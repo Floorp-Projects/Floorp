@@ -3067,7 +3067,7 @@ IsHiDPIContext(nsDeviceContext* aContext)
 
 Maybe<nsNativeThemeCocoa::WidgetInfo>
 nsNativeThemeCocoa::ComputeWidgetInfo(nsIFrame* aFrame,
-                                      WidgetType aWidgetType,
+                                      StyleAppearance aWidgetType,
                                       const nsRect& aRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -3527,7 +3527,7 @@ nsNativeThemeCocoa::ComputeWidgetInfo(nsIFrame* aFrame,
 NS_IMETHODIMP
 nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
                                          nsIFrame* aFrame,
-                                         WidgetType aWidgetType,
+                                         StyleAppearance aWidgetType,
                                          const nsRect& aRect,
                                          const nsRect& aDirtyRect)
 {
@@ -3813,7 +3813,7 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
                                                      const mozilla::layers::StackingContextHelper& aSc,
                                                      mozilla::layers::WebRenderLayerManager* aManager,
                                                      nsIFrame* aFrame,
-                                                     WidgetType aWidgetType,
+                                                     StyleAppearance aWidgetType,
                                                      const nsRect& aRect)
 {
   nsPresContext* presContext = aFrame->PresContext();
@@ -4014,7 +4014,7 @@ static const LayoutDeviceIntMargin kAquaSearchfieldBorder(3, 5, 2, 19);
 LayoutDeviceIntMargin
 nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
                                     nsIFrame* aFrame,
-                                    WidgetType aWidgetType)
+                                    StyleAppearance aWidgetType)
 {
   LayoutDeviceIntMargin result;
 
@@ -4138,7 +4138,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
 bool
 nsNativeThemeCocoa::GetWidgetPadding(nsDeviceContext* aContext,
                                      nsIFrame* aFrame,
-                                     WidgetType aWidgetType,
+                                     StyleAppearance aWidgetType,
                                      LayoutDeviceIntMargin* aResult)
 {
   // We don't want CSS padding being used for certain widgets.
@@ -4158,8 +4158,10 @@ nsNativeThemeCocoa::GetWidgetPadding(nsDeviceContext* aContext,
 }
 
 bool
-nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                      WidgetType aWidgetType, nsRect* aOverflowRect)
+nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext,
+                                      nsIFrame* aFrame,
+                                      StyleAppearance aWidgetType,
+                                      nsRect* aOverflowRect)
 {
   nsIntMargin overflow;
   switch (aWidgetType) {
@@ -4229,7 +4231,7 @@ static const int32_t kSmallScrollbarThumbMinSize = 26;
 NS_IMETHODIMP
 nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                          nsIFrame* aFrame,
-                                         WidgetType aWidgetType,
+                                         StyleAppearance aWidgetType,
                                          LayoutDeviceIntSize* aResult,
                                          bool* aIsOverridable)
 {
@@ -4542,8 +4544,10 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, WidgetType aWidgetType,
-                                       nsAtom* aAttribute, bool* aShouldRepaint,
+nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame,
+                                       StyleAppearance aWidgetType,
+                                       nsAtom* aAttribute,
+                                       bool* aShouldRepaint,
                                        const nsAttrValue* aOldValue)
 {
   // Some widget types just never change state.
@@ -4613,7 +4617,7 @@ nsNativeThemeCocoa::ThemeChanged()
 
 bool
 nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                      WidgetType aWidgetType)
+                                      StyleAppearance aWidgetType)
 {
   if (aWidgetType == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
@@ -4757,7 +4761,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
 }
 
 bool
-nsNativeThemeCocoa::WidgetIsContainer(WidgetType aWidgetType)
+nsNativeThemeCocoa::WidgetIsContainer(StyleAppearance aWidgetType)
 {
   if (aWidgetType == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
@@ -4784,7 +4788,7 @@ nsNativeThemeCocoa::WidgetIsContainer(WidgetType aWidgetType)
 }
 
 bool
-nsNativeThemeCocoa::ThemeDrawsFocusForWidget(WidgetType aWidgetType)
+nsNativeThemeCocoa::ThemeDrawsFocusForWidget(StyleAppearance aWidgetType)
 {
   if (aWidgetType == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
@@ -4811,7 +4815,7 @@ nsNativeThemeCocoa::ThemeNeedsComboboxDropmarker()
 }
 
 bool
-nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(WidgetType aWidgetType)
+nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aWidgetType)
 {
   switch (aWidgetType) {
     case StyleAppearance::Dialog:
@@ -4859,7 +4863,7 @@ nsNativeThemeCocoa::IsWindowSheet(nsIFrame* aFrame)
 
 bool
 nsNativeThemeCocoa::NeedToClearBackgroundBehindWidget(nsIFrame* aFrame,
-                                                      WidgetType aWidgetType)
+                                                      StyleAppearance aWidgetType)
 {
   switch (aWidgetType) {
     case StyleAppearance::MozMacSourceList:
@@ -4886,7 +4890,8 @@ nsNativeThemeCocoa::NeedToClearBackgroundBehindWidget(nsIFrame* aFrame,
 }
 
 nsITheme::ThemeGeometryType
-nsNativeThemeCocoa::ThemeGeometryTypeForWidget(nsIFrame* aFrame, WidgetType aWidgetType)
+nsNativeThemeCocoa::ThemeGeometryTypeForWidget(nsIFrame* aFrame,
+                                               StyleAppearance aWidgetType)
 {
   switch (aWidgetType) {
     case StyleAppearance::MozWindowTitlebar:
@@ -4934,7 +4939,8 @@ nsNativeThemeCocoa::ThemeGeometryTypeForWidget(nsIFrame* aFrame, WidgetType aWid
 }
 
 nsITheme::Transparency
-nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, WidgetType aWidgetType)
+nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame,
+                                          StyleAppearance aWidgetType)
 {
   switch (aWidgetType) {
   case StyleAppearance::Menupopup:

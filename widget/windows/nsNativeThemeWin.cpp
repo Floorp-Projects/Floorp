@@ -571,7 +571,7 @@ nsNativeThemeWin::CalculateProgressOverlayRect(nsIFrame* aFrame,
  */
 void
 nsNativeThemeWin::DrawThemedProgressMeter(nsIFrame* aFrame,
-                                          WidgetType aWidgetType,
+                                          StyleAppearance aWidgetType,
                                           HANDLE aTheme, HDC aHdc,
                                           int aPart, int aState,
                                           RECT* aWidgetRect, RECT* aClipRect)
@@ -625,7 +625,7 @@ nsNativeThemeWin::DrawThemedProgressMeter(nsIFrame* aFrame,
 LayoutDeviceIntMargin
 nsNativeThemeWin::GetCachedWidgetBorder(HTHEME aTheme,
                                         nsUXThemeClass aThemeClass,
-                                        WidgetType aWidgetType,
+                                        StyleAppearance aWidgetType,
                                         int32_t aPart,
                                         int32_t aState)
 {
@@ -663,7 +663,8 @@ nsNativeThemeWin::GetCachedWidgetBorder(HTHEME aTheme,
 }
 
 nsresult nsNativeThemeWin::GetCachedMinimumWidgetSize(nsIFrame * aFrame, HANDLE aTheme,
-                                                      nsUXThemeClass aThemeClass, WidgetType aWidgetType,
+                                                      nsUXThemeClass aThemeClass,
+                                                      StyleAppearance aWidgetType,
                                                       int32_t aPart, int32_t aState, THEMESIZE aSizeReq,
                                                       mozilla::LayoutDeviceIntSize * aResult)
 {
@@ -730,7 +731,7 @@ nsresult nsNativeThemeWin::GetCachedMinimumWidgetSize(nsIFrame * aFrame, HANDLE 
   return NS_OK;
 }
 
-mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(WidgetType aWidgetType)
+mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(StyleAppearance aWidgetType)
 {
   switch (aWidgetType) {
     case StyleAppearance::Button:
@@ -842,7 +843,7 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(WidgetType aWidge
 }
 
 HANDLE
-nsNativeThemeWin::GetTheme(WidgetType aWidgetType)
+nsNativeThemeWin::GetTheme(StyleAppearance aWidgetType)
 {
   mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aWidgetType);
   if (themeClass.isNothing()) {
@@ -852,7 +853,8 @@ nsNativeThemeWin::GetTheme(WidgetType aWidgetType)
 }
 
 int32_t
-nsNativeThemeWin::StandardGetState(nsIFrame* aFrame, WidgetType aWidgetType,
+nsNativeThemeWin::StandardGetState(nsIFrame* aFrame,
+                                   StyleAppearance aWidgetType,
                                    bool wantFocused)
 {
   EventStates eventState = GetContentState(aFrame, aWidgetType);
@@ -867,7 +869,8 @@ nsNativeThemeWin::StandardGetState(nsIFrame* aFrame, WidgetType aWidgetType,
 }
 
 bool
-nsNativeThemeWin::IsMenuActive(nsIFrame *aFrame, WidgetType aWidgetType)
+nsNativeThemeWin::IsMenuActive(nsIFrame *aFrame,
+                               StyleAppearance aWidgetType)
 {
   nsIContent* content = aFrame->GetContent();
   if (content->IsXULElement() &&
@@ -885,7 +888,8 @@ nsNativeThemeWin::IsMenuActive(nsIFrame *aFrame, WidgetType aWidgetType)
  * (but isThemeBackgroundPartiallyTransparent may not work).
  */
 nsresult 
-nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, WidgetType aWidgetType, 
+nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
+                                       StyleAppearance aWidgetType, 
                                        int32_t& aPart, int32_t& aState)
 {
   if (aWidgetType == StyleAppearance::MenulistButton &&
@@ -1579,7 +1583,7 @@ ShouldDrawCustomScrollbar(ComputedStyle* aStyle)
 NS_IMETHODIMP
 nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
                                        nsIFrame* aFrame,
-                                       WidgetType aWidgetType,
+                                       StyleAppearance aWidgetType,
                                        const nsRect& aRect,
                                        const nsRect& aDirtyRect)
 {
@@ -2030,7 +2034,7 @@ ScaleForFrameDPI(LayoutDeviceIntSize* aSize, nsIFrame* aFrame)
 LayoutDeviceIntMargin
 nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext, 
                                   nsIFrame* aFrame,
-                                  WidgetType aWidgetType)
+                                  StyleAppearance aWidgetType)
 {
   LayoutDeviceIntMargin result;
   mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aWidgetType);
@@ -2109,7 +2113,7 @@ nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext,
 bool
 nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext, 
                                    nsIFrame* aFrame,
-                                   WidgetType aWidgetType,
+                                   StyleAppearance aWidgetType,
                                    LayoutDeviceIntMargin* aResult)
 {
   if (aWidgetType == StyleAppearance::MenulistButton &&
@@ -2276,7 +2280,7 @@ nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
 bool
 nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext, 
                                     nsIFrame* aFrame,
-                                    WidgetType aWidgetType,
+                                    StyleAppearance aWidgetType,
                                     nsRect* aOverflowRect)
 {
   /* This is disabled for now, because it causes invalidation problems --
@@ -2324,7 +2328,7 @@ nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext,
 
 NS_IMETHODIMP
 nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                       WidgetType aWidgetType,
+                                       StyleAppearance aWidgetType,
                                        LayoutDeviceIntSize* aResult, bool* aIsOverridable)
 {
   if (aWidgetType == StyleAppearance::MenulistButton &&
@@ -2566,7 +2570,8 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
 }
 
 NS_IMETHODIMP
-nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, WidgetType aWidgetType, 
+nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame,
+                                     StyleAppearance aWidgetType, 
                                      nsAtom* aAttribute, bool* aShouldRepaint,
                                      const nsAttrValue* aOldValue)
 {
@@ -2662,7 +2667,7 @@ nsNativeThemeWin::ThemeChanged()
 bool 
 nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
-                                      WidgetType aWidgetType)
+                                      StyleAppearance aWidgetType)
 {
   // XXXdwh We can go even further and call the API to ask if support exists for
   // specific widgets.
@@ -2690,7 +2695,7 @@ nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
 }
 
 bool 
-nsNativeThemeWin::WidgetIsContainer(WidgetType aWidgetType)
+nsNativeThemeWin::WidgetIsContainer(StyleAppearance aWidgetType)
 {
   if (aWidgetType == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
@@ -2707,7 +2712,7 @@ nsNativeThemeWin::WidgetIsContainer(WidgetType aWidgetType)
 }
 
 bool
-nsNativeThemeWin::ThemeDrawsFocusForWidget(WidgetType aWidgetType)
+nsNativeThemeWin::ThemeDrawsFocusForWidget(StyleAppearance aWidgetType)
 {
   return false;
 }
@@ -2719,7 +2724,7 @@ nsNativeThemeWin::ThemeNeedsComboboxDropmarker()
 }
 
 bool
-nsNativeThemeWin::WidgetAppearanceDependsOnWindowFocus(WidgetType aWidgetType)
+nsNativeThemeWin::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aWidgetType)
 {
   switch (aWidgetType) {
     case StyleAppearance::MozWindowTitlebar:
@@ -2739,7 +2744,7 @@ nsNativeThemeWin::WidgetAppearanceDependsOnWindowFocus(WidgetType aWidgetType)
 
 nsITheme::ThemeGeometryType
 nsNativeThemeWin::ThemeGeometryTypeForWidget(nsIFrame* aFrame,
-                                             WidgetType aWidgetType)
+                                             StyleAppearance aWidgetType)
 {
   switch (aWidgetType) {
     case StyleAppearance::MozWindowButtonBox:
@@ -2751,7 +2756,8 @@ nsNativeThemeWin::ThemeGeometryTypeForWidget(nsIFrame* aFrame,
 }
 
 nsITheme::Transparency
-nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, WidgetType aWidgetType)
+nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame,
+                                        StyleAppearance aWidgetType)
 {
   if (IsWidgetScrollbarPart(aWidgetType)) {
     ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
@@ -2830,7 +2836,7 @@ nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, WidgetType aWidgetType
 
 bool
 nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
-                                             WidgetType aWidgetType)
+                                             StyleAppearance aWidgetType)
 {
   switch (aWidgetType) {
     case StyleAppearance::Resizer:
@@ -2919,7 +2925,7 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
 LayoutDeviceIntMargin
 nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext, 
                                          nsIFrame* aFrame,
-                                         WidgetType aWidgetType)
+                                         StyleAppearance aWidgetType)
 {
   if (aWidgetType == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
@@ -2978,7 +2984,7 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext,
 bool
 nsNativeThemeWin::ClassicGetWidgetPadding(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,
-                                   WidgetType aWidgetType,
+                                   StyleAppearance aWidgetType,
                                    LayoutDeviceIntMargin* aResult)
 {
   switch (aWidgetType) {
@@ -3018,7 +3024,7 @@ nsNativeThemeWin::ClassicGetWidgetPadding(nsDeviceContext* aContext,
 
 nsresult
 nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
-                                              WidgetType aWidgetType,
+                                              StyleAppearance aWidgetType,
                                               LayoutDeviceIntSize* aResult,
                                               bool* aIsOverridable)
 {
@@ -3221,8 +3227,11 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
 }
 
 
-nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, WidgetType aWidgetType,
-                                 int32_t& aPart, int32_t& aState, bool& aFocused)
+nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame,
+                                                       StyleAppearance aWidgetType,
+                                                       int32_t& aPart,
+                                                       int32_t& aState,
+                                                       bool& aFocused)
 {  
   if (aWidgetType == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
@@ -3728,7 +3737,7 @@ void nsNativeThemeWin::DrawCheckedRect(HDC hdc, const RECT& rc, int32_t fore, in
 
 nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(gfxContext* aContext,
                                   nsIFrame* aFrame,
-                                  WidgetType aWidgetType,
+                                  StyleAppearance aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect)
 {
@@ -4166,7 +4175,7 @@ RENDER_AGAIN:
 }
 
 uint32_t
-nsNativeThemeWin::GetWidgetNativeDrawingFlags(WidgetType aWidgetType)
+nsNativeThemeWin::GetWidgetNativeDrawingFlags(StyleAppearance aWidgetType)
 {
   switch (aWidgetType) {
     case StyleAppearance::Button:
@@ -4314,7 +4323,7 @@ nsresult
 nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
                                           nsIFrame* aFrame,
                                           ComputedStyle* aStyle,
-                                          WidgetType aWidgetType,
+                                          StyleAppearance aWidgetType,
                                           const nsRect& aRect,
                                           const nsRect& aClipRect)
 {

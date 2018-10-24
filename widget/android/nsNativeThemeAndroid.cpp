@@ -173,7 +173,7 @@ PaintCheckedRadioButton(nsIFrame* aFrame,
 NS_IMETHODIMP
 nsNativeThemeAndroid::DrawWidgetBackground(gfxContext* aContext,
                                            nsIFrame* aFrame,
-                                           WidgetType aWidgetType,
+                                           StyleAppearance aWidgetType,
                                            const nsRect& aRect,
                                            const nsRect& aDirtyRect)
 {
@@ -207,14 +207,15 @@ nsNativeThemeAndroid::DrawWidgetBackground(gfxContext* aContext,
 
 LayoutDeviceIntMargin
 nsNativeThemeAndroid::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                      WidgetType aWidgetType)
+                                      StyleAppearance aWidgetType)
 {
   return LayoutDeviceIntMargin();
 }
 
 bool
 nsNativeThemeAndroid::GetWidgetPadding(nsDeviceContext* aContext,
-                                       nsIFrame* aFrame, WidgetType aWidgetType,
+                                       nsIFrame* aFrame,
+                                       StyleAppearance aWidgetType,
                                        LayoutDeviceIntMargin* aResult)
 {
   switch (aWidgetType) {
@@ -232,7 +233,8 @@ nsNativeThemeAndroid::GetWidgetPadding(nsDeviceContext* aContext,
 
 bool
 nsNativeThemeAndroid::GetWidgetOverflow(nsDeviceContext* aContext,
-                                        nsIFrame* aFrame, WidgetType aWidgetType,
+                                        nsIFrame* aFrame,
+                                        StyleAppearance aWidgetType,
                                         nsRect* aOverflowRect)
 {
   return false;
@@ -240,7 +242,8 @@ nsNativeThemeAndroid::GetWidgetOverflow(nsDeviceContext* aContext,
 
 NS_IMETHODIMP
 nsNativeThemeAndroid::GetMinimumWidgetSize(nsPresContext* aPresContext,
-                                       nsIFrame* aFrame, WidgetType aWidgetType,
+                                       nsIFrame* aFrame,
+                                       StyleAppearance aWidgetType,
                                        LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable)
 {
@@ -254,9 +257,11 @@ nsNativeThemeAndroid::GetMinimumWidgetSize(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsNativeThemeAndroid::WidgetStateChanged(nsIFrame* aFrame, WidgetType aWidgetType,
-                                     nsAtom* aAttribute, bool* aShouldRepaint,
-                                     const nsAttrValue* aOldValue)
+nsNativeThemeAndroid::WidgetStateChanged(nsIFrame* aFrame,
+                                         StyleAppearance aWidgetType,
+                                         nsAtom* aAttribute,
+                                         bool* aShouldRepaint,
+                                         const nsAttrValue* aOldValue)
 {
   if (aWidgetType == StyleAppearance::Radio || aWidgetType == StyleAppearance::Checkbox) {
     if (aAttribute == nsGkAtoms::active ||
@@ -280,7 +285,7 @@ nsNativeThemeAndroid::ThemeChanged()
 NS_IMETHODIMP_(bool)
 nsNativeThemeAndroid::ThemeSupportsWidget(nsPresContext* aPresContext,
                                           nsIFrame* aFrame,
-                                          WidgetType aWidgetType)
+                                          StyleAppearance aWidgetType)
 {
   switch (aWidgetType) {
     case StyleAppearance::Radio:
@@ -292,13 +297,13 @@ nsNativeThemeAndroid::ThemeSupportsWidget(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP_(bool)
-nsNativeThemeAndroid::WidgetIsContainer(WidgetType aWidgetType)
+nsNativeThemeAndroid::WidgetIsContainer(StyleAppearance aWidgetType)
 {
   return false;
 }
 
 bool
-nsNativeThemeAndroid::ThemeDrawsFocusForWidget(WidgetType aWidgetType)
+nsNativeThemeAndroid::ThemeDrawsFocusForWidget(StyleAppearance aWidgetType)
 {
   return false;
 }
@@ -310,7 +315,8 @@ nsNativeThemeAndroid::ThemeNeedsComboboxDropmarker()
 }
 
 nsITheme::Transparency
-nsNativeThemeAndroid::GetWidgetTransparency(nsIFrame* aFrame, WidgetType aWidgetType)
+nsNativeThemeAndroid::GetWidgetTransparency(nsIFrame* aFrame,
+                                            StyleAppearance aWidgetType)
 {
   return eUnknownTransparency;
 }
