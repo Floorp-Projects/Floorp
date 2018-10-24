@@ -25,49 +25,6 @@ namespace mozilla {
 using namespace dom;
 
 /******************************************************************************
- * AutoSelectionRestorer
- *****************************************************************************/
-
-AutoSelectionRestorer::AutoSelectionRestorer(
-                         Selection* aSelection,
-                         EditorBase* aEditorBase
-                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : mEditorBase(nullptr)
-{
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aEditorBase)) {
-    return;
-  }
-  if (aEditorBase->ArePreservingSelection()) {
-    // We already have initialized mSavedSel, so this must be nested call.
-    return;
-  }
-  mSelection = aSelection;
-  mEditorBase = aEditorBase;
-  mEditorBase->PreserveSelectionAcrossActions(mSelection);
-}
-
-AutoSelectionRestorer::~AutoSelectionRestorer()
-{
-  NS_ASSERTION(!mSelection || mEditorBase,
-               "mEditorBase should be non-null when mSelection is");
-  // mSelection will be null if this was nested call.
-  if (mSelection && mEditorBase->ArePreservingSelection()) {
-    mEditorBase->RestorePreservedSelection(mSelection);
-  }
-}
-
-void
-AutoSelectionRestorer::Abort()
-{
-  NS_ASSERTION(!mSelection || mEditorBase,
-               "mEditorBase should be non-null when mSelection is");
-  if (mSelection) {
-    mEditorBase->StopPreservingSelection();
-  }
-}
-
-/******************************************************************************
  * some helper classes for iterating the dom tree
  *****************************************************************************/
 

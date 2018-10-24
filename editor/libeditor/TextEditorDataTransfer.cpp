@@ -6,7 +6,6 @@
 #include "mozilla/TextEditor.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/EditorUtils.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/SelectionState.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -125,7 +124,7 @@ TextEditor::InsertTextFromTransferable(nsITransferable* aTransferable)
       // Sanitize possible carriage returns in the string to be inserted
       nsContentUtils::PlatformToDOMLineBreaks(stuffToPaste);
 
-      AutoPlaceholderBatch beginBatching(this);
+      AutoPlaceholderBatch treatAsOneTransaction(*this);
       rv = InsertTextAt(stuffToPaste, nullptr, 0, true);
     }
   }
@@ -155,7 +154,7 @@ TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
     data->GetAsAString(insertText);
     nsContentUtils::PlatformToDOMLineBreaks(insertText);
 
-    AutoPlaceholderBatch beginBatching(this);
+    AutoPlaceholderBatch treatAsOneTransaction(*this);
     return InsertTextAt(insertText, aDestinationNode, aDestOffset, aDoDeleteSelection);
   }
 
@@ -203,7 +202,7 @@ TextEditor::OnDrop(DragEvent* aDropEvent)
   }
 
   // Combine any deletion and drop insertion into one transaction
-  AutoPlaceholderBatch beginBatching(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   bool deleteSelection = false;
 

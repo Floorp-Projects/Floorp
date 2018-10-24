@@ -13,7 +13,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
-#include "mozilla/EditorUtils.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/mozalloc.h"
@@ -420,7 +419,7 @@ TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
 nsresult
 TextEditor::OnInputText(const nsAString& aStringToInsert)
 {
-  AutoPlaceholderBatch batch(this, nsGkAtoms::TypingTxnName);
+  AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
   nsresult rv = InsertTextAsSubAction(aStringToInsert);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -431,7 +430,7 @@ TextEditor::OnInputText(const nsAString& aStringToInsert)
 nsresult
 TextEditor::OnInputParagraphSeparator()
 {
-  AutoPlaceholderBatch batch(this, nsGkAtoms::TypingTxnName);
+  AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
   nsresult rv = InsertParagraphSeparatorAsAction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -663,7 +662,7 @@ TextEditor::DeleteSelectionAsAction(EDirection aDirection,
     "unless mutation event listener nests some operations");
 
   // delete placeholder txns merge.
-  AutoPlaceholderBatch batch(this, nsGkAtoms::DeleteTxnName);
+  AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::DeleteTxnName);
   nsresult rv = DeleteSelectionAsSubAction(aDirection, aStripWrappers);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -968,7 +967,7 @@ TextEditor::InsertTextAsAction(const nsAString& aStringToInsert)
     "Should be called only when this is the only edit action of the operation "
     "unless mutation event listener nests some operations");
 
-  AutoPlaceholderBatch batch(this, nullptr);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   nsresult rv = InsertTextAsSubAction(aStringToInsert);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1045,7 +1044,7 @@ TextEditor::InsertParagraphSeparatorAsAction()
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  AutoPlaceholderBatch beginBatching(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
                                       EditSubAction::eInsertParagraphSeparator,
@@ -1136,7 +1135,7 @@ TextEditor::SetText(const nsAString& aString)
 {
   MOZ_ASSERT(aString.FindChar(static_cast<char16_t>('\r')) == kNotFound);
 
-  AutoPlaceholderBatch batch(this, nullptr);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   nsresult rv = SetTextAsSubAction(aString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1148,7 +1147,7 @@ nsresult
 TextEditor::ReplaceTextAsAction(const nsAString& aString,
                                 nsRange* aReplaceRange /* = nullptr */)
 {
-  AutoPlaceholderBatch batch(this, nullptr);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   // This should emulates inserting text for better undo/redo behavior.
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
@@ -1170,7 +1169,7 @@ TextEditor::ReplaceTextAsAction(const nsAString& aString,
   // Note that do not notify selectionchange caused by selecting all text
   // because it's preparation of our delete implementation so web apps
   // shouldn't receive such selectionchange before the first mutation.
-  AutoUpdateViewBatch preventSelectionChangeEvent(this);
+  AutoUpdateViewBatch preventSelectionChangeEvent(*this);
 
   RefPtr<Selection> selection = GetSelection();
   if (NS_WARN_IF(!selection)) {
@@ -1235,7 +1234,7 @@ TextEditor::SetTextAsSubAction(const nsAString& aString)
     // Note that do not notify selectionchange caused by selecting all text
     // because it's preparation of our delete implementation so web apps
     // shouldn't receive such selectionchange before the first mutation.
-    AutoUpdateViewBatch preventSelectionChangeEvent(this);
+    AutoUpdateViewBatch preventSelectionChangeEvent(*this);
 
     // We want to select trailing BR node to remove all nodes to replace all,
     // but TextEditor::SelectEntireDocument doesn't select that BR node.
@@ -1354,7 +1353,7 @@ TextEditor::OnCompositionChange(WidgetCompositionEvent& aCompsitionChangeEvent)
 
   nsresult rv;
   {
-    AutoPlaceholderBatch batch(this, nsGkAtoms::IMETxnName);
+    AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::IMETxnName);
 
     MOZ_ASSERT(mIsInEditSubAction,
       "AutoPlaceholderBatch should've notified the observes of before-edit");
@@ -1627,7 +1626,7 @@ TextEditor::Undo(uint32_t aCount)
   // Protect the edit rules object from dying.
   RefPtr<TextEditRules> rules(mRules);
 
-  AutoUpdateViewBatch beginViewBatching(this);
+  AutoUpdateViewBatch preventSelectionChangeEvent(*this);
 
   NotifyEditorObservers(eNotifyEditorObserversOfBefore);
   if (NS_WARN_IF(!CanUndo()) || NS_WARN_IF(Destroyed())) {
@@ -1682,7 +1681,7 @@ TextEditor::Redo(uint32_t aCount)
   // Protect the edit rules object from dying.
   RefPtr<TextEditRules> rules(mRules);
 
-  AutoUpdateViewBatch beginViewBatching(this);
+  AutoUpdateViewBatch preventSelectionChangeEvent(*this);
 
   NotifyEditorObservers(eNotifyEditorObserversOfBefore);
   if (NS_WARN_IF(!CanRedo()) || NS_WARN_IF(Destroyed())) {
@@ -1766,7 +1765,8 @@ TextEditor::Cut()
   if (FireClipboardEvent(eCut, nsIClipboard::kGlobalClipboard, &actionTaken)) {
     // XXX This transaction name is referred by PlaceholderTransaction::Merge()
     //     so that we need to keep using it here.
-    AutoPlaceholderBatch batch(this, nsGkAtoms::DeleteTxnName);
+    AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                               *nsGkAtoms::DeleteTxnName);
     DeleteSelectionAsSubAction(eNone, eStrip);
   }
   return actionTaken ? NS_OK : NS_ERROR_FAILURE;
@@ -1986,7 +1986,7 @@ TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   if (textDataObj && len > 0) {
     nsAutoString stuffToPaste;
     textDataObj->GetData ( stuffToPaste );
-    AutoPlaceholderBatch beginBatching(this);
+    AutoPlaceholderBatch treatAsOneTransaction(*this);
     rv = InsertWithQuotationsAsSubAction(stuffToPaste);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
