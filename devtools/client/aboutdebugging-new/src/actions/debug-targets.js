@@ -128,7 +128,7 @@ function requestTabs() {
 
       dispatch({ type: REQUEST_TABS_SUCCESS, tabs });
     } catch (e) {
-      dispatch({ type: REQUEST_TABS_FAILURE, error: e.message });
+      dispatch({ type: REQUEST_TABS_FAILURE, error: e });
     }
   };
 }
@@ -151,7 +151,7 @@ function requestExtensions() {
         temporaryExtensions,
       });
     } catch (e) {
-      dispatch({ type: REQUEST_EXTENSIONS_FAILURE, error: e.message });
+      dispatch({ type: REQUEST_EXTENSIONS_FAILURE, error: e });
     }
   };
 }
@@ -176,7 +176,7 @@ function requestWorkers() {
         sharedWorkers,
       });
     } catch (e) {
-      dispatch({ type: REQUEST_WORKERS_FAILURE, error: e.message });
+      dispatch({ type: REQUEST_WORKERS_FAILURE, error: e });
     }
   };
 }
