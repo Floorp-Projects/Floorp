@@ -37,9 +37,10 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
  * Breakpoints reducer
  * @module reducers/breakpoints
  */
-function initialBreakpointsState() {
+function initialBreakpointsState(xhrBreakpoints = []) {
   return (0, _makeRecord2.default)({
     breakpoints: I.Map(),
+    xhrBreakpoints: I.List(xhrBreakpoints),
     breakpointsDisabled: false
   })();
 }
@@ -95,9 +96,81 @@ function update(state = initialBreakpointsState(), action) {
       {
         return initialBreakpointsState();
       }
+
+    case "SET_XHR_BREAKPOINT":
+      {
+        return addXHRBreakpoint(state, action);
+      }
+
+    case "REMOVE_XHR_BREAKPOINT":
+      {
+        return removeXHRBreakpoint(state, action);
+      }
+
+    case "UPDATE_XHR_BREAKPOINT":
+      {
+        return updateXHRBreakpoint(state, action);
+      }
+
+    case "ENABLE_XHR_BREAKPOINT":
+      {
+        return updateXHRBreakpoint(state, action);
+      }
+
+    case "DISABLE_XHR_BREAKPOINT":
+      {
+        return updateXHRBreakpoint(state, action);
+      }
   }
 
   return state;
+}
+
+function addXHRBreakpoint(state, action) {
+  const {
+    xhrBreakpoints
+  } = state;
+  const {
+    breakpoint
+  } = action;
+  const {
+    path,
+    method
+  } = breakpoint;
+  const existingBreakpointIndex = state.xhrBreakpoints.findIndex(bp => bp.path === path && bp.method === method);
+
+  if (existingBreakpointIndex === -1) {
+    return state.set("xhrBreakpoints", xhrBreakpoints.push(breakpoint));
+  } else if (xhrBreakpoints.get(existingBreakpointIndex) !== breakpoint) {
+    return state.set("xhrBreakpoints", xhrBreakpoints.set(existingBreakpointIndex, breakpoint));
+  }
+
+  return state;
+}
+
+function removeXHRBreakpoint(state, action) {
+  const {
+    breakpoint: {
+      path,
+      method
+    }
+  } = action;
+  const {
+    xhrBreakpoints
+  } = state;
+  const index = xhrBreakpoints.findIndex(bp => bp.path === path && bp.method === method);
+  return state.set("xhrBreakpoints", xhrBreakpoints.delete(index));
+}
+
+function updateXHRBreakpoint(state, action) {
+  const {
+    breakpoint,
+    index
+  } = action;
+  const {
+    xhrBreakpoints
+  } = state;
+  return state.set("xhrBreakpoints", xhrBreakpoints.set(index, breakpoint));
 }
 
 function addBreakpoint(state, action) {

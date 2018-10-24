@@ -39,11 +39,13 @@ class ConnectPage extends PureComponent {
       getString: PropTypes.func.isRequired,
       networkEnabled: PropTypes.bool.isRequired,
       networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
+      wifiEnabled: PropTypes.bool.isRequired,
     };
   }
 
   renderWifi() {
-    const { getString } = this.props;
+    const { getString, wifiEnabled } = this.props;
+
     return Localized(
       {
         id: "about-debugging-connect-wifi",
@@ -52,8 +54,9 @@ class ConnectPage extends PureComponent {
       ConnectSection(
         {
           icon: WIFI_ICON_SRC,
-          title: "Via WiFi (Recommended)",
+          title: "Via WiFi",
         },
+        wifiEnabled ?
         ConnectSteps({
           steps: [
             getString("about-debugging-connect-wifi-step-same-network"),
@@ -61,7 +64,19 @@ class ConnectPage extends PureComponent {
             getString("about-debugging-connect-wifi-step-open-options"),
             getString("about-debugging-connect-wifi-step-enable-debug"),
           ],
-        })
+        }) :
+        Localized(
+          {
+            id: "about-debugging-connect-wifi-disabled",
+            $pref: PREFERENCES.WIFI_ENABLED,
+          },
+          dom.div(
+            {
+              className: "connect-page__disabled-section",
+            },
+            "about-debugging-connect-wifi-disabled"
+          )
+        )
       )
     );
   }

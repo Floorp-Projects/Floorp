@@ -1989,41 +1989,6 @@ RENDER_AGAIN:
   return NS_OK;
 }
 
-static nscolor
-GetScrollbarFaceColorForAuto(ComputedStyle* aStyle)
-{
-  return NS_RGB(205, 205, 205);
-}
-
-static nscolor
-GetScrollbarTrackColorForAuto(ComputedStyle* aStyle)
-{
-  return NS_RGB(240, 240, 240);
-}
-
-nscolor
-nsNativeThemeWin::GetWidgetAutoColor(ComputedStyle* aStyle, WidgetType aWidgetType)
-{
-  switch (aWidgetType) {
-    case StyleAppearance::Scrollbar:
-    case StyleAppearance::ScrollbarSmall:
-    case StyleAppearance::ScrollbarVertical:
-    case StyleAppearance::ScrollbarHorizontal:
-    case StyleAppearance::ScrollbarbuttonUp:
-    case StyleAppearance::ScrollbarbuttonDown:
-    case StyleAppearance::ScrollbarbuttonLeft:
-    case StyleAppearance::ScrollbarbuttonRight:
-      return GetScrollbarTrackColorForAuto(aStyle);
-
-    case StyleAppearance::ScrollbarthumbVertical:
-    case StyleAppearance::ScrollbarthumbHorizontal:
-      return GetScrollbarFaceColorForAuto(aStyle);
-
-    default:
-      return nsITheme::GetWidgetAutoColor(aStyle, aWidgetType);
-  }
-}
-
 static void
 ScaleForFrameDPI(LayoutDeviceIntMargin* aMargin, nsIFrame* aFrame)
 {
@@ -4350,7 +4315,7 @@ nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
 
   const nsStyleUI* ui = aStyle->StyleUI();
   nscolor trackColor = ui->mScrollbarTrackColor.IsAuto()
-    ? GetScrollbarTrackColorForAuto(aStyle)
+    ? NS_RGB(240, 240, 240)
     : ui->mScrollbarTrackColor.CalcColor(aStyle);
   switch (aWidgetType) {
     case StyleAppearance::ScrollbarHorizontal:
@@ -4387,7 +4352,7 @@ nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
     case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::ScrollbarthumbHorizontal: {
       nscolor faceColor = ui->mScrollbarFaceColor.IsAuto()
-        ? GetScrollbarFaceColorForAuto(aStyle)
+        ? NS_RGB(205, 205, 205)
         : ui->mScrollbarFaceColor.CalcColor(aStyle);
       faceColor = AdjustScrollbarFaceColor(faceColor, eventStates);
       ctx->SetColor(Color::FromABGR(faceColor));

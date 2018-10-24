@@ -75,14 +75,6 @@ public:
                                   const nsRect& aDirtyRect) = 0;
 
   /**
-   * Get the used color of the given widget when it's specified as auto.
-   * It's currently only used for scrollbar-*-color properties.
-   */
-  virtual nscolor GetWidgetAutoColor(mozilla::ComputedStyle* aStyle,
-                                     WidgetType aWidgetType)
-  { return NS_RGB(0, 0, 0); }
-
-  /**
    * Create WebRender commands for the theme background.
    * @return true if the theme knows how to create WebRender commands for the
    *         given widget type, false if DrawWidgetBackground need sto be called
