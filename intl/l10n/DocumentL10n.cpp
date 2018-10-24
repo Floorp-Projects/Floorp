@@ -14,59 +14,9 @@
 #include "nsQueryObject.h"
 #include "nsISupports.h"
 #include "nsContentUtils.h"
-#include "xpcprivate.h"
 
 namespace mozilla {
 namespace dom {
-
-NS_INTERFACE_MAP_BEGIN(PromiseResolver)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(PromiseResolver)
-NS_IMPL_RELEASE(PromiseResolver)
-
-PromiseResolver::PromiseResolver(Promise* aPromise)
-{
-  mPromise = aPromise;
-}
-
-void
-PromiseResolver::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
-{
-  JS::RootedObject sourceScope(aCx, JS::CurrentGlobalOrNull(aCx));
-
-  AutoEntryScript aes(mPromise->GetParentObject(), "Promise resolution");
-  JSContext* cx = aes.cx();
-  JS::Rooted<JS::Value> value(cx, aValue);
-
-  xpc::StackScopedCloneOptions options;
-  StackScopedClone(cx, options, sourceScope, &value);
-
-  mPromise->MaybeResolve(cx, value);
-  mPromise = nullptr;
-}
-
-void
-PromiseResolver::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
-{
-  JS::RootedObject sourceScope(aCx, JS::CurrentGlobalOrNull(aCx));
-
-  AutoEntryScript aes(mPromise->GetParentObject(), "Promise rejection");
-  JSContext* cx = aes.cx();
-  JS::Rooted<JS::Value> value(cx, aValue);
-
-  xpc::StackScopedCloneOptions options;
-  StackScopedClone(cx, options, sourceScope, &value);
-
-  mPromise->MaybeReject(cx, value);
-  mPromise = nullptr;
-}
-
-PromiseResolver::~PromiseResolver()
-{
-  mPromise = nullptr;
-}
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DocumentL10n)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -130,31 +80,6 @@ DocumentL10n::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return DocumentL10n_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<Promise>
-DocumentL10n::MaybeWrapPromise(Promise* aInnerPromise)
-{
-  // For system principal we don't need to wrap the
-  // result promise at all.
-  if (nsContentUtils::IsSystemPrincipal(mDocument->NodePrincipal())) {
-    return RefPtr<Promise>(aInnerPromise).forget();
-  }
-
-  nsIGlobalObject* global = mDocument->GetScopeObject();
-  if (!global) {
-    return nullptr;
-  }
-
-  ErrorResult result;
-  RefPtr<Promise> docPromise = Promise::Create(global, result);
-  if (result.Failed()) {
-    return nullptr;
-  }
-
-  RefPtr<PromiseResolver> resolver = new PromiseResolver(docPromise);
-  aInnerPromise->AppendNativeHandler(resolver);
-  return docPromise.forget();
-}
-
 NS_IMETHODIMP
 DocumentL10n::HandleEvent(Event* aEvent)
 {
@@ -211,7 +136,7 @@ DocumentL10n::FormatMessages(JSContext* aCx, const Sequence<L10nKey>& aKeys, Err
     return nullptr;
   }
 
-  return MaybeWrapPromise(promise);
+  return promise.forget();
 }
 
 already_AddRefed<Promise>
@@ -234,7 +159,7 @@ DocumentL10n::FormatValues(JSContext* aCx, const Sequence<L10nKey>& aKeys, Error
     return nullptr;
   }
 
-  return MaybeWrapPromise(promise);
+  return promise.forget();
 }
 
 already_AddRefed<Promise>
@@ -254,7 +179,7 @@ DocumentL10n::FormatValue(JSContext* aCx, const nsAString& aId, const Optional<J
     aRv.Throw(rv);
     return nullptr;
   }
-  return MaybeWrapPromise(promise);
+  return promise.forget();
 }
 
 void
@@ -310,7 +235,7 @@ DocumentL10n::TranslateFragment(nsINode& aNode, ErrorResult& aRv)
     aRv.Throw(rv);
     return nullptr;
   }
-  return MaybeWrapPromise(promise);
+  return promise.forget();
 }
 
 already_AddRefed<Promise>
@@ -327,7 +252,7 @@ DocumentL10n::TranslateElements(const Sequence<OwningNonNull<Element>>& aElement
   if (aRv.Failed()) {
     return nullptr;
   }
-  return MaybeWrapPromise(promise);
+  return promise.forget();
 }
 
 class L10nReadyHandler final : public PromiseNativeHandler

@@ -107,7 +107,6 @@
 #include "nsChildContentList.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "xpcprivate.h"
 
 #include "XPathGenerator.h"
 
@@ -3145,18 +3144,7 @@ public:
         }
       }
     }
-
-    JS::RootedObject sourceScope(aCx, JS::CurrentGlobalOrNull(aCx));
-
-    AutoEntryScript aes(mReturnValuePromise->GetParentObject(), "Promise resolution");
-    JSContext* cx = aes.cx();
-    JS::Rooted<JS::Value> result(cx, JS::ObjectValue(*untranslatedElements));
-
-    xpc::StackScopedCloneOptions options;
-    options.wrapReflectors = true;
-    StackScopedClone(cx, options, sourceScope, &result);
-
-    mReturnValuePromise->MaybeResolve(result);
+    mReturnValuePromise->MaybeResolve(untranslatedElements);
   }
 
   virtual void
