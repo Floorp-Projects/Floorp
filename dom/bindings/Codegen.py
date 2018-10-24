@@ -2973,13 +2973,20 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         # if we don't need to create anything, why are we generating this?
         assert needInterfaceObject or needInterfacePrototypeObject
 
+        def maybecrash(reason):
+            if self.descriptor.name == "Document":
+                return 'MOZ_CRASH("Bug 1405521/1488480: %s");\n' % reason
+            return ""
+
         getParentProto = fill(
             """
             JS::${type}<JSObject*> parentProto(${getParentProto});
             if (!parentProto) {
+              $*{maybeCrash}
               return;
             }
             """,
+            maybeCrash=maybecrash("Can't get Node.prototype"),
             type=parentProtoType,
             getParentProto=getParentProto)
 
@@ -2987,9 +2994,11 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             """
             JS::${type}<JSObject*> constructorProto(${getConstructorProto});
             if (!constructorProto) {
+              $*{maybeCrash}
               return;
             }
             """,
+            maybeCrash=maybecrash("Can't get Node"),
             type=constructorProtoType,
             getConstructorProto=getConstructorProto)
 
@@ -3005,7 +3014,12 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                            for properties in idsToInit]
             idsInitedFlag = CGGeneric("static bool sIdsInited = false;\n")
             setFlag = CGGeneric("sIdsInited = true;\n")
-            initIdConditionals = [CGIfWrapper(CGGeneric("return;\n"), call)
+            initIdConditionals = [CGIfWrapper(CGGeneric(fill(
+                """
+                $*{maybeCrash}
+                return;
+                """,
+                maybeCrash=maybecrash("Can't init IDs"))), call)
                                   for call in initIdCalls]
             initIds = CGList([idsInitedFlag,
                               CGIfWrapper(CGList(initIdConditionals + [setFlag]),
@@ -3208,10 +3222,12 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                   JS::Rooted<JSObject*> holderProto(aCx, ${holderProto});
                   unforgeableHolder = JS_NewObjectWithoutMetadata(aCx, ${holderClass}, holderProto);
                   if (!unforgeableHolder) {
+                    $*{maybeCrash}
                     $*{failureCode}
                   }
                 }
                 """,
+                maybeCrash=maybecrash("Can't create unforgeable holder"),
                 holderProto=holderProto,
                 holderClass=holderClass,
                 failureCode=failureCode))
@@ -3547,12 +3563,22 @@ def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode,
 
     unforgeables = []
 
+    if descriptor.name == "Document":
+        maybeCrash = dedent(
+            """
+            MOZ_CRASH("Bug 1405521/1488480: Can't define unforgeable attributes");
+            """);
+    else:
+        maybeCrash = "";
+
     defineUnforgeableAttrs = fill(
         """
         if (!DefineUnforgeableAttributes(aCx, ${holderName}, %s)) {
+          $*{maybeCrash}
           $*{failureCode}
         }
         """,
+        maybeCrash=maybeCrash,
         failureCode=failureCode,
         holderName=holderName)
     defineUnforgeableMethods = fill(
