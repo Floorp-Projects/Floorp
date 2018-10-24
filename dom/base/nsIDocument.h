@@ -4771,6 +4771,9 @@ protected:
   // document lightweight theme for use with :-moz-lwtheme, :-moz-lwtheme-brighttext
   // and :-moz-lwtheme-darktext
   DocumentTheme                         mDocLWTheme;
+
+  // Pres shell resolution saved before entering fullscreen mode.
+  float mSavedResolution;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
