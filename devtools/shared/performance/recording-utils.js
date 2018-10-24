@@ -12,7 +12,7 @@ function mapRecordingOptions(type, options) {
   if (type === "profiler") {
     return {
       entries: options.bufferSize,
-      interval: options.sampleFrequency ? (1000 / (options.sampleFrequency * 1000))
+      interval: options.sampleFrequency ? (1000 / options.sampleFrequency)
                                         : void 0,
     };
   }

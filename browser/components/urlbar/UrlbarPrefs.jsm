@@ -97,11 +97,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Results will include the user's history when this is true.
   ["suggest.history", true],
 
-  // Results will include the user's history when this is true, but only those
-  // URLs with the "typed" flag (which includes but isn't limited to URLs the
-  // user has typed in the urlbar).
-  ["suggest.history.onlyTyped", false],
-
   // Results will include switch-to-tab results when this is true.
   ["suggest.openpage", true],
 
@@ -131,12 +126,14 @@ const PREF_OTHER_DEFAULTS = new Map([
   ["keyword.enabled", true],
 ]);
 
-const TYPES = [
-  "history",
-  "bookmark",
-  "openpage",
-  "searches",
-];
+// Maps preferences under browser.urlbar.suggest to behavior names, as defined
+// in mozIPlacesAutoComplete.
+const SUGGEST_PREF_TO_BEHAVIOR = {
+  history: "history",
+  bookmark: "bookmark",
+  openpage: "openpage",
+  searches: "search",
+};
 
 const PREF_TYPES = new Map([
   ["boolean", "Bool"],
@@ -211,8 +208,6 @@ class Preferences {
     // Some prefs may influence others.
     if (pref == "matchBuckets") {
       this._map.delete("matchBucketsSearch");
-    } else if (pref == "suggest.history") {
-      this._map.delete("suggest.history.onlyTyped");
     }
     if (pref == "autocomplete.enabled" || pref.startsWith("suggest.")) {
       this._map.delete("defaultBehavior");
@@ -293,16 +288,11 @@ class Preferences {
         }
         return this.get("matchBuckets");
       }
-      case "suggest.history.onlyTyped": {
-        // If history is not set, onlyTyped value should be ignored.
-        return this.get("suggest.history") && this._readPref(pref);
-      }
       case "defaultBehavior": {
         let val = 0;
-        for (let type of [...TYPES, "history.onlyTyped"]) {
-          let behavior = type == "history.onlyTyped" ? "TYPED" : type.toUpperCase();
-          val |= this.get("suggest." + type) &&
-                 Ci.mozIPlacesAutoComplete["BEHAVIOR_" + behavior];
+        for (let type of Object.keys(SUGGEST_PREF_TO_BEHAVIOR)) {
+          let behavior = `BEHAVIOR_${SUGGEST_PREF_TO_BEHAVIOR[type].toUpperCase()}`;
+          val |= this.get("suggest." + type) && Ci.mozIPlacesAutoComplete[behavior];
         }
         return val;
       }
@@ -313,8 +303,7 @@ class Preferences {
         // bookmarks are disabled, it defaults to open pages.
         let val = Ci.mozIPlacesAutoComplete.BEHAVIOR_RESTRICT;
         if (this.get("suggest.history")) {
-          val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_HISTORY |
-                Ci.mozIPlacesAutoComplete.BEHAVIOR_TYPED;
+          val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_HISTORY;
         } else if (this.get("suggest.bookmark")) {
           val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_BOOKMARK;
         } else {
@@ -352,22 +341,23 @@ class Preferences {
     this._linkingPrefs = true;
     try {
       let branch = Services.prefs.getBranch(PREF_URLBAR_BRANCH);
+      const SUGGEST_PREFS = Object.keys(SUGGEST_PREF_TO_BEHAVIOR);
       if (changedPref.startsWith("suggest.")) {
         // A suggest pref changed, fix autocomplete.enabled.
         branch.setBoolPref("autocomplete.enabled",
-                          TYPES.some(type => this.get("suggest." + type)));
+                           SUGGEST_PREFS.some(type => this.get("suggest." + type)));
       } else if (this.get("autocomplete.enabled")) {
         // If autocomplete is enabled and all of the suggest.* prefs are
         // disabled, reset the suggest.* prefs to their default value.
-        if (TYPES.every(type => !this.get("suggest." + type))) {
-          for (let type of TYPES) {
+        if (SUGGEST_PREFS.every(type => !this.get("suggest." + type))) {
+          for (let type of SUGGEST_PREFS) {
             let def = PREF_URLBAR_DEFAULTS.get("suggest." + type);
             branch.setBoolPref("suggest." + type, def);
           }
         }
       } else {
         // If autocomplete is disabled, deactivate all suggest preferences.
-        for (let type of TYPES) {
+        for (let type of SUGGEST_PREFS) {
           branch.setBoolPref("suggest." + type, false);
         }
       }

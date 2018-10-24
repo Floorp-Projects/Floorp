@@ -5,7 +5,6 @@ const ENGINE_NAME = "engine-suggestions.xml";
 const SERVER_PORT = 9000;
 const SUGGEST_PREF = "browser.urlbar.suggest.searches";
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
-const SUGGEST_RESTRICT_TOKEN = "$";
 
 var suggestionsFn;
 var previousSuggestionsFn;
@@ -297,11 +296,12 @@ add_task(async function restrictToken() {
 
   // Now do a restricted search to make sure only suggestions appear.
   await check_autocomplete({
-    search: SUGGEST_RESTRICT_TOKEN + " hello",
+    search: `${UrlbarTokenizer.RESTRICT.SEARCH} hello`,
     searchParam: "enable-actions",
     matches: [
       // TODO (bug 1177895) This is wrong.
-      makeSearchMatch(SUGGEST_RESTRICT_TOKEN + " hello", { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchMatch(`${UrlbarTokenizer.RESTRICT.SEARCH} hello`,
+                      { engineName: ENGINE_NAME, heuristic: true }),
       {
         uri: makeActionURI(("searchengine"), {
           engineName: ENGINE_NAME,

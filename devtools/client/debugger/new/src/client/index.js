@@ -15,6 +15,8 @@ var _dbg = require("../utils/dbg");
 
 var _bootstrap = require("../utils/bootstrap");
 
+var _breakpoints = require("../reducers/breakpoints");
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -31,12 +33,29 @@ function loadFromPrefs(actions) {
   }
 }
 
+function syncXHRBreakpoints() {
+  _prefs.asyncStore.xhrBreakpoints.then(bps => {
+    bps.forEach(({
+      path,
+      method,
+      disabled
+    }) => {
+      if (!disabled) {
+        firefox.clientCommands.setXHRBreakpoint(path, method);
+      }
+    });
+  });
+}
+
 async function loadInitialState() {
   const pendingBreakpoints = await _prefs.asyncStore.pendingBreakpoints;
   const tabs = await _prefs.asyncStore.tabs;
+  const xhrBreakpoints = await _prefs.asyncStore.xhrBreakpoints;
+  const breakpoints = (0, _breakpoints.initialBreakpointsState)(xhrBreakpoints);
   return {
     pendingBreakpoints,
-    tabs
+    tabs,
+    breakpoints
   };
 }
 
@@ -62,6 +81,7 @@ async function onConnect(connection, {
   const workers = (0, _bootstrap.bootstrapWorkers)();
   await firefox.onConnect(connection, actions);
   await loadFromPrefs(actions);
+  syncXHRBreakpoints();
   (0, _dbg.setupHelper)({
     store,
     actions,

@@ -43,10 +43,25 @@ var UrlbarTokenizer = {
     RESTRICT_BOOKMARK: 5,
     RESTRICT_TAG: 6,
     RESTRICT_OPENPAGE: 7,
-    RESTRICT_TYPED: 8,
-    RESTRICT_SEARCH: 9,
-    RESTRICT_TITLE: 10,
-    RESTRICT_URL: 11,
+    RESTRICT_SEARCH: 8,
+    RESTRICT_TITLE: 9,
+    RESTRICT_URL: 10,
+  },
+
+  // The special characters below can be typed into the urlbar to restrict
+  // the search to a certain category, like history, bookmarks or open pages; or
+  // to force a match on just the title or url.
+  // These restriction characters can be typed alone, or at word boundaries,
+  // provided their meaning cannot be confused, for example # could be present
+  // in a valid url, and thus it should not be interpreted as a restriction.
+  RESTRICT: {
+    HISTORY: "^",
+    BOOKMARK: "*",
+    TAG: "+",
+    OPENPAGE: "%",
+    SEARCH: "?",
+    TITLE: "#",
+    URL: "$",
   },
 
   /**
@@ -168,22 +183,11 @@ var UrlbarTokenizer = {
   },
 };
 
-// The special characters below can be typed into the urlbar to restrict
-// the search to a certain category, like history, bookmarks or open pages; or
-// to force a match on just the title or url.
-// These restriction characters can be typed alone, or at word boundaries,
-// provided their meaning cannot be confused, for example # could be present
-// in a valid url, and thus it should not be interpreted as a restriction.
-UrlbarTokenizer.CHAR_TO_TYPE_MAP = new Map([
-  ["^", UrlbarTokenizer.TYPE.RESTRICT_HISTORY],
-  ["*", UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK],
-  ["+", UrlbarTokenizer.TYPE.RESTRICT_TAG],
-  ["%", UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE],
-  ["~", UrlbarTokenizer.TYPE.RESTRICT_TYPED],
-  ["$", UrlbarTokenizer.TYPE.RESTRICT_SEARCH],
-  ["#", UrlbarTokenizer.TYPE.RESTRICT_TITLE],
-  ["@", UrlbarTokenizer.TYPE.RESTRICT_URL],
-]);
+const CHAR_TO_TYPE_MAP = new Map(
+  Object.entries(UrlbarTokenizer.RESTRICT).map(
+    ([type, char]) => [ char, UrlbarTokenizer.TYPE[`RESTRICT_${type}`] ]
+  )
+);
 
 /**
  * Given a search string, splits it into string tokens.
@@ -195,8 +199,8 @@ function splitString(searchString) {
   // The first step is splitting on unicode whitespaces.
   let tokens = searchString.trim().split(UrlbarTokenizer.REGEXP_SPACES);
   let accumulator = [];
-  let hasRestrictionToken = tokens.some(t => UrlbarTokenizer.CHAR_TO_TYPE_MAP.has(t));
-  let chars = Array.from(UrlbarTokenizer.CHAR_TO_TYPE_MAP.keys()).join("");
+  let hasRestrictionToken = tokens.some(t => CHAR_TO_TYPE_MAP.has(t));
+  let chars = Array.from(CHAR_TO_TYPE_MAP.keys()).join("");
   logger.debug("Restriction chars", chars);
   for (let token of tokens) {
     // It's possible we have to split a token, if there's no separate restriction
@@ -248,7 +252,7 @@ function filterTokens(tokens) {
       value: token,
       type: UrlbarTokenizer.TYPE.TEXT,
     };
-    let restrictionType = UrlbarTokenizer.CHAR_TO_TYPE_MAP.get(token);
+    let restrictionType = CHAR_TO_TYPE_MAP.get(token);
     if (tokens.length > 1 &&
         restrictionType &&
         foundRestriction.length == 0 ||
