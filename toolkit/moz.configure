@@ -471,7 +471,7 @@ option('--enable-eme',
        nargs='*',
        choices=('widevine',),
        default=eme_default,
-       help='Enable support for Encrypted Media Extensions')
+       help='{Enable|Disable} support for Encrypted Media Extensions')
 
 @depends('--enable-eme', target)
 def enable_eme(value, target):
