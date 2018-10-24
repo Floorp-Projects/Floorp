@@ -28,6 +28,7 @@ ChromeUtils.import("resource://testing-common/httpd.js");
 XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
 });
 
 const TITLE_SEARCH_ENGINE_SEPARATOR = " \u00B7\u2013\u00B7 ";
