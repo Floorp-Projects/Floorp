@@ -17,20 +17,21 @@ import android.util.AttributeSet
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.DownloadListener
+import android.webkit.PermissionRequest
 import android.webkit.SslErrorHandler
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
-import android.webkit.WebViewClient
-import android.webkit.ValueCallback
 import android.webkit.WebView.HitTestResult.EMAIL_TYPE
 import android.webkit.WebView.HitTestResult.GEO_TYPE
 import android.webkit.WebView.HitTestResult.IMAGE_TYPE
 import android.webkit.WebView.HitTestResult.PHONE_TYPE
 import android.webkit.WebView.HitTestResult.SRC_ANCHOR_TYPE
 import android.webkit.WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE
+import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.errorpages.ErrorType
@@ -256,6 +257,7 @@ class SystemEngineView @JvmOverloads constructor(
 
     private fun isLowOnMemory() = testLowMemory || (context?.isOSOnLowMemory() == true)
 
+    @Suppress("ComplexMethod")
     private fun createWebChromeClient() = object : WebChromeClient() {
         override fun getVisitedHistory(callback: ValueCallback<Array<String>>) {
             // TODO private browsing not supported for SystemEngine
@@ -292,6 +294,16 @@ class SystemEngineView @JvmOverloads constructor(
         override fun onHideCustomView() {
             removeFullScreenView()
             session?.internalNotifyObservers { onFullScreenChange(false) }
+        }
+
+        override fun onPermissionRequest(request: PermissionRequest) {
+            if (request.resources.contains(PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID)) {
+                // For now we automatically grant playing protected media (EME APIs).
+                // See https://github.com/mozilla-mobile/android-components/issues/1128
+                request.grant(arrayOf(PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID))
+            } else {
+                super.onPermissionRequest(request)
+            }
         }
     }
 
