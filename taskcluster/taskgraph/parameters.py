@@ -59,7 +59,6 @@ PARAMETERS = {
     'head_ref': get_head_ref,
     'head_repository': 'https://hg.mozilla.org/mozilla-central',
     'head_rev': get_head_ref,
-    'include_nightly': False,
     'level': '3',
     'message': '',
     'moz_build_date': lambda: datetime.now().strftime("%Y%m%d%H%M%S"),
