@@ -328,9 +328,13 @@ MARKUPMAP(q,
           New_HyperText,
           0)
 
-MARKUPMAP(section,
-          New_HyperText,
-          roles::SECTION)
+MARKUPMAP(
+  section,
+  [](Element* aElement, Accessible* aContext) -> Accessible* {
+     return new HTMLSectionAccessible(aElement, aContext->Document());
+  },
+  0
+)
 
 MARKUPMAP(summary,
           New_HTMLSummary,
