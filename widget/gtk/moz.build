@@ -108,16 +108,11 @@ if CONFIG['ACCESSIBILITY']:
         'maiRedundantObjectFactory.c',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
-    UNIFIED_SOURCES += [
-        'gtk2drawing.c',
-    ]
-else:
-    UNIFIED_SOURCES += [
-        'gtk3drawing.cpp',
-        'nsApplicationChooser.cpp',
-        'WidgetStyleCache.cpp',
-    ]
+UNIFIED_SOURCES += [
+    'gtk3drawing.cpp',
+    'nsApplicationChooser.cpp',
+    'WidgetStyleCache.cpp',
+]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
