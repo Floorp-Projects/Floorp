@@ -111,6 +111,10 @@ function runtimesReducer(state = RuntimesState(), action) {
     case USB_RUNTIMES_UPDATED: {
       const { runtimes } = action;
       const usbRuntimes = runtimes.map(runtime => {
+        const existingRuntime = findRuntimeById(runtime.id, state);
+        const existingRuntimeDetails =
+          existingRuntime ? existingRuntime.runtimeDetails : null;
+
         return {
           id: runtime.id,
           extra: {
@@ -118,6 +122,7 @@ function runtimesReducer(state = RuntimesState(), action) {
             deviceName: runtime.deviceName,
           },
           name: runtime.shortName,
+          runtimeDetails: existingRuntimeDetails,
           type: RUNTIMES.USB,
         };
       });
