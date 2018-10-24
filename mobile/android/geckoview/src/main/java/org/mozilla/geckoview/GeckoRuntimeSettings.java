@@ -562,7 +562,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
     }
 
     /**
-     * Gets the locale code in Gecko format ("en" or "en-US").
+     * @return The locale code in Gecko format ("en" or "en-US").
      */
     public String getLocale() {
         return mLocale;
