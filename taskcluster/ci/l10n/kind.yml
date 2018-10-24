@@ -167,7 +167,7 @@ job-template:
                     - single_locale/tc_common.py
                     - single_locale/tc_android-api-16.py
                     - single_locale/onchange.py
-                # no default, so we fail on new entries
+        # no default, so we fail on new entries
         actions:
             by-build-platform:
                 default: ['clone-locales', 'list-locales', 'setup', 'repack',
