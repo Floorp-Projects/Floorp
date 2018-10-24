@@ -72,7 +72,7 @@ l10n_description_schema = Schema({
         Optional('config-paths'): [basestring],
 
         # Options to pass to the mozharness script
-        Required('options'): _by_platform([basestring]),
+        Optional('options'): _by_platform([basestring]),
 
         # Action commands to provide to mozharness script
         Required('actions'): _by_platform([basestring]),

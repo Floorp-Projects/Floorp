@@ -51,13 +51,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
          "help": "Override the tags set for all repos"
          }
     ], [
-        ['--revision', ],
-        {"action": "store",
-         "dest": "revision",
-         "type": "string",
-         "help": "Override the gecko revision to use (otherwise use automation supplied"
-                 " value, or en-US revision) "}
-    ], [
         ['--scm-level'],
         {"action": "store",
          "type": "int",
@@ -91,7 +84,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
         )
         self.base_package_name = None
         self.repack_env = None
-        self.revision = None
         self.upload_env = None
         self.upload_urls = {}
 
@@ -127,26 +119,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
                                     replace_dict=dict(self.config))
         self.upload_env = upload_env
         return self.upload_env
-
-    def query_revision(self):
-        """ Get the gecko revision in this order of precedence
-              * cached value
-              * command line arg --revision   (development, taskcluster)
-              * from the en-US build          (m-c & m-a)
-
-        This will fail the last case if the build hasn't been pulled yet.
-        """
-        if self.revision:
-            return self.revision
-
-        config = self.config
-        revision = None
-        if config.get("revision"):
-            revision = config["revision"]
-        if not revision:
-            self.fatal("Can't determine revision!")
-        self.revision = str(revision)
-        return self.revision
 
     def _query_make_variable(self, variable, make_args=None):
         make = self.query_exe('make')
