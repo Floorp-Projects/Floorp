@@ -391,7 +391,7 @@ impl<T, U> Polygon<T, U> where
             let denom = pb.dot(pb);
             if !denom.approx_eq(&T::zero()) {
                 let t = pr.dot(pb) / denom;
-                if t > T::zero() && t < T::one() {
+                if t > T::approx_epsilon() && t < T::one() - T::approx_epsilon() {
                     *cut = Some(a + (b - a) * t);
                 }
             }

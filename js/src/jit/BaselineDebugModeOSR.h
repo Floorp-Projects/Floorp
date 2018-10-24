@@ -106,14 +106,14 @@ struct BaselineDebugModeOSRInfo
     uint8_t* resumeAddr;
     jsbytecode* pc;
     PCMappingSlotInfo slotInfo;
-    ICEntry::Kind frameKind;
+    RetAddrEntry::Kind frameKind;
 
     // Filled in by SyncBaselineDebugModeOSRInfo.
     uintptr_t stackAdjust;
     Value valueR0;
     Value valueR1;
 
-    BaselineDebugModeOSRInfo(jsbytecode* pc, ICEntry::Kind kind)
+    BaselineDebugModeOSRInfo(jsbytecode* pc, RetAddrEntry::Kind kind)
       : resumeAddr(nullptr),
         pc(pc),
         slotInfo(0),

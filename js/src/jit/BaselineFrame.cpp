@@ -150,12 +150,13 @@ BaselineFrame::initForOsr(InterpreterFrame* fp, uint32_t numStackValues)
 
         // The caller pushed a fake return address. ScriptFrameIter, used by the
         // debugger, wants a valid return address, but it's okay to just pick one.
-        // In debug mode there's always at least 1 ICEntry (since there are always
-        // debug prologue/epilogue calls).
+        // In debug mode there's always at least one RetAddrEntry (since there are
+        // always debug prologue/epilogue calls).
         JSJitFrameIter frame(cx->activation()->asJit());
         MOZ_ASSERT(frame.returnAddress() == nullptr);
         BaselineScript* baseline = fp->script()->baselineScript();
-        frame.current()->setReturnAddress(baseline->returnAddressForIC(baseline->icEntry(0)));
+        uint8_t* retAddr = baseline->returnAddressForEntry(baseline->retAddrEntry(0));
+        frame.current()->setReturnAddress(retAddr);
 
         if (!Debugger::handleBaselineOsr(cx, fp, this)) {
             return false;

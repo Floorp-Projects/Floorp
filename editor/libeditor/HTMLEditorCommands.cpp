@@ -275,23 +275,12 @@ StyleUpdatingCommand::ToggleState(HTMLEditor* aHTMLEditor)
     return NS_OK;
   }
 
-  // Superscript and Subscript styles are mutually exclusive.
-  AutoTransactionBatch bundleAllTransactions(*aHTMLEditor);
-
-  if (mTagName == nsGkAtoms::sub || mTagName == nsGkAtoms::sup) {
-    nsresult rv = aHTMLEditor->RemoveInlineProperty(mTagName, nullptr);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
   nsresult rv =
-    aHTMLEditor->SetInlineProperty(*mTagName, nullptr, EmptyString());
+    aHTMLEditor->SetInlinePropertyAsAction(*mTagName, nullptr, EmptyString());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-
-  return rv;
+  return NS_OK;
 }
 
 ListCommand::ListCommand(nsAtom* aTagName)
@@ -746,8 +735,9 @@ FontFaceStateCommand::SetState(HTMLEditor* aHTMLEditor,
 
   if (newState.EqualsLiteral("tt")) {
     // The old "teletype" attribute
-    nsresult rv = aHTMLEditor->SetInlineProperty(*nsGkAtoms::tt, nullptr,
-                                                 EmptyString());
+    nsresult rv =
+      aHTMLEditor->SetInlinePropertyAsAction(*nsGkAtoms::tt, nullptr,
+                                             EmptyString());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -773,9 +763,8 @@ FontFaceStateCommand::SetState(HTMLEditor* aHTMLEditor,
     return NS_OK;
   }
 
-  rv = aHTMLEditor->SetInlineProperty(*nsGkAtoms::font,
-                                      nsGkAtoms::face,
-                                      newState);
+  rv = aHTMLEditor->SetInlinePropertyAsAction(*nsGkAtoms::font, nsGkAtoms::face,
+                                              newState);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -836,9 +825,9 @@ FontSizeStateCommand::SetState(HTMLEditor* aHTMLEditor,
   if (!newState.IsEmpty() &&
       !newState.EqualsLiteral("normal") &&
       !newState.EqualsLiteral("medium")) {
-    nsresult rv = aHTMLEditor->SetInlineProperty(*nsGkAtoms::font,
-                                                 nsGkAtoms::size,
-                                                 newState);
+    nsresult rv =
+      aHTMLEditor->SetInlinePropertyAsAction(*nsGkAtoms::font, nsGkAtoms::size,
+                                             newState);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -909,9 +898,9 @@ FontColorStateCommand::SetState(HTMLEditor* aHTMLEditor,
     return NS_OK;
   }
 
-  nsresult rv = aHTMLEditor->SetInlineProperty(*nsGkAtoms::font,
-                                               nsGkAtoms::color,
-                                               newState);
+  nsresult rv =
+    aHTMLEditor->SetInlinePropertyAsAction(*nsGkAtoms::font, nsGkAtoms::color,
+                                           newState);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -961,9 +950,9 @@ HighlightColorStateCommand::SetState(HTMLEditor* aHTMLEditor,
     return NS_OK;
   }
 
-  nsresult rv = aHTMLEditor->SetInlineProperty(*nsGkAtoms::font,
-                                               nsGkAtoms::bgcolor,
-                                               newState);
+  nsresult rv =
+    aHTMLEditor->SetInlinePropertyAsAction(*nsGkAtoms::font, nsGkAtoms::bgcolor,
+                                           newState);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

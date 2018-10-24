@@ -6,7 +6,7 @@
 #include "TextServicesDocument.h"
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/EditorUtils.h"        // for AutoTransactionBatch
+#include "mozilla/EditorUtils.h"        // for AutoTransactionBatchExternal
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
@@ -1148,12 +1148,9 @@ TextServicesDocument::InsertText(const nsString* aText)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // AutoTransactionBatch grabs mTextEditor, so, we don't need to grab the
-  // instance with local variable here.
-  // XXX Well, do we really need to create AutoTransactionBatch here?
-  //     Looks like that after InsertTextAsAction(), this does nothing
-  //     from a point of view of editor.
-  AutoTransactionBatch bundleAllTransactions(*mTextEditor);
+  // AutoTransactionBatchExternal grabs mTextEditor, so, we don't need to grab
+  // the instance with local variable here.
+  AutoTransactionBatchExternal treatAsOneTransaction(*mTextEditor);
 
   nsresult rv = mTextEditor->InsertTextAsAction(*aText);
   if (NS_FAILED(rv)) {
