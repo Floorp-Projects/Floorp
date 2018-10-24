@@ -154,7 +154,7 @@ var dialog = {
       let gIOSvc = Cc["@mozilla.org/gio-service;1"]
                      .getService(Ci.nsIGIOService);
       var gioApps = gIOSvc.getAppsForURIScheme(this._URI.scheme);
-      for (let handler of gioApps.enumerate()) {
+      for (let handler of gioApps.enumerate(Ci.nsIHandlerApp)) {
         // OS handler share the same name, it's most likely the same app, skipping...
         if (handler.name == this._handlerInfo.defaultDescription) {
           continue;
