@@ -17,13 +17,29 @@
 #include "nsIDocument.h"
 #include "nsINode.h"
 #include "mozIDOMLocalization.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 
 namespace mozilla {
 namespace dom {
 
 class Element;
-class Promise;
 struct L10nKey;
+
+class PromiseResolver final : public PromiseNativeHandler
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  explicit PromiseResolver(Promise* aPromise);
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+
+protected:
+  virtual ~PromiseResolver();
+
+  RefPtr<Promise> mPromise;
+};
 
 enum class DocumentL10nState
 {
@@ -60,6 +76,8 @@ protected:
   RefPtr<Promise> mReady;
   DocumentL10nState mState;
   nsCOMPtr<mozIDOMLocalization> mDOMLocalization;
+
+  already_AddRefed<Promise> MaybeWrapPromise(Promise* aPromise);
 
 public:
   nsIDocument* GetParentObject() const { return mDocument; };
