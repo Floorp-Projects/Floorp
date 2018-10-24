@@ -13,10 +13,6 @@ using namespace mozilla;
 void
 nsViewportInfo::ConstrainViewportValues()
 {
-  // Constrain the min/max zoom as specified at:
-  // dev.w3.org/csswg/css-device-adapt section 6.2
-  mMaxZoom = std::max(mMinZoom, mMaxZoom);
-
   if (mDefaultZoom > mMaxZoom) {
     mDefaultZoomValid = false;
     mDefaultZoom = mMaxZoom;
