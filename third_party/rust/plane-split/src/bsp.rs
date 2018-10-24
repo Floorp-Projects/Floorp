@@ -20,12 +20,13 @@ impl<T, U> BspPlane for Polygon<T, U> where
         debug!("\tCutting anchor {} by {}", poly.anchor, self.anchor);
         trace!("\t\tbase {:?}", self.plane);
 
-        let (intersection, dist) = if self.plane.normal
-            .dot(poly.plane.normal)
-            .approx_eq(&T::one())
-        {
-            debug!("\t\tNormals roughly match");
+        let ndot = self.plane.normal.dot(poly.plane.normal);
+        let (intersection, dist) = if ndot.approx_eq(&T::one()) {
+            debug!("\t\tNormals roughly point to the same direction");
             (Intersection::Coplanar, self.plane.offset - poly.plane.offset)
+        } else if ndot.approx_eq(&-T::one()) {
+            debug!("\t\tNormals roughly point to opposite directions");
+            (Intersection::Coplanar, self.plane.offset + poly.plane.offset)
         } else {
             let is = self.intersect(&poly);
             let dist = self.plane.signed_distance_sum_to(&poly);
