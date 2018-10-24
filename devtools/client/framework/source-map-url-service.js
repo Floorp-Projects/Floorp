@@ -61,7 +61,7 @@ SourceMapURLService.prototype._getLoadingPromise = function() {
       this._stylesheetsFront.on("stylesheet-added", this._onNewStyleSheet);
       const styleSheetsLoadingPromise =
           this._stylesheetsFront.getStyleSheets().then(sheets => {
-            sheets.forEach(this._onNewStyleSheet);
+            sheets.forEach(this._registerNewStyleSheet, this);
           }, () => {
             // Ignore any protocol-based errors.
           });
@@ -71,7 +71,7 @@ SourceMapURLService.prototype._getLoadingPromise = function() {
         // Ignore errors.  Register the sources we got; we can't rely on
         // an event to arrive if the source actor already existed.
         for (const source of sources) {
-          this._onSourceUpdated({source});
+          this._registerNewSource(source);
         }
       }, e => {
         // Also ignore any protocol-based errors.
@@ -92,6 +92,7 @@ SourceMapURLService.prototype.reset = function() {
   this._urls.clear();
   this._subscriptions.clear();
   this._idMap.clear();
+  this._loadingPromise = null;
 };
 
 /**
@@ -114,12 +115,28 @@ SourceMapURLService.prototype.destroy = function() {
  * A helper function that is called when a new source is available.
  */
 SourceMapURLService.prototype._onSourceUpdated = function(sourceEvent) {
+  const url = this._registerNewSource(sourceEvent.source);
+
+  if (url) {
+    // Subscribers might have been added for this file before the
+    // "source-updated" event was fired.
+    this._dispatchSubscribersForURL(url);
+  }
+};
+
+/**
+ * A helper function that registers a new source file with the service.
+ *
+ * @param {SourceActor} source The new source's actor.
+ * @returns {string | undefined} A URL for the registered file,
+ *        if registered successfully.
+ */
+SourceMapURLService.prototype._registerNewSource = function(source) {
   // Maybe we were shut down while waiting.
   if (!this._urls) {
     return;
   }
 
-  const { source } = sourceEvent;
   const { generatedUrl, url, actor: id, sourceMapURL } = source;
 
   // |generatedUrl| comes from the actor and is extracted from the
@@ -127,6 +144,8 @@ SourceMapURLService.prototype._onSourceUpdated = function(sourceEvent) {
   const seenUrl = generatedUrl || url;
   this._urls.set(seenUrl, { id, url: seenUrl, sourceMapURL });
   this._idMap.set(id, seenUrl);
+
+  return seenUrl;
 };
 
 /**
@@ -136,6 +155,23 @@ SourceMapURLService.prototype._onSourceUpdated = function(sourceEvent) {
  *        The new style sheet's actor.
  */
 SourceMapURLService.prototype._onNewStyleSheet = function(sheet) {
+  const url = this._registerNewStyleSheet(sheet);
+
+  if (url) {
+    // Subscribers might have been added for this file before the
+    // "stylesheet-added" event was fired.
+    this._dispatchSubscribersForURL(url);
+  }
+};
+
+/**
+ * A helper function that registers a new stylesheet with the service.
+ * @param {StyleSheetActor} sheet
+ *        The new style sheet's actor.
+ * @returns {string | undefined} A URL for the registered file,
+ *        if registered successfully.
+ */
+SourceMapURLService.prototype._registerNewStyleSheet = function(sheet) {
   // Maybe we were shut down while waiting.
   if (!this._urls) {
     return;
@@ -145,6 +181,8 @@ SourceMapURLService.prototype._onNewStyleSheet = function(sheet) {
   const url = href || nodeHref;
   this._urls.set(url, { id, url, sourceMapURL});
   this._idMap.set(id, url);
+
+  return url;
 };
 
 /**
@@ -167,17 +205,26 @@ SourceMapURLService.prototype.sourceMapChanged = function(id, newUrl) {
     // The source map URL here doesn't actually matter.
     this._urls.set(urlKey, { id, url: newUrl, sourceMapURL: "" });
 
-    // Walk over all the location subscribers, looking for any that
-    // are subscribed to a location coming from |urlKey|.  Then,
-    // re-notify any such subscriber by clearing the stored promise
-    // and forcing a re-evaluation.
-    for (const [, subscriptionEntry] of this._subscriptions) {
-      if (subscriptionEntry.url === urlKey) {
-        // Force an update.
-        subscriptionEntry.promise = null;
-        for (const callback of subscriptionEntry.callbacks) {
-          this._callOneCallback(subscriptionEntry, callback);
-        }
+    this._dispatchSubscribersForURL(urlKey);
+  }
+};
+
+/**
+ * A helper function that dispatches subscribers for a specific URL.
+ * @param {string} urlKey
+ *        The url to trigger subscribers for.
+ */
+SourceMapURLService.prototype._dispatchSubscribersForURL = function(urlKey) {
+  // Walk over all the location subscribers, looking for any that
+  // are subscribed to a location coming from |urlKey|.  Then,
+  // re-notify any such subscriber by clearing the stored promise
+  // and forcing a re-evaluation.
+  for (const [, subscriptionEntry] of this._subscriptions) {
+    if (subscriptionEntry.url === urlKey) {
+      // Force an update.
+      subscriptionEntry.promise = null;
+      for (const callback of subscriptionEntry.callbacks) {
+        this._callOneCallback(subscriptionEntry, callback);
       }
     }
   }
