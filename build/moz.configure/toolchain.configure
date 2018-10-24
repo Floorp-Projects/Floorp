@@ -9,8 +9,8 @@ imply_option('--enable-release', depends_if('MOZ_AUTOMATION')(lambda x: True))
 
 js_option('--enable-release',
           default=milestone.is_release_or_beta,
-          help='Build with more conservative, release engineering-oriented '
-               'options. This may slow down builds.')
+          help='{Build|Do not build} with more conservative, release '
+               'engineering-oriented options.{ This may slow down builds.|}')
 
 
 @depends('--enable-release')

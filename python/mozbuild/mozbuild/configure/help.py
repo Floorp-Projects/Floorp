@@ -40,7 +40,7 @@ class HelpFormatter(object):
         else:
             target.append('  %-24s  %s' % (opt, help))
 
-    RE_FORMAT = re.compile(r'{([^|}]+)\|([^|}]+)}')
+    RE_FORMAT = re.compile(r'{([^|}]*)\|([^|}]*)}')
 
     # Return formatted help text for --{enable,disable,with,without}-* options.
     #
