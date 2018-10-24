@@ -5496,8 +5496,13 @@ pref("urlclassifier.downloadBlockTable", "goog-badbinurl-proto");
 // Tables for login reputation
 pref("urlclassifier.passwordAllowTable", "goog-passwordwhite-proto");
 
-// Tables for tracking protection
+// Tables for anti-tracking features
+#ifdef EARLY_BETA_OR_EARLIER
+// Use the strict list for the default cookie restrictions in Nightly and early betas
+pref("urlclassifier.trackingAnnotationTable", "test-track-simple,base-track-digest256,content-track-digest256");
+#else
 pref("urlclassifier.trackingAnnotationTable", "test-track-simple,base-track-digest256");
+#endif
 pref("urlclassifier.trackingAnnotationWhitelistTable", "test-trackwhite-simple,mozstd-trackwhite-digest256");
 pref("urlclassifier.trackingTable", "test-track-simple,base-track-digest256");
 pref("urlclassifier.trackingWhitelistTable", "test-trackwhite-simple,mozstd-trackwhite-digest256");
