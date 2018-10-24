@@ -12,13 +12,14 @@ const {
 } = require("../constants");
 
 function UiState(locations = [], debugTargetCollapsibilities = {},
-                 networkEnabled = false) {
+                 networkEnabled = false, wifiEnabled = false) {
   return {
     adbAddonStatus: null,
     debugTargetCollapsibilities,
     networkEnabled,
     networkLocations: locations,
     selectedPage: null,
+    wifiEnabled,
   };
 }
 

@@ -82,6 +82,7 @@ interface mozIPlacesAutoComplete : nsISupports
 
   /**
    * Search for typed pages.
+   * No more supported by Firefox, it is still being used by comm-central clients.
    */
   const long BEHAVIOR_TYPED = 1 << 5;
 
@@ -105,7 +106,7 @@ interface mozIPlacesAutoComplete : nsISupports
   /**
    * Include search suggestions from the currently selected search provider.
    */
-  const long BEHAVIOR_SEARCHES = 1 << 9;
+  const long BEHAVIOR_SEARCH = 1 << 9;
 
   /**
    * Populate list of Preloaded Sites from JSON.
