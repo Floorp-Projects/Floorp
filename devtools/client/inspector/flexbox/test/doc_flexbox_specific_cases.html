@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+#grow-not-grow {
+  display:flex;
+  width:500px;
+  border:1px solid;
+}
+#grow-not-grow div:first-child {
+  flex-grow:1;
+  flex-basis:100px;
+  max-width:50px;
+}
+#grow-not-grow div:last-child {
+  flex-grow: 1;
+}
+</style>
+<div id="grow-not-grow">
+  <div>item 1</div>
+  <div>item 2</div>
+</div>
