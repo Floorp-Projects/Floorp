@@ -1066,7 +1066,10 @@ function _loadURI(browser, uri, params = {}) {
   try {
     if (!mustChangeProcess) {
       if (userContextId) {
-        browser.webNavigation.setOriginAttributesBeforeLoading({ userContextId });
+        browser.webNavigation.setOriginAttributesBeforeLoading({
+          userContextId,
+          privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(browser) ? 1 : 0,
+        });
       }
 
       browser.webNavigation.loadURIWithOptions(uri, flags,
@@ -1113,7 +1116,10 @@ function _loadURI(browser, uri, params = {}) {
       gBrowser.updateBrowserRemotenessByURL(browser, uri);
 
       if (userContextId) {
-        browser.webNavigation.setOriginAttributesBeforeLoading({ userContextId });
+        browser.webNavigation.setOriginAttributesBeforeLoading({
+          userContextId,
+          privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(browser) ? 1 : 0,
+        });
       }
 
       browser.webNavigation.loadURIWithOptions(uri, flags, referrerURI, referrerPolicy,
