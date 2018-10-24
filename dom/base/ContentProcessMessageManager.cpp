@@ -10,7 +10,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/ParentProcessMessageManager.h"
-#include "mozilla/dom/ResolveSystemBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ipc/SharedMap.h"
 
