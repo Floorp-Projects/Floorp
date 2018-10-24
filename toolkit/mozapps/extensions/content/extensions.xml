@@ -627,6 +627,10 @@
 
           <xul:hbox class="advancedinfo-container" flex="1">
             <xul:vbox class="description-outer-container" flex="1">
+              <xul:hbox class="description-container">
+                <xul:label anonid="description" class="description" crop="end" flex="1"/>
+                <xul:spacer flex="5000"/> <!-- Necessary to make the description crop -->
+              </xul:hbox>
               <xul:hbox class="relnotes-toggle-container">
                 <xul:button anonid="relnotes-toggle-btn" class="relnotes-toggle"
                             hidden="true" label="&cmd.showReleaseNotes.label;"
@@ -789,6 +793,10 @@
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "date-updated");
       </field>
+      <field name="_description">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "description");
+      </field>
       <field name="_stateMenulist">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "state-menulist");
@@ -909,6 +917,11 @@
             this._icon.src = iconURL;
           else
             this._icon.src = "";
+
+          if (this.mAddon.description)
+            this._description.value = this.mAddon.description;
+          else
+            this._description.hidden = true;
 
           let legacyWarning = legacyExtensionsEnabled && !this.mAddon.install &&
             isLegacyExtension(this.mAddon);
