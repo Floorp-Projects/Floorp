@@ -84,5 +84,5 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
 
   get _window() {
     return Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
-  }
+  },
 });
