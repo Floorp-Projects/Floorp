@@ -1142,13 +1142,6 @@ HyperTextAccessible::LandmarkRole() const
     return nsGkAtoms::main;
   }
 
-  // Only return xml-roles "region" if the section has an accessible name.
-  if (mContent->IsHTMLElement(nsGkAtoms::section)) {
-    nsAutoString name;
-    const_cast<HyperTextAccessible*>(this)->Name(name);
-    return name.IsEmpty() ? nullptr : nsGkAtoms::region;
-  }
-
   // Only return xml-roles "form" if the form has an accessible name.
   if (mContent->IsHTMLElement(nsGkAtoms::form)) {
     nsAutoString name;
