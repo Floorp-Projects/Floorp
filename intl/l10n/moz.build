@@ -32,6 +32,7 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += [
     '/dom/base',
+    '/js/xpconnect/src',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
