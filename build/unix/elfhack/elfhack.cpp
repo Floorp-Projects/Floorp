@@ -464,7 +464,7 @@ void set_relative_reloc(Elf_Rela *rel, Elf *elf, unsigned int value) {
     rel->r_addend = value;
 }
 
-void maybe_split_segment(Elf *elf, ElfSegment *segment, bool fill)
+void maybe_split_segment(Elf *elf, ElfSegment *segment)
 {
     std::list<ElfSection *>::iterator it = segment->begin();
     for (ElfSection *last = *(it++); it != segment->end(); last = *(it++)) {
@@ -484,44 +484,11 @@ void maybe_split_segment(Elf *elf, ElfSegment *segment, bool fill)
             phdr.p_memsz = (unsigned int)-1;
             ElfSegment *newSegment = new ElfSegment(&phdr);
             elf->insertSegmentAfter(segment, newSegment);
-            ElfSection *section = *it;
             for (; it != segment->end(); ++it) {
                 newSegment->addSection(*it);
             }
             for (it = newSegment->begin(); it != newSegment->end(); ++it) {
                 segment->removeSection(*it);
-            }
-            // Fill the virtual address space gap left between the two PT_LOADs
-            // with a new PT_LOAD with no permissions. This avoids the linker
-            // (especially bionic's) filling the gap with anonymous memory,
-            // which breakpad doesn't like.
-            // /!\ running strip on a elfhacked binary will break this filler
-            // PT_LOAD.
-            if (!fill)
-                break;
-            // Insert dummy segment to normalize the entire Elf with the header
-            // sizes adjusted, before inserting a filler segment.
-            {
-              memset(&phdr, 0, sizeof(phdr));
-              ElfSegment dummySegment(&phdr);
-              elf->insertSegmentAfter(segment, &dummySegment);
-              elf->normalize();
-              elf->removeSegment(&dummySegment);
-            }
-            ElfSection *previous = section->getPrevious();
-            phdr.p_type = PT_LOAD;
-            phdr.p_vaddr = (previous->getAddr() + previous->getSize() + segment->getAlign() - 1) & ~(segment->getAlign() - 1);
-            phdr.p_paddr = phdr.p_vaddr + segment->getVPDiff();
-            phdr.p_flags = 0;
-            phdr.p_align = 0;
-            phdr.p_filesz = (section->getAddr() & ~(newSegment->getAlign() - 1)) - phdr.p_vaddr;
-            phdr.p_memsz = phdr.p_filesz;
-            if (phdr.p_filesz) {
-                newSegment = new ElfSegment(&phdr);
-                assert(newSegment->isElfHackFillerSegment());
-                elf->insertSegmentAfter(segment, newSegment);
-            } else {
-                elf->normalize();
             }
             break;
         }
@@ -767,7 +734,7 @@ malformed:
 }
 
 template <typename Rel_Type>
-int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type2, bool force, bool fill)
+int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type2, bool force)
 {
     ElfDynamic_Section *dyn = elf->getDynSection();
     if (dyn == nullptr) {
@@ -1136,7 +1103,7 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     // Adjust PT_LOAD segments
     for (ElfSegment *segment = elf->getSegmentByType(PT_LOAD); segment;
          segment = elf->getSegmentByType(PT_LOAD, segment)) {
-        maybe_split_segment(elf, segment, fill);
+        maybe_split_segment(elf, segment);
     }
 
     // Ensure Elf sections will be at their final location.
@@ -1167,7 +1134,7 @@ static inline int backup_file(const char *name)
     return rename(name, fname.c_str());
 }
 
-void do_file(const char *name, bool backup = false, bool force = false, bool fill = false)
+void do_file(const char *name, bool backup = false, bool force = false)
 {
     std::ifstream file(name, std::ios::in|std::ios::binary);
     Elf elf(file);
@@ -1190,13 +1157,13 @@ void do_file(const char *name, bool backup = false, bool force = false, bool fil
     int exit = -1;
     switch (elf.getMachine()) {
     case EM_386:
-        exit = do_relocation_section<Elf_Rel>(&elf, R_386_RELATIVE, R_386_32, force, fill);
+        exit = do_relocation_section<Elf_Rel>(&elf, R_386_RELATIVE, R_386_32, force);
         break;
     case EM_X86_64:
-        exit = do_relocation_section<Elf_Rela>(&elf, R_X86_64_RELATIVE, R_X86_64_64, force, fill);
+        exit = do_relocation_section<Elf_Rela>(&elf, R_X86_64_RELATIVE, R_X86_64_64, force);
         break;
     case EM_ARM:
-        exit = do_relocation_section<Elf_Rel>(&elf, R_ARM_RELATIVE, R_ARM_ABS32, force, fill);
+        exit = do_relocation_section<Elf_Rel>(&elf, R_ARM_RELATIVE, R_ARM_ABS32, force);
         break;
     }
     if (exit == 0) {
@@ -1246,12 +1213,6 @@ void undo_file(const char *name, bool backup = false)
         return;
     }
     second = elf.getSegmentByType(PT_LOAD, first);
-    ElfSegment *filler = nullptr;
-    // If the second PT_LOAD is a filler from elfhack --fill, check the third.
-    if (second->isElfHackFillerSegment()) {
-        filler = second;
-        second = elf.getSegmentByType(PT_LOAD, filler);
-    }
     if (second->getFlags() != first->getFlags()) {
         fprintf(stderr, "Couldn't identify elfhacked PT_LOAD segments. Skipping\n");
         return;
@@ -1263,8 +1224,6 @@ void undo_file(const char *name, bool backup = false)
         first->addSection(*section);
 
     elf.removeSegment(second);
-    if (filler)
-        elf.removeSegment(filler);
 
     if (backup && backup_file(name) != 0) {
         fprintf(stderr, "Couln't create backup file\n");
@@ -1281,7 +1240,6 @@ int main(int argc, char *argv[])
     bool backup = false;
     bool force = false;
     bool revert = false;
-    bool fill = false;
     char *lastSlash = rindex(argv[0], '/');
     if (lastSlash != nullptr)
         rundir = strndup(argv[0], lastSlash - argv[0]);
@@ -1292,12 +1250,10 @@ int main(int argc, char *argv[])
             backup = true;
         else if (strcmp(argv[arg], "-r") == 0)
             revert = true;
-        else if (strcmp(argv[arg], "--fill") == 0)
-            fill = true;
         else if (revert) {
             undo_file(argv[arg], backup);
         } else
-            do_file(argv[arg], backup, force, fill);
+            do_file(argv[arg], backup, force);
     }
 
     free(rundir);
