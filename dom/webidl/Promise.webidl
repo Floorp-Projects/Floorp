@@ -14,7 +14,6 @@ callback AnyCallback = any (any value);
 
 // Hack to allow us to have JS owning and properly tracing/CCing/etc a
 // PromiseNativeHandler.
-[NoInterfaceObject,
- Exposed=(Window,Worker,System)]
+[NoInterfaceObject, Exposed=(Window,Worker)]
 interface PromiseNativeHandler {
 };
