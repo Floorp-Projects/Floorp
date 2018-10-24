@@ -19,9 +19,9 @@ add_task(async function test_javascript_match() {
   await PlacesTestUtils.addVisits([
     { uri: uri1, title: "title" },
     { uri: uri2, title: "title" },
-    { uri: uri3, title: "title", transition: TRANSITION_TYPED},
-    { uri: uri4, title: "title", transition: TRANSITION_TYPED },
-    { uri: uri6, title: "title", transition: TRANSITION_TYPED },
+    { uri: uri3, title: "title" },
+    { uri: uri4, title: "title" },
+    { uri: uri6, title: "title" },
     { uri: uri7, title: "title" },
   ]);
 
@@ -43,15 +43,16 @@ add_task(async function test_javascript_match() {
   await check_autocomplete({
     search: "foo",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("foo", { heuristic: true }),
-               { uri: uri1, title: "title" },
-               { uri: uri2, title: "title", style: ["bookmark"] },
-               { uri: uri3, title: "title" },
-               { uri: uri4, title: "title", style: ["bookmark"] },
-               { uri: uri5, title: "title", style: ["bookmark"] },
-               { uri: uri6, title: "title", style: ["bookmark"] },
-               makeSwitchToTabMatch("http://t.foo/6", { title: "title" }),
-             ],
+    matches: [
+      makeSearchMatch("foo", { heuristic: true }),
+      { uri: uri1, title: "title" },
+      { uri: uri2, title: "title", style: ["bookmark"] },
+      { uri: uri3, title: "title" },
+      { uri: uri4, title: "title", style: ["bookmark"] },
+      { uri: uri5, title: "title", style: ["bookmark"] },
+      { uri: uri6, title: "title", style: ["bookmark"] },
+      makeSwitchToTabMatch("http://t.foo/6", { title: "title" }),
+    ],
   });
 
   // Note the next few tests do *not* get a search result as enable-actions
@@ -59,18 +60,25 @@ add_task(async function test_javascript_match() {
   info("Match only history");
   await check_autocomplete({
     search: `foo ${UrlbarTokenizer.RESTRICT.HISTORY}`,
-    matches: [ { uri: uri1, title: "title" },
-               { uri: uri2, title: "title" },
-               { uri: uri3, title: "title" },
-               { uri: uri4, title: "title" },
-               { uri: uri7, title: "title" } ],
+    matches: [
+      { uri: uri1, title: "title" },
+      { uri: uri2, title: "title" },
+      { uri: uri3, title: "title" },
+      { uri: uri4, title: "title" },
+      { uri: uri7, title: "title" },
+    ],
   });
 
-  info("Drop-down empty search matches only typed history");
+  info("Drop-down empty search matches history sorted by frecency desc");
   await check_autocomplete({
     search: "",
-    matches: [ { uri: uri3, title: "title" },
-               { uri: uri4, title: "title" } ],
+    matches: [
+      { uri: uri7, title: "title" },
+      { uri: uri4, title: "title" },
+      { uri: uri3, title: "title" },
+      { uri: uri2, title: "title" },
+      { uri: uri1, title: "title" },
+    ],
   });
 
   info("Drop-down empty search matches only bookmarks");
@@ -78,10 +86,12 @@ add_task(async function test_javascript_match() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
   await check_autocomplete({
     search: "",
-    matches: [ { uri: uri2, title: "title", style: ["bookmark"] },
-               { uri: uri4, title: "title", style: ["bookmark"] },
-               { uri: uri5, title: "title", style: ["bookmark"] },
-               { uri: uri6, title: "title", style: ["bookmark"] } ],
+    matches: [
+      { uri: uri2, title: "title", style: ["bookmark"] },
+      { uri: uri4, title: "title", style: ["bookmark"] },
+      { uri: uri5, title: "title", style: ["bookmark"] },
+      { uri: uri6, title: "title", style: ["bookmark"] },
+    ],
   });
 
   info("Drop-down empty search matches only open tabs");
@@ -90,8 +100,8 @@ add_task(async function test_javascript_match() {
     search: "",
     searchParam: "enable-actions",
     matches: [
-               makeSwitchToTabMatch("http://t.foo/6", { title: "title" }),
-             ],
+      makeSwitchToTabMatch("http://t.foo/6", { title: "title" }),
+    ],
   });
 
   Services.prefs.clearUserPref("browser.urlbar.suggest.history");
