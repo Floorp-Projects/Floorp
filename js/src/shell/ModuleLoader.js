@@ -38,6 +38,10 @@ const ReflectLoader = new class {
     }
 
     resolve(name, referencingInfo) {
+        if (name === "") {
+            throw new ErrorClass("Invalid module specifier");
+        }
+
         if (this.isJavascriptURL(name) || os.path.isAbsolute(name)) {
             return name;
         }
