@@ -1,0 +1,146 @@
+[
+    {
+        "access": "hJWmvgAAAJMAAAApAAAAfgAAAHSwkNAnZGVwb3NpdKCgQCNpbnRAk6AnQWNjb3VudECQoEAkdm9pZECgoJKgIECwXAD/kgkiYXV0b3Rlc3Qvc3JjL21haW4vamF2YS9SYWNlcmQuamF2YZGgoJGwAjafTBegJHRoaXNAkAQcoKOglJOgBBpAsEBAQEAEAaCRkTBBY2NvdW50Lm1CYWxhbmNlQKAEF0A=",
+        "bug_class": "PROVER",
+        "bug_trace": [
+            {
+                "column_number": -1,
+                "description": "access to `this.Account.mBalance`",
+                "filename": "autotest/src/main/java/Racerd.java",
+                "level": 0,
+                "line_number": 28
+            }
+        ],
+        "bug_type": "THREAD_SAFETY_VIOLATION",
+        "bug_type_hum": "Thread Safety Violation",
+        "censored_reason": "",
+        "column": -1,
+        "file": "autotest/src/main/java/Racerd.java",
+        "hash": "6b62cb17008a3135d218108fa3123402",
+        "key": "Racerd.java|deposit|THREAD_SAFETY_VIOLATION",
+        "kind": "ERROR",
+        "line": 28,
+        "node_key": "9c5d6d9028928346cc4fb44cced5dea1",
+        "procedure": "void Account.deposit(int)",
+        "procedure_id": "Account.deposit(int):void.a9cc1805c1e3652887a5ee12b55803af",
+        "procedure_start_line": 0,
+        "qualifier": "Unprotected write. Non-private method `void Account.deposit(int)` writes to field `this.Account.mBalance` outside of synchronization.\n Reporting because the current class is annotated `@ThreadSafe`, so we assume that this method can run in parallel with other non-private methods in the class (including itself).",
+        "severity": "HIGH",
+        "visibility": "user"
+    },
+    {
+        "access": "hJWmvgAAAKYAAAApAAAAhQAAAHqwkNAqbWFrZURpbm5lckCToCZSYWNlcmRAkKBAJHZvaWRAoKCQ0Clib2lsV2F0ZXJAk6AEC0AECkCwTQD/kgkiYXV0b3Rlc3Qvc3JjL21haW4vamF2YS9SYWNlcmQuamF2YZGgoJGwAjafTBegJHRoaXNAkAQboKOglJOgBBxAsEBAQEAEAaCRkTNSYWNlcmQubVRlbXBlcmF0dXJlQKCwUQD/BBdA",
+        "bug_class": "PROVER",
+        "bug_trace": [
+            {
+                "column_number": -1,
+                "description": "call to void Racerd.boilWater()",
+                "filename": "autotest/src/main/java/Racerd.java",
+                "level": 0,
+                "line_number": 13
+            },
+            {
+                "column_number": -1,
+                "description": "access to `this.Racerd.mTemperature`",
+                "filename": "autotest/src/main/java/Racerd.java",
+                "level": 1,
+                "line_number": 17
+            }
+        ],
+        "bug_type": "THREAD_SAFETY_VIOLATION",
+        "bug_type_hum": "Thread Safety Violation",
+        "censored_reason": "",
+        "column": -1,
+        "file": "autotest/src/main/java/Racerd.java",
+        "hash": "2882383086ab102a88144ae3c2cc4701",
+        "key": "Racerd.java|makeDinner|THREAD_SAFETY_VIOLATION",
+        "kind": "ERROR",
+        "line": 13,
+        "node_key": "9c5d6d9028928346cc4fb44cced5dea1",
+        "procedure": "void Racerd.makeDinner()",
+        "procedure_id": "Racerd.makeDinner():void.2796f75396b30d2d49b24ddfab722306",
+        "procedure_start_line": 0,
+        "qualifier": "Unprotected write. Non-private method `void Racerd.makeDinner()` indirectly writes to field `this.Racerd.mTemperature` outside of synchronization.\n Reporting because the current class is annotated `@ThreadSafe`, so we assume that this method can run in parallel with other non-private methods in the class (including itself).",
+        "severity": "HIGH",
+        "visibility": "user"
+    },
+    {
+        "access": "hJWmvgAAAJgAAAAqAAAAgwAAAHqwkNAod2l0aGRyYXegoEAjaW50QJOgJ0FjY291bnRAkKBABAZAoKCSoCBAsGMA/5IJImF1dG90ZXN0L3NyYy9tYWluL2phdmEvUmFjZXJkLmphdmGQoKCRsAI2n0wXoCR0aGlzQJAEG6CjoJSToAQZQLBAQEBABAGgkZEwQWNjb3VudC5tQmFsYW5jZUCgBBegsGIA/wQYQA==",
+        "bug_class": "PROVER",
+        "bug_trace": [
+            {
+                "column_number": -1,
+                "description": "<Read trace>",
+                "filename": "autotest/src/main/java/Racerd.java",
+                "level": 0,
+                "line_number": 35
+            },
+            {
+                "column_number": -1,
+                "description": "access to `this.Account.mBalance`",
+                "filename": "autotest/src/main/java/Racerd.java",
+                "level": 0,
+                "line_number": 35
+            },
+            {
+                "column_number": -1,
+                "description": "<Write trace>",
+                "filename": "autotest/src/main/java/Racerd.java",
+                "level": 0,
+                "line_number": 34
+            },
+            {
+                "column_number": -1,
+                "description": "access to `this.Account.mBalance`",
+                "filename": "autotest/src/main/java/Racerd.java",
+                "level": 0,
+                "line_number": 34
+            }
+        ],
+        "bug_type": "THREAD_SAFETY_VIOLATION",
+        "bug_type_hum": "Thread Safety Violation",
+        "censored_reason": "",
+        "column": -1,
+        "file": "autotest/src/main/java/Racerd.java",
+        "hash": "5665f12d2392f93f11f556cd1b1e238a",
+        "key": "Racerd.java|withdraw|THREAD_SAFETY_VIOLATION",
+        "kind": "ERROR",
+        "line": 35,
+        "node_key": "9c5d6d9028928346cc4fb44cced5dea1",
+        "procedure": "int Account.withdraw(int)",
+        "procedure_id": "Account.withdraw(int):int.038de5054c5c25e60d169e42e0177a16",
+        "procedure_start_line": 0,
+        "qualifier": "Read/Write race. Non-private method `int Account.withdraw(int)` reads without synchronization from `this.Account.mBalance`. Potentially races with write in method `Account.withdraw(...)`.\n Reporting because the current class is annotated `@ThreadSafe`, so we assume that this method can run in parallel with other non-private methods in the class (including itself).",
+        "severity": "HIGH",
+        "visibility": "user"
+    },
+    {
+        "access": "hJWmvgAAAJEAAAAoAAAAfAAAAHOwkNAod2l0aGRyYXegoEAjaW50QJOgJ0FjY291bnRAkKBABAZAoKCSoCBAsGIA/5IJImF1dG90ZXN0L3NyYy9tYWluL2phdmEvUmFjZXJkLmphdmGRoKCRsAI2n0wXoCR0aGlzQJAEG6CjoJSToAQZQLBAQEBABAGgkZEwQWNjb3VudC5tQmFsYW5jZUCgBBdA",
+        "bug_class": "PROVER",
+        "bug_trace": [
+            {
+                "column_number": -1,
+                "description": "access to `this.Account.mBalance`",
+                "filename": "autotest/src/main/java/Racerd.java",
+                "level": 0,
+                "line_number": 34
+            }
+        ],
+        "bug_type": "THREAD_SAFETY_VIOLATION",
+        "bug_type_hum": "Thread Safety Violation",
+        "censored_reason": "",
+        "column": -1,
+        "file": "autotest/src/main/java/Racerd.java",
+        "hash": "a7c30fd1b251d9e16750fc7e5913b885",
+        "key": "Racerd.java|withdraw|THREAD_SAFETY_VIOLATION",
+        "kind": "ERROR",
+        "line": 34,
+        "node_key": "9c5d6d9028928346cc4fb44cced5dea1",
+        "procedure": "int Account.withdraw(int)",
+        "procedure_id": "Account.withdraw(int):int.038de5054c5c25e60d169e42e0177a16",
+        "procedure_start_line": 0,
+        "qualifier": "Unprotected write. Non-private method `int Account.withdraw(int)` writes to field `this.Account.mBalance` outside of synchronization.\n Reporting because the current class is annotated `@ThreadSafe`, so we assume that this method can run in parallel with other non-private methods in the class (including itself).",
+        "severity": "HIGH",
+        "visibility": "user"
+    }
+]
