@@ -8,15 +8,16 @@ const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { accessibleWalkerSpec } = require("devtools/shared/specs/accessibility");
-const { isXUL } = require("devtools/server/actors/highlighters/utils/markup");
-const { CustomHighlighterActor, register } =
-  require("devtools/server/actors/highlighters");
 
 loader.lazyRequireGetter(this, "AccessibleActor", "devtools/server/actors/accessibility/accessible", true);
+loader.lazyRequireGetter(this, "CustomHighlighterActor", "devtools/server/actors/highlighters", true);
 loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "isDefunct", "devtools/server/actors/utils/accessibility", true);
+loader.lazyRequireGetter(this, "isTypeRegistered", "devtools/server/actors/highlighters", true);
 loader.lazyRequireGetter(this, "isWindowIncluded", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(this, "isXUL", "devtools/server/actors/highlighters/utils/markup", true);
+loader.lazyRequireGetter(this, "register", "devtools/server/actors/highlighters", true);
 
 const nsIAccessibleEvent = Ci.nsIAccessibleEvent;
 const nsIAccessibleStateChangeEvent = Ci.nsIAccessibleStateChangeEvent;
@@ -92,9 +93,6 @@ const NAME_FROM_SUBTREE_RULE_ROLES = new Set([
 
 const IS_OSX = Services.appinfo.OS === "Darwin";
 
-register("AccessibleHighlighter", "accessible");
-register("XULWindowAccessibleHighlighter", "xul-accessible");
-
 /**
  * Helper function that determines if nsIAccessible object is in stale state. When an
  * object is stale it means its subtree is not up to date.
@@ -131,11 +129,26 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     this.onKey = this.onKey.bind(this);
     this.onHighlighterEvent = this.onHighlighterEvent.bind(this);
 
-    this.highlighter = CustomHighlighterActor(this, isXUL(this.rootWin) ?
-      "XULWindowAccessibleHighlighter" : "AccessibleHighlighter");
+    DevToolsUtils.defineLazyGetter(this, "highlighter", () => {
+      let highlighter;
+      if (isXUL(this.rootWin)) {
+        if (!isTypeRegistered("XULWindowAccessibleHighlighter")) {
+          register("XULWindowAccessibleHighlighter", "xul-accessible");
+        }
 
-    this.manage(this.highlighter);
-    this.highlighter.on("highlighter-event", this.onHighlighterEvent);
+        highlighter = CustomHighlighterActor(this, "XULWindowAccessibleHighlighter");
+      } else {
+        if (!isTypeRegistered("AccessibleHighlighter")) {
+          register("AccessibleHighlighter", "accessible");
+        }
+
+        highlighter = CustomHighlighterActor(this, "AccessibleHighlighter");
+      }
+
+      this.manage(highlighter);
+      highlighter.on("highlighter-event", this.onHighlighterEvent);
+      return highlighter;
+    });
   },
 
   setA11yServiceGetter() {
