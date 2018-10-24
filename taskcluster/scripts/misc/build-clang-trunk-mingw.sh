@@ -168,12 +168,6 @@ EOF
 }
 
 build_libcxx() {
-  # Below, we specify -g -gcodeview to build static libraries with debug information.
-  # Because we're not distributing these builds, this is fine. If one were to distribute
-  # the builds, perhaps one would want to make those flags conditional or investigation
-  # other options.
-  let debug_flags="-g -gcodeview"
-
   mkdir libunwind
   pushd libunwind
   cmake \
@@ -194,7 +188,7 @@ build_libcxx() {
       -DLIBUNWIND_ENABLE_THREADS=TRUE \
       -DLIBUNWIND_ENABLE_SHARED=FALSE \
       -DLIBUNWIND_ENABLE_CROSS_UNWINDING=FALSE \
-      -DCMAKE_CXX_FLAGS="${debug_flags} -nostdinc++ -I$SRC_DIR/libcxx/include -DPSAPI_VERSION=2" \
+      -DCMAKE_CXX_FLAGS="-nostdinc++ -I$SRC_DIR/libcxx/include -DPSAPI_VERSION=2" \
       $SRC_DIR/libunwind
   make $make_flags
   make $make_flags install
@@ -222,7 +216,7 @@ build_libcxx() {
       -DLIBCXXABI_LIBCXX_INCLUDES=$SRC_DIR/libcxx/include \
       -DLLVM_NO_OLD_LIBSTDCXX=TRUE \
       -DCXX_SUPPORTS_CXX11=TRUE \
-      -DCMAKE_CXX_FLAGS="-${debug_flags} -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS -D_LIBCPP_HAS_THREAD_API_WIN32" \
+      -DCMAKE_CXX_FLAGS="-D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS -D_LIBCPP_HAS_THREAD_API_WIN32" \
       $SRC_DIR/libcxxabi
   make $make_flags VERBOSE=1
   popd
@@ -255,7 +249,7 @@ build_libcxx() {
       -DLIBCXX_CXX_ABI=libcxxabi \
       -DLIBCXX_CXX_ABI_INCLUDE_PATHS=$SRC_DIR/libcxxabi/include \
       -DLIBCXX_CXX_ABI_LIBRARY_PATH=../libcxxabi/lib \
-      -DCMAKE_CXX_FLAGS="-${debug_flags} -D_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS" \
+      -DCMAKE_CXX_FLAGS="-D_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS" \
       $SRC_DIR/libcxx
   make $make_flags VERBOSE=1
   make $make_flags install
