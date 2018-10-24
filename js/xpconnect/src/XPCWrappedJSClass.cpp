@@ -135,7 +135,6 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(JSContext* cx, REFNSIID aIID,
                                          const nsXPTInterfaceInfo* aInfo)
     : mRuntime(nsXPConnect::GetRuntimeInstance()),
       mInfo(aInfo),
-      mName(nullptr),
       mIID(aIID),
       mDescriptors(nullptr)
 {
@@ -174,10 +173,6 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
     }
     if (mRuntime) {
         mRuntime->GetWrappedJSClassMap()->Remove(this);
-    }
-
-    if (mName) {
-        free(mName);
     }
 }
 
@@ -1331,10 +1326,7 @@ pre_call_clean_up:
 const char*
 nsXPCWrappedJSClass::GetInterfaceName()
 {
-    if (!mName) {
-        mName = moz_xstrdup(mInfo->Name());
-    }
-    return mName;
+    return mInfo->Name();
 }
 
 static const JSClass XPCOutParamClass = {

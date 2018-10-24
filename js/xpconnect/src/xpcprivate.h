@@ -1785,7 +1785,6 @@ private:
 private:
     XPCJSRuntime* mRuntime;
     const nsXPTInterfaceInfo* mInfo;
-    char* mName;
     nsIID mIID;
     uint32_t* mDescriptors;
 };
