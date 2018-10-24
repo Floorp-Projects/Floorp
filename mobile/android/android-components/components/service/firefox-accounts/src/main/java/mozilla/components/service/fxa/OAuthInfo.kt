@@ -4,36 +4,59 @@
 
 package mozilla.components.service.fxa
 
-import com.sun.jna.Pointer
-import com.sun.jna.Structure
+import org.json.JSONObject
+import org.mozilla.fxaclient.internal.OAuthInfo as InternalOAuthInfo
 
-import java.util.Arrays
+/**
+ * Scoped key data.
+ *
+ * @property kid The JWK key identifier.
+ * @property k The JWK key data.
+ */
+data class OAuthScopedKey(
+    val kid: String,
+    val k: String
+)
 
-class OAuthInfo internal constructor(raw: Raw) {
+/**
+ * The result of authentication with FxA via an OAuth flow.
+ *
+ * @property accessToken The access token produced by the flow.
+ * @property keys When present, a map of scopes to [OAuthScopedKey].
+ * @property scopes A list of scopes that this token is valid for.
+ */
+data class OAuthInfo(
+    val accessToken: String,
+    val keys: Map<String, OAuthScopedKey>?,
+    val scopes: List<String>
+) {
+    companion object {
+        internal fun fromInternal(v: InternalOAuthInfo): OAuthInfo {
+            // This is a space-separated list of scopes.
+            val scopes = v.scope?.split(" ")?.filter { it.isNotEmpty() } ?: listOf()
 
-    @JvmField val accessToken: String?
-    @JvmField val keys: String?
-    @JvmField val scope: String?
+            // v.keys (when present) is a string representing a JSON object that maps scopes to
+            // keys. There's some extra data in each key that we don't include ("kty" which is
+            // always the string "oct", and "scope" which is always the key in the map).
+            val keys = v.keys?.let {
+                val jo = JSONObject(it)
+                val result = mutableMapOf<String, OAuthScopedKey>()
+                for (scope in jo.keys()) {
+                    val obj = jo.getJSONObject(scope)
+                    result[scope] = OAuthScopedKey(
+                            kid = obj.getString("kid"),
+                            k = obj.getString("k")
+                    )
+                }
+                result
+            }
 
-    @Suppress("VariableNaming")
-    class Raw(p: Pointer) : Structure(p) {
-        @JvmField var access_token: Pointer? = null
-        @JvmField var keys: Pointer? = null
-        @JvmField var scope: Pointer? = null
-
-        init {
-            read()
+            return OAuthInfo(
+                    // The access token should always be present
+                    accessToken = v.accessToken!!,
+                    keys = keys,
+                    scopes = scopes
+            )
         }
-
-        override fun getFieldOrder(): List<String> {
-            return Arrays.asList("access_token", "keys", "scope")
-        }
-    }
-
-    init {
-        this.accessToken = raw.access_token?.getString(0, RustObject.RUST_STRING_ENCODING)
-        this.keys = raw.keys?.getString(0, RustObject.RUST_STRING_ENCODING)
-        this.scope = raw.scope?.getString(0, RustObject.RUST_STRING_ENCODING)
-        FxaClient.INSTANCE.fxa_oauth_info_free(raw.pointer)
     }
 }

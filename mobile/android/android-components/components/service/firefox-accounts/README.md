@@ -51,39 +51,40 @@ val STATE_KEY = "fxaState"
 Then you can write the following:
 
 ```kotlin
-getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).getString(FXA_STATE_KEY, "").let {
-    FirefoxAccount.fromJSONString(it).then({
-        account = it
-        FxaResult<Void>()
-    }, {
-        Config.custom(CONFIG_URL).whenComplete { value: Config ->
-            account = FirefoxAccount(value, CLIENT_ID, REDIRECT_URL)
+whenAccount = async {
+    let savedState = getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).getString(FXA_STATE_KEY, "")
+    try {
+        FirefoxAccount.fromJSONString(savedState).await()
+    } catch (e: FxaException) {
+        // Note: Config implements autoclosable, and must be disposed of.
+        Config.custom(CONFIG_URL).await().use { config ->
+            FirefoxAccount(config, CLIENT_ID, REDIRECT_URL)
         }
-        FxaResult<Void>()
-    })
+    }
 }
 ```
 
-> For more info on the chainable Promise-like type `FxaResult`, check out the source code [here](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaResult.kt)
-
-The code above checks if you have some existing state for FxA, otherwise it configures it.
+The code above checks if you have some existing state for FxA, otherwise it configures it. It assigns `whenAccount`, which is a `Deferred` that resolves to the `FirefoxAccount` when it's complete.
 
 You can now attempt to fetch the FxA profile. The first time the application starts it won't have any state, so
 `account.getProfile()` will fail and proceed to the `account.beginOAuthFlow` branch and it will open the FxA OAuth login
 in the web view.
 
 ```kotlin
-account.getProfile().then({ profile: Profile ->
-    // Render the profile
-    val txtView: TextView = findViewById(R.id.txtView)
-    runOnUiThread {
-        txtView.text = profile.displayName
+launch {
+    val account = whenAccount.await()
+    try {
+        val profile = account.getProfile().await()
+        launch(UI) {
+            txtView.text = profile.displayName
+        }
+    } catch (e: FxaException) {
+        val url = account.beginOAuthFlow(scopes, wantsKeys)
+        launch(UI) {
+            openWebView(url)
+        }
     }
-    FxaResult<Void>()
-}, { exception: Exception ->
-    account?.beginOAuthFlow(scopes, wantsKeys)?.whenComplete { openWebView(it) }
-    FxaResult<Void>()
-})
+}
 ```
 
 When spawning the WebView, be sure to override the `OnPageStarted` function to intercept the redirect url and fetch the code + state parameters:
@@ -107,16 +108,16 @@ override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
 Finally, complete the OAuth flow, try to retrieve the profile information, then save your login state once you've gotten valid profile information:
 
 ```kotlin
-account?.completeOAuthFlow(code, state)?.then {
-    account?.getProfile()
-}.whenComplete { profile: Profile ->
-    runOnUiThread {
-        txtView.text = profile.displayName
+launch {
+    val account = whenAccount.await()
+    account.completeOAuthFlow(code, state).await()
+    val profile = account.getProfile().await()
+    launch(UI) {
+        txtView.txt = profile.displayName
     }
-    account?.toJSONString().let {
-        getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).edit()
-            .putString(FXA_STATE_KEY, it).apply()
-    }
+    val json = account.toJSONString()
+    getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).edit()
+        .putString(FXA_STATE_KEY, json).apply()
 }
 ```
 

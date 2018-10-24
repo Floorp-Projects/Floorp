@@ -8,64 +8,11 @@ A simple app showcasing the service-firefox-account component.
 
 The main concepts shown in the sample app are:
 
-* Usage of the asynchronous result type `FxaResult`
+* Usage of the asynchronous result type `Deferred`
 * Setting up a`FirefoxAccount` object, from a previous session or from scratch
 * Spawning a custom tab or a WebView to handle the user's authentication flow
 
 A minimal walkthrough is also provided in the [component README](https://github.com/mozilla-mobile/android-components/tree/master/components/service/firefox-accounts).
-
-## `FxaResult` usage
-
-`FxaResult` represents a chainable asynchronous result, and is used as a convenient method of running potentially long-running tasks (eg. network requests, crypto operations) on threads outside of the UI thread.
-
-A value or exception can be wrapped in an FxaResult:
-
-```kotlin
-val fxaValue = FxaResult.fromValue(42)
-val fxaException = FxaResult.fromException(Exception("Something went wrong"))
-```
-
-One can attach `OnValueListener`s or `OnExceptionListener`s to an `FxaResult`. There are a few ways of chaining results in Kotlin:
-
-* Passing the listeners directly via `then`, with object expressions or otherwise: 
-
-	```kotlin
-	FxaResult.fromValue(42).then(object : OnValueListener<Integer, Void> {
-		override fun onValue(value: Integer): FxaResult<Void>? {
-			// handle the value
-			return FxaResult<Void>()
-		}
-	}, object : OnExceptionListener<Void> {
-		override fun onException(exception: Exception): FxaResult<Void>? {
-			// handle the exception
-			return FxaResult<Void>()
-		}
-	})
-	```
-
-	Since Java 6 does not support simple lambda syntax, this is one of the main ways to chain `FxaResult`s in Java.
-
-* Passing lambdas via `then`:
-
-	```kotlin
-	FxaResult.fromValue(42).then({ value: Int -> // valueListener
-		// handle the value
-		return FxaResult<Void>()
-	}, { exception: Exception ->
-		// handle the exception
-		return FxaResult<Void>()
-	}
-	```
-
-* Completing a chain via `whenComplete`:
-
-	```kotlin
-	FxaResult.fromValue(42).whenComplete { value: Integer ->
-		// handle the value
-	}
-	```
-
-	Since `whenComplete` implies that the chain of promises has come to an end, there is no need to return another FxaResult at the end.
 
 ## Setting up the account
 
@@ -78,15 +25,16 @@ One can attach `OnValueListener`s or `OnExceptionListener`s to an `FxaResult`. T
 To restore an account from an existing state in shared preferences:
 
 ```kotlin
+// Inside a `launch` or `async` block:
 getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).getString(FXA_STATE_KEY, "").let {
-	FirefoxAccount.fromJSONString(it).whenComplete { this.account = it }
+	FirefoxAccount.fromJSONString(it).await()
 }
 ```
 
 To persist an account's state in shared preferences:
 
 ```kotlin
-account?.toJSONString().let {
+account.toJSONString().let {
     getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).edit().putString(FXA_STATE_KEY, it).apply()
 }
 ```
@@ -96,8 +44,9 @@ account?.toJSONString().let {
 If no previous auth state was found, we have to create a new one using some default OAuth parameters. Find the hostname, or `CONFIG_URL` for your OAuth provider, then create a `CLIENT_ID` and `REDIRECT_URL` for your application. From there, we can create a `Config` object, and finally our `FirefoxAccount` object:
 
 ```kotlin
-Config.custom(CONFIG_URL).whenComplete { value: Config ->
-	this.account = FirefoxAccount(value, CLIENT_ID, REDIRECT_URL)
+// Inside a `launch` or `async` block:
+Config.custom(CONFIG_URL).await().use { value: Config ->
+	FirefoxAccount(value, CLIENT_ID, REDIRECT_URL)
 }
 ```
 

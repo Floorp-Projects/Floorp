@@ -4,23 +4,27 @@
 
 package mozilla.components.service.fxa
 
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.async
+import org.mozilla.fxaclient.internal.Config as InternalConfig
+
 /**
  * Config represents the server endpoint configurations needed for the
  * authentication flow.
  */
-class Config(override var rawPointer: RawConfig?) : RustObject<RawConfig>() {
-    override fun destroy(p: RawConfig) {
-        synchronized(FxaClient.INSTANCE) { FxaClient.INSTANCE.fxa_config_free(p) }
+class Config internal constructor(internal val inner: InternalConfig) : AutoCloseable {
+
+    override fun close() {
+        inner.close()
     }
 
     companion object {
         /**
          * Set up endpoints used in the production Firefox Accounts instance.
          */
-        fun release(): FxaResult<Config> {
-            return safeAsync { e ->
-                val p = FxaClient.INSTANCE.fxa_get_release_config(e)
-                Config(p)
+        fun release(): Deferred<Config> {
+            return async {
+                Config(InternalConfig.release())
             }
         }
 
@@ -29,10 +33,9 @@ class Config(override var rawPointer: RawConfig?) : RustObject<RawConfig>() {
          *
          * @param content_base Hostname of the FxA auth service provider
          */
-        fun custom(content_base: String): FxaResult<Config> {
-            return safeAsync { e ->
-                val p = FxaClient.INSTANCE.fxa_get_custom_config(content_base, e)
-                Config(p)
+        fun custom(content_base: String): Deferred<Config> {
+            return async {
+                Config(InternalConfig.custom(content_base))
             }
         }
     }

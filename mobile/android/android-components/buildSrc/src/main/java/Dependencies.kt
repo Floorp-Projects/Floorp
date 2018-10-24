@@ -25,7 +25,7 @@ private object Versions {
 
     const val sentry = "1.7.10"
 
-    const val mozilla_app_services = "0.6.0"
+    const val mozilla_app_services = "0.7.1"
     const val servo = "0.0.1.20181017.aa95911"
 }
 
@@ -61,7 +61,7 @@ object Deps {
     const val tools_lintapi = "com.android.tools.lint:lint-api:${Versions.lint}"
     const val tools_linttests = "com.android.tools.lint:lint-tests:${Versions.lint}"
 
-    const val mozilla_fxa = "org.mozilla.fxa_client:fxa_client:${Versions.mozilla_app_services}"
+    const val mozilla_fxa = "org.mozilla.fxaclient:fxaclient:${Versions.mozilla_app_services}"
     const val mozilla_sync_logins = "org.mozilla.sync15:logins:${Versions.mozilla_app_services}"
     const val mozilla_servo = "org.mozilla.servoview:servoview-armv7:${Versions.servo}"
 

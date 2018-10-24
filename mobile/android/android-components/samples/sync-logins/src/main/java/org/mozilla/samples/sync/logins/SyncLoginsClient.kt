@@ -1,7 +1,6 @@
 package org.mozilla.samples.sync.logins
 
 import mozilla.components.service.fxa.OAuthInfo
-import org.json.JSONObject
 import org.mozilla.sync15.logins.DatabaseLoginsStorage
 import org.mozilla.sync15.logins.LoginsStorage
 import org.mozilla.sync15.logins.SyncUnlockInfo
@@ -85,13 +84,13 @@ class SyncLoginsClient(private val databasePath: String) {
     // Helper to convert FxA OAuthInfo + TokenServer URL to `SyncUnlockInfo`.
     private fun getUnlockInfo(oauthInfo: OAuthInfo, tokenServerURL: String): SyncUnlockInfo {
         val keys = oauthInfo.keys ?: throw RuntimeException("keys are missing!")
-        val keysObj = JSONObject(keys)
-        val keyInfo = keysObj.getJSONObject("https://identity.mozilla.com/apps/oldsync") ?: throw RuntimeException("Key info is missing!")
+        val keyInfo = keys["https://identity.mozilla.com/apps/oldsync"]
+                ?: throw RuntimeException("Key info is missing!")
 
         return SyncUnlockInfo(
-                kid = keyInfo.getString("kid") ?: throw RuntimeException("keyInfo.kid is missing!"),
-                fxaAccessToken = oauthInfo.accessToken ?: throw RuntimeException("accessToken is missing!"),
-                syncKey = keyInfo.getString("k") ?: throw RuntimeException("keyInfo.k is missing!"),
+                kid = keyInfo.kid,
+                fxaAccessToken = oauthInfo.accessToken,
+                syncKey = keyInfo.k,
                 tokenserverURL = tokenServerURL
         )
     }
