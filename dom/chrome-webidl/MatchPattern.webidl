@@ -30,7 +30,7 @@ interface URI;
  *      the URL path must exactly match the pattern path.
  */
 [Constructor(DOMString pattern, optional MatchPatternOptions options),
- ChromeOnly, Exposed=(Window,System)]
+ ChromeOnly, Exposed=Window]
 interface MatchPattern {
   /**
    * Returns true if the given URI matches the pattern.
@@ -74,7 +74,7 @@ interface MatchPattern {
  * matches when any of its sub-patterns matches.
  */
 [Constructor(sequence<(DOMString or MatchPattern)> patterns, optional MatchPatternOptions options),
- ChromeOnly, Exposed=(Window,System)]
+ ChromeOnly, Exposed=Window]
 interface MatchPatternSet {
   /**
    * Returns true if the given URI matches any sub-pattern.

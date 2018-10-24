@@ -49,14 +49,6 @@ uint8_t
 GetChannelCountOfImageFormat(ImageBitmapFormat aFormat);
 
 /*
- * Get the needed buffer size to store the image data in the given
- * ImageBitmapFormat with the given width and height.
- */
-uint32_t
-CalculateImageBufferSize(ImageBitmapFormat aFormat,
-                         uint32_t aWidth, uint32_t aHeight);
-
-/*
  * This function always copies the image data in _aSrcBuffer_ into _aDstBuffer_
  * and it also performs color conversion if the _aSrcFormat_ and the
  * _aDstFormat_ are different.

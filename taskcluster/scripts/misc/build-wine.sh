@@ -17,10 +17,9 @@ cd $WORKSPACE
 
 # --------------
 $GPG --import $data_dir/DA23579A74D4AD9AF9D3F945CEFAC8EAAF17519D.key
-
-download_and_check http://dl.winehq.org/wine/source/2.0/ wine-2.0.1.tar.xz.sign
-tar xaf $TMPDIR/wine-2.0.1.tar.xz
-cd wine-2.0.1
+download_and_check http://dl.winehq.org/wine/source/3.0/ wine-3.0.3.tar.xz.sign
+tar xaf $TMPDIR/wine-3.0.3.tar.xz
+cd wine-3.0.3
 ./configure --prefix=$INSTALL_DIR/
 make -j$(nproc)
 make install
