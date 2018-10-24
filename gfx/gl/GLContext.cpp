@@ -97,6 +97,7 @@ static const char* const sExtensionNames[] = {
     "GL_ARB_framebuffer_object",
     "GL_ARB_framebuffer_sRGB",
     "GL_ARB_geometry_shader4",
+    "GL_ARB_gpu_shader5",
     "GL_ARB_half_float_pixel",
     "GL_ARB_instanced_arrays",
     "GL_ARB_internalformat_query",
@@ -139,6 +140,7 @@ static const char* const sExtensionNames[] = {
     "GL_EXT_framebuffer_object",
     "GL_EXT_framebuffer_sRGB",
     "GL_EXT_gpu_shader4",
+    "GL_EXT_gpu_shader5",
     "GL_EXT_multisampled_render_to_texture",
     "GL_EXT_occlusion_query_boolean",
     "GL_EXT_packed_depth_stencil",
@@ -172,6 +174,7 @@ static const char* const sExtensionNames[] = {
     "GL_NV_fence",
     "GL_NV_framebuffer_blit",
     "GL_NV_geometry_program4",
+    "GL_NV_gpu_shader5",
     "GL_NV_half_float",
     "GL_NV_instanced_arrays",
     "GL_NV_primitive_restart",
@@ -378,6 +381,10 @@ GLContext::LoadFeatureSymbols(const char* prefix, bool trygl, const SymLoadStruc
 bool
 GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
 {
+    // see bug 929506 comment 29. wglGetProcAddress requires a current context.
+    if (!MakeCurrent(true))
+        return false;
+
     mWorkAroundDriverBugs = gfxPrefs::WorkAroundDriverBugs();
 
     const SymLoadStruct coreSymbols[] = {
@@ -513,10 +520,6 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
         return false;
 
     ////////////////
-
-    if (!MakeCurrent()) {
-        return false;
-    }
 
     const std::string versionStr = (const char*)fGetString(LOCAL_GL_VERSION);
     if (versionStr.find("OpenGL ES") == 0) {
@@ -2051,11 +2054,9 @@ GLContext::MarkDestroyed()
     mBlitHelper = nullptr;
     mReadTexImageHelper = nullptr;
 
-    if (!MakeCurrent()) {
-        NS_WARNING("MakeCurrent() failed during MarkDestroyed! Skipping GL object teardown.");
-    }
-
+    mIsDestroyed = true;
     mSymbols = {};
+    (void)MakeCurrent(true); // Clear current context.
 }
 
 #ifdef MOZ_GL_DEBUG
@@ -2941,16 +2942,14 @@ GetBytesPerTexel(GLenum format, GLenum type)
 }
 
 bool
-GLContext::MakeCurrent(bool aForce) const
+GLContext::MakeCurrent(const bool aForce) const
 {
-    if (MOZ_UNLIKELY( IsDestroyed() ))
-        return false;
-
-    if (MOZ_LIKELY( !aForce )) {
-        bool isCurrent;
+    if (MOZ_LIKELY( !aForce & !IsDestroyed() )) {
+        bool isCurrent = false;
         if (mUseTLSIsCurrent) {
             isCurrent = (sCurrentContext.get() == reinterpret_cast<uintptr_t>(this));
-        } else {
+        }
+        if (MOZ_UNLIKELY( !isCurrent )) {
             isCurrent = IsCurrentImpl();
         }
         if (MOZ_LIKELY( isCurrent )) {
@@ -2959,8 +2958,10 @@ GLContext::MakeCurrent(bool aForce) const
         }
     }
 
-    if (!MakeCurrentImpl())
+    if (MOZ_UNLIKELY( !MakeCurrentImpl() )) {
+        ClearGetCurrentContextTLS();
         return false;
+    }
 
     sCurrentContext.set(reinterpret_cast<uintptr_t>(this));
     return true;
