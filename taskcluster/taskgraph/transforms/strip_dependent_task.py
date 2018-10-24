@@ -15,5 +15,5 @@ transforms = TransformSequence()
 @transforms.add
 def strip_dependent_task(config, jobs):
     for job in jobs:
-        del job['dependent-task']
+        del job['primary-dependency']
         yield job

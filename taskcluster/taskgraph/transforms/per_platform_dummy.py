@@ -16,9 +16,9 @@ transforms = TransformSequence()
 def one_task_per_product_and_platform(config, jobs):
     unique_products_and_platforms = set()
     for job in jobs:
-        dep_task = job["dependent-task"]
-        if 'dependent-task' in job:
-            del job['dependent-task']
+        dep_task = job["primary-dependency"]
+        if 'primary-dependency' in job:
+            del job['primary-dependency']
         product = dep_task.attributes.get("shipping_product")
         platform = dep_task.attributes.get("build_platform")
         if (product, platform) not in unique_products_and_platforms:
