@@ -448,6 +448,7 @@ def mozharness_test_on_script_engine_autophone(config, job, taskdesc):
         "MOZ_HIDE_RESULTS_TABLE": '1',
         "MOZ_NODE_PATH": "/usr/local/bin/node",
         'MOZ_AUTOMATION': '1',
+        'WORKING_DIR': '/builds/worker',
         'WORKSPACE': '/builds/worker/workspace',
         'TASKCLUSTER_WORKER_TYPE': job['worker-type'],
     }
