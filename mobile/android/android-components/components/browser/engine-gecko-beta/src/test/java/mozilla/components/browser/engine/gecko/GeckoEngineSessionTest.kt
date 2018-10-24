@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko
 
 import android.os.Handler
+import android.os.Message
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
@@ -22,6 +23,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
@@ -54,6 +56,11 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class GeckoEngineSessionTest {
+
+    @Before
+    fun setup() {
+        ThreadUtils.sGeckoHandler = null
+    }
 
     @Test
     fun engineSessionInitialization() {
@@ -262,13 +269,22 @@ class GeckoEngineSessionTest {
 
     @Test
     fun saveState() {
-        ThreadUtils.sGeckoHandler = Handler()
-
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         engineSession.geckoSession = mock(GeckoSession::class.java)
         val currentState = GeckoSession.SessionState("")
         val stateMap = mapOf(GeckoEngineSession.GECKO_STATE_KEY to currentState.toString())
 
+        var first = true
+        ThreadUtils.sGeckoHandler = object : Handler() {
+            override fun sendMessageAtTime(msg: Message?, uptimeMillis: Long): Boolean {
+                // Only run the saveState runnable and ignore everything that comes after
+                if (first) {
+                    first = false
+                    return super.sendMessageAtTime(msg, uptimeMillis)
+                }
+                return true
+            }
+        }
         `when`(engineSession.geckoSession.saveState()).thenReturn(GeckoResult.fromValue(currentState))
         assertEquals(stateMap, engineSession.saveState())
     }
