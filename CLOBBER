@@ -22,4 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1499899 - Fix some win64 clang-cl -Wunused-* warnings. (change to IUnknownImpl)
+
+Merge day clobber
