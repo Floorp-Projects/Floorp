@@ -26,6 +26,9 @@ add_task(async function() {
   let previewTooltip = await assertShowPreviewTooltip(view, setColor);
   await assertTooltipHiddenOnMouseOut(previewTooltip, setColor);
 
+  ok(previewTooltip.panel.textContent.includes("--color = chartreuse"),
+    "CSS variable preview tooltip shows the expected CSS variable");
+
   const unsetVar = getRuleViewProperty(view, "div", "background-color").valueSpan
     .querySelector(".ruleview-unmatched-variable");
   const setVar = unsetVar.nextElementSibling;
@@ -37,5 +40,11 @@ add_task(async function() {
   is(setVarName.dataset.variable, "--bg = seagreen",
                                   "--bg's dataset.variable is not set correctly");
   previewTooltip = await assertShowPreviewTooltip(view, setVarName);
+
+  ok(!previewTooltip.panel.textContent.includes("--color = chartreuse"),
+    "CSS variable preview tooltip no longer shows the previous CSS variable");
+  ok(previewTooltip.panel.textContent.includes("--bg = seagreen"),
+    "CSS variable preview tooltip shows the new CSS variable");
+
   await assertTooltipHiddenOnMouseOut(previewTooltip, setVarName);
 });
