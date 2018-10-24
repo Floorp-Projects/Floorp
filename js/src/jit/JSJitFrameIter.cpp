@@ -147,10 +147,10 @@ JSJitFrameIter::baselineScriptAndPc(JSScript** scriptRes, jsbytecode** pcRes) co
         return;
     }
 
-    // Else, there must be an ICEntry for the current return address.
+    // Else, there must be a VMCallEntry for the current return address.
     uint8_t* retAddr = returnAddressToFp();
-    ICEntry& icEntry = script->baselineScript()->icEntryFromReturnAddress(retAddr);
-    *pcRes = icEntry.pc(script);
+    RetAddrEntry& entry = script->baselineScript()->retAddrEntryFromReturnAddress(retAddr);
+    *pcRes = entry.pc(script);
 }
 
 Value*
