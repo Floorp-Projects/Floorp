@@ -39,11 +39,16 @@ class ConnectPage extends PureComponent {
       getString: PropTypes.func.isRequired,
       networkEnabled: PropTypes.bool.isRequired,
       networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
+      wifiEnabled: PropTypes.bool.isRequired,
     };
   }
 
   renderWifi() {
-    const { getString } = this.props;
+    const { getString, wifiEnabled } = this.props;
+    if (!wifiEnabled) {
+      return null;
+    }
+
     return Localized(
       {
         id: "about-debugging-connect-wifi",
