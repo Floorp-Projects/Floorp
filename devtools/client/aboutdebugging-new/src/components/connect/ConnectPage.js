@@ -35,6 +35,7 @@ class ConnectPage extends PureComponent {
       dispatch: PropTypes.func.isRequired,
       // Provided by wrapping the component with FluentReact.withLocalization.
       getString: PropTypes.func.isRequired,
+      networkEnabled: PropTypes.bool.isRequired,
       networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
     };
   }
@@ -153,7 +154,12 @@ class ConnectPage extends PureComponent {
   }
 
   renderNetwork() {
-    const { dispatch, networkLocations } = this.props;
+    const { dispatch, networkEnabled, networkLocations } = this.props;
+
+    if (!networkEnabled) {
+      return null;
+    }
+
     return Localized(
       {
         id: "about-debugging-connect-network",
