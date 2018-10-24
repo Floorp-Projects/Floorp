@@ -25,6 +25,7 @@ NS_INTERFACE_MAP_BEGIN(WakeLock)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIWakeLock)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(WakeLock)
@@ -256,6 +257,14 @@ WakeLock::HandleEvent(Event *aEvent)
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+WakeLock::Unlock()
+{
+  ErrorResult error;
+  Unlock(error);
+  return error.StealNSResult();
 }
 
 nsPIDOMWindowInner*
