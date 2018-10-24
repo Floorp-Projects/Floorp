@@ -32,35 +32,26 @@ GLContextEAGL::GLContextEAGL(CreateContextFlags flags, const SurfaceCaps& caps,
 
 GLContextEAGL::~GLContextEAGL()
 {
-    MakeCurrent();
+    if (MakeCurrent()) {
+        if (mBackbufferFB) {
+            fDeleteFramebuffers(1, &mBackbufferFB);
+        }
 
-    if (mBackbufferFB) {
-        fDeleteFramebuffers(1, &mBackbufferFB);
+        if (mBackbufferRB) {
+            fDeleteRenderbuffers(1, &mBackbufferRB);
+        }
     }
 
-    if (mBackbufferRB) {
-        fDeleteRenderbuffers(1, &mBackbufferRB);
-    }
+    mLayer = nil;
 
     MarkDestroyed();
-
-    if (mLayer) {
-      mLayer = nil;
-    }
-
-    if (mContext) {
-      [EAGLContext setCurrentContext:nil];
-      [mContext release];
-    }
+    [mContext release];
 }
 
 bool
 GLContextEAGL::Init()
 {
-    if (!InitWithPrefix("gl", true))
-        return false;
-
-    return true;
+    return InitWithPrefix("gl", true);
 }
 
 bool
@@ -112,12 +103,11 @@ GLContextEAGL::RecreateRB()
 bool
 GLContextEAGL::MakeCurrentImpl() const
 {
-    if (mContext) {
-        if(![EAGLContext setCurrentContext:mContext]) {
-            return false;
-        }
+    if (IsDestroyed()) {
+        [EAGLContext setCurrentContext:nil];
+        return false;
     }
-    return true;
+    return [EAGLContext setCurrentContext:mContext];
 }
 
 bool

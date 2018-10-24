@@ -14,6 +14,7 @@ AntiTracking.runTest("ServiceWorkers",
     });
   },
   [["dom.serviceWorkers.exemptFromPerDomainMax", true],
+   ["dom.ipc.processCount", 1],
    ["dom.serviceWorkers.enabled", true],
    ["dom.serviceWorkers.testing.enabled", true]]);
 
@@ -21,6 +22,7 @@ AntiTracking.runTest("ServiceWorkers and Storage Access API",
   async _ => {
     await SpecialPowers.pushPrefEnv({"set": [
        ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+       ["dom.ipc.processCount", 1],
        ["dom.serviceWorkers.enabled", true],
        ["dom.serviceWorkers.testing.enabled", true],
     ]});
@@ -46,6 +48,7 @@ AntiTracking.runTest("ServiceWorkers and Storage Access API",
   async _ => {
     await SpecialPowers.pushPrefEnv({"set": [
        ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+       ["dom.ipc.processCount", 1],
        ["dom.serviceWorkers.enabled", true],
        ["dom.serviceWorkers.testing.enabled", true],
     ]});
@@ -77,6 +80,7 @@ AntiTracking.runTest("ServiceWorkers and Storage Access API",
     });
   },
   [["dom.serviceWorkers.exemptFromPerDomainMax", true],
+   ["dom.ipc.processCount", 1],
    ["dom.serviceWorkers.enabled", true],
    ["dom.serviceWorkers.testing.enabled", true]],
   false, false);

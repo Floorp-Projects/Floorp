@@ -6,6 +6,7 @@ const UINT_SCALAR = "telemetry.test.unsigned_int_kind";
 const STRING_SCALAR = "telemetry.test.string_kind";
 const BOOLEAN_SCALAR = "telemetry.test.boolean_kind";
 const KEYED_UINT_SCALAR = "telemetry.test.keyed_unsigned_int";
+const KEYED_EXCEED_SCALAR = "telemetry.keyed_scalars_exceed_limit";
 
 function getProcessScalars(aChannel, aProcessName, aKeyed = false, aClear = false) {
   const scalars = aKeyed ?
@@ -534,6 +535,31 @@ add_task(async function test_keyed_max_keys() {
     Assert.equal(keyedScalars[KEYED_UINT_SCALAR][keyName], expectedValue++,
                  "The key must contain the expected value.");
   });
+
+  // Check that KEYED_EXCEED_SCALAR is in keyedScalars
+  Assert.ok((KEYED_EXCEED_SCALAR in keyedScalars),
+            "We have exceeded maximum number of Keys.");
+
+  // Generate the names for the exceeded keys
+  let keyNamesSet2 = new Set();
+  for (let k = 0; k < 100; k++) {
+    keyNamesSet2.add("key2_" + k);
+  }
+
+  // Add 100 keys to the keyed exceed scalar and set their initial value.
+  valueToSet = 0;
+  keyNamesSet2.forEach(keyName2 => {
+    Telemetry.keyedScalarSet(KEYED_EXCEED_SCALAR, keyName2, valueToSet++);
+  });
+
+  // Check that there are exactly 100 keys in KEYED_EXCEED_SCALAR
+  let snapshot = Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  Assert.equal(100, Object.keys(snapshot.parent[KEYED_UINT_SCALAR]).length,
+             "The keyed scalar must contain all the 100 keys.");
+
+  // Check that KEYED_UINT_SCALAR is in keyedScalars and its value equals 3
+  Assert.ok((KEYED_UINT_SCALAR in keyedScalars[KEYED_EXCEED_SCALAR]), "The keyed Scalar is in the keyed exceeded scalar");
+  Assert.equal(keyedScalars[KEYED_EXCEED_SCALAR][KEYED_UINT_SCALAR], 3, "We have exactly 3 keys over the limit");
 });
 
 add_task(async function test_dynamicScalars_registration() {
