@@ -8,13 +8,10 @@ const { Ci } = require("chrome");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { accessibleSpec } = require("devtools/shared/specs/accessibility");
 
-const {
-  getContrastRatioFor,
-  isDefunct,
-} = require("devtools/server/actors/utils/accessibility");
+loader.lazyRequireGetter(this, "getContrastRatioFor", "devtools/server/actors/utils/accessibility", true);
+loader.lazyRequireGetter(this, "isDefunct", "devtools/server/actors/utils/accessibility", true);
 
 const nsIAccessibleRelation = Ci.nsIAccessibleRelation;
-
 const RELATIONS_TO_IGNORE = new Set([
   nsIAccessibleRelation.RELATION_CONTAINING_APPLICATION,
   nsIAccessibleRelation.RELATION_CONTAINING_TAB_PANE,
