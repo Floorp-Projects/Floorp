@@ -210,19 +210,11 @@ static bool gInitialized = false;
 
 // Perform our one-time intialization for this module
 
-static nsresult
-Initialize()
+void
+nsLayoutModuleInitialize()
 {
   if (gInitialized) {
     MOZ_CRASH("Recursive layout module initialization");
-    return NS_ERROR_FAILURE;
-  }
-  if (XRE_GetProcessType() == GeckoProcessType_GPU) {
-    // We mark the layout module as being available in the GPU process so that
-    // XPCOM's component manager initializes the power manager service, which
-    // is needed for nsAppShell. However, we don't actually need anything in
-    // the layout module itself.
-    return NS_OK;
   }
 
   static_assert(sizeof(uintptr_t) == sizeof(void*),
@@ -231,18 +223,22 @@ Initialize()
 
   gInitialized = true;
 
-  nsresult rv;
-  rv = xpcModuleCtor();
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = nsLayoutStatics::Initialize();
-  if (NS_FAILED(rv)) {
-    Shutdown();
-    return rv;
+  if (XRE_GetProcessType() == GeckoProcessType_GPU) {
+    // We mark the layout module as being available in the GPU process so that
+    // XPCOM's component manager initializes the power manager service, which
+    // is needed for nsAppShell. However, we don't actually need anything in
+    // the layout module itself.
+    return;
   }
 
-  return NS_OK;
+  if (NS_FAILED(xpcModuleCtor())) {
+    MOZ_CRASH("xpcModuleCtor failed");
+  }
+
+  if (NS_FAILED(nsLayoutStatics::Initialize())) {
+    Shutdown();
+    MOZ_CRASH("nsLayoutStatics::Initialize failed");
+  }
 }
 
 // Shutdown this module, releasing all of the module resources
@@ -685,6 +681,14 @@ static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
   { nullptr }
   // clang-format on
 };
+
+static nsresult
+Initialize()
+{
+  // nsLayoutModuleInitialize should be called first.
+  MOZ_RELEASE_ASSERT(gInitialized);
+  return NS_OK;
+}
 
 static void
 LayoutModuleDtor()
