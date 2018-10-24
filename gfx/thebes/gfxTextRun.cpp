@@ -1884,7 +1884,10 @@ void
 gfxFontGroup::AddFamilyToFontList(gfxFontFamily* aFamily,
                                   FontFamilyType aGeneric)
 {
-    NS_ASSERTION(aFamily, "trying to add a null font family to fontlist");
+    if (!aFamily) {
+        MOZ_ASSERT_UNREACHABLE("don't try to add a null font family!");
+        return;
+    }
     AutoTArray<gfxFontEntry*,4> fontEntryList;
     aFamily->FindAllFontsForStyle(mStyle, fontEntryList);
     // add these to the fontlist
