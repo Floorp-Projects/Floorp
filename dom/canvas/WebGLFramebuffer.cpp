@@ -508,6 +508,10 @@ WebGLFramebuffer::Delete()
     mContext->gl->fDeleteFramebuffers(1, &mGLName);
 
     LinkedListElement<WebGLFramebuffer>::removeFrom(mContext->mFramebuffers);
+
+#ifdef ANDROID
+    mIsFB = false;
+#endif
 }
 
 ////
@@ -1228,7 +1232,7 @@ WebGLFramebuffer::FramebufferTexture2D(GLenum attachEnum,
         if (!mContext->ValidateObject("texture", *tex))
             return;
 
-        if (!tex->Target()) {
+        if (!tex->HasEverBeenBound()) {
             mContext->ErrorInvalidOperation("`texture` has never been bound.");
             return;
         }
@@ -1313,7 +1317,7 @@ WebGLFramebuffer::FramebufferTextureLayer(GLenum attachEnum,
         if (!mContext->ValidateObject("texture", *tex))
             return;
 
-        if (!tex->Target()) {
+        if (!tex->HasEverBeenBound()) {
             mContext->ErrorInvalidOperation("`texture` has never been bound.");
             return;
         }

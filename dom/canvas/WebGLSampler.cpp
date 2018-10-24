@@ -11,6 +11,8 @@
 
 namespace mozilla {
 
+
+
 WebGLSampler::WebGLSampler(WebGLContext* const webgl)
     : WebGLRefCountedObject(webgl)
     , mGLName([&]() {
