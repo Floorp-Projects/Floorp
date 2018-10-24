@@ -5,6 +5,7 @@
 package mozilla.components.browser.toolbar
 
 import android.content.Context
+import android.graphics.Typeface
 import android.support.annotation.DrawableRes
 import android.support.annotation.VisibleForTesting
 import android.util.AttributeSet
@@ -101,6 +102,46 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     /**
+     * Sets the colour of the text to be displayed when the URL of the toolbar is empty.
+     */
+    var hintColor: Int
+        get() = displayToolbar.urlView.currentHintTextColor
+        set(value) {
+            displayToolbar.urlView.setHintTextColor(value)
+            editToolbar.urlView.setHintTextColor(value)
+        }
+
+    /**
+     * Sets the colour of the text for the URL/search term displayed in the toolbar.
+     */
+    var textColor: Int
+        get() = displayToolbar.urlView.currentTextColor
+        set(value) {
+            displayToolbar.urlView.setTextColor(value)
+            editToolbar.urlView.setTextColor(value)
+        }
+
+    /**
+     * Sets the size of the text for the URL/search term displayed in the toolbar.
+     */
+    var textSize: Float
+        get() = displayToolbar.urlView.textSize
+        set(value) {
+            displayToolbar.urlView.textSize = value
+            editToolbar.urlView.textSize = value
+        }
+
+    /**
+     * Sets the typeface of the text for the URL/search term displayed in the toolbar.
+     */
+    var typeface: Typeface
+        get() = displayToolbar.urlView.typeface
+        set(value) {
+            displayToolbar.urlView.typeface = value
+            editToolbar.urlView.typeface = value
+        }
+
+    /**
      * Sets a listener to be invoked when focus of the URL input view (in edit mode) changed.
      */
     fun setOnEditFocusChangeListener(listener: (Boolean) -> Unit) {
@@ -145,6 +186,23 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     init {
+        context.obtainStyledAttributes(attrs, R.styleable.BrowserToolbar, defStyleAttr, 0).apply {
+            attrs?.let {
+                hintColor = getColor(
+                    R.styleable.BrowserToolbar_browserToolbarHintColor,
+                    hintColor
+                )
+                textColor = getColor(
+                    R.styleable.BrowserToolbar_browserToolbarTextColor,
+                    textColor
+                )
+                textSize = getDimension(
+                    R.styleable.BrowserToolbar_browserToolbarTextSize,
+                    textSize
+                ) / resources.displayMetrics.density
+            }
+            recycle()
+        }
         addView(displayToolbar)
         addView(editToolbar)
 

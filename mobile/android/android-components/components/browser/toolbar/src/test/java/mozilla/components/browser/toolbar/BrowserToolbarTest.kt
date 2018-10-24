@@ -4,6 +4,9 @@
 
 package mozilla.components.browser.toolbar
 
+import android.graphics.Color
+import android.graphics.Typeface
+import android.util.AttributeSet
 import android.view.View
 import android.widget.LinearLayout
 import mozilla.components.browser.menu.BrowserMenuBuilder
@@ -15,6 +18,7 @@ import mozilla.components.support.base.android.Padding
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -543,5 +547,70 @@ class BrowserToolbarTest {
         assertEquals(view.paddingTop, 20)
         assertEquals(view.paddingRight, 24)
         assertEquals(view.paddingBottom, 28)
+    }
+
+    @Test
+    fun `hintColor changes edit and display urlView`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+
+        assertTrue(toolbar.displayToolbar.urlView.currentHintTextColor != Color.RED)
+        assertTrue(toolbar.editToolbar.urlView.currentHintTextColor != Color.RED)
+
+        toolbar.hintColor = Color.RED
+
+        assertEquals(Color.RED, toolbar.displayToolbar.urlView.currentHintTextColor)
+        assertEquals(Color.RED, toolbar.editToolbar.urlView.currentHintTextColor)
+    }
+
+    @Test
+    fun `textColor changes edit and display urlView`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+
+        assertTrue(toolbar.displayToolbar.urlView.currentTextColor != Color.RED)
+        assertTrue(toolbar.editToolbar.urlView.currentTextColor != Color.RED)
+
+        toolbar.textColor = Color.RED
+
+        assertEquals(Color.RED, toolbar.displayToolbar.urlView.currentTextColor)
+        assertEquals(Color.RED, toolbar.editToolbar.urlView.currentTextColor)
+    }
+
+    @Test
+    fun `textSize changes edit and display urlView`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+
+        assertTrue(toolbar.displayToolbar.urlView.textSize != 12f)
+        assertTrue(toolbar.editToolbar.urlView.textSize != 12f)
+
+        toolbar.textSize = 12f
+
+        assertEquals(12f, toolbar.displayToolbar.urlView.textSize)
+        assertEquals(12f, toolbar.editToolbar.urlView.textSize)
+    }
+
+    @Test
+    fun `typeface changes edit and display urlView`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val typeface: Typeface = mock()
+
+        assertNotEquals(typeface, toolbar.editToolbar.urlView.typeface)
+        assertNotEquals(typeface, toolbar.displayToolbar.urlView.typeface)
+
+        toolbar.typeface = typeface
+
+        assertEquals(typeface, toolbar.displayToolbar.urlView.typeface)
+        assertEquals(typeface, toolbar.editToolbar.urlView.typeface)
+    }
+
+    @Test
+    fun `obtainAttributes called when attributes provided`() {
+        val application = spy(RuntimeEnvironment.application)
+        val attributeSet: AttributeSet = mock()
+
+        BrowserToolbar(application)
+        verify(application, never()).obtainStyledAttributes(attributeSet, R.styleable.BrowserToolbar, 0, 0)
+
+        BrowserToolbar(application, attributeSet)
+        verify(application).obtainStyledAttributes(attributeSet, R.styleable.BrowserToolbar, 0, 0)
     }
 }

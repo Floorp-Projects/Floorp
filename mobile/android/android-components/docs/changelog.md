@@ -17,19 +17,36 @@ permalink: /changelog/
 * **browser-toolbar**:
   * Added new listener to get notified when the user is editing the URL:
   ```kotlin
-          toolbar.setOnEditListener(object : Toolbar.OnEditListener {
-            override fun onTextChanged(text: String) {
-              // Fired whenever the user changes the text in the address bar.
-            }
+  toolbar.setOnEditListener(object : Toolbar.OnEditListener {
+      override fun onTextChanged(text: String) {
+          // Fired whenever the user changes the text in the address bar.
+      }
 
-            override fun onStartEditing() {
-              // Fired when the toolbar switches to edit mode.
-            }
+      override fun onStartEditing() {
+          // Fired when the toolbar switches to edit mode.
+      }
 
-            override fun onStopEditing() {
-              // Fired when the toolbar switches back to display mode.
-            }
-        })
+      override fun onStopEditing() {
+          // Fired when the toolbar switches back to display mode.
+      }
+  })
+  ```
+  * Added new toolbar APIs:
+  ```kotlin
+  toolbar.textColor: Int = getColor(R.color.photonRed50)
+  toolbar.hintColor: Int = getColor(R.color.photonGreen50)
+  toolbar.textSize: Float = 12f
+  toolbar.typeface: Typeface = Typeface.createFromFile("fonts/foo.tff")
+  ```
+    These attributes are also available in XML (except for typeface):
+  ```xml
+  <mozilla.components.browser.toolbar.BrowserToolbar 
+    android:id="@+id/toolbar"
+    app:browserToolbarTextColor="#ff0000"
+    app:browserToolbarHintColor="#00ff00"
+    app:browserToolbarTextSize="12sp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"/>
   ```
   * [Api improvement](https://github.com/mozilla-mobile/android-components/issues/772) for more flexibility to create a `BrowserToolbar.Button`,
   and `BrowserToolbar.ToggleButton`, now you can provide a custom padding:
