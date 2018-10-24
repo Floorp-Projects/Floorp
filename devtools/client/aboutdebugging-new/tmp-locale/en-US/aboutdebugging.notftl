@@ -43,6 +43,11 @@ about-debugging-connect-title = Connect a Device
 about-debugging-connect-wifi
   .title = Via WiFi
 
+# Temporary text displayed when wifi support is turned off via preferences.
+# { $pref } is the name of the preference that enables wifi
+# Do not localize
+about-debugging-connect-wifi-disabled = WiFi debugging currently under development. You can enable it with the preference "{ $pref }".
+
 # WiFi section step by step guide
 about-debugging-connect-wifi-step-same-network = Ensure that your browser and device are on the same network
 
