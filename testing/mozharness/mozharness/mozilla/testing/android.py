@@ -194,7 +194,7 @@ class AndroidMixin(object):
     def _verify_emulator_and_restart_on_fail(self):
         emulator_ok = self._verify_emulator()
         if not emulator_ok:
-            self.screenshot("emulator-startup-screenshot-")
+            self.device_screenshot()
             self.kill_processes(self.config["emulator_process_name"])
             subprocess.check_call(['ps', '-ef'])
             # remove emulator tmp files
@@ -335,23 +335,23 @@ class AndroidMixin(object):
     def shell_output(self, cmd):
         return self.device.shell_output(cmd, timeout=30)
 
-    def screenshot(self, prefix):
+    def device_screenshot(self):
         """
-           Save a screenshot of the entire screen to the blob upload directory.
+           On emulator, save a screenshot of the entire screen to the upload directory;
+           otherwise, save a screenshot of the device to the upload directory.
         """
-        dirs = self.query_abs_dirs()
-        utility = os.path.join(self.xre_path, "screentopng")
-        if not os.path.exists(utility):
-            self.warning("Unable to take screenshot: %s does not exist" % utility)
-            return
-        try:
-            tmpfd, filename = tempfile.mkstemp(prefix=prefix, suffix='.png',
-                                               dir=dirs['abs_blob_upload_dir'])
-            os.close(tmpfd)
-            self.info("Taking screenshot with %s; saving to %s" % (utility, filename))
-            subprocess.call([utility, filename], env=self.query_env())
-        except OSError, err:
-            self.warning("Failed to take screenshot: %s" % err.strerror)
+        from mozscreenshot import dump_screen, dump_device_screen
+        reset_dir = False
+        if not os.environ.get("MOZ_UPLOAD_DIR", None):
+            dirs = self.query_abs_dirs()
+            os.environ["MOZ_UPLOAD_DIR"] = dirs['abs_blob_upload_dir']
+            reset_dir = True
+        if self.is_emulator:
+            dump_screen(self.xre_path, self)
+        else:
+            dump_device_screen(self.device, self)
+        if reset_dir:
+            del os.environ["MOZ_UPLOAD_DIR"]
 
     def download_hostutils(self, xre_dir):
         """
