@@ -6,12 +6,8 @@
 #ifndef WSRunObject_h
 #define WSRunObject_h
 
-#include "nsCOMPtr.h"
-#include "nsIEditor.h" // for EDirection
-#include "nsINode.h"
-#include "nscore.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/Text.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h" // for EditorDOMPoint
 
 namespace mozilla {
@@ -150,6 +146,10 @@ inline const WSType operator|(const WSType::Enum& aLeft,
 
 class MOZ_STACK_CLASS WSRunObject final
 {
+protected:
+  typedef EditorBase::AutoTransactionsConserveSelection
+            AutoTransactionsConserveSelection;
+
 public:
   enum BlockBoundary
   {
