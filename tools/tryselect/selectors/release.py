@@ -12,6 +12,11 @@ from mozilla_version.gecko import FirefoxVersion
 from ..cli import BaseTryParser
 from ..push import push_to_try, vcs
 
+TARGET_TASKS = {
+    'staging': 'staging_release_builds',
+    'beta-sim': 'beta_simulation',
+}
+
 
 def read_file(path):
     with open(path) as fh:
@@ -40,12 +45,19 @@ class ReleaseParser(BaseTryParser):
           'dest': 'limit_locales',
           'help': "Don't build a limited number of locales in the staging release.",
           }],
+        [['--tasks'],
+         {'choices': TARGET_TASKS.keys(),
+          'default': 'staging',
+          'help': "Which tasks to run on-push.",
+          }],
+
     ]
     common_groups = ['push']
 
 
 def run_try_release(
-    version, migrations=(), push=True, message='{msg}', limit_locales=True, **kwargs
+    version, migrations, limit_locales, tasks,
+    push=True, message='{msg}', **kwargs
 ):
 
     if version.is_beta:
@@ -66,7 +78,7 @@ def run_try_release(
     task_config = {
         'version': 2,
         'parameters': {
-            'target_tasks_method': 'staging_release_builds',
+            'target_tasks_method': TARGET_TASKS[tasks],
             'optimize_target_tasks': True,
             'release_type': release_type,
         },
