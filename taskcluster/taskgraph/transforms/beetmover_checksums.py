@@ -88,9 +88,6 @@ def make_beetmover_checksums_description(config, jobs):
 
         dependent_kind = str(dep_job.kind)
         dependencies = {dependent_kind: dep_job.label}
-        for k, v in dep_job.dependencies.items():
-            if k.startswith('beetmover'):
-                dependencies[k] = v
 
         attributes = copy_attributes_from_dependent_job(dep_job)
 
@@ -145,25 +142,12 @@ def generate_upstream_artifacts(refs, platform, locale=None):
 @transforms.add
 def make_beetmover_checksums_worker(config, jobs):
     for job in jobs:
-        valid_beetmover_job = (len(job["dependencies"]) == 2)
-        if not valid_beetmover_job:
-            raise NotImplementedError("Beetmover checksums must have two dependencies.")
-
         locale = job["attributes"].get("locale")
         platform = job["attributes"]["build_platform"]
 
         refs = {
-            "beetmover": None,
-            "signing": None,
+            "signing": "<checksums-signing>",
         }
-        for dependency in job["dependencies"].keys():
-            if dependency.startswith("beetmover"):
-                refs['beetmover'] = "<{}>".format(dependency)
-            else:
-                refs['signing'] = "<{}>".format(dependency)
-        if None in refs.values():
-            raise NotImplementedError(
-                "Beetmover checksums must have a beetmover and signing dependency!")
 
         worker = {
             'implementation': 'beetmover',
