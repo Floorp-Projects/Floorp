@@ -1494,7 +1494,7 @@ Accessible::ARIATransformRole(role aRole) const
   if (aRole == roles::REGION) {
     nsAutoString name;
     Name(name);
-    return name.IsEmpty() ? NativeRole() : aRole;
+    return name.IsEmpty() ? NativeRole() : roles::LANDMARK;
   }
 
   // XXX: these unfortunate exceptions don't fit into the ARIA table. This is
