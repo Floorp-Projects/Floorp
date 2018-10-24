@@ -38,12 +38,15 @@ set +e
 
 URL_FLANK_BIN=`curl -s https://api.github.com/repos/TestArmada/flank/releases/latest | grep "browser_download_url*" | cut -d '"' -f 4`
 JAVA_BIN="/usr/bin/java"
-PATH_TEST="/opt/focus-android/app/src/androidTest/java/org/mozilla/focus/activity"
-PATH_TOOLS="/opt/focus-android/tools/taskcluster"
+WORKDIR="/opt/focus-android"
+PATH_TEST="$WORKDIR/app/src/androidTest/java/org/mozilla/focus/activity"
+PATH_TOOLS="$WORKDIR/tools/taskcluster"
 PACKAGE="org.mozilla.focus.activity"
 FLANK_BIN="$PATH_TOOLS/flank.jar"
 FLANK_CONF="$PATH_TOOLS/flank.yml"
 
+echo "home: $HOME"
+export GOOGLE_APPLICATION_CREDENTIALS="$WORKDIR/.firebase_token.json"
 
 if [ "$1" == "x86" ] || [ "$1" == "arm" ]; then
     if [ "$2" == "geckoview" ] || [ "$2" == "webview" ]; then
