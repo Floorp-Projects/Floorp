@@ -810,12 +810,12 @@ linux64-mingw32-nsis:
     toolchains:
         - linux64-mingw32-gcc
 
-linux64-mingw32-fxc2:
-    description: "fxc2.exe build for MinGW32 Cross Compile"
+linux64-mingw-fxc2-x86:
+    description: "fxc2.exe x86 build for MinGW Cross Compile"
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TMW(mingw32-fxc2)
+        symbol: TMW(mingw-fxc2-x86)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -823,10 +823,11 @@ linux64-mingw32-fxc2:
         max-run-time: 1800
     run:
         using: toolchain-script
-        script: build-mingw32-fxc2.sh
+        script: build-mingw-fxc2-x86.sh
         resources:
-            - 'build/unix/build-gcc/build-gcc.sh'
-            - 'taskcluster/scripts/misc/build-gcc-mingw32.sh'
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-trunk-mingw.json'
+            - 'taskcluster/scripts/misc/build-clang-trunk-mingw.sh'
         toolchain-artifact: public/build/fxc2.tar.xz
     toolchains:
-        - linux64-mingw32-gcc
+        - linux64-clang-trunk-mingw-x86

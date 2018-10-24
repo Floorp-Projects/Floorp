@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1139964
     ppm.removeMessageListener(msgName, processListener);
     ok(m.data.hasPromise, "ProcessGlobal should have Promise object in the global scope!");
     ok(m.data.hasTextEncoder, "ProcessGlobal should have TextEncoder object in the global scope!");
-    ok(!m.data.hasWindow, "ProcessGlobal should not have Window object in the global scope!");
+    ok(m.data.hasWindow, "ProcessGlobal should have Window object in the global scope!");
 
     messageManager.addMessageListener(msgName, tabListener)
     messageManager.loadFrameScript("data:,(" + mmScriptForPromiseTest.toString() + ")()", true);
@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1139964
     messageManager.removeMessageListener(msgName, tabListener);
     ok(m.data.hasPromise, "TabChildGlobal should have Promise object in the global scope!");
     ok(m.data.hasTextEncoder, "TabChildGlobal should have TextEncoder object in the global scope!");
-    ok(!m.data.hasWindow, "TabChildGlobal should not have Window object in the global scope!");
+    ok(m.data.hasWindow, "TabChildGlobal should have Window object in the global scope!");
 
     opener.setTimeout("done()", 0);
     window.close();

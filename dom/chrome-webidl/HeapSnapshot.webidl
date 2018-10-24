@@ -7,7 +7,7 @@
 /**
  * A HeapSnapshot represents a snapshot of the heap graph
  */
-[ChromeOnly, Exposed=(Window,System,Worker)]
+[ChromeOnly, Exposed=(Window,Worker)]
 interface HeapSnapshot {
   /**
    * A time stamp of when the heap snapshot was taken, if available. Units are

@@ -327,6 +327,13 @@ class IDLScope(IDLObject):
         assert identifier.scope == self
         return self._lookupIdentifier(identifier)
 
+    def addIfaceGlobalNames(self, interfaceName, globalNames):
+        """Record the global names (from |globalNames|) that can be used in
+        [Exposed] to expose things in a global named |interfaceName|"""
+        self.globalNames.update(globalNames)
+        for name in globalNames:
+            self.globalNameMapping[name].add(interfaceName)
+
 
 class IDLIdentifier(IDLObject):
     def __init__(self, location, scope, name):
@@ -504,8 +511,10 @@ class IDLExposureMixins():
         return 'Window' in self.exposureSet
 
     def isExposedOnMainThread(self):
-        return (self.isExposedInWindow() or
-                self.isExposedInSystemGlobals())
+        return self.isExposedInWindow()
+
+    def isExposedOffMainThread(self):
+        return len(self.exposureSet - {'Window', 'FakeTestPrimaryGlobal'}) > 0
 
     def isExposedInAnyWorker(self):
         return len(self.getWorkerExposureSet()) > 0
@@ -515,9 +524,6 @@ class IDLExposureMixins():
 
     def isExposedInAnyWorklet(self):
         return len(self.getWorkletExposureSet()) > 0
-
-    def isExposedInSystemGlobals(self):
-        return 'BackstagePass' in self.exposureSet
 
     def isExposedInSomeButNotAllWorkers(self):
         """
@@ -1323,10 +1329,9 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
                     checkDuplicateNames(member, bindingAlias, "BindingAlias")
 
 
-        if (self.getExtendedAttribute("Pref") and
-            self._exposureGlobalNames != set([self.parentScope.primaryGlobalName])):
-            raise WebIDLError("[Pref] used on an interface that is not %s-only" %
-                              self.parentScope.primaryGlobalName,
+        if self.getExtendedAttribute("Pref") and self.isExposedOffMainThread():
+            raise WebIDLError("[Pref] used on an interface that is not "
+                              "main-thread-only",
                               [self.location])
 
         # Conditional exposure makes no sense for interfaces with no
@@ -1710,9 +1715,8 @@ class IDLInterface(IDLInterfaceOrNamespace):
                     self.globalNames = attr.args()
                 else:
                     self.globalNames = [self.identifier.name]
-                self.parentScope.globalNames.update(self.globalNames)
-                for globalName in self.globalNames:
-                    self.parentScope.globalNameMapping[globalName].add(self.identifier.name)
+                self.parentScope.addIfaceGlobalNames(self.identifier.name,
+                                                     self.globalNames)
                 self._isOnGlobalProtoChain = True
             elif identifier == "PrimaryGlobal":
                 if not attr.noArguments():
@@ -1725,8 +1729,8 @@ class IDLInterface(IDLInterfaceOrNamespace):
                          self.parentScope.primaryGlobalAttr.location])
                 self.parentScope.primaryGlobalAttr = attr
                 self.parentScope.primaryGlobalName = self.identifier.name
-                self.parentScope.globalNames.add(self.identifier.name)
-                self.parentScope.globalNameMapping[self.identifier.name].add(self.identifier.name)
+                self.parentScope.addIfaceGlobalNames(self.identifier.name,
+                                                     [self.identifier.name])
                 self._isOnGlobalProtoChain = True
             elif identifier == "SecureContext":
                 if not attr.noArguments():
@@ -3572,10 +3576,9 @@ class IDLInterfaceMember(IDLObjectWithIdentifier, IDLExposureMixins):
         IDLExposureMixins.finish(self, scope)
 
     def validate(self):
-        if (self.getExtendedAttribute("Pref") and
-            self.exposureSet != set([self._globalScope.primaryGlobalName])):
+        if self.getExtendedAttribute("Pref") and self.isExposedOffMainThread():
             raise WebIDLError("[Pref] used on an interface member that is not "
-                              "%s-only" % self._globalScope.primaryGlobalName,
+                              "main-thread-only",
                               [self.location])
 
         if self.isAttr() or self.isMethod():
@@ -6896,16 +6899,13 @@ class Parser(Tokenizer):
             logger.reportGrammarErrors()
 
         self._globalScope = IDLScope(BuiltinLocation("<Global Scope>"), None, None)
+
         # To make our test harness work, pretend like we have a primary global already.
         # Note that we _don't_ set _globalScope.primaryGlobalAttr,
         # so we'll still be able to detect multiple PrimaryGlobal extended attributes.
         self._globalScope.primaryGlobalName = "FakeTestPrimaryGlobal"
-        self._globalScope.globalNames.add("FakeTestPrimaryGlobal")
-        self._globalScope.globalNameMapping["FakeTestPrimaryGlobal"].add("FakeTestPrimaryGlobal")
-        # And we add the special-cased "System" global name, which
-        # doesn't have any corresponding interfaces.
-        self._globalScope.globalNames.add("System")
-        self._globalScope.globalNameMapping["System"].add("BackstagePass")
+        self._globalScope.addIfaceGlobalNames("FakeTestPrimaryGlobal", ["FakeTestPrimaryGlobal"])
+
         self._installBuiltins(self._globalScope)
         self._productions = []
 

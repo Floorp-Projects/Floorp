@@ -12,12 +12,12 @@ enum PlacesEventType {
   "bookmark-added",
 };
 
-[ChromeOnly, Exposed=(Window,System)]
+[ChromeOnly, Exposed=Window]
 interface PlacesEvent {
   readonly attribute PlacesEventType type;
 };
 
-[ChromeOnly, Exposed=(Window,System)]
+[ChromeOnly, Exposed=Window]
 interface PlacesVisit : PlacesEvent {
   /**
    * URL of the visit.
@@ -76,7 +76,7 @@ interface PlacesVisit : PlacesEvent {
 /**
  * Base class for properties that are common to all bookmark events.
  */
-[ChromeOnly, Exposed=(Window,System)]
+[ChromeOnly, Exposed=Window]
 interface PlacesBookmark : PlacesEvent {
   /**
    * The id of the item.
@@ -135,7 +135,7 @@ dictionary PlacesBookmarkAdditionInit {
   required boolean isTagging;
 };
 
-[ChromeOnly, Exposed=(Window,System), Constructor(PlacesBookmarkAdditionInit initDict)]
+[ChromeOnly, Exposed=Window, Constructor(PlacesBookmarkAdditionInit initDict)]
 interface PlacesBookmarkAddition : PlacesBookmark {
   /**
    * The item's index in the folder.

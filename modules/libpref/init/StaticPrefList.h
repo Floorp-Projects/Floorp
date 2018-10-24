@@ -250,13 +250,6 @@ VARCACHE_PREF(
   uint32_t, 5000
 )
 
-// Disable the ImageBitmap-extensions for now.
-VARCACHE_PREF(
-  "canvas.imagebitmap_extensions.enabled",
-   canvas_imagebitmap_extensions_enabled,
-  RelaxedAtomicBool, false
-)
-
 // SW Cache API
 VARCACHE_PREF(
   "dom.caches.enabled",

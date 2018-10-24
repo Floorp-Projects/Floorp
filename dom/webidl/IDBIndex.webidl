@@ -18,7 +18,7 @@ dictionary IDBIndexParameters {
     DOMString? locale = null;
 };
 
-[Exposed=(Window,Worker,System)]
+[Exposed=(Window,Worker)]
 interface IDBIndex {
     [SetterThrows]
     attribute DOMString name;

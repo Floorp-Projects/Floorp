@@ -12,7 +12,7 @@ dictionary IDBObjectStoreParameters {
     boolean                             autoIncrement = false;
 };
 
-[Exposed=(Window,Worker,System)]
+[Exposed=(Window,Worker)]
 interface IDBObjectStore {
     [SetterThrows]
     attribute DOMString name;

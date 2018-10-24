@@ -11,9 +11,8 @@ namespace mozilla {
 namespace dom {
 
 // So we don't have to forward declare this elsewhere.
-class HTMLImageElementOrHTMLVideoElementOrHTMLCanvasElementOrBlobOrImageDataOrCanvasRenderingContext2DOrImageBitmapOrArrayBufferViewOrArrayBuffer;
-typedef HTMLImageElementOrHTMLVideoElementOrHTMLCanvasElementOrBlobOrImageDataOrCanvasRenderingContext2DOrImageBitmapOrArrayBufferViewOrArrayBuffer
-        ImageBitmapSource;
+class HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmapOrBlobOrCanvasRenderingContext2DOrImageData;
+typedef HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmapOrBlobOrCanvasRenderingContext2DOrImageData ImageBitmapSource;
 
 }
 }
