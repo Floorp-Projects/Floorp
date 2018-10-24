@@ -83,6 +83,26 @@ exports.STATUS = {
 };
 
 /**
+ * Mapping of CSSRule type value to CSSRule type name.
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
+ */
+exports.CSSRuleTypeName = {
+  1: "", // Regular CSS style rule has no name
+  3: "@import",
+  4: "@media",
+  5: "@font-face",
+  6: "@page",
+  7: "@keyframes",
+  8: "@keyframe",
+  10: "@namespace",
+  11: "@counter-style",
+  12: "@supports",
+  13: "@document",
+  14: "@font-feature-values",
+  15: "@viewport",
+};
+
+/**
  * Lookup a l10n string in the shared styleinspector string bundle.
  *
  * @param {String} name

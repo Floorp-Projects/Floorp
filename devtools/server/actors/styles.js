@@ -27,7 +27,10 @@ loader.lazyRequireGetter(this, "UPDATE_PRESERVING_RULES",
   "devtools/server/actors/stylesheets", true);
 loader.lazyRequireGetter(this, "UPDATE_GENERAL",
   "devtools/server/actors/stylesheets", true);
-loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "findCssSelector",
+  "devtools/shared/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "CSSRuleTypeName",
+  "devtools/shared/inspector/css-logic", true);
 
 loader.lazyGetter(this, "PSEUDO_ELEMENTS", () => {
   return InspectorUtils.getCSSPseudoElementNames();
@@ -986,13 +989,13 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     if (CSSRule.isInstance(item)) {
       this.type = item.type;
       this.rawRule = item;
+      this._computeRuleIndex();
       if ((this.type === CSSRule.STYLE_RULE ||
            this.type === CSSRule.KEYFRAME_RULE) &&
           this.rawRule.parentStyleSheet) {
         this.line = InspectorUtils.getRelativeRuleLine(this.rawRule);
         this.column = InspectorUtils.getRuleColumn(this.rawRule);
         this._parentSheet = this.rawRule.parentStyleSheet;
-        this._computeRuleIndex();
         this.sheetActor = this.pageStyle._sheetRef(this._parentSheet);
         this.sheetActor.on("style-applied", this._onStyleApplied);
       }
@@ -1047,6 +1050,25 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
             // the fly and the URI is not registered with the about:handler
             // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
             this._parentSheet.href !== "about:PreferenceStyleSheet");
+  },
+
+  /**
+   * Return an array with StyleRuleActor instances for each of this rule's ancestor rules
+   * (@media, @supports, @keyframes, etc) obtained by recursively reading rule.parentRule.
+   * If the rule has no ancestors, return an empty array.
+   *
+   * @return {Array}
+   */
+  get ancestorRules() {
+    const ancestors = [];
+    let rule = this.rawRule;
+
+    while (rule.parentRule) {
+      ancestors.push(this.pageStyle._styleRef(rule.parentRule));
+      rule = rule.parentRule;
+    }
+
+    return ancestors;
   },
 
   getDocument: function(sheet) {
@@ -1186,10 +1208,10 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     const result = [];
 
     while (rule) {
-      let cssRules;
+      let cssRules = [];
       if (rule.parentRule) {
         cssRules = rule.parentRule.cssRules;
-      } else {
+      } else if (rule.parentStyleSheet) {
         cssRules = rule.parentStyleSheet.cssRules;
       }
 
@@ -1476,19 +1498,53 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
 
     // Metadata about a change.
     const data = {};
-    data.type = change.type;
-    data.selector = this.rawRule.selectorText;
+    // Collect information about the rule's ancestors (@media, @supports, @keyframes).
+    // Used to show context for this change in the UI and to match the rule for undo/redo.
+    data.ancestors = this.ancestorRules.map(rule => {
+      return {
+        // Rule type as number defined by CSSRule.type (ex: 4, 7, 12)
+        // @see https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
+        type: rule.rawRule.type,
+        // Rule type as human-readable string (ex: "@media", "@supports", "@keyframes")
+        typeName: CSSRuleTypeName[rule.rawRule.type],
+        // Conditions of @media and @supports rules (ex: "min-width: 1em")
+        conditionText: rule.rawRule.conditionText,
+        // Name of @keyframes rule; refrenced by the animation-name CSS property.
+        name: rule.rawRule.name,
+        // Selector of individual @keyframe rule within a @keyframes rule (ex: 0%, 100%).
+        keyText: rule.rawRule.keyText,
+        // Array with the indexes of this rule and its ancestors within the CSS rule tree.
+        ruleIndex: rule._ruleIndex,
+      };
+    });
 
-    // For inline style changes, generate a unique selector and pass the node tag.
+    // For changes in element style attributes, generate a unique selector.
     if (this.type === ELEMENT_STYLE) {
-      data.tag = this.rawNode.tagName;
-      data.href = "inline";
       // findCssSelector() fails on XUL documents. Catch and silently ignore that error.
       try {
         data.selector = findCssSelector(this.rawNode);
       } catch (err) {}
+
+      data.source = {
+        type: "element",
+        // Used to differentiate between elements which match the same generated selector
+        // but live in different documents (ex: host document and iframe).
+        href: this.rawNode.baseURI,
+        // Element style attributes don't have a rule index; use the generated selector.
+        index: data.selector,
+      };
+      data.ruleIndex = 0;
     } else {
-      data.href = this._parentSheet.href || "inline stylesheet";
+      data.selector = (this.type === CSSRule.KEYFRAME_RULE)
+        ? this.rawRule.keyText
+        : this.rawRule.selectorText;
+      data.source = {
+        type: "stylesheet",
+        href: this.sheetActor.href,
+        index: this.sheetActor.styleSheetIndex,
+      };
+      // Used to differentiate between changes to rules with identical selectors.
+      data.ruleIndex = this._ruleIndex;
     }
 
     switch (change.type) {
@@ -1511,14 +1567,6 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         data.add = null;
         data.remove = { property: change.name, value: prevValue };
         break;
-    }
-
-    // Do not track non-changes. This can occur when typing a value in the Rule view
-    // inline editor, then committing it by pressing the Enter key.
-    if (data.add && data.remove &&
-        data.add.property === data.remove.property &&
-        data.add.value === data.remove.value) {
-      return;
     }
 
     TrackChangeEmitter.trackChange(data);
