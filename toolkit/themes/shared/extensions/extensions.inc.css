@@ -426,9 +426,8 @@ richlistbox.list > richlistitem.addon {
 }
 
 .description-container {
-  margin-inline-start: 6px;
   -moz-box-align: center;
-  font-size: 1.25rem;
+  font-size: 1rem;
 }
 
 .description {
