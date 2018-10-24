@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.1'
+PACKAGE_VERSION = '0.1.1'
 
 setup(name='mozdebug',
       version=PACKAGE_VERSION,
