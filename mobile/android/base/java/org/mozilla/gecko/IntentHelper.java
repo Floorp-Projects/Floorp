@@ -22,6 +22,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.StrictMode;
 import android.provider.Browser;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
@@ -434,12 +435,18 @@ public final class IntentHelper implements BundleEventListener {
     }
 
     private void open(final GeckoBundle message) {
-        openUriExternal(message.getString("url", ""),
-                        message.getString("mime", ""),
-                        message.getString("packageName", ""),
-                        message.getString("className", ""),
-                        message.getString("action", ""),
-                        message.getString("title", ""), false);
+        final StrictMode.VmPolicy prevPolicy = StrictMode.getVmPolicy();
+        StrictMode.setVmPolicy(StrictMode.VmPolicy.LAX);
+        try {
+            openUriExternal(message.getString("url", ""),
+                            message.getString("mime", ""),
+                            message.getString("packageName", ""),
+                            message.getString("className", ""),
+                            message.getString("action", ""),
+                            message.getString("title", ""), false);
+        } finally {
+            StrictMode.setVmPolicy(prevPolicy);
+        }
     }
 
     private void openForResult(final GeckoBundle message, final EventCallback callback) {
@@ -458,10 +465,14 @@ public final class IntentHelper implements BundleEventListener {
             return;
         }
         final ResultHandler handler = new ResultHandler(callback);
+        final StrictMode.VmPolicy prevPolicy = StrictMode.getVmPolicy();
+        StrictMode.setVmPolicy(StrictMode.VmPolicy.LAX);
         try {
             ActivityHandlerHelper.startIntentForActivity(activity, intent, handler);
         } catch (SecurityException e) {
             Log.w(LOGTAG, "Forbidden to launch activity.", e);
+        } finally {
+            StrictMode.setVmPolicy(prevPolicy);
         }
     }
 
