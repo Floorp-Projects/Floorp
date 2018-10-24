@@ -13,11 +13,14 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/RandomNum.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WrappingOperations.h"
 
 #include <cmath>
+#include <fcntl.h>
+#ifdef XP_UNIX
+# include <unistd.h>
+#endif
 
 #include "fdlibm.h"
 #include "jsapi.h"
@@ -33,9 +36,75 @@
 
 #include "vm/JSObject-inl.h"
 
+#if defined(XP_WIN)
+// #define needed to link in RtlGenRandom(), a.k.a. SystemFunction036.  See the
+// "Community Additions" comment on MSDN here:
+// https://msdn.microsoft.com/en-us/library/windows/desktop/aa387694.aspx
+# define SystemFunction036 NTAPI SystemFunction036
+# include <ntsecapi.h>
+# undef SystemFunction036
+#endif
+
+#if defined(ANDROID) || defined(XP_DARWIN) || defined(__DragonFly__) || \
+    defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+# include <stdlib.h>
+# define HAVE_ARC4RANDOM
+#endif
+
+#if defined(__linux__)
+# include <linux/random.h> // For GRND_NONBLOCK.
+# include <sys/syscall.h> // For SYS_getrandom.
+
+// Older glibc versions don't define SYS_getrandom, so we define it here if
+// it's not available. See bug 995069.
+# if defined(__x86_64__)
+#  define GETRANDOM_NR 318
+# elif defined(__i386__)
+#  define GETRANDOM_NR 355
+# elif defined(__aarch64__)
+#  define GETRANDOM_NR 278
+# elif defined(__arm__)
+#  define GETRANDOM_NR 384
+# elif defined(__powerpc__)
+#  define GETRANDOM_NR 359
+# elif defined(__s390__)
+#  define GETRANDOM_NR 349
+# elif defined(__mips__)
+#  include <sgidefs.h>
+#  if _MIPS_SIM == _MIPS_SIM_ABI32
+#    define GETRANDOM_NR 4353
+#  elif _MIPS_SIM == _MIPS_SIM_ABI64
+#    define GETRANDOM_NR 5313
+#  elif _MIPS_SIM == _MIPS_SIM_NABI32
+#    define GETRANDOM_NR 6317
+#  endif
+# endif
+
+# if defined(SYS_getrandom)
+// We have SYS_getrandom. Use it to check GETRANDOM_NR. Only do this if we set
+// GETRANDOM_NR so tier 3 platforms with recent glibc are not forced to define
+// it for no good reason.
+#  if defined(GETRANDOM_NR)
+static_assert(GETRANDOM_NR == SYS_getrandom,
+              "GETRANDOM_NR should match the actual SYS_getrandom value");
+#  endif
+# else
+#  define SYS_getrandom GETRANDOM_NR
+# endif
+
+# if defined(GRND_NONBLOCK)
+static_assert(GRND_NONBLOCK == 1, "If GRND_NONBLOCK is not 1 the #define below is wrong");
+# else
+#  define GRND_NONBLOCK 1
+# endif
+
+#endif // defined(__linux__)
+
 using namespace js;
 
 using mozilla::Abs;
+using mozilla::NumberEqualsInt32;
+using mozilla::NumberIsInt32;
 using mozilla::ExponentComponent;
 using mozilla::FloatingPoint;
 using mozilla::IsFinite;
@@ -43,11 +112,8 @@ using mozilla::IsInfinite;
 using mozilla::IsNaN;
 using mozilla::IsNegative;
 using mozilla::IsNegativeZero;
-using mozilla::Maybe;
-using mozilla::NegativeInfinity;
-using mozilla::NumberEqualsInt32;
-using mozilla::NumberIsInt32;
 using mozilla::PositiveInfinity;
+using mozilla::NegativeInfinity;
 using mozilla::WrappingMultiply;
 using JS::ToNumber;
 using JS::GenericNaN;
@@ -568,13 +634,35 @@ js::math_pow(JSContext* cx, unsigned argc, Value* vp)
 uint64_t
 js::GenerateRandomSeed()
 {
-    Maybe<uint64_t> maybeSeed = mozilla::RandomUint64();
-    
-    return maybeSeed.valueOrFrom([] {
-        // Use PRMJ_Now() in case we couldn't read random bits from the OS.
-        uint64_t timestamp = PRMJ_Now();
-        return timestamp ^ (timestamp << 32);
-    });
+    uint64_t seed = 0;
+
+#if defined(XP_WIN)
+    MOZ_ALWAYS_TRUE(RtlGenRandom(&seed, sizeof(seed)));
+#elif defined(HAVE_ARC4RANDOM)
+    seed = (static_cast<uint64_t>(arc4random()) << 32) | arc4random();
+#elif defined(XP_UNIX)
+    bool done = false;
+# if defined(__linux__)
+    // Try the relatively new getrandom syscall first. It's the preferred way
+    // on Linux as /dev/urandom may not work inside chroots and is harder to
+    // sandbox (see bug 995069).
+    int ret = syscall(SYS_getrandom, &seed, sizeof(seed), GRND_NONBLOCK);
+    done = (ret == sizeof(seed));
+# endif
+    if (!done) {
+        int fd = open("/dev/urandom", O_RDONLY);
+        if (fd >= 0) {
+            mozilla::Unused << read(fd, static_cast<void*>(&seed), sizeof(seed));
+            close(fd);
+        }
+    }
+#else
+# error "Platform needs to implement GenerateRandomSeed()"
+#endif
+
+    // Also mix in PRMJ_Now() in case we couldn't read random bits from the OS.
+    uint64_t timestamp = PRMJ_Now();
+    return seed ^ timestamp ^ (timestamp << 32);
 }
 
 void
