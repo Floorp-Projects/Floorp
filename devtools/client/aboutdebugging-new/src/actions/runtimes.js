@@ -215,7 +215,26 @@ function unwatchRuntime(id) {
 }
 
 function updateUSBRuntimes(runtimes) {
-  return { type: USB_RUNTIMES_UPDATED, runtimes };
+  return async (dispatch, getState) => {
+    const currentRuntime = getCurrentRuntime(getState().runtimes);
+
+    if (currentRuntime &&
+        currentRuntime.type === RUNTIMES.USB &&
+        !runtimes.find(runtime => currentRuntime.id === runtime.id)) {
+      // Since current USB runtime was invalid, move to this firefox page.
+      // This case is considered as followings and so on:
+      // * Remove ADB addon
+      // * (Physically) Disconnect USB runtime
+      //
+      // The reason why we call selectPage before USB_RUNTIMES_UPDATED was fired is below.
+      // Current runtime can not be retrieved after USB_RUNTIMES_UPDATED action, since
+      // that updates runtime state. So, before that we fire selectPage action so that to
+      // transact unwatchRuntime correctly.
+      await dispatch(Actions.selectPage(RUNTIMES.THIS_FIREFOX, RUNTIMES.THIS_FIREFOX));
+    }
+
+    dispatch({ type: USB_RUNTIMES_UPDATED, runtimes });
+  };
 }
 
 module.exports = {
