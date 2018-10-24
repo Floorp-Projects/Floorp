@@ -245,6 +245,7 @@ BaselineCompiler::compile()
                             profilerExitFrameToggleOffset_.offset(),
                             postDebugPrologueOffset_.offset(),
                             icEntries_.length(),
+                            retAddrEntries_.length(),
                             pcMappingIndexEntries.length(),
                             pcEntries.length(),
                             bytecodeTypeMapEntries,
@@ -269,9 +270,12 @@ BaselineCompiler::compile()
     MOZ_ASSERT(pcEntries.length() > 0);
     baselineScript->copyPCMappingEntries(pcEntries);
 
-    // Copy IC entries
-    if (icEntries_.length()) {
+    // Copy ICEntries and RetAddrEntries.
+    if (icEntries_.length() > 0) {
         baselineScript->copyICEntries(script, &icEntries_[0]);
+    }
+    if (retAddrEntries_.length() > 0) {
+        baselineScript->copyRetAddrEntries(script, &retAddrEntries_[0]);
     }
 
     // Adopt fallback stubs from the compiler into the baseline script.
@@ -578,16 +582,28 @@ BaselineCompiler::emitOutOfLinePostBarrierSlot()
 }
 
 bool
-BaselineCompiler::emitIC(ICStub* stub, ICEntry::Kind kind)
+BaselineCompiler::emitIC(ICStub* stub, bool isForOp)
 {
-    ICEntry* entry = allocateICEntry(stub, kind);
-    if (!entry) {
+    if (!stub) {
         return false;
     }
 
-    CodeOffset patchOffset;
-    EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(CodeOffset(masm.currentOffset()));
+    CodeOffset patchOffset, callOffset;
+    EmitCallIC(masm, &patchOffset, &callOffset);
+
+    // ICs need both an ICEntry and a RetAddrEntry.
+
+    RetAddrEntry::Kind kind = isForOp ? RetAddrEntry::Kind::IC : RetAddrEntry::Kind::NonOpIC;
+    if (!retAddrEntries_.emplaceBack(script->pcToOffset(pc), kind, callOffset)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    if (!icEntries_.emplaceBack(stub, script->pcToOffset(pc), isForOp)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
     if (!addICLoadLabel(patchOffset)) {
         return false;
     }
@@ -686,9 +702,7 @@ BaselineCompiler::callVM(const VMFunction& fun, CallVMPhase phase)
     }
 #endif
 
-    // Add a fake ICEntry (without stubs), so that the return offset to
-    // pc mapping works.
-    return appendICEntry(ICEntry::Kind_CallVM, callOffset);
+    return appendRetAddrEntry(RetAddrEntry::Kind::CallVM, callOffset);
 }
 
 typedef bool (*CheckOverRecursedBaselineFn)(JSContext*, BaselineFrame*);
@@ -735,7 +749,7 @@ BaselineCompiler::emitStackCheck()
         return false;
     }
 
-    icEntries_.back().setFakeKind(ICEntry::Kind_StackCheck);
+    retAddrEntries_.back().setKind(RetAddrEntry::Kind::StackCheck);
 
     masm.bind(&skipCall);
     return true;
@@ -772,8 +786,8 @@ BaselineCompiler::emitDebugPrologue()
             return false;
         }
 
-        // Fix up the fake ICEntry appended by callVM for on-stack recompilation.
-        icEntries_.back().setFakeKind(ICEntry::Kind_DebugPrologue);
+        // Fix up the RetAddrEntry appended by callVM for on-stack recompilation.
+        retAddrEntries_.back().setKind(RetAddrEntry::Kind::DebugPrologue);
 
         // If the stub returns |true|, we have to return the value stored in the
         // frame's return value slot.
@@ -945,8 +959,8 @@ BaselineCompiler::emitWarmUpCounterIncrement(bool allowOsr)
             return false;
         }
 
-        // Annotate the ICEntry as warmup counter.
-        icEntries_.back().setFakeKind(ICEntry::Kind_WarmupCounter);
+        // Annotate the RetAddrEntry as warmup counter.
+        retAddrEntries_.back().setKind(RetAddrEntry::Kind::WarmupCounter);
     }
     masm.bind(&skipCall);
 
@@ -1010,8 +1024,8 @@ BaselineCompiler::emitDebugTrap()
     MOZ_ASSERT((&offset)->offset() == entry.nativeOffset);
 #endif
 
-    // Add an IC entry for the return offset -> pc mapping.
-    return appendICEntry(ICEntry::Kind_DebugTrap, masm.currentOffset());
+    // Add a RetAddrEntry for the return offset -> pc mapping.
+    return appendRetAddrEntry(RetAddrEntry::Kind::DebugTrap, masm.currentOffset());
 }
 
 #ifdef JS_TRACE_LOGGING
@@ -4207,8 +4221,8 @@ BaselineCompiler::emitReturn()
             return false;
         }
 
-        // Fix up the fake ICEntry appended by callVM for on-stack recompilation.
-        icEntries_.back().setFakeKind(ICEntry::Kind_DebugEpilogue);
+        // Fix up the RetAddrEntry appended by callVM for on-stack recompilation.
+        retAddrEntries_.back().setKind(RetAddrEntry::Kind::DebugEpilogue);
 
         masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
     }
@@ -4946,7 +4960,7 @@ BaselineCompiler::emit_JSOP_DEBUGAFTERYIELD()
         return false;
     }
 
-    icEntries_.back().setFakeKind(ICEntry::Kind_DebugAfterYield);
+    retAddrEntries_.back().setKind(RetAddrEntry::Kind::DebugAfterYield);
 
     Label done;
     masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &done);
@@ -5068,8 +5082,8 @@ BaselineCompiler::emit_JSOP_RESUME()
     masm.callAndPushReturnAddress(&genStart);
 #endif
 
-    // Add an IC entry so the return offset -> pc mapping works.
-    if (!appendICEntry(ICEntry::Kind_Op, masm.currentOffset())) {
+    // Add a RetAddrEntry so the return offset -> pc mapping works.
+    if (!appendRetAddrEntry(RetAddrEntry::Kind::IC, masm.currentOffset())) {
         return false;
     }
 

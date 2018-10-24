@@ -4313,8 +4313,6 @@ AreShadowArraysEqual(nsCSSShadowArray* lhs,
 nsStyleText::nsStyleText(const nsPresContext* aContext)
   : mTextAlign(NS_STYLE_TEXT_ALIGN_START)
   , mTextAlignLast(NS_STYLE_TEXT_ALIGN_AUTO)
-  , mTextAlignTrue(false)
-  , mTextAlignLastTrue(false)
   , mTextJustify(StyleTextJustify::Auto)
   , mTextTransform(NS_STYLE_TEXT_TRANSFORM_NONE)
   , mWhiteSpace(StyleWhiteSpace::Normal)
@@ -4350,8 +4348,6 @@ nsStyleText::nsStyleText(const nsPresContext* aContext)
 nsStyleText::nsStyleText(const nsStyleText& aSource)
   : mTextAlign(aSource.mTextAlign)
   , mTextAlignLast(aSource.mTextAlignLast)
-  , mTextAlignTrue(false)
-  , mTextAlignLastTrue(false)
   , mTextJustify(aSource.mTextJustify)
   , mTextTransform(aSource.mTextTransform)
   , mWhiteSpace(aSource.mWhiteSpace)
@@ -4402,8 +4398,6 @@ nsStyleText::CalcDifference(const nsStyleText& aNewData) const
 
   if ((mTextAlign != aNewData.mTextAlign) ||
       (mTextAlignLast != aNewData.mTextAlignLast) ||
-      (mTextAlignTrue != aNewData.mTextAlignTrue) ||
-      (mTextAlignLastTrue != aNewData.mTextAlignLastTrue) ||
       (mTextTransform != aNewData.mTextTransform) ||
       (mWhiteSpace != aNewData.mWhiteSpace) ||
       (mWordBreak != aNewData.mWordBreak) ||

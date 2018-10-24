@@ -31,7 +31,7 @@ EmitRepushTailCallReg(MacroAssembler& masm)
 }
 
 inline void
-EmitCallIC(CodeOffset* patchOffset, MacroAssembler& masm)
+EmitCallIC(MacroAssembler& masm, CodeOffset* patchOffset, CodeOffset* callOffset)
 {
     // Move ICEntry offset into ICStubReg
     CodeOffset offset = masm.movWithPatch(ImmWord(-1), ICStubReg);
@@ -44,6 +44,7 @@ EmitCallIC(CodeOffset* patchOffset, MacroAssembler& masm)
     // Load stubcode pointer from BaselineStubEntry into ICTailCallReg
     // ICTailCallReg will always be unused in the contexts where ICs are called.
     masm.call(Address(ICStubReg, ICStub::offsetOfStubCode()));
+    *callOffset = CodeOffset(masm.currentOffset());
 }
 
 inline void

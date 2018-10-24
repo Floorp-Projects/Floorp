@@ -54,6 +54,33 @@ HTMLEditor::IsEmptyTextNode(nsINode& aNode)
          isEmptyTextNode;
 }
 
+nsresult
+HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
+                                      nsAtom* aAttribute,
+                                      const nsAString& aValue)
+{
+  AutoTransactionBatch treatAsOneTransaction(*this);
+
+  if (&aProperty == nsGkAtoms::sup) {
+    // Superscript and Subscript styles are mutually exclusive.
+    nsresult rv = RemoveInlinePropertyInternal(nsGkAtoms::sub, nullptr);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else if (&aProperty == nsGkAtoms::sub) {
+    // Superscript and Subscript styles are mutually exclusive.
+    nsresult rv = RemoveInlinePropertyInternal(nsGkAtoms::sup, nullptr);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+  nsresult rv = SetInlinePropertyInternal(aProperty, aAttribute, aValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 HTMLEditor::SetInlineProperty(const nsAString& aProperty,
                               const nsAString& aAttribute,
@@ -91,11 +118,11 @@ HTMLEditor::SetInlinePropertyInternal(nsAtom& aProperty,
     return NS_OK;
   }
 
-  AutoPlaceholderBatch batchIt(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eInsertElement,
                                       nsIEditor::eNext);
-  AutoSelectionRestorer selectionRestorer(selection, this);
+  AutoSelectionRestorer restoreSelectionLater(*selection, *this);
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   bool cancel, handled;
@@ -1216,7 +1243,7 @@ HTMLEditor::GetInlinePropertyWithAttrValue(nsAtom* aProperty,
 NS_IMETHODIMP
 HTMLEditor::RemoveAllInlineProperties()
 {
-  AutoPlaceholderBatch batchIt(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
                                       EditSubAction::eRemoveAllTextProperties,
@@ -1268,11 +1295,11 @@ HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
     return NS_OK;
   }
 
-  AutoPlaceholderBatch batchIt(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eRemoveTextProperty,
                                       nsIEditor::eNext);
-  AutoSelectionRestorer selectionRestorer(selection, this);
+  AutoSelectionRestorer restoreSelectionLater(*selection, *this);
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   bool cancel, handled;
@@ -1438,11 +1465,11 @@ HTMLEditor::RelativeFontChange(FontSize aDir)
   }
 
   // Wrap with txn batching, rules sniffing, and selection preservation code
-  AutoPlaceholderBatch batchIt(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eSetTextProperty,
                                       nsIEditor::eNext);
-  AutoSelectionRestorer selectionRestorer(selection, this);
+  AutoSelectionRestorer restoreSelectionLater(*selection, *this);
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   // Loop through the ranges in the selection
