@@ -141,7 +141,7 @@ l10n_description_schema = schema.extend({
     # Max number locales per chunk
     Optional('locales-per-chunk'): _by_platform(int),
 
-    # Task deps to chain this task with, added in transforms from dependent-task
+    # Task deps to chain this task with, added in transforms from primary-dependency
     # if this is a nightly
     Optional('dependencies'): {basestring: basestring},
 

@@ -19,7 +19,7 @@ def make_signing_description(config, jobs):
     for job in jobs:
         job['depname'] = 'unsigned-repack'
 
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
 
         # add the chunk number to the TH symbol
         symbol = 'Ns{}'.format(dep_job.attributes.get('l10n_chunk'))
@@ -35,7 +35,7 @@ def make_signing_description(config, jobs):
 @transforms.add
 def define_upstream_artifacts(config, jobs):
     for job in jobs:
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
 
         locale_specifications = generate_specifications_of_artifacts_to_sign(
             dep_job,

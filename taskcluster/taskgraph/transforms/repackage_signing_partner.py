@@ -7,10 +7,11 @@ Transform the repackage signing task into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.partners import check_if_partners_enabled
-from taskgraph.util.schema import validate_schema, Schema
+from taskgraph.util.schema import validate_schema
 from taskgraph.util.scriptworker import (
     add_scope_prefix,
     get_signing_cert_scope_per_platform,
@@ -25,8 +26,7 @@ task_description_schema = {str(k): v for k, v in task_description_schema.schema.
 
 transforms = TransformSequence()
 
-repackage_signing_description_schema = Schema({
-    Required('dependent-task'): object,
+repackage_signing_description_schema = schema.extend({
     Required('depname', default='repackage'): basestring,
     Optional('label'): basestring,
     Optional('extra'): object,
@@ -40,7 +40,7 @@ transforms.add(check_if_partners_enabled)
 @transforms.add
 def validate(config, jobs):
     for job in jobs:
-        label = job.get('dependent-task', object).__dict__.get('label', '?no-label?')
+        label = job.get('primary-dependency', object).__dict__.get('label', '?no-label?')
         validate_schema(
             repackage_signing_description_schema, job,
             "In repackage-signing ({!r} kind) task for {!r}:".format(config.kind, label))
@@ -50,7 +50,7 @@ def validate(config, jobs):
 @transforms.add
 def make_repackage_signing_description(config, jobs):
     for job in jobs:
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
         repack_id = dep_job.task['extra']['repack_id']
         attributes = dep_job.attributes
         build_platform = dep_job.attributes.get('build_platform')
