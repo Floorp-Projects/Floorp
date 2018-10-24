@@ -81,6 +81,11 @@ const key = (id, win = window) => {
   // TODO: remove when we have flame charts via bug 1148663.
   Services.prefs.setBoolPref(PrefUtils.UI_ENABLE_MEMORY_FLAME_CHART, true);
 
+  // By default, reduce the default buffer size to reduce the overhead when
+  // transfering the profile data. Hopefully this should help to reduce our
+  // intermittents for the performance tests.
+  Services.prefs.setIntPref(PrefUtils.PROFILER_BUFFER_SIZE_PREF, 100000);
+
   registerCleanupFunction(() => {
     info("finish() was called, cleaning up...");
 
