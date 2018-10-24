@@ -611,6 +611,22 @@ GetIBContainingBlockFor(nsIFrame* aFrame)
   return parentFrame;
 }
 
+static nsIFrame*
+GetMultiColumnContainingBlockFor(nsIFrame* aFrame)
+{
+  MOZ_ASSERT(aFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR),
+             "Should only be called if the frame has a multi-column ancestor!");
+
+  nsIFrame* current = aFrame->GetParent();
+  while (current && !current->IsColumnSetWrapperFrame()) {
+    current = current->GetParent();
+  }
+
+  MOZ_ASSERT(current, "No ColumnSetWrapperFrame in a valid column hierarchy?");
+
+  return current;
+}
+
 // This is a bit slow, but sometimes we need it.
 static bool
 ParentIsWrapperAnonBox(nsIFrame* aParent)
@@ -8719,6 +8735,50 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
   MOZ_ASSERT(aFrame == aFrame->FirstContinuation(),
              "aFrame not the result of GetPrimaryFrame()?");
 
+  if (aFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
+    nsIFrame* parent = aFrame->GetParent();
+    bool needsReframe =
+      // 1. Removing a column-span may lead to an empty
+      // ::-moz-column-span-wrapper.
+      aFrame->IsColumnSpan() ||
+      // 2. Removing the only child of a ::-moz-column-content whose
+      // ColumnSet parent has a previous column-span sibling requires
+      // reframing since we might connect the ColumnSet's next column-span
+      // sibling (if there's one). Note that this isn't actually needed if
+      // the ColumnSet is at the end of ColumnSetWrapper since we create
+      // empty ones at the end anyway, but we're not worried about
+      // optimizing that case.
+      (parent->Style()->GetPseudo() == nsCSSAnonBoxes::columnContent() &&
+       // The only child in ::-moz-column-content (might be tall enough to
+       // split across columns)
+       !aFrame->GetPrevSibling() && !aFrame->GetNextSibling() &&
+       // That ::-moz-column-content is the first column.
+       !parent->GetPrevInFlow() &&
+       // The ColumnSet containing ::-moz-column-set has a previous sibling
+       // that is a column-span.
+       parent->GetPrevContinuation());
+
+    if (needsReframe) {
+      nsIFrame* containingBlock = GetMultiColumnContainingBlockFor(aFrame);
+
+#ifdef DEBUG
+      if (IsFramePartOfIBSplit(aFrame)) {
+        nsIFrame* ibContainingBlock = GetIBContainingBlockFor(aFrame);
+        MOZ_ASSERT(containingBlock == ibContainingBlock ||
+                   nsLayoutUtils::IsProperAncestorFrame(containingBlock,
+                                                        ibContainingBlock),
+                   "Multi-column containing block should be equal to or be the "
+                   "ancestor of the IB containing block!");
+      }
+#endif
+
+      TRACE("Multi-column");
+      RecreateFramesForContent(containingBlock->GetContent(),
+                               InsertionKind::Async);
+      return true;
+    }
+  }
+
   if (IsFramePartOfIBSplit(aFrame)) {
     // The removal functions can't handle removal of an {ib} split directly; we
     // need to rebuild the containing block.
@@ -12017,6 +12077,46 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     }
   }
 
+  // Situation #6 is a column hierarchy that's getting new children.
+  if (aFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
+    if (aFrame->IsColumnSetWrapperFrame()) {
+      // Reframe the multi-column container whenever elements insert/append
+      // into it.
+      TRACE("Multi-column");
+      RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
+      return true;
+    }
+
+    bool anyColumnSpanItems = false;
+    for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
+      if (iter.item().mComputedStyle->StyleColumn()->IsColumnSpanStyle()) {
+        anyColumnSpanItems = true;
+        break;
+      }
+    }
+
+    bool needsReframe =
+      // 1. Insert / append any column-span children.
+      anyColumnSpanItems ||
+      // 2. GetInsertionPrevSibling() modifies insertion parent. If the prev
+      // sibling is a column-span, aFrame ends up being the
+      // column-span-wrapper.
+      aFrame->Style()->GetPseudo() == nsCSSAnonBoxes::columnSpanWrapper() ||
+      // 3. Append into {ib} split container. There might be room for
+      // optimization, but let's reframe for correctness...
+      IsFramePartOfIBSplit(aFrame);
+
+    if (needsReframe) {
+      TRACE("Multi-column");
+      RecreateFramesForContent(
+        GetMultiColumnContainingBlockFor(aFrame)->GetContent(),
+        InsertionKind::Async);
+      return true;
+    }
+
+    return false;
+  }
+
   // Now we have several cases involving {ib} splits.  Put them all in a
   // do/while with breaks to take us to the "go and reconstruct" code.
   do {
@@ -12132,7 +12232,7 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
         printf("  ==> blockContent=%p\n", blockContent);
       }
 #endif
-      RecreateFramesForContent(blockContent->AsElement(), InsertionKind::Async);
+      RecreateFramesForContent(blockContent, InsertionKind::Async);
       return;
     }
   }
