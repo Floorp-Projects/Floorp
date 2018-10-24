@@ -50,6 +50,7 @@ SOURCES += [
     'TestSyncError.cpp',
     'TestSyncHang.cpp',
     'TestSyncWakeup.cpp',
+    'TestUniquePtrIPC.cpp',
     'TestUrgency.cpp',
     'TestUrgentHangs.cpp',
 ]
@@ -123,6 +124,7 @@ IPDL_SOURCES += [
     'PTestSyncError.ipdl',
     'PTestSyncHang.ipdl',
     'PTestSyncWakeup.ipdl',
+    'PTestUniquePtrIPC.ipdl',
     'PTestUrgency.ipdl',
     'PTestUrgentHangs.ipdl',
 ]
