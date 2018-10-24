@@ -7,7 +7,7 @@
  * https://dom.spec.whatwg.org/#abortsignal
  */
 
-[Exposed=(Window,Worker,System)]
+[Exposed=(Window,Worker)]
 interface AbortSignal : EventTarget {
   readonly attribute boolean aborted;
 
