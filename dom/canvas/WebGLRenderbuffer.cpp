@@ -52,6 +52,7 @@ WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext* webgl)
     , mPrimaryRB( DoCreateRenderbuffer(webgl->gl) )
     , mEmulatePackedDepthStencil( EmulatePackedDepthStencil(webgl->gl) )
     , mSecondaryRB(0)
+    , mHasBeenBound(false)
 {
     mContext->mRenderbuffers.insertBack(this);
 

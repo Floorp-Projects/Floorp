@@ -43,10 +43,7 @@ WebGL2Context::IsSampler(const WebGLSampler* const obj)
     if (!ValidateIsObject(obj))
         return false;
 
-    if (obj->IsDeleteRequested())
-        return false;
-
-    return true;
+    return gl->fIsSampler(obj->mGLName);
 }
 
 void

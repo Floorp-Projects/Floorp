@@ -172,6 +172,7 @@ public:
 
     void Delete();
 
+    bool HasEverBeenBound() const { return mTarget != LOCAL_GL_NONE; }
     TexTarget Target() const { return mTarget; }
 
     WebGLContext* GetParentObject() const {
@@ -191,6 +192,7 @@ public:
     bool BindTexture(TexTarget texTarget);
     void GenerateMipmap();
     JS::Value GetTexParameter(TexTarget texTarget, GLenum pname);
+    bool IsTexture() const;
     void TexParameter(TexTarget texTarget, GLenum pname, const FloatOrInt& param);
 
     ////////////////////////////////////
