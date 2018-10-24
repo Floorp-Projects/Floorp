@@ -39,6 +39,18 @@ Notes to self:
 
 NS_IMPL_ISUPPORTS(nsTransferable, nsITransferable)
 
+size_t
+GetDataForFlavor(const nsTArray<DataStruct>& aArray, const char* aDataFlavor)
+{
+  for (size_t i = 0; i < aArray.Length(); ++i) {
+    if (aArray[i].GetFlavor().Equals(aDataFlavor)) {
+      return i;
+    }
+  }
+
+  return aArray.NoIndex;
+}
+
 DataStruct::DataStruct(DataStruct&& aRHS)
   : mData(aRHS.mData.forget())
   , mDataLen(aRHS.mDataLen)
@@ -223,21 +235,6 @@ nsTransferable::GetTransferDataFlavors(nsTArray<nsCString>& aFlavors)
   }
 }
 
-Maybe<size_t>
-nsTransferable::FindDataFlavor(const char* aFlavor)
-{
-  nsDependentCString flavor(aFlavor);
-
-  for (size_t i = 0; i < mDataArray.Length(); ++i) {
-    if (mDataArray[i].GetFlavor().Equals(flavor)) {
-      return Some(i);
-    }
-  }
-
-  return Nothing();
-}
-
-
 //
 // GetTransferData
 //
@@ -257,33 +254,37 @@ nsTransferable::GetTransferData(const char* aFlavor,
 
   nsresult rv = NS_OK;
 
-  // First look and see if the data is present in one of the intrinsic flavors.
-  if (Maybe<size_t> index = FindDataFlavor(aFlavor)) {
-    nsCOMPtr<nsISupports> dataBytes;
-    uint32_t len;
-    mDataArray[index.value()].GetData(getter_AddRefs(dataBytes), &len);
+  // first look and see if the data is present in one of the intrinsic flavors
+  for (size_t i = 0; i < mDataArray.Length(); ++i) {
+    DataStruct& data = mDataArray.ElementAt(i);
+    if (data.GetFlavor().Equals(aFlavor)) {
+      nsCOMPtr<nsISupports> dataBytes;
+      uint32_t len;
+      data.GetData(getter_AddRefs(dataBytes), &len);
 
-    // Do we have a (lazy) data provider?
-    if (nsCOMPtr<nsIFlavorDataProvider> dataProvider =
-          do_QueryInterface(dataBytes)) {
-      rv = dataProvider->GetFlavorData(this, aFlavor,
-                                       getter_AddRefs(dataBytes), &len);
-      if (NS_FAILED(rv)) {
-        dataBytes = nullptr;
-        // The provider failed, fall into the converter code below.
+      // Do we have a (lazy) data provider?
+      if (nsCOMPtr<nsIFlavorDataProvider> dataProvider =
+            do_QueryInterface(dataBytes)) {
+        rv = dataProvider->GetFlavorData(this, aFlavor,
+                                         getter_AddRefs(dataBytes), &len);
+        if (NS_FAILED(rv)) {
+          // The provider failed, fall into the converter code below.
+          break;
+        }
       }
-    }
 
-    if (dataBytes) {
-      *aDataLen = len;
-      dataBytes.forget(aData);
-      return NS_OK;
-    }
+      if (dataBytes) {
+        *aDataLen = len;
+        dataBytes.forget(aData);
+        return NS_OK;
+      }
 
-    // Empty data
+      // Not found.
+      break;
+    }
   }
 
-  // If not, try using a format converter to get the requested flavor.
+  // if not, try using a format converter to get the requested flavor
   if (mFormatConv) {
     for (size_t i = 0; i < mDataArray.Length(); ++i) {
       DataStruct& data = mDataArray.ElementAt(i);
@@ -352,10 +353,12 @@ nsTransferable::SetTransferData(const char* aFlavor,
   MOZ_ASSERT(mInitialized);
 
   // first check our intrinsic flavors to see if one has been registered.
-  if (Maybe<size_t> index = FindDataFlavor(aFlavor)) {
-    DataStruct& data = mDataArray.ElementAt(index.value());
-    data.SetData(aData, aDataLen, mPrivateData);
-    return NS_OK;
+  for (size_t i = 0; i < mDataArray.Length(); ++i) {
+    DataStruct& data = mDataArray.ElementAt(i);
+    if (data.GetFlavor().Equals(aFlavor)) {
+      data.SetData(aData, aDataLen, mPrivateData);
+      return NS_OK;
+    }
   }
 
   // if not, try using a format converter to find a flavor to put the data in
@@ -399,12 +402,13 @@ nsTransferable::AddDataFlavor(const char* aDataFlavor)
 {
   MOZ_ASSERT(mInitialized);
 
-  if (FindDataFlavor(aDataFlavor).isSome()) {
+  if (GetDataForFlavor(mDataArray, aDataFlavor) != mDataArray.NoIndex) {
     return NS_ERROR_FAILURE;
   }
 
   // Create a new "slot" for the data
   mDataArray.AppendElement(DataStruct(aDataFlavor));
+
   return NS_OK;
 }
 
@@ -419,11 +423,11 @@ nsTransferable::RemoveDataFlavor(const char* aDataFlavor)
 {
   MOZ_ASSERT(mInitialized);
 
-  if (Maybe<size_t> index = FindDataFlavor(aDataFlavor)) {
-    mDataArray.RemoveElementAt(index.value());
+  size_t idx = GetDataForFlavor(mDataArray, aDataFlavor);
+  if (idx != mDataArray.NoIndex) {
+    mDataArray.RemoveElementAt(idx);
     return NS_OK;
   }
-
   return NS_ERROR_FAILURE;
 }
 
