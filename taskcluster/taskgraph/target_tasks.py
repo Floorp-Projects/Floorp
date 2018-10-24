@@ -25,7 +25,7 @@ def get_method(method):
 
 
 def filter_out_nightly(task, parameters):
-    return not task.attributes.get('nightly') or parameters.get('include_nightly')
+    return not task.attributes.get('nightly')
 
 
 def filter_out_cron(task, parameters):
@@ -98,7 +98,7 @@ def filter_beta_release_tasks(task, parameters, ignore_kinds=None, allow_l10n=Fa
 def standard_filter(task, parameters):
     return all(
         filter_func(task, parameters) for filter_func in
-        (filter_out_nightly, filter_out_cron, filter_for_project)
+        (filter_out_cron, filter_for_project)
     )
 
 
@@ -178,7 +178,8 @@ def target_tasks_default(full_task_graph, parameters, graph_config):
     """Target the tasks which have indicated they should be run on this project
     via the `run_on_projects` attributes."""
     return [l for l, t in full_task_graph.tasks.iteritems()
-            if standard_filter(t, parameters)]
+            if standard_filter(t, parameters)
+            or filter_out_nightly(t, parameters)]
 
 
 @_target_task('ash_tasks')
@@ -443,7 +444,7 @@ def target_tasks_pine(full_task_graph, parameters, graph_config):
         if platform == 'linux64-asan':
             return False
         # disable non-pine and nightly tasks
-        if standard_filter(task, parameters):
+        if standard_filter(task, parameters) or filter_out_nightly(task, parameters):
             return True
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
