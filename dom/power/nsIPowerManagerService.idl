@@ -12,6 +12,7 @@
 
 interface nsIDOMMozWakeLockListener;
 interface mozIDOMWindow;
+interface nsIWakeLock;
 
 /**
  * For use with non-content code.
@@ -28,5 +29,5 @@ interface nsIPowerManagerService : nsISupports
    * A wake lock without associated window, e.g. used in chrome, is
    * always considered invisible.
    */
-  nsISupports newWakeLock(in AString aTopic, [optional] in mozIDOMWindow aWindow);
+  nsIWakeLock newWakeLock(in AString aTopic, [optional] in mozIDOMWindow aWindow);
 };
