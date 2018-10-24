@@ -68,7 +68,7 @@ echo "FLANK_CONF: $FLANK_CONF"
 echo "FLANK_BIN: $FLANK_BIN"
 echo
 
-wget $URL_FLANK_BIN
+wget $URL_FLANK_BIN -O $FLANK_BIN 
 echo
 echo "---------------------------------------"
 echo "FLANK VERSION"
