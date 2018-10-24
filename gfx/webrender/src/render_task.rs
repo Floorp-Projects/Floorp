@@ -125,7 +125,7 @@ impl RenderTaskTree {
         };
 
         let pass = &mut passes[pass_index];
-        pass.add_render_task(id, task.get_dynamic_size(), task.target_kind());
+        pass.add_render_task(id, task.get_dynamic_size(), task.target_kind(), &task.location);
     }
 
     pub fn prepare_for_render(&mut self) {
@@ -173,7 +173,7 @@ impl ops::IndexMut<RenderTaskId> for RenderTaskTree {
 }
 
 /// Identifies the output buffer location for a given `RenderTask`.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum RenderTaskLocation {
@@ -200,6 +200,16 @@ pub enum RenderTaskLocation {
         /// The target region within the above layer.
         rect: DeviceIntRect,
     },
+}
+
+impl RenderTaskLocation {
+    /// Returns true if this is a dynamic location.
+    pub fn is_dynamic(&self) -> bool {
+        match *self {
+            RenderTaskLocation::Dynamic(..) => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Debug)]
