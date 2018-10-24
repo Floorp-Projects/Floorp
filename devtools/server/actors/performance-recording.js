@@ -70,7 +70,7 @@ Object.assign({
       allocationsSampleProbability: options.allocationsSampleProbability || 0,
       allocationsMaxLogLength: options.allocationsMaxLogLength || 0,
       bufferSize: options.bufferSize || 0,
-      sampleFrequency: options.sampleFrequency || 1,
+      sampleFrequency: options.sampleFrequency || 1000,
     };
 
     this._console = !!options.console;
