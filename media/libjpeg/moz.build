@@ -71,6 +71,10 @@ SOURCES += [
     'jctrans.c',
 ]
 
+SOURCES += [
+    'jpeg_nbits_table.c',
+]
+
 if CONFIG['LIBJPEG_TURBO_USE_YASM']:
     USE_YASM = True
 
