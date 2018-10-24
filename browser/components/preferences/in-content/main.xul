@@ -459,7 +459,10 @@
               class="accessory-button"
               data-l10n-id="update-history"
               preference="app.update.disable_button.showUpdateHistory"
-              searchkeywords="&history.title; &history2.intro;"/>
+              search-l10n-ids="
+                history-title,
+                history-intro
+              "/>
     </vbox>
 #endif
   </hbox>
