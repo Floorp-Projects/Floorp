@@ -19,7 +19,7 @@ For events recorded into Firefox Telemetry we also provide an API that opaquely 
 Serialization format
 ====================
 
-Events are submitted as an array, e.g.:
+Events are submitted in an :doc:`../data/event-ping` as an array, e.g.:
 
 .. code-block:: js
 
@@ -133,6 +133,10 @@ The following event properties are valid:
   - ``fennec``
   - ``geckoview``
   - ``all`` (record on all products)
+
+.. note::
+
+  Combinations of ``category``, ``method``, and ``object`` defined in the file must be unique.
 
 The API
 =======
