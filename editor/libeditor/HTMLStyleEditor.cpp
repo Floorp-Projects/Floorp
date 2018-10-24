@@ -118,11 +118,11 @@ HTMLEditor::SetInlinePropertyInternal(nsAtom& aProperty,
     return NS_OK;
   }
 
-  AutoPlaceholderBatch batchIt(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eInsertElement,
                                       nsIEditor::eNext);
-  AutoSelectionRestorer selectionRestorer(selection, this);
+  AutoSelectionRestorer restoreSelectionLater(*selection, *this);
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   bool cancel, handled;
@@ -1243,7 +1243,7 @@ HTMLEditor::GetInlinePropertyWithAttrValue(nsAtom* aProperty,
 NS_IMETHODIMP
 HTMLEditor::RemoveAllInlineProperties()
 {
-  AutoPlaceholderBatch batchIt(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
                                       EditSubAction::eRemoveAllTextProperties,
@@ -1295,11 +1295,11 @@ HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
     return NS_OK;
   }
 
-  AutoPlaceholderBatch batchIt(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eRemoveTextProperty,
                                       nsIEditor::eNext);
-  AutoSelectionRestorer selectionRestorer(selection, this);
+  AutoSelectionRestorer restoreSelectionLater(*selection, *this);
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   bool cancel, handled;
@@ -1465,11 +1465,11 @@ HTMLEditor::RelativeFontChange(FontSize aDir)
   }
 
   // Wrap with txn batching, rules sniffing, and selection preservation code
-  AutoPlaceholderBatch batchIt(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eSetTextProperty,
                                       nsIEditor::eNext);
-  AutoSelectionRestorer selectionRestorer(selection, this);
+  AutoSelectionRestorer restoreSelectionLater(*selection, *this);
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   // Loop through the ranges in the selection
