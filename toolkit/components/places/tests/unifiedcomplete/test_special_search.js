@@ -12,7 +12,6 @@
 
 function setSuggestPrefsToFalse() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
-  Services.prefs.setBoolPref("browser.urlbar.suggest.history.onlyTyped", false);
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
 }
 
@@ -287,17 +286,6 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
-  info("foo -> default history, is star, is typed");
-  setSuggestPrefsToFalse();
-  Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
-  Services.prefs.setBoolPref("browser.urlbar.suggest.history.onlyTyped", true);
-  Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
-  await check_autocomplete({
-    search: "foo",
-    matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
-  });
-
   info("foo -> is star");
   setSuggestPrefsToFalse();
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
@@ -311,22 +299,6 @@ add_task(async function test_special_searches() {
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
-  });
-
-  info("foo -> is star, is typed");
-  setSuggestPrefsToFalse();
-  // only typed should be ignored
-  Services.prefs.setBoolPref("browser.urlbar.suggest.history.onlyTyped", true);
-  Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
-  await check_autocomplete({
-    search: "foo",
-    matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
-               { uri: uri7, title: "title", style: [ "bookmark" ] },
-               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
-               { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] }  ],
   });
 
   await cleanup();

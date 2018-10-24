@@ -40,7 +40,6 @@ async function cleanup() {
   let suggestPrefs = [
     "history",
     "bookmark",
-    "history.onlyTyped",
     "openpage",
     "searches",
   ];

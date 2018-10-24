@@ -554,6 +554,8 @@ namespace places {
     }
 
     int32_t visitCount = aArguments->AsInt32(kArgIndexVisitCount);
+    // Filtering on typed is no more used by Firefox, it is still being used by
+    // comm-central clients.
     bool typed = aArguments->AsInt32(kArgIndexTyped) ? true : false;
     bool bookmark = aArguments->AsInt32(kArgIndexBookmark) ? true : false;
     nsDependentCString tags = getSharedUTF8String(aArguments, kArgIndexTags);

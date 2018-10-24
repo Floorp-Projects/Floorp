@@ -642,11 +642,6 @@ Search.prototype = {
     type = type.toUpperCase();
     this._behavior |=
       Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type];
-
-    // Setting the "typed" behavior should also set the "history" behavior.
-    if (type == "TYPED") {
-      this.setBehavior("history");
-    }
   },
 
   /**
@@ -2136,8 +2131,7 @@ Search.prototype = {
   get _suggestionPrefQuery() {
     if (!this.hasBehavior("restrict") && this.hasBehavior("history") &&
         this.hasBehavior("bookmark")) {
-      return this.hasBehavior("typed") ? defaultQuery("AND h.typed = 1")
-                                       : defaultQuery();
+      return defaultQuery();
     }
     let conditions = [];
     if (this.hasBehavior("history")) {
@@ -2145,9 +2139,6 @@ Search.prototype = {
       // faster in this case.  ANALYZE helps the query planner to figure out the
       // faster path, but it may not have up-to-date information yet.
       conditions.push("+h.visit_count > 0");
-    }
-    if (this.hasBehavior("typed")) {
-      conditions.push("h.typed = 1");
     }
     if (this.hasBehavior("bookmark")) {
       conditions.push("bookmarked");
