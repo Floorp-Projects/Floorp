@@ -578,7 +578,7 @@
   <!-- Addon - generic - A normal addon item, or an update to one -->
   <binding id="addon-generic"
            extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
-    <content>
+    <content tooltiptext="&addon.details.tooltip;">
       <xul:hbox anonid="warning-container"
                 class="warning">
         <xul:image class="warning-icon"/>
