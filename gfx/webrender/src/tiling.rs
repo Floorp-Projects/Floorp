@@ -195,13 +195,14 @@ pub enum RenderTargetKind {
 pub struct RenderTargetList<T> {
     screen_size: DeviceIntSize,
     pub format: ImageFormat,
-    /// The maximum width and height of any single primitive we've encountered.
+    /// The maximum width and height of any single primitive we've encountered
+    /// that will be drawn to a dynamic location.
     ///
     /// We initially create our per-slice allocators with a width and height of
     /// IDEAL_MAX_TEXTURE_DIMENSION. If we encounter a larger primitive, the
-    /// allocation will fail, but we'll bump max_size, which will cause the
+    /// allocation will fail, but we'll bump max_dynamic_size, which will cause the
     /// allocator for the next slice to be just large enough to accomodate it.
-    pub max_size: DeviceUintSize,
+    pub max_dynamic_size: DeviceUintSize,
     pub targets: Vec<T>,
     pub saved_index: Option<SavedTargetIndex>,
 }
@@ -214,7 +215,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
         RenderTargetList {
             screen_size,
             format,
-            max_size: DeviceUintSize::new(0, 0),
+            max_dynamic_size: DeviceUintSize::new(0, 0),
             targets: Vec::new(),
             saved_index: None,
         }
@@ -283,8 +284,8 @@ impl<T: RenderTarget> RenderTargetList<T> {
                 // dimensions, unless we've already gone bigger on a previous
                 // slice.
                 let allocator_dimensions = DeviceUintSize::new(
-                    cmp::max(IDEAL_MAX_TEXTURE_DIMENSION, self.max_size.width),
-                    cmp::max(IDEAL_MAX_TEXTURE_DIMENSION, self.max_size.height),
+                    cmp::max(IDEAL_MAX_TEXTURE_DIMENSION, self.max_dynamic_size.width),
+                    cmp::max(IDEAL_MAX_TEXTURE_DIMENSION, self.max_dynamic_size.height),
                 );
                 let mut new_target = T::new(Some(allocator_dimensions), self.screen_size);
                 let origin = new_target.allocate(alloc_size).expect(&format!(
@@ -305,8 +306,8 @@ impl<T: RenderTarget> RenderTargetList<T> {
 
     pub fn check_ready(&self, t: &Texture) {
         let dimensions = t.get_dimensions();
-        assert!(dimensions.width >= self.max_size.width);
-        assert!(dimensions.height >= self.max_size.height);
+        assert!(dimensions.width >= self.max_dynamic_size.width);
+        assert!(dimensions.height >= self.max_dynamic_size.height);
         assert_eq!(t.get_format(), self.format);
         assert_eq!(t.get_layer_count() as usize, self.targets.len());
         assert!(t.supports_depth() >= self.needs_depth());
@@ -893,14 +894,21 @@ impl RenderPass {
         task_id: RenderTaskId,
         size: DeviceIntSize,
         target_kind: RenderTargetKind,
+        location: &RenderTaskLocation,
     ) {
         if let RenderPassKind::OffScreen { ref mut color, ref mut alpha, .. } = self.kind {
-            let max_size = match target_kind {
-                RenderTargetKind::Color => &mut color.max_size,
-                RenderTargetKind::Alpha => &mut alpha.max_size,
-            };
-            max_size.width = cmp::max(max_size.width, size.width as u32);
-            max_size.height = cmp::max(max_size.height, size.height as u32);
+            // If this will be rendered to a dynamically-allocated region on an
+            // off-screen render target, update the max-encountered size. We don't
+            // need to do this for things drawn to the texture cache, since those
+            // don't affect our render target allocation.
+            if location.is_dynamic() {
+                let max_size = match target_kind {
+                    RenderTargetKind::Color => &mut color.max_dynamic_size,
+                    RenderTargetKind::Alpha => &mut alpha.max_dynamic_size,
+                };
+                max_size.width = cmp::max(max_size.width, size.width as u32);
+                max_size.height = cmp::max(max_size.height, size.height as u32);
+            }
         }
 
         self.tasks.push(task_id);
