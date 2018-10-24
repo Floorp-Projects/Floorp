@@ -4,6 +4,8 @@
 
 "use strict";
 
+const Services = require("Services");
+
 const { applyMiddleware, createStore } = require("devtools/client/shared/vendor/redux");
 const { thunk } = require("devtools/client/shared/redux/middleware/thunk.js");
 
@@ -17,6 +19,8 @@ const tabComponentDataMiddleware = require("./middleware/tab-component-data");
 const workerComponentDataMiddleware = require("./middleware/worker-component-data");
 const { getDebugTargetCollapsibilities } = require("./modules/debug-target-collapsibilities");
 const { getNetworkLocations } = require("./modules/network-locations");
+
+const { PREFERENCES } = require("./constants");
 
 function configureStore() {
   const initialState = {
@@ -37,7 +41,8 @@ function configureStore() {
 function getUiState() {
   const collapsibilities = getDebugTargetCollapsibilities();
   const locations = getNetworkLocations();
-  return new UiState(locations, collapsibilities);
+  const networkEnabled = Services.prefs.getBoolPref(PREFERENCES.NETWORK_ENABLED, false);
+  return new UiState(locations, collapsibilities, networkEnabled);
 }
 
 exports.configureStore = configureStore;

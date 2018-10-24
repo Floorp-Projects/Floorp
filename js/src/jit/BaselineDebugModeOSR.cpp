@@ -27,7 +27,7 @@ struct DebugModeOSREntry
     ICStub* newStub;
     BaselineDebugModeOSRInfo* recompInfo;
     uint32_t pcOffset;
-    ICEntry::Kind frameKind;
+    RetAddrEntry::Kind frameKind;
 
     explicit DebugModeOSREntry(JSScript* script)
       : script(script),
@@ -36,7 +36,7 @@ struct DebugModeOSREntry
         newStub(nullptr),
         recompInfo(nullptr),
         pcOffset(uint32_t(-1)),
-        frameKind(ICEntry::Kind_Invalid)
+        frameKind(RetAddrEntry::Kind::Invalid)
     { }
 
     DebugModeOSREntry(JSScript* script, uint32_t pcOffset)
@@ -46,21 +46,21 @@ struct DebugModeOSREntry
         newStub(nullptr),
         recompInfo(nullptr),
         pcOffset(pcOffset),
-        frameKind(ICEntry::Kind_Invalid)
+        frameKind(RetAddrEntry::Kind::Invalid)
     { }
 
-    DebugModeOSREntry(JSScript* script, const ICEntry& icEntry)
+    DebugModeOSREntry(JSScript* script, const RetAddrEntry& retAddrEntry)
       : script(script),
         oldBaselineScript(script->baselineScript()),
         oldStub(nullptr),
         newStub(nullptr),
         recompInfo(nullptr),
-        pcOffset(icEntry.pcOffset()),
-        frameKind(icEntry.kind())
+        pcOffset(retAddrEntry.pcOffset()),
+        frameKind(retAddrEntry.kind())
     {
 #ifdef DEBUG
-        MOZ_ASSERT(pcOffset == icEntry.pcOffset());
-        MOZ_ASSERT(frameKind == icEntry.kind());
+        MOZ_ASSERT(pcOffset == retAddrEntry.pcOffset());
+        MOZ_ASSERT(frameKind == retAddrEntry.kind());
 #endif
     }
 
@@ -97,13 +97,13 @@ struct DebugModeOSREntry
     }
 
     bool needsRecompileInfo() const {
-        return frameKind == ICEntry::Kind_CallVM ||
-               frameKind == ICEntry::Kind_WarmupCounter ||
-               frameKind == ICEntry::Kind_StackCheck ||
-               frameKind == ICEntry::Kind_DebugTrap ||
-               frameKind == ICEntry::Kind_DebugPrologue ||
-               frameKind == ICEntry::Kind_DebugAfterYield ||
-               frameKind == ICEntry::Kind_DebugEpilogue;
+        return frameKind == RetAddrEntry::Kind::CallVM ||
+               frameKind == RetAddrEntry::Kind::WarmupCounter ||
+               frameKind == RetAddrEntry::Kind::StackCheck ||
+               frameKind == RetAddrEntry::Kind::DebugTrap ||
+               frameKind == RetAddrEntry::Kind::DebugPrologue ||
+               frameKind == RetAddrEntry::Kind::DebugAfterYield ||
+               frameKind == RetAddrEntry::Kind::DebugEpilogue;
     }
 
     bool recompiled() const {
@@ -128,7 +128,7 @@ struct DebugModeOSREntry
 
         // XXX: Work around compiler error disallowing using bitfields
         // with the template magic of new_.
-        ICEntry::Kind kind = frameKind;
+        RetAddrEntry::Kind kind = frameKind;
         recompInfo = cx->new_<BaselineDebugModeOSRInfo>(pc, kind);
         return !!recompInfo;
     }
@@ -204,24 +204,26 @@ CollectJitStackScripts(JSContext* cx, const Debugger::ExecutionObservableSet& ob
                 // use the BaselineDebugModeOSRInfo on the frame directly to
                 // patch. Indeed, we cannot use frame.returnAddressToFp(), as
                 // it points into the debug mode OSR handler and cannot be
-                // used to look up a corresponding ICEntry.
+                // used to look up a corresponding RetAddrEntry.
                 //
                 // See case F in PatchBaselineFramesForDebugMode.
                 if (!entries.append(DebugModeOSREntry(script, info))) {
                     return false;
                 }
             } else if (baselineFrame->hasOverridePc()) {
-                // If the frame is not settled on a pc with an ICEntry, overridePc
-                // will contain an explicit bytecode offset. We can (and must) use that.
+                // If the frame is not settled on a pc with a RetAddrEntry,
+                // overridePc will contain an explicit bytecode offset. We can
+                // (and must) use that.
                 uint32_t offset = script->pcToOffset(baselineFrame->overridePc());
                 if (!entries.append(DebugModeOSREntry(script, offset))) {
                     return false;
                 }
             } else {
-                // The frame must be settled on a pc with an ICEntry.
+                // The frame must be settled on a pc with a RetAddrEntry.
                 uint8_t* retAddr = frame.returnAddressToFp();
-                ICEntry& icEntry = script->baselineScript()->icEntryFromReturnAddress(retAddr);
-                if (!entries.append(DebugModeOSREntry(script, icEntry))) {
+                RetAddrEntry& retAddrEntry =
+                    script->baselineScript()->retAddrEntryFromReturnAddress(retAddr);
+                if (!entries.append(DebugModeOSREntry(script, retAddrEntry))) {
                     return false;
                 }
             }
@@ -297,41 +299,41 @@ CollectInterpreterStackScripts(JSContext* cx, const Debugger::ExecutionObservabl
 
 #ifdef JS_JITSPEW
 static const char*
-ICEntryKindToString(ICEntry::Kind kind)
+RetAddrEntryKindToString(RetAddrEntry::Kind kind)
 {
     switch (kind) {
-      case ICEntry::Kind_Op:
+      case RetAddrEntry::Kind::IC:
         return "IC";
-      case ICEntry::Kind_NonOp:
+      case RetAddrEntry::Kind::NonOpIC:
         return "non-op IC";
-      case ICEntry::Kind_CallVM:
+      case RetAddrEntry::Kind::CallVM:
         return "callVM";
-      case ICEntry::Kind_WarmupCounter:
+      case RetAddrEntry::Kind::WarmupCounter:
         return "warmup counter";
-      case ICEntry::Kind_StackCheck:
+      case RetAddrEntry::Kind::StackCheck:
         return "stack check";
-      case ICEntry::Kind_DebugTrap:
+      case RetAddrEntry::Kind::DebugTrap:
         return "debug trap";
-      case ICEntry::Kind_DebugPrologue:
+      case RetAddrEntry::Kind::DebugPrologue:
         return "debug prologue";
-      case ICEntry::Kind_DebugAfterYield:
+      case RetAddrEntry::Kind::DebugAfterYield:
         return "debug after yield";
-      case ICEntry::Kind_DebugEpilogue:
+      case RetAddrEntry::Kind::DebugEpilogue:
         return "debug epilogue";
       default:
-        MOZ_CRASH("bad ICEntry kind");
+        MOZ_CRASH("bad RetAddrEntry kind");
     }
 }
 #endif // JS_JITSPEW
 
 static void
-SpewPatchBaselineFrame(uint8_t* oldReturnAddress, uint8_t* newReturnAddress,
-                       JSScript* script, ICEntry::Kind frameKind, jsbytecode* pc)
+SpewPatchBaselineFrame(const uint8_t* oldReturnAddress, const uint8_t* newReturnAddress,
+                       JSScript* script, RetAddrEntry::Kind frameKind, const jsbytecode* pc)
 {
     JitSpew(JitSpew_BaselineDebugModeOSR,
             "Patch return %p -> %p on BaselineJS frame (%s:%u:%u) from %s at %s",
             oldReturnAddress, newReturnAddress, script->filename(), script->lineno(),
-            script->column(), ICEntryKindToString(frameKind), CodeName[(JSOp)*pc]);
+            script->column(), RetAddrEntryKindToString(frameKind), CodeName[(JSOp)*pc]);
 }
 
 static void
@@ -417,9 +419,9 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
             MOZ_ASSERT(pcOffset < script->length());
 
             BaselineScript* bl = script->baselineScript();
-            ICEntry::Kind kind = entry.frameKind;
+            RetAddrEntry::Kind kind = entry.frameKind;
 
-            if (kind == ICEntry::Kind_Op) {
+            if (kind == RetAddrEntry::Kind::IC) {
                 // Case A above.
                 //
                 // Patching these cases needs to patch both the stub frame and
@@ -429,7 +431,8 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
                 //
                 // Since we're using the same IC stub code, we can resume
                 // directly to the IC resume address.
-                uint8_t* retAddr = bl->returnAddressForIC(bl->icEntryFromPCOffset(pcOffset));
+                RetAddrEntry& retAddrEntry = bl->retAddrEntryFromPCOffset(pcOffset, kind);
+                uint8_t* retAddr = bl->returnAddressForEntry(retAddrEntry);
                 SpewPatchBaselineFrame(prev->returnAddress(), retAddr, script, kind, pc);
                 DebugModeOSRVolatileJitFrameIter::forwardLiveIterators(
                     cx, prev->returnAddress(), retAddr);
@@ -438,13 +441,13 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
                 break;
             }
 
-            if (kind == ICEntry::Kind_Invalid) {
+            if (kind == RetAddrEntry::Kind::Invalid) {
                 // Cases G and H above.
                 //
                 // We are recompiling a frame with an override pc.
                 // This may occur from inside the exception handler,
                 // by way of an onExceptionUnwind invocation, on a pc
-                // without an ICEntry. It may also happen if we call
+                // without a RetAddrEntry. It may also happen if we call
                 // GeneratorThrowOrReturn and trigger onEnterFrame.
                 //
                 // If profiling is off, patch the resume address to nullptr,
@@ -476,13 +479,13 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
             if (info) {
                 MOZ_ASSERT(info->pc == pc);
                 MOZ_ASSERT(info->frameKind == kind);
-                MOZ_ASSERT(kind == ICEntry::Kind_CallVM ||
-                           kind == ICEntry::Kind_WarmupCounter ||
-                           kind == ICEntry::Kind_StackCheck ||
-                           kind == ICEntry::Kind_DebugTrap ||
-                           kind == ICEntry::Kind_DebugPrologue ||
-                           kind == ICEntry::Kind_DebugAfterYield ||
-                           kind == ICEntry::Kind_DebugEpilogue);
+                MOZ_ASSERT(kind == RetAddrEntry::Kind::CallVM ||
+                           kind == RetAddrEntry::Kind::WarmupCounter ||
+                           kind == RetAddrEntry::Kind::StackCheck ||
+                           kind == RetAddrEntry::Kind::DebugTrap ||
+                           kind == RetAddrEntry::Kind::DebugPrologue ||
+                           kind == RetAddrEntry::Kind::DebugAfterYield ||
+                           kind == RetAddrEntry::Kind::DebugEpilogue);
 
                 // We will have allocated a new recompile info, so delete the
                 // existing one.
@@ -495,7 +498,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
 
             bool popFrameReg;
             switch (kind) {
-              case ICEntry::Kind_CallVM: {
+              case RetAddrEntry::Kind::CallVM: {
                 // Case B above.
                 //
                 // Patching returns from a VM call. After fixing up the the
@@ -505,37 +508,26 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
                 // callVMs which can trigger debug mode OSR are the *only*
                 // callVMs generated for their respective pc locations in the
                 // baseline JIT code.
-                ICEntry& callVMEntry = bl->callVMEntryFromPCOffset(pcOffset);
-                recompInfo->resumeAddr = bl->returnAddressForIC(callVMEntry);
+                RetAddrEntry& retAddrEntry = bl->retAddrEntryFromPCOffset(pcOffset, kind);
+                recompInfo->resumeAddr = bl->returnAddressForEntry(retAddrEntry);
                 popFrameReg = false;
                 break;
               }
 
-              case ICEntry::Kind_WarmupCounter: {
-                // Case J above.
+              case RetAddrEntry::Kind::WarmupCounter:
+              case RetAddrEntry::Kind::StackCheck: {
+                // Cases I and J above.
                 //
                 // Patching mechanism is identical to a CallVM. This is
-                // handled especially only because the warmup counter VM call is
-                // part of the prologue, and not tied an opcode.
-                ICEntry& warmupCountEntry = bl->warmupCountICEntry();
-                recompInfo->resumeAddr = bl->returnAddressForIC(warmupCountEntry);
+                // handled especially only because these VM calls are part of
+                // the prologue, and not tied to an opcode.
+                RetAddrEntry& entry = bl->prologueRetAddrEntry(kind);
+                recompInfo->resumeAddr = bl->returnAddressForEntry(entry);
                 popFrameReg = false;
                 break;
               }
 
-              case ICEntry::Kind_StackCheck: {
-                // Case I above.
-                //
-                // Patching mechanism is identical to a CallVM. This is
-                // handled especially only because the stack check VM call is
-                // part of the prologue, and not tied an opcode.
-                ICEntry& stackCheckEntry = bl->stackCheckICEntry();
-                recompInfo->resumeAddr = bl->returnAddressForIC(stackCheckEntry);
-                popFrameReg = false;
-                break;
-              }
-
-              case ICEntry::Kind_DebugTrap:
+              case RetAddrEntry::Kind::DebugTrap:
                 // Case C above.
                 //
                 // Debug traps are emitted before each op, so we resume at the
@@ -547,7 +539,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
                 popFrameReg = false;
                 break;
 
-              case ICEntry::Kind_DebugPrologue:
+              case RetAddrEntry::Kind::DebugPrologue:
                 // Case D above.
                 //
                 // We patch a jump directly to the right place in the prologue
@@ -556,7 +548,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
                 popFrameReg = true;
                 break;
 
-              case ICEntry::Kind_DebugAfterYield:
+              case RetAddrEntry::Kind::DebugAfterYield:
                 // Case K above.
                 //
                 // Resume at the next instruction.
@@ -572,7 +564,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
                 //
                 // We patch a jump directly to the epilogue after popping the
                 // frame reg and checking for forced return.
-                MOZ_ASSERT(kind == ICEntry::Kind_DebugEpilogue);
+                MOZ_ASSERT(kind == RetAddrEntry::Kind::DebugEpilogue);
                 recompInfo->resumeAddr = bl->epilogueEntryAddr();
                 popFrameReg = true;
                 break;
@@ -747,7 +739,7 @@ CloneOldBaselineStub(JSContext* cx, DebugModeOSREntryVector& entries, size_t ent
         return true;
     }
 
-    if (entry.frameKind == ICEntry::Kind_Invalid) {
+    if (entry.frameKind == RetAddrEntry::Kind::Invalid) {
         // The exception handler can modify the frame's override pc while
         // unwinding scopes. This is fine, but if we have a stub frame, the code
         // code below will get confused: the entry's pcOffset doesn't match the
@@ -789,7 +781,7 @@ CloneOldBaselineStub(JSContext* cx, DebugModeOSREntryVector& entries, size_t ent
     // frames that entered the exception handler (entries[i].newStub is nullptr
     // in that case, see above).
     for (size_t i = 0; i < entryIndex; i++) {
-        if (oldStub == entries[i].oldStub && entries[i].frameKind != ICEntry::Kind_Invalid) {
+        if (oldStub == entries[i].oldStub && entries[i].frameKind != RetAddrEntry::Kind::Invalid) {
             MOZ_ASSERT(entries[i].newStub);
             entry.newStub = entries[i].newStub;
             return true;
@@ -978,17 +970,17 @@ BaselineDebugModeOSRInfo::popValueInto(PCMappingSlotInfo::SlotLocation loc, Valu
 static inline bool
 HasForcedReturn(BaselineDebugModeOSRInfo* info, bool rv)
 {
-    ICEntry::Kind kind = info->frameKind;
+    RetAddrEntry::Kind kind = info->frameKind;
 
     // The debug epilogue always checks its resumption value, so we don't need
     // to check rv.
-    if (kind == ICEntry::Kind_DebugEpilogue) {
+    if (kind == RetAddrEntry::Kind::DebugEpilogue) {
         return true;
     }
 
     // |rv| is the value in ReturnReg. If true, in the case of the prologue or
     // after yield, it means a forced return.
-    if (kind == ICEntry::Kind_DebugPrologue || kind == ICEntry::Kind_DebugAfterYield) {
+    if (kind == RetAddrEntry::Kind::DebugPrologue || kind == RetAddrEntry::Kind::DebugAfterYield) {
         return rv;
     }
 
@@ -1004,26 +996,27 @@ IsReturningFromCallVM(BaselineDebugModeOSRInfo* info)
     //
     // The stack check entries are returns from a callVM, but have a special
     // kind because they do not exist in a 1-1 relationship with a pc offset.
-    return info->frameKind == ICEntry::Kind_CallVM ||
-           info->frameKind == ICEntry::Kind_WarmupCounter ||
-           info->frameKind == ICEntry::Kind_StackCheck;
+    return info->frameKind == RetAddrEntry::Kind::CallVM ||
+           info->frameKind == RetAddrEntry::Kind::WarmupCounter ||
+           info->frameKind == RetAddrEntry::Kind::StackCheck;
 }
 
 static void
-EmitBranchICEntryKind(MacroAssembler& masm, Register entry, ICEntry::Kind kind, Label* label)
+EmitBranchRetAddrEntryKind(MacroAssembler& masm, Register entry, RetAddrEntry::Kind kind,
+                          Label* label)
 {
     masm.branch32(MacroAssembler::Equal,
                   Address(entry, offsetof(BaselineDebugModeOSRInfo, frameKind)),
-                  Imm32(kind), label);
+                  Imm32(uint32_t(kind)), label);
 }
 
 static void
 EmitBranchIsReturningFromCallVM(MacroAssembler& masm, Register entry, Label* label)
 {
     // Keep this in sync with IsReturningFromCallVM.
-    EmitBranchICEntryKind(masm, entry, ICEntry::Kind_CallVM, label);
-    EmitBranchICEntryKind(masm, entry, ICEntry::Kind_WarmupCounter, label);
-    EmitBranchICEntryKind(masm, entry, ICEntry::Kind_StackCheck, label);
+    EmitBranchRetAddrEntryKind(masm, entry, RetAddrEntry::Kind::CallVM, label);
+    EmitBranchRetAddrEntryKind(masm, entry, RetAddrEntry::Kind::WarmupCounter, label);
+    EmitBranchRetAddrEntryKind(masm, entry, RetAddrEntry::Kind::StackCheck, label);
 }
 
 static void

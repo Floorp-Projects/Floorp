@@ -7,6 +7,7 @@
 #define mozilla_TextEditRules_h
 
 #include "mozilla/EditAction.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/HTMLEditor.h" // for nsIEditor::AsHTMLEditor()
@@ -57,6 +58,13 @@ class Selection;
 class TextEditRules : public nsITimerCallback
                     , public nsINamed
 {
+protected:
+  typedef EditorBase::AutoSelectionRestorer
+            AutoSelectionRestorer;
+  typedef EditorBase::AutoTopLevelEditSubActionNotifier
+            AutoTopLevelEditSubActionNotifier;
+  typedef EditorBase::AutoTransactionsConserveSelection
+            AutoTransactionsConserveSelection;
 public:
   typedef dom::Element Element;
   typedef dom::Selection Selection;
