@@ -106,8 +106,6 @@ struct nsXPTInterfaceInfo
                        JS::MutableHandleValue constant,
                        char** aName) const;
 
-  bool EnsureResolved() const { return true; } // XXX: Remove (bug 1480245)
-
   ////////////////////////////////////////////////////////////////
   // Ensure these fields are in the same order as xptcodegen.py //
   ////////////////////////////////////////////////////////////////
