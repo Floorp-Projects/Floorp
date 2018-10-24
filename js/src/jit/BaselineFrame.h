@@ -58,15 +58,16 @@ class BaselineFrame
         HAS_DEBUG_MODE_OSR_INFO = 1 << 10,
 
         // This flag is intended for use whenever the frame is settled on a
-        // native code address without a corresponding ICEntry. In this case,
-        // the frame contains an explicit bytecode offset for frame iterators.
+        // native code address without a corresponding RetAddrEntry. In this
+        // case, the frame contains an explicit bytecode offset for frame
+        // iterators.
         //
         // There can also be an override pc if the frame has had its
         // environment chain unwound to a pc during exception handling that is
         // different from its current pc.
         //
         // This flag should never be set on the top frame while we're
-        // executing JIT code. In debug mode, it is checked before and
+        // executing JIT code. In debug builds, it is checked before and
         // after VM calls.
         HAS_OVERRIDE_PC = 1 << 11,
 
