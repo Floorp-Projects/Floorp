@@ -10,6 +10,7 @@
 
 const Services = require("Services");
 const promise = require("promise");
+const flags = require("devtools/shared/flags");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
 const {Toolbox} = require("devtools/client/framework/toolbox");
@@ -291,7 +292,10 @@ Inspector.prototype = {
     // Setup the sidebar panels.
     this.setupSidebar();
 
-    await this.once("markuploaded");
+    if (flags.testing) {
+      await this.once("markuploaded");
+    }
+
     this.isReady = true;
 
     // All the components are initialized. Take care of the remaining initialization

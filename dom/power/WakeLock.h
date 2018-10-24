@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
 #include "nsIObserver.h"
+#include "nsIWakeLock.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
@@ -26,10 +27,12 @@ class WakeLock final
   : public nsIDOMEventListener
   , public nsIObserver
   , public nsSupportsWeakReference
+  , public nsIWakeLock
 {
 public:
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIWAKELOCK
 
   NS_DECL_ISUPPORTS
 
