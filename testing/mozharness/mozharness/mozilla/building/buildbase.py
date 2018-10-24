@@ -1002,25 +1002,6 @@ or run without that action (ie: --no-{action})"
         self.run_command(cmd, cwd=dirs['abs_src_dir'], halt_on_failure=True,
                          env=env)
 
-    def query_revision(self, source_path=None):
-        """ returns the revision of the build
-
-         This method is used both to figure out what revision to check out and
-         to figure out what revision *was* checked out.
-        """
-        revision = None
-        if not source_path:
-            dirs = self.query_abs_dirs()
-            source_path = dirs['abs_src_dir']  # let's take the default
-
-        # Look at what we have checked out
-        if os.path.exists(source_path):
-            hg = self.query_exe('hg', return_type='list')
-            revision = self.get_output_from_command(
-                hg + ['parent', '--template', '{node}'], cwd=source_path
-            )
-        return revision.encode('ascii', 'replace') if revision else None
-
     def generate_build_props(self, console_output=True, halt_on_failure=False):
         """sets props found from mach build and, in addition, buildid,
         sourcestamp,  appVersion, and appName."""

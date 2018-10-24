@@ -129,19 +129,17 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         self.httpdManifest = posixpath.join(self.remoteComponentsDir, 'httpd.manifest')
         self.testingModulesDir = self.remoteModulesDir
         self.testharnessdir = self.remoteScriptsDir
-        xpcshell.XPCShellTestThread.buildXpcsCmd(self)
+        xpcsCmd = xpcshell.XPCShellTestThread.buildXpcsCmd(self)
         # remove "-g <dir> -a <dir>" and add "--greomni <apk>"
-        del(self.xpcsCmd[1:5])
+        del xpcsCmd[1:5]
         if self.options['localAPK']:
-            self.xpcsCmd.insert(3, '--greomni')
-            self.xpcsCmd.insert(4, self.remoteAPK)
+            xpcsCmd.insert(3, '--greomni')
+            xpcsCmd.insert(4, self.remoteAPK)
 
         if self.remoteDebugger:
             # for example, "/data/local/gdbserver" "localhost:12345"
-            self.xpcsCmd = [
-              self.remoteDebugger,
-              self.remoteDebuggerArgs,
-              self.xpcsCmd]
+            xpcsCmd = [self.remoteDebugger, self.remoteDebuggerArgs] + xpcsCmd
+        return xpcsCmd
 
     def killTimeout(self, proc):
         self.kill(proc)

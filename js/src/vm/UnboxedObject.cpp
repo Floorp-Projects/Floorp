@@ -133,10 +133,15 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
         masm.push(ScratchDoubleReg);
     }
 
-    Label failure, tenuredObject, allocated;
+    Label failure, tenuredObject, allocated, unknownProperties;
     masm.branch32(Assembler::NotEqual, newKindReg, Imm32(GenericObject), &tenuredObject);
-    masm.branchTest32(Assembler::NonZero, AbsoluteAddress(group->addressOfFlags()),
+
+    masm.load32(AbsoluteAddress(group->addressOfFlags()), scratch1);
+    masm.branchTest32(Assembler::NonZero, scratch1,
+                      Imm32(OBJECT_FLAG_UNKNOWN_PROPERTIES), &unknownProperties);
+    masm.branchTest32(Assembler::NonZero, scratch1,
                       Imm32(OBJECT_FLAG_PRE_TENURE), &tenuredObject);
+    masm.bind(&unknownProperties);
 
     // Allocate an object in the nursery
     TemplateObject templateObj(templateObject);

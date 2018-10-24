@@ -40,7 +40,7 @@ job-defaults:
    run:
       using: mozharness
       config: []  # See extra-config below
-      actions: [create-virtualenv collect-individual-checksums create-big-checksums create-summary]
+      actions: [create-virtualenv, collect-individual-checksums, create-big-checksums, create-summary]
       options:
          - "version={version}"
          - "build-number={build_number}"

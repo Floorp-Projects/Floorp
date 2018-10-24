@@ -88,6 +88,7 @@ raptor-firefox:
     - raptor-webaudio-firefox
     - raptor-gdocs-firefox
     - raptor-sunspider-firefox
+    - raptor-wasm-godot-firefox
 
 raptor-chrome:
     - raptor-tp6-chrome
@@ -98,6 +99,7 @@ raptor-chrome:
     - raptor-webaudio-chrome
     - raptor-gdocs-chrome
     - raptor-sunspider-chrome
+    - raptor-wasm-godot-firefox
 
 # Fetch tasks are only supported on Linux for now,
 # so these need to be separate sets.

@@ -1477,15 +1477,13 @@ function run_next_test() {
 }
 
 try {
+  // Set global preferences
   if (runningInParent) {
     // Always use network provider for geolocation tests
     // so we bypass the OSX dialog raised by the corelocation provider
     _Services.prefs.setBoolPref("geo.provider.testing", true);
-  }
-} catch (e) { }
-// We need to avoid hitting the network with certain components.
-try {
-  if (runningInParent) {
+
+    // We need to avoid hitting the network with certain components.
     _Services.prefs.setCharPref("media.gmp-manager.url.override", "http://%(server)s/dummy-gmp-manager.xml");
     _Services.prefs.setCharPref("media.gmp-manager.updateEnabled", false);
     _Services.prefs.setCharPref("extensions.systemAddon.update.url", "http://%(server)s/dummy-system-addons.xml");
@@ -1493,17 +1491,15 @@ try {
     _Services.prefs.setCharPref("toolkit.telemetry.server", "https://%(server)s/telemetry-dummy");
     _Services.prefs.setCharPref("browser.search.geoip.url", "https://%(server)s/geoip-dummy");
     _Services.prefs.setCharPref("browser.safebrowsing.downloads.remote.url", "https://%(server)s/safebrowsing-dummy");
-  }
-} catch (e) { }
 
-// Make tests run consistently on DevEdition (which has a lightweight theme
-// selected by default).
-try {
-  if (runningInParent) {
+    // Make tests run consistently on DevEdition (which has a lightweight theme
+    // selected by default).
     _Services.prefs.deleteBranch("lightweightThemes.selectedThemeID");
     _Services.prefs.deleteBranch("browser.devedition.theme.enabled");
   }
-} catch (e) { }
+} catch (e) {
+  do_throw(e);
+}
 
 function _load_mozinfo() {
   let mozinfoFile = Cc["@mozilla.org/file/local;1"]

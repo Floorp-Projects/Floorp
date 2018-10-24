@@ -114,7 +114,7 @@ function connectRuntime(id) {
         },
       });
     } catch (e) {
-      dispatch({ type: CONNECT_RUNTIME_FAILURE, error: e.message });
+      dispatch({ type: CONNECT_RUNTIME_FAILURE, error: e });
     }
   };
 }
@@ -137,7 +137,7 @@ function disconnectRuntime(id) {
         },
       });
     } catch (e) {
-      dispatch({ type: DISCONNECT_RUNTIME_FAILURE, error: e.message });
+      dispatch({ type: DISCONNECT_RUNTIME_FAILURE, error: e });
     }
   };
 }
@@ -158,8 +158,7 @@ function updateConnectionPromptSetting(connectionPromptEnabled) {
       dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
                  runtime, connectionPromptEnabled });
     } catch (e) {
-      dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_FAILURE,
-                 error: e.message });
+      dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_FAILURE, error: e });
     }
   };
 }
@@ -190,7 +189,7 @@ function watchRuntime(id) {
         dispatch(Actions.requestWorkers());
       }
     } catch (e) {
-      dispatch({ type: WATCH_RUNTIME_FAILURE, error: e.message });
+      dispatch({ type: WATCH_RUNTIME_FAILURE, error: e });
     }
   };
 }
@@ -209,7 +208,7 @@ function unwatchRuntime(id) {
 
       dispatch({ type: UNWATCH_RUNTIME_SUCCESS });
     } catch (e) {
-      dispatch({ type: UNWATCH_RUNTIME_FAILURE, error: e.message });
+      dispatch({ type: UNWATCH_RUNTIME_FAILURE, error: e });
     }
   };
 }
