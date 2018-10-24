@@ -68,6 +68,24 @@ function postMessageToWorkerInTab(tab, url, message) {
   return jsonrpc(tab, "postMessageToWorker", [url, message]);
 }
 
+function generateMouseClickInTab(tab, path) {
+  info("Generating mouse click in tab.");
+
+  return jsonrpc(tab, "generateMouseClick", [path]);
+}
+
+function evalInTab(tab, string) {
+  info("Evalling string in tab.");
+
+  return jsonrpc(tab, "_eval", [string]);
+}
+
+function callInTab(tab, name) {
+  info("Calling function with name '" + name + "' in tab.");
+
+  return jsonrpc(tab, "call", [name, Array.prototype.slice.call(arguments, 2)]);
+}
+
 function connect(client) {
   info("Connecting client.");
   return client.connect();
@@ -116,6 +134,11 @@ function findWorker(workers, url) {
 function attachWorker(targetFront, worker) {
   info("Attaching to worker with url '" + worker.url + "'.");
   return targetFront.attachWorker(worker.actor);
+}
+
+function waitForWorkerListChanged(targetFront) {
+  info("Waiting for worker list to change.");
+  return targetFront.once("workerListChanged");
 }
 
 function attachThread(workerTargetFront, options) {
@@ -221,3 +244,39 @@ this.removeTab = function removeTab(tab, win) {
   targetBrowser.removeTab(tab);
   return deferred.promise;
 };
+
+async function attachTargetActorForUrl(client, url) {
+  const grip = await getTargetActorForUrl(client, url);
+  const [ response, front ] = await client.attachTarget(grip.actor);
+  return [grip, response, front];
+}
+
+async function attachThreadActorForUrl(client, url) {
+  const [, response] = await attachTargetActorForUrl(client, url);
+  const [, threadClient] = await client.attachThread(response.threadActor);
+  await threadClient.resume();
+  return threadClient;
+}
+
+function getTargetActorForUrl(client, url) {
+  const deferred = getDeferredPromise().defer();
+
+  client.listTabs().then(response => {
+    const targetActor = response.tabs.filter(grip => grip.url == url).pop();
+    deferred.resolve(targetActor);
+  });
+
+  return deferred.promise;
+}
+
+function pushPrefs(...aPrefs) {
+  const deferred = getDeferredPromise().defer();
+  SpecialPowers.pushPrefEnv({"set": aPrefs}, deferred.resolve);
+  return deferred.promise;
+}
+
+function popPrefs() {
+  const deferred = getDeferredPromise().defer();
+  SpecialPowers.popPrefEnv(deferred.resolve);
+  return deferred.promise;
+}
