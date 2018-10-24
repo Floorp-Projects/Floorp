@@ -2386,20 +2386,21 @@ function synthesizeDrop(aSrcElement, aDestElement, aDragData, aDropEffect, aWind
 
 /**
  * Emulate a drag and drop by emulating a dragstart by mousedown and mousemove,
- * and firing events dragenter, dragover, drop, and mouseup.
+ * and firing events dragenter, dragover, drop, and dragend.
  * This does not modify dataTransfer and tries to emulate the plain drag and
  * drop as much as possible, compared to synthesizeDrop.
  *
  * @param aParams
  *        {
  *          srcElement:   The element to start dragging
- *          destElement:  The element to drop on
+ *          destElement:  The element to drop on. Pass null to emulate
+ *                        a drop on an invalid target.
  *          srcX:         The initial x coordinate inside srcElement
  *          srcY:         The initial y coordinate inside srcElement
  *          stepX:        The x-axis step for mousemove inside srcElement
  *          stepY:        The y-axis step for mousemove inside srcElement
- *          destX:        The x coordinate inside destElement
- *          destY:        The x coordinate inside destElement
+ *          finalX:       The final x coordinate inside srcElement
+ *          finalY:       The final x coordinate inside srcElement
  *          srcWindow:    The window for dispatching event on srcElement,
  *                        defaults to the current window object
  *          destWindow:   The window for dispatching event on destElement,
@@ -2415,8 +2416,8 @@ async function synthesizePlainDragAndDrop(aParams)
     srcY = 2,
     stepX = 9,
     stepY = 9,
-    destX = 2,
-    destY = 2,
+    finalX = srcX + stepX * 2,
+    finalY = srcY + stepY * 2,
     srcWindow = window,
     destWindow = window,
   } = aParams;
@@ -2451,15 +2452,26 @@ async function synthesizePlainDragAndDrop(aParams)
 
     await new Promise(r => setTimeout(r, 0));
 
-    let event = createDragEventObject("dragover", destElement, destWindow,
-                                      dataTransfer, {});
-    sendDragEvent(event, destElement, destWindow);
+    let event;
+    if (destElement) {
+      // dragover and drop are only fired to a valid drop target. If the
+      // destElement parameter is null, this function is being used to
+      // simulate a drag'n'drop over an invalid drop target.
+      event = createDragEventObject("dragover", destElement, destWindow,
+                                        dataTransfer, {});
+      sendDragEvent(event, destElement, destWindow);
 
-    await new Promise(r => setTimeout(r, 0));
+      await new Promise(r => setTimeout(r, 0));
 
-    event = createDragEventObject("drop", destElement, destWindow,
-                                  dataTransfer, {});
-    sendDragEvent(event, destElement, destWindow);
+      event = createDragEventObject("drop", destElement, destWindow,
+                                    dataTransfer, {});
+      sendDragEvent(event, destElement, destWindow);
+    }
+
+    // dragend is fired, by definition, on the srcElement
+    event = createDragEventObject("dragend", srcElement, srcWindow,
+                                  dataTransfer, {clientX: finalX, clientY: finalY});
+    sendDragEvent(event, srcElement, srcWindow);
 
     await new Promise(r => setTimeout(r, 0));
 
