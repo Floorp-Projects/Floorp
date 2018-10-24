@@ -137,6 +137,27 @@ protected:
   virtual ~HTMLHeaderOrFooterAccessible() {}
 };
 
+/**
+ * Used for HTML section element.
+ */
+class HTMLSectionAccessible : public HyperTextAccessibleWrap
+{
+public:
+
+  HTMLSectionAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+    HyperTextAccessibleWrap(aContent, aDoc) {}
+
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLSectionAccessible,
+                                       HyperTextAccessibleWrap)
+
+  // Accessible
+  virtual nsAtom* LandmarkRole() const override;
+  virtual a11y::role NativeRole() const override;
+
+protected:
+  virtual ~HTMLSectionAccessible() = default;
+};
+
 } // namespace a11y
 } // namespace mozilla
 
