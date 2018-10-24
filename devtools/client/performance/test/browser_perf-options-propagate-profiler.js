@@ -19,7 +19,7 @@ add_task(async function() {
   });
 
   Services.prefs.setIntPref(PROFILER_BUFFER_SIZE_PREF, 1000);
-  Services.prefs.setIntPref(PROFILER_SAMPLE_RATE_PREF, 2);
+  Services.prefs.setIntPref(PROFILER_SAMPLE_RATE_PREF, 2000);
 
   await startRecording(panel);
   const { entries, interval } = await toolbox.performance.getConfiguration();

@@ -17,4 +17,5 @@ DevToolsModules(
     'Scopes.js',
     'UtilsBar.js',
     'Workers.js',
+    'XHRBreakpoints.js',
 )

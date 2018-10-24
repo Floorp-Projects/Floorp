@@ -33,6 +33,7 @@ class App extends PureComponent {
       networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       selectedPage: PropTypes.string,
       usbRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
+      wifiEnabled: PropTypes.bool.isRequired,
     };
   }
 
@@ -43,6 +44,7 @@ class App extends PureComponent {
       networkEnabled,
       networkLocations,
       selectedPage,
+      wifiEnabled,
     } = this.props;
 
     if (!selectedPage) {
@@ -57,6 +59,7 @@ class App extends PureComponent {
           dispatch,
           networkEnabled,
           networkLocations,
+          wifiEnabled,
         });
       default:
         // All pages except for the CONNECT page are RUNTIME pages.
@@ -105,6 +108,7 @@ const mapStateToProps = state => {
     networkRuntimes: state.runtimes.networkRuntimes,
     selectedPage: state.ui.selectedPage,
     usbRuntimes: state.runtimes.usbRuntimes,
+    wifiEnabled: state.ui.wifiEnabled,
   };
 };
 

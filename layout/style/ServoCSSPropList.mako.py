@@ -101,6 +101,7 @@ SERIALIZED_PREDEFINED_TYPES = [
     "OffsetPath",
     "Opacity",
     "Resize",
+    "TextAlign",
     "TransformStyle",
     "background::BackgroundSize",
     "basic_shape::ClippingShape",

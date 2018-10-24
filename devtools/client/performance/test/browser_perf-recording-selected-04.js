@@ -7,7 +7,11 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { UI_ENABLE_MEMORY_PREF, UI_ENABLE_ALLOCATIONS_PREF } = require("devtools/client/performance/test/helpers/prefs");
+const {
+  UI_ENABLE_MEMORY_PREF,
+  UI_ENABLE_ALLOCATIONS_PREF,
+  PROFILER_SAMPLE_RATE_PREF,
+} = require("devtools/client/performance/test/helpers/prefs");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording, waitForAllWidgetsRendered } = require("devtools/client/performance/test/helpers/actions");
 const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
@@ -26,10 +30,18 @@ add_task(async function() {
   // Enable allocations to test the memory-calltree and memory-flamegraph.
   Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, true);
 
-  await startRecording(panel);
-  await stopRecording(panel);
+  // Because enabling the memory panel has a significant overhead, especially in
+  // slow builds like ccov builds, let's reduce the overhead from the sampling.
+  Services.prefs.setIntPref(PROFILER_SAMPLE_RATE_PREF, 100);
 
-  // Ållow widgets to be updated while hidden, to make testing easier.
+  ok(true, "Starting recording...");
+  await startRecording(panel);
+  ok(true, "Recording started!");
+  ok(true, "Stopping recording...");
+  await stopRecording(panel);
+  ok(true, "Recording stopped!");
+
+  // Allow widgets to be updated while hidden, to make testing easier.
   DetailsSubview.canUpdateWhileHidden = true;
 
   // Cycle through all the views to initialize them. The waterfall is shown

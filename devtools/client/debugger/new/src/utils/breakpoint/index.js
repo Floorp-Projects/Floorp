@@ -31,6 +31,7 @@ exports.assertPendingLocation = assertPendingLocation;
 exports.breakpointAtLocation = breakpointAtLocation;
 exports.breakpointExists = breakpointExists;
 exports.createBreakpoint = createBreakpoint;
+exports.createXHRBreakpoint = createXHRBreakpoint;
 exports.createPendingBreakpoint = createPendingBreakpoint;
 
 var _selectors = require("../../selectors/index");
@@ -173,6 +174,19 @@ function createBreakpoint(location, overrides = {}) {
     originalText
   };
   return properties;
+}
+
+function createXHRBreakpoint(path, method, overrides = {}) {
+  const properties = {
+    path,
+    method,
+    disabled: false,
+    loading: false,
+    text: `URL contains "${path}"`
+  };
+  return { ...properties,
+    ...overrides
+  };
 }
 
 function createPendingLocation(location) {

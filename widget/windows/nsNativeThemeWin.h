@@ -37,9 +37,6 @@ public:
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect) override;
 
-  nscolor GetWidgetAutoColor(mozilla::ComputedStyle* aStyle,
-                             WidgetType aWidgetType) override;
-
   MOZ_MUST_USE LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext,
                                                      nsIFrame* aFrame,
                                                      WidgetType aWidgetType) override;
