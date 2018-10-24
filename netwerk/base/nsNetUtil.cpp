@@ -49,7 +49,7 @@
 #include "nsIPropertyBag2.h"
 #include "nsIProtocolProxyService.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
-#include "nsIRequestObserverProxy.h"
+#include "nsRequestObserverProxy.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISensitiveInfoHiddenURI.h"
 #include "nsISimpleStreamListener.h"
@@ -60,7 +60,7 @@
 #include "nsIIncrementalStreamLoader.h"
 #include "nsIStreamTransportService.h"
 #include "nsStringStream.h"
-#include "nsISyncStreamListener.h"
+#include "nsSyncStreamListener.h"
 #include "nsITransport.h"
 #include "nsIURIWithSpecialOrigin.h"
 #include "nsIURLParser.h"
@@ -1186,16 +1186,15 @@ nsresult
 NS_NewSyncStreamListener(nsIStreamListener **result,
                          nsIInputStream    **stream)
 {
-    nsresult rv;
-    nsCOMPtr<nsISyncStreamListener> listener =
-        do_CreateInstance(NS_SYNCSTREAMLISTENER_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = listener->GetInputStream(stream);
+    nsCOMPtr<nsISyncStreamListener> listener = nsSyncStreamListener::Create();
+    if (listener) {
+        nsresult rv = listener->GetInputStream(stream);
         if (NS_SUCCEEDED(rv)) {
             listener.forget(result);
         }
+        return rv;
     }
-    return rv;
+    return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -1227,14 +1226,10 @@ NS_NewRequestObserverProxy(nsIRequestObserver **result,
                            nsIRequestObserver  *observer,
                            nsISupports         *context)
 {
-    nsresult rv;
-    nsCOMPtr<nsIRequestObserverProxy> proxy =
-        do_CreateInstance(NS_REQUESTOBSERVERPROXY_CONTRACTID, &rv);
+    nsCOMPtr<nsIRequestObserverProxy> proxy = new nsRequestObserverProxy();
+    nsresult rv = proxy->Init(observer, context);
     if (NS_SUCCEEDED(rv)) {
-        rv = proxy->Init(observer, context);
-        if (NS_SUCCEEDED(rv)) {
-            proxy.forget(result);
-        }
+        proxy.forget(result);
     }
     return rv;
 }

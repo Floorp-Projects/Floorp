@@ -19,7 +19,7 @@ namespace dom {
 
 MessageEventRunnable::MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                                            TargetAndBusyBehavior aBehavior)
-  : WorkerRunnable(aWorkerPrivate, aBehavior)
+  : WorkerDebuggeeRunnable(aWorkerPrivate, aBehavior)
   , StructuredCloneHolder(CloningSupported, TransferringSupported,
                           StructuredCloneScope::SameProcessDifferentThread)
 {

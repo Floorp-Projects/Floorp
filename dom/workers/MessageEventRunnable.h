@@ -17,7 +17,7 @@ class DOMEventTargetHelper;
 
 namespace dom {
 
-class MessageEventRunnable final : public WorkerRunnable
+class MessageEventRunnable final : public WorkerDebuggeeRunnable
                                  , public StructuredCloneHolder
 {
 public:

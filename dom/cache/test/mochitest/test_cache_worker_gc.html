@@ -37,6 +37,7 @@ async function test() {
   ok(weakWorker, 'worker supports weak reference');
   w = null;
   await gc();
+  await gc();
   ok(!weakWorker.get(), 'worker weak reference should be garbage collected');
   SimpleTest.finish();
 }

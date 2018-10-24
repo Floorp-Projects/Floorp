@@ -53,6 +53,36 @@ def stub_installer(config, jobs):
 
 
 @transforms.add
+def update_channel(config, jobs):
+    for job in jobs:
+        resolve_keyed_by(
+            job, 'run.update-channel', item_name=job['name'],
+            **{
+                'release-type': config.params['release_type'],
+            }
+        )
+        update_channel = job['run'].pop('update-channel', None)
+        if update_channel:
+            job['run'].setdefault('extra-config', {})['update_channel'] = update_channel
+        yield job
+
+
+@transforms.add
+def mozconfig(config, jobs):
+    for job in jobs:
+        resolve_keyed_by(
+            job, 'run.mozconfig-variant', item_name=job['name'],
+            **{
+                'release-type': config.params['release_type'],
+            }
+        )
+        mozconfig_variant = job['run'].pop('mozconfig-variant', None)
+        if mozconfig_variant:
+            job['run'].setdefault('extra-config', {})['mozconfig_variant'] = mozconfig_variant
+        yield job
+
+
+@transforms.add
 def set_env(config, jobs):
     """Set extra environment variables from try command line."""
     env = []

@@ -119,12 +119,3 @@ interface nsISocketProvider : nsISupports
      */
     const unsigned long BE_CONSERVATIVE = 1 << 4;
 };
-
-%{C++
-/**
- * nsISocketProvider implementations should be registered with XPCOM under a
- * contract ID of the form: "@mozilla.org/network/socket;2?type=foo"
- */
-#define NS_NETWORK_SOCKET_CONTRACTID_PREFIX \
-    "@mozilla.org/network/socket;2?type="
-%}

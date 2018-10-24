@@ -135,6 +135,26 @@ class TestResolveKeyedBy(unittest.TestCase):
             Exception, resolve_keyed_by,
             {'f': 'hats', 'x': {'by-f': {'hat.*': 'head', 'ha.*': 'hair'}}}, 'x', 'n')
 
+    def test_no_key_no_default(self):
+        """
+        When the key referenced in `by-*` doesn't exist, and there is not default value,
+        an exception is raised.
+        """
+        self.assertRaises(
+            Exception, resolve_keyed_by,
+            {'x': {'by-f': {'hat.*': 'head', 'ha.*': 'hair'}}}, 'x', 'n')
+
+    def test_no_key(self):
+        """
+        When the key referenced in `by-*` doesn't exist, and there is a default value,
+        that value is used as the result.
+        """
+        self.assertEqual(
+            resolve_keyed_by(
+                {'x': {'by-f': {'hat': 'head', 'default': 'anywhere'}}},
+                'x', 'n'),
+            {'x': 'anywhere'})
+
 
 if __name__ == '__main__':
     main()

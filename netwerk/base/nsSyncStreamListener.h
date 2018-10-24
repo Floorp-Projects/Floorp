@@ -23,15 +23,16 @@ public:
     NS_DECL_NSISYNCSTREAMLISTENER
     NS_DECL_NSIINPUTSTREAM
 
+    static already_AddRefed<nsISyncStreamListener> Create();
+
+private:
     nsSyncStreamListener()
         : mStatus(NS_OK)
         , mKeepWaiting(false)
         , mDone(false) {}
+    ~nsSyncStreamListener() = default;
 
     nsresult Init();
-
-private:
-    ~nsSyncStreamListener() = default;
 
     nsresult WaitForData();
 

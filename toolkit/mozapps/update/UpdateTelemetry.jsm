@@ -86,6 +86,8 @@ var AUSTLMY = {
   CHK_ELEVATION_OPTOUT_FOR_VERSION: 36,
   // Update checks disabled by enterprise policy
   CHK_DISABLED_BY_POLICY: 37,
+  // Update check failed due to write error
+  CHK_ERR_WRITE_FAILURE: 38,
 
   /**
    * Submit a telemetry ping for the update check result code or a telemetry
@@ -173,6 +175,7 @@ var AUSTLMY = {
   DWNLD_ERR_DOCUMENT_NOT_CACHED: 12,
   DWNLD_ERR_VERIFY_NO_REQUEST: 13,
   DWNLD_ERR_VERIFY_PATCH_SIZE_NOT_EQUAL: 14,
+  DWNLD_ERR_WRITE_FAILURE: 15,
 
   /**
    * Submit a telemetry ping for the update download result code.
@@ -204,6 +207,10 @@ var AUSTLMY = {
       Cu.reportError(e);
     }
   },
+
+  // Previous state codes are defined in pingStateAndStatusCodes() in
+  // nsUpdateService.js
+  STATE_WRITE_FAILURE: 14,
 
   /**
    * Submit a telemetry ping for the update status state code.

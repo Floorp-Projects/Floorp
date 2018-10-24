@@ -297,6 +297,25 @@ public:
 };
 
 
+template<>
+class nsAutoRefTraits<PSID>
+{
+public:
+  typedef PSID RawRef;
+  static RawRef Void()
+  {
+    return nullptr;
+  }
+
+  static void Release(RawRef aFD)
+  {
+    if (aFD != Void()) {
+      FreeSid(aFD);
+    }
+  }
+};
+
+
 typedef nsAutoRef<HKEY> nsAutoRegKey;
 typedef nsAutoRef<HDC> nsAutoHDC;
 typedef nsAutoRef<HBRUSH> nsAutoBrush;
@@ -308,6 +327,7 @@ typedef nsAutoRef<HMODULE> nsModuleHandle;
 typedef nsAutoRef<DEVMODEW*> nsAutoDevMode;
 typedef nsAutoRef<nsHGLOBAL> nsAutoGlobalMem;
 typedef nsAutoRef<nsHPRINTER> nsAutoPrinter;
+typedef nsAutoRef<PSID> nsAutoSid;
 
 namespace {
 
@@ -367,5 +387,13 @@ LoadLibrarySystem32(LPCWSTR aModule)
 }
 
 }
+
+struct LocalFreeDeleter
+{
+  void operator()(void* aPtr)
+  {
+    ::LocalFree(aPtr);
+  }
+};
 
 #endif
