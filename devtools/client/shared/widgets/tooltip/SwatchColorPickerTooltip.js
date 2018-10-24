@@ -51,6 +51,7 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
 
   setColorPickerContent(color) {
     const { doc } = this.tooltip;
+    this.tooltip.panel.innerHTML = "";
 
     const container = doc.createElementNS(XHTML_NS, "div");
     container.id = "spectrum-tooltip";

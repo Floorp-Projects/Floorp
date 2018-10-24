@@ -84,7 +84,7 @@ function installAdbAddon() {
       await adbAddon.install();
       dispatch({ type: ADB_ADDON_INSTALL_SUCCESS });
     } catch (e) {
-      dispatch({ type: ADB_ADDON_INSTALL_FAILURE, error: e.message });
+      dispatch({ type: ADB_ADDON_INSTALL_FAILURE, error: e });
     }
   };
 }
@@ -97,7 +97,7 @@ function uninstallAdbAddon() {
       await adbAddon.uninstall();
       dispatch({ type: ADB_ADDON_UNINSTALL_SUCCESS });
     } catch (e) {
-      dispatch({ type: ADB_ADDON_UNINSTALL_FAILURE, error: e.message });
+      dispatch({ type: ADB_ADDON_UNINSTALL_FAILURE, error: e });
     }
   };
 }

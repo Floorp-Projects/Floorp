@@ -33,7 +33,8 @@ netwerk/test/browser/**
 netwerk/test/httpserver/**
 netwerk/test/mochitests/**
 netwerk/test/unit*/**
-netwerk/wifi/**
+# Bug 1501445.
+netwerk/wifi/tests/wifi_access_point_test.html
 parser/**
 tools/update-packaging/**
 uriloader/exthandler/**
@@ -171,7 +172,6 @@ devtools/server/tests/unit/xpcshell_debugging_script.js
 dom/abort/**
 dom/animation/**
 dom/asmjscache/**
-dom/audiochannel/**
 dom/base/**
 dom/battery/**
 dom/bindings/**
@@ -180,7 +180,6 @@ dom/browser-element/**
 dom/cache/test/mochitest/**
 dom/cache/test/xpcshell/**
 dom/canvas/**
-dom/commandhandler/**
 dom/console/**
 dom/crypto/**
 dom/encoding/**
@@ -255,6 +254,7 @@ dom/xslt/**
 dom/xul/**
 
 # Third-party
+dom/canvas/test/webgl-conf/**
 dom/media/webvtt/**
 
 # Third-party
@@ -302,6 +302,11 @@ mobile/android/locales/
 
 # Non-standard `(catch ex if ...)`
 mobile/android/chrome/content/browser.js
+
+# Pre-processed/pref files
+modules/libpref/greprefs.js
+modules/libpref/init/all.js
+modules/libpref/test/unit/*data/**
 
 # Only contains non-standard test files.
 python/**

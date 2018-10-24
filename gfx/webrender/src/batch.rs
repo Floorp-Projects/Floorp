@@ -18,7 +18,7 @@ use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureS
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentTaskId, DeferredResolve};
 use prim_store::{EdgeAaSegmentMask, ImageSource};
 use prim_store::{VisibleGradientTile, PrimitiveInstance};
-use prim_store::{BrushSegment, BorderSource, Primitive, PrimitiveDetails};
+use prim_store::{BrushSegment, BorderSource, PrimitiveDetails};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskTree};
 use renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use renderer::BLOCKS_PER_UV_RECT;
@@ -564,7 +564,7 @@ impl AlphaBatchBuilder {
             .clip_task_id
             .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
 
-        let specified_blend_mode = prim.get_blend_mode();
+        let specified_blend_mode = prim_instance.get_blend_mode(&prim.details);
 
         let non_segmented_blend_mode = if !prim_instance.opacity.is_opaque ||
             prim_instance.clip_task_id.is_some() ||
@@ -1733,9 +1733,12 @@ impl BrushPrimitive {
     }
 }
 
-impl Primitive {
-    fn get_blend_mode(&self) -> BlendMode {
-        match self.details {
+impl PrimitiveInstance {
+    fn get_blend_mode(
+        &self,
+        details: &PrimitiveDetails,
+    ) -> BlendMode {
+        match *details {
             // Can only resolve the TextRun's blend mode once glyphs are fetched.
             PrimitiveDetails::TextRun(..) => {
                 BlendMode::PremultipliedAlpha
@@ -1768,9 +1771,10 @@ impl Primitive {
 
     pub fn is_cacheable(
         &self,
+        details: &PrimitiveDetails,
         resource_cache: &ResourceCache
     ) -> bool {
-        let image_key = match self.details {
+        let image_key = match *details {
             PrimitiveDetails::Brush(BrushPrimitive { kind: BrushKind::Image{ request, ..  }, .. }) => {
                 request.key
             }

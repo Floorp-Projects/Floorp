@@ -1867,21 +1867,7 @@ ValidateCopyDestUsage(WebGLContext* webgl,
 
     const auto dstFormat = dstUsage->format;
 
-    const auto fnNarrowType = [&](webgl::ComponentType type) {
-        switch (type) {
-        case webgl::ComponentType::NormInt:
-        case webgl::ComponentType::NormUInt:
-            // These both count as "fixed-point".
-            return webgl::ComponentType::NormInt;
-
-        default:
-            return type;
-        }
-    };
-
-    const auto srcType = fnNarrowType(srcFormat->componentType);
-    const auto dstType = fnNarrowType(dstFormat->componentType);
-    if (dstType != srcType) {
+    if (dstFormat->componentType != srcFormat->componentType) {
         webgl->ErrorInvalidOperation("For sized internalFormats, source and dest"
                                      " component types must match. (source: %s, dest:"
                                      " %s)",

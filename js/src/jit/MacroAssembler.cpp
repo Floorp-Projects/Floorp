@@ -3413,8 +3413,15 @@ MacroAssembler::branchIfPretenuredGroup(const ObjectGroup* group, Register scrat
 void
 MacroAssembler::branchIfPretenuredGroup(Register group, Label* label)
 {
+    // To check for the pretenured flag we need OBJECT_FLAG_PRETENURED set, and
+    // OBJECT_FLAG_UNKNOWN_PROPERTIES unset, so check the latter first, and don't
+    // branch if it set.
+    Label unknownProperties;
+    branchTest32(Assembler::NonZero, Address(group, ObjectGroup::offsetOfFlags()),
+                Imm32(OBJECT_FLAG_UNKNOWN_PROPERTIES), &unknownProperties);
     branchTest32(Assembler::NonZero, Address(group, ObjectGroup::offsetOfFlags()),
                  Imm32(OBJECT_FLAG_PRE_TENURE), label);
+    bind(&unknownProperties);
 }
 
 

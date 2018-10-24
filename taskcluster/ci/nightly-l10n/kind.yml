@@ -223,8 +223,6 @@ job-template:
                     - single_locale/tc_common.py
                     - single_locale/tc_android-api-16.py
         # no default, so we fail on new entries
-        options:
-            - revision=$GECKO_HEAD_REV
         actions:
             by-build-platform:
                 default: ['clone-locales', 'list-locales', 'setup', 'repack',

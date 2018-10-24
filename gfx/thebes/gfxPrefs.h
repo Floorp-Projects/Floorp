@@ -741,6 +741,8 @@ private:
 
   DECL_GFX_PREF(Live, "print.font-variations-as-paths",        PrintFontVariationsAsPaths, bool, true);
 
+  DECL_GFX_PREF(Live, "sanity-test.running",                   SanityTestRunning, bool, false);
+
   DECL_GFX_PREF(Once, "slider.snapMultiplier",                 SliderSnapMultiplier, int32_t, 0);
 
   DECL_GFX_PREF(Live, "test.events.async.enabled",             TestEventsAsyncEnabled, bool, false);

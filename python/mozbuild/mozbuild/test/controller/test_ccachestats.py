@@ -199,6 +199,31 @@ class TestCcacheStats(unittest.TestCase):
     max cache size                       7.0 GB
     """.format(timestamp=time.strftime('%c'))
 
+    STAT9 = """
+    cache directory                     /Users/tlin/.ccache
+    primary config                      /Users/tlin/.ccache/ccache.conf
+    secondary config      (readonly)    /usr/local/Cellar/ccache/3.5/etc/ccache.conf
+    stats updated                       {timestamp}
+    stats zeroed                        {timestamp2}
+    cache hit (direct)                 80147
+    cache hit (preprocessed)           21413
+    cache miss                        191128
+    cache hit rate                     34.70 %
+    called for link                     5194
+    called for preprocessing            1721
+    compile failed                       825
+    preprocessor error                  3838
+    cache file missing                  4863
+    bad compiler arguments                32
+    autoconf compile/link               3554
+    unsupported code directive             4
+    no input file                       5545
+    cleanups performed                  3154
+    files in cache                     18525
+    cache size                          13.4 GB
+    max cache size                      15.0 GB
+    """.format(timestamp=time.strftime('%c'), timestamp2=time.strftime('%c'))
+
     def test_parse_garbage_stats_message(self):
         self.assertRaises(ValueError, CCacheStats, self.STAT_GARBAGE)
 
@@ -260,6 +285,11 @@ class TestCcacheStats(unittest.TestCase):
         # Test parsing 3.4 output.
         stat8 = CCacheStats(self.STAT8)
         self.assertTrue(stat8)
+
+    def test_stats_version35(self):
+        # Test parsing 3.5 output.
+        stat9 = CCacheStats(self.STAT9)
+        self.assertTrue(stat9)
 
 if __name__ == '__main__':
     main()

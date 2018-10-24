@@ -53,6 +53,7 @@ class WorkerErrorReport;
 class WorkerEventTarget;
 class WorkerGlobalScope;
 class WorkerRunnable;
+class WorkerDebuggeeRunnable;
 class WorkerThread;
 
 // SharedMutex is a small wrapper around an (internal) reference-counted Mutex
@@ -534,6 +535,10 @@ public:
   nsresult
   DispatchToMainThread(already_AddRefed<nsIRunnable> aRunnable,
                        uint32_t aFlags = NS_DISPATCH_NORMAL);
+
+  nsresult
+  DispatchDebuggeeToMainThread(already_AddRefed<WorkerDebuggeeRunnable> aRunnable,
+                               uint32_t aFlags = NS_DISPATCH_NORMAL);
 
   // Get an event target that will dispatch runnables as control runnables on
   // the worker thread.  Implement nsICancelableRunnable if you wish to take
@@ -1068,13 +1073,6 @@ public:
     mLoadingWorkerScript = aLoadingWorkerScript;
   }
 
-  void
-  QueueRunnable(nsIRunnable* aRunnable)
-  {
-    AssertIsOnParentThread();
-    mQueuedRunnables.AppendElement(aRunnable);
-  }
-
   bool
   RegisterSharedWorker(SharedWorker* aSharedWorker, MessagePort* aPort);
 
@@ -1375,6 +1373,10 @@ private:
   RefPtr<WorkerEventTarget> mWorkerControlEventTarget;
   RefPtr<WorkerEventTarget> mWorkerHybridEventTarget;
 
+  // A pauseable queue for WorkerDebuggeeRunnables directed at the main thread.
+  // See WorkerDebuggeeRunnable for details.
+  RefPtr<ThrottledEventQueue> mMainThreadDebuggeeEventTarget;
+
   struct SyncLoopInfo
   {
     explicit SyncLoopInfo(EventTarget* aEventTarget);
@@ -1407,9 +1409,6 @@ private:
   RefPtr<PerformanceStorage> mPerformanceStorage;
 
   RefPtr<WorkerCSPEventListener> mCSPEventListener;
-
-  // Only used for top level workers.
-  nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
 
   // Protected by mMutex.
   nsTArray<RefPtr<WorkerRunnable>> mPreStartRunnables;
