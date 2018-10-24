@@ -12,7 +12,7 @@ permalink: /changelog/
 
 * Compiled against:
   * Android (SDK: 27, Support Libraries: 27.1.1)
-  * Kotlin (Stdlib: 1.2.61, Coroutines: 0.23.4)
+  * Kotlin (Stdlib: **1.2.71** 🔺, Coroutines: **0.30.2** 🔺)
   * GeckoView (Nightly: **65.0.20181023100123** 🔺, Beta: **64.0.20181022150107** 🔺, Release: **63.0.20181018182531** 🔺)
 * **browser-toolbar**:
   * Added new listener to get notified when the user is editing the URL:

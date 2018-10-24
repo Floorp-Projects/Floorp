@@ -13,6 +13,7 @@ import kotlinx.android.synthetic.main.activity_toolbar.*
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.isActive
 import kotlinx.coroutines.experimental.launch
 import mozilla.components.browser.domains.DomainAutoCompleteProvider
 import mozilla.components.browser.menu.BrowserMenu
@@ -400,7 +401,7 @@ class ToolbarActivity : AppCompatActivity() {
                         view.progress = progress
                     }
 
-                    delay(progress * 5)
+                    delay(progress * 5L)
                 }
             } catch (t: Throwable) {
                 if (view == null) {
