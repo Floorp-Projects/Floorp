@@ -131,12 +131,14 @@ const PREF_OTHER_DEFAULTS = new Map([
   ["keyword.enabled", true],
 ]);
 
-const TYPES = [
-  "history",
-  "bookmark",
-  "openpage",
-  "searches",
-];
+// Maps preferences under browser.urlbar.suggest to behavior names, as defined
+// in mozIPlacesAutoComplete.
+const SUGGEST_PREF_TO_BEHAVIOR = {
+  history: "history",
+  bookmark: "bookmark",
+  openpage: "openpage",
+  searches: "search",
+};
 
 const PREF_TYPES = new Map([
   ["boolean", "Bool"],
@@ -299,8 +301,9 @@ class Preferences {
       }
       case "defaultBehavior": {
         let val = 0;
-        for (let type of [...TYPES, "history.onlyTyped"]) {
-          let behavior = type == "history.onlyTyped" ? "TYPED" : type.toUpperCase();
+        for (let type of [...Object.keys(SUGGEST_PREF_TO_BEHAVIOR), "history.onlyTyped"]) {
+          let behavior = type == "history.onlyTyped" ?
+            "TYPED" : SUGGEST_PREF_TO_BEHAVIOR[type].toUpperCase();
           val |= this.get("suggest." + type) &&
                  Ci.mozIPlacesAutoComplete["BEHAVIOR_" + behavior];
         }
@@ -352,22 +355,23 @@ class Preferences {
     this._linkingPrefs = true;
     try {
       let branch = Services.prefs.getBranch(PREF_URLBAR_BRANCH);
+      const SUGGEST_PREFS = Object.keys(SUGGEST_PREF_TO_BEHAVIOR);
       if (changedPref.startsWith("suggest.")) {
         // A suggest pref changed, fix autocomplete.enabled.
         branch.setBoolPref("autocomplete.enabled",
-                          TYPES.some(type => this.get("suggest." + type)));
+                           SUGGEST_PREFS.some(type => this.get("suggest." + type)));
       } else if (this.get("autocomplete.enabled")) {
         // If autocomplete is enabled and all of the suggest.* prefs are
         // disabled, reset the suggest.* prefs to their default value.
-        if (TYPES.every(type => !this.get("suggest." + type))) {
-          for (let type of TYPES) {
+        if (SUGGEST_PREFS.every(type => !this.get("suggest." + type))) {
+          for (let type of SUGGEST_PREFS) {
             let def = PREF_URLBAR_DEFAULTS.get("suggest." + type);
             branch.setBoolPref("suggest." + type, def);
           }
         }
       } else {
         // If autocomplete is disabled, deactivate all suggest preferences.
-        for (let type of TYPES) {
+        for (let type of SUGGEST_PREFS) {
           branch.setBoolPref("suggest." + type, false);
         }
       }
