@@ -204,6 +204,7 @@ class BrowserToolbarTest {
         assertEquals(56, toolbar.editToolbar.measuredHeight)
     }
 
+    @Test
     fun `toolbar will switch back to display mode after an URL has been entered`() {
         val toolbar = BrowserToolbar(RuntimeEnvironment.application)
         toolbar.editMode()
@@ -287,6 +288,7 @@ class BrowserToolbarTest {
         verify(displayToolbar).addPageAction(action)
     }
 
+    @Test
     fun `URL update does not override search terms in edit mode`() {
         val toolbar = BrowserToolbar(RuntimeEnvironment.application)
         val displayToolbar = mock(DisplayToolbar::class.java)
@@ -296,9 +298,9 @@ class BrowserToolbarTest {
         toolbar.editToolbar = editToolbar
 
         toolbar.setSearchTerms("mozilla android")
-        toolbar.url = "https://www.mozilla.org"
+        toolbar.url = "https://www.mozilla.com"
         toolbar.editMode()
-        verify(displayToolbar).updateUrl("https://www.mozilla.org")
+        verify(displayToolbar).updateUrl("https://www.mozilla.com")
         verify(editToolbar).updateUrl("mozilla android")
 
         toolbar.setSearchTerms("")
