@@ -105,7 +105,7 @@ android {
     project.configureProductFlavors.delegate = it
     project.configureProductFlavors()
 
-    flavorDimensions "audience", "geckoBinaries", "minApi"
+    flavorDimensions "audience", "geckoBinaries"
 
     sourceSets {
         main {
