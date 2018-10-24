@@ -27,7 +27,7 @@ def loader(kind, path, config, params, loaded_tasks):
     jobs = base_loader(kind, path, config, params, loaded_tasks)
 
     for job in jobs:
-        dependent_task = job['dependent-task']
+        dependent_task = job['primary-dependency']
         if dependent_task.attributes.get('nightly') or \
                 dependent_task.label in NON_NIGHTLY_LABELS_WHICH_SHOULD_SIGN_BUILDS:
             yield job

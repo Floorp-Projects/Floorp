@@ -7,10 +7,11 @@ Transform the beetmover task into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import craft_release_properties
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
-from taskgraph.util.schema import validate_schema, Schema, optionally_keyed_by, resolve_keyed_by
+from taskgraph.util.schema import validate_schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
                                          get_beetmover_action_scope)
 from taskgraph.transforms.task import task_description_schema
@@ -29,10 +30,7 @@ task_description_schema = {str(k): v for k, v in task_description_schema.schema.
 transforms = TransformSequence()
 
 
-beetmover_description_schema = Schema({
-    # the dependent task (object) for this beetmover job, used to inform beetmover.
-    Required('dependent-task'): object,
-
+beetmover_description_schema = schema.extend({
     # depname is used in taskref's to identify the taskID of the unsigned things
     Required('depname', default='build'): basestring,
 
@@ -58,7 +56,7 @@ beetmover_description_schema = Schema({
 @transforms.add
 def set_label(config, jobs):
     for job in jobs:
-        job['label'] = job['dependent-task'].label.replace(
+        job['label'] = job['primary-dependency'].label.replace(
             'sign-and-push-langpacks', 'beetmover-signed-langpacks'
         )
 
@@ -88,7 +86,7 @@ def resolve_keys(config, jobs):
 @transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
         attributes = dep_job.attributes
 
         treeherder = job.get('treeherder', {})
@@ -158,7 +156,7 @@ def generate_upstream_artifacts(upstream_task_ref, locales):
 @transforms.add
 def strip_unused_data(config, jobs):
     for job in jobs:
-        del job['dependent-task']
+        del job['primary-dependency']
 
         yield job
 

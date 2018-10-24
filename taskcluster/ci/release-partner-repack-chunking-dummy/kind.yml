@@ -11,7 +11,7 @@ transforms:
    # We'd do it here, except single_dep doesn't pay attention to any
    # per platform things that we set.
    - taskgraph.transforms.copy_attributes_from_dependent_task:transforms
-   # This transform is needed because task.py doesn't allow "dependent-task" to be
+   # This transform is needed because task.py doesn't allow "primary-dependency" to be
    # set, but the single_dep loader sets it (and we need it for chunk_partners,
    # name_sanity, and copy_build_platform_from_dependent_task to work).
    - taskgraph.transforms.strip_dependent_task:transforms

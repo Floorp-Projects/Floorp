@@ -6,6 +6,15 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 
+from voluptuous import Required
+
+from ..task import Task
+from ..util.schema import Schema
+
+schema = Schema({
+    Required('primary-dependency', 'primary dependency task'): Task,
+})
+
 
 def loader(kind, path, config, params, loaded_tasks):
     """
@@ -50,7 +59,9 @@ def loader(kind, path, config, params, loaded_tasks):
                 # make sure all attributes exist
                 continue
 
-        job = {'dependent-task': task}
+        job = {
+            'primary-dependency': task,
+        }
 
         if job_template:
             job.update(copy.deepcopy(job_template))

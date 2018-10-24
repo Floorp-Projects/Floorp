@@ -9,9 +9,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 
+from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
-from taskgraph.util.schema import validate_schema, Schema
+from taskgraph.util.schema import validate_schema
 from taskgraph.util.scriptworker import (
     add_scope_prefix,
     get_signing_cert_scope_per_platform,
@@ -26,8 +27,7 @@ task_description_schema = {str(k): v for k, v in task_description_schema.schema.
 
 transforms = TransformSequence()
 
-repackage_signing_description_schema = Schema({
-    Required('dependent-task'): object,
+repackage_signing_description_schema = schema.extend({
     Required('depname', default='repackage'): basestring,
     Optional('label'): basestring,
     Optional('treeherder'): task_description_schema['treeherder'],
@@ -46,7 +46,7 @@ SIGNING_FORMATS = {
 @transforms.add
 def validate(config, jobs):
     for job in jobs:
-        label = job.get('dependent-task', object).__dict__.get('label', '?no-label?')
+        label = job.get('primary-dependency', object).__dict__.get('label', '?no-label?')
         validate_schema(
             repackage_signing_description_schema, job,
             "In repackage-signing ({!r} kind) task for {!r}:".format(config.kind, label))
@@ -56,7 +56,7 @@ def validate(config, jobs):
 @transforms.add
 def make_repackage_signing_description(config, jobs):
     for job in jobs:
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
         attributes = copy_attributes_from_dependent_job(dep_job)
         attributes['repackage_type'] = 'repackage-signing'
 
