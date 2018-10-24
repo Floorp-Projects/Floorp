@@ -1,5 +1,6 @@
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+// eslint-disable-next-line mozilla/use-services
 const appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
 const { FluentBundle, FluentResource } = ChromeUtils.import("resource://gre/modules/Fluent.jsm", {});
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
