@@ -52,7 +52,7 @@ gfx/ots/.*
 gfx/qcms/.*
 gfx/sfntly/.*
 gfx/skia/.*
-gfx/vr/openvr/.*
+gfx/vr/service/openvr/.*
 gfx/webrender/.*
 gfx/webrender_api/.*
 gfx/wrench/.*
