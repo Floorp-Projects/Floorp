@@ -61,7 +61,7 @@ FlexItemValues::FlexItemValues(FlexLineValues* aParent,
     aItem->mCrossMinSize);
   mCrossMaxSize = ToPossiblyUnconstrainedPixels(aItem->mCrossMaxSize);
 
-  mClampState = FlexItemClampState::Unclamped;
+  mClampState = aItem->mClampState;
 }
 
 JSObject*
