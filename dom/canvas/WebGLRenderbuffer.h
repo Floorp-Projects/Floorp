@@ -26,15 +26,16 @@ class WebGLRenderbuffer final
     , public WebGLRectangleObject
     , public CacheInvalidator
 {
+    friend class WebGLContext;
     friend class WebGLFramebuffer;
     friend class WebGLFBAttachPoint;
 
 public:
     const GLuint mPrimaryRB;
-    bool mHasBeenBound = false;
 protected:
     const bool mEmulatePackedDepthStencil;
     GLuint mSecondaryRB;
+    bool mHasBeenBound;
     webgl::ImageInfo mImageInfo;
 
 public:
