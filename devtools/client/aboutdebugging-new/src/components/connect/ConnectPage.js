@@ -24,6 +24,8 @@ const ConnectSteps = createFactory(require("./ConnectSteps"));
 const NetworkLocationsForm = createFactory(require("./NetworkLocationsForm"));
 const NetworkLocationsList = createFactory(require("./NetworkLocationsList"));
 
+const { PREFERENCES } = require("../../constants");
+
 const USB_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const WIFI_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const GLOBE_ICON_SRC = "chrome://devtools/skin/images/globe.svg";
@@ -156,10 +158,6 @@ class ConnectPage extends PureComponent {
   renderNetwork() {
     const { dispatch, networkEnabled, networkLocations } = this.props;
 
-    if (!networkEnabled) {
-      return null;
-    }
-
     return Localized(
       {
         id: "about-debugging-connect-network",
@@ -171,9 +169,30 @@ class ConnectPage extends PureComponent {
           icon: GLOBE_ICON_SRC,
           title: "Via Network Location",
         },
-        NetworkLocationsList({ dispatch, networkLocations }),
-        dom.hr({ className: "separator separator--breathe" }),
-        NetworkLocationsForm({ dispatch }),
+        ...(
+          networkEnabled ?
+          [
+            NetworkLocationsList({ dispatch, networkLocations }),
+            dom.hr({ className: "separator separator--breathe" }),
+            NetworkLocationsForm({ dispatch }),
+          ] : [
+            // We are using an array for this single element because of the spread
+            // operator (...). The spread operator avoids React warnings about missing
+            // keys.
+            Localized(
+              {
+                id: "about-debugging-connect-network-disabled",
+                $pref: PREFERENCES.NETWORK_ENABLED,
+              },
+              dom.div(
+                {
+                  className: "connect-page__disabled-section",
+                },
+                "about-debugging-connect-network-disabled"
+              )
+            ),
+          ]
+        )
       )
     );
   }
