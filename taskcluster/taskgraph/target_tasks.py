@@ -47,18 +47,10 @@ def filter_on_platforms(task, platforms):
     return (platform in platforms)
 
 
-def filter_beta_release_tasks(task, parameters, ignore_kinds=None, allow_l10n=False):
+def filter_release_tasks(task, parameters):
     if not standard_filter(task, parameters):
         return False
-    if ignore_kinds is None:
-        ignore_kinds = [
-            'balrog',
-            'beetmover', 'beetmover-checksums', 'beetmover-l10n',
-            'beetmover-repackage', 'beetmover-repackage-signing',
-            'checksums-signing',
-            'nightly-l10n', 'nightly-l10n-signing',
-            'push-apk', 'repackage-l10n',
-        ]
+
     platform = task.attributes.get('build_platform')
     if platform in (
             # On beta, Nightly builds are already PGOs
@@ -83,13 +75,7 @@ def filter_beta_release_tasks(task, parameters, ignore_kinds=None, allow_l10n=Fa
            task.attributes.get('unittest_suite') != 'raptor':
             return False
 
-    # skip l10n, beetmover, balrog
-    if task.kind in ignore_kinds:
-        return False
-
-    # No l10n repacks per push. They may be triggered by kinds which depend
-    # on l10n builds/repacks. For instance: "repackage-signing"
-    if not allow_l10n and task.attributes.get('locale', '') != '':
+    if task.attributes.get('shipping_phase') not in (None, 'build'):
         return False
 
     return True
@@ -179,7 +165,7 @@ def target_tasks_default(full_task_graph, parameters, graph_config):
     via the `run_on_projects` attributes."""
     return [l for l, t in full_task_graph.tasks.iteritems()
             if standard_filter(t, parameters)
-            or filter_out_nightly(t, parameters)]
+            and filter_out_nightly(t, parameters)]
 
 
 @_target_task('ash_tasks')
@@ -274,8 +260,8 @@ def target_tasks_mozilla_beta(full_task_graph, parameters, graph_config):
     of desktop, plus android CI. The candidates build process involves a pipeline
     of builds and signing, but does not include beetmover or balrog jobs."""
 
-    return [l for l, t in full_task_graph.tasks.iteritems() if
-            filter_beta_release_tasks(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.iteritems()
+            if filter_release_tasks(t, parameters)]
 
 
 @_target_task('mozilla_release_tasks')
@@ -284,8 +270,8 @@ def target_tasks_mozilla_release(full_task_graph, parameters, graph_config):
     of desktop, plus android CI. The candidates build process involves a pipeline
     of builds and signing, but does not include beetmover or balrog jobs."""
 
-    return [l for l, t in full_task_graph.tasks.iteritems() if
-            filter_beta_release_tasks(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.iteritems()
+            if filter_release_tasks(t, parameters)]
 
 
 @_target_task('mozilla_esr60_tasks')
@@ -295,7 +281,7 @@ def target_tasks_mozilla_esr60(full_task_graph, parameters, graph_config):
     of builds and signing, but does not include beetmover or balrog jobs."""
 
     def filter(task):
-        if not filter_beta_release_tasks(task, parameters):
+        if not filter_release_tasks(task, parameters):
             return False
 
         platform = task.attributes.get('build_platform')
