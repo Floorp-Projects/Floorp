@@ -95,6 +95,7 @@
   <string name="preference_mozilla_telemetry_summary">Shikmatiuk</string>
   <string name="preference_about">Ipanpa %1$s</string>
   <string name="preference_search_restore">Shimukwepa ka achtutalijtuk motor tatemua</string>
+  <string name="preference_search_remove_title">Shikishti muchi ne tepusyulu taishtemua</string>
   <string name="preference_search_remove">Shikishti</string>
   <string name="preference_homescreen_tips">Shikneshtili tanawatilis ipal ne achtu iswat</string>
   <string name="action_option_add_search_engine">Shiktali se motor tatemualis</string>
@@ -102,6 +103,10 @@
   <string name="search_add_manually_string">Shiktemu ne mekat yawi mukwi</string>
   <string name="search_add_manually_save">Shiktajpia</string>
   <string name="search_add_manually_example">Machiut: machiut.com/search/?q=%s</string>
+  <string name="search_add_confirmation">Shiktali se yankwik tepusyulu taishtemua.</string>
+  <string name="search_add_error_empty_name">Shikishtuka ne itukay ne tepusyulu taishtemua</string>
+  <string name="search_add_error_duplicate_name">Seuk tepusyulu taishtemua kipiaya ne sesan itukay.</string>
+  <string name="search_add_error_empty_search">Shiktemu tay tikneki</string>
   <string name="content_description_clear_input">Shikpupu ne tajkwilujtuk</string>
   <string name="content_description_dismiss_input">Shikishti</string>
   <string name="content_description_erase">Shikpupu mutatemulis panutuk</string>
@@ -115,6 +120,7 @@
   <string name="content_description_back">Shimukwepa ka ipan</string>
   <string name="content_description_stop">Makaya shiktemilti ne sitioj web</string>
   <string name="content_description_customtab_exit">Shimukwepa ka ne aplicación panutuk</string>
+  <string name="content_description_trackers_blocked">Keski tapachiwiani ishtzaktuk</string>
   <string name="content_description_blocking_switch">Shiktentzakwa muchi ne tapachiwiani</string>
   <string name="your_rights">Tay mupal</string>
   <string name="external_app_prompt_title">Shiktapu ne ilpika tik seuk aplicación</string>
@@ -124,9 +130,11 @@
   <string name="external_multiple_apps_matched_exit">¿Tikneki tikisa tik ne ichtaka pashalulis?</string>
   <string name="download_snackbar_finished">%1$s tamik</string>
   <string name="download_snackbar_open">Shiktapu</string>
+  <string name="download_dialog_warning"><![CDATA["Ne archivoj temultijtuk "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"te yawi mupupua "</b>" kemen tikpupua %1$s tay tikitztuk."]]></string>
   <string name="download_dialog_title">Shiktemulti ne archivoj</string>
   <string name="download_dialog_action_cancel">Shikajkawa</string>
   <string name="download_dialog_action_download">Shitemulti</string>
+  <string name="errorpage_title">Se uijkayu panuk keman mutemultia ne iswat</string>
   <string name="errorpage_refresh">Shikejeku uksenpa</string>
   <string name="error_connectionfailure_title">Tesu weli musalua</string>
   <string name="error_timeout_title">Tea tinemi salujtuk</string>

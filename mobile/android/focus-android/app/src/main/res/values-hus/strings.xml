@@ -30,7 +30,7 @@
   <string name="preference_privacy_and_security_header">Tsinataláb ani belkadhtaláb</string>
   <string name="preference_privacy_and_security_summary">Abal ka takuy tin kwentaj an alim, cookies, kwetém kidhbax</string>
   <string name="preference_search_summary">Ka punuw abal ka kalej ok\'ox an kwetém kidhbax</string>
-  <string name="preference_mozilla_summary">tin kwentaj an %1$s, tolmixtaláb</string>
+  <string name="preference_mozilla_summary">Tin kwentaj an %1$s, tolmixtaláb</string>
   <string name="preference_category_tracking_protection">K\'anix abal yab kit elan</string>
   <string name="preference_category_web_content">Xi in kwa\'al an xeklek</string>
   <string name="preference_category_switching_apps">Jalk\'unal an eyendhanél</string>
@@ -94,7 +94,7 @@
   <string name="preference_mozilla_telemetry2">Ka ebna\' jay i eyendhanél a eyendhamal</string>
   <string name="preference_mozilla_telemetry_summary">Ka exla\' más</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla in t\'ajál abal kin pena\' expidh xi in yejenchal ani kin alwa\'medha\' %1$s abal patal.</string>
-  <string name="preference_privacy_notice">Tin kwentaj an tsinataláb</string>
+  <string name="preference_privacy_notice">Tin kwentaj an tsinaxtaláb</string>
   <string name="preference_about">Tolmixtaláb %1$s</string>
   <string name="preference_search_installed_search_engines">An alimchik punudhits ta k\'al</string>
   <string name="preference_search_restore">Ka punuw juníl an alimchik axi talakits ok\'chidh</string>
