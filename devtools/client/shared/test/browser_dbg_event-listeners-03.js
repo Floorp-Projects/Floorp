@@ -3,12 +3,23 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Tests that the eventListeners request works when there are event handlers
  * that the debugger cannot unwrap.
  */
 
-const TAB_URL = EXAMPLE_URL + "doc_native-event-handler.html";
+// Import helpers for the workers
+/* import-globals-from helper_workers.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/helper_workers.js",
+  this);
+
+var { DebuggerServer } = require("devtools/server/main");
+var { DebuggerClient } = require("devtools/shared/client/debugger-client");
+
+const TAB_URL = TEST_URI_ROOT + "doc_native-event-handler.html";
 
 var gClient;
 var gTab;
@@ -17,37 +28,37 @@ function test() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  let transport = DebuggerServer.connectPipe();
+  const transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
   gClient.connect().then(([aType, aTraits]) => {
     is(aType, "browser",
       "Root actor should identify itself as a browser.");
 
     addTab(TAB_URL)
-      .then((aTab) => {
-        gTab = aTab;
+      .then((tab) => {
+        gTab = tab;
         return attachThreadActorForUrl(gClient, TAB_URL);
       })
       .then(pauseDebuggee)
       .then(testEventListeners)
       .then(() => gClient.close())
       .then(finish)
-      .catch(aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
+      .catch(error => {
+        ok(false, "Got an error: " + error.message + "\n" + error.stack);
       });
   });
 }
 
-function pauseDebuggee(aThreadClient) {
-  let deferred = promise.defer();
+function pauseDebuggee(threadClient) {
+  const deferred = getDeferredPromise().defer();
 
-  gClient.addOneTimeListener("paused", (aEvent, aPacket) => {
-    is(aPacket.type, "paused",
+  gClient.addOneTimeListener("paused", (event, packet) => {
+    is(packet.type, "paused",
       "We should now be paused.");
-    is(aPacket.why.type, "debuggerStatement",
+    is(packet.why.type, "debuggerStatement",
       "The debugger statement was hit.");
 
-    deferred.resolve(aThreadClient);
+    deferred.resolve(threadClient);
   });
 
   generateMouseClickInTab(gTab, "content.document.querySelector('button')");
@@ -55,12 +66,12 @@ function pauseDebuggee(aThreadClient) {
   return deferred.promise;
 }
 
-function testEventListeners(aThreadClient) {
-  let deferred = promise.defer();
+function testEventListeners(threadClient) {
+  const deferred = getDeferredPromise().defer();
 
-  aThreadClient.eventListeners(aPacket => {
-    if (aPacket.error) {
-      let msg = "Error getting event listeners: " + aPacket.message;
+  threadClient.eventListeners(packet => {
+    if (packet.error) {
+      const msg = "Error getting event listeners: " + packet.message;
       ok(false, msg);
       deferred.reject(msg);
       return;
@@ -69,13 +80,13 @@ function testEventListeners(aThreadClient) {
     // There are 2 event listeners in the page: button.onclick, window.onload.
     // The video element controls listeners are skipped — they cannot be
     // unwrapped but they shouldn't cause us to throw either.
-    is(aPacket.listeners.length, 2, "Found all event listeners.");
-    aThreadClient.resume(deferred.resolve);
+    is(packet.listeners.length, 2, "Found all event listeners.");
+    threadClient.resume(deferred.resolve);
   });
 
   return deferred.promise;
 }
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   gClient = null;
 });
