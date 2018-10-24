@@ -64,7 +64,7 @@ class UrlbarInput {
 
     for (let method of METHODS) {
       this[method] = (...args) => {
-        this.textbox[method](...args);
+        return this.textbox[method](...args);
       };
     }
 
