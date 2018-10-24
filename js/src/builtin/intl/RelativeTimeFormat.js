@@ -186,6 +186,12 @@ function Intl_RelativeTimeFormat_format(value, unit) {
     // Step 4.
     let u = ToString(unit);
 
+    // PartitionRelativeTimePattern, step 4.
+    if (!Number_isFinite(t)) {
+        ThrowRangeError(JSMSG_DATE_NOT_FINITE, "RelativeTimeFormat");
+    }
+
+    // PartitionRelativeTimePattern, step 5.
     switch (u) {
       case "second":
       case "seconds":
