@@ -20,8 +20,7 @@ const workerComponentDataMiddleware = require("./middleware/worker-component-dat
 const { getDebugTargetCollapsibilities } = require("./modules/debug-target-collapsibilities");
 const { getNetworkLocations } = require("./modules/network-locations");
 
-// Temporary preference without any default value until network locations are enabled.
-const NETWORK_ENABLED_PREF = "devtools.aboutdebugging.network";
+const { PREFERENCES } = require("./constants");
 
 function configureStore() {
   const initialState = {
@@ -42,7 +41,7 @@ function configureStore() {
 function getUiState() {
   const collapsibilities = getDebugTargetCollapsibilities();
   const locations = getNetworkLocations();
-  const networkEnabled = Services.prefs.getBoolPref(NETWORK_ENABLED_PREF, false);
+  const networkEnabled = Services.prefs.getBoolPref(PREFERENCES.NETWORK_ENABLED, false);
   return new UiState(locations, collapsibilities, networkEnabled);
 }
 
