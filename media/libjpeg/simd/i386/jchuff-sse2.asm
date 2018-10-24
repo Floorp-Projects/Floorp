@@ -27,10 +27,9 @@
 
     alignz      32
     GLOBAL_DATA(jconst_huff_encode_one_block)
+    EXTERN      EXTN(jpeg_nbits_table)
 
 EXTN(jconst_huff_encode_one_block):
-
-%include "jpeg_nbits_table.inc"
 
     alignz      32
 
@@ -233,7 +232,7 @@ EXTN(jsimd_huff_encode_one_block_sse2):
 
     ; Find the number of bits needed for the magnitude of the coefficient
     movpic      ebp, POINTER [esp+gotptr]                        ; load GOT address (ebp)
-    movzx       edx, byte [GOTOFF(ebp, jpeg_nbits_table + ecx)]  ; nbits = JPEG_NBITS(temp);
+    movzx       edx, byte [GOTOFF(ebp, EXTN(jpeg_nbits_table) + ecx)]  ; nbits = JPEG_NBITS(temp);
     mov         DWORD [esp+temp2], edx                           ; backup nbits in temp2
 
     ; Emit the Huffman-coded symbol for the number of bits
@@ -305,7 +304,7 @@ EXTN(jsimd_huff_encode_one_block_sse2):
 .ERLOOP:
     movsx       eax, word [esi]                                  ; temp = t1[k];
     movpic      edx, POINTER [esp+gotptr]                        ; load GOT address (edx)
-    movzx       eax, byte [GOTOFF(edx, jpeg_nbits_table + eax)]  ; nbits = JPEG_NBITS(temp);
+    movzx       eax, byte [GOTOFF(edx, EXTN(jpeg_nbits_table) + eax)]  ; nbits = JPEG_NBITS(temp);
     mov         DWORD [esp+temp2], eax
     ; Emit Huffman symbol for run length / number of bits
     shl         ecx, 4                        ; temp3 = (r << 4) + nbits;
