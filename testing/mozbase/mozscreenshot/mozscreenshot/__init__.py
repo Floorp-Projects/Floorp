@@ -21,7 +21,7 @@ def printstatus(name, returncode):
     print("TEST-INFO | %s: %s" % (name, strstatus(returncode)))
 
 
-def dump_screen(utilityPath, log):
+def dump_screen(utilityPath, log, prefix='mozilla-test-fail-screenshot_'):
     """dumps a screenshot of the entire screen to a directory specified by
     the MOZ_UPLOAD_DIR environment variable.
 
@@ -52,7 +52,7 @@ def dump_screen(utilityPath, log):
     # Run the capture
     try:
         tmpfd, imgfilename = tempfile.mkstemp(
-            prefix='mozilla-test-fail-screenshot_',
+            prefix=prefix,
             suffix='.png', dir=parent_dir
         )
         os.close(tmpfd)
@@ -68,7 +68,7 @@ def dump_screen(utilityPath, log):
                  % (utility[0], err.strerror))
 
 
-def dump_device_screen(device, log):
+def dump_device_screen(device, log, prefix='mozilla-test-fail-screenshot_'):
     """dumps a screenshot of a real device's entire screen to a directory
     specified by the MOZ_UPLOAD_DIR environment variable. Cloned from
     mozscreenshot.dump_screen.
@@ -95,8 +95,8 @@ def dump_device_screen(device, log):
         # We can use mktemp on real devices since we do not test on
         # real devices older than Android 6.0. Note we must create the
         # file without an extension due to limitations in mktemp.
-        filename = device.shell_output('mktemp -p %s mozilla-test-fail-screenshot_XXXXXX' %
-                                       device.test_root)
+        filename = device.shell_output('mktemp -p %s %sXXXXXX' %
+                                       (device.test_root, prefix))
         pngfilename = filename + '.png'
         device.mv(filename, pngfilename)
         if is_structured_log:
