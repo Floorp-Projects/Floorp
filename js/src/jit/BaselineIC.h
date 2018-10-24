@@ -214,115 +214,30 @@ void TypeFallbackICSpew(JSContext* cx, ICTypeMonitor_Fallback* stub, const char*
 #define TypeFallbackICSpew(...)
 #endif
 
-//
-// An entry in the JIT IC descriptor table.
-//
+// An entry in the BaselineScript IC descriptor table. There's one ICEntry per
+// IC.
 class ICEntry
 {
-  private:
-    // A pointer to the shared IC stub for this instruction.
+    // A pointer to the first IC stub for this instruction.
     ICStub* firstStub_;
 
-    // Offset from the start of the JIT code where the IC
-    // load and call instructions are.
-    uint32_t returnOffset_;
-
     // The PC of this IC's bytecode op within the JSScript.
-    uint32_t pcOffset_ : 28;
+    uint32_t pcOffset_ : 31;
+    uint32_t isForOp_ : 1;
 
   public:
-    enum Kind {
-        // A for-op IC entry.
-        Kind_Op = 0,
-
-        // A non-op IC entry.
-        Kind_NonOp,
-
-        // A fake IC entry for returning from a callVM for an op.
-        Kind_CallVM,
-
-        // A fake IC entry for returning from a callVM not for an op (e.g., in
-        // the prologue).
-        Kind_NonOpCallVM,
-
-        // A fake IC entry for returning from a callVM to after the
-        // warmup counter.
-        Kind_WarmupCounter,
-
-        // A fake IC entry for returning from a callVM to the interrupt
-        // handler via the over-recursion check on function entry.
-        Kind_StackCheck,
-
-        // A fake IC entry for returning from DebugTrapHandler.
-        Kind_DebugTrap,
-
-        // A fake IC entry for returning from a callVM to
-        // Debug{Prologue,AfterYield,Epilogue}.
-        Kind_DebugPrologue,
-        Kind_DebugAfterYield,
-        Kind_DebugEpilogue,
-
-        Kind_Invalid
-    };
-
-  private:
-    // What this IC is for.
-    Kind kind_ : 4;
-
-    // Set the kind and asserts that it's sane.
-    void setKind(Kind kind) {
-        MOZ_ASSERT(kind < Kind_Invalid);
-        kind_ = kind;
-        MOZ_ASSERT(this->kind() == kind);
-    }
-
-  public:
-    ICEntry(uint32_t pcOffset, Kind kind)
-      : firstStub_(nullptr), returnOffset_(), pcOffset_(pcOffset)
+    ICEntry(ICStub* firstStub, uint32_t pcOffset, bool isForOp)
+      : firstStub_(firstStub), pcOffset_(pcOffset), isForOp_(uint32_t(isForOp))
     {
-        // The offset must fit in at least 28 bits, since we shave off 4 for
-        // the Kind enum.
+        // The offset must fit in at least 31 bits, since we shave off 1 for
+        // the isForOp_ flag.
         MOZ_ASSERT(pcOffset_ == pcOffset);
-        JS_STATIC_ASSERT(BaselineScript::MAX_JSSCRIPT_LENGTH <= (1u << 28) - 1);
-        MOZ_ASSERT(pcOffset <= BaselineScript::MAX_JSSCRIPT_LENGTH);
-        setKind(kind);
+        JS_STATIC_ASSERT(BaselineMaxScriptLength <= (1u << 31) - 1);
+        MOZ_ASSERT(pcOffset <= BaselineMaxScriptLength);
     }
 
-    CodeOffset returnOffset() const {
-        return CodeOffset(returnOffset_);
-    }
-
-    void setReturnOffset(CodeOffset offset) {
-        MOZ_ASSERT(offset.offset() <= (size_t) UINT32_MAX);
-        returnOffset_ = (uint32_t) offset.offset();
-    }
-
-    uint32_t pcOffset() const {
-        return pcOffset_;
-    }
-
-    jsbytecode* pc(JSScript* script) const {
-        return script->offsetToPC(pcOffset_);
-    }
-
-    Kind kind() const {
-        // MSVC compiles enums as signed.
-        return Kind(kind_ & 0xf);
-    }
-    bool isForOp() const {
-        return kind() == Kind_Op;
-    }
-
-    void setFakeKind(Kind kind) {
-        MOZ_ASSERT(kind != Kind_Op && kind != Kind_NonOp);
-        setKind(kind);
-    }
-
-    bool hasStub() const {
-        return firstStub_ != nullptr;
-    }
     ICStub* firstStub() const {
-        MOZ_ASSERT(hasStub());
+        MOZ_ASSERT(firstStub_);
         return firstStub_;
     }
 
@@ -332,12 +247,23 @@ class ICEntry
         firstStub_ = stub;
     }
 
+    uint32_t pcOffset() const {
+        return pcOffset_;
+    }
+    jsbytecode* pc(JSScript* script) const {
+        return script->offsetToPC(pcOffset_);
+    }
+
     static inline size_t offsetOfFirstStub() {
         return offsetof(ICEntry, firstStub_);
     }
 
     inline ICStub** addressOfFirstStub() {
         return &firstStub_;
+    }
+
+    bool isForOp() const {
+        return !!isForOp_;
     }
 
     void trace(JSTracer* trc);

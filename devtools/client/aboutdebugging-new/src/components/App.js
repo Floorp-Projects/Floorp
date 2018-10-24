@@ -28,6 +28,7 @@ class App extends PureComponent {
       // property to all components who need to dispatch actions.
       dispatch: PropTypes.func.isRequired,
       fluentBundles: PropTypes.arrayOf(PropTypes.object).isRequired,
+      networkEnabled: PropTypes.bool.isRequired,
       networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
       networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       selectedPage: PropTypes.string,
@@ -39,6 +40,7 @@ class App extends PureComponent {
     const {
       adbAddonStatus,
       dispatch,
+      networkEnabled,
       networkLocations,
       selectedPage,
     } = this.props;
@@ -53,6 +55,7 @@ class App extends PureComponent {
         return ConnectPage({
           adbAddonStatus,
           dispatch,
+          networkEnabled,
           networkLocations,
         });
       default:
@@ -97,6 +100,7 @@ class App extends PureComponent {
 const mapStateToProps = state => {
   return {
     adbAddonStatus: state.ui.adbAddonStatus,
+    networkEnabled: state.ui.networkEnabled,
     networkLocations: state.ui.networkLocations,
     networkRuntimes: state.runtimes.networkRuntimes,
     selectedPage: state.ui.selectedPage,

@@ -118,9 +118,6 @@ ICEntry::fallbackStub() const
 void
 ICEntry::trace(JSTracer* trc)
 {
-    if (!hasStub()) {
-        return;
-    }
     for (ICStub* stub = firstStub(); stub; stub = stub->next()) {
         stub->trace(trc);
     }

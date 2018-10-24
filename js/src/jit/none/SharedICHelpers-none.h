@@ -14,7 +14,7 @@ static const size_t ICStackValueOffset = 0;
 
 inline void EmitRestoreTailCallReg(MacroAssembler&) { MOZ_CRASH(); }
 inline void EmitRepushTailCallReg(MacroAssembler&) { MOZ_CRASH(); }
-inline void EmitCallIC(CodeOffset*, MacroAssembler&) { MOZ_CRASH(); }
+inline void EmitCallIC(MacroAssembler&, CodeOffset*, CodeOffset*) { MOZ_CRASH(); }
 inline void EmitEnterTypeMonitorIC(MacroAssembler&, size_t v = 0) { MOZ_CRASH(); }
 inline void EmitReturnFromIC(MacroAssembler&) { MOZ_CRASH(); }
 inline void EmitChangeICReturnAddress(MacroAssembler&, Register) { MOZ_CRASH(); }

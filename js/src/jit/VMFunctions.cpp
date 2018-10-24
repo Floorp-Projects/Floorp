@@ -1116,7 +1116,7 @@ HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr, bool* mus
     *mustReturn = false;
 
     RootedScript script(cx, frame->script());
-    jsbytecode* pc = script->baselineScript()->icEntryFromReturnAddress(retAddr).pc(script);
+    jsbytecode* pc = script->baselineScript()->retAddrEntryFromReturnAddress(retAddr).pc(script);
 
     if (*pc == JSOP_DEBUGAFTERYIELD) {
         // JSOP_DEBUGAFTERYIELD will set the frame's debuggee flag and call the

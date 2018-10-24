@@ -77,6 +77,11 @@ about-debugging-connect-usb-step-plug-device = Connect the USB Device to your co
 about-debugging-connect-network
   .title = Via Network Location
 
+# Temporary text displayed when network location support is turned off via preferences.
+# { $pref } is the name of the preference that enables network locations
+# Do not localize
+about-debugging-connect-network-disabled = Network location support currently under development. You can enable it with the preference "{ $pref }".
+
 # Below are the titles for the various categories of debug targets that can be found
 # on "runtime" pages of about:debugging.
 # Title of the temporary extensions category (only available for "This Firefox" runtime).

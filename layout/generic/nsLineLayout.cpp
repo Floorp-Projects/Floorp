@@ -3218,9 +3218,7 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
   //
   nscoord dx = 0;
   uint8_t textAlign = mStyleText->mTextAlign;
-  bool textAlignTrue = mStyleText->mTextAlignTrue;
   if (aIsLastLine) {
-    textAlignTrue = mStyleText->mTextAlignLastTrue;
     if (mStyleText->mTextAlignLast == NS_STYLE_TEXT_ALIGN_AUTO) {
       if (textAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY) {
         textAlign = NS_STYLE_TEXT_ALIGN_START;
@@ -3231,7 +3229,7 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
   }
 
   bool isSVG = nsSVGUtils::IsInSVGTextSubtree(mBlockReflowInput->mFrame);
-  bool doTextAlign = remainingISize > 0 || textAlignTrue;
+  bool doTextAlign = remainingISize > 0;
 
   int32_t additionalGaps = 0;
   if (!isSVG && (mHasRuby || (doTextAlign &&

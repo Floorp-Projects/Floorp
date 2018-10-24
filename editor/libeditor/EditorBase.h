@@ -7,6 +7,7 @@
 #define mozilla_EditorBase_h
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
+#include "mozilla/EditAction.h"         // for EditSubAction
 #include "mozilla/EditorDOMPoint.h"     // for EditorDOMPoint
 #include "mozilla/Maybe.h"              // for Maybe
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
@@ -83,7 +84,6 @@ class TextInputListener;
 class TextServicesDocument;
 class TypeInState;
 class WSRunObject;
-enum class EditSubAction : int32_t;
 
 namespace dom {
 class DataTransfer;
@@ -1910,6 +1910,190 @@ private:
    * This is a helper class of them.
    */
   nsresult SetTextDirectionTo(TextDirection aTextDirection);
+
+protected: // helper classes which may be used by friends
+  /**
+   * Stack based helper class for calling EditorBase::EndTransactionInternal().
+   */
+  class MOZ_RAII AutoTransactionBatch final
+  {
+  public:
+    explicit AutoTransactionBatch(EditorBase& aEditorBase
+                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mEditorBase(aEditorBase)
+    {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+      mEditorBase->BeginTransactionInternal();
+    }
+
+    ~AutoTransactionBatch()
+    {
+      mEditorBase->EndTransactionInternal();
+    }
+
+  protected:
+    OwningNonNull<EditorBase> mEditorBase;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  };
+
+  /**
+   * Stack based helper class for batching a collection of transactions inside
+   * a placeholder transaction.
+   */
+  class MOZ_RAII AutoPlaceholderBatch final
+  {
+  public:
+    explicit AutoPlaceholderBatch(EditorBase& aEditorBase
+                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mEditorBase(aEditorBase)
+    {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+      mEditorBase->BeginPlaceholderTransaction(nullptr);
+    }
+
+    AutoPlaceholderBatch(EditorBase& aEditorBase,
+                         nsAtom& aTransactionName
+                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mEditorBase(aEditorBase)
+    {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+      mEditorBase->BeginPlaceholderTransaction(&aTransactionName);
+    }
+
+    ~AutoPlaceholderBatch()
+    {
+      mEditorBase->EndPlaceholderTransaction();
+    }
+
+  protected:
+    OwningNonNull<EditorBase> mEditorBase;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  };
+
+  /**
+   * Stack based helper class for saving/restoring selection.  Note that this
+   * assumes that the nodes involved are still around afterwords!
+   */
+  class MOZ_RAII AutoSelectionRestorer final
+  {
+  public:
+    /**
+     * Constructor responsible for remembering all state needed to restore
+     * aSelection.
+     */
+    AutoSelectionRestorer(Selection& aSelection,
+                          EditorBase& aEditorBase
+                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+
+    /**
+     * Destructor restores mSelection to its former state
+     */
+    ~AutoSelectionRestorer();
+
+    /**
+     * Abort() cancels to restore the selection.
+     */
+    void Abort();
+
+  protected:
+    RefPtr<Selection> mSelection;
+    EditorBase* mEditorBase;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  };
+
+  /**
+   * AutoTopLevelEditSubActionNotifier notifies editor of start to handle
+   * top level edit sub-action and end handling top level edit sub-action.
+   */
+  class MOZ_RAII AutoTopLevelEditSubActionNotifier final
+  {
+  public:
+    AutoTopLevelEditSubActionNotifier(EditorBase& aEditorBase,
+                                      EditSubAction aEditSubAction,
+                                      nsIEditor::EDirection aDirection
+                                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mEditorBase(aEditorBase)
+      , mDoNothing(false)
+    {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+      // mTopLevelEditSubAction will already be set if this is nested call
+      // XXX Looks like that this is not aware of unexpected nested edit action
+      //     handling via selectionchange event listener or mutation event
+      //     listener.
+      if (!mEditorBase.mTopLevelEditSubAction) {
+        mEditorBase.OnStartToHandleTopLevelEditSubAction(aEditSubAction,
+                                                         aDirection);
+      } else {
+        mDoNothing = true; // nested calls will end up here
+      }
+    }
+
+    ~AutoTopLevelEditSubActionNotifier()
+    {
+      if (!mDoNothing) {
+        mEditorBase.OnEndHandlingTopLevelEditSubAction();
+      }
+    }
+
+  protected:
+    EditorBase& mEditorBase;
+    bool mDoNothing;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  };
+
+  /**
+   * Stack based helper class for turning off active selection adjustment
+   * by low level transactions
+   */
+  class MOZ_RAII AutoTransactionsConserveSelection final
+  {
+  public:
+    explicit AutoTransactionsConserveSelection(EditorBase& aEditorBase
+                                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mEditorBase(aEditorBase)
+      , mAllowedTransactionsToChangeSelection(
+          aEditorBase.AllowsTransactionsToChangeSelection())
+    {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+      mEditorBase.MakeThisAllowTransactionsToChangeSelection(false);
+    }
+
+    ~AutoTransactionsConserveSelection()
+    {
+      mEditorBase.MakeThisAllowTransactionsToChangeSelection(
+                    mAllowedTransactionsToChangeSelection);
+    }
+
+  protected:
+    EditorBase& mEditorBase;
+    bool mAllowedTransactionsToChangeSelection;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  };
+
+  /***************************************************************************
+   * stack based helper class for batching reflow and paint requests.
+   */
+  class MOZ_RAII AutoUpdateViewBatch final
+  {
+  public:
+    explicit AutoUpdateViewBatch(EditorBase& aEditorBase
+                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mEditorBase(aEditorBase)
+    {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+      mEditorBase.BeginUpdateViewBatch();
+    }
+
+    ~AutoUpdateViewBatch()
+    {
+      mEditorBase.EndUpdateViewBatch();
+    }
+
+  protected:
+    EditorBase& mEditorBase;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  };
+
 protected:
   enum Tristate
   {
@@ -2001,12 +2185,6 @@ protected:
   // Whether we are an HTML editor class.
   bool mIsHTMLEditorClass;
 
-  friend class AutoPlaceholderBatch;
-  friend class AutoSelectionRestorer;
-  friend class AutoTopLevelEditSubActionNotifier;
-  friend class AutoTransactionBatch;
-  friend class AutoTransactionsConserveSelection;
-  friend class AutoUpdateViewBatch;
   friend class CompositionTransaction;
   friend class CreateElementTransaction;
   friend class CSSEditUtils;

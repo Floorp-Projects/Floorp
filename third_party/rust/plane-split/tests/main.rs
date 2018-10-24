@@ -72,7 +72,7 @@ fn empty() {
     assert_eq!(None, poly);
 }
 
-fn test_trasnformed(rect: TypedRect<f32, ()>, transform: TypedTransform3D<f32, (), ()>) {
+fn test_transformed(rect: TypedRect<f32, ()>, transform: TypedTransform3D<f32, (), ()>) {
     let poly = Polygon::from_transformed_rect(rect, transform, 0).unwrap();
     assert!(poly.is_valid());
 
@@ -89,7 +89,7 @@ fn from_transformed_rect() {
     let transform =
         TypedTransform3D::create_rotation(0.5f32.sqrt(), 0.0, 0.5f32.sqrt(), Angle::radians(5.0))
         .pre_translate(vec3(0.0, 0.0, 10.0));
-    test_trasnformed(rect, transform);
+    test_transformed(rect, transform);
 }
 
 #[test]
@@ -99,7 +99,7 @@ fn from_transformed_rect_perspective() {
         TypedTransform3D::create_perspective(400.0)
         .pre_translate(vec3(0.0, 0.0, 100.0));
     transform.m44 = 0.7; //for fun
-    test_trasnformed(rect, transform);
+    test_transformed(rect, transform);
 }
 
 #[test]

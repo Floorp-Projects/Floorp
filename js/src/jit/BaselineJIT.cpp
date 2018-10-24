@@ -292,11 +292,11 @@ CanEnterBaselineJIT(JSContext* cx, HandleScript script, InterpreterFrame* osrFra
         return Method_Skipped;
     }
 
-    if (script->length() > BaselineScript::MAX_JSSCRIPT_LENGTH) {
+    if (script->length() > BaselineMaxScriptLength) {
         return Method_CantCompile;
     }
 
-    if (script->nslots() > BaselineScript::MAX_JSSCRIPT_SLOTS) {
+    if (script->nslots() > BaselineMaxScriptSlots) {
         return Method_CantCompile;
     }
 
@@ -387,6 +387,7 @@ BaselineScript::New(JSScript* jsscript,
                     uint32_t profilerExitToggleOffset,
                     uint32_t postDebugPrologueOffset,
                     size_t icEntries,
+                    size_t retAddrEntries,
                     size_t pcMappingIndexEntries, size_t pcMappingSize,
                     size_t bytecodeTypeMapEntries,
                     size_t yieldEntries,
@@ -395,12 +396,14 @@ BaselineScript::New(JSScript* jsscript,
     static const unsigned DataAlignment = sizeof(uintptr_t);
 
     size_t icEntriesSize = icEntries * sizeof(ICEntry);
+    size_t retAddrEntriesSize = retAddrEntries * sizeof(RetAddrEntry);
     size_t pcMappingIndexEntriesSize = pcMappingIndexEntries * sizeof(PCMappingIndexEntry);
     size_t bytecodeTypeMapSize = bytecodeTypeMapEntries * sizeof(uint32_t);
     size_t yieldEntriesSize = yieldEntries * sizeof(uintptr_t);
     size_t tlEntriesSize = traceLoggerToggleOffsetEntries * sizeof(uint32_t);
 
     size_t paddedICEntriesSize = AlignBytes(icEntriesSize, DataAlignment);
+    size_t paddedRetAddrEntriesSize = AlignBytes(retAddrEntriesSize, DataAlignment);
     size_t paddedPCMappingIndexEntriesSize = AlignBytes(pcMappingIndexEntriesSize, DataAlignment);
     size_t paddedPCMappingSize = AlignBytes(pcMappingSize, DataAlignment);
     size_t paddedBytecodeTypesMapSize = AlignBytes(bytecodeTypeMapSize, DataAlignment);
@@ -408,6 +411,7 @@ BaselineScript::New(JSScript* jsscript,
     size_t paddedTLEntriesSize = AlignBytes(tlEntriesSize, DataAlignment);
 
     size_t allocBytes = paddedICEntriesSize +
+                        paddedRetAddrEntriesSize +
                         paddedPCMappingIndexEntriesSize +
                         paddedPCMappingSize +
                         paddedBytecodeTypesMapSize +
@@ -428,6 +432,10 @@ BaselineScript::New(JSScript* jsscript,
     script->icEntriesOffset_ = offsetCursor;
     script->icEntries_ = icEntries;
     offsetCursor += paddedICEntriesSize;
+
+    script->retAddrEntriesOffset_ = offsetCursor;
+    script->retAddrEntries_ = retAddrEntries;
+    offsetCursor += paddedRetAddrEntriesSize;
 
     script->pcMappingIndexOffset_ = offsetCursor;
     script->pcMappingIndexEntries_ = pcMappingIndexEntries;
@@ -565,6 +573,13 @@ BaselineScript::icEntry(size_t index)
     return icEntryList()[index];
 }
 
+RetAddrEntry&
+BaselineScript::retAddrEntry(size_t index)
+{
+    MOZ_ASSERT(index < numRetAddrEntries());
+    return retAddrEntryList()[index];
+}
+
 PCMappingIndexEntry&
 BaselineScript::pcMappingIndexEntry(size_t index)
 {
@@ -587,24 +602,45 @@ BaselineScript::pcMappingReader(size_t indexEntry)
 
 struct ICEntries
 {
+    using EntryT = ICEntry;
+
     BaselineScript* const baseline_;
 
     explicit ICEntries(BaselineScript* baseline) : baseline_(baseline) {}
 
+    size_t numEntries() const {
+        return baseline_->numICEntries();
+    }
     ICEntry& operator[](size_t index) const {
         return baseline_->icEntry(index);
     }
 };
 
-ICEntry&
-BaselineScript::icEntryFromReturnOffset(CodeOffset returnOffset)
+struct RetAddrEntries
+{
+    using EntryT = RetAddrEntry;
+
+    BaselineScript* const baseline_;
+
+    explicit RetAddrEntries(BaselineScript* baseline) : baseline_(baseline) {}
+
+    size_t numEntries() const {
+        return baseline_->numRetAddrEntries();
+    }
+    RetAddrEntry& operator[](size_t index) const {
+        return baseline_->retAddrEntry(index);
+    }
+};
+
+RetAddrEntry&
+BaselineScript::retAddrEntryFromReturnOffset(CodeOffset returnOffset)
 {
     size_t loc;
 #ifdef DEBUG
     bool found =
 #endif
-        BinarySearchIf(ICEntries(this), 0, numICEntries(),
-                       [&returnOffset](ICEntry& entry) {
+        BinarySearchIf(RetAddrEntries(this), 0, numRetAddrEntries(),
+                       [&returnOffset](const RetAddrEntry& entry) {
                            size_t roffset = returnOffset.offset();
                            size_t entryRoffset = entry.returnOffset().offset();
                            if (roffset < entryRoffset) {
@@ -618,16 +654,18 @@ BaselineScript::icEntryFromReturnOffset(CodeOffset returnOffset)
                        &loc);
 
     MOZ_ASSERT(found);
-    MOZ_ASSERT(loc < numICEntries());
-    MOZ_ASSERT(icEntry(loc).returnOffset().offset() == returnOffset.offset());
-    return icEntry(loc);
+    MOZ_ASSERT(loc < numRetAddrEntries());
+    MOZ_ASSERT(retAddrEntry(loc).returnOffset().offset() == returnOffset.offset());
+    return retAddrEntry(loc);
 }
 
+template <typename Entries>
 static inline bool
 ComputeBinarySearchMid(BaselineScript* baseline, uint32_t pcOffset, size_t* loc)
 {
-    return BinarySearchIf(ICEntries(baseline), 0, baseline->numICEntries(),
-                          [pcOffset](ICEntry& entry) {
+    Entries entries(baseline);
+    return BinarySearchIf(entries, 0, entries.numEntries(),
+                          [pcOffset](typename Entries::EntryT& entry) {
                               uint32_t entryOffset = entry.pcOffset();
                               if (pcOffset < entryOffset) {
                                   return -1;
@@ -641,7 +679,7 @@ ComputeBinarySearchMid(BaselineScript* baseline, uint32_t pcOffset, size_t* loc)
 }
 
 uint8_t*
-BaselineScript::returnAddressForIC(const ICEntry& ent)
+BaselineScript::returnAddressForEntry(const RetAddrEntry& ent)
 {
     return method()->raw() + ent.returnOffset().offset();
 }
@@ -652,7 +690,7 @@ BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset)
     // Multiple IC entries can have the same PC offset, but this method only looks for
     // those which have isForOp() set.
     size_t mid;
-    if (!ComputeBinarySearchMid(this, pcOffset, &mid)) {
+    if (!ComputeBinarySearchMid<ICEntries>(this, pcOffset, &mid)) {
         return nullptr;
     }
 
@@ -669,7 +707,10 @@ BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset)
             break;
         }
     }
-    for (size_t i = mid+1; i < numICEntries() && icEntry(i).pcOffset() == pcOffset; i++) {
+    for (size_t i = mid + 1; i < numICEntries(); i++) {
+        if (icEntry(i).pcOffset() != pcOffset) {
+            break;
+        }
         if (icEntry(i).isForOp()) {
             return &icEntry(i);
         }
@@ -716,66 +757,58 @@ BaselineScript::icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntr
     return *entry;
 }
 
-ICEntry&
-BaselineScript::callVMEntryFromPCOffset(uint32_t pcOffset)
+RetAddrEntry&
+BaselineScript::retAddrEntryFromPCOffset(uint32_t pcOffset, RetAddrEntry::Kind kind)
 {
-    // Like icEntryFromPCOffset, but only looks for the fake ICEntries
-    // inserted by VM calls.
     size_t mid;
-    MOZ_ALWAYS_TRUE(ComputeBinarySearchMid(this, pcOffset, &mid));
-    MOZ_ASSERT(mid < numICEntries());
+    MOZ_ALWAYS_TRUE(ComputeBinarySearchMid<RetAddrEntries>(this, pcOffset, &mid));
+    MOZ_ASSERT(mid < numRetAddrEntries());
 
-    for (size_t i = mid; icEntry(i).pcOffset() == pcOffset; i--) {
-        if (icEntry(i).kind() == ICEntry::Kind_CallVM) {
-            return icEntry(i);
+    for (size_t i = mid; retAddrEntry(i).pcOffset() == pcOffset; i--) {
+        if (retAddrEntry(i).kind() == kind) {
+            return retAddrEntry(i);
         }
         if (i == 0) {
             break;
         }
     }
-    for (size_t i = mid+1; i < numICEntries() && icEntry(i).pcOffset() == pcOffset; i++) {
-        if (icEntry(i).kind() == ICEntry::Kind_CallVM) {
-            return icEntry(i);
+    for (size_t i = mid + 1; i < numRetAddrEntries(); i++) {
+        if (retAddrEntry(i).pcOffset() != pcOffset) {
+            break;
+        }
+        if (retAddrEntry(i).kind() == kind) {
+            return retAddrEntry(i);
         }
     }
-    MOZ_CRASH("Invalid PC offset for callVM entry.");
+    MOZ_CRASH("Didn't find RetAddrEntry.");
 }
 
-ICEntry&
-BaselineScript::stackCheckICEntry()
+RetAddrEntry&
+BaselineScript::prologueRetAddrEntry(RetAddrEntry::Kind kind)
 {
-    // The stack check will always be at offset 0, so just do a linear search
-    // from the beginning. This is only needed for debug mode OSR, when
-    // patching a frame that has invoked a Debugger hook via the interrupt
-    // handler via the stack check, which is part of the prologue.
-    for (size_t i = 0; i < numICEntries() && icEntry(i).pcOffset() == 0; i++) {
-        if (icEntry(i).kind() == ICEntry::Kind_StackCheck) {
-            return icEntry(i);
+    MOZ_ASSERT(kind == RetAddrEntry::Kind::StackCheck ||
+               kind == RetAddrEntry::Kind::WarmupCounter);
+
+    // The prologue entries will always be at a very low offset, so just do a
+    // linear search from the beginning.
+    for (size_t i = 0; i < numRetAddrEntries(); i++) {
+        if (retAddrEntry(i).pcOffset() != 0) {
+            break;
+        }
+        if (retAddrEntry(i).kind() == kind) {
+            return retAddrEntry(i);
         }
     }
-    MOZ_CRASH("No stack check ICEntry found.");
+    MOZ_CRASH("Didn't find prologue RetAddrEntry.");
 }
 
-ICEntry&
-BaselineScript::warmupCountICEntry()
-{
-    // The stack check will be at a very low offset, so just do a linear search
-    // from the beginning.
-    for (size_t i = 0; i < numICEntries() && icEntry(i).pcOffset() == 0; i++) {
-        if (icEntry(i).kind() == ICEntry::Kind_WarmupCounter) {
-            return icEntry(i);
-        }
-    }
-    MOZ_CRASH("No warmup count ICEntry found.");
-}
-
-ICEntry&
-BaselineScript::icEntryFromReturnAddress(uint8_t* returnAddr)
+RetAddrEntry&
+BaselineScript::retAddrEntryFromReturnAddress(uint8_t* returnAddr)
 {
     MOZ_ASSERT(returnAddr > method_->raw());
     MOZ_ASSERT(returnAddr < method_->raw() + method_->instructionsSize());
     CodeOffset offset(returnAddr - method_->raw());
-    return icEntryFromReturnOffset(offset);
+    return retAddrEntryFromReturnOffset(offset);
 }
 
 void
@@ -798,11 +831,6 @@ BaselineScript::copyICEntries(JSScript* script, const ICEntry* entries)
         ICEntry& realEntry = icEntry(i);
         realEntry = entries[i];
 
-        if (!realEntry.hasStub()) {
-            // VM call without any stubs.
-            continue;
-        }
-
         // If the attached stub is a fallback stub, then fix it up with
         // a pointer to the (now available) realEntry.
         if (realEntry.firstStub()->isFallback()) {
@@ -818,6 +846,14 @@ BaselineScript::copyICEntries(JSScript* script, const ICEntry* entries)
             ICTableSwitch* stub = realEntry.firstStub()->toTableSwitch();
             stub->fixupJumpTable(script, this);
         }
+    }
+}
+
+void
+BaselineScript::copyRetAddrEntries(JSScript* script, const RetAddrEntry* entries)
+{
+    for (uint32_t i = 0; i < numRetAddrEntries(); i++) {
+        retAddrEntry(i) = entries[i];
     }
 }
 
@@ -1109,10 +1145,6 @@ BaselineScript::purgeOptimizedStubs(Zone* zone)
 
     for (size_t i = 0; i < numICEntries(); i++) {
         ICEntry& entry = icEntry(i);
-        if (!entry.hasStub()) {
-            continue;
-        }
-
         ICStub* lastStub = entry.firstStub();
         while (lastStub->next()) {
             lastStub = lastStub->next();
@@ -1154,10 +1186,6 @@ BaselineScript::purgeOptimizedStubs(Zone* zone)
     // All remaining stubs must be allocated in the fallback space.
     for (size_t i = 0; i < numICEntries(); i++) {
         ICEntry& entry = icEntry(i);
-        if (!entry.hasStub()) {
-            continue;
-        }
-
         ICStub* stub = entry.firstStub();
         while (stub->next()) {
             MOZ_ASSERT(stub->allocatedInFallbackSpace());
@@ -1196,9 +1224,6 @@ DumpICInfo(JSScript* script)
 
     for (size_t i = 0; i < blScript->numICEntries(); i++) {
         ICEntry& entry = blScript->icEntry(i);
-        if (!entry.hasStub()) {
-            continue;
-        }
 
         unsigned column;
         jsbytecode* pc = entry.pc(script);

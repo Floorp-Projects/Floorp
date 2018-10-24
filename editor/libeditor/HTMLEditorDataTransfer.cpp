@@ -96,7 +96,7 @@ HTMLEditor::LoadHTML(const nsAString& aInputString)
 
   // force IME commit; set up rules sniffing and batching
   CommitComposition();
-  AutoPlaceholderBatch beginBatching(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
                                       EditSubAction::eInsertHTMLSource,
@@ -200,7 +200,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
 
   // force IME commit; set up rules sniffing and batching
   CommitComposition();
-  AutoPlaceholderBatch beginBatching(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::ePasteHTMLContent,
                                       nsIEditor::eNext);
@@ -324,7 +324,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     // Save current selection since DeleteTableCellWithTransaction() perturbs
     // it.
     {
-      AutoSelectionRestorer selectionRestorer(selection, this);
+      AutoSelectionRestorer restoreSelectionLater(*selection, *this);
       rv = DeleteTableCellWithTransaction(1);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -1009,7 +1009,7 @@ HTMLEditor::BlobReader::OnResult(const nsACString& aResult)
   nsresult rv = ImgFromData(type, aResult, stuffToPaste);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  AutoPlaceholderBatch beginBatching(mHTMLEditor);
+  AutoPlaceholderBatch treatAsOneTransaction(*mHTMLEditor);
   rv = mHTMLEditor->DoInsertHTMLWithContext(stuffToPaste, EmptyString(),
                                             EmptyString(),
                                             NS_LITERAL_STRING(kFileMime),
@@ -1195,7 +1195,7 @@ HTMLEditor::InsertObject(const nsACString& aType,
     rv = ImgFromData(type, imageData, stuffToPaste);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    AutoPlaceholderBatch beginBatching(this);
+    AutoPlaceholderBatch treatAsOneTransaction(*this);
     rv = DoInsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(),
                                  NS_LITERAL_STRING(kFileMime),
                                  aSourceDoc,
@@ -1247,7 +1247,7 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
 
         rv = ParseCFHTML(cfhtml, getter_Copies(cffragment), getter_Copies(cfcontext));
         if (NS_SUCCEEDED(rv) && !cffragment.IsEmpty()) {
-          AutoPlaceholderBatch beginBatching(this);
+          AutoPlaceholderBatch treatAsOneTransaction(*this);
           // If we have our private HTML flavor, we will only use the fragment
           // from the CF_HTML. The rest comes from the clipboard.
           if (havePrivateHTMLFlavor) {
@@ -1297,7 +1297,7 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
       }
 
       if (!stuffToPaste.IsEmpty()) {
-        AutoPlaceholderBatch beginBatching(this);
+        AutoPlaceholderBatch treatAsOneTransaction(*this);
         if (bestFlavor.EqualsLiteral(kHTMLMime)) {
           rv = DoInsertHTMLWithContext(stuffToPaste,
                                        aContextStr, aInfoStr, flavor,
@@ -1382,7 +1382,7 @@ HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
 
         nsresult rv = ParseCFHTML(cfhtml, getter_Copies(cffragment), getter_Copies(cfcontext));
         if (NS_SUCCEEDED(rv) && !cffragment.IsEmpty()) {
-          AutoPlaceholderBatch beginBatching(this);
+          AutoPlaceholderBatch treatAsOneTransaction(*this);
 
           if (hasPrivateHTMLFlavor) {
             // If we have our private HTML flavor, we will only use the fragment
@@ -1411,7 +1411,7 @@ HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
         GetStringFromDataTransfer(aDataTransfer, NS_LITERAL_STRING(kHTMLContext), aIndex, contextString);
         GetStringFromDataTransfer(aDataTransfer, NS_LITERAL_STRING(kHTMLInfo), aIndex, infoString);
 
-        AutoPlaceholderBatch beginBatching(this);
+        AutoPlaceholderBatch treatAsOneTransaction(*this);
         if (type.EqualsLiteral(kHTMLMime)) {
           return DoInsertHTMLWithContext(text,
                                          contextString, infoString, type,
@@ -1428,7 +1428,7 @@ HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
       nsAutoString text;
       GetStringFromDataTransfer(aDataTransfer, type, aIndex, text);
 
-      AutoPlaceholderBatch beginBatching(this);
+      AutoPlaceholderBatch treatAsOneTransaction(*this);
       return InsertTextAt(text, aDestinationNode, aDestOffset, aDoDeleteSelection);
     }
   }
@@ -1705,7 +1705,7 @@ HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   // If it's not in plain text edit mode, paste text into new
   // <blockquote type="cite"> element after removing selection.
 
-  AutoPlaceholderBatch beginBatching(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eInsertQuotation,
                                       nsIEditor::eNext);
@@ -1799,7 +1799,7 @@ HTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType)
       nsAutoString stuffToPaste;
       textDataObj->GetData(stuffToPaste);
       NS_ASSERTION(stuffToPaste.Length() <= (len/2), "Invalid length!");
-      AutoPlaceholderBatch beginBatching(this);
+      AutoPlaceholderBatch treatAsOneTransaction(*this);
       rv = InsertAsPlaintextQuotation(stuffToPaste, true, 0);
     }
   }
@@ -1813,7 +1813,7 @@ HTMLEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
   // The whole operation should be undoable in one transaction:
   // XXX Why isn't enough to use only AutoPlaceholderBatch here?
   AutoTransactionBatch bundleAllTransactions(*this);
-  AutoPlaceholderBatch beginBatching(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   nsresult rv = InsertTextWithQuotationsInternal(aStringToInsert);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1916,7 +1916,7 @@ nsresult
 HTMLEditor::InsertAsQuotation(const nsAString& aQuotedText,
                               nsINode** aNodeInserted)
 {
-  AutoPlaceholderBatch beginBatching(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   if (IsPlaintextEditor()) {
     return InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
   }
@@ -2063,7 +2063,7 @@ HTMLEditor::Rewrap(bool aRespectNewlines)
   // undoable in one transaction.
   // XXX Why isn't enough to use only AutoPlaceholderBatch here?
   AutoTransactionBatch bundleAllTransactions(*this);
-  AutoPlaceholderBatch beginBatching(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   rv = InsertTextWithQuotationsInternal(wrapped);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -2077,7 +2077,7 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                    bool aInsertHTML,
                                    nsINode** aNodeInserted)
 {
-  AutoPlaceholderBatch beginBatching(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   // Don't let anyone insert HTML when we're in plaintext mode.
   if (IsPlaintextEditor()) {
