@@ -555,33 +555,31 @@ class GeckoWebViewProvider : IWebViewProvider {
             val stateData = session.savedWebViewState!!
             val savedSession = stateData.getParcelable<GeckoSession>(GECKO_SESSION)!!
 
-            if (geckoSession != savedSession) {
-                if (!restored) {
-                    // Tab changed, we need to close the default session and restore our saved session
-                    geckoSession.close()
+            if (geckoSession != savedSession && !restored) {
+                // Tab changed, we need to close the default session and restore our saved session
+                geckoSession.close()
 
-                    geckoSession = savedSession
-                    canGoBack = stateData.getBoolean(CAN_GO_BACK, false)
-                    canGoForward = stateData.getBoolean(CAN_GO_FORWARD, false)
-                    isSecure = stateData.getBoolean(IS_SECURE, false)
-                    webViewTitle = stateData.getString(WEBVIEW_TITLE, null)
-                    currentUrl = stateData.getString(CURRENT_URL, ABOUT_BLANK)
-                    applySettingsAndSetDelegates()
-                    if (!geckoSession.isOpen) {
-                        geckoSession.open(geckoRuntime!!)
-                    }
-                    setSession(geckoSession)
-                } else {
-                    // App was backgrounded and restored;
-                    // GV restored the GeckoSession itself, but we need to restore our variables
-                    canGoBack = stateData.getBoolean(CAN_GO_BACK, false)
-                    canGoForward = stateData.getBoolean(CAN_GO_FORWARD, false)
-                    isSecure = stateData.getBoolean(IS_SECURE, false)
-                    webViewTitle = stateData.getString(WEBVIEW_TITLE, null)
-                    currentUrl = stateData.getString(CURRENT_URL, ABOUT_BLANK)
-                    applySettingsAndSetDelegates()
-                    restored = false
+                geckoSession = savedSession
+                canGoBack = stateData.getBoolean(CAN_GO_BACK, false)
+                canGoForward = stateData.getBoolean(CAN_GO_FORWARD, false)
+                isSecure = stateData.getBoolean(IS_SECURE, false)
+                webViewTitle = stateData.getString(WEBVIEW_TITLE, null)
+                currentUrl = stateData.getString(CURRENT_URL, ABOUT_BLANK)
+                applySettingsAndSetDelegates()
+                if (!geckoSession.isOpen) {
+                    geckoSession.open(geckoRuntime!!)
                 }
+                setSession(geckoSession)
+            } else {
+                // App was backgrounded and restored;
+                // GV restored the GeckoSession itself, but we need to restore our variables
+                canGoBack = stateData.getBoolean(CAN_GO_BACK, false)
+                canGoForward = stateData.getBoolean(CAN_GO_FORWARD, false)
+                isSecure = stateData.getBoolean(IS_SECURE, false)
+                webViewTitle = stateData.getString(WEBVIEW_TITLE, null)
+                currentUrl = stateData.getString(CURRENT_URL, ABOUT_BLANK)
+                applySettingsAndSetDelegates()
+                restored = false
             }
         }
 
