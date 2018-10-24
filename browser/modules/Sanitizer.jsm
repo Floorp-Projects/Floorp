@@ -738,6 +738,20 @@ async function sanitizeSessionPrincipals() {
     principals.push(sw.principal);
   }
 
+  // Let's take the list of unique hosts+OA from cookies.
+  let enumerator = Services.cookies.enumerator;
+  let hosts = new Set();
+  for (let cookie of enumerator) {
+    hosts.add(cookie.host + ChromeUtils.originAttributesToSuffix(cookie.originAttributes));
+  }
+
+  hosts.forEach(host => {
+    // Cookies and permissions are handled by origin/host. Doesn't matter if we
+    // use http: or https: schema here.
+    principals.push(
+      Services.scriptSecurityManager.createCodebasePrincipalFromOrigin("https://" + host));
+  });
+
   await maybeSanitizeSessionPrincipals(principals);
 }
 
@@ -761,7 +775,8 @@ async function maybeSanitizeSessionPrincipals(principals) {
 async function sanitizeSessionPrincipal(principal) {
   await new Promise(resolve => {
     Services.clearData.deleteDataFromPrincipal(principal, true /* user request */,
-                                               Ci.nsIClearDataService.CLEAR_DOM_STORAGES,
+                                               Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
+                                               Ci.nsIClearDataService.CLEAR_COOKIES,
                                                resolve);
   });
 }
