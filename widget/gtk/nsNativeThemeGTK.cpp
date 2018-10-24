@@ -157,20 +157,23 @@ static bool IsFrameContentNodeInNamespace(nsIFrame *aFrame, uint32_t aNamespace)
   return content->IsInNamespace(aNamespace);
 }
 
-static bool IsWidgetTypeDisabled(uint8_t* aDisabledVector, StyleAppearance aWidgetType) {
+static bool IsWidgetTypeDisabled(const uint8_t* aDisabledVector,
+                                 StyleAppearance aWidgetType) {
   auto type = static_cast<size_t>(aWidgetType);
   MOZ_ASSERT(type < static_cast<size_t>(mozilla::StyleAppearance::Count));
   return (aDisabledVector[type >> 3] & (1 << (type & 7))) != 0;
 }
 
-static void SetWidgetTypeDisabled(uint8_t* aDisabledVector, StyleAppearance aWidgetType) {
+static void SetWidgetTypeDisabled(uint8_t* aDisabledVector,
+                                  StyleAppearance aWidgetType) {
   auto type = static_cast<size_t>(aWidgetType);
   MOZ_ASSERT(type < static_cast<size_t>(mozilla::StyleAppearance::Count));
   aDisabledVector[type >> 3] |= (1 << (type & 7));
 }
 
 static inline uint16_t
-GetWidgetStateKey(StyleAppearance aWidgetType, GtkWidgetState *aWidgetState)
+GetWidgetStateKey(StyleAppearance aWidgetType,
+                  GtkWidgetState *aWidgetState)
 {
   return (aWidgetState->active |
           aWidgetState->focused << 1 |
@@ -232,7 +235,8 @@ static bool ShouldScrollbarButtonBeDisabled(int32_t aCurpos, int32_t aMaxpos,
 }
 
 bool
-nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType, nsIFrame* aFrame,
+nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
+                                       nsIFrame* aFrame,
                                        WidgetNodeType& aGtkWidgetType,
                                        GtkWidgetState* aState,
                                        gint* aWidgetFlags)
@@ -1143,7 +1147,7 @@ nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame,
 }
 
 bool
-nsNativeThemeGTK::IsWidgetVisible(WidgetType aWidgetType)
+nsNativeThemeGTK::IsWidgetVisible(StyleAppearance aWidgetType)
 {
   switch (aWidgetType) {
   case StyleAppearance::MozWindowButtonBox:
@@ -1306,7 +1310,8 @@ nsNativeThemeGTK::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBuild
 }
 
 WidgetNodeType
-nsNativeThemeGTK::NativeThemeToGtkTheme(StyleAppearance aWidgetType, nsIFrame* aFrame)
+nsNativeThemeGTK::NativeThemeToGtkTheme(StyleAppearance aWidgetType,
+                                        nsIFrame* aFrame)
 {
   WidgetNodeType gtkWidgetType;
   gint unusedFlags;

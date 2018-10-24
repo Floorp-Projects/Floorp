@@ -18,7 +18,7 @@ NS_IMPL_ISUPPORTS_INHERITED(HeadlessThemeGTK, nsNativeTheme, nsITheme)
 NS_IMETHODIMP
 HeadlessThemeGTK::DrawWidgetBackground(gfxContext* aContext,
                                        nsIFrame* aFrame,
-                                       WidgetType aWidgetType,
+                                       StyleAppearance aWidgetType,
                                        const nsRect& aRect,
                                        const nsRect& aDirtyRect)
 {
@@ -27,7 +27,7 @@ HeadlessThemeGTK::DrawWidgetBackground(gfxContext* aContext,
 
 LayoutDeviceIntMargin
 HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                  WidgetType aWidgetType)
+                                  StyleAppearance aWidgetType)
 {
   if (aWidgetType == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
@@ -121,7 +121,8 @@ HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
 
 bool
 HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
-                                   nsIFrame* aFrame, WidgetType aWidgetType,
+                                   nsIFrame* aFrame,
+                                   StyleAppearance aWidgetType,
                                    LayoutDeviceIntMargin* aResult)
 {
   if (aWidgetType == StyleAppearance::MenulistButton &&
@@ -171,7 +172,8 @@ HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
 
 NS_IMETHODIMP
 HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
-                                       nsIFrame* aFrame, WidgetType aWidgetType,
+                                       nsIFrame* aFrame,
+                                       StyleAppearance aWidgetType,
                                        LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable)
 {
@@ -319,8 +321,10 @@ HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-HeadlessThemeGTK::WidgetStateChanged(nsIFrame* aFrame, WidgetType aWidgetType,
-                                     nsAtom* aAttribute, bool* aShouldRepaint,
+HeadlessThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
+                                     StyleAppearance aWidgetType,
+                                     nsAtom* aAttribute,
+                                     bool* aShouldRepaint,
                                      const nsAttrValue* aOldValue)
 {
   return NS_OK;
@@ -343,7 +347,7 @@ static bool IsFrameContentNodeInNamespace(nsIFrame *aFrame, uint32_t aNamespace)
 NS_IMETHODIMP_(bool)
 HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
-                                      WidgetType aWidgetType)
+                                      StyleAppearance aWidgetType)
 {
   if (aWidgetType == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
@@ -440,7 +444,7 @@ HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP_(bool)
-HeadlessThemeGTK::WidgetIsContainer(WidgetType aWidgetType)
+HeadlessThemeGTK::WidgetIsContainer(StyleAppearance aWidgetType)
 {
   if (aWidgetType == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
@@ -465,7 +469,7 @@ HeadlessThemeGTK::WidgetIsContainer(WidgetType aWidgetType)
 }
 
 bool
-HeadlessThemeGTK::ThemeDrawsFocusForWidget(WidgetType aWidgetType)
+HeadlessThemeGTK::ThemeDrawsFocusForWidget(StyleAppearance aWidgetType)
 {
    if (aWidgetType == StyleAppearance::Menulist ||
        aWidgetType == StyleAppearance::Button ||
