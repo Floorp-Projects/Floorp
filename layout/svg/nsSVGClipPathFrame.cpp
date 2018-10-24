@@ -56,7 +56,7 @@ nsSVGClipPathFrame::ApplyClipPath(gfxContext& aContext,
 
   if (singleClipPathChild) {
     SVGGeometryFrame* pathFrame = do_QueryFrame(singleClipPathChild);
-    if (pathFrame) {
+    if (pathFrame && pathFrame->StyleVisibility()->IsVisible()) {
       SVGGeometryElement* pathElement =
         static_cast<SVGGeometryElement*>(pathFrame->GetContent());
       gfxMatrix toChildsUserSpace = pathElement->
