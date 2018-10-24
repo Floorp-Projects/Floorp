@@ -168,7 +168,7 @@ class XPCShellTestThread(Thread):
         self.has_failure_output = False
         self.saw_proc_start = False
         self.saw_proc_end = False
-        self.complete_command = None
+        self.command = None
         self.harness_timeout = kwargs.get('harness_timeout')
         self.timedout = False
 
@@ -387,7 +387,7 @@ class XPCShellTestThread(Thread):
         mozinfo.output_to_file(mozInfoJSPath)
         return mozInfoJSPath
 
-    def buildCmdHead(self, headfiles, xpcscmd):
+    def buildCmdHead(self):
         """
           Build the command line arguments for the head files,
           along with the address of the webserver which some tests require.
@@ -395,12 +395,13 @@ class XPCShellTestThread(Thread):
           On a remote system, this is overloaded to resolve quoting issues over a
           secondary command line.
         """
+        headfiles = self.getHeadFiles(self.test_object)
         cmdH = ", ".join(['"' + f.replace('\\', '/') + '"'
                          for f in headfiles])
 
         dbgport = 0 if self.jsDebuggerInfo is None else self.jsDebuggerInfo.port
 
-        return xpcscmd + [
+        return [
             '-e', 'const _SERVER_ADDR = "localhost"',
             '-e', 'const _HEAD_FILES = [%s];' % cmdH,
             '-e', 'const _JSDEBUGGER_PORT = %d;' % dbgport,
@@ -438,7 +439,7 @@ class XPCShellTestThread(Thread):
         if not self.appPath:
             self.appPath = self.xrePath
 
-        self.xpcsCmd = [
+        xpcsCmd = [
             self.xpcshell,
             '-g', self.xrePath,
             '-a', self.appPath,
@@ -452,15 +453,15 @@ class XPCShellTestThread(Thread):
         if self.testingModulesDir:
             # Escape backslashes in string literal.
             sanitized = self.testingModulesDir.replace('\\', '\\\\')
-            self.xpcsCmd.extend([
+            xpcsCmd.extend([
                 '-e',
                 'const _TESTING_MODULES_DIR = "%s";' % sanitized
             ])
 
-        self.xpcsCmd.extend(['-f', os.path.join(self.testharnessdir, 'head.js')])
+        xpcsCmd.extend(['-f', os.path.join(self.testharnessdir, 'head.js')])
 
         if self.debuggerInfo:
-            self.xpcsCmd = [self.debuggerInfo.path] + self.debuggerInfo.args + self.xpcsCmd
+            xpcsCmd = [self.debuggerInfo.path] + self.debuggerInfo.args + xpcsCmd
 
         # Automation doesn't specify a pluginsPath and xpcshell defaults to
         # $APPDIR/plugins. We do the same here so we can carry on with
@@ -470,7 +471,9 @@ class XPCShellTestThread(Thread):
 
         self.pluginsDir = self.setupPluginsDir()
         if self.pluginsDir:
-            self.xpcsCmd.extend(['-p', self.pluginsDir])
+            xpcsCmd.extend(['-p', self.pluginsDir])
+
+        return xpcsCmd
 
     def cleanupDir(self, directory, name):
         if not os.path.exists(directory):
@@ -529,7 +532,7 @@ class XPCShellTestThread(Thread):
             line = self.fix_text_output(line).rstrip('\r\n')
             self.log.process_output(self.proc_ident,
                                     line,
-                                    command=self.complete_command)
+                                    command=self.command)
         else:
             if 'message' in line:
                 line['message'] = self.fix_text_output(line['message'])
@@ -630,27 +633,27 @@ class XPCShellTestThread(Thread):
         self.tempDir = self.setupTempDir()
         self.mozInfoJSPath = self.setupMozinfoJS()
 
-        self.buildXpcsCmd()
-        head_files = self.getHeadFiles(self.test_object)
-        cmdH = self.buildCmdHead(head_files, self.xpcsCmd)
+        # The order of the command line is important:
+        # 1) Arguments for xpcshell itself
+        self.command = self.buildXpcsCmd()
 
-        # The test file will have to be loaded after the head files.
-        cmdT = self.buildCmdTestFile(path)
+        # 2) Arguments for the head files
+        self.command.extend(self.buildCmdHead())
 
-        args = self.xpcsRunArgs[:]
-        if 'debug' in self.test_object:
-            args.insert(0, '-d')
+        # 3) Arguments for the test file
+        self.command.extend(self.buildCmdTestFile(path))
+        self.command.extend(['-e', 'const _TEST_NAME = "%s";' % name])
 
-        # The test name to log
-        cmdI = ['-e', 'const _TEST_NAME = "%s"' % name]
-
-        # Directory for javascript code coverage output, null by default.
-        cmdC = ['-e', 'const _JSCOV_DIR = null']
+        # 4) Arguments for code coverage
         if self.jscovdir:
-            cmdC = ['-e', 'const _JSCOV_DIR = "%s"' % self.jscovdir.replace('\\', '/')]
-            self.complete_command = cmdH + cmdT + cmdI + cmdC + args
-        else:
-            self.complete_command = cmdH + cmdT + cmdI + args
+            self.command.extend(
+                ['-e', 'const _JSCOV_DIR = "%s";' % self.jscovdir.replace('\\', '/')])
+
+        # 5) Runtime arguments
+        if 'debug' in self.test_object:
+            self.command.append('-d')
+
+        self.command.extend(self.xpcsRunArgs)
 
         if self.test_object.get('dmd') == 'true':
             self.env['PYTHON'] = sys.executable
@@ -679,9 +682,9 @@ class XPCShellTestThread(Thread):
         try:
             self.log.test_start(name)
             if self.verbose:
-                self.logCommand(name, self.complete_command, test_dir)
+                self.logCommand(name, self.command, test_dir)
 
-            proc = self.launchProcess(self.complete_command,
+            proc = self.launchProcess(self.command,
                                       stdout=self.pStdout, stderr=self.pStderr,
                                       env=self.env, cwd=test_dir,
                                       timeout=testTimeoutInterval)
