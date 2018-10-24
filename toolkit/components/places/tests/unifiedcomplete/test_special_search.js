@@ -49,7 +49,7 @@ add_task(async function test_special_searches() {
   // Test restricting searches
   info("History restrict");
   await check_autocomplete({
-    search: "^",
+    search: UrlbarTokenizer.RESTRICT.HISTORY,
     matches: [ { uri: uri1, title: "title" },
                { uri: uri2, title: "foo.bar" },
                { uri: uri3, title: "title" },
@@ -60,7 +60,7 @@ add_task(async function test_special_searches() {
 
   info("Star restrict");
   await check_autocomplete({
-    search: "*",
+    search: UrlbarTokenizer.RESTRICT.BOOKMARK,
     matches: [ { uri: uri5, title: "title", style: [ "bookmark" ] },
                { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
                { uri: uri7, title: "title", style: [ "bookmark" ] },
@@ -73,7 +73,7 @@ add_task(async function test_special_searches() {
 
   info("Tag restrict");
   await check_autocomplete({
-    search: "+",
+    search: UrlbarTokenizer.RESTRICT.TAG,
     matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
@@ -83,7 +83,7 @@ add_task(async function test_special_searches() {
   // Test specials as any word position
   info("Special as first word");
   await check_autocomplete({
-    search: "^ foo bar",
+    search: `${UrlbarTokenizer.RESTRICT.HISTORY} foo bar`,
     matches: [ { uri: uri2, title: "foo.bar" },
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
@@ -93,7 +93,7 @@ add_task(async function test_special_searches() {
 
   info("Special as middle word");
   await check_autocomplete({
-    search: "foo ^ bar",
+    search: `foo ${UrlbarTokenizer.RESTRICT.HISTORY} bar`,
     matches: [ { uri: uri2, title: "foo.bar" },
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
@@ -103,7 +103,7 @@ add_task(async function test_special_searches() {
 
   info("Special as last word");
   await check_autocomplete({
-    search: "foo bar ^",
+    search: `foo bar ${UrlbarTokenizer.RESTRICT.HISTORY}`,
     matches: [ { uri: uri2, title: "foo.bar" },
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
@@ -112,9 +112,9 @@ add_task(async function test_special_searches() {
   });
 
   // Test restricting and matching searches with a term
-  info("foo ^ -> history");
+  info(`foo ${UrlbarTokenizer.RESTRICT.HISTORY} -> history`);
   await check_autocomplete({
-    search: "foo ^",
+    search: `foo ${UrlbarTokenizer.RESTRICT.HISTORY}`,
     matches: [ { uri: uri2, title: "foo.bar" },
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
@@ -122,9 +122,9 @@ add_task(async function test_special_searches() {
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
-  info("foo * -> is star");
+  info(`foo ${UrlbarTokenizer.RESTRICT.BOOKMARK} -> is star`);
   await check_autocomplete({
-    search: "foo *",
+    search: `foo ${UrlbarTokenizer.RESTRICT.BOOKMARK}`,
     matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
                { uri: uri7, title: "title", style: [ "bookmark" ] },
                { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
@@ -134,9 +134,9 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
-  info("foo # -> in title");
+  info(`foo ${UrlbarTokenizer.RESTRICT.TITLE} -> in title`);
   await check_autocomplete({
-    search: "foo #",
+    search: `foo ${UrlbarTokenizer.RESTRICT.TITLE}`,
     matches: [ { uri: uri2, title: "foo.bar" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
@@ -147,9 +147,9 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
-  info("foo @ -> in url");
+  info(`foo ${UrlbarTokenizer.RESTRICT.URL} -> in url`);
   await check_autocomplete({
-    search: "foo @",
+    search: `foo ${UrlbarTokenizer.RESTRICT.URL}`,
     matches: [ { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri7, title: "title", style: [ "bookmark" ] },
@@ -158,63 +158,49 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
-  info("foo + -> is tag");
+  info(`foo ${UrlbarTokenizer.RESTRICT.TAG} -> is tag`);
   await check_autocomplete({
-    search: "foo +",
+    search: `foo ${UrlbarTokenizer.RESTRICT.TAG}`,
     matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
-  info("foo ~ -> is typed");
-  await check_autocomplete({
-    search: "foo ~",
-    matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
-  });
-
   // Test various pairs of special searches
-  info("foo ^ * -> history, is star");
+  info(`foo ${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.BOOKMARK} -> history, is star`);
   await check_autocomplete({
-    search: "foo ^ *",
+    search: `foo ${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.BOOKMARK}`,
     matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
-  info("foo ^ # -> history, in title");
+  info(`foo ${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.TITLE} -> history, in title`);
   await check_autocomplete({
-    search: "foo ^ #",
+    search: `foo ${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.TITLE}`,
     matches: [ { uri: uri2, title: "foo.bar" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
-  info("foo ^ @ -> history, in url");
+  info(`foo ${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.URL} -> history, in url`);
   await check_autocomplete({
-    search: "foo ^ @",
+    search: `foo ${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.URL}`,
     matches: [ { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
-  info("foo ^ + -> history, is tag");
+  info(`foo ${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.TAG} -> history, is tag`);
   await check_autocomplete({
-    search: "foo ^ +",
+    search: `foo ${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.TAG}`,
     matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
-  info("foo ^ ~ -> history, is typed");
+  info(`foo ${UrlbarTokenizer.RESTRICT.BOOKMARK} ${UrlbarTokenizer.RESTRICT.TITLE} -> is star, in title`);
   await check_autocomplete({
-    search: "foo ^ ~",
-    matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
-  });
-
-  info("foo * # -> is star, in title");
-  await check_autocomplete({
-    search: "foo * #",
+    search: `foo ${UrlbarTokenizer.RESTRICT.BOOKMARK} ${UrlbarTokenizer.RESTRICT.TITLE}`,
     matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
                { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
                { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
@@ -223,73 +209,47 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
-  info("foo * @ -> is star, in url");
+  info(`foo ${UrlbarTokenizer.RESTRICT.BOOKMARK} ${UrlbarTokenizer.RESTRICT.URL} -> is star, in url`);
   await check_autocomplete({
-    search: "foo * @",
+    search: `foo ${UrlbarTokenizer.RESTRICT.BOOKMARK} ${UrlbarTokenizer.RESTRICT.URL}`,
     matches: [ { uri: uri7, title: "title", style: [ "bookmark" ] },
                { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
-  info("foo * + -> same as +");
+  info(`foo ${UrlbarTokenizer.RESTRICT.BOOKMARK} ${UrlbarTokenizer.RESTRICT.TAG} -> same as ${UrlbarTokenizer.RESTRICT.TAG}`);
   await check_autocomplete({
-    search: "foo * +",
+    search: `foo ${UrlbarTokenizer.RESTRICT.BOOKMARK} ${UrlbarTokenizer.RESTRICT.TAG}`,
     matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
-  info("foo * ~ -> is star, is typed");
+  info(`foo ${UrlbarTokenizer.RESTRICT.TITLE} ${UrlbarTokenizer.RESTRICT.URL} -> in title, in url`);
   await check_autocomplete({
-    search: "foo * ~",
-    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
-  });
-
-  info("foo # @ -> in title, in url");
-  await check_autocomplete({
-    search: "foo # @",
+    search: `foo ${UrlbarTokenizer.RESTRICT.TITLE} ${UrlbarTokenizer.RESTRICT.URL}`,
     matches: [ { uri: uri4, title: "foo.bar" },
                { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
-  info("foo # + -> in title, is tag");
+  info(`foo ${UrlbarTokenizer.RESTRICT.TITLE} ${UrlbarTokenizer.RESTRICT.TAG} -> in title, is tag`);
   await check_autocomplete({
-    search: "foo # +",
+    search: `foo ${UrlbarTokenizer.RESTRICT.TITLE} ${UrlbarTokenizer.RESTRICT.TAG}`,
     matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
-  info("foo # ~ -> in title, is typed");
+  info(`foo ${UrlbarTokenizer.RESTRICT.URL} ${UrlbarTokenizer.RESTRICT.TAG} -> in url, is tag`);
   await check_autocomplete({
-    search: "foo # ~",
-    matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
-  });
-
-  info("foo @ + -> in url, is tag");
-  await check_autocomplete({
-    search: "foo @ +",
+    search: `foo ${UrlbarTokenizer.RESTRICT.URL} ${UrlbarTokenizer.RESTRICT.TAG}`,
     matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
-  });
-
-  info("foo @ ~ -> in url, is typed");
-  await check_autocomplete({
-    search: "foo @ ~",
-    matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
-  });
-
-  info("foo + ~ -> is tag, is typed");
-  await check_autocomplete({
-    search: "foo + ~",
-    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   // Disable autoFill for the next tests, see test_autoFill_default_behavior.js

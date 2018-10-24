@@ -56,11 +56,14 @@ add_task(async function test_javascript_match() {
 
   // Note the next few tests do *not* get a search result as enable-actions
   // isn't specified.
-  info("Match only typed history");
+  info("Match only history");
   await check_autocomplete({
-    search: "foo ^ ~",
-    matches: [ { uri: uri3, title: "title" },
-               { uri: uri4, title: "title" } ],
+    search: `foo ${UrlbarTokenizer.RESTRICT.HISTORY}`,
+    matches: [ { uri: uri1, title: "title" },
+               { uri: uri2, title: "title" },
+               { uri: uri3, title: "title" },
+               { uri: uri4, title: "title" },
+               { uri: uri7, title: "title" } ],
   });
 
   info("Drop-down empty search matches only typed history");

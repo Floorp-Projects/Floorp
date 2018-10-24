@@ -78,20 +78,6 @@ const QUERYINDEX_PLACEID       = 8;
 const QUERYINDEX_SWITCHTAB     = 9;
 const QUERYINDEX_FRECENCY      = 10;
 
-// The special characters below can be typed into the urlbar to either restrict
-// the search to visited history, bookmarked, tagged pages; or force a match on
-// just the title text or url.
-const TOKEN_TO_BEHAVIOR_MAP = new Map([
-  ["^", "history"],
-  ["*", "bookmark"],
-  ["+", "tag"],
-  ["%", "openpage"],
-  ["~", "typed"],
-  ["$", "searches"],
-  ["#", "title"],
-  ["@", "url"],
-]);
-
 // If a URL starts with one of these prefixes, then we don't provide search
 // suggestions for it.
 const DISALLOWED_URLLIKE_PREFIXES = [
@@ -354,11 +340,21 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "syncUsernamePref",
                                       "services.sync.username");
+
+// The special characters below can be typed into the urlbar to either restrict
+// the search to visited history, bookmarked, tagged pages; or force a match on
+// just the title text or url.
+XPCOMUtils.defineLazyGetter(this, "TOKEN_TO_BEHAVIOR_MAP", () => new Map(
+  Object.entries(UrlbarTokenizer.RESTRICT).map(
+    ([type, char]) => [char, type.toLowerCase()]
+  )
+));
 
 function setTimeout(callback, ms) {
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -877,7 +873,7 @@ Search.prototype = {
         query = query.substr(0, UrlbarPrefs.get("maxCharsForSearchSuggestions"));
         // Avoid fetching suggestions if they are not required, private browsing
         // mode is enabled, or the query may expose sensitive information.
-        if (this.hasBehavior("searches") &&
+        if (this.hasBehavior("search") &&
             !this._inPrivateWindow &&
             !this._prohibitSearchSuggestionsFor(query)) {
           let engine;
