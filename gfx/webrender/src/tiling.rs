@@ -28,9 +28,14 @@ use texture_allocator::GuillotineAllocator;
 #[cfg(feature = "pathfinder")]
 use webrender_api::{DevicePixel, FontRenderMode};
 
-const MIN_TARGET_SIZE: u32 = 2048;
 const STYLE_SOLID: i32 = ((BorderStyle::Solid as i32) << 8) | ((BorderStyle::Solid as i32) << 16);
 const STYLE_MASK: i32 = 0x00FF_FF00;
+
+/// According to apitrace, textures larger than 2048 break fast clear
+/// optimizations on some intel drivers. We sometimes need to go larger, but
+/// we try to avoid it. This can go away when proper tiling support lands,
+/// since we can then split large primitives across multiple textures.
+const IDEAL_MAX_TEXTURE_DIMENSION: u32 = 2048;
 
 /// Identifies a given `RenderTarget` in a `RenderTargetList`.
 #[derive(Debug, Copy, Clone)]
@@ -190,6 +195,12 @@ pub enum RenderTargetKind {
 pub struct RenderTargetList<T> {
     screen_size: DeviceIntSize,
     pub format: ImageFormat,
+    /// The maximum width and height of any single primitive we've encountered.
+    ///
+    /// We initially create our per-slice allocators with a width and height of
+    /// IDEAL_MAX_TEXTURE_DIMENSION. If we encounter a larger primitive, the
+    /// allocation will fail, but we'll bump max_size, which will cause the
+    /// allocator for the next slice to be just large enough to accomodate it.
     pub max_size: DeviceUintSize,
     pub targets: Vec<T>,
     pub saved_index: Option<SavedTargetIndex>,
@@ -203,7 +214,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
         RenderTargetList {
             screen_size,
             format,
-            max_size: DeviceUintSize::new(MIN_TARGET_SIZE, MIN_TARGET_SIZE),
+            max_size: DeviceUintSize::new(0, 0),
             targets: Vec::new(),
             saved_index: None,
         }
@@ -268,7 +279,14 @@ impl<T: RenderTarget> RenderTargetList<T> {
         let origin = match existing_origin {
             Some(origin) => origin,
             None => {
-                let mut new_target = T::new(Some(self.max_size), self.screen_size);
+                // Have the allocator restrict slice sizes to our max ideal
+                // dimensions, unless we've already gone bigger on a previous
+                // slice.
+                let allocator_dimensions = DeviceUintSize::new(
+                    cmp::max(IDEAL_MAX_TEXTURE_DIMENSION, self.max_size.width),
+                    cmp::max(IDEAL_MAX_TEXTURE_DIMENSION, self.max_size.height),
+                );
+                let mut new_target = T::new(Some(allocator_dimensions), self.screen_size);
                 let origin = new_target.allocate(alloc_size).expect(&format!(
                     "Each render task must allocate <= size of one target! ({})",
                     alloc_size
@@ -286,7 +304,9 @@ impl<T: RenderTarget> RenderTargetList<T> {
     }
 
     pub fn check_ready(&self, t: &Texture) {
-        assert_eq!(t.get_dimensions(), self.max_size);
+        let dimensions = t.get_dimensions();
+        assert!(dimensions.width >= self.max_size.width);
+        assert!(dimensions.height >= self.max_size.height);
         assert_eq!(t.get_format(), self.format);
         assert_eq!(t.get_layer_count() as usize, self.targets.len());
         assert!(t.supports_depth() >= self.needs_depth());

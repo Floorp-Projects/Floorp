@@ -22,3 +22,26 @@ jobs-from:
     - linux.yml
     - macosx.yml
     - windows.yml
+
+job-defaults:
+    run:
+        mozconfig-variant:
+            by-release-type:
+                beta: beta
+                release.*: release
+                # We keep using the release configs as the beta and release configs are
+                # identical except for
+                # https://searchfox.org/mozilla-central/rev/ce9ff94ffed34dc17ec0bfa406156d489eaa8ee1/browser/config/mozconfigs/linux32/release#1    # noqa
+                esr.*: release
+                default: nightly
+        # Note: These settings are only honored by nightly (i.e. shipping) builds
+        update-channel:
+            by-release-type:
+                nightly: nightly
+                beta:
+                    by-shipping-product:
+                        devedition: aurora
+                        default: beta
+                release.*: release
+                esr.*: esr
+                default: null

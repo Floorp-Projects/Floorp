@@ -26,7 +26,7 @@ namespace dom {
 
 namespace {
 
-class ReportErrorRunnable final : public WorkerRunnable
+class ReportErrorRunnable final : public WorkerDebuggeeRunnable
 {
   WorkerErrorReport mReport;
 
@@ -159,7 +159,7 @@ public:
 
   ReportErrorRunnable(WorkerPrivate* aWorkerPrivate,
                       const WorkerErrorReport& aReport)
-  : WorkerRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount),
+  : WorkerDebuggeeRunnable(aWorkerPrivate),
     mReport(aReport)
   { }
 
@@ -240,7 +240,7 @@ private:
   }
 };
 
-class ReportGenericErrorRunnable final : public WorkerRunnable
+class ReportGenericErrorRunnable final : public WorkerDebuggeeRunnable
 {
 public:
   static void
@@ -256,7 +256,7 @@ public:
 
 private:
   explicit ReportGenericErrorRunnable(WorkerPrivate* aWorkerPrivate)
-    : WorkerRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount)
+    : WorkerDebuggeeRunnable(aWorkerPrivate)
   {
     aWorkerPrivate->AssertIsOnWorkerThread();
   }

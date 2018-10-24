@@ -13,7 +13,7 @@
 #include "nsHttpRequestHead.h"
 #include "TCPFastOpen.h"
 #include "nsISocketProvider.h"
-#include "nsISocketProviderService.h"
+#include "nsSocketProviderService.h"
 #include "nsISSLSocketControl.h"
 #include "nsISocketTransport.h"
 #include "nsISupportsPriority.h"
@@ -53,7 +53,7 @@ TLSFilterTransaction::TLSFilterTransaction(nsAHttpTransaction *aWrapped,
 
   nsCOMPtr<nsISocketProvider> provider;
   nsCOMPtr<nsISocketProviderService> spserv =
-    do_GetService(NS_SOCKETPROVIDERSERVICE_CONTRACTID);
+    nsSocketProviderService::GetOrCreate();
 
   if (spserv) {
     spserv->GetSocketProvider("ssl", getter_AddRefs(provider));

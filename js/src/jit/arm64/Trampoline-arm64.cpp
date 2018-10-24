@@ -136,11 +136,11 @@ JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm)
             // Store the argument to tmp_sp, then increment tmp_sp by 8.
             masm.Str(x24, MemOperand(tmp_sp, Operand(8), vixl::PostIndex));
 
-            // Set the condition codes for |cmp tmp_argc, 2| (using the old value).
+            // Decrement tmp_argc and set the condition codes for the new value.
             masm.Subs(tmp_argc, tmp_argc, Operand(1));
 
             // Branch if arguments remain.
-            masm.B(&loopHead, vixl::Condition::ge);
+            masm.B(&loopHead, vixl::Condition::NonZero);
         }
 
         masm.bind(&noArguments);

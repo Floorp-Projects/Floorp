@@ -111,14 +111,14 @@ add_task(async function() {
     ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     let collectStacks = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG;
     let components = {};
-    for (let component of Cu.loadedComponents()) {
+    for (let component of Cu.loadedComponents) {
       /* Keep only the file name for components, as the path is an absolute file
          URL rather than a resource:// URL like for modules. */
       components[component.replace(/.*\//, "")] =
         collectStacks ? Cu.getComponentLoadStack(component) : "";
     }
     let modules = {};
-    for (let module of Cu.loadedModules()) {
+    for (let module of Cu.loadedModules) {
       modules[module] = collectStacks ? Cu.getModuleImportStack(module) : "";
     }
     let services = {};

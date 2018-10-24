@@ -155,29 +155,43 @@
  * A directory service key which provides the update directory. Callers should
  * fall back to appDir.
  * Windows:    If vendor name exists:
- *             Documents and Settings\<User>\Local Settings\Application Data\
- *             <vendor name>\updates\
- *             <hash of the path to XRE_EXECUTABLE_FILE’s parent directory>
+ *             ProgramData\<vendor name>\updates\
+ *             <hash of the path to XRE_EXECUTABLE_FILE's parent directory>
  *
  *             If vendor name doesn't exist, but product name exists:
- *             Documents and Settings\<User>\Local Settings\Application Data\
- *             <product name>\updates\
- *             <hash of the path to XRE_EXECUTABLE_FILE’s parent directory>
+ *             ProgramData\<product name>\updates\
+ *             <hash of the path to XRE_EXECUTABLE_FILE's parent directory>
  *
  *             If neither vendor nor product name exists:
- *               If app dir is under Program Files:
- *               Documents and Settings\<User>\Local Settings\Application Data\
- *               <relative path to app dir from Program Files>
- *
- *               If app dir isn’t under Program Files:
- *               Documents and Settings\<User>\Local Settings\Application Data\
- *               <MOZ_APP_NAME>
+ *             ProgramData\Mozilla\updates
  *
  * Mac:        ~/Library/Caches/Mozilla/updates/<absolute path to app dir>
  *
  * All others: Parent directory of XRE_EXECUTABLE_FILE.
  */
 #define XRE_UPDATE_ROOT_DIR "UpdRootD"
+
+/**
+ * A directory service key which provides the *old* update directory. This
+ * path should only be used when data needs to be migrated from the old update
+ * directory.
+ * Windows:    If vendor name exists:
+ *             Documents and Settings\<User>\Local Settings\Application Data\
+ *             <vendor name>\updates\
+ *             <hash of the path to XRE_EXECUTABLE_FILE's parent directory>
+ *
+ *             If vendor name doesn't exist, but product name exists:
+ *             Documents and Settings\<User>\Local Settings\Application Data\
+ *             <product name>\updates\
+ *             <hash of the path to XRE_EXECUTABLE_FILE's parent directory>
+ *
+ *             If neither vendor nor product name exists:
+ *             Documents and Settings\<User>\Local Settings\Application Data\
+ *             Mozilla\updates
+ *
+ * This path does not exist on other operating systems
+ */
+#define XRE_OLD_UPDATE_ROOT_DIR "OldUpdRootD"
 
 /**
  * Begin an XUL application. Does not return until the user exits the
