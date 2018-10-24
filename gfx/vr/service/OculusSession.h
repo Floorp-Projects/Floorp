@@ -12,7 +12,7 @@
 #include "mozilla/gfx/2D.h"
 #include "moz_external_vr.h"
 #include "nsTArray.h"
-#include "../ovr_capi_dynamic.h"
+#include "oculus/ovr_capi_dynamic.h"
 #include "prlink.h"
 #include "ShaderDefinitionsD3D11.h" // for VertexShaderConstants and PixelShaderConstants
 
