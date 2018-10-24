@@ -272,7 +272,7 @@ GetVariantFromIVariant(nsIVariant* aInput, uint32_t aScalarKind,
  */
 nsresult
 WriteVariantToJSONWriter(uint32_t aScalarType, nsIVariant* aInputValue,
-                         const char* aPropertyName, mozilla::JSONWriter<>& aWriter)
+                         const char* aPropertyName, mozilla::JSONWriter& aWriter)
 {
   MOZ_ASSERT(aInputValue);
 
@@ -3480,7 +3480,7 @@ TelemetryScalar::AddDynamicScalarDefinitions(
  * @returns NS_OK or a failure value explaining why persistence failed.
  */
 nsresult
-TelemetryScalar::SerializeScalars(mozilla::JSONWriter<>& aWriter)
+TelemetryScalar::SerializeScalars(mozilla::JSONWriter& aWriter)
 {
   // Get a copy of the data, without clearing.
   ScalarSnapshotTable scalarsToReflect;
@@ -3531,7 +3531,7 @@ TelemetryScalar::SerializeScalars(mozilla::JSONWriter<>& aWriter)
  * @returns NS_OK or a failure value explaining why persistence failed.
  */
 nsresult
-TelemetryScalar::SerializeKeyedScalars(mozilla::JSONWriter<>& aWriter)
+TelemetryScalar::SerializeKeyedScalars(mozilla::JSONWriter& aWriter)
 {
   // Get a copy of the data, without clearing.
   KeyedScalarSnapshotTable keyedScalarsToReflect;
