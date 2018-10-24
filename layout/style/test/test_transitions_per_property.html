@@ -1590,9 +1590,14 @@ function test_auto_color_transition(prop, options={}) {
   const test_color = "rgb(51, 102, 153)";
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "auto", "");
-  let used_value_of_auto = get_color(cs.getPropertyValue(prop));
-  isnot(used_value_of_auto, test_color,
-        msg_prefix + "ensure used auto value is different than our test color");
+  if (prop == "scrollbar-color") {
+    is(cs.getPropertyValue(prop), "auto",
+       msg_prefix + "auto should not be resolved to rgb color");
+  } else {
+    let used_value_of_auto = get_color(cs.getPropertyValue(prop));
+    isnot(used_value_of_auto, test_color,
+          msg_prefix + "ensure used auto value is different than our test color");
+  }
 
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, set_color(test_color), "");
