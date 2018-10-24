@@ -377,7 +377,7 @@ public:
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext,
                                   nsIFrame* aFrame,
-                                  WidgetType aWidgetType,
+                                  StyleAppearance aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect) override;
   bool CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBuilder& aBuilder,
@@ -385,39 +385,44 @@ public:
                                         const mozilla::layers::StackingContextHelper& aSc,
                                         mozilla::layers::WebRenderLayerManager* aManager,
                                         nsIFrame* aFrame,
-                                        WidgetType aWidgetType,
+                                        StyleAppearance aWidgetType,
                                         const nsRect& aRect) override;
   MOZ_MUST_USE LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext,
                                                      nsIFrame* aFrame,
-                                                     WidgetType aWidgetType) override;
+                                                     StyleAppearance aWidgetType) override;
 
    bool GetWidgetPadding(nsDeviceContext* aContext,
                          nsIFrame* aFrame,
-                         WidgetType aWidgetType,
+                         StyleAppearance aWidgetType,
                          LayoutDeviceIntMargin* aResult) override;
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                   WidgetType aWidgetType, nsRect* aOverflowRect) override;
+                                 StyleAppearance aWidgetType,
+                                 nsRect* aOverflowRect) override;
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                  WidgetType aWidgetType,
+                                  StyleAppearance aWidgetType,
                                   mozilla::LayoutDeviceIntSize* aResult, bool* aIsOverridable) override;
-  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, WidgetType aWidgetType, 
+  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame,
+                                StyleAppearance aWidgetType, 
                                 nsAtom* aAttribute, bool* aShouldRepaint,
                                 const nsAttrValue* aOldValue) override;
   NS_IMETHOD ThemeChanged() override;
-  bool ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame, WidgetType aWidgetType) override;
-  bool WidgetIsContainer(WidgetType aWidgetType) override;
-  bool ThemeDrawsFocusForWidget(WidgetType aWidgetType) override;
+  bool ThemeSupportsWidget(nsPresContext* aPresContext,
+                           nsIFrame* aFrame,
+                           StyleAppearance aWidgetType) override;
+  bool WidgetIsContainer(StyleAppearance aWidgetType) override;
+  bool ThemeDrawsFocusForWidget(StyleAppearance aWidgetType) override;
   bool ThemeNeedsComboboxDropmarker() override;
-  virtual bool WidgetAppearanceDependsOnWindowFocus(WidgetType aWidgetType) override;
+  virtual bool WidgetAppearanceDependsOnWindowFocus(StyleAppearance aWidgetType) override;
   virtual bool NeedToClearBackgroundBehindWidget(nsIFrame* aFrame,
-                                                 WidgetType aWidgetType) override;
+                                                 StyleAppearance aWidgetType) override;
   virtual ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame* aFrame,
-                                                       WidgetType aWidgetType) override;
-  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, WidgetType aWidgetType) override;
+                                                       StyleAppearance aWidgetType) override;
+  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame,
+                                             StyleAppearance aWidgetType) override;
   mozilla::Maybe<WidgetInfo> ComputeWidgetInfo(nsIFrame* aFrame,
-                                               WidgetType aWidgetType,
+                                               StyleAppearance aWidgetType,
                                                const nsRect& aRect);
   void DrawProgress(CGContextRef context, const HIRect& inBoxRect,
                     const ProgressParams& aParams);
