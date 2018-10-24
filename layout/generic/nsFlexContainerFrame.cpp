@@ -546,8 +546,29 @@ public:
 
   bool IsFrozen() const            { return mIsFrozen; }
 
-  bool HadMinViolation() const     { return mHadMinViolation; }
-  bool HadMaxViolation() const     { return mHadMaxViolation; }
+  bool HadMinViolation() const
+  {
+    MOZ_ASSERT(!mIsFrozen, "min violation has no meaning for frozen items.");
+    return mHadMinViolation;
+  }
+
+  bool HadMaxViolation() const
+  {
+    MOZ_ASSERT(!mIsFrozen, "max violation has no meaning for frozen items.");
+    return mHadMaxViolation;
+  }
+
+  bool WasMinClamped() const
+  {
+    MOZ_ASSERT(mIsFrozen, "min clamping has no meaning for unfrozen items.");
+    return mHadMinViolation;
+  }
+
+  bool WasMaxClamped() const
+  {
+    MOZ_ASSERT(mIsFrozen, "max clamping has no meaning for unfrozen items.");
+    return mHadMaxViolation;
+  }
 
   // Indicates whether this item received a preliminary "measuring" reflow
   // before its actual reflow.
@@ -740,7 +761,16 @@ public:
     mShareOfWeightSoFar = aNewShare;
   }
 
-  void Freeze() { mIsFrozen = true; }
+  void Freeze()
+  {
+    mIsFrozen = true;
+    // Now that we are frozen, the meaning of mHadMinViolation and
+    // mHadMaxViolation changes to indicate min and max clamping. Clear
+    // both of the member variables so that they are ready to be set
+    // as clamping state later, if necessary.
+    mHadMinViolation = false;
+    mHadMaxViolation = false;
+  }
 
   void SetHadMinViolation()
   {
@@ -757,7 +787,31 @@ public:
     mHadMaxViolation = true;
   }
   void ClearViolationFlags()
-  { mHadMinViolation = mHadMaxViolation = false; }
+  {
+    MOZ_ASSERT(!mIsFrozen,
+               "shouldn't be altering violation flags after we're "
+               "frozen");
+    mHadMinViolation = mHadMaxViolation = false;
+  }
+
+  void SetWasMinClamped()
+  {
+    MOZ_ASSERT(!mHadMinViolation && !mHadMaxViolation, "only clamp once");
+    // This reuses the mHadMinViolation member variable to track clamping
+    // events. This is allowable because mHadMinViolation only reflects
+    // a violation up until the item is frozen.
+    MOZ_ASSERT(mIsFrozen, "shouldn't set clamping state when we are unfrozen");
+    mHadMinViolation = true;
+  }
+  void SetWasMaxClamped()
+  {
+    MOZ_ASSERT(!mHadMinViolation && !mHadMaxViolation, "only clamp once");
+    // This reuses the mHadMaxViolation member variable to track clamping
+    // events. This is allowable because mHadMaxViolation only reflects
+    // a violation up until the item is frozen.
+    MOZ_ASSERT(mIsFrozen, "shouldn't set clamping state when we are unfrozen");
+    mHadMaxViolation = true;
+  }
 
   // Setters for values that are determined after we've resolved our main size
   // -------------------------------------------------------------------------
@@ -2614,8 +2668,10 @@ FlexLine::FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
       } // else, we'll reset this item's main size to its flex base size on the
         // next iteration of this algorithm.
 
-      // Clear this item's violation(s), now that we've dealt with them
-      item->ClearViolationFlags();
+      if (!item->IsFrozen()) {
+        // Clear this item's violation(s), now that we've dealt with them
+        item->ClearViolationFlags();
+      }
     }
   }
 }
