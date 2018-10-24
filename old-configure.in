@@ -2055,9 +2055,6 @@ if test "$COMPILE_ENVIRONMENT"; then
     AC_DEFINE_UNQUOTED(GDK_VERSION_MAX_ALLOWED,$GDK_VERSION_MAX_ALLOWED)
     GLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_32
   fi
-  if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
-    GLIB_VERSION_MAX_ALLOWED=$GLIB_VERSION_MIN_REQUIRED
-  fi
   if test "$MOZ_ENABLE_GTK"; then
     if test "$MOZ_X11"; then
       GDK_PACKAGES=gdk-x11-2.0
@@ -2067,10 +2064,6 @@ if test "$COMPILE_ENVIRONMENT"; then
 
     PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 glib-2.0 >= $GLIB_VERSION gobject-2.0 gio-unix-2.0 $GDK_PACKAGES)
     MOZ_GTK2_CFLAGS="-I${_topsrcdir}/widget/gtk/compat $MOZ_GTK2_CFLAGS"
-  fi
-  if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
-    TK_CFLAGS=$MOZ_GTK2_CFLAGS
-    TK_LIBS=$MOZ_GTK2_LIBS
   fi
 fi # COMPILE_ENVIRONMENT
 
