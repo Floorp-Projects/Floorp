@@ -97,13 +97,8 @@ LCovSource::LCovSource(LCovSource&& src)
 }
 
 void
-LCovSource::exportInto(GenericPrinter& out) const
+LCovSource::exportInto(GenericPrinter& out)
 {
-    // Only write if everything got recorded.
-    if (!hasTopLevelScript_) {
-        return;
-    }
-
     out.printf("SF:%s\n", name_.get());
 
     outFN_.exportInto(out);
@@ -127,6 +122,18 @@ LCovSource::exportInto(GenericPrinter& out) const
     out.printf("LH:%zu\n", numLinesHit_);
 
     out.put("end_of_record\n");
+
+    outFN_.clear();
+    outFNDA_.clear();
+    numFunctionsFound_ = 0;
+    numFunctionsHit_ = 0;
+    outBRDA_.clear();
+    numBranchesFound_ = 0;
+    numBranchesHit_ = 0;
+    linesHit_.clear();
+    numLinesInstrumented_ = 0;
+    numLinesHit_ = 0;
+    maxLineHit_ = 0;
 }
 
 bool
@@ -575,7 +582,8 @@ LCovRealm::exportInto(GenericPrinter& out, bool* isEmpty) const
 
     *isEmpty = false;
     outTN_.exportInto(out);
-    for (const LCovSource& sc : *sources_) {
+    for (LCovSource& sc : *sources_) {
+        // Only write if everything got recorded.
         if (sc.isComplete()) {
             sc.exportInto(out);
         }
