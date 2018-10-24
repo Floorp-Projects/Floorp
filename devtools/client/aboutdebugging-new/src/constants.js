@@ -62,6 +62,11 @@ const PAGES = {
   CONNECT: "connect",
 };
 
+const PREFERENCES = {
+  // Temporary preference without any default value until network locations are enabled.
+  NETWORK_ENABLED: "devtools.aboutdebugging.network",
+};
+
 const RUNTIME_PREFERENCE = {
   CONNECTION_PROMPT: "devtools.debugger.prompt-connection",
 };
@@ -94,6 +99,7 @@ module.exports = Object.assign({}, {
   DEBUG_TARGETS,
   DEBUG_TARGET_PANE,
   PAGES,
+  PREFERENCES,
   RUNTIME_PREFERENCE,
   RUNTIMES,
   SERVICE_WORKER_FETCH_STATES,
