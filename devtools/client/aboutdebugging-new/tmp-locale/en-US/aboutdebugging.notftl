@@ -41,7 +41,7 @@ about-debugging-connect-title = Connect a Device
 
 # WiFi section of the Connect page
 about-debugging-connect-wifi
-  .title = Via WiFi (Recommended)
+  .title = Via WiFi
 
 # WiFi section step by step guide
 about-debugging-connect-wifi-step-same-network = Ensure that your browser and device are on the same network
