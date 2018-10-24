@@ -10,7 +10,6 @@
 #include "nsWindowsDllInterceptor.h"
 #include "sandbox/win/src/sandbox_factory.h"
 #include "mozilla/sandboxing/permissionsService.h"
-#include "mozilla/Unused.h"
 
 namespace mozilla {
 namespace sandboxing {
@@ -159,7 +158,7 @@ InitializeBrokerServices()
   // the process to swap its window station. During this time all the UI
   // will be broken. This has to run before threads and windows are created.
   scoped_refptr<sandbox::TargetPolicy> policy = brokerServices->CreatePolicy();
-  Unused << policy->CreateAlternateDesktop(true);
+  sandbox::ResultCode result = policy->CreateAlternateDesktop(true);
 
   return brokerServices;
 }
