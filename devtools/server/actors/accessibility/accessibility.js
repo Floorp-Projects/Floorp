@@ -8,9 +8,10 @@ const { DebuggerServer } = require("devtools/server/main");
 const Services = require("Services");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const defer = require("devtools/shared/defer");
-const events = require("devtools/shared/event-emitter");
 const { accessibilitySpec } = require("devtools/shared/specs/accessibility");
-const { AccessibleWalkerActor } = require("devtools/server/actors/accessibility/walker");
+
+loader.lazyRequireGetter(this, "AccessibleWalkerActor", "devtools/server/actors/accessibility/walker", true);
+loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 
 const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
 
