@@ -43,6 +43,7 @@ class SwatchFilterTooltip extends SwatchBasedEditorTooltip {
 
   setFilterContent(filter) {
     const { doc } = this.tooltip;
+    this.tooltip.panel.innerHTML = "";
 
     const container = doc.createElementNS(XHTML_NS, "div");
     container.id = "filter-container";

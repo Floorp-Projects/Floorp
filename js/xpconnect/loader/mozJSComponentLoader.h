@@ -11,6 +11,7 @@
 #include "mozilla/FileLocation.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Module.h"
+#include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsIObserver.h"
@@ -29,13 +30,6 @@ namespace mozilla {
     class ScriptPreloader;
 } // namespace mozilla
 
-
-/* 6bd13476-1dd2-11b2-bbef-f0ccb5fa64b6 (thanks, mozbot) */
-
-#define MOZJSCOMPONENTLOADER_CID                                              \
-  {0x6bd13476, 0x1dd2, 0x11b2,                                                \
-    { 0xbb, 0xef, 0xf0, 0xcc, 0xb5, 0xfa, 0x64, 0xb6 }}
-#define MOZJSCOMPONENTLOADER_CONTRACTID "@mozilla.org/moz/jsloader;1"
 
 #if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
 #define STARTUP_RECORDER_ENABLED
@@ -59,9 +53,13 @@ class mozJSComponentLoader final : public nsIObserver
     void FindTargetObject(JSContext* aCx,
                           JS::MutableHandleObject aTargetObject);
 
-    static already_AddRefed<mozJSComponentLoader> GetOrCreate();
+    static void InitStatics();
+    static void Shutdown();
 
-    static mozJSComponentLoader* Get() { return sSelf; }
+    static mozJSComponentLoader* Get() {
+        MOZ_ASSERT(sSelf, "Should have already created the component loader");
+        return sSelf;
+    }
 
     nsresult ImportInto(const nsACString& aResourceURI, JS::HandleValue aTargetObj,
                         JSContext* aCx, uint8_t aArgc, JS::MutableHandleValue aRetval);
@@ -101,7 +99,7 @@ class mozJSComponentLoader final : public nsIObserver
     }
 
  private:
-    static mozJSComponentLoader* sSelf;
+    static mozilla::StaticRefPtr<mozJSComponentLoader> sSelf;
 
     nsresult ReallyInit();
     void UnloadModules();

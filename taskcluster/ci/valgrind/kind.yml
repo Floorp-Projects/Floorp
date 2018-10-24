@@ -33,7 +33,7 @@ jobs:
                 PERFHERDER_EXTRA_OPTIONS: valgrind
         run:
             using: mozharness
-            actions: [get-secrets build valgrind-test]
+            actions: [get-secrets, build, valgrind-test]
             custom-build-variant-cfg: valgrind
             config:
                 - builds/releng_base_firefox.py

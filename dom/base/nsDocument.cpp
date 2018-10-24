@@ -1510,7 +1510,8 @@ nsIDocument::nsIDocument()
     mIgnoreOpensDuringUnloadCounter(0),
     mNumTrackersFound(0),
     mNumTrackersBlocked(0),
-    mDocLWTheme(Doc_Theme_Uninitialized)
+    mDocLWTheme(Doc_Theme_Uninitialized),
+    mSavedResolution(1.0f)
 {
   SetIsInDocument();
   SetIsConnected(true);
@@ -2232,20 +2233,35 @@ nsIDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 }
 
 /**
- * DocumentL10n is currently allowed for system
- * principal.
- *
- * In the future we'll want to expose it to non-web-exposed
- * about:* pages.
+ * Determine whether the principal is allowed access to the localization system.
+ * We don't want the web to ever see this but all our UI including in content
+ * pages should pass this test.
  */
 bool
 PrincipalAllowsL10n(nsIPrincipal* principal)
 {
+  // The system principal is always allowed.
   if (nsContentUtils::IsSystemPrincipal(principal)) {
     return true;
   }
 
-  return false;
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = principal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  bool hasFlags;
+
+  // Allow access to uris that cannot be loaded by web content.
+  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_DANGEROUS_TO_LOAD, &hasFlags);
+  NS_ENSURE_SUCCESS(rv, false);
+  if (hasFlags) {
+    return true;
+  }
+
+  // UI resources also get access.
+  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_IS_UI_RESOURCE, &hasFlags);
+  NS_ENSURE_SUCCESS(rv, false);
+  return hasFlags;
 }
 
 void
@@ -3400,7 +3416,8 @@ nsIDocument::GetL10n()
 bool
 nsDocument::DocumentSupportsL10n(JSContext* aCx, JSObject* aObject)
 {
-  return PrincipalAllowsL10n(nsContentUtils::SubjectPrincipal(aCx));
+  nsCOMPtr<nsIPrincipal> callerPrincipal = nsContentUtils::SubjectPrincipal(aCx);
+  return PrincipalAllowsL10n(callerPrincipal);
 }
 
 void
@@ -11170,6 +11187,16 @@ nsIDocument::CleanupFullscreenState()
   }
   mFullscreenStack.Clear();
   mFullscreenRoot = nullptr;
+
+  // Restore the zoom level that was in place prior to entering fullscreen.
+  if (nsIPresShell* shell = GetShell()) {
+    if (nsPresContext* context = shell->GetPresContext()) {
+      if (context->IsRootContentDocument()) {
+        shell->SetResolutionAndScaleTo(mSavedResolution);
+      }
+    }
+  }
+
   UpdateViewportScrollbarOverrideForFullscreen(this);
 }
 
@@ -11573,6 +11600,23 @@ nsIDocument::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest)
   nsIDocument* child = this;
   while (true) {
     child->SetFullscreenRoot(fullScreenRootDoc);
+
+    // When entering fullscreen, reset the RCD's zoom level to 1,
+    // otherwise the fullscreen content could be sized larger than the
+    // screen (since fullscreen is implemented using position:fixed and
+    // fixed elements are sized to the layout viewport).
+    // This also ensures that things like video controls aren't zoomed in
+    // when in fullscreen mode.
+    if (nsIPresShell* shell = child->GetShell()) {
+      if (nsPresContext* context = shell->GetPresContext()) {
+        if (context->IsRootContentDocument()) {
+          // Save the previous resolution so it can be restored.
+          child->mSavedResolution = shell->GetResolution();
+          shell->SetResolutionAndScaleTo(1.0f);
+        }
+      }
+    }
+
     NS_ASSERTION(child->GetFullscreenRoot() == fullScreenRootDoc,
         "Fullscreen root should be set!");
     if (child == fullScreenRootDoc) {

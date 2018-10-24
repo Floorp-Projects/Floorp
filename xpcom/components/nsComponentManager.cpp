@@ -17,6 +17,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsCategoryManager.h"
 #include "nsCategoryManagerUtils.h"
+#include "nsLayoutModule.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsIConsoleService.h"
 #include "nsIObserverService.h"
@@ -353,6 +354,10 @@ nsComponentManagerImpl::Init()
   for (uint32_t i = 0; i < sExtraStaticModules->Length(); ++i) {
     RegisterModule((*sExtraStaticModules)[i]);
   }
+
+  // This needs to be called very early, before anything in nsLayoutModule is
+  // used, and before any calls are made into the JS engine.
+  nsLayoutModuleInitialize();
 
   bool loadChromeManifests = (XRE_GetProcessType() != GeckoProcessType_GPU);
   if (loadChromeManifests) {
@@ -788,7 +793,7 @@ nsComponentManagerImpl::KnownModule::Load()
       return false;
     }
 
-    RefPtr<mozJSComponentLoader> loader = mozJSComponentLoader::GetOrCreate();
+    RefPtr<mozJSComponentLoader> loader = mozJSComponentLoader::Get();
     mModule = loader->LoadModule(mFile);
 
     if (!mModule) {

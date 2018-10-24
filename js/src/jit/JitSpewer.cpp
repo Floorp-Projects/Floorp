@@ -9,6 +9,7 @@
 #include "jit/JitSpewer.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/Sprintf.h"
 
 #ifdef XP_WIN
 #include <process.h>
@@ -624,7 +625,9 @@ jit::CheckLogging()
     FILE* spewfh = stderr;
     const char* filename = getenv("ION_SPEW_FILENAME");
     if (filename && *filename) {
-        spewfh = fopen(filename, "w");
+        char actual_filename[2048] = {0};
+        SprintfLiteral(actual_filename, "%s.%d", filename, getpid());
+        spewfh = fopen(actual_filename, "w");
         MOZ_RELEASE_ASSERT(spewfh);
         setbuf(spewfh, nullptr); // Make unbuffered
     }
