@@ -483,6 +483,7 @@ MemoryErrorCorrection:
     documentation for MemoryErrorCorrection property of
     Win32_PhysicalMemoryArray WMI class.
   type: string
+  ping: true
 
 MozCrashReason:
   description: >

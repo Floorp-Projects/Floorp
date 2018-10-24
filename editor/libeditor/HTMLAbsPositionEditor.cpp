@@ -11,7 +11,6 @@
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
 #include "mozilla/EditAction.h"
-#include "mozilla/EditorUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEditRules.h"
 #include "mozilla/dom/Selection.h"
@@ -48,7 +47,7 @@ using namespace dom;
 nsresult
 HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled)
 {
-  AutoPlaceholderBatch beginBatching(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
                                       aEnabled ?
@@ -149,7 +148,7 @@ HTMLEditor::SetZIndex(Element& aElement,
 nsresult
 HTMLEditor::AddZIndex(int32_t aChange)
 {
-  AutoPlaceholderBatch beginBatching(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
                                       aChange < 0 ?
@@ -480,7 +479,7 @@ HTMLEditor::SetFinalPosition(int32_t aX,
   y.AppendInt(newY);
 
   // we want one transaction only from a user's point of view
-  AutoPlaceholderBatch batchIt(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   if (NS_WARN_IF(!mAbsolutelyPositionedObject)) {
     return NS_ERROR_FAILURE;
@@ -538,7 +537,7 @@ HTMLEditor::SetPositionToAbsoluteOrStatic(Element& aElement,
 nsresult
 HTMLEditor::SetPositionToAbsolute(Element& aElement)
 {
-  AutoPlaceholderBatch batchIt(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   int32_t x, y;
   GetElementOrigin(aElement, x, y);
@@ -571,7 +570,7 @@ HTMLEditor::SetPositionToAbsolute(Element& aElement)
 nsresult
 HTMLEditor::SetPositionToStatic(Element& aElement)
 {
-  AutoPlaceholderBatch batchIt(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   mCSSEditUtils->RemoveCSSProperty(aElement, *nsGkAtoms::position,
                                    EmptyString());
@@ -636,7 +635,7 @@ HTMLEditor::SetTopAndLeft(Element& aElement,
                           int32_t aX,
                           int32_t aY)
 {
-  AutoPlaceholderBatch batchIt(this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   mCSSEditUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::left, aX);
   mCSSEditUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::top, aY);
 }

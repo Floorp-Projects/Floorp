@@ -263,6 +263,7 @@ class BaselineCompiler final
 
     FallbackICStubSpace stubSpace_;
     js::Vector<ICEntry, 16, SystemAllocPolicy> icEntries_;
+    js::Vector<RetAddrEntry, 16, SystemAllocPolicy> retAddrEntries_;
 
     // Stores the native code offset for a bytecode pc.
     struct PCMappingEntry
@@ -344,30 +345,8 @@ class BaselineCompiler final
     }
 
   private:
-    ICEntry* allocateICEntry(ICStub* stub, ICEntry::Kind kind) {
-        if (!stub) {
-            return nullptr;
-        }
-
-        // Create the entry and add it to the vector.
-        if (!icEntries_.append(ICEntry(script->pcToOffset(pc), kind))) {
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
-        ICEntry& vecEntry = icEntries_.back();
-
-        // Set the first stub for the IC entry to the fallback stub
-        vecEntry.setFirstStub(stub);
-
-        // Return pointer to the IC entry
-        return &vecEntry;
-    }
-
-    // Append an ICEntry without a stub.
-    bool appendICEntry(ICEntry::Kind kind, uint32_t returnOffset) {
-        ICEntry entry(script->pcToOffset(pc), kind);
-        entry.setReturnOffset(CodeOffset(returnOffset));
-        if (!icEntries_.append(entry)) {
+    MOZ_MUST_USE bool appendRetAddrEntry(RetAddrEntry::Kind kind, uint32_t retOffset) {
+        if (!retAddrEntries_.emplaceBack(script->pcToOffset(pc), kind, CodeOffset(retOffset))) {
             ReportOutOfMemory(cx);
             return false;
         }
@@ -426,7 +405,7 @@ class BaselineCompiler final
         if (!callVM(fun, phase)) {
             return false;
         }
-        icEntries_.back().setFakeKind(ICEntry::Kind_NonOpCallVM);
+        retAddrEntries_.back().setKind(RetAddrEntry::Kind::NonOpCallVM);
         return true;
     }
 
@@ -443,12 +422,12 @@ class BaselineCompiler final
     MOZ_MUST_USE bool emitPrologue();
     MOZ_MUST_USE bool emitEpilogue();
     MOZ_MUST_USE bool emitOutOfLinePostBarrierSlot();
-    MOZ_MUST_USE bool emitIC(ICStub* stub, ICEntry::Kind kind);
+    MOZ_MUST_USE bool emitIC(ICStub* stub, bool isForOp);
     MOZ_MUST_USE bool emitOpIC(ICStub* stub) {
-        return emitIC(stub, ICEntry::Kind_Op);
+        return emitIC(stub, true);
     }
     MOZ_MUST_USE bool emitNonOpIC(ICStub* stub) {
-        return emitIC(stub, ICEntry::Kind_NonOp);
+        return emitIC(stub, false);
     }
 
     MOZ_MUST_USE bool emitStackCheck();

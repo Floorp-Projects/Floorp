@@ -11,10 +11,12 @@ const {
   PAGE_SELECTED,
 } = require("../constants");
 
-function UiState(locations = [], debugTargetCollapsibilities = {}) {
+function UiState(locations = [], debugTargetCollapsibilities = {},
+                 networkEnabled = false) {
   return {
     adbAddonStatus: null,
     debugTargetCollapsibilities,
+    networkEnabled,
     networkLocations: locations,
     selectedPage: null,
   };

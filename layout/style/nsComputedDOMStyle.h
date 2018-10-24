@@ -149,10 +149,6 @@ private:
 
   nsMargin GetAdjustedValuesForBoxSizing();
 
-  // Helper method for DoGetTextAlign[Last].
-  already_AddRefed<CSSValue> CreateTextAlignValue(uint8_t aAlign,
-                                                  bool aAlignTrue,
-                                                  const KTableEntry aTable[]);
   // This indicates error by leaving mComputedStyle null.
   void UpdateCurrentStyleSources(bool aNeedsLayoutFlush);
   void ClearCurrentStyleSources();
