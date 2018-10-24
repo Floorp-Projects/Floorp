@@ -48,7 +48,8 @@ add_task(async function usingTabCloseButton() {
   is(gBrowser.multiSelectedTabsCount, 2, "Two multiselected tabs");
 
   // Closing a selected tab
-  let tab2CloseBtn = document.getAnonymousElementByAttribute(tab1, "anonid", "close-button");
+  let tab2CloseBtn = document.getAnonymousElementByAttribute(tab2, "anonid", "close-button");
+  tab2.mOverCloseButton = true;
   let tab1Closing = BrowserTestUtils.waitForTabClosing(tab1);
   let tab2Closing = BrowserTestUtils.waitForTabClosing(tab2);
   tab2CloseBtn.click();
