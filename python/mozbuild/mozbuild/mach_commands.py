@@ -1759,10 +1759,10 @@ class StaticAnalysis(MachCommandBase):
                      help='Number of concurrent jobs to run.'
                      ' Default is the number of CPUs.')
     @CommandArgument('--task', '-t', type=str,
-                     default='compileLocalWithGeckoBinariesNoMinApiDebugSources',
+                     default='compileLocalWithGeckoBinariesDebugSources',
                      help='Which gradle tasks to use to compile the java codebase.')
     def check_java(self, source=['mobile'], jobs=2, strip=1, verbose=False, checks=[],
-                   task='compileLocalWithGeckoBinariesNoMinApiDebugSources',
+                   task='compileLocalWithGeckoBinariesDebugSources',
                    skip_export=False):
         self._set_log_level(verbose)
         self.log_manager.enable_all_structured_loggers()

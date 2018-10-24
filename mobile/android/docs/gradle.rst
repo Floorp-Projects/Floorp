@@ -82,16 +82,6 @@ and the omnijar.
 **Local developers almost always want to build "withGeckoBinaries", so that the
 APK files produced can be run on device.**
 
-minApi
-------
-
-At various times in the past, Fennec has supported APK splits, producing APKs
-that support only specific Android versions.  While this is not used at this
-time, there are certain developer options (i.e., options that should only apply
-to "local" audiences) that *also* depend on the target Android version.  This
-flavor dimension allows to opt in to those options, improving the speed of
-development.
-
 Integration into the larger `moz.build` build system
 ====================================================
 
