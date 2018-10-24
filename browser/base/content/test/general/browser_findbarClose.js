@@ -3,17 +3,15 @@
 
 // Tests find bar auto-close behavior
 
-var newTab;
+const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com");
 
 add_task(async function findbar_test() {
-  waitForExplicitFinish();
-  newTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  let newTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  gBrowser.selectedTab = newTab;
 
-  let promise = ContentTask.spawn(newTab.linkedBrowser, null, async function() {
-    await ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", false);
-  });
-  BrowserTestUtils.loadURI(newTab.linkedBrowser, "http://example.com/browser/" +
-    "browser/base/content/test/general/test_bug628179.html");
+  let url = TEST_PATH + "test_bug628179.html";
+  let promise = BrowserTestUtils.browserLoaded(newTab.linkedBrowser, false, url);
+  BrowserTestUtils.loadURI(newTab.linkedBrowser, url);
   await promise;
 
   await gFindBarPromise;
@@ -22,7 +20,7 @@ add_task(async function findbar_test() {
   await new ContentTask.spawn(newTab.linkedBrowser, null, async function() {
     let iframe = content.document.getElementById("iframe");
     let awaitLoad = ContentTaskUtils.waitForEvent(iframe, "load", false);
-    iframe.src = "http://example.org/";
+    iframe.src = "https://example.org/";
     await awaitLoad;
   });
 
@@ -31,6 +29,5 @@ add_task(async function findbar_test() {
 
   gFindBar.close();
   gBrowser.removeTab(newTab);
-  finish();
 });
 
