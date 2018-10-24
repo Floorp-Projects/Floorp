@@ -13,8 +13,9 @@ import signal
 import subprocess
 import time
 import tempfile
+from threading import Timer
 from mozharness.mozilla.automation import TBPL_RETRY, EXIT_STATUS_DICT
-from mozharness.base.script import PostScriptAction
+from mozharness.base.script import PreScriptAction, PostScriptAction
 
 
 class AndroidMixin(object):
@@ -194,7 +195,7 @@ class AndroidMixin(object):
     def _verify_emulator_and_restart_on_fail(self):
         emulator_ok = self._verify_emulator()
         if not emulator_ok:
-            self.device_screenshot()
+            self.device_screenshot("screenshot-emulator-start")
             self.kill_processes(self.config["emulator_process_name"])
             subprocess.check_call(['ps', '-ef'])
             # remove emulator tmp files
@@ -335,10 +336,12 @@ class AndroidMixin(object):
     def shell_output(self, cmd):
         return self.device.shell_output(cmd, timeout=30)
 
-    def device_screenshot(self):
+    def device_screenshot(self, prefix):
         """
            On emulator, save a screenshot of the entire screen to the upload directory;
            otherwise, save a screenshot of the device to the upload directory.
+
+           :param prefix specifies a filename prefix for the screenshot
         """
         from mozscreenshot import dump_screen, dump_device_screen
         reset_dir = False
@@ -347,9 +350,9 @@ class AndroidMixin(object):
             os.environ["MOZ_UPLOAD_DIR"] = dirs['abs_blob_upload_dir']
             reset_dir = True
         if self.is_emulator:
-            dump_screen(self.xre_path, self)
+            dump_screen(self.xre_path, self, prefix=prefix)
         else:
-            dump_device_screen(self.device, self)
+            dump_device_screen(self.device, self, prefix=prefix)
         if reset_dir:
             del os.environ["MOZ_UPLOAD_DIR"]
 
@@ -494,6 +497,25 @@ class AndroidMixin(object):
         # Get a post-boot device process list for diagnostics
         self.info(self.shell_output('ps'))
 
+    @PreScriptAction('run-tests')
+    def timed_screenshots(self, action, success=None):
+        """
+        If configured, start screenshot timers.
+        """
+        if not self.is_android:
+            return
+
+        def take_screenshot(seconds):
+            self.device_screenshot("screenshot-%ss-" % str(seconds))
+            self.info("timed (%ss) screenshot complete" % str(seconds))
+
+        self.timers = []
+        for seconds in self.config.get("screenshot_times", []):
+            self.info("screenshot requested %s seconds from now" % str(seconds))
+            t = Timer(int(seconds), take_screenshot, [seconds])
+            t.start()
+            self.timers.append(t)
+
     @PostScriptAction('run-tests')
     def stop_device(self, action, success=None):
         """
@@ -502,6 +524,8 @@ class AndroidMixin(object):
         if not self.is_android:
             return
 
+        for t in self.timers:
+            t.cancel()
         self.logcat_stop()
         if self.is_emulator:
             self.kill_processes(self.config["emulator_process_name"])
