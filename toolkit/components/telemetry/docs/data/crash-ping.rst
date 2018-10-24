@@ -6,8 +6,8 @@ This ping is captured after the main Firefox process crashes or after a child pr
 process crashes, whether or not the crash report is submitted to
 crash-stats.mozilla.org. It includes non-identifying metadata about the crash.
 
-This ping is sent either by the ```CrashManager``` or by the crash reporter
-client. The ```CrashManager``` is responsible for sending crash pings for the
+This ping is sent either by the ``CrashManager`` or by the crash reporter
+client. The ``CrashManager`` is responsible for sending crash pings for the
 child processes crashes, which are sent right after the crash is detected,
 as well as for main process crashes, which are sent after Firefox restarts
 successfully. The crash reporter client sends crash pings only for main process
@@ -44,7 +44,7 @@ Structure:
         minidumpSha256Hash: <hash>, // SHA256 hash of the minidump file
         processType: <type>, // Type of process that crashed, see below for a list of types
         stackTraces: { ... }, // Optional, see below
-        metadata: { // Annotations saved while Firefox was running. See nsExceptionHandler.cpp for more information
+        metadata: { // Annotations saved while Firefox was running. See CrashAnnotations.yaml for more information
           ProductID: "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
           ProductName: "Firefox",
           ReleaseChannel: <channel>,
@@ -62,6 +62,7 @@ Structure:
           ipc_channel_error: <error string>, // Optional, contains the string processing error reason for an ipc-based content crash
           IsGarbageCollecting: "1", // Optional, if set indicates that the crash occurred while the garbage collector was running
           LowCommitSpaceEvents: <num>, // Windows-only, present only if >0, number of low commit space events detected by the available memory tracker
+          MemoryErrorCorrection: <type>, // Windows-only, indicates the type of ECC memory in use, see below
           MozCrashReason: <reason>, // Optional, contains the string passed to MOZ_CRASH()
           OOMAllocationSize: <size>, // Size of the allocation that caused an OOM
           RemoteType: <type>, // Optional, type of content process, see below for a list of types
@@ -210,7 +211,34 @@ The ``code_id`` field holds a unique ID used to distinguish between different
 versions and builds of the same module. See `breakpad <https://chromium.googlesource.com/breakpad/breakpad/+/24f5931c5e0120982c0cbf1896641e3ef2bdd52f/src/google_breakpad/processor/code_module.h#60>`__'s
 description for further information. This field is populated only on Windows.
 
+The value of the ``MemoryErrorCorrection`` metadata field contains the type
+of memory error correction available on the machine, it can be one of the
+following types:
+
++----------------+-----------------------------------------------------------+
+| Type           | Description                                               |
++================+===========================================================+
+| Reserved       | Should never be set, assume no error correction available |
++----------------+-----------------------------------------------------------+
+| Other          | Assume no error correction available                      |
++----------------+-----------------------------------------------------------+
+| Unknown        | Assume no error correction available                      |
++----------------+-----------------------------------------------------------+
+| None           | No error correction available                             |
++----------------+-----------------------------------------------------------+
+| Parity         | Single-bit error detection, no correction.                |
++----------------+-----------------------------------------------------------+
+| Single-bit ECC | SECDED ECC (single-bit correction, double-bit detection)  |
++----------------+-----------------------------------------------------------+
+| Multi-bit ECC  | Usually single-device data correction (SDDC, Chipkill)    |
++----------------+-----------------------------------------------------------+
+| CRC            | Multi-device data correction (DDDC or similar)            |
++----------------+-----------------------------------------------------------+
+
 Version History
 ---------------
 
 - Firefox 58: Added ipc_channel_error (`bug 1410143 <https://bugzilla.mozilla.org/show_bug.cgi?id=1410143>`_).
+- Firefox 62: Added LowCommitSpaceEvents (`bug 1464773 <https://bugzilla.mozilla.org/show_bug.cgi?id=1464773>`_).
+- Firefox 63: Added RecordReplayError (`bug 1481009 <https://bugzilla.mozilla.org/show_bug.cgi?id=1481009>`_).
+- Firefox 64: Added MemoryErrorCorrection (`bug 1498609 <https://bugzilla.mozilla.org/show_bug.cgi?id=1498609>`_).
