@@ -52,14 +52,14 @@ nsNativeTheme::GetPresShell(nsIFrame* aFrame)
 }
 
 EventStates
-nsNativeTheme::GetContentState(nsIFrame* aFrame, StyleAppearance aWidgetType)
+nsNativeTheme::GetContentState(nsIFrame* aFrame, StyleAppearance aAppearance)
 {
   if (!aFrame)
     return EventStates();
 
   bool isXULCheckboxRadio =
-    (aWidgetType == StyleAppearance::Checkbox ||
-     aWidgetType == StyleAppearance::Radio) &&
+    (aAppearance == StyleAppearance::Checkbox ||
+     aAppearance == StyleAppearance::Radio) &&
     aFrame->GetContent()->IsXULElement();
   if (isXULCheckboxRadio)
     aFrame = aFrame->GetParent();
@@ -78,7 +78,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, StyleAppearance aWidgetType)
 
     // <input type=number> needs special handling since its nested native
     // anonymous <input type=text> takes focus for it.
-    if (aWidgetType == StyleAppearance::NumberInput &&
+    if (aAppearance == StyleAppearance::NumberInput &&
         frameContent->IsHTMLElement(nsGkAtoms::input)) {
       nsNumberControlFrame *numberControlFrame = do_QueryFrame(aFrame);
       if (numberControlFrame && numberControlFrame->IsFocused()) {
@@ -95,7 +95,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, StyleAppearance aWidgetType)
     }
   }
   
-  if (isXULCheckboxRadio && aWidgetType == StyleAppearance::Radio) {
+  if (isXULCheckboxRadio && aAppearance == StyleAppearance::Radio) {
     if (IsFocused(aFrame))
       flags |= NS_EVENT_STATE_FOCUS;
   }
@@ -105,18 +105,18 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, StyleAppearance aWidgetType)
   // focus something in the window.
 #if defined(XP_MACOSX)
   // Mac always draws focus rings for textboxes and lists.
-  if (aWidgetType == StyleAppearance::MenulistTextfield ||
-      aWidgetType == StyleAppearance::NumberInput ||
-      aWidgetType == StyleAppearance::Textfield ||
-      aWidgetType == StyleAppearance::TextfieldMultiline ||
-      aWidgetType == StyleAppearance::Searchfield ||
-      aWidgetType == StyleAppearance::Listbox) {
+  if (aAppearance == StyleAppearance::MenulistTextfield ||
+      aAppearance == StyleAppearance::NumberInput ||
+      aAppearance == StyleAppearance::Textfield ||
+      aAppearance == StyleAppearance::TextfieldMultiline ||
+      aAppearance == StyleAppearance::Searchfield ||
+      aAppearance == StyleAppearance::Listbox) {
     return flags;
   }
 #endif
 #if defined(XP_WIN)
   // On Windows, focused buttons are always drawn as such by the native theme.
-  if (aWidgetType == StyleAppearance::Button)
+  if (aAppearance == StyleAppearance::Button)
     return flags;
 #endif    
 #if defined(XP_MACOSX) || defined(XP_WIN)
@@ -272,7 +272,7 @@ nsNativeTheme::GetIndeterminate(nsIFrame* aFrame)
 
 bool
 nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
-                              StyleAppearance aWidgetType)
+                              StyleAppearance aAppearance)
 {
   // Check for specific widgets to see if HTML has overridden the style.
   if (!aFrame)
@@ -283,7 +283,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
   // whether the style is overriden instead of the resizer. This allows a
   // non-native transparent resizer to be used instead. Otherwise, we just
   // fall through and return false.
-  if (aWidgetType == StyleAppearance::Resizer) {
+  if (aAppearance == StyleAppearance::Resizer) {
     nsIFrame* parentFrame = aFrame->GetParent();
     if (parentFrame && parentFrame->IsScrollFrame()) {
       // if the parent is a scrollframe, the resizer should be native themed
@@ -300,10 +300,11 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
    * Progress bar appearance should be the same for the bar and the container
    * frame. nsProgressFrame owns the logic and will tell us what we should do.
    */
-  if (aWidgetType == StyleAppearance::Progresschunk ||
-      aWidgetType == StyleAppearance::Progressbar) {
-    nsProgressFrame* progressFrame = do_QueryFrame(aWidgetType == StyleAppearance::Progresschunk
-                                       ? aFrame->GetParent() : aFrame);
+  if (aAppearance == StyleAppearance::Progresschunk ||
+      aAppearance == StyleAppearance::Progressbar) {
+    nsProgressFrame* progressFrame =
+      do_QueryFrame(aAppearance == StyleAppearance::Progresschunk
+                      ? aFrame->GetParent() : aFrame);
     if (progressFrame) {
       return !progressFrame->ShouldUseNativeStyle();
     }
@@ -313,10 +314,11 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
    * Meter bar appearance should be the same for the bar and the container
    * frame. nsMeterFrame owns the logic and will tell us what we should do.
    */
-  if (aWidgetType == StyleAppearance::Meterchunk ||
-      aWidgetType == StyleAppearance::Meterbar) {
-    nsMeterFrame* meterFrame = do_QueryFrame(aWidgetType == StyleAppearance::Meterchunk
-                                       ? aFrame->GetParent() : aFrame);
+  if (aAppearance == StyleAppearance::Meterchunk ||
+      aAppearance == StyleAppearance::Meterbar) {
+    nsMeterFrame* meterFrame =
+      do_QueryFrame(aAppearance == StyleAppearance::Meterchunk
+                      ? aFrame->GetParent() : aFrame);
     if (meterFrame) {
       return !meterFrame->ShouldUseNativeStyle();
     }
@@ -327,18 +329,18 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
    * comes to native theming (either all parts, or no parts, are themed).
    * nsRangeFrame owns the logic and will tell us what we should do.
    */
-  if (aWidgetType == StyleAppearance::Range ||
-      aWidgetType == StyleAppearance::RangeThumb) {
+  if (aAppearance == StyleAppearance::Range ||
+      aAppearance == StyleAppearance::RangeThumb) {
     nsRangeFrame* rangeFrame =
-      do_QueryFrame(aWidgetType == StyleAppearance::RangeThumb
+      do_QueryFrame(aAppearance == StyleAppearance::RangeThumb
                       ? aFrame->GetParent() : aFrame);
     if (rangeFrame) {
       return !rangeFrame->ShouldUseNativeStyle();
     }
   }
 
-  if (aWidgetType == StyleAppearance::SpinnerUpbutton ||
-      aWidgetType == StyleAppearance::SpinnerDownbutton) {
+  if (aAppearance == StyleAppearance::SpinnerUpbutton ||
+      aAppearance == StyleAppearance::SpinnerDownbutton) {
     nsNumberControlFrame* numberControlFrame =
       nsNumberControlFrame::GetNumberControlFrameForSpinButton(aFrame);
     if (numberControlFrame) {
@@ -346,14 +348,14 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
     }
   }
 
-  return (aWidgetType == StyleAppearance::NumberInput ||
-          aWidgetType == StyleAppearance::Button ||
-          aWidgetType == StyleAppearance::MenulistTextfield ||
-          aWidgetType == StyleAppearance::Textfield ||
-          aWidgetType == StyleAppearance::TextfieldMultiline ||
-          aWidgetType == StyleAppearance::Listbox ||
-          aWidgetType == StyleAppearance::Menulist ||
-          (aWidgetType == StyleAppearance::MenulistButton &&
+  return (aAppearance == StyleAppearance::NumberInput ||
+          aAppearance == StyleAppearance::Button ||
+          aAppearance == StyleAppearance::MenulistTextfield ||
+          aAppearance == StyleAppearance::Textfield ||
+          aAppearance == StyleAppearance::TextfieldMultiline ||
+          aAppearance == StyleAppearance::Listbox ||
+          aAppearance == StyleAppearance::Menulist ||
+          (aAppearance == StyleAppearance::MenulistButton &&
            StaticPrefs::layout_css_webkit_appearance_enabled())) &&
          aFrame->GetContent()->IsHTMLElement() &&
          aPresContext->HasAuthorSpecifiedRules(aFrame,
@@ -806,9 +808,9 @@ nsNativeTheme::IsDarkBackground(nsIFrame* aFrame)
 }
 
 bool
-nsNativeTheme::IsWidgetScrollbarPart(StyleAppearance aWidgetType)
+nsNativeTheme::IsWidgetScrollbarPart(StyleAppearance aAppearance)
 {
-  switch (aWidgetType) {
+  switch (aAppearance) {
     case StyleAppearance::Scrollbar:
     case StyleAppearance::ScrollbarSmall:
     case StyleAppearance::ScrollbarVertical:

@@ -18,7 +18,7 @@ NS_IMPL_ISUPPORTS_INHERITED(HeadlessThemeGTK, nsNativeTheme, nsITheme)
 NS_IMETHODIMP
 HeadlessThemeGTK::DrawWidgetBackground(gfxContext* aContext,
                                        nsIFrame* aFrame,
-                                       StyleAppearance aWidgetType,
+                                       StyleAppearance aAppearance,
                                        const nsRect& aRect,
                                        const nsRect& aDirtyRect)
 {
@@ -27,16 +27,16 @@ HeadlessThemeGTK::DrawWidgetBackground(gfxContext* aContext,
 
 LayoutDeviceIntMargin
 HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                  StyleAppearance aWidgetType)
+                                  StyleAppearance aAppearance)
 {
-  if (aWidgetType == StyleAppearance::MenulistButton &&
+  if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
-    aWidgetType = StyleAppearance::Menulist;
+    aAppearance = StyleAppearance::Menulist;
   }
 
   LayoutDeviceIntMargin result;
   // The following values are generated from the Ubuntu GTK theme.
-  switch (aWidgetType) {
+  switch (aAppearance) {
     case StyleAppearance::Button:
     case StyleAppearance::Toolbarbutton:
       result.top = 6;
@@ -122,16 +122,16 @@ HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
 bool
 HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,
-                                   StyleAppearance aWidgetType,
+                                   StyleAppearance aAppearance,
                                    LayoutDeviceIntMargin* aResult)
 {
-  if (aWidgetType == StyleAppearance::MenulistButton &&
+  if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
-    aWidgetType = StyleAppearance::Menulist;
+    aAppearance = StyleAppearance::Menulist;
   }
 
   // The following values are generated from the Ubuntu GTK theme.
-  switch (aWidgetType) {
+  switch (aAppearance) {
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
     case StyleAppearance::Toolbarbutton:
@@ -173,20 +173,20 @@ HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
 NS_IMETHODIMP
 HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                        nsIFrame* aFrame,
-                                       StyleAppearance aWidgetType,
+                                       StyleAppearance aAppearance,
                                        LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable)
 {
   aResult->width = aResult->height = 0;
   *aIsOverridable = true;
 
-  if (aWidgetType == StyleAppearance::MenulistButton &&
+  if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
-    aWidgetType = StyleAppearance::Menulist;
+    aAppearance = StyleAppearance::Menulist;
   }
 
   // The following values are generated from the Ubuntu GTK theme.
-  switch (aWidgetType) {
+  switch (aAppearance) {
     case StyleAppearance::Splitter:
       if (IsHorizontal(aFrame)) {
         aResult->width = 6;
@@ -322,7 +322,7 @@ HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
 
 NS_IMETHODIMP
 HeadlessThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
-                                     StyleAppearance aWidgetType,
+                                     StyleAppearance aAppearance,
                                      nsAtom* aAttribute,
                                      bool* aShouldRepaint,
                                      const nsAttrValue* aOldValue)
@@ -347,14 +347,14 @@ static bool IsFrameContentNodeInNamespace(nsIFrame *aFrame, uint32_t aNamespace)
 NS_IMETHODIMP_(bool)
 HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
-                                      StyleAppearance aWidgetType)
+                                      StyleAppearance aAppearance)
 {
-  if (aWidgetType == StyleAppearance::MenulistButton &&
+  if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
-    aWidgetType = StyleAppearance::Menulist;
+    aAppearance = StyleAppearance::Menulist;
   }
 
-  switch (aWidgetType) {
+  switch (aAppearance) {
     case StyleAppearance::Button:
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
@@ -432,11 +432,11 @@ HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Menuseparator:
     case StyleAppearance::Menuarrow:
     case StyleAppearance::MozGtkInfoBar:
-      return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
+      return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistButton:
       return (!aFrame || IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) &&
-              !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
+              !IsWidgetStyled(aPresContext, aFrame, aAppearance);
     default:
       break;
   }
@@ -444,24 +444,24 @@ HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP_(bool)
-HeadlessThemeGTK::WidgetIsContainer(StyleAppearance aWidgetType)
+HeadlessThemeGTK::WidgetIsContainer(StyleAppearance aAppearance)
 {
-  if (aWidgetType == StyleAppearance::MenulistButton &&
+  if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
-    aWidgetType = StyleAppearance::Menulist;
+    aAppearance = StyleAppearance::Menulist;
   }
 
-    if (aWidgetType == StyleAppearance::MenulistButton ||
-        aWidgetType == StyleAppearance::MozMenulistButton ||
-        aWidgetType == StyleAppearance::Radio ||
-        aWidgetType == StyleAppearance::RangeThumb ||
-        aWidgetType == StyleAppearance::Checkbox ||
-        aWidgetType == StyleAppearance::TabScrollArrowBack ||
-        aWidgetType == StyleAppearance::TabScrollArrowForward ||
-        aWidgetType == StyleAppearance::ButtonArrowUp ||
-        aWidgetType == StyleAppearance::ButtonArrowDown ||
-        aWidgetType == StyleAppearance::ButtonArrowNext ||
-        aWidgetType == StyleAppearance::ButtonArrowPrevious) {
+    if (aAppearance == StyleAppearance::MenulistButton ||
+        aAppearance == StyleAppearance::MozMenulistButton ||
+        aAppearance == StyleAppearance::Radio ||
+        aAppearance == StyleAppearance::RangeThumb ||
+        aAppearance == StyleAppearance::Checkbox ||
+        aAppearance == StyleAppearance::TabScrollArrowBack ||
+        aAppearance == StyleAppearance::TabScrollArrowForward ||
+        aAppearance == StyleAppearance::ButtonArrowUp ||
+        aAppearance == StyleAppearance::ButtonArrowDown ||
+        aAppearance == StyleAppearance::ButtonArrowNext ||
+        aAppearance == StyleAppearance::ButtonArrowPrevious) {
 
     return false;
   }
@@ -469,11 +469,11 @@ HeadlessThemeGTK::WidgetIsContainer(StyleAppearance aWidgetType)
 }
 
 bool
-HeadlessThemeGTK::ThemeDrawsFocusForWidget(StyleAppearance aWidgetType)
+HeadlessThemeGTK::ThemeDrawsFocusForWidget(StyleAppearance aAppearance)
 {
-   if (aWidgetType == StyleAppearance::Menulist ||
-       aWidgetType == StyleAppearance::Button ||
-       aWidgetType == StyleAppearance::Treeheadercell) {
+   if (aAppearance == StyleAppearance::Menulist ||
+       aAppearance == StyleAppearance::Button ||
+       aAppearance == StyleAppearance::Treeheadercell) {
     return true;
   }
   return false;
