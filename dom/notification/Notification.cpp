@@ -1742,7 +1742,7 @@ Notification::ShowInternal()
   if (isPersistent) {
     nsAutoString persistentData;
 
-    JSONWriter<> w(MakeUnique<StringWriteFunc>(persistentData));
+    JSONWriter w(MakeUnique<StringWriteFunc>(persistentData));
     w.Start();
 
     nsAutoString origin;

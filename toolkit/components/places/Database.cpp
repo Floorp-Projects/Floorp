@@ -2584,8 +2584,8 @@ Database::MigrateV51Up()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString json;
-  JSONWriter<> jw{ MakeUnique<StringWriteFunc>(json) };
-  jw.StartArrayProperty(nullptr, JSONWriter<>::SingleLineStyle);
+  JSONWriter jw{ MakeUnique<StringWriteFunc>(json) };
+  jw.StartArrayProperty(nullptr, JSONWriter::SingleLineStyle);
 
   bool hasAtLeastOne = false;
   bool hasMore = false;

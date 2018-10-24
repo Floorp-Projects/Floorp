@@ -469,7 +469,7 @@ class HandleReportAndFinishReportingCallbacks final
 public:
   NS_DECL_ISUPPORTS
 
-  HandleReportAndFinishReportingCallbacks(UniquePtr<JSONWriter<>> aWriter,
+  HandleReportAndFinishReportingCallbacks(UniquePtr<JSONWriter> aWriter,
                                           nsIFinishDumpingCallback* aFinishDumping,
                                           nsISupports* aFinishDumpingData)
     : mWriter(std::move(aWriter))
@@ -545,7 +545,7 @@ public:
 private:
   ~HandleReportAndFinishReportingCallbacks() {}
 
-  UniquePtr<JSONWriter<>> mWriter;
+  UniquePtr<JSONWriter> mWriter;
   nsCOMPtr<nsIFinishDumpingCallback> mFinishDumping;
   nsCOMPtr<nsISupports> mFinishDumpingData;
 };
@@ -649,7 +649,7 @@ DumpMemoryInfoToFile(
     return rv;
   }
   auto jsonWriter =
-    MakeUnique<JSONWriter<>>(MakeUnique<GZWriterWrapper>(gzWriter));
+    MakeUnique<JSONWriter>(MakeUnique<GZWriterWrapper>(gzWriter));
 
   nsCOMPtr<nsIMemoryReporterManager> mgr =
     do_GetService("@mozilla.org/memory-reporter-manager;1");

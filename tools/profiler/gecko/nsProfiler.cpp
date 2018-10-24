@@ -193,7 +193,7 @@ nsProfiler::GetSharedLibraries(JSContext* aCx,
   JS::RootedValue val(aCx);
   {
     nsString buffer;
-    ProfilerJSONWriter w(MakeUnique<StringWriteFunc>(buffer));
+    JSONWriter w(MakeUnique<StringWriteFunc>(buffer));
     w.StartArrayElement();
     AppendSharedLibraries(w);
     w.EndArray();
