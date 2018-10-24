@@ -158,21 +158,21 @@ static bool IsFrameContentNodeInNamespace(nsIFrame *aFrame, uint32_t aNamespace)
 }
 
 static bool IsWidgetTypeDisabled(const uint8_t* aDisabledVector,
-                                 StyleAppearance aWidgetType) {
-  auto type = static_cast<size_t>(aWidgetType);
+                                 StyleAppearance aAppearance) {
+  auto type = static_cast<size_t>(aAppearance);
   MOZ_ASSERT(type < static_cast<size_t>(mozilla::StyleAppearance::Count));
   return (aDisabledVector[type >> 3] & (1 << (type & 7))) != 0;
 }
 
 static void SetWidgetTypeDisabled(uint8_t* aDisabledVector,
-                                  StyleAppearance aWidgetType) {
-  auto type = static_cast<size_t>(aWidgetType);
+                                  StyleAppearance aAppearance) {
+  auto type = static_cast<size_t>(aAppearance);
   MOZ_ASSERT(type < static_cast<size_t>(mozilla::StyleAppearance::Count));
   aDisabledVector[type >> 3] |= (1 << (type & 7));
 }
 
 static inline uint16_t
-GetWidgetStateKey(StyleAppearance aWidgetType,
+GetWidgetStateKey(StyleAppearance aAppearance,
                   GtkWidgetState *aWidgetState)
 {
   return (aWidgetState->active |
@@ -180,24 +180,24 @@ GetWidgetStateKey(StyleAppearance aWidgetType,
           aWidgetState->inHover << 2 |
           aWidgetState->disabled << 3 |
           aWidgetState->isDefault << 4 |
-          static_cast<uint16_t>(aWidgetType) << 5);
+          static_cast<uint16_t>(aAppearance) << 5);
 }
 
 static bool IsWidgetStateSafe(uint8_t* aSafeVector,
-                              StyleAppearance aWidgetType,
+                              StyleAppearance aAppearance,
                               GtkWidgetState *aWidgetState)
 {
-  MOZ_ASSERT(static_cast<size_t>(aWidgetType) < static_cast<size_t>(mozilla::StyleAppearance::Count));
-  uint16_t key = GetWidgetStateKey(aWidgetType, aWidgetState);
+  MOZ_ASSERT(static_cast<size_t>(aAppearance) < static_cast<size_t>(mozilla::StyleAppearance::Count));
+  uint16_t key = GetWidgetStateKey(aAppearance, aWidgetState);
   return (aSafeVector[key >> 3] & (1 << (key & 7))) != 0;
 }
 
 static void SetWidgetStateSafe(uint8_t *aSafeVector,
-                               StyleAppearance aWidgetType,
+                               StyleAppearance aAppearance,
                                GtkWidgetState *aWidgetState)
 {
-  MOZ_ASSERT(static_cast<size_t>(aWidgetType) < static_cast<size_t>(mozilla::StyleAppearance::Count));
-  uint16_t key = GetWidgetStateKey(aWidgetType, aWidgetState);
+  MOZ_ASSERT(static_cast<size_t>(aAppearance) < static_cast<size_t>(mozilla::StyleAppearance::Count));
+  uint16_t key = GetWidgetStateKey(aAppearance, aWidgetState);
   aSafeVector[key >> 3] |= (1 << (key & 7));
 }
 
@@ -226,24 +226,24 @@ nsNativeThemeGTK::GetTabMarginPixels(nsIFrame* aFrame)
 }
 
 static bool ShouldScrollbarButtonBeDisabled(int32_t aCurpos, int32_t aMaxpos,
-                                            StyleAppearance aWidgetType)
+                                            StyleAppearance aAppearance)
 {
-  return ((aCurpos == 0 && (aWidgetType == StyleAppearance::ScrollbarbuttonUp ||
-                            aWidgetType == StyleAppearance::ScrollbarbuttonLeft))
-      || (aCurpos == aMaxpos && (aWidgetType == StyleAppearance::ScrollbarbuttonDown ||
-                                 aWidgetType == StyleAppearance::ScrollbarbuttonRight)));
+  return ((aCurpos == 0 && (aAppearance == StyleAppearance::ScrollbarbuttonUp ||
+                            aAppearance == StyleAppearance::ScrollbarbuttonLeft))
+      || (aCurpos == aMaxpos && (aAppearance == StyleAppearance::ScrollbarbuttonDown ||
+                                 aAppearance == StyleAppearance::ScrollbarbuttonRight)));
 }
 
 bool
-nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
+nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
                                        nsIFrame* aFrame,
                                        WidgetNodeType& aGtkWidgetType,
                                        GtkWidgetState* aState,
                                        gint* aWidgetFlags)
 {
-  if (aWidgetType == StyleAppearance::MenulistButton &&
+  if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
-    aWidgetType = StyleAppearance::Menulist;
+    aAppearance = StyleAppearance::Menulist;
   }
 
   if (aState) {
@@ -252,15 +252,15 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
     // For XUL checkboxes and radio buttons, the state of the parent
     // determines our state.
     nsIFrame *stateFrame = aFrame;
-    if (aFrame && ((aWidgetFlags && (aWidgetType == StyleAppearance::Checkbox ||
-                                     aWidgetType == StyleAppearance::Radio)) ||
-                   aWidgetType == StyleAppearance::CheckboxLabel ||
-                   aWidgetType == StyleAppearance::RadioLabel)) {
+    if (aFrame && ((aWidgetFlags && (aAppearance == StyleAppearance::Checkbox ||
+                                     aAppearance == StyleAppearance::Radio)) ||
+                   aAppearance == StyleAppearance::CheckboxLabel ||
+                   aAppearance == StyleAppearance::RadioLabel)) {
 
       nsAtom* atom = nullptr;
       if (IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) {
-        if (aWidgetType == StyleAppearance::CheckboxLabel ||
-            aWidgetType == StyleAppearance::RadioLabel) {
+        if (aAppearance == StyleAppearance::CheckboxLabel ||
+            aAppearance == StyleAppearance::RadioLabel) {
           // Adjust stateFrame so GetContentState finds the correct state.
           stateFrame = aFrame = aFrame->GetParent()->GetParent();
         } else {
@@ -270,8 +270,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
         }
         if (aWidgetFlags) {
           if (!atom) {
-            atom = (aWidgetType == StyleAppearance::Checkbox ||
-                    aWidgetType == StyleAppearance::CheckboxLabel) ? nsGkAtoms::checked
+            atom = (aAppearance == StyleAppearance::Checkbox ||
+                    aAppearance == StyleAppearance::CheckboxLabel) ? nsGkAtoms::checked
                                                             : nsGkAtoms::selected;
           }
           *aWidgetFlags = CheckBooleanAttr(aFrame, atom);
@@ -287,17 +287,17 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
             *aWidgetFlags |= MOZ_GTK_WIDGET_INCONSISTENT;
         }
       }
-    } else if (aWidgetType == StyleAppearance::ToolbarbuttonDropdown ||
-               aWidgetType == StyleAppearance::Treeheadersortarrow ||
-               aWidgetType == StyleAppearance::ButtonArrowPrevious ||
-               aWidgetType == StyleAppearance::ButtonArrowNext ||
-               aWidgetType == StyleAppearance::ButtonArrowUp ||
-               aWidgetType == StyleAppearance::ButtonArrowDown) {
+    } else if (aAppearance == StyleAppearance::ToolbarbuttonDropdown ||
+               aAppearance == StyleAppearance::Treeheadersortarrow ||
+               aAppearance == StyleAppearance::ButtonArrowPrevious ||
+               aAppearance == StyleAppearance::ButtonArrowNext ||
+               aAppearance == StyleAppearance::ButtonArrowUp ||
+               aAppearance == StyleAppearance::ButtonArrowDown) {
       // The state of an arrow comes from its parent.
       stateFrame = aFrame = aFrame->GetParent();
     }
 
-    EventStates eventState = GetContentState(stateFrame, aWidgetType);
+    EventStates eventState = GetContentState(stateFrame, aAppearance);
 
     aState->disabled = IsDisabled(aFrame, eventState) || IsReadOnly(aFrame);
     aState->active  = eventState.HasState(NS_EVENT_STATE_ACTIVE);
@@ -306,7 +306,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
     aState->isDefault = IsDefaultButton(aFrame);
     aState->canDefault = FALSE; // XXX fix me
 
-    if (aWidgetType == StyleAppearance::FocusOutline) {
+    if (aAppearance == StyleAppearance::FocusOutline) {
       aState->disabled = FALSE;
       aState->active  = FALSE;
       aState->inHover = FALSE;
@@ -315,16 +315,16 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
 
       aState->focused = TRUE;
       aState->depressed = TRUE; // see moz_gtk_entry_paint()
-    } else if (aWidgetType == StyleAppearance::Button ||
-               aWidgetType == StyleAppearance::Toolbarbutton ||
-               aWidgetType == StyleAppearance::Dualbutton ||
-               aWidgetType == StyleAppearance::ToolbarbuttonDropdown ||
-               aWidgetType == StyleAppearance::Menulist ||
-               aWidgetType == StyleAppearance::MenulistButton ||
-               aWidgetType == StyleAppearance::MozMenulistButton) {
+    } else if (aAppearance == StyleAppearance::Button ||
+               aAppearance == StyleAppearance::Toolbarbutton ||
+               aAppearance == StyleAppearance::Dualbutton ||
+               aAppearance == StyleAppearance::ToolbarbuttonDropdown ||
+               aAppearance == StyleAppearance::Menulist ||
+               aAppearance == StyleAppearance::MenulistButton ||
+               aAppearance == StyleAppearance::MozMenulistButton) {
       aState->active &= aState->inHover;
-    } else if (aWidgetType == StyleAppearance::Treetwisty ||
-               aWidgetType == StyleAppearance::Treetwistyopen) {
+    } else if (aAppearance == StyleAppearance::Treetwisty ||
+               aAppearance == StyleAppearance::Treetwistyopen) {
       nsTreeBodyFrame *treeBodyFrame = do_QueryFrame(aFrame);
       if (treeBodyFrame) {
         const mozilla::AtomArray& atoms =
@@ -338,22 +338,22 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
       // For these widget types, some element (either a child or parent)
       // actually has element focus, so we check the focused attribute
       // to see whether to draw in the focused state.
-      if (aWidgetType == StyleAppearance::NumberInput ||
-          aWidgetType == StyleAppearance::Textfield ||
-          aWidgetType == StyleAppearance::TextfieldMultiline ||
-          aWidgetType == StyleAppearance::MenulistTextfield ||
-          aWidgetType == StyleAppearance::SpinnerTextfield ||
-          aWidgetType == StyleAppearance::RadioContainer ||
-          aWidgetType == StyleAppearance::RadioLabel) {
+      if (aAppearance == StyleAppearance::NumberInput ||
+          aAppearance == StyleAppearance::Textfield ||
+          aAppearance == StyleAppearance::TextfieldMultiline ||
+          aAppearance == StyleAppearance::MenulistTextfield ||
+          aAppearance == StyleAppearance::SpinnerTextfield ||
+          aAppearance == StyleAppearance::RadioContainer ||
+          aAppearance == StyleAppearance::RadioLabel) {
         aState->focused = IsFocused(aFrame);
-      } else if (aWidgetType == StyleAppearance::Radio ||
-                 aWidgetType == StyleAppearance::Checkbox) {
+      } else if (aAppearance == StyleAppearance::Radio ||
+                 aAppearance == StyleAppearance::Checkbox) {
         // In XUL, checkboxes and radios shouldn't have focus rings, their labels do
         aState->focused = FALSE;
       }
 
-      if (aWidgetType == StyleAppearance::ScrollbarthumbVertical ||
-          aWidgetType == StyleAppearance::ScrollbarthumbHorizontal) {
+      if (aAppearance == StyleAppearance::ScrollbarthumbVertical ||
+          aAppearance == StyleAppearance::ScrollbarthumbHorizontal) {
         // for scrollbars we need to go up two to go from the thumb to
         // the slider to the actual scrollbar object
         nsIFrame *tmpFrame = aFrame->GetParent()->GetParent();
@@ -368,15 +368,15 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
         }
       }
 
-      if (aWidgetType == StyleAppearance::ScrollbarbuttonUp ||
-          aWidgetType == StyleAppearance::ScrollbarbuttonDown ||
-          aWidgetType == StyleAppearance::ScrollbarbuttonLeft ||
-          aWidgetType == StyleAppearance::ScrollbarbuttonRight) {
+      if (aAppearance == StyleAppearance::ScrollbarbuttonUp ||
+          aAppearance == StyleAppearance::ScrollbarbuttonDown ||
+          aAppearance == StyleAppearance::ScrollbarbuttonLeft ||
+          aAppearance == StyleAppearance::ScrollbarbuttonRight) {
         // set the state to disabled when the scrollbar is scrolled to
         // the beginning or the end, depending on the button type.
         int32_t curpos = CheckIntAttr(aFrame, nsGkAtoms::curpos, 0);
         int32_t maxpos = CheckIntAttr(aFrame, nsGkAtoms::maxpos, 100);
-        if (ShouldScrollbarButtonBeDisabled(curpos, maxpos, aWidgetType)) {
+        if (ShouldScrollbarButtonBeDisabled(curpos, maxpos, aAppearance)) {
           aState->disabled = true;
         }
 
@@ -389,7 +389,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
 
         if (aWidgetFlags) {
           *aWidgetFlags = GetScrollbarButtonType(aFrame);
-          if (static_cast<uint8_t>(aWidgetType) -
+          if (static_cast<uint8_t>(aAppearance) -
                 static_cast<uint8_t>(StyleAppearance::ScrollbarbuttonUp) < 2)
             *aWidgetFlags |= MOZ_GTK_STEPPER_VERTICAL;
         }
@@ -400,11 +400,11 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
       // menus which are children of a menu bar are only marked as prelight
       // if they are open, not on normal hover.
 
-      if (aWidgetType == StyleAppearance::Menuitem ||
-          aWidgetType == StyleAppearance::Checkmenuitem ||
-          aWidgetType == StyleAppearance::Radiomenuitem ||
-          aWidgetType == StyleAppearance::Menuseparator ||
-          aWidgetType == StyleAppearance::Menuarrow) {
+      if (aAppearance == StyleAppearance::Menuitem ||
+          aAppearance == StyleAppearance::Checkmenuitem ||
+          aAppearance == StyleAppearance::Radiomenuitem ||
+          aAppearance == StyleAppearance::Menuseparator ||
+          aAppearance == StyleAppearance::Menuarrow) {
         bool isTopLevel = false;
         nsMenuFrame *menuFrame = do_QueryFrame(aFrame);
         if (menuFrame) {
@@ -419,8 +419,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
 
         aState->active = FALSE;
 
-        if (aWidgetType == StyleAppearance::Checkmenuitem ||
-            aWidgetType == StyleAppearance::Radiomenuitem) {
+        if (aAppearance == StyleAppearance::Checkmenuitem ||
+            aAppearance == StyleAppearance::Radiomenuitem) {
           *aWidgetFlags = 0;
           if (aFrame && aFrame->GetContent() &&
               aFrame->GetContent()->IsElement()) {
@@ -433,13 +433,13 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
 
       // A button with drop down menu open or an activated toggle button
       // should always appear depressed.
-      if (aWidgetType == StyleAppearance::Button ||
-          aWidgetType == StyleAppearance::Toolbarbutton ||
-          aWidgetType == StyleAppearance::Dualbutton ||
-          aWidgetType == StyleAppearance::ToolbarbuttonDropdown ||
-          aWidgetType == StyleAppearance::Menulist ||
-          aWidgetType == StyleAppearance::MenulistButton ||
-          aWidgetType == StyleAppearance::MozMenulistButton) {
+      if (aAppearance == StyleAppearance::Button ||
+          aAppearance == StyleAppearance::Toolbarbutton ||
+          aAppearance == StyleAppearance::Dualbutton ||
+          aAppearance == StyleAppearance::ToolbarbuttonDropdown ||
+          aAppearance == StyleAppearance::Menulist ||
+          aAppearance == StyleAppearance::MenulistButton ||
+          aAppearance == StyleAppearance::MozMenulistButton) {
         bool menuOpen = IsOpenButton(aFrame);
         aState->depressed = IsCheckedButton(aFrame) || menuOpen;
         // we must not highlight buttons with open drop down menus on hover.
@@ -448,38 +448,38 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
 
       // When the input field of the drop down button has focus, some themes
       // should draw focus for the drop down button as well.
-      if ((aWidgetType == StyleAppearance::MenulistButton ||
-           aWidgetType == StyleAppearance::MozMenulistButton) &&
+      if ((aAppearance == StyleAppearance::MenulistButton ||
+           aAppearance == StyleAppearance::MozMenulistButton) &&
           aWidgetFlags) {
         *aWidgetFlags = CheckBooleanAttr(aFrame, nsGkAtoms::parentfocused);
       }
     }
 
-    if (aWidgetType == StyleAppearance::MozWindowTitlebar ||
-        aWidgetType == StyleAppearance::MozWindowTitlebarMaximized ||
-        aWidgetType == StyleAppearance::MozWindowButtonClose ||
-        aWidgetType == StyleAppearance::MozWindowButtonMinimize ||
-        aWidgetType == StyleAppearance::MozWindowButtonMaximize ||
-        aWidgetType == StyleAppearance::MozWindowButtonRestore) {
+    if (aAppearance == StyleAppearance::MozWindowTitlebar ||
+        aAppearance == StyleAppearance::MozWindowTitlebarMaximized ||
+        aAppearance == StyleAppearance::MozWindowButtonClose ||
+        aAppearance == StyleAppearance::MozWindowButtonMinimize ||
+        aAppearance == StyleAppearance::MozWindowButtonMaximize ||
+        aAppearance == StyleAppearance::MozWindowButtonRestore) {
       aState->backdrop = !nsWindow::GetTopLevelWindowActiveState(aFrame);
     }
 
-    if (aWidgetType ==  StyleAppearance::ScrollbarbuttonUp ||
-        aWidgetType ==  StyleAppearance::ScrollbarbuttonDown ||
-        aWidgetType ==  StyleAppearance::ScrollbarbuttonLeft ||
-        aWidgetType ==  StyleAppearance::ScrollbarbuttonRight ||
-        aWidgetType == StyleAppearance::ScrollbarVertical ||
-        aWidgetType == StyleAppearance::ScrollbarHorizontal ||
-        aWidgetType == StyleAppearance::ScrollbartrackHorizontal ||
-        aWidgetType == StyleAppearance::ScrollbartrackVertical ||
-        aWidgetType == StyleAppearance::ScrollbarthumbVertical||
-        aWidgetType == StyleAppearance::ScrollbarthumbHorizontal) {
+    if (aAppearance == StyleAppearance::ScrollbarbuttonUp ||
+        aAppearance == StyleAppearance::ScrollbarbuttonDown ||
+        aAppearance == StyleAppearance::ScrollbarbuttonLeft ||
+        aAppearance == StyleAppearance::ScrollbarbuttonRight ||
+        aAppearance == StyleAppearance::ScrollbarVertical ||
+        aAppearance == StyleAppearance::ScrollbarHorizontal ||
+        aAppearance == StyleAppearance::ScrollbartrackHorizontal ||
+        aAppearance == StyleAppearance::ScrollbartrackVertical ||
+        aAppearance == StyleAppearance::ScrollbarthumbVertical||
+        aAppearance == StyleAppearance::ScrollbarthumbHorizontal) {
       EventStates docState = aFrame->GetContent()->OwnerDoc()->GetDocumentState();
       aState->backdrop = docState.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
     }
   }
 
-  switch (aWidgetType) {
+  switch (aAppearance) {
   case StyleAppearance::Button:
     if (aWidgetFlags)
       *aWidgetFlags = GTK_RELIEF_NORMAL;
@@ -496,7 +496,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
     break;
   case StyleAppearance::Checkbox:
   case StyleAppearance::Radio:
-    aGtkWidgetType = (aWidgetType == StyleAppearance::Radio) ? MOZ_GTK_RADIOBUTTON : MOZ_GTK_CHECKBUTTON;
+    aGtkWidgetType = (aAppearance == StyleAppearance::Radio)
+                       ? MOZ_GTK_RADIOBUTTON : MOZ_GTK_CHECKBUTTON;
     break;
   case StyleAppearance::ScrollbarbuttonUp:
   case StyleAppearance::ScrollbarbuttonDown:
@@ -506,14 +507,14 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
     break;
   case StyleAppearance::ScrollbarVertical:
     aGtkWidgetType = MOZ_GTK_SCROLLBAR_VERTICAL;
-    if (GetWidgetTransparency(aFrame, aWidgetType) == eOpaque)
+    if (GetWidgetTransparency(aFrame, aAppearance) == eOpaque)
         *aWidgetFlags = MOZ_GTK_TRACK_OPAQUE;
     else
         *aWidgetFlags = 0;
     break;
   case StyleAppearance::ScrollbarHorizontal:
     aGtkWidgetType = MOZ_GTK_SCROLLBAR_HORIZONTAL;
-    if (GetWidgetTransparency(aFrame, aWidgetType) == eOpaque)
+    if (GetWidgetTransparency(aFrame, aAppearance) == eOpaque)
         *aWidgetFlags = MOZ_GTK_TRACK_OPAQUE;
     else
         *aWidgetFlags = 0;
@@ -678,11 +679,11 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
     if (aWidgetFlags) {
       *aWidgetFlags = GTK_ARROW_DOWN;
 
-      if (aWidgetType == StyleAppearance::ButtonArrowUp)
+      if (aAppearance == StyleAppearance::ButtonArrowUp)
         *aWidgetFlags = GTK_ARROW_UP;
-      else if (aWidgetType == StyleAppearance::ButtonArrowNext)
+      else if (aAppearance == StyleAppearance::ButtonArrowNext)
         *aWidgetFlags = GTK_ARROW_RIGHT;
-      else if (aWidgetType == StyleAppearance::ButtonArrowPrevious)
+      else if (aAppearance == StyleAppearance::ButtonArrowPrevious)
         *aWidgetFlags = GTK_ARROW_LEFT;
     }
     break;
@@ -716,7 +717,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
   case StyleAppearance::ProgresschunkVertical:
     {
       nsIFrame* stateFrame = aFrame->GetParent();
-      EventStates eventStates = GetContentState(stateFrame, aWidgetType);
+      EventStates eventStates = GetContentState(stateFrame, aAppearance);
 
       aGtkWidgetType = IsIndeterminateProgress(stateFrame, eventStates)
                          ? IsVerticalProgress(stateFrame)
@@ -728,7 +729,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType,
   case StyleAppearance::TabScrollArrowBack:
   case StyleAppearance::TabScrollArrowForward:
     if (aWidgetFlags)
-      *aWidgetFlags = aWidgetType == StyleAppearance::TabScrollArrowBack ?
+      *aWidgetFlags = aAppearance == StyleAppearance::TabScrollArrowBack ?
                         GTK_ARROW_LEFT : GTK_ARROW_RIGHT;
     aGtkWidgetType = MOZ_GTK_TAB_SCROLLARROW;
     break;
@@ -1077,14 +1078,14 @@ DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
 
 bool
 nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame,
-                                        StyleAppearance aWidgetType,
+                                        StyleAppearance aAppearance,
                                         nsIntMargin* aExtra)
 {
   *aExtra = nsIntMargin(0,0,0,0);
   // Allow an extra one pixel above and below the thumb for certain
   // GTK2 themes (Ximian Industrial, Bluecurve, Misty, at least);
   // We modify the frame's overflow area.  See bug 297508.
-  switch (aWidgetType) {
+  switch (aAppearance) {
   case StyleAppearance::ScrollbarthumbVertical:
     aExtra->top = aExtra->bottom = 1;
     break;
@@ -1147,9 +1148,9 @@ nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame,
 }
 
 bool
-nsNativeThemeGTK::IsWidgetVisible(StyleAppearance aWidgetType)
+nsNativeThemeGTK::IsWidgetVisible(StyleAppearance aAppearance)
 {
-  switch (aWidgetType) {
+  switch (aAppearance) {
   case StyleAppearance::MozWindowButtonBox:
     return false;
   default:
@@ -1161,7 +1162,7 @@ nsNativeThemeGTK::IsWidgetVisible(StyleAppearance aWidgetType)
 NS_IMETHODIMP
 nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext,
                                        nsIFrame* aFrame,
-                                       StyleAppearance aWidgetType,
+                                       StyleAppearance aAppearance,
                                        const nsRect& aRect,
                                        const nsRect& aDirtyRect)
 {
@@ -1170,8 +1171,8 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext,
   GtkTextDirection direction = GetTextDirection(aFrame);
   gint flags;
 
-  if (!IsWidgetVisible(aWidgetType) ||
-      !GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, &state,
+  if (!IsWidgetVisible(aAppearance) ||
+      !GetGtkWidgetAndState(aAppearance, aFrame, gtkWidgetType, &state,
                             &flags)) {
     return NS_OK;
   }
@@ -1204,7 +1205,7 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext,
   nsIntRect widgetRect(0, 0, NS_lround(rect.Width()), NS_lround(rect.Height()));
   nsIntRect overflowRect(widgetRect);
   nsIntMargin extraSize;
-  if (GetExtraSizeForWidget(aFrame, aWidgetType, &extraSize)) {
+  if (GetExtraSizeForWidget(aFrame, aAppearance, &extraSize)) {
     overflowRect.Inflate(extraSize);
   }
 
@@ -1217,16 +1218,16 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext,
       || !drawingRect.IntersectRect(overflowRect, drawingRect))
     return NS_OK;
 
-  NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType),
+  NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aAppearance),
                "Trying to render an unsafe widget!");
 
-  bool safeState = IsWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
+  bool safeState = IsWidgetStateSafe(mSafeWidgetStates, aAppearance, &state);
   if (!safeState) {
     gLastGdkError = 0;
     gdk_error_trap_push ();
   }
 
-  Transparency transparency = GetWidgetTransparency(aFrame, aWidgetType);
+  Transparency transparency = GetWidgetTransparency(aFrame, aAppearance);
 
   // gdk rectangles are wrt the drawing rect.
   GdkRectangle gdk_rect = {-drawingRect.x/scaleFactor,
@@ -1258,16 +1259,16 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext,
 #ifdef DEBUG
       printf("GTK theme failed for widget type %d, error was %d, state was "
              "[active=%d,focused=%d,inHover=%d,disabled=%d]\n",
-             static_cast<int>(aWidgetType), gLastGdkError, state.active,
+             static_cast<int>(aAppearance), gLastGdkError, state.active,
              state.focused, state.inHover, state.disabled);
 #endif
       NS_WARNING("GTK theme failed; disabling unsafe widget");
-      SetWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType);
+      SetWidgetTypeDisabled(mDisabledWidgetTypes, aAppearance);
       // force refresh of the window, because the widget was not
       // successfully drawn it must be redrawn using the default look
       RefreshWidgetWindow(aFrame);
     } else {
-      SetWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
+      SetWidgetStateSafe(mSafeWidgetStates, aAppearance, &state);
     }
   }
 
@@ -1288,14 +1289,14 @@ nsNativeThemeGTK::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBuild
                                                    const mozilla::layers::StackingContextHelper& aSc,
                                                    mozilla::layers::WebRenderLayerManager* aManager,
                                                    nsIFrame* aFrame,
-                                                   StyleAppearance aWidgetType,
+                                                   StyleAppearance aAppearance,
                                                    const nsRect& aRect)
 {
   nsPresContext* presContext = aFrame->PresContext();
   wr::LayoutRect bounds = wr::ToRoundedLayoutRect(
     LayoutDeviceRect::FromAppUnits(aRect, presContext->AppUnitsPerDevPixel()));
 
-  switch (aWidgetType) {
+  switch (aAppearance) {
   case StyleAppearance::Window:
   case StyleAppearance::Dialog:
     aBuilder.PushRect(bounds, bounds, true,
@@ -1310,13 +1311,13 @@ nsNativeThemeGTK::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBuild
 }
 
 WidgetNodeType
-nsNativeThemeGTK::NativeThemeToGtkTheme(StyleAppearance aWidgetType,
+nsNativeThemeGTK::NativeThemeToGtkTheme(StyleAppearance aAppearance,
                                         nsIFrame* aFrame)
 {
   WidgetNodeType gtkWidgetType;
   gint unusedFlags;
 
-  if (!GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
+  if (!GetGtkWidgetAndState(aAppearance, aFrame, gtkWidgetType, nullptr,
                             &unusedFlags))
   {
     MOZ_ASSERT_UNREACHABLE("Unknown native widget to gtk widget mapping");
@@ -1327,7 +1328,7 @@ nsNativeThemeGTK::NativeThemeToGtkTheme(StyleAppearance aWidgetType,
 
 void
 nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame,
-                                        StyleAppearance aWidgetType,
+                                        StyleAppearance aAppearance,
                                         GtkTextDirection aDirection,
                                         LayoutDeviceIntMargin* aResult)
 {
@@ -1335,7 +1336,7 @@ nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame,
 
   WidgetNodeType gtkWidgetType;
   gint unusedFlags;
-  if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
+  if (GetGtkWidgetAndState(aAppearance, aFrame, gtkWidgetType, nullptr,
                            &unusedFlags)) {
     MOZ_ASSERT(0 <= gtkWidgetType && gtkWidgetType < MOZ_GTK_WIDGET_NODE_COUNT);
     uint8_t cacheIndex = gtkWidgetType / 8;
@@ -1357,16 +1358,16 @@ nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame,
 LayoutDeviceIntMargin
 nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext,
                                   nsIFrame* aFrame,
-                                  StyleAppearance aWidgetType)
+                                  StyleAppearance aAppearance)
 {
   LayoutDeviceIntMargin result;
   GtkTextDirection direction = GetTextDirection(aFrame);
-  switch (aWidgetType) {
+  switch (aAppearance) {
   case StyleAppearance::ScrollbarHorizontal:
   case StyleAppearance::ScrollbarVertical:
     {
       GtkOrientation orientation =
-        aWidgetType == StyleAppearance::ScrollbarHorizontal ?
+        aAppearance == StyleAppearance::ScrollbarHorizontal ?
         GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL;
       const ScrollbarGTKMetrics* metrics =
         GetActiveScrollbarMetrics(orientation);
@@ -1382,7 +1383,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext,
   case StyleAppearance::ScrollbartrackVertical:
     {
       GtkOrientation orientation =
-        aWidgetType == StyleAppearance::ScrollbartrackHorizontal ?
+        aAppearance == StyleAppearance::ScrollbartrackHorizontal ?
         GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL;
       const ScrollbarGTKMetrics* metrics =
         GetActiveScrollbarMetrics(orientation);
@@ -1412,7 +1413,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext,
       WidgetNodeType gtkWidgetType;
       gint flags;
 
-      if (!GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
+      if (!GetGtkWidgetAndState(aAppearance, aFrame, gtkWidgetType, nullptr,
                                 &flags)) {
         return result;
       }
@@ -1432,7 +1433,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext,
     MOZ_FALLTHROUGH;
   default:
     {
-      GetCachedWidgetBorder(aFrame, aWidgetType, direction, &result);
+      GetCachedWidgetBorder(aFrame, aAppearance, direction, &result);
     }
   }
 
@@ -1447,15 +1448,15 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext,
 bool
 nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,
-                                   StyleAppearance aWidgetType,
+                                   StyleAppearance aAppearance,
                                    LayoutDeviceIntMargin* aResult)
 {
-  if (aWidgetType == StyleAppearance::MenulistButton &&
+  if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
-    aWidgetType = StyleAppearance::Menulist;
+    aAppearance = StyleAppearance::Menulist;
   }
 
-  switch (aWidgetType) {
+  switch (aAppearance) {
     case StyleAppearance::ButtonFocus:
     case StyleAppearance::Toolbarbutton:
     case StyleAppearance::MozWindowButtonBox:
@@ -1489,11 +1490,11 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
         if (!IsRegularMenuItem(aFrame))
           return false;
 
-        GetCachedWidgetBorder(aFrame, aWidgetType, GetTextDirection(aFrame),
+        GetCachedWidgetBorder(aFrame, aAppearance, GetTextDirection(aFrame),
                               aResult);
 
         gint horizontal_padding;
-        if (aWidgetType == StyleAppearance::Menuitem)
+        if (aAppearance == StyleAppearance::Menuitem)
           moz_gtk_menuitem_get_horizontal_padding(&horizontal_padding);
         else
           moz_gtk_checkmenuitem_get_horizontal_padding(&horizontal_padding);
@@ -1519,11 +1520,11 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
 bool
 nsNativeThemeGTK::GetWidgetOverflow(nsDeviceContext* aContext,
                                     nsIFrame* aFrame,
-                                    StyleAppearance aWidgetType,
+                                    StyleAppearance aAppearance,
                                     nsRect* aOverflowRect)
 {
   nsIntMargin extraSize;
-  if (!GetExtraSizeForWidget(aFrame, aWidgetType, &extraSize))
+  if (!GetExtraSizeForWidget(aFrame, aAppearance, &extraSize))
     return false;
 
   int32_t p2a = aContext->AppUnitsPerDevPixel();
@@ -1539,19 +1540,19 @@ nsNativeThemeGTK::GetWidgetOverflow(nsDeviceContext* aContext,
 NS_IMETHODIMP
 nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                        nsIFrame* aFrame,
-                                       StyleAppearance aWidgetType,
+                                       StyleAppearance aAppearance,
                                        LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable)
 {
   aResult->width = aResult->height = 0;
   *aIsOverridable = true;
 
-  if (aWidgetType == StyleAppearance::MenulistButton &&
+  if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
-    aWidgetType = StyleAppearance::Menulist;
+    aAppearance = StyleAppearance::Menulist;
   }
 
-  switch (aWidgetType) {
+  switch (aAppearance) {
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonDown:
       {
@@ -1598,7 +1599,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
        * or track. So add a minimum size to the track as well to prevent a
        * 0-width scrollbar. */
       GtkOrientation orientation =
-        aWidgetType == StyleAppearance::ScrollbarHorizontal ?
+        aAppearance == StyleAppearance::ScrollbarHorizontal ?
         GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL;
       const ScrollbarGTKMetrics* metrics =
         GetActiveScrollbarMetrics(orientation);
@@ -1611,7 +1612,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case StyleAppearance::ScrollbarthumbHorizontal:
       {
         GtkOrientation orientation =
-          aWidgetType == StyleAppearance::ScrollbarthumbHorizontal ?
+          aAppearance == StyleAppearance::ScrollbarthumbHorizontal ?
           GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL;
         const ScrollbarGTKMetrics* metrics =
           GetActiveScrollbarMetrics(orientation);
@@ -1654,7 +1655,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       {
         gint thumb_length, thumb_height;
 
-        if (aWidgetType == StyleAppearance::ScalethumbVertical) {
+        if (aAppearance == StyleAppearance::ScalethumbVertical) {
           moz_gtk_get_scalethumb_metrics(GTK_ORIENTATION_VERTICAL, &thumb_length, &thumb_height);
           aResult->width = thumb_height;
           aResult->height = thumb_length;
@@ -1695,7 +1696,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
   case StyleAppearance::Checkbox:
   case StyleAppearance::Radio:
     {
-      const ToggleGTKMetrics* metrics = GetToggleMetrics(aWidgetType == StyleAppearance::Radio);
+      const ToggleGTKMetrics* metrics = GetToggleMetrics(aAppearance == StyleAppearance::Radio);
       aResult->width = metrics->minSizeWithBorder.width;
       aResult->height = metrics->minSizeWithBorder.height;
     }
@@ -1745,7 +1746,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
   case StyleAppearance::Toolbarbutton:
   case StyleAppearance::Treeheadercell:
     {
-      if (aWidgetType == StyleAppearance::Menulist) {
+      if (aAppearance == StyleAppearance::Menulist) {
         // Include the arrow size.
         moz_gtk_get_arrow_size(MOZ_GTK_DROPDOWN,
                                &aResult->width, &aResult->height);
@@ -1755,7 +1756,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       // box model may consider border and padding with child minimum sizes.
 
       LayoutDeviceIntMargin border;
-      GetCachedWidgetBorder(aFrame, aWidgetType, GetTextDirection(aFrame), &border);
+      GetCachedWidgetBorder(aFrame, aAppearance, GetTextDirection(aFrame), &border);
       aResult->width += border.left + border.right;
       aResult->height += border.top + border.bottom;
     }
@@ -1817,51 +1818,51 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
-                                     StyleAppearance aWidgetType,
+                                     StyleAppearance aAppearance,
                                      nsAtom* aAttribute, bool* aShouldRepaint,
                                      const nsAttrValue* aOldValue)
 {
   // Some widget types just never change state.
-  if (aWidgetType == StyleAppearance::Toolbox ||
-      aWidgetType == StyleAppearance::Toolbar ||
-      aWidgetType == StyleAppearance::Statusbar ||
-      aWidgetType == StyleAppearance::Statusbarpanel ||
-      aWidgetType == StyleAppearance::Resizerpanel ||
-      aWidgetType == StyleAppearance::Progresschunk ||
-      aWidgetType == StyleAppearance::ProgresschunkVertical ||
-      aWidgetType == StyleAppearance::Progressbar ||
-      aWidgetType == StyleAppearance::ProgressbarVertical ||
-      aWidgetType == StyleAppearance::Menubar ||
-      aWidgetType == StyleAppearance::Menupopup ||
-      aWidgetType == StyleAppearance::Tooltip ||
-      aWidgetType == StyleAppearance::Menuseparator ||
-      aWidgetType == StyleAppearance::Window ||
-      aWidgetType == StyleAppearance::Dialog) {
+  if (aAppearance == StyleAppearance::Toolbox ||
+      aAppearance == StyleAppearance::Toolbar ||
+      aAppearance == StyleAppearance::Statusbar ||
+      aAppearance == StyleAppearance::Statusbarpanel ||
+      aAppearance == StyleAppearance::Resizerpanel ||
+      aAppearance == StyleAppearance::Progresschunk ||
+      aAppearance == StyleAppearance::ProgresschunkVertical ||
+      aAppearance == StyleAppearance::Progressbar ||
+      aAppearance == StyleAppearance::ProgressbarVertical ||
+      aAppearance == StyleAppearance::Menubar ||
+      aAppearance == StyleAppearance::Menupopup ||
+      aAppearance == StyleAppearance::Tooltip ||
+      aAppearance == StyleAppearance::Menuseparator ||
+      aAppearance == StyleAppearance::Window ||
+      aAppearance == StyleAppearance::Dialog) {
     *aShouldRepaint = false;
     return NS_OK;
   }
 
-  if (aWidgetType == StyleAppearance::MozWindowTitlebar ||
-      aWidgetType == StyleAppearance::MozWindowTitlebarMaximized ||
-      aWidgetType == StyleAppearance::MozWindowButtonClose ||
-      aWidgetType == StyleAppearance::MozWindowButtonMinimize ||
-      aWidgetType == StyleAppearance::MozWindowButtonMaximize ||
-      aWidgetType == StyleAppearance::MozWindowButtonRestore) {
+  if (aAppearance == StyleAppearance::MozWindowTitlebar ||
+      aAppearance == StyleAppearance::MozWindowTitlebarMaximized ||
+      aAppearance == StyleAppearance::MozWindowButtonClose ||
+      aAppearance == StyleAppearance::MozWindowButtonMinimize ||
+      aAppearance == StyleAppearance::MozWindowButtonMaximize ||
+      aAppearance == StyleAppearance::MozWindowButtonRestore) {
     *aShouldRepaint = true;
     return NS_OK;
   }
 
-  if ((aWidgetType == StyleAppearance::ScrollbarthumbVertical ||
-       aWidgetType == StyleAppearance::ScrollbarthumbHorizontal) &&
+  if ((aAppearance == StyleAppearance::ScrollbarthumbVertical ||
+       aAppearance == StyleAppearance::ScrollbarthumbHorizontal) &&
        aAttribute == nsGkAtoms::active) {
     *aShouldRepaint = true;
     return NS_OK;
   }
 
-  if ((aWidgetType == StyleAppearance::ScrollbarbuttonUp ||
-       aWidgetType == StyleAppearance::ScrollbarbuttonDown ||
-       aWidgetType == StyleAppearance::ScrollbarbuttonLeft ||
-       aWidgetType == StyleAppearance::ScrollbarbuttonRight) &&
+  if ((aAppearance == StyleAppearance::ScrollbarbuttonUp ||
+       aAppearance == StyleAppearance::ScrollbarbuttonDown ||
+       aAppearance == StyleAppearance::ScrollbarbuttonLeft ||
+       aAppearance == StyleAppearance::ScrollbarbuttonRight) &&
       (aAttribute == nsGkAtoms::curpos ||
        aAttribute == nsGkAtoms::maxpos)) {
     // If 'curpos' has changed and we are passed its old value, we can
@@ -1876,8 +1877,10 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
       if (str.IsEmpty() || NS_FAILED(err)) {
         *aShouldRepaint = true;
       } else {
-        bool disabledBefore = ShouldScrollbarButtonBeDisabled(oldCurpos, maxpos, aWidgetType);
-        bool disabledNow = ShouldScrollbarButtonBeDisabled(curpos, maxpos, aWidgetType);
+        bool disabledBefore =
+          ShouldScrollbarButtonBeDisabled(oldCurpos, maxpos, aAppearance);
+        bool disabledNow =
+          ShouldScrollbarButtonBeDisabled(curpos, maxpos, aAppearance);
         *aShouldRepaint = (disabledBefore != disabledNow);
       }
     } else {
@@ -1925,12 +1928,12 @@ nsNativeThemeGTK::ThemeChanged()
 NS_IMETHODIMP_(bool)
 nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
-                                      StyleAppearance aWidgetType)
+                                      StyleAppearance aAppearance)
 {
-  if (IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType))
+  if (IsWidgetTypeDisabled(mDisabledWidgetTypes, aAppearance))
     return false;
 
-  if (IsWidgetScrollbarPart(aWidgetType)) {
+  if (IsWidgetScrollbarPart(aAppearance)) {
     ComputedStyle* cs = nsLayoutUtils::StyleForScrollbar(aFrame);
     if (cs->StyleUI()->HasCustomScrollbars() ||
         // We cannot handle thin scrollbar on GTK+ widget directly as well.
@@ -1939,12 +1942,12 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     }
   }
 
-  if (aWidgetType == StyleAppearance::MenulistButton &&
+  if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
-    aWidgetType = StyleAppearance::Menulist;
+    aAppearance = StyleAppearance::Menulist;
   }
 
-  switch (aWidgetType) {
+  switch (aAppearance) {
   // Combobox dropdowns don't support native theming in vertical mode.
   case StyleAppearance::Menulist:
   case StyleAppearance::MenulistText:
@@ -2039,7 +2042,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
 #ifdef MOZ_WIDGET_GTK
   case StyleAppearance::MozGtkInfoBar:
 #endif
-    return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
+    return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
 
   case StyleAppearance::MozWindowButtonBox:
   case StyleAppearance::MozWindowButtonClose:
@@ -2051,7 +2054,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     // GtkHeaderBar is available on GTK 3.10+, which is used for styling
     // title bars and title buttons.
     return gtk_check_version(3, 10, 0) == nullptr &&
-           !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
+           !IsWidgetStyled(aPresContext, aFrame, aAppearance);
 
   case StyleAppearance::MenulistButton:
   case StyleAppearance::MozMenulistButton:
@@ -2061,7 +2064,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     // "Native" dropdown buttons cause padding and margin problems, but only
     // in HTML so allow them in XUL.
     return (!aFrame || IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) &&
-           !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
+           !IsWidgetStyled(aPresContext, aFrame, aAppearance);
 
   case StyleAppearance::FocusOutline:
     return true;
@@ -2073,40 +2076,40 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP_(bool)
-nsNativeThemeGTK::WidgetIsContainer(StyleAppearance aWidgetType)
+nsNativeThemeGTK::WidgetIsContainer(StyleAppearance aAppearance)
 {
-  if (aWidgetType == StyleAppearance::MenulistButton &&
+  if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
-    aWidgetType = StyleAppearance::Menulist;
+    aAppearance = StyleAppearance::Menulist;
   }
 
   // XXXdwh At some point flesh all of this out.
-  if (aWidgetType == StyleAppearance::MenulistButton ||
-      aWidgetType == StyleAppearance::MozMenulistButton ||
-      aWidgetType == StyleAppearance::Radio ||
-      aWidgetType == StyleAppearance::RangeThumb ||
-      aWidgetType == StyleAppearance::Checkbox ||
-      aWidgetType == StyleAppearance::TabScrollArrowBack ||
-      aWidgetType == StyleAppearance::TabScrollArrowForward ||
-      aWidgetType == StyleAppearance::ButtonArrowUp ||
-      aWidgetType == StyleAppearance::ButtonArrowDown ||
-      aWidgetType == StyleAppearance::ButtonArrowNext ||
-      aWidgetType == StyleAppearance::ButtonArrowPrevious)
+  if (aAppearance == StyleAppearance::MenulistButton ||
+      aAppearance == StyleAppearance::MozMenulistButton ||
+      aAppearance == StyleAppearance::Radio ||
+      aAppearance == StyleAppearance::RangeThumb ||
+      aAppearance == StyleAppearance::Checkbox ||
+      aAppearance == StyleAppearance::TabScrollArrowBack ||
+      aAppearance == StyleAppearance::TabScrollArrowForward ||
+      aAppearance == StyleAppearance::ButtonArrowUp ||
+      aAppearance == StyleAppearance::ButtonArrowDown ||
+      aAppearance == StyleAppearance::ButtonArrowNext ||
+      aAppearance == StyleAppearance::ButtonArrowPrevious)
     return false;
   return true;
 }
 
 bool
-nsNativeThemeGTK::ThemeDrawsFocusForWidget(StyleAppearance aWidgetType)
+nsNativeThemeGTK::ThemeDrawsFocusForWidget(StyleAppearance aAppearance)
 {
-  if (aWidgetType == StyleAppearance::MenulistButton &&
+  if (aAppearance == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
-    aWidgetType = StyleAppearance::Menulist;
+    aAppearance = StyleAppearance::Menulist;
   }
 
-  if (aWidgetType == StyleAppearance::Menulist ||
-      aWidgetType == StyleAppearance::Button ||
-      aWidgetType == StyleAppearance::Treeheadercell)
+  if (aAppearance == StyleAppearance::Menulist ||
+      aAppearance == StyleAppearance::Button ||
+      aAppearance == StyleAppearance::Treeheadercell)
     return true;
 
   return false;
@@ -2120,9 +2123,9 @@ nsNativeThemeGTK::ThemeNeedsComboboxDropmarker()
 
 nsITheme::Transparency
 nsNativeThemeGTK::GetWidgetTransparency(nsIFrame* aFrame,
-                                        StyleAppearance aWidgetType)
+                                        StyleAppearance aAppearance)
 {
-  switch (aWidgetType) {
+  switch (aAppearance) {
   // These widgets always draw a default background.
   case StyleAppearance::Menupopup:
   case StyleAppearance::Window:
@@ -2150,9 +2153,9 @@ nsNativeThemeGTK::GetWidgetTransparency(nsIFrame* aFrame,
 }
 
 bool
-nsNativeThemeGTK::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aWidgetType)
+nsNativeThemeGTK::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aAppearance)
 {
-  switch (aWidgetType) {
+  switch (aAppearance) {
     case StyleAppearance::MozWindowTitlebar:
     case StyleAppearance::MozWindowTitlebarMaximized:
     case StyleAppearance::MozWindowButtonClose:

@@ -610,7 +610,7 @@ moz_gtk_get_tab_thickness(WidgetNodeType aNodeType);
  * Get ToolbarButtonGTKMetrics for recent theme.
  */
 const ToolbarButtonGTKMetrics*
-GetToolbarButtonMetrics(WidgetNodeType aWidgetType);
+GetToolbarButtonMetrics(WidgetNodeType aAppearance);
 
 /**
  * Get toolbar button layout.
