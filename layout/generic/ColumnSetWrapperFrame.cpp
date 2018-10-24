@@ -33,6 +33,24 @@ ColumnSetWrapperFrame::ColumnSetWrapperFrame(ComputedStyle* aStyle)
 {
 }
 
+nsContainerFrame*
+ColumnSetWrapperFrame::GetContentInsertionFrame()
+{
+  nsIFrame* columnSet = PrincipalChildList().OnlyChild();
+  if (columnSet) {
+    // We have only one child, which means we don't have any column-span
+    // descendants. Thus we can safely return our only ColumnSet child's
+    // insertion frame as ours.
+    MOZ_ASSERT(columnSet->IsColumnSetFrame());
+    return columnSet->GetContentInsertionFrame();
+  }
+
+  // We have column-span descendants. Return ourselves as the insertion
+  // frame to let nsCSSFrameConstructor::WipeContainingBlock() figure out
+  // what to do.
+  return this;
+}
+
 void
 ColumnSetWrapperFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
 {

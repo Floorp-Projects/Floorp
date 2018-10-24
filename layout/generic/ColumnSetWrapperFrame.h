@@ -33,6 +33,8 @@ public:
                                                      ComputedStyle* aStyle,
                                                      nsFrameState aStateFlags);
 
+  nsContainerFrame* GetContentInsertionFrame() override;
+
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
 #ifdef DEBUG_FRAME_DUMP
