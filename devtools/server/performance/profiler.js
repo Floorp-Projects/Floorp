@@ -25,7 +25,7 @@ var DEFAULT_PROFILER_OPTIONS = {
   // by the pref `devtools.performance.profiler.buffer-size`.
   entries: Math.pow(10, 7),
   // When using the DevTools Performance Tools, this will be overridden
-  // by the pref `devtools.performance.profiler.sample-rate-khz`.
+  // by the pref `devtools.performance.profiler.sample-frequency-hz`.
   interval: 1,
   features: ["js"],
   threadFilters: ["GeckoMain"],
