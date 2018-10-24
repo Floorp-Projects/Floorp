@@ -14,6 +14,7 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.IntentUtils;
+import org.mozilla.gecko.util.StrictModeContext;
 import org.mozilla.gecko.widget.ExternalIntentDuringPrivateBrowsingPromptFragment;
 
 import android.app.Activity;
@@ -435,15 +436,22 @@ public final class IntentHelper implements BundleEventListener {
         callback.sendSuccess(getHandlersForIntent(intent));
     }
 
+    @SuppressWarnings("try")
     private void open(final GeckoBundle message) {
-        openUriExternal(message.getString("url", ""),
-                        message.getString("mime", ""),
-                        message.getString("packageName", ""),
-                        message.getString("className", ""),
-                        message.getString("action", ""),
-                        message.getString("title", ""), false);
+        // Bug 1450449 - this is most likely a document from the publicly accessible storage which
+        // isn't owned exclusively by Firefox, so there's no real benefit to using content:// URIs
+        // here.
+        try (StrictModeContext unused = StrictModeContext.allowAllVmPolicies()) {
+            openUriExternal(message.getString("url", ""),
+                            message.getString("mime", ""),
+                            message.getString("packageName", ""),
+                            message.getString("className", ""),
+                            message.getString("action", ""),
+                            message.getString("title", ""), false);
+        }
     }
 
+    @SuppressWarnings("try")
     private void openForResult(final GeckoBundle message, final EventCallback callback) {
         Intent intent = getOpenURIIntent(getContext(),
                                          message.getString("url", ""),
@@ -460,7 +468,10 @@ public final class IntentHelper implements BundleEventListener {
             return;
         }
         final ResultHandler handler = new ResultHandler(callback);
-        try {
+        // Bug 1450449 - this is most likely a document from the publicly accessible storage which
+        // isn't owned exclusively by Firefox, so there's no real benefit to using content:// URIs
+        // here.
+        try (StrictModeContext unused = StrictModeContext.allowAllVmPolicies()) {
             ActivityHandlerHelper.startIntentForActivity(activity, intent, handler);
         } catch (SecurityException e) {
             Log.w(LOGTAG, "Forbidden to launch activity.", e);
