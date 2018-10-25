@@ -2866,7 +2866,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindowOuter* aWindow,
   // from there but instead from the beginning of the document. Otherwise, the
   // content that appears before the retargetdocumentfocus element will never
   // get checked as it will be skipped when the focus is retargetted to it.
-  if (forDocumentNavigation && doc->IsXULDocument()) {
+  if (forDocumentNavigation && nsContentUtils::IsChromeDoc(doc)) {
     nsAutoString retarget;
 
     if (rootContent->GetAttr(kNameSpaceID_None,
@@ -4047,7 +4047,7 @@ nsFocusManager::FocusFirst(Element* aRootElement, nsIContent** aNextContent)
 
   nsIDocument* doc = aRootElement->GetComposedDoc();
   if (doc) {
-    if (doc->IsXULDocument()) {
+    if (nsContentUtils::IsChromeDoc(doc)) {
       // If the redirectdocumentfocus attribute is set, redirect the focus to a
       // specific element. This is primarily used to retarget the focus to the
       // urlbar during document navigation.

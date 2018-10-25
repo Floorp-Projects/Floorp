@@ -21,12 +21,6 @@
 #include "gfxPrefs.h"
 #include "gfxVR.h"
 #include "gfxVRExternal.h"
-#if defined(XP_WIN)
-#include "gfxVROculus.h"
-#endif
-#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
-#include "gfxVROpenVR.h"
-#endif
 
 #include "gfxVRPuppet.h"
 #include "ipc/VRLayerParent.h"
@@ -85,20 +79,6 @@ VRManager::VRManager()
 
   RefPtr<VRSystemManager> mgr;
 
-  /**
-   * We must add the VRDisplayManager's to mManagers in a careful order to
-   * ensure that we don't detect the same VRDisplay from multiple API's.
-   *
-   * Oculus comes first, as it will only enumerate Oculus HMD's and is the
-   * native interface for Oculus HMD's.
-   *
-   * OpenvR comes second, as it is the native interface for HTC Vive
-   * which is the most common HMD at this time.
-   *
-   * OSVR will be used if Oculus SDK and OpenVR don't detect any HMDS,
-   * to support everyone else.
-   */
-
 #if !defined(MOZ_WIDGET_ANDROID)
   // The VR Service accesses all hardware from a separate process
   // and replaces the other VRSystemManager when enabled.
@@ -123,26 +103,6 @@ VRManager::VRManager()
       mManagers.AppendElement(mExternalManager);
     }
   }
-
-#if defined(XP_WIN)
-  if (!mVRService) {
-    // The Oculus runtime is supported only on Windows
-    mgr = VRSystemManagerOculus::Create();
-    if (mgr) {
-      mManagers.AppendElement(mgr);
-    }
-  }
-#endif
-
-#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
-  if (!mVRService) {
-    // OpenVR is cross platform compatible
-    mgr = VRSystemManagerOpenVR::Create();
-    if (mgr) {
-      mManagers.AppendElement(mgr);
-    }
-  } // !mVRService
-#endif
 
   // Enable gamepad extensions while VR is enabled.
   // Preference only can be set at the Parent process.

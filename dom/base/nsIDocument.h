@@ -4318,9 +4318,6 @@ protected:
 
   // These member variables cache information about the viewport so we don't
   // have to recalculate it each time.
-  bool mValidWidth: 1;
-  bool mValidHeight: 1;
-  bool mAutoSize: 1;
   bool mAllowZoom: 1;
   bool mValidScaleFloat: 1;
   bool mValidMaxScale: 1;

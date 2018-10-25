@@ -23,7 +23,7 @@ def define_upstream_artifacts(config, jobs):
         return
 
     for job in jobs:
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
         repack_id = job['extra']['repack_id']
         artifacts_specifications = generate_specifications_of_artifacts_to_sign(
             dep_job,

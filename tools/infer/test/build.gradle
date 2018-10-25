@@ -1,0 +1,6 @@
+allprojects {
+    // Expose the per-object-directory configuration to all projects.
+    ext {
+        topobjdir = gradle.mozconfig.topobjdir
+    }
+}

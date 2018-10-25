@@ -65,7 +65,7 @@ def generate_upstream_artifacts(job, release_history, platform, locale=None):
 @transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
 
         treeherder = job.get('treeherder', {})
         treeherder.setdefault('symbol', 'ps(N)')

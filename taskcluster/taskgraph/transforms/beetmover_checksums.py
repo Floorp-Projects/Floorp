@@ -7,10 +7,11 @@ Transform the checksums signing task into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import craft_release_properties
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
-from taskgraph.util.schema import validate_schema, Schema
+from taskgraph.util.schema import validate_schema
 from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
                                          get_beetmover_action_scope,
                                          get_worker_type_for_scope)
@@ -27,8 +28,7 @@ taskref_or_string = Any(
     basestring,
     {Required('task-reference'): basestring})
 
-beetmover_checksums_description_schema = Schema({
-    Required('dependent-task'): object,
+beetmover_checksums_description_schema = schema.extend({
     Required('depname', default='build'): basestring,
     Optional('label'): basestring,
     Optional('treeherder'): task_description_schema['treeherder'],
@@ -41,7 +41,7 @@ beetmover_checksums_description_schema = Schema({
 @transforms.add
 def validate(config, jobs):
     for job in jobs:
-        label = job.get('dependent-task', object).__dict__.get('label', '?no-label?')
+        label = job.get('primary-dependency', object).__dict__.get('label', '?no-label?')
         validate_schema(
             beetmover_checksums_description_schema, job,
             "In checksums-signing ({!r} kind) task for {!r}:".format(config.kind, label))
@@ -51,7 +51,7 @@ def validate(config, jobs):
 @transforms.add
 def make_beetmover_checksums_description(config, jobs):
     for job in jobs:
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
         attributes = dep_job.attributes
 
         treeherder = job.get('treeherder', {})
@@ -88,9 +88,6 @@ def make_beetmover_checksums_description(config, jobs):
 
         dependent_kind = str(dep_job.kind)
         dependencies = {dependent_kind: dep_job.label}
-        for k, v in dep_job.dependencies.items():
-            if k.startswith('beetmover'):
-                dependencies[k] = v
 
         attributes = copy_attributes_from_dependent_job(dep_job)
 
@@ -145,25 +142,12 @@ def generate_upstream_artifacts(refs, platform, locale=None):
 @transforms.add
 def make_beetmover_checksums_worker(config, jobs):
     for job in jobs:
-        valid_beetmover_job = (len(job["dependencies"]) == 2)
-        if not valid_beetmover_job:
-            raise NotImplementedError("Beetmover checksums must have two dependencies.")
-
         locale = job["attributes"].get("locale")
         platform = job["attributes"]["build_platform"]
 
         refs = {
-            "beetmover": None,
-            "signing": None,
+            "signing": "<checksums-signing>",
         }
-        for dependency in job["dependencies"].keys():
-            if dependency.startswith("beetmover"):
-                refs['beetmover'] = "<{}>".format(dependency)
-            else:
-                refs['signing'] = "<{}>".format(dependency)
-        if None in refs.values():
-            raise NotImplementedError(
-                "Beetmover checksums must have a beetmover and signing dependency!")
 
         worker = {
             'implementation': 'beetmover',

@@ -26,15 +26,16 @@ We only use some files from the SDK:
 
 Steps to update the library:
 
-- Copy "README.md" from the root of the openvr repo to the "gfx/vr/openvr" directory.
+- Copy "README.md" from the root of the openvr repo to the "gfx/vr/service/openvr"
+  directory.
 
-- Copy "headers/openvr.h" to "gfx/vr/openvr/headers" directory. The other files
+- Copy "headers/openvr.h" to "gfx/vr/service/openvr/headers" directory. The other files
   in this directory can be ignored.
 
 - The rest of the files in the "src" directory and the "src/vrcommon" are copied
-  to the "gfx/vr/openvr/src" directory.
+  to the "gfx/vr/service/openvr/src" directory.
 
-- Update "gfx/vr/openvr/moz.build" when files are added or removed.
+- Update "gfx/vr/service/openvr/moz.build" when files are added or removed.
 
 - Update the "strtools_public.h" and "strtools_public.cpp" files, commenting out
   the "Uint64ToString", "wcsncpy_s", and "strncpy_s" functions.

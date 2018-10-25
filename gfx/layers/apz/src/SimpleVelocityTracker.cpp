@@ -78,7 +78,10 @@ SimpleVelocityTracker::HandleDynamicToolbarMovement(uint32_t aStartTimestampMs,
 {
   float timeDelta = aEndTimestampMs - aStartTimestampMs;
   MOZ_ASSERT(timeDelta != 0);
-  float velocity = aDelta / timeDelta;
+  // Negate the delta to convert from spatial coordinates (e.g. toolbar
+  // has moved up --> negative delta) to scroll coordinates (e.g. toolbar
+  // has moved up --> scroll offset is increasing).
+  float velocity = -aDelta / timeDelta;
   velocity = ApplyFlingCurveToVelocity(velocity);
   mVelocitySampleTimeMs = aEndTimestampMs;
 
