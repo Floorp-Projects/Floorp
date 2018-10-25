@@ -8,7 +8,6 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM")
 
 EXPORTS.mozilla.dom += [
-    'AudioWorkletGlobalScope.h',
     'PaintWorkletGlobalScope.h',
     'Worklet.h',
     'WorkletGlobalScope.h',
@@ -18,7 +17,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
-    'AudioWorkletGlobalScope.cpp',
     'PaintWorkletGlobalScope.cpp',
     'Worklet.cpp',
     'WorkletGlobalScope.cpp',
