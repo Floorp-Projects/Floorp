@@ -22,6 +22,13 @@ public:
 
   bool DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) override;
 
+  bool ApplyContentShift(const CSSPoint& aShiftDelta) override
+  {
+    // Autoscroll works using screen space coordinates, so there's no work we
+    // need to do to handle a content shift
+    return true;
+  }
+
   void Cancel(CancelAnimationFlags aFlags) override;
 private:
   AsyncPanZoomController& mApzc;

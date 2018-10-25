@@ -109,5 +109,12 @@ GenericScrollAnimation::DoSample(FrameMetrics& aFrameMetrics, const TimeDuration
   return !finished;
 }
 
+bool
+GenericScrollAnimation::ApplyContentShift(const CSSPoint& aShiftDelta)
+{
+  mAnimationPhysics->ApplyContentShift(aShiftDelta);
+  return true;
+}
+
 } // namespace layers
 } // namespace mozilla

@@ -28,6 +28,8 @@ public:
 
   bool DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) override;
 
+  bool ApplyContentShift(const CSSPoint& aShiftDelta) override;
+
   void UpdateDelta(TimeStamp aTime,
                    const nsPoint& aDelta,
                    const nsSize& aCurrentVelocity);
