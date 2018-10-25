@@ -837,13 +837,6 @@ content-blocking-toggle-label-off = OFF
 
 content-blocking-category-label = Choose what to block
 
-# "Slow" in this instance means "slow to load on the network".
-# FastBlock is a feature that blocks requests to tracking sites if they
-# have not finished loading after a certain threshold of seconds.
-content-blocking-fastblock-slow-loading-trackers-label =
-  .label = Slow-Loading Trackers
-  .accesskey = S
-content-blocking-fastblock-new-description = Block just the trackers that keep pages from loading quickly.
 content-blocking-tracking-protection-trackers-label =
   .label = Trackers
   .accesskey = T
