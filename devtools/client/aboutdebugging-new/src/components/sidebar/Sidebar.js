@@ -15,8 +15,10 @@ const { PAGES, RUNTIMES } = require("../../constants");
 const Types = require("../../types");
 loader.lazyRequireGetter(this, "ADB_ADDON_STATES", "devtools/shared/adb/adb-addon", true);
 
+const SidebarItem = createFactory(require("./SidebarItem"));
 const SidebarFixedItem = createFactory(require("./SidebarFixedItem"));
 const SidebarRuntimeItem = createFactory(require("./SidebarRuntimeItem"));
+const RefreshDevicesButton = createFactory(require("./RefreshDevicesButton"));
 const FIREFOX_ICON = "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
 const CONNECT_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const GLOBE_ICON = "chrome://devtools/skin/images/globe.svg";
@@ -28,6 +30,7 @@ class Sidebar extends PureComponent {
       adbAddonStatus: PropTypes.string,
       className: PropTypes.string,
       dispatch: PropTypes.func.isRequired,
+      isScanningUsb: PropTypes.bool.isRequired,
       networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       selectedPage: PropTypes.string,
       usbRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
@@ -50,21 +53,34 @@ class Sidebar extends PureComponent {
     );
   }
 
-  renderDevices() {
-    const { networkRuntimes, usbRuntimes } = this.props;
-    if (!networkRuntimes.length && !usbRuntimes.length) {
-      return Localized(
+  renderDevicesEmpty() {
+    return SidebarItem(
+      {
+        isSelected: false,
+        selectable: false,
+      },
+      Localized(
         {
           id: "about-debugging-sidebar-no-devices",
-        }, dom.aside(
+        },
+        dom.aside(
           {
             className: "sidebar__devices__message js-sidebar-no-devices",
           },
           "No devices discovered"
         )
-      );
-    }
+      )
+    );
+  }
 
+  renderDevices() {
+    const { networkRuntimes, usbRuntimes } = this.props;
+
+    // render a "no devices" messages when the lists are empty
+    if (!networkRuntimes.length && !usbRuntimes.length) {
+      return this.renderDevicesEmpty();
+    }
+    // render all devices otherwise
     return [
       ...this.renderSidebarItems(GLOBE_ICON, networkRuntimes),
       ...this.renderSidebarItems(USB_ICON, usbRuntimes),
@@ -93,7 +109,7 @@ class Sidebar extends PureComponent {
   }
 
   render() {
-    const { dispatch, selectedPage } = this.props;
+    const { dispatch, selectedPage, isScanningUsb } = this.props;
 
     return dom.aside(
       {
@@ -122,9 +138,26 @@ class Sidebar extends PureComponent {
             name: "Connect",
           })
         ),
-        dom.hr({ className: "separator" }),
-        this.renderAdbAddonStatus(),
-        this.renderDevices()
+        SidebarItem(
+          {
+            isSelected: false,
+            selectable: false,
+          },
+          dom.hr({ className: "separator" }),
+          this.renderAdbAddonStatus(),
+        ),
+        this.renderDevices(),
+        SidebarItem(
+          {
+            className: "sidebar-item--breathe sidebar__refresh-usb",
+            isSelected: false,
+            selectable: false,
+          },
+          RefreshDevicesButton({
+            dispatch,
+            isScanning: isScanningUsb,
+          })
+        ),
       )
     );
   }
