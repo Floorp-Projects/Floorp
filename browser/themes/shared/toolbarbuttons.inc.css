@@ -83,7 +83,7 @@ toolbar[brighttext] {
   padding: 0 var(--toolbarbutton-inner-padding) !important;
 }
 
-#navigator-toolbox:not(:hover) > #TabsToolbar > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .scrollbutton-down:not([highlight]) {
+#navigator-toolbox:not(:hover) > #TabsToolbar .tabbrowser-arrowscrollbox > .scrollbutton-down:not([highlight]) {
   transition: 1s background-color ease-out;
 }
 

@@ -1,0 +1,11 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<hbox class="titlebar-buttonbox-container titlebar-item">
+  <hbox class="titlebar-buttonbox titlebar-color">
+    <toolbarbutton class="titlebar-button titlebar-min" oncommand="window.minimize();"/>
+    <toolbarbutton class="titlebar-button titlebar-max" oncommand="onTitlebarMaxClick();"/>
+    <toolbarbutton class="titlebar-button titlebar-close" command="cmd_closeWindow"/>
+  </hbox>
+</hbox>

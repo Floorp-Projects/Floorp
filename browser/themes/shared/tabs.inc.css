@@ -512,7 +512,7 @@
 }
 
 %ifdef MENUBAR_CAN_AUTOHIDE
-#toolbar-menubar:not([autohide=true]) + #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab > .tab-stack > .tab-background,
+#toolbar-menubar:not([autohide=true]) + #TabsToolbar .tabbrowser-tab > .tab-stack > .tab-background,
 %endif
 :root:not([tabsintitlebar]) .tab-background,
 :root[extradragspace] .tab-background {
@@ -554,7 +554,7 @@
   background-color: rgba(0,0,0,.1);
 }
 
-#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]) {
+#TabsToolbar[brighttext] .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]) {
   background-color: rgba(255,255,255,.1);
 }
 
@@ -570,12 +570,12 @@
   transform: none;
 }
 
-#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true]):not([multiselected]) {
+#TabsToolbar[brighttext] .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true]):not([multiselected]) {
   background-color: rgba(255,255,255,.2);
 }
 
 .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true])[multiselected],
-#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true])[multiselected] {
+#TabsToolbar[brighttext] .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true])[multiselected] {
   opacity: 0.5;
 }
 
@@ -585,7 +585,7 @@
   background-color: rgba(0,0,0,.1);
 }
 
-#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab[multiselected] > .tab-stack > .tab-background:not([selected=true]) {
+#TabsToolbar[brighttext] .tabbrowser-tab[multiselected] > .tab-stack > .tab-background:not([selected=true]) {
   background-color: rgba(255,255,255,.1);
 }
 
@@ -668,7 +668,7 @@
 }
 
 %ifdef MENUBAR_CAN_AUTOHIDE
-:root[tabsintitlebar]:not([extradragspace]) #toolbar-menubar[autohide=true] + #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab::after,
+:root[tabsintitlebar]:not([extradragspace]) #toolbar-menubar[autohide=true] + #TabsToolbar .tabbrowser-tab::after,
 %else
 :root[tabsintitlebar]:not([extradragspace]) .tabbrowser-tab::after,
 %endif
@@ -717,8 +717,7 @@
 /* New tab button */
 
 .tabs-newtab-button,
-#TabsToolbar > #new-tab-button ,
-#TabsToolbar > toolbarpaletteitem > #new-tab-button {
+#TabsToolbar #new-tab-button {
   list-style-image: url(chrome://browser/skin/add.svg);
 }
 

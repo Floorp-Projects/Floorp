@@ -55,10 +55,6 @@ toolbarbutton[disabled="true"] {
 }
 
 @media (-moz-windows-default-theme: 0) {
-  :root[lwtheme-image] toolbarbutton {
-    -moz-appearance: none;
-  }
-
   :root[lwtheme-image] toolbarbutton:not([disabled="true"]) {
     text-shadow: inherit;
   }
