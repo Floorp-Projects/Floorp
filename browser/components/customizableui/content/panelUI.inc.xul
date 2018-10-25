@@ -226,10 +226,8 @@
         <toolbarseparator class="sync-ui-item"/>
         <toolbaritem closemenu="none">
           <toolbarbutton id="appMenu-tp-label"
-                         tooltiptext="&trackingProtection.tooltip;"
                          class="subviewbutton subviewbutton-iconic"
-                         oncommand="ContentBlocking.openPreferences('appMenu-trackingprotection'); PanelUI.hide();"
-                         label="&trackingProtection.title;"/>
+                         oncommand="ContentBlocking.openPreferences('appMenu-trackingprotection'); PanelUI.hide();"/>
           <toolbarseparator id="appMenu-tp-vertical-separator" orient="vertical"/>
           <toolbarbutton id="appMenu-tp-toggle"
                          enabled="false"
