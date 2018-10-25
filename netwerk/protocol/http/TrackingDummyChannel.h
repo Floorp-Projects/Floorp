@@ -42,6 +42,7 @@ namespace net {
  * hack in particular.
  */
 class TrackingDummyChannel final : public nsIChannel
+                                 , public nsIHttpChannelInternal
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(TRACKING_DUMMY_CHANNEL_IID)
@@ -49,6 +50,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
+  NS_DECL_NSIHTTPCHANNELINTERNAL
 
   enum StorageAllowedState
   {
@@ -62,6 +64,8 @@ public:
                  const std::function<void(bool)>& aCallback);
 
   TrackingDummyChannel(nsIURI* aURI,
+                       nsIURI* aTopWindowURI,
+                       nsresult aTopWindowURIResult,
                        nsILoadInfo* aLoadInfo);
 
   bool
@@ -75,6 +79,8 @@ private:
 
   nsCOMPtr<nsILoadInfo> mLoadInfo;
   nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIURI> mTopWindowURI;
+  nsresult mTopWindowURIResult;
 
   bool mIsTrackingResource;
 };
