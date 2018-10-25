@@ -90,12 +90,17 @@ NS_IMPL_RELEASE(TrackingDummyChannel)
 NS_INTERFACE_MAP_BEGIN(TrackingDummyChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsIChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(TrackingDummyChannel)
 NS_INTERFACE_MAP_END
 
 TrackingDummyChannel::TrackingDummyChannel(nsIURI* aURI,
+                                           nsIURI* aTopWindowURI,
+                                           nsresult aTopWindowURIResult,
                                            nsILoadInfo* aLoadInfo)
-  : mIsTrackingResource(false)
+  : mTopWindowURI(aTopWindowURI)
+  , mTopWindowURIResult(aTopWindowURIResult)
+  , mIsTrackingResource(false)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -348,6 +353,363 @@ TrackingDummyChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 
 NS_IMETHODIMP
 TrackingDummyChannel::GetIsDocument(bool* aIsDocument)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//-----------------------------------------------------------------------------
+// TrackingDummyChannel::nsIHttpChannelInternal
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetDocumentURI(nsIURI** aDocumentURI)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetDocumentURI(nsIURI* aDocumentURI)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetRequestVersion(uint32_t* aMajor, uint32_t* aMinor)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetResponseVersion(uint32_t* aMajor, uint32_t* aMinor)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::TakeAllSecurityMessages(nsCOMArray<nsISecurityConsoleMessage>& aMessages)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetCookie(const char* aCookieHeader)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetupFallbackChannel(const char* aFallbackKey)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetThirdPartyFlags(uint32_t* aThirdPartyFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetThirdPartyFlags(uint32_t aThirdPartyFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetForceAllowThirdPartyCookie(bool* aForceAllowThirdPartyCookie)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetForceAllowThirdPartyCookie(bool aForceAllowThirdPartyCookie)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetCanceled(bool* aCanceled)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetChannelIsForDownload(bool* aChannlIsForDownload)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetChannelIsForDownload(bool aChannlIsForDownload)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetLocalAddress(nsACString& aLocalAddress)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetLocalPort(int32_t* aLocalPort)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetRemoteAddress(nsACString& aRemoteAddress)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetRemotePort(int32_t* aRemotePort)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetCacheKeysRedirectChain(nsTArray<nsCString>* aCacheKeys)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::HTTPUpgrade(const nsACString& aProtocolName,
+                                  nsIHttpUpgradeListener* aListener)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetAllowSpdy(bool* aAllowSpdy)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetAllowSpdy(bool aAllowSpdy)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetResponseTimeoutEnabled(bool* aResponseTimeoutEnabled)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetResponseTimeoutEnabled(bool aResponseTimeoutEnabled)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetInitialRwin(uint32_t* aInitialRwin)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetInitialRwin(uint32_t aInitialRwin)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetApiRedirectToURI(nsIURI** aApiRedirectToURI)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetAllowAltSvc(bool* aAllowAltSvc)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetAllowAltSvc(bool aAllowAltSvc)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetBeConservative(bool* aBeConservative)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetBeConservative(bool aBeConservative)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetTrr(bool* aTrr)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetTrr(bool aTrr)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetTlsFlags(uint32_t* aTlsFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetTlsFlags(uint32_t aTlsFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetLastModifiedTime(PRTime* aLastModifiedTime)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetCorsIncludeCredentials(bool* aCorsIncludeCredentials)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetCorsIncludeCredentials(bool aCorsIncludeCredentials)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetCorsMode(uint32_t* aCorsMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetCorsMode(uint32_t aCorsMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetRedirectMode(uint32_t* aRedirectMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetRedirectMode(uint32_t aRedirectMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetFetchCacheMode(uint32_t* aFetchCacheMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetFetchCacheMode(uint32_t aFetchCacheMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetTopWindowURI(nsIURI** aTopWindowURI)
+{
+  nsCOMPtr<nsIURI> topWindowURI = mTopWindowURI;
+  topWindowURI.forget(aTopWindowURI);
+  return mTopWindowURIResult;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetTopWindowURIIfUnknown(nsIURI* aTopWindowURI)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetProxyURI(nsIURI** aProxyURI)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void
+TrackingDummyChannel::SetCorsPreflightParameters(const nsTArray<nsCString>& aUnsafeHeaders)
+{}
+
+void
+TrackingDummyChannel::SetAltDataForChild(bool aIsForChild)
+{}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetBlockAuthPrompt(bool* aBlockAuthPrompt)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetBlockAuthPrompt(bool aBlockAuthPrompt)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetIntegrityMetadata(nsAString& aIntegrityMetadata)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetIntegrityMetadata(const nsAString& aIntegrityMetadata)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetConnectionInfoHashKey(nsACString& aConnectionInfoHashKey)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetLastRedirectFlags(uint32_t* aLastRedirectFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetLastRedirectFlags(uint32_t aLastRedirectFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::GetNavigationStartTimeStamp(TimeStamp* aNavigationStartTimeStamp)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetNavigationStartTimeStamp(TimeStamp aNavigationStartTimeStamp)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::CancelForTrackingProtection()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
