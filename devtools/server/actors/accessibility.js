@@ -5,23 +5,37 @@
 "use strict";
 
 const { Cc, Ci } = require("chrome");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const { DebuggerServer } = require("devtools/server/main");
 const Services = require("Services");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
-const { accessibleWalkerSpec } = require("devtools/shared/specs/accessibility");
+const defer = require("devtools/shared/defer");
+const events = require("devtools/shared/event-emitter");
+const {
+  accessibleSpec,
+  accessibleWalkerSpec,
+  accessibilitySpec,
+} = require("devtools/shared/specs/accessibility");
 
-loader.lazyRequireGetter(this, "AccessibleActor", "devtools/server/actors/accessibility/accessible", true);
-loader.lazyRequireGetter(this, "CustomHighlighterActor", "devtools/server/actors/highlighters", true);
-loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/shared/DevToolsUtils");
-loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
-loader.lazyRequireGetter(this, "isDefunct", "devtools/server/actors/utils/accessibility", true);
-loader.lazyRequireGetter(this, "isTypeRegistered", "devtools/server/actors/highlighters", true);
-loader.lazyRequireGetter(this, "isWindowIncluded", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "isXUL", "devtools/server/actors/highlighters/utils/markup", true);
-loader.lazyRequireGetter(this, "register", "devtools/server/actors/highlighters", true);
+const { isXUL } = require("devtools/server/actors/highlighters/utils/markup");
+const { isWindowIncluded } = require("devtools/shared/layout/utils");
+const { CustomHighlighterActor, register } =
+  require("devtools/server/actors/highlighters");
+const { getContrastRatioFor } = require("devtools/server/actors/utils/accessibility");
+const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
 
 const nsIAccessibleEvent = Ci.nsIAccessibleEvent;
 const nsIAccessibleStateChangeEvent = Ci.nsIAccessibleStateChangeEvent;
+const nsIAccessibleRelation = Ci.nsIAccessibleRelation;
 const nsIAccessibleRole = Ci.nsIAccessibleRole;
+
+const RELATIONS_TO_IGNORE = new Set([
+  nsIAccessibleRelation.RELATION_CONTAINING_APPLICATION,
+  nsIAccessibleRelation.RELATION_CONTAINING_TAB_PANE,
+  nsIAccessibleRelation.RELATION_CONTAINING_WINDOW,
+  nsIAccessibleRelation.RELATION_PARENT_WINDOW_OF,
+  nsIAccessibleRelation.RELATION_SUBWINDOW_OF,
+]);
 
 const {
   EVENT_TEXT_CHANGED,
@@ -93,6 +107,39 @@ const NAME_FROM_SUBTREE_RULE_ROLES = new Set([
 
 const IS_OSX = Services.appinfo.OS === "Darwin";
 
+register("AccessibleHighlighter", "accessible");
+register("XULWindowAccessibleHighlighter", "xul-accessible");
+
+/**
+ * Helper function that determines if nsIAccessible object is in defunct state.
+ *
+ * @param  {nsIAccessible}  accessible
+ *         object to be tested.
+ * @return {Boolean}
+ *         True if accessible object is defunct, false otherwise.
+ */
+function isDefunct(accessible) {
+  // If accessibility is disabled, safely assume that the accessible object is
+  // now dead.
+  if (!Services.appinfo.accessibilityEnabled) {
+    return true;
+  }
+
+  let defunct = false;
+
+  try {
+    const extraState = {};
+    accessible.getState({}, extraState);
+    // extraState.value is a bitmask. We are applying bitwise AND to mask out
+    // irrelevant states.
+    defunct = !!(extraState.value & Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT);
+  } catch (e) {
+    defunct = true;
+  }
+
+  return defunct;
+}
+
 /**
  * Helper function that determines if nsIAccessible object is in stale state. When an
  * object is stale it means its subtree is not up to date.
@@ -109,6 +156,311 @@ function isStale(accessible) {
   // irrelevant states.
   return !!(extraState.value & Ci.nsIAccessibleStates.EXT_STATE_STALE);
 }
+
+/**
+ * Set of actors that expose accessibility tree information to the
+ * devtools protocol clients.
+ *
+ * The |Accessibility| actor is the main entry point. It is used to request
+ * an AccessibleWalker actor that caches the tree of Accessible actors.
+ *
+ * The |AccessibleWalker| actor is used to cache all seen Accessible actors as
+ * well as observe all relevant accessible events.
+ *
+ * The |Accessible| actor provides information about a particular accessible
+ * object, its properties, , attributes, states, relations, etc.
+ */
+
+/**
+ * The AccessibleActor provides information about a given accessible object: its
+ * role, name, states, etc.
+ */
+const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
+  initialize(walker, rawAccessible) {
+    Actor.prototype.initialize.call(this, walker.conn);
+    this.walker = walker;
+    this.rawAccessible = rawAccessible;
+
+    /**
+     * Indicates if the raw accessible is no longer alive.
+     *
+     * @return Boolean
+     */
+    Object.defineProperty(this, "isDefunct", {
+      get() {
+        const defunct = isDefunct(this.rawAccessible);
+        if (defunct) {
+          delete this.isDefunct;
+          this.isDefunct = true;
+          return this.isDefunct;
+        }
+
+        return defunct;
+      },
+      configurable: true,
+    });
+  },
+
+  /**
+   * Items returned by this actor should belong to the parent walker.
+   */
+  marshallPool() {
+    return this.walker;
+  },
+
+  destroy() {
+    Actor.prototype.destroy.call(this);
+    this.walker = null;
+    this.rawAccessible = null;
+  },
+
+  get role() {
+    if (this.isDefunct) {
+      return null;
+    }
+    return this.walker.a11yService.getStringRole(this.rawAccessible.role);
+  },
+
+  get name() {
+    if (this.isDefunct) {
+      return null;
+    }
+    return this.rawAccessible.name;
+  },
+
+  get value() {
+    if (this.isDefunct) {
+      return null;
+    }
+    return this.rawAccessible.value;
+  },
+
+  get description() {
+    if (this.isDefunct) {
+      return null;
+    }
+    return this.rawAccessible.description;
+  },
+
+  get keyboardShortcut() {
+    if (this.isDefunct) {
+      return null;
+    }
+    // Gecko accessibility exposes two key bindings: Accessible::AccessKey and
+    // Accessible::KeyboardShortcut. The former is used for accesskey, where the latter
+    // is used for global shortcuts defined by XUL menu items, etc. Here - do what the
+    // Windows implementation does: try AccessKey first, and if that's empty, use
+    // KeyboardShortcut.
+    return this.rawAccessible.accessKey || this.rawAccessible.keyboardShortcut;
+  },
+
+  get childCount() {
+    if (this.isDefunct) {
+      return 0;
+    }
+    return this.rawAccessible.childCount;
+  },
+
+  get domNodeType() {
+    if (this.isDefunct) {
+      return 0;
+    }
+    return this.rawAccessible.DOMNode ? this.rawAccessible.DOMNode.nodeType : 0;
+  },
+
+  get parentAcc() {
+    if (this.isDefunct) {
+      return null;
+    }
+    return this.walker.addRef(this.rawAccessible.parent);
+  },
+
+  children() {
+    const children = [];
+    if (this.isDefunct) {
+      return children;
+    }
+
+    for (let child = this.rawAccessible.firstChild; child; child = child.nextSibling) {
+      children.push(this.walker.addRef(child));
+    }
+    return children;
+  },
+
+  get indexInParent() {
+    if (this.isDefunct) {
+      return -1;
+    }
+
+    try {
+      return this.rawAccessible.indexInParent;
+    } catch (e) {
+      // Accessible is dead.
+      return -1;
+    }
+  },
+
+  get actions() {
+    const actions = [];
+    if (this.isDefunct) {
+      return actions;
+    }
+
+    for (let i = 0; i < this.rawAccessible.actionCount; i++) {
+      actions.push(this.rawAccessible.getActionDescription(i));
+    }
+    return actions;
+  },
+
+  get states() {
+    if (this.isDefunct) {
+      return [];
+    }
+
+    const state = {};
+    const extState = {};
+    this.rawAccessible.getState(state, extState);
+    return [
+      ...this.walker.a11yService.getStringStates(state.value, extState.value),
+    ];
+  },
+
+  get attributes() {
+    if (this.isDefunct || !this.rawAccessible.attributes) {
+      return {};
+    }
+
+    const attributes = {};
+    for (const { key, value } of this.rawAccessible.attributes.enumerate()) {
+      attributes[key] = value;
+    }
+
+    return attributes;
+  },
+
+  get bounds() {
+    if (this.isDefunct) {
+      return null;
+    }
+
+    let x = {}, y = {}, w = {}, h = {};
+    try {
+      this.rawAccessible.getBoundsInCSSPixels(x, y, w, h);
+      x = x.value;
+      y = y.value;
+      w = w.value;
+      h = h.value;
+    } catch (e) {
+      return null;
+    }
+
+    // Check if accessible bounds are invalid.
+    const left = x, right = x + w, top = y, bottom = y + h;
+    if (left === right || top === bottom) {
+      return null;
+    }
+
+    return { x, y, w, h };
+  },
+
+  async getRelations() {
+    const relationObjects = [];
+    if (this.isDefunct) {
+      return relationObjects;
+    }
+
+    const relations =
+      [...this.rawAccessible.getRelations().enumerate(nsIAccessibleRelation)];
+    if (relations.length === 0) {
+      return relationObjects;
+    }
+
+    const doc = await this.walker.getDocument();
+    relations.forEach(relation => {
+      if (RELATIONS_TO_IGNORE.has(relation.relationType)) {
+        return;
+      }
+
+      const type = this.walker.a11yService.getStringRelationType(relation.relationType);
+      const targets = [...relation.getTargets().enumerate(Ci.nsIAccessible)];
+      let relationObject;
+      for (const target of targets) {
+        // Target of the relation is not part of the current root document.
+        if (target.rootDocument !== doc.rawAccessible) {
+          continue;
+        }
+
+        let targetAcc;
+        try {
+          targetAcc = this.walker.attachAccessible(target, doc);
+        } catch (e) {
+          // Target is not available.
+        }
+
+        if (targetAcc) {
+          if (!relationObject) {
+            relationObject = { type, targets: [] };
+          }
+
+          relationObject.targets.push(targetAcc);
+        }
+      }
+
+      if (relationObject) {
+        relationObjects.push(relationObject);
+      }
+    });
+
+    return relationObjects;
+  },
+
+  form() {
+    return {
+      actor: this.actorID,
+      role: this.role,
+      name: this.name,
+      value: this.value,
+      description: this.description,
+      keyboardShortcut: this.keyboardShortcut,
+      childCount: this.childCount,
+      domNodeType: this.domNodeType,
+      indexInParent: this.indexInParent,
+      states: this.states,
+      actions: this.actions,
+      attributes: this.attributes,
+    };
+  },
+
+  _isValidTextLeaf(rawAccessible) {
+    return !isDefunct(rawAccessible) &&
+           rawAccessible.role === nsIAccessibleRole.ROLE_TEXT_LEAF &&
+           rawAccessible.name && rawAccessible.name.trim().length > 0;
+  },
+
+  get _nonEmptyTextLeafs() {
+    return this.children().filter(child => this._isValidTextLeaf(child.rawAccessible));
+  },
+
+  /**
+   * Calculate the contrast ratio of the given accessible.
+   */
+  _getContrastRatio() {
+    return getContrastRatioFor(this._isValidTextLeaf(this.rawAccessible) ?
+      this.rawAccessible.DOMNode.parentNode : this.rawAccessible.DOMNode);
+  },
+
+  /**
+   * Audit the state of the accessible object.
+   *
+   * @return {Object|null}
+   *         Audit results for the accessible object.
+  */
+  get audit() {
+    return this.isDefunct ? null : {
+      contrastRatio: this._getContrastRatio(),
+    };
+  },
+});
 
 /**
  * The AccessibleWalkerActor stores a cache of AccessibleActors that represent
@@ -129,26 +481,11 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     this.onKey = this.onKey.bind(this);
     this.onHighlighterEvent = this.onHighlighterEvent.bind(this);
 
-    DevToolsUtils.defineLazyGetter(this, "highlighter", () => {
-      let highlighter;
-      if (isXUL(this.rootWin)) {
-        if (!isTypeRegistered("XULWindowAccessibleHighlighter")) {
-          register("XULWindowAccessibleHighlighter", "xul-accessible");
-        }
+    this.highlighter = CustomHighlighterActor(this, isXUL(this.rootWin) ?
+      "XULWindowAccessibleHighlighter" : "AccessibleHighlighter");
 
-        highlighter = CustomHighlighterActor(this, "XULWindowAccessibleHighlighter");
-      } else {
-        if (!isTypeRegistered("AccessibleHighlighter")) {
-          register("AccessibleHighlighter", "accessible");
-        }
-
-        highlighter = CustomHighlighterActor(this, "AccessibleHighlighter");
-      }
-
-      this.manage(highlighter);
-      highlighter.on("highlighter-event", this.onHighlighterEvent);
-      return highlighter;
-    });
+    this.manage(this.highlighter);
+    this.highlighter.on("highlighter-event", this.onHighlighterEvent);
   },
 
   setA11yServiceGetter() {
@@ -724,4 +1061,266 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
   },
 });
 
+/**
+ * The AccessibilityActor is a top level container actor that initializes
+ * accessible walker and is the top-most point of interaction for accessibility
+ * tools UI.
+ */
+const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
+  initialize(conn, targetActor) {
+    Actor.prototype.initialize.call(this, conn);
+
+    this.initializedDeferred = defer();
+
+    if (DebuggerServer.isInChildProcess) {
+      this._msgName = `debug:${this.conn.prefix}accessibility`;
+      this.conn.setupInParent({
+        module: "devtools/server/actors/accessibility-parent",
+        setupParent: "setupParentProcess",
+      });
+
+      this.onMessage = this.onMessage.bind(this);
+      this.messageManager.addMessageListener(`${this._msgName}:event`, this.onMessage);
+    } else {
+      this.userPref = Services.prefs.getIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED);
+      Services.obs.addObserver(this, "a11y-consumers-changed");
+      Services.prefs.addObserver(PREF_ACCESSIBILITY_FORCE_DISABLED, this);
+      this.initializedDeferred.resolve();
+    }
+
+    Services.obs.addObserver(this, "a11y-init-or-shutdown");
+    this.targetActor = targetActor;
+  },
+
+  bootstrap() {
+    return this.initializedDeferred.promise.then(() => ({
+      enabled: this.enabled,
+      canBeEnabled: this.canBeEnabled,
+      canBeDisabled: this.canBeDisabled,
+    }));
+  },
+
+  get enabled() {
+    return Services.appinfo.accessibilityEnabled;
+  },
+
+  get canBeEnabled() {
+    if (DebuggerServer.isInChildProcess) {
+      return this._canBeEnabled;
+    }
+
+    return Services.prefs.getIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED) < 1;
+  },
+
+  get canBeDisabled() {
+    if (DebuggerServer.isInChildProcess) {
+      return this._canBeDisabled;
+    } else if (!this.enabled) {
+      return true;
+    }
+
+    const { PlatformAPI } = JSON.parse(this.walker.a11yService.getConsumers());
+    return !PlatformAPI;
+  },
+
+  /**
+   * Getter for a message manager that corresponds to a current tab. It is onyl
+   * used if the AccessibilityActor runs in the child process.
+   *
+   * @return {Object}
+   *         Message manager that corresponds to the current content tab.
+   */
+  get messageManager() {
+    if (!DebuggerServer.isInChildProcess) {
+      throw new Error(
+        "Message manager should only be used when actor is in child process.");
+    }
+
+    return this.conn.parentMessageManager;
+  },
+
+  onMessage(msg) {
+    const { topic, data } = msg.data;
+
+    switch (topic) {
+      case "initialized":
+        this._canBeEnabled = data.canBeEnabled;
+        this._canBeDisabled = data.canBeDisabled;
+
+        // Sometimes when the tool is reopened content process accessibility service is
+        // not shut down yet because GC did not run in that process (though it did in
+        // parent process and the service was shut down there). We need to sync the two
+        // services if possible.
+        if (!data.enabled && this.enabled && data.canBeEnabled) {
+          this.messageManager.sendAsyncMessage(this._msgName, { action: "enable" });
+        }
+
+        this.initializedDeferred.resolve();
+        break;
+      case "can-be-disabled-change":
+        this._canBeDisabled = data;
+        events.emit(this, "can-be-disabled-change", this.canBeDisabled);
+        break;
+
+      case "can-be-enabled-change":
+        this._canBeEnabled = data;
+        events.emit(this, "can-be-enabled-change", this.canBeEnabled);
+        break;
+
+      default:
+        break;
+    }
+  },
+
+  /**
+   * Enable acessibility service in the given process.
+   */
+  async enable() {
+    if (this.enabled || !this.canBeEnabled) {
+      return;
+    }
+
+    const initPromise = this.once("init");
+
+    if (DebuggerServer.isInChildProcess) {
+      this.messageManager.sendAsyncMessage(this._msgName, { action: "enable" });
+    } else {
+      // This executes accessibility service lazy getter and adds accessible
+      // events observer.
+      this.walker.a11yService;
+    }
+
+    await initPromise;
+  },
+
+  /**
+   * Disable acessibility service in the given process.
+   */
+  async disable() {
+    if (!this.enabled || !this.canBeDisabled) {
+      return;
+    }
+
+    this.disabling = true;
+    const shutdownPromise = this.once("shutdown");
+    if (DebuggerServer.isInChildProcess) {
+      this.messageManager.sendAsyncMessage(this._msgName, { action: "disable" });
+    } else {
+      // Set PREF_ACCESSIBILITY_FORCE_DISABLED to 1 to force disable
+      // accessibility service. This is the only way to guarantee an immediate
+      // accessibility service shutdown in all processes. This also prevents
+      // accessibility service from starting up in the future.
+      //
+      // TODO: Introduce a shutdown method that is exposed via XPCOM on
+      // accessibility service.
+      Services.prefs.setIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED, 1);
+      // Set PREF_ACCESSIBILITY_FORCE_DISABLED back to previous default or user
+      // set value. This will not start accessibility service until the user
+      // activates it again. It simply ensures that accessibility service can
+      // start again (when value is below 1).
+      Services.prefs.setIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED, this.userPref);
+    }
+
+    await shutdownPromise;
+    delete this.disabling;
+  },
+
+  /**
+   * Observe Accessibility service init and shutdown events. It relays these
+   * events to AccessibilityFront iff the event is fired for the a11y service
+   * that lives in the same process.
+   *
+   * @param  {null} subject
+   *         Not used.
+   * @param  {String} topic
+   *         Name of the a11y service event: "a11y-init-or-shutdown".
+   * @param  {String} data
+   *         "0" corresponds to shutdown and "1" to init.
+   */
+  observe(subject, topic, data) {
+    if (topic === "a11y-init-or-shutdown") {
+      // This event is fired when accessibility service is initialized or shut
+      // down. "init" and "shutdown" events are only relayed when the enabled
+      // state matches the event (e.g. the event came from the same process as
+      // the actor).
+      const enabled = data === "1";
+      if (enabled && this.enabled) {
+        events.emit(this, "init");
+      } else if (!enabled && !this.enabled) {
+        if (this.walker) {
+          this.walker.reset();
+        }
+
+        events.emit(this, "shutdown");
+      }
+    } else if (topic === "a11y-consumers-changed") {
+      // This event is fired when accessibility service consumers change. There
+      // are 3 possible consumers of a11y service: XPCOM, PlatformAPI (e.g.
+      // screen readers) and MainProcess. PlatformAPI consumer can only be set
+      // in parent process, and MainProcess consumer can only be set in child
+      // process. We only care about PlatformAPI consumer changes because when
+      // set, we can no longer disable accessibility service.
+      const { PlatformAPI } = JSON.parse(data);
+      events.emit(this, "can-be-disabled-change", !PlatformAPI);
+    } else if (!this.disabling && topic === "nsPref:changed" &&
+               data === PREF_ACCESSIBILITY_FORCE_DISABLED) {
+      // PREF_ACCESSIBILITY_FORCE_DISABLED preference change event. When set to
+      // >=1, it means that the user wants to disable accessibility service and
+      // prevent it from starting in the future. Note: we also check
+      // this.disabling state when handling this pref change because this is how
+      // we disable the accessibility inspector itself.
+      events.emit(this, "can-be-enabled-change", this.canBeEnabled);
+    }
+  },
+
+  /**
+   * Get or create AccessibilityWalker actor, similar to WalkerActor.
+   *
+   * @return {Object}
+   *         AccessibleWalkerActor for the current tab.
+   */
+  getWalker() {
+    if (!this.walker) {
+      this.walker = new AccessibleWalkerActor(this.conn, this.targetActor);
+    }
+    return this.walker;
+  },
+
+  /**
+   * Destroy accessibility service actor. This method also shutsdown
+   * accessibility service if possible.
+   */
+  async destroy() {
+    if (this.destroyed) {
+      await this.destroyed;
+      return;
+    }
+
+    let resolver;
+    this.destroyed = new Promise(resolve => {
+      resolver = resolve;
+    });
+
+    if (this.walker) {
+      this.walker.reset();
+    }
+
+    Services.obs.removeObserver(this, "a11y-init-or-shutdown");
+    if (DebuggerServer.isInChildProcess) {
+      this.messageManager.removeMessageListener(`${this._msgName}:event`,
+                                                this.onMessage);
+    } else {
+      Services.obs.removeObserver(this, "a11y-consumers-changed");
+      Services.prefs.removeObserver(PREF_ACCESSIBILITY_FORCE_DISABLED, this);
+    }
+
+    Actor.prototype.destroy.call(this);
+    this.walker = null;
+    this.targetActor = null;
+    resolver();
+  },
+});
+
+exports.AccessibleActor = AccessibleActor;
 exports.AccessibleWalkerActor = AccessibleWalkerActor;
+exports.AccessibilityActor = AccessibilityActor;
