@@ -10,6 +10,9 @@
 #include "BackstagePass.h"
 #include "nsIPrincipal.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/WebIDLGlobalNameHash.h"
+
+using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(BackstagePass,
                   nsIXPCScriptable,
@@ -18,11 +21,15 @@ NS_IMPL_ISUPPORTS(BackstagePass,
                   nsIScriptObjectPrincipal,
                   nsISupportsWeakReference)
 
+// XXX(nika): It appears we don't have support for mayresolve hooks in
+// nsIXPCScriptable, and I don't really want to add it because I'd rather just
+// kill nsIXPCScriptable alltogether, so we don't use it here.
+
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME         BackstagePass
 #define XPC_MAP_QUOTED_CLASSNAME "BackstagePass"
 #define XPC_MAP_FLAGS (XPC_SCRIPTABLE_WANT_RESOLVE | \
-                       XPC_SCRIPTABLE_WANT_ENUMERATE | \
+                       XPC_SCRIPTABLE_WANT_NEWENUMERATE | \
                        XPC_SCRIPTABLE_WANT_FINALIZE | \
                        XPC_SCRIPTABLE_WANT_PRECREATE | \
                        XPC_SCRIPTABLE_USE_JSSTUB_FOR_ADDPROPERTY |  \
@@ -58,17 +65,21 @@ BackstagePass::Resolve(nsIXPConnectWrappedNative* wrapper,
 {
     JS::RootedObject obj(cx, objArg);
     JS::RootedId id(cx, idArg);
-    *_retval = mozilla::dom::SystemGlobalResolve(cx, obj, id, resolvedp);
+    *_retval =
+        WebIDLGlobalNameHash::ResolveForSystemGlobal(cx, obj, id, resolvedp);
     return *_retval ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-BackstagePass::Enumerate(nsIXPConnectWrappedNative* wrapper, JSContext* cx,
-                         JSObject* objArg, bool* _retval)
+BackstagePass::NewEnumerate(nsIXPConnectWrappedNative* wrapper, JSContext* cx,
+                            JSObject* objArg, JS::AutoIdVector& properties,
+                            bool enumerableOnly, bool* _retval)
 {
     JS::RootedObject obj(cx, objArg);
-    *_retval = mozilla::dom::SystemGlobalEnumerate(cx, obj);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+    *_retval =
+        WebIDLGlobalNameHash::NewEnumerateSystemGlobal(cx, obj, properties,
+                                                       enumerableOnly);
+    return *_retval ?  NS_OK : NS_ERROR_FAILURE;
 }
 
 /***************************************************************************/

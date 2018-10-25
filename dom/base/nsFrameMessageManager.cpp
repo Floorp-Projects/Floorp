@@ -47,7 +47,6 @@
 #include "mozilla/dom/ParentProcessMessageManager.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/ProcessMessageManager.h"
-#include "mozilla/dom/ResolveSystemBinding.h"
 #include "mozilla/dom/SameProcessMessageQueue.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"

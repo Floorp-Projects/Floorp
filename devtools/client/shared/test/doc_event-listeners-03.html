@@ -14,9 +14,11 @@
     <button id="boundHandleEventClick">boundHandleEventClick</button>
 
     <script type="text/javascript">
-      window.addEventListener("load", function () {
+      "use strict";
+
+      window.addEventListener("load", function() {
         function initialSetup(event) {
-          var button = document.getElementById("initialSetup");
+          const button = document.getElementById("initialSetup");
           button.removeEventListener("click", initialSetup);
           debugger;
         }
@@ -26,7 +28,7 @@
         }
 
         function handleEventClick() {
-          var button = document.getElementById("handleEventClick");
+          const button = document.getElementById("handleEventClick");
           // Create a long prototype chain to test for weird edge cases.
           button.addEventListener("click", Object.create(Object.create(this)));
         }
@@ -36,7 +38,7 @@
         };
 
         function boundHandleEventClick() {
-          var button = document.getElementById("boundHandleEventClick");
+          const button = document.getElementById("boundHandleEventClick");
           this.handleEvent = this.handleEvent.bind(this);
           button.addEventListener("click", this);
         }
@@ -45,15 +47,15 @@
           window.foobar = "boundHandleEventClick";
         };
 
-        var button = document.getElementById("clicker");
+        const button = document.getElementById("clicker");
         // Bind more than once to test for weird edge cases.
-        var boundClicker = clicker.bind(this).bind(this).bind(this);
+        const boundClicker = clicker.bind(this).bind(this).bind(this);
         button.addEventListener("click", boundClicker);
 
         new handleEventClick();
         new boundHandleEventClick();
 
-        var initButton = document.getElementById("initialSetup");
+        const initButton = document.getElementById("initialSetup");
         initButton.addEventListener("click", initialSetup);
       }, {once: true});
     </script>

@@ -163,7 +163,7 @@ ProcessMiddlemanCall(const char* aInputData, size_t aInputSize,
     call->DecodeInput(inputStream);
 
     const Redirection& redirection = gRedirections[call->mCallId];
-    MOZ_RELEASE_ASSERT(gRedirections[call->mCallId].mMiddlemanCall);
+    MOZ_RELEASE_ASSERT(redirection.mMiddlemanCall);
 
     CallArguments arguments;
     call->mArguments.CopyTo(&arguments);
@@ -323,6 +323,9 @@ void
 Middleman_SystemOutput(MiddlemanCallContext& aCx, const void** aOutput, bool aUpdating)
 {
   if (!*aOutput) {
+    if (aCx.mPhase == MiddlemanCallPhase::MiddlemanOutput) {
+      aCx.mCall->SetMiddlemanValue(*aOutput);
+    }
     return;
   }
 
