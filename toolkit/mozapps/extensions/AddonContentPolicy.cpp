@@ -97,6 +97,11 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation,
                                const nsACString& aMimeTypeGuess,
                                int16_t* aShouldLoad)
 {
+  if (!aContentLocation || !aLoadInfo) {
+    *aShouldLoad = REJECT_REQUEST;
+    return NS_ERROR_FAILURE;
+  }
+
   uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
   nsCOMPtr<nsIURI> requestOrigin;
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
