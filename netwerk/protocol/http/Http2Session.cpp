@@ -3760,6 +3760,8 @@ Http2Session::Close(nsresult aReason)
     goAwayReason = NO_HTTP_ERROR;
   } else if (aReason == NS_ERROR_ILLEGAL_VALUE) {
     goAwayReason = PROTOCOL_ERROR;
+  } else if (mCleanShutdown) {
+    goAwayReason = NO_HTTP_ERROR;
   } else {
     goAwayReason = INTERNAL_ERROR;
   }
@@ -4650,6 +4652,12 @@ Http2Session::TopLevelOuterContentWindowIdChanged(uint64_t windowId)
   for (auto iter = mStreamTransactionHash.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->TopLevelOuterContentWindowIdChanged(windowId);
   }
+}
+
+void
+Http2Session::SetCleanShutdown(bool aCleanShutdown)
+{
+  mCleanShutdown = aCleanShutdown;
 }
 
 } // namespace net

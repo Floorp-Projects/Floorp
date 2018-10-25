@@ -248,6 +248,7 @@ public:
   void SendPing() override;
   MOZ_MUST_USE bool MaybeReTunnel(nsAHttpTransaction *) override;
   bool UseH2Deps() { return mUseH2Deps; }
+  void SetCleanShutdown(bool) override;
 
   // overload of nsAHttpTransaction
   MOZ_MUST_USE nsresult ReadSegmentsAgain(nsAHttpSegmentReader *, uint32_t, uint32_t *, bool *) final;
