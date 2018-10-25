@@ -124,10 +124,6 @@ public class ClassicWebViewProvider implements IWebViewProvider {
         settings.setSaveFormData(false);
         //noinspection deprecation - This method is deprecated but let's call it in case WebView implementations still obey it.
         settings.setSavePassword(false);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            settings.setSafeBrowsingEnabled(Settings.getInstance(context).shouldUseSafeBrowsing());
-        }
     }
 
     @Override
@@ -135,10 +131,6 @@ public class ClassicWebViewProvider implements IWebViewProvider {
 
         // Clear the cache so trackers previously loaded are removed
         systemWebView.clearCache(true);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            webSettings.setSafeBrowsingEnabled(Settings.getInstance(context).shouldUseSafeBrowsing());
-        }
 
         // We could consider calling setLoadsImagesAutomatically() here too (This will block images not loaded over the network too)
         webSettings.setBlockNetworkImage(Settings.getInstance(context).shouldBlockImages());
