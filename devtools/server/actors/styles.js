@@ -1489,12 +1489,17 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    *        Data about a modification to a rule. @see |modifyProperties()|
    */
   logChange(change) {
-    const prevValue = this._declarations[change.index]
+    let prevValue = this._declarations[change.index]
       ? this._declarations[change.index].value
       : null;
     const prevName = this._declarations[change.index]
       ? this._declarations[change.index].name
       : null;
+    const prevPriority = this._declarations[change.index]
+      ? this._declarations[change.index].priority
+      : null;
+    // Append the "!important" string if defined in the previous priority flag.
+    prevValue = (prevValue && prevPriority) ? `${prevValue} !important` : prevValue;
 
     // Metadata about a change.
     const data = {};
@@ -1553,8 +1558,11 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // Otherwise, a new declaration is being created or the value of an existing
         // declaration is being updated. In that case, use the provided `change.name`.
         const name = change.newName ? change.newName : change.name;
-        // Reuse the previous value when the property is being renamed.
-        const value = change.newName ? prevValue : change.value;
+        // Append the "!important" string if defined in the incoming priority flag.
+        const newValue = change.priority ? `${change.value} !important` : change.value;
+        // Reuse the previous value string, when the property is renamed.
+        // Otherwise, use the incoming value string.
+        const value = change.newName ? prevValue : newValue;
 
         data.add = { property: name, value };
         // If there is a previous value, log its removal together with the previous
