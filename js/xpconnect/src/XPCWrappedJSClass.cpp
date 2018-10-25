@@ -147,14 +147,7 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(JSContext* cx, REFNSIID aIID,
             }
 
             for (i = 0; i < methodCount; i++) {
-                const nsXPTMethodInfo* info;
-                if (NS_SUCCEEDED(mInfo->GetMethodInfo(i, &info))) {
-                    SetReflectable(i, XPCConvert::IsMethodReflectable(*info));
-                } else {
-                    delete [] mDescriptors;
-                    mDescriptors = nullptr;
-                    break;
-                }
+                SetReflectable(i, XPCConvert::IsMethodReflectable(mInfo->Method(i)));
             }
         }
     } else {
