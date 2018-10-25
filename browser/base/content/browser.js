@@ -70,6 +70,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
   UrlbarInput: "resource:///modules/UrlbarInput.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   UrlbarValueFormatter: "resource:///modules/UrlbarValueFormatter.jsm",
   Utils: "resource://gre/modules/sessionstore/Utils.jsm",
   Weave: "resource://services-sync/main.js",
@@ -2465,80 +2466,6 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup, referrerPolicy,
   }
 }
 
-/**
- * Given a string, will generate a more appropriate urlbar value if a Places
- * keyword or a search alias is found at the beginning of it.
- *
- * @param url
- *        A string that may begin with a keyword or an alias.
- *
- * @return {Promise}
- * @resolves { url, postData, mayInheritPrincipal }. If it's not possible
- *           to discern a keyword or an alias, url will be the input string.
- */
-async function getShortcutOrURIAndPostData(url) {
-  let mayInheritPrincipal = false;
-  let postData = null;
-  // Split on the first whitespace.
-  let [keyword, param = ""] = url.trim().split(/\s(.+)/, 2);
-
-  if (!keyword) {
-    return { url, postData, mayInheritPrincipal };
-  }
-
-  let engine = Services.search.getEngineByAlias(keyword);
-  if (engine) {
-    let submission = engine.getSubmission(param, null, "keyword");
-    return { url: submission.uri.spec,
-             postData: submission.postData,
-             mayInheritPrincipal };
-  }
-
-  // A corrupt Places database could make this throw, breaking navigation
-  // from the location bar.
-  let entry = null;
-  try {
-    entry = await PlacesUtils.keywords.fetch(keyword);
-  } catch (ex) {
-    Cu.reportError(`Unable to fetch Places keyword "${keyword}": ${ex}`);
-  }
-  if (!entry || !entry.url) {
-    // This is not a Places keyword.
-    return { url, postData, mayInheritPrincipal };
-  }
-
-  try {
-    [url, postData] =
-      await BrowserUtils.parseUrlAndPostData(entry.url.href,
-                                             entry.postData,
-                                             param);
-    if (postData) {
-      postData = getPostDataStream(postData);
-    }
-
-    // Since this URL came from a bookmark, it's safe to let it inherit the
-    // current document's principal.
-    mayInheritPrincipal = true;
-  } catch (ex) {
-    // It was not possible to bind the param, just use the original url value.
-  }
-
-  return { url, postData, mayInheritPrincipal };
-}
-
-function getPostDataStream(aPostDataString,
-                           aType = "application/x-www-form-urlencoded") {
-  let dataStream = Cc["@mozilla.org/io/string-input-stream;1"]
-                     .createInstance(Ci.nsIStringInputStream);
-  dataStream.data = aPostDataString;
-
-  let mimeStream = Cc["@mozilla.org/network/mime-input-stream;1"]
-                     .createInstance(Ci.nsIMIMEInputStream);
-  mimeStream.addHeader("Content-Type", aType);
-  mimeStream.setData(dataStream);
-  return mimeStream.QueryInterface(Ci.nsIInputStream);
-}
-
 function getLoadContext() {
   return window.docShell.QueryInterface(Ci.nsILoadContext);
 }
@@ -3703,7 +3630,7 @@ var newTabButtonObserver = {
 
     for (let link of links) {
       if (link.url) {
-        let data = await getShortcutOrURIAndPostData(link.url);
+        let data = await UrlbarUtils.getShortcutOrURIAndPostData(link.url);
         // Allow third-party services to fixup this URL.
         openNewTabWith(data.url, shiftKey, {
           // TODO fix allowInheritPrincipal
@@ -3738,7 +3665,7 @@ var newWindowButtonObserver = {
 
     for (let link of links) {
       if (link.url) {
-        let data = await getShortcutOrURIAndPostData(link.url);
+        let data = await UrlbarUtils.getShortcutOrURIAndPostData(link.url);
         // Allow third-party services to fixup this URL.
         openNewWindowWith(data.url, {
           // TODO fix allowInheritPrincipal
@@ -4383,14 +4310,6 @@ function FillHistoryMenu(aParent) {
 
   updateSessionHistory(sessionHistory, true);
   return true;
-}
-
-function addToUrlbarHistory(aUrlToAdd) {
-  if (!PrivateBrowsingUtils.isWindowPrivate(window) &&
-      aUrlToAdd &&
-      !aUrlToAdd.includes(" ") &&
-      !/[\x00-\x1F]/.test(aUrlToAdd)) // eslint-disable-line no-control-regex
-    PlacesUIUtils.markPageAsTyped(aUrlToAdd);
 }
 
 function BrowserDownloadsUI() {
@@ -6240,7 +6159,7 @@ function middleMousePaste(event) {
     lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
   }
 
-  getShortcutOrURIAndPostData(clipboard).then(data => {
+  UrlbarUtils.getShortcutOrURIAndPostData(clipboard).then(data => {
     try {
       makeURI(data.url);
     } catch (ex) {
@@ -6249,7 +6168,7 @@ function middleMousePaste(event) {
     }
 
     try {
-      addToUrlbarHistory(data.url);
+      UrlbarUtils.addToUrlbarHistory(data.url, window);
     } catch (ex) {
       // Things may go wrong when adding url to session history,
       // but don't let that interfere with the loading of the url.
@@ -6326,7 +6245,7 @@ function handleDroppedLink(event, urlOrLinks, nameOrTriggeringPrincipal, trigger
     let urls = [];
     let postDatas = [];
     for (let link of links) {
-      let data = await getShortcutOrURIAndPostData(link.url);
+      let data = await UrlbarUtils.getShortcutOrURIAndPostData(link.url);
       urls.push(data.url);
       postDatas.push(data.postData);
     }
