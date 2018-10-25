@@ -284,6 +284,9 @@ GetPropIRGenerator::tryAttachStub()
             if (tryAttachDenseElementHole(obj, objId, index, indexId)) {
                 return true;
             }
+            if (tryAttachSparseElement(obj, objId, index, indexId)) {
+                return true;
+            }
             if (tryAttachUnboxedElementHole(obj, objId, index, indexId)) {
                 return true;
             }
@@ -2210,6 +2213,70 @@ GetPropIRGenerator::tryAttachDenseElementHole(HandleObject obj, ObjOperandId obj
     writer.typeMonitorResult();
 
     trackAttached("DenseElementHole");
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachSparseElement(HandleObject obj, ObjOperandId objId,
+                                           uint32_t index, Int32OperandId indexId)
+{
+    if (!obj->isNative()) {
+        return false;
+    }
+    NativeObject* nobj = &obj->as<NativeObject>();
+
+    // Stub doesn't handle negative indices.
+    if (index > INT_MAX) {
+        return false;
+    }
+
+    // We also need to be past the end of the dense capacity, to ensure sparse.
+    if (index < nobj->getDenseInitializedLength()) {
+        return false;
+    }
+
+    // Only handle Array objects in this stub.
+    if (!nobj->is<ArrayObject>()) {
+        return false;
+    }
+
+    // Here, we ensure that the prototype chain does not define any sparse
+    // indexed properties on the shape lineage. This allows us to guard on
+    // the shapes up the prototype chain to ensure that no indexed properties
+    // exist outside of the dense elements.
+    //
+    // The `GeneratePrototypeHoleGuards` call below will guard on the shapes,
+    // as well as ensure that no prototypes contain dense elements, allowing
+    // us to perform a pure shape-search for out-of-bounds integer-indexed
+    // properties on the recevier object.
+    if ((nobj->staticPrototype() != nullptr) &&
+        ObjectMayHaveExtraIndexedProperties(nobj->staticPrototype()))
+    {
+        return false;
+    }
+
+    // Ensure that obj is an Array.
+    writer.guardClass(objId, GuardClassKind::Array);
+
+    // The helper we are going to call only applies to non-dense elements.
+    writer.guardIndexGreaterThanDenseInitLength(objId, indexId);
+
+    // Ensures we are able to efficiently able to map to an integral jsid.
+    writer.guardIndexIsNonNegative(indexId);
+
+    // Shape guard the prototype chain to avoid shadowing indexes from appearing.
+    // The helper function also ensures that the index does not appear within the
+    // dense element set of the prototypes.
+    GeneratePrototypeHoleGuards(writer, nobj, objId);
+
+    // At this point, we are guaranteed that the indexed property will not
+    // be found on one of the prototypes. We are assured that we only have
+    // to check that the receiving object has the property.
+
+    writer.callGetSparseElementResult(objId, indexId);
+    writer.typeMonitorResult();
+
+    trackAttached("GetSparseElement");
     return true;
 }
 

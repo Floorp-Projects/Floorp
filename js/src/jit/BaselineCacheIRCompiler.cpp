@@ -1898,6 +1898,27 @@ BaselineCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper()
     return true;
 }
 
+bool
+BaselineCacheIRCompiler::emitCallGetSparseElementResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register id = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    allocator.discardStack(masm);
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch);
+
+    masm.Push(id);
+    masm.Push(obj);
+
+    if (!callVM(masm, GetSparseElementHelperInfo)) {
+        return false;
+    }
+    stubFrame.leave(masm);
+    return true;
+}
 
 bool
 BaselineCacheIRCompiler::emitMegamorphicSetElement()
