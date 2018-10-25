@@ -535,6 +535,11 @@ parent:
     async RemotePaintIsReady();
 
     /**
+     * Child informs the parent that a compositor transaction has ocurred.
+     */
+    async NotifyCompositorTransaction();
+
+    /**
      * Child informs the parent that the content is ready to handle input
      * events. This is sent when the TabChild is created.
      */
