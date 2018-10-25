@@ -22,6 +22,10 @@ interface nsINetworkConnectivityService : nsISupports
   readonly attribute long DNSv4;
   readonly attribute long DNSv6;
 
+  /* If connecting to IPv4/v6 works on the current network */
+  readonly attribute long IPv4;
+  readonly attribute long IPv6;
+
   /* Starts the DNS request to check for DNS v4/v6 availability */
   void recheckDNS();
 };

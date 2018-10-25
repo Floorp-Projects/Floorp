@@ -6,6 +6,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "xpcpublic.h"
+#include "nsSocketTransport2.h"
 
 namespace mozilla {
 namespace net {
@@ -61,6 +62,27 @@ NetworkConnectivityService::GetDNSv6(int32_t *aState)
 {
   NS_ENSURE_ARG(aState);
   *aState = mDNSv6;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+NetworkConnectivityService::GetIPv4(int32_t *aState)
+{
+  NS_ENSURE_ARG(aState);
+  *aState = nsSocketTransport::HasIPv4Connectivity()
+              ? nsINetworkConnectivityService::OK
+              : nsINetworkConnectivityService::NOT_AVAILABLE;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+NetworkConnectivityService::GetIPv6(int32_t *aState)
+{
+  NS_ENSURE_ARG(aState);
+  *aState = nsSocketTransport::HasIPv6Connectivity()
+              ? nsINetworkConnectivityService::OK
+              : nsINetworkConnectivityService::NOT_AVAILABLE;
   return NS_OK;
 }
 
