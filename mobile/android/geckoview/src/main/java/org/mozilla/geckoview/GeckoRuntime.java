@@ -231,6 +231,10 @@ public final class GeckoRuntime implements Parcelable {
         return true;
     }
 
+    /* package */ void setDefaultPrefs(GeckoBundle prefs) {
+        EventDispatcher.getInstance().dispatch("GeckoView:SetDefaultPrefs", prefs);
+    }
+
     /**
      * Create a new runtime with default settings and attach it to the given
      * context.
