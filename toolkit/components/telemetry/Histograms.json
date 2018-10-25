@@ -12846,8 +12846,8 @@
   },
   "STORAGE_SYNC_GET_OPS_SIZE": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["eglassercamp@mozilla.com"],
-    "expires_in_version": "64",
+    "alert_emails": ["addons-dev-internal@mozilla.com", "eglassercamp@mozilla.com", "lgreco@mozilla.com"],
+    "expires_in_version": "67",
     "bug_numbers": [1328974],
     "kind": "exponential",
     "high": 100000,
@@ -12858,8 +12858,8 @@
   },
   "STORAGE_SYNC_SET_OPS_SIZE": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["eglassercamp@mozilla.com"],
-    "expires_in_version": "64",
+    "alert_emails": ["addons-dev-internal@mozilla.com", "eglassercamp@mozilla.com", "lgreco@mozilla.com"],
+    "expires_in_version": "67",
     "bug_numbers": [1328974],
     "kind": "exponential",
     "high": 100000,
@@ -12870,8 +12870,8 @@
   },
   "STORAGE_SYNC_REMOVE_OPS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["eglassercamp@mozilla.com"],
-    "expires_in_version": "64",
+    "alert_emails": ["addons-dev-internal@mozilla.com", "eglassercamp@mozilla.com", "lgreco@mozilla.com"],
+    "expires_in_version": "67",
     "bug_numbers": [1328974],
     "kind": "count",
     "keyed": true,
