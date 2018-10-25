@@ -109,14 +109,14 @@ android-lint/opt:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-lint
         artifacts:
-            - name: public/android/lint/lint-results-officialWithoutGeckoBinariesNoMinApiPhotonDebug.html
-              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialWithoutGeckoBinariesNoMinApiPhotonDebug.html
+            - name: public/android/lint/lint-results-officialWithoutGeckoBinariesNoMinApiDebug.html
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialWithoutGeckoBinariesNoMinApiDebug.html
               type: file
-            - name: public/android/lint/lint-results-officialWithoutGeckoBinariesNoMinApiPhotonDebug.xml
-              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialWithoutGeckoBinariesNoMinApiPhotonDebug.xml
+            - name: public/android/lint/lint-results-officialWithoutGeckoBinariesNoMinApiDebug.xml
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialWithoutGeckoBinariesNoMinApiDebug.xml
               type: file
-            - name: public/android/lint/lint-results-officialWithoutGeckoBinariesNoMinApiPhotonDebug_files
-              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialWithoutGeckoBinariesNoMinApiPhotonDebug_files
+            - name: public/android/lint/lint-results-officialWithoutGeckoBinariesNoMinApiDebug_files
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialWithoutGeckoBinariesNoMinApiDebug_files
               type: directory
             - name: public/build
               path: /builds/worker/artifacts/
@@ -216,11 +216,11 @@ android-findbugs/opt:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-findbugs
         artifacts:
-            - name: public/android/findbugs/findbugs-officialWithoutGeckoBinariesNoMinApiPhotonDebug-output.html
-              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialWithoutGeckoBinariesNoMinApiPhotonDebug-output.html
+            - name: public/android/findbugs/findbugs-officialWithoutGeckoBinariesNoMinApiDebug-output.html
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialWithoutGeckoBinariesNoMinApiDebug-output.html
               type: file
-            - name: public/android/findbugs/findbugs-officialWithoutGeckoBinariesNoMinApiPhotonDebug-output.xml
-              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialWithoutGeckoBinariesNoMinApiPhotonDebug-output.xml
+            - name: public/android/findbugs/findbugs-officialWithoutGeckoBinariesNoMinApiDebug-output.xml
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialWithoutGeckoBinariesNoMinApiDebug-output.xml
               type: file
             - name: public/build
               path: /builds/worker/artifacts/
