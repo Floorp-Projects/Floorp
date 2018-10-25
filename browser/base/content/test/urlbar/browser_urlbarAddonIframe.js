@@ -106,9 +106,18 @@ add_task(async function() {
   // Check the heuristic result.
   let result = promiseValues[2];
   let engineName = Services.search.currentEngine.name;
-  Assert.equal(result.url,
-               `moz-action:searchengine,{"engineName":"${engineName}","input":"test","searchQuery":"test"}`,
-               "result.url");
+  Assert.deepEqual(
+    PlacesUtils.parseActionUrl(result.url),
+    {
+      type: "searchengine",
+      params: {
+        engineName,
+        input: "test",
+        searchQuery: "test",
+      },
+    },
+    "result.url"
+  );
   Assert.ok("action" in result, "result.action");
   Assert.equal(result.action.type, "searchengine", "result.action.type");
   Assert.ok("params" in result.action, "result.action.params");
