@@ -61,6 +61,24 @@ function createIframeAndWaitForMessage(url) {
   });
 }
 
+/**
+ * Helper to create a nested iframe into the iframe created by
+ * createIframeAndWaitForMessage().
+ *
+ * A promise will be returned that resolves with the payload of the postMessage
+ * call.
+ */
+function createNestedIframeAndWaitForMessage(url) {
+  const iframe = document.getElementsByTagName('iframe')[0];
+  iframe.contentWindow.postMessage("create nested iframe", "*");
+  return new Promise((resolve) => {
+    window.addEventListener(
+      'message',
+      (event) => { resolve(event.data); },
+      { once: true });
+  });
+}
+
 async function unregisterAll() {
   const registrations = await navigator.serviceWorker.getRegistrations();
   for (const reg of registrations) {
