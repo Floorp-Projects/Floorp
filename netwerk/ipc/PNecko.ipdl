@@ -112,7 +112,9 @@ parent:
 
   async PChannelDiverter(ChannelDiverterArgs channel);
 
-  async PTrackingDummyChannel(nsIURI uri, OptionalLoadInfoArgs loadInfo);
+  async PTrackingDummyChannel(nsIURI uri, nsIURI aTopWindowURI,
+                              nsresult aTopWindowURIResult,
+                              OptionalLoadInfoArgs loadInfo);
 
   /**
    * These are called from the child with the results of the auth prompt.
