@@ -104,6 +104,24 @@ function createRule(ruleData, rules) {
     .pop();
 }
 
+function removeRule(ruleId, rules) {
+  const rule = rules[ruleId];
+
+  // First, remove this rule's id from its parent's list of children
+  if (rule.parent && rules[rule.parent]) {
+    rules[rule.parent].children = rules[rule.parent].children.filter(childRuleId => {
+      return childRuleId !== ruleId;
+    });
+
+    // Remove the parent rule if it has no children left.
+    if (!rules[rule.parent].children.length) {
+      removeRule(rule.parent, rules);
+    }
+  }
+
+  delete rules[ruleId];
+}
+
 /**
  * Aggregated changes grouped by sources (stylesheet/element), which contain rules,
  * which contain collections of added and removed CSS declarations.
@@ -166,19 +184,47 @@ const reducers = {
     // Copy or create collection of all CSS declarations ever removed from this rule.
     const remove = Object.assign({}, rule.remove);
 
-    // Track the remove operation only if the property was not previously introduced by
-    // an add operation. This ensures repeated changes of the same property register as
-    // a single remove operation of its original value.
-    if (change.remove && change.remove.property && !add[change.remove.property]) {
-      remove[change.remove.property] = change.remove.value;
+    if (change.remove && change.remove.property) {
+      // Track the remove operation only if the property was not previously introduced
+      // by an add operation. This ensures repeated changes of the same property
+      // register as a single remove operation of its original value.
+      if (!add[change.remove.property]) {
+        remove[change.remove.property] = change.remove.value;
+      }
+
+      // Delete any previous add operation which would be canceled out by this remove.
+      if (add[change.remove.property] === change.remove.value) {
+        delete add[change.remove.property];
+      }
     }
 
     if (change.add && change.add.property) {
       add[change.add.property] = change.add.value;
     }
 
-    source.rules = { ...rules, [ruleId]: { ...rule, add, remove } };
-    state[sourceId] = source;
+    const property = change.add && change.add.property ||
+                     change.remove && change.remove.property;
+
+    // Remove tracked operations if they cancel each other out.
+    if (add[property] === remove[property]) {
+      delete add[property];
+      delete remove[property];
+    }
+
+    // Remove information about the rule if none its declarations changed.
+    if (!Object.keys(add).length && !Object.keys(remove).length) {
+      removeRule(ruleId, rules);
+      source.rules = { ...rules };
+    } else {
+      source.rules = { ...rules, [ruleId]: { ...rule, add, remove } };
+    }
+
+    // Remove information about the source if none of its rules changed.
+    if (!Object.keys(source.rules).length) {
+      delete state[sourceId];
+    } else {
+      state[sourceId] = source;
+    }
 
     return state;
   },
