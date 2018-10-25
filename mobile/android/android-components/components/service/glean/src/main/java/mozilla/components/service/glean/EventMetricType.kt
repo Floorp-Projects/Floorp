@@ -10,7 +10,7 @@ import mozilla.components.support.base.log.logger.Logger
 // Maximum length of any string value in the extra dictionary, in UTF8 byte sequence length.
 internal const val MAX_LENGTH_EXTRA_KEY_VALUE = 80
 // Maximum length of any passed value string, in UTF8 byte sequence length.
-internal const val MAX_LENGTH_VALUE = 80
+internal const val MAX_LENGTH_EVENT_VALUE = 80
 
 /**
  * This implements the developer facing API for recording events.
@@ -47,17 +47,7 @@ data class EventMetricType(
     @Suppress("ReturnCount", "ComplexMethod")
     public fun record(objectId: String, value: String? = null, extra: Map<String, String>? = null) {
         // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
-
-        // Silently drop recording for disabled events.
-        if (disabled) {
-            return
-        }
-
-        // TODO implement "user" metric lifetime. See bug 1499756.
-        // Metrics can be recorded with application or user lifetime. For now,
-        // we only support "application": metrics live as long as the application lives.
-        if (!applicationProperty) {
-            logger.error("The metric lifetime must be explicitly set.")
+        if (!shouldRecord(logger)) {
             return
         }
 
@@ -69,9 +59,9 @@ data class EventMetricType(
         }
 
         val truncatedValue = value?.let {
-            if (it.length > MAX_LENGTH_VALUE) {
+            if (it.length > MAX_LENGTH_EVENT_VALUE) {
                 logger.warn("Value parameter exceeds maximum string length, truncating.")
-                return@let it.substring(0, MAX_LENGTH_VALUE)
+                return@let it.substring(0, MAX_LENGTH_EVENT_VALUE)
             }
             it
         }

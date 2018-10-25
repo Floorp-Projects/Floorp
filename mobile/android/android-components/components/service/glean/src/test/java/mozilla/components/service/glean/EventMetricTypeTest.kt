@@ -149,7 +149,7 @@ class EventMetricTypeTest {
         val secondEvent = snapshot.filter { e -> e.objectId == "buttonB" }.single()
         assertEquals("ui", secondEvent.category)
         assertEquals("click", secondEvent.name)
-        assertEquals(testValue.repeat(10).substring(0, MAX_LENGTH_VALUE), secondEvent.value)
+        assertEquals(testValue.repeat(10).substring(0, MAX_LENGTH_EVENT_VALUE), secondEvent.value)
     }
 
     @Test

@@ -19,3 +19,13 @@ browser_engagement:
     extra_keys:
       key1: "This is key one"
       key2: "This is key two"
+
+basic:
+  os:
+    type: string
+    description: >
+      The name of the os
+    bugs:
+      - 123456789
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
