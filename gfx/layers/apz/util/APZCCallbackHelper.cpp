@@ -757,7 +757,12 @@ SendLayersDependentApzcTargetConfirmation(nsIPresShell* aShell, uint64_t aInputB
     return;
   }
 
-  LayerTransactionChild* shadow = lm->AsShadowForwarder()->GetShadowManager();
+  ShadowLayerForwarder* lf = lm->AsShadowForwarder();
+  if (!lf) {
+    return;
+  }
+
+  LayerTransactionChild* shadow = lf->GetShadowManager();
   if (!shadow) {
     return;
   }
