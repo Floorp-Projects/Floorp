@@ -1,7 +1,7 @@
 "use strict";
 
 const PREF_INTRO_COUNT = "browser.contentblocking.introCount";
-const PREF_CB_UI_ENABLED = "browser.contentblocking.ui.enabled";
+const PREF_CB_ENABLED = "browser.contentblocking.enabled";
 const PREF_TP_ENABLED = "privacy.trackingprotection.enabled";
 const PREF_FB_ENABLED = "browser.fastblock.enabled";
 const PREF_FB_TIMEOUT = "browser.fastblock.timeout";
@@ -14,7 +14,7 @@ var {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/Url
 
 registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
-  Services.prefs.clearUserPref(PREF_CB_UI_ENABLED);
+  Services.prefs.clearUserPref(PREF_CB_ENABLED);
   Services.prefs.clearUserPref(PREF_TP_ENABLED);
   Services.prefs.clearUserPref(PREF_FB_ENABLED);
   Services.prefs.clearUserPref(PREF_FB_TIMEOUT);
@@ -26,7 +26,7 @@ function allowOneIntro() {
 }
 
 add_task(async function setup_test() {
-  Services.prefs.setBoolPref(PREF_CB_UI_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_CB_ENABLED, true);
   Services.prefs.setBoolPref(PREF_TP_ENABLED, true);
   await UrlClassifierTestUtils.addTestTrackers();
 });
