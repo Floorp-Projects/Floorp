@@ -2501,7 +2501,10 @@ WebGLContext::ValidateIsObject(const WebGLDeletableObject* const object) const
     if (!object->IsCompatibleWithContext(this))
         return false;
 
-    return !object->IsDeleted();
+    if (object->IsDeleted())
+        return false;
+
+    return true;
 }
 
 bool

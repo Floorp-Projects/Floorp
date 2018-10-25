@@ -131,7 +131,8 @@ WebGLFBAttachPoint::IsComplete(WebGLContext* webgl, nsCString* const out_info) c
         // We need to check immutable textures though, because checking completeness is
         // also when we zero invalidated/no-data tex images.
         const bool complete = [&]() {
-            const auto texCompleteness = tex->CalcCompletenessInfo();
+            const bool ensureInit = false;
+            const auto texCompleteness = tex->CalcCompletenessInfo(ensureInit);
             if (!texCompleteness) // OOM
                 return false;
             if (!texCompleteness->levels)
@@ -508,10 +509,6 @@ WebGLFramebuffer::Delete()
     mContext->gl->fDeleteFramebuffers(1, &mGLName);
 
     LinkedListElement<WebGLFramebuffer>::removeFrom(mContext->mFramebuffers);
-
-#ifdef ANDROID
-    mIsFB = false;
-#endif
 }
 
 ////
@@ -1232,7 +1229,7 @@ WebGLFramebuffer::FramebufferTexture2D(GLenum attachEnum,
         if (!mContext->ValidateObject("texture", *tex))
             return;
 
-        if (!tex->HasEverBeenBound()) {
+        if (!tex->Target()) {
             mContext->ErrorInvalidOperation("`texture` has never been bound.");
             return;
         }
@@ -1317,7 +1314,7 @@ WebGLFramebuffer::FramebufferTextureLayer(GLenum attachEnum,
         if (!mContext->ValidateObject("texture", *tex))
             return;
 
-        if (!tex->HasEverBeenBound()) {
+        if (!tex->Target()) {
             mContext->ErrorInvalidOperation("`texture` has never been bound.");
             return;
         }
