@@ -16,13 +16,8 @@
 namespace mozilla {
 namespace recordreplay {
 
-// The total number of locks that have been created. Reserved IDs:
-// 0: Locks that are not recorded.
-// 1: Used by gAtomicLock for atomic accesses.
-//
-// This is only used while recording, and increments gradually as locks are
-// created.
-static const size_t gAtomicLockId = 1;
+// The total number of locks that have been created. Each Lock is given a
+// non-zero id based on this counter.
 static Atomic<size_t, SequentiallyConsistent, Behavior::DontPreserve> gNumLocks;
 
 struct LockAcquires
@@ -63,6 +58,19 @@ typedef std::unordered_map<void*, Lock*> LockMap;
 static LockMap* gLocks;
 static ReadWriteSpinLock gLocksLock;
 
+static Lock*
+CreateNewLock(Thread* aThread, size_t aId)
+{
+  LockAcquires* info = gLockAcquires.Create(aId);
+  info->mAcquires = gRecordingFile->OpenStream(StreamName::Lock, aId);
+
+  if (IsReplaying()) {
+    info->ReadAndNotifyNextOwner(aThread);
+  }
+
+  return new Lock(aId);
+}
+
 /* static */ void
 Lock::New(void* aNativeLock)
 {
@@ -81,12 +89,7 @@ Lock::New(void* aNativeLock)
   }
   thread->Events().RecordOrReplayScalar(&id);
 
-  LockAcquires* info = gLockAcquires.Create(id);
-  info->mAcquires = gRecordingFile->OpenStream(StreamName::Lock, id);
-
-  if (IsReplaying()) {
-    info->ReadAndNotifyNextOwner(thread);
-  }
+  Lock* lock = CreateNewLock(thread, id);
 
   // Tolerate new locks being created with identical pointers, even if there
   // was no explicit Destroy() call for the old one.
@@ -99,7 +102,7 @@ Lock::New(void* aNativeLock)
     gLocks = new LockMap();
   }
 
-  gLocks->insert(LockMap::value_type(aNativeLock, new Lock(id)));
+  gLocks->insert(LockMap::value_type(aNativeLock, lock));
 
   thread->EndDisallowEvents();
 }
@@ -201,30 +204,6 @@ Lock::Exit()
   }
 }
 
-struct AtomicLock : public detail::MutexImpl
-{
-  using detail::MutexImpl::lock;
-  using detail::MutexImpl::unlock;
-};
-
-// Lock which is held during code sections that run atomically.
-static AtomicLock* gAtomicLock = nullptr;
-
-/* static */ void
-Lock::InitializeLocks()
-{
-  gNumLocks = gAtomicLockId;
-  gAtomicLock = new AtomicLock();
-
-  AssertEventsAreNotPassedThrough();
-
-  // There should be exactly one recorded lock right now, unless we had an
-  // initialization failure and didn't record the lock just created.
-  MOZ_RELEASE_ASSERT(!IsRecording() ||
-                     gNumLocks == gAtomicLockId + 1 ||
-                     gInitializationFailureMessage);
-}
-
 /* static */ void
 Lock::LockAquiresUpdated(size_t aLockId)
 {
@@ -234,24 +213,94 @@ Lock::LockAquiresUpdated(size_t aLockId)
   }
 }
 
+// We use a set of Locks to record and replay the order in which atomic
+// accesses occur. Each lock describes the acquire order for a disjoint set of
+// values; this is done to reduce contention between threads, and ensures that
+// when the same value pointer is used in two ordered atomic accesses, those
+// accesses will replay in the same order as they did while recording.
+// Instead of using platform mutexes, we manage the Locks directly to avoid
+// overhead in Lock::Find. Atomics accesses are a major source of recording
+// overhead, which we want to minimize.
+static const size_t NumAtomicLocks = 89;
+static Lock** gAtomicLocks;
+
+// While recording, these locks prevent multiple threads from simultaneously
+// owning the same atomic lock.
+static SpinLock* gAtomicLockOwners;
+
+/* static */ void
+Lock::InitializeLocks()
+{
+  Thread* thread = Thread::Current();
+
+  gNumLocks = 1;
+  gAtomicLocks = new Lock*[NumAtomicLocks];
+  for (size_t i = 0; i < NumAtomicLocks; i++) {
+    gAtomicLocks[i] = CreateNewLock(thread, gNumLocks++);
+  }
+  if (IsRecording()) {
+    gAtomicLockOwners = new SpinLock[NumAtomicLocks];
+    PodZero(gAtomicLockOwners, NumAtomicLocks);
+  }
+}
+
 extern "C" {
 
 MOZ_EXPORT void
-RecordReplayInterface_InternalBeginOrderedAtomicAccess()
+RecordReplayInterface_InternalBeginOrderedAtomicAccess(const void* aValue)
 {
   MOZ_RELEASE_ASSERT(IsRecordingOrReplaying());
-  if (!gInitializationFailureMessage) {
-    gAtomicLock->lock();
+
+  Thread* thread = Thread::Current();
+
+  // Determine which atomic lock to use for this access.
+  size_t atomicId;
+  {
+    RecordingEventSection res(thread);
+    if (!res.CanAccessEvents()) {
+      return;
+    }
+
+    thread->Events().RecordOrReplayThreadEvent(ThreadEvent::AtomicAccess);
+
+    atomicId = IsRecording() ? (HashGeneric(aValue) % NumAtomicLocks) : 0;
+    thread->Events().RecordOrReplayScalar(&atomicId);
+    MOZ_RELEASE_ASSERT(atomicId < NumAtomicLocks);
   }
+
+  // When recording, hold a spin lock so that no other thread can access this
+  // same atomic until this access ends. When replaying, we don't need to hold
+  // any actual lock, as the atomic access cannot race and the Lock structure
+  // ensures that accesses happen in the same order.
+  if (IsRecording()) {
+    gAtomicLockOwners[atomicId].Lock();
+  }
+
+  gAtomicLocks[atomicId]->Enter();
+
+  MOZ_RELEASE_ASSERT(thread->AtomicLockId().isNothing());
+  thread->AtomicLockId().emplace(atomicId);
 }
 
 MOZ_EXPORT void
 RecordReplayInterface_InternalEndOrderedAtomicAccess()
 {
   MOZ_RELEASE_ASSERT(IsRecordingOrReplaying());
-  if (!gInitializationFailureMessage) {
-    gAtomicLock->unlock();
+
+  Thread* thread = Thread::Current();
+  if (!thread || thread->PassThroughEvents() || thread->HasDivergedFromRecording()) {
+    return;
   }
+
+  MOZ_RELEASE_ASSERT(thread->AtomicLockId().isSome());
+  size_t atomicId = thread->AtomicLockId().ref();
+  thread->AtomicLockId().reset();
+
+  if (IsRecording()) {
+    gAtomicLockOwners[atomicId].Unlock();
+  }
+
+  gAtomicLocks[atomicId]->Exit();
 }
 
 } // extern "C"
