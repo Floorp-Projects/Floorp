@@ -76,6 +76,12 @@ PER_PROJECT_PARAMETERS = {
         'release_type': 'esr60',
     },
 
+    'comm-central': {
+        'target_tasks_method': 'default',
+        'optimize_target_tasks': True,
+        'release_type': 'nightly',
+    },
+
     'comm-beta': {
         'target_tasks_method': 'mozilla_beta_tasks',
         'optimize_target_tasks': True,
