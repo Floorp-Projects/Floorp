@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <div></div>
+
+    <script>
+    "use strict";
+
+    // This function is called from test.
+    // eslint-disable-next-line
+    function startMutation() {
+      const target = document.querySelector("div");
+      const animation = target.animate({ opacity: [1, 0] }, 100000);
+      animation.currentTime = 1;
+      animation.cancel();
+    }
+    </script>
+  </body>
+</html>
