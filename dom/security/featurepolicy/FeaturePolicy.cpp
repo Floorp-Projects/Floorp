@@ -36,17 +36,17 @@ FeaturePolicy::InheritPolicy(FeaturePolicy* aParentPolicy)
 
   RefPtr<FeaturePolicy> dest = this;
   RefPtr<FeaturePolicy> src = aParentPolicy;
-  nsCOMPtr<nsIPrincipal> origin = mDefaultOrigin;
-  FeaturePolicyUtils::ForEachFeature([dest, src, origin](const char* aFeatureName) {
+  FeaturePolicyUtils::ForEachFeature([dest, src](const char* aFeatureName) {
     nsString featureName;
     featureName.AppendASCII(aFeatureName);
 
     // If the destination has a declared feature (via the HTTP header or 'allow'
-    // attribute) we allow the feature only if both parent FeaturePolicy and this
-    // one allow the current origin.
-    if (dest->HasDeclaredFeature(featureName)) {
-      if (!dest->AllowsFeatureInternal(featureName, origin) ||
-          !src->AllowsFeatureInternal(featureName, origin)) {
+    // attribute) we allow the feature if the destination allows it and the
+    // parent allows its origin or the destinations' one.
+    if (dest->HasDeclaredFeature(featureName) &&
+        dest->AllowsFeatureInternal(featureName, dest->mDefaultOrigin)) {
+      if (!src->AllowsFeatureInternal(featureName, src->mDefaultOrigin) &&
+          !src->AllowsFeatureInternal(featureName, dest->mDefaultOrigin)) {
         dest->SetInheritedDeniedFeature(featureName);
       }
       return;
@@ -54,7 +54,7 @@ FeaturePolicy::InheritPolicy(FeaturePolicy* aParentPolicy)
 
     // If there was not a declared feature, we allow the feature if the parent
     // FeaturePolicy allows the current origin.
-    if (!src->AllowsFeatureInternal(featureName, origin)) {
+    if (!src->AllowsFeatureInternal(featureName, dest->mDefaultOrigin)) {
       dest->SetInheritedDeniedFeature(featureName);
     }
   });

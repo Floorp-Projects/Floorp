@@ -3,11 +3,22 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Tests the behavior of the debugger statement.
  */
 
-const TAB_URL = EXAMPLE_URL + "doc_inline-debugger-statement.html";
+// Import helpers for the workers
+/* import-globals-from helper_workers.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/helper_workers.js",
+  this);
+
+var { DebuggerServer } = require("devtools/server/main");
+var { DebuggerClient } = require("devtools/shared/client/debugger-client");
+
+const TAB_URL = TEST_URI_ROOT + "doc_inline-debugger-statement.html";
 
 var gClient;
 var gTab;
@@ -16,31 +27,31 @@ function test() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  let transport = DebuggerServer.connectPipe();
+  const transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
   gClient.connect().then(([aType, aTraits]) => {
     is(aType, "browser",
       "Root actor should identify itself as a browser.");
 
     addTab(TAB_URL)
-      .then((aTab) => {
-        gTab = aTab;
+      .then(tab => {
+        gTab = tab;
         return attachTargetActorForUrl(gClient, TAB_URL);
       })
       .then(testEarlyDebuggerStatement)
       .then(testDebuggerStatement)
       .then(() => gClient.close())
       .then(finish)
-      .catch(aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
+      .catch(error => {
+        ok(false, "Got an error: " + error.message + "\n" + error.stack);
       });
   });
 }
 
 function testEarlyDebuggerStatement([aGrip, aResponse]) {
-  let deferred = promise.defer();
+  const deferred = getDeferredPromise().defer();
 
-  let onPaused = function (aEvent, aPacket) {
+  const onPaused = function(event, packet) {
     ok(false, "Pause shouldn't be called before we've attached!");
     deferred.reject();
   };
@@ -65,9 +76,9 @@ function testEarlyDebuggerStatement([aGrip, aResponse]) {
 }
 
 function testDebuggerStatement([aGrip, aResponse]) {
-  let deferred = promise.defer();
+  const deferred = getDeferredPromise().defer();
 
-  gClient.addListener("paused", (aEvent, aPacket) => {
+  gClient.addListener("paused", (event, packet) => {
     gClient.request({ to: aResponse.threadActor, type: "resume" }, () => {
       ok(true, "The pause handler was triggered on a debugger statement.");
       deferred.resolve();
@@ -80,6 +91,6 @@ function testDebuggerStatement([aGrip, aResponse]) {
   return deferred.promise;
 }
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   gClient = null;
 });

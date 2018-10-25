@@ -3,92 +3,104 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Tests that the eventListeners request works.
  */
 
-const TAB_URL = EXAMPLE_URL + "doc_event-listeners-01.html";
+// Import helpers for the workers
+/* import-globals-from helper_workers.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/helper_workers.js",
+  this);
+
+var { DebuggerServer } = require("devtools/server/main");
+var { DebuggerClient } = require("devtools/shared/client/debugger-client");
+
+const TAB_URL = TEST_URI_ROOT + "doc_event-listeners-01.html";
 
 add_task(async function() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  let transport = DebuggerServer.connectPipe();
-  let client = new DebuggerClient(transport);
-  let [type, traits] = await client.connect();
+  const transport = DebuggerServer.connectPipe();
+  const client = new DebuggerClient(transport);
+  const [type] = await client.connect();
 
   Assert.equal(type, "browser",
     "Root actor should identify itself as a browser.");
 
-  let tab = await addTab(TAB_URL);
-  let threadClient = await attachThreadActorForUrl(client, TAB_URL);
+  const tab = await addTab(TAB_URL);
+  const threadClient = await attachThreadActorForUrl(client, TAB_URL);
   await pauseDebuggee(tab, client, threadClient);
   await testEventListeners(client, threadClient);
 
   await client.close();
 });
 
-function pauseDebuggee(aTab, aClient, aThreadClient) {
-  let deferred = promise.defer();
+function pauseDebuggee(tab, client, threadClient) {
+  const deferred = getDeferredPromise().defer();
 
-  aClient.addOneTimeListener("paused", (aEvent, aPacket) => {
-    is(aPacket.type, "paused",
+  client.addOneTimeListener("paused", (event, packet) => {
+    is(packet.type, "paused",
       "We should now be paused.");
-    is(aPacket.why.type, "debuggerStatement",
+    is(packet.why.type, "debuggerStatement",
       "The debugger statement was hit.");
 
-    deferred.resolve(aThreadClient);
+    deferred.resolve(threadClient);
   });
 
-  generateMouseClickInTab(aTab, "content.document.querySelector('button')");
+  generateMouseClickInTab(tab, "content.document.querySelector('button')");
 
   return deferred.promise;
 }
 
-async function testEventListeners(aClient, aThreadClient) {
-  let packet = await aThreadClient.eventListeners();
+async function testEventListeners(client, threadClient) {
+  const packet = await threadClient.eventListeners();
 
   if (packet.error) {
-    let msg = "Error getting event listeners: " + packet.message;
+    const msg = "Error getting event listeners: " + packet.message;
     Assert.ok(false, msg);
     return;
   }
 
   is(packet.listeners.length, 3, "Found all event listeners.");
 
-  let listeners = await promise.all(packet.listeners.map(listener => {
-    const lDeferred = promise.defer();
-    aThreadClient.pauseGrip(listener.function).getDefinitionSite(aResponse => {
-      if (aResponse.error) {
-        const msg = "Error getting function definition site: " + aResponse.message;
+  const listeners = await getDeferredPromise().all(packet.listeners.map(listener => {
+    const lDeferred = getDeferredPromise().defer();
+    threadClient.pauseGrip(listener.function).getDefinitionSite(response => {
+      if (response.error) {
+        const msg = "Error getting function definition site: " + response.message;
         ok(false, msg);
         lDeferred.reject(msg);
         return;
       }
-      listener.function.url = aResponse.source.url;
+      listener.function.url = response.source.url;
       lDeferred.resolve(listener);
     });
     return lDeferred.promise;
   }));
 
-  let types = [];
+  const types = [];
 
-  for (let l of listeners) {
+  for (const l of listeners) {
     info("Listener for the " + l.type + " event.");
-    let node = l.node;
+    const node = l.node;
     ok(node, "There is a node property.");
     ok(node.object, "There is a node object property.");
     if (node.selector != "window") {
-      let nodeCount =
-        await ContentTask.spawn(gBrowser.selectedBrowser, node.selector, async (selector) => {
-          return content.document.querySelectorAll(selector).length;
-        });
+      const nodeCount =
+        await ContentTask.spawn(gBrowser.selectedBrowser, node.selector,
+          async (selector) => {
+            return content.document.querySelectorAll(selector).length;
+          });
       Assert.equal(nodeCount, 1, "The node property is a unique CSS selector.");
     } else {
       Assert.ok(true, "The node property is a unique CSS selector.");
     }
 
-    let func = l.function;
+    const func = l.function;
     ok(func, "There is a function property.");
     is(func.type, "object", "The function form is of type 'object'.");
     is(func.class, "Function", "The function form is of class 'Function'.");
@@ -128,5 +140,5 @@ async function testEventListeners(aClient, aThreadClient) {
   Assert.ok(types.includes("change"), "Found the change handler.");
   Assert.ok(types.includes("keyup"), "Found the keyup handler.");
 
-  await aThreadClient.resume();
+  await threadClient.resume();
 }

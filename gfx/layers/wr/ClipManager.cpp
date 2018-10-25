@@ -292,9 +292,12 @@ ClipManager::DefineScrollLayers(const ActiveScrolledRoot* aASR,
 
   Maybe<ScrollMetadata> metadata = aASR->mScrollableFrame->ComputeScrollMetadata(
       mManager, aItem->ReferenceFrame(), Nothing(), nullptr);
-  MOZ_ASSERT(metadata);
-  FrameMetrics& metrics = metadata->GetMetrics();
+  if (!metadata) {
+    MOZ_ASSERT_UNREACHABLE("Expected scroll metadata to be available!");
+    return ancestorScrollId;
+  }
 
+  FrameMetrics& metrics = metadata->GetMetrics();
   if (!metrics.IsScrollable()) {
     // This item is a scrolling no-op, skip over it in the ASR chain.
     return ancestorScrollId;

@@ -14,18 +14,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="tree-base" extends="chrome://global/content/bindings/general.xml#basecontrol">
-    <implementation>
-      <method name="_isAccelPressed">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          return aEvent.getModifierState("Accel");
-        ]]></body>
-      </method>
-    </implementation>
-  </binding>
-
-  <binding id="tree" extends="chrome://global/content/bindings/tree.xml#tree-base">
+  <binding id="tree" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <content hidevscroll="true" hidehscroll="true" clickthrough="never">
       <children includes="treecols"/>
       <xul:stack class="tree-stack" flex="1">
@@ -416,7 +405,7 @@
             if (this.view.rowCount == 0)
               return;
 
-            if (this._isAccelPressed(event) && this.view.selection.single) {
+            if (event.getModifierState("Accel") && this.view.selection.single) {
               this.treeBoxObject.scrollByLines(offset);
               return;
             }
@@ -428,7 +417,7 @@
               c = edge;
             }
 
-            if (!this._isAccelPressed(event))
+            if (!event.getModifierState("Accel"))
               this.view.selection.timedSelect(c, this._selectDelay);
             else // Ctrl+Up/Down moves the anchor without selecting
               this.currentIndex = c;
@@ -469,7 +458,7 @@
 
             // Extend the selection from the existing pivot, if any
             this.view.selection.rangedSelect(-1, c + offset,
-                                             this._isAccelPressed(event));
+                                             event.getModifierState("Accel"));
             this.treeBoxObject.ensureRowIsVisible(c + offset);
 
           ]]>
@@ -487,7 +476,7 @@
             if (this.view.rowCount == 0)
               return;
 
-            if (this.pageUpOrDownMovesSelection == this._isAccelPressed(event)) {
+            if (this.pageUpOrDownMovesSelection == event.getModifierState("Accel")) {
                this.treeBoxObject.scrollByPages(offset);
                return;
             }
@@ -537,7 +526,7 @@
               return;
 
             if (this.view.rowCount == 1 && !this.view.selection.isSelected(0) &&
-                !(this.pageUpOrDownMovesSelection == this._isAccelPressed(event))) {
+                !(this.pageUpOrDownMovesSelection == event.getModifierState("Accel"))) {
               this.view.selection.timedSelect(0, this._selectDelay);
               return;
             }
@@ -562,7 +551,7 @@
                  this.treeBoxObject.ensureRowIsVisible(i > edge ? edge : i);
               }
               // Extend the selection from the existing pivot, if any
-              this.view.selection.rangedSelect(-1, i > edge ? edge : i, this._isAccelPressed(event));
+              this.view.selection.rangedSelect(-1, i > edge ? edge : i, event.getModifierState("Accel"));
 
             } else {
 
@@ -571,7 +560,7 @@
                  this.treeBoxObject.ensureRowIsVisible(i);
               }
               // Extend the selection from the existing pivot, if any
-              this.view.selection.rangedSelect(-1, i, this._isAccelPressed(event));
+              this.view.selection.rangedSelect(-1, i, event.getModifierState("Accel"));
             }
 
           ]]>
@@ -594,7 +583,7 @@
             }
 
             // Normal behaviour is to select the first/last row
-            if (!this._isAccelPressed(event))
+            if (!event.getModifierState("Accel"))
               this.view.selection.timedSelect(edge, this._selectDelay);
 
             // In a multiselect tree Ctrl+Home/End moves the anchor
@@ -627,7 +616,7 @@
 
             // Extend the selection from the existing pivot, if any.
             // -1 doesn't work here, so using currentIndex instead
-            this.view.selection.rangedSelect(this.currentIndex, edge, this._isAccelPressed(event));
+            this.view.selection.rangedSelect(this.currentIndex, edge, event.getModifierState("Accel"));
 
             this.treeBoxObject.ensureRowIsVisible(edge);
           ]]>
@@ -906,12 +895,12 @@
          if (event.charCode == " ".charCodeAt(0)) {
            var c = this.currentIndex;
            if (!this.view.selection.isSelected(c) ||
-               (!this.view.selection.single && this._isAccelPressed(event))) {
+               (!this.view.selection.single && event.getModifierState("Accel"))) {
              this.view.selection.toggleSelect(c);
              event.preventDefault();
            }
          } else if (!this.disableKeyNavigation && event.charCode > 0 &&
-                    !event.altKey && !this._isAccelPressed(event) &&
+                    !event.altKey && !event.getModifierState("Accel") &&
                     !event.metaKey && !event.ctrlKey) {
            var l = this._keyNavigate(event);
            if (l >= 0) {
@@ -944,7 +933,7 @@
     </implementation>
   </binding>
 
-  <binding id="treerows" extends="chrome://global/content/bindings/tree.xml#tree-base">
+  <binding id="treerows" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <content>
       <xul:hbox flex="1" class="tree-bodybox">
         <children/>
@@ -983,7 +972,7 @@
     </handlers>
   </binding>
 
-  <binding id="treebody" extends="chrome://global/content/bindings/tree.xml#tree-base">
+  <binding id="treebody" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <implementation>
       <constructor>
         if ("_ensureColumnOrder" in this.parentNode)
@@ -1001,7 +990,7 @@
       <![CDATA[
          if (this.parentNode.disabled)
            return;
-         if (((!this._isAccelPressed(event) ||
+         if (((!event.getModifierState("Accel") ||
              !this.parentNode.pageUpOrDownMovesSelection) &&
              !event.shiftKey && !event.metaKey) ||
              this.parentNode.view.selection.single) {
@@ -1071,7 +1060,7 @@
         }
 
         if (!view.selection.single) {
-          var augment = this._isAccelPressed(event);
+          var augment = event.getModifierState("Accel");
           if (event.shiftKey) {
             view.selection.rangedSelect(-1, cell.row, augment);
             b.ensureRowIsVisible(cell.row);
@@ -1135,7 +1124,7 @@
   </binding>
 
   <binding id="treecol-base"
-           extends="chrome://global/content/bindings/tree.xml#tree-base">
+           extends="chrome://global/content/bindings/general.xml#basecontrol">
     <implementation>
       <constructor>
         this.parentNode.parentNode._columnsDirty = true;
@@ -1353,7 +1342,7 @@
   </binding>
 
   <binding id="columnpicker" display="xul:button"
-           extends="chrome://global/content/bindings/tree.xml#tree-base">
+           extends="chrome://global/content/bindings/general.xml#basecontrol">
     <content>
       <xul:image class="tree-columnpicker-icon"/>
       <xul:menupopup anonid="popup">
