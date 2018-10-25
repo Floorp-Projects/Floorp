@@ -773,7 +773,8 @@ class MozSearchOneOffs extends MozXULElement {
   }
 
   _buttonForEngine(engine) {
-    return document.getElementById(this._buttonIDForEngine(engine));
+    return this._popup &&
+      document.getAnonymousElementByAttribute(this._popup, "id", this._buttonIDForEngine(engine));
   }
 
   /**
