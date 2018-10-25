@@ -290,8 +290,8 @@ GetUserSid(nsAString& sidString)
 static nsresult
 ReadRegKeyValueWithDefault(nsCOMPtr<nsIWindowsRegKey> regKey,
                            uint32_t flags,
-                           wchar_t* optionalChildName,
-                           wchar_t* valueName,
+                           const wchar_t* optionalChildName,
+                           const wchar_t* valueName,
                            uint32_t defaultValue,
                            uint32_t& valueOut)
 {

@@ -1065,7 +1065,7 @@ const LPSTR ACHAReqInfo::FixedValue<0>::value = nullptr;
 
 template<> template<>
 struct ACHAReqInfo::FixedValue<1> { static const LPSTR value; };
-const LPSTR ACHAReqInfo::FixedValue<1>::value = UNISP_NAME_A;
+const LPSTR ACHAReqInfo::FixedValue<1>::value = const_cast<char*>(UNISP_NAME_A); // -Wwritable-strings
 
 template<> template<>
 struct ACHAReqInfo::FixedValue<2> { static const unsigned long value; };
