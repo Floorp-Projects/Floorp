@@ -10044,7 +10044,7 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
 #endif
     enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
     enableAsyncStacks = !op.getBoolOption("no-async-stacks");
-    enableStreams = !op.getBoolOption("no-streams");
+    enableStreams = op.getBoolOption("enable-streams");
 
 #if defined ENABLE_WASM_GC && defined ENABLE_WASM_CRANELIFT
     // Note, once we remove --wasm-gc this test will no longer make any sense
@@ -10669,8 +10669,7 @@ main(int argc, char** argv, char** envp)
 #endif
         || !op.addBoolOption('\0', "no-native-regexp", "Disable native regexp compilation")
         || !op.addBoolOption('\0', "no-unboxed-objects", "Disable creating unboxed plain objects")
-        || !op.addBoolOption('\0', "enable-streams", "Enable WHATWG Streams (default)")
-        || !op.addBoolOption('\0', "no-streams", "Disable WHATWG Streams")
+        || !op.addBoolOption('\0', "enable-streams", "Enable WHATWG Streams")
 #ifdef ENABLE_SHARED_ARRAY_BUFFER
         || !op.addStringOption('\0', "shared-memory", "on/off",
                                "SharedArrayBuffer and Atomics "
