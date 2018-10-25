@@ -14,6 +14,7 @@ const TEST_URI = `
 async function openContextMenuForNode({ toolbox }, selector) {
   info("Selecting Inspector tab and opening a context menu");
   const inspector = await toolbox.selectTool("inspector");
+  await inspector._isMarkupLoaded;
 
   if (!selector) {
     ok(inspector.selection.isBodyNode(), "Default selection is a body node.");

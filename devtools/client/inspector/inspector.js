@@ -10,7 +10,6 @@
 
 const Services = require("Services");
 const promise = require("promise");
-const flags = require("devtools/shared/flags");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
 const {Toolbox} = require("devtools/client/framework/toolbox");
@@ -291,10 +290,6 @@ Inspector.prototype = {
 
     // Setup the sidebar panels.
     this.setupSidebar();
-
-    if (flags.testing) {
-      await this.once("markuploaded");
-    }
 
     this.isReady = true;
 
@@ -1488,6 +1483,7 @@ Inspector.prototype = {
 
     this._is3PaneModeChromeEnabled = null;
     this._is3PaneModeEnabled = null;
+    this._isMarkupLoaded = null;
     this._markupBox = null;
     this._markupFrame = null;
     this._notificationBox = null;
@@ -1958,6 +1954,9 @@ Inspector.prototype = {
   },
 
   _initMarkup: function() {
+    // This is used in accessibility tests to ensure the markup is loaded.
+    this._isMarkupLoaded = this.once("markuploaded");
+
     if (!this._markupFrame) {
       this._markupFrame = this.panelDoc.createElement("iframe");
       this._markupFrame.setAttribute("aria-label",
