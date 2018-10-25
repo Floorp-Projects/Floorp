@@ -332,7 +332,6 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mIceRestartCount(0)
   , mIceRollbackCount(0)
   , mHaveConfiguredCodecs(false)
-  , mHaveDataStream(false)
   , mAddCandidateErrorCount(0)
   , mTrickle(true) // TODO(ekr@rtfm.com): Use pref
   , mPrivateWindow(false)
@@ -1207,11 +1206,22 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
 
   CSFLogDebug(LOGTAG, "%s: making DOMDataChannel", __FUNCTION__);
 
-  if (!mHaveDataStream) {
-    mJsepSession->AddTransceiver(
-        new JsepTransceiver(SdpMediaSection::MediaType::kApplication));
-    mHaveDataStream = true;
+  RefPtr<JsepTransceiver> dcTransceiver;
+  for (auto& transceiver : mJsepSession->GetTransceivers()) {
+    if (transceiver->GetMediaType() == SdpMediaSection::kApplication) {
+      dcTransceiver = transceiver;
+      break;
+    }
   }
+
+  if (!dcTransceiver) {
+    dcTransceiver =
+      new JsepTransceiver(SdpMediaSection::MediaType::kApplication);
+    mJsepSession->AddTransceiver(dcTransceiver);
+  }
+
+  dcTransceiver->RestartDatachannelTransceiver();
+
   RefPtr<nsDOMDataChannel> retval;
   rv = NS_NewDOMDataChannel(dataChannel.forget(), mWindow,
 			    getter_AddRefs(retval));
@@ -1271,8 +1281,6 @@ PeerConnectionImpl::NotifyDataChannel(already_AddRefed<DataChannel> aChannel)
   nsresult rv = NS_NewDOMDataChannel(channel.forget(),
                                      mWindow, getter_AddRefs(domchannel));
   NS_ENSURE_SUCCESS_VOID(rv);
-
-  mHaveDataStream = true;
 
   RefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
