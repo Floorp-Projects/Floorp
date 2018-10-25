@@ -12,6 +12,16 @@
   window.parent.postMessage({
     controlled: !!navigator.serviceWorker.controller
   }, "*");
+
+  addEventListener("message", e => {
+    if (e.data == "create nested iframe") {
+      const iframe = document.createElement('iframe');
+      document.body.appendChild(iframe);
+      iframe.src = location.href;
+    } else {
+      window.parent.postMessage(e.data, "*");
+    }
+  });
 </script>
 </body>
 </html>
