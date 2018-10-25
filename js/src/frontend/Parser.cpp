@@ -5017,7 +5017,7 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(DeclarationKind kind,
             TokenPos namePos = anyChars.nextToken().pos;
 
             PropertyType propType;
-            Node propName = propertyName(yieldHandling, declKind, literal, &propType, &propAtom);
+            Node propName = propertyName(yieldHandling, PropertyNameInPattern, declKind, literal, &propType, &propAtom);
             if (!propName) {
                 return null();
             }
@@ -8027,8 +8027,8 @@ GeneralParser<ParseHandler, Unit>::classDefinition(YieldHandling yieldHandling,
 
     MUST_MATCH_TOKEN(TokenKind::LeftCurly, JSMSG_CURLY_BEFORE_CLASS);
 
-    ListNodeType classMethods = handler.newClassMethodList(pos().begin);
-    if (!classMethods) {
+    ListNodeType classMembers = handler.newClassMemberList(pos().begin);
+    if (!classMembers) {
         return null();
     }
 
@@ -8072,8 +8072,41 @@ GeneralParser<ParseHandler, Unit>::classDefinition(YieldHandling yieldHandling,
         }
 
         PropertyType propType;
-        Node propName = propertyName(yieldHandling, declKind, classMethods, &propType, &propAtom);
+        Node propName = propertyName(yieldHandling, PropertyNameInClass, declKind, classMembers, &propType, &propAtom);
         if (!propName) {
+            return null();
+        }
+
+        if (propType == PropertyType::Field) {
+            if (isStatic) {
+                errorAt(nameOffset, JSMSG_BAD_METHOD_DEF);
+                return null();
+            }
+            if (!tokenStream.getToken(&tt)) {
+                return null();
+            }
+            Node initializer = null();
+            if (tt == TokenKind::Assign) {
+                initializer = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+                if (!tokenStream.getToken(&tt)) {
+                    return null();
+                }
+            }
+
+            // TODO(khyperia): Implement ASI
+            if (tt != TokenKind::Semi) {
+                error(JSMSG_MISSING_SEMI_FIELD);
+                return null();
+            }
+
+            if (!handler.addClassFieldDefinition(classMembers, propName, initializer)) {
+                return null();
+            }
+
+            // TODO(khyperia): Change the below to `continue;` once fields are
+            // fully supported in the backend. We can't fail in BytecodeCompiler
+            // because of lazy parsing.
+            errorAt(nameOffset, JSMSG_FIELDS_NOT_SUPPORTED);
             return null();
         }
 
@@ -8133,7 +8166,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(YieldHandling yieldHandling,
         }
 
         AccessorType atype = ToAccessorType(propType);
-        if (!handler.addClassMethodDefinition(classMethods, propName, funNode, atype, isStatic)) {
+        if (!handler.addClassMethodDefinition(classMembers, propName, funNode, atype, isStatic)) {
             return null();
         }
     }
@@ -8149,7 +8182,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(YieldHandling yieldHandling,
     }
 
     Node nameNode = null();
-    Node methodsOrBlock = classMethods;
+    Node membersOrBlock = classMembers;
     if (name) {
         // The inner name is immutable.
         if (!noteDeclaredName(name, DeclarationKind::Const, namePos)) {
@@ -8161,12 +8194,12 @@ GeneralParser<ParseHandler, Unit>::classDefinition(YieldHandling yieldHandling,
             return null();
         }
 
-        Node classBlock = finishLexicalScope(*innerScope, classMethods);
+        Node classBlock = finishLexicalScope(*innerScope, classMembers);
         if (!classBlock) {
             return null();
         }
 
-        methodsOrBlock = classBlock;
+        membersOrBlock = classBlock;
 
         // Pop the inner scope.
         innerScope.reset();
@@ -8193,7 +8226,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(YieldHandling yieldHandling,
 
     MOZ_ALWAYS_TRUE(setLocalStrictMode(savedStrictness));
 
-    return handler.newClass(nameNode, classHeritage, methodsOrBlock,
+    return handler.newClass(nameNode, classHeritage, membersOrBlock,
                             TokenPos(classStartOffset, classEndOffset));
 }
 
@@ -9604,6 +9637,7 @@ GeneralParser<ParseHandler, Unit>::memberExpr(YieldHandling yieldHandling,
             if (!tokenStream.getToken(&tt)) {
                 return null();
             }
+
             if (TokenKindIsPossibleIdentifierName(tt)) {
                 PropertyName* field = anyChars.currentName();
                 if (handler.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
@@ -9817,7 +9851,7 @@ GeneralParser<ParseHandler, Unit>::checkLabelOrIdentifierReference(PropertyName*
         tt = hint;
     }
 
-    if (tt == TokenKind::Name) {
+    if (tt == TokenKind::Name || tt == TokenKind::PrivateName) {
         return true;
     }
     if (TokenKindIsContextualKeyword(tt)) {
@@ -10275,10 +10309,11 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(YieldHandling yieldHandling,
 template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, Unit>::propertyName(YieldHandling yieldHandling,
-                                                const Maybe<DeclarationKind>& maybeDecl,
-                                                ListNodeType propList,
-                                                PropertyType* propType,
-                                                MutableHandleAtom propAtom)
+                                                 PropertyNameContext propertyNameContext,
+                                                 const Maybe<DeclarationKind>& maybeDecl,
+                                                 ListNodeType propList,
+                                                 PropertyType* propType,
+                                                 MutableHandleAtom propAtom)
 {
     TokenKind ltok;
     if (!tokenStream.getToken(&ltok)) {
@@ -10449,6 +10484,16 @@ GeneralParser<ParseHandler, Unit>::propertyName(YieldHandling yieldHandling,
         return propName;
     }
 
+    if (propertyNameContext == PropertyNameInClass && (tt == TokenKind::Semi || tt == TokenKind::Assign)) {
+        if (isGenerator || isAsync) {
+            error(JSMSG_BAD_PROP_ID);
+            return null();
+        }
+        anyChars.ungetToken();
+        *propType = PropertyType::Field;
+        return propName;
+    }
+
     if (TokenKindIsPossibleIdentifierName(ltok) &&
         (tt == TokenKind::Comma || tt == TokenKind::RightCurly || tt == TokenKind::Assign))
     {
@@ -10567,7 +10612,7 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
             TokenPos namePos = anyChars.nextToken().pos;
 
             PropertyType propType;
-            Node propName = propertyName(yieldHandling, declKind, literal, &propType, &propAtom);
+            Node propName = propertyName(yieldHandling, PropertyNameInLiteral, declKind, literal, &propType, &propAtom);
             if (!propName) {
                 return null();
             }

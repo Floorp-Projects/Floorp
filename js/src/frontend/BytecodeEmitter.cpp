@@ -1043,6 +1043,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         return true;
 
       case ParseNodeKind::ObjectPropertyName:
+      case ParseNodeKind::PrivateName: // no side effects, unlike ParseNodeKind::Name
       case ParseNodeKind::String:
       case ParseNodeKind::TemplateString:
         MOZ_ASSERT(pn->is<NameNode>());
@@ -1486,17 +1487,18 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case ParseNodeKind::ForOf:           // by ParseNodeKind::For
       case ParseNodeKind::ForHead:         // by ParseNodeKind::For
       case ParseNodeKind::ClassMethod:     // by ParseNodeKind::Class
+      case ParseNodeKind::ClassField:      // by ParseNodeKind::Class
       case ParseNodeKind::ClassNames:      // by ParseNodeKind::Class
-      case ParseNodeKind::ClassMethodList: // by ParseNodeKind::Class
-      case ParseNodeKind::ImportSpecList: // by ParseNodeKind::Import
+      case ParseNodeKind::ClassMemberList: // by ParseNodeKind::Class
+      case ParseNodeKind::ImportSpecList:  // by ParseNodeKind::Import
       case ParseNodeKind::ImportSpec:      // by ParseNodeKind::Import
-      case ParseNodeKind::ExportBatchSpec:// by ParseNodeKind::Export
-      case ParseNodeKind::ExportSpecList: // by ParseNodeKind::Export
+      case ParseNodeKind::ExportBatchSpec: // by ParseNodeKind::Export
+      case ParseNodeKind::ExportSpecList:  // by ParseNodeKind::Export
       case ParseNodeKind::ExportSpec:      // by ParseNodeKind::Export
-      case ParseNodeKind::CallSiteObj:      // by ParseNodeKind::TaggedTemplate
-      case ParseNodeKind::PosHolder:        // by ParseNodeKind::NewTarget
-      case ParseNodeKind::SuperBase:        // by ParseNodeKind::Elem and others
-      case ParseNodeKind::PropertyName:     // by ParseNodeKind::Dot
+      case ParseNodeKind::CallSiteObj:     // by ParseNodeKind::TaggedTemplate
+      case ParseNodeKind::PosHolder:       // by ParseNodeKind::NewTarget
+      case ParseNodeKind::SuperBase:       // by ParseNodeKind::Elem and others
+      case ParseNodeKind::PropertyName:    // by ParseNodeKind::Dot
         MOZ_CRASH("handled by parent nodes");
 
       case ParseNodeKind::Limit: // invalid sentinel value
@@ -1789,6 +1791,8 @@ BytecodeEmitter::emitPropLHS(PropertyAccess* prop)
     }
 
     while (true) {
+        // TODO(khyperia): Implement private field access.
+
         // Walk back up the list, emitting annotated name ops.
         if (!emitAtomOp(pndot->key().atom(), JSOP_GETPROP)) {
             return false;
@@ -1810,6 +1814,7 @@ bool
 BytecodeEmitter::emitPropIncDec(UnaryNode* incDec)
 {
     PropertyAccess* prop = &incDec->kid()->as<PropertyAccess>();
+    // TODO(khyperia): Implement private field access.
     bool isSuper = prop->isSuper();
     ParseNodeKind kind = incDec->getKind();
     PropOpEmitter poe(this,
@@ -2624,6 +2629,7 @@ BytecodeEmitter::emitSetOrInitializeDestructuring(ParseNode* target, Destructuri
             //                                            // [Other]
             //                                            // OBJ VAL
             PropertyAccess* prop = &target->as<PropertyAccess>();
+            // TODO(khyperia): Implement private field access.
             bool isSuper = prop->isSuper();
             PropOpEmitter poe(this,
                               PropOpEmitter::Kind::SimpleAssignment,
@@ -3993,6 +3999,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs)
         switch (lhs->getKind()) {
           case ParseNodeKind::Dot: {
             PropertyAccess* prop = &lhs->as<PropertyAccess>();
+            // TODO(khyperia): Implement private field access.
             if (!poe->emitGet(prop->key().atom())) {      // [Super]
                 //                                        // THIS SUPERBASE PROP
                 //                                        // [Other]
@@ -4066,6 +4073,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs)
     switch (lhs->getKind()) {
       case ParseNodeKind::Dot: {
         PropertyAccess* prop = &lhs->as<PropertyAccess>();
+        // TODO(khyperia): Implement private field access.
         if (!poe->emitAssignment(prop->key().atom())) {   // VAL
             return false;
         }
@@ -6392,6 +6400,7 @@ BytecodeEmitter::emitDeleteProperty(UnaryNode* deleteNode)
     MOZ_ASSERT(deleteNode->isKind(ParseNodeKind::DeleteProp));
 
     PropertyAccess* propExpr = &deleteNode->kid()->as<PropertyAccess>();
+    // TODO(khyperia): Implement private field access.
     PropOpEmitter poe(this,
                       PropOpEmitter::Kind::Delete,
                       propExpr->as<PropertyAccess>().isSuper()
@@ -6793,6 +6802,7 @@ BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call, CallOrNew
       case ParseNodeKind::Dot: {
         MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
         PropertyAccess* prop = &callee->as<PropertyAccess>();
+        // TODO(khyperia): Implement private field access.
         bool isSuper = prop->isSuper();
 
         PropOpEmitter& poe = cone.prepareForPropCallee(isSuper);
@@ -7018,7 +7028,9 @@ BytecodeEmitter::emitCallOrNew(BinaryNode* callNode,
                  cur->isKind(ParseNodeKind::Dot);
                  cur = &cur->as<PropertyAccess>().expression())
             {
-                ParseNode* left = &cur->as<PropertyAccess>().expression();
+                PropertyAccess* prop = &cur->as<PropertyAccess>();
+                ParseNode* left = &prop->expression();
+                // TODO(khyperia): Implement private field access.
                 if (left->isKind(ParseNodeKind::Name) || left->isKind(ParseNodeKind::This) ||
                     left->isKind(ParseNodeKind::SuperBase))
                 {
@@ -7302,6 +7314,10 @@ bool
 BytecodeEmitter::emitPropertyList(ListNode* obj, MutableHandlePlainObject objp, PropListType type)
 {
     for (ParseNode* propdef : obj->contents()) {
+        if (propdef->is<ClassField>()) {
+            // TODO(khyperia): Implement private field access.
+            return false;
+        }
         if (!updateSourceCoordNotes(propdef->pn_pos.begin)) {
             return false;
         }
@@ -8132,9 +8148,13 @@ BytecodeEmitter::emitClass(ClassNode* classNode)
 {
     ClassNames* names = classNode->names();
     ParseNode* heritageExpression = classNode->heritage();
-    ListNode* classMethods = classNode->methodList();
+    ListNode* classMembers = classNode->memberList();
     CodeNode* constructor = nullptr;
-    for (ParseNode* mn : classMethods->contents()) {
+    for (ParseNode* mn : classMembers->contents()) {
+        if (mn->is<ClassField>()) {
+            // TODO(khyperia): Implement private field access.
+            return false;
+        }
         ClassMethod& method = mn->as<ClassMethod>();
         ParseNode& methodName = method.name();
         if (!method.isStatic() &&
@@ -8321,7 +8341,7 @@ BytecodeEmitter::emitClass(ClassNode* classNode)
     }
 
     RootedPlainObject obj(cx);
-    if (!emitPropertyList(classMethods, &obj, ClassBody)) {     // ... CONSTRUCTOR HOMEOBJ
+    if (!emitPropertyList(classMembers, &obj, ClassBody)) {     // ... CONSTRUCTOR HOMEOBJ
         return false;
     }
 
@@ -8693,6 +8713,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
 
       case ParseNodeKind::Dot: {
         PropertyAccess* prop = &pn->as<PropertyAccess>();
+        // TODO(khyperia): Implement private field access.
         bool isSuper = prop->isSuper();
         PropOpEmitter poe(this,
                           PropOpEmitter::Kind::Get,
