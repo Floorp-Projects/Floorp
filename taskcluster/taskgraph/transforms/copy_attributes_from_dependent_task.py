@@ -17,6 +17,6 @@ transforms = TransformSequence()
 def copy_attributes(config, jobs):
     for job in jobs:
         job.setdefault('attributes', {})
-        job['attributes'].update(copy_attributes_from_dependent_job(job['dependent-task']))
+        job['attributes'].update(copy_attributes_from_dependent_job(job['primary-dependency']))
 
         yield job

@@ -21,7 +21,7 @@ def add_signed_routes(config, jobs):
        this corresponds to, with .signed inserted, for all gecko.v2 routes"""
 
     for job in jobs:
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
 
         job['routes'] = []
         if dep_job.attributes.get('nightly'):
@@ -39,7 +39,7 @@ def add_signed_routes(config, jobs):
 @transforms.add
 def define_upstream_artifacts(config, jobs):
     for job in jobs:
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
         build_platform = dep_job.attributes.get('build_platform')
 
         artifacts_specifications = generate_specifications_of_artifacts_to_sign(

@@ -54,6 +54,7 @@ struct ComputedFlexItemInfo
   nscoord mMainMaxSize;
   nscoord mCrossMinSize;
   nscoord mCrossMaxSize;
+  mozilla::dom::FlexItemClampState mClampState;
 };
 
 struct ComputedFlexLineInfo

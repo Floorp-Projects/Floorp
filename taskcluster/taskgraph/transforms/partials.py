@@ -42,7 +42,7 @@ def make_task_description(config, jobs):
     if not config.params.get('release_history'):
         return
     for job in jobs:
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
 
         treeherder = job.get('treeherder', {})
         treeherder.setdefault('symbol', 'p(N)')
