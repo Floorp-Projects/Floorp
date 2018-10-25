@@ -168,11 +168,6 @@ XPCNativeInterface::GetNewOrUsed(const nsXPTInterfaceInfo* info)
 {
     RefPtr<XPCNativeInterface> iface;
 
-    const nsIID* iid;
-    if (NS_FAILED(info->GetIIDShared(&iid)) || !iid) {
-        return nullptr;
-    }
-
     XPCJSRuntime* rt = XPCJSRuntime::Get();
 
     IID2NativeInterfaceMap* map = rt->GetIID2NativeInterfaceMap();
@@ -180,7 +175,7 @@ XPCNativeInterface::GetNewOrUsed(const nsXPTInterfaceInfo* info)
         return nullptr;
     }
 
-    iface = map->Find(*iid);
+    iface = map->Find(info->IID());
 
     if (iface) {
         return iface.forget();
@@ -230,8 +225,6 @@ XPCNativeInterface::NewInstance(const nsXPTInterfaceInfo* aInfo)
 
     int i;
     bool failed = false;
-    uint16_t constCount;
-    uint16_t methodCount;
     uint16_t totalCount;
     uint16_t realTotalCount = 0;
     XPCNativeMember* cur;
@@ -245,20 +238,10 @@ XPCNativeInterface::NewInstance(const nsXPTInterfaceInfo* aInfo)
     // Find out how often we create these objects w/o really looking at
     // (or using) the members.
 
-    bool canScript;
-    if (NS_FAILED(aInfo->IsScriptable(&canScript)) || !canScript) {
-        return nullptr;
-    }
-
-    bool mainProcessScriptableOnly;
-    if (NS_FAILED(aInfo->IsMainProcessScriptableOnly(&mainProcessScriptableOnly))) {
-        return nullptr;
-    }
-    if (mainProcessScriptableOnly && !XRE_IsParentProcess()) {
+    if (aInfo->IsMainProcessScriptableOnly() && !XRE_IsParentProcess()) {
         nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
         if (console) {
-            const char* intfNameChars;
-            aInfo->GetNameShared(&intfNameChars);
+            const char* intfNameChars = aInfo->Name();
             nsPrintfCString errorMsg("Use of %s in content process is deprecated.", intfNameChars);
 
             nsAutoString filename;
@@ -273,9 +256,8 @@ XPCNativeInterface::NewInstance(const nsXPTInterfaceInfo* aInfo)
         }
     }
 
-    if (NS_FAILED(aInfo->GetMethodCount(&methodCount)) ||
-        NS_FAILED(aInfo->GetConstantCount(&constCount)))
-        return nullptr;
+    uint16_t methodCount = aInfo->MethodCount();
+    uint16_t constCount = aInfo->ConstantCount();
 
     // If the interface does not have nsISupports in its inheritance chain
     // then we know we can't reflect its methods. However, some interfaces that
@@ -301,26 +283,22 @@ XPCNativeInterface::NewInstance(const nsXPTInterfaceInfo* aInfo)
     // of the member objects.
 
     for (i = 0; i < methodCount; i++) {
-        const nsXPTMethodInfo* info;
-        if (NS_FAILED(aInfo->GetMethodInfo(i, &info))) {
-            failed = true;
-            break;
-        }
+        const nsXPTMethodInfo& info = aInfo->Method(i);
 
         // don't reflect Addref or Release
         if (i == 1 || i == 2) {
             continue;
         }
 
-        if (!XPCConvert::IsMethodReflectable(*info)) {
+        if (!XPCConvert::IsMethodReflectable(info)) {
             continue;
         }
 
         jsid name;
-        if (info->IsSymbol()) {
-            name = SYMBOL_TO_JSID(info->GetSymbol(cx));
+        if (info.IsSymbol()) {
+            name = SYMBOL_TO_JSID(info.GetSymbol(cx));
         } else {
-            str = JS_AtomizeAndPinString(cx, info->GetName());
+            str = JS_AtomizeAndPinString(cx, info.GetName());
             if (!str) {
                 NS_ERROR("bad method name");
                 failed = true;
@@ -329,7 +307,7 @@ XPCNativeInterface::NewInstance(const nsXPTInterfaceInfo* aInfo)
             name = INTERNED_STRING_TO_JSID(cx, str);
         }
 
-        if (info->IsSetter()) {
+        if (info.IsSetter()) {
             MOZ_ASSERT(realTotalCount,"bad setter");
             // Note: ASSUMES Getter/Setter pairs are next to each other
             // This is a rule of the typelib spec.
@@ -348,7 +326,7 @@ XPCNativeInterface::NewInstance(const nsXPTInterfaceInfo* aInfo)
             }
             cur = &members[realTotalCount];
             cur->SetName(name);
-            if (info->IsGetter()) {
+            if (info.IsGetter()) {
                 cur->SetReadOnlyAttribute(i);
             } else {
                 cur->SetMethod(i);
@@ -391,8 +369,8 @@ XPCNativeInterface::NewInstance(const nsXPTInterfaceInfo* aInfo)
     }
 
     if (!failed) {
-        const char* bytes;
-        if (NS_FAILED(aInfo->GetNameShared(&bytes)) || !bytes ||
+        const char* bytes = aInfo->Name();
+        if (nullptr == bytes ||
             nullptr == (str = JS_AtomizeAndPinString(cx, bytes))) {
             failed = true;
         }
