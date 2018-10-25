@@ -4,7 +4,7 @@
 
 A simple browser app that is composed from the browser components in this repository.
 
-[Reference browser](https://github.com/mozilla-mobile/reference-browser).
+⚠️ **Note**: This sample application is only a very basic browser. For a full-featured reference browser implementation see the **[reference-browser repository](https://github.com/mozilla-mobile/reference-browser)**.
 
 ## Build variants
 

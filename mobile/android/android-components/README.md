@@ -6,9 +6,9 @@
 
 _A collection of Android libraries to build browsers or browser-like applications._
 
-For more information [see the website](https://mozilla-mobile.github.io/android-components/).
+ℹ️ For more information **[see the website](https://mozilla-mobile.github.io/android-components/)**.
 
-[Reference browser](https://github.com/mozilla-mobile/reference-browser).
+A full featured reference browser implementation based on the components can be found in the [reference-browser repository](https://github.com/mozilla-mobile/reference-browser).
 
 # Getting Involved
 
@@ -154,7 +154,7 @@ _Supporting components with generic helper code._
 
 _Sample apps using various components._
 
-* [**Browser**](samples/browser) - A simple browser composed from browser components.
+* [**Browser**](samples/browser) - A simple browser composed from browser components. This sample application is only a very basic browser. For a full-featured reference browser implementation see the **[reference-browser repository](https://github.com/mozilla-mobile/reference-browser)**.
 
 * [**Firefox Accounts (FxA)**](samples/firefox-accounts) - A simple app demoing Firefox Accounts integration.
 
