@@ -274,15 +274,17 @@ class GeckoEngineSessionTest {
         val currentState = GeckoSession.SessionState("")
         val stateMap = mapOf(GeckoEngineSession.GECKO_STATE_KEY to currentState.toString())
 
-        var first = true
         ThreadUtils.sGeckoHandler = object : Handler() {
             override fun sendMessageAtTime(msg: Message?, uptimeMillis: Long): Boolean {
-                // Only run the saveState runnable and ignore everything that comes after
-                if (first) {
-                    first = false
-                    return super.sendMessageAtTime(msg, uptimeMillis)
+                val wrappedRunnable = Runnable {
+                    try {
+                        msg?.callback?.run()
+                    } catch (t: Throwable) {
+                        // We ignore this in the test as the runnable could be calling
+                        // a native method (disposeNative) which won't work in Robolectric
+                    }
                 }
-                return true
+                return super.sendMessageAtTime(Message.obtain(this, wrappedRunnable), uptimeMillis)
             }
         }
         `when`(engineSession.geckoSession.saveState()).thenReturn(GeckoResult.fromValue(currentState))
