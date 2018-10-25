@@ -22,7 +22,7 @@ class VRSession
 {
 public:
   VRSession();
-  virtual ~VRSession();
+  virtual ~VRSession() = default;
 
   virtual bool Initialize(mozilla::gfx::VRSystemState& aSystemState) = 0;
   virtual void Shutdown() = 0;

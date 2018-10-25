@@ -778,7 +778,6 @@ VRSystemManagerExternal::ScanForControllers()
 {
   // Controller updates are handled in VRDisplayClient for
   // VRSystemManagerExternal
-  return;
 }
 
 void
@@ -786,7 +785,6 @@ VRSystemManagerExternal::HandleInput()
 {
   // Controller updates are handled in VRDisplayClient for
   // VRSystemManagerExternal
-  return;
 }
 
 void
