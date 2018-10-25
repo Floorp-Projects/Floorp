@@ -105,7 +105,15 @@ android {
     project.configureProductFlavors.delegate = it
     project.configureProductFlavors()
 
-    flavorDimensions "audience", "geckoBinaries"
+    flavorDimensions "audience", "geckoBinaries", "minApi", "skin"
+
+    productFlavors {
+        // Since Firefox 57, the mobile user interface has followed the Photon design.
+        // Before Firefox 57, the user interface followed the Australis design.
+        photon {
+            dimension "skin"
+        }
+    }
 
     sourceSets {
         main {

@@ -165,7 +165,7 @@ for f in ['res/raw/suggestedsites.json',
     suggestedsites.flags += [
         '--verbose',
         '--android-package-name', CONFIG['ANDROID_PACKAGE_NAME'],
-        '--resources', TOPSRCDIR + '/mobile/android/app/src/main/res',
+        '--resources', TOPSRCDIR + '/mobile/android/app/src/photon/res',
         '--fallback',
         # The `locales/en-US` in this path will not be rewritten.
         TOPSRCDIR + '/mobile/locales/en-US/chrome/region.properties',
