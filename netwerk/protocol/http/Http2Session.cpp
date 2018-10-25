@@ -162,6 +162,8 @@ Http2Session::Shutdown()
       CloseStream(stream, NS_ERROR_NET_PARTIAL_TRANSFER);
     } else if (mGoAwayReason == INADEQUATE_SECURITY) {
       CloseStream(stream, NS_ERROR_NET_INADEQUATE_SECURITY);
+    } else if (!mCleanShutdown) {
+      CloseStream(stream, NS_ERROR_NET_HTTP2_SENT_GOAWAY);
     } else {
       CloseStream(stream, NS_ERROR_ABORT);
     }
@@ -190,8 +192,17 @@ Http2Session::~Http2Session()
 inline nsresult
 Http2Session::SessionError(enum errorType reason)
 {
+  LOG3(("Http2Session::SessionError %p reason=0x%x mPeerGoAwayReason=0x%x",
+        this, reason, mPeerGoAwayReason));
   mGoAwayReason = reason;
-  return NS_ERROR_ILLEGAL_VALUE;
+
+  if (reason == INADEQUATE_SECURITY) {
+    // This one is special, as we have an error page just for this
+    return NS_ERROR_NET_INADEQUATE_SECURITY;
+  }
+
+  // We're the one sending a generic GOAWAY
+  return NS_ERROR_NET_HTTP2_SENT_GOAWAY;
 }
 
 void
