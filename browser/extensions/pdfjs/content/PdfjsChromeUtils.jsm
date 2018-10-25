@@ -192,24 +192,27 @@ var PdfjsChromeUtils = {
   },
 
   handleEvent(aEvent) {
+    const type = aEvent.type;
     // Handle the tab find initialized event specially:
-    if (aEvent.type == "TabFindInitialized") {
+    if (type == "TabFindInitialized") {
       let browser = aEvent.target.linkedBrowser;
       this._hookupEventListeners(browser);
-      aEvent.target.removeEventListener(aEvent.type, this);
+      aEvent.target.removeEventListener(type, this);
       return;
     }
 
     // To avoid forwarding the message as a CPOW, create a structured cloneable
     // version of the event for both performance, and ease of usage, reasons.
-    let type = aEvent.type;
-    let detail = {
-      query: aEvent.detail.query,
-      caseSensitive: aEvent.detail.caseSensitive,
-      entireWord: aEvent.detail.entireWord,
-      highlightAll: aEvent.detail.highlightAll,
-      findPrevious: aEvent.detail.findPrevious,
-    };
+    let detail = null;
+    if (type !== "findbarclose") {
+      detail = {
+        query: aEvent.detail.query,
+        caseSensitive: aEvent.detail.caseSensitive,
+        entireWord: aEvent.detail.entireWord,
+        highlightAll: aEvent.detail.highlightAll,
+        findPrevious: aEvent.detail.findPrevious,
+      };
+    }
 
     let browser = aEvent.currentTarget.browser;
     if (!this._browsers.has(browser)) {
@@ -222,10 +225,13 @@ var PdfjsChromeUtils = {
     aEvent.preventDefault();
   },
 
-  _types: ["find",
-           "findagain",
-           "findhighlightallchange",
-           "findcasesensitivitychange"],
+  _types: [
+    "find",
+    "findagain",
+    "findhighlightallchange",
+    "findcasesensitivitychange",
+    "findbarclose",
+  ],
 
   _addEventListener(aMsg) {
     let browser = aMsg.target;

@@ -668,6 +668,10 @@ class MozFindbar extends XULElement {
       this.setAttribute("noanim", true);
     this.hidden = true;
 
+    let event = document.createEvent("Events");
+    event.initEvent("findbarclose", true, false);
+    this.dispatchEvent(event);
+
     // 'focusContent()' iterates over all listeners in the chrome
     // process, so we need to call it from here.
     this.browser.finder.focusContent();
