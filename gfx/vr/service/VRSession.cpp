@@ -14,11 +14,6 @@ VRSession::VRSession()
 
 }
 
-VRSession::~VRSession()
-{
-
-}
-
 #if defined(XP_WIN)
 bool
 VRSession::CreateD3DContext(RefPtr<ID3D11Device> aDevice)
