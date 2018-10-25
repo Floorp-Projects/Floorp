@@ -89,6 +89,7 @@ toolbar[customizable="true"] {
 %ifdef XP_MACOSX
 #toolbar-menubar {
   -moz-binding: none;
+  visibility: collapse;
 }
 %endif
 
@@ -153,7 +154,7 @@ panelview[mainview] > .panel-header {
 #tabbrowser-tabs[hasadjacentnewtabbutton]:not([overflow="true"]) ~ #new-tab-button,
 #tabbrowser-tabs[overflow="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
 #tabbrowser-tabs:not([hasadjacentnewtabbutton]) > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
-#TabsToolbar[customizing="true"] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
+#TabsToolbar[customizing="true"] #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
   visibility: collapse;
 }
 
@@ -240,16 +241,16 @@ panelview[mainview] > .panel-header {
 
 /* The next 3 rules allow dragging tabs slightly outside of the tabstrip
  * to make it easier to drag tabs. */
-#TabsToolbar[movingtab] {
+#navigator-toolbox[movingtab] > #titlebar > #TabsToolbar {
   padding-bottom: 15px;
 }
 
-#TabsToolbar[movingtab] > #tabbrowser-tabs {
+#navigator-toolbox[movingtab] #tabbrowser-tabs {
   padding-bottom: 15px;
   margin-bottom: -15px;
 }
 
-#TabsToolbar[movingtab] + #nav-bar {
+#navigator-toolbox[movingtab] > #nav-bar {
   margin-top: -15px;
   pointer-events: none;
 }
@@ -286,32 +287,40 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
 
 
 %ifdef MENUBAR_CAN_AUTOHIDE
-#toolbar-menubar:not([autohide=true]) + #TabsToolbar > .titlebar-placeholder,
+#toolbar-menubar:not([autohide=true]) + #TabsToolbar > .titlebar-item,
+#toolbar-menubar:not([autohide=true]) + #TabsToolbar .titlebar-placeholder,
 %endif
 %ifndef MOZ_WIDGET_COCOA
 #main-window:not([sizemode=normal]) .titlebar-placeholder[type="pre-tabs"],
 %endif
-#main-window:not([chromemargin]) > #titlebar,
-#main-window[inFullscreen] > #titlebar,
+#main-window:not([chromemargin]) .titlebar-buttonbox-container,
+#main-window[inFullscreen] .titlebar-buttonbox-container,
 #main-window[inFullscreen] .titlebar-placeholder,
 #main-window:not([tabsintitlebar]) .titlebar-placeholder {
   display: none;
 }
 
+%ifdef MENUBAR_CAN_AUTOHIDE
+#toolbar-menubar[autohide=true]:not([inactive]) + #TabsToolbar > .titlebar-buttonbox-container {
+  visibility: hidden;
+}
+%endif
+
 #titlebar {
   -moz-window-dragging: drag;
 }
 
-#titlebar-spacer {
-  pointer-events: none;
-}
-
-#main-window[tabsintitlebar] #titlebar-buttonbox {
+#main-window[tabsintitlebar] .titlebar-buttonbox {
   position: relative;
 }
 
-#titlebar-buttonbox {
+#main-window:not([tabsintitlebar]) .titlebar-buttonbox {
+  display: none;
+}
+
+.titlebar-buttonbox {
   -moz-appearance: -moz-window-button-box;
+  position: relative;
 }
 
 #personal-bookmarks {
@@ -322,23 +331,27 @@ toolbarpaletteitem {
   -moz-window-dragging: no-drag;
 }
 
+.titlebar-buttonbox-container {
+  -moz-box-ordinal-group: 1000;
+}
+
 %ifdef XP_MACOSX
 #titlebar-fullscreen-button {
   -moz-appearance: -moz-mac-fullscreen-button;
 }
 
-/* Fullscreen and caption buttons don't move with RTL on OS X so override the automatic ordering. */
-#titlebar-secondary-buttonbox:-moz-locale-dir(ltr),
-#titlebar-buttonbox-container:-moz-locale-dir(rtl),
-.titlebar-placeholder[type="fullscreen-button"]:-moz-locale-dir(ltr),
-.titlebar-placeholder[type="caption-buttons"]:-moz-locale-dir(rtl) {
+/**
+ * On macOS, the window caption buttons are on the left side of the window titlebar,
+ * even when using the RTL UI direction. Similarly, the fullscreen button is on the
+ * right side of the window titlebar, even when using the RTL UI direction. These
+ * next rules enforce that ordering.
+ */
+#titlebar-secondary-buttonbox:-moz-locale-dir(ltr) {
   -moz-box-ordinal-group: 1000;
 }
 
 #titlebar-secondary-buttonbox:-moz-locale-dir(rtl),
-#titlebar-buttonbox-container:-moz-locale-dir(ltr),
-.titlebar-placeholder[type="caption-buttons"]:-moz-locale-dir(ltr),
-.titlebar-placeholder[type="fullscreen-button"]:-moz-locale-dir(rtl) {
+.titlebar-buttonbox-container:-moz-locale-dir(ltr) {
   -moz-box-ordinal-group: 0;
 }
 %endif
