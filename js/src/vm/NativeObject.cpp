@@ -2534,6 +2534,32 @@ GeneralizedGetProperty(JSContext* cx, JSObject* obj, jsid id, const Value& recei
     return GetPropertyNoGC(cx, obj, receiver, id, vp.address());
 }
 
+bool
+js::GetSparseElementHelper(JSContext* cx, HandleArrayObject obj, int32_t int_id,
+                           MutableHandleValue result)
+{
+    // Callers should have ensured that this object has a static prototype.
+    MOZ_ASSERT(obj->hasStaticPrototype());
+
+    // Indexed properties can not exist on the prototype chain.
+    MOZ_ASSERT_IF(obj->staticPrototype() != nullptr,
+                  !ObjectMayHaveExtraIndexedProperties(obj->staticPrototype()));
+
+    MOZ_ASSERT(INT_FITS_IN_JSID(int_id));
+    RootedId id(cx, INT_TO_JSID(int_id));
+
+    Shape* rawShape = obj->lastProperty()->search(cx, id);
+    if (!rawShape) {
+        // Property not found, return directly.
+        result.setUndefined();
+        return true;
+    }
+
+    RootedValue receiver(cx, ObjectValue(*obj));
+    RootedShape shape(cx, rawShape);
+    return GetExistingProperty<CanGC>(cx, receiver, obj, shape, result);
+}
+
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE bool
 NativeGetPropertyInline(JSContext* cx,
