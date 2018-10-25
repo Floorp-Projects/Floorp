@@ -350,9 +350,7 @@ nsXPCWrappedJS::GetNewOrUsed(JSContext* cx,
 
     MOZ_RELEASE_ASSERT(js::GetContextCompartment(cx) == js::GetObjectCompartment(jsObj));
 
-    bool allowNonScriptable = mozilla::jsipc::IsWrappedCPOW(jsObj);
-    RefPtr<nsXPCWrappedJSClass> clasp = nsXPCWrappedJSClass::GetNewOrUsed(cx, aIID,
-                                                                          allowNonScriptable);
+    RefPtr<nsXPCWrappedJSClass> clasp = nsXPCWrappedJSClass::GetNewOrUsed(cx, aIID);
     if (!clasp) {
         return NS_ERROR_FAILURE;
     }
@@ -616,10 +614,9 @@ nsXPCWrappedJS::FindInherited(REFNSIID aIID)
     MOZ_ASSERT(!aIID.Equals(NS_GET_IID(nsISupports)), "bad call sequence");
 
     for (nsXPCWrappedJS* cur = mRoot; cur; cur = cur->mNext) {
-        bool found;
-        if (NS_SUCCEEDED(cur->GetClass()->GetInterfaceInfo()->
-                         HasAncestor(&aIID, &found)) && found)
+        if (cur->GetClass()->GetInterfaceInfo()->HasAncestor(aIID)) {
             return cur;
+        }
     }
 
     return nullptr;
@@ -751,12 +748,8 @@ nsXPCWrappedJS::DebugDump(int16_t depth)
 
         XPC_LOG_ALWAYS(("%s wrapper around JSObject @ %p",              \
                         IsRootWrapper() ? "ROOT":"non-root", mJSObj.get()));
-        char* name;
-        GetClass()->GetInterfaceInfo()->GetName(&name);
+        const char* name = GetClass()->GetInterfaceInfo()->Name();
         XPC_LOG_ALWAYS(("interface name is %s", name));
-        if (name) {
-            free(name);
-        }
         char * iid = GetClass()->GetIID().ToString();
         XPC_LOG_ALWAYS(("IID number is %s", iid ? iid : "invalid"));
         if (iid) {

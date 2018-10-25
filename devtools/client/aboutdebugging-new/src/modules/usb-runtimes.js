@@ -37,3 +37,8 @@ function removeUSBRuntimesObserver(listener) {
   adbScanner.off("runtime-list-updated", listener);
 }
 exports.removeUSBRuntimesObserver = removeUSBRuntimesObserver;
+
+function refreshUSBRuntimes() {
+  return adbScanner.scan();
+}
+exports.refreshUSBRuntimes = refreshUSBRuntimes;
