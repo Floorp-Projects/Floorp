@@ -55,7 +55,7 @@ PARAMETERS = {
     'build_number': 1,
     'do_not_optimize': [],
     'existing_tasks': {},
-    'filters': ['check_servo', 'target_tasks_method'],
+    'filters': ['target_tasks_method'],
     'head_ref': get_head_ref,
     'head_repository': 'https://hg.mozilla.org/mozilla-central',
     'head_rev': get_head_ref,

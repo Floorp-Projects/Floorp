@@ -10,12 +10,10 @@ const searchPopup = document.getElementById("PopupSearchAutoComplete");
 const oneOffsContainer =
   document.getAnonymousElementByAttribute(searchPopup, "anonid",
                                           "search-one-off-buttons");
-const searchSettings =
-  document.getAnonymousElementByAttribute(oneOffsContainer, "anonid",
-                                          "search-settings");
-var header =
-  document.getAnonymousElementByAttribute(oneOffsContainer, "anonid",
-                                          "search-panel-one-offs-header");
+const searchSettings = oneOffsContainer.querySelector(".search-setting-button");
+
+var header = oneOffsContainer.querySelector(".search-panel-one-offs-header");
+
 function getHeaderText() {
   let headerChild = header.selectedPanel;
   while (headerChild.hasChildNodes()) {

@@ -169,17 +169,31 @@ var gReplacedMethods = [
   "getShortcutOrURIAndPostData",
 ];
 
+// Returns the target object for the replaced method.
+function getStub(replacedMethod) {
+  let targetObj = replacedMethod == "getShortcutOrURIAndPostData" ? UrlbarUtils : gTestWin;
+  return targetObj[replacedMethod];
+}
+
 // Reference to the new window.
 var gTestWin = null;
-
-// List of methods invoked by a specific call to contentAreaClick.
-var gInvokedMethods = [];
 
 // The test currently running.
 var gCurrentTest = null;
 
+var sandbox;
+
 function test() {
   waitForExplicitFinish();
+
+  /* global sinon */
+  Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
+  sandbox = sinon.sandbox.create();
+
+  registerCleanupFunction(function() {
+    sandbox.restore();
+    delete window.sinon;
+  });
 
   gTestWin = openDialog(location, "", "chrome,all,dialog=no", "about:blank");
   whenDelayedStartupFinished(gTestWin, function() {
@@ -210,14 +224,16 @@ var gClickHandler = {
        gCurrentTest.desc + ": event.defaultPrevented is correct (" + prevent + ")");
 
     // Check that all required methods have been called.
-    gCurrentTest.expectedInvokedMethods.forEach(function(aExpectedMethodName) {
-      isnot(gInvokedMethods.indexOf(aExpectedMethodName), -1,
-            gCurrentTest.desc + ":" + aExpectedMethodName + " was invoked");
-    });
+    for (let expectedMethod of gCurrentTest.expectedInvokedMethods) {
+      ok(getStub(expectedMethod).called,
+        `${gCurrentTest.desc}:${expectedMethod} should have been invoked`);
+    }
 
-    if (gInvokedMethods.length != gCurrentTest.expectedInvokedMethods.length) {
-      ok(false, "Wrong number of invoked methods");
-      gInvokedMethods.forEach(method => info(method + " was invoked"));
+    for (let method of gReplacedMethods) {
+      if (getStub(method).called &&
+          !gCurrentTest.expectedInvokedMethods.includes(method)) {
+        ok(false, `Should have not called ${method}`);
+      }
     }
 
     event.preventDefault();
@@ -227,23 +243,14 @@ var gClickHandler = {
   },
 };
 
-// Wraps around the methods' replacement mock function.
-function wrapperMethod(aInvokedMethods, aMethodName) {
-  return function() {
-    aInvokedMethods.push(aMethodName);
-    // At least getShortcutOrURIAndPostData requires to return url
-    return (aMethodName == "getShortcutOrURIAndPostData") ? arguments.url : arguments[0];
-  };
-}
-
 function setupTestBrowserWindow() {
   // Steal click events and don't propagate them.
   gTestWin.addEventListener("click", gClickHandler, true);
 
   // Replace methods.
-  gReplacedMethods.forEach(function(aMethodName) {
-    gTestWin["old_" + aMethodName] = gTestWin[aMethodName];
-    gTestWin[aMethodName] = wrapperMethod(gInvokedMethods, aMethodName);
+  gReplacedMethods.forEach(function(methodName) {
+    let targetObj = methodName == "getShortcutOrURIAndPostData" ? UrlbarUtils : gTestWin;
+    sandbox.stub(targetObj, methodName).returnsArg(0);
   });
 
   // Inject links in content.
@@ -279,7 +286,7 @@ function runNextTest() {
   }
 
   // Move to next target.
-  gInvokedMethods.length = 0;
+  sandbox.resetHistory();
   let target = gCurrentTest.targets.shift();
 
   info(gCurrentTest.desc + ": testing " + target);
@@ -293,13 +300,6 @@ function runNextTest() {
 function finishTest() {
   info("Restoring browser...");
   gTestWin.removeEventListener("click", gClickHandler, true);
-
-  // Restore original methods.
-  gReplacedMethods.forEach(function(aMethodName) {
-    gTestWin[aMethodName] = gTestWin["old_" + aMethodName];
-    delete gTestWin["old_" + aMethodName];
-  });
-
   gTestWin.close();
   finish();
 }

@@ -122,6 +122,11 @@ JsepSessionImpl::AddTransceiver(RefPtr<JsepTransceiver> transceiver)
     // Datachannel transceivers should always be sendrecv. Just set it instead
     // of asserting.
     transceiver->mJsDirection = SdpDirectionAttribute::kSendrecv;
+#ifdef DEBUG
+    for (auto& transceiver : mTransceivers) {
+      MOZ_ASSERT(transceiver->GetMediaType() != SdpMediaSection::kApplication);
+    }
+#endif
   }
 
   transceiver->mSendTrack.PopulateCodecs(mSupportedCodecs.values);
@@ -228,11 +233,8 @@ JsepSessionImpl::CreateOfferMsection(const JsepOfferOptions& options,
                                      JsepTransceiver& transceiver,
                                      Sdp* local)
 {
-  JsepTrack& sendTrack(transceiver.mSendTrack);
-  JsepTrack& recvTrack(transceiver.mRecvTrack);
-
   SdpMediaSection::Protocol protocol(
-      SdpHelper::GetProtocolForMediaType(sendTrack.GetMediaType()));
+      SdpHelper::GetProtocolForMediaType(transceiver.GetMediaType()));
 
   const Sdp* answer(GetAnswer());
   const SdpMediaSection* lastAnswerMsection = nullptr;
@@ -247,7 +249,7 @@ JsepSessionImpl::CreateOfferMsection(const JsepOfferOptions& options,
   }
 
   SdpMediaSection* msection = &local->AddMediaSection(
-      sendTrack.GetMediaType(),
+      transceiver.GetMediaType(),
       transceiver.mJsDirection,
       0,
       protocol,
@@ -256,6 +258,7 @@ JsepSessionImpl::CreateOfferMsection(const JsepOfferOptions& options,
 
   // Some of this stuff (eg; mid) sticks around even if disabled
   if (lastAnswerMsection) {
+    MOZ_ASSERT(lastAnswerMsection->GetMediaType() == transceiver.GetMediaType());
     nsresult rv = mSdpHelper.CopyStickyParams(*lastAnswerMsection, msection);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -278,8 +281,8 @@ JsepSessionImpl::CreateOfferMsection(const JsepOfferOptions& options,
   nsresult rv = AddTransportAttributes(msection, SdpSetupAttribute::kActpass);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  sendTrack.AddToOffer(mSsrcGenerator, msection);
-  recvTrack.AddToOffer(mSsrcGenerator, msection);
+  transceiver.mSendTrack.AddToOffer(mSsrcGenerator, msection);
+  transceiver.mRecvTrack.AddToOffer(mSsrcGenerator, msection);
 
   AddExtmap(msection);
 
@@ -632,6 +635,7 @@ JsepSessionImpl::CreateAnswerMsection(const JsepAnswerOptions& options,
                                       const SdpMediaSection& remoteMsection,
                                       Sdp* sdp)
 {
+  MOZ_ASSERT(transceiver.GetMediaType() == remoteMsection.GetMediaType());
   SdpDirectionAttribute::Direction direction =
     reverse(remoteMsection.GetDirection()) & transceiver.mJsDirection;
   SdpMediaSection& msection =
@@ -968,6 +972,11 @@ JsepSessionImpl::SetRemoteDescription(JsepSdpType type, const std::string& sdp)
   if (type == kJsepSdpOffer) {
     mOldTransceivers.clear();
     for (const auto& transceiver : mTransceivers) {
+      if (!transceiver->IsNegotiated()) {
+        // We chose a level for this transceiver, but never negotiated it.
+        // Discard this state.
+        transceiver->ClearLevel();
+      }
       mOldTransceivers.push_back(new JsepTransceiver(*transceiver));
     }
   }
@@ -1492,7 +1501,9 @@ JsepTransceiver*
 JsepSessionImpl::GetTransceiverForLocal(size_t level)
 {
   if (JsepTransceiver* transceiver = GetTransceiverForLevel(level)) {
-    if (WasMsectionDisabledLastNegotiation(level) && transceiver->IsStopped()) {
+    if (WasMsectionDisabledLastNegotiation(level) &&
+        transceiver->IsStopped() &&
+        transceiver->GetMediaType() != SdpMediaSection::kApplication) {
       // Attempt to recycle. If this fails, the old transceiver stays put.
       transceiver->Disassociate();
       JsepTransceiver* newTransceiver = FindUnassociatedTransceiver(
@@ -1644,6 +1655,11 @@ JsepSessionImpl::FindUnassociatedTransceiver(
 {
   // Look through transceivers that are not mapped to an m-section
   for (RefPtr<JsepTransceiver>& transceiver : mTransceivers) {
+    if (type == SdpMediaSection::kApplication &&
+        type == transceiver->GetMediaType()) {
+      transceiver->RestartDatachannelTransceiver();
+      return transceiver.get();
+    }
     if (!transceiver->IsStopped() &&
         !transceiver->HasLevel() &&
         (!magic || transceiver->HasAddTrackMagic()) &&

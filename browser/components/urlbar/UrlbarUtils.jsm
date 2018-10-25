@@ -11,6 +11,16 @@
 
 var EXPORTED_SYMBOLS = ["UrlbarUtils"];
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
+
 var UrlbarUtils = {
   // Values for browser.urlbar.insertMethod
   INSERTMETHOD: {
@@ -55,5 +65,101 @@ var UrlbarUtils = {
     // Indicates an open tab.
     // The payload is: { url, userContextId }
     TAB_SWITCH: 1,
+  },
+
+  /**
+   * Adds a url to history as long as it isn't in a private browsing window,
+   * and it is valid.
+   *
+   * @param {string} url The url to add to history.
+   * @param {nsIDomWindow} window The window from where the url is being added.
+   */
+  addToUrlbarHistory(url, window) {
+    if (!PrivateBrowsingUtils.isWindowPrivate(window) &&
+        url &&
+        !url.includes(" ") &&
+        !/[\x00-\x1F]/.test(url)) // eslint-disable-line no-control-regex
+      PlacesUIUtils.markPageAsTyped(url);
+  },
+
+  /**
+   * Given a string, will generate a more appropriate urlbar value if a Places
+   * keyword or a search alias is found at the beginning of it.
+   *
+   * @param {string} url
+   *        A string that may begin with a keyword or an alias.
+   *
+   * @returns {Promise}
+   * @resolves { url, postData, mayInheritPrincipal }. If it's not possible
+   *           to discern a keyword or an alias, url will be the input string.
+   */
+  async getShortcutOrURIAndPostData(url) {
+    let mayInheritPrincipal = false;
+    let postData = null;
+    // Split on the first whitespace.
+    let [keyword, param = ""] = url.trim().split(/\s(.+)/, 2);
+
+    if (!keyword) {
+      return { url, postData, mayInheritPrincipal };
+    }
+
+    let engine = Services.search.getEngineByAlias(keyword);
+    if (engine) {
+      let submission = engine.getSubmission(param, null, "keyword");
+      return { url: submission.uri.spec,
+               postData: submission.postData,
+               mayInheritPrincipal };
+    }
+
+    // A corrupt Places database could make this throw, breaking navigation
+    // from the location bar.
+    let entry = null;
+    try {
+      entry = await PlacesUtils.keywords.fetch(keyword);
+    } catch (ex) {
+      Cu.reportError(`Unable to fetch Places keyword "${keyword}": ${ex}`);
+    }
+    if (!entry || !entry.url) {
+      // This is not a Places keyword.
+      return { url, postData, mayInheritPrincipal };
+    }
+
+    try {
+      [url, postData] =
+        await BrowserUtils.parseUrlAndPostData(entry.url.href,
+                                               entry.postData,
+                                               param);
+      if (postData) {
+        postData = this.getPostDataStream(postData);
+      }
+
+      // Since this URL came from a bookmark, it's safe to let it inherit the
+      // current document's principal.
+      mayInheritPrincipal = true;
+    } catch (ex) {
+      // It was not possible to bind the param, just use the original url value.
+    }
+
+    return { url, postData, mayInheritPrincipal };
+  },
+
+  /**
+   * Returns an input stream wrapper for the given post data.
+   *
+   * @param {string} postDataString The string to wrap.
+   * @param {string} [type] The encoding type.
+   * @returns {nsIInputStream} An input stream of the wrapped post data.
+   */
+  getPostDataStream(postDataString,
+                    type = "application/x-www-form-urlencoded") {
+    let dataStream = Cc["@mozilla.org/io/string-input-stream;1"]
+                       .createInstance(Ci.nsIStringInputStream);
+    dataStream.data = postDataString;
+
+    let mimeStream = Cc["@mozilla.org/network/mime-input-stream;1"]
+                       .createInstance(Ci.nsIMIMEInputStream);
+    mimeStream.addHeader("Content-Type", type);
+    mimeStream.setData(dataStream);
+    return mimeStream.QueryInterface(Ci.nsIInputStream);
   },
 };
