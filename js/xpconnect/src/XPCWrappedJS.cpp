@@ -350,9 +350,7 @@ nsXPCWrappedJS::GetNewOrUsed(JSContext* cx,
 
     MOZ_RELEASE_ASSERT(js::GetContextCompartment(cx) == js::GetObjectCompartment(jsObj));
 
-    bool allowNonScriptable = mozilla::jsipc::IsWrappedCPOW(jsObj);
-    RefPtr<nsXPCWrappedJSClass> clasp = nsXPCWrappedJSClass::GetNewOrUsed(cx, aIID,
-                                                                          allowNonScriptable);
+    RefPtr<nsXPCWrappedJSClass> clasp = nsXPCWrappedJSClass::GetNewOrUsed(cx, aIID);
     if (!clasp) {
         return NS_ERROR_FAILURE;
     }
