@@ -68,10 +68,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // INSERTMETHOD values.
   ["insertMethod", UrlbarUtils.INSERTMETHOD.MERGE_RELATED],
 
-  // Controls how URLs are matched against the user's search string.  See
-  // mozIPlacesAutoComplete.
-  ["matchBehavior", Ci.mozIPlacesAutoComplete.MATCH_BOUNDARY_ANYWHERE],
-
   // Controls the composition of search results.
   ["matchBuckets", "suggestion:4,general:Infinity"],
 
@@ -308,16 +304,6 @@ class Preferences {
           val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_BOOKMARK;
         } else {
           val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_OPENPAGE;
-        }
-        return val;
-      }
-      case "matchBehavior": {
-        // Validate matchBehavior; default to MATCH_BOUNDARY_ANYWHERE.
-        let val = this._readPref(pref);
-        if (![Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE,
-              Ci.mozIPlacesAutoComplete.MATCH_BOUNDARY,
-              Ci.mozIPlacesAutoComplete.MATCH_BEGINNING].includes(val)) {
-          val = Ci.mozIPlacesAutoComplete.MATCH_BOUNDARY_ANYWHERE;
         }
         return val;
       }
