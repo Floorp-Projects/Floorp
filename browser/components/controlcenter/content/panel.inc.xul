@@ -59,9 +59,6 @@
             when-connection="not-secure secure secure-ev secure-cert-user-overridden extension">
         <vbox id="identity-popup-content-blocking-content" flex="1">
           <hbox align="start">
-            <label id="tracking-protection-label"
-                   class="identity-popup-headline"
-                   flex="1">&trackingProtection.title;</label>
             <label id="content-blocking-label"
                    class="identity-popup-headline"
                    flex="1">&contentBlocking.title;</label>
@@ -76,7 +73,6 @@
             </hbox>
             <toolbarbutton id="tracking-protection-preferences-button"
                            class="identity-popup-preferences-button subviewbutton"
-                           tooltiptext="&trackingProtection.tooltip;"
                            oncommand="ContentBlocking.openPreferences('identityPopup-TP-preferencesButton'); gIdentityHandler.recordClick('cb_prefs_button');" />
           </hbox>
 

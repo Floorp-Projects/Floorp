@@ -1029,9 +1029,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY contentBlocking.breakageReportView.sendReport.label "Send Report">
 <!ENTITY contentBlocking.breakageReportView.cancel.label "Cancel">
 
-<!ENTITY trackingProtection.title "Tracking Protection">
-<!ENTITY trackingProtection.tooltip "Open Tracking Protection Preferences">
-
 <!-- LOCALIZATION NOTE (trackingProtection.unblock3.label, trackingProtection.unblock3.accesskey):
      The associated button with this label and accesskey is only shown when opening the control
      center while looking at a site with trackers in NON-private browsing mode. -->
