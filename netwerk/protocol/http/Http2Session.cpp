@@ -115,6 +115,7 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, enum SpdyVersio
   , mTlsHandshakeFinished(false)
   , mCheckNetworkStallsWithTFO(false)
   , mLastRequestBytesSentTime(0)
+  , mPeerFailedHandshake(false)
   , mTrrStreams(0)
 {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
@@ -183,6 +184,7 @@ Http2Session::~Http2Session()
                         mServerPushedResources);
   Telemetry::Accumulate(Telemetry::SPDY_GOAWAY_LOCAL, mClientGoAwayReason);
   Telemetry::Accumulate(Telemetry::SPDY_GOAWAY_PEER, mPeerGoAwayReason);
+  Telemetry::Accumulate(Telemetry::HTTP2_FAIL_BEFORE_SETTINGS, mPeerFailedHandshake);
 }
 
 inline nsresult
@@ -3156,6 +3158,14 @@ Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
     if (mDownstreamState == BUFFERING_OPENING_SETTINGS &&
         mInputFrameType != FRAME_TYPE_SETTINGS) {
       LOG3(("First Frame Type Must Be Settings\n"));
+      mPeerFailedHandshake = true;
+      // Go through and re-start all of our transactions with h2 disabled.
+      for (auto iter = mStreamTransactionHash.Iter(); !iter.Done(); iter.Next()) {
+        nsAutoPtr<Http2Stream>& stream = iter.Data();
+        stream->Transaction()->DisableSpdy();
+        CloseStream(stream, NS_ERROR_NET_RESET);
+      }
+      mStreamTransactionHash.Clear();
       return SessionError(PROTOCOL_ERROR);
     }
 
