@@ -1876,12 +1876,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                        flex="1"/>
       <xul:hbox anonid="footer">
         <children/>
-        <xul:vbox anonid="one-off-search-buttons"
-                  class="search-one-offs"
-                  compact="true"
-                  includecurrentengine="true"
-                  disabletab="true"
-                  flex="1"/>
+        <xul:search-one-offs anonid="one-off-search-buttons"
+                             class="search-one-offs"
+                             compact="true"
+                             includecurrentengine="true"
+                             disabletab="true"
+                             flex="1"/>
       </xul:hbox>
     </content>
 
