@@ -167,10 +167,8 @@ class UrlbarController {
       new URL(text);
     } catch (ex) {
       // TODO: Figure out why we need lastLocationChange here.
-      // TODO: Possibly move getShortcutOrURIAndPostData into a utility function
-      // in a jsm (there's nothing window specific about it).
       // let lastLocationChange = browser.lastLocationChange;
-      // getShortcutOrURIAndPostData(text).then(data => {
+      // UrlbarUtils.getShortcutOrURIAndPostData(text).then(data => {
       //   if (where != "current" ||
       //       browser.lastLocationChange == lastLocationChange) {
       //     params.postData = data.postData;
@@ -308,8 +306,7 @@ class UrlbarController {
       browser.initialPageLoadedFromURLBar = url;
     }
     try {
-      // TODO: Move function to PlacesUIUtils.
-      this.window.addToUrlbarHistory(url);
+      UrlbarUtils.addToUrlbarHistory(url);
     } catch (ex) {
       // Things may go wrong when adding url to session history,
       // but don't let that interfere with the loading of the url.

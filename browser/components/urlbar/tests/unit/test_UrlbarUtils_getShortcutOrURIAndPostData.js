@@ -1,11 +1,21 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * These tests unit test the functionality of UrlbarController by stubbing out the
+ * model and providing stubs to be called.
+ */
+
+"use strict";
+
 function getPostDataString(aIS) {
   if (!aIS)
     return null;
 
-  var sis = Cc["@mozilla.org/scriptableinputstream;1"].
+  let sis = Cc["@mozilla.org/scriptableinputstream;1"].
             createInstance(Ci.nsIScriptableInputStream);
   sis.init(aIS);
-  var dataLines = sis.read(aIS.available()).split("\n");
+  let dataLines = sis.read(aIS.available()).split("\n");
 
   // only want the last line
   return dataLines[dataLines.length - 1];
@@ -21,7 +31,7 @@ function keyWordData() {}
 keyWordData.prototype = {
   init(aKeyWord, aURL, aPostData, aSearchWord) {
     this.keyword = aKeyWord;
-    this.uri = makeURI(aURL);
+    this.uri = Services.io.newURI(aURL);
     this.postData = aPostData;
     this.searchWord = aSearchWord;
 
@@ -100,12 +110,14 @@ add_task(async function test_getshortcutoruri() {
     let query = data.keyword;
     if (data.searchWord)
       query += " " + data.searchWord;
-    let returnedData = await getShortcutOrURIAndPostData(query);
+    let returnedData = await UrlbarUtils.getShortcutOrURIAndPostData(query);
     // null result.url means we should expect the same query we sent in
     let expected = result.url || query;
-    is(returnedData.url, expected, "got correct URL for " + data.keyword);
-    is(getPostDataString(returnedData.postData), result.postData, "got correct postData for " + data.keyword);
-    is(returnedData.mayInheritPrincipal, !result.isUnsafe, "got correct mayInheritPrincipal for " + data.keyword);
+    Assert.equal(returnedData.url, expected, "got correct URL for " + data.keyword);
+    Assert.equal(getPostDataString(returnedData.postData), result.postData,
+      "got correct postData for " + data.keyword);
+    Assert.equal(returnedData.mayInheritPrincipal, !result.isUnsafe,
+      "got correct mayInheritPrincipal for " + data.keyword);
   }
 
   await cleanupKeywords();
