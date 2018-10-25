@@ -44,9 +44,7 @@ class ChangesView {
       store: this.store,
     }, changesApp);
 
-    // TODO: save store and restore/replay on refresh.
-    // Bug 1478439 - https://bugzilla.mozilla.org/show_bug.cgi?id=1478439
-    this.inspector.target.once("will-navigate", this.destroy);
+    this.inspector.target.on("will-navigate", this.onClearChanges);
 
     // Sync the store to the changes stored on the server. The
     // syncChangesToServer() method is async, but we don't await it since
