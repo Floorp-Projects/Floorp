@@ -158,13 +158,13 @@ template<recordreplay::Behavior Recording> struct AutoRecordAtomicAccess;
 
 template<>
 struct AutoRecordAtomicAccess<recordreplay::Behavior::DontPreserve> {
-  AutoRecordAtomicAccess() {}
+  explicit AutoRecordAtomicAccess(const void* aValue) {}
   ~AutoRecordAtomicAccess() {}
 };
 
 template<>
 struct AutoRecordAtomicAccess<recordreplay::Behavior::Preserve> {
-  AutoRecordAtomicAccess() { recordreplay::BeginOrderedAtomicAccess(); }
+  explicit AutoRecordAtomicAccess(const void* aValue) { recordreplay::BeginOrderedAtomicAccess(aValue); }
   ~AutoRecordAtomicAccess() { recordreplay::EndOrderedAtomicAccess(); }
 };
 
@@ -218,26 +218,26 @@ struct IntrinsicMemoryOps : public IntrinsicBase<T, Order>
 
   static T load(const typename Base::ValueType& aPtr)
   {
-    AutoRecordAtomicAccess<Recording> record;
+    AutoRecordAtomicAccess<Recording> record(&aPtr);
     return aPtr.load(Base::OrderedOp::LoadOrder);
   }
 
   static void store(typename Base::ValueType& aPtr, T aVal)
   {
-    AutoRecordAtomicAccess<Recording> record;
+    AutoRecordAtomicAccess<Recording> record(&aPtr);
     aPtr.store(aVal, Base::OrderedOp::StoreOrder);
   }
 
   static T exchange(typename Base::ValueType& aPtr, T aVal)
   {
-    AutoRecordAtomicAccess<Recording> record;
+    AutoRecordAtomicAccess<Recording> record(&aPtr);
     return aPtr.exchange(aVal, Base::OrderedOp::AtomicRMWOrder);
   }
 
   static bool compareExchange(typename Base::ValueType& aPtr,
                               T aOldVal, T aNewVal)
   {
-    AutoRecordAtomicAccess<Recording> record;
+    AutoRecordAtomicAccess<Recording> record(&aPtr);
     return aPtr.compare_exchange_strong(aOldVal, aNewVal,
                                         Base::OrderedOp::AtomicRMWOrder,
                                         Base::OrderedOp::CompareExchangeFailureOrder);
@@ -251,13 +251,13 @@ struct IntrinsicAddSub : public IntrinsicBase<T, Order>
 
   static T add(typename Base::ValueType& aPtr, T aVal)
   {
-    AutoRecordAtomicAccess<Recording> record;
+    AutoRecordAtomicAccess<Recording> record(&aPtr);
     return aPtr.fetch_add(aVal, Base::OrderedOp::AtomicRMWOrder);
   }
 
   static T sub(typename Base::ValueType& aPtr, T aVal)
   {
-    AutoRecordAtomicAccess<Recording> record;
+    AutoRecordAtomicAccess<Recording> record(&aPtr);
     return aPtr.fetch_sub(aVal, Base::OrderedOp::AtomicRMWOrder);
   }
 };
@@ -269,13 +269,13 @@ struct IntrinsicAddSub<T*, Order, Recording> : public IntrinsicBase<T*, Order>
 
   static T* add(typename Base::ValueType& aPtr, ptrdiff_t aVal)
   {
-    AutoRecordAtomicAccess<Recording> record;
+    AutoRecordAtomicAccess<Recording> record(&aPtr);
     return aPtr.fetch_add(aVal, Base::OrderedOp::AtomicRMWOrder);
   }
 
   static T* sub(typename Base::ValueType& aPtr, ptrdiff_t aVal)
   {
-    AutoRecordAtomicAccess<Recording> record;
+    AutoRecordAtomicAccess<Recording> record(&aPtr);
     return aPtr.fetch_sub(aVal, Base::OrderedOp::AtomicRMWOrder);
   }
 };
@@ -304,19 +304,19 @@ struct AtomicIntrinsics : public IntrinsicMemoryOps<T, Order, Recording>,
 
   static T or_(typename Base::ValueType& aPtr, T aVal)
   {
-    AutoRecordAtomicAccess<Recording> record;
+    AutoRecordAtomicAccess<Recording> record(&aPtr);
     return aPtr.fetch_or(aVal, Base::OrderedOp::AtomicRMWOrder);
   }
 
   static T xor_(typename Base::ValueType& aPtr, T aVal)
   {
-    AutoRecordAtomicAccess<Recording> record;
+    AutoRecordAtomicAccess<Recording> record(&aPtr);
     return aPtr.fetch_xor(aVal, Base::OrderedOp::AtomicRMWOrder);
   }
 
   static T and_(typename Base::ValueType& aPtr, T aVal)
   {
-    AutoRecordAtomicAccess<Recording> record;
+    AutoRecordAtomicAccess<Recording> record(&aPtr);
     return aPtr.fetch_and(aVal, Base::OrderedOp::AtomicRMWOrder);
   }
 };
