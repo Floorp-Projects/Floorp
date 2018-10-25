@@ -354,7 +354,7 @@ void ResetMiddlemanCalls();
 ///////////////////////////////////////////////////////////////////////////////
 
 // Capture the contents of an input buffer at BufferArg with element count at CountArg.
-template <size_t BufferArg, size_t CountArg, typename ElemType>
+template <size_t BufferArg, size_t CountArg, typename ElemType = char>
 static inline void
 Middleman_Buffer(MiddlemanCallContext& aCx)
 {
