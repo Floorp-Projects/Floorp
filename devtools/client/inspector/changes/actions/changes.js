@@ -17,10 +17,10 @@ module.exports = {
     };
   },
 
-  trackChange(data) {
+  trackChange(change) {
     return {
       type: TRACK_CHANGE,
-      data,
+      change,
     };
   },
 
