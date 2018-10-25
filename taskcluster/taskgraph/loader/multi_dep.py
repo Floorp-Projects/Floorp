@@ -13,7 +13,10 @@ from ..util.schema import Schema
 
 schema = Schema({
     Required('primary-dependency', 'primary dependency task'): Task,
-    Required('dependent-tasks', 'dictionary of dependent tasks, keyed by kind'): {basestring: Task},
+    Required(
+        'dependent-tasks',
+        'dictionary of dependent tasks, keyed by kind',
+    ): {basestring: Task},
 })
 
 
