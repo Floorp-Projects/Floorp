@@ -108,7 +108,7 @@ wmain(int argc, WCHAR **argv)
   }
 
   SERVICE_TABLE_ENTRYW DispatchTable[] = {
-    { SVC_NAME, (LPSERVICE_MAIN_FUNCTIONW) SvcMain },
+    { const_cast<LPWSTR>(SVC_NAME), (LPSERVICE_MAIN_FUNCTIONW) SvcMain }, // -Wwritable-strings
     { nullptr, nullptr }
   };
 

@@ -77,7 +77,7 @@ CredentialManagerSecret::StoreSecret(const nsACString& aSecret,
   const nsCString& secret = PromiseFlatCString(aSecret);
   cred.CredentialBlob = (LPBYTE)secret.get();
   cred.Persist = CRED_PERSIST_LOCAL_MACHINE;
-  cred.UserName = "";
+  cred.UserName = const_cast<char*>(""); // -Wwritable-strings
 
   // https://docs.microsoft.com/en-us/windows/desktop/api/wincred/nf-wincred-credwritea
   BOOL ok = CredWriteA(&cred, 0);
