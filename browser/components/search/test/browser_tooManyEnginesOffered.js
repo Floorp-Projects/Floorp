@@ -86,9 +86,7 @@ add_task(async function test() {
 function getOpenSearchItems() {
   let os = [];
 
-  let addEngineList =
-    document.getAnonymousElementByAttribute(oneOffsContainer, "anonid",
-                                            "add-engines");
+  let addEngineList = oneOffsContainer.querySelector(".search-add-engines");
   for (let item = addEngineList.firstElementChild; item; item = item.nextElementSibling)
     os.push(item);
 

@@ -10,6 +10,10 @@
   fill: currentColor;
 }
 
+.search-one-offs {
+  -moz-box-orient: vertical;
+}
+
 /**
  * The borders of the various elements are specified as follows.
  *
@@ -104,10 +108,10 @@
   border-bottom: none !important;
 }
 
-.search-panel-one-offs:not([compact=true]) > .searchbar-engine-one-off-item.last-of-row,
-.search-panel-one-offs[compact=true] > .searchbar-engine-one-off-item.last-of-row:not(.dummy),
-.search-panel-one-offs[compact=true] > .searchbar-engine-one-off-item.dummy:not(.last-of-row),
-.search-panel-one-offs[compact=true] > .searchbar-engine-one-off-item.last-engine,
+.search-one-offs:not([compact=true]) .searchbar-engine-one-off-item.last-of-row,
+.search-one-offs[compact=true] .searchbar-engine-one-off-item.last-of-row:not(.dummy),
+.search-one-offs[compact=true] .searchbar-engine-one-off-item.dummy:not(.last-of-row),
+.search-one-offs[compact=true] .searchbar-engine-one-off-item.last-engine,
 .search-setting-button-compact {
   background-image: none;
 }

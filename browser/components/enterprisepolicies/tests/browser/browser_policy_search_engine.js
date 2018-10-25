@@ -33,9 +33,7 @@ async function test_opensearch(shouldWork) {
   let oneOffsContainer = document.getAnonymousElementByAttribute(searchPopup,
                                                                  "anonid",
                                                                  "search-one-off-buttons");
-  let engineListElement = document.getAnonymousElementByAttribute(oneOffsContainer,
-                                                                  "anonid",
-                                                                  "add-engines");
+  let engineListElement = oneOffsContainer.querySelector(".search-add-engines");
   if (shouldWork) {
     ok(engineListElement.firstElementChild,
        "There should be search engines available to add");
