@@ -569,6 +569,8 @@ private:
 
   bool mCheckNetworkStallsWithTFO;
   PRIntervalTime mLastRequestBytesSentTime;
+
+  bool mPeerFailedHandshake;
 private:
 /// connect tunnels
   void DispatchOnTunnel(nsAHttpTransaction *, nsIInterfaceRequestor *);
