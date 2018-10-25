@@ -345,8 +345,16 @@ inline bool isPlacementNew(const CXXNewExpr *Expression) {
   return true;
 }
 
+extern DenseMap<unsigned, bool> InThirdPartyPathCache;
+
 inline bool inThirdPartyPath(SourceLocation Loc, const SourceManager &SM) {
   Loc = SM.getFileLoc(Loc);
+
+  unsigned id = SM.getFileID(Loc).getHashValue();
+  auto pair = InThirdPartyPathCache.find(id);
+  if (pair != InThirdPartyPathCache.end()) {
+    return pair->second;
+  }
 
   SmallString<1024> RawFileName = SM.getFilename(Loc);
   llvm::sys::fs::make_absolute(RawFileName);
@@ -374,11 +382,13 @@ inline bool inThirdPartyPath(SourceLocation Loc, const SourceManager &SM) {
 
       // We found a match!
       if (IThirdPartyB == ThirdPartyE) {
+        InThirdPartyPathCache.insert(std::make_pair(id, true));
         return true;
       }
     }
   }
 
+  InThirdPartyPathCache.insert(std::make_pair(id, false));
   return false;
 }
 
