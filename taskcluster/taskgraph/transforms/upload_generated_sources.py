@@ -18,8 +18,8 @@ transforms = TransformSequence()
 @transforms.add
 def add_task_info(config, jobs):
     for job in jobs:
-        dep_task = job['dependent-task']
-        del job['dependent-task']
+        dep_task = job['primary-dependency']
+        del job['primary-dependency']
 
         # Add a dependency on the build task.
         job['dependencies'] = {'build': dep_task.label}

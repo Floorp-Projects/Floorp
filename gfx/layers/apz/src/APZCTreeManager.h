@@ -593,6 +593,8 @@ public:
    * This is used to track velocities accurately in the presence of movement
    * of the dynamic toolbar, since in such cases the finger can be moving
    * relative to the screen even though no scrolling is occurring.
+   * Note that this function expects "spatial coordinates" (i.e. toolbar
+   * moves up --> negative delta).
    */
   void ProcessDynamicToolbarMovement(uint32_t aStartTimestampMs,
                                      uint32_t aEndTimestampMs,

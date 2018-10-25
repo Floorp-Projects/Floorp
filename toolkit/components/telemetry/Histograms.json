@@ -2007,6 +2007,25 @@
     "labels": ["Suspended", "NotSuspended", "SuspendedLocal", "NotSuspendedLocal"],
     "description": "Collect whether the resource is suspended by back pressure. And split by local-ness."
   },
+  "NETWORK_BACK_PRESSURE_SUSPENSION_CP_TYPE": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "68",
+    "alert_emails": ["necko@mozilla.com", "junior@mozilla.com"],
+    "bug_numbers": [1487559],
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "Collect the content policy when the resource is non-local and suspended by back pressure (0-44 from nsContentPolicyType in nsIContentPolicy.idl)."
+  },
+  "NETWORK_BACK_PRESSURE_SUSPENSION_DELAY_TIME_MS": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "68",
+    "alert_emails": ["necko@mozilla.com", "junior@mozilla.com"],
+    "bug_numbers": [1498434],
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "The delay caused by the e10s back pressure suspension(ms)"
+  },
   "NETWORK_HTTP_REDIRECT_TO_SCHEME" :{
     "record_in_processes": ["main"],
     "alert_emails": ["necko@mozilla.com", "seceng-telemetry@mozilla.com", "jkt@mozilla.com"],

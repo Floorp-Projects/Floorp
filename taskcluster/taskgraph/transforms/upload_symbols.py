@@ -26,7 +26,7 @@ def check_nightlies(config, tasks):
     Putting this check here (instead of the transforms for the build kind) lets us
     leverage the any not-for-build-platforms set in the update-symbols kind."""
     for task in tasks:
-        dep = task['dependent-task']
+        dep = task['primary-dependency']
         if config.params['project'] in RELEASE_PROJECTS and \
                 dep.attributes.get('nightly') and \
                 not dep.attributes.get('enable-full-crashsymbols'):
@@ -38,7 +38,7 @@ def check_nightlies(config, tasks):
 @transforms.add
 def fill_template(config, tasks):
     for task in tasks:
-        dep = task['dependent-task']
+        dep = task['primary-dependency']
 
         # Fill out the dynamic fields in the task description
         task['label'] = dep.label + '-upload-symbols'
@@ -80,6 +80,6 @@ def fill_template(config, tasks):
         task['treeherder'] = treeherder
 
         # clear out the stuff that's not part of a task description
-        del task['dependent-task']
+        del task['primary-dependency']
 
         yield task

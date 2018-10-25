@@ -17,7 +17,7 @@ transforms = TransformSequence()
 @transforms.add
 def split_locales(config, jobs):
     for job in jobs:
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
         for locale in dep_job.attributes.get('chunk_locales', []):
             locale_job = copy.deepcopy(job)  # don't overwrite dict values here
             treeherder = locale_job.setdefault('treeherder', {})

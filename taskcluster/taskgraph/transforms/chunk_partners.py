@@ -30,7 +30,7 @@ def chunk_partners(config, jobs):
     partner_configs = get_partner_config_by_kind(config, config.kind)
 
     for job in jobs:
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
         build_platform = dep_job.attributes["build_platform"]
         # already chunked
         if dep_job.task.get('extra', {}).get('repack_id'):

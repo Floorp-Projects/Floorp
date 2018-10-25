@@ -5505,8 +5505,8 @@ pref("urlclassifier.downloadBlockTable", "goog-badbinurl-proto");
 pref("urlclassifier.passwordAllowTable", "goog-passwordwhite-proto");
 
 // Tables for anti-tracking features
-#ifdef NIGHTLY_BUILD
-// Use the strict list for the default cookie restrictions in Nightly
+#ifdef EARLY_BETA_OR_EARLIER
+// Use the strict list for the default cookie restrictions in Nightly and early betas
 pref("urlclassifier.trackingAnnotationTable", "test-track-simple,base-track-digest256,content-track-digest256");
 #else
 pref("urlclassifier.trackingAnnotationTable", "test-track-simple,base-track-digest256");

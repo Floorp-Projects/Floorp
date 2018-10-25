@@ -249,10 +249,10 @@ nsTransferable::GetTransferData(const char* aFlavor,
 {
   MOZ_ASSERT(mInitialized);
 
-  NS_ENSURE_ARG_POINTER(aFlavor && aData && aDataLen);
+  *aData = nullptr;
+  *aDataLen = 0;
 
   nsresult rv = NS_OK;
-  nsCOMPtr<nsISupports> savedData;
 
   // first look and see if the data is present in one of the intrinsic flavors
   for (size_t i = 0; i < mDataArray.Length(); ++i) {
@@ -273,17 +273,16 @@ nsTransferable::GetTransferData(const char* aFlavor,
         }
       }
 
-      if (dataBytes && len > 0) { // XXXmats why is zero length not ok?
+      if (dataBytes) {
         *aDataLen = len;
         dataBytes.forget(aData);
         return NS_OK;
       }
-      savedData = dataBytes; // return this if format converter fails
+
+      // Not found.
       break;
     }
   }
-
-  bool found = false;
 
   // if not, try using a format converter to get the requested flavor
   if (mFormatConv) {
@@ -303,25 +302,17 @@ nsTransferable::GetTransferData(const char* aFlavor,
                                            getter_AddRefs(dataBytes), &len);
           if (NS_FAILED(rv)) {
             // Give up.
-            break;
+            return rv;
           }
         }
 
-        mFormatConv->Convert(
-          data.GetFlavor().get(), dataBytes, len, aFlavor, aData, aDataLen);
-        found = true;
-        break;
+        return mFormatConv->Convert(data.GetFlavor().get(), dataBytes, len,
+                                    aFlavor, aData, aDataLen);
       }
     }
   }
 
-  // for backward compatibility
-  if (!found) {
-    savedData.forget(aData);
-    *aDataLen = 0;
-  }
-
-  return found ? NS_OK : NS_ERROR_FAILURE;
+  return NS_ERROR_FAILURE;
 }
 
 //

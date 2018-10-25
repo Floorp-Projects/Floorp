@@ -6,6 +6,16 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 
+from voluptuous import Required
+
+from ..task import Task
+from ..util.schema import Schema
+
+schema = Schema({
+    Required('primary-dependency', 'primary dependency task'): Task,
+    Required('dependent-tasks', 'dictionary of dependent tasks, keyed by kind'): {basestring: Task},
+})
+
 
 # Define a collection of group_by functions
 GROUP_BY_MAP = {}
