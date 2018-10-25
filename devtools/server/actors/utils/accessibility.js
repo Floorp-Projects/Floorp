@@ -4,11 +4,9 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "Ci", "chrome", true);
 loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
 loader.lazyRequireGetter(this, "CssLogic", "devtools/server/actors/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "InspectorActorUtils", "devtools/server/actors/inspector/utils");
-loader.lazyRequireGetter(this, "Services");
 
 /**
  * Calculates the contrast ratio of the referenced DOM node.
@@ -64,35 +62,4 @@ function getContrastRatioFor(node) {
   };
 }
 
-/**
- * Helper function that determines if nsIAccessible object is in defunct state.
- *
- * @param  {nsIAccessible}  accessible
- *         object to be tested.
- * @return {Boolean}
- *         True if accessible object is defunct, false otherwise.
- */
-function isDefunct(accessible) {
-  // If accessibility is disabled, safely assume that the accessible object is
-  // now dead.
-  if (!Services.appinfo.accessibilityEnabled) {
-    return true;
-  }
-
-  let defunct = false;
-
-  try {
-    const extraState = {};
-    accessible.getState({}, extraState);
-    // extraState.value is a bitmask. We are applying bitwise AND to mask out
-    // irrelevant states.
-    defunct = !!(extraState.value & Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT);
-  } catch (e) {
-    defunct = true;
-  }
-
-  return defunct;
-}
-
 exports.getContrastRatioFor = getContrastRatioFor;
-exports.isDefunct = isDefunct;
