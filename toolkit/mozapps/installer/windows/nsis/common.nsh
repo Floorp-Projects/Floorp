@@ -1712,6 +1712,124 @@
   !endif
 !macroend
 
+/**
+ * Find the first existing installation for the application.
+ * This is similar to GetSingleInstallPath, except that it always returns the
+ * first path it finds, instead of an error when more than one path exists.
+ *
+ * The shell context and the registry view should already have been set.
+ *
+ * @param   _KEY
+ *          The registry subkey (typically Software\Mozilla\App Name).
+ * @return  _RESULT
+ *          path to the install directory of the first location found, or
+ *          the string "false" if no existing installation was found.
+ *
+ * $R5 = counter for the loop's EnumRegKey
+ * $R6 = return value from EnumRegKey
+ * $R7 = return value from ReadRegStr
+ * $R8 = storage for _KEY
+ * $R9 = _KEY and _RESULT
+ */
+!macro GetFirstInstallPath
+  !ifndef ${_MOZFUNC_UN}GetFirstInstallPath
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}GetLongPath
+    !insertmacro ${_MOZFUNC_UN_TMP}GetParent
+    !insertmacro ${_MOZFUNC_UN_TMP}RemoveQuotesFromPath
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}GetFirstInstallPath "!insertmacro ${_MOZFUNC_UN}__GetFirstInstallPathCall"
+
+    Function ${_MOZFUNC_UN}__GetFirstInstallPath
+      Exch $R9
+      Push $R8
+      Push $R7
+      Push $R6
+      Push $R5
+
+      StrCpy $R8 $R9
+      StrCpy $R9 "false"
+      StrCpy $R5 0
+
+      ${Do}
+        ClearErrors
+        EnumRegKey $R6 SHCTX $R8 $R5
+        ${If} ${Errors}
+        ${OrIf} $R6 == ""
+          ${Break}
+        ${EndIf}
+
+        IntOp $R5 $R5 + 1
+
+        ReadRegStr $R7 SHCTX "$R8\$R6\Main" "PathToExe"
+        ${If} ${Errors}
+          ${Continue}
+        ${EndIf}
+
+        ${${_MOZFUNC_UN}RemoveQuotesFromPath} "$R7" $R7
+        GetFullPathName $R7 "$R7"
+        ${If} ${Errors}
+          ${Continue}
+        ${EndIf}
+
+        StrCpy $R9 "$R7"
+        ${Break}
+      ${Loop}
+
+      ${If} $R9 != "false"
+        ${${_MOZFUNC_UN}GetLongPath} "$R9" $R9
+        ${${_MOZFUNC_UN}GetParent} "$R9" $R9
+      ${EndIf}
+
+      Pop $R5
+      Pop $R6
+      Pop $R7
+      Pop $R8
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro __GetFirstInstallPathCall _KEY _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Call __GetFirstInstallPath
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.__GetFirstInstallPathCall _KEY _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Call un.__GetFirstInstallPath
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.__GetFirstInstallPath
+  !ifndef un.__GetFirstInstallPath
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro __GetFirstInstallPath
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
 
 ################################################################################
 # Macros for working with the file system

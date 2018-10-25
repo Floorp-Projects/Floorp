@@ -440,6 +440,7 @@ def link_to_cpp(interfaces, fd):
     # Write out our header
     fd.write("""
 #include "xptinfo.h"
+#include "mozilla/PerfectHash.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/dom/BindingUtils.h"
 

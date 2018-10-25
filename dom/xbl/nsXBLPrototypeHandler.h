@@ -18,6 +18,7 @@
 #include "nsIWeakReference.h"
 #include "nsCycleCollectionParticipant.h"
 #include "js/TypeDecls.h"
+#include "mozilla/ShortcutKeys.h"
 
 class nsIContent;
 class nsIObjectInputStream;
@@ -92,6 +93,10 @@ public:
 
   // This constructor is used only by XUL key handlers (e.g., <key>)
   explicit nsXBLPrototypeHandler(mozilla::dom::Element* aKeyElement, XBLReservedKey aReserved);
+
+  // This constructor is used for keyboard handlers for browser, editor, input
+  // and textarea elements.
+  explicit nsXBLPrototypeHandler(mozilla::ShortcutKeyData* aKeyData);
 
   // This constructor is used for handlers loaded from the cache
   explicit nsXBLPrototypeHandler(nsXBLPrototypeBinding* aBinding);

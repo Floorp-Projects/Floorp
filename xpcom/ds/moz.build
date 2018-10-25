@@ -91,6 +91,7 @@ EXPORTS.mozilla += [
     'IncrementalTokenizer.h',
     'MruCache.h',
     'Observer.h',
+    'PerfectHash.h',
     'SimpleEnumerator.h',
     'StickyTimeDuration.h',
     'Tokenizer.h',

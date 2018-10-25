@@ -11,6 +11,8 @@ import math
 import textwrap
 import functools
 
+from perfecthash import PerfectHash
+
 from WebIDL import BuiltinTypes, IDLBuiltinType, IDLNullValue, IDLSequenceType, IDLType, IDLAttribute, IDLInterfaceMember, IDLUndefinedValue, IDLEmptySequenceValue, IDLDictionary
 from Configuration import NoSuchDescriptorError, getTypesFromDescriptor, getTypesFromDictionary, getTypesFromCallback, getAllTypes, Descriptor, MemberIsUnforgeable, iteratorNativeType
 
@@ -28,6 +30,11 @@ MAY_RESOLVE_HOOK_NAME = '_mayResolve'
 NEW_ENUMERATE_HOOK_NAME = '_newEnumerate'
 ENUM_ENTRY_VARIABLE_NAME = 'strings'
 INSTANCE_RESERVED_SLOTS = 1
+
+# This size is arbitrary. It is a power of 2 to make using it as a modulo
+# operand cheap, and is usually around 1/3-1/5th of the set size (sometimes
+# smaller for very large sets).
+GLOBAL_NAMES_PHF_SIZE=256
 
 
 def memberReservedSlot(member, descriptor):
@@ -13691,47 +13698,82 @@ def getGlobalNames(config):
         names.extend((n.identifier.name, desc) for n in desc.interface.namedConstructors)
     return names
 
-class CGGlobalNamesString(CGGeneric):
+class CGGlobalNames(CGGeneric):
     def __init__(self, config):
-        globalNames = getGlobalNames(config)
         currentOffset = 0
         strings = []
-        for (name, _) in globalNames:
-            strings.append('/* %i */ "%s\\0"' % (currentOffset, name))
-            currentOffset += len(name) + 1 # Add trailing null.
+        entries = []
+        for name, desc in getGlobalNames(config):
+            # Add a string to the list.
+            offset = currentOffset
+            strings.append('/* %i */ "%s\\0"' % (offset, name))
+            currentOffset += len(name) + 1  # Add trailing null.
+
+            # Generate the entry declaration
+            # XXX(nika): mCreate & mEnabled require relocations. If we want to
+            # reduce those, we could move them into separate tables.
+            nativeEntry = fill("""
+                {
+                  /* mNameOffset */ ${nameOffset}, // "${name}"
+                  /* mNameLength */ ${nameLength},
+                  /* mConstructorId */ constructors::id::${realname},
+                  /* mCreate */ ${realname}_Binding::CreateInterfaceObjects,
+                  /* mEnabled */ ${enabled}
+                }
+                """,
+                nameOffset=offset,
+                nameLength=len(name),
+                name=name,
+                realname=desc.name,
+                enabled=("%s_Binding::ConstructorEnabled" % desc.name
+                         if desc.isExposedConditionally() else "nullptr"))
+
+            entries.append((name, nativeEntry))
+
+        # Unfortunately, when running tests, we may have no entries.
+        # PerfectHash will assert if we give it an empty set of entries, so we
+        # just generate a dummy value.
+        if len(entries) == 0:
+            CGGeneric.__init__(self, define=dedent('''
+                static_assert(false, "No WebIDL global name entries!");
+                '''))
+            return
+
+        # Build the perfect hash function.
+        phf = PerfectHash(entries, GLOBAL_NAMES_PHF_SIZE)
+
+        # Generate code for the PHF
+        phfCodegen = phf.codegen('WebIDLGlobalNameHash::sEntries',
+                                 'WebIDLNameTableEntry')
+        entries = phfCodegen.gen_entries(lambda e: e[1])
+        getter = phfCodegen.gen_jsflatstr_getter(
+            name='WebIDLGlobalNameHash::GetEntry',
+            return_type='const WebIDLNameTableEntry*',
+            # XXX(nika): It would be nice to have a length overload for
+            # JS_FlatStringEqualsAscii.
+            return_entry=dedent("""
+                if (JS_FlatStringEqualsAscii(aKey, sNames + entry.mNameOffset)) {
+                  return &entry;
+                }
+                return nullptr;
+                """))
+
         define = fill("""
             const uint32_t WebIDLGlobalNameHash::sCount = ${count};
 
             const char WebIDLGlobalNameHash::sNames[] =
               $*{strings}
 
+            $*{entries}
+
+            $*{getter}
+
             """,
-            count=len(globalNames),
-            strings="\n".join(strings) + ";\n")
-
+            count=len(phf.entries),
+            strings="\n".join(strings) + ";\n",
+            entries=entries,
+            getter=getter)
         CGGeneric.__init__(self, define=define)
-
-
-class CGRegisterGlobalNames(CGAbstractMethod):
-    def __init__(self, config):
-        CGAbstractMethod.__init__(self, None, 'RegisterWebIDLGlobalNames',
-                                  'void', [])
-        self.config = config
-
-    def definition_body(self):
-        def getCheck(desc):
-            if not desc.isExposedConditionally():
-                return "nullptr"
-            return "%s_Binding::ConstructorEnabled" % desc.name
-
-        define = ""
-        currentOffset = 0
-        for (name, desc) in getGlobalNames(self.config):
-            length = len(name)
-            define += "WebIDLGlobalNameHash::Register(%i, %i, %s_Binding::CreateInterfaceObjects, %s, constructors::id::%s);\n" % (
-                currentOffset, length, desc.name, getCheck(desc), desc.name)
-            currentOffset += length + 1 # Add trailing null.
-        return define
 
 
 def dependencySortObjects(objects, dependencyGetter, nameGetter):
@@ -17119,11 +17161,7 @@ class GlobalGenRoots():
     @staticmethod
     def RegisterBindings(config):
 
-        curr = CGList([CGGlobalNamesString(config), CGRegisterGlobalNames(config)])
-
-        # Wrap all of that in our namespaces.
-        curr = CGNamespace.build(['mozilla', 'dom'],
-                                 CGWrapper(curr, post='\n'))
+        curr = CGNamespace.build(['mozilla', 'dom'], CGGlobalNames(config))
         curr = CGWrapper(curr, post='\n')
 
         # Add the includes
@@ -17133,6 +17171,7 @@ class GlobalGenRoots():
                                                             register=True)]
         defineIncludes.append('mozilla/dom/WebIDLGlobalNameHash.h')
         defineIncludes.append('mozilla/dom/PrototypeList.h')
+        defineIncludes.append('mozilla/PerfectHash.h')
         defineIncludes.extend([CGHeaders.getDeclarationFilename(desc.interface)
                                for desc in config.getDescriptors(isNavigatorProperty=True,
                                                                  register=True)])

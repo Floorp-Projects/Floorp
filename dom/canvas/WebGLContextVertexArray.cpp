@@ -35,6 +35,7 @@ WebGLContext::BindVertexArray(WebGLVertexArray* array)
     MOZ_ASSERT(mBoundVertexArray == array);
     if (mBoundVertexArray) {
         mBoundVertexArray->AddBufferBindCounts(+1);
+        mBoundVertexArray->mHasBeenBound = true;
     }
 }
 
@@ -46,9 +47,6 @@ WebGLContext::CreateVertexArray()
         return nullptr;
 
     RefPtr<WebGLVertexArray> globj = CreateVertexArrayImpl();
-
-    globj->GenVertexArray();
-
     return globj.forget();
 }
 

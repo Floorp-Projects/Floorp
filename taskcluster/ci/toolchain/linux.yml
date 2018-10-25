@@ -44,7 +44,6 @@ linux64-clang-6:
             - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-6-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
         - linux64-gcc-4.9
@@ -66,6 +65,7 @@ linux64-clang-7:
             - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-7-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
         - linux64-gcc-4.9
@@ -118,12 +118,12 @@ linux64-clang-trunk-mingw-x64:
     toolchains:
         - linux64-gcc-4.9
 
-linux64-clang-6-macosx-cross:
-    description: "Clang 6 toolchain build with MacOS Compiler RT libs"
+linux64-clang-7-macosx-cross:
+    description: "Clang 7 toolchain build with MacOS Compiler RT libs"
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TL(clang6-macosx-cross)
+        symbol: TL(clang7-macosx-cross)
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -132,17 +132,17 @@ linux64-clang-6-macosx-cross:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
     run:
         using: toolchain-script
-        script: build-clang-6-linux-macosx-cross.sh
+        script: build-clang-7-linux-macosx-cross.sh
         resources:
             - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-6-macosx64.json'
+            - 'build/build-clang/clang-7-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: linux64-clang-macosx-cross
         toolchain-artifact: public/build/clang.tar.xz
         tooltool-downloads: internal
     toolchains:
         - linux64-cctools-port
-        - linux64-clang-6
+        - linux64-clang-7
         - linux64-gcc-4.9
 
 linux64-clang-tidy:
@@ -354,7 +354,7 @@ linux64-cctools-port:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/cctools.tar.xz
     toolchains:
-        - linux64-clang-6
+        - linux64-clang-7
 
 linux64-hfsplus:
     description: "hfsplus toolchain build"

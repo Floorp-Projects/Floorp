@@ -23,10 +23,10 @@ ContentProcessController::ContentProcessController(const RefPtr<dom::TabChild>& 
 }
 
 void
-ContentProcessController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
+ContentProcessController::RequestContentRepaint(const RepaintRequest& aRequest)
 {
   if (mBrowser) {
-    mBrowser->UpdateFrame(aFrameMetrics);
+    mBrowser->UpdateFrame(aRequest);
   }
 }
 
