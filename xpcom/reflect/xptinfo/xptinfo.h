@@ -101,27 +101,10 @@ struct nsXPTInterfaceInfo
   uint16_t MethodCount() const { return mNumMethods; }
   const nsXPTMethodInfo& Method(uint16_t aIndex) const;
 
-
-  ////////////////////////////////////////////////////////////
-  // nsIInterfaceInfo backwards compatibility (bug 1480245) //
-  ////////////////////////////////////////////////////////////
-
-  nsresult GetName(char** aName) const;
-  nsresult IsScriptable(bool* aRes) const;
-  nsresult IsBuiltinClass(bool* aRes) const;
-  nsresult GetParent(const nsXPTInterfaceInfo** aParent) const;
-  nsresult GetMethodCount(uint16_t* aMethodCount) const;
-  nsresult GetConstantCount(uint16_t* aConstantCount) const;
   nsresult GetMethodInfo(uint16_t aIndex, const nsXPTMethodInfo** aInfo) const;
   nsresult GetConstant(uint16_t aIndex,
                        JS::MutableHandleValue constant,
                        char** aName) const;
-  nsresult IsIID(const nsIID* aIID, bool* aIs) const;
-  nsresult GetNameShared(const char** aName) const;
-  nsresult GetIIDShared(const nsIID** aIID) const;
-  nsresult IsFunction(bool* aRetval) const;
-  nsresult HasAncestor(const nsIID* aIID, bool* aRetval) const;
-  nsresult IsMainProcessScriptableOnly(bool* aRetval) const;
 
   bool EnsureResolved() const { return true; } // XXX: Remove (bug 1480245)
 

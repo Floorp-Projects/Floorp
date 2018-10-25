@@ -62,53 +62,6 @@ nsXPTInterfaceInfo::Method(uint16_t aIndex) const
   return xpt::detail::GetMethod(mMethods + aIndex);
 }
 
-
-////////////////////////////////////////////////
-// nsIInterfaceInfo backcompat implementation //
-////////////////////////////////////////////////
-
-nsresult
-nsXPTInterfaceInfo::GetName(char** aName) const
-{
-  *aName = moz_xstrdup(Name());
-  return NS_OK;
-}
-
-nsresult
-nsXPTInterfaceInfo::IsScriptable(bool* aRes) const
-{
-  *aRes = IsScriptable();
-  return NS_OK;
-}
-
-nsresult
-nsXPTInterfaceInfo::IsBuiltinClass(bool* aRes) const
-{
-  *aRes = IsBuiltinClass();
-  return NS_OK;
-}
-
-nsresult
-nsXPTInterfaceInfo::GetParent(const nsXPTInterfaceInfo** aParent) const
-{
-  *aParent = GetParent();
-  return NS_OK;
-}
-
-nsresult
-nsXPTInterfaceInfo::GetMethodCount(uint16_t* aMethodCount) const
-{
-  *aMethodCount = MethodCount();
-  return NS_OK;
-}
-
-nsresult
-nsXPTInterfaceInfo::GetConstantCount(uint16_t* aConstantCount) const
-{
-  *aConstantCount = ConstantCount();
-  return NS_OK;
-}
-
 nsresult
 nsXPTInterfaceInfo::GetMethodInfo(uint16_t aIndex, const nsXPTMethodInfo** aInfo) const
 {
@@ -127,48 +80,6 @@ nsXPTInterfaceInfo::GetConstant(uint16_t aIndex,
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsXPTInterfaceInfo::IsIID(const nsIID* aIID, bool* aIs) const
-{
-  *aIs = mIID == *aIID;
-  return NS_OK;
-}
-
-nsresult
-nsXPTInterfaceInfo::GetNameShared(const char** aName) const
-{
-  *aName = Name();
-  return NS_OK;
-}
-
-nsresult
-nsXPTInterfaceInfo::GetIIDShared(const nsIID** aIID) const
-{
-  *aIID = &IID();
-  return NS_OK;
-}
-
-nsresult
-nsXPTInterfaceInfo::IsFunction(bool* aRetval) const
-{
-  *aRetval = IsFunction();
-  return NS_OK;
-}
-
-nsresult
-nsXPTInterfaceInfo::HasAncestor(const nsIID* aIID, bool* aRetval) const
-{
-  *aRetval = HasAncestor(*aIID);
-  return NS_OK;
-}
-
-nsresult
-nsXPTInterfaceInfo::IsMainProcessScriptableOnly(bool* aRetval) const
-{
-  *aRetval = IsMainProcessScriptableOnly();
-  return NS_OK;
 }
 
 ////////////////////////////////////
