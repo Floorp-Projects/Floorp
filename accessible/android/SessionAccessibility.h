@@ -100,7 +100,7 @@ public:
                             bool aIsInsert,
                             bool aFromUser);
   void SendSelectedEvent(AccessibleWrap* aAccessible);
-  void SendClickedEvent(AccessibleWrap* aAccessible);
+  void SendClickedEvent(AccessibleWrap* aAccessible, bool aChecked);
   void SendWindowContentChangedEvent(AccessibleWrap* aAccessible);
   void SendWindowStateChangedEvent(AccessibleWrap* aAccessible);
 
