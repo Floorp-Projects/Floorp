@@ -2070,6 +2070,7 @@ STATIC_ATOMS = [
     # Scroll origins without smooth-scrolling prefs
     Atom("apz",        "apz"),
     Atom("restore",    "restore"),
+    Atom("relative",    "relative"),
 
     Atom("alert", "alert"),
     Atom("alertdialog", "alertdialog"),

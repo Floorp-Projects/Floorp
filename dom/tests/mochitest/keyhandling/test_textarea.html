@@ -1,0 +1,226 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>input key handling</title>
+
+<script type="text/javascript" src="http://mochi.test:8888/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="http://mochi.test:8888/tests/SimpleTest/EventUtils.js"></script>
+<script type="text/javascript" src="http://mochi.test:8888/tests/SimpleTest/NativeKeyCodes.js"></script>
+<link rel="stylesheet" type="text/css" href="http://mochi.test:8888/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+const IS_MAC = navigator.platform.indexOf("Mac") == 0;
+const VK = {};
+const CHARS = {};
+
+if (IS_MAC) {
+  VK.LEFT = MAC_VK_LeftArrow;
+  CHARS.LEFT = "\uF702";
+  VK.RIGHT = MAC_VK_RightArrow;
+  CHARS.RIGHT = "\uF703";
+  VK.UP = MAC_VK_UpArrow;
+  CHARS.UP = "\uF700";
+  VK.DOWN = MAC_VK_DownArrow;
+  CHARS.DOWN = "\uF701";
+  VK.X = MAC_VK_ANSI_X;
+  VK.V = MAC_VK_ANSI_V;
+  VK.A = MAC_VK_ANSI_A;
+  VK.F = MAC_VK_ANSI_F;
+  VK.O = MAC_VK_ANSI_O;
+  VK.BACKSPACE = MAC_VK_PC_Backspace;
+  CHARS.BACKSPACE = "\u007F";
+  VK.Z = MAC_VK_ANSI_Z;
+  VK.SPACE = MAC_VK_Space;
+} else {
+  VK.LEFT = WIN_VK_LEFT;
+  CHARS.LEFT = "";
+  VK.RIGHT = WIN_VK_RIGHT;
+  CHARS.RIGHT = "";
+  VK.UP = WIN_VK_UP;
+  CHARS.UP = "";
+  VK.DOWN = WIN_VK_DOWN;
+  CHARS.DOWN = "";
+  VK.X = WIN_VK_X;
+  VK.V = WIN_VK_V;
+  VK.A = WIN_VK_A;
+  VK.F = WIN_VK_F;
+  VK.O = WIN_VK_O;
+  VK.END = WIN_VK_END;
+  CHARS.END = "";
+  VK.HOME = WIN_VK_HOME;
+  CHARS.HOME = "";
+  VK.BACKSPACE = WIN_VK_BACK;
+  CHARS.BACKSPACE = "";
+  VK.Z = WIN_VK_Z;
+  VK.SPACE = WIN_VK_SPACE;
+}
+
+if (window.opener) {
+  ok = window.opener.ok;
+  is = window.opener.is;
+}
+
+function synthesizeKey(keyCode, modifiers, chars, event = "keyup") {
+  return new Promise((resolve, reject) => {
+    window.addEventListener(event, resolve, { once: true });
+
+    if (!synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, keyCode, modifiers, chars, chars)) {
+      reject();
+    }
+  });
+}
+
+async function checkElement(element, start, end, content = "Test text") {
+  isReady = () => {
+    if (start != element.selectionStart) {
+      return false;
+    }
+    if (end != element.selectionEnd) {
+      return false;
+    }
+    if (content != element.value) {
+      return false;
+    }
+    return true;
+  };
+
+  for (let i = 0; i < 10; i++) {
+    if (isReady()) {
+      return;
+    }
+
+    SimpleTest.requestFlakyTimeout("Polling for changes to apply");
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  ok(false, "Timed out waiting for state");
+  is(element.selectionStart, start, "Should have the right selectionStart");
+  is(element.selectionEnd, end, "Should have the right selectionEnd");
+  is(element.value, content, "Should have the right value");
+}
+
+async function startTest() {
+  let input = document.getElementById("input");
+  input.focus();
+  await checkElement(input, 0, 0);
+
+  info("right");
+  await synthesizeKey(VK.RIGHT, {}, CHARS.RIGHT);
+  await checkElement(input, 1, 1);
+
+  info("shift+right");
+  await synthesizeKey(VK.RIGHT, { shiftKey: true }, CHARS.RIGHT);
+  await checkElement(input, 1, 2);
+
+  info("shift+right");
+  await synthesizeKey(VK.RIGHT, { shiftKey: true }, CHARS.RIGHT);
+  await checkElement(input, 1, 3);
+
+  info("shift+left");
+  await synthesizeKey(VK.LEFT, { shiftKey: true }, CHARS.LEFT);
+  await checkElement(input, 1, 2);
+
+  info("shift+left");
+  await synthesizeKey(VK.LEFT, { shiftKey: true }, CHARS.LEFT);
+  await checkElement(input, 1, 1);
+
+  info("shift+left");
+  await synthesizeKey(VK.LEFT, { shiftKey: true }, CHARS.LEFT);
+  await checkElement(input, 0, 1);
+
+  info("shift+right");
+  await synthesizeKey(VK.RIGHT, { shiftKey: true }, CHARS.RIGHT);
+  await checkElement(input, 1, 1);
+
+  info("left");
+  await synthesizeKey(VK.LEFT, {}, CHARS.LEFT);
+  await checkElement(input, 0, 0);
+
+  if (IS_MAC) {
+    info("down");
+    await synthesizeKey(VK.DOWN, { shiftKey: true }, CHARS.DOWN);
+  } else {
+    info("end");
+    await synthesizeKey(VK.END, { shiftKey: true }, CHARS.END);
+  }
+  await checkElement(input, 0, 9);
+
+  info("cut");
+  await synthesizeKey(VK.X, { accelKey: true }, "x", "input");
+  await checkElement(input, 0, 0, "");
+  let text = SpecialPowers.getClipboardData("text/unicode");
+  is(text, "Test text", "Should have cut to the clipboard");
+  SpecialPowers.clipboardCopyString("New text");
+
+  info("paste");
+  await synthesizeKey(VK.V, { accelKey: true }, "v", "input");
+  await checkElement(input, 8, 8, "New text");
+
+  if (IS_MAC) {
+    info("up");
+    await synthesizeKey(VK.UP, {}, CHARS.UP);
+  } else {
+    info("home");
+    await synthesizeKey(VK.HOME, {}, CHARS.HOME);
+  }
+  await checkElement(input, 0, 0, "New text");
+
+  info("select all");
+  await synthesizeKey(VK.A, { accelKey: true}, "a", "select");
+  await checkElement(input, 0, 8, "New text");
+
+  info("right");
+  await synthesizeKey(VK.RIGHT, {}, CHARS.RIGHT);
+  await checkElement(input, 8, 8, "New text");
+
+  info("word left");
+  if (IS_MAC) {
+    await synthesizeKey(VK.LEFT, { altKey: true }, CHARS.LEFT);
+  } else {
+    await synthesizeKey(VK.LEFT, { ctrlKey: true }, CHARS.LEFT);
+  }
+  await checkElement(input, 4, 4, "New text");
+
+  info("delete word left");
+  if (IS_MAC) {
+    await synthesizeKey(VK.BACKSPACE, { altKey: true }, CHARS.BACKSPACE);
+  } else {
+    await synthesizeKey(VK.BACKSPACE, { ctrlKey: true }, CHARS.BACKSPACE);
+  }
+  await checkElement(input, 0, 0, "text");
+
+  info("undo");
+  await synthesizeKey(VK.Z, { accelKey: true }, "", "input");
+  await checkElement(input, 4, 4, "New text");
+
+  info("redo");
+  await synthesizeKey(VK.Z, { accelKey: true, shiftKey: true }, "", "input");
+  await checkElement(input, 0, 0, "text");
+
+  info("typing");
+  await synthesizeKey(VK.RIGHT, {}, CHARS.RIGHT);
+  await synthesizeKey(VK.RIGHT, {}, CHARS.RIGHT);
+  await synthesizeKey(VK.RIGHT, {}, CHARS.RIGHT);
+  await synthesizeKey(VK.RIGHT, {}, CHARS.RIGHT);
+  await synthesizeKey(VK.SPACE, {}, " ");
+  await synthesizeKey(VK.F, {}, "f");
+  await synthesizeKey(VK.O, {}, "o");
+  await synthesizeKey(VK.O, {}, "o");
+  await checkElement(input, 8, 8, "text foo");
+}
+
+async function runTest() {
+  // When running in windowed mode the caller will start the test once we have
+  // focus.
+  if (window.opener) {
+    return;
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  await startTest();
+  SimpleTest.finish();
+}
+</script>
+</head>
+<body onload="runTest();">
+<textarea id=input>Test text</textarea>
+</body>
+</html>

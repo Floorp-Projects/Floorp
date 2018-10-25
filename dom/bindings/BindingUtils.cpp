@@ -3412,31 +3412,6 @@ CreateGlobalOptionsWithXPConnect::PostCreateGlobal(JSContext* aCx,
   return true;
 }
 
-static bool sRegisteredDOMNames = false;
-
-static void
-RegisterDOMNames()
-{
-  if (sRegisteredDOMNames) {
-    return;
-  }
-
-  // Register new DOM bindings
-  WebIDLGlobalNameHash::Init();
-
-  sRegisteredDOMNames = true;
-}
-
-/* static */
-bool
-CreateGlobalOptions<nsGlobalWindowInner>::PostCreateGlobal(JSContext* aCx,
-                                                           JS::Handle<JSObject*> aGlobal)
-{
-  RegisterDOMNames();
-
-  return CreateGlobalOptionsWithXPConnect::PostCreateGlobal(aCx, aGlobal);
-}
-
 #ifdef DEBUG
 void
 AssertReturnTypeMatchesJitinfo(const JSJitInfo* aJitInfo,

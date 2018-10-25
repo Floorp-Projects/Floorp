@@ -35,12 +35,12 @@ RemoteContentController::~RemoteContentController()
 }
 
 void
-RemoteContentController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
+RemoteContentController::RequestContentRepaint(const RepaintRequest& aRequest)
 {
   MOZ_ASSERT(IsRepaintThread());
 
   if (mCanSend) {
-    Unused << SendRequestContentRepaint(aFrameMetrics);
+    Unused << SendRequestContentRepaint(aRequest);
   }
 }
 

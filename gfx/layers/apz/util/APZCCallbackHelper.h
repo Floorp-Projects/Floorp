@@ -10,6 +10,7 @@
 #include "InputData.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/APZUtils.h"
+#include "mozilla/layers/RepaintRequest.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsRefreshDriver.h"
 
@@ -64,17 +65,15 @@ public:
        to the root frame for the given metrics' scrollId. If tiled thebes layers
        are enabled, this will align the displayport to tile boundaries. Setting
        the scroll position can cause some small adjustments to be made to the
-       actual scroll position. aMetrics' display port and scroll position will
-       be updated with any modifications made. */
-    static void UpdateRootFrame(FrameMetrics& aMetrics);
+       actual scroll position. */
+    static void UpdateRootFrame(const RepaintRequest& aRequest);
 
     /* Applies the scroll parameters from the given FrameMetrics object to the
        subframe corresponding to given metrics' scrollId. If tiled thebes
        layers are enabled, this will align the displayport to tile boundaries.
        Setting the scroll position can cause some small adjustments to be made
-       to the actual scroll position. aMetrics' display port and scroll position
-       will be updated with any modifications made. */
-    static void UpdateSubFrame(FrameMetrics& aMetrics);
+       to the actual scroll position. */
+    static void UpdateSubFrame(const RepaintRequest& aRequest);
 
     /* Get the presShellId and view ID for the given content element.
      * If the view ID does not exist, one is created.
@@ -194,8 +193,8 @@ public:
 
     static void CancelAutoscroll(const FrameMetrics::ViewID& aScrollId);
 
-    static void
-    AdjustDisplayPortForScrollDelta(mozilla::layers::FrameMetrics& aFrameMetrics,
+    static ScreenMargin
+    AdjustDisplayPortForScrollDelta(const RepaintRequest& aRequest,
                                     const CSSPoint& aActualScrollOffset);
 
     /*
