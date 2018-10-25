@@ -141,14 +141,6 @@ namespace net {
 } // namespace net
 } // namespace mozilla
 
-#include "mozilla/net/NetworkConnectivityService.h"
-namespace mozilla {
-namespace net {
-  NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsINetworkConnectivityService,
-    NetworkConnectivityService::GetSingleton)
-} // namespace net
-} // namespace mozilla
-
 ///////////////////////////////////////////////////////////////////////////////
 
 extern nsresult
@@ -730,7 +722,6 @@ NS_DEFINE_NAMED_CID(NS_CACHE_STORAGE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_NSILOADCONTEXTINFOFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_NETWORKPREDICTOR_CID);
 NS_DEFINE_NAMED_CID(NS_CAPTIVEPORTAL_CID);
-NS_DEFINE_NAMED_CID(NS_NETWORKCONNECTIVITYSERVICE_CID);
 #ifdef BUILD_NETWORK_INFO_SERVICE
 NS_DEFINE_NAMED_CID(NETWORKINFOSERVICE_CID);
 #endif // BUILD_NETWORK_INFO_SERVICE
@@ -839,7 +830,6 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_NSILOADCONTEXTINFOFACTORY_CID, false, nullptr, LoadContextInfoFactoryConstructor },
     { &kNS_NETWORKPREDICTOR_CID, false, nullptr, mozilla::net::Predictor::Create },
     { &kNS_CAPTIVEPORTAL_CID, false, nullptr, mozilla::net::nsICaptivePortalServiceConstructor },
-    { &kNS_NETWORKCONNECTIVITYSERVICE_CID, false, nullptr, mozilla::net::nsINetworkConnectivityServiceConstructor },
 #ifdef BUILD_NETWORK_INFO_SERVICE
     { &kNETWORKINFOSERVICE_CID, false, nullptr, nsNetworkInfoServiceConstructor },
 #endif
@@ -948,7 +938,6 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_NSILOADCONTEXTINFOFACTORY_CONTRACTID, &kNS_NSILOADCONTEXTINFOFACTORY_CID },
     { NS_NETWORKPREDICTOR_CONTRACTID, &kNS_NETWORKPREDICTOR_CID },
     { NS_CAPTIVEPORTAL_CONTRACTID, &kNS_CAPTIVEPORTAL_CID },
-    { NS_NETWORKCONNECTIVITYSERVICE_CONTRACTID, &kNS_NETWORKCONNECTIVITYSERVICE_CID },
 #ifdef BUILD_NETWORK_INFO_SERVICE
     { NETWORKINFOSERVICE_CONTRACT_ID, &kNETWORKINFOSERVICE_CID },
 #endif
