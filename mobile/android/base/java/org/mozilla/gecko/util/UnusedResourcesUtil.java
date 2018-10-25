@@ -50,6 +50,7 @@ final class UnusedResourcesUtil {
             R.drawable.pause,
             R.drawable.phone,
             R.drawable.play,
+            R.drawable.sync_promo,
             R.drawable.undo_button_icon,
     };
 
