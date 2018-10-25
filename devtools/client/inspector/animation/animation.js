@@ -312,10 +312,21 @@ class AnimationInspector {
 
     for (const {type, player: animation} of changes) {
       if (type === "added") {
+        if (!animation.state.type) {
+          // This animation was added but removed immediately.
+          continue;
+        }
+
         addedAnimations.push(animation);
         animation.on("changed", this.onAnimationStateChanged);
       } else if (type === "removed") {
         const index = animations.indexOf(animation);
+
+        if (index < 0) {
+          // This animation was added but removed immediately.
+          continue;
+        }
+
         animations.splice(index, 1);
         animation.off("changed", this.onAnimationStateChanged);
       }

@@ -336,6 +336,14 @@ protected: // May be called by friends.
   nsresult ExtendSelectionForDelete(Selection* aSelection,
                                     nsIEditor::EDirection* aAction);
 
+  /**
+   * HideLastPasswordInput() is called by timer callback of TextEditRules.
+   * This should be called only by TextEditRules::Notify().
+   * When this is called, the TextEditRules wants to call its
+   * HideLastPasswordInput().
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult HideLastPasswordInput();
+
   static void GetDefaultEditorPrefs(int32_t& aNewLineHandling,
                                     int32_t& aCaretStyle);
 
