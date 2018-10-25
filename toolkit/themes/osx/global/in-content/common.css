@@ -92,6 +92,7 @@ html|*.numberbox-input::-moz-number-spin-down  {
 textbox[type="search"] {
   -moz-appearance: none;
   padding-inline-start: 10px;
+  padding-inline-end: 10px;
 }
 
 xul|textbox[type="search"] > moz-input-box > .textbox-search-sign {
