@@ -24,20 +24,23 @@ Before you attempt to make a contribution please read the [Community Participati
 
 * Subscribe to our mailing list [android-components@](https://lists.mozilla.org/listinfo/android-components) to keep up to date ([Archives](https://lists.mozilla.org/pipermail/android-components/)).
 
+# Maven repository
+
+All components are getting published on [maven.mozilla.org](http://maven.mozilla.org/).
+
+```groovy
+repositories {
+    maven {
+       url "https://maven.mozilla.org/maven2"
+    }
+}
+```
+
 # Components
 
 * 🔴 **In Development** - Not ready to be used in shipping products.
 * ⚪ **Preview** - This component is almost/partially ready and can be tested in products.
 * 🔵 **Production ready** - Used by shipping products.
-
-Our artifacts live in [maven.mozilla.org](https://maven.mozilla.org/maven2) remember to add it in your root ```build.gradle``` file:
-```groovy
-repositories {
-  maven {
-   url "https://maven.mozilla.org/maven2"
-  }
-}
-```
 
 ## Browser
 

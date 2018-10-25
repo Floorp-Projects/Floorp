@@ -6,7 +6,7 @@ The standard set of fonts used by Mozilla Android products.
 
 ### Setting up the dependency
 
-Use gradle to download the library from JCenter:
+Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
 
 ```Groovy
 implementation "org.mozilla.photon:ui-fonts:{latest-version}"

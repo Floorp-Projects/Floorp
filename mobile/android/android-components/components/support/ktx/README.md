@@ -6,7 +6,7 @@ A set of Kotlin extensions on top of the Android framework and Kotlin standard l
 
 ### Setting up the dependency
 
-Use gradle to download the library from JCenter:
+Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
 
 ```Groovy
 implementation "org.mozilla.components:support-ktx:{latest-version}"

@@ -6,7 +6,7 @@ A client-side telemetry SDK for collecting metrics and sending them to Mozilla's
 
 ### Setting up the dependency
 
-Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md)):
+Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
 
 ```Groovy
 implementation "org.mozilla.components:service-glean:{latest-version}"

@@ -14,7 +14,7 @@ Main features:
 
 ### Setting up the dependency
 
-Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository]()):
+Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
 
 ```Groovy
 implementation "org.mozilla.components:lib-crash:{latest-version}"

@@ -12,7 +12,7 @@ The **Firefox Sync - Logins Component** provides a way for Android applications 
 
 ### Setting up the dependency
 
-Use gradle to download the library from JCenter:
+Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
 
 ```
 implementation "org.mozilla.components:service-sync-logins:{latest-version}"

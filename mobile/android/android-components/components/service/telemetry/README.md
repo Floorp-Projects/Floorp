@@ -10,7 +10,7 @@ The goal of this library is to provide a generic set of components to support a 
 
 ### Setting up the dependency
 
-Use gradle to download the library from JCenter:
+Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
 
 ```Groovy
 implementation "org.mozilla.components:service-telemetry:{latest-version}"

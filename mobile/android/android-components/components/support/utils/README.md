@@ -6,7 +6,7 @@ Generic utility classes to be shared between projects.
 
 ### Setting up the dependency
 
-Use gradle to download the library from JCenter:
+Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
 
 ```Groovy
 implementation "org.mozilla.components:support-utils:{latest-version}"
