@@ -25,6 +25,8 @@ public:
 
   void
   Init(nsIURI* aURI,
+       nsIURI* aTopWindowURI,
+       nsresult aTopWindowURIResult,
        nsILoadInfo* aLoadInfo);
 
 private:
