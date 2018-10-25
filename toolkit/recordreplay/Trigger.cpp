@@ -69,7 +69,7 @@ RecordReplayInterface_RegisterTrigger(void* aObj, const std::function<void()>& a
 
   size_t id;
   {
-    AutoOrderedAtomicAccess order;
+    AutoOrderedAtomicAccess order(gTriggers);
     StaticMutexAutoLock lock(gTriggersMutex);
 
     TriggerInfoMap::iterator iter = gTriggerInfoMap->find(aObj);
