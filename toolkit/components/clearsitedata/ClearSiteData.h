@@ -39,11 +39,6 @@ private:
   void
   ClearDataFromChannel(nsIHttpChannel* aChannel);
 
-  // This method checks if the protocol handler of the URI has the
-  // URI_IS_POTENTIALLY_TRUSTWORTHY flag.
-  bool
-  IsSecureURI(nsIURI* aURI) const;
-
   // From the Clear-Site-Data header, it returns a bitmap with Type values.
   uint32_t
   ParseHeader(nsIHttpChannel* aChannel, nsIURI* aURI) const;
