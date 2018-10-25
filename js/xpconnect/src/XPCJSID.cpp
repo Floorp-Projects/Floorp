@@ -367,10 +367,6 @@ nsJSIID::NewID(const nsXPTInterfaceInfo* aInfo)
         return nullptr;
     }
 
-    if (!aInfo->IsScriptable()) {
-        return nullptr;
-    }
-
     RefPtr<nsJSIID> idObj = new nsJSIID(aInfo);
     return idObj.forget();
 }

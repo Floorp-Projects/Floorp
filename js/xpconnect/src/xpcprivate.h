@@ -1713,9 +1713,7 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass
 public:
 
     static already_AddRefed<nsXPCWrappedJSClass>
-    GetNewOrUsed(JSContext* cx,
-                 REFNSIID aIID,
-                 bool allowNonScriptable = false);
+    GetNewOrUsed(JSContext* cx, REFNSIID aIID);
 
     REFNSIID GetIID() const {return mIID;}
     XPCJSRuntime* GetRuntime() const {return mRuntime;}
