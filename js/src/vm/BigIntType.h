@@ -116,6 +116,16 @@ class BigInt final : public js::gc::TenuredCell
     static bool equal(BigInt* lhs, double rhs);
     static JS::Result<bool> looselyEqual(JSContext* cx, HandleBigInt lhs, HandleValue rhs);
 
+    static bool lessThan(BigInt* x, BigInt* y);
+
+    // These methods return Nothing when the non-BigInt operand is NaN
+    // or a string that can't be interpreted as a BigInt.
+    static mozilla::Maybe<bool> lessThan(BigInt* lhs, double rhs);
+    static mozilla::Maybe<bool> lessThan(double lhs, BigInt* rhs);
+    static bool lessThan(JSContext* cx, HandleBigInt lhs, HandleString rhs, mozilla::Maybe<bool>& res);
+    static bool lessThan(JSContext* cx, HandleString lhs, HandleBigInt rhs, mozilla::Maybe<bool>& res);
+    static bool lessThan(JSContext* cx, HandleValue lhs, HandleValue rhs, mozilla::Maybe<bool>& res);
+
     // Return the length in bytes of the representation used by
     // writeBytes.
     static size_t byteLength(BigInt* x);
