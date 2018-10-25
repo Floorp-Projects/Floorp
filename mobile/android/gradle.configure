@@ -52,13 +52,13 @@ def gradle_android_build_config():
         return namespace(
             productFlavors=productFlavors,
             buildType=buildType,
-            # Like 'OfficialWithoutGeckoBinariesPhotonDebug'
+            # Like 'OfficialWithoutGeckoBinariesDebug'
             name = ''.join(capitalize(t) for t in chain(productFlavors, (buildType, )))
         )
 
     return namespace(
         app=namespace(
-            variant=variant(('official', 'withoutGeckoBinaries', 'noMinApi', 'photon'), 'debug'),
+            variant=variant(('official', 'withoutGeckoBinaries', 'noMinApi'), 'debug'),
         ),
         geckoview=namespace(
             variant=variant(('official', 'withGeckoBinaries', 'noMinApi'), 'debug'),
@@ -71,7 +71,7 @@ def gradle_android_build_config():
 
 @depends(gradle_android_build_config)
 def gradle_android_variant_name(build_config):
-    '''Like "officialWithoutGeckoBinariesNoMinApiPhotonDebug".'''
+    '''Like "officialWithoutGeckoBinariesNoMinApiDebug".'''
     def uncapitalize(s):
         if s:
             return s[0].lower() + s[1:]
@@ -148,9 +148,9 @@ def gradle_android_app_apks(build_config, build_env):
         else:
             return s
 
-    # Like 'officialPhoton'.
+    # Like 'productFlavor'.
     productFlavor = uncapitalize(''.join(imap(capitalize, build_config.app.variant.productFlavors)))
-    # Like 'official-photon'.
+    # Like 'product-flavor'.
     product_flavor = '-'.join(build_config.app.variant.productFlavors)
 
     substs = {
