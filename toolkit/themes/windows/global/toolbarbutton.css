@@ -28,10 +28,7 @@ toolbarbutton.tabbable {
 }
 
 toolbarbutton:-moz-focusring {
-  /* -moz-appearance looks redundant here but is necessary.
-      Without it, the outline won't appear. */
-  -moz-appearance: toolbarbutton;
-  outline: 1px dotted -moz-DialogText;
+  outline: 1px dotted;
   outline-offset: -2px;
 }
 
