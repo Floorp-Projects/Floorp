@@ -276,14 +276,28 @@ public:
     mDoSmoothScroll = aOther.mDoSmoothScroll;
   }
 
-  void ApplyRelativeScrollUpdateFrom(const FrameMetrics& aOther)
+  /**
+   * Applies the relative scroll offset update contained in aOther to the
+   * scroll offset contained in this. The scroll delta is clamped to the
+   * scrollable region.
+   *
+   * @returns The clamped scroll offset delta that was applied
+   */
+  CSSPoint ApplyRelativeScrollUpdateFrom(const FrameMetrics& aOther)
   {
     MOZ_ASSERT(aOther.IsRelative());
+    CSSPoint origin = mScrollOffset;
     CSSPoint delta = (aOther.mScrollOffset - aOther.mBaseScrollOffset);
     ClampAndSetScrollOffset(mScrollOffset + delta);
     mScrollGeneration = aOther.mScrollGeneration;
+    return mScrollOffset - origin;
   }
 
+  /**
+   * Applies the relative scroll offset update contained in aOther to the
+   * smooth scroll destination offset contained in this. The scroll delta is
+   * clamped to the scrollable region.
+   */
   void ApplyRelativeSmoothScrollUpdateFrom(const FrameMetrics& aOther)
   {
     MOZ_ASSERT(aOther.IsRelative());

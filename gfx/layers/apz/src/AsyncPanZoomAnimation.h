@@ -31,6 +31,19 @@ public:
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
                         const TimeDuration& aDelta) = 0;
 
+  /**
+   * Attempt to apply a translation to the animation in response to content
+   * providing a relative scroll offset update.
+   *
+   * @param aShiftDelta the amount to translate the animation in app units
+   * @returns Whether the animation was able to translate. If false, the
+   *    animation must be canceled.
+   */
+  virtual bool ApplyContentShift(const CSSPoint& aShiftDelta)
+  {
+    return false;
+  }
+
   bool Sample(FrameMetrics& aFrameMetrics,
               const TimeDuration& aDelta) {
     // In some situations, particularly when handoff is involved, it's possible

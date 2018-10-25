@@ -25,6 +25,8 @@ public:
               const nsPoint& aDestination,
               const nsSize& aCurrentVelocity) override;
 
+  void ApplyContentShift(const CSSPoint& aShiftDelta) override;
+
   // Get the velocity at a point in time in nscoords/sec.
   nsSize VelocityAt(const TimeStamp& aTime) override;
 
