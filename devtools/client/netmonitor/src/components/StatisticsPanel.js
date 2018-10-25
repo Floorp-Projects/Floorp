@@ -29,6 +29,7 @@ const NETWORK_ANALYSIS_PIE_CHART_DIAMETER = 200;
 const BACK_BUTTON = L10N.getStr("netmonitor.backButton");
 const CHARTS_CACHE_ENABLED = L10N.getStr("charts.cacheEnabled");
 const CHARTS_CACHE_DISABLED = L10N.getStr("charts.cacheDisabled");
+const CHARTS_LEARN_MORE = L10N.getStr("charts.learnMore");
 
 /*
  * Statistics panel component
@@ -125,7 +126,14 @@ class StatisticsPanel extends Component {
     const title = this.refs[chartId].querySelector(".table-chart-title");
     const containerNode = document.createElement("span");
     title.appendChild(containerNode);
-    ReactDOM.render(MDNLink({ url }), containerNode);
+
+    ReactDOM.render(
+      MDNLink({
+        url: url,
+        title: CHARTS_LEARN_MORE,
+      }),
+      containerNode
+    );
     this.mdnLinkContainerNodes.set(chartId, containerNode);
   }
 
