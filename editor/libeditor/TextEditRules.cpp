@@ -1846,12 +1846,6 @@ TextEditRules::CreateBRInternal(
   return CreateElementResult(brElement.forget());
 }
 
-nsresult
-TextEditRules::DocumentModified()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 bool
 TextEditRules::IsPasswordEditor() const
 {
