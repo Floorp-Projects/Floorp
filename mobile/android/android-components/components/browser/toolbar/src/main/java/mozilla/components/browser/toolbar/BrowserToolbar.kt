@@ -250,7 +250,7 @@ class BrowserToolbar @JvmOverloads constructor(
     /**
      * Switches to URL editing mode.
      */
-    fun editMode() {
+    override fun editMode() {
         val urlValue = if (searchTerms.isEmpty()) url else searchTerms
         editToolbar.updateUrl(urlValue)
 
@@ -262,7 +262,7 @@ class BrowserToolbar @JvmOverloads constructor(
     /**
      * Switches to URL displaying mode.
      */
-    fun displayMode() {
+    override fun displayMode() {
         updateState(State.DISPLAY)
     }
 

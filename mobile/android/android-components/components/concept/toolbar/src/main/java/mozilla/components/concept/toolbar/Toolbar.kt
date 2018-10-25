@@ -16,6 +16,7 @@ import java.lang.ref.WeakReference
 /**
  * Interface to be implemented by components that provide browser toolbar functionality.
  */
+@Suppress("TooManyFunctions")
 interface Toolbar {
     /**
      * Sets/Gets the URL to be displayed on the toolbar.
@@ -79,6 +80,16 @@ interface Toolbar {
      * Registers the given listener to be invoked when the user edits the URL.
      */
     fun setOnEditListener(listener: OnEditListener)
+
+    /**
+     * Switches to URL displaying mode (from editing mode) if supported by the toolbar implementation.
+     */
+    fun displayMode()
+
+    /**
+     * Switches to URL editing mode (from displaying mode) if supported by the toolbar implementation.
+     */
+    fun editMode()
 
     /**
      * Listener to be invoked when the user edits the URL.
