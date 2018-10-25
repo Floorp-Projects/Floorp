@@ -8,7 +8,6 @@
 #define __GFXMESSAGEUTILS_H__
 
 #include "FilterSupport.h"
-#include "FrameMetrics.h"
 #include "ImageTypes.h"
 #include "RegionBuilder.h"
 #include "base/process_util.h"

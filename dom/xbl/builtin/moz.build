@@ -15,3 +15,8 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
 else:
     DIRS += ['emacs']
 
+EXPORTS.mozilla += ['ShortcutKeys.h']
+
+SOURCES += ['ShortcutKeys.cpp']
+
+FINAL_LIBRARY = 'xul'

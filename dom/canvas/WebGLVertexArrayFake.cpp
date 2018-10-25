@@ -11,12 +11,11 @@
 namespace mozilla {
 
 WebGLVertexArrayFake::WebGLVertexArrayFake(WebGLContext* webgl)
-    : WebGLVertexArray(webgl)
-    , mIsVAO(false)
+    : WebGLVertexArray(webgl, 0)
 { }
 
 void
-WebGLVertexArrayFake::BindVertexArrayImpl()
+WebGLVertexArrayFake::BindVertexArray()
 {
     // Go through and re-bind all buffers and setup all
     // vertex attribute pointers
@@ -52,19 +51,6 @@ WebGLVertexArrayFake::BindVertexArrayImpl()
     }
 
     mContext->BindBuffer(LOCAL_GL_ARRAY_BUFFER, prevBuffer);
-    mIsVAO = true;
-}
-
-void
-WebGLVertexArrayFake::DeleteImpl()
-{
-    mIsVAO = false;
-}
-
-bool
-WebGLVertexArrayFake::IsVertexArrayImpl() const
-{
-    return mIsVAO;
 }
 
 } // namespace mozilla

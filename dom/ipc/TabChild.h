@@ -185,9 +185,9 @@ protected:
   void DispatchMessageManagerMessage(const nsAString& aMessageName,
                                      const nsAString& aJSONData);
 
-  void ProcessUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics);
+  void ProcessUpdateFrame(const mozilla::layers::RepaintRequest& aRequest);
 
-  bool UpdateFrameHandler(const mozilla::layers::FrameMetrics& aFrameMetrics);
+  bool UpdateFrameHandler(const mozilla::layers::RepaintRequest& aRequest);
 
 protected:
   RefPtr<TabChildMessageManager> mTabChildMessageManager;
@@ -635,7 +635,7 @@ public:
   void SetAllowedTouchBehavior(uint64_t aInputBlockId,
                                const nsTArray<TouchBehaviorFlags>& aFlags) const;
 
-  bool UpdateFrame(const FrameMetrics& aFrameMetrics);
+  bool UpdateFrame(const layers::RepaintRequest& aRequest);
   bool NotifyAPZStateChange(const ViewID& aViewId,
                             const layers::GeckoContentController::APZStateChange& aChange,
                             const int& aArg);

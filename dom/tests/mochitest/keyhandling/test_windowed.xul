@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<window title="Top-level window keyhandling tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    async function run_test(path) {
+      let win = window.openDialog(path, "_blank", "width=500,height=500");
+      await SimpleTest.promiseFocus(win);
+      await win.startTest();
+    }
+
+    async function test() {
+      await run_test("test_input.html");
+      await run_test("test_textarea.html");
+      SimpleTest.finish();
+    }
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+</window>

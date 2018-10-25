@@ -140,28 +140,18 @@ class WebGLFramebuffer final
     , public SupportsWeakPtr<WebGLFramebuffer>
     , public CacheInvalidator
 {
-    friend class WebGLContext;
-
 public:
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLFramebuffer)
 
     const GLuint mGLName;
+    bool mHasBeenBound = false;
 
 private:
     mutable uint64_t mNumFBStatusInvals = 0;
 
-protected:
-#ifdef ANDROID
-    // Bug 1140459: Some drivers (including our test slaves!) don't
-    // give reasonable answers for IsRenderbuffer, maybe others.
-    // This shows up on Android 2.3 emulator.
-    //
-    // So we track the `is a Framebuffer` state ourselves.
-    bool mIsFB = false;
-#endif
-
     ////
 
+protected:
     WebGLFBAttachPoint mDepthAttachment;
     WebGLFBAttachPoint mStencilAttachment;
     WebGLFBAttachPoint mDepthStencilAttachment;

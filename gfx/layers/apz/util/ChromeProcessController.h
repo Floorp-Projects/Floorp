@@ -45,7 +45,7 @@ public:
   virtual void Destroy() override;
 
   // GeckoContentController interface
-  virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) override;
+  virtual void RequestContentRepaint(const RepaintRequest& aRequest) override;
   virtual void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
   virtual bool IsRepaintThread() override;
   virtual void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) override;

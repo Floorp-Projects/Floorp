@@ -147,9 +147,7 @@ WebGLContext::BindFramebuffer(GLenum target, WebGLFramebuffer* wfb)
     } else {
         GLuint framebuffername = wfb->mGLName;
         gl->fBindFramebuffer(target, framebuffername);
-#ifdef ANDROID
-        wfb->mIsFB = true;
-#endif
+        wfb->mHasBeenBound = true;
     }
 
     switch (target) {
@@ -1065,7 +1063,10 @@ WebGLContext::IsBuffer(const WebGLBuffer* const obj)
     if (!ValidateIsObject(obj))
         return false;
 
-    return gl->fIsBuffer(obj->mGLName);
+    if (obj->IsDeleteRequested())
+        return false;
+
+    return obj->Content() != WebGLBuffer::Kind::Undefined;
 }
 
 bool
@@ -1075,15 +1076,10 @@ WebGLContext::IsFramebuffer(const WebGLFramebuffer* const obj)
     if (!ValidateIsObject(obj))
         return false;
 
-#ifdef ANDROID
-    if (gl->WorkAroundDriverBugs() &&
-        gl->Renderer() == GLRenderer::AndroidEmulator)
-    {
-        return obj->mIsFB;
-    }
-#endif
+    if (obj->IsDeleteRequested())
+        return false;
 
-    return gl->fIsFramebuffer(obj->mGLName);
+    return obj->mHasBeenBound;
 }
 
 bool
@@ -1100,7 +1096,10 @@ WebGLContext::IsQuery(const WebGLQuery* const obj)
     if (!ValidateIsObject(obj))
         return false;
 
-    return obj->IsQuery();
+    if (obj->IsDeleteRequested())
+        return false;
+
+    return bool(obj->Target());
 }
 
 bool
@@ -1108,6 +1107,9 @@ WebGLContext::IsRenderbuffer(const WebGLRenderbuffer* const obj)
 {
     const FuncScope funcScope(*this, "isRenderbuffer");
     if (!ValidateIsObject(obj))
+        return false;
+
+    if (obj->IsDeleteRequested())
         return false;
 
     return obj->mHasBeenBound;
@@ -1127,7 +1129,10 @@ WebGLContext::IsTexture(const WebGLTexture* const obj)
     if (!ValidateIsObject(obj))
         return false;
 
-    return obj->IsTexture();
+    if (obj->IsDeleteRequested())
+        return false;
+
+    return bool(obj->Target());
 }
 
 bool
@@ -1137,7 +1142,10 @@ WebGLContext::IsVertexArray(const WebGLVertexArray* const obj)
     if (!ValidateIsObject(obj))
         return false;
 
-    return obj->IsVertexArray();
+    if (obj->IsDeleteRequested())
+        return false;
+
+    return obj->mHasBeenBound;
 }
 
 // -

@@ -16,10 +16,8 @@ class WebGLVertexArrayFake final
     friend class WebGLVertexArray;
 
 protected:
-    virtual void BindVertexArrayImpl() override;
-    virtual void DeleteImpl() override;
-    virtual void GenVertexArray() override {};
-    virtual bool IsVertexArrayImpl() const override;
+    virtual void BindVertexArray() override;
+    virtual void DeleteImpl() override {}
 
 private:
     explicit WebGLVertexArrayFake(WebGLContext* webgl);
@@ -27,8 +25,6 @@ private:
     ~WebGLVertexArrayFake() {
         DeleteOnce();
     }
-
-    bool mIsVAO;
 };
 
 } // namespace mozilla

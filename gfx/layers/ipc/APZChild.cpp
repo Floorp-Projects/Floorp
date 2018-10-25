@@ -30,11 +30,11 @@ APZChild::~APZChild()
 }
 
 mozilla::ipc::IPCResult
-APZChild::RecvRequestContentRepaint(const FrameMetrics& aFrameMetrics)
+APZChild::RecvRequestContentRepaint(const RepaintRequest& aRequest)
 {
   MOZ_ASSERT(mController->IsRepaintThread());
 
-  mController->RequestContentRepaint(aFrameMetrics);
+  mController->RequestContentRepaint(aRequest);
   return IPC_OK();
 }
 

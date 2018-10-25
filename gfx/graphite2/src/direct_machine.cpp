@@ -56,6 +56,26 @@ using namespace vm;
 
 namespace {
 
+// The GCC manual has this to say about labels as values:
+//   The &&foo expressions for the same label might have different values
+//   if the containing function is inlined or cloned. If a program relies
+//   on them being always the same, __attribute__((__noinline__,__noclone__))
+//   should be used to prevent inlining and cloning.
+//
+// is_return in Code.cpp relies on being able to do comparisons, so it needs
+// them to be always the same.
+//
+// The GCC manual further adds:
+//   If &&foo is used in a static variable initializer, inlining and
+//   cloning is forbidden.
+//
+// In this file, &&foo *is* used in a static variable initializer, and it's not
+// entirely clear whether this should prevent inlining of the function or not.
+// In practice, though, clang 7 can end up inlining the function with ThinLTO,
+// which breaks at least is_return. https://bugs.llvm.org/show_bug.cgi?id=39241
+// So all in all, we need at least the __noinline__ attribute. __noclone__
+// is not supported by clang.
+__attribute__((__noinline__))
 const void * direct_run(const bool          get_table_mode,
                         const instr       * program,
                         const byte        * data,

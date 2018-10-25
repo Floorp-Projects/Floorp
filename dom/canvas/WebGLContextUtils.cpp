@@ -702,8 +702,8 @@ WebGLContext::AssertCachedBindings() const
     GetAndFlushUnderlyingGLErrors();
 
     if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::OES_vertex_array_object)) {
-        GLuint bound = mBoundVertexArray ? mBoundVertexArray->GLName() : 0;
-        AssertUintParamCorrect(gl, LOCAL_GL_VERTEX_ARRAY_BINDING, bound);
+        AssertUintParamCorrect(gl, LOCAL_GL_VERTEX_ARRAY_BINDING,
+                               mBoundVertexArray->mGLName);
     }
 
     GLint stencilBits = 0;

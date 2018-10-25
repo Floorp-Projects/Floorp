@@ -888,10 +888,10 @@ Element::ScrollBy(double aXScrollDif, double aYScrollDif)
 {
   nsIScrollableFrame *sf = GetScrollFrame();
   if (sf) {
-    CSSIntPoint scrollPos = sf->GetScrollPositionCSSPixels();
-    scrollPos += CSSIntPoint::Truncate(mozilla::ToZeroIfNonfinite(aXScrollDif),
-                                       mozilla::ToZeroIfNonfinite(aYScrollDif));
-    Scroll(scrollPos, ScrollOptions());
+    ScrollToOptions options;
+    options.mLeft.Construct(aXScrollDif);
+    options.mTop.Construct(aYScrollDif);
+    ScrollBy(options);
   }
 }
 
@@ -900,14 +900,25 @@ Element::ScrollBy(const ScrollToOptions& aOptions)
 {
   nsIScrollableFrame *sf = GetScrollFrame();
   if (sf) {
-    CSSIntPoint scrollPos = sf->GetScrollPositionCSSPixels();
+    CSSIntPoint scrollDelta;
     if (aOptions.mLeft.WasPassed()) {
-      scrollPos.x += mozilla::ToZeroIfNonfinite(aOptions.mLeft.Value());
+      scrollDelta.x = mozilla::ToZeroIfNonfinite(aOptions.mLeft.Value());
     }
     if (aOptions.mTop.WasPassed()) {
-      scrollPos.y += mozilla::ToZeroIfNonfinite(aOptions.mTop.Value());
+      scrollDelta.y = mozilla::ToZeroIfNonfinite(aOptions.mTop.Value());
     }
-    Scroll(scrollPos, aOptions);
+
+    nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
+    if (aOptions.mBehavior == ScrollBehavior::Smooth) {
+      scrollMode = nsIScrollableFrame::SMOOTH_MSD;
+    } else if (aOptions.mBehavior == ScrollBehavior::Auto) {
+      ScrollStyles styles = sf->GetScrollStyles();
+      if (styles.mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
+        scrollMode = nsIScrollableFrame::SMOOTH_MSD;
+      }
+    }
+
+    sf->ScrollByCSSPixels(scrollDelta, scrollMode, nsGkAtoms::relative);
   }
 }
 

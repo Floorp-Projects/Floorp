@@ -40,7 +40,7 @@ public:
 
   // GeckoContentController
 
-  void RequestContentRepaint(const FrameMetrics& frame) override;
+  void RequestContentRepaint(const RepaintRequest& aRequest) override;
 
   void HandleTap(TapType aType,
                  const LayoutDevicePoint& aPoint,
