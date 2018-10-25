@@ -66,18 +66,6 @@
     </hbox>
     <vbox id="contentBlockingCategories">
       <label id="content-blocking-categories-label" data-l10n-id="content-blocking-category-label"/>
-      <hbox class="content-blocking-category fast-block-ui">
-        <vbox>
-          <checkbox id="contentBlockingFastBlockCheckbox"
-                    class="content-blocking-checkbox" flex="1"
-                    src="chrome://browser/skin/controlcenter/slowtrackers.svg"
-                    preference="browser.fastblock.enabled"
-                    data-l10n-id="content-blocking-fastblock-slow-loading-trackers-label"/>
-          <vbox class="content-blocking-category-labels" flex="1">
-            <description data-l10n-id="content-blocking-fastblock-new-description" class="content-blocking-category-description"/>
-          </vbox>
-        </vbox>
-      </hbox>
       <vbox>
         <hbox class="content-blocking-category tracking-protection-ui">
           <vbox>
