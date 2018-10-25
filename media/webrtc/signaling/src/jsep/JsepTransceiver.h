@@ -59,6 +59,9 @@ class JsepTransceiver {
 
     void Rollback(JsepTransceiver& oldTransceiver)
     {
+      MOZ_ASSERT(oldTransceiver.GetMediaType() == GetMediaType());
+      MOZ_ASSERT(!oldTransceiver.HasLevel() ||
+                 oldTransceiver.GetLevel() == GetLevel());
       mTransport = oldTransceiver.mTransport;
       mLevel = oldTransceiver.mLevel;
       mBundleLevel = oldTransceiver.mBundleLevel;
@@ -109,8 +112,6 @@ class JsepTransceiver {
 
     void ClearLevel()
     {
-      MOZ_ASSERT(mStopped);
-      MOZ_ASSERT(!IsAssociated());
       mLevel = SIZE_MAX;
     }
 
@@ -128,6 +129,12 @@ class JsepTransceiver {
     bool IsStopped() const
     {
       return mStopped;
+    }
+
+    void RestartDatachannelTransceiver()
+    {
+      MOZ_RELEASE_ASSERT(GetMediaType() == SdpMediaSection::kApplication);
+      mStopped = false;
     }
 
     void SetRemoved()
@@ -203,6 +210,7 @@ class JsepTransceiver {
     // Convenience function
     SdpMediaSection::MediaType GetMediaType() const
     {
+      MOZ_ASSERT(mRecvTrack.GetMediaType() == mSendTrack.GetMediaType());
       return mRecvTrack.GetMediaType();
     }
 
