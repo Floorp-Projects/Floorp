@@ -1916,14 +1916,23 @@ nsresult
 HTMLEditor::InsertAsQuotation(const nsAString& aQuotedText,
                               nsINode** aNodeInserted)
 {
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
   if (IsPlaintextEditor()) {
-    return InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
+    AutoPlaceholderBatch treatAsOneTransaction(*this);
+    nsresult rv = InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
   }
 
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   nsAutoString citation;
-  return InsertAsCitedQuotation(aQuotedText, citation, false,
-                                aNodeInserted);
+  nsresult rv =
+    InsertAsCitedQuotationInternal(aQuotedText, citation, false, aNodeInserted);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 // Insert plaintext as a quotation, with cite marks (e.g. "> ").
@@ -2077,14 +2086,36 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                    bool aInsertHTML,
                                    nsINode** aNodeInserted)
 {
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   // Don't let anyone insert HTML when we're in plaintext mode.
   if (IsPlaintextEditor()) {
     NS_ASSERTION(!aInsertHTML,
       "InsertAsCitedQuotation: trying to insert html into plaintext editor");
-    return InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
+    AutoPlaceholderBatch treatAsOneTransaction(*this);
+    nsresult rv = InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
   }
+
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  nsresult rv =
+    InsertAsCitedQuotationInternal(aQuotedText, aCitation, aInsertHTML,
+                                   aNodeInserted);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::InsertAsCitedQuotationInternal(const nsAString& aQuotedText,
+                                           const nsAString& aCitation,
+                                           bool aInsertHTML,
+                                           nsINode** aNodeInserted)
+{
+  MOZ_ASSERT(!IsPlaintextEditor());
 
   RefPtr<Selection> selection = GetSelection();
   if (NS_WARN_IF(!selection)) {
