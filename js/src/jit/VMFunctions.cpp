@@ -2085,5 +2085,10 @@ typedef bool (*AddOrUpdateSparseElementHelperFn)(JSContext* cx, HandleArrayObjec
 const VMFunction AddOrUpdateSparseElementHelperInfo =
     FunctionInfo<AddOrUpdateSparseElementHelperFn>(AddOrUpdateSparseElementHelper, "AddOrUpdateSparseElementHelper");
 
+typedef bool (*GetSparseElementHelperFn)(JSContext* cx, HandleArrayObject obj,
+                                         int32_t int_id, MutableHandleValue result);
+const VMFunction GetSparseElementHelperInfo =
+    FunctionInfo<GetSparseElementHelperFn>(GetSparseElementHelper, "getSparseElementHelper");
+
 } // namespace jit
 } // namespace js
