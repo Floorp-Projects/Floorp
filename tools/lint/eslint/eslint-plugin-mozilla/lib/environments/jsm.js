@@ -23,8 +23,8 @@ module.exports = {
     "Ci": false,
     "Cr": false,
     "Cu": false,
-    // These globals are made available via WebIDL files, see ResolveSystemBinding in:
-    // https://searchfox.org/mozilla-central/source/__GENERATED__/dom/bindings/ResolveSystemBinding.cpp
+    // These globals are made available via WebIDL files, see WebIDLGlobalNameHash.
+    // XXX(nika): We should also explicitly include window-defined globals here now.
     "AbortController": false,
     "AbortSignal": false,
     "AddonManagerPermissions": false,

@@ -30,9 +30,12 @@ class Lock
   // Unique ID for this lock.
   size_t mId;
 
+  // When replaying, any thread owning this lock as part of the recording.
+  Atomic<size_t, SequentiallyConsistent, Behavior::DontPreserve> mOwner;
+
 public:
   explicit Lock(size_t aId)
-    : mId(aId)
+    : mId(aId), mOwner(0)
   {
     MOZ_ASSERT(aId);
   }
