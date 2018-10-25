@@ -135,10 +135,21 @@ Lock::Find(void* aNativeLock)
       // should be generated right now. Doing things in this order avoids
       // reentrancy issues when initializing the thread-local state used by
       // these calls.
-      if (AreThreadEventsPassedThrough() || HasDivergedFromRecording()) {
+      Lock* lock = iter->second;
+      if (AreThreadEventsPassedThrough()) {
         return nullptr;
       }
-      return iter->second;
+      if (HasDivergedFromRecording()) {
+        // When diverged from the recording, don't allow uses of locks that are
+        // held by idling threads that have not diverged from the recording.
+        // This will cause the process to deadlock, so rewind instead.
+        if (lock->mOwner && Thread::GetById(lock->mOwner)->IsIdle()) {
+          EnsureNotDivergedFromRecording();
+          Unreachable();
+        }
+        return nullptr;
+      }
+      return lock;
     }
   }
 
@@ -171,6 +182,9 @@ Lock::Enter()
     while (thread->Id() != acquires->mNextOwner && !thread->MaybeDivergeFromRecording()) {
       Thread::Wait();
     }
+    if (!thread->HasDivergedFromRecording()) {
+      mOwner = thread->Id();
+    }
   }
 }
 
@@ -179,6 +193,8 @@ Lock::Exit()
 {
   Thread* thread = Thread::Current();
   if (IsReplaying() && !thread->HasDivergedFromRecording()) {
+    mOwner = 0;
+
     // Notify the next owner before releasing the lock.
     LockAcquires* acquires = gLockAcquires.Get(mId);
     acquires->ReadAndNotifyNextOwner(thread);

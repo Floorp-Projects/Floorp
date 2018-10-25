@@ -1,0 +1,73 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+// Import helpers for the workers
+/* import-globals-from helper_workers.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/helper_workers.js",
+  this);
+
+var { DebuggerServer } = require("devtools/server/main");
+var { DebuggerClient } = require("devtools/shared/client/debugger-client");
+
+var TAB_URL = EXAMPLE_URL + "doc_listworkers-tab.html";
+var WORKER1_URL = "code_listworkers-worker1.js";
+var WORKER2_URL = "code_listworkers-worker2.js";
+
+add_task(async function test() {
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
+
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  await connect(client);
+
+  const tab = await addTab(TAB_URL);
+  const { tabs } = await listTabs(client);
+  const [, targetFront] = await attachTarget(client, findTab(tabs, TAB_URL));
+
+  let { workers } = await listWorkers(targetFront);
+  is(workers.length, 0);
+
+  executeSoon(() => {
+    evalInTab(tab, "var worker1 = new Worker('" + WORKER1_URL + "');");
+  });
+  await waitForWorkerListChanged(targetFront);
+
+  ({ workers } = await listWorkers(targetFront));
+  is(workers.length, 1);
+  is(workers[0].url, WORKER1_URL);
+
+  executeSoon(() => {
+    evalInTab(tab, "var worker2 = new Worker('" + WORKER2_URL + "');");
+  });
+  await waitForWorkerListChanged(targetFront);
+
+  ({ workers } = await listWorkers(targetFront));
+  is(workers.length, 2);
+  is(workers[0].url, WORKER1_URL);
+  is(workers[1].url, WORKER2_URL);
+
+  executeSoon(() => {
+    evalInTab(tab, "worker1.terminate()");
+  });
+  await waitForWorkerListChanged(targetFront);
+
+  ({ workers } = await listWorkers(targetFront));
+  is(workers.length, 1);
+  is(workers[0].url, WORKER2_URL);
+
+  executeSoon(() => {
+    evalInTab(tab, "worker2.terminate()");
+  });
+  await waitForWorkerListChanged(targetFront);
+
+  ({ workers } = await listWorkers(targetFront));
+  is(workers.length, 0);
+
+  await close(client);
+  finish();
+});
