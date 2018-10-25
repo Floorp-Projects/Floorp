@@ -85,7 +85,7 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
 
     this.mTotalPages = document.getElementById("print-preview-totalPages");
 
-    this.mScaleCombobox = document.getElementById("print-preview-scale-label");
+    this.mScaleCombobox = document.getElementById("print-preview-scale");
 
     this.mPortaitButton = document.getElementById("print-preview-portrait-button");
 
