@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Testcase for bug 1500530</title>
+  <style type="text/css">
+html,body {
+  color:black; background-color:white; font:48pt/1 Arial; padding:0; margin:0;
+}
+
+input {
+  font-family: Arial;
+  font-size: 48pt;
+  vertical-align: top;
+  background: lime;
+}
+div { text-indent: -24ch; margin-top: -2px; }
+
+mask {
+  position: absolute;
+  left: 100px; right: 0; top: 0; bottom: 0;
+  background: black;
+}
+
+mask2 {
+  position: absolute;
+  left: 0; right: 0; top: 18px; bottom: 0;
+  background: black;
+}
+
+  </style>
+</head>
+<body>
+
+<mask></mask>
+<mask2></mask2>
+<div><input type="file"></div>
+
+
+</body>
+</html>
