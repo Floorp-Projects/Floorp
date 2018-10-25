@@ -79,7 +79,6 @@ struct nsXPTInterfaceInfo
 
 
   // Interface flag getters
-  bool IsScriptable() const { return true; } // XXX remove (bug 1480245)
   bool IsFunction() const { return mFunction; }
   bool IsBuiltinClass() const { return mBuiltinClass; }
   bool IsMainProcessScriptableOnly() const { return mMainProcessScriptableOnly; }

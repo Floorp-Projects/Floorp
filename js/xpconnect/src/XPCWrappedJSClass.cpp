@@ -107,7 +107,7 @@ private:
 
 // static
 already_AddRefed<nsXPCWrappedJSClass>
-nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID, bool allowNonScriptable)
+nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID)
 {
     XPCJSRuntime* xpcrt = nsXPConnect::GetRuntimeInstance();
     IID2WrappedJSClassMap* map = xpcrt->GetWrappedJSClassMap();
@@ -116,11 +116,7 @@ nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID, bool allowNonScr
     if (!clasp) {
         const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByIID(aIID);
         if (info) {
-            bool canScript = info->IsScriptable();
-            bool isBuiltin = info->IsBuiltinClass();
-            if ((canScript || allowNonScriptable) && !isBuiltin &&
-                nsXPConnect::IsISupportsDescendant(info))
-            {
+            if (!info->IsBuiltinClass() && nsXPConnect::IsISupportsDescendant(info)) {
                 clasp = new nsXPCWrappedJSClass(cx, aIID, info);
                 if (!clasp->mDescriptors) {
                     clasp = nullptr;
@@ -219,19 +215,10 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
         return nullptr;
     }
 
-    // Ensure that we are asking for a scriptable interface.
-    // NB:  It's important for security that this check is here rather
-    // than later, since it prevents untrusted objects from implementing
-    // some interfaces in JS and aggregating a trusted object to
-    // implement intentionally (for security) unscriptable interfaces.
-    // We so often ask for nsISupports that we can short-circuit the test...
+    // Ensure that we are asking for a non-builtinclass interface
     if (!aIID.Equals(NS_GET_IID(nsISupports))) {
-        bool allowNonScriptable = mozilla::jsipc::IsWrappedCPOW(jsobj);
-
         const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByIID(aIID);
-        if (!info || info->IsBuiltinClass() ||
-            (!info->IsScriptable() && !allowNonScriptable))
-        {
+        if (!info || info->IsBuiltinClass()) {
             return nullptr;
         }
     }
