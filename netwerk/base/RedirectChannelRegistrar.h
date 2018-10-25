@@ -43,8 +43,6 @@ protected:
   ParentChannelHashtable mParentChannels;
   uint32_t mId;
   Mutex mLock;
-
-  static StaticRefPtr<RedirectChannelRegistrar> gSingleton;
 };
 
 } // namespace net
