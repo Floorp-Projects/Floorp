@@ -282,6 +282,7 @@ extern const char* const CacheKindNames[];
     _(LoadTypedObjectResult)              \
     _(LoadDenseElementResult)             \
     _(LoadDenseElementHoleResult)         \
+    _(CallGetSparseElementResult)         \
     _(LoadDenseElementExistsResult)       \
     _(LoadTypedElementExistsResult)       \
     _(LoadDenseElementHoleExistsResult)   \
@@ -1238,6 +1239,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::LoadDenseElementHoleResult, obj);
         writeOperandId(index);
     }
+    void callGetSparseElementResult(ObjOperandId obj, Int32OperandId index) {
+        writeOpWithOperandId(CacheOp::CallGetSparseElementResult, obj);
+        writeOperandId(index);
+    }
     void loadDenseElementExistsResult(ObjOperandId obj, Int32OperandId index) {
         writeOpWithOperandId(CacheOp::LoadDenseElementExistsResult, obj);
         writeOperandId(index);
@@ -1600,6 +1605,8 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
                                uint32_t index, Int32OperandId indexId);
     bool tryAttachDenseElementHole(HandleObject obj, ObjOperandId objId,
                                    uint32_t index, Int32OperandId indexId);
+    bool tryAttachSparseElement(HandleObject obj, ObjOperandId objId,
+                                uint32_t index, Int32OperandId indexId);
     bool tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
                                uint32_t index, Int32OperandId indexId);
     bool tryAttachUnboxedElementHole(HandleObject obj, ObjOperandId objId,
