@@ -1,7 +1,7 @@
 "use strict";
 
-const PREF_INTRO_COUNT = "privacy.trackingprotection.introCount";
-const PREF_CB_UI_ENABLED = "browser.contentblocking.ui.enabled";
+const PREF_INTRO_COUNT = "browser.contentblocking.introCount";
+const PREF_CB_ENABLED = "browser.contentblocking.enabled";
 const PREF_TP_ENABLED = "privacy.trackingprotection.enabled";
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
@@ -12,9 +12,8 @@ var {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/Url
 
 registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
-  Services.prefs.clearUserPref(PREF_CB_UI_ENABLED);
+  Services.prefs.clearUserPref(PREF_CB_ENABLED);
   Services.prefs.clearUserPref(PREF_TP_ENABLED);
-  Services.prefs.clearUserPref(PREF_INTRO_COUNT);
 });
 
 function allowOneIntro() {
@@ -22,7 +21,7 @@ function allowOneIntro() {
 }
 
 add_task(async function setup_test() {
-  Services.prefs.setBoolPref(PREF_CB_UI_ENABLED, false);
+  Services.prefs.setBoolPref(PREF_CB_ENABLED, true);
   Services.prefs.setBoolPref(PREF_TP_ENABLED, true);
   await UrlClassifierTestUtils.addTestTrackers();
 });
