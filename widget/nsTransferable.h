@@ -13,6 +13,7 @@
 #include "nsTArray.h"
 #include "nsIPrincipal.h"
 #include "prio.h"
+#include "mozilla/Maybe.h"
 
 class nsIMutableArray;
 
@@ -73,9 +74,12 @@ public:
 protected:
   virtual ~nsTransferable();
 
-  // get flavors w/out converter
+  // Get flavors w/out converter
   void GetTransferDataFlavors(nsTArray<nsCString>& aFlavors);
- 
+
+  // Find index for data with the matching flavor in mDataArray.
+  mozilla::Maybe<size_t> FindDataFlavor(const char* aFlavor);
+
   nsTArray<DataStruct> mDataArray;
   nsCOMPtr<nsIFormatConverter> mFormatConv;
   bool mPrivateData;
