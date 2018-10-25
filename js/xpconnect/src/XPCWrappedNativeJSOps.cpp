@@ -941,7 +941,8 @@ XPC_WN_NewEnumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,
     }
 
     bool retval = true;
-    nsresult rv = scr->NewEnumerate(wrapper, cx, obj, properties, &retval);
+    nsresult rv = scr->NewEnumerate(wrapper, cx, obj, properties,
+                                    enumerableOnly, &retval);
     if (NS_FAILED(rv)) {
         return Throw(rv, cx);
     }
