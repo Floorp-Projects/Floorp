@@ -476,46 +476,20 @@ GetSurfaceFromElement(nsIGlobalObject* aGlobal, ElementType& aElement, ErrorResu
   nsLayoutUtils::SurfaceFromElementResult res =
     nsLayoutUtils::SurfaceFromElement(&aElement, nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE);
 
+  RefPtr<SourceSurface> surface = res.GetSourceSurface();
+  if (NS_WARN_IF(!surface)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+
   // check origin-clean
   if (!CheckSecurityForElements(res)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
 
-  RefPtr<SourceSurface> surface = res.GetSourceSurface();
-
-  if (NS_WARN_IF(!surface)) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
   return surface.forget();
-}
-
-/*
- * The specification doesn't allow to create an ImegeBitmap from a vector image.
- * This function is used to check if the given Image Element contains a
- * raster image.
- */
-template<class ElementType>
-static bool
-HasRasterImage(ElementType& aImageEl)
-{
-  nsresult rv;
-
-  nsCOMPtr<imgIRequest> imgRequest;
-  rv = aImageEl.GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                           getter_AddRefs(imgRequest));
-  if (NS_SUCCEEDED(rv) && imgRequest) {
-    nsCOMPtr<imgIContainer> imgContainer;
-    rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
-    if (NS_SUCCEEDED(rv) && imgContainer &&
-        imgContainer->GetType() == imgIContainer::TYPE_RASTER) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 ImageBitmap::ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
@@ -857,12 +831,6 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl
 {
   // Check if the image element is completely available or not.
   if (!aImageEl.Complete()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  // Check if the image element is a bitmap (e.g. it's a vector graphic) or not.
-  if (!HasRasterImage(aImageEl)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
