@@ -289,6 +289,8 @@ enum class InvalidEscapeType {
 // The only escapes found in IdentifierName are of the Unicode flavor.
 enum class IdentifierEscapes { None, SawUnicodeEscape };
 
+enum class NameVisibility { Public, Private };
+
 class TokenStreamShared;
 
 struct Token
@@ -406,7 +408,7 @@ struct Token
     // Mutators
 
     void setName(PropertyName* name) {
-        MOZ_ASSERT(type == TokenKind::Name);
+        MOZ_ASSERT(type == TokenKind::Name || type == TokenKind::PrivateName);
         u.name = name;
     }
 
@@ -432,7 +434,7 @@ struct Token
     // Type-safe accessors
 
     PropertyName* name() const {
-        MOZ_ASSERT(type == TokenKind::Name);
+        MOZ_ASSERT(type == TokenKind::Name || type == TokenKind::PrivateName);
         return u.name->JSAtom::asPropertyName(); // poor-man's type verification
     }
 
@@ -627,7 +629,7 @@ class TokenStreamAnyChars
 
   public:
     PropertyName* currentName() const {
-        if (isCurrentTokenType(TokenKind::Name)) {
+        if (isCurrentTokenType(TokenKind::Name) || isCurrentTokenType(TokenKind::PrivateName)) {
             return currentToken().name();
         }
 
@@ -636,7 +638,7 @@ class TokenStreamAnyChars
     }
 
     bool currentNameHasEscapes() const {
-        if (isCurrentTokenType(TokenKind::Name)) {
+        if (isCurrentTokenType(TokenKind::Name) || isCurrentTokenType(TokenKind::PrivateName)) {
             TokenPos pos = currentToken().pos;
             return (pos.end - pos.begin) != currentToken().name()->length();
         }
@@ -1927,6 +1929,15 @@ class GeneralTokenStreamChars
         token->setName(name);
     }
 
+    void newPrivateNameToken(PropertyName* name,
+                             TokenStart start,
+                             TokenStreamShared::Modifier modifier,
+                             TokenKind* out)
+    {
+        Token* token = newToken(TokenKind::PrivateName, start, modifier, out);
+        token->setName(name);
+    }
+
     void newRegExpToken(RegExpFlag reflags, TokenStart start, TokenKind* out)
     {
         Token* token = newToken(TokenKind::RegExp, start, TokenStreamShared::Operand, out);
@@ -2000,6 +2011,7 @@ class GeneralTokenStreamChars
 
     uint32_t matchUnicodeEscapeIdStart(uint32_t* codePoint);
     bool matchUnicodeEscapeIdent(uint32_t* codePoint);
+    bool matchIdentifierStart();
 
     /**
      * If possible, compute a line of context for an otherwise-filled-in |err|
@@ -2335,6 +2347,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::matchUnicodeEscapeIdStart;
     using GeneralCharsBase::newAtomToken;
     using GeneralCharsBase::newNameToken;
+    using GeneralCharsBase::newPrivateNameToken;
     using GeneralCharsBase::newNumberToken;
     using GeneralCharsBase::newRegExpToken;
     using GeneralCharsBase::newSimpleToken;
@@ -2670,7 +2683,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     MOZ_MUST_USE bool identifierName(TokenStart start, const Unit* identStart,
                                      IdentifierEscapes escaping, Modifier modifier,
-                                     TokenKind* out);
+                                     NameVisibility visibility, TokenKind* out);
+
+    MOZ_MUST_USE bool matchIdentifierStart(IdentifierEscapes* sawEscape);
 
     MOZ_MUST_USE bool getTokenInternal(TokenKind* const ttp, const Modifier modifier);
 

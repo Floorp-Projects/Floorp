@@ -240,7 +240,8 @@ enum class PropertyType {
     AsyncMethod,
     AsyncGeneratorMethod,
     Constructor,
-    DerivedConstructor
+    DerivedConstructor,
+    Field,
 };
 
 enum AwaitHandling : uint8_t { AwaitIsName, AwaitIsKeyword, AwaitIsModuleKeyword };
@@ -1243,7 +1244,9 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     bool checkLexicalDeclarationDirectlyWithinBlock(ParseContext::Statement& stmt,
                                                     DeclarationKind kind, TokenPos pos);
 
+    enum PropertyNameContext { PropertyNameInLiteral, PropertyNameInPattern, PropertyNameInClass };
     Node propertyName(YieldHandling yieldHandling,
+                      PropertyNameContext propertyNameContext,
                       const mozilla::Maybe<DeclarationKind>& maybeDecl,
                       ListNodeType propList,
                       PropertyType* propType, MutableHandleAtom propAtom);
