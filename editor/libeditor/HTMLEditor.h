@@ -1519,6 +1519,26 @@ protected: // Shouldn't be used by friend classes
                          bool aDispatchPasteEvent);
 
   /**
+   * InsertAsCitedQuotationInternal() inserts a <blockquote> element whose
+   * cite attribute is aCitation and whose content is aQuotedText.
+   * Note that this shouldn't be called when IsPlaintextEditor() is true.
+   *
+   * @param aQuotedText     HTML source if aInsertHTML is true.  Otherwise,
+   *                        plain text.  This is inserted into new <blockquote>
+   *                        element.
+   * @param aCitation       cite attribute value of new <blockquote> element.
+   * @param aInsertHTML     true if aQuotedText should be treated as HTML
+   *                        source.
+   *                        false if aQuotedText should be treated as plain
+   *                        text.
+   * @param aNodeInserted   [OUT] The new <blockquote> element.
+   */
+  nsresult InsertAsCitedQuotationInternal(const nsAString& aQuotedText,
+                                          const nsAString& aCitation,
+                                          bool aInsertHTML,
+                                          nsINode** aNodeInserted);
+
+  /**
    * InsertNodeIntoProperAncestorWithTransaction() attempts to insert aNode
    * into the document, at aPointToInsert.  Checks with strict dtd to see if
    * containment is allowed.  If not allowed, will attempt to find a parent
