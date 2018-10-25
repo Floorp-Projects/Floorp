@@ -58,7 +58,7 @@ class BrowserFragment : Fragment(), BackHandler, DownloadDialogListener {
                 components.defaultSearchUseCase,
                 sessionId)
 
-        tabsToolbarFeature = TabsToolbarFeature(requireContext(), toolbar, ::showTabs)
+        tabsToolbarFeature = TabsToolbarFeature(toolbar, components.sessionManager, ::showTabs)
 
         downloadsFeature = DownloadsFeature(
             requireContext(),

@@ -29,6 +29,7 @@ dependencies {
     implementation project(':concept-tabstray')
     implementation project(':concept-toolbar')
     implementation project(':ui-icons')
+    implementation project(':ui-tabcounter')
     implementation project(':support-ktx')
 
     implementation Deps.support_fragment

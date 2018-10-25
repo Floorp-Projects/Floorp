@@ -64,24 +64,19 @@ open class TabCounter @JvmOverloads constructor(
     }
 
     fun setCountWithAnimation(count: Int) {
-        var exitEarly = true
         // Don't animate from initial state.
         if (this.count == 0) {
             setCount(count)
-            exitEarly = true
+            return
         }
 
         if (this.count == count) {
-            exitEarly = true
+            return
         }
 
         // Don't animate if there are still over MAX_VISIBLE_TABS tabs open.
         if (this.count > MAX_VISIBLE_TABS && count > MAX_VISIBLE_TABS) {
             this.count = count
-            exitEarly = true
-        }
-
-        if (exitEarly) {
             return
         }
 

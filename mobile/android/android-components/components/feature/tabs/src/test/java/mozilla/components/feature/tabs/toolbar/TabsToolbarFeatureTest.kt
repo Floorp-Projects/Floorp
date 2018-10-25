@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.tabs.toolbar
 
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -11,14 +12,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class TabsToolbarFeatureTest {
     @Test
     fun `feature adds "tabs" button to toolbar`() {
         val toolbar: Toolbar = mock()
-        TabsToolbarFeature(RuntimeEnvironment.application, toolbar) {}
+        val sessionManager: SessionManager = mock()
+        TabsToolbarFeature(toolbar, sessionManager) {}
 
         verify(toolbar).addBrowserAction(any())
     }
