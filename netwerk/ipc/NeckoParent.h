@@ -243,6 +243,8 @@ protected:
 
   virtual PTrackingDummyChannelParent*
     AllocPTrackingDummyChannelParent(nsIURI* aURI,
+                                     nsIURI* aTopWindowURI,
+                                     const nsresult& aTopWindowURIResult,
                                      const OptionalLoadInfoArgs& aLoadInfo) override;
 
   virtual bool
@@ -251,6 +253,8 @@ protected:
   virtual mozilla::ipc::IPCResult
     RecvPTrackingDummyChannelConstructor(PTrackingDummyChannelParent* aActor,
                                          nsIURI* aURI,
+                                         nsIURI* aTopWindowURI,
+                                         const nsresult& aTopWindowURIResult,
                                          const OptionalLoadInfoArgs& aLoadInfo) override;
 };
 
