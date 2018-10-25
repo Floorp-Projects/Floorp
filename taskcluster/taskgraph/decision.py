@@ -207,7 +207,6 @@ def get_decision_parameters(config, options):
     # Define default filter list, as most configurations shouldn't need
     # custom filters.
     parameters['filters'] = [
-        'check_servo',
         'target_tasks_method',
     ]
     parameters['existing_tasks'] = {}
