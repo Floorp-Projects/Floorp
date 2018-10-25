@@ -205,8 +205,12 @@ public final class GeckoRuntime implements Parcelable {
         GeckoAppShell.setScreenSizeOverride(settings.getScreenSizeOverride());
         GeckoAppShell.setCrashHandlerService(settings.getCrashHandler());
 
-        if (!GeckoThread.initMainProcess(/* profile */ null, settings.getArguments(),
-                                         settings.getExtras(), flags)) {
+        final GeckoThread.InitInfo info = new GeckoThread.InitInfo();
+        info.args = settings.getArguments();
+        info.extras = settings.getExtras();
+        info.flags = flags;
+
+        if (!GeckoThread.init(info)) {
             Log.w(LOGTAG, "init failed (could not initiate GeckoThread)");
             return false;
         }
