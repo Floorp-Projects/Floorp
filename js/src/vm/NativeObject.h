@@ -1615,6 +1615,10 @@ NativeGetElement(JSContext* cx, HandleNativeObject obj, HandleValue reciever, in
                  MutableHandleValue vp);
 
 bool
+GetSparseElementHelper(JSContext* cx, HandleArrayObject obj, int32_t int_id,
+                       MutableHandleValue result);
+
+bool
 SetPropertyByDefining(JSContext* cx, HandleId id, HandleValue v, HandleValue receiver,
                       ObjectOpResult& result);
 
