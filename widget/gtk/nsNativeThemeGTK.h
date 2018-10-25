@@ -92,6 +92,7 @@ private:
                             GtkWidgetState* aState, gint* aWidgetFlags);
   bool GetExtraSizeForWidget(nsIFrame* aFrame, WidgetType aWidgetType,
                                nsIntMargin* aExtra);
+  bool IsWidgetVisible(WidgetType aWidgetType);
 
   void RefreshWidgetWindow(nsIFrame* aFrame);
   WidgetNodeType NativeThemeToGtkTheme(WidgetType aWidgetType, nsIFrame* aFrame);
