@@ -77,7 +77,6 @@ add_task(async function() {
     ["browser.contentblocking.allowlist.annotations.enabled", true],
     ["browser.contentblocking.allowlist.storage.enabled", true],
     ["browser.contentblocking.enabled", true],
-    ["browser.contentblocking.ui.enabled", true],
     ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
   ]});
 
