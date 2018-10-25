@@ -10,14 +10,7 @@
  * http://w3c.github.io/mediacapture-worker/#imagebitmap-extensions
  */
 
-// This is needed because we don't support SVG element as canvas image source.
-// See bug 1500768.
-typedef (HTMLImageElement or
-         HTMLCanvasElement or
-         HTMLVideoElement or
-         ImageBitmap) CanvasImageSourceExcludedSVG;
-
-typedef (CanvasImageSourceExcludedSVG or
+typedef (CanvasImageSource or
          Blob or
          CanvasRenderingContext2D or // This is out of spec.
          ImageData) ImageBitmapSource;
