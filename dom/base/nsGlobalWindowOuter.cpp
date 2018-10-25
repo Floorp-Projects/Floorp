@@ -5784,6 +5784,22 @@ nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> a
     if (NS_WARN_IF(!providedPrincipal)) {
       return;
     }
+  } else {
+    // We still need to check the originAttributes if the target origin is '*'.
+    // But we will ingore the FPD here since the FPDs are possible to be different.
+    auto principal = BasePrincipal::Cast(GetPrincipal());
+    NS_ENSURE_TRUE_VOID(principal);
+
+    OriginAttributes targetAttrs = principal->OriginAttributesRef();
+    OriginAttributes sourceAttrs = aSubjectPrincipal.OriginAttributesRef();
+    MOZ_DIAGNOSTIC_ASSERT(sourceAttrs.EqualsIgnoringFPD(targetAttrs));
+
+    // If 'privacy.firstparty.isolate.block_post_message' is true, we will block
+    // postMessage across different first party domains.
+    if (OriginAttributes::IsBlockPostMessageForFPI() &&
+        sourceAttrs.mFirstPartyDomain != targetAttrs.mFirstPartyDomain) {
+      return;
+    }
   }
 
   // Create and asynchronously dispatch a runnable which will handle actual DOM
