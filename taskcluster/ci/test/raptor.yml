@@ -347,7 +347,7 @@ raptor-assorted-dom-chrome:
             - assorted-dom
 
 raptor-wasm-godot-firefox:
-    description: "Raptor Wasm GoDot on Firefox"
+    description: "Raptor Wasm Godot on Firefox"
     try-name: raptor-wasm-godot-firefox
     treeherder-symbol: Rap(godot)
     run-on-projects: ['try', 'mozilla-central']
@@ -358,7 +358,7 @@ raptor-wasm-godot-firefox:
             - --test=raptor-wasm-godot
 
 raptor-wasm-godot-chrome:
-    description: "Raptor Wasm GoDot on Chrome"
+    description: "Raptor Wasm Godot on Chrome"
     try-name: raptor-wasm-godot-chrome
     treeherder-symbol: Rap-C(godot)
     run-on-projects: ['try', 'mozilla-central']
@@ -368,3 +368,25 @@ raptor-wasm-godot-chrome:
         extra-options:
             - --test=raptor-wasm-godot
             - --app=chrome
+
+raptor-wasm-godot-baseline-firefox:
+    description: "Raptor Wasm Godot on Firefox with baseline JIT"
+    try-name: raptor-wasm-godot-baseline-firefox
+    treeherder-symbol: Rap(godot-b)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    max-run-time: 1500
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-godot-baseline
+
+raptor-wasm-godot-ion-firefox:
+    description: "Raptor WASM godot on Firefox with ION Monkey"
+    try-name: raptor-wasm-godot-ion-firefox
+    treeherder-symbol: Rap(godot-i)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    max-run-time: 1500
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-godot-ion
