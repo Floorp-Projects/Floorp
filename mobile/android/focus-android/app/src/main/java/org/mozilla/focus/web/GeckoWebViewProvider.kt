@@ -452,22 +452,22 @@ class GeckoWebViewProvider : IWebViewProvider {
                     val complete = when {
                         request.target == GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW -> {
                             geckoSession.loadUri(request.uri)
-                            AllowOrDeny.ALLOW
+                            AllowOrDeny.DENY
                         }
                         LocalizedContent.handleInternalContent(request.uri,
                                 this@GeckoWebView,
                                 context) -> {
-                            AllowOrDeny.ALLOW
+                            AllowOrDeny.DENY
                         }
                         !UrlUtils.isSupportedProtocol(uri.scheme) && callback != null &&
                                 IntentUtils.handleExternalUri(context,
                                         this@GeckoWebView,
                                         request.uri) -> {
-                            AllowOrDeny.ALLOW
+                            AllowOrDeny.DENY
                         }
                         else -> {
                             callback?.onRequest(request.isUserTriggered)
-                            AllowOrDeny.DENY
+                            AllowOrDeny.ALLOW
                         }
                     }
 

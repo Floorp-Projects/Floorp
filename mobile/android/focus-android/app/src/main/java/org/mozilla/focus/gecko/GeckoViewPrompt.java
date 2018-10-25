@@ -765,7 +765,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
 
     @Override
     public GeckoResult<AllowOrDeny> onPopupRequest(GeckoSession session, String targetUri) {
-        return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+        return GeckoResult.fromValue(AllowOrDeny.DENY);
     }
 
     public void onFileCallbackResult(final int resultCode, final Intent data) {
