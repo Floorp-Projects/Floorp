@@ -73,6 +73,9 @@
         public/build/browser.storage-memory.maven.zip:
           path: /build/android-components/components/browser/storage-memory/build/target.maven.zip
           name: browser-storage-memory
+        public/build/browser.storage-sync.maven.zip:
+          path: /build/android-components/components/browser/storage-sync/build/target.maven.zip
+          name: browser-storage-sync
         public/build/browser.domains.maven.zip:
           path: /build/android-components/components/browser/domains/build/target.maven.zip
           name: browser-domains
