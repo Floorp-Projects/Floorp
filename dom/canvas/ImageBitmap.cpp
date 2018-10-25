@@ -438,7 +438,7 @@ private:
 };
 
 static bool
-CheckSecurityForHTMLElements(bool aIsWriteOnly, bool aCORSUsed, nsIPrincipal* aPrincipal)
+CheckSecurityForElements(bool aIsWriteOnly, bool aCORSUsed, nsIPrincipal* aPrincipal)
 {
   if (aIsWriteOnly || !aPrincipal) {
     return false;
@@ -460,24 +460,24 @@ CheckSecurityForHTMLElements(bool aIsWriteOnly, bool aCORSUsed, nsIPrincipal* aP
 }
 
 static bool
-CheckSecurityForHTMLElements(const nsLayoutUtils::SurfaceFromElementResult& aRes)
+CheckSecurityForElements(const nsLayoutUtils::SurfaceFromElementResult& aRes)
 {
-  return CheckSecurityForHTMLElements(aRes.mIsWriteOnly, aRes.mCORSUsed, aRes.mPrincipal);
+  return CheckSecurityForElements(aRes.mIsWriteOnly, aRes.mCORSUsed, aRes.mPrincipal);
 }
 
 /*
  * A wrapper to the nsLayoutUtils::SurfaceFromElement() function followed by the
  * security checking.
  */
-template<class HTMLElementType>
+template<class ElementType>
 static already_AddRefed<SourceSurface>
-GetSurfaceFromElement(nsIGlobalObject* aGlobal, HTMLElementType& aElement, ErrorResult& aRv)
+GetSurfaceFromElement(nsIGlobalObject* aGlobal, ElementType& aElement, ErrorResult& aRv)
 {
   nsLayoutUtils::SurfaceFromElementResult res =
     nsLayoutUtils::SurfaceFromElement(&aElement, nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE);
 
   // check origin-clean
-  if (!CheckSecurityForHTMLElements(res)) {
+  if (!CheckSecurityForElements(res)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
@@ -494,11 +494,12 @@ GetSurfaceFromElement(nsIGlobalObject* aGlobal, HTMLElementType& aElement, Error
 
 /*
  * The specification doesn't allow to create an ImegeBitmap from a vector image.
- * This function is used to check if the given HTMLImageElement contains a
+ * This function is used to check if the given Image Element contains a
  * raster image.
  */
+template<class ElementType>
 static bool
-HasRasterImage(HTMLImageElement& aImageEl)
+HasRasterImage(ElementType& aImageEl)
 {
   nsresult rv;
 
@@ -893,6 +894,36 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl
 }
 
 /* static */ already_AddRefed<ImageBitmap>
+ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, SVGImageElement& aImageEl,
+                            const Maybe<IntRect>& aCropRect, ErrorResult& aRv)
+{
+  // Get the SourceSurface out from the image element and then do security
+  // checking.
+  RefPtr<SourceSurface> surface = GetSurfaceFromElement(aGlobal, aImageEl, aRv);
+
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  // Create ImageBitmap.
+  RefPtr<layers::Image> data = CreateImageFromSurface(surface);
+
+  if (NS_WARN_IF(!data)) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+
+  // Set the picture rectangle.
+  if (ret && aCropRect.isSome()) {
+    ret->SetPictureRect(aCropRect.ref(), aRv);
+  }
+
+  return ret.forget();
+}
+
+/* static */ already_AddRefed<ImageBitmap>
 ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl,
                             const Maybe<IntRect>& aCropRect, ErrorResult& aRv)
 {
@@ -914,7 +945,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl
   // Check security.
   nsCOMPtr<nsIPrincipal> principal = aVideoEl.GetCurrentVideoPrincipal();
   bool CORSUsed = aVideoEl.GetCORSMode() != CORS_NONE;
-  if (!CheckSecurityForHTMLElements(false, CORSUsed, principal)) {
+  if (!CheckSecurityForElements(false, CORSUsed, principal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
@@ -1373,6 +1404,10 @@ ImageBitmap::Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
     MOZ_ASSERT(NS_IsMainThread(),
                "Creating ImageBitmap from HTMLImageElement off the main thread.");
     imageBitmap = CreateInternal(aGlobal, aSrc.GetAsHTMLImageElement(), aCropRect, aRv);
+  } else if (aSrc.IsSVGImageElement()) {
+    MOZ_ASSERT(NS_IsMainThread(),
+               "Creating ImageBitmap from SVGImageElement off the main thread.");
+    imageBitmap = CreateInternal(aGlobal, aSrc.GetAsSVGImageElement(), aCropRect, aRv);
   } else if (aSrc.IsHTMLVideoElement()) {
     MOZ_ASSERT(NS_IsMainThread(),
                "Creating ImageBitmap from HTMLVideoElement off the main thread.");
