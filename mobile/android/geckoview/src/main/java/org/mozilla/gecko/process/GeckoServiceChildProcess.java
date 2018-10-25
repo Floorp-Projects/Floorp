@@ -102,8 +102,17 @@ public class GeckoServiceChildProcess extends Service {
                         }
                     }
 
-                    if (GeckoThread.initChildProcess(args, extras, flags, prefsFd, prefMapFd, ipcFd,
-                                                     crashReporterFd, crashAnnotationFd)) {
+                    final GeckoThread.InitInfo info = new GeckoThread.InitInfo();
+                    info.args = args;
+                    info.extras = extras;
+                    info.flags = flags;
+                    info.prefsFd = prefsFd;
+                    info.prefMapFd = prefMapFd;
+                    info.ipcFd = ipcFd;
+                    info.crashFd = crashReporterFd;
+                    info.crashAnnotationFd = crashAnnotationFd;
+
+                    if (GeckoThread.init(info)) {
                         GeckoThread.launch();
                     }
                 }
