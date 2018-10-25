@@ -43,8 +43,8 @@ then
   fi
   set -x
 else
-  # enable locale cache
-  export MBSDIFF_HOOK="/home/worker/bin/mbsdiff_hook.sh -c /tmp/fs-cache"
+  # disable caching
+  export MBSDIFF_HOOK=
 fi
 
 if [ ! -z "$FILENAME_TEMPLATE" ]; then
