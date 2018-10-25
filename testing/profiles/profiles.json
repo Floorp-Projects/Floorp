@@ -5,5 +5,6 @@
     "reftest": ["common", "reftest"],
     "talos": ["common", "perf"],
     "valgrind": ["common", "unittest"],
+    "xpcshell": ["xpcshell"],
     "web-platform-tests": ["common", "unittest", "web-platform"]
 }
