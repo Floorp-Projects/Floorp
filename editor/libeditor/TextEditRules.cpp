@@ -782,7 +782,7 @@ TextEditRules::WillInsertText(EditSubAction aEditSubAction,
     mPasswordText.Insert(*outString, start);
 
     if (LookAndFeel::GetEchoPassword() && !DontEchoPassword()) {
-      nsresult rv = HideLastPWInput();
+      nsresult rv = HideLastPasswordInputInternal();
       mLastStart = start;
       mLastLength = outString->Length();
       if (mTimer) {
@@ -1094,7 +1094,7 @@ TextEditRules::DeleteSelectionWithTransaction(
                                               start, end);
 
     if (LookAndFeel::GetEchoPassword()) {
-      rv = HideLastPWInput();
+      rv = HideLastPasswordInputInternal();
       mLastStart = start;
       mLastLength = 0;
       if (mTimer) {
@@ -1704,20 +1704,36 @@ TextEditRules::Notify(nsITimer* aTimer)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  Selection* selection = mTextEditor->GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
+  // Check whether our text editor's password flag was changed before this
+  // "hide password character" timer actually fires.
+  if (!IsPasswordEditor()) {
+    return NS_OK;
   }
 
-  AutoSafeEditorData setData(*this, *mTextEditor, *selection);
+  RefPtr<TextEditor> textEditor(mTextEditor);
+  nsresult rv = textEditor->HideLastPasswordInput();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+TextEditRules::HideLastPasswordInput(Selection& aSelection)
+{
+  MOZ_ASSERT(IsPasswordEditor());
+
+  AutoSafeEditorData setData(*this, *mTextEditor, aSelection);
 
   // Check whether our text editor's password flag was changed before this
   // "hide password character" timer actually fires.
-  nsresult rv = IsPasswordEditor() ? HideLastPWInput() : NS_OK;
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to hide last password input");
+  nsresult rv = HideLastPasswordInputInternal();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   ASSERT_PASSWORD_LENGTHS_EQUAL();
   mLastLength = 0;
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1728,7 +1744,7 @@ TextEditRules::GetName(nsACString& aName)
 }
 
 nsresult
-TextEditRules::HideLastPWInput()
+TextEditRules::HideLastPasswordInputInternal()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
