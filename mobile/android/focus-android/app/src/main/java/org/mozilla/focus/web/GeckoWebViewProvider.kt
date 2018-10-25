@@ -40,6 +40,7 @@ import org.mozilla.focus.utils.MobileMetricsPingStorage
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.webview.SystemWebView
+import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
@@ -89,8 +90,6 @@ class GeckoWebViewProvider : IWebViewProvider {
             runtimeSettingsBuilder.useContentProcessHint(true)
             runtimeSettingsBuilder.blockMalware(Settings.getInstance(context).shouldUseSafeBrowsing())
             runtimeSettingsBuilder.blockPhishing(Settings.getInstance(context).shouldUseSafeBrowsing())
-            runtimeSettingsBuilder.nativeCrashReportingEnabled(false)
-            runtimeSettingsBuilder.javaCrashReportingEnabled(false)
             geckoRuntime =
                     GeckoRuntime.create(context.applicationContext, runtimeSettingsBuilder.build())
         }
@@ -443,6 +442,37 @@ class GeckoWebViewProvider : IWebViewProvider {
         @Suppress("ComplexMethod")
         private fun createNavigationDelegate(): GeckoSession.NavigationDelegate {
             return object : GeckoSession.NavigationDelegate {
+                override fun onLoadRequest(
+                    session: GeckoSession,
+                    request: NavigationDelegate.LoadRequest
+                ): GeckoResult<AllowOrDeny>? {
+                    val uri = Uri.parse(request.uri)
+
+                    val complete = when {
+                        request.target == GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW -> {
+                            geckoSession.loadUri(request.uri)
+                            AllowOrDeny.ALLOW
+                        }
+                        LocalizedContent.handleInternalContent(request.uri,
+                                this@GeckoWebView,
+                                context) -> {
+                            AllowOrDeny.ALLOW
+                        }
+                        !UrlUtils.isSupportedProtocol(uri.scheme) && callback != null &&
+                                IntentUtils.handleExternalUri(context,
+                                        this@GeckoWebView,
+                                        request.uri) -> {
+                            AllowOrDeny.ALLOW
+                        }
+                        else -> {
+                            callback?.onRequest(request.isUserTriggered)
+                            AllowOrDeny.DENY
+                        }
+                    }
+
+                    return GeckoResult.fromValue(complete)
+                }
+
                 override fun onLoadError(
                     session: GeckoSession?,
                     uri: String?,
@@ -457,38 +487,6 @@ class GeckoWebViewProvider : IWebViewProvider {
                         return GeckoResult.fromValue(Base64.encodeToUriString(this))
                     }
                     return GeckoResult.fromValue(null)
-                }
-
-                override fun onLoadRequest(
-                    session: GeckoSession,
-                    uri: String,
-                    target: Int,
-                    flags: Int
-                ): GeckoResult<Boolean>? {
-                    val response: GeckoResult<Boolean> = GeckoResult()
-                    val urlToURI = Uri.parse(uri)
-                    // If this is trying to load in a new tab, just load it in the current one
-                    if (target == GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
-                        geckoSession.loadUri(uri)
-                        response.complete(true)
-                    } else if (LocalizedContent.handleInternalContent(
-                            uri,
-                            this@GeckoWebView,
-                            context
-                        )
-                    ) {
-                        response.complete(true)
-                    } else if (!UrlUtils.isSupportedProtocol(urlToURI.scheme) && callback != null &&
-                        IntentUtils.handleExternalUri(context, this@GeckoWebView, uri)
-                    ) {
-                        response.complete(true)
-                    } else {
-                        callback?.onRequest(flags == GeckoSession.NavigationDelegate.LOAD_REQUEST_IS_USER_TRIGGERED)
-
-                        // Otherwise allow the load to continue normally
-                        response.complete(false)
-                    }
-                    return response
                 }
 
                 override fun onNewSession(
