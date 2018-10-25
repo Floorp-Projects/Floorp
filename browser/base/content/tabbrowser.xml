@@ -590,7 +590,7 @@
 
           if (this.getAttribute("movingtab") != "true") {
             this.setAttribute("movingtab", "true");
-            this.parentNode.setAttribute("movingtab", "true");
+            gNavToolbox.setAttribute("movingtab", "true");
             if (!draggedTab.multiselected)
               this.selectedItem = draggedTab;
           }
@@ -717,7 +717,7 @@
           }
 
           this.removeAttribute("movingtab");
-          this.parentNode.removeAttribute("movingtab");
+          gNavToolbox.removeAttribute("movingtab");
 
           this._handleTabSelect();
         ]]></body>
@@ -1143,7 +1143,7 @@
         <parameter name="aContainer"/>
         <body><![CDATA[
           if (aContainer.ownerDocument == document &&
-              aContainer.id == "TabsToolbar") {
+              aContainer.id == "TabsToolbar-customization-target") {
             this._updateNewTabVisibility();
           }
         ]]></body>

@@ -85,11 +85,6 @@
   -moz-box-pack: center;
 }
 
-#titlebar-content {
-  /* Ensure the the content part of the titlebar does not shrink. */
-  min-height: inherit;
-}
-
 #titlebar-buttonbox > .titlebar-button {
   display: none;
 }
@@ -103,15 +98,15 @@
   -moz-box-align: center;
 }
 
-#titlebar-buttonbox-container {
+.titlebar-buttonbox-container {
   -moz-box-align: center;
 }
 
 /* These would be margin-inline-start/end if it wasn't for the fact that OS X
  * doesn't reverse the order of the items in the titlebar in RTL mode. */
-.titlebar-placeholder[type="caption-buttons"],
-#titlebar-buttonbox {
+.titlebar-buttonbox {
   margin-left: 12px;
+  margin-top: calc(-1 * var(--space-above-tabbar));
 }
 
 /* The fullscreen button doesnt show on Yosemite(10.10) or above so dont give it a
@@ -120,18 +115,6 @@
   .titlebar-placeholder[type="fullscreen-button"] {
     margin-right: 4px;
   }
-}
-
-#main-window:not([tabsintitlebar]) > #titlebar {
-  height: 22px; /* The native titlebar on OS X is 22px tall. */
-}
-
-/**
- * For tabs in titlebar on OS X, we stretch the titlebar down so that the
- * tabstrip can overlap it.
- */
-#main-window[tabsintitlebar] > #titlebar {
-  min-height: calc(var(--tab-min-height) + var(--space-above-tabbar));
 }
 
 /** End titlebar **/
@@ -148,9 +131,9 @@
 
 /* Draw the bottom border of the tabs toolbar when it's not using
    -moz-appearance: toolbar. */
-#main-window:-moz-any([sizemode="fullscreen"],[customize-entered]) #TabsToolbar:not([collapsed="true"]) + #nav-bar,
-#main-window:not([tabsintitlebar]) #TabsToolbar:not([collapsed="true"]) + #nav-bar,
-#TabsToolbar:not([collapsed="true"]) + #nav-bar:-moz-lwtheme {
+#main-window:-moz-any([sizemode="fullscreen"],[customize-entered]) #nav-bar:not([tabs-hidden="true"]),
+#main-window:not([tabsintitlebar]) #nav-bar:not([tabs-hidden="true"]),
+#nav-bar:not([tabs-hidden="true"]):-moz-lwtheme {
   box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border-color);
 }
 
@@ -164,12 +147,12 @@
     --tabs-border-color: rgba(0,0,0,.05);
   }
 
-  #main-window[tabsintitlebar] #TabsToolbar:not([collapsed="true"]) + #nav-bar:not(:-moz-lwtheme) {
+  #main-window[tabsintitlebar] #nav-bar:not([tabs-hidden="true"]):not(:-moz-lwtheme) {
     box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border-color);
   }
 }
 
-#TabsToolbar:not([collapsed="true"]) + #nav-bar {
+#nav-bar:not([tabs-hidden="true"]) {
   /* The toolbar buttons that animate are only visible when the #TabsToolbar is not collapsed.
      The animations use position:absolute and require a positioned #nav-bar. */
   position: relative;
@@ -643,12 +626,7 @@ html|input.urlbar-input {
 }
 
 #TabsToolbar {
-  -moz-appearance: none;
   padding-top: var(--space-above-tabbar);
-}
-
-:root:not([customizing]):not([tabsintitlebar]):not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme) {
-  -moz-appearance: toolbar;
 }
 
 #TabsToolbar:not(:-moz-lwtheme) {
@@ -961,10 +939,10 @@ html|*.addon-webext-perm-list {
 
 /* Private browsing and accessibility indicators */
 
-:root[accessibilitymode][tabsintitlebar]:not([inFullscreen]) > #navigator-toolbox > #TabsToolbar > .accessibility-indicator,
-:root[privatebrowsingmode=temporary][tabsintitlebar]:not([inFullscreen]) > #navigator-toolbox > #TabsToolbar > .private-browsing-indicator,
-:root[accessibilitymode]:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > .accessibility-indicator,
-:root[privatebrowsingmode=temporary]:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > .private-browsing-indicator {
+:root[accessibilitymode][tabsintitlebar]:not([inFullscreen]) > #navigator-toolbox > #titlebar > #TabsToolbar > .accessibility-indicator,
+:root[privatebrowsingmode=temporary][tabsintitlebar]:not([inFullscreen]) > #navigator-toolbox > #titlebar > #TabsToolbar > .private-browsing-indicator,
+:root[accessibilitymode]:not([tabsintitlebar]) > #navigator-toolbox > #titlebar > #TabsToolbar > #titlebar-secondary-buttonbox > .accessibility-indicator,
+:root[privatebrowsingmode=temporary]:not([tabsintitlebar]) > #navigator-toolbox > #titlebar > #TabsToolbar > #titlebar-secondary-buttonbox > .private-browsing-indicator {
   display: none;
 }
 

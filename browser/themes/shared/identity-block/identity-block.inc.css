@@ -151,6 +151,7 @@
   visibility: collapse;
   overflow: hidden;
   width: 20px;
+  height: 20px;
   margin-inline-end: -20px;
 }
 
@@ -172,7 +173,6 @@
 #tracking-protection-icon-box > #tracking-protection-icon-animatable-box {
   position: absolute;
   overflow: hidden;
-  top: calc(50% - 10px); /* half the height of the sprite */
   margin-inline-start: 4px;
   width: 16px;
   height: 20px;

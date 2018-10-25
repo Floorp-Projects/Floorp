@@ -723,110 +723,98 @@ xmlns="http://www.w3.org/1999/xhtml"
   </popupset>
   <box id="appMenu-viewCache" hidden="true"/>
 
-<vbox id="titlebar">
-  <hbox id="titlebar-content">
-    <spacer id="titlebar-spacer" flex="1"/>
-    <hbox id="titlebar-buttonbox-container">
-      <hbox id="titlebar-buttonbox" class="titlebar-color">
-        <toolbarbutton class="titlebar-button" id="titlebar-min" oncommand="window.minimize();"/>
-        <toolbarbutton class="titlebar-button" id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
-        <toolbarbutton class="titlebar-button" id="titlebar-close" command="cmd_closeWindow"/>
-      </hbox>
-    </hbox>
-#ifdef XP_MACOSX
-    <!-- OS X does not natively support RTL for its titlebar items, so we prevent this secondary
-         buttonbox from reversing order in RTL by forcing an LTR direction. -->
-    <hbox id="titlebar-secondary-buttonbox" dir="ltr">
-      <button class="accessibility-indicator" tooltiptext="&accessibilityIndicator.tooltip;" aria-live="polite"/>
-      <hbox class="private-browsing-indicator"/>
-      <hbox id="titlebar-fullscreen-button"/>
-    </hbox>
-#endif
-  </hbox>
-</vbox>
-
   <toolbox id="navigator-toolbox">
-    <!-- Menu -->
-    <toolbar type="menubar" id="toolbar-menubar"
-             class="browser-toolbar chromeclass-menubar titlebar-color"
-             customizable="true"
-             mode="icons"
+
+    <vbox id="titlebar">
+      <!-- Menu -->
+      <toolbar type="menubar" id="toolbar-menubar"
+               class="browser-toolbar chromeclass-menubar titlebar-color"
+               customizable="true"
+               mode="icons"
 #ifdef MENUBAR_CAN_AUTOHIDE
-             toolbarname="&menubarCmd.label;"
-             accesskey="&menubarCmd.accesskey;"
-             autohide="true"
+               toolbarname="&menubarCmd.label;"
+               accesskey="&menubarCmd.accesskey;"
+               autohide="true"
 #endif
-             context="toolbar-context-menu">
-      <toolbaritem id="menubar-items" align="center">
+               context="toolbar-context-menu">
+        <toolbaritem id="menubar-items" align="center">
 # The entire main menubar is placed into browser-menubar.inc, so that it can be
 # shared with other top level windows in macWindow.inc.xul.
 #include browser-menubar.inc
-      </toolbaritem>
+        </toolbaritem>
+        <spacer flex="1" />
+#include titlebar-items.inc.xul
+      </toolbar>
 
-#ifndef XP_MACOSX
-      <hbox class="titlebar-placeholder" type="caption-buttons" ordinal="1000"
-            skipintoolbarset="true"/>
-#endif
-    </toolbar>
+      <toolbar id="TabsToolbar"
+               class="browser-toolbar titlebar-color"
+               fullscreentoolbar="true"
+               customizable="true"
+               customizationtarget="TabsToolbar-customization-target"
+               mode="icons"
+               aria-label="&tabsToolbar.label;"
+               context="toolbar-context-menu"
+               flex="1">
+        <vbox flex="1" class="toolbar-items">
+          <spacer flex="1000"/>
 
-    <toolbar id="TabsToolbar"
-             class="browser-toolbar titlebar-color"
-             fullscreentoolbar="true"
-             customizable="true"
-             mode="icons"
-             aria-label="&tabsToolbar.label;"
-             context="toolbar-context-menu">
-      <hbox class="titlebar-placeholder" type="pre-tabs"
-            skipintoolbarset="true"/>
+          <hbox id="TabsToolbar-customization-target" flex="1">
+            <hbox class="titlebar-placeholder" type="pre-tabs"
+                  skipintoolbarset="true"/>
 
-      <tabs id="tabbrowser-tabs"
-            flex="1"
-            setfocus="false"
-            tooltip="tabbrowser-tab-tooltip"
-            stopwatchid="FX_TAB_CLICK_MS">
-        <tab class="tabbrowser-tab" selected="true" visuallyselected="true" fadein="true"/>
-      </tabs>
+            <tabs id="tabbrowser-tabs"
+                  flex="1"
+                  setfocus="false"
+                  tooltip="tabbrowser-tab-tooltip"
+                  stopwatchid="FX_TAB_CLICK_MS">
+              <tab class="tabbrowser-tab" selected="true" visuallyselected="true" fadein="true"/>
+            </tabs>
 
-      <toolbarbutton id="new-tab-button"
-                     class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&tabCmd.label;"
-                     command="cmd_newNavigatorTab"
-                     onclick="checkForMiddleClick(this, event);"
-                     tooltip="dynamic-shortcut-tooltip"
-                     ondrop="newTabButtonObserver.onDrop(event)"
-                     ondragover="newTabButtonObserver.onDragOver(event)"
-                     ondragenter="newTabButtonObserver.onDragOver(event)"
-                     ondragexit="newTabButtonObserver.onDragExit(event)"
-                     cui-areatype="toolbar"
-                     removable="true"/>
+            <toolbarbutton id="new-tab-button"
+                           class="toolbarbutton-1 chromeclass-toolbar-additional"
+                           label="&tabCmd.label;"
+                           command="cmd_newNavigatorTab"
+                           onclick="checkForMiddleClick(this, event);"
+                           tooltip="dynamic-shortcut-tooltip"
+                           ondrop="newTabButtonObserver.onDrop(event)"
+                           ondragover="newTabButtonObserver.onDragOver(event)"
+                           ondragenter="newTabButtonObserver.onDragOver(event)"
+                           ondragexit="newTabButtonObserver.onDragExit(event)"
+                           cui-areatype="toolbar"
+                           removable="true"/>
 
-      <toolbarbutton id="alltabs-button"
-                     class="toolbarbutton-1 chromeclass-toolbar-additional tabs-alltabs-button badged-button"
-                     oncommand="gTabsPanel.showAllTabsPanel();"
-                     label="&listAllTabs.label;"
-                     tooltiptext="&listAllTabs.label;"
-                     removable="false"/>
+            <toolbarbutton id="alltabs-button"
+                           class="toolbarbutton-1 chromeclass-toolbar-additional tabs-alltabs-button badged-button"
+                           oncommand="gTabsPanel.showAllTabsPanel();"
+                           label="&listAllTabs.label;"
+                           tooltiptext="&listAllTabs.label;"
+                           removable="false"/>
 
-      <hbox class="titlebar-placeholder" type="post-tabs"
-            ordinal="1000"
-            skipintoolbarset="true"/>
+            <hbox class="titlebar-placeholder" type="post-tabs"
+                  ordinal="1000"
+                  skipintoolbarset="true"/>
+          </hbox>
+        </vbox>
 
-      <button class="accessibility-indicator" tooltiptext="&accessibilityIndicator.tooltip;"
-              ordinal="1000"
-              aria-live="polite" skipintoolbarset="true"/>
-      <hbox class="private-browsing-indicator" skipintoolbarset="true"
-            ordinal="1000"/>
-      <hbox class="titlebar-placeholder" type="caption-buttons"
-#ifndef XP_MACOSX
-            ordinal="1000"
-#endif
-            skipintoolbarset="true"/>
+        <button class="accessibility-indicator titlebar-item"  tooltiptext="&accessibilityIndicator.tooltip;"
+                ordinal="1000"
+                aria-live="polite" skipintoolbarset="true"/>
+        <hbox class="private-browsing-indicator titlebar-item" skipintoolbarset="true"
+              ordinal="1000"/>
+#include titlebar-items.inc.xul
 
 #ifdef XP_MACOSX
-      <hbox class="titlebar-placeholder" type="fullscreen-button"
-            skipintoolbarset="true"/>
+        <!-- OS X does not natively support RTL for its titlebar items, so we prevent this secondary
+             buttonbox from reversing order in RTL by forcing an LTR direction. -->
+        <hbox id="titlebar-secondary-buttonbox" dir="ltr">
+          <button class="accessibility-indicator" tooltiptext="&accessibilityIndicator.tooltip;" aria-live="polite"/>
+          <hbox class="private-browsing-indicator"/>
+          <hbox id="titlebar-fullscreen-button"/>
+        </hbox>
 #endif
-    </toolbar>
+      </toolbar>
+
+    </vbox>
 
     <toolbar id="nav-bar"
              class="browser-toolbar"
