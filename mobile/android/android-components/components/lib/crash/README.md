@@ -172,7 +172,7 @@ crashReporter.submitReport(crash)
 
 ### Sending GeckoView crash reports
 
-⚠️ Note: For sending GeckoView crash reports GeckoView **63.0** or higher is required!
+⚠️ Note: For sending GeckoView crash reports GeckoView **64.0** or higher is required!
 
 Register `CrashHandlerService` as crash handler for GeckoView:
 
