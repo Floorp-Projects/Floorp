@@ -26,7 +26,7 @@ add_task(async function getPost() {
       search: alias,
       searchParam: "enable-actions",
       matches: [
-        makeSearchMatch(alias, {
+        makeSearchMatch(`${alias} `, {
           engineName: `Aliased${alias.toUpperCase()}MozSearch`,
           searchQuery: "",
           alias,
@@ -115,10 +115,10 @@ add_task(async function engineWithSuggestions() {
     engine.alias = alias;
 
     await check_autocomplete({
-      search: `${alias}`,
+      search: alias,
       searchParam: "enable-actions",
       matches: [
-        makeSearchMatch(alias, {
+        makeSearchMatch(`${alias} `, {
           engineName: SUGGESTIONS_ENGINE_NAME,
           alias,
           searchQuery: "",
@@ -150,13 +150,15 @@ add_task(async function engineWithSuggestions() {
           searchQuery: "fire",
           heuristic: true,
         }),
-        makeSearchMatch(`fire foo`, {
+        makeSearchMatch(`${alias} fire foo`, {
           engineName: SUGGESTIONS_ENGINE_NAME,
+          alias,
           searchQuery: "fire",
           searchSuggestion: "fire foo",
         }),
-        makeSearchMatch(`fire bar`, {
+        makeSearchMatch(`${alias} fire bar`, {
           engineName: SUGGESTIONS_ENGINE_NAME,
+          alias,
           searchQuery: "fire",
           searchSuggestion: "fire bar",
         }),
