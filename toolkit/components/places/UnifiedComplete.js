@@ -344,6 +344,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AboutPagesUtils: "resource://gre/modules/AboutPagesUtils.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PlacesRemoteTabsAutocompleteProvider: "resource://gre/modules/PlacesRemoteTabsAutocompleteProvider.jsm",
   PlacesSearchAutocompleteProvider: "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
@@ -478,23 +479,47 @@ function stripHttpAndTrim(spec, trimSlash = true) {
 
 /**
  * Returns the key to be used for a match in a map for the purposes of removing
- * duplicate entries - any 2 URLs that should be considered the same should
- * return the same key. For some moz-action URLs this will unwrap the params
- * and return a key based on the wrapped URL.
+ * duplicate entries - any 2 matches that should be considered the same should
+ * return the same key.  The type of the returned key depends on the type of the
+ * match, so don't assume you can compare keys using ==.  Instead, use
+ * ObjectUtils.deepEqual().
+ *
+ * @param   {object} match
+ *          The match object.
+ * @returns {value} Some opaque key object.  Use ObjectUtils.deepEqual() to
+ *          compare keys.
  */
-function makeKeyForURL(match) {
-  let url = match.value;
-  let action = PlacesUtils.parseActionUrl(url);
-  // At this stage we only consider moz-action URLs.
-  if (!action || !("url" in action.params)) {
-    // For autofill entries, we need to have a key based on the comment rather
-    // than the value field, because the latter may have been trimmed.
-    if (match.hasOwnProperty("style") && match.style.includes("autofill")) {
-      url = match.comment;
-    }
-    return [stripHttpAndTrim(url), null];
+function makeKeyForMatch(match) {
+  // For autofill entries, we need to have a key based on the comment rather
+  // than the value field, because the latter may have been trimmed.
+  if (match.hasOwnProperty("style") && match.style.includes("autofill")) {
+    return [stripHttpAndTrim(match.comment), null];
   }
-  return [stripHttpAndTrim(action.params.url), action];
+
+  let action = PlacesUtils.parseActionUrl(match.value);
+  if (!action) {
+    return [stripHttpAndTrim(match.value), null];
+  }
+
+  let key;
+  switch (action.type) {
+    case "searchengine":
+      // We want to exclude search suggestion matches that simply echo back the
+      // query string in the heuristic result.  For example, if the user types
+      // "@engine test", we want to exclude a "test" suggestion match.
+      key = [
+        action.type,
+        action.params.engineName,
+        (action.params.searchSuggestion || action.params.searchQuery)
+          .toLocaleLowerCase(),
+      ];
+      break;
+    default:
+      key = stripHttpAndTrim(action.params.url || match.value);
+      break;
+  }
+
+  return [key, action];
 }
 
 /**
@@ -815,7 +840,7 @@ Search.prototype = {
     // If the query is simply "@", then the results should be a list of all the
     // search engines with "@" aliases, without a hueristic result.
     if (this._trimmedOriginalSearchString == "@") {
-      let added = await this._addSearchEngineTokenAliasResults();
+      let added = await this._addSearchEngineTokenAliasMatches();
       if (added) {
         this._cleanUpNonCurrentMatches(null);
         this._autocompleteSearch.finishSearch(true);
@@ -867,19 +892,24 @@ Search.prototype = {
       ExtensionSearchHandler.handleInputCancelled();
     }
 
+    // Start adding search suggestions, unless they aren't required or the
+    // window is private.
     let searchSuggestionsCompletePromise = Promise.resolve();
-    if (this._enableActions) {
+    if (this._enableActions &&
+        this.hasBehavior("searches") &&
+        !this._inPrivateWindow) {
+      // Get the query string stripped of any engine alias or restriction token.
+      // In the former case, _searchTokens[0] will be the alias, so use
+      // this._searchEngineHeuristicMatch.query.  In the latter case, the token
+      // has been removed from _searchTokens, so use _searchTokens.join().
       let query =
         this._searchEngineAliasMatch ? this._searchEngineAliasMatch.query :
         this._searchTokens.join(" ");
       if (query) {
         // Limit the string sent for search suggestions to a maximum length.
         query = query.substr(0, UrlbarPrefs.get("maxCharsForSearchSuggestions"));
-        // Avoid fetching suggestions if they are not required, private browsing
-        // mode is enabled, or the query may expose sensitive information.
-        if (this.hasBehavior("searches") &&
-            !this._inPrivateWindow &&
-            !this._prohibitSearchSuggestionsFor(query)) {
+        // Don't add suggestions if the query may expose sensitive information.
+        if (!this._prohibitSearchSuggestionsFor(query)) {
           let engine;
           if (this._searchEngineAliasMatch) {
             engine = this._searchEngineAliasMatch.engine;
@@ -889,12 +919,16 @@ Search.prototype = {
               return;
             }
           }
+          let alias =
+            this._searchEngineAliasMatch &&
+            this._searchEngineAliasMatch.alias ||
+            "";
           searchSuggestionsCompletePromise =
-            this._matchSearchSuggestions(engine, query);
+            this._matchSearchSuggestions(engine, query, alias);
           // If the user has used a search engine alias, then the only results
           // we want to show are suggestions from that engine, so we're done.
           // We're also done if we're restricting results to suggestions.
-          if (this._searchEngineAliasMatch || this.hasBehavior("restrict")) {
+          if (alias || this.hasBehavior("restrict")) {
             // Wait for the suggestions to be added.
             await searchSuggestionsCompletePromise;
             this._cleanUpNonCurrentMatches(null);
@@ -1088,20 +1122,15 @@ Search.prototype = {
    *
    * @returns {bool} True if any results were added, false if not.
    */
-  async _addSearchEngineTokenAliasResults() {
+  async _addSearchEngineTokenAliasMatches() {
     let engines = await PlacesSearchAutocompleteProvider.tokenAliasEngines();
     if (!engines || !engines.length) {
       return false;
     }
     for (let { engine, tokenAliases } of engines) {
-      let alias = tokenAliases[0];
-      // `input` should have a trailing space so that when the user selects the
-      // result, they can start typing their query without first having to enter
-      // a space between the alias and query.
       this._addSearchEngineMatch({
         engine,
-        alias,
-        input: alias + " ",
+        alias: tokenAliases[0],
       });
     }
     return true;
@@ -1262,7 +1291,7 @@ Search.prototype = {
     return false;
   },
 
-  _matchSearchSuggestions(engine, searchString) {
+  _matchSearchSuggestions(engine, searchString, alias) {
     this._suggestionsFetch =
       PlacesSearchAutocompleteProvider.newSuggestionsFetch(
         engine,
@@ -1290,6 +1319,7 @@ Search.prototype = {
         if (!looksLikeUrl(suggestion)) {
           this._addSearchEngineMatch({
             engine,
+            alias,
             query: searchString,
             suggestion,
             historical,
@@ -1545,40 +1575,47 @@ Search.prototype = {
    * @param {bool} [historical]
    *        True if you're adding a suggestion match and the suggestion is from
    *        the user's local history (and not the search engine).
-   * @param {string} [input]
-   *        Use this value to override the action.params.input that this method
-   *        would otherwise compute.
    */
   _addSearchEngineMatch({engine,
                          query = "",
                          alias = undefined,
                          suggestion = undefined,
-                         historical = false,
-                         input = undefined}) {
+                         historical = false}) {
     let actionURLParams = {
       engineName: engine.name,
-      input: input || suggestion || this._originalSearchString,
       searchQuery: query,
     };
-    if (alias) {
-      actionURLParams.alias = alias;
-    }
+
     if (suggestion) {
-      actionURLParams.searchSuggestion = suggestion;
+      // `input` should include the alias.
+      actionURLParams.input = (alias ? `${alias} ` : "") + suggestion;
+    } else if (alias && !query) {
+      // `input` should have a trailing space so that when the user selects the
+      // result, they can start typing their query without first having to enter
+      // a space between the alias and query.
+      actionURLParams.input = `${alias} `;
+    } else {
+      actionURLParams.input = this._originalSearchString;
     }
-    let value = PlacesUtils.mozActionURI("searchengine", actionURLParams);
+
     let match = {
-      value,
       comment: engine.name,
-      icon: engine.iconURI ? engine.iconURI.spec : null,
+      icon: engine.iconURI && !suggestion ? engine.iconURI.spec : null,
       style: "action searchengine",
       frecency: FRECENCY_DEFAULT,
     };
+
+    if (alias) {
+      actionURLParams.alias = alias;
+      match.style += " alias";
+    }
     if (suggestion) {
+      actionURLParams.searchSuggestion = suggestion;
       match.style += " suggestion";
       match.type = UrlbarUtils.MATCH_GROUP.SUGGESTION;
     }
 
+    match.value = PlacesUtils.mozActionURI("searchengine", actionURLParams);
     this._addMatch(match);
   },
 
@@ -1836,16 +1873,16 @@ Search.prototype = {
     // Note: this partially fixes Bug 1222435,  but not if the urls differ more
     // than just by "http://". We should still evaluate www and other schemes
     // equivalences.
-    let [urlMapKey, action] = makeKeyForURL(match);
+    let [urlMapKey, action] = makeKeyForMatch(match);
     if ((match.placeId && this._usedPlaceIds.has(match.placeId)) ||
-        this._usedURLs.map(e => e.key).includes(urlMapKey)) {
+        this._usedURLs.some(e => ObjectUtils.deepEqual(e.key, urlMapKey))) {
       let isDupe = true;
       if (action && ["switchtab", "remotetab"].includes(action.type)) {
         // The new entry is a switch/remote tab entry, look for the duplicate
         // among current matches.
         for (let i = 0; i < this._usedURLs.length; ++i) {
           let {key: matchKey, action: matchAction, type: matchType} = this._usedURLs[i];
-          if (matchKey == urlMapKey) {
+          if (ObjectUtils.deepEqual(matchKey, urlMapKey)) {
             isDupe = true;
             // Don't replace the match if the existing one is heuristic and the
             // new one is a switchtab, instead also add the switchtab match.

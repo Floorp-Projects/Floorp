@@ -22,9 +22,18 @@ add_task(async function() {
   await promiseAutocompleteResultPopup("open a search");
   let result = await waitForAutocompleteResultAt(0);
   isnot(result, null, "Should have a result");
-  is(result.getAttribute("url"),
-     `moz-action:searchengine,{"engineName":"MozSearch","input":"open%20a%20search","searchQuery":"open%20a%20search"}`,
-     "Result should be a moz-action: for the correct search engine");
+  Assert.deepEqual(
+    PlacesUtils.parseActionUrl(result.getAttribute("url")),
+    {
+      type: "searchengine",
+      params: {
+        engineName: "MozSearch",
+        input: "open a search",
+        searchQuery: "open a search",
+      },
+    },
+    "Result should be a moz-action: for the correct search engine"
+  );
   is(result.hasAttribute("image"), false, "Result shouldn't have an image attribute");
 
   let tabPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
