@@ -634,6 +634,11 @@ nsFileControlFrame::UpdateDisplayedValue(const nsAString& aValue, bool aNotify)
     if (auto* textFrame = static_cast<nsTextFrame*>(text->GetPrimaryFrame())) {
       textFrame->NotifyNativeAnonymousTextnodeChange(oldLength);
     }
+    nsBlockFrame* label = do_QueryFrame(mTextContent->GetPrimaryFrame());
+    if (label && label->LinesBegin() != label->LinesEnd()) {
+      label->AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
+      label->LinesBegin()->MarkDirty();
+    }
   }
 }
 
