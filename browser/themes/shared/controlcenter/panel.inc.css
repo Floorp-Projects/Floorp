@@ -383,6 +383,15 @@ description#identity-popup-content-verifier,
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
 }
 
+/* We can currently show either the old tracking protection-only UI, which has "Tracking Protection"
+ * as a label, or the new content blocking UI which has a different label and also a list of
+ * categories of blockers. This rule hides elements depending on which UI we want to show */
+#identity-popup-content-blocking-content[contentBlockingUI] #tracking-protection-label,
+#identity-popup-content-blocking-content:not([contentBlockingUI]) #content-blocking-label,
+#identity-popup-content-blocking-content:not([contentBlockingUI]) > #identity-popup-content-blocking-category-list {
+  display: none;
+}
+
 /* Disabled label */
 
 #identity-popup-content-blocking-disabled-label {
@@ -408,6 +417,11 @@ description#identity-popup-content-verifier,
   display: -moz-box;
   background-color: #d70022;
   stroke: #d70022;
+}
+
+#identity-popup-content-blocking-content:not([contentBlockingUI]):not([enabled]) #identity-popup-content-blocking-disabled-label {
+  background-color: #b1b1b3;
+  stroke: #b1b1b3;
 }
 
 #identity-popup-content-blocking-content:not([enabled]) #identity-popup-content-blocking-disabled-label-exception {
