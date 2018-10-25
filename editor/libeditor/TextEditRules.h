@@ -104,8 +104,6 @@ public:
    */
   virtual bool DocumentIsEmpty();
 
-  virtual nsresult DocumentModified();
-
 protected:
   virtual ~TextEditRules();
 

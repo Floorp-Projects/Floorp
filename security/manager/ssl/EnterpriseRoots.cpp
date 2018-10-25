@@ -41,11 +41,11 @@ CertIsTrustAnchorForTLSServerAuth(PCCERT_CONTEXT certificate)
   PCCERT_CHAIN_CONTEXT pChainContext = nullptr;
   CERT_ENHKEY_USAGE enhkeyUsage;
   memset(&enhkeyUsage, 0, sizeof(CERT_ENHKEY_USAGE));
-  LPSTR identifiers[] = {
+  LPCSTR identifiers[] = {
     "1.3.6.1.5.5.7.3.1", // id-kp-serverAuth
   };
   enhkeyUsage.cUsageIdentifier = ArrayLength(identifiers);
-  enhkeyUsage.rgpszUsageIdentifier = identifiers;
+  enhkeyUsage.rgpszUsageIdentifier = const_cast<LPSTR*>(identifiers); // -Wwritable-strings
   CERT_USAGE_MATCH certUsage;
   memset(&certUsage, 0, sizeof(CERT_USAGE_MATCH));
   certUsage.dwType = USAGE_MATCH_TYPE_AND;

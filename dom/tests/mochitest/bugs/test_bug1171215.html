@@ -29,7 +29,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1022869
         // Cookies are set up, disallow third-party cookies and start the test.
         SpecialPowers.pushPrefEnv({ set: [
             ["browser.contentblocking.enabled", true],
-            ["browser.contentblocking.ui.enabled", true],
             ["network.cookie.cookieBehavior", 1],
           ]}, () => { continueTest(); });
     }).catch((e) => { ok(false, `Got exception: ${e}`) });

@@ -54,6 +54,7 @@ class Raptor(object):
         self.control_server = None
         self.playback = None
         self.benchmark = None
+        self.post_startup_delay = 30000  # raptor webext pause time after browser startup
 
         # Create the profile; for geckoview we want a firefox profile type
         if self.config['app'] == 'geckoview':
@@ -139,6 +140,7 @@ class Raptor(object):
         gen_test_config(self.config['app'],
                         test['name'],
                         self.control_server.port,
+                        self.post_startup_delay,
                         benchmark_port)
 
         # for android we must make the benchmarks server available to the device
@@ -148,6 +150,8 @@ class Raptor(object):
             self.device.create_socket_connection('reverse', _tcp_port, _tcp_port)
 
         # must intall raptor addon each time because we dynamically update some content
+        # note: for chrome the addon is just a list of paths that ultimately are added
+        # to the chromium command line '--load-extension' argument
         raptor_webext = os.path.join(webext_dir, 'raptor')
         self.log.info("installing webext %s" % raptor_webext)
         self.profile.addons.install(raptor_webext)
@@ -232,6 +236,9 @@ class Raptor(object):
 
         # convert to seconds and account for page cycles
         timeout = int(timeout / 1000) * int(test['page_cycles'])
+        # account for the pause the raptor webext runner takes after browser startup
+        timeout += int(self.post_startup_delay / 1000)
+
         try:
             elapsed_time = 0
             while not self.control_server._finished:
@@ -253,10 +260,13 @@ class Raptor(object):
             self.playback.stop()
 
         # remove the raptor webext; as it must be reloaded with each subtest anyway
-        # applies to firefox only; chrome the addon is actually just cmd line arg
+        self.log.info("removing webext %s" % raptor_webext)
         if self.config['app'] in ["firefox", "geckoview"]:
-            self.log.info("removing webext %s" % raptor_webext)
             self.profile.addons.remove_addon(webext_id)
+
+        # for chrome the addon is just a list (appended to cmd line)
+        if self.config['app'] in ["chrome", "chrome-android"]:
+            self.profile.addons.remove(raptor_webext)
 
         if self.config['app'] != "geckoview":
             if self.runner.is_running():
