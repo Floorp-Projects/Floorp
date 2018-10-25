@@ -6161,6 +6161,7 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
     } else {
       metadata = scrollFrame->ComputeScrollMetadata(
         aEntry->mLayer->Manager(), mContainerReferenceFrame, Some(mParameters), clip);
+      scrollFrame->NotifyApzTransaction();
       mCachedScrollMetadata.mASR = asr;
       mCachedScrollMetadata.mClip = clip;
       mCachedScrollMetadata.mMetadata = metadata;

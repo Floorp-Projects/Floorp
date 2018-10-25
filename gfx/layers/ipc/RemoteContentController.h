@@ -39,7 +39,7 @@ public:
 
   virtual ~RemoteContentController();
 
-  virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) override;
+  virtual void RequestContentRepaint(const RepaintRequest& aRequest) override;
 
   virtual void HandleTap(TapType aTapType,
                          const LayoutDevicePoint& aPoint,

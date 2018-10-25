@@ -227,6 +227,7 @@ EXPORTS.mozilla.layers += [
     'PersistentBufferProvider.h',
     'ProfilerScreenshots.h',
     'RenderTrace.h',
+    'RepaintRequest.h',
     'RotatedBuffer.h',
     'ShareableCanvasRenderer.h',
     'SourceSurfaceSharedData.h',

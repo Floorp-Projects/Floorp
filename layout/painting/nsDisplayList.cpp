@@ -7229,7 +7229,7 @@ nsDisplaySubDocument::ComputeScrollMetadata(
   nsRect viewport = mFrame->GetRect() - mFrame->GetPosition() +
                     mFrame->GetOffsetToCrossDoc(ReferenceFrame());
 
-  return MakeUnique<ScrollMetadata>(
+  UniquePtr<ScrollMetadata> metadata = MakeUnique<ScrollMetadata>(
     nsLayoutUtils::ComputeScrollMetadata(mFrame,
                                          rootScrollFrame,
                                          rootScrollFrame->GetContent(),
@@ -7240,6 +7240,12 @@ nsDisplaySubDocument::ComputeScrollMetadata(
                                          Nothing(),
                                          isRootContentDocument,
                                          Some(params)));
+  nsIScrollableFrame* scrollableFrame = rootScrollFrame->GetScrollTargetFrame();
+  if (scrollableFrame) {
+    scrollableFrame->NotifyApzTransaction();
+  }
+
+  return metadata;
 }
 
 static bool
@@ -7932,6 +7938,10 @@ nsDisplayScrollInfoLayer::ComputeScrollMetadata(
                                          false,
                                          Some(aContainerParameters));
   metadata.GetMetrics().SetIsScrollInfoLayer(true);
+  nsIScrollableFrame* scrollableFrame = mScrollFrame->GetScrollTargetFrame();
+  if (scrollableFrame) {
+    scrollableFrame->NotifyApzTransaction();
+  }
 
   return UniquePtr<ScrollMetadata>(new ScrollMetadata(metadata));
 }
