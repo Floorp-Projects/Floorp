@@ -219,17 +219,10 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
   // property amounts to anything.
 
   if (0 == mLineNumber && !HasPrevInFlow(mBlockReflowInput->mFrame)) {
-    const nsStyleCoord &textIndent = mStyleText->mTextIndent;
-    nscoord pctBasis = 0;
-    if (textIndent.HasPercent()) {
-      pctBasis =
-        mBlockReflowInput->GetContainingBlockContentISize(aWritingMode);
-    }
-    nscoord indent = textIndent.ComputeCoordPercentCalc(pctBasis);
-
-    mTextIndent = indent;
-
-    psd->mICoord += indent;
+    nscoord pctBasis = mBlockReflowInput->ComputedISize();
+    mTextIndent = nsLayoutUtils::ResolveToLength<false>(mStyleText->mTextIndent,
+                                                        pctBasis);
+    psd->mICoord += mTextIndent;
   }
 
   PerFrameData* pfd = NewPerFrameData(mBlockReflowInput->mFrame);
