@@ -43,7 +43,7 @@ class TestCheckSchema(unittest.TestCase):
         with self.assertRaises(Exception):
             Schema({"kebab-case": int}).extend({"camelCase": int})
 
-    def test_extend_schema(self):
+    def test_extend_schema_twice(self):
         "Extending a schema twice applies taskgraph checks."
         with self.assertRaises(Exception):
             Schema({"kebab-case": int}).extend({'more-kebab': int}).extend({"camelCase": int})
