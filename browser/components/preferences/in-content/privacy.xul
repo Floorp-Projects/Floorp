@@ -19,15 +19,11 @@
 <!-- Tracking / Content Blocking -->
 <groupbox id="trackingGroup" data-category="panePrivacy" hidden="true" aria-describedby="contentBlockingDescription">
   <caption>
-    <label id="trackingProtectionHeader" hidden="true" data-l10n-id="tracking-header"/>
     <label id="contentBlockingHeader" data-l10n-id="content-blocking-header"/>
   </caption>
   <vbox data-subcategory="trackingprotection">
     <hbox align="start">
       <vbox flex="1">
-        <description id="trackingProtectionDescription" class="description-with-side-element" hidden="true" data-l10n-id="tracking-desc">
-          <html:a id="trackingProtectionLearnMore" data-l10n-name="learn-more" target="_blank" class="learnMore text-link"/>
-        </description>
         <description id="contentBlockingDescription" class="description-with-side-element" data-l10n-id="content-blocking-desc"></description>
         <label id="contentBlockingLearnMore" data-l10n-id="content-blocking-learn-more" class="learnMore text-link"/>
       </vbox>
@@ -165,53 +161,13 @@
         </hbox>
       </hbox>
     </vbox>
-    <hbox id="trackingProtectionBox" hidden="true">
-      <vbox flex="1">
-        <vbox>
-          <hbox id="trackingProtectionExtensionContentLabel" align="center" hidden="true">
-            <description control="disableTrackingProtectionExtension" flex="1"/>
-          </hbox>
-          <vbox>
-            <description id="trackingProtectionDesc"
-                         control="trackingProtectionRadioGroup">
-              <label data-l10n-id="tracking-mode-label"/>
-            </description>
-            <radiogroup id="trackingProtectionRadioGroup" aria-labelledby="trackingProtectionDesc">
-              <radio value="always"
-                     data-l10n-id="tracking-mode-always"/>
-              <radio value="private"
-                     data-l10n-id="tracking-mode-private"/>
-              <radio value="never"
-                     data-l10n-id="tracking-mode-never"/>
-            </radiogroup>
-          </vbox>
-        </vbox>
-      </vbox>
-      <vbox id="trackingProtectionAdvancedSettings">
-        <hbox id="trackingProtectionExtensionContentButton" hidden="true">
-          <button id="disableTrackingProtectionExtension"
-                  class="extension-controlled-button accessory-button"
-                  flex="1"
-                  data-l10n-id="disable-extension"/>
-        </hbox>
-        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-        <hbox>
-          <button id="changeBlockList"
-                  class="accessory-button"
-                  flex="1"
-                  data-l10n-id="tracking-change-block-list"
-                  preference="pref.privacy.disable_button.change_blocklist"
-                  search-l10n-ids="blocklist-window.title, blocklist-desc, blocklist-button-cancel.label, blocklist-button-ok.label"/>
-        </hbox>
-      </vbox>
-    </hbox>
     <vbox id="doNotTrackLearnMoreBox">
       <label><label class="tail-with-learn-more" data-l10n-id="do-not-track-description" id="doNotTrackDesc"></label><label
       class="learnMore text-link" href="https://www.mozilla.org/dnt"
       data-l10n-id="do-not-track-learn-more"></label></label>
       <radiogroup id="doNotTrackRadioGroup" aria-labelledby="doNotTrackDesc" preference="privacy.donottrackheader.enabled">
         <radio value="true" data-l10n-id="do-not-track-option-always"/>
-        <radio value="false" data-l10n-id="do-not-track-option-default"/>
+        <radio value="false" data-l10n-id="do-not-track-option-default-content-blocking"/>
       </radiogroup>
     </vbox>
   </vbox>
