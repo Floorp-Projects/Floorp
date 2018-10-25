@@ -1489,15 +1489,17 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    *        Data about a modification to a rule. @see |modifyProperties()|
    */
   logChange(change) {
-    let prevValue = this._declarations[change.index]
-      ? this._declarations[change.index].value
-      : null;
-    const prevName = this._declarations[change.index]
-      ? this._declarations[change.index].name
-      : null;
-    const prevPriority = this._declarations[change.index]
-      ? this._declarations[change.index].priority
-      : null;
+    // Destructure properties from the previous CSS declaration at this index, if any,
+    // to new variable names to indicate the previous state.
+    let {
+      value: prevValue,
+      name: prevName,
+      priority: prevPriority,
+      commentOffsets,
+    } = this._declarations[change.index] || {};
+    // A declaration is disabled if it has a `commentOffsets` array.
+    // Here we type coerce the value to a boolean with double-bang (!!)
+    const prevDisabled = !!commentOffsets;
     // Append the "!important" string if defined in the previous priority flag.
     prevValue = (prevValue && prevPriority) ? `${prevValue} !important` : prevValue;
 
@@ -1569,6 +1571,15 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // property name. Using the previous name handles the case for renaming a property
         // and is harmless when updating an existing value (the name stays the same).
         data.remove = prevValue ? { property: prevName, value: prevValue } : null;
+
+        // When toggling a declaration from OFF to ON, if not renaming the property,
+        // do not mark the previous declaration for removal, otherwise the add and
+        // remove operations will cancel each other out when tracked. Tracked changes
+        // have no context of "disabled", only "add" or remove, like diffs.
+        if (prevDisabled && !change.newName && prevValue === newValue) {
+          data.remove = null;
+        }
+
         break;
 
       case "remove":
