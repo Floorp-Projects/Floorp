@@ -68,6 +68,8 @@ tasks:
         deadline: {$fromNow: '2 hours'}
         provisionerId: aws-provisioner-v1
         workerType: github-worker
+        routes:
+          - 'notify.irc-channel.#android-ci.on-any'
         scopes:
           - queue:create-task:aws-provisioner-v1/github-worker
           - queue:scheduler-id:taskcluster-github

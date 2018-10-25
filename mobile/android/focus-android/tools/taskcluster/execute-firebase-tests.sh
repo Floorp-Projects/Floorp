@@ -105,7 +105,7 @@ test_targets=$(echo "${test_targets}" | sed '$!s~$~\\~g')
 sed "s/TEST_TARGETS/${test_targets}/g" $FLANK_CONF_TEMPLATE > $FLANK_CONF
 rm -f TEST_TARGETS
 $JAVA_BIN -jar $FLANK_BIN android run --config=$FLANK_CONF
-cp -r "$PATH_TOOLS/results" "$WORKDIR/test_artifacts"
+cp -r "$WORKDIR/results" "$WORKDIR/test_artifacts"
 
 exitcode=$?
 
