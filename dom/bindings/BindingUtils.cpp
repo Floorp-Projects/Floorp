@@ -56,7 +56,6 @@
 #include "mozilla/dom/XULPopupElementBinding.h"
 #include "mozilla/dom/XULTextElementBinding.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/ResolveSystemBinding.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
@@ -3510,29 +3509,6 @@ UnwrapWindowProxyImpl(JSContext* cx,
   nsCOMPtr<nsPIDOMWindowOuter> outer = inner->GetOuterWindow();
   outer.forget(ppArg);
   return NS_OK;
-}
-
-bool
-SystemGlobalResolve(JSContext* cx, JS::Handle<JSObject*> obj,
-                    JS::Handle<jsid> id, bool* resolvedp)
-{
-  if (!ResolveGlobal(cx, obj, id, resolvedp)) {
-    return false;
-  }
-
-  if (*resolvedp) {
-    return true;
-  }
-
-  return ResolveSystemBinding(cx, obj, id, resolvedp);
-}
-
-bool
-SystemGlobalEnumerate(JSContext* cx, JS::Handle<JSObject*> obj)
-{
-  bool ignored = false;
-  return JS_EnumerateStandardClasses(cx, obj) &&
-         ResolveSystemBinding(cx, obj, JSID_VOIDHANDLE, &ignored);
 }
 
 template<decltype(JS::NewMapObject) Method>

@@ -13,6 +13,7 @@
 #include "mozilla/Unused.h"
 #include "nsASCIIMask.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsIClearDataService.h"
 #include "nsIHttpChannel.h"
@@ -20,6 +21,7 @@
 #include "nsIObserverService.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptError.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
 
 using namespace mozilla;
@@ -194,6 +196,26 @@ ClearSiteData::ClearDataFromChannel(nsIHttpChannel* aChannel)
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
 
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  if (NS_WARN_IF(!ssm)) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = ssm->GetChannelResultPrincipal(aChannel, getter_AddRefs(principal));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsCOMPtr<nsIContentSecurityManager> csm =
+    do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);
+
+  bool secure;
+  rv = csm->IsOriginPotentiallyTrustworthy(principal, &secure);
+  if (NS_WARN_IF(NS_FAILED(rv)) || !secure) {
+    return;
+  }
+
   // We want to use the final URI to check if Clear-Site-Data should be allowed
   // or not.
   rv = aChannel->GetURI(getter_AddRefs(uri));
@@ -201,24 +223,9 @@ ClearSiteData::ClearDataFromChannel(nsIHttpChannel* aChannel)
     return;
   }
 
-  if (!IsSecureURI(uri)) {
-    return;
-  }
-
   uint32_t flags = ParseHeader(aChannel, uri);
   if (flags == 0) {
     // Nothing to do.
-    return;
-  }
-
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  if (NS_WARN_IF(!ssm)) {
-    return;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal;
-  rv = ssm->GetChannelURIPrincipal(aChannel, getter_AddRefs(principal));
-  if (NS_WARN_IF(NS_FAILED(rv)) || !principal) {
     return;
   }
 
@@ -262,21 +269,6 @@ ClearSiteData::ClearDataFromChannel(nsIHttpChannel* aChannel)
     LogOpToConsole(aChannel, uri, eExecutionContexts);
     BrowsingContextsReload(holder, principal);
   }
-}
-
-bool
-ClearSiteData::IsSecureURI(nsIURI* aURI) const
-{
-  MOZ_ASSERT(aURI);
-
-  bool prioriAuthenticated = false;
-  if (NS_WARN_IF(NS_FAILED(NS_URIChainHasFlags(aURI,
-                                               nsIProtocolHandler::URI_IS_POTENTIALLY_TRUSTWORTHY,
-                                               &prioriAuthenticated)))) {
-    return false;
-  }
-
-  return prioriAuthenticated;
 }
 
 uint32_t

@@ -545,7 +545,7 @@ PaintFromMainThread()
 void
 NotifyPaintComplete()
 {
-  MOZ_RELEASE_ASSERT(Thread::Current()->Id() == gCompositorThreadId);
+  MOZ_RELEASE_ASSERT(!gCompositorThreadId || Thread::Current()->Id() == gCompositorThreadId);
 
   // Notify the main thread in case it is waiting for this paint to complete.
   {
@@ -577,22 +577,21 @@ Repaint(size_t* aWidth, size_t* aHeight)
   // and the last graphics we sent will still be correct.
   Thread* compositorThread = Thread::GetById(gCompositorThreadId);
   if (!compositorThread->WillDivergeFromRecordingSoon()) {
+    // Allow the compositor to diverge from the recording so it can perform
+    // any paint we are about to trigger, or finish any in flight paint that
+    // that existed at the point we are paused at.
+    Thread::GetById(gCompositorThreadId)->SetShouldDivergeFromRecording();
+    Thread::ResumeSingleIdleThread(gCompositorThreadId);
+
     // Create an artifical vsync to see if graphics have changed since the last
     // paint and a new paint is needed.
     NotifyVsyncObserver();
 
-    if (gNumPendingPaints) {
-      // Allow the compositor to diverge from the recording so it can perform
-      // any paint we just triggered, or finish any in flight paint that that
-      // existed at the point we are paused at.
-      Thread::GetById(gCompositorThreadId)->SetShouldDivergeFromRecording();
-
-      // Wait for the compositor to finish all in flight paints, including any
-      // one we just triggered.
-      MonitorAutoLock lock(*gMonitor);
-      while (gNumPendingPaints) {
-        gMonitor->Wait();
-      }
+    // Wait for the compositor to finish all in flight paints, including any
+    // one we just triggered.
+    MonitorAutoLock lock(*gMonitor);
+    while (gNumPendingPaints) {
+      gMonitor->Wait();
     }
   }
 

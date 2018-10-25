@@ -446,10 +446,12 @@ APZUpdater::RunOnControllerThread(LayersId aLayersId, already_AddRefed<Runnable>
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
 
+  RefPtr<Runnable> task = aTask;
+
   RunOnUpdaterThread(aLayersId, NewRunnableFunction(
       "APZUpdater::RunOnControllerThread",
       &APZThreadUtils::RunOnControllerThread,
-      std::move(aTask)));
+      std::move(task)));
 }
 
 bool

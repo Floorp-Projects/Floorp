@@ -127,6 +127,9 @@ private:
   // File descriptor to notify to wake the thread up, fixed at creation.
   FileHandle mNotifyfd;
 
+  // Whether the thread should attempt to idle.
+  Atomic<bool, SequentiallyConsistent, Behavior::DontPreserve> mShouldIdle;
+
   // Whether the thread is waiting on idlefd.
   Atomic<bool, SequentiallyConsistent, Behavior::DontPreserve> mIdle;
 
@@ -289,6 +292,13 @@ public:
   // After WaitForIdleThreads(), the main thread will call this to allow
   // other threads to resume execution.
   static void ResumeIdleThreads();
+
+  // Allow a single thread to resume execution.
+  static void ResumeSingleIdleThread(size_t aId);
+
+  // Return whether this thread is in the idle state entered after
+  // WaitForIdleThreads.
+  bool IsIdle() { return mIdle; }
 };
 
 // This uses a stack pointer instead of TLS to make sure events are passed

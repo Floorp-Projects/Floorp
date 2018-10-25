@@ -206,5 +206,79 @@ WebIDLGlobalNameHash::GetNames(JSContext* aCx, JS::Handle<JSObject*> aObj,
   return true;
 }
 
+/* static */
+bool
+WebIDLGlobalNameHash::ResolveForSystemGlobal(JSContext* aCx,
+                                             JS::Handle<JSObject*> aObj,
+                                             JS::Handle<jsid> aId,
+                                             bool* aResolvedp)
+{
+  MOZ_ASSERT(JS_IsGlobalObject(aObj));
+
+  // First we try to resolve standard classes.
+  if (!JS_ResolveStandardClass(aCx, aObj, aId, aResolvedp)) {
+    return false;
+  }
+  if (*aResolvedp) {
+    return true;
+  }
+
+  // We don't resolve any non-string entries.
+  if (!JSID_IS_STRING(aId)) {
+    return true;
+  }
+
+  // XXX(nika): In the Window case, we unwrap our global object here to handle
+  // XRays. I don't think we ever create xrays to system globals, so I believe
+  // we can skip this step.
+  MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(aObj), "Xrays not supported!");
+
+  // Look up the corresponding entry in the name table, and resolve if enabled.
+  const WebIDLNameTableEntry* entry = GetEntry(JSID_TO_FLAT_STRING(aId));
+  if (entry && (!entry->mEnabled || entry->mEnabled(aCx, aObj))) {
+    if (NS_WARN_IF(!GetPerInterfaceObjectHandle(aCx, entry->mConstructorId,
+                                                entry->mCreate,
+                                                /* aDefineOnGlobal = */ true))) {
+      return Throw(aCx, NS_ERROR_FAILURE);
+    }
+
+    *aResolvedp = true;
+  }
+  return true;
+}
+
+/* static */
+bool
+WebIDLGlobalNameHash::NewEnumerateSystemGlobal(JSContext* aCx,
+                                               JS::Handle<JSObject*> aObj,
+                                               JS::AutoIdVector& aProperties,
+                                               bool aEnumerableOnly)
+{
+  MOZ_ASSERT(JS_IsGlobalObject(aObj));
+
+  if (!JS_NewEnumerateStandardClasses(aCx, aObj, aProperties, aEnumerableOnly)) {
+    return false;
+  }
+
+  // All properties defined on our global are non-enumerable, so we can skip
+  // remaining properties.
+  if (aEnumerableOnly) {
+    return true;
+  }
+
+  // Enumerate all entries & add enabled ones.
+  for (size_t i = 0; i < sCount; ++i) {
+    const WebIDLNameTableEntry& entry = sEntries[i];
+    if (!entry.mEnabled || entry.mEnabled(aCx, aObj)) {
+      JSString* str = JS_AtomizeStringN(aCx, sNames + entry.mNameOffset,
+                                        entry.mNameLength);
+      if (!str || !aProperties.append(NON_INTEGER_ATOM_TO_JSID(str))) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla

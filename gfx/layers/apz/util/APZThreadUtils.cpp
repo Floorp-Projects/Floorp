@@ -41,9 +41,9 @@ APZThreadUtils::AssertOnControllerThread() {
 }
 
 /*static*/ void
-APZThreadUtils::RunOnControllerThread(already_AddRefed<Runnable> aTask)
+APZThreadUtils::RunOnControllerThread(RefPtr<Runnable>&& aTask)
 {
-  RefPtr<Runnable> task = aTask;
+  RefPtr<Runnable> task = std::move(aTask);
 
   if (!sControllerThread) {
     // Could happen on startup

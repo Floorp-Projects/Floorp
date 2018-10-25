@@ -3,13 +3,19 @@
 
 "use strict";
 
+// Import helpers for the workers
+/* import-globals-from helper_workers.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/helper_workers.js",
+  this);
+
 // The following "connectionClosed" rejection should not be left uncaught. This
 // test has been whitelisted until the issue is fixed.
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
 PromiseTestUtils.expectUncaughtRejection(/[object Object]/);
 
-var TAB_URL = EXAMPLE_URL + "doc_WorkerTargetActor.attachThread-tab.html";
-var WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
+const TAB_URL = EXAMPLE_URL + "doc_WorkerTargetActor.attachThread-tab.html";
+const WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 
 add_task(async function() {
   await pushPrefs(["devtools.scratchpad.enabled", true]);
@@ -17,21 +23,21 @@ add_task(async function() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
   await connect(client);
 
-  let tab = await addTab(TAB_URL);
-  let { tabs } = await listTabs(client);
-  let [, targetFront] = await attachTarget(client, findTab(tabs, TAB_URL));
+  const tab = await addTab(TAB_URL);
+  const { tabs } = await listTabs(client);
+  const [, targetFront] = await attachTarget(client, findTab(tabs, TAB_URL));
 
   await listWorkers(targetFront);
   await createWorkerInTab(tab, WORKER_URL);
 
-  let { workers } = await listWorkers(targetFront);
-  let [, workerTargetFront] = await attachWorker(targetFront,
+  const { workers } = await listWorkers(targetFront);
+  const [, workerTargetFront] = await attachWorker(targetFront,
                                              findWorker(workers, WORKER_URL));
 
-  let toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerTargetFront),
+  const toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerTargetFront),
                                             "jsdebugger",
                                             Toolbox.HostType.WINDOW);
 
@@ -48,8 +54,8 @@ add_task(async function() {
   ok(toolbox.win.parent.document.title.includes(WORKER_URL),
      "worker URL in host title");
 
-  let toolTabs = toolbox.doc.querySelectorAll(".devtools-tab");
-  let activeTools = [...toolTabs].map(tab=>tab.getAttribute("data-id"));
+  const toolTabs = toolbox.doc.querySelectorAll(".devtools-tab");
+  const activeTools = [...toolTabs].map(toolTab => toolTab.getAttribute("data-id"));
 
   is(activeTools.join(","), "webconsole,jsdebugger,scratchpad",
     "Correct set of tools supported by worker");

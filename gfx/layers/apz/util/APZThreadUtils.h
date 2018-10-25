@@ -45,7 +45,7 @@ public:
    * this function is called from the controller thread itself then the task is
    * run immediately without getting queued.
    */
-  static void RunOnControllerThread(already_AddRefed<Runnable> aTask);
+  static void RunOnControllerThread(RefPtr<Runnable>&& aTask);
 
   /**
    * Returns true if currently on APZ "controller thread".
