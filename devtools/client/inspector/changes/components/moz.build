@@ -6,4 +6,5 @@
 
 DevToolsModules(
     'ChangesApp.js',
+    'CSSDeclaration.js',
 )
