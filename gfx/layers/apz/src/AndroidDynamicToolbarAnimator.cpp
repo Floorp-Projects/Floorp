@@ -628,7 +628,7 @@ AndroidDynamicToolbarAnimator::ProcessTouchDelta(const RefPtr<APZCTreeManager>& 
       // be safe to use.
       aApz->ProcessDynamicToolbarMovement(mControllerLastEventTimeStamp,
                                           aTimeStamp,
-                                          -(float)aDelta);
+                                          (float)aDelta);
     }
   }
 
