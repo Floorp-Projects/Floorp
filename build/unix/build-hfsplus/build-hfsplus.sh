@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# hfsplus needs to be rebuilt when changing the clang version used to build it.
+# Until bug 1471905 is addressed, increase the following number
+# when that happens: 1
+
 set -e
 set -x
 

@@ -107,7 +107,7 @@ private:
 
 // static
 already_AddRefed<nsXPCWrappedJSClass>
-nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID, bool allowNonScriptable)
+nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID)
 {
     XPCJSRuntime* xpcrt = nsXPConnect::GetRuntimeInstance();
     IID2WrappedJSClassMap* map = xpcrt->GetWrappedJSClassMap();
@@ -116,11 +116,7 @@ nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID, bool allowNonScr
     if (!clasp) {
         const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByIID(aIID);
         if (info) {
-            bool canScript, isBuiltin;
-            if (NS_SUCCEEDED(info->IsScriptable(&canScript)) && (canScript || allowNonScriptable) &&
-                NS_SUCCEEDED(info->IsBuiltinClass(&isBuiltin)) && !isBuiltin &&
-                nsXPConnect::IsISupportsDescendant(info))
-            {
+            if (!info->IsBuiltinClass() && nsXPConnect::IsISupportsDescendant(info)) {
                 clasp = new nsXPCWrappedJSClass(cx, aIID, info);
                 if (!clasp->mDescriptors) {
                     clasp = nullptr;
@@ -135,37 +131,27 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(JSContext* cx, REFNSIID aIID,
                                          const nsXPTInterfaceInfo* aInfo)
     : mRuntime(nsXPConnect::GetRuntimeInstance()),
       mInfo(aInfo),
-      mName(nullptr),
       mIID(aIID),
       mDescriptors(nullptr)
 {
     mRuntime->GetWrappedJSClassMap()->Add(this);
 
-    uint16_t methodCount;
-    if (NS_SUCCEEDED(mInfo->GetMethodCount(&methodCount))) {
-        if (methodCount) {
-            int wordCount = (methodCount/32)+1;
-            if (nullptr != (mDescriptors = new uint32_t[wordCount])) {
-                int i;
-                // init flags to 0;
-                for (i = wordCount-1; i >= 0; i--) {
-                    mDescriptors[i] = 0;
-                }
-
-                for (i = 0; i < methodCount; i++) {
-                    const nsXPTMethodInfo* info;
-                    if (NS_SUCCEEDED(mInfo->GetMethodInfo(i, &info))) {
-                        SetReflectable(i, XPCConvert::IsMethodReflectable(*info));
-                    } else {
-                        delete [] mDescriptors;
-                        mDescriptors = nullptr;
-                        break;
-                    }
-                }
+    uint16_t methodCount = mInfo->MethodCount();
+    if (methodCount) {
+        int wordCount = (methodCount/32)+1;
+        if (nullptr != (mDescriptors = new uint32_t[wordCount])) {
+            int i;
+            // init flags to 0;
+            for (i = wordCount-1; i >= 0; i--) {
+                mDescriptors[i] = 0;
             }
-        } else {
-            mDescriptors = &zero_methods_descriptor;
+
+            for (i = 0; i < methodCount; i++) {
+                SetReflectable(i, XPCConvert::IsMethodReflectable(mInfo->Method(i)));
+            }
         }
+    } else {
+        mDescriptors = &zero_methods_descriptor;
     }
 }
 
@@ -176,10 +162,6 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
     }
     if (mRuntime) {
         mRuntime->GetWrappedJSClassMap()->Remove(this);
-    }
-
-    if (mName) {
-        free(mName);
     }
 }
 
@@ -226,19 +208,10 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
         return nullptr;
     }
 
-    // Ensure that we are asking for a scriptable interface.
-    // NB:  It's important for security that this check is here rather
-    // than later, since it prevents untrusted objects from implementing
-    // some interfaces in JS and aggregating a trusted object to
-    // implement intentionally (for security) unscriptable interfaces.
-    // We so often ask for nsISupports that we can short-circuit the test...
+    // Ensure that we are asking for a non-builtinclass interface
     if (!aIID.Equals(NS_GET_IID(nsISupports))) {
-        bool allowNonScriptable = mozilla::jsipc::IsWrappedCPOW(jsobj);
-
         const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByIID(aIID);
-        if (!info || info->IsBuiltinClass() ||
-            (!info->IsScriptable() && !allowNonScriptable))
-        {
+        if (!info || info->IsBuiltinClass()) {
             return nullptr;
         }
     }
@@ -1081,11 +1054,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
         // If the interface is marked as a [function] then we will assume that
         // our JSObject is a function and not an object with a named method.
 
-        bool isFunction;
-        if (NS_FAILED(mInfo->IsFunction(&isFunction))) {
-            goto pre_call_clean_up;
-        }
-
         // In the xpidl [function] case we are making sure now that the
         // JSObject is callable. If it is *not* callable then we silently
         // fallback to looking up the named property...
@@ -1098,7 +1066,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
         // pass this along to the caller as an exception/result code.
 
         fval = ObjectValue(*obj);
-        if (!isFunction || JS_TypeOfValue(ccx, fval) != JSTYPE_FUNCTION) {
+        if (!mInfo->IsFunction() || JS_TypeOfValue(ccx, fval) != JSTYPE_FUNCTION) {
             if (!JS_GetPropertyById(cx, obj, id, &fval)) {
                 goto pre_call_clean_up;
             }
@@ -1338,10 +1306,7 @@ pre_call_clean_up:
 const char*
 nsXPCWrappedJSClass::GetInterfaceName()
 {
-    if (!mName) {
-        mInfo->GetName(&mName);
-    }
-    return mName;
+    return mInfo->Name();
 }
 
 static const JSClass XPCOutParamClass = {
@@ -1370,12 +1335,8 @@ nsXPCWrappedJSClass::DebugDump(int16_t depth)
     depth-- ;
     XPC_LOG_ALWAYS(("nsXPCWrappedJSClass @ %p with mRefCnt = %" PRIuPTR, this, mRefCnt.get()));
     XPC_LOG_INDENT();
-        char* name;
-        mInfo->GetName(&name);
+        const char* name = mInfo->Name();
         XPC_LOG_ALWAYS(("interface name is %s", name));
-        if (name) {
-            free(name);
-        }
         char * iid = mIID.ToString();
         XPC_LOG_ALWAYS(("IID number is %s", iid ? iid : "invalid"));
         if (iid) {
@@ -1384,15 +1345,11 @@ nsXPCWrappedJSClass::DebugDump(int16_t depth)
         XPC_LOG_ALWAYS(("InterfaceInfo @ %p", mInfo));
         uint16_t methodCount = 0;
         if (depth) {
-            uint16_t i;
-            const nsXPTInterfaceInfo* parent;
             XPC_LOG_INDENT();
-            mInfo->GetParent(&parent);
-            XPC_LOG_ALWAYS(("parent @ %p", parent));
-            mInfo->GetMethodCount(&methodCount);
+            XPC_LOG_ALWAYS(("parent @ %p", mInfo->GetParent()));
+            methodCount = mInfo->MethodCount();
             XPC_LOG_ALWAYS(("MethodCount = %d", methodCount));
-            mInfo->GetConstantCount(&i);
-            XPC_LOG_ALWAYS(("ConstantCount = %d", i));
+            XPC_LOG_ALWAYS(("ConstantCount = %d", mInfo->ConstantCount()));
             XPC_LOG_OUTDENT();
         }
         XPC_LOG_ALWAYS(("mRuntime @ %p", mRuntime));

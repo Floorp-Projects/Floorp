@@ -118,7 +118,7 @@ class Output(object):
                 elif 'wasm-misc' in test.measurements:
                     subtests, vals = self.parseWASMMiscOutput(test)
                 elif 'wasm-godot' in test.measurements:
-                    subtests, vals = self.parseWASMGoDotOutput(test)
+                    subtests, vals = self.parseWASMGodotOutput(test)
                 suite['subtests'] = subtests
 
             else:
@@ -219,7 +219,7 @@ class Output(object):
 
         return subtests, vals
 
-    def parseWASMGoDotOutput(self, test):
+    def parseWASMGodotOutput(self, test):
         '''
             {u'wasm-godot': [
                 {

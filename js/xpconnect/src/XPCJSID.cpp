@@ -309,24 +309,21 @@ nsJSIID::~nsJSIID() {}
 
 NS_IMETHODIMP nsJSIID::GetName(char * *aName)
 {
-    return mInfo->GetName(aName);
+    *aName = moz_xstrdup(mInfo->Name());
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsJSIID::GetNumber(char * *aNumber)
 {
     char str[NSID_LENGTH];
-    const nsIID* id;
-    mInfo->GetIIDShared(&id);
-    id->ToProvidedString(str);
+    mInfo->IID().ToProvidedString(str);
     *aNumber = (char*) moz_xmemdup(str, NSID_LENGTH);
     return NS_OK;
 }
 
 NS_IMETHODIMP_(const nsID*) nsJSIID::GetID()
 {
-    const nsIID* id;
-    mInfo->GetIIDShared(&id);
-    return id;
+    return &mInfo->IID();
 }
 
 NS_IMETHODIMP nsJSIID::GetValid(bool* aValid)
@@ -346,7 +343,7 @@ NS_IMETHODIMP nsJSIID::Equals(nsIJSID* other, bool* _retval)
         return NS_OK;
     }
 
-    mInfo->IsIID(other->GetID(), _retval);
+    *_retval = mInfo->IID() == *other->GetID();
     return NS_OK;
 }
 
@@ -357,7 +354,8 @@ NS_IMETHODIMP nsJSIID::Initialize(const char* idString)
 
 NS_IMETHODIMP nsJSIID::ToString(char** _retval)
 {
-    return mInfo->GetName(_retval);
+    *_retval = moz_xstrdup(mInfo->Name());
+    return NS_OK;
 }
 
 // static
@@ -366,10 +364,6 @@ nsJSIID::NewID(const nsXPTInterfaceInfo* aInfo)
 {
     if (!aInfo) {
         NS_ERROR("no info");
-        return nullptr;
-    }
-
-    if (!aInfo->IsScriptable()) {
         return nullptr;
     }
 
@@ -537,8 +531,7 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative* wrapper,
     // we have a JSObject
     RootedObject obj(cx, &val.toObject());
 
-    const nsIID* iid;
-    mInfo->GetIIDShared(&iid);
+    const nsIID* iid = &mInfo->IID();
     return xpc::HasInstance(cx, obj, iid, bp);
 }
 

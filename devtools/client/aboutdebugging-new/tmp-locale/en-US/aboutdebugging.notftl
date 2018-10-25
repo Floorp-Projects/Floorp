@@ -36,6 +36,10 @@ about-debugging-sidebar-item-connect-button = Connect
 # successfully connecting to them. Temporary UI, do not localize.
 about-debugging-sidebar-item-connected-label = Connected
 
+# Temporary text displayed in a sidebar button to refresh USB devices. Temporary
+# UI, do not localize.
+about-debugging-refresh-usb-devices-button = Refresh devices
+
 # Title of the Connect page.
 about-debugging-connect-title = Connect a Device
 

@@ -16,10 +16,13 @@ const {
   NETWORK_LOCATIONS_UPDATED,
   PAGE_SELECTED,
   PAGES,
+  USB_RUNTIMES_SCAN_START,
+  USB_RUNTIMES_SCAN_SUCCESS,
 } = require("../constants");
 
 const NetworkLocationsModule = require("../modules/network-locations");
 const { adbAddon } = require("devtools/shared/adb/adb-addon");
+const { refreshUSBRuntimes } = require("../modules/usb-runtimes");
 
 const Actions = require("./index");
 
@@ -102,10 +105,24 @@ function uninstallAdbAddon() {
   };
 }
 
+function scanUSBRuntimes() {
+  return async (dispatch, getState) => {
+    // do not re-scan if we are already doing it
+    if (getState().ui.isScanningUsb) {
+      return;
+    }
+
+    dispatch({ type: USB_RUNTIMES_SCAN_START });
+    await refreshUSBRuntimes();
+    dispatch({ type: USB_RUNTIMES_SCAN_SUCCESS });
+  };
+}
+
 module.exports = {
   addNetworkLocation,
   installAdbAddon,
   removeNetworkLocation,
+  scanUSBRuntimes,
   selectPage,
   uninstallAdbAddon,
   updateAdbAddonStatus,

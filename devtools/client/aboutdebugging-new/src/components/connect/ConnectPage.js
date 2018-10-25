@@ -121,7 +121,7 @@ class ConnectPage extends PureComponent {
       },
       dom.button(
         {
-          className: "std-button connect-page__usb__toggle-button " +
+          className: "default-button connect-page__usb__toggle-button " +
                      "js-connect-usb-toggle-button",
           disabled,
           onClick: () => this.onToggleUSBClick(),

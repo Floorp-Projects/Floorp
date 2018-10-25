@@ -138,6 +138,7 @@ function setBrokenImageTooltip(tooltip, doc) {
 
   tooltip.panel.innerHTML = "";
   tooltip.panel.appendChild(div);
+  tooltip.setContentSize({width: "auto", height: "auto"});
 }
 
 module.exports.getImageDimensions = getImageDimensions;

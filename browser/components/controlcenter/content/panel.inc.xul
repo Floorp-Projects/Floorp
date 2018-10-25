@@ -7,6 +7,7 @@
        hidden="true"
        photon="true"
        role="alertdialog"
+       aria-labelledby="identity-popup-mainView-panel-header-span"
        onpopupshown="gIdentityHandler.onPopupShown(event);"
        onpopuphidden="gIdentityHandler.onPopupHidden(event);"
        orient="vertical">
