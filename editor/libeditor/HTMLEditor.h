@@ -981,6 +981,13 @@ protected: // May be called by friends.
   nsresult SetPositionToAbsolute(Element& aElement);
   nsresult SetPositionToStatic(Element& aElement);
 
+  /**
+   * OnModifyDocument() is called when the editor is changed.  This should
+   * be called only by HTMLEditRules::DocumentModifiedWorker() to call
+   * HTMLEditRules::OnModifyDocument().
+   */
+  MOZ_CAN_RUN_SCRIPT void OnModifyDocument();
+
 protected: // Called by helper classes.
   virtual void
   OnStartToHandleTopLevelEditSubAction(
