@@ -452,6 +452,16 @@
   { 0x92, 0x05, 0xc3, 0x09, 0xce, 0xb2, 0xd6, 0x41 } \
 }
 
+#define NS_NETWORKCONNECTIVITYSERVICE_CONTRACTID \
+    "@mozilla.org/network/network-connectivity-service;1"
+#define NS_NETWORKCONNECTIVITYSERVICE_CID \
+{ /* 2693457e-3ba5-4455-991f-5350946adb12 */ \
+    0x2693457e, \
+    0x3ba5, \
+    0x4455, \
+  { 0x99, 0x1f, 0x53, 0x50, 0x94, 0x6a, 0xdb, 0x12 } \
+}
+
 /******************************************************************************
  * netwerk/cache/ classes
  */
