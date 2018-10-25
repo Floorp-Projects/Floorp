@@ -28,7 +28,6 @@ sync protocol PRenderFrame
     manager PBrowser;
 
 parent:
-    async NotifyCompositorTransaction();
 
     async __delete__();
 };

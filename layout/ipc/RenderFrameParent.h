@@ -8,10 +8,8 @@
 #define mozilla_layout_RenderFrameParent_h
 
 #include "mozilla/Attributes.h"
-#include <map>
 
 #include "mozilla/dom/ipc/IdType.h"
-#include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layout/PRenderFrameParent.h"
@@ -22,94 +20,48 @@ class nsSubDocumentFrame;
 
 namespace mozilla {
 
-class InputEvent;
 
 namespace layers {
-class AsyncDragMetrics;
-class TargetConfig;
 struct TextureFactoryIdentifier;
-struct ScrollableLayerGuid;
 } // namespace layers
 
 namespace layout {
 
 class RenderFrameParent final : public PRenderFrameParent
 {
-  typedef mozilla::layers::AsyncDragMetrics AsyncDragMetrics;
-  typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::CompositorOptions CompositorOptions;
-  typedef mozilla::layers::ContainerLayer ContainerLayer;
-  typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::LayersId LayersId;
-  typedef mozilla::layers::TargetConfig TargetConfig;
-  typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::layers::TextureFactoryIdentifier TextureFactoryIdentifier;
-  typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
-  typedef mozilla::layers::TouchBehaviorFlags TouchBehaviorFlags;
-  typedef mozilla::layers::ZoomConstraints ZoomConstraints;
-  typedef ScrollableLayerGuid::ViewID ViewID;
-
 public:
 
-
-  /**
-   * Select the desired scrolling behavior.  If ASYNC_PAN_ZOOM is
-   * chosen, then RenderFrameParent will watch input events and use
-   * them to asynchronously pan and zoom.
-   */
   explicit RenderFrameParent(nsFrameLoader* aFrameLoader);
   virtual ~RenderFrameParent();
 
-  bool Init(nsFrameLoader* aFrameLoader);
-  bool IsInitted();
+  bool Initialize(nsFrameLoader* aFrameLoader);
   void Destroy();
 
-
-  already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
-                                     nsIFrame* aFrame,
-                                     LayerManager* aManager,
-                                     nsDisplayItem* aItem,
-                                     const ContainerLayerParameters& aContainerParameters);
-
+  void EnsureLayersConnected(CompositorOptions* aCompositorOptions);
+  LayerManager* AttachLayerManager();
   void OwnerContentChanged(nsIContent* aContent);
 
-  bool HitTest(const nsRect& aRect);
+  nsFrameLoader* GetFrameLoader() const { return mFrameLoader; }
+  LayersId GetLayersId() const { return mLayersId; }
+  CompositorOptions GetCompositorOptions() const { return mCompositorOptions; }
 
-  void GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier);
+  void GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier) const;
 
-  inline LayersId GetLayersId() const { return mLayersId; }
-  inline bool IsLayersConnected() const { return mLayersConnected; }
-  inline CompositorOptions GetCompositorOptions() const { return mCompositorOptions; }
-
-  void TakeFocusForClickFromTap();
-
-  void EnsureLayersConnected(CompositorOptions* aCompositorOptions);
-
-  LayerManager* AttachLayerManager();
-
-  nsFrameLoader* FrameLoader() const
-  {
-    return mFrameLoader;
-  }
+  bool IsInitialized() const { return mInitialized; }
+  bool IsLayersConnected() const { return mLayersConnected; }
 
 protected:
   void ActorDestroy(ActorDestroyReason why) override;
 
-  virtual mozilla::ipc::IPCResult RecvNotifyCompositorTransaction() override;
-
 private:
-  void TriggerRepaint();
-  void DispatchEventForPanZoomController(const InputEvent& aEvent);
-
   // When our child frame is pushing transactions directly to the
   // compositor, this is the ID of its layer tree in the compositor's
   // context.
   LayersId mLayersId;
-  // A flag that indicates whether or not the compositor knows about the
-  // layers id. In some cases this RenderFrameParent is not connected to the
-  // compositor and so this flag is false.
-  bool mLayersConnected;
   // The compositor options for this layers id. This is only meaningful if
   // the compositor actually knows about this layers id (i.e. when mLayersConnected
   // is true).
@@ -118,24 +70,11 @@ private:
   RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<LayerManager> mLayerManager;
 
-  // True after Destroy() has been called, which is triggered
-  // originally by nsFrameLoader::Destroy().  After this point, we can
-  // no longer safely ask the frame loader to find its nearest layer
-  // manager, because it may have been disconnected from the DOM.
-  // It's still OK to *tell* the frame loader that we've painted after
-  // it's destroyed; it'll just ignore us, and we won't be able to
-  // find an nsIFrame to invalidate.  See ShadowLayersUpdated().
-  //
-  // Prefer the extra bit of state to null'ing out mFrameLoader in
-  // Destroy() so that less code needs to be special-cased for after
-  // Destroy().
-  //
-  // It's possible for mFrameLoader==null and
-  // mFrameLoaderDestroyed==false.
-  bool mFrameLoaderDestroyed;
-
-  bool mAsyncPanZoomEnabled;
-  bool mInitted;
+  bool mInitialized;
+  // A flag that indicates whether or not the compositor knows about the
+  // layers id. In some cases this RenderFrameParent is not connected to the
+  // compositor and so this flag is false.
+  bool mLayersConnected;
 };
 
 } // namespace layout
@@ -148,7 +87,15 @@ private:
  */
 class nsDisplayRemote final : public nsDisplayItem
 {
+  typedef mozilla::dom::TabId TabId;
+  typedef mozilla::gfx::Matrix4x4 Matrix4x4;
+  typedef mozilla::layers::EventRegionsOverride EventRegionsOverride;
+  typedef mozilla::layers::Layer Layer;
+  typedef mozilla::layers::LayersId LayersId;
+  typedef mozilla::layers::RefLayer RefLayer;
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
+  typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
+  typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
 
 public:
   nsDisplayRemote(nsDisplayListBuilder* aBuilder,
@@ -177,13 +124,12 @@ public:
   NS_DISPLAY_DECL_NAME("Remote", TYPE_REMOTE)
 
 private:
-  mozilla::layers::LayersId GetRemoteLayersId() const;
+  LayersId GetRemoteLayersId() const;
   RenderFrameParent* GetRenderFrameParent() const;
 
-  mozilla::dom::TabId mTabId;
-  mozilla::LayoutDeviceIntPoint mOffset;
-  mozilla::layers::EventRegionsOverride mEventRegionsOverride;
+  TabId mTabId;
+  LayoutDeviceIntPoint mOffset;
+  EventRegionsOverride mEventRegionsOverride;
 };
-
 
 #endif  // mozilla_layout_RenderFrameParent_h
