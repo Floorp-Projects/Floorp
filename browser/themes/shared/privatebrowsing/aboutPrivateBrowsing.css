@@ -86,8 +86,7 @@ p {
   font-size: .9em;
 }
 
-#cbTitle,
-#tpTitle {
+#cbTitle {
   margin-inline-end: 12px;
 }
 
