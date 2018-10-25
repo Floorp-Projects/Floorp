@@ -58,20 +58,20 @@ def gradle_android_build_config():
 
     return namespace(
         app=namespace(
-            variant=variant(('official', 'withoutGeckoBinaries', 'noMinApi'), 'debug'),
+            variant=variant(('official', 'withoutGeckoBinaries'), 'debug'),
         ),
         geckoview=namespace(
-            variant=variant(('official', 'withGeckoBinaries', 'noMinApi'), 'debug'),
+            variant=variant(('official', 'withGeckoBinaries'), 'debug'),
         ),
         geckoview_example=namespace(
-            variant=variant(('official', 'withGeckoBinaries', 'noMinApi'), 'debug'),
+            variant=variant(('official', 'withGeckoBinaries'), 'debug'),
         ),
     )
 
 
 @depends(gradle_android_build_config)
 def gradle_android_variant_name(build_config):
-    '''Like "officialWithoutGeckoBinariesNoMinApiDebug".'''
+    '''Like "officialWithoutGeckoBinariesDebug".'''
     def uncapitalize(s):
         if s:
             return s[0].lower() + s[1:]
