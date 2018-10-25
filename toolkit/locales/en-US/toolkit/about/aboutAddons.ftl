@@ -140,7 +140,7 @@ detail-repository-value =
 
 detail-check-for-updates =
     .label = Check for Updates
-    .accesskey = F
+    .accesskey = U
     .tooltiptext = Check for updates for this add-on
 
 detail-show-preferences =
