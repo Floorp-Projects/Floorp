@@ -149,13 +149,13 @@ RecordReplayInterface_Initialize(int aArgc, char* aArgv[])
   InitializeCountdownThread();
   SetupDirtyMemoryHandler();
   InitializeMiddlemanCalls();
+  Lock::InitializeLocks();
 
   // Don't create a stylo thread pool when recording or replaying.
   putenv((char*) "STYLO_THREADS=1");
 
   thread->SetPassThrough(false);
 
-  Lock::InitializeLocks();
   InitializeRewindState();
   gRecordingPid = RecordReplayValue(gPid);
 
