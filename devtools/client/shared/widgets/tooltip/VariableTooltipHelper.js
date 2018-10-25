@@ -25,6 +25,7 @@ function setVariableTooltip(tooltip, doc, text) {
 
   tooltip.panel.innerHTML = "";
   tooltip.panel.appendChild(div);
+  tooltip.setContentSize({width: "auto", height: "auto"});
 }
 
 module.exports.setVariableTooltip = setVariableTooltip;
