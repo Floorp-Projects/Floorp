@@ -188,8 +188,7 @@ function getOneOffs() {
     document.getAnonymousElementByAttribute(searchPopup, "anonid",
                                             "search-one-off-buttons");
   let oneOff =
-    document.getAnonymousElementByAttribute(oneOffsContainer, "anonid",
-                                            "search-panel-one-offs");
+    oneOffsContainer.querySelector(".search-panel-one-offs");
   for (oneOff = oneOff.firstChild; oneOff; oneOff = oneOff.nextSibling) {
     if (oneOff.nodeType == Node.ELEMENT_NODE) {
       if (oneOff.classList.contains("dummy") ||

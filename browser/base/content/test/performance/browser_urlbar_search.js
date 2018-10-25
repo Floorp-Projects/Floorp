@@ -22,8 +22,8 @@ if (AppConstants.DEBUG ||
     AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
   EXPECTED_REFLOWS_FIRST_OPEN.push({
     stack: [
-      "_rebuild@chrome://browser/content/search/search.xml",
-      "set_popup@chrome://browser/content/search/search.xml",
+      "_rebuild@chrome://browser/content/search/search-one-offs.js",
+      "set popup@chrome://browser/content/search/search-one-offs.js",
       "set_oneOffSearchesEnabled@chrome://browser/content/urlbarBindings.xml",
       "_enableOrDisableOneOffSearches@chrome://browser/content/urlbarBindings.xml",
       "@chrome://browser/content/urlbarBindings.xml",

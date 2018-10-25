@@ -4,18 +4,12 @@ const TEST_ENGINE_NAME = "Foo";
 const TEST_ENGINE_BASENAME = "testEngine.xml";
 
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
-const oneOffBinding = document.getAnonymousElementByAttribute(
+const oneOffElement = document.getAnonymousElementByAttribute(
   searchPopup, "anonid", "search-one-off-buttons"
 );
-const contextMenu = document.getAnonymousElementByAttribute(
-  oneOffBinding, "anonid", "search-one-offs-context-menu"
-);
-const oneOffButtons = document.getAnonymousElementByAttribute(
-  oneOffBinding, "anonid", "search-panel-one-offs"
-);
-const searchInNewTabMenuItem = document.getAnonymousElementByAttribute(
-  oneOffBinding, "anonid", "search-one-offs-context-open-in-new-tab"
-);
+const contextMenu = oneOffElement.querySelector(".search-one-offs-context-menu");
+const oneOffButtons = oneOffElement.buttons;
+const searchInNewTabMenuItem = oneOffElement.querySelector(".search-one-offs-context-open-in-new-tab");
 
 let searchbar;
 let searchIcon;
