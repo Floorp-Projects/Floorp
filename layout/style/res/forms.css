@@ -491,6 +491,7 @@ input[type="file"] {
 }
 
 input[type="file"] > label {
+  display: inline-block;
   min-inline-size: 12em;
   padding-inline-start: 5px;
   text-align: match-parent;
