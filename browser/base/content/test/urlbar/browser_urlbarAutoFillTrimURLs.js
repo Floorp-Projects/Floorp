@@ -51,8 +51,15 @@ async function promiseTestResult(test) {
   is(result.getAttribute("type"), test.resultListType,
      `Autocomplete result should have searchengine for the type for search '${test.search}'`);
 
-  is(gURLBar.mController.getFinalCompleteValueAt(0), test.finalCompleteValue,
-     `Autocomplete item should go to the expected final value for search '${test.search}'`);
+  let actualValue = gURLBar.mController.getFinalCompleteValueAt(0);
+  let actualAction = PlacesUtils.parseActionUrl(actualValue);
+  let expectedAction = PlacesUtils.parseActionUrl(test.finalCompleteValue);
+  Assert.equal(!!actualAction, !!expectedAction);
+  if (actualAction) {
+    Assert.deepEqual(actualAction, expectedAction);
+  } else {
+    Assert.equal(actualValue, test.finalCompleteValue);
+  }
 }
 
 const tests = [{
