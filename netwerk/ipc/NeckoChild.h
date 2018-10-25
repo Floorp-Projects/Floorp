@@ -108,6 +108,8 @@ protected:
 
   virtual PTrackingDummyChannelChild*
     AllocPTrackingDummyChannelChild(nsIURI* aURI,
+                                    nsIURI* aTopWindowURI,
+                                    const nsresult& aTopWindowURIResult,
                                     const OptionalLoadInfoArgs& aLoadInfo) override;
 
   virtual bool

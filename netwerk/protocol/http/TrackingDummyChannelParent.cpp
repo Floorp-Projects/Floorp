@@ -22,6 +22,8 @@ TrackingDummyChannelParent::~TrackingDummyChannelParent() = default;
 
 void
 TrackingDummyChannelParent::Init(nsIURI* aURI,
+                                 nsIURI* aTopWindowURI,
+                                 nsresult aTopWindowURIResult,
                                  nsILoadInfo* aLoadInfo)
 {
   MOZ_ASSERT(mIPCActive);
@@ -36,7 +38,8 @@ TrackingDummyChannelParent::Init(nsIURI* aURI,
   }
 
   RefPtr<TrackingDummyChannel> channel =
-    new TrackingDummyChannel(aURI, aLoadInfo);
+    new TrackingDummyChannel(aURI, aTopWindowURI, aTopWindowURIResult,
+                             aLoadInfo);
 
   RefPtr<nsChannelClassifier> channelClassifier =
     new nsChannelClassifier(channel);
