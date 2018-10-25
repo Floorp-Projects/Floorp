@@ -8,6 +8,7 @@ import android.os.Bundle
 import mozilla.components.browser.session.Session
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.session.removeAndCloseSession
 
 /**
  * The main entry point for "custom tabs" opened by third-party apps.
@@ -38,7 +39,7 @@ class CustomTabActivity : MainActivity() {
         if (isFinishing && customTabSession.isCustomTabSession()) {
             // This may not be a custom tab session anymore ("open in firefox focus"). So only remove it if this
             // activity is finishing and this is still a custom tab session.
-            components.sessionManager.remove(customTabSession)
+            components.sessionManager.removeAndCloseSession(customTabSession)
         }
     }
     companion object {

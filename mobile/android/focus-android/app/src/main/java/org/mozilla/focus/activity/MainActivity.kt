@@ -24,6 +24,7 @@ import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
+import org.mozilla.focus.session.removeAndCloseAllSessions
 import org.mozilla.focus.session.ui.SessionsSheetFragment
 import org.mozilla.focus.settings.ExperimentsSettingsFragment
 import org.mozilla.focus.telemetry.SentryWrapper
@@ -205,7 +206,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         val fromShortcut = intent.getBooleanExtra(EXTRA_SHORTCUT, false)
         val fromNotification = intent.getBooleanExtra(EXTRA_NOTIFICATION, false)
 
-        components.sessionManager.removeSessions()
+        components.sessionManager.removeAndCloseAllSessions()
 
         if (fromShortcut) {
             TelemetryWrapper.eraseShortcutEvent()

@@ -8,6 +8,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.session.removeAndCloseAllSessions
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class EraseAndOpenShortcutActivity : Activity() {
@@ -15,7 +16,7 @@ class EraseAndOpenShortcutActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        components.sessionManager.removeSessions()
+        components.sessionManager.removeAndCloseAllSessions()
 
         TelemetryWrapper.eraseAndOpenShortcutEvent()
 

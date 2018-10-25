@@ -54,7 +54,6 @@ import org.mozilla.geckoview.SessionFinder
  */
 @Suppress("TooManyFunctions")
 class GeckoWebViewProvider : IWebViewProvider {
-
     override fun preload(context: Context) {
         sendTelemetryEventOnSwitchToGecko(context)
         createGeckoRuntime(context)
@@ -203,7 +202,9 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         override fun cleanup() {
-            geckoSession.close()
+            if (geckoSession.isOpen) {
+                geckoSession.close()
+            }
         }
 
         override fun setBlockingEnabled(enabled: Boolean) {

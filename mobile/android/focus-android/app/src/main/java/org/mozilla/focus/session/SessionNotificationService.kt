@@ -38,7 +38,7 @@ class SessionNotificationService : Service() {
             ACTION_ERASE -> {
                 TelemetryWrapper.eraseNotificationEvent()
 
-                components.sessionManager.removeSessions()
+                components.sessionManager.removeAndCloseAllSessions()
 
                 VisibilityLifeCycleCallback.finishAndRemoveTaskIfInBackground(this)
             }
@@ -52,7 +52,7 @@ class SessionNotificationService : Service() {
     override fun onTaskRemoved(rootIntent: Intent) {
         TelemetryWrapper.eraseTaskRemoved()
 
-        components.sessionManager.removeSessions()
+        components.sessionManager.removeAndCloseAllSessions()
 
         stopForeground(true)
         stopSelf()
