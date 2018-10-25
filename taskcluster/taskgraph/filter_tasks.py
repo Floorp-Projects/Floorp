@@ -33,35 +33,3 @@ def filter_target_tasks(graph, parameters, graph_config):
     attr = parameters.get('target_tasks_method', 'all_tasks')
     fn = target_tasks.get_method(attr)
     return fn(graph, parameters, graph_config)
-
-
-@filter_task('check_servo')
-def filter_servo(graph, parameters, graph_config):
-    """Filter out tasks for Servo vendoring changesets.
-
-    If the change triggering is related to Servo vendoring, impact is minimal
-    because not all platforms use Servo code.
-
-    We filter out tests on platforms that don't run Servo tests because running
-    tests will accomplish little for these changes.
-    """
-
-    SERVO_TEST_PLATFORMS = {
-        'linux64',
-        'linux64-stylo',
-    }
-
-    def fltr(task):
-        if parameters.get('owner') != "servo-vcs-sync@mozilla.com":
-            return True
-
-        # This is a Servo vendor change.
-
-        # Servo code is compiled. So we at least need to build. Resource
-        # savings come from pruning tests. So that's where we filter.
-        if task.attributes.get('kind') != 'test':
-            return True
-
-        return task.attributes.get('build_platform') in SERVO_TEST_PLATFORMS
-
-    return [l for l, t in graph.tasks.iteritems() if fltr(t)]
