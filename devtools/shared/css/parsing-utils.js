@@ -875,6 +875,7 @@ RuleRewriter.prototype = {
   setPropertyEnabled: function(index, name, isEnabled) {
     this.completeInitialization(index);
     const decl = this.decl;
+    const priority = decl.priority;
     let copyOffset = decl.offsets[1];
     if (isEnabled) {
       // Enable it.  First see if the comment start can be deleted.
@@ -918,9 +919,9 @@ RuleRewriter.prototype = {
     this.completeCopying(copyOffset);
 
     if (isEnabled) {
-      this.modifications.push({ type: "set", index, name, value: decl.value });
+      this.modifications.push({ type: "set", index, name, value: decl.value, priority });
     } else {
-      this.modifications.push({ type: "remove", index, name });
+      this.modifications.push({ type: "remove", index, name, priority });
     }
   },
 
