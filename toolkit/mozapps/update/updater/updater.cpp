@@ -2052,7 +2052,7 @@ LaunchWinPostProcess(const WCHAR *installationDir,
   CopyFileW(slogFile, dlogFile, false);
 
   STARTUPINFOW si = {sizeof(si), 0};
-  si.lpDesktop = L"";
+  si.lpDesktop = const_cast<LPWSTR>(L""); // -Wwritable-strings
   PROCESS_INFORMATION pi = {0};
 
   bool ok = CreateProcessW(exefullpath,
