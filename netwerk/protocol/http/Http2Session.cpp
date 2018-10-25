@@ -3170,6 +3170,13 @@ Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
         mInputFrameType != FRAME_TYPE_SETTINGS) {
       LOG3(("First Frame Type Must Be Settings\n"));
       mPeerFailedHandshake = true;
+
+      // Don't allow any more h2 connections to this host
+      RefPtr<nsHttpConnectionInfo> ci = ConnectionInfo();
+      if (ci) {
+        gHttpHandler->BlacklistSpdy(ci);
+      }
+
       // Go through and re-start all of our transactions with h2 disabled.
       for (auto iter = mStreamTransactionHash.Iter(); !iter.Done(); iter.Next()) {
         nsAutoPtr<Http2Stream>& stream = iter.Data();
