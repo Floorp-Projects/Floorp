@@ -7,13 +7,22 @@ package org.mozilla.focus.settings
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.v7.preference.ListPreference
+import android.support.v7.preference.Preference
 import android.text.TextUtils
+import android.view.Gravity
+import android.view.ViewGroup
+import android.view.WindowManager
+import android.view.WindowManager.LayoutParams.MATCH_PARENT
+import android.view.WindowManager.LayoutParams.WRAP_CONTENT
+import android.widget.FrameLayout
+import android.widget.ProgressBar
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.SettingsActivity
 import org.mozilla.focus.locale.LocaleManager
 import org.mozilla.focus.locale.Locales
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.widget.DefaultBrowserPreference
+import org.mozilla.focus.widget.LocaleListPreference
 import java.util.Locale
 
 class GeneralSettingsFragment : BaseSettingsFragment(),
@@ -87,6 +96,35 @@ class GeneralSettingsFragment : BaseSettingsFragment(),
                 .replace(R.id.container, SettingsFragment.newInstance()).commit()
             navigateToFragment(GeneralSettingsFragment.newInstance())
         }
+    }
+
+    override fun onDisplayPreferenceDialog(preference: Preference?) {
+        if (preference is LocaleListPreference) {
+            showLoading(view as ViewGroup)
+            // wait until the values are set
+            preference.setEntriesListener {
+                hideLoading()
+                super.onDisplayPreferenceDialog(preference)
+            }
+        } else super.onDisplayPreferenceDialog(preference)
+    }
+
+    private var progress: FrameLayout? = null
+
+    private fun hideLoading() {
+        val root = view as ViewGroup?
+        if (root != null && progress != null) {
+            root.removeView(progress)
+        }
+    }
+
+    private fun showLoading(root: ViewGroup) {
+        progress = FrameLayout(root.context)
+        val lp = FrameLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
+        lp.gravity = Gravity.CENTER
+        progress!!.addView(ProgressBar(root.context), lp)
+        val lp2 = WindowManager.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+        root.addView(progress, lp2)
     }
 
     companion object {

@@ -149,6 +149,20 @@ public class LocaleListPreference extends ListPreference {
 
     }
 
+    interface EntriesListener {
+        void onEntriesSet();
+    }
+
+    private EntriesListener entriesListener = null;
+
+    public void setEntriesListener(EntriesListener entriesListener) {
+        if (getEntryValues() != null) {
+            entriesListener.onEntriesSet();
+        } else {
+            this.entriesListener = entriesListener;
+        }
+    }
+
     @Override
     public void onAttached() {
         super.onAttached();
@@ -181,6 +195,9 @@ public class LocaleListPreference extends ListPreference {
         super.onPrepareForRemoval();
         if (buildLocaleListTask != null) {
             buildLocaleListTask.cancel(true);
+        }
+        if (entriesListener != null) {
+            entriesListener = null;
         }
     }
 
@@ -335,12 +352,12 @@ public class LocaleListPreference extends ListPreference {
 
     static final class BuildLocaleListTask extends AsyncTask<Void, Void, Pair<String[], String[]>> {
 
-        private final WeakReference<ListPreference> weakListPreference;
+        private final WeakReference<LocaleListPreference> weakListPreference;
         private final CharacterValidator characterValidator;
         private final Collection<String> shippingLocales;
         private final String systemDefaultLanguage;
 
-        BuildLocaleListTask(ListPreference listPreference, String systemDefaultLanguage,
+        BuildLocaleListTask(LocaleListPreference listPreference, String systemDefaultLanguage,
                             CharacterValidator characterValidator, Collection<String> shippingLocales) {
             this.characterValidator = characterValidator;
             this.shippingLocales = shippingLocales;
@@ -400,10 +417,13 @@ public class LocaleListPreference extends ListPreference {
                 return;
             }
 
-            final ListPreference preference = weakListPreference.get();
+            final LocaleListPreference preference = weakListPreference.get();
             if (preference != null) {
                 preference.setEntries(pair.getFirst());
                 preference.setEntryValues(pair.getSecond());
+                if (preference.entriesListener != null) {
+                    preference.entriesListener.onEntriesSet();
+                }
             }
         }
     }
