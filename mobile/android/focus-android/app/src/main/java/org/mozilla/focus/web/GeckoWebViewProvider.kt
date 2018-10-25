@@ -249,16 +249,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                     geckoRuntime!!.settings.remoteDebuggingEnabled =
                             Settings.getInstance(context).shouldEnableRemoteDebugging()
                 context.getString(R.string.pref_key_performance_enable_cookies) -> {
-                    val cookiesValue = if (Settings.getInstance(context).shouldBlockCookies() &&
-                        Settings.getInstance(context).shouldBlockThirdPartyCookies()
-                    ) {
-                        GeckoRuntimeSettings.COOKIE_ACCEPT_NONE
-                    } else if (Settings.getInstance(context).shouldBlockThirdPartyCookies()) {
-                        GeckoRuntimeSettings.COOKIE_ACCEPT_FIRST_PARTY
-                    } else {
-                        GeckoRuntimeSettings.COOKIE_ACCEPT_ALL
-                    }
-                    geckoRuntime!!.settings.cookieBehavior = cookiesValue
+                    updateCookieSettings()
                 }
                 context.getString(R.string.pref_key_safe_browsing) -> {
                     val shouldUseSafeBrowsing =
@@ -277,16 +268,26 @@ class GeckoWebViewProvider : IWebViewProvider {
             geckoRuntime!!.settings.webFontsEnabled =
                     !Settings.getInstance(context).shouldBlockWebFonts()
             geckoRuntime!!.settings.remoteDebuggingEnabled = false
-            val cookiesValue = if (Settings.getInstance(context).shouldBlockCookies() &&
-                Settings.getInstance(context).shouldBlockThirdPartyCookies()
-            ) {
-                GeckoRuntimeSettings.COOKIE_ACCEPT_NONE
-            } else if (Settings.getInstance(context).shouldBlockThirdPartyCookies()) {
-                GeckoRuntimeSettings.COOKIE_ACCEPT_FIRST_PARTY
-            } else {
-                GeckoRuntimeSettings.COOKIE_ACCEPT_ALL
-            }
-            geckoRuntime!!.settings.cookieBehavior = cookiesValue
+            updateCookieSettings()
+        }
+
+        private fun updateCookieSettings() {
+            geckoRuntime!!.settings.cookieBehavior =
+                    when (Settings.getInstance(context).shouldBlockCookiesValue()) {
+                        context.getString(
+                            R.string.preference_privacy_should_block_cookies_yes_option
+                        ) ->
+                            GeckoRuntimeSettings.COOKIE_ACCEPT_NONE
+                        context.getString(
+                            R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option
+                        ) ->
+                            GeckoRuntimeSettings.COOKIE_ACCEPT_NON_TRACKERS
+                        context.getString(
+                            R.string.preference_privacy_should_block_cookies_third_party_only_option
+                        ) ->
+                            GeckoRuntimeSettings.COOKIE_ACCEPT_FIRST_PARTY
+                        else -> GeckoRuntimeSettings.COOKIE_ACCEPT_ALL
+                    }
         }
 
         private fun updateBlocking() {
