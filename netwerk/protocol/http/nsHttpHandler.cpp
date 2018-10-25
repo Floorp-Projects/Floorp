@@ -2789,5 +2789,18 @@ nsHttpHandler::IsBeforeLastActiveTabLoadOptimization(TimeStamp const &when)
          when <= mLastActiveTabLoadOptimizationHit;
 }
 
+void
+nsHttpHandler::BlacklistSpdy(const nsHttpConnectionInfo *ci)
+{
+    mConnMgr->BlacklistSpdy(ci);
+    mBlacklistedSpdyOrigins.PutEntry(ci->GetOrigin());
+}
+
+bool
+nsHttpHandler::IsSpdyBlacklisted(const nsHttpConnectionInfo *ci)
+{
+    return mBlacklistedSpdyOrigins.Contains(ci->GetOrigin());
+}
+
 } // namespace net
 } // namespace mozilla
