@@ -62,16 +62,14 @@ class Frame extends Component {
   componentWillMount() {
     if (this.props.sourceMapService) {
       const { source, line, column } = this.props.frame;
-      this.props.sourceMapService.subscribe(source, line, column,
-                                            this._locationChanged);
+      this.unsubscribeSourceMapService = this.props.sourceMapService.subscribe(
+        source, line, column, this._locationChanged);
     }
   }
 
   componentWillUnmount() {
-    if (this.props.sourceMapService) {
-      const { source, line, column } = this.props.frame;
-      this.props.sourceMapService.unsubscribe(source, line, column,
-                                              this._locationChanged);
+    if (typeof this.unsubscribeSourceMapService === "function") {
+      this.unsubscribeSourceMapService();
     }
   }
 
