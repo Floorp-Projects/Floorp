@@ -28,3 +28,8 @@
 .sidebar-item--selected {
   color: var(--sidebar-selected-color);
 }
+
+.sidebar-item--breathe {
+  margin-block-start: calc(2 * var(--base-distance));
+  margin-block-end: calc(2 * var(--base-distance));
+}
