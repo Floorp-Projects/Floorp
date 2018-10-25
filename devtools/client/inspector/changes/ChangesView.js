@@ -17,7 +17,8 @@ const {
 } = require("./actions/changes");
 
 class ChangesView {
-  constructor(inspector) {
+  constructor(inspector, window) {
+    this.document = window.document;
     this.inspector = inspector;
     this.store = this.inspector.store;
     this.toolbox = this.inspector.toolbox;
@@ -84,6 +85,7 @@ class ChangesView {
     this.changesFront.off("clear-changes", this.onClearChanges);
     this.changesFront = null;
 
+    this.document = null;
     this.inspector = null;
     this.store = null;
     this.toolbox = null;
