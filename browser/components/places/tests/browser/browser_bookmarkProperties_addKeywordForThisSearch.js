@@ -46,7 +46,7 @@ add_task(async function() {
       Assert.equal(pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO), "windows-1252", "charset is correct");
 
       // Now check getShortcutOrURI.
-      let data = await getShortcutOrURIAndPostData("kw test");
+      let data = await UrlbarUtils.getShortcutOrURIAndPostData("kw test");
       Assert.equal(getPostDataString(data.postData), "accenti=\u00E0\u00E8\u00EC\u00F2\u00F9&search=test", "getShortcutOrURI POST data is correct");
       Assert.equal(data.url, TEST_URL, "getShortcutOrURI URL is correct");
     }, closeHandler);

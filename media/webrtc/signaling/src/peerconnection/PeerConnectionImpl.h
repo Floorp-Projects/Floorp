@@ -711,8 +711,6 @@ private:
 
   bool mHaveConfiguredCodecs;
 
-  bool mHaveDataStream;
-
   unsigned int mAddCandidateErrorCount;
 
   bool mTrickle;

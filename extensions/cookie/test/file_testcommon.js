@@ -15,7 +15,6 @@ function setupTest(uri, cookies, loads) {
   var prefSet = new Promise(resolve => {
     SpecialPowers.pushPrefEnv({ set: [
       ["browser.contentblocking.enabled", true],
-      ["browser.contentblocking.ui.enabled", true],
       ["network.cookie.cookieBehavior", 1],
     ]}, resolve);
   });

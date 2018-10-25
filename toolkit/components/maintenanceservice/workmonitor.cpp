@@ -188,7 +188,7 @@ StartUpdateProcess(int argc,
   LOG(("Starting update process as the service in session 0."));
   STARTUPINFO si = {0};
   si.cb = sizeof(STARTUPINFO);
-  si.lpDesktop = L"winsta0\\Default";
+  si.lpDesktop = const_cast<LPWSTR>(L"winsta0\\Default"); // -Wwritable-strings
   PROCESS_INFORMATION pi = {0};
 
   // The updater command line is of the form:
@@ -206,7 +206,7 @@ StartUpdateProcess(int argc,
   // across all OS if it's of no harm.
   if (argc >= index) {
     // Setting the desktop to blank will ensure no GUI is displayed
-    si.lpDesktop = L"";
+    si.lpDesktop = const_cast<LPWSTR>(L""); // -Wwritable-strings
     si.dwFlags |= STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
   }

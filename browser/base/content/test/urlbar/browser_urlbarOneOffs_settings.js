@@ -59,8 +59,9 @@ add_task(async function test_open_settings_with_enter() {
   await selectSettings(() => {
     EventUtils.synthesizeKey("KEY_ArrowUp");
 
-    Assert.equal(gURLBar.popup.oneOffSearchButtons.selectedButton.getAttribute("anonid"),
-      "search-settings-compact", "Should have selected the settings button");
+    Assert.ok(gURLBar.popup.oneOffSearchButtons.selectedButton
+      .classList.contains("search-setting-button-compact"),
+      "Should have selected the settings button");
 
     EventUtils.synthesizeKey("KEY_Enter");
   });

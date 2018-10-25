@@ -11388,12 +11388,16 @@ HTMLEditRules::DocumentModifiedWorker()
     return;
   }
 
-  Selection* selection = mHTMLEditor->GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return;
-  }
+  RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
+  htmlEditor->OnModifyDocument();
+}
 
-  AutoSafeEditorData setData(*this, *mHTMLEditor, *selection);
+void
+HTMLEditRules::OnModifyDocument(Selection& aSelection)
+{
+  MOZ_ASSERT(mHTMLEditor);
+
+  AutoSafeEditorData setData(*this, *mHTMLEditor, aSelection);
 
   // DeleteNodeWithTransaction() below may cause a flush, which could destroy
   // the editor

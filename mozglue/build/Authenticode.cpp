@@ -245,7 +245,7 @@ SignedBinary::VerifySignature(const wchar_t* aFilePath)
 
     CERT_STRONG_SIGN_PARA policy = {sizeof(policy)};
     policy.dwInfoChoice = CERT_STRONG_SIGN_OID_INFO_CHOICE;
-    policy.pszOID = szOID_CERT_STRONG_SIGN_OS_CURRENT;
+    policy.pszOID = const_cast<char*>(szOID_CERT_STRONG_SIGN_OS_CURRENT); // -Wwritable-strings
 
     if (!pCryptCATAdminAcquireContext2(&rawCatAdmin, nullptr,
                                        BCRYPT_SHA256_ALGORITHM, &policy, 0)) {

@@ -1142,6 +1142,18 @@ nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame,
   return true;
 }
 
+bool
+nsNativeThemeGTK::IsWidgetVisible(WidgetType aWidgetType)
+{
+  switch (aWidgetType) {
+  case StyleAppearance::MozWindowButtonBox:
+    return false;
+  default:
+    break;
+  }
+  return true;
+}
+
 NS_IMETHODIMP
 nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext,
                                        nsIFrame* aFrame,
@@ -1153,9 +1165,12 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext,
   WidgetNodeType gtkWidgetType;
   GtkTextDirection direction = GetTextDirection(aFrame);
   gint flags;
-  if (!GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, &state,
-                            &flags))
+
+  if (!IsWidgetVisible(aWidgetType) ||
+      !GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, &state,
+                            &flags)) {
     return NS_OK;
+  }
 
   gfxContext* ctx = aContext;
   nsPresContext *presContext = aFrame->PresContext();
