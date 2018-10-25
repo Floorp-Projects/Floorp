@@ -118,7 +118,7 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
       AccStateChangeEvent* event = downcast_accEvent(aEvent);
       auto state = event->GetState();
       if (state & states::CHECKED) {
-        sessionAcc->SendClickedEvent(accessible);
+        sessionAcc->SendClickedEvent(accessible, event->IsStateEnabled());
       }
 
       if (state & states::SELECTED) {
@@ -373,7 +373,7 @@ AccessibleWrap::WrapperRangeInfo(double* aCurVal, double* aMinVal,
 }
 
 mozilla::java::GeckoBundle::LocalRef
-AccessibleWrap::ToBundle(bool aMinimal)
+AccessibleWrap::ToBundle()
 {
   if (!IsProxy() && IsDefunct()) {
     return nullptr;
@@ -405,11 +405,6 @@ AccessibleWrap::ToBundle(bool aMinimal)
     Name(text);
   }
   GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(text));
-
-  if (aMinimal) {
-    GECKOBUNDLE_FINISH(nodeInfo);
-    return nodeInfo;
-  }
 
   nsAutoString geckoRole;
   nsAutoString roleDescription;
