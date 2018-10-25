@@ -7,6 +7,7 @@
 <!ENTITY privatebrowsingpage.openPrivateWindow.accesskey "P">
 
 <!ENTITY privateBrowsing.title                           "Private Browsing">
+<!ENTITY privateBrowsing.title.tracking                  "Private Browsing with Tracking Protection">
 <!ENTITY aboutPrivateBrowsing.info.notsaved.before       "When you browse in a Private Window, Firefox ">
 <!ENTITY aboutPrivateBrowsing.info.notsaved.emphasize    "does not save">
 <!ENTITY aboutPrivateBrowsing.info.notsaved.after        ":">
@@ -27,6 +28,8 @@
 <!ENTITY aboutPrivateBrowsing.learnMore3.title           "Private Browsing">
 <!ENTITY aboutPrivateBrowsing.learnMore3.after           ".">
 
+<!ENTITY trackingProtection.title                        "Tracking Protection">
+<!ENTITY trackingProtection.description2                 "Some websites use trackers that can monitor your activity across the Internet. With Tracking Protection Firefox will block many trackers that can collect information about your browsing behavior.">
 <!ENTITY trackingProtection.startTour1                   "See how it works">
 
 <!ENTITY contentBlocking.title                           "Content Blocking">

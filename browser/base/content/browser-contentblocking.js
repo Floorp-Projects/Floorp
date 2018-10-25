@@ -38,6 +38,32 @@ var TrackingProtection = {
       document.getElementById("identity-popup-content-blocking-category-tracking-protection");
   },
 
+  strings: {
+    get enableTooltip() {
+      delete this.enableTooltip;
+      return this.enableTooltip =
+        gNavigatorBundle.getString("trackingProtection.toggle.enable.tooltip");
+    },
+
+    get disableTooltip() {
+      delete this.disableTooltip;
+      return this.disableTooltip =
+        gNavigatorBundle.getString("trackingProtection.toggle.disable.tooltip");
+    },
+
+    get disableTooltipPB() {
+      delete this.disableTooltipPB;
+      return this.disableTooltipPB =
+        gNavigatorBundle.getString("trackingProtection.toggle.disable.pbmode.tooltip");
+    },
+
+    get enableTooltipPB() {
+      delete this.enableTooltipPB;
+      return this.enableTooltipPB =
+        gNavigatorBundle.getString("trackingProtection.toggle.enable.pbmode.tooltip");
+    },
+  },
+
   init() {
     this.updateEnabled();
 
@@ -62,11 +88,36 @@ var TrackingProtection = {
             PrivateBrowsingUtils.isWindowPrivate(window));
   },
 
+  onGlobalToggleCommand() {
+    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+      Services.prefs.setBoolPref(this.PREF_ENABLED_IN_PRIVATE_WINDOWS, !this.enabledInPrivateWindows);
+    } else {
+      Services.prefs.setBoolPref(this.PREF_ENABLED_GLOBALLY, !this.enabledGlobally);
+    }
+  },
+
   updateEnabled() {
     this.enabledGlobally =
       Services.prefs.getBoolPref(this.PREF_ENABLED_GLOBALLY);
     this.enabledInPrivateWindows =
       Services.prefs.getBoolPref(this.PREF_ENABLED_IN_PRIVATE_WINDOWS);
+
+    if (!ContentBlocking.contentBlockingUIEnabled) {
+      ContentBlocking.updateEnabled();
+      let appMenuButton = ContentBlocking.appMenuButton;
+
+      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+        appMenuButton.setAttribute("tooltiptext", this.enabledInPrivateWindows ?
+          this.strings.disableTooltipPB : this.strings.enableTooltipPB);
+        appMenuButton.setAttribute("enabled", this.enabledInPrivateWindows);
+        appMenuButton.setAttribute("aria-pressed", this.enabledInPrivateWindows);
+      } else {
+        appMenuButton.setAttribute("tooltiptext", this.enabledGlobally ?
+          this.strings.disableTooltip : this.strings.enableTooltip);
+        appMenuButton.setAttribute("enabled", this.enabledGlobally);
+        appMenuButton.setAttribute("aria-pressed", this.enabledGlobally);
+      }
+    }
   },
 
   isBlockerActivated(state) {
@@ -151,10 +202,12 @@ var ContentBlocking = {
   // If the user ignores the doorhanger, we stop showing it after some time.
   MAX_INTROS: 20,
   PREF_ENABLED: "browser.contentblocking.enabled",
+  PREF_UI_ENABLED: "browser.contentblocking.ui.enabled",
   PREF_ANIMATIONS_ENABLED: "toolkit.cosmeticAnimations.enabled",
   PREF_REPORT_BREAKAGE_ENABLED: "browser.contentblocking.reportBreakage.enabled",
   PREF_REPORT_BREAKAGE_URL: "browser.contentblocking.reportBreakage.url",
   PREF_INTRO_COUNT_CB: "browser.contentblocking.introCount",
+  PREF_INTRO_COUNT_TP: "privacy.trackingprotection.introCount",
   PREF_GLOBAL_TOGGLE: "browser.contentblocking.global-toggle.enabled",
   content: null,
   icon: null,
@@ -162,7 +215,7 @@ var ContentBlocking = {
   disabledTooltipText: null,
 
   get prefIntroCount() {
-    return this.PREF_INTRO_COUNT_CB;
+    return this.contentBlockingUIEnabled ? this.PREF_INTRO_COUNT_CB : this.PREF_INTRO_COUNT_TP;
   },
 
   get appMenuLabel() {
@@ -278,11 +331,11 @@ var ContentBlocking = {
       this.updateEnabled.bind(this));
     XPCOMUtils.defineLazyPreferenceGetter(this, "reportBreakageEnabled",
       this.PREF_REPORT_BREAKAGE_ENABLED, false);
+    XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingUIEnabled", this.PREF_UI_ENABLED, false,
+      this.updateUIEnabled.bind(this));
 
     this.updateEnabled();
-
-    this.appMenuLabel.setAttribute("label", this.strings.appMenuTitle);
-    this.appMenuLabel.setAttribute("tooltiptext", this.strings.appMenuTooltip);
+    this.updateUIEnabled();
 
     this.activeTooltipText =
       gNavigatorBundle.getString("trackingProtection.icon.activeTooltip");
@@ -302,16 +355,18 @@ var ContentBlocking = {
   },
 
   get enabled() {
-    return this.contentBlockingEnabled;
+    return this.contentBlockingUIEnabled ? this.contentBlockingEnabled : TrackingProtection.enabled;
   },
 
   updateEnabled() {
     this.content.toggleAttribute("enabled", this.enabled);
 
-    this.appMenuButton.setAttribute("tooltiptext", this.enabled ?
-      this.strings.disableTooltip : this.strings.enableTooltip);
-    this.appMenuButton.setAttribute("enabled", this.enabled);
-    this.appMenuButton.setAttribute("aria-pressed", this.enabled);
+    if (this.contentBlockingUIEnabled) {
+      this.appMenuButton.setAttribute("tooltiptext", this.enabled ?
+        this.strings.disableTooltip : this.strings.enableTooltip);
+      this.appMenuButton.setAttribute("enabled", this.enabled);
+      this.appMenuButton.setAttribute("aria-pressed", this.enabled);
+    }
 
     // The enabled state of blockers may also change since it depends on this.enabled.
     for (let blocker of this.blockers) {
@@ -319,8 +374,23 @@ var ContentBlocking = {
     }
   },
 
+  updateUIEnabled() {
+    this.content.toggleAttribute("contentBlockingUI", this.contentBlockingUIEnabled);
+
+    if (this.contentBlockingUIEnabled) {
+      this.appMenuLabel.setAttribute("label", this.strings.appMenuTitle);
+      this.appMenuLabel.setAttribute("tooltiptext", this.strings.appMenuTooltip);
+    }
+
+    this.updateEnabled();
+  },
+
   onGlobalToggleCommand() {
-    Services.prefs.setBoolPref(this.PREF_ENABLED, !this.enabled);
+    if (this.contentBlockingUIEnabled) {
+      Services.prefs.setBoolPref(this.PREF_ENABLED, !this.enabled);
+    } else {
+      TrackingProtection.onGlobalToggleCommand();
+    }
   },
 
   hideIdentityPopupAndReload() {
@@ -545,22 +615,30 @@ var ContentBlocking = {
     let brandBundle = document.getElementById("bundle_brand");
     let brandShortName = brandBundle.getString("brandShortName");
 
-
-    let introTitle = gNavigatorBundle.getFormattedString("contentBlocking.intro.title",
-                                                         [brandShortName]);
+    let introTitle;
     let introDescription;
     // This will be sent to the onboarding website to let them know which
     // UI variation we're showing.
     let variation;
-    // We show a different UI tour variation for users that already have TP
-    // enabled globally.
-    if (TrackingProtection.enabledGlobally) {
-      introDescription = gNavigatorBundle.getString("contentBlocking.intro.v2.description");
-      variation = 2;
+
+    if (this.contentBlockingUIEnabled) {
+      introTitle = gNavigatorBundle.getFormattedString("contentBlocking.intro.title",
+                                                       [brandShortName]);
+      // We show a different UI tour variation for users that already have TP
+      // enabled globally.
+      if (TrackingProtection.enabledGlobally) {
+        introDescription = gNavigatorBundle.getString("contentBlocking.intro.v2.description");
+        variation = 2;
+      } else {
+        introDescription = gNavigatorBundle.getFormattedString("contentBlocking.intro.v1.description",
+                                                               [brandShortName]);
+        variation = 1;
+      }
     } else {
-      introDescription = gNavigatorBundle.getFormattedString("contentBlocking.intro.v1.description",
+      introTitle = gNavigatorBundle.getString("trackingProtection.intro.title");
+      introDescription = gNavigatorBundle.getFormattedString("trackingProtection.intro.description2",
                                                              [brandShortName]);
-      variation = 1;
+      variation = 0;
     }
 
     let openStep2 = () => {
