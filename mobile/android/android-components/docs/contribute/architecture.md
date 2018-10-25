@@ -16,7 +16,7 @@ On top of `Concept` modules we provide `Browser` components. These components pr
 
 On the highest level, we provide `Feature` components which provide use case implementations (e.g search, load URL). Features can connect multiple `Browser` components with concepts, and will therefore depend on other components.
 
-The following diagram does not contain all available components. See [Components](#components) for a complete and up-to-date list.
+The following diagram does not contain all available components. See [Components]({{ site.baseurl }}/components/) for a complete and up-to-date list.
 
 ```
     ┌─────────────────────┬───────────────────────────────────────────────────────────────────────┐
