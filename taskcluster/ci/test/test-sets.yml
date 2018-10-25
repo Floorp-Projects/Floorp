@@ -108,6 +108,8 @@ raptor-fetch-firefox:
     - raptor-wasm-misc-firefox
     - raptor-wasm-misc-baseline-firefox
     - raptor-wasm-misc-ion-firefox
+    - raptor-wasm-godot-baseline-firefox
+    - raptor-wasm-godot-ion-firefox
     - raptor-assorted-dom-firefox
 
 raptor-fetch-geckoview:
