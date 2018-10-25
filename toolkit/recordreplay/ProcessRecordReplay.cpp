@@ -385,7 +385,7 @@ RecordReplayInterface_InternalRegisterThing(void* aThing)
     return;
   }
 
-  AutoOrderedAtomicAccess at;
+  AutoOrderedAtomicAccess at(&gGenericThings);
   StaticMutexAutoLock lock(gGenericThingsMutex);
   if (!gGenericThings) {
     gGenericThings = new ValueIndex();
