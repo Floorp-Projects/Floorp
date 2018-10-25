@@ -8,6 +8,7 @@ import android.content.Context
 import android.util.AttributeSet
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.LearnMoreSwitchPreference
+import org.mozilla.focus.telemetry.CrashReporterWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.telemetry.TelemetryHolder
@@ -29,6 +30,7 @@ internal class TelemetrySwitchPreference(context: Context?, attrs: AttributeSet?
         TelemetryHolder.get()
                 .configuration
                 .setUploadEnabled(isChecked).isCollectionEnabled = isChecked
+        CrashReporterWrapper.onIsEnabledChanged(context)
     }
 
     override fun getDescription(): String? {

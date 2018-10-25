@@ -29,7 +29,6 @@ import org.mozilla.focus.session.removeAndCloseAllSessions
 import org.mozilla.focus.session.ui.SessionsSheetFragment
 import org.mozilla.focus.settings.ExperimentsSettingsFragment
 import org.mozilla.focus.shortcut.HomeScreen
-import org.mozilla.focus.telemetry.SentryWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.ExperimentsSyncService
@@ -58,10 +57,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
                 finish()
                 return
             }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            SentryWrapper.init(this)
         }
 
         initViewModel()

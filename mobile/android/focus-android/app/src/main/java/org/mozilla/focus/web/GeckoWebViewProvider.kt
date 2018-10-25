@@ -22,6 +22,7 @@ import kotlinx.coroutines.experimental.launch
 import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.session.Session
+import mozilla.components.lib.crash.handler.CrashHandlerService
 import mozilla.components.support.ktx.android.util.Base64
 import mozilla.components.support.utils.ThreadUtils
 import org.json.JSONException
@@ -31,7 +32,7 @@ import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.savedWebViewState
 import org.mozilla.focus.gecko.GeckoViewPrompt
 import org.mozilla.focus.gecko.NestedGeckoView
-import org.mozilla.focus.telemetry.SentryWrapper
+import org.mozilla.focus.telemetry.CrashReporterWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.FileUtils
@@ -89,6 +90,8 @@ class GeckoWebViewProvider : IWebViewProvider {
             runtimeSettingsBuilder.useContentProcessHint(true)
             runtimeSettingsBuilder.blockMalware(Settings.getInstance(context).shouldUseSafeBrowsing())
             runtimeSettingsBuilder.blockPhishing(Settings.getInstance(context).shouldUseSafeBrowsing())
+            runtimeSettingsBuilder.crashHandler(CrashHandlerService::class.java)
+
             geckoRuntime =
                     GeckoRuntime.create(context.applicationContext, runtimeSettingsBuilder.build())
         }
@@ -372,7 +375,7 @@ class GeckoWebViewProvider : IWebViewProvider {
 
                 override fun onCrash(session: GeckoSession) {
                     Log.i(TAG, "Crashed, opening new session")
-                    SentryWrapper.captureGeckoCrash()
+                    CrashReporterWrapper.captureGeckoCrash()
                     geckoSession.close()
                     geckoSession = createGeckoSession()
                     applySettingsAndSetDelegates()

@@ -201,6 +201,7 @@ dependencies {
     }
     implementation "org.mozilla.components:support-ktx:$mozilla_components_version"
     implementation "org.mozilla.components:support-utils:$mozilla_components_version"
+    implementation "org.mozilla.components:lib-crash:$mozilla_components_version"
 
     implementation 'com.squareup.okhttp3:okhttp:3.11.0'
 

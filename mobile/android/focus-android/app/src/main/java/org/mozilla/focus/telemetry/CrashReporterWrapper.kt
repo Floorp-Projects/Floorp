@@ -4,8 +4,10 @@
 package org.mozilla.focus.telemetry
 
 import android.content.Context
-import io.sentry.Sentry
-import io.sentry.android.AndroidSentryClientFactory
+import android.os.Build
+import mozilla.components.lib.crash.Crash
+import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.lib.crash.service.SentryService
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.locale.LocaleManager
 import java.util.Locale
@@ -19,38 +21,37 @@ import java.util.Locale
  * builds, add a .sentry_token file and replace the [TelemetryWrapper.isTelemetryEnabled]
  * value with true (upload is disabled by default in dev builds).
  */
-object SentryWrapper {
+object CrashReporterWrapper {
     private const val TAG_BUILD_FLAVOR: String = "build_flavor"
     private const val TAG_BUILD_TYPE: String = "build_type"
     private const val TAG_LOCALE_LANG_TAG: String = "locale_lang_tag"
+    private var crashReporter: CrashReporter? = null
 
     fun init(context: Context) {
-        onIsEnabledChanged(context, TelemetryWrapper.isTelemetryEnabled(context))
-        addTags(context)
-    }
-
-    internal fun onIsEnabledChanged(context: Context, isEnabled: Boolean) {
         // The BuildConfig value is populated from a file at compile time.
         // If the file did not exist, the value will be null.
-        //
-        // If you provide a null DSN to Sentry, it will disable upload and buffering to disk:
-        // https://github.com/getsentry/sentry-java/issues/574#issuecomment-378298484
-        //
-        // In the current implementation, each time `init` is called, it will overwrite the
-        // stored client and DSN, thus calling it with a null DSN will have the affect of
-        // disabling the client: https://github.com/getsentry/sentry-java/issues/574#issuecomment-378406105
-        val sentryDsn = if (isEnabled) BuildConfig.SENTRY_TOKEN else null
-        Sentry.init(sentryDsn, AndroidSentryClientFactory(context.applicationContext))
+        val supportedBuild = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
+        if (!supportedBuild || BuildConfig.SENTRY_TOKEN.isEmpty()) return
+
+        val sentryDsn= BuildConfig.SENTRY_TOKEN
+        crashReporter = CrashReporter(services = listOf(
+                SentryService(
+                        context,
+                        sentryDsn,
+                        tags = createTags(context))
+        )).install(context)
+
+        onIsEnabledChanged(context)
     }
 
-    private fun addTags(context: Context) {
-        Sentry.getContext().addTag(TAG_BUILD_FLAVOR, BuildConfig.FLAVOR)
-        Sentry.getContext().addTag(TAG_BUILD_TYPE, BuildConfig.BUILD_TYPE)
-        Sentry.getContext().addTag(
-            TAG_LOCALE_LANG_TAG,
-            getLocaleTag(context)
-        )
+    fun onIsEnabledChanged(context: Context, isEnabled: Boolean = TelemetryWrapper.isTelemetryEnabled(context)) {
+        crashReporter?.enabled = isEnabled
     }
+
+    private fun createTags(context: Context) = mapOf(
+            TAG_BUILD_FLAVOR to BuildConfig.FLAVOR,
+            TAG_BUILD_TYPE to BuildConfig.BUILD_TYPE,
+            TAG_LOCALE_LANG_TAG to getLocaleTag(context))
 
     private fun getLocaleTag(context: Context): String {
         val currentLocale = LocaleManager.getInstance().getCurrentLocale(context)
@@ -62,6 +63,7 @@ object SentryWrapper {
     }
 
     fun captureGeckoCrash() {
-        Sentry.capture("GeckoSession crashes, opening new session")
+//        crashReporter?.submitReport(Crash())
+//        .capture("GeckoSession crashes, opening new session")
     }
 }
