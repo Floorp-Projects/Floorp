@@ -626,6 +626,8 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvRemotePaintIsReady() override;
 
+  virtual mozilla::ipc::IPCResult RecvNotifyCompositorTransaction() override;
+
   virtual mozilla::ipc::IPCResult RecvRemoteIsReadyToHandleInputEvents() override;
 
   virtual mozilla::ipc::IPCResult RecvPaintWhileInterruptingJSNoOp(const LayersObserverEpoch& aEpoch) override;

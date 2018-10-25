@@ -641,7 +641,7 @@ TabParent::InitRenderFrame()
     MOZ_ASSERT(frameLoader);
     if (frameLoader) {
       RenderFrameParent* renderFrame = new RenderFrameParent(frameLoader);
-      MOZ_ASSERT(renderFrame->IsInitted());
+      MOZ_ASSERT(renderFrame->IsInitialized());
       layers::LayersId layersId = renderFrame->GetLayersId();
       AddTabParentToTable(layersId, this);
       if (!SendPRenderFrameConstructor(renderFrame)) {
@@ -1654,9 +1654,19 @@ TabParent::SendHandleTap(TapType aType,
   if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
     return false;
   }
-  if ((aType == TapType::eSingleTap || aType == TapType::eSecondTap) &&
-      GetRenderFrame()) {
-    GetRenderFrame()->TakeFocusForClickFromTap();
+  if ((aType == TapType::eSingleTap || aType == TapType::eSecondTap)) {
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (fm) {
+      RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+      if (frameLoader) {
+        RefPtr<Element> element = frameLoader->GetOwnerContent();
+        if (element) {
+          fm->SetFocus(element, nsIFocusManager::FLAG_BYMOUSE |
+                                nsIFocusManager::FLAG_BYTOUCH |
+                                nsIFocusManager::FLAG_NOSCROLL);
+        }
+      }
+    }
   }
   LayoutDeviceIntPoint offset = GetChildProcessOffset();
   return Manager()->AsContentParent()->IsInputPriorityEventEnabled()
@@ -2604,7 +2614,7 @@ TabParent::AllocPRenderFrameParent()
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
 
   RenderFrameParent* rfp = new RenderFrameParent(frameLoader);
-  if (rfp->IsInitted()) {
+  if (rfp->IsInitialized()) {
     layers::LayersId layersId = rfp->GetLayersId();
     AddTabParentToTable(layersId, this);
   }
@@ -2632,7 +2642,7 @@ TabParent::SetRenderFrame(PRenderFrameParent* aRFParent)
   }
 
   RenderFrameParent* renderFrame = static_cast<RenderFrameParent*>(aRFParent);
-  bool success = renderFrame->Init(frameLoader);
+  bool success = renderFrame->Initialize(frameLoader);
   if (!success) {
     return false;
   }
@@ -3181,6 +3191,30 @@ TabParent::RecvRemotePaintIsReady()
   event->SetTrusted(true);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
   mFrameElement->DispatchEvent(*event);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+TabParent::RecvNotifyCompositorTransaction()
+{
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+
+  if (!frameLoader) {
+    return IPC_OK();
+  }
+
+  nsIFrame* docFrame = frameLoader->GetPrimaryFrameOfOwningContent();
+
+  if (!docFrame) {
+    // Bad, but nothing we can do about it (XXX/cjones: or is there?
+    // maybe bug 589337?).  When the new frame is created, we'll
+    // probably still be the current render frame and will get to draw
+    // our content then.  Or, we're shutting down and this update goes
+    // to /dev/null.
+    return IPC_OK();
+  }
+
+  docFrame->InvalidateLayer(DisplayItemType::TYPE_REMOTE);
   return IPC_OK();
 }
 

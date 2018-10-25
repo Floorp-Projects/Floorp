@@ -2923,7 +2923,7 @@ TabChild::NotifyPainted()
     if (!mNotified) {
         // Recording/replaying processes have a compositor but not a remote frame.
         if (!recordreplay::IsRecordingOrReplaying()) {
-            mRemoteFrame->SendNotifyCompositorTransaction();
+            SendNotifyCompositorTransaction();
         }
         mNotified = true;
     }
@@ -3302,7 +3302,7 @@ TabChild::RecvRequestNotifyAfterRemotePaint()
 
   // Tell the CompositorBridgeChild that, when it gets a RemotePaintIsReady
   // message that it should forward it us so that we can bounce it to our
-  // RenderFrameParent.
+  // TabParent.
   compositor->RequestNotifyAfterRemotePaint(this);
   return IPC_OK();
 }
