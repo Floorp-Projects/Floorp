@@ -19,6 +19,9 @@
         public/build/support.base.maven.zip:
           path: /build/android-components/components/support/base/build/target.maven.zip
           name: support-base
+        public/build/concept.awesomebar.maven.zip:
+          path: /build/android-components/components/concept/awesomebar/build/target.maven.zip
+          name: concept-awesomebar
         public/build/concept.engine.maven.zip:
           path: /build/android-components/components/concept/engine/build/target.maven.zip
           name: concept-engine

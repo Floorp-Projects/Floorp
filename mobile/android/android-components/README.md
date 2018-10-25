@@ -74,6 +74,8 @@ High-level components for building browser(-like) apps.
 
 _API contracts and abstraction layers for browser components._
 
+* 🔴 [**Awesomebar**](components/concept/awesomebar/README.md) - An abstract definition of an awesome bar component.
+
 * ⚪ [**Engine**](components/concept/engine/README.md) - Abstraction layer that allows hiding the actual browser engine implementation.
 
 * 🔴 [**Tabstray**](components/concept/tabstray/README.md) - Abstract definition of a tabs tray component.
