@@ -22,6 +22,17 @@ TrackingDummyChannelChild::Create(nsIHttpChannel* aChannel, nsIURI* aURI,
   MOZ_ASSERT(aChannel);
   MOZ_ASSERT(aURI);
 
+  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
+    do_QueryInterface(aChannel);
+  if (!httpChannelInternal) {
+    // Any non-http channel is allowed.
+    return true;
+  }
+
+  nsCOMPtr<nsIURI> topWindowURI;
+  nsresult topWindowURIResult =
+    httpChannelInternal->GetTopWindowURI(getter_AddRefs(topWindowURI));
+
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   if (!loadInfo) {
     return false;
@@ -31,7 +42,9 @@ TrackingDummyChannelChild::Create(nsIHttpChannel* aChannel, nsIURI* aURI,
   mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs);
 
   PTrackingDummyChannelChild* actor =
-    gNeckoChild->SendPTrackingDummyChannelConstructor(aURI, loadInfoArgs);
+    gNeckoChild->SendPTrackingDummyChannelConstructor(aURI, topWindowURI,
+                                                      topWindowURIResult,
+                                                      loadInfoArgs);
   if (!actor) {
     return false;
   }
@@ -77,7 +90,9 @@ TrackingDummyChannelChild::Recv__delete__(const bool& aTrackingResource)
   nsCOMPtr<nsIHttpChannel> channel = std::move(mChannel);
 
   RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(channel);
-  httpChannel->SetIsTrackingResource(mIsThirdParty);
+  if (aTrackingResource) {
+    httpChannel->SetIsTrackingResource(mIsThirdParty);
+  }
 
   bool storageGranted =
     AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel, mURI,

@@ -537,6 +537,8 @@ NeckoChild::RecvNetworkChangeNotification(nsCString const& type)
 
 PTrackingDummyChannelChild*
 NeckoChild::AllocPTrackingDummyChannelChild(nsIURI* aURI,
+                                            nsIURI* aTopWindowURI,
+                                            const nsresult& aTopWindowURIResult,
                                             const OptionalLoadInfoArgs& aLoadInfo)
 {
   return new TrackingDummyChannelChild();

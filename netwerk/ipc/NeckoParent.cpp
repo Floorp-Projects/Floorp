@@ -1017,6 +1017,8 @@ NeckoParent::RecvGetExtensionFD(const URIParams& aURI,
 
 PTrackingDummyChannelParent*
 NeckoParent::AllocPTrackingDummyChannelParent(nsIURI* aURI,
+                                              nsIURI* aTopWindowURI,
+                                              const nsresult& aTopWindowURIResult,
                                               const OptionalLoadInfoArgs& aLoadInfo)
 {
   RefPtr<TrackingDummyChannelParent> c = new TrackingDummyChannelParent();
@@ -1026,6 +1028,8 @@ NeckoParent::AllocPTrackingDummyChannelParent(nsIURI* aURI,
 mozilla::ipc::IPCResult
 NeckoParent::RecvPTrackingDummyChannelConstructor(PTrackingDummyChannelParent* aActor,
                                                   nsIURI* aURI,
+                                                  nsIURI* aTopWindowURI,
+                                                  const nsresult& aTopWindowURIResult,
                                                   const OptionalLoadInfoArgs& aLoadInfo)
 {
   TrackingDummyChannelParent* p =
@@ -1041,7 +1045,7 @@ NeckoParent::RecvPTrackingDummyChannelConstructor(PTrackingDummyChannelParent* a
     return IPC_FAIL_NO_REASON(this);
   }
 
-  p->Init(aURI, loadInfo);
+  p->Init(aURI, aTopWindowURI, aTopWindowURIResult, loadInfo);
   return IPC_OK();
 }
 
