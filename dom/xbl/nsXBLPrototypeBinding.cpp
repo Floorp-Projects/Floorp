@@ -721,32 +721,24 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAString& aImpls)
       const nsXPTInterfaceInfo* iinfo = nsXPTInterfaceInfo::ByName(token);
 
       if (iinfo) {
-        // obtain an IID.
-        const nsIID* iid = nullptr;
-        iinfo->GetIIDShared(&iid);
+        // Add the iid to our table.
+        mInterfaceTable.Put(iinfo->IID(), mBinding);
 
-        if (iid) {
-          // We found a valid iid.  Add it to our table.
-          mInterfaceTable.Put(*iid, mBinding);
-
-          // this block adds the parent interfaces of each interface
-          // defined in the xbl definition (implements="nsI...")
-          const nsXPTInterfaceInfo* parentInfo;
-          // if it has a parent, add it to the table
-          while (NS_SUCCEEDED(iinfo->GetParent(&parentInfo)) && parentInfo) {
-            // get the iid
-            parentInfo->GetIIDShared(&iid);
-
-            // don't add nsISupports to the table
-            if (!iid || iid->Equals(NS_GET_IID(nsISupports)))
-              break;
-
-            // add the iid to the table
-            mInterfaceTable.Put(*iid, mBinding);
-
-            // look for the next parent
-            iinfo = parentInfo;
+        // this block adds the parent interfaces of each interface
+        // defined in the xbl definition (implements="nsI...")
+        const nsXPTInterfaceInfo* parentInfo;
+        // if it has a parent, add it to the table
+        while ((parentInfo = iinfo->GetParent())) {
+          // don't add nsISupports to the table
+          if (parentInfo->IID().Equals(NS_GET_IID(nsISupports))) {
+            break;
           }
+
+          // add the iid to the table
+          mInterfaceTable.Put(parentInfo->IID(), mBinding);
+
+          // look for the next parent
+          iinfo = parentInfo;
         }
       }
 
