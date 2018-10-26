@@ -7,6 +7,7 @@ ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 ChromeUtils.import("resource://services-common/utils.js");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const PREF_CACHED_CLIENTID = "toolkit.telemetry.cachedClientID";
 
@@ -129,4 +130,28 @@ add_task(async function test_resetParallelGet() {
 
   Assert.notEqual(firstClientID, newClientID, "After reset client ID should be different.");
   Assert.equal(newClientID, otherClientID, "Getting the client ID in parallel to a reset should give the same id.");
+});
+
+add_task({
+  skip_if: () => AppConstants.platform != "android",
+}, async function test_FennecCanaryDetect() {
+  const KNOWN_UUID = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0";
+
+  // We should get a valid UUID after reset
+  let firstClientID = await ClientID.resetClientID();
+  Assert.notEqual(KNOWN_UUID, firstClientID, "Client ID should be random.");
+
+  // Set the canary client ID.
+  await ClientID.setClientID(KNOWN_UUID);
+  Assert.equal(KNOWN_UUID, await ClientID.getClientID(), "Client ID should be known canary.");
+
+  let newClientID = await ClientID.resetClientID();
+  Assert.notEqual(KNOWN_UUID, newClientID, "After reset Client ID should be random.");
+  Assert.notEqual(firstClientID, newClientID, "After reset Client ID should be new.");
+  Assert.ok(ClientID.wasCanaryClientID(), "After reset we should have detected a canary client ID");
+
+  let clientID = await ClientID.resetClientID();
+  Assert.notEqual(KNOWN_UUID, clientID, "After reset Client ID should be random.");
+  Assert.notEqual(newClientID, clientID, "After reset Client ID should be new.");
+  Assert.ok(!ClientID.wasCanaryClientID(), "After reset we should not have detected a canary client ID");
 });
