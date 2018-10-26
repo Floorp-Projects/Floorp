@@ -5224,10 +5224,13 @@ ICTableSwitch::Compiler::getStub(ICStubSpace* space)
 void
 ICTableSwitch::fixupJumpTable(JSScript* script, BaselineScript* baseline)
 {
-    defaultTarget_ = baseline->nativeCodeForPC(script, (jsbytecode*) defaultTarget_);
+    PCMappingSlotInfo slotInfo;
+    defaultTarget_ = baseline->nativeCodeForPC(script, (jsbytecode*) defaultTarget_, &slotInfo);
+    MOZ_ASSERT(slotInfo.isStackSynced());
 
     for (int32_t i = 0; i < length_; i++) {
-        table_[i] = baseline->nativeCodeForPC(script, (jsbytecode*) table_[i]);
+        table_[i] = baseline->nativeCodeForPC(script, (jsbytecode*) table_[i], &slotInfo);
+        MOZ_ASSERT(slotInfo.isStackSynced());
     }
 }
 
@@ -5530,7 +5533,10 @@ DoRetSubFallback(JSContext* cx, BaselineFrame* frame, ICRetSub_Fallback* stub,
     JSScript* script = frame->script();
     uint32_t offset = uint32_t(val.toInt32());
 
-    *resumeAddr = script->baselineScript()->nativeCodeForPC(script, script->offsetToPC(offset));
+    PCMappingSlotInfo slotInfo;
+    *resumeAddr = script->baselineScript()->nativeCodeForPC(script, script->offsetToPC(offset),
+                                                            &slotInfo);
+    MOZ_ASSERT(slotInfo.isStackSynced());
 
     if (stub->numOptimizedStubs() >= ICRetSub_Fallback::MAX_OPTIMIZED_STUBS) {
         return true;
