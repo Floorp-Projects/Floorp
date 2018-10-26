@@ -20,9 +20,6 @@ ChromeUtils.defineModuleGetter(this, "SiteDataManager",
 
 ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingCookiesAndSiteDataRejectTrackersRecommended",
-                                      "browser.contentblocking.cookies-site-data.ui.reject-trackers.recommended");
-
 XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingCookiesAndSiteDataRejectTrackersEnabled",
                                       "browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled");
 
@@ -31,9 +28,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingTrackingProtectionUi
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingRejectTrackersUiEnabled",
                                       "browser.contentblocking.rejecttrackers.ui.enabled");
-
-XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingRejectTrackersRecommended",
-                                      "browser.contentblocking.rejecttrackers.ui.recommended");
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingEnabled",
                                       "browser.contentblocking.enabled");
@@ -487,12 +481,6 @@ var gPrivacyPane = {
         }
       }
     }
-
-    // Allow turning off the "(recommended)" label using a pref
-    let blockCookiesFromTrackers = document.getElementById("blockCookiesFromTrackersCB");
-    if (contentBlockingRejectTrackersRecommended) {
-      document.l10n.setAttributes(blockCookiesFromTrackers, "content-blocking-reject-trackers-block-trackers-option-recommended");
-    }
   },
 
   /**
@@ -535,13 +523,8 @@ var gPrivacyPane = {
     document.getElementById("contentBlockingCheckboxContainer").hidden =
       !Services.prefs.getBoolPref("browser.contentblocking.global-toggle.enabled", true);
 
-    // Allow turning off the "(recommended)" label using a pref
-    let blockCookiesFromTrackers = document.getElementById("blockCookiesFromTrackers");
-    if (contentBlockingCookiesAndSiteDataRejectTrackersRecommended) {
-      document.l10n.setAttributes(blockCookiesFromTrackers, "sitedata-block-trackers-option-recommended");
-    }
-
     // Allow hiding the Reject Trackers option based on a pref
+    let blockCookiesFromTrackers = document.getElementById("blockCookiesFromTrackers");
     if (!contentBlockingCookiesAndSiteDataRejectTrackersEnabled) {
       blockCookiesFromTrackers.remove();
     }
