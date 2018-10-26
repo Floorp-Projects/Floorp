@@ -116,6 +116,7 @@ permalink: /changelog/
     // ..
   ).install(applicationContext)
   ```
+  * Showing the crash prompt won't play the default activity animation anymore.
   * Added a new sample app `samples-crash` to show and test crash reporter integration.
 * **lib-jexl**
   * New component for evaluating Javascript Expression Language (JEXL) expressions. This implementation is based on [Mozjexl](https://github.com/mozilla/mozjexl) used at Mozilla, specifically as a part of SHIELD and Normandy. In a future version of Fretboard JEXL will allow more complex rules for experiments. For more see [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/README.md).
