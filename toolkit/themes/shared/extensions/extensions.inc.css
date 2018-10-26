@@ -254,8 +254,10 @@ button.warning {
 }
 
 #header-utils-btn {
+  -moz-appearance: none;
+  border: 1px solid var(--in-content-box-border-color);
+  border-radius: 2px;
   line-height: 20px;
-  border-color: var(--in-content-box-border-color);
   background-color: var(--in-content-page-background);
   padding-right: 10px;
   padding-left: 10px;
@@ -263,30 +265,17 @@ button.warning {
   margin-bottom: 2px;
 }
 
-#header-utils-btn:not([disabled="true"]):active:hover,
-#header-utils-btn[open="true"] {
-  padding-bottom: 0px;
-  padding-top: 0px;
-  background-color: var(--in-content-box-background-active);
-}
-
-.header-button {
-  -moz-appearance: none;
-  border: 1px solid;
-  border-radius: 2px;
-}
-
-.header-button[disabled="true"] > .toolbarbutton-icon {
-  opacity: 0.4;
-}
-
-.header-button:not([disabled="true"]):hover,
-#header-utils-btn:not([disabled="true"]):hover {
-  background-color: #ebebeb;
+#header-utils-btn:hover {
+  background-color: var(--in-content-box-background-hover);
   cursor: pointer;
 }
 
-.header-button > .toolbarbutton-text {
+#header-utils-btn:active:hover,
+#header-utils-btn[open="true"] {
+  background-color: var(--in-content-box-background-active);
+}
+
+#header-utils-btn > .toolbarbutton-text {
   display: none;
 }
 
