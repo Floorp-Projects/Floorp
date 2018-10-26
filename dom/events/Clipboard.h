@@ -45,6 +45,12 @@ public:
 
   static LogModule* GetClipboardLog();
 
+  // Check if the Clipboard.readText API should be enabled for this context.
+  // This API is only enabled for Extension and System contexts, as there is no
+  // way to request the required permission for web content. If the clipboard
+  // API testing pref is enabled, ReadText is enabled for web content for
+  // testing purposes.
+  static bool ReadTextEnabled(JSContext* aCx, JSObject* aGlobal);
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -53,7 +59,7 @@ private:
   // Checks if dom.events.testing.asyncClipboard pref is enabled.
   // The aforementioned pref allows automated tests to bypass the security checks when writing to
   //  or reading from the clipboard.
-  bool IsTestingPrefEnabled();
+  static bool IsTestingPrefEnabled();
 
   already_AddRefed<Promise> ReadHelper(JSContext* aCx, nsIPrincipal& aSubjectPrincipal,
                                        ClipboardReadType aClipboardReadType, ErrorResult& aRv);

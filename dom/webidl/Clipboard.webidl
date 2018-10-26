@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://www.w3.org/TR/geolocation-API
+ * https://w3c.github.io/clipboard-apis/
  *
  * Copyright © 2018 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -15,8 +15,9 @@
 interface Clipboard : EventTarget {
   [Pref="dom.events.asyncClipboard.dataTransfer", Throws, NeedsSubjectPrincipal]
   Promise<DataTransfer> read();
-  [Throws, NeedsSubjectPrincipal]
+  [Func="Clipboard::ReadTextEnabled", Throws, NeedsSubjectPrincipal]
   Promise<DOMString> readText();
+
   [Pref="dom.events.asyncClipboard.dataTransfer", Throws, NeedsSubjectPrincipal]
   Promise<void> write(DataTransfer data);
   [Throws, NeedsSubjectPrincipal]
