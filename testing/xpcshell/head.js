@@ -12,7 +12,8 @@
 
 /* defined by the harness */
 /* globals _HEAD_FILES, _HEAD_JS_PATH, _JSDEBUGGER_PORT, _JSCOV_DIR,
-    _MOZINFO_JS_PATH, _TEST_FILE, _TEST_NAME, _TESTING_MODULES_DIR:true */
+    _MOZINFO_JS_PATH, _TEST_FILE, _TEST_NAME, _TESTING_MODULES_DIR:true,
+    _PREFS_FILE */
 
 /* defined by XPCShellImpl.cpp */
 /* globals load, sendCommand */
@@ -1479,6 +1480,11 @@ function run_next_test() {
 try {
   // Set global preferences
   if (runningInParent) {
+    let prefsFile = Cc["@mozilla.org/file/local;1"]
+      .createInstance(Ci.nsIFile);
+    prefsFile.initWithPath(_PREFS_FILE);
+    _Services.prefs.readUserPrefsFromFile(prefsFile);
+
     // Always use network provider for geolocation tests
     // so we bypass the OSX dialog raised by the corelocation provider
     _Services.prefs.setBoolPref("geo.provider.testing", true);
