@@ -294,6 +294,9 @@ private:
   // outlined in the specification.
   void FireTimeUpdate();
 
+  // True if we're going to loop back to the head position when media is in looping.
+  bool IsLoopingBack(double aPrevPosition, double aCurPosition) const;
+
   // Returns true if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
   bool CanPlayThrough();

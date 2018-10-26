@@ -2355,20 +2355,7 @@ DecodingState::Step()
   TimeUnit before = mMaster->GetMediaTime();
   mMaster->UpdatePlaybackPositionPeriodically();
 
-  // Fire the `seeking` and `seeked` events to meet the HTML spec
-  // when the media is looped back from the end to the beginning.
-  if (before > mMaster->GetMediaTime()) {
-    MOZ_ASSERT(mMaster->mLooping);
-    mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::Loop);
-  // After looping is cancelled, the time won't be corrected, and therefore we
-  // can check it to see if the end of the media track is reached. Make sure
-  // the media is started before comparing the time, or it's meaningless.
-  // Without checking IsStarted(), the media will be terminated immediately
-  // after seeking forward. When the state is just transited from seeking state,
-  // GetClock() is smaller than GetMediaTime(), since GetMediaTime() is updated
-  // upon seek is completed while GetClock() will be updated after the media is
-  // started again.
-  } else if (mMaster->mMediaSink->IsStarted() && !mMaster->mLooping) {
+  if (mMaster->mMediaSink->IsStarted() && !mMaster->mLooping) {
     TimeUnit adjusted = mMaster->GetClock();
     Reader()->AdjustByLooping(adjusted);
     if (adjusted < before) {
