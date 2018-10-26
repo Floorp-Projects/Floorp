@@ -125,7 +125,9 @@ class Group extends _react.Component {
 
   renderDescription() {
     const frame = this.props.group[0];
-    const displayName = (0, _frames.formatDisplayName)(frame);
+    const displayName = (0, _frames.formatDisplayName)(frame, {
+      maxLength: null
+    });
     return _react2.default.createElement("li", {
       key: frame.id,
       className: (0, _classnames2.default)("group"),
