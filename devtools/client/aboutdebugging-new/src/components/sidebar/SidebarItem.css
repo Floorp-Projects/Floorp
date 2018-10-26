@@ -11,14 +11,15 @@
 .sidebar-item {
   color: var(--sidebar-text-color);
   border-radius: 2px;
-  padding-inline-end: 10px;
-  padding-inline-start: 10px;
-  transition: background-color 150ms;
+  height: var(--category-height);
+  padding-inline-end: var(--category-padding);
+  padding-inline-start: var(--category-padding);
+  transition: background-color var(--category-transition-duration);
   -moz-user-select: none;
 }
 
 .sidebar-item:not(.sidebar-item--selectable) {
-  opacity: 0.5;
+  color: var(--grey-40);
 }
 
 .sidebar-item--selectable:hover {

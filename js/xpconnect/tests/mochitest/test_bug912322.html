@@ -18,8 +18,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=912322
     ok(f in SpecialPowers.wrap(document), f + " should be available to chrome via Xray");
   }
 
+  var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
   // Test window.controllers.
-  is(typeof window.controllers, 'undefined', "controllers should not be available to content");
+  if (AppConstants.RELEASE_OR_BETA) {
+    is(typeof window.controllers, 'object', "shimmed controllers should be available to content in beta and release");
+  } else {
+    is(typeof window.controllers, 'undefined', "controllers should not be available to content in Nightly");
+  }
   is(typeof SpecialPowers.wrap(window).controllers, 'object', "controllers should be available over Xray");
 
   </script>
