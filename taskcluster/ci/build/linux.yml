@@ -982,6 +982,9 @@ linux64-ccov/debug:
         - linux64-cbindgen
         - linux64-sccache
         - linux64-node
+    fetches:
+        toolchain:
+            - linux64-grcov
 
 linux64-ccov/opt:
     description: "Linux64-CCov Opt"

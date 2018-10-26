@@ -827,15 +827,43 @@ struct ParamTraits<mozilla::TimeStampValue>
   {
     WriteParam(aMsg, aParam.mGTC);
     WriteParam(aMsg, aParam.mQPC);
-    WriteParam(aMsg, aParam.mHasQPC);
+    WriteParam(aMsg, aParam.mUsedCanonicalNow);
     WriteParam(aMsg, aParam.mIsNull);
+    WriteParam(aMsg, aParam.mHasQPC);
   }
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return (ReadParam(aMsg, aIter, &aResult->mGTC) &&
             ReadParam(aMsg, aIter, &aResult->mQPC) &&
-            ReadParam(aMsg, aIter, &aResult->mHasQPC) &&
-            ReadParam(aMsg, aIter, &aResult->mIsNull));
+            ReadParam(aMsg, aIter, &aResult->mUsedCanonicalNow) &&
+            ReadParam(aMsg, aIter, &aResult->mIsNull) &&
+            ReadParam(aMsg, aIter, &aResult->mHasQPC));
+  }
+};
+
+#else
+
+template<>
+struct ParamTraits<mozilla::TimeStamp63Bit>
+{
+  typedef mozilla::TimeStamp63Bit paramType;
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mUsedCanonicalNow);
+    WriteParam(aMsg, aParam.mTimeStamp);
+  }
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    bool success = true;
+    uint64_t result;
+
+    success &= ReadParam(aMsg, aIter, &result);
+    aResult->mUsedCanonicalNow = result & 0x01;
+
+    success &= ReadParam(aMsg, aIter, &result);
+    aResult->mTimeStamp = result & 0x7FFFFFFFFFFFFFFF;
+
+    return success;
   }
 };
 
