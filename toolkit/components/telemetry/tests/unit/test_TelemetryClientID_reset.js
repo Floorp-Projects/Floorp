@@ -15,10 +15,10 @@ const PING_FORMAT_VERSION = 4;
 const OPTOUT_PING_TYPE = "optout";
 const TEST_PING_TYPE = "test-ping-type";
 
-function sendPing() {
+function sendPing(addEnvironment = false) {
   let options = {
     addClientId: true,
-    addEnvironment: false,
+    addEnvironment,
   };
   return TelemetryController.submitExternalPing(TEST_PING_TYPE, {}, options);
 }
@@ -211,6 +211,7 @@ add_task(async function test_clientid_canary_nonunified_no_pref_trigger() {
 
   // Restart the instance
   await TelemetryController.testShutdown();
+  await TelemetryStorage.testClearPendingPings();
   await TelemetryController.testReset();
 
   let newClientId = await ClientID.getClientID();
@@ -221,6 +222,7 @@ add_task(async function test_clientid_canary_nonunified_no_pref_trigger() {
 
   // Restart the instance
   await TelemetryController.testShutdown();
+  await TelemetryStorage.testClearPendingPings();
   await TelemetryController.testReset();
 
   newClientId = await ClientID.getClientID();
