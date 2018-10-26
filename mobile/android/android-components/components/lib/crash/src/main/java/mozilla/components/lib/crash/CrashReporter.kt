@@ -153,7 +153,8 @@ class CrashReporter(
      */
     data class PromptConfiguration(
         internal val appName: String = "App",
-        internal val organizationName: String = "Mozilla"
+        internal val organizationName: String = "Mozilla",
+        internal val message: String? = null
     )
 
     companion object {

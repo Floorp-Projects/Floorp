@@ -24,6 +24,19 @@
         tools:text="@string/mozac_lib_crash_dialog_title"
         style="@style/Base.DialogWindowTitle.AppCompat" />
 
+    <TextView
+        android:id="@+id/messageView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/titleView"
+        tools:text="As a private browser, we never save and cannot restore your last browsing session." />
+
     <CheckBox
         android:id="@+id/sendCheckbox"
         android:layout_width="match_parent"
@@ -31,11 +44,11 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
+        android:checked="true"
         android:padding="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/titleView"
-        android:checked="true"
+        app:layout_constraintTop_toBottomOf="@+id/messageView"
         tools:text="@string/mozac_lib_crash_dialog_checkbox" />
 
     <Button

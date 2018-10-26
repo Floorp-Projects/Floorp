@@ -7,6 +7,7 @@ package mozilla.components.lib.crash.prompt
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.view.View
 import kotlinx.android.synthetic.main.mozac_lib_crash_crashreporter.*
 import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.GlobalScope
@@ -45,6 +46,12 @@ class CrashReporterActivity : AppCompatActivity() {
             setOnClickListener { restart() }
         }
         closeButton.setOnClickListener { close() }
+
+        if (crashReporter.promptConfiguration.message == null) {
+            messageView.visibility = View.GONE
+        } else {
+            messageView.text = crashReporter.promptConfiguration.message
+        }
     }
 
     private fun close() {
