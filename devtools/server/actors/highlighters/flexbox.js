@@ -165,8 +165,9 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.clearCache();
 
     this.flexData = null;
-    this.crossAxisDirection = null;
     this.mainAxisDirection = null;
+    this.crossAxisDirection = null;
+    this.axes = null;
 
     AutoRefreshHighlighter.prototype.destroy.call(this);
   }
@@ -304,8 +305,17 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
 
     const flex = this.currentNode.getAsFlexContainer();
+
+    const oldCrossAxisDirection = this.crossAxisDirection;
     this.crossAxisDirection = flex.crossAxisDirection;
+    const newCrossAxisDirection = this.crossAxisDirection;
+
+    const oldMainAxisDirection = this.mainAxisDirection;
     this.mainAxisDirection = flex.mainAxisDirection;
+    const newMainAxisDirection = this.mainAxisDirection;
+
+    // Concatenate the axes to simplify conditionals.
+    this.axes = `${this.mainAxisDirection} ${this.crossAxisDirection}`;
 
     const oldFlexData = this.flexData;
     this.flexData = getFlexData(flex, this.win);
@@ -332,7 +342,9 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
            oldAlignItems !== newAlignItems ||
            oldFlexDirection !== newFlexDirection ||
            oldFlexWrap !== newFlexWrap ||
-           oldJustifyContent !== newJustifyContent;
+           oldJustifyContent !== newJustifyContent ||
+           oldCrossAxisDirection !== newCrossAxisDirection ||
+           oldMainAxisDirection !== newMainAxisDirection;
   }
 
   _hide() {
@@ -599,9 +611,11 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     for (const flexLine of this.flexData.lines) {
       const { crossStart, crossSize } = flexLine;
 
-      switch (this.mainAxisDirection) {
-        case "horizontal-lr":
-        case "horizontal-rl":
+      switch (this.axes) {
+        case "horizontal-lr vertical-tb":
+        case "horizontal-lr vertical-bt":
+        case "horizontal-rl vertical-tb":
+        case "horizontal-rl vertical-bt":
           clearRect(this.ctx, 0, crossStart, bounds.width, crossStart + crossSize,
             this.currentMatrix);
 
@@ -618,7 +632,8 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
             this.ctx.stroke();
           }
           break;
-        case "vertical-tb":
+        case "vertical-tb horizontal-lr":
+        case "vertical-bt horizontal-rl":
           clearRect(this.ctx, crossStart, 0, crossStart + crossSize, bounds.height,
             this.currentMatrix);
 
@@ -635,7 +650,8 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
             this.ctx.stroke();
           }
           break;
-        case "vertical-bt":
+        case "vertical-bt horizontal-lr":
+        case "vertical-tb horizontal-rl":
           clearRect(this.ctx, bounds.width - crossStart, 0,
             bounds.width - crossStart - crossSize, bounds.height, this.currentMatrix);
 
@@ -690,17 +706,21 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
         const bottom = Math.round(flexItemBounds.bottom / zoom - bounds.top);
 
         // Clear a rectangular are covering the alignment container.
-        switch (this.mainAxisDirection) {
-          case "horizontal-lr":
-          case "horizontal-rl":
+        switch (this.axes) {
+          case "horizontal-lr vertical-tb":
+          case "horizontal-lr vertical-bt":
+          case "horizontal-rl vertical-tb":
+          case "horizontal-rl vertical-bt":
             clearRect(this.ctx, left, Math.round(crossStart) + 2, right,
               Math.round(crossStart + crossSize) - 2, this.currentMatrix);
             break;
-          case "vertical-tb":
+          case "vertical-tb horizontal-lr":
+          case "vertical-bt horizontal-rl":
             clearRect(this.ctx, Math.round(crossStart) + 1, top,
               Math.round(crossStart + crossSize), bottom, this.currentMatrix);
             break;
-          case "vertical-bt":
+          case "vertical-bt horizontal-lr":
+          case "vertical-tb horizontal-rl":
             clearRect(this.ctx, Math.round(bounds.width - crossStart - crossSize) + 1,
               top, Math.round(bounds.width - crossStart), bottom, this.currentMatrix);
             break;
