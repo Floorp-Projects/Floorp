@@ -120,7 +120,13 @@ The crash reporter prompt can be customized by providing a `PromptConfiguration`
 CrashReporter(
 	promptConfiguration = CrashReporter.PromptConfiguration(
 		appName = "My App",
-		organizationName = "My Organization"
+		organizationName = "My Organization",
+
+		// An additional message that will be shown in the prompt
+		message = "We are very sorry!"
+
+		// Use a custom theme for the prompt (Extend Theme.Mozac.CrashReporter)
+		theme = android.R.style.Theme_Holo_Dialog
 	),
 
 	// ..

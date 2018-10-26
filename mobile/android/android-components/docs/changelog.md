@@ -100,6 +100,23 @@ permalink: /changelog/
   Once the feature has been initialized, history will be tracked for all subsequently added sessions.
 * **sample-browser**:
   * Updated the sample browser to track browsing history using an in-memory history storage implementation (how much is actually tracked in practice depends on which engine is being used. As of this release, only `SystemEngine` provides a full set of necessary APIs).
+* **lib-crash**
+  * Added option to display additional message in prompt and define the theme to be used:
+  ```Kotlin
+    CrashReporter(
+    promptConfiguration = CrashReporter.PromptConfiguration(
+      // ..
+
+      // An additional message that will be shown in the prompt
+      message = "We are very sorry!"
+
+      // Use a custom theme for the prompt (Extend Theme.Mozac.CrashReporter)
+      theme = android.R.style.Theme_Holo_Dialog
+    ),
+    // ..
+  ).install(applicationContext)
+  ```
+  * Added a new sample app `samples-crash` to show and test crash reporter integration.
 * **lib-jexl**
   * New component for evaluating Javascript Expression Language (JEXL) expressions. This implementation is based on [Mozjexl](https://github.com/mozilla/mozjexl) used at Mozilla, specifically as a part of SHIELD and Normandy. In a future version of Fretboard JEXL will allow more complex rules for experiments. For more see [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/README.md).
 
