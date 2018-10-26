@@ -9,8 +9,8 @@
   <string name="search_hint">འཚོལ་བྱའི་ནང་དོན་ %1$s</string>
   <string name="menu_share">མཉམ་སྤྱོད་་་</string>
   <string name="menu_report_site_issue">དྲ་ཚིགས་གནད་དོན་སྙན་སེང་ཞུ་བ།</string>
-  <string name="menu_open_with_default_browser2">ཁ་ཕྱེ་བ་ཡུལ་%1$s</string>
-  <string name="menu_open_with_a_browser2">ཁ་ཕྱེ་བ་ཡུལ་་་་</string>
+  <string name="menu_open_with_default_browser2">ཁ་ཕྱེ་ཡུལ་%1$s</string>
+  <string name="menu_open_with_a_browser2">ཁ་ཕྱེ་ཡུལ་་་་</string>
   <string name="menu_add_to_home_screen">ཁ་པའི་མདུན་ངོས་ཞོག་ཅིག</string>
   <string name="menu_whats_new">གནས་ཚུལ་གསར་པ།</string>
   <string name="menu_settings">སྒྲིག་བཟོ།</string>
