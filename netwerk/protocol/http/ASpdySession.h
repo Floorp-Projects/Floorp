@@ -86,6 +86,8 @@ public:
             code == NS_ERROR_INVALID_CONTENT_ENCODING ||
             code == NS_BINDING_RETARGETED || code == NS_ERROR_CORRUPTED_CONTENT);
   }
+
+  virtual void SetCleanShutdown(bool) = 0;
 };
 
 typedef bool (*ALPNCallback) (nsISupports *); // nsISSLSocketControl is typical

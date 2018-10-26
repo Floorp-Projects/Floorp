@@ -119,36 +119,28 @@ FindReservedWord<Utf8Unit>(const Utf8Unit* units, size_t length)
 }
 
 static const ReservedWordInfo*
-FindReservedWord(JSLinearString* str)
+FindReservedWord(JSLinearString* str, js::frontend::NameVisibility* visibility)
 {
     JS::AutoCheckCannotGC nogc;
-    return str->hasLatin1Chars()
-           ? FindReservedWord(str->latin1Chars(nogc), str->length())
-           : FindReservedWord(str->twoByteChars(nogc), str->length());
-}
-
-template <typename CharT>
-static bool
-IsIdentifierImpl(const CharT* chars, size_t length)
-{
-    using namespace js;
-
-    if (length == 0) {
-        return false;
-    }
-
-    if (!unicode::IsIdentifierStart(char16_t(*chars))) {
-        return false;
-    }
-
-    const CharT* end = chars + length;
-    while (++chars != end) {
-        if (!unicode::IsIdentifierPart(char16_t(*chars))) {
-            return false;
+    if (str->hasLatin1Chars()) {
+        const JS::Latin1Char* chars = str->latin1Chars(nogc);
+        size_t length = str->length();
+        if (length > 0 && chars[0] == '#') {
+            *visibility = js::frontend::NameVisibility::Private;
+            return nullptr;
         }
+        *visibility = js::frontend::NameVisibility::Public;
+        return FindReservedWord(chars, length);
     }
 
-    return true;
+    const char16_t* chars = str->twoByteChars(nogc);
+    size_t length = str->length();
+    if (length > 0 && chars[0] == '#') {
+        *visibility = js::frontend::NameVisibility::Private;
+        return nullptr;
+    }
+    *visibility = js::frontend::NameVisibility::Public;
+    return FindReservedWord(chars, length);
 }
 
 static uint32_t
@@ -171,15 +163,71 @@ GetSingleCodePoint(const char16_t** p, const char16_t* end)
     return codePoint;
 }
 
-static bool
-IsIdentifierMaybeNonBMP(const char16_t* chars, size_t length)
-{
-    using namespace js;
+namespace js {
 
-    if (IsIdentifierImpl(chars, length)) {
-        return true;
+namespace frontend {
+
+bool
+IsIdentifier(JSLinearString* str)
+{
+    JS::AutoCheckCannotGC nogc;
+    MOZ_ASSERT(str);
+    if (str->hasLatin1Chars()) {
+        return IsIdentifier(str->latin1Chars(nogc), str->length());
+    }
+    return IsIdentifier(str->twoByteChars(nogc), str->length());
+}
+
+bool
+IsIdentifierNameOrPrivateName(JSLinearString* str)
+{
+    JS::AutoCheckCannotGC nogc;
+    MOZ_ASSERT(str);
+    if (str->hasLatin1Chars()) {
+        return IsIdentifierNameOrPrivateName(str->latin1Chars(nogc), str->length());
+    }
+    return IsIdentifierNameOrPrivateName(str->twoByteChars(nogc), str->length());
+}
+
+bool
+IsIdentifier(const Latin1Char* chars, size_t length)
+{
+    if (length == 0) {
+        return false;
     }
 
+    if (!unicode::IsIdentifierStart(char16_t(*chars))) {
+        return false;
+    }
+
+    const Latin1Char* end = chars + length;
+    while (++chars != end) {
+        if (!unicode::IsIdentifierPart(char16_t(*chars))) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool
+IsIdentifierNameOrPrivateName(const Latin1Char* chars, size_t length)
+{
+    if (length == 0) {
+        return false;
+    }
+
+    if (char16_t(*chars) == '#') {
+        ++chars;
+        --length;
+    }
+
+    return IsIdentifier(chars, length);
+}
+
+bool
+IsIdentifier(const char16_t* chars, size_t length)
+{
     if (length == 0) {
         return false;
     }
@@ -203,37 +251,45 @@ IsIdentifierMaybeNonBMP(const char16_t* chars, size_t length)
     return true;
 }
 
-namespace js {
-
-namespace frontend {
-
 bool
-IsIdentifier(JSLinearString* str)
+IsIdentifierNameOrPrivateName(const char16_t* chars, size_t length)
 {
-    JS::AutoCheckCannotGC nogc;
-    MOZ_ASSERT(str);
-    if (str->hasLatin1Chars()) {
-        return ::IsIdentifierImpl(str->latin1Chars(nogc), str->length());
+    if (length == 0) {
+        return false;
     }
-    return ::IsIdentifierMaybeNonBMP(str->twoByteChars(nogc), str->length());
-}
 
-bool
-IsIdentifier(const char* chars, size_t length)
-{
-    return ::IsIdentifierImpl(chars, length);
-}
+    const char16_t* p = chars;
+    const char16_t* end = chars + length;
+    uint32_t codePoint;
 
-bool
-IsIdentifier(const char16_t* chars, size_t length)
-{
-    return ::IsIdentifierImpl(chars, length);
+    codePoint = GetSingleCodePoint(&p, end);
+    if (codePoint == '#') {
+        if (length == 1) {
+            return false;
+        }
+
+        codePoint = GetSingleCodePoint(&p, end);
+    }
+
+    if (!unicode::IsIdentifierStart(codePoint)) {
+        return false;
+    }
+
+    while (p < end) {
+        codePoint = GetSingleCodePoint(&p, end);
+        if (!unicode::IsIdentifierPart(codePoint)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool
 IsKeyword(JSLinearString* str)
 {
-    if (const ReservedWordInfo* rw = FindReservedWord(str)) {
+    NameVisibility visibility;
+    if (const ReservedWordInfo* rw = FindReservedWord(str, &visibility)) {
         return TokenKindIsKeyword(rw->tokentype);
     }
 
@@ -243,17 +299,19 @@ IsKeyword(JSLinearString* str)
 TokenKind
 ReservedWordTokenKind(PropertyName* str)
 {
-    if (const ReservedWordInfo* rw = FindReservedWord(str)) {
+    NameVisibility visibility;
+    if (const ReservedWordInfo* rw = FindReservedWord(str, &visibility)) {
         return rw->tokentype;
     }
 
-    return TokenKind::Name;
+    return visibility == NameVisibility::Private ? TokenKind::PrivateName : TokenKind::Name;
 }
 
 const char*
 ReservedWordToCharZ(PropertyName* str)
 {
-    if (const ReservedWordInfo* rw = FindReservedWord(str)) {
+    NameVisibility visibility;
+    if (const ReservedWordInfo* rw = FindReservedWord(str, &visibility)) {
         return ReservedWordToCharZ(rw->tokentype);
     }
 
@@ -1661,6 +1719,42 @@ GeneralTokenStreamChars<Unit, AnyCharsAccess>::matchUnicodeEscapeIdent(uint32_t*
 }
 
 template<typename Unit, class AnyCharsAccess>
+MOZ_MUST_USE bool
+TokenStreamSpecific<Unit, AnyCharsAccess>::matchIdentifierStart(IdentifierEscapes* sawEscape)
+{
+    int32_t unit = getCodeUnit();
+    if (unicode::IsIdentifierStart(char16_t(unit))) {
+        *sawEscape = IdentifierEscapes::None;
+        return true;
+    }
+
+    if (unit == '\\') {
+        *sawEscape = IdentifierEscapes::SawUnicodeEscape;
+
+        uint32_t codePoint;
+        uint32_t escapeLength = matchUnicodeEscapeIdStart(&codePoint);
+        if (escapeLength != 0) {
+            return true;
+        }
+
+        // We could point "into" a mistyped escape, e.g. for "\u{41H}" we
+        // could point at the 'H'.  But we don't do that now, so the code
+        // unit after the '\' isn't necessarily bad, so just point at the
+        // start of the actually-invalid escape.
+        ungetCodeUnit('\\');
+        error(JSMSG_BAD_ESCAPE);
+        return false;
+    }
+
+    *sawEscape = IdentifierEscapes::None;
+
+    // NOTE: |unit| may be EOF here.
+    ungetCodeUnit(unit);
+    error(JSMSG_MISSING_PRIVATE_NAME);
+    return false;
+}
+
+template<typename Unit, class AnyCharsAccess>
 bool
 TokenStreamSpecific<Unit, AnyCharsAccess>::getDirectives(bool isMultiline,
                                                          bool shouldWarnDeprecated)
@@ -1931,9 +2025,11 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::putIdentInCharBuffer(const Unit* iden
 template<typename Unit, class AnyCharsAccess>
 MOZ_MUST_USE bool
 TokenStreamSpecific<Unit, AnyCharsAccess>::identifierName(TokenStart start,
-                                                          const Unit* identStart,
-                                                          IdentifierEscapes escaping,
-                                                          Modifier modifier, TokenKind* out)
+                                                           const Unit* identStart,
+                                                           IdentifierEscapes escaping,
+                                                           Modifier modifier,
+                                                           NameVisibility visibility,
+                                                           TokenKind* out)
 {
     // Run the bad-token code for every path out of this function except the
     // two success-cases.
@@ -1995,11 +2091,14 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::identifierName(TokenStart start,
         const Unit* chars = identStart;
         size_t length = this->sourceUnits.addressOfNextCodeUnit() - identStart;
 
-        // Represent reserved words lacking escapes as reserved word tokens.
-        if (const ReservedWordInfo* rw = FindReservedWord(chars, length)) {
-            noteBadToken.release();
-            newSimpleToken(rw->tokentype, start, modifier, out);
-            return true;
+        // Private identifiers start with a '#', and so cannot be reserved words.
+        if (visibility == NameVisibility::Public) {
+            // Represent reserved words lacking escapes as reserved word tokens.
+            if (const ReservedWordInfo* rw = FindReservedWord(chars, length)) {
+                noteBadToken.release();
+                newSimpleToken(rw->tokentype, start, modifier, out);
+                return true;
+            }
         }
 
         atom = atomizeSourceChars(anyCharsAccess().cx, MakeSpan(chars, length));
@@ -2009,7 +2108,16 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::identifierName(TokenStart start,
     }
 
     noteBadToken.release();
-    newNameToken(atom->asPropertyName(), start, modifier, out);
+    if (visibility == NameVisibility::Private) {
+        MOZ_ASSERT(identStart[0] == static_cast<Unit>('#'), "Private identifier starts with #");
+        newPrivateNameToken(atom->asPropertyName(), start, modifier, out);
+
+        // TODO(khypera): Delete the below once private names are supported.
+        errorAt(start.offset(), JSMSG_FIELDS_NOT_SUPPORTED);
+        return false;
+    } else {
+        newNameToken(atom->asPropertyName(), start, modifier, out);
+    }
     return true;
 }
 
@@ -2440,7 +2548,7 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(TokenKind* const ttp
                            "or else we'll fail to maintain line-info/flags "
                            "for EOL here");
 
-                return identifierName(start, identStart, IdentifierEscapes::None, modifier, ttp);
+                return identifierName(start, identStart, IdentifierEscapes::None, modifier, NameVisibility::Public, ttp);
             }
 
             error(JSMSG_ILLEGAL_CHARACTER);
@@ -2489,7 +2597,8 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(TokenKind* const ttp
         if (c1kind == Ident) {
             TokenStart start(this->sourceUnits, -1);
             return identifierName(start, this->sourceUnits.addressOfNextCodeUnit() - 1,
-                                  IdentifierEscapes::None, modifier, ttp);
+                                  IdentifierEscapes::None, modifier,
+                                  NameVisibility::Public, ttp);
         }
 
         // Look for a decimal number.
@@ -2682,6 +2791,16 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(TokenKind* const ttp
             simpleKind = TokenKind::Dot;
             break;
 
+          case '#': {
+            TokenStart start(this->sourceUnits, -1);
+            const Unit* identStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
+            IdentifierEscapes sawEscape;
+            if (!matchIdentifierStart(&sawEscape)) {
+                return badToken();
+            }
+            return identifierName(start, identStart, sawEscape, modifier, NameVisibility::Private, ttp);
+          }
+
           case '=':
             if (matchCodeUnit('=')) {
                 simpleKind = matchCodeUnit('=') ? TokenKind::StrictEq : TokenKind::Eq;
@@ -2705,7 +2824,7 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(TokenKind* const ttp
             if (uint32_t escapeLength = matchUnicodeEscapeIdStart(&codePoint)) {
                 return identifierName(start,
                                       this->sourceUnits.addressOfNextCodeUnit() - escapeLength - 1,
-                                      IdentifierEscapes::SawUnicodeEscape, modifier, ttp);
+                                      IdentifierEscapes::SawUnicodeEscape, modifier, NameVisibility::Public, ttp);
             }
 
             // We could point "into" a mistyped escape, e.g. for "\u{41H}" we

@@ -23,7 +23,7 @@ use gpu_types::BrushFlags;
 use hit_test::{HitTestingItem, HitTestingRun};
 use image::simplify_repeated_primitive;
 use internal_types::{FastHashMap, FastHashSet};
-use picture::{Picture3DContext, PictureCompositeMode, PictureIdGenerator, PicturePrimitive};
+use picture::{Picture3DContext, PictureCompositeMode, PictureIdGenerator, PicturePrimitive, PrimitiveList};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor, PrimitiveInstance};
 use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveOpacity, PrimitiveKey, PrimitiveSceneData};
 use prim_store::{BorderSource, BrushSegment, BrushSegmentVec, PrimitiveContainer, PrimitiveDataHandle, PrimitiveStore};
@@ -1077,6 +1077,10 @@ impl<'a> DisplayListFlattener<'a> {
         };
 
         // Add picture for this actual stacking context contents to render into.
+        let prim_list = PrimitiveList::new(
+            stacking_context.primitives,
+            &self.prim_store.primitives,
+        );
         let leaf_picture = PicturePrimitive::new_image(
             self.picture_id_generator.next(),
             leaf_composite_mode,
@@ -1085,7 +1089,8 @@ impl<'a> DisplayListFlattener<'a> {
             leaf_output_pipeline_id,
             true,
             stacking_context.requested_raster_space,
-            stacking_context.primitives,
+            prim_list,
+            stacking_context.spatial_node_index,
         );
         let leaf_pic_index = self.prim_store.create_picture(leaf_picture);
 
@@ -1120,6 +1125,11 @@ impl<'a> DisplayListFlattener<'a> {
         if let Picture3DContext::In { root_data: Some(mut prims), ancestor_index } = stacking_context.context_3d {
             prims.push(cur_instance.clone());
 
+            let prim_list = PrimitiveList::new(
+                prims,
+                &self.prim_store.primitives,
+            );
+
             // This is the acttual picture representing our 3D hierarchy root.
             let container_picture = PicturePrimitive::new_image(
                 self.picture_id_generator.next(),
@@ -1132,7 +1142,8 @@ impl<'a> DisplayListFlattener<'a> {
                 stacking_context.frame_output_pipeline_id,
                 true,
                 stacking_context.requested_raster_space,
-                prims,
+                prim_list,
+                stacking_context.spatial_node_index,
             );
 
             current_pic_index = self.prim_store.create_picture(container_picture);
@@ -1148,6 +1159,10 @@ impl<'a> DisplayListFlattener<'a> {
         // For each filter, create a new image with that composite mode.
         for filter in &stacking_context.composite_ops.filters {
             let filter = filter.sanitize();
+            let prim_list = PrimitiveList::new(
+                vec![cur_instance.clone()],
+                &self.prim_store.primitives,
+            );
 
             let filter_picture = PicturePrimitive::new_image(
                 self.picture_id_generator.next(),
@@ -1157,7 +1172,8 @@ impl<'a> DisplayListFlattener<'a> {
                 None,
                 true,
                 stacking_context.requested_raster_space,
-                vec![cur_instance.clone()],
+                prim_list,
+                stacking_context.spatial_node_index,
             );
             let filter_pic_index = self.prim_store.create_picture(filter_picture);
             current_pic_index = filter_pic_index;
@@ -1181,6 +1197,11 @@ impl<'a> DisplayListFlattener<'a> {
 
         // Same for mix-blend-mode.
         if let Some(mix_blend_mode) = stacking_context.composite_ops.mix_blend_mode {
+            let prim_list = PrimitiveList::new(
+                vec![cur_instance.clone()],
+                &self.prim_store.primitives,
+            );
+
             let blend_picture = PicturePrimitive::new_image(
                 self.picture_id_generator.next(),
                 Some(PictureCompositeMode::MixBlend(mix_blend_mode)),
@@ -1189,7 +1210,8 @@ impl<'a> DisplayListFlattener<'a> {
                 None,
                 true,
                 stacking_context.requested_raster_space,
-                vec![cur_instance.clone()],
+                prim_list,
+                stacking_context.spatial_node_index,
             );
             let blend_pic_index = self.prim_store.create_picture(blend_picture);
             current_pic_index = blend_pic_index;
@@ -1513,6 +1535,11 @@ impl<'a> DisplayListFlattener<'a> {
                     // No point in adding a shadow here if there were no primitives
                     // added to the shadow.
                     if !prims.is_empty() {
+                        let prim_list = PrimitiveList::new(
+                            prims,
+                            &self.prim_store.primitives,
+                        );
+
                         // Create a picture that the shadow primitives will be added to. If the
                         // blur radius is 0, the code in Picture::prepare_for_render will
                         // detect this and mark the picture to be drawn directly into the
@@ -1526,7 +1553,8 @@ impl<'a> DisplayListFlattener<'a> {
                             None,
                             is_passthrough,
                             raster_space,
-                            prims,
+                            prim_list,
+                            pending_shadow.clip_and_scroll.spatial_node_index,
                         );
 
                         // Create the primitive to draw the shadow picture into the scene.
@@ -2233,6 +2261,11 @@ impl FlattenedStackingContext {
             Picture3DContext::Out => panic!("Unexpected out of 3D context"),
         };
 
+        let prim_list = PrimitiveList::new(
+            mem::replace(&mut self.primitives, Vec::new()),
+            &prim_store.primitives,
+        );
+
         let container_picture = PicturePrimitive::new_image(
             picture_id_generator.next(),
             Some(PictureCompositeMode::Blit),
@@ -2241,7 +2274,8 @@ impl FlattenedStackingContext {
             None,
             true,
             self.requested_raster_space,
-            mem::replace(&mut self.primitives, Vec::new()),
+            prim_list,
+            self.spatial_node_index,
         );
 
         let pic_index = prim_store.create_picture(container_picture);

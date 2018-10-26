@@ -151,7 +151,7 @@ SessionAccessibility::SendAccessibilityFocusedEvent(AccessibleWrap* aAccessible)
 {
   mSessionAccessibility->SendEvent(
     java::sdk::AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED,
-    aAccessible->VirtualViewID(), nullptr, aAccessible->ToBundle(true));
+    aAccessible->VirtualViewID(), aAccessible->AndroidClass(), nullptr);
   aAccessible->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
 }
 
@@ -160,7 +160,7 @@ SessionAccessibility::SendHoverEnterEvent(AccessibleWrap* aAccessible)
 {
   mSessionAccessibility->SendEvent(
     java::sdk::AccessibilityEvent::TYPE_VIEW_HOVER_ENTER,
-    aAccessible->VirtualViewID(), nullptr, aAccessible->ToBundle(true));
+    aAccessible->VirtualViewID(), aAccessible->AndroidClass(), nullptr);
 }
 
 void
@@ -174,7 +174,7 @@ SessionAccessibility::SendFocusEvent(AccessibleWrap* aAccessible)
 
   mSessionAccessibility->SendEvent(
     java::sdk::AccessibilityEvent::TYPE_VIEW_FOCUSED,
-    aAccessible->VirtualViewID(), nullptr, aAccessible->ToBundle(true));
+    aAccessible->VirtualViewID(), aAccessible->AndroidClass(), nullptr);
 }
 
 void
@@ -199,8 +199,8 @@ SessionAccessibility::SendScrollingEvent(AccessibleWrap* aAccessible,
   GECKOBUNDLE_FINISH(eventInfo);
 
   mSessionAccessibility->SendEvent(
-    java::sdk::AccessibilityEvent::TYPE_VIEW_SCROLLED, virtualViewId, eventInfo,
-    aAccessible->ToBundle(true));
+    java::sdk::AccessibilityEvent::TYPE_VIEW_SCROLLED, virtualViewId,
+    aAccessible->AndroidClass(), eventInfo);
 
   SendWindowContentChangedEvent(aAccessible);
 }
@@ -210,7 +210,7 @@ SessionAccessibility::SendWindowContentChangedEvent(AccessibleWrap* aAccessible)
 {
   mSessionAccessibility->SendEvent(
     java::sdk::AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED,
-    aAccessible->VirtualViewID(), nullptr, aAccessible->ToBundle(true));
+    aAccessible->VirtualViewID(), aAccessible->AndroidClass(), nullptr);
 }
 
 void
@@ -224,7 +224,7 @@ SessionAccessibility::SendWindowStateChangedEvent(AccessibleWrap* aAccessible)
 
   mSessionAccessibility->SendEvent(
     java::sdk::AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED,
-    aAccessible->VirtualViewID(), nullptr, aAccessible->ToBundle(true));
+    aAccessible->VirtualViewID(), aAccessible->AndroidClass(), nullptr);
 }
 
 void
@@ -245,7 +245,7 @@ SessionAccessibility::SendTextSelectionChangedEvent(AccessibleWrap* aAccessible,
 
   mSessionAccessibility->SendEvent(
     java::sdk::AccessibilityEvent::TYPE_VIEW_TEXT_SELECTION_CHANGED,
-    aAccessible->VirtualViewID(), eventInfo, aAccessible->ToBundle(true));
+    aAccessible->VirtualViewID(), aAccessible->AndroidClass(), eventInfo);
 }
 
 void
@@ -279,7 +279,7 @@ SessionAccessibility::SendTextChangedEvent(AccessibleWrap* aAccessible,
 
   mSessionAccessibility->SendEvent(
     java::sdk::AccessibilityEvent::TYPE_VIEW_TEXT_CHANGED,
-    aAccessible->VirtualViewID(), eventInfo, aAccessible->ToBundle(true));
+    aAccessible->VirtualViewID(), aAccessible->AndroidClass(), eventInfo);
 }
 
 void
@@ -299,15 +299,20 @@ SessionAccessibility::SendTextTraversedEvent(AccessibleWrap* aAccessible,
   mSessionAccessibility->SendEvent(
     java::sdk::AccessibilityEvent::
       TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-    aAccessible->VirtualViewID(), eventInfo, aAccessible->ToBundle(true));
+    aAccessible->VirtualViewID(), aAccessible->AndroidClass(), eventInfo);
 }
 
 void
-SessionAccessibility::SendClickedEvent(AccessibleWrap* aAccessible)
+SessionAccessibility::SendClickedEvent(AccessibleWrap* aAccessible, bool aChecked)
 {
+  GECKOBUNDLE_START(eventInfo);
+  // Boolean::FALSE/TRUE gets clobbered by a macro, so ugh.
+  GECKOBUNDLE_PUT(eventInfo, "checked", java::sdk::Integer::ValueOf(aChecked ? 1 : 0));
+  GECKOBUNDLE_FINISH(eventInfo);
+
   mSessionAccessibility->SendEvent(
     java::sdk::AccessibilityEvent::TYPE_VIEW_CLICKED,
-    aAccessible->VirtualViewID(), nullptr, aAccessible->ToBundle(true));
+    aAccessible->VirtualViewID(), aAccessible->AndroidClass(), eventInfo);
 }
 
 void
@@ -315,5 +320,5 @@ SessionAccessibility::SendSelectedEvent(AccessibleWrap* aAccessible)
 {
   mSessionAccessibility->SendEvent(
     java::sdk::AccessibilityEvent::TYPE_VIEW_SELECTED,
-    aAccessible->VirtualViewID(), nullptr, aAccessible->ToBundle(true));
+    aAccessible->VirtualViewID(), aAccessible->AndroidClass(), nullptr);
 }

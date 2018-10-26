@@ -73,6 +73,7 @@
     macro(LeftParen,    "'('") \
     macro(RightParen,   "')'") \
     macro(Name,         "identifier") \
+    macro(PrivateName,  "private identifier") \
     macro(Number,       "numeric literal") \
     macro(String,       "string literal") \
     \
@@ -322,6 +323,7 @@ inline MOZ_MUST_USE bool
 TokenKindIsPossibleIdentifier(TokenKind tt)
 {
     return tt == TokenKind::Name ||
+           tt == TokenKind::PrivateName ||
            TokenKindIsContextualKeyword(tt) ||
            TokenKindIsStrictReservedWord(tt);
 }

@@ -6536,6 +6536,11 @@ nsHttpChannel::BeginConnect()
     OriginAttributes originAttributes;
     NS_GetOriginAttributes(this, originAttributes);
 
+    RefPtr<nsHttpConnectionInfo> connInfo =
+        new nsHttpConnectionInfo(host, port, EmptyCString(), mUsername,
+                                 proxyInfo, originAttributes, isHttps);
+    mAllowAltSvc = (mAllowAltSvc && !gHttpHandler->IsSpdyBlacklisted(connInfo));
+
     RefPtr<AltSvcMapping> mapping;
     if (!mConnectionInfo && mAllowAltSvc && // per channel
         !(mLoadFlags & LOAD_FRESH_CONNECTION) &&
@@ -6589,9 +6594,16 @@ nsHttpChannel::BeginConnect()
     } else {
         LOG(("nsHttpChannel %p Using default connection info", this));
 
-        mConnectionInfo = new nsHttpConnectionInfo(host, port, EmptyCString(), mUsername, proxyInfo,
-                                                   originAttributes, isHttps);
+        mConnectionInfo = connInfo;
         Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC, false);
+    }
+
+    // Need to re-ask the handler, since mConnectionInfo may not be the connInfo
+    // we used earlier
+    if (gHttpHandler->IsSpdyBlacklisted(mConnectionInfo)) {
+        mAllowSpdy = 0;
+        mCaps |= NS_HTTP_DISALLOW_SPDY;
+        mConnectionInfo->SetNoSpdy(true);
     }
 
     mAuthProvider = new nsHttpChannelAuthProvider();

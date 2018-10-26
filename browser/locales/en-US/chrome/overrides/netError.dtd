@@ -239,3 +239,6 @@ certificate.">
 
 <!ENTITY prefReset.longDesc "It looks like your network security settings might be causing this. Do you want the default settings to be restored?">
 <!ENTITY prefReset.label "Restore default settings">
+
+<!ENTITY networkProtocolError.title "Network Protocol Error">
+<!ENTITY networkProtocolError.longDesc "<p>The page you are trying to view cannot be shown because an error in the network protocol was detected.</p><ul><li>Please contact the website owners to inform them of this problem.</li></ul>">

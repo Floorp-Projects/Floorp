@@ -264,7 +264,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         if (!elision) {
             return false;
         }
-        addList(/* list = */ literal, /* child = */ elision);
+        addList(/* list = */ literal, /* kid = */ elision);
         literal->setHasArrayHoleOrSpread();
         literal->setHasNonConstInitializer();
         return true;
@@ -277,7 +277,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         if (!spread) {
             return false;
         }
-        addList(/* list = */ literal, /* child = */ spread);
+        addList(/* list = */ literal, /* kid = */ spread);
         literal->setHasArrayHoleOrSpread();
         literal->setHasNonConstInitializer();
         return true;
@@ -287,7 +287,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         if (!element->isConstant()) {
             literal->setHasNonConstInitializer();
         }
-        addList(/* list = */ literal, /* child = */ element);
+        addList(/* list = */ literal, /* kid = */ element);
     }
 
     BinaryNodeType newCall(Node callee, Node args) {
@@ -310,11 +310,11 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<ListNode>(ParseNodeKind::Object, TokenPos(begin, begin + 1));
     }
 
-    ClassNodeType newClass(Node name, Node heritage, Node methodBlock, const TokenPos& pos) {
-        return new_<ClassNode>(name, heritage, methodBlock, pos);
+    ClassNodeType newClass(Node name, Node heritage, Node memberBlock, const TokenPos& pos) {
+        return new_<ClassNode>(name, heritage, memberBlock, pos);
     }
-    ListNodeType newClassMethodList(uint32_t begin) {
-        return new_<ListNode>(ParseNodeKind::ClassMethodList, TokenPos(begin, begin + 1));
+    ListNodeType newClassMemberList(uint32_t begin) {
+        return new_<ListNode>(ParseNodeKind::ClassMemberList, TokenPos(begin, begin + 1));
     }
     ClassNamesType newClassNames(Node outer, Node inner, const TokenPos& pos) {
         return new_<ClassNames>(outer, inner, pos);
@@ -339,7 +339,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         if (!mutation) {
             return false;
         }
-        addList(/* list = */ literal, /* child = */ mutation);
+        addList(/* list = */ literal, /* kid = */ mutation);
         return true;
     }
 
@@ -357,7 +357,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
             literal->setHasNonConstInitializer();
         }
 
-        addList(/* list = */ literal, /* child = */ propdef);
+        addList(/* list = */ literal, /* kid = */ propdef);
     }
 
     MOZ_MUST_USE bool addPropertyDefinition(ListNodeType literal, Node key, Node val) {
@@ -380,7 +380,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         if (!propdef) {
             return false;
         }
-        addList(/* list = */ literal, /* child = */ propdef);
+        addList(/* list = */ literal, /* kid = */ propdef);
         return true;
     }
 
@@ -392,7 +392,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         if (!spread) {
             return false;
         }
-        addList(/* list = */ literal, /* child = */ spread);
+        addList(/* list = */ literal, /* kid = */ spread);
         return true;
     }
 
@@ -408,15 +408,15 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
             return false;
         }
 
-        addList(/* list = */ literal, /* child = */ propdef);
+        addList(/* list = */ literal, /* kid = */ propdef);
         return true;
     }
 
-    MOZ_MUST_USE bool addClassMethodDefinition(ListNodeType methodList, Node key,
+    MOZ_MUST_USE bool addClassMethodDefinition(ListNodeType memberList, Node key,
                                                CodeNodeType funNode, AccessorType atype,
                                                bool isStatic)
     {
-        MOZ_ASSERT(methodList->isKind(ParseNodeKind::ClassMethodList));
+        MOZ_ASSERT(memberList->isKind(ParseNodeKind::ClassMemberList));
         MOZ_ASSERT(isUsableAsObjectPropertyName(key));
 
         checkAndSetIsDirectRHSAnonFunction(funNode);
@@ -426,7 +426,22 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         if (!classMethod) {
             return false;
         }
-        addList(/* list = */ methodList, /* child = */ classMethod);
+        addList(/* list = */ memberList, /* kid = */ classMethod);
+        return true;
+    }
+
+    MOZ_MUST_USE bool addClassFieldDefinition(ListNodeType memberList,
+                                              Node name, Node initializer)
+    {
+        MOZ_ASSERT(memberList->isKind(ParseNodeKind::ClassMemberList));
+        MOZ_ASSERT(isUsableAsObjectPropertyName(name));
+
+        ClassField* classField = new_<ClassField>(name, initializer);
+
+        if (!classField) {
+            return false;
+        }
+        addList(/* list = */ memberList, /* kid = */ classField);
         return true;
     }
 
@@ -466,7 +481,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     void addStatementToList(ListNodeType list, Node stmt) {
         MOZ_ASSERT(list->isKind(ParseNodeKind::StatementList));
 
-        addList(/* list = */ list, /* child = */ stmt);
+        addList(/* list = */ list, /* kid = */ stmt);
 
         if (isFunctionStmt(stmt)) {
             // Notify the emitter that the block contains body-level function
@@ -483,7 +498,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     void addCaseStatementToList(ListNodeType list, CaseClauseType caseClause) {
         MOZ_ASSERT(list->isKind(ParseNodeKind::StatementList));
 
-        addList(/* list = */ list, /* child = */ caseClause);
+        addList(/* list = */ list, /* kid = */ caseClause);
 
         if (caseClause->statementList()->hasTopLevelFunctionDeclarations()) {
             list->setHasTopLevelFunctionDeclarations();
@@ -735,11 +750,11 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         funbox->functionNode = funNode;
     }
     void addFunctionFormalParameter(CodeNodeType funNode, Node argpn) {
-        addList(/* list = */ funNode->body(), /* child = */ argpn);
+        addList(/* list = */ funNode->body(), /* kid = */ argpn);
     }
     void setFunctionBody(CodeNodeType funNode, LexicalScopeNodeType body) {
         MOZ_ASSERT(funNode->body()->isKind(ParseNodeKind::ParamsBody));
-        addList(/* list = */ funNode->body(), /* child = */ body);
+        addList(/* list = */ funNode->body(), /* kid = */ body);
     }
 
     CodeNodeType newModule(const TokenPos& pos) {

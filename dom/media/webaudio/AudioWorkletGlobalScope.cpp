@@ -7,7 +7,7 @@
 #include "AudioWorkletGlobalScope.h"
 #include "jsapi.h"
 #include "mozilla/dom/AudioWorkletGlobalScopeBinding.h"
-#include "WorkletPrincipal.h"
+#include "mozilla/dom/WorkletPrincipal.h"
 
 namespace mozilla {
 namespace dom {

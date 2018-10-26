@@ -125,16 +125,7 @@ var LightweightThemeManager = {
   },
 
   get currentThemeForDisplay() {
-    var data = this.currentTheme;
-
-    if (!data || data.id == DEFAULT_THEME_ID) {
-      if (_fallbackThemeData) {
-        return _fallbackThemeData;
-      }
-      if (_defaultThemeIsInDarkMode && _defaultDarkThemeID) {
-        return this.getUsedTheme(_defaultDarkThemeID);
-      }
-    }
+    var data = _substituteDefaulThemeIfNeeded(this.currentTheme);
 
     if (data && PERSIST_ENABLED) {
       for (let key in PERSIST_FILES) {
@@ -221,6 +212,8 @@ var LightweightThemeManager = {
   },
 
   previewTheme(aData) {
+    aData = _substituteDefaulThemeIfNeeded(aData);
+
     let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
     cancel.data = false;
     Services.obs.notifyObservers(cancel, "lightweight-theme-preview-requested",
@@ -898,6 +891,19 @@ function _updateUsedThemes(aList) {
 function _notifyWindows(aThemeData) {
   Services.obs.notifyObservers(null, "lightweight-theme-styling-update",
                                JSON.stringify({theme: aThemeData}));
+}
+
+function _substituteDefaulThemeIfNeeded(aThemeData) {
+  if (!aThemeData || aThemeData.id == DEFAULT_THEME_ID) {
+    if (_fallbackThemeData) {
+      return _fallbackThemeData;
+    }
+    if (_defaultThemeIsInDarkMode && _defaultDarkThemeID) {
+      return LightweightThemeManager.getUsedTheme(_defaultDarkThemeID);
+    }
+  }
+
+  return aThemeData;
 }
 
 var _previewTimer;

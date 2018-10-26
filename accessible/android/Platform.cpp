@@ -85,7 +85,7 @@ a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget,
   }
 
   if (aState & states::CHECKED) {
-    sessionAcc->SendClickedEvent(WrapperFor(aTarget));
+    sessionAcc->SendClickedEvent(WrapperFor(aTarget), aEnabled);
   }
 
   if (aState & states::SELECTED) {
