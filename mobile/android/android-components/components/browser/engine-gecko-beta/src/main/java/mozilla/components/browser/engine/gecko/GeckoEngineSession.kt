@@ -58,6 +58,7 @@ class GeckoEngineSession(
     init {
         defaultSettings?.trackingProtectionPolicy?.let { enableTrackingProtection(it) }
         defaultSettings?.requestInterceptor?.let { settings.requestInterceptor = it }
+        defaultSettings?.historyTrackingDelegate?.let { settings.historyTrackingDelegate = it }
 
         geckoSession.settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, privateMode)
         geckoSession.open(runtime)

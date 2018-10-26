@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 
 /**
  * WebView-based implementation of the Engine interface.
@@ -72,6 +73,12 @@ class SystemEngine(
             get() = defaultSettings.trackingProtectionPolicy
             set(value) {
                 defaultSettings.trackingProtectionPolicy = value
+            }
+
+        override var historyTrackingDelegate: HistoryTrackingDelegate?
+            get() = defaultSettings.historyTrackingDelegate
+            set(value) {
+                defaultSettings.historyTrackingDelegate = value
             }
     }.apply {
         this.remoteDebuggingEnabled = defaultSettings.remoteDebuggingEnabled
