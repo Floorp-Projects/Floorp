@@ -55,34 +55,47 @@ StepTiming(const ComputedTimingFunction::StepFunc& aStepFunc,
            double aPortion,
            ComputedTimingFunction::BeforeFlag aBeforeFlag)
 {
-  // Calculate current step using step-end behavior
-  int32_t step = floor(aPortion * aStepFunc.mSteps);
+  // Use the algorithm defined in the spec:
+  // https://drafts.csswg.org/css-easing-1/#step-timing-function-algo
 
-  // step-start is one step ahead
-  if (aStepFunc.mPos == StyleStepPosition::Start) {
-    step++;
+  // Calculate current step.
+  int32_t currentStep = floor(aPortion * aStepFunc.mSteps);
+
+  // Increment current step if it is jump-start or start.
+  if (aStepFunc.mPos == StyleStepPosition::Start ||
+      aStepFunc.mPos == StyleStepPosition::JumpStart ||
+      aStepFunc.mPos == StyleStepPosition::JumpBoth) {
+    ++currentStep;
   }
 
   // If the "before flag" is set and we are at a transition point,
   // drop back a step
   if (aBeforeFlag == ComputedTimingFunction::BeforeFlag::Set &&
       fmod(aPortion * aStepFunc.mSteps, 1) == 0) {
-    step--;
+    --currentStep;
   }
-
-  // Convert to a progress value
-  double result = double(step) / double(aStepFunc.mSteps);
 
   // We should not produce a result outside [0, 1] unless we have an
   // input outside that range. This takes care of steps that would otherwise
   // occur at boundaries.
-  if (result < 0.0 && aPortion >= 0.0) {
-    return 0.0;
+  if (aPortion >= 0.0 && currentStep < 0) {
+    currentStep = 0;
   }
-  if (result > 1.0 && aPortion <= 1.0) {
-    return 1.0;
+
+  int32_t jumps = aStepFunc.mSteps;
+  if (aStepFunc.mPos == StyleStepPosition::JumpBoth) {
+    ++jumps;
+  } else if (aStepFunc.mPos == StyleStepPosition::JumpNone) {
+    --jumps;
   }
-  return result;
+
+  if (aPortion <= 1.0 && currentStep > jumps) {
+    currentStep = jumps;
+  }
+
+  // Convert to the output progress value.
+  MOZ_ASSERT(jumps > 0, "`jumps` should be a positive integer");
+  return double(currentStep) / double(jumps);
 }
 
 double

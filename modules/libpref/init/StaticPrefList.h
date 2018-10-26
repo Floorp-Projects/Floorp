@@ -803,6 +803,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Is steps(jump-*) supported in easing functions?
+VARCACHE_PREF(
+  "layout.css.step-position-jump.enabled",
+   layout_css_step_position_jump_enabled,
+  bool, true
+)
+
 //---------------------------------------------------------------------------
 // JavaScript prefs
 //---------------------------------------------------------------------------

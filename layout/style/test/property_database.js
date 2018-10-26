@@ -8164,6 +8164,34 @@ if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {
   );
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.step-position-jump.enabled")) {
+  gCSSProperties["animation-timing-function"].other_values.push(
+    "steps(1, jump-start)",
+    "steps(1, jump-end)",
+    "steps(2, jump-none)",
+    "steps(1, jump-both)",
+  );
+  gCSSProperties["animation-timing-function"].invalid_values.push(
+    "steps(0, jump-start)",
+    "steps(0, jump-end)",
+    "steps(1, jump-none)",
+    "steps(0, jump-both)",
+  );
+
+  gCSSProperties["transition-timing-function"].other_values.push(
+    "steps(1, jump-start)",
+    "steps(1, jump-end)",
+    "steps(2, jump-none)",
+    "steps(1, jump-both)",
+  );
+  gCSSProperties["transition-timing-function"].invalid_values.push(
+    "steps(0, jump-start)",
+    "steps(0, jump-end)",
+    "steps(1, jump-none)",
+    "steps(0, jump-both)",
+  );
+}
+
 const OVERFLOW_MOZKWS = [
   "-moz-scrollbars-none",
   "-moz-scrollbars-horizontal",
