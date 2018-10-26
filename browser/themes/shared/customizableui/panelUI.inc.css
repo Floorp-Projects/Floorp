@@ -600,55 +600,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   -moz-box-flex: 1;
 }
 
-#appMenu-tp-toggle {
-  -moz-appearance: none;
-  box-sizing: border-box;
-  min-width: 26px;
-  height: 10px;
-  border-radius: 10px;
-  background-color: var(--arrowpanel-dimmed-even-further);
-  border: 1px solid transparent;
-  margin-top: 4px;
-  margin-bottom: 4px;
-  margin-inline-start: 1px;
-  margin-inline-end: 7px;
-  padding: 2px;
-  transition: padding .2s ease;
-}
-
-/* Don't resize the toggle in touch mode. */
-#appMenu-popup[touchmode] #appMenu-tp-toggle {
-  margin-top: 12px;
-  margin-bottom: 12px;
-}
-
-#appMenu-tp-toggle::before {
-  position: relative;
-  display: block;
-  content: "";
-  width: 10px;
-  height: 10px;
-  border-radius: 10px;
-  background: white;
-}
-
-#appMenu-tp-toggle[enabled=true] {
-  background-color: #0a84ff;
-  border: 1px solid #0a84ff;
-  /* Push the toggle to the right. */
-  padding-inline-start: 12px;
-}
-
-#appMenu-tp-toggle:hover,
-#appMenu-tp-toggle:-moz-focusring {
-  border: 1px solid var(--panel-separator-color);
-}
-
-#appMenu-tp-toggle[enabled=true]:hover,
-#appMenu-tp-toggle[enabled=true]:-moz-focusring {
-  background-color: #45a1ff;
-}
-
 .addon-banner-item > .toolbarbutton-text,
 .panel-banner-item > .toolbarbutton-text {
   margin: 0;
