@@ -4,6 +4,11 @@ WebPayments UI
 
 User Interface for the WebPayments `Payment Request API <https://w3c.github.io/browser-payment-api/>`_ and `Payment Handler API <https://w3c.github.io/payment-handler/>`_.
 
+
+  `Project Wiki <https://wiki.mozilla.org/Firefox/Features/Web_Payments>`_ |
+  `#payments on IRC <ircs://irc.mozilla.org:6697/payments>`_ |
+  `File a bug <https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox&component=WebPayments%20UI&status_whiteboard=[webpayments]%20[triage]>`_
+
 JSDoc style comments are used within the JS files of the component. This document will focus on higher-level and shared concepts.
 
 .. toctree::
@@ -12,6 +17,8 @@ JSDoc style comments are used within the JS files of the component. This documen
 
 Debugging/Development
 =====================
+
+Relevant preferences: ``dom.payments.*``
 
 Must Have Electrolysis
 ----------------------
@@ -25,10 +32,10 @@ Set the pref ``dom.payments.loglevel`` to "Debug" to increase the verbosity of c
 
 Unprivileged UI Development
 ---------------------------
-During development of the unprivileged custom elements, you can load the dialog from a
-local server without even requiring a build. Simply run `./mach python browser/components/payments/server.py`
-then load `http://localhost:8000/paymentRequest.xhtml?debug=1` in the browser.
-Use the debugging console to load sample data.
+During development of the unprivileged custom elements, you can load the dialog in a tab with
+the url `resource://payments/paymentRequest.xhtml`.
+You can then use the debugging console to load sample data. Autofill add/edit form strings
+will not appear when developing this way until they are converted to FTL.
 
 Debugging Console
 -----------------
@@ -43,16 +50,9 @@ Debugging the unprivileged frame with the developer tools
 To open a debugger in the context of the remote payment frame, click the "Debug frame" button in the
 debugging console.
 
-Use the `tabs` variable in the Browser Content Toolbox's console to access the frame contents.
+Use the ``tabs`` variable in the Browser Content Toolbox's console to access the frame contents.
 There can be multiple frames loaded in the same process so you will need to find the correct tab
-in the array by checking the file name is `paymentRequest.xhtml` (e.g. `tabs[0].content.location`).
-
-
-Communication with the DOM
-==========================
-
-Communication from the DOM to the UI happens via the `paymentUIService.js` (implementing ``nsIPaymentUIService``).
-The UI talks to the DOM code via the ``nsIPaymentRequestService`` interface.
+in the array by checking the file name is `paymentRequest.xhtml` (e.g. ``tabs[0].content.location``).
 
 
 Dialog Architecture
@@ -70,12 +70,30 @@ Instead, all communication across the privileged/unprivileged boundary is done v
 These events are converted to/from message manager messages of the same name to communicate to the other process.
 The purpose of `paymentDialogFrameScript.js` is to simply convert unprivileged DOM events to/from messages from the other process.
 
+The dialog depends on the add/edit forms and storage from :doc:`Form Autofill </browser/extensions/formautofill/docs/index>` for addresses and credit cards.
+
+Communication with the DOM
+--------------------------
+
+Communication from the DOM to the UI happens via the `paymentUIService.js` (implementing ``nsIPaymentUIService``).
+The UI talks to the DOM code via the ``nsIPaymentRequestService`` interface.
+
+
 Custom Elements
 ---------------
 
-The Payment Request UI uses Custom Elements for the UI components.
+The Payment Request UI uses `Custom Elements <https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements>`_ for the UI components.
 
 Some guidelines:
+
+* There are some `mixins <https://dxr.mozilla.org/mozilla-central/source/browser/components/payments/res/mixins/>`_
+  to provide commonly needed functionality to a custom element.
+* `res/containers/ <https://dxr.mozilla.org/mozilla-central/source/browser/components/payments/res/containers/>`_
+  contains elements that react to application state changes,
+  `res/components/ <https://dxr.mozilla.org/mozilla-central/source/browser/components/payments/res/components>`_
+  contains elements that aren't connected to the state directly.
+* Elements should avoid having their own internal/private state and should react to state changes.
+  Containers primarily use the application state (``requestStore``) while components primarily use attributes.
 * If you're overriding a lifecycle callback, don't forget to call that method on
   ``super`` from the implementation to ensure that mixins and ancestor classes
   work properly.

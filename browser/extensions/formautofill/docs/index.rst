@@ -1,9 +1,9 @@
 Form Autofill
 =============
 
-[`Wiki <https://wiki.mozilla.org/Firefox/Features/Form_Autofill>`_] |
-[IRC `#formfill <ircs://irc.mozilla.org:6697/formfill>`_] |
-[Mailing list `autofill@lists.mozilla.org <mailto:autofill@lists.mozilla.org>`_]
+`Wiki <https://wiki.mozilla.org/Firefox/Features/Form_Autofill>`_ |
+`IRC: #formfill <ircs://irc.mozilla.org:6697/formfill>`_ |
+Mailing List: `autofill@lists.mozilla.org <mailto:autofill@lists.mozilla.org>`_
 
 Introduction
 ------------
