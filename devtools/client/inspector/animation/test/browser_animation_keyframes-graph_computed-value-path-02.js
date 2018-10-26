@@ -26,6 +26,27 @@ const TEST_DATA = [
     ],
   },
   {
+    targetClass: "steps-jump-none-keyframe",
+    properties: [
+      {
+        name: "opacity",
+        computedValuePathClass: "distance-path",
+        expectedPathSegments: [
+          { x: 0, y: 0 },
+          { x: 199, y: 0 },
+          { x: 200, y: 25 },
+          { x: 399, y: 25 },
+          { x: 400, y: 50 },
+          { x: 599, y: 50 },
+          { x: 600, y: 75 },
+          { x: 799, y: 75 },
+          { x: 800, y: 100 },
+          { x: 1000, y: 100 },
+        ],
+      },
+    ],
+  },
+  {
     targetClass: "narrow-offsets",
     properties: [
       {
