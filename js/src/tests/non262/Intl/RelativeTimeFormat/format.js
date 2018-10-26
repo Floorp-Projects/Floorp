@@ -111,10 +111,10 @@ assertEq(rtf.format(1, "day"), "غدًا");
 
 
 rtf = new Intl.RelativeTimeFormat("en-US");
-assertEq(rtf.format(Infinity, "year"), "in ∞ years");
-assertEq(rtf.format(-Infinity, "year"), "∞ years ago");
 
 var weirdValueCases = [
+  Infinity,
+  -Infinity,
   NaN,
   "word",
   [0,2],
@@ -122,7 +122,7 @@ var weirdValueCases = [
 ];
 
 for (let c of weirdValueCases) {
-  assertEq(rtf.format(c, "year"), "in NaN years");
+  assertThrowsInstanceOf(() => rtf.format(c, "year"), RangeError);
 };
 
 var weirdUnitCases = [
@@ -137,7 +137,7 @@ var weirdUnitCases = [
 ];
 
 for (let u of weirdUnitCases) {
-  assertThrows(function() {
+  assertThrowsInstanceOf(function() {
     var rtf = new Intl.RelativeTimeFormat("en-US");
     rtf.format(1, u);
   }, RangeError);
