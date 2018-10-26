@@ -54,69 +54,8 @@
   margin-top: 4px !important;
 }
 
-#contentBlockingCategories,
-#contentBlockingCheckboxContainer {
+#contentBlockingCategories {
   margin-top: 16px;
-}
-
-#contentBlockingToggleLabel {
-  line-height: 34px;
-}
-
-#contentBlockingCheckbox {
-  visibility: collapse;
-}
-
-/* If shown, the button-box takes up some space that results
- * in unwanted changes in right-hand margin when toggling
- * this button. We just hide it since we don't need it. */
-#contentBlockingToggle > .button-box {
-  display: none;
-}
-
-#contentBlockingToggle {
-  -moz-appearance: none;
-  box-sizing: border-box;
-  min-width: 48px;
-  max-width: 48px;
-  min-height: 30px;
-  max-height: 30px;
-  border-radius: 20px;
-  background-color: #d7d7db;
-  border: 1px solid transparent;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  margin-inline-start: 1px;
-  margin-inline-end: 7px;
-  padding: 5px;
-  transition: padding .2s ease;
-}
-
-#contentBlockingToggle::before {
-  position: relative;
-  display: block;
-  content: "";
-  width: 18px;
-  height: 18px;
-  border-radius: 10px;
-  background: white;
-}
-
-#contentBlockingCheckbox[checked="true"] + #contentBlockingToggle {
-  background-color: #2292d0;
-  border: 1px solid #2292d0;
-  /* Push the toggle to the right. */
-  padding-inline-start: 23px;
-}
-
-#contentBlockingToggle:hover,
-#contentBlockingToggle:-moz-focusring {
-  border: 1px solid #b1b1b3;
-}
-
-#contentBlockingCheckbox[checked] + #contentBlockingToggle:hover,
-#contentBlockingCheckbox[checked] + #contentBlockingToggle:-moz-focusring {
-  background-color: #0a84ff;
 }
 
 .content-blocking-category {
