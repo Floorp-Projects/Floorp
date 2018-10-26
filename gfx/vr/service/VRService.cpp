@@ -134,7 +134,6 @@ VRService::Start()
     options.permanent_hang_timeout = 2048; // milliseconds
 
     if (!mServiceThread->StartWithOptions(options)) {
-      mServiceThread->Stop();
       delete mServiceThread;
       mServiceThread = nullptr;
       return;
@@ -152,7 +151,6 @@ VRService::Stop()
 {
   if (mServiceThread) {
     mShutdownRequested = true;
-    mServiceThread->Stop();
     delete mServiceThread;
     mServiceThread = nullptr;
   }

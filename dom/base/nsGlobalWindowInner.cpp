@@ -4446,22 +4446,6 @@ nsGlobalWindowInner::ResetVRTelemetry(bool aUpdate)
   }
 }
 
-void
-nsGlobalWindowInner::StartVRActivity()
-{
-  if (mVREventObserver) {
-    mVREventObserver->StartActivity();
-  }
-}
-
-void
-nsGlobalWindowInner::StopVRActivity()
-{
-  if (mVREventObserver) {
-    mVREventObserver->StopActivity();
-  }
-}
-
 #ifndef XP_WIN // This guard should match the guard at the callsite.
 static bool ShouldShowFocusRingIfFocusedByMouse(nsIContent* aNode)
 {

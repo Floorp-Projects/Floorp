@@ -24,7 +24,6 @@ VRManagerParent::VRManagerParent(ProcessId aChildProcessId, bool aIsContentChild
   , mHaveEventListener(false)
   , mHaveControllerListener(false)
   , mIsContentChild(aIsContentChild)
-  , mVRActiveStatus(true)
 {
   MOZ_COUNT_CTOR(VRManagerParent);
   MOZ_ASSERT(NS_IsMainThread());
@@ -205,10 +204,6 @@ VRManagerParent::RecvSetGroupMask(const uint32_t& aDisplayID, const uint32_t& aG
 bool
 VRManagerParent::HaveEventListener()
 {
-  if (!mVRActiveStatus) {
-    return false;
-  }
-
   return mHaveEventListener;
 }
 
@@ -216,12 +211,6 @@ bool
 VRManagerParent::HaveControllerListener()
 {
   return mHaveControllerListener;
-}
-
-bool
-VRManagerParent::GetVRActiveStatus()
-{
-  return mVRActiveStatus;
 }
 
 mozilla::ipc::IPCResult
@@ -477,20 +466,6 @@ VRManagerParent::RecvStopVRNavigation(const uint32_t& aDeviceID, const TimeDurat
 {
   VRManager* vm = VRManager::Get();
   vm->StopVRNavigation(aDeviceID, aTimeout);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-VRManagerParent::RecvStartActivity()
-{
-  mVRActiveStatus = true;
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-VRManagerParent::RecvStopActivity()
-{
-  mVRActiveStatus = false;
   return IPC_OK();
 }
 
