@@ -849,28 +849,16 @@ nsHostResolver::Shutdown()
     for (auto iter = mRecordDB.Iter(); !iter.Done(); iter.Next()) {
         iter.UserData()->Cancel();
     }
-#ifdef NS_BUILD_REFCNT_LOGGING
 
-    // Logically join the outstanding worker threads with a timeout.
-    // Use this approach instead of PR_JoinThread() because that does
-    // not allow a timeout which may be necessary for a semi-responsive
-    // shutdown if the thread is blocked on a very slow DNS resolution.
-    // mActiveTaskCount is read outside of mLock, but the worst case
-    // scenario for that race is one extra 25ms sleep.
-
-    PRIntervalTime delay = PR_MillisecondsToInterval(25);
-    PRIntervalTime stopTime = PR_IntervalNow() + PR_SecondsToInterval(20);
-    while (mActiveTaskCount && PR_IntervalNow() < stopTime)
-        PR_Sleep(delay);
-#endif
+    // Shutdown the resolver threads, but with a timeout of 20 seconds.
+    // If the timeout is exceeded, any stuck threads will be leaked.
+    mResolverThreads->ShutdownWithTimeout(20 * 1000);
 
     {
         mozilla::DebugOnly<nsresult> rv = GetAddrInfoShutdown();
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "Failed to shutdown GetAddrInfo");
     }
-
-    mResolverThreads->Shutdown();
 }
 
 nsresult
