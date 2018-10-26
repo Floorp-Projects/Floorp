@@ -25,6 +25,9 @@
         public/build/concept.engine.maven.zip:
           path: /build/android-components/components/concept/engine/build/target.maven.zip
           name: concept-engine
+        public/build/concept.storage.maven.zip:
+          path: /build/android-components/components/concept/storage/build/target.maven.zip
+          name: concept-storage
         public/build/concept.toolbar.maven.zip:
           path: /build/android-components/components/concept/toolbar/build/target.maven.zip
           name: concept-toolbar
