@@ -109,6 +109,7 @@ dependencies {
     implementation project(':concept-engine')
     implementation project(':concept-tabstray')
     implementation project(':concept-toolbar')
+    implementation project(':concept-storage')
 
     implementation project(':browser-engine-system')
 
@@ -117,10 +118,12 @@ dependencies {
     implementation project(':browser-tabstray')
     implementation project(':browser-toolbar')
     implementation project(':browser-menu')
+    implementation project(':browser-storage-memory')
 
     implementation project(':feature-intent')
     implementation project(':feature-search')
     implementation project(':feature-session')
+    implementation project(':feature-storage')
     implementation project(':feature-toolbar')
     implementation project(':feature-tabs')
 
