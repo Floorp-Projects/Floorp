@@ -105,6 +105,19 @@ def match_run_on_projects(project, run_on_projects):
     return project in run_on_projects
 
 
+def match_run_on_hg_branches(hg_branch, run_on_hg_branches):
+    """Determine whether the given project is included in the `run-on-hg-branches`
+    parameter. Allows 'all'."""
+    if 'all' in run_on_hg_branches:
+        return True
+
+    for expected_hg_branch_pattern in run_on_hg_branches:
+        if re.match(expected_hg_branch_pattern, hg_branch):
+            return True
+
+    return False
+
+
 def copy_attributes_from_dependent_job(dep_job):
     attributes = {
         'build_platform': dep_job.attributes.get('build_platform'),
