@@ -195,7 +195,7 @@
                       onsyncfrompreference="return gPrivacyPane.readBlockCookiesFrom();"
                       onsynctopreference="return gPrivacyPane.writeBlockCookiesFrom();">
               <menupopup>
-                <menuitem id="blockCookiesFromTrackers" data-l10n-id="sitedata-block-trackers-option-recommended" value="trackers"/>
+                <menuitem data-l10n-id="sitedata-block-trackers-option-recommended" value="trackers"/>
                 <menuitem data-l10n-id="sitedata-block-unvisited-option" value="unvisited"/>
                 <menuitem data-l10n-id="sitedata-block-all-third-party-option" value="all-third-parties"/>
                 <menuitem data-l10n-id="sitedata-block-all-option" value="always"/>
