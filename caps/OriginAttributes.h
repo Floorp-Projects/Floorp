@@ -61,6 +61,14 @@ public:
     return !(*this == aOther);
   }
 
+  MOZ_MUST_USE bool EqualsIgnoringFPD(const OriginAttributes& aOther) const
+  {
+    return mAppId == aOther.mAppId &&
+           mInIsolatedMozBrowser == aOther.mInIsolatedMozBrowser &&
+           mUserContextId == aOther.mUserContextId &&
+           mPrivateBrowsingId == aOther.mPrivateBrowsingId;
+  }
+
   // Serializes/Deserializes non-default values into the suffix format, i.e.
   // |!key1=value1&key2=value2|. If there are no non-default attributes, this
   // returns an empty string.
@@ -96,6 +104,13 @@ public:
     return !sFirstPartyIsolation || sRestrictedOpenerAccess;
   }
 
+  // Check whether we block the postMessage across different FPDs when the
+  // targetOrigin is '*'.
+  static inline MOZ_MUST_USE bool IsBlockPostMessageForFPI()
+  {
+    return sFirstPartyIsolation && sBlockPostMessageForFPI;
+  }
+
   // returns true if the originAttributes suffix has mPrivateBrowsingId value
   // different than 0.
   static bool IsPrivateBrowsing(const nsACString& aOrigin);
@@ -105,6 +120,7 @@ public:
 private:
   static bool sFirstPartyIsolation;
   static bool sRestrictedOpenerAccess;
+  static bool sBlockPostMessageForFPI;
 };
 
 class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary

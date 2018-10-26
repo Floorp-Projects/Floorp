@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>Test page for always sending a message to its opener through postMessage</title>
+</head>
+<body>
+  <script>
+  window.onload = () => {
+    // The target origin is coming from the query string.
+    let targetOrigin = window.location.search.substring(1);
+    window.opener.postMessage("Message", targetOrigin);
+  };
+  </script>
+</body>
+</html>

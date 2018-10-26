@@ -110,7 +110,7 @@
             let tagName = PlacesUtils.nodeIsTagQuery(elt._placesNode) ?
                             elt._placesNode.title : null;
             if ((PlacesUtils.nodeIsFolder(elt._placesNode) &&
-                 !PlacesUIUtils.isFolderReadOnly(elt._placesNode, this._rootView)) ||
+                 !PlacesUIUtils.isFolderReadOnly(elt._placesNode)) ||
                 PlacesUtils.nodeIsTagQuery(elt._placesNode)) {
               // This is a folder or a tag container.
               if (eventY - eltY < eltHeight * 0.20) {
