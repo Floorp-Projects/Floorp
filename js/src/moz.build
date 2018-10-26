@@ -286,6 +286,7 @@ UNIFIED_SOURCES += [
     'jit/BaselineJIT.cpp',
     'jit/BitSet.cpp',
     'jit/BytecodeAnalysis.cpp',
+    'jit/C1Spewer.cpp',
     'jit/CacheIR.cpp',
     'jit/CacheIRCompiler.cpp',
     'jit/CacheIRSpewer.cpp',
