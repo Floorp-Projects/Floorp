@@ -7,7 +7,7 @@ These helpers record the elapsed time into histograms, so you have to create sui
 
 From JavaScript
 ===============
-JavaScript can measure elapsed time using `TelemetryStopwatch.jsm <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/TelemetryStopwatch.jsm>`_.
+JavaScript can measure elapsed time using TelemetryStopwatch.
 
 ``TelemetryStopwatch`` is a helper that simplifies recording elapsed time (in milliseconds) into histograms (plain or keyed).
 
