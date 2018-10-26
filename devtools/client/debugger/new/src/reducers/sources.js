@@ -23,6 +23,7 @@ exports.getOriginalSourceByUrlInSources = getOriginalSourceByUrlInSources;
 exports.getGeneratedSourceByUrlInSources = getGeneratedSourceByUrlInSources;
 exports.getSpecificSourceByUrlInSources = getSpecificSourceByUrlInSources;
 exports.getSourceByUrlInSources = getSourceByUrlInSources;
+exports.getSourcesUrlsInSources = getSourcesUrlsInSources;
 exports.getSourceInSources = getSourceInSources;
 exports.getSources = getSources;
 exports.getUrls = getUrls;
@@ -391,6 +392,16 @@ function getSourcesByUrlInSources(sources, urls, url) {
   }
 
   return urls[url].map(id => sources[id]);
+}
+
+function getSourcesUrlsInSources(state, url) {
+  const urls = getUrls(state);
+
+  if (!url || !urls[url]) {
+    return [];
+  }
+
+  return [...new Set(Object.keys(urls).filter(Boolean))];
 }
 
 function getSourceInSources(sources, id) {
