@@ -31,8 +31,38 @@ permalink: /changelog/
             }
         })
   ```
+  * [Api improvement](https://github.com/mozilla-mobile/android-components/issues/772) for more flexibility to create a `BrowserToolbar.Button`,
+  and `BrowserToolbar.ToggleButton`, now you can provide a custom padding:
+  ```kotlin
+     val padding = Padding(start = 16, top = 16, end = 16, bottom = 16)
+     val button = BrowserToolbar.Button(mozac_ic_back, "Forward", padding = padding) {}
+     var toggle = BrowserToolbar.ToggleButton(mozac_ic_pin, mozac_ic_pin_filled, "Pin", "Unpin", padding = padding) {}
+  ```
+* **concept-toolbar**:
+  * [Api improvement](https://github.com/mozilla-mobile/android-components/issues/772) for more flexibility to create a `Toolbar.ActionToggleButton`,
+  `Toolbar.ActionButton`, `Toolbar.ActionSpace` and `Toolbar.ActionImage`, now you can provide a custom padding:
+  ```kotlin
+     val padding = Padding(start = 16, top = 16, end = 16, bottom = 16)
+     var toggle = Toolbar.ActionToggleButton(0, mozac_ic_pin_filled, "Pin", "Unpin", padding = padding) {}
+     val button = Toolbar.ActionButton(mozac_ic_back, "Forward", padding = padding) {}
+     val space = Toolbar.ActionSpace(pxToDp(128), padding = padding)
+     val image = Toolbar.ActionImage(brand, padding = padding)
+  ```
+* **support-base**:
+  * A new class add for representing an Android Padding.
+    ```kotlin
+       val padding = Padding(16, 24, 32, 40)
+       val (start, top, end, bottom) = padding
+    ```
+* **support-ktx**:
+  * A new extention function that allows you to set `Padding` object to a `View`.
+    ```kotlin
+       val padding = Padding(16, 24, 32, 40)
+       val view = View(context)
+       view.setPadding(padding)
+    ```
 * **concept-engine**, **browser-engine-system**, **browser-engine-gecko(-beta/nightly)**
-  * `RequestInterceptor` was enhanced to support loading an alternative URL.  
+  * `RequestInterceptor` was enhanced to support loading an alternative URL.
   :warning: **This is a breaking change for the `RequestInterceptor` method signature!**
   ```kotlin
           // To provide alternative content the new InterceptionResponse.Content type needs to be used
