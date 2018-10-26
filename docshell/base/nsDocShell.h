@@ -534,7 +534,7 @@ private: // member functions
                      uint32_t aReferrerPolicy,
                      nsIPrincipal* aTriggeringPrincipal,
                      nsIPrincipal* aPrincipalToInherit,
-                     const char* aTypeHint,
+                     const nsACString& aTypeHint,
                      const nsAString& aFileName,
                      nsIInputStream* aPostData,
                      nsIInputStream* aHeadersData,
@@ -904,6 +904,14 @@ private: // member functions
   {
     return mCSSErrorReportingEnabled;
   }
+
+  // Handles retrieval of subframe session history for nsDocShell::LoadURI. If a
+  // load is requested in a subframe of the current DocShell, the subframe
+  // loadType may need to reflect the loadType of the parent document, or in
+  // some cases (like reloads), the history load may need to be cancelled. See
+  // function comments for in-depth logic descriptions.
+  void
+  MaybeHandleSubframeHistory(nsDocShellLoadState* aLoadState);
 
 private: // data members
   static nsIURIFixup* sURIFixup;
