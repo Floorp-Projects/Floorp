@@ -29,8 +29,10 @@ decorate_task(
   }),
   withAboutStudies,
   async function testLearnMore(browser) {
-    ContentTask.spawn(browser, null, () => {
-      content.document.getElementById("shield-studies-learn-more").click();
+    ContentTask.spawn(browser, null, async () => {
+      const doc = content.document;
+      await ContentTaskUtils.waitForCondition(() => doc.getElementById("shield-studies-learn-more"));
+      doc.getElementById("shield-studies-learn-more").click();
     });
     await BrowserTestUtils.waitForLocationChange(gBrowser);
 
