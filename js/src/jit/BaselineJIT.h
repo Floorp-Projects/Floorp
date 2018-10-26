@@ -247,12 +247,17 @@ struct BaselineScript final
     // directly to this script.
     Vector<DependentWasmImport>* dependentWasmImports_ = nullptr;
 
-    // Native code offset right before the scope chain is initialized.
-    uint32_t prologueOffset_;
+    // Early Ion bailouts will enter at this address. This is after frame
+    // construction and before environment chain is initialized.
+    uint32_t bailoutPrologueOffset_;
 
-    // Native code offset right before the frame is popped and the method
-    // returned from.
-    uint32_t epilogueOffset_;
+    // Baseline Debug OSR during prologue will enter at this address. This is
+    // right after where a debug prologue VM call would have returned.
+    uint32_t debugOsrPrologueOffset_;
+
+    // Baseline Debug OSR during epilogue will enter at this address. This is
+    // right after where a debug epilogue VM call would have returned.
+    uint32_t debugOsrEpilogueOffset_;
 
     // The offsets for the toggledJump instructions for profiler instrumentation.
     uint32_t profilerEnterToggleOffset_;
@@ -266,14 +271,6 @@ struct BaselineScript final
 # endif
     TraceLoggerEvent traceLoggerScriptEvent_ = {};
 #endif
-
-    // Native code offsets right after the debug prologue VM call returns, or
-    // would have returned. This offset is recorded even when debug mode is
-    // off to aid on-stack debug mode recompilation.
-    //
-    // We don't need one for the debug epilogue because that always happens
-    // right before the epilogue, so we just use the epilogue offset.
-    uint32_t postDebugPrologueOffset_;
 
   public:
     enum Flag {
@@ -357,15 +354,16 @@ struct BaselineScript final
 
     // Use BaselineScript::New to create new instances. It will properly
     // allocate trailing objects.
-    BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
+    BaselineScript(uint32_t bailoutPrologueOffset,
+                   uint32_t debugOsrPrologueOffset,
+                   uint32_t debugOsrEpilogueOffset,
                    uint32_t profilerEnterToggleOffset,
-                   uint32_t profilerExitToggleOffset,
-                   uint32_t postDebugPrologueOffset)
-      : prologueOffset_(prologueOffset),
-        epilogueOffset_(epilogueOffset),
+                   uint32_t profilerExitToggleOffset)
+      : bailoutPrologueOffset_(bailoutPrologueOffset),
+        debugOsrPrologueOffset_(debugOsrPrologueOffset),
+        debugOsrEpilogueOffset_(debugOsrEpilogueOffset),
         profilerEnterToggleOffset_(profilerEnterToggleOffset),
-        profilerExitToggleOffset_(profilerExitToggleOffset),
-        postDebugPrologueOffset_(postDebugPrologueOffset)
+        profilerExitToggleOffset_(profilerExitToggleOffset)
     { }
 
   public:
@@ -376,10 +374,11 @@ struct BaselineScript final
     }
 
     static BaselineScript* New(JSScript* jsscript,
-                               uint32_t prologueOffset, uint32_t epilogueOffset,
+                               uint32_t bailoutPrologueOffset,
+                               uint32_t debugOsrPrologueOffset,
+                               uint32_t debugOsrEpilogueOffset,
                                uint32_t profilerEnterToggleOffset,
                                uint32_t profilerExitToggleOffset,
-                               uint32_t postDebugPrologueOffset,
                                size_t icEntries,
                                size_t retAddrEntries,
                                size_t pcMappingIndexEntries, size_t pcMappingSize,
@@ -450,25 +449,14 @@ struct BaselineScript final
         return flags_ & USES_ENVIRONMENT_CHAIN;
     }
 
-    uint32_t prologueOffset() const {
-        return prologueOffset_;
+    uint8_t* bailoutPrologueEntryAddr() const {
+        return method_->raw() + bailoutPrologueOffset_;
     }
-    uint8_t* prologueEntryAddr() const {
-        return method_->raw() + prologueOffset_;
+    uint8_t* debugOsrPrologueEntryAddr() const {
+        return method_->raw() + debugOsrPrologueOffset_;
     }
-
-    uint32_t epilogueOffset() const {
-        return epilogueOffset_;
-    }
-    uint8_t* epilogueEntryAddr() const {
-        return method_->raw() + epilogueOffset_;
-    }
-
-    uint32_t postDebugPrologueOffset() const {
-        return postDebugPrologueOffset_;
-    }
-    uint8_t* postDebugPrologueAddr() const {
-        return method_->raw() + postDebugPrologueOffset_;
+    uint8_t* debugOsrEpilogueEntryAddr() const {
+        return method_->raw() + debugOsrEpilogueOffset_;
     }
 
     ICEntry* icEntryList() {

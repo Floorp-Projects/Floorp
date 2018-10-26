@@ -345,10 +345,11 @@ jit::CanEnterBaselineMethod(JSContext* cx, RunState& state)
 
 BaselineScript*
 BaselineScript::New(JSScript* jsscript,
-                    uint32_t prologueOffset, uint32_t epilogueOffset,
+                    uint32_t bailoutPrologueOffset,
+                    uint32_t debugOsrPrologueOffset,
+                    uint32_t debugOsrEpilogueOffset,
                     uint32_t profilerEnterToggleOffset,
                     uint32_t profilerExitToggleOffset,
-                    uint32_t postDebugPrologueOffset,
                     size_t icEntries,
                     size_t retAddrEntries,
                     size_t pcMappingIndexEntries, size_t pcMappingSize,
@@ -385,9 +386,11 @@ BaselineScript::New(JSScript* jsscript,
     if (!script) {
         return nullptr;
     }
-    new (script) BaselineScript(prologueOffset, epilogueOffset,
-                                profilerEnterToggleOffset, profilerExitToggleOffset,
-                                postDebugPrologueOffset);
+    new (script) BaselineScript(bailoutPrologueOffset,
+                                debugOsrPrologueOffset,
+                                debugOsrEpilogueOffset,
+                                profilerEnterToggleOffset,
+                                profilerExitToggleOffset);
 
     size_t offsetCursor = sizeof(BaselineScript);
     MOZ_ASSERT(offsetCursor == AlignBytes(sizeof(BaselineScript), DataAlignment));
