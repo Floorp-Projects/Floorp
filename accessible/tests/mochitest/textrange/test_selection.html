@@ -93,7 +93,7 @@
       testTextRange(a11yrange, "selection range #7", document, 4, document, 5);
 
       ok(a11yrange.crop(getAccessible("table")), "Range failed to crop #7.");
-      testTextRange(a11yrange, "cropped range #7", "c2", 5, "c2", 6);
+      testTextRange(a11yrange, "cropped range #7", "table", 0, "table", 1);
 
       SimpleTest.finish();
     }
