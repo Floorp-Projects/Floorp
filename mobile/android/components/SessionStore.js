@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
   SharedPreferences: "resource://gre/modules/SharedPreferences.jsm",
   Task: "resource://gre/modules/Task.jsm",
-  TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
   Utils: "resource://gre/modules/sessionstore/Utils.jsm",
 });
 
