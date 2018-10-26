@@ -180,8 +180,10 @@ var DownloadNotifications = {
 };
 
 function getCookieFromDownload(download) {
+  // Arbitrary value used to truncate long Data URLs. See bug 1497526
+  const maxUrlLength = 1024;
   return download.target.path +
-         download.source.url +
+         download.source.url.slice(-maxUrlLength) +
          download.startTime;
 }
 
