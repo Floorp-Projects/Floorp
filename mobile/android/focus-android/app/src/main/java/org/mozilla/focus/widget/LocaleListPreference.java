@@ -65,6 +65,7 @@ public class LocaleListPreference extends ListPreference {
         languageCodeToNameMap.put("jv", "Basa Jawa");
         languageCodeToNameMap.put("ppl", "Náhuat Pipil");
         languageCodeToNameMap.put("su", "Basa Sunda");
+        languageCodeToNameMap.put("hus", "Tének");
     }
     static {
         // Override the native name for certain locale regions based on language community needs.
