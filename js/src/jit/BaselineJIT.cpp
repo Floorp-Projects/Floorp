@@ -1206,8 +1206,8 @@ GetStubEnteredCount(ICStub* stub, uint32_t* count)
     return false;
 }
 
-static void
-DumpICInfo(JSScript* script)
+void
+jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason)
 {
     MOZ_ASSERT(script->hasBaselineScript());
     BaselineScript* blScript = script->baselineScript();
@@ -1218,19 +1218,23 @@ DumpICInfo(JSScript* script)
 
     Fprinter& out = JitSpewPrinter();
 
-    const char* filename = script->filename() ? script->filename() : "unknown";
-    out.printf("Dumping IC info for %s:%d\n", filename,
-            PCToLineNumber(script, script->code()));
+    out.printf("[BaselineICStats] Dumping IC info for %s script %s:%d:%d\n",
+                dumpReason, script->filename(), script->lineno(),
+                script->column());
 
     for (size_t i = 0; i < blScript->numICEntries(); i++) {
         ICEntry& entry = blScript->icEntry(i);
 
-        unsigned column;
+        uint32_t pcOffset = entry.pcOffset();
         jsbytecode* pc = entry.pc(script);
+
+        unsigned column;
         unsigned int line = PCToLineNumber(script, pc, &column);
-        out.printf("\t%s:%u:%u (%s) \t", filename, line, column, CodeName[*pc]);
+        out.printf("[BaselineICStats]     %s - pc=%u line=%u col=%u\n",
+                   CodeName[*pc], pcOffset, line, column);
 
         ICStub* stub = entry.firstStub();
+        out.printf("[BaselineICStats]          ");
         while (stub) {
             uint32_t count;
             if (GetStubEnteredCount(stub, &count)) {
@@ -1238,7 +1242,7 @@ DumpICInfo(JSScript* script)
             } else if (stub->isFallback()) {
                 out.printf("(fb) %u", stub->toFallbackStub()->enteredCount());
             } else {
-                out.printf(" <unknown> -> ");
+                out.printf(" ?? -> ");
             }
             stub = stub->next();
         }
@@ -1254,10 +1258,6 @@ jit::FinishDiscardBaselineScript(FreeOp* fop, JSScript* script)
     if (!script->hasBaselineScript()) {
         return;
     }
-
-#ifdef JS_JITSPEW
-    DumpICInfo(script);
-#endif
 
     if (script->baselineScript()->active()) {
         // Script is live on the stack. Keep the BaselineScript, but destroy
