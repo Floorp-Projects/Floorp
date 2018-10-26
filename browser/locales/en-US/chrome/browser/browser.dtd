@@ -964,24 +964,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY contentBlocking.disabled.tooltip "You have disabled Content Blocking.">
 <!ENTITY contentBlocking.exception.tooltip "You have disabled Content Blocking for this site.">
 
-<!ENTITY contentBlocking.fastBlock.label "Slow-Loading Trackers">
-<!-- LOCALIZATION NOTE (contentBlocking.fastBlock.blocked.label):
-     This label signals that this type of content blocking is turned
-     ON and is successfully blocking malicious/slow content, so this is
-     a positive thing. It forms the end of the (imaginary) sentence
-     "Slow-Loading Trackers [are] Blocked"-->
-<!ENTITY contentBlocking.fastBlock.blocked.label "Blocked">
-<!-- LOCALIZATION NOTE (contentBlocking.fastBlock.blocking.label):
-     This label signals that this type of content blocking is turned
-     ON, so this is a positive thing. It forms the verb in (imaginary) sentence
-     "Firefox is blocking Slow-Loading Trackers"-->
-<!ENTITY contentBlocking.fastBlock.blocking.label "Blocking">
-<!-- LOCALIZATION NOTE (contentBlocking.fastBlock.add.label):
-     This is displayed as a link to preferences, where the user can add
-     this specific type of content blocking. When this text is shown
-     the type of content blocking is currently not enabled. -->
-<!ENTITY contentBlocking.fastBlock.add.label "Add Blocking…">
-
 <!ENTITY contentBlocking.trackingProtection2.label "All Detected Trackers">
 <!ENTITY contentBlocking.trackingProtection3.label "Trackers">
 <!-- LOCALIZATION NOTE (contentBlocking.trackingProtection.blocked.label):

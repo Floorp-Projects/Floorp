@@ -2860,11 +2860,12 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
           // (using min or max, depending on sign).
           // This should not change the sign of availableFreeSpace (except
           // possibly by setting it to 0), as enforced by this assertion:
-          MOZ_ASSERT(totalDesiredPortionOfOrigFreeSpace == 0 ||
-                     ((totalDesiredPortionOfOrigFreeSpace > 0) ==
-                      (availableFreeSpace > 0)),
-                     "When we reduce available free space for flex factors < 1,"
-                     "we shouldn't change the sign of the free space...");
+          NS_ASSERTION(totalDesiredPortionOfOrigFreeSpace == 0 ||
+                       ((totalDesiredPortionOfOrigFreeSpace > 0) ==
+                        (availableFreeSpace > 0)),
+                       "When we reduce available free space for flex "
+                       "factors < 1, we shouldn't change the sign of the "
+                       "free space...");
 
           if (availableFreeSpace > 0) {
             availableFreeSpace = std::min(availableFreeSpace,

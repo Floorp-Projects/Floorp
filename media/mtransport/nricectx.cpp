@@ -786,7 +786,6 @@ NrIceStats NrIceCtx::Destroy() {
 }
 
 NrIceCtx::~NrIceCtx() {
-  Destroy();
 }
 
 void NrIceCtx::destroy_peer_ctx() {

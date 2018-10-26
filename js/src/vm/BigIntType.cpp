@@ -28,6 +28,8 @@
 using namespace js;
 
 using mozilla::Maybe;
+using mozilla::Some;
+using mozilla::Nothing;
 using mozilla::Range;
 using mozilla::RangedPtr;
 
@@ -728,6 +730,89 @@ BigInt::looselyEqual(JSContext* cx, HandleBigInt lhs, HandleValue rhs)
 
     // Step 13.
     return false;
+}
+
+// BigInt proposal section 1.1.12. BigInt::lessThan ( x, y )
+bool
+BigInt::lessThan(BigInt* x, BigInt* y)
+{
+    return mpz_cmp(x->num_, y->num_) < 0;
+}
+
+Maybe<bool>
+BigInt::lessThan(BigInt* lhs, double rhs)
+{
+    if (mozilla::IsNaN(rhs)) {
+        return Maybe<bool>(Nothing());
+    }
+    return Some(mpz_cmp_d(lhs->num_, rhs) < 0);
+}
+
+Maybe<bool>
+BigInt::lessThan(double lhs, BigInt* rhs)
+{
+    if (mozilla::IsNaN(lhs)) {
+        return Maybe<bool>(Nothing());
+    }
+    return Some(-mpz_cmp_d(rhs->num_, lhs) < 0);
+}
+
+bool
+BigInt::lessThan(JSContext* cx, HandleBigInt lhs, HandleString rhs, Maybe<bool>& res)
+{
+    RootedBigInt rhsBigInt(cx);
+    JS_TRY_VAR_OR_RETURN_FALSE(cx, rhsBigInt, StringToBigInt(cx, rhs, 0));
+    if (!rhsBigInt) {
+        res = Nothing();
+        return true;
+    }
+    res = Some(lessThan(lhs, rhsBigInt));
+    return true;
+}
+
+bool
+BigInt::lessThan(JSContext* cx, HandleString lhs, HandleBigInt rhs, Maybe<bool>& res)
+{
+    RootedBigInt lhsBigInt(cx);
+    JS_TRY_VAR_OR_RETURN_FALSE(cx, lhsBigInt, StringToBigInt(cx, lhs, 0));
+    if (!lhsBigInt) {
+        res = Nothing();
+        return true;
+    }
+    res = Some(lessThan(lhsBigInt, rhs));
+    return true;
+}
+
+bool
+BigInt::lessThan(JSContext* cx, HandleValue lhs, HandleValue rhs, Maybe<bool>& res)
+{
+    if (lhs.isBigInt()) {
+        if (rhs.isString()) {
+            RootedBigInt lhsBigInt(cx, lhs.toBigInt());
+            RootedString rhsString(cx, rhs.toString());
+            return lessThan(cx, lhsBigInt, rhsString, res);
+        }
+
+        if (rhs.isNumber()) {
+            res = lessThan(lhs.toBigInt(), rhs.toNumber());
+            return true;
+        }
+
+        MOZ_ASSERT(rhs.isBigInt());
+        res = Some(lessThan(lhs.toBigInt(), rhs.toBigInt()));
+        return true;
+    }
+
+    MOZ_ASSERT(rhs.isBigInt());
+    if (lhs.isString()) {
+        RootedString lhsString(cx, lhs.toString());
+        RootedBigInt rhsBigInt(cx, rhs.toBigInt());
+        return lessThan(cx, lhsString, rhsBigInt, res);
+    }
+
+    MOZ_ASSERT(lhs.isNumber());
+    res = lessThan(lhs.toNumber(), rhs.toBigInt());
+    return true;
 }
 
 JSLinearString*

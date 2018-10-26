@@ -324,6 +324,8 @@ SourceMapURLService.prototype._callOneCallback = async function(subscriptionEntr
  *                 location.  If false, then source maps are disabled
  *                 and the generated location should be used; in this
  *                 case the remaining arguments should be ignored.
+ * @returns {Function | undefined} An unsubscribe function or undefined if the service
+ *                                 was destroyed.
  */
 SourceMapURLService.prototype.subscribe = function(url, line, column, callback) {
   if (!this._subscriptions) {
@@ -348,6 +350,8 @@ SourceMapURLService.prototype.subscribe = function(url, line, column, callback) 
   if (this._prefValue) {
     this._callOneCallback(subscriptionEntry, callback);
   }
+
+  return () => this.unsubscribe(url, line, column, callback);
 };
 
 /**

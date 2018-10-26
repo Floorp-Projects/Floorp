@@ -2,27 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var FastBlock = {
-  reportBreakageLabel: "fastblock",
-  telemetryIdentifier: "fb",
-  PREF_ENABLED: "browser.fastblock.enabled",
-  PREF_UI_ENABLED: "browser.contentblocking.fastblock.control-center.ui.enabled",
-
-  get categoryItem() {
-    delete this.categoryItem;
-    return this.categoryItem = document.getElementById("identity-popup-content-blocking-category-fastblock");
-  },
-
-  init() {
-    XPCOMUtils.defineLazyPreferenceGetter(this, "enabled", this.PREF_ENABLED, false);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "visible", this.PREF_UI_ENABLED, false);
-  },
-
-  isBlockerActivated(state) {
-    return state & Ci.nsIWebProgressListener.STATE_BLOCKED_SLOW_TRACKING_CONTENT;
-  },
-};
-
 var TrackingProtection = {
   reportBreakageLabel: "trackingprotection",
   telemetryIdentifier: "tp",
@@ -214,7 +193,7 @@ var ContentBlocking = {
   //
   // It may also contain an init() and uninit() function, which will be called
   // on ContentBlocking.init() and ContentBlocking.uninit().
-  blockers: [FastBlock, TrackingProtection, ThirdPartyCookies],
+  blockers: [TrackingProtection, ThirdPartyCookies],
 
   get _baseURIForChannelClassifier() {
     // Convert document URI into the format used by
@@ -363,9 +342,6 @@ var ContentBlocking = {
     body += `${ThirdPartyCookies.PREF_ENABLED}: ${Services.prefs.getIntPref(ThirdPartyCookies.PREF_ENABLED)}\n`;
     body += `network.cookie.lifetimePolicy: ${Services.prefs.getIntPref("network.cookie.lifetimePolicy")}\n`;
     body += `privacy.restrict3rdpartystorage.expiration: ${Services.prefs.getIntPref("privacy.restrict3rdpartystorage.expiration")}\n`;
-    body += `${FastBlock.PREF_ENABLED}: ${Services.prefs.getBoolPref(FastBlock.PREF_ENABLED)}\n`;
-    body += `${FastBlock.PREF_UI_ENABLED}: ${Services.prefs.getBoolPref(FastBlock.PREF_UI_ENABLED)}\n`;
-    body += `browser.fastblock.timeout: ${Services.prefs.getIntPref("browser.fastblock.timeout")}\n`;
 
     let comments = document.getElementById("identity-popup-breakageReportView-collection-comments");
     body += "\n**Comments**\n" + comments.value;
@@ -469,7 +445,6 @@ var ContentBlocking = {
     if (this.reportBreakageEnabled ||
         (ThirdPartyCookies.reportBreakageEnabled &&
          ThirdPartyCookies.activated &&
-         !FastBlock.activated &&
          !TrackingProtection.activated)) {
       this.reportBreakageButton.removeAttribute("hidden");
     } else {
