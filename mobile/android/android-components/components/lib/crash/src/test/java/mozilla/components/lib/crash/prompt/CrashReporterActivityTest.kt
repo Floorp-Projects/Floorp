@@ -6,12 +6,15 @@ package mozilla.components.lib.crash.prompt
 
 import android.content.Intent
 import android.widget.Button
+import android.widget.TextView
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.R
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.test.mock
-import org.junit.Ignore
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
@@ -20,7 +23,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
-@Ignore("Timing issues")
 class CrashReporterActivityTest {
     @Test
     fun `Pressing close button sends report`() {
@@ -38,12 +40,17 @@ class CrashReporterActivityTest {
 
         val activity = Robolectric.buildActivity(CrashReporterActivity::class.java, intent)
             .create()
+            .visible()
             .start()
             .resume()
             .get()
 
         val closeButton = activity.findViewById<Button>(R.id.closeButton)
         closeButton.performClick()
+
+        runBlocking {
+            delay(100)
+        }
 
         verify(service).report(crash)
     }
@@ -64,6 +71,7 @@ class CrashReporterActivityTest {
 
         val activity = Robolectric.buildActivity(CrashReporterActivity::class.java, intent)
             .create()
+            .visible()
             .start()
             .resume()
             .get()
@@ -71,6 +79,37 @@ class CrashReporterActivityTest {
         val restartButton = activity.findViewById<Button>(R.id.restartButton)
         restartButton.performClick()
 
+        runBlocking {
+            delay(100)
+        }
+
         verify(service).report(crash)
+    }
+
+    @Test
+    fun `Custom message is set on CrashReporterActivity`() {
+        CrashReporter(
+            shouldPrompt = CrashReporter.Prompt.ALWAYS,
+            promptConfiguration = CrashReporter.PromptConfiguration(
+                message = "Hello World!",
+                theme = android.R.style.Theme_Holo_Dialog // Yolo!
+            ),
+            services = listOf(mock())
+        ).install(RuntimeEnvironment.application)
+
+        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"))
+
+        val intent = Intent()
+        crash.fillIn(intent)
+
+        val activity = Robolectric.buildActivity(CrashReporterActivity::class.java, intent)
+            .create()
+            .visible()
+            .start()
+            .resume()
+            .get()
+
+        val view = activity.findViewById<TextView>(R.id.messageView)
+        assertEquals("Hello World!", view.text)
     }
 }
