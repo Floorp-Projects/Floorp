@@ -96,8 +96,7 @@ struct CubicBezierFunction {
 
 struct StepFunction {
   int steps;
-  // 1 = nsTimingFunction::StepStart, 2 = nsTimingFunction::StepEnd
-  int type;
+  uint8_t type; // Converted from StyleStepPosition.
 };
 
 union TimingFunction {

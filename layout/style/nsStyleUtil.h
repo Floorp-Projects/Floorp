@@ -76,14 +76,14 @@ public:
     aResult.AppendFloat(aNumber);
   }
 
-  static void AppendStepsTimingFunction(nsTimingFunction::Type aType,
-                                        uint32_t aSteps,
+  static void AppendStepsTimingFunction(uint32_t aStepNumber,
+                                        mozilla::StyleStepPosition aStepPos,
                                         nsAString& aResult);
   static void AppendCubicBezierTimingFunction(float aX1, float aY1,
                                               float aX2, float aY2,
                                               nsAString& aResult);
   static void AppendCubicBezierKeywordTimingFunction(
-      nsTimingFunction::Type aType,
+      mozilla::StyleTimingKeyword aType,
       nsAString& aResult);
 
   /*

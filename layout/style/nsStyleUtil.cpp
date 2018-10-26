@@ -275,19 +275,19 @@ nsStyleUtil::AppendPaintOrderValue(uint8_t aValue,
 }
 
 /* static */ void
-nsStyleUtil::AppendStepsTimingFunction(nsTimingFunction::Type aType,
-                                       uint32_t aSteps,
+nsStyleUtil::AppendStepsTimingFunction(uint32_t aStepNumber,
+                                       mozilla::StyleStepPosition aStepPos,
                                        nsAString& aResult)
 {
-  MOZ_ASSERT(aType == nsTimingFunction::Type::StepStart ||
-             aType == nsTimingFunction::Type::StepEnd);
-
   aResult.AppendLiteral("steps(");
-  aResult.AppendInt(aSteps);
-  if (aType == nsTimingFunction::Type::StepStart) {
-    aResult.AppendLiteral(", start)");
-  } else {
-    aResult.AppendLiteral(")");
+  aResult.AppendInt(aStepNumber);
+  switch (aStepPos) {
+    case StyleStepPosition::Start:
+      aResult.AppendLiteral(", start)");
+      break;
+    case StyleStepPosition::End:
+    default:
+      aResult.AppendLiteral(")");
   }
 }
 
@@ -311,15 +311,15 @@ nsStyleUtil::AppendCubicBezierTimingFunction(float aX1, float aY1,
 
 /* static */ void
 nsStyleUtil::AppendCubicBezierKeywordTimingFunction(
-    nsTimingFunction::Type aType,
+    StyleTimingKeyword aType,
     nsAString& aResult)
 {
   switch (aType) {
-    case nsTimingFunction::Type::Ease:
-    case nsTimingFunction::Type::Linear:
-    case nsTimingFunction::Type::EaseIn:
-    case nsTimingFunction::Type::EaseOut:
-    case nsTimingFunction::Type::EaseInOut: {
+    case StyleTimingKeyword::Linear:
+    case StyleTimingKeyword::Ease:
+    case StyleTimingKeyword::EaseIn:
+    case StyleTimingKeyword::EaseOut:
+    case StyleTimingKeyword::EaseInOut: {
       nsCSSKeyword keyword = nsCSSProps::ValueToKeywordEnum(
           static_cast<int32_t>(aType),
           nsCSSProps::kTransitionTimingFunctionKTable);
