@@ -2,13 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals MozQueryInterface */
+ // This file defines these globals on the window object.
+ // Define them here so that ESLint can find them:
+/* globals MozElementMixin, MozXULElement, MozBaseControl */
 
 "use strict";
 
 // This is loaded into chrome windows with the subscript loader. Wrap in
 // a block to prevent accidentally leaking globals onto `window`.
-{
+(() => {
+
+// Handle customElements.js being loaded as a script in addition to the subscriptLoader
+// from MainProcessSingleton, to handle pages that can open both before and after
+// MainProcessSingleton starts. See Bug 1501845.
+if (window.MozXULElement) {
+  return;
+}
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
@@ -188,6 +197,7 @@ const MozXULElement = MozElementMixin(XULElement);
  * onto the object itself.
  */
 function getInterfaceProxy(obj) {
+  /* globals MozQueryInterface */
   if (!obj._customInterfaceProxy) {
     obj._customInterfaceProxy = new Proxy(obj, {
       get(target, prop, receiver) {
@@ -266,4 +276,4 @@ if (!isDummyDocument) {
     });
   }
 }
-}
+})();
