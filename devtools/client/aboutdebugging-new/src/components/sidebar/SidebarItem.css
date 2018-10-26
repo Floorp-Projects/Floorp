@@ -18,7 +18,7 @@
 }
 
 .sidebar-item:not(.sidebar-item--selectable) {
-  opacity: 0.5;
+  color: var(--grey-40);
 }
 
 .sidebar-item--selectable:hover {
