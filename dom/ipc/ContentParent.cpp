@@ -2742,15 +2742,6 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
   // of value to take effect.
   shouldSandbox = IsContentSandboxEnabled();
 
-#ifdef XP_MACOSX
-  // If the sandbox was initialized during content process
-  // startup, we must not send the SetProcessSandbox message.
-  // If early startup was pref'd off or the process is a
-  // middleman process, send SetProcessSandbox now.
-  shouldSandbox = shouldSandbox &&
-    (!sEarlySandboxInit || IsRecordingOrReplaying());
-#endif
-
 #ifdef XP_LINUX
   if (shouldSandbox) {
     MOZ_ASSERT(!mSandboxBroker);
