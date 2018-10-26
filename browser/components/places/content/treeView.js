@@ -107,10 +107,6 @@ PlacesTreeView.prototype = {
    * @return true if aContainer is a plain container, false otherwise.
    */
   _isPlainContainer: function PTV__isPlainContainer(aContainer) {
-    // Livemarks are always plain containers.
-    if (this._controller.hasCachedLivemarkInfo(aContainer))
-      return true;
-
     // We don't know enough about non-query containers.
     if (!(aContainer instanceof Ci.nsINavHistoryQueryResultNode))
       return false;
@@ -343,8 +339,7 @@ PlacesTreeView.prototype = {
 
       // Recursively do containers.
       if (!this._flatList &&
-          curChild instanceof Ci.nsINavHistoryContainerResultNode &&
-          !this._controller.hasCachedLivemarkInfo(curChild)) {
+          curChild instanceof Ci.nsINavHistoryContainerResultNode) {
         let uri = curChild.uri;
         let isopen = false;
 
@@ -831,22 +826,6 @@ PlacesTreeView.prototype = {
     }
   },
 
-  _populateLivemarkContainer: function PTV__populateLivemarkContainer(aNode) {
-    PlacesUtils.livemarks.getLivemark({ id: aNode.itemId })
-      .then(aLivemark => {
-        let placesNode = aNode;
-        // Need to check containerOpen since getLivemark is async.
-        if (!placesNode.containerOpen)
-          return;
-
-        let children = aLivemark.getNodesForContainer(placesNode);
-        for (let i = 0; i < children.length; i++) {
-          let child = children[i];
-          this.nodeInserted(placesNode, child, i);
-        }
-      }, Cu.reportError);
-  },
-
   nodeTitleChanged: function PTV_nodeTitleChanged(aNode, aNewTitle) {
     this._invalidateCellValue(aNode, this.COLUMN_TYPE_TITLE);
   },
@@ -870,19 +849,6 @@ PlacesTreeView.prototype = {
                                                  itemId: aNode.itemId,
                                                  time: aOldVisitDate}));
     this._nodeDetails.set(makeNodeDetailsKey(aNode), aNode);
-    if (aNode.parent && this._controller.hasCachedLivemarkInfo(aNode.parent)) {
-      // Find the node in the parent.
-      let parentRow = this._flatList ? 0 : this._getRowForNode(aNode.parent);
-      for (let i = parentRow; i < this._rows.length; i++) {
-        let child = this.nodeForTreeIndex(i);
-        if (child.uri == aNode.uri) {
-          this._cellProperties.delete(child);
-          this._invalidateCellValue(child, this.COLUMN_TYPE_TITLE);
-          break;
-        }
-      }
-      return;
-    }
 
     this._invalidateCellValue(aNode, this.COLUMN_TYPE_DATE);
     this._invalidateCellValue(aNode, this.COLUMN_TYPE_VISITCOUNT);
@@ -894,18 +860,7 @@ PlacesTreeView.prototype = {
 
   nodeKeywordChanged(aNode, aNewKeyword) {},
 
-  nodeAnnotationChanged: function PTV_nodeAnnotationChanged(aNode, aAnno) {
-    if (aAnno == PlacesUtils.LMANNO_FEEDURI) {
-      PlacesUtils.livemarks.getLivemark({ id: aNode.itemId })
-        .then(aLivemark => {
-          this._controller.cacheLivemarkInfo(aNode, aLivemark);
-          let properties = this._cellProperties.get(aNode);
-          this._cellProperties.set(aNode, properties += " livemark");
-          // The livemark attribute is set as a cell property on the title cell.
-          this._invalidateCellValue(aNode, this.COLUMN_TYPE_TITLE);
-        }, Cu.reportError);
-    }
-  },
+  nodeAnnotationChanged() {},
 
   nodeDateAddedChanged: function PTV_nodeDateAddedChanged(aNode, aNewValue) {
     this._invalidateCellValue(aNode, this.COLUMN_TYPE_DATEADDED);
@@ -919,32 +874,6 @@ PlacesTreeView.prototype = {
   containerStateChanged:
   function PTV_containerStateChanged(aNode, aOldState, aNewState) {
     this.invalidateContainer(aNode);
-
-    if (PlacesUtils.nodeIsFolder(aNode) ||
-        (this._flatList && aNode == this._rootNode)) {
-      let queryOptions = PlacesUtils.asQuery(this._rootNode).queryOptions;
-      if (queryOptions.excludeItems) {
-        return;
-      }
-      if (aNode.itemId != -1) { // run when there's a valid node id
-        PlacesUtils.livemarks.getLivemark({ id: aNode.itemId })
-          .then(aLivemark => {
-            let shouldInvalidate =
-              !this._controller.hasCachedLivemarkInfo(aNode);
-            this._controller.cacheLivemarkInfo(aNode, aLivemark);
-            if (aNewState == Ci.nsINavHistoryContainerResultNode.STATE_OPENED) {
-              aLivemark.registerForUpdates(aNode, this);
-              // Prioritize the current livemark.
-              aLivemark.reload();
-              PlacesUtils.livemarks.reloadLivemarks();
-              if (shouldInvalidate)
-                this.invalidateContainer(aNode);
-            } else {
-              aLivemark.unregisterForUpdates(aNode);
-            }
-          }, () => undefined);
-      }
-    }
   },
 
   invalidateContainer: function PTV_invalidateContainer(aContainer) {
@@ -1062,13 +991,6 @@ PlacesTreeView.prototype = {
         // and didn't find a match, so we can open our item.
         if (!parent && !item.containerOpen)
           item.containerOpen = true;
-      }
-    }
-
-    if (this._controller.hasCachedLivemarkInfo(aContainer)) {
-      let queryOptions = PlacesUtils.asQuery(this._result.root).queryOptions;
-      if (!queryOptions.excludeItems) {
-        this._populateLivemarkContainer(aContainer);
       }
     }
 
@@ -1248,22 +1170,6 @@ PlacesTreeView.prototype = {
             properties += " dayContainer";
           else if (PlacesUtils.nodeIsHost(node))
             properties += " hostContainer";
-        } else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
-                 nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
-          if (itemId != -1) {
-            if (this._controller.hasCachedLivemarkInfo(node)) {
-              properties += " livemark";
-            } else {
-              PlacesUtils.livemarks.getLivemark({ id: itemId })
-                .then(aLivemark => {
-                  this._controller.cacheLivemarkInfo(node, aLivemark);
-                  let livemarkProps = this._cellProperties.get(node);
-                  this._cellProperties.set(node, livemarkProps += " livemark");
-                  // The livemark attribute is set as a cell property on the title cell.
-                  this._invalidateCellValue(node, this.COLUMN_TYPE_TITLE);
-                }, () => undefined);
-            }
-          }
         }
 
         if (itemId == -1) {
@@ -1289,13 +1195,6 @@ PlacesTreeView.prototype = {
         properties += " separator";
       else if (PlacesUtils.nodeIsURI(node)) {
         properties += " " + PlacesUIUtils.guessUrlSchemeForUI(node.uri);
-
-        if (this._controller.hasCachedLivemarkInfo(node.parent)) {
-          properties += " livemarkItem";
-          if (node.accessCount) {
-            properties += " visited";
-          }
-        }
       }
 
       this._cellProperties.set(node, properties);
@@ -1338,14 +1237,8 @@ PlacesTreeView.prototype = {
     if (this._flatList)
       return true;
 
-    let node = this._rows[aRow];
-    if (this._controller.hasCachedLivemarkInfo(node)) {
-      let queryOptions = PlacesUtils.asQuery(this._result.root).queryOptions;
-      return queryOptions.excludeItems;
-    }
-
     // All containers are listed in the rows array.
-    return !node.hasChildren;
+    return !this._rows[aRow].hasChildren;
   },
 
   isSeparator: function PTV_isSeparator(aRow) {
@@ -1590,18 +1483,15 @@ PlacesTreeView.prototype = {
       return;
     }
 
-    // Persist containers open status, but never persist livemarks.
-    if (!this._controller.hasCachedLivemarkInfo(node)) {
-      let uri = node.uri;
+    let uri = node.uri;
 
-      if (uri) {
-        let docURI = document.documentURI;
+    if (uri) {
+      let docURI = document.documentURI;
 
-        if (node.containerOpen) {
-          Services.xulStore.removeValue(docURI, uri, "open");
-        } else {
-          Services.xulStore.setValue(docURI, uri, "open", "true");
-        }
+      if (node.containerOpen) {
+        Services.xulStore.removeValue(docURI, uri, "open");
+      } else {
+        Services.xulStore.setValue(docURI, uri, "open", "true");
       }
     }
 
@@ -1716,9 +1606,8 @@ PlacesTreeView.prototype = {
     }
     let itemGuid = node.bookmarkGuid;
 
-    // Only bookmark-nodes are editable.  Fortunately, this checks also takes
-    // care of livemark children.
-    if (itemGuid == "")
+    // Only bookmark-nodes are editable.
+    if (!itemGuid)
       return false;
 
     // The following items are also not editable, even though they are bookmark

@@ -10,16 +10,6 @@
 
 const MS_PER_DAY = 86400000; // 24 * 60 * 60 * 1000
 
-// Match type constants.
-// These indicate what type of search function we should be using.
-const {
-  MATCH_ANYWHERE,
-  MATCH_BOUNDARY_ANYWHERE,
-  MATCH_BOUNDARY,
-  MATCH_BEGINNING,
-  MATCH_BEGINNING_CASE_SENSITIVE,
-} = Ci.mozIPlacesAutoComplete;
-
 // AutoComplete query type constants.
 // Describes the various types of queries that we can process rows for.
 const QUERYTYPE_FILTERED            = 0;
@@ -576,7 +566,7 @@ function Search(searchString, searchParam, autocompleteListener,
   this._searchString = Services.textToSubURI.unEscapeURIForUI("UTF-8", suffix);
   this._strippedPrefix = prefix.toLowerCase();
 
-  this._matchBehavior = UrlbarPrefs.get("matchBehavior");
+  this._matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_BOUNDARY;
   // Set the default behavior for this search.
   this._behavior = this._searchString ? UrlbarPrefs.get("defaultBehavior")
                                       : UrlbarPrefs.get("emptySearchDefaultBehavior");
@@ -982,14 +972,12 @@ Search.prototype = {
 
     this._matchAboutPages();
 
-    // If we do not have enough results, and our match type is
-    // MATCH_BOUNDARY_ANYWHERE, search again with MATCH_ANYWHERE to get more
-    // results.
+    // If we do not have enough matches search again with MATCH_ANYWHERE, to
+    // get more matches.
     let count = this._counts[UrlbarUtils.MATCH_GROUP.GENERAL] +
                 this._counts[UrlbarUtils.MATCH_GROUP.HEURISTIC];
-    if (this._matchBehavior == MATCH_BOUNDARY_ANYWHERE &&
-        count < UrlbarPrefs.get("maxRichResults")) {
-      this._matchBehavior = MATCH_ANYWHERE;
+    if (count < UrlbarPrefs.get("maxRichResults")) {
+      this._matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE;
       for (let [query, params] of [ this._adaptiveQuery,
                                     this._searchQuery ]) {
         await conn.executeCached(query, params, this._onResultRow.bind(this));

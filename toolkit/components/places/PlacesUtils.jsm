@@ -1105,8 +1105,8 @@ var PlacesUtils = {
    */
   validatePageInfo(pageInfo, validateVisits = true) {
     return this.validateItemProperties("PageInfo", PAGEINFO_VALIDATORS, pageInfo,
-      { url: { requiredIf: b => { typeof b.guid != "string"; } },
-        guid: { requiredIf: b => { typeof b.url != "string"; } },
+      { url: { requiredIf: b => !b.guid },
+        guid: { requiredIf: b => !b.url },
         visits: { requiredIf: b => validateVisits  },
       });
   },
