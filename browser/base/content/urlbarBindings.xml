@@ -620,7 +620,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
             reuseEmpty = true;
           }
-          if (where == "tab" && reuseEmpty && isTabEmpty(gBrowser.selectedTab)) {
+          if (where == "tab" && reuseEmpty && gBrowser.selectedTab.isEmpty) {
             where = "current";
           }
           return where;
@@ -736,7 +736,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   };
 
                   if (switchToTabHavingURI(url, false, loadOpts) &&
-                      isTabEmpty(prevTab)) {
+                      prevTab.isEmpty) {
                     gBrowser.removeTab(prevTab);
                   }
                   return;
