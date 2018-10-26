@@ -235,7 +235,6 @@
   skin/classic/browser/places/bookmarksMenu.svg                (../shared/places/bookmarksMenu.svg)
   skin/classic/browser/places/bookmarksToolbar.svg             (../shared/places/bookmarksToolbar.svg)
   skin/classic/browser/places/folder.svg                       (../shared/places/folder.svg)
-  skin/classic/browser/places/folder-live.svg                  (../shared/places/folder-live.svg)
   skin/classic/browser/places/folder-smart.svg                 (../shared/places/folder-smart.svg)
   skin/classic/browser/places/history.svg                      (../shared/places/history.svg)
   skin/classic/browser/places/tag.svg                          (../shared/places/tag.svg)

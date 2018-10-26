@@ -518,11 +518,9 @@ var PlacesUIUtils = {
    *
    * @param aNode
    *        a node, except the root node of a query.
-   * @param aView
-   *        The view originating the request.
    * @return true if the aNode represents a removable entry, false otherwise.
    */
-  canUserRemove(aNode, aView) {
+  canUserRemove(aNode) {
     let parentNode = aNode.parent;
     if (!parentNode) {
       // canUserRemove doesn't accept root nodes.
@@ -558,7 +556,7 @@ var PlacesUIUtils = {
       return true;
 
     // Otherwise it has to be a child of an editable folder.
-    return !this.isFolderReadOnly(parentNode, aView);
+    return !this.isFolderReadOnly(parentNode);
   },
 
   /**
@@ -576,25 +574,15 @@ var PlacesUIUtils = {
    *
    * @param placesNode
    *        any folder result node.
-   * @param view
-   *        The view originating the request.
    * @throws if placesNode is not a folder result node or views is invalid.
-   * @note livemark "folders" are considered read-only (but see bug 1072833).
    * @return true if placesNode is a read-only folder, false otherwise.
    */
-  isFolderReadOnly(placesNode, view) {
+  isFolderReadOnly(placesNode) {
     if (typeof placesNode != "object" || !PlacesUtils.nodeIsFolder(placesNode)) {
       throw new Error("invalid value for placesNode");
     }
-    if (!view || typeof view != "object") {
-      throw new Error("invalid value for aView");
-    }
-    let itemId = PlacesUtils.getConcreteItemId(placesNode);
-    if (itemId == PlacesUtils.placesRootId ||
-        view.controller.hasCachedLivemarkInfo(placesNode))
-      return true;
 
-    return false;
+    return PlacesUtils.getConcreteItemId(placesNode) == PlacesUtils.placesRootId;
   },
 
   /** aItemsToOpen needs to be an array of objects of the form:
@@ -644,25 +632,6 @@ var PlacesUIUtils = {
       replace: false,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
-  },
-
-  openLiveMarkNodesInTabs:
-  function PUIU_openLiveMarkNodesInTabs(aNode, aEvent, aView) {
-    let window = aView.ownerWindow;
-
-    PlacesUtils.livemarks.getLivemark({id: aNode.itemId})
-      .then(aLivemark => {
-        let urlsToOpen = [];
-
-        let nodes = aLivemark.getNodesForContainer(aNode);
-        for (let node of nodes) {
-          urlsToOpen.push({uri: node.uri, isBookmark: false});
-        }
-
-        if (OpenInTabsUtils.confirmOpenInTabs(urlsToOpen.length, window)) {
-          this._openTabset(urlsToOpen, aEvent, window);
-        }
-      }, Cu.reportError);
   },
 
   openContainerNodeInTabs:

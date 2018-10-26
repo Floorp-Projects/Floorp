@@ -26,7 +26,6 @@ browser.jar:
   skin/classic/browser/notification-icons/geo.svg          (notification-icons/geo.svg)
   skin/classic/browser/places/allBookmarks.png        (places/allBookmarks.png)
   skin/classic/browser/places/editBookmark.css        (places/editBookmark.css)
-  skin/classic/browser/places/livemark-item.png       (places/livemark-item.png)
 * skin/classic/browser/places/sidebar.css             (places/sidebar.css)
   skin/classic/browser/places/organizer.css           (places/organizer.css)
   skin/classic/browser/places/organizer.xml           (places/organizer.xml)
