@@ -8,7 +8,6 @@ ChromeUtils.import("resource://gre/modules/narrate/VoiceSelect.jsm");
 ChromeUtils.import("resource://gre/modules/narrate/Narrator.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AsyncPrefs.jsm");
-ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm");
 
 var EXPORTED_SYMBOLS = ["NarrateControls"];
 

@@ -9,8 +9,6 @@ var EXPORTED_SYMBOLS = ["ExtensionTelemetry", "getTrimmedString"];
 
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
-                               "resource://gre/modules/TelemetryStopwatch.jsm");
 
 // Map of the base histogram ids for the metrics recorded for the extensions.
 const histograms = {

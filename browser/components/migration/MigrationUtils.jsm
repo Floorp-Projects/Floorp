@@ -28,8 +28,6 @@ ChromeUtils.defineModuleGetter(this, "ResponsivenessMonitor",
                                "resource://gre/modules/ResponsivenessMonitor.jsm");
 ChromeUtils.defineModuleGetter(this, "Sqlite",
                                "resource://gre/modules/Sqlite.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
-                               "resource://gre/modules/TelemetryStopwatch.jsm");
 ChromeUtils.defineModuleGetter(this, "WindowsRegistry",
                                "resource://gre/modules/WindowsRegistry.jsm");
 ChromeUtils.defineModuleGetter(this, "setTimeout",
