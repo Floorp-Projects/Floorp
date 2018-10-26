@@ -2550,6 +2550,14 @@
     "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
     "bug_numbers": [1296280]
   },
+  "HTTP2_FAIL_BEFORE_SETTINGS": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether an HTTP/2 session failed because the peer did not handshake properly",
+    "alert_emails": ["hurley@mozilla.com"],
+    "bug_numbers": [1050329]
+  },
   "HTTP_CHANNEL_DISPOSITION" : {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["necko@mozilla.com"],
@@ -12861,8 +12869,8 @@
   },
   "STORAGE_SYNC_GET_OPS_SIZE": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["eglassercamp@mozilla.com"],
-    "expires_in_version": "64",
+    "alert_emails": ["addons-dev-internal@mozilla.com", "eglassercamp@mozilla.com", "lgreco@mozilla.com"],
+    "expires_in_version": "67",
     "bug_numbers": [1328974],
     "kind": "exponential",
     "high": 100000,
@@ -12873,8 +12881,8 @@
   },
   "STORAGE_SYNC_SET_OPS_SIZE": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["eglassercamp@mozilla.com"],
-    "expires_in_version": "64",
+    "alert_emails": ["addons-dev-internal@mozilla.com", "eglassercamp@mozilla.com", "lgreco@mozilla.com"],
+    "expires_in_version": "67",
     "bug_numbers": [1328974],
     "kind": "exponential",
     "high": 100000,
@@ -12885,8 +12893,8 @@
   },
   "STORAGE_SYNC_REMOVE_OPS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["eglassercamp@mozilla.com"],
-    "expires_in_version": "64",
+    "alert_emails": ["addons-dev-internal@mozilla.com", "eglassercamp@mozilla.com", "lgreco@mozilla.com"],
+    "expires_in_version": "67",
     "bug_numbers": [1328974],
     "kind": "count",
     "keyed": true,

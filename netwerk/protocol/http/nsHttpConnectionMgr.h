@@ -255,6 +255,8 @@ public:
         return mCurrentTopLevelOuterContentWindowId;
     }
 
+    void BlacklistSpdy(const nsHttpConnectionInfo *ci);
+
 private:
     virtual ~nsHttpConnectionMgr();
 
@@ -310,6 +312,13 @@ private:
         // connection is currently using spdy.
         bool mUsingSpdy : 1;
 
+        // Determines whether or not we can continue to use spdy-enabled
+        // connections in the future. This is generally set to false either when
+        // some connection here encounters connection-based auth (such as NTLM)
+        // or when some connection here encounters a server that is totally
+        // busted (such as it fails to properly perform the h2 handshake).
+        bool mCanUseSpdy : 1;
+
         // Flags to remember our happy-eyeballs decision.
         // Reset only by Ctrl-F5 reload.
         // True when we've first connected an IPv4 server for this host,
@@ -326,6 +335,9 @@ private:
         bool mUseFastOpen : 1;
 
         bool mDoNotDestroy : 1;
+
+        bool AllowSpdy() const { return mCanUseSpdy; }
+        void DisallowSpdy();
 
         // Set the IP family preference flags according the connected family
         void RecordIPFamilyPreference(uint16_t family);

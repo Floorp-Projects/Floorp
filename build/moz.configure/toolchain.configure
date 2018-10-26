@@ -550,6 +550,9 @@ def check_compiler(compiler, language, target):
             if (info.cpu, target.cpu) == ('x86_64', 'x86'):
                 # -m32 does not use -Xclang, so add it directly.
                 flags.append('-m32')
+            elif target.toolchain == 'aarch64-mingw32':
+                # clang-cl uses a different name for this target
+                flags.append('--target=aarch64-windows-msvc')
         elif info.type == 'gcc':
             same_arch = same_arch_different_bits()
             if (target.cpu, info.cpu) in same_arch:

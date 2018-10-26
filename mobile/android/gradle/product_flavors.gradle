@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ext.configureProductFlavors = {
-    flavorDimensions "audience", "geckoBinaries", "minApi"
+    flavorDimensions "audience", "geckoBinaries"
     productFlavors {
         local {
             dimension "audience"
@@ -24,25 +24,6 @@ ext.configureProductFlavors = {
 
         withoutGeckoBinaries {
             dimension "geckoBinaries"
-        }
-
-        // For API 21+ - with pre-dexing, this will be faster for local development.
-        minApi21 {
-            dimension "minApi"
-
-            // For pre-dexing, setting `minSdkVersion 21` allows the Android gradle plugin to
-            // pre-DEX each module and produce an APK that can be tested on
-            // Android Lollipop without time consuming DEX merging processes.
-            minSdkVersion 21
-            dexOptions {
-                preDexLibraries true
-            }
-        }
-
-        // For API < 21 - does not support pre-dexing because local development
-        // is slow in that case.
-        noMinApi {
-            dimension "minApi"
         }
     }
 }

@@ -68,6 +68,7 @@ class ObjectBox;
     F(Arguments, PN_LIST) \
     F(Name, PN_NAME) \
     F(ObjectPropertyName, PN_NAME) \
+    F(PrivateName, PN_NAME) \
     F(ComputedName, PN_UNARY) \
     F(Number, PN_NUMBER) \
     F(String, PN_NAME) \
@@ -128,7 +129,8 @@ class ObjectBox;
     F(MutateProto, PN_UNARY) \
     F(Class, PN_TERNARY) \
     F(ClassMethod, PN_BINARY) \
-    F(ClassMethodList, PN_LIST) \
+    F(ClassField, PN_FIELD) \
+    F(ClassMemberList, PN_LIST) \
     F(ClassNames, PN_BINARY) \
     F(NewTarget, PN_BINARY) \
     F(PosHolder, PN_NULLARY) \
@@ -253,15 +255,15 @@ IsTypeofKind(ParseNodeKind kind)
  *   kid1: ClassNames for class name. can be null for anonymous class.
  *   kid2: expression after `extends`. null if no expression
  *   kid3: either of
- *           * ClassMethodList, if anonymous class
- *           * LexicalScopeNode which contains ClassMethodList as scopeBody,
+ *           * ClassMemberList, if anonymous class
+ *           * LexicalScopeNode which contains ClassMemberList as scopeBody,
  *             if named class
  * ClassNames (ClassNames)
  *   left: Name node for outer binding, or null if the class is an expression
  *         that doesn't create an outer binding
  *   right: Name node for inner binding
- * ClassMethodList (ListNode)
- *   head: list of N ClassMethod nodes
+ * ClassMemberList (ListNode)
+ *   head: list of N ClassMethod or ClassField nodes
  *   count: N >= 0
  * ClassMethod (ClassMethod)
  *   name: propertyName
@@ -520,6 +522,7 @@ enum ParseNodeArity
     PN_CODE,                            /* module or function definition node */
     PN_LIST,                            /* generic singly linked list */
     PN_NAME,                            /* name, label, string */
+    PN_FIELD,                           /* field name, optional initializer */
     PN_NUMBER,                          /* numeric literal */
     PN_REGEXP,                          /* regexp literal */
     PN_LOOP,                            /* loop control (break/continue) */
@@ -532,6 +535,7 @@ enum ParseNodeArity
     macro(AssignmentNode, AssignmentNodeType, asAssignment) \
     macro(CaseClause, CaseClauseType, asCaseClause) \
     macro(ClassMethod, ClassMethodType, asClassMethod) \
+    macro(ClassField, ClassFieldType, asClassField) \
     macro(ClassNames, ClassNamesType, asClassNames) \
     macro(ForNode, ForNodeType, asFor) \
     macro(PropertyAccess, PropertyAccessType, asPropertyAccess) \
@@ -713,6 +717,12 @@ class ParseNode
             ParseNode*  initOrStmt;     /* var initializer, argument default,
                                          * or label statement target */
         } name;
+        struct {
+          private:
+            friend class ClassField;
+            ParseNode* name;
+            ParseNode* initializer;     /* field initializer - optional */
+        } field;
         struct {
           private:
             friend class RegExpLiteral;
@@ -972,7 +982,7 @@ class BinaryNode : public ParseNode
     }
 
     // Methods used by FoldConstants.cpp.
-    // caller are responsible for keeping the list consistent.
+    // callers are responsible for keeping the list consistent.
     ParseNode** unsafeLeftReference() {
         return &pn_u.binary.left;
     }
@@ -1179,7 +1189,7 @@ class ListNode : public ParseNode
     MOZ_MUST_USE bool hasNonConstInitializer() const {
         MOZ_ASSERT(isKind(ParseNodeKind::Array) ||
                    isKind(ParseNodeKind::Object) ||
-                   isKind(ParseNodeKind::ClassMethodList));
+                   isKind(ParseNodeKind::ClassMemberList));
         return pn_u.list.xflags & hasNonConstInitializerBit;
     }
 
@@ -1196,7 +1206,7 @@ class ListNode : public ParseNode
     void setHasNonConstInitializer() {
         MOZ_ASSERT(isKind(ParseNodeKind::Array) ||
                    isKind(ParseNodeKind::Object) ||
-                   isKind(ParseNodeKind::ClassMethodList));
+                   isKind(ParseNodeKind::ClassMemberList));
         pn_u.list.xflags |= hasNonConstInitializerBit;
     }
 
@@ -1960,6 +1970,48 @@ class ClassMethod : public BinaryNode
     }
 };
 
+class ClassField : public ParseNode
+{
+  public:
+    ClassField(ParseNode* name, ParseNode* initializer)
+      : ParseNode(ParseNodeKind::ClassField, JSOP_NOP, PN_FIELD,
+                  initializer == nullptr ? name->pn_pos : TokenPos::box(name->pn_pos, initializer->pn_pos))
+    {
+        pn_u.field.name = name;
+        pn_u.field.initializer = initializer;
+    }
+
+    static bool test(const ParseNode& node) {
+        return node.isKind(ParseNodeKind::ClassField);
+    }
+
+    ParseNode& name() const {
+        return *pn_u.field.name;
+    }
+
+    bool hasInitializer() const {
+        return pn_u.field.initializer != nullptr;
+    }
+
+    ParseNode& initializer() const {
+        return *pn_u.field.initializer;
+    }
+
+#ifdef DEBUG
+    void dump(GenericPrinter& out, int indent);
+#endif
+
+    // Methods used by FoldConstants.cpp.
+    // callers are responsible for keeping the list consistent.
+    ParseNode** unsafeNameReference() {
+        return &pn_u.field.name;
+    }
+
+    ParseNode** unsafeInitializerReference() {
+        return &pn_u.field.initializer;
+    }
+};
+
 class SwitchStatement : public BinaryNode
 {
   public:
@@ -2046,13 +2098,13 @@ class ClassNames : public BinaryNode
 class ClassNode : public TernaryNode
 {
   public:
-    ClassNode(ParseNode* names, ParseNode* heritage, ParseNode* methodsOrBlock,
+    ClassNode(ParseNode* names, ParseNode* heritage, ParseNode* membersOrBlock,
               const TokenPos& pos)
-      : TernaryNode(ParseNodeKind::Class, names, heritage, methodsOrBlock, pos)
+      : TernaryNode(ParseNodeKind::Class, names, heritage, membersOrBlock, pos)
     {
         MOZ_ASSERT_IF(names, names->is<ClassNames>());
-        MOZ_ASSERT(methodsOrBlock->is<LexicalScopeNode>() ||
-                   methodsOrBlock->isKind(ParseNodeKind::ClassMethodList));
+        MOZ_ASSERT(membersOrBlock->is<LexicalScopeNode>() ||
+                   membersOrBlock->isKind(ParseNodeKind::ClassMemberList));
     }
 
     static bool test(const ParseNode& node) {
@@ -2067,14 +2119,14 @@ class ClassNode : public TernaryNode
     ParseNode* heritage() const {
         return kid2();
     }
-    ListNode* methodList() const {
-        ParseNode* methodsOrBlock = kid3();
-        if (methodsOrBlock->isKind(ParseNodeKind::ClassMethodList)) {
-            return &methodsOrBlock->as<ListNode>();
+    ListNode* memberList() const {
+        ParseNode* membersOrBlock = kid3();
+        if (membersOrBlock->isKind(ParseNodeKind::ClassMemberList)) {
+            return &membersOrBlock->as<ListNode>();
         }
 
-        ListNode* list = &methodsOrBlock->as<LexicalScopeNode>().scopeBody()->as<ListNode>();
-        MOZ_ASSERT(list->isKind(ParseNodeKind::ClassMethodList));
+        ListNode* list = &membersOrBlock->as<LexicalScopeNode>().scopeBody()->as<ListNode>();
+        MOZ_ASSERT(list->isKind(ParseNodeKind::ClassMemberList));
         return list;
     }
     Handle<LexicalScope::Data*> scopeBindings() const {

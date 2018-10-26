@@ -318,7 +318,7 @@ afterEvaluate {
     // The bundle tasks are only present when the particular configuration is
     // being built, so this task might not exist.  (This is due to the way the
     // Android Gradle plugin defines things during configuration.)
-    def bundleWithGeckoBinaries = tasks.findByName('bundleOfficialWithGeckoBinariesNoMinApiRelease')
+    def bundleWithGeckoBinaries = tasks.findByName('bundleOfficialWithGeckoBinariesRelease')
     if (!bundleWithGeckoBinaries) {
         return
     }
@@ -332,10 +332,10 @@ afterEvaluate {
 
     artifacts {
         // Instead of default (release) configuration, publish one with Gecko binaries.
-        archives bundleOfficialWithGeckoBinariesNoMinApiRelease
+        archives bundleOfficialWithGeckoBinariesRelease
         // Javadoc and sources for developer ergononomics.
-        archives javadocJarOfficialWithGeckoBinariesNoMinApiRelease
-        archives sourcesJarOfficialWithGeckoBinariesNoMinApiRelease
+        archives javadocJarOfficialWithGeckoBinariesRelease
+        archives sourcesJarOfficialWithGeckoBinariesRelease
     }
 
     // For now, ensure Kotlin is only used in tests.

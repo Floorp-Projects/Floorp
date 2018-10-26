@@ -5372,6 +5372,14 @@ IonBuilder::jsop_funcall(uint32_t argc)
     TemporaryTypeSet* funTypes = current->peek(funcDepth)->resultTypeSet();
     JSFunction* target = getSingleCallTarget(funTypes);
 
+    CallInfo callInfo(alloc(), pc, /* constructing = */ false,
+                      /* ignoresReturnValue = */ BytecodeIsPopped(pc));
+
+    // Save prior call stack in case we need to resolve during bailout
+    // recovery of inner inlined function. This includes the JSFunction and the
+    // 'call' native function.
+    MOZ_TRY(callInfo.savePriorCallStack(this, current, argc + 2));
+
     // Shimmy the slots down to remove the native 'call' function.
     current->shimmySlots(funcDepth - 1);
 
@@ -5386,8 +5394,6 @@ IonBuilder::jsop_funcall(uint32_t argc)
         argc -= 1;
     }
 
-    CallInfo callInfo(alloc(), pc, /* constructing = */ false,
-                      /* ignoresReturnValue = */ BytecodeIsPopped(pc));
     if (!callInfo.init(current, argc)) {
         return abort(AbortReason::Alloc);
     }
