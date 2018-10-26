@@ -42,8 +42,6 @@ public:
   void AddListener(dom::VREventObserver* aObserver);
   // Indicate that an observer should no longer receive VR events.
   void RemoveListener(dom::VREventObserver* aObserver);
-  void StartActivity();
-  void StopActivity();
 
   bool GetVRDisplays(nsTArray<RefPtr<VRDisplayClient> >& aDisplays);
   bool RefreshVRDisplaysWithCallback(uint64_t aWindowId);

@@ -26,7 +26,6 @@ VREventObserver::VREventObserver(nsGlobalWindowInner* aGlobalWindow)
   : mWindow(aGlobalWindow)
   , mIs2DView(true)
   , mHasReset(false)
-  , mStopActivity(false)
 {
   MOZ_ASSERT(aGlobalWindow);
 
@@ -56,7 +55,6 @@ VREventObserver::DisconnectFromOwner()
     VRManagerChild* vmc = VRManagerChild::Get();
     vmc->RemoveListener(this);
   }
-  mStopActivity = true;
 }
 
 void
@@ -77,28 +75,6 @@ VREventObserver::UpdateSpentTimeIn2DTelemetry(bool aUpdate)
     mSpendTimeIn2DView = TimeStamp::Now();
     mHasReset = true;
   }
-}
-
-void
-VREventObserver::StartActivity()
-{
-  mStopActivity = false;
-  VRManagerChild* vmc = VRManagerChild::Get();
-  vmc->StartActivity();
-}
-
-void
-VREventObserver::StopActivity()
-{
-  mStopActivity = true;
-  VRManagerChild* vmc = VRManagerChild::Get();
-  vmc->StopActivity();
-}
-
-bool
-VREventObserver::GetStopActivityStatus()
-{
-  return mStopActivity;
 }
 
 void
