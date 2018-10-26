@@ -125,8 +125,6 @@ class TempAllocator;
 
 // The JitSpewer is only available on debug builds.
 // None of the global functions have effect on non-debug builds.
-static const int NULL_ID = -1;
-
 #ifdef JS_JITSPEW
 
 // Class made to hold the MIR and LIR graphs of an Wasm / Ion compilation.
