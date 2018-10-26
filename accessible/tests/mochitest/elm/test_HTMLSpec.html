@@ -230,7 +230,7 @@
         relations: {
           RELATION_LABELLED_BY: "caption",
         },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText, nsIAccessibleTable ],
+        interfaces: nsIAccessibleTable,
         children: [
           {
             role: ROLE_CAPTION,
@@ -241,7 +241,6 @@
           },
           { // td inside thead
             role: ROLE_ROW,
-            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
             children: [
               {
                 role: ROLE_COLUMNHEADER,

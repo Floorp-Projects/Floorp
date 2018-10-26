@@ -8,7 +8,7 @@
 #define mozilla_a11y_xpcAccessibleTable_h_
 
 #include "nsIAccessibleTable.h"
-#include "xpcAccessibleHyperText.h"
+#include "xpcAccessibleGeneric.h"
 
 namespace mozilla {
 namespace a11y {
@@ -16,15 +16,15 @@ namespace a11y {
 /**
  * XPCOM wrapper around TableAccessible class.
  */
-class xpcAccessibleTable : public xpcAccessibleHyperText,
+class xpcAccessibleTable : public xpcAccessibleGeneric,
                            public nsIAccessibleTable
 {
 public:
   explicit xpcAccessibleTable(Accessible* aIntl) :
-    xpcAccessibleHyperText(aIntl) { }
+    xpcAccessibleGeneric(aIntl) { }
 
   xpcAccessibleTable(ProxyAccessible* aProxy, uint32_t aInterfaces) :
-    xpcAccessibleHyperText(aProxy, aInterfaces) {}
+    xpcAccessibleGeneric(aProxy, aInterfaces) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
