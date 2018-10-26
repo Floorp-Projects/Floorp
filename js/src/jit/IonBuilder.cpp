@@ -779,6 +779,14 @@ IonBuilder::init()
 AbortReasonOr<Ok>
 IonBuilder::build()
 {
+    // Spew IC info for inlined script, but only when actually compiling,
+    // not when analyzing it.
+#ifdef JS_JITSPEW
+    if (!info().isAnalysis()) {
+        JitSpewBaselineICStats(script(), "To-Be-Compiled");
+    }
+#endif
+
     MOZ_TRY(init());
 
     if (script()->hasBaselineScript()) {
@@ -971,6 +979,14 @@ IonBuilder::buildInline(IonBuilder* callerBuilder, MResumePoint* callerResumePoi
                         CallInfo& callInfo)
 {
     inlineCallInfo_ = &callInfo;
+
+    // Spew IC info for inlined script, but only when actually compiling,
+    // not when analyzing it.
+#ifdef JS_JITSPEW
+    if (!info().isAnalysis()) {
+        JitSpewBaselineICStats(script(), "To-Be-Inlined");
+    }
+#endif
 
     MOZ_TRY(init());
 
