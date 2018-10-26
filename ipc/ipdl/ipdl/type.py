@@ -80,6 +80,9 @@ class TypeVisitor:
     def visitEndpointType(self, s, *args):
         pass
 
+    def visitUniquePtrType(self, s, *args):
+        pass
+
 
 class Type:
     def __cmp__(self, o):
@@ -102,6 +105,9 @@ class Type:
     # Is this type neither compound nor an array?
 
     def isAtom(self):
+        return False
+
+    def isUniquePtr(self):
         return False
 
     def typename(self):
@@ -491,6 +497,19 @@ class EndpointType(IPDLType):
         return str(self.qname)
 
 
+class UniquePtrType(Type):
+    def __init__(self, innertype):
+        self.innertype = innertype
+
+    def isUniquePtr(self): return True
+
+    def name(self):
+        return 'UniquePtr<' + self.innertype.fullname() + '>'
+
+    def fullname(self):
+        return 'mozilla::UniquePtr<' + self.innertype.fullname() + '>'
+
+
 def iteractortypes(t, visited=None):
     """Iterate over any actor(s) buried in |type|."""
     if visited is None:
@@ -843,7 +862,10 @@ class GatherDecls(TcheckVisitor):
 
     def visitUsingStmt(self, using):
         fullname = str(using.type)
-        if using.type.basename() == fullname:
+        if (using.type.basename() == fullname) or using.type.uniqueptr:
+            # Prevent generation of typedefs.  If basename == fullname then
+            # there is nothing to typedef.  With UniquePtrs, basenames
+            # are generic so typedefs would be illegal.
             fullname = None
         if fullname == 'mozilla::ipc::Shmem':
             ipdltype = ShmemType(using.type.spec)
@@ -1050,6 +1072,9 @@ class GatherDecls(TcheckVisitor):
 
         if typespec.array:
             itype = ArrayType(itype)
+
+        if typespec.uniqueptr:
+            itype = UniquePtrType(itype)
 
         return itype
 

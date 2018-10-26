@@ -40,6 +40,7 @@ Types = (
     'nsDependentCSubstring',
     'mozilla::ipc::Shmem',
     'mozilla::ipc::ByteBuf',
+    'mozilla::UniquePtr',
     'mozilla::ipc::FileDescriptor'
 )
 
@@ -54,6 +55,7 @@ HeaderIncludes = (
     'mozilla/ipc/ProtocolUtils.h',
     'nsTHashtable.h',
     'mozilla/OperatorNewExtensions.h',
+    'mozilla/UniquePtr.h',
 )
 
 CppIncludes = (

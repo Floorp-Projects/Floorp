@@ -2,6 +2,7 @@
 #define mozilla_ipc_IPDLParamTraits_h
 
 #include "chrome/common/ipc_message_utils.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace ipc {
@@ -160,6 +161,45 @@ private:
   // {IPDL,}ParamTraits<T> specialization.
   static const bool sUseWriteBytes = (mozilla::IsIntegral<T>::value ||
                                       mozilla::IsFloatingPoint<T>::value);
+};
+
+template<typename T>
+struct IPDLParamTraits<mozilla::UniquePtr<T>>
+{
+  typedef mozilla::UniquePtr<T> paramType;
+
+  // Allow UniquePtr<T>& and UniquePtr<T>&&
+  template<typename ParamTypeRef>
+  static void Write(IPC::Message* aMsg, IProtocol* aActor, ParamTypeRef&& aParam)
+  {
+    // write bool true if inner object is null
+    WriteParam(aMsg, aParam == nullptr);
+    if (aParam) {
+      WriteIPDLParam(aMsg, aActor, *aParam.get());
+      aParam = nullptr;
+    }
+  }
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, paramType* aResult)
+  {
+    MOZ_ASSERT(aResult);
+    bool isNull;
+    *aResult = nullptr;
+    if (!ReadParam(aMsg, aIter, &isNull)) {
+      return false;
+    }
+    if (isNull) {
+      return true;
+    }
+    T* obj = new T();
+    if (!ReadIPDLParam(aMsg, aIter, aActor, obj)) {
+      delete obj;
+      return false;
+    }
+    aResult->reset(obj);
+    return true;
+  }
 };
 
 } // namespace ipc
