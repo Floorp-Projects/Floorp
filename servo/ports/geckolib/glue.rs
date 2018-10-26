@@ -121,6 +121,7 @@ use style::gecko_bindings::structs::nsCompatibility;
 use style::gecko_bindings::structs::nsIDocument;
 use style::gecko_bindings::structs::nsStyleTransformMatrix::MatrixTransformOperator;
 use style::gecko_bindings::structs::nsTArray;
+use style::gecko_bindings::structs::nsTimingFunction;
 use style::gecko_bindings::structs::nsresult;
 use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasFFI, HasArcFFI};
 use style::gecko_bindings::sugar::ownership::{HasSimpleFFI, Strong};
@@ -3467,7 +3468,8 @@ pub extern "C" fn Servo_ParseEasing(
         parser.parse_entirely(|p| transition_timing_function::single_value::parse(&context, p));
     match result {
         Ok(parsed_easing) => {
-            *output = parsed_easing.into();
+            // We store as computed value in nsTimingFunction.
+            (*output).mTiming = parsed_easing.to_computed_value_without_context();
             true
         },
         Err(_) => false
@@ -5074,9 +5076,11 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
         }
 
         // Override timing_function if the keyframe has an animation-timing-function.
-        let timing_function = match step.get_animation_timing_function(&guard) {
-            Some(val) => val.into(),
-            None => *inherited_timing_function,
+        let timing_function = nsTimingFunction {
+            mTiming: match step.get_animation_timing_function(&guard) {
+                Some(val) => val.to_computed_value_without_context(),
+                None => (*inherited_timing_function).mTiming,
+            }
         };
 
         // Look for an existing keyframe with the same offset and timing

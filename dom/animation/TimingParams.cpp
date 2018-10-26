@@ -215,7 +215,7 @@ TimingParams::ParseEasing(const nsAString& aEasing,
     return Nothing();
   }
 
-  if (timingFunction.mType == nsTimingFunction::Type::Linear) {
+  if (timingFunction.IsLinear()) {
     return Nothing();
   }
 

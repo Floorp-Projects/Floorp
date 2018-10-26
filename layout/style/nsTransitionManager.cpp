@@ -631,7 +631,7 @@ GetTransitionKeyframes(nsCSSPropertyID aProperty,
 
   Keyframe& fromFrame = AppendKeyframe(0.0, aProperty, std::move(aStartValue),
                                        keyframes);
-  if (aTimingFunction.mType != nsTimingFunction::Type::Linear) {
+  if (!aTimingFunction.IsLinear()) {
     fromFrame.mTimingFunction.emplace();
     fromFrame.mTimingFunction->Init(aTimingFunction);
   }

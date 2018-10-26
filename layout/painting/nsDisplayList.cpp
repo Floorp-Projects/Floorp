@@ -420,8 +420,8 @@ ToTimingFunction(const Maybe<ComputedTimingFunction>& aCTF)
       spline->X1(), spline->Y1(), spline->X2(), spline->Y2()));
   }
 
-  uint32_t type = aCTF->GetType() == nsTimingFunction::Type::StepStart ? 1 : 2;
-  return TimingFunction(StepFunction(aCTF->GetSteps(), type));
+  return TimingFunction(StepFunction(
+    aCTF->GetSteps().mSteps, static_cast<uint8_t>(aCTF->GetSteps().mPos)));
 }
 
 static void
