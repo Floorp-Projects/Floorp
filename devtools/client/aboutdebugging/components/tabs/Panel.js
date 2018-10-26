@@ -62,7 +62,7 @@ class TabsPanel extends Component {
         const base64Favicon = btoa(String.fromCharCode.apply(String, tab.favicon));
         tab.icon = "data:image/png;base64," + base64Favicon;
       } else {
-        tab.icon = "chrome://devtools/skin/images/globe.svg";
+        tab.icon = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
       }
     }
 

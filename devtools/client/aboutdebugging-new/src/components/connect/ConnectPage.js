@@ -28,7 +28,7 @@ const { PREFERENCES } = require("../../constants");
 
 const USB_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const WIFI_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
-const GLOBE_ICON_SRC = "chrome://devtools/skin/images/globe.svg";
+const GLOBE_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
 
 class ConnectPage extends PureComponent {
   static get propTypes() {
