@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.936';
-var pdfjsBuild = 'd2189293';
+var pdfjsVersion = '2.0.943';
+var pdfjsBuild = 'dc98bf76';
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -327,7 +327,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.936';
+    let workerVersion = '2.0.943';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }

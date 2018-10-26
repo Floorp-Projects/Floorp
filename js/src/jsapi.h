@@ -262,7 +262,7 @@ struct JSErrorInterceptor {
      *
      * This method MUST be infallible.
      */
-    virtual void interceptError(JSContext* cx, const JS::Value& error) = 0;
+    virtual void interceptError(JSContext* cx, JS::HandleValue error) = 0;
 };
 
 /************************************************************************/

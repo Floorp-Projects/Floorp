@@ -219,7 +219,7 @@ function Intl_RelativeTimeFormat_format(value, unit) {
 }
 
 /**
- * Returns the resolved options for a PluralRules object.
+ * Returns the resolved options for a RelativeTimeFormat object.
  *
  * Spec: ECMAScript 402 API, RelativeTimeFormat, 1.4.4.
  */

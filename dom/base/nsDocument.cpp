@@ -10714,8 +10714,12 @@ public:
     {
       if (mCurrent) {
         if (mRootShellForIteration && aOption == eDocumentsWithSameRoot) {
+          // Use a temporary to avoid undefined behavior from passing
+          // mRootShellForIteration.
+          nsCOMPtr<nsIDocShellTreeItem> root;
           mRootShellForIteration->
-            GetRootTreeItem(getter_AddRefs(mRootShellForIteration));
+            GetRootTreeItem(getter_AddRefs(root));
+          mRootShellForIteration = root.forget();
         }
         SkipToNextMatch();
       }
@@ -10751,7 +10755,9 @@ public:
             continue;
           }
           while (docShell && docShell != mRootShellForIteration) {
-            docShell->GetParent(getter_AddRefs(docShell));
+            nsCOMPtr<nsIDocShellTreeItem> parent;
+            docShell->GetParent(getter_AddRefs(parent));
+            docShell = parent.forget();
           }
           if (docShell) {
             break;

@@ -8,6 +8,7 @@
  * Implementation of the OS-independent methods of the TimeStamp class
  */
 
+#include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
 #include <stdio.h>
 #include <string.h>
@@ -45,6 +46,35 @@ struct TimeStampInitialization
   };
 };
 
+static bool sFuzzyfoxEnabled;
+
+/* static */ bool
+TimeStamp::GetFuzzyfoxEnabled()
+{
+  return sFuzzyfoxEnabled;
+}
+
+/* static */ void
+TimeStamp::SetFuzzyfoxEnabled(bool aValue)
+{
+  sFuzzyfoxEnabled = aValue;
+}
+
+// These variables store the frozen time (as a TimeStamp) for FuzzyFox that
+// will be reported if FuzzyFox is enabled.
+// We overload the top bit of sCanonicalNow and sCanonicalGTC to
+// indicate if a Timestamp is a fuzzed timestamp (bit set) or not
+// (bit unset).
+#ifdef XP_WIN
+static Atomic<uint64_t> sCanonicalGTC;
+static Atomic<uint64_t> sCanonicalQPC;
+static Atomic<bool> sCanonicalHasQPC;
+#else
+static Atomic<uint64_t> sCanonicalNowTimeStamp;
+#endif
+static Atomic<int64_t> sCanonicalNowTime;
+// This variable stores the frozen time (as ms since the epoch) for FuzzyFox
+// to report if FuzzyFox is enabled.
 static TimeStampInitialization sInitOnce;
 
 MFBT_API TimeStamp
@@ -92,6 +122,53 @@ void
 TimeStamp::RecordProcessRestart()
 {
   sInitOnce.mProcessCreation = TimeStamp();
+}
+
+MFBT_API TimeStamp
+TimeStamp::NowFuzzy(TimeStampValue aValue)
+{
+#ifdef XP_WIN
+  TimeStampValue canonicalNow = TimeStampValue(sCanonicalGTC, sCanonicalQPC, sCanonicalHasQPC, true);
+#else
+  TimeStampValue canonicalNow = TimeStampValue(sCanonicalNowTimeStamp);
+#endif
+
+  if (TimeStamp::GetFuzzyfoxEnabled()) {
+    if(MOZ_LIKELY(!canonicalNow.IsNull())) {
+      return TimeStamp(canonicalNow);
+    }
+  }
+  // When we disable Fuzzyfox, time may goes backwards, so we need to make sure
+  // we don't do that.
+  else if (MOZ_UNLIKELY(canonicalNow > aValue)) {
+    return TimeStamp(canonicalNow);
+  }
+
+  return TimeStamp(aValue);
+}
+
+MFBT_API void
+TimeStamp::UpdateFuzzyTimeStamp(TimeStamp aValue)
+{
+#ifdef XP_WIN
+  sCanonicalGTC = aValue.mValue.mGTC;
+  sCanonicalQPC = aValue.mValue.mQPC;
+  sCanonicalHasQPC = aValue.mValue.mHasQPC;
+#else
+  sCanonicalNowTimeStamp = aValue.mValue.mTimeStamp;
+#endif
+}
+
+MFBT_API int64_t
+TimeStamp::NowFuzzyTime()
+{
+  return sCanonicalNowTime;
+}
+
+MFBT_API void
+TimeStamp::UpdateFuzzyTime(int64_t aValue)
+{
+  sCanonicalNowTime = aValue;
 }
 
 } // namespace mozilla

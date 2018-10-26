@@ -1,3 +1,5 @@
 . "$topsrcdir/browser/config/mozconfigs/linux64/code-coverage"
 
 ac_add_options --enable-debug=-g1
+# We enable Rust tests on the debug build only, as the opt build is currently only used for fuzzing.
+ac_add_options --enable-rust-tests
