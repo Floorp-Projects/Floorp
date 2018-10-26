@@ -734,6 +734,11 @@ private:
 
 public:
     MOZ_MUST_USE nsresult NewChannelId(uint64_t& channelId);
+
+    void BlacklistSpdy(const nsHttpConnectionInfo *ci);
+    MOZ_MUST_USE bool IsSpdyBlacklisted(const nsHttpConnectionInfo *ci);
+private:
+    nsTHashtable<nsCStringHashKey> mBlacklistedSpdyOrigins;
 };
 
 extern StaticRefPtr<nsHttpHandler> gHttpHandler;

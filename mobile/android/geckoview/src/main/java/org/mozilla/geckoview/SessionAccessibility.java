@@ -129,14 +129,14 @@ public class SessionAccessibility {
             switch (action) {
             case AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS:
                     if (virtualViewId == View.NO_ID) {
-                        sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, View.NO_ID, null, null);
+                        sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, View.NO_ID, CLASSNAME_WEBVIEW, null);
                     } else {
                         final GeckoBundle nodeInfo = nativeProvider.getNodeInfo(virtualViewId);
                         final int flags = nodeInfo != null ? nodeInfo.getInt("flags") : 0;
                         if ((flags & FLAG_FOCUSED) != 0) {
                             mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityCursorToFocused", null);
                         } else {
-                            sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, virtualViewId, null, nodeInfo);
+                            sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, virtualViewId, nodeInfo.getInt("className"), null);
                         }
                     }
                 return true;
@@ -145,7 +145,7 @@ public class SessionAccessibility {
                 GeckoBundle nodeInfo = nativeProvider.getNodeInfo(virtualViewId);
                 final int flags = nodeInfo != null ? nodeInfo.getInt("flags") : 0;
                 if ((flags & (FLAG_SELECTABLE | FLAG_CHECKABLE)) == 0) {
-                    sendEvent(AccessibilityEvent.TYPE_VIEW_CLICKED, virtualViewId, null, nodeInfo);
+                    sendEvent(AccessibilityEvent.TYPE_VIEW_CLICKED, virtualViewId, nodeInfo.getInt("className"), null);
                 }
                 return true;
             case AccessibilityNodeInfo.ACTION_LONG_CLICK:
@@ -569,7 +569,7 @@ public class SessionAccessibility {
         return true;
     }
 
-    /* package */ void sendEvent(final int eventType, final int sourceId, final GeckoBundle eventData, final GeckoBundle sourceInfo) {
+    /* package */ void sendEvent(final int eventType, final int sourceId, final int className, final GeckoBundle eventData) {
         ThreadUtils.assertOnUiThread();
         if (mView == null) {
             return;
@@ -588,14 +588,8 @@ public class SessionAccessibility {
         final AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
         event.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
         event.setSource(mView, sourceId);
+        event.setClassName(getClassName(className));
         event.setEnabled(true);
-
-        if (sourceInfo != null) {
-            final int flags = sourceInfo.getInt("flags");
-            event.setClassName(getClassName(sourceInfo.getInt("className")));
-            event.setChecked((flags & FLAG_CHECKED) != 0);
-            event.getText().add(sourceInfo.getString("text", ""));
-        }
 
         if (eventData != null) {
             if (eventData.containsKey("text")) {
@@ -613,6 +607,7 @@ public class SessionAccessibility {
             event.setScrollY(eventData.getInt("scrollY", -1));
             event.setMaxScrollX(eventData.getInt("maxScrollX", -1));
             event.setMaxScrollY(eventData.getInt("maxScrollY", -1));
+            event.setChecked(eventData.getInt("checked") != 0);
         }
 
         ((ViewParent) mView).requestSendAccessibilityEvent(mView, event);
@@ -637,11 +632,11 @@ public class SessionAccessibility {
         public native void setText(int id, String text);
 
         @WrapForJNI(calledFrom = "gecko", stubName = "SendEvent")
-        private void sendEventNative(final int eventType, final int sourceId, final GeckoBundle eventData, final GeckoBundle sourceInfo) {
+        private void sendEventNative(final int eventType, final int sourceId, final int className, final GeckoBundle eventData) {
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    sendEvent(eventType, sourceId, eventData, sourceInfo);
+                    sendEvent(eventType, sourceId, className, eventData);
                 }
             });
         }

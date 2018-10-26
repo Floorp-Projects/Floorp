@@ -30,8 +30,7 @@ namespace {
 int64_t
 FrameIDFromBrowserState(const mozilla::gfx::VRBrowserState& aState)
 {
-  for (int iLayer = 0; iLayer < kVRLayerMaxCount; iLayer++) {
-    const VRLayerState& layer = aState.layerState[iLayer];
+  for (const auto& layer : aState.layerState) {
     if (layer.type == VRLayerType::LayerType_Stereo_Immersive) {
       return layer.layer_stereo_immersive.mFrameId;
     }
@@ -42,8 +41,7 @@ FrameIDFromBrowserState(const mozilla::gfx::VRBrowserState& aState)
 bool
 IsImmersiveContentActive(const mozilla::gfx::VRBrowserState& aState)
 {
-  for (int iLayer = 0; iLayer < kVRLayerMaxCount; iLayer++) {
-    const VRLayerState& layer = aState.layerState[iLayer];
+  for (const auto& layer : aState.layerState) {
     if (layer.type == VRLayerType::LayerType_Stereo_Immersive) {
       return true;
     }
@@ -359,7 +357,9 @@ VRService::ServiceImmersiveMode()
     MessageLoop::current()->PostTask(NewRunnableMethod(
       "gfx::VRService::ServiceShutdown", this, &VRService::ServiceShutdown));
     return;
-  } else if (!IsImmersiveContentActive(mBrowserState)) {
+  }
+
+  if (!IsImmersiveContentActive(mBrowserState)) {
     // Exit immersive mode
     mSession->StopAllHaptics();
     mSession->StopPresentation();
@@ -375,8 +375,7 @@ VRService::ServiceImmersiveMode()
     // A new immersive frame has been received.
     // Submit the textures to the VR system compositor.
     bool success = false;
-    for (int iLayer = 0; iLayer < kVRLayerMaxCount; iLayer++) {
-      const VRLayerState& layer = mBrowserState.layerState[iLayer];
+    for (const auto& layer : mBrowserState.layerState) {
       if (layer.type == VRLayerType::LayerType_Stereo_Immersive) {
         // SubmitFrame may block in order to control the timing for
         // the next frame start

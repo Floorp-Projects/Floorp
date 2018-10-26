@@ -22,7 +22,7 @@ use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuData
 use gpu_types::BrushFlags;
 use image::{self, Repetition};
 use intern;
-use picture::{PictureCompositeMode, PicturePrimitive};
+use picture::{PictureCompositeMode, PicturePrimitive, PictureUpdateContext};
 #[cfg(debug_assertions)]
 use render_backend::FrameId;
 use render_task::{BlitSource, RenderTask, RenderTaskCacheKey, to_cache_size};
@@ -1653,6 +1653,31 @@ impl PrimitiveStore {
         let index = PictureIndex(self.pictures.len());
         self.pictures.push(prim);
         index
+    }
+
+    /// Update a picture, determining surface configuration,
+    /// rasterization roots, and (in future) whether there
+    /// are cached surfaces that can be used by this picture.
+    pub fn update_picture(
+        &mut self,
+        pic_index: PictureIndex,
+        context: &PictureUpdateContext,
+        frame_context: &FrameBuildingContext,
+    ) {
+        if let Some((child_context, children)) = self.pictures[pic_index.0].pre_update(
+            context,
+            frame_context,
+        ) {
+            for child_pic_index in &children {
+                self.update_picture(
+                    *child_pic_index,
+                    &child_context,
+                    frame_context,
+                );
+            }
+
+            self.pictures[pic_index.0].post_update(children);
+        }
     }
 
     pub fn add_primitive(

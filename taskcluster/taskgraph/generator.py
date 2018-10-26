@@ -251,7 +251,11 @@ class TaskGraphGenerator(object):
         for kind_name in kind_graph.visit_postorder():
             logger.debug("Loading tasks for kind {}".format(kind_name))
             kind = kinds[kind_name]
-            new_tasks = kind.load_tasks(parameters, list(all_tasks.values()))
+            try:
+                new_tasks = kind.load_tasks(parameters, list(all_tasks.values()))
+            except Exception:
+                logger.exception("Error loading tasks for kind {}:".format(kind_name))
+                raise
             for task in new_tasks:
                 if task.label in all_tasks:
                     raise Exception("duplicate tasks with label " + task.label)

@@ -337,6 +337,8 @@ with modules["NETWORK"]:
     errors["NS_ERROR_NET_PARTIAL_TRANSFER"] = FAILURE(76)
     # HTTP/2 detected invalid TLS configuration
     errors["NS_ERROR_NET_INADEQUATE_SECURITY"] = FAILURE(82)
+    # HTTP/2 sent a GOAWAY
+    errors["NS_ERROR_NET_HTTP2_SENT_GOAWAY"] = FAILURE(83)
 
     # XXX really need to better rationalize these error codes.  are consumers of
     # necko really expected to know how to discern the meaning of these??

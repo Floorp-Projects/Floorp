@@ -448,6 +448,14 @@ skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/order.js
 skip script test262/intl402/PluralRules/prototype/resolvedOptions/order.js
 skip script test262/intl402/NumberFormat/prototype/resolvedOptions/order.js
 
+# Fields are not fully implemented yet
+skip script non262/fields/access.js
+skip script non262/fields/basic.js
+skip script non262/fields/error.js
+skip script non262/fields/field_types.js
+skip script non262/fields/literal.js
+skip script non262/fields/mixed_methods.js
+skip script non262/fields/quirks.js
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #

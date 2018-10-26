@@ -90,6 +90,7 @@ class NameResolver
           }
 
           case ParseNodeKind::Name:
+          case ParseNodeKind::PrivateName:
             *foundName = true;
             return buf->append(n->as<NameNode>().atom());
 
@@ -148,6 +149,7 @@ class NameResolver
             }
 
             switch (cur->getKind()) {
+              case ParseNodeKind::PrivateName:
               case ParseNodeKind::Name:     return cur;  /* found the initialized declaration */
               case ParseNodeKind::This:     return cur;  /* Setting a property of 'this'. */
               case ParseNodeKind::Function: return nullptr; /* won't find an assignment or declaration */
@@ -447,6 +449,7 @@ class NameResolver
             break;
 
           case ParseNodeKind::ObjectPropertyName:
+          case ParseNodeKind::PrivateName: // TODO(khyperia): Implement private field access.
           case ParseNodeKind::String:
           case ParseNodeKind::TemplateString:
             MOZ_ASSERT(cur->is<NameNode>());
@@ -537,6 +540,21 @@ class NameResolver
             if (!resolve(node->right(), prefix)) {
                 return false;
             }
+            break;
+          }
+
+          case ParseNodeKind::ClassField: {
+            ClassField* node = &cur->as<ClassField>();
+            if (!resolve(&node->name(), prefix)) {
+                return false;
+            }
+
+            if (node->hasInitializer()) {
+                if (!resolve(&node->initializer(), prefix)) {
+                    return false;
+                }
+            }
+
             break;
           }
 
@@ -701,7 +719,7 @@ class NameResolver
                     return false;
                 }
             }
-            if (!resolve(classNode->methodList(), prefix)) {
+            if (!resolve(classNode->memberList(), prefix)) {
                 return false;
             }
             break;
@@ -809,7 +827,7 @@ class NameResolver
             break;
 
           case ParseNodeKind::Object:
-          case ParseNodeKind::ClassMethodList:
+          case ParseNodeKind::ClassMemberList:
             for (ParseNode* element : cur->as<ListNode>().contents()) {
                 if (!resolve(element, prefix)) {
                     return false;

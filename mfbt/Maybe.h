@@ -158,10 +158,6 @@ struct MaybePoisoner
  *   - std::optional lacks many convenience functions that Maybe has. Most
  *     unfortunately, it lacks equivalents of the type-inferred constructor
  *     functions |Some()| and |Nothing()|.
- *
- * N.B. GCC has missed optimizations with Maybe in the past and may generate
- * extra branches/loads/stores. Use with caution on hot paths; it's not known
- * whether or not this is still a problem.
  */
 template<class T>
 class MOZ_NON_PARAM MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
@@ -444,49 +440,46 @@ public:
   /* If |isSome()|, runs the provided function or functor on the contents of
    * this Maybe. */
   template<typename Func>
-  Maybe& apply(Func aFunc)
+  Maybe& apply(Func&& aFunc)
   {
     if (isSome()) {
-      aFunc(ref());
+      std::forward<Func>(aFunc)(ref());
     }
     return *this;
   }
 
   template<typename Func>
-  const Maybe& apply(Func aFunc) const
+  const Maybe& apply(Func&& aFunc) const
   {
     if (isSome()) {
-      aFunc(ref());
+      std::forward<Func>(aFunc)(ref());
     }
     return *this;
   }
 
   /*
    * If |isSome()|, runs the provided function and returns the result wrapped
-   * in a Maybe. If |isNothing()|, returns an empty Maybe value.
+   * in a Maybe. If |isNothing()|, returns an empty Maybe value with the same
+   * value type as what the provided function would have returned.
    */
   template<typename Func>
-  auto map(Func aFunc) -> Maybe<decltype(aFunc(DeclVal<Maybe<T>>().ref()))>
+  auto map(Func&& aFunc)
   {
-    using ReturnType = decltype(aFunc(ref()));
+    Maybe<decltype(std::forward<Func>(aFunc)(ref()))> val;
     if (isSome()) {
-      Maybe<ReturnType> val;
-      val.emplace(aFunc(ref()));
-      return val;
+      val.emplace(std::forward<Func>(aFunc)(ref()));
     }
-    return Maybe<ReturnType>();
+    return val;
   }
 
   template<typename Func>
-  auto map(Func aFunc) const -> Maybe<decltype(aFunc(DeclVal<Maybe<T>>().ref()))>
+  auto map(Func&& aFunc) const
   {
-    using ReturnType = decltype(aFunc(ref()));
+    Maybe<decltype(std::forward<Func>(aFunc)(ref()))> val;
     if (isSome()) {
-      Maybe<ReturnType> val;
-      val.emplace(aFunc(ref()));
-      return val;
+      val.emplace(std::forward<Func>(aFunc)(ref()));
     }
-    return Maybe<ReturnType>();
+    return val;
   }
 
   /* If |isSome()|, empties this Maybe and destroys its contents. */

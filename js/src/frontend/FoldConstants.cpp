@@ -365,6 +365,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
       case ParseNodeKind::Arguments:
       case ParseNodeKind::Call:
       case ParseNodeKind::Name:
+      case ParseNodeKind::PrivateName:
       case ParseNodeKind::TemplateString:
       case ParseNodeKind::TemplateStringList:
       case ParseNodeKind::TaggedTemplate:
@@ -386,7 +387,8 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
       case ParseNodeKind::ForOf:
       case ParseNodeKind::ForHead:
       case ParseNodeKind::ClassMethod:
-      case ParseNodeKind::ClassMethodList:
+      case ParseNodeKind::ClassField:
+      case ParseNodeKind::ClassMemberList:
       case ParseNodeKind::ClassNames:
       case ParseNodeKind::NewTarget:
       case ParseNodeKind::ImportMeta:
@@ -1631,6 +1633,7 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         return true;
 
       case ParseNodeKind::ObjectPropertyName:
+      case ParseNodeKind::PrivateName:
       case ParseNodeKind::String:
       case ParseNodeKind::TemplateString:
         MOZ_ASSERT(pn->is<NameNode>());
@@ -1759,7 +1762,7 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
       case ParseNodeKind::Array:
       case ParseNodeKind::Object:
       case ParseNodeKind::StatementList:
-      case ParseNodeKind::ClassMethodList:
+      case ParseNodeKind::ClassMemberList:
       case ParseNodeKind::TemplateStringList:
       case ParseNodeKind::Var:
       case ParseNodeKind::Const:
@@ -1847,6 +1850,17 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         BinaryNode* node = &pn->as<BinaryNode>();
         return Fold(cx, node->unsafeLeftReference(), parser) &&
                Fold(cx, node->unsafeRightReference(), parser);
+      }
+
+      case ParseNodeKind::ClassField: {
+        ClassField* node = &pn->as<ClassField>();
+        if (node->hasInitializer()) {
+            if (!Fold(cx, node->unsafeInitializerReference(), parser)) {
+                return false;
+            }
+        }
+
+        return true;
       }
 
       case ParseNodeKind::NewTarget:

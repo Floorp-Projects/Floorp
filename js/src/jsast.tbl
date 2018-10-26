@@ -78,4 +78,5 @@ ASTDEF(AST_COMPUTED_NAME,         "ComputedName",                   "computedNam
 
 ASTDEF(AST_CLASS_STMT,            "ClassStatement",                 "classStatement")
 ASTDEF(AST_CLASS_METHOD,          "ClassMethod",                    "classMethod")
+ASTDEF(AST_CLASS_FIELD,           "ClassField",                     "classField")
 /* AST_LIMIT = last + 1 */

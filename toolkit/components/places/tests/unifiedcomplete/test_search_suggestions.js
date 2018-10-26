@@ -31,7 +31,7 @@ add_task(async function setup() {
   });
   setSuggestionsFn(searchStr => {
     let suffixes = ["foo", "bar"];
-    return suffixes.map(s => searchStr + " " + s);
+    return [searchStr].concat(suffixes.map(s => searchStr + " " + s));
   });
 
   // Install the test engine.
@@ -95,6 +95,9 @@ add_task(async function singleWordQuery() {
     searchParam: "enable-actions",
     matches: [
       makeSearchMatch("hello", { engineName: ENGINE_NAME, heuristic: true }),
+      // The test engine echoes back the search string as the first suggestion,
+      // so it would appear here (as "hello"), but we remove suggestions that
+      // duplicate the search string, so it should not actually appear.
       { uri: makeActionURI(("searchengine"), {
         engineName: ENGINE_NAME,
         input: "hello foo",
@@ -302,6 +305,17 @@ add_task(async function restrictToken() {
       // TODO (bug 1177895) This is wrong.
       makeSearchMatch(`${UrlbarTokenizer.RESTRICT.SEARCH} hello`,
                       { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "hello",
+          searchQuery: "hello",
+          searchSuggestion: "hello",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
       {
         uri: makeActionURI(("searchengine"), {
           engineName: ENGINE_NAME,

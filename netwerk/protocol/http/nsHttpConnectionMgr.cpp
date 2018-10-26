@@ -1954,6 +1954,9 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
         trans->SetConnection(nullptr);
         rv = DispatchTransaction(ent, trans, conn);
     } else {
+        if (!ent->AllowSpdy()) {
+            trans->DisableSpdy();
+        }
         pendingTransInfo = new PendingTransactionInfo(trans);
         rv = TryDispatchTransaction(ent, !!trans->TunnelProvider(), pendingTransInfo);
     }
@@ -5112,6 +5115,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
         gHttpHandler->IsSpdyEnabled() &&
         gHttpHandler->CoalesceSpdy() &&
         mEnt && mEnt->mConnInfo && mEnt->mConnInfo->EndToEndSSL() &&
+        mEnt->AllowSpdy() &&
         !mEnt->mConnInfo->UsingProxy() &&
         mEnt->mCoalescingKeys.IsEmpty()) {
 
@@ -5266,6 +5270,7 @@ nsHttpConnectionMgr::
 nsConnectionEntry::nsConnectionEntry(nsHttpConnectionInfo *ci)
     : mConnInfo(ci)
     , mUsingSpdy(false)
+    , mCanUseSpdy(true)
     , mPreferIPv4(false)
     , mPreferIPv6(false)
     , mUsedForConnection(false)
@@ -5400,6 +5405,42 @@ nsConnectionEntry::RemoveHalfOpen(nsHalfOpenSocket *halfOpen)
                  "    failed to process pending queue\n"));
         }
     }
+}
+
+void
+nsHttpConnectionMgr::BlacklistSpdy(const nsHttpConnectionInfo *ci)
+{
+    LOG(("nsHttpConnectionMgr::BlacklistSpdy blacklisting ci %s", ci->HashKey().BeginReading()));
+    nsConnectionEntry *ent = mCT.GetWeak(ci->HashKey());
+    if (!ent) {
+        LOG(("nsHttpConnectionMgr::BlacklistSpdy no entry found?!"));
+        return;
+    }
+
+    ent->DisallowSpdy();
+}
+
+void
+nsHttpConnectionMgr::
+nsConnectionEntry::DisallowSpdy()
+{
+    mCanUseSpdy = false;
+
+    // If we have any spdy connections, we want to go ahead and close them when
+    // they're done so we can free up some connections.
+    for (uint32_t i = 0; i < mActiveConns.Length(); ++i) {
+        if (mActiveConns[i]->UsingSpdy()) {
+            mActiveConns[i]->DontReuse();
+        }
+    }
+    for (uint32_t i = 0; i < mIdleConns.Length(); ++i) {
+        if (mIdleConns[i]->UsingSpdy()) {
+            mIdleConns[i]->DontReuse();
+        }
+    }
+
+    // Can't coalesce if we're not using spdy
+    mCoalescingKeys.Clear();
 }
 
 void
