@@ -104,7 +104,9 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     private fun registerSessionObserver() {
         components.sessionManager.register(object : SessionManager.Observer {
             override fun onSessionSelected(session: Session) {
-                showBrowserScreenForCurrentSession()
+                if (!session.isCustomTabSession()) {
+                    showBrowserScreenForCurrentSession()
+                }
             }
 
             override fun onAllSessionsRemoved() {
