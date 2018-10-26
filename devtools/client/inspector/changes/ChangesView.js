@@ -17,7 +17,8 @@ const {
 } = require("./actions/changes");
 
 class ChangesView {
-  constructor(inspector) {
+  constructor(inspector, window) {
+    this.document = window.document;
     this.inspector = inspector;
     this.store = this.inspector.store;
     this.toolbox = this.inspector.toolbox;
@@ -44,9 +45,7 @@ class ChangesView {
       store: this.store,
     }, changesApp);
 
-    // TODO: save store and restore/replay on refresh.
-    // Bug 1478439 - https://bugzilla.mozilla.org/show_bug.cgi?id=1478439
-    this.inspector.target.once("will-navigate", this.destroy);
+    this.inspector.target.on("will-navigate", this.onClearChanges);
 
     // Sync the store to the changes stored on the server. The
     // syncChangesToServer() method is async, but we don't await it since
@@ -86,6 +85,7 @@ class ChangesView {
     this.changesFront.off("clear-changes", this.onClearChanges);
     this.changesFront = null;
 
+    this.document = null;
     this.inspector = null;
     this.store = null;
     this.toolbox = null;
