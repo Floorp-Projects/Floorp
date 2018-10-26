@@ -13,11 +13,6 @@ import sys
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
-GECKO_SRCDIR = os.path.join(os.path.expanduser('~'), 'checkouts', 'gecko')
-
-TELEMETRY_TEST_HOME = os.path.join(GECKO_SRCDIR, 'toolkit', 'components', 'telemetry',
-                                   'tests', 'marionette')
-
 from mozharness.base.python import PreScriptAction
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.mozilla.testing.testbase import (
@@ -100,15 +95,18 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
             self.fatal(
                 'You must use --test-url, or --test-packages-url')
 
-    @PreScriptAction('create-virtualenv')
+    @PreScriptAction("create-virtualenv")
     def _pre_create_virtualenv(self, action):
+        abs_dirs = self.query_abs_dirs()
+
         requirements = os.path.join(
-            GECKO_SRCDIR,
-            'testing',
-            'config',
-            'telemetry_tests_source_requirements.txt',
+            abs_dirs["abs_test_install_dir"],
+            "config",
+            "telemetry_tests_requirements.txt",
         )
-        self.register_virtualenv_module(requirements=[requirements], two_pass=True)
+        self.register_virtualenv_module(
+            requirements=[requirements], two_pass=True
+        )
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -116,14 +114,22 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 
         abs_dirs = super(TelemetryTests, self).query_abs_dirs()
 
+        abs_test_install_dir = os.path.join(abs_dirs["abs_work_dir"], "tests")
+
         dirs = {
-            'abs_blob_upload_dir': os.path.join(abs_dirs['abs_work_dir'], 'blobber_upload_dir'),
-            'abs_telemetry_dir': TELEMETRY_TEST_HOME,
+            "abs_test_install_dir": abs_test_install_dir,
+            "abs_telemetry_dir": os.path.join(
+                abs_test_install_dir, "telemetry", "marionette"
+            ),
+            "abs_blob_upload_dir": os.path.join(
+                abs_dirs["abs_work_dir"], "blobber_upload_dir"
+            ),
         }
 
         for key in dirs:
             if key not in abs_dirs:
                 abs_dirs[key] = dirs[key]
+
         self.abs_dirs = abs_dirs
 
         return self.abs_dirs
