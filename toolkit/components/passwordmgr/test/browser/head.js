@@ -111,7 +111,7 @@ function getCaptureDoorhanger(aKind, popupNotifications = PopupNotifications) {
 function clickDoorhangerButton(aPopup, aButtonIndex) {
   ok(true, "Looking for action at index " + aButtonIndex);
 
-  let notifications = aPopup.owner.panel.childNodes;
+  let notifications = aPopup.owner.panel.children;
   ok(notifications.length > 0, "at least one notification displayed");
   ok(true, notifications.length + " notification(s)");
   let notification = notifications[0];
@@ -124,7 +124,7 @@ function clickDoorhangerButton(aPopup, aButtonIndex) {
     notification.secondaryButton.doCommand();
   } else if (aButtonIndex <= aPopup.secondaryActions.length) {
     ok(true, "Triggering secondary action " + aButtonIndex);
-    notification.childNodes[aButtonIndex - 1].doCommand();
+    notification.children[aButtonIndex - 1].doCommand();
   }
 }
 
