@@ -10,7 +10,6 @@ from __future__ import absolute_import, unicode_literals
 import os
 
 from voluptuous import (
-    Any,
     Optional,
     Required,
 )
@@ -47,7 +46,7 @@ FETCH_SCHEMA = Schema({
     # Description of the task.
     Required('description'): basestring,
 
-    Required('fetch'): Any({
+    Required('fetch'): {
         'type': 'static-url',
 
         # The URL to download.
@@ -75,7 +74,7 @@ FETCH_SCHEMA = Schema({
 
         # IMPORTANT: when adding anything that changes the behavior of the task,
         # it is important to update the digest data used to compute cache hits.
-    }),
+    },
 })
 
 

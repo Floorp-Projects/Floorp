@@ -28,7 +28,7 @@ cron_yml_schema = Schema({
         # what to run
 
         # Description of the job to run, keyed by 'type'
-        Required('job'): Any({
+        Required('job'): {
             Required('type'): 'decision-task',
 
             # Treeherder symbol for the cron task
@@ -36,7 +36,7 @@ cron_yml_schema = Schema({
 
             # --target-tasks-method './mach taskgraph decision' argument
             'target-tasks-method': basestring,
-        }),
+        },
 
         # when to run it
 
