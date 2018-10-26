@@ -91,6 +91,9 @@
         public/build/feature.session.maven.zip:
           path: /build/android-components/components/feature/session/build/target.maven.zip
           name: feature-session
+        public/build/feature.storage.maven.zip:
+          path: /build/android-components/components/feature/storage/build/target.maven.zip
+          name: feature-storage
         public/build/feature.toolbar.maven.zip:
           path: /build/android-components/components/feature/toolbar/build/target.maven.zip
           name: feature-toolbar
