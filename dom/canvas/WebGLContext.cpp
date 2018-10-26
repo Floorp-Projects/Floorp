@@ -118,7 +118,7 @@ WebGLContextOptions::operator==(const WebGLContextOptions& r) const
 }
 
 WebGLContext::WebGLContext()
-    : WebGLContextUnchecked(nullptr)
+    : gl(mGL_OnlyClearInDestroyResourcesAndContext) // const reference
     , mMaxPerfWarnings(gfxPrefs::WebGLMaxPerfWarnings())
     , mNumPerfWarnings(0)
     , mMaxAcceptableFBStatusInvals(gfxPrefs::WebGLMaxAcceptableFBStatusInvals())
