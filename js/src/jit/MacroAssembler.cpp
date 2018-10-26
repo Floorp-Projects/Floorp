@@ -2074,7 +2074,7 @@ MacroAssembler::handleFailure()
     jump(excTail);
 }
 
-#ifdef DEBUG
+#ifdef JS_MASM_VERBOSE
 static void
 AssumeUnreachable_(const char* output) {
     MOZ_ReportAssertionFailure(output, __FILE__, __LINE__);
@@ -2084,7 +2084,7 @@ AssumeUnreachable_(const char* output) {
 void
 MacroAssembler::assumeUnreachable(const char* output)
 {
-#ifdef DEBUG
+#ifdef JS_MASM_VERBOSE
     if (!IsCompilingWasm()) {
         AllocatableRegisterSet regs(RegisterSet::Volatile());
         LiveRegisterSet save(regs.asLiveSet());
@@ -2119,6 +2119,7 @@ MacroAssembler::assertTestInt32(Condition cond, const T& value, const char* outp
 
 template void MacroAssembler::assertTestInt32(Condition, const Address&, const char*);
 
+#ifdef JS_MASM_VERBOSE
 static void
 Printf0_(const char* output)
 {
@@ -2129,10 +2130,12 @@ Printf0_(const char* output)
     // output, and it's always unbuffered.
     fprintf(stderr, "%s", output);
 }
+#endif
 
 void
 MacroAssembler::printf(const char* output)
 {
+#ifdef JS_MASM_VERBOSE
     AllocatableRegisterSet regs(RegisterSet::Volatile());
     LiveRegisterSet save(regs.asLiveSet());
     PushRegsInMask(save);
@@ -2145,8 +2148,10 @@ MacroAssembler::printf(const char* output)
     callWithABI(JS_FUNC_TO_DATA_PTR(void*, Printf0_));
 
     PopRegsInMask(save);
+#endif
 }
 
+#ifdef JS_MASM_VERBOSE
 static void
 Printf1_(const char* output, uintptr_t value)
 {
@@ -2158,10 +2163,12 @@ Printf1_(const char* output, uintptr_t value)
     }
     fprintf(stderr, "%s", line.get());
 }
+#endif
 
 void
 MacroAssembler::printf(const char* output, Register value)
 {
+#ifdef JS_MASM_VERBOSE
     AllocatableRegisterSet regs(RegisterSet::Volatile());
     LiveRegisterSet save(regs.asLiveSet());
     PushRegsInMask(save);
@@ -2177,6 +2184,7 @@ MacroAssembler::printf(const char* output, Register value)
     callWithABI(JS_FUNC_TO_DATA_PTR(void*, Printf1_));
 
     PopRegsInMask(save);
+#endif
 }
 
 #ifdef JS_TRACE_LOGGING
