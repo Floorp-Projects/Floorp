@@ -1516,12 +1516,6 @@ pref("network.cookie.cookieBehavior", 4 /* BEHAVIOR_REJECT_TRACKER */);
 pref("browser.contentblocking.allowlist.storage.enabled", true);
 
 #ifdef NIGHTLY_BUILD
-pref("browser.contentblocking.global-toggle.enabled", true);
-#else
-pref("browser.contentblocking.global-toggle.enabled", false);
-#endif
-
-#ifdef NIGHTLY_BUILD
 // Enable the Storage Access API in Nightly
 pref("dom.storage_access.enabled", true);
 #endif
