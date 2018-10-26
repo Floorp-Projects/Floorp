@@ -202,7 +202,13 @@ TimeStamp::Shutdown()
 TimeStamp
 TimeStamp::Now(bool aHighResolution)
 {
-  return TimeStamp(ClockTimeNs());
+  return TimeStamp::NowFuzzy(TimeStampValue(false, ClockTimeNs()));
+}
+
+TimeStamp
+TimeStamp::NowUnfuzzed(bool aHighResolution)
+{
+  return TimeStamp(TimeStampValue(false, ClockTimeNs()));
 }
 
 #if defined(XP_LINUX) || defined(ANDROID)

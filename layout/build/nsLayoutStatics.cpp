@@ -102,6 +102,7 @@
 #include "DecoderDoctorLogger.h"
 #include "MediaDecoder.h"
 #include "mozilla/ClearSiteData.h"
+#include "mozilla/Fuzzyfox.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPresData.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
@@ -283,6 +284,8 @@ nsLayoutStatics::Initialize()
   }
 
   nsThreadManager::InitializeShutdownObserver();
+
+  mozilla::Fuzzyfox::Start();
 
   ClearSiteData::Initialize();
 

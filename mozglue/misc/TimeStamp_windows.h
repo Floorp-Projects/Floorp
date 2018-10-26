@@ -11,29 +11,57 @@
 
 namespace mozilla {
 
+/**
+ * The [mt] unit:
+ *
+ * Many values are kept in ticks of the Performance Counter x 1000,
+ * further just referred as [mt], meaning milli-ticks.
+ *
+ * This is needed to preserve maximum precision of the performance frequency
+ * representation.  GetTickCount64 values in milliseconds are multiplied with
+ * frequency per second.  Therefore we need to multiply QPC value by 1000 to
+ * have the same units to allow simple arithmentic with both QPC and GTC.
+ */
+#define ms2mt(x) ((x) * mozilla::GetQueryPerformanceFrequencyPerSec())
+#define mt2ms(x) ((x) / mozilla::GetQueryPerformanceFrequencyPerSec())
+#define mt2ms_f(x) (double(x) / mozilla::GetQueryPerformanceFrequencyPerSec())
+
+MFBT_API uint64_t
+GetQueryPerformanceFrequencyPerSec();
+
 class TimeStamp;
+class TimeStampValue;
+
+TimeStampValue
+NowInternal(bool aHighResolution);
+
 
 class TimeStampValue
 {
+  friend TimeStampValue NowInternal(bool);
+  friend bool IsCanonicalTimeStamp(TimeStampValue);
   friend struct IPC::ParamTraits<mozilla::TimeStampValue>;
   friend class TimeStamp;
+  friend class Fuzzyfox;
 
   // Both QPC and GTC are kept in [mt] units.
   uint64_t mGTC;
   uint64_t mQPC;
-  bool mHasQPC;
-  bool mIsNull;
 
-  MFBT_API TimeStampValue(uint64_t aGTC, uint64_t aQPC, bool aHasQPC);
+  bool mUsedCanonicalNow;
+  bool mIsNull;
+  bool mHasQPC;
+
+  MFBT_API TimeStampValue(uint64_t aGTC, uint64_t aQPC, bool aHasQPC, bool aUsedCanonicalNow);
 
   MFBT_API uint64_t CheckQPC(const TimeStampValue& aOther) const;
 
-  struct _SomethingVeryRandomHere;
-  constexpr MOZ_IMPLICIT TimeStampValue(_SomethingVeryRandomHere* aNullValue)
+  constexpr MOZ_IMPLICIT TimeStampValue()
     : mGTC(0)
     , mQPC(0)
-    , mHasQPC(false)
+    , mUsedCanonicalNow(false)
     , mIsNull(true)
+    , mHasQPC(false)
   {
   }
 
@@ -42,11 +70,11 @@ public:
 
   TimeStampValue operator+(const int64_t aOther) const
   {
-    return TimeStampValue(mGTC + aOther, mQPC + aOther, mHasQPC);
+    return TimeStampValue(mGTC + aOther, mQPC + aOther, mHasQPC, mUsedCanonicalNow);
   }
   TimeStampValue operator-(const int64_t aOther) const
   {
-    return TimeStampValue(mGTC - aOther, mQPC - aOther, mHasQPC);
+    return TimeStampValue(mGTC - aOther, mQPC - aOther, mHasQPC, mUsedCanonicalNow);
   }
   MFBT_API TimeStampValue& operator+=(const int64_t aOther);
   MFBT_API TimeStampValue& operator-=(const int64_t aOther);
@@ -74,6 +102,18 @@ public:
   bool operator!=(const TimeStampValue& aOther) const
   {
     return int64_t(*this - aOther) != 0;
+  }
+  bool UsedCanonicalNow() const
+  {
+    return mUsedCanonicalNow;
+  }
+  void SetCanonicalNow()
+  {
+    mUsedCanonicalNow = true;
+  }
+  bool IsNull() const
+  {
+    return mIsNull;
   }
 };
 
