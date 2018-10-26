@@ -9,44 +9,44 @@ package mozilla.components.concept.engine
  * an element.
  */
 @Suppress("ClassNaming", "ClassName")
-sealed class HitResult(val src: String) {
+sealed class HitResult(open val src: String) {
     /**
      * Default type if we're unable to match the type to anything. It may or may not have a src.
      */
-    class UNKNOWN(src: String) : HitResult(src)
+    data class UNKNOWN(override val src: String) : HitResult(src)
 
     /**
      * If the HTML element was of type 'HTMLImageElement'.
      */
-    class IMAGE(src: String) : HitResult(src)
+    data class IMAGE(override val src: String) : HitResult(src)
 
     /**
      * If the HTML element was of type 'HTMLVideoElement'.
      */
-    class VIDEO(src: String) : HitResult(src)
+    data class VIDEO(override val src: String) : HitResult(src)
 
     /**
      * If the HTML element was of type 'HTMLAudioElement'.
      */
-    class AUDIO(src: String) : HitResult(src)
+    data class AUDIO(override val src: String) : HitResult(src)
 
     /**
      * If the HTML element was of type 'HTMLImageElement' and contained a URI.
      */
-    class IMAGE_SRC(src: String, val uri: String) : HitResult(src)
+    data class IMAGE_SRC(override val src: String, val uri: String) : HitResult(src)
 
     /**
      * The type used if the URI is prepended with 'tel:'.
      */
-    class PHONE(src: String) : HitResult(src)
+    data class PHONE(override val src: String) : HitResult(src)
 
     /**
      * The type used if the URI is prepended with 'mailto:'.
      */
-    class EMAIL(src: String) : HitResult(src)
+    data class EMAIL(override val src: String) : HitResult(src)
 
     /**
      * The type used if the URI is prepended with 'geo:'.
      */
-    class GEO(src: String) : HitResult(src)
+    data class GEO(override val src: String) : HitResult(src)
 }
