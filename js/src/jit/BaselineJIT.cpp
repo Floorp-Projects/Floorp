@@ -780,16 +780,25 @@ BaselineScript::retAddrEntryFromReturnAddress(uint8_t* returnAddr)
 }
 
 void
-BaselineScript::copyYieldAndAwaitEntries(JSScript* script, Vector<uint32_t>& yieldAndAwaitOffsets)
+BaselineScript::computeYieldAndAwaitNativeOffsets(JSScript* script)
 {
-    uint8_t** entries = yieldEntryList();
-
-    for (size_t i = 0; i < yieldAndAwaitOffsets.length(); i++) {
-        uint32_t offset = yieldAndAwaitOffsets[i];
-        PCMappingSlotInfo slotInfo;
-        entries[i] = nativeCodeForPC(script, script->offsetToPC(offset), &slotInfo);
-        MOZ_ASSERT(slotInfo.isStackSynced());
+    if (!script->hasYieldAndAwaitOffsets()) {
+        return;
     }
+
+    // Translate pcOffset to BaselineScript native address. This may return
+    // nullptr if compiler decided code was unreachable.
+    auto computeNative = [this,script](uint32_t pcOffset) {
+        PCMappingSlotInfo slotInfo;
+        uint8_t* nativeCode = maybeNativeCodeForPC(script, script->offsetToPC(pcOffset), &slotInfo);
+        MOZ_ASSERT(slotInfo.isStackSynced());
+
+        return nativeCode;
+    };
+
+    mozilla::Span<uint32_t> pcOffsets = script->yieldAndAwaitOffsets();
+    uint8_t** nativeOffsets = yieldEntryList();
+    std::transform(pcOffsets.begin(), pcOffsets.end(), nativeOffsets, computeNative);
 }
 
 void
