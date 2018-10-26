@@ -26,9 +26,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingTrackingProtectionUi
 XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingRejectTrackersUiEnabled",
                                       "browser.contentblocking.rejecttrackers.ui.enabled");
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingEnabled",
-                                      "browser.contentblocking.enabled");
-
 const PREF_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 const TRACKING_PROTECTION_KEY = "websites.trackingProtectionMode";
@@ -52,9 +49,6 @@ XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
 });
 
 Preferences.addAll([
-  // Content Blocking
-  { id: "browser.contentblocking.enabled", type: "bool" },
-
   // Tracking Protection
   { id: "privacy.trackingprotection.enabled", type: "bool" },
   { id: "privacy.trackingprotection.pbmode.enabled", type: "bool" },
@@ -177,13 +171,10 @@ var gPrivacyPane = {
       let disabled = isLocked || isControlled;
       let tpCheckbox =
         document.getElementById("contentBlockingTrackingProtectionCheckbox");
-      // Only enable the TP menu if content blocking and Detect All Trackers
-      // are enabled.
+      // Only enable the TP menu if Detect All Trackers is enabled.
       document.getElementById("trackingProtectionMenu").disabled = disabled ||
-        !tpCheckbox.checked ||
-        !contentBlockingEnabled;
-      // Only enable the TP category checkbox if content blocking is enabled.
-      tpCheckbox.disabled = disabled || !contentBlockingEnabled;
+        !tpCheckbox.checked;
+      tpCheckbox.disabled = disabled;
 
       // Notify observers that the TP UI has been updated.
       // This is needed since our tests need to be notified about the
@@ -256,8 +247,6 @@ var gPrivacyPane = {
     this.trackingProtectionReadPrefs();
     this.networkCookieBehaviorReadPrefs();
     this._initTrackingProtectionExtensionControl();
-
-    this.updateContentBlockingVisibility();
 
     Preferences.get("privacy.trackingprotection.enabled").on("change",
       gPrivacyPane.trackingProtectionReadPrefs.bind(gPrivacyPane));
@@ -434,11 +423,6 @@ var gPrivacyPane = {
    * Initializes the content blocking section.
    */
   initContentBlocking() {
-    let contentBlockingCheckbox = document.getElementById("contentBlockingCheckbox");
-    setEventListener("contentBlockingToggle", "command",
-      () => contentBlockingCheckbox.click());
-    setEventListener("contentBlockingToggle", "command",
-      this.updateContentBlockingControls);
     setEventListener("changeBlockListLink", "click", this.showBlockLists);
     setEventListener("contentBlockingRestoreDefaults", "command",
       this.restoreContentBlockingPrefs);
@@ -511,83 +495,6 @@ var gPrivacyPane = {
     gotoPref("privacy-sitedata");
   },
 
-  /**
-   * Changes the visibility of elements in the CB section depending on the
-   * content blocking UI prefs.
-   */
-  updateContentBlockingVisibility() {
-    // Potentially hide the global toggle.
-    document.getElementById("contentBlockingCheckboxContainer").hidden =
-      !Services.prefs.getBoolPref("browser.contentblocking.global-toggle.enabled", true);
-  },
-
-  /**
-   * Updates the preferences UI to reflect the browser.contentblocking.enabled pref.
-   * This affects the button to toggle the pref and the disabled state of the dependent controls.
-   */
-  updateContentBlockingToggle() {
-    let onOrOff = contentBlockingEnabled ? "on" : "off";
-    let contentBlockingToggle = document.getElementById("contentBlockingToggle");
-    let contentBlockingToggleLabel = document.getElementById("contentBlockingToggleLabel");
-
-    document.l10n.setAttributes(contentBlockingToggle,
-      "content-blocking-toggle-" + onOrOff);
-    contentBlockingToggle.setAttribute("aria-pressed", contentBlockingEnabled);
-    document.l10n.setAttributes(contentBlockingToggleLabel,
-      "content-blocking-toggle-label-" + onOrOff);
-
-    this.updateContentBlockingControls();
-  },
-
-  /**
-   * Changes the disabled state of controls that depend on the browser.contentblocking.enabled pref.
-   */
-  updateContentBlockingControls() {
-    let dependentControls = [
-      "#content-blocking-categories-label",
-      ".content-blocking-checkbox",
-      "#changeBlockListLink",
-      "#contentBlockingChangeCookieSettings",
-      "#blockCookiesCB, #blockCookiesCB > radio",
-      "#blockCookies, #blockCookies > radio",
-    ];
-
-    this._toggleControls(dependentControls, contentBlockingEnabled);
-
-    // The list of dependent controls here would normally include #blockCookiesLabel,
-    // #blockCookiesMenu, #keepUntil and #keepCookiesUntil, but in order to avoid
-    // having two parts of the code responsible for figuring out whether these
-    // controls must be enabled or disabled, we offload that responsibility to
-    // networkCookieBehaviorReadPrefs() which already knows how to deal with it.
-    this.networkCookieBehaviorReadPrefs();
-
-    // If Content Blocking gets disabled, show the warning in the Cookies and Site Data section.
-    let blockCookiesWarning = document.getElementById("blockCookiesWarning");
-    blockCookiesWarning.hidden = contentBlockingEnabled;
-
-    // Need to make sure we account for pref locking/extension overrides when enabling the TP menu.
-    this._updateTrackingProtectionUI();
-
-    // If we are turning Content Blocking on, we may need to keep some parts of the Third-Party Cookies
-    // UI off, depending on the value of the cookieBehavior pref.  readBlockCookiesCheckbox() can do
-    // the work that is needed for that.
-    this.readBlockCookiesCheckbox();
-  },
-
-  _toggleControls(dependentControls, enabled) {
-    for (let selector of dependentControls) {
-      let controls = document.querySelectorAll(selector);
-
-      for (let control of controls) {
-        if (enabled) {
-          control.removeAttribute("disabled");
-        } else {
-          control.setAttribute("disabled", "true");
-        }
-      }
-    }
-  },
-
   // TRACKING PROTECTION MODE
 
   /**
@@ -642,17 +549,16 @@ var gPrivacyPane = {
     let keepUntilLabel = document.getElementById("keepUntil");
     let keepUntilMenu = document.getElementById("keepCookiesUntil");
 
-    let disabledByCB = !contentBlockingEnabled;
     let blockCookies = (behavior != 0);
     let cookieBehaviorLocked = Services.prefs.prefIsLocked("network.cookie.cookieBehavior");
-    let blockCookiesControlsDisabled = !blockCookies || cookieBehaviorLocked || disabledByCB;
+    let blockCookiesControlsDisabled = !blockCookies || cookieBehaviorLocked;
     blockCookiesLabel.disabled = blockCookiesMenu.disabled = blockCookiesControlsDisabled;
 
     let completelyBlockCookies = (behavior == 2);
     let privateBrowsing = Preferences.get("browser.privatebrowsing.autostart").value;
     let cookieExpirationLocked = Services.prefs.prefIsLocked("network.cookie.lifetimePolicy");
     let keepUntilControlsDisabled = privateBrowsing || completelyBlockCookies ||
-                                    cookieExpirationLocked || disabledByCB;
+                                    cookieExpirationLocked;
     keepUntilLabel.disabled = keepUntilMenu.disabled = keepUntilControlsDisabled;
 
     switch (behavior) {
@@ -1080,14 +986,6 @@ var gPrivacyPane = {
   enableThirdPartyCookiesUI() {
     document.getElementById("blockCookiesCBDeck").selectedIndex = 0;
     document.getElementById("contentBlockingChangeCookieSettings").hidden = true;
-
-    let dependentControls = [
-      ".reject-trackers-ui .content-blocking-checkbox",
-      "#blockCookiesCB, #blockCookiesCB > radio",
-      "#blockCookiesCBDeck",
-    ];
-
-    this._toggleControls(dependentControls, contentBlockingEnabled);
   },
 
   disableThirdPartyCookiesUI(reason) {
@@ -1102,14 +1000,6 @@ var gPrivacyPane = {
     }
     document.getElementById("blockCookiesCBDeck").selectedIndex = deckIndex;
     document.getElementById("contentBlockingChangeCookieSettings").hidden = false;
-
-    let dependentControls = [
-      ".reject-trackers-ui .content-blocking-checkbox",
-      "#blockCookiesCB, #blockCookiesCB > radio",
-      "#blockCookiesCBDeck",
-    ];
-
-    this._toggleControls(dependentControls, false);
   },
 
   /**
@@ -1184,12 +1074,12 @@ var gPrivacyPane = {
       case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
         this.enableThirdPartyCookiesUI();
         bcCheckbox.checked = true;
-        bcControl.disabled = !contentBlockingEnabled;
+        bcControl.disabled = false;
         break;
       case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
         this.enableThirdPartyCookiesUI();
         bcCheckbox.checked = true;
-        bcControl.disabled = !contentBlockingEnabled;
+        bcControl.disabled = false;
         break;
       default:
         break;
