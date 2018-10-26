@@ -539,6 +539,12 @@ ARCHIVE_FILES = {
             'pattern': 'automation.py',
             'dest': 'xpcshell',
         },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'testing/profiles',
+            'pattern': '**',
+            'dest': 'xpcshell/profile_data',
+        },
     ],
     'updater-dep': [
         {
