@@ -361,6 +361,94 @@ nsThreadPool::Shutdown()
   return NS_OK;
 }
 
+template<typename Pred>
+static void
+SpinMTEventLoopUntil(Pred&& aPredicate,
+                     nsIThread* aThread,
+                     TimeDuration aTimeout)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Must be run on the main thread");
+
+  // From a latency perspective, spinning the event loop is like leaving script
+  // and returning to the event loop. Tell the watchdog we stopped running
+  // script (until we return).
+  mozilla::Maybe<xpc::AutoScriptActivity> asa;
+  asa.emplace(false);
+
+  TimeStamp deadline = TimeStamp::Now() + aTimeout;
+  while (!aPredicate() && TimeStamp::Now() < deadline) {
+    if (!NS_ProcessNextEvent(aThread, false)) {
+      PR_Sleep(PR_MillisecondsToInterval(1));
+    }
+  }
+}
+
+NS_IMETHODIMP
+nsThreadPool::ShutdownWithTimeout(int32_t aTimeoutMs)
+{
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCOMArray<nsIThread> threads;
+  nsCOMPtr<nsIThreadPoolListener> listener;
+  {
+    MutexAutoLock lock(mMutex);
+    mShutdown = true;
+    mEventsAvailable.NotifyAll();
+
+    threads.AppendObjects(mThreads);
+    mThreads.Clear();
+
+    // Swap in a null listener so that we release the listener at the end of
+    // this method. The listener will be kept alive as long as the other threads
+    // that were created when it was set.
+    mListener.swap(listener);
+  }
+
+  // IMPORTANT! Never dereference these pointers, as the objects may go away at
+  // any time. We just use the pointers values for comparison, to check if the
+  // thread has been shut down or not.
+  nsTArray<nsThreadShutdownContext*> contexts;
+
+  // It's important that we shutdown the threads while outside the event queue
+  // monitor.  Otherwise, we could end up dead-locking.
+  for (int32_t i = 0; i < threads.Count(); ++i) {
+    // Shutdown async
+    nsThreadShutdownContext* maybeContext =
+      static_cast<nsThread*>(threads[i])->ShutdownInternal(false);
+    contexts.AppendElement(maybeContext);
+  }
+
+  NotNull<nsThread*> currentThread =
+    WrapNotNull(nsThreadManager::get().GetCurrentThread());
+
+  // We spin the event loop until all of the threads in the thread pool
+  // have shut down, or the timeout expires.
+  SpinMTEventLoopUntil([&]() {
+      for (nsIThread* thread : threads) {
+        if (static_cast<nsThread*>(thread)->mThread) {
+          return false;
+        }
+      }
+      return true;
+    }, currentThread, TimeDuration::FromMilliseconds(aTimeoutMs));
+
+  // For any threads that have not shutdown yet, we need to remove them from
+  // mRequestedShutdownContexts so the thread manager does not wait for them
+  // at shutdown.
+  for (int32_t i = 0; i < threads.Count(); ++i) {
+    nsThread* thread = static_cast<nsThread*>(threads[i]);
+    // If mThread is not null on the thread it means that it hasn't shutdown
+    // context[i] corresponds to thread[i]
+    if (thread->mThread && contexts[i]) {
+      currentThread->mRequestedShutdownContexts.RemoveElement(contexts[i]);
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsThreadPool::GetThreadLimit(uint32_t* aValue)
 {
