@@ -77,6 +77,12 @@ public class CrashReporterService extends JobIntentService {
     }
 
     @Override
+    public boolean onUnbind(Intent intent) {
+        shutdown();
+        return false;
+    }
+
+    @Override
     public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
         // When running on pre-O devices the work will be dispatched to onHandleWork() automatically
         // When running on Oreo and later devices we will enqueue the work for the JobIntentService to perform
@@ -437,5 +443,19 @@ public class CrashReporterService extends JobIntentService {
 
     private String unescape(String string) {
         return string.replaceAll("\\\\\\\\", "\\").replaceAll("\\\\n", "\n").replaceAll("\\\\t", "\t");
+    }
+
+    /**
+     * Terminate the currently running Java Virtual Machine.
+     *
+     * This service is started as a foreground service.
+     * But because it does little work it doesn't post a Notification to bug the user unneededly.
+     * Although all it's work is done in < 5 seconds, after them passing the ActivityManager will post
+     * an ANR error to logcat because we aren't calling Service.startForeground().
+     * Although nothing gets through to the user this errors are registered in the Google Play console.
+     * See bug 1501449.
+     */
+    private void shutdown() {
+        System.exit(0);
     }
 }
