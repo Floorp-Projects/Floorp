@@ -184,7 +184,16 @@ Clipboard::GetClipboardLog()
   return gClipboardLog;
 }
 
-bool
+/* static */ bool
+Clipboard::ReadTextEnabled(JSContext* aCx, JSObject* aGlobal)
+{
+  nsIPrincipal* prin = nsContentUtils::SubjectPrincipal(aCx);
+  return IsTestingPrefEnabled() ||
+    prin->GetIsAddonOrExpandedAddonPrincipal() ||
+    prin->GetIsSystemPrincipal();
+}
+
+/* static */ bool
 Clipboard::IsTestingPrefEnabled()
 {
   static bool sPrefCached = false;

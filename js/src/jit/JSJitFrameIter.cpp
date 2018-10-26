@@ -667,8 +667,10 @@ JSJitProfilingFrameIterator::fixBaselineReturnAddress()
     // the stack. We have the actual jsbytecode* stashed on the frame itself;
     // translate that into the Baseline code address.
     if (jsbytecode* override = bl->maybeOverridePc()) {
+        PCMappingSlotInfo slotInfo;
         JSScript* script = bl->script();
-        returnAddressToFp_ = script->baselineScript()->nativeCodeForPC(script, override);
+        returnAddressToFp_ = script->baselineScript()->nativeCodeForPC(script, override, &slotInfo);
+        MOZ_ASSERT(slotInfo.isStackSynced());
         return;
     }
 }
@@ -764,6 +766,7 @@ JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
         fp_ = ((uint8_t*) stubFrame->reverseSavedFramePtr())
                 + jit::BaselineFrame::FramePointerOffset;
         type_ = FrameType::BaselineJS;
+        fixBaselineReturnAddress();
         return;
     }
 
@@ -785,6 +788,7 @@ JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
             fp_ = ((uint8_t*) stubFrame->reverseSavedFramePtr())
                     + jit::BaselineFrame::FramePointerOffset;
             type_ = FrameType::BaselineJS;
+            fixBaselineReturnAddress();
             return;
         }
 
