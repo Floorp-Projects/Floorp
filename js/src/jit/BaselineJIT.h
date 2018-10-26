@@ -542,7 +542,15 @@ struct BaselineScript final
     void copyPCMappingIndexEntries(const PCMappingIndexEntry* entries);
     void copyPCMappingEntries(const CompactBufferWriter& entries);
 
-    uint8_t* nativeCodeForPC(JSScript* script, jsbytecode* pc, PCMappingSlotInfo* slotInfo);
+    // Baseline JIT may not generate code for unreachable bytecode which
+    // results in mapping returning nullptr.
+    uint8_t* maybeNativeCodeForPC(JSScript* script, jsbytecode* pc, PCMappingSlotInfo* slotInfo);
+    uint8_t* nativeCodeForPC(JSScript* script, jsbytecode* pc, PCMappingSlotInfo* slotInfo)
+    {
+        uint8_t* native = maybeNativeCodeForPC(script, pc, slotInfo);
+        MOZ_ASSERT(native);
+        return native;
+    }
 
     // Return the bytecode offset for a given native code address. Be careful
     // when using this method: we don't emit code for some bytecode ops, so
