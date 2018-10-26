@@ -65,6 +65,9 @@ class PCMappingSlotInfo
         return PCMappingSlotInfo(2 | (topSlotLoc << 2) | (nextSlotLoc) << 4);
     }
 
+    inline bool isStackSynced() const {
+        return numUnsynced() == 0;
+    }
     inline unsigned numUnsynced() const {
         return slotInfo_ & 0x3;
     }
@@ -539,8 +542,7 @@ struct BaselineScript final
     void copyPCMappingIndexEntries(const PCMappingIndexEntry* entries);
     void copyPCMappingEntries(const CompactBufferWriter& entries);
 
-    uint8_t* nativeCodeForPC(JSScript* script, jsbytecode* pc,
-                             PCMappingSlotInfo* slotInfo = nullptr);
+    uint8_t* nativeCodeForPC(JSScript* script, jsbytecode* pc, PCMappingSlotInfo* slotInfo);
 
     // Return the bytecode offset for a given native code address. Be careful
     // when using this method: we don't emit code for some bytecode ops, so
