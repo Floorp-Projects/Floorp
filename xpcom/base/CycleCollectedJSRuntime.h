@@ -383,7 +383,7 @@ private:
   // Built on nightly only to avoid any possible performance impact on release
 
   struct ErrorInterceptor final : public JSErrorInterceptor {
-    virtual void interceptError(JSContext* cx, const JS::Value& val) override;
+    virtual void interceptError(JSContext* cx, JS::HandleValue exn) override;
     void Shutdown(JSRuntime* rt);
 
     // Copy of the details of the exception.
