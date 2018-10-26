@@ -456,20 +456,6 @@ contentblocking:
     release_channel_collection: opt-out
     record_in_processes:
       - main
-  fastblock_enabled:
-    bug_numbers:
-      - 1484251
-    description: >
-      Whether FastBlock was enabled at startup.
-    expires: never
-    kind: boolean
-    notification_emails:
-      - jhofmann@mozilla.com
-      - pdol@mozilla.com
-      - seceng-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    record_in_processes:
-      - main
   exceptions:
     bug_numbers:
       - 1484251

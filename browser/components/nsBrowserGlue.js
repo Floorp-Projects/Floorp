@@ -1364,9 +1364,6 @@ BrowserGlue.prototype = {
     let cookieBehavior = Services.prefs.getIntPref("network.cookie.cookieBehavior");
     Services.telemetry.getHistogramById("COOKIE_BEHAVIOR").add(cookieBehavior);
 
-    let fastBlockEnabled = Services.prefs.getBoolPref("browser.fastblock.enabled");
-    Services.telemetry.scalarSet("contentblocking.fastblock_enabled", fastBlockEnabled);
-
     let contentBlockingEnabled = Services.prefs.getBoolPref("browser.contentblocking.enabled");
     Services.telemetry.scalarSet("contentblocking.enabled", contentBlockingEnabled);
 
