@@ -1061,6 +1061,15 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
 ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, CanvasRenderingContext2D& aCanvasCtx,
                             const Maybe<IntRect>& aCropRect, ErrorResult& aRv)
 {
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal);
+  nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(win);
+  if (NS_WARN_IF(!window) || !window->GetExtantDoc()) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  window->GetExtantDoc()->WarnOnceAbout(nsIDocument::eCreateImageBitmapCanvasRenderingContext2D);
+
   // Check origin-clean.
   if (aCanvasCtx.GetCanvas()->IsWriteOnly()) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
