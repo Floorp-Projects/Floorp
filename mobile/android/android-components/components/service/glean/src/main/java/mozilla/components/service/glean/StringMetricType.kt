@@ -20,12 +20,12 @@ internal const val MAX_LENGTH_STRING_VALUE = 50
  * data and making sure that limits are enforced.
  */
 data class StringMetricType(
-    override val applicationProperty: Boolean = false,
-    override val disabled: Boolean = false,
+    override val applicationProperty: Boolean,
+    override val disabled: Boolean,
     override val category: String,
     override val name: String,
-    override val sendInPings: List<String> = listOf("default"),
-    override val userProperty: Boolean = false
+    override val sendInPings: List<String>,
+    override val userProperty: Boolean
 ) : CommonMetricData {
     private val logger = Logger("glean/StringMetricType")
 

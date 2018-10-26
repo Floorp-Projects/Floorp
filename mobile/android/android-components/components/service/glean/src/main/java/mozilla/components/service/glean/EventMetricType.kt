@@ -22,12 +22,12 @@ internal const val MAX_LENGTH_EVENT_VALUE = 80
  * data and making sure that limits are enforced.
  */
 data class EventMetricType(
-    override val applicationProperty: Boolean = false,
-    override val disabled: Boolean = false,
+    override val applicationProperty: Boolean,
+    override val disabled: Boolean,
     override val category: String,
     override val name: String,
-    override val sendInPings: List<String> = listOf("default"),
-    override val userProperty: Boolean = false,
+    override val sendInPings: List<String>,
+    override val userProperty: Boolean,
     val objects: List<String>,
     val allowedExtraKeys: List<String>? = null
 ) : CommonMetricData {
