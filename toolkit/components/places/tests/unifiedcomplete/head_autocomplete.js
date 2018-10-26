@@ -319,13 +319,15 @@ var addBookmark = async function(aBookmarkObj) {
 
   if (aBookmarkObj.keyword) {
     await PlacesUtils.keywords.insert({ keyword: aBookmarkObj.keyword,
-                                        url: aBookmarkObj.uri.spec ? aBookmarkObj.uri.spec : aBookmarkObj.uri,
+                                        url: aBookmarkObj.uri instanceof Ci.nsIURI ? aBookmarkObj.uri.spec : aBookmarkObj.uri,
                                         postData: aBookmarkObj.postData,
                                       });
   }
 
   if (aBookmarkObj.tags) {
-    PlacesUtils.tagging.tagURI(aBookmarkObj.uri, aBookmarkObj.tags);
+    let uri = aBookmarkObj.uri instanceof Ci.nsIURI ?
+      aBookmarkObj.uri : Services.io.newURI(aBookmarkObj.uri);
+    PlacesUtils.tagging.tagURI(uri, aBookmarkObj.tags);
   }
 };
 

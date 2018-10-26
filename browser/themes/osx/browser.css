@@ -189,9 +189,7 @@
 }
 
 /* Workaround for native menubar inheritance */
-.openintabs-menuitem,
-.openlivemarksite-menuitem,
-.livemarkstatus-menuitem {
+.openintabs-menuitem {
   list-style-image: none;
 }
 

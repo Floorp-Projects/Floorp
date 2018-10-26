@@ -189,7 +189,7 @@ PlacesController.prototype = {
       let selectedNode = this._view.selectedNode;
       return selectedNode &&
              PlacesUtils.nodeIsFolder(selectedNode) &&
-             !PlacesUIUtils.isFolderReadOnly(selectedNode, this._view) &&
+             !PlacesUIUtils.isFolderReadOnly(selectedNode) &&
              this._view.result.sortingMode ==
                  Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
     }
@@ -308,7 +308,7 @@ PlacesController.prototype = {
         if (nodes[i] == root)
           return false;
 
-        if (!PlacesUIUtils.canUserRemove(nodes[i], this._view))
+        if (!PlacesUIUtils.canUserRemove(nodes[i]))
           return false;
       }
     }
@@ -1242,7 +1242,7 @@ PlacesController.prototype = {
     // Allow dropping into Tag containers and editable folders.
     return !PlacesUtils.nodeIsTagQuery(container) &&
            (!PlacesUtils.nodeIsFolder(container) ||
-            PlacesUIUtils.isFolderReadOnly(container, this._view));
+            PlacesUIUtils.isFolderReadOnly(container));
   },
 
   /**
@@ -1262,7 +1262,7 @@ PlacesController.prototype = {
     let parentNode = node.parent;
     return parentNode != null &&
            PlacesUtils.nodeIsFolder(parentNode) &&
-           !PlacesUIUtils.isFolderReadOnly(parentNode, this._view) &&
+           !PlacesUIUtils.isFolderReadOnly(parentNode) &&
            !PlacesUtils.nodeIsTagQuery(parentNode);
   },
 };

@@ -8,9 +8,12 @@ DIRS += [
     'actions',
     'components',
     'reducers',
+    'utils',
 ]
 
 DevToolsModules(
     'ChangesManager.js',
     'ChangesView.js',
 )
+
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
