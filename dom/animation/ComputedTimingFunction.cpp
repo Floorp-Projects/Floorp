@@ -13,41 +13,65 @@ namespace mozilla {
 void
 ComputedTimingFunction::Init(const nsTimingFunction &aFunction)
 {
-  mType = aFunction.mType;
-  if (nsTimingFunction::IsSplineType(mType)) {
-    mTimingFunction.Init(aFunction.mFunc.mX1, aFunction.mFunc.mY1,
-                         aFunction.mFunc.mX2, aFunction.mFunc.mY2);
-  } else {
-    mSteps = aFunction.mSteps;
+  const StyleComputedTimingFunction& timing = aFunction.mTiming;
+  switch (timing.tag) {
+    case StyleComputedTimingFunction::Tag::Keyword: {
+      mType = static_cast<Type>(static_cast<uint8_t>(timing.keyword._0));
+
+      static_assert(
+        static_cast<uint8_t>(StyleTimingKeyword::Linear) == 0 &&
+          static_cast<uint8_t>(StyleTimingKeyword::Ease) == 1 &&
+          static_cast<uint8_t>(StyleTimingKeyword::EaseIn) == 2 &&
+          static_cast<uint8_t>(StyleTimingKeyword::EaseOut) == 3 &&
+          static_cast<uint8_t>(StyleTimingKeyword::EaseInOut) == 4,
+        "transition timing function constants not as expected");
+
+      static const float timingFunctionValues[5][4] = {
+        { 0.00f, 0.00f, 1.00f, 1.00f }, // linear
+        { 0.25f, 0.10f, 0.25f, 1.00f }, // ease
+        { 0.42f, 0.00f, 1.00f, 1.00f }, // ease-in
+        { 0.00f, 0.00f, 0.58f, 1.00f }, // ease-out
+        { 0.42f, 0.00f, 0.58f, 1.00f }  // ease-in-out
+      };
+      const float (&values)[4] = timingFunctionValues[uint8_t(mType)];
+      mTimingFunction.Init(values[0], values[1], values[2], values[3]);
+      break;
+    }
+    case StyleComputedTimingFunction::Tag::CubicBezier:
+      mType = Type::CubicBezier;
+      mTimingFunction.Init(timing.cubic_bezier.x1, timing.cubic_bezier.y1,
+                           timing.cubic_bezier.x2, timing.cubic_bezier.y2);
+      break;
+    case StyleComputedTimingFunction::Tag::Steps:
+      mType = Type::Step;
+      mSteps.mSteps = static_cast<uint32_t>(timing.steps._0);
+      mSteps.mPos = timing.steps._1;
+      break;
   }
 }
 
 static inline double
-StepTiming(uint32_t aSteps,
+StepTiming(const ComputedTimingFunction::StepFunc& aStepFunc,
            double aPortion,
-           ComputedTimingFunction::BeforeFlag aBeforeFlag,
-           nsTimingFunction::Type aType)
+           ComputedTimingFunction::BeforeFlag aBeforeFlag)
 {
-  MOZ_ASSERT(aType == nsTimingFunction::Type::StepStart ||
-             aType == nsTimingFunction::Type::StepEnd, "invalid type");
-
   // Calculate current step using step-end behavior
-  int32_t step = floor(aPortion * aSteps);
+  int32_t step = floor(aPortion * aStepFunc.mSteps);
 
   // step-start is one step ahead
-  if (aType == nsTimingFunction::Type::StepStart) {
+  if (aStepFunc.mPos == StyleStepPosition::Start) {
     step++;
   }
 
   // If the "before flag" is set and we are at a transition point,
   // drop back a step
   if (aBeforeFlag == ComputedTimingFunction::BeforeFlag::Set &&
-      fmod(aPortion * aSteps, 1) == 0) {
+      fmod(aPortion * aStepFunc.mSteps, 1) == 0) {
     step--;
   }
 
   // Convert to a progress value
-  double result = double(step) / double(aSteps);
+  double result = double(step) / double(aStepFunc.mSteps);
 
   // We should not produce a result outside [0, 1] unless we have an
   // input outside that range. This takes care of steps that would otherwise
@@ -112,7 +136,7 @@ ComputedTimingFunction::GetValue(
     return mTimingFunction.GetSplineValue(aPortion);
   }
 
-  return StepTiming(mSteps, aPortion, aBeforeFlag, mType);
+  return StepTiming(mSteps, aPortion, aBeforeFlag);
 }
 
 int32_t
@@ -122,15 +146,16 @@ ComputedTimingFunction::Compare(const ComputedTimingFunction& aRhs) const
     return int32_t(mType) - int32_t(aRhs.mType);
   }
 
-  if (mType == nsTimingFunction::Type::CubicBezier) {
+  if (mType == Type::CubicBezier) {
     int32_t order = mTimingFunction.Compare(aRhs.mTimingFunction);
     if (order != 0) {
       return order;
     }
-  } else if (mType == nsTimingFunction::Type::StepStart ||
-             mType == nsTimingFunction::Type::StepEnd) {
-    if (mSteps != aRhs.mSteps) {
-      return int32_t(mSteps) - int32_t(aRhs.mSteps);
+  } else if (mType == Type::Step) {
+    if (mSteps.mPos != aRhs.mSteps.mPos) {
+      return int32_t(mSteps.mPos) - int32_t(aRhs.mSteps.mPos);
+    } else if (mSteps.mSteps != aRhs.mSteps.mSteps) {
+      return int32_t(mSteps.mSteps) - int32_t(aRhs.mSteps.mSteps);
     }
   }
 
@@ -141,19 +166,21 @@ void
 ComputedTimingFunction::AppendToString(nsAString& aResult) const
 {
   switch (mType) {
-    case nsTimingFunction::Type::CubicBezier:
+    case Type::CubicBezier:
       nsStyleUtil::AppendCubicBezierTimingFunction(mTimingFunction.X1(),
                                                    mTimingFunction.Y1(),
                                                    mTimingFunction.X2(),
                                                    mTimingFunction.Y2(),
                                                    aResult);
       break;
-    case nsTimingFunction::Type::StepStart:
-    case nsTimingFunction::Type::StepEnd:
-      nsStyleUtil::AppendStepsTimingFunction(mType, mSteps, aResult);
+    case Type::Step:
+      nsStyleUtil::AppendStepsTimingFunction(mSteps.mSteps,
+                                             mSteps.mPos,
+                                             aResult);
       break;
     default:
-      nsStyleUtil::AppendCubicBezierKeywordTimingFunction(mType, aResult);
+      nsStyleUtil::AppendCubicBezierKeywordTimingFunction(
+        StyleTimingKeyword(uint8_t(mType)), aResult);
       break;
   }
 }
@@ -165,17 +192,15 @@ ComputedTimingFunction::Compare(const Maybe<ComputedTimingFunction>& aLhs,
   // We can't use |operator<| for const Maybe<>& here because
   // 'ease' is prior to 'linear' which is represented by Nothing().
   // So we have to convert Nothing() as 'linear' and check it first.
-  nsTimingFunction::Type lhsType = aLhs.isNothing() ?
-    nsTimingFunction::Type::Linear : aLhs->GetType();
-  nsTimingFunction::Type rhsType = aRhs.isNothing() ?
-    nsTimingFunction::Type::Linear : aRhs->GetType();
+  Type lhsType = aLhs.isNothing() ? Type::Linear : aLhs->GetType();
+  Type rhsType = aRhs.isNothing() ? Type::Linear : aRhs->GetType();
 
   if (lhsType != rhsType) {
     return int32_t(lhsType) - int32_t(rhsType);
   }
 
   // Both of them are Nothing().
-  if (lhsType == nsTimingFunction::Type::Linear) {
+  if (lhsType == Type::Linear) {
     return 0;
   }
 

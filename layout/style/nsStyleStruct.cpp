@@ -3318,52 +3318,6 @@ nsStyleBackground::IsTransparent(mozilla::ComputedStyle* aStyle) const
          NS_GET_A(BackgroundColor(aStyle)) == 0;
 }
 
-void
-nsTimingFunction::AssignFromKeyword(int32_t aTimingFunctionType)
-{
-  switch (aTimingFunctionType) {
-    case NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START:
-      mType = Type::StepStart;
-      mSteps = 1;
-      return;
-    default:
-      MOZ_FALLTHROUGH_ASSERT("aTimingFunctionType must be a keyword value");
-    case NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END:
-      mType = Type::StepEnd;
-      mSteps = 1;
-      return;
-    case NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE:
-    case NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR:
-    case NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN:
-    case NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_OUT:
-    case NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN_OUT:
-      mType = static_cast<Type>(aTimingFunctionType);
-      break;
-  }
-
-  static_assert(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE == 0 &&
-                NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR == 1 &&
-                NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN == 2 &&
-                NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_OUT == 3 &&
-                NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN_OUT == 4,
-                "transition timing function constants not as expected");
-
-  static const float timingFunctionValues[5][4] = {
-    { 0.25f, 0.10f, 0.25f, 1.00f }, // ease
-    { 0.00f, 0.00f, 1.00f, 1.00f }, // linear
-    { 0.42f, 0.00f, 1.00f, 1.00f }, // ease-in
-    { 0.00f, 0.00f, 0.58f, 1.00f }, // ease-out
-    { 0.42f, 0.00f, 0.58f, 1.00f }  // ease-in-out
-  };
-
-  MOZ_ASSERT(0 <= aTimingFunctionType && aTimingFunctionType < 5,
-             "keyword out of range");
-  mFunc.mX1 = timingFunctionValues[aTimingFunctionType][0];
-  mFunc.mY1 = timingFunctionValues[aTimingFunctionType][1];
-  mFunc.mX2 = timingFunctionValues[aTimingFunctionType][2];
-  mFunc.mY2 = timingFunctionValues[aTimingFunctionType][3];
-}
-
 StyleTransition::StyleTransition(const StyleTransition& aCopy)
   : mTimingFunction(aCopy.mTimingFunction)
   , mDuration(aCopy.mDuration)
@@ -3376,7 +3330,7 @@ StyleTransition::StyleTransition(const StyleTransition& aCopy)
 void
 StyleTransition::SetInitialValues()
 {
-  mTimingFunction = nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE);
+  mTimingFunction = nsTimingFunction(StyleTimingKeyword::Ease);
   mDuration = 0.0;
   mDelay = 0.0;
   mProperty = eCSSPropertyExtra_all_properties;
@@ -3408,7 +3362,7 @@ StyleAnimation::StyleAnimation(const StyleAnimation& aCopy)
 void
 StyleAnimation::SetInitialValues()
 {
-  mTimingFunction = nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE);
+  mTimingFunction = nsTimingFunction(StyleTimingKeyword::Ease);
   mDuration = 0.0;
   mDelay = 0.0;
   mName = nsGkAtoms::_empty;

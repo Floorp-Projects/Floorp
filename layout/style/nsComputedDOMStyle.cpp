@@ -4583,23 +4583,25 @@ nsComputedDOMStyle::AppendTimingFunction(nsDOMCSSValueList *aValueList,
   RefPtr<nsROCSSPrimitiveValue> timingFunction = new nsROCSSPrimitiveValue;
 
   nsAutoString tmp;
-  switch (aTimingFunction.mType) {
-    case nsTimingFunction::Type::CubicBezier:
-      nsStyleUtil::AppendCubicBezierTimingFunction(aTimingFunction.mFunc.mX1,
-                                                   aTimingFunction.mFunc.mY1,
-                                                   aTimingFunction.mFunc.mX2,
-                                                   aTimingFunction.mFunc.mY2,
-                                                   tmp);
+  switch (aTimingFunction.mTiming.tag) {
+    case StyleComputedTimingFunction::Tag::CubicBezier:
+      nsStyleUtil::AppendCubicBezierTimingFunction(
+        aTimingFunction.mTiming.cubic_bezier.x1,
+        aTimingFunction.mTiming.cubic_bezier.y1,
+        aTimingFunction.mTiming.cubic_bezier.x2,
+        aTimingFunction.mTiming.cubic_bezier.y2,
+        tmp);
       break;
-    case nsTimingFunction::Type::StepStart:
-    case nsTimingFunction::Type::StepEnd:
-      nsStyleUtil::AppendStepsTimingFunction(aTimingFunction.mType,
-                                             aTimingFunction.mSteps,
-                                             tmp);
+    case StyleComputedTimingFunction::Tag::Steps:
+      nsStyleUtil::AppendStepsTimingFunction(
+        aTimingFunction.mTiming.steps._0,
+        aTimingFunction.mTiming.steps._1,
+        tmp);
       break;
-    default:
-      nsStyleUtil::AppendCubicBezierKeywordTimingFunction(aTimingFunction.mType,
-                                                          tmp);
+    case StyleComputedTimingFunction::Tag::Keyword:
+      nsStyleUtil::AppendCubicBezierKeywordTimingFunction(
+        aTimingFunction.mTiming.keyword._0,
+        tmp);
       break;
   }
   timingFunction->SetString(tmp);
