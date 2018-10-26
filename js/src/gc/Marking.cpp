@@ -1623,7 +1623,7 @@ VisitTraceList(F f, const int32_t* traceList, uint8_t* memory, Args&&... args)
 /*** Mark-stack Marking ***************************************************************************/
 
 bool
-GCMarker::drainMarkStack(SliceBudget& budget)
+GCMarker::markUntilBudgetExhaused(SliceBudget& budget)
 {
 #ifdef DEBUG
     MOZ_ASSERT(!strictCompartmentChecking);

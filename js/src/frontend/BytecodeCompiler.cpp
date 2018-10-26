@@ -939,6 +939,10 @@ frontend::CompileLazyBinASTFunction(JSContext* cx, Handle<LazyScript*> lazy, con
     MOZ_ASSERT(lazy->enclosingScriptHasEverBeenCompiled());
     MOZ_ASSERT(lazy->isBinAST());
 
+    AutoAssertReportedException assertException(cx);
+    Rooted<JSFunction*> fun(cx, lazy->functionNonDelazifying());
+    AutoAssertFunctionDelazificationCompletion delazificationCompletion(cx, fun);
+
     CompileOptions options(cx);
     options.setMutedErrors(lazy->mutedErrors())
            .setFileAndLine(lazy->filename(), lazy->lineno())
@@ -986,10 +990,8 @@ frontend::CompileLazyBinASTFunction(JSContext* cx, Handle<LazyScript*> lazy, con
         return false;
     }
 
-    if (!NameFunctions(cx, pn)) {
-        return false;
-    }
-
+    delazificationCompletion.complete();
+    assertException.reset();
     return script;
 }
 

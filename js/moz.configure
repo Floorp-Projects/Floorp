@@ -369,6 +369,18 @@ set_define('JS_JITSPEW',
 set_config('JS_JITSPEW',
            depends_if('--enable-jitspew')(lambda _: True))
 
+# When enabled, masm will generate assumeUnreachable calls that act as
+# assertions in the generated code. This option is worth disabling when you
+# have to track mutated values through the generated code, to avoid constantly
+# dumping registers on and off the stack.
+js_option('--enable-masm-verbose',
+          default=depends(when=moz_debug)(lambda: True),
+          help='Enable MacroAssembler verbosity of generated code.')
+set_define('JS_MASM_VERBOSE',
+           depends_if('--enable-masm-verbose')(lambda _: True))
+set_config('JS_MASM_VERBOSE',
+           depends_if('--enable-masm-verbose')(lambda _: True))
+
 
 js_option('--enable-more-deterministic', env='JS_MORE_DETERMINISTIC',
           help='Enable changes that make the shell more deterministic')
