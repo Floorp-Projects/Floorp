@@ -7,6 +7,7 @@
 #ifndef nsHttpChannel_h__
 #define nsHttpChannel_h__
 
+#include "DelayHttpChannelQueue.h"
 #include "HttpBaseChannel.h"
 #include "nsTArray.h"
 #include "nsICachingChannel.h"
@@ -204,6 +205,8 @@ public: /* internal necko use only */
     {
         return mRequestTime;
     }
+
+    nsresult AsyncOpenFinal(TimeStamp aTimeStamp);
 
     MOZ_MUST_USE nsresult OpenCacheEntry(bool usingSSL);
     MOZ_MUST_USE nsresult OpenCacheEntryInternal(bool isHttps,

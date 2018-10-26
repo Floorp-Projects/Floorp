@@ -76,13 +76,25 @@ GLContextCGL::GLContextCGL(CreateContextFlags flags, const SurfaceCaps& caps,
 GLContextCGL::~GLContextCGL()
 {
     MarkDestroyed();
-    [mContext release];
+
+    if (mContext) {
+        if ([NSOpenGLContext currentContext] == mContext) {
+            // Clear the current context before releasing. If we don't do
+            // this, the next time we call [NSOpenGLContext currentContext],
+            // "invalid context" will be printed to the console.
+            [NSOpenGLContext clearCurrentContext];
+        }
+        [mContext release];
+    }
 }
 
 bool
 GLContextCGL::Init()
 {
-    return InitWithPrefix("gl", true);
+    if (!InitWithPrefix("gl", true))
+        return false;
+
+    return true;
 }
 
 CGLContextObj
@@ -94,11 +106,6 @@ GLContextCGL::GetCGLContext() const
 bool
 GLContextCGL::MakeCurrentImpl() const
 {
-    if (IsDestroyed()) {
-        [NSOpenGLContext clearCurrentContext];
-        return false;
-    }
-
     if (mContext) {
         [mContext makeCurrentContext];
         MOZ_ASSERT(IsCurrentImpl());

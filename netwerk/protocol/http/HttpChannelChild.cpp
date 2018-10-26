@@ -30,6 +30,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsChannelClassifier.h"
 #include "nsContentPolicyUtils.h"
+#include "nsDOMNavigationTiming.h"
 #include "nsGlobalWindow.h"
 #include "nsStringStream.h"
 #include "nsHttpChannel.h"

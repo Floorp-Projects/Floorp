@@ -645,16 +645,16 @@ class ADBDevice(ADBCommand):
         # there is /sbin/ls which embeds ansi escape codes to colorize
         # the output.  Detect if we are using busybox ls. We want each
         # entry on a single line and we don't want . or ..
-        system_dir = "/system"
+        ls_dir = "/sdcard"
 
-        if self.shell_bool("/system/bin/ls {}".format(system_dir), timeout=timeout):
+        if self.shell_bool("/system/bin/ls {}".format(ls_dir), timeout=timeout):
             self._ls = "/system/bin/ls"
-        elif self.shell_bool("/system/xbin/ls {}".format(system_dir), timeout=timeout):
+        elif self.shell_bool("/system/xbin/ls {}".format(ls_dir), timeout=timeout):
             self._ls = "/system/xbin/ls"
         else:
             raise ADBError("ADBDevice.__init__: ls could not be found")
         try:
-            self.shell_output("%s -1A {}".format(system_dir) % self._ls, timeout=timeout)
+            self.shell_output("%s -1A {}".format(ls_dir) % self._ls, timeout=timeout)
             self._ls += " -1A"
         except ADBError:
             self._ls += " -a"
