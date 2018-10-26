@@ -52,7 +52,7 @@ fn render_task_sanity_check(size: &DeviceIntSize) {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskId(pub u32, FrameId); // TODO(gw): Make private when using GPU cache!
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
