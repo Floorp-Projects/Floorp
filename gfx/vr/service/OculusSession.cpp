@@ -236,14 +236,13 @@ OculusSession::~OculusSession()
 bool
 OculusSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
 {
+  if (!LoadOvrLib()) {
+    return false;
+  }
   if (!CreateD3DObjects()) {
     return false;
   }
   if (!CreateShaders()) {
-    return false;
-  }
-
-  if (!LoadOvrLib()) {
     return false;
   }
   // We start off with an invisible session, then re-initialize

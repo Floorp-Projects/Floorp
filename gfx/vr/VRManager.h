@@ -33,6 +33,7 @@ class VRSystemManagerExternal;
 class VRManager
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::gfx::VRManager)
+  friend class VRManagerParent;
 
 public:
   static void ManagerInit();
