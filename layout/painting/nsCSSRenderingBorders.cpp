@@ -102,19 +102,13 @@ CheckFourFloatsEqual(const Float* vals, Float k)
   return (vals[0] == k && vals[1] == k && vals[2] == k && vals[3] == k);
 }
 
-static bool
-IsZeroSize(const Size& sz)
-{
-  return sz.width == 0.0 || sz.height == 0.0;
-}
-
 /* static */ bool
 nsCSSBorderRenderer::AllCornersZeroSize(const RectCornerRadii& corners)
 {
-  return IsZeroSize(corners[eCornerTopLeft]) &&
-         IsZeroSize(corners[eCornerTopRight]) &&
-         IsZeroSize(corners[eCornerBottomRight]) &&
-         IsZeroSize(corners[eCornerBottomLeft]);
+  return corners[eCornerTopLeft].IsEmpty() &&
+         corners[eCornerTopRight].IsEmpty() &&
+         corners[eCornerBottomRight].IsEmpty() &&
+         corners[eCornerBottomLeft].IsEmpty();
 }
 
 static mozilla::Side
@@ -419,7 +413,7 @@ nsCSSBorderRenderer::IsCornerMergeable(Corner aCorner)
   }
 
   Size radius = mBorderRadii[aCorner];
-  return IsZeroSize(radius) ||
+  return radius.IsEmpty() ||
          (radius.width < widthH / 2.0f && radius.height < widthH / 2.0f);
 }
 
@@ -625,7 +619,7 @@ nsCSSBorderRenderer::GetSideClipSubPath(mozilla::Side aSide)
   SideClipType startType = SIDE_CLIP_TRAPEZOID;
   SideClipType endType = SIDE_CLIP_TRAPEZOID;
 
-  if (!IsZeroSize(mBorderRadii[GetCCWCorner(aSide)])) {
+  if (!mBorderRadii[GetCCWCorner(aSide)].IsEmpty()) {
     startType = SIDE_CLIP_TRAPEZOID_FULL;
   } else if (startIsDotted && !isDotted) {
     startType = SIDE_CLIP_RECTANGLE_CORNER;
@@ -633,7 +627,7 @@ nsCSSBorderRenderer::GetSideClipSubPath(mozilla::Side aSide)
     startType = SIDE_CLIP_RECTANGLE_NO_CORNER;
   }
 
-  if (!IsZeroSize(mBorderRadii[GetCWCorner(aSide)])) {
+  if (!mBorderRadii[GetCWCorner(aSide)].IsEmpty()) {
     endType = SIDE_CLIP_TRAPEZOID_FULL;
   } else if (endIsDotted && !isDotted) {
     endType = SIDE_CLIP_RECTANGLE_CORNER;
@@ -753,7 +747,7 @@ nsCSSBorderRenderer::GetStraightBorderPoint(mozilla::Side aSide,
   uint8_t otherStyle = mBorderStyles[otherSide];
   Float otherBorderWidth = mBorderWidths[otherSide];
   Size radius = mBorderRadii[aCorner];
-  if (IsZeroSize(radius)) {
+  if (radius.IsEmpty()) {
     radius.width = 0.0f;
     radius.height = 0.0f;
   }
@@ -1024,7 +1018,7 @@ nsCSSBorderRenderer::GetStraightBorderPoint(mozilla::Side aSide,
     return P;
   }
 
-  if (otherStyle == NS_STYLE_BORDER_STYLE_DOTTED && IsZeroSize(radius)) {
+  if (otherStyle == NS_STYLE_BORDER_STYLE_DOTTED && radius.IsEmpty()) {
     // If other side is dotted and radius=0, draw side to the end of corner.
     //
     //   +-------------------------------
@@ -1493,38 +1487,38 @@ nsCSSBorderRenderer::DrawBorderSides(int aSides)
   if (IsSingleSide(aSides)) {
     if (aSides == eSideBitsTop) {
       if (mBorderStyles[eSideRight] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_TR])) {
+          mBorderRadii[C_TR].IsEmpty()) {
         noMarginRight = true;
       }
       if (mBorderStyles[eSideLeft] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_TL])) {
+          mBorderRadii[C_TL].IsEmpty()) {
         noMarginLeft = true;
       }
     } else if (aSides == eSideBitsRight) {
       if (mBorderStyles[eSideTop] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_TR])) {
+          mBorderRadii[C_TR].IsEmpty()) {
         noMarginTop = true;
       }
       if (mBorderStyles[eSideBottom] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_BR])) {
+          mBorderRadii[C_BR].IsEmpty()) {
         noMarginBottom = true;
       }
     } else if (aSides == eSideBitsBottom) {
       if (mBorderStyles[eSideRight] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_BR])) {
+          mBorderRadii[C_BR].IsEmpty()) {
         noMarginRight = true;
       }
       if (mBorderStyles[eSideLeft] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_BL])) {
+          mBorderRadii[C_BL].IsEmpty()) {
         noMarginLeft = true;
       }
     } else {
       if (mBorderStyles[eSideTop] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_TL])) {
+          mBorderRadii[C_TL].IsEmpty()) {
         noMarginTop = true;
       }
       if (mBorderStyles[eSideBottom] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_BL])) {
+          mBorderRadii[C_BL].IsEmpty()) {
         noMarginBottom = true;
       }
     }
@@ -2323,7 +2317,7 @@ nsCSSBorderRenderer::DrawDashedOrDottedCorner(mozilla::Side aSide,
   Float styleV = mBorderStyles[sideV];
 
   // Corner between dotted and others with radius=0 is drawn by side.
-  if (IsZeroSize(mBorderRadii[aCorner]) &&
+  if (mBorderRadii[aCorner].IsEmpty() &&
       (styleV == NS_STYLE_BORDER_STYLE_DOTTED ||
        styleH == NS_STYLE_BORDER_STYLE_DOTTED)) {
     return;
@@ -3372,8 +3366,9 @@ nsCSSBorderRenderer::DrawBorders()
       const mozilla::Side sides[2] = { mozilla::Side(corner),
                                        PREV_SIDE(corner) };
 
-      if (!IsZeroSize(mBorderRadii[corner]))
+      if (!mBorderRadii[corner].IsEmpty()) {
         continue;
+      }
 
       if (mBorderWidths[sides[0]] == 1.0 && mBorderWidths[sides[1]] == 1.0) {
         if (mOuterRect.Width() > mOuterRect.Height()) {
@@ -3388,8 +3383,9 @@ nsCSSBorderRenderer::DrawBorders()
     NS_FOR_CSS_FULL_CORNERS(corner)
     {
       // if there's no corner, don't do all this work for it
-      if (IsZeroSize(mBorderCornerDimensions[corner]))
+      if (mBorderCornerDimensions[corner].IsEmpty()) {
         continue;
+      }
 
       const int sides[2] = { corner, PREV_SIDE(corner) };
       int sideBits = (1 << sides[0]) | (1 << sides[1]);
@@ -3399,7 +3395,7 @@ nsCSSBorderRenderer::DrawBorders()
       // If we don't have anything complex going on in this corner,
       // then we can just fill the corner with a solid color, and avoid
       // the potentially expensive clip.
-      if (simpleCornerStyle && IsZeroSize(mBorderRadii[corner]) &&
+      if (simpleCornerStyle && mBorderRadii[corner].IsEmpty() &&
           IsSolidCornerStyle(mBorderStyles[sides[0]], corner)) {
         Color color = MakeBorderColor(
           mBorderColors[sides[0]],
