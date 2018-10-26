@@ -273,13 +273,6 @@ PlacesViewBase.prototype = {
     if (!resultNode.containerOpen)
       return;
 
-    if (this.controller.hasCachedLivemarkInfo(resultNode)) {
-      this._setEmptyPopupStatus(aPopup, false);
-      aPopup._built = true;
-      this._populateLivemarkPopup(aPopup);
-      return;
-    }
-
     this._cleanPopup(aPopup);
 
     let cc = resultNode.childCount;
@@ -343,7 +336,6 @@ PlacesViewBase.prototype = {
       element = document.createXULElement("menuseparator");
       element.setAttribute("class", "small-separator");
     } else {
-      let itemId = aPlacesNode.itemId;
       if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_URI) {
         element = document.createXULElement("menuitem");
         element.className = "menuitem-iconic bookmark-item menuitem-with-favicon";
@@ -361,18 +353,6 @@ PlacesViewBase.prototype = {
             element.setAttribute("dayContainer", "true");
           else if (PlacesUtils.nodeIsHost(aPlacesNode))
             element.setAttribute("hostContainer", "true");
-        } else if (itemId != -1) {
-          PlacesUtils.livemarks.getLivemark({ id: itemId })
-            .then(aLivemark => {
-              element.setAttribute("livemark", "true");
-              if (AppConstants.platform === "macosx") {
-                // OS X native menubar doesn't track list-style-images since
-                // it doesn't have a frame (bug 733415).  Thus enforce updating.
-                element.setAttribute("image", "");
-                element.removeAttribute("image");
-              }
-              this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
-            }, () => undefined);
         }
 
         let popup = document.createXULElement("menupopup");
@@ -419,80 +399,6 @@ PlacesViewBase.prototype = {
     return element;
   },
 
-  _setLivemarkSiteURIMenuItem:
-  function PVB__setLivemarkSiteURIMenuItem(aPopup) {
-    let livemarkInfo = this.controller.getCachedLivemarkInfo(aPopup._placesNode);
-    let siteUrl = livemarkInfo && livemarkInfo.siteURI ?
-                  livemarkInfo.siteURI.spec : null;
-    if (!siteUrl && aPopup._siteURIMenuitem) {
-      aPopup.removeChild(aPopup._siteURIMenuitem);
-      aPopup._siteURIMenuitem = null;
-      aPopup.removeChild(aPopup._siteURIMenuseparator);
-      aPopup._siteURIMenuseparator = null;
-    } else if (siteUrl && !aPopup._siteURIMenuitem) {
-      // Add "Open (Feed Name)" menuitem.
-      aPopup._siteURIMenuitem = document.createXULElement("menuitem");
-      aPopup._siteURIMenuitem.className = "openlivemarksite-menuitem";
-      if (typeof this.options.extraClasses.entry == "string") {
-        aPopup._siteURIMenuitem.classList.add(this.options.extraClasses.entry);
-      }
-      aPopup._siteURIMenuitem.setAttribute("targetURI", siteUrl);
-      aPopup._siteURIMenuitem.setAttribute("oncommand",
-        "openUILink(this.getAttribute('targetURI'), event, {" +
-        " triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});");
-
-      // If a user middle-clicks this item we serve the oncommand event.
-      // We are using checkForMiddleClick because of Bug 246720.
-      // Note: stopPropagation is needed to avoid serving middle-click
-      // with BT_onClick that would open all items in tabs.
-      aPopup._siteURIMenuitem.setAttribute("onclick",
-        "checkForMiddleClick(this, event); event.stopPropagation();");
-      let label =
-        PlacesUIUtils.getFormattedString("menuOpenLivemarkOrigin.label",
-                                         [aPopup.parentNode.getAttribute("label")]);
-      aPopup._siteURIMenuitem.setAttribute("label", label);
-      aPopup.insertBefore(aPopup._siteURIMenuitem, aPopup._startMarker);
-
-      aPopup._siteURIMenuseparator = document.createXULElement("menuseparator");
-      aPopup.insertBefore(aPopup._siteURIMenuseparator, aPopup._startMarker);
-    }
-  },
-
-  /**
-   * Add, update or remove the livemark status menuitem.
-   * @param aPopup
-   *        The livemark container popup
-   * @param aStatus
-   *        The livemark status
-   */
-  _setLivemarkStatusMenuItem:
-  function PVB_setLivemarkStatusMenuItem(aPopup, aStatus) {
-    let statusMenuitem = aPopup._statusMenuitem;
-    if (!statusMenuitem) {
-      // Create the status menuitem and cache it in the popup object.
-      statusMenuitem = document.createXULElement("menuitem");
-      statusMenuitem.className = "livemarkstatus-menuitem";
-      if (typeof this.options.extraClasses.entry == "string") {
-        statusMenuitem.classList.add(this.options.extraClasses.entry);
-      }
-      statusMenuitem.setAttribute("disabled", true);
-      aPopup._statusMenuitem = statusMenuitem;
-    }
-
-    if (aStatus == Ci.mozILivemark.STATUS_LOADING ||
-        aStatus == Ci.mozILivemark.STATUS_FAILED) {
-      // Status has changed, update the cached status menuitem.
-      let stringId = aStatus == Ci.mozILivemark.STATUS_LOADING ?
-                       "bookmarksLivemarkLoading" : "bookmarksLivemarkFailed";
-      statusMenuitem.setAttribute("label", PlacesUIUtils.getString(stringId));
-      if (aPopup._startMarker.nextElementSibling != statusMenuitem)
-        aPopup.insertBefore(statusMenuitem, aPopup._startMarker.nextElementSibling);
-    } else if (aPopup._statusMenuitem.parentNode == aPopup) {
-      // The livemark has finished loading.
-      aPopup.removeChild(aPopup._statusMenuitem);
-    }
-  },
-
   toggleCutNode: function PVB_toggleCutNode(aPlacesNode, aValue) {
     let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
 
@@ -532,32 +438,7 @@ PlacesViewBase.prototype = {
     elt.setAttribute("image", aPlacesNode.icon);
   },
 
-  nodeAnnotationChanged:
-  function PVB_nodeAnnotationChanged(aPlacesNode, aAnno) {
-    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
-
-    // All livemarks have a feedURI, so use it as our indicator of a livemark
-    // being modified.
-    if (aAnno == PlacesUtils.LMANNO_FEEDURI) {
-      let menu = elt.parentNode;
-      if (!menu.hasAttribute("livemark")) {
-        menu.setAttribute("livemark", "true");
-        if (AppConstants.platform === "macosx") {
-          // OS X native menubar doesn't track list-style-images since
-          // it doesn't have a frame (bug 733415).  Thus enforce updating.
-          menu.setAttribute("image", "");
-          menu.removeAttribute("image");
-        }
-      }
-
-      PlacesUtils.livemarks.getLivemark({ id: aPlacesNode.itemId })
-        .then(aLivemark => {
-          // Controller will use this to build the meta data for the node.
-          this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
-          this.invalidateContainer(aPlacesNode);
-        }, () => undefined);
-    }
-  },
+  nodeAnnotationChanged() {},
 
   nodeTitleChanged:
   function PVB_nodeTitleChanged(aPlacesNode, aNewTitle) {
@@ -602,26 +483,7 @@ PlacesViewBase.prototype = {
     }
   },
 
-  nodeHistoryDetailsChanged:
-  function PVB_nodeHistoryDetailsChanged(aPlacesNode, aTime, aCount) {
-    if (aPlacesNode.parent &&
-        this.controller.hasCachedLivemarkInfo(aPlacesNode.parent)) {
-      // Find the node in the parent.
-      let popup = this._getDOMNodeForPlacesNode(aPlacesNode.parent);
-      for (let child = popup._startMarker.nextElementSibling;
-           child != popup._endMarker;
-           child = child.nextElementSibling) {
-        if (child._placesNode && child._placesNode.uri == aPlacesNode.uri) {
-          if (aPlacesNode.accessCount)
-            child.setAttribute("visited", "true");
-          else
-            child.removeAttribute("visited");
-          break;
-        }
-      }
-    }
-  },
-
+  nodeHistoryDetailsChanged() { },
   nodeTagsChanged() { },
   nodeDateAddedChanged() { },
   nodeLastModifiedChanged() { },
@@ -676,64 +538,7 @@ PlacesViewBase.prototype = {
     if (aNewState == Ci.nsINavHistoryContainerResultNode.STATE_OPENED ||
         aNewState == Ci.nsINavHistoryContainerResultNode.STATE_CLOSED) {
       this.invalidateContainer(aPlacesNode);
-
-      if (PlacesUtils.nodeIsFolder(aPlacesNode)) {
-        let queryOptions = PlacesUtils.asQuery(this._result.root).queryOptions;
-        if (queryOptions.excludeItems) {
-          return;
-        }
-
-        PlacesUtils.livemarks.getLivemark({ id: aPlacesNode.itemId })
-          .then(aLivemark => {
-            if (!this.controller) {
-              // We might have been destroyed in the interim...
-              return;
-            }
-            let shouldInvalidate =
-              !this.controller.hasCachedLivemarkInfo(aPlacesNode);
-            this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
-            if (aNewState == Ci.nsINavHistoryContainerResultNode.STATE_OPENED) {
-              aLivemark.registerForUpdates(aPlacesNode, this);
-              // Prioritize the current livemark.
-              aLivemark.reload();
-              PlacesUtils.livemarks.reloadLivemarks();
-              if (shouldInvalidate)
-                this.invalidateContainer(aPlacesNode);
-            } else {
-              aLivemark.unregisterForUpdates(aPlacesNode);
-            }
-          }, () => undefined);
-      }
     }
-  },
-
-  _populateLivemarkPopup: function PVB__populateLivemarkPopup(aPopup) {
-    this._setLivemarkSiteURIMenuItem(aPopup);
-    // Show the loading status only if there are no entries yet.
-    if (aPopup._startMarker.nextElementSibling == aPopup._endMarker)
-      this._setLivemarkStatusMenuItem(aPopup, Ci.mozILivemark.STATUS_LOADING);
-
-    PlacesUtils.livemarks.getLivemark({ id: aPopup._placesNode.itemId })
-      .then(aLivemark => {
-        let placesNode = aPopup._placesNode;
-        if (!placesNode.containerOpen)
-          return;
-
-        if (aLivemark.status != Ci.mozILivemark.STATUS_LOADING)
-          this._setLivemarkStatusMenuItem(aPopup, aLivemark.status);
-        this._cleanPopup(aPopup,
-          this._nativeView && aPopup.parentNode.hasAttribute("open"));
-
-        let children = aLivemark.getNodesForContainer(placesNode);
-        for (let i = 0; i < children.length; i++) {
-          let child = children[i];
-          this.nodeInserted(placesNode, child, i);
-          if (child.accessCount)
-            this._getDOMNodeForPlacesNode(child).setAttribute("visited", true);
-          else
-            this._getDOMNodeForPlacesNode(child).removeAttribute("visited");
-        }
-      }, Cu.reportError);
   },
 
   /**
@@ -822,12 +627,6 @@ PlacesViewBase.prototype = {
       hasMultipleURIs = numURINodes > 1;
     }
 
-    let isLiveMark = false;
-    if (this.controller.hasCachedLivemarkInfo(aPopup._placesNode)) {
-      hasMultipleURIs = true;
-      isLiveMark = true;
-    }
-
     if (!hasMultipleURIs) {
       aPopup.setAttribute("singleitempopup", "true");
     } else {
@@ -858,15 +657,9 @@ PlacesViewBase.prototype = {
       if (typeof this.options.extraClasses.footer == "string")
         aPopup._endOptOpenAllInTabs.classList.add(this.options.extraClasses.footer);
 
-      if (isLiveMark) {
-        aPopup._endOptOpenAllInTabs.setAttribute("oncommand",
-          "PlacesUIUtils.openLiveMarkNodesInTabs(this.parentNode._placesNode, event, " +
-                                                 "PlacesUIUtils.getViewForNode(this));");
-      } else {
-        aPopup._endOptOpenAllInTabs.setAttribute("oncommand",
-          "PlacesUIUtils.openContainerNodeInTabs(this.parentNode._placesNode, event, " +
-                                                 "PlacesUIUtils.getViewForNode(this));");
-      }
+      aPopup._endOptOpenAllInTabs.setAttribute("oncommand",
+        "PlacesUIUtils.openContainerNodeInTabs(this.parentNode._placesNode, event, " +
+                                               "PlacesUIUtils.getViewForNode(this));");
       aPopup._endOptOpenAllInTabs.setAttribute("onclick",
         "checkForMiddleClick(this, event); event.stopPropagation();");
       aPopup._endOptOpenAllInTabs.setAttribute("label",
@@ -1120,12 +913,6 @@ PlacesToolbar.prototype = {
           button.setAttribute("query", "true");
           if (PlacesUtils.nodeIsTagQuery(aChild))
             button.setAttribute("tagContainer", "true");
-        } else if (PlacesUtils.nodeIsFolder(aChild)) {
-          PlacesUtils.livemarks.getLivemark({ id: aChild.itemId })
-            .then(aLivemark => {
-              button.setAttribute("livemark", "true");
-              this.controller.cacheLivemarkInfo(aChild, aLivemark);
-            }, () => undefined);
         }
 
         let popup = document.createXULElement("menupopup");
@@ -1453,18 +1240,7 @@ PlacesToolbar.prototype = {
     if (elt.localName == "menupopup")
       elt = elt.parentNode;
 
-    if (elt.parentNode == this._rootElt) { // Node is on the toolbar.
-      // All livemarks have a feedURI, so use it as our indicator.
-      if (aAnno == PlacesUtils.LMANNO_FEEDURI) {
-        elt.setAttribute("livemark", true);
-
-        PlacesUtils.livemarks.getLivemark({ id: aPlacesNode.itemId })
-          .then(aLivemark => {
-            this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
-            this.invalidateContainer(aPlacesNode);
-          }, Cu.reportError);
-      }
-    } else {
+    if (elt.parentNode != this._rootElt) { // Node is on the toolbar.
       // Node is in a submenu.
       PlacesViewBase.prototype.nodeAnnotationChanged.apply(this, arguments);
     }
@@ -1548,7 +1324,7 @@ PlacesToolbar.prototype = {
       let eltRect = elt.getBoundingClientRect();
       let eltIndex = Array.prototype.indexOf.call(this._rootElt.children, elt);
       if (PlacesUtils.nodeIsFolder(elt._placesNode) &&
-          !PlacesUIUtils.isFolderReadOnly(elt._placesNode, this)) {
+          !PlacesUIUtils.isFolderReadOnly(elt._placesNode)) {
         // This is a folder.
         // If we are in the middle of it, drop inside it.
         // Otherwise, drop before it, with regards to RTL mode.
@@ -1864,15 +1640,11 @@ PlacesToolbar.prototype = {
     let popup = aEvent.target;
     let placesNode = popup._placesNode;
     // Avoid handling popuphidden of inner views
-    if (placesNode && PlacesUIUtils.getViewForNode(popup) == this) {
-      // UI performance: folder queries are cheap, keep the resultnode open
-      // so we don't rebuild its contents whenever the popup is reopened.
-      // Though, we want to always close feed containers so their expiration
-      // status will be checked at next opening.
-      if (!PlacesUtils.nodeIsFolder(placesNode) ||
-          this.controller.hasCachedLivemarkInfo(placesNode)) {
-        placesNode.containerOpen = false;
-      }
+    if (placesNode && PlacesUIUtils.getViewForNode(popup) == this &&
+        // UI performance: folder queries are cheap, keep the resultnode open
+        // so we don't rebuild its contents whenever the popup is reopened.
+        !PlacesUtils.nodeIsFolder(placesNode)) {
+      placesNode.containerOpen = false;
     }
 
     let parent = popup.parentNode;
@@ -1967,11 +1739,9 @@ PlacesMenu.prototype = {
 
     // UI performance: folder queries are cheap, keep the resultnode open
     // so we don't rebuild its contents whenever the popup is reopened.
-    // Though, we want to always close feed containers so their expiration
-    // status will be checked at next opening.
-    if (!PlacesUtils.nodeIsFolder(placesNode) ||
-        this.controller.hasCachedLivemarkInfo(placesNode))
+    if (!PlacesUtils.nodeIsFolder(placesNode)) {
       placesNode.containerOpen = false;
+    }
 
     // The autoopened attribute is set for folders which have been
     // automatically opened when dragged over.  Turn off this attribute
@@ -2023,12 +1793,6 @@ PlacesPanelMenuView.prototype = {
           button.setAttribute("query", "true");
           if (PlacesUtils.nodeIsTagQuery(aChild))
             button.setAttribute("tagContainer", "true");
-        } else if (PlacesUtils.nodeIsFolder(aChild)) {
-          PlacesUtils.livemarks.getLivemark({ id: aChild.itemId })
-            .then(aLivemark => {
-              button.setAttribute("livemark", "true");
-              this.controller.cacheLivemarkInfo(aChild, aLivemark);
-            }, () => undefined);
         }
       } else if (PlacesUtils.nodeIsURI(aChild)) {
         button.setAttribute("scheme",
@@ -2078,27 +1842,7 @@ PlacesPanelMenuView.prototype = {
     this._rootElt.insertBefore(elt, this._rootElt.children[aNewIndex]);
   },
 
-  nodeAnnotationChanged:
-  function PAMV_nodeAnnotationChanged(aPlacesNode, aAnno) {
-    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
-    // There's no UI representation for the root node.
-    if (elt == this._rootElt)
-      return;
-
-    if (elt.parentNode != this._rootElt)
-      return;
-
-    // All livemarks have a feedURI, so use it as our indicator.
-    if (aAnno == PlacesUtils.LMANNO_FEEDURI) {
-      elt.setAttribute("livemark", true);
-
-      PlacesUtils.livemarks.getLivemark({ id: aPlacesNode.itemId })
-        .then(aLivemark => {
-          this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
-          this.invalidateContainer(aPlacesNode);
-        }, Cu.reportError);
-    }
-  },
+  nodeAnnotationChanged() {},
 
   nodeTitleChanged: function PAMV_nodeTitleChanged(aPlacesNode, aNewTitle) {
     let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
@@ -2286,15 +2030,11 @@ this.PlacesPanelview = class extends PlacesViewBase {
     let panelview = event.originalTarget;
     let placesNode = panelview._placesNode;
     // Avoid handling ViewHiding of inner views
-    if (placesNode && PlacesUIUtils.getViewForNode(panelview) == this) {
-      // UI performance: folder queries are cheap, keep the resultnode open
-      // so we don't rebuild its contents whenever the popup is reopened.
-      // Though, we want to always close feed containers so their expiration
-      // status will be checked at next opening.
-      if (!PlacesUtils.nodeIsFolder(placesNode) ||
-          this.controller.hasCachedLivemarkInfo(placesNode)) {
-        placesNode.containerOpen = false;
-      }
+    if (placesNode && PlacesUIUtils.getViewForNode(panelview) == this &&
+        // UI performance: folder queries are cheap, keep the resultnode open
+        // so we don't rebuild its contents whenever the popup is reopened.
+        !PlacesUtils.nodeIsFolder(placesNode)) {
+      placesNode.containerOpen = false;
     }
   }
 

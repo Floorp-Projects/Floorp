@@ -19,6 +19,13 @@ add_task(async function test_error_cases() {
     "passing a null as pageInfo should throw an Error"
   );
   Assert.throws(
+    () => PlacesUtils.history.update({
+      description: "Test description",
+    }),
+    /Error: PageInfo: The following properties were expected: url, guid/,
+    "not included a url or a guid should throw"
+  );
+  Assert.throws(
     () => PlacesUtils.history.update({url: "not a valid url string"}),
     /Error: PageInfo: Invalid value for property/,
     "passing an invalid url should throw an Error"
@@ -155,7 +162,7 @@ add_task(async function test_previewImageURL_change_saved() {
 
   let guid = await PlacesTestUtils.fieldInDB(TEST_URL, "guid");
   previewImageURL = IMAGE_URL;
-  await PlacesUtils.history.update({ url: TEST_URL, guid, previewImageURL });
+  await PlacesUtils.history.update({ guid, previewImageURL });
   previewImageURLInDB = await PlacesTestUtils.fieldInDB(TEST_URL, "preview_image_url");
   Assert.equal(previewImageURL, previewImageURLInDB, "previewImageURL should be updated via GUID as expected");
 

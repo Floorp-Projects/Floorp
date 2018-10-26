@@ -224,6 +224,8 @@ interface nsIRequest : nsISupports
     /**
      * When set, this flag indicates that caches of network connections,
      * particularly HTTP persistent connections, should not be used.
+     * Use this together with LOAD_INITIAL_DOCUMENT_URI as otherwise it has no
+     * effect.
      */
     const unsigned long LOAD_FRESH_CONNECTION = 1 << 15;
 };
