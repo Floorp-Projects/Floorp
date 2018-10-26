@@ -5792,11 +5792,20 @@ nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> a
 
     OriginAttributes targetAttrs = principal->OriginAttributesRef();
     OriginAttributes sourceAttrs = aSubjectPrincipal.OriginAttributesRef();
-    MOZ_DIAGNOSTIC_ASSERT(sourceAttrs.EqualsIgnoringFPD(targetAttrs));
+    // We have to exempt the check of OA if the subject prioncipal is a system
+    // principal since there are many tests try to post messages to content from
+    // chrome with a mismatch OA. For example, using the ContentTask.spawn() to
+    // post a message into a private browsing window. The injected code in
+    // ContentTask.spawn() will be executed under the system principal and the
+    // OA of the system principal mismatches with the OA of a private browsing
+    // window.
+    MOZ_DIAGNOSTIC_ASSERT(aSubjectPrincipal.GetIsSystemPrincipal() ||
+                          sourceAttrs.EqualsIgnoringFPD(targetAttrs));
 
     // If 'privacy.firstparty.isolate.block_post_message' is true, we will block
     // postMessage across different first party domains.
     if (OriginAttributes::IsBlockPostMessageForFPI() &&
+        !aSubjectPrincipal.GetIsSystemPrincipal() &&
         sourceAttrs.mFirstPartyDomain != targetAttrs.mFirstPartyDomain) {
       return;
     }
