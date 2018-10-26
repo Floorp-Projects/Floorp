@@ -16,9 +16,6 @@
   display: grid;
   grid-template-columns: 34px 1fr;
   font-size: 16px;
-  height: 48px;
-  padding-inline-end: 10px;
-  padding-inline-start: 10px;
 }
 
 .sidebar-fixed-item__icon {

@@ -439,8 +439,10 @@ ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame, EnvironmentI
             script->resetWarmUpCounter();
 
             // Resume at the start of the catch block.
+            PCMappingSlotInfo slotInfo;
             rfe->kind = ResumeFromException::RESUME_CATCH;
-            rfe->target = script->baselineScript()->nativeCodeForPC(script, *pc);
+            rfe->target = script->baselineScript()->nativeCodeForPC(script, *pc, &slotInfo);
+            MOZ_ASSERT(slotInfo.isStackSynced());
             return true;
           }
 
@@ -450,9 +452,11 @@ ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame, EnvironmentI
                 break;
             }
 
+            PCMappingSlotInfo slotInfo;
             SettleOnTryNote(cx, tn, frame, ei, rfe, pc);
             rfe->kind = ResumeFromException::RESUME_FINALLY;
-            rfe->target = script->baselineScript()->nativeCodeForPC(script, *pc);
+            rfe->target = script->baselineScript()->nativeCodeForPC(script, *pc, &slotInfo);
+            MOZ_ASSERT(slotInfo.isStackSynced());
             // Drop the exception instead of leaking cross compartment data.
             if (!cx->getPendingException(MutableHandleValue::fromMarkedLocation(&rfe->exception))) {
                 rfe->exception = UndefinedValue();
