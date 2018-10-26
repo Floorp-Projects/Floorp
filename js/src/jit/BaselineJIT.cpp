@@ -157,7 +157,9 @@ jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc)
     BaselineScript* baseline = fp->script()->baselineScript();
 
     EnterJitData data(cx);
-    data.jitcode = baseline->nativeCodeForPC(fp->script(), pc);
+    PCMappingSlotInfo slotInfo;
+    data.jitcode = baseline->nativeCodeForPC(fp->script(), pc, &slotInfo);
+    MOZ_ASSERT(slotInfo.isStackSynced());
 
     // Skip debug breakpoint/trap handler, the interpreter already handled it
     // for the current op.
@@ -784,7 +786,9 @@ BaselineScript::copyYieldAndAwaitEntries(JSScript* script, Vector<uint32_t>& yie
 
     for (size_t i = 0; i < yieldAndAwaitOffsets.length(); i++) {
         uint32_t offset = yieldAndAwaitOffsets[i];
-        entries[i] = nativeCodeForPC(script, script->offsetToPC(offset));
+        PCMappingSlotInfo slotInfo;
+        entries[i] = nativeCodeForPC(script, script->offsetToPC(offset), &slotInfo);
+        MOZ_ASSERT(slotInfo.isStackSynced());
     }
 }
 
@@ -885,9 +889,7 @@ BaselineScript::nativeCodeForPC(JSScript* script, jsbytecode* pc, PCMappingSlotI
         }
 
         if (curPC == pc) {
-            if (slotInfo) {
-                *slotInfo = PCMappingSlotInfo(b & ~0x80);
-            }
+            *slotInfo = PCMappingSlotInfo(b & 0x7F);
             return method_->raw() + nativeOffset;
         }
 

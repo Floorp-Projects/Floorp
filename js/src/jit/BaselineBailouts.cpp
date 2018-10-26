@@ -1216,12 +1216,13 @@ InitFromBailout(JSContext* cx, size_t frameNo,
                 // the correct pc offset of the throwing op instead of its
                 // successor (this pc will be used as the BaselineFrame's
                 // override pc).
-                //
-                // Note that we never resume at this pc, it is set for the sake
-                // of frame iterators giving the correct answer.
                 jsbytecode* throwPC = script->offsetToPC(iter.pcOffset());
                 builder.setResumePC(throwPC);
-                nativeCodeForPC = baselineScript->nativeCodeForPC(script, throwPC);
+
+                // Note that we never resume at this pc, it is set for the sake
+                // of frame iterators giving the correct answer.
+                PCMappingSlotInfo unused;
+                nativeCodeForPC = baselineScript->nativeCodeForPC(script, throwPC, &unused);
             } else {
                 nativeCodeForPC = baselineScript->nativeCodeForPC(script, pc, &slotInfo);
             }

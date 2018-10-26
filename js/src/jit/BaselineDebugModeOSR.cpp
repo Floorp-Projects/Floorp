@@ -457,7 +457,10 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
                 MOZ_ASSERT(frame.baselineFrame()->overridePc() == pc);
                 uint8_t* retAddr;
                 if (cx->runtime()->geckoProfiler().enabled()) {
-                    retAddr = bl->nativeCodeForPC(script, pc);
+                    // Won't actually jump to this address so we can ignore the
+                    // register state in the slot info.
+                    PCMappingSlotInfo unused;
+                    retAddr = bl->nativeCodeForPC(script, pc, &unused);
                 } else {
                     retAddr = nullptr;
                 }
