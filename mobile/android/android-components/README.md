@@ -66,6 +66,8 @@ High-level components for building browser(-like) apps.
 
 * 🔵 [**Session**](components/browser/session/README.md) - A generic representation of a browser session.
 
+* 🔴 [**Storage-Memory**](components/browser/storage-memory/README.md) - An in-memory implementation of browser storage.
+
 * 🔴 [**Tabstray**](components/browser/tabstray/README.md) - A customizable tabs tray for browsers.
 
 * ⚪ [**Toolbar**](components/browser/toolbar/README.md) - A customizable toolbar for browsers.
@@ -77,6 +79,8 @@ _API contracts and abstraction layers for browser components._
 * 🔴 [**Awesomebar**](components/concept/awesomebar/README.md) - An abstract definition of an awesome bar component.
 
 * ⚪ [**Engine**](components/concept/engine/README.md) - Abstraction layer that allows hiding the actual browser engine implementation.
+
+* 🔴 [**Storage**](components/concept/storage/README.md) - Abstract definition of a browser storage component.
 
 * 🔴 [**Tabstray**](components/concept/tabstray/README.md) - Abstract definition of a tabs tray component.
 
@@ -93,6 +97,8 @@ _Combined components to implement feature-specific use cases._
 * 🔴 [**Search**](components/feature/search/README.md) - A component that connects an (concept) engine implementation with the browser search module.
 
 * ⚪ [**Session**](components/feature/session/README.md) - A component that connects an (concept) engine implementation with the browser session module.
+
+* 🔴 [**Storage**](components/feature/storage/README.md) -A component that connects a (concept) storage implementation with its various consumers, like a (concept) engine implementation for history tracking.
 
 * 🔴 [**Tabs**](components/feature/tabs/README.md) - A component that connects a tabs tray implementation with the session and toolbar modules.
 
