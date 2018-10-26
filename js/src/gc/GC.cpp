@@ -7295,7 +7295,7 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoGCSession& session)
         isCompacting = false;
 
         auto unlimited = SliceBudget::unlimited();
-        incrementalCollectSlice(unlimited, JS::gcreason::RESET, session);
+        incrementalSlice(unlimited, JS::gcreason::RESET, session);
 
         isCompacting = wasCompacting;
 
@@ -7316,7 +7316,7 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoGCSession& session)
         isCompacting = false;
 
         auto unlimited = SliceBudget::unlimited();
-        incrementalCollectSlice(unlimited, JS::gcreason::RESET, session);
+        incrementalSlice(unlimited, JS::gcreason::RESET, session);
 
         isCompacting = wasCompacting;
 
@@ -7331,7 +7331,7 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoGCSession& session)
         zonesToMaybeCompact.ref().clear();
 
         auto unlimited = SliceBudget::unlimited();
-        incrementalCollectSlice(unlimited, JS::gcreason::RESET, session);
+        incrementalSlice(unlimited, JS::gcreason::RESET, session);
 
         isCompacting = wasCompacting;
         break;
@@ -7339,7 +7339,7 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoGCSession& session)
 
       case State::Decommit: {
         auto unlimited = SliceBudget::unlimited();
-        incrementalCollectSlice(unlimited, JS::gcreason::RESET, session);
+        incrementalSlice(unlimited, JS::gcreason::RESET, session);
         break;
       }
     }
@@ -7433,7 +7433,7 @@ ShouldCleanUpEverything(JS::gcreason::Reason reason, JSGCInvocationKind gckind)
 }
 
 GCRuntime::IncrementalResult
-GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason reason,
+GCRuntime::incrementalSlice(SliceBudget& budget, JS::gcreason::Reason reason,
                                    AutoGCSession& session)
 {
     AutoDisableBarriers disableBarriers(rt);
@@ -7941,7 +7941,7 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget,
 
     gcTracer.traceMajorGCStart();
 
-    result = incrementalCollectSlice(budget, reason, session);
+    result = incrementalSlice(budget, reason, session);
 
     chunkAllocationSinceLastGC = false;
 
@@ -8738,7 +8738,7 @@ GCRuntime::runDebugGC()
         }
     } else if (hasIncrementalTwoSliceZealMode()) {
         // These modes trigger incremental GC that happens in two slices and the
-        // supplied budget is ignored by incrementalCollectSlice.
+        // supplied budget is ignored by incrementalSlice.
         budget = SliceBudget(WorkBudget(1));
 
         if (!isIncrementalGCInProgress()) {

@@ -593,9 +593,9 @@ class GCRuntime
                                            SliceBudget& budget,
                                            JS::gcreason::Reason reason);
     bool shouldRepeatForDeadZone(JS::gcreason::Reason reason);
-    IncrementalResult incrementalCollectSlice(SliceBudget& budget,
-                                              JS::gcreason::Reason reason,
-                                              AutoGCSession& session);
+    IncrementalResult incrementalSlice(SliceBudget& budget,
+                                       JS::gcreason::Reason reason,
+                                       AutoGCSession& session);
     MOZ_MUST_USE bool shouldCollectNurseryForSlice(bool nonincrementalByAPI,
         SliceBudget& budget);
 
