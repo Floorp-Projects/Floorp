@@ -13,6 +13,7 @@ import org.mozilla.telemetry.event.TelemetryEvent;
 import org.mozilla.telemetry.measurement.ClientIdMeasurement;
 import org.mozilla.telemetry.measurement.DefaultSearchMeasurement;
 import org.mozilla.telemetry.measurement.EventsMeasurement;
+import org.mozilla.telemetry.measurement.ExperimentsMapMeasurement;
 import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;
 import org.mozilla.telemetry.ping.TelemetryEventPingBuilder;
@@ -224,6 +225,37 @@ public class Telemetry {
         final TelemetryCorePingBuilder builder = (TelemetryCorePingBuilder) pingBuilders.get(TelemetryCorePingBuilder.TYPE);
         builder.getExperimentsMeasurement()
                 .setActiveExperiments(activeExperimentsIds);
+
+        return this;
+    }
+
+    /**
+     * Records all experiments the client knows of in the event ping.
+     *
+     * @param experiments A map of experiments the client knows of. Mapping experiment name to a Boolean value that is
+     *                    true if the client is part of the experiment and false if the client is not part of the
+     *                    experiment.
+     */
+    public Telemetry recordExperiments(Map<String, Boolean> experiments) {
+        if (!configuration.isCollectionEnabled()) {
+            return this;
+        }
+
+        final TelemetryPingBuilder mobileEventBuilder = pingBuilders.get(TelemetryMobileEventPingBuilder.TYPE);
+        final TelemetryPingBuilder focusEventBuilder = pingBuilders.get(TelemetryEventPingBuilder.TYPE);
+
+        final ExperimentsMapMeasurement measurement;
+
+        if (mobileEventBuilder != null) {
+            measurement = ((TelemetryMobileEventPingBuilder) mobileEventBuilder).getExperimentsMapMeasurement();
+        } else if (focusEventBuilder != null) {
+            measurement = ((TelemetryEventPingBuilder) focusEventBuilder).getExperimentsMapMeasurement();
+        } else {
+            throw new IllegalStateException("Expect either TelemetryEventPingBuilder or " +
+                    "TelemetryMobileEventPingBuilder to be record experiments");
+        }
+
+        measurement.setExperiments(experiments);
 
         return this;
     }

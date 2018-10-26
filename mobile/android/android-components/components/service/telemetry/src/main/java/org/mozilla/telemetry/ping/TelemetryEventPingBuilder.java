@@ -5,14 +5,7 @@
 package org.mozilla.telemetry.ping;
 
 import org.mozilla.telemetry.config.TelemetryConfiguration;
-import org.mozilla.telemetry.measurement.CreatedTimestampMeasurement;
-import org.mozilla.telemetry.measurement.EventsMeasurement;
-import org.mozilla.telemetry.measurement.LocaleMeasurement;
-import org.mozilla.telemetry.measurement.OperatingSystemMeasurement;
-import org.mozilla.telemetry.measurement.OperatingSystemVersionMeasurement;
-import org.mozilla.telemetry.measurement.SequenceMeasurement;
-import org.mozilla.telemetry.measurement.SettingsMeasurement;
-import org.mozilla.telemetry.measurement.TimezoneOffsetMeasurement;
+import org.mozilla.telemetry.measurement.*;
 
 /**
  * A telemetry ping builder for pings of type "focus-event".
@@ -27,6 +20,7 @@ public class TelemetryEventPingBuilder extends TelemetryPingBuilder {
     private static final int VERSION = 1;
 
     private EventsMeasurement eventsMeasurement;
+    private ExperimentsMapMeasurement experimentsMapMeasurement;
 
     public TelemetryEventPingBuilder(TelemetryConfiguration configuration) {
         super(configuration, TYPE, VERSION);
@@ -39,10 +33,15 @@ public class TelemetryEventPingBuilder extends TelemetryPingBuilder {
         addMeasurement(new TimezoneOffsetMeasurement());
         addMeasurement(new SettingsMeasurement(configuration));
         addMeasurement(eventsMeasurement = new EventsMeasurement(configuration));
+        addMeasurement(experimentsMapMeasurement = new ExperimentsMapMeasurement());
     }
 
     public EventsMeasurement getEventsMeasurement() {
         return eventsMeasurement;
+    }
+
+    public ExperimentsMapMeasurement getExperimentsMapMeasurement() {
+        return experimentsMapMeasurement;
     }
 
     @Override

@@ -19,9 +19,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.event.TelemetryEvent;
-import org.mozilla.telemetry.measurement.DefaultSearchMeasurement;
-import org.mozilla.telemetry.measurement.SearchesMeasurement;
-import org.mozilla.telemetry.measurement.SessionDurationMeasurement;
+import org.mozilla.telemetry.measurement.*;
 import org.mozilla.telemetry.net.HttpURLConnectionTelemetryClient;
 import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;
@@ -39,9 +37,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
@@ -496,6 +492,52 @@ public class TelemetryTest {
                 mock(TelemetryScheduler.class));
 
         assertEquals(clientId, telemetry.getClientId());
+    }
+
+    @Test
+    public void testExperimentsAreForwardedToFocusEventPingMeasurement() {
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
+        final TelemetryStorage storage = mock(TelemetryStorage.class);
+        final TelemetryClient client = mock(TelemetryClient.class);
+        final TelemetryScheduler scheduler = mock(TelemetryScheduler.class);
+
+        final ExperimentsMapMeasurement measurement = mock(ExperimentsMapMeasurement.class);
+        final TelemetryEventPingBuilder builder = spy(new TelemetryEventPingBuilder(configuration));
+        doReturn(measurement).when(builder).getExperimentsMapMeasurement();
+
+        final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler)
+                .addPingBuilder(builder);
+
+        final Map<String, Boolean> experiments = new HashMap<>();
+        experiments.put("use-gecko", true);
+        experiments.put("use-homescreen-tips", false);
+
+        telemetry.recordExperiments(experiments);
+
+        verify(measurement).setExperiments(experiments);
+    }
+
+    @Test
+    public void testExperimentsAreForwardedToMobileEventPingMeasurement() {
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
+        final TelemetryStorage storage = mock(TelemetryStorage.class);
+        final TelemetryClient client = mock(TelemetryClient.class);
+        final TelemetryScheduler scheduler = mock(TelemetryScheduler.class);
+
+        final ExperimentsMapMeasurement measurement = mock(ExperimentsMapMeasurement.class);
+        final TelemetryMobileEventPingBuilder builder = spy(new TelemetryMobileEventPingBuilder(configuration));
+        doReturn(measurement).when(builder).getExperimentsMapMeasurement();
+
+        final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler)
+                .addPingBuilder(builder);
+
+        final Map<String, Boolean> experiments = new HashMap<>();
+        experiments.put("use-gecko", true);
+        experiments.put("use-homescreen-tips", false);
+
+        telemetry.recordExperiments(experiments);
+
+        verify(measurement).setExperiments(experiments);
     }
 
     @Test(expected = IllegalStateException.class)
