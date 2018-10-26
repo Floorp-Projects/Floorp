@@ -63,7 +63,6 @@ BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript
     profilerExitFrameToggleOffset_(),
     traceLoggerToggleOffsets_(cx),
     traceLoggerScriptTextIdOffset_(),
-    yieldAndAwaitOffsets_(cx),
     modifiesArguments_(false)
 {
 #ifdef JS_CODEGEN_NONE
@@ -236,8 +235,11 @@ BaselineCompiler::compile()
         return Method_Error;
     }
 
-    // Note: There is an extra entry in the bytecode type map for the search hint, see below.
+    // Note: There is an extra entry in the bytecode type map for the search
+    // hint, see below.
     size_t bytecodeTypeMapEntries = script->nTypeSets() + 1;
+    size_t yieldAndAwaitEntries =
+        script->hasYieldAndAwaitOffsets() ? script->yieldAndAwaitOffsets().size() : 0;
     UniquePtr<BaselineScript> baselineScript(
         BaselineScript::New(script, bailoutPrologueOffset_.offset(),
                             debugOsrPrologueOffset_.offset(),
@@ -249,7 +251,7 @@ BaselineCompiler::compile()
                             pcMappingIndexEntries.length(),
                             pcEntries.length(),
                             bytecodeTypeMapEntries,
-                            yieldAndAwaitOffsets_.length(),
+                            yieldAndAwaitEntries,
                             traceLoggerToggleOffsets_.length()),
         JS::DeletePolicy<BaselineScript>(cx->runtime()));
     if (!baselineScript) {
@@ -315,7 +317,8 @@ BaselineCompiler::compile()
     // searches for the sought entry when queries are in linear order.
     bytecodeMap[script->nTypeSets()] = 0;
 
-    baselineScript->copyYieldAndAwaitEntries(script, yieldAndAwaitOffsets_);
+    // Compute yield/await native resume addresses.
+    baselineScript->computeYieldAndAwaitNativeOffsets(script);
 
     if (compileDebugInstrumentation_) {
         baselineScript->setHasDebugInstrumentation();
@@ -4822,32 +4825,8 @@ BaselineCompiler::emit_JSOP_GENERATOR()
 }
 
 bool
-BaselineCompiler::addYieldAndAwaitOffset()
-{
-    MOZ_ASSERT(*pc == JSOP_INITIALYIELD || *pc == JSOP_YIELD || *pc == JSOP_AWAIT);
-
-    uint32_t yieldAndAwaitIndex = GET_UINT24(pc);
-
-    while (yieldAndAwaitIndex >= yieldAndAwaitOffsets_.length()) {
-        if (!yieldAndAwaitOffsets_.append(0)) {
-            return false;
-        }
-    }
-
-    static_assert(JSOP_INITIALYIELD_LENGTH == JSOP_YIELD_LENGTH &&
-                  JSOP_INITIALYIELD_LENGTH == JSOP_AWAIT_LENGTH,
-                  "code below assumes INITIALYIELD and YIELD and AWAIT have same length");
-    yieldAndAwaitOffsets_[yieldAndAwaitIndex] = script->pcToOffset(pc + JSOP_YIELD_LENGTH);
-    return true;
-}
-
-bool
 BaselineCompiler::emit_JSOP_INITIALYIELD()
 {
-    if (!addYieldAndAwaitOffset()) {
-        return false;
-    }
-
     frame.syncStack(0);
     MOZ_ASSERT(frame.stackDepth() == 1);
 
@@ -4885,10 +4864,6 @@ static const VMFunction NormalSuspendInfo =
 bool
 BaselineCompiler::emit_JSOP_YIELD()
 {
-    if (!addYieldAndAwaitOffset()) {
-        return false;
-    }
-
     // Store generator in R0.
     frame.popRegsAndSync(1);
 
