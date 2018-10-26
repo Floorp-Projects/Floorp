@@ -239,11 +239,11 @@ BaselineCompiler::compile()
     // Note: There is an extra entry in the bytecode type map for the search hint, see below.
     size_t bytecodeTypeMapEntries = script->nTypeSets() + 1;
     UniquePtr<BaselineScript> baselineScript(
-        BaselineScript::New(script, prologueOffset_.offset(),
-                            epilogueOffset_.offset(),
+        BaselineScript::New(script, bailoutPrologueOffset_.offset(),
+                            debugOsrPrologueOffset_.offset(),
+                            debugOsrEpilogueOffset_.offset(),
                             profilerEnterFrameToggleOffset_.offset(),
                             profilerExitFrameToggleOffset_.offset(),
-                            postDebugPrologueOffset_.offset(),
                             icEntries_.length(),
                             retAddrEntries_.length(),
                             pcMappingIndexEntries.length(),
@@ -486,7 +486,7 @@ BaselineCompiler::emitPrologue()
 
     // Record the offset of the prologue, because Ion can bailout before
     // the env chain is initialized.
-    prologueOffset_ = CodeOffset(masm.currentOffset());
+    bailoutPrologueOffset_ = CodeOffset(masm.currentOffset());
 
     // When compiling with Debugger instrumentation, set the debuggeeness of
     // the frame before any operation that can call into the VM.
@@ -525,7 +525,7 @@ BaselineCompiler::emitEpilogue()
 {
     // Record the offset of the epilogue, so we can do early return from
     // Debugger handlers during on-stack recompile.
-    epilogueOffset_ = CodeOffset(masm.currentOffset());
+    debugOsrEpilogueOffset_ = CodeOffset(masm.currentOffset());
 
     masm.bind(&return_);
 
@@ -800,7 +800,7 @@ BaselineCompiler::emitDebugPrologue()
         masm.bind(&done);
     }
 
-    postDebugPrologueOffset_ = CodeOffset(masm.currentOffset());
+    debugOsrPrologueOffset_ = CodeOffset(masm.currentOffset());
 
     return true;
 }

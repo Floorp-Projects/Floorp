@@ -305,16 +305,17 @@ class BaselineCompiler final
     NonAssertingLabel return_;
     NonAssertingLabel postBarrierSlot_;
 
-    // Native code offset right before the scope chain is initialized.
-    CodeOffset prologueOffset_;
+    // Early Ion bailouts will enter at this address. This is after frame
+    // construction and before environment chain is initialized.
+    CodeOffset bailoutPrologueOffset_;
 
-    // Native code offset right before the frame is popped and the method
-    // returned from.
-    CodeOffset epilogueOffset_;
+    // Baseline Debug OSR during prologue will enter at this address. This is
+    // right after where a debug prologue VM call would have returned.
+    CodeOffset debugOsrPrologueOffset_;
 
-    // Native code offset right after debug prologue and epilogue, or
-    // equivalent positions when debug mode is off.
-    CodeOffset postDebugPrologueOffset_;
+    // Baseline Debug OSR during epilogue will enter at this address. This is
+    // right after where a debug epilogue VM call would have returned.
+    CodeOffset debugOsrEpilogueOffset_;
 
     // For each INITIALYIELD or YIELD or AWAIT op, this Vector maps the yield
     // index to the bytecode offset of the next op.
