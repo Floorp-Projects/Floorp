@@ -6,7 +6,7 @@ namespace {
 
 // An interceptor that triggers GC:
 struct ErrorInterceptorWithGC : JSErrorInterceptor {
-    void interceptError(JSContext* cx, const JS::Value& val) override {
+    void interceptError(JSContext* cx, JS::HandleValue val) override {
         JS::PrepareForFullGC(cx);
         JS::NonIncrementalGC(cx, GC_SHRINK, JS::gcreason::DEBUG_GC);
     }

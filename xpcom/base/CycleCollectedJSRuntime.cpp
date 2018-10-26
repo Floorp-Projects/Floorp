@@ -1599,7 +1599,7 @@ CycleCollectedJSRuntime::ErrorInterceptor::Shutdown(JSRuntime* rt)
 }
 
 /* virtual */ void
-CycleCollectedJSRuntime::ErrorInterceptor::interceptError(JSContext* cx, const JS::Value& exn)
+CycleCollectedJSRuntime::ErrorInterceptor::interceptError(JSContext* cx, JS::HandleValue exn)
 {
   if (mThrownError) {
     // We already have an error, we don't need anything more.
@@ -1631,7 +1631,6 @@ CycleCollectedJSRuntime::ErrorInterceptor::interceptError(JSContext* cx, const J
   // While copying the details of an exception could be expensive, in most runs,
   // this will be done at most once during the execution of the process, so the
   // total cost should be reasonable.
-  JS::RootedValue value(cx, exn);
 
   ErrorDetails details;
   details.mType = *type;
@@ -1640,7 +1639,7 @@ CycleCollectedJSRuntime::ErrorInterceptor::interceptError(JSContext* cx, const J
   // work, we want to avoid that complex use case.
   // Fortunately, we have already checked above that `exn` is an exception object,
   // so nothing such should happen.
-  nsContentUtils::ExtractErrorValues(cx, value, details.mFilename, &details.mLine, &details.mColumn, details.mMessage);
+  nsContentUtils::ExtractErrorValues(cx, exn, details.mFilename, &details.mLine, &details.mColumn, details.mMessage);
 
   JS::UniqueChars buf = JS::FormatStackDump(cx, /* showArgs = */ false, /* showLocals = */ false, /* showThisProps = */ false);
   CopyUTF8toUTF16(mozilla::MakeStringSpan(buf.get()), details.mStack);
