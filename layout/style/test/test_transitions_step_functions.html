@@ -87,6 +87,44 @@ run_test("steps(8,end)", 0.80, 0.75);
 run_test("steps(8,end)", 0.90, 0.875);
 run_test("steps(8,end)", 1.00, 1.0);
 
+// steps(_, jump-*)
+run_test("steps(2, jump-start)", 0.00, 0.5);
+run_test("steps(2, jump-start)", 0.49, 0.5);
+run_test("steps(2, jump-start)", 0.50, 1.0);
+run_test("steps(2, jump-start)", 0.99, 1.0);
+run_test("steps(2, jump-start)", 1.00, 1.0);
+
+run_test("steps(2, jump-end)", 0.00, 0.0);
+run_test("steps(2, jump-end)", 0.49, 0.0);
+run_test("steps(2, jump-end)", 0.50, 0.5);
+run_test("steps(2, jump-end)", 0.99, 0.5);
+run_test("steps(2, jump-end)", 1.00, 1.0);
+
+run_test("steps(1, jump-both)", 0.00, 0.5);
+run_test("steps(1, jump-both)", 0.10, 0.5);
+run_test("steps(1, jump-both)", 0.99, 0.5);
+run_test("steps(1, jump-both)", 1.00, 1.0);
+
+run_test("steps(3, jump-both)", 0.00, 0.25);
+run_test("steps(3, jump-both)", 0.33, 0.25);
+run_test("steps(3, jump-both)", 0.34, 0.5);
+run_test("steps(3, jump-both)", 0.66, 0.5);
+run_test("steps(3, jump-both)", 0.67, 0.75);
+run_test("steps(3, jump-both)", 0.99, 0.75);
+run_test("steps(3, jump-both)", 1.00, 1.0);
+
+run_test("steps(2, jump-none)", 0.00, 0.0);
+run_test("steps(2, jump-none)", 0.49, 0.0);
+run_test("steps(2, jump-none)", 0.50, 1.0);
+run_test("steps(2, jump-none)", 1.00, 1.0);
+
+run_test("steps(3, jump-none)", 0.00, 0.0);
+run_test("steps(3, jump-none)", 0.33, 0.0);
+run_test("steps(3, jump-none)", 0.34, 0.5);
+run_test("steps(3, jump-none)", 0.66, 0.5);
+run_test("steps(3, jump-none)", 0.67, 1.0);
+run_test("steps(3, jump-none)", 1.00, 1.0);
+
 </script>
 </pre>
 </body>
