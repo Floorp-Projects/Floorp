@@ -105,9 +105,9 @@ test_targets=$(echo "${test_targets}" | sed '$!s~$~\\~g')
 sed "s/TEST_TARGETS/${test_targets}/g" $FLANK_CONF_TEMPLATE > $FLANK_CONF
 rm -f TEST_TARGETS
 $JAVA_BIN -jar $FLANK_BIN android run --config=$FLANK_CONF
-cp -r "$WORKDIR/results" "$WORKDIR/test_artifacts"
-
 exitcode=$?
+
+cp -r "$WORKDIR/results" "$WORKDIR/test_artifacts"
 
 # Now exit the script with the exit code from the test run. (Only 0 if all test executions passed)
 exit $exitcode
