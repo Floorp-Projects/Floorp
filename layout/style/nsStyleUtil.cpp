@@ -282,12 +282,24 @@ nsStyleUtil::AppendStepsTimingFunction(uint32_t aStepNumber,
   aResult.AppendLiteral("steps(");
   aResult.AppendInt(aStepNumber);
   switch (aStepPos) {
+    case StyleStepPosition::JumpStart:
+      aResult.AppendLiteral(", jump-start)");
+      break;
+    case StyleStepPosition::JumpNone:
+      aResult.AppendLiteral(", jump-none)");
+      break;
+    case StyleStepPosition::JumpBoth:
+      aResult.AppendLiteral(", jump-both)");
+      break;
     case StyleStepPosition::Start:
       aResult.AppendLiteral(", start)");
       break;
+    case StyleStepPosition::JumpEnd:
     case StyleStepPosition::End:
-    default:
       aResult.AppendLiteral(")");
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported timing function");
   }
 }
 
