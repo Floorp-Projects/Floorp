@@ -592,6 +592,9 @@ win64-ccov/debug:
         - win64-cbindgen
         - win64-sccache
         - win64-node
+    fetches:
+        toolchain:
+            - win64-grcov
 
 win64-asan/debug:
     description: "Win64 Debug ASAN"
