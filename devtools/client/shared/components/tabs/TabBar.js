@@ -317,6 +317,9 @@ class Tabbar extends Component {
       });
     }
 
+    // Ensure tab id and title are used as fallbacks if not defined as panel props.
+    tab.panel.props = Object.assign({ id: tab.id, title: tab.title }, tab.panel.props);
+
     return tab.panel;
   }
 
