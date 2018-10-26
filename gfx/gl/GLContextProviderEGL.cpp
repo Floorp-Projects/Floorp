@@ -158,18 +158,19 @@ is_power_of_two(int v)
 }
 
 static void
-DestroySurface(const EGLSurface surf)
-{
-    if (!surf)
-        return;
+DestroySurface(EGLSurface oldSurface) {
+    auto* egl = gl::GLLibraryEGL::Get();
 
-    const auto& egl = gl::GLLibraryEGL::Get();
-
-    // TODO: This breaks TLS MakeCurrent caching.
-    MOZ_ALWAYS_TRUE( egl->fDestroySurface(EGL_DISPLAY(), surf) );
+    if (oldSurface != EGL_NO_SURFACE) {
+        // TODO: This breaks TLS MakeCurrent caching.
+        egl->fMakeCurrent(EGL_DISPLAY(),
+                          EGL_NO_SURFACE, EGL_NO_SURFACE,
+                          EGL_NO_CONTEXT);
+        egl->fDestroySurface(EGL_DISPLAY(), oldSurface);
 #if defined(MOZ_WAYLAND)
-    DeleteWaylandGLSurface(surf);
+        DeleteWaylandGLSurface(oldSurface);
 #endif
+    }
 }
 
 static EGLSurface
@@ -283,7 +284,7 @@ GLContextEGLFactory::Create(EGLNativeWindowType aWindow,
                                                             surface, &discardFailureId);
     if (!gl) {
         gfxCriticalNote << "Failed to create EGLContext!";
-        DestroySurface(surface);
+        mozilla::gl::DestroySurface(surface);
         return nullptr;
     }
 
@@ -325,9 +326,9 @@ GLContextEGL::~GLContextEGL()
 #endif
 
     mEgl->fDestroyContext(EGL_DISPLAY(), mContext);
-    DestroySurface(mSurface);
-    MOZ_ASSERT(!mFallbackSurface || mFallbackSurface != mSurface);
-    DestroySurface(mFallbackSurface);
+
+    mozilla::gl::DestroySurface(mSurface);
+    mozilla::gl::DestroySurface(mFallbackSurface);
 }
 
 bool
@@ -350,7 +351,13 @@ GLContextEGL::Init()
     SetupLookupFunction();
     if (!InitWithPrefix("gl", true))
         return false;
-    MOZ_ASSERT(IsCurrent());
+
+    bool current = MakeCurrent();
+    if (!current) {
+        gfx::LogFailure(NS_LITERAL_CSTRING(
+            "Couldn't get device attachments for device."));
+        return false;
+    }
 
     static_assert(sizeof(GLint) >= sizeof(int32_t), "GLint is smaller than int32_t");
     mMaxTextureImageSize = INT32_MAX;
@@ -401,10 +408,7 @@ GLContextEGL::ReleaseTexImage()
 }
 
 void
-GLContextEGL::SetEGLSurfaceOverride(const EGLSurface surf)
-{
-    MOZ_ASSERT(!surf || surf != mSurface);
-
+GLContextEGL::SetEGLSurfaceOverride(EGLSurface surf) {
     if (Screen()) {
         /* Blit `draw` to `read` if we need to, before we potentially juggle
           * `read` around. If we don't, we might attach a different `read`,
@@ -415,21 +419,15 @@ GLContextEGL::SetEGLSurfaceOverride(const EGLSurface surf)
     }
 
     mSurfaceOverride = surf;
-    MOZ_ALWAYS_TRUE( MakeCurrent(true) );
+    DebugOnly<bool> ok = MakeCurrent(true);
+    MOZ_ASSERT(ok);
 }
 
 bool
 GLContextEGL::MakeCurrentImpl() const
 {
-    if (IsDestroyed()) {
-        MOZ_ALWAYS_TRUE( mEgl->fMakeCurrent(EGL_DISPLAY(), nullptr, nullptr, nullptr) );
-        return false;
-    }
-
-    auto surface = mSurface;
-    if (mSurfaceOverride) {
-        surface = mSurfaceOverride;
-    }
+    EGLSurface surface = (mSurfaceOverride != EGL_NO_SURFACE) ? mSurfaceOverride
+                                                              : mSurface;
     if (!surface) {
         surface = mFallbackSurface;
     }
@@ -459,8 +457,7 @@ GLContextEGL::IsCurrentImpl() const
 }
 
 bool
-GLContextEGL::RenewSurface(CompositorWidget* const aWidget)
-{
+GLContextEGL::RenewSurface(CompositorWidget* aWidget) {
     if (!mOwnsContext) {
         return false;
     }
@@ -482,13 +479,14 @@ GLContextEGL::RenewSurface(CompositorWidget* const aWidget)
 }
 
 void
-GLContextEGL::ReleaseSurface()
-{
-    if (!mOwnsContext)
-        return;
-
-    DestroySurface(mSurface);
-    mSurface = nullptr;
+GLContextEGL::ReleaseSurface() {
+    if (mOwnsContext) {
+        mozilla::gl::DestroySurface(mSurface);
+    }
+    if (mSurface == mSurfaceOverride) {
+        mSurfaceOverride = EGL_NO_SURFACE;
+    }
+    mSurface = EGL_NO_SURFACE;
 }
 
 bool
