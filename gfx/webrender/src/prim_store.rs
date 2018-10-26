@@ -2583,7 +2583,7 @@ impl PrimitiveInstance {
             self.prepared_frame_id = frame_state.render_tasks.frame_id();
         }
 
-        match *prim_details {
+        self.opacity = match *prim_details {
             PrimitiveDetails::TextRun(ref mut text) => {
                 // The transform only makes sense for screen space rasterization
                 let transform = prim_context.spatial_node.world_content_transform.to_transform();
@@ -2595,6 +2595,7 @@ impl PrimitiveInstance {
                     display_list,
                     frame_state,
                 );
+                PrimitiveOpacity::translucent()
             }
             PrimitiveDetails::Brush(ref mut brush) => {
                 match brush.kind {
@@ -2624,13 +2625,6 @@ impl PrimitiveInstance {
                                 frame_state.gpu_cache.invalidate(&mut self.gpu_location);
                             }
 
-                            // Update opacity for this primitive to ensure the correct
-                            // batching parameters are used.
-                            self.opacity.is_opaque =
-                                image_properties.descriptor.is_opaque &&
-                                opacity_binding.current == 1.0 &&
-                                color.a == 1.0;
-
                             if *tile_spacing != LayoutSize::zero() && !is_tiled {
                                 *source = ImageSource::Cache {
                                     // Size in device-pixels we need to allocate in render task cache.
@@ -2652,6 +2646,7 @@ impl PrimitiveInstance {
                             }
 
                             let mut request_source_image = false;
+                            let mut is_opaque = image_properties.descriptor.is_opaque;
 
                             // Every frame, for cached items, we need to request the render
                             // task cache item. The closure will be invoked on the first
@@ -2670,9 +2665,7 @@ impl PrimitiveInstance {
                                     size.width += padding.horizontal();
                                     size.height += padding.vertical();
 
-                                    if padding != DeviceIntSideOffsets::zero() {
-                                        self.opacity.is_opaque = false;
-                                    }
+                                    is_opaque &= padding == DeviceIntSideOffsets::zero();
 
                                     let image_cache_key = ImageCacheKey {
                                         request,
@@ -2811,18 +2804,17 @@ impl PrimitiveInstance {
                                     frame_state.gpu_cache,
                                 );
                             }
+
+                            if is_opaque {
+                                PrimitiveOpacity::from_alpha(opacity_binding.current * color.a)
+                            } else {
+                                PrimitiveOpacity::translucent()
+                            }
+                        } else {
+                            PrimitiveOpacity::opaque()
                         }
                     }
                     BrushKind::LineDecoration { color, ref mut handle, style, orientation, wavy_line_thickness } => {
-                        // Update opacity for this primitive to ensure the correct
-                        // batching parameters are used.
-                        self.opacity.is_opaque = match style {
-                            LineStyle::Solid => color.a == 1.0,
-                            LineStyle::Dotted |
-                            LineStyle::Dashed |
-                            LineStyle::Wavy => false,
-                        };
-
                         // Work out the device pixel size to be used to cache this line decoration.
                         let size = get_line_decoration_sizes(
                             &prim_local_rect.size,
@@ -2831,7 +2823,7 @@ impl PrimitiveInstance {
                             wavy_line_thickness,
                         );
 
-                        if is_chased {
+                        if cfg!(debug_assertions) && is_chased {
                             println!("\tline decoration opaque={}, sizes={:?}", self.opacity.is_opaque, size);
                         }
 
@@ -2903,10 +2895,15 @@ impl PrimitiveInstance {
                                 }
                             ));
                         }
+
+                        match style {
+                            LineStyle::Solid => PrimitiveOpacity::from_alpha(color.a),
+                            LineStyle::Dotted |
+                            LineStyle::Dashed |
+                            LineStyle::Wavy => PrimitiveOpacity::translucent(),
+                        }
                     }
                     BrushKind::YuvImage { format, yuv_key, image_rendering, .. } => {
-                        self.opacity = PrimitiveOpacity::opaque();
-
                         let channel_num = format.get_plane_num();
                         debug_assert!(channel_num <= 3);
                         for channel in 0 .. channel_num {
@@ -2919,6 +2916,8 @@ impl PrimitiveInstance {
                                 frame_state.gpu_cache,
                             );
                         }
+
+                        PrimitiveOpacity::opaque()
                     }
                     BrushKind::Border { ref mut source, .. } => {
                         match *source {
@@ -2928,15 +2927,15 @@ impl PrimitiveInstance {
                                     .get_image_properties(request.key);
 
                                 if let Some(image_properties) = image_properties {
-                                    // Update opacity for this primitive to ensure the correct
-                                    // batching parameters are used.
-                                    self.opacity.is_opaque =
-                                        image_properties.descriptor.is_opaque;
-
                                     frame_state.resource_cache.request_image(
                                         request,
                                         frame_state.gpu_cache,
                                     );
+                                    PrimitiveOpacity {
+                                        is_opaque: image_properties.descriptor.is_opaque,
+                                    }
+                                } else {
+                                    PrimitiveOpacity::opaque()
                                 }
                             }
                             BorderSource::Border { ref border, ref widths, ref mut segments, .. } => {
@@ -2979,6 +2978,9 @@ impl PrimitiveInstance {
                                         }
                                     ));
                                 }
+
+                                // Shouldn't matter, since the segment opacity is used instead
+                                PrimitiveOpacity::translucent()
                             }
                         }
                     }
@@ -3031,6 +3033,9 @@ impl PrimitiveInstance {
                                 },
                             );
                         }
+
+                        //TODO: can we make it opaque in some cases?
+                        PrimitiveOpacity::translucent()
                     }
                     BrushKind::LinearGradient {
                         stops_range,
@@ -3045,19 +3050,6 @@ impl PrimitiveInstance {
                         ref mut visible_tiles,
                         ..
                     } => {
-                        // If the coverage of the gradient extends to or beyond
-                        // the primitive rect, then the opacity can be determined
-                        // by the colors of the stops. If we have tiling / spacing
-                        // then we just assume the gradient is translucent for now.
-                        // (In the future we could consider segmenting in some cases).
-                        let stride = stretch_size + tile_spacing;
-                        self.opacity = if stride.width >= prim_local_rect.size.width &&
-                           stride.height >= prim_local_rect.size.height {
-                            stops_opacity
-                        } else {
-                            PrimitiveOpacity::translucent()
-                        };
-
                         build_gradient_stops_request(
                             stops_handle,
                             stops_range,
@@ -3094,6 +3086,19 @@ impl PrimitiveInstance {
                                 }
                             );
                         }
+
+                        // If the coverage of the gradient extends to or beyond
+                        // the primitive rect, then the opacity can be determined
+                        // by the colors of the stops. If we have tiling / spacing
+                        // then we just assume the gradient is translucent for now.
+                        // (In the future we could consider segmenting in some cases).
+                        let stride = stretch_size + tile_spacing;
+                        if stride.width >= prim_local_rect.size.width &&
+                           stride.height >= prim_local_rect.size.height {
+                            stops_opacity
+                        } else {
+                            PrimitiveOpacity::translucent()
+                        }
                     }
                     BrushKind::Picture { pic_index, .. } => {
                         let pic = &mut pictures[pic_index.0];
@@ -3117,6 +3122,8 @@ impl PrimitiveInstance {
                         } else {
                             self.clipped_world_rect = None;
                         }
+
+                        PrimitiveOpacity::translucent()
                     }
                     BrushKind::Solid { ref color, ref mut opacity_binding, .. } => {
                         // If the opacity changed, invalidate the GPU cache so that
@@ -3126,12 +3133,12 @@ impl PrimitiveInstance {
                         if opacity_binding.update(frame_context.scene_properties) {
                             frame_state.gpu_cache.invalidate(&mut self.gpu_location);
                         }
-                        self.opacity = PrimitiveOpacity::from_alpha(opacity_binding.current * color.a);
+                        PrimitiveOpacity::from_alpha(opacity_binding.current * color.a)
                     }
-                    BrushKind::Clear => {}
+                    BrushKind::Clear => PrimitiveOpacity::opaque(),
                 }
             }
-        }
+        };
 
         if is_tiled {
             // we already requested each tile's gpu data.
