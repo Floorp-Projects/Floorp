@@ -1260,7 +1260,7 @@ InitFromBailout(JSContext* cx, size_t frameNo,
                 // resume into the prologue for function scripts.
                 MOZ_ASSERT(fun);
                 MOZ_ASSERT(numUnsynced == 0);
-                opReturnAddr = baselineScript->prologueEntryAddr();
+                opReturnAddr = baselineScript->bailoutPrologueEntryAddr();
                 JitSpew(JitSpew_BaselineBailouts, "      Resuming into prologue.");
 
                 // Undo the progress for any loop entry we thought we were skipping
