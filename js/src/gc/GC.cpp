@@ -4843,7 +4843,7 @@ GCRuntime::markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase)
     markWeakReferences<SweepGroupZonesIter>(phase);
 }
 
-template <class ZoneIterT, class CompartmentIterT>
+template <class ZoneIterT>
 void
 GCRuntime::markGrayReferences(gcstats::PhaseKind phase)
 {
@@ -4864,7 +4864,7 @@ GCRuntime::markGrayReferences(gcstats::PhaseKind phase)
 void
 GCRuntime::markGrayReferencesInCurrentGroup(gcstats::PhaseKind phase)
 {
-    markGrayReferences<SweepGroupZonesIter, SweepGroupCompartmentsIter>(phase);
+    markGrayReferences<SweepGroupZonesIter>(phase);
 }
 
 void
@@ -4876,7 +4876,7 @@ GCRuntime::markAllWeakReferences(gcstats::PhaseKind phase)
 void
 GCRuntime::markAllGrayReferences(gcstats::PhaseKind phase)
 {
-    markGrayReferences<GCZonesIter, GCCompartmentsIter>(phase);
+    markGrayReferences<GCZonesIter>(phase);
 }
 
 #ifdef JS_GC_ZEAL
