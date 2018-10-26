@@ -64,6 +64,7 @@ module.exports = {
     // generators, see bug 968038.
     "StopIteration": false,
     "StructuredCloneHolder": false,
+    "TelemetryStopwatch": false,
     "WebAssembly": false,
     "WebExtensionContentScript": false,
     "WebExtensionPolicy": false,

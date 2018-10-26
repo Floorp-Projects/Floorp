@@ -61,9 +61,14 @@ EXPORTS.mozilla += [
     'other/ProcessedStack.h',
 ]
 
+EXPORTS.mozilla.telemetry += [
+    'core/Stopwatch.h',
+]
+
 SOURCES += [
     'core/ipc/TelemetryIPC.cpp',
     'core/ipc/TelemetryIPCAccumulator.cpp',
+    'core/Stopwatch.cpp',
     'core/Telemetry.cpp',
     'core/TelemetryCommon.cpp',
     'core/TelemetryEvent.cpp',
