@@ -27,6 +27,7 @@ import android.view.View
 import android.widget.TextView
 import mozilla.components.browser.session.Session
 import org.mozilla.focus.R
+import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -53,7 +54,8 @@ object WebContextMenu {
     fun show(
         context: Context,
         callback: IWebView.Callback,
-        hitTarget: IWebView.HitTarget
+        hitTarget: IWebView.HitTarget,
+        session: Session
     ) {
         if (!(hitTarget.isLink || hitTarget.isImage)) {
             // We don't support any other classes yet:
@@ -98,7 +100,7 @@ object WebContextMenu {
             navigationMenuView.isVerticalScrollBarEnabled = false
         }
 
-        setupMenuForHitTarget(dialog, menu, callback, hitTarget, context)
+        setupMenuForHitTarget(dialog, menu, callback, hitTarget, context, session)
 
         val warningView = view.findViewById<View>(R.id.warning) as TextView
         if (hitTarget.isImage) {
@@ -137,20 +139,28 @@ object WebContextMenu {
      * has already been created - we need the dialog in order to be able to dismiss it in the
      * menu callbacks.
      */
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "LongParameterList")
     private fun setupMenuForHitTarget(
         dialog: Dialog,
         navigationView: NavigationView,
         callback: IWebView.Callback,
         hitTarget: IWebView.HitTarget,
-        context: Context
+        context: Context,
+        session: Session
     ) = with(navigationView) {
         val appLinkData =
             if (hitTarget.linkURL != null) getAppDataForLink(context, hitTarget.linkURL) else null
         inflateMenu(R.menu.menu_browser_context)
 
         menu.findItem(R.id.menu_open_with_app).isVisible = appLinkData != null
-        menu.findItem(R.id.menu_new_tab).isVisible = hitTarget.isLink
+        menu.findItem(R.id.menu_new_tab).isVisible = hitTarget.isLink &&
+                !session.isCustomTabSession()
+        menu.findItem(R.id.menu_open_in_focus).title = resources.getString(
+            R.string.menu_open_with_default_browser2,
+            resources.getString(R.string.app_name)
+        )
+        menu.findItem(R.id.menu_open_in_focus).isVisible = hitTarget.isLink &&
+                session.isCustomTabSession()
         menu.findItem(R.id.menu_link_share).isVisible = hitTarget.isLink
         menu.findItem(R.id.menu_link_copy).isVisible = hitTarget.isLink
         menu.findItem(R.id.menu_image_share).isVisible = hitTarget.isImage
@@ -164,16 +174,33 @@ object WebContextMenu {
 
             when (item.itemId) {
                 R.id.menu_open_with_app -> {
-                    val fragment = OpenWithFragment.newInstance(appLinkData!!, hitTarget.linkURL, null)
-                    fragment.show(context.asFragmentActivity()!!.supportFragmentManager, OpenWithFragment.FRAGMENT_TAG)
+                    val fragment =
+                        OpenWithFragment.newInstance(appLinkData!!, hitTarget.linkURL, null)
+                    fragment.show(
+                        context.asFragmentActivity()!!.supportFragmentManager,
+                        OpenWithFragment.FRAGMENT_TAG
+                    )
 
                     true
                 }
+                R.id.menu_open_in_focus -> {
+                    // Open selected link in Focus and navigate there
+                    val newSession = Session(hitTarget.linkURL, source = Session.Source.MENU)
+                    context.components.sessionManager.add(newSession, selected = true)
+
+                    val intent = Intent(context, MainActivity::class.java)
+                    intent.action = Intent.ACTION_MAIN
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    context.startActivity(intent)
+
+                    TelemetryWrapper.openLinkInFullBrowserFromCustomTabEvent()
+                    true
+                }
                 R.id.menu_new_tab -> {
-                    val session = Session(hitTarget.linkURL, source = Session.Source.MENU)
+                    val newSession = Session(hitTarget.linkURL, source = Session.Source.MENU)
                     context.components.sessionManager.add(
-                            session,
-                            selected = Settings.getInstance(context).shouldOpenNewTabs()
+                        newSession,
+                        selected = Settings.getInstance(context).shouldOpenNewTabs()
                     )
 
                     if (!Settings.getInstance(context).shouldOpenNewTabs()) {
@@ -182,7 +209,7 @@ object WebContextMenu {
                                 (context as Activity).findViewById(android.R.id.content),
                                 R.string.new_tab_opened_snackbar)
                         snackbar.setAction(R.string.open_new_tab_snackbar) {
-                            context.components.sessionManager.select(session)
+                            context.components.sessionManager.select(newSession)
                         }
                         snackbar.show()
                     }

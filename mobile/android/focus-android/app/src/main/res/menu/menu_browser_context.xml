@@ -10,6 +10,9 @@
         android:id="@+id/menu_new_tab"
         android:title="@string/contextmenu_open_in_new_tab" />
     <item
+        android:id="@+id/menu_open_in_focus"
+        android:title="@string/menu_open_with_default_browser2" />
+    <item
         android:id="@+id/menu_link_share"
         android:title="@string/contextmenu_link_share" />
     <item

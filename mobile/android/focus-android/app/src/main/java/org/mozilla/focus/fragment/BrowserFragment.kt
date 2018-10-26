@@ -492,7 +492,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             override fun onRequestDesktopStateChanged(shouldRequestDesktop: Boolean) {}
 
             override fun onLongPress(hitTarget: IWebView.HitTarget) {
-                WebContextMenu.show(requireActivity(), this, hitTarget)
+                WebContextMenu.show(requireActivity(), this, hitTarget, session)
             }
 
             override fun onEnterFullScreen(callback: IWebView.FullscreenCallback, view: View?) {

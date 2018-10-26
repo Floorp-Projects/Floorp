@@ -626,6 +626,19 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
+    fun openLinkInFullBrowserFromCustomTabEvent() {
+        withSessionCounts(
+            TelemetryEvent.create(
+                Category.ACTION,
+                Method.OPEN,
+                Object.BROWSER_CONTEXTMENU,
+                Value.FULL_BROWSER
+            )
+        )
+            .queue()
+    }
+
+    @JvmStatic
     fun openWebContextMenuEvent() {
         TelemetryEvent.create(Category.ACTION, Method.LONG_PRESS, Object.BROWSER).queue()
     }
