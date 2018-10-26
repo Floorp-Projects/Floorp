@@ -128,3 +128,41 @@ TEST(ThreadPool, Parallelism)
 
   pool->Shutdown();
 }
+
+TEST(ThreadPool, ShutdownWithTimeout)
+{
+  Task::sCount = 0;
+  nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
+
+  for (int i = 0; i < 4; ++i) {
+    nsCOMPtr<nsIRunnable> task = new Task(i);
+    EXPECT_TRUE(task);
+
+    pool->Dispatch(task, NS_DISPATCH_NORMAL);
+  }
+
+  // Wait for a max of 300 ms. All threads should be done by then.
+  pool->ShutdownWithTimeout(300);
+  EXPECT_EQ(Task::sCount, 4);
+
+  Task::sCount = 0;
+  pool = new nsThreadPool();
+  for (int i = 0; i < 3; ++i) {
+    nsCOMPtr<nsIRunnable> task = new Task(i);
+    EXPECT_TRUE(task);
+
+    pool->Dispatch(task, NS_DISPATCH_NORMAL);
+  }
+
+  pool->Dispatch(NS_NewRunnableFunction("infinite-loop", []() {
+      printf("### running from thread that never ends: %p\n",
+             (void *) PR_GetCurrentThread());
+      while(true) {
+          PR_Sleep(PR_MillisecondsToInterval(100));
+      }
+      EXPECT_TRUE(false); // We should never get here.
+    }), NS_DISPATCH_NORMAL);
+
+  pool->ShutdownWithTimeout(1000);
+  EXPECT_EQ(Task::sCount, 3);
+}
