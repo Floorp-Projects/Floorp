@@ -50,6 +50,7 @@ setupProject(':browser-errorpages', 'components/browser/errorpages', 'Responsive
 setupProject(':browser-menu', 'components/browser/menu', 'A customizable menu for browsers.')
 setupProject(':browser-search', 'components/browser/search', 'Search plugins and companion code to load, parse and use them.')
 setupProject(':browser-session', 'components/browser/session', 'An abstract layer hiding the actual browser engine implementation.')
+setupProject(':browser-storage-memory', 'components/browser/storage-memory', 'A memory-backed implementation of core data storage.')
 setupProject(':browser-tabstray', 'components/browser/tabstray', 'A tabs tray component for browsers.')
 setupProject(':browser-toolbar', 'components/browser/toolbar', 'A customizable toolbar for browsers.')
 

@@ -257,7 +257,7 @@ class SystemEngineViewTest {
 
         val engineView = SystemEngineView(RuntimeEnvironment.application)
         val historyDelegate = object : HistoryTrackingDelegate {
-            override fun onVisited(uri: String, isReload: Boolean?, privateMode: Boolean) {
+            override fun onVisited(uri: String, isReload: Boolean, privateMode: Boolean) {
                 fail()
             }
 

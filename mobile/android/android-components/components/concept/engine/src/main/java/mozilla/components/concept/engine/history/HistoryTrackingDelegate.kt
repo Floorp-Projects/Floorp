@@ -15,7 +15,7 @@ interface HistoryTrackingDelegate {
     /**
      * A URI visit happened that an engine considers worthy of being recorded in browser's history.
      */
-    fun onVisited(uri: String, isReload: Boolean? = false, privateMode: Boolean)
+    fun onVisited(uri: String, isReload: Boolean = false, privateMode: Boolean)
 
     /**
      * Title changed for a given URI.
