@@ -678,19 +678,6 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
-// Is support for the frames() timing function enabled?
-#ifdef RELEASE_OR_BETA
-# define PREF_VALUE false
-#else
-# define PREF_VALUE true
-#endif
-VARCACHE_PREF(
-  "layout.css.frames-timing.enabled",
-   layout_css_frames_timing_enabled,
-  bool, PREF_VALUE
-)
-#undef PREF_VALUE
-
 // Should the :visited selector ever match (otherwise :link matches instead)?
 VARCACHE_PREF(
   "layout.css.visited_links_enabled",

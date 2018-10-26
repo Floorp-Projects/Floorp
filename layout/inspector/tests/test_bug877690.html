@@ -121,7 +121,7 @@ function do_test() {
   var prop = "-moz-transition";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "all", "unset", "cubic-bezier", "ease", "ease-in", "ease-in-out",
-                   "ease-out", "frames", "inherit", "linear", "none", "step-end", "step-start",
+                   "ease-out", "inherit", "linear", "none", "step-end", "step-start",
                    "steps" ];
   ok(testValues(values, expected), "property -moz-transition's values.");
 

@@ -31,10 +31,6 @@ AnimationUtils::TimingFunctionToComputedTimingFunction(
         nsTimingFunction::Type::StepEnd;
       return Some(ComputedTimingFunction::Steps(type, sf.steps()));
     }
-    case TimingFunction::TFramesFunction: {
-      FramesFunction ff = aTimingFunction.get_FramesFunction();
-      return Some(ComputedTimingFunction::Frames(ff.frames()));
-    }
     default:
       MOZ_ASSERT_UNREACHABLE(
         "Function must be null, bezier, step or frames");
