@@ -82,14 +82,6 @@
                        crop="end">&contentBlocking.notDetected;</description>
 
           <vbox id="identity-popup-content-blocking-category-list">
-            <hbox id="identity-popup-content-blocking-category-fastblock"
-                  class="identity-popup-content-blocking-category" align="center" role="group">
-              <image class="identity-popup-content-blocking-category-icon fastblock-icon"/>
-              <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.fastBlock.label;</label>
-              <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.fastBlock.blocking.label;</label>
-              <label flex="1" class="identity-popup-content-blocking-category-add-blocking text-link"
-                     onclick="ContentBlocking.openPreferences('identityPopup-CB-fastblock'); gIdentityHandler.recordClick('fb_add_blocking');">&contentBlocking.fastBlock.add.label;</label>
-            </hbox>
             <hbox id="identity-popup-content-blocking-category-tracking-protection"
                   class="identity-popup-content-blocking-category" align="center" role="group">
               <image class="identity-popup-content-blocking-category-icon tracking-protection-icon"/>

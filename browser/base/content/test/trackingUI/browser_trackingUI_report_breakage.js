@@ -86,7 +86,6 @@ add_task(async function testReportBreakageVisibility() {
       url: COOKIE_PAGE,
       prefs: {
         "browser.contentblocking.enabled": true,
-        "browser.fastblock.enabled": false,
         "privacy.trackingprotection.enabled": false,
         "network.cookie.cookieBehavior": Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
         "browser.contentblocking.reportBreakage.enabled": false,
@@ -213,9 +212,6 @@ add_task(async function testReportBreakage() {
           "network.cookie.cookieBehavior",
           "network.cookie.lifetimePolicy",
           "privacy.restrict3rdpartystorage.expiration",
-          "browser.fastblock.enabled",
-          "browser.contentblocking.fastblock.control-center.ui.enabled",
-          "browser.fastblock.timeout",
         ];
         let prefsBody = "";
 
