@@ -17,8 +17,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
-
 ChromeUtils.defineModuleGetter(this, "TelemetryHealthPing",
   "resource://gre/modules/HealthPing.jsm");
 
