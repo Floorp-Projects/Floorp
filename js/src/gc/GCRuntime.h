@@ -616,9 +616,9 @@ class GCRuntime
     void markCompartments();
     IncrementalProgress markUntilBudgetExhaused(SliceBudget& sliceBudget, gcstats::PhaseKind phase);
     void drainMarkStack();
-    template <class CompartmentIterT> void markWeakReferences(gcstats::PhaseKind phase);
+    template <class ZoneIterT> void markWeakReferences(gcstats::PhaseKind phase);
     void markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase);
-    template <class ZoneIterT, class CompartmentIterT> void markGrayReferences(gcstats::PhaseKind phase);
+    template <class ZoneIterT> void markGrayReferences(gcstats::PhaseKind phase);
     void markBufferedGrayRoots(JS::Zone* zone);
     void markGrayReferencesInCurrentGroup(gcstats::PhaseKind phase);
     void markAllWeakReferences(gcstats::PhaseKind phase);
