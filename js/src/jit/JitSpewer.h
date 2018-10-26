@@ -12,7 +12,6 @@
 
 #include <stdarg.h>
 
-#include "jit/C1Spewer.h"
 #include "jit/JSONSpewer.h"
 
 #include "js/RootingAPI.h"
@@ -132,9 +131,7 @@ class GraphSpewer
 {
   private:
     MIRGraph* graph_;
-    LSprinter c1Printer_;
     LSprinter jsonPrinter_;
-    C1Spewer c1Spewer_;
     JSONSpewer jsonSpewer_;
 
   public:
