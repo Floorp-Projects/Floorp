@@ -33,11 +33,11 @@ def ffi_target(target):
             'Use --with-system-ffi instead.')
 
     if target.os == 'WINNT':
-        target_dir = 'x86'
-        if target.cpu == 'x86_64':
-            target_name = 'X86_WIN64'
-        else:
-            target_name = 'X86_WIN32'
+        target_dir, target_name = {
+            'x86_64': ('x86', 'X86_WIN64'),
+            'x86': ('x86', 'X86_WIN32'),
+            'aarch64': ('aarch64', 'ARM64_WIN64'),
+        }[target.cpu]
     elif target.os == 'OSX':
         target_dir = 'x86'
         target_name = 'X86_DARWIN'

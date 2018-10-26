@@ -12,7 +12,7 @@ static JS::PersistentRootedString gLatestMessage;
 
 // An interceptor that stores the error in `gLatestMessage`.
 struct SimpleInterceptor: JSErrorInterceptor {
-    virtual void interceptError(JSContext* cx, const JS::Value& val) override {
+    virtual void interceptError(JSContext* cx, JS::HandleValue val) override {
         js::StringBuffer buffer(cx);
         if (!ValueToStringBuffer(cx, val, buffer)) {
             MOZ_CRASH("Could not convert to string buffer");

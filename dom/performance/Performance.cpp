@@ -109,7 +109,7 @@ Performance::Now()
 DOMHighResTimeStamp
 Performance::NowUnclamped() const
 {
-  TimeDuration duration = TimeStamp::Now() - CreationTimeStamp();
+  TimeDuration duration = TimeStamp::NowUnfuzzed() - CreationTimeStamp();
   return duration.ToMilliseconds();
 }
 
