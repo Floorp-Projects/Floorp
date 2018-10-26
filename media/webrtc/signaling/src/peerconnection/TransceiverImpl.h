@@ -9,17 +9,14 @@
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
 #include "nsTArray.h"
-#include "mozilla/OwningNonNull.h"
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "ErrorList.h"
-#include "mtransport/transportflow.h"
 #include "signaling/src/jsep/JsepTransceiver.h"
 
 class nsIPrincipal;
 
 namespace mozilla {
 class PeerIdentity;
-class PeerConnectionMedia;
 class JsepTransceiver;
 enum class MediaSessionConduitLocalDirection : int;
 class MediaSessionConduit;
@@ -29,6 +26,7 @@ class MediaPipelineReceive;
 class MediaPipelineTransmit;
 class MediaPipeline;
 class MediaPipelineFilter;
+class MediaTransportHandler;
 class WebRtcCallWrapper;
 class JsepTrackNegotiatedDetails;
 
@@ -41,7 +39,7 @@ struct RTCRtpSourceEntry;
  * This is what ties all the various pieces that make up a transceiver
  * together. This includes:
  * MediaStreamTrack for rendering and capture
- * TransportFlow for RTP transmission/reception
+ * MediaTransportHandler for RTP transmission/reception
  * Audio/VideoConduit for feeding RTP/RTCP into webrtc.org for decoding, and
  * feeding audio/video frames into webrtc.org for encoding into RTP/RTCP.
 */
@@ -53,6 +51,7 @@ public:
    * set.
    */
   TransceiverImpl(const std::string& aPCHandle,
+                  MediaTransportHandler* aTransportHandler,
                   JsepTransceiver* aJsepTransceiver,
                   nsIEventTarget* aMainThread,
                   nsIEventTarget* aStsThread,
@@ -71,7 +70,7 @@ public:
                               nsIPrincipal* aPrincipal,
                               const PeerIdentity* aSinkIdentity);
 
-  nsresult UpdateTransport(PeerConnectionMedia& aTransportManager);
+  nsresult UpdateTransport();
 
   nsresult UpdateConduit();
 
@@ -144,6 +143,7 @@ private:
   void Stop();
 
   const std::string mPCHandle;
+  RefPtr<MediaTransportHandler> mTransportHandler;
   RefPtr<JsepTransceiver> mJsepTransceiver;
   std::string mMid;
   bool mHaveStartedReceiving;
@@ -154,8 +154,6 @@ private:
   RefPtr<dom::MediaStreamTrack> mSendTrack;
   // state for webrtc.org that is shared between all transceivers
   RefPtr<WebRtcCallWrapper> mCallWrapper;
-  RefPtr<TransportFlow> mRtpFlow;
-  RefPtr<TransportFlow> mRtcpFlow;
   RefPtr<MediaSessionConduit> mConduit;
   RefPtr<MediaPipelineReceive> mReceivePipeline;
   RefPtr<MediaPipelineTransmit> mTransmitPipeline;

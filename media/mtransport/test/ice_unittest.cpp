@@ -979,6 +979,7 @@ class IceTestPeer : public sigslot::has_slots<> {
       }
     }
 
+    ice_ctx_->Destroy();
     ice_ctx_ = nullptr;
 
     if (remote_) {

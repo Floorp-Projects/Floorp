@@ -12,6 +12,8 @@
 #include "transportflow.h"
 #include "transportlayer.h"
 
+#include "mozilla/DebugOnly.h"
+
 namespace mozilla {
 
 NS_IMPL_ISUPPORTS0(TransportFlow)
@@ -26,12 +28,12 @@ TransportFlow::~TransportFlow() {
   // destroy it simultaneously. The conversion to an nsAutoPtr
   // ensures automatic destruction of the queue at exit of
   // DestroyFinal.
-  if (target_) {
-    nsAutoPtr<std::deque<TransportLayer*>> layers_tmp(layers_.release());
-    RUN_ON_THREAD(target_,
-                  WrapRunnableNM(&TransportFlow::DestroyFinal, layers_tmp),
-                  NS_DISPATCH_NORMAL);
-  }
+  MOZ_RELEASE_ASSERT(target_);
+  nsAutoPtr<std::deque<TransportLayer*>> layers_tmp(layers_.release());
+  DebugOnly<nsresult> rv = target_->Dispatch(
+      WrapRunnableNM(&TransportFlow::DestroyFinal, layers_tmp),
+      NS_DISPATCH_NORMAL);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 void TransportFlow::DestroyFinal(nsAutoPtr<std::deque<TransportLayer *> > layers) {

@@ -20,6 +20,7 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '/media/mtransport',
+    '/media/webrtc',
     '/netwerk/sctp/src',
 ]
 

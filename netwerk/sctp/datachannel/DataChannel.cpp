@@ -50,6 +50,8 @@
 #include "mozilla/Unused.h"
 #ifdef MOZ_PEERCONNECTION
 #include "mtransport/runnable_utils.h"
+#include "signaling/src/peerconnection/MediaTransportHandler.h"
+#include "mediapacket.h"
 #endif
 
 #define DATACHANNEL_LOG(args) LOG(args)
@@ -304,7 +306,8 @@ debug_printf(const char *format, ...)
 }
 
 DataChannelConnection::DataChannelConnection(DataConnectionListener *listener,
-                                             nsIEventTarget *aTarget)
+                                             nsIEventTarget *aTarget,
+                                             MediaTransportHandler* aHandler)
   : NeckoTargetHolder(aTarget)
   , mLock("netwerk::sctp::DataChannelConnection")
   , mSendInterleaved(false)
@@ -312,13 +315,13 @@ DataChannelConnection::DataChannelConnection(DataConnectionListener *listener,
   , mMaxMessageSizeSet(false)
   , mMaxMessageSize(0)
   , mAllocateEven(false)
+  , mTransportHandler(aHandler)
 {
   mCurrentStream = 0;
   mState = CLOSED;
   mSocket = nullptr;
   mMasterSocket = nullptr;
   mListener = listener;
-  mDtls = nullptr;
   mLocalPort = 0;
   mRemotePort = 0;
   mPendingType = PENDING_NONE;
@@ -336,10 +339,7 @@ DataChannelConnection::~DataChannelConnection()
   ASSERT_WEBRTC(mState == CLOSED);
   MOZ_ASSERT(!mMasterSocket);
   MOZ_ASSERT(mPending.GetSize() == 0);
-  MOZ_ASSERT(!mDtls);
 
-  // Already disconnected from sigslot/mTransportFlow
-  // TransportFlows must be released from the STS thread
   if (!IsSTSThread()) {
     ASSERT_WEBRTC(NS_IsMainThread());
 
@@ -421,8 +421,7 @@ void DataChannelConnection::DestroyOnSTS(struct socket *aMasterSocket,
 
 void DataChannelConnection::DestroyOnSTSFinal()
 {
-  mTransportFlow = nullptr;
-  mDtls = nullptr;
+  mTransportHandler = nullptr;
   sDataChannelShutdown->CreateConnectionShutdown(this);
 }
 
@@ -686,60 +685,71 @@ DataChannelConnection::GetMaxMessageSize()
 }
 
 #ifdef MOZ_PEERCONNECTION
-void
-DataChannelConnection::SetEvenOdd()
-{
-  ASSERT_WEBRTC(IsSTSThread());
-
-  MOZ_ASSERT(mDtls);  // DTLS is mandatory
-  mAllocateEven = (mDtls->role() == TransportLayerDtls::CLIENT);
-}
 
 bool
-DataChannelConnection::ConnectViaTransportFlow(TransportFlow *aFlow, uint16_t localport, uint16_t remoteport)
+DataChannelConnection::ConnectToTransport(
+    const std::string& aTransportId,
+    bool aClient,
+    uint16_t localport, uint16_t remoteport)
 {
   LOG(("Connect DTLS local %u, remote %u", localport, remoteport));
 
-  MOZ_ASSERT(mMasterSocket, "SCTP wasn't initialized before ConnectViaTransportFlow!");
-  if (NS_WARN_IF(!aFlow)) {
+  MOZ_ASSERT(mMasterSocket, "SCTP wasn't initialized before ConnectToTransport!");
+  if (NS_WARN_IF(aTransportId.empty())) {
     return false;
   }
 
-  mTransportFlow = aFlow;
   mLocalPort = localport;
   mRemotePort = remoteport;
   mState = CONNECTING;
 
   RUN_ON_THREAD(mSTS, WrapRunnable(RefPtr<DataChannelConnection>(this),
-                                   &DataChannelConnection::SetSignals),
+                                   &DataChannelConnection::SetSignals,
+                                   aTransportId,
+                                   aClient),
                 NS_DISPATCH_NORMAL);
   return true;
 }
 
 void
-DataChannelConnection::SetSignals()
+DataChannelConnection::SetSignals(const std::string& aTransportId,
+                                  bool aClient)
 {
   ASSERT_WEBRTC(IsSTSThread());
-  mDtls = static_cast<TransportLayerDtls*>(mTransportFlow->GetLayer("dtls"));
-  ASSERT_WEBRTC(mDtls);
-  LOG(("Setting transport signals, state: %d", mDtls->state()));
-  mDtls->SignalPacketReceived.connect(this, &DataChannelConnection::SctpDtlsInput);
+  mTransportId = aTransportId;
+  mAllocateEven = aClient;
+  mTransportHandler->SignalPacketReceived.connect(
+      this, &DataChannelConnection::SctpDtlsInput);
   // SignalStateChange() doesn't call you with the initial state
-  mDtls->SignalStateChange.connect(this, &DataChannelConnection::CompleteConnect);
-  CompleteConnect(mDtls, mDtls->state());
+  if (mTransportHandler->GetState(mTransportId, false)
+        == TransportLayer::TS_OPEN) {
+    LOG(("Setting transport signals, dtls already open"));
+    CompleteConnect();
+  } else {
+    LOG(("Setting transport signals, dtls not open yet"));
+    mTransportHandler->SignalStateChange.connect(
+        this, &DataChannelConnection::TransportStateChange);
+  }
 }
 
 void
-DataChannelConnection::CompleteConnect(TransportLayer *layer, TransportLayer::State state)
+DataChannelConnection::TransportStateChange(const std::string& aTransportId,
+                                            TransportLayer::State aState)
 {
-  LOG(("Data transport state: %d", state));
+  if (aState == TransportLayer::TS_OPEN) {
+    CompleteConnect();
+  }
+}
+
+void
+DataChannelConnection::CompleteConnect()
+{
+  LOG(("dtls open"));
   MutexAutoLock lock(mLock);
   ASSERT_WEBRTC(IsSTSThread());
-  // We should abort connection on TS_ERROR.
-  // Note however that the association will also fail (perhaps with a delay) and
-  // notify us in that way
-  if (state != TransportLayer::TS_OPEN || !mMasterSocket)
+  if (!mMasterSocket) {
     return;
+  }
 
   struct sockaddr_conn addr;
   memset(&addr, 0, sizeof(addr));
@@ -795,8 +805,7 @@ DataChannelConnection::CompleteConnect(TransportLayer *layer, TransportLayer::St
       LOG(("usrsctp_connect failed: %d", errno));
       mState = CLOSED;
     } else {
-      // We set Even/Odd and fire ON_CONNECTION via SCTP_COMM_UP when we get that
-      // This also avoids issues with calling TransportFlow stuff on Mainthread
+      // We fire ON_CONNECTION via SCTP_COMM_UP when we get that
       return;
     }
   }
@@ -838,8 +847,13 @@ DataChannelConnection::ProcessQueuedOpens()
 }
 
 void
-DataChannelConnection::SctpDtlsInput(TransportLayer *layer, MediaPacket& packet)
+DataChannelConnection::SctpDtlsInput(const std::string& aTransportId,
+                                     MediaPacket& packet)
 {
+  if ((packet.type() != MediaPacket::SCTP) || (mTransportId != aTransportId)) {
+    return;
+  }
+
   if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
     char *buf;
 
@@ -859,8 +873,9 @@ int
 DataChannelConnection::SendPacket(nsAutoPtr<MediaPacket> packet)
 {
   //LOG(("%p: SCTP/DTLS sent %ld bytes", this, len));
-  if (mDtls) {
-    return mDtls->SendPacket(*packet) < 0 ? 1 : 0;
+  if (!mTransportId.empty()) {
+    nsresult rv = mTransportHandler->SendPacket(mTransportId, *packet);
+    return NS_FAILED(rv) ? 1 : 0;
   }
   return 0;
 }
@@ -888,6 +903,7 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
   // one of the locks before calling a packet output routine; with changes to
   // the underlying SCTP stack this might remove the need to use an async proxy.
   nsAutoPtr<MediaPacket> packet(new MediaPacket);
+  packet->SetType(MediaPacket::SCTP);
   packet->Copy(static_cast<const uint8_t*>(buffer), length);
 
   // XXX It might be worthwhile to add an assertion against the thread
@@ -905,8 +921,6 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
 #ifdef ALLOW_DIRECT_SCTP_LISTEN_CONNECT
 // listen for incoming associations
 // Blocks! - Don't call this from main thread!
-
-#error This code will not work as-is since SetEvenOdd() runs on Mainthread
 
 bool
 DataChannelConnection::Listen(unsigned short port)
@@ -951,8 +965,6 @@ DataChannelConnection::Listen(unsigned short port)
                          (const void *)&l, (socklen_t)sizeof(struct linger)) < 0) {
     LOG(("Couldn't set SO_LINGER on SCTP socket"));
   }
-
-  SetEvenOdd();
 
   // Notify Connection open
   // XXX We need to make sure connection sticks around until the message is delivered
@@ -1030,8 +1042,6 @@ DataChannelConnection::Connect(const char *addr, unsigned short port)
 
   LOG(("connect() succeeded!  Entering connected mode"));
   mState = OPEN;
-
-  SetEvenOdd();
 
   // Notify Connection open
   // XXX We need to make sure connection sticks around until the message is delivered
@@ -1809,8 +1819,6 @@ DataChannelConnection::HandleAssociationChangeEvent(const struct sctp_assoc_chan
         LOG(("Older Firefox detected, using PPID-based fragmentation"));
         mPpidFragmentation = true;
       }
-
-      SetEvenOdd();
 
       Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
                  DataChannelOnMessageAvailable::ON_CONNECTION,

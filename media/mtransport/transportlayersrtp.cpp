@@ -56,40 +56,6 @@ TransportLayerSrtp::Setup()
   return true;
 }
 
-static bool IsRtp(const unsigned char* data, size_t len)
-{
-  if (len < 2)
-    return false;
-
-  // Check if this is a RTCP packet. Logic based on the types listed in
-  // media/webrtc/trunk/src/modules/rtp_rtcp/source/rtp_utility.cc
-
-  // Anything outside this range is RTP.
-  if ((data[1] < 192) || (data[1] > 207))
-    return true;
-
-  if (data[1] == 192) // FIR
-    return false;
-
-  if (data[1] == 193) // NACK, but could also be RTP. This makes us sad
-    return true;      // but it's how webrtc.org behaves.
-
-  if (data[1] == 194)
-    return true;
-
-  if (data[1] == 195) // IJ.
-    return false;
-
-  if ((data[1] > 195) && (data[1] < 200)) // the > 195 is redundant
-    return true;
-
-  if ((data[1] >= 200) && (data[1] <= 207)) // SR, RR, SDES, BYE,
-    return false;                           // APP, RTPFB, PSFB, XR
-
-  MOZ_ASSERT(false); // Not reached, belt and suspenders.
-  return true;
-}
-
 TransportResult
 TransportLayerSrtp::SendPacket(MediaPacket& packet)
 {
@@ -105,9 +71,11 @@ TransportLayerSrtp::SendPacket(MediaPacket& packet)
   switch (packet.type()) {
     case MediaPacket::RTP:
       res = mSendSrtp->ProtectRtp(packet.data(), packet.len(), packet.capacity(), &out_len);
+      packet.SetType(MediaPacket::SRTP);
       break;
     case MediaPacket::RTCP:
       res = mSendSrtp->ProtectRtcp(packet.data(), packet.len(), packet.capacity(), &out_len);
+      packet.SetType(MediaPacket::SRTCP);
       break;
     default:
       MOZ_CRASH("SRTP layer asked to send packet that is neither RTP or RTCP");
@@ -227,12 +195,8 @@ TransportLayerSrtp::PacketReceived(TransportLayer* layer, MediaPacket& packet)
     return;
   }
 
-  if (packet.len() < 4) {
-    return;
-  }
-
-  // not RTP/RTCP per RFC 7983
-  if (packet.data()[0] <= 127 || packet.data()[0] >= 192) {
+  if (packet.type() != MediaPacket::SRTP &&
+      packet.type() != MediaPacket::SRTCP) {
     return;
   }
 
@@ -241,7 +205,7 @@ TransportLayerSrtp::PacketReceived(TransportLayer* layer, MediaPacket& packet)
   int outLen;
   nsresult res;
 
-  if (IsRtp(packet.data(), packet.len())) {
+  if (packet.type() == MediaPacket::SRTP) {
     packet.SetType(MediaPacket::RTP);
     res = mRecvSrtp->UnprotectRtp(packet.data(), packet.len(), packet.len(), &outLen);
   } else {
