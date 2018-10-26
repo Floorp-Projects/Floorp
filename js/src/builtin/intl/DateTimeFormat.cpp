@@ -969,7 +969,8 @@ js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp)
 
     ClippedTime x = TimeClip(args[1].toNumber());
     if (!x.isValid()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DATE_NOT_FINITE);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DATE_NOT_FINITE,
+                                  "DateTimeFormat");
         return false;
     }
 
