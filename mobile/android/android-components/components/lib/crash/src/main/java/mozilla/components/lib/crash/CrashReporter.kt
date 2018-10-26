@@ -118,6 +118,7 @@ class CrashReporter(
         val intent = Intent(context, CrashReporterActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
 
         crash.fillIn(intent)
 

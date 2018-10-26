@@ -4,5 +4,6 @@
         <item name="windowNoTitle">true</item>
         <item name="android:windowMinWidthMajor">96%</item>
         <item name="android:windowMinWidthMinor">96%</item>
+        <item name="android:windowAnimationStyle">@null</item>
     </style>
 </resources>
