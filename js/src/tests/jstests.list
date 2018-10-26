@@ -397,9 +397,7 @@ skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-one.js
 skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-all-on-loc.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1346081
-skip script test262/intl402/NumberFormat/prototype/format/format-fraction-digits.js
 skip script test262/intl402/NumberFormat/prototype/format/format-fraction-digits-precision.js
-skip script test262/intl402/NumberFormat/prototype/format/format-significant-digits.js
 skip script test262/intl402/NumberFormat/prototype/format/format-significant-digits-precision.js
 
 # Hoisted block-level function named "arguments" not initialized with undefined per B.3.3.1
@@ -431,14 +429,6 @@ skip script test262/annexB/language/function-code/block-decl-nested-blocks-with-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1406171
 skip script test262/built-ins/Reflect/ownKeys/return-on-corresponding-order-large-index.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1291407
-skip script test262/intl402/ListFormat/prototype/toStringTag/toString.js
-skip script test262/intl402/ListFormat/prototype/toStringTag/toStringTag.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1473228
-skip script test262/intl402/Segmenter/prototype/toStringTag/toString.js
-skip script test262/intl402/Segmenter/prototype/toStringTag/toStringTag.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1473229
 skip include test262/intl402/RelativeTimeFormat/prototype/formatToParts/jstests.list
 
@@ -450,11 +440,8 @@ skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-long
 skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-narrow.js
 skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-short.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1473230
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1473588
 skip script test262/intl402/RelativeTimeFormat/prototype/format/unit-plural.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1483548
-skip script test262/intl402/RelativeTimeFormat/prototype/format/value-non-finite.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1499933
 skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/order.js

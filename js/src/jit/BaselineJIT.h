@@ -763,6 +763,11 @@ MarkActiveBaselineScripts(Zone* zone);
 MethodStatus
 BaselineCompile(JSContext* cx, JSScript* script, bool forceDebugInstrumentation = false);
 
+#ifdef JS_JITSPEW
+void
+JitSpewBaselineICStats(JSScript* script, const char* dumpReason);
+#endif
+
 static const unsigned BASELINE_MAX_ARGS_LENGTH = 20000;
 
 } // namespace jit
