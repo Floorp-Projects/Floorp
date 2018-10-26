@@ -522,6 +522,7 @@ public:
   static TimeStamp NowLoRes() { return Now(false); }
   static TimeStamp NowUnfuzzed() { return NowUnfuzzed(true); }
 
+  static MFBT_API int64_t NowFuzzyTime();
   /**
    * Return a timestamp representing the time when the current process was
    * created which will be comparable with other timestamps taken with this
@@ -661,6 +662,7 @@ private:
   static MFBT_API TimeStamp NowUnfuzzed(bool aHighResolution);
   static MFBT_API TimeStamp NowFuzzy(TimeStampValue aValue);
 
+  static MFBT_API void UpdateFuzzyTime(int64_t aValue);
   static MFBT_API void UpdateFuzzyTimeStamp(TimeStamp aValue);
 
   /**

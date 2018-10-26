@@ -301,7 +301,8 @@ Fuzzyfox::UpdateClocks(uint64_t aNewTime, TimeStamp aNewTimeStamp)
   // Clocks get the new official (frozen) time. This happens on all ticks
   mObs->NotifyObservers(mTimeUpdateWrapper, FUZZYFOX_UPDATECLOCK_OBSERVER_TOPIC, nullptr);
 
-  // Update the timestamp's canonicaltime
+  // Update the timestamp's canonicaltimes
+  TimeStamp::UpdateFuzzyTime(aNewTime);
   TimeStamp::UpdateFuzzyTimeStamp(aNewTimeStamp);
 }
 
