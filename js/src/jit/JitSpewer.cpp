@@ -260,7 +260,9 @@ IonSpewer::~IonSpewer()
 
 GraphSpewer::GraphSpewer(TempAllocator *alloc)
   : graph_(nullptr),
+    c1Printer_(alloc->lifoAlloc()),
     jsonPrinter_(alloc->lifoAlloc()),
+    c1Spewer_(c1Printer_),
     jsonSpewer_(jsonPrinter_)
 {
 }
@@ -291,6 +293,7 @@ GraphSpewer::beginFunction(JSScript* function)
         return;
     }
 
+    c1Spewer_.beginFunction(graph_, function);
     jsonSpewer_.beginFunction(function);
 
     ionspewer.beginFunction();
@@ -302,6 +305,8 @@ GraphSpewer::spewPass(const char* pass)
     if (!isSpewing()) {
         return;
     }
+
+    c1Spewer_.spewPass(pass);
 
     jsonSpewer_.beginPass(pass);
     jsonSpewer_.spewMIR(graph_);
@@ -326,6 +331,9 @@ GraphSpewer::spewPass(const char* pass, BacktrackingAllocator* ra)
         return;
     }
 
+    c1Spewer_.spewPass(pass);
+    c1Spewer_.spewRanges(pass, ra);
+
     jsonSpewer_.beginPass(pass);
     jsonSpewer_.spewMIR(graph_);
     jsonSpewer_.spewLIR(graph_);
@@ -348,6 +356,7 @@ GraphSpewer::endFunction()
         return;
     }
 
+    c1Spewer_.endFunction();
     jsonSpewer_.endFunction();
 
     ionspewer.endFunction(this);
@@ -357,6 +366,12 @@ GraphSpewer::endFunction()
 void
 GraphSpewer::dump(Fprinter& c1Out, Fprinter& jsonOut)
 {
+    if (!c1Printer_.hadOutOfMemory()) {
+        c1Printer_.exportInto(c1Out);
+        c1Out.flush();
+    }
+    c1Printer_.clear();
+
     if (!jsonPrinter_.hadOutOfMemory()) {
         jsonPrinter_.exportInto(jsonOut);
     } else {
