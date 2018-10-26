@@ -260,9 +260,12 @@ xmlns="http://www.w3.org/1999/xhtml"
         <html:div class="urlbarView-body-inner">
           <!-- TODO: add search suggestions notification -->
           <html:div class="urlbarView-results"/>
-          <!-- TODO: add footer -->
         </html:div>
       </html:div>
+      <search-one-offs class="search-one-offs"
+                       compact="true"
+                       includecurrentengine="true"
+                       disabletab="true"/>
     </panel>
 
    <!-- for date/time picker. consumeoutsideclicks is set to never, so that
