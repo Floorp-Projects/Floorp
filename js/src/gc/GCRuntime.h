@@ -593,9 +593,9 @@ class GCRuntime
                                            SliceBudget& budget,
                                            JS::gcreason::Reason reason);
     bool shouldRepeatForDeadZone(JS::gcreason::Reason reason);
-    IncrementalResult incrementalCollectSlice(SliceBudget& budget,
-                                              JS::gcreason::Reason reason,
-                                              AutoGCSession& session);
+    IncrementalResult incrementalSlice(SliceBudget& budget,
+                                       JS::gcreason::Reason reason,
+                                       AutoGCSession& session);
     MOZ_MUST_USE bool shouldCollectNurseryForSlice(bool nonincrementalByAPI,
         SliceBudget& budget);
 
@@ -614,10 +614,11 @@ class GCRuntime
     void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark);
     void maybeDoCycleCollection();
     void markCompartments();
-    IncrementalProgress drainMarkStack(SliceBudget& sliceBudget, gcstats::PhaseKind phase);
-    template <class CompartmentIterT> void markWeakReferences(gcstats::PhaseKind phase);
+    IncrementalProgress markUntilBudgetExhaused(SliceBudget& sliceBudget, gcstats::PhaseKind phase);
+    void drainMarkStack();
+    template <class ZoneIterT> void markWeakReferences(gcstats::PhaseKind phase);
     void markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase);
-    template <class ZoneIterT, class CompartmentIterT> void markGrayReferences(gcstats::PhaseKind phase);
+    template <class ZoneIterT> void markGrayReferences(gcstats::PhaseKind phase);
     void markBufferedGrayRoots(JS::Zone* zone);
     void markGrayReferencesInCurrentGroup(gcstats::PhaseKind phase);
     void markAllWeakReferences(gcstats::PhaseKind phase);
