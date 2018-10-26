@@ -39,6 +39,7 @@ public:
   bool IsSameProcess() const;
   bool HaveEventListener();
   bool HaveControllerListener();
+  bool GetVRActiveStatus();
   bool SendGamepadUpdate(const GamepadChangeEvent& aGamepadEvent);
   bool SendReplyGamepadVibrateHaptic(const uint32_t& aPromiseID);
 
@@ -75,6 +76,9 @@ protected:
   virtual mozilla::ipc::IPCResult RecvNewPoseMoveToMockController(const uint32_t& aDeviceID, const GamepadPoseState& pose) override;
   virtual mozilla::ipc::IPCResult RecvStartVRNavigation(const uint32_t& aDeviceID) override;
   virtual mozilla::ipc::IPCResult RecvStopVRNavigation(const uint32_t& aDeviceID, const TimeDuration& aTimeout) override;
+  virtual mozilla::ipc::IPCResult RecvStartActivity() override;
+  virtual mozilla::ipc::IPCResult RecvStopActivity() override;
+
 private:
   void RegisterWithManager();
   void UnregisterFromManager();
@@ -99,6 +103,10 @@ private:
   bool mHaveEventListener;
   bool mHaveControllerListener;
   bool mIsContentChild;
+
+  // When VR tabs are switched the background, we won't need to
+  // initialize its session in VRService thread.
+  bool mVRActiveStatus;
 };
 
 class VRManagerPromise final
