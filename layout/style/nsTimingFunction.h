@@ -20,16 +20,13 @@ struct nsTimingFunction
     StepStart,    // step-start and steps(..., start)
     StepEnd,      // step-end, steps(..., end) and steps(...)
     CubicBezier,  // cubic-bezier()
-    Frames,       // frames()
   };
 
   // Whether the timing function type is represented by a spline,
   // and thus will have mFunc filled in.
   static bool IsSplineType(Type aType)
   {
-    return aType != Type::StepStart &&
-           aType != Type::StepEnd &&
-           aType != Type::Frames;
+    return aType != Type::StepStart && aType != Type::StepEnd;
   }
 
   explicit nsTimingFunction(
@@ -51,14 +48,12 @@ struct nsTimingFunction
 
   enum class Keyword { Implicit, Explicit };
 
-  nsTimingFunction(Type aType, uint32_t aStepsOrFrames)
+  nsTimingFunction(Type aType, uint32_t aSteps)
     : mType(aType)
   {
-    MOZ_ASSERT(mType == Type::StepStart ||
-               mType == Type::StepEnd ||
-               mType == Type::Frames,
+    MOZ_ASSERT(mType == Type::StepStart || mType == Type::StepEnd,
                "wrong type");
-    mStepsOrFrames = aStepsOrFrames;
+    mSteps = aSteps;
   }
 
   nsTimingFunction(const nsTimingFunction& aOther)
@@ -75,7 +70,7 @@ struct nsTimingFunction
       float mY2;
     } mFunc;
     struct {
-      uint32_t mStepsOrFrames;
+      uint32_t mSteps;
     };
   };
 
@@ -94,7 +89,7 @@ struct nsTimingFunction
       mFunc.mX2 = aOther.mFunc.mX2;
       mFunc.mY2 = aOther.mFunc.mY2;
     } else {
-      mStepsOrFrames = aOther.mStepsOrFrames;
+      mSteps = aOther.mSteps;
     }
 
     return *this;
@@ -109,7 +104,7 @@ struct nsTimingFunction
       return mFunc.mX1 == aOther.mFunc.mX1 && mFunc.mY1 == aOther.mFunc.mY1 &&
              mFunc.mX2 == aOther.mFunc.mX2 && mFunc.mY2 == aOther.mFunc.mY2;
     }
-    return mStepsOrFrames == aOther.mStepsOrFrames;
+    return mSteps == aOther.mSteps;
   }
 
   bool operator!=(const nsTimingFunction& aOther) const

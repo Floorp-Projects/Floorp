@@ -32,10 +32,9 @@ for (const params of gEasingTests) {
   }, `Transformed progress for ${params.desc}`);
 }
 
-// Additional tests for various boundary conditions of step timing functions and
-// frames timing functions.
+// Additional tests for various boundary conditions of step timing functions.
 
-const gStepAndFramesTimingFunctionTests = [
+const gStepTimingFunctionTests = [
   {
     description: 'Test bounds point of step-start easing',
     effect:     {
@@ -254,44 +253,9 @@ const gStepAndFramesTimingFunctionTests = [
                   { currentTime: 2500, progress: 0.5 },
                 ]
   },
-  {
-    description: 'Test bounds point of frames easing',
-    effect:     {
-                  delay: 1000,
-                  duration: 1000,
-                  fill: 'both',
-                  easing: 'frames(2)'
-                },
-    conditions: [
-                  { currentTime: 0,    progress: 0 },
-                  { currentTime: 1000, progress: 0 },
-                  { currentTime: 1499, progress: 0 },
-                  { currentTime: 1500, progress: 1 },
-                  { currentTime: 2000, progress: 1 }
-                ]
-  },
-  {
-    description: 'Test bounds point of frames easing ' +
-                 'with iterationStart and delay',
-    effect:     {
-                  delay: 1000,
-                  duration: 1000,
-                  fill: 'both',
-                  iterationStart: 0.5,
-                  easing: 'frames(2)'
-                },
-    conditions: [
-                  { currentTime: 0,    progress: 1 },
-                  { currentTime: 1000, progress: 1 },
-                  { currentTime: 1499, progress: 1 },
-                  { currentTime: 1500, progress: 0 },
-                  { currentTime: 1999, progress: 0 },
-                  { currentTime: 2000, progress: 1 }
-                ]
-  }
 ];
 
-for (const options of gStepAndFramesTimingFunctionTests) {
+for (const options of gStepTimingFunctionTests) {
   test(t => {
     const target = createDiv(t);
     const animation = target.animate(null, options.effect);

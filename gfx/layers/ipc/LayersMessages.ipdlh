@@ -100,15 +100,10 @@ struct StepFunction {
   int type;
 };
 
-struct FramesFunction {
-  int frames;
-};
-
 union TimingFunction {
   null_t;
   CubicBezierFunction;
   StepFunction;
-  FramesFunction;
 };
 
 // Send the angle with units rather than sending all angles in radians
