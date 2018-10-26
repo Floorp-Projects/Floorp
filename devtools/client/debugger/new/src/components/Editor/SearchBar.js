@@ -223,9 +223,15 @@ class SearchBar extends _react.Component {
         });
         return _react2.default.createElement("button", {
           className: preppedClass,
-          onClick: () => {
+          onMouseDown: () => {
             toggleFileSearchModifier(modVal);
             doSearch(query);
+          },
+          onKeyDown: e => {
+            if (e.key === "Enter") {
+              toggleFileSearchModifier(modVal);
+              doSearch(query);
+            }
           },
           title: tooltip
         }, _react2.default.createElement(_Svg2.default, {

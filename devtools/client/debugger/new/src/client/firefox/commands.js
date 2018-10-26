@@ -255,7 +255,9 @@ function debuggeeCommand(script) {
 }
 
 function navigate(url) {
-  return tabTarget.activeTab.navigateTo({ url });
+  return tabTarget.activeTab.navigateTo({
+    url
+  });
 }
 
 function reload() {

@@ -60,7 +60,7 @@ function truncateMiddleText(sourceText, maxLength) {
   let truncatedText = sourceText;
 
   if (sourceText.length > maxLength) {
-    truncatedText = `${sourceText.substring(0, Math.round(maxLength / 2) - 2)}...${sourceText.substring(sourceText.length - Math.round(maxLength / 2 - 1))}`;
+    truncatedText = `${sourceText.substring(0, Math.round(maxLength / 2) - 2)}…${sourceText.substring(sourceText.length - Math.round(maxLength / 2 - 1))}`;
   }
 
   return truncatedText;
