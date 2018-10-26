@@ -205,10 +205,6 @@ VRManagerParent::RecvSetGroupMask(const uint32_t& aDisplayID, const uint32_t& aG
 bool
 VRManagerParent::HaveEventListener()
 {
-  if (!mVRActiveStatus) {
-    return false;
-  }
-
   return mHaveEventListener;
 }
 
