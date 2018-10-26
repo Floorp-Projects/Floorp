@@ -76,7 +76,6 @@ from mozlog import commandline
 import mozcrash
 import mozfile
 import mozinfo
-from mozprofile import Profile
 from mozrunner.utils import get_stack_fixer_function
 
 # --------------------------------------------------------------
@@ -157,7 +156,6 @@ class XPCShellTestThread(Thread):
         self.log = kwargs.get('log')
         self.app_dir_key = kwargs.get('app_dir_key')
         self.interactive = kwargs.get('interactive')
-        self.prefsFile = kwargs.get('prefsFile')
 
         # only one of these will be set to 1. adding them to the totals in
         # the harness
@@ -404,6 +402,7 @@ class XPCShellTestThread(Thread):
         dbgport = 0 if self.jsDebuggerInfo is None else self.jsDebuggerInfo.port
 
         return [
+            '-e', 'const _SERVER_ADDR = "localhost"',
             '-e', 'const _HEAD_FILES = [%s];' % cmdH,
             '-e', 'const _JSDEBUGGER_PORT = %d;' % dbgport,
         ]
@@ -449,7 +448,6 @@ class XPCShellTestThread(Thread):
             '-s',
             '-e', 'const _HEAD_JS_PATH = "%s";' % self.headJSPath,
             '-e', 'const _MOZINFO_JS_PATH = "%s";' % self.mozInfoJSPath,
-            '-e', 'const _PREFS_FILE = "%s";' % self.prefsFile.replace('\\', '\\\\'),
         ]
 
         if self.testingModulesDir:
@@ -946,33 +944,6 @@ class XPCShellTests(object):
         if self.mozInfo is None:
             self.mozInfo = os.path.join(self.testharnessdir, "mozinfo.json")
 
-    def buildPrefsFile(self):
-        # Create the prefs.js file
-        profile_data_dir = os.path.join(SCRIPT_DIR, 'profile_data')
-
-        # If possible, read profile data from topsrcdir. This prevents us from
-        # requiring a re-build to pick up newly added extensions in the
-        # <profile>/extensions directory.
-        if build:
-            path = os.path.join(build.topsrcdir, 'testing', 'profiles')
-            if os.path.isdir(path):
-                profile_data_dir = path
-
-        with open(os.path.join(profile_data_dir, 'profiles.json'), 'r') as fh:
-            base_profiles = json.load(fh)['xpcshell']
-
-        # values to use when interpolating preferences
-        interpolation = {
-            "server": "dummyserver",
-        }
-
-        profile = Profile(profile=self.tempDir, restore=False)
-        for name in base_profiles:
-            path = os.path.join(profile_data_dir, name)
-            profile.merge(path, interpolation=interpolation)
-
-        self.prefsFile = os.path.join(profile.profile, 'user.js')
-
     def buildCoreEnvironment(self):
         """
           Add environment variables likely to be used across all platforms, including
@@ -1275,7 +1246,6 @@ class XPCShellTests(object):
         self.todoCount = 0
 
         self.setAbsPath()
-        self.buildPrefsFile()
         self.buildXpcsRunArgs()
 
         self.event = Event()
@@ -1346,8 +1316,7 @@ class XPCShellTests(object):
             'keep_going': self.keepGoing,
             'log': self.log,
             'interactive': self.interactive,
-            'app_dir_key': appDirKey,
-            'prefsFile': self.prefsFile,
+            'app_dir_key': appDirKey
         }
 
         if self.sequential:
