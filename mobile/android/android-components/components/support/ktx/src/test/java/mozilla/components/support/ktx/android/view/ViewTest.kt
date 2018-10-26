@@ -7,6 +7,8 @@ package mozilla.components.support.ktx.android.view
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
+import mozilla.components.support.base.android.Padding
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -49,5 +51,22 @@ class ViewTest {
         assertFalse(view.isGone())
         assertFalse(view.isVisible())
         assertTrue(view.isInvisible())
+    }
+
+    @Test
+    fun `setPadding should set padding`() {
+        val view = TextView(RuntimeEnvironment.application)
+
+        assertEquals(view.paddingLeft, 0)
+        assertEquals(view.paddingTop, 0)
+        assertEquals(view.paddingRight, 0)
+        assertEquals(view.paddingBottom, 0)
+
+        view.setPadding(Padding(16, 20, 24, 28))
+
+        assertEquals(view.paddingLeft, 16)
+        assertEquals(view.paddingTop, 20)
+        assertEquals(view.paddingRight, 24)
+        assertEquals(view.paddingBottom, 28)
     }
 }

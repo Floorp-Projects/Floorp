@@ -5,10 +5,13 @@
 package mozilla.components.browser.toolbar
 
 import android.view.View
+import android.widget.LinearLayout
 import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.toolbar.BrowserToolbar.Companion.ACTION_PADDING_DP
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.support.base.android.Padding
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -469,5 +472,76 @@ class BrowserToolbarTest {
         verify(listener).onStartEditing()
         verify(listener).onTextChanged("Hello")
         verify(listener).onTextChanged("Hello World")
+    }
+
+    @Test
+    fun `BrowserToolbar Button must set padding`() {
+        var button = BrowserToolbar.Button(0, "imageResource", visible = { true }) {}
+        val linearLayout = LinearLayout(RuntimeEnvironment.application)
+        var view = button.createView(linearLayout)
+        val padding = Padding(0, 0, 0, 0)
+        assertEquals(view.paddingLeft, ACTION_PADDING_DP)
+        assertEquals(view.paddingTop, ACTION_PADDING_DP)
+        assertEquals(view.paddingRight, ACTION_PADDING_DP)
+        assertEquals(view.paddingBottom, ACTION_PADDING_DP)
+        button = BrowserToolbar.Button(0, "imageResource", padding = padding.copy(left = 16)) {}
+        view = button.createView(linearLayout)
+        assertEquals(view.paddingLeft, 16)
+        button = BrowserToolbar.Button(0, "imageResource", padding = padding.copy(top = 16)) {}
+        view = button.createView(linearLayout)
+        assertEquals(view.paddingTop, 16)
+        button = BrowserToolbar.Button(0, "imageResource", padding = padding.copy(right = 16)) {}
+        view = button.createView(linearLayout)
+        assertEquals(view.paddingRight, 16)
+        button = BrowserToolbar.Button(0, "imageResource", padding = padding.copy(bottom = 16)) {}
+        view = button.createView(linearLayout)
+        assertEquals(view.paddingBottom, 16)
+        button = BrowserToolbar.Button(
+            0, "imageResource",
+            padding = Padding(16, 20, 24, 28)
+        ) {}
+        view = button.createView(linearLayout)
+        view.paddingLeft
+        assertEquals(view.paddingLeft, 16)
+        assertEquals(view.paddingTop, 20)
+        assertEquals(view.paddingRight, 24)
+        assertEquals(view.paddingBottom, 28)
+    }
+
+    @Test
+    fun `BrowserToolbar ToggleButton must set padding`() {
+        var button = BrowserToolbar.ToggleButton(
+            0,
+            0,
+            "imageResource",
+            "",
+            visible = { true },
+            selected = false,
+            background = 0
+        ) {}
+        val linearLayout = LinearLayout(RuntimeEnvironment.application)
+        var view = button.createView(linearLayout)
+        val padding = Padding(0, 0, 0, 0)
+        assertEquals(view.paddingLeft, ACTION_PADDING_DP)
+        assertEquals(view.paddingTop, ACTION_PADDING_DP)
+        assertEquals(view.paddingRight, ACTION_PADDING_DP)
+        assertEquals(view.paddingBottom, ACTION_PADDING_DP)
+
+        button = BrowserToolbar.ToggleButton(
+            0,
+            0,
+            "imageResource",
+            "",
+            visible = { true },
+            selected = false,
+            background = 0,
+            padding = Padding(16, 20, 24, 28)
+        ) {}
+        view = button.createView(linearLayout)
+        view.paddingLeft
+        assertEquals(view.paddingLeft, 16)
+        assertEquals(view.paddingTop, 20)
+        assertEquals(view.paddingRight, 24)
+        assertEquals(view.paddingBottom, 28)
     }
 }

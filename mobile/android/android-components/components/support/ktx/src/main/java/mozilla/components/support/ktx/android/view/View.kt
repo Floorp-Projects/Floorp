@@ -10,6 +10,8 @@ import android.os.Looper
 import android.support.v4.view.ViewCompat
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import mozilla.components.support.base.android.Padding
+import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.content.systemService
 import java.lang.ref.WeakReference
 
@@ -61,9 +63,23 @@ fun View.showKeyboard(flags: Int = InputMethodManager.SHOW_IMPLICIT) {
  */
 fun View.hideKeyboard() {
     val imm = (context.getSystemService(Context.INPUT_METHOD_SERVICE) ?: return)
-            as InputMethodManager
+        as InputMethodManager
 
     imm.hideSoftInputFromWindow(windowToken, 0)
+}
+
+/**
+ * Set a padding using [Padding] object.
+ */
+fun View.setPadding(padding: Padding) {
+    with(resources) {
+        setPadding(
+            pxToDp(padding.left),
+            pxToDp(padding.top),
+            pxToDp(padding.right),
+            pxToDp(padding.bottom)
+        )
+    }
 }
 
 private class ShowKeyboard(

@@ -15,9 +15,11 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.support.base.android.Padding
 import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.forEach
 import mozilla.components.support.ktx.android.view.isVisible
+import mozilla.components.support.ktx.android.view.setPadding
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 
 /**
@@ -310,6 +312,7 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param contentDescription The content description to use.
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
      * @param background A custom (stateful) background drawable resource to be used.
+     * @param padding a custom [Padding] for this Button.
      * @param listener Callback that will be invoked whenever the button is pressed
      */
     open class Button(
@@ -317,14 +320,12 @@ class BrowserToolbar @JvmOverloads constructor(
         contentDescription: String,
         visible: () -> Boolean = { true },
         @DrawableRes background: Int? = null,
+        private val padding: Padding = defaultActionPadding,
         listener: () -> Unit
-    ) : Toolbar.ActionButton(imageResource, contentDescription, visible, background, listener) {
+    ) : Toolbar.ActionButton(imageResource, contentDescription, visible, background, listener = listener) {
         override fun createView(parent: ViewGroup): View {
             val view = super.createView(parent)
-
-            val padding = view.resources.pxToDp(ACTION_PADDING_DP)
-            view.setPadding(padding, padding, padding, padding)
-
+            view.setPadding(padding)
             return view
         }
     }
@@ -340,6 +341,7 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
      * @param selected Sets whether this button should be selected initially.
      * @param background A custom (stateful) background drawable resource to be used.
+     * @param padding a custom [Padding] for this Button.
      * @param listener Callback that will be invoked whenever the checked state changes.
      */
     open class ToggleButton(
@@ -350,6 +352,7 @@ class BrowserToolbar @JvmOverloads constructor(
         visible: () -> Boolean = { true },
         selected: Boolean = false,
         @DrawableRes background: Int? = null,
+        private val padding: Padding = defaultActionPadding,
         listener: (Boolean) -> Unit
     ) : Toolbar.ActionToggleButton(
         imageResource,
@@ -359,18 +362,19 @@ class BrowserToolbar @JvmOverloads constructor(
         visible,
         selected,
         background,
-        listener
+        listener = listener
     ) {
         override fun createView(parent: ViewGroup): View {
             return super.createView(parent).apply {
-                val padding = resources.pxToDp(ACTION_PADDING_DP)
-                setPadding(padding, padding, padding, padding)
+                setPadding(padding)
             }
         }
     }
 
     companion object {
-        private const val ACTION_PADDING_DP = 16
+        internal const val ACTION_PADDING_DP = 16
+        private val defaultActionPadding =
+            Padding(ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP)
         private const val DEFAULT_TOOLBAR_HEIGHT_DP = 56
     }
 }

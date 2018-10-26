@@ -5,6 +5,9 @@
 package mozilla.components.concept.toolbar
 
 import android.widget.FrameLayout
+import android.widget.LinearLayout
+import mozilla.components.support.base.android.Padding
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -149,5 +152,30 @@ class ActionToggleButtonTest {
         val view = button.createView(FrameLayout(RuntimeEnvironment.application))
         view.performClick()
         assertTrue(button.isSelected())
+    }
+
+    @Test
+    fun `Toolbar ActionToggleButton must set padding`() {
+        var button = Toolbar.ActionToggleButton(0, 0, "imageResource", "") {}
+        val linearLayout = LinearLayout(RuntimeEnvironment.application)
+        var view = button.createView(linearLayout)
+        val padding = Padding(16, 20, 24, 28)
+
+        assertEquals(view.paddingLeft, 0)
+        assertEquals(view.paddingTop, 0)
+        assertEquals(view.paddingRight, 0)
+        assertEquals(view.paddingBottom, 0)
+
+        button = Toolbar.ActionToggleButton(
+            0, 0, "imageResource", "",
+            padding = padding
+        ) {}
+
+        view = button.createView(linearLayout)
+        view.paddingLeft
+        assertEquals(view.paddingLeft, 16)
+        assertEquals(view.paddingTop, 20)
+        assertEquals(view.paddingRight, 24)
+        assertEquals(view.paddingBottom, 28)
     }
 }

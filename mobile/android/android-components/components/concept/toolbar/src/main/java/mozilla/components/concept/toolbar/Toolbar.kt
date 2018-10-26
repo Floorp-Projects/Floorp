@@ -11,6 +11,8 @@ import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import mozilla.components.support.base.android.Padding
+import mozilla.components.support.ktx.android.view.setPadding
 import java.lang.ref.WeakReference
 
 /**
@@ -130,6 +132,7 @@ interface Toolbar {
      * @param contentDescription The content description to use.
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
      * @param background A custom (stateful) background drawable resource to be used.
+     * @param padding A optional custom padding.
      * @param listener Callback that will be invoked whenever the button is pressed
      */
     open class ActionButton(
@@ -137,12 +140,13 @@ interface Toolbar {
         private val contentDescription: String,
         override val visible: () -> Boolean = { true },
         @DrawableRes private val background: Int? = null,
+        private val padding: Padding? = null,
         private val listener: () -> Unit
     ) : Action {
-        override fun createView(parent: ViewGroup): View = AppCompatImageButton(parent.context).also {
-            it.setImageResource(imageResource)
-            it.contentDescription = contentDescription
-            it.setOnClickListener { listener.invoke() }
+        override fun createView(parent: ViewGroup): View = AppCompatImageButton(parent.context).also { imageButton ->
+            imageButton.setImageResource(imageResource)
+            imageButton.contentDescription = contentDescription
+            imageButton.setOnClickListener { listener.invoke() }
 
             if (background == null) {
                 val outValue = TypedValue()
@@ -150,10 +154,11 @@ interface Toolbar {
                         android.R.attr.selectableItemBackgroundBorderless,
                         outValue,
                         true)
-                it.setBackgroundResource(outValue.resourceId)
+                imageButton.setBackgroundResource(outValue.resourceId)
             } else {
-                it.setBackgroundResource(background)
+                imageButton.setBackgroundResource(background)
             }
+            padding?.let { imageButton.setPadding(it) }
         }
 
         override fun bind(view: View) = Unit
@@ -170,6 +175,7 @@ interface Toolbar {
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
      * @param selected Sets whether this button should be selected initially.
      * @param background A custom (stateful) background drawable resource to be used.
+     * @param padding A optional custom padding.
      * @param listener Callback that will be invoked whenever the checked state changes.
      */
     open class ActionToggleButton(
@@ -180,15 +186,16 @@ interface Toolbar {
         override val visible: () -> Boolean = { true },
         private var selected: Boolean = false,
         @DrawableRes private val background: Int? = null,
-        private val listener: (Boolean) -> Unit
+        private val padding: Padding? = null,
+        private val listener: (Boolean) -> Unit = {}
     ) : Action {
         private var view: WeakReference<ImageButton>? = null
 
-        override fun createView(parent: ViewGroup): View = AppCompatImageButton(parent.context).also {
-            view = WeakReference(it)
+        override fun createView(parent: ViewGroup): View = AppCompatImageButton(parent.context).also { imageButton ->
+            view = WeakReference(imageButton)
 
-            it.setOnClickListener { toggle() }
-            it.isSelected = selected
+            imageButton.setOnClickListener { toggle() }
+            imageButton.isSelected = selected
 
             updateViewState()
 
@@ -199,10 +206,11 @@ interface Toolbar {
                         outValue,
                         true)
 
-                it.setBackgroundResource(outValue.resourceId)
+                imageButton.setBackgroundResource(outValue.resourceId)
             } else {
-                it.setBackgroundResource(background)
+                imageButton.setBackgroundResource(background)
             }
+            padding?.let { imageButton.setPadding(it) }
         }
 
         /**
@@ -260,12 +268,15 @@ interface Toolbar {
      * An "empty" action with a desired width to be used as "placeholder".
      *
      * @param desiredWidth The desired width in density independent pixels for this action.
+     * @param padding A optional custom padding.
      */
     open class ActionSpace(
-        private val desiredWidth: Int
+        private val desiredWidth: Int,
+        private val padding: Padding? = null
     ) : Action {
         override fun createView(parent: ViewGroup): View = View(parent.context).apply {
             minimumWidth = desiredWidth
+            padding?.let { this.setPadding(it) }
         }
 
         override fun bind(view: View) = Unit
@@ -278,10 +289,12 @@ interface Toolbar {
      * @param contentDescription Optional content description to be used. If no content description
      *                           is provided then this view will be treated as not important for
      *                           accessibility.
+     * @param padding A optional custom padding.
      */
     open class ActionImage(
         @DrawableRes private val imageResource: Int,
-        private val contentDescription: String? = null
+        private val contentDescription: String? = null,
+        private val padding: Padding? = null
     ) : Action {
         override fun createView(parent: ViewGroup): View = AppCompatImageView(parent.context).also {
             val drawable = parent.context.resources.getDrawable(imageResource, parent.context.theme)
@@ -295,6 +308,7 @@ interface Toolbar {
             } else {
                 View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
             }
+            padding?.let { pd -> it.setPadding(pd) }
         }
 
         override fun bind(view: View) = Unit
