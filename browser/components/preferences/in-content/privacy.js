@@ -26,9 +26,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingCookiesAndSiteDataRe
 XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingCookiesAndSiteDataRejectTrackersEnabled",
                                       "browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled");
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingFastBlockUiEnabled",
-                                      "browser.contentblocking.fastblock.ui.enabled");
-
 XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingTrackingProtectionUiEnabled",
                                       "browser.contentblocking.trackingprotection.ui.enabled");
 
@@ -66,9 +63,6 @@ XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
 Preferences.addAll([
   // Content Blocking
   { id: "browser.contentblocking.enabled", type: "bool" },
-
-  // FastBlock
-  { id: "browser.fastblock.enabled", type: "bool" },
 
   // Tracking Protection
   { id: "privacy.trackingprotection.enabled", type: "bool" },
@@ -480,7 +474,6 @@ var gPrivacyPane = {
     // Honour our Content Blocking category UI prefs. If each pref is set to false,
     // Make all descendants of the corresponding selector hidden.
     let selectorPrefMap = {
-      ".fast-block-ui": contentBlockingFastBlockUiEnabled,
       ".tracking-protection-ui": contentBlockingTrackingProtectionUiEnabled,
       ".reject-trackers-ui": contentBlockingRejectTrackersUiEnabled,
     };
@@ -513,7 +506,6 @@ var gPrivacyPane = {
     }
 
     clearIfNotLocked("browser.contentblocking.enabled");
-    clearIfNotLocked("browser.fastblock.enabled");
     clearIfNotLocked("urlclassifier.trackingTable");
     clearIfNotLocked("network.cookie.cookieBehavior");
     clearIfNotLocked("network.cookie.lifetimePolicy");

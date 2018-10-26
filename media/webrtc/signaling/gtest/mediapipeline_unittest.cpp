@@ -26,6 +26,7 @@
 #include "mozilla/SyncRunnable.h"
 #include "mtransport_test_utils.h"
 #include "SharedBuffer.h"
+#include "MediaTransportHandler.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -164,63 +165,71 @@ public:
     }
 };
 
-class TransportInfo {
+class LoopbackTransport : public MediaTransportBase {
  public:
-  TransportInfo() :
-    flow_(nullptr),
-    loopback_(nullptr) {}
+  LoopbackTransport()
+  {
+    SetState("mux", TransportLayer::TS_INIT, false);
+    SetState("mux", TransportLayer::TS_INIT, true);
+    SetState("non-mux", TransportLayer::TS_INIT, false);
+    SetState("non-mux", TransportLayer::TS_INIT, true);
+  }
 
-  static void InitAndConnect(TransportInfo &client, TransportInfo &server) {
-    client.Init(true);
-    server.Init(false);
+  static void InitAndConnect(LoopbackTransport &client, LoopbackTransport &server) {
     client.Connect(&server);
     server.Connect(&client);
   }
 
-  void Init(bool client) {
-    UniquePtr<TransportLayerLoopback> loopback(new TransportLayerLoopback);
-    UniquePtr<TransportLayerDtls> dtls(new TransportLayerDtls);
-    UniquePtr<TransportLayerSrtp> srtp(new TransportLayerSrtp(*dtls));
-
-    std::vector<uint16_t> ciphers;
-    ciphers.push_back(kDtlsSrtpAeadAes256Gcm);
-    dtls->SetSrtpCiphers(ciphers);
-    dtls->SetIdentity(DtlsIdentity::Generate());
-    dtls->SetRole(client ? TransportLayerDtls::CLIENT :
-      TransportLayerDtls::SERVER);
-    dtls->SetVerificationAllowAll();
-
-    ASSERT_EQ(NS_OK, loopback->Init());
-    ASSERT_EQ(NS_OK, dtls->Init());
-    ASSERT_EQ(NS_OK, srtp->Init());
-
-    dtls->Chain(loopback.get());
-    srtp->Chain(loopback.get());
-
-    flow_ = new TransportFlow();
-    loopback_ = loopback.release();
-    flow_->PushLayer(loopback_);
-    flow_->PushLayer(dtls.release());
-    flow_->PushLayer(srtp.release());
-  }
-
-  void Connect(TransportInfo* peer) {
-    MOZ_ASSERT(loopback_);
-    MOZ_ASSERT(peer->loopback_);
-
-    loopback_->Connect(peer->loopback_);
+  void Connect(LoopbackTransport* peer) {
+    peer_ = peer;
   }
 
   void Shutdown() {
-    if (loopback_) {
-      loopback_->Disconnect();
-    }
-    loopback_ = nullptr;
-    flow_ = nullptr;
+    peer_ = nullptr;
   }
 
-  RefPtr<TransportFlow> flow_;
-  TransportLayerLoopback *loopback_;
+  nsresult SendPacket(const std::string& aTransportId,
+                      MediaPacket& aPacket) override
+  {
+    peer_->SignalPacketReceived(aTransportId, aPacket);
+    return NS_OK;
+  }
+
+  TransportLayer::State GetState(const std::string& aTransportId,
+                                 bool aRtcp) const override
+  {
+    if (aRtcp) {
+      auto it = mRtcpStates.find(aTransportId);
+      if (it != mRtcpStates.end()) {
+        return it->second;
+      }
+    } else {
+      auto it = mRtpStates.find(aTransportId);
+      if (it != mRtpStates.end()) {
+        return it->second;
+      }
+    }
+
+    return TransportLayer::TS_NONE;
+  }
+
+  void SetState(const std::string& aTransportId,
+                TransportLayer::State aState,
+                bool aRtcp)
+  {
+    if (aRtcp) {
+      mRtcpStates[aTransportId] = aState;
+      SignalRtcpStateChange(aTransportId, aState);
+    } else {
+      mRtpStates[aTransportId] = aState;
+      SignalStateChange(aTransportId, aState);
+    }
+  }
+
+private:
+  RefPtr<MediaTransportBase> peer_;
+  std::map<std::string, TransportLayer::State> mRtpStates;
+  std::map<std::string, TransportLayer::State> mRtcpStates;
 };
 
 class TestAgent {
@@ -229,25 +238,34 @@ class TestAgent {
       audio_config_(109, "opus", 48000, 960, 2, 64000, false),
       audio_conduit_(mozilla::AudioSessionConduit::Create()),
       audio_pipeline_(),
-      use_bundle_(false) {
+      transport_(new LoopbackTransport) {
   }
 
-  static void ConnectRtp(TestAgent *client, TestAgent *server) {
-    TransportInfo::InitAndConnect(client->audio_rtp_transport_,
-                                  server->audio_rtp_transport_);
+  static void Connect(TestAgent *client, TestAgent *server) {
+    LoopbackTransport::InitAndConnect(*client->transport_,
+                                      *server->transport_);
   }
 
-  static void ConnectRtcp(TestAgent *client, TestAgent *server) {
-    TransportInfo::InitAndConnect(client->audio_rtcp_transport_,
-                                  server->audio_rtcp_transport_);
+  virtual void CreatePipeline(const std::string& aTransportId) = 0;
+
+  void SetState(const std::string& aTransportId,
+                TransportLayer::State aState,
+                bool aRtcp)
+  {
+    mozilla::SyncRunnable::DispatchToThread(
+        test_utils->sts_target(),
+        WrapRunnable(transport_,
+          &LoopbackTransport::SetState, aTransportId, aState, aRtcp));
   }
 
-  static void ConnectBundle(TestAgent *client, TestAgent *server) {
-    TransportInfo::InitAndConnect(client->bundle_transport_,
-                                  server->bundle_transport_);
+  void UpdateTransport(const std::string& aTransportId,
+                       nsAutoPtr<MediaPipelineFilter> aFilter)
+  {
+    mozilla::SyncRunnable::DispatchToThread(
+        test_utils->sts_target(),
+        WrapRunnable(audio_pipeline_,
+          &MediaPipeline::UpdateTransport_s, aTransportId, aFilter));
   }
-
-  virtual void CreatePipeline(bool aIsRtcpMux) = 0;
 
   void Stop() {
     MOZ_MTLOG(ML_DEBUG, "Stopping");
@@ -257,9 +275,7 @@ class TestAgent {
   }
 
   void Shutdown_s() {
-    audio_rtp_transport_.Shutdown();
-    audio_rtcp_transport_.Shutdown();
-    bundle_transport_.Shutdown();
+    transport_->Shutdown();
   }
 
   void Shutdown() {
@@ -301,11 +317,6 @@ class TestAgent {
     return audio_pipeline_->RtcpPacketsReceived();
   }
 
-
-  void SetUsingBundle(bool use_bundle) {
-    use_bundle_ = use_bundle;
-  }
-
  protected:
   mozilla::AudioCodecConfig audio_config_;
   RefPtr<mozilla::MediaSessionConduit> audio_conduit_;
@@ -314,10 +325,7 @@ class TestAgent {
   // both directions; only the sender's RTCP is sent, but the receiver should
   // be sending it too.
   RefPtr<mozilla::MediaPipeline> audio_pipeline_;
-  TransportInfo audio_rtp_transport_;
-  TransportInfo audio_rtcp_transport_;
-  TransportInfo bundle_transport_;
-  bool use_bundle_;
+  RefPtr<LoopbackTransport> transport_;
 };
 
 class TestAgentSend : public TestAgent {
@@ -331,17 +339,14 @@ class TestAgentSend : public TestAgent {
     audio_stream_track_ = new FakeAudioStreamTrack();
   }
 
-  virtual void CreatePipeline(bool aIsRtcpMux) {
+  virtual void CreatePipeline(const std::string& aTransportId) {
 
     std::string test_pc;
-
-    if (aIsRtcpMux) {
-      ASSERT_FALSE(audio_rtcp_transport_.flow_);
-    }
 
     RefPtr<MediaPipelineTransmit> audio_pipeline =
       new mozilla::MediaPipelineTransmit(
         test_pc,
+        transport_,
         nullptr,
         test_utils->sts_target(),
         false,
@@ -352,16 +357,8 @@ class TestAgentSend : public TestAgent {
 
     audio_pipeline_ = audio_pipeline;
 
-    RefPtr<TransportFlow> rtp(audio_rtp_transport_.flow_);
-    RefPtr<TransportFlow> rtcp(audio_rtcp_transport_.flow_);
-
-    if (use_bundle_) {
-      rtp = bundle_transport_.flow_;
-      rtcp = nullptr;
-    }
-
-    audio_pipeline_->UpdateTransport_m(
-        rtp, rtcp, nsAutoPtr<MediaPipelineFilter>(nullptr));
+    audio_pipeline_->UpdateTransport_m(aTransportId,
+                                       nsAutoPtr<MediaPipelineFilter>(nullptr));
   }
 };
 
@@ -379,15 +376,12 @@ class TestAgentReceive : public TestAgent {
     EXPECT_EQ(mozilla::kMediaConduitNoError, err);
   }
 
-  virtual void CreatePipeline(bool aIsRtcpMux) {
+  virtual void CreatePipeline(const std::string& aTransportId) {
     std::string test_pc;
-
-    if (aIsRtcpMux) {
-      ASSERT_FALSE(audio_rtcp_transport_.flow_);
-    }
 
     audio_pipeline_ = new mozilla::MediaPipelineReceiveAudio(
         test_pc,
+        transport_,
         nullptr,
         test_utils->sts_target(),
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get()),
@@ -395,26 +389,16 @@ class TestAgentReceive : public TestAgent {
 
     audio_pipeline_->Start();
 
-    RefPtr<TransportFlow> rtp(audio_rtp_transport_.flow_);
-    RefPtr<TransportFlow> rtcp(audio_rtcp_transport_.flow_);
-
-    if (use_bundle_) {
-      rtp = bundle_transport_.flow_;
-      rtcp = nullptr;
-    }
-
-    audio_pipeline_->UpdateTransport_m(rtp, rtcp, bundle_filter_);
+    audio_pipeline_->UpdateTransport_m(aTransportId, bundle_filter_);
   }
 
   void SetBundleFilter(nsAutoPtr<MediaPipelineFilter> filter) {
     bundle_filter_ = filter;
   }
 
-  void UpdateFilter_s(
+  void UpdateTransport_s(const std::string& aTransportId,
       nsAutoPtr<MediaPipelineFilter> filter) {
-    audio_pipeline_->UpdateTransport_s(audio_rtp_transport_.flow_,
-                                       audio_rtcp_transport_.flow_,
-                                       filter);
+    audio_pipeline_->UpdateTransport_s(aTransportId, filter);
   }
 
  private:
@@ -436,24 +420,10 @@ class MediaPipelineTest : public ::testing::Test {
   }
 
   // Setup transport.
-  void InitTransports(bool aIsRtcpMux) {
-    // RTP, p1_ is server, p2_ is client
+  void InitTransports() {
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
-      WrapRunnableNM(&TestAgent::ConnectRtp, &p2_, &p1_));
-
-    // Create RTCP flows separately if we are not muxing them.
-    if(!aIsRtcpMux) {
-      // RTCP, p1_ is server, p2_ is client
-      mozilla::SyncRunnable::DispatchToThread(
-        test_utils->sts_target(),
-        WrapRunnableNM(&TestAgent::ConnectRtcp, &p2_, &p1_));
-    }
-
-    // BUNDLE, p1_ is server, p2_ is client
-    mozilla::SyncRunnable::DispatchToThread(
-      test_utils->sts_target(),
-      WrapRunnableNM(&TestAgent::ConnectBundle, &p2_, &p1_));
+      WrapRunnableNM(&TestAgent::Connect, &p2_, &p1_));
   }
 
   // Verify RTP and RTCP
@@ -473,10 +443,28 @@ class MediaPipelineTest : public ::testing::Test {
     p2_.SetBundleFilter(initialFilter);
 
     // Setup transport flows
-    InitTransports(aIsRtcpMux);
+    InitTransports();
 
-    p1_.CreatePipeline(aIsRtcpMux);
-    p2_.CreatePipeline(aIsRtcpMux);
+    std::string transportId = aIsRtcpMux ? "mux" : "non-mux";
+    p1_.CreatePipeline(transportId);
+    p2_.CreatePipeline(transportId);
+
+    // Set state of transports to CONNECTING. MediaPipeline doesn't really care
+    // about this transition, but we're trying to simluate what happens in a
+    // real case.
+    p1_.SetState(transportId, TransportLayer::TS_CONNECTING, false);
+    p1_.SetState(transportId, TransportLayer::TS_CONNECTING, true);
+    p2_.SetState(transportId, TransportLayer::TS_CONNECTING, false);
+    p2_.SetState(transportId, TransportLayer::TS_CONNECTING, true);
+
+    PR_Sleep(10);
+
+    // Set state of transports to OPEN (ie; connected). This should result in
+    // media flowing.
+    p1_.SetState(transportId, TransportLayer::TS_OPEN, false);
+    p1_.SetState(transportId, TransportLayer::TS_OPEN, true);
+    p2_.SetState(transportId, TransportLayer::TS_OPEN, false);
+    p2_.SetState(transportId, TransportLayer::TS_OPEN, true);
 
     if (bundle) {
       PR_Sleep(ms_until_filter_update);
@@ -489,11 +477,7 @@ class MediaPipelineTest : public ::testing::Test {
         refinedFilter->AddRemoteSSRC(p1_.GetLocalSSRC());
       }
 
-      mozilla::SyncRunnable::DispatchToThread(
-          test_utils->sts_target(),
-          WrapRunnable(&p2_,
-                       &TestAgentReceive::UpdateFilter_s,
-                       refinedFilter));
+      p2_.UpdateTransport(transportId, refinedFilter);
     }
 
     // wait for some RTP/RTCP tx and rx to happen

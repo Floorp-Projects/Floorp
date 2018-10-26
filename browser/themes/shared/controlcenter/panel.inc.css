@@ -453,14 +453,6 @@ description#identity-popup-content-verifier,
   display: none;
 }
 
-.fastblock-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/slowtrackers.svg);
-}
-
-#identity-popup-content-blocking-category-fastblock.blocked > .fastblock-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/slowtrackers-disabled.svg);
-}
-
 .tracking-protection-icon {
   list-style-image: url(chrome://browser/skin/controlcenter/trackers.svg);
 }

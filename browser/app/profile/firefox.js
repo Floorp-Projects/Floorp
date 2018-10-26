@@ -1526,10 +1526,6 @@ pref("browser.contentblocking.global-toggle.enabled", false);
 pref("dom.storage_access.enabled", true);
 #endif
 
-// Disable the UI for FastBlock in product.
-pref("browser.contentblocking.fastblock.ui.enabled", false);
-pref("browser.contentblocking.fastblock.control-center.ui.enabled", false);
-
 // Define a set of default features for the Content Blocking UI.
 pref("browser.contentblocking.trackingprotection.ui.enabled", true);
 pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);

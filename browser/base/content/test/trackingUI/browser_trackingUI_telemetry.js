@@ -41,8 +41,6 @@ add_task(async function setup() {
 
   is(scalars["contentblocking.enabled"], Services.prefs.getBoolPref("browser.contentblocking.enabled"),
     "CB enabled status was recorded at startup");
-  is(scalars["contentblocking.fastblock_enabled"], Services.prefs.getBoolPref("browser.fastblock.enabled"),
-    "FB enabled status was recorded at startup");
   is(scalars["contentblocking.exceptions"], 0, "no CB exceptions at startup");
 });
 
