@@ -44,13 +44,8 @@
 #include "mozilla/gfx/Types.h"
 #include "nsError.h"
 #include "nsThreadUtils.h"
-#include "nspr.h"
 #include "runnable_utils.h"
-#include "srtp.h"
-#include "transportflow.h"
-#include "transportlayer.h"
-#include "transportlayerdtls.h"
-#include "transportlayerice.h"
+#include "signaling/src/peerconnection/MediaTransportHandler.h"
 #include "Tracing.h"
 
 #include "webrtc/base/bind.h"
@@ -602,15 +597,15 @@ protected:
 };
 
 MediaPipeline::MediaPipeline(const std::string& aPc,
+                             MediaTransportBase* aTransportHandler,
                              DirectionType aDirection,
                              nsCOMPtr<nsIEventTarget> aMainThread,
                              nsCOMPtr<nsIEventTarget> aStsThread,
                              RefPtr<MediaSessionConduit> aConduit)
   : mDirection(aDirection)
   , mLevel(0)
+  , mTransportHandler(aTransportHandler)
   , mConduit(aConduit)
-  , mRtp(nullptr, RTP)
-  , mRtcp(nullptr, RTCP)
   , mMainThread(aMainThread)
   , mStsThread(aStsThread)
   , mTransport(new PipelineTransport(aStsThread))
@@ -660,74 +655,49 @@ MediaPipeline::DetachTransport_s()
           ("%s in %s", mDescription.c_str(), __FUNCTION__));
 
   disconnect_all();
+  mRtpState = TransportLayer::TS_NONE;
+  mRtcpState = TransportLayer::TS_NONE;
+  mTransportId.clear();
   mTransport->Detach();
-  mRtp.Detach();
-  mRtcp.Detach();
 
   // Make sure any cycles are broken
   mPacketDumper = nullptr;
 }
 
-nsresult
-MediaPipeline::AttachTransport_s()
-{
-  ASSERT_ON_THREAD(mStsThread);
-  nsresult res;
-  MOZ_ASSERT(mRtp.mTransport);
-  MOZ_ASSERT(mRtcp.mTransport);
-  res = ConnectTransport_s(mRtp);
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
-  if (mRtcp.mTransport != mRtp.mTransport) {
-    res = ConnectTransport_s(mRtcp);
-    if (NS_FAILED(res)) {
-      return res;
-    }
-  }
-
-  mTransport->Attach(this);
-
-  return NS_OK;
-}
-
 void
-MediaPipeline::UpdateTransport_m(RefPtr<TransportFlow> aRtpTransport,
-                                 RefPtr<TransportFlow> aRtcpTransport,
+MediaPipeline::UpdateTransport_m(const std::string& aTransportId,
                                  nsAutoPtr<MediaPipelineFilter> aFilter)
 {
   RUN_ON_THREAD(mStsThread,
                 WrapRunnable(RefPtr<MediaPipeline>(this),
                              &MediaPipeline::UpdateTransport_s,
-                             aRtpTransport,
-                             aRtcpTransport,
+                             aTransportId,
                              aFilter),
                 NS_DISPATCH_NORMAL);
 }
 
 void
-MediaPipeline::UpdateTransport_s(RefPtr<TransportFlow> aRtpTransport,
-                                 RefPtr<TransportFlow> aRtcpTransport,
+MediaPipeline::UpdateTransport_s(const std::string& aTransportId,
                                  nsAutoPtr<MediaPipelineFilter> aFilter)
 {
-  bool rtcp_mux = false;
-  if (!aRtcpTransport) {
-    aRtcpTransport = aRtpTransport;
-    rtcp_mux = true;
+  ASSERT_ON_THREAD(mStsThread);
+  if (!mSignalsConnected) {
+    mTransportHandler->SignalStateChange.connect(
+        this, &MediaPipeline::RtpStateChange);
+    mTransportHandler->SignalRtcpStateChange.connect(
+        this, &MediaPipeline::RtcpStateChange);
+    mTransportHandler->SignalEncryptedSending.connect(
+        this, &MediaPipeline::EncryptedPacketSending);
+    mTransportHandler->SignalPacketReceived.connect(
+        this, &MediaPipeline::PacketReceived);
+    mSignalsConnected = true;
   }
 
-  if ((aRtpTransport != mRtp.mTransport) ||
-      (aRtcpTransport != mRtcp.mTransport)) {
-    disconnect_all();
-    mTransport->Detach();
-    mRtp.Detach();
-    mRtcp.Detach();
-    if (aRtpTransport && aRtcpTransport) {
-      mRtp = TransportInfo(aRtpTransport, rtcp_mux ? MUX : RTP);
-      mRtcp = TransportInfo(aRtcpTransport, rtcp_mux ? MUX : RTCP);
-      AttachTransport_s();
-    }
+  if (aTransportId != mTransportId) {
+    mTransportId = aTransportId;
+    mRtpState = mTransportHandler->GetState(mTransportId, false);
+    mRtcpState = mTransportHandler->GetState(mTransportId, true);
+    CheckTransportStates();
   }
 
   if (mFilter && aFilter) {
@@ -790,121 +760,80 @@ MediaPipeline::GetContributingSourceStats(
 }
 
 void
-MediaPipeline::StateChange(TransportLayer* aLayer, TransportLayer::State aState)
+MediaPipeline::RtpStateChange(const std::string& aTransportId,
+                              TransportLayer::State aState)
 {
-  TransportInfo* info = GetTransportInfo_s(aLayer);
-  MOZ_ASSERT(info);
-
-  if (aState == TransportLayer::TS_OPEN) {
-    MOZ_LOG(gMediaPipelineLog, LogLevel::Info, ("Flow is ready"));
-    TransportReady_s(*info);
-  } else if (aState == TransportLayer::TS_CLOSED ||
-             aState == TransportLayer::TS_ERROR) {
-    TransportFailed_s(*info);
+  if (mTransportId != aTransportId) {
+    return;
   }
-}
-
-static bool
-MakeRtpTypeToStringArray(const char** aArray)
-{
-  static const char* RTP_str = "RTP";
-  static const char* RTCP_str = "RTCP";
-  static const char* MUX_str = "RTP/RTCP mux";
-  aArray[MediaPipeline::RTP] = RTP_str;
-  aArray[MediaPipeline::RTCP] = RTCP_str;
-  aArray[MediaPipeline::MUX] = MUX_str;
-  return true;
-}
-
-static const char*
-ToString(MediaPipeline::RtpType type)
-{
-  static const char* array[(int)MediaPipeline::MAX_RTP_TYPE] = { nullptr };
-  // Dummy variable to cause init to happen only on first call
-  static bool dummy = MakeRtpTypeToStringArray(array);
-  (void)dummy;
-  return array[type];
-}
-
-nsresult
-MediaPipeline::TransportReady_s(TransportInfo& aInfo)
-{
-  // TODO(ekr@rtfm.com): implement some kind of notification on
-  // failure. bug 852665.
-  if (aInfo.mState != StateType::MP_CONNECTING) {
-    MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
-            ("Transport ready for flow in wrong state:%s :%s",
-             mDescription.c_str(),
-             ToString(aInfo.mType)));
-    return NS_ERROR_FAILURE;
-  }
-
-  MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
-          ("Transport ready for pipeline %p flow %s: %s",
-           this,
-           mDescription.c_str(),
-            ToString(aInfo.mType)));
-
-  if (mDirection == DirectionType::RECEIVE) {
-    MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
-            ("Listening for %s packets received on %p",
-             ToString(aInfo.mType),
-             aInfo.mSrtp));
-
-    aInfo.mSrtp->SignalPacketReceived.connect(
-        this, &MediaPipeline::PacketReceived);
-  }
-
-  aInfo.mState = StateType::MP_OPEN;
-  UpdateRtcpMuxState(aInfo);
-  return NS_OK;
-}
-
-nsresult
-MediaPipeline::TransportFailed_s(TransportInfo& aInfo)
-{
-  ASSERT_ON_THREAD(mStsThread);
-
-  aInfo.mState = StateType::MP_CLOSED;
-  UpdateRtcpMuxState(aInfo);
-
-  MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
-          ("Transport closed for flow %s", ToString(aInfo.mType)));
-
-  NS_WARNING(
-    "MediaPipeline Transport failed. This is not properly cleaned up yet");
-
-  // TODO(ekr@rtfm.com): SECURITY: Figure out how to clean up if the
-  // connection was good and now it is bad.
-  // TODO(ekr@rtfm.com): Report up so that the PC knows we
-  // have experienced an error.
-
-  return NS_OK;
+  mRtpState = aState;
+  CheckTransportStates();
 }
 
 void
-MediaPipeline::UpdateRtcpMuxState(TransportInfo& aInfo)
+MediaPipeline::RtcpStateChange(const std::string& aTransportId,
+                              TransportLayer::State aState)
 {
-  if (aInfo.mType == MUX) {
-    if (aInfo.mTransport == mRtcp.mTransport) {
-      mRtcp.mState = aInfo.mState;
-    }
+  if (mTransportId != aTransportId) {
+    return;
+  }
+  mRtcpState = aState;
+  CheckTransportStates();
+}
+
+void
+MediaPipeline::CheckTransportStates()
+{
+  ASSERT_ON_THREAD(mStsThread);
+
+  if (mRtpState == TransportLayer::TS_CLOSED ||
+      mRtpState == TransportLayer::TS_ERROR ||
+      mRtcpState == TransportLayer::TS_CLOSED ||
+      mRtcpState == TransportLayer::TS_ERROR) {
+    MOZ_LOG(gMediaPipelineLog, LogLevel::Warning,
+            ("RTP Transport failed for pipeline %p flow %s",
+             this,
+             mDescription.c_str()));
+
+    NS_WARNING(
+      "MediaPipeline Transport failed. This is not properly cleaned up yet");
+    // TODO(ekr@rtfm.com): SECURITY: Figure out how to clean up if the
+    // connection was good and now it is bad.
+    // TODO(ekr@rtfm.com): Report up so that the PC knows we
+    // have experienced an error.
+    mTransport->Detach();
+    return;
+  }
+
+  if (mRtpState == TransportLayer::TS_OPEN) {
+    MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
+            ("RTP Transport ready for pipeline %p flow %s",
+             this,
+             mDescription.c_str()));
+  }
+
+  if (mRtcpState == TransportLayer::TS_OPEN) {
+    MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
+            ("RTCP Transport ready for pipeline %p flow %s",
+             this,
+             mDescription.c_str()));
+  }
+
+  if (mRtpState == TransportLayer::TS_OPEN && mRtcpState == mRtpState) {
+    mTransport->Attach(this);
+    TransportReady_s();
   }
 }
 
 nsresult
-MediaPipeline::SendPacket(TransportLayer* aLayer, MediaPacket& packet)
+MediaPipeline::SendPacket(MediaPacket& packet)
 {
   ASSERT_ON_THREAD(mStsThread);
+  MOZ_ASSERT(mRtpState == TransportLayer::TS_OPEN);
+  MOZ_ASSERT(!mTransportId.empty());
+  nsresult rv = mTransportHandler->SendPacket(mTransportId, packet);
 
-  int len = packet.len();
-  TransportResult res = aLayer->SendPacket(packet);
-
-  if (res != len) {
-    // Ignore blocking indications
-    if (res == TE_WOULDBLOCK)
-      return NS_OK;
-
+  if (NS_FAILED(rv)) {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
             ("Failed write on stream %s", mDescription.c_str()));
     return NS_BASE_STREAM_CLOSED;
@@ -921,11 +850,10 @@ MediaPipeline::IncrementRtpPacketsSent(int32_t aBytes)
 
   if (!(mRtpPacketsSent % 100)) {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
-            ("RTP sent packet count for %s Pipeline %p Flow: %p: %u (%" PRId64
+            ("RTP sent packet count for %s Pipeline %p: %u (%" PRId64
              " bytes)",
              mDescription.c_str(),
              this,
-             static_cast<void*>(mRtp.mTransport),
              mRtpPacketsSent,
              mRtpBytesSent));
   }
@@ -937,10 +865,9 @@ MediaPipeline::IncrementRtcpPacketsSent()
   ++mRtcpPacketsSent;
   if (!(mRtcpPacketsSent % 100)) {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
-            ("RTCP sent packet count for %s Pipeline %p Flow: %p: %u",
+            ("RTCP sent packet count for %s Pipeline %p: %u",
              mDescription.c_str(),
              this,
-             static_cast<void*>(mRtp.mTransport),
              mRtcpPacketsSent));
   }
 }
@@ -952,11 +879,10 @@ MediaPipeline::IncrementRtpPacketsReceived(int32_t aBytes)
   mRtpBytesReceived += aBytes;
   if (!(mRtpPacketsReceived % 100)) {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
-            ("RTP received packet count for %s Pipeline %p Flow: %p: %u (%"
+            ("RTP received packet count for %s Pipeline %p: %u (%"
              PRId64 " bytes)",
              mDescription.c_str(),
              this,
-             static_cast<void*>(mRtp.mTransport),
              mRtpPacketsReceived,
              mRtpBytesReceived));
   }
@@ -968,16 +894,15 @@ MediaPipeline::IncrementRtcpPacketsReceived()
   ++mRtcpPacketsReceived;
   if (!(mRtcpPacketsReceived % 100)) {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
-            ("RTCP received packet count for %s Pipeline %p Flow: %p: %u",
+            ("RTCP received packet count for %s Pipeline %p: %u",
              mDescription.c_str(),
              this,
-             static_cast<void*>(mRtp.mTransport),
              mRtcpPacketsReceived));
   }
 }
 
 void
-MediaPipeline::RtpPacketReceived(TransportLayer* aLayer, MediaPacket& packet)
+MediaPipeline::RtpPacketReceived(MediaPacket& packet)
 {
   if (mDirection == DirectionType::TRANSMIT) {
     return;
@@ -992,18 +917,6 @@ MediaPipeline::RtpPacketReceived(TransportLayer* aLayer, MediaPacket& packet)
   if (!mConduit) {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
             ("Discarding incoming packet; media disconnected"));
-    return;
-  }
-
-  if (mRtp.mState != StateType::MP_OPEN) {
-    MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
-            ("Discarding incoming packet; pipeline not open"));
-    return;
-  }
-
-  if (mRtp.mSrtp->state() != TransportLayer::TS_OPEN) {
-    MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
-            ("Discarding incoming packet; transport not open"));
     return;
   }
 
@@ -1078,7 +991,7 @@ MediaPipeline::RtpPacketReceived(TransportLayer* aLayer, MediaPacket& packet)
 }
 
 void
-MediaPipeline::RtcpPacketReceived(TransportLayer* aLayer, MediaPacket& packet)
+MediaPipeline::RtcpPacketReceived(MediaPacket& packet)
 {
   if (!mTransport->Pipeline()) {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
@@ -1089,18 +1002,6 @@ MediaPipeline::RtcpPacketReceived(TransportLayer* aLayer, MediaPacket& packet)
   if (!mConduit) {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
             ("Discarding incoming packet; media disconnected"));
-    return;
-  }
-
-  if (mRtcp.mState != StateType::MP_OPEN) {
-    MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
-            ("Discarding incoming packet; pipeline not open"));
-    return;
-  }
-
-  if (mRtcp.mSrtp->state() != TransportLayer::TS_OPEN) {
-    MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
-            ("Discarding incoming packet; transport not open"));
     return;
   }
 
@@ -1131,8 +1032,13 @@ MediaPipeline::RtcpPacketReceived(TransportLayer* aLayer, MediaPacket& packet)
 }
 
 void
-MediaPipeline::PacketReceived(TransportLayer* aLayer, MediaPacket& packet)
+MediaPipeline::PacketReceived(const std::string& aTransportId,
+                              MediaPacket& packet)
 {
+  if (mTransportId != aTransportId) {
+    return;
+  }
+
   if (!mTransport->Pipeline()) {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
             ("Discarding incoming packet; transport disconnected"));
@@ -1141,13 +1047,34 @@ MediaPipeline::PacketReceived(TransportLayer* aLayer, MediaPacket& packet)
 
   switch (packet.type()) {
     case MediaPacket::RTP:
-      RtpPacketReceived(aLayer, packet);
+      RtpPacketReceived(packet);
       break;
     case MediaPacket::RTCP:
-      RtcpPacketReceived(aLayer, packet);
+      RtcpPacketReceived(packet);
       break;
     default:
-      MOZ_CRASH("TransportLayerSrtp let something other than RTP/RTCP through");
+      ;
+  }
+}
+
+void
+MediaPipeline::EncryptedPacketSending(const std::string& aTransportId,
+                                      MediaPacket& aPacket)
+{
+  if (mTransportId == aTransportId) {
+    dom::mozPacketDumpType type;
+    if (aPacket.type() == MediaPacket::SRTP) {
+      type = dom::mozPacketDumpType::Srtp;
+    } else if (aPacket.type() == MediaPacket::SRTCP) {
+      type = dom::mozPacketDumpType::Srtcp;
+    } else if (aPacket.type() == MediaPacket::DTLS) {
+      // TODO(bug 1497936): Implement packet dump for DTLS
+      return;
+    } else {
+      MOZ_ASSERT(false);
+      return;
+    }
+    mPacketDumper->Dump(Level(), type, true, aPacket.data(), aPacket.len());
   }
 }
 
@@ -1273,11 +1200,13 @@ protected:
 
 MediaPipelineTransmit::MediaPipelineTransmit(
   const std::string& aPc,
+  MediaTransportBase* aTransportHandler,
   nsCOMPtr<nsIEventTarget> aMainThread,
   nsCOMPtr<nsIEventTarget> aStsThread,
   bool aIsVideo,
   RefPtr<MediaSessionConduit> aConduit)
   : MediaPipeline(aPc,
+                  aTransportHandler,
                   DirectionType::TRANSMIT,
                   aMainThread,
                   aStsThread,
@@ -1468,19 +1397,13 @@ MediaPipelineTransmit::DetachMedia()
   // Let the listener be destroyed with the pipeline (or later).
 }
 
-nsresult
-MediaPipelineTransmit::TransportReady_s(TransportInfo& aInfo)
+void
+MediaPipelineTransmit::TransportReady_s()
 {
   ASSERT_ON_THREAD(mStsThread);
   // Call base ready function.
-  MediaPipeline::TransportReady_s(aInfo);
-
-  // Should not be set for a transmitter
-  if (&aInfo == &mRtp) {
-    mListener->SetActive(true);
-  }
-
-  return NS_OK;
+  MediaPipeline::TransportReady_s();
+  mListener->SetActive(true);
 }
 
 nsresult
@@ -1511,51 +1434,6 @@ MediaPipelineTransmit::SetTrack(MediaStreamTrack* aDomTrack)
 }
 
 nsresult
-MediaPipeline::ConnectTransport_s(TransportInfo& aInfo)
-{
-  MOZ_ASSERT(aInfo.mTransport);
-  MOZ_ASSERT(aInfo.mSrtp);
-  ASSERT_ON_THREAD(mStsThread);
-
-  // Look to see if the transport is ready
-  if (aInfo.mSrtp->state() == TransportLayer::TS_OPEN) {
-    nsresult res = TransportReady_s(aInfo);
-    if (NS_FAILED(res)) {
-      MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
-              ("Error calling TransportReady(); res=%u in %s",
-                static_cast<uint32_t>(res),
-                __FUNCTION__));
-      return res;
-    }
-  } else if (aInfo.mSrtp->state() == TransportLayer::TS_ERROR) {
-      MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
-              ("%s transport is already in error state",
-               ToString(aInfo.mType)));
-    TransportFailed_s(aInfo);
-    return NS_ERROR_FAILURE;
-  }
-
-  aInfo.mSrtp->SignalStateChange.connect(this, &MediaPipeline::StateChange);
-
-  return NS_OK;
-}
-
-MediaPipeline::TransportInfo*
-MediaPipeline::GetTransportInfo_s(TransportLayer* aLayer)
-{
-  ASSERT_ON_THREAD(mStsThread);
-  if (aLayer == mRtp.mSrtp) {
-    return &mRtp;
-  }
-
-  if (aLayer == mRtcp.mSrtp) {
-    return &mRtcp;
-  }
-
-  return nullptr;
-}
-
-nsresult
 MediaPipeline::PipelineTransport::SendRtpPacket(const uint8_t* aData, size_t aLen)
 {
   nsAutoPtr<MediaPacket> packet(new MediaPacket);
@@ -1583,15 +1461,13 @@ MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
     return NS_OK; // Detached
   }
 
-  TransportInfo& transport = isRtp ? mPipeline->mRtp : mPipeline->mRtcp;
-
-  if (transport.mSrtp->state() != TransportLayer::TS_OPEN) {
-    // SRTP not ready yet.
+  if (isRtp && mPipeline->mRtpState != TransportLayer::TS_OPEN) {
     return NS_OK;
   }
 
-  MOZ_ASSERT(transport.mTransport);
-  NS_ENSURE_TRUE(transport.mTransport, NS_ERROR_NULL_POINTER);
+  if (!isRtp && mPipeline->mRtcpState != TransportLayer::TS_OPEN) {
+    return NS_OK;
+  }
 
   MediaPacket packet(std::move(*aPacket));
   packet.sdp_level() = Some(mPipeline->Level());
@@ -1621,7 +1497,7 @@ MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
            mPipeline->mDescription.c_str(),
            (isRtp ? "RTP" : "RTCP")));
 
-  return mPipeline->SendPacket(transport.mSrtp, packet);
+  return mPipeline->SendPacket(packet);
 }
 
 nsresult
@@ -1898,11 +1774,14 @@ protected:
   Atomic<bool> mMaybeTrackNeedsUnmute;
 };
 
-MediaPipelineReceive::MediaPipelineReceive(const std::string& aPc,
-                                           nsCOMPtr<nsIEventTarget> aMainThread,
-                                           nsCOMPtr<nsIEventTarget> aStsThread,
-                                           RefPtr<MediaSessionConduit> aConduit)
+MediaPipelineReceive::MediaPipelineReceive(
+    const std::string& aPc,
+    MediaTransportBase* aTransportHandler,
+    nsCOMPtr<nsIEventTarget> aMainThread,
+    nsCOMPtr<nsIEventTarget> aStsThread,
+    RefPtr<MediaSessionConduit> aConduit)
   : MediaPipeline(aPc,
+                  aTransportHandler,
                   DirectionType::RECEIVE,
                   aMainThread,
                   aStsThread,
@@ -2048,11 +1927,16 @@ private:
 
 MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
   const std::string& aPc,
+  MediaTransportBase* aTransportHandler,
   nsCOMPtr<nsIEventTarget> aMainThread,
   nsCOMPtr<nsIEventTarget> aStsThread,
   RefPtr<AudioSessionConduit> aConduit,
   dom::MediaStreamTrack* aTrack)
-  : MediaPipelineReceive(aPc, aMainThread, aStsThread, aConduit)
+  : MediaPipelineReceive(aPc,
+                         aTransportHandler,
+                         aMainThread,
+                         aStsThread,
+                         aConduit)
   , mListener(aTrack ? new PipelineListener(aTrack, mConduit) : nullptr)
 {
   mDescription = mPc + "| Receive audio";
@@ -2236,11 +2120,16 @@ private:
 
 MediaPipelineReceiveVideo::MediaPipelineReceiveVideo(
   const std::string& aPc,
+  MediaTransportBase* aTransportHandler,
   nsCOMPtr<nsIEventTarget> aMainThread,
   nsCOMPtr<nsIEventTarget> aStsThread,
   RefPtr<VideoSessionConduit> aConduit,
   dom::MediaStreamTrack* aTrack)
-  : MediaPipelineReceive(aPc, aMainThread, aStsThread, aConduit)
+  : MediaPipelineReceive(aPc,
+                         aTransportHandler,
+                         aMainThread,
+                         aStsThread,
+                         aConduit)
   , mRenderer(new PipelineRenderer(this))
   , mListener(aTrack ? new PipelineListener(aTrack) : nullptr)
 {

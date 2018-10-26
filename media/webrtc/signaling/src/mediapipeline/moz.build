@@ -22,7 +22,6 @@ UNIFIED_SOURCES += [
     'MediaPipeline.cpp',
     'MediaPipelineFilter.cpp',
     'RtpLogger.cpp',
-    'TransportLayerPacketDumper.cpp',
 ]
 
 DEFINES['TRACING'] = True

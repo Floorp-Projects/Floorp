@@ -477,6 +477,10 @@ nsresult NrIceMediaStream::GetDefaultCandidate(
     int component,
     NrIceCandidate* candidate) const {
 
+  if (!stream_) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nr_ice_candidate *cand;
 
   int r = nr_ice_media_stream_get_default_candidate(stream_, component, &cand);
