@@ -6,5 +6,7 @@ package org.mozilla.samples.dataprotect
 
 import android.util.Base64
 
-val B64_FLAGS = Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_PADDING
-val KEYSTORE_LABEL = "samples-dataprotect"
+object Constants {
+    const val B64_FLAGS = Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_PADDING
+    const val KEYSTORE_LABEL = "samples-dataprotect"
+}

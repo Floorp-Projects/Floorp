@@ -121,11 +121,11 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             val permissionCheck = ContextCompat.checkSelfPermission(this@MainActivity,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
-            if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
-                }
+            if (permissionCheck != PackageManager.PERMISSION_GRANTED &&
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+            ) {
+                requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
             }
 
             val appFiles = this@MainActivity.applicationContext.getExternalFilesDir(null)

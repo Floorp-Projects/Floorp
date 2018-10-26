@@ -53,6 +53,7 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
         unregisterReceiver(receiver)
     }
 
+    @Suppress("TooGenericExceptionThrown")
     override fun onClick(view: View) {
         when (view) {
             fatalCrashButton -> throw RuntimeException("Boom!")

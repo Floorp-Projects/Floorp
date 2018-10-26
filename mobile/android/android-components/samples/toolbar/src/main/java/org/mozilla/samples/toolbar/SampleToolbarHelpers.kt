@@ -25,6 +25,7 @@ enum class ToolbarConfiguration(val label: String) {
     SEEDLING("Seedling")
 }
 
+@Suppress("MagicNumber")
 class ConfigurationAdapter(val configuration: ToolbarConfiguration) : RecyclerView.Adapter<ConfigurationViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ConfigurationViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_toolbar_configuration, parent, false)
@@ -72,6 +73,7 @@ object Extra {
 /**
  * A custom view to be drawn behind the URL and page actions. Acts as a custom progress view.
  */
+@Suppress("MagicNumber")
 class UrlBoxProgressView(
     context: Context
 ) : View(context) {

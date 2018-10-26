@@ -33,6 +33,7 @@ import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 /**
  * This sample application shows how to use and customize the browser-toolbar component.
  */
+@Suppress("TooManyFunctions", "MagicNumber")
 class ToolbarActivity : AppCompatActivity() {
     private val autoCompleteProvider: DomainAutoCompleteProvider = DomainAutoCompleteProvider()
 
@@ -214,6 +215,7 @@ class ToolbarActivity : AppCompatActivity() {
     /**
      * A large dark toolbar with padding, flexible space and branding.
      */
+    @Suppress("LongMethod")
     private fun setupSeedlingToolbar() {
         // //////////////////////////////////////////////////////////////////////////////////////////
         // Setup background and size/padding
@@ -392,6 +394,7 @@ class ToolbarActivity : AppCompatActivity() {
 
     private var loading: Boolean = false
 
+    @Suppress("TooGenericExceptionCaught", "LongMethod", "ComplexMethod")
     private fun simulateReload(view: UrlBoxProgressView? = null) {
         job?.cancel()
 

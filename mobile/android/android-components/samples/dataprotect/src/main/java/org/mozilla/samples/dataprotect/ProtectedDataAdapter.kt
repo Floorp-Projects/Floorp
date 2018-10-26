@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import mozilla.components.lib.dataprotect.Keystore
+import org.mozilla.samples.dataprotect.Constants.B64_FLAGS
 import java.nio.charset.StandardCharsets
 
 class ProtectedDataAdapter(

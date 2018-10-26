@@ -14,11 +14,14 @@ import android.util.Base64
 import android.widget.Button
 import mozilla.components.lib.dataprotect.Keystore
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.samples.dataprotect.Constants.B64_FLAGS
+import org.mozilla.samples.dataprotect.Constants.KEYSTORE_LABEL
 import java.nio.charset.StandardCharsets
 
 class MainActivity : AppCompatActivity() {
     private val logger: Logger = Logger("dataprotect")
     private val keystore: Keystore = Keystore(KEYSTORE_LABEL)
+    @Suppress("MagicNumber")
     private val itemKeys: List<String> = List(5) { "protected item ${it + 1}" }
 
     private lateinit var listView: RecyclerView

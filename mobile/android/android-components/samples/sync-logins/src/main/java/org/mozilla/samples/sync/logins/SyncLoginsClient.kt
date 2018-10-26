@@ -56,6 +56,7 @@ class SyncLoginsClient(databasePath: String) : AutoCloseable {
         return this.store
     }
 
+    @Suppress("TooGenericExceptionThrown", "ThrowsCount")
     // Helper to convert FxA OAuthInfo + TokenServer URL to `SyncUnlockInfo`.
     private fun getUnlockInfo(oauthInfo: OAuthInfo, tokenServerURL: String): SyncUnlockInfo {
         val keys = oauthInfo.keys ?: throw RuntimeException("keys are missing!")
