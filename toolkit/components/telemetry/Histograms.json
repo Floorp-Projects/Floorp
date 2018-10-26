@@ -6383,26 +6383,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Whether the browser we migrated from was the browser with the most recent data. Keyed by that browser's identifier (e.g. 'ie', 'edge', 'safari', etc.)."
   },
-  "FX_PREFERENCES_CATEGORY_OPENED": {
-    "record_in_processes": ["main", "content"],
-    "bug_numbers": [1324167],
-    "alert_emails": ["jaws@mozilla.com"],
-    "expires_in_version": "59",
-    "kind": "categorical",
-    "labels": ["unknown", "general", "search", "content", "applications", "privacy", "security", "sync", "advancedGeneral", "advancedDataChoices", "advancedNetwork", "advancedUpdates", "advancedCerts"],
-    "releaseChannelCollection": "opt-out",
-    "description": "Count how often each preference category is opened."
-  },
-  "FX_PREFERENCES_CATEGORY_OPENED_V2": {
-    "record_in_processes": ["main", "content"],
-    "bug_numbers": [1335907, 1425173, 1451006],
-    "alert_emails": ["jaws@mozilla.com"],
-    "expires_in_version": "66",
-    "kind": "categorical",
-    "labels": ["unknown", "searchresults", "general", "applications", "privacy", "sync", "advanced", "search", "home"],
-    "releaseChannelCollection": "opt-out",
-    "description": "Count how often each preference category is opened."
-  },
   "FX_PREFERENCES_OPENED_VIA": {
     "record_in_processes": ["main", "content"],
     "bug_numbers": [1330315, 1420062, 1427973],

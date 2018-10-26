@@ -188,10 +188,6 @@ function gotoPref(aCategory) {
   mainContent.scrollTop = 0;
 
   spotlight(subcategory);
-
-  Services.telemetry
-          .getHistogramById("FX_PREFERENCES_CATEGORY_OPENED_V2")
-          .add(telemetryBucketForCategory(friendlyName));
 }
 
 function search(aQuery, aAttribute) {
