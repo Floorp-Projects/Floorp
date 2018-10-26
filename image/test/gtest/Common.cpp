@@ -38,12 +38,7 @@ AutoInitializeImageLib::AutoInitializeImageLib()
   sImageLibInitialized = true;
 
   // Force sRGB to be consistent with reftests.
-  nsresult rv = Preferences::SetBool("gfx.color_management.force_srgb", true);
-  EXPECT_TRUE(rv == NS_OK);
-
-  // Ensure WebP is enabled to run decoder tests.
-  rv = Preferences::SetBool("image.webp.enabled", true);
-  EXPECT_TRUE(rv == NS_OK);
+  Preferences::SetBool("gfx.color_management.force_srgb", true);
 
   // Ensure that ImageLib services are initialized.
   nsCOMPtr<imgITools> imgTools = do_CreateInstance("@mozilla.org/image/tools;1");
@@ -556,16 +551,6 @@ ImageTestCase GreenIconTestCase()
                        TEST_CASE_IS_TRANSPARENT);
 }
 
-ImageTestCase GreenWebPTestCase()
-{
-  return ImageTestCase("green.webp", "image/webp", IntSize(100, 100));
-}
-
-ImageTestCase GreenWebPIccSrgbTestCase()
-{
-  return ImageTestCase("green.icc_srgb.webp", "image/webp", IntSize(100, 100));
-}
-
 ImageTestCase GreenFirstFrameAnimatedGIFTestCase()
 {
   return ImageTestCase("first-frame-green.gif", "image/gif", IntSize(100, 100),
@@ -576,12 +561,6 @@ ImageTestCase GreenFirstFrameAnimatedPNGTestCase()
 {
   return ImageTestCase("first-frame-green.png", "image/png", IntSize(100, 100),
                        TEST_CASE_IS_TRANSPARENT | TEST_CASE_IS_ANIMATED);
-}
-
-ImageTestCase GreenFirstFrameAnimatedWebPTestCase()
-{
-  return ImageTestCase("first-frame-green.webp", "image/webp", IntSize(100, 100),
-                       TEST_CASE_IS_ANIMATED);
 }
 
 ImageTestCase CorruptTestCase()
@@ -718,12 +697,6 @@ ImageTestCase DownscaledIconTestCase()
 {
   return ImageTestCase("downscaled.icon", "image/icon", IntSize(100, 100),
                        IntSize(20, 20), TEST_CASE_IS_TRANSPARENT);
-}
-
-ImageTestCase DownscaledWebPTestCase()
-{
-  return ImageTestCase("downscaled.webp", "image/webp", IntSize(100, 100),
-                       IntSize(20, 20));
 }
 
 ImageTestCase DownscaledTransparentICOWithANDMaskTestCase()
