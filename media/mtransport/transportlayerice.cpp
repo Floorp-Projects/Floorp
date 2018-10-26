@@ -125,6 +125,7 @@ void TransportLayerIce::PostSetup() {
 
 TransportResult TransportLayerIce::SendPacket(MediaPacket& packet) {
   CheckThread();
+  SignalPacketSending(this, packet);
   nsresult res = stream_->SendPacket(component_,
                                      packet.data(),
                                      packet.len());
@@ -182,6 +183,8 @@ void TransportLayerIce::IcePacketReceived(NrIceMediaStream *stream, int componen
   // footgun though with MediaPackets that end up on the heap.
   MediaPacket packet;
   packet.Copy(data, len);
+  packet.Categorize();
+
   SignalPacketReceived(this, packet);
 }
 

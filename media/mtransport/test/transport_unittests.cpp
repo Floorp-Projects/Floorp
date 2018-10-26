@@ -482,6 +482,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
       loopback_->Disconnect();
       flow_ = nullptr;
     }
+    ice_ctx_->Destroy();
     ice_ctx_ = nullptr;
     streams_.clear();
   }

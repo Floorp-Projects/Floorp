@@ -211,14 +211,6 @@ public:
     return mMedia;
   }
 
-  // Configure the ability to use localhost.
-  void SetAllowIceLoopback(bool val) { mAllowIceLoopback = val; }
-  bool GetAllowIceLoopback() const { return mAllowIceLoopback; }
-
-  // Configure the ability to use IPV6 link-local addresses.
-  void SetAllowIceLinkLocal(bool val) { mAllowIceLinkLocal = val; }
-  bool GetAllowIceLinkLocal() const { return mAllowIceLinkLocal; }
-
   // Handle system to allow weak references to be passed through C code
   virtual const std::string& GetHandle();
 
@@ -233,7 +225,6 @@ public:
                               const std::string& defaultRtcpAddr,
                               uint16_t defaultRtcpPort,
                               const std::string& transportId);
-  void EndOfLocalCandidates(const std::string& transportId);
 
   static void ListenThread(void *aData);
   static void ConnectThread(void *aData);
@@ -447,7 +438,10 @@ public:
   }
 
   // this method checks to see if we've made a promise to protect media.
-  bool PrivacyRequested() const { return mPrivacyRequested; }
+  bool PrivacyRequested() const
+  {
+    return mPrivacyRequested.isSome() && *mPrivacyRequested;
+  }
 
   NS_IMETHODIMP GetFingerprint(char** fingerprint);
   void GetFingerprint(nsAString& fingerprint)
@@ -541,7 +535,7 @@ public:
 
   bool IsClosed() const;
   // called when DTLS connects; we only need this once
-  nsresult SetDtlsConnected(bool aPrivacyRequested);
+  nsresult OnAlpnNegotiated(const std::string& aAlpn);
 
   bool HasMedia() const;
 
@@ -611,7 +605,8 @@ private:
       uint16_t* remoteport,
       uint32_t* maxmessagesize,
       bool*     mmsset,
-      std::string* transportId) const;
+      std::string* transportId,
+      bool* client) const;
 
   nsresult AddRtpTransceiverToJsepSession(RefPtr<JsepTransceiver>& transceiver);
   already_AddRefed<TransceiverImpl> CreateTransceiverImpl(
@@ -649,10 +644,6 @@ private:
   mozilla::dom::PCImplIceConnectionState mIceConnectionState;
   mozilla::dom::PCImplIceGatheringState mIceGatheringState;
 
-  // DTLS
-  // this is true if we have been connected ever, see SetDtlsConnected
-  bool mDtlsConnected;
-
   nsCOMPtr<nsIThread> mThread;
   // TODO: Remove if we ever properly wire PeerConnection for cycle-collection.
   nsWeakPtr mPCObserver;
@@ -679,7 +670,7 @@ private:
   //
   // This can be false if mPeerIdentity is set, in the case where identity is
   // provided, but the media is not protected from the app on either side
-  bool mPrivacyRequested;
+  Maybe<bool> mPrivacyRequested;
 
   // A handle to refer to this PC with
   std::string mHandle;
@@ -693,8 +684,6 @@ private:
   // DataConnection that's used to get all the DataChannels
   RefPtr<mozilla::DataChannelConnection> mDataConnection;
 
-  bool mAllowIceLoopback;
-  bool mAllowIceLinkLocal;
   bool mForceIceTcp;
   RefPtr<PeerConnectionMedia> mMedia;
 

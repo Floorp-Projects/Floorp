@@ -27,9 +27,7 @@
 #include "mozilla/net/NeckoTargetHolder.h"
 #ifdef SCTP_DTLS_SUPPORTED
 #include "mtransport/sigslot.h"
-#include "mtransport/transportflow.h"
-#include "mtransport/transportlayer.h"
-#include "mtransport/transportlayerdtls.h"
+#include "mtransport/transportlayer.h" // For TransportLayer::State
 #endif
 
 #ifndef DATACHANNEL_LOG
@@ -50,6 +48,8 @@ namespace mozilla {
 class DataChannelConnection;
 class DataChannel;
 class DataChannelOnMessageAvailable;
+class MediaPacket;
+class MediaTransportHandler;
 
 // For sending outgoing messages.
 // This class only holds a reference to the data and the info structure but does
@@ -145,7 +145,8 @@ public:
   };
 
   DataChannelConnection(DataConnectionListener *listener,
-                        nsIEventTarget *aTarget);
+                        nsIEventTarget *aTarget,
+                        MediaTransportHandler* aTransportHandler);
 
   bool Init(unsigned short aPort, uint16_t aNumStreams, bool aMaxMessageSizeSet,
             uint64_t aMaxMessageSize);
@@ -168,11 +169,11 @@ public:
 #endif
 
 #ifdef SCTP_DTLS_SUPPORTED
-  // Connect using a TransportFlow (DTLS) channel
-  void SetEvenOdd();
-  bool ConnectViaTransportFlow(TransportFlow *aFlow, uint16_t localport, uint16_t remoteport);
-  void CompleteConnect(TransportLayer *layer, TransportLayer::State state);
-  void SetSignals();
+  bool ConnectToTransport(const std::string& aTransportId, bool aClient, uint16_t localport, uint16_t remoteport);
+  void TransportStateChange(const std::string& aTransportId,
+                            TransportLayer::State aState);
+  void CompleteConnect();
+  void SetSignals(const std::string& aTransportId, bool aClient);
 #endif
 
   typedef enum {
@@ -247,7 +248,7 @@ private:
 #ifdef SCTP_DTLS_SUPPORTED
   static void DTLSConnectThread(void *data);
   int SendPacket(nsAutoPtr<MediaPacket> packet);
-  void SctpDtlsInput(TransportLayer *layer, MediaPacket& packet);
+  void SctpDtlsInput(const std::string& aTransportId, MediaPacket& packet);
   static int SctpDtlsOutput(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df);
 #endif
   DataChannel* FindChannelByStream(uint16_t stream);
@@ -310,9 +311,6 @@ private:
   }
 #endif
 
-  // Exists solely for proxying release of the TransportFlow to the STS thread
-  static void ReleaseTransportFlow(const RefPtr<TransportFlow>& aFlow) {}
-
   bool mSendInterleaved;
   bool mPpidFragmentation;
   bool mMaxMessageSizeSet;
@@ -338,8 +336,8 @@ private:
   uint16_t mState; // Protected with mLock
 
 #ifdef SCTP_DTLS_SUPPORTED
-  RefPtr<TransportFlow> mTransportFlow;
-  TransportLayerDtls* mDtls;
+  std::string mTransportId;
+  RefPtr<MediaTransportHandler> mTransportHandler;
   nsCOMPtr<nsIEventTarget> mSTS;
 #endif
   uint16_t mLocalPort; // Accessed from connect thread
