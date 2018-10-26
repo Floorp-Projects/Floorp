@@ -73,6 +73,7 @@ Structure:
       profile: {
         creationDate: <integer>, // integer days since UNIX epoch, e.g. 16446
         resetDate: <integer>, // integer days since UNIX epoch, e.g. 16446 - optional
+        wasCanary: <bool>, // Android only: true if this profile previously had a canary client ID
       },
       partner: { // This section may not be immediately available on startup
         distributionId: <string>, // pref "distribution.id", null on failure
@@ -375,6 +376,12 @@ It's read from a file-stored timestamp from the client's profile directory.
     If the timestamp file does not exist all files in the profile directory are scanned.
     The oldest creation or modification date of the scanned files is then taken to be the profile creation date.
     This has been shown to sometimes be inaccurate (`bug 1449739 <https://bugzilla.mozilla.org/show_bug.cgi?id=1449739>`_).
+
+wasCanary
+~~~~~~~~~
+
+Android-only. This attribute is set to ``true`` if the client ID was erroneously set to a canary client ID before
+and later reset to a new random client ID. The attribute is not included if the client ID was not changed.
 
 partner
 -------
