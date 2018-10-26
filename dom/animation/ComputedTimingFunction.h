@@ -35,16 +35,10 @@ public:
     MOZ_ASSERT(aSteps > 0, "The number of steps should be 1 or more");
     return ComputedTimingFunction(aType, aSteps);
   }
-  static ComputedTimingFunction
-  Frames(uint32_t aFrames)
-  {
-    MOZ_ASSERT(aFrames > 1, "The number of frames should be 2 or more");
-    return ComputedTimingFunction(nsTimingFunction::Type::Frames, aFrames);
-  }
 
   ComputedTimingFunction() = default;
   explicit ComputedTimingFunction(const nsTimingFunction& aFunction)
-    : mStepsOrFrames(0)
+    : mSteps(0)
   {
     Init(aFunction);
   }
@@ -68,19 +62,14 @@ public:
   {
     MOZ_ASSERT(mType == nsTimingFunction::Type::StepStart ||
                mType == nsTimingFunction::Type::StepEnd);
-    return mStepsOrFrames;
-  }
-  uint32_t GetFrames() const
-  {
-    MOZ_ASSERT(mType == nsTimingFunction::Type::Frames);
-    return mStepsOrFrames;
+    return mSteps;
   }
   bool operator==(const ComputedTimingFunction& aOther) const
   {
     return mType == aOther.mType &&
            (HasSpline() ?
             mTimingFunction == aOther.mTimingFunction :
-            mStepsOrFrames == aOther.mStepsOrFrames);
+            mSteps == aOther.mSteps);
   }
   bool operator!=(const ComputedTimingFunction& aOther) const
   {
@@ -94,7 +83,7 @@ public:
               mTimingFunction.Y1() == aOther.mFunc.mY1 &&
               mTimingFunction.X2() == aOther.mFunc.mX2 &&
               mTimingFunction.Y2() == aOther.mFunc.mY2
-            : mStepsOrFrames == aOther.mStepsOrFrames);
+            : mSteps == aOther.mSteps);
   }
   bool operator!=(const nsTimingFunction& aOther) const
   {
@@ -116,16 +105,16 @@ private:
   ComputedTimingFunction(double x1, double y1, double x2, double y2)
     : mType(nsTimingFunction::Type::CubicBezier)
     , mTimingFunction(x1, y1, x2, y2)
-    , mStepsOrFrames(0)
+    , mSteps(0)
   {
   }
-  ComputedTimingFunction(nsTimingFunction::Type aType, uint32_t aStepsOrFrames)
+  ComputedTimingFunction(nsTimingFunction::Type aType, uint32_t aSteps)
     : mType(aType)
-    , mStepsOrFrames(aStepsOrFrames) { }
+    , mSteps(aSteps) { }
 
   nsTimingFunction::Type mType = nsTimingFunction::Type::Linear;
   nsSMILKeySpline mTimingFunction;
-  uint32_t mStepsOrFrames;
+  uint32_t mSteps;
 };
 
 inline bool

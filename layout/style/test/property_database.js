@@ -6439,14 +6439,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
     .push("'vert' calc(2.5)");
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.frames-timing.enabled")) {
-  gCSSProperties["animation-timing-function"].other_values.push(
-    "frames(2)", "frames(1000)", "frames( 2 )");
-  gCSSProperties["animation-timing-function"].invalid_values.push(
-    "frames(1)", "frames(-2)", "frames", "frames()", "frames(,)",
-    "frames(a)", "frames(2.0)", "frames(2.5)", "frames(2 3)");
-}
-
 if (IsCSSPropertyPrefEnabled("svg.transform-box.enabled")) {
   gCSSProperties["transform-box"] = {
     domProp: "transformBox",
