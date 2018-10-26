@@ -70,9 +70,11 @@ static Atomic<uint64_t> sCanonicalGTC;
 static Atomic<uint64_t> sCanonicalQPC;
 static Atomic<bool> sCanonicalHasQPC;
 #else
-static Atomic<uint64_t> sCanonicalNow;
+static Atomic<uint64_t> sCanonicalNowTimeStamp;
 #endif
-
+static Atomic<int64_t> sCanonicalNowTime;
+// This variable stores the frozen time (as ms since the epoch) for FuzzyFox
+// to report if FuzzyFox is enabled.
 static TimeStampInitialization sInitOnce;
 
 MFBT_API TimeStamp
@@ -155,6 +157,18 @@ TimeStamp::UpdateFuzzyTimeStamp(TimeStamp aValue)
 #else
   sCanonicalNowTimeStamp = aValue.mValue.mTimeStamp;
 #endif
+}
+
+MFBT_API int64_t
+TimeStamp::NowFuzzyTime()
+{
+  return sCanonicalNowTime;
+}
+
+MFBT_API void
+TimeStamp::UpdateFuzzyTime(int64_t aValue)
+{
+  sCanonicalNowTime = aValue;
 }
 
 } // namespace mozilla
