@@ -181,6 +181,7 @@ protected:
   struct nsThreadShutdownContext* ShutdownInternal(bool aSync);
 
   friend class nsThreadManager;
+  friend class nsThreadPool;
 
   static mozilla::OffTheBooksMutex& ThreadListMutex();
   static mozilla::LinkedList<nsThread>& ThreadList();
