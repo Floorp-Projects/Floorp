@@ -618,7 +618,6 @@ typedef js::Vector<CodePosition, 4, SystemAllocPolicy> SplitPositionVector;
 
 class BacktrackingAllocator : protected RegisterAllocator
 {
-    friend class C1Spewer;
     friend class JSONSpewer;
 
     // This flag is set when testing new allocator modifications.
