@@ -240,10 +240,6 @@ AnimationFrameDiscardingQueue::AdvanceInternal()
 imgFrame*
 AnimationFrameDiscardingQueue::Get(size_t aFrame, bool aForDisplay)
 {
-  // If we are advancing on behalf of the animation, we don't expect it to be
-  // getting any frames (besides the first) until we get the desired frame.
-  MOZ_ASSERT(aFrame == 0 || mAdvance == 0);
-
   // The first frame is stored separately. If we only need the frame for
   // display purposes, we can return it right away. If we need it for advancing
   // the animation, we want to verify the recreated first frame is available
@@ -270,6 +266,10 @@ AnimationFrameDiscardingQueue::Get(size_t aFrame, bool aForDisplay)
   if (offset >= mDisplay.size()) {
     return nullptr;
   }
+
+  // If we are advancing on behalf of the animation, we don't expect it to be
+  // getting any frames (besides the first) until we get the desired frame.
+  MOZ_ASSERT(aFrame == 0 || mAdvance == 0);
 
   // If we have space for the frame, it should always be available.
   MOZ_ASSERT(mDisplay[offset]);
@@ -305,10 +305,13 @@ AnimationFrameDiscardingQueue::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf
   for (const RefPtr<imgFrame>& frame : mDisplay) {
     ++i;
     if (mSize < i) {
-      // First frame again, we already covered it above.
-      MOZ_ASSERT(mFirstFrame.get() == frame.get());
       i = 1;
-      continue;
+      if (mFirstFrame.get() == frame.get()) {
+        // First frame again, we already covered it above. We can have a
+        // different frame in the first frame position in the discard queue
+        // on subsequent passes of the animation. This is useful for recycling.
+        continue;
+      }
     }
 
     frame->AddSizeOfExcludingThis(aMallocSizeOf,
