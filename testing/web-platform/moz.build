@@ -227,7 +227,7 @@ with Files("tests/css/css-paint-api/**"):
 with Files("tests/css/css-scoping/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
-with Files("tests/css/css-timing/**"):
+with Files("tests/css/css-easing/**"):
     BUG_COMPONENT = ("Core", "Layout")
 
 with Files("tests/css/css-typed-om/**"):
