@@ -15,15 +15,6 @@ treechildren::-moz-tree-image(title) {
   height: 16px;
 }
 
-treechildren::-moz-tree-image(title, livemarkItem) {
-  list-style-image: url("chrome://browser/skin/places/livemark-item.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
-treechildren::-moz-tree-image(title, livemarkItem, visited) {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-
 treechildren::-moz-tree-image(title, container),
 treechildren::-moz-tree-image(title, open) {
   list-style-image: url("chrome://browser/skin/places/folder.svg");
@@ -34,10 +25,6 @@ treechildren::-moz-tree-image(title, separator) {
   width: 0 !important;
   height: 0 !important;
   margin: 0;
-}
-
-treechildren::-moz-tree-image(container, livemark) {
-  list-style-image: url("chrome://browser/skin/places/folder-live.svg");
 }
 
 treechildren::-moz-tree-image(container, queryFolder_toolbar_____) {

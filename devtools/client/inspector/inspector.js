@@ -278,7 +278,7 @@ Inspector.prototype = {
       // the ChangesActor. We want the ChangesActor to be guaranteed available before
       // the user makes any changes.
       this.changesFront = this.toolbox.target.getFront("changes");
-      await this.changesFront.allChanges();
+      this.changesFront.allChanges();
     }
 
     // Setup the splitter before the sidebar is displayed so, we don't miss any events.

@@ -19,6 +19,9 @@ interface mozIPlacesAutoComplete : nsISupports
   //////////////////////////////////////////////////////////////////////////////
   //// Matching Constants
 
+  // A few of these are not used in Firefox, but are still referenced in
+  // comm-central.
+
   /**
    * Match anywhere in each searchable term.
    */

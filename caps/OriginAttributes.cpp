@@ -19,6 +19,7 @@ using dom::URLParams;
 
 bool OriginAttributes::sFirstPartyIsolation = false;
 bool OriginAttributes::sRestrictedOpenerAccess = false;
+bool OriginAttributes::sBlockPostMessageForFPI = false;
 
 void
 OriginAttributes::InitPrefs()
@@ -31,6 +32,8 @@ OriginAttributes::InitPrefs()
                                  "privacy.firstparty.isolate");
     Preferences::AddBoolVarCache(&sRestrictedOpenerAccess,
                                  "privacy.firstparty.isolate.restrict_opener_access");
+    Preferences::AddBoolVarCache(&sBlockPostMessageForFPI,
+                                 "privacy.firstparty.isolate.block_post_message");
   }
 }
 

@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>Test page for window.postMessage</title>
+</head>
+<body>
+  <div id="display" style="white-space:pre; font-family:monospace; display:inline;"></div>
+  <input type="button" id="button" title="button"/>
+  <script>
+
+  const TEST_PATH = "http://example.org/browser/browser/components/originattributes/test/browser/file_postMessageSender.html";
+
+  window.onload = () => {
+    window.addEventListener("message", aEvent => {
+      if (aEvent.data === "Message") {
+        document.getElementById("display").innerHTML = "Message";
+      }
+    });
+
+    document.getElementById("button").onclick = () => {
+      window.postMessage("Self", "/");
+    };
+  };
+  </script>
+</body>
+</html>
