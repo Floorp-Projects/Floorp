@@ -219,7 +219,7 @@ task_description_schema = Schema({
 
     # information specific to the worker implementation that will run this task
     'worker': Any({
-        Required('implementation'): Any('docker-worker', 'docker-engine'),
+        Required('implementation'): 'docker-worker',
         Required('os'): 'linux',
 
         # For tasks that will run in docker-worker or docker-engine, this is the
