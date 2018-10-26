@@ -50,6 +50,9 @@ class TransportLayerIce : public TransportLayer {
   void IcePacketReceived(NrIceMediaStream *stream, int component,
                          const unsigned char *data, int len);
 
+  // Useful for capturing encrypted packets
+  sigslot::signal2<TransportLayer*, MediaPacket&> SignalPacketSending;
+
   TRANSPORT_LAYER_ID("ice")
 
  private:

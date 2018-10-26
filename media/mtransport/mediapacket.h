@@ -86,10 +86,15 @@ class MediaPacket {
 
     enum Type {
       UNCLASSIFIED,
+      SRTP,
+      SRTCP,
+      DTLS,
       RTP,
       RTCP,
       SCTP
     };
+
+    void Categorize();
 
     void SetType(Type type)
     {

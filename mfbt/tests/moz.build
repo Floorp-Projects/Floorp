@@ -44,6 +44,7 @@ CppUnitTests([
     'TestNonDereferenceable',
     'TestNotNull',
     'TestPair',
+    'TestRandomNum',
     'TestRange',
     'TestRefPtr',
     'TestResult',
