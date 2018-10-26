@@ -265,9 +265,7 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
 
   (allow file-read-metadata (home-subpath "/Library"))
 
-  (allow file-read-metadata
-    (literal "/private/var")
-    (subpath "/private/var/folders"))
+  (allow file-read-metadata (subpath "/private/var"))
 
   ; bug 1303987
   (if (string? debugWriteDir)
