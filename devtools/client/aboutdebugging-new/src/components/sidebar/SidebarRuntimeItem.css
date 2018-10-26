@@ -15,11 +15,10 @@
   align-items: center;
   display: grid;
   grid-column-gap: var(--base-distance);
-  grid-template-columns: 20px 1fr auto;
+  grid-template-columns: calc(var(--base-distance) * 6) 1fr auto;
 }
 
 .sidebar-runtime-item__icon {
   fill: currentColor;
   -moz-context-properties: fill;
-  margin-inline-end: var(--base-distance);
 }

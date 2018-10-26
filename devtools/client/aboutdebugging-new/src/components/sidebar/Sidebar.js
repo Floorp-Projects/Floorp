@@ -21,7 +21,7 @@ const SidebarRuntimeItem = createFactory(require("./SidebarRuntimeItem"));
 const RefreshDevicesButton = createFactory(require("./RefreshDevicesButton"));
 const FIREFOX_ICON = "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
 const CONNECT_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
-const GLOBE_ICON = "chrome://devtools/skin/images/globe.svg";
+const GLOBE_ICON = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
 const USB_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 
 class Sidebar extends PureComponent {

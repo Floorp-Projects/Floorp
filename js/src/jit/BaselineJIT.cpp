@@ -61,43 +61,6 @@ ICStubSpace::freeAllAfterMinorGC(Zone* zone)
     }
 }
 
-BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
-                               uint32_t profilerEnterToggleOffset,
-                               uint32_t profilerExitToggleOffset,
-                               uint32_t postDebugPrologueOffset)
-  : method_(nullptr),
-    templateEnv_(nullptr),
-    fallbackStubSpace_(),
-    dependentWasmImports_(nullptr),
-    prologueOffset_(prologueOffset),
-    epilogueOffset_(epilogueOffset),
-    profilerEnterToggleOffset_(profilerEnterToggleOffset),
-    profilerExitToggleOffset_(profilerExitToggleOffset),
-#ifdef JS_TRACE_LOGGING
-# ifdef DEBUG
-    traceLoggerScriptsEnabled_(false),
-    traceLoggerEngineEnabled_(false),
-# endif
-    traceLoggerScriptEvent_(),
-#endif
-    postDebugPrologueOffset_(postDebugPrologueOffset),
-    flags_(0),
-    icEntriesOffset_(0),
-    icEntries_(0),
-    pcMappingIndexOffset_(0),
-    pcMappingIndexEntries_(0),
-    pcMappingOffset_(0),
-    pcMappingSize_(0),
-    bytecodeTypeMapOffset_(0),
-    yieldEntriesOffset_(0),
-    traceLoggerToggleOffsetsOffset_(0),
-    numTraceLoggerToggleOffsets_(0),
-    inlinedBytecodeLength_(0),
-    maxInliningDepth_(UINT8_MAX),
-    pendingBuilder_(nullptr),
-    controlFlowGraph_(nullptr)
-{ }
-
 static bool
 CheckFrame(InterpreterFrame* fp)
 {
@@ -194,7 +157,9 @@ jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc)
     BaselineScript* baseline = fp->script()->baselineScript();
 
     EnterJitData data(cx);
-    data.jitcode = baseline->nativeCodeForPC(fp->script(), pc);
+    PCMappingSlotInfo slotInfo;
+    data.jitcode = baseline->nativeCodeForPC(fp->script(), pc, &slotInfo);
+    MOZ_ASSERT(slotInfo.isStackSynced());
 
     // Skip debug breakpoint/trap handler, the interpreter already handled it
     // for the current op.
@@ -382,10 +347,11 @@ jit::CanEnterBaselineMethod(JSContext* cx, RunState& state)
 
 BaselineScript*
 BaselineScript::New(JSScript* jsscript,
-                    uint32_t prologueOffset, uint32_t epilogueOffset,
+                    uint32_t bailoutPrologueOffset,
+                    uint32_t debugOsrPrologueOffset,
+                    uint32_t debugOsrEpilogueOffset,
                     uint32_t profilerEnterToggleOffset,
                     uint32_t profilerExitToggleOffset,
-                    uint32_t postDebugPrologueOffset,
                     size_t icEntries,
                     size_t retAddrEntries,
                     size_t pcMappingIndexEntries, size_t pcMappingSize,
@@ -422,9 +388,11 @@ BaselineScript::New(JSScript* jsscript,
     if (!script) {
         return nullptr;
     }
-    new (script) BaselineScript(prologueOffset, epilogueOffset,
-                                profilerEnterToggleOffset, profilerExitToggleOffset,
-                                postDebugPrologueOffset);
+    new (script) BaselineScript(bailoutPrologueOffset,
+                                debugOsrPrologueOffset,
+                                debugOsrEpilogueOffset,
+                                profilerEnterToggleOffset,
+                                profilerExitToggleOffset);
 
     size_t offsetCursor = sizeof(BaselineScript);
     MOZ_ASSERT(offsetCursor == AlignBytes(sizeof(BaselineScript), DataAlignment));
@@ -812,14 +780,25 @@ BaselineScript::retAddrEntryFromReturnAddress(uint8_t* returnAddr)
 }
 
 void
-BaselineScript::copyYieldAndAwaitEntries(JSScript* script, Vector<uint32_t>& yieldAndAwaitOffsets)
+BaselineScript::computeYieldAndAwaitNativeOffsets(JSScript* script)
 {
-    uint8_t** entries = yieldEntryList();
-
-    for (size_t i = 0; i < yieldAndAwaitOffsets.length(); i++) {
-        uint32_t offset = yieldAndAwaitOffsets[i];
-        entries[i] = nativeCodeForPC(script, script->offsetToPC(offset));
+    if (!script->hasYieldAndAwaitOffsets()) {
+        return;
     }
+
+    // Translate pcOffset to BaselineScript native address. This may return
+    // nullptr if compiler decided code was unreachable.
+    auto computeNative = [this,script](uint32_t pcOffset) {
+        PCMappingSlotInfo slotInfo;
+        uint8_t* nativeCode = maybeNativeCodeForPC(script, script->offsetToPC(pcOffset), &slotInfo);
+        MOZ_ASSERT(slotInfo.isStackSynced());
+
+        return nativeCode;
+    };
+
+    mozilla::Span<uint32_t> pcOffsets = script->yieldAndAwaitOffsets();
+    uint8_t** nativeOffsets = yieldEntryList();
+    std::transform(pcOffsets.begin(), pcOffsets.end(), nativeOffsets, computeNative);
 }
 
 void
@@ -881,95 +860,91 @@ BaselineScript::copyPCMappingIndexEntries(const PCMappingIndexEntry* entries)
 }
 
 uint8_t*
-BaselineScript::nativeCodeForPC(JSScript* script, jsbytecode* pc, PCMappingSlotInfo* slotInfo)
+BaselineScript::maybeNativeCodeForPC(JSScript* script, jsbytecode* pc, PCMappingSlotInfo* slotInfo)
 {
     MOZ_ASSERT_IF(script->hasBaselineScript(), script->baselineScript() == this);
 
     uint32_t pcOffset = script->pcToOffset(pc);
 
-    // Look for the first PCMappingIndexEntry with pc > the pc we are
-    // interested in.
-    uint32_t i = 1;
-    for (; i < numPCMappingIndexEntries(); i++) {
-        if (pcMappingIndexEntry(i).pcOffset > pcOffset) {
+    // Find PCMappingIndexEntry containing pc. They are in ascedending order
+    // with the start of one entry being the end of the previous entry. Find
+    // first entry where pcOffset < endOffset.
+    uint32_t i = 0;
+    for (; (i + 1) < numPCMappingIndexEntries(); i++) {
+        uint32_t endOffset = pcMappingIndexEntry(i + 1).pcOffset;
+        if (pcOffset < endOffset) {
             break;
         }
     }
-
-    // The previous entry contains the current pc.
-    MOZ_ASSERT(i > 0);
-    i--;
 
     PCMappingIndexEntry& entry = pcMappingIndexEntry(i);
     MOZ_ASSERT(pcOffset >= entry.pcOffset);
 
     CompactBufferReader reader(pcMappingReader(i));
-    jsbytecode* curPC = script->offsetToPC(entry.pcOffset);
-    uint32_t nativeOffset = entry.nativeOffset;
+    MOZ_ASSERT(reader.more());
 
+    jsbytecode* curPC = script->offsetToPC(entry.pcOffset);
+    uint32_t curNativeOffset = entry.nativeOffset;
     MOZ_ASSERT(script->containsPC(curPC));
-    MOZ_ASSERT(curPC <= pc);
 
     while (reader.more()) {
         // If the high bit is set, the native offset relative to the
         // previous pc != 0 and comes next.
         uint8_t b = reader.readByte();
         if (b & 0x80) {
-            nativeOffset += reader.readUnsigned();
+            curNativeOffset += reader.readUnsigned();
         }
 
         if (curPC == pc) {
-            if (slotInfo) {
-                *slotInfo = PCMappingSlotInfo(b & ~0x80);
-            }
-            return method_->raw() + nativeOffset;
+            *slotInfo = PCMappingSlotInfo(b & 0x7F);
+            return method_->raw() + curNativeOffset;
         }
 
         curPC += GetBytecodeLength(curPC);
     }
 
-    MOZ_CRASH("No native code for this pc");
+    // Code was not generated for this PC because BaselineCompiler believes it
+    // is unreachable.
+    return nullptr;
 }
 
 jsbytecode*
 BaselineScript::approximatePcForNativeAddress(JSScript* script, uint8_t* nativeAddress)
 {
     MOZ_ASSERT(script->baselineScript() == this);
-    MOZ_ASSERT(nativeAddress >= method_->raw());
-    MOZ_ASSERT(nativeAddress < method_->raw() + method_->instructionsSize());
+    MOZ_ASSERT(containsCodeAddress(nativeAddress));
 
     uint32_t nativeOffset = nativeAddress - method_->raw();
-    MOZ_ASSERT(nativeOffset < method_->instructionsSize());
 
-    // Look for the first PCMappingIndexEntry with native offset > the native offset we are
-    // interested in.
-    uint32_t i = 1;
-    for (; i < numPCMappingIndexEntries(); i++) {
-        if (pcMappingIndexEntry(i).nativeOffset > nativeOffset) {
+    // The native code address can occur before the start of ops. Associate
+    // those with start of bytecode.
+    if (nativeOffset < pcMappingIndexEntry(0).nativeOffset) {
+        return script->code();
+    }
+
+    // Find corresponding PCMappingIndexEntry for native offset. They are in
+    // ascedending order with the start of one entry being the end of the
+    // previous entry. Find first entry where nativeOffset < endOffset.
+    uint32_t i = 0;
+    for (; (i + 1) < numPCMappingIndexEntries(); i++) {
+        uint32_t endOffset = pcMappingIndexEntry(i + 1).nativeOffset;
+        if (nativeOffset < endOffset) {
             break;
         }
     }
 
-    // Go back an entry to search forward from.
-    MOZ_ASSERT(i > 0);
-    i--;
-
     PCMappingIndexEntry& entry = pcMappingIndexEntry(i);
+    MOZ_ASSERT(nativeOffset >= entry.nativeOffset);
 
     CompactBufferReader reader(pcMappingReader(i));
+    MOZ_ASSERT(reader.more());
+
     jsbytecode* curPC = script->offsetToPC(entry.pcOffset);
     uint32_t curNativeOffset = entry.nativeOffset;
-
     MOZ_ASSERT(script->containsPC(curPC));
 
-    // The native code address can occur before the start of ops.
-    // Associate those with bytecode offset 0.
-    if (curNativeOffset > nativeOffset) {
-        return script->code();
-    }
-
     jsbytecode* lastPC = curPC;
-    while (true) {
+    while (reader.more()) {
         // If the high bit is set, the native offset relative to the
         // previous pc != 0 and comes next.
         uint8_t b = reader.readByte();
@@ -985,15 +960,12 @@ BaselineScript::approximatePcForNativeAddress(JSScript* script, uint8_t* nativeA
             return lastPC;
         }
 
-        // The native address may lie in-between the last delta-entry in
-        // a pcMappingIndexEntry, and the next pcMappingIndexEntry.
-        if (!reader.more()) {
-            return curPC;
-        }
-
         lastPC = curPC;
         curPC += GetBytecodeLength(curPC);
     }
+
+    // Associate all addresses at end of PCMappingIndexEntry with lastPC.
+    return lastPC;
 }
 
 void

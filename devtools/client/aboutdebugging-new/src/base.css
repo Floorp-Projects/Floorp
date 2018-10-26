@@ -17,6 +17,12 @@
   --category-text: rgba(12,12,13);
   --category-text-selected: #0a84ff;
 
+  /* Dimensions from common.css #categories > .category */
+  /* TODO: Values are not based on photon's 4px base distance, see bug 1501638 */
+  --category-height: 48px;
+  --category-padding: 10px;
+  --category-transition-duration: 150ms;
+
   --link-color: #0a8dff;
   --link-color-active: #003eaa;
   --link-color-hover: #0060df;

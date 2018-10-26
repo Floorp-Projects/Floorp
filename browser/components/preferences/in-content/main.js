@@ -2114,9 +2114,9 @@ var gMainPane = {
     if (providerDisplayName) {
       // Show cloud storage radio button with provider name in label
       let saveToCloudRadio = document.getElementById("saveToCloud");
-      let cloudStrings = Services.strings.createBundle("resource://cloudstorage/preferences.properties");
-      saveToCloudRadio.label = cloudStrings.formatStringFromName("saveFilesToCloudStorage",
-        [providerDisplayName], 1);
+      document.l10n.setAttributes(saveToCloudRadio, "save-files-to-cloud-storage", {
+        "service-name": providerDisplayName,
+      });
       saveToCloudRadio.hidden = false;
 
       let useDownloadDirPref = Preferences.get("browser.download.useDownloadDir");

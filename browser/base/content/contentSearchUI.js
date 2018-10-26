@@ -223,6 +223,11 @@ ContentSearchUIController.prototype = {
   },
 
   handleEvent(event) {
+    // The event handler is triggered by external events while the search
+    // element may no longer be present
+    if (!document.contains(this.input)) {
+      return;
+    }
     this["_on" + event.type[0].toUpperCase() + event.type.substr(1)](event);
   },
 

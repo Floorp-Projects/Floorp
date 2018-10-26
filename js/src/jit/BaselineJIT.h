@@ -65,6 +65,9 @@ class PCMappingSlotInfo
         return PCMappingSlotInfo(2 | (topSlotLoc << 2) | (nextSlotLoc) << 4);
     }
 
+    inline bool isStackSynced() const {
+        return numUnsynced() == 0;
+    }
     inline unsigned numUnsynced() const {
         return slotInfo_ & 0x3;
     }
@@ -229,30 +232,35 @@ class RetAddrEntry
     }
 };
 
-struct BaselineScript
+struct BaselineScript final
 {
   private:
     // Code pointer containing the actual method.
-    HeapPtr<JitCode*> method_;
+    HeapPtr<JitCode*> method_ = nullptr;
 
     // For functions with a call object, template objects to use for the call
     // object and decl env object (linked via the call object's enclosing
     // scope).
-    HeapPtr<EnvironmentObject*> templateEnv_;
+    HeapPtr<EnvironmentObject*> templateEnv_ = nullptr;
 
     // Allocated space for fallback stubs.
-    FallbackICStubSpace fallbackStubSpace_;
+    FallbackICStubSpace fallbackStubSpace_ = {};
 
     // If non-null, the list of wasm::Modules that contain an optimized call
     // directly to this script.
-    Vector<DependentWasmImport>* dependentWasmImports_;
+    Vector<DependentWasmImport>* dependentWasmImports_ = nullptr;
 
-    // Native code offset right before the scope chain is initialized.
-    uint32_t prologueOffset_;
+    // Early Ion bailouts will enter at this address. This is after frame
+    // construction and before environment chain is initialized.
+    uint32_t bailoutPrologueOffset_;
 
-    // Native code offset right before the frame is popped and the method
-    // returned from.
-    uint32_t epilogueOffset_;
+    // Baseline Debug OSR during prologue will enter at this address. This is
+    // right after where a debug prologue VM call would have returned.
+    uint32_t debugOsrPrologueOffset_;
+
+    // Baseline Debug OSR during epilogue will enter at this address. This is
+    // right after where a debug epilogue VM call would have returned.
+    uint32_t debugOsrEpilogueOffset_;
 
     // The offsets for the toggledJump instructions for profiler instrumentation.
     uint32_t profilerEnterToggleOffset_;
@@ -261,19 +269,11 @@ struct BaselineScript
     // The offsets and event used for Tracelogger toggling.
 #ifdef JS_TRACE_LOGGING
 # ifdef DEBUG
-    bool traceLoggerScriptsEnabled_;
-    bool traceLoggerEngineEnabled_;
+    bool traceLoggerScriptsEnabled_ = false;
+    bool traceLoggerEngineEnabled_ = false;
 # endif
-    TraceLoggerEvent traceLoggerScriptEvent_;
+    TraceLoggerEvent traceLoggerScriptEvent_ = {};
 #endif
-
-    // Native code offsets right after the debug prologue VM call returns, or
-    // would have returned. This offset is recorded even when debug mode is
-    // off to aid on-stack debug mode recompilation.
-    //
-    // We don't need one for the debug epilogue because that always happens
-    // right before the epilogue, so we just use the epilogue offset.
-    uint32_t postDebugPrologueOffset_;
 
   public:
     enum Flag {
@@ -308,60 +308,68 @@ struct BaselineScript
     };
 
   private:
-    uint32_t flags_;
+    uint32_t flags_ = 0;
 
   private:
     void trace(JSTracer* trc);
 
-    uint32_t icEntriesOffset_;
-    uint32_t icEntries_;
+    uint32_t icEntriesOffset_ = 0;
+    uint32_t icEntries_ = 0;
 
-    uint32_t retAddrEntriesOffset_;
-    uint32_t retAddrEntries_;
+    uint32_t retAddrEntriesOffset_ = 0;
+    uint32_t retAddrEntries_ = 0;
 
-    uint32_t pcMappingIndexOffset_;
-    uint32_t pcMappingIndexEntries_;
+    uint32_t pcMappingIndexOffset_ = 0;
+    uint32_t pcMappingIndexEntries_ = 0;
 
-    uint32_t pcMappingOffset_;
-    uint32_t pcMappingSize_;
+    uint32_t pcMappingOffset_ = 0;
+    uint32_t pcMappingSize_ = 0;
 
     // List mapping indexes of bytecode type sets to the offset of the opcode
     // they correspond to, for use by TypeScript::BytecodeTypes.
-    uint32_t bytecodeTypeMapOffset_;
+    uint32_t bytecodeTypeMapOffset_ = 0;
 
     // For generator scripts, we store the native code address for each yield
     // instruction.
-    uint32_t yieldEntriesOffset_;
+    uint32_t yieldEntriesOffset_ = 0;
 
     // By default tracelogger is disabled. Therefore we disable the logging code
     // by default. We store the offsets we must patch to enable the logging.
-    uint32_t traceLoggerToggleOffsetsOffset_;
-    uint32_t numTraceLoggerToggleOffsets_;
+    uint32_t traceLoggerToggleOffsetsOffset_ = 0;
+    uint32_t numTraceLoggerToggleOffsets_ = 0;
 
     // The total bytecode length of all scripts we inlined when we Ion-compiled
     // this script. 0 if Ion did not compile this script or if we didn't inline
     // anything.
-    uint16_t inlinedBytecodeLength_;
+    uint16_t inlinedBytecodeLength_ = 0;
 
     // The max inlining depth where we can still inline all functions we inlined
     // when we Ion-compiled this script. This starts as UINT8_MAX, since we have
     // no data yet, and won't affect inlining heuristics in that case. The value
     // is updated when we Ion-compile this script. See makeInliningDecision for
     // more info.
-    uint8_t maxInliningDepth_;
+    uint8_t maxInliningDepth_ = UINT8_MAX;
 
     // An ion compilation that is ready, but isn't linked yet.
-    IonBuilder *pendingBuilder_;
+    IonBuilder *pendingBuilder_ = nullptr;
 
-    ControlFlowGraph* controlFlowGraph_;
+    ControlFlowGraph* controlFlowGraph_ = nullptr;
+
+    // Use BaselineScript::New to create new instances. It will properly
+    // allocate trailing objects.
+    BaselineScript(uint32_t bailoutPrologueOffset,
+                   uint32_t debugOsrPrologueOffset,
+                   uint32_t debugOsrEpilogueOffset,
+                   uint32_t profilerEnterToggleOffset,
+                   uint32_t profilerExitToggleOffset)
+      : bailoutPrologueOffset_(bailoutPrologueOffset),
+        debugOsrPrologueOffset_(debugOsrPrologueOffset),
+        debugOsrEpilogueOffset_(debugOsrEpilogueOffset),
+        profilerEnterToggleOffset_(profilerEnterToggleOffset),
+        profilerExitToggleOffset_(profilerExitToggleOffset)
+    { }
 
   public:
-    // Do not call directly, use BaselineScript::New. This is public for cx->new_.
-    BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
-                   uint32_t profilerEnterToggleOffset,
-                   uint32_t profilerExitToggleOffset,
-                   uint32_t postDebugPrologueOffset);
-
     ~BaselineScript() {
         // The contents of the fallback stub space are removed and freed
         // separately after the next minor GC. See BaselineScript::Destroy.
@@ -369,10 +377,11 @@ struct BaselineScript
     }
 
     static BaselineScript* New(JSScript* jsscript,
-                               uint32_t prologueOffset, uint32_t epilogueOffset,
+                               uint32_t bailoutPrologueOffset,
+                               uint32_t debugOsrPrologueOffset,
+                               uint32_t debugOsrEpilogueOffset,
                                uint32_t profilerEnterToggleOffset,
                                uint32_t profilerExitToggleOffset,
-                               uint32_t postDebugPrologueOffset,
                                size_t icEntries,
                                size_t retAddrEntries,
                                size_t pcMappingIndexEntries, size_t pcMappingSize,
@@ -443,25 +452,14 @@ struct BaselineScript
         return flags_ & USES_ENVIRONMENT_CHAIN;
     }
 
-    uint32_t prologueOffset() const {
-        return prologueOffset_;
+    uint8_t* bailoutPrologueEntryAddr() const {
+        return method_->raw() + bailoutPrologueOffset_;
     }
-    uint8_t* prologueEntryAddr() const {
-        return method_->raw() + prologueOffset_;
+    uint8_t* debugOsrPrologueEntryAddr() const {
+        return method_->raw() + debugOsrPrologueOffset_;
     }
-
-    uint32_t epilogueOffset() const {
-        return epilogueOffset_;
-    }
-    uint8_t* epilogueEntryAddr() const {
-        return method_->raw() + epilogueOffset_;
-    }
-
-    uint32_t postDebugPrologueOffset() const {
-        return postDebugPrologueOffset_;
-    }
-    uint8_t* postDebugPrologueAddr() const {
-        return method_->raw() + postDebugPrologueOffset_;
+    uint8_t* debugOsrEpilogueEntryAddr() const {
+        return method_->raw() + debugOsrEpilogueOffset_;
     }
 
     ICEntry* icEntryList() {
@@ -532,7 +530,9 @@ struct BaselineScript
 
     void adoptFallbackStubs(FallbackICStubSpace* stubSpace);
 
-    void copyYieldAndAwaitEntries(JSScript* script, Vector<uint32_t>& yieldAndAwaitOffsets);
+    // Copy yieldAndAwaitOffsets list from |script| and convert the pcOffsets
+    // to native addresses in the Baseline code.
+    void computeYieldAndAwaitNativeOffsets(JSScript* script);
 
     PCMappingIndexEntry& pcMappingIndexEntry(size_t index);
     CompactBufferReader pcMappingReader(size_t indexEntry);
@@ -544,8 +544,15 @@ struct BaselineScript
     void copyPCMappingIndexEntries(const PCMappingIndexEntry* entries);
     void copyPCMappingEntries(const CompactBufferWriter& entries);
 
-    uint8_t* nativeCodeForPC(JSScript* script, jsbytecode* pc,
-                             PCMappingSlotInfo* slotInfo = nullptr);
+    // Baseline JIT may not generate code for unreachable bytecode which
+    // results in mapping returning nullptr.
+    uint8_t* maybeNativeCodeForPC(JSScript* script, jsbytecode* pc, PCMappingSlotInfo* slotInfo);
+    uint8_t* nativeCodeForPC(JSScript* script, jsbytecode* pc, PCMappingSlotInfo* slotInfo)
+    {
+        uint8_t* native = maybeNativeCodeForPC(script, pc, slotInfo);
+        MOZ_ASSERT(native);
+        return native;
+    }
 
     // Return the bytecode offset for a given native code address. Be careful
     // when using this method: we don't emit code for some bytecode ops, so
