@@ -26,8 +26,8 @@ class GitHubClient(token: String) {
         return httpPOST(url, bodyJson, tokenHeader)
     }
 
-    private fun httpPOST(urlString: String, json: String,
-                         vararg headers: Pair<String, String>): Pair<Boolean, String> {
+    @Suppress("TooGenericExceptionCaught")
+    private fun httpPOST(urlString: String, json: String, vararg headers: Pair<String, String>): Pair<Boolean, String> {
         val url = URL(urlString)
         val http = url.openConnection() as HttpURLConnection
 
@@ -51,7 +51,6 @@ class GitHubClient(token: String) {
         } catch (e: Exception) {
             responseSuccessful = false
             http.errorStream.bufferedReader().readText()
-
         }
         return responseSuccessful to textResponse
     }

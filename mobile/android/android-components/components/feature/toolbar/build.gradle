@@ -28,7 +28,7 @@ dependencies {
 
     implementation project(':support-ktx')
 
-    implementation Deps.kotlin_stdlib
+    implementation Dependencies.kotlin_stdlib
 }
 
 apply from: '../../../publish.gradle'

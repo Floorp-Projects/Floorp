@@ -27,13 +27,13 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':support-ktx')
 
-    implementation Deps.kotlin_stdlib
+    implementation Dependencies.kotlin_stdlib
 
-    testImplementation Deps.testing_junit
-    testImplementation Deps.testing_robolectric
-    testImplementation Deps.testing_mockito
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
 
-    testImplementation Deps.support_customtabs
+    testImplementation Dependencies.support_customtabs
 }
 
 apply from: '../../../publish.gradle'

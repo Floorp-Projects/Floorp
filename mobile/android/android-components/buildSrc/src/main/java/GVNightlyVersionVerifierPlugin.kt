@@ -16,7 +16,8 @@ open class GVNightlyVersionVerifierPlugin : Plugin<Project> {
 
     companion object {
         private const val GV_VERSION_PATH_FILE = "buildSrc/src/main/java/Gecko.kt"
-        private const val MAVEN_MOZILLA_GV_URL = "https://maven.mozilla.org/maven2/org/mozilla/geckoview/geckoview-nightly-armeabi-v7a/maven-metadata.xml"
+        private const val MAVEN_MOZILLA_GV_URL =
+            "https://maven.mozilla.org/maven2/org/mozilla/geckoview/geckoview-nightly-armeabi-v7a/maven-metadata.xml"
     }
 
     override fun apply(project: Project) {
@@ -29,6 +30,7 @@ open class GVNightlyVersionVerifierPlugin : Plugin<Project> {
         }
     }
 
+    @Suppress("TooGenericExceptionThrown")
     private fun updateGVNightlyVersion(project: Project) {
 
         val newVersion = getLastGeckoViewNightlyVersion(project)
@@ -60,9 +62,8 @@ open class GVNightlyVersionVerifierPlugin : Plugin<Project> {
         val file = File(path)
         var fileContent = file.readText()
         fileContent = fileContent.replace(Regex("nightly_version.*=.*"),
-                "nightly_version = \"$newVersion\"")
+            "nightly_version = \"$newVersion\"")
         file.writeText(fileContent)
         println("${file.name} file updated")
     }
-
 }

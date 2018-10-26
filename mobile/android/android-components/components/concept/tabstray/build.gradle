@@ -25,7 +25,7 @@ dependencies {
     implementation project(':browser-session')
     implementation project(':support-base')
 
-    implementation Deps.kotlin_stdlib
+    implementation Dependencies.kotlin_stdlib
 }
 
 apply from: '../../../publish.gradle'

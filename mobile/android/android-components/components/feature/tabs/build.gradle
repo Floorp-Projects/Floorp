@@ -32,20 +32,20 @@ dependencies {
     implementation project(':ui-tabcounter')
     implementation project(':support-ktx')
 
-    implementation Deps.support_fragment
-    implementation Deps.support_recyclerview
+    implementation Dependencies.support_fragment
+    implementation Dependencies.support_recyclerview
 
-    implementation Deps.kotlin_stdlib
-    implementation Deps.kotlin_coroutines
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
     // In tests we are constructing our own SessionManager instance which needs to know about an "engine".
     testImplementation project(':concept-engine')
 
     testImplementation project(':support-test')
 
-    testImplementation Deps.testing_junit
-    testImplementation Deps.testing_robolectric
-    testImplementation Deps.testing_mockito
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
 }
 
 apply from: '../../../publish.gradle'

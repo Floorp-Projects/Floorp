@@ -28,23 +28,23 @@ configurations {
 }
 
 dependencies {
-    jnaForTest Deps.jnaForTest
+    jnaForTest Dependencies.jnaForTest
 
-    api Deps.mozilla_places
+    api Dependencies.mozilla_places
 
     implementation project(':concept-storage')
     implementation project(':support-utils')
 
-    implementation Deps.kotlin_stdlib
-    implementation Deps.kotlin_coroutines
-    implementation Deps.jna
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
+    implementation Dependencies.jna
 
     testImplementation configurations.jnaForTest.dependencies
     testImplementation project(':support-test')
 
-    testImplementation Deps.testing_junit
-    testImplementation Deps.testing_robolectric
-    testImplementation Deps.testing_mockito
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
 }
 
 apply from: '../../../publish.gradle'

@@ -32,12 +32,12 @@ dependencies {
     compileOnly Gecko.geckoview_release_arm
     testImplementation Gecko.geckoview_release_arm
 
-    implementation Deps.kotlin_stdlib
-    implementation Deps.kotlin_coroutines
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
-    testImplementation Deps.testing_junit
-    testImplementation Deps.testing_robolectric
-    testImplementation Deps.testing_mockito
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
 
     testImplementation project(':support-test')
 }

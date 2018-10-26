@@ -25,10 +25,10 @@ android {
 }
 
 dependencies {
-    implementation Deps.kotlin_stdlib
+    implementation Dependencies.kotlin_stdlib
 
-    testImplementation Deps.testing_junit
-    testImplementation Deps.testing_mockito
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_mockito
 }
 
 apply from: '../../../publish.gradle'

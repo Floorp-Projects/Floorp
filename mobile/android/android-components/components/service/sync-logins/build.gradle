@@ -45,21 +45,21 @@ configurations {
 }
 
 dependencies {
-    jnaForTest Deps.jnaForTest
+    jnaForTest Dependencies.jnaForTest
 
-    api Deps.mozilla_sync_logins
+    api Dependencies.mozilla_sync_logins
 
-    implementation Deps.kotlin_stdlib
-    implementation Deps.jna
-    implementation Deps.kotlin_coroutines
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.jna
+    implementation Dependencies.kotlin_coroutines
 
     testImplementation configurations.jnaForTest.dependencies
 
-    testImplementation Deps.mozilla_sync_logins
+    testImplementation Dependencies.mozilla_sync_logins
 
-    testImplementation Deps.testing_junit
-    testImplementation Deps.testing_robolectric
-    testImplementation Deps.testing_mockito
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
 }
 
 apply from: '../../../publish.gradle'

@@ -25,16 +25,16 @@ android {
 }
 
 dependencies {
-    implementation Deps.kotlin_stdlib
+    implementation Dependencies.kotlin_stdlib
 
     // We expose the app-compat as API so that consumers get access to the Lifecycle classes automatically
-    api Deps.support_appcompat
+    api Dependencies.support_appcompat
 
     testImplementation project(':support-test')
 
-    testImplementation Deps.testing_junit
-    testImplementation Deps.testing_robolectric
-    testImplementation Deps.testing_mockito
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
 }
 
 apply from: '../../../publish.gradle'

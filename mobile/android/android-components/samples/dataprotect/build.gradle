@@ -28,9 +28,9 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(':lib-dataprotect')
 
-    implementation Deps.kotlin_stdlib
-    implementation Deps.kotlin_coroutines
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
-    implementation Deps.support_appcompat
-    implementation Deps.support_recyclerview
+    implementation Dependencies.support_appcompat
+    implementation Dependencies.support_recyclerview
 }

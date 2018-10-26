@@ -27,11 +27,11 @@ dependencies {
     implementation project(':browser-session')
     implementation project(':support-ktx')
     implementation project(':support-utils')
-    implementation Deps.kotlin_stdlib
+    implementation Dependencies.kotlin_stdlib
 
-    testImplementation Deps.testing_junit
-    testImplementation Deps.testing_robolectric
-    testImplementation Deps.testing_mockito
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
     testImplementation project(':support-test')
     testImplementation project(':concept-engine')
 }

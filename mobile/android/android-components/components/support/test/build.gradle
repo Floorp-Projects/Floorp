@@ -28,12 +28,12 @@ android {
 }
 
 dependencies {
-    implementation Deps.kotlin_stdlib
+    implementation Dependencies.kotlin_stdlib
 
-    implementation Deps.testing_junit
-    implementation Deps.testing_mockito
-    implementation Deps.testing_robolectric
-    testImplementation Deps.support_compat
+    implementation Dependencies.testing_junit
+    implementation Dependencies.testing_mockito
+    implementation Dependencies.testing_robolectric
+    testImplementation Dependencies.support_compat
     testImplementation project(':support-ktx')
 }
 

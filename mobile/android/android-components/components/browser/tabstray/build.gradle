@@ -32,17 +32,17 @@ dependencies {
     implementation project(':ui-icons')
     implementation project(':ui-colors')
 
-    implementation Deps.support_appcompat
-    implementation Deps.support_cardview
-    api Deps.support_recyclerview
+    implementation Dependencies.support_appcompat
+    implementation Dependencies.support_cardview
+    api Dependencies.support_recyclerview
 
-    implementation Deps.kotlin_stdlib
+    implementation Dependencies.kotlin_stdlib
 
     testImplementation project(':support-test')
 
-    testImplementation Deps.testing_junit
-    testImplementation Deps.testing_robolectric
-    testImplementation Deps.testing_mockito
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
 }
 
 apply from: '../../../publish.gradle'

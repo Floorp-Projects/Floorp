@@ -26,8 +26,8 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':support-ktx')
 
-    implementation Deps.kotlin_stdlib
-    implementation Deps.support_customtabs
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.support_customtabs
 
     // We expose this as API because we are using Observable in our public API and do not want every
     // consumer to have to manually import "utils".
@@ -35,9 +35,9 @@ dependencies {
 
     testImplementation project(':support-test')
 
-    testImplementation Deps.testing_junit
-    testImplementation Deps.testing_robolectric
-    testImplementation Deps.testing_mockito
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
 }
 
 apply from: '../../../publish.gradle'

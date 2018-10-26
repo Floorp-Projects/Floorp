@@ -29,17 +29,17 @@ android {
 dependencies {
     api project(':concept-awesomebar')
 
-    api Deps.support_recyclerview
-    implementation Deps.support_constraintlayout
+    api Dependencies.support_recyclerview
+    implementation Dependencies.support_constraintlayout
 
-    implementation Deps.kotlin_stdlib
-    implementation Deps.kotlin_coroutines
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
     testImplementation project(':support-test')
 
-    testImplementation Deps.testing_junit
-    testImplementation Deps.testing_robolectric
-    testImplementation Deps.testing_mockito
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
 }
 
 archivesBaseName = "browser-awesomebar"

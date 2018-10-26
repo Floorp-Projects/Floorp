@@ -9,11 +9,11 @@ targetCompatibility = JavaVersion.VERSION_1_8
 sourceCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
-  compileOnly Deps.tools_lintapi
-  compileOnly Deps.kotlin_stdlib
+  compileOnly Dependencies.tools_lintapi
+  compileOnly Dependencies.kotlin_stdlib
 
-  testImplementation Deps.tools_lint
-  testImplementation Deps.tools_linttests
+  testImplementation Dependencies.tools_lint
+  testImplementation Dependencies.tools_linttests
 }
 
 jar {

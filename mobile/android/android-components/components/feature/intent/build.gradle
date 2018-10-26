@@ -30,15 +30,15 @@ dependencies {
     implementation project(':feature-session')
     implementation project(':support-utils')
     implementation project(':support-ktx')
-    implementation Deps.kotlin_stdlib
+    implementation Dependencies.kotlin_stdlib
 
     testImplementation project(':browser-search')
     testImplementation project(':support-test')
-    testImplementation Deps.testing_junit
-    testImplementation Deps.testing_robolectric
-    testImplementation Deps.testing_mockito
-    testImplementation Deps.support_customtabs
-    testImplementation Deps.kotlin_coroutines
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.support_customtabs
+    testImplementation Dependencies.kotlin_coroutines
 }
 
 apply from: '../../../publish.gradle'

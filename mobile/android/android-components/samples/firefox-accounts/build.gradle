@@ -38,14 +38,14 @@ android {
 dependencies {
     implementation project(':service-firefox-accounts')
 
-    implementation Deps.support_constraintlayout
+    implementation Dependencies.support_constraintlayout
     implementation ('me.dm7.barcodescanner:zxing:1.9.8') {
         exclude module: 'support-v4'
     }
 
-    implementation Deps.kotlin_stdlib
-    implementation Deps.kotlin_coroutines
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
-    implementation Deps.support_appcompat
-    implementation Deps.support_customtabs
+    implementation Dependencies.support_appcompat
+    implementation Dependencies.support_customtabs
 }

@@ -36,15 +36,16 @@ dependencies {
 
     implementation project(':support-ktx')
 
-    implementation Deps.kotlin_stdlib
-    implementation Deps.kotlin_coroutines
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
     testImplementation project(':support-test')
     testImplementation project(':browser-storage-memory')
-    testImplementation Deps.testing_junit
-    testImplementation Deps.testing_robolectric
-    testImplementation Deps.testing_mockito
-    testImplementation Deps.testing_mockwebserver
+
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.testing_mockwebserver
 }
 
 apply from: '../../../publish.gradle'

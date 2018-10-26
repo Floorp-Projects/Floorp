@@ -43,11 +43,11 @@ dependencies {
     implementation project(':service-glean')
     implementation project(':support-base')
 
-    implementation Deps.kotlin_stdlib
-    implementation Deps.kotlin_coroutines
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
-    implementation Deps.support_appcompat
-    implementation Deps.support_customtabs
+    implementation Dependencies.support_appcompat
+    implementation Dependencies.support_customtabs
 }
 
 apply from: '../../components/service/glean/scripts/sdk_generator.gradle'

@@ -25,24 +25,24 @@ android {
 }
 
 dependencies {
-    implementation Deps.kotlin_stdlib
-    implementation Deps.kotlin_coroutines
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
-    implementation Deps.support_appcompat
-    implementation Deps.support_constraintlayout
+    implementation Dependencies.support_appcompat
+    implementation Dependencies.support_constraintlayout
 
     implementation project(':support-base')
 
     // We only compile against Sentry and GeckoView. It's up to the app to add those dependencies if it wants to
     // send crash reports to Socorro (GV) or Sentry.
-    compileOnly Deps.thirdparty_sentry
+    compileOnly Dependencies.thirdparty_sentry
     compileOnly Gecko.geckoview_nightly_arm
-    testImplementation Deps.thirdparty_sentry
+    testImplementation Dependencies.thirdparty_sentry
 
     testImplementation project(':support-test')
-    testImplementation Deps.testing_junit
-    testImplementation Deps.testing_robolectric
-    testImplementation Deps.testing_mockito
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
 }
 
 apply from: '../../../publish.gradle'

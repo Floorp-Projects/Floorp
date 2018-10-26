@@ -31,10 +31,10 @@ android {
 dependencies {
     implementation project(':lib-crash')
 
-    implementation Deps.kotlin_stdlib
-    implementation Deps.kotlin_coroutines
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
-    implementation Deps.support_appcompat
-    implementation Deps.support_design
-    implementation Deps.support_recyclerview
+    implementation Dependencies.support_appcompat
+    implementation Dependencies.support_design
+    implementation Dependencies.support_recyclerview
 }
