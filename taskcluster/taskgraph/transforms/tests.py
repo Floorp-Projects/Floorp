@@ -371,9 +371,9 @@ test_description_schema = Schema({
     Optional('product'): basestring,
 
     # conditional files to determine when these tests should be run
-    Exclusive(Optional('when'), 'optimization'): Any({
+    Exclusive(Optional('when'), 'optimization'): {
         Optional('files-changed'): [basestring],
-    }),
+    },
 
     # Optimization to perform on this task during the optimization phase.
     # Optimizations are defined in taskcluster/taskgraph/optimize.py.
