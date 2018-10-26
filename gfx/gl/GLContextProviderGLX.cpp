@@ -587,12 +587,20 @@ GLContextGLX::~GLContextGLX()
         return;
     }
 
+    // see bug 659842 comment 76
+#ifdef DEBUG
+    bool success =
+#endif
+    mGLX->fMakeCurrent(mDisplay, X11None, nullptr);
+    MOZ_ASSERT(success,
+               "glXMakeCurrent failed to release GL context before we call "
+               "glXDestroyContext!");
+
     mGLX->fDestroyContext(mDisplay, mContext);
 
     if (mDeleteDrawable) {
         mGLX->fDestroyPixmap(mDisplay, mDrawable);
     }
-    MOZ_ASSERT(!mOverrideDrawable);
 }
 
 
@@ -621,16 +629,7 @@ GLContextGLX::MakeCurrentImpl() const
         Unused << XPending(mDisplay);
     }
 
-    if (IsDestroyed()) {
-        MOZ_ALWAYS_TRUE( mGLX->fMakeCurrent(mDisplay, X11None, nullptr) );
-        return false; // Did not MakeCurrent mContext, but that's what we wanted!
-    }
-
-    auto drawable = mDrawable;
-    if (mOverrideDrawable) {
-        drawable = mOverrideDrawable.ref();
-    }
-    const bool succeeded = mGLX->fMakeCurrent(mDisplay, drawable, mContext);
+    const bool succeeded = mGLX->fMakeCurrent(mDisplay, mDrawable, mContext);
     NS_ASSERTION(succeeded, "Failed to make GL context current!");
 
     if (!IsOffscreen() && mGLX->SupportsSwapControl()) {
@@ -695,18 +694,16 @@ GLContextGLX::GetWSIInfo(nsCString* const out) const
 bool
 GLContextGLX::OverrideDrawable(GLXDrawable drawable)
 {
-    if (Screen()) {
+    if (Screen())
         Screen()->AssureBlitted();
-    }
-    mOverrideDrawable = Some(drawable);
-    return MakeCurrent(true);
+    Bool result = mGLX->fMakeCurrent(mDisplay, drawable, mContext);
+    return result;
 }
 
 bool
 GLContextGLX::RestoreDrawable()
 {
-    mOverrideDrawable = Nothing();
-    return MakeCurrent(true);
+    return mGLX->fMakeCurrent(mDisplay, mDrawable, mContext);
 }
 
 GLContextGLX::GLContextGLX(
