@@ -28,7 +28,7 @@ using namespace mozilla::a11y;
 
 ARIAGridAccessible::
   ARIAGridAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  AccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
   mGenericTypes |= eTable;
 }
@@ -534,7 +534,7 @@ ARIAGridAccessible::SetARIASelected(Accessible* aAccessible,
 
 ARIARowAccessible::
   ARIARowAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  AccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
   mGenericTypes |= eTableRow;
 }
