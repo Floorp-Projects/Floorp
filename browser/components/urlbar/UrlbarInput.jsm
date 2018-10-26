@@ -230,7 +230,16 @@ class UrlbarInput {
    * @param {UrlbarMatch} result The result that was selected.
    */
   resultSelected(event, result) {
-    // Set the input value to the target url.
+    this.setValueFromResult(result);
+    this.controller.resultSelected(event, result);
+  }
+
+  /**
+   * Called by the view when moving through results with the keyboard.
+   *
+   * @param {UrlbarMatch} result The result that was selected.
+   */
+  setValueFromResult(result) {
     let val = result.url;
     let uri;
     try {
@@ -240,8 +249,6 @@ class UrlbarInput {
       val = this.window.losslessDecodeURI(uri);
     }
     this.value = val;
-
-    this.controller.resultSelected(event, result);
   }
 
   // Getters and Setters below.
