@@ -21,7 +21,7 @@ static const uint32_t XPC_TABLE_DEFAULT_SIZE = 40;
 // nsISupports
 
 NS_IMPL_ISUPPORTS_INHERITED(xpcAccessibleTable,
-                            xpcAccessibleGeneric,
+                            xpcAccessibleHyperText,
                             nsIAccessibleTable)
 
 ////////////////////////////////////////////////////////////////////////////////
