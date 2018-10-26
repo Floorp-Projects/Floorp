@@ -42,6 +42,7 @@ object Deps {
 
     const val support_annotations = "com.android.support:support-annotations:${Versions.support_libraries}"
     const val support_cardview = "com.android.support:cardview-v7:${Versions.support_libraries}"
+    const val support_design = "com.android.support:design:${Versions.support_libraries}"
     const val support_recyclerview = "com.android.support:recyclerview-v7:${Versions.support_libraries}"
     const val support_appcompat = "com.android.support:appcompat-v7:${Versions.support_libraries}"
     const val support_customtabs = "com.android.support:customtabs:${Versions.support_libraries}"

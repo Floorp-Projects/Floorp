@@ -164,6 +164,8 @@ _Sample apps using various components._
 
 * [**Browser**](samples/browser) - A simple browser composed from browser components. This sample application is only a very basic browser. For a full-featured reference browser implementation see the **[reference-browser repository](https://github.com/mozilla-mobile/reference-browser)**.
 
+* [**Crash**](samples/crash) - An app showing the integration of the `lib-crash` component.
+
 * [**Firefox Accounts (FxA)**](samples/firefox-accounts) - A simple app demoing Firefox Accounts integration.
 
 * [**Firefox Sync - Logins**](samples/sync-logins) - A simple app demoing Firefox Sync (Logins) integration.

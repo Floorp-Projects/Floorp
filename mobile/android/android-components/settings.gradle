@@ -103,6 +103,7 @@ setupProject(':tooling-lint', 'components/tooling/lint', 'Custom Lint checks for
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 setupProject(':samples-browser', 'samples/browser', 'A simple browser composed from browser components.')
+setupProject(':samples-crash', 'samples/crash', 'An app showing the integration of the lib-crash component.')
 setupProject(':samples-firefox-accounts', 'samples/firefox-accounts', 'A simple app demoing Firefox Accounts integration.')
 setupProject(':samples-glean', 'samples/glean', 'An app demoing how to use the Glean library to collect and send telemetry data.')
 setupProject(':samples-sync-logins', 'samples/sync-logins', 'A simple app demoing Firefox Sync (Logins) integration.')
