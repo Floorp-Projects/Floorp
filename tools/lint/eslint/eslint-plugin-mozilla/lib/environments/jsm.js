@@ -68,6 +68,7 @@ module.exports = {
     "StreamFilter": false,
     "StreamFilterDataEvent": false,
     "StructuredCloneHolder": false,
+    "TelemetryStopwatch": false,
     "TCPServerSocket": false,
     "TCPServerSocketEvent": false,
     "TCPSocket": false,
