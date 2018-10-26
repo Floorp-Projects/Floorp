@@ -111,7 +111,6 @@ const FlexboxActor = ActorClassWithSpec(flexboxSpec, {
           mainMaxSize: item.mainMaxSize,
           mainMinSize: item.mainMinSize,
           lineGrowthState: line.growthState,
-          clampState: item.clampState,
         }));
       }
     }
