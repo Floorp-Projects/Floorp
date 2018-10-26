@@ -121,9 +121,6 @@ class BaseProfile(object):
             self.set_preferences(prefs, filename=basename)
 
         extension_dir = os.path.join(other, 'extensions')
-        if not os.path.isdir(extension_dir):
-            return
-
         for basename in os.listdir(extension_dir):
             path = os.path.join(extension_dir, basename)
 
