@@ -4814,8 +4814,7 @@ GCRuntime::markWeakReferences(gcstats::PhaseKind phase)
     marker.enterWeakMarkingMode();
 
     // TODO bug 1167452: Make weak marking incremental
-    auto unlimited = SliceBudget::unlimited();
-    MOZ_RELEASE_ASSERT(marker.drainMarkStack(unlimited));
+    drainMarkStack();
 
     for (;;) {
         bool markedAny = false;
@@ -4831,8 +4830,7 @@ GCRuntime::markWeakReferences(gcstats::PhaseKind phase)
             break;
         }
 
-        auto unlimited = SliceBudget::unlimited();
-        MOZ_RELEASE_ASSERT(marker.drainMarkStack(unlimited));
+        drainMarkStack();
     }
     MOZ_ASSERT(marker.isDrained());
 
@@ -4860,8 +4858,7 @@ GCRuntime::markGrayReferences(gcstats::PhaseKind phase)
             (*op)(&marker, grayRootTracer.data);
         }
     }
-    auto unlimited = SliceBudget::unlimited();
-    MOZ_RELEASE_ASSERT(marker.drainMarkStack(unlimited));
+    drainMarkStack();
 }
 
 void
@@ -5028,8 +5025,7 @@ js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session)
         gc->traceRuntimeForMajorGC(gcmarker, session);
 
         gc->incrementalState = State::Mark;
-        auto unlimited = SliceBudget::unlimited();
-        MOZ_RELEASE_ASSERT(gc->marker.drainMarkStack(unlimited));
+        gc->drainMarkStack();
     }
 
     gc->incrementalState = State::Sweep;
@@ -5559,8 +5555,7 @@ GCRuntime::markIncomingCrossCompartmentPointers(MarkColor color)
         }
     }
 
-    auto unlimited = SliceBudget::unlimited();
-    MOZ_RELEASE_ASSERT(marker.drainMarkStack(unlimited));
+    drainMarkStack();
 }
 
 static bool
@@ -6263,7 +6258,7 @@ ArenaLists::foregroundFinalize(FreeOp* fop, AllocKind thingKind, SliceBudget& sl
 }
 
 IncrementalProgress
-GCRuntime::drainMarkStack(SliceBudget& sliceBudget, gcstats::PhaseKind phase)
+GCRuntime::markUntilBudgetExhaused(SliceBudget& sliceBudget, gcstats::PhaseKind phase)
 {
     // Marked GC things may vary between recording and replaying, so marking
     // and sweeping should not perform any recorded events.
@@ -6271,7 +6266,14 @@ GCRuntime::drainMarkStack(SliceBudget& sliceBudget, gcstats::PhaseKind phase)
 
     /* Run a marking slice and return whether the stack is now empty. */
     gcstats::AutoPhase ap(stats(), phase);
-    return marker.drainMarkStack(sliceBudget) ? Finished : NotFinished;
+    return marker.markUntilBudgetExhaused(sliceBudget) ? Finished : NotFinished;
+}
+
+void
+GCRuntime::drainMarkStack()
+{
+    auto unlimited = SliceBudget::unlimited();
+    MOZ_RELEASE_ASSERT(marker.markUntilBudgetExhaused(unlimited));
 }
 
 static void
@@ -6980,7 +6982,7 @@ GCRuntime::performSweepActions(SliceBudget& budget)
     if (initialState != State::Sweep) {
         MOZ_ASSERT(marker.isDrained());
     } else {
-        if (drainMarkStack(budget, gcstats::PhaseKind::SWEEP_MARK) == NotFinished) {
+        if (markUntilBudgetExhaused(budget, gcstats::PhaseKind::SWEEP_MARK) == NotFinished) {
             return NotFinished;
         }
     }
@@ -7525,7 +7527,7 @@ GCRuntime::incrementalSlice(SliceBudget& budget, JS::gcreason::Reason reason,
             stats().nonincremental(AbortReason::GrayRootBufferingFailed);
         }
 
-        if (drainMarkStack(budget, gcstats::PhaseKind::MARK) == NotFinished) {
+        if (markUntilBudgetExhaused(budget, gcstats::PhaseKind::MARK) == NotFinished) {
             break;
         }
 
