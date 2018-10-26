@@ -70,6 +70,7 @@ VRManager::VRManager()
   : mInitialized(false)
   , mAccumulator100ms(0.0f)
   , mVRDisplaysRequested(false)
+  , mVRDisplaysRequestedNonFocus(false)
   , mVRControllersRequested(false)
   , mVRServiceStarted(false)
   , mTaskInterval(0)
@@ -199,15 +200,18 @@ void
 VRManager::UpdateRequestedDevices()
 {
   bool bHaveEventListener = false;
+  bool bHaveEventListenerNonFocus = false;
   bool bHaveControllerListener = false;
 
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
     VRManagerParent *vmp = iter.Get()->GetKey();
-    bHaveEventListener |= vmp->HaveEventListener();
+    bHaveEventListener |= vmp->HaveEventListener() && vmp->GetVRActiveStatus();
+    bHaveEventListenerNonFocus |= vmp->HaveEventListener() && !vmp->GetVRActiveStatus();
     bHaveControllerListener |= vmp->HaveControllerListener();
   }
 
   mVRDisplaysRequested = bHaveEventListener;
+  mVRDisplaysRequestedNonFocus = bHaveEventListenerNonFocus;
   // We only currently allow controllers to be used when
   // also activating a VR display
   mVRControllersRequested = mVRDisplaysRequested && bHaveControllerListener;
@@ -405,7 +409,8 @@ void
 VRManager::CheckForInactiveTimeout()
 {
   // Shut down the VR devices when not in use
-  if (mVRDisplaysRequested || mVRControllersRequested) {
+  if (mVRDisplaysRequested || mVRDisplaysRequestedNonFocus ||
+      mVRControllersRequested) {
     // We are using a VR device, keep it alive
     mLastActiveTime = TimeStamp::Now();
   }
