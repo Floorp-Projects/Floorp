@@ -141,6 +141,7 @@ if CONFIG['NIGHTLY_BUILD']:
     # The Error interceptor only exists on Nightly.
     UNIFIED_SOURCES += [
         'testErrorInterceptor.cpp',
+        'testErrorInterceptorGC.cpp',
     ]
 
 if CONFIG['JS_BUILD_BINAST'] and CONFIG['JS_STANDALONE'] and not CONFIG['FUZZING']:
