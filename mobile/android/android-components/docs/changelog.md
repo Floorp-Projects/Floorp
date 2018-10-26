@@ -84,8 +84,24 @@ permalink: /changelog/
             }
          }
   ```
+* **concept-storage**:
+  * Added a new concept for describing an interface for storing browser data. First iteration includes a description of `HistoryStorage`.
+* **browser-storage-memory**:
+  * Added an in-memory implementation of `concept-storage`.
+* **feature-storage**:
+  * Added a first iteration of `feature-storage`, which includes `HistoryTrackingFeature` that ties together `concept-storage` and `concept-engine` and allows engines to track history visits and page meta information. It does so by implementing `HistoryTrackingDelegate` defined by `concept-engine`.
+  Before adding a first session to the engine, initialize the history tracking feature:
+  ```kotlin
+  val historyTrackingFeature = HistoryTrackingFeature(
+    components.engine,
+    components.historyStorage
+  )
+  ```
+  Once the feature has been initialized, history will be tracked for all subsequently added sessions.
+* **sample-browser**:
+  * Updated the sample browser to track browsing history using an in-memory history storage implementation (how much is actually tracked in practice depends on which engine is being used. As of this release, only `SystemEngine` provides a full set of necessary APIs).
 * **lib-jexl**
-  * New component for for evaluating Javascript Expression Language (JEXL) expressions. This implementation is based on [Mozjexl](https://github.com/mozilla/mozjexl) used at Mozilla, specifically as a part of SHIELD and Normandy. In a future version of Fretboard JEXL will allow more complex rules for experiments. For more see [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/README.md).
+  * New component for evaluating Javascript Expression Language (JEXL) expressions. This implementation is based on [Mozjexl](https://github.com/mozilla/mozjexl) used at Mozilla, specifically as a part of SHIELD and Normandy. In a future version of Fretboard JEXL will allow more complex rules for experiments. For more see [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/README.md).
 
 # 0.28.0
 
