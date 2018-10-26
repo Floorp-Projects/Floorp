@@ -4814,8 +4814,7 @@ GCRuntime::markWeakReferences(gcstats::PhaseKind phase)
     marker.enterWeakMarkingMode();
 
     // TODO bug 1167452: Make weak marking incremental
-    auto unlimited = SliceBudget::unlimited();
-    MOZ_RELEASE_ASSERT(marker.drainMarkStack(unlimited));
+    drainMarkStack();
 
     for (;;) {
         bool markedAny = false;
@@ -4831,8 +4830,7 @@ GCRuntime::markWeakReferences(gcstats::PhaseKind phase)
             break;
         }
 
-        auto unlimited = SliceBudget::unlimited();
-        MOZ_RELEASE_ASSERT(marker.drainMarkStack(unlimited));
+        drainMarkStack();
     }
     MOZ_ASSERT(marker.isDrained());
 
@@ -4845,7 +4843,7 @@ GCRuntime::markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase)
     markWeakReferences<SweepGroupZonesIter>(phase);
 }
 
-template <class ZoneIterT, class CompartmentIterT>
+template <class ZoneIterT>
 void
 GCRuntime::markGrayReferences(gcstats::PhaseKind phase)
 {
@@ -4860,14 +4858,13 @@ GCRuntime::markGrayReferences(gcstats::PhaseKind phase)
             (*op)(&marker, grayRootTracer.data);
         }
     }
-    auto unlimited = SliceBudget::unlimited();
-    MOZ_RELEASE_ASSERT(marker.drainMarkStack(unlimited));
+    drainMarkStack();
 }
 
 void
 GCRuntime::markGrayReferencesInCurrentGroup(gcstats::PhaseKind phase)
 {
-    markGrayReferences<SweepGroupZonesIter, SweepGroupCompartmentsIter>(phase);
+    markGrayReferences<SweepGroupZonesIter>(phase);
 }
 
 void
@@ -4879,7 +4876,7 @@ GCRuntime::markAllWeakReferences(gcstats::PhaseKind phase)
 void
 GCRuntime::markAllGrayReferences(gcstats::PhaseKind phase)
 {
-    markGrayReferences<GCZonesIter, GCCompartmentsIter>(phase);
+    markGrayReferences<GCZonesIter>(phase);
 }
 
 #ifdef JS_GC_ZEAL
@@ -5028,8 +5025,7 @@ js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session)
         gc->traceRuntimeForMajorGC(gcmarker, session);
 
         gc->incrementalState = State::Mark;
-        auto unlimited = SliceBudget::unlimited();
-        MOZ_RELEASE_ASSERT(gc->marker.drainMarkStack(unlimited));
+        gc->drainMarkStack();
     }
 
     gc->incrementalState = State::Sweep;
@@ -5559,8 +5555,7 @@ GCRuntime::markIncomingCrossCompartmentPointers(MarkColor color)
         }
     }
 
-    auto unlimited = SliceBudget::unlimited();
-    MOZ_RELEASE_ASSERT(marker.drainMarkStack(unlimited));
+    drainMarkStack();
 }
 
 static bool
@@ -6263,7 +6258,7 @@ ArenaLists::foregroundFinalize(FreeOp* fop, AllocKind thingKind, SliceBudget& sl
 }
 
 IncrementalProgress
-GCRuntime::drainMarkStack(SliceBudget& sliceBudget, gcstats::PhaseKind phase)
+GCRuntime::markUntilBudgetExhaused(SliceBudget& sliceBudget, gcstats::PhaseKind phase)
 {
     // Marked GC things may vary between recording and replaying, so marking
     // and sweeping should not perform any recorded events.
@@ -6271,7 +6266,14 @@ GCRuntime::drainMarkStack(SliceBudget& sliceBudget, gcstats::PhaseKind phase)
 
     /* Run a marking slice and return whether the stack is now empty. */
     gcstats::AutoPhase ap(stats(), phase);
-    return marker.drainMarkStack(sliceBudget) ? Finished : NotFinished;
+    return marker.markUntilBudgetExhaused(sliceBudget) ? Finished : NotFinished;
+}
+
+void
+GCRuntime::drainMarkStack()
+{
+    auto unlimited = SliceBudget::unlimited();
+    MOZ_RELEASE_ASSERT(marker.markUntilBudgetExhaused(unlimited));
 }
 
 static void
@@ -6980,7 +6982,7 @@ GCRuntime::performSweepActions(SliceBudget& budget)
     if (initialState != State::Sweep) {
         MOZ_ASSERT(marker.isDrained());
     } else {
-        if (drainMarkStack(budget, gcstats::PhaseKind::SWEEP_MARK) == NotFinished) {
+        if (markUntilBudgetExhaused(budget, gcstats::PhaseKind::SWEEP_MARK) == NotFinished) {
             return NotFinished;
         }
     }
@@ -7295,7 +7297,7 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoGCSession& session)
         isCompacting = false;
 
         auto unlimited = SliceBudget::unlimited();
-        incrementalCollectSlice(unlimited, JS::gcreason::RESET, session);
+        incrementalSlice(unlimited, JS::gcreason::RESET, session);
 
         isCompacting = wasCompacting;
 
@@ -7316,7 +7318,7 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoGCSession& session)
         isCompacting = false;
 
         auto unlimited = SliceBudget::unlimited();
-        incrementalCollectSlice(unlimited, JS::gcreason::RESET, session);
+        incrementalSlice(unlimited, JS::gcreason::RESET, session);
 
         isCompacting = wasCompacting;
 
@@ -7331,7 +7333,7 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoGCSession& session)
         zonesToMaybeCompact.ref().clear();
 
         auto unlimited = SliceBudget::unlimited();
-        incrementalCollectSlice(unlimited, JS::gcreason::RESET, session);
+        incrementalSlice(unlimited, JS::gcreason::RESET, session);
 
         isCompacting = wasCompacting;
         break;
@@ -7339,7 +7341,7 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoGCSession& session)
 
       case State::Decommit: {
         auto unlimited = SliceBudget::unlimited();
-        incrementalCollectSlice(unlimited, JS::gcreason::RESET, session);
+        incrementalSlice(unlimited, JS::gcreason::RESET, session);
         break;
       }
     }
@@ -7433,7 +7435,7 @@ ShouldCleanUpEverything(JS::gcreason::Reason reason, JSGCInvocationKind gckind)
 }
 
 GCRuntime::IncrementalResult
-GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason reason,
+GCRuntime::incrementalSlice(SliceBudget& budget, JS::gcreason::Reason reason,
                                    AutoGCSession& session)
 {
     AutoDisableBarriers disableBarriers(rt);
@@ -7525,7 +7527,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
             stats().nonincremental(AbortReason::GrayRootBufferingFailed);
         }
 
-        if (drainMarkStack(budget, gcstats::PhaseKind::MARK) == NotFinished) {
+        if (markUntilBudgetExhaused(budget, gcstats::PhaseKind::MARK) == NotFinished) {
             break;
         }
 
@@ -7941,7 +7943,7 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget,
 
     gcTracer.traceMajorGCStart();
 
-    result = incrementalCollectSlice(budget, reason, session);
+    result = incrementalSlice(budget, reason, session);
 
     chunkAllocationSinceLastGC = false;
 
@@ -8738,7 +8740,7 @@ GCRuntime::runDebugGC()
         }
     } else if (hasIncrementalTwoSliceZealMode()) {
         // These modes trigger incremental GC that happens in two slices and the
-        // supplied budget is ignored by incrementalCollectSlice.
+        // supplied budget is ignored by incrementalSlice.
         budget = SliceBudget(WorkBudget(1));
 
         if (!isIncrementalGCInProgress()) {
