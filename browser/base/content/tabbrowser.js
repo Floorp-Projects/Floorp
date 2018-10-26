@@ -1118,7 +1118,7 @@ window._gBrowser = {
         return;
       }
 
-      if (!window.fullScreen || isTabEmpty(newTab)) {
+      if (!window.fullScreen || newTab.isEmpty) {
         focusAndSelectUrlBar();
         return;
       }
@@ -5008,7 +5008,7 @@ class TabProgressListener {
 
       if (aWebProgress.isTopLevel) {
         let isSuccessful = Components.isSuccessCode(aStatus);
-        if (!isSuccessful && !isTabEmpty(this.mTab)) {
+        if (!isSuccessful && !this.mTab.isEmpty) {
           // Restore the current document's location in case the
           // request was stopped (possibly from a content script)
           // before the location changed.

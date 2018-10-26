@@ -857,7 +857,7 @@ class MozSearchOneOffs extends MozXULElement {
     } else {
       var newTabPref = Services.prefs.getBoolPref("browser.search.openintab");
       if ((aEvent instanceof KeyboardEvent && aEvent.altKey) ^ newTabPref &&
-          !isTabEmpty(gBrowser.selectedTab)) {
+          !gBrowser.selectedTab.isEmpty) {
         where = "tab";
       }
       if (aEvent instanceof MouseEvent &&
