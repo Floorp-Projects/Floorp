@@ -277,7 +277,10 @@ mochitest-media:
             windows10-64-ccov/debug: 7200
             macosx64-ccov/debug: 7200
             default: 5400
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            android-hw.*: ['try']
+            default: built-projects
     loopback-video: true
     virtualization:
         by-test-platform:

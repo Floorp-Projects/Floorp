@@ -74,7 +74,8 @@ raptor-speedometer-geckoview:
     target: geckoview_example.apk
     run-on-projects:
         by-test-platform:
-            android-hw.*: ['try', 'mozilla-central']
+            android-hw-g5.*: ['try']
+            android-hw-p2.*: ['try', 'mozilla-central']
     max-run-time: 900
     mozharness:
         extra-options:
@@ -239,7 +240,8 @@ raptor-unity-webgl-geckoview:
     target: geckoview_example.apk
     run-on-projects:
         by-test-platform:
-            android-hw-.*arm7.*: ['try', 'mozilla-central']
+            android-hw-g5.*: ['try']
+            android-hw-p2.*: ['try', 'mozilla-central']
     max-run-time: 900
     mozharness:
         extra-options:

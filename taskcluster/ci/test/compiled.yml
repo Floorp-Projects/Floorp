@@ -59,7 +59,10 @@ jittest:
         by-test-platform:
             android-em.*: xlarge
             default: default
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            android-hw.*: ['try']
+            default: built-projects
     chunks:
         by-test-platform:
             windows.*: 1
