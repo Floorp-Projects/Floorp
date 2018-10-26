@@ -16,8 +16,8 @@ function createLocation({
 }) {
   return {
     sourceId,
-    line,
+    line: line || 0,
     column,
-    sourceUrl: sourceUrl || null
+    sourceUrl: sourceUrl || ""
   };
 }

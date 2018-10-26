@@ -75,7 +75,8 @@ function mapDisplayNames(frame, library) {
 }
 
 function formatDisplayName(frame, {
-  shouldMapDisplayName = true
+  shouldMapDisplayName = true,
+  maxLength = 25
 } = {}) {
   let {
     displayName,
@@ -89,7 +90,7 @@ function formatDisplayName(frame, {
   }
 
   displayName = simplifyDisplayName(displayName);
-  return (0, _utils.endTruncateStr)(displayName, 25);
+  return Number.isInteger(maxLength) ? (0, _utils.endTruncateStr)(displayName, maxLength) : displayName;
 }
 
 function formatCopyName(frame) {

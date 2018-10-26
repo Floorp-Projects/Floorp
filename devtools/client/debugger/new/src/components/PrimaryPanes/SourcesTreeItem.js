@@ -38,6 +38,8 @@ var _clipboard = require("../../utils/clipboard");
 
 var _prefs = require("../../utils/prefs");
 
+var _url = require("../../utils/url");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -199,12 +201,18 @@ class SourceTreeItem extends _react.Component {
     const {
       item,
       depth,
+      source,
       focused,
-      hasMatchingGeneratedSource
+      hasMatchingGeneratedSource,
+      hasSiblingOfSameName
     } = this.props;
     const suffix = hasMatchingGeneratedSource ? _react2.default.createElement("span", {
       className: "suffix"
     }, L10N.getStr("sourceFooter.mappedSuffix")) : null;
+    const querystring = source ? (0, _url.parse)(source.url).search : null;
+    const query = hasSiblingOfSameName && querystring ? _react2.default.createElement("span", {
+      className: "query"
+    }, querystring) : null;
     return _react2.default.createElement("div", {
       className: (0, _classnames2.default)("node", {
         focused
@@ -214,7 +222,7 @@ class SourceTreeItem extends _react.Component {
       onContextMenu: e => this.onContextMenu(e, item)
     }, this.renderItemArrow(), this.getIcon(item, depth), _react2.default.createElement("span", {
       className: "label"
-    }, " ", this.renderItemName(), " ", suffix));
+    }, " ", this.renderItemName(), query, " ", suffix));
   }
 
 }
@@ -227,12 +235,21 @@ function getHasMatchingGeneratedSource(state, source) {
   return !!(0, _selectors.getGeneratedSourceByURL)(state, source.url);
 }
 
+function getHasSiblingOfSameName(state, source) {
+  if (!source) {
+    return false;
+  }
+
+  return (0, _selectors.getSourcesUrlsInSources)(state, source.url).length > 1;
+}
+
 const mapStateToProps = (state, props) => {
   const {
     source
   } = props;
   return {
-    hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source)
+    hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
+    hasSiblingOfSameName: getHasSiblingOfSameName(state, source)
   };
 };
 
