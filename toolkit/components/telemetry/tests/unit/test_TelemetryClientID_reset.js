@@ -229,6 +229,47 @@ add_task(async function test_clientid_canary_nonunified_no_pref_trigger() {
   Assert.equal(firstClientId, newClientId, "Client ID should be unmodified");
 });
 
+/**
+ * On Android Telemetry is not unified.
+ * Test that we record the canary flag after detecting a canary client ID and resetting to a new ID.
+ */
+add_task(async function test_clientid_canary_nonunified_canary_detected() {
+  const isUnified = Preferences.get(TelemetryUtils.Preferences.Unified, false);
+  if (isUnified) {
+    // Skipping the test if unified telemetry is on.
+    return;
+  }
+
+  let firstClientId = await ClientID.resetClientID();
+  await TelemetryController.testReset();
+  await sendPing(/* environment */ true);
+  let ping = await PingServer.promiseNextPing();
+  Assert.equal(ping.type, TEST_PING_TYPE, "The ping must be a test ping");
+  Assert.equal(firstClientId, ping.clientId, "Client ID should be from the reset");
+  Assert.ok(!("wasCanary" in ping.environment.profile));
+
+  // Setting canary
+  await ClientID.setClientID(TelemetryUtils.knownClientID);
+
+  // Reset the controller to reset the client ID.
+  await TelemetryController.testReset();
+  await sendPing(/* environment */ true);
+  ping = await PingServer.promiseNextPing();
+  Assert.equal(ping.type, TEST_PING_TYPE, "The ping must be a test ping");
+  let clientId = ping.clientId;
+  Assert.notEqual(TelemetryUtils.knownClientID, clientId, "Client ID should have been reset to a valid one.");
+  Assert.notEqual(firstClientId, clientId, "Client ID should be a new one after reset.");
+  Assert.ok(ping.environment.profile.wasCanary, "Previous canary client ID should have been detected after reset.");
+
+  // Reset the controller again.
+  await TelemetryController.testReset();
+  await sendPing(/* environment */ true);
+  ping = await PingServer.promiseNextPing();
+  Assert.equal(ping.type, TEST_PING_TYPE, "The ping must be a test ping");
+  Assert.equal(clientId, ping.clientId, "Client ID should be unmodified now.");
+  Assert.ok(ping.environment.profile.wasCanary, "Canary client ID flag should be persisted.");
+});
+
 add_task(async function stopServer() {
   await PingServer.stop();
 });
