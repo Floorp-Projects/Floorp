@@ -28,7 +28,8 @@ class CrashApplication : Application() {
             promptConfiguration = CrashReporter.PromptConfiguration(
                 appName = "Sample App",
                 organizationName = "Mozilla",
-                message = "As a private browser, we never save and cannot restore your last browsing session."
+                message = "As a private browser, we never save and cannot restore your last browsing session.",
+                theme = R.style.CrashDialogTheme
             ),
             nonFatalCrashIntent = createNonFatalPendingIntent(this),
             enabled = true

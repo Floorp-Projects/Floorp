@@ -13,13 +13,11 @@ import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
-import android.view.Menu
 import android.view.View
 import kotlinx.android.synthetic.main.activity_crash.*
 import mozilla.components.lib.crash.Crash
-import mozilla.components.lib.crash.CrashReporter
 
-class CrashActivity: AppCompatActivity(), View.OnClickListener {
+class CrashActivity : AppCompatActivity(), View.OnClickListener {
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (!Crash.isCrashIntent(intent)) {

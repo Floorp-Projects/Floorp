@@ -21,14 +21,13 @@ import mozilla.components.lib.crash.R
  * Activity showing the crash reporter prompt asking the user for confirmation before submitting a crash report.
  */
 class CrashReporterActivity : AppCompatActivity() {
-    private lateinit var crashReporter: CrashReporter
-    private lateinit var crash: Crash
+    private val crashReporter: CrashReporter by lazy { CrashReporter.requireInstance }
+    private val crash: Crash by lazy { Crash.fromIntent(intent) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        setTheme(crashReporter.promptConfiguration.theme)
 
-        crashReporter = CrashReporter.requireInstance
-        crash = Crash.fromIntent(intent)
+        super.onCreate(savedInstanceState)
 
         setContentView(R.layout.mozac_lib_crash_crashreporter)
 
