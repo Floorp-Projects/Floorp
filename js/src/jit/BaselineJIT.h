@@ -229,23 +229,23 @@ class RetAddrEntry
     }
 };
 
-struct BaselineScript
+struct BaselineScript final
 {
   private:
     // Code pointer containing the actual method.
-    HeapPtr<JitCode*> method_;
+    HeapPtr<JitCode*> method_ = nullptr;
 
     // For functions with a call object, template objects to use for the call
     // object and decl env object (linked via the call object's enclosing
     // scope).
-    HeapPtr<EnvironmentObject*> templateEnv_;
+    HeapPtr<EnvironmentObject*> templateEnv_ = nullptr;
 
     // Allocated space for fallback stubs.
-    FallbackICStubSpace fallbackStubSpace_;
+    FallbackICStubSpace fallbackStubSpace_ = {};
 
     // If non-null, the list of wasm::Modules that contain an optimized call
     // directly to this script.
-    Vector<DependentWasmImport>* dependentWasmImports_;
+    Vector<DependentWasmImport>* dependentWasmImports_ = nullptr;
 
     // Native code offset right before the scope chain is initialized.
     uint32_t prologueOffset_;
@@ -261,10 +261,10 @@ struct BaselineScript
     // The offsets and event used for Tracelogger toggling.
 #ifdef JS_TRACE_LOGGING
 # ifdef DEBUG
-    bool traceLoggerScriptsEnabled_;
-    bool traceLoggerEngineEnabled_;
+    bool traceLoggerScriptsEnabled_ = false;
+    bool traceLoggerEngineEnabled_ = false;
 # endif
-    TraceLoggerEvent traceLoggerScriptEvent_;
+    TraceLoggerEvent traceLoggerScriptEvent_ = {};
 #endif
 
     // Native code offsets right after the debug prologue VM call returns, or
@@ -308,60 +308,67 @@ struct BaselineScript
     };
 
   private:
-    uint32_t flags_;
+    uint32_t flags_ = 0;
 
   private:
     void trace(JSTracer* trc);
 
-    uint32_t icEntriesOffset_;
-    uint32_t icEntries_;
+    uint32_t icEntriesOffset_ = 0;
+    uint32_t icEntries_ = 0;
 
-    uint32_t retAddrEntriesOffset_;
-    uint32_t retAddrEntries_;
+    uint32_t retAddrEntriesOffset_ = 0;
+    uint32_t retAddrEntries_ = 0;
 
-    uint32_t pcMappingIndexOffset_;
-    uint32_t pcMappingIndexEntries_;
+    uint32_t pcMappingIndexOffset_ = 0;
+    uint32_t pcMappingIndexEntries_ = 0;
 
-    uint32_t pcMappingOffset_;
-    uint32_t pcMappingSize_;
+    uint32_t pcMappingOffset_ = 0;
+    uint32_t pcMappingSize_ = 0;
 
     // List mapping indexes of bytecode type sets to the offset of the opcode
     // they correspond to, for use by TypeScript::BytecodeTypes.
-    uint32_t bytecodeTypeMapOffset_;
+    uint32_t bytecodeTypeMapOffset_ = 0;
 
     // For generator scripts, we store the native code address for each yield
     // instruction.
-    uint32_t yieldEntriesOffset_;
+    uint32_t yieldEntriesOffset_ = 0;
 
     // By default tracelogger is disabled. Therefore we disable the logging code
     // by default. We store the offsets we must patch to enable the logging.
-    uint32_t traceLoggerToggleOffsetsOffset_;
-    uint32_t numTraceLoggerToggleOffsets_;
+    uint32_t traceLoggerToggleOffsetsOffset_ = 0;
+    uint32_t numTraceLoggerToggleOffsets_ = 0;
 
     // The total bytecode length of all scripts we inlined when we Ion-compiled
     // this script. 0 if Ion did not compile this script or if we didn't inline
     // anything.
-    uint16_t inlinedBytecodeLength_;
+    uint16_t inlinedBytecodeLength_ = 0;
 
     // The max inlining depth where we can still inline all functions we inlined
     // when we Ion-compiled this script. This starts as UINT8_MAX, since we have
     // no data yet, and won't affect inlining heuristics in that case. The value
     // is updated when we Ion-compile this script. See makeInliningDecision for
     // more info.
-    uint8_t maxInliningDepth_;
+    uint8_t maxInliningDepth_ = UINT8_MAX;
 
     // An ion compilation that is ready, but isn't linked yet.
-    IonBuilder *pendingBuilder_;
+    IonBuilder *pendingBuilder_ = nullptr;
 
-    ControlFlowGraph* controlFlowGraph_;
+    ControlFlowGraph* controlFlowGraph_ = nullptr;
 
-  public:
-    // Do not call directly, use BaselineScript::New. This is public for cx->new_.
+    // Use BaselineScript::New to create new instances. It will properly
+    // allocate trailing objects.
     BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
                    uint32_t profilerEnterToggleOffset,
                    uint32_t profilerExitToggleOffset,
-                   uint32_t postDebugPrologueOffset);
+                   uint32_t postDebugPrologueOffset)
+      : prologueOffset_(prologueOffset),
+        epilogueOffset_(epilogueOffset),
+        profilerEnterToggleOffset_(profilerEnterToggleOffset),
+        profilerExitToggleOffset_(profilerExitToggleOffset),
+        postDebugPrologueOffset_(postDebugPrologueOffset)
+    { }
 
+  public:
     ~BaselineScript() {
         // The contents of the fallback stub space are removed and freed
         // separately after the next minor GC. See BaselineScript::Destroy.
