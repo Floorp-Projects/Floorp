@@ -618,14 +618,12 @@ security.ui.identitypopup:
     record_in_processes:
       - main
     extra_keys:
-      fb: Whether FastBlock was active while the user opened the popup
       tp: Whether Tracking Protection was active while the user opened the popup
       cr: Whether Cookie Restrictions was active while the user opened the popup
     products:
       - firefox
   click:
     objects: [
-      "fb_add_blocking",
       "tp_add_blocking",
       "cookies_add_blocking",
       "cb_prefs_button",
@@ -648,7 +646,6 @@ security.ui.identitypopup:
     record_in_processes:
       - main
     extra_keys:
-      fb: Whether FastBlock was active while the user interacted with the UI
       tp: Whether Tracking Protection was active while the user interacted with the UI
       cr: Whether Cookie Restrictions was active while the user interacted with the UI
     products:
