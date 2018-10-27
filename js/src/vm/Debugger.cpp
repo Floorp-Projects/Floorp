@@ -17,7 +17,6 @@
 #include "jsnum.h"
 
 #include "frontend/BytecodeCompilation.h"
-#include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 #include "gc/FreeOp.h"
 #include "gc/HashUtil.h"
@@ -8927,7 +8926,9 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
         if (!scope) {
             return false;
         }
-        script = frontend::CompileEvalScript(cx, env, scope, options, srcBuf);
+
+        frontend::EvalScriptInfo info(cx, options, env, scope);
+        script = frontend::CompileEvalScript(info, srcBuf);
         if (!script) {
             return false;
         }

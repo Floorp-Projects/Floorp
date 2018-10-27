@@ -9,7 +9,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Range.h"
 
-#include "frontend/BytecodeCompiler.h"
+#include "frontend/BytecodeCompilation.h"
 #include "gc/HashUtil.h"
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
@@ -328,7 +328,8 @@ EvalKernel(JSContext* cx, HandleValue v, EvalType evalType, AbstractFramePtr cal
             return false;
         }
 
-        JSScript* compiled = frontend::CompileEvalScript(cx, env, enclosing, options, srcBuf);
+        frontend::EvalScriptInfo info(cx, options, env, enclosing);
+        JSScript* compiled = frontend::CompileEvalScript(info, srcBuf);
         if (!compiled) {
             return false;
         }
@@ -417,7 +418,8 @@ js::DirectEvalStringFromIon(JSContext* cx,
             return false;
         }
 
-        JSScript* compiled = frontend::CompileEvalScript(cx, env, enclosing, options, srcBuf);
+        frontend::EvalScriptInfo info(cx, options, env, enclosing);
+        JSScript* compiled = frontend::CompileEvalScript(info, srcBuf);
         if (!compiled) {
             return false;
         }
