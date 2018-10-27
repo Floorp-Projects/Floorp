@@ -231,6 +231,13 @@ frontend::CompileGlobalScript(GlobalScriptInfo& info, JS::SourceText<char16_t>& 
     return CreateGlobalScript(info, srcBuf, sourceObjectOut);
 }
 
+JSScript*
+frontend::CompileGlobalScript(GlobalScriptInfo& info, JS::SourceText<Utf8Unit>& srcBuf,
+                              ScriptSourceObject** sourceObjectOut /* = nullptr */)
+{
+    return CreateGlobalScript(info, srcBuf, sourceObjectOut);
+}
+
 template<typename Unit>
 static JSScript*
 CreateEvalScript(frontend::EvalScriptInfo& info, SourceText<Unit>& srcBuf)
