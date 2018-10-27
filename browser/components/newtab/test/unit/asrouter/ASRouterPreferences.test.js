@@ -4,6 +4,7 @@ const FAKE_PROVIDERS = [{id: "foo"}, {id: "bar"}];
 const PROVIDER_PREF = "browser.newtabpage.activity-stream.asrouter.messageProviders";
 const DEVTOOLS_PREF = "browser.newtabpage.activity-stream.asrouter.devtoolsEnabled";
 const SNIPPETS_USER_PREF = "browser.newtabpage.activity-stream.feeds.snippets";
+const CFR_USER_PREF = "browser.newtabpage.activity-stream.asrouter.userprefs.cfr";
 
 /** NUMBER_OF_PREFS_TO_OBSERVE includes:
  *  1. asrouter.messageProvider
@@ -164,6 +165,14 @@ describe("ASRouterPreferences", () => {
       assert.isTrue(ASRouterPreferences.getUserPreference("snippets"));
     });
   });
+  describe("#getAllUserPreferences", () => {
+    it("should return all user preferences", () => {
+      boolPrefStub.withArgs(SNIPPETS_USER_PREF).returns(true);
+      boolPrefStub.withArgs(CFR_USER_PREF).returns(false);
+      const result = ASRouterPreferences.getAllUserPreferences();
+      assert.deepEqual(result, {snippets: true, cfr: false});
+    });
+  });
   describe("#enableOrDisableProvider", () => {
     it("should enable an existing provider if second param is true", () => {
       const setStub = sandbox.stub(global.Services.prefs, "setStringPref");
@@ -193,6 +202,17 @@ describe("ASRouterPreferences", () => {
       assert.doesNotThrow(() => {
         ASRouterPreferences.enableOrDisableProvider("foo", true);
       });
+    });
+  });
+  describe("#setUserPreference", () => {
+    it("should do nothing if the pref doesn't exist", () => {
+      ASRouterPreferences.setUserPreference("foo", true);
+      assert.notCalled(boolPrefStub);
+    });
+    it("should set the given pref", () => {
+      const setStub = sandbox.stub(global.Services.prefs, "setBoolPref");
+      ASRouterPreferences.setUserPreference("snippets", true);
+      assert.calledWith(setStub, SNIPPETS_USER_PREF, true);
     });
   });
   describe("#resetProviderPref", () => {

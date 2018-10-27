@@ -211,7 +211,7 @@ describe("ASRouter", () => {
       assert.calledOnce(channel.sendAsyncMessage);
       assert.deepEqual(channel.sendAsyncMessage.firstCall.args[1], {
         type: "ADMIN_SET_STATE",
-        data: Object.assign({}, Router.state, {providerPrefs: ASRouterPreferences.providers}),
+        data: Object.assign({}, Router.state, {providerPrefs: ASRouterPreferences.providers, userPrefs: ASRouterPreferences.getAllUserPreferences()}),
       });
     });
     it("should not send a message on a state change asrouter.devtoolsEnabled pref is on", async () => {
@@ -606,7 +606,7 @@ describe("ASRouter", () => {
         assert.calledOnce(msg.target.sendAsyncMessage);
         assert.deepEqual(msg.target.sendAsyncMessage.firstCall.args[1], {
           type: "ADMIN_SET_STATE",
-          data: Object.assign({}, Router.state, {providerPrefs: ASRouterPreferences.providers}),
+          data: Object.assign({}, Router.state, {providerPrefs: ASRouterPreferences.providers, userPrefs: ASRouterPreferences.getAllUserPreferences()}),
         });
       });
     });
@@ -893,6 +893,16 @@ describe("ASRouter", () => {
         await Router.onMessage(msg);
 
         assert.calledOnce(ASRouterPreferences.resetProviderPref);
+      });
+    });
+    describe("#onMessage: SET_PROVIDER_USER_PREF", () => {
+      it("should set provider user pref via ASRouterPreferences", async () => {
+        const msg = fakeAsyncMessage({type: "SET_PROVIDER_USER_PREF", data: {id: "foo", value: true}});
+        sandbox.stub(ASRouterPreferences, "setUserPreference");
+
+        await Router.onMessage(msg);
+
+        assert.calledWith(ASRouterPreferences.setUserPreference, "foo", true);
       });
     });
   });

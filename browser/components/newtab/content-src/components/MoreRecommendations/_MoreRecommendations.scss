@@ -1,13 +1,7 @@
 .more-recommendations {
-  @media (min-width: $break-point-large) {
-    // This is floating to accomodate a very large number of topics and/or
-    // very long topic names due to l10n.
-    float: right;
-
-    &:dir(rtl) {
-      float: left;
-    }
-  }
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
 
   &::after {
     background: url('#{$image-path}topic-show-more-12.svg') no-repeat center center;
