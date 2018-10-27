@@ -132,7 +132,7 @@ interface nsIPermissionManager : nsISupports
    * Passing a system principal will be a no-op because they will always be
    * granted permissions.
    */
-  void addFromPrincipal(in nsIPrincipal principal, in string typed,
+  void addFromPrincipal(in nsIPrincipal principal, in string type,
                         in uint32_t permission,
                         [optional] in uint32_t expireType,
                         [optional] in int64_t expireTime);

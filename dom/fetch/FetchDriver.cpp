@@ -539,7 +539,7 @@ FetchDriver::HttpFetch(const nsACString& aPreferredAlternativeDataType)
   MOZ_ASSERT(mLoadGroup);
   nsCOMPtr<nsIChannel> chan;
 
-  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL |
+  nsLoadFlags loadFlags = nsIRequest::LOAD_BACKGROUND |
     bypassFlag | nsIChannel::LOAD_CLASSIFY_URI;
   if (mDocument) {
     MOZ_ASSERT(mDocument->NodePrincipal() == mPrincipal);

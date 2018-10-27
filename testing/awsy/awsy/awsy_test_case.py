@@ -255,7 +255,7 @@ class AwsyTestCase(MarionetteTestCase):
             self.marionette.execute_script(dmd_script, script_timeout=60000)
             tmpdir = tempfile.gettempdir()
             prefix = "incomplete-unified-memory-report-%s-%d-*" % (checkpointName, iteration)
-            max_wait = 60
+            max_wait = 240
             elapsed = 0
             while fnmatch.filter(os.listdir(tmpdir), prefix) and elapsed < max_wait:
                 self.logger.info("Waiting for memory report to finish")
