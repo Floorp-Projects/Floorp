@@ -562,7 +562,7 @@ SourceAwareCompiler<Unit>::createSourceAndParser(BytecodeCompiler& info, ParseGo
 
     if (info.canLazilyParse()) {
         syntaxParser.emplace(info.cx, info.cx->tempLifoAlloc(), info.options,
-                             sourceBuffer_.get(), sourceBuffer_.length(),
+                             sourceBuffer_.units(), sourceBuffer_.length(),
                              /* foldConstants = */ false, *info.usedNames, nullptr, nullptr,
                              info.sourceObject, goal);
         if (!syntaxParser->checkOptions()) {
@@ -571,9 +571,8 @@ SourceAwareCompiler<Unit>::createSourceAndParser(BytecodeCompiler& info, ParseGo
     }
 
     parser.emplace(info.cx, info.cx->tempLifoAlloc(), info.options,
-                   sourceBuffer_.get(), sourceBuffer_.length(),
-                   /* foldConstants = */ true, *info.usedNames, syntaxParser.ptrOr(nullptr),
-                   nullptr, info.sourceObject, goal);
+                   sourceBuffer_.units(), sourceBuffer_.length(), /* foldConstants = */ true,
+                   *info.usedNames, syntaxParser.ptrOr(nullptr), nullptr, info.sourceObject, goal);
     parser->ss = info.scriptSource;
     return parser->checkOptions();
 }
