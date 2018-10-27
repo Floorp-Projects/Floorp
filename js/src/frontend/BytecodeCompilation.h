@@ -120,6 +120,10 @@ class MOZ_STACK_CLASS GlobalScriptInfo final
     }
 };
 
+extern JSScript*
+CompileGlobalScript(GlobalScriptInfo& info, JS::SourceText<char16_t>& srcBuf,
+                    ScriptSourceObject** sourceObjectOut = nullptr);
+
 class MOZ_STACK_CLASS EvalScriptInfo final
   : public BytecodeCompiler
 {
