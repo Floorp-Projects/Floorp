@@ -64,6 +64,7 @@ function testOneFile(uri) {
                                           wantGlobalProperties: ["ChromeUtils"] });
 
   // Populate test environment with test harness prerequisites.
+  testScope.SpecialPowers = SpecialPowers;
   testScope.Components = SpecialPowers.Components;
   testScope._TEST_FILE = uri;
 
