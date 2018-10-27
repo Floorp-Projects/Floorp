@@ -951,9 +951,11 @@ add_task(async function test_environmentChange() {
     }
 
     let expectedPrioResult = {
-      "browserIsUserDefault": true,
-      "newTabPageEnabled": true,
-      "pdfViewerUsed": false,
+      "booleans": [
+        true,
+        true,
+        false,
+      ],
     };
 
     Preferences.set(PREF_TEST, 3);

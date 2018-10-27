@@ -770,8 +770,6 @@ sitedata-block-desc = Type blocked
 
 sitedata-block-trackers-option-recommended =
     .label = Third-party trackers (recommended)
-sitedata-block-trackers-option =
-    .label = Third-party trackers
 sitedata-block-unvisited-option =
     .label = Cookies from unvisited websites
 sitedata-block-all-third-party-option =
@@ -790,11 +788,6 @@ sitedata-settings =
 sitedata-cookies-exceptions =
     .label = Exceptions…
     .accesskey = E
-
-# This is a warning message shown next to a yellow warning icon when the Cookies and Site Data subsection
-# in Preferences has been disabled due to Content Blocking being disabled. It is displayed next to the
-# Cookies and Site Data section.
-sitedata-warning-your-settings-prevent-changes = Your settings in Content Blocking are preventing changes to Cookies and Site Data settings.
 
 ## Privacy Section - Address Bar
 
@@ -824,16 +817,6 @@ content-blocking-learn-more = Learn more
 content-blocking-restore-defaults =
   .label = Restore Defaults
   .accesskey = R
-
-content-blocking-toggle-on =
-  .tooltiptext = Turn Off Content Blocking
-content-blocking-toggle-off =
-  .tooltiptext = Turn On Content Blocking
-
-content-blocking-toggle-label-on = ON
-  .accesskey = O
-content-blocking-toggle-label-off = OFF
-  .accesskey = O
 
 content-blocking-category-label = Choose what to block
 
@@ -866,9 +849,6 @@ content-blocking-change-cookie-settings =
   .accesskey = S
 content-blocking-reject-trackers-block-trackers-option-recommended =
   .label = Trackers (recommended)
-  .accesskey = k
-content-blocking-reject-trackers-block-trackers-option =
-  .label = Trackers
   .accesskey = k
 content-blocking-reject-trackers-all-third-parties-option =
   .label = All third-party cookies (may cause websites to break)

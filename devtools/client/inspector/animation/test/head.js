@@ -49,9 +49,7 @@ const closeAnimationInspector = async function() {
 
 /**
  * Some animation features are not enabled by default in release/beta channels
- * yet including:
- *   * parts of the Web Animations API (Bug 1264101), and
- *   * the frames() timing function (Bug 1379582).
+ * yet including parts of the Web Animations API.
  */
 const enableAnimationFeatures = function() {
   return new Promise(resolve => {
@@ -60,7 +58,7 @@ const enableAnimationFeatures = function() {
       ["dom.animations-api.getAnimations.enabled", true],
       ["dom.animations-api.implicit-keyframes.enabled", true],
       ["dom.animations-api.timelines.enabled", true],
-      ["layout.css.frames-timing.enabled", true],
+      ["layout.css.step-position-jump.enabled", true],
     ]}, resolve);
   });
 };

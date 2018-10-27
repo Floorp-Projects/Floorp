@@ -14,6 +14,7 @@
 #include "jslibmath.h"
 #include "jit/IonIC.h"
 #include "jit/SharedICHelpers.h"
+#include "jit/SharedICRegisters.h"
 
 #include "builtin/Boolean-inl.h"
 

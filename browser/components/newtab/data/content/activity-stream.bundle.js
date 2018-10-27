@@ -1760,6 +1760,7 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
     super(props);
     this.onMessage = this.onMessage.bind(this);
     this.handleEnabledToggle = this.handleEnabledToggle.bind(this);
+    this.handleUserPrefToggle = this.handleUserPrefToggle.bind(this);
     this.onChangeMessageFilter = this.onChangeMessageFilter.bind(this);
     this.findOtherBundledMessagesOfSameTemplate = this.findOtherBundledMessagesOfSameTemplate.bind(this);
     this.state = { messageFilter: "all" };
@@ -1924,32 +1925,50 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
       react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
         "tr",
         { className: "message-item" },
+        react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("td", { className: "min" }),
         react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
           "td",
-          null,
-          "id"
+          { className: "min" },
+          "Provider ID"
         ),
         react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
           "td",
           null,
-          "enabled"
+          "Source"
         ),
         react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
           "td",
           null,
-          "source"
-        ),
-        react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-          "td",
-          null,
-          "last updated"
+          "Last Updated"
         )
       )
     );
   }
 
   handleEnabledToggle(event) {
-    const action = { type: event.target.checked ? "ENABLE_PROVIDER" : "DISABLE_PROVIDER", data: event.target.name };
+    const provider = this.state.providerPrefs.find(p => p.id === event.target.dataset.provider);
+    const userPrefInfo = this.state.userPrefs;
+
+    const isUserEnabled = provider.id in userPrefInfo ? userPrefInfo[provider.id] : true;
+    const isSystemEnabled = provider.enabled;
+    const isEnabling = event.target.checked;
+
+    if (isEnabling) {
+      if (!isUserEnabled) {
+        _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_0__["ASRouterUtils"].sendMessage({ type: "SET_PROVIDER_USER_PREF", data: { id: provider.id, value: true } });
+      }
+      if (!isSystemEnabled) {
+        _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_0__["ASRouterUtils"].sendMessage({ type: "ENABLE_PROVIDER", data: provider.id });
+      }
+    } else {
+      _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_0__["ASRouterUtils"].sendMessage({ type: "DISABLE_PROVIDER", data: provider.id });
+    }
+
+    this.setState({ messageFilter: "all" });
+  }
+
+  handleUserPrefToggle(event) {
+    const action = { type: "SET_PROVIDER_USER_PREF", data: { id: event.target.dataset.provider, value: event.target.checked } };
     _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_0__["ASRouterUtils"].sendMessage(action);
     this.setState({ messageFilter: "all" });
   }
@@ -1957,6 +1976,8 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
   renderProviders() {
     const providersConfig = this.state.providerPrefs;
     const providerInfo = this.state.providers;
+    const userPrefInfo = this.state.userPrefs;
+
     return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
       "table",
       null,
@@ -1967,19 +1988,48 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
         providersConfig.map((provider, i) => {
           const isTestProvider = provider.id === "snippets_local_testing";
           const info = providerInfo.find(p => p.id === provider.id) || {};
-          let label = "(local)";
+          const isUserEnabled = provider.id in userPrefInfo ? userPrefInfo[provider.id] : true;
+          const isSystemEnabled = isTestProvider || provider.enabled;
+
+          let label = "local";
           if (provider.type === "remote") {
+            let displayUrl = "";
+            try {
+              displayUrl = `(${new URL(info.url).hostname})`;
+            } catch (err) {}
             label = react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-              "a",
-              { target: "_blank", href: info.url },
-              info.url
+              "span",
+              null,
+              "endpoint ",
+              react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+                "a",
+                { target: "_blank", href: info.url },
+                displayUrl
+              )
             );
           } else if (provider.type === "remote-settings") {
-            label = `${provider.bucket} (Remote Settings)`;
+            label = `remote settings (${provider.bucket})`;
           }
+
+          let reasonsDisabled = [];
+          if (!isSystemEnabled) {
+            reasonsDisabled.push("system pref");
+          }
+          if (!isUserEnabled) {
+            reasonsDisabled.push("user pref");
+          }
+          if (reasonsDisabled.length) {
+            label = `disabled via ${reasonsDisabled.join(", ")}`;
+          }
+
           return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
             "tr",
             { className: "message-item", key: i },
+            react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+              "td",
+              null,
+              isTestProvider ? react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("input", { type: "checkbox", disabled: true, readOnly: true, checked: true }) : react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("input", { type: "checkbox", "data-provider": provider.id, checked: isUserEnabled && isSystemEnabled, onChange: this.handleEnabledToggle })
+            ),
             react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
               "td",
               null,
@@ -1988,12 +2038,11 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
             react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
               "td",
               null,
-              isTestProvider ? null : react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("input", { type: "checkbox", name: provider.id, checked: provider.enabled, onChange: this.handleEnabledToggle })
-            ),
-            react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-              "td",
-              null,
-              label
+              react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+                "span",
+                { className: `sourceLabel${isUserEnabled && isSystemEnabled ? "" : " isDisabled"}` },
+                label
+              )
             ),
             react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
               "td",
@@ -2029,12 +2078,12 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
       react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
         "h2",
         null,
-        "Message Providers"
-      ),
-      react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-        "button",
-        { className: "button", onClick: this.resetPref },
-        "Restore defaults"
+        "Message Providers ",
+        react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+          "button",
+          { title: "Restore all provider settings that ship with Firefox", className: "button", onClick: this.resetPref },
+          "Restore default prefs"
+        )
       ),
       this.state.providers ? this.renderProviders() : null,
       react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
@@ -2840,9 +2889,17 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
         id === "topstories" && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
           "div",
           { className: "top-stories-bottom-container" },
-          shouldShowTopics && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Topics_Topics__WEBPACK_IMPORTED_MODULE_9__["Topics"], { topics: this.props.topics }),
-          shouldShowPocketCta && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_PocketLoggedInCta_PocketLoggedInCta__WEBPACK_IMPORTED_MODULE_7__["PocketLoggedInCta"], null),
-          read_more_endpoint && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_MoreRecommendations_MoreRecommendations__WEBPACK_IMPORTED_MODULE_6__["MoreRecommendations"], { read_more_endpoint: read_more_endpoint })
+          react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
+            "div",
+            null,
+            shouldShowTopics && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Topics_Topics__WEBPACK_IMPORTED_MODULE_9__["Topics"], { topics: this.props.topics }),
+            shouldShowPocketCta && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_PocketLoggedInCta_PocketLoggedInCta__WEBPACK_IMPORTED_MODULE_7__["PocketLoggedInCta"], null)
+          ),
+          react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
+            "div",
+            null,
+            read_more_endpoint && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_MoreRecommendations_MoreRecommendations__WEBPACK_IMPORTED_MODULE_6__["MoreRecommendations"], { read_more_endpoint: read_more_endpoint })
+          )
         )
       )
     );

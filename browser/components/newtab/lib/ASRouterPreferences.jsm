@@ -120,6 +120,21 @@ class _ASRouterPreferences {
     return Services.prefs.getBoolPref(USER_PREFERENCES[providerId], true);
   }
 
+  getAllUserPreferences() {
+    const values = {};
+    for (const id of Object.keys(USER_PREFERENCES)) {
+      values[id] = this.getUserPreference(id);
+    }
+    return values;
+  }
+
+  setUserPreference(providerId, value) {
+    if (!USER_PREFERENCES[providerId]) {
+      return;
+    }
+    Services.prefs.setBoolPref(USER_PREFERENCES[providerId], value);
+  }
+
   addListener(callback) {
     this._callbacks.add(callback);
   }

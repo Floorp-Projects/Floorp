@@ -6439,14 +6439,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
     .push("'vert' calc(2.5)");
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.frames-timing.enabled")) {
-  gCSSProperties["animation-timing-function"].other_values.push(
-    "frames(2)", "frames(1000)", "frames( 2 )");
-  gCSSProperties["animation-timing-function"].invalid_values.push(
-    "frames(1)", "frames(-2)", "frames", "frames()", "frames(,)",
-    "frames(a)", "frames(2.0)", "frames(2.5)", "frames(2 3)");
-}
-
 if (IsCSSPropertyPrefEnabled("svg.transform-box.enabled")) {
   gCSSProperties["transform-box"] = {
     domProp: "transformBox",
@@ -8169,6 +8161,34 @@ if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {
     "path(nonzero)",
     "path(evenodd, '')",
     "path(abs, 'M 10 10 L 10 10 z')",
+  );
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.step-position-jump.enabled")) {
+  gCSSProperties["animation-timing-function"].other_values.push(
+    "steps(1, jump-start)",
+    "steps(1, jump-end)",
+    "steps(2, jump-none)",
+    "steps(1, jump-both)",
+  );
+  gCSSProperties["animation-timing-function"].invalid_values.push(
+    "steps(0, jump-start)",
+    "steps(0, jump-end)",
+    "steps(1, jump-none)",
+    "steps(0, jump-both)",
+  );
+
+  gCSSProperties["transition-timing-function"].other_values.push(
+    "steps(1, jump-start)",
+    "steps(1, jump-end)",
+    "steps(2, jump-none)",
+    "steps(1, jump-both)",
+  );
+  gCSSProperties["transition-timing-function"].invalid_values.push(
+    "steps(0, jump-start)",
+    "steps(0, jump-end)",
+    "steps(1, jump-none)",
+    "steps(0, jump-both)",
   );
 }
 

@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Tasertit n tbaḍnit",
   "firstrun_continue_to_login": "Kemmel",
   "firstrun_skip_login": "Zgel amecwaṛ-agi",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Ldi umuɣ",
   "pocket_learn_more": "Issin ugar"
 };

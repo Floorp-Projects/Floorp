@@ -16,3 +16,7 @@ npm-debug.log
 
 # also ignores ping centre tests
 ping-centre/
+
+# ignore things from about:library for now
+aboutlibrary/
+content-src/aboutlibrary/

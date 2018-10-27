@@ -12,7 +12,6 @@
 
 #include <stdarg.h>
 
-#include "jit/C1Spewer.h"
 #include "jit/JSONSpewer.h"
 
 #include "js/RootingAPI.h"
@@ -125,8 +124,6 @@ class TempAllocator;
 
 // The JitSpewer is only available on debug builds.
 // None of the global functions have effect on non-debug builds.
-static const int NULL_ID = -1;
-
 #ifdef JS_JITSPEW
 
 // Class made to hold the MIR and LIR graphs of an Wasm / Ion compilation.
@@ -134,9 +131,7 @@ class GraphSpewer
 {
   private:
     MIRGraph* graph_;
-    LSprinter c1Printer_;
     LSprinter jsonPrinter_;
-    C1Spewer c1Spewer_;
     JSONSpewer jsonSpewer_;
 
   public:

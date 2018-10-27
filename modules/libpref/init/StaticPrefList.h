@@ -678,19 +678,6 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
-// Is support for the frames() timing function enabled?
-#ifdef RELEASE_OR_BETA
-# define PREF_VALUE false
-#else
-# define PREF_VALUE true
-#endif
-VARCACHE_PREF(
-  "layout.css.frames-timing.enabled",
-   layout_css_frames_timing_enabled,
-  bool, PREF_VALUE
-)
-#undef PREF_VALUE
-
 // Should the :visited selector ever match (otherwise :link matches instead)?
 VARCACHE_PREF(
   "layout.css.visited_links_enabled",
@@ -814,6 +801,13 @@ VARCACHE_PREF(
   "layout.css.column-span.enabled",
    layout_css_column_span_enabled,
   bool, false
+)
+
+// Is steps(jump-*) supported in easing functions?
+VARCACHE_PREF(
+  "layout.css.step-position-jump.enabled",
+   layout_css_step_position_jump_enabled,
+  bool, true
 )
 
 //---------------------------------------------------------------------------

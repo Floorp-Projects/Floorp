@@ -42,13 +42,14 @@ module.exports = function(config) {
       "sinon", // require("sinon") require("karma-sinon")
     ],
     reporters: [
-      "coverage", // require("karma-coverage")
+      "coverage-istanbul", // require("karma-coverage")
       "mocha", // require("karma-mocha-reporter")
     ],
-    coverageReporter: {
+    coverageIstanbulReporter: {
+      reports: ["html", "text-summary"],
       dir: PATHS.coverageReportingPath,
       // This will make karma fail if coverage reporting is less than the minimums here
-      check: !isTDD && {
+      thresholds: !isTDD && {
         global: {
           statements: 100,
           lines: 100,
@@ -56,11 +57,6 @@ module.exports = function(config) {
           branches: 90,
         },
       },
-      reporters: [
-        {type: "html", subdir: "report-html"},
-        {type: "text", subdir: ".", file: "text.txt"},
-        {type: "text-summary", subdir: ".", file: "text-summary.txt"},
-      ],
     },
     files: [PATHS.testEntryFile],
     preprocessors,
