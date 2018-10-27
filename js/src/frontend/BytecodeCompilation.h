@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h" // MOZ_ASSERT
 #include "mozilla/Attributes.h" // MOZ_MUST_USE, MOZ_STACK_CLASS
 #include "mozilla/Maybe.h" // mozilla::Maybe, mozilla::Nothing
+#include "mozilla/Utf8.h" // mozilla::Utf8Unit
 
 #include <stddef.h> // size_t
 #include <stdint.h> // uint32_t
@@ -123,6 +124,10 @@ class MOZ_STACK_CLASS GlobalScriptInfo final
 
 extern JSScript*
 CompileGlobalScript(GlobalScriptInfo& info, JS::SourceText<char16_t>& srcBuf,
+                    ScriptSourceObject** sourceObjectOut = nullptr);
+
+extern JSScript*
+CompileGlobalScript(GlobalScriptInfo& info, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
                     ScriptSourceObject** sourceObjectOut = nullptr);
 
 class MOZ_STACK_CLASS EvalScriptInfo final
