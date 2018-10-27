@@ -72,6 +72,8 @@
   font-size: 12px;
   line-height: 1.6;
   margin-top: $topic-margin-top;
+  display: flex;
+  justify-content: space-between;
 
   a {
     color: var(--newtab-link-secondary-color);
@@ -86,14 +88,6 @@
   @media (min-width: $break-point-large) {
     line-height: 16px;
     height: 16px;
-  }
-
-  // This is a clearfix to for the more-recommendations link which is floating and causes
-  // some jank when we set overflow:hidden for the animation.
-  &::after {
-    clear: both;
-    content: '';
-    display: table;
   }
 }
 

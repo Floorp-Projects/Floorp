@@ -461,7 +461,7 @@ this.ActivityStream = class ActivityStream {
       // If there's an existing value and it has changed, that means we need to
       // overwrite the default with the new value.
       if (prefConfig.value !== undefined && prefConfig.value !== newValue) {
-        this._defaultPrefs.setDefaultPref(pref, newValue);
+        this._defaultPrefs.set(pref, newValue);
       }
 
       prefConfig.value = newValue;

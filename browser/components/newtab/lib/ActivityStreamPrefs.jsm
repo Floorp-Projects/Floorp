@@ -5,7 +5,6 @@
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const ACTIVITY_STREAM_PREF_BRANCH = "browser.newtabpage.activity-stream.";
 
@@ -16,12 +15,7 @@ this.Prefs = class Prefs extends Preferences {
    */
   constructor(branch = ACTIVITY_STREAM_PREF_BRANCH) {
     super({branch});
-    this._branchName = branch;
     this._branchObservers = new Map();
-  }
-
-  get branchName() {
-    return this._branchName;
   }
 
   ignoreBranch(listener) {
@@ -39,7 +33,7 @@ this.Prefs = class Prefs extends Preferences {
   }
 };
 
-this.DefaultPrefs = class DefaultPrefs {
+this.DefaultPrefs = class DefaultPrefs extends Preferences {
   /**
    * DefaultPrefs - A helper for setting and resetting default prefs for the add-on
    *
@@ -50,28 +44,11 @@ this.DefaultPrefs = class DefaultPrefs {
    * @param  {string} branch (optional) The pref branch (defaults to ACTIVITY_STREAM_PREF_BRANCH)
    */
   constructor(config, branch = ACTIVITY_STREAM_PREF_BRANCH) {
+    super({
+      branch,
+      defaultBranch: true,
+    });
     this._config = config;
-    this.branch = Services.prefs.getDefaultBranch(branch);
-  }
-
-  /**
-   * setDefaultPref - Sets the default value (not user-defined) for a given pref
-   *
-   * @param  {string} key The name of the pref
-   * @param  {type} val The default value of the pref
-   */
-  setDefaultPref(key, val) {
-    switch (typeof val) {
-      case "boolean":
-        this.branch.setBoolPref(key, val);
-        break;
-      case "number":
-        this.branch.setIntPref(key, val);
-        break;
-      case "string":
-        this.branch.setStringPref(key, val);
-        break;
-    }
   }
 
   /**
@@ -82,6 +59,17 @@ this.DefaultPrefs = class DefaultPrefs {
     const IS_UNOFFICIAL_BUILD = !AppConstants.MOZILLA_OFFICIAL;
 
     for (const pref of this._config.keys()) {
+      try {
+        // Avoid replacing existing valid default pref values, e.g., those set
+        // via Autoconfig or policy
+        if (this.get(pref) !== undefined) {
+          continue;
+        }
+      } catch (ex) {
+        // We get NS_ERROR_UNEXPECTED for prefs that have a user value (causing
+        // default branch to believe there's a type) but no actual default value
+      }
+
       const prefConfig = this._config.get(pref);
       let value;
       if (IS_UNOFFICIAL_BUILD && "value_local_dev" in prefConfig) {
@@ -89,16 +77,13 @@ this.DefaultPrefs = class DefaultPrefs {
       } else {
         value = prefConfig.value;
       }
-      this.setDefaultPref(pref, value);
-    }
-  }
 
-  /**
-   * reset - Resets all user-defined prefs for prefs in ._config to their defaults
-   */
-  reset() {
-    for (const name of this._config.keys()) {
-      this.branch.clearUserPref(name);
+      try {
+        this.set(pref, value);
+      } catch (ex) {
+        // Potentially the user somehow set an unexpected value type, so we fail
+        // to set a default of our expected type
+      }
     }
   }
 };

@@ -3,8 +3,8 @@
 }
 
 @mixin textbox-focus($color) {
-  --newtab-textbox-focus-color: $color;
-  --newtab-textbox-focus-boxshadow: textbox-shadow($color);
+  --newtab-textbox-focus-color: #{$color};
+  --newtab-textbox-focus-boxshadow: #{textbox-shadow($color)};
 }
 
 // scss variables related to the theme.
@@ -21,118 +21,118 @@ $shadow-secondary: 0 1px 4px 0 $grey-90-20;
 // Default theme
 body {
   // General styles
-  --newtab-background-color: $grey-10;
-  --newtab-border-primary-color: $grey-40;
-  --newtab-border-secondary-color: $grey-30;
-  --newtab-button-primary-color: $blue-60;
+  --newtab-background-color: #{$grey-10};
+  --newtab-border-primary-color: #{$grey-40};
+  --newtab-border-secondary-color: #{$grey-30};
+  --newtab-button-primary-color: #{$blue-60};
   --newtab-button-secondary-color: inherit;
-  --newtab-element-active-color: $grey-30-60;
-  --newtab-element-hover-color: $grey-20;
-  --newtab-icon-primary-color: $grey-90-80;
-  --newtab-icon-secondary-color: $grey-90-60;
-  --newtab-icon-tertiary-color: $grey-30;
-  --newtab-inner-box-shadow-color: $black-10;
-  --newtab-link-primary-color: $blue-60;
-  --newtab-link-secondary-color: $teal-70;
-  --newtab-text-conditional-color: $grey-60;
-  --newtab-text-primary-color: $grey-90;
-  --newtab-text-secondary-color: $grey-50;
-  --newtab-textbox-background-color: $white;
-  --newtab-textbox-border: $grey-90-20;
+  --newtab-element-active-color: #{$grey-30-60};
+  --newtab-element-hover-color: #{$grey-20};
+  --newtab-icon-primary-color: #{$grey-90-80};
+  --newtab-icon-secondary-color: #{$grey-90-60};
+  --newtab-icon-tertiary-color: #{$grey-30};
+  --newtab-inner-box-shadow-color: #{$black-10};
+  --newtab-link-primary-color: #{$blue-60};
+  --newtab-link-secondary-color: #{$teal-70};
+  --newtab-text-conditional-color: #{$grey-60};
+  --newtab-text-primary-color: #{$grey-90};
+  --newtab-text-secondary-color: #{$grey-50};
+  --newtab-textbox-background-color: #{$white};
+  --newtab-textbox-border: #{$grey-90-20};
   @include textbox-focus($blue-60); // sass-lint:disable-line mixins-before-declarations
 
   // Context menu
-  --newtab-contextmenu-background-color: $grey-10;
-  --newtab-contextmenu-button-color: $white;
+  --newtab-contextmenu-background-color: #{$grey-10};
+  --newtab-contextmenu-button-color: #{$white};
 
   // Modal + overlay
-  --newtab-modal-color: $white;
-  --newtab-overlay-color: $grey-20-80;
+  --newtab-modal-color: #{$white};
+  --newtab-overlay-color: #{$grey-20-80};
 
   // Sections
-  --newtab-section-header-text-color: $grey-50;
-  --newtab-section-navigation-text-color: $grey-50;
-  --newtab-section-active-contextmenu-color: $grey-90;
+  --newtab-section-header-text-color: #{$grey-50};
+  --newtab-section-navigation-text-color: #{$grey-50};
+  --newtab-section-active-contextmenu-color: #{$grey-90};
 
   // Search
   --newtab-search-border-color: transparent;
-  --newtab-search-dropdown-color: $white;
-  --newtab-search-dropdown-header-color: $grey-10;
-  --newtab-search-header-background-color: $grey-10-95;
-  --newtab-search-icon-color: $grey-90-40;
-  --newtab-search-wordmark-color: $firefox-wordmark-default-color;
+  --newtab-search-dropdown-color: #{$white};
+  --newtab-search-dropdown-header-color: #{$grey-10};
+  --newtab-search-header-background-color: #{$grey-10-95};
+  --newtab-search-icon-color: #{$grey-90-40};
+  --newtab-search-wordmark-color: #{$firefox-wordmark-default-color};
 
   // Top Sites
-  --newtab-topsites-background-color: $white;
-  --newtab-topsites-icon-shadow: inset $inner-box-shadow;
+  --newtab-topsites-background-color: #{$white};
+  --newtab-topsites-icon-shadow: inset #{$inner-box-shadow};
   --newtab-topsites-label-color: inherit;
 
   // Cards
-  --newtab-card-active-outline-color: $grey-30;
-  --newtab-card-background-color: $white;
-  --newtab-card-hairline-color: $black-10;
-  --newtab-card-shadow: 0 1px 4px 0 $grey-90-10;
+  --newtab-card-active-outline-color: #{$grey-30};
+  --newtab-card-background-color: #{$white};
+  --newtab-card-hairline-color: #{$black-10};
+  --newtab-card-shadow: 0 1px 4px 0 #{$grey-90-10};
 
   // Snippets
-  --newtab-snippets-background-color: $white;
+  --newtab-snippets-background-color: #{$white};
   --newtab-snippets-hairline-color: transparent;
 
   &[lwt-newtab-brighttext] {
     // General styles
-    --newtab-background-color: $grey-80;
-    --newtab-border-primary-color: $grey-10-80;
-    --newtab-border-secondary-color: $grey-10-10;
-    --newtab-button-primary-color: $blue-60;
-    --newtab-button-secondary-color: $grey-70;
-    --newtab-element-active-color: $grey-10-20;
-    --newtab-element-hover-color: $grey-10-10;
-    --newtab-icon-primary-color: $grey-10-80;
-    --newtab-icon-secondary-color: $grey-10-40;
-    --newtab-icon-tertiary-color: $grey-10-40;
-    --newtab-inner-box-shadow-color: $grey-10-20;
-    --newtab-link-primary-color: $blue-40;
-    --newtab-link-secondary-color: $pocket-teal;
-    --newtab-text-conditional-color: $grey-10;
-    --newtab-text-primary-color: $grey-10;
-    --newtab-text-secondary-color: $grey-10-80;
-    --newtab-textbox-background-color: $grey-70;
-    --newtab-textbox-border: $grey-10-20;
+    --newtab-background-color: #{$grey-80};
+    --newtab-border-primary-color: #{$grey-10-80};
+    --newtab-border-secondary-color: #{$grey-10-10};
+    --newtab-button-primary-color: #{$blue-60};
+    --newtab-button-secondary-color: #{$grey-70};
+    --newtab-element-active-color: #{$grey-10-20};
+    --newtab-element-hover-color: #{$grey-10-10};
+    --newtab-icon-primary-color: #{$grey-10-80};
+    --newtab-icon-secondary-color: #{$grey-10-40};
+    --newtab-icon-tertiary-color: #{$grey-10-40};
+    --newtab-inner-box-shadow-color: #{$grey-10-20};
+    --newtab-link-primary-color: #{$blue-40};
+    --newtab-link-secondary-color: #{$pocket-teal};
+    --newtab-text-conditional-color: #{$grey-10};
+    --newtab-text-primary-color: #{$grey-10};
+    --newtab-text-secondary-color: #{$grey-10-80};
+    --newtab-textbox-background-color: #{$grey-70};
+    --newtab-textbox-border: #{$grey-10-20};
     @include textbox-focus($blue-40); // sass-lint:disable-line mixins-before-declarations
 
     // Context menu
-    --newtab-contextmenu-background-color: $grey-60;
-    --newtab-contextmenu-button-color: $grey-80;
+    --newtab-contextmenu-background-color: #{$grey-60};
+    --newtab-contextmenu-button-color: #{$grey-80};
 
     // Modal + overlay
-    --newtab-modal-color: $grey-80;
-    --newtab-overlay-color: $grey-90-80;
+    --newtab-modal-color: #{$grey-80};
+    --newtab-overlay-color: #{$grey-90-80};
 
     // Sections
-    --newtab-section-header-text-color: $grey-10-80;
-    --newtab-section-navigation-text-color: $grey-10-80;
-    --newtab-section-active-contextmenu-color: $white;
+    --newtab-section-header-text-color: #{$grey-10-80};
+    --newtab-section-navigation-text-color: #{$grey-10-80};
+    --newtab-section-active-contextmenu-color: #{$white};
 
     // Search
-    --newtab-search-border-color: $grey-10-20;
-    --newtab-search-dropdown-color: $grey-70;
-    --newtab-search-dropdown-header-color: $grey-60;
-    --newtab-search-header-background-color: $grey-80-95;
-    --newtab-search-icon-color: $grey-10-60;
-    --newtab-search-wordmark-color: $firefox-wordmark-darktheme-color;
+    --newtab-search-border-color: #{$grey-10-20};
+    --newtab-search-dropdown-color: #{$grey-70};
+    --newtab-search-dropdown-header-color: #{$grey-60};
+    --newtab-search-header-background-color: #{$grey-80-95};
+    --newtab-search-icon-color: #{$grey-10-60};
+    --newtab-search-wordmark-color: #{$firefox-wordmark-darktheme-color};
 
     // Top Sites
-    --newtab-topsites-background-color: $grey-70;
+    --newtab-topsites-background-color: #{$grey-70};
     --newtab-topsites-icon-shadow: none;
-    --newtab-topsites-label-color: $grey-10-80;
+    --newtab-topsites-label-color: #{$grey-10-80};
 
     // Cards
-    --newtab-card-active-outline-color: $grey-60;
-    --newtab-card-background-color: $grey-70;
-    --newtab-card-hairline-color: $grey-10-10;
-    --newtab-card-shadow: 0 1px 8px 0 $grey-90-20;
+    --newtab-card-active-outline-color: #{$grey-60};
+    --newtab-card-background-color: #{$grey-70};
+    --newtab-card-hairline-color: #{$grey-10-10};
+    --newtab-card-shadow: 0 1px 8px 0 #{$grey-90-20};
 
     // Snippets
-    --newtab-snippets-background-color: $grey-70;
-    --newtab-snippets-hairline-color: $white-10;
+    --newtab-snippets-background-color: #{$grey-70};
+    --newtab-snippets-hairline-color: #{$white-10};
   }
 }

@@ -244,10 +244,14 @@ export class Section extends React.PureComponent {
           </div>}
         {id === "topstories" &&
           <div className="top-stories-bottom-container">
-            {shouldShowTopics && <Topics topics={this.props.topics} />}
-            {shouldShowPocketCta && <PocketLoggedInCta />}
-            {read_more_endpoint &&
-              <MoreRecommendations read_more_endpoint={read_more_endpoint} />}
+            <div>
+              {shouldShowTopics && <Topics topics={this.props.topics} />}
+              {shouldShowPocketCta && <PocketLoggedInCta />}
+            </div>
+            <div>
+              {read_more_endpoint &&
+                <MoreRecommendations read_more_endpoint={read_more_endpoint} />}
+            </div>
           </div>}
       </CollapsibleSection>
     </ComponentPerfTimer>);

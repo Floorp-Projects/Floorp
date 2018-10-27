@@ -14,9 +14,27 @@
     font-size: 32px;
   }
 
+  h2 .button {
+    font-size: 14px;
+    padding: 6px 12px;
+    margin-inline-start: 5px;
+    margin-bottom: 0;
+  }
+
   table {
     border-collapse: collapse;
     width: 100%;
+  }
+
+  .sourceLabel {
+    background: $grey-20;
+    padding: 2px 5px;
+    border-radius: 3px;
+
+    &.isDisabled {
+      background: $email-input-invalid;
+      color: $red-60;
+    }
   }
 
   .message-item {
@@ -28,6 +46,13 @@
       vertical-align: top;
       border-bottom: 1px solid $border-color;
       padding: 8px;
+
+
+
+      &.min {
+        width: 1%;
+        white-space: nowrap;
+      }
 
       &:first-child {
         border-left: 1px solid $border-color;

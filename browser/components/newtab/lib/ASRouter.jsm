@@ -502,6 +502,7 @@ class _ASRouter {
       data: {
         ...this.state,
         providerPrefs: ASRouterPreferences.providers,
+        userPrefs: ASRouterPreferences.getAllUserPreferences(),
       },
     });
   }
@@ -1013,6 +1014,9 @@ class _ASRouter {
         break;
       case "RESET_PROVIDER_PREF":
         ASRouterPreferences.resetProviderPref();
+        break;
+      case "SET_PROVIDER_USER_PREF":
+        ASRouterPreferences.setUserPreference(action.data.id, action.data.value);
         break;
     }
   }

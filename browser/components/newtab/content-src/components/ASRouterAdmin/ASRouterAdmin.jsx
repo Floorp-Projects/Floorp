@@ -6,6 +6,7 @@ export class ASRouterAdmin extends React.PureComponent {
     super(props);
     this.onMessage = this.onMessage.bind(this);
     this.handleEnabledToggle = this.handleEnabledToggle.bind(this);
+    this.handleUserPrefToggle = this.handleUserPrefToggle.bind(this);
     this.onChangeMessageFilter = this.onChangeMessageFilter.bind(this);
     this.findOtherBundledMessagesOfSameTemplate = this.findOtherBundledMessagesOfSameTemplate.bind(this);
     this.state = {messageFilter: "all"};
@@ -110,16 +111,38 @@ export class ASRouterAdmin extends React.PureComponent {
   renderTableHead() {
     return (<thead>
       <tr className="message-item">
-        <td>id</td>
-        <td>enabled</td>
-        <td>source</td>
-        <td>last updated</td>
+        <td className="min" />
+        <td className="min">Provider ID</td>
+        <td>Source</td>
+        <td>Last Updated</td>
       </tr>
     </thead>);
   }
 
   handleEnabledToggle(event) {
-    const action = {type: event.target.checked ? "ENABLE_PROVIDER" : "DISABLE_PROVIDER", data: event.target.name};
+    const provider = this.state.providerPrefs.find(p => p.id === event.target.dataset.provider);
+    const userPrefInfo = this.state.userPrefs;
+
+    const isUserEnabled = provider.id in userPrefInfo ? userPrefInfo[provider.id] : true;
+    const isSystemEnabled = provider.enabled;
+    const isEnabling = event.target.checked;
+
+    if (isEnabling) {
+      if (!isUserEnabled) {
+        ASRouterUtils.sendMessage({type: "SET_PROVIDER_USER_PREF", data: {id: provider.id, value: true}});
+      }
+      if (!isSystemEnabled) {
+        ASRouterUtils.sendMessage({type: "ENABLE_PROVIDER", data: provider.id});
+      }
+    } else {
+      ASRouterUtils.sendMessage({type: "DISABLE_PROVIDER", data: provider.id});
+    }
+
+    this.setState({messageFilter: "all"});
+  }
+
+  handleUserPrefToggle(event) {
+    const action = {type: "SET_PROVIDER_USER_PREF", data: {id: event.target.dataset.provider, value: event.target.checked}};
     ASRouterUtils.sendMessage(action);
     this.setState({messageFilter: "all"});
   }
@@ -127,20 +150,42 @@ export class ASRouterAdmin extends React.PureComponent {
   renderProviders() {
     const providersConfig = this.state.providerPrefs;
     const providerInfo = this.state.providers;
+    const userPrefInfo = this.state.userPrefs;
+
     return (<table>{this.renderTableHead()}<tbody>
       {providersConfig.map((provider, i) => {
         const isTestProvider = provider.id === "snippets_local_testing";
         const info = providerInfo.find(p => p.id === provider.id) || {};
-        let label = "(local)";
+        const isUserEnabled = provider.id in userPrefInfo ? userPrefInfo[provider.id] : true;
+        const isSystemEnabled = (isTestProvider || provider.enabled);
+
+        let label = "local";
         if (provider.type === "remote") {
-          label = <a target="_blank" href={info.url}>{info.url}</a>;
+          let displayUrl = "";
+          try {
+            displayUrl = `(${new URL(info.url).hostname})`;
+          } catch (err) {}
+          label = (<span>endpoint <a target="_blank" href={info.url}>{displayUrl}</a></span>);
         } else if (provider.type === "remote-settings") {
-          label = `${provider.bucket} (Remote Settings)`;
+          label = `remote settings (${provider.bucket})`;
         }
+
+        let reasonsDisabled = [];
+        if (!isSystemEnabled) {
+          reasonsDisabled.push("system pref");
+        }
+        if (!isUserEnabled) {
+          reasonsDisabled.push("user pref");
+        }
+        if (reasonsDisabled.length) {
+          label = `disabled via ${reasonsDisabled.join(", ")}`;
+        }
+
         return (<tr className="message-item" key={i}>
+
+          <td>{isTestProvider ? <input type="checkbox" disabled={true} readOnly={true} checked={true} /> : <input type="checkbox" data-provider={provider.id} checked={isUserEnabled && isSystemEnabled} onChange={this.handleEnabledToggle} />}</td>
           <td>{provider.id}</td>
-          <td>{isTestProvider ? null : <input type="checkbox" name={provider.id} checked={provider.enabled} onChange={this.handleEnabledToggle} />}</td>
-          <td>{label}</td>
+          <td><span className={`sourceLabel${(isUserEnabled && isSystemEnabled) ? "" : " isDisabled"}`}>{label}</span></td>
           <td style={{whiteSpace: "nowrap"}}>{info.lastUpdated ? new Date(info.lastUpdated).toLocaleString() : ""}</td>
         </tr>);
       })}
@@ -152,8 +197,8 @@ export class ASRouterAdmin extends React.PureComponent {
       <h1>AS Router Admin</h1>
       <h2>Targeting Utilities</h2>
       <button className="button" onClick={this.expireCache}>Expire Cache</button> (This expires the cache in ASR Targeting for bookmarks and top sites)
-      <h2>Message Providers</h2>
-      <button className="button" onClick={this.resetPref}>Restore defaults</button>
+      <h2>Message Providers <button title="Restore all provider settings that ship with Firefox" className="button" onClick={this.resetPref}>Restore default prefs</button></h2>
+
       {this.state.providers ? this.renderProviders() : null}
       <h2>Messages</h2>
       {this.renderMessageFilter()}
