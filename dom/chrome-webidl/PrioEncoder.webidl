@@ -11,9 +11,7 @@ namespace PrioEncoder {
 };
 
 dictionary PrioParams {
-  required boolean browserIsUserDefault;
-  required boolean newTabPageEnabled;
-  required boolean pdfViewerUsed;
+  required sequence<boolean> booleans;
 };
 
 dictionary PrioEncodedData {

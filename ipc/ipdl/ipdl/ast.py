@@ -328,6 +328,7 @@ class TypeSpec(Node):
         self.spec = spec                # QualifiedId
         self.array = 0                  # bool
         self.nullable = 0               # bool
+        self.uniqueptr = 0              # bool
 
     def basename(self):
         return self.spec.baseid

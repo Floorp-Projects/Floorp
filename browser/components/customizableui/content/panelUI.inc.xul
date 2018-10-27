@@ -224,14 +224,10 @@
                          closemenu="none"/>
         </toolbaritem>
         <toolbarseparator class="sync-ui-item"/>
-        <toolbaritem closemenu="none">
+        <toolbaritem>
           <toolbarbutton id="appMenu-tp-label"
                          class="subviewbutton subviewbutton-iconic"
-                         oncommand="ContentBlocking.openPreferences('appMenu-trackingprotection'); PanelUI.hide();"/>
-          <toolbarseparator id="appMenu-tp-vertical-separator" orient="vertical"/>
-          <toolbarbutton id="appMenu-tp-toggle"
-                         enabled="false"
-                         oncommand="ContentBlocking.onGlobalToggleCommand();" />
+                         oncommand="ContentBlocking.openPreferences('appMenu-trackingprotection');"/>
         </toolbaritem>
         <toolbarseparator id="appMenu-tp-separator"/>
         <toolbarbutton id="appMenu-new-window-button"

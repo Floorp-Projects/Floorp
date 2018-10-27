@@ -1518,12 +1518,6 @@ pref("network.cookie.cookieBehavior", 4 /* BEHAVIOR_REJECT_TRACKER */);
 pref("browser.contentblocking.allowlist.storage.enabled", true);
 
 #ifdef NIGHTLY_BUILD
-pref("browser.contentblocking.global-toggle.enabled", true);
-#else
-pref("browser.contentblocking.global-toggle.enabled", false);
-#endif
-
-#ifdef NIGHTLY_BUILD
 // Enable the Storage Access API in Nightly
 pref("dom.storage_access.enabled", true);
 #endif
@@ -1532,10 +1526,7 @@ pref("dom.storage_access.enabled", true);
 pref("browser.contentblocking.trackingprotection.ui.enabled", true);
 pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
 pref("browser.contentblocking.rejecttrackers.ui.enabled", true);
-pref("browser.contentblocking.rejecttrackers.ui.recommended", true);
 pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
-pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.recommended", true);
-pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", true);
 
 // Enable the Report Breakage UI on Nightly and Beta but not on Release yet.
 #ifdef EARLY_BETA_OR_EARLIER

@@ -53,17 +53,6 @@
         </hbox>
       </vbox>
     </hbox>
-    <hbox id="contentBlockingCheckboxContainer">
-      <checkbox id="contentBlockingCheckbox"
-                onsyncfrompreference="return gPrivacyPane.updateContentBlockingToggle()"
-                preference="browser.contentblocking.enabled"/>
-      <button id="contentBlockingToggle"
-              data-l10n-attrs="tooltiptext"
-              data-l10n-id="content-blocking-toggle-on"/>
-      <label id="contentBlockingToggleLabel"
-             data-l10n-id="content-blocking-toggle-label-on"
-             control="contentBlockingToggle"/>
-    </hbox>
     <vbox id="contentBlockingCategories">
       <label id="content-blocking-categories-label" data-l10n-id="content-blocking-category-label"/>
       <vbox>
@@ -137,8 +126,7 @@
                           onsyncfrompreference="return gPrivacyPane.readBlockCookiesCB();"
                           onsynctopreference="return gPrivacyPane.writeBlockCookiesCB();">
                 <radio value="trackers"
-                       id="blockCookiesFromTrackersCB"
-                       data-l10n-id="content-blocking-reject-trackers-block-trackers-option"
+                       data-l10n-id="content-blocking-reject-trackers-block-trackers-option-recommended"
                        flex="1" />
                 <radio value="all-third-parties"
                        data-l10n-id="content-blocking-reject-trackers-all-third-parties-option"
@@ -172,9 +160,6 @@
         <label id="siteDataLearnMoreLink"
           class="learnMore text-link" data-l10n-id="sitedata-learn-more"/>
       </description>
-      <description class="description-with-side-element warning-description"
-                   flex="1" hidden="true" id="blockCookiesWarning"
-                   data-l10n-id="sitedata-warning-your-settings-prevent-changes"/>
       <radiogroup id="blockCookies"
                   preference="network.cookie.cookieBehavior"
                   onsyncfrompreference="return gPrivacyPane.readBlockCookies();"
@@ -196,7 +181,7 @@
                       onsyncfrompreference="return gPrivacyPane.readBlockCookiesFrom();"
                       onsynctopreference="return gPrivacyPane.writeBlockCookiesFrom();">
               <menupopup>
-                <menuitem id="blockCookiesFromTrackers" data-l10n-id="sitedata-block-trackers-option" value="trackers"/>
+                <menuitem data-l10n-id="sitedata-block-trackers-option-recommended" value="trackers"/>
                 <menuitem data-l10n-id="sitedata-block-unvisited-option" value="unvisited"/>
                 <menuitem data-l10n-id="sitedata-block-all-third-party-option" value="all-third-parties"/>
                 <menuitem data-l10n-id="sitedata-block-all-option" value="always"/>

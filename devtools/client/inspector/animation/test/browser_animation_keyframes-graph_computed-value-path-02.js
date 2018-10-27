@@ -26,7 +26,7 @@ const TEST_DATA = [
     ],
   },
   {
-    targetClass: "frames-keyframe",
+    targetClass: "steps-jump-none-keyframe",
     properties: [
       {
         name: "opacity",

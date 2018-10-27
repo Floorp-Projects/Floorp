@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Ĉefaj temoj:",
   "pocket_read_even_more": "Montri pli da artikoloj",
   "pocket_more_reccommendations": "Pli da rekomendoj",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Kiel funkcias tio",
   "pocket_cta_button": "Instali Pocket",
   "pocket_cta_text": "Konservu viajn ŝatatajn artikolojn en Pocket, kaj stimulu vian menson per ravaj legaĵoj.",
   "highlights_empty_state": "Komencu retumi kaj ĉi tie ni montros al vi kelkajn el la plej bonaj artikoloj, filmetoj kaj aliaj paĝoj, kiujn vi antaŭ nelonge vizits aŭ por kiuj vi aldonis legosignon.",
@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "rimarkon pri privateco",
   "firstrun_continue_to_login": "Daŭrigi",
   "firstrun_skip_login": "Pretersalti tiun ĉi paŝon",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Malfermi menuon",
   "pocket_learn_more": "Pli da informo"
 };

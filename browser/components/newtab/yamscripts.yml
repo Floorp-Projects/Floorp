@@ -27,6 +27,12 @@ scripts:
     stringsExport: cp $npm_package_config_locales_dir/$npm_package_config_default_locale/strings.properties $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/chrome/browser/activity-stream/newtab.properties
     copyPingCentre: cpx "ping-centre/PingCentre.jsm" $npm_package_config_mc_dir/browser/modules
 
+# buildlibrary: Export about:library code to mozilla-central - intentionally not included in buildmc for now
+  buildlibrary:
+    webpack: webpack --config webpack.aboutlibrary.config.js
+    css: node-sass --source-map true --source-map-contents content-src/aboutlibrary -o aboutlibrary/content
+    copy: cpx "aboutlibrary/**/{,.}*" $npm_package_config_mc_dir/browser/components/library
+
 # startmc: Start developing the bootstrapped add-on
   startmc:
     _parallel: true
@@ -43,12 +49,11 @@ scripts:
   testmc:
     lint: =>lint
     build: =>bundle:webpack && =>bundle:locales
-    unit: karma start karma.mc.config.js || (cat logs/coverage/text.txt && exit 2)
-    post: cat logs/coverage/text-summary.txt
+    unit: karma start karma.mc.config.js
 
   tddmc: karma start karma.mc.config.js --tdd
 
-  debugcoverage: open logs/coverage/report-html/index.html
+  debugcoverage: open logs/coverage/index.html
 
 # lint: Run eslint and sass-lint
   lint:
