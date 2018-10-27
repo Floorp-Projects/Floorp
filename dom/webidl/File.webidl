@@ -19,8 +19,7 @@ interface File : Blob {
   readonly attribute long long lastModified;
 };
 
-dictionary FilePropertyBag {
-  DOMString type = "";
+dictionary FilePropertyBag : BlobPropertyBag {
   long long lastModified;
 };
 
