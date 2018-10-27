@@ -677,7 +677,7 @@ var PlacesUIUtils = {
       if (where == "current" && !aNode.uri.startsWith("javascript:")) {
         where = "tab";
       }
-      if (where == "tab" && browserWindow.isTabEmpty(browserWindow.gBrowser.selectedTab)) {
+      if (where == "tab" && browserWindow.gBrowser.selectedTab.isEmpty) {
         where = "current";
       }
     }

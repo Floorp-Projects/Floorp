@@ -96,19 +96,13 @@ struct CubicBezierFunction {
 
 struct StepFunction {
   int steps;
-  // 1 = nsTimingFunction::StepStart, 2 = nsTimingFunction::StepEnd
-  int type;
-};
-
-struct FramesFunction {
-  int frames;
+  uint8_t type; // Converted from StyleStepPosition.
 };
 
 union TimingFunction {
   null_t;
   CubicBezierFunction;
   StepFunction;
-  FramesFunction;
 };
 
 // Send the angle with units rather than sending all angles in radians

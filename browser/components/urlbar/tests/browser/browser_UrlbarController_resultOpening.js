@@ -52,7 +52,7 @@ add_task(function test_handleEnteredText_url() {
 
 add_task(function test_resultSelected_switchtab() {
   sandbox.stub(window, "switchToTabHavingURI").returns(true);
-  sandbox.stub(window, "isTabEmpty").returns(false);
+  sandbox.stub(window.gBrowser.selectedTab, "isEmpty").returns(false);
   sandbox.stub(window.gBrowser, "removeTab");
 
   const event = new MouseEvent("click", {button: 0});

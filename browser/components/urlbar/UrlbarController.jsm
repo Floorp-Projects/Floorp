@@ -215,7 +215,7 @@ class UrlbarController {
         };
 
         if (this.window.switchToTabHavingURI(url, false, loadOpts) &&
-            this.window.isTabEmpty(prevTab)) {
+            prevTab.isEmpty) {
           this.window.gBrowser.removeTab(prevTab);
         }
         return;
@@ -381,7 +381,7 @@ class UrlbarController {
     }
     if (where == "tab" &&
         reuseEmpty &&
-        this.window.isTabEmpty(this.window.gBrowser.selectedTab)) {
+        this.window.gBrowser.selectedTab.isEmpty) {
       where = "current";
     }
     return where;

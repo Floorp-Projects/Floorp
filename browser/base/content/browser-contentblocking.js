@@ -134,7 +134,6 @@ var ContentBlocking = {
   PREF_REPORT_BREAKAGE_ENABLED: "browser.contentblocking.reportBreakage.enabled",
   PREF_REPORT_BREAKAGE_URL: "browser.contentblocking.reportBreakage.url",
   PREF_INTRO_COUNT_CB: "browser.contentblocking.introCount",
-  PREF_GLOBAL_TOGGLE: "browser.contentblocking.global-toggle.enabled",
   content: null,
   icon: null,
   activeTooltipText: null,
@@ -149,29 +148,7 @@ var ContentBlocking = {
     return this.appMenuLabel = document.getElementById("appMenu-tp-label");
   },
 
-  get appMenuButton() {
-    delete this.appMenuButton;
-    return this.appMenuButton = document.getElementById("appMenu-tp-toggle");
-  },
-
-  get appMenuVerticalSeparator() {
-    delete this.appMenuVerticalSeparator;
-    return this.appMenuVerticalSeparator = document.getElementById("appMenu-tp-vertical-separator");
-  },
-
   strings: {
-    get enableTooltip() {
-      delete this.enableTooltip;
-      return this.enableTooltip =
-        gNavigatorBundle.getString("contentBlocking.toggle.enable.tooltip");
-    },
-
-    get disableTooltip() {
-      delete this.disableTooltip;
-      return this.disableTooltip =
-        gNavigatorBundle.getString("contentBlocking.toggle.disable.tooltip");
-    },
-
     get appMenuTitle() {
       delete this.appMenuTitle;
       return this.appMenuTitle =
@@ -224,20 +201,6 @@ var ContentBlocking = {
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     this.reportBreakageLearnMore.href = baseURL + "blocking-breakage";
 
-    this.updateGlobalToggleVisibility = () => {
-      if (Services.prefs.getBoolPref(this.PREF_GLOBAL_TOGGLE, true)) {
-        this.appMenuButton.removeAttribute("hidden");
-        this.appMenuVerticalSeparator.removeAttribute("hidden");
-      } else {
-        this.appMenuButton.setAttribute("hidden", "true");
-        this.appMenuVerticalSeparator.setAttribute("hidden", "true");
-      }
-    };
-
-    this.updateGlobalToggleVisibility();
-
-    Services.prefs.addObserver(this.PREF_GLOBAL_TOGGLE, this.updateGlobalToggleVisibility);
-
     this.updateAnimationsEnabled = () => {
       this.iconBox.toggleAttribute("animationsenabled",
         Services.prefs.getBoolPref(this.PREF_ANIMATIONS_ENABLED, false));
@@ -277,7 +240,6 @@ var ContentBlocking = {
     }
 
     Services.prefs.removeObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
-    Services.prefs.removeObserver(this.PREF_GLOBAL_TOGGLE, this.updateGlobalToggleVisibility);
   },
 
   get enabled() {
@@ -287,19 +249,10 @@ var ContentBlocking = {
   updateEnabled() {
     this.content.toggleAttribute("enabled", this.enabled);
 
-    this.appMenuButton.setAttribute("tooltiptext", this.enabled ?
-      this.strings.disableTooltip : this.strings.enableTooltip);
-    this.appMenuButton.setAttribute("enabled", this.enabled);
-    this.appMenuButton.setAttribute("aria-pressed", this.enabled);
-
     // The enabled state of blockers may also change since it depends on this.enabled.
     for (let blocker of this.blockers) {
       blocker.categoryItem.classList.toggle("blocked", this.enabled && blocker.enabled);
     }
-  },
-
-  onGlobalToggleCommand() {
-    Services.prefs.setBoolPref(this.PREF_ENABLED, !this.enabled);
   },
 
   hideIdentityPopupAndReload() {

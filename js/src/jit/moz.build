@@ -48,7 +48,6 @@ UNIFIED_SOURCES += [
     'BaselineJIT.cpp',
     'BitSet.cpp',
     'BytecodeAnalysis.cpp',
-    'C1Spewer.cpp',
     'CacheIR.cpp',
     'CacheIRCompiler.cpp',
     'CacheIRSpewer.cpp',

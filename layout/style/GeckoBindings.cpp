@@ -1791,7 +1791,7 @@ GetOrCreateKeyframe(nsTArray<Keyframe>* aKeyframes,
                          ? 0
                          : keyframeIndex);
   keyframe->mOffset.emplace(aOffset);
-  if (aTimingFunction->mType != nsTimingFunction::Type::Linear) {
+  if (!aTimingFunction->IsLinear()) {
     keyframe->mTimingFunction.emplace();
     keyframe->mTimingFunction->Init(*aTimingFunction);
   }

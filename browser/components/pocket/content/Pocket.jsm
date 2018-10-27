@@ -19,7 +19,7 @@ var Pocket = {
     let win = event.view;
     let where = win.whereToOpenLink(event);
     // Never override the current tab unless it's blank:
-    if (where == "current" && !win.isTabEmpty(win.gBrowser.selectedTab)) {
+    if (where == "current" && !win.gBrowser.selectedTab.isEmpty) {
       where = "tab";
     }
     win.openTrustedLinkIn(this.listURL, where);

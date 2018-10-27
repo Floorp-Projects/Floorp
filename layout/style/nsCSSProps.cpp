@@ -34,8 +34,6 @@ using namespace mozilla;
 
 typedef nsCSSProps::KTableEntry KTableEntry;
 
-using namespace mozilla;
-
 static int32_t gPropertyTableRefCount;
 static nsStaticCaseInsensitiveNameTable* gFontDescTable;
 static nsStaticCaseInsensitiveNameTable* gCounterDescTable;
@@ -623,13 +621,11 @@ const KTableEntry nsCSSProps::kTouchActionKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kTransitionTimingFunctionKTable[] = {
-  { eCSSKeyword_ease, NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE },
-  { eCSSKeyword_linear, NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR },
-  { eCSSKeyword_ease_in, NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN },
-  { eCSSKeyword_ease_out, NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_OUT },
-  { eCSSKeyword_ease_in_out, NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN_OUT },
-  { eCSSKeyword_step_start, NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START },
-  { eCSSKeyword_step_end, NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END },
+  { eCSSKeyword_linear,       StyleTimingKeyword::Linear },
+  { eCSSKeyword_ease,         StyleTimingKeyword::Ease },
+  { eCSSKeyword_ease_in,      StyleTimingKeyword::EaseIn },
+  { eCSSKeyword_ease_out,     StyleTimingKeyword::EaseOut },
+  { eCSSKeyword_ease_in_out,  StyleTimingKeyword::EaseInOut },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

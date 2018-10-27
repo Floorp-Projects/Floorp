@@ -294,6 +294,9 @@ private:
   // outlined in the specification.
   void FireTimeUpdate();
 
+  // True if we're going to loop back to the head position when media is in looping.
+  bool IsLoopingBack(double aPrevPosition, double aCurPosition) const;
+
   // Returns true if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
   bool CanPlayThrough();
@@ -599,6 +602,9 @@ protected:
   // PlaybackRate and pitch preservation status we should start at.
   double mPlaybackRate;
 
+  // True if the decoder is seeking.
+  Watchable<bool> mLogicallySeeking;
+
   // Buffered range, mirrored from the reader.
   Mirror<media::TimeIntervals> mBuffered;
 
@@ -631,9 +637,6 @@ protected:
   // This can only be changed on the main thread.
   PlayState mNextState = PLAY_STATE_PAUSED;
 
-  // True if the decoder is seeking.
-  Canonical<bool> mLogicallySeeking;
-
   // True if the media is same-origin with the element. Data can only be
   // passed to MediaStreams when this is true.
   Canonical<bool> mSameOriginMedia;
@@ -662,10 +665,6 @@ public:
     return &mLooping;
   }
   AbstractCanonical<PlayState>* CanonicalPlayState() { return &mPlayState; }
-  AbstractCanonical<bool>* CanonicalLogicallySeeking()
-  {
-    return &mLogicallySeeking;
-  }
   AbstractCanonical<bool>* CanonicalSameOriginMedia()
   {
     return &mSameOriginMedia;

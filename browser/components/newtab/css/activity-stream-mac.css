@@ -917,7 +917,9 @@ main {
   color: var(--newtab-section-navigation-text-color);
   font-size: 12px;
   line-height: 1.6;
-  margin-top: 12px; }
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between; }
   .top-stories-bottom-container a {
     color: var(--newtab-link-secondary-color);
     font-weight: bold; }
@@ -928,10 +930,6 @@ main {
     .top-stories-bottom-container {
       line-height: 16px;
       height: 16px; } }
-  .top-stories-bottom-container::after {
-    clear: both;
-    content: '';
-    display: table; }
 
 @media (min-width: 1122px) {
   .sections-list .normal-cards .section-list {
@@ -1331,7 +1329,8 @@ a.firstrun-link {
   .contentSearchSuggestionTable .contentSearchHeader {
     background-color: var(--newtab-search-dropdown-header-color);
     color: var(--newtab-text-secondary-color); }
-  .contentSearchSuggestionTable .contentSearchHeader, .contentSearchSuggestionTable .contentSearchSettingsButton {
+  .contentSearchSuggestionTable .contentSearchHeader,
+  .contentSearchSuggestionTable .contentSearchSettingsButton {
     border-color: var(--newtab-border-secondary-color); }
   .contentSearchSuggestionTable .contentSearchSuggestionsList {
     border: 0; }
@@ -1364,7 +1363,8 @@ a.firstrun-link {
     background: var(--newtab-element-hover-color);
     color: var(--newtab-text-primary-color); }
 
-.contentSearchHeaderRow > td > img, .contentSearchSuggestionRow > td > .historyIcon {
+.contentSearchHeaderRow > td > img,
+.contentSearchSuggestionRow > td > .historyIcon {
   margin-inline-start: 7px;
   margin-inline-end: 15px; }
 
@@ -1815,15 +1815,30 @@ a.firstrun-link {
   .asrouter-admin h1 {
     font-weight: 200;
     font-size: 32px; }
+  .asrouter-admin h2 .button {
+    font-size: 14px;
+    padding: 6px 12px;
+    margin-inline-start: 5px;
+    margin-bottom: 0; }
   .asrouter-admin table {
     border-collapse: collapse;
     width: 100%; }
+  .asrouter-admin .sourceLabel {
+    background: #EDEDF0;
+    padding: 2px 5px;
+    border-radius: 3px; }
+    .asrouter-admin .sourceLabel.isDisabled {
+      background: rgba(215, 0, 34, 0.3);
+      color: #D70022; }
   .asrouter-admin .message-item:first-child td {
     border-top: 1px solid var(--newtab-border-secondary-color); }
   .asrouter-admin .message-item td {
     vertical-align: top;
     border-bottom: 1px solid var(--newtab-border-secondary-color);
     padding: 8px; }
+    .asrouter-admin .message-item td.min {
+      width: 1%;
+      white-space: nowrap; }
     .asrouter-admin .message-item td:first-child {
       border-left: 1px solid var(--newtab-border-secondary-color); }
     .asrouter-admin .message-item td:last-child {
@@ -1876,25 +1891,22 @@ a.firstrun-link {
   .pocket-logged-in-cta .cta-text {
     vertical-align: top; }
 
-@media (min-width: 866px) {
-  .more-recommendations {
-    float: right; }
-    .more-recommendations:dir(rtl) {
-      float: left; } }
-
-.more-recommendations::after {
-  background: url("../data/content/assets/topic-show-more-12.svg") no-repeat center center;
-  content: '';
-  -moz-context-properties: fill;
-  display: inline-block;
-  fill: var(--newtab-link-secondary-color);
-  height: 16px;
-  margin-inline-start: 5px;
-  vertical-align: top;
-  width: 12px; }
-
-.more-recommendations:dir(rtl)::after {
-  transform: scaleX(-1); }
+.more-recommendations {
+  display: flex;
+  align-items: center;
+  white-space: nowrap; }
+  .more-recommendations::after {
+    background: url("../data/content/assets/topic-show-more-12.svg") no-repeat center center;
+    content: '';
+    -moz-context-properties: fill;
+    display: inline-block;
+    fill: var(--newtab-link-secondary-color);
+    height: 16px;
+    margin-inline-start: 5px;
+    vertical-align: top;
+    width: 12px; }
+  .more-recommendations:dir(rtl)::after {
+    transform: scaleX(-1); }
 
 .ASRouterButton {
   font-weight: bold;

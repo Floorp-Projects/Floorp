@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privatumo pranešimu",
   "firstrun_continue_to_login": "Tęsti",
   "firstrun_skip_login": "Praleisti šį žingsnį",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Atverti meniu",
   "pocket_learn_more": "Sužinoti daugiau"
 };

@@ -1,63 +1,17 @@
 /* eslint-env webextensions */
 
-const CB_PREF = "browser.contentblocking.enabled";
 const CB_TP_UI_PREF = "browser.contentblocking.trackingprotection.ui.enabled";
 const CB_RT_UI_PREF = "browser.contentblocking.rejecttrackers.ui.enabled";
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PBM_PREF = "privacy.trackingprotection.pbmode.enabled";
 const TP_LIST_PREF = "urlclassifier.trackingTable";
 const NCB_PREF = "network.cookie.cookieBehavior";
-const TOGGLE_PREF = "browser.contentblocking.global-toggle.enabled";
 
 requestLongerTimeout(2);
-
-// Checks that the content blocking toggle follows and changes the CB pref.
-add_task(async function testContentBlockingToggle() {
-  SpecialPowers.pushPrefEnv({set: [
-    [TOGGLE_PREF, true],
-  ]});
-
-  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
-  let doc = gBrowser.contentDocument;
-
-  let contentBlockingToggle = doc.getElementById("contentBlockingToggle");
-  let contentBlockingCheckbox = doc.getElementById("contentBlockingCheckbox");
-  let contentBlockingToggleLabel = doc.getElementById("contentBlockingToggleLabel");
-
-  Services.prefs.setBoolPref(CB_PREF, true);
-  await TestUtils.waitForCondition(() => contentBlockingToggleLabel.textContent == "ON", "toggle label is correct");
-
-  ok(contentBlockingCheckbox.checked, "Checkbox is checked when CB is on");
-  is(contentBlockingToggle.getAttribute("aria-pressed"), "true", "toggle button has correct aria attribute");
-
-  Services.prefs.setBoolPref(CB_PREF, false);
-  await TestUtils.waitForCondition(() => contentBlockingToggleLabel.textContent == "OFF", "toggle label is correct");
-
-  ok(!contentBlockingCheckbox.checked, "Checkbox is not checked when CB is off");
-  is(contentBlockingToggle.getAttribute("aria-pressed"), "false", "toggle button has correct aria attribute");
-
-  contentBlockingToggle.click();
-  await TestUtils.waitForCondition(() => contentBlockingToggleLabel.textContent == "ON", "toggle label is correct");
-
-  is(Services.prefs.getBoolPref(CB_PREF), true, "Content Blocking is on");
-  ok(contentBlockingCheckbox.checked, "Checkbox is checked when CB is on");
-  is(contentBlockingToggle.getAttribute("aria-pressed"), "true", "toggle button has correct aria attribute");
-
-  contentBlockingToggle.click();
-  await TestUtils.waitForCondition(() => contentBlockingToggleLabel.textContent == "OFF", "toggle label is correct");
-
-  is(Services.prefs.getBoolPref(CB_PREF), false, "Content Blocking is off");
-  ok(!contentBlockingCheckbox.checked, "Checkbox is not checked when CB is off");
-  is(contentBlockingToggle.getAttribute("aria-pressed"), "false", "toggle button has correct aria attribute");
-
-  Services.prefs.clearUserPref(CB_PREF);
-  gBrowser.removeCurrentTab();
-});
 
 // Tests that the content blocking main category checkboxes have the correct default state.
 add_task(async function testContentBlockingMainCategory() {
   let prefs = [
-    [CB_PREF, true],
     [TP_PREF, false],
     [TP_PBM_PREF, true],
     [NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
@@ -114,8 +68,8 @@ add_task(async function testContentBlockingMainCategory() {
   // assignment above is a no-op.
 
   // Ensure the dependent controls are enabled
-  checkControlStateWorker(doc, dependentControls, true);
-  checkControlStateWorker(doc, alwaysEnabledControls, true);
+  checkControlState(doc, dependentControls, true);
+  checkControlState(doc, alwaysEnabledControls, true);
 
   let promise = TestUtils.topicObserved("privacy-pane-tp-ui-updated");
   EventUtils.synthesizeMouseAtCenter(tpCheckbox, {}, doc.defaultView);
@@ -124,8 +78,8 @@ add_task(async function testContentBlockingMainCategory() {
   ok(!tpCheckbox.checked, "The checkbox should now be unchecked");
 
   // Ensure the dependent controls are disabled
-  checkControlStateWorker(doc, dependentControls, false);
-  checkControlStateWorker(doc, alwaysEnabledControls, true);
+  checkControlState(doc, dependentControls, false);
+  checkControlState(doc, alwaysEnabledControls, true);
 
   // Make sure the selection in the tracking protection submenu persists after
   // a few times of checking and unchecking All Detected Trackers.
@@ -152,11 +106,10 @@ add_task(async function testContentBlockingMainCategory() {
 // Tests that the content blocking "Restore Defaults" button does what it's supposed to.
 add_task(async function testContentBlockingRestoreDefaults() {
   let prefs = {
-    CB_PREF: null,
-    TP_LIST_PREF: null,
-    TP_PREF: null,
-    TP_PBM_PREF: null,
-    NCB_PREF: null,
+    [TP_LIST_PREF]: null,
+    [TP_PREF]: null,
+    [TP_PBM_PREF]: null,
+    [NCB_PREF]: null,
   };
 
   for (let pref in prefs) {
@@ -167,10 +120,14 @@ add_task(async function testContentBlockingRestoreDefaults() {
     case Services.prefs.PREF_INT:
       prefs[pref] = Services.prefs.getIntPref(pref);
       break;
+    case Services.prefs.PREF_STRING:
+      prefs[pref] = Services.prefs.getCharPref(pref);
+      break;
+    default:
+      ok(false, `Unknown pref type for ${pref}`);
     }
   }
 
-  Services.prefs.setBoolPref(CB_PREF, false);
   Services.prefs.setStringPref(TP_LIST_PREF, "test-track-simple,base-track-digest256,content-track-digest256");
   Services.prefs.setBoolPref(TP_PREF, true);
   Services.prefs.setBoolPref(TP_PBM_PREF, false);
@@ -189,6 +146,13 @@ add_task(async function testContentBlockingRestoreDefaults() {
         ok(Services.prefs.prefHasUserValue(pref), `modified the pref ${pref}`);
       }
       break;
+    case Services.prefs.PREF_STRING:
+      if (Services.prefs.getCharPref(pref) != prefs[pref]) {
+        ok(Services.prefs.prefHasUserValue(pref), `modified the pref ${pref}`);
+      }
+      break;
+    default:
+      ok(false, `Unknown pref type for ${pref}`);
     }
   }
 
@@ -227,31 +191,31 @@ add_task(async function testContentBlockingRestoreDefaultsSkipExtensionControlle
   });
 
   let resettable = {
-    CB_PREF: null,
-    TP_LIST_PREF: null,
-    NCB_PREF: null,
+    [TP_LIST_PREF]: null,
+    [NCB_PREF]: null,
   };
 
   for (let pref in resettable) {
     switch (Services.prefs.getPrefType(pref)) {
-    case Services.prefs.PREF_BOOL:
-      resettable[pref] = Services.prefs.getBoolPref(pref);
+    case Services.prefs.PREF_STRING:
+      resettable[pref] = Services.prefs.getCharPref(pref);
       break;
     case Services.prefs.PREF_INT:
       resettable[pref] = Services.prefs.getIntPref(pref);
       break;
+    default:
+      ok(false, `Unknown pref type for ${pref}`);
     }
   }
 
-  Services.prefs.setBoolPref(CB_PREF, false);
   Services.prefs.setStringPref(TP_LIST_PREF, "test-track-simple,base-track-digest256,content-track-digest256");
   Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
 
   for (let pref in resettable) {
     switch (Services.prefs.getPrefType(pref)) {
-    case Services.prefs.PREF_BOOL:
+    case Services.prefs.PREF_STRING:
       // Account for prefs that may have retained their default value
-      if (Services.prefs.getBoolPref(pref) != resettable[pref]) {
+      if (Services.prefs.getCharPref(pref) != resettable[pref]) {
         ok(Services.prefs.prefHasUserValue(pref), `modified the pref ${pref}`);
       }
       break;
@@ -260,6 +224,8 @@ add_task(async function testContentBlockingRestoreDefaultsSkipExtensionControlle
         ok(Services.prefs.prefHasUserValue(pref), `modified the pref ${pref}`);
       }
       break;
+    default:
+      ok(false, `Unknown pref type for ${pref}`);
     }
   }
 
@@ -267,23 +233,16 @@ add_task(async function testContentBlockingRestoreDefaultsSkipExtensionControlle
 
   await TestUtils.waitForCondition(() => Services.prefs.prefHasUserValue(TP_PREF));
 
-  let dependentControls = [
-    ".reject-trackers-ui .content-blocking-checkbox",
-    "#content-blocking-categories-label",
-    "#changeBlockListLink",
-    "#contentBlockingChangeCookieSettings",
-    "#blockCookiesCB, #blockCookiesCB > radio",
-  ];
-  let alwaysDisabledControls = [
+  let disabledControls = [
     ".tracking-protection-ui .content-blocking-checkbox",
     "#trackingProtectionMenu",
     "[control=trackingProtectionMenu]",
   ];
 
-  await doDependentControlChecks(dependentControls, alwaysDisabledControls);
-
   await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
   let doc = gBrowser.contentDocument;
+
+  checkControlState(doc, disabledControls, false);
 
   let contentBlockingRestoreDefaults = doc.getElementById("contentBlockingRestoreDefaults");
   contentBlockingRestoreDefaults.click();
@@ -299,119 +258,17 @@ add_task(async function testContentBlockingRestoreDefaultsSkipExtensionControlle
   gBrowser.removeCurrentTab();
 });
 
-function checkControlStateWorker(doc, dependentControls, enabled) {
-  for (let selector of dependentControls) {
-    let controls = doc.querySelectorAll(selector);
-    for (let control of controls) {
+function checkControlState(doc, controls, enabled) {
+  for (let selector of controls) {
+    for (let control of doc.querySelectorAll(selector)) {
       if (enabled) {
-        ok(!control.hasAttribute("disabled"), `${selector} is enabled because CB is on.`);
+        ok(!control.hasAttribute("disabled"), `${selector} is enabled.`);
       } else {
-        is(control.getAttribute("disabled"), "true", `${selector} is disabled because CB is off`);
+        is(control.getAttribute("disabled"), "true", `${selector} is disabled.`);
       }
     }
   }
 }
-
-function checkControlState(doc, dependentControls) {
-  let enabled = Services.prefs.getBoolPref(CB_PREF);
-  return checkControlStateWorker(doc, dependentControls, enabled);
-}
-
-async function doDependentControlChecks(dependentControls,
-                                        alwaysDisabledControls = []) {
-  Services.prefs.setBoolPref(CB_PREF, true);
-  Services.prefs.setBoolPref(TOGGLE_PREF, true);
-
-  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
-  let doc = gBrowser.contentDocument;
-
-  is(Services.prefs.getBoolPref(CB_PREF), true, "Content Blocking is on");
-  checkControlState(doc, dependentControls);
-  checkControlStateWorker(doc, alwaysDisabledControls, false);
-
-  gBrowser.removeCurrentTab();
-
-  Services.prefs.setBoolPref(CB_PREF, false);
-
-  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
-  doc = gBrowser.contentDocument;
-
-  is(Services.prefs.getBoolPref(CB_PREF), false, "Content Blocking is off");
-  checkControlState(doc, dependentControls);
-  checkControlStateWorker(doc, alwaysDisabledControls, false);
-
-  let contentBlockingToggle = doc.getElementById("contentBlockingToggle");
-  contentBlockingToggle.doCommand();
-
-  await TestUtils.topicObserved("privacy-pane-tp-ui-updated");
-
-  is(Services.prefs.getBoolPref(CB_PREF), true, "Content Blocking is on");
-  checkControlState(doc, dependentControls);
-  checkControlStateWorker(doc, alwaysDisabledControls, false);
-
-  contentBlockingToggle.doCommand();
-
-  await TestUtils.topicObserved("privacy-pane-tp-ui-updated");
-
-  is(Services.prefs.getBoolPref(CB_PREF), false, "Content Blocking is off");
-  checkControlState(doc, dependentControls);
-  checkControlStateWorker(doc, alwaysDisabledControls, false);
-
-  Services.prefs.clearUserPref(CB_PREF);
-  Services.prefs.clearUserPref(TOGGLE_PREF);
-  gBrowser.removeCurrentTab();
-}
-
-// Checks that the granular controls are disabled or enabled depending on the master pref for CB.
-add_task(async function testContentBlockingDependentControls() {
-  // In Accept All Cookies mode, the radiogroup under Third-Party Cookies is always disabled
-  // since the checkbox next to Third-Party Cookies would be unchecked.
-  SpecialPowers.pushPrefEnv({set: [
-    [CB_TP_UI_PREF, true],
-    [CB_RT_UI_PREF, true],
-    [NCB_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT],
-  ]});
-
-  let dependentControls = [
-    ".content-blocking-checkbox",
-    "#content-blocking-categories-label",
-    "#changeBlockListLink",
-    "#contentBlockingChangeCookieSettings",
-    "#blockCookies, #blockCookies > radio",
-    "#keepUntil",
-    "#keepCookiesUntil",
-  ];
-  let alwaysDisabledControls = [
-    "#blockCookiesCB, #blockCookiesCB > radio",
-    "#blockCookiesLabel",
-    "#blockCookiesMenu",
-  ];
-
-  await doDependentControlChecks(dependentControls, alwaysDisabledControls);
-
-  // In Block Cookies from Trackers (or Block Cookies from All Third-Parties) mode, the
-  // radiogroup's disabled status must obey the content blocking enabled state.
-  SpecialPowers.pushPrefEnv({set: [
-    [CB_TP_UI_PREF, true],
-    [CB_RT_UI_PREF, true],
-    [NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
-  ]});
-
-  dependentControls = [
-    ".content-blocking-checkbox",
-    "#content-blocking-categories-label",
-    "#changeBlockListLink",
-    "#contentBlockingChangeCookieSettings",
-    "#blockCookiesCB, #blockCookiesCB > radio",
-    "#blockCookies, #blockCookies > radio",
-    "#blockCookiesLabel",
-    "#blockCookiesMenu",
-    "#keepUntil",
-    "#keepCookiesUntil",
-  ];
-
-  await doDependentControlChecks(dependentControls);
-});
 
 // Checks that the controls for tracking protection are disabled when all TP prefs are off.
 add_task(async function testContentBlockingDependentTPControls() {
@@ -423,180 +280,22 @@ add_task(async function testContentBlockingDependentTPControls() {
     [NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
   ]});
 
-  let dependentControls = [
-    "#content-blocking-categories-label",
-    "[control=trackingProtectionMenu]",
-    "#changeBlockListLink",
-    "#contentBlockingChangeCookieSettings",
-    "#blockCookiesCB, #blockCookiesCB > radio",
-    "#blockCookies, #blockCookies > radio",
-    "#blockCookiesLabel",
-    "#blockCookiesMenu",
-    "#keepUntil",
-    "#keepCookiesUntil",
-  ];
-  let alwaysDisabledControls = [
+  let disabledControls = [
     "#trackingProtectionMenu",
   ];
 
-  await doDependentControlChecks(dependentControls, alwaysDisabledControls);
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  let doc = gBrowser.contentDocument;
+
+  checkControlState(doc, disabledControls, false);
+
+  gBrowser.removeCurrentTab();
 });
-
-
-// Checks that the granular controls are disabled or enabled depending on the master pref for CB
-// when the Cookies and Site Data section is set to block either "All Cookies" or "Cookies from
-// unvisited websites".
-add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
-  let prefValuesToTest = [
-    Ci.nsICookieService.BEHAVIOR_REJECT,        // Block All Cookies
-  ];
-  for (let value of prefValuesToTest) {
-    await SpecialPowers.pushPrefEnv({set: [
-      [CB_TP_UI_PREF, true],
-      [CB_RT_UI_PREF, true],
-      [TP_PREF, false],
-      [TP_PBM_PREF, true],
-      [NCB_PREF, value],
-    ]});
-
-    // When Block All Cookies is selected, the Third-Party Cookies section under Content Blocking
-    // as well as the Keep Until controls under Cookies and Site Data should get disabled
-    // unconditionally.
-    let dependentControls = [
-      "#content-blocking-categories-label",
-      "#contentBlockingTrackingProtectionCheckbox",
-      ".tracking-protection-icon",
-      "#trackingProtectionMenu",
-      "[control=trackingProtectionMenu]",
-      "#changeBlockListLink",
-      "#contentBlockingChangeCookieSettings",
-      "#blockCookies, #blockCookies > radio",
-      "#blockCookiesLabel",
-      "#blockCookiesMenu",
-    ];
-    let alwaysDisabledControls = [
-      "[control=blockCookiesCB]",
-      "#blockCookiesCBDeck",
-      "#blockCookiesCB, #blockCookiesCB > radio",
-      "#keepUntil",
-      "#keepCookiesUntil",
-    ];
-
-    await doDependentControlChecks(dependentControls, alwaysDisabledControls);
-  }
-
-  // When Block Cookies from unvisited websites is selected, the Third-Party Cookies section under
-  // Content Blocking should get disabled unconditionally.
-  prefValuesToTest = [
-    Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN, // Block Cookies from unvisited websites
-  ];
-  for (let value of prefValuesToTest) {
-    await SpecialPowers.pushPrefEnv({set: [
-      [CB_TP_UI_PREF, true],
-      [CB_RT_UI_PREF, true],
-      [TP_PREF, false],
-      [TP_PBM_PREF, true],
-      [NCB_PREF, value],
-    ]});
-
-    let dependentControls = [
-      "#content-blocking-categories-label",
-      "#contentBlockingTrackingProtectionCheckbox",
-      ".tracking-protection-icon",
-      "#trackingProtectionMenu",
-      "[control=trackingProtectionMenu]",
-      "#changeBlockListLink",
-      "#contentBlockingChangeCookieSettings",
-      "#blockCookies, #blockCookies > radio",
-      "#blockCookiesLabel",
-      "#blockCookiesMenu",
-      "#keepUntil",
-      "#keepCookiesUntil",
-    ];
-    let alwaysDisabledControls = [
-      "[control=blockCookiesCB]",
-      "#blockCookiesCBDeck",
-      "#blockCookiesCB, #blockCookiesCB > radio",
-    ];
-
-    await doDependentControlChecks(dependentControls, alwaysDisabledControls);
-  }
-
-  // When Accept All Cookies is selected, the radio buttons under Third-Party Cookies
-  // in Content Blocking as well as the Type blocked controls in Cookies and Site Data
-  // must remain disabled unconditionally.
-  prefValuesToTest = [
-    Ci.nsICookieService.BEHAVIOR_ACCEPT,         // Accept All Cookies
-  ];
-  for (let value of prefValuesToTest) {
-    await SpecialPowers.pushPrefEnv({set: [
-      [CB_TP_UI_PREF, true],
-      [CB_RT_UI_PREF, true],
-      [TP_PREF, false],
-      [TP_PBM_PREF, true],
-      [NCB_PREF, value],
-    ]});
-
-    let dependentControls = [
-      "#content-blocking-categories-label",
-      ".content-blocking-checkbox",
-      "#trackingProtectionMenu",
-      "[control=trackingProtectionMenu]",
-      "#changeBlockListLink",
-      "#contentBlockingChangeCookieSettings",
-      "#blockCookies, #blockCookies > radio",
-      "#keepUntil",
-      "#keepCookiesUntil",
-    ];
-    let alwaysDisabledControls = [
-      "#blockCookiesCB, #blockCookiesCB > radio",
-      "#blockCookiesLabel",
-      "#blockCookiesMenu",
-    ];
-
-    await doDependentControlChecks(dependentControls, alwaysDisabledControls);
-  }
-
-  // For other choices of cookie policies, no parts of the UI should get disabled
-  // unconditionally.
-  prefValuesToTest = [
-    Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN, // Block All Third-Party Cookies
-    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER, // Block Cookies from third-party trackers
-  ];
-  for (let value of prefValuesToTest) {
-    await SpecialPowers.pushPrefEnv({set: [
-      [CB_TP_UI_PREF, true],
-      [CB_RT_UI_PREF, true],
-      [TP_PREF, false],
-      [TP_PBM_PREF, true],
-      [NCB_PREF, value],
-    ]});
-
-    let dependentControls = [
-      "#content-blocking-categories-label",
-      ".content-blocking-checkbox",
-      "#trackingProtectionMenu",
-      "[control=trackingProtectionMenu]",
-      "#changeBlockListLink",
-      "#contentBlockingChangeCookieSettings",
-      "#blockCookiesCB, #blockCookiesCB > radio",
-      "#blockCookies, #blockCookies > radio",
-      "#blockCookiesLabel",
-      "#blockCookiesMenu",
-      "#keepUntil",
-      "#keepCookiesUntil",
-    ];
-
-    await doDependentControlChecks(dependentControls);
-  }
-});
-
 
 // Checks that the warnings in the Content Blocking Third-Party Cookies section correctly appear based on
 // the selections in the Cookies and Site Data section.
 add_task(async function testContentBlockingThirdPartyCookiesWarning() {
   await SpecialPowers.pushPrefEnv({set: [
-    [CB_PREF, true],
     [CB_TP_UI_PREF, true],
     [CB_RT_UI_PREF, true],
   ]});

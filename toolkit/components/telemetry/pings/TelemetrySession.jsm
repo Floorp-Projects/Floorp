@@ -1614,21 +1614,21 @@ var Impl = {
    */
   _prioEncode(payloadObj) {
     // First, map the Telemetry histogram names to the params PrioEncoder expects.
-    const prioEncodedHistograms = {
-      "BROWSER_IS_USER_DEFAULT": "browserIsUserDefault",
-      "NEWTAB_PAGE_ENABLED": "newTabPageEnabled",
-      "PDF_VIEWER_USED": "pdfViewerUsed",
-    };
+    const prioEncodedHistograms = [
+      "BROWSER_IS_USER_DEFAULT",
+      "NEWTAB_PAGE_ENABLED",
+      "PDF_VIEWER_USED",
+    ];
 
     // Build list of Prio parameters, using the first value recorded in each histogram.
-    let prioParams = {};
-    for (const [histogramName, prioName] of Object.entries(prioEncodedHistograms)) {
+    let prioParams = { booleans: [] };
+    for (const [i, histogramName] of prioEncodedHistograms.entries()) {
       try {
         if (histogramName in payloadObj.histograms) {
           const histogram = payloadObj.histograms[histogramName];
-          prioParams[prioName] = Boolean(histogram.sum);
+          prioParams.booleans[i] = Boolean(histogram.sum);
         } else {
-          prioParams[prioName] = false;
+          prioParams.booleans[i] = false;
         }
 
       } catch (ex) {

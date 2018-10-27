@@ -50,7 +50,7 @@ add_task(async function checkPrefTurnsOffCanonize() {
 
   let tabsToClose = [];
   // Ensure we don't end up loading something in the current tab becuase it's empty:
-  if (isTabEmpty(gBrowser.selectedTab)) {
+  if (gBrowser.selectedTab.isEmpty) {
     tabsToClose.push(await BrowserTestUtils.openNewForegroundTab({gBrowser, opening: "about:mozilla"}));
   }
   let initialTabURL = gBrowser.selectedBrowser.currentURI.spec;
