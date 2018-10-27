@@ -742,7 +742,7 @@ async function sanitizeSessionPrincipals() {
   let enumerator = Services.cookies.enumerator;
   let hosts = new Set();
   for (let cookie of enumerator) {
-    hosts.add(cookie.host + ChromeUtils.originAttributesToSuffix(cookie.originAttributes));
+    hosts.add(cookie.rawHost + ChromeUtils.originAttributesToSuffix(cookie.originAttributes));
   }
 
   hosts.forEach(host => {
