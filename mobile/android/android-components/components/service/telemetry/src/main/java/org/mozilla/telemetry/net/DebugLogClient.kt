@@ -14,7 +14,7 @@ import org.mozilla.telemetry.config.TelemetryConfiguration
  * useful for debugging purposes.
  */
 class DebugLogClient(private val tag: String) : TelemetryClient {
-    private val logger = Logger("telemetry/debug")
+    private val logger = Logger(tag)
 
     override fun uploadPing(configuration: TelemetryConfiguration, path: String, serializedPing: String): Boolean {
         logger.debug("---PING--- $path")
