@@ -809,10 +809,10 @@ frontend::CompileGlobalBinASTScript(JSContext* cx, LifoAlloc& alloc, const ReadO
 
 #endif // JS_BUILD_BINAST
 
-ModuleObject*
-frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInput,
-                        SourceText<char16_t>& srcBuf,
-                        ScriptSourceObject** sourceObjectOut)
+template<typename Unit>
+static ModuleObject*
+CreateModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInput,
+             SourceText<Unit>& srcBuf, ScriptSourceObject** sourceObjectOut)
 {
     MOZ_ASSERT(srcBuf.get());
     MOZ_ASSERT_IF(sourceObjectOut, *sourceObjectOut == nullptr);
@@ -838,8 +838,15 @@ frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInpu
 }
 
 ModuleObject*
-frontend::CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                        SourceText<char16_t>& srcBuf)
+frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInput,
+                        SourceText<char16_t>& srcBuf, ScriptSourceObject** sourceObjectOut)
+{
+    return CreateModule(cx, optionsInput, srcBuf, sourceObjectOut);
+}
+
+template<typename Unit>
+static ModuleObject*
+CreateModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options, SourceText<Unit>& srcBuf)
 {
     AutoAssertReportedException assertException(cx);
 
@@ -860,6 +867,13 @@ frontend::CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options
 
     assertException.reset();
     return module;
+}
+
+ModuleObject*
+frontend::CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+                        SourceText<char16_t>& srcBuf)
+{
+    return CreateModule(cx, options, srcBuf);
 }
 
 // When leaving this scope, the given function should either:
