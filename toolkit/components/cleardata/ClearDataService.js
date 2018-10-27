@@ -514,10 +514,37 @@ const PermissionsCleaner = {
   deleteByHost(aHost, aOriginAttributes) {
     return new Promise(aResolve => {
       for (let perm of Services.perms.enumerator) {
+        let toBeRemoved;
         try {
-          if (eTLDService.hasRootDomain(perm.principal.URI.host, aHost)) {
-            Services.perms.removePermission(perm);
+          toBeRemoved = eTLDService.hasRootDomain(perm.principal.URI.host,
+                                                  aHost);
+        } catch (ex) {
+          continue;
+        }
+
+        if (!toBeRemoved && perm.type.startsWith("3rdPartyStorage^")) {
+          let parts = perm.type.split("^");
+          for (let i = 1; i < parts.length; ++i) {
+            let uri;
+            try {
+              uri = Services.io.newURI(parts[i]);
+            } catch (ex) {
+              continue;
+            }
+
+            toBeRemoved = eTLDService.hasRootDomain(uri.host, aHost);
+            if (toBeRemoved) {
+              break;
+            }
           }
+        }
+
+        if (!toBeRemoved) {
+          continue;
+        }
+
+        try {
+          Services.perms.removePermission(perm);
         } catch (ex) {
           // Ignore entry
         }
