@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Utf8.h"
 
 #include "builtin/ModuleObject.h"
 #if defined(JS_BUILD_BINAST)
@@ -36,6 +37,7 @@ using namespace js::frontend;
 
 using mozilla::Maybe;
 using mozilla::Nothing;
+using mozilla::Utf8Unit;
 
 using JS::CompileOptions;
 using JS::ReadOnlyCompileOptions;
@@ -919,8 +921,9 @@ class MOZ_STACK_CLASS AutoAssertFunctionDelazificationCompletion
     }
 };
 
-bool
-frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const char16_t* chars, size_t length)
+template<typename Unit>
+static bool
+CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy, const Unit* units, size_t length)
 {
     MOZ_ASSERT(cx->compartment() == lazy->functionNonDelazifying()->compartment());
 
@@ -964,9 +967,9 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     UsedNameTracker usedNames(cx);
 
     RootedScriptSourceObject sourceObject(cx, &lazy->sourceObject());
-    Parser<FullParseHandler, char16_t> parser(cx, cx->tempLifoAlloc(), options, chars, length,
-                                              /* foldConstants = */ true, usedNames, nullptr,
-                                              lazy, sourceObject, lazy->parseGoal());
+    Parser<FullParseHandler, Unit> parser(cx, cx->tempLifoAlloc(), options, units, length,
+                                          /* foldConstants = */ true, usedNames, nullptr,
+                                          lazy, sourceObject, lazy->parseGoal());
     if (!parser.checkOptions()) {
         return false;
     }
@@ -1005,6 +1008,20 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     delazificationCompletion.complete();
     assertException.reset();
     return true;
+}
+
+bool
+frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy,
+                              const char16_t* units, size_t length)
+{
+    return CompileLazyFunctionImpl(cx, lazy, units, length);
+}
+
+bool
+frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy,
+                              const Utf8Unit* units, size_t length)
+{
+    return CompileLazyFunctionImpl(cx, lazy, units, length);
 }
 
 #ifdef JS_BUILD_BINAST
