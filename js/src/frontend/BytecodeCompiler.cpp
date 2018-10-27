@@ -222,6 +222,13 @@ CreateGlobalScript(GlobalScriptInfo& info, JS::SourceText<Unit>& srcBuf,
     return script;
 }
 
+JSScript*
+frontend::CompileGlobalScript(GlobalScriptInfo& info, JS::SourceText<char16_t>& srcBuf,
+                              ScriptSourceObject** sourceObjectOut /* = nullptr */)
+{
+    return CreateGlobalScript(info, srcBuf, sourceObjectOut);
+}
+
 template<typename Unit>
 class MOZ_STACK_CLASS EvalScriptCompiler final
   : public ScriptCompiler<Unit>
@@ -733,18 +740,6 @@ frontend::CreateScriptSourceObject(JSContext* cx, const ReadOnlyCompileOptions& 
     }
 
     return sso;
-}
-
-JSScript*
-frontend::CompileGlobalScript(JSContext* cx, ScopeKind scopeKind,
-                              const ReadOnlyCompileOptions& options,
-                              SourceText<char16_t>& srcBuf,
-                              ScriptSourceObject** sourceObjectOut)
-{
-    MOZ_ASSERT(scopeKind == ScopeKind::Global || scopeKind == ScopeKind::NonSyntactic);
-
-    GlobalScriptInfo info(cx, options, scopeKind);
-    return CreateGlobalScript(info, srcBuf, sourceObjectOut);
 }
 
 #if defined(JS_BUILD_BINAST)
