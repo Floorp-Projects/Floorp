@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h" // MOZ_MUST_USE, MOZ_STACK_CLASS
 #include "mozilla/Maybe.h" // mozilla::Maybe, mozilla::Nothing
 
+#include <stddef.h> // size_t
 #include <stdint.h> // uint32_t
 
 #include "frontend/EitherParser.h" // js::frontend::EitherParser
@@ -20,7 +21,7 @@
 #include "js/RootingAPI.h" // JS::{,Mutable}Handle, JS::Rooted
 #include "js/SourceText.h" // JS::SourceText
 #include "vm/JSContext.h" // js::AutoKeepAtoms
-#include "vm/JSScript.h" // js::{FunctionAsync,Generator}Kind, JSScript, js::ScriptSource, js::ScriptSourceObject
+#include "vm/JSScript.h" // js::{FunctionAsync,Generator}Kind, js::LazyScript, JSScript, js::ScriptSource, js::ScriptSourceObject
 #include "vm/Scope.h" // js::ScopeKind
 
 class JSFunction;
@@ -167,6 +168,14 @@ class MOZ_STACK_CLASS StandaloneFunctionInfo final
       : BytecodeCompiler(cx, options)
     {}
 };
+
+extern MOZ_MUST_USE bool
+CompileLazyFunction(JSContext* cx, JS::Handle<LazyScript*> lazy,
+                    const char16_t* units, size_t length);
+
+extern MOZ_MUST_USE bool
+CompileLazyFunction(JSContext* cx, JS::Handle<LazyScript*> lazy,
+                    const mozilla::Utf8Unit* units, size_t length);
 
 } // namespace frontend
 

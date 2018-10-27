@@ -26,6 +26,7 @@
 #include "builtin/Object.h"
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/String.h"
+#include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
@@ -1793,9 +1794,14 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
                     return false;
                 }
 
-                // XXX There are no UTF-8 ScriptSources now, so just crash so this
-                //     gets filled in later.
-                MOZ_CRASH("UTF-8 lazy function compilation not implemented yet");
+                if (!frontend::CompileLazyFunction(cx, lazy, units.get(), lazyLength)) {
+                    // The frontend shouldn't fail after linking the function and the
+                    // non-lazy script together.
+                    MOZ_ASSERT(fun->isInterpretedLazy());
+                    MOZ_ASSERT(fun->lazyScript() == lazy);
+                    MOZ_ASSERT(!lazy->hasScript());
+                    return false;
+                }
             } else {
                 MOZ_ASSERT(lazy->scriptSource()->hasSourceType<char16_t>());
 

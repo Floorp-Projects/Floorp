@@ -52,9 +52,6 @@ CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
               JS::SourceText<char16_t>& srcBuf,
               ScriptSourceObject** sourceObjectOut);
 
-MOZ_MUST_USE bool
-CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const char16_t* chars, size_t length);
-
 //
 // Compile a single function. The source in srcBuf must match the ECMA-262
 // FunctionExpression production.
