@@ -2035,6 +2035,7 @@ ScriptSource::setSourceCopy(JSContext* cx, SourceText<Unit>& srcBuf)
 }
 
 template bool ScriptSource::setSourceCopy(JSContext* cx, SourceText<char16_t>& srcBuf);
+template bool ScriptSource::setSourceCopy(JSContext* cx, SourceText<Utf8Unit>& srcBuf);
 
 void
 ScriptSource::trace(JSTracer* trc)

@@ -190,6 +190,20 @@ CompileUtf8File(JSContext* cx, const ReadOnlyCompileOptions& options,
                 FILE* file, MutableHandle<JSScript*> script);
 
 /**
+ * Compile the UTF-8 contents of the given file into a script.  If the contents
+ * contain any malformed UTF-8, an error is reported.
+ *
+ * |script| is always set to the compiled script or to null in case of error.
+ *
+ * NOTE: This function DOES NOT INFLATE the UTF-8 bytes to UTF-16 before
+ *       compiling them.  UTF-8 compilation is currently experimental and has
+ *       known bugs.  Use only if you're willing to tolerate unspecified bugs!
+ */
+extern JS_PUBLIC_API(bool)
+CompileUtf8FileDontInflate(JSContext* cx, const ReadOnlyCompileOptions& options,
+                           FILE* file, MutableHandle<JSScript*> script);
+
+/**
  * Compile the UTF-8 contents of the file at the given path into a script.
  * (The path itself is in the system encoding, not [necessarily] UTF-8.)  If
  * the contents contain any malformed UTF-8, an error is reported.

@@ -10,6 +10,7 @@
 
 #include "mozilla/Maybe.h" // mozilla::None, mozilla::Some
 #include "mozilla/TextUtils.h" // mozilla::IsAscii
+#include "mozilla/Utf8.h" // mozilla::Utf8Unit
 
 #include <utility> // std::move
 
@@ -35,6 +36,8 @@
 
 #include "vm/JSContext-inl.h" // JSContext::check
 
+using mozilla::Utf8Unit;
+
 using JS::CompileOptions;
 using JS::HandleObject;
 using JS::ReadOnlyCompileOptions;
@@ -52,9 +55,10 @@ JS::detail::ReportSourceTooLong(JSContext* cx)
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SOURCE_TOO_LONG);
 }
 
+template<typename Unit>
 static bool
 CompileSourceBuffer(JSContext* cx, const ReadOnlyCompileOptions& options,
-                    SourceText<char16_t>& srcBuf, JS::MutableHandleScript script)
+                    SourceText<Unit>& srcBuf, JS::MutableHandleScript script)
 {
     ScopeKind scopeKind = options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
@@ -102,6 +106,18 @@ CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
     return CompileSourceBuffer(cx, options, source, script);
 }
 
+static bool
+CompileUtf8DontInflate(JSContext* cx, const ReadOnlyCompileOptions& options,
+                       const char* bytes, size_t length, JS::MutableHandleScript script)
+{
+    SourceText<Utf8Unit> source;
+    if (!source.init(cx, bytes, length, SourceOwnership::Borrowed)) {
+        return false;
+    }
+
+    return CompileSourceBuffer(cx, options, source, script);
+}
+
 bool
 JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
             SourceText<char16_t>& srcBuf, JS::MutableHandleScript script)
@@ -134,6 +150,20 @@ JS::CompileUtf8File(JSContext* cx, const ReadOnlyCompileOptions& options,
 
     return ::CompileUtf8(cx, options,
                          reinterpret_cast<const char*>(buffer.begin()), buffer.length(), script);
+}
+
+bool
+JS::CompileUtf8FileDontInflate(JSContext* cx, const ReadOnlyCompileOptions& options,
+                               FILE* file, JS::MutableHandleScript script)
+{
+    FileContents buffer(cx);
+    if (!ReadCompleteFile(cx, file, buffer)) {
+        return false;
+    }
+
+    return ::CompileUtf8DontInflate(cx, options,
+                                    reinterpret_cast<const char*>(buffer.begin()), buffer.length(),
+                                    script);
 }
 
 bool
