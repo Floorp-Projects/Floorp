@@ -40,10 +40,41 @@ using JS::CompileOptions;
 using JS::ReadOnlyCompileOptions;
 using JS::SourceText;
 
+class BytecodeCompiler;
+
 template<typename Unit> class SourceAwareCompiler;
 template<typename Unit> class ScriptCompiler;
 template<typename Unit> class ModuleCompiler;
 template<typename Unit> class StandaloneFunctionCompiler;
+
+// CompileScript independently returns the ScriptSourceObject (SSO) for the
+// compile.  This is used by off-thread script compilation (OT-SC).
+//
+// OT-SC cannot initialize the SSO when it is first constructed because the
+// SSO is allocated initially in a separate compartment.
+//
+// After OT-SC, the separate compartment is merged with the main compartment,
+// at which point the JSScripts created become observable by the debugger via
+// memory-space scanning.
+//
+// Whatever happens to the top-level script compilation (even if it fails and
+// returns null), we must finish initializing the SSO.  This is because there
+// may be valid inner scripts observable by the debugger which reference the
+// partially-initialized SSO.
+class MOZ_STACK_CLASS AutoInitializeSourceObject
+{
+    BytecodeCompiler& compiler_;
+    ScriptSourceObject** sourceObjectOut_;
+
+  public:
+    AutoInitializeSourceObject(BytecodeCompiler& compiler,
+                               ScriptSourceObject** sourceObjectOut)
+      : compiler_(compiler),
+        sourceObjectOut_(sourceObjectOut)
+    { }
+
+    inline ~AutoInitializeSourceObject();
+};
 
 // The BytecodeCompiler class contains resources common to compiling scripts and
 // function bodies.
@@ -73,6 +104,10 @@ class MOZ_STACK_CLASS BytecodeCompiler
     template<typename Unit> friend class StandaloneFunctionCompiler;
 
   public:
+    JSContext* context() const {
+        return cx;
+    }
+
     ScriptSourceObject* sourceObjectPtr() const {
         return sourceObject.get();
     }
@@ -106,6 +141,52 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     MOZ_MUST_USE bool
     deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObject environment);
+};
+
+inline
+AutoInitializeSourceObject::~AutoInitializeSourceObject()
+{
+    if (sourceObjectOut_) {
+        *sourceObjectOut_ = compiler_.sourceObjectPtr();
+    }
+}
+
+// RAII class to check the frontend reports an exception when it fails to
+// compile a script.
+class MOZ_RAII AutoAssertReportedException
+{
+#ifdef DEBUG
+    JSContext* cx_;
+    bool check_;
+
+  public:
+    explicit AutoAssertReportedException(JSContext* cx)
+      : cx_(cx),
+        check_(true)
+    {}
+    void reset() {
+        check_ = false;
+    }
+    ~AutoAssertReportedException() {
+        if (!check_) {
+            return;
+        }
+
+        if (!cx_->helperThread()) {
+            MOZ_ASSERT(cx_->isExceptionPending());
+            return;
+        }
+
+        ParseTask* task = cx_->helperThread()->parseTask();
+        MOZ_ASSERT(task->outOfMemory ||
+                   task->overRecursed ||
+                   !task->errors.empty());
+    }
+#else
+  public:
+    explicit AutoAssertReportedException(JSContext*) {}
+    void reset() {}
+#endif
 };
 
 template<typename Unit>
@@ -182,8 +263,14 @@ class MOZ_STACK_CLASS ScriptCompiler
 
     using typename Base::TokenStreamPosition;
 
-  protected:
-    using Base::Base;
+  public:
+    explicit ScriptCompiler(SourceText<Unit>& srcBuf)
+      : Base(srcBuf)
+    {}
+
+    MOZ_MUST_USE bool prepareScriptParse(BytecodeCompiler& compiler) {
+        return Base::prepareScriptParse(compiler);
+    }
 
     JSScript* compileScript(BytecodeCompiler& compiler, HandleObject environment,
                             SharedContext* sc);
@@ -208,26 +295,27 @@ class MOZ_STACK_CLASS GlobalScriptInfo final
 };
 
 template<typename Unit>
-class MOZ_STACK_CLASS GlobalScriptCompiler final
-  : public ScriptCompiler<Unit>
+static JSScript*
+CreateGlobalScript(GlobalScriptInfo& info, JS::SourceText<Unit>& srcBuf,
+                   ScriptSourceObject** sourceObjectOut = nullptr)
 {
-    using Base = ScriptCompiler<Unit>;
+    AutoAssertReportedException assertException(info.context());
 
-    using Base::compileScript;
-    using Base::prepareScriptParse;
+    ScriptCompiler<Unit> compiler(srcBuf);
+    AutoInitializeSourceObject autoSSO(info, sourceObjectOut);
 
-  public:
-    explicit GlobalScriptCompiler(SourceText<Unit>& srcBuf)
-      : Base(srcBuf)
-    {}
-
-    JSScript* compile(GlobalScriptInfo& info) {
-        if (!prepareScriptParse(info)) {
-            return nullptr;
-        }
-        return compileScript(info, nullptr, info.sharedContext());
+    if (!compiler.prepareScriptParse(info)) {
+        return nullptr;
     }
-};
+
+    JSScript* script = compiler.compileScript(info, nullptr, info.sharedContext());
+    if (!script) {
+        return nullptr;
+    }
+
+    assertException.reset();
+    return script;
+}
 
 class MOZ_STACK_CLASS EvalScriptInfo final
   : public BytecodeCompiler
@@ -781,77 +869,6 @@ frontend::CreateScriptSourceObject(JSContext* cx, const ReadOnlyCompileOptions& 
     return sso;
 }
 
-// CompileScript independently returns the ScriptSourceObject (SSO) for the
-// compile.  This is used by off-thread script compilation (OT-SC).
-//
-// OT-SC cannot initialize the SSO when it is first constructed because the
-// SSO is allocated initially in a separate compartment.
-//
-// After OT-SC, the separate compartment is merged with the main compartment,
-// at which point the JSScripts created become observable by the debugger via
-// memory-space scanning.
-//
-// Whatever happens to the top-level script compilation (even if it fails and
-// returns null), we must finish initializing the SSO.  This is because there
-// may be valid inner scripts observable by the debugger which reference the
-// partially-initialized SSO.
-class MOZ_STACK_CLASS AutoInitializeSourceObject
-{
-    BytecodeCompiler& compiler_;
-    ScriptSourceObject** sourceObjectOut_;
-
-  public:
-    AutoInitializeSourceObject(BytecodeCompiler& compiler,
-                               ScriptSourceObject** sourceObjectOut)
-      : compiler_(compiler),
-        sourceObjectOut_(sourceObjectOut)
-    { }
-
-    ~AutoInitializeSourceObject() {
-        if (sourceObjectOut_) {
-            *sourceObjectOut_ = compiler_.sourceObjectPtr();
-        }
-    }
-};
-
-// RAII class to check the frontend reports an exception when it fails to
-// compile a script.
-class MOZ_RAII AutoAssertReportedException
-{
-#ifdef DEBUG
-    JSContext* cx_;
-    bool check_;
-
-  public:
-    explicit AutoAssertReportedException(JSContext* cx)
-      : cx_(cx),
-        check_(true)
-    {}
-    void reset() {
-        check_ = false;
-    }
-    ~AutoAssertReportedException() {
-        if (!check_) {
-            return;
-        }
-
-        if (!cx_->helperThread()) {
-            MOZ_ASSERT(cx_->isExceptionPending());
-            return;
-        }
-
-        ParseTask* task = cx_->helperThread()->parseTask();
-        MOZ_ASSERT(task->outOfMemory ||
-                   task->overRecursed ||
-                   !task->errors.empty());
-    }
-#else
-  public:
-    explicit AutoAssertReportedException(JSContext*) {}
-    void reset() {}
-#endif
-};
-
 JSScript*
 frontend::CompileGlobalScript(JSContext* cx, ScopeKind scopeKind,
                               const ReadOnlyCompileOptions& options,
@@ -860,19 +877,8 @@ frontend::CompileGlobalScript(JSContext* cx, ScopeKind scopeKind,
 {
     MOZ_ASSERT(scopeKind == ScopeKind::Global || scopeKind == ScopeKind::NonSyntactic);
 
-    AutoAssertReportedException assertException(cx);
-
     GlobalScriptInfo info(cx, options, scopeKind);
-    AutoInitializeSourceObject autoSSO(info, sourceObjectOut);
-
-    GlobalScriptCompiler<char16_t> compiler(srcBuf);
-    JSScript* script = compiler.compile(info);
-    if (!script) {
-        return nullptr;
-    }
-
-    assertException.reset();
-    return script;
+    return CreateGlobalScript(info, srcBuf, sourceObjectOut);
 }
 
 #if defined(JS_BUILD_BINAST)
