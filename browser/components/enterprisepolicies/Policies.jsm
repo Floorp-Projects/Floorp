@@ -842,7 +842,7 @@ var Policies = {
             }
             if (defaultEngine) {
               try {
-                Services.search.currentEngine = defaultEngine;
+                Services.search.defaultEngine = defaultEngine;
               } catch (ex) {
                 log.error("Unable to set the default search engine", ex);
               }

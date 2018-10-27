@@ -158,12 +158,12 @@ class MozSearchbar extends MozXULElement {
   }
 
   set currentEngine(val) {
-    Services.search.currentEngine = val;
+    Services.search.defaultEngine = val;
     return val;
   }
 
   get currentEngine() {
-    var currentEngine = Services.search.currentEngine;
+    var currentEngine = Services.search.defaultEngine;
     // Return a dummy engine if there is no currentEngine
     return currentEngine || { name: "", uri: null };
   }
