@@ -36,7 +36,6 @@
 
 .datetime-edit-field[disabled="true"],
 .datetime-edit-field[readonly="true"]  {
-  color: GrayText;
   -moz-user-select: none;
 }
 
