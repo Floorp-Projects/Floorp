@@ -30,12 +30,6 @@ class ErrorReporter;
 class FunctionBox;
 class ParseNode;
 
-JSScript*
-CompileGlobalScript(JSContext* cx, ScopeKind scopeKind,
-                    const JS::ReadOnlyCompileOptions& options,
-                    JS::SourceText<char16_t>& srcBuf,
-                    ScriptSourceObject** sourceObjectOut = nullptr);
-
 #if defined(JS_BUILD_BINAST)
 
 JSScript*

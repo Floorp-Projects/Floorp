@@ -16,6 +16,7 @@
 #include "jsfriendapi.h"
 #include "jsnum.h"
 
+#include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 #include "gc/FreeOp.h"
@@ -8927,20 +8928,22 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
             return false;
         }
         script = frontend::CompileEvalScript(cx, env, scope, options, srcBuf);
-        if (script) {
-            script->setActiveEval();
+        if (!script) {
+            return false;
         }
+
+        script->setActiveEval();
     } else {
         // Do not consider executeInGlobal{WithBindings} as an eval, but instead
         // as executing a series of statements at the global level. This is to
         // circumvent the fresh lexical scope that all eval have, so that the
         // users of executeInGlobal, like the web console, may add new bindings to
         // the global scope.
-        script = frontend::CompileGlobalScript(cx, scopeKind, options, srcBuf);
-    }
-
-    if (!script) {
-        return false;
+        frontend::GlobalScriptInfo info(cx, options, scopeKind);
+        script = frontend::CompileGlobalScript(info, srcBuf);
+        if (!script) {
+            return false;
+        }
     }
 
     return ExecuteKernel(cx, script, *env, NullValue(), frame, rval.address());
