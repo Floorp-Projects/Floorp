@@ -86,8 +86,8 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     if (!item) {
       return;
     }
-    if (Services.search.currentEngine.name != item.value &&
-        Services.search.currentEngine.name != item.initialValue) {
+    if (Services.search.defaultEngine.name != item.value &&
+        Services.search.defaultEngine.name != item.initialValue) {
       // The current engine is not the same as the value that the ExtensionSettingsStore has.
       // This means that the user changed the engine, so we shouldn't control it anymore.
       // Do nothing and remove our entry from the ExtensionSettingsStore.
@@ -99,7 +99,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       try {
         let engine = Services.search.getEngineByName(item.value || item.initialValue);
         if (engine) {
-          Services.search.currentEngine = engine;
+          Services.search.defaultEngine = engine;
         }
       } catch (e) {
         Cu.reportError(e);
@@ -217,7 +217,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         if (extension.startupReason === "ADDON_INSTALL") {
           // Don't ask if it already the current engine
           let engine = Services.search.getEngineByName(engineName);
-          if (Services.search.currentEngine != engine) {
+          if (Services.search.defaultEngine != engine) {
             let allow = await new Promise(resolve => {
               let subject = {
                 wrappedJSObject: {
@@ -227,7 +227,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
                   browser: windowTracker.topWindow.gBrowser.selectedBrowser,
                   name: this.extension.name,
                   icon: this.extension.iconURL,
-                  currentEngine: Services.search.currentEngine.name,
+                  currentEngine: Services.search.defaultEngine.name,
                   newEngine: engineName,
                   resolve,
                 },
@@ -256,9 +256,9 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     if (extension.startupReason === "ADDON_INSTALL") {
       let item = await ExtensionSettingsStore.addSetting(
         extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => {
-          return Services.search.currentEngine.name;
+          return Services.search.defaultEngine.name;
         });
-      Services.search.currentEngine = Services.search.getEngineByName(item.value);
+      Services.search.defaultEngine = Services.search.getEngineByName(item.value);
     } else if (extension.startupReason === "ADDON_ENABLE") {
       chrome_settings_overrides.processDefaultSearchSetting("enable", extension.id);
     }
@@ -272,7 +272,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       let engines = Services.search.getEnginesByExtensionID(extension.id);
       if (engines.length > 0) {
         // There can be only one engine right now
-        isCurrent = Services.search.currentEngine == engines[0];
+        isCurrent = Services.search.defaultEngine == engines[0];
         // Get position of engine and store it
         index = Services.search.getEngines().indexOf(engines[0]);
         Services.search.removeEngine(engines[0]);
@@ -289,7 +289,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       if (extension.startupReason === "ADDON_UPGRADE") {
         let engine = Services.search.getEngineByName(engines[0].name);
         if (isCurrent) {
-          Services.search.currentEngine = engine;
+          Services.search.defaultEngine = engine;
         }
         if (index != -1) {
           Services.search.moveEngine(engine, index);
