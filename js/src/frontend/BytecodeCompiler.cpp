@@ -230,26 +230,30 @@ frontend::CompileGlobalScript(GlobalScriptInfo& info, JS::SourceText<char16_t>& 
 }
 
 template<typename Unit>
-class MOZ_STACK_CLASS EvalScriptCompiler final
-  : public ScriptCompiler<Unit>
+static JSScript*
+CreateEvalScript(frontend::EvalScriptInfo& info, SourceText<Unit>& srcBuf)
 {
-    using Base = ScriptCompiler<Unit>;
+    AutoAssertReportedException assertException(info.context());
 
-    using Base::compileScript;
-    using Base::prepareScriptParse;
-
-  public:
-    explicit EvalScriptCompiler(SourceText<Unit>& srcBuf)
-      : Base(srcBuf)
-    {}
-
-    JSScript* compile(EvalScriptInfo& info) {
-        if (!prepareScriptParse(info)) {
-            return nullptr;
-        }
-        return compileScript(info, info.environment(), info.sharedContext());
+    frontend::ScriptCompiler<Unit> compiler(srcBuf);
+    if (!compiler.prepareScriptParse(info)) {
+        return nullptr;
     }
-};
+
+    JSScript* script = compiler.compileScript(info, info.environment(), info.sharedContext());
+    if (!script) {
+        return nullptr;
+    }
+
+    assertException.reset();
+    return script;
+}
+
+JSScript*
+frontend::CompileEvalScript(EvalScriptInfo& info, JS::SourceText<char16_t>& srcBuf)
+{
+    return CreateEvalScript(info, srcBuf);
+}
 
 template<typename Unit>
 class MOZ_STACK_CLASS frontend::ModuleCompiler final
@@ -804,29 +808,6 @@ frontend::CompileGlobalBinASTScript(JSContext* cx, LifoAlloc& alloc, const ReadO
 }
 
 #endif // JS_BUILD_BINAST
-
-JSScript*
-frontend::CompileEvalScript(JSContext* cx, HandleObject environment,
-                            HandleScope enclosingScope,
-                            const ReadOnlyCompileOptions& options,
-                            SourceText<char16_t>& srcBuf,
-                            ScriptSourceObject** sourceObjectOut)
-{
-    AutoAssertReportedException assertException(cx);
-
-    EvalScriptInfo info(cx, options, environment, enclosingScope);
-    AutoInitializeSourceObject autoSSO(info, sourceObjectOut);
-
-    EvalScriptCompiler<char16_t> compiler(srcBuf);
-    JSScript* script = compiler.compile(info);
-    if (!script) {
-        return nullptr;
-    }
-
-    assertException.reset();
-    return script;
-
-}
 
 ModuleObject*
 frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInput,

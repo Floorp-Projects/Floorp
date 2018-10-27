@@ -43,13 +43,6 @@ CompileLazyBinASTFunction(JSContext* cx, Handle<LazyScript*> lazy, const uint8_t
 
 #endif // JS_BUILD_BINAST
 
-JSScript*
-CompileEvalScript(JSContext* cx, HandleObject environment,
-                  HandleScope enclosingScope,
-                  const JS::ReadOnlyCompileOptions& options,
-                  JS::SourceText<char16_t>& srcBuf,
-                  ScriptSourceObject** sourceObjectOut = nullptr);
-
 ModuleObject*
 CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
               JS::SourceText<char16_t>& srcBuf);

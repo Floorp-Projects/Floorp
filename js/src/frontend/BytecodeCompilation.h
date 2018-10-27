@@ -147,6 +147,9 @@ class MOZ_STACK_CLASS EvalScriptInfo final
     }
 };
 
+extern JSScript*
+CompileEvalScript(EvalScriptInfo& info, JS::SourceText<char16_t>& srcBuf);
+
 class MOZ_STACK_CLASS ModuleInfo final
   : public BytecodeCompiler
 {
