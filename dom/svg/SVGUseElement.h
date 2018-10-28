@@ -87,6 +87,18 @@ public:
   // referenced element.
   void UpdateShadowTree();
 
+  // Shared code between AfterSetAttr and nsSVGUseFrame::AttributeChanged.
+  //
+  // This is needed because SMIL doesn't go through AfterSetAttr unfortunately.
+  void ProcessAttributeChange(int32_t aNamespaceID, nsAtom* aAttribute);
+
+  nsresult AfterSetAttr(int32_t aNamespaceID,
+                        nsAtom* aAttribute,
+                        const nsAttrValue* aValue,
+                        const nsAttrValue* aOldValue,
+                        nsIPrincipal* aSubjectPrincipal,
+                        bool aNotify) final;
+
 protected:
   /**
    * Helper that provides a reference to the element with the ID that is
