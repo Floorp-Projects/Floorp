@@ -25,6 +25,7 @@ TEST_HARNESS_FILES.testing.mochitest.tests.robocop += [
     '*.swf',
     '*.webm',
     '*.xml',
+    '/mobile/android/tests/browser/chrome/head.js',
     'reader_mode_pages/**', # The ** preserves directory structure.
     'robocop*.js',
     'test*.js',
