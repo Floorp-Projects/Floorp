@@ -559,6 +559,9 @@ public:
   // false for only resetting the timestamp.
   void ResetVRTelemetry(bool aUpdate);
 
+  void StartVRActivity();
+  void StopVRActivity();
+
   // Update the VR displays for this window
   bool UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDisplays);
 
