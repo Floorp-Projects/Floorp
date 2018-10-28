@@ -59,13 +59,16 @@ def test_make_index_tasks(make_taskgraph):
             "index.gecko.v2.mozilla-central.revision."
             "b5d8b27a753725c1de41ffae2e338798f3b5cacd.firefox-l10n.linux64-opt.uk",
             "index.gecko.v2.mozilla-central.revision."
-            "b5d8b27a753725c1de41ffae2e338798f3b5cacd.firefox-l10n.linux64-opt.zh-CN"
+            "b5d8b27a753725c1de41ffae2e338798f3b5cacd.firefox-l10n.linux64-opt.zh-CN",
         ],
         'deadline': 'soon',
         'metadata': {
             'description': 'desc',
             'owner': 'owner@foo.com',
             'source': 'https://source',
+        },
+        'extra': {
+            'index': {'rank': 1540722354},
         },
     }
     task = Task(kind='test', label='a', attributes={}, task=task_def)
@@ -80,6 +83,7 @@ def test_make_index_tasks(make_taskgraph):
 
     assert index_task.task['payload']['command'][0] == 'insert-indexes.js'
     assert index_task.task['payload']['env']['TARGET_TASKID'] == 'a-tid'
+    assert index_task.task['payload']['env']['INDEX_RANK'] == 1540722354
 
     # check the scope summary
     assert index_task.task['scopes'] == ['index:insert-task:gecko.v2.mozilla-central.*']
