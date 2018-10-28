@@ -6,6 +6,7 @@
 
 #include "nsSVGUseFrame.h"
 
+#include "mozilla/dom/MutationEvent.h"
 #include "mozilla/dom/SVGUseElement.h"
 #include "SVGObserverUtils.h"
 
@@ -41,59 +42,58 @@ nsSVGUseFrame::Init(nsIContent*       aContent,
 }
 
 nsresult
-nsSVGUseFrame::AttributeChanged(int32_t aNameSpaceID,
+nsSVGUseFrame::AttributeChanged(int32_t aNamespaceID,
                                 nsAtom* aAttribute,
                                 int32_t aModType)
 {
-  auto* useElement = static_cast<SVGUseElement*>(GetContent());
-
-  if (aNameSpaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y) {
-      // make sure our cached transform matrix gets (lazily) updated
-      mCanvasTM = nullptr;
-      nsLayoutUtils::PostRestyleEvent(
-        useElement, nsRestyleHint(0),
-        nsChangeHint_InvalidateRenderingObservers);
-      nsSVGUtils::ScheduleReflowSVG(this);
-      nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
-    } else if (aAttribute == nsGkAtoms::width ||
-               aAttribute == nsGkAtoms::height) {
-      bool invalidate = false;
-      if (mHasValidDimensions != useElement->HasValidDimensions()) {
-        mHasValidDimensions = !mHasValidDimensions;
-        invalidate = true;
-      }
-
-      // FIXME(emilio): This shouldn't really belong to nsSVGUseFrame, but
-      // SVGUseElement.
-      if (useElement->OurWidthAndHeightAreUsed()) {
-        invalidate = true;
-        useElement->SyncWidthOrHeight(aAttribute);
-      }
-
-      if (invalidate) {
-        nsLayoutUtils::PostRestyleEvent(
-          useElement, nsRestyleHint(0),
-          nsChangeHint_InvalidateRenderingObservers);
-        nsSVGUtils::ScheduleReflowSVG(this);
-      }
-    }
+  // Currently our SMIL implementation does not modify the DOM attributes. Once
+  // we implement the SVG 2 SMIL behaviour this can be removed
+  // SVGUseElement::AfterSetAttr's implementation will be sufficient.
+  if (aModType == MutationEvent_Binding::SMIL) {
+    auto* content = SVGUseElement::FromNode(GetContent());
+    content->ProcessAttributeChange(aNamespaceID, aAttribute);
   }
 
-  if ((aNameSpaceID == kNameSpaceID_XLink ||
-       aNameSpaceID == kNameSpaceID_None) &&
-      aAttribute == nsGkAtoms::href) {
-    // we're changing our nature, clear out the clone information
+  return nsSVGGFrame::AttributeChanged(aNamespaceID, aAttribute, aModType);
+}
+
+void
+nsSVGUseFrame::PositionAttributeChanged()
+{
+  // make sure our cached transform matrix gets (lazily) updated
+  mCanvasTM = nullptr;
+  nsLayoutUtils::PostRestyleEvent(
+    GetContent()->AsElement(), nsRestyleHint(0),
+    nsChangeHint_InvalidateRenderingObservers);
+  nsSVGUtils::ScheduleReflowSVG(this);
+  nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
+}
+
+void
+nsSVGUseFrame::DimensionAttributeChanged(bool aHadValidDimensions,
+                                         bool aAttributeIsUsed)
+{
+  bool invalidate = aAttributeIsUsed;
+  if (mHasValidDimensions != aHadValidDimensions) {
+    mHasValidDimensions = !mHasValidDimensions;
+    invalidate = true;
+  }
+
+  if (invalidate) {
     nsLayoutUtils::PostRestyleEvent(
-      useElement, nsRestyleHint(0),
+      GetContent()->AsElement(), nsRestyleHint(0),
       nsChangeHint_InvalidateRenderingObservers);
     nsSVGUtils::ScheduleReflowSVG(this);
-    useElement->mOriginal = nullptr;
-    useElement->UnlinkSource();
-    useElement->TriggerReclone();
   }
+}
 
-  return nsSVGGFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
+void
+nsSVGUseFrame::HrefChanged()
+{
+  nsLayoutUtils::PostRestyleEvent(
+    GetContent()->AsElement(), nsRestyleHint(0),
+    nsChangeHint_InvalidateRenderingObservers);
+  nsSVGUtils::ScheduleReflowSVG(this);
 }
 
 //----------------------------------------------------------------------

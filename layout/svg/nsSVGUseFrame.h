@@ -31,9 +31,19 @@ public:
             nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 
-  nsresult AttributeChanged(int32_t aNameSpaceID,
+  // Called when the x or y attributes changed.
+  void PositionAttributeChanged();
+
+  // Called when the href attributes changed.
+  void HrefChanged();
+
+  // Called when the width or height attributes changed.
+  void DimensionAttributeChanged(bool aHadValidDimensions,
+                                 bool aAttributeIsUsed);
+
+  nsresult AttributeChanged(int32_t aNamespaceID,
                             nsAtom* aAttribute,
-                            int32_t aModType) override;
+                            int32_t aModType) final;
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override
