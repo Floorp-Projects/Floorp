@@ -26,6 +26,19 @@ function run_test() {
       input: "see www.mozilla.org maybe",
       url: "http://www.mozilla.org"
     },
+    // -- delimiters
+    {
+      input: "see http://www.mozilla.org/maybe today",  // Spaces
+      url: "http://www.mozilla.org/maybe"
+    },
+    {
+      input: "see \"http://www.mozilla.org/maybe today\"",  // Double quotes
+      url: "http://www.mozilla.org/maybetoday"              // spaces ignored
+    },
+    {
+      input: "see <http://www.mozilla.org/maybe today>",  // Angle brackets
+      url: "http://www.mozilla.org/maybetoday"            // spaces ignored
+    },
     // -- freetext
     {
       input:"I mean http://www.mozilla.org/.",
