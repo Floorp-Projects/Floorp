@@ -619,6 +619,25 @@ VRManagerChild::RemoveListener(dom::VREventObserver* aObserver)
 }
 
 void
+VRManagerChild::StartActivity()
+{
+  Unused << SendStartActivity();
+}
+
+void
+VRManagerChild::StopActivity()
+{
+  for (auto& listener : mListeners) {
+    if (!listener->GetStopActivityStatus()) {
+      // We are still showing VR in the active window.
+      return;
+    }
+  }
+
+  Unused << SendStopActivity();
+}
+
+void
 VRManagerChild::HandleFatalError(const char* aMsg) const
 {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aMsg, OtherPid());
