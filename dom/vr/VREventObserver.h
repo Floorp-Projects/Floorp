@@ -33,6 +33,9 @@ public:
 
   void DisconnectFromOwner();
   void UpdateSpentTimeIn2DTelemetry(bool aUpdate);
+  void StartActivity();
+  void StopActivity();
+  bool GetStopActivityStatus();
 
 private:
   ~VREventObserver();
@@ -43,6 +46,7 @@ private:
   TimeStamp mSpendTimeIn2DView;
   bool mIs2DView;
   bool mHasReset;
+  bool mStopActivity;
 };
 
 } // namespace dom
