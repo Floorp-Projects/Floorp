@@ -45,7 +45,10 @@ function _evalURI(uri, sandbox) {
  * Robocop:Java messages.
  */
 function testOneFile(uri) {
-  let HEAD_JS = "robocop_head.js";
+  let HEAD_JS = [
+    "head.js",
+    "robocop_head.js",
+  ];
 
   // System principal.  This is dangerous, but this is test code that
   // should only run on developer and build farm machines, and the
@@ -64,8 +67,8 @@ function testOneFile(uri) {
   testScope.Components = SpecialPowers.Components;
   testScope._TEST_FILE = uri;
 
-  // Output from head.js is fed, line by line, to this function.  We
-  // send any such output back to the Java Robocop harness.
+  // Output from robocop_head.js is fed, line by line, to this function.
+  // We send any such output back to the Java Robocop harness.
   testScope.dump = function(str) {
     let message = { type: "Robocop:Java",
                     innerType: "progress",
@@ -76,7 +79,13 @@ function testOneFile(uri) {
 
   // Populate test environment with test harness.  The symbols defined
   // above must be present before executing the test harness.
-  _evalURI(HEAD_JS, testScope);
+  for (script of HEAD_JS) {
+    _evalURI(script, testScope);
+  }
+
+  // Required to make tests/browser/chrome/head.js not notice that it isn't
+  // running in a real Mochitest environment.
+  testScope.info = testScope.do_print;
 
   return _evalURI(uri, testScope);
 }
