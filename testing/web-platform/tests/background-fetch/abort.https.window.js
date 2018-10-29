@@ -60,3 +60,15 @@ backgroundFetchTest(async (test, backgroundFetch) => {
   });
 
 }, 'Calling BackgroundFetchRegistration.abort sets the correct fields and responses are still available');
+
+backgroundFetchTest(async (test, backgroundFetch) => {
+  const registration = await backgroundFetch.fetch(
+      uniqueId(), '/serviceworker/resources/slow-response.php');
+  assert_true(await registration.abort());
+
+  const {results} = await getMessageFromServiceWorker();
+  assert_equals(results.length, 1);
+  assert_false(results[0].response);
+  assert_equals(results[0].name, 'AbortError');
+
+}, 'An aborted fetch throws a DOM exception when accessing an incomplete record', 'sw-abort.js');
