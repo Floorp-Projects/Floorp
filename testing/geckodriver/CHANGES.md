@@ -4,6 +4,15 @@ Change log
 All notable changes to this program is documented in this file.
 
 
+Unreleased
+----------
+
+### Added
+
+- Added new endpoint `GET /session/{session id}/moz/screenshot/full`
+  for taking full document screenshots, thanks to Greg Fraley.
+
+
 0.23.0 (2018-10-03)
 -------------------
 
