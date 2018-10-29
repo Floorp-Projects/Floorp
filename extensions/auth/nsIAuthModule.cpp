@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ModuleUtils.h"
 #include "nsCRT.h"
 #include "nsIAuthModule.h"
 
-//-----------------------------------------------------------------------------
 #include "nsAuthGSSAPI.h"
 #if defined( USE_SSPI )
 #include "nsAuthSSPI.h"
@@ -16,14 +14,6 @@
 #include "nsAuthSASL.h"
 #include "nsNTLMAuthModule.h"
 #include "nsNSSComponent.h"
-
-static const mozilla::Module::CIDEntry kAuthCIDs[] = {
-  { nullptr }
-};
-
-static const mozilla::Module::ContractIDEntry kAuthContracts[] = {
-  { nullptr }
-};
 
 // static
 already_AddRefed<nsIAuthModule>
@@ -73,30 +63,4 @@ nsIAuthModule::CreateInstance(const char* aType)
   return auth.forget();
 }
 
-//-----------------------------------------------------------------------------
 mozilla::LazyLogModule gNegotiateLog("negotiateauth");
-
-// setup nspr logging ...
-static nsresult
-InitNegotiateAuth()
-{
-  return NS_OK;
-}
-
-static void
-DestroyNegotiateAuth()
-{
-  nsAuthGSSAPI::Shutdown();
-}
-
-static const mozilla::Module kAuthModule = {
-  mozilla::Module::kVersion,
-  kAuthCIDs,
-  kAuthContracts,
-  nullptr,
-  nullptr,
-  InitNegotiateAuth,
-  DestroyNegotiateAuth
-};
-
-NSMODULE_DEFN(nsAuthModule) = &kAuthModule;
