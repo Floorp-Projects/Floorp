@@ -54,6 +54,9 @@ Push Information
    The timestamp of the push to the repository that triggered this decision
    task.  Expressed as an integer seconds since the UNIX epoch.
 
+``hg_branch``
+  The mercurial branch where the revision lives in.
+
 ``build_date``
    The timestamp of the build date. Defaults to ``pushdate`` and falls back to present time of
    taskgraph invocation. Expressed as an integer seconds since the UNIX epoch.

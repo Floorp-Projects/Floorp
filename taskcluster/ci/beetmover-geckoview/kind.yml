@@ -30,9 +30,24 @@ not-for-build-platforms:
    - win64-asan-reporter-nightly/opt
 
 job-template:
-   # Beetmoving geckoview makes it available to the official maven repo. So we want beetmover to
-   # act only when the release is greenlit.
-   shipping-phase: ship
+   run-on-projects: ['mozilla-central', 'mozilla-release']
+   run-on-hg-branches:
+      by-project:
+         mozilla-release:
+            - '^GECKOVIEW_\d+_RELBRANCH$'
+         default:
+            - '.*'
+   shipping-phase:
+      by-project:
+         # Beetmoving geckoview makes it available to the official maven repo.
+         # So we want beetmover to act only when the release is greenlit. That
+         # is to say:
+         # - right after nightly builds on mozilla-central
+         # - when Fennec beta was greenlit by QA on mozilla-beta (hence the ship phase)
+         # - at every patch uplifted on the GECKOVIEW_XX_RELBRANC on mozilla-release
+         # Reminder: There is no Android/geckoview build on ESR.
+         mozilla-release: build
+         default: ship
    bucket-scope:
       by-release-level:
          production: 'project:releng:beetmover:bucket:maven-production'
