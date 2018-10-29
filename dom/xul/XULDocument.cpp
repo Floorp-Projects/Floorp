@@ -607,7 +607,18 @@ XULDocument::AddElementToDocumentPost(Element* aElement)
 nsresult
 XULDocument::AddSubtreeToDocument(nsIContent* aContent)
 {
-    NS_ASSERTION(aContent->GetUncomposedDoc() == this, "Element not in doc!");
+    MOZ_ASSERT(aContent->GetComposedDoc() == this, "Element not in doc!");
+
+    // If the content is not in the document, it must be in a shadow tree.
+    //
+    // The shadow root itself takes care of maintaining the ID tables and such,
+    // and there's no use case for localization links in shadow trees, or at
+    // least they don't work in regular HTML documents either as of today so...
+    if (MOZ_UNLIKELY(!aContent->IsInUncomposedDoc())) {
+        MOZ_ASSERT(aContent->IsInShadowTree());
+        return NS_OK;
+    }
+
     // From here on we only care about elements.
     Element* aElement = Element::FromNode(aContent);
     if (!aElement) {
