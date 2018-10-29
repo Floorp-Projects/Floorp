@@ -24,6 +24,11 @@ data class UuidMetricType(
     override val name: String,
     override val sendInPings: List<String>
 ) : CommonMetricData {
+
+    override fun defaultStorageDestinations(): List<String> {
+        return listOf("metrics")
+    }
+
     private val logger = Logger("glean/UuidMetricType")
 
     /**

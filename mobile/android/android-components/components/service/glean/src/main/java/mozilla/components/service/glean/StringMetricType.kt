@@ -23,6 +23,11 @@ data class StringMetricType(
     override val name: String,
     override val sendInPings: List<String>
 ) : CommonMetricData {
+
+    override fun defaultStorageDestinations(): List<String> {
+        return listOf("metrics")
+    }
+
     private val logger = Logger("glean/StringMetricType")
 
     companion object {
@@ -53,7 +58,7 @@ data class StringMetricType(
 
         // Delegate storing the string to the storage engine.
         StringsStorageEngine.record(
-            stores = sendInPings,
+            stores = getStorageNames(),
             category = category,
             name = name,
             value = truncatedValue
