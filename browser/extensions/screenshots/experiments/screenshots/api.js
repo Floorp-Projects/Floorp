@@ -55,7 +55,7 @@ const LibraryButton = {
     }
     const parent = libraryViewInsertionPoint.parentNode;
     const {nextSibling} = libraryViewInsertionPoint;
-    const item = win.document.createElement("toolbarbutton");
+    const item = win.document.createXULElement("toolbarbutton");
     item.className = "subviewbutton subviewbutton-iconic";
     item.addEventListener("command", () => win.openWebLinkIn(this.PAGE_TO_OPEN, "tab"));
     item.id = this.ITEM_ID;
