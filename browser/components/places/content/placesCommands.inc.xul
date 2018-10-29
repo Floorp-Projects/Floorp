@@ -27,8 +27,6 @@
   <command id="placesCmd_rename"
            oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_show:info');"
            observes="placesCmd_show:info"/>
-  <command id="placesCmd_reload"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_reload');"/>
   <command id="placesCmd_sortBy:name"
            oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_sortBy:name');"/>
   <command id="placesCmd_deleteDataHost"

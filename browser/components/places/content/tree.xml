@@ -741,8 +741,8 @@
             return;
           }
 
-          // If this node is child of a readonly container (e.g. a livemark)
-          // or cannot be moved, we must force a copy.
+          // If this node is child of a readonly container or cannot be moved,
+          // we must force a copy.
           if (!this.controller.canMoveNode(node)) {
             event.dataTransfer.effectAllowed = "copyLink";
             break;
