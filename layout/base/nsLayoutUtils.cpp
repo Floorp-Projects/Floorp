@@ -4828,8 +4828,7 @@ GetPercentBSize(const nsStyleCoord& aStyle,
   nscoord h;
   if (!GetAbsoluteCoord(bSizeCoord, h) &&
       !GetPercentBSize(bSizeCoord, f, aHorizontalAxis, h)) {
-    NS_ASSERTION(bSizeCoord.GetUnit() == eStyleUnit_Auto ||
-                 bSizeCoord.HasPercent(),
+    NS_ASSERTION(bSizeCoord.IsAutoOrEnum() || bSizeCoord.HasPercent(),
                  "unknown block-size unit");
     LayoutFrameType fType = f->Type();
     if (fType != LayoutFrameType::Viewport &&
@@ -4843,7 +4842,7 @@ GetPercentBSize(const nsStyleCoord& aStyle,
       return false;
     }
 
-    NS_ASSERTION(bSizeCoord.GetUnit() == eStyleUnit_Auto,
+    NS_ASSERTION(bSizeCoord.IsAutoOrEnum(),
                  "Unexpected block-size unit for viewport or canvas or page-content");
     // For the viewport, canvas, and page-content kids, the percentage
     // basis is just the parent block-size.
@@ -4862,8 +4861,7 @@ GetPercentBSize(const nsStyleCoord& aStyle,
     if (maxh < h)
       h = maxh;
   } else {
-    NS_ASSERTION(maxBSizeCoord.GetUnit() == eStyleUnit_None ||
-                 maxBSizeCoord.HasPercent(),
+    NS_ASSERTION(maxBSizeCoord.IsAutoOrEnum() || maxBSizeCoord.HasPercent(),
                  "unknown max block-size unit");
   }
 
@@ -4875,8 +4873,7 @@ GetPercentBSize(const nsStyleCoord& aStyle,
     if (minh > h)
       h = minh;
   } else {
-    NS_ASSERTION(minBSizeCoord.HasPercent() ||
-                 minBSizeCoord.GetUnit() == eStyleUnit_Auto,
+    NS_ASSERTION(minBSizeCoord.IsAutoOrEnum() || minBSizeCoord.HasPercent(),
                  "unknown min block-size unit");
   }
 
@@ -8453,11 +8450,11 @@ nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
         MOZ_ASSERT(grandparent && grandparent->IsRubyFrame());
         return FontSizeInflationFor(grandparent);
       }
-      nsStyleCoord stylePosWidth = f->StylePosition()->mWidth;
-      nsStyleCoord stylePosHeight = f->StylePosition()->mHeight;
-      if (stylePosWidth.GetUnit() != eStyleUnit_Auto ||
-          stylePosHeight.GetUnit() != eStyleUnit_Auto) {
-
+      WritingMode wm = f->GetWritingMode();
+      nsStyleCoord stylePosISize = f->StylePosition()->ISize(wm);
+      nsStyleCoord stylePosBSize = f->StylePosition()->BSize(wm);
+      if (stylePosISize.GetUnit() != eStyleUnit_Auto ||
+          !stylePosBSize.IsAutoOrEnum()) {
         return 1.0;
       }
     }
