@@ -563,7 +563,12 @@ nsSVGUseFrame*
 SVGUseElement::GetFrame() const
 {
   nsIFrame* frame = GetPrimaryFrame();
-  MOZ_ASSERT_IF(frame, frame->IsSVGUseFrame());
+  // We might be a plain nsSVGContainerFrame if we didn't pass the conditional
+  // processing checks.
+  if (!frame || !frame->IsSVGUseFrame()) {
+    MOZ_ASSERT_IF(frame, frame->Type() == LayoutFrameType::None);
+    return nullptr;
+  }
   return static_cast<nsSVGUseFrame*>(frame);
 }
 
