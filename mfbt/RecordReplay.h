@@ -103,15 +103,16 @@ static inline bool IsMiddleman() { return false; }
 
 // Mark a region which occurs atomically wrt the recording. No two threads can
 // be in an atomic region at once, and the order in which atomic sections are
-// executed by the various threads will be the same in the replay as in the
-// recording. These calls have no effect when not recording/replaying.
-static inline void BeginOrderedAtomicAccess();
+// executed by the various threads for the same aValue will be the same in the
+// replay as in the recording. These calls have no effect when not recording or
+// replaying.
+static inline void BeginOrderedAtomicAccess(const void* aValue);
 static inline void EndOrderedAtomicAccess();
 
 // RAII class for an atomic access.
 struct MOZ_RAII AutoOrderedAtomicAccess
 {
-  AutoOrderedAtomicAccess() { BeginOrderedAtomicAccess(); }
+  explicit AutoOrderedAtomicAccess(const void* aValue) { BeginOrderedAtomicAccess(aValue); }
   ~AutoOrderedAtomicAccess() { EndOrderedAtomicAccess(); }
 };
 
@@ -430,7 +431,7 @@ NoteContentParse16(const void* aToken,
 
 #endif
 
-MOZ_MakeRecordReplayWrapperVoid(BeginOrderedAtomicAccess, (), ())
+MOZ_MakeRecordReplayWrapperVoid(BeginOrderedAtomicAccess, (const void* aValue), (aValue))
 MOZ_MakeRecordReplayWrapperVoid(EndOrderedAtomicAccess, (), ())
 MOZ_MakeRecordReplayWrapperVoid(BeginPassThroughThreadEvents, (), ())
 MOZ_MakeRecordReplayWrapperVoid(EndPassThroughThreadEvents, (), ())

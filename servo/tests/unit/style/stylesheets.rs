@@ -17,8 +17,8 @@ use std::sync::atomic::AtomicBool;
 use style::context::QuirksMode;
 use style::error_reporting::{ParseErrorReporter, ContextualParseError};
 use style::media_queries::MediaList;
-use style::properties::{CSSWideKeyword, CustomDeclaration, DeclarationPushMode};
-use style::properties::{DeclaredValueOwned, Importance};
+use style::properties::{CSSWideKeyword, CustomDeclaration};
+use style::properties::{CustomDeclarationValue, Importance};
 use style::properties::{PropertyDeclaration, PropertyDeclarationBlock};
 use style::properties::longhands::{self, animation_timing_function};
 use style::shared_lock::SharedRwLock;
@@ -28,13 +28,13 @@ use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframePer
 use style::values::{KeyframesName, CustomIdent};
 use style::values::computed::Percentage;
 use style::values::specified::{LengthOrPercentageOrAuto, PositionComponent};
-use style::values::specified::transform::TimingFunction;
+use style::values::specified::TimingFunction;
 
 pub fn block_from<I>(iterable: I) -> PropertyDeclarationBlock
 where I: IntoIterator<Item=(PropertyDeclaration, Importance)> {
     let mut block = PropertyDeclarationBlock::new();
     for (d, i) in iterable {
-        block.push(d, i, DeclarationPushMode::Append);
+        block.push(d, i);
     }
     block
 }
@@ -113,7 +113,7 @@ fn test_parse_stylesheet() {
                         (
                             PropertyDeclaration::Custom(CustomDeclaration {
                                 name: Atom::from("a"),
-                                value: DeclaredValueOwned::CSSWideKeyword(CSSWideKeyword::Inherit),
+                                value: CustomDeclarationValue::CSSWideKeyword(CSSWideKeyword::Inherit),
                             }),
                             Importance::Important,
                         ),

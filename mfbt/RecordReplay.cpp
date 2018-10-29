@@ -42,7 +42,7 @@ namespace recordreplay {
   Macro(DefineRecordReplayControlObject, bool, (JSContext* aCx, JSObject* aObj), (aCx, aObj))
 
 #define FOR_EACH_INTERFACE_VOID(Macro)                          \
-  Macro(InternalBeginOrderedAtomicAccess, (), ())               \
+  Macro(InternalBeginOrderedAtomicAccess, (const void* aValue), (aValue)) \
   Macro(InternalEndOrderedAtomicAccess, (), ())                 \
   Macro(InternalBeginPassThroughThreadEvents, (), ())           \
   Macro(InternalEndPassThroughThreadEvents, (), ())             \

@@ -45,6 +45,9 @@ namespace recordreplay {
   _Macro(Assert)                                               \
   _Macro(AssertBytes)                                          \
                                                                \
+  /* Performed an atomic access. */                            \
+  _Macro(AtomicAccess)                                         \
+                                                               \
   /* Executed a nested callback (see Callback.h). */           \
   _Macro(ExecuteCallback)                                      \
                                                                \
