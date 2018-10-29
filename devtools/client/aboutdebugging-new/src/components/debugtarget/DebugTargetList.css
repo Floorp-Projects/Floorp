@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .debug-target-list {
-  margin-inline-start: 60px;
+  margin-inline-start: calc(var(--base-distance) * 6);
   overflow: hidden;
 }
 
