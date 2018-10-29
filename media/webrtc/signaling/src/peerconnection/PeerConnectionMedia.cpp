@@ -371,13 +371,13 @@ nsresult PeerConnectionMedia::Init(const dom::RTCConfiguration& aConfiguration)
   // setup the stun local addresses IPC async call
   InitLocalAddrs();
 
-  NrIceCtx::InitializeGlobals(mParent->GetAllowIceLoopback(),
-      ice_tcp,
-      mParent->GetAllowIceLinkLocal());
-
   // TODO(ekr@rtfm.com): need some way to set not offerer later
   // Looks like a bug in the NrIceCtx API.
-  mIceCtx = NrIceCtx::Create("PC:" + mParentName,
+  mIceCtx = NrIceCtx::Create(
+      "PC:" + mParentName,
+      mParent->GetAllowIceLoopback(),
+      ice_tcp,
+      mParent->GetAllowIceLinkLocal(),
       toNrIcePolicy(aConfiguration.mIceTransportPolicy));
   if(!mIceCtx) {
     CSFLogError(LOGTAG, "%s: Failed to create Ice Context", __FUNCTION__);
