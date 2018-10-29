@@ -15,6 +15,7 @@ let queue = new taskcluster.Queue({
 
 // Load input
 let taskId = process.env.TARGET_TASKID;
+let rank = parseInt(process.env.INDEX_RANK, 10);
 let namespaces = process.argv.slice(2);
 
 // Validate input
@@ -23,13 +24,18 @@ if (!taskId) {
   process.exit(1);
 }
 
+if (isNaN(rank)) {
+  console.log("Expected index rank as environment variable: INDEX_RANK");
+  process.exit(1);
+}
+
 // Fetch task definition to get expiration and then insert into index
 queue.task(taskId).then(task => task.expires).then(expires => {
   return Promise.all(namespaces.map(namespace => {
-    console.log("Inserting %s into index under: %s", taskId, namespace);
+    console.log("Inserting %s into index (rank %d) under: %s", taskId, rank, namespace);
     return index.insertTask(namespace, {
       taskId,
-      rank: 0,
+      rank,
       data: {},
       expires,
     });

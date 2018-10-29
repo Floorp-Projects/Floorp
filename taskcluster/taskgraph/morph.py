@@ -83,7 +83,7 @@ def derive_misc_task(task, purpose, image, taskgraph, label_to_taskid):
                 'taskclusterProxy': True,
             },
             'maxRunTime': 600,
-        }
+        },
     }
 
     # only include the docker-image dependency here if it is actually in the
@@ -132,7 +132,10 @@ def make_index_task(parent_task, taskgraph, label_to_taskid):
     task.task['scopes'] = sorted(scopes)
 
     task.task['payload']['command'] = ['insert-indexes.js'] + index_paths
-    task.task['payload']['env'] = {"TARGET_TASKID": parent_task.task_id}
+    task.task['payload']['env'] = {
+        'TARGET_TASKID': parent_task.task_id,
+        'INDEX_RANK': parent_task.task.get('extra', {}).get('index', {}).get('rank', 0),
+    }
     return task
 
 
