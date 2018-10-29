@@ -14,7 +14,7 @@ pub struct nsresult(pub u32);
 pub trait NsresultExt {
     fn failed(self) -> bool;
     fn succeeded(self) -> bool;
-    fn to_result(self) -> Result<nsresult, nsresult>;
+    fn to_result(self) -> Result<(), nsresult>;
 
     /// Get a printable name for the nsresult error code. This function returns
     /// a nsCString<'static>, which implements `Display`.
@@ -30,11 +30,11 @@ impl NsresultExt for nsresult {
         !self.failed()
     }
 
-    fn to_result(self) -> Result<nsresult, nsresult> {
+    fn to_result(self) -> Result<(), nsresult> {
         if self.failed() {
             Err(self)
         } else {
-            Ok(self)
+            Ok(())
         }
     }
 
