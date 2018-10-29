@@ -22,6 +22,7 @@ namespace dom {
 
 class ClientHandle;
 class ClientInfoAndState;
+struct PostMessageOptions;
 class Promise;
 
 template <typename t> class Sequence;
@@ -87,6 +88,11 @@ public:
   void
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
               const Sequence<JSObject*>& aTransferrable,
+              ErrorResult& aRv);
+
+  void
+  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+              const PostMessageOptions& aOptions,
               ErrorResult& aRv);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
