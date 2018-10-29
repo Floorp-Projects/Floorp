@@ -73,6 +73,9 @@ private:
   Maybe<wr::WrClipId> ClipIdAfterOverride(const Maybe<wr::WrClipId>& aClipId);
 
   Maybe<wr::WrClipId>
+  GetScrollLayer(const ActiveScrolledRoot* aASR);
+
+  Maybe<wr::WrClipId>
   DefineScrollLayers(const ActiveScrolledRoot* aASR,
                      nsDisplayItem* aItem,
                      const StackingContextHelper& aSc);
