@@ -57,8 +57,8 @@ function promisePageActionPanelEvent(eventType) {
 function promisePageActionViewChildrenVisible(panelViewNode) {
   info("promisePageActionViewChildrenVisible waiting for a child node to be visible");
   return BrowserTestUtils.waitForCondition(() => {
-    const bodyNode = panelViewNode.firstChild;
-    for (const childNode of bodyNode.childNodes) {
+    const bodyNode = panelViewNode.firstElementChild;
+    for (const childNode of bodyNode.children) {
       const bounds = window.windowUtils.getBoundsWithoutFlushing(childNode);
       if (bounds.width > 0 && bounds.height > 0) {
         return true;
