@@ -49,6 +49,8 @@
   */
   --alt-heading-icon-size: calc(var(--base-distance) * 6);
   --alt-heading-icon-gap: var(--base-distance);
+  --main-heading-icon-size: calc(var(--base-distance) * 16);
+  --main-heading-icon-gap: calc(var(--base-distance) * 3);
 }
 
 /*
@@ -106,6 +108,10 @@ a:active {
 */
 
 /* Main style for heading (i.e. h1) */
+/* +--------+-------------+
+*  | [Icon] | Lorem ipsum |
+*  +--------+-------------+
+*/
 .main-heading {
   font-size: 2.5em;
   font-weight: lighter;
@@ -113,6 +119,15 @@ a:active {
   color: var(--in-content-text-color);
   margin: 0;
   margin-bottom: .5em;
+
+  display: grid;
+  grid-template-columns: var(--main-heading-icon-size) 1fr;
+  grid-column-gap: var(--main-heading-icon-gap);
+  align-items: center;
+}
+
+.main-heading__icon {
+  width: 100%;
 }
 
 /* Main style for a subheading (i.e. h2) */
