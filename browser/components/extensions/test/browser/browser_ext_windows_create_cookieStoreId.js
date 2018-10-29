@@ -60,6 +60,28 @@ add_task(async function invalid_cookieStoreId() {
   await extension.unload();
 });
 
+add_task(async function perma_private_browsing_mode() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.privatebrowsing.autostart", true]]});
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs", "cookies"],
+    },
+    async background() {
+      await browser.test.assertRejects(
+        browser.windows.create({cookieStoreId: "firefox-container-1"}),
+        /Contextual identities are unavailable in permanent private browsing mode/,
+        "cookieStoreId cannot be a container tab ID in perma-private browsing mode");
+
+      browser.test.sendMessage("done");
+    },
+  });
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+  await SpecialPowers.popPrefEnv();
+});
+
 add_task(async function valid_cookieStoreId() {
   await SpecialPowers.pushPrefEnv({"set": [
     ["privacy.userContext.enabled", true],
