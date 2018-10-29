@@ -225,6 +225,10 @@ QuoteString(JSContext* cx, JSString* str, char quote = '\0');
 extern bool
 QuoteString(Sprinter* sp, JSString* str, char quote = '\0');
 
+// Appends the JSON quoted string to the given Sprinter.
+extern bool
+JSONQuoteString(Sprinter* sp, JSString* str);
+
 } // namespace js
 
 #endif // vm_Printer_h
