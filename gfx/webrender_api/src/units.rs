@@ -93,8 +93,8 @@ pub type WorldVector3D = TypedVector3D<f32, WorldPixel>;
 /// Offset in number of tiles.
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Tiles;
-pub type TileOffset = TypedPoint2D<u16, Tiles>;
-pub type TileRange = TypedRect<u16, Tiles>;
+pub type TileOffset = TypedPoint2D<u32, Tiles>;
+pub type TileRange = TypedRect<u32, Tiles>;
 
 /// Scaling ratio from world pixels to device pixels.
 pub type DevicePixelScale = TypedScale<f32, WorldPixel, DevicePixel>;

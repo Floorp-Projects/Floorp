@@ -157,6 +157,9 @@ task_description_schema = Schema({
     # See the attributes documentation for details.
     Optional('run-on-projects'): optionally_keyed_by('build-platform', [basestring]),
 
+    # Like `run_on_projects`, `run-on-hg-branches` defaults to "all".
+    Optional('run-on-hg-branches'): optionally_keyed_by('project', [basestring]),
+
     # The `shipping_phase` attribute, defaulting to None. This specifies the
     # release promotion phase that this task belongs to.
     Required('shipping-phase'): Any(

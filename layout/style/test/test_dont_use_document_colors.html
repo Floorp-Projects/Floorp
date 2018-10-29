@@ -14,6 +14,14 @@
   #seven {
     border: 3px solid;
   }
+  #eight {
+    border: 10px solid transparent;
+    border-image: repeating-linear-gradient(45deg, blue, blue 1%, red 1%, red 8%) 10;
+  }
+  #nine {
+    border: 10px solid blue;
+    border-image: none;
+  }
 
   /* XXX also test rgba() */
 
@@ -22,6 +30,7 @@
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=58048">Mozilla Bug 58048</a>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=255411">Mozilla Bug 255411</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1430969">Mozilla Bug 1430969</a>
 <div id="display">
 
 <div id="one">Hello</div>
@@ -31,6 +40,8 @@
 <div id="five" dir="ltr">Hello</div>
 <div id="six" dir="rtl">Hello</div>
 <div id="seven">Hello</div>
+<div id="eight">I have a border-image</div>
+<div id="nine">I do not have a border-image</div>
 
 </div>
 <pre id="test">
@@ -46,6 +57,8 @@ var cs4 = getComputedStyle(document.getElementById("four"), "");
 var cs5 = getComputedStyle(document.getElementById("five"), "");
 var cs6 = getComputedStyle(document.getElementById("six"), "");
 var cs7 = getComputedStyle(document.getElementById("seven"), "");
+var cs8 = getComputedStyle(document.getElementById("eight"), "");
+var cs9 = getComputedStyle(document.getElementById("nine"), "");
 
 function pushPrefEnvAndWait(args, cb) {
   SpecialPowers.pushPrefEnv(args, _ => {
@@ -66,7 +79,6 @@ var inputBorderRightColor, inputBorderLeftColor, inputBorderBottomColor;
 
 function part1()
 {
-
     isnot(cs1.backgroundColor, cs2.backgroundColor, "background-color applies");
     isnot(cs1.color, cs2.color, "color applies");
     isnot(cs1.borderTopColor, cs2.borderTopColor, "border-top-color applies");
@@ -114,6 +126,7 @@ function part1()
           "border-left-color applies");
     isnot(cs3.borderBottomColor, cs4.borderBottomColor,
           "border-bottom-color applies");
+    isnot(cs8.borderImageSource, cs9.borderImageSource, "border-image-source applies");
     transparentBackgroundColor = cs2.backgroundColor;
     inputBackgroundColor = cs4.backgroundColor;
     inputColor = cs4.color;
@@ -168,6 +181,7 @@ function part2()
        "border-left-color not broken on inputs");
     is(cs4.borderBottomColor, inputBorderBottomColor,
        "border-bottom-color not broken on inputs");
+    is(cs8.borderImageSource, cs9.borderImageSource, "border-image-source is blocked");
 
     SimpleTest.finish();
 }

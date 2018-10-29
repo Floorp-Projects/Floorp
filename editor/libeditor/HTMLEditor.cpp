@@ -51,7 +51,6 @@
 // Misc
 #include "mozilla/EditorUtils.h"
 #include "HTMLEditorObjectResizerUtils.h"
-#include "TextEditorTest.h"
 #include "WSRunObject.h"
 #include "nsGkAtoms.h"
 #include "nsIWidget.h"
@@ -3571,24 +3570,6 @@ HTMLEditor::ContentRemoved(nsIContent* aChild,
       htmlRules->DocumentModified();
     }
   }
-}
-
-NS_IMETHODIMP
-HTMLEditor::DebugUnitTests(int32_t* outNumTests,
-                           int32_t* outNumTestsFailed)
-{
-#ifdef DEBUG
-  NS_ENSURE_TRUE(outNumTests && outNumTestsFailed, NS_ERROR_NULL_POINTER);
-
-  TextEditorTest *tester = new TextEditorTest();
-  NS_ENSURE_TRUE(tester, NS_ERROR_OUT_OF_MEMORY);
-
-  tester->Run(this, outNumTests, outNumTestsFailed);
-  delete tester;
-  return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 void

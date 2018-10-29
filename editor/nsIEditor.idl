@@ -471,20 +471,6 @@ interface nsIEditor  : nsISupports
   /** Remove a DocumentStateListener to the editors list of doc state listeners. */
   void removeDocumentStateListener(in nsIDocumentStateListener listener);
 
-
-  /* ------------ Debug methods -------------- */
-
-  /**
-   * And a debug method -- show us what the tree looks like right now
-   */
-  void dumpContentTree();
-
-  /** Dumps a text representation of the content tree to standard out */
-  void debugDumpContent() ;
-
-  /* Run unit tests. Noop in optimized builds */
-  void debugUnitTests(out long outNumTests, out long  outNumTestsFailed);
-
   /**
    * forceCompositionEnd() force the composition end
    */

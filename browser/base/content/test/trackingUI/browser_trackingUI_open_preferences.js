@@ -3,7 +3,6 @@
 
 "use strict";
 
-const CB_PREF = "browser.contentblocking.enabled";
 const TP_PREF = "privacy.trackingprotection.enabled";
 const FB_PREF = "browser.fastblock.enabled";
 const TPC_PREF = "network.cookie.cookieBehavior";
@@ -67,7 +66,6 @@ add_task(async function testOpenPreferencesFromPrefsButton() {
 // links to about:preferences
 add_task(async function testOpenPreferencesFromAddBlockingButtons() {
   SpecialPowers.pushPrefEnv({set: [
-    [CB_PREF, true],
     [FB_PREF, false],
     [TP_PREF, false],
     [TPC_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT],

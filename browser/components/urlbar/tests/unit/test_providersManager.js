@@ -9,7 +9,11 @@ add_task(async function test_providers() {
 
   let context = createContext();
   let controller = new UrlbarController({
-    window: {},
+    browserWindow: {
+      location: {
+        href: AppConstants.BROWSER_CHROME_URL,
+      },
+    },
   });
   let resultsPromise = promiseControllerNotification(controller, "onQueryResults");
 
