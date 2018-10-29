@@ -729,7 +729,7 @@ struct SharedDepthTarget {
     refcount: usize,
 }
 
-#[cfg(feature = "debug")]
+#[cfg(debug_assertions)]
 impl Drop for SharedDepthTarget {
     fn drop(&mut self) {
         debug_assert!(thread::panicking() || self.refcount == 0);
