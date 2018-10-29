@@ -191,20 +191,12 @@
         </hbox>
         <hbox id="keepRow"
               align="center">
-          <label id="keepUntil"
-                 control="keepCookiesUntil"
-                 data-l10n-id="sitedata-keep-until"/>
-          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-          <hbox>
-            <menulist id="keepCookiesUntil"
-                      onsyncfrompreference="return gPrivacyPane.readKeepCookiesUntil();"
-                      preference="network.cookie.lifetimePolicy">
-              <menupopup>
-                <menuitem data-l10n-id="sitedata-keep-until-expire" value="0"/>
-                <menuitem data-l10n-id="sitedata-keep-until-closed" value="2"/>
-              </menupopup>
-            </menulist>
-          </hbox>
+          <checkbox id="deleteOnClose"
+                    data-l10n-id="sitedata-delete-on-close"
+                    preference="network.cookie.lifetimePolicy"
+                    onsyncfrompreference="return gPrivacyPane.readDeleteOnClose();"
+                    onsynctopreference="return gPrivacyPane.writeDeleteOnClose();"
+                    flex="1" />
         </hbox>
       </radiogroup>
     </vbox>
