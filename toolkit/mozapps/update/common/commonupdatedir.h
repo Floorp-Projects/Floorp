@@ -27,8 +27,6 @@ enum class SetPermissionsOf {
 // This function does two things. It retrieves the update directory and it sets
 // the permissions of the directory and, optionally, its contents.
 HRESULT GetCommonUpdateDirectory(const wchar_t* installPath,
-                                 const char* vendor,
-                                 const char* appName,
                                  SetPermissionsOf dirPermsToSet,
                                  mozilla::UniquePtr<wchar_t[]>& result);
 HRESULT GetUserUpdateDirectory(const wchar_t* installPath,

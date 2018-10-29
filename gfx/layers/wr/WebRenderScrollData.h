@@ -74,6 +74,7 @@ public:
   void SetEventRegionsOverride(const EventRegionsOverride& aOverride) { mEventRegionsOverride = aOverride; }
   EventRegionsOverride GetEventRegionsOverride() const { return mEventRegionsOverride; }
 
+  void SetVisibleRegion(const LayerIntRegion& aRegion) { mVisibleRegion = aRegion; }
   const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
   void SetReferentId(LayersId aReferentId) { mReferentId = Some(aReferentId); }
   Maybe<LayersId> GetReferentId() const { return mReferentId; }

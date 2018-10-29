@@ -529,7 +529,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 'crate-type %s is not permitted for %s' % (crate_type, libname),
                 context)
 
-        cargo_target_dir = context.config.topobjdir
+        cargo_target_dir = context.get('RUST_LIBRARY_TARGET_DIR', '.')
 
         dependencies = set(config.get('dependencies', {}).iterkeys())
 

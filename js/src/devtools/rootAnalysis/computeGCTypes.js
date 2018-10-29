@@ -11,11 +11,15 @@ var typeInfo_filename = scriptArgs[1] || "typeInfo.txt";
 var typeInfo = {
     'GCPointers': [],
     'GCThings': [],
+    'GCInvalidated': [],
     'NonGCTypes': {}, // unused
     'NonGCPointers': {},
     'RootedGCThings': {},
     'RootedPointers': {},
     'RootedBases': {'JS::AutoGCRooter': true},
+    'InheritFromTemplateArgs': {},
+    'OtherCSUTags': {},
+    'OtherFieldTags': {},
 
     // RAII types within which we should assume GC is suppressed, eg
     // AutoSuppressGC.
@@ -44,7 +48,7 @@ function processCSU(csu, body)
         if (tag == 'GC Pointer')
             typeInfo.GCPointers.push(csu);
         else if (tag == 'Invalidated by GC')
-            typeInfo.GCPointers.push(csu);
+            typeInfo.GCInvalidated.push(csu);
         else if (tag == 'GC Thing')
             typeInfo.GCThings.push(csu);
         else if (tag == 'Suppressed GC Pointer')
@@ -55,12 +59,16 @@ function processCSU(csu, body)
             typeInfo.RootedBases[csu] = true;
         else if (tag == 'Suppress GC')
             typeInfo.GCSuppressors[csu] = true;
+        else if (tag == 'moz_inherit_type_annotations_from_template_args')
+            typeInfo.InheritFromTemplateArgs[csu] = true;
+        else
+            addToKeyedList(typeInfo.OtherCSUTags, csu, tag);
     }
 
     for (let { 'Base': base } of (body.CSUBaseClass || []))
         addBaseClass(csu, base);
 
-    for (let field of (body.DataField || [])) {
+    for (const field of (body.DataField || [])) {
         var type = field.Field.Type;
         var fieldName = field.Field.Name[0];
         if (type.Kind == "Pointer") {
@@ -75,6 +83,24 @@ function processCSU(csu, body)
         }
         if (type.Kind == "CSU")
             addNestedStructure(csu, type.Name, fieldName);
+
+        for (const { 'Name': [ annType, tag ] } of (field.Annotation || [])) {
+            if (!(csu in typeInfo.OtherFieldTags))
+                typeInfo.OtherFieldTags[csu] = [];
+            addToKeyedList(typeInfo.OtherFieldTags[csu], fieldName, tag);
+        }
+    }
+
+    for (const funcfield of (body.FunctionField || [])) {
+        const fields = funcfield.Field;
+        // Pure virtual functions will not have field.Variable; others will.
+        for (const field of funcfield.Field) {
+            for (const {'Name': [annType, tag]} of (field.Annotation || [])) {
+                if (!(csu in typeInfo.OtherFieldTags))
+                    typeInfo.OtherFieldTags[csu] = {};
+                addToKeyedList(typeInfo.OtherFieldTags[csu], field.Name[0], tag);
+            }
+        }
     }
 }
 
@@ -139,6 +165,47 @@ for (const csu of typeInfo.GCThings)
     addGCType(csu);
 for (const csu of typeInfo.GCPointers)
     addGCPointer(csu);
+for (const csu of typeInfo.GCInvalidated)
+    addGCPointer(csu);
+
+// GC Thing and GC Pointer annotations can be inherited from template args if
+// this annotation is used. Think of Maybe<T> for example: Maybe<JSObject*> has
+// the same GC rules as JSObject*. But this needs to be done in a conservative
+// direction: Maybe<AutoSuppressGC> should not be regarding as suppressing GC
+// (because it might still be None).
+//
+// Note that there is an order-dependence here that is being mostly ignored (eg
+// Maybe<Maybe<Cell*>> -- if that is processed before Maybe<Cell*> is
+// processed, we won't get the right answer). We'll at least sort by string
+// length to make it hard to hit that case.
+var inheritors = Object.keys(typeInfo.InheritFromTemplateArgs).sort((a, b) => a.length - b.length);
+for (const csu of inheritors) {
+    // Unfortunately, we just have a string type name, not the full structure
+    // of a templatized type, so we will have to resort to loose (buggy)
+    // pattern matching.
+    //
+    // Currently, the simplest ways I know of to break this are:
+    //
+    //   foo<T>::bar<U>
+    //   foo<bar<T,U>>
+    //
+    const [_, params_str] = csu.match(/<(.*)>/);
+    for (let param of params_str.split(",")) {
+        param = param.replace(/^\s+/, '')
+        param = param.replace(/\s+$/, '')
+        const pieces = param.split("*");
+        const core_type = pieces[0];
+        const ptrdness = pieces.length - 1;
+        if (ptrdness > 1)
+            continue;
+        const paramDesc = 'template-param-' + param;
+        const why = '(inherited annotations from ' + param + ')';
+        if (typeInfo.GCThings.indexOf(core_type) != -1)
+            markGCType(csu, paramDesc, why, ptrdness, 0, "");
+        if (typeInfo.GCPointers.indexOf(core_type) != -1)
+            markGCType(csu, paramDesc, why, ptrdness + 1, 0, "");
+    }
+}
 
 // Everything that inherits from a "Rooted Base" is considered to be rooted.
 // This is for things like CustomAutoRooter and its subclasses.

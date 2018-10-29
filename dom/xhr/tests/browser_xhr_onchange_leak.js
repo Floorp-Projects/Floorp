@@ -11,10 +11,10 @@ add_task(async function test() {
   const url = "http://mochi.test:8888/browser/dom/xhr/tests/browser_xhr_onchange_leak.html";
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   let browser = gBrowser.selectedBrowser;
-  let done = await ContentTask.spawn(browser,{}, async function(browser){
+  let done = await ContentTask.spawn(browser, {}, async function(browser) {
     let doc = content.document;
     let promise = ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", true);
-    content.location = "about:home";
+    content.location = "http://example.org/";
     await promise;
     return true;
   });
