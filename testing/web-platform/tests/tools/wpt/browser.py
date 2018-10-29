@@ -264,7 +264,7 @@ class Firefox(Browser):
 
         dest = os.path.join(dest, "profiles", channel)
         if version:
-            dest = dest.join(version)
+            dest = os.path.join(dest, version)
         have_cache = False
         if os.path.exists(dest):
             if channel != "nightly":
