@@ -102,25 +102,6 @@ public class DownloadFileTest {
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
-    private UiObject downloadTitle = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId(TestHelper.getAppName() + ":id/title_template")
-            .enabled(true));
-    private UiObject downloadFileName = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId(TestHelper.getAppName() + ":id/download_dialog_file_name")
-            .enabled(true));
-    private UiObject downloadWarning = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId(TestHelper.getAppName() + ":id/download_dialog_warning")
-            .enabled(true));
-    private UiObject downloadCancelBtn = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId(TestHelper.getAppName() + ":id/download_dialog_cancel")
-            .enabled(true));
-    private UiObject downloadBtn = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId(TestHelper.getAppName() + ":id/download_dialog_download")
-            .enabled(true));
-    private UiObject completedMsg = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId(TestHelper.getAppName() + ":id/snackbar_text")
-            .enabled(true));
-
     @Test
     public void DownloadTest() throws UiObjectNotFoundException  {
         UiObject downloadIcon;
@@ -140,17 +121,22 @@ public class DownloadFileTest {
 
         downloadIcon.click();
 
-        downloadTitle.waitForExists(waitingTime);
-        Assert.assertTrue(downloadTitle.isEnabled());
-        Assert.assertTrue(downloadCancelBtn.isEnabled());
-        Assert.assertTrue(downloadBtn.isEnabled());
-        Assert.assertEquals(downloadFileName.getText(), "download.jpg");
-        Assert.assertEquals(downloadWarning.getText(),
+        // If permission dialog appears, grant it
+        if (TestHelper.permAllowBtn.waitForExists(waitingTime)) {
+            TestHelper.permAllowBtn.click();
+        }
+
+        TestHelper.downloadTitle.waitForExists(waitingTime);
+        Assert.assertTrue(TestHelper.downloadTitle.isEnabled());
+        Assert.assertTrue(TestHelper.downloadCancelBtn.isEnabled());
+        Assert.assertTrue(TestHelper.downloadBtn.isEnabled());
+        Assert.assertEquals(TestHelper.downloadFileName.getText(), "download.jpg");
+        Assert.assertEquals(TestHelper.downloadWarning.getText(),
                 "Downloaded files will not be deleted when you erase Firefox Focus history.");
-        downloadBtn.click();
-        completedMsg.waitForExists(waitingTime);
-        Assert.assertTrue(completedMsg.isEnabled());
-        Assert.assertTrue(completedMsg.getText().contains("finished"));
+        TestHelper.downloadBtn.click();
+        TestHelper.completedMsg.waitForExists(waitingTime);
+        Assert.assertTrue(TestHelper.completedMsg.isEnabled());
+        Assert.assertTrue(TestHelper.completedMsg.getText().contains("finished"));
         TestHelper.mDevice.openNotification();
         TestHelper.mDevice.waitForIdle();
         TestHelper.savedNotification.waitForExists(waitingTime);

@@ -232,6 +232,13 @@ public class ImageSelectTest {
         Assert.assertTrue(saveMenu.exists());
         saveMenu.click();
 
+        // If permission dialog appears, grant it
+        if (TestHelper.permAllowBtn.waitForExists(waitingTime)) {
+            TestHelper.permAllowBtn.click();
+            TestHelper.downloadTitle.waitForExists(waitingTime);
+            TestHelper.downloadBtn.click();
+        }
+
         TestHelper.mDevice.openNotification();
         TestHelper.savedNotification.waitForExists(waitingTime);
         TestHelper.savedNotification.swipeRight(50);

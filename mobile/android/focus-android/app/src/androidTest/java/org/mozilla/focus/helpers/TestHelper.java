@@ -94,7 +94,9 @@ public final class TestHelper {
     public static UiObject browserURLbar = mDevice.findObject(new UiSelector()
             .resourceId(getAppName() + ":id/display_url")
             .clickable(true));
-
+    public static UiObject permAllowBtn = mDevice.findObject(new UiSelector()
+            .resourceId("com.android.packageinstaller:id/permission_allow_button")
+            .clickable(true));
     public static UiObject inlineAutocompleteEditText = mDevice.findObject(new UiSelector()
             .resourceId(getAppName() + ":id/urlView")
             .focused(true)
@@ -184,6 +186,25 @@ public final class TestHelper {
             .enabled(true));
     public static UiObject identityState = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId(TestHelper.getAppName() + ":id/site_identity_state")
+            .enabled(true));
+
+    public static UiObject downloadTitle = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId(TestHelper.getAppName() + ":id/title_template")
+            .enabled(true));
+    public static UiObject downloadFileName = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId(TestHelper.getAppName() + ":id/download_dialog_file_name")
+            .enabled(true));
+    public static UiObject downloadWarning = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId(TestHelper.getAppName() + ":id/download_dialog_warning")
+            .enabled(true));
+    public static UiObject downloadCancelBtn = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId(TestHelper.getAppName() + ":id/download_dialog_cancel")
+            .enabled(true));
+    public static UiObject downloadBtn = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId(TestHelper.getAppName() + ":id/download_dialog_download")
+            .enabled(true));
+    public static UiObject completedMsg = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId(TestHelper.getAppName() + ":id/snackbar_text")
             .enabled(true));
 
     /********* Main View Menu Item Locators ***********/
