@@ -110,8 +110,9 @@
 
     <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
          instead of the short title when it has enough space. Android recommends a maximum length
-         of 25 characters. -->
-    <string name="shortcut_erase_and_open_long_label">Erase and open Focus</string>
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Erase and open %1$s</string>
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
@@ -195,7 +196,7 @@
     <!-- Summary for the toggle to enable autocomplete for the topsites list -->
     <string name="preference_autocomplete_topsite_summary">Enable to autocomplete more than 450 popular URLs in the address bar.</string>
 
-    <!-- Title of "switch" preference that enables/disables autocomplete for the user-dfined list -->
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">For Sites You Add</string>
 
     <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
@@ -763,20 +764,14 @@ be temporary, and you can try again later.</li>
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Turn off tips on the start screen</string>
 
-    <!-- Displayed in a snackbar when a user opens a new tab, gives action to switch to the newly opened tab -->
+    <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">New tab opened</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">Switch</string>
 
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Switch to link in new tab immediately</string>
-
-    <!-- deprecated strings -->
-    <string name="tip_disable_tips">Turn off tips on the %1$s start screen</string>
-    <string name="preference_switch_autocomplete">Autocomplete</string>
-    <string name="preference_category_autocomplete_preinstalled">Default URL List</string>
-    <string name="preference_autocomplete_preinstalled_summary">Enable to have %1$s autocomplete over 450 popular URLs in the address bar.</string>
-    <string name="preference_category_autocomplete_custom_urls">Custom URLs</string>
-    <string name="preference_autocomplete_subitem_customlist">Custom URLs</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_category_safe_browsing">Safe Browsing</string>
@@ -797,7 +792,7 @@ be temporary, and you can try again later.</li>
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Tab Crashed</string>
     <!-- Headline for the tab crash report screen -->
-    <string name="tab_crash_report_headline">Sorry. We\'re having a problem with this tab.</string>
+    <string name="tab_crash_report_headline">Sorry. We’re having a problem with this tab.</string>
     <!-- Subtitle for the tab crash report screen -->
     <string name="tab_crash_report_description">As a private browser, we never save and cannot restore this tab.</string>
     <!-- Label for button to close the tab-->
