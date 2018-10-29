@@ -861,23 +861,29 @@ public class GeckoPreferences
                         pref.setEnabled(isHealthReportEnabled);
 
                         // Instruct the user on how to enable Health Report
-                        final String RIGHT_CHEVRON_SPACE_PADDED = " > ";
-                        StringBuilder healthReportSettingPath = new StringBuilder()
-                                .append(getString(R.string.pref_category_privacy_short))
-                                .append(RIGHT_CHEVRON_SPACE_PADDED)
-                                .append(getString(R.string.pref_category_datareporting))
-                                .append(RIGHT_CHEVRON_SPACE_PADDED)
-                                .append(getString(R.string.datareporting_fhr_title));
-                        SpannableString boldSettingsLocation = new SpannableString(healthReportSettingPath);
-                        boldSettingsLocation.setSpan(new StyleSpan(Typeface.BOLD),
-                                0, healthReportSettingPath.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+                        final String healthReportSettingPath =
+                                getString(R.string.pref_feature_tips_notification_enabling_path);
+                        final String enableHealthReportHint =
+                                getString(R.string.pref_feature_tips_notification_enabling_hint);
+
+                        final int healthReportPathFirstCharIndex =
+                                enableHealthReportHint.indexOf(healthReportSettingPath);
+                        if (healthReportPathFirstCharIndex < 0) {
+                            return;
+                        }
+                        final int healthReportPathLastCharIndex =
+                                healthReportPathFirstCharIndex + healthReportSettingPath.length();
+
+                        final SpannableString enableHealthReportBoldedHint =
+                                new SpannableString(enableHealthReportHint);
+                        enableHealthReportBoldedHint.setSpan(new StyleSpan(Typeface.BOLD),
+                                healthReportPathFirstCharIndex, healthReportPathLastCharIndex,
+                                Spannable.SPAN_INCLUSIVE_INCLUSIVE);
 
                         SpannableStringBuilder summaryTextBuilder = new SpannableStringBuilder()
                                 .append(getString(R.string.pref_feature_tips_notification_summary))
                                 .append("\n\n")
-                                .append(getString(R.string.pref_feature_tips_notification_enabling_hint))
-                                .append(" ")
-                                .append(boldSettingsLocation);
+                                .append(enableHealthReportBoldedHint);
 
                         pref.setSummary(summaryTextBuilder);
                     }
