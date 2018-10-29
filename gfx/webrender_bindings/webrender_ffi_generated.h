@@ -972,7 +972,7 @@ struct ByteSlice {
   }
 };
 
-using TileOffset = TypedPoint2D<uint16_t, Tiles>;
+using TileOffset = TypedPoint2D<uint32_t, Tiles>;
 
 using DeviceUintRect = TypedRect<uint32_t, DevicePixel>;
 
