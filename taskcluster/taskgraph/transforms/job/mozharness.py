@@ -147,8 +147,12 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     # android-build).
     taskdesc['worker'].setdefault('docker-image', {'in-tree': 'debian7-amd64-build'})
 
+    taskdesc['worker'].setdefault('artifacts', []).append({
+        'name': 'public/logs',
+        'path': '{workdir}/logs/'.format(**run),
+        'type': 'directory'
+    })
     worker['taskcluster-proxy'] = run.get('taskcluster-proxy')
-
     docker_worker_add_artifacts(config, job, taskdesc)
     docker_worker_add_workspace_cache(config, job, taskdesc,
                                       extra=run.get('extra-workspace-cache-key'))
@@ -253,6 +257,11 @@ def mozharness_on_generic_worker(config, job, taskdesc):
 
     worker = taskdesc['worker']
 
+    taskdesc['worker'].setdefault('artifacts', []).append({
+        'name': 'public/logs',
+        'path': 'logs',
+        'type': 'directory'
+    })
     if not worker.get('skip-artifacts', False):
         generic_worker_add_artifacts(config, job, taskdesc)
     support_vcs_checkout(config, job, taskdesc)
