@@ -5291,6 +5291,8 @@ nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
                                                 bool aBlocked,
                                                 nsIURI* aURIHint)
 {
+  MOZ_ASSERT(aURIHint);
+
   nsCOMPtr<nsIDocShell> docShell = GetDocShell();
   if (!docShell) {
     return;
@@ -5320,10 +5322,8 @@ nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
   }
   securityUI->GetState(&state);
   nsAutoString origin;
-  origin.SetIsVoid(true);
-  if (aURIHint) {
-    nsContentUtils::GetUTFOrigin(aURIHint, origin);
-  }
+  nsContentUtils::GetUTFOrigin(aURIHint, origin);
+
   bool unblocked = false;
   if (aState == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
     doc->SetHasTrackingContentBlocked(aBlocked, origin);
