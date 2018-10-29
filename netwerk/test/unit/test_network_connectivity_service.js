@@ -54,4 +54,8 @@ add_task(async function testDNS() {
 
   equal(ncs.DNSv4, Ci.nsINetworkConnectivityService.OK, "Check DNSv4 support (expect OK)");
   equal(ncs.DNSv6, Ci.nsINetworkConnectivityService.OK, "Check DNSv6 support (expect OK)");
+
+  // It's difficult to check when there's no connectivity in automation,
+  equal(ncs.IPv4, Ci.nsINetworkConnectivityService.OK, "Check IPv4 support (expect OK)");
+  equal(ncs.IPv6, Ci.nsINetworkConnectivityService.OK, "Check IPv6 support (expect OK)");
 });
