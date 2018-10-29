@@ -2072,6 +2072,10 @@ function getUserContextIdForCookieStoreId(extension, cookieStoreId, isPrivateBro
   }
 
   if (isContainerCookieStoreId(cookieStoreId)) {
+    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
+      // Container tabs are not supported in perma-private browsing mode - bug 1320757
+      throw new ExtensionError(`Contextual identities are unavailable in permanent private browsing mode`);
+    }
     let userContextId = getContainerForCookieStoreId(cookieStoreId);
     if (!userContextId) {
       throw new ExtensionError(`No cookie store exists with ID ${cookieStoreId}`);
