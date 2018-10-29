@@ -1984,21 +1984,6 @@ class BaseScript(ScriptMixin, LogMixin, object):
         elif error_if_missing:
             self.error("No such method %s!" % method_name)
 
-    @PostScriptRun
-    def copy_logs_to_upload_dir(self):
-        """Copies logs to the upload directory"""
-        self.info("Copying logs to upload dir...")
-        log_files = ['localconfig.json']
-        for log_name in self.log_obj.log_files.keys():
-            log_files.append(self.log_obj.log_files[log_name])
-        dirs = self.query_abs_dirs()
-        for log_file in log_files:
-            self.copy_to_upload_dir(os.path.join(dirs['abs_log_dir'], log_file),
-                                    dest=os.path.join('logs', log_file),
-                                    short_desc='%s log' % log_name,
-                                    long_desc='%s log' % log_name,
-                                    max_backups=self.config.get("log_max_rotate", 0))
-
     def run_action(self, action):
         if action not in self.actions:
             self.action_message("Skipping %s step." % action)
@@ -2118,8 +2103,6 @@ class BaseScript(ScriptMixin, LogMixin, object):
 
             if not post_success:
                 self.fatal("Aborting due to failure in post-run listener.")
-        if self.config.get("copy_logs_post_run", True):
-            self.copy_logs_to_upload_dir()
 
         return self.return_code
 
