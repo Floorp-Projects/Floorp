@@ -279,11 +279,9 @@ pref("browser.urlbar.ctrlCanonizesURLs", true);
 pref("browser.urlbar.autoFill", true);
 pref("browser.urlbar.speculativeConnect.enabled", true);
 
-// 0: Match anywhere (e.g., middle of words)
-// 1: Match on word boundaries and then try matching anywhere
-// 2: Match only on word boundaries (e.g., after / or .)
-// 3: Match at the beginning of the url or title
-pref("browser.urlbar.matchBehavior", 1);
+// Whether bookmarklets should be filtered out of Address Bar matches.
+// This is enabled for security reasons, when true it is still possible to
+// search for bookmarklets typing "javascript: " followed by the actual query.
 pref("browser.urlbar.filter.javascript", true);
 
 // the maximum number of results to show in autocomplete when doing richResults
