@@ -8059,7 +8059,7 @@ const SafeBrowsingNotificationBox = {
     let notification = notificationBox.appendNotification(
       title,
       value,
-      "chrome://global/skin/icons/blacklist_favicon.png",
+      "chrome://global/skin/icons/blocklist_favicon.png",
       notificationBox.PRIORITY_CRITICAL_HIGH,
       buttons
     );
