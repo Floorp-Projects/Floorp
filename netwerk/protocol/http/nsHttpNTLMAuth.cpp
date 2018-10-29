@@ -35,6 +35,7 @@
 #include "nsIChannel.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/net/HttpAuthUtils.h"
+#include "mozilla/ClearOnShutdown.h"
 
 namespace mozilla {
 namespace net {
@@ -44,6 +45,8 @@ static const char kAllowNonFqdn[] = "network.automatic-ntlm-auth.allow-non-fqdn"
 static const char kTrustedURIs[]  = "network.automatic-ntlm-auth.trusted-uris";
 static const char kForceGeneric[] = "network.auth.force-generic-ntlm";
 static const char kSSOinPBmode[] = "network.auth.private-browsing-sso";
+
+StaticRefPtr<nsHttpNTLMAuth> nsHttpNTLMAuth::gSingleton;
 
 static bool
 IsNonFqdn(nsIURI *uri)
@@ -143,6 +146,21 @@ public:
 NS_IMPL_ISUPPORTS0(nsNTLMSessionState)
 
 //-----------------------------------------------------------------------------
+
+already_AddRefed<nsIHttpAuthenticator>
+nsHttpNTLMAuth::GetOrCreate()
+{
+    nsCOMPtr<nsIHttpAuthenticator> authenticator;
+    if (gSingleton) {
+      authenticator = gSingleton;
+    } else {
+      gSingleton = new nsHttpNTLMAuth();
+      ClearOnShutdown(&gSingleton);
+      authenticator = gSingleton;
+    }
+
+    return authenticator.forget();
+}
 
 NS_IMPL_ISUPPORTS(nsHttpNTLMAuth, nsIHttpAuthenticator)
 
