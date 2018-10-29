@@ -140,3 +140,6 @@ window.addEventListener("DOMContentLoaded", () => {
 window.addEventListener("unload", () => {
   AboutDebugging.destroy();
 }, {once: true});
+
+// Expose AboutDebugging to tests so that they can access to the store.
+window.AboutDebugging = AboutDebugging;
