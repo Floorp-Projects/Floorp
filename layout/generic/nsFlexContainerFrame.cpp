@@ -265,6 +265,19 @@ AddChecked(nscoord aFirst, nscoord aSecond)
   return checkedResult.isValid() ? checkedResult.value() : nscoord_MAX;
 }
 
+// Check if the size is auto or it is a keyword in the block axis.
+// |aIsInline| should represent whether aSize is in the inline axis, from the
+// perspective of the writing mode of the flex item that the size comes from.
+//
+// max-content and min-content should behave as property's initial value.
+// Bug 567039: We treat -moz-fit-content and -moz-available as property's
+// initial value for now.
+static inline bool
+IsAutoOrEnumOnBSize(const nsStyleCoord& aSize, bool aIsInline) {
+  return aSize.GetUnit() == eStyleUnit_Auto ||
+         (!aIsInline && aSize.GetUnit() == eStyleUnit_Enumerated);
+}
+
 // Helper-macros to let us pick one of two expressions to evaluate
 // (an inline-axis expression vs. a block-axis expression), to get a
 // main-axis or cross-axis component.
@@ -2086,8 +2099,9 @@ FlexItem::CheckForMinSizeAuto(const ReflowInput& aFlexItemReflowInput,
   // main axis. But since we only care whether it's 'visible', we can check
   // either subproperty -- because they must be BOTH 'visible' or BOTH
   // non-'visible' due to the way the subproperties interact.
-  mNeedsMinSizeAutoResolution = (mainMinSize.GetUnit() == eStyleUnit_Auto &&
-                                 disp->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE);
+  mNeedsMinSizeAutoResolution =
+    IsAutoOrEnumOnBSize(mainMinSize, IsInlineAxisMainAxis()) &&
+    disp->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE;
 }
 
 nscoord
@@ -4384,7 +4398,7 @@ nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   const nsStyleCoord& bsize = stylePos->BSize(wm);
   if (bsize.HasPercent() ||
       (StyleDisplay()->IsAbsolutelyPositionedStyle() &&
-       eStyleUnit_Auto == bsize.GetUnit() &&
+       bsize.IsAutoOrEnum() &&
        eStyleUnit_Auto != stylePos->mOffset.GetBStartUnit(wm) &&
        eStyleUnit_Auto != stylePos->mOffset.GetBEndUnit(wm))) {
     AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
