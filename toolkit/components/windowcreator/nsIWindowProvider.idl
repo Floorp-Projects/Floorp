@@ -14,12 +14,12 @@
 #include "nsISupports.idl"
 
 %{ C++
-class nsDocShellLoadState;
+class nsDocShellLoadInfo;
 %}
 
 interface mozIDOMWindowProxy;
 interface nsIURI;
-native nsDocShellLoadStatePtr(nsDocShellLoadState*);
+native nsDocShellLoadInfoPtr(nsDocShellLoadInfo*);
 
 /**
  * The nsIWindowProvider interface exists so that the window watcher's default
@@ -76,7 +76,7 @@ interface nsIWindowProvider : nsISupports
    *        the feature string to the window it returns in any way it sees fit.
    *        See the nsIWindowWatcher interface for details on feature strings.
    *
-   * @param aLoadState Specify setup information of the load in the new window
+   * @param aLoadInfo Specify setup information of the load in the new window
    *
    * @param aWindowIsNew [out] Whether the window being returned was just
    *        created by the window provider implementation.  This can be used by
@@ -106,6 +106,6 @@ interface nsIWindowProvider : nsISupports
                                    in AString aName,
                                    in AUTF8String aFeatures,
                                    in boolean aForceNoOpener,
-                                   in nsDocShellLoadStatePtr aLoadState,
+                                   in nsDocShellLoadInfoPtr aLoadInfo,
                                    out boolean aWindowIsNew);
 };

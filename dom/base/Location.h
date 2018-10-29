@@ -17,7 +17,6 @@
 
 class nsIDocShell;
 class nsIURI;
-class nsDocShellLoadState;
 
 namespace mozilla {
 namespace dom {
@@ -168,7 +167,6 @@ protected:
   // Note, this method can return NS_OK with a null value for aURL. This happens
   // if the docShell is null.
   nsresult GetURI(nsIURI** aURL, bool aGetInnermostURI = false);
-
   void SetURI(nsIURI* aURL, nsIPrincipal& aSubjectPrincipal,
               ErrorResult& aRv, bool aReplace = false);
   void SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
@@ -186,7 +184,7 @@ protected:
   // Check whether it's OK to load the given url with the given subject
   // principal, and if so construct the right nsDocShellLoadInfo for the load
   // and return it.
-  already_AddRefed<nsDocShellLoadState> CheckURL(nsIURI *url,
+  already_AddRefed<nsDocShellLoadInfo> CheckURL(nsIURI *url,
                                                 nsIPrincipal& aSubjectPrincipal,
                                                 ErrorResult& aRv);
 

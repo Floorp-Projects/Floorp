@@ -5947,10 +5947,3 @@ pref("dom.datatransfer.mozAtAPIs", true);
 #ifdef MOZ_LIBPRIO
 pref("prio.enabled", false);
 #endif
-
-#ifdef NIGHTLY_BUILD
-// Bug 1499552; add a dummy pref to verify that collection of preferences
-// via telemetry is working as expected.
-pref("app.normandy.test.with_true_default", true);
-pref("app.normandy.test.with_false_default", false);
-#endif

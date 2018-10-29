@@ -18,6 +18,7 @@
 
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ClientState.h"
+#include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -230,6 +231,13 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   mInner->PostMessage(std::move(data), clientInfo.ref(), clientState.ref());
 }
 
+void
+ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                           const PostMessageOptions& aOptions,
+                           ErrorResult& aRv)
+{
+  PostMessage(aCx, aMessage, aOptions.mTransfer, aRv);
+}
 
 const ServiceWorkerDescriptor&
 ServiceWorker::Descriptor() const

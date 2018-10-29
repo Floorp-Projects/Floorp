@@ -24,6 +24,7 @@ namespace dom {
 class ClonedMessageData;
 class MessagePortChild;
 class MessagePortIdentifier;
+struct PostMessageOptions;
 class PostMessageRunnable;
 class SharedMessagePortMessage;
 class StrongWorkerRef;
@@ -56,6 +57,11 @@ public:
   void
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
               const Sequence<JSObject*>& aTransferable,
+              ErrorResult& aRv);
+
+  void
+  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+              const PostMessageOptions& aOptions,
               ErrorResult& aRv);
 
   void Start();

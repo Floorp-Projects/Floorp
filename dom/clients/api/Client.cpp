@@ -12,6 +12,7 @@
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
+#include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
@@ -140,6 +141,14 @@ Client::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 
   EnsureHandle();
   mHandle->PostMessage(data, workerPrivate->GetServiceWorkerDescriptor());
+}
+
+void
+Client::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                    const PostMessageOptions& aOptions,
+                    ErrorResult& aRv)
+{
+  PostMessage(aCx, aMessage, aOptions.mTransfer, aRv);
 }
 
 VisibilityState

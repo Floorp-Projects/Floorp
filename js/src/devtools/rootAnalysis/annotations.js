@@ -427,3 +427,15 @@ function listNonGCPointers() {
         'NPIdentifier',
     ];
 }
+
+function isJSNative(mangled)
+{
+    // _Z...E = function
+    // 9JSContext = JSContext*
+    // j = uint32
+    // PN2JS5Value = JS::Value*
+    //   P = pointer
+    //   N2JS = JS::
+    //   5Value = Value
+    return mangled.endsWith("P9JSContextjPN2JS5ValueE") && mangled.startsWith("_Z");
+}

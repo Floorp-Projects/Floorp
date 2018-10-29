@@ -316,7 +316,7 @@ CanonicalizeNaN(double d)
  *   conditional move (not speculated) to zero the payload register if the type
  *   doesn't match.
  */
-union MOZ_NON_PARAM alignas(8) Value
+union alignas(8) Value
 {
   private:
     uint64_t asBits_;
@@ -929,7 +929,7 @@ union MOZ_NON_PARAM alignas(8) Value
     bool isPrivateGCThing() const {
         return toTag() == JSVAL_TAG_PRIVATE_GCTHING;
     }
-} JS_HAZ_GC_POINTER;
+} JS_HAZ_GC_POINTER MOZ_NON_PARAM;
 
 static_assert(sizeof(Value) == 8,
               "Value size must leave three tag bits, be a binary power, and "

@@ -692,7 +692,7 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
     }
 
     mozilla::UniquePtr<wchar_t[]> updateDir;
-    HRESULT permResult = GetCommonUpdateDirectory(installDir, nullptr, nullptr,
+    HRESULT permResult = GetCommonUpdateDirectory(installDir,
                                                   SetPermissionsOf::AllFilesAndDirs,
                                                   updateDir);
     if (FAILED(permResult)) {
@@ -787,7 +787,6 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
     }
     HRESULT permResult = GetCommonUpdateDirectory(gotInstallDir ? argv[3]
                                                                 : nullptr,
-                           nullptr, nullptr,
                            SetPermissionsOf::AllFilesAndDirs, updateDir);
     if (FAILED(permResult)) {
       LOG_WARN(("Unable to set the permissions on the update directory "

@@ -361,7 +361,7 @@ int NS_main(int argc, NS_tchar **argv)
   if (!NS_tstrcmp(argv[1], NS_T("create-update-dir"))) {
 #ifdef XP_WIN
     mozilla::UniquePtr<wchar_t[]> updateDir;
-    HRESULT result = GetCommonUpdateDirectory(argv[2], nullptr, nullptr,
+    HRESULT result = GetCommonUpdateDirectory(argv[2],
                                               SetPermissionsOf::AllFilesAndDirs,
                                               updateDir);
     return SUCCEEDED(result) ? 0 : 1;

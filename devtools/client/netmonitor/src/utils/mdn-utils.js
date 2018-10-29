@@ -192,7 +192,7 @@ function getHTTPStatusCodeURL(statusCode, panelId) {
  * @return {string} the MDN URL of the Timings tag for Network Monitor.
  */
 function getNetMonitorTimingsURL() {
-  return `${MDN_URL}Tools/Network_Monitor${getGAParams()}#Timings`;
+  return `${MDN_URL}Tools/Network_Monitor/request_details${getGAParams()}#Timings`;
 }
 
 /**
@@ -201,7 +201,7 @@ function getNetMonitorTimingsURL() {
  * @return {string} The MDN URL for the documentation of Performance Analysis.
  */
 function getPerformanceAnalysisURL() {
-  return `${MDN_URL}Tools/Network_Monitor${getGAParams()}#Performance_analysis`;
+  return `${MDN_URL}Tools/Network_Monitor/Performance_analysis${getGAParams()}`;
 }
 
 /**
@@ -210,7 +210,8 @@ function getPerformanceAnalysisURL() {
  * @return {string} The MDN URL for the documentation of Filter box.
  */
 function getFilterBoxURL() {
-  return `${MDN_URL}Tools/Network_Monitor${getGAParams()}#Filtering_by_properties`;
+  return `${MDN_URL}Tools/Network_Monitor/request_list${getGAParams()}` +
+    `#Filtering_by_properties`;
 }
 
 module.exports = {

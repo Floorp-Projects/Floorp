@@ -36,8 +36,7 @@ public:
                    const nsAString& aCallerOrigin,
                    nsGlobalWindowOuter* aTargetWindow,
                    nsIPrincipal* aProvidedPrincipal,
-                   nsIDocument* aSourceDocument,
-                   bool aTrustedCaller);
+                   nsIDocument* aSourceDocument);
 
 private:
   ~PostMessageEvent();
@@ -54,7 +53,6 @@ private:
   RefPtr<nsGlobalWindowOuter> mTargetWindow;
   nsCOMPtr<nsIPrincipal> mProvidedPrincipal;
   nsCOMPtr<nsIDocument> mSourceDocument;
-  bool mTrustedCaller;
 };
 
 } // namespace dom

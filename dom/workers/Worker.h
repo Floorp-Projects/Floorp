@@ -19,6 +19,7 @@
 namespace mozilla {
 namespace dom {
 
+struct PostMessageOptions;
 struct WorkerOptions;
 class WorkerPrivate;
 
@@ -41,6 +42,11 @@ public:
   void
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
               const Sequence<JSObject*>& aTransferable,
+              ErrorResult& aRv);
+
+  void
+  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+              const PostMessageOptions& aOptions,
               ErrorResult& aRv);
 
   void

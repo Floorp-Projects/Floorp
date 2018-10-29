@@ -957,8 +957,8 @@ nsUpdateProcessor::FixUpdateDirectoryPerms(bool aShouldUseService)
         // In the event that the directory is owned by this user, we may be able
         // to fix things without the maintenance service
         mozilla::UniquePtr<wchar_t[]> updateDir;
-        HRESULT permResult = GetCommonUpdateDirectory(mInstallPath.get(), nullptr,
-                               nullptr, SetPermissionsOf::AllFilesAndDirs,
+        HRESULT permResult = GetCommonUpdateDirectory(mInstallPath.get(),
+                               SetPermissionsOf::AllFilesAndDirs,
                                updateDir);
         if (SUCCEEDED(permResult)) {
           LOG(("Successfully fixed permissions from within Firefox\n"));
