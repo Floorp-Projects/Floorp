@@ -4,7 +4,6 @@
  * See also Bug 1175858.
  */
 
-const CB_PREF = "browser.contentblocking.enabled";
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PB_PREF = "privacy.trackingprotection.enabled";
 const NCB_PREF = "network.cookie.cookieBehavior";
@@ -17,7 +16,6 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(TP_PREF);
   Services.prefs.clearUserPref(TP_PB_PREF);
   Services.prefs.clearUserPref(NCB_PREF);
-  Services.prefs.clearUserPref(CB_PREF);
   Services.prefs.clearUserPref(ContentBlocking.prefIntroCount);
 });
 
@@ -168,8 +166,6 @@ add_task(async function testNormalBrowsing() {
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
   Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
   ok(ThirdPartyCookies.enabled, "ThirdPartyCookies is enabled after setting the pref");
-  Services.prefs.setBoolPref(CB_PREF, true);
-  ok(ContentBlocking.enabled, "CB is enabled after setting the pref");
   Services.prefs.setIntPref(ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS);
 
   await testTrackingProtectionAnimation(gBrowser);
@@ -190,8 +186,6 @@ add_task(async function testPrivateBrowsing() {
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
   Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
   ok(ThirdPartyCookies.enabled, "ThirdPartyCookies is enabled after setting the pref");
-  Services.prefs.setBoolPref(CB_PREF, true);
-  ok(TrackingProtection.enabled, "CB is enabled after setting the pref");
   Services.prefs.setIntPref(ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS);
 
   await testTrackingProtectionAnimation(tabbrowser);

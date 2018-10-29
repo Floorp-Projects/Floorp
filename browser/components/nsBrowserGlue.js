@@ -1364,9 +1364,6 @@ BrowserGlue.prototype = {
     let cookieBehavior = Services.prefs.getIntPref("network.cookie.cookieBehavior");
     Services.telemetry.getHistogramById("COOKIE_BEHAVIOR").add(cookieBehavior);
 
-    let contentBlockingEnabled = Services.prefs.getBoolPref("browser.contentblocking.enabled");
-    Services.telemetry.scalarSet("contentblocking.enabled", contentBlockingEnabled);
-
     let exceptions = 0;
     for (let permission of Services.perms.enumerator) {
       if (permission.type == "trackingprotection") {
