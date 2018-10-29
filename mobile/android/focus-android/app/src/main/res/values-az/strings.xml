@@ -43,11 +43,6 @@
   <string name="preference_state_on">Açıq</string>
   <string name="preference_state_off">Bağlı</string>
   <string name="preference_subitem_autocomplete">Ünvan Avtomatik Tamamlama</string>
-  <string name="preference_switch_autocomplete">Avtomatik Tamamlama</string>
-  <string name="preference_category_autocomplete_preinstalled">Ön seçili ünvan siyahısı</string>
-  <string name="preference_autocomplete_preinstalled_summary">%1$s səyyahının 450 məşhur ünvanı avtomatik tamamlamasını aktivləşdirin.</string>
-  <string name="preference_category_autocomplete_custom_urls">Fərdi Ünvanlar</string>
-  <string name="preference_autocomplete_subitem_customlist">Fərdi Ünvanlar</string>
   <string name="preference_autocomplete_action_add">+ Fərdi ünvan əlavə et</string>
   <string name="preference_autocomplete_title_add">Fərdi ünvan əlavə et</string>
   <string name="custom_autocomplete_quick_add">Fərdi ünvan əlavə et</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Çox işlətdiyiniz saytlar üçün avto doldurma\n Ünvan sətrindəki hər hansı bir ünvana uzun basın</string>
   <string name="tip_open_in_new_tab">Keçidi yeni vərəqdə açın\n Səhifədə hər hansı bir keçidə uzun basın</string>
   <string name="tip_request_desktop">Bütöv masaüstü saytını görmək istəyirsiniz?%1$s Menyu &gt; Masaüstü saytını istə</string>
-  <string name="tip_disable_tips">%1$s ana ekranındakı məsləhətləri söndür</string>
 </resources>

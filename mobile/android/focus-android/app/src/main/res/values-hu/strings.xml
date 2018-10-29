@@ -43,11 +43,6 @@
   <string name="preference_state_on">Be</string>
   <string name="preference_state_off">Ki</string>
   <string name="preference_subitem_autocomplete">Automatikus URL kiegészítés</string>
-  <string name="preference_switch_autocomplete">Automatikus kiegészítés</string>
-  <string name="preference_category_autocomplete_preinstalled">Alapértelmezett URL lista</string>
-  <string name="preference_autocomplete_preinstalled_summary">Engedélyezés, hogy a %1$s 450 népszerű URL-t automatikusan kiegészítsen a címsávban.</string>
-  <string name="preference_category_autocomplete_custom_urls">Egyéni URL-ek</string>
-  <string name="preference_autocomplete_subitem_customlist">Egyéni URL-ek</string>
   <string name="preference_autocomplete_action_add">+ Egyéni URL hozzáadása</string>
   <string name="preference_autocomplete_title_add">Egyéni URL hozzáadása</string>
   <string name="custom_autocomplete_quick_add">Egyéni URL hozzáadása</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">URL-ek automatikus kiegészítése a leggyakrabban használt oldalaknál\nNyomja meg hosszan az URL-t a címsorban</string>
   <string name="tip_open_in_new_tab">Nyissa meg a hivatkozást új lapon\nNyomja meg hosszan bármelyik hivatkozást az oldalon</string>
   <string name="tip_request_desktop">Inkább az asztali oldalt látná?%1$s Menü &gt; Asztali oldal kérése</string>
-  <string name="tip_disable_tips">A tippek kikapcsolása a %1$s kezdőképernyőjén</string>
 </resources>

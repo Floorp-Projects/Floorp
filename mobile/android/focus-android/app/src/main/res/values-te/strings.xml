@@ -40,10 +40,6 @@
   <string name="preference_state_on">చేతనం</string>
   <string name="preference_state_off">అచేతనం</string>
   <string name="preference_subitem_autocomplete">URL స్వయంపూర్తి</string>
-  <string name="preference_switch_autocomplete">స్వయంపూర్తి</string>
-  <string name="preference_category_autocomplete_preinstalled">అప్రమేయ URL జాబితా</string>
-  <string name="preference_category_autocomplete_custom_urls">ఇష్టానుసారం URLలు</string>
-  <string name="preference_autocomplete_subitem_customlist">ఇష్టానుసారం URLs</string>
   <string name="preference_autocomplete_action_add">+ఇష్టానుసారమైన URLను జోడించండి</string>
   <string name="preference_autocomplete_title_add">ఇష్టానుసారమైన URLను జోడించండి</string>
   <string name="custom_autocomplete_quick_add">ఇష్టానుసారమైన URLను జోడించండి</string>

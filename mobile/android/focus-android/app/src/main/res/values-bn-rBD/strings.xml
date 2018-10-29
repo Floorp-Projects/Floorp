@@ -41,11 +41,6 @@
   <string name="preference_state_on">চালু</string>
   <string name="preference_state_off">বন্ধ</string>
   <string name="preference_subitem_autocomplete">URL অটোকমপ্লিট</string>
-  <string name="preference_switch_autocomplete">অটোকমপ্লিট</string>
-  <string name="preference_category_autocomplete_preinstalled">ডিফল্ট URL লিস্ট</string>
-  <string name="preference_autocomplete_preinstalled_summary">অ্যাড্রেস বারে 450 টি জনপ্রিয় URLs এর উপরে %1$s স্বতঃপূর্ণ থাকতে সক্ষম।</string>
-  <string name="preference_category_autocomplete_custom_urls">কাস্টোম URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">কাস্টোম URLs</string>
   <string name="preference_autocomplete_action_add">+ কাস্টোম URL যোগ করুন</string>
   <string name="preference_autocomplete_title_add">কাস্টোম URL যোগ করুন</string>
   <string name="custom_autocomplete_quick_add">কাস্টোম URL যোগ করুন</string>

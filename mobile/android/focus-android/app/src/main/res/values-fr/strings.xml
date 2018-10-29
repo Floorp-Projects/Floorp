@@ -43,11 +43,6 @@
   <string name="preference_state_on">Activée</string>
   <string name="preference_state_off">Désactivée</string>
   <string name="preference_subitem_autocomplete">Saisie semi-automatique des adresses</string>
-  <string name="preference_switch_autocomplete">Saisie semi-automatique</string>
-  <string name="preference_category_autocomplete_preinstalled">Liste d’adresses par défaut</string>
-  <string name="preference_autocomplete_preinstalled_summary">Activer pour que %1$s complète automatiquement plus de 450 adresses populaires dans la barre d’adresse.</string>
-  <string name="preference_category_autocomplete_custom_urls">Adresses personnalisées</string>
-  <string name="preference_autocomplete_subitem_customlist">Adresses personnalisées</string>
   <string name="preference_autocomplete_action_add">+ Ajouter une adresse personnalisée</string>
   <string name="preference_autocomplete_title_add">Ajouter une adresse personnalisée</string>
   <string name="custom_autocomplete_quick_add">Ajouter une adresse personnalisée</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Compléter automatiquement les URL des sites les plus visités\n Effectuez un appui long sur une URL dans la barre d’adresse</string>
   <string name="tip_open_in_new_tab">Ouvrir un lien dans un nouvel onglet\n Effectuez un appui long sur un lien dans une page</string>
   <string name="tip_request_desktop">Préférez-vous voir la version pour ordinateur du site ?%1$s Menu &gt; Voir version ordinateur</string>
-  <string name="tip_disable_tips">Désactiver les conseils sur l’écran de démarrage de %1$s</string>
 </resources>

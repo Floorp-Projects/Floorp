@@ -43,11 +43,6 @@
   <string name="preference_state_on">Zašaltowany</string>
   <string name="preference_state_off">Wušaltowany</string>
   <string name="preference_subitem_autocomplete">Awtomatiske wudopołnjenje URL</string>
-  <string name="preference_switch_autocomplete">Wudopołnjenje</string>
-  <string name="preference_category_autocomplete_preinstalled">Standardna lisćina adresow</string>
-  <string name="preference_autocomplete_preinstalled_summary">Zmóžniś, aby %1$s wěcej ako 450 woblubowanych adresow w adresowrm pólu wudopołnił.</string>
-  <string name="preference_category_autocomplete_custom_urls">Swójske URL</string>
-  <string name="preference_autocomplete_subitem_customlist">Swójske adrese</string>
   <string name="preference_autocomplete_action_add">+ Swójsku adresu pśidaś</string>
   <string name="preference_autocomplete_title_add">Swójsku adresu pśidaś</string>
   <string name="custom_autocomplete_quick_add">Swójski URL pśidaś</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">URL za sedła, ku kótarymž se nejcesćej woglědujośo, awtomatiski wudopołniś\nTłocćo dłujko na URL w adresowem pólu</string>
   <string name="tip_open_in_new_tab">Wótkaz w nowem rejtarku wócyniś\nTłocćo dłujko na wótkaz na boku</string>
   <string name="tip_request_desktop">Cośo lubjej dopołne desktopowe sedło wiźeś?%1$s Meni &gt; Desktopowe sedło pominaś</string>
-  <string name="tip_disable_tips">Tipy na startowej wobrazowce %1$s znjemóžniś</string>
 </resources>

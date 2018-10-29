@@ -43,11 +43,6 @@
   <string name="preference_state_on">Titzij</string>
   <string name="preference_state_off">Tichup</string>
   <string name="preference_subitem_autocomplete">URL Titz\'aqatisäx ruyon</string>
-  <string name="preference_switch_autocomplete">Titz\'aqatisäx ruyon</string>
-  <string name="preference_category_autocomplete_preinstalled">K\'o wi URL Cholb\'äl</string>
-  <string name="preference_autocomplete_preinstalled_summary">Titzij richin nik\'ul %1$s ruyonil nunojisaj naqaj chi re 450 ajowan taq URLs pa kikajtz\'ik ochochib\'äl.</string>
-  <string name="preference_category_autocomplete_custom_urls">Ichinan URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">Ichinan URLs</string>
   <string name="preference_autocomplete_action_add">+ Titz\'aqatisäx ichinan URL</string>
   <string name="preference_autocomplete_title_add">Titz\'aqatisäx ichinan URL</string>
   <string name="custom_autocomplete_quick_add">Titz\'aqatisäx ichinan URL</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Ruyon ke\'atz\'aqatisaj ri taq URLs kichin ri taq ruxan yalan ye\'awokisaj\n Tapitz\'itz\'ej xa b\'achike URL pa rukajtz\'ik ochochib\'äl</string>
   <string name="tip_open_in_new_tab">Tijaq jun ximonel pa jun k\'ak\'a\' ruwi\'\n Tapitz\'itz\'ej xab\'achike ximonel pa jun ruxaq</string>
   <string name="tip_request_desktop">"¿La nawajo\' natzu\' ri ruxaq ruk\'amaya\'l ruwa kematz\'ib\'?%1$s\n    K\'utsamajib\'äl &gt; Tik\'utüx jun ruxaq ruk\'amaya\'l ruwa kematz\'ib\'"</string>
-  <string name="tip_disable_tips">Tichup ri taq chilab\'enïk pa ri tikirib\'äl ruwäch %1$s</string>
 </resources>

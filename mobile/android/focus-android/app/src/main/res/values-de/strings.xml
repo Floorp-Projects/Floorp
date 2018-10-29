@@ -43,11 +43,6 @@
   <string name="preference_state_on">An</string>
   <string name="preference_state_off">Aus</string>
   <string name="preference_subitem_autocomplete">Adressen-Autovervollständigung</string>
-  <string name="preference_switch_autocomplete">Autovervollständigung</string>
-  <string name="preference_category_autocomplete_preinstalled">Standard-Adressliste</string>
-  <string name="preference_autocomplete_preinstalled_summary">Aktivieren, damit %1$s über 450 beliebte Adressen in der Adressleiste automatisch vervollständigt.</string>
-  <string name="preference_category_autocomplete_custom_urls">Benutzerdefinierte Adressen</string>
-  <string name="preference_autocomplete_subitem_customlist">Benutzerdefinierte Adressen</string>
   <string name="preference_autocomplete_action_add">+ Benutzerdefinierte Adresse hinzufügen</string>
   <string name="preference_autocomplete_title_add">Benutzerdefinierte Adresse hinzufügen</string>
   <string name="custom_autocomplete_quick_add">Benutzerdefinierte Adresse hinzufügen</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Autovervollständigung für meistbesuchte Websites\n Drücken Sie lange auf eine URL in der Adressleiste</string>
   <string name="tip_open_in_new_tab">Einen Link in einem neuen Tab öffnen\n Drücken Sie lange auf einen Link in einer Seite</string>
   <string name="tip_request_desktop">Lieber die gesamte Desktop-Website ansehen?%1$s Menü → Desktop-Seite anfordern</string>
-  <string name="tip_disable_tips">Tipps im %1$s-Startbildschirm abschalten</string>
 </resources>

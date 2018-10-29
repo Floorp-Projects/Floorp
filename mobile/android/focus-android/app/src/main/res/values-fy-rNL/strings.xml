@@ -43,11 +43,6 @@
   <string name="preference_state_on">Oan</string>
   <string name="preference_state_off">Ut</string>
   <string name="preference_subitem_autocomplete">URL\'s automatysk oanfolje</string>
-  <string name="preference_switch_autocomplete">Automatysk oanfolje</string>
-  <string name="preference_category_autocomplete_preinstalled">Standert URL-list</string>
-  <string name="preference_autocomplete_preinstalled_summary">Skeakel dit yn om %1$s automatysk mear as 450 populêre URL’s yn de adresbalke oanfolje te litten.</string>
-  <string name="preference_category_autocomplete_custom_urls">Eigen URL\'s</string>
-  <string name="preference_autocomplete_subitem_customlist">Oanpaste URL\'s</string>
   <string name="preference_autocomplete_action_add">+ Oanpaste URL tafoegje</string>
   <string name="preference_autocomplete_title_add">Oanpaste URL tafoegje</string>
   <string name="custom_autocomplete_quick_add">Oanpaste URL tafoegje</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">URL’s foar meastbrûkte websites automatysk oanfolje\n Hâld jo finger op in URL yn de adresbalke</string>
   <string name="tip_open_in_new_tab">In keppeling yn in nij ljepblêd iepenje\n Hâld jo finger op in keppeling op in side</string>
   <string name="tip_request_desktop">Leaver de folsleine Desktop-website besjen?%1$s Menu &gt; Desktopwebsite opfreegje</string>
-  <string name="tip_disable_tips">Tips op it %1$s-startskerm útskeakelje</string>
 </resources>

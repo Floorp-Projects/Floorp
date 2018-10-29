@@ -41,10 +41,6 @@
   <string name="preference_state_on">Udép</string>
   <string name="preference_state_off">Maté</string>
   <string name="preference_subitem_autocomplete">Peuleungkap URL keudroe</string>
-  <string name="preference_switch_autocomplete">Peuleungkap keudroe</string>
-  <string name="preference_category_autocomplete_preinstalled">Dapeuta URL Teutap</string>
-  <string name="preference_category_autocomplete_custom_urls">URL Kustom</string>
-  <string name="preference_autocomplete_subitem_customlist">URL Kustom</string>
   <string name="preference_autocomplete_action_add">+ Tamah URL kustom</string>
   <string name="preference_autocomplete_title_add">Tamah URL kustom</string>
   <string name="custom_autocomplete_quick_add">Tamah URL kustom</string>

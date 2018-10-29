@@ -43,10 +43,6 @@
   <string name="preference_state_on">Sí</string>
   <string name="preference_state_off">Non</string>
   <string name="preference_subitem_autocomplete">Autocompletáu d\'URLs</string>
-  <string name="preference_switch_autocomplete">Autocompletáu</string>
-  <string name="preference_category_autocomplete_preinstalled">Llistáu d\'URLs por defeutu</string>
-  <string name="preference_category_autocomplete_custom_urls">URLs personalizaes</string>
-  <string name="preference_autocomplete_subitem_customlist">URLs personalizaes</string>
   <string name="preference_autocomplete_action_add">+ Amestar URL personalizada</string>
   <string name="preference_autocomplete_title_add">Amestar URL personalizada</string>
   <string name="custom_autocomplete_quick_add">Amestar URL personalizada</string>

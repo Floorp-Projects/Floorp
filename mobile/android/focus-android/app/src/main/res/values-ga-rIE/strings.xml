@@ -41,10 +41,6 @@
   <string name="preference_state_on">Ann</string>
   <string name="preference_state_off">As</string>
   <string name="preference_subitem_autocomplete">Uathchríochnú URL</string>
-  <string name="preference_switch_autocomplete">Uathchríochnú</string>
-  <string name="preference_category_autocomplete_preinstalled">Liosta URLanna réamhshocraithe</string>
-  <string name="preference_category_autocomplete_custom_urls">URLanna saincheaptha</string>
-  <string name="preference_autocomplete_subitem_customlist">URLanna saincheaptha</string>
   <string name="preference_autocomplete_action_add">+ Cuir URL saincheaptha leis</string>
   <string name="preference_autocomplete_title_add">Cuir URL saincheaptha leis</string>
   <string name="custom_autocomplete_quick_add">Cuir URL saincheaptha leis</string>

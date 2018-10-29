@@ -43,11 +43,6 @@
   <string name="preference_state_on">Oypisa\'m</string>
   <string name="preference_state_off">Tzaanale</string>
   <string name="preference_subitem_autocomplete">Ankuxhe\' la tz\'ajsan u URL</string>
-  <string name="preference_switch_autocomplete">Ankuxhe\' la tz\'ajsan</string>
-  <string name="preference_category_autocomplete_preinstalled">Tachul URL uva\' b\'anel ve\'t kan tuche\'</string>
-  <string name="preference_autocomplete_preinstalled_summary">Laaoke aq\'al uva\' ankuxh u %1$s la tz\'ajsan uma\'l 450 URLs uva\' nimal chit ootzimal tu laab\'al tetze\' kat la b\'en kat axh.</string>
-  <string name="preference_category_autocomplete_custom_urls">Ankuxh axh la b\'anon tu u URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">Unq\'a URLs b\'anel ve\'t tuche\'</string>
   <string name="preference_autocomplete_action_add">+ Aq\' ve\'t unq\'a URL uve\' b\'anel ve\'t tuche\'</string>
   <string name="preference_autocomplete_title_add">Aq\' ve\'t unq\'a URL uve\' b\'anel ve\'t tuche\'</string>
   <string name="custom_autocomplete_quick_add">Aq\' ve\'t unq\'a URL uve\' b\'anel ve\'t tuche\'</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">B\'an atz\'ajsat unq\'a URLs ti\' unq\'a vee\' uve\' pal chit ab\'anb\'eta\'\n Laaku\' kam kuxh URL tan u k\'uchb\'al ixaansal tetze\'</string>
   <string name="tip_open_in_new_tab">Jaj uma\'t ak\' chukb\'al tetz\n Laaku\' ab\'iste kuxh chukb\'al tetz</string>
   <string name="tip_request_desktop">Nasa\' eelat ve\'te\' uva\' at ve\'t kan svatz?%1$s Menú &gt; La jaj ve\'te\' aq\'al uva\' la kaa svatz</string>
-  <string name="tip_disable_tips">Eesel unq\'a alol isuuchile\' uve\' ni kuxh tul ti xe\'teb\'al u %1$se\'</string>
 </resources>

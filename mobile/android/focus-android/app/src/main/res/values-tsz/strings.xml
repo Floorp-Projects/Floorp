@@ -43,11 +43,6 @@
   <string name="preference_state_on">Étskuni</string>
   <string name="preference_state_off">P\'atani</string>
   <string name="preference_subitem_autocomplete">URL Karanharhikuarini</string>
-  <string name="preference_switch_autocomplete">Karanharhikuarini</string>
-  <string name="preference_category_autocomplete_preinstalled">URL Miyuntskwarhu pént\'ani</string>
-  <string name="preference_autocomplete_preinstalled_summary">Jura\'kuni eska %1$s karakurhintaaka kari 450 URLs echaru.</string>
-  <string name="preference_category_autocomplete_custom_urls">Pékurhintskwa URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">Pékurhintskwa URLs</string>
   <string name="preference_autocomplete_action_add">+ Kúrhuta máteru pékurhintskwa URL</string>
   <string name="preference_autocomplete_title_add">Kúrhuta máteru pékurhintskwa URL</string>
   <string name="custom_autocomplete_quick_add">Kúrhuta máteru pékurhintskwa URL</string>

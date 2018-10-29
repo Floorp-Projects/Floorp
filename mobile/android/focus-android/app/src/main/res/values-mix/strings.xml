@@ -43,11 +43,6 @@
   <string name="preference_state_on">Kuna</string>
   <string name="preference_state_off">Kasi</string>
   <string name="preference_subitem_autocomplete">Chaa URL</string>
-  <string name="preference_switch_autocomplete">Chaa</string>
-  <string name="preference_category_autocomplete_preinstalled">URLs ña tsa sa\'an inka</string>
-  <string name="preference_autocomplete_preinstalled_summary">Kuachi\'in tava %1$s na skuti 450 URLs ña kuaka che\'e na nu direcciòn.</string>
-  <string name="preference_category_autocomplete_custom_urls">Nixi Kunu URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">Tana kunu URLs</string>
   <string name="preference_autocomplete_action_add">+ Chaa URL</string>
   <string name="preference_autocomplete_title_add">Chaa URL</string>
   <string name="custom_autocomplete_quick_add">Chaa URL</string>

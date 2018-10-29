@@ -43,11 +43,6 @@
   <string name="preference_state_on">Päällä</string>
   <string name="preference_state_off">Pois päältä</string>
   <string name="preference_subitem_autocomplete">Osoitteen automaattinen täydennys</string>
-  <string name="preference_switch_autocomplete">Automaattinen täydennys</string>
-  <string name="preference_category_autocomplete_preinstalled">Oletusosoitteiden lista</string>
-  <string name="preference_autocomplete_preinstalled_summary">Ota käyttöön saadaksesi %1$s täydentämään automaattisesti yli 450 suosittua osoitetta osoiterivillä.</string>
-  <string name="preference_category_autocomplete_custom_urls">Mukautetut osoitteet</string>
-  <string name="preference_autocomplete_subitem_customlist">Mukautetut osoitteet</string>
   <string name="preference_autocomplete_action_add">+ Lisää mukautettu osoite</string>
   <string name="preference_autocomplete_title_add">Lisää mukautettu osoite</string>
   <string name="custom_autocomplete_quick_add">Lisää mukautettu osoite</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Täydennä osoitteet sivustoille, joita käytät eniten\n Paina pitkään osoitekentässä olevia osoitteita</string>
   <string name="tip_open_in_new_tab">Avaa linkki uuteen välilehteen\n Paina pitkään mitä tahansa linkkiä sivulla</string>
   <string name="tip_request_desktop">Haluatko mieluummin nähdä sivuston täyden työpöytäversion?%1$s Valikko &gt; Sivuston työpöytäversio</string>
-  <string name="tip_disable_tips">Poista vihjeet käytöstä %1$s -aloitusnäytöltä</string>
 </resources>

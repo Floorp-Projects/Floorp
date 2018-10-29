@@ -43,11 +43,6 @@
   <string name="preference_state_on">ເປີດ</string>
   <string name="preference_state_off">ປິດ</string>
   <string name="preference_subitem_autocomplete">ການເຕີມ URL ແບບອັດຕະໂນມັດ</string>
-  <string name="preference_switch_autocomplete">ການເຕີມແບບອັດຕະໂນມັດ</string>
-  <string name="preference_category_autocomplete_preinstalled">ລາຍການ URL ເລີ່ມຕົ້ນ</string>
-  <string name="preference_autocomplete_preinstalled_summary">ເປີດໃຊ້ງານເພື່ອໃຫ້ມີການເຕິມອັດຕະໂນມັດຂອງ %1$s ຜ່ານ 450 URLs ຍອດນິຍົມໃນແຖບທີ່ຢູ່,</string>
-  <string name="preference_category_autocomplete_custom_urls">URLs ທີ່ກຳນົດເອງ</string>
-  <string name="preference_autocomplete_subitem_customlist">URLs ທີ່ກຳນົດເອງ</string>
   <string name="preference_autocomplete_action_add">+ ເພີ່ມ URL ທີ່ກຳນົດເອງ</string>
   <string name="preference_autocomplete_title_add">ເພີ່ມ URL ທີ່ກຳນົດເອງ</string>
   <string name="custom_autocomplete_quick_add">ເພີ່ມ URL ທີ່ກຳນົດເອງ</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">ເຕີມ URLs ໂດຍອັດຕະໂນມັດສຳລັບເວັບໄຊທີ່ທ່ານໃຊ້ຫຼາຍທີ່ສຸດ\n ແຕະຄ້າງທີ່ URL ໃດໆ ໃນແທບທີ່ຢູ່</string>
   <string name="tip_open_in_new_tab">ເປີດລີ້ງໃນແທບໃໝ່\n ແຕະຄ້າງທີ່ລີ້ງໃດໆໃນໜ້າ</string>
   <string name="tip_request_desktop">ຕ້ອງການເຫັນໄຊສຳລັບເດສທ້ອບແບບເຕັມ? %1$s ເມນູ&gt; ຂໍໄຊສຳລັບເດສທ້ອບ</string>
-  <string name="tip_disable_tips">ປິດເຄັດລັບໃນໜ້າຈໍເລີ່ມຕົ້ນຂອງ%1$s</string>
 </resources>

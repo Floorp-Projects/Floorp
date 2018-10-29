@@ -43,11 +43,6 @@
   <string name="preference_state_on">चालू</string>
   <string name="preference_state_off">बंद</string>
   <string name="preference_subitem_autocomplete">URL अपना सँ पूर्ण</string>
-  <string name="preference_switch_autocomplete">अपना सँ पूर्ण</string>
-  <string name="preference_category_autocomplete_preinstalled">डिफ़ॉल्ट URL सूची</string>
-  <string name="preference_autocomplete_preinstalled_summary">एड्रेस बार में 450 लोकप्रिय URLs पर %1$s स्वत: पूर्णता लेली सक्षम करू.</string>
-  <string name="preference_category_autocomplete_custom_urls">पसंदीदा URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">पसंदीदा URLs</string>
   <string name="preference_autocomplete_action_add">+ अपन पसंदीदा URL जोड़ि‍यै</string>
   <string name="preference_autocomplete_title_add">पसंदीदा URL जोड़ि‍यै</string>
   <string name="custom_autocomplete_quick_add">पसंदीदा URL जोड़ि‍यै</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">सबसे जादा उपयोग करै वाला साइटों के अपना सँ पूर्ण URLs ले\n एड्रेस बार में कोनो URL के देर तक दबियै</string>
   <string name="tip_open_in_new_tab">नया टैब में एगो लिंक खोलियै\n  पेज पर कोनो लिंक के देर तक दाबियै</string>
   <string name="tip_request_desktop">बल्कि पूरे डेस्कटॉप साइट देखियै?\n    %1$s मेनू&gt; डेस्कटॉप साइट के अनुरोध करियै</string>
-  <string name="tip_disable_tips">%1$s प्रारंभ स्क्रीन सलाह के बंद करियै</string>
 </resources>

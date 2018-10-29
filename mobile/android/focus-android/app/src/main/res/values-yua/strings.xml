@@ -39,11 +39,6 @@
   <string name="preference_state_on">Meyajta’al</string>
   <string name="preference_state_off">Ma’ tu meyajta’al</string>
   <string name="preference_subitem_autocomplete">Chuupuk tu juunaj URL</string>
-  <string name="preference_switch_autocomplete">Chuupuk tu juunaj</string>
-  <string name="preference_category_autocomplete_preinstalled">Tsool ts’íib URL le ta yáax ts’íibo’</string>
-  <string name="preference_autocomplete_preinstalled_summary">Meyajtej uti’al ka %1$s ku laj chuupuk tu juunaj ich 450 URLs le u taj uts tu yich máak u cha’antik ichil le ba’alil tsola’anilob.</string>
-  <string name="preference_category_autocomplete_custom_urls">Tsikbe’eniltal URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">URL tsikbe’eniltal</string>
   <string name="preference_autocomplete_action_add">+ Ts’áabak URL tsikbe’eniltal</string>
   <string name="preference_autocomplete_title_add">Ts’áabak URL tsikbe’eniltal</string>
   <string name="custom_autocomplete_quick_add">Ts’áabak URL tsikbe’eniltal</string>

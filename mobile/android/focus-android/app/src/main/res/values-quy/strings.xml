@@ -41,11 +41,6 @@
   <string name="preference_state_on">Jap\'ichisqa</string>
   <string name="preference_state_off">Wañuchisqa</string>
   <string name="preference_subitem_autocomplete">URL sapanmanta junt\'achiy</string>
-  <string name="preference_switch_autocomplete">Sapanmanta junt\'achiy</string>
-  <string name="preference_category_autocomplete_preinstalled">Ajinaña jamuq URL Rikurpu</string>
-  <string name="preference_autocomplete_preinstalled_summary">Kawsachiy kay %1$s sapanmanta junt\'achinanpaq kay direcciones siqipi aswan 450 munasqa URLs kaqkunawan.</string>
-  <string name="preference_category_autocomplete_custom_urls">URLs kaqkunata sapanchaykuy</string>
-  <string name="preference_autocomplete_subitem_customlist">URLs kaqkunata sapanchaykuy</string>
   <string name="preference_autocomplete_action_add">+ sapanchaykunata yapay URL</string>
   <string name="preference_autocomplete_title_add">Sapanchaykunata yapay URL</string>
   <string name="custom_autocomplete_quick_add">Sapanchaykunata yapay URL</string>

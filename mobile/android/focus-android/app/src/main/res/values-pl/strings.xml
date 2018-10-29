@@ -43,11 +43,6 @@
   <string name="preference_state_on">Włączone</string>
   <string name="preference_state_off">Wyłączone</string>
   <string name="preference_subitem_autocomplete">Automatyczne uzupełnianie adresów</string>
-  <string name="preference_switch_autocomplete">Automatyczne uzupełnianie</string>
-  <string name="preference_category_autocomplete_preinstalled">Domyślna lista adresów</string>
-  <string name="preference_autocomplete_preinstalled_summary">Włącz, aby %1$s automatycznie uzupełniał ponad 450 popularnych adresów na pasku adresu.</string>
-  <string name="preference_category_autocomplete_custom_urls">Inne adresy</string>
-  <string name="preference_autocomplete_subitem_customlist">Inne adresy</string>
   <string name="preference_autocomplete_action_add">+ Dodaj inny adres</string>
   <string name="preference_autocomplete_title_add">Dodaj inny adres</string>
   <string name="custom_autocomplete_quick_add">Dodaj inny adres</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Automatycznie uzupełniaj adresy najczęściej odwiedzanych stron\n Przytrzymaj dowolny adres na pasku adresu</string>
   <string name="tip_open_in_new_tab">Otwórz odnośnik w nowej karcie\n Przytrzymaj dowolny odnośnik na stronie</string>
   <string name="tip_request_desktop">Wolisz pełną wersję strony jak na komputerze?%1$s Menu → Wersja na komputery</string>
-  <string name="tip_disable_tips">Wyłącz wskazówki na ekranie głównym %1$s</string>
 </resources>

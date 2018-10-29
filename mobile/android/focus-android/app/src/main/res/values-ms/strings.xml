@@ -43,11 +43,6 @@
   <string name="preference_state_on">Aktif</string>
   <string name="preference_state_off">Nyahaktif</string>
   <string name="preference_subitem_autocomplete">Auto-lengkap URL</string>
-  <string name="preference_switch_autocomplete">Auto-lengkap</string>
-  <string name="preference_category_autocomplete_preinstalled">Senarai URL Piawai</string>
-  <string name="preference_autocomplete_preinstalled_summary">Aktifkan %1$s supaya auto-lengkap lebih 450 URLs popular dalam bar alamat.</string>
-  <string name="preference_category_autocomplete_custom_urls">Penyesuaian URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">URLs Penyesuaian</string>
   <string name="preference_autocomplete_action_add">+ Tambah URL penyesuaian</string>
   <string name="preference_autocomplete_title_add">Tambah URL penyesuaian</string>
   <string name="custom_autocomplete_quick_add">Tambah URL penyesuaian</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Autolengkap URL untuk laman yang kerap dilawati\n Tekan lama-lama URL dalam bar alamat</string>
   <string name="tip_open_in_new_tab">Buka pautan dalam tab baru\n Tekan lama-lama pautan atau halaman</string>
   <string name="tip_request_desktop">Mahu paparan laman desktop?%1$s Menu &gt; Pinta laman desktop</string>
-  <string name="tip_disable_tips">Nyahaktifkan panduan pada skrin mula %1$s</string>
 </resources>

@@ -43,11 +43,6 @@
   <string name="preference_state_on">På</string>
   <string name="preference_state_off">Av</string>
   <string name="preference_subitem_autocomplete">Autofullfør nettadresse</string>
-  <string name="preference_switch_autocomplete">Netadresse-autofullføring</string>
-  <string name="preference_category_autocomplete_preinstalled">Standard nettadresseliste</string>
-  <string name="preference_autocomplete_preinstalled_summary">Aktiver at %1$s autofullfører over 450 populære nettadresser i adressefeltet.</string>
-  <string name="preference_category_autocomplete_custom_urls">Tilpassede nettadreser</string>
-  <string name="preference_autocomplete_subitem_customlist">Tilpassede nettadresser</string>
   <string name="preference_autocomplete_action_add">+ Legg til tilpasset nettadresse</string>
   <string name="preference_autocomplete_title_add">Legg til tilpasset nettadresse</string>
   <string name="custom_autocomplete_quick_add">Legg til tilpasset nettadresse</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Autofullfør nettadresser for nettsteder du bruker mest\n Trykk og hold på en nettadresse i adressefeltet</string>
   <string name="tip_open_in_new_tab">Åpne en lenke i en ny fane\n Trykk og hold på en lenke på en side</string>
   <string name="tip_request_desktop">Vil du heller se den fulle skrivebordsversjonen?%1$s Meny &gt; Vis skrivebordsversjon</string>
-  <string name="tip_disable_tips">Slå av tips på startskjermen for %1$s</string>
 </resources>

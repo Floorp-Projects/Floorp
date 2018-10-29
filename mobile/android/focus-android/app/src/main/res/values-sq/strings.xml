@@ -43,11 +43,6 @@
   <string name="preference_state_on">On</string>
   <string name="preference_state_off">Off</string>
   <string name="preference_subitem_autocomplete">Vetëplotësim URLje</string>
-  <string name="preference_switch_autocomplete">Vetëplotësim</string>
-  <string name="preference_category_autocomplete_preinstalled">Listë Parazgjedhje URLsh</string>
-  <string name="preference_autocomplete_preinstalled_summary">Aktivizojeni që %1$s-i të vetëplotësojë te shtylla e adresave mbi 450 URL popullore.</string>
-  <string name="preference_category_autocomplete_custom_urls">URL Vetjake</string>
-  <string name="preference_autocomplete_subitem_customlist">URLra Vetjake</string>
   <string name="preference_autocomplete_action_add">+ Shtoni URL vetjake</string>
   <string name="preference_autocomplete_title_add">Shtoni URL vetjake</string>
   <string name="custom_autocomplete_quick_add">Shtoni URL vetjake</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Vetëplotësim URL-sh për sajtet që përdorni më shpesh\n Shtypni paksa çfarëdo URL-je te shtylla e adresave</string>
   <string name="tip_open_in_new_tab">Hapni një lidhje në një skedë të re\n Shtypeni paksa çfarëdo lidhje në një faqe</string>
   <string name="tip_request_desktop">Më mirë të shihni sajtin e plotë për desktop?%1$s Menu &gt; Kërko sajtin për desktop</string>
-  <string name="tip_disable_tips">Mbylli ndihmëzat te skena e nisjes së %1$s</string>
 </resources>

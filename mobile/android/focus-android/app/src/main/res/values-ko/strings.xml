@@ -43,11 +43,6 @@
   <string name="preference_state_on">사용 중</string>
   <string name="preference_state_off">사용 안 함</string>
   <string name="preference_subitem_autocomplete">URL 자동 완성</string>
-  <string name="preference_switch_autocomplete">자동 완성</string>
-  <string name="preference_category_autocomplete_preinstalled">기본 URL 목록</string>
-  <string name="preference_autocomplete_preinstalled_summary">주소창에서 450개가 넘는 URL의 %1$s 자동 완성 기능을 사용하세요.</string>
-  <string name="preference_category_autocomplete_custom_urls">사용자 정의 URL</string>
-  <string name="preference_autocomplete_subitem_customlist">사용자 정의 URL</string>
   <string name="preference_autocomplete_action_add">+ 사용자 정의 URL 추가</string>
   <string name="preference_autocomplete_title_add">사용자 정의 URL 추가</string>
   <string name="custom_autocomplete_quick_add">사용자 정의 URL 추가</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">자주 사용하는 사이트 URL을 자동 완성합니다\n 주소창에서 URL을 길게 눌러 보세요</string>
   <string name="tip_open_in_new_tab">링크를 새 탭에서 엽니다\n 페이지의 링크를 길게 눌러 보세요</string>
   <string name="tip_request_desktop">전체 데스크톱 사이트를 보고 싶으세요?%1$s 메뉴 &gt; 데스크톱 사이트 요청</string>
-  <string name="tip_disable_tips">%1$s 시작 화면의 팁 끄기</string>
 </resources>

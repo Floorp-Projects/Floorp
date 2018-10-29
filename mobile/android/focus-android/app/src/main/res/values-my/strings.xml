@@ -43,11 +43,6 @@
   <string name="preference_state_on">ဖွင့်ပါ</string>
   <string name="preference_state_off">ပိတ်ပါ</string>
   <string name="preference_subitem_autocomplete">URL အလိုအလျောက်ဖြည့်စွက်</string>
-  <string name="preference_switch_autocomplete">အလိုအလျောက်ဖြည့်စွက်</string>
-  <string name="preference_category_autocomplete_preinstalled">ပုံသေ URL စာရင်း</string>
-  <string name="preference_autocomplete_preinstalled_summary">လိပ်စာဘားတန်းတွင် လူသုံးများ URLs 450 ကျော် %1$s အလိုအလျောက်စာဖြည့်စနစ်ရရှိရန် ဖွင့်ပါ။</string>
-  <string name="preference_category_autocomplete_custom_urls">စိတ်ကြိုက် URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">စိတ်ကြိုက် URLs</string>
   <string name="preference_autocomplete_action_add">+ စိတ်ကြိုက် URLs တိုးရန်</string>
   <string name="preference_autocomplete_title_add">စိတ်ကြိုက် URLs တိုးရန်</string>
   <string name="custom_autocomplete_quick_add">စိတ်ကြိုက် URLs တိုးရန်</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">သင်အသုံးပြုများသော ဆိုက်များ၏ URLs ကို အလိုအလျောက်ဖြည့်ပါမည်\n လိပ်စာဘားတန်းထဲတွင် မည်သည့် URL ကိုမဆို ကြာကြာဖိပြီး ဖွင့်နိုင်သည်</string>
   <string name="tip_open_in_new_tab">လင့်ခ်ကို တဗ်ပ်အသစ်တွင် ဖွင့်ပါ\n စာမျက်နှာရှိ မည်သည့်လင့်ခ်တွင်မဆို ကြာကြာဖိပြီး ဖွင့်နိုင်သည်</string>
   <string name="tip_request_desktop">ဒက်စတော့ဆိုက်ကိုသာ ကြည့်ရှုလိုပါသလား။ %1$s မီနူး &gt; ဒက်စတော့ဆိုက်ကို ပြပါ</string>
-  <string name="tip_disable_tips">%1$s စတင်အသုံးပြုရာ ဖန်သားပြင်တွင် ဖော်ပြသော အကြံပြုချက်များကို ပိတ်ပါ</string>
 </resources>

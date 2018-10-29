@@ -41,11 +41,6 @@
   <string name="preference_state_on">Uključeno</string>
   <string name="preference_state_off">Isključeno</string>
   <string name="preference_subitem_autocomplete">Automatsko završavanje URL-a</string>
-  <string name="preference_switch_autocomplete">Automatsko završavanje</string>
-  <string name="preference_category_autocomplete_preinstalled">Izvorna URL lista</string>
-  <string name="preference_autocomplete_preinstalled_summary">Omogućite da %1$s automatski završi preko 450 popularnih URL adresa u adresnoj traci.</string>
-  <string name="preference_category_autocomplete_custom_urls">Prilagođeni URL-ovi</string>
-  <string name="preference_autocomplete_subitem_customlist">Prilagođeni URL-ovi</string>
   <string name="preference_autocomplete_action_add">+ Dodaj prilagođeni URL</string>
   <string name="preference_autocomplete_title_add">Dodaj prilagođeni URL</string>
   <string name="custom_autocomplete_quick_add">Dodaj prilagođeni URL</string>

@@ -43,11 +43,6 @@
   <string name="preference_state_on">Chubowu</string>
   <string name="preference_state_off">Ŕ\'am</string>
   <string name="preference_subitem_autocomplete">URL yeemik chublwi</string>
-  <string name="preference_switch_autocomplete">Yeemik chublwi</string>
-  <string name="preference_category_autocomplete_preinstalled">URL mul te ñub ik chmiich</string>
-  <string name="preference_autocomplete_preinstalled_summary">Mchubowuka %1$s ey 450 URLs jaab trchech chu paa tek krab ñum ktrchech chayoomum chublwihikyawa.</string>
-  <string name="preference_category_autocomplete_custom_urls">URLs yemik trchechu wiijaan</string>
-  <string name="preference_autocomplete_subitem_customlist">URLs yemik trchechu wiijaan</string>
   <string name="preference_autocomplete_action_add">+ URL yeemik wii jam sal chmii</string>
   <string name="preference_autocomplete_title_add">URL yeemik wii jam sal chmii</string>
   <string name="custom_autocomplete_quick_add">URL yeemik wii jam sal chmii</string>

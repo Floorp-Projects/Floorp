@@ -27,10 +27,6 @@
   <string name="preference_state_on">በርቷል</string>
   <string name="preference_state_off">ጠፍቷል</string>
   <string name="preference_subitem_autocomplete">URL ራስ-አጠናቅቅ</string>
-  <string name="preference_switch_autocomplete">ራስ-አጠናቅቅ</string>
-  <string name="preference_category_autocomplete_preinstalled">ነባሪ URL ዝርዝር\n</string>
-  <string name="preference_autocomplete_preinstalled_summary">ሊኖራቸው የሚችል ያንቁ %1$s ራስ-አጠናቅቅ ተጠናቋል 450 ታዋቂ URLs በአድራሻ አሞሌ ውስጥ::</string>
-  <string name="preference_autocomplete_subitem_customlist">ብጁ URLs</string>
   <string name="preference_autocomplete_action_add">+ ብጁ አክል URL</string>
   <string name="preference_autocomplete_title_add">ብጁ አክል URL</string>
   <string name="preference_autocomplete_title_remove">ብጁ አስወግድ URLs</string>

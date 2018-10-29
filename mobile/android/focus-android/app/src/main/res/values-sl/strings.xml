@@ -43,11 +43,6 @@
   <string name="preference_state_on">Vključeno</string>
   <string name="preference_state_off">Izklopljeno</string>
   <string name="preference_subitem_autocomplete">Samodejno dopolnjevanje URL</string>
-  <string name="preference_switch_autocomplete">Samodejno dopolni</string>
-  <string name="preference_category_autocomplete_preinstalled">Privzeti seznam URL-jev</string>
-  <string name="preference_autocomplete_preinstalled_summary">Omogočite, če želite, da %1$s v naslovni vrstici samodejno dopolni preko 450 priljubljenih URL-jev.</string>
-  <string name="preference_category_autocomplete_custom_urls">Spletni naslovi po meri</string>
-  <string name="preference_autocomplete_subitem_customlist">URL-ji po meri</string>
   <string name="preference_autocomplete_action_add">+ Dodaj URL po meri</string>
   <string name="preference_autocomplete_title_add">Dodaj URL po meri</string>
   <string name="custom_autocomplete_quick_add">Dodaj spletni naslov po meri</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Samodejno dokončajte spletne naslove za strani, ki jih najpogosteje obiskujete\n Pridržite prst na kateremkoli spletnem naslovu v naslovni vrstici</string>
   <string name="tip_open_in_new_tab">Odprite povezavo v novem zavihku\n Pridržite prst na katerikoli povezavi na strani</string>
   <string name="tip_request_desktop">Želite uporabljati polno različico strani?%1$s Meni &gt; Zahtevaj stran za namizja</string>
-  <string name="tip_disable_tips">Izključi namige na začetnem zaslonu %1$sa</string>
 </resources>

@@ -43,11 +43,6 @@
   <string name="preference_state_on">Activado</string>
   <string name="preference_state_off">Desactivado</string>
   <string name="preference_subitem_autocomplete">Autocompletar URL</string>
-  <string name="preference_switch_autocomplete">Autocompletar</string>
-  <string name="preference_category_autocomplete_preinstalled">Lista de URL predeterminada</string>
-  <string name="preference_autocomplete_preinstalled_summary">Activar para que %1$s autocomplete la barra de direcciones con más de 450 URLs populares.</string>
-  <string name="preference_category_autocomplete_custom_urls">URLs personalizadas</string>
-  <string name="preference_autocomplete_subitem_customlist">URLs personalizadas</string>
   <string name="preference_autocomplete_action_add">+ Agregar URL personalizada</string>
   <string name="preference_autocomplete_title_add">Agregar URL personalizada</string>
   <string name="custom_autocomplete_quick_add">Agregar URL personalizada</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Autocomplete las URLs para los sitios que más usa\n Mantenga presionada cualquier URL en la barra de direcciones</string>
   <string name="tip_open_in_new_tab">Abra un enlace en una nueva pestaña\n Mantenga presionado cualquier enlace en una página</string>
   <string name="tip_request_desktop">¿Prefiere ver el sitio de escritorio?%1$s Menú &gt; Solicitar sitio de escritorio</string>
-  <string name="tip_disable_tips">Desactivar los consejos en la pantalla de inicio de %1$s</string>
 </resources>

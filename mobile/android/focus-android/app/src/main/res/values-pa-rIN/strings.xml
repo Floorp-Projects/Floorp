@@ -43,11 +43,6 @@
   <string name="preference_state_on">ਚਾਲੂ</string>
   <string name="preference_state_off">ਬੰਦ</string>
   <string name="preference_subitem_autocomplete">URL ਆਪੇ-ਪੂਰਨ</string>
-  <string name="preference_switch_autocomplete">ਆਪੇ-ਪੂਰਨ</string>
-  <string name="preference_category_autocomplete_preinstalled">ਮੂਲ URL ਸੂਚੀ</string>
-  <string name="preference_autocomplete_preinstalled_summary">ਐਡਰੈੱਸ ਬਾਰ ਵਿੱਚ 450 ਤੋਂ ਵੱਧ ਪ੍ਰਸਿੱਧ ਯੂਆਰਐਲ %1$s ਆਟੋ-ਪੂਰਨ ਹੋਣ ਦੇ ਯੋਗ ਬਣਾਓ।</string>
-  <string name="preference_category_autocomplete_custom_urls">ਕਸਟਮ URL</string>
-  <string name="preference_autocomplete_subitem_customlist">ਕਸਟਮ URL</string>
   <string name="preference_autocomplete_action_add">+ ਕਸਟਮ URL ਜੋੜੋ</string>
   <string name="preference_autocomplete_title_add">ਕਸਟਮ URL ਜੋੜੋ</string>
   <string name="custom_autocomplete_quick_add">ਕਸਟਮ URL ਜੋੜੋ</string>

@@ -43,11 +43,6 @@
   <string name="preference_state_on">Taip</string>
   <string name="preference_state_off">Ne</string>
   <string name="preference_subitem_autocomplete">Automatinis URL adresų užbaigimas</string>
-  <string name="preference_switch_autocomplete">Automatinis užbaigimas</string>
-  <string name="preference_category_autocomplete_preinstalled">Numatytųjų adresų sąrašas</string>
-  <string name="preference_autocomplete_preinstalled_summary">Įjungus, „%1$s“ adreso lauke automatiškai užbaigs virš 450 populiarių URL adresų.</string>
-  <string name="preference_category_autocomplete_custom_urls">Pasirinktiniai adresai</string>
-  <string name="preference_autocomplete_subitem_customlist">Pasirinktiniai adresai</string>
   <string name="preference_autocomplete_action_add">+ Pridėti savą adresą</string>
   <string name="preference_autocomplete_title_add">Savo adreso pridėjimas</string>
   <string name="custom_autocomplete_quick_add">Pridėti savą adresą</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Automatiškai užbaikite lankomiausių svetainių adresus\n Spustelėkite ir palaikykite bet kurį URL adresą adreso lauke</string>
   <string name="tip_open_in_new_tab">Atverkite saitą naujoje kortelėje\n Spustelėkite ir palaikykite bet kurį saitą tinklalapyje</string>
   <string name="tip_request_desktop">Norite tradicinės svetainės versijos?%1$s Meniu &gt; Prašyti ne mob. svetainės</string>
-  <string name="tip_disable_tips">Išjungti patarimus „%1$s“ pradžios ekrane</string>
 </resources>

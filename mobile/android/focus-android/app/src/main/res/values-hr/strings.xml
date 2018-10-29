@@ -22,7 +22,6 @@
   <string name="preference_search_engine_default">Zadano</string>
   <string name="preference_state_on">Uključeno</string>
   <string name="preference_state_off">Isključeno</string>
-  <string name="preference_category_autocomplete_preinstalled">Zadana URL lista</string>
   <string name="preference_autocomplete_learn_more">Saznajte više</string>
   <string name="preference_autocomplete_add_title">URL za dodati</string>
   <string name="preference_autocomplete_add_example">Primjer: example.com</string>

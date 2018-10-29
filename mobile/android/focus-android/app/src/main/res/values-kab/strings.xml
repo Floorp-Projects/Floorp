@@ -43,11 +43,6 @@
   <string name="preference_state_on">Yermed</string>
   <string name="preference_state_off">Yensa</string>
   <string name="preference_subitem_autocomplete">Taččart tawurmant URL</string>
-  <string name="preference_switch_autocomplete">Taččart tawurmant</string>
-  <string name="preference_category_autocomplete_preinstalled">Tabdart URL tamezwart</string>
-  <string name="preference_autocomplete_preinstalled_summary">%1$s ur yizmir ara ad yesεu taččart tawurmant i ugar n 450 n URLs deg ufeggag n tansiwin.</string>
-  <string name="preference_category_autocomplete_custom_urls">URLs iganen</string>
-  <string name="preference_autocomplete_subitem_customlist">URLs iganen</string>
   <string name="preference_autocomplete_action_add">+ Rnu URL aganan</string>
   <string name="preference_autocomplete_title_add">Rnu URL aganan</string>
   <string name="custom_autocomplete_quick_add">Rnu URL aganan</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Taččarant tawurmant URLs i yismal i tseqdaceḍ aṭas \n Asenned ɣezzifen ɣef URL ibɣu yilli deg ufeggag n tansiwin</string>
   <string name="tip_open_in_new_tab">Ldi aseɣwen deg iccer amaynut\n Asenned ɣezzifen ɣef useɣwen deg usebter</string>
   <string name="tip_request_desktop">Iff-itt ma twalaḍ asmel aččuran?%1$s Umuɣ &gt; Suter asmel n tnarit</string>
-  <string name="tip_disable_tips">Sens timahaltin deg %1$s ugdil n tnekra</string>
 </resources>

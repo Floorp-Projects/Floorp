@@ -41,11 +41,6 @@
   <string name="preference_state_on">இயக்கு</string>
   <string name="preference_state_off">அணை</string>
   <string name="preference_subitem_autocomplete">URL தானியங்கு நிரப்பு</string>
-  <string name="preference_switch_autocomplete">தானியங்கு நிரப்பி</string>
-  <string name="preference_category_autocomplete_preinstalled">இயல்பு URL பட்டியல்</string>
-  <string name="preference_autocomplete_preinstalled_summary">முகவரிப்பட்டையில் 450 பிரபல URLs உடைய %1$s தானியங்குநிரப்பலைக் கொண்டிருக்க செயற்படுத்தவும்.</string>
-  <string name="preference_category_autocomplete_custom_urls">தனிபயன் URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">தனிபயன் URLs</string>
   <string name="preference_autocomplete_action_add">+ தனிபயன் URL சேர்</string>
   <string name="preference_autocomplete_title_add">தனிபயன் URL சேர்</string>
   <string name="custom_autocomplete_quick_add">தனிபயன் URL சேர்</string>

@@ -37,10 +37,6 @@
   <string name="preference_state_on">Blá Kìy</string>
   <string name="preference_state_off">Tóg gá</string>
   <string name="preference_subitem_autocomplete">URL mkéy</string>
-  <string name="preference_switch_autocomplete">Mkéy</string>
-  <string name="preference_category_autocomplete_preinstalled">URL dób lá</string>
-  <string name="preference_category_autocomplete_custom_urls">Tùs kùe URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">Tùs kùe URLs</string>
   <string name="preference_autocomplete_action_add">m-tób tùs kùe URL</string>
   <string name="preference_autocomplete_title_add">M-tób tùs kùe URL</string>
   <string name="custom_autocomplete_quick_add">M-tòb URL</string>

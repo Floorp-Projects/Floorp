@@ -43,11 +43,6 @@
   <string name="preference_state_on">Activar</string>
   <string name="preference_state_off">Inactive</string>
   <string name="preference_subitem_autocomplete">Auto-completamento del URL</string>
-  <string name="preference_switch_autocomplete">Auto-completar</string>
-  <string name="preference_category_autocomplete_preinstalled">Lista de URL predefinite</string>
-  <string name="preference_autocomplete_preinstalled_summary">Activa %1$s sur 450 URLs popular a ser auto-completate in le barra del adresses.</string>
-  <string name="preference_category_autocomplete_custom_urls">URLs personalisate</string>
-  <string name="preference_autocomplete_subitem_customlist">URLs personalisate</string>
   <string name="preference_autocomplete_action_add">+ Adder URL personalisate</string>
   <string name="preference_autocomplete_title_add">Adder URL personalisate</string>
   <string name="custom_autocomplete_quick_add">Adder URL personalisate</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Auto-completar URLs pro le sitos que tu usa plus\n Retene pulsate longemente ulle URL in le barra de adresse</string>
   <string name="tip_open_in_new_tab">Aperi le ligamine in un nove scheda\n Retene pulsate longemente ulle ligamine sur un pagina</string>
   <string name="tip_request_desktop">Vider plus tosto le sito in modo plen scriptorio?%1$s Menu &gt; Requirer sito de scriptorio</string>
-  <string name="tip_disable_tips">Disactivar le suggestiones sur le pagina initial de %1$s</string>
 </resources>

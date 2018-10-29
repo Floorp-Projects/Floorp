@@ -43,11 +43,6 @@
   <string name="preference_state_on">Bật</string>
   <string name="preference_state_off">Tắt</string>
   <string name="preference_subitem_autocomplete">URL tự động điền</string>
-  <string name="preference_switch_autocomplete">Tự động điền</string>
-  <string name="preference_category_autocomplete_preinstalled">Danh sách URL mặc định</string>
-  <string name="preference_autocomplete_preinstalled_summary">Cho phép tự đồng điền %1$s trên 450 URL phổ biến trên thanh địa chỉ.</string>
-  <string name="preference_category_autocomplete_custom_urls">URL tùy chỉnh</string>
-  <string name="preference_autocomplete_subitem_customlist">URL tùy chỉnh</string>
   <string name="preference_autocomplete_action_add">+ Thêm URL tùy chỉnh</string>
   <string name="preference_autocomplete_title_add">Thêm URL tùy chỉnh</string>
   <string name="custom_autocomplete_quick_add">Thêm URL tùy chỉnh</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Tự động điền URLs cho các trang web bạn sử dụng\n Nhấp và giữ bất kỳ URL trong thanh địa chỉ</string>
   <string name="tip_open_in_new_tab">Mở liên kết trên thẻ mới\n Nhấp và giữ bất kì liên kết nào trên trang</string>
   <string name="tip_request_desktop">Muốn xem phiên bản máy tính?%1$s Menu &gt; Yêu cầu trang web trên máy tính</string>
-  <string name="tip_disable_tips">Tắt mẹo trên màn hình bắt đầu của %1$s</string>
 </resources>

@@ -43,11 +43,6 @@
   <string name="preference_state_on">Іске қосулған</string>
   <string name="preference_state_off">Сөндірілген</string>
   <string name="preference_subitem_autocomplete">URL автотолықтыру</string>
-  <string name="preference_switch_autocomplete">Автотолықтыру</string>
-  <string name="preference_category_autocomplete_preinstalled">Бастапқы URL тізімі</string>
-  <string name="preference_autocomplete_preinstalled_summary">%1$s адрестік жолақта 450-ден астам әйгілі URL-ді автотолықтыру үшін іске қосыңыз.</string>
-  <string name="preference_category_autocomplete_custom_urls">Таңдауыңызша URL</string>
-  <string name="preference_autocomplete_subitem_customlist">Таңдауыңызша URL-дер</string>
   <string name="preference_autocomplete_action_add">+ Таңдауыңызша URL қосу</string>
   <string name="preference_autocomplete_title_add">Таңдауыңызша URL қосу</string>
   <string name="custom_autocomplete_quick_add">Таңдауыңызша URL қосу</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Жиірек қолданылатын сайттар үшін сілтемелерді автотолықтырыңыз\n Адрестік жолақта кез келген сілтемеге ұзақ шертіңіз</string>
   <string name="tip_open_in_new_tab">Сілтемені жаңа бетте ашу\n Беттегі кез келген сілтемеге ұзақ шертіңіз</string>
   <string name="tip_request_desktop">Жұмыс үстелге арналған толық өлшемді көргіңіз келе ме?%1$s Мәзір &gt; Сайттың толық нұсқасы</string>
-  <string name="tip_disable_tips">%1$s іске қосу экранында кеңестерді сөндіру</string>
 </resources>

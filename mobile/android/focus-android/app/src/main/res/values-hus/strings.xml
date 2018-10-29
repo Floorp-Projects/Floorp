@@ -43,11 +43,6 @@
   <string name="preference_state_on">Ka lek\'wtsiy</string>
   <string name="preference_state_off">Ka tepdha\'</string>
   <string name="preference_subitem_autocomplete">Ka kwetém kidhban an URL</string>
-  <string name="preference_switch_autocomplete">Ka kwetém kidhban</string>
-  <string name="preference_category_autocomplete_preinstalled">kwene\' i URL axi ok\'ox dhuchadh</string>
-  <string name="preference_autocomplete_preinstalled_summary">ka lek\'wtsiy abal %1$s kin kwetém kidhbay 450 i URLs abal ebál, axi lej exladh, ti jolataláb ju\'taj it alim.</string>
-  <string name="preference_category_autocomplete_custom_urls">Ka tsab bijiy an URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">Ka tsab bijiy an URLs</string>
   <string name="preference_autocomplete_action_add">+ Ka punuw an URL axi tsab bijidh</string>
   <string name="preference_autocomplete_title_add">Ka punuw an URL axi tsab bijidh</string>
   <string name="custom_autocomplete_quick_add">Ka punuw an URL axi tsab bijidh</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">"Ka eyendha\' an kweten putundhach URLs abal an xeklek axi a eyendal\n Ka ni\'a\' jawakits tum URLs ti alimtaláb\n "</string>
   <string name="tip_open_in_new_tab">Ka japiy jun i ne\'dhach al jun i it xeklek\n Ka jila\' ni\'adh jawakitsk\'ij tum ne\'dhach al jun i xeklek</string>
   <string name="tip_request_desktop">A le\' ka meta\' an xeklek ta mexajil%1$s Takuxtaláb &gt; Ka konoy an xeklek ta mexajil</string>
-  <string name="tip_disable_tips">Ka tepdha\' an kawchix axi ti olchal ti ok\'ox xeklek ti %1$s</string>
 </resources>

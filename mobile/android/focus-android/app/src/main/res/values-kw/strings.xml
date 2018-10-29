@@ -43,11 +43,6 @@
   <string name="preference_state_on">Byw</string>
   <string name="preference_state_off">Marow</string>
   <string name="preference_subitem_autocomplete">Kollenwel awtomatek a URLs</string>
-  <string name="preference_switch_autocomplete">Kollenwel awtomatek</string>
-  <string name="preference_category_autocomplete_preinstalled">Rol URL defowt</string>
-  <string name="preference_autocomplete_preinstalled_summary">Gallosegi dhe gavos %1$s kollenwel yn awtomatek moy es 450 URL gerys da y\'n barr trigva.</string>
-  <string name="preference_category_autocomplete_custom_urls">URLs personelhes</string>
-  <string name="preference_autocomplete_subitem_customlist">URLs personelhes</string>
   <string name="preference_autocomplete_action_add">+ Keworra URL personelhes</string>
   <string name="preference_autocomplete_title_add">Keworra URL personelhes</string>
   <string name="custom_autocomplete_quick_add">Keworra URL personelhes</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Awtolenwel URLs rag agas gwiasvaow gwella\nHirwaskowgh neb URL y\'n barr trigva</string>
   <string name="tip_open_in_new_tab">Ygeri kevren yn tabb nowydh\nHirwaskowgh neb kevren folen</string>
   <string name="tip_request_desktop">Gwell gweles an wiasva desktop leun?%1$sRol &gt; Gwiasva desktop</string>
-  <string name="tip_disable_tips">Diallosegi profyansow war skrin dre %1$s</string>
 </resources>

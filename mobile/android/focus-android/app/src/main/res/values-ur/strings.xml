@@ -40,10 +40,6 @@
   <string name="preference_state_on">چالو</string>
   <string name="preference_state_off">بند</string>
   <string name="preference_subitem_autocomplete">URL خودکار تکميل</string>
-  <string name="preference_switch_autocomplete">خودکار تکميل</string>
-  <string name="preference_category_autocomplete_preinstalled">طے شدہ URL فہرست</string>
-  <string name="preference_category_autocomplete_custom_urls">مخصوص URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">مخصوص URLs</string>
   <string name="preference_autocomplete_action_add">تخصیصی URL کا + اظافہ کریں</string>
   <string name="preference_autocomplete_title_add">تخصیصی URL کا اظافہ کریں</string>
   <string name="custom_autocomplete_quick_add">تخصیصی URL کا اظافہ کریں</string>

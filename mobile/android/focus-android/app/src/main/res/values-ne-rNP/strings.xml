@@ -40,10 +40,6 @@
   <string name="preference_state_on">खुला</string>
   <string name="preference_state_off">बन्द</string>
   <string name="preference_subitem_autocomplete">URL स्वत: पूर्ण</string>
-  <string name="preference_switch_autocomplete">स्वत: पूर्ण</string>
-  <string name="preference_category_autocomplete_preinstalled">पूर्वनिर्धारित URL सूची</string>
-  <string name="preference_category_autocomplete_custom_urls">अनुकूल URL हरू</string>
-  <string name="preference_autocomplete_subitem_customlist">अनुकूलन URLहरू</string>
   <string name="preference_autocomplete_action_add">+ अनुकूल URL थप्नुहोस्</string>
   <string name="preference_autocomplete_title_add">+ अनुकूल URL थप्नुहोस्</string>
   <string name="custom_autocomplete_quick_add">अनुकूल URL थप्नुहोस्</string>

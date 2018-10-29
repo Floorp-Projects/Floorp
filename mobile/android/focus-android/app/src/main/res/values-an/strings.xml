@@ -41,11 +41,6 @@
   <string name="preference_state_on">Activau</string>
   <string name="preference_state_off">Desactivau</string>
   <string name="preference_subitem_autocomplete">Autocompletar URL</string>
-  <string name="preference_switch_autocomplete">Autocompletar</string>
-  <string name="preference_category_autocomplete_preinstalled">Lista URL per defecto</string>
-  <string name="preference_autocomplete_preinstalled_summary">Activar pa tener autocompletau de %1$s con 450 URLs populars en a barra d\'adrezas.</string>
-  <string name="preference_category_autocomplete_custom_urls">URLs personalizadas</string>
-  <string name="preference_autocomplete_subitem_customlist">URLs personalizadas</string>
   <string name="preference_autocomplete_action_add">+ Anyader URL personalizada</string>
   <string name="preference_autocomplete_title_add">Anyader URL personalizada</string>
   <string name="custom_autocomplete_quick_add">Anyadir una URL personalizada</string>

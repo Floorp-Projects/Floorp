@@ -43,11 +43,6 @@
   <string name="preference_state_on">Timakaktuk</string>
   <string name="preference_state_off">Sewtuk</string>
   <string name="preference_subitem_autocomplete">URL temi isel</string>
-  <string name="preference_switch_autocomplete">Temi isel</string>
-  <string name="preference_category_autocomplete_preinstalled">Listaj achtutalijtuk URL</string>
-  <string name="preference_autocomplete_preinstalled_summary">Shiktimaka pal ma %1$s temi isel tik 450 URLs muishmattuk tik ne barraj direccion.</string>
-  <string name="preference_category_autocomplete_custom_urls">Shikmajmachiwa ne URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">Shikmajmachiwa ne URLs</string>
   <string name="preference_autocomplete_action_add">+Shiktalili ne mu-URL</string>
   <string name="preference_autocomplete_title_add">Shiktalili ne mu-URL</string>
   <string name="custom_autocomplete_quick_add">Shiktalili ne mu-URL</string>
@@ -195,5 +190,4 @@
   <string name="tip_set_default_browser">Shiktapu sejse ilpika %1$s\n Shikchiwa %1$s ken ne achtutalijtuk tajtachialis</string>
   <string name="tip_open_in_new_tab">Shiktapu se ilpika tik se yankwik pestañaj\n Shikpajpachu yek ne ilpika taja tikneki tik se iswat</string>
   <string name="tip_request_desktop">Tiknekiskia nikita muchi ne escritorioj?%1$s Menu &gt; Shiktajtani ne iswat ipal ne escritorioj</string>
-  <string name="tip_disable_tips">Shiksewi ne tanawatilis ijtik ne achtu iswat ipal %1$s</string>
 </resources>

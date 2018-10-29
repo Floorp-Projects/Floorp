@@ -43,11 +43,6 @@
   <string name="preference_state_on">เปิด</string>
   <string name="preference_state_off">ปิด</string>
   <string name="preference_subitem_autocomplete">การเติม URL อัตโนมัติ</string>
-  <string name="preference_switch_autocomplete">การเติมอัตโนมัติ</string>
-  <string name="preference_category_autocomplete_preinstalled">รายการ URL เริ่มต้น</string>
-  <string name="preference_autocomplete_preinstalled_summary">เปิดใช้งานเพื่อให้มีการเติมอัตโนมัติของ %1$s ผ่าน 450 URL ยอดนิยมในแถบที่อยู่</string>
-  <string name="preference_category_autocomplete_custom_urls">URL ที่กำหนดเอง</string>
-  <string name="preference_autocomplete_subitem_customlist">URL ที่กำหนดเอง</string>
   <string name="preference_autocomplete_action_add">+ เพิ่ม URL ที่กำหนดเอง</string>
   <string name="preference_autocomplete_title_add">เพิ่ม URL ที่กำหนดเอง</string>
   <string name="custom_autocomplete_quick_add">เพิ่ม URL ที่กำหนดเอง</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">เติม URL โดยอัตโนมัติสำหรับไซต์ที่คุณใช้มากที่สุด\n แตะค้างที่ URL ใด ๆ ในแถบที่อยู่</string>
   <string name="tip_open_in_new_tab">เปิดลิงก์ในแท็บใหม่\n แตะค้างที่ลิงก์ใด ๆ ในหน้า</string>
   <string name="tip_request_desktop">ต้องการเห็นไซต์สำหรับเดสก์ท็อปแบบเต็ม?%1$s เมนู &gt; ขอไซต์สำหรับเดสก์ท็อป</string>
-  <string name="tip_disable_tips">ปิดเคล็ดลับในหน้าจอเริ่มต้นของ %1$s</string>
 </resources>

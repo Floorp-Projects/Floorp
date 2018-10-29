@@ -43,11 +43,6 @@
   <string name="preference_state_on">Activat</string>
   <string name="preference_state_off">Desactivat</string>
   <string name="preference_subitem_autocomplete">Emplenament d’adreças</string>
-  <string name="preference_switch_autocomplete">Autocompletar</string>
-  <string name="preference_category_autocomplete_preinstalled">Lista d’adreças per defaut</string>
-  <string name="preference_autocomplete_preinstalled_summary">Activar per que %1$s complete la barra d’adreça amb 450 adreças mai popularas.</string>
-  <string name="preference_category_autocomplete_custom_urls">Adreças personalizadas</string>
-  <string name="preference_autocomplete_subitem_customlist">Adreças personalizadas</string>
   <string name="preference_autocomplete_action_add">+ Ajustar una adreça personalizada</string>
   <string name="preference_autocomplete_title_add">Ajustar una adreça personalizada</string>
   <string name="custom_autocomplete_quick_add">Ajustar una adreça personalizada</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Emplenament automaticament de las URL dels sites mai visitats\n Mantenètz quichat quin que siá URL dins la barra d’adreça</string>
   <string name="tip_open_in_new_tab">Dobrir un ligam dins un onglet novèl\n Mantenètz quichat quin que siá ligam de la pagina</string>
   <string name="tip_request_desktop">Vos aimatz mai lo site en version ordenador ? Menú %1$s &gt; Veire version ordenador</string>
-  <string name="tip_disable_tips">Quitar de mostrar las astúcias quand %1$s se lança</string>
 </resources>

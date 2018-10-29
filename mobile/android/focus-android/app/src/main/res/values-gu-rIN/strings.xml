@@ -43,11 +43,6 @@
   <string name="preference_state_on">ચાલુ</string>
   <string name="preference_state_off">બંધ</string>
   <string name="preference_subitem_autocomplete">URL સ્વતઃપૂર્ણ</string>
-  <string name="preference_switch_autocomplete">સ્વત: પૂર્ણ</string>
-  <string name="preference_category_autocomplete_preinstalled">મૂળભૂત URL સૂચિ</string>
-  <string name="preference_autocomplete_preinstalled_summary">સરનામાં બારમાં 450 થી વધુ લોકપ્રિય URLs પર %1$s સ્વત: પૂર્ણ થવામાં સક્ષમ છે.</string>
-  <string name="preference_category_autocomplete_custom_urls">પોતાના URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">પોતાનું URLs</string>
   <string name="preference_autocomplete_action_add">+ પોતાનું URL ઉમેરો</string>
   <string name="preference_autocomplete_title_add">પોતાનું URL ઉમેરો</string>
   <string name="custom_autocomplete_quick_add">પોતાનું URL ઉમેરો</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">તમે સૌથી વધુ ઉપયોગ કરો છો તે સાઇટ્સ માટે સ્વતઃપૂર્ણ URLs\n સરનામાં બારમાં કોઈપણ URL ને લાંબા સમય સુધી દબાવો</string>
   <string name="tip_open_in_new_tab">નવી ટેબમાં લિંક ખોલો\n કોઈ પૃષ્ઠ પર કોઈ લિંકને લાંબા સમયથી દબાવો</string>
   <string name="tip_request_desktop">તેના બદલે સંપૂર્ણ ડેસ્કટૉપ સાઇટ જુઓ?%1$s મેનૂ &gt; ડેસ્કટૉપ સાઇટની વિનંતી કરો</string>
-  <string name="tip_disable_tips">%1$s ની પ્રારંભ સ્ક્રીન પર ટિપ્સ બંધ કરો</string>
 </resources>

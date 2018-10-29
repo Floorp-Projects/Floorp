@@ -43,11 +43,6 @@
   <string name="preference_state_on">Hurung</string>
   <string name="preference_state_off">Pareum</string>
   <string name="preference_subitem_autocomplete">URL Otokumplit</string>
-  <string name="preference_switch_autocomplete">Otokumplit</string>
-  <string name="preference_category_autocomplete_preinstalled">Daptar URL Baku</string>
-  <string name="preference_autocomplete_preinstalled_summary">Hurungkeun hambéh %1$s otokumplit leuwih ti 450 URL kakoncara di leunjeuran alamat.</string>
-  <string name="preference_category_autocomplete_custom_urls">URL Sakahayang</string>
-  <string name="preference_autocomplete_subitem_customlist">URL Sakahayang</string>
   <string name="preference_autocomplete_action_add">+ Tambah URL sakahayang</string>
   <string name="preference_autocomplete_title_add">Tambah URL sakahayang</string>
   <string name="custom_autocomplete_quick_add">Tambah URL sakahayang</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Otokumplit URLs pikeun loka anu mindeng dianjangan\n Pencét lila URL dina bilah alamat</string>
   <string name="tip_open_in_new_tab">Muka hiji tutumbu dina hiji tab anyar\n Pencét lila tutumbu dina kacana</string>
   <string name="tip_request_desktop">Leuwih resep nempo loka déstop weuteuh?%1$s Menu &gt; Pilih loka déstop</string>
-  <string name="tip_disable_tips">Pareuman weling dina %1$s layar mimiti</string>
 </resources>

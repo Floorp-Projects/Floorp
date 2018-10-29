@@ -43,11 +43,6 @@
   <string name="preference_state_on">Zapinjeny</string>
   <string name="preference_state_off">Wupinjeny</string>
   <string name="preference_subitem_autocomplete">Awtomatiske wudospołnjenje URL</string>
-  <string name="preference_switch_autocomplete">Wudospołnjenje</string>
-  <string name="preference_category_autocomplete_preinstalled">Standardna lisćina adresow</string>
-  <string name="preference_autocomplete_preinstalled_summary">Zmóžnić, zo by %1$s wjace hač 450 woblubowanych adresow w adresowym polu wudospołnił.</string>
-  <string name="preference_category_autocomplete_custom_urls">Swójske URL</string>
-  <string name="preference_autocomplete_subitem_customlist">Swójske adresy</string>
   <string name="preference_autocomplete_action_add">+ Swójsku adresu přidać</string>
   <string name="preference_autocomplete_title_add">Swójsku adresu přidać</string>
   <string name="custom_autocomplete_quick_add">Swójski URL přidać</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">URL za sydła, kotrež najhusćišo wopytujeće, awtomatisce wudospołnić\nTłóčće dołho na URL w adresowym polu</string>
   <string name="tip_open_in_new_tab">Wotkaz w nowym rajtarku wočinić\nTłóčće dołho na wotkaz na stronje</string>
   <string name="tip_request_desktop">Chceće radšo dospołne desktopowe sydło widźeć?%1$s Meni &gt; Desktopowe sydło požadać</string>
-  <string name="tip_disable_tips">Pokiwy na startowej wobrazowce %1$s znjemóžnić</string>
 </resources>

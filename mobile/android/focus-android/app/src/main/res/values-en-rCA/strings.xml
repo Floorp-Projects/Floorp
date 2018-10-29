@@ -43,11 +43,6 @@
   <string name="preference_state_on">On</string>
   <string name="preference_state_off">Off</string>
   <string name="preference_subitem_autocomplete">URL Autocomplete</string>
-  <string name="preference_switch_autocomplete">Autocomplete</string>
-  <string name="preference_category_autocomplete_preinstalled">Default URL List</string>
-  <string name="preference_autocomplete_preinstalled_summary">Enable to have %1$s autocomplete over 450 popular URLs in the address bar.</string>
-  <string name="preference_category_autocomplete_custom_urls">Custom URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">Custom URLs</string>
   <string name="preference_autocomplete_action_add">+ Add custom URL</string>
   <string name="preference_autocomplete_title_add">Add custom URL</string>
   <string name="custom_autocomplete_quick_add">Add custom URL</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Autocomplete URLs for sites you use most\n Long-press any URL in the address bar</string>
   <string name="tip_open_in_new_tab">Open a link in a new tab\n Long-press any link on a page</string>
   <string name="tip_request_desktop">Rather see the full desktop site?%1$s Menu &gt; Request desktop site</string>
-  <string name="tip_disable_tips">Turn off tips on the %1$s start screen</string>
 </resources>

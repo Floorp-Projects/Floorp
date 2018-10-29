@@ -43,11 +43,6 @@
   <string name="preference_state_on">Açık</string>
   <string name="preference_state_off">Kapalı</string>
   <string name="preference_subitem_autocomplete">Otomatik adres tamamlama</string>
-  <string name="preference_switch_autocomplete">Otomatik tamamla</string>
-  <string name="preference_category_autocomplete_preinstalled">Varsayılan adres listesi</string>
-  <string name="preference_autocomplete_preinstalled_summary">%1$s’un 450’den fazla popüler adresi adres çubuğunda tamamlaması için bunu etkinleştirin.</string>
-  <string name="preference_category_autocomplete_custom_urls">Özel adresler</string>
-  <string name="preference_autocomplete_subitem_customlist">Özel adresler</string>
   <string name="preference_autocomplete_action_add">+ Özel adres ekle</string>
   <string name="preference_autocomplete_title_add">Özel adres ekle</string>
   <string name="custom_autocomplete_quick_add">Özel adres ekle</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">En çok kullandığınız sitelerin adreslerini otomatik tamamlayabilirsiniz\n Adres çubuğundaki herhangi bir adrese basılı tutun</string>
   <string name="tip_open_in_new_tab">Bağlantıları yeni sekmede açabilirsiniz\n Bir sayfadaki herhangi bir bağlantıya uzun basın</string>
   <string name="tip_request_desktop">Sitenin bilgisayar sürümünü görmek mü istiyorsunuz?%1$s Menü &gt; Masaüstü sitesini iste</string>
-  <string name="tip_disable_tips">%1$s başlangıç ekranındaki ipuçlarını kapat</string>
 </resources>

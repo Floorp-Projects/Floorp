@@ -43,11 +43,6 @@
   <string name="preference_state_on">Aan</string>
   <string name="preference_state_off">Uit</string>
   <string name="preference_subitem_autocomplete">URL’s automatisch aanvullen</string>
-  <string name="preference_switch_autocomplete">Automatisch aanvullen</string>
-  <string name="preference_category_autocomplete_preinstalled">Standaard URL-lijst</string>
-  <string name="preference_autocomplete_preinstalled_summary">Schakel dit in om %1$s automatisch meer dan 450 populaire URL’s in de adresbalk te laten aanvullen.</string>
-  <string name="preference_category_autocomplete_custom_urls">Aangepaste URL’s</string>
-  <string name="preference_autocomplete_subitem_customlist">Aangepaste URL’s</string>
   <string name="preference_autocomplete_action_add">+ Aangepaste URL toevoegen</string>
   <string name="preference_autocomplete_title_add">Aangepaste URL toevoegen</string>
   <string name="custom_autocomplete_quick_add">Aangepaste URL toevoegen</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">URL’s voor meestgebruikte websites automatisch aanvullen\n Houd uw vinger op een URL in de adresbalk</string>
   <string name="tip_open_in_new_tab">Een koppeling in een nieuw tabblad openen\n Houd uw vinger op een koppeling op een pagina</string>
   <string name="tip_request_desktop">Ziet u liever de volledige desktopwebsite?%1$s Menu &gt; Desktopwebsite opvragen</string>
-  <string name="tip_disable_tips">Tips op het startscherm van %1$s uitschakelen</string>
 </resources>

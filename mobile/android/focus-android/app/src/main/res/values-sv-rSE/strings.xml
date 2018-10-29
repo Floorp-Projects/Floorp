@@ -43,11 +43,6 @@
   <string name="preference_state_on">På</string>
   <string name="preference_state_off">Av</string>
   <string name="preference_subitem_autocomplete">Autokomplettera webbadress</string>
-  <string name="preference_switch_autocomplete">Autokomplettera</string>
-  <string name="preference_category_autocomplete_preinstalled">Standard webbadresslista</string>
-  <string name="preference_autocomplete_preinstalled_summary">Aktivera %1$s att automatiskt komplettera över 450 populära webbadresser i adressfältet.</string>
-  <string name="preference_category_autocomplete_custom_urls">Anpassade webbadresser</string>
-  <string name="preference_autocomplete_subitem_customlist">Anpassade webbadresser</string>
   <string name="preference_autocomplete_action_add">+ Lägg till anpassad webbadress</string>
   <string name="preference_autocomplete_title_add">Lägg till anpassad webbadress</string>
   <string name="custom_autocomplete_quick_add">Lägg till anpassad webbadress</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Autokomplettera webbadresser för webbplatser som du använder mest\n Tryck länge på vilken URL som helst i adressfältet</string>
   <string name="tip_open_in_new_tab">Öppna en länk i en ny flik\n Tryck länge på en länk på en sida</string>
   <string name="tip_request_desktop">Vill du hellre se webbplatsen anpassad för datorer?%1$s Meny &gt; Begär datorwebbplats</string>
-  <string name="tip_disable_tips">Stäng av tips på startskärmen för %1$s</string>
 </resources>

@@ -43,11 +43,6 @@
   <string name="preference_state_on">चालू</string>
   <string name="preference_state_off">बंद</string>
   <string name="preference_subitem_autocomplete">URL स्वयंपूर्ण</string>
-  <string name="preference_switch_autocomplete">स्वयंपूर्ण</string>
-  <string name="preference_category_autocomplete_preinstalled">पूर्वनिर्धारित URL यादी</string>
-  <string name="preference_autocomplete_preinstalled_summary">450 हुन अधिक विख्यात URL %1$s ने स्वयंपूर्ण करणे सक्षम करा.</string>
-  <string name="preference_category_autocomplete_custom_urls">सानुकूल URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">सानुकूल URLs</string>
   <string name="preference_autocomplete_action_add">+ सानुकूल URL जोडा</string>
   <string name="preference_autocomplete_title_add">सानुकूल URL जोडा</string>
   <string name="custom_autocomplete_quick_add">सानुकूल URL जोडा</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">सर्वात जास्त वापरलेल्या साईट च्या URL स्वयंपूर्ण करा\nकोणतीही URL पत्ता पट्टी मध्ये दीर्घकाळ दाबून धरा</string>
   <string name="tip_open_in_new_tab">एका नवीन टॅबमध्ये एक दुवा उघडा\n एका पृष्ठावर कोणताही दुवा दीर्घ-दाबून ठेवा</string>
   <string name="tip_request_desktop">याऐवजी पूर्ण डेस्कटॉप साईट पाहायची का?%1$s मेनू &gt; डेस्कटॉप साईटची विनंती करा</string>
-  <string name="tip_disable_tips">%1$s च्या आरंभ पटलावर सूचना बंद करा</string>
 </resources>

@@ -43,11 +43,6 @@
   <string name="preference_state_on">ჩართული</string>
   <string name="preference_state_off">გამორთული</string>
   <string name="preference_subitem_autocomplete">URL-ს თვითშევსება</string>
-  <string name="preference_switch_autocomplete">თვითშევსება</string>
-  <string name="preference_category_autocomplete_preinstalled">ნაგულისხმევი URL-ების ჩამონათვალი</string>
-  <string name="preference_autocomplete_preinstalled_summary">ჩართეთ და %1$s თავად დაასრულებს 450-ზე მეტ ცნობილ URL-ბმულს, მისამართების ველში აკრეფისას.</string>
-  <string name="preference_category_autocomplete_custom_urls">საკუთარი URL-ები</string>
-  <string name="preference_autocomplete_subitem_customlist">საკუთარი URL-ები</string>
   <string name="preference_autocomplete_action_add">+ საკუთარი URL-ების დამატება</string>
   <string name="preference_autocomplete_title_add">საკუთარი URL-ს დამატება</string>
   <string name="custom_autocomplete_quick_add">საკუთარი URL-ს დამატება</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">URL-ბმულების თვითშევსება სასურველი საიტებისთვის\n ნებისმიერ URL-ბმულზე ხანგრძლივი დაჭერით მისამართების ველში</string>
   <string name="tip_open_in_new_tab">გახსენით ბმული ახალ ჩანართში\n გვერდის ნებისმიერ ბმულზე ხანგრძლივი დაჭერით</string>
   <string name="tip_request_desktop">საიტის სრული ვერსიის ნახვას ამჯობინებთ?%1$s მენიუ &gt; სრული საიტის მოთხოვნა</string>
-  <string name="tip_disable_tips">რჩევების ჩვენება %1$s-ის მთავარ ეკრანზე</string>
 </resources>

@@ -43,11 +43,6 @@
   <string name="preference_state_on">Кабызылган</string>
   <string name="preference_state_off">Сүнгән</string>
   <string name="preference_subitem_autocomplete">URL-адресны автотөгәлләү</string>
-  <string name="preference_switch_autocomplete">Автотөгәлләү</string>
-  <string name="preference_category_autocomplete_preinstalled">Стандарт URL исемлеге</string>
-  <string name="preference_autocomplete_preinstalled_summary">450\'дән артык мәшһүр сайт адреслары өчен %1$s\'та автотөгәлләүне кабызу.</string>
-  <string name="preference_category_autocomplete_custom_urls">Үзгә URL\'лар</string>
-  <string name="preference_autocomplete_subitem_customlist">Үзгә URL\'лар</string>
   <string name="preference_autocomplete_action_add">+ Үзгә URL өстәү</string>
   <string name="preference_autocomplete_title_add">Үзгә URL өстәү</string>
   <string name="custom_autocomplete_quick_add">Үзгә URL өстәү</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Иң еш кулланылган сайтларның адресларын автотөгәлләү өчен\nАдрес юлындагы URL\'га озак итеп басып торыгыз</string>
   <string name="tip_open_in_new_tab">Сылтаманы яңа биттә ачу өчен\nСылтамага озак итеп басып торыгыз</string>
   <string name="tip_request_desktop">Сайтның өстәл өсте компьютерлары өчен эшләнгән версиясен карыйсыгыз киләме?%1$sМеню → Өстәл өсте компьютеры</string>
-  <string name="tip_disable_tips">%1$s өй экрандагы киңәшләрне сүндерү</string>
 </resources>

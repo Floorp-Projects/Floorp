@@ -43,11 +43,6 @@
   <string name="preference_state_on">Ενεργό</string>
   <string name="preference_state_off">Ανενεργό</string>
   <string name="preference_subitem_autocomplete">Αυτόματη συμπλήρωση URL</string>
-  <string name="preference_switch_autocomplete">Αυτόματη συμπλήρωση</string>
-  <string name="preference_category_autocomplete_preinstalled">Λίστα προεπιλεγμένων URL</string>
-  <string name="preference_autocomplete_preinstalled_summary">Ενεργοποιήστε ώστε το %1$s να συμπληρώνει αυτόματα περισσότερα από 450 δημοφιλή URLs στη γραμμή διευθύνσεων.</string>
-  <string name="preference_category_autocomplete_custom_urls">Προσαρμοσμένα URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">Προσαρμοσμένα URLs</string>
   <string name="preference_autocomplete_action_add">+ Προσθήκη προσαρμοσμένου URL</string>
   <string name="preference_autocomplete_title_add">Προσθήκη προσαρμοσμένου URL</string>
   <string name="custom_autocomplete_quick_add">Προσθήκη προσαρμοσμένου URL</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Αυτόματη συμπλήρωση URLs για τις ιστοσελίδες συχνής χρήσης\n Πατήστε παρατεταμένα οποιοδήποτε URL στη γραμμή διευθύνσεων</string>
   <string name="tip_open_in_new_tab">Άνοιγμα συνδέσμου σε νέα καρτέλα\n Πατήστε παρατεταμένα οποιοδήποτε σύνδεσμο σε μια σελίδα</string>
   <string name="tip_request_desktop">Προτιμάτε την πλήρη έκδοση για υπολογιστές;%1$s Μενού &gt; Απαίτηση ιστοσελίδας για υπολογιστές</string>
-  <string name="tip_disable_tips">Απενεργοποίηση συμβουλών στην αρχική οθόνη του %1$s</string>
 </resources>

@@ -43,11 +43,6 @@
   <string name="preference_state_on">Ymlaen</string>
   <string name="preference_state_off">Diffodd</string>
   <string name="preference_subitem_autocomplete">AwtoGwblhau URL</string>
-  <string name="preference_switch_autocomplete">Awtogwblhau</string>
-  <string name="preference_category_autocomplete_preinstalled">Rhestr URL rhagosodedig</string>
-  <string name="preference_autocomplete_preinstalled_summary">Galluogi i %1$s awtogwblhau dros 450 URLs poblogaidd yn y bar cyfeiriad.</string>
-  <string name="preference_category_autocomplete_custom_urls">URLau cyfaddas</string>
-  <string name="preference_autocomplete_subitem_customlist">URLau cyfaddas</string>
   <string name="preference_autocomplete_action_add">+ Ychwanegu URL cyfaddas</string>
   <string name="preference_autocomplete_title_add">Ychwanegu URL cyfaddas</string>
   <string name="custom_autocomplete_quick_add">Ychwanegu URL cyfaddas</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Gosod URLau awtogwblhau i\'ch gwefannau gorau\n Pwyso\'n hir unrhyw URL yn y bar cyfeiriad</string>
   <string name="tip_open_in_new_tab">Agor dolen mewn tab newydd\n Pwyso\'n hir ar unrhyw ddolen ar dudalen</string>
   <string name="tip_request_desktop">Gwell gweld gwefan bwrdd gwaith lawn?%1$s Dewislen &gt; Gwefan bwrdd gwaith</string>
-  <string name="tip_disable_tips">Diffodd awgrymiadau ar sgrin cychwyn %1$s</string>
 </resources>

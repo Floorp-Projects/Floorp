@@ -39,10 +39,6 @@
   <string name="preference_state_on">སྤྱོད།</string>
   <string name="preference_state_off">སྤྱོད་མཚམས་འཇོག</string>
   <string name="preference_subitem_autocomplete">དྲ་ཚིཊ་ཁ་བྱང་རང་གྲུབ།</string>
-  <string name="preference_switch_autocomplete">རང་གྲུབ།</string>
-  <string name="preference_category_autocomplete_preinstalled">རྩ་བའི་དྲ་ཚིཊ་ཁ་བྱང་ཐོ་གཞུང་།</string>
-  <string name="preference_category_autocomplete_custom_urls">རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་།</string>
-  <string name="preference_autocomplete_subitem_customlist">རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་།</string>
   <string name="preference_autocomplete_action_add">"+  རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་སྣོན།"</string>
   <string name="preference_autocomplete_title_add">རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་སྣོན།</string>
   <string name="custom_autocomplete_quick_add">རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་སྣོན།</string>

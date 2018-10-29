@@ -34,11 +34,6 @@
   <string name="preference_state_on">Batira</string>
   <string name="preference_state_off">Dzimwa</string>
   <string name="preference_subitem_autocomplete">URL Yapedziswa</string>
-  <string name="preference_switch_autocomplete">Pedzisirwa</string>
-  <string name="preference_category_autocomplete_preinstalled">Zvisizvo URL List</string>
-  <string name="preference_autocomplete_preinstalled_summary">Ita kuti ive ne %1$s inogadziriswa kupfuura dzinopfuura 450 dzinowanikwa URLs mubhadha rekero.</string>
-  <string name="preference_category_autocomplete_custom_urls">Yaunodao URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">Yaunodao URLs</string>
   <string name="preference_autocomplete_action_add">+ Wedzera yaunodao URL</string>
   <string name="preference_autocomplete_title_add">Wedzera yaunodao URL</string>
   <string name="custom_autocomplete_quick_add">Wedzera yaunodao URL</string>

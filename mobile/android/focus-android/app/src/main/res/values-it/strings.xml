@@ -43,11 +43,6 @@
   <string name="preference_state_on">Attivo</string>
   <string name="preference_state_off">Disattivato</string>
   <string name="preference_subitem_autocomplete">Completamento automatico indirizzo</string>
-  <string name="preference_switch_autocomplete">Completamento automatico</string>
-  <string name="preference_category_autocomplete_preinstalled">Elenco indirizzi predefinito</string>
-  <string name="preference_autocomplete_preinstalled_summary">Attiva per completare automaticamente oltre 450 domini nella barra degli indirizzi di %1$s.</string>
-  <string name="preference_category_autocomplete_custom_urls">Indirizzi URL personalizzati</string>
-  <string name="preference_autocomplete_subitem_customlist">Indirizzi personalizzati</string>
   <string name="preference_autocomplete_action_add">+ Aggiungi indirizzo personalizzato</string>
   <string name="preference_autocomplete_title_add">Nuovo indirizzo pers.</string>
   <string name="custom_autocomplete_quick_add">Nuovo indirizzo pers.</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Completamento automatico degli indirizzi per i siti che visiti più spesso\n Tieni premuto più a lungo un indirizzo URL nella barra degli indirizzi</string>
   <string name="tip_open_in_new_tab">Apri un link in una nuova scheda\n Tieni premuto a lungo un link in una pagina</string>
   <string name="tip_request_desktop">Preferisci visualizzare il sito in modalità desktop?%1$s Menu &gt; Modalità desktop</string>
-  <string name="tip_disable_tips">Disattiva i suggerimenti nella %1$s schermata iniziale</string>
 </resources>

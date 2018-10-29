@@ -28,10 +28,6 @@
   <string name="preference_state_on">Taalees</string>
   <string name="preference_state_off">Fayees</string>
   <string name="preference_subitem_autocomplete">Àggale mbindum màkkaan gu boppu</string>
-  <string name="preference_switch_autocomplete">Àggale mbind gu boppu</string>
-  <string name="preference_category_autocomplete_preinstalled">Limu màkkaan yim wàccaale</string>
-  <string name="preference_autocomplete_preinstalled_summary">Doxalal ngir %1$s man di la mottalil lu romb 450 màkkaani web yu siiw ci bànqaasu màkkaan bi.</string>
-  <string name="preference_autocomplete_subitem_customlist">Màkkaan yees jëmmal</string>
   <string name="preference_autocomplete_action_add">+ Yokkal ag màkkaan gees jëmmal</string>
   <string name="preference_autocomplete_title_add">Yokkal ag màkkaan gees jëmmal</string>
   <string name="preference_autocomplete_title_remove">Dindi màkkaan gees Jëmmal</string>

@@ -43,11 +43,6 @@
   <string name="preference_state_on">चालू</string>
   <string name="preference_state_off">बंद</string>
   <string name="preference_subitem_autocomplete">URL स्वत: पूर्ण</string>
-  <string name="preference_switch_autocomplete">स्‍वत: पूर्ण</string>
-  <string name="preference_category_autocomplete_preinstalled">मूलभूत URL सूची</string>
-  <string name="preference_autocomplete_preinstalled_summary">पता पट्ट में 450 लोकप्रिय URLs पर %1$s स्वत: पूर्णता के लिए सक्षम करेंl</string>
-  <string name="preference_category_autocomplete_custom_urls">विशिष्ट URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">उपभोक्ता संशोधित URLs</string>
   <string name="preference_autocomplete_action_add">+ अपनी संशोधित URL जोड़ें</string>
   <string name="preference_autocomplete_title_add">अपनी संशोधित URL जोड़ें</string>
   <string name="custom_autocomplete_quick_add">विशिष्ट URL जोड़ें</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">स्वतः पूर्ण URLs उन साइटों के लिए जिन्हें आप अधिक इस्तेमाल करते हैं\n पता बार में किसी URL पर कुछ देर दबा कर रखें</string>
   <string name="tip_open_in_new_tab">कोई लिंक एक नये टैब में खोलें\n पृष्ठ पर किसी लिंक पर कुछ देर दबा कर रखें</string>
   <string name="tip_request_desktop">इसके बदले पूर्ण डेस्कटॉप साइट देखें?%1$s मेन्यु &gt; डेस्कटॉप साइट कि अनुरोध करें</string>
-  <string name="tip_disable_tips">%1$s प्रारंभ स्क्रीन पर सलाह को बंद करें</string>
 </resources>

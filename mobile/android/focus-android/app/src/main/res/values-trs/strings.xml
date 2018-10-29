@@ -43,11 +43,6 @@
   <string name="preference_state_on">On</string>
   <string name="preference_state_off">Off</string>
   <string name="preference_subitem_autocomplete">Nuta\' ma\'ān ma URL</string>
-  <string name="preference_switch_autocomplete">Nuta\' ma\'ān ma</string>
-  <string name="preference_category_autocomplete_preinstalled">Dadànj hua nian lista URL</string>
-  <string name="preference_autocomplete_preinstalled_summary">Nachrun %1$s da\' nuta\' ma\'ān ma 450 URLs sa nià\' dojruhua guìi ni\'iaj ni.</string>
-  <string name="preference_category_autocomplete_custom_urls">Nagi\'iaj mu\'ù nej URL</string>
-  <string name="preference_autocomplete_subitem_customlist">Nagi\'iaj mu\'ù nej URL</string>
   <string name="preference_autocomplete_action_add">+ Nùto\' sa nagi\'iaj ma\'ān URL</string>
   <string name="preference_autocomplete_title_add">Nùto\' sa nagi\'iaj ma\'ān URL</string>
   <string name="custom_autocomplete_quick_add">Nùto\' sa nagi\'iaj ma\'ān URL</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">"Nagi\'iaj chre\' nej URL guenda nej sitio rajsun yitïnjt\nRu\'ma ra\'à riña URL \'na\' riña dukuán direksiôn "</string>
   <string name="tip_open_in_new_tab">Na\'nïn a\'ngo enlase riña a\'ngo rakïj ñanj nakàa\nRu\'ma ra\'à riña ahuin nanj ma\'an enlase \'na riña pajinâ</string>
   <string name="tip_request_desktop">Ruat ni\'iaj sitio \'na\' riña eskritorio aj%1$s Menú &gt; gachinj ni\'iaj</string>
-  <string name="tip_disable_tips">Duna\'àj sa rikî sujerênsia riña %1$s pantayâ gayi\'ij</string>
 </resources>

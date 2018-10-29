@@ -43,11 +43,6 @@
   <string name="preference_state_on">Activat</string>
   <string name="preference_state_off">Desactivat</string>
   <string name="preference_subitem_autocomplete">Emplenament automàtic d\'URL</string>
-  <string name="preference_switch_autocomplete">Emplenament automàtic</string>
-  <string name="preference_category_autocomplete_preinstalled">Llista d\'URL per defecte</string>
-  <string name="preference_autocomplete_preinstalled_summary">Activeu-lo per fer permetre que el %1$s empleni automàticament més de 450 URL populars a la barra d\'adreces.</string>
-  <string name="preference_category_autocomplete_custom_urls">URL personalitzats</string>
-  <string name="preference_autocomplete_subitem_customlist">URL personalitzats</string>
   <string name="preference_autocomplete_action_add">+ Afegeix un URL personalitzat</string>
   <string name="preference_autocomplete_title_add">URL personalitzat nou</string>
   <string name="custom_autocomplete_quick_add">Afegeix URL personalitzat</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Emplenament automàtic dels URL dels llocs que més utilitzeu\n Manteniu premut qualsevol URL de la barra d\'adreces</string>
   <string name="tip_open_in_new_tab">Obriu un enllaç en una pestanya nova\n Manteniu premut qualsevol enllaç de la pàgina</string>
   <string name="tip_request_desktop">Preferiu veure el lloc com es mostra en l\'escriptori?%1$s Menú &gt; Mostra el lloc d\'escriptori</string>
-  <string name="tip_disable_tips">Desactiva els consells de la pantalla d\'inici del %1$s</string>
 </resources>

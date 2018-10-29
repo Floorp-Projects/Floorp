@@ -31,11 +31,6 @@
   <string name="preference_state_on">Միաց.</string>
   <string name="preference_state_off">Անջ.</string>
   <string name="preference_subitem_autocomplete">URL ինքնալրացում</string>
-  <string name="preference_switch_autocomplete">Ինքնալրացում</string>
-  <string name="preference_category_autocomplete_preinstalled">Սկզբնադիր URL ցանկ</string>
-  <string name="preference_autocomplete_preinstalled_summary">Միացրեք՝ ունենալու համար %1$s ինքնալրացում աեվլի քան 450 հանրահայտ URL-ների համար:</string>
-  <string name="preference_category_autocomplete_custom_urls">Հարմարեցված URL-ներ</string>
-  <string name="preference_autocomplete_subitem_customlist">Հարմարեցված URL-ներ</string>
   <string name="preference_autocomplete_action_add">+ Հավելել հարմարեցված URL</string>
   <string name="preference_autocomplete_title_add">Հավելել հարմարեցված URL</string>
   <string name="custom_autocomplete_quick_add">Ավելացնել հարմարեցված URL</string>

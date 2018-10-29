@@ -43,11 +43,6 @@
   <string name="preference_state_on">Tɨɨn</string>
   <string name="preference_state_off">Xina´va</string>
   <string name="preference_subitem_autocomplete">URL Tee ntu´u</string>
-  <string name="preference_switch_autocomplete">Tee ntu´u</string>
-  <string name="preference_category_autocomplete_preinstalled">Lista URL predeterminada</string>
-  <string name="preference_autocomplete_preinstalled_summary">Ke´í saa %1$s kutivi nuu ka̱a̱ direcciones kuaiyo daa 450 URLs a ni´ika.</string>
-  <string name="preference_category_autocomplete_custom_urls">Sa´a vii URLs</string>
-  <string name="preference_autocomplete_subitem_customlist">Sá´á vii URLs</string>
   <string name="preference_autocomplete_action_add">+Tee a sá´á vii URL</string>
   <string name="preference_autocomplete_title_add">Tee URL vii</string>
   <string name="custom_autocomplete_quick_add">Tee a sá´á vii URL</string>

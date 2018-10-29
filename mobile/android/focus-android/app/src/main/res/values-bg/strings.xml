@@ -43,11 +43,6 @@
   <string name="preference_state_on">Включено</string>
   <string name="preference_state_off">Изключено</string>
   <string name="preference_subitem_autocomplete">Автоматично довършване на адреси</string>
-  <string name="preference_switch_autocomplete">Автоматично довършване</string>
-  <string name="preference_category_autocomplete_preinstalled">Фабричен списък на адреси</string>
-  <string name="preference_autocomplete_preinstalled_summary">Включете, за да имате в лентата за адреси на %1$s автоматично довършване на повече от 450 популярни адреси.</string>
-  <string name="preference_category_autocomplete_custom_urls">Потребителски адреси</string>
-  <string name="preference_autocomplete_subitem_customlist">Потребителски адреси</string>
   <string name="preference_autocomplete_action_add">+ Добавяне на потребителски адрес</string>
   <string name="preference_autocomplete_title_add">Добавяне на адрес</string>
   <string name="custom_autocomplete_quick_add">Добавяне на адрес</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Автоматизирано завършвайте адреси на често посещавани сайтове\n Натиснете продължително върху адрес в адресната лента</string>
   <string name="tip_open_in_new_tab">Отваряйте препратки в нов раздел\n Натиснете продължително върху препратка в страница</string>
   <string name="tip_request_desktop">Искате да видите пълния настолен изглед на сайт?%1$s Меню &gt; Настолна версия на сайта</string>
-  <string name="tip_disable_tips">Изключване на съветите на началния екран на %1$s</string>
 </resources>

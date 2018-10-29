@@ -43,11 +43,6 @@
   <string name="preference_state_on">Aktibatuta</string>
   <string name="preference_state_off">Desaktibatuta</string>
   <string name="preference_subitem_autocomplete">URLen osatze automatikoa</string>
-  <string name="preference_switch_autocomplete">Osatze automatikoa</string>
-  <string name="preference_category_autocomplete_preinstalled">URL zerrenda lehenetsia</string>
-  <string name="preference_autocomplete_preinstalled_summary">Gaituz gero, helbide-barran automatikoki osatuko ditu 450 URL ezagun baino gehiago %1$s(e)k.</string>
-  <string name="preference_category_autocomplete_custom_urls">URL pertsonalizatuak</string>
-  <string name="preference_autocomplete_subitem_customlist">URL pertsonalizatuak</string>
   <string name="preference_autocomplete_action_add">+ Gehitu URL perstonalizatua</string>
   <string name="preference_autocomplete_title_add">Gehitu URL perstonalizatua</string>
   <string name="custom_autocomplete_quick_add">Gehitu URL pertsonalizatua</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">Osatu automatikoki gehien bisitatzen dituzun guneetako URLak\n Mantendu sakatuta helbide-barran edozein URL</string>
   <string name="tip_open_in_new_tab">Ireki lotura fitxa berri batean\n Mantendu sakatuta orri bateko edozein lotura</string>
   <string name="tip_request_desktop">Nahiago duzu mahaigaineko gune osoa ikusi?%1$s Menua &gt; Mahaigaineko gunea</string>
-  <string name="tip_disable_tips">Desgaitu %1$s(r)en hasierako pantailako aholkuak</string>
 </resources>

@@ -43,11 +43,6 @@
   <string name="preference_state_on">مفعّل</string>
   <string name="preference_state_off">معطّل</string>
   <string name="preference_subitem_autocomplete">إكمال المسارات تلقائيا</string>
-  <string name="preference_switch_autocomplete">الإكمال التلقائي</string>
-  <string name="preference_category_autocomplete_preinstalled">قائمة المسارات المبدئية</string>
-  <string name="preference_autocomplete_preinstalled_summary">فعّله ليُكمل %1$s تلقائيا أكثر من ٤٥٠ عنوان وب في شريط العناوين.</string>
-  <string name="preference_category_autocomplete_custom_urls">مسارات مخصصة</string>
-  <string name="preference_autocomplete_subitem_customlist">المسارات المخصصة</string>
   <string name="preference_autocomplete_action_add">+ أضِف مسارا مخصصا</string>
   <string name="preference_autocomplete_title_add">أضِف مسارا مخصصا</string>
   <string name="custom_autocomplete_quick_add">أضِف مسارا مخصصا</string>
@@ -229,5 +224,4 @@
   <string name="tip_autocomplete_url">أكمِل تلقائيًا عناوين المواقع التي تزورها باستمرار\nاضغط مطوّلًا على أي عنوان في شريط العنوان</string>
   <string name="tip_open_in_new_tab">افتح الرابط في لسان جديد\nانقر مطوّلًا على أي رابط في الصفحة</string>
   <string name="tip_request_desktop">أتفضّل عرض نسخة سطح المكتب؟%1$s القائمة &gt; اطلب موقع سطح المكتب</string>
-  <string name="tip_disable_tips">عطّل النصائح في شاشة بداية %1$s</string>
 </resources>
