@@ -59,7 +59,7 @@ add_task(async function register_404() {
  */
 add_task(async function register_bad_mime_type() {
   let expectedMessage = expect_console_message(
-    "ServiceWorkerRegisterMimeTypeError",
+    "ServiceWorkerRegisterMimeTypeError2",
     [make_absolute_url("bad_mime_type/"), "text/plain",
      make_absolute_url("sw_bad_mime_type.js")]);
 
