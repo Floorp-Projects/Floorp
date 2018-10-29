@@ -12,12 +12,14 @@ import logging
 import time
 import yaml
 
-from .generator import TaskGraphGenerator
+from . import GECKO
+from .actions import render_actions_json
 from .create import create_tasks
+from .generator import TaskGraphGenerator
 from .parameters import Parameters, get_version, get_app_version
 from .taskgraph import TaskGraph
 from .try_option_syntax import parse_message
-from .actions import render_actions_json
+from taskgraph.util.hg import get_hg_revision_branch
 from taskgraph.util.partials import populate_release_history
 from taskgraph.util.yaml import load_yaml
 
@@ -174,6 +176,7 @@ def get_decision_parameters(config, options):
 
     """
     product_dir = config['product-dir']
+    root = options.get('root') or GECKO
 
     parameters = {n: options[n] for n in [
         'base_repository',
@@ -209,6 +212,7 @@ def get_decision_parameters(config, options):
     parameters['build_number'] = 1
     parameters['version'] = get_version(product_dir)
     parameters['app_version'] = get_app_version(product_dir)
+    parameters['hg_branch'] = get_hg_revision_branch(root, revision=parameters['head_rev'])
     parameters['next_version'] = None
     parameters['release_type'] = ''
     parameters['release_eta'] = ''
