@@ -73,7 +73,11 @@ this.ASRouterTriggerListeners = new Map([
 
     onLocationChange(aBrowser, aWebProgress, aRequest, aLocationURI, aFlags) {
       const location = aLocationURI ? aLocationURI.spec : "";
-      if (location && aWebProgress.isTopLevel) {
+      // Some websites trigger redirect events after they finish loading even
+      // though the location remains the same. This results in onLocationChange
+      // events to be fired twice.
+      const isSameDocument = !!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT);
+      if (location && aWebProgress.isTopLevel && !isSameDocument) {
         try {
           const host = (new URL(location)).hostname;
           if (this._hosts.has(host)) {
