@@ -1,1 +1,4 @@
 15656cb497303703b4d541d3e14292259e4c5343
+
+Additional fixes cherry-picked from the upstream WebRender repository:
+https://github.com/servo/webrender/pull/3234
