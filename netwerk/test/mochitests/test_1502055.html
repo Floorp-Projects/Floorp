@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Clear-Site-Data + 304 header.</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+  ["dom.serviceWorkers.enabled", true],
+  ["dom.serviceWorkers.testing.enabled", true]
+]}).then(() => {
+  let ifr = document.createElement('iframe');
+  ifr.src = "https://example.org/tests/netwerk/test/mochitests/iframe_1502055.html";
+  document.body.appendChild(ifr);
+  addEventListener("message", e => {
+    if (e.type == "finish") {
+      ok(true, "Test passed");
+      SimpleTest.finish();
+      return;
+    }
+
+    if (e.type == "info") {
+      info(e.msg);
+      return;
+    }
+  });
+});
+
+</script>
+
+</body>
+</html>
