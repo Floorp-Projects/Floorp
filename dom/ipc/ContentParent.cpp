@@ -2934,26 +2934,6 @@ ContentParent::RecvPlayEventSound(const uint32_t& aEventId)
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvGetSystemColors(const uint32_t& colorsCount,
-                                   InfallibleTArray<uint32_t>* colors)
-{
-#ifdef MOZ_WIDGET_ANDROID
-  NS_ASSERTION(AndroidBridge::Bridge() != nullptr, "AndroidBridge is not available");
-  if (AndroidBridge::Bridge() == nullptr) {
-    // Do not fail - the colors won't be right, but it's not critical
-    return IPC_OK();
-  }
-
-  colors->AppendElements(colorsCount);
-
-  // The array elements correspond to the members of AndroidSystemColors structure,
-  // so just pass the pointer to the elements buffer
-  AndroidBridge::Bridge()->GetSystemColors((AndroidSystemColors*)colors->Elements());
-#endif
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 ContentParent::RecvGetIconForExtension(const nsCString& aFileExt,
                                        const uint32_t& aIconSize,
                                        InfallibleTArray<uint8_t>* bits)
