@@ -22,8 +22,8 @@ function PC_BOTH_WAIT_FOR_ICE_FAILED(test) {
              e => is(e.message, reason, msg + " must fail with: " + e.message));
 
   return Promise.all([
-    isFail(() => waitForIceConnected(test, test.pcLocal), "ICE failed", "Local ICE"),
-    isFail(() => waitForIceConnected(test, test.pcRemote), "ICE failed", "Remote ICE")
+    isFail(() => test.pcLocal.waitForIceConnected(), "ICE failed", "Local ICE"),
+    isFail(() => test.pcRemote.waitForIceConnected(), "ICE failed", "Remote ICE")
   ])
   .then(() => ok(true, "ICE on both sides must fail."));
 }
