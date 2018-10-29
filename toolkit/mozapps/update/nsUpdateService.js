@@ -12,12 +12,19 @@ ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/ctypes.jsm", this);
 ChromeUtils.import("resource://gre/modules/UpdateTelemetry.jsm", this);
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
+ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser", "XMLHttpRequest"]);
 
 const UPDATESERVICE_CID = Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}");
 
 const PREF_APP_UPDATE_ALTWINDOWTYPE        = "app.update.altwindowtype";
+// Do not use PREF_APP_UPDATE_AUTO directly! Call getAutoUpdateIsEnabled or
+// setAutoUpdateIsEnabled.
+// See nsIApplicationUpdateService::getAutoUpdateIsEnabled and
+// nsIApplicationUpdateService::setAutoUpdateIsEnabled in nsIUpdateService.idl
+// for additional details.
 const PREF_APP_UPDATE_AUTO                 = "app.update.auto";
+const PREF_APP_UPDATE_AUTO_MIGRATED        = "app.update.auto.migrated";
 const PREF_APP_UPDATE_BACKGROUNDINTERVAL   = "app.update.download.backgroundInterval";
 const PREF_APP_UPDATE_BACKGROUNDERRORS     = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_BACKGROUNDMAXERRORS  = "app.update.backgroundMaxErrors";
@@ -46,6 +53,14 @@ const PREF_APP_UPDATE_SOCKET_RETRYTIMEOUT  = "app.update.socket.retryTimeout";
 const PREF_APP_UPDATE_STAGING_ENABLED      = "app.update.staging.enabled";
 const PREF_APP_UPDATE_URL                  = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS          = "app.update.url.details";
+// Note that although this value has the same format as those above, it is very
+// different. It is not stored as part of the user's prefs. Instead it is stored
+// in the file indicated by FILE_UPDATE_CONFIG_JSON , which will be located in
+// the update directory. This allows it to be accessible from all Firefox
+// profiles and from the Background Update Agent.
+const CONFIG_APP_UPDATE_AUTO               = "app.update.auto";
+// The default value for the above setting
+const DEFAULT_APP_UPDATE_AUTO = true;
 
 const URI_BRAND_PROPERTIES      = "chrome://branding/locale/brand.properties";
 const URI_UPDATE_HISTORY_DIALOG = "chrome://mozapps/content/update/history.xul";
@@ -62,6 +77,7 @@ const FILE_ACTIVE_UPDATE_XML = "active-update.xml";
 const FILE_BACKUP_UPDATE_LOG = "backup-update.log";
 const FILE_LAST_UPDATE_LOG   = "last-update.log";
 const FILE_UPDATES_XML       = "updates.xml";
+const FILE_UPDATE_CONFIG_JSON = "update-config.json";
 const FILE_UPDATE_LOG        = "update.log";
 const FILE_UPDATE_MAR        = "update.mar";
 const FILE_UPDATE_STATUS     = "update.status";
@@ -213,6 +229,8 @@ XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function aus_gLogEnabled() {
 XPCOMUtils.defineLazyGetter(this, "gUpdateBundle", function aus_gUpdateBundle() {
   return Services.strings.createBundle(URI_UPDATES_PROPERTIES);
 });
+
+XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => new TextDecoder());
 
 /**
  * Tests to make sure that we can write to a given directory.
@@ -2296,7 +2314,7 @@ UpdateService.prototype = {
    * @param   updates
    *          An array of available updates
    */
-  _selectAndInstallUpdate: function AUS__selectAndInstallUpdate(updates) {
+  _selectAndInstallUpdate: async function AUS__selectAndInstallUpdate(updates) {
     // Return early if there's an active update. The user is already aware and
     // is downloading or performed some user action to prevent notification.
     var um = Cc["@mozilla.org/updates/update-manager;1"].
@@ -2359,7 +2377,8 @@ UpdateService.prototype = {
      * Major         Notify
      * Minor         Auto Install
      */
-    if (!Services.prefs.getBoolPref(PREF_APP_UPDATE_AUTO, true)) {
+    let updateAuto = await this.getAutoUpdateIsEnabled();
+    if (!updateAuto) {
       LOG("UpdateService:_selectAndInstallUpdate - prompting because silent " +
           "install is disabled. Notifying observers. topic: update-available, " +
           "status: show-prompt");
@@ -2440,6 +2459,130 @@ UpdateService.prototype = {
 
     LOG("UpdateService.canCheckForUpdates - able to check for updates");
     return true;
+  },
+
+  _updateAutoSettingCachedVal: null,
+  // Used for serializing reads and writes of the app update json config file.
+  // This is especially important for making sure writes don't happen out of
+  // order. It would be bad if a user double-toggling this setting resulted in a
+  // race condition. The last write must be the one that ultimately controls
+  // the setting's value.
+  _updateAutoIOPromise: Promise.resolve(),
+
+  _readUpdateAutoConfig: async function AUS__readUpdateAuto() {
+    let configFile = getUpdateFile([FILE_UPDATE_CONFIG_JSON ]);
+    let binaryData = await OS.File.read(configFile.path);
+    let jsonData = gTextDecoder.decode(binaryData);
+    let configData = JSON.parse(jsonData);
+    return !!configData[CONFIG_APP_UPDATE_AUTO];
+  },
+
+  _writeUpdateAutoConfig: async function AUS__writeUpdateAutoPref(enabledValue) {
+    let enabledBoolValue = !!enabledValue;
+    let configFile = getUpdateFile([FILE_UPDATE_CONFIG_JSON]);
+    let configObject = {[CONFIG_APP_UPDATE_AUTO]: enabledBoolValue};
+
+    await OS.File.writeAtomic(configFile.path, JSON.stringify(configObject));
+    return enabledBoolValue;
+  },
+
+  // If the value of app.update.auto has changed, notify observers. Returns the
+  // new value for app.update.auto.
+  _maybeUpdateAutoConfigChanged: function AUS__maybeUpdateAutoConfigChanged(newValue) {
+    if (newValue != this._updateAutoSettingCachedVal) {
+      this._updateAutoSettingCachedVal = newValue;
+      Services.obs.notifyObservers(null, "auto-update-config-change",
+                                   newValue.toString());
+    }
+    return newValue;
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  getAutoUpdateIsEnabled: function AUS_getAutoUpdateIsEnabled() {
+    if (AppConstants.platform != "win") {
+      // Only in Windows do we store the update config in the update directory
+      let prefValue = Services.prefs.getBoolPref(PREF_APP_UPDATE_AUTO,
+                                                 DEFAULT_APP_UPDATE_AUTO);
+      return Promise.resolve(prefValue);
+    }
+    // Justification for the empty catch statement below:
+    // All promises returned by (get|set)AutoUpdateIsEnabled are part of a
+    // single promise chain in order to serialize disk operations. We don't want
+    // the entire promise chain to reject when one operation fails.
+    //
+    // There is only one situation when a promise in this chain should ever
+    // reject, which is when writing fails and the error is logged and
+    // re-thrown. All other possible exceptions are wrapped in try blocks, which
+    // also log any exception that may occur.
+    let readPromise = this._updateAutoIOPromise.catch(() => {}).then(async () => {
+      try {
+        let configValue = await this._readUpdateAutoConfig();
+        // If we read a value out of this file, don't later perform migration.
+        // If the file is deleted, we don't want some stale pref getting
+        // written to it just because a different profile performed migration.
+        Services.prefs.setBoolPref(PREF_APP_UPDATE_AUTO_MIGRATED, true);
+        return configValue;
+      } catch (e) {
+        LOG("UpdateService.getAutoUpdateIsEnabled - Unable to read app " +
+            "update configuration file. Exception: " + e);
+        let valueMigrated = Services.prefs.getBoolPref(
+                              PREF_APP_UPDATE_AUTO_MIGRATED,
+                              false);
+        if (!valueMigrated) {
+          LOG("UpdateService.getAutoUpdateIsEnabled - Attempting migration.");
+          Services.prefs.setBoolPref(PREF_APP_UPDATE_AUTO_MIGRATED, true);
+          let prefValue = Services.prefs.getBoolPref(PREF_APP_UPDATE_AUTO,
+                                                     DEFAULT_APP_UPDATE_AUTO);
+          try {
+            return await this._writeUpdateAutoConfig(prefValue);
+          } catch (e) {
+            LOG("UpdateService.getAutoUpdateIsEnabled - Migration failed. " +
+                "Exception: " + e);
+          }
+        }
+      }
+      // Fallthrough for if the value could not be read or migrated.
+      return DEFAULT_APP_UPDATE_AUTO;
+    }).then(this._maybeUpdateAutoConfigChanged.bind(this));
+    this._updateAutoIOPromise = readPromise;
+    return readPromise;
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  setAutoUpdateIsEnabled: function AUS_setAutoUpdateIsEnabled(enabledValue) {
+    if (AppConstants.platform != "win") {
+      // Only in Windows do we store the update config in the update directory
+      let prefValue = !!enabledValue;
+      Services.prefs.setBoolPref(PREF_APP_UPDATE_AUTO, prefValue);
+      this._maybeUpdateAutoConfigChanged(prefValue);
+      return Promise.resolve(prefValue);
+    }
+    // Justification for the empty catch statement below:
+    // All promises returned by (get|set)AutoUpdateIsEnabled are part of a
+    // single promise chain in order to serialize disk operations. We don't want
+    // the entire promise chain to reject when one operation fails.
+    //
+    // There is only one situation when a promise in this chain should ever
+    // reject, which is when writing fails and the error is logged and
+    // re-thrown. All other possible exceptions are wrapped in try blocks, which
+    // also log any exception that may occur.
+    let writePromise = this._updateAutoIOPromise.catch(() => {}).then(async () => {
+      try {
+        return await this._writeUpdateAutoConfig(enabledValue);
+      } catch (e) {
+        LOG("UpdateService.setAutoUpdateIsEnabled - App update configuration " +
+            "file write failed. Exception: " + e);
+        // After logging, rethrow the error so the caller knows that writing the
+        // value in the app update config file failed.
+        throw e;
+      }
+    }).then(this._maybeUpdateAutoConfigChanged.bind(this));
+    this._updateAutoIOPromise = writePromise;
+    return writePromise;
   },
 
   /**
