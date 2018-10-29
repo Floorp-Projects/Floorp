@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.943';
-var pdfjsBuild = 'dc98bf76';
+var pdfjsVersion = '2.1.15';
+var pdfjsBuild = '991a574c';
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -327,7 +327,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.943';
+    let workerVersion = '2.1.15';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -19142,6 +19142,11 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var dict = xobj.dict;
       var matrix = dict.getArray('Matrix');
       var bbox = dict.getArray('BBox');
+      if (Array.isArray(bbox) && bbox.length === 4) {
+        bbox = _util.Util.normalizeRect(bbox);
+      } else {
+        bbox = null;
+      }
       var group = dict.get('Group');
       if (group) {
         var groupOptions = {
