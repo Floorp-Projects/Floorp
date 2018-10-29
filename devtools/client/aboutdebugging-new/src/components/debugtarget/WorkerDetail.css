@@ -7,7 +7,7 @@
  *
  *  +----------------+--------------------+
  *  | detail name dt | detail value dd    |
- *  | (60px )        | (auto)             |
+ *  | (auto )        |                    |
  *  +----------------+--------------------+
  *  | detail name dt | detail value dd    |
  *  +----------------+--------------------+
@@ -18,6 +18,6 @@
  */
 .worker-detail {
   display: grid;
-  grid-template-columns: calc(var(--base-distance) * 15) auto;
-  margin-block-start: var(--base-distance);
+  grid-template-columns: auto 1fr;
+  grid-column-gap: var(--base-distance);
 }
