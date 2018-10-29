@@ -22,6 +22,7 @@ class JSONPrinter
 {
   protected:
     int indentLevel_;
+    bool indent_;
     bool first_;
     GenericPrinter& out_;
     DtoaState* dtoaState_;
@@ -29,8 +30,9 @@ class JSONPrinter
     void indent();
 
   public:
-    explicit JSONPrinter(GenericPrinter& out)
+    explicit JSONPrinter(GenericPrinter& out, bool indent = true)
       : indentLevel_(0),
+        indent_(indent),
         first_(true),
         out_(out),
         dtoaState_(nullptr)
@@ -40,6 +42,7 @@ class JSONPrinter
     ~JSONPrinter();
 
     void beginObject();
+    void beginList();
     void beginObjectProperty(const char* name);
     void beginListProperty(const char* name);
 
