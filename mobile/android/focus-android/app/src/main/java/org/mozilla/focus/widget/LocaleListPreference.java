@@ -150,7 +150,7 @@ public class LocaleListPreference extends ListPreference {
 
     }
 
-    interface EntriesListener {
+    public interface EntriesListener {
         void onEntriesSet();
     }
 
