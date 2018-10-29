@@ -133,13 +133,14 @@ interface nsIAuthModule : nsISupports
                 in unsigned long   aInTokenLength,
                 out voidPtr        aOutToken,
                 out unsigned long  aOutTokenLength);
-};
 
 %{C++
-/**
- * nsIAuthModule implementations are registered under the following contract
- * ID prefix:
- */
-#define NS_AUTH_MODULE_CONTRACTID_PREFIX \
-    "@mozilla.org/network/auth-module;1?name="
+    /**
+     * Create a new instance of an auth module.
+     *
+     * @param aType
+     *        The type of the auth module to be constructed.
+     */
+    static already_AddRefed<nsIAuthModule> CreateInstance(const char* aType);
 %}
+};

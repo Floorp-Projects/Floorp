@@ -154,13 +154,14 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
                                        nsISupports **continuationState,
                                        bool *identityInvalid)
 {
-    nsIAuthModule *module = (nsIAuthModule *) *continuationState;
+    nsIAuthModule *rawModule = (nsIAuthModule *) *continuationState;
 
     *identityInvalid = false;
-    if (module)
+    if (rawModule)
         return NS_OK;
 
     nsresult rv;
+    nsCOMPtr<nsIAuthModule> module;
 
     nsCOMPtr<nsIURI> uri;
     rv = authChannel->GetURI(getter_AddRefs(uri));
@@ -215,31 +216,25 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
     //
     service.InsertLiteral("HTTP@", 0);
 
-    const char *contractID;
+    const char *authType;
     if (TestBoolPref(kNegotiateAuthSSPI)) {
 	   LOG(("  using negotiate-sspi\n"));
-	   contractID = NS_AUTH_MODULE_CONTRACTID_PREFIX "negotiate-sspi";
+	   authType = "negotiate-sspi";
     }
     else {
 	   LOG(("  using negotiate-gss\n"));
-	   contractID = NS_AUTH_MODULE_CONTRACTID_PREFIX "negotiate-gss";
+	   authType = "negotiate-gss";
     }
 
-    rv = CallCreateInstance(contractID, &module);
-
-    if (NS_FAILED(rv)) {
-        LOG(("  Failed to load Negotiate Module \n"));
-        return rv;
-    }
+    MOZ_ALWAYS_TRUE(module = nsIAuthModule::CreateInstance(authType));
 
     rv = module->Init(service.get(), req_flags, nullptr, nullptr, nullptr);
 
     if (NS_FAILED(rv)) {
-        NS_RELEASE(module);
         return rv;
     }
 
-    *continuationState = module;
+    module.forget(continuationState);
     return NS_OK;
 }
 
