@@ -20,6 +20,7 @@ ChromeUtils.defineModuleGetter(this, "CloudStorage",
   "resource://gre/modules/CloudStorage.jsm");
 
 XPCOMUtils.defineLazyServiceGetters(this, {
+  gAUS: ["@mozilla.org/updates/update-service;1", "nsIApplicationUpdateService"],
   gHandlerService: ["@mozilla.org/uriloader/handler-service;1", "nsIHandlerService"],
   gMIMEService: ["@mozilla.org/mime;1", "nsIMIMEService"],
 });
@@ -42,6 +43,8 @@ const PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS =
 
 // Strings to identify ExtensionSettingsStore overrides
 const CONTAINERS_KEY = "privacy.containers";
+
+const AUTO_UPDATE_CHANGED_TOPIC = "auto-update-config-change";
 
 // The nsHandlerInfoAction enumeration values in nsIHandlerInfo identify
 // the actions the application can take with content of various types.
@@ -175,7 +178,6 @@ if (AppConstants.platform === "win") {
 
 if (AppConstants.MOZ_UPDATER) {
   Preferences.addAll([
-    { id: "app.update.auto", type: "bool" },
     { id: "app.update.disable_button.showUpdateHistory", type: "bool" },
   ]);
 
@@ -481,6 +483,14 @@ var gMainPane = {
         if (AppConstants.MOZ_MAINTENANCE_SERVICE) {
           document.getElementById("useService").hidden = true;
         }
+      } else {
+        // Start with no option selected since we are still reading the value
+        document.getElementById("autoDesktop").removeAttribute("selected");
+        document.getElementById("manualDesktop").removeAttribute("selected");
+        // Start reading the correct value from the disk
+        this.updateReadPrefs();
+        setEventListener("updateRadioGroup", "command",
+                         gMainPane.updateWritePrefs);
       }
 
       if (AppConstants.MOZ_MAINTENANCE_SERVICE) {
@@ -509,6 +519,7 @@ var gMainPane = {
     // the view when they change.
     Services.prefs.addObserver(PREF_SHOW_PLUGINS_IN_LIST, this);
     Services.prefs.addObserver(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS, this);
+    Services.obs.addObserver(this, AUTO_UPDATE_CHANGED_TOPIC);
 
     setEventListener("filter", "command", gMainPane.filter);
     setEventListener("typeColumn", "click", gMainPane.sort);
@@ -1275,6 +1286,57 @@ var gMainPane = {
   },
 
   /**
+   * Selects the correct item in the update radio group
+   */
+  async updateReadPrefs() {
+    if (AppConstants.MOZ_UPDATER &&
+        (!Services.policies || Services.policies.isAllowed("appUpdate"))) {
+      let radiogroup = document.getElementById("updateRadioGroup");
+      radiogroup.disabled = true;
+      try {
+        let enabled = await gAUS.getAutoUpdateIsEnabled();
+        radiogroup.value = enabled;
+        radiogroup.disabled = false;
+      } catch (error) {
+        Cu.reportError(error);
+      }
+    }
+  },
+
+  /**
+   * Writes the value of the update radio group to the disk
+   */
+  async updateWritePrefs() {
+    if (AppConstants.MOZ_UPDATER &&
+        (!Services.policies || Services.policies.isAllowed("appUpdate"))) {
+      let radiogroup = document.getElementById("updateRadioGroup");
+      let updateAutoValue = (radiogroup.value == "true");
+      radiogroup.disabled = true;
+      try {
+        await gAUS.setAutoUpdateIsEnabled(updateAutoValue);
+        radiogroup.disabled = false;
+      } catch (error) {
+        Cu.reportError(error);
+        await this.updateReadPrefs();
+        await this.reportUpdatePrefWriteError(error);
+      }
+    }
+  },
+
+  async reportUpdatePrefWriteError(error) {
+    let [title, message] = await document.l10n.formatValues([
+      {id: "update-pref-write-failure-title"},
+      {id: "update-pref-write-failure-message", args: {path: error.path}},
+    ]);
+
+    // Set up the Ok Button
+    let buttonFlags = (Services.prompt.BUTTON_POS_0 *
+                       Services.prompt.BUTTON_TITLE_OK);
+    Services.prompt.confirmEx(window, title, message, buttonFlags,
+                              null, null, null, null, {});
+  },
+
+  /**
    * Displays the history of installed updates.
    */
   showUpdates() {
@@ -1287,6 +1349,8 @@ var gMainPane = {
     Services.prefs.removeObserver(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS, this);
 
     Services.prefs.removeObserver(PREF_CONTAINERS_EXTENSION, this);
+
+    Services.obs.removeObserver(this, AUTO_UPDATE_CHANGED_TOPIC);
   },
 
 
@@ -1317,6 +1381,11 @@ var gMainPane = {
         // the view when any of them changes.
         this._rebuildView();
       }
+    } else if (aTopic == AUTO_UPDATE_CHANGED_TOPIC) {
+      if (aData != "true" && aData != "false") {
+        throw new Error("Invalid preference value for app.update.auto");
+      }
+      document.getElementById("updateRadioGroup").value = aData;
     }
   },
 
