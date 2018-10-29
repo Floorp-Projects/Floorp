@@ -262,9 +262,7 @@ class Firefox(Browser):
         if dest is None:
             dest = os.pwd
 
-        dest = os.path.join(dest, "profiles", channel)
-        if version:
-            dest = dest.join(version)
+        dest = os.path.join(dest, "profiles", channel, version)
         have_cache = False
         if os.path.exists(dest):
             if channel != "nightly":
@@ -572,9 +570,7 @@ class Opera(Browser):
         except subprocess.CalledProcessError:
             logger.warn("Failed to call %s", binary)
             return None
-        m = re.search(r"[0-9\.]+( [a-z]+)?$", output.strip())
-        if m:
-            return m.group(0)
+        return re.search(r"[0-9\.]+( [a-z]+)?$", output.strip()).group(0)
 
 
 class Edge(Browser):
@@ -712,9 +708,7 @@ class Servo(Browser):
     def version(self, binary):
         """Retrieve the release version of the installed browser."""
         output = call(binary, "--version")
-        m = re.search(r"[0-9\.]+( [a-z]+)?$", output.strip())
-        if m:
-            return m.group(0)
+        return re.search(r"[0-9\.]+( [a-z]+)?$", output.strip()).group(0)
 
 
 class Sauce(Browser):
