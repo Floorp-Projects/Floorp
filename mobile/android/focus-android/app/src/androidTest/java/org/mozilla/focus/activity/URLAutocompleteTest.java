@@ -115,11 +115,11 @@ public class URLAutocompleteTest {
     }
 
     @Test
+    // Add custom autocomplete, and check to see it works
     public void CustomCompletionTest() throws UiObjectNotFoundException {
         OpenCustomCompleteDialog();
 
         // Enable URL autocomplete, and add URL
-        toggleAutocomplete();
         addAutoComplete(site);
         exitToTop();
 
@@ -132,20 +132,15 @@ public class URLAutocompleteTest {
 
         // Check autocompletion
         checkACOff(site.substring(0, 3));
-
-        // Reset to disabled
-        OpenCustomCompleteDialog();
-        toggleAutocomplete();
-    }
+     }
 
     @Test
     // add custom autocompletion site, but disable autocomplete
     public void DisableCCwithSiteTest() throws UiObjectNotFoundException {
         OpenCustomCompleteDialog();
-        toggleAutocomplete();
         addAutoComplete(site);
         Espresso.pressBack();
-        toggleAutocomplete();       // Disable autocomplete
+        toggleCustomAC();  // Custom autocomplete is now off
         Espresso.pressBack();
         Espresso.pressBack();
         Espresso.pressBack();
@@ -153,7 +148,7 @@ public class URLAutocompleteTest {
 
         // Now enable autocomplete
         OpenCustomCompleteDialog();
-        toggleAutocomplete();
+        toggleCustomAC();  // Custom autocomplete is now on
         Espresso.pressBack();
         Espresso.pressBack();
         Espresso.pressBack();
@@ -163,8 +158,6 @@ public class URLAutocompleteTest {
         // Cleanup
         OpenCustomCompleteDialog();
         removeACSite();
-        Espresso.pressBack();
-        toggleAutocomplete();
     }
 
     @Test
@@ -172,7 +165,6 @@ public class URLAutocompleteTest {
         OpenCustomCompleteDialog();
 
         // Enable URL autocomplete, and tap Custom URL add button
-        toggleAutocomplete();
         addAutoComplete(site);
         exitToTop();
 
@@ -192,7 +184,6 @@ public class URLAutocompleteTest {
         // Cleanup
         removeACSite();
         Espresso.pressBack();
-        toggleAutocomplete();       // Disable autocomplete
     }
 
     // exit to the main view from custom autocomplete dialog
@@ -203,8 +194,13 @@ public class URLAutocompleteTest {
         Espresso.pressBack();
     }
 
-    private void toggleAutocomplete() {
-        onView(withText("Add and manage custom autocomplete URLs."))
+    private void toggleTopsiteAC() {
+        onView(withText("For Top sites"))
+                .perform(click());
+    }
+
+    private void toggleCustomAC() {
+        onView(withText("For Sites You Add"))
                 .perform(click());
     }
 
