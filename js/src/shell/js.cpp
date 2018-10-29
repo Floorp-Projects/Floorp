@@ -8249,12 +8249,6 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "nukeAllCCWs()",
 "  Like nukeCCW, but for all CrossCompartmentWrappers targeting the current compartment."),
 
-    JS_FN_HELP("recomputeWrappers", RecomputeWrappers, 2, 0,
-"recomputeWrappers([src, [target]])",
-"  Recompute all cross-compartment wrappers. src and target are both optional\n"
-"  and can be used to filter source or target compartments: the unwrapped\n"
-"  object's compartment is used as CompartmentFilter.\n"),
-
     JS_FN_HELP("wrapWithProto", WrapWithProto, 2, 0,
 "wrapWithProto(obj)",
 "  Wrap an object into a noop wrapper with prototype semantics."),
@@ -8532,6 +8526,12 @@ TestAssertRecoveredOnBailout,
 "setBufferStreamParams(delayMillis, chunkByteSize)",
 "  Set the delay time (between calls to StreamConsumer::consumeChunk) and chunk\n"
 "  size (in bytes)."),
+
+    JS_FN_HELP("recomputeWrappers", RecomputeWrappers, 2, 0,
+"recomputeWrappers([src, [target]])",
+"  Recompute all cross-compartment wrappers. src and target are both optional\n"
+"  and can be used to filter source or target compartments: the unwrapped\n"
+"  object's compartment is used as CompartmentFilter.\n"),
 
     JS_FS_HELP_END
 };
