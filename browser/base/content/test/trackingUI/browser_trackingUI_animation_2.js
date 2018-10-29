@@ -101,6 +101,53 @@ async function testTrackingProtectionAnimation(tabbrowser) {
 
   ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
   ok(ContentBlocking.iconBox.hasAttribute("animate"), "iconBox animating");
+  await BrowserTestUtils.waitForEvent(ContentBlocking.animatedIcon, "animationend");
+
+  info("Inject tracking cookie inside tracking tab");
+  securityChanged = waitForSecurityChange(tabbrowser);
+  await ContentTask.spawn(tabbrowser.selectedBrowser, {},
+                          function() {
+    content.postMessage("cookie", "*");
+  });
+  await securityChanged;
+
+  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
+  ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
+
+  info("Inject tracking element inside tracking tab");
+  securityChanged = waitForSecurityChange(tabbrowser);
+  await ContentTask.spawn(tabbrowser.selectedBrowser, {},
+                          function() {
+    content.postMessage("tracking", "*");
+  });
+  await securityChanged;
+
+  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
+  ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
+
+  tabbrowser.selectedTab = trackingCookiesTab;
+
+  info("Inject tracking cookie inside tracking cookies tab");
+  securityChanged = waitForSecurityChange(tabbrowser);
+  await ContentTask.spawn(tabbrowser.selectedBrowser, {},
+                          function() {
+    content.postMessage("cookie", "*");
+  });
+  await securityChanged;
+
+  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
+  ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
+
+  info("Inject tracking element inside tracking cookies tab");
+  securityChanged = waitForSecurityChange(tabbrowser);
+  await ContentTask.spawn(tabbrowser.selectedBrowser, {},
+                          function() {
+    content.postMessage("tracking", "*");
+  });
+  await securityChanged;
+
+  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
+  ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
 
   while (tabbrowser.tabs.length > 1) {
     tabbrowser.removeCurrentTab();
