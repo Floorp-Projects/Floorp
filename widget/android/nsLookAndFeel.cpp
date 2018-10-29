@@ -54,30 +54,6 @@ nsLookAndFeel::GetSystemColors()
     return NS_OK;
 }
 
-nsresult
-nsLookAndFeel::CallRemoteGetSystemColors()
-{
-    // An array has to be used to get data from remote process
-    InfallibleTArray<uint32_t> colors;
-    uint32_t colorsCount = sizeof(AndroidSystemColors) / sizeof(nscolor);
-
-    if (!ContentChild::GetSingleton()->SendGetSystemColors(colorsCount, &colors))
-        return NS_ERROR_FAILURE;
-
-    NS_ASSERTION(colors.Length() == colorsCount, "System colors array is incomplete");
-    if (colors.Length() == 0)
-        return NS_ERROR_FAILURE;
-
-    if (colors.Length() < colorsCount)
-        colorsCount = colors.Length();
-
-    // Array elements correspond to the members of mSystemColors structure,
-    // so just copy the memory block
-    memcpy(&mSystemColors, colors.Elements(), sizeof(nscolor) * colorsCount);
-
-    return NS_OK;
-}
-
 void
 nsLookAndFeel::NativeInit()
 {
@@ -520,13 +496,11 @@ void
 nsLookAndFeel::EnsureInitSystemColors()
 {
     if (!mInitializedSystemColors) {
-        nsresult rv;
         if (XRE_IsParentProcess()) {
-            rv = GetSystemColors();
-        } else {
-            rv = CallRemoteGetSystemColors();
+            nsresult rv = GetSystemColors();
+            mInitializedSystemColors = NS_SUCCEEDED(rv);
         }
-        mInitializedSystemColors = NS_SUCCEEDED(rv);
+        // Child process will set system color cache from ContentParent.
     }
 }
 
@@ -541,4 +515,85 @@ nsLookAndFeel::EnsureInitShowPassword()
         }
         mInitializedShowPassword = true;
     }
+}
+
+nsTArray<LookAndFeelInt>
+nsLookAndFeel::GetIntCacheImpl()
+{
+    MOZ_ASSERT(XRE_IsParentProcess());
+    EnsureInitSystemColors();
+    MOZ_ASSERT(mInitializedSystemColors);
+
+    nsTArray<LookAndFeelInt> lookAndFeelCache =
+        nsXPLookAndFeel::GetIntCacheImpl();
+    lookAndFeelCache.SetCapacity(sizeof(AndroidSystemColors) / sizeof(nscolor));
+
+    LookAndFeelInt laf;
+    laf.id = eColorID_WindowForeground;
+    laf.colorValue = mSystemColors.textColorPrimary;
+    lookAndFeelCache.AppendElement(laf);
+
+    laf.id = eColorID_WidgetBackground;
+    laf.colorValue = mSystemColors.colorBackground;
+    lookAndFeelCache.AppendElement(laf);
+
+    laf.id = eColorID_WidgetForeground;
+    laf.colorValue = mSystemColors.colorForeground;
+    lookAndFeelCache.AppendElement(laf);
+
+    laf.id = eColorID_WidgetSelectBackground;
+    laf.colorValue = mSystemColors.textColorHighlight;
+    lookAndFeelCache.AppendElement(laf);
+
+    laf.id = eColorID_WidgetSelectForeground;
+    laf.colorValue = mSystemColors.textColorPrimaryInverse;
+    lookAndFeelCache.AppendElement(laf);
+
+    laf.id = eColorID_inactivecaptiontext;
+    laf.colorValue = mSystemColors.textColorTertiary;
+    lookAndFeelCache.AppendElement(laf);
+
+    laf.id = eColorID_windowtext;
+    laf.colorValue = mSystemColors.textColorPrimary;
+    lookAndFeelCache.AppendElement(laf);
+
+    // XXX The following colors are unused.
+    // - textColorTertiaryInverse
+    // - panelColorForeground
+    // - panelColorBackground
+
+    return lookAndFeelCache;
+}
+
+void
+nsLookAndFeel::SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelCache)
+{
+    for (auto entry : aLookAndFeelCache) {
+        switch (entry.id) {
+        case eColorID_WindowForeground:
+            mSystemColors.textColorPrimary = entry.colorValue;
+            break;
+        case eColorID_WidgetBackground:
+            mSystemColors.colorBackground = entry.colorValue;
+            break;
+        case eColorID_WidgetForeground:
+            mSystemColors.colorForeground = entry.colorValue;
+            break;
+        case eColorID_WidgetSelectBackground:
+            mSystemColors.textColorHighlight = entry.colorValue;
+            break;
+        case eColorID_WidgetSelectForeground:
+            mSystemColors.textColorPrimaryInverse = entry.colorValue;
+            break;
+        case eColorID_inactivecaptiontext:
+            mSystemColors.textColorTertiary = entry.colorValue;
+            break;
+        case eColorID_windowtext:
+            mSystemColors.textColorPrimary = entry.colorValue;
+            break;
+        default:
+            MOZ_ASSERT(false);
+        }
+    }
+    mInitializedSystemColors = true;
 }
