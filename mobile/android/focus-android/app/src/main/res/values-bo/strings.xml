@@ -3,8 +3,8 @@
   <string name="action_cancel">འདོར་བ།</string>
   <string name="action_ok">ཆོག</string>
   <string name="action_save">ཉར་ཚགས།</string>
-  <string name="urlbar_hint">འཚོལ་ཞིབ་ཡང་ན་དྲ་ཚིཊ་ཁ་བྱང་འདིར་འཇུག་རོཊ།</string>
-  <string name="teaser">རང་གྲུབ་དྲྭ་འཚོལ། དྲྭ་འཚོལ། བསུབ་པ། བསྐྱར་འཚོལ།</string>
+  <string name="urlbar_hint">འཚོལ་བཤེར་ཡང་ན་དྲ་ཚིཊ་ཁ་བྱང་འདིར་འཇུག་རོཊ།</string>
+  <string name="teaser">རང་འགུལ་སྒེར་དོན་གསང་རྒྱ། དྲྭ་འཚོལ། བསུབ་པ། བསྐྱར་འཚོལ།</string>
   <string name="feedback_erase">འཚོལ་རབས་འདོར་སུབ་བྱས་ཟིན།</string>
   <string name="search_hint">འཚོལ་བྱའི་ནང་དོན་ %1$s</string>
   <string name="menu_share">མཉམ་སྤྱོད་་་</string>
@@ -13,10 +13,10 @@
   <string name="menu_open_with_a_browser2">ཁ་ཕྱེ་ཡུལ་་་་</string>
   <string name="menu_add_to_home_screen">ཁ་པའི་མདུན་ངོས་ཞོག་ཅིག</string>
   <string name="menu_whats_new">གནས་ཚུལ་གསར་པ།</string>
-  <string name="menu_settings">སྒྲིག་བཟོ།</string>
+  <string name="menu_settings">སྒྲིག་འགོད།</string>
   <string name="menu_about">ངོ་སྤྲོད།</string>
   <string name="menu_help">རོགས་རམ།</string>
-  <string name="menu_rights">ཁྱེད་ཀྱི་བདག་དབང</string>
+  <string name="menu_rights">ཁྱེད་ཀྱི་བདག་དབང་།</string>
   <string name="menu_trackers_blocked_title">རྗེས་འདེད་མཁན་བཀག</string>
   <string name="share_dialog_title">མཉམ་སྤྱོད་བརྒྱུད་ལམ།</string>
   <string name="notification_erase_text">འཚོལ་རབས་འདོར་སུབ་བྱོས།</string>
@@ -33,7 +33,8 @@
   <string name="preference_category_general">སྤྱི་བཀོལ།</string>
   <string name="preference_category_data_collection_use">གནས་ཚུལ་བསྡུས་རུབ་དང་བེད་སྤྱོད།</string>
   <string name="preference_category_search">འཚོལ་བཤེར།</string>
-  <string name="preference_show_search_suggestions">འཚོལ་བཤེར་འབྲེལ་ཡོད་འོས་སྦྱོར་ལེན་པ།</string>
+  <string name="preference_show_search_suggestions">འཚོལ་བཤེར་ནང་དོན་འོས་སྦྱོར་ལེན་པ།</string>
+  <string name="preference_show_search_suggestions_summary">%1$s ཡིས་རང་འཇུག་པའི་འཚོལ་བྱའི་ནང་དོན་འཚོལ་བཤེར་དྲ་བ་གཏོང་ལེན་བྱེད།</string>
   <string name="preference_search_engine_default">རྩ་བ།</string>
   <string name="preference_state_on">སྤྱོད།</string>
   <string name="preference_state_off">སྤྱོད་མཚམས་འཇོག</string>
@@ -71,7 +72,7 @@
   <string name="preference_default_browser2">" %1$s རྩ་བའི་བཤར་བཆས་སུ་བསྐོས།"</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">དེ་བས་མང་།</string>
-  <string name="preference_privacy_notice">སྒོས་དབང་གསལ་བརྡ།</string>
+  <string name="preference_privacy_notice">སྒོར་དབང་གསལ་བརྡ།</string>
   <string name="preference_about">%1$s ངོ་སྤྲོད།</string>
   <string name="preference_search_installed_search_engines">འཚོལ་བཤེར་སྒྲིག་འཇུག</string>
   <string name="preference_search_restore">རྩ་བའི་འཚོལ་བཤེར་དྲ་ངོས་བསྐྱར་གསོ་བྱོས།</string>
@@ -97,7 +98,7 @@
   <string name="content_description_trackers_blocked">རྗེས་འདེད་མཁན་བཀག་གྲངས།</string>
   <string name="content_description_blocking_switch">རྗེས་འདེད་མཁན་འགོག</string>
   <string name="your_rights">ཁྱེད་ཀྱི་བདག་དབང་།</string>
-  <string name="external_multiple_apps_matched_exit">གསང་རྒྱ་ནས་ཕྱིར་ཐོན་དགོས་ཡིན་ནམ།</string>
+  <string name="external_multiple_apps_matched_exit">གསང་རྒྱ་ནས་ཕྱིར་ཐོན་དགོས་སམ།</string>
   <string name="download_snackbar_open">ཁ་ཕྱེ་བ།</string>
   <string name="download_dialog_warning"><![CDATA[%1$s འཚོལ་རབས་འདོར་སུབ་བྱེད་སྐབས་ཕབ་ལེན་ཟིན་པའི་ཡིག་ཆ་<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3938;&#4003;&#3928;&#3942;&#3851;&#3936;&#3921;&#3964;&#3938;&#3851;&#3942;&#3956;&#3926;&#3851;&#3928;&#3954;&#3851;&#3926;&#4017;&#3853;</b>]]></string>
   <string name="download_dialog_title">ཡིག་ཆ་ཕབ་ལེན།</string>
@@ -112,6 +113,7 @@
   <string name="contextmenu_image_warning"><![CDATA[%1$s འཚོལ་རབས་འདོར་སུབ་བྱེད་སྐབས་འགྲེམ་སྤེལ་དང་ཉར་ཟིན་པའི་ཡིག་ཆ་རྣམས་<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3936;&#3921;&#3964;&#3938;&#3851;&#3942;&#3956;&#3926;&#3851;&#3928;&#3954;&#3851;&#3926;&#4017;&#3853;</b>]]></string>
   <string name="firstrun_defaultbrowser_title">སྒེར་དབང་ཆེ་རུ་གཏོང་།</string>
   <string name="firstrun_search_title">ཁྱོད་ཀྱི་འཚོལ་བཤེར། ཁྱོད་ཀྱི་ལམ།</string>
+  <string name="firstrun_search_text">འཚོལ་བྱའི་ནང་དོན་གཞན་དག་ཡིན་ནམ། འཚོལ་བཤེར་གཞན་ཞིག་སྒྲིག་འགོད་ནས་ངོས་གཙོར་འཇོག་རོགས།</string>
   <string name="firstrun_privacy_title">སྒེར་དབང་ཁྱོད་ཀྱི་གོམས་གཤིས་བཟོས།</string>
   <string name="firstrun_close_button">ཆོག་ ཤེས་སོང་།</string>
   <string name="firstrun_skip_button">མཆོང་པ།</string>
@@ -119,11 +121,13 @@
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_action_add">སྣོན།</string>
   <string name="dialog_addtohomescreen_action_cancel">འདོར་བ།</string>
+  <string name="notification_browsing_session_channel_name">སྒེར་དོན་གསང་རྒྱ་དུས་མཚམས།</string>
   <string name="tabs_tray_action_erase">འཚོལ་རབས་འདོར་སུབ་བྱོས།</string>
   <string name="download_firefox">Firefox ཕབ་ལེན།</string>
-  <string name="gv_prompt_username_hint">ཐོ་མིང་།</string>
+  <string name="gv_prompt_username_hint">སྤྱོད་མཁན་གྱི་མིང་།</string>
   <string name="gv_prompt_password_hint">གསང་གྲངས།</string>
   <string name="gv_prompt_clear">གཙང་བཟོ།</string>
+  <string name="site_security_icon_content_description">དྲ་བའི་བདེ་འཇགས།</string>
   <string name="preference_autocomplete_duplicate_url_error">དྲ་ཚིཊ་ཁ་བྱང་སྔོན་ནས་འདུག།</string>
   <string name="find_in_page">ཤོག་ངོས་ནང་འཚོལ་བཤེར་བྱོས།</string>
   <string name="find_in_page_input">ཤོག་ངོས་ནང་འཚོལ་བཤེར་བྱོས།</string>
@@ -142,6 +146,7 @@
   <string name="biometric_auth_not_recognized_error">མཛུབ་ཐེལ་ངོས་འཛིན་མ་ཐུབ། བསྐྱར་དུ་ཚོད་ལྟ་བྱོས།</string>
   <string name="biometric_auth_moved_too_quickly">མཛུག་མོ་འགུལ་སྐྱོད་མགྱོགས་དྲག་འདུག་ བསྐྱར་དུ་ཚོད་ལྟ་བྱོས།</string>
   <string name="enable_search_suggestion_title">འཚོལ་བཤེར་འབྲེལ་ཡོད་འོས་སྦྱོར་དགོས་སམ།</string>
+  <string name="enable_search_suggestion_subtitle">ཁྱེད་ལ་སྤྲོ་བ་ཡོད་པའི་ནང་དོན་མཁོ་འདོན་ཆེད་དུ། %1$s ཡིས་རང་འཇུག་པའི་འཚོལ་བྱའི་ནང་དོན་རང་འདེམ་པའི་འཚོལ་བཤེར་དྲ་བར་འདོན་སྤྲོད་བྱ་དགོས།. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">དེ་བས་མང་།</string>
   <string name="enable_search_suggestions_no">མིན།</string>
   <string name="enable_search_suggestions_yes">རེད།</string>
