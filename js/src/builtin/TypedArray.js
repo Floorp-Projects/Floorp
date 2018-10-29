@@ -981,7 +981,7 @@ function TypedArraySet(overloaded, offset = 0) {
     var targetLength = TypedArrayLength(target);
 
     // Steps 12 et seq.
-    if (IsPossiblyWrappedTypedArray(overloaded))
+    if (IsObject(overloaded) && IsPossiblyWrappedTypedArray(overloaded))
         return SetFromTypedArray(target, overloaded, targetOffset, targetLength);
 
     return SetFromNonTypedArray(target, overloaded, targetOffset, targetLength, targetBuffer);
