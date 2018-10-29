@@ -618,14 +618,16 @@ Breakpoint::Breakpoint(Debugger* debugger, BreakpointSite* site, JSObject* handl
 }
 
 void
-Breakpoint::destroy(FreeOp* fop)
+Breakpoint::destroy(FreeOp* fop, MayDestroySite mayDestroySite /* true */)
 {
     if (debugger->enabled) {
         site->dec(fop);
     }
     debugger->breakpoints.remove(this);
     site->breakpoints.remove(this);
-    site->destroyIfEmpty(fop);
+    if (mayDestroySite == MayDestroySite::True) {
+        site->destroyIfEmpty(fop);
+    }
     fop->delete_(this);
 }
 
@@ -4351,8 +4353,8 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
         }
     }
 
-    auto *globalDebuggersVector = global->getDebuggers();
-    auto *zoneDebuggersVector = global->zone()->getDebuggers();
+    auto* globalDebuggersVector = global->getDebuggers();
+    auto* zoneDebuggersVector = global->zone()->getDebuggers();
 
     // The relation must be removed from up to three places:
     // globalDebuggersVector and debuggees for sure, and possibly the
@@ -4392,6 +4394,8 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
                 bp->destroy(fop);
             }
             break;
+          default:
+            MOZ_CRASH("unknown breakpoint type");
         }
     }
     MOZ_ASSERT_IF(debuggees.empty(), !firstBreakpoint());
@@ -7386,7 +7390,11 @@ class DebuggerScriptClearBreakpointMatcher
     JSObject* handler_;
 
   public:
-    explicit DebuggerScriptClearBreakpointMatcher(JSContext* cx, Debugger* dbg, JSObject* handler) : cx_(cx), dbg_(dbg), handler_(handler) { }
+    DebuggerScriptClearBreakpointMatcher(JSContext* cx, Debugger* dbg, JSObject* handler)
+      : cx_(cx),
+        dbg_(dbg),
+        handler_(handler)
+    { }
     using ReturnType = bool;
 
     ReturnType match(HandleScript script) {
@@ -7405,7 +7413,9 @@ class DebuggerScriptClearBreakpointMatcher
         if (!instance.debugEnabled()) {
             return true;
         }
-        return instance.debug().clearBreakpointsIn(cx_, instanceObj, dbg_, handler_);
+        instance.debug().clearBreakpointsIn(cx_->runtime()->defaultFreeOp(), instanceObj, dbg_,
+                                            handler_);
+        return true;
     }
 };
 

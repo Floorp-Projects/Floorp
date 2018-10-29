@@ -246,26 +246,16 @@ DebugState::destroyBreakpointSite(FreeOp* fop, uint32_t offset)
     breakpointSites_.remove(p);
 }
 
-bool
-DebugState::clearBreakpointsIn(JSContext* cx, WasmInstanceObject* instance, js::Debugger* dbg, JSObject* handler)
+void
+DebugState::clearBreakpointsIn(FreeOp* fop, WasmInstanceObject* instance, js::Debugger* dbg,
+                               JSObject* handler)
 {
     MOZ_ASSERT(instance);
     if (breakpointSites_.empty()) {
-        return true;
+        return;
     }
-
-    // Make copy of all sites list, so breakpointSites_ can be modified by
-    // destroyBreakpointSite calls.
-    Vector<WasmBreakpointSite*> sites(cx);
-    if (!sites.resize(breakpointSites_.count())) {
-        return false;
-    }
-    size_t i = 0;
-    for (WasmBreakpointSiteMap::Range r = breakpointSites_.all(); !r.empty(); r.popFront()) {
-        sites[i++] = r.front().value();
-    }
-
-    for (WasmBreakpointSite* site : sites) {
+    for (WasmBreakpointSiteMap::Enum e(breakpointSites_); !e.empty(); e.popFront()) {
+        WasmBreakpointSite* site = e.front().value();
         Breakpoint* nextbp;
         for (Breakpoint* bp = site->firstBreakpoint(); bp; bp = nextbp) {
             nextbp = bp->nextInSite();
@@ -273,11 +263,20 @@ DebugState::clearBreakpointsIn(JSContext* cx, WasmInstanceObject* instance, js::
                 (!dbg || bp->debugger == dbg) &&
                 (!handler || bp->getHandler() == handler))
             {
-                bp->destroy(cx->runtime()->defaultFreeOp());
+                bp->destroy(fop, Breakpoint::MayDestroySite::False);
             }
         }
+        if (site->isEmpty()) {
+            fop->delete_(site);
+            e.removeFront();
+        }
     }
-    return true;
+}
+
+void
+DebugState::clearAllBreakpoints(FreeOp* fop, WasmInstanceObject* instance)
+{
+    clearBreakpointsIn(fop, instance, nullptr, nullptr);
 }
 
 void
