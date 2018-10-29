@@ -5642,6 +5642,94 @@ BaselineCompile(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+PCCountProfiling_Start(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    js::StartPCCountProfiling(cx);
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+PCCountProfiling_Stop(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    js::StopPCCountProfiling(cx);
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+PCCountProfiling_Purge(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    js::PurgePCCounts(cx);
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+PCCountProfiling_ScriptCount(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    size_t length = js::GetPCCountScriptCount(cx);
+
+    args.rval().setNumber(double(length));
+    return true;
+}
+
+static bool
+PCCountProfiling_ScriptSummary(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "summary", 1)) {
+        return false;
+    }
+
+    uint32_t index;
+    if (!JS::ToUint32(cx, args[0], &index)) {
+        return false;
+    }
+
+    JSString* str = js::GetPCCountScriptSummary(cx, index);
+    if (!str) {
+        return false;
+    }
+
+    args.rval().setString(str);
+    return true;
+}
+
+static bool
+PCCountProfiling_ScriptContents(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "contents", 1)) {
+        return false;
+    }
+
+    uint32_t index;
+    if (!JS::ToUint32(cx, args[0], &index)) {
+        return false;
+    }
+
+    JSString* str = js::GetPCCountScriptContents(cx, index);
+    if (!str) {
+        return false;
+    }
+
+    args.rval().setString(str);
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'zone' [, 'shrinking'])",
@@ -6360,6 +6448,36 @@ JS_FN_HELP("setDefaultLocale", SetDefaultLocale, 1, 0,
     JS_FS_HELP_END
 };
 
+static const JSFunctionSpecWithHelp PCCountProfilingTestingFunctions[] = {
+    JS_FN_HELP("start", PCCountProfiling_Start, 0, 0,
+    "start()",
+    "  Start PC count profiling."),
+
+    JS_FN_HELP("stop", PCCountProfiling_Stop, 0, 0,
+    "stop()",
+    "  Stop PC count profiling."),
+
+    JS_FN_HELP("purge", PCCountProfiling_Purge, 0, 0,
+    "purge()",
+    "  Purge the collected PC count profiling data."),
+
+    JS_FN_HELP("count", PCCountProfiling_ScriptCount, 0, 0,
+    "count()",
+    "  Return the number of profiled scripts."),
+
+    JS_FN_HELP("summary", PCCountProfiling_ScriptSummary, 1, 0,
+    "summary(index)",
+    "  Return the PC count profiling summary for the given script index.\n"
+    "  The script index must be in the range [0, pc.count())."),
+
+    JS_FN_HELP("contents", PCCountProfiling_ScriptContents, 1, 0,
+    "contents(index)",
+    "  Return the complete profiling contents for the given script index.\n"
+    "  The script index must be in the range [0, pc.count())."),
+
+    JS_FS_HELP_END
+};
+
 bool
 js::DefineTestingFunctions(JSContext* cx, HandleObject obj, bool fuzzingSafe_,
                            bool disableOOMFunctions_)
@@ -6373,6 +6491,19 @@ js::DefineTestingFunctions(JSContext* cx, HandleObject obj, bool fuzzingSafe_,
 
     if (!fuzzingSafe) {
         if (!JS_DefineFunctionsWithHelp(cx, obj, FuzzingUnsafeTestingFunctions)) {
+            return false;
+        }
+
+        RootedObject pccount(cx, JS_NewPlainObject(cx));
+        if (!pccount) {
+            return false;
+        }
+
+        if (!JS_DefineProperty(cx, obj, "pccount", pccount, 0)) {
+            return false;
+        }
+
+        if (!JS_DefineFunctionsWithHelp(cx, pccount, PCCountProfilingTestingFunctions)) {
             return false;
         }
     }
