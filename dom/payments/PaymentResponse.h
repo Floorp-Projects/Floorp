@@ -19,6 +19,83 @@ class PaymentAddress;
 class PaymentRequest;
 class Promise;
 
+class GeneralData final
+{
+public:
+  GeneralData() = default;
+  ~GeneralData() = default;
+  nsString data;
+};
+
+class BasicCardData final
+{
+public:
+  struct Address {
+    nsString country;
+    nsTArray<nsString> addressLine;
+    nsString region;
+    nsString regionCode;
+    nsString city;
+    nsString dependentLocality;
+    nsString postalCode;
+    nsString sortingCode;
+    nsString organization;
+    nsString recipient;
+    nsString phone;
+  };
+  BasicCardData() = default;
+  ~BasicCardData() = default;
+
+  nsString cardholderName;
+  nsString cardNumber;
+  nsString expiryMonth;
+  nsString expiryYear;
+  nsString cardSecurityCode;
+  Address billingAddress;
+};
+
+class ResponseData final
+{
+public:
+  enum Type {
+    Unknown = 0,
+    GeneralResponse = 1,
+    BasicCardResponse
+  };
+  ResponseData()
+    : mType(ResponseData::Unknown)
+  {}
+  explicit ResponseData(const GeneralData& aGeneralData)
+    : mType(GeneralResponse)
+    , mGeneralData(aGeneralData)
+  {}
+  explicit ResponseData(const BasicCardData& aBasicCardData)
+    : mType(BasicCardResponse)
+    , mBasicCardData(aBasicCardData)
+  {}
+  ResponseData& operator = (const GeneralData& aGeneralData) {
+    mType = GeneralResponse;
+    mGeneralData = aGeneralData;
+    mBasicCardData = BasicCardData();
+    return *this;
+  }
+  ResponseData& operator = (const BasicCardData& aBasicCardData) {
+    mType = BasicCardResponse;
+    mGeneralData = GeneralData();
+    mBasicCardData = aBasicCardData;
+    return *this;
+  }
+  virtual ~ResponseData() = default;
+
+  const Type& type() const { return mType; }
+  const GeneralData& generalData() const { return mGeneralData; }
+  const BasicCardData& basicCardData() const { return mBasicCardData;}
+private:
+  Type mType;
+  GeneralData mGeneralData;
+  BasicCardData mBasicCardData;
+};
+
 class PaymentResponse final
   : public DOMEventTargetHelper
   , public nsITimerCallback
@@ -37,7 +114,7 @@ public:
                   const nsAString& aMethodName,
                   const nsAString& aShippingOption,
                   PaymentAddress* aShippingAddress,
-                  const nsAString& aDetails,
+                  const ResponseData& aDetails,
                   const nsAString& aPayerName,
                   const nsAString& aPayerEmail,
                   const nsAString& aPayerPhone);
@@ -80,7 +157,7 @@ public:
   void RespondRetry(const nsAString& aMethodName,
                     const nsAString& aShippingOption,
                     PaymentAddress* aShippingAddress,
-                    const nsAString& aDetails,
+                    const ResponseData& aDetails,
                     const nsAString& aPayerName,
                     const nsAString& aPayerEmail,
                     const nsAString& aPayerPhone);
@@ -103,7 +180,7 @@ private:
   PaymentRequest* mRequest;
   nsString mRequestId;
   nsString mMethodName;
-  nsString mDetails;
+  ResponseData mDetails;
   nsString mShippingOption;
   nsString mPayerName;
   nsString mPayerEmail;

@@ -138,8 +138,17 @@ PaymentRequestParent::RespondPayment(nsIPaymentActionResponse* aResponse)
       NS_ENSURE_SUCCESS(response->GetAcceptStatus(&acceptStatus), NS_ERROR_FAILURE);
       nsAutoString methodName;
       NS_ENSURE_SUCCESS(response->GetMethodName(methodName), NS_ERROR_FAILURE);
-      nsAutoString data;
-      NS_ENSURE_SUCCESS(response->GetData(data), NS_ERROR_FAILURE);
+      IPCPaymentResponseData ipcData;
+      if (acceptStatus == nsIPaymentActionResponse::PAYMENT_ACCEPTED) {
+        nsCOMPtr<nsIPaymentResponseData> data;
+        NS_ENSURE_SUCCESS(response->GetData(getter_AddRefs(data)),
+                          NS_ERROR_FAILURE);
+        MOZ_ASSERT(data);
+        NS_ENSURE_SUCCESS(SerializeResponseData(ipcData, data), NS_ERROR_FAILURE);
+      } else {
+        ipcData = IPCGeneralResponse();
+      }
+
       nsAutoString payerName;
       NS_ENSURE_SUCCESS(response->GetPayerName(payerName), NS_ERROR_FAILURE);
       nsAutoString payerEmail;
@@ -149,7 +158,7 @@ PaymentRequestParent::RespondPayment(nsIPaymentActionResponse* aResponse)
       IPCPaymentShowActionResponse actionResponse(requestId,
                                                   acceptStatus,
                                                   methodName,
-                                                  data,
+                                                  ipcData,
                                                   payerName,
                                                   payerEmail,
                                                   payerPhone);
@@ -209,66 +218,10 @@ PaymentRequestParent::ChangeShippingAddress(const nsAString& aRequestId,
   if (!mActorAlive) {
     return NS_ERROR_FAILURE;
   }
-  nsAutoString country;
-  nsresult rv = aAddress->GetCountry(country);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIArray> iaddressLine;
-  rv = aAddress->GetAddressLine(getter_AddRefs(iaddressLine));
+  IPCPaymentAddress ipcAddress;
+  nsresult rv = SerializeAddress(ipcAddress, aAddress);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString region;
-  rv = aAddress->GetRegion(region);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString regionCode;
-  rv = aAddress->GetRegionCode(regionCode);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString city;
-  rv = aAddress->GetCity(city);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString dependentLocality;
-  rv = aAddress->GetDependentLocality(dependentLocality);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString postalCode;
-  rv = aAddress->GetPostalCode(postalCode);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString sortingCode;
-  rv = aAddress->GetSortingCode(sortingCode);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString organization;
-  rv = aAddress->GetOrganization(organization);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString recipient;
-  rv = aAddress->GetRecipient(recipient);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString phone;
-  rv = aAddress->GetPhone(phone);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsTArray<nsString> addressLine;
-  uint32_t length;
-  rv = iaddressLine->GetLength(&length);
-  NS_ENSURE_SUCCESS(rv, rv);
-  for (uint32_t index = 0; index < length; ++index) {
-    nsCOMPtr<nsISupportsString> iaddress = do_QueryElementAt(iaddressLine, index);
-    MOZ_ASSERT(iaddress);
-    nsAutoString address;
-    rv = iaddress->GetData(address);
-    NS_ENSURE_SUCCESS(rv, rv);
-    addressLine.AppendElement(address);
-  }
-
-  IPCPaymentAddress ipcAddress(country, addressLine, region, regionCode, city,
-                               dependentLocality, postalCode, sortingCode,
-                               organization, recipient, phone);
 
   nsAutoString requestId(aRequestId);
   if (!SendChangeShippingAddress(requestId, ipcAddress)) {
@@ -359,6 +312,123 @@ PaymentRequestParent::ActorDestroy(ActorDestroyReason aWhy)
     MOZ_ASSERT(rowRequest);
     rowRequest->SetIPC(nullptr);
   }
+}
+
+nsresult
+PaymentRequestParent::SerializeAddress(IPCPaymentAddress& aIPCAddress,
+                                       nsIPaymentAddress* aAddress)
+{
+  // address can be nullptr
+  if (!aAddress) {
+    return NS_OK;
+  }
+  nsAutoString country;
+  nsresult rv = aAddress->GetCountry(country);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIArray> iaddressLine;
+  rv = aAddress->GetAddressLine(getter_AddRefs(iaddressLine));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString region;
+  rv = aAddress->GetRegion(region);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString regionCode;
+  rv = aAddress->GetRegionCode(regionCode);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString city;
+  rv = aAddress->GetCity(city);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString dependentLocality;
+  rv = aAddress->GetDependentLocality(dependentLocality);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString postalCode;
+  rv = aAddress->GetPostalCode(postalCode);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString sortingCode;
+  rv = aAddress->GetSortingCode(sortingCode);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString organization;
+  rv = aAddress->GetOrganization(organization);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString recipient;
+  rv = aAddress->GetRecipient(recipient);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString phone;
+  rv = aAddress->GetPhone(phone);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsTArray<nsString> addressLine;
+  uint32_t length;
+  rv = iaddressLine->GetLength(&length);
+  NS_ENSURE_SUCCESS(rv, rv);
+  for (uint32_t index = 0; index < length; ++index) {
+    nsCOMPtr<nsISupportsString> iaddress = do_QueryElementAt(iaddressLine, index);
+    MOZ_ASSERT(iaddress);
+    nsAutoString address;
+    rv = iaddress->GetData(address);
+    NS_ENSURE_SUCCESS(rv, rv);
+    addressLine.AppendElement(address);
+  }
+
+  aIPCAddress = IPCPaymentAddress(country, addressLine, region, regionCode, city,
+                                  dependentLocality, postalCode, sortingCode,
+                                  organization, recipient, phone);
+  return NS_OK;
+}
+
+nsresult
+PaymentRequestParent::SerializeResponseData(IPCPaymentResponseData& aIPCData,
+                                            nsIPaymentResponseData* aData)
+{
+  NS_ENSURE_ARG_POINTER(aData);
+  uint32_t dataType;
+  NS_ENSURE_SUCCESS(aData->GetType(&dataType), NS_ERROR_FAILURE);
+  switch(dataType) {
+    case nsIPaymentResponseData::GENERAL_RESPONSE: {
+      nsCOMPtr<nsIGeneralResponseData> response = do_QueryInterface(aData);
+      MOZ_ASSERT(response);
+      IPCGeneralResponse data;
+      NS_ENSURE_SUCCESS(response->GetData(data.data()), NS_ERROR_FAILURE);
+      aIPCData = data;
+      break;
+    }
+    case nsIPaymentResponseData::BASICCARD_RESPONSE: {
+      nsCOMPtr<nsIBasicCardResponseData> response = do_QueryInterface(aData);
+      MOZ_ASSERT(response);
+      IPCBasicCardResponse data;
+      NS_ENSURE_SUCCESS(response->GetCardholderName(data.cardholderName()),
+                        NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(response->GetCardNumber(data.cardNumber()),
+                        NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(response->GetExpiryMonth(data.expiryMonth()),
+                        NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(response->GetExpiryYear(data.expiryYear()),
+                        NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(response->GetCardSecurityCode(data.cardSecurityCode()),
+                        NS_ERROR_FAILURE);
+      nsCOMPtr<nsIPaymentAddress> address;
+      NS_ENSURE_SUCCESS(response->GetBillingAddress(getter_AddRefs(address)),
+                        NS_ERROR_FAILURE);
+      IPCPaymentAddress ipcAddress;
+      NS_ENSURE_SUCCESS(SerializeAddress(ipcAddress, address), NS_ERROR_FAILURE);
+      data.billingAddress() = ipcAddress;
+      aIPCData = data;
+      break;
+    }
+    default: {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  return NS_OK;
 }
 } // end of namespace dom
 } // end of namespace mozilla
