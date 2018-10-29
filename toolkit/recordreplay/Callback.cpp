@@ -29,7 +29,7 @@ RegisterCallbackData(void* aData)
     return;
   }
 
-  AutoOrderedAtomicAccess at;
+  AutoOrderedAtomicAccess at(&gCallbackData);
   StaticMutexAutoLock lock(gCallbackMutex);
   if (!gCallbackData) {
     gCallbackData = new ValueIndex();
