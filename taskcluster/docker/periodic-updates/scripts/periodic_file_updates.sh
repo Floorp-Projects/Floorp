@@ -496,6 +496,7 @@ case "${PRODUCT}" in
     APP_DIR="mail"
     APP_ID="%7B3550f703-e582-4d05-9a08-453d09bdfdc6%7D"
     APP_NAME="Thunderbird"
+    COMMIT_AUTHOR="tbirdbld <tbirdbld@thunderbird.net>"
     ;;
   firefox)
     APP_DIR="browser"
@@ -513,13 +514,18 @@ if [ "${REPODIR}" == "" ]; then
   REPODIR="$(basename "${BRANCH}")"
 fi
 
-if [ "${BRANCH}" == "mozilla-central" ]; then
-  HGREPO="https://${HGHOST}/${BRANCH}"
-elif [[ "${BRANCH}" == mozilla-* ]]; then
-  HGREPO="https://${HGHOST}/releases/${BRANCH}"
-else
-  HGREPO="https://${HGHOST}/projects/${BRANCH}"
-fi
+case "${BRANCH}" in
+  mozilla-central|comm-central )
+    HGREPO="https://${HGHOST}/${BRANCH}"
+    ;;
+  mozilla-*|comm-* )
+    HGREPO="https://${HGHOST}/releases/${BRANCH}"
+    ;;
+  * )
+    HGREPO="https://${HGHOST}/projects/${BRANCH}"
+    ;;
+esac
+
 MCREPO="https://${HGHOST}/mozilla-central"
 
 # Remove once 52esr is off support

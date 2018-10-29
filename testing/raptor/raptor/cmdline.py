@@ -20,11 +20,20 @@ def create_parser(mach_interface=False):
             choices=['firefox', 'chrome', 'geckoview'])
     add_arg('-b', '--binary', dest='binary',
             help="path to the browser executable that we are testing")
+    add_arg('--geckoProfile', action="store_true", dest="gecko_profile",
+            help="Profile the run and output the results in $MOZ_UPLOAD_DIR. "
+            "After talos is finished, perf-html.io will be launched in Firefox so you "
+            "can analyze the local profiles. To disable auto-launching of perf-html.io "
+            "set the RAPTOR_DISABLE_PROFILE_LAUNCH=1 env var.")
+    add_arg('--geckoProfileInterval', dest='gecko_profile_interval', type=float,
+            help="How frequently to take samples (milliseconds)")
+    add_arg('--geckoProfileEntries', dest="gecko_profile_entries", type=int,
+            help="How many samples to take with the profiler")
+    add_arg('--symbolsPath', dest='symbols_path',
+            help="Path to the symbols for the build we are testing")
     if not mach_interface:
         add_arg('--branchName', dest="branch_name", default='',
                 help="Name of the branch we are testing on")
-        add_arg('--symbolsPath', dest='symbols_path',
-                help="Path to the symbols for the build we are testing")
         add_arg('--run-local', dest="run_local", default=False, action="store_true",
                 help="Flag that indicates if raptor is running locally or in production")
         add_arg('--obj-path', dest="obj_path", default=None,
@@ -43,6 +52,10 @@ def verify_options(parser, args):
     if args.app != "geckoview":
         if not os.path.isfile(args.binary):
             parser.error("{binary} does not exist!".format(**ctx))
+
+    # if geckoProfile specified but not running on Firefox, not supported
+    if args.gecko_profile is True and args.app != "firefox":
+        parser.error("Gecko profiling is only supported when running raptor on Firefox!")
 
 
 def parse_args(argv=None):

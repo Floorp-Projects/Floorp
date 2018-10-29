@@ -47,9 +47,6 @@ class PropertyResult;
 
 enum class SymbolCode: uint32_t;
 
-#ifdef ENABLE_BIGINT
-class BigInt;
-#endif
 } // namespace JS
 
 // Do the importing.
@@ -171,6 +168,7 @@ using JS::SymbolCode;
 #ifdef ENABLE_BIGINT
 using JS::BigInt;
 #endif
+
 } /* namespace js */
 
 #endif /* NamespaceImports_h */

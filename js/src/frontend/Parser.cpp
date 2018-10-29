@@ -8088,6 +8088,9 @@ GeneralParser<ParseHandler, Unit>::classDefinition(YieldHandling yieldHandling,
             Node initializer = null();
             if (tt == TokenKind::Assign) {
                 initializer = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+                if (!initializer) {
+                    return null();
+                }
                 if (!tokenStream.getToken(&tt)) {
                     return null();
                 }

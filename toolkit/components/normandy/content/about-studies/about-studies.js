@@ -150,7 +150,7 @@ class StudyList extends React.Component {
     return (
       r("div", {},
         r("h2", {}, translations.activeStudiesList),
-        r("ul", { className: "study-list" },
+        r("ul", { className: "study-list active-study-list" },
           activeStudies.map(study => (
             study.type === "addon"
             ? r(AddonStudyListItem, { key: study.name, study, translations })
@@ -158,7 +158,7 @@ class StudyList extends React.Component {
           )),
         ),
         r("h2", {}, translations.completedStudiesList),
-        r("ul", { className: "study-list" },
+        r("ul", { className: "study-list inactive-study-list" },
           inactiveStudies.map(study => (
             study.type === "addon"
             ? r(AddonStudyListItem, { key: study.name, study, translations })

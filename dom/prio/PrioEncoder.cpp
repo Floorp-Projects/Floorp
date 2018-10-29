@@ -106,6 +106,11 @@ PrioEncoder::Encode(GlobalObject& aGlobal,
   }
 
   nsTArray<bool> dataItems = aPrioParams.mBooleans;
+  if (dataItems.Length() > gNumBooleans) {
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(
+      NS_LITERAL_STRING("Maximum boolean value exceeded"));
+    return;
+  }
 
   PrioConfig prioConfig = PrioConfig_new(dataItems.Length(),
                                          sPublicKeyA,

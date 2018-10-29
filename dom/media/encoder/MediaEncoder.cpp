@@ -110,30 +110,42 @@ public:
       mInitialized = true;
     }
 
-    if (mDirectConnected) {
-      if (aQueuedMedia.IsNull()) {
-        nsresult rv =
-          mEncoderThread->Dispatch(
-            NewRunnableMethod<StreamTime>(
-              "mozilla::AudioTrackEncoder::AdvanceBlockedInput",
-              mEncoder, &AudioTrackEncoder::AdvanceBlockedInput,
-              aQueuedMedia.GetDuration()));
-        MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-        Unused << rv;
-        return;
-      }
-    } else {
+    if (!mDirectConnected) {
       NotifyRealtimeTrackData(aGraph, aTrackOffset, aQueuedMedia);
     }
 
-    nsresult rv =
-      mEncoderThread->Dispatch(
-        NewRunnableMethod<StreamTime>(
+    AutoTArray<Pair<bool, StreamTime>, 2> nulledSequence;
+    for (AudioSegment::ConstChunkIterator
+         iter(static_cast<const AudioSegment&>(aQueuedMedia));
+         !iter.IsEnded(); iter.Next()) {
+      if (!nulledSequence.IsEmpty()) {
+        Pair<bool, StreamTime>& last = nulledSequence.LastElement();
+        if (last.first() == iter->IsNull()) {
+          last.second() += iter->GetDuration();
+          continue;
+        }
+      }
+      nulledSequence.AppendElement(
+        MakePair(iter->IsNull(), iter->GetDuration()));
+    }
+
+    for (const Pair<bool, StreamTime>& nulledRange : nulledSequence) {
+      if (nulledRange.first()) {
+        nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<StreamTime>(
+          "mozilla::AudioTrackEncoder::AdvanceBlockedInput",
+          mEncoder, &AudioTrackEncoder::AdvanceBlockedInput,
+          nulledRange.second()));
+        MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+        Unused << rv;
+      } else {
+        nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<StreamTime>(
           "mozilla::AudioTrackEncoder::AdvanceCurrentTime",
           mEncoder, &AudioTrackEncoder::AdvanceCurrentTime,
-          aQueuedMedia.GetDuration()));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
+          nulledRange.second()));
+        MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+        Unused << rv;
+      }
+    }
   }
 
   void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
@@ -262,36 +274,46 @@ public:
     }
 
     if (!mInitialized) {
-      nsresult rv =
-        mEncoderThread->Dispatch(
-          NewRunnableMethod<StreamTime>(
-            "mozilla::VideoTrackEncoder::SetStartOffset",
-            mEncoder, &VideoTrackEncoder::SetStartOffset, aTrackOffset));
+      nsresult rv =mEncoderThread->Dispatch(NewRunnableMethod<StreamTime>(
+        "mozilla::VideoTrackEncoder::SetStartOffset",
+        mEncoder, &VideoTrackEncoder::SetStartOffset, aTrackOffset));
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
       Unused << rv;
       mInitialized = true;
     }
 
-    if (aQueuedMedia.IsNull()) {
-      nsresult rv =
-        mEncoderThread->Dispatch(
-          NewRunnableMethod<StreamTime>(
-            "mozilla::VideoTrackEncoder::AdvanceBlockedInput",
-            mEncoder, &VideoTrackEncoder::AdvanceBlockedInput,
-            aQueuedMedia.GetDuration()));
-      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-      Unused << rv;
-      return;
+    AutoTArray<Pair<bool, StreamTime>, 2> nulledSequence;
+    for (VideoSegment::ConstChunkIterator
+         iter(static_cast<const VideoSegment&>(aQueuedMedia));
+         !iter.IsEnded(); iter.Next()) {
+      if (!nulledSequence.IsEmpty()) {
+        Pair<bool, StreamTime>& last = nulledSequence.LastElement();
+        if (last.first() == iter->IsNull()) {
+          last.second() += iter->GetDuration();
+          continue;
+        }
+      }
+      nulledSequence.AppendElement(
+        MakePair(iter->IsNull(), iter->GetDuration()));
     }
 
-    nsresult rv =
-      mEncoderThread->Dispatch(
-        NewRunnableMethod<StreamTime>(
+    for (const Pair<bool, StreamTime>& nulledRange : nulledSequence) {
+      if (nulledRange.first()) {
+        nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<StreamTime>(
+          "mozilla::VideoTrackEncoder::AdvanceBlockedInput",
+          mEncoder, &VideoTrackEncoder::AdvanceBlockedInput,
+          nulledRange.second()));
+        MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+        Unused << rv;
+      } else {
+        nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<StreamTime>(
           "mozilla::VideoTrackEncoder::AdvanceCurrentTime",
           mEncoder, &VideoTrackEncoder::AdvanceCurrentTime,
-          aQueuedMedia.GetDuration()));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
+          nulledRange.second()));
+        MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+        Unused << rv;
+      }
+    }
   }
 
   void SetCurrentFrames(const VideoSegment& aMedia) override

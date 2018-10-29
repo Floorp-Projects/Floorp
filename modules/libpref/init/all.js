@@ -5433,6 +5433,10 @@ pref("network.captive-portal-service.maxInterval", 1500000); // 25 minutes
 pref("network.captive-portal-service.backoffFactor", "5.0");
 pref("network.captive-portal-service.enabled", false);
 
+pref("network.connectivity-service.enabled", true);
+pref("network.connectivity-service.DNSv4.domain", "mozilla.org");
+pref("network.connectivity-service.DNSv6.domain", "mozilla.org");
+
 // DNS Trusted Recursive Resolver
 // 0 - default off, 1 - race, 2 TRR first, 3 TRR only, 4 shadow, 5 off by choice
 pref("network.trr.mode", 0);

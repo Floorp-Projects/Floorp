@@ -71,7 +71,6 @@ UNIFIED_SOURCES += [
     'SplitNodeTransaction.cpp',
     'TextEditor.cpp',
     'TextEditorDataTransfer.cpp',
-    'TextEditorTest.cpp',
     'TextEditRules.cpp',
     'TextEditRulesBidi.cpp',
     'TextEditUtils.cpp',
