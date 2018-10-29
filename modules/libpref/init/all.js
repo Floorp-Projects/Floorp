@@ -5950,6 +5950,5 @@ pref("prio.enabled", false);
 #ifdef NIGHTLY_BUILD
 // Bug 1499552; add a dummy pref to verify that collection of preferences
 // via telemetry is working as expected.
-pref("app.normandy.test.with_true_default", true);
-pref("app.normandy.test.with_false_default", false);
+pref("app.normandy.test.with_default", false);
 #endif
