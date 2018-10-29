@@ -158,7 +158,12 @@ var RecipeRunner = {
     }
 
     const apiUrl = Services.prefs.getCharPref(API_URL_PREF);
-    if (!apiUrl || !apiUrl.startsWith("https://")) {
+    if (!apiUrl) {
+      log.warn(`Disabling Shield because ${API_URL_PREF} is not set.`);
+      this.disable();
+      return;
+    }
+    if (!apiUrl.startsWith("https://")) {
       log.warn(`Disabling Shield because ${API_URL_PREF} is not an HTTPS url: ${apiUrl}.`);
       this.disable();
       return;
