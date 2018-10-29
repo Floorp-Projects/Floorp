@@ -1140,7 +1140,7 @@ Element::AddToIdTable(nsAtom* aId)
     containingShadow->AddToIdTable(this, aId);
   } else {
     nsIDocument* doc = GetUncomposedDoc();
-    if (doc && (!IsInAnonymousSubtree() || doc->IsXULDocument())) {
+    if (doc && !IsInAnonymousSubtree()) {
       doc->AddToIdTable(this, aId);
     }
   }
@@ -1163,7 +1163,7 @@ Element::RemoveFromIdTable()
     }
   } else {
     nsIDocument* doc = GetUncomposedDoc();
-    if (doc && (!IsInAnonymousSubtree() || doc->IsXULDocument())) {
+    if (doc && !IsInAnonymousSubtree()) {
       doc->RemoveFromIdTable(this, id);
     }
   }
