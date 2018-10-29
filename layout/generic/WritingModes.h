@@ -2153,38 +2153,51 @@ nsStylePosition::MaxBSize(mozilla::WritingMode aWM) const
 inline bool
 nsStylePosition::ISizeDependsOnContainer(mozilla::WritingMode aWM) const
 {
-  return aWM.IsVertical() ? HeightDependsOnContainer()
-                          : WidthDependsOnContainer();
+  const auto& iSize = aWM.IsVertical() ? mHeight : mWidth;
+  return iSize.GetUnit() == eStyleUnit_Auto ||
+         ISizeCoordDependsOnContainer(iSize);
 }
 inline bool
 nsStylePosition::MinISizeDependsOnContainer(mozilla::WritingMode aWM) const
 {
-  return aWM.IsVertical() ? MinHeightDependsOnContainer()
-                          : MinWidthDependsOnContainer();
+  // NOTE: For a flex item, "min-inline-size:auto" is supposed to behave like
+  // "min-content", which does depend on the container, so you might think we'd
+  // need a special case for "flex item && min-inline-size:auto" here. However,
+  // we don't actually need that special-case code, because flex items are
+  // explicitly supposed to *ignore* their min-inline-size (i.e. behave like
+  // it's 0) until the flex container explicitly considers it. So -- since the
+  // flex container doesn't rely on this method, we don't need to worry about
+  // special behavior for flex items' "min-inline-size:auto" values here.
+  return ISizeCoordDependsOnContainer(MinISize(aWM));
 }
 inline bool
 nsStylePosition::MaxISizeDependsOnContainer(mozilla::WritingMode aWM) const
 {
-  return aWM.IsVertical() ? MaxHeightDependsOnContainer()
-                          : MaxWidthDependsOnContainer();
+  // NOTE: The comment above MinISizeDependsOnContainer about flex items
+  // applies here, too.
+  return ISizeCoordDependsOnContainer(MaxISize(aWM));
 }
+// Note that these functions count `auto` as depending on the container
+// since that's the case for absolutely positioned elements.
+// However, some callers do not care about this case and should check
+// for it, since it is the most common case.
+// FIXME: We should probably change the assumption to be the other way
+// around.
 inline bool
 nsStylePosition::BSizeDependsOnContainer(mozilla::WritingMode aWM) const
 {
-  return aWM.IsVertical() ? WidthDependsOnContainer()
-                          : HeightDependsOnContainer();
+  const auto& bSize = aWM.IsVertical() ? mWidth : mHeight;
+  return bSize.IsAutoOrEnum() || BSizeCoordDependsOnContainer(bSize);
 }
 inline bool
 nsStylePosition::MinBSizeDependsOnContainer(mozilla::WritingMode aWM) const
 {
-  return aWM.IsVertical() ? MinWidthDependsOnContainer()
-                          : MinHeightDependsOnContainer();
+  return BSizeCoordDependsOnContainer(MinBSize(aWM));
 }
 inline bool
 nsStylePosition::MaxBSizeDependsOnContainer(mozilla::WritingMode aWM) const
 {
-  return aWM.IsVertical() ? MaxWidthDependsOnContainer()
-                          : MaxHeightDependsOnContainer();
+  return BSizeCoordDependsOnContainer(MaxBSize(aWM));
 }
 
 inline bool
