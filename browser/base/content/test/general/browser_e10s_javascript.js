@@ -1,11 +1,11 @@
-const CHROME_PROCESS = Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-const CONTENT_PROCESS = Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
+const CHROME_PROCESS = E10SUtils.NOT_REMOTE;
+const WEB_CONTENT_PROCESS = E10SUtils.WEB_REMOTE_TYPE;
 
 add_task(async function() {
   let url = "javascript:dosomething()";
 
-  ok(E10SUtils.canLoadURIInProcess(url, CHROME_PROCESS),
+  ok(E10SUtils.canLoadURIInRemoteType(url, CHROME_PROCESS),
      "Check URL in chrome process.");
-  ok(E10SUtils.canLoadURIInProcess(url, CONTENT_PROCESS),
-     "Check URL in content process.");
+  ok(E10SUtils.canLoadURIInRemoteType(url, WEB_CONTENT_PROCESS),
+     "Check URL in web content process.");
 });

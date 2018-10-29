@@ -1353,23 +1353,21 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile** aResult, bool aGetOldLocation)
   rv = updRoot->GetPath(installPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  const char* vendor = GetAppVendor();
-  if (vendor && vendor[0] == '\0') {
-    vendor = nullptr;
-  }
-  const char* appName = GetAppName();
-  if (appName && appName[0] == '\0') {
-    appName = nullptr;
-  }
-
   mozilla::UniquePtr<wchar_t[]> updatePath;
   HRESULT hrv;
   if (aGetOldLocation) {
+    const char* vendor = GetAppVendor();
+    if (vendor && vendor[0] == '\0') {
+      vendor = nullptr;
+    }
+    const char* appName = GetAppName();
+    if (appName && appName[0] == '\0') {
+      appName = nullptr;
+    }
     hrv = GetUserUpdateDirectory(PromiseFlatString(installPath).get(), vendor,
                                  appName, updatePath);
   } else {
-    hrv = GetCommonUpdateDirectory(PromiseFlatString(installPath).get(), vendor,
-                                   appName,
+    hrv = GetCommonUpdateDirectory(PromiseFlatString(installPath).get(),
                                    SetPermissionsOf::BaseDirIfNotExists,
                                    updatePath);
   }

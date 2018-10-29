@@ -34,7 +34,7 @@ struct OverrideMapping;
 class nsIDomainPolicy;
 class nsIURIClassifierCallback;
 struct LookAndFeelInt;
-class nsDocShellLoadState;
+class nsDocShellLoadInfo;
 
 namespace mozilla {
 class RemoteSpellcheckEngineChild;
@@ -119,7 +119,7 @@ public:
                       const nsAString& aName,
                       const nsACString& aFeatures,
                       bool aForceNoOpener,
-                      nsDocShellLoadState* aLoadState,
+                      nsDocShellLoadInfo* aLoadInfo,
                       bool* aWindowIsNew,
                       mozIDOMWindowProxy** aReturn);
 

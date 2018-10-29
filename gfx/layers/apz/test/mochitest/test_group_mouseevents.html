@@ -25,7 +25,10 @@ var subtests = [
   // Test for scrollbar-dragging on a scrollframe inside an SVGEffects
   {'file': 'helper_bug1331693.html'},
   // Test for scrollbar-dragging on a transformed scrollframe inside a fixed-pos item
-  {'file': 'helper_bug1462961.html'}
+  {'file': 'helper_bug1462961.html'},
+  // Scrollbar dragging where we exercise the snapback behaviour by moving the
+  // mouse away from the scrollbar during drag
+  {'file': 'helper_scrollbar_snap_bug1501062.html'}
 ];
 
 if (isApzEnabled()) {

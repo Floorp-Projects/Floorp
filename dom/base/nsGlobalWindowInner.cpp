@@ -4125,6 +4125,25 @@ nsGlobalWindowInner::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessa
 }
 
 void
+nsGlobalWindowInner::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                                    const WindowPostMessageOptions& aOptions,
+                                    nsIPrincipal& aSubjectPrincipal,
+                                    ErrorResult& aRv)
+{
+  JS::Rooted<JS::Value> transferArray(aCx, JS::UndefinedValue());
+
+  aRv = nsContentUtils::CreateJSValueFromSequenceOfObject(aCx,
+                                                          aOptions.mTransfer,
+                                                          &transferArray);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  PostMessageMoz(aCx, aMessage, aOptions.mTargetOrigin, transferArray,
+                 aSubjectPrincipal, aRv);
+}
+
+void
 nsGlobalWindowInner::Close(ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(CloseOuter, (nsContentUtils::IsCallerChrome()), aError, );

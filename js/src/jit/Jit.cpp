@@ -17,7 +17,7 @@
 using namespace js;
 using namespace js::jit;
 
-static EnterJitStatus
+static EnterJitStatus JS_HAZ_JSNATIVE_CALLER
 EnterJit(JSContext* cx, RunState& state, uint8_t* code)
 {
     MOZ_ASSERT(state.script()->hasBaselineScript());

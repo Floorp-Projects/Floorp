@@ -23,7 +23,9 @@ interface Client {
   // readonly attribute boolean reserved;
 
   [Throws]
-  void postMessage(any message, optional sequence<object> transfer = []);
+  void postMessage(any message, sequence<object> transfer);
+  [Throws]
+  void postMessage(any message, optional PostMessageOptions aOptions);
 };
 
 [Exposed=ServiceWorker]

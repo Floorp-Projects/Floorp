@@ -49,7 +49,7 @@ class nsFontCache final : public nsIObserver
 public:
     nsFontCache(): mContext(nullptr) {}
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
     void Init(nsDeviceContext* aContext);

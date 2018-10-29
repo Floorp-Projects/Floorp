@@ -214,7 +214,7 @@ protected:
   // AccessibleCaretEventHub::Terminate() which is called in
   // PresShell::Destroy(), it frees us automatically. No need to worry if we
   // outlive mPresShell.
-  nsIPresShell* MOZ_NON_OWNING_REF const mPresShell = nullptr;
+  nsIPresShell* const MOZ_NON_OWNING_REF mPresShell = nullptr;
 
   RefPtr<dom::AnonymousContent> mCaretElementHolder;
 
