@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(2693457e-3ba5-4455-991f-5350946adb12)]
+interface nsINetworkConnectivityService : nsISupports
+{
+  /**
+   * Each tested feature may be in one of 3 states:
+   *   UNKNOWN, if a check hasn't been performed.
+   *   OK, if the feature was successfully tested
+   *   NOT_AVAILABLE, if the feature is blocked by the network.
+   *                  Note that the endpoints are guaranteed to support the features.
+   */
+  const long UNKNOWN             = 0;
+  const long OK                  = 1;
+  const long NOT_AVAILABLE       = 2;
+
+  /* If DNS v4/v6 queries actually work on the current network */
+  readonly attribute long DNSv4;
+  readonly attribute long DNSv6;
+
+  /* If connecting to IPv4/v6 works on the current network */
+  readonly attribute long IPv4;
+  readonly attribute long IPv6;
+
+  /* Starts the DNS request to check for DNS v4/v6 availability */
+  void recheckDNS();
+};

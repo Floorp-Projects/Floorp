@@ -24,7 +24,8 @@ if (AppConstants.DEBUG ||
     stack: [
       "_rebuild@chrome://browser/content/search/search-one-offs.js",
       "set popup@chrome://browser/content/search/search-one-offs.js",
-      "set_oneOffSearchesEnabled@chrome://browser/content/urlbarBindings.xml",
+      "_syncOneOffSearchesEnabled@chrome://browser/content/urlbarBindings.xml",
+      "toggleOneOffSearches@chrome://browser/content/urlbarBindings.xml",
       "_enableOrDisableOneOffSearches@chrome://browser/content/urlbarBindings.xml",
       "@chrome://browser/content/urlbarBindings.xml",
       "_openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",

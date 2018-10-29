@@ -60,7 +60,7 @@ add_task(async function setup() {
   sandbox = sinon.sandbox.create();
 
   fakeController = new UrlbarController({
-    window,
+    browserWindow: window,
   });
 
   sandbox.stub(fakeController, "startQuery");

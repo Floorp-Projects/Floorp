@@ -140,7 +140,6 @@ public class GeckoJavaSampler {
                 return (sample.mJavaTime -
                     SystemClock.elapsedRealtime()) + getProfilerTime();
             }
-            System.out.println("Sample: " + sample.mTime);
             return sample.mTime;
         }
         return 0;

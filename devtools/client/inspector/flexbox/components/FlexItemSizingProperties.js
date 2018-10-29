@@ -97,20 +97,14 @@ class FlexItemSizingProperties extends PureComponent {
     );
   }
 
-  renderBaseSizeSection({ mainBaseSize, mainMinSize }, properties, dimension) {
+  renderBaseSizeSection({ mainBaseSize, clampState }, properties, dimension) {
     const flexBasisValue = properties["flex-basis"];
     const dimensionValue = properties[dimension];
-    const minDimensionValue = properties[`min-${dimension}`];
-    const hasMinClamping = mainMinSize && mainMinSize === mainBaseSize;
 
     let property = null;
     let reason = null;
 
-    if (hasMinClamping && minDimensionValue) {
-      // If min clamping happened, then the base size is going to be that value.
-      // TODO: this isn't going to be necessarily true after bug 1498273 is fixed.
-      property = this.renderCssProperty(`min-${dimension}`, minDimensionValue);
-    } else if (flexBasisValue && !hasMinClamping) {
+    if (flexBasisValue) {
       // If flex-basis is defined, then that's what is used for the base size.
       property = this.renderCssProperty("flex-basis", flexBasisValue);
     } else if (dimensionValue) {
@@ -143,6 +137,7 @@ class FlexItemSizingProperties extends PureComponent {
       mainBaseSize,
       mainFinalSize,
       lineGrowthState,
+      clampState,
     } = flexItemSizing;
 
     // Don't attempt to display anything useful if everything is 0.
@@ -156,9 +151,7 @@ class FlexItemSizingProperties extends PureComponent {
     const flexShrink0 = parseFloat(flexShrink) === 0;
     const grew = mainDeltaSize > 0;
     const shrank = mainDeltaSize < 0;
-    // TODO: replace this with the new clamping state that the API will return once bug
-    // 1498273 is fixed.
-    const wasClamped = mainDeltaSize + mainBaseSize !== mainFinalSize;
+    const wasClamped = clampState !== "unclamped";
 
     const reasons = [];
 
@@ -262,17 +255,14 @@ class FlexItemSizingProperties extends PureComponent {
     );
   }
 
-  renderMinimumSizeSection({ mainMinSize, mainFinalSize }, properties, dimension) {
+  renderMinimumSizeSection({ clampState, mainMinSize }, properties, dimension) {
     // We only display the minimum size when the item actually violates that size during
     // layout & is clamped.
-    // For now, we detect this by checking that the min-size is the same as the final size
-    // and that a min-size is actually defined in CSS.
-    // TODO: replace this with the new clamping state that the API will return once bug
-    // 1498273 is fixed.
-    const minDimensionValue = properties[`min-${dimension}`];
-    if (mainMinSize !== mainFinalSize || !minDimensionValue) {
+    if (clampState !== "clamped_to_min") {
       return null;
     }
+
+    const minDimensionValue = properties[`min-${dimension}`];
 
     return (
       dom.li({ className: "section min" },
@@ -287,10 +277,8 @@ class FlexItemSizingProperties extends PureComponent {
     );
   }
 
-  renderMaximumSizeSection({ mainMaxSize, mainFinalSize }, properties, dimension) {
-    // TODO: replace this with the new clamping state that the API will return once bug
-    // 1498273 is fixed.
-    if (mainMaxSize !== mainFinalSize) {
+  renderMaximumSizeSection({ clampState, mainMaxSize }, properties, dimension) {
+    if (clampState !== "clamped_to_max") {
       return null;
     }
 

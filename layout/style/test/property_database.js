@@ -6687,7 +6687,7 @@ gCSSProperties["grid-template-columns"] = {
 if (isGridTemplateSubgridValueEnabled) {
   gCSSProperties["grid-template-columns"].other_values.push(
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=981300
-    "[none auto subgrid min-content max-content foo] 40px",
+    "[none subgrid min-content max-content foo] 40px",
 
     "subgrid",
     "subgrid [] [foo bar]",

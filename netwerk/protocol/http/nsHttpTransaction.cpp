@@ -9,11 +9,15 @@
 
 #include "base/basictypes.h"
 
+#include "nsHttpBasicAuth.h"
+#include "nsHttpChunkedDecoder.h"
+#include "nsHttpDigestAuth.h"
 #include "nsHttpHandler.h"
-#include "nsHttpTransaction.h"
+#include "nsHttpNegotiateAuth.h"
+#include "nsHttpNTLMAuth.h"
 #include "nsHttpRequestHead.h"
 #include "nsHttpResponseHead.h"
-#include "nsHttpChunkedDecoder.h"
+#include "nsHttpTransaction.h"
 #include "nsTransportUtils.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -2022,12 +2026,17 @@ nsHttpTransaction::CheckForStickyAuthSchemeAt(nsHttpAtom const& header)
   while (p.ReadWord(schema)) {
       ToLowerCase(schema);
 
-      nsAutoCString contractid;
-      contractid.AssignLiteral(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
-      contractid.Append(schema);
-
       // using a new instance because of thread safety of auth modules refcnt
-      nsCOMPtr<nsIHttpAuthenticator> authenticator(do_CreateInstance(contractid.get()));
+      nsCOMPtr<nsIHttpAuthenticator> authenticator;
+      if (schema.EqualsLiteral("negotiate")) {
+        authenticator = new nsHttpNegotiateAuth();
+      } else if (schema.EqualsLiteral("basic")) {
+        authenticator = new nsHttpBasicAuth();
+      } else if (schema.EqualsLiteral("digest")) {
+        authenticator = new nsHttpDigestAuth();
+      } else if (schema.EqualsLiteral("ntlm")) {
+        authenticator = new nsHttpNTLMAuth();
+      }
       if (authenticator) {
           uint32_t flags;
           nsresult rv = authenticator->GetAuthFlags(&flags);

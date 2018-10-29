@@ -4,13 +4,12 @@
 
 #include "RedirectChannelRegistrar.h"
 #include "mozilla/StaticPtr.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace net {
 
-namespace {
-StaticRefPtr<RedirectChannelRegistrar> gSingleton;
-}
+StaticRefPtr<RedirectChannelRegistrar> RedirectChannelRegistrar::gSingleton;
 
 NS_IMPL_ISUPPORTS(RedirectChannelRegistrar, nsIRedirectChannelRegistrar)
 

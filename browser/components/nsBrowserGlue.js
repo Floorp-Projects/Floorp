@@ -1032,6 +1032,10 @@ BrowserGlue.prototype = {
       popup: "#fff",
       popup_text: "#0c0c0d",
       popup_border: "#ccc",
+      toolbarColor: "#f5f6f7",
+      toolbar_bottom_separator: "#ccc",
+      toolbar_field: "#fff",
+      toolbar_field_border: "#ccc",
       author: vendorShortName,
     });
     LightweightThemeManager.addBuiltInTheme({
@@ -1044,8 +1048,12 @@ BrowserGlue.prototype = {
       popup: "#4a4a4f",
       popup_text: "rgb(249, 249, 250)",
       popup_border: "#27272b",
-      toolbar_field_text: "rgb(249, 249, 250)",
+      toolbarColor: "hsl(240, 1%, 20%)",
+      toolbar_bottom_separator: "hsl(240, 5%, 5%)",
+      toolbar_field: "rgb(71, 71, 73)",
       toolbar_field_border: "rgba(249, 249, 250, 0.2)",
+      toolbar_field_separator: "#5F6670",
+      toolbar_field_text: "rgb(249, 249, 250)",
       ntp_background: "#2A2A2E",
       ntp_text: "rgb(249, 249, 250)",
       sidebar: "#38383D",
@@ -1363,9 +1371,6 @@ BrowserGlue.prototype = {
 
     let cookieBehavior = Services.prefs.getIntPref("network.cookie.cookieBehavior");
     Services.telemetry.getHistogramById("COOKIE_BEHAVIOR").add(cookieBehavior);
-
-    let contentBlockingEnabled = Services.prefs.getBoolPref("browser.contentblocking.enabled");
-    Services.telemetry.scalarSet("contentblocking.enabled", contentBlockingEnabled);
 
     let exceptions = 0;
     for (let permission of Services.perms.enumerator) {
@@ -2366,7 +2371,7 @@ BrowserGlue.prototype = {
         }, SEARCH_SERVICE_TOPIC);
       });
       searchInitializedPromise.then(() => {
-        let currentEngine = Services.search.currentEngine.wrappedJSObject;
+        let currentEngine = Services.search.defaultEngine.wrappedJSObject;
         // Only reset the current engine if it wasn't set by a WebExtension
         // and it is not one of the default engines.
         // If the original default is not a default, the user has a weird

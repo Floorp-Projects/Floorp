@@ -79,7 +79,7 @@
             accesskey="&cutCmd.accesskey;"
             closemenu="single"
             selection="bookmark|folder|separator|query"
-            forcehideselection="tagChild|livemarkChild"/>
+            forcehideselection="tagChild"/>
   <menuitem id="placesContext_copy"
             command="placesCmd_copy"
             label="&copyCmd.label;"
@@ -120,17 +120,10 @@
             accesskey="&cmd.context_sortby_name.accesskey;"
             closemenu="single"
             selection="folder"/>
-  <menuitem id="placesContext_reload"
-            command="placesCmd_reload"
-            label="&cmd.reloadLivebookmark.label;"
-            accesskey="&cmd.reloadLivebookmark.accesskey;"
-            closemenu="single"
-            selection="livemark"/>
   <menuseparator id="placesContext_sortSeparator"/>
   <menuitem id="placesContext_show:info"
             command="placesCmd_show:info"
             label="&cmd.properties.label;"
             accesskey="&cmd.properties.accesskey;"
-            selection="bookmark|folder|query"
-            forcehideselection="livemarkChild"/>
+            selection="bookmark|folder|query"/>
 </menupopup>

@@ -7,7 +7,6 @@ const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
 const COOKIE_PAGE = "http://not-tracking.example.com/browser/browser/base/content/test/trackingUI/cookiePage.html";
 
-const CB_PREF = "browser.contentblocking.enabled";
 const TP_PREF = "privacy.trackingprotection.enabled";
 const PREF_REPORT_BREAKAGE_ENABLED = "browser.contentblocking.reportBreakage.enabled";
 const PREF_REPORT_BREAKAGE_URL = "browser.contentblocking.reportBreakage.url";
@@ -39,7 +38,6 @@ add_task(async function testReportBreakageVisibility() {
     {
       url: TRACKING_PAGE,
       prefs: {
-        "browser.contentblocking.enabled": true,
         "privacy.trackingprotection.enabled": true,
         "browser.contentblocking.reportBreakage.enabled": true,
       },
@@ -49,7 +47,6 @@ add_task(async function testReportBreakageVisibility() {
       url: TRACKING_PAGE,
       hasException: true,
       prefs: {
-        "browser.contentblocking.enabled": true,
         "privacy.trackingprotection.enabled": true,
         "browser.contentblocking.reportBreakage.enabled": true,
       },
@@ -58,16 +55,6 @@ add_task(async function testReportBreakageVisibility() {
     {
       url: TRACKING_PAGE,
       prefs: {
-        "browser.contentblocking.enabled": false,
-        "privacy.trackingprotection.enabled": true,
-        "browser.contentblocking.reportBreakage.enabled": true,
-      },
-      buttonVisible: false,
-    },
-    {
-      url: TRACKING_PAGE,
-      prefs: {
-        "browser.contentblocking.enabled": true,
         "privacy.trackingprotection.enabled": true,
         "browser.contentblocking.reportBreakage.enabled": false,
       },
@@ -76,7 +63,6 @@ add_task(async function testReportBreakageVisibility() {
     {
       url: BENIGN_PAGE,
       prefs: {
-        "browser.contentblocking.enabled": true,
         "privacy.trackingprotection.enabled": true,
         "browser.contentblocking.reportBreakage.enabled": true,
       },
@@ -85,7 +71,6 @@ add_task(async function testReportBreakageVisibility() {
     {
       url: COOKIE_PAGE,
       prefs: {
-        "browser.contentblocking.enabled": true,
         "privacy.trackingprotection.enabled": false,
         "network.cookie.cookieBehavior": Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
         "browser.contentblocking.reportBreakage.enabled": false,
@@ -122,7 +107,6 @@ add_task(async function testReportBreakageVisibility() {
 
 add_task(async function testReportBreakageCancel() {
   Services.prefs.setBoolPref(TP_PREF, true);
-  Services.prefs.setBoolPref(CB_PREF, true);
   Services.prefs.setBoolPref(PREF_REPORT_BREAKAGE_ENABLED, true);
 
   await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function() {
@@ -153,7 +137,6 @@ add_task(async function testReportBreakageCancel() {
     ok(true, "Main view was shown");
   });
 
-  Services.prefs.clearUserPref(CB_PREF);
   Services.prefs.clearUserPref(TP_PREF);
   Services.prefs.clearUserPref(PREF_REPORT_BREAKAGE_ENABLED);
 });
@@ -166,7 +149,6 @@ add_task(async function testReportBreakage() {
   let path = i.primaryScheme + "://" + i.primaryHost + ":" + i.primaryPort + "/";
 
   Services.prefs.setBoolPref(TP_PREF, true);
-  Services.prefs.setBoolPref(CB_PREF, true);
   Services.prefs.setBoolPref(PREF_REPORT_BREAKAGE_ENABLED, true);
   Services.prefs.setStringPref(PREF_REPORT_BREAKAGE_URL, path);
 
@@ -248,7 +230,6 @@ add_task(async function testReportBreakage() {
   // Stop the server.
   await new Promise(r => server.stop(r));
 
-  Services.prefs.clearUserPref(CB_PREF);
   Services.prefs.clearUserPref(TP_PREF);
   Services.prefs.clearUserPref(PREF_REPORT_BREAKAGE_ENABLED);
   Services.prefs.clearUserPref(PREF_REPORT_BREAKAGE_URL);
@@ -256,7 +237,6 @@ add_task(async function testReportBreakage() {
 
 add_task(async function cleanup() {
   // Clear prefs that are touched in this test again for sanity.
-  Services.prefs.clearUserPref(CB_PREF);
   Services.prefs.clearUserPref(TP_PREF);
   Services.prefs.clearUserPref(PREF_REPORT_BREAKAGE_ENABLED);
   Services.prefs.clearUserPref(PREF_REPORT_BREAKAGE_URL);

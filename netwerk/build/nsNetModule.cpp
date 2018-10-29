@@ -39,6 +39,7 @@
 #include "mozilla/net/BackgroundChannelRegistrar.h"
 #include "mozilla/net/NeckoChild.h"
 #include "RedirectChannelRegistrar.h"
+#include "nsAuthGSSAPI.h"
 
 #include "nsNetCID.h"
 
@@ -141,6 +142,14 @@ namespace net {
 } // namespace net
 } // namespace mozilla
 
+#include "mozilla/net/NetworkConnectivityService.h"
+namespace mozilla {
+namespace net {
+  NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsINetworkConnectivityService,
+    NetworkConnectivityService::GetSingleton)
+} // namespace net
+} // namespace mozilla
+
 ///////////////////////////////////////////////////////////////////////////////
 
 extern nsresult
@@ -225,22 +234,16 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init)
 #undef LOG
 #undef LOG_ENABLED
 #include "nsHttpAuthManager.h"
-#include "nsHttpBasicAuth.h"
-#include "nsHttpDigestAuth.h"
-#include "nsHttpNTLMAuth.h"
 #include "nsHttpActivityDistributor.h"
 #include "ThrottleQueue.h"
 #undef LOG
 #undef LOG_ENABLED
 namespace mozilla {
 namespace net {
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpNTLMAuth)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsHttpHandler, nsHttpHandler::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpsHandler, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpAuthManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpActivityDistributor)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpBasicAuth)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpDigestAuth)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ThrottleQueue)
 } // namespace net
 } // namespace mozilla
@@ -618,6 +621,8 @@ static void nsNetShutdown()
 
     mozilla::net::BackgroundChannelRegistrar::Shutdown();
 
+    nsAuthGSSAPI::Shutdown();
+
     delete gNetSniffers;
     gNetSniffers = nullptr;
     delete gDataSniffers;
@@ -676,9 +681,6 @@ NS_DEFINE_NAMED_CID(NS_MIMEHEADERPARAM_CID);
 NS_DEFINE_NAMED_CID(NS_FILEPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_HTTPPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_HTTPSPROTOCOLHANDLER_CID);
-NS_DEFINE_NAMED_CID(NS_HTTPBASICAUTH_CID);
-NS_DEFINE_NAMED_CID(NS_HTTPDIGESTAUTH_CID);
-NS_DEFINE_NAMED_CID(NS_HTTPNTLMAUTH_CID);
 NS_DEFINE_NAMED_CID(NS_HTTPAUTHMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_HTTPACTIVITYDISTRIBUTOR_CID);
 NS_DEFINE_NAMED_CID(NS_THROTTLEQUEUE_CID);
@@ -722,6 +724,7 @@ NS_DEFINE_NAMED_CID(NS_CACHE_STORAGE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_NSILOADCONTEXTINFOFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_NETWORKPREDICTOR_CID);
 NS_DEFINE_NAMED_CID(NS_CAPTIVEPORTAL_CID);
+NS_DEFINE_NAMED_CID(NS_NETWORKCONNECTIVITYSERVICE_CID);
 #ifdef BUILD_NETWORK_INFO_SERVICE
 NS_DEFINE_NAMED_CID(NETWORKINFOSERVICE_CID);
 #endif // BUILD_NETWORK_INFO_SERVICE
@@ -782,9 +785,6 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_FILEPROTOCOLHANDLER_CID, false, nullptr, nsFileProtocolHandlerConstructor },
     { &kNS_HTTPPROTOCOLHANDLER_CID, false, nullptr, mozilla::net::nsHttpHandlerConstructor },
     { &kNS_HTTPSPROTOCOLHANDLER_CID, false, nullptr, mozilla::net::nsHttpsHandlerConstructor },
-    { &kNS_HTTPBASICAUTH_CID, false, nullptr, mozilla::net::nsHttpBasicAuthConstructor },
-    { &kNS_HTTPDIGESTAUTH_CID, false, nullptr, mozilla::net::nsHttpDigestAuthConstructor },
-    { &kNS_HTTPNTLMAUTH_CID, false, nullptr, mozilla::net::nsHttpNTLMAuthConstructor },
     { &kNS_HTTPAUTHMANAGER_CID, false, nullptr, mozilla::net::nsHttpAuthManagerConstructor },
     { &kNS_HTTPACTIVITYDISTRIBUTOR_CID, false, nullptr, mozilla::net::nsHttpActivityDistributorConstructor },
     { &kNS_THROTTLEQUEUE_CID, false, nullptr, mozilla::net::ThrottleQueueConstructor },
@@ -830,6 +830,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_NSILOADCONTEXTINFOFACTORY_CID, false, nullptr, LoadContextInfoFactoryConstructor },
     { &kNS_NETWORKPREDICTOR_CID, false, nullptr, mozilla::net::Predictor::Create },
     { &kNS_CAPTIVEPORTAL_CID, false, nullptr, mozilla::net::nsICaptivePortalServiceConstructor },
+    { &kNS_NETWORKCONNECTIVITYSERVICE_CID, false, nullptr, mozilla::net::nsINetworkConnectivityServiceConstructor },
 #ifdef BUILD_NETWORK_INFO_SERVICE
     { &kNETWORKINFOSERVICE_CID, false, nullptr, nsNetworkInfoServiceConstructor },
 #endif
@@ -895,9 +896,6 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "file", &kNS_FILEPROTOCOLHANDLER_CID },
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &kNS_HTTPPROTOCOLHANDLER_CID },
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "https", &kNS_HTTPSPROTOCOLHANDLER_CID },
-    { NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "basic", &kNS_HTTPBASICAUTH_CID },
-    { NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "digest", &kNS_HTTPDIGESTAUTH_CID },
-    { NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "ntlm", &kNS_HTTPNTLMAUTH_CID },
     { NS_HTTPAUTHMANAGER_CONTRACTID, &kNS_HTTPAUTHMANAGER_CID },
     { NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID, &kNS_HTTPACTIVITYDISTRIBUTOR_CID },
     { NS_THROTTLEQUEUE_CONTRACTID, &kNS_THROTTLEQUEUE_CID },
@@ -938,6 +936,7 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_NSILOADCONTEXTINFOFACTORY_CONTRACTID, &kNS_NSILOADCONTEXTINFOFACTORY_CID },
     { NS_NETWORKPREDICTOR_CONTRACTID, &kNS_NETWORKPREDICTOR_CID },
     { NS_CAPTIVEPORTAL_CONTRACTID, &kNS_CAPTIVEPORTAL_CID },
+    { NS_NETWORKCONNECTIVITYSERVICE_CONTRACTID, &kNS_NETWORKCONNECTIVITYSERVICE_CID },
 #ifdef BUILD_NETWORK_INFO_SERVICE
     { NETWORKINFOSERVICE_CONTRACT_ID, &kNETWORKINFOSERVICE_CID },
 #endif

@@ -26,6 +26,7 @@ import org.mozilla.gecko.gfx.PanningPerfAPI;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.StrictModeContext;
 import org.mozilla.geckoview.GeckoView;
 
 import android.app.Activity;
@@ -447,6 +448,7 @@ public class FennecNativeDriver implements Driver, CompositorController.GetPixel
         log(level, null, t);
     }
 
+    @SuppressWarnings("try")
     public static void log(LogLevel level, String message, Throwable t) {
         if (mLogFile == null) {
             throw new RuntimeException(
@@ -456,19 +458,21 @@ public class FennecNativeDriver implements Driver, CompositorController.GetPixel
 
         if (level.isEnabled(mLogLevel)) {
             PrintWriter pw = null;
-            try {
-                pw = new PrintWriter(new FileWriter(mLogFile, true));
-                if (message != null) {
-                    pw.println(message);
-                }
-                if (t != null) {
-                    t.printStackTrace(pw);
-                }
-            } catch (IOException ioe) {
-                Log.e("Robocop", "exception with file writer on: " + mLogFile);
-            } finally {
-                if (pw != null) {
-                    pw.close();
+            try (StrictModeContext unused = StrictModeContext.allowDiskWrites()) {
+                try {
+                    pw = new PrintWriter(new FileWriter(mLogFile, true));
+                    if (message != null) {
+                        pw.println(message);
+                    }
+                    if (t != null) {
+                        t.printStackTrace(pw);
+                    }
+                } catch (IOException ioe) {
+                    Log.e("Robocop", "exception with file writer on: " + mLogFile);
+                } finally {
+                    if (pw != null) {
+                        pw.close();
+                    }
                 }
             }
 

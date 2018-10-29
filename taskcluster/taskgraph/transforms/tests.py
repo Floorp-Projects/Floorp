@@ -958,7 +958,7 @@ def set_profile(config, tests):
     if config.params['try_mode'] == 'try_option_syntax':
         profile = config.params['try_options']['profile']
     for test in tests:
-        if profile and test['suite'] == 'talos':
+        if profile and test['suite'] in ['talos', 'raptor']:
             test['mozharness']['extra-options'].append('--geckoProfile')
         yield test
 

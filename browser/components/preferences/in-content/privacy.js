@@ -474,7 +474,6 @@ var gPrivacyPane = {
       }
     }
 
-    clearIfNotLocked("browser.contentblocking.enabled");
     clearIfNotLocked("urlclassifier.trackingTable");
     clearIfNotLocked("network.cookie.cookieBehavior");
     clearIfNotLocked("network.cookie.lifetimePolicy");
