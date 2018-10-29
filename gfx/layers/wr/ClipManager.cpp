@@ -87,9 +87,7 @@ void
 ClipManager::PushOverrideForASR(const ActiveScrolledRoot* aASR,
                                 const Maybe<wr::WrClipId>& aClipId)
 {
-  layers::FrameMetrics::ViewID viewId = aASR
-      ? aASR->GetViewId() : layers::FrameMetrics::NULL_SCROLL_ID;
-  Maybe<wr::WrClipId> scrollId = mBuilder->GetScrollIdForDefinedScrollLayer(viewId);
+  Maybe<wr::WrClipId> scrollId = GetScrollLayer(aASR);
   MOZ_ASSERT(scrollId.isSome());
 
   CLIP_LOG("Pushing override %zu -> %s\n", scrollId->id,
@@ -107,9 +105,7 @@ ClipManager::PopOverrideForASR(const ActiveScrolledRoot* aASR)
   MOZ_ASSERT(!mCacheStack.empty());
   mCacheStack.pop();
 
-  layers::FrameMetrics::ViewID viewId = aASR
-      ? aASR->GetViewId() : layers::FrameMetrics::NULL_SCROLL_ID;
-  Maybe<wr::WrClipId> scrollId = mBuilder->GetScrollIdForDefinedScrollLayer(viewId);
+  Maybe<wr::WrClipId> scrollId = GetScrollLayer(aASR);
   MOZ_ASSERT(scrollId.isSome());
 
   auto it = mASROverride.find(*scrollId);
@@ -247,11 +243,7 @@ ClipManager::BeginItem(nsDisplayItem* aItem,
   } else if (clip) {
     // If the clip's ASR is different, then we need to set the scroll id
     // explicitly to match the desired ASR.
-    FrameMetrics::ViewID viewId = asr
-        ? asr->GetViewId()
-        : FrameMetrics::NULL_SCROLL_ID;
-    Maybe<wr::WrClipId> scrollId =
-        mBuilder->GetScrollIdForDefinedScrollLayer(viewId);
+    Maybe<wr::WrClipId> scrollId = GetScrollLayer(asr);
     MOZ_ASSERT(scrollId.isSome());
     clips.mScrollId = ClipIdAfterOverride(scrollId);
   } else {
@@ -270,6 +262,27 @@ ClipManager::BeginItem(nsDisplayItem* aItem,
   mItemClipStack.push(clips);
 
   CLIP_LOG("done setup for %p\n", aItem);
+}
+
+Maybe<wr::WrClipId>
+ClipManager::GetScrollLayer(const ActiveScrolledRoot* aASR)
+{
+  for (const ActiveScrolledRoot* asr = aASR; asr; asr = asr->mParent) {
+    Maybe<wr::WrClipId> scrollId =
+      mBuilder->GetScrollIdForDefinedScrollLayer(asr->GetViewId());
+    if (scrollId) {
+      return scrollId;
+    }
+
+    // If this ASR doesn't have a scroll ID, then we should check its ancestor.
+    // There may not be one defined because the ASR may not be scrollable or we
+    // failed to get the scroll metadata.
+  }
+
+  Maybe<wr::WrClipId> scrollId =
+    mBuilder->GetScrollIdForDefinedScrollLayer(FrameMetrics::NULL_SCROLL_ID);
+  MOZ_ASSERT(scrollId.isSome());
+  return scrollId;
 }
 
 Maybe<wr::WrClipId>
@@ -354,11 +367,7 @@ ClipManager::DefineClipChain(const DisplayItemClipChain* aChain,
     nsTArray<wr::ComplexClipRegion> wrRoundedRects;
     chain->mClip.ToComplexClipRegions(aAppUnitsPerDevPixel, aSc, wrRoundedRects);
 
-    FrameMetrics::ViewID viewId = chain->mASR
-        ? chain->mASR->GetViewId()
-        : FrameMetrics::NULL_SCROLL_ID;
-    Maybe<wr::WrClipId> scrollId =
-      mBuilder->GetScrollIdForDefinedScrollLayer(viewId);
+    Maybe<wr::WrClipId> scrollId = GetScrollLayer(chain->mASR);
     // Before calling DefineClipChain we defined the ASRs by calling
     // DefineScrollLayers, so we must have a scrollId here.
     MOZ_ASSERT(scrollId.isSome());
