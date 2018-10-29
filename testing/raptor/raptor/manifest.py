@@ -159,6 +159,14 @@ def get_raptor_test_list(args, oskey):
                 # subtest comes from matching test ini file name, so add it
                 tests_to_run.append(next_test)
 
+    # if geckoProfile is enabled, limit pagecycles to 2
+    if args.gecko_profile is True:
+        for next_test in tests_to_run:
+            if next_test['page_cycles'] > 2:
+                LOG.info("gecko profiling enabled, limiting pagecycles "
+                         "to 2 for test %s" % next_test['name'])
+                next_test['page_cycles'] = 2
+
     # write out .json test setting files for the control server to read and send to web ext
     if len(tests_to_run) != 0:
         for test in tests_to_run:
