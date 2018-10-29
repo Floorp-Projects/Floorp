@@ -1,0 +1,15 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>TelemetryMeasurement.flush - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">org.mozilla.telemetry.measurement</a>&nbsp;/&nbsp;<a href="index.html">TelemetryMeasurement</a>&nbsp;/&nbsp;<a href="./flush.html">flush</a><br/>
+<br/>
+<h1>flush</h1>
+<a name="org.mozilla.telemetry.measurement.TelemetryMeasurement$flush()"></a>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">flush</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/measurement/TelemetryMeasurement.java#L29">(source)</a>
+<p>Flush this measurement in order for serializing a ping. Calling this method should create an Object representing the current state of this measurement. Optionally this measurement might be reset. For example a TelemetryMeasurement implementation for the OS version of the device might just return a String like "7.0.1". However a TelemetryMeasurement implementation for counting the usage of search engines might return a HashMap mapping search engine names to search counts. Additionally those counts will be reset after flushing.</p>
+</BODY>
+</HTML>
