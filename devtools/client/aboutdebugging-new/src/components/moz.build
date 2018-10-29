@@ -12,7 +12,6 @@ DevToolsModules(
     'App.css',
     'App.js',
     'ConnectionPromptSetting.js',
-    'RuntimeInfo.css',
     'RuntimeInfo.js',
     'RuntimePage.css',
     'RuntimePage.js',
