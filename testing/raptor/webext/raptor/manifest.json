@@ -36,6 +36,7 @@
     "<all_urls>",
     "tabs",
     "storage",
-    "alarms"
+    "alarms",
+    "geckoProfiler"
   ]
 }

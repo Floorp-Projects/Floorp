@@ -103,6 +103,18 @@ def write_test_settings_json(test_details, oskey):
     if test_details.get("alert_threshold", None) is not None:
         test_settings['raptor-options']['alert_threshold'] = float(test_details['alert_threshold'])
 
+    # if gecko profiling is enabled, write profiling settings for webext
+    if test_details.get("gecko_profile", False):
+        test_settings['raptor-options']['gecko_profile'] = True
+        # when profiling, if webRender is enabled we need to set that, so
+        # the runner can add the web render threads to gecko profiling
+        test_settings['raptor-options']['gecko_profile_interval'] = \
+            float(test_details.get("gecko_profile_interval", 0))
+        test_settings['raptor-options']['gecko_profile_entries'] = \
+            float(test_details.get("gecko_profile_entries", 0))
+        if str(os.getenv('MOZ_WEBRENDER')) == '1':
+            test_settings['raptor-options']['webrender_enabled'] = True
+
     if test_details.get("newtab_per_cycle", None) is not None:
         test_settings['raptor-options']['newtab_per_cycle'] = \
             bool(test_details['newtab_per_cycle'])
@@ -159,9 +171,10 @@ def get_raptor_test_list(args, oskey):
                 # subtest comes from matching test ini file name, so add it
                 tests_to_run.append(next_test)
 
-    # if geckoProfile is enabled, limit pagecycles to 2
+    # if geckoProfile is enabled, turn it on in test settings and limit pagecycles to 2
     if args.gecko_profile is True:
         for next_test in tests_to_run:
+            next_test['gecko_profile'] = True
             if next_test['page_cycles'] > 2:
                 LOG.info("gecko profiling enabled, limiting pagecycles "
                          "to 2 for test %s" % next_test['name'])
