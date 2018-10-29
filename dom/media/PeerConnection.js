@@ -581,7 +581,10 @@ class RTCPeerConnection {
         name: "ECDSA", namedCurve: "P-256",
       });
     }
-    this._impl.certificate = certificate;
+    // Is the PC still around after the await?
+    if (!this._closed) {
+      this._impl.certificate = certificate;
+    }
   }
 
   _resetPeerIdentityPromise() {
