@@ -4,6 +4,7 @@
 
 #include "RedirectChannelRegistrar.h"
 #include "mozilla/StaticPtr.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace net {
