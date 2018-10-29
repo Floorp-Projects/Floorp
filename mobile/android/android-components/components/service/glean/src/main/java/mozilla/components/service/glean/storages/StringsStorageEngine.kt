@@ -5,13 +5,14 @@
 package mozilla.components.service.glean.storages
 
 import android.support.annotation.VisibleForTesting
+import org.json.JSONObject
 
 /**
  * This singleton handles the in-memory storage logic for strings. It is meant to be used by
  * the Specific Strings API and the ping assembling objects. No validation on the stored data
  * is performed at this point: validation must be performed by the Specific Strings API.
  */
-internal object StringsStorageEngine {
+internal object StringsStorageEngine : StorageEngine {
     private val stringStores: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
 
     /**
@@ -53,6 +54,20 @@ internal object StringsStorageEngine {
         }
 
         return stringStores.get(storeName)
+    }
+
+    /**
+     * Get a snapshot of the stored data as a JSON object.
+     *
+     * @param storeName the name of the desired store
+     * @param clearStore whether or not to clearStore the requested store
+     *
+     * @return the [JSONObject] containing the recorded data.
+     */
+    override fun getSnapshotAsJSON(storeName: String, clearStore: Boolean): Any? {
+        return getSnapshot(storeName, clearStore)?.let { stringMap ->
+            return JSONObject(stringMap)
+        }
     }
 
     @VisibleForTesting

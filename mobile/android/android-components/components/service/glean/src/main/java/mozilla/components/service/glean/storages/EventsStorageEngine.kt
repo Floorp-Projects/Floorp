@@ -6,13 +6,14 @@ package mozilla.components.service.glean.storages
 
 import android.os.SystemClock
 import android.support.annotation.VisibleForTesting
+import org.json.JSONArray
 
 /**
  * This singleton handles the in-memory storage logic for events. It is meant to be used by
  * the Specific Events API and the ping assembling objects. No validation on the stored data
  * is performed at this point: validation must be performed by the Specific Events API.
  */
-internal object EventsStorageEngine {
+internal object EventsStorageEngine : StorageEngine {
     // Events recorded within the list should be reasonably sorted by timestamp, assuming
     // the sequence of calls to [record] has not been messed with. However, please only
     // trust the recorded timestamp values.
@@ -79,7 +80,32 @@ internal object EventsStorageEngine {
             return eventStores.remove(storeName)
         }
 
-        return eventStores.get(storeName)
+        return eventStores[storeName]
+    }
+
+    /**
+     * Get a snapshot of the stored data as a JSON object.
+     *
+     * @param storeName the name of the desired store
+     * @param clearStore whether or not to clearStore the requested store
+     *
+     * @return the JSONArray containing the recorded data
+     */
+    override fun getSnapshotAsJSON(storeName: String, clearStore: Boolean): Any? {
+        return getSnapshot(storeName, clearStore)?.let { pingEvents ->
+            val eventsArray = JSONArray()
+            pingEvents.forEach {
+                val eventData = JSONArray()
+                eventData.put(it.msSinceStart)
+                eventData.put(it.category)
+                eventData.put(it.name)
+                eventData.put(it.objectId)
+                eventData.put(it.value)
+                eventData.put(it.extra)
+                eventsArray.put(eventData)
+            }
+            return eventsArray
+        }
     }
 
     @VisibleForTesting

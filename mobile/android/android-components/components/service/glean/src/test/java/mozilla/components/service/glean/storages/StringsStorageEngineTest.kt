@@ -69,4 +69,24 @@ class StringsStorageEngineTest {
             assertEquals(1, s!!.size)
         }
     }
+
+    @Test
+    fun `Strings are serialized in the correct JSON format`() {
+        // Record the string in the store, without providing optional arguments.
+        StringsStorageEngine.record(
+            stores = listOf("store1"),
+            category = "telemetry",
+            name = "string_metric",
+            value = "test_string_value"
+        )
+
+        // Get the snapshot from "store1" and clear it.
+        val snapshot = StringsStorageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = true)
+        // Check that getting a new snapshot for "store1" returns an empty store.
+        assertNull("The engine must report 'null' on empty stores",
+            StringsStorageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = false))
+        // Check that this serializes to the expected JSON format.
+        assertEquals("{\"telemetry.string_metric\":\"test_string_value\"}",
+            snapshot.toString())
+    }
 }

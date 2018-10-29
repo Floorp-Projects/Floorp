@@ -7,12 +7,16 @@ package org.mozilla.samples.glean
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
+import mozilla.components.support.base.log.Log
+import mozilla.components.support.base.log.sink.AndroidLogSink
 
 open class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        Log.addSink(AndroidLogSink())
 
         GleanMetrics.Basic.os.set("Android")
         GleanMetrics.Basic.clientId.generateAndSet()

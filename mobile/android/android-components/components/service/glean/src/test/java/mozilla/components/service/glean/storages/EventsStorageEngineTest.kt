@@ -134,4 +134,24 @@ class EventsStorageEngineTest {
                     s.first().extra)
         }
     }
+
+    @Test
+    fun `Events are serialized in the correct JSON format`() {
+        // Record the event in the store, without providing optional arguments.
+        EventsStorageEngine.record(
+            stores = listOf("store1"),
+            category = "telemetry",
+            name = "test_event_clear",
+            objectId = "test_event_object"
+        )
+
+        // Get the snapshot from "store1" and clear it.
+        val snapshot = EventsStorageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = true)
+        // Check that getting a new snapshot for "store1" returns an empty store.
+        assertNull("The engine must report 'null' on empty stores",
+            EventsStorageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = false))
+        // Check that this serializes to the expected JSON format.
+        assertEquals("[[0,\"telemetry\",\"test_event_clear\",\"test_event_object\",null,null]]",
+            snapshot.toString())
+    }
 }

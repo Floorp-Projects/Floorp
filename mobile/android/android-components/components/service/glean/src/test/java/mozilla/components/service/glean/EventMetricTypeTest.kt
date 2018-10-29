@@ -24,6 +24,20 @@ class EventMetricTypeTest {
     }
 
     @Test
+    fun `The API must define the expected "default" storage`() {
+        // Define a 'click' event, which will be stored in "store1"
+        val click = EventMetricType(
+            disabled = false,
+            category = "ui",
+            lifetime = Lifetime.Ping,
+            name = "click",
+            sendInPings = listOf("store1"),
+            objects = listOf("buttonA", "buttonB")
+        )
+        assertEquals(listOf("events"), click.defaultStorageDestinations())
+    }
+
+    @Test
     fun `The API records to its storage engine`() {
         // Define a 'click' event, which will be stored in "store1"
         val click = EventMetricType(
