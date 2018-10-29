@@ -40,6 +40,7 @@ function appUpdater(options = {}) {
 
   this.options = options;
   this.updateDeck = document.getElementById("updateDeck");
+  this.promiseAutoUpdateSetting = null;
 
   // Hide the update deck when the update window is already open and it's not
   // already applied, to avoid syncing issues between them. Applied updates
@@ -80,6 +81,9 @@ function appUpdater(options = {}) {
     // selectPanel("downloading") is called from setupDownloadingUI().
     return;
   }
+
+  // We might need this value later, so start loading it from the disk now.
+  this.promiseAutoUpdateSetting = this.aus.getAutoUpdateIsEnabled();
 
   // That leaves the options
   // "Check for updates, but let me choose whether to install them", and
@@ -134,14 +138,6 @@ appUpdater.prototype =
   get backgroundUpdateEnabled() {
     return !this.updateDisabledByPolicy &&
            gAppUpdater.aus.canStageUpdates;
-  },
-
-  // true when updating is automatic.
-  get updateAuto() {
-    try {
-      return Services.prefs.getBoolPref("app.update.auto");
-    } catch (e) { }
-    return true; // Firefox default is true
   },
 
   /**
@@ -260,10 +256,16 @@ appUpdater.prototype =
         return;
       }
 
-      if (gAppUpdater.updateAuto) // automatically download and install
-        gAppUpdater.startDownload();
-      else // ask
-        gAppUpdater.selectPanel("downloadAndInstall");
+      if (this.promiseAutoUpdateSetting == null) {
+        this.promiseAutoUpdateSetting = this.aus.getAutoUpdateIsEnabled();
+      }
+      this.promiseAutoUpdateSetting.then(updateAuto => {
+        if (updateAuto) { // automatically download and install
+          gAppUpdater.startDownload();
+        } else { // ask
+          gAppUpdater.selectPanel("downloadAndInstall");
+        }
+      });
     },
 
     /**
