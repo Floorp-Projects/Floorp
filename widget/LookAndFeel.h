@@ -19,7 +19,10 @@ struct gfxFontStyle;
 struct LookAndFeelInt
 {
   int32_t id;
-  int32_t value;
+  union {
+    int32_t value;
+    nscolor colorValue;
+  };
 };
 
 namespace mozilla {
