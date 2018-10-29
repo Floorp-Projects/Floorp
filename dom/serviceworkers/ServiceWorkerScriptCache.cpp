@@ -1031,11 +1031,10 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
     return rv;
   }
 
-  if (!mimeType.LowerCaseEqualsLiteral("text/javascript") &&
-      !mimeType.LowerCaseEqualsLiteral("application/x-javascript") &&
-      !mimeType.LowerCaseEqualsLiteral("application/javascript")) {
+  if (mimeType.IsEmpty() ||
+      !nsContentUtils::IsJavascriptMIMEType(NS_ConvertUTF8toUTF16(mimeType))) {
     ServiceWorkerManager::LocalizeAndReportToAllClients(
-      mRegistration->Scope(), "ServiceWorkerRegisterMimeTypeError",
+      mRegistration->Scope(), "ServiceWorkerRegisterMimeTypeError2",
       nsTArray<nsString> { NS_ConvertUTF8toUTF16(mRegistration->Scope()),
         NS_ConvertUTF8toUTF16(mimeType), mURL });
     rv = NS_ERROR_DOM_SECURITY_ERR;
