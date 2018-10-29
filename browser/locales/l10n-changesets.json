@@ -567,7 +567,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "dd794ae0a60d"
+        "revision": "389dd3eff91c"
     },
     "gl": {
         "platforms": [
@@ -687,7 +687,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "592b36a9f860"
+        "revision": "9760b275fbe9"
     },
     "hy-AM": {
         "platforms": [
