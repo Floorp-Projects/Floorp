@@ -7,14 +7,18 @@
 const CB_PREF = "browser.contentblocking.enabled";
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PB_PREF = "privacy.trackingprotection.enabled";
+const NCB_PREF = "network.cookie.cookieBehavior";
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+const COOKIE_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/cookiePage.html";
 
 registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
   Services.prefs.clearUserPref(TP_PREF);
   Services.prefs.clearUserPref(TP_PB_PREF);
+  Services.prefs.clearUserPref(NCB_PREF);
   Services.prefs.clearUserPref(CB_PREF);
+  Services.prefs.clearUserPref(ContentBlocking.prefIntroCount);
 });
 
 function waitForSecurityChange(tabbrowser, numChanges = 1) {
@@ -47,8 +51,16 @@ async function testTrackingProtectionAnimation(tabbrowser) {
 
   ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
   ok(ContentBlocking.iconBox.hasAttribute("animate"), "iconBox animating");
+  await BrowserTestUtils.waitForEvent(ContentBlocking.animatedIcon, "animationend");
 
-  info("Switch from tracking -> benign tab");
+  info("Load a test page containing tracking cookies");
+  let trackingCookiesTab = await BrowserTestUtils.openNewForegroundTab(tabbrowser, COOKIE_PAGE);
+
+  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
+  ok(ContentBlocking.iconBox.hasAttribute("animate"), "iconBox animating");
+  await BrowserTestUtils.waitForEvent(ContentBlocking.animatedIcon, "animationend");
+
+  info("Switch from tracking cookie -> benign tab");
   let securityChanged = waitForSecurityChange(tabbrowser);
   tabbrowser.selectedTab = benignTab;
   await securityChanged;
@@ -64,8 +76,26 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
   ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
 
-  info("Reload tracking tab");
+  info("Switch from tracking -> tracking cookies tab");
+  securityChanged = waitForSecurityChange(tabbrowser);
+  tabbrowser.selectedTab = trackingCookiesTab;
+  await securityChanged;
+
+  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
+  ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
+
+  info("Reload tracking cookies tab");
   securityChanged = waitForSecurityChange(tabbrowser, 2);
+  tabbrowser.reload();
+  await securityChanged;
+
+  ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
+  ok(ContentBlocking.iconBox.hasAttribute("animate"), "iconBox animating");
+  await BrowserTestUtils.waitForEvent(ContentBlocking.animatedIcon, "animationend");
+
+  info("Reload tracking tab");
+  securityChanged = waitForSecurityChange(tabbrowser, 3);
+  tabbrowser.selectedTab = trackingTab;
   tabbrowser.reload();
   await securityChanged;
 
@@ -84,11 +114,16 @@ add_task(async function testNormalBrowsing() {
   ok(ContentBlocking, "CB is attached to the browser window");
   let TrackingProtection = gBrowser.ownerGlobal.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the browser window");
+  let ThirdPartyCookies = gBrowser.ownerGlobal.ThirdPartyCookies;
+  ok(ThirdPartyCookies, "TPC is attached to the browser window");
 
   Services.prefs.setBoolPref(TP_PREF, true);
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
+  Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
+  ok(ThirdPartyCookies.enabled, "ThirdPartyCookies is enabled after setting the pref");
   Services.prefs.setBoolPref(CB_PREF, true);
   ok(ContentBlocking.enabled, "CB is enabled after setting the pref");
+  Services.prefs.setIntPref(ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS);
 
   await testTrackingProtectionAnimation(gBrowser);
 });
@@ -101,11 +136,16 @@ add_task(async function testPrivateBrowsing() {
   ok(ContentBlocking, "CB is attached to the private window");
   let TrackingProtection = tabbrowser.ownerGlobal.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the private window");
+  let ThirdPartyCookies = tabbrowser.ownerGlobal.ThirdPartyCookies;
+  ok(ThirdPartyCookies, "TPC is attached to the browser window");
 
   Services.prefs.setBoolPref(TP_PB_PREF, true);
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
+  Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
+  ok(ThirdPartyCookies.enabled, "ThirdPartyCookies is enabled after setting the pref");
   Services.prefs.setBoolPref(CB_PREF, true);
   ok(TrackingProtection.enabled, "CB is enabled after setting the pref");
+  Services.prefs.setIntPref(ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS);
 
   await testTrackingProtectionAnimation(tabbrowser);
 
