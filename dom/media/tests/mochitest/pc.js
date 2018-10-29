@@ -799,7 +799,7 @@ function PeerConnectionWrapper(label, configuration) {
     if (iceState === "connected") {
       this.iceConnectedResolve();
     } else if (iceState === "failed") {
-      this.iceConnectedReject();
+      this.iceConnectedReject(new Error("ICE failed"));
     }
   };
 
