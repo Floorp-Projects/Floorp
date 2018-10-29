@@ -35,6 +35,11 @@ impl GradientBuilder {
         self.stops.as_ref()
     }
 
+    /// Return the gradient stops vector.
+    pub fn into_stops(self) -> Vec<GradientStop> {
+        self.stops
+    }
+
     /// Produce a linear gradient, normalize the stops.
     pub fn gradient(
         &mut self,
