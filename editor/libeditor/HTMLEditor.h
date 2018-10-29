@@ -139,9 +139,6 @@ public:
 
   NS_IMETHOD DeleteNode(nsINode* aNode) override;
 
-  NS_IMETHOD DebugUnitTests(int32_t* outNumTests,
-                            int32_t* outNumTestsFailed) override;
-
   virtual nsresult HandleKeyPressEvent(
                      WidgetKeyboardEvent* aKeyboardEvent) override;
   virtual nsIContent* GetFocusedContent() override;

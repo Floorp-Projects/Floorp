@@ -2307,42 +2307,6 @@ EditorBase::OutputToString(const nsAString& aFormatType,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-EditorBase::DumpContentTree()
-{
-#ifdef DEBUG
-  if (mRootElement) {
-    mRootElement->List(stdout);
-  }
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EditorBase::DebugDumpContent()
-{
-#ifdef DEBUG
-  nsCOMPtr<nsIDocument> document = GetDocument();
-  if (NS_WARN_IF(!document)) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  Element* body = document->GetBody();
-  if (body) {
-    body->List();
-  }
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EditorBase::DebugUnitTests(int32_t* outNumTests,
-                           int32_t* outNumTestsFailed)
-{
-  MOZ_ASSERT_UNREACHABLE("This should never get called. Overridden by "
-                         "subclasses");
-  return NS_OK;
-}
-
 bool
 EditorBase::ArePreservingSelection()
 {
