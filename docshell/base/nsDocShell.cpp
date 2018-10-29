@@ -2988,8 +2988,10 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
   // Our parent has changed. Recompute scriptability.
   RecomputeCanExecuteScripts();
 
-  nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
-  if (window) {
+  // Inform windows when they're being removed from their parent.
+  if (!aParent && mScriptGlobal) {
+    nsCOMPtr<nsPIDOMWindowOuter> window = mScriptGlobal->AsOuter();
+    MOZ_ASSERT(window);
     auto* win = nsGlobalWindowOuter::Cast(window);
     win->ParentWindowChanged();
   }
