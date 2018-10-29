@@ -950,26 +950,31 @@ decorate_task(
       name: "defaultBranchRecipe",
       preferenceName: "fake.default",
       preferenceValue: "experiment value",
-      branch: "default",
+      preferenceBranchType: "default",
     }),
     experimentFactory({
       name: "userBranchRecipe",
       preferenceName: "fake.user",
       preferenceValue: "experiment value",
-      branch: "user",
+      preferenceBranchType: "user",
     }),
   ]),
   async function testSaveStartupPrefsUserBranch(experiments) {
+    Assert.deepEqual(Services.prefs.getChildList(startupPrefs), [], "As a prerequisite no startup prefs are set");
+
     await PreferenceExperiments.saveStartupPrefs();
 
+    Assert.deepEqual(
+      Services.prefs.getChildList(startupPrefs),
+      [`${startupPrefs}.fake.default`],
+      "only the expected prefs are set",
+    );
     is(
       Services.prefs.getCharPref(`${startupPrefs}.fake.default`, "fallback value"),
       "experiment value",
       "The startup value for fake.default was set",
     );
-    // XXX: Switched to from ok() to todo_is() in Bug 1467712. Follow up in 1500965
-    // This expects 0, but the test value is 32
-    todo_is(
+    is(
       Services.prefs.getPrefType(`${startupPrefs}.fake.user`),
       Services.prefs.PREF_INVALID,
       "The startup value for fake.user was not set",
