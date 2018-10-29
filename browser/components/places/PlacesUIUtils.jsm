@@ -542,18 +542,10 @@ var PlacesUIUtils = {
       }
     }
 
-    // If it's not a bookmark, we can remove it unless it's a child of a
-    // livemark.
-    if (aNode.itemId == -1) {
-      // Rather than executing a db query, checking the existence of the feedURI
-      // annotation, detect livemark children by the fact that they are the only
-      // direct non-bookmark children of bookmark folders.
-      return !PlacesUtils.nodeIsFolder(parentNode);
-    }
-
-    // Generally it's always possible to remove children of a query.
-    if (PlacesUtils.nodeIsQuery(parentNode))
+    // If it's not a bookmark, or it's child of a query, we can remove it.
+    if (aNode.itemId == -1 || PlacesUtils.nodeIsQuery(parentNode)) {
       return true;
+    }
 
     // Otherwise it has to be a child of an editable folder.
     return !this.isFolderReadOnly(parentNode);
