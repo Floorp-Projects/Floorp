@@ -28,8 +28,7 @@ class LocalesTest(locales.LocalesMixin, script.BaseScript):
         self.log_obj = None
 
 class TestLocalesMixin(unittest.TestCase):
-    BASE_ABS_DIRS = ['abs_log_dir',
-                     'abs_upload_dir', 'abs_work_dir', 'base_work_dir']
+    BASE_ABS_DIRS = ['abs_log_dir', 'abs_work_dir', 'base_work_dir']
     def setUp(self):
         cleanup()
 
