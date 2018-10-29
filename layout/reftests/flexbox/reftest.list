@@ -122,3 +122,9 @@ fuzzy-if(gtkWidget,0-1,0-31) == flexbox-widget-flex-items-4.html flexbox-widget-
 == flexbox-table-flex-items-3.html flexbox-table-flex-items-3-ref.html
 == flexbox-table-flex-items-4.html flexbox-table-flex-items-4-ref.html
 == flexbox-table-flex-items-5.html flexbox-table-flex-items-5-ref.html
+
+# Tests for Bug 1500627. Keywords on min-height (block size) should behave as
+# the initial value. (i.e. auto)
+== flexbox-min-bsize-keywords-vert-1.html flexbox-min-bsize-keywords-vert-1-ref.html
+== flexbox-min-bsize-keywords-horiz-1.html flexbox-min-bsize-keywords-horiz-1-ref.html
+== flexbox-bsize-keywords-no-stretch-1.html flexbox-bsize-keywords-no-stretch-1-ref.html
