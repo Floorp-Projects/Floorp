@@ -697,6 +697,10 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         }
     }
 
+    // If XDR operation fails, we must call JSScript::freeScriptData in order
+    // to neuter the script. Various things that iterate raw scripts in a GC
+    // arena use the presense of this data to detect if initialization is
+    // complete.
     auto scriptDataGuard = mozilla::MakeScopeExit([&] {
         if (mode == XDR_DECODE) {
             script->freeScriptData();
@@ -718,7 +722,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         }
     }
 
-    scriptDataGuard.release();
     if (mode == XDR_DECODE) {
         if (!script->shareScriptData(cx)) {
             return xdr->fail(JS::TranscodeResult_Throw);
@@ -977,6 +980,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         }
     }
 
+    scriptDataGuard.release();
     return Ok();
 }
 
