@@ -966,7 +966,7 @@ class TupBackend(CommonBackend):
             invocation['full-deps'].update(inputs)
             invocation['full-deps'].update(invocation['outputs'])
 
-            cmd_key = ' '.join(outputs)
+            cmd_key = ' '.join(command)
             if cmd_key not in self._rust_cmds:
                 self._rust_cmds.add(cmd_key)
                 # We have some custom build scripts that depend on python code
