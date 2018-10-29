@@ -8,7 +8,6 @@
 
 :root:-moz-lwtheme {
   --toolbar-color: var(--chrome-color);
-  --toolbar-bgcolor: var(--chrome-secondary-background-color);
   --toolbar-non-lwt-bgcolor: var(--toolbar-bgcolor);
   --toolbar-non-lwt-textcolor: var(--chrome-color);
   --toolbar-non-lwt-bgimage: none;
@@ -20,14 +19,6 @@
   /* Chrome */
   --chrome-background-color: hsl(240, 5%, 5%);
   --chrome-color: rgb(249, 249, 250);
-  --chrome-secondary-background-color: hsl(240, 1%, 20%);
-  --toolbox-border-bottom-color: hsl(240, 5%, 5%);
-  --chrome-nav-bar-controls-border-color: hsla(240, 5%, 5%, .3);
-
-  /* Url and search bars */
-  --lwt-toolbar-field-background-color: rgb(71, 71, 73);
-  --lwt-toolbar-field-color: var(--chrome-color);
-  --urlbar-separator-color: #5F6670;
 
   /* !important to override LightweightThemeManager.addBuiltInTheme in
      nsBrowserGlue.js */
@@ -36,23 +27,12 @@
 }
 
 :root:-moz-lwtheme-darktext {
-  --lwt-toolbar-field-background-color: #fff;
-
   --chrome-background-color: #E3E4E6;
   --chrome-color: #18191a;
-  --chrome-secondary-background-color: #f5f6f7;
-  --toolbox-border-bottom-color: #cccccc;
-  --chrome-nav-bar-controls-border-color: #ccc;
 }
 
 #tabbrowser-tabs:-moz-lwtheme {
   --tab-line-color: #0a84ff;
-}
-
-.toolbarbutton-animatable-box[brighttext],
-toolbar[brighttext] .toolbarbutton-animatable-box,
-toolbar[brighttext] .toolbarbutton-1 {
-  fill: rgb(249, 249, 250);
 }
 
 /* Change the base colors for the browser chrome */
@@ -63,16 +43,3 @@ toolbar[brighttext] .toolbarbutton-1 {
   color: var(--chrome-color);
 }
 
-.browser-toolbar:not(.titlebar-color),
-.browserContainer > findbar,
-#browser-bottombox {
-  background-color: var(--chrome-secondary-background-color) !important;
-  background-image: none !important;
-  color: var(--chrome-color);
-}
-
-/* URL bar and search bar*/
-#urlbar:not([focused="true"]),
-.searchbar-textbox:not([focused="true"]) {
-  border-color: var(--chrome-nav-bar-controls-border-color);
-}
