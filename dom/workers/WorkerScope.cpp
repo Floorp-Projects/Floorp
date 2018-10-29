@@ -615,6 +615,16 @@ DedicatedWorkerGlobalScope::PostMessage(JSContext* aCx,
 }
 
 void
+DedicatedWorkerGlobalScope::PostMessage(JSContext* aCx,
+                                        JS::Handle<JS::Value> aMessage,
+                                        const PostMessageOptions& aOptions,
+                                        ErrorResult& aRv)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  mWorkerPrivate->PostMessageToParent(aCx, aMessage, aOptions.mTransfer, aRv);
+}
+
+void
 DedicatedWorkerGlobalScope::Close()
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
