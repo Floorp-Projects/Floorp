@@ -25,7 +25,7 @@
 #include "nsIWebProgress.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsDocShellLoadState.h"
+#include "nsDocShellLoadInfo.h"
 #include "nsIBaseWindow.h"
 #include "nsIBrowser.h"
 #include "nsContentUtils.h"
@@ -390,9 +390,9 @@ nsFrameLoader::ReallyStartLoadingInternal()
   rv = CheckURILoad(mURIToLoad, mTriggeringPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
+  RefPtr<nsDocShellLoadInfo> loadInfo = new nsDocShellLoadInfo();
 
-  loadState->SetOriginalFrameSrc(mLoadingOriginalSrc);
+  loadInfo->SetOriginalFrameSrc(mLoadingOriginalSrc);
   mLoadingOriginalSrc = false;
 
   // If this frame is sandboxed with respect to origin we will set it up with
@@ -403,9 +403,9 @@ nsFrameLoader::ReallyStartLoadingInternal()
   // is very important; needed to prevent XSS attacks on documents loaded in
   // subframes!
   if (mTriggeringPrincipal) {
-    loadState->SetTriggeringPrincipal(mTriggeringPrincipal);
+    loadInfo->SetTriggeringPrincipal(mTriggeringPrincipal);
   } else {
-    loadState->SetTriggeringPrincipal(mOwnerContent->NodePrincipal());
+    loadInfo->SetTriggeringPrincipal(mOwnerContent->NodePrincipal());
   }
 
   nsCOMPtr<nsIURI> referrer;
@@ -420,9 +420,9 @@ nsFrameLoader::ReallyStartLoadingInternal()
     mOwnerContent->OwnerDoc()->GetReferrer(referrerStr);
     rv = NS_NewURI(getter_AddRefs(referrer), referrerStr);
 
-    loadState->SetSrcdocData(srcdoc);
+    loadInfo->SetSrcdocData(srcdoc);
     nsCOMPtr<nsIURI> baseURI = mOwnerContent->GetBaseURI();
-    loadState->SetBaseURI(baseURI);
+    loadInfo->SetBaseURI(baseURI);
   }
   else {
     rv = mOwnerContent->NodePrincipal()->GetURI(getter_AddRefs(referrer));
@@ -437,7 +437,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
     bool isNullPrincipalScheme;
     rv = referrer->SchemeIs(NS_NULLPRINCIPAL_SCHEME, &isNullPrincipalScheme);
     if (NS_SUCCEEDED(rv) && !isNullPrincipalScheme) {
-      loadState->SetReferrer(referrer);
+      loadInfo->SetReferrer(referrer);
     }
   }
 
@@ -453,7 +453,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
       referrerPolicy = iframeReferrerPolicy;
     }
   }
-  loadState->SetReferrerPolicy(referrerPolicy);
+  loadInfo->SetReferrerPolicy(referrerPolicy);
 
   // Default flags:
   int32_t flags = nsIWebNavigation::LOAD_FLAGS_NONE;
@@ -467,10 +467,8 @@ nsFrameLoader::ReallyStartLoadingInternal()
   // Kick off the load...
   bool tmpState = mNeedsAsyncDestroy;
   mNeedsAsyncDestroy = true;
-  loadState->SetURI(mURIToLoad);
-  loadState->SetLoadFlags(flags);
-  loadState->SetFirstParty(false);
-  rv = mDocShell->LoadURI(loadState);
+  nsCOMPtr<nsIURI> uriToLoad = mURIToLoad;
+  rv = mDocShell->LoadURI(uriToLoad, loadInfo, flags, false);
   mNeedsAsyncDestroy = tmpState;
   mURIToLoad = nullptr;
   NS_ENSURE_SUCCESS(rv, rv);
