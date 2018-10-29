@@ -20,17 +20,16 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
         addPreferencesFromResource(R.xml.privacy_security_settings)
 
         val biometricPreference = findPreference(getString(R.string.pref_key_biometric))
+        val appName = getString(R.string.app_name)
+        biometricPreference.summary =
+                getString(R.string.preference_security_biometric_summary, appName)
 
         // Remove the biometric toggle if the software or hardware do not support it
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || !Biometrics.hasFingerprintHardware(
-                context!!
+                requireContext()
             )
         ) {
             preferenceScreen.removePreference(biometricPreference)
-        } else {
-            val appName = resources.getString(R.string.app_name)
-            biometricPreference.summary =
-                    resources.getString(R.string.preference_security_biometric_summary, appName)
         }
 
         if (!AppConstants.isGeckoBuild) {
