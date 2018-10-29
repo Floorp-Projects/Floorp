@@ -362,13 +362,6 @@ var tests =
      source: "idnKidNoWhitelist",
      returnOrigin: "http://sub1.xn--exaple-kqf.test",
    },
-   // 55
-   {
-     args: ["NOT-RECEIVED", undefined],
-     source: "sameDomain",
-     name: "SyntaxError",
-     code: DOMException.SYNTAX_ERR
-   },
   ];
 
 function allTests(callback)
