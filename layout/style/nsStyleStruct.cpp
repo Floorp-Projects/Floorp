@@ -1772,15 +1772,6 @@ nsStylePosition::CalcDifference(const nsStylePosition& aNewData,
   return hint;
 }
 
-/* static */ bool
-nsStylePosition::WidthCoordDependsOnContainer(const nsStyleCoord &aCoord)
-{
-  return aCoord.HasPercent() ||
-         (aCoord.GetUnit() == eStyleUnit_Enumerated &&
-          (aCoord.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT ||
-           aCoord.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE));
-}
-
 uint8_t
 nsStylePosition::UsedAlignSelf(ComputedStyle* aParent) const
 {
