@@ -33,6 +33,7 @@ UNIFIED_SOURCES += [
     'TestMediaMIMETypes.cpp',
     'TestMP3Demuxer.cpp',
     'TestMP4Demuxer.cpp',
+    'TestOpusParser.cpp',
     'TestRust.cpp',
     'TestVideoSegment.cpp',
     'TestVideoUtils.cpp',

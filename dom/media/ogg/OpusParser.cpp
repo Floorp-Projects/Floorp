@@ -93,26 +93,8 @@ bool OpusParser::DecodeHeader(unsigned char* aData, size_t aLength)
         return false;
       }
       if (mChannelMapping == 2) {
-        // https://tools.ietf.org/html/draft-ietf-codec-ambisonics-08#page-3
-        // For both channel mapping family 2 and family 3, the allowed numbers
-        // of channels: (1 + n)^2 + 2j for n = 0, 1, ..., 14 and j = 0 or 1,
-        // where n denotes the (highest) ambisonic order and j denotes whether
-        // or not there is a separate non-diegetic stereo stream Explicitly the
-        // allowed number of channels are 1, 3, 4, 6, 9, 11, 16, 18, 25, 27, 36,
-        // 38, 49, 51, 64, 66, 81, 83, 100, 102, 121, 123, 144, 146, 169, 171,
-        // 196, 198, 225, and 227.
-
-        // We use the property that int(sqrt(n)) == int(sqrt(n+2)) for n != 3
-        // which is handled by the test n^2 + 2 != channel
-        double val = sqrt(mChannels);
-        if (val == 0 || val > 15) {
+        if (!IsValidMapping2ChannelsCount(mChannels)) {
           return false;
-        }
-        if (val != int32_t(val)) {
-          if (val * val + 2 != mChannels) {
-            // Not a valid channel count.
-            return false;
-          }
         }
       }
       if (aLength > static_cast<unsigned>(20 + mChannels)) {
@@ -213,6 +195,28 @@ bool OpusParser::DecodeTags(unsigned char* aData, size_t aLength)
   }
 #endif
   return true;
+}
+
+/* static */ bool
+OpusParser::IsValidMapping2ChannelsCount(uint8_t aChannels)
+{
+  // https://tools.ietf.org/html/draft-ietf-codec-ambisonics-08#page-4
+  // For both channel mapping family 2 and family 3, the allowed numbers
+  // of channels: (1 + n)^2 + 2j for n = 0, 1, ..., 14 and j = 0 or 1,
+  // where n denotes the (highest) ambisonic order and j denotes whether
+  // or not there is a separate non-diegetic stereo stream Explicitly the
+  // allowed number of channels are 1, 3, 4, 6, 9, 11, 16, 18, 25, 27, 36,
+  // 38, 49, 51, 64, 66, 81, 83, 100, 102, 121, 123, 144, 146, 169, 171,
+  // 196, 198, 225, and 227.
+
+  // We use the property that int(sqrt(n)) == int(sqrt(n+2)) for n != 3
+  // which is handled by the test n^2 + 2 != channel
+  if (aChannels < 1 || aChannels > 227) {
+    return false;
+  }
+  double val = sqrt(aChannels);
+  int32_t valInt = int32_t(val);
+  return val == valInt || valInt * valInt + 2 == aChannels;
 }
 
 } // namespace mozilla
