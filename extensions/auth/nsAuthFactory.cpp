@@ -7,18 +7,6 @@
 
 //-----------------------------------------------------------------------------
 
-#define NS_HTTPNEGOTIATEAUTH_CID                   \
-{ /* 75c80fd0-accb-432c-af59-ec60668c3990 */       \
-  0x75c80fd0,                                      \
-  0xaccb,                                          \
-  0x432c,                                          \
-  {0xaf, 0x59, 0xec, 0x60, 0x66, 0x8c, 0x39, 0x90} \
-}
-
-#include "nsHttpNegotiateAuth.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpNegotiateAuth)
-//-----------------------------------------------------------------------------
-
 #define NS_NEGOTIATEAUTH_CID                       \
 { /* 96ec4163-efc8-407a-8735-007fb26be4e8 */       \
   0x96ec4163,                                      \
@@ -184,7 +172,6 @@ NS_DEFINE_NAMED_CID(NS_SYSNTLMAUTH_CID);
 #else
 NS_DEFINE_NAMED_CID(NS_SAMBANTLMAUTH_CID);
 #endif
-NS_DEFINE_NAMED_CID(NS_HTTPNEGOTIATEAUTH_CID);
 NS_DEFINE_NAMED_CID(NS_AUTHSASL_CID);
 
 
@@ -198,7 +185,6 @@ static const mozilla::Module::CIDEntry kAuthCIDs[] = {
 #else
   { &kNS_SAMBANTLMAUTH_CID, false, nullptr, nsSambaNTLMAuthConstructor },
 #endif
-  { &kNS_HTTPNEGOTIATEAUTH_CID, false, nullptr, nsHttpNegotiateAuthConstructor },
   { &kNS_AUTHSASL_CID, false, nullptr, nsAuthSASLConstructor },
   { nullptr }
 };
@@ -213,7 +199,6 @@ static const mozilla::Module::ContractIDEntry kAuthContracts[] = {
 #elif !defined(XP_MACOSX)
   { NS_AUTH_MODULE_CONTRACTID_PREFIX "sys-ntlm", &kNS_SAMBANTLMAUTH_CID },
 #endif
-  { NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "negotiate", &kNS_HTTPNEGOTIATEAUTH_CID },
   { NS_AUTH_MODULE_CONTRACTID_PREFIX "sasl-gssapi", &kNS_AUTHSASL_CID },
   { nullptr }
 };
