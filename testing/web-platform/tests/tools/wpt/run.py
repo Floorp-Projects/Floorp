@@ -436,7 +436,6 @@ product_setup = {
     "safari": Safari,
     "safari_webdriver": SafariWebDriver,
     "servo": Servo,
-    "servodriver": Servo,
     "sauce": Sauce,
     "opera": Opera,
     "webkit": WebKit,
@@ -478,13 +477,10 @@ def setup_wptrunner(venv, prompt=True, install_browser=False, **kwargs):
 
     if kwargs["channel"]:
         channel = install.get_channel(kwargs["product"], kwargs["channel"])
-        if channel is not None:
-            if channel != kwargs["channel"]:
-                logger.info("Interpreting channel '%s' as '%s'" % (kwargs["channel"],
-                                                                   channel))
-                kwargs["browser_channel"] = channel
-        else:
-            logger.info("Valid channels for %s not known; using argument unmodified" % kwargs["product"])
+        if channel != kwargs["channel"]:
+            logger.info("Interpreting channel '%s' as '%s'" % (kwargs["channel"],
+                                                               channel))
+        kwargs["browser_channel"] = channel
     del kwargs["channel"]
 
     if install_browser:

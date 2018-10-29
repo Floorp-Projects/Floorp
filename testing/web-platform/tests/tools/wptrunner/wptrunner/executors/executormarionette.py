@@ -118,11 +118,11 @@ class MarionetteTestharnessProtocolPart(TestharnessProtocolPart):
 
     def load_runner(self, url_protocol):
         # Check if we previously had a test window open, and if we did make sure it's closed
-        if self.runner_handle:
-            self._close_windows()
+        self.parent.base.execute_script("if (window.win) {window.win.close()}")
         url = urlparse.urljoin(self.parent.executor.server_url(url_protocol),
                                "/testharness_runner.html")
         self.logger.debug("Loading %s" % url)
+        self.runner_handle = self.marionette.current_window_handle
         try:
             self.dismiss_alert(lambda: self.marionette.navigate(url))
         except Exception as e:
@@ -132,11 +132,10 @@ class MarionetteTestharnessProtocolPart(TestharnessProtocolPart):
                 "that your firewall rules or network setup does not "
                 "prevent access.\e%s" % (url, traceback.format_exc(e)))
             raise
-        self.runner_handle = self.marionette.current_window_handle
         format_map = {"title": threading.current_thread().name.replace("'", '"')}
         self.parent.base.execute_script(self.runner_script % format_map)
 
-    def _close_windows(self):
+    def close_old_windows(self, url_protocol):
         handles = self.marionette.window_handles
         runner_handle = None
         try:
@@ -149,23 +148,18 @@ class MarionetteTestharnessProtocolPart(TestharnessProtocolPart):
             # but it hopefully doesn't matter too much if that assumption is
             # wrong since we reload the runner in that tab anyway.
             runner_handle = handles.pop(0)
-            self.logger.info("Changing harness_window to %s" % runner_handle)
 
         for handle in handles:
             try:
                 self.dismiss_alert(lambda: self.marionette.switch_to_window(handle))
                 self.marionette.switch_to_window(handle)
-                self.logger.info("Closing window %s" % handle)
                 self.marionette.close()
             except errors.NoSuchWindowException:
                 # We might have raced with the previous test to close this
                 # window, skip it.
                 pass
-        self.marionette.switch_to_window(runner_handle)
-        return runner_handle
 
-    def close_old_windows(self, url_protocol):
-        runner_handle = self._close_windows()
+        self.marionette.switch_to_window(runner_handle)
         if runner_handle != self.runner_handle:
             self.load_runner(url_protocol)
         return self.runner_handle
@@ -616,12 +610,7 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
         TestharnessExecutor.__init__(self, browser, server_config,
                                      timeout_multiplier=timeout_multiplier,
                                      debug_info=debug_info)
-        self.protocol = MarionetteProtocol(self,
-                                           browser,
-                                           capabilities,
-                                           timeout_multiplier,
-                                           kwargs["e10s"],
-                                           ccov)
+        self.protocol = MarionetteProtocol(self, browser, capabilities, timeout_multiplier, kwargs["e10s"], ccov)
         self.script = open(os.path.join(here, "testharness_webdriver.js")).read()
         self.script_resume = open(os.path.join(here, "testharness_webdriver_resume.js")).read()
         self.close_after_done = close_after_done
@@ -670,6 +659,7 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
         return (test.result_cls(extra=extra, *data), [])
 
     def do_testharness(self, protocol, url, timeout):
+        protocol.base.execute_script("if (window.win) {window.win.close()}")
         parent_window = protocol.testharness.close_old_windows(protocol)
 
         if timeout is not None:
@@ -689,12 +679,11 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
 
         script = self.script % format_map
 
-        protocol.base.execute_script(script, async=True)
+        rv = protocol.base.execute_script(script)
         test_window = protocol.testharness.get_test_window(self.window_id, parent_window)
 
         handler = CallbackHandler(self.logger, protocol, test_window)
         while True:
-            self.protocol.base.set_window(test_window)
             result = protocol.base.execute_script(
                 self.script_resume % format_map, async=True)
             if result is None:
