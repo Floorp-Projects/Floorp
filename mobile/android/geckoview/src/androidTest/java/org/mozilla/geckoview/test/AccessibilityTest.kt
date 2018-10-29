@@ -55,7 +55,8 @@ class AccessibilityTest : BaseSessionTest() {
         try {
             val getVirtualDescendantIdMethod =
                 AccessibilityNodeInfo::class.java.getMethod("getVirtualDescendantId", Long::class.java)
-            return getVirtualDescendantIdMethod.invoke(null, childId) as Int
+            val virtualDescendantId = getVirtualDescendantIdMethod.invoke(null, childId) as Int
+            return if (virtualDescendantId == Int.MAX_VALUE) -1 else virtualDescendantId
         } catch (ex: Exception) {
             return 0
         }
