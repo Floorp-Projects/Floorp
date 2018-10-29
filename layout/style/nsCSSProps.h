@@ -345,9 +345,7 @@ public:
   static const KTableEntry kOverflowClipBoxKTable[];
   static const KTableEntry kOverscrollBehaviorKTable[];
   static const KTableEntry kScrollSnapTypeKTable[];
-  // Not const because we modify its entries when the pref
-  // "layout.css.text-align-unsafe-value.enabled" changes:
-  static KTableEntry kTextAlignKTable[];
+  static const KTableEntry kTextAlignKTable[];
   static const KTableEntry kTextDecorationLineKTable[];
   static const KTableEntry kTextDecorationStyleKTable[];
   static const KTableEntry kTextEmphasisStyleShapeKTable[];

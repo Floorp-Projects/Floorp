@@ -92,6 +92,58 @@ SVGUseElement::~SVGUseElement()
 //----------------------------------------------------------------------
 // nsINode methods
 
+void
+SVGUseElement::ProcessAttributeChange(int32_t aNamespaceID, nsAtom* aAttribute)
+{
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y) {
+      if (auto* frame = GetFrame()) {
+        frame->PositionAttributeChanged();
+      }
+    } else if (aAttribute == nsGkAtoms::width ||
+               aAttribute == nsGkAtoms::height) {
+      const bool hadValidDimensions = HasValidDimensions();
+      const bool isUsed = OurWidthAndHeightAreUsed();
+      if (isUsed) {
+        SyncWidthOrHeight(aAttribute);
+      }
+
+      if (auto* frame = GetFrame()) {
+        frame->DimensionAttributeChanged(hadValidDimensions, isUsed);
+      }
+    }
+  }
+
+  if ((aNamespaceID == kNameSpaceID_XLink ||
+       aNamespaceID == kNameSpaceID_None) &&
+      aAttribute == nsGkAtoms::href) {
+    // We're changing our nature, clear out the clone information.
+    if (auto* frame = GetFrame()) {
+      frame->HrefChanged();
+    }
+    mOriginal = nullptr;
+    UnlinkSource();
+    TriggerReclone();
+  }
+}
+
+nsresult
+SVGUseElement::AfterSetAttr(int32_t aNamespaceID,
+                            nsAtom* aAttribute,
+                            const nsAttrValue* aValue,
+                            const nsAttrValue* aOldValue,
+                            nsIPrincipal* aSubjectPrincipal,
+                            bool aNotify)
+{
+  ProcessAttributeChange(aNamespaceID, aAttribute);
+  return SVGUseElementBase::AfterSetAttr(aNamespaceID,
+                                         aAttribute,
+                                         aValue,
+                                         aOldValue,
+                                         aSubjectPrincipal,
+                                         aNotify);
+}
+
 nsresult
 SVGUseElement::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
 {
@@ -179,7 +231,7 @@ SVGUseElement::CharacterDataChanged(nsIContent* aContent,
 
 void
 SVGUseElement::AttributeChanged(Element* aElement,
-                                int32_t aNameSpaceID,
+                                int32_t aNamespaceID,
                                 nsAtom* aAttribute,
                                 int32_t aModType,
                                 const nsAttrValue* aOldValue)

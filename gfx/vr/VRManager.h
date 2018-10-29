@@ -112,6 +112,7 @@ private:
   RefPtr<VRService> mVRService;
 #endif
   bool mVRDisplaysRequested;
+  bool mVRDisplaysRequestedNonFocus;
   bool mVRControllersRequested;
   bool mVRServiceStarted;
   uint32_t mTaskInterval;
