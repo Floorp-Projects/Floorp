@@ -648,10 +648,6 @@ private:
     // process hasn't finished yet.
     uint32_t                          mTrackingProtectionCancellationPending : 1;
 
-    // True only when we are between Resume and async fire of mCallOnResume.
-    // Used to suspend any newly created pumps in mCallOnResume handler.
-    uint32_t                          mAsyncResumePending : 1;
-
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 
     // Needed for accurate DNS timing
