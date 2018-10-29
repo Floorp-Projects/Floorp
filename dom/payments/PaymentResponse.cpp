@@ -51,7 +51,7 @@ PaymentResponse::PaymentResponse(nsPIDOMWindowInner* aWindow,
                                  const nsAString& aMethodName,
                                  const nsAString& aShippingOption,
                                  PaymentAddress* aShippingAddress,
-                                 const nsAString& aDetails,
+                                 const ResponseData& aDetails,
                                  const nsAString& aPayerName,
                                  const nsAString& aPayerEmail,
                                  const nsAString& aPayerPhone)
@@ -101,23 +101,70 @@ void
 PaymentResponse::GetDetails(JSContext* aCx,
                             JS::MutableHandle<JSObject*> aRetVal) const
 {
-  RefPtr<BasicCardService> service = BasicCardService::GetService();
-  MOZ_ASSERT(service);
-  if (!service->IsBasicCardPayment(mMethodName)) {
-    DeserializeToJSObject(mDetails, aCx, aRetVal);
-  } else {
-    BasicCardResponse response;
-    nsresult rv = service->DecodeBasicCardData(mDetails, GetOwner(), response);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
+  switch(mDetails.type()) {
+    case ResponseData::GeneralResponse: {
+      const GeneralData& rawData = mDetails.generalData();
+      DeserializeToJSObject(rawData.data, aCx, aRetVal);
+      break;
     }
-
-    MOZ_ASSERT(aCx);
-    JS::RootedValue value(aCx);
-    if (NS_WARN_IF(!response.ToObjectInternal(aCx, &value))) {
-      return;
+    case ResponseData::BasicCardResponse: {
+      const BasicCardData& rawData = mDetails.basicCardData();
+      BasicCardResponse basicCardResponse;
+      if (!rawData.cardholderName.IsEmpty()) {
+        basicCardResponse.mCardholderName.Construct();
+        basicCardResponse.mCardholderName.Value() = rawData.cardholderName;
+      }
+      basicCardResponse.mCardNumber = rawData.cardNumber;
+      if (!rawData.expiryMonth.IsEmpty()) {
+        basicCardResponse.mExpiryMonth.Construct();
+        basicCardResponse.mExpiryMonth.Value() = rawData.expiryMonth;
+      }
+      if (!rawData.expiryYear.IsEmpty()) {
+        basicCardResponse.mExpiryYear.Construct();
+        basicCardResponse.mExpiryYear.Value() = rawData.expiryYear;
+      }
+      if (!rawData.cardSecurityCode.IsEmpty()) {
+        basicCardResponse.mCardSecurityCode.Construct();
+        basicCardResponse.mCardSecurityCode.Value() = rawData.cardSecurityCode;
+      }
+      if (!rawData.billingAddress.country.IsEmpty() ||
+          !rawData.billingAddress.addressLine.IsEmpty() ||
+          !rawData.billingAddress.region.IsEmpty() ||
+          !rawData.billingAddress.regionCode.IsEmpty() ||
+          !rawData.billingAddress.city.IsEmpty() ||
+          !rawData.billingAddress.dependentLocality.IsEmpty() ||
+          !rawData.billingAddress.postalCode.IsEmpty() ||
+          !rawData.billingAddress.sortingCode.IsEmpty() ||
+          !rawData.billingAddress.organization.IsEmpty() ||
+          !rawData.billingAddress.recipient.IsEmpty() ||
+          !rawData.billingAddress.phone.IsEmpty()) {
+        basicCardResponse.mBillingAddress.Construct();
+        basicCardResponse.mBillingAddress.Value() =
+          new PaymentAddress(GetOwner(),
+                             rawData.billingAddress.country,
+                             rawData.billingAddress.addressLine,
+                             rawData.billingAddress.region,
+                             rawData.billingAddress.regionCode,
+                             rawData.billingAddress.city,
+                             rawData.billingAddress.dependentLocality,
+                             rawData.billingAddress.postalCode,
+                             rawData.billingAddress.sortingCode,
+                             rawData.billingAddress.organization,
+                             rawData.billingAddress.recipient,
+                             rawData.billingAddress.phone);
+      }
+      MOZ_ASSERT(aCx);
+      JS::RootedValue value(aCx);
+      if (NS_WARN_IF(!basicCardResponse.ToObjectInternal(aCx, &value))) {
+        return;
+      }
+      aRetVal.set(&value.toObject());
+      break;
     }
-    aRetVal.set(&value.toObject());
+    default: {
+      MOZ_ASSERT(false);
+      break;
+    }
   }
 }
 
@@ -275,7 +322,7 @@ void
 PaymentResponse::RespondRetry(const nsAString& aMethodName,
                               const nsAString& aShippingOption,
                               PaymentAddress* aShippingAddress,
-                              const nsAString& aDetails,
+                              const ResponseData& aDetails,
                               const nsAString& aPayerName,
                               const nsAString& aPayerEmail,
                               const nsAString& aPayerPhone)

@@ -29,6 +29,24 @@ billingAddress.init("USA",               // country
                      "Bill A. Pacheco",  // recipient
                      "+14344413879"); // phone
 
+const specialAddress = Cc["@mozilla.org/dom/payments/payment-address;1"].
+                           createInstance(Ci.nsIPaymentAddress);
+const specialAddressLine = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+const specialData = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+specialData.data = ":$%@&*";
+specialAddressLine.appendElement(specialData);
+specialAddress.init("USA",               // country
+                     specialAddressLine, // address line
+                     "CA",               // region
+                     "CA",               // region code
+                     "San Bruno",        // city
+                     "",                 // dependent locality
+                     "94066",            // postal code
+                     "123456",           // sorting code
+                     "",                 // organization
+                     "Bill A. Pacheco",  // recipient
+                     "+14344413879"); // phone
+
 const basiccardResponseData = Cc["@mozilla.org/dom/payments/basiccard-response-data;1"].
                                  createInstance(Ci.nsIBasicCardResponseData);
 
@@ -109,12 +127,46 @@ const simpleResponseUI = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
+const specialAddressUI = {
+  showPayment: function(requestId) {
+    try {
+      basiccardResponseData.initData("Bill A. Pacheco",  // cardholderName
+                                     "4916855166538720", // cardNumber
+                                     "01",               // expiryMonth
+                                     "2024",             // expiryYear
+                                     "180",              // cardSecurityCode
+                                     specialAddress);    // billingAddress
+    } catch (e) {
+      emitTestFail("Fail to initialize basic card response data.");
+    }
+    showResponse.init(requestId,
+                      Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
+                      "basic-card",         // payment method
+                      basiccardResponseData,// payment method data
+                      "Bill A. Pacheco",    // payer name
+                      "",                   // payer email
+                      "");                  // payer phone
+    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+  },
+  abortPayment: abortPaymentResponse,
+  completePayment: completePaymentResponse,
+  updatePayment: function(requestId) {
+  },
+  closePayment: function (requestId) {
+  },
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
+};
+
 addMessageListener("set-detailed-ui-service", function() {
   paymentSrv.setTestingUIService(detailedResponseUI.QueryInterface(Ci.nsIPaymentUIService));
 });
 
 addMessageListener("set-simple-ui-service", function() {
   paymentSrv.setTestingUIService(simpleResponseUI.QueryInterface(Ci.nsIPaymentUIService));
+});
+
+addMessageListener("set-special-address-ui-service", function() {
+  paymentSrv.setTestingUIService(specialAddressUI.QueryInterface(Ci.nsIPaymentUIService));
 });
 
 addMessageListener("error-response-test", function() {
