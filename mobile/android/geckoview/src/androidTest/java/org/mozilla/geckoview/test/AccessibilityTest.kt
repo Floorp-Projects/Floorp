@@ -35,6 +35,7 @@ import org.junit.Test
 import org.junit.Before
 import org.junit.After
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 
 const val DISPLAY_WIDTH = 480
 const val DISPLAY_HEIGHT = 640
@@ -498,6 +499,7 @@ class AccessibilityTest : BaseSessionTest() {
         return screenRect.contains(nodeBounds)
     }
 
+    @ReuseSession(false)
     @Test fun testScroll() {
         var nodeId = View.NO_ID
         sessionRule.session.loadString(
