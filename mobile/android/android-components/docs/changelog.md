@@ -120,6 +120,15 @@ permalink: /changelog/
   * Added a new sample app `samples-crash` to show and test crash reporter integration.
 * **lib-jexl**
   * New component for evaluating Javascript Expression Language (JEXL) expressions. This implementation is based on [Mozjexl](https://github.com/mozilla/mozjexl) used at Mozilla, specifically as a part of SHIELD and Normandy. In a future version of Fretboard JEXL will allow more complex rules for experiments. For more see [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/README.md).
+* **service-telemetry**
+  * Added option to send list of experiments in event pings: `Telemetry.recordExperiments(Map<String, Boolean> experiments)`
+  * Fixed an issue where `DebugLogClient` didn't use the provided log tag.
+* **service-fretboard**
+  * Fixed an issue where for some locales a `MissingResourceException` would occur.
+* **browser-engine-system**
+  * Playback of protected media (DRM) is now granted automatically.
+* **browser-engine-gecko**
+  * Updated components to follow merge day: (Nightly: 65.0, Beta: 64.0, Release: 63.0)
 
 # 0.28.0
 
