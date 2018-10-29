@@ -27,11 +27,9 @@ void
 JSONPrinter::indent()
 {
     MOZ_ASSERT(indentLevel_ >= 0);
-    if (indent_) {
-        out_.putChar('\n');
-        for (int i = 0; i < indentLevel_; i++) {
-            out_.put("  ");
-        }
+    out_.printf("\n");
+    for (int i = 0; i < indentLevel_; i++) {
+        out_.printf("  ");
     }
 }
 
@@ -39,7 +37,7 @@ void
 JSONPrinter::propertyName(const char* name)
 {
     if (!first_) {
-        out_.putChar(',');
+        out_.printf(",");
     }
     indent();
     out_.printf("\"%s\":", name);
@@ -50,21 +48,11 @@ void
 JSONPrinter::beginObject()
 {
     if (!first_) {
-        out_.putChar(',');
+        out_.printf(",");
         indent();
     }
-    out_.putChar('{');
+    out_.printf("{");
     indentLevel_++;
-    first_ = true;
-}
-
-void
-JSONPrinter::beginList()
-{
-    if (!first_) {
-        out_.putChar(',');
-    }
-    out_.putChar('[');
     first_ = true;
 }
 
@@ -72,7 +60,7 @@ void
 JSONPrinter::beginObjectProperty(const char* name)
 {
     propertyName(name);
-    out_.putChar('{');
+    out_.printf("{");
     indentLevel_++;
     first_ = true;
 }
@@ -81,7 +69,7 @@ void
 JSONPrinter::beginListProperty(const char* name)
 {
     propertyName(name);
-    out_.putChar('[');
+    out_.printf("[");
     first_ = true;
 }
 
@@ -89,13 +77,13 @@ void
 JSONPrinter::beginStringProperty(const char* name)
 {
     propertyName(name);
-    out_.putChar('"');
+    out_.printf("\"");
 }
 
 void
 JSONPrinter::endStringProperty()
 {
-    out_.putChar('"');
+    out_.printf("\"");
 }
 
 void
@@ -126,11 +114,11 @@ JSONPrinter::value(const char* format, ...)
     va_start(ap, format);
 
     if (!first_) {
-        out_.putChar(',');
+        out_.printf(",");
     }
-    out_.putChar('"');
+    out_.printf("\"");
     out_.vprintf(format, ap);
-    out_.putChar('"');
+    out_.printf("\"");
 
     va_end(ap);
     first_ = false;
@@ -147,7 +135,7 @@ void
 JSONPrinter::value(int val)
 {
     if (!first_) {
-        out_.putChar(',');
+        out_.printf(",");
     }
     out_.printf("%d", val);
     first_ = false;
@@ -188,7 +176,7 @@ JSONPrinter::floatProperty(const char* name, double value, size_t precision)
 {
     if (!mozilla::IsFinite(value)) {
         propertyName(name);
-        out_.put("null");
+        out_.printf("null");
         return;
     }
 
@@ -238,13 +226,13 @@ JSONPrinter::endObject()
 {
     indentLevel_--;
     indent();
-    out_.putChar('}');
+    out_.printf("}");
     first_ = false;
 }
 
 void
 JSONPrinter::endList()
 {
-    out_.putChar(']');
+    out_.printf("]");
     first_ = false;
 }
