@@ -18,6 +18,7 @@ function run_test() {
     getHTTPStatusCodeURL,
     getNetMonitorTimingsURL,
     getPerformanceAnalysisURL,
+    getFilterBoxURL,
   } = require("devtools/client/netmonitor/src/utils/mdn-utils");
 
   info("Checking for supported headers");
@@ -33,8 +34,12 @@ function run_test() {
     `${MDN_URL}Web/HTTP/Status${GTM_PARAMS_WC}`);
 
   equal(getNetMonitorTimingsURL(),
-    `${MDN_URL}Tools/Network_Monitor${GTM_PARAMS_NM}#Timings`);
+    `${MDN_URL}Tools/Network_Monitor/request_details${GTM_PARAMS_NM}#Timings`);
 
   equal(getPerformanceAnalysisURL(),
-    `${MDN_URL}Tools/Network_Monitor${GTM_PARAMS_NM}#Performance_analysis`);
+    `${MDN_URL}Tools/Network_Monitor/Performance_analysis${GTM_PARAMS_NM}`);
+
+  equal(getFilterBoxURL(),
+    `${MDN_URL}Tools/Network_Monitor/request_list` +
+    `${GTM_PARAMS_NM}#Filtering_by_properties`);
 }

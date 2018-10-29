@@ -351,6 +351,8 @@ function moveMouseAndScrollWheelOver(element, dx, dy, testDriver, waitForScroll 
 // processed by the widget code can be detected by listening for the mousemove
 // events in the caller, or for some other event that is triggered by the
 // mousemove, such as the scroll event resulting from the scrollbar drag.
+// Note: helper_scrollbar_snap_bug1501062.html contains a copy of this code
+// with modifications. Fixes here should be copied there if appropriate.
 function* dragVerticalScrollbar(element, testDriver, distance = 20, increment = 5) {
   var boundingClientRect = element.getBoundingClientRect();
   var verticalScrollbarWidth = boundingClientRect.width - element.clientWidth;

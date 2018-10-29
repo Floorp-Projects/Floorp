@@ -9,7 +9,7 @@
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/PaymentRequest.h"
 #include "mozilla/dom/PaymentRequestChild.h"
-#include "mozilla/dom/PaymentResponse.h"
+#include "mozilla/dom/PaymentRequestManager.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/intl/MozLocale.h"
 #include "mozilla/EventStateManager.h"
@@ -18,8 +18,8 @@
 #include "nsIScriptError.h"
 #include "nsIURLParser.h"
 #include "nsNetCID.h"
-#include "PaymentRequestManager.h"
 #include "mozilla/dom/MerchantValidationEvent.h"
+#include "PaymentResponse.h"
 
 using mozilla::intl::LocaleService;
 
@@ -797,7 +797,7 @@ PaymentRequest::RejectShowPayment(nsresult aRejectReason)
 
 void
 PaymentRequest::RespondShowPayment(const nsAString& aMethodName,
-                                   const nsAString& aDetails,
+                                   const ResponseData& aDetails,
                                    const nsAString& aPayerName,
                                    const nsAString& aPayerEmail,
                                    const nsAString& aPayerPhone,
@@ -888,7 +888,7 @@ PaymentRequest::RespondAbortPayment(bool aSuccess)
   if (NS_FAILED(mUpdateError)) {
     // Respond show with mUpdateError, set mUpdating to false.
     mUpdating = false;
-    RespondShowPayment(EmptyString(), EmptyString(), EmptyString(),
+    RespondShowPayment(EmptyString(), ResponseData(), EmptyString(),
                        EmptyString(), EmptyString(), mUpdateError);
     mUpdateError = NS_OK;
     return;

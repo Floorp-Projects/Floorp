@@ -230,6 +230,48 @@ intrinsic_GuardToBuiltin(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+template<typename T>
+static bool
+intrinsic_IsWrappedInstanceOfBuiltin(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isObject());
+
+    JSObject* obj = &args[0].toObject();
+    if (!obj->is<WrapperObject>()) {
+        args.rval().setBoolean(false);
+        return true;
+    }
+
+    JSObject* unwrapped = CheckedUnwrap(obj);
+    if (!unwrapped) {
+        ReportAccessDenied(cx);
+        return false;
+    }
+
+    args.rval().setBoolean(unwrapped->is<T>());
+    return true;
+}
+
+template<typename T>
+static bool
+intrinsic_IsPossiblyWrappedInstanceOfBuiltin(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isObject());
+
+    JSObject* obj = CheckedUnwrap(&args[0].toObject());
+    if (!obj) {
+        ReportAccessDenied(cx);
+        return false;
+    }
+
+    args.rval().setBoolean(obj->is<T>());
+    return true;
+}
+
 /**
  * Self-hosting intrinsic returning the original constructor for a builtin
  * the name of which is the first and only argument.
@@ -934,34 +976,6 @@ intrinsic_GeneratorSetClosed(JSContext* cx, unsigned argc, Value* vp)
 
 template<typename T>
 static bool
-intrinsic_IsWrappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-
-    if (!args[0].isObject()) {
-        args.rval().setBoolean(false);
-        return true;
-    }
-
-    JSObject* obj = &args[0].toObject();
-    if (!obj->is<WrapperObject>()) {
-        args.rval().setBoolean(false);
-        return true;
-    }
-
-    JSObject* unwrapped = CheckedUnwrap(obj);
-    if (!unwrapped) {
-        ReportAccessDenied(cx);
-        return false;
-    }
-
-    args.rval().setBoolean(unwrapped->is<T>());
-    return true;
-}
-
-template<typename T>
-static bool
 intrinsic_ArrayBufferByteLength(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1077,27 +1091,6 @@ intrinsic_GetTypedArrayKind(JSContext* cx, unsigned argc, Value* vp)
     Scalar::Type type = JS_GetArrayBufferViewType(obj);
 
     args.rval().setInt32(static_cast<int32_t>(type));
-    return true;
-}
-
-static bool
-intrinsic_IsPossiblyWrappedTypedArray(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-
-    bool isTypedArray = false;
-    if (args[0].isObject()) {
-        JSObject* obj = CheckedUnwrap(&args[0].toObject());
-        if (!obj) {
-            ReportAccessDenied(cx);
-            return false;
-        }
-
-        isTypedArray = obj->is<TypedArrayObject>();
-    }
-
-    args.rval().setBoolean(isTypedArray);
     return true;
 }
 
@@ -2555,9 +2548,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
           intrinsic_GuardToBuiltin<SharedArrayBufferObject>,       1,0,
           IntrinsicGuardToSharedArrayBuffer),
     JS_FN("IsWrappedArrayBuffer",
-          intrinsic_IsWrappedArrayBuffer<ArrayBufferObject>,            1,0),
+          intrinsic_IsWrappedInstanceOfBuiltin<ArrayBufferObject>,      1,0),
     JS_FN("IsWrappedSharedArrayBuffer",
-          intrinsic_IsWrappedArrayBuffer<SharedArrayBufferObject>,      1,0),
+          intrinsic_IsWrappedInstanceOfBuiltin<SharedArrayBufferObject>, 1,0),
 
     JS_INLINABLE_FN("ArrayBufferByteLength",
                     intrinsic_ArrayBufferByteLength<ArrayBufferObject>, 1,0,
@@ -2581,7 +2574,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("IsTypedArray",
                     intrinsic_IsInstanceOfBuiltin<TypedArrayObject>,    1,0,
                     IntrinsicIsTypedArray),
-    JS_INLINABLE_FN("IsPossiblyWrappedTypedArray",intrinsic_IsPossiblyWrappedTypedArray,1,0,
+    JS_INLINABLE_FN("IsPossiblyWrappedTypedArray",
+                    intrinsic_IsPossiblyWrappedInstanceOfBuiltin<TypedArrayObject>, 1,0,
                     IntrinsicIsPossiblyWrappedTypedArray),
 
     JS_FN("TypedArrayBuffer",        intrinsic_TypedArrayBuffer,        1,0),

@@ -33,6 +33,7 @@ class Function;
 class IDBFactory;
 enum class ImageBitmapFormat : uint8_t;
 class Performance;
+struct PostMessageOptions;
 class Promise;
 class RequestOrUSVString;
 class WorkerLocation;
@@ -260,6 +261,10 @@ public:
   void
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
               const Sequence<JSObject*>& aTransferable,
+              ErrorResult& aRv);
+  void
+  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+              const PostMessageOptions& aOptions,
               ErrorResult& aRv);
 
   void

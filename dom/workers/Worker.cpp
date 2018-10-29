@@ -125,6 +125,14 @@ Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 }
 
 void
+Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                    const PostMessageOptions& aOptions,
+                    ErrorResult& aRv)
+{
+  PostMessage(aCx, aMessage, aOptions.mTransfer, aRv);
+}
+
+void
 Worker::Terminate()
 {
   NS_ASSERT_OWNINGTHREAD(Worker);

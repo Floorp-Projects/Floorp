@@ -1585,6 +1585,8 @@ XPCOMUtils.defineLazyGetter(this, "gInstallDirPathHash", function test_gIDPH() {
     logTestInfo("failed to create registry key. Registry Path: " + REG_PATH +
                 ", Key Name: " + appDir.path + ", Key Value: " + gTestID +
                 ", Exception " + e);
+    do_throw("Unable to write HKLM or HKCU TaskBarIDs registry key, key path: "
+             + REG_PATH);
   }
   return null;
 });
@@ -1649,44 +1651,21 @@ function getMockUpdRootDWin(aGetOldLocation) {
     do_throw("Windows only function called by a different platform!");
   }
 
+  let relPathUpdates = "";
   let dataDirectory;
   if (aGetOldLocation) {
     dataDirectory = gLocalAppDataDir.clone();
+    if (MOZ_APP_VENDOR || MOZ_APP_BASENAME) {
+      relPathUpdates += (MOZ_APP_VENDOR ? MOZ_APP_VENDOR : MOZ_APP_BASENAME);
+    } else {
+      relPathUpdates += "Mozilla";
+    }
   } else {
     dataDirectory = gCommonAppDataDir.clone();
-  }
-  let progFilesDir = gProgFilesDir.clone();
-  let appDir = Services.dirsvc.get(XRE_EXECUTABLE_FILE, Ci.nsIFile).parent;
-
-  let appDirPath = appDir.path;
-  let relPathUpdates = "";
-  if (gInstallDirPathHash && (MOZ_APP_VENDOR || MOZ_APP_BASENAME)) {
-    relPathUpdates += (MOZ_APP_VENDOR ? MOZ_APP_VENDOR : MOZ_APP_BASENAME) +
-                      "\\" + DIR_UPDATES + "\\" + gInstallDirPathHash;
+    relPathUpdates += "Mozilla";
   }
 
-  if (!relPathUpdates && progFilesDir) {
-    if (appDirPath.length > progFilesDir.path.length) {
-      if (appDirPath.substr(0, progFilesDir.path.length) == progFilesDir.path) {
-        if (MOZ_APP_VENDOR && MOZ_APP_BASENAME) {
-          relPathUpdates += MOZ_APP_VENDOR + "\\" + MOZ_APP_BASENAME;
-        } else {
-          relPathUpdates += MOZ_APP_BASENAME;
-        }
-        relPathUpdates += appDirPath.substr(progFilesDir.path.length);
-      }
-    }
-  }
-
-  if (!relPathUpdates) {
-    if (MOZ_APP_VENDOR && MOZ_APP_BASENAME) {
-      relPathUpdates += MOZ_APP_VENDOR + "\\" + MOZ_APP_BASENAME;
-    } else {
-      relPathUpdates += MOZ_APP_BASENAME;
-    }
-    relPathUpdates += "\\" + MOZ_APP_NAME;
-  }
-
+  relPathUpdates += "\\" + DIR_UPDATES + "\\" + gInstallDirPathHash;
   let updatesDir = Cc["@mozilla.org/file/local;1"].
                    createInstance(Ci.nsIFile);
   updatesDir.initWithPath(dataDirectory.path + "\\" + relPathUpdates);
