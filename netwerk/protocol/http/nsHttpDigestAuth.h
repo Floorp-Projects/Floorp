@@ -11,7 +11,6 @@
 #include "nsStringFwd.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/StaticPtr.h"
 
 class nsICryptoHash;
 
@@ -38,8 +37,6 @@ class nsHttpDigestAuth final : public nsIHttpAuthenticator
     NS_DECL_NSIHTTPAUTHENTICATOR
 
     nsHttpDigestAuth() = default;
-
-    static already_AddRefed<nsIHttpAuthenticator> GetOrCreate();
 
   protected:
     ~nsHttpDigestAuth() = default;
@@ -90,8 +87,6 @@ class nsHttpDigestAuth final : public nsIHttpAuthenticator
   protected:
     nsCOMPtr<nsICryptoHash>        mVerifier;
     char                           mHashBuf[DIGEST_LENGTH];
-
-    static StaticRefPtr<nsHttpDigestAuth> gSingleton;
 };
 
 } // namespace net

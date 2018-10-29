@@ -49,7 +49,6 @@
 #include "nsICancelable.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/net/HttpAuthUtils.h"
-#include "mozilla/ClearOnShutdown.h"
 
 using mozilla::Base64Decode;
 
@@ -62,8 +61,6 @@ static const char kNegotiateAuthAllowProxies[] = "network.negotiate-auth.allow-p
 static const char kNegotiateAuthAllowNonFqdn[] = "network.negotiate-auth.allow-non-fqdn";
 static const char kNegotiateAuthSSPI[] = "network.auth.use-sspi";
 static const char kSSOinPBmode[] = "network.auth.private-browsing-sso";
-
-mozilla::StaticRefPtr<nsHttpNegotiateAuth> nsHttpNegotiateAuth::gSingleton;
 
 #define kNegotiateLen  (sizeof(kNegotiate)-1)
 #define DEFAULT_THREAD_TIMEOUT_MS 30000
@@ -108,21 +105,6 @@ TestNotInPBMode(nsIHttpAuthenticableChannel *authChannel, bool proxyAuth)
     return false;
 }
 
-already_AddRefed<nsIHttpAuthenticator>
-nsHttpNegotiateAuth::GetOrCreate()
-{
-    nsCOMPtr<nsIHttpAuthenticator> authenticator;
-    if (gSingleton) {
-      authenticator = gSingleton;
-    } else {
-      gSingleton = new nsHttpNegotiateAuth();
-      mozilla::ClearOnShutdown(&gSingleton);
-      authenticator = gSingleton;
-    }
-
-    return authenticator.forget();
-}
-
 NS_IMETHODIMP
 nsHttpNegotiateAuth::GetAuthFlags(uint32_t *flags)
 {
@@ -154,14 +136,13 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
                                        nsISupports **continuationState,
                                        bool *identityInvalid)
 {
-    nsIAuthModule *rawModule = (nsIAuthModule *) *continuationState;
+    nsIAuthModule *module = (nsIAuthModule *) *continuationState;
 
     *identityInvalid = false;
-    if (rawModule)
+    if (module)
         return NS_OK;
 
     nsresult rv;
-    nsCOMPtr<nsIAuthModule> module;
 
     nsCOMPtr<nsIURI> uri;
     rv = authChannel->GetURI(getter_AddRefs(uri));
@@ -216,26 +197,31 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
     //
     service.InsertLiteral("HTTP@", 0);
 
-    const char *authType;
+    const char *contractID;
     if (TestBoolPref(kNegotiateAuthSSPI)) {
 	   LOG(("  using negotiate-sspi\n"));
-	   authType = "negotiate-sspi";
+	   contractID = NS_AUTH_MODULE_CONTRACTID_PREFIX "negotiate-sspi";
     }
     else {
 	   LOG(("  using negotiate-gss\n"));
-	   authType = "negotiate-gss";
+	   contractID = NS_AUTH_MODULE_CONTRACTID_PREFIX "negotiate-gss";
     }
 
-    MOZ_ALWAYS_TRUE(module = nsIAuthModule::CreateInstance(authType));
-
-    rv = module->Init(service.get(), req_flags, nullptr, nullptr, nullptr);
+    rv = CallCreateInstance(contractID, &module);
 
     if (NS_FAILED(rv)) {
         LOG(("  Failed to load Negotiate Module \n"));
         return rv;
     }
 
-    module.forget(continuationState);
+    rv = module->Init(service.get(), req_flags, nullptr, nullptr, nullptr);
+
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(module);
+        return rv;
+    }
+
+    *continuationState = module;
     return NS_OK;
 }
 
@@ -396,8 +382,12 @@ class GetNextTokenRunnable final : public mozilla::Runnable
             nsresult rv;
 
             // Use negotiate service to call GenerateCredentials outside of main thread
+            nsAutoCString contractId;
+            contractId.AssignLiteral(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
+            contractId.AppendLiteral("negotiate");
             nsCOMPtr<nsIHttpAuthenticator> authenticator =
-              new nsHttpNegotiateAuth();
+              do_GetService(contractId.get(), &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
 
             nsISupports *sessionState = mSessionState;
             nsISupports *continuationState = mContinuationState;

@@ -5,8 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
+    'nsAuthFactory.cpp',
     'nsAuthGSSAPI.cpp',
-    'nsIAuthModule.cpp',
 ]
 
 SOURCES += [
@@ -26,7 +26,6 @@ else:
 
 LOCAL_INCLUDES += [
     '/netwerk/dns', # For nsDNSService2.h
-    '/security/manager/ssl',
 ]
 
 FINAL_LIBRARY = 'xul'
