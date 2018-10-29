@@ -3,7 +3,8 @@
 var PKT_SENDTOMOBILE = (function() {
 
     var width = 350;
-    var ctaHeight = 200;
+    var variant1Height = 312;
+    var variant2Height = 200;
     var confirmHeight = 275;
     var premDetailsHeight = 110;
     var email = null;
@@ -48,10 +49,22 @@ var PKT_SENDTOMOBILE = (function() {
         $("body").addClass("pkt_ext_ho2_experiment");
         var height = (adjustHeight) ? premDetailsHeight : 0;
 
-        // Show "Send to your phone" CTA
-        height += ctaHeight;
-        $("body").append(Handlebars.templates.ho2_sharebutton());
-        thePKT_SAVED.sendMessage("resizePanel", { width, height });
+        if (ho2 == "show_prompt_preview") {
+            height += variant1Height;
+            $("body").append(Handlebars.templates.ho2_sharebutton_v1());
+            thePKT_SAVED.sendMessage("resizePanel", { width, height });
+            thePKT_SAVED.sendMessage("getArticleInfo", {}, function(data) {
+                _swapPlaceholder(data);
+            });
+        } else if (ho2 == "show_prompt_no_preview") {
+            height += variant2Height;
+            $("body").append(Handlebars.templates.ho2_sharebutton_v2());
+            thePKT_SAVED.sendMessage("resizePanel", { width, height });
+        } else if (ho2 == "show_prompt_get_app") {
+            height += variant2Height;
+            $("body").append(Handlebars.templates.ho2_sharebutton_v3());
+            thePKT_SAVED.sendMessage("resizePanel", { width, height });
+        }
 
         _initPanelOneClicks();
     }
