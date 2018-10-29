@@ -1094,8 +1094,8 @@ public:
   virtual void
   NotifyContentBlockingState(unsigned aState,
                              nsIChannel* aChannel,
-                             bool aBlocked = true,
-                             nsIURI* aURIHint = nullptr) = 0;
+                             bool aBlocked,
+                             nsIURI* aURIHint) = 0;
 
   // WebIDL-ish APIs
   void MarkUncollectableForCCGeneration(uint32_t aGeneration)
