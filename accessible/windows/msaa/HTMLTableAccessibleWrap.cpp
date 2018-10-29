@@ -16,8 +16,9 @@ using namespace mozilla::a11y;
 NS_IMPL_ISUPPORTS_INHERITED0(HTMLTableAccessibleWrap,
                              HTMLTableAccessible)
 
-IMPL_IUNKNOWN_INHERITED1(HTMLTableAccessibleWrap,
+IMPL_IUNKNOWN_INHERITED2(HTMLTableAccessibleWrap,
                          AccessibleWrap,
+                         HyperTextAccessibleWrap,
                          ia2AccessibleTable)
 
 void
