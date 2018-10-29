@@ -36,13 +36,15 @@ from outputhandler import OutputHandler
 from manifest import get_raptor_test_list
 from playback import get_playback
 from results import RaptorResultsHandler
+from gecko_profile import GeckoProfile
 
 
 class Raptor(object):
     """Container class for Raptor"""
 
     def __init__(self, app, binary, run_local=False, obj_path=None,
-                 gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None):
+                 gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
+                 symbols_path=None):
         self.config = {}
         self.config['app'] = app
         self.config['binary'] = binary
@@ -53,11 +55,13 @@ class Raptor(object):
         self.config['gecko_profile'] = gecko_profile
         self.config['gecko_profile_interval'] = gecko_profile_interval
         self.config['gecko_profile_entries'] = gecko_profile_entries
+        self.config['symbols_path'] = symbols_path
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
         self.log = get_default_logger(component='raptor-main')
         self.control_server = None
         self.playback = None
         self.benchmark = None
+        self.gecko_profiler = None
         self.post_startup_delay = 30000  # raptor webext pause time after browser startup
 
         # Create the profile; for geckoview we want a firefox profile type
@@ -235,6 +239,14 @@ class Raptor(object):
 
             self.control_server.browser_proc = proc
 
+            # if geckoProfile is enabled, initialize it
+            if self.config['gecko_profile'] is True:
+                self._init_gecko_profiling(test)
+                # tell the control server the gecko_profile dir; the control server will
+                # receive the actual gecko profiles from the web ext and will write them
+                # to disk; then profiles are picked up by gecko_profile.symbolicate
+                self.control_server.gecko_profile_dir = self.gecko_profiler.gecko_profile_dir
+
         # set our cs flag to indicate we are running the browser/app
         self.control_server._finished = False
 
@@ -242,6 +254,10 @@ class Raptor(object):
         timeout = int(timeout / 1000) * int(test['page_cycles'])
         # account for the pause the raptor webext runner takes after browser startup
         timeout += int(self.post_startup_delay / 1000)
+
+        # if geckoProfile enabled, give browser more time for profiling
+        if self.config['gecko_profile'] is True:
+            timeout += 5 * 60
 
         try:
             elapsed_time = 0
@@ -272,11 +288,28 @@ class Raptor(object):
         if self.config['app'] in ["chrome", "chrome-android"]:
             self.profile.addons.remove(raptor_webext)
 
+        # gecko profiling symbolication
+        if self.config['gecko_profile'] is True:
+            self.gecko_profiler.symbolicate()
+            # clean up the temp gecko profiling folders
+            self.log.info("cleaning up after gecko profiling")
+            self.gecko_profiler.clean()
+
         if self.config['app'] != "geckoview":
             if self.runner.is_running():
                 self.runner.stop()
         # TODO the geckoview app should have been shutdown by this point by the
         # control server, but we can double-check here to make sure
+
+    def _init_gecko_profiling(self, test):
+        self.log.info("initializing gecko profiler")
+        upload_dir = os.getenv('MOZ_UPLOAD_DIR')
+        if not upload_dir:
+            self.log.critical("Profiling ignored because MOZ_UPLOAD_DIR was not set")
+        else:
+            self.gecko_profiler = GeckoProfile(upload_dir,
+                                               self.config,
+                                               test)
 
     def process_results(self):
         # when running locally output results in build/raptor.json; when running
@@ -335,7 +368,8 @@ def main(args=sys.argv[1:]):
                     args.obj_path,
                     args.gecko_profile,
                     args.gecko_profile_interval,
-                    args.gecko_profile_entries)
+                    args.gecko_profile_entries,
+                    args.symbols_path)
 
     raptor.start_control_server()
 

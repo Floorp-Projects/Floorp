@@ -50,6 +50,10 @@ var isDCFPending = false;
 var isTTFIPending = false;
 var isBenchmarkPending = false;
 var pageTimeout = 10000; // default pageload timeout
+var geckoProfiling = false;
+var geckoInterval = 1;
+var geckoEntries = 1000000;
+var webRenderEnabled = false;
 
 var results = {"name": "",
                "page": "",
@@ -89,6 +93,22 @@ function getTestSettings() {
         results.lower_is_better = settings.lower_is_better === true;
         results.subtest_lower_is_better = settings.subtest_lower_is_better === true;
         results.alert_threshold = settings.alert_threshold;
+
+        if (settings.gecko_profile !== undefined) {
+          if (settings.gecko_profile === true) {
+            geckoProfiling = true;
+            results.extra_options = ["gecko_profile"];
+            if (settings.gecko_interval !== undefined) {
+              geckoInterval = settings.gecko_interval;
+            }
+            if (settings.gecko_entries !== undefined) {
+              geckoEntries = settings.gecko_entries;
+            }
+            if (settings.webrender_enabled !== undefined) {
+              webRenderEnabled = settings.webrender_enabled;
+            }
+          }
+        }
 
         if (settings.newtab_per_cycle !== undefined) {
           reuseTab = settings.newtab_per_cycle;
@@ -191,10 +211,14 @@ async function testTabUpdated(tab) {
 function waitForResult() {
   console.log("awaiting results...");
   return new Promise(resolve => {
-    function checkForResult() {
+    async function checkForResult() {
       if (testType == "pageload") {
         if (!isHeroPending && !isFNBPaintPending && !isFCPPending && !isDCFPending && !isTTFIPending) {
           cancelTimeoutAlarm("raptor-page-timeout");
+          postToControlServer("status", "results received");
+          if (geckoProfiling) {
+            await getGeckoProfile();
+          }
           resolve();
         } else {
           setTimeout(checkForResult, 5);
@@ -202,6 +226,10 @@ function waitForResult() {
       } else if (testType == "benchmark") {
         if (!isBenchmarkPending) {
           cancelTimeoutAlarm("raptor-page-timeout");
+          postToControlServer("status", "results received");
+          if (geckoProfiling) {
+            await getGeckoProfile();
+          }
           resolve();
         } else {
           setTimeout(checkForResult, 5);
@@ -212,16 +240,67 @@ function waitForResult() {
   });
 }
 
+async function startGeckoProfiling() {
+  var _threads;
+  if (webRenderEnabled) {
+    _threads = ["GeckoMain", "Compositor", "WR,Renderer"];
+  } else {
+    _threads = ["GeckoMain", "Compositor"];
+  }
+  postToControlServer("status", "starting gecko profiling");
+  await browser.geckoProfiler.start({
+    bufferSize: geckoEntries,
+    interval: geckoInterval,
+    features: ["js", "leaf", "stackwalk", "threads", "responsiveness"],
+    threads: _threads,
+  });
+}
+
+async function stopGeckoProfiling() {
+  postToControlServer("status", "stopping gecko profiling");
+  await browser.geckoProfiler.stop();
+}
+
+async function pauseGeckoProfiling() {
+  postToControlServer("status", "pausing gecko profiling");
+  await browser.geckoProfiler.pause();
+}
+
+async function resumeGeckoProfiling() {
+  postToControlServer("status", "resuming gecko profiling");
+  await browser.geckoProfiler.resume();
+}
+
+async function getGeckoProfile() {
+  // pause the profiler
+  await pauseGeckoProfiling();
+  // get the profile and send to control server
+  postToControlServer("status", "retrieving gecko profile");
+  let arrayBuffer = await browser.geckoProfiler.getProfileAsArrayBuffer();
+  let textDecoder = new TextDecoder();
+  let profile = JSON.parse(textDecoder.decode(arrayBuffer));
+  console.log(profile);
+  postToControlServer("gecko_profile", [testName, pageCycle, profile]);
+  // resume if we have more pagecycles left
+  if (pageCycle + 1 <= pageCycles) {
+    await resumeGeckoProfiling();
+  }
+}
+
 function nextCycle() {
   pageCycle++;
   if (pageCycle == 1) {
-    var text = "running " + pageCycles + " pagecycles of " + testURL;
+    let text = "running " + pageCycles + " pagecycles of " + testURL;
     postToControlServer("status", text);
+    // start the profiler if enabled
+    if (geckoProfiling) {
+      startGeckoProfiling();
+    }
   }
   if (pageCycle <= pageCycles) {
     setTimeout(function() {
-      var text = "begin pagecycle " + pageCycle;
-      console.log("\n" + text);
+
+      let text = "begin pagecycle " + pageCycle;
       postToControlServer("status", text);
 
       // set page timeout alarm
@@ -363,6 +442,10 @@ function verifyResults() {
 }
 
 function postToControlServer(msgType, msgData) {
+  // if posting a status message, log it to console also
+  if (msgType == "status") {
+    console.log("\n" + msgData);
+  }
   // requires 'control server' running at port 8000 to receive results
   var url = "http://127.0.0.1:" + csPort + "/";
   var client = new XMLHttpRequest();
@@ -399,6 +482,11 @@ function cleanUp() {
   } else if (testType == "benchmark") {
     console.log("benchmark complete");
   }
+  // if profiling was enabled, stop the profiler
+  if (geckoProfiling) {
+    stopGeckoProfiling();
+  }
+
   window.onload = null;
   // tell the control server we are done and the browser can be shutdown
   postToControlServer("status", "__raptor_shutdownBrowser");
@@ -439,7 +527,7 @@ function runner() {
 
       // create new empty tab, which starts the test; we want to
       // wait some time for the browser to settle before beginning
-      var text = "* pausing " + postStartupDelay / 1000 + " seconds to let browser settle... *";
+      let text = "* pausing " + postStartupDelay / 1000 + " seconds to let browser settle... *";
       postToControlServer("status", text);
 
       // setTimeout(function() { nextCycle(); }, postStartupDelay);

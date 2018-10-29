@@ -53,6 +53,10 @@ def verify_options(parser, args):
         if not os.path.isfile(args.binary):
             parser.error("{binary} does not exist!".format(**ctx))
 
+    # if geckoProfile specified but not running on Firefox, not supported
+    if args.gecko_profile is True and args.app != "firefox":
+        parser.error("Gecko profiling is only supported when running raptor on Firefox!")
+
 
 def parse_args(argv=None):
     parser = create_parser()
