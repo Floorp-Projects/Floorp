@@ -24,7 +24,7 @@ def attrAsMethodStruct(iface, m, getter):
     return derive_method_tmpl % {
         'name': rust.attributeNativeName(m, getter),
         'params': ', '.join(params),
-        'ret': 'nsresult',
+        'ret': '::nserror::nsresult',
     }
 
 
