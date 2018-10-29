@@ -7,8 +7,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import subprocess
-
 
 def match_utc(params, sched):
     """Return True if params['time'] matches the given schedule.
@@ -38,10 +36,3 @@ def match_utc(params, sched):
         return False
 
     return True
-
-
-def calculate_head_rev(root):
-    # we assume that run-task has correctly checked out the revision indicated by
-    # GECKO_HEAD_REF, so all that remains is to see what the current revision is.
-    # Mercurial refers to that as `.`.
-    return subprocess.check_output(['hg', 'log', '-r', '.', '-T', '{node}'], cwd=root)
