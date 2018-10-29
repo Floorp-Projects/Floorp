@@ -444,7 +444,7 @@ function test_info() {
     // decides that the file was actually truncated rather than
     // recreated, hence that it should keep its previous creation
     // date.  Debugging hilarity ensues.
-  });
+  })();
 
   let change = stat.lastModificationDate;
   info("Testing lastModificationDate: " + change);
