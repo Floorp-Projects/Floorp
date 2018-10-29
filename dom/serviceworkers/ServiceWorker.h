@@ -21,6 +21,7 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
+struct PostMessageOptions;
 class ServiceWorkerCloneData;
 
 #define NS_DOM_SERVICEWORKER_IID \
@@ -98,6 +99,10 @@ public:
   void
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
               const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
+
+  void
+  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+              const PostMessageOptions& aOptions, ErrorResult& aRv);
 
   const ServiceWorkerDescriptor&
   Descriptor() const;

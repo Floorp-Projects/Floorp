@@ -5,7 +5,6 @@ http://example.org/tests/dom/tests/mochitest/whatwg/postMessage_joined_helper2.h
 -->
 <head>
   <title>postMessage joined domains, innermost frame</title>
-  <script type="application/javascript" src="browserFu.js"></script>
   <script type="application/javascript">
     function receiveMessage(evt)
     {
@@ -25,12 +24,6 @@ http://example.org/tests/dom/tests/mochitest/whatwg/postMessage_joined_helper2.h
       {
         response += " wrong-target(" + evt.target + ")";
         response += " location(" + window.location.href + ")";
-      }
-
-      if (isMozilla)
-      {
-        if (evt.isTrusted !== false)
-          response += " unexpected-trusted-event";
       }
 
       if (evt.source !== window.parent)

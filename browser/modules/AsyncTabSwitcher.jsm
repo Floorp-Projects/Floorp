@@ -353,7 +353,7 @@ class AsyncTabSwitcher {
       // determined by the busy state on the tab element and checking
       // if the loaded URI is local.
       let hasSufficientlyLoaded = !this.requestedTab.hasAttribute("busy") &&
-        !this.tabbrowser._isLocalAboutURI(requestedBrowser.currentURI);
+        !this.tabbrowser.isLocalAboutURI(requestedBrowser.currentURI);
 
       let fl = requestedBrowser.frameLoader;
       shouldBeBlank = !this.minimizedOrFullyOccluded &&

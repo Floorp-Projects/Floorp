@@ -33,8 +33,7 @@ PostMessageEvent::PostMessageEvent(nsGlobalWindowOuter* aSource,
                                    const nsAString& aCallerOrigin,
                                    nsGlobalWindowOuter* aTargetWindow,
                                    nsIPrincipal* aProvidedPrincipal,
-                                   nsIDocument* aSourceDocument,
-                                   bool aTrustedCaller)
+                                   nsIDocument* aSourceDocument)
   : Runnable("dom::PostMessageEvent")
   , StructuredCloneHolder(CloningSupported,
                           TransferringSupported,
@@ -44,7 +43,6 @@ PostMessageEvent::PostMessageEvent(nsGlobalWindowOuter* aSource,
   , mTargetWindow(aTargetWindow)
   , mProvidedPrincipal(aProvidedPrincipal)
   , mSourceDocument(aSourceDocument)
-  , mTrustedCaller(aTrustedCaller)
 {
 }
 
@@ -110,13 +108,6 @@ PostMessageEvent::Run()
         "Target and source should have the same userContextId attribute.");
       MOZ_DIAGNOSTIC_ASSERT(sourceAttrs.mInIsolatedMozBrowser == targetAttrs.mInIsolatedMozBrowser,
         "Target and source should have the same inIsolatedMozBrowser attribute.");
-
-      if (!nsContentUtils::IsSystemOrExpandedPrincipal(targetPrin) &&
-          !nsContentUtils::IsSystemOrExpandedPrincipal(mProvidedPrincipal) &&
-          !mTrustedCaller) {
-        MOZ_DIAGNOSTIC_ASSERT(sourceAttrs.mPrivateBrowsingId == targetAttrs.mPrivateBrowsingId,
-          "Target and source should have the same mPrivateBrowsingId attribute.");
-      }
 
       nsAutoString providedOrigin, targetOrigin;
       nsresult rv = nsContentUtils::GetUTFOrigin(targetPrin, targetOrigin);
@@ -198,7 +189,7 @@ PostMessageEvent::Dispatch(nsGlobalWindowInner* aTargetWindow, Event* aEvent)
   RefPtr<nsPresContext> presContext =
     aTargetWindow->GetExtantDoc()->GetPresContext();
 
-  aEvent->SetTrusted(mTrustedCaller);
+  aEvent->SetTrusted(true);
   WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
 
   nsEventStatus status = nsEventStatus_eIgnore;
