@@ -4,7 +4,7 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.29.0-SNAPSHOT (In Development)
+# 0.29.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.28.0...master),
 [Milestone](https://github.com/mozilla-mobile/android-components/milestone/31?closed=1),
@@ -40,7 +40,7 @@ permalink: /changelog/
   ```
     These attributes are also available in XML (except for typeface):
   ```xml
-  <mozilla.components.browser.toolbar.BrowserToolbar 
+  <mozilla.components.browser.toolbar.BrowserToolbar
     android:id="@+id/toolbar"
     app:browserToolbarTextColor="#ff0000"
     app:browserToolbarHintColor="#00ff00"
