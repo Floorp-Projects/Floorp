@@ -559,13 +559,15 @@ void TlsConnectTestBase::CheckResumption(SessionResumptionMode expected) {
   EXPECT_EQ(stateless_count, stats->hsh_sid_stateless_resumes);
 
   if (expected != RESUME_NONE) {
-    if (client_->version() < SSL_LIBRARY_VERSION_TLS_1_3) {
+    if (client_->version() < SSL_LIBRARY_VERSION_TLS_1_3 &&
+        client_->GetResumptionToken().size() == 0) {
       // Check that the last two session ids match.
       ASSERT_EQ(1U + expected_resumptions_, session_ids_.size());
       EXPECT_EQ(session_ids_[session_ids_.size() - 1],
                 session_ids_[session_ids_.size() - 2]);
     } else {
-      // TLS 1.3 only uses tickets.
+      // We've either chosen TLS 1.3 or are using an external resumption token,
+      // both of which only use tickets.
       EXPECT_TRUE(expected & RESUME_TICKET);
     }
   }

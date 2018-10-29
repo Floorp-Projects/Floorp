@@ -229,6 +229,7 @@ bool TlsAgent::EnsureTlsSetup(PRFileDesc* modelSocket) {
 
 bool TlsAgent::MaybeSetResumptionToken() {
   if (!resumption_token_.empty()) {
+    LOG("setting external resumption token");
     SECStatus rv = SSL_SetResumptionToken(ssl_fd(), resumption_token_.data(),
                                           resumption_token_.size());
 
@@ -938,8 +939,8 @@ void TlsAgent::SendRecordDirect(const TlsRecord& record) {
   SendDirect(buf);
 }
 
-static bool ErrorIsNonFatal(PRErrorCode code) {
-  return code == PR_WOULD_BLOCK_ERROR || code == SSL_ERROR_RX_SHORT_DTLS_READ;
+static bool ErrorIsFatal(PRErrorCode code) {
+  return code != PR_WOULD_BLOCK_ERROR && code != SSL_ERROR_RX_SHORT_DTLS_READ;
 }
 
 void TlsAgent::SendData(size_t bytes, size_t blocksize) {
@@ -998,28 +999,39 @@ bool TlsAgent::SendEncryptedRecord(const std::shared_ptr<TlsCipherSpec>& spec,
 void TlsAgent::ReadBytes(size_t amount) {
   uint8_t block[16384];
 
-  int32_t rv = PR_Read(ssl_fd(), block, (std::min)(amount, sizeof(block)));
-  LOGV("ReadBytes " << rv);
-  int32_t err;
+  size_t remaining = amount;
+  while (remaining > 0) {
+    int32_t rv = PR_Read(ssl_fd(), block, (std::min)(amount, sizeof(block)));
+    LOGV("ReadBytes " << rv);
 
-  if (rv >= 0) {
-    size_t count = static_cast<size_t>(rv);
-    for (size_t i = 0; i < count; ++i) {
-      ASSERT_EQ(recv_ctr_ & 0xff, block[i]);
-      recv_ctr_++;
-    }
-  } else {
-    err = PR_GetError();
-    LOG("Read error " << PORT_ErrorToName(err) << ": "
-                      << PORT_ErrorToString(err));
-    if (err != PR_WOULD_BLOCK_ERROR && expect_readwrite_error_) {
-      error_code_ = err;
-      expect_readwrite_error_ = false;
+    if (rv > 0) {
+      size_t count = static_cast<size_t>(rv);
+      for (size_t i = 0; i < count; ++i) {
+        ASSERT_EQ(recv_ctr_ & 0xff, block[i]);
+        recv_ctr_++;
+      }
+      remaining -= rv;
+    } else {
+      PRErrorCode err = 0;
+      if (rv < 0) {
+        err = PR_GetError();
+        LOG("Read error " << PORT_ErrorToName(err) << ": "
+                          << PORT_ErrorToString(err));
+        if (err != PR_WOULD_BLOCK_ERROR && expect_readwrite_error_) {
+          error_code_ = err;
+          expect_readwrite_error_ = false;
+        }
+      }
+      if (err != 0 && ErrorIsFatal(err)) {
+        // If we hit a fatal error, we're done.
+        remaining = 0;
+      }
+      break;
     }
   }
 
   // If closed, then don't bother waiting around.
-  if (rv > 0 || (rv < 0 && ErrorIsNonFatal(err))) {
+  if (remaining) {
     LOGV("Re-arming");
     Poller::Instance()->Wait(READABLE_EVENT, adapter_, this,
                              &TlsAgent::ReadableCallback);

@@ -234,9 +234,20 @@ ssl_FreeLockedSID(sslSessionID *sid)
 void
 ssl_FreeSID(sslSessionID *sid)
 {
+    if (sid) {
+        LOCK_CACHE;
+        ssl_FreeLockedSID(sid);
+        UNLOCK_CACHE;
+    }
+}
+
+sslSessionID *
+ssl_ReferenceSID(sslSessionID *sid)
+{
     LOCK_CACHE;
-    ssl_FreeLockedSID(sid);
+    sid->references++;
     UNLOCK_CACHE;
+    return sid;
 }
 
 /************************************************************************/
@@ -704,10 +715,9 @@ ssl_DecodeResumptionToken(sslSessionID *sid, const PRUint8 *encodedToken,
 }
 
 PRBool
-ssl_IsResumptionTokenValid(sslSocket *ss)
+ssl_IsResumptionTokenUsable(sslSocket *ss, sslSessionID *sid)
 {
     PORT_Assert(ss);
-    sslSessionID *sid = ss->sec.ci.sid;
     PORT_Assert(sid);
 
     // Check that the ticket didn't expire.

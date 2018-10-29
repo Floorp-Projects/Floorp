@@ -1184,6 +1184,7 @@ extern sslSessionID *ssl_LookupSID(const PRIPv6Addr *addr, PRUint16 port,
                                    const char *peerID, const char *urlSvrName);
 extern void ssl_FreeSID(sslSessionID *sid);
 extern void ssl_DestroySID(sslSessionID *sid, PRBool freeIt);
+extern sslSessionID *ssl_ReferenceSID(sslSessionID *sid);
 
 extern int ssl3_SendApplicationData(sslSocket *ss, const PRUint8 *in,
                                     int len, int flags);
@@ -1726,7 +1727,7 @@ void ssl_Trace(const char *format, ...);
 void ssl_CacheExternalToken(sslSocket *ss);
 SECStatus ssl_DecodeResumptionToken(sslSessionID *sid, const PRUint8 *encodedTicket,
                                     PRUint32 encodedTicketLen);
-PRBool ssl_IsResumptionTokenValid(sslSocket *ss);
+PRBool ssl_IsResumptionTokenUsable(sslSocket *ss, sslSessionID *sid);
 
 /* Remove when stable. */
 
