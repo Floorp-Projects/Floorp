@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>CSS Test: Testing a vertical flex container with keywords on min-height</title>
+  <meta charset="utf-8">
+  <style>
+    .container {
+      display: flex;
+      width: -moz-fit-content;
+      width: fit-content;
+      flex-direction: column;
+    }
+    .container > * {
+      border: 1px solid black;
+      flex-basis: 0;
+    }
+    .itemA {
+      background: purple;
+      min-height: -moz-max-content;
+      min-height: max-content;
+    }
+    .itemB {
+      background: teal;
+      min-height: -moz-min-content;
+      min-height: min-content;
+    }
+    .itemC {
+      background: blue;
+      min-height: -moz-fit-content;
+      min-height: fit-content;
+    }
+    .itemD {
+      background: yellow;
+      min-height: -moz-available;
+      min-height: -webkit-fill-available;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="itemA">itemA</div>
+    <div class="itemB">itemB</div>
+    <div class="itemC">itemC</div>
+    <div class="itemD">itemD</div>
+  </div>
+</body>
+</html>
