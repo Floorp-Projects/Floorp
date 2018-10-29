@@ -125,7 +125,8 @@ ADDITIONAL_SCREENSHOT_LOCALES = [
 	"bo",
 	"ace",
 	"zh-HK",
-	"nv"
+	"nv",
+	"sn"
 ]
 
 # Those are locales that we take automated screenshots of.
