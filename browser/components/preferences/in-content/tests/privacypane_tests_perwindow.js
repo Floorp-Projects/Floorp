@@ -46,8 +46,7 @@ function test_dependent_elements(win) {
   let controls = [
     win.document.getElementById("rememberHistory"),
     win.document.getElementById("rememberForms"),
-    win.document.getElementById("keepUntil"),
-    win.document.getElementById("keepCookiesUntil"),
+    win.document.getElementById("deleteOnClose"),
     win.document.getElementById("alwaysClear"),
   ];
   controls.forEach(function(control) {
@@ -61,8 +60,8 @@ function test_dependent_elements(win) {
   });
   let cookieexceptions = win.document.getElementById("cookieExceptions");
   ok(cookieexceptions, "the cookie exceptions button should exist");
-  let keepuntil = win.document.getElementById("keepCookiesUntil");
-  ok(keepuntil, "the keep cookies until menulist should exist");
+  let deleteOnCloseCheckbox = win.document.getElementById("deleteOnClose");
+  ok(deleteOnCloseCheckbox, "the delete on close checkbox should exist");
   let alwaysclear = win.document.getElementById("alwaysClear");
   ok(alwaysclear, "the clear data on close checkbox should exist");
   let rememberhistory = win.document.getElementById("rememberHistory");
@@ -77,8 +76,6 @@ function test_dependent_elements(win) {
       is(control.disabled, disabled,
         control.getAttribute("id") + " should " + (disabled ? "" : "not ") + "be disabled");
     });
-    is(keepuntil.value, disabled ? 2 : 0,
-      "the keep cookies until menulist value should be as expected");
     if (disabled) {
      ok(!alwaysclear.checked,
         "the clear data on close checkbox value should be as expected");
@@ -114,12 +111,11 @@ function test_dependent_elements(win) {
 }
 
 function test_dependent_cookie_elements(win) {
-  let keepUntil = win.document.getElementById("keepUntil");
-  let keepCookiesUntil = win.document.getElementById("keepCookiesUntil");
+  let deleteOnCloseCheckbox = win.document.getElementById("deleteOnClose");
   let blockCookiesLabel = win.document.getElementById("blockCookiesLabel");
   let blockCookiesMenu = win.document.getElementById("blockCookiesMenu");
 
-  let controls = [blockCookiesLabel, blockCookiesMenu, keepUntil, keepCookiesUntil];
+  let controls = [blockCookiesLabel, blockCookiesMenu, deleteOnCloseCheckbox];
   controls.forEach(function(control) {
     ok(control, "the dependent cookie controls should exist");
   });
@@ -140,11 +136,11 @@ function test_dependent_cookie_elements(win) {
   blockcookies.value = "allow";
   controlChanged(blockcookies);
   expect_disabled(true, [blockCookiesLabel, blockCookiesMenu]);
-  expect_disabled(false, [keepUntil, keepCookiesUntil]);
+  expect_disabled(false, [deleteOnCloseCheckbox]);
 
   blockCookiesMenu.value = "always";
   controlChanged(blockCookiesMenu);
-  expect_disabled(true, [keepUntil, keepCookiesUntil]);
+  expect_disabled(true, [deleteOnCloseCheckbox]);
   expect_disabled(false, [blockCookiesLabel, blockCookiesMenu]);
 
   if (win.contentBlockingCookiesAndSiteDataRejectTrackersEnabled) {
@@ -161,7 +157,7 @@ function test_dependent_cookie_elements(win) {
   // disable the "keep cookies until..." menu.
   historymode.value = "dontremember";
   controlChanged(historymode);
-  expect_disabled(true, [keepUntil, keepCookiesUntil]);
+  expect_disabled(true, [deleteOnCloseCheckbox]);
   expect_disabled(false, [blockCookiesLabel, blockCookiesMenu]);
 
   historymode.value = "remember";

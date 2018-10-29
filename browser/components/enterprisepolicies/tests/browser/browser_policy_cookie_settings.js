@@ -89,14 +89,11 @@ async function test_cookie_settings({
   // eslint-disable-next-line no-shadow
   await ContentTask.spawn(tab.linkedBrowser, {cookiesEnabled, cookieSettingsLocked}, async function({cookiesEnabled, cookieSettingsLocked}) {
     content.setTimeout(() => {
-      let keepUntilLabel = content.document.getElementById("keepUntil");
-      let keepUntilMenu = content.document.getElementById("keepCookiesUntil");
+      let deleteOnCloseCheckbox = content.document.getElementById("deleteOnClose");
 
       let expectControlsDisabled = !cookiesEnabled || cookieSettingsLocked;
-      is(keepUntilLabel.disabled, expectControlsDisabled,
-         "\"Keep Cookies Until\" Label disabled status should match expected");
-      is(keepUntilMenu.disabled, expectControlsDisabled,
-         "\"Keep Cookies Until\" Menu disabled status should match expected");
+      is(deleteOnCloseCheckbox.disabled, expectControlsDisabled,
+         "\"Delete cookies when Firefox is closed\" checkbox disabled status should match expected");
     }, 0);
   });
   BrowserTestUtils.removeTab(tab);
