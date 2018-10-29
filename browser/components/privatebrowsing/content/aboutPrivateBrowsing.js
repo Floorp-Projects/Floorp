@@ -4,28 +4,7 @@
 
 /* eslint-env mozilla/frame-script */
 
-const CB_ENABLED_PREF = "browser.contentblocking.enabled";
-const TP_ENABLED_PREF = "privacy.trackingprotection.enabled";
 const TP_PB_ENABLED_PREF = "privacy.trackingprotection.pbmode.enabled";
-
-function updateTPInfo() {
-  let tpButton = document.getElementById("tpButton");
-  let tpToggle = document.getElementById("tpToggle");
-  let tpSubHeader = document.getElementById("tpSubHeader");
-
-  let globalTrackingEnabled = RPMGetBoolPref(TP_ENABLED_PREF);
-  let trackingEnabled = globalTrackingEnabled || RPMGetBoolPref(TP_PB_ENABLED_PREF);
-
-  let contentBlockingEnabled = RPMGetBoolPref(CB_ENABLED_PREF);
-  trackingEnabled = trackingEnabled && contentBlockingEnabled;
-
-  // if tracking protection is enabled globally we don't even give the user
-  // a choice here by hiding the toggle completely.
-  tpButton.toggleAttribute("hidden", globalTrackingEnabled);
-  tpToggle.checked = trackingEnabled;
-
-  tpSubHeader.classList.toggle("tp-off", !trackingEnabled);
-}
 
 document.addEventListener("DOMContentLoaded", function() {
   if (!RPMIsWindowPrivate()) {
@@ -50,22 +29,9 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("learnMore").setAttribute("href",
     RPMGetFormatURLPref("app.support.baseURL") + "private-browsing");
 
-  let tpToggle = document.getElementById("tpToggle");
-  document.getElementById("tpButton").addEventListener("click", () => {
-    tpToggle.click();
-  });
-  tpToggle.addEventListener("change", async function() {
-    let promises = [];
-    if (tpToggle.checked) {
-      promises.push(RPMSetBoolPref(CB_ENABLED_PREF, true));
-    }
-
-    promises.push(RPMSetBoolPref(TP_PB_ENABLED_PREF, tpToggle.checked));
-
-    await Promise.all(promises);
-
-    updateTPInfo();
-  });
-
-  updateTPInfo();
+  let tpEnabled = RPMGetBoolPref(TP_PB_ENABLED_PREF);
+  if (!tpEnabled) {
+    document.getElementById("tpSubHeader").remove();
+    document.getElementById("tpSection").remove();
+  }
 });
