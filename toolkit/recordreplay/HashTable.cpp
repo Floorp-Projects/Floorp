@@ -16,6 +16,8 @@
 
 #include "PLDHashTable.h"
 
+#include <unordered_set>
+
 namespace mozilla {
 namespace recordreplay {
 
@@ -44,14 +46,6 @@ typedef uint32_t HashNumber;
 
 class StableHashTableInfo
 {
-  // Magic number for attempting to determine whether we are dealing with an
-  // actual StableHashTableInfo. Despite our best efforts some hashtables do
-  // not go through stabilization (e.g. they have static constructors that run
-  // before record/replay state is initialized).
-  size_t mMagic;
-
-  static const size_t MagicNumber = 0xDEADBEEFDEADBEEF;
-
   // Information about a key in the table: the key pointer, along with the new
   // hash number we have generated for the key.
   struct KeyInfo {
@@ -84,6 +78,10 @@ class StableHashTableInfo
   uint8_t* mCallbackStorage;
   static const size_t CallbackStorageCapacity = 4096;
 
+  // Whether this table has been marked as destroyed and is unusable. This is
+  // temporary state to detect UAF bugs related to this class.
+  bool mDestroyed;
+
   // Get an existing key in the table.
   KeyInfo* FindKeyInfo(HashNumber aOriginalHash, const void* aKey, HashInfo** aHashInfo = nullptr) {
     HashToKeyMap::iterator iter = mHashToKey.find(aOriginalHash);
@@ -103,23 +101,32 @@ class StableHashTableInfo
 
 public:
   StableHashTableInfo()
-    : mMagic(MagicNumber)
-    , mLastKey(nullptr)
+    : mLastKey(nullptr)
     , mLastNewHash(0)
     , mHashGenerator(0)
     , mCallbackStorage(nullptr)
+    , mDestroyed(false)
   {
     // Use AllocateMemory, as the result will have RWX permissions.
     mCallbackStorage = (uint8_t*) AllocateMemory(CallbackStorageCapacity, MemoryKind::Tracked);
+
+    MarkValid();
   }
 
   ~StableHashTableInfo() {
     MOZ_RELEASE_ASSERT(mHashToKey.empty());
     DeallocateMemory(mCallbackStorage, CallbackStorageCapacity, MemoryKind::Tracked);
+
+    UnmarkValid();
   }
 
-  bool AppearsValid() {
-    return mMagic == MagicNumber;
+  bool IsDestroyed() {
+    return mDestroyed;
+  }
+
+  void MarkDestroyed() {
+    MOZ_RELEASE_ASSERT(!IsDestroyed());
+    mDestroyed = true;
   }
 
   void AddKey(HashNumber aOriginalHash, const void* aKey, HashNumber aNewHash) {
@@ -232,7 +239,35 @@ public:
     mLastKey = aOther.mLastKey = nullptr;
     mLastNewHash = aOther.mLastNewHash = 0;
   }
+
+  // Set of valid StableHashTableInfo pointers. We use this to determine whether
+  // we are dealing with an actual StableHashTableInfo. Despite our best efforts
+  // some hashtables do not go through stabilization (e.g. they have static
+  // constructors that run before record/replay state is initialized).
+  static std::unordered_set<StableHashTableInfo*>* gHashInfos;
+  static SpinLock gHashInfosLock;
+
+  inline bool IsValid() {
+    AutoSpinLock lock(gHashInfosLock);
+    return gHashInfos && gHashInfos->find(this) != gHashInfos->end();
+  }
+
+  inline void MarkValid() {
+    AutoSpinLock lock(gHashInfosLock);
+    if (!gHashInfos) {
+      gHashInfos = new std::unordered_set<StableHashTableInfo*>();
+    }
+    gHashInfos->insert(this);
+  }
+
+  inline void UnmarkValid() {
+    AutoSpinLock lock(gHashInfosLock);
+    gHashInfos->erase(this);
+  }
 };
+
+std::unordered_set<StableHashTableInfo*>* StableHashTableInfo::gHashInfos;
+SpinLock StableHashTableInfo::gHashInfosLock;
 
 ///////////////////////////////////////////////////////////////////////////////
 // PLHashTable Stabilization
@@ -264,7 +299,7 @@ struct PLHashTableInfo : public StableHashTableInfo
 
   static PLHashTableInfo* FromPrivate(void* aAllocPrivate) {
     PLHashTableInfo* info = reinterpret_cast<PLHashTableInfo*>(aAllocPrivate);
-    MOZ_RELEASE_ASSERT(info->AppearsValid());
+    MOZ_RELEASE_ASSERT(!info->IsDestroyed());
     return info;
   }
 };
@@ -336,6 +371,7 @@ static PLHashAllocOps gWrapPLHashAllocOps = {
 static uint32_t
 PLHashComputeHash(void* aKey, PLHashTableInfo* aInfo)
 {
+  MOZ_RELEASE_ASSERT(!aInfo->IsDestroyed());
   uint32_t originalHash = aInfo->mKeyHash(aKey);
   HashNumber newHash;
   if (aInfo->HasMatchingKey(originalHash,
@@ -366,7 +402,8 @@ void
 DestroyPLHashTableCallbacks(void* aAllocPrivate)
 {
   PLHashTableInfo* info = PLHashTableInfo::FromPrivate(aAllocPrivate);
-  delete info;
+  info->MarkDestroyed();
+  //delete info;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -392,7 +429,11 @@ struct PLDHashTableInfo : public StableHashTableInfo
   static PLDHashTableInfo* MaybeFromOps(const PLDHashTableOps* aOps) {
     PLDHashTableInfo* res = reinterpret_cast<PLDHashTableInfo*>
       ((uint8_t*)aOps - offsetof(PLDHashTableInfo, mNewOps));
-    return res->AppearsValid() ? res : nullptr;
+    if (res->IsValid()) {
+      MOZ_RELEASE_ASSERT(!res->IsDestroyed());
+      return res;
+    }
+    return nullptr;
   }
 
   static PLDHashTableInfo* FromOps(const PLDHashTableOps* aOps) {
@@ -405,6 +446,7 @@ struct PLDHashTableInfo : public StableHashTableInfo
 static PLDHashNumber
 PLDHashTableComputeHash(const void* aKey, PLDHashTableInfo* aInfo)
 {
+  MOZ_RELEASE_ASSERT(!aInfo->IsDestroyed());
   uint32_t originalHash = aInfo->mOps->hashKey(aKey);
   HashNumber newHash;
   if (aInfo->HasMatchingKey(originalHash,
@@ -420,6 +462,7 @@ static void
 PLDHashTableMoveEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aFrom, PLDHashEntryHdr* aTo,
                       PLDHashTableInfo* aInfo)
 {
+  MOZ_RELEASE_ASSERT(!aInfo->IsDestroyed());
   aInfo->mOps->moveEntry(aTable, aFrom, aTo);
 
   uint32_t originalHash = aInfo->GetOriginalHashNumber(aFrom);
@@ -432,6 +475,7 @@ PLDHashTableMoveEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aFrom, PLDHas
 static void
 PLDHashTableClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry, PLDHashTableInfo* aInfo)
 {
+  MOZ_RELEASE_ASSERT(!aInfo->IsDestroyed());
   aInfo->mOps->clearEntry(aTable, aEntry);
 
   uint32_t originalHash = aInfo->GetOriginalHashNumber(aEntry);
@@ -441,6 +485,8 @@ PLDHashTableClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry, PLDHashTab
 static void
 PLDHashTableInitEntry(PLDHashEntryHdr* aEntry, const void* aKey, PLDHashTableInfo* aInfo)
 {
+  MOZ_RELEASE_ASSERT(!aInfo->IsDestroyed());
+
   if (aInfo->mOps->initEntry) {
     aInfo->mOps->initEntry(aEntry, aKey);
   }
@@ -481,9 +527,12 @@ RecordReplayInterface_InternalDestroyPLDHashTableCallbacks(const PLDHashTableOps
 
   // Note: PLDHashTables with static ctors might have been constructed before
   // record/replay state was initialized and have their normal ops. Check the
-  // magic number via MaybeFromOps before destroying the info.
+  // info is valid via MaybeFromOps before destroying the info.
   PLDHashTableInfo* info = PLDHashTableInfo::MaybeFromOps(aOps);
-  delete info;
+  if (info) {
+    info->MarkDestroyed();
+  }
+  //delete info;
 }
 
 MOZ_EXPORT void
