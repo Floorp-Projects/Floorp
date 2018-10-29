@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>postMessage message receiver</title>
-  <script type="application/javascript" src="browserFu.js"></script>
   <script type="application/javascript">
     function $(id) { return document.getElementById(id); }
 
@@ -24,12 +23,6 @@
         response += " unexpected-source(" + evt.source + ")";
         response += " window-parent-is(" + window.parent + ")";
         response += " location(" + window.location.href + ")";
-      }
-
-      if (isMozilla)
-      {
-        if (evt.isTrusted !== false)
-          response += " unexpected-trusted";
       }
 
       if (evt.type != "message")
