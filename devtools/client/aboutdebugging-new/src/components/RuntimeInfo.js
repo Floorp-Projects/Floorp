@@ -29,11 +29,11 @@ class RuntimeInfo extends PureComponent {
 
     return dom.h1(
       {
-        className: "main-heading runtime-info",
+        className: "main-heading",
       },
       dom.img(
         {
-          className: "runtime-info__icon",
+          className: "main-heading__icon",
           src: icon,
         }
       ),
