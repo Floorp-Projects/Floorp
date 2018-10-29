@@ -76,31 +76,28 @@ class SeleniumBaseProtocolPart(BaseProtocolPart):
 class SeleniumTestharnessProtocolPart(TestharnessProtocolPart):
     def setup(self):
         self.webdriver = self.parent.webdriver
-        self.runner_handle = None
         with open(os.path.join(here, "runner.js")) as f:
             self.runner_script = f.read()
 
     def load_runner(self, url_protocol):
-        if self.runner_handle:
-            self.webdriver.switch_to_window(self.runner_handle)
         url = urlparse.urljoin(self.parent.executor.server_url(url_protocol),
                                "/testharness_runner.html")
         self.logger.debug("Loading %s" % url)
         self.webdriver.get(url)
-        self.runner_handle = self.webdriver.current_window_handle
         format_map = {"title": threading.current_thread().name.replace("'", '"')}
         self.parent.base.execute_script(self.runner_script % format_map)
 
     def close_old_windows(self):
-        handles = [item for item in self.webdriver.window_handles if item != self.runner_handle]
+        exclude = self.webdriver.current_window_handle
+        handles = [item for item in self.webdriver.window_handles if item != exclude]
         for handle in handles:
             try:
                 self.webdriver.switch_to_window(handle)
                 self.webdriver.close()
             except exceptions.NoSuchWindowException:
                 pass
-        self.webdriver.switch_to_window(self.runner_handle)
-        return self.runner_handle
+        self.webdriver.switch_to_window(exclude)
+        return exclude
 
     def get_test_window(self, window_id, parent):
         test_window = None
@@ -332,12 +329,11 @@ class SeleniumTestharnessExecutor(TestharnessExecutor):
 
         parent_window = protocol.testharness.close_old_windows()
         # Now start the test harness
-        protocol.base.execute_script(self.script % format_map, async=True)
+        protocol.base.execute_script(self.script % format_map)
         test_window = protocol.testharness.get_test_window(self.window_id, parent_window)
 
         handler = CallbackHandler(self.logger, protocol, test_window)
         while True:
-            self.protocol.base.set_window(test_window)
             result = protocol.base.execute_script(
                 self.script_resume % format_map, async=True)
             done, rv = handler(result)

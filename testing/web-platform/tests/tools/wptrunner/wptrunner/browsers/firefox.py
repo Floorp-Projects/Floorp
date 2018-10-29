@@ -197,7 +197,6 @@ class FirefoxBrowser(Browser):
 
         self.asan = asan
         self.lsan_allowed = None
-        self.lsan_max_stack_depth = None
         self.leak_check = leak_check
         self.leak_report_file = None
         self.lsan_handler = None
@@ -207,7 +206,6 @@ class FirefoxBrowser(Browser):
 
     def settings(self, test):
         self.lsan_allowed = test.lsan_allowed
-        self.lsan_max_stack_depth = test.lsan_max_stack_depth
         return {"check_leaks": self.leak_check and not test.leaks,
                 "lsan_allowed": test.lsan_allowed}
 
@@ -223,8 +221,7 @@ class FirefoxBrowser(Browser):
             print "Setting up LSAN"
             self.lsan_handler = mozleak.LSANLeaks(self.logger,
                                                   scope=group_metadata.get("scope", "/"),
-                                                  allowed=self.lsan_allowed,
-                                                  maxNumRecordedFrames=self.lsan_max_stack_depth)
+                                                  allowed=self.lsan_allowed)
 
         env = test_environment(xrePath=os.path.dirname(self.binary),
                                debugger=self.debug_info is not None,
