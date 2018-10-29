@@ -41,7 +41,8 @@ from results import RaptorResultsHandler
 class Raptor(object):
     """Container class for Raptor"""
 
-    def __init__(self, app, binary, run_local=False, obj_path=None):
+    def __init__(self, app, binary, run_local=False, obj_path=None,
+                 gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None):
         self.config = {}
         self.config['app'] = app
         self.config['binary'] = binary
@@ -49,6 +50,9 @@ class Raptor(object):
         self.config['processor'] = mozinfo.processor
         self.config['run_local'] = run_local
         self.config['obj_path'] = obj_path
+        self.config['gecko_profile'] = gecko_profile
+        self.config['gecko_profile_interval'] = gecko_profile_interval
+        self.config['gecko_profile_entries'] = gecko_profile_entries
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
         self.log = get_default_logger(component='raptor-main')
         self.control_server = None
@@ -325,7 +329,13 @@ def main(args=sys.argv[1:]):
     for next_test in raptor_test_list:
         LOG.info(next_test['name'])
 
-    raptor = Raptor(args.app, args.binary, args.run_local, args.obj_path)
+    raptor = Raptor(args.app,
+                    args.binary,
+                    args.run_local,
+                    args.obj_path,
+                    args.gecko_profile,
+                    args.gecko_profile_interval,
+                    args.gecko_profile_entries)
 
     raptor.start_control_server()
 
