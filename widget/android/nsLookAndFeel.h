@@ -24,6 +24,9 @@ public:
     virtual bool GetEchoPasswordImpl() override;
     virtual uint32_t GetPasswordMaskDelayImpl() override;
     virtual char16_t GetPasswordCharacterImpl() override;
+    virtual nsTArray<LookAndFeelInt> GetIntCacheImpl() override;
+    virtual void SetIntCacheImpl(
+                   const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) override;
 
     void SetPrefersReducedMotionOverrideForTest(bool aValue)
     {
@@ -45,7 +48,6 @@ protected:
     static bool mPrefersReducedMotionForTest;
 
     nsresult GetSystemColors();
-    nsresult CallRemoteGetSystemColors();
 
     void EnsureInitSystemColors();
     void EnsureInitShowPassword();
