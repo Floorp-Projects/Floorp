@@ -22,8 +22,8 @@ namespace dom {
 /**
  * Class to track what element is referenced by a given ID.
  *
- * To use it, call Reset() to set it up to watch a given URI. Call get()
- * anytime to determine the referenced element (which may be null if
+ * To use it, call one of the Reset methods to set it up to watch a given ID.
+ * Call get() anytime to determine the referenced element (which may be null if
  * the element isn't found). When the element changes, ElementChanged
  * will be called, so subclass this class if you want to receive that
  * notification. ElementChanged runs at safe-for-script time, i.e. outside
@@ -66,13 +66,13 @@ public:
    * @param aReferenceImage whether the ID references image elements which are
    * subject to the document's mozSetImageElement overriding mechanism.
    */
-  void Reset(nsIContent* aFrom, nsIURI* aURI, nsIURI* aReferrer,
-             uint32_t aReferrerPolicy, bool aWatch = true,
-             bool aReferenceImage = false);
+  void ResetToURIFragmentID(nsIContent* aFrom, nsIURI* aURI, nsIURI* aReferrer,
+                            uint32_t aReferrerPolicy, bool aWatch = true,
+                            bool aReferenceImage = false);
 
   /**
-   * A variation on Reset() to set up a reference that consists of the ID of
-   * an element in the same document as aFrom.
+   * A variation on ResetToURIFragmentID() to set up a reference that consists
+   * of the ID of an element in the same document as aFrom.
    * @param aFrom the source element for context
    * @param aID the ID of the element
    * @param aWatch if false, then we do not set up the notifications to track
