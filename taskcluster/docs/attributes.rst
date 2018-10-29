@@ -37,6 +37,18 @@ be specified by name regardless of ``run_on_projects``.
 If ``run_on_projects`` is set to an empty list, then the task will not run
 anywhere, unless its build platform is specified explicitly in try syntax.
 
+run_on_hg_branches
+==================
+
+On a given project, the mercurial branch where this task should be in the target
+task set.  This is how requirements like "only run this RELBRANCH" get implemented.
+These are either the regular expression of a branch (e.g.: "GECKOVIEW_\d+_RELBRANCH")
+or the following alias:
+
+ * `all` -- everywhere (the default)
+
+Like ``run_on_projects``, the same behavior applies if it is set to an empty list.
+
 task_duplicates
 ===============
 

@@ -33,39 +33,87 @@ class FakeTryOptionSyntax(object):
 
 class TestTargetTasks(unittest.TestCase):
 
-    def default_matches(self, run_on_projects, project):
+    def default_matches_project(self, run_on_projects, project):
+        return self.default_matches(
+            attributes={
+                'run_on_projects': run_on_projects,
+            },
+            parameters={
+                'project': project,
+                'hg_branch': 'default',
+            },
+        )
+
+    def default_matches_hg_branch(self, run_on_hg_branches, hg_branch):
+        attributes = {'run_on_projects': ['all']}
+        if run_on_hg_branches is not None:
+            attributes['run_on_hg_branches'] = run_on_hg_branches
+
+        return self.default_matches(
+            attributes=attributes,
+            parameters={
+                'project': 'mozilla-central',
+                'hg_branch': hg_branch,
+            },
+        )
+
+    def default_matches(self, attributes, parameters):
         method = target_tasks.get_method('default')
         graph = TaskGraph(tasks={
             'a': Task(kind='build', label='a',
-                      attributes={'run_on_projects': run_on_projects},
+                      attributes=attributes,
                       task={}),
         }, graph=Graph(nodes={'a'}, edges=set()))
-        parameters = {'project': project}
         return 'a' in method(graph, parameters, {})
 
     def test_default_all(self):
         """run_on_projects=[all] includes release, integration, and other projects"""
-        self.assertTrue(self.default_matches(['all'], 'mozilla-central'))
-        self.assertTrue(self.default_matches(['all'], 'mozilla-inbound'))
-        self.assertTrue(self.default_matches(['all'], 'baobab'))
+        self.assertTrue(self.default_matches_project(['all'], 'mozilla-central'))
+        self.assertTrue(self.default_matches_project(['all'], 'mozilla-inbound'))
+        self.assertTrue(self.default_matches_project(['all'], 'baobab'))
 
     def test_default_integration(self):
         """run_on_projects=[integration] includes integration projects"""
-        self.assertFalse(self.default_matches(['integration'], 'mozilla-central'))
-        self.assertTrue(self.default_matches(['integration'], 'mozilla-inbound'))
-        self.assertFalse(self.default_matches(['integration'], 'baobab'))
+        self.assertFalse(self.default_matches_project(['integration'], 'mozilla-central'))
+        self.assertTrue(self.default_matches_project(['integration'], 'mozilla-inbound'))
+        self.assertFalse(self.default_matches_project(['integration'], 'baobab'))
 
     def test_default_release(self):
         """run_on_projects=[release] includes release projects"""
-        self.assertTrue(self.default_matches(['release'], 'mozilla-central'))
-        self.assertFalse(self.default_matches(['release'], 'mozilla-inbound'))
-        self.assertFalse(self.default_matches(['release'], 'baobab'))
+        self.assertTrue(self.default_matches_project(['release'], 'mozilla-central'))
+        self.assertFalse(self.default_matches_project(['release'], 'mozilla-inbound'))
+        self.assertFalse(self.default_matches_project(['release'], 'baobab'))
 
     def test_default_nothing(self):
         """run_on_projects=[] includes nothing"""
-        self.assertFalse(self.default_matches([], 'mozilla-central'))
-        self.assertFalse(self.default_matches([], 'mozilla-inbound'))
-        self.assertFalse(self.default_matches([], 'baobab'))
+        self.assertFalse(self.default_matches_project([], 'mozilla-central'))
+        self.assertFalse(self.default_matches_project([], 'mozilla-inbound'))
+        self.assertFalse(self.default_matches_project([], 'baobab'))
+
+    def test_default_hg_branch(self):
+        self.assertTrue(self.default_matches_hg_branch(None, 'default'))
+        self.assertTrue(self.default_matches_hg_branch(None, 'GECKOVIEW_62_RELBRANCH'))
+
+        self.assertFalse(self.default_matches_hg_branch([], 'default'))
+        self.assertFalse(self.default_matches_hg_branch([], 'GECKOVIEW_62_RELBRANCH'))
+
+        self.assertTrue(self.default_matches_hg_branch(['all'], 'default'))
+        self.assertTrue(self.default_matches_hg_branch(['all'], 'GECKOVIEW_62_RELBRANCH'))
+
+        self.assertTrue(self.default_matches_hg_branch(['default'], 'default'))
+        self.assertTrue(self.default_matches_hg_branch([r'default'], 'default'))
+        self.assertFalse(self.default_matches_hg_branch([r'default'], 'GECKOVIEW_62_RELBRANCH'))
+
+        self.assertTrue(
+            self.default_matches_hg_branch(['GECKOVIEW_62_RELBRANCH'], 'GECKOVIEW_62_RELBRANCH')
+        )
+        self.assertTrue(
+            self.default_matches_hg_branch(['GECKOVIEW_\d+_RELBRANCH'], 'GECKOVIEW_62_RELBRANCH')
+        )
+        self.assertTrue(
+            self.default_matches_hg_branch([r'GECKOVIEW_\d+_RELBRANCH'], 'GECKOVIEW_62_RELBRANCH')
+        )
+        self.assertFalse(self.default_matches_hg_branch([r'GECKOVIEW_\d+_RELBRANCH'], 'default'))
 
     def make_task_graph(self):
         tasks = {
