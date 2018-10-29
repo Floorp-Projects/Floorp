@@ -18,6 +18,7 @@ public:
 
   bool DecodeHeader(unsigned char* aData, size_t aLength);
   bool DecodeTags(unsigned char* aData, size_t aLength);
+  static bool IsValidMapping2ChannelsCount(uint8_t aChannels);
 
   // Various fields from the Ogg Opus header.
   int mRate;        // Sample rate the decoder uses (always 48 kHz).

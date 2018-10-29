@@ -53,7 +53,7 @@ const SEARCH_FILTERS = [
 ];
 
 function getShortURLForCurrentSearch() {
-  const url = shortURL({url: Services.search.currentEngine.searchForm});
+  const url = shortURL({url: Services.search.defaultEngine.searchForm});
   return url;
 }
 

@@ -62,6 +62,7 @@ module.exports = {
     "MessageChannel": false,
     "MessageEvent": false,
     "MessagePort": false,
+    "MouseEvent": false,
     "PrecompiledScript": false,
     "PromiseDebugging": false,
     "StreamFilter": false,

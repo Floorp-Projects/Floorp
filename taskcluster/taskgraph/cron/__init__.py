@@ -15,13 +15,11 @@ import traceback
 import yaml
 
 from . import decision, schema
-from .util import (
-    match_utc,
-    calculate_head_rev
-)
+from .util import match_utc
 from ..create import create_task
 from .. import GECKO
 from taskgraph.util.attributes import match_run_on_projects
+from taskgraph.util.hg import calculate_head_rev
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.taskcluster import get_session
 

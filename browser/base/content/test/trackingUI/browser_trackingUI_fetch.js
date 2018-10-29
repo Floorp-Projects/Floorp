@@ -20,7 +20,6 @@ function waitForSecurityChange(numChanges = 1) {
 add_task(async function test_fetch() {
   await SpecialPowers.pushPrefEnv({ set: [
     ["privacy.trackingprotection.enabled", true],
-    ["browser.contentblocking.enabled", true],
   ]});
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(newTabBrowser) {
@@ -34,7 +33,6 @@ add_task(async function test_fetch() {
 
     let ContentBlocking = newTabBrowser.ownerGlobal.ContentBlocking;
     ok(ContentBlocking, "got CB object");
-    ok(ContentBlocking.enabled, "CB is enabled");
 
     ok(ContentBlocking.content.hasAttribute("detected"), "has detected content blocking");
     ok(ContentBlocking.iconBox.hasAttribute("active"), "icon box is active");

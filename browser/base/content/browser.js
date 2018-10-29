@@ -3780,7 +3780,7 @@ const BrowserSearch = {
       if (Components.isSuccessCode(rv)) {
         // Delay the update for this until so that we don't change it while
         // the user is looking at it / isn't expecting it.
-        this._updateURLBarPlaceholder(Services.search.currentEngine, true);
+        this._updateURLBarPlaceholder(Services.search.defaultEngine, true);
         this._searchInitComplete = true;
       }
     });
@@ -4072,17 +4072,11 @@ const BrowserSearch = {
    *                search was performed.
    */
   _loadSearch(searchText, useNewTab, purpose, triggeringPrincipal) {
-    let engine;
     if (!triggeringPrincipal) {
       throw new Error("Required argument triggeringPrincipal missing within _loadSearch");
     }
 
-    // If the search bar is visible, use the current engine, otherwise, fall
-    // back to the default engine.
-    if (isElementVisible(this.searchBar))
-      engine = Services.search.currentEngine;
-    else
-      engine = Services.search.defaultEngine;
+    let engine = Services.search.defaultEngine;
 
     let submission = engine.getSubmission(searchText, null, purpose); // HTML response
 
@@ -8065,7 +8059,7 @@ const SafeBrowsingNotificationBox = {
     let notification = notificationBox.appendNotification(
       title,
       value,
-      "chrome://global/skin/icons/blacklist_favicon.png",
+      "chrome://global/skin/icons/blocklist_favicon.png",
       notificationBox.PRIORITY_CRITICAL_HIGH,
       buttons
     );

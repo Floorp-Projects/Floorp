@@ -423,6 +423,8 @@ impl MarionetteSession {
         msg: &WebDriverMessage<GeckoExtensionRoute>,
         resp: MarionetteResponse,
     ) -> WebDriverResult<WebDriverResponse> {
+        use self::GeckoExtensionCommand::*;
+
         if resp.id != self.command_id {
             return Err(WebDriverError::new(
                 ErrorStatus::UnknownError,
@@ -715,11 +717,9 @@ impl MarionetteSession {
             }
             DeleteSession => WebDriverResponse::DeleteSession,
             Extension(ref extension) => match extension {
-                &GeckoExtensionCommand::GetContext => {
-                    WebDriverResponse::Generic(resp.to_value_response(true)?)
-                }
-                &GeckoExtensionCommand::SetContext(_) => WebDriverResponse::Void,
-                &GeckoExtensionCommand::XblAnonymousChildren(_) => {
+                GetContext => WebDriverResponse::Generic(resp.to_value_response(true)?),
+                SetContext(_) => WebDriverResponse::Void,
+                XblAnonymousChildren(_) => {
                     let els_vec = try_opt!(
                         resp.result.as_array(),
                         ErrorStatus::UnknownError,
@@ -733,7 +733,7 @@ impl MarionetteSession {
                     );
                     WebDriverResponse::Generic(ValueResponse(serde_json::to_value(els)?))
                 }
-                &GeckoExtensionCommand::XblAnonymousByAttribute(_, _) => {
+                XblAnonymousByAttribute(_, _) => {
                     let el = try!(self.to_web_element(try_opt!(
                         resp.result.get("value"),
                         ErrorStatus::UnknownError,
@@ -741,10 +741,9 @@ impl MarionetteSession {
                     )));
                     WebDriverResponse::Generic(ValueResponse(serde_json::to_value(el)?))
                 }
-                &GeckoExtensionCommand::InstallAddon(_) => {
-                    WebDriverResponse::Generic(resp.to_value_response(true)?)
-                }
-                &GeckoExtensionCommand::UninstallAddon(_) => WebDriverResponse::Void,
+                InstallAddon(_) => WebDriverResponse::Generic(resp.to_value_response(true)?),
+                UninstallAddon(_) => WebDriverResponse::Void,
+                TakeFullScreenshot => WebDriverResponse::Generic(resp.to_value_response(true)?),
             },
         })
     }
@@ -781,6 +780,8 @@ impl MarionetteCommand {
         capabilities: Option<Map<String, Value>>,
         msg: &WebDriverMessage<GeckoExtensionRoute>,
     ) -> WebDriverResult<MarionetteCommand> {
+        use self::GeckoExtensionCommand::*;
+
         let (opt_name, opt_parameters) = match msg.command {
             Status => panic!("Got status command that should already have been handled"),
             AcceptAlert => {
@@ -932,27 +933,34 @@ impl MarionetteCommand {
                 (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
             }
             Extension(ref extension) => match extension {
-                &GeckoExtensionCommand::GetContext => (Some("Marionette:GetContext"), None),
-                &GeckoExtensionCommand::InstallAddon(ref x) => {
+                GetContext => (Some("Marionette:GetContext"), None),
+                InstallAddon(x) => {
                     (Some("Addon:Install"), Some(x.to_marionette()))
                 }
-                &GeckoExtensionCommand::SetContext(ref x) => {
+                SetContext(x) => {
                     (Some("Marionette:SetContext"), Some(x.to_marionette()))
                 }
-                &GeckoExtensionCommand::UninstallAddon(ref x) => {
+                UninstallAddon(x) => {
                     (Some("Addon:Uninstall"), Some(x.to_marionette()))
                 }
-                &GeckoExtensionCommand::XblAnonymousByAttribute(ref e, ref x) => {
-                    let mut data = try!(x.to_marionette());
+                XblAnonymousByAttribute(e, x) => {
+                    let mut data = x.to_marionette()?;
                     data.insert("element".to_string(), Value::String(e.id.clone()));
                     (Some("WebDriver:FindElement"), Some(Ok(data)))
                 }
-                &GeckoExtensionCommand::XblAnonymousChildren(ref e) => {
+                XblAnonymousChildren(e) => {
                     let mut data = Map::new();
                     data.insert("using".to_owned(), serde_json::to_value("anon")?);
                     data.insert("value".to_owned(), Value::Null);
                     data.insert("element".to_string(), serde_json::to_value(e.id.clone())?);
                     (Some("WebDriver:FindElements"), Some(Ok(data)))
+                }
+                TakeFullScreenshot => {
+                    let mut data = Map::new();
+                    data.insert("id".to_string(), Value::Null);
+                    data.insert("highlights".to_string(), Value::Array(vec![]));
+                    data.insert("full".to_string(), Value::Bool(true));
+                    (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
                 }
             },
         };

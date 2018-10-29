@@ -29,8 +29,10 @@ decorate_task(
   }),
   withAboutStudies,
   async function testLearnMore(browser) {
-    ContentTask.spawn(browser, null, () => {
-      content.document.getElementById("shield-studies-learn-more").click();
+    ContentTask.spawn(browser, null, async () => {
+      const doc = content.document;
+      await ContentTaskUtils.waitForCondition(() => doc.getElementById("shield-studies-learn-more"));
+      doc.getElementById("shield-studies-learn-more").click();
     });
     await BrowserTestUtils.waitForLocationChange(gBrowser);
 
@@ -71,6 +73,7 @@ decorate_task(
   }
 );
 
+// Test that the study listing shows studies in the proper order and grouping
 decorate_task(
   AddonStudies.withStudies([
     addonStudyFactory({
@@ -199,19 +202,19 @@ decorate_task(
 
       activeAddonStudy.querySelector(".remove-button").click();
       await ContentTaskUtils.waitForCondition(() => (
-        getStudyRow(doc, addonStudies[0].name).matches(".study--disabled")
+        getStudyRow(doc, addonStudies[0].name).matches(".study.disabled")
       ));
       ok(
-        getStudyRow(doc, addonStudies[0].name).matches(".study--disabled"),
+        getStudyRow(doc, addonStudies[0].name).matches(".study.disabled"),
         "Clicking the remove button updates the UI to show that the study has been disabled."
       );
 
       activePrefStudy.querySelector(".remove-button").click();
       await ContentTaskUtils.waitForCondition(() => (
-        getStudyRow(doc, prefStudies[0].name).matches(".study--disabled")
+        getStudyRow(doc, prefStudies[0].name).matches(".study.disabled")
       ));
       ok(
-        getStudyRow(doc, prefStudies[0].name).matches(".study--disabled"),
+        getStudyRow(doc, prefStudies[0].name).matches(".study.disabled"),
         "Clicking the remove button updates the UI to show that the study has been disabled."
       );
     });
@@ -230,6 +233,7 @@ decorate_task(
   }
 );
 
+// Test that a message is shown when no studies have been run
 decorate_task(
   AddonStudies.withStudies([]),
   withAboutStudies,
@@ -248,6 +252,7 @@ decorate_task(
   }
 );
 
+// Test that the message shown when studies are disabled and studies exist
 decorate_task(
   withAboutStudies,
   async function testStudyListing(browser) {
@@ -269,4 +274,5 @@ decorate_task(
       RecipeRunner.checkPrefs();
     }
   }
-).only();
+);
+

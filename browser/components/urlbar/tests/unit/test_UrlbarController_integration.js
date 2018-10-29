@@ -31,7 +31,11 @@ function assertContextMatches(context, expectedValues) {
 
 add_task(async function setup() {
   controller = new UrlbarController({
-    window: {},
+    browserWindow: {
+      location: {
+        href: AppConstants.BROWSER_CHROME_URL,
+      },
+    },
   });
 });
 

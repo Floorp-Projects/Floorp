@@ -29,6 +29,9 @@ public:
               RootedDictionary<PrioEncodedData>& aData,
               ErrorResult& aRv);
 
+  // maximum number of booleans that can be prio-encoded in a single batch.
+  const static uint32_t gNumBooleans = 2046;
+
 private:
   PrioEncoder();
   ~PrioEncoder();
