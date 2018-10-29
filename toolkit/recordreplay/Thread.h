@@ -140,6 +140,9 @@ private:
   bool mUnrecordedWaitOnlyWhenDiverged;
   bool mUnrecordedWaitNotified;
 
+  // Identifier of any atomic which this thread currently holds.
+  Maybe<size_t> mAtomicLockId;
+
 public:
 ///////////////////////////////////////////////////////////////////////////////
 // Public Routines
@@ -253,6 +256,9 @@ public:
 
   // Wait until this thread finishes executing its start routine.
   void Join();
+
+  // Give access to the atomic lock which the thread owns.
+  Maybe<size_t>& AtomicLockId() { return mAtomicLockId; }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Thread Coordination

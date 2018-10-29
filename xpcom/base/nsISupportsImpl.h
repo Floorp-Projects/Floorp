@@ -339,7 +339,7 @@ public:
     // first increment on that thread.  The necessary memory
     // synchronization is done by the mechanism that transfers the
     // pointer between threads.
-    detail::AutoRecordAtomicAccess<Recording> record;
+    detail::AutoRecordAtomicAccess<Recording> record(this);
     return mValue.fetch_add(1, std::memory_order_relaxed) + 1;
   }
   MOZ_ALWAYS_INLINE nsrefcnt operator--()
@@ -348,7 +348,7 @@ public:
     // release semantics so that prior writes on this thread are visible
     // to the thread that destroys the object when it reads mValue with
     // acquire semantics.
-    detail::AutoRecordAtomicAccess<Recording> record;
+    detail::AutoRecordAtomicAccess<Recording> record(this);
     nsrefcnt result = mValue.fetch_sub(1, std::memory_order_release) - 1;
     if (result == 0) {
       // We're going to destroy the object on this thread, so we need
@@ -364,7 +364,7 @@ public:
   {
     // Use release semantics since we're not sure what the caller is
     // doing.
-    detail::AutoRecordAtomicAccess<Recording> record;
+    detail::AutoRecordAtomicAccess<Recording> record(this);
     mValue.store(aValue, std::memory_order_release);
     return aValue;
   }
@@ -373,7 +373,7 @@ public:
   {
     // Use acquire semantics since we're not sure what the caller is
     // doing.
-    detail::AutoRecordAtomicAccess<Recording> record;
+    detail::AutoRecordAtomicAccess<Recording> record(this);
     return mValue.load(std::memory_order_acquire);
   }
 
