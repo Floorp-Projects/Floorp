@@ -581,7 +581,7 @@ var BrowserTestUtils = {
         // Add these event listeners now since they may fire before the
         // DOMContentLoaded event down below.
         let promises = [
-          this.waitForEvent(win, "focus"),
+          this.waitForEvent(win, "focus", true),
           this.waitForEvent(win, "activate"),
         ];
 
@@ -723,7 +723,7 @@ var BrowserTestUtils = {
     }
     let win = currentWin.OpenBrowserWindow(options);
 
-    let promises = [this.waitForEvent(win, "focus"), this.waitForEvent(win, "activate")];
+    let promises = [this.waitForEvent(win, "focus", true), this.waitForEvent(win, "activate")];
 
     // Wait for browser-delayed-startup-finished notification, it indicates
     // that the window has loaded completely and is ready to be used for
