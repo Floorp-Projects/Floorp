@@ -67,6 +67,13 @@ class RaptorRunner(MozbuildObject):
         # Set up the external repo
         external_repo_path = os.path.join(get_state_dir()[0], 'performance-tests')
 
+        try:
+            subprocess.check_output(['git', '--version'])
+        except Exception as ex:
+            print("Git is not available! Please install git and "
+                  "ensure it is included in the terminal path")
+            raise ex
+
         if not os.path.isdir(external_repo_path):
             subprocess.check_call(['git', 'clone', BENCHMARK_REPOSITORY, external_repo_path])
         else:
