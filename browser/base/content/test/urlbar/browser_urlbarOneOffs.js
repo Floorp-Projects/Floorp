@@ -34,6 +34,8 @@ add_task(async function init() {
 // Keys up and down through the history panel, i.e., the panel that's shown when
 // there's no text in the textbox.
 add_task(async function history() {
+  gURLBar.popup.toggleOneOffSearches(true);
+
   gURLBar.focus();
   EventUtils.synthesizeKey("KEY_ArrowDown");
   await promisePopupShown(gURLBar.popup);
@@ -248,6 +250,32 @@ add_task(async function collapsedOneOffs() {
   assertState(1, -1);
   await hidePopup();
 });
+
+
+// The one-offs should be hidden when searching with an "@engine" search engine
+// alias.
+add_task(async function hiddenWhenUsingSearchAlias() {
+  let typedValue = "@example";
+  await promiseAutocompleteResultPopup(typedValue, window, true);
+  await waitForAutocompleteResultAt(0);
+  Assert.equal(gURLBar.popup.oneOffSearchesEnabled, false);
+  Assert.equal(
+    window.getComputedStyle(gURLBar.popup.oneOffSearchButtons).display,
+    "none"
+  );
+  await hidePopup();
+
+  typedValue = "not an engine alias";
+  await promiseAutocompleteResultPopup(typedValue, window, true);
+  await waitForAutocompleteResultAt(0);
+  Assert.equal(gURLBar.popup.oneOffSearchesEnabled, true);
+  Assert.equal(
+    window.getComputedStyle(gURLBar.popup.oneOffSearchButtons).display,
+    "-moz-box"
+  );
+  await hidePopup();
+});
+
 
 function assertState(result, oneOff, textValue = undefined) {
   Assert.equal(gURLBar.popup.selectedIndex, result,

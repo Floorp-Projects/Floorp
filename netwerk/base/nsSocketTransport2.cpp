@@ -755,6 +755,15 @@ nsSocketOutputStream::AsyncWait(nsIOutputStreamCallback *callback,
 // socket transport impl
 //-----------------------------------------------------------------------------
 
+// We assume we have connectivity at first.
+bool nsSocketTransport::sHasIPv4Connectivity = true;
+bool nsSocketTransport::sHasIPv6Connectivity = true;
+
+uint32_t nsSocketTransport::sIPv4FailedCounter = 0;
+uint32_t nsSocketTransport::sIPv6FailedCounter = 0;
+
+const uint32_t kFailureThreshold = 50;
+
 nsSocketTransport::nsSocketTransport()
     : mTypes(nullptr)
     , mTypeCount(0)
@@ -1857,14 +1866,25 @@ nsSocketTransport::RecoverFromError()
         if (NS_SUCCEEDED(mFirstRetryError)) {
             mFirstRetryError = mCondition;
         }
-        if ((mState == STATE_CONNECTING) && mDNSRecord &&
-            mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase()) {
+        if ((mState == STATE_CONNECTING) && mDNSRecord) {
             if (mNetAddr.raw.family == AF_INET) {
-                Telemetry::Accumulate(Telemetry::IPV4_AND_IPV6_ADDRESS_CONNECTIVITY,
-                                      UNSUCCESSFUL_CONNECTING_TO_IPV4_ADDRESS);
+                sIPv4FailedCounter++;
+                if (sIPv4FailedCounter > kFailureThreshold) {
+                    sHasIPv4Connectivity = false;
+                }
+                if (mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase()) {
+                    Telemetry::Accumulate(Telemetry::IPV4_AND_IPV6_ADDRESS_CONNECTIVITY,
+                                          UNSUCCESSFUL_CONNECTING_TO_IPV4_ADDRESS);
+                }
             } else if (mNetAddr.raw.family == AF_INET6) {
-                Telemetry::Accumulate(Telemetry::IPV4_AND_IPV6_ADDRESS_CONNECTIVITY,
-                                      UNSUCCESSFUL_CONNECTING_TO_IPV6_ADDRESS);
+                sIPv6FailedCounter++;
+                if (sIPv6FailedCounter > kFailureThreshold) {
+                    sHasIPv6Connectivity = false;
+                }
+                if (mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase()) {
+                    Telemetry::Accumulate(Telemetry::IPV4_AND_IPV6_ADDRESS_CONNECTIVITY,
+                                          UNSUCCESSFUL_CONNECTING_TO_IPV6_ADDRESS);
+                }
             }
         }
 
@@ -2346,12 +2366,18 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
             //
             OnSocketConnected();
 
-            if (mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase()) {
-                if (mNetAddr.raw.family == AF_INET) {
+            if (mNetAddr.raw.family == AF_INET) {
+                sIPv4FailedCounter = 0;
+                sHasIPv4Connectivity = true;
+                if (mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase()) {
                     Telemetry::Accumulate(
                         Telemetry::IPV4_AND_IPV6_ADDRESS_CONNECTIVITY,
                         SUCCESSFUL_CONNECTING_TO_IPV4_ADDRESS);
-                } else if (mNetAddr.raw.family == AF_INET6) {
+                }
+            } else if (mNetAddr.raw.family == AF_INET6) {
+                sIPv6FailedCounter = 0;
+                sHasIPv6Connectivity = true;
+                if (mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase()) {
                     Telemetry::Accumulate(
                         Telemetry::IPV4_AND_IPV6_ADDRESS_CONNECTIVITY,
                         SUCCESSFUL_CONNECTING_TO_IPV6_ADDRESS);

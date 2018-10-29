@@ -61,17 +61,16 @@ class FlexItemSizingOutline extends PureComponent {
   render() {
     const {
       flexItemSizing,
-      properties,
     } = this.props.flexItem;
     const {
       mainBaseSize,
       mainDeltaSize,
       mainMaxSize,
       mainMinSize,
+      clampState,
     } = flexItemSizing;
 
     const isRow = this.props.flexDirection.startsWith("row");
-    const dimension = isRow ? "width" : "height";
 
     // Calculate the final size. This is base + delta, then clamped by min or max.
     let mainFinalSize = mainBaseSize + mainDeltaSize;
@@ -83,18 +82,12 @@ class FlexItemSizingOutline extends PureComponent {
       return null;
     }
 
-    // The max size is only interesting to show if it did clamp the item
-    // TODO: replace this with the new clamping state that the API will return once bug
-    // 1498273 is fixed.
-    const showMax = mainMaxSize === mainFinalSize;
+    // The max size is only interesting to show if it did clamp the item.
+    const showMax = clampState === "clamped_to_max";
 
     // The min size is only really interesting if it actually clamped the item.
-    // Just checking that the main size = final size isn't enough because this may be true
-    // if the max content size is the final size. So also check that min-width/height is
-    // set.
-    // TODO: replace this with the new clamping state that the API will return once bug
-    // 1498273 is fixed.
-    const showMin = mainMinSize === mainFinalSize && properties[`min-${dimension}`];
+    // TODO: We might also want to check if the min-size property is defined.
+    const showMin = clampState === "clamped_to_min";
 
     // Sort all of the dimensions in order to come up with a grid track template.
     // Make mainDeltaSize start from the same point as the other ones so we can compare.
@@ -153,7 +146,7 @@ class FlexItemSizingOutline extends PureComponent {
           this.renderBasisOutline(mainBaseSize),
           this.renderDeltaOutline(mainDeltaSize),
           this.renderFinalOutline(mainFinalSize, mainMaxSize, mainMinSize,
-                                  showMin || showMax)
+                                  clampState !== "unclamped")
         )
       )
     );

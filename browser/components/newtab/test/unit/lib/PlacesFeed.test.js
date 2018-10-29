@@ -250,7 +250,7 @@ describe("PlacesFeed", () => {
       feed.fillSearchTopSiteTerm(action);
 
       assert.calledOnce(locationBar.search);
-      assert.calledWithExactly(locationBar.search, "@Foo ", {disableOneOffButtons: true, disableSearchSuggestionsNotification: true});
+      assert.calledWithExactly(locationBar.search, "@Foo ");
     });
     it("should call saveToPocket on SAVE_TO_POCKET", () => {
       const action = {

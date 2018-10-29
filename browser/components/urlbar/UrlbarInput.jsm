@@ -46,7 +46,7 @@ class UrlbarInput {
     this.window = this.textbox.ownerGlobal;
     this.document = this.window.document;
     this.controller = options.controller || new UrlbarController({
-      window: this.window,
+      browserWindow: this.window,
     });
     this.view = new UrlbarView(this);
     this.valueIsTyped = false;

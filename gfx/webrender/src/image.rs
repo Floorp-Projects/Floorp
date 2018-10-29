@@ -156,10 +156,10 @@ pub struct Tile {
 }
 
 pub struct TileIterator {
-    current_x: u16,
-    x_count: u16,
-    current_y: u16,
-    y_count: u16,
+    current_x: u32,
+    x_count: u32,
+    current_y: u32,
+    y_count: u32,
     origin: TileOffset,
     tile_size: LayoutSize,
     leftover_offset: TileOffset,
@@ -302,26 +302,43 @@ pub fn tiles(
 
     // Offset of the row and column of tiles with leftover size.
     let leftover_offset = TileOffset::new(
-        (device_image_size.width / device_tile_size) as u16,
-        (device_image_size.height / device_tile_size) as u16,
+        (device_image_size.width / device_tile_size) as u32,
+        (device_image_size.height / device_tile_size) as u32,
     );
 
     // Number of culled out tiles to skip before the first visible tile.
     let t0 = TileOffset::new(
         if visible_rect.origin.x > prim_rect.origin.x {
-            f32::floor((visible_rect.origin.x - prim_rect.origin.x) / layer_tile_size.width) as u16
+            f32::floor((visible_rect.origin.x - prim_rect.origin.x) / layer_tile_size.width) as u32
         } else {
             0
         },
         if visible_rect.origin.y > prim_rect.origin.y {
-            f32::floor((visible_rect.origin.y - prim_rect.origin.y) / layer_tile_size.height) as u16
+            f32::floor((visible_rect.origin.y - prim_rect.origin.y) / layer_tile_size.height) as u32
         } else {
             0
         },
     );
 
-    let x_count = f32::ceil((visible_rect.max_x() - prim_rect.origin.x) / layer_tile_size.width) as u16 - t0.x;
-    let y_count = f32::ceil((visible_rect.max_y() - prim_rect.origin.y) / layer_tile_size.height) as u16 - t0.y;
+    // Since we're working in layer space, we can end up computing leftover tiles with an empty
+    // size due to floating point precision issues. Detect this case so that we don't return
+    // tiles with an empty size.
+    let x_count = {
+        let result = f32::ceil((visible_rect.max_x() - prim_rect.origin.x) / layer_tile_size.width) as u32 - t0.x;
+        if result == leftover_offset.x + 1 && leftover_layer_size.width == 0.0f32 {
+            leftover_offset.x
+        } else {
+            result
+        }
+    };
+    let y_count = {
+        let result = f32::ceil((visible_rect.max_y() - prim_rect.origin.y) / layer_tile_size.height) as u32 - t0.y;
+        if result == leftover_offset.y + 1 && leftover_layer_size.height == 0.0f32 {
+            leftover_offset.y
+        } else {
+            result
+        }
+    };
 
     let mut row_flags = EdgeAaSegmentMask::TOP;
     if y_count == 1 {
@@ -352,12 +369,12 @@ pub fn compute_tile_range(
     let t0 = point2(
         f32::floor(visible_area.origin.x as f32 * tw),
         f32::floor(visible_area.origin.y as f32 * th),
-    ).try_cast::<u16>().unwrap_or_else(|| panic!("compute_tile_range bad values {:?} {:?}", visible_area, tile_size));
+    ).try_cast::<u32>().unwrap_or_else(|| panic!("compute_tile_range bad values {:?} {:?}", visible_area, tile_size));
 
     let t1 = point2(
         f32::ceil(visible_area.max_x() as f32 * tw),
         f32::ceil(visible_area.max_y() as f32 * th),
-    ).try_cast::<u16>().unwrap_or_else(|| panic!("compute_tile_range bad values {:?} {:?}", visible_area, tile_size));
+    ).try_cast::<u32>().unwrap_or_else(|| panic!("compute_tile_range bad values {:?} {:?}", visible_area, tile_size));
 
     TileRange {
         origin: t0,

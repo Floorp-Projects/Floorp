@@ -129,7 +129,6 @@ var ThirdPartyCookies = {
 var ContentBlocking = {
   // If the user ignores the doorhanger, we stop showing it after some time.
   MAX_INTROS: 20,
-  PREF_ENABLED: "browser.contentblocking.enabled",
   PREF_ANIMATIONS_ENABLED: "toolkit.cosmeticAnimations.enabled",
   PREF_REPORT_BREAKAGE_ENABLED: "browser.contentblocking.reportBreakage.enabled",
   PREF_REPORT_BREAKAGE_URL: "browser.contentblocking.reportBreakage.url",
@@ -216,12 +215,8 @@ var ContentBlocking = {
 
     Services.prefs.addObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
 
-    XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingEnabled", this.PREF_ENABLED, false,
-      this.updateEnabled.bind(this));
     XPCOMUtils.defineLazyPreferenceGetter(this, "reportBreakageEnabled",
       this.PREF_REPORT_BREAKAGE_ENABLED, false);
-
-    this.updateEnabled();
 
     this.appMenuLabel.setAttribute("label", this.strings.appMenuTitle);
     this.appMenuLabel.setAttribute("tooltiptext", this.strings.appMenuTooltip);
@@ -240,19 +235,6 @@ var ContentBlocking = {
     }
 
     Services.prefs.removeObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
-  },
-
-  get enabled() {
-    return this.contentBlockingEnabled;
-  },
-
-  updateEnabled() {
-    this.content.toggleAttribute("enabled", this.enabled);
-
-    // The enabled state of blockers may also change since it depends on this.enabled.
-    for (let blocker of this.blockers) {
-      blocker.categoryItem.classList.toggle("blocked", this.enabled && blocker.enabled);
-    }
   },
 
   hideIdentityPopupAndReload() {
@@ -366,7 +348,7 @@ var ContentBlocking = {
       // dialog should only be able to open in the currently selected tab and onSecurityChange
       // runs on tab switch, so we can avoid associating the data with the document directly.
       blocker.activated = blocker.isBlockerActivated(state);
-      blocker.categoryItem.classList.toggle("blocked", this.enabled && blocker.enabled);
+      blocker.categoryItem.classList.toggle("blocked", blocker.enabled);
       blocker.categoryItem.hidden = !blocker.visible;
       anyBlockerActivated = anyBlockerActivated || blocker.activated;
     }
@@ -375,7 +357,7 @@ var ContentBlocking = {
     // occurs on the page.  Note that merely allowing the loading of content that
     // we could have blocked does not trigger the appearance of the shield.
     // This state will be overriden later if there's an exception set for this site.
-    let active = this.enabled && anyBlockerActivated;
+    let active = anyBlockerActivated;
     let isAllowing = state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT;
     let detected = anyBlockerActivated || isAllowing;
 
@@ -391,7 +373,7 @@ var ContentBlocking = {
     this.content.toggleAttribute("active", active);
 
     this.iconBox.toggleAttribute("active", active);
-    this.iconBox.toggleAttribute("hasException", this.enabled && hasException);
+    this.iconBox.toggleAttribute("hasException", hasException);
 
     // For release (due to the large volume) we only want to receive reports
     // for breakage that is directly related to third party cookie blocking.

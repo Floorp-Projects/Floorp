@@ -8,6 +8,7 @@ var EXPORTED_SYMBOLS = ["QueryContext", "UrlbarController"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   // BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
@@ -86,19 +87,23 @@ class UrlbarController {
    *
    * @param {object} options
    *   The initial options for UrlbarController.
-   * @param {object} options.window
-   *   The window this controller is operating within.
+   * @param {object} options.browserWindow
+   *   The browser window this controller is operating within.
    * @param {object} [options.manager]
    *   Optional fake providers manager to override the built-in providers manager.
    *   Intended for use in unit tests only.
    */
   constructor(options = {}) {
-    if (!options.window) {
-      throw new Error("Missing options: window");
+    if (!options.browserWindow) {
+      throw new Error("Missing options: browserWindow");
+    }
+    if (!options.browserWindow.location ||
+        options.browserWindow.location.href != AppConstants.BROWSER_CHROME_URL) {
+      throw new Error("browserWindow should be an actual browser window.");
     }
 
     this.manager = options.manager || UrlbarProvidersManager;
-    this.window = options.window;
+    this.browserWindow = options.browserWindow;
 
     this._listeners = new Set();
   }
@@ -150,7 +155,6 @@ class UrlbarController {
    *   For possible properties @see {_loadURL}
    */
   handleEnteredText(event, text, openWhere, openParams = {}) {
-    let browser = this.window.gBrowser.selectedBrowser;
     let where = openWhere || this._whereToOpen(event);
 
     openParams.postData = null;
@@ -180,7 +184,7 @@ class UrlbarController {
       return;
     }
 
-    this._loadURL(text, browser, where, openParams);
+    this._loadURL(text, where, openParams);
   }
 
   /**
@@ -202,21 +206,20 @@ class UrlbarController {
     let where = openWhere || this._whereToOpen(event);
     openParams.postData = null;
     openParams.allowInheritPrincipal = false;
-    let browser = this.window.gBrowser.selectedBrowser;
     let url = result.url;
 
     switch (result.type) {
       case UrlbarUtils.MATCH_TYPE.TAB_SWITCH: {
         // TODO: Implement handleRevert or equivalent on the input.
         // this.input.handleRevert();
-        let prevTab = this.window.gBrowser.selectedTab;
+        let prevTab = this.browserWindow.gBrowser.selectedTab;
         let loadOpts = {
           adoptIntoActiveWindow: UrlbarPrefs.get("switchTabs.adoptIntoActiveWindow"),
         };
 
-        if (this.window.switchToTabHavingURI(url, false, loadOpts) &&
+        if (this.browserWindow.switchToTabHavingURI(url, false, loadOpts) &&
             prevTab.isEmpty) {
-          this.window.gBrowser.removeTab(prevTab);
+          this.browserWindow.gBrowser.removeTab(prevTab);
         }
         return;
 
@@ -230,7 +233,7 @@ class UrlbarController {
       }
     }
 
-    this._loadURL(url, browser, where, openParams);
+    this._loadURL(url, where, openParams);
   }
 
   /**
@@ -284,8 +287,6 @@ class UrlbarController {
    *
    * @param {string} url
    *   The URL to open.
-   * @param {object} browser
-   *   The browser to open it in.
    * @param {string} openUILinkWhere
    *   Where we expect the result to be opened.
    * @param {object} params
@@ -298,11 +299,13 @@ class UrlbarController {
    * @param {boolean} [params.allowInheritPrincipal]
    *   If the principal may be inherited
    */
-  _loadURL(url, browser, openUILinkWhere, params) {
+  _loadURL(url, openUILinkWhere, params) {
+    let browser = this.browserWindow.gBrowser.selectedBrowser;
+
     // TODO: These should probably be set by the input field.
     // this.value = url;
     // browser.userTypedValue = url;
-    if (this.window.gInitialPages.includes(url)) {
+    if (this.browserWindow.gInitialPages.includes(url)) {
       browser.initialPageLoadedFromURLBar = url;
     }
     try {
@@ -321,7 +324,7 @@ class UrlbarController {
       params.allowPinnedTabHostChange = true;
       params.allowPopups = url.startsWith("javascript:");
     } else {
-      params.initiatingDoc = this.window.document;
+      params.initiatingDoc = this.browserWindow.document;
     }
 
     // Focus the content area before triggering loads, since if the load
@@ -335,7 +338,7 @@ class UrlbarController {
     }
 
     try {
-      this.window.openTrustedLinkIn(url, openUILinkWhere, params);
+      this.browserWindow.openTrustedLinkIn(url, openUILinkWhere, params);
     } catch (ex) {
       // This load can throw an exception in certain cases, which means
       // we'll want to replace the URL with the loaded URL:
@@ -357,7 +360,7 @@ class UrlbarController {
    * @returns {"current" | "tabshifted" | "tab" | "save" | "window"}
    */
   _whereToOpen(event) {
-    let isMouseEvent = event instanceof this.window.MouseEvent;
+    let isMouseEvent = event instanceof MouseEvent;
     let reuseEmpty = !isMouseEvent;
     let where = undefined;
     if (!isMouseEvent && event && event.altKey) {
@@ -369,7 +372,7 @@ class UrlbarController {
       // pressed, open in current tab to allow ctrl-enter to canonize URL.
       where = "current";
     } else {
-      where = this.window.whereToOpenLink(event, false, false);
+      where = this.browserWindow.whereToOpenLink(event, false, false);
     }
     if (this.openInTab) {
       if (where == "current") {
@@ -381,7 +384,7 @@ class UrlbarController {
     }
     if (where == "tab" &&
         reuseEmpty &&
-        this.window.gBrowser.selectedTab.isEmpty) {
+        this.browserWindow.gBrowser.selectedTab.isEmpty) {
       where = "current";
     }
     return where;

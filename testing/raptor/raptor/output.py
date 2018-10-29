@@ -494,9 +494,10 @@ class Output(object):
 
         # the output that treeherder expects to find
         extra_opts = self.summarized_results['suites'][0].get('extraOptions', [])
-        if 'geckoProfile' not in extra_opts:
+        if 'gecko_profile' not in extra_opts:
             LOG.info("PERFHERDER_DATA: %s" % json.dumps(self.summarized_results))
-
+        else:
+            LOG.info("gecko profiling enabled - not posting results for perfherder")
         json.dump(self.summarized_results, open(results_path, 'w'), indent=2,
                   sort_keys=True)
 

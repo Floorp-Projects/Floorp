@@ -53,6 +53,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/net/CaptivePortalService.h"
+#include "mozilla/net/NetworkConnectivityService.h"
 #include "mozilla/Unused.h"
 #include "ReferrerPolicy.h"
 #include "nsContentSecurityManager.h"
@@ -261,6 +262,10 @@ nsIOService::Init()
     InitializeProtocolProxyService();
 
     SetOffline(false);
+
+    RefPtr<NetworkConnectivityService> ncs =
+      NetworkConnectivityService::GetSingleton();
+    ncs->Init();
 
     return NS_OK;
 }
