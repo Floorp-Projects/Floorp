@@ -1462,50 +1462,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   nsStyleCoord    mColumnGap;       // normal, coord, percent, calc
   nsStyleCoord    mRowGap;          // normal, coord, percent, calc
 
-  // FIXME: Logical-coordinate equivalents to these WidthDepends... and
-  // HeightDepends... methods have been introduced (see below); we probably
-  // want to work towards removing the physical methods, and using the logical
-  // ones in all cases.
-
-  bool WidthDependsOnContainer() const
-    {
-      return mWidth.GetUnit() == eStyleUnit_Auto ||
-        WidthCoordDependsOnContainer(mWidth);
-    }
-
-  // NOTE: For a flex item, "min-width:auto" is supposed to behave like
-  // "min-content", which does depend on the container, so you might think we'd
-  // need a special case for "flex item && min-width:auto" here.  However,
-  // we don't actually need that special-case code, because flex items are
-  // explicitly supposed to *ignore* their min-width (i.e. behave like it's 0)
-  // until the flex container explicitly considers it.  So -- since the flex
-  // container doesn't rely on this method, we don't need to worry about
-  // special behavior for flex items' "min-width:auto" values here.
-  bool MinWidthDependsOnContainer() const
-    { return WidthCoordDependsOnContainer(mMinWidth); }
-  bool MaxWidthDependsOnContainer() const
-    { return WidthCoordDependsOnContainer(mMaxWidth); }
-
-  // Note that these functions count 'auto' as depending on the
-  // container since that's the case for absolutely positioned elements.
-  // However, some callers do not care about this case and should check
-  // for it, since it is the most common case.
-  // FIXME: We should probably change the assumption to be the other way
-  // around.
-  // Consider this as part of moving to the logical-coordinate APIs.
-  bool HeightDependsOnContainer() const
-    {
-      return mHeight.GetUnit() == eStyleUnit_Auto || // CSS 2.1, 10.6.4, item (5)
-        HeightCoordDependsOnContainer(mHeight);
-    }
-
-  // NOTE: The comment above MinWidthDependsOnContainer about flex items
-  // applies here, too.
-  bool MinHeightDependsOnContainer() const
-    { return HeightCoordDependsOnContainer(mMinHeight); }
-  bool MaxHeightDependsOnContainer() const
-    { return HeightCoordDependsOnContainer(mMaxHeight); }
-
   bool OffsetHasPercent(mozilla::Side aSide) const
   {
     return mOffset.Get(aSide).HasPercent();
@@ -1538,9 +1494,17 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   const nsStyleGridTemplate& GridTemplateRows() const;
 
 private:
-  static bool WidthCoordDependsOnContainer(const nsStyleCoord &aCoord);
-  static bool HeightCoordDependsOnContainer(const nsStyleCoord &aCoord)
-    { return aCoord.HasPercent(); }
+  static bool ISizeCoordDependsOnContainer(const nsStyleCoord &aCoord)
+  {
+    return aCoord.HasPercent() ||
+           (aCoord.GetUnit() == eStyleUnit_Enumerated &&
+            (aCoord.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT ||
+             aCoord.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE));
+  }
+  static bool BSizeCoordDependsOnContainer(const nsStyleCoord &aCoord)
+  {
+    return aCoord.HasPercent();
+  }
 };
 
 struct nsStyleTextOverflowSide
