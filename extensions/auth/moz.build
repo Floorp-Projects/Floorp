@@ -26,6 +26,7 @@ else:
 
 LOCAL_INCLUDES += [
     '/netwerk/dns', # For nsDNSService2.h
+    '/security/manager/ssl',
 ]
 
 FINAL_LIBRARY = 'xul'

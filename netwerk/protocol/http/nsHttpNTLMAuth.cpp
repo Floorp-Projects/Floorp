@@ -186,7 +186,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
     // If native NTLM auth apis are available and enabled through prefs,
     // try to use them.
     if (PL_strcasecmp(challenge, "NTLM") == 0) {
-        nsCOMPtr<nsISupports> module;
+        nsCOMPtr<nsIAuthModule> module;
 
         // Check to see if we should default to our generic NTLM auth module
         // through UseGenericNTLM. (We use native auth by default if the
@@ -201,7 +201,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
                 // Try logging in with the user's default credentials. If
                 // successful, |identityInvalid| is false, which will trigger
                 // a default credentials attempt once we return.
-                module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "sys-ntlm");
+                module = nsIAuthModule::CreateInstance("sys-ntlm");
             }
 #ifdef XP_WIN
             else {
@@ -210,7 +210,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
                 // Note, for servers that use LMv1 a weak hash of the user's password
                 // will be sent. We rely on windows internal apis to decide whether
                 // we should support this older, less secure version of the protocol.
-                module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "sys-ntlm");
+                module = nsIAuthModule::CreateInstance("sys-ntlm");
                 *identityInvalid = true;
             }
 #endif // XP_WIN
@@ -238,7 +238,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
             // Use our internal NTLM implementation. Note, this is less secure,
             // see bug 520607 for details.
             LOG(("Trying to fall back on internal ntlm auth.\n"));
-            module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "ntlm");
+            module = nsIAuthModule::CreateInstance("ntlm");
 
             mUseNative = false;
 
@@ -254,7 +254,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
 
         // A non-null continuation state implies that we failed to authenticate.
         // Blow away the old authentication state, and use the new one.
-        module.swap(*continuationState);
+        module.forget(continuationState);
     }
     return NS_OK;
 }
