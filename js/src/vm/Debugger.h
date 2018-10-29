@@ -1656,7 +1656,6 @@ class BreakpointSite {
 
   protected:
     virtual void recompile(FreeOp* fop) = 0;
-    bool isEmpty() const;
     inline bool isEnabled() const { return enabledCount > 0; }
 
   public:
@@ -1668,6 +1667,7 @@ class BreakpointSite {
 
     void inc(FreeOp* fop);
     void dec(FreeOp* fop);
+    bool isEmpty() const;
     virtual void destroyIfEmpty(FreeOp* fop) = 0;
 
     inline JSBreakpointSite* asJS();
@@ -1711,7 +1711,13 @@ class Breakpoint {
 
   public:
     Breakpoint(Debugger* debugger, BreakpointSite* site, JSObject* handler);
-    void destroy(FreeOp* fop);
+
+    enum MayDestroySite {
+        False,
+        True
+    };
+    void destroy(FreeOp* fop, MayDestroySite mayDestroySite = MayDestroySite::True);
+
     Breakpoint* nextInDebugger();
     Breakpoint* nextInSite();
     const PreBarrieredObject& getHandler() const { return handler; }

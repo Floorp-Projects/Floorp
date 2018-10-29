@@ -14,6 +14,7 @@
 #include "jit/JitRealm.h"
 #include "vm/Debugger.h"
 #include "vm/Runtime.h"
+#include "wasm/WasmInstance.h"
 
 #include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
@@ -184,6 +185,18 @@ Zone::sweepBreakpoints(FreeOp* fop)
                     bp->destroy(fop);
                 }
             }
+        }
+    }
+
+    for (RealmsInZoneIter realms(this); !realms.done(); realms.next()) {
+        for (wasm::Instance* instance : realms->wasm.instances()) {
+            if (!instance->debugEnabled()) {
+                continue;
+            }
+            if (!IsAboutToBeFinalized(&instance->object_)) {
+                continue;
+            }
+            instance->debug().clearAllBreakpoints(fop, instance->objectUnbarriered());
         }
     }
 }
