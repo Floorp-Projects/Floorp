@@ -19,12 +19,6 @@
 #include "mozilla/RelativeTimeline.h"
 #include "PrincipalChangeObserver.h"
 
-// X11 has a #define for CurrentTime. Unbelievable :-(.
-// See dom/media/webaudio/AudioContext.h for more fun!
-#ifdef CurrentTime
-#undef CurrentTime
-#endif
-
 namespace mozilla {
 
 class AbstractThread;
@@ -357,8 +351,6 @@ public:
               const dom::Sequence<OwningNonNull<MediaStreamTrack>>& aTracks,
               ErrorResult& aRv);
 
-  double CurrentTime();
-
   static already_AddRefed<dom::Promise>
   CountUnderlyingStreams(const dom::GlobalObject& aGlobal, ErrorResult& aRv);
 
@@ -522,11 +514,6 @@ public:
                                   nsIPrincipal* aPrincipal,
                                   MediaStreamGraph* aGraph);
 
-  void SetLogicalStreamStartTime(StreamTime aTime)
-  {
-    mLogicalStreamStartTime = aTime;
-  }
-
   /**
    * Adds a MediaStreamTrack to mTracks and raises "addtrack".
    *
@@ -661,9 +648,6 @@ protected:
   // it currently contains. PrincipalChangeObservers will be notified only if
   // the principal changes.
   void RecomputePrincipal();
-
-  // StreamTime at which the currentTime attribute would return 0.
-  StreamTime mLogicalStreamStartTime;
 
   // We need this to track our parent object.
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
