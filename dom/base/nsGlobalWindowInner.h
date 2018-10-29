@@ -133,6 +133,7 @@ class WakeLock;
 #if defined(MOZ_WIDGET_ANDROID)
 class WindowOrientationObserver;
 #endif
+struct WindowPostMessageOptions;
 class Worklet;
 namespace cache {
 class CacheStorage;
@@ -734,6 +735,10 @@ public:
   void PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                       const nsAString& aTargetOrigin,
                       const mozilla::dom::Sequence<JSObject*>& aTransfer,
+                      nsIPrincipal& aSubjectPrincipal,
+                      mozilla::ErrorResult& aError);
+  void PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                      const mozilla::dom::WindowPostMessageOptions& aOptions,
                       nsIPrincipal& aSubjectPrincipal,
                       mozilla::ErrorResult& aError);
   int32_t SetTimeout(JSContext* aCx, mozilla::dom::Function& aFunction,

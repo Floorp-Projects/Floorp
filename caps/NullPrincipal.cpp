@@ -38,24 +38,19 @@ NS_IMPL_CI_INTERFACE_GETTER(NullPrincipal,
 /* static */ already_AddRefed<NullPrincipal>
 NullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
 {
-  MOZ_ASSERT(aInheritFrom);
-  return CreateWithInheritedAttributes(Cast(aInheritFrom)->OriginAttributesRef(), false);
+  RefPtr<NullPrincipal> nullPrin = new NullPrincipal();
+  nsresult rv = nullPrin->Init(Cast(aInheritFrom)->OriginAttributesRef());
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+  return nullPrin.forget();
 }
 
 /* static */ already_AddRefed<NullPrincipal>
 NullPrincipal::CreateWithInheritedAttributes(nsIDocShell* aDocShell, bool aIsFirstParty)
 {
-  MOZ_ASSERT(aDocShell);
-
   OriginAttributes attrs = nsDocShell::Cast(aDocShell)->GetOriginAttributes();
-  return CreateWithInheritedAttributes(attrs, aIsFirstParty);
-}
 
-/* static */ already_AddRefed<NullPrincipal>
-NullPrincipal::CreateWithInheritedAttributes(const OriginAttributes& aOriginAttributes, bool aIsFirstParty)
-{
   RefPtr<NullPrincipal> nullPrin = new NullPrincipal();
-  nsresult rv = nullPrin->Init(aOriginAttributes, aIsFirstParty);
+  nsresult rv = nullPrin->Init(attrs, aIsFirstParty);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   return nullPrin.forget();
 }

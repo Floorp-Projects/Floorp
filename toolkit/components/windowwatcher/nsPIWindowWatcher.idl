@@ -11,7 +11,7 @@
 #include "nsISupports.idl"
 
 %{ C++
-class nsDocShellLoadState;
+class nsDocShellLoadInfo;
 %}
 
 interface mozIDOMWindowProxy;
@@ -21,7 +21,7 @@ interface nsIWebBrowserChrome;
 interface nsIDocShellTreeItem;
 interface nsIArray;
 interface nsITabParent;
-native nsDocShellLoadStatePtr(nsDocShellLoadState*);
+native nsDocShellLoadInfoPtr(nsDocShellLoadInfo*);
 
 [uuid(d162f9c4-19d5-4723-931f-f1e51bfa9f68)]
 
@@ -66,8 +66,8 @@ interface nsPIWindowWatcher : nsISupports
                             looking for existing windows with the given name,
                             not setting an opener on the newly opened window,
                             and returning null from this method.
-      @param aLoadState if aNavigate is true, this allows the caller to pass in
-                        an nsIDocShellLoadState to use for the navigation.
+      @param aLoadInfo if aNavigate is true, this allows the caller to pass in
+                       an nsIDocShellLoadInfo to use for the navigation.
                        Callers can pass in null if they want the windowwatcher
                        to just construct a loadinfo itself.  If aNavigate is
                        false, this argument is ignored.
@@ -90,7 +90,7 @@ interface nsPIWindowWatcher : nsISupports
                                  in nsISupports aArgs,
                                  in boolean aIsPopupSpam,
                                  in boolean aForceNoOpener,
-                                 in nsDocShellLoadStatePtr aLoadState);
+                                 in nsDocShellLoadInfoPtr aLoadInfo);
 
   /**
    * Opens a new window so that the window that aOpeningTab belongs to

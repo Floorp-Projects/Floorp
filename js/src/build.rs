@@ -90,7 +90,7 @@ fn maybe_add_spidermonkey_rust_lib() {
     target_build_dir.push("../../");
 
     let mut build_dir = target_build_dir.display().to_string();
-    build_dir.push_str("mozjs_sys-*/out/*/debug");
+    build_dir.push_str("mozjs_sys-*/out/js/src/rust/*/debug");
 
     let entries = match glob::glob(&build_dir){
         Err(_) => { return; }

@@ -20,7 +20,9 @@ interface ServiceWorker : EventTarget {
   attribute EventHandler onstatechange;
 
   [Throws]
-  void postMessage(any message, optional sequence<object> transferable = []);
+  void postMessage(any message, sequence<object> transferable);
+  [Throws]
+  void postMessage(any message, optional PostMessageOptions options);
 };
 
 ServiceWorker implements AbstractWorker;

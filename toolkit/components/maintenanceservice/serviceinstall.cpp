@@ -257,7 +257,7 @@ BOOL
 SvcInstall(SvcInstallAction action)
 {
   mozilla::UniquePtr<wchar_t[]> updateDir;
-  HRESULT permResult = GetCommonUpdateDirectory(nullptr, nullptr, nullptr,
+  HRESULT permResult = GetCommonUpdateDirectory(nullptr,
                                                 SetPermissionsOf::AllFilesAndDirs,
                                                 updateDir);
   if (FAILED(permResult)) {
