@@ -872,10 +872,10 @@ function Intl_DateTimeFormat_resolvedOptions() {
 
     if (internals.mozExtensions) {
         if (internals.patternOption !== undefined) {
-            result.pattern = internals.pattern;
+            _DefineDataProperty(result, "pattern", internals.pattern);
         } else if (internals.dateStyle || internals.timeStyle) {
-            result.dateStyle = internals.dateStyle;
-            result.timeStyle = internals.timeStyle;
+            _DefineDataProperty(result, "dateStyle", internals.dateStyle);
+            _DefineDataProperty(result, "timeStyle", internals.timeStyle);
         }
     }
 
@@ -916,6 +916,7 @@ function resolveICUPattern(pattern, result) {
             // "text" cases
             case "G":
             case "E":
+            case "c":
             case "z":
             case "v":
             case "V":
@@ -963,6 +964,7 @@ function resolveICUPattern(pattern, result) {
             // http://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
             switch (c) {
             case "E":
+            case "c":
                 weekday = value;
                 break;
             case "G":
