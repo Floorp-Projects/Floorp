@@ -1764,6 +1764,14 @@ ValueToStringBuffer(JSContext* cx, const Value& v, StringBuffer& sb);
 extern JSString*
 ValueToSource(JSContext* cx, HandleValue v);
 
+/*
+ * Convert a JSString to its source expression; returns null after reporting an
+ * error, otherwise returns a new string reference. No Handle needed since the
+ * input is dead after the GC.
+ */
+extern JSString*
+StringToSource(JSContext* cx, JSString* str);
+
 } /* namespace js */
 
 MOZ_ALWAYS_INLINE bool

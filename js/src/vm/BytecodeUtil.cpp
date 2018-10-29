@@ -2657,14 +2657,18 @@ js::GetPCCountScriptCount(JSContext* cx)
     return rt->scriptAndCountsVector->length();
 }
 
+enum MaybeComma {NO_COMMA, COMMA};
+
 static MOZ_MUST_USE bool
-JSONStringProperty(Sprinter& sp, JSONPrinter& json, const char* name, JSString* str) {
-    json.beginStringProperty(name);
-    if (!JSONQuoteString(&sp, str)) {
+AppendJSONProperty(StringBuffer& buf, const char* name, MaybeComma comma = COMMA)
+{
+    if (comma && !buf.append(',')) {
         return false;
     }
-    json.endStringProperty();
-    return true;
+
+    return buf.append('\"') &&
+           buf.append(name, strlen(name)) &&
+           buf.append("\":", 2);
 }
 
 JS_FRIEND_API(JSString*)
@@ -2680,21 +2684,45 @@ js::GetPCCountScriptSummary(JSContext* cx, size_t index)
     const ScriptAndCounts& sac = (*rt->scriptAndCountsVector)[index];
     RootedScript script(cx, sac.script);
 
-    Sprinter sp(cx);
-    if (!sp.init()) {
+    /*
+     * OOM on buffer appends here will not be caught immediately, but since
+     * StringBuffer uses a TempAllocPolicy will trigger an exception on the
+     * context if they occur, which we'll catch before returning.
+     */
+    StringBuffer buf(cx);
+
+    if (!buf.append('{')) {
         return nullptr;
     }
 
-    JSONPrinter json(sp, false);
+    if (!AppendJSONProperty(buf, "file", NO_COMMA)) {
+        return nullptr;
+    }
+    JSString* str = JS_NewStringCopyZ(cx, script->filename());
+    if (!str || !(str = StringToSource(cx, str))) {
+        return nullptr;
+    }
+    if (!buf.append(str)) {
+        return nullptr;
+    }
 
-    json.beginObject();
+    if (!AppendJSONProperty(buf, "line")) {
+        return nullptr;
+    }
+    if (!NumberValueToStringBuffer(cx, Int32Value(script->lineno()), buf)) {
+        return nullptr;
+    }
 
-    json.property("file", script->filename());
-    json.property("line", script->lineno());
-
-    if (JSFunction* fun = script->functionNonDelazifying()) {
-        if (JSAtom* atom = fun->displayAtom()) {
-            if (!JSONStringProperty(sp, json, "name", atom)) {
+    if (script->functionNonDelazifying()) {
+        JSAtom* atom = script->functionNonDelazifying()->displayAtom();
+        if (atom) {
+            if (!AppendJSONProperty(buf, "name")) {
+                return nullptr;
+            }
+            if (!(str = StringToSource(cx, atom))) {
+                return nullptr;
+            }
+            if (!buf.append(str)) {
                 return nullptr;
             }
         }
@@ -2704,14 +2732,26 @@ js::GetPCCountScriptSummary(JSContext* cx, size_t index)
 
     jsbytecode* codeEnd = script->codeEnd();
     for (jsbytecode* pc = script->code(); pc < codeEnd; pc = GetNextPc(pc)) {
-        if (const PCCounts* counts = sac.maybeGetPCCounts(pc)) {
-            total += counts->numExec();
+        const PCCounts* counts = sac.maybeGetPCCounts(pc);
+        if (!counts) {
+            continue;
         }
+        total += counts->numExec();
     }
 
-    json.beginObjectProperty("totals");
+    if (!AppendJSONProperty(buf, "totals")) {
+        return nullptr;
+    }
+    if (!buf.append('{')) {
+        return nullptr;
+    }
 
-    json.property(PCCounts::numExecName, total);
+    if (!AppendJSONProperty(buf, PCCounts::numExecName, NO_COMMA)) {
+        return nullptr;
+    }
+    if (!NumberValueToStringBuffer(cx, DoubleValue(total), buf)) {
+        return nullptr;
+    }
 
     uint64_t ionActivity = 0;
     jit::IonScriptCounts* ionCounts = sac.getIonCounts();
@@ -2722,48 +2762,64 @@ js::GetPCCountScriptSummary(JSContext* cx, size_t index)
         ionCounts = ionCounts->previous();
     }
     if (ionActivity) {
-        json.property("ion", ionActivity);
+        if (!AppendJSONProperty(buf, "ion", COMMA)) {
+            return nullptr;
+        }
+        if (!NumberValueToStringBuffer(cx, DoubleValue(ionActivity), buf)) {
+            return nullptr;
+        }
     }
 
-    json.endObject();
-
-    json.endObject();
-
-    if (sp.hadOutOfMemory()) {
+    if (!buf.append('}')) {
+        return nullptr;
+    }
+    if (!buf.append('}')) {
         return nullptr;
     }
 
-    return NewStringCopyZ<CanGC>(cx, sp.string());
+    MOZ_ASSERT(!cx->isExceptionPending());
+
+    return buf.finishString();
 }
 
 static bool
-GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, Sprinter& sp)
+GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, StringBuffer& buf)
 {
-    JSONPrinter json(sp, false);
-
     RootedScript script(cx, sac.script);
 
-    BytecodeParser parser(cx, script);
-    if (!parser.parse()) {
+    if (!buf.append('{')) {
         return false;
     }
-
-    json.beginObject();
+    if (!AppendJSONProperty(buf, "text", NO_COMMA)) {
+        return false;
+    }
 
     JSString* str = JS_DecompileScript(cx, script);
-    if (!str) {
+    if (!str || !(str = StringToSource(cx, str))) {
         return false;
     }
 
-    if (!JSONStringProperty(sp, json, "text", str)) {
+    if (!buf.append(str)) {
         return false;
     }
 
-    json.property("line", script->lineno());
+    if (!AppendJSONProperty(buf, "line")) {
+        return false;
+    }
+    if (!NumberValueToStringBuffer(cx, Int32Value(script->lineno()), buf)) {
+        return false;
+    }
 
-    json.beginListProperty("opcodes");
+    if (!AppendJSONProperty(buf, "opcodes")) {
+        return false;
+    }
+    if (!buf.append('[')) {
+        return false;
+    }
+    bool comma = false;
 
     uint64_t hits = 0;
+
     for (BytecodeRangeWithPosition range(cx, script); !range.empty(); range.popFront()) {
         jsbytecode *pc = range.frontPC();
         size_t offset = script->pcToOffset(pc);
@@ -2771,17 +2827,55 @@ GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, Sprinter& sp)
 
         // If the current instruction is a jump target,
         // then update the number of hits.
-        if (const PCCounts* counts = sac.maybeGetPCCounts(pc)) {
+        const PCCounts* counts = sac.maybeGetPCCounts(pc);
+        if (counts) {
             hits = counts->numExec();
         }
 
-        json.beginObject();
+        if (comma && !buf.append(',')) {
+            return false;
+        }
+        comma = true;
 
-        json.property("id", offset);
-        json.property("line", range.frontLineNumber());
-        json.property("name", CodeName[op]);
+        if (!buf.append('{')) {
+            return false;
+        }
+
+        if (!AppendJSONProperty(buf, "id", NO_COMMA)) {
+            return false;
+        }
+        if (!NumberValueToStringBuffer(cx, Int32Value(offset), buf)) {
+            return false;
+        }
+
+        if (!AppendJSONProperty(buf, "line")) {
+            return false;
+        }
+        if (!NumberValueToStringBuffer(cx, Int32Value(range.frontLineNumber()), buf)) {
+            return false;
+        }
 
         {
+            const char* name = CodeName[op];
+            if (!AppendJSONProperty(buf, "name")) {
+                return false;
+            }
+            if (!buf.append('\"')) {
+                return false;
+            }
+            if (!buf.append(name, strlen(name))) {
+                return false;
+            }
+            if (!buf.append('\"')) {
+                return false;
+            }
+        }
+
+        {
+            BytecodeParser parser(cx, script);
+            if (!parser.parse()) {
+                return false;
+            }
             ExpressionDecompiler ed(cx, script, parser);
             if (!ed.init()) {
                 return false;
@@ -2794,76 +2888,147 @@ GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, Sprinter& sp)
             if (!text) {
                 return false;
             }
-
             JS::ConstUTF8CharsZ utf8chars(text.get(), strlen(text.get()));
             JSString* str = NewStringCopyUTF8Z<CanGC>(cx, utf8chars);
-            if (!str) {
+            if (!AppendJSONProperty(buf, "text")) {
                 return false;
             }
-
-            if (!JSONStringProperty(sp, json, "text", str)) {
+            if (!str || !(str = StringToSource(cx, str))) {
+                return false;
+            }
+            if (!buf.append(str)) {
                 return false;
             }
         }
 
-        json.beginObjectProperty("counts");
+        if (!AppendJSONProperty(buf, "counts")) {
+            return false;
+        }
+        if (!buf.append('{')) {
+            return false;
+        }
+
         if (hits > 0) {
-            json.property(PCCounts::numExecName, hits);
+            if (!AppendJSONProperty(buf, PCCounts::numExecName, NO_COMMA)) {
+                return false;
+            }
+            if (!NumberValueToStringBuffer(cx, DoubleValue(hits), buf)) {
+                return false;
+            }
         }
-        json.endObject();
 
-        json.endObject();
+        if (!buf.append('}')) {
+            return false;
+        }
+        if (!buf.append('}')) {
+            return false;
+        }
 
         // If the current instruction has thrown,
         // then decrement the hit counts with the number of throws.
-        if (const PCCounts* counts = sac.maybeGetThrowCounts(pc)) {
+        counts = sac.maybeGetThrowCounts(pc);
+        if (counts) {
             hits -= counts->numExec();
         }
     }
 
-    json.endList();
+    if (!buf.append(']')) {
+        return false;
+    }
 
-    if (jit::IonScriptCounts* ionCounts = sac.getIonCounts()) {
-        json.beginListProperty("ion");
-
+    jit::IonScriptCounts* ionCounts = sac.getIonCounts();
+    if (ionCounts) {
+        if (!AppendJSONProperty(buf, "ion")) {
+            return false;
+        }
+        if (!buf.append('[')) {
+            return false;
+        }
+        bool comma = false;
         while (ionCounts) {
-            json.beginList();
+            if (comma && !buf.append(',')) {
+                return false;
+            }
+            comma = true;
+
+            if (!buf.append('[')) {
+                return false;
+            }
             for (size_t i = 0; i < ionCounts->numBlocks(); i++) {
+                if (i && !buf.append(',')) {
+                    return false;
+                }
                 const jit::IonBlockCounts& block = ionCounts->block(i);
 
-                json.beginObject();
-                json.property("id", block.id());
-                json.property("offset", block.offset());
-
-                json.beginListProperty("successors");
+                if (!buf.append('{')) {
+                    return false;
+                }
+                if (!AppendJSONProperty(buf, "id", NO_COMMA)) {
+                    return false;
+                }
+                if (!NumberValueToStringBuffer(cx, Int32Value(block.id()), buf)) {
+                    return false;
+                }
+                if (!AppendJSONProperty(buf, "offset")) {
+                    return false;
+                }
+                if (!NumberValueToStringBuffer(cx, Int32Value(block.offset()), buf)) {
+                    return false;
+                }
+                if (!AppendJSONProperty(buf, "successors")) {
+                    return false;
+                }
+                if (!buf.append('[')) {
+                    return false;
+                }
                 for (size_t j = 0; j < block.numSuccessors(); j++) {
-                    json.value(block.successor(j));
+                    if (j && !buf.append(',')) {
+                        return false;
+                    }
+                    if (!NumberValueToStringBuffer(cx, Int32Value(block.successor(j)), buf)) {
+                        return false;
+                    }
                 }
-                json.endList();
-
-                json.property("hits", block.hitCount());
-
-                JSString* str = NewStringCopyZ<CanGC>(cx, block.code());
-                if (!str) {
+                if (!buf.append(']')) {
+                    return false;
+                }
+                if (!AppendJSONProperty(buf, "hits")) {
+                    return false;
+                }
+                if (!NumberValueToStringBuffer(cx, DoubleValue(block.hitCount()), buf)) {
                     return false;
                 }
 
-                if (!JSONStringProperty(sp, json, "code", str)) {
+                if (!AppendJSONProperty(buf, "code")) {
                     return false;
                 }
-
-                json.endObject();
+                JSString* str = JS_NewStringCopyZ(cx, block.code());
+                if (!str || !(str = StringToSource(cx, str))) {
+                    return false;
+                }
+                if (!buf.append(str)) {
+                    return false;
+                }
+                if (!buf.append('}')) {
+                    return false;
+                }
             }
-            json.endList();
+            if (!buf.append(']')) {
+                return false;
+            }
 
             ionCounts = ionCounts->previous();
         }
-
-        json.endList();
+        if (!buf.append(']')) {
+            return false;
+        }
     }
 
-    json.endObject();
+    if (!buf.append('}')) {
+        return false;
+    }
 
+    MOZ_ASSERT(!cx->isExceptionPending());
     return true;
 }
 
@@ -2880,23 +3045,16 @@ js::GetPCCountScriptContents(JSContext* cx, size_t index)
     const ScriptAndCounts& sac = (*rt->scriptAndCountsVector)[index];
     JSScript* script = sac.script;
 
-    Sprinter sp(cx);
-    if (!sp.init()) {
-        return nullptr;
-    }
+    StringBuffer buf(cx);
 
     {
         AutoRealm ar(cx, &script->global());
-        if (!GetPCCountJSON(cx, sac, sp)) {
+        if (!GetPCCountJSON(cx, sac, buf)) {
             return nullptr;
         }
     }
 
-    if (sp.hadOutOfMemory()) {
-        return nullptr;
-    }
-
-    return NewStringCopyZ<CanGC>(cx, sp.string());
+    return buf.finishString();
 }
 
 static bool

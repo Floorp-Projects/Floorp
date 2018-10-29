@@ -281,7 +281,7 @@ Sprinter::jsprintf(const char* format, ...)
 }
 
 const char js_EscapeMap[] = {
-    // clang-format off
+     // clang-format off
     '\b', 'b',
     '\f', 'f',
     '\n', 'n',
@@ -295,32 +295,11 @@ const char js_EscapeMap[] = {
     // clang-format on
 };
 
-static const char JSONEscapeMap[] = {
-    // clang-format off
-    '\b', 'b',
-    '\f', 'f',
-    '\n', 'n',
-    '\r', 'r',
-    '\t', 't',
-    '"',  '"',
-    '\\', '\\',
-    '\0'
-    // clang-format on
-};
-
-enum class QuoteTarget {
-    String, JSON
-};
-
-template <QuoteTarget target, typename CharT>
+template <typename CharT>
 static bool
 QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars, char quote)
 {
-    MOZ_ASSERT_IF(target == QuoteTarget::JSON, quote == '\0');
-
     using CharPtr = mozilla::RangedPtr<const CharT>;
-
-    const char* escapeMap = (target == QuoteTarget::String) ? js_EscapeMap : JSONEscapeMap;
 
     if (quote) {
         if (!sp->putChar(quote)) {
@@ -335,17 +314,7 @@ QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars, char quote)
         /* Move t forward from s past un-quote-worthy characters. */
         const CharPtr s = t;
         char16_t c = *t;
-        while (c < 127 && c != '\\') {
-            if (target == QuoteTarget::String) {
-                if (!isprint(c) || c == quote || c == '\t') {
-                    break;
-                }
-            } else {
-                if (c < ' ' || c == '"') {
-                    break;
-                }
-            }
-
+        while (c < 127 && isprint(c) && c != quote && c != '\\' && c != '\t') {
             ++t;
             if (t == end) {
                 break;
@@ -370,9 +339,9 @@ QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars, char quote)
             break;
         }
 
-        /* Use escapeMap, \u, or \x only if necessary. */
+        /* Use js_EscapeMap, \u, or \x only if necessary. */
         const char* escape;
-        if (!(c >> 8) && c != 0 && (escape = strchr(escapeMap, int(c))) != nullptr) {
+        if (!(c >> 8) && c != 0 && (escape = strchr(js_EscapeMap, int(c))) != nullptr) {
             if (!sp->jsprintf("\\%c", escape[1])) {
                 return false;
             }
@@ -408,8 +377,8 @@ QuoteString(Sprinter* sp, JSString* str, char quote /*= '\0' */)
 
     JS::AutoCheckCannotGC nogc;
     return linear->hasLatin1Chars()
-           ? QuoteString<QuoteTarget::String>(sp, linear->latin1Range(nogc), quote)
-           : QuoteString<QuoteTarget::String>(sp, linear->twoByteRange(nogc), quote);
+           ? QuoteString(sp, linear->latin1Range(nogc), quote)
+           : QuoteString(sp, linear->twoByteRange(nogc), quote);
 }
 
 UniqueChars
@@ -423,20 +392,6 @@ QuoteString(JSContext* cx, JSString* str, char quote /* = '\0' */)
         return nullptr;
     }
     return sprinter.release();
-}
- 
-bool
-JSONQuoteString(Sprinter* sp, JSString* str)
-{
-    JSLinearString* linear = str->ensureLinear(sp->context);
-    if (!linear) {
-        return false;
-    }
-
-    JS::AutoCheckCannotGC nogc;
-    return linear->hasLatin1Chars()
-           ? QuoteString<QuoteTarget::JSON>(sp, linear->latin1Range(nogc), '\0')
-           : QuoteString<QuoteTarget::JSON>(sp, linear->twoByteRange(nogc), '\0');
 }
 
 Fprinter::Fprinter(FILE* fp)
