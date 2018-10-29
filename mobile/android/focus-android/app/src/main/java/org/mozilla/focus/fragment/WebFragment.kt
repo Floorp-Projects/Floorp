@@ -67,6 +67,8 @@ abstract class WebFragment : LocaleAwareFragment() {
 
         if (!AppConstants.isGeckoBuild) {
             restoreStateOrLoadUrl()
+        } else {
+            loadInitialUrl()
         }
 
         onCreateViewCalled()
@@ -131,6 +133,16 @@ abstract class WebFragment : LocaleAwareFragment() {
 
     protected fun getWebView(): IWebView? {
         return if (isWebViewAvailable) webViewInstance else null
+    }
+
+    private fun loadInitialUrl() {
+        val session = session
+        if (session == null || session.savedWebViewState == null) {
+            val url = initialUrl
+            if (!TextUtils.isEmpty(url)) {
+                webViewInstance!!.loadUrl(url)
+            }
+        }
     }
 
     private fun restoreStateOrLoadUrl() {
