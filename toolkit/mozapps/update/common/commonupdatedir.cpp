@@ -538,14 +538,12 @@ GetCachedHash(const char16_t* installPath, HKEY rootKey,
  */
 HRESULT
 GetCommonUpdateDirectory(const wchar_t* installPath,
-                         const char* vendor,
-                         const char* appName,
                          SetPermissionsOf permsToSet,
                          mozilla::UniquePtr<wchar_t[]>& result)
 {
   return GetUpdateDirectory(installPath,
-                            vendor,
-                            appName,
+                            nullptr,
+                            nullptr,
                             WhichUpdateDir::CommonAppData,
                             permsToSet,
                             result);
@@ -591,21 +589,21 @@ GetUpdateDirectory(const wchar_t* installPath,
                    SetPermissionsOf permsToSet,
                    mozilla::UniquePtr<wchar_t[]>& result)
 {
-  PWSTR programDataPath;
+  PWSTR baseDirParentPath;
   REFKNOWNFOLDERID folderID =
     (whichDir == WhichUpdateDir::CommonAppData) ? FOLDERID_ProgramData
                                                 : FOLDERID_LocalAppData;
   HRESULT hrv = SHGetKnownFolderPath(folderID, KF_FLAG_CREATE, nullptr,
-                                     &programDataPath);
-  // Free programDataPath when it goes out of scope.
+                                     &baseDirParentPath);
+  // Free baseDirParentPath when it goes out of scope.
   mozilla::UniquePtr<wchar_t, CoTaskMemFreeDeleter>
-    programDataPathUnique(programDataPath);
+    baseDirParentPathUnique(baseDirParentPath);
   if (FAILED(hrv)) {
     return hrv;
   }
 
   SimpleAutoString baseDir;
-  if (vendor || appName) {
+  if (whichDir == WhichUpdateDir::UserAppData && (vendor || appName)) {
     const char* rawBaseDir = vendor ? vendor : appName;
     hrv = baseDir.CopyFrom(rawBaseDir);
   } else {
@@ -618,9 +616,9 @@ GetUpdateDirectory(const wchar_t* installPath,
 
   // Generate the base path (C:\ProgramData\Mozilla)
   SimpleAutoString basePath;
-  size_t basePathLen = wcslen(programDataPath) + 1 /* path separator */ +
+  size_t basePathLen = wcslen(baseDirParentPath) + 1 /* path separator */ +
                        baseDir.Length();
-  basePath.AllocAndAssignSprintf(basePathLen, L"%s\\%s", programDataPath,
+  basePath.AllocAndAssignSprintf(basePathLen, L"%s\\%s", baseDirParentPath,
                                  baseDir.String());
   if (basePath.Length() != basePathLen) {
     return E_FAIL;
