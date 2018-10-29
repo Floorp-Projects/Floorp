@@ -42,13 +42,8 @@ beetmover_description_schema = schema.extend({
     Optional('label'): basestring,
     Optional('treeherder'): task_description_schema['treeherder'],
 
-    Required('run-on-projects'): task_description_schema['run-on-projects'],
-    Required('run-on-hg-branches'): task_description_schema['run-on-hg-branches'],
-
     Optional('bucket-scope'): optionally_keyed_by('release-level', basestring),
-    Optional('shipping-phase'): optionally_keyed_by(
-        'project', task_description_schema['shipping-phase']
-    ),
+    Optional('shipping-phase'): task_description_schema['shipping-phase'],
     Optional('shipping-product'): task_description_schema['shipping-product'],
 })
 
@@ -60,22 +55,6 @@ def validate(config, jobs):
         validate_schema(
             beetmover_description_schema, job,
             "In beetmover-geckoview ({!r} kind) task for {!r}:".format(config.kind, label))
-        yield job
-
-
-@transforms.add
-def resolve_keys(config, jobs):
-    for job in jobs:
-        resolve_keyed_by(
-            job, 'run-on-hg-branches', item_name=job['label'], project=config.params['project']
-        )
-        resolve_keyed_by(
-            job, 'shipping-phase', item_name=job['label'], project=config.params['project']
-        )
-        resolve_keyed_by(
-            job, 'bucket-scope', item_name=job['label'],
-            **{'release-level': config.params.release_level()}
-        )
         yield job
 
 
@@ -110,7 +89,10 @@ def make_task_description(config, jobs):
         if job.get('locale'):
             attributes['locale'] = job['locale']
 
-        attributes['run_on_hg_branches'] = job['run-on-hg-branches']
+        resolve_keyed_by(
+            job, 'bucket-scope', item_name=job['label'],
+            **{'release-level': config.params.release_level()}
+        )
 
         task = {
             'label': label,
@@ -119,7 +101,7 @@ def make_task_description(config, jobs):
             'scopes': [job['bucket-scope'], 'project:releng:beetmover:action:push-to-maven'],
             'dependencies': dependencies,
             'attributes': attributes,
-            'run-on-projects': job['run-on-projects'],
+            'run-on-projects': ['mozilla-central'],
             'treeherder': treeherder,
             'shipping-phase': job['shipping-phase'],
         }
