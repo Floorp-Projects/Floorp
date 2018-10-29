@@ -892,9 +892,6 @@ parent:
     async Beep() compress;
     async PlayEventSound(uint32_t aEventId) compress;
 
-    sync GetSystemColors(uint32_t colorsCount)
-        returns (uint32_t[] colors);
-
     sync GetIconForExtension(nsCString aFileExt, uint32_t aIconSize)
         returns (uint8_t[] bits);
 

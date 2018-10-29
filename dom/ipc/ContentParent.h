@@ -1033,9 +1033,6 @@ private:
   virtual mozilla::ipc::IPCResult RecvBeep() override;
   virtual mozilla::ipc::IPCResult RecvPlayEventSound(const uint32_t& aEventId) override;
 
-  virtual mozilla::ipc::IPCResult RecvGetSystemColors(const uint32_t& colorsCount,
-                                                      InfallibleTArray<uint32_t>* colors) override;
-
   virtual mozilla::ipc::IPCResult RecvGetIconForExtension(const nsCString& aFileExt,
                                                           const uint32_t& aIconSize,
                                                           InfallibleTArray<uint8_t>* bits) override;
