@@ -74,6 +74,7 @@ const TEST_GLOBAL = {
   Ci: {
     nsIHttpChannel: {REFERRER_POLICY_UNSAFE_URL: 5},
     nsITimer: {TYPE_ONE_SHOT: 1},
+    nsIWebProgressListener: {LOCATION_CHANGE_SAME_DOCUMENT: 1},
   },
   Cu: {
     importGlobalProperties() {},
