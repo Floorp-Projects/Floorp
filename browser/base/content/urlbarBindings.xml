@@ -1242,8 +1242,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
       <method name="_enableOrDisableOneOffSearches">
         <body><![CDATA[
-          this.popup.oneOffSearchesEnabled =
-            this._prefs.getBoolPref("oneOffSearches");
+          this.popup.toggleOneOffSearches(
+            this._prefs.getBoolPref("oneOffSearches"),
+            "pref"
+          );
         ]]></body>
       </method>
 
@@ -1642,32 +1644,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         @param  value
                 The input's value will be set to this value, and the search will
                 use it as its query.
-        @param  options
-                An optional object with the following optional properties:
-                * disableOneOffButtons: Set to true to hide the one-off search
-                  buttons.
-                * disableSearchSuggestionsNotification: Set to true to hide the
-                  onboarding opt-out search suggestions notification.
       -->
       <method name="search">
         <parameter name="value"/>
-        <parameter name="options"/>
         <body><![CDATA[
-          options = options || {};
-
-          if (options.disableOneOffButtons) {
-            this.popup.addEventListener("popupshowing", () => {
-              if (this.popup.oneOffSearchesEnabled) {
-                this.popup.oneOffSearchesEnabled = false;
-                this.popup.addEventListener("popuphidden", () => {
-                  this.popup.oneOffSearchesEnabled = true;
-                }, {once: true});
-              }
-            }, {once: true});
-          }
-
-          if (options.disableSearchSuggestionsNotification &&
-              this.whichSearchSuggestionsNotification != "none") {
+          // Hide the suggestions notification if the search uses an "@engine"
+          // search engine alias.
+          if (value.trim()[0] == "@") {
             let which = this.whichSearchSuggestionsNotification;
             this._whichSearchSuggestionsNotification = "none";
             this.popup.addEventListener("popuphidden", () => {
@@ -1919,8 +1902,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                                                 "one-off-search-buttons");
       </field>
 
-      <field name="_oneOffSearchesEnabled">false</field>
-
       <field name="_overrideValue">null</field>
       <property name="overrideValue"
                 onget="return this._overrideValue;"
@@ -1938,13 +1919,31 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
-      <property name="oneOffSearchesEnabled">
-        <getter><![CDATA[
-          return this._oneOffSearchesEnabled;
-        ]]></getter>
-        <setter><![CDATA[
-          this._oneOffSearchesEnabled = !!val;
-          if (val) {
+      <field name="_oneOffSearchesEnabledByReason">new Map()</field>
+
+      <method name="toggleOneOffSearches">
+        <parameter name="enable"/>
+        <parameter name="reason"/>
+        <body><![CDATA[
+          this._oneOffSearchesEnabledByReason.set(reason || "runtime", enable);
+          this._syncOneOffSearchesEnabled();
+        ]]></body>
+      </method>
+
+      <method name="_syncOneOffSearchesEnabled">
+        <body><![CDATA[
+          // If the popup hasn't ever been opened yet, then don't actually do
+          // anything.  (The popup will still be hidden in that case.)  The
+          // input adds a popupshowing listener that will call this method back
+          // and lazily initialize the one-off buttons the first time the popup
+          // opens.  There are performance tests that fail if we don't do this.
+          if (this.hidden) {
+            return;
+          }
+
+          let enable = Array.from(this._oneOffSearchesEnabledByReason.values())
+                            .every(v => v);
+          if (enable) {
             this.oneOffSearchButtons.telemetryOrigin = "urlbar";
             this.oneOffSearchButtons.style.display = "-moz-box";
             // Set .textbox first, since the popup setter will cause
@@ -1957,8 +1956,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             this.oneOffSearchButtons.textbox = null;
             this.oneOffSearchButtons.popup = null;
           }
-          return this._oneOffSearchesEnabled;
-        ]]></setter>
+        ]]></body>
+      </method>
+
+      <property name="oneOffSearchesEnabled" readonly="true">
+        <getter><![CDATA[
+          return this.oneOffSearchButtons.style.display != "none";
+        ]]></getter>
       </property>
 
       <!-- Override this so that navigating between items results in an item
@@ -2461,6 +2465,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             // selected and is now being reused.
             if (selectHeuristic || !this.input.gotResultForCurrentQuery) {
               this.input.formatValue();
+
+              // Also, hide the one-off search buttons if the user is using, or
+              // starting to use, an "@engine" search engine alias.
+              this.toggleOneOffSearches(this.input.value.trim()[0] != "@");
             }
 
             // If this is the first time we get the result from the current
@@ -2479,7 +2487,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                          this.input.urlbarSearchSuggestEnabled) {
                 // Preconnect to the current search engine only if the search
                 // suggestions are enabled.
-                let engine = Services.search.currentEngine;
+                let engine = Services.search.defaultEngine;
                 engine.speculativeConnect({window,
                                            originAttributes: gBrowser.contentPrincipal.originAttributes});
               }

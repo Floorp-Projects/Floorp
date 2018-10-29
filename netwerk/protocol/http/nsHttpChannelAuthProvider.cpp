@@ -25,6 +25,10 @@
 #include "nsIHttpAuthenticableChannel.h"
 #include "nsIURI.h"
 #include "nsContentUtils.h"
+#include "nsHttpBasicAuth.h"
+#include "nsHttpDigestAuth.h"
+#include "nsHttpNegotiateAuth.h"
+#include "nsHttpNTLMAuth.h"
 #include "nsServiceManagerUtils.h"
 #include "nsILoadContext.h"
 #include "nsIURL.h"
@@ -1095,11 +1099,23 @@ nsHttpChannelAuthProvider::GetAuthenticator(const char            *challenge,
     // normalize to lowercase
     ToLowerCase(authType);
 
-    nsAutoCString contractid;
-    contractid.AssignLiteral(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
-    contractid.Append(authType);
+    nsCOMPtr<nsIHttpAuthenticator> authenticator;
+    if (authType.EqualsLiteral("negotiate")) {
+      authenticator = nsHttpNegotiateAuth::GetOrCreate();
+    } else if (authType.EqualsLiteral("basic")) {
+      authenticator = nsHttpBasicAuth::GetOrCreate();
+    } else if (authType.EqualsLiteral("digest")) {
+      authenticator = nsHttpDigestAuth::GetOrCreate();
+    } else if (authType.EqualsLiteral("ntlm")) {
+      authenticator = nsHttpNTLMAuth::GetOrCreate();
+    } else {
+      return NS_ERROR_SERVICE_NOT_FOUND;
+    }
 
-    return CallGetService(contractid.get(), auth);
+    MOZ_ASSERT(authenticator);
+    authenticator.forget(auth);
+
+    return NS_OK;
 }
 
 void

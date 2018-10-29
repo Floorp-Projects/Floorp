@@ -4,7 +4,6 @@
 // Test that sites added to the Tracking Protection whitelist in private
 // browsing mode don't persist once the private browsing window closes.
 
-const CB_PREF = "browser.contentblocking.enabled";
 const TP_PB_PREF = "privacy.trackingprotection.enabled";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 var TrackingProtection = null;
@@ -13,7 +12,6 @@ var browser = null;
 
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref(TP_PB_PREF);
-  Services.prefs.clearUserPref(CB_PREF);
   ContentBlocking = TrackingProtection = browser = null;
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
@@ -105,8 +103,6 @@ add_task(async function testExceptionAddition() {
 
   Services.prefs.setBoolPref(TP_PB_PREF, true);
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
-  Services.prefs.setBoolPref(CB_PREF, true);
-  ok(TrackingProtection.enabled, "CB is enabled after setting the pref");
 
   info("Load a test page containing tracking elements");
   await promiseTabLoadEvent(tab, TRACKING_PAGE);
@@ -142,7 +138,6 @@ add_task(async function testExceptionPersistence() {
   TrackingProtection = browser.ownerGlobal.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the private window");
 
-  ok(ContentBlocking.enabled, "CB is still enabled");
   ok(TrackingProtection.enabled, "TP is still enabled");
 
   info("Load a test page containing tracking elements");

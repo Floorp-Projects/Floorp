@@ -73,8 +73,6 @@ function PlacesController(aView) {
   XPCOMUtils.defineLazyGetter(this, "profileName", function() {
     return Services.dirsvc.get("ProfD", Ci.nsIFile).leafName;
   });
-
-  this._cachedLivemarkInfoObjects = new Map();
 }
 
 PlacesController.prototype = {
@@ -180,11 +178,6 @@ PlacesController.prototype = {
                               (PlacesUtils.nodeIsFolder(selectedNode) &&
                                !PlacesUtils.isQueryGeneratedFolder(selectedNode)));
     }
-    case "placesCmd_reload": {
-      // Livemark containers
-      let selectedNode = this._view.selectedNode;
-      return selectedNode && this.hasCachedLivemarkInfo(selectedNode);
-    }
     case "placesCmd_sortBy:name": {
       let selectedNode = this._view.selectedNode;
       return selectedNode &&
@@ -262,9 +255,6 @@ PlacesController.prototype = {
       break;
     case "placesCmd_show:info":
       this.showBookmarkPropertiesForSelection();
-      break;
-    case "placesCmd_reload":
-      this.reloadSelectedLivemark();
       break;
     case "placesCmd_sortBy:name":
       this.sortFolderByName().catch(Cu.reportError);
@@ -377,7 +367,6 @@ PlacesController.prototype = {
    * rules:
    *    "link"              node is a URI
    *    "bookmark"          node is a bookmark
-   *    "livemarkChild"     node is a child of a livemark
    *    "tagChild"          node is a child of a tag
    *    "folder"            node is a folder
    *    "query"             node is a query
@@ -420,9 +409,6 @@ PlacesController.prototype = {
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT:
           nodeData.folder = true;
-          if (this.hasCachedLivemarkInfo(node)) {
-            nodeData.livemark = true;
-          }
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR:
           nodeData.separator = true;
@@ -432,11 +418,8 @@ PlacesController.prototype = {
           if (PlacesUtils.nodeIsBookmark(node)) {
             nodeData.bookmark = true;
             var parentNode = node.parent;
-            if (parentNode) {
-              if (PlacesUtils.nodeIsTagQuery(parentNode))
-                nodeData.tagChild = true;
-              else if (this.hasCachedLivemarkInfo(parentNode))
-                nodeData.livemarkChild = true;
+            if (parentNode && PlacesUtils.nodeIsTagQuery(parentNode)) {
+              nodeData.tagChild = true;
             }
           }
           break;
@@ -651,20 +634,6 @@ PlacesController.prototype = {
                                        node,
                                        hiddenRows: [ "folderPicker" ],
                                      }, window.top);
-  },
-
-  /**
-   * Reloads the selected livemark if any.
-   */
-  reloadSelectedLivemark: function PC_reloadSelectedLivemark() {
-    var selectedNode = this._view.selectedNode;
-    if (selectedNode) {
-      let itemId = selectedNode.itemId;
-      PlacesUtils.livemarks.getLivemark({ id: itemId })
-        .then(aLivemark => {
-          aLivemark.reload(true);
-        }, Cu.reportError);
-    }
   },
 
   /**
@@ -977,12 +946,7 @@ PlacesController.prototype = {
         // This order is _important_! It controls how this and other
         // applications select data to be inserted based on type.
         addData(PlacesUtils.TYPE_X_MOZ_PLACE, i);
-
-        // Drop the feed uri for livemark containers
-        let livemarkInfo = this.getCachedLivemarkInfo(node);
-        if (livemarkInfo) {
-          addURIData(i, livemarkInfo.feedURI.spec);
-        } else if (node.uri) {
+        if (node.uri) {
           addURIData(i);
         }
       }
@@ -1055,13 +1019,8 @@ PlacesController.prototype = {
       if (PlacesUtils.nodeIsFolder(node))
         copiedFolders.push(node);
 
-      let livemarkInfo = this.getCachedLivemarkInfo(node);
-      let feedURI = livemarkInfo && livemarkInfo.feedURI.spec;
-
       contents.forEach(function(content) {
-        content.entries.push(
-          PlacesUtils.wrapNode(node, content.type, feedURI)
-        );
+        content.entries.push(PlacesUtils.wrapNode(node, content.type));
       });
     }, this);
 
@@ -1195,40 +1154,6 @@ PlacesController.prototype = {
 
     if (itemsToSelect.length > 0)
       this._view.selectItems(itemsToSelect, false);
-  },
-
-  /**
-   * Cache the livemark info for a node.  This allows the controller and the
-   * views to treat the given node as a livemark.
-   * @param aNode
-   *        a places result node.
-   * @param aLivemarkInfo
-   *        a mozILivemarkInfo object.
-   */
-  cacheLivemarkInfo: function PC_cacheLivemarkInfo(aNode, aLivemarkInfo) {
-    this._cachedLivemarkInfoObjects.set(aNode, aLivemarkInfo);
-  },
-
-  /**
-   * Returns whether or not there's cached mozILivemarkInfo object for a node.
-   * @param aNode
-   *        a places result node.
-   * @return true if there's a cached mozILivemarkInfo object for
-   *         aNode, false otherwise.
-   */
-  hasCachedLivemarkInfo: function PC_hasCachedLivemarkInfo(aNode) {
-    return this._cachedLivemarkInfoObjects.has(aNode);
-  },
-
-  /**
-   * Returns the cached livemark info for a node, if set by cacheLivemarkInfo,
-   * null otherwise.
-   * @param aNode
-   *        a places result node.
-   * @return the mozILivemarkInfo object for aNode, if set, null otherwise.
-   */
-  getCachedLivemarkInfo: function PC_getCachedLivemarkInfo(aNode) {
-    return this._cachedLivemarkInfoObjects.get(aNode, null);
   },
 
   /**

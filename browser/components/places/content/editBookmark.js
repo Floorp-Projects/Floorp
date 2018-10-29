@@ -173,7 +173,7 @@ var gEditItemOverlay = {
    *        2. any of the following optional properties:
    *          - hiddenRows (Strings array): list of rows to be hidden regardless
    *            of the item edited. Possible values: "title", "location",
-   *            "keyword", "feedLocation", "siteLocation", folderPicker"
+   *            "keyword", "folderPicker".
    */
   initPanel(aInfo) {
     if (typeof(aInfo) != "object" || aInfo === null)

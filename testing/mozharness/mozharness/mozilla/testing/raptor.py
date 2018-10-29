@@ -77,6 +77,22 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "default": False,
             "help": "Tries to enable the WebRender compositor.",
         }],
+        [["--geckoProfile"], {
+            "dest": "gecko_profile",
+            "action": "store_true",
+            "default": False,
+            "help": "Whether or not to profile the test run and save the profile results"
+        }],
+        [["--geckoProfileInterval"], {
+            "dest": "gecko_profile_interval",
+            "type": "int",
+            "help": "The interval between samples taken by the profiler (milliseconds)"
+        }],
+        [["--geckoProfileEntries"], {
+            "dest": "gecko_profile_entries",
+            "type": "int",
+            "help": "How many samples to take with the profiler"
+        }],
     ] + testing_config_options + copy.deepcopy(code_coverage_config_options)
 
     def __init__(self, **kwargs):
@@ -133,8 +149,10 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         self.repo_path = self.config.get("repo_path")
         self.obj_path = self.config.get("obj_path")
         self.test = None
-        self.gecko_profile = self.config.get('gecko_profile')
+        self.gecko_profile = self.config.get('gecko_profile') or \
+            "--geckoProfile" in self.config.get("raptor_cmd_line_args", [])
         self.gecko_profile_interval = self.config.get('gecko_profile_interval')
+        self.gecko_profile_entries = self.config.get('gecko_profile_entries')
         self.test_packages_url = self.config.get('test_packages_url')
 
     # We accept some configuration options from the try commit message in the
@@ -148,6 +166,10 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             if self.gecko_profile_interval:
                 gecko_results.extend(
                     ['--geckoProfileInterval', str(self.gecko_profile_interval)]
+                )
+            if self.gecko_profile_entries:
+                gecko_results.extend(
+                    ['--geckoProfileEntries', str(self.gecko_profile_entries)]
                 )
         return gecko_results
 

@@ -14,8 +14,20 @@
 #grow-not-grow div:last-child {
   flex-grow: 1;
 }
+
+#want-to-grow-more-than-max {
+  width: 500px;
+  display: flex;
+}
+#want-to-grow-more-than-max div {
+  flex: 1;
+  max-width: 200px;
+}
 </style>
 <div id="grow-not-grow">
   <div>item 1</div>
   <div>item 2</div>
+</div>
+<div id="want-to-grow-more-than-max">
+  <div>item wants to grow more</div>
 </div>

@@ -143,7 +143,7 @@ class MozSearchOneOffs extends MozXULElement {
         this.handleSearchCommand(event, this._contextEngine, true);
       }
       if (target.classList.contains("search-one-offs-context-set-default")) {
-        let currentEngine = Services.search.currentEngine;
+        let currentEngine = Services.search.defaultEngine;
 
         if (!this.getAttribute("includecurrentengine")) {
           // Make the target button of the context menu reflect the current
@@ -160,7 +160,7 @@ class MozSearchOneOffs extends MozXULElement {
           button.engine = currentEngine;
         }
 
-        Services.search.currentEngine = this._contextEngine;
+        Services.search.defaultEngine = this._contextEngine;
       }
     });
 
@@ -173,7 +173,7 @@ class MozSearchOneOffs extends MozXULElement {
         return;
       }
       this.querySelector(".search-one-offs-context-set-default")
-          .setAttribute("disabled", target.engine == Services.search.currentEngine);
+          .setAttribute("disabled", target.engine == Services.search.defaultEngine);
 
       this.contextMenuPopup.openPopupAtScreen(event.screenX, event.screenY, true);
       event.preventDefault();
@@ -440,7 +440,7 @@ class MozSearchOneOffs extends MozXULElement {
     }
     let currentEngineNameToIgnore;
     if (!this.getAttribute("includecurrentengine"))
-      currentEngineNameToIgnore = Services.search.currentEngine.name;
+      currentEngineNameToIgnore = Services.search.defaultEngine.name;
 
     let pref = Services.prefs.getStringPref("browser.search.hiddenOneOffs");
     let hiddenList = pref ? pref.split(",") : [];
@@ -568,7 +568,7 @@ class MozSearchOneOffs extends MozXULElement {
     let engines = this.engines;
     let oneOffCount = engines.length;
     let collapsed = !oneOffCount ||
-                    (oneOffCount == 1 && engines[0].name == Services.search.currentEngine.name);
+                    (oneOffCount == 1 && engines[0].name == Services.search.defaultEngine.name);
 
     // header is a xul:deck so collapsed doesn't work on it, see bug 589569.
     this.header.hidden = this.buttons.collapsed = collapsed;

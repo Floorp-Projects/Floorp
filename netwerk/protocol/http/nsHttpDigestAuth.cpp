@@ -7,6 +7,7 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Unused.h"
 
@@ -24,6 +25,23 @@
 
 namespace mozilla {
 namespace net {
+
+StaticRefPtr<nsHttpDigestAuth> nsHttpDigestAuth::gSingleton;
+
+already_AddRefed<nsIHttpAuthenticator>
+nsHttpDigestAuth::GetOrCreate()
+{
+    nsCOMPtr<nsIHttpAuthenticator> authenticator;
+    if (gSingleton) {
+      authenticator = gSingleton;
+    } else {
+      gSingleton = new nsHttpDigestAuth();
+      ClearOnShutdown(&gSingleton);
+      authenticator = gSingleton;
+    }
+
+    return authenticator.forget();
+}
 
 //-----------------------------------------------------------------------------
 // nsHttpDigestAuth::nsISupports

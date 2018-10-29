@@ -10,9 +10,27 @@
 #include "plstr.h"
 #include "nsString.h"
 #include "mozilla/Base64.h"
+#include "mozilla/ClearOnShutdown.h"
 
 namespace mozilla {
 namespace net {
+
+StaticRefPtr<nsHttpBasicAuth> nsHttpBasicAuth::gSingleton;
+
+already_AddRefed<nsIHttpAuthenticator>
+nsHttpBasicAuth::GetOrCreate()
+{
+    nsCOMPtr<nsIHttpAuthenticator> authenticator;
+    if (gSingleton) {
+      authenticator = gSingleton;
+    } else {
+      gSingleton = new nsHttpBasicAuth();
+      ClearOnShutdown(&gSingleton);
+      authenticator = gSingleton;
+    }
+
+    return authenticator.forget();
+}
 
 //-----------------------------------------------------------------------------
 // nsHttpBasicAuth::nsISupports
