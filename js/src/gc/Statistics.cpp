@@ -72,7 +72,7 @@ JS_PUBLIC_API(const char*)
 JS::gcreason::ExplainReason(JS::gcreason::Reason reason)
 {
     switch (reason) {
-#define SWITCH_REASON(name)                         \
+#define SWITCH_REASON(name, _)                    \
         case JS::gcreason::name:                    \
           return #name;
         GCREASONS(SWITCH_REASON)
@@ -87,7 +87,7 @@ const char*
 js::gcstats::ExplainAbortReason(gc::AbortReason reason)
 {
     switch (reason) {
-#define SWITCH_REASON(name)                         \
+#define SWITCH_REASON(name, _)                      \
         case gc::AbortReason::name:                 \
           return #name;
         GC_ABORT_REASONS(SWITCH_REASON)

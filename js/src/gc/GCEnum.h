@@ -39,20 +39,20 @@ enum class State {
 };
 
 // Reasons we reset an ongoing incremental GC or perform a non-incremental GC.
-#define GC_ABORT_REASONS(D) \
-    D(None) \
-    D(NonIncrementalRequested) \
-    D(AbortRequested) \
-    D(Unused1) \
-    D(IncrementalDisabled) \
-    D(ModeChange) \
-    D(MallocBytesTrigger) \
-    D(GCBytesTrigger) \
-    D(ZoneChange) \
-    D(CompartmentRevived) \
-    D(GrayRootBufferingFailed)
+#define GC_ABORT_REASONS(D)            \
+    D(None,                         0) \
+    D(NonIncrementalRequested,      1) \
+    D(AbortRequested,               2) \
+    D(Unused1,                      3) \
+    D(IncrementalDisabled,          4) \
+    D(ModeChange,                   5) \
+    D(MallocBytesTrigger,           6) \
+    D(GCBytesTrigger,               7) \
+    D(ZoneChange,                   8) \
+    D(CompartmentRevived,           9) \
+    D(GrayRootBufferingFailed,     10)
 enum class AbortReason {
-#define MAKE_REASON(name) name,
+#define MAKE_REASON(name, num) name = num,
     GC_ABORT_REASONS(MAKE_REASON)
 #undef MAKE_REASON
 };
