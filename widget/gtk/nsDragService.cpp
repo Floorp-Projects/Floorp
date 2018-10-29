@@ -1478,81 +1478,58 @@ nsDragService::SourceEndDragSession(GdkDragContext *aContext,
 }
 
 static void
-CreateUriList(nsIArray *items, gchar **text, gint *length)
+CreateURIList(nsIArray* aItems, nsACString& aURIList)
 {
-    uint32_t i, count;
-    GString *uriList = g_string_new(nullptr);
+    uint32_t length = 0;
+    aItems->GetLength(&length);
 
-    items->GetLength(&count);
-    for (i = 0; i < count; i++) {
-        nsCOMPtr<nsITransferable> item;
-        item = do_QueryElementAt(items, i);
+    for (uint32_t i = 0; i < length; ++i) {
+        nsCOMPtr<nsITransferable> item = do_QueryElementAt(aItems, i);
+        if (!item) {
+            continue;
+        }
 
-        if (item) {
-            uint32_t tmpDataLen = 0;
-            void    *tmpData = nullptr;
-            nsresult rv = NS_OK;
-            nsCOMPtr<nsISupports> data;
-            rv = item->GetTransferData(kURLMime,
-                                       getter_AddRefs(data),
-                                       &tmpDataLen);
+        nsCOMPtr<nsISupports> data;
+        uint32_t len = 0;
+        nsresult rv = item->GetTransferData(kURLMime, getter_AddRefs(data),
+                                            &len);
+        if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsISupportsString> string = do_QueryInterface(data);
 
-            if (NS_SUCCEEDED(rv)) {
-                nsPrimitiveHelpers::CreateDataFromPrimitive(
-                    nsDependentCString(kURLMime), data, &tmpData, tmpDataLen);
-                char* plainTextData = nullptr;
-                char16_t* castedUnicode = reinterpret_cast<char16_t*>
-                                                           (tmpData);
-                uint32_t plainTextLen = 0;
-                UTF16ToNewUTF8(castedUnicode,
-                               tmpDataLen / 2,
-                               &plainTextData,
-                               &plainTextLen);
-                if (plainTextData) {
-                    uint32_t j;
+            nsAutoString text;
+            if (string) {
+                string->GetData(text);
+            }
 
-                    // text/x-moz-url is of form url + "\n" + title.
-                    // We just want the url.
-                    for (j = 0; j < plainTextLen; j++)
-                        if (plainTextData[j] == '\n' ||
-                            plainTextData[j] == '\r') {
-                            plainTextData[j] = '\0';
-                            break;
-                        }
-                    g_string_append(uriList, plainTextData);
-                    g_string_append(uriList, "\r\n");
-                    // this wasn't allocated with glib
-                    free(plainTextData);
-                }
-                if (tmpData) {
-                    // this wasn't allocated with glib
-                    free(tmpData);
-                }
-            } else {
-                // There is no uri available.  If there is a file available,
-                // create a uri from the file.
-                nsCOMPtr<nsISupports> data;
-                rv = item->GetTransferData(kFileMime,
-                                           getter_AddRefs(data),
-                                           &tmpDataLen);
-                if (NS_SUCCEEDED(rv)) {
-                    if (nsCOMPtr<nsIFile> file = do_QueryInterface(data)) {
-                        nsCOMPtr<nsIURI> fileURI;
-                        NS_NewFileURI(getter_AddRefs(fileURI), file);
-                        if (fileURI) {
-                            nsAutoCString uristring;
-                            fileURI->GetSpec(uristring);
-                            g_string_append(uriList, uristring.get());
-                            g_string_append(uriList, "\r\n");
-                        }
-                    }
+            // text/x-moz-url is of form url + "\n" + title.
+            // We just want the url.
+            int32_t separatorPos = text.FindChar(u'\n');
+            if (separatorPos >= 0) {
+                text.Truncate(separatorPos);
+            }
+
+            AppendUTF16toUTF8(text, aURIList);
+            aURIList.AppendLiteral("\r\n");
+            continue;
+        }
+
+        // There is no URI available. If there is a file available, create
+        // a URI from the file.
+        rv = item->GetTransferData(kFileMime, getter_AddRefs(data), &len);
+        if (NS_SUCCEEDED(rv)) {
+            if (nsCOMPtr<nsIFile> file = do_QueryInterface(data)) {
+                nsCOMPtr<nsIURI> fileURI;
+                NS_NewFileURI(getter_AddRefs(fileURI), file);
+                if (fileURI) {
+                    nsAutoCString spec;
+                    fileURI->GetSpec(spec);
+
+                    aURIList.Append(spec);
+                    aURIList.AppendLiteral("\r\n");
                 }
             }
         }
     }
-    *text = uriList->str;
-    *length = uriList->len + 1;
-    g_string_free(uriList, FALSE); // don't free the data
 }
 
 
@@ -1748,12 +1725,10 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
         } else {
             if (mimeFlavor.EqualsLiteral(gTextUriListType)) {
                 // fall back for text/uri-list
-                gchar *uriList;
-                gint length;
-                CreateUriList(mSourceDataItems, &uriList, &length);
+                nsAutoCString list;
+                CreateURIList(mSourceDataItems, list);
                 gtk_selection_data_set(aSelectionData, target,
-                                       8, (guchar *)uriList, length);
-                g_free(uriList);
+                                       8, (guchar *)list.get(), list.Length());
                 return;
             }
         }

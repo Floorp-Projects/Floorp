@@ -242,7 +242,8 @@ OculusSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
   if (!CreateShaders()) {
     return false;
   }
-
+  // Ideally, we should move LoadOvrLib() up to the first line to avoid
+  // unnecessary D3D objects creation. But it will cause a WPT fail in Win 7 debug.
   if (!LoadOvrLib()) {
     return false;
   }

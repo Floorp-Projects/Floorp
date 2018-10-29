@@ -1140,27 +1140,11 @@ ReadableStream_getReader(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-// Streams spec, 3.2.4.4. pipeThrough({ writable, readable }, options)
-static MOZ_MUST_USE bool
-ReadableStream_pipeThrough(JSContext* cx, unsigned argc, Value* vp)
-{
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_READABLESTREAM_METHOD_NOT_IMPLEMENTED, "pipeThrough");
-    return false;
-    // // Step 1: Perform ? Invoke(this, "pipeTo", « writable, options »).
+// Streams spec, 3.2.5.4. pipeThrough({ writable, readable }, options)
+// Not implemented.
 
-    // // Step 2: Return readable.
-}
-
-// Streams spec, 3.2.4.5. pipeTo(dest, { preventClose, preventAbort, preventCancel } = {})
-// TODO: Unimplemented since spec is not complete yet.
-static MOZ_MUST_USE bool
-ReadableStream_pipeTo(JSContext* cx, unsigned argc, Value* vp)
-{
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_READABLESTREAM_METHOD_NOT_IMPLEMENTED, "pipeTo");
-    return false;
-}
+// Streams spec, 3.2.5.5. pipeTo(dest, { preventClose, preventAbort, preventCancel } = {})
+// Not implemented.
 
 static MOZ_MUST_USE bool
 ReadableStreamTee(JSContext* cx, Handle<ReadableStream*> stream, bool cloneForBranch2,
@@ -1202,8 +1186,6 @@ ReadableStream_tee(JSContext* cx, unsigned argc, Value* vp)
 static const JSFunctionSpec ReadableStream_methods[] = {
     JS_FN("cancel",         ReadableStream_cancel,      1, 0),
     JS_FN("getReader",      ReadableStream_getReader,   0, 0),
-    JS_FN("pipeThrough",    ReadableStream_pipeThrough, 2, 0),
-    JS_FN("pipeTo",         ReadableStream_pipeTo,      1, 0),
     JS_FN("tee",            ReadableStream_tee,         0, 0),
     JS_FS_END
 };

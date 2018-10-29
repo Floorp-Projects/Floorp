@@ -170,7 +170,8 @@ var whitelist = [
   {file: "chrome://global/content/bindings/toolbar.xml",
    platforms: ["macosx", "win"]},
   // Bug 1483277 (temporarily unreferenced)
-  {file: "chrome://browser/content/browser.xhtml"},
+  {file: AppConstants.BROWSER_CHROME_URL == "chrome://browser/content/browser.xul" ?
+    "chrome://browser/content/browser.xhtml" : "chrome://browser/content/browser.xul" },
   // Bug 1494170
   // (The references to these files are dynamically generated, so the test can't
   // find the references)

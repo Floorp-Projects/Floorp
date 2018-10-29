@@ -20,6 +20,7 @@
 #include "nsIDOMStorageManager.h"
 #include "nsIPermission.h"
 #include "nsIPermissionManager.h"
+#include "nsIPrefBranch.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIWebProgressListener.h"
 #include "mozilla/AntiTrackingCommon.h"
@@ -983,6 +984,11 @@ nsGlobalWindowOuter::~nsGlobalWindowOuter()
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->RemoveObserver(this, PERM_CHANGE_NOTIFICATION);
+  }
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefBranch) {
+    prefBranch->RemoveObserver("network.cookie.cookieBehavior", this);
   }
 
   nsLayoutStatics::Release();
@@ -6635,6 +6641,7 @@ nsGlobalWindowOuter::SetIsBackground(bool aIsBackground)
     // the background window.
     if (inner && changed) {
       inner->StopGamepadHaptics();
+      inner->StopVRActivity();
       // true is for asking to set the delta time to
       // the telemetry.
       inner->ResetVRTelemetry(true);
@@ -6647,6 +6654,7 @@ nsGlobalWindowOuter::SetIsBackground(bool aIsBackground)
     // false is for only resetting the timestamp.
     inner->ResetVRTelemetry(false);
     inner->SyncGamepadState();
+    inner->StartVRActivity();
   }
 }
 
@@ -6882,6 +6890,10 @@ nsGlobalWindowOuter::Observe(nsISupports* aSupports, const char* aTopic,
         return NS_OK;
       }
     }
+  } else if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    // Reset the storage access permission when our cookie policy changes.
+    mHasStorageAccess = false;
+    return NS_OK;
   }
   return NS_OK;
 }
@@ -7760,6 +7772,11 @@ nsGlobalWindowOuter::Create(nsIDocShell* aDocShell, bool aIsChrome)
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->AddObserver(window, PERM_CHANGE_NOTIFICATION, true);
+  }
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefBranch) {
+    prefBranch->AddObserver("network.cookie.cookieBehavior", window, true);
   }
   return window.forget();
 }
