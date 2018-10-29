@@ -147,10 +147,8 @@ public:
   Element* GetImageIdElement();
   /**
    * This can fire ID change callbacks.
-   * @return true if the content could be added, false if we failed due
-   * to OOM.
    */
-  bool AddIdElement(Element* aElement);
+  void AddIdElement(Element* aElement);
   /**
    * This can fire ID change callbacks.
    */

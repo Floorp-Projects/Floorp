@@ -497,9 +497,7 @@ struct PositionComparator
 
   int operator()(void* aElement) const {
     Element* curElement = static_cast<Element*>(aElement);
-    if (mElement == curElement) {
-      return 0;
-    }
+    MOZ_DIAGNOSTIC_ASSERT(mElement != curElement);
     if (nsContentUtils::PositionIsBefore(mElement, curElement)) {
       return -1;
     }
@@ -509,48 +507,40 @@ struct PositionComparator
 
 } // namespace
 
-bool
+void
 nsIdentifierMapEntry::AddIdElement(Element* aElement)
 {
   MOZ_ASSERT(aElement, "Must have element");
-  MOZ_ASSERT(!mIdContentList.Contains(nullptr),
-                  "Why is null in our list?");
-
-#ifdef DEBUG
-  Element* currentElement = mIdContentList.SafeElementAt(0);
-#endif
+  MOZ_ASSERT(!mIdContentList.Contains(nullptr), "Why is null in our list?");
 
   // Common case
   if (mIdContentList.IsEmpty()) {
-    if (!mIdContentList.AppendElement(aElement))
-      return false;
-    NS_ASSERTION(currentElement == nullptr, "How did that happen?");
+    mIdContentList.AppendElement(aElement);
     FireChangeCallbacks(nullptr, aElement);
-    return true;
+    return;
   }
+
+#ifdef DEBUG
+  Element* currentElement = mIdContentList.ElementAt(0);
+#endif
 
   // We seem to have multiple content nodes for the same id, or XUL is messing
   // with us.  Search for the right place to insert the content.
 
   size_t idx;
-  if (BinarySearchIf(mIdContentList, 0, mIdContentList.Length(),
-                     PositionComparator(aElement), &idx)) {
-    // Already in the list, so already in the right spot.  Get out of here.
-    // XXXbz this only happens because XUL does all sorts of random
-    // UpdateIdTableEntry calls.  Hate, hate, hate!
-    return true;
-  }
+  BinarySearchIf(mIdContentList,
+                 0,
+                 mIdContentList.Length(),
+                 PositionComparator(aElement),
+                 &idx);
 
-  if (!mIdContentList.InsertElementAt(idx, aElement)) {
-    return false;
-  }
+  mIdContentList.InsertElementAt(idx, aElement);
 
   if (idx == 0) {
     Element* oldElement = mIdContentList.SafeElementAt(1);
     NS_ASSERTION(currentElement == oldElement, "How did that happen?");
     FireChangeCallbacks(oldElement, aElement);
   }
-  return true;
 }
 
 void
