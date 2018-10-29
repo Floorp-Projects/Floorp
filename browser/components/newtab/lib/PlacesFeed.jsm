@@ -280,7 +280,7 @@ class PlacesFeed {
   }
 
   fillSearchTopSiteTerm({_target, data}) {
-    _target.browser.ownerGlobal.gURLBar.search(`${data.label} `, {disableOneOffButtons: true, disableSearchSuggestionsNotification: true});
+    _target.browser.ownerGlobal.gURLBar.search(`${data.label} `);
   }
 
   onAction(action) {

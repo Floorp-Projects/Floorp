@@ -28,7 +28,7 @@ add_task(async function init() {
 });
 
 
-// Calls search() with only a search-string argument.
+// Calls search() with a normal, non-"@engine" search-string argument.
 add_task(async function basic() {
   let resetNotification = enableSearchSuggestionsNotification();
 
@@ -47,85 +47,15 @@ add_task(async function basic() {
 });
 
 
-// Calls search() with the search-suggestions notification disabled.
-add_task(async function disableSearchSuggestionsNotification() {
+// Calls search() with an "@engine" search engine alias so that the one-off
+// search buttons and search-suggestions notification are disabled.
+add_task(async function searchEngineAlias() {
   let resetNotification = enableSearchSuggestionsNotification();
 
-  gURLBar.search("disableSearchSuggestionsNotification", {
-    disableSearchSuggestionsNotification: true,
-  });
+  gURLBar.search("@example");
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  assertUrlbarValue("disableSearchSuggestionsNotification");
-
-  assertSearchSuggestionsNotificationVisible(false);
-  assertOneOffButtonsVisible(true);
-
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
-
-  // Open the popup again (by doing another search) to make sure the
-  // notification is shown -- i.e., that we didn't accidentally break it if
-  // it should continue being shown.
-  gURLBar.search("disableSearchSuggestionsNotification again");
-  await promiseSearchComplete();
-  await waitForAutocompleteResultAt(0);
-  assertUrlbarValue("disableSearchSuggestionsNotification again");
-  assertSearchSuggestionsNotificationVisible(true);
-  assertOneOffButtonsVisible(true);
-
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
-
-  resetNotification();
-});
-
-
-// Calls search() with the one-off search buttons disabled.
-add_task(async function disableOneOffButtons() {
-  let resetNotification = enableSearchSuggestionsNotification();
-
-  gURLBar.search("disableOneOffButtons", {
-    disableOneOffButtons: true,
-  });
-  await promiseSearchComplete();
-  await waitForAutocompleteResultAt(0);
-  assertUrlbarValue("disableOneOffButtons");
-
-  assertSearchSuggestionsNotificationVisible(true);
-  assertOneOffButtonsVisible(false);
-
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
-
-  // Open the popup again (by doing another search) to make sure the one-off
-  // buttons are shown -- i.e., that we didn't accidentally break them.
-  gURLBar.search("disableOneOffButtons again");
-  await promiseSearchComplete();
-  await waitForAutocompleteResultAt(0);
-  assertUrlbarValue("disableOneOffButtons again");
-  assertSearchSuggestionsNotificationVisible(true);
-  assertOneOffButtonsVisible(true);
-
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
-
-  resetNotification();
-});
-
-
-// Calls search() with both the search-suggestions notification and the one-off
-// search buttons disabled.
-add_task(async function disableSearchSuggestionsNotificationAndOneOffButtons() {
-  let resetNotification = enableSearchSuggestionsNotification();
-
-  gURLBar.search("disableSearchSuggestionsNotificationAndOneOffButtons", {
-    disableSearchSuggestionsNotification: true,
-    disableOneOffButtons: true,
-  });
-  await promiseSearchComplete();
-  await waitForAutocompleteResultAt(0);
-  assertUrlbarValue("disableSearchSuggestionsNotificationAndOneOffButtons");
+  assertUrlbarValue("@example");
 
   assertSearchSuggestionsNotificationVisible(false);
   assertOneOffButtonsVisible(false);
@@ -136,10 +66,10 @@ add_task(async function disableSearchSuggestionsNotificationAndOneOffButtons() {
   // Open the popup again (by doing another search) to make sure the
   // notification and one-off buttons are shown -- i.e., that we didn't
   // accidentally break them.
-  gURLBar.search("disableSearchSuggestionsNotificationAndOneOffButtons again");
+  gURLBar.search("not an engine alias");
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  assertUrlbarValue("disableSearchSuggestionsNotificationAndOneOffButtons again");
+  assertUrlbarValue("not an engine alias");
   assertSearchSuggestionsNotificationVisible(true);
   assertOneOffButtonsVisible(true);
 
