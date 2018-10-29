@@ -4192,14 +4192,22 @@ const CHARACTERS_TO_NORMALIZE = {
   '\u00BD': '1/2',
   '\u00BE': '3/4'
 };
+let normalizationRegex = null;
+function normalize(text) {
+  if (!normalizationRegex) {
+    const replace = Object.keys(CHARACTERS_TO_NORMALIZE).join('');
+    normalizationRegex = new RegExp(`[${replace}]`, 'g');
+  }
+  return text.replace(normalizationRegex, function (ch) {
+    return CHARACTERS_TO_NORMALIZE[ch];
+  });
+}
 class PDFFindController {
   constructor({ linkService, eventBus = (0, _dom_events.getGlobalEventBus)() }) {
     this._linkService = linkService;
     this._eventBus = eventBus;
     this._reset();
     eventBus.on('findbarclose', this._onFindBarClose.bind(this));
-    const replace = Object.keys(CHARACTERS_TO_NORMALIZE).join('');
-    this._normalizationRegex = new RegExp(`[${replace}]`, 'g');
   }
   get highlightMatches() {
     return this._highlightMatches;
@@ -4256,7 +4264,7 @@ class PDFFindController {
     this._highlightMatches = false;
     this._pdfDocument = null;
     this._pageMatches = [];
-    this._pageMatchesLength = null;
+    this._pageMatchesLength = [];
     this._state = null;
     this._selected = {
       pageIdx: -1,
@@ -4264,7 +4272,8 @@ class PDFFindController {
     };
     this._offset = {
       pageIdx: null,
-      matchIdx: null
+      matchIdx: null,
+      wrapped: false
     };
     this._extractTextPromises = [];
     this._pageContents = [];
@@ -4277,10 +4286,12 @@ class PDFFindController {
     this._findTimeout = null;
     this._firstPageCapability = (0, _pdfjsLib.createPromiseCapability)();
   }
-  _normalize(text) {
-    return text.replace(this._normalizationRegex, function (ch) {
-      return CHARACTERS_TO_NORMALIZE[ch];
-    });
+  get _query() {
+    if (this._state.query !== this._rawQuery) {
+      this._rawQuery = this._state.query;
+      this._normalizedQuery = normalize(this._state.query);
+    }
+    return this._normalizedQuery;
   }
   _prepareMatches(matchesWithLength, matches, matchesLength) {
     function isSubTerm(matchesWithLength, currentIndex) {
@@ -4372,16 +4383,13 @@ class PDFFindController {
         });
       }
     }
-    if (!this._pageMatchesLength) {
-      this._pageMatchesLength = [];
-    }
     this._pageMatchesLength[pageIndex] = [];
     this._pageMatches[pageIndex] = [];
     this._prepareMatches(matchesWithLength, this._pageMatches[pageIndex], this._pageMatchesLength[pageIndex]);
   }
   _calculateMatch(pageIndex) {
-    let pageContent = this._normalize(this._pageContents[pageIndex]);
-    let query = this._normalize(this._state.query);
+    let pageContent = this._pageContents[pageIndex];
+    let query = this._query;
     const { caseSensitive, entireWord, phraseSearch } = this._state;
     if (query.length === 0) {
       return;
@@ -4423,7 +4431,7 @@ class PDFFindController {
           for (let j = 0, jj = textItems.length; j < jj; j++) {
             strBuf.push(textItems[j].str);
           }
-          this._pageContents[i] = strBuf.join('');
+          this._pageContents[i] = normalize(strBuf.join(''));
           extractTextCapability.resolve(i);
         }, reason => {
           console.error(`Unable to get text content for page ${i + 1}`, reason);
@@ -4442,6 +4450,12 @@ class PDFFindController {
       pageIndex: index
     });
   }
+  _updateAllPages() {
+    this._eventBus.dispatch('updatetextlayermatches', {
+      source: this,
+      pageIndex: -1
+    });
+  }
   _nextMatch() {
     const previous = this._state.findPrevious;
     const currentPageIndex = this._linkService.page - 1;
@@ -4452,22 +4466,24 @@ class PDFFindController {
       this._selected.pageIdx = this._selected.matchIdx = -1;
       this._offset.pageIdx = currentPageIndex;
       this._offset.matchIdx = null;
+      this._offset.wrapped = false;
       this._resumePageIdx = null;
       this._pageMatches.length = 0;
-      this._pageMatchesLength = null;
+      this._pageMatchesLength.length = 0;
       this._matchesCountTotal = 0;
+      this._updateAllPages();
       for (let i = 0; i < numPages; i++) {
-        this._updatePage(i);
-        if (!(i in this._pendingFindMatches)) {
-          this._pendingFindMatches[i] = true;
-          this._extractTextPromises[i].then(pageIdx => {
-            delete this._pendingFindMatches[pageIdx];
-            this._calculateMatch(pageIdx);
-          });
+        if (this._pendingFindMatches[i] === true) {
+          continue;
         }
+        this._pendingFindMatches[i] = true;
+        this._extractTextPromises[i].then(pageIdx => {
+          delete this._pendingFindMatches[pageIdx];
+          this._calculateMatch(pageIdx);
+        });
       }
     }
-    if (this._state.query === '') {
+    if (this._query === '') {
       this._updateUIState(FindState.FOUND);
       return;
     }
@@ -4558,13 +4574,14 @@ class PDFFindController {
       if (this._findTimeout) {
         clearTimeout(this._findTimeout);
         this._findTimeout = null;
-        this._updateUIState(FindState.FOUND);
       }
+      if (this._resumePageIdx) {
+        this._resumePageIdx = null;
+        this._dirtyMatch = true;
+      }
+      this._updateUIState(FindState.FOUND);
       this._highlightMatches = false;
-      this._eventBus.dispatch('updatetextlayermatches', {
-        source: this,
-        pageIndex: -1
-      });
+      this._updateAllPages();
     });
   }
   _requestMatchesCount() {
@@ -7977,7 +7994,7 @@ class TextLayerBuilder {
     this.textLayerRenderTask.promise.then(() => {
       this.textLayerDiv.appendChild(textLayerFrag);
       this._finishRendering();
-      this.updateMatches();
+      this._updateMatches();
     }, function (reason) {});
   }
   cancel() {
@@ -7994,17 +8011,17 @@ class TextLayerBuilder {
     this.cancel();
     this.textContent = textContent;
   }
-  convertMatches(matches, matchesLength) {
-    let i = 0;
-    let iIndex = 0;
-    let textContentItemsStr = this.textContentItemsStr;
-    let end = textContentItemsStr.length - 1;
-    let queryLen = this.findController === null ? 0 : this.findController.state.query.length;
-    let ret = [];
+  _convertMatches(matches, matchesLength) {
     if (!matches) {
-      return ret;
+      return [];
     }
-    for (let m = 0, len = matches.length; m < len; m++) {
+    const { findController, textContentItemsStr } = this;
+    let i = 0,
+        iIndex = 0;
+    const end = textContentItemsStr.length - 1;
+    const queryLen = findController.state.query.length;
+    const result = [];
+    for (let m = 0, mm = matches.length; m < mm; m++) {
       let matchIdx = matches[m];
       while (i !== end && matchIdx >= iIndex + textContentItemsStr[i].length) {
         iIndex += textContentItemsStr[i].length;
@@ -8032,21 +8049,19 @@ class TextLayerBuilder {
         divIdx: i,
         offset: matchIdx - iIndex
       };
-      ret.push(match);
+      result.push(match);
     }
-    return ret;
+    return result;
   }
-  renderMatches(matches) {
+  _renderMatches(matches) {
     if (matches.length === 0) {
       return;
     }
-    let textContentItemsStr = this.textContentItemsStr;
-    let textDivs = this.textDivs;
+    const { findController, pageIdx, textContentItemsStr, textDivs } = this;
+    const isSelectedPage = pageIdx === findController.selected.pageIdx;
+    const selectedMatchIdx = findController.selected.matchIdx;
+    const highlightAll = findController.state.highlightAll;
     let prevEnd = null;
-    let pageIdx = this.pageIdx;
-    let isSelectedPage = this.findController === null ? false : pageIdx === this.findController.selected.pageIdx;
-    let selectedMatchIdx = this.findController === null ? -1 : this.findController.selected.matchIdx;
-    let highlightAll = this.findController === null ? false : this.findController.state.highlightAll;
     let infinity = {
       divIdx: -1,
       offset: undefined
@@ -8083,14 +8098,12 @@ class TextLayerBuilder {
       let end = match.end;
       let isSelected = isSelectedPage && i === selectedMatchIdx;
       let highlightSuffix = isSelected ? ' selected' : '';
-      if (this.findController) {
-        if (this.findController.selected.matchIdx === i && this.findController.selected.pageIdx === pageIdx) {
-          const spot = {
-            top: MATCH_SCROLL_OFFSET_TOP,
-            left: MATCH_SCROLL_OFFSET_LEFT
-          };
-          (0, _ui_utils.scrollIntoView)(textDivs[begin.divIdx], spot, true);
-        }
+      if (findController.selected.matchIdx === i && findController.selected.pageIdx === pageIdx) {
+        const spot = {
+          top: MATCH_SCROLL_OFFSET_TOP,
+          left: MATCH_SCROLL_OFFSET_LEFT
+        };
+        (0, _ui_utils.scrollIntoView)(textDivs[begin.divIdx], spot, true);
       }
       if (!prevEnd || begin.divIdx !== prevEnd.divIdx) {
         if (prevEnd !== null) {
@@ -8115,15 +8128,13 @@ class TextLayerBuilder {
       appendTextToDiv(prevEnd.divIdx, prevEnd.offset, infinity.offset);
     }
   }
-  updateMatches() {
+  _updateMatches() {
     if (!this.renderingDone) {
       return;
     }
-    let matches = this.matches;
-    let textDivs = this.textDivs;
-    let textContentItemsStr = this.textContentItemsStr;
+    const { findController, matches, pageIdx, textContentItemsStr, textDivs } = this;
     let clearedUntilDivIdx = -1;
-    for (let i = 0, len = matches.length; i < len; i++) {
+    for (let i = 0, ii = matches.length; i < ii; i++) {
       let match = matches[i];
       let begin = Math.max(clearedUntilDivIdx, match.begin.divIdx);
       for (let n = begin, end = match.end.divIdx; n <= end; n++) {
@@ -8133,16 +8144,13 @@ class TextLayerBuilder {
       }
       clearedUntilDivIdx = match.end.divIdx + 1;
     }
-    if (!this.findController || !this.findController.highlightMatches) {
+    if (!findController || !findController.highlightMatches) {
       return;
     }
-    let pageMatches, pageMatchesLength;
-    if (this.findController !== null) {
-      pageMatches = this.findController.pageMatches[this.pageIdx] || null;
-      pageMatchesLength = this.findController.pageMatchesLength ? this.findController.pageMatchesLength[this.pageIdx] || null : null;
-    }
-    this.matches = this.convertMatches(pageMatches, pageMatchesLength);
-    this.renderMatches(this.matches);
+    const pageMatches = findController.pageMatches[pageIdx] || null;
+    const pageMatchesLength = findController.pageMatchesLength[pageIdx] || null;
+    this.matches = this._convertMatches(pageMatches, pageMatchesLength);
+    this._renderMatches(this.matches);
   }
   _bindEvents() {
     const { eventBus, _boundEvents } = this;
@@ -8163,7 +8171,7 @@ class TextLayerBuilder {
       if (evt.pageIndex !== this.pageIdx && evt.pageIndex !== -1) {
         return;
       }
-      this.updateMatches();
+      this._updateMatches();
     };
     eventBus.on('pagecancelled', _boundEvents.pageCancelled);
     eventBus.on('updatetextlayermatches', _boundEvents.updateTextLayerMatches);
