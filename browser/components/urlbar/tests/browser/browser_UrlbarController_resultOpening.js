@@ -13,7 +13,7 @@ add_task(async function setup() {
   sandbox = sinon.sandbox.create();
 
   controller = new UrlbarController({
-    window,
+    browserWindow: window,
   });
 
   registerCleanupFunction(async () => {
