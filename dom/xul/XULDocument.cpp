@@ -484,10 +484,9 @@ XULDocument::ContentAppended(nsIContent* aFirstNewContent)
     nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
 
     // Update our element map
-    nsresult rv = NS_OK;
-    for (nsIContent* cur = aFirstNewContent; cur && NS_SUCCEEDED(rv);
+    for (nsIContent* cur = aFirstNewContent; cur;
          cur = cur->GetNextSibling()) {
-        rv = AddSubtreeToDocument(cur);
+        AddSubtreeToDocument(cur);
     }
 }
 
@@ -505,12 +504,8 @@ XULDocument::ContentInserted(nsIContent* aChild)
 void
 XULDocument::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
 {
-    NS_ASSERTION(aChild->OwnerDoc() == this, "unexpected doc");
-
-    // Might not need this, but be safe for now.
-    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
-
-    RemoveSubtreeFromDocument(aChild);
+    // FIXME(emilio): Doesn't this need to remove the l10n links if they go
+    // away, or something?
 }
 
 //----------------------------------------------------------------------
@@ -570,25 +565,7 @@ XULDocument::Persist(Element* aElement, int32_t aNameSpaceID,
     mLocalStore->SetValue(uri, id, attrstr, valuestr);
 }
 
-nsresult
-XULDocument::AddElementToDocumentPre(Element* aElement)
-{
-    // Do a bunch of work that's necessary when an element gets added
-    // to the XUL Document.
-
-    // 1. Add the element to the id map, since it seems this can be
-    // called when creating elements from prototypes.
-    nsAtom* id = aElement->GetID();
-    if (id) {
-        // FIXME: Shouldn't BindToTree take care of this?
-        nsAutoScriptBlocker scriptBlocker;
-        AddToIdTable(aElement, id);
-    }
-
-    return NS_OK;
-}
-
-nsresult
+void
 XULDocument::AddElementToDocumentPost(Element* aElement)
 {
     if (aElement == GetRootElement()) {
@@ -600,11 +577,9 @@ XULDocument::AddElementToDocumentPost(Element* aElement)
     } else if (aElement->IsXULElement(nsGkAtoms::linkset)) {
         OnL10nResourceContainerParsed();
     }
-
-    return NS_OK;
 }
 
-nsresult
+void
 XULDocument::AddSubtreeToDocument(nsIContent* aContent)
 {
     MOZ_ASSERT(aContent->GetComposedDoc() == this, "Element not in doc!");
@@ -616,66 +591,24 @@ XULDocument::AddSubtreeToDocument(nsIContent* aContent)
     // least they don't work in regular HTML documents either as of today so...
     if (MOZ_UNLIKELY(!aContent->IsInUncomposedDoc())) {
         MOZ_ASSERT(aContent->IsInShadowTree());
-        return NS_OK;
+        return;
     }
 
     // From here on we only care about elements.
     Element* aElement = Element::FromNode(aContent);
     if (!aElement) {
-        return NS_OK;
+        return;
     }
-
-    // Do pre-order addition magic
-    nsresult rv = AddElementToDocumentPre(aElement);
-    if (NS_FAILED(rv)) return rv;
 
     // Recurse to children
     for (nsIContent* child = aElement->GetLastChild();
          child;
          child = child->GetPreviousSibling()) {
-
-        rv = AddSubtreeToDocument(child);
-        if (NS_FAILED(rv))
-            return rv;
+        AddSubtreeToDocument(child);
     }
 
     // Do post-order addition magic
-    return AddElementToDocumentPost(aElement);
-}
-
-nsresult
-XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
-{
-    // From here on we only care about elements.
-    Element* aElement = Element::FromNode(aContent);
-    if (!aElement) {
-        return NS_OK;
-    }
-
-    // Do a bunch of cleanup to remove an element from the XUL
-    // document.
-    nsresult rv;
-
-    // Remove any children from the document.
-    for (nsIContent* child = aElement->GetLastChild();
-         child;
-         child = child->GetPreviousSibling()) {
-
-        rv = RemoveSubtreeFromDocument(child);
-        if (NS_FAILED(rv))
-            return rv;
-    }
-
-    // Remove the element from the id map, since we added it in
-    // AddElementToDocumentPre().
-    nsAtom* id = aElement->GetID();
-    if (id) {
-        // FIXME: Shouldn't UnbindFromTree take care of this?
-        nsAutoScriptBlocker scriptBlocker;
-        RemoveFromIdTable(aElement, id);
-    }
-
-    return NS_OK;
+    AddElementToDocumentPost(aElement);
 }
 
 //----------------------------------------------------------------------
@@ -1250,9 +1183,6 @@ XULDocument::ResumeWalk()
                 // ...and append it to the content model.
                 rv = element->AppendChildTo(child, false);
                 if (NS_FAILED(rv)) return rv;
-
-                // do pre-order document-level hookup.
-                AddElementToDocumentPre(child);
 
                 // If it has children, push the element onto the context
                 // stack and begin to process them.
