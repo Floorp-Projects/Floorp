@@ -15,18 +15,7 @@ add_task(async function() {
   const {toolbox, inspector, view} = await openComputedView();
   await selectNode("h1", inspector);
 
-  const win = view.styleWindow;
   const searchField = view.searchField;
-  const searchContextMenu = toolbox.textBoxContextMenuPopup;
-  ok(searchContextMenu,
-    "The search filter context menu is loaded in the computed view");
-
-  const cmdUndo = searchContextMenu.querySelector("[command=cmd_undo]");
-  const cmdDelete = searchContextMenu.querySelector("[command=cmd_delete]");
-  const cmdSelectAll = searchContextMenu.querySelector("[command=cmd_selectAll]");
-  const cmdCut = searchContextMenu.querySelector("[command=cmd_cut]");
-  const cmdCopy = searchContextMenu.querySelector("[command=cmd_copy]");
-  const cmdPaste = searchContextMenu.querySelector("[command=cmd_paste]");
 
   info("Opening context menu");
 
@@ -36,10 +25,20 @@ add_task(async function() {
   searchField.focus();
   await onFocus;
 
-  const onContextMenuPopup = once(searchContextMenu, "popupshowing");
-  EventUtils.synthesizeMouse(searchField, 2, 2,
-    {type: "contextmenu", button: 2}, win);
-  await onContextMenuPopup;
+  let onContextMenuOpen = toolbox.once("menu-open");
+  synthesizeContextMenuEvent(searchField);
+  await onContextMenuOpen;
+
+  let searchContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  ok(searchContextMenu,
+    "The search filter context menu is loaded in the computed view");
+
+  let cmdUndo = searchContextMenu.querySelector("#editmenu-undo");
+  let cmdDelete = searchContextMenu.querySelector("#editmenu-delete");
+  let cmdSelectAll = searchContextMenu.querySelector("#editmenu-selectAll");
+  let cmdCut = searchContextMenu.querySelector("#editmenu-cut");
+  let cmdCopy = searchContextMenu.querySelector("#editmenu-copy");
+  let cmdPaste = searchContextMenu.querySelector("#editmenu-paste");
 
   is(cmdUndo.getAttribute("disabled"), "true", "cmdUndo is disabled");
   is(cmdDelete.getAttribute("disabled"), "true", "cmdDelete is disabled");
@@ -52,24 +51,39 @@ add_task(async function() {
   is(cmdPaste.getAttribute("disabled"), "", "cmdPaste is enabled");
 
   info("Closing context menu");
-  const onContextMenuHidden = once(searchContextMenu, "popuphidden");
-  searchContextMenu.hidePopup();
-  await onContextMenuHidden;
+  let onContextMenuClose = toolbox.once("menu-close");
+  EventUtils.sendKey("ESCAPE", toolbox.win);
+  await onContextMenuClose;
 
   info("Copy text in search field using the context menu");
   searchField.setUserInput(TEST_INPUT);
   searchField.select();
-  EventUtils.synthesizeMouse(searchField, 2, 2,
-    {type: "contextmenu", button: 2}, win);
-  await onContextMenuPopup;
+
+  onContextMenuOpen = toolbox.once("menu-open");
+  synthesizeContextMenuEvent(searchField);
+  await onContextMenuOpen;
+
+  searchContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  cmdCopy = searchContextMenu.querySelector("#editmenu-copy");
   await waitForClipboardPromise(() => cmdCopy.click(), TEST_INPUT);
-  searchContextMenu.hidePopup();
-  await onContextMenuHidden;
+
+  onContextMenuClose = toolbox.once("menu-close");
+  EventUtils.sendKey("ESCAPE", toolbox.win);
+  await onContextMenuClose;
 
   info("Reopen context menu and check command properties");
-  EventUtils.synthesizeMouse(searchField, 2, 2,
-    {type: "contextmenu", button: 2}, win);
-  await onContextMenuPopup;
+
+  onContextMenuOpen = toolbox.once("menu-open");
+  synthesizeContextMenuEvent(searchField);
+  await onContextMenuOpen;
+
+  searchContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  cmdUndo = searchContextMenu.querySelector("#editmenu-undo");
+  cmdDelete = searchContextMenu.querySelector("#editmenu-delete");
+  cmdSelectAll = searchContextMenu.querySelector("#editmenu-selectAll");
+  cmdCut = searchContextMenu.querySelector("#editmenu-cut");
+  cmdCopy = searchContextMenu.querySelector("#editmenu-copy");
+  cmdPaste = searchContextMenu.querySelector("#editmenu-paste");
 
   is(cmdUndo.getAttribute("disabled"), "", "cmdUndo is enabled");
   is(cmdDelete.getAttribute("disabled"), "", "cmdDelete is enabled");
@@ -77,4 +91,8 @@ add_task(async function() {
   is(cmdCut.getAttribute("disabled"), "", "cmdCut is enabled");
   is(cmdCopy.getAttribute("disabled"), "", "cmdCopy is enabled");
   is(cmdPaste.getAttribute("disabled"), "", "cmdPaste is enabled");
+
+  onContextMenuClose = toolbox.once("menu-close");
+  EventUtils.sendKey("ESCAPE", toolbox.win);
+  await onContextMenuClose;
 });
