@@ -32,6 +32,7 @@ DevToolsModules(
     'preference.js',
     'promises.js',
     'reflow.js',
+    'root.js',
     'screenshot.js',
     'storage.js',
     'string.js',

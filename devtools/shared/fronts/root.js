@@ -1,119 +1,38 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
-const { Ci } = require("chrome");
-const { arg, DebuggerClient } = require("devtools/shared/client/debugger-client");
+const {Ci} = require("chrome");
+const {rootSpec} = require("devtools/shared/specs/root");
+const protocol = require("devtools/shared/protocol");
+const {custom} = protocol;
+
 loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
 
-/**
- * A RootClient object represents a root actor on the server. Each
- * DebuggerClient keeps a RootClient instance representing the root actor
- * for the initial connection; DebuggerClient's 'listTabs' and
- * 'listChildProcesses' methods forward to that root actor.
- *
- * @param client object
- *      The client connection to which this actor belongs.
- * @param greeting string
- *      The greeting packet from the root actor we're to represent.
- *
- * Properties of a RootClient instance:
- *
- * @property actor string
- *      The name of this child's root actor.
- * @property applicationType string
- *      The application type, as given in the root actor's greeting packet.
- * @property traits object
- *      The traits object, as given in the root actor's greeting packet.
- */
-function RootClient(client, greeting) {
-  this._client = client;
-  this.actor = greeting.from;
-  this.applicationType = greeting.applicationType;
-  this.traits = greeting.traits;
+const RootFront = protocol.FrontClassWithSpec(rootSpec, {
+  initialize: function(client, form) {
+    protocol.Front.prototype.initialize.call(this, client, { actor: form.from });
 
-  // Cache root form as this will always be the same value.
-  Object.defineProperty(this, "rootForm", {
-    get() {
-      delete this.rootForm;
-      this.rootForm = this._getRoot();
-      return this.rootForm;
-    },
-    configurable: true,
-  });
+    this.applicationType = form.applicationType;
+    this.traits = form.traits;
 
-  // Cache of already created global scoped fronts
-  // [typeName:string => Front instance]
-  this.fronts = new Map();
-}
-exports.RootClient = RootClient;
+    // Cache root form as this will always be the same value.
+    Object.defineProperty(this, "rootForm", {
+      get() {
+        delete this.rootForm;
+        this.rootForm = this.getRoot();
+        return this.rootForm;
+      },
+      configurable: true,
+    });
 
-RootClient.prototype = {
-  constructor: RootClient,
+    // Cache of already created global scoped fronts
+    // [typeName:string => Front instance]
+    this.fronts = new Map();
 
-  /**
-   * Gets the "root" form, which lists all the global actors that affect the entire
-   * browser.  This can replace usages of `listTabs` that only wanted the global actors
-   * and didn't actually care about tabs.
-   */
-  _getRoot: DebuggerClient.requester({ type: "getRoot" }),
-
-   /**
-   * List the open tabs.
-   *
-   * @param object options
-   *        Optional flags for listTabs:
-   *        - boolean favicons: return favicon data
-   * @param function onResponse
-   *        Called with the response packet.
-   */
-  listTabs: DebuggerClient.requester({ type: "listTabs", options: arg(0) }),
-
-  /**
-   * List the installed addons.
-   *
-   * @param function onResponse
-   *        Called with the response packet.
-   */
-  listAddons: DebuggerClient.requester({ type: "listAddons" }),
-
-  /**
-   * List the registered workers.
-   *
-   * @param function onResponse
-   *        Called with the response packet.
-   */
-  listWorkers: DebuggerClient.requester({ type: "listWorkers" }),
-
-  /**
-   * List the registered service workers.
-   *
-   * @param function onResponse
-   *        Called with the response packet.
-   */
-  listServiceWorkerRegistrations: DebuggerClient.requester({
-    type: "listServiceWorkerRegistrations",
-  }),
-
-  /**
-   * List the running processes.
-   *
-   * @param function onResponse
-   *        Called with the response packet.
-   */
-  listProcesses: DebuggerClient.requester({ type: "listProcesses" }),
-
-  /**
-   * Fetch the ParentProcessTargetActor for the main process or ContentProcessTargetActor
-   * for a a given child process ID.
-   *
-   * @param number id
-   *        The ID for the process to attach (returned by `listProcesses`).
-   *        Connected to the main process if is 0.
-   */
-  getProcess: DebuggerClient.requester({ type: "getProcess", id: arg(0) }),
+    this._client = client;
+  },
 
   /**
    * Retrieve all service worker registrations as well as workers from the parent and
@@ -229,12 +148,8 @@ RootClient.prototype = {
    *        If nothing is specified, returns the actor for the currently
    *        selected tab.
    */
-  getTab: function(filter) {
-    const packet = {
-      to: this.actor,
-      type: "getTab",
-    };
-
+  getTab: custom(async function(filter) {
+    const packet = {};
     if (filter) {
       if (typeof (filter.outerWindowID) == "number") {
         packet.outerWindowID = filter.outerWindowID;
@@ -260,27 +175,20 @@ RootClient.prototype = {
       }
     }
 
-    return this.request(packet);
-  },
+    return this._getTab(packet);
+  }, {
+    impl: "_getTab",
+  }),
 
   /**
-   * Fetch the ChromeWindowTargetActor for a specific window, like a browser window in
-   * Firefox, but it can be used to reach any window in the process.
+   * Test request that returns the object passed as first argument.
    *
-   * @param number outerWindowID
-   *        The outerWindowID of the top level window you are looking for.
+   * `echo` is special as all the property of the given object have to be passed
+   * on the packet object. That's not something that can be achieve by requester helper.
    */
-  getWindow: function({ outerWindowID }) {
-    if (!outerWindowID) {
-      throw new Error("Must specify outerWindowID");
-    }
 
-    const packet = {
-      to: this.actor,
-      type: "getWindow",
-      outerWindowID,
-    };
-
+  echo(packet) {
+    packet.type = "echo";
     return this.request(packet);
   },
 
@@ -301,45 +209,5 @@ RootClient.prototype = {
     this.fronts.set(typeName, front);
     return front;
   },
-
-  /**
-   * Description of protocol's actors and methods.
-   *
-   * @param function onResponse
-   *        Called with the response packet.
-   */
-  protocolDescription: DebuggerClient.requester({ type: "protocolDescription" }),
-
-  /**
-   * Special request, actually supported by all actors to retrieve the list of all
-   * the request names supported by this actor.
-   */
-  requestTypes: DebuggerClient.requester({ type: "requestTypes" }),
-
-  /**
-   * Test request that returns the object passed as first argument.
-   *
-   * `echo` is special as all the property of the given object have to be passed
-   * on the packet object. That's not something that can be achieve by requester helper.
-   */
-  echo(object) {
-    const packet = Object.assign(object, {
-      to: this.actor,
-      type: "echo",
-    });
-    return this.request(packet);
-  },
-
-  /*
-   * Methods constructed by DebuggerClient.requester require these forwards
-   * on their 'this'.
-   */
-  get _transport() {
-    return this._client._transport;
-  },
-  get request() {
-    return this._client.request;
-  },
-};
-
-module.exports = RootClient;
+});
+exports.RootFront = RootFront;
