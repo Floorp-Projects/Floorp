@@ -881,7 +881,8 @@ FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp, int num,
     JSAutoRealm ar(cx, envChain);
 
     const char* filename = script->filename();
-    unsigned lineno = PCToLineNumber(script, pc);
+    unsigned column = 0;
+    unsigned lineno = PCToLineNumber(script, pc, &column);
     RootedFunction fun(cx, iter.maybeCallee(cx));
     RootedString funname(cx);
     if (fun) {
@@ -990,11 +991,12 @@ FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp, int num,
         }
     }
 
-    // print filename and line number
-    if (!sp.printf("%s [\"%s\":%d]\n",
+    // print filename, line number and column
+    if (!sp.printf("%s [\"%s\":%d:%d]\n",
                    fun ? ")" : "",
                    filename ? filename : "<unknown>",
-                   lineno))
+                   lineno,
+                   column))
     {
         return false;
     }
