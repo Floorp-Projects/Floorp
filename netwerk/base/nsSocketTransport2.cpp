@@ -1610,7 +1610,8 @@ nsSocketTransport::InitiateSocket()
     }
 
     bool tfo = false;
-    if (mFastOpenCallback &&
+    if (!mProxyTransparent &&
+        mFastOpenCallback &&
         mFastOpenCallback->FastOpenEnabled()) {
         if (NS_SUCCEEDED(AttachTCPFastOpenIOLayer(fd))) {
             tfo = true;
