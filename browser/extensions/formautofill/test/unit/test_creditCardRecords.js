@@ -672,3 +672,35 @@ add_task(async function test_getDuplicateGuid() {
   record["cc-number"] = "************" + last4Digits;
   Assert.equal(await profileStorage.creditCards.getDuplicateGuid(record), null);
 });
+
+add_task(async function test_creditCardFillDisabled() {
+  Services.prefs.setBoolPref("extensions.formautofill.creditCards.enabled", false);
+
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+  let profileStorage = new FormAutofillStorage(path);
+  await profileStorage.initialize();
+
+  Assert.equal(!!profileStorage.creditCards, true,
+               "credit card records initialized and available.");
+
+  Services.prefs.setBoolPref("extensions.formautofill.creditCards.enabled", true);
+});
+
+add_task(async function test_creditCardFillUnavailable() {
+  Services.prefs.setBoolPref("extensions.formautofill.creditCards.available", false);
+
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+  let profileStorage = new FormAutofillStorage(path);
+  await profileStorage.initialize();
+
+  try {
+    profileStorage.creditCards; // eslint-disable-line no-unused-expressions
+    throw new Error("Access credit card didn't throw.");
+  } catch (err) {
+    Assert.equal(err.message,
+                 "CreditCards is not initialized. " +
+                 "Please restart if you flip the pref manually.");
+  }
+
+  Services.prefs.setBoolPref("extensions.formautofill.creditCards.available", true);
+});

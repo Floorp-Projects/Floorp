@@ -1927,7 +1927,7 @@ FormAutofillStorage.prototype = {
       this._initializePromise = this._store.load()
         .then(() => {
           let initializeAutofillRecords = [this.addresses.initialize()];
-          if (FormAutofill.isAutofillCreditCardsEnabled) {
+          if (FormAutofill.isAutofillCreditCardsAvailable) {
             initializeAutofillRecords.push(this.creditCards.initialize());
           } else {
             // Make creditCards records unavailable to other modules
