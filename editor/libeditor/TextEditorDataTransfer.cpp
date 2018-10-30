@@ -164,9 +164,16 @@ TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
 nsresult
 TextEditor::OnDrop(DragEvent* aDropEvent)
 {
+  if (NS_WARN_IF(!aDropEvent)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   CommitComposition();
 
-  NS_ENSURE_TRUE(aDropEvent, NS_ERROR_FAILURE);
+  AutoEditActionDataSetter editActionData(*this, EditAction::eDrop);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   RefPtr<DataTransfer> dataTransfer = aDropEvent->GetDataTransfer();
   NS_ENSURE_TRUE(dataTransfer, NS_ERROR_FAILURE);
@@ -213,22 +220,17 @@ TextEditor::OnDrop(DragEvent* aDropEvent)
 
   int32_t newSelectionOffset = aDropEvent->RangeOffset();
 
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-
-  bool isCollapsed = selection->IsCollapsed();
-
   // Check if mouse is in the selection
   // if so, jump through some hoops to determine if mouse is over selection (bail)
   // and whether user wants to copy selection or delete it
-  if (!isCollapsed) {
+  if (!SelectionRefPtr()->IsCollapsed()) {
     // We never have to delete if selection is already collapsed
     bool cursorIsInSelection = false;
 
-    uint32_t rangeCount = selection->RangeCount();
+    uint32_t rangeCount = SelectionRefPtr()->RangeCount();
 
     for (uint32_t j = 0; j < rangeCount; j++) {
-      RefPtr<nsRange> range = selection->GetRangeAt(j);
+      RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(j);
       if (!range) {
         // don't bail yet, iterate through them all
         continue;
@@ -297,6 +299,11 @@ nsresult
 TextEditor::PasteAsAction(int32_t aClipboardType,
                           bool aDispatchPasteEvent)
 {
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   if (AsHTMLEditor()) {
     nsresult rv =
       AsHTMLEditor()->PasteInternal(aClipboardType, aDispatchPasteEvent);
@@ -346,6 +353,11 @@ TextEditor::PasteAsAction(int32_t aClipboardType,
 NS_IMETHODIMP
 TextEditor::PasteTransferable(nsITransferable* aTransferable)
 {
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   // Use an invalid value for the clipboard type as data comes from aTransferable
   // and we don't currently implement a way to put that in the data transfer yet.
   if (!FireClipboardEvent(ePaste, -1)) {
