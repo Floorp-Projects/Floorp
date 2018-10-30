@@ -30,12 +30,6 @@ using namespace js;
 using mozilla::ArrayEqual;
 using mozilla::Utf8Unit;
 
-template<XDRMode mode>
-LifoAlloc&
-XDRState<mode>::lifoAlloc() const {
-    return buf.cx()->tempLifoAlloc();
-}
-
 #ifdef DEBUG
 bool
 XDRCoderBase::validateResultCode(JSContext* cx, JS::TranscodeResult code) const

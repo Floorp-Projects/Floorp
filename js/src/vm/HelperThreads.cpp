@@ -568,8 +568,7 @@ ScriptParseTask::parse(JSContext* cx)
 
     ScopeKind scopeKind = options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
-    JSScript* script = frontend::CompileGlobalScript(cx, cx->tempLifoAlloc(), scopeKind,
-                                                     options, data,
+    JSScript* script = frontend::CompileGlobalScript(cx, scopeKind, options, data,
                                                      /* sourceObjectOut = */ &sourceObject.get());
     if (script) {
         scripts.infallibleAppend(script);
@@ -592,7 +591,7 @@ ModuleParseTask::parse(JSContext* cx)
 
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
-    ModuleObject* module = frontend::CompileModule(cx, options, data, cx->tempLifoAlloc(), &sourceObject.get());
+    ModuleObject* module = frontend::CompileModule(cx, options, data, &sourceObject.get());
     if (module) {
         scripts.infallibleAppend(module->script());
         if (sourceObject) {
@@ -615,8 +614,7 @@ ScriptDecodeTask::parse(JSContext* cx)
     RootedScript resultScript(cx);
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
-    XDROffThreadDecoder decoder(cx, cx->tempLifoAlloc(), &options,
-                                /* sourceObjectOut = */ &sourceObject.get(), range);
+    XDROffThreadDecoder decoder(cx, &options, /* sourceObjectOut = */ &sourceObject.get(), range);
     XDRResult res = decoder.codeScript(&resultScript);
     MOZ_ASSERT(bool(resultScript) == res.isOk());
     if (res.isOk()) {
@@ -681,7 +679,7 @@ MultiScriptsDecodeTask::parse(JSContext* cx)
         RootedScript resultScript(cx);
         Rooted<ScriptSourceObject*> sourceObject(cx);
 
-        XDROffThreadDecoder decoder(cx, cx->tempLifoAlloc(), &opts, &sourceObject.get(),
+        XDROffThreadDecoder decoder(cx, &opts, &sourceObject.get(),
                                     source.range);
         XDRResult res = decoder.codeScript(&resultScript);
         MOZ_ASSERT(bool(resultScript) == res.isOk());
@@ -2310,6 +2308,8 @@ HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked)
 
         task->parse(cx);
 
+        MOZ_ASSERT(cx->tempLifoAlloc().isEmpty());
+        cx->tempLifoAlloc().freeAll();
         cx->frontendCollectionPool().purge();
         cx->atomsZoneFreeLists().clear();
     }

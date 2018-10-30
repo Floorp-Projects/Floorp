@@ -45,7 +45,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
   public:
     // Construct an object passing mandatory arguments.
     BytecodeCompiler(JSContext* cx,
-                     LifoAlloc& alloc,
                      const ReadOnlyCompileOptions& options,
                      SourceBufferHolder& sourceBuffer,
                      HandleScope enclosingScope);
@@ -83,7 +82,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
     AutoKeepAtoms keepAtoms;
 
     JSContext* cx;
-    LifoAlloc& alloc;
     const ReadOnlyCompileOptions& options;
     SourceBufferHolder& sourceBuffer;
 
@@ -154,13 +152,11 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextI
 #endif
 
 BytecodeCompiler::BytecodeCompiler(JSContext* cx,
-                                   LifoAlloc& alloc,
                                    const ReadOnlyCompileOptions& options,
                                    SourceBufferHolder& sourceBuffer,
                                    HandleScope enclosingScope)
   : keepAtoms(cx),
     cx(cx),
-    alloc(alloc),
     options(options),
     sourceBuffer(sourceBuffer),
     enclosingScope(cx, enclosingScope),
@@ -233,15 +229,15 @@ BytecodeCompiler::createParser(ParseGoal goal)
     usedNames.emplace(cx);
 
     if (canLazilyParse()) {
-        syntaxParser.emplace(cx, alloc, options, sourceBuffer.get(), sourceBuffer.length(),
-                             /* foldConstants = */ false, *usedNames, nullptr, nullptr,
-                             sourceObject, goal);
+        syntaxParser.emplace(cx, cx->tempLifoAlloc(), options, sourceBuffer.get(),
+                             sourceBuffer.length(), /* foldConstants = */ false,
+                             *usedNames, nullptr, nullptr, sourceObject, goal);
         if (!syntaxParser->checkOptions()) {
             return false;
         }
     }
 
-    parser.emplace(cx, alloc, options, sourceBuffer.get(), sourceBuffer.length(),
+    parser.emplace(cx, cx->tempLifoAlloc(), options, sourceBuffer.get(), sourceBuffer.length(),
                    /* foldConstants = */ true, *usedNames, syntaxParser.ptrOr(nullptr), nullptr,
                    sourceObject, goal);
     parser->ss = scriptSource;
@@ -643,14 +639,14 @@ class MOZ_RAII AutoAssertReportedException
 };
 
 JSScript*
-frontend::CompileGlobalScript(JSContext* cx, LifoAlloc& alloc, ScopeKind scopeKind,
+frontend::CompileGlobalScript(JSContext* cx, ScopeKind scopeKind,
                               const ReadOnlyCompileOptions& options,
                               SourceBufferHolder& srcBuf,
                               ScriptSourceObject** sourceObjectOut)
 {
     MOZ_ASSERT(scopeKind == ScopeKind::Global || scopeKind == ScopeKind::NonSyntactic);
     AutoAssertReportedException assertException(cx);
-    BytecodeCompiler compiler(cx, alloc, options, srcBuf, /* enclosingScope = */ nullptr);
+    BytecodeCompiler compiler(cx, options, srcBuf, /* enclosingScope = */ nullptr);
     AutoInitializeSourceObject autoSSO(compiler, sourceObjectOut);
     JSScript* script = compiler.compileGlobalScript(scopeKind);
     if (!script) {
@@ -724,14 +720,14 @@ frontend::CompileGlobalBinASTScript(JSContext* cx, LifoAlloc& alloc, const ReadO
 #endif // JS_BUILD_BINAST
 
 JSScript*
-frontend::CompileEvalScript(JSContext* cx, LifoAlloc& alloc,
-                            HandleObject environment, HandleScope enclosingScope,
+frontend::CompileEvalScript(JSContext* cx, HandleObject environment,
+                            HandleScope enclosingScope,
                             const ReadOnlyCompileOptions& options,
                             SourceBufferHolder& srcBuf,
                             ScriptSourceObject** sourceObjectOut)
 {
     AutoAssertReportedException assertException(cx);
-    BytecodeCompiler compiler(cx, alloc, options, srcBuf, enclosingScope);
+    BytecodeCompiler compiler(cx, options, srcBuf, enclosingScope);
     AutoInitializeSourceObject autoSSO(compiler, sourceObjectOut);
     JSScript* script = compiler.compileEvalScript(environment, enclosingScope);
     if (!script) {
@@ -744,7 +740,7 @@ frontend::CompileEvalScript(JSContext* cx, LifoAlloc& alloc,
 
 ModuleObject*
 frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInput,
-                        SourceBufferHolder& srcBuf, LifoAlloc& alloc,
+                        SourceBufferHolder& srcBuf,
                         ScriptSourceObject** sourceObjectOut)
 {
     MOZ_ASSERT(srcBuf.get());
@@ -758,7 +754,7 @@ frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInpu
     options.allowHTMLComments = false;
 
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
-    BytecodeCompiler compiler(cx, alloc, options, srcBuf, emptyGlobalScope);
+    BytecodeCompiler compiler(cx, options, srcBuf, emptyGlobalScope);
     AutoInitializeSourceObject autoSSO(compiler, sourceObjectOut);
     ModuleObject* module = compiler.compileModule();
     if (!module) {
@@ -779,8 +775,7 @@ frontend::CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options
         return nullptr;
     }
 
-    LifoAlloc& alloc = cx->tempLifoAlloc();
-    RootedModuleObject module(cx, CompileModule(cx, options, srcBuf, alloc));
+    RootedModuleObject module(cx, CompileModule(cx, options, srcBuf, nullptr));
     if (!module) {
         return nullptr;
     }
@@ -1011,7 +1006,7 @@ frontend::CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
         scope = &cx->global()->emptyGlobalScope();
     }
 
-    BytecodeCompiler compiler(cx, cx->tempLifoAlloc(), options, srcBuf, scope);
+    BytecodeCompiler compiler(cx, options, srcBuf, scope);
     if (!compiler.compileStandaloneFunction(fun, GeneratorKind::NotGenerator,
                                             FunctionAsyncKind::SyncFunction,
                                             parameterListEnd))
@@ -1033,7 +1028,7 @@ frontend::CompileStandaloneGenerator(JSContext* cx, MutableHandleFunction fun,
 
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
 
-    BytecodeCompiler compiler(cx, cx->tempLifoAlloc(), options, srcBuf, emptyGlobalScope);
+    BytecodeCompiler compiler(cx, options, srcBuf, emptyGlobalScope);
     if (!compiler.compileStandaloneFunction(fun, GeneratorKind::Generator,
                                             FunctionAsyncKind::SyncFunction,
                                             parameterListEnd))
@@ -1055,7 +1050,7 @@ frontend::CompileStandaloneAsyncFunction(JSContext* cx, MutableHandleFunction fu
 
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
 
-    BytecodeCompiler compiler(cx, cx->tempLifoAlloc(), options, srcBuf, emptyGlobalScope);
+    BytecodeCompiler compiler(cx, options, srcBuf, emptyGlobalScope);
     if (!compiler.compileStandaloneFunction(fun, GeneratorKind::NotGenerator,
                                             FunctionAsyncKind::AsyncFunction,
                                             parameterListEnd))
@@ -1077,7 +1072,7 @@ frontend::CompileStandaloneAsyncGenerator(JSContext* cx, MutableHandleFunction f
 
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
 
-    BytecodeCompiler compiler(cx, cx->tempLifoAlloc(), options, srcBuf, emptyGlobalScope);
+    BytecodeCompiler compiler(cx, options, srcBuf, emptyGlobalScope);
     if (!compiler.compileStandaloneFunction(fun, GeneratorKind::Generator,
                                             FunctionAsyncKind::AsyncFunction,
                                             parameterListEnd))
