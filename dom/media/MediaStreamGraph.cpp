@@ -3635,21 +3635,6 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
 }
 
 void
-ProcessedMediaStream::QueueFinish()
-{
-  class Message : public ControlMessage {
-  public:
-    explicit Message(ProcessedMediaStream* aStream)
-      : ControlMessage(aStream) {}
-    void Run() override
-    {
-      mStream->FinishOnGraphThread();
-    }
-  };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this));
-}
-
-void
 ProcessedMediaStream::QueueSetAutofinish(bool aAutofinish)
 {
   class Message : public ControlMessage {

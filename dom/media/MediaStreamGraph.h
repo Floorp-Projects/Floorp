@@ -1187,10 +1187,6 @@ public:
                     uint16_t aOutputNumber = 0,
                     nsTArray<TrackID>* aBlockedTracks = nullptr);
   /**
-   * Queue a message to force this stream into the finished state.
-   */
-  void QueueFinish();
-  /**
    * Queue a message to set the autofinish flag on this stream (defaults to
    * false). When this flag is set, and all input streams are in the finished
    * state (including if there are no input streams), this stream automatically
