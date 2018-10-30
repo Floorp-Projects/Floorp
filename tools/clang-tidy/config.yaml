@@ -116,6 +116,8 @@ clang_checkers:
   - name: readability-delete-null-pointer
   - name: readability-else-after-return
   - name: readability-implicit-bool-conversion
+    # On automation the config flags act strange. Please see Bug 1500241.
+    publish: !!bool no
     config:
       - key: AllowIntegerConditions
         # The check will allow conditional integer conversions.
