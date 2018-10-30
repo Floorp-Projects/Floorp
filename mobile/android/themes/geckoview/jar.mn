@@ -6,10 +6,9 @@
 geckoview.jar:
 
 % skin geckoview classic/1.0 %skin/
+  skin/config.css                           (config.css)
   skin/content.css                          (content.css)
   skin/defines.css                          (defines.css)
-  skin/scrollbar.css                        (scrollbar-apz.css)
-
   skin/images/accessiblecaret-normal-hdpi.png       (images/accessiblecaret-normal-hdpi.png)
   skin/images/accessiblecaret-normal-xhdpi.png      (images/accessiblecaret-normal-xhdpi.png)
   skin/images/accessiblecaret-normal-xxhdpi.png     (images/accessiblecaret-normal-xxhdpi.png)
@@ -19,5 +18,14 @@ geckoview.jar:
   skin/images/accessiblecaret-tilt-right-hdpi.png   (images/accessiblecaret-tilt-right-hdpi.png)
   skin/images/accessiblecaret-tilt-right-xhdpi.png  (images/accessiblecaret-tilt-right-xhdpi.png)
   skin/images/accessiblecaret-tilt-right-xxhdpi.png (images/accessiblecaret-tilt-right-xxhdpi.png)
-  skin/images/dropmarker.svg                        (images/dropmarker.svg)
-  skin/images/dropmarker-right.svg                  (images/dropmarker-right.svg)
+  skin/images/arrowdown-16.png              (images/arrowdown-16.png)
+  skin/images/arrowup-16.png                (images/arrowup-16.png)
+  skin/images/config-plus.png               (images/config-plus.png)
+  skin/images/dropmarker-right.svg          (images/dropmarker-right.svg)
+  skin/images/dropmarker.svg                (images/dropmarker.svg)
+  skin/images/lock.png                      (images/lock.png)
+  skin/images/search-clear-30.png           (images/search-clear-30.png)
+  skin/images/search.png                    (images/search.png)
+  skin/images/textfield.png                 (images/textfield.png)
+  skin/images/throbber.png                  (images/throbber.png)
+  skin/scrollbar.css                        (scrollbar-apz.css)

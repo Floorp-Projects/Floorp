@@ -3,7 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 chrome.jar:
 % skin browser classic/1.0 %skin/
   skin/aboutPage.css                        (aboutPage.css)
@@ -17,7 +16,6 @@ chrome.jar:
   skin/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
   skin/aboutReader.css                      (aboutReader.css)
   skin/aboutSupport.css                     (aboutSupport.css)
-  skin/config.css                           (config.css)
   skin/defines.css                          (defines.css)
   skin/netError.css                         (netError.css)
   skin/spinner.css                          (spinner.css)
@@ -29,13 +27,7 @@ chrome.jar:
 
   skin/aboutLogins.css                      (aboutLogins.css)
 
-  skin/images/search.png                    (images/search.png)
-  skin/images/lock.png                      (images/lock.png)
-  skin/images/textfield.png                 (images/textfield.png)
-
   skin/images/amo-logo.png                  (images/amo-logo.png)
-  skin/images/arrowdown-16.png              (images/arrowdown-16.png)
-  skin/images/arrowup-16.png                (images/arrowup-16.png)
   skin/images/blocked-warning.png           (images/blocked-warning.png)
   skin/images/checkbox_checked.png          (images/checkbox_checked.png)
   skin/images/checkbox_checked_disabled.png (images/checkbox_checked_disabled.png)
@@ -48,13 +40,10 @@ chrome.jar:
   skin/images/errorpage-warning.png         (images/errorpage-warning.png)
   skin/images/grey-caution.svg              (images/grey-caution.svg)
   skin/images/certerror-warning.png         (images/certerror-warning.png)
-  skin/images/throbber.png                  (images/throbber.png)
-  skin/images/search-clear-30.png           (images/search-clear-30.png)
   skin/images/placeholder_image.svg         (images/placeholder_image.svg)
   skin/images/about-btn-darkgrey.png        (images/about-btn-darkgrey.png)
   skin/images/logo-hdpi.png                 (images/logo-hdpi.png)
   skin/images/wordmark-hdpi.png             (images/wordmark-hdpi.png)
-  skin/images/config-plus.png               (images/config-plus.png)
   skin/images/reader-minus-hdpi.png              (images/reader-minus-hdpi.png)
   skin/images/reader-minus-xhdpi.png             (images/reader-minus-xhdpi.png)
   skin/images/reader-minus-xxhdpi.png            (images/reader-minus-xxhdpi.png)
