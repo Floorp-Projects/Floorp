@@ -31,6 +31,7 @@ public class TestGeckoProfile {
     private static final String PROFILE_NAME = "profileName";
 
     private static final String CLIENT_ID_JSON_ATTR = "clientID";
+    private static final String CLIENT_ID_CANARY = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0";
     private static final String PROFILE_CREATION_DATE_JSON_ATTR = "created";
 
     @Rule
@@ -52,9 +53,12 @@ public class TestGeckoProfile {
         timesFile = new File(profileDir, "times.json");
     }
 
-    public void assertValidClientId(final String clientId) {
+    private void assertValidClientId(final String clientId) throws IllegalStateException {
         // This isn't the method we use in the main GeckoProfile code, but it should be equivalent.
         UUID.fromString(clientId); // assert: will throw if null or invalid UUID.
+        if (CLIENT_ID_CANARY.equals(clientId)) {
+            throw new IllegalArgumentException("Canary client id: " + clientId);
+        }
     }
 
     @Test
@@ -74,6 +78,15 @@ public class TestGeckoProfile {
 
         assertEquals("Returned client ID is the same as the one previously returned", clientId, profile.getClientId());
         assertEquals("clientID file format matches expectations", clientId, readClientIdFromFile(clientIdFile));
+    }
+
+    @Test
+    public void testIfHadCanaryClientIdForFreshProfile() throws Exception {
+         assertFalse("client ID file does not exist", clientIdFile.exists());
+
+        // Asking for getClientId() will create a new one if none existed
+        profile.getClientId();
+        assertEquals(false, profile.getIfHadCanaryClientId());
     }
 
     @Test
@@ -126,6 +139,47 @@ public class TestGeckoProfile {
     }
 
     @Test
+    public void testGetClientIdForCanaryId() throws Exception {
+        assertTrue("Created the parent dirs of the client ID file", clientIdFile.getParentFile().mkdirs());
+        writeClientIdToFile(clientIdFile, CLIENT_ID_CANARY);
+
+        final String clientIdForCanaryId = profile.getClientId();
+        assertValidClientId(clientIdForCanaryId);
+        assertNotEquals(CLIENT_ID_CANARY, clientIdForCanaryId);
+    }
+
+    @Test
+    public void testCanaryFlagForValidId() throws Exception {
+        assertTrue("Created the parent dirs of the client ID file", clientIdFile.getParentFile().mkdirs());
+        final String generatedValidClientId = UUID.randomUUID().toString();
+        writeClientIdToFile(clientIdFile, generatedValidClientId);
+        createCanaryIdFlag();
+
+        final boolean hasCanaryFlagForValidId = profile.getIfHadCanaryClientId();
+        assertEquals(false, hasCanaryFlagForValidId);
+    }
+
+    @Test
+    public void testCanaryIdFlagForInvalidId() throws Exception {
+        assertTrue("Created the parent dirs of the client ID file", clientIdFile.getParentFile().mkdirs());
+        writeClientIdToFile(clientIdFile, "invalid");
+        createCanaryIdFlag();
+
+        final boolean hasCanaryFlagForInvalidId = profile.getIfHadCanaryClientId();
+        assertEquals(false, hasCanaryFlagForInvalidId);
+    }
+
+    @Test
+    public void testCanaryIdFlagForCanaryId() throws Exception {
+        assertTrue("Created the parent dirs of the client ID file", clientIdFile.getParentFile().mkdirs());
+        writeClientIdToFile(clientIdFile, CLIENT_ID_CANARY);
+        createCanaryIdFlag();
+
+        final boolean hasCanaryFlagForCanaryId = profile.getIfHadCanaryClientId();
+        assertEquals(true, hasCanaryFlagForCanaryId);
+    }
+
+    @Test
     public void testEnsureParentDirs() {
         final File grandParentDir = new File(profileDir, "grandParent");
         final File parentDir = new File(grandParentDir, "parent");
@@ -171,6 +225,7 @@ public class TestGeckoProfile {
                 "905de1c0-0ea6-4a43-95f9-6170035f5a8", // too short (last section)
                 "05de1c0-0ea6-4a43-95f9-6170035f5a82", // too short (first section)
                 "905de1c0-0ea6-4a43-95f9-6170035f5a8!", // contains a symbol
+                CLIENT_ID_CANARY,
         };
         for (final String invalidClientId : invalidClientIds) {
             assertFalse("Client ID, " + invalidClientId + ", is invalid", GeckoProfile.isClientIdValid(invalidClientId));
@@ -230,5 +285,9 @@ public class TestGeckoProfile {
         final JSONObject obj = new JSONObject();
         obj.put(CLIENT_ID_JSON_ATTR, clientId);
         FileUtils.writeJSONObjectToFile(file, obj);
+    }
+
+    private void createCanaryIdFlag() throws Exception{
+        profile.getClientId();
     }
 }
