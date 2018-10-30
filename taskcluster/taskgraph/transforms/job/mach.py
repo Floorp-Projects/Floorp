@@ -9,13 +9,17 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.job import run_job_using, configure_taskdesc_for_run
 from taskgraph.util.schema import Schema
-from voluptuous import Required
+from voluptuous import Required, Optional, Any
 
 mach_schema = Schema({
     Required('using'): 'mach',
 
     # The mach command (omitting `./mach`) to run
     Required('mach'): basestring,
+
+    # The sparse checkout profile to use. Value is the filename relative to the
+    # directory where sparse profiles are defined (build/sparse-profiles/).
+    Optional('sparse-profile'): Any(basestring, None),
 
     # if true, perform a checkout of a comm-central based branch inside the
     # gecko checkout
