@@ -44,7 +44,7 @@ window.Application = {
       },
     };
     this.toolbox.target.activeTab.on("workerListChanged", this.updateWorkers);
-    this.client.addListener("serviceWorkerRegistrationListChanged", this.updateWorkers);
+    this.client.mainRoot.on("serviceWorkerRegistrationListChanged", this.updateWorkers);
     this.client.addListener("registration-changed", this.updateWorkers);
     this.client.mainRoot.on("processListChanged", this.updateWorkers);
     this.toolbox.target.on("navigate", this.updateDomain);
@@ -89,7 +89,7 @@ window.Application = {
 
   destroy() {
     this.toolbox.target.activeTab.off("workerListChanged", this.updateWorkers);
-    this.client.removeListener("serviceWorkerRegistrationListChanged",
+    this.client.mainRoot.off("serviceWorkerRegistrationListChanged",
       this.updateWorkers);
     this.client.removeListener("registration-changed", this.updateWorkers);
     this.client.mainRoot.off("processListChanged", this.updateWorkers);
