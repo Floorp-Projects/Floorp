@@ -42,6 +42,7 @@ void RecordChildEvent(const mozilla::TimeStamp& timestamp,
                       const nsTArray<mozilla::Telemetry::EventExtraEntry>& extra);
 
 void IPCTimerFired(nsITimer* aTimer, void* aClosure);
+
 void DeInitializeGlobalState();
 
 void DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent);
