@@ -9,10 +9,12 @@ import json
 from pathlib2 import Path
 
 import mozunit
-from pkg_resources import parse_version
+import pytest
+
+from mozilla_version.gecko import GeckoVersion
 from mozrelease.buglist_creator import (
     is_excluded_change, create_bugs_url, is_backout_bug, get_previous_tag_version,
-    get_bugs_in_changeset, dot_version_to_tag_version, tag_version_to_dot_version_parse,
+    get_bugs_in_changeset, tag_version, parse_tag_version,
 )
 
 
@@ -20,62 +22,58 @@ DATA_PATH = Path(__file__).with_name("data")
 
 
 def test_beta_1_release():
-    release_object_54_0b1 = {
-        'branch': 'releases/mozilla-beta',
-        'product': 'firefox',
-        'version': '54.0b1',
-        'mozillaRevision': 'cf76e00dcd6f',
-    }
-    buglist_str_54_0b1 = create_bugs_url(release_object_54_0b1)
+    buglist_str_54_0b1 = create_bugs_url(
+        product='firefox',
+        current_version=GeckoVersion.parse('54.0b1'),
+        current_revision='cf76e00dcd6f',
+    )
     assert buglist_str_54_0b1 == '', 'There should be no bugs to compare for beta 1.'
 
 
-def test_is_excluded_change():
-    excluded_changesets = [
-        {'desc': 'something something something a=test-only something something something'},
-        {'desc': 'this is a a=release change!'},
-    ]
-    assert all(is_excluded_change(excluded) for excluded in excluded_changesets), \
-        'is_excluded_change failed to exclude a changeset.'
+@pytest.mark.parametrize('description,is_excluded', (
+    ('something something something a=test-only something something something', True),
+    ('this is a a=release change!', True),
+))
+def test_is_excluded_change(description, is_excluded):
+    assert is_excluded_change({'desc': description}) == is_excluded
 
 
-def test_is_backout_bug():
-    backout_bugs_descs = [
-        'I backed out this bug because',
-        'Backing out this bug due to',
-        'Backout bug xyz',
-        'Back out bug xyz',
-    ]
-
-    not_backout_bugs = [
-        'this is a regular bug description',
-    ]
-
-    assert all(is_backout_bug(backout_desc.lower()) for backout_desc in backout_bugs_descs)
-    assert all(not is_backout_bug(regular_desc.lower()) for regular_desc in not_backout_bugs)
+@pytest.mark.parametrize('description,is_backout', (
+    ('I backed out this bug because', True),
+    ('Backing out this bug due to', True),
+    ('Backout bug xyz', True),
+    ('Back out bug xyz', True),
+    ('this is a regular bug description', False),
+))
+def test_is_backout_bug(description, is_backout):
+    assert is_backout_bug(description) == is_backout
 
 
-def test_dot_version_to_tag_version():
-    test_tuples = [
-        (['firefox', '53.0b10'], 'FIREFOX_53_0b10_RELEASE'),
-        (['firefox', '52.0'], 'FIREFOX_52_0_RELEASE'),
-        (['fennec', '52.0.2'], 'FENNEC_52_0_2_RELEASE'),
-    ]
-
-    assert all(dot_version_to_tag_version(*args) == results for args, results in test_tuples)
-
-
-def test_tag_version_to_dot_version_parse():
-    test_tuples = [
-        ('FIREFOX_53_0b10_RELEASE', parse_version('53.0b10')),
-        ('FIREFOX_52_0_RELEASE', parse_version('52.0')),
-        ('FENNEC_52_0_2_RELEASE', parse_version('52.0.2')),
-    ]
-
-    assert all(tag_version_to_dot_version_parse(tag) == expected for tag, expected in test_tuples)
+@pytest.mark.parametrize('product,version,tag', (
+    ('firefox', GeckoVersion.parse('53.0b10'), 'FIREFOX_53_0b10_RELEASE'),
+    ('firefox', GeckoVersion.parse('52.0'), 'FIREFOX_52_0_RELEASE'),
+    ('fennec', GeckoVersion.parse('52.0.2'), 'FENNEC_52_0_2_RELEASE'),
+))
+def test_tag_version(product, version, tag):
+    assert tag_version(product, version) == tag
 
 
-def test_get_previous_tag_version():
+@pytest.mark.parametrize('tag,version', (
+    ('FIREFOX_53_0b10_RELEASE', GeckoVersion.parse('53.0b10')),
+    ('FIREFOX_52_0_RELEASE', GeckoVersion.parse('52.0')),
+    ('FENNEC_52_0_2_RELEASE', GeckoVersion.parse('52.0.2')),
+))
+def test_parse_tag_version(tag, version):
+    assert parse_tag_version(tag) == version
+
+
+@pytest.mark.parametrize('version,tag,previous_tag', (
+    (GeckoVersion.parse('48.0b4'), 'FIREFOX_48_0b4_RELEASE', 'FIREFOX_48_0b3_RELEASE'),
+    (GeckoVersion.parse('48.0b9'), 'FIREFOX_48_0b9_RELEASE', 'FIREFOX_48_0b7_RELEASE'),
+    (GeckoVersion.parse('48.0.2'), 'FIREFOX_48_0_2_RELEASE', 'FIREFOX_48_0_1_RELEASE'),
+    (GeckoVersion.parse('48.0.1'), 'FIREFOX_48_0_1_RELEASE', 'FIREFOX_48_0_RELEASE'),
+))
+def test_get_previous_tag_version(version, tag, previous_tag):
     product = 'firefox'
     ff_48_tags = [
         u'FIREFOX_BETA_48_END',
@@ -116,16 +114,7 @@ def test_get_previous_tag_version():
         ],
     }
 
-    test_tuples = [
-        ('48.0b4', 'FIREFOX_48_0b4_RELEASE', 'FIREFOX_48_0b3_RELEASE'),
-        ('48.0b9', 'FIREFOX_48_0b9_RELEASE', 'FIREFOX_48_0b7_RELEASE'),
-        ('48.0.2', 'FIREFOX_48_0_2_RELEASE', 'FIREFOX_48_0_1_RELEASE'),
-        ('48.0.1', 'FIREFOX_48_0_1_RELEASE', 'FIREFOX_48_0_RELEASE'),
-    ]
-
-    assert all(
-        get_previous_tag_version(product, dot_version, tag_version, mock_hg_json) == expected
-        for dot_version, tag_version, expected in test_tuples)
+    assert get_previous_tag_version(product, version, tag, mock_hg_json) == previous_tag
 
 
 def test_get_bugs_in_changeset():
