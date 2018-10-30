@@ -106,14 +106,16 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
       baseURI = doc->GetBaseURI();
     }
     nsCOMPtr<nsIURI> resolvedURI;
-    aRv = NS_NewURI(getter_AddRefs(resolvedURI), aUrl, nullptr, baseURI);
-    if (NS_WARN_IF(aRv.Failed())) {
+    nsresult rv = NS_NewURI(getter_AddRefs(resolvedURI), aUrl, nullptr, baseURI);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.ThrowTypeError<MSG_INVALID_URL>(aUrl);
       return nullptr;
     }
 
     nsAutoCString spec;
-    aRv = resolvedURI->GetSpec(spec);
-    if (NS_WARN_IF(aRv.Failed())) {
+    rv = resolvedURI->GetSpec(spec);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.ThrowTypeError<MSG_INVALID_URL>(aUrl);
       return nullptr;
     }
 
