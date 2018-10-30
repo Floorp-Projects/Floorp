@@ -23,6 +23,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Build;
 import android.os.Handler;
+import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
@@ -339,6 +340,7 @@ public final class SessionTextInput {
      * @param defHandler Handler returned by the system {@code getHandler} implementation.
      * @return Handler to return to the system through {@code getHandler}.
      */
+    @AnyThread
     public synchronized @NonNull Handler getHandler(final @NonNull Handler defHandler) {
         // May be called on any thread.
         if (mInputConnection != null) {
@@ -389,6 +391,7 @@ public final class SessionTextInput {
      * @return InputConnection instance, or null if there is no active input
      *         (or if in viewless mode).
      */
+    @AnyThread
     public synchronized @Nullable InputConnection onCreateInputConnection(
             final @NonNull EditorInfo attrs) {
         // May be called on any thread.

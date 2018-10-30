@@ -41,6 +41,7 @@ import android.os.IInterface;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.SystemClock;
+import android.support.annotation.AnyThread;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.annotation.NonNull;
@@ -1104,6 +1105,7 @@ public class GeckoSession extends LayerSession
      *
      * @return SessionTextInput instance.
      */
+    @AnyThread
     public @NonNull SessionTextInput getTextInput() {
         // May be called on any thread.
         return mTextInput;
