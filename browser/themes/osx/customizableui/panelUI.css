@@ -80,3 +80,23 @@ menu.subviewbutton > .menu-right {
 #PanelUI-remotetabs-tabslist {
   padding-bottom: 4px;
 }
+
+.panel-button {
+  -moz-appearance: none;
+  border-radius: 2px;
+  background-color: var(--arrowpanel-dimmed);
+  color: inherit;
+  padding: 2px 6px;
+}
+
+.panel-button@buttonStateHover@ {
+  background-color: var(--arrowpanel-dimmed-further);
+}
+
+.panel-button@buttonStateActive@ {
+  background-color: var(--arrowpanel-dimmed-even-further);
+}
+
+.panel-button:-moz-focusring {
+  box-shadow: var(--focus-ring-box-shadow);
+}

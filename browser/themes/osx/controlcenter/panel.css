@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../shared.inc
 %include ../../shared/controlcenter/panel.inc.css
 
 .identity-popup-expander:-moz-focusring,
@@ -12,13 +11,7 @@
 
 .tracking-protection-button,
 #identity-popup-securityView-body > button {
-  @hudButton@
   min-height: 30px;
-}
-
-.tracking-protection-button:hover:active,
-#identity-popup-securityView-body > button:hover:active {
-  @hudButtonPressed@
 }
 
 .tracking-protection-button:-moz-focusring,
