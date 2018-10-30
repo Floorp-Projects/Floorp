@@ -12,11 +12,12 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
+import kotlin.math.max
 
 /**
  * This class provides access to a centralized registry of all active sessions.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class SessionManager(
     val engine: Engine,
     val defaultSession: (() -> Session)? = null,
@@ -284,13 +285,14 @@ class SessionManager(
      * Recalculate the index of the selected session after a session was removed. Returns true if the index has changed.
      * False otherwise.
      */
+    @Suppress("ComplexMethod")
     private fun recalculateSelectionIndex(
         indexToRemove: Int,
         selectParentIfExists: Boolean,
         parentId: String?
     ): Boolean {
         // Recalculate selection
-        val newSelectedIndex = when {
+        var newSelectedIndex = when {
             // All items have been removed
             values.size == 0 -> NO_SELECTION
 
@@ -311,6 +313,15 @@ class SessionManager(
             else -> selectedIndex
         }
 
+        if (newSelectedIndex != NO_SELECTION && values[newSelectedIndex].isCustomTabSession()) {
+            // Oh shoot! The session we want to select is a custom tab and that's a no no. Let's find a regular session
+            // that is still close.
+            newSelectedIndex = findNearbyNonCustomTabSession(
+                // Find a new index. Either from the one we wanted to select or if that was the parent then start from
+                // the index we just removed.
+                if (selectParentIfExists) indexToRemove else newSelectedIndex)
+        }
+
         val selectionUpdated = newSelectedIndex != selectedIndex
 
         if (selectionUpdated) {
@@ -318,6 +329,31 @@ class SessionManager(
         }
 
         return selectionUpdated
+    }
+
+    /**
+     * @return Index of a new session that is not a custom tab and as close as possible to the given index. Returns
+     * [NO_SELECTION] if no session to select could be found.
+     */
+    private fun findNearbyNonCustomTabSession(index: Int): Int {
+        val maxSteps = max(values.lastIndex - index, index)
+
+        if (maxSteps <= 0) {
+            return NO_SELECTION
+        }
+
+        // Try sessions oscillating near the index.
+        for (steps in 1..maxSteps) {
+            listOf(index - steps, index + steps).forEach { current ->
+                if (current >= 0 &&
+                    current <= values.lastIndex &&
+                    !values[current].isCustomTabSession()) {
+                    return current
+                }
+            }
+        }
+
+        return NO_SELECTION
     }
 
     /**

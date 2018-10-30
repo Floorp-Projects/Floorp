@@ -871,4 +871,103 @@ class SessionManagerTest {
         assertNull(session2.parentId)
         assertEquals(session2.id, session4.parentId)
     }
+
+    @Test
+    fun `SessionManager should not select custom tab session after removing selected session`() {
+        val manager = SessionManager(mock())
+        assertNull(manager.selectedSession)
+
+        val customTabSession = Session("https://www.mozilla.org")
+        customTabSession.customTabConfig = mock()
+        manager.add(customTabSession)
+
+        assertNull(manager.selectedSession)
+
+        val session = Session("https://www.firefox.com")
+        manager.add(session)
+
+        assertEquals(session, manager.selectedSession)
+
+        manager.remove(session)
+
+        assertNull(manager.selectedSession)
+    }
+
+    @Test
+    fun `SessionManager should not select parent if it is a custom tab session`() {
+        val parent = Session("https://www.mozilla.org")
+        parent.customTabConfig = mock()
+
+        val session1 = Session("https://www.firefox.com")
+        val session2 = Session("https://getpocket.com")
+        val child = Session("https://www.mozilla.org/en-US/internet-health/")
+
+        val manager = SessionManager(mock())
+        manager.add(parent)
+        manager.add(session1)
+        manager.add(session2)
+        manager.add(child, parent = parent)
+
+        manager.select(child)
+        manager.remove(child, selectParentIfExists = true)
+
+        assertEquals(session2, manager.selectedSession)
+        assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
+    }
+
+    @Test
+    fun `SessionManager will select new non custom tab session if selected session gets removed`() {
+        val session1 = Session("https://www.firefox.com").apply { customTabConfig = mock() }
+        val session2 = Session("https://developer.mozilla.org/en-US/")
+        val session3 = Session("https://www.mozilla.org/en-US/internet-health/").apply { customTabConfig = mock() }
+        val session4 = Session("https://www.mozilla.org/en-US/technology/")
+        val session5 = Session("https://example.org/555").apply { customTabConfig = mock() }
+        val session6 = Session("https://example.org/Hello").apply { customTabConfig = mock() }
+        val session7 = Session("https://example.org/World").apply { customTabConfig = mock() }
+        val session8 = Session("https://example.org/JustTestingThings").apply { customTabConfig = mock() }
+        val session9 = Session("https://example.org/NoCustomTab")
+
+        val manager = SessionManager(mock())
+        manager.add(session1)
+        manager.add(session2)
+        manager.add(session3)
+        manager.add(session4)
+        manager.add(session5)
+        manager.add(session6)
+        manager.add(session7)
+        manager.add(session8)
+        manager.add(session9)
+
+        manager.select(session4)
+        assertEquals(session4, manager.selectedSession)
+
+        manager.remove(session4)
+        assertEquals(session2, manager.selectedSession)
+
+        manager.remove(session2)
+        assertEquals(session9, manager.selectedSession)
+
+        manager.remove(session9)
+        assertNull(manager.selectedSession)
+    }
+
+    @Test(expected = java.lang.IllegalStateException::class)
+    fun `SessionManager throws if parent to be selected cannot be found`() {
+        // This should never be possible with the current implementation of SessionManager. However this test makes
+        // sure that if this situation occurs (bug) then we throw an exception.
+
+        val parent = Session("https://www.mozilla.org")
+        val session = Session("https://www.firefox.com")
+
+        val manager = SessionManager(mock())
+        manager.add(parent)
+        manager.add(session, parent = parent)
+
+        manager.select(session)
+
+        // The parent id is marked as "internal". Component consuemrs normally cannot modify it.
+        session.parentId = "DoesNotExist"
+
+        manager.remove(session, selectParentIfExists = true)
+    }
 }
