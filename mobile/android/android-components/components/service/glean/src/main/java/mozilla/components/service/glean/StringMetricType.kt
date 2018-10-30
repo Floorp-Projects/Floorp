@@ -7,9 +7,6 @@ package mozilla.components.service.glean
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
-// Maximum length of any passed value string, in UTF8 byte sequence length.
-internal const val MAX_LENGTH_STRING_VALUE = 50
-
 /**
  * This implements the developer facing API for recording string metrics.
  *
@@ -29,13 +26,16 @@ data class StringMetricType(
 ) : CommonMetricData {
     private val logger = Logger("glean/StringMetricType")
 
+    // Maximum length of any passed value string, in UTF8 byte sequence length.
+    private val MAX_LENGTH_VALUE = 50
+
     /**
      * Set a string value.
      *
      * @param value This is a user defined string value. The maximum length of
      * this string is defined the metrics.yaml file by max_length.
      */
-    public fun set(value: String) {
+    fun set(value: String) {
         // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
 
         if (!shouldRecord(logger)) {
@@ -43,9 +43,9 @@ data class StringMetricType(
         }
 
         val truncatedValue = value.let {
-            if (it.length > MAX_LENGTH_STRING_VALUE) {
-                logger.warn("String length ${it.length} > $MAX_LENGTH_STRING_VALUE")
-                return@let it.substring(0, MAX_LENGTH_STRING_VALUE)
+            if (it.length > MAX_LENGTH_VALUE) {
+                logger.warn("String length ${it.length} > $MAX_LENGTH_VALUE")
+                return@let it.substring(0, MAX_LENGTH_VALUE)
             }
             it
         }

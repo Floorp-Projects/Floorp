@@ -33,6 +33,11 @@ data class EventMetricType(
 ) : CommonMetricData {
     private val logger = Logger("glean/EventMetricType")
 
+    // Maximum length of any string value in the extra dictionary, in UTF8 byte sequence length.
+    private val MAX_LENGTH_EXTRA_KEY_VALUE = 80
+    // Maximum length of any passed value string, in UTF8 byte sequence length.
+    private val MAX_LENGTH_VALUE = 80
+
     /**
      * Record an event by using the information provided by the instance of this class.
      *
@@ -45,7 +50,7 @@ data class EventMetricType(
      *              The maximum length for values is defined by [MAX_LENGTH_EXTRA_KEY_VALUE]
      */
     @Suppress("ReturnCount", "ComplexMethod")
-    public fun record(objectId: String, value: String? = null, extra: Map<String, String>? = null) {
+    fun record(objectId: String, value: String? = null, extra: Map<String, String>? = null) {
         // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
         if (!shouldRecord(logger)) {
             return
@@ -59,9 +64,9 @@ data class EventMetricType(
         }
 
         val truncatedValue = value?.let {
-            if (it.length > MAX_LENGTH_EVENT_VALUE) {
+            if (it.length > MAX_LENGTH_VALUE) {
                 logger.warn("Value parameter exceeds maximum string length, truncating.")
-                return@let it.substring(0, MAX_LENGTH_EVENT_VALUE)
+                return@let it.substring(0, MAX_LENGTH_VALUE)
             }
             it
         }
