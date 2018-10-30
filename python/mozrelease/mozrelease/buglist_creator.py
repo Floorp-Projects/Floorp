@@ -21,20 +21,20 @@ BUGZILLA_BUGLIST_TEMPLATE = 'https://bugzilla.mozilla.org/buglist.cgi?bug_id={bu
 BUG_NUMBER_REGEX = re.compile(r'bug \d+', re.IGNORECASE)
 CHANGELOG_TO_FROM_STRING = '{product}_{version}_RELEASE'
 CHANGESET_URL_TEMPLATE = (
-    'https://hg.mozilla.org/{release_branch}/{logtype}'
+    '{repo}/{logtype}'
     '?fromchange={from_version}&tochange={to_version}&full=1'
 )
 FULL_CHANGESET_PREFIX = 'Full Mercurial changelog: '
 LIST_DESCRIPTION_TEMPLATE = 'Comparing Mercurial tag {from_version} to {to_version}:'
 MAX_BUGS_IN_BUGLIST = 250
-MERCURIAL_TAGS_URL_TEMPLATE = 'https://hg.mozilla.org/{release_branch}/json-tags'
+MERCURIAL_TAGS_URL_TEMPLATE = '{repo}/json-tags'
 NO_BUGS = ''  # Return this when bug list can't be created
 URL_SHORTENER_TEMPLATE = 'https://bugzilla.mozilla.org/rest/bitly/shorten?url={url}'
 
 log = logging.getLogger(__name__)
 
 
-def create_bugs_url(product, current_version, current_revision):
+def create_bugs_url(product, current_version, current_revision, repo=None):
     """
     Creates list of bugs and backout bugs for release-drivers email
 
@@ -48,18 +48,19 @@ def create_bugs_url(product, current_version, current_revision):
             # If the version is beta 1, don't make any links
             return NO_BUGS
 
-        branch = get_branch_by_version(current_version)
+        if repo is None:
+            repo = get_repo_by_version(current_version)
         # Get the tag version, for display purposes
         current_version_tag = tag_version(product, current_version)
 
         # Get all Hg tags for this branch, determine the previous version
-        tag_url = MERCURIAL_TAGS_URL_TEMPLATE.format(release_branch=branch)
+        tag_url = MERCURIAL_TAGS_URL_TEMPLATE.format(repo=repo)
         mercurial_tags_json = requests.get(tag_url).json()
         previous_version_tag = get_previous_tag_version(
             product, current_version, current_version_tag, mercurial_tags_json)
 
         # Get the changeset between these versions, parse for all unique bugs and backout bugs
-        resp = requests.get(CHANGESET_URL_TEMPLATE.format(release_branch=branch,
+        resp = requests.get(CHANGESET_URL_TEMPLATE.format(repo=repo,
                                                           from_version=previous_version_tag,
                                                           to_version=current_revision,
                                                           logtype='json-pushes'))
@@ -72,7 +73,7 @@ def create_bugs_url(product, current_version, current_revision):
                 from_version=previous_version_tag,
                 to_version=current_version_tag)
 
-            changeset_html = CHANGESET_URL_TEMPLATE.format(release_branch=branch,
+            changeset_html = CHANGESET_URL_TEMPLATE.format(repo=repo,
                                                            from_version=previous_version_tag,
                                                            to_version=current_revision,
                                                            logtype='pushloghtml')
@@ -197,16 +198,16 @@ def format_return_value(description, unique_bugs, unique_backout_bugs, changeset
     return return_str
 
 
-def get_branch_by_version(version):
+def get_repo_by_version(version):
     """
-    Get the branch a given version is found on.
+    Get the repo a given version is found on.
     """
     if version.is_beta:
-        return 'releases/mozilla-beta'
+        return 'https://hg.mozilla.org/releases/mozilla-beta'
     elif version.is_release:
-        return 'releases/mozilla-release'
+        return 'https://hg.mozilla.org/releases/mozilla-release'
     elif version.is_esr:
-        return 'releases/mozilla-esr{}'.format(version.major_number)
+        return 'https://hg.mozilla.org/releases/mozilla-esr{}'.format(version.major_number)
     else:
         raise Exception(
             'Unsupported version type {}: {}'.format(
@@ -215,19 +216,19 @@ def get_branch_by_version(version):
 
 def email_release_drivers(
     addresses, product, version, build_number,
-    revision, task_group_id,
+    repo, revision, task_group_id,
 ):
     # Send an email to the mailing after the build
-    email_buglist_string = create_bugs_url(product, version, revision)
+    email_buglist_string = create_bugs_url(product, version, revision, repo=repo)
 
     content = """\
 A new build has been started:
 
-Commit: https://hg.mozilla.org/{path}/rev/{revision}
+Commit: {repo}/rev/{revision}
 Task group: https://tools.taskcluster.net/push-inspector/#/{task_group_id}
 
 {email_buglist_string}
-""".format(path=get_branch_by_version(version), revision=revision,
+""".format(repo=repo, revision=revision,
            task_group_id=task_group_id,
            email_buglist_string=email_buglist_string)
 
