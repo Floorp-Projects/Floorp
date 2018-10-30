@@ -170,18 +170,7 @@ template<class T>
 bool
 IsMaybeWrapped(const HandleValue v)
 {
-    if (!v.isObject()) {
-        return false;
-    }
-    JSObject* obj = &v.toObject();
-    if (obj->is<T>()) {
-        return true;
-    }
-    obj = CheckedUnwrap(obj);
-    if (!obj) {
-        return false;
-    }
-    return obj->is<T>();
+    return v.isObject() && v.toObject().canUnwrapAs<T>();
 }
 
 static inline uint32_t
@@ -2742,7 +2731,7 @@ static MOZ_MUST_USE bool
 ReadableStreamDefaultController_close_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableStreamDefaultController*> controller(cx);
-    controller = &UncheckedUnwrap(&args.thisv().toObject())->as<ReadableStreamDefaultController>();
+    controller = &args.thisv().toObject().unwrapAs<ReadableStreamDefaultController>();
 
     // Steps 2-3.
     if (!VerifyControllerStateForClosing(cx, controller)) {
@@ -2773,7 +2762,7 @@ static MOZ_MUST_USE bool
 ReadableStreamDefaultController_enqueue_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableStreamDefaultController*> controller(cx);
-    controller = &UncheckedUnwrap(&args.thisv().toObject())->as<ReadableStreamDefaultController>();
+    controller = &args.thisv().toObject().unwrapAs<ReadableStreamDefaultController>();
 
     // Step 2: If this.[[closeRequested]] is true, throw a TypeError exception.
     if (ControllerFlags(controller) & ControllerFlag_CloseRequested) {
@@ -2819,7 +2808,7 @@ static MOZ_MUST_USE bool
 ReadableStreamDefaultController_error_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableStreamDefaultController*> controller(cx);
-    controller = &UncheckedUnwrap(&args.thisv().toObject())->as<ReadableStreamDefaultController>();
+    controller = &args.thisv().toObject().unwrapAs<ReadableStreamDefaultController>();
 
     // Step 2: Let stream be this.[[controlledReadableStream]].
     // Step 3: If stream.[[state]] is not "readable", throw a TypeError exception.
