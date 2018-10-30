@@ -90,7 +90,7 @@ HTMLEditor::GetAbsolutelyPositionedSelectionContainer()
     return nullptr;
   }
 
-  RefPtr<Element> element = GetSelectionContainerElement(*SelectionRefPtr());
+  RefPtr<Element> element = GetSelectionContainerElement();
   if (NS_WARN_IF(!element)) {
     return nullptr;
   }
@@ -473,11 +473,7 @@ HTMLEditor::EndMoving()
 
   mGrabberClicked = false;
   mIsMoving = false;
-  RefPtr<Selection> selection = GetSelection();
-  if (!selection) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  nsresult rv = RefereshEditingUI(*selection);
+  nsresult rv = RefereshEditingUI();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -582,8 +578,7 @@ HTMLEditor::SetPositionToAbsolute(Element& aElement)
       return NS_ERROR_FAILURE;
     }
     RefPtr<Element> newBrElement =
-      InsertBrElementWithTransaction(*selection,
-                                     EditorRawDOMPoint(parentNode, 0));
+      InsertBrElementWithTransaction(EditorRawDOMPoint(parentNode, 0));
     if (NS_WARN_IF(!newBrElement)) {
       return NS_ERROR_FAILURE;
     }

@@ -803,8 +803,7 @@ protected: // May be called by friends.
                                         Text& aTextNode, int32_t aOffset,
                                         bool aSuppressIME = false);
 
-  nsresult SetTextImpl(Selection& aSelection,
-                       const nsAString& aString,
+  nsresult SetTextImpl(const nsAString& aString,
                        Text& aTextNode);
 
   /**
@@ -1316,11 +1315,7 @@ protected: // May be called by friends.
   EditorDOMPoint JoinNodesDeepWithTransaction(nsIContent& aLeftNode,
                                               nsIContent& aRightNode);
 
-  /**
-   * Note that aSelection is optional and can be nullptr.
-   */
-  nsresult DoTransaction(Selection* aSelection,
-                         nsITransaction* aTxn);
+  nsresult DoTransactionInternal(nsITransaction* aTxn);
 
   virtual bool IsBlockNode(nsINode* aNode);
 
@@ -1602,16 +1597,16 @@ protected: // May be called by friends.
   }
   static nsIContent* GetNodeAtRangeOffsetPoint(const RawRangeBoundary& aPoint);
 
-  static EditorRawDOMPoint GetStartPoint(Selection* aSelection);
-  static EditorRawDOMPoint GetEndPoint(Selection* aSelection);
+  static EditorRawDOMPoint GetStartPoint(const Selection& aSelection);
+  static EditorRawDOMPoint GetEndPoint(const Selection& aSelection);
 
-  static nsresult GetEndChildNode(Selection* aSelection,
+  static nsresult GetEndChildNode(const Selection& aSelection,
                                   nsIContent** aEndNode);
 
   /**
    * CollapseSelectionToEnd() collapses the selection to the end of the editor.
    */
-  nsresult CollapseSelectionToEnd(Selection* aSelection);
+  nsresult CollapseSelectionToEnd();
 
   /**
    * Helpers to add a node to the selection.
@@ -1644,7 +1639,6 @@ protected: // May be called by friends.
   }
 
   nsresult HandleInlineSpellCheck(EditSubAction aEditSubAction,
-                                  Selection& aSelection,
                                   nsINode* previousSelectedNode,
                                   uint32_t previousSelectedOffset,
                                   nsINode* aStartContainer,
@@ -1720,8 +1714,8 @@ protected: // Called by helper classes.
    * various editor actions.
    */
   bool ArePreservingSelection();
-  void PreserveSelectionAcrossActions(Selection* aSel);
-  nsresult RestorePreservedSelection(Selection* aSel);
+  void PreserveSelectionAcrossActions();
+  nsresult RestorePreservedSelection();
   void StopPreservingSelection();
 
   /**
@@ -1802,7 +1796,7 @@ protected: // Shouldn't be used by friend classes
   /**
    * Make the given selection span the entire document.
    */
-  virtual nsresult SelectEntireDocument(Selection* aSelection);
+  virtual nsresult SelectEntireDocument();
 
   /**
    * Helper method for scrolling the selection into view after
@@ -1908,15 +1902,13 @@ protected: // Shouldn't be used by friend classes
   /**
    * InitializeSelectionAncestorLimit() is called by InitializeSelection().
    * When this is called, each implementation has to call
-   * aSelection.SetAncestorLimiter() with aAnotherLimit.
+   * Selection::SetAncestorLimiter() with aAnotherLimit.
    *
-   * @param aSelection          The selection.
-   * @param aAncestorLimit      New ancestor limit of aSelection.  This always
+   * @param aAncestorLimit      New ancestor limit of Selection.  This always
    *                            has parent node.  So, it's always safe to
    *                            call SetAncestorLimit() with this node.
    */
-  virtual void InitializeSelectionAncestorLimit(Selection& aSelection,
-                                                nsIContent& aAncestorLimit);
+  virtual void InitializeSelectionAncestorLimit(nsIContent& aAncestorLimit);
 
   /**
    * Return the offset of aChild in aParent.  Asserts fatally if parent or
@@ -2051,9 +2043,8 @@ protected: // helper classes which may be used by friends
      * Constructor responsible for remembering all state needed to restore
      * aSelection.
      */
-    AutoSelectionRestorer(Selection& aSelection,
-                          EditorBase& aEditorBase
-                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    explicit AutoSelectionRestorer(EditorBase& aEditorBase
+                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /**
      * Destructor restores mSelection to its former state
@@ -2066,7 +2057,6 @@ protected: // helper classes which may be used by friends
     void Abort();
 
   protected:
-    RefPtr<Selection> mSelection;
     EditorBase* mEditorBase;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };

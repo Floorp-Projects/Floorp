@@ -73,7 +73,7 @@ TypeInState::UpdateSelState(Selection* aSelection)
     return NS_OK;
   }
 
-  mLastSelectionPoint = EditorBase::GetStartPoint(aSelection);
+  mLastSelectionPoint = EditorBase::GetStartPoint(*aSelection);
   if (!mLastSelectionPoint.IsSet()) {
     return NS_ERROR_FAILURE;
   }
@@ -98,7 +98,7 @@ TypeInState::OnSelectionChange(Selection& aSelection)
 
   if (aSelection.IsCollapsed() && aSelection.RangeCount()) {
     EditorRawDOMPoint selectionStartPoint(
-                        EditorBase::GetStartPoint(&aSelection));
+                        EditorBase::GetStartPoint(aSelection));
     if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
       return;
     }

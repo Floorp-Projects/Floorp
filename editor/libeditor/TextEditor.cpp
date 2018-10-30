@@ -66,12 +66,10 @@ using namespace dom;
 
 template already_AddRefed<Element>
 TextEditor::InsertBrElementWithTransaction(
-              Selection& aSelection,
               const EditorDOMPoint& aPointToInsert,
               EDirection aSelect);
 template already_AddRefed<Element>
 TextEditor::InsertBrElementWithTransaction(
-              Selection& aSelection,
               const EditorRawDOMPoint& aPointToInsert,
               EDirection aSelect);
 
@@ -463,10 +461,11 @@ TextEditor::OnInputParagraphSeparator()
 template<typename PT, typename CT>
 already_AddRefed<Element>
 TextEditor::InsertBrElementWithTransaction(
-              Selection& aSelection,
               const EditorDOMPointBase<PT, CT>& aPointToInsert,
               EDirection aSelect /* = eNone */)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return nullptr;
   }
@@ -520,7 +519,7 @@ TextEditor::InsertBrElementWithTransaction(
     case eNone:
       break;
     case eNext: {
-      aSelection.SetInterlinePosition(true, IgnoreErrors());
+      SelectionRefPtr()->SetInterlinePosition(true, IgnoreErrors());
       // Collapse selection after the <br> node.
       EditorRawDOMPoint afterBRElement(newBRElement);
       if (afterBRElement.IsSet()) {
@@ -528,7 +527,7 @@ TextEditor::InsertBrElementWithTransaction(
         NS_WARNING_ASSERTION(advanced,
           "Failed to advance offset after the <br> element");
         ErrorResult error;
-        aSelection.Collapse(afterBRElement, error);
+        SelectionRefPtr()->Collapse(afterBRElement, error);
         NS_WARNING_ASSERTION(!error.Failed(),
           "Failed to collapse selection after the <br> element");
       } else {
@@ -537,12 +536,12 @@ TextEditor::InsertBrElementWithTransaction(
       break;
     }
     case ePrevious: {
-      aSelection.SetInterlinePosition(true, IgnoreErrors());
+      SelectionRefPtr()->SetInterlinePosition(true, IgnoreErrors());
       // Collapse selection at the <br> node.
       EditorRawDOMPoint atBRElement(newBRElement);
       if (atBRElement.IsSet()) {
         ErrorResult error;
-        aSelection.Collapse(atBRElement, error);
+        SelectionRefPtr()->Collapse(atBRElement, error);
         NS_WARNING_ASSERTION(!error.Failed(),
           "Failed to collapse selection at the <br> element");
       } else {
@@ -560,10 +559,11 @@ TextEditor::InsertBrElementWithTransaction(
 }
 
 nsresult
-TextEditor::ExtendSelectionForDelete(Selection* aSelection,
-                                     nsIEditor::EDirection* aAction)
+TextEditor::ExtendSelectionForDelete(nsIEditor::EDirection* aAction)
 {
-  bool bCollapsed = aSelection->IsCollapsed();
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  bool bCollapsed = SelectionRefPtr()->IsCollapsed();
 
   if (*aAction == eNextWord ||
       *aAction == ePreviousWord ||
@@ -609,7 +609,7 @@ TextEditor::ExtendSelectionForDelete(Selection* aSelection,
         // to make sure that pressing backspace will only delete the last
         // typed character.
         EditorRawDOMPoint atStartOfSelection =
-          EditorBase::GetStartPoint(aSelection);
+          EditorBase::GetStartPoint(*SelectionRefPtr());
         if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
           return NS_ERROR_FAILURE;
         }
@@ -847,7 +847,7 @@ TextEditor::DeleteSelectionWithTransaction(EDirection aDirection,
   }
 
   // Delete the specified amount
-  nsresult rv = DoTransaction(deleteSelectionTransaction);
+  nsresult rv = DoTransactionInternal(deleteSelectionTransaction);
 
   if (mRules && mRules->AsHTMLEditRules() && deleteCharData) {
     MOZ_ASSERT(deleteNode);
@@ -1172,7 +1172,7 @@ TextEditor::InsertParagraphSeparatorAsAction()
       rv = selection->Collapse(pointAfterInsertedLineBreak);
       if (NS_SUCCEEDED(rv)) {
         // see if we're at the end of the editor range
-        EditorRawDOMPoint endPoint = GetEndPoint(selection);
+        EditorRawDOMPoint endPoint = EditorBase::GetEndPoint(*selection);
         if (endPoint == pointAfterInsertedLineBreak) {
           // SetInterlinePosition(true) means we want the caret to stick to the
           // content on the "right".  We want the caret to stick to whatever is
@@ -1313,7 +1313,7 @@ TextEditor::SetTextAsSubAction(const nsAString& aString)
       }
       rv = selection->Collapse(rootElement, 0);
     } else {
-      rv = EditorBase::SelectEntireDocument(selection);
+      rv = EditorBase::SelectEntireDocument();
     }
     if (NS_SUCCEEDED(rv)) {
       rv = ReplaceSelectionAsSubAction(aString);
@@ -2239,9 +2239,11 @@ TextEditor::OnEndHandlingTopLevelEditSubAction()
 }
 
 nsresult
-TextEditor::SelectEntireDocument(Selection* aSelection)
+TextEditor::SelectEntireDocument()
 {
-  if (!aSelection || !mRules) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (!mRules) {
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -2257,16 +2259,19 @@ TextEditor::SelectEntireDocument(Selection* aSelection)
     }
 
     // if it's empty don't select entire doc - that would select the bogus node
-    return aSelection->Collapse(rootElement, 0);
+    return SelectionRefPtr()->Collapse(rootElement, 0);
   }
 
-  SelectionBatcher selectionBatcher(aSelection);
-  nsresult rv = EditorBase::SelectEntireDocument(aSelection);
-  NS_ENSURE_SUCCESS(rv, rv);
+  SelectionBatcher selectionBatcher(SelectionRefPtr());
+  nsresult rv = EditorBase::SelectEntireDocument();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // Don't select the trailing BR node if we have one
   nsCOMPtr<nsIContent> childNode;
-  rv = GetEndChildNode(aSelection, getter_AddRefs(childNode));
+  rv = EditorBase::GetEndChildNode(*SelectionRefPtr(),
+                                   getter_AddRefs(childNode));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2278,7 +2283,7 @@ TextEditor::SelectEntireDocument(Selection* aSelection)
     int32_t parentOffset;
     nsINode* parentNode = GetNodeLocation(childNode, &parentOffset);
 
-    return aSelection->Extend(parentNode, parentOffset);
+    return SelectionRefPtr()->Extend(parentNode, parentOffset);
   }
 
   return NS_OK;
