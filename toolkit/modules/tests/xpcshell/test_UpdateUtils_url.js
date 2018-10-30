@@ -314,13 +314,6 @@ add_task(async function test_distribution_version() {
                "the url param for %DISTRIBUTION_VERSION%" + MSG_SHOULD_EQUAL);
 });
 
-add_task(async function test_custom() {
-  Services.prefs.setCharPref("app.update.custom", "custom");
-  let url = URL_PREFIX + "%CUSTOM%/";
-  Assert.equal(await getResult(url), "custom",
-               "the url query string for %CUSTOM%" + MSG_SHOULD_EQUAL);
-});
-
 // url constructed with %SYSTEM_CAPABILITIES%
 add_task(async function test_systemCapabilities() {
   let url = URL_PREFIX + "%SYSTEM_CAPABILITIES%/";

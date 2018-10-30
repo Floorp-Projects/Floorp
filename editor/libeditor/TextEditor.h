@@ -232,6 +232,10 @@ public:
   nsresult ComputeTextValue(uint32_t aDocumentEncoderFlags,
                             nsAString& aOutputString) const
   {
+    AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
     return ComputeValueInternal(NS_LITERAL_STRING("text/plain"),
                                 aDocumentEncoderFlags, aOutputString);
   }
@@ -310,7 +314,6 @@ protected: // May be called by friends.
    * before aPointToInsert.  Then, tries to collapse selection at or after the
    * new <br> node if aSelect is not eNone.
    *
-   * @param aSelection          The selection of this editor.
    * @param aPointToInsert      The DOM point where should be <br> node inserted
    *                            before.
    * @param aSelect             If eNone, this won't change selection.
@@ -324,7 +327,6 @@ protected: // May be called by friends.
   template<typename PT, typename CT>
   already_AddRefed<Element>
   InsertBrElementWithTransaction(
-    Selection& aSelection,
     const EditorDOMPointBase<PT, CT>& aPointToInsert,
     EDirection aSelect = eNone);
 
@@ -333,14 +335,13 @@ protected: // May be called by friends.
    * If done, also update aAction to what's actually left to do after the
    * extension.
    */
-  nsresult ExtendSelectionForDelete(Selection* aSelection,
-                                    nsIEditor::EDirection* aAction);
+  nsresult ExtendSelectionForDelete(nsIEditor::EDirection* aAction);
 
   /**
    * HideLastPasswordInput() is called by timer callback of TextEditRules.
    * This should be called only by TextEditRules::Notify().
    * When this is called, the TextEditRules wants to call its
-   * HideLastPasswordInput().
+   * HideLastPasswordInput() with AutoEditActionDataSetter instance.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult HideLastPasswordInput();
 
@@ -365,7 +366,7 @@ protected: // Shouldn't be used by friend classes
   /**
    * Make the given selection span the entire document.
    */
-  virtual nsresult SelectEntireDocument(Selection* aSelection) override;
+  virtual nsresult SelectEntireDocument() override;
 
   /**
    * OnInputText() is called when user inputs text with keyboard or something.

@@ -83,7 +83,7 @@
   #define NS_WIN_FAVORITES_DIR                "Favs"
   #define NS_WIN_APPDATA_DIR                  "AppData"
   #define NS_WIN_LOCAL_APPDATA_DIR            "LocalAppData"
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
   #define NS_WIN_LOCAL_APPDATA_LOW_DIR        "LocalAppDataLow"
   #define NS_WIN_LOW_INTEGRITY_TEMP_BASE      "LowTmpDBase"
 #endif

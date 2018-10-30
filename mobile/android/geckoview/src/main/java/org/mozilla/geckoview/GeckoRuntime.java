@@ -18,6 +18,7 @@ import android.content.Context;
 import android.os.Process;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.UiThread;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -98,6 +99,7 @@ public final class GeckoRuntime implements Parcelable {
      * @param context An application context for the default runtime.
      * @return The (static) default runtime for the context.
      */
+    @UiThread
     public static synchronized @NonNull GeckoRuntime getDefault(final @NonNull Context context) {
         ThreadUtils.assertOnUiThread();
         if (DEBUG) {
@@ -240,6 +242,7 @@ public final class GeckoRuntime implements Parcelable {
      * @param context The context of the runtime.
      * @return An initialized runtime.
      */
+    @UiThread
     public static @NonNull GeckoRuntime create(final @NonNull Context context) {
         return create(context, new GeckoRuntimeSettings());
     }
@@ -256,6 +259,7 @@ public final class GeckoRuntime implements Parcelable {
      * @param settings The settings for the runtime.
      * @return An initialized runtime.
      */
+    @UiThread
     public static @NonNull GeckoRuntime create(final @NonNull Context context,
                                                final @NonNull GeckoRuntimeSettings settings) {
         ThreadUtils.assertOnUiThread();
@@ -329,6 +333,7 @@ public final class GeckoRuntime implements Parcelable {
      *
      * @return The telemetry object.
      */
+    @UiThread
     public RuntimeTelemetry getTelemetry() {
         ThreadUtils.assertOnUiThread();
 

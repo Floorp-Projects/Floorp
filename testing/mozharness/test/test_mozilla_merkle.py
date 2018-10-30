@@ -51,11 +51,11 @@ proofs = [
     [nodeC, nodeD],
 ]
 
-known_proof5 = ('020000' + \
-                '0000000000000007' + '0000000000000005' + \
-                '0063' + \
-                '20' + leaves[4].encode('hex') + \
-                '20' + leaves[6].encode('hex') + \
+known_proof5 = ('020000' +
+                '0000000000000007' + '0000000000000005' +
+                '0063' +
+                '20' + leaves[4].encode('hex') +
+                '20' + leaves[6].encode('hex') +
                 '20' + nodeD.encode('hex')).decode('hex')
 
 
@@ -72,7 +72,6 @@ class TestMerkleTree(unittest.TestCase):
             self.assertEquals(proof.leaf_index, i)
             self.assertEquals(proof.tree_size, tree.n)
             self.assertEquals(proof.path_elements, proofs[i])
-
 
     def testInclusionProofEncodeDecode(self):
         tree = MerkleTree(hash_fn, data)
@@ -97,7 +96,10 @@ class TestMerkleTree(unittest.TestCase):
     def testLargeTree(self):
         TEST_SIZE = 5000
         ELEM_SIZE_BYTES = 16
-        data = [bytearray(random.getrandbits(8) for _ in xrange(ELEM_SIZE_BYTES)) for _ in xrange(TEST_SIZE)]
+        data = [
+            bytearray(random.getrandbits(8) for _ in xrange(ELEM_SIZE_BYTES))
+            for _ in xrange(TEST_SIZE)
+        ]
         tree = MerkleTree(hash_fn, data)
         head = tree.head()
 

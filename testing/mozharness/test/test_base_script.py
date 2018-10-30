@@ -11,7 +11,7 @@ if os.name == 'nt':
     try:
         import win32file
         PYWIN32 = True
-    except:
+    except ImportError:
         pass
 
 

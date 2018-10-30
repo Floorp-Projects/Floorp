@@ -12,7 +12,7 @@ var { WebAudioFront } =
 async function testTarget(client, target) {
   await target.attach();
 
-  is(target.hasActor("timeline"), true, "target.hasActor() true when actor exists.");
+  is(target.hasActor("inspector"), true, "target.hasActor() true when actor exists.");
   is(target.hasActor("webaudio"), true, "target.hasActor() true when actor exists.");
   is(target.hasActor("notreal"), false, "target.hasActor() false when actor does not exist.");
   // Create a front to ensure the actor is loaded

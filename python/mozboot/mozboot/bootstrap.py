@@ -610,8 +610,21 @@ def current_firefox_checkout(check_output, env, hg=None):
     return (None, None)
 
 
-def update_git_tools(git, root_state_dir):
-    """Ensure git-cinnabar is up to date."""
+def update_git_tools(git, root_state_dir, top_src_dir):
+    """Update git tools, hooks and extensions"""
+    # Bug 1481425 - delete the git-mozreview
+    # commit message hook in .git/hooks dir
+    mozreview_commit_hook = os.path.join(top_src_dir, '.git/hooks/commit-msg')
+    if os.path.exists(mozreview_commit_hook):
+        with open(mozreview_commit_hook, 'rb') as f:
+            contents = f.read()
+
+        if b'MozReview' in contents:
+            print('removing git-mozreview commit message hook...')
+            os.remove(mozreview_commit_hook)
+            print('git-mozreview commit message hook removed.')
+
+    # Ensure git-cinnabar is up to date.
     cinnabar_dir = os.path.join(root_state_dir, 'git-cinnabar')
 
     # Ensure the latest revision of git-cinnabar is present.
@@ -651,9 +664,9 @@ def update_git_repo(git, url, dest):
         print('=' * 80)
 
 
-def configure_git(git, root_state_dir):
+def configure_git(git, root_state_dir, top_src_dir):
     """Run the Git configuration steps."""
-    cinnabar_dir = update_git_tools(git, root_state_dir)
+    cinnabar_dir = update_git_tools(git, root_state_dir, top_src_dir)
 
     print(ADD_GIT_TOOLS_PATH.format(cinnabar_dir))
 
