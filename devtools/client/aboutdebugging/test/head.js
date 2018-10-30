@@ -462,9 +462,11 @@ function getAddonByID(addonId) {
 /**
  * Uninstall an add-on.
  */
-async function tearDownAddon(addon) {
+async function tearDownAddon(AboutDebugging, addon) {
   const onUninstalled = promiseAddonEvent("onUninstalled");
+  const onListUpdated = once(AboutDebugging, "addons-updated");
   addon.uninstall();
+  await onListUpdated;
   const [uninstalledAddon] = await onUninstalled;
   is(uninstalledAddon.id, addon.id,
      `Add-on was uninstalled: ${uninstalledAddon.id}`);
