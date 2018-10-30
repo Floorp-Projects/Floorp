@@ -397,11 +397,8 @@ interface nsIHTMLEditor : nsISupports
    * Selection and focus state.  When this method shows or hides UI, the
    * editor (and/or its document/window) could be broken by mutation observers.
    * FYI: Current user in script is only BlueGriffon.
-   *
-   * @param aSelection  Selection instance for the normal selection of the
-   *                    document.
    */
-  void checkSelectionStateForAnonymousButtons(in Selection aSelection);
+  void checkSelectionStateForAnonymousButtons();
 
   boolean isAnonymousElement(in Element aElement);
 
