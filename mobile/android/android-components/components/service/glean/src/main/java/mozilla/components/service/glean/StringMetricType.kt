@@ -26,8 +26,10 @@ data class StringMetricType(
 ) : CommonMetricData {
     private val logger = Logger("glean/StringMetricType")
 
-    // Maximum length of any passed value string, in UTF8 byte sequence length.
-    private val MAX_LENGTH_VALUE = 50
+    companion object {
+        // Maximum length of any passed value string, in UTF8 byte sequence length.
+        private const val MAX_LENGTH_VALUE = 50
+    }
 
     /**
      * Set a string value.

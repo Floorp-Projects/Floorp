@@ -33,10 +33,12 @@ data class EventMetricType(
 ) : CommonMetricData {
     private val logger = Logger("glean/EventMetricType")
 
-    // Maximum length of any string value in the extra dictionary, in UTF8 byte sequence length.
-    private val MAX_LENGTH_EXTRA_KEY_VALUE = 80
-    // Maximum length of any passed value string, in UTF8 byte sequence length.
-    private val MAX_LENGTH_VALUE = 80
+    companion object {
+        // Maximum length of any string value in the extra dictionary, in UTF8 byte sequence length.
+        private const val MAX_LENGTH_EXTRA_KEY_VALUE = 80
+        // Maximum length of any passed value string, in UTF8 byte sequence length.
+        private const val MAX_LENGTH_VALUE = 80
+    }
 
     /**
      * Record an event by using the information provided by the instance of this class.
