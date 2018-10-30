@@ -50,7 +50,7 @@ function promisify(context, method, ...args) {
 
 function endTruncateStr(str, size) {
   if (str.length > size) {
-    return `...${str.slice(str.length - size)}`;
+    return `…${str.slice(str.length - size)}`;
   }
 
   return str;

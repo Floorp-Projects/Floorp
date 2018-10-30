@@ -3717,6 +3717,22 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
         if (dom::Element* element = presShell->GetDocument()->GetDocumentElement()) {
           id = nsLayoutUtils::FindOrCreateIDFor(element);
         }
+      // In some cases we get a root document here on an APZ-enabled window
+      // that doesn't have the root displayport initialized yet, even though
+      // the ChromeProcessController is supposed to do it when the widget is
+      // created. This can happen simply because the ChromeProcessController
+      // does it on the next spin of the event loop, and we can trigger a paint
+      // synchronously after window creation but before that runs. In that case
+      // we should initialize the root displayport here before we do the paint.
+      } else if (XRE_IsParentProcess() && presContext->IsRoot()
+          && presShell->GetDocument() != nullptr
+          && presShell->GetRootScrollFrame() != nullptr
+          && nsLayoutUtils::UsesAsyncScrolling(presShell->GetRootScrollFrame())) {
+        if (dom::Element* element = presShell->GetDocument()->GetDocumentElement()) {
+          if (!nsLayoutUtils::HasDisplayPort(element)) {
+            APZCCallbackHelper::InitializeRootDisplayport(presShell);
+          }
+        }
       }
 
       nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(&builder, id);

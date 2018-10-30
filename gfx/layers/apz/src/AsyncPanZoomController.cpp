@@ -4112,17 +4112,13 @@ AsyncPanZoomController::UpdateCheckerboardEvent(const MutexAutoLock& aProofOfLoc
                                                 uint32_t aMagnitude)
 {
   if (mCheckerboardEvent && mCheckerboardEvent->RecordFrameInfo(aMagnitude)) {
-    // This checkerboard event is done. Report some metrics to telemetry, but
-    // skip reporting if the sanity checker window is running, because we get
-    // checkerboarding reported on that window that we don't really care about.
-    if (!gfxPrefs::SanityTestRunning()) {
-      mozilla::Telemetry::Accumulate(mozilla::Telemetry::CHECKERBOARD_SEVERITY,
-        mCheckerboardEvent->GetSeverity());
-      mozilla::Telemetry::Accumulate(mozilla::Telemetry::CHECKERBOARD_PEAK,
-        mCheckerboardEvent->GetPeak());
-      mozilla::Telemetry::Accumulate(mozilla::Telemetry::CHECKERBOARD_DURATION,
-        (uint32_t)mCheckerboardEvent->GetDuration().ToMilliseconds());
-    }
+    // This checkerboard event is done. Report some metrics to telemetry.
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::CHECKERBOARD_SEVERITY,
+      mCheckerboardEvent->GetSeverity());
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::CHECKERBOARD_PEAK,
+      mCheckerboardEvent->GetPeak());
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::CHECKERBOARD_DURATION,
+      (uint32_t)mCheckerboardEvent->GetDuration().ToMilliseconds());
 
     mPotentialCheckerboardTracker.CheckerboardDone();
 

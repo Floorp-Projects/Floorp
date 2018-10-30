@@ -88,33 +88,6 @@ public:
   }
 };
 
-class FileReader::AsyncWaitRunnable final : public CancelableRunnable
-{
-public:
-  explicit AsyncWaitRunnable(FileReader* aReader)
-    : CancelableRunnable("FileReader::AsyncWaitRunnable")
-    , mReader(aReader)
-  {}
-
-  NS_IMETHOD
-  Run() override
-  {
-    if (mReader) {
-      mReader->InitialAsyncWait();
-    }
-    return NS_OK;
-  }
-
-  void
-  Abort()
-  {
-    mReader = nullptr;
-  }
-
-public:
-  RefPtr<FileReader> mReader;
-};
-
 void
 FileReader::RootResultArrayBuffer()
 {
@@ -473,8 +446,7 @@ FileReader::ReadFileContent(Blob& aBlob,
     }
   }
 
-  mAsyncWaitRunnable = new AsyncWaitRunnable(this);
-  aRv = NS_DispatchToCurrentThread(mAsyncWaitRunnable);
+  aRv = DoAsyncWait();
   if (NS_WARN_IF(aRv.Failed())) {
     FreeFileData();
     return;
@@ -482,20 +454,6 @@ FileReader::ReadFileContent(Blob& aBlob,
 
   //FileReader should be in loading state here
   mReadyState = LOADING;
-}
-
-void
-FileReader::InitialAsyncWait()
-{
-  mAsyncWaitRunnable = nullptr;
-
-  nsresult rv = DoAsyncWait();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    mReadyState = EMPTY;
-    FreeFileData();
-    return;
-  }
-
   DispatchProgressEvent(NS_LITERAL_STRING(LOADSTART_STR));
 }
 
@@ -816,11 +774,6 @@ FileReader::Abort()
 
   ClearProgressEventTimer();
 
-  if (mAsyncWaitRunnable) {
-    mAsyncWaitRunnable->Abort();
-    mAsyncWaitRunnable = nullptr;
-  }
-
   mReadyState = DONE;
 
   // XXX The spec doesn't say this
@@ -830,19 +783,7 @@ FileReader::Abort()
   SetDOMStringToNull(mResult);
   mResultArrayBuffer = nullptr;
 
-  if (mAsyncStream) {
-    if (mBusyCount) {
-      // This will abort any pending reading. See nsIAsyncInputStream.idl.
-      mAsyncStream->AsyncWait(/* callback */ nullptr,
-                              /* aFlags*/ 0,
-                              /* aRequestedCount */ 0,
-                              mTarget);
-      DecreaseBusyCounter();
-      MOZ_ASSERT(mBusyCount == 0);
-    }
-    mAsyncStream = nullptr;
-  }
-
+  mAsyncStream = nullptr;
   mBlob = nullptr;
 
   //Clean up memory buffer
@@ -889,11 +830,6 @@ void
 FileReader::Shutdown()
 {
   mReadyState = DONE;
-
-  if (mAsyncWaitRunnable) {
-    mAsyncWaitRunnable->Abort();
-    mAsyncWaitRunnable = nullptr;
-  }
 
   if (mAsyncStream) {
     mAsyncStream->Close();
