@@ -179,7 +179,7 @@ TRR::SendHTTPRequest()
     // let NS resolves skip the blacklist check
     MOZ_ASSERT(mRec);
 
-    if (gTRRService->IsTRRBlacklisted(mHost, mRec->originSuffix, mPB, true)) {
+    if (gTRRService->IsTRRBlacklisted(mHost, mOriginSuffix, mPB, true)) {
       if (mType == TRRTYPE_A) {
         // count only blacklist for A records to avoid double counts
         Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED, true);
@@ -913,7 +913,8 @@ TRR::ReturnData()
     if (!mHostResolver) {
       return NS_ERROR_FAILURE;
     }
-    (void)mHostResolver->CompleteLookup(mRec, NS_OK, ai.forget(), mPB);
+    (void)mHostResolver->CompleteLookup(mRec, NS_OK, ai.forget(), mPB,
+                                        mOriginSuffix);
     mHostResolver = nullptr;
     mRec = nullptr;
   } else {
@@ -937,7 +938,7 @@ TRR::FailData(nsresult error)
     // this comes from TRR
     AddrInfo *ai = new AddrInfo(mHost, mType);
 
-    (void)mHostResolver->CompleteLookup(mRec, error, ai, mPB);
+    (void)mHostResolver->CompleteLookup(mRec, error, ai, mPB, mOriginSuffix);
   }
 
   mHostResolver = nullptr;

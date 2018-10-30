@@ -6,7 +6,10 @@
 
 package org.mozilla.geckoview;
 
+import android.support.annotation.UiThread;
 import android.view.Surface;
+
+import org.mozilla.gecko.util.ThreadUtils;
 
 /**
  * Applications use a GeckoDisplay instance to provide {@link GeckoSession} with a {@link Surface} for
@@ -30,7 +33,10 @@ public class GeckoDisplay {
      * @param width New width of the Surface.
      * @param height New height of the Surface.
      */
+    @UiThread
     public void surfaceChanged(Surface surface, int width, int height) {
+        ThreadUtils.assertOnUiThread();
+
         if (session.getDisplay() == this) {
             session.onSurfaceChanged(surface, width, height);
         }
@@ -41,7 +47,10 @@ public class GeckoDisplay {
      * application main thread. GeckoSession may block this call to ensure the Surface is
      * valid while pausing drawing.
      */
+    @UiThread
     public void surfaceDestroyed() {
+        ThreadUtils.assertOnUiThread();
+
         if (session.getDisplay() == this) {
             session.onSurfaceDestroyed();
         }
@@ -54,7 +63,10 @@ public class GeckoDisplay {
      * @param left The X coordinate of the display on the screen, in screen pixels.
      * @param top The Y coordinate of the display on the screen, in screen pixels.
      */
+    @UiThread
     public void screenOriginChanged(final int left, final int top) {
+        ThreadUtils.assertOnUiThread();
+
         if (session.getDisplay() == this) {
             session.onScreenOriginChanged(left, top);
         }
@@ -69,7 +81,9 @@ public class GeckoDisplay {
      *
      * @return True if display should be pinned on the screen.
      */
+    @UiThread
     public boolean shouldPinOnScreen() {
+        ThreadUtils.assertOnUiThread();
         return session.getDisplay() == this && session.shouldPinOnScreen();
     }
 }

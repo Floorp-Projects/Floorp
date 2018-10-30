@@ -60,7 +60,7 @@ function debugTargetListenerMiddleware(store) {
         const { client } = runtime.runtimeDetails;
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.TAB)) {
-          client.addListener("tabListChanged", onTabsUpdated);
+          client.mainRoot.on("tabListChanged", onTabsUpdated);
         }
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.EXTENSION)) {
@@ -68,9 +68,9 @@ function debugTargetListenerMiddleware(store) {
         }
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.WORKER)) {
-          client.addListener("workerListChanged", onWorkersUpdated);
-          client.addListener("serviceWorkerRegistrationListChanged", onWorkersUpdated);
-          client.addListener("processListChanged", onWorkersUpdated);
+          client.mainRoot.on("workerListChanged", onWorkersUpdated);
+          client.mainRoot.on("serviceWorkerRegistrationListChanged", onWorkersUpdated);
+          client.mainRoot.on("processListChanged", onWorkersUpdated);
           client.addListener("registration-changed", onWorkersUpdated);
           client.addListener("push-subscription-modified", onWorkersUpdated);
         }
@@ -81,7 +81,7 @@ function debugTargetListenerMiddleware(store) {
         const { client } = runtime.runtimeDetails;
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.TAB)) {
-          client.removeListener("tabListChanged", onTabsUpdated);
+          client.mainRoot.off("tabListChanged", onTabsUpdated);
         }
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.EXTENSION)) {
@@ -89,9 +89,9 @@ function debugTargetListenerMiddleware(store) {
         }
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.WORKER)) {
-          client.removeListener("workerListChanged", onWorkersUpdated);
-          client.removeListener("serviceWorkerRegistrationListChanged", onWorkersUpdated);
-          client.removeListener("processListChanged", onWorkersUpdated);
+          client.mainRoot.off("workerListChanged", onWorkersUpdated);
+          client.mainRoot.off("serviceWorkerRegistrationListChanged", onWorkersUpdated);
+          client.mainRoot.off("processListChanged", onWorkersUpdated);
           client.removeListener("registration-changed", onWorkersUpdated);
           client.removeListener("push-subscription-modified", onWorkersUpdated);
         }

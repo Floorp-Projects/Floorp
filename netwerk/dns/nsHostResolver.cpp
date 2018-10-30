@@ -743,7 +743,8 @@ nsHostResolver::ClearPendingQueue(LinkedList<RefPtr<nsHostRecord>>& aPendingQ)
         for (RefPtr<nsHostRecord> rec : aPendingQ) {
             rec->Cancel();
             if (rec->IsAddrRecord()) {
-                CompleteLookup(rec, NS_ERROR_ABORT, nullptr, rec->pb);
+                CompleteLookup(rec, NS_ERROR_ABORT, nullptr, rec->pb,
+                               rec->originSuffix);
             } else {
                 CompleteLookupByType(rec, NS_ERROR_ABORT, nullptr, 0, rec->pb);
             }
@@ -1786,7 +1787,8 @@ nsHostResolver::AddToEvictionQ(nsHostRecord* rec)
 // returns LOOKUP_RESOLVEAGAIN, but only if 'status' is not NS_ERROR_ABORT.
 // takes ownership of AddrInfo parameter
 nsHostResolver::LookupStatus
-nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNewRRSet, bool pb)
+nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNewRRSet, bool pb,
+                               const nsACString & aOriginsuffix)
 {
     MutexAutoLock lock(mLock);
     MOZ_ASSERT(rec);
@@ -2219,7 +2221,8 @@ nsHostResolver::ThreadFunc()
              rec->host.get(),
              ai ? "success" : "failure: unknown host"));
 
-        if (LOOKUP_RESOLVEAGAIN == CompleteLookup(rec, status, ai, rec->pb)) {
+        if (LOOKUP_RESOLVEAGAIN == CompleteLookup(rec, status, ai, rec->pb,
+                                                  rec->originSuffix)) {
             // leave 'rec' assigned and loop to make a renewed host resolve
             LOG(("DNS lookup thread - Re-resolving host [%s].\n", rec->host.get()));
         } else {

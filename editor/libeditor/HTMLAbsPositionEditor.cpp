@@ -47,6 +47,15 @@ using namespace dom;
 nsresult
 HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  AutoEditActionDataSetter editActionData(
+                             *this,
+                             EditAction::eSetPositionToAbsoluteOrStatic);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
@@ -57,8 +66,6 @@ HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled)
 
   // the line below does not match the code; should it be removed?
   // Find out if the selection is collapsed:
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   EditSubActionInfo subActionInfo(
                       aEnabled ? EditSubAction::eSetPositionToAbsolute :
@@ -67,23 +74,27 @@ HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled)
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
   nsresult rv =
-    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+    rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (NS_FAILED(rv) || cancel) {
     return rv;
   }
 
-  return rules->DidDoAction(selection, subActionInfo, rv);
+  rv = rules->DidDoAction(subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 already_AddRefed<Element>
 HTMLEditor::GetAbsolutelyPositionedSelectionContainer()
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
     return nullptr;
   }
 
-  RefPtr<Element> element = GetSelectionContainerElement(*selection);
+  RefPtr<Element> element = GetSelectionContainerElement();
   if (NS_WARN_IF(!element)) {
     return nullptr;
   }
@@ -148,6 +159,15 @@ HTMLEditor::SetZIndex(Element& aElement,
 nsresult
 HTMLEditor::AddZIndex(int32_t aChange)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  AutoEditActionDataSetter editActionData(
+                             *this,
+                             EditAction::eIncreaseOrDecreaseZIndex);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
@@ -158,25 +178,31 @@ HTMLEditor::AddZIndex(int32_t aChange)
 
   // brade: can we get rid of this comment?
   // Find out if the selection is collapsed:
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   EditSubActionInfo subActionInfo(aChange < 0 ? EditSubAction::eDecreaseZIndex :
                                                 EditSubAction::eIncreaseZIndex);
   bool cancel, handled;
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
-  nsresult rv =
-    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
 
-  return rules->DidDoAction(selection, subActionInfo, rv);
+  rv = rules->DidDoAction(subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 int32_t
 HTMLEditor::GetZIndex(Element& aElement)
 {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return 0;
+  }
+
   nsAutoString zIndexStr;
 
   nsresult rv =
@@ -249,6 +275,11 @@ HTMLEditor::RefreshGrabber()
 {
   if (NS_WARN_IF(!mAbsolutelyPositionedObject)) {
     return NS_ERROR_FAILURE;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   nsresult rv = RefreshGrabberInternal();
@@ -449,11 +480,7 @@ HTMLEditor::EndMoving()
 
   mGrabberClicked = false;
   mIsMoving = false;
-  RefPtr<Selection> selection = GetSelection();
-  if (!selection) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  nsresult rv = RefereshEditingUI(*selection);
+  nsresult rv = RefereshEditingUI();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -537,6 +564,8 @@ HTMLEditor::SetPositionToAbsoluteOrStatic(Element& aElement,
 nsresult
 HTMLEditor::SetPositionToAbsolute(Element& aElement)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   int32_t x, y;
@@ -553,13 +582,8 @@ HTMLEditor::SetPositionToAbsolute(Element& aElement)
   // container
   nsINode* parentNode = aElement.GetParentNode();
   if (parentNode->GetChildCount() == 1) {
-    RefPtr<Selection> selection = GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
     RefPtr<Element> newBrElement =
-      InsertBrElementWithTransaction(*selection,
-                                     EditorRawDOMPoint(parentNode, 0));
+      InsertBrElementWithTransaction(EditorRawDOMPoint(parentNode, 0));
     if (NS_WARN_IF(!newBrElement)) {
       return NS_ERROR_FAILURE;
     }

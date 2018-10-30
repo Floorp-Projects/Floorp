@@ -748,6 +748,10 @@ pub struct Device {
     default_read_fbo: FBOId,
     default_draw_fbo: FBOId,
 
+    /// Track depth state for assertions. Note that the default FBO has depth,
+    /// so this defaults to true.
+    depth_available: bool,
+
     device_pixel_ratio: f32,
     upload_method: UploadMethod,
 
@@ -927,6 +931,8 @@ impl Device {
             program_mode_id: UniformLocation::INVALID,
             default_read_fbo: FBOId(0),
             default_draw_fbo: FBOId(0),
+
+            depth_available: true,
 
             max_texture_size,
             renderer_name,
@@ -1123,24 +1129,26 @@ impl Device {
     pub fn reset_draw_target(&mut self) {
         let fbo = self.default_draw_fbo;
         self.bind_draw_target_impl(fbo);
+        self.depth_available = true;
     }
 
     pub fn bind_draw_target(
         &mut self,
         target: DrawTarget,
     ) {
-        let (fbo_id, dimensions) = match target {
-            DrawTarget::Default(d) => (self.default_draw_fbo, d),
+        let (fbo_id, dimensions, depth_available) = match target {
+            DrawTarget::Default(d) => (self.default_draw_fbo, d, true),
             DrawTarget::Texture { texture, layer, with_depth } => {
                 let dim = texture.get_dimensions();
                 if with_depth {
-                    (texture.fbos_with_depth[layer], dim)
+                    (texture.fbos_with_depth[layer], dim, true)
                 } else {
-                    (texture.fbos[layer], dim)
+                    (texture.fbos[layer], dim, false)
                 }
             }
         };
 
+        self.depth_available = depth_available;
         self.bind_draw_target_impl(fbo_id);
         self.gl.viewport(
             0,
@@ -1462,6 +1470,7 @@ impl Device {
             self.bind_draw_target_impl(*draw_fbo);
             self.blit_render_target(rect, rect);
         }
+        self.reset_draw_target();
         self.reset_read_target();
     }
 
@@ -2268,6 +2277,7 @@ impl Device {
     }
 
     pub fn enable_depth(&self) {
+        assert!(self.depth_available, "Enabling depth test without depth target");
         self.gl.enable(gl::DEPTH_TEST);
     }
 
@@ -2280,6 +2290,7 @@ impl Device {
     }
 
     pub fn enable_depth_write(&self) {
+        assert!(self.depth_available, "Enabling depth write without depth target");
         self.gl.depth_mask(true);
     }
 

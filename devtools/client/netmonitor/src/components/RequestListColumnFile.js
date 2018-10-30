@@ -32,7 +32,10 @@ class RequestListColumnFile extends Component {
     } = this.props;
     const iconClassList = ["requests-file-type-icon"];
 
-    if (cause && cause.type == "img") {
+    if (cause && (
+        cause.type.includes("img") ||
+        cause.type.includes("image") ||
+        cause.type.includes("beacon"))) {
       iconClassList.push("file-type-image");
     } else {
       iconClassList.push("file-type-general");

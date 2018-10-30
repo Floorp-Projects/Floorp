@@ -300,6 +300,7 @@ private:
     // Connections will only be established in this function.
     // (including DNS prefetch and speculative connection.)
     nsresult BeginConnectActual();
+    void MaybeStartDNSPrefetch();
 
     // We might synchronously or asynchronously call BeginConnectActual,
     // which includes DNS prefetch and speculative connection, according to

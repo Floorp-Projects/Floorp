@@ -80,6 +80,7 @@ public:
     , mCnameLoop(kCnameChaseMax)
     , mAllowRFC1918(false)
     , mTxtTtl(UINT32_MAX)
+    , mOriginSuffix(aRec->originSuffix)
   {
     mHost = aRec->host;
     mPB = aRec->pb;
@@ -103,6 +104,7 @@ public:
     , mCnameLoop(aLoopCount)
     , mAllowRFC1918(false)
     , mTxtTtl(UINT32_MAX)
+    , mOriginSuffix(aRec->originSuffix)
   {
 
   }
@@ -124,9 +126,11 @@ public:
   explicit TRR(AHostResolver *aResolver,
                nsACString &aHost,
                enum TrrType aType,
+               const nsACString &aOriginSuffix,
                bool aPB)
     : mozilla::Runnable("TRR")
     , mHost(aHost)
+    , mRec(nullptr)
     , mHostResolver(aResolver)
     , mType(aType)
     , mBodySize(0)
@@ -135,6 +139,7 @@ public:
     , mCnameLoop(kCnameChaseMax)
     , mAllowRFC1918(false)
     , mTxtTtl(UINT32_MAX)
+    , mOriginSuffix(aOriginSuffix)
   { }
 
   NS_IMETHOD Run() override;
@@ -179,6 +184,9 @@ private:
   bool mAllowRFC1918;
   nsTArray<nsCString> mTxt;
   uint32_t mTxtTtl;
+
+  // keep a copy of the originSuffix for the cases where mRec == nullptr */
+  const nsCString mOriginSuffix;
 };
 
 } // namespace net

@@ -153,6 +153,11 @@ const run_test = Test(async function() {
 
   await client.connect();
 
+  // DebuggerClient.connect() will instantiate the regular RootFront
+  // which will override the one we just registered and mess up with this test.
+  // So override it again with test one before asserting.
+  protocol.types.registeredTypes.get("root").actorSpec = rootSpec;
+
   const rootFront = RootFront(conn);
 
   // Trigger some methods that return forms.
