@@ -8,6 +8,7 @@
 #include "TextEditUtils.h"              // for TextEditUtils
 #include "mozilla/ArrayUtils.h"         // for ArrayLength
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
+#include "mozilla/EditAction.h"         // for EditAction
 #include "mozilla/EditorBase.h"         // for EditorBase
 #include "mozilla/dom/Element.h"        // for Element, nsINode
 #include "nsAString.h"                  // for nsAString::IsEmpty
@@ -697,6 +698,101 @@ HTMLEditUtils::IsSingleLineContainer(nsINode& aNode)
          aNode.IsAnyOfHTMLElements(nsGkAtoms::li,
                                    nsGkAtoms::dt,
                                    nsGkAtoms::dd);
+}
+
+EditAction
+HTMLEditUtils::GetEditActionForInsert(const nsAtom& aTagName)
+{
+  // This method may be in a hot path.  So, return only necessary
+  // EditAction::eInsert*Element.
+  if (&aTagName == nsGkAtoms::ul) {
+    // For InputEvent.inputType, "insertUnorderedList".
+    return EditAction::eInsertUnorderedListElement;
+  }
+  if (&aTagName == nsGkAtoms::ol) {
+    // For InputEvent.inputType, "insertOrderedList".
+    return EditAction::eInsertOrderedListElement;
+  }
+  if (&aTagName == nsGkAtoms::hr) {
+    // For InputEvent.inputType, "insertHorizontalRule".
+    return EditAction::eInsertHorizontalRuleElement;
+  }
+  return EditAction::eInsertNode;
+}
+
+EditAction
+HTMLEditUtils::GetEditActionForInsert(const Element& aElement)
+{
+  return GetEditActionForInsert(*aElement.NodeInfo()->NameAtom());
+}
+
+EditAction
+HTMLEditUtils::GetEditActionForFormatText(const nsAtom& aProperty,
+                                          const nsAtom* aAttribute,
+                                          bool aToSetStyle)
+{
+  // This method may be in a hot path.  So, return only necessary
+  // EditAction::eSet*Property or EditAction::eRemove*Property.
+  if (&aProperty == nsGkAtoms::b) {
+    return aToSetStyle ? EditAction::eSetFontWeightProperty :
+                         EditAction::eRemoveFontWeightProperty;
+  }
+  if (&aProperty == nsGkAtoms::i) {
+    return aToSetStyle ? EditAction::eSetTextStyleProperty :
+                         EditAction::eRemoveTextStyleProperty;
+  }
+  if (&aProperty == nsGkAtoms::u) {
+    return aToSetStyle ? EditAction::eSetTextDecorationPropertyUnderline :
+                         EditAction::eRemoveTextDecorationPropertyUnderline;
+  }
+  if (&aProperty == nsGkAtoms::strike) {
+    return aToSetStyle ? EditAction::eSetTextDecorationPropertyLineThrough :
+                         EditAction::eRemoveTextDecorationPropertyLineThrough;
+  }
+  if (&aProperty == nsGkAtoms::sup) {
+    return aToSetStyle ? EditAction::eSetVerticalAlignPropertySuper :
+                         EditAction::eRemoveVerticalAlignPropertySuper;
+  }
+  if (&aProperty == nsGkAtoms::sub) {
+    return aToSetStyle ? EditAction::eSetVerticalAlignPropertySub :
+                         EditAction::eRemoveVerticalAlignPropertySub;
+  }
+  if (&aProperty == nsGkAtoms::font) {
+    if (aAttribute == nsGkAtoms::face) {
+      return aToSetStyle ? EditAction::eSetFontFamilyProperty :
+                           EditAction::eRemoveFontFamilyProperty;
+    }
+    if (aAttribute == nsGkAtoms::color) {
+      return aToSetStyle ? EditAction::eSetColorProperty :
+                           EditAction::eRemoveColorProperty;
+    }
+    if (aAttribute == nsGkAtoms::bgcolor) {
+      return aToSetStyle ? EditAction::eSetBackgroundColorPropertyInline :
+                           EditAction::eRemoveBackgroundColorPropertyInline;
+    }
+  }
+  return aToSetStyle ? EditAction::eSetInlineStyleProperty :
+                       EditAction::eRemoveInlineStyleProperty;
+}
+
+EditAction
+HTMLEditUtils::GetEditActionForAlignment(const nsAString& aAlignType)
+{
+  // This method may be in a hot path.  So, return only necessary
+  // EditAction::eAlign*.
+  if (aAlignType.EqualsLiteral("left")) {
+    return EditAction::eAlignLeft;
+  }
+  if (aAlignType.EqualsLiteral("right")) {
+    return EditAction::eAlignRight;
+  }
+  if (aAlignType.EqualsLiteral("center")) {
+    return EditAction::eAlignCenter;
+  }
+  if (aAlignType.EqualsLiteral("justify")) {
+    return EditAction::eJustify;
+  }
+  return EditAction::eSetAlignment;
 }
 
 } // namespace mozilla

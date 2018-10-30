@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 
+class nsAtom;
 class nsINode;
 
 namespace mozilla {
@@ -45,6 +46,13 @@ public:
    */
   static bool IsNonListSingleLineContainer(nsINode& aNode);
   static bool IsSingleLineContainer(nsINode& aNode);
+
+  static EditAction GetEditActionForInsert(const nsAtom& aTagName);
+  static EditAction GetEditActionForInsert(const Element& aElement);
+  static EditAction GetEditActionForFormatText(const nsAtom& aProperty,
+                                               const nsAtom* aAttribute,
+                                               bool aToSetStyle);
+  static EditAction GetEditActionForAlignment(const nsAString& aAlignType);
 };
 
 } // namespace mozilla
