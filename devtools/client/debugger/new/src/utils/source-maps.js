@@ -40,6 +40,10 @@ async function getGeneratedLocation(state, source, location, sourceMaps) {
 async function getMappedLocation(state, sourceMaps, location) {
   const source = (0, _selectors.getSource)(state, location.sourceId);
 
+  if (!source) {
+    throw new Error("Unknown source for location");
+  }
+
   if ((0, _devtoolsSourceMap.isOriginalId)(location.sourceId)) {
     return getGeneratedLocation(state, source, location, sourceMaps);
   }
