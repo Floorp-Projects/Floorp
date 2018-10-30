@@ -390,30 +390,31 @@ StreamFromReader(JSContext *maybeCx, const ReadableStreamReader* reader)
  * Must only be called on ReadableStreams that already have a reader
  * associated with them.
  *
- * If the reader is a wrapper, it will be unwrapped, so it might not be an
- * object from the currently active compartment.
- *
- * If the reader cannot be unwrapped, which can only happen if it's a dead
- * wrapper object, a nullptr is returned. If a JSContext is available, an
- * exception is reported, too. The JSContext isn't mandatory to make use
- * easier for call sites that don't otherwise need a JSContext and can provide
- * useful defaults in case the reader is a dead object wrapper.
+ * If the reader is a wrapper, it will be unwrapped, so the object stored in
+ * `unwrappedResult` might not be an object from the currently active
+ * compartment.
  */
+static MOZ_MUST_USE bool
+UnwrapReaderFromStream(JSContext* cx,
+                       Handle<ReadableStream*> stream,
+                       MutableHandle<ReadableStreamReader*> unwrappedResult)
+{
+    return UnwrapInternalSlot(cx, stream, StreamSlot_Reader, unwrappedResult);
+}
+
 static MOZ_MUST_USE ReadableStreamReader*
-ReaderFromStream(JSContext* maybeCx, const ReadableStream* stream)
+UnwrapReaderFromStreamNoThrow(ReadableStream* stream)
 {
     JSObject* readerObj = &stream->getFixedSlot(StreamSlot_Reader).toObject();
     if (IsProxy(readerObj)) {
         if (JS_IsDeadWrapper(readerObj)) {
-            if (maybeCx) {
-                JS_ReportErrorNumberASCII(maybeCx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
-            }
             return nullptr;
         }
 
-        // It's ok to do an unchecked unwrap here: the reader wouldn't have
-        // been stored on the stream if it couldn't be unwrapped.
-        readerObj = UncheckedUnwrap(readerObj);
+        readerObj = CheckedUnwrap(readerObj);
+        if (!readerObj) {
+            return nullptr;
+        }
     }
 
     return &readerObj->as<ReadableStreamReader>();
@@ -1274,10 +1275,11 @@ ReadableStreamTee_Pull(JSContext* cx, Handle<TeeState*> teeState,
     if (!UnwrapInternalSlot(cx, teeState, TeeStateSlot_Stream, &stream)) {
         return nullptr;
     }
-    RootedObject readerObj(cx, ReaderFromStream(cx, stream));
-    if (!readerObj) {
+    Rooted<ReadableStreamReader*> readerObj(cx);
+    if (!UnwrapReaderFromStream(cx, stream, &readerObj)) {
         return nullptr;
     }
+
     Rooted<ReadableStreamDefaultReader*> reader(cx,
                                                 &readerObj->as<ReadableStreamDefaultReader>());
 
@@ -1550,8 +1552,8 @@ ReadableStreamAddReadOrReadIntoRequest(JSContext* cx, Handle<ReadableStream*> st
 {
     // Step 1: Assert: ! IsReadableStreamBYOBReader(stream.[[reader]]) is true.
     // Skipped: handles both kinds of readers.
-    Rooted<ReadableStreamReader*> reader(cx, ReaderFromStream(cx, stream));
-    if (!reader) {
+    Rooted<ReadableStreamReader*> reader(cx);
+    if (!UnwrapReaderFromStream(cx, stream, &reader)) {
         return nullptr;
     }
 
@@ -1669,8 +1671,8 @@ ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> stream)
     }
 
     // Step 3: Let reader be stream.[[reader]].
-    Rooted<ReadableStreamReader*> reader(cx, ReaderFromStream(cx, stream));
-    if (!reader) {
+    Rooted<ReadableStreamReader*> reader(cx);
+    if (!UnwrapReaderFromStream(cx, stream, &reader)) {
         return false;
     }
 
@@ -1763,8 +1765,8 @@ ReadableStreamErrorInternal(JSContext* cx, Handle<ReadableStream*> stream, Handl
     }
 
     // Step 5: Let reader be stream.[[reader]].
-    Rooted<ReadableStreamReader*> reader(cx, ReaderFromStream(cx, stream));
-    if (!reader) {
+    Rooted<ReadableStreamReader*> reader(cx);
+    if (!UnwrapReaderFromStream(cx, stream, &reader)) {
         return false;
     }
 
@@ -1847,8 +1849,8 @@ ReadableStreamFulfillReadOrReadIntoRequest(JSContext* cx, Handle<ReadableStream*
                                            HandleValue chunk, bool done)
 {
     // Step 1: Let reader be stream.[[reader]].
-    Rooted<ReadableStreamReader*> reader(cx, ReaderFromStream(cx, stream));
-    if (!reader) {
+    Rooted<ReadableStreamReader*> reader(cx);
+    if (!UnwrapReaderFromStream(cx, stream, &reader)) {
         return false;
     }
 
@@ -1892,7 +1894,7 @@ ReadableStreamGetNumReadRequests(ReadableStream* stream)
     }
 
     JS::AutoSuppressGCAnalysis nogc;
-    ReadableStreamReader* reader = ReaderFromStream(nullptr, stream);
+    ReadableStreamReader* reader = UnwrapReaderFromStreamNoThrow(stream);
 
     // Reader is a dead wrapper, treat it as non-existent.
     if (!reader) {
@@ -1912,7 +1914,7 @@ enum class ReaderMode
 #if DEBUG
 // Streams spec 3.4.12. ReadableStreamHasDefaultReader ( stream )
 static MOZ_MUST_USE bool
-ReadableStreamHasDefaultReader(JSContext* cx, ReadableStream* stream, bool* result)
+ReadableStreamHasDefaultReader(JSContext* cx, Handle<ReadableStream*> stream, bool* result)
 {
     // Step 1: Let reader be stream.[[reader]].
     // Step 2: If reader is undefined, return false.
@@ -1923,26 +1925,26 @@ ReadableStreamHasDefaultReader(JSContext* cx, ReadableStream* stream, bool* resu
 
     // Step 3: If ! ReadableStreamDefaultReader(reader) is false, return false.
     // Step 4: Return true.
-    JSObject* readerObj = ReaderFromStream(cx, stream);
-    if (!readerObj) {
+    Rooted<ReadableStreamReader*> reader(cx);
+    if (!UnwrapReaderFromStream(cx, stream, &reader)) {
         return false;
     }
 
-    *result = readerObj->is<ReadableStreamDefaultReader>();
+    *result = reader->is<ReadableStreamDefaultReader>();
     return true;
 }
 #endif // DEBUG
 
 static MOZ_MUST_USE bool
-ReadableStreamGetReaderMode(JSContext* cx, ReadableStream* stream, ReaderMode* mode)
+ReadableStreamGetReaderMode(JSContext* cx, Handle<ReadableStream*> stream, ReaderMode* mode)
 {
     if (stream->getFixedSlot(StreamSlot_Reader).isUndefined()) {
         *mode = ReaderMode::None;
         return true;
     }
 
-    JSObject* readerObj = ReaderFromStream(cx, stream);
-    if (!readerObj) {
+    Rooted<ReadableStreamReader*> reader(cx);
+    if (!UnwrapReaderFromStream(cx, stream, &reader)) {
         return false;
     }
 
@@ -2305,7 +2307,7 @@ ReadableStreamReaderGenericRelease(JSContext* cx, Handle<ReadableStreamReader*> 
     }
 
     // Step 2: Assert: reader.[[ownerReadableStream]].[[reader]] is reader.
-    MOZ_ASSERT(ReaderFromStream(cx, stream) == reader);
+    MOZ_ASSERT(UnwrapReaderFromStreamNoThrow(stream) == reader);
 
     // Create an exception to reject promises with below. We don't have a
     // clean way to do this, unfortunately.
