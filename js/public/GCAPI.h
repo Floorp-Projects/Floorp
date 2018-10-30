@@ -333,72 +333,72 @@ namespace JS {
 
 #define GCREASONS(D)                            \
     /* Reasons internal to the JS engine */     \
-    D(API)                                      \
-    D(EAGER_ALLOC_TRIGGER)                      \
-    D(DESTROY_RUNTIME)                          \
-    D(ROOTS_REMOVED)                            \
-    D(LAST_DITCH)                               \
-    D(TOO_MUCH_MALLOC)                          \
-    D(ALLOC_TRIGGER)                            \
-    D(DEBUG_GC)                                 \
-    D(COMPARTMENT_REVIVED)                      \
-    D(RESET)                                    \
-    D(OUT_OF_NURSERY)                           \
-    D(EVICT_NURSERY)                            \
-    D(DELAYED_ATOMS_GC)                         \
-    D(SHARED_MEMORY_LIMIT)                      \
-    D(IDLE_TIME_COLLECTION)                     \
-    D(INCREMENTAL_TOO_SLOW)                     \
-    D(ABORT_GC)                                 \
-    D(FULL_WHOLE_CELL_BUFFER)                   \
-    D(FULL_GENERIC_BUFFER)                      \
-    D(FULL_VALUE_BUFFER)                        \
-    D(FULL_CELL_PTR_BUFFER)                     \
-    D(FULL_SLOT_BUFFER)                         \
-    D(FULL_SHAPE_BUFFER)                        \
-    D(TOO_MUCH_WASM_MEMORY)                     \
+    D(API,                       0)             \
+    D(EAGER_ALLOC_TRIGGER,       1)             \
+    D(DESTROY_RUNTIME,           2)             \
+    D(ROOTS_REMOVED,             3)             \
+    D(LAST_DITCH,                4)             \
+    D(TOO_MUCH_MALLOC,           5)             \
+    D(ALLOC_TRIGGER,             6)             \
+    D(DEBUG_GC,                  7)             \
+    D(COMPARTMENT_REVIVED,       8)             \
+    D(RESET,                     9)             \
+    D(OUT_OF_NURSERY,           10)             \
+    D(EVICT_NURSERY,            11)             \
+    D(DELAYED_ATOMS_GC,         12)             \
+    D(SHARED_MEMORY_LIMIT,      13)             \
+    D(IDLE_TIME_COLLECTION,     14)             \
+    D(INCREMENTAL_TOO_SLOW,     15)             \
+    D(ABORT_GC,                 16)             \
+    D(FULL_WHOLE_CELL_BUFFER,   17)             \
+    D(FULL_GENERIC_BUFFER,      18)             \
+    D(FULL_VALUE_BUFFER,        19)             \
+    D(FULL_CELL_PTR_BUFFER,     20)             \
+    D(FULL_SLOT_BUFFER,         21)             \
+    D(FULL_SHAPE_BUFFER,        22)             \
+    D(TOO_MUCH_WASM_MEMORY,     23)             \
                                                 \
     /* These are reserved for future use. */    \
-    D(RESERVED0)                                \
-    D(RESERVED1)                                \
-    D(RESERVED2)                                \
-    D(RESERVED3)                                \
-    D(RESERVED4)                                \
-    D(RESERVED5)                                \
-    D(RESERVED6)                                \
-    D(RESERVED7)                                \
-    D(RESERVED8)                                \
+    D(RESERVED0,                24)             \
+    D(RESERVED1,                25)             \
+    D(RESERVED2,                26)             \
+    D(RESERVED3,                27)             \
+    D(RESERVED4,                28)             \
+    D(RESERVED5,                29)             \
+    D(RESERVED6,                30)             \
+    D(RESERVED7,                31)             \
+    D(RESERVED8,                32)             \
                                                 \
     /* Reasons from Firefox */                  \
-    D(DOM_WINDOW_UTILS)                         \
-    D(COMPONENT_UTILS)                          \
-    D(MEM_PRESSURE)                             \
-    D(CC_WAITING)                               \
-    D(CC_FORCED)                                \
-    D(LOAD_END)                                 \
-    D(POST_COMPARTMENT)                         \
-    D(PAGE_HIDE)                                \
-    D(NSJSCONTEXT_DESTROY)                      \
-    D(SET_NEW_DOCUMENT)                         \
-    D(SET_DOC_SHELL)                            \
-    D(DOM_UTILS)                                \
-    D(DOM_IPC)                                  \
-    D(DOM_WORKER)                               \
-    D(INTER_SLICE_GC)                           \
-    D(UNUSED1)                                  \
-    D(FULL_GC_TIMER)                            \
-    D(SHUTDOWN_CC)                              \
-    D(UNUSED2)                                  \
-    D(USER_INACTIVE)                            \
-    D(XPCONNECT_SHUTDOWN)                       \
-    D(DOCSHELL)                                 \
-    D(HTML_PARSER)
+    D(DOM_WINDOW_UTILS,         33)             \
+    D(COMPONENT_UTILS,          34)             \
+    D(MEM_PRESSURE,             35)             \
+    D(CC_WAITING,               36)             \
+    D(CC_FORCED,                37)             \
+    D(LOAD_END,                 38)             \
+    D(POST_COMPARTMENT,         39)             \
+    D(PAGE_HIDE,                40)             \
+    D(NSJSCONTEXT_DESTROY,      41)             \
+    D(SET_NEW_DOCUMENT,         42)             \
+    D(SET_DOC_SHELL,            43)             \
+    D(DOM_UTILS,                44)             \
+    D(DOM_IPC,                  45)             \
+    D(DOM_WORKER,               46)             \
+    D(INTER_SLICE_GC,           47)             \
+    D(UNUSED1,                  48)             \
+    D(FULL_GC_TIMER,            49)             \
+    D(SHUTDOWN_CC,              50)             \
+    D(UNUSED2,                  51)             \
+    D(USER_INACTIVE,            52)             \
+    D(XPCONNECT_SHUTDOWN,       53)             \
+    D(DOCSHELL,                 54)             \
+    D(HTML_PARSER,              55)
 
 namespace gcreason {
 
 /* GCReasons will end up looking like JSGC_MAYBEGC */
 enum Reason {
-#define MAKE_REASON(name) name,
+#define MAKE_REASON(name, val) name = val,
     GCREASONS(MAKE_REASON)
 #undef MAKE_REASON
     NO_REASON,
