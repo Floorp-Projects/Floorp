@@ -219,11 +219,6 @@ public:
    */
   void PrepareUpdatesToMainThreadState(bool aFinalUpdate);
   /**
-   * Returns false if there is any stream that has finished but not yet finished
-   * playing out.
-   */
-  bool AllFinishedStreamsNotified();
-  /**
    * If we are rendering in non-realtime mode, we don't want to send messages to
    * the main thread at each iteration for performance reasons. We instead
    * notify the main thread at the same rate
