@@ -105,17 +105,17 @@ function run_test() {
 
   const trace = connectPipeTracing();
   const client = new DebuggerClient(trace);
-  let rootClient;
+  let rootFront;
 
   client.connect().then(([applicationType, traits]) => {
-    rootClient = RootFront(client);
+    rootFront = RootFront(client);
 
     const calls = [];
     let sequence = 0;
 
     // Execute a call that won't finish processing until 2
     // more calls have happened
-    calls.push(rootClient.promiseReturn(2).then(ret => {
+    calls.push(rootFront.promiseReturn(2).then(ret => {
       // Check right return order
       Assert.equal(sequence, 0);
       // Check request handling order
@@ -124,21 +124,21 @@ function run_test() {
 
     // Put a few requests into the backlog
 
-    calls.push(rootClient.simpleReturn().then(ret => {
+    calls.push(rootFront.simpleReturn().then(ret => {
       // Check right return order
       Assert.equal(sequence, 1);
       // Check request handling order
       Assert.equal(ret, sequence++);
     }));
 
-    calls.push(rootClient.simpleReturn().then(ret => {
+    calls.push(rootFront.simpleReturn().then(ret => {
       // Check right return order
       Assert.equal(sequence, 2);
       // Check request handling order
       Assert.equal(ret, sequence++);
     }));
 
-    calls.push(rootClient.simpleThrow().then(() => {
+    calls.push(rootFront.simpleThrow().then(() => {
       Assert.ok(false, "simpleThrow shouldn't succeed!");
     }, error => {
       // Check right return order
@@ -150,7 +150,7 @@ function run_test() {
     // handlers, meaning that we can't check the actual order with certainty.
     const deferAfterRejection = defer();
 
-    calls.push(rootClient.promiseThrow().then(() => {
+    calls.push(rootFront.promiseThrow().then(() => {
       Assert.ok(false, "promiseThrow shouldn't succeed!");
     }, error => {
       // Check right return order
@@ -159,7 +159,7 @@ function run_test() {
       deferAfterRejection.resolve();
     }));
 
-    calls.push(rootClient.simpleReturn().then(ret => {
+    calls.push(rootFront.simpleReturn().then(ret => {
       return deferAfterRejection.promise.then(function() {
         // Check right return order
         Assert.equal(sequence, 5);
@@ -170,7 +170,7 @@ function run_test() {
 
     // Break up the backlog with a long request that waits
     // for another simpleReturn before completing
-    calls.push(rootClient.promiseReturn(1).then(ret => {
+    calls.push(rootFront.promiseReturn(1).then(ret => {
       return deferAfterRejection.promise.then(function() {
         // Check right return order
         Assert.equal(sequence, 6);
@@ -179,7 +179,7 @@ function run_test() {
       });
     }));
 
-    calls.push(rootClient.simpleReturn().then(ret => {
+    calls.push(rootFront.simpleReturn().then(ret => {
       return deferAfterRejection.promise.then(function() {
         // Check right return order
         Assert.equal(sequence, 7);
