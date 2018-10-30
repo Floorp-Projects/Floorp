@@ -570,8 +570,7 @@ async function testPrefsSwitch() {
   // FastBlock OFF
   await runTest({
     "set": [
-      ["browser.contentblocking.enabled", false],
-      ["browser.fastblock.enabled", true],
+      ["browser.fastblock.enabled", false],
       ["browser.fastblock.timeout", 1],
     ]}, testNoFastBlock, 0);
 
