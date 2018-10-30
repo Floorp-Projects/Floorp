@@ -82,3 +82,6 @@ patch -p3 < disable-device-switching.patch
 
 echo "Applying uplift-bug1500109-to-beta.patch on top of $rev"
 patch -p3 < uplift-bug1500109-to-beta.patch
+
+echo "Applying uplift-bug1502165-to-beta.patch on top of $rev"
+patch -p3 < uplift-bug1502165-to-beta.patch

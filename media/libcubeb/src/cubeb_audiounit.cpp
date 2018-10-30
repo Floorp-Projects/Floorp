@@ -3413,7 +3413,7 @@ audiounit_get_devices_of_type(cubeb_device_type devtype)
   // Remove the aggregate device from the list of devices (if any).
   for (auto it = devices.begin(); it != devices.end();) {
     CFStringRef name = get_device_name(*it);
-    if (CFStringFind(name, CFSTR("CubebAggregateDevice"), 0).location !=
+    if (name && CFStringFind(name, CFSTR("CubebAggregateDevice"), 0).location !=
         kCFNotFound) {
       it = devices.erase(it);
     } else {
