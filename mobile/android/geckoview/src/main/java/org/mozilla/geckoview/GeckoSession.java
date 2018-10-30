@@ -521,8 +521,7 @@ public class GeckoSession extends LayerSession
                     }
                     delegate.onContentPermissionRequest(
                             GeckoSession.this, message.getString("uri"),
-                            type, message.getString("access"),
-                            new PermissionCallback(typeString, callback));
+                            type, new PermissionCallback(typeString, callback));
                 } else if ("GeckoView:MediaPermission".equals(event)) {
                     GeckoBundle[] videoBundles = message.getBundleArray("video");
                     GeckoBundle[] audioBundles = message.getBundleArray("audio");
@@ -3317,12 +3316,10 @@ public class GeckoSession extends LayerSession
          *             PERMISSION_GEOLOCATION
          *             PERMISSION_DESKTOP_NOTIFICATION
          *             PERMISSION_AUTOPLAY_MEDIA
-         * @param access Not used.
          * @param callback Callback interface.
          */
         void onContentPermissionRequest(GeckoSession session, String uri,
-                                        @Permission int type,
-                                        String access, Callback callback);
+                                        @Permission int type, Callback callback);
 
         class MediaSource {
             @IntDef({SOURCE_CAMERA, SOURCE_SCREEN, SOURCE_APPLICATION,

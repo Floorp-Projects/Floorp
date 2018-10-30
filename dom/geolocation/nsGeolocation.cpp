@@ -303,7 +303,6 @@ nsGeolocationRequest::GetTypes(nsIArray** aTypes)
 {
   nsTArray<nsString> emptyOptions;
   return nsContentPermissionUtils::CreatePermissionArray(NS_LITERAL_CSTRING("geolocation"),
-                                                         NS_LITERAL_CSTRING("unused"),
                                                          emptyOptions,
                                                          aTypes);
 }
