@@ -10,13 +10,14 @@ import os
 import re
 import requests
 from operator import itemgetter
-from pkg_resources import parse_version
+
+from mozilla_version.gecko import GeckoVersion
 
 BUGLIST_PREFIX = 'Bugs since previous changeset: '
-BACKOUT_REGEX = r'back(\s?)out|backed out|backing out'
+BACKOUT_REGEX = re.compile(r'back(\s?)out|backed out|backing out', re.IGNORECASE)
 BACKOUT_PREFIX = 'Backouts since previous changeset: '
 BUGZILLA_BUGLIST_TEMPLATE = 'https://bugzilla.mozilla.org/buglist.cgi?bug_id={bugs}'
-BUG_NUMBER_REGEX = r'bug \d+'
+BUG_NUMBER_REGEX = re.compile(r'bug \d+', re.IGNORECASE)
 CHANGELOG_TO_FROM_STRING = '{product}_{version}_RELEASE'
 CHANGESET_URL_TEMPLATE = (
     'https://hg.mozilla.org/{release_branch}/{logtype}'
@@ -32,7 +33,7 @@ URL_SHORTENER_TEMPLATE = 'https://bugzilla.mozilla.org/rest/bitly/shorten?url={u
 log = logging.getLogger(__name__)
 
 
-def create_bugs_url(release):
+def create_bugs_url(product, current_version, current_revision):
     """
     Creates list of bugs and backout bugs for release-drivers email
 
@@ -42,23 +43,19 @@ def create_bugs_url(release):
     """
     try:
         # Extract the important data, ignore if beta1 release
-        current_version_dot = release['version']
-        if re.search(r'b1$', current_version_dot):
+        if current_version.beta_number == 1:
             # If the version is beta 1, don't make any links
             return NO_BUGS
 
-        product = release['product']
-        branch = release['branch']
-        current_revision = release['mozillaRevision']
-
+        branch = get_branch_by_version(current_version)
         # Get the tag version, for display purposes
-        current_version_tag = dot_version_to_tag_version(product, current_version_dot)
+        current_version_tag = tag_version(product, current_version)
 
         # Get all Hg tags for this branch, determine the previous version
         tag_url = MERCURIAL_TAGS_URL_TEMPLATE.format(release_branch=branch)
         mercurial_tags_json = requests.get(tag_url).json()
         previous_version_tag = get_previous_tag_version(
-            product, current_version_dot, current_version_tag, mercurial_tags_json)
+            product, current_version, current_version_tag, mercurial_tags_json)
 
         # Get the changeset between these versions, parse for all unique bugs and backout bugs
         resp = requests.get(CHANGESET_URL_TEMPLATE.format(release_branch=branch,
@@ -96,13 +93,13 @@ def get_bugs_in_changeset(changeset_data):
             if is_excluded_change(changeset):
                 continue
 
-            changeset_desc_lower = changeset['desc'].lower()
-            bug_re = re.search(BUG_NUMBER_REGEX, changeset_desc_lower)
+            changeset_desc = changeset['desc']
+            bug_re = BUG_NUMBER_REGEX.search(changeset_desc)
 
             if bug_re:
                 bug_number = bug_re.group().split(' ')[1]
 
-                if is_backout_bug(changeset_desc_lower):
+                if is_backout_bug(changeset_desc):
                     unique_backout_bugs.add(bug_number)
                 else:
                     unique_bugs.add(bug_number)
@@ -118,8 +115,8 @@ def is_excluded_change(changeset):
     return any(keyword in changeset['desc'] for keyword in excluded_change_keywords)
 
 
-def is_backout_bug(changeset_description_lowercase):
-    return re.search(BACKOUT_REGEX, changeset_description_lowercase)
+def is_backout_bug(changeset_description):
+    return bool(BACKOUT_REGEX.search(changeset_description))
 
 
 def create_short_url_with_prefix(buglist, backout_buglist):
@@ -145,18 +142,18 @@ def create_short_url_with_prefix(buglist, backout_buglist):
     return urls[0], urls[1]
 
 
-def dot_version_to_tag_version(product, dot_version):
-    underscore_version = dot_version.replace('.', '_')
+def tag_version(product, version):
+    underscore_version = str(version).replace('.', '_')
     return CHANGELOG_TO_FROM_STRING.format(product=product.upper(), version=underscore_version)
 
 
-def tag_version_to_dot_version_parse(tag):
+def parse_tag_version(tag):
     dot_version = '.'.join(tag.split('_')[1:-1])
-    return parse_version(dot_version)
+    return GeckoVersion.parse(dot_version)
 
 
 def get_previous_tag_version(
-    product, current_version_dot, current_version_tag, mercurial_tags_json,
+    product, current_version, current_version_tag, mercurial_tags_json,
 ):
     """
     Gets the previous hg version tag for the product and branch, given the current version tag
@@ -164,9 +161,8 @@ def get_previous_tag_version(
 
     def _invalid_tag_filter(tag):
         """Filters by product and removes incorrect major version + base, end releases"""
-        major_version = current_version_dot.split('.')[0]
-        prod_major_version_re = r'^{product}_{major_version}'.format(product=product.upper(),
-                                                                     major_version=major_version)
+        prod_major_version_re = r'^{product}_{major_version}'.format(
+            product=product.upper(), major_version=current_version.major_number)
 
         return 'BASE' not in tag and \
                'END' not in tag and \
@@ -174,20 +170,19 @@ def get_previous_tag_version(
                re.match(prod_major_version_re, tag)
 
     # Get rid of irrelevant tags, sort by date and extract the tag string
-    tags = set(map(itemgetter('tag'), mercurial_tags_json['tags']))
-    tags = filter(_invalid_tag_filter, tags)
-    dot_tag_version_mapping = zip(map(tag_version_to_dot_version_parse, tags), tags)
-    dot_tag_version_mapping.append(  # Add the current version to the list
-        (parse_version(current_version_dot), current_version_tag)
-    )
-    dot_tag_version_mapping = sorted(dot_tag_version_mapping, key=itemgetter(0))
+    tags = {
+        (parse_tag_version(item['tag']), item['tag'])
+        for item in mercurial_tags_json['tags']
+        if _invalid_tag_filter(item['tag'])
+    }
+    # Add the current version to the list
+    tags.add((current_version, current_version_tag))
+    tags = sorted(tags, key=lambda tag: tag[0])
 
     # Find where the current version is and go back one to get the previous version
-    next_version_index = (
-        map(itemgetter(0), dot_tag_version_mapping).index(parse_version(current_version_dot)) - 1
-    )
+    next_version_index = (map(itemgetter(0), tags).index(current_version) - 1)
 
-    return dot_tag_version_mapping[next_version_index][1]
+    return tags[next_version_index][1]
 
 
 def format_return_value(description, unique_bugs, unique_backout_bugs, changeset_html):
@@ -201,3 +196,17 @@ def format_return_value(description, unique_bugs, unique_backout_bugs, changeset
     return return_str
 
 
+def get_branch_by_version(version):
+    """
+    Get the branch a given version is found on.
+    """
+    if version.is_beta:
+        return 'releases/mozilla-beta'
+    elif version.is_release:
+        return 'releases/mozilla-release'
+    elif version.is_esr:
+        return 'releases/mozilla-esr{}'.format(version.major_number)
+    else:
+        raise Exception(
+            'Unsupported version type {}: {}'.format(
+                version.version_type.name, version))
