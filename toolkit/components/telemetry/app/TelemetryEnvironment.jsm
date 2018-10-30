@@ -184,6 +184,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["accessibility.browsewithcaret", {what: RECORD_PREF_VALUE}],
   ["accessibility.force_disabled", {what:  RECORD_PREF_VALUE}],
   ["app.shield.optoutstudies.enabled", {what: RECORD_PREF_VALUE}],
+  ["app.update.auto", {what: RECORD_PREF_VALUE}],
   ["app.update.interval", {what: RECORD_PREF_VALUE}],
   ["app.update.service.enabled", {what: RECORD_PREF_VALUE}],
   ["app.update.silent", {what: RECORD_PREF_VALUE}],
@@ -266,6 +267,7 @@ const PREF_DISTRIBUTOR = "app.distributor";
 const PREF_DISTRIBUTOR_CHANNEL = "app.distributor.channel";
 const PREF_APP_PARTNER_BRANCH = "app.partner.";
 const PREF_PARTNER_ID = "mozilla.partner.id";
+const PREF_UPDATE_AUTODOWNLOAD = "app.update.auto";
 const PREF_SEARCH_COHORT = "browser.search.cohort";
 
 const COMPOSITOR_CREATED_TOPIC = "compositor:created";
@@ -277,7 +279,6 @@ const SEARCH_SERVICE_TOPIC = "browser-search-service";
 const SESSIONSTORE_WINDOWS_RESTORED_TOPIC = "sessionstore-windows-restored";
 const PREF_CHANGED_TOPIC = "nsPref:changed";
 const BLOCKLIST_LOADED_TOPIC = "blocklist-loaded";
-const AUTO_UPDATE_PREF_CHANGE_TOPIC = "auto-update-config-change";
 
 /**
  * Enforces the parameter to a boolean value.
@@ -901,7 +902,6 @@ function EnvironmentCache() {
   if (AppConstants.MOZ_BUILD_APP == "browser") {
     p.push(this._loadAttributionAsync());
   }
-  p.push(this._loadAutoUpdateAsync());
 
   for (const [id, {branch, options}] of gActiveExperimentStartupBuffer.entries()) {
     this.setExperimentActive(id, branch, options);
@@ -1152,7 +1152,6 @@ EnvironmentCache.prototype = {
     Services.obs.addObserver(this, GFX_FEATURES_READY_TOPIC);
     Services.obs.addObserver(this, SEARCH_ENGINE_MODIFIED_TOPIC);
     Services.obs.addObserver(this, SEARCH_SERVICE_TOPIC);
-    Services.obs.addObserver(this, AUTO_UPDATE_PREF_CHANGE_TOPIC);
   },
 
   _removeObservers() {
@@ -1165,7 +1164,6 @@ EnvironmentCache.prototype = {
     Services.obs.removeObserver(this, GFX_FEATURES_READY_TOPIC);
     Services.obs.removeObserver(this, SEARCH_ENGINE_MODIFIED_TOPIC);
     Services.obs.removeObserver(this, SEARCH_SERVICE_TOPIC);
-    Services.obs.removeObserver(this, AUTO_UPDATE_PREF_CHANGE_TOPIC);
   },
 
   observe(aSubject, aTopic, aData) {
@@ -1218,9 +1216,6 @@ EnvironmentCache.prototype = {
         if (options && !options.requiresRestart) {
           this._onPrefChanged(aData);
         }
-        break;
-      case AUTO_UPDATE_PREF_CHANGE_TOPIC:
-        this._currentEnvironment.settings.update.autoDownload = (aData == "true");
         break;
     }
   },
@@ -1417,6 +1412,7 @@ EnvironmentCache.prototype = {
       update: {
         channel: updateChannel,
         enabled: !Services.policies || Services.policies.isAllowed("appUpdate"),
+        autoDownload: Services.prefs.getBoolPref(PREF_UPDATE_AUTODOWNLOAD, true),
       },
       userPrefs: this._getPrefData(),
       sandbox: this._getSandboxData(),
@@ -1428,7 +1424,6 @@ EnvironmentCache.prototype = {
     this._updateAttribution();
     this._updateDefaultBrowser();
     this._updateSearchEngine();
-    this._updateAutoDownload();
   },
 
   _getSandboxData() {
@@ -1504,27 +1499,6 @@ EnvironmentCache.prototype = {
         limitStringToLength(data[key], MAX_ATTRIBUTION_STRING_LENGTH);
     }
     this._currentEnvironment.settings.attribution = attributionData;
-  },
-
-  /**
-   * Load the auto update pref and adds it to the environment
-   */
-  async _loadAutoUpdateAsync() {
-    let aus = Cc["@mozilla.org/updates/update-service;1"]
-              .getService(Ci.nsIApplicationUpdateService);
-    this._updateAutoDownloadCache = await aus.getAutoUpdateIsEnabled();
-    this._updateAutoDownload();
-  },
-
-  /**
-   * Update the environment with the cached value for whether updates can auto-
-   * download.
-   */
-  _updateAutoDownload() {
-    if (this._updateAutoDownloadCache === undefined) {
-      return;
-    }
-    this._currentEnvironment.settings.update.autoDownload = this._updateAutoDownloadCache;
   },
 
   /**
