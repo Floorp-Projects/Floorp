@@ -62,7 +62,7 @@
 #include "UIKitDirProvider.h"
 #endif
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
 #include "mozilla/SandboxSettings.h"
 #include "nsIUUIDGenerator.h"
 #include "mozilla/Unused.h"
@@ -81,7 +81,7 @@
 
 #define PREF_OVERRIDE_DIRNAME "preferences"
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
 static already_AddRefed<nsIFile> GetProcessSandboxTempDir(GeckoProcessType type);
 static nsresult DeleteDirIfExists(nsIFile *dir);
 static bool IsContentSandboxDisabled();
