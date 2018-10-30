@@ -83,15 +83,17 @@ add_task(async function reloadButtonReloadsAddon() {
   });
 
   const reloaded = once(AboutDebugging, "addon-reload");
+  const onListUpdated = once(AboutDebugging, "addons-updated");
   reloadButton.click();
   await reloaded;
+  await onListUpdated;
 
   const [reloadedAddon] = await onInstalled;
   is(reloadedAddon.name, ADDON_NAME,
      "Add-on was reloaded: " + reloadedAddon.name);
 
   await onBootstrapInstallCalled;
-  await tearDownAddon(reloadedAddon);
+  await tearDownAddon(AboutDebugging, reloadedAddon);
   await closeAboutDebugging(tab);
 });
 
@@ -114,8 +116,12 @@ add_task(async function reloadButtonRefreshesMetadata() {
   const tempExt = new TempWebExt(ADDON_ID);
   tempExt.writeManifest(manifestBase);
 
+  // The list is updated twice. On AddonManager's onInstalled event as well
+  // as WebExtension's Management's startup event.
+  let onListUpdated = waitForNEvents(AboutDebugging, "addons-updated", 2);
   const onInstalled = promiseAddonEvent("onInstalled");
   await AddonManager.installTemporaryAddon(tempExt.sourceDir);
+  await onListUpdated;
 
   info("Wait until addon onInstalled event is received");
   await onInstalled;
@@ -126,12 +132,16 @@ add_task(async function reloadButtonRefreshesMetadata() {
   const newName = "Temporary web extension (updated)";
   tempExt.writeManifest(Object.assign({}, manifestBase, {name: newName}));
 
+  // The list is updated twice, once for uninstall of the old
+  // and another one for install of the new
+  onListUpdated = waitForNEvents(AboutDebugging, "addons-updated", 2);
   // Wait for the add-on list to be updated with the reloaded name.
   const onReInstall = promiseAddonEvent("onInstalled");
   const reloadButton = getReloadButton(document, manifestBase.name);
   const reloaded = once(AboutDebugging, "addon-reload");
   reloadButton.click();
   await reloaded;
+  await onListUpdated;
 
   info("Wait until addon onInstalled event is received again");
   const [reloadedAddon] = await onReInstall;
@@ -139,15 +149,21 @@ add_task(async function reloadButtonRefreshesMetadata() {
   info("Wait until addon name is updated in about:debugging#addons");
   await waitUntilAddonContainer(newName, document);
 
-  await tearDownAddon(reloadedAddon);
+  await tearDownAddon(AboutDebugging, reloadedAddon);
   tempExt.remove();
   await closeAboutDebugging(tab);
 });
 
 add_task(async function onlyTempInstalledAddonsCanBeReloaded() {
-  const { tab, document } = await openAboutDebugging("addons");
+  const { tab, document, window } = await openAboutDebugging("addons");
+  const { AboutDebugging } = window;
   await waitForInitialAddonList(document);
+
+  // The list is updated twice. On AddonManager's onInstalled event as well
+  // as WebExtension's Management's startup event.
+  const onListUpdated = waitForNEvents(AboutDebugging, "addons-updated", 2);
   await installAddonWithManager(getSupportsFile("addons/bug1273184.xpi").file);
+  await onListUpdated;
 
   info("Wait until addon appears in about:debugging#addons");
   await waitUntilAddonContainer(PACKAGED_ADDON_NAME, document);
@@ -159,6 +175,6 @@ add_task(async function onlyTempInstalledAddonsCanBeReloaded() {
   const reloadButton = getReloadButton(document, addon.name);
   ok(!reloadButton, "There should not be a reload button");
 
-  await tearDownAddon(addon);
+  await tearDownAddon(AboutDebugging, addon);
   await closeAboutDebugging(tab);
 });

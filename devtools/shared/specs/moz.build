@@ -42,6 +42,7 @@ DevToolsModules(
     'promises.js',
     'property-iterator.js',
     'reflow.js',
+    'root.js',
     'screenshot.js',
     'script.js',
     'source.js',

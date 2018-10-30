@@ -116,13 +116,13 @@ async function test() {
   SimpleTest.registerCleanupFunction(UrlClassifierTestUtils.cleanupTestTrackers);
   await UrlClassifierTestUtils.addTestTrackers();
 
-  // Load the test from a URL that's NOT on the whitelist with content blocking disabled
-  await SpecialPowers.setBoolPref("browser.contentblocking.enabled", false);
+  // Load the test from a URL that's NOT on the whitelist with tracking protection disabled
+  await SpecialPowers.setBoolPref("privacy.trackingprotection.enabled", false);
   await testOnWindow(contentPage2).then(function(aWindow) {
     checkLoads(aWindow, false, false);
     aWindow.close();
   });
-  await SpecialPowers.clearUserPref("browser.contentblocking.enabled");
+  await SpecialPowers.setBoolPref("privacy.trackingprotection.enabled", true);
 
   // Load the test from a URL that's NOT on the whitelist
   await testOnWindow(contentPage2).then(function(aWindow) {
@@ -143,6 +143,7 @@ async function test() {
     aWindow.close();
   });
   await SpecialPowers.clearUserPref("urlclassifier.trackingWhitelistTable");
+  await SpecialPowers.clearUserPref("privacy.trackingprotection.enabled");
 
   SimpleTest.finish();
 }

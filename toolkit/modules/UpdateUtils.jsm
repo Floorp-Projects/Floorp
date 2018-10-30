@@ -16,7 +16,6 @@ ChromeUtils.defineModuleGetter(this, "WindowsRegistry",
 const FILE_UPDATE_LOCALE                  = "update.locale";
 const PREF_APP_DISTRIBUTION               = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION       = "distribution.version";
-const PREF_APP_UPDATE_CUSTOM              = "app.update.custom";
 
 
 var UpdateUtils = {
@@ -87,8 +86,6 @@ var UpdateUtils = {
           return Services.appinfo.platformVersion;
         case "SYSTEM_CAPABILITIES":
           return getSystemCapabilities();
-        case "CUSTOM":
-          return Services.prefs.getStringPref(PREF_APP_UPDATE_CUSTOM, "");
         case "DISTRIBUTION":
           return getDistributionPrefValue(PREF_APP_DISTRIBUTION);
         case "DISTRIBUTION_VERSION":

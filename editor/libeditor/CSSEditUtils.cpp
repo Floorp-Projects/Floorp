@@ -453,7 +453,7 @@ CSSEditUtils::SetCSSProperty(Element& aElement,
     return NS_ERROR_NOT_AVAILABLE;
   }
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
-  return htmlEditor->DoTransaction(transaction);
+  return htmlEditor->DoTransactionInternal(transaction);
 }
 
 nsresult
@@ -485,7 +485,7 @@ CSSEditUtils::RemoveCSSProperty(Element& aElement,
     return NS_ERROR_NOT_AVAILABLE;
   }
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
-  return htmlEditor->DoTransaction(transaction);
+  return htmlEditor->DoTransactionInternal(transaction);
 }
 
 // static

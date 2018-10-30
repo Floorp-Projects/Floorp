@@ -43,17 +43,19 @@ nsAuthSASL::Init(const char *serviceName,
     serviceFlags |= REQ_MUTUAL_AUTH;
 
     // Find out whether we should be trying SSPI or not
-    const char *authType = "kerb-gss";
+    const char *contractID = NS_AUTH_MODULE_CONTRACTID_PREFIX "kerb-gss";
 
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
         bool val;
         rv = prefs->GetBoolPref(kNegotiateAuthSSPI, &val);
         if (NS_SUCCEEDED(rv) && val)
-            authType = "kerb-sspi";
+            contractID = NS_AUTH_MODULE_CONTRACTID_PREFIX "kerb-sspi";
     }
 
-    MOZ_ALWAYS_TRUE(mInnerModule = nsIAuthModule::CreateInstance(authType));
+    mInnerModule = do_CreateInstance(contractID, &rv);
+    // if we can't create the GSSAPI module, then bail
+    NS_ENSURE_SUCCESS(rv, rv);
 
     mInnerModule->Init(serviceName, serviceFlags, nullptr, nullptr, nullptr);
 

@@ -725,8 +725,7 @@ nsHttpChannel::CheckFastBlocked()
         Preferences::AddUintVarCache(&sFastBlockLimit, "browser.fastblock.limit");
     }
 
-    if (!StaticPrefs::browser_contentblocking_enabled() ||
-        !StaticPrefs::browser_fastblock_enabled()) {
+    if (!StaticPrefs::browser_fastblock_enabled()) {
         LOG(("FastBlock disabled by pref [this=%p]\n", this));
 
         return false;
@@ -6688,6 +6687,7 @@ nsHttpChannel::BeginConnect()
     }
 
     if (!(mLoadFlags & LOAD_CLASSIFY_URI)) {
+        MaybeStartDNSPrefetch();
         return ContinueBeginConnectWithResult();
     }
 
@@ -6722,21 +6722,9 @@ nsHttpChannel::BeginConnect()
     return NS_OK;
 }
 
-nsresult
-nsHttpChannel::BeginConnectActual()
+void
+nsHttpChannel::MaybeStartDNSPrefetch()
 {
-    if (mCanceled) {
-        return mStatus;
-    }
-
-    if (mTrackingProtectionCancellationPending) {
-        LOG(("Waiting for tracking protection cancellation in BeginConnectActual [this=%p]\n", this));
-        MOZ_ASSERT(!mCallOnResume ||
-                   mCallOnResume == &nsHttpChannel::HandleContinueCancelledByTrackingProtection,
-                   "We should be paused waiting for cancellation from tracking protection");
-        return NS_OK;
-    }
-
     if (!mConnectionInfo->UsingHttpProxy() &&
         !(mLoadFlags & (LOAD_NO_NETWORK_IO | LOAD_ONLY_FROM_CACHE))) {
         // Start a DNS lookup very early in case the real open is queued the DNS can
@@ -6752,7 +6740,7 @@ nsHttpChannel::BeginConnectActual()
         // be correct, and even when it isn't, the timing still represents _a_
         // valid DNS lookup timing for the site, even if it is not _the_
         // timing we used.
-        LOG(("nsHttpChannel::BeginConnect [this=%p] prefetching%s\n",
+        LOG(("nsHttpChannel::MaybeStartDNSPrefetch [this=%p] prefetching%s\n",
              this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : ""));
         OriginAttributes originAttributes;
         NS_GetOriginAttributes(this, originAttributes);
@@ -6760,6 +6748,24 @@ nsHttpChannel::BeginConnectActual()
                                          this, mTimingEnabled);
         mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
     }
+}
+
+nsresult
+nsHttpChannel::BeginConnectActual()
+{
+    if (mCanceled) {
+        return mStatus;
+    }
+
+    if (mTrackingProtectionCancellationPending) {
+        LOG(("Waiting for tracking protection cancellation in BeginConnectActual [this=%p]\n", this));
+        MOZ_ASSERT(!mCallOnResume ||
+                   mCallOnResume == &nsHttpChannel::HandleContinueCancelledByTrackingProtection,
+                   "We should be paused waiting for cancellation from tracking protection");
+        return NS_OK;
+    }
+
+    MaybeStartDNSPrefetch();
 
     nsresult rv = ContinueBeginConnectWithResult();
     if (NS_FAILED(rv)) {

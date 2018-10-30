@@ -48,14 +48,18 @@ class TestParseConfigFile(unittest.TestCase):
             self.assertEqual(config_dict[key], c._config[key])
 
     def test_illegal_config(self):
-        self.assertRaises(IOError, config.parse_config_file, "this_file_does_not_exist.py", search_path="yadda")
+        self.assertRaises(
+            IOError,
+            config.parse_config_file, "this_file_does_not_exist.py", search_path="yadda")
 
     def test_illegal_suffix(self):
         self.assertRaises(RuntimeError, config.parse_config_file, "test/test.illegal_suffix")
 
     def test_malformed_json(self):
         if JSON_TYPE == 'simplejson':
-            self.assertRaises(json.decoder.JSONDecodeError, config.parse_config_file, "test/test_malformed.json")
+            self.assertRaises(
+                json.decoder.JSONDecodeError,
+                config.parse_config_file, "test/test_malformed.json")
         else:
             self.assertRaises(ValueError, config.parse_config_file, "test/test_malformed.json")
 
@@ -105,7 +109,7 @@ class TestReadOnlyDict(unittest.TestCase):
     control_dict = {
         'b': '2',
         'c': {'d': '4'},
-        'e': ['f', 'g'],
+        'h': ['f', 'g'],
         'e': ['f', 'g', {'turtles': ['turtle1']}],
         'd': {
             'turtles': ['turtle1']
@@ -169,7 +173,7 @@ class TestReadOnlyDict(unittest.TestCase):
         # all on 2.7.
         try:
             r['e'] = 2
-        except:
+        except AssertionError:
             pass
         else:
             self.assertEqual(0, 1, msg="can set r['e'] when locked")
@@ -178,7 +182,7 @@ class TestReadOnlyDict(unittest.TestCase):
         r = self.get_locked_ROD()
         try:
             del r['e']
-        except:
+        except AssertionError:
             pass
         else:
             self.assertEqual(0, 1, "can del r['e'] when locked")
@@ -256,7 +260,7 @@ class TestActions(unittest.TestCase):
         c = config.BaseConfig(initial_config_file='test/test.json')
         try:
             c.verify_actions(['not_a_real_action'])
-        except:
+        except SystemExit:
             pass
         else:
             self.assertEqual(0, 1, msg="verify_actions() didn't die on invalid action")
@@ -303,6 +307,7 @@ class TestActions(unittest.TestCase):
         c.parse_args(args=['foo', '--a', '--e'])
         self.assertEqual(['a', 'e'], c.get_actions(),
                          msg="--ACTION broken")
+
 
 if __name__ == '__main__':
     unittest.main()

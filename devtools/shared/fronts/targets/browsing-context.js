@@ -9,7 +9,8 @@ const {custom} = protocol;
 
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
 
-const BrowsingContextFront = protocol.FrontClassWithSpec(browsingContextTargetSpec, {
+const BrowsingContextTargetFront =
+protocol.FrontClassWithSpec(browsingContextTargetSpec, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
 
@@ -102,4 +103,4 @@ const BrowsingContextFront = protocol.FrontClassWithSpec(browsingContextTargetSp
   },
 });
 
-exports.BrowsingContextFront = BrowsingContextFront;
+exports.BrowsingContextTargetFront = BrowsingContextTargetFront;

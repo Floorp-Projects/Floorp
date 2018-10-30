@@ -180,7 +180,6 @@ Push.prototype = {
     // Create an array with a single nsIContentPermissionType element.
     let type = {
       type: "desktop-notification",
-      access: null,
       options: [],
       QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPermissionType]),
     };

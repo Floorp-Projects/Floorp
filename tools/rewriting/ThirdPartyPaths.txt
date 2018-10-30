@@ -5,6 +5,7 @@ devtools/client/sourceeditor/codemirror/
 devtools/client/sourceeditor/tern/
 devtools/shared/heapsnapshot/CoreDump.pb.cc
 devtools/shared/heapsnapshot/CoreDump.pb.h
+dom/canvas/test/webgl-conf/checkout/closure-library/
 dom/media/gmp/widevine-adapter/content_decryption_module.h
 dom/media/gmp/widevine-adapter/content_decryption_module_export.h
 dom/media/gmp/widevine-adapter/content_decryption_module_ext.h

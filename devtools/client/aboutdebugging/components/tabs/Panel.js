@@ -42,13 +42,13 @@ class TabsPanel extends Component {
 
   componentDidMount() {
     const { client } = this.props;
-    client.addListener("tabListChanged", this.update);
+    client.mainRoot.on("tabListChanged", this.update);
     this.update();
   }
 
   componentWillUnmount() {
     const { client } = this.props;
-    client.removeListener("tabListChanged", this.update);
+    client.mainRoot.off("tabListChanged", this.update);
   }
 
   async update() {

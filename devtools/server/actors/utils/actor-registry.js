@@ -213,11 +213,6 @@ const ActorRegistry = {
       constructor: "CSSUsageActor",
       type: { target: true },
     });
-    this.registerModule("devtools/server/actors/timeline", {
-      prefix: "timeline",
-      constructor: "TimelineActor",
-      type: { target: true },
-    });
     if ("nsIProfiler" in Ci &&
         !Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false)) {
       this.registerModule("devtools/server/actors/performance", {
@@ -246,7 +241,7 @@ const ActorRegistry = {
       constructor: "WebExtensionInspectedWindowActor",
       type: { target: true },
     });
-    this.registerModule("devtools/server/actors/accessibility", {
+    this.registerModule("devtools/server/actors/accessibility/accessibility", {
       prefix: "accessibility",
       constructor: "AccessibilityActor",
       type: { target: true },

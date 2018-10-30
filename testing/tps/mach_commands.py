@@ -24,6 +24,9 @@ class MachCommands(MachCommandBase):
         if not os.path.exists(os.path.dirname(dest)):
             os.makedirs(os.path.dirname(dest))
 
+        if os.path.isfile(dest):
+            os.unlink(dest)
+
         jarrer = Jarrer(optimize=False)
         for p, f in FileFinder(src).find('*'):
             jarrer.add(p, f)

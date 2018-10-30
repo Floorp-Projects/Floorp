@@ -26,10 +26,10 @@ const {
 const cols = {
   status: true,
   method: true,
+  domain: true,
   file: true,
   protocol: false,
   scheme: false,
-  domain: true,
   remoteip: false,
   cause: true,
   type: true,
@@ -156,6 +156,7 @@ function ui(state = UI(), action) {
     case RESET_COLUMNS:
       return resetColumns(state);
     case REMOVE_SELECTED_CUSTOM_REQUEST:
+      return openNetworkDetails(state, { open: true });
     case SEND_CUSTOM_REQUEST:
       return openNetworkDetails(state, { open: false });
     case SELECT_DETAILS_PANEL_TAB:

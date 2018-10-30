@@ -211,11 +211,9 @@ ContentPermissionRequestParent::IsBeingDestroyed()
 NS_IMPL_ISUPPORTS(ContentPermissionType, nsIContentPermissionType)
 
 ContentPermissionType::ContentPermissionType(const nsACString& aType,
-                                             const nsACString& aAccess,
                                              const nsTArray<nsString>& aOptions)
 {
   mType = aType;
-  mAccess = aAccess;
   mOptions = aOptions;
 }
 
@@ -227,13 +225,6 @@ NS_IMETHODIMP
 ContentPermissionType::GetType(nsACString& aType)
 {
   aType = mType;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ContentPermissionType::GetAccess(nsACString& aAccess)
-{
-  aAccess = mAccess;
   return NS_OK;
 }
 
@@ -276,7 +267,6 @@ nsContentPermissionUtils::ConvertPermissionRequestToArray(nsTArray<PermissionReq
   for (uint32_t i = 0; i < len; i++) {
     RefPtr<ContentPermissionType> cpt =
       new ContentPermissionType(aSrcArray[i].type(),
-                                aSrcArray[i].access(),
                                 aSrcArray[i].options());
     aDesArray->AppendElement(cpt);
   }
@@ -292,9 +282,7 @@ nsContentPermissionUtils::ConvertArrayToPermissionRequest(nsIArray* aSrcArray,
   for (uint32_t i = 0; i < len; i++) {
     nsCOMPtr<nsIContentPermissionType> cpt = do_QueryElementAt(aSrcArray, i);
     nsAutoCString type;
-    nsAutoCString access;
     cpt->GetType(type);
-    cpt->GetAccess(access);
 
     nsCOMPtr<nsIArray> optionArray;
     cpt->GetOptions(getter_AddRefs(optionArray));
@@ -312,7 +300,7 @@ nsContentPermissionUtils::ConvertArrayToPermissionRequest(nsIArray* aSrcArray,
       }
     }
 
-    aDesArray.AppendElement(PermissionRequest(type, access, options));
+    aDesArray.AppendElement(PermissionRequest(type, options));
   }
   return len;
 }
@@ -335,14 +323,12 @@ ContentPermissionRequestChildMap()
 
 /* static */ nsresult
 nsContentPermissionUtils::CreatePermissionArray(const nsACString& aType,
-                                                const nsACString& aAccess,
                                                 const nsTArray<nsString>& aOptions,
                                                 nsIArray** aTypesArray)
 {
   nsCOMPtr<nsIMutableArray> types = do_CreateInstance(NS_ARRAY_CONTRACTID);
   RefPtr<ContentPermissionType> permType = new ContentPermissionType(aType,
-                                                                       aAccess,
-                                                                       aOptions);
+                                                                     aOptions);
   types->AppendElement(permType);
   types.forget(aTypesArray);
 

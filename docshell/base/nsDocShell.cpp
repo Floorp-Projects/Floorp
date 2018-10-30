@@ -12845,7 +12845,6 @@ nsDocShell::GetUseTrackingProtection(bool* aUseTrackingProtection)
 {
   *aUseTrackingProtection  = false;
 
-  bool cbEnabled = StaticPrefs::browser_contentblocking_enabled();
   static bool sTPEnabled = false;
   static bool sTPInPBEnabled = false;
   static bool sPrefsInit = false;
@@ -12858,8 +12857,8 @@ nsDocShell::GetUseTrackingProtection(bool* aUseTrackingProtection)
       "privacy.trackingprotection.pbmode.enabled", false);
   }
 
-  if (mUseTrackingProtection || (cbEnabled && sTPEnabled) ||
-      (cbEnabled && UsePrivateBrowsing() && sTPInPBEnabled)) {
+  if (mUseTrackingProtection || sTPEnabled ||
+      (UsePrivateBrowsing() && sTPInPBEnabled)) {
     *aUseTrackingProtection = true;
     return NS_OK;
   }

@@ -61,12 +61,12 @@ function run_test() {
 
   const trace = connectPipeTracing();
   const client = new DebuggerClient(trace);
-  let rootClient;
+  let rootFront;
 
   client.connect().then(([applicationType, traits]) => {
-    rootClient = RootFront(client);
+    rootFront = RootFront(client);
 
-    rootClient.simpleReturn().then(() => {
+    rootFront.simpleReturn().then(() => {
       ok(false, "Connection was aborted, request shouldn't resolve");
       do_test_finished();
     }, e => {
