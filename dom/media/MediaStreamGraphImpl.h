@@ -672,6 +672,10 @@ public:
    */
   GraphTime mProcessedTime = 0;
   /**
+   * The graph should stop processing at this time.
+   */
+  GraphTime mEndTime;
+  /**
    * Date of the last time we updated the main thread with the graph state.
    */
   TimeStamp mLastMainThreadUpdate;
@@ -812,11 +816,6 @@ public:
 #endif
     return mLifecycleState;
   }
-  /**
-   * The graph should stop processing at or after this time.
-   * Only set on main thread. Read on both main and MSG thread.
-   */
-  Atomic<GraphTime> mEndTime;
 
   /**
    * True when we need to do a forced shutdown during application shutdown.
