@@ -3383,7 +3383,7 @@ JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
 }
 
 /* static */ bool
-JSScript::initFunctionPrototype(JSContext* cx, Handle<JSScript*> script,
+JSScript::initFunctionPrototype(JSContext* cx, HandleScript script,
                                 HandleFunction functionProto)
 {
     uint32_t numScopes = 1;
@@ -3407,19 +3407,22 @@ JSScript::initFunctionPrototype(JSContext* cx, Handle<JSScript*> script,
         return false;
     }
 
-    js::PrivateScriptData* data = script->data_;
-    data->scopes()[0].init(functionProtoScope);
+    mozilla::Span<GCPtrScope> scopes = script->data_->scopes();
+    scopes[0].init(functionProtoScope);
 
     uint32_t codeLength = 1;
-    uint32_t srcNotesLength = 1;
+    uint32_t noteLength = 1;
     uint32_t numAtoms = 0;
-    if (!script->createSharedScriptData(cx, codeLength, srcNotesLength, numAtoms)) {
+    if (!script->createSharedScriptData(cx, codeLength, noteLength, numAtoms)) {
         return false;
     }
 
-    jsbytecode* code = script->code();
+    jsbytecode* code = script->scriptData_->code();
     code[0] = JSOP_RETRVAL;
-    code[1] = SRC_NULL;
+
+    jssrcnote* notes = script->scriptData_->notes();
+    notes[0] = SRC_NULL;
+
     return script->shareScriptData(cx);
 }
 
