@@ -91,6 +91,12 @@ nsIFrame::IsInlineOutside() const
   return StyleDisplay()->IsInlineOutside(this);
 }
 
+bool
+nsIFrame::IsColumnSpan() const
+{
+  return IsBlockOutside() && StyleColumn()->IsColumnSpanStyle();
+}
+
 mozilla::StyleDisplay
 nsIFrame::GetDisplay() const
 {
