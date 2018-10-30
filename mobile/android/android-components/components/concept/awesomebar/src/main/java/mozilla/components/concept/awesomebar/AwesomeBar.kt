@@ -55,16 +55,18 @@ interface AwesomeBar {
      * A [Suggestion] to be displayed by an [AwesomeBar] implementation.
      *
      * @property id A unique ID identifying this [Suggestion]. A stable ID but different data indicates to the
-     *              [AwesomeBar] that this is the same [Suggestion] with new data. This will affect how the [AwesomeBar]
-     *              animates showing the new suggestion.
+     * [AwesomeBar] that this is the same [Suggestion] with new data. This will affect how the [AwesomeBar]
+     * animates showing the new suggestion.
      * @property title A user-readable title for the [Suggestion].
      * @property description A user-readable description for the [Suggestion].
      * @property icon A lambda that can be invoked by the [AwesomeBar] implementation to receive an icon [Bitmap] for
-     *                this [Suggestion]. The [AwesomeBar] will pass in its desired width and height for the Bitmap.
+     * this [Suggestion]. The [AwesomeBar] will pass in its desired width and height for the Bitmap.
      * @property chips A list of [Chip] instances to be displayed.
      * @property flags A set of [Flag] values for this [Suggestion].
      * @property onSuggestionClicked A callback to be executed when the [Suggestion] was clicked by the user.
      * @property onChipClicked A callback to be executed when a [Chip] was clicked by the user.
+     * @property score A score used to rank suggestions of this provider against each other. A suggestion with a higher
+     * score will be shown on top of suggestions with a lower score.
      */
     data class Suggestion(
         val id: String = UUID.randomUUID().toString(),
@@ -74,7 +76,8 @@ interface AwesomeBar {
         val chips: List<Chip> = emptyList(),
         val flags: Set<Flag> = emptySet(),
         val onSuggestionClicked: (() -> Unit)? = null,
-        val onChipClicked: ((Chip) -> Unit)? = null
+        val onChipClicked: ((Chip) -> Unit)? = null,
+        val score: Int = 0
     ) {
         /**
          * Chips are compact actions that are shown as part of a suggestion. For example a [Suggestion] from a search
@@ -93,6 +96,19 @@ interface AwesomeBar {
             BOOKMARK,
             OPEN_TAB
         }
+
+        /**
+         * Returns true if the content of the two suggestions is the same.
+         *
+         * This is used by [AwesomeBar] implementations to decide whether an updated suggestion (same id) needs its
+         * view to be updated in order to display new data.
+         */
+        fun areContentsTheSame(other: Suggestion): Boolean {
+            return title == other.title &&
+                description == other.description &&
+                chips == other.chips &&
+                flags == other.flags
+        }
     }
 
     /**
@@ -108,31 +124,29 @@ interface AwesomeBar {
         /**
          * Fired whenever the user changes their input, after they have started interacting with the awesome bar.
          *
-         * This is a synchronous call. It is up to the [AwesomeBar] implementation to perform this operation on a
-         * non-main thread. For example the `browser-awesomebar` component wrap this call in an async block inside a
-         * coroutine:
+         * This is a suspending function. An [AwesomeBar] implementation is expected to invoke this method from a
+         * [Coroutine](https://kotlinlang.org/docs/reference/coroutines-overview.html). This allows the [AwesomeBar]
+         * implementation to group and cancel calls to multiple providers.
          *
-         * ```Kotlin
-         * jobs = providers.map { provider ->
-         *     launch(UI) {
-         *        val suggestions = async(dispatcher) { provider.onInputChanged(text) }
-         *        // Do something with suggestions
-         *     }
-         * }
-         * ```
-         *
-         * This allows the awesome bar component to be in control of the jobs launched and lets it cancel jobs as soon
-         * as they are no longer needed. For the provider this makes the implementation easier as it does not need to
-         * deal with asynchronous cancellable tasks.
+         * Coroutine cancellation is cooperative. A coroutine code has to cooperate to be cancellable:
+         * https://github.com/Kotlin/kotlinx.coroutines/blob/master/docs/cancellation-and-timeouts.md
          *
          * @param text The current user input in the toolbar.
          * @return A list of suggestions to be displayed by the [AwesomeBar].
          */
-        fun onInputChanged(text: String): List<Suggestion>
+        suspend fun onInputChanged(text: String): List<Suggestion>
 
         /**
          * Fired when the user has cancelled their interaction with the awesome bar.
          */
         fun onInputCancelled() = Unit
+
+        /**
+         * If true an [AwesomeBar] implementation can clear the previous suggestions of this provider as soon as the
+         * user continues to type. If this is false an [AwesomeBar] implementation is allowed to keep the previous
+         * suggestions around until the provider returns a new list of suggestions for the updated text.
+         */
+        val shouldClearSuggestions
+            get() = true
     }
 }
