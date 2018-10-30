@@ -32,6 +32,7 @@ def add_notifications(config, jobs):
             '--product', job['shipping-product'],
             '--revision', config.params['head_rev'],
             '--build-number', str(config.params['build_number']),
+            '--repo', config.params['head_repository'],
         ]
         for address in emails:
             command += ['--address', address]
