@@ -224,7 +224,15 @@ FRAME_STATE_BIT(Generic, 42, NS_FRAME_FONT_INFLATION_FLOW_ROOT)
 // this does not include nsSVGOuterSVGFrame since it takes part is CSS layout.
 FRAME_STATE_BIT(Generic, 43, NS_FRAME_SVG_LAYOUT)
 
-// Bits 44 and 45 are currently unused, but be kind and check with bug 1465474
+// This bit is set if a frame has a multi-column ancestor (i.e.
+// ColumnSetWrapperFrame) within the same block formatting context. A
+// top-level ColumnSetWrapperFrame doesn't have this bit set, whereas a
+// ColumnSetWrapperFrame nested inside a column does have this bit set. All
+// the children of the column-spans do not have this bit set because they
+// are in a new block formatting context created by column-spans.
+FRAME_STATE_BIT(Generic, 44, NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)
+
+// Bits 45 is currently unused, but be kind and check with bug 1465474
 // first please :-)
 
 // This bit indicates that we're tracking visibility for this frame, and that
@@ -285,7 +293,7 @@ FRAME_STATE_BIT(Generic, 59, NS_FRAME_IS_IN_SINGLE_CHAR_MI)
 // NOTE: Bits 20-31 and 60-63 of the frame state are reserved for specific
 // frame classes.
 
-// NOTE: Bits 44 and 45 are currently unused.
+// NOTE: Currently unused and available bit(s): 45.
 
 
 // == Frame state bits that apply to box frames ===============================
