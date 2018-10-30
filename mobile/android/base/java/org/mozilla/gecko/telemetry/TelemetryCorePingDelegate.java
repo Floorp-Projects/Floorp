@@ -155,10 +155,12 @@ public class TelemetryCorePingDelegate extends BrowserAppDelegateWithReference
                 }
 
                 final String clientID;
+                final boolean hadCanaryClientId;
                 try {
                     clientID = profile.getClientId();
+                    hadCanaryClientId = profile.getIfHadCanaryClientId();
                 } catch (final IOException e) {
-                    Log.w(LOGTAG, "Unable to get client ID to generate core ping: " + e);
+                    Log.w(LOGTAG, "Unable to get client ID properties to generate core ping: " + e);
                     return;
                 }
 
@@ -168,6 +170,7 @@ public class TelemetryCorePingDelegate extends BrowserAppDelegateWithReference
                         sessionMeasurements.getAndResetSessionMeasurements(activity);
                 final TelemetryCorePingBuilder pingBuilder = new TelemetryCorePingBuilder(activity)
                         .setClientID(clientID)
+                        .setHadCanaryClientId(hadCanaryClientId)
                         .setDefaultSearchEngine(TelemetryCorePingBuilder.getEngineIdentifier(engine))
                         .setProfileCreationDate(TelemetryCorePingBuilder.getProfileCreationDate(activity, profile))
                         .setSequenceNumber(TelemetryCorePingBuilder.getAndIncrementSequenceNumber(sharedPrefs))
