@@ -40,16 +40,19 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--product',
                      required=True,
                      help="The product being built.")
+    @CommandArgument('--repo',
+                     help="The repo being built.")
     @CommandArgument('--revision',
                      required=True,
                      help="The revision being built.")
-    def buglist(self, version, product, revision):
+    def buglist(self, version, product, revision, repo):
         self.setup_logging()
         from mozrelease.buglist_creator import create_bugs_url
         print(create_bugs_url(
             product=product,
             current_version=version,
             current_revision=revision,
+            repo=repo,
         ))
 
     @SubCommand('release', 'send-buglist-email',
@@ -67,6 +70,9 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--product',
                      required=True,
                      help="The product being built.")
+    @CommandArgument('--repo',
+                     required=True,
+                     help="The repo being built.")
     @CommandArgument('--revision',
                      required=True,
                      help="The revision being built.")
