@@ -241,7 +241,7 @@ const ActorRegistry = {
       constructor: "WebExtensionInspectedWindowActor",
       type: { target: true },
     });
-    this.registerModule("devtools/server/actors/accessibility", {
+    this.registerModule("devtools/server/actors/accessibility/accessibility", {
       prefix: "accessibility",
       constructor: "AccessibilityActor",
       type: { target: true },
