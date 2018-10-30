@@ -64,6 +64,7 @@ struct SweepAction
     virtual ~SweepAction() {}
     virtual IncrementalProgress run(Args... args) = 0;
     virtual void assertFinished() const = 0;
+    virtual bool shouldSkip() { return false; }
 };
 
 class ChunkPool
@@ -631,9 +632,6 @@ class GCRuntime
     IncrementalProgress endMarkingSweepGroup(FreeOp* fop, SliceBudget& budget);
     void markIncomingCrossCompartmentPointers(MarkColor color);
     IncrementalProgress beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget);
-#ifdef JS_GC_ZEAL
-    IncrementalProgress maybeYieldForSweepingZeal(FreeOp* fop, SliceBudget& budget);
-#endif
     bool shouldReleaseObservedTypes();
     void sweepDebuggerOnMainThread(FreeOp* fop);
     void sweepJitDataOnMainThread(FreeOp* fop);
