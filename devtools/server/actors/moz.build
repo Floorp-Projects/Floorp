@@ -63,7 +63,6 @@ DevToolsModules(
     'styles.js',
     'stylesheets.js',
     'thread.js',
-    'timeline.js',
     'webaudio.js',
     'webbrowser.js',
     'webconsole.js',
