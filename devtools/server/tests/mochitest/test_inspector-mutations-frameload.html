@@ -27,8 +27,8 @@ async function setup(callback) {
   const { target, doc } = await attachURL(url);
   gInspectee = doc;
   gTarget = target;
-  const inspector = target.getInspector();
-  gWalker = await inspector.getWalker();
+  const inspector = await target.getInspector();
+  gWalker = inspector.walker;
   await callback();
 }
 
