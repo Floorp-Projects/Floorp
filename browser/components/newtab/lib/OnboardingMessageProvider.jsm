@@ -35,7 +35,7 @@ const ONBOARDING_MESSAGES = () => ([
       button_label: {string_id: "onboarding-button-label-try-now"},
       button_action: {
         type: "OPEN_URL",
-        data: {url: "https://screenshots.firefox.com/#tour"},
+        data: {args: "https://screenshots.firefox.com/#tour"},
       },
     },
     trigger: {id: "firstRun"},
@@ -52,7 +52,7 @@ const ONBOARDING_MESSAGES = () => ([
       button_label: {string_id: "onboarding-button-label-try-now"},
       button_action: {
         type: "OPEN_ABOUT_PAGE",
-        data: {page: "addons"},
+        data: {args: "addons"},
       },
     },
     trigger: {id: "firstRun"},
@@ -69,7 +69,7 @@ const ONBOARDING_MESSAGES = () => ([
       button_label: {string_id: "onboarding-button-label-try-now"},
       button_action: {
         type: "OPEN_URL",
-        data: {url: "https://addons.mozilla.org/en-US/firefox/addon/ghostery/"},
+        data: {args: "https://addons.mozilla.org/en-US/firefox/addon/ghostery/"},
       },
     },
     targeting: "providerCohorts.onboarding == 'ghostery'",
@@ -88,6 +88,10 @@ const OnboardingMessageProvider = {
   async getMessages() {
     const messages = await this.translateMessages(ONBOARDING_MESSAGES());
     return messages;
+  },
+  getUntranslatedMessages() {
+    // This is helpful for jsonSchema testing - since we are localizing in the provider
+    return ONBOARDING_MESSAGES();
   },
   async translateMessages(messages) {
     let translatedMessages = [];
