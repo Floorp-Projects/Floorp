@@ -100,7 +100,7 @@ private:
 
   DocAccessible* mDocument;
   nsAtom* mRelAttr;
-  DocAccessible::AttrRelProviderArray* mProviders;
+  DocAccessible::AttrRelProviders* mProviders;
   nsIContent* mBindingParent;
   uint32_t mIndex;
 };
