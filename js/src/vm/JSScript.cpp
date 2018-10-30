@@ -594,8 +594,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
 
     if (mode == XDR_DECODE) {
-        if (!JSScript::partiallyInit(cx, script, nscopes, nconsts, nobjects, ntrynotes,
-                                     nscopenotes, nyieldoffsets))
+        if (!JSScript::createPrivateScriptData(cx, script, nscopes, nconsts, nobjects,
+                                               ntrynotes, nscopenotes, nyieldoffsets))
         {
             return xdr->fail(JS::TranscodeResult_Throw);
         }
@@ -696,7 +696,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
 
     if (mode == XDR_DECODE) {
-        if (!script->createScriptData(cx, length, nsrcnotes, natoms)) {
+        if (!script->createSharedScriptData(cx, length, nsrcnotes, natoms)) {
             return xdr->fail(JS::TranscodeResult_Throw);
         }
     }
@@ -2931,11 +2931,11 @@ js::ScriptBytecodeHasher::Lookup::~Lookup()
 }
 
 bool
-JSScript::createScriptData(JSContext* cx, uint32_t codeLength, uint32_t srcnotesLength,
-                           uint32_t natoms)
+JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
+                                 uint32_t noteLength, uint32_t natoms)
 {
     MOZ_ASSERT(!scriptData());
-    SharedScriptData* ssd = SharedScriptData::new_(cx, codeLength, srcnotesLength, natoms);
+    SharedScriptData* ssd = SharedScriptData::new_(cx, codeLength, noteLength, natoms);
     if (!ssd) {
         return false;
     }
@@ -3363,9 +3363,9 @@ AllocScriptData(JSContext* cx, size_t size)
 }
 
 /* static */ bool
-JSScript::partiallyInit(JSContext* cx, HandleScript script, uint32_t nscopes,
-                        uint32_t nconsts, uint32_t nobjects, uint32_t ntrynotes,
-                        uint32_t nscopenotes, uint32_t nyieldoffsets)
+JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
+                                  uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
+                                  uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets)
 {
     cx->check(script);
 
@@ -3392,8 +3392,8 @@ JSScript::initFunctionPrototype(JSContext* cx, Handle<JSScript*> script,
     uint32_t numTryNotes = 0;
     uint32_t numScopeNotes = 0;
     uint32_t numYieldAndAwaitOffsets = 0;
-    if (!partiallyInit(cx, script, numScopes, numConsts, numObjects, numTryNotes,
-                       numScopeNotes, numYieldAndAwaitOffsets))
+    if (!createPrivateScriptData(cx, script, numScopes, numConsts, numObjects,
+                                 numTryNotes, numScopeNotes, numYieldAndAwaitOffsets))
     {
         return false;
     }
@@ -3413,7 +3413,7 @@ JSScript::initFunctionPrototype(JSContext* cx, Handle<JSScript*> script,
     uint32_t codeLength = 1;
     uint32_t srcNotesLength = 1;
     uint32_t numAtoms = 0;
-    if (!script->createScriptData(cx, codeLength, srcNotesLength, numAtoms)) {
+    if (!script->createSharedScriptData(cx, codeLength, srcNotesLength, numAtoms)) {
         return false;
     }
 
@@ -3514,10 +3514,10 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, frontend::Byt
         return false;
     }
     uint32_t natoms = bce->atomIndices->count();
-    if (!partiallyInit(cx, script,
-                       bce->scopeList.length(), bce->numberList.length(), bce->objectList.length,
-                       bce->tryNoteList.length(), bce->scopeNoteList.length(),
-                       bce->yieldAndAwaitOffsetList.length()))
+    if (!createPrivateScriptData(cx, script, bce->scopeList.length(), bce->numberList.length(),
+                                 bce->objectList.length, bce->tryNoteList.length(),
+                                 bce->scopeNoteList.length(),
+                                 bce->yieldAndAwaitOffsetList.length()))
     {
         return false;
     }
@@ -3527,14 +3527,14 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, frontend::Byt
     script->nTypeSets_ = bce->typesetCount;
     script->lineno_ = bce->firstLine;
 
-    if (!script->createScriptData(cx, prologueLength + mainLength, nsrcnotes, natoms)) {
+    if (!script->createSharedScriptData(cx, prologueLength + mainLength, nsrcnotes, natoms)) {
         return false;
     }
 
-    // Any fallible operation after JSScript::createScriptData should reset
-    // JSScript.scriptData_, in order to treat this script as uncompleted,
-    // in JSScript::isUncompleted.
-    // JSScript::shareScriptData resets it before returning false.
+    // Any fallible operation after JSScript::createSharedScriptData should
+    // reset JSScript.scriptData_, in order to treat this script as
+    // uncompleted, in JSScript::isUncompleted.  JSScript::shareScriptData
+    // resets it before returning false.
 
     jsbytecode* code = script->code();
     PodCopy<jsbytecode>(code, bce->prologue.code.begin(), prologueLength);
