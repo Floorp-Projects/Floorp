@@ -945,7 +945,6 @@ ReadableStream::constructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedValue val(cx, args.get(0));
     RootedValue underlyingSource(cx, args.get(0));
     RootedValue options(cx, args.get(1));
 
