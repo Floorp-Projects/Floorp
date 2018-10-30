@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script>
+      addEventListener('pageshow', function() {
+        opener.postMessage("pageshow", "*");
+      });
+    </script>
+  </head>
+  <body>
+    This file posts a message containing "pageshow" to opener on pageshow.
+  </body>
+</html>
