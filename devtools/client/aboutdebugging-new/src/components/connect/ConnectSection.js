@@ -11,7 +11,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 class ConnectSection extends PureComponent {
   static get propTypes() {
     return {
-      children: PropTypes.any.isRequired,
+      children: PropTypes.node.isRequired,
       className: PropTypes.string,
       icon: PropTypes.string.isRequired,
       title: PropTypes.string.isRequired,
