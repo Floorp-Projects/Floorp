@@ -4,7 +4,7 @@
 
 @import "chrome://global/skin/";
 
-%include shared.inc
+%include ../../../toolkit/themes/osx/global/shared.inc
 
 #topBar {
   -moz-appearance: toolbar;
