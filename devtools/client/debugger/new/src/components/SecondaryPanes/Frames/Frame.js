@@ -31,9 +31,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function FrameTitle({
   frame,
-  options
+  options = {}
 }) {
-  const displayName = (0, _frames.formatDisplayName)(frame, options);
+  const displayName = (0, _frames.formatDisplayName)(frame, { ...options,
+    maxLength: null
+  });
   return _react2.default.createElement("div", {
     className: "title"
   }, displayName);

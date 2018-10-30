@@ -2666,49 +2666,54 @@ menuseparator {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .call-site {
-  background: #f0f9ff;
   position: relative;
+  border-bottom: 2px solid lightgrey;
+  cursor: pointer;
 }
 
 .call-site::before {
   content: "";
-  position: absolute;
-  width: 100%;
-  height: calc(100% - 2px);
-  border-bottom: 2px solid #aed3ef;
+  mask: url("chrome://devtools/skin/images/debugger/column-marker.svg") no-repeat 100% 100%;
+  mask-size: contain;
+  display: inline-block;
+  background-color: var(--blue-55);
+  opacity: 0.5;
+  width: 9px;
+  height: 12px;
 }
 
 .call-site-bp {
   position: relative;
-}
-
-.debug-expression.call-site-bp,
-.call-site-bp {
-  background-color: #fce7e7;
+  border-bottom: 2px solid #aed3ef;
+  cursor: pointer;
 }
 
 .call-site-bp::before {
   content: "";
-  position: absolute;
-  width: 100%;
-  height: calc(100% - 2px);
-  border-bottom: 2px solid red;
+  mask: url("chrome://devtools/skin/images/debugger/column-marker.svg") no-repeat 100% 100%;
+  mask-size: contain;
+  display: inline-block;
+  background-color: var(--blue-55);
+  width: 9px;
+  height: 12px;
 }
 
 .theme-dark .call-site {
-  background-color: #4b5462;
-}
-
-.theme-dark .call-site::before {
-  border-bottom-color: #5f78a4;
+  border-bottom: none;
 }
 
 .theme-dark .call-site-bp {
-  background-color: #4b3f3f;
+  border-bottom: none;
+}
+
+.theme-dark .call-site::before {
+  background-color: var(--blue-60);
+  opacity: 1;
 }
 
 .theme-dark .call-site-bp::before {
-  border-bottom-color: #dd4d4d;
+  background-color: var(--blue-50);
+  opacity: 0.5;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -3418,6 +3423,12 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 .frames ul .frames-group .group .location {
   font-weight: 500;
   cursor: default;
+  /*
+   * direction:rtl is set in Frames.css to overflow the location text from the
+   * start. Here we need to reset it in order to display the framework icon
+   * after the framework name.
+   */
+  direction: ltr;
 }
 
 .frames ul .frames-group.expanded .group,
@@ -3500,13 +3511,16 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 .frames ul li {
-  padding: 0 10px 0 21px;
+  padding: 7px 10px 7px 21px;
   overflow: hidden;
   display: flex;
   justify-content: space-between;
+  column-gap: 0.5em;
   flex-direction: row;
   align-items: center;
   margin: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
 }
 
 .frames ul li * {
@@ -3521,12 +3535,15 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 .frames .location {
   font-weight: normal;
-  display: flex;
-  justify-content: space-between;
-  flex-direction: row;
-  align-items: center;
   margin: 0;
-  flex-shrink: 0;
+  flex-grow: 1;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  /* Trick to get the ellipsis at the start of the string */
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: right;
 }
 
 .theme-light .frames .location {
@@ -3541,7 +3558,6 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 .frames .title {
   text-overflow: ellipsis;
   overflow: hidden;
-  margin: 7px 0.5em 7px 0;
 }
 
 .frames ul li:hover,
@@ -3587,9 +3603,9 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 .annotation-logo {
+  display: inline-block;
   width: 12px;
-  margin-left: 3px;
-  line-height: 8px;
+  margin-inline-start: 4px;
 }
 
 :root.theme-dark .annotation-logo svg path {
