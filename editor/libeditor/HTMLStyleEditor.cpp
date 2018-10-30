@@ -1039,16 +1039,15 @@ HTMLEditor::GetInlinePropertyBase(nsAtom& aProperty,
                                   bool* aAll,
                                   nsAString* outValue)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   *aAny = false;
   *aAll = true;
   *aFirst = false;
   bool first = true;
 
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-
-  bool isCollapsed = selection->IsCollapsed();
-  RefPtr<nsRange> range = selection->GetRangeAt(0);
+  bool isCollapsed = SelectionRefPtr()->IsCollapsed();
+  RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(0);
   // XXX: Should be a while loop, to get each separate range
   // XXX: ERROR_HANDLING can currentItem be null?
   if (range) {
@@ -1057,7 +1056,9 @@ HTMLEditor::GetInlinePropertyBase(nsAtom& aProperty,
 
     if (isCollapsed) {
       nsCOMPtr<nsINode> collapsedNode = range->GetStartContainer();
-      NS_ENSURE_TRUE(collapsedNode, NS_ERROR_FAILURE);
+      if (NS_WARN_IF(!collapsedNode)) {
+        return NS_ERROR_FAILURE;
+      }
       bool isSet, theSetting;
       nsString tOutString;
       if (aAttribute) {
@@ -1506,23 +1507,29 @@ HTMLEditor::DecreaseFontSize()
 nsresult
 HTMLEditor::RelativeFontChange(FontSize aDir)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   CommitComposition();
 
-  // Get the selection
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
   // If selection is collapsed, set typing state
-  if (selection->IsCollapsed()) {
+  if (SelectionRefPtr()->IsCollapsed()) {
     nsAtom& atom = aDir == FontSize::incr ? *nsGkAtoms::big :
-                                             *nsGkAtoms::small;
+                                            *nsGkAtoms::small;
 
     // Let's see in what kind of element the selection is
-    NS_ENSURE_TRUE(selection->RangeCount() &&
-                   selection->GetRangeAt(0)->GetStartContainer(), NS_OK);
-    OwningNonNull<nsINode> selectedNode =
-      *selection->GetRangeAt(0)->GetStartContainer();
+    if (NS_WARN_IF(!SelectionRefPtr()->RangeCount())) {
+      return NS_OK;
+    }
+    RefPtr<nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
+    if (NS_WARN_IF(!firstRange) ||
+        NS_WARN_IF(!firstRange->GetStartContainer())) {
+      return NS_OK;
+    }
+    OwningNonNull<nsINode> selectedNode = *firstRange->GetStartContainer();
     if (IsTextNode(selectedNode)) {
-      NS_ENSURE_TRUE(selectedNode->GetParentNode(), NS_OK);
+      if (NS_WARN_IF(!selectedNode->GetParentNode())) {
+        return NS_OK;
+      }
       selectedNode = *selectedNode->GetParentNode();
     }
     if (!CanContainTag(selectedNode, atom)) {
@@ -1544,11 +1551,13 @@ HTMLEditor::RelativeFontChange(FontSize aDir)
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   // Loop through the ranges in the selection
-  AutoRangeArray arrayOfRanges(selection);
+  AutoRangeArray arrayOfRanges(SelectionRefPtr());
   for (auto& range : arrayOfRanges.mRanges) {
     // Adjust range to include any ancestors with entirely selected children
     nsresult rv = PromoteInlineRange(*range);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     // Check for easy case: both range endpoints in same text node
     nsCOMPtr<nsINode> startNode = range->GetStartContainer();
@@ -1557,7 +1566,9 @@ HTMLEditor::RelativeFontChange(FontSize aDir)
       rv = RelativeFontChangeOnTextNode(aDir, *startNode->GetAsText(),
                                         range->StartOffset(),
                                         range->EndOffset());
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     } else {
       // Not the easy case.  Range not contained in single text node.  There
       // are up to three phases here.  There are all the nodes reported by the
@@ -1577,7 +1588,9 @@ HTMLEditor::RelativeFontChange(FontSize aDir)
       if (NS_SUCCEEDED(rv)) {
         nsTArray<OwningNonNull<nsIContent>> arrayOfNodes;
         for (; !iter->IsDone(); iter->Next()) {
-          NS_ENSURE_TRUE(iter->GetCurrentNode()->IsContent(), NS_ERROR_FAILURE);
+          if (NS_WARN_IF(!iter->GetCurrentNode()->IsContent())) {
+            return NS_ERROR_FAILURE;
+          }
           OwningNonNull<nsIContent> node = *iter->GetCurrentNode()->AsContent();
 
           if (IsEditable(node)) {
@@ -1588,7 +1601,9 @@ HTMLEditor::RelativeFontChange(FontSize aDir)
         // Now that we have the list, do the font size change on each node
         for (auto& node : arrayOfNodes) {
           rv = RelativeFontChangeOnNode(aDir == FontSize::incr ? +1 : -1, node);
-          NS_ENSURE_SUCCESS(rv, rv);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
         }
       }
       // Now check the start and end parents of the range to see if they need
@@ -1598,12 +1613,16 @@ HTMLEditor::RelativeFontChange(FontSize aDir)
         rv = RelativeFontChangeOnTextNode(aDir, *startNode->GetAsText(),
                                           range->StartOffset(),
                                           startNode->Length());
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
       if (IsTextNode(endNode) && IsEditable(endNode)) {
         rv = RelativeFontChangeOnTextNode(aDir, *endNode->GetAsText(), 0,
                                           range->EndOffset());
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
     }
   }
