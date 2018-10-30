@@ -3,10 +3,6 @@ job-defaults:
         by-test-platform:
             android-em-7.0-x86/opt: geckoview-androidTest.apk
             default: null
-    tier:
-        by-test-platform:
-            android-em-7.0-x86/opt: 3
-            default: default
     serviceworker-e10s:
         by-test-platform:
             linux64/debug: both
@@ -216,6 +212,10 @@ mochitest-clipboard:
                     - --test-suite=mochitest-plain-clipboard
                 default:
                     - --mochitest-suite=plain-clipboard,chrome-clipboard,browser-chrome-clipboard
+    tier:
+        by-test-platform:
+            android-em-7.0-x86/opt: 3
+            default: default
 
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
