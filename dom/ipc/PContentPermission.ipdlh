@@ -7,7 +7,6 @@ namespace dom {
 
 struct PermissionRequest {
   nsCString type;
-  nsCString access;
   nsString[] options;
 };
 

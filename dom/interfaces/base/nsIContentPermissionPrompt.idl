@@ -22,12 +22,6 @@ interface nsIContentPermissionType : nsISupports {
   readonly attribute ACString type;
 
   /**
-   *  The access of the permission request, such as
-   *  "read".
-   */
-  readonly attribute ACString access;
-
-  /**
    * The array of available options.
    */
   readonly attribute nsIArray options; // ["choice1", "choice2"]
