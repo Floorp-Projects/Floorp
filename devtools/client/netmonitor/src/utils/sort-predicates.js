@@ -165,12 +165,12 @@ function contentSize(first, second) {
 const sorters = {
   status,
   method,
+  domain,
   file,
   protocol,
   scheme,
   cookies,
   setCookies,
-  domain,
   remoteip,
   cause,
   type,
