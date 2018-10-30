@@ -47,7 +47,7 @@ class Dispatcher {
       Services.obs.addObserver(this, topic, true);
     }
     for (let {event, options, actor} of this.events) {
-      this.addEventListener(event, this.handleActorEvent.bind(this, actor), options);
+      this.addEventListener(event, actor, options);
     }
 
     this.mm.addEventListener("unload", this);
@@ -59,7 +59,8 @@ class Dispatcher {
     }
   }
 
-  addEventListener(event, listener, options) {
+  addEventListener(event, actor, options) {
+    let listener = this.handleActorEvent.bind(this, actor);
     this.mm.addEventListener(event, listener, options);
   }
 
@@ -186,7 +187,8 @@ class SingletonDispatcher extends Dispatcher {
     }
   }
 
-  addEventListener(event, listener, options) {
+  addEventListener(event, actor, options) {
+    let listener = this.handleActorEvent.bind(this, actor);
     this.listeners.push([event, listener, options]);
     this.window.addEventListener(event, listener, options);
   }

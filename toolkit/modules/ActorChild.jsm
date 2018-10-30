@@ -30,8 +30,8 @@ class ActorChild {
     return this.mm.docShell;
   }
 
-  addEventListener(event, listener, options) {
-    this._dispatcher.addEventListener(event, listener, options);
+  addEventListener(event, options) {
+    this._dispatcher.addEventListener(event, this.constructor.name, options);
   }
 
   cleanup() {
