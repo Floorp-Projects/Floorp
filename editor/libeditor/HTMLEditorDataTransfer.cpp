@@ -232,7 +232,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   if (!aDestNode) {
     // if caller didn't provide the destination/target node,
     // fetch the paste insertion point from our selection
-    targetPoint = EditorBase::GetStartPoint(selection);
+    targetPoint = EditorBase::GetStartPoint(*selection);
     if (NS_WARN_IF(!targetPoint.IsSet()) ||
         !IsEditable(targetPoint.GetContainer())) {
       return NS_ERROR_FAILURE;
@@ -293,8 +293,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   // check for table cell selection mode
   bool cellSelectionMode = false;
   IgnoredErrorResult ignoredError;
-  RefPtr<Element> cellElement =
-    GetFirstSelectedTableCellElement(*selection, ignoredError);
+  RefPtr<Element> cellElement = GetFirstSelectedTableCellElement(ignoredError);
   if (cellElement) {
     cellSelectionMode = true;
   }
@@ -328,7 +327,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     // Save current selection since DeleteTableCellWithTransaction() perturbs
     // it.
     {
-      AutoSelectionRestorer restoreSelectionLater(*selection, *this);
+      AutoSelectionRestorer restoreSelectionLater(*this);
       rv = DeleteTableCellWithTransaction(1);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -351,7 +350,8 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     // Adjust position based on the first node we are going to insert.
     // FYI: WillDoAction() above might have changed the selection.
     EditorDOMPoint pointToInsert =
-      GetBetterInsertionPointFor(nodeList[0], GetStartPoint(selection));
+      GetBetterInsertionPointFor(nodeList[0],
+                                 EditorBase::GetStartPoint(*selection));
     if (NS_WARN_IF(!pointToInsert.IsSet())) {
       return NS_ERROR_FAILURE;
     }

@@ -135,7 +135,7 @@ HTMLEditor::SetInlinePropertyInternal(nsAtom& aProperty,
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eInsertElement,
                                       nsIEditor::eNext);
-  AutoSelectionRestorer restoreSelectionLater(*selection, *this);
+  AutoSelectionRestorer restoreSelectionLater(*this);
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   bool cancel, handled;
@@ -1366,7 +1366,7 @@ HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eRemoveTextProperty,
                                       nsIEditor::eNext);
-  AutoSelectionRestorer restoreSelectionLater(*selection, *this);
+  AutoSelectionRestorer restoreSelectionLater(*this);
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   bool cancel, handled;
@@ -1548,7 +1548,7 @@ HTMLEditor::RelativeFontChange(FontSize aDir)
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eSetTextProperty,
                                       nsIEditor::eNext);
-  AutoSelectionRestorer restoreSelectionLater(*selection, *this);
+  AutoSelectionRestorer restoreSelectionLater(*this);
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   // Loop through the ranges in the selection

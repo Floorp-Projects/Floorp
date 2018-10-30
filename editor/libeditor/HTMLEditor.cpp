@@ -438,7 +438,7 @@ HTMLEditor::NotifySelectionChanged(nsIDocument* aDocument,
       // FYI: This is an XPCOM method.  So, the caller, Selection, guarantees
       //      the lifetime of this instance.  So, don't need to grab this with
       //      local variable.
-      DebugOnly<nsresult> rv = RefereshEditingUI(*aSelection);
+      DebugOnly<nsresult> rv = RefereshEditingUI();
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RefereshEditingUI() failed");
     }
   }
@@ -611,9 +611,10 @@ HTMLEditor::BeginningOfDocument()
 }
 
 void
-HTMLEditor::InitializeSelectionAncestorLimit(Selection& aSelection,
-                                             nsIContent& aAncestorLimit)
+HTMLEditor::InitializeSelectionAncestorLimit(nsIContent& aAncestorLimit)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   // Hack for initializing selection.
   // HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode() will try to
   // collapse selection at first editable text node or inline element which
@@ -631,9 +632,10 @@ HTMLEditor::InitializeSelectionAncestorLimit(Selection& aSelection,
   // Basically, we should try to collapse selection at first editable node
   // in HTMLEditor.
   bool tryToCollapseSelectionAtFirstEditableNode = true;
-  if (aSelection.RangeCount() == 1 && aSelection.IsCollapsed()) {
+  if (SelectionRefPtr()->RangeCount() == 1 &&
+      SelectionRefPtr()->IsCollapsed()) {
     Element* editingHost = GetActiveEditingHost();
-    nsRange* range = aSelection.GetRangeAt(0);
+    nsRange* range = SelectionRefPtr()->GetRangeAt(0);
     if (range->GetStartContainer() == editingHost &&
         !range->StartOffset()) {
       // JS or user operation has already collapsed selection at start of
@@ -643,7 +645,7 @@ HTMLEditor::InitializeSelectionAncestorLimit(Selection& aSelection,
     }
   }
 
-  EditorBase::InitializeSelectionAncestorLimit(aSelection, aAncestorLimit);
+  EditorBase::InitializeSelectionAncestorLimit(aAncestorLimit);
 
   // XXX Do we need to check if we still need to change selection?  E.g.,
   //     we could have already lost focus while we're changing the ancestor
@@ -1149,8 +1151,7 @@ HTMLEditor::TabInTable(bool inIsShift,
   }
 
   // Find enclosing table cell from selection (cell may be selected element)
-  Element* cellElement =
-    GetElementOrParentByTagNameAtSelection(*SelectionRefPtr(), *nsGkAtoms::td);
+  Element* cellElement = GetElementOrParentByTagNameAtSelection(*nsGkAtoms::td);
   if (NS_WARN_IF(!cellElement)) {
     // Do nothing if we didn't find a table cell.
     return NS_OK;
@@ -1187,7 +1188,7 @@ HTMLEditor::TabInTable(bool inIsShift,
 
     if (node && HTMLEditUtils::IsTableCell(node) &&
         GetEnclosingTable(node) == table) {
-      CollapseSelectionToDeepestNonTableFirstChild(nullptr, node);
+      CollapseSelectionToDeepestNonTableFirstChild(node);
       *outHandled = true;
       return NS_OK;
     }
@@ -1212,8 +1213,7 @@ HTMLEditor::TabInTable(bool inIsShift,
     // to new row...
     RefPtr<Element> tblElement, cell;
     int32_t row;
-    rv = GetCellContext(nullptr,
-                        getter_AddRefs(tblElement),
+    rv = GetCellContext(getter_AddRefs(tblElement),
                         getter_AddRefs(cell),
                         nullptr, nullptr,
                         &row, nullptr);
@@ -1257,7 +1257,7 @@ HTMLEditor::InsertBrElementAtSelectionWithTransaction()
     }
   }
 
-  EditorRawDOMPoint atStartOfSelection(GetStartPoint(selection));
+  EditorRawDOMPoint atStartOfSelection(EditorBase::GetStartPoint(*selection));
   if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
     return NS_ERROR_FAILURE;
   }
@@ -1265,7 +1265,7 @@ HTMLEditor::InsertBrElementAtSelectionWithTransaction()
   // InsertBrElementWithTransaction() will set selection after the new <br>
   // element.
   RefPtr<Element> newBrElement =
-    InsertBrElementWithTransaction(*selection, atStartOfSelection, eNext);
+    InsertBrElementWithTransaction(atStartOfSelection, eNext);
   if (NS_WARN_IF(!newBrElement)) {
     return NS_ERROR_FAILURE;
   }
@@ -1273,19 +1273,11 @@ HTMLEditor::InsertBrElementAtSelectionWithTransaction()
 }
 
 void
-HTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(Selection* aSelection,
-                                                         nsINode* aNode)
+HTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsINode* aNode)
 {
-  MOZ_ASSERT(aNode);
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  RefPtr<Selection> selection = aSelection;
-  if (!selection) {
-    selection = GetSelection();
-  }
-  if (!selection) {
-    // Nothing to do
-    return;
-  }
+  MOZ_ASSERT(aNode);
 
   nsCOMPtr<nsINode> node = aNode;
 
@@ -1299,7 +1291,7 @@ HTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(Selection* aSelection,
     node = child;
   }
 
-  selection->Collapse(node, 0);
+  SelectionRefPtr()->Collapse(node, 0);
 }
 
 nsresult
@@ -1729,7 +1721,7 @@ HTMLEditor::InsertElementAtSelection(Element* aElement,
       // Set caret after element, but check for special case
       //  of inserting table-related elements: set in first cell instead
       if (!SetCaretInTableCell(aElement)) {
-        rv = CollapseSelectionAfter(*SelectionRefPtr(), *aElement);
+        rv = CollapseSelectionAfter(*aElement);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -1743,8 +1735,7 @@ HTMLEditor::InsertElementAtSelection(Element* aElement,
           "Failed to advance offset from inserted point");
         // Collapse selection to the new <br> element node after creating it.
         RefPtr<Element> newBrElement =
-          InsertBrElementWithTransaction(*SelectionRefPtr(), insertedPoint,
-                                         ePrevious);
+          InsertBrElementWithTransaction(insertedPoint, ePrevious);
         if (NS_WARN_IF(!newBrElement)) {
           return NS_ERROR_FAILURE;
         }
@@ -1835,7 +1826,7 @@ HTMLEditor::SelectElement(Element* aElement)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsresult rv = SelectContentInternal(*SelectionRefPtr(), *aElement);
+  nsresult rv = SelectContentInternal(*aElement);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1843,9 +1834,10 @@ HTMLEditor::SelectElement(Element* aElement)
 }
 
 nsresult
-HTMLEditor::SelectContentInternal(Selection& aSelection,
-                                  nsIContent& aContentToSelect)
+HTMLEditor::SelectContentInternal(nsIContent& aContentToSelect)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   // Must be sure that element is contained in the document body
   if (!IsDescendantOfEditorRoot(&aContentToSelect)) {
     return NS_ERROR_FAILURE;
@@ -1863,12 +1855,12 @@ HTMLEditor::SelectContentInternal(Selection& aSelection,
   int32_t offsetInParent = parent->ComputeIndexOf(&aContentToSelect);
 
   // Collapse selection to just before desired element,
-  nsresult rv = aSelection.Collapse(parent, offsetInParent);
+  nsresult rv = SelectionRefPtr()->Collapse(parent, offsetInParent);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
   // then extend it to just after
-  rv = aSelection.Extend(parent, offsetInParent + 1);
+  rv = SelectionRefPtr()->Extend(parent, offsetInParent + 1);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1887,7 +1879,7 @@ HTMLEditor::SetCaretAfterElement(Element* aElement)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsresult rv = CollapseSelectionAfter(*SelectionRefPtr(), *aElement);
+  nsresult rv = CollapseSelectionAfter(*aElement);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1895,9 +1887,10 @@ HTMLEditor::SetCaretAfterElement(Element* aElement)
 }
 
 nsresult
-HTMLEditor::CollapseSelectionAfter(Selection& aSelection,
-                                   Element& aElement)
+HTMLEditor::CollapseSelectionAfter(Element& aElement)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   // Be sure the element is contained in the document body
   if (NS_WARN_IF(!IsDescendantOfEditorRoot(&aElement))) {
     return NS_ERROR_INVALID_ARG;
@@ -1912,7 +1905,7 @@ HTMLEditor::CollapseSelectionAfter(Selection& aSelection,
     return NS_ERROR_FAILURE;
   }
   ErrorResult error;
-  aSelection.Collapse(afterElement, error);
+  SelectionRefPtr()->Collapse(afterElement, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -2108,7 +2101,7 @@ HTMLEditor::GetHTMLBackgroundColorState(bool* aMixed,
 
   ErrorResult error;
   RefPtr<Element> cellOrRowOrTableElement =
-    GetSelectedOrParentTableElement(*selection, error);
+    GetSelectedOrParentTableElement(error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -2311,7 +2304,11 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
     }
   }
 
-  return rules->DidDoAction(SelectionRefPtr(), subActionInfo, rv);
+  rv = rules->DidDoAction(SelectionRefPtr(), subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2345,7 +2342,11 @@ HTMLEditor::RemoveList(const nsAString&)
 
   // no default behavior for this yet.  what would it mean?
 
-  return rules->DidDoAction(SelectionRefPtr(), subActionInfo, rv);
+  rv = rules->DidDoAction(SelectionRefPtr(), subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -2679,7 +2680,11 @@ HTMLEditor::Align(const nsAString& aAlignType)
     return rv;
   }
 
-  return rules->DidDoAction(SelectionRefPtr(), subActionInfo, rv);
+  rv = rules->DidDoAction(SelectionRefPtr(), subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 Element*
@@ -2696,21 +2701,18 @@ HTMLEditor::GetElementOrParentByTagName(const nsAtom& aTagName,
   if (aNode) {
     return GetElementOrParentByTagNameInternal(aTagName, *aNode);
   }
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return nullptr;
-  }
-  return GetElementOrParentByTagNameAtSelection(*selection, aTagName);
+  return GetElementOrParentByTagNameAtSelection(aTagName);
 }
 
 Element*
-HTMLEditor::GetElementOrParentByTagNameAtSelection(Selection& aSelection,
-                                                   const nsAtom& aTagName) const
+HTMLEditor::GetElementOrParentByTagNameAtSelection(const nsAtom& aTagName) const
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   MOZ_ASSERT(&aTagName != nsGkAtoms::_empty);
 
   // If no node supplied, get it from anchor node of current selection
-  const EditorRawDOMPoint atAnchor(aSelection.AnchorRef());
+  const EditorRawDOMPoint atAnchor(SelectionRefPtr()->AnchorRef());
   if (NS_WARN_IF(!atAnchor.IsSet())) {
     return nullptr;
   }
@@ -2820,8 +2822,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
 
   ErrorResult error;
   RefPtr<nsAtom> tagName = GetLowerCaseNameAtom(aTagName);
-  RefPtr<nsINode> selectedNode =
-    GetSelectedElement(*SelectionRefPtr(), tagName, error);
+  RefPtr<nsINode> selectedNode = GetSelectedElement(tagName, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -2830,16 +2831,17 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
 }
 
 already_AddRefed<Element>
-HTMLEditor::GetSelectedElement(Selection& aSelection,
-                               const nsAtom* aTagName,
+HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
                                ErrorResult& aRv)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   MOZ_ASSERT(!aRv.Failed());
 
   bool isLinkTag = aTagName && IsLinkTag(*aTagName);
   bool isNamedAnchorTag = aTagName && IsNamedAnchorTag(*aTagName);
 
-  RefPtr<nsRange> firstRange = aSelection.GetRangeAt(0);
+  RefPtr<nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -2878,8 +2880,8 @@ HTMLEditor::GetSelectedElement(Selection& aSelection,
     // Link tag is a special case - we return the anchor node
     //  found for any selection that is totally within a link,
     //  included a collapsed selection (just a caret in a link)
-    const RangeBoundary& anchor = aSelection.AnchorRef();
-    const RangeBoundary& focus = aSelection.FocusRef();
+    const RangeBoundary& anchor = SelectionRefPtr()->AnchorRef();
+    const RangeBoundary& focus = SelectionRefPtr()->FocusRef();
     // Link node must be the same for both ends of selection
     if (anchor.IsSet()) {
       Element* parentLinkOfAnchor =
@@ -2887,7 +2889,7 @@ HTMLEditor::GetSelectedElement(Selection& aSelection,
                                             *anchor.Container());
       // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
       if (parentLinkOfAnchor) {
-        if (aSelection.IsCollapsed()) {
+        if (SelectionRefPtr()->IsCollapsed()) {
           // We have just a caret in the link.
           return do_AddRef(parentLinkOfAnchor);
         }
@@ -2912,7 +2914,7 @@ HTMLEditor::GetSelectedElement(Selection& aSelection,
     }
   }
 
-  if (aSelection.IsCollapsed()) {
+  if (SelectionRefPtr()->IsCollapsed()) {
     return selectedElement.forget();
   }
 
@@ -3135,7 +3137,7 @@ HTMLEditor::SetHTMLBackgroundColorWithTransaction(const nsAString& aColor)
   ErrorResult error;
   bool isCellSelected = false;
   RefPtr<Element> cellOrRowOrTableElement =
-    GetSelectedOrParentTableElement(*selection, error, &isCellSelected);
+    GetSelectedOrParentTableElement(error, &isCellSelected);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -3154,7 +3156,7 @@ HTMLEditor::SetHTMLBackgroundColorWithTransaction(const nsAString& aColor)
                                                     nsGkAtoms::tr)) {
       IgnoredErrorResult ignoredError;
       RefPtr<Element> cellElement =
-        GetFirstSelectedTableCellElement(*selection, ignoredError);
+        GetFirstSelectedTableCellElement(ignoredError);
       if (cellElement) {
         if (setColor) {
           while (cellElement) {
@@ -3164,8 +3166,7 @@ HTMLEditor::SetHTMLBackgroundColorWithTransaction(const nsAString& aColor)
             if (NS_WARN_IF(NS_FAILED(rv))) {
               return rv;
             }
-            cellElement =
-              GetNextSelectedTableCellElement(*selection, ignoredError);
+            cellElement = GetNextSelectedTableCellElement(ignoredError);
           }
           return NS_OK;
         }
@@ -3175,8 +3176,7 @@ HTMLEditor::SetHTMLBackgroundColorWithTransaction(const nsAString& aColor)
           if (NS_FAILED(rv)) {
             return rv;
           }
-          cellElement =
-            GetNextSelectedTableCellElement(*selection, ignoredError);
+          cellElement = GetNextSelectedTableCellElement(ignoredError);
         }
         return NS_OK;
       }
@@ -3816,9 +3816,11 @@ HTMLEditor::IsContainer(nsINode* aNode)
 }
 
 nsresult
-HTMLEditor::SelectEntireDocument(Selection* aSelection)
+HTMLEditor::SelectEntireDocument()
 {
-  if (!aSelection || !mRules) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (!mRules) {
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -3831,10 +3833,14 @@ HTMLEditor::SelectEntireDocument(Selection* aSelection)
     Element* rootElement = GetRoot();
 
     // if its empty dont select entire doc - that would select the bogus node
-    return aSelection->Collapse(rootElement, 0);
+    nsresult rv = SelectionRefPtr()->Collapse(rootElement, 0);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
   }
 
-  return EditorBase::SelectEntireDocument(aSelection);
+  return EditorBase::SelectEntireDocument();
 }
 
 nsresult
@@ -4022,12 +4028,18 @@ HTMLEditor::CollapseAdjacentTextNodes(nsRange* aInRange)
 }
 
 nsresult
-HTMLEditor::SetSelectionAtDocumentStart(Selection* aSelection)
+HTMLEditor::SetSelectionAtDocumentStart()
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   dom::Element* rootElement = GetRoot();
   NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER);
 
-  return aSelection->Collapse(rootElement, 0);
+  nsresult rv = SelectionRefPtr()->Collapse(rootElement, 0);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 /**
@@ -4064,8 +4076,7 @@ HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement)
         !sibling->IsHTMLElement(nsGkAtoms::br) && !IsBlockNode(child)) {
       // Insert br node
       RefPtr<Element> brElement =
-        InsertBrElementWithTransaction(*selection,
-                                       EditorRawDOMPoint(&aElement, 0));
+        InsertBrElementWithTransaction(EditorRawDOMPoint(&aElement, 0));
       if (NS_WARN_IF(!brElement)) {
         return NS_ERROR_FAILURE;
       }
@@ -4085,8 +4096,7 @@ HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement)
         // Insert br node
         EditorRawDOMPoint endOfNode;
         endOfNode.SetToEndOf(&aElement);
-        RefPtr<Element> brElement =
-          InsertBrElementWithTransaction(*selection, endOfNode);
+        RefPtr<Element> brElement = InsertBrElementWithTransaction(endOfNode);
         if (NS_WARN_IF(!brElement)) {
           return NS_ERROR_FAILURE;
         }
@@ -4107,8 +4117,7 @@ HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement)
           !sibling->IsHTMLElement(nsGkAtoms::br)) {
         // Insert br node
         RefPtr<Element> brElement =
-          InsertBrElementWithTransaction(*selection,
-                                         EditorRawDOMPoint(&aElement, 0));
+          InsertBrElementWithTransaction(EditorRawDOMPoint(&aElement, 0));
         if (NS_WARN_IF(!brElement)) {
           return NS_ERROR_FAILURE;
         }
@@ -4641,7 +4650,7 @@ HTMLEditor::SetCSSBackgroundColorWithTransaction(const nsAString& aColor)
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eInsertElement,
                                       nsIEditor::eNext);
-  AutoSelectionRestorer restoreSelectionLater(*selection, *this);
+  AutoSelectionRestorer restoreSelectionLater(*this);
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   // XXX Although, this method may set background color of ancestor block
@@ -4897,8 +4906,7 @@ HTMLEditor::CopyLastEditableChildStylesWithTransaction(
     return NS_ERROR_FAILURE;
   }
   RefPtr<Element> brElement =
-    InsertBrElementWithTransaction(*selection,
-                                   EditorRawDOMPoint(firstClonsedElement, 0));
+    InsertBrElementWithTransaction(EditorRawDOMPoint(firstClonsedElement, 0));
   if (NS_WARN_IF(!brElement)) {
     return NS_ERROR_FAILURE;
   }
@@ -4933,20 +4941,22 @@ HTMLEditor::GetElementOrigin(Element& aElement,
 }
 
 Element*
-HTMLEditor::GetSelectionContainerElement(Selection& aSelection) const
+HTMLEditor::GetSelectionContainerElement() const
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   nsINode* focusNode = nullptr;
-  if (aSelection.IsCollapsed()) {
-    focusNode = aSelection.GetFocusNode();
+  if (SelectionRefPtr()->IsCollapsed()) {
+    focusNode = SelectionRefPtr()->GetFocusNode();
     if (NS_WARN_IF(!focusNode)) {
       return nullptr;
     }
   } else {
-    uint32_t rangeCount = aSelection.RangeCount();
+    uint32_t rangeCount = SelectionRefPtr()->RangeCount();
     MOZ_ASSERT(rangeCount, "If 0, Selection::IsCollapsed() should return true");
 
     if (rangeCount == 1) {
-      nsRange* range = aSelection.GetRangeAt(0);
+      nsRange* range = SelectionRefPtr()->GetRangeAt(0);
 
       const RangeBoundary& startRef = range->StartRef();
       const RangeBoundary& endRef = range->EndRef();
@@ -4970,7 +4980,7 @@ HTMLEditor::GetSelectionContainerElement(Selection& aSelection) const
       }
     } else {
       for (uint32_t i = 0; i < rangeCount; i++) {
-        nsRange* range = aSelection.GetRangeAt(i);
+        nsRange* range = SelectionRefPtr()->GetRangeAt(i);
         nsINode* startContainer = range->GetStartContainer();
         if (!focusNode) {
           focusNode = startContainer;
