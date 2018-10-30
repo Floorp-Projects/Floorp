@@ -128,8 +128,6 @@ public:
   eDataFormat DataFormat() const { return mDataFormat; }
   const nsString& Result() const { return mResult; }
 
-  void InitialAsyncWait();
-
 private:
   virtual ~FileReader();
 
@@ -209,10 +207,6 @@ private:
   // This value is set when the reading starts in order to keep the worker alive
   // during the process.
   RefPtr<StrongWorkerRef> mStrongWorkerRef;
-
-  // Runnable to start the reading asynchronous.
-  class AsyncWaitRunnable;
-  RefPtr<AsyncWaitRunnable> mAsyncWaitRunnable;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(FileReader, FILEREADER_ID)
