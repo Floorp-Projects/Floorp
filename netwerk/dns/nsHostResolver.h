@@ -368,7 +368,8 @@ public:
         LOOKUP_RESOLVEAGAIN,
     };
 
-    virtual LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *, bool pb) = 0;
+    virtual LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *, bool pb,
+                                        const nsACString &aOriginsuffix) = 0;
     virtual LookupStatus CompleteLookupByType(nsHostRecord *, nsresult,
                                               const nsTArray<nsCString> *aResult,
                                               uint32_t aTtl, bool pb) = 0;
@@ -487,7 +488,8 @@ public:
      */
     void FlushCache();
 
-    LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *, bool pb) override;
+    LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *, bool pb,
+                                const nsACString &aOriginsuffix) override;
     LookupStatus CompleteLookupByType(nsHostRecord *, nsresult,
                                       const nsTArray<nsCString> *aResult,
                                       uint32_t aTtl, bool pb) override;
