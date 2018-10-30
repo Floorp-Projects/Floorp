@@ -41,6 +41,7 @@ flake8:
         - testing/mozharness/mozharness/mozilla/tooltool.py
         - testing/mozharness/mozinfo
         - testing/mozharness/scripts
+        - testing/mozharness/test
         - testing/raptor
         - testing/remotecppunittests.py
         - testing/runcppunittests.py
