@@ -1370,13 +1370,45 @@ const DebugUtils = {
 };
 
 
-function promiseExtensionViewLoaded(browser) {
-  return new Promise(resolve => {
-    browser.messageManager.addMessageListener("Extension:ExtensionViewLoaded", function onLoad({data}) {
-      browser.messageManager.removeMessageListener("Extension:ExtensionViewLoaded", onLoad);
-      resolve(data.childId && ParentAPIManager.getContextById(data.childId));
-    });
+/**
+ * Returns a Promise which resolves with the message data when the given message
+ * was received by the message manager. The promise is rejected if the message
+ * manager was closed before a message was received.
+ *
+ * @param {MessageListenerManager} messageManager
+ *        The message manager on which to listen for messages.
+ * @param {string} messageName
+ *        The message to listen for.
+ * @returns {Promise<*>}
+ */
+function promiseMessageFromChild(messageManager, messageName) {
+  return new Promise((resolve, reject) => {
+    let unregister;
+    function listener(message) {
+      unregister();
+      resolve(message.data);
+    }
+    function observer(subject, topic, data) {
+      if (subject === messageManager) {
+        unregister();
+        reject(new Error(`Message manager was disconnected before receiving ${messageName}`));
+      }
+    }
+    unregister = () => {
+      Services.obs.removeObserver(observer, "message-manager-close");
+      messageManager.removeMessageListener(messageName, listener);
+    };
+    messageManager.addMessageListener(messageName, listener);
+    Services.obs.addObserver(observer, "message-manager-close");
   });
+}
+
+// This should be called before browser.loadURI is invoked.
+async function promiseExtensionViewLoaded(browser) {
+  let {childId} = await promiseMessageFromChild(browser.messageManager, "Extension:ExtensionViewLoaded");
+  if (childId) {
+    return ParentAPIManager.getContextById(childId);
+  }
 }
 
 /**
