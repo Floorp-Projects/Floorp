@@ -56,7 +56,7 @@ class WorkersPanel extends Component {
     const client = this.props.client;
     client.addListener("workerListChanged", this.updateWorkers);
     client.addListener("serviceWorkerRegistrationListChanged", this.updateWorkers);
-    client.addListener("processListChanged", this.updateWorkers);
+    client.mainRoot.on("processListChanged", this.updateWorkers);
     client.addListener("registration-changed", this.updateWorkers);
 
     // Some notes about these observers:
@@ -80,7 +80,7 @@ class WorkersPanel extends Component {
 
   componentWillUnmount() {
     const client = this.props.client;
-    client.removeListener("processListChanged", this.updateWorkers);
+    client.mainRoot.off("processListChanged", this.updateWorkers);
     client.removeListener("serviceWorkerRegistrationListChanged", this.updateWorkers);
     client.removeListener("workerListChanged", this.updateWorkers);
     client.removeListener("registration-changed", this.updateWorkers);
