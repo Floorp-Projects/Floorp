@@ -132,13 +132,14 @@ MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument)
         }
       }
     }
-  }
 
-  // If the given ID is referred by relation attribute then create an accessible
-  // for it.
-  nsAutoString id;
-  if (nsCoreUtils::GetID(aContent, id) && !id.IsEmpty())
-    return aDocument->IsDependentID(id);
+    // If the given ID is referred by relation attribute then create an accessible
+    // for it.
+    nsAutoString id;
+    if (nsCoreUtils::GetID(aContent, id) && !id.IsEmpty()) {
+      return aDocument->IsDependentID(aContent->AsElement(), id);
+    }
+  }
 
   return false;
 }

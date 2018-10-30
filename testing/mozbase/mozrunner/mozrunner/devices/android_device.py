@@ -514,7 +514,7 @@ class AndroidEmulator(object):
         env['ANDROID_AVD_HOME'] = os.path.join(EMULATOR_HOME_DIR, "avd")
         command = [self.emulator_path, "-avd", self.avd_info.name]
         if self.gpu:
-            command += ['-gpu', 'swiftshader']
+            command += ['-gpu', 'swiftshader_indirect']
         if self.avd_info.extra_args:
             # -enable-kvm option is not valid on OSX
             if _get_host_platform() == 'macosx64' and '-enable-kvm' in self.avd_info.extra_args:

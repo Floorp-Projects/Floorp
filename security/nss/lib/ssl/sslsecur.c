@@ -685,23 +685,6 @@ ssl_SecureConnect(sslSocket *ss, const PRNetAddr *sa)
 }
 
 /*
- * The TLS 1.2 RFC 5246, Section 7.2.1 says:
- *
- *     Unless some other fatal alert has been transmitted, each party is
- *     required to send a close_notify alert before closing the write side
- *     of the connection.  The other party MUST respond with a close_notify
- *     alert of its own and close down the connection immediately,
- *     discarding any pending writes.  It is not required for the initiator
- *     of the close to wait for the responding close_notify alert before
- *     closing the read side of the connection.
- *
- * The second sentence requires that we send a close_notify alert when we
- * have received a close_notify alert.  In practice, all SSL implementations
- * close the socket immediately after sending a close_notify alert (which is
- * allowed by the third sentence), so responding with a close_notify alert
- * would result in a write failure with the ECONNRESET error.  This is why
- * we don't respond with a close_notify alert.
- *
  * Also, in the unlikely event that the TCP pipe is full and the peer stops
  * reading, the SSL3_SendAlert call in ssl_SecureClose and ssl_SecureShutdown
  * may block indefinitely in blocking mode, and may fail (without retrying)
@@ -714,8 +697,7 @@ ssl_SecureClose(sslSocket *ss)
     int rv;
 
     if (!(ss->shutdownHow & ssl_SHUTDOWN_SEND) &&
-        ss->firstHsDone &&
-        !ss->recvdCloseNotify) {
+        ss->firstHsDone) {
 
         /* We don't want the final alert to be Nagle delayed. */
         if (!ss->delayDisabled) {
@@ -744,8 +726,7 @@ ssl_SecureShutdown(sslSocket *ss, int nsprHow)
 
     if ((sslHow & ssl_SHUTDOWN_SEND) != 0 &&
         !(ss->shutdownHow & ssl_SHUTDOWN_SEND) &&
-        ss->firstHsDone &&
-        !ss->recvdCloseNotify) {
+        ss->firstHsDone) {
 
         (void)SSL3_SendAlert(ss, alert_warning, close_notify);
     }

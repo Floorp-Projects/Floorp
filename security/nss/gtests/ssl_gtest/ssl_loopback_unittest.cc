@@ -629,6 +629,85 @@ TEST_P(TlsConnectGeneric, CheckRandoms) {
   EXPECT_NE(0, memcmp(srandom1, srandom2, random_len));
 }
 
+void FailOnCloseNotify(const PRFileDesc* fd, void* arg, const SSLAlert* alert) {
+  ADD_FAILURE() << "received alert " << alert->description;
+}
+
+void CheckCloseNotify(const PRFileDesc* fd, void* arg, const SSLAlert* alert) {
+  *reinterpret_cast<bool*>(arg) = true;
+  EXPECT_EQ(close_notify, alert->description);
+  EXPECT_EQ(alert_warning, alert->level);
+}
+
+TEST_P(TlsConnectGeneric, ShutdownOneSide) {
+  Connect();
+
+  // Setup to check alerts.
+  EXPECT_EQ(SECSuccess, SSL_AlertSentCallback(server_->ssl_fd(),
+                                              FailOnCloseNotify, nullptr));
+  EXPECT_EQ(SECSuccess, SSL_AlertReceivedCallback(client_->ssl_fd(),
+                                                  FailOnCloseNotify, nullptr));
+
+  bool client_sent = false;
+  EXPECT_EQ(SECSuccess, SSL_AlertSentCallback(client_->ssl_fd(),
+                                              CheckCloseNotify, &client_sent));
+  bool server_received = false;
+  EXPECT_EQ(SECSuccess,
+            SSL_AlertReceivedCallback(server_->ssl_fd(), CheckCloseNotify,
+                                      &server_received));
+  EXPECT_EQ(PR_SUCCESS, PR_Shutdown(client_->ssl_fd(), PR_SHUTDOWN_SEND));
+
+  // Make sure that the server reads out the close_notify.
+  uint8_t buf[10];
+  EXPECT_EQ(0, PR_Read(server_->ssl_fd(), buf, sizeof(buf)));
+
+  // Reading and writing should still work in the one open direction.
+  EXPECT_TRUE(client_sent);
+  EXPECT_TRUE(server_received);
+  server_->SendData(10, 10);
+  client_->ReadBytes(10);
+
+  // Now close the other side and do the same checks.
+  bool server_sent = false;
+  EXPECT_EQ(SECSuccess, SSL_AlertSentCallback(server_->ssl_fd(),
+                                              CheckCloseNotify, &server_sent));
+  bool client_received = false;
+  EXPECT_EQ(SECSuccess,
+            SSL_AlertReceivedCallback(client_->ssl_fd(), CheckCloseNotify,
+                                      &client_received));
+  EXPECT_EQ(PR_SUCCESS, PR_Shutdown(server_->ssl_fd(), PR_SHUTDOWN_SEND));
+
+  EXPECT_EQ(0, PR_Read(client_->ssl_fd(), buf, sizeof(buf)));
+  EXPECT_TRUE(server_sent);
+  EXPECT_TRUE(client_received);
+}
+
+TEST_P(TlsConnectGeneric, ShutdownOneSideThenCloseTcp) {
+  Connect();
+
+  bool client_sent = false;
+  EXPECT_EQ(SECSuccess, SSL_AlertSentCallback(client_->ssl_fd(),
+                                              CheckCloseNotify, &client_sent));
+  bool server_received = false;
+  EXPECT_EQ(SECSuccess,
+            SSL_AlertReceivedCallback(server_->ssl_fd(), CheckCloseNotify,
+                                      &server_received));
+  EXPECT_EQ(PR_SUCCESS, PR_Shutdown(client_->ssl_fd(), PR_SHUTDOWN_SEND));
+
+  // Make sure that the server reads out the close_notify.
+  uint8_t buf[10];
+  EXPECT_EQ(0, PR_Read(server_->ssl_fd(), buf, sizeof(buf)));
+
+  // Now simulate the underlying connection closing.
+  client_->adapter()->Reset();
+
+  // Now close the other side and see that things don't explode.
+  EXPECT_EQ(PR_SUCCESS, PR_Shutdown(server_->ssl_fd(), PR_SHUTDOWN_SEND));
+
+  EXPECT_GT(0, PR_Read(client_->ssl_fd(), buf, sizeof(buf)));
+  EXPECT_EQ(PR_NOT_CONNECTED_ERROR, PR_GetError());
+}
+
 INSTANTIATE_TEST_CASE_P(
     GenericStream, TlsConnectGeneric,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,

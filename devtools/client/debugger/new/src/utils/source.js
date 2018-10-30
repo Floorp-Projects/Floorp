@@ -145,9 +145,14 @@ function getRawSourceURL(url) {
   return url ? url.replace(/:formatted$/, "") : url;
 }
 
-function resolveFileURL(url, transformUrl = initialUrl => initialUrl) {
+function resolveFileURL(url, transformUrl = initialUrl => initialUrl, truncate = true) {
   url = getRawSourceURL(url || "");
   const name = transformUrl(url);
+
+  if (!truncate) {
+    return name;
+  }
+
   return (0, _utils.endTruncateStr)(name, 50);
 }
 
@@ -233,7 +238,7 @@ function getDisplayPath(mySource, sources) {
  */
 
 
-function getFileURL(source) {
+function getFileURL(source, truncate = true) {
   const {
     url,
     id
@@ -243,7 +248,7 @@ function getFileURL(source) {
     return getFormattedSourceId(id);
   }
 
-  return resolveFileURL(url, _devtoolsModules.getUnicodeUrl);
+  return resolveFileURL(url, _devtoolsModules.getUnicodeUrl, truncate);
 }
 
 const contentTypeModeMap = {

@@ -4,7 +4,6 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://services-common/async.js");
 ChromeUtils.import("resource://services-sync/addonsreconciler.js");
@@ -26,48 +25,14 @@ let tracker;
 
 AddonTestUtils.init(this);
 
-const ADDONS = {
-  test_install1: {
-    "install.rdf": {
-      id: "addon1@tests.mozilla.org",
-      version: "1.0",
-      name: "Test 1",
-      description: "Test Description",
-      bootstrap: true,
-
-      targetApplications: [{
-          id: "xpcshell@tests.mozilla.org",
-          minVersion: "1",
-          maxVersion: "1"}],
-    },
-    "icon.png": "Fake icon image",
-    "icon64.png": "Fake icon image",
+const ADDON_ID = "addon1@tests.mozilla.org";
+const XPI = AddonTestUtils.createTempWebExtensionFile({
+  manifest: {
+    name: "Test 1",
+    description: "Test Description",
+    applications: { gecko: { id: ADDON_ID } },
   },
-  test_bootstrap1_1: {
-    "install.rdf": {
-      id: "bootstrap1@tests.mozilla.org",
-      version: "1.0",
-      bootstrap: "true",
-      multiprocessCompatible: "true",
-      name: "Test Bootstrap 1",
-      description: "Test Description",
-
-      iconURL: "chrome://foo/skin/icon.png",
-      aboutURL: "chrome://foo/content/about.xul",
-      optionsURL: "chrome://foo/content/options.xul",
-
-      targetApplications: [{
-          id: "xpcshell@tests.mozilla.org",
-          minVersion: "1",
-          maxVersion: "1"}],
-    },
-  },
-};
-
-const XPIS = {};
-for (let [name, files] of Object.entries(ADDONS)) {
-  XPIS[name] = AddonTestUtils.createTempXPIFile(files);
-}
+});
 
 async function resetReconciler() {
   reconciler._addons = {};
@@ -103,10 +68,10 @@ add_task(async function setup() {
 add_task(async function test_addon_install() {
   _("Ensure basic add-on APIs work as expected.");
 
-  let install = await AddonManager.getInstallForFile(XPIS.test_bootstrap1_1);
+  let install = await AddonManager.getInstallForFile(XPI);
   Assert.notEqual(install, null);
   Assert.equal(install.type, "extension");
-  Assert.equal(install.name, "Test Bootstrap 1");
+  Assert.equal(install.name, "Test 1");
 
   await resetReconciler();
 });
@@ -118,11 +83,11 @@ add_task(async function test_find_dupe() {
   // test, so we do it manually.
   await engine._refreshReconcilerState();
 
-  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
+  let addon = await installAddon(XPI, reconciler);
 
   let record = {
     id:            Utils.makeGUID(),
-    addonID:       addon.id,
+    addonID:       ADDON_ID,
     enabled:       true,
     applicationID: Services.appinfo.ID,
     source:        "amo",
@@ -169,7 +134,7 @@ add_task(async function test_get_changed_ids() {
   await tracker.clearChangedIDs();
 
   _("Ensure reconciler changes are populated.");
-  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
+  let addon = await installAddon(XPI, reconciler);
   await tracker.clearChangedIDs(); // Just in case.
   changes = await engine.getChangedIDs();
   Assert.equal("object", typeof(changes));
@@ -217,7 +182,6 @@ add_task(async function test_disabled_install_semantics() {
   // disabled state and incoming syncGUID is preserved, even on the next sync.
   const USER       = "foo";
   const PASSWORD   = "password";
-  const ADDON_ID   = "addon1@tests.mozilla.org";
 
   let server = new SyncServer();
   server.start();
@@ -238,7 +202,7 @@ add_task(async function test_disabled_install_semantics() {
   amoServer.registerFile("/search/guid:addon1%40tests.mozilla.org",
                          do_get_file("addon1-search.json"));
 
-  amoServer.registerFile("/addon1.xpi", XPIS.test_install1);
+  amoServer.registerFile("/addon1.xpi", XPI);
   amoServer.start(8888);
 
   // Insert an existing record into the server.

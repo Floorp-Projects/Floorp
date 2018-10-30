@@ -1,4 +1,4 @@
-asserts(0-6) load 307322-1.svg # bug 563481
+load 307322-1.svg
 load 327705-1.svg
 load 336994-1.html
 load 344888-1.svg
