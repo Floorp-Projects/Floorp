@@ -20,7 +20,6 @@ class JSLinearString;
 namespace js {
 
 class LazyScript;
-class LifoAlloc;
 class ModuleObject;
 class ScriptSourceObject;
 
@@ -31,7 +30,7 @@ class FunctionBox;
 class ParseNode;
 
 JSScript*
-CompileGlobalScript(JSContext* cx, LifoAlloc& alloc, ScopeKind scopeKind,
+CompileGlobalScript(JSContext* cx, ScopeKind scopeKind,
                     const JS::ReadOnlyCompileOptions& options,
                     JS::SourceBufferHolder& srcBuf,
                     ScriptSourceObject** sourceObjectOut = nullptr);
@@ -50,8 +49,8 @@ CompileLazyBinASTFunction(JSContext* cx, Handle<LazyScript*> lazy, const uint8_t
 #endif // JS_BUILD_BINAST
 
 JSScript*
-CompileEvalScript(JSContext* cx, LifoAlloc& alloc,
-                  HandleObject scopeChain, HandleScope enclosingScope,
+CompileEvalScript(JSContext* cx, HandleObject environment,
+                  HandleScope enclosingScope,
                   const JS::ReadOnlyCompileOptions& options,
                   JS::SourceBufferHolder& srcBuf,
                   ScriptSourceObject** sourceObjectOut = nullptr);
@@ -62,8 +61,8 @@ CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
 
 ModuleObject*
 CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-              JS::SourceBufferHolder& srcBuf, LifoAlloc& alloc,
-              ScriptSourceObject** sourceObjectOut = nullptr);
+              JS::SourceBufferHolder& srcBuf,
+              ScriptSourceObject** sourceObjectOut);
 
 MOZ_MUST_USE bool
 CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const char16_t* chars, size_t length);

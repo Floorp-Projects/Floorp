@@ -254,7 +254,6 @@ class XDRState : public XDRCoderBase
     JSContext* cx() const {
         return buf.cx();
     }
-    virtual LifoAlloc& lifoAlloc() const;
 
     virtual bool hasOptions() const { return false; }
     virtual const JS::ReadOnlyCompileOptions& options() {
@@ -508,7 +507,6 @@ class XDROffThreadDecoder : public XDRDecoder
 {
     const JS::ReadOnlyCompileOptions* options_;
     ScriptSourceObject** sourceObjectOut_;
-    LifoAlloc& alloc_;
 
   public:
     // Note, when providing an JSContext, where isJSContext is false,
@@ -519,22 +517,17 @@ class XDROffThreadDecoder : public XDRDecoder
     //
     // When providing a sourceObjectOut pointer, you have to ensure that it is
     // marked by the GC to avoid dangling pointers.
-    XDROffThreadDecoder(JSContext* cx, LifoAlloc& alloc,
+    XDROffThreadDecoder(JSContext* cx,
                         const JS::ReadOnlyCompileOptions* options,
                         ScriptSourceObject** sourceObjectOut,
                         const JS::TranscodeRange& range)
       : XDRDecoder(cx, range),
         options_(options),
-        sourceObjectOut_(sourceObjectOut),
-        alloc_(alloc)
+        sourceObjectOut_(sourceObjectOut)
     {
         MOZ_ASSERT(options);
         MOZ_ASSERT(sourceObjectOut);
         MOZ_ASSERT(*sourceObjectOut == nullptr);
-    }
-
-    LifoAlloc& lifoAlloc() const override {
-        return alloc_;
     }
 
     bool hasOptions() const override { return true; }
