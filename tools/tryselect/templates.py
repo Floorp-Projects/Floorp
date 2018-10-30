@@ -144,9 +144,12 @@ class ChemspillPrio(Template):
             }
 
 
-class TalosProfile(Template):
+class GeckoProfile(Template):
 
     def add_arguments(self, parser):
+        parser.add_argument('--gecko-profile', dest='profile', action='store_true', default=False,
+                            help='Create and upload a gecko profile during talos/raptor tasks.')
+        # For backwards compatibility
         parser.add_argument('--talos-profile', dest='profile', action='store_true', default=False,
                             help='Create and upload a gecko profile during talos tasks.')
         # This is added for consistency with the 'syntax' selector
@@ -156,7 +159,7 @@ class TalosProfile(Template):
     def context(self, profile, **kwargs):
         if not profile:
             return
-        return {'talos-profile': profile}
+        return {'gecko-profile': profile}
 
 
 all_templates = {
@@ -165,5 +168,5 @@ all_templates = {
     'env': Environment,
     'rebuild': Rebuild,
     'chemspill-prio': ChemspillPrio,
-    'talos-profile': TalosProfile,
+    'gecko-profile': GeckoProfile,
 }

@@ -21,13 +21,19 @@ def create_parser(mach_interface=False):
     add_arg('-b', '--binary', dest='binary',
             help="path to the browser executable that we are testing")
     add_arg('--geckoProfile', action="store_true", dest="gecko_profile",
+            help=argparse.SUPPRESS)
+    add_arg('--geckoProfileInterval', dest='gecko_profile_interval', type=float,
+            help=argparse.SUPPRESS)
+    add_arg('--geckoProfileEntries', dest="gecko_profile_entries", type=int,
+            help=argparse.SUPPRESS)
+    add_arg('--gecko-profile', action="store_true", dest="gecko_profile",
             help="Profile the run and output the results in $MOZ_UPLOAD_DIR. "
             "After talos is finished, perf-html.io will be launched in Firefox so you "
             "can analyze the local profiles. To disable auto-launching of perf-html.io "
-            "set the RAPTOR_DISABLE_PROFILE_LAUNCH=1 env var.")
-    add_arg('--geckoProfileInterval', dest='gecko_profile_interval', type=float,
+            "set the DISABLE_PROFILE_LAUNCH=1 env var.")
+    add_arg('--gecko-profile-interval', dest='gecko_profile_interval', type=float,
             help="How frequently to take samples (milliseconds)")
-    add_arg('--geckoProfileEntries', dest="gecko_profile_entries", type=int,
+    add_arg('--gecko-profile-entries', dest="gecko_profile_entries", type=int,
             help="How many samples to take with the profiler")
     add_arg('--symbolsPath', dest='symbols_path',
             help="Path to the symbols for the build we are testing")

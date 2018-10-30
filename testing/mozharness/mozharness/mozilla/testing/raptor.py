@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import argparse
 import copy
 import json
 import os
@@ -81,14 +82,30 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "dest": "gecko_profile",
             "action": "store_true",
             "default": False,
-            "help": "Whether or not to profile the test run and save the profile results"
+            "help": argparse.SUPPRESS
         }],
         [["--geckoProfileInterval"], {
             "dest": "gecko_profile_interval",
             "type": "int",
-            "help": "The interval between samples taken by the profiler (milliseconds)"
+            "help": argparse.SUPPRESS
         }],
         [["--geckoProfileEntries"], {
+            "dest": "gecko_profile_entries",
+            "type": "int",
+            "help": argparse.SUPPRESS
+        }],
+        [["--gecko-profile"], {
+            "dest": "gecko_profile",
+            "action": "store_true",
+            "default": False,
+            "help": "Whether or not to profile the test run and save the profile results"
+        }],
+        [["--gecko-profile-interval"], {
+            "dest": "gecko_profile_interval",
+            "type": "int",
+            "help": "The interval between samples taken by the profiler (milliseconds)"
+        }],
+        [["--gecko-profile-entries"], {
             "dest": "gecko_profile_entries",
             "type": "int",
             "help": "How many samples to take with the profiler"
