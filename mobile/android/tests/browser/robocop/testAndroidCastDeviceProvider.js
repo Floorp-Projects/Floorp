@@ -8,12 +8,7 @@
 
 "use strict";
 
-/* eslint-disable mozilla/use-chromeutils-import */
-
-Cu.import("resource://gre/modules/Messaging.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-const {ChromeUtils} = Cu.getGlobalForObject(XPCOMUtils);
+ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 
 // event name
 const TOPIC_ANDROID_CAST_DEVICE_ADDED   = "AndroidCastDevice:Added";

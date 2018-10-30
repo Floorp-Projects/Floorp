@@ -5,10 +5,8 @@
 
 "use strict";
 
-/* eslint-disable mozilla/use-chromeutils-import */
-
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/SimpleServiceDiscovery.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/SimpleServiceDiscovery.jsm");
 
 Cu.importGlobalProperties(["InspectorUtils"]);
 

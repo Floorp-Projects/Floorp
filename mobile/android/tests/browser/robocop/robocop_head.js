@@ -27,6 +27,7 @@
 
 /* eslint-disable mozilla/use-cc-etc */
 /* eslint-disable mozilla/use-chromeutils-import */
+/* eslint-disable mozilla/use-chromeutils-generateqi */
 /* eslint-disable mozilla/use-services */
 
 var _quit = false;
