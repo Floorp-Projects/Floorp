@@ -47,6 +47,7 @@ MACH_MODULES = [
     'python/mozbuild/mozbuild/backend/mach_commands.py',
     'python/mozbuild/mozbuild/compilation/codecomplete.py',
     'python/mozbuild/mozbuild/frontend/mach_commands.py',
+    'python/mozrelease/mozrelease/mach_commands.py',
     'taskcluster/mach_commands.py',
     'testing/awsy/mach_commands.py',
     'testing/firefox-ui/mach_commands.py',
@@ -89,7 +90,7 @@ CATEGORIES = {
     'ci': {
         'short': 'CI',
         'long': 'Taskcluster commands',
-        'priority': 59
+        'priority': 59,
     },
     'devenv': {
         'short': 'Development Environment',
@@ -106,13 +107,18 @@ CATEGORIES = {
         'long': 'Potent potables and assorted snacks.',
         'priority': 10,
     },
+    'release': {
+        'short': 'Release automation',
+        'long': 'Commands for used in release automation.',
+        'priority': 5,
+    },
     'disabled': {
         'short': 'Disabled',
         'long': 'The disabled commands are hidden by default. Use -v to display them. '
         'These commands are unavailable for your current context, '
         'run "mach <command>" to see why.',
         'priority': 0,
-    }
+    },
 }
 
 
