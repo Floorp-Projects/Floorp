@@ -245,6 +245,8 @@ AssertedBoundName:
         Ok
     extra-params: AssertedScopeKind scopeKind
     extra-args: scopeKind
+    init: |
+        const bool allowDuplicateName = false;
     fields:
         isCaptured:
              after: |
@@ -252,7 +254,7 @@ AssertedBoundName:
                 DeclarationKind declKind;
                 MOZ_TRY(getBoundScope(scopeKind, scope, declKind));
     build: |
-        MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured));
+        MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured, allowDuplicateName));
         auto result = Ok();
 
 AssertedDeclaredName:
@@ -279,6 +281,8 @@ AssertedMaybePositionalParameterName:
 
 AssertedPositionalParameterName:
     inherits: AssertedMaybePositionalParameterName
+    init: |
+        bool allowDuplicateName = !parseContext_->sc()->strict();
     fields:
         name:
             after: |
@@ -1343,11 +1347,11 @@ VariableDeclarator:
         ParseNode* result;
         if (binding->isKind(ParseNodeKind::Name)) {
             // `var foo [= bar]``
-            MOZ_TRY(checkBinding(binding->template as<NameNode>().atom()->asPropertyName()));
-
-            BINJS_TRY_VAR(result, factory_.newName(binding->template as<NameNode>().atom()->asPropertyName(), tokenizer_->pos(start), cx_));
+            NameNode* bindingNameNode = &binding->template as<NameNode>();
+            MOZ_TRY(checkBinding(bindingNameNode->atom()->asPropertyName()));
+            result = bindingNameNode;
             if (init) {
-                result->as<NameNode>().setInitializer(init);
+                BINJS_TRY(factory_.finishInitializerAssignment(bindingNameNode, init));
             }
         } else {
             // `var pattern = bar`

@@ -7,6 +7,30 @@
   ],
   'targets': [
     {
+      'target_name': 'intel-gcm-s_lib',
+      'type': 'static_library',
+      'sources': [
+        'intel-aes.s',
+        'intel-gcm.s',
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports'
+      ],
+      'conditions': [
+        [ 'cc_is_clang==1', {
+          'cflags': [
+            '-no-integrated-as',
+          ],
+          'cflags_mozilla': [
+            '-no-integrated-as',
+          ],
+          'asflags_mozilla': [
+            '-no-integrated-as',
+          ],
+        }],
+      ],
+    },
+    {
       'target_name': 'intel-gcm-wrap_c_lib',
       'type': 'static_library',
       'sources': [
@@ -15,12 +39,19 @@
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports'
       ],
+      'conditions': [
+        [ '(OS=="linux" or OS=="android") and target_arch=="x64"', {
+          'dependencies': [
+            'intel-gcm-s_lib',
+          ],
+        }],
+      ],
       'cflags': [
-        '-mssse3'
+        '-mssse3',
       ],
       'cflags_mozilla': [
         '-mssse3'
-      ]
+      ],
     },
     {
       # TODO: make this so that all hardware accelerated code is in here.

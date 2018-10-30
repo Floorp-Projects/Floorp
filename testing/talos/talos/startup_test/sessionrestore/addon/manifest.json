@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+  "name": "Session Restore Startup Performance Test",
+  "description": "Bug 936630, bug 1098357. This add-on broadcasts the duration of session restore.",
+  "version": "2.1",
+
+  "applications": {
+    "gecko": {
+      "id": "session-restore-test-2@mozilla.org"
+    }
+  },
+
+  "experiment_apis": {
+    "sessionrestore": {
+      "schema": "schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "api.js",
+        "events": ["startup"]
+      }
+    }
+  }
+}

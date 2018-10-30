@@ -65,46 +65,24 @@ var EXPORTED_SYMBOLS = ["AddonsReconciler", "CHANGE_INSTALLED",
  *   reconciler.stopListening();
  *   await reconciler.saveState(...);
  *
- * There are 2 classes of listeners in the AddonManager: AddonListener and
- * InstallListener. This class is a listener for both (member functions just
- * get called directly).
- *
+ * This class uses the AddonManager AddonListener interface.
  * When an add-on is installed, listeners are called in the following order:
+ *  AL.onInstalling, AL.onInstalled
  *
- *  IL.onInstallStarted, AL.onInstalling, IL.onInstallEnded, AL.onInstalled
- *
- * For non-restartless add-ons, an application restart may occur between
- * IL.onInstallEnded and AL.onInstalled. Unfortunately, Sync likely will
- * not be loaded when AL.onInstalled is fired shortly after application
- * start, so it won't see this event. Therefore, for add-ons requiring a
- * restart, Sync treats the IL.onInstallEnded event as good enough to
- * indicate an install. For restartless add-ons, Sync assumes AL.onInstalled
- * will follow shortly after IL.onInstallEnded and thus it ignores
- * IL.onInstallEnded.
- *
- * The listeners can also see events related to the download of the add-on.
- * This class isn't interested in those. However, there are failure events,
- * IL.onDownloadFailed and IL.onDownloadCanceled which get called if a
- * download doesn't complete successfully.
- *
- * For uninstalls, we see AL.onUninstalling then AL.onUninstalled. Like
- * installs, the events could be separated by an application restart and Sync
- * may not see the onUninstalled event. Again, if we require a restart, we
- * react to onUninstalling. If not, we assume we'll get onUninstalled.
+ * For uninstalls, we see AL.onUninstalling then AL.onUninstalled.
  *
  * Enabling and disabling work by sending:
  *
  *   AL.onEnabling, AL.onEnabled
  *   AL.onDisabling, AL.onDisabled
  *
- * Again, they may be separated by a restart, so we heed the requiresRestart
- * flag.
- *
  * Actions can be undone. All undoable actions notify the same
  * AL.onOperationCancelled event. We treat this event like any other.
  *
- * Restartless add-ons have interesting behavior during uninstall. These
- * add-ons are first disabled then they are actually uninstalled. So, we will
+ * When an add-on is uninstalled from about:addons, the user is offered an
+ * "Undo" option, which leads to the following sequence of events as
+ * observed by an AddonListener:
+ * Add-ons are first disabled then they are actually uninstalled. So, we will
  * see AL.onDisabling and AL.onDisabled. The onUninstalling and onUninstalled
  * events only come after the Addon Manager is closed or another view is
  * switched to. In the case of Sync performing the uninstall, the uninstall
@@ -291,7 +269,6 @@ AddonsReconciler.prototype = {
 
     this._log.info("Registering as Add-on Manager listener.");
     AddonManager.addAddonListener(this);
-    AddonManager.addInstallListener(this);
     this._listening = true;
   },
 
@@ -309,8 +286,7 @@ AddonsReconciler.prototype = {
       return;
     }
 
-    this._log.debug("Stopping listening and removing AddonManager listeners.");
-    AddonManager.removeInstallListener(this);
+    this._log.debug("Stopping listening and removing AddonManager listener.");
     AddonManager.removeAddonListener(this);
     this._listening = false;
   },
@@ -531,26 +507,15 @@ AddonsReconciler.prototype = {
   /**
    * Handler that is invoked as part of the AddonManager listeners.
    */
-  async _handleListener(action, addon, requiresRestart) {
+  async _handleListener(action, addon) {
     // Since this is called as an observer, we explicitly trap errors and
     // log them to ourselves so we don't see errors reported elsewhere.
     try {
       let id = addon.id;
       this._log.debug("Add-on change: " + action + " to " + id);
 
-      // We assume that every event for non-restartless add-ons is
-      // followed by another event and that this follow-up event is the most
-      // appropriate to react to. Currently we ignore onEnabling, onDisabling,
-      // and onUninstalling for non-restartless add-ons.
-      if (requiresRestart === false) {
-        this._log.debug("Ignoring " + action + " for restartless add-on.");
-        return;
-      }
-
       switch (action) {
-        case "onEnabling":
         case "onEnabled":
-        case "onDisabling":
         case "onDisabled":
         case "onInstalled":
         case "onInstallEnded":
@@ -558,7 +523,6 @@ AddonsReconciler.prototype = {
           await this.rectifyStateFromAddon(addon);
           break;
 
-        case "onUninstalling":
         case "onUninstalled":
           let id = addon.id;
           let addons = this.addons;
@@ -583,36 +547,19 @@ AddonsReconciler.prototype = {
   },
 
   // AddonListeners
-  onEnabling: function onEnabling(addon, requiresRestart) {
-    this.queueCaller.enqueueCall(() => this._handleListener("onEnabling", addon, requiresRestart));
-  },
   onEnabled: function onEnabled(addon) {
     this.queueCaller.enqueueCall(() => this._handleListener("onEnabled", addon));
-  },
-  onDisabling: function onDisabling(addon, requiresRestart) {
-    this.queueCaller.enqueueCall(() => this._handleListener("onDisabling", addon, requiresRestart));
   },
   onDisabled: function onDisabled(addon) {
     this.queueCaller.enqueueCall(() => this._handleListener("onDisabled", addon));
   },
-  onInstalling: function onInstalling(addon, requiresRestart) {
-    this.queueCaller.enqueueCall(() => this._handleListener("onInstalling", addon, requiresRestart));
-  },
   onInstalled: function onInstalled(addon) {
     this.queueCaller.enqueueCall(() => this._handleListener("onInstalled", addon));
-  },
-  onUninstalling: function onUninstalling(addon, requiresRestart) {
-    this.queueCaller.enqueueCall(() => this._handleListener("onUninstalling", addon, requiresRestart));
   },
   onUninstalled: function onUninstalled(addon) {
     this.queueCaller.enqueueCall(() => this._handleListener("onUninstalled", addon));
   },
   onOperationCancelled: function onOperationCancelled(addon) {
     this.queueCaller.enqueueCall(() => this._handleListener("onOperationCancelled", addon));
-  },
-
-  // InstallListeners
-  onInstallEnded: function onInstallEnded(install, addon) {
-    this.queueCaller.enqueueCall(() => this._handleListener("onInstallEnded", addon));
   },
 };

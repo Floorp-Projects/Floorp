@@ -93,7 +93,9 @@ class Group extends _react.Component {
       toggleFrameworkGrouping,
       frameworkGroupingOn,
       toggleBlackBox,
-      copyStackTrace
+      copyStackTrace,
+      displayFullUrl,
+      getFrameTitle
     } = this.props;
     const {
       expanded
@@ -115,7 +117,9 @@ class Group extends _react.Component {
       selectFrame: selectFrame,
       shouldMapDisplayName: false,
       toggleBlackBox: toggleBlackBox,
-      toggleFrameworkGrouping: toggleFrameworkGrouping
+      toggleFrameworkGrouping: toggleFrameworkGrouping,
+      displayFullUrl: displayFullUrl,
+      getFrameTitle: getFrameTitle
     })));
   }
 

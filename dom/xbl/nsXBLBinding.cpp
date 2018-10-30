@@ -205,9 +205,11 @@ nsXBLBinding::BindAnonymousContent(nsIContent* aAnonParent,
     }
 
 #ifdef MOZ_XUL
-    // To make XUL templates work (and other goodies that happen when
-    // an element is added to a XUL document), we need to notify the
-    // XUL document using its special API.
+    // To make other goodies that happen when an element is added to a XUL
+    // document work, we need to notify the XUL document using its special API.
+    //
+    // FIXME(emilio): Is this needed anymore? Do we really use <linkset> or
+    // <link> from XBL stuff?
     if (doc && doc->IsXULDocument()) {
       doc->AsXULDocument()->AddSubtreeToDocument(child);
     }
@@ -223,18 +225,10 @@ nsXBLBinding::UnbindAnonymousContent(nsIDocument* aDocument,
   nsAutoScriptBlocker scriptBlocker;
   // Hold a strong ref while doing this, just in case.
   nsCOMPtr<nsIContent> anonParent = aAnonParent;
-#ifdef MOZ_XUL
-  const bool isXULDocument = aDocument && aDocument->IsXULDocument();
-#endif
   for (nsIContent* child = aAnonParent->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
     child->UnbindFromTree(true, aNullParent);
-#ifdef MOZ_XUL
-    if (isXULDocument) {
-      aDocument->AsXULDocument()->RemoveSubtreeFromDocument(child);
-    }
-#endif
   }
 }
 

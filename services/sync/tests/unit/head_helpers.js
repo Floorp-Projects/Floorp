@@ -107,16 +107,7 @@ function loadWebExtensionTestFunctions() {
  * @param  install addonInstall instance to install
  */
 async function installAddonFromInstall(install) {
-  await new Promise(res => {
-    let listener = {
-      onInstallEnded() {
-        AddonManager.removeAddonListener(listener);
-        res();
-      },
-    };
-    AddonManager.addInstallListener(listener);
-    install.install();
-  });
+  await install.install();
 
   Assert.notEqual(null, install.addon);
   Assert.notEqual(null, install.addon.syncGUID);

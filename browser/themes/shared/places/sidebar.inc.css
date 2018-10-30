@@ -12,6 +12,11 @@
 .sidebar-panel[lwt-sidebar] {
   background-color: var(--lwt-sidebar-background-color);
   color: var(--lwt-sidebar-text-color);
+  scrollbar-color: rgba(204,204,204,.5) rgba(230,230,235,.5);
+}
+
+.sidebar-panel[lwt-sidebar-brighttext] {
+  scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
 }
 
 .sidebar-panel[lwt-sidebar] .sidebar-placesTreechildren::-moz-tree-row(selected) {

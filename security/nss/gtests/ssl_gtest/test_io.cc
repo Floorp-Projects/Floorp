@@ -31,6 +31,20 @@ ScopedPRFileDesc DummyPrSocket::CreateFD() {
   return DummyIOLayerMethods::CreateFD(test_fd_identity, this);
 }
 
+void DummyPrSocket::Reset() {
+  auto p = peer_.lock();
+  peer_.reset();
+  if (p) {
+    p->peer_.reset();
+    p->Reset();
+  }
+  while (!input_.empty()) {
+    input_.pop();
+  }
+  filter_ = nullptr;
+  write_error_ = 0;
+}
+
 void DummyPrSocket::PacketReceived(const DataBuffer &packet) {
   input_.push(Packet(packet));
 }
@@ -39,6 +53,12 @@ int32_t DummyPrSocket::Read(PRFileDesc *f, void *data, int32_t len) {
   PR_ASSERT(variant_ == ssl_variant_stream);
   if (variant_ != ssl_variant_stream) {
     PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return -1;
+  }
+
+  auto dst = peer_.lock();
+  if (!dst) {
+    PR_SetError(PR_NOT_CONNECTED_ERROR, 0);
     return -1;
   }
 
@@ -74,6 +94,12 @@ int32_t DummyPrSocket::Recv(PRFileDesc *f, void *buf, int32_t buflen,
     return Read(f, buf, buflen);
   }
 
+  auto dst = peer_.lock();
+  if (!dst) {
+    PR_SetError(PR_NOT_CONNECTED_ERROR, 0);
+    return -1;
+  }
+
   if (input_.empty()) {
     PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
     return -1;
@@ -101,7 +127,7 @@ int32_t DummyPrSocket::Write(PRFileDesc *f, const void *buf, int32_t length) {
 
   auto dst = peer_.lock();
   if (!dst) {
-    PR_SetError(PR_IO_ERROR, 0);
+    PR_SetError(PR_NOT_CONNECTED_ERROR, 0);
     return -1;
   }
 

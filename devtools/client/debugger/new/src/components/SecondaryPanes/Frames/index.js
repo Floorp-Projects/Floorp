@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.Frames = undefined;
 
 var _react = require("devtools/client/shared/vendor/react");
 
@@ -104,7 +105,9 @@ class Frames extends _react.Component {
       selectFrame,
       selectedFrame,
       toggleBlackBox,
-      frameworkGroupingOn
+      frameworkGroupingOn,
+      displayFullUrl,
+      getFrameTitle
     } = this.props;
     const framesOrGroups = this.truncateFrames(this.collapseFrames(frames));
     return _react2.default.createElement("ul", null, framesOrGroups.map(frameOrGroup => frameOrGroup.id ? _react2.default.createElement(_Frame2.default, {
@@ -115,7 +118,9 @@ class Frames extends _react.Component {
       selectFrame: selectFrame,
       selectedFrame: selectedFrame,
       toggleBlackBox: toggleBlackBox,
-      key: String(frameOrGroup.id)
+      key: String(frameOrGroup.id),
+      displayFullUrl: displayFullUrl,
+      getFrameTitle: getFrameTitle
     }) : _react2.default.createElement(_Group2.default, {
       group: frameOrGroup,
       toggleFrameworkGrouping: this.toggleFrameworkGrouping,
@@ -124,7 +129,9 @@ class Frames extends _react.Component {
       selectFrame: selectFrame,
       selectedFrame: selectedFrame,
       toggleBlackBox: toggleBlackBox,
-      key: frameOrGroup[0].id
+      key: frameOrGroup[0].id,
+      displayFullUrl: displayFullUrl,
+      getFrameTitle: getFrameTitle
     })));
   }
 
@@ -178,5 +185,9 @@ exports.default = (0, _reactRedux.connect)(mapStateToProps, {
   selectFrame: _actions2.default.selectFrame,
   toggleBlackBox: _actions2.default.toggleBlackBox,
   toggleFrameworkGrouping: _actions2.default.toggleFrameworkGrouping,
-  disableFrameTruncate: _actions2.default.disableFrameTruncate
-})(Frames);
+  disableFrameTruncate: false,
+  displayFullUrl: false
+})(Frames); // Export the non-connected component in order to use it outside of the debugger
+// panel (e.g. console, netmonitor, …).
+
+exports.Frames = Frames;

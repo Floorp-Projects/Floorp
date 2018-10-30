@@ -80,14 +80,16 @@ RelatedAccIterator::
   mDocument(aDocument), mRelAttr(aRelAttr), mProviders(nullptr),
   mBindingParent(nullptr), mIndex(0)
 {
-  mBindingParent = aDependentContent->GetBindingParent();
+  mBindingParent = aDependentContent->IsInAnonymousSubtree() ?
+    aDependentContent->GetBindingParent() : nullptr;
   nsAtom* IDAttr = mBindingParent ?
     nsGkAtoms::anonid : nsGkAtoms::id;
 
   nsAutoString id;
   if (aDependentContent->IsElement() &&
-      aDependentContent->AsElement()->GetAttr(kNameSpaceID_None, IDAttr, id))
-    mProviders = mDocument->mDependentIDsHash.Get(id);
+      aDependentContent->AsElement()->GetAttr(kNameSpaceID_None, IDAttr, id)) {
+    mProviders = mDocument->GetRelProviders(aDependentContent->AsElement(), id);
+  }
 }
 
 Accessible*
@@ -102,7 +104,8 @@ RelatedAccIterator::Next()
     // Return related accessible for the given attribute and if the provider
     // content is in the same binding in the case of XBL usage.
     if (provider->mRelAttr == mRelAttr) {
-      nsIContent* bindingParent = provider->mContent->GetBindingParent();
+      nsIContent* bindingParent = provider->mContent->IsInAnonymousSubtree() ?
+        provider->mContent->GetBindingParent() : nullptr;
       bool inScope = mBindingParent == bindingParent ||
         mBindingParent == provider->mContent;
 
@@ -258,8 +261,9 @@ IDRefsIterator::
                  nsAtom* aIDRefsAttr) :
   mContent(aContent), mDoc(aDoc), mCurrIdx(0)
 {
-  if (mContent->IsInUncomposedDoc() && mContent->IsElement())
+  if (mContent->IsElement()) {
     mContent->AsElement()->GetAttr(kNameSpaceID_None, aIDRefsAttr, mIDs);
+  }
 }
 
 const nsDependentSubstring
@@ -304,9 +308,13 @@ IDRefsIterator::GetElem(const nsDependentSubstring& aID)
   // Get elements in DOM tree by ID attribute if this is an explicit content.
   // In case of bound element check its anonymous subtree.
   if (!mContent->IsInAnonymousSubtree()) {
-    dom::Element* refElm = mContent->OwnerDoc()->GetElementById(aID);
-    if (refElm || !mContent->GetXBLBinding())
-      return refElm;
+    dom::DocumentOrShadowRoot* docOrShadowRoot =
+      mContent->GetUncomposedDocOrConnectedShadowRoot();
+    if (docOrShadowRoot) {
+      dom::Element* refElm = docOrShadowRoot->GetElementById(aID);
+      if (refElm || !mContent->GetXBLBinding())
+        return refElm;
+    }
   }
 
   // If content is in anonymous subtree or an element having anonymous subtree

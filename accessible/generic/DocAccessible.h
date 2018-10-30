@@ -329,8 +329,8 @@ public:
    *       XBL bindings. Be careful the result of this method may be  senseless
    *       while it's called for XUL elements (where XBL is used widely).
    */
-  bool IsDependentID(const nsAString& aID) const
-    { return mDependentIDsHash.Get(aID, nullptr); }
+  bool IsDependentID(dom::Element* aElement, const nsAString& aID) const
+    { return GetRelProviders(aElement, aID); }
 
   /**
    * Initialize the newly created accessible and put it into document caches.
@@ -674,12 +674,26 @@ protected:
     AttrRelProvider& operator =(const AttrRelProvider&);
   };
 
+  typedef nsTArray<nsAutoPtr<AttrRelProvider> > AttrRelProviders;
+  typedef nsClassHashtable<nsStringHashKey, AttrRelProviders> DependentIDsHashtable;
+
+  /**
+   * Returns/creates/removes attribute relation providers associated with
+   * a DOM document if the element is in uncomposed document or associated
+   * with shadow DOM the element is in.
+   */
+  AttrRelProviders* GetRelProviders(dom::Element* aElement,
+                                    const nsAString& aID) const;
+  AttrRelProviders* GetOrCreateRelProviders(dom::Element* aElement,
+                                            const nsAString& aID);
+  void RemoveRelProvidersIfEmpty(dom::Element* aElement,
+                                 const nsAString& aID);
+
   /**
    * The cache of IDs pointed by relation attributes.
    */
-  typedef nsTArray<nsAutoPtr<AttrRelProvider> > AttrRelProviderArray;
-  nsClassHashtable<nsStringHashKey, AttrRelProviderArray>
-    mDependentIDsHash;
+  nsClassHashtable<nsPtrHashKey<dom::DocumentOrShadowRoot>, DependentIDsHashtable>
+    mDependentIDsHashes;
 
   friend class RelatedAccIterator;
 

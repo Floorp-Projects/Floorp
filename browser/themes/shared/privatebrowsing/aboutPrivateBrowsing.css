@@ -4,10 +4,6 @@
 
 @import url("chrome://global/skin/in-content/info-pages.css");
 
-:root {
-  --color-grey: #505473;
-}
-
 html.private {
   --in-content-page-color: white;
   --in-content-text-color: white;
@@ -78,10 +74,6 @@ p {
   background-position: right;
 }
 
-.about-subheader.tp-off {
-  background-image: url("chrome://browser/skin/privatebrowsing/tracking-protection-off.svg");
-}
-
 .about-info {
   font-size: .9em;
 }
@@ -96,64 +88,4 @@ a.button {
   border: 1px solid #6000a1;
   text-decoration: none;
   display: inline-block;
-}
-
-/**
- * We want to hide the checkbox in lieu of the toggle-btn
- * "slider toggle". We need to make the toggle keyboard
- * focusable, however, which is not possible if it's
- * display:none. We work around this by making the toggle
- * invisible but still present in the display list, allowing
- * it to receive keyboard events. When it is focused by keyboard,
- * we use the -moz-focusring selector on the invisible checkbox
- * to show a focus ring around the slider toggle.
- */
-.toggle-input {
-  opacity: 0;
-  width: 0;
-  pointer-events: none;
-  position: absolute;
-}
-
-.toggle + .toggle-btn {
-  box-sizing: border-box;
-  cursor: pointer;
-  min-width: 48px;
-  height: 27px;
-  border-radius: 13px;
-  background-color: var(--color-grey);
-  border: 1px solid #202340;
-}
-
-.toggle + .toggle-btn::after {
-  position: relative;
-  display: block;
-  content: "";
-  width: 25px;
-  height: 100%;
-  left: 0;
-  border-radius: 50%;
-  background: white;
-  transition: left .2s ease;
-}
-
-.toggle + .toggle-btn:dir(rtl)::after {
-  left: auto;
-  right: 0;
-  transition-property: right;
-}
-
-.toggle:checked + .toggle-btn {
-  background: #16da00;
-  border-color: #0CA700;
-}
-
-.toggle:checked + .toggle-btn::after {
-  inset-inline-start: 21px;
-}
-
-.toggle:-moz-focusring + .toggle-btn {
-  outline: 2px solid rgba(0, 149, 221, 0.5);
-  outline-offset: 1px;
-  -moz-outline-radius: 2px;
 }
