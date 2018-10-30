@@ -15,6 +15,7 @@ import java.io.IOException;
 public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
     private static final String TEST_JS = "testUnifiedTelemetryClientId.js";
     private static final String CLIENT_ID_PATH = "datareporting/state.json";
+    private static final String CLIENT_ID_CANARY = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0";
 
     private GeckoProfile profile;
     private File profileDir;
@@ -138,6 +139,7 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
         // file is created when Java attempts to retrieve it if it does not exist.
         final String clientId = profile.getClientId();
         fAssertNotNull("Returned client ID is not null", clientId);
+        fAssertNotEquals("Client ID is not the canary id", clientId, CLIENT_ID_CANARY);
         fAssertTrue("Client ID file exists after getClientId call", getClientIdFile().exists());
         return clientId;
     }
