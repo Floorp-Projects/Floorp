@@ -2761,6 +2761,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn
             mColumnWidth.GetUnit() != eStyleUnit_Auto);
   }
 
+  bool IsColumnSpanStyle() const {
+    return mColumnSpan == mozilla::StyleColumnSpan::All;
+  }
+
 protected:
   nscoord mColumnRuleWidth;  // coord
   nscoord mTwipsPerPixel;

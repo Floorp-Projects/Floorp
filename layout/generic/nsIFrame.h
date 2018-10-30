@@ -3885,6 +3885,14 @@ public:
   inline bool IsRelativelyPositioned() const;
   inline bool IsAbsolutelyPositioned(const nsStyleDisplay* aStyleDisplay = nullptr) const;
 
+  // Does this frame have "column-span: all" style.
+  //
+  // Note this only checks computed style, but not testing whether the
+  // containing block formatting context was established by a multicol.
+  // Callers need to consider NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR to check
+  // whether multi-column effects apply or not.
+  inline bool IsColumnSpan() const;
+
   /**
    * Returns the vertical-align value to be used for layout, if it is one
    * of the enumerated values.  If this is an SVG text frame, it returns a value

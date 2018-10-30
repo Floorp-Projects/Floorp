@@ -245,6 +245,7 @@
 %endif
 }
 
+*|*::-moz-column-set,
 *|*::-moz-column-content {
   /* the column boxes inside a column-flowed block */
   /* make unicode-bidi inherit, otherwise it has no effect on column boxes */
@@ -255,6 +256,24 @@
   /* Carry through our parent's height so that %-height children get
   their heights set */
   height: 100%;
+}
+
+*|*::-moz-column-set {
+  /* Inherit from ColumnSetWrapperFrame so that nsColumnSetFrame is aware of
+   them.*/
+  columns: inherit;
+  column-gap: inherit;
+  column-rule: inherit;
+  column-fill: inherit;
+}
+
+*|*::-moz-column-span-wrapper {
+  /* As a result of the discussion in
+   * https://github.com/w3c/csswg-drafts/issues/1072, most of the styles
+   * currently applied to ::-moz-block-inside-inline-wrapper should not
+   * apply here. */
+  display: block;
+  column-span: all;
 }
 
 *|*::-moz-anonymous-flex-item,

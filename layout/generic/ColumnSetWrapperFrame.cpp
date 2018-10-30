@@ -33,6 +33,36 @@ ColumnSetWrapperFrame::ColumnSetWrapperFrame(ComputedStyle* aStyle)
 {
 }
 
+void
+ColumnSetWrapperFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
+{
+  MOZ_ASSERT(!GetPrevContinuation(),
+             "Who set NS_FRAME_OWNS_ANON_BOXES on our continuations?");
+
+  // It's sufficient to append the first ColumnSet child, which is the first
+  // continuation of the directly owned anon boxes.
+  nsIFrame* columnSet = PrincipalChildList().FirstChild();
+  MOZ_ASSERT(columnSet && columnSet->IsColumnSetFrame(),
+             "The first child should always be ColumnSet!");
+  aResult.AppendElement(OwnedAnonBox(columnSet));
+
+#ifdef DEBUG
+  // All the other ColumnSets are the continuation of the first ColumnSet;
+  // the -moz-column-span-wrappers are the continuations of other blocks in
+  // -moz-column-span-contents.
+  for (nsIFrame* child : PrincipalChildList()) {
+    if (child == columnSet) {
+      // Skip testing the first child.
+      continue;
+    }
+    MOZ_ASSERT((child->IsColumnSetFrame() ||
+                child->Style()->GetPseudo() == nsCSSAnonBoxes::columnSpanWrapper()) &&
+               child->GetPrevContinuation(),
+               "Prev continuation is not set properly?");
+  }
+#endif
+}
+
 #ifdef DEBUG_FRAME_DUMP
 nsresult
 ColumnSetWrapperFrame::GetFrameName(nsAString& aResult) const
@@ -48,7 +78,11 @@ void
 ColumnSetWrapperFrame::AppendFrames(ChildListID aListID,
                                     nsFrameList& aFrameList)
 {
-  MOZ_ASSERT_UNREACHABLE("Unsupported operation!");
+#ifdef DEBUG
+  MOZ_ASSERT(!mFinishedBuildingColumns, "Should only call once!");
+  mFinishedBuildingColumns = true;
+#endif
+
   nsBlockFrame::AppendFrames(aListID, aFrameList);
 }
 
