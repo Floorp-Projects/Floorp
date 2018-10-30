@@ -234,12 +234,21 @@ DefaultJitOptions::DefaultJitOptions()
         }
     }
 
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    SET_DEFAULT(spectreIndexMasking, false);
+    SET_DEFAULT(spectreObjectMitigationsBarriers, false);
+    SET_DEFAULT(spectreObjectMitigationsMisc, false);
+    SET_DEFAULT(spectreStringMitigations, false);
+    SET_DEFAULT(spectreValueMasking, false);
+    SET_DEFAULT(spectreJitToCxxCalls, false);
+#else
     SET_DEFAULT(spectreIndexMasking, true);
     SET_DEFAULT(spectreObjectMitigationsBarriers, true);
     SET_DEFAULT(spectreObjectMitigationsMisc, true);
     SET_DEFAULT(spectreStringMitigations, true);
     SET_DEFAULT(spectreValueMasking, true);
     SET_DEFAULT(spectreJitToCxxCalls, true);
+#endif
 
     // Toggles whether unboxed plain objects can be created by the VM.
     SET_DEFAULT(disableUnboxedObjects, false);
