@@ -4,7 +4,6 @@ import re
 import requests
 from operator import itemgetter
 from pkg_resources import parse_version
-from simplejson import JSONDecodeError
 
 BUGLIST_PREFIX = 'Bugs since previous changeset: '
 BACKOUT_REGEX = r'back(\s?)out|backed out|backing out'
@@ -119,8 +118,8 @@ def create_short_url_with_prefix(buglist, backout_buglist):
                 url = requests.get(URL_SHORTENER_TEMPLATE.format(url=long_bugzilla_link)).json()['url']
                 url = prefix + url + '\n'
 
-            except (KeyError, JSONDecodeError,):
                 # If the Bugzilla link fails despite limiting the number of bugs, don't make the url and continue
+            except (KeyError, ValueError):
                 url = ''
         else:
             url = ''
