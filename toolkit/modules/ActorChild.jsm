@@ -23,7 +23,7 @@ class ActorChild {
   }
 
   get content() {
-    return this._dispatcher.window || this.mm.content;
+    return this._dispatcher.window;
   }
 
   get docShell() {
@@ -32,6 +32,16 @@ class ActorChild {
 
   addEventListener(event, options) {
     this._dispatcher.addEventListener(event, this.constructor.name, options);
+  }
+
+  addMessageListener(msg) {
+    this._dispatcher.addMessageListener(msg, this.constructor.name);
+  }
+
+  sendAsyncMessage(msg, data = {}) {
+    data.frameId = this._dispatcher.frameId;
+    data.browsingContextId = this._dispatcher.browsingContextId;
+    this.mm.sendAsyncMessage(msg, data);
   }
 
   cleanup() {
