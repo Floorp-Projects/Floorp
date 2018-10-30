@@ -21,6 +21,35 @@ enum class EditAction
   // something at creating, destroying or focus move etc, i.e., not edit
   // action is being handled but editor is doing something.
   eNotEditing,
+
+  // eSetTextDirection indicates that setting text direction (LTR or RTL).
+  eSetTextDirection,
+
+  // The following edit actions are not user's operation.  They are caused
+  // by if UI does something.
+
+  // eUnknown indicates some special edit actions, e.g., batching of some
+  // nsI*Editor method calls.  This shouldn't be set while handling a user
+  // operation.
+  eUnknown,
+
+  // eSetAttribute indicates to set attribute value of an element node.
+  eSetAttribute,
+
+  // eRemoveAttribute indicates to remove attribute from an element node.
+  eRemoveAttribute,
+
+  // eInsertNode indicates to insert a node into the tree.
+  eInsertNode,
+
+  // eDeleteNode indicates to remove a node form the tree.
+  eRemoveNode,
+
+  // eSplitNode indicates to split a node.
+  eSplitNode,
+
+  // eJoinNodes indicates to join 2 nodes.
+  eJoinNodes,
 };
 
 // This is int32_t instead of int16_t because nsIInlineSpellChecker.idl's
