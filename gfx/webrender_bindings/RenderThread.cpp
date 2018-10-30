@@ -151,6 +151,10 @@ RenderThread::DoAccumulateMemoryReport(MemoryReport aReport, const RefPtr<Memory
     wr_renderer_accumulate_memory_report(r.second->GetRenderer(), &aReport);
   }
 
+  // Note total gpu bytes allocated across all WR instances.
+  MOZ_ASSERT(aReport.total_gpu_bytes_allocated == 0);
+  aReport.total_gpu_bytes_allocated = wr_total_gpu_bytes_allocated();
+
   aPromise->Resolve(aReport, __func__);
 }
 
