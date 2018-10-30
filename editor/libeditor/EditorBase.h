@@ -7,7 +7,7 @@
 #define mozilla_EditorBase_h
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
-#include "mozilla/EditAction.h"         // for EditSubAction
+#include "mozilla/EditAction.h"         // for EditAction and EditSubAction
 #include "mozilla/EditorDOMPoint.h"     // for EditorDOMPoint
 #include "mozilla/Maybe.h"              // for Maybe
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
@@ -298,6 +298,10 @@ public:
   Selection* GetSelection(SelectionType aSelectionType =
                                           SelectionType::eNormal) const
   {
+    if (aSelectionType == SelectionType::eNormal &&
+        IsEditActionDataAvailable()) {
+      return SelectionRefPtr().get();
+    }
     nsISelectionController* sc = GetSelectionController();
     if (!sc) {
       return nullptr;
@@ -682,6 +686,41 @@ public:
    */
  void ReinitializeSelection(Element& aElement);
 
+protected: // AutoEditActionDataSetter, this shouldn't be accessed by friends.
+  /**
+   * AutoEditActionDataSetter grabs some necessary objects for handling any
+   * edit actions and store the edit action what we're handling.  When this is
+   * created, its pointer is set to the mEditActionData, and this guarantees
+   * the lifetime of grabbing objects until it's destroyed.
+   */
+  class MOZ_STACK_CLASS AutoEditActionDataSetter final
+  {
+  public:
+    AutoEditActionDataSetter(const EditorBase& aEditorBase,
+                             EditAction aEditAction);
+    ~AutoEditActionDataSetter();
+
+    bool CanHandle() const
+    {
+      return mSelection && mEditorBase.IsInitialized();
+    }
+
+    const RefPtr<Selection>& SelectionRefPtr() const { return mSelection; }
+    EditAction GetEditAction() const { return mEditAction; }
+
+  private:
+    EditorBase& mEditorBase;
+    RefPtr<Selection> mSelection;
+    // EditAction may be nested, for example, a command may be executed
+    // from mutation event listener which is run while editor changes
+    // the DOM tree.  In such case, we need to handle edit action separately.
+    AutoEditActionDataSetter* mParentData;
+    EditAction mEditAction;
+
+    AutoEditActionDataSetter() = delete;
+    AutoEditActionDataSetter(const AutoEditActionDataSetter& aOther) = delete;
+  };
+
 protected: // May be called by friends.
   /****************************************************************************
    * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
@@ -691,6 +730,35 @@ protected: // May be called by friends.
    * to do that for you, you need to create a wrapper method in public scope
    * and call it.
    ****************************************************************************/
+
+  bool IsEditActionDataAvailable() const
+  {
+    return mEditActionData && mEditActionData->CanHandle();
+  }
+
+  /**
+   * SelectionRefPtr() returns cached Selection.  This is pretty faster than
+   * EditorBase::GetSelection() if available.
+   * Note that this never returns nullptr unless public methods ignore
+   * result of AutoEditActionDataSetter::CanHandle() and keep handling edit
+   * action but any methods should stop handling edit action if it returns
+   * false.
+   */
+  const RefPtr<Selection>& SelectionRefPtr() const
+  {
+    MOZ_ASSERT(mEditActionData);
+    return mEditActionData->SelectionRefPtr();
+  }
+
+  /**
+   * GetEditAction() returns EditAction which is being handled.  If some
+   * edit actions are nested, this returns the innermost edit action.
+   */
+  EditAction GetEditAction() const
+  {
+    return mEditActionData ? mEditActionData->GetEditAction() :
+                             EditAction::eNone;
+  }
 
   /**
    * InsertTextWithTransaction() inserts aStringToInsert to aPointToInsert or
@@ -735,8 +803,7 @@ protected: // May be called by friends.
                                         Text& aTextNode, int32_t aOffset,
                                         bool aSuppressIME = false);
 
-  nsresult SetTextImpl(Selection& aSelection,
-                       const nsAString& aString,
+  nsresult SetTextImpl(const nsAString& aString,
                        Text& aTextNode);
 
   /**
@@ -1248,11 +1315,7 @@ protected: // May be called by friends.
   EditorDOMPoint JoinNodesDeepWithTransaction(nsIContent& aLeftNode,
                                               nsIContent& aRightNode);
 
-  /**
-   * Note that aSelection is optional and can be nullptr.
-   */
-  nsresult DoTransaction(Selection* aSelection,
-                         nsITransaction* aTxn);
+  nsresult DoTransactionInternal(nsITransaction* aTxn);
 
   virtual bool IsBlockNode(nsINode* aNode);
 
@@ -1534,16 +1597,16 @@ protected: // May be called by friends.
   }
   static nsIContent* GetNodeAtRangeOffsetPoint(const RawRangeBoundary& aPoint);
 
-  static EditorRawDOMPoint GetStartPoint(Selection* aSelection);
-  static EditorRawDOMPoint GetEndPoint(Selection* aSelection);
+  static EditorRawDOMPoint GetStartPoint(const Selection& aSelection);
+  static EditorRawDOMPoint GetEndPoint(const Selection& aSelection);
 
-  static nsresult GetEndChildNode(Selection* aSelection,
+  static nsresult GetEndChildNode(const Selection& aSelection,
                                   nsIContent** aEndNode);
 
   /**
    * CollapseSelectionToEnd() collapses the selection to the end of the editor.
    */
-  nsresult CollapseSelectionToEnd(Selection* aSelection);
+  nsresult CollapseSelectionToEnd();
 
   /**
    * Helpers to add a node to the selection.
@@ -1576,7 +1639,6 @@ protected: // May be called by friends.
   }
 
   nsresult HandleInlineSpellCheck(EditSubAction aEditSubAction,
-                                  Selection& aSelection,
                                   nsINode* previousSelectedNode,
                                   uint32_t previousSelectedOffset,
                                   nsINode* aStartContainer,
@@ -1652,8 +1714,8 @@ protected: // Called by helper classes.
    * various editor actions.
    */
   bool ArePreservingSelection();
-  void PreserveSelectionAcrossActions(Selection* aSel);
-  nsresult RestorePreservedSelection(Selection* aSel);
+  void PreserveSelectionAcrossActions();
+  nsresult RestorePreservedSelection();
   void StopPreservingSelection();
 
   /**
@@ -1734,7 +1796,7 @@ protected: // Shouldn't be used by friend classes
   /**
    * Make the given selection span the entire document.
    */
-  virtual nsresult SelectEntireDocument(Selection* aSelection);
+  virtual nsresult SelectEntireDocument();
 
   /**
    * Helper method for scrolling the selection into view after
@@ -1840,15 +1902,13 @@ protected: // Shouldn't be used by friend classes
   /**
    * InitializeSelectionAncestorLimit() is called by InitializeSelection().
    * When this is called, each implementation has to call
-   * aSelection.SetAncestorLimiter() with aAnotherLimit.
+   * Selection::SetAncestorLimiter() with aAnotherLimit.
    *
-   * @param aSelection          The selection.
-   * @param aAncestorLimit      New ancestor limit of aSelection.  This always
+   * @param aAncestorLimit      New ancestor limit of Selection.  This always
    *                            has parent node.  So, it's always safe to
    *                            call SetAncestorLimit() with this node.
    */
-  virtual void InitializeSelectionAncestorLimit(Selection& aSelection,
-                                                nsIContent& aAncestorLimit);
+  virtual void InitializeSelectionAncestorLimit(nsIContent& aAncestorLimit);
 
   /**
    * Return the offset of aChild in aParent.  Asserts fatally if parent or
@@ -1902,6 +1962,8 @@ protected: // Shouldn't be used by friend classes
 private:
   nsCOMPtr<nsISelectionController> mSelectionController;
   nsCOMPtr<nsIDocument> mDocument;
+
+  AutoEditActionDataSetter* mEditActionData;
 
 
   /**
@@ -1981,9 +2043,8 @@ protected: // helper classes which may be used by friends
      * Constructor responsible for remembering all state needed to restore
      * aSelection.
      */
-    AutoSelectionRestorer(Selection& aSelection,
-                          EditorBase& aEditorBase
-                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    explicit AutoSelectionRestorer(EditorBase& aEditorBase
+                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /**
      * Destructor restores mSelection to its former state
@@ -1996,7 +2057,6 @@ protected: // helper classes which may be used by friends
     void Abort();
 
   protected:
-    RefPtr<Selection> mSelection;
     EditorBase* mEditorBase;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };

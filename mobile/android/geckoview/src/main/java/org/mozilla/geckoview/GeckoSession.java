@@ -41,10 +41,12 @@ import android.os.IInterface;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.SystemClock;
+import android.support.annotation.AnyThread;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringDef;
+import android.support.annotation.UiThread;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Surface;
@@ -521,8 +523,7 @@ public class GeckoSession extends LayerSession
                     }
                     delegate.onContentPermissionRequest(
                             GeckoSession.this, message.getString("uri"),
-                            type, message.getString("access"),
-                            new PermissionCallback(typeString, callback));
+                            type, new PermissionCallback(typeString, callback));
                 } else if ("GeckoView:MediaPermission".equals(event)) {
                     GeckoBundle[] videoBundles = message.getBundleArray("video");
                     GeckoBundle[] audioBundles = message.getBundleArray("audio");
@@ -1022,6 +1023,7 @@ public class GeckoSession extends LayerSession
      * @see #close
      * @see #isOpen
      */
+    @UiThread
     public void open(final @NonNull GeckoRuntime runtime) {
         ThreadUtils.assertOnUiThread();
 
@@ -1071,6 +1073,7 @@ public class GeckoSession extends LayerSession
      * @see #open
      * @see #isOpen
      */
+    @UiThread
     public void close() {
         ThreadUtils.assertOnUiThread();
 
@@ -1102,6 +1105,7 @@ public class GeckoSession extends LayerSession
      *
      * @return SessionTextInput instance.
      */
+    @AnyThread
     public @NonNull SessionTextInput getTextInput() {
         // May be called on any thread.
         return mTextInput;
@@ -1112,6 +1116,7 @@ public class GeckoSession extends LayerSession
       *
       * @return SessionAccessibility instance.
       */
+    @UiThread
     public @NonNull SessionAccessibility getAccessibility() {
         ThreadUtils.assertOnUiThread();
         if (mAccessibility != null) { return mAccessibility; }
@@ -1520,6 +1525,7 @@ public class GeckoSession extends LayerSession
      * @return GeckoDisplay instance.
      * @see #releaseDisplay(GeckoDisplay)
      */
+    @UiThread
     public @NonNull GeckoDisplay acquireDisplay() {
         ThreadUtils.assertOnUiThread();
 
@@ -1539,6 +1545,7 @@ public class GeckoSession extends LayerSession
      * @param display Acquired GeckoDisplay instance.
      * @see #acquireDisplay()
      */
+    @UiThread
     public void releaseDisplay(final @NonNull GeckoDisplay display) {
         ThreadUtils.assertOnUiThread();
 
@@ -3317,12 +3324,10 @@ public class GeckoSession extends LayerSession
          *             PERMISSION_GEOLOCATION
          *             PERMISSION_DESKTOP_NOTIFICATION
          *             PERMISSION_AUTOPLAY_MEDIA
-         * @param access Not used.
          * @param callback Callback interface.
          */
         void onContentPermissionRequest(GeckoSession session, String uri,
-                                        @Permission int type,
-                                        String access, Callback callback);
+                                        @Permission int type, Callback callback);
 
         class MediaSource {
             @IntDef({SOURCE_CAMERA, SOURCE_SCREEN, SOURCE_APPLICATION,
@@ -3541,6 +3546,7 @@ public class GeckoSession extends LayerSession
          * @param session Session instance.
          * @param reason Reason for the reset.
          */
+        @UiThread
         void restartInput(@NonNull GeckoSession session, @RestartReason int reason);
 
         /**
@@ -3550,6 +3556,7 @@ public class GeckoSession extends LayerSession
          * @param session Session instance.
          * @see #hideSoftInput
          * */
+        @UiThread
         void showSoftInput(@NonNull GeckoSession session);
 
         /**
@@ -3559,6 +3566,7 @@ public class GeckoSession extends LayerSession
          * @param session Session instance.
          * @see #showSoftInput
          * */
+        @UiThread
         void hideSoftInput(@NonNull GeckoSession session);
 
         /**
@@ -3571,6 +3579,7 @@ public class GeckoSession extends LayerSession
          * @param compositionStart Composition start offset, or -1 if there is no composition.
          * @param compositionEnd Composition end offset, or -1 if there is no composition.
          */
+        @UiThread
         void updateSelection(@NonNull GeckoSession session, int selStart, int selEnd,
                              int compositionStart, int compositionEnd);
 
@@ -3583,6 +3592,7 @@ public class GeckoSession extends LayerSession
          * @param request The extract text request.
          * @param text The extracted text.
          */
+        @UiThread
         void updateExtractedText(@NonNull GeckoSession session,
                                  @NonNull ExtractedTextRequest request,
                                  @NonNull ExtractedText text);
@@ -3595,6 +3605,7 @@ public class GeckoSession extends LayerSession
          * @param session Session instance.
          * @param info Cursor-anchor information.
          */
+        @UiThread
         void updateCursorAnchorInfo(@NonNull GeckoSession session, @NonNull CursorAnchorInfo info);
 
         @Retention(RetentionPolicy.SOURCE)
@@ -3634,6 +3645,7 @@ public class GeckoSession extends LayerSession
          *                  SessionTextInput#onProvideAutofillVirtualStructure} and can be used
          *                  with {@link SessionTextInput#autofill}.
          */
+        @UiThread
         void notifyAutoFill(@NonNull GeckoSession session, @AutoFillNotification int notification,
                             int virtualId);
     }

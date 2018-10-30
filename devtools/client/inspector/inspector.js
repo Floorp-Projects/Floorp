@@ -903,6 +903,10 @@ Inspector.prototype = {
       layoutId,
       layoutTitle,
       {
+        props: {
+          id: layoutId,
+          title: layoutTitle,
+        },
         panel: () => {
           if (!this.layoutview) {
             const LayoutView =
@@ -927,6 +931,10 @@ Inspector.prototype = {
       animationId,
       animationTitle,
       {
+        props: {
+          id: animationId,
+          title: animationTitle,
+        },
         panel: () => {
           const AnimationInspector =
             this.browserRequire("devtools/client/inspector/animation/animation");
@@ -944,6 +952,10 @@ Inspector.prototype = {
       fontId,
       fontTitle,
       {
+        props: {
+          id: fontId,
+          title: fontTitle,
+        },
         panel: () => {
           if (!this.fontinspector) {
             const FontInspector =
@@ -965,6 +977,10 @@ Inspector.prototype = {
         changesId,
         changesTitle,
         {
+          props: {
+            id: changesId,
+            title: changesTitle,
+          },
           panel: () => {
             if (!this.changesView) {
               const ChangesView =

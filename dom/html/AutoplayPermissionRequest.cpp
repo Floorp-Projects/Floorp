@@ -56,7 +56,6 @@ AutoplayPermissionRequest::GetTypes(nsIArray** aTypes)
   nsTArray<nsString> emptyOptions;
   return dom::nsContentPermissionUtils::CreatePermissionArray(
     NS_LITERAL_CSTRING("autoplay-media"),
-    NS_LITERAL_CSTRING("unused"),
     emptyOptions,
     aTypes);
 }
