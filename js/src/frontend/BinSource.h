@@ -194,7 +194,8 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     MOZ_MUST_USE JS::Result<Ok> addScopeName(AssertedScopeKind scopeKind, HandleAtom name,
                                              ParseContext::Scope* scope,
                                              DeclarationKind declKind,
-                                             bool isCaptured);
+                                             bool isCaptured,
+                                             bool allowDuplicateName);
 
     void captureFunctionName();
 
