@@ -1446,12 +1446,6 @@ class DebuggerFrame : public NativeObject
     friend class ScriptedOnPopHandler;
 
   public:
-    enum {
-        OWNER_SLOT
-    };
-
-    static const unsigned RESERVED_SLOTS = 1;
-
     static const Class class_;
 
     static NativeObject* initClass(JSContext* cx, HandleObject dbgCtor,
