@@ -77,7 +77,7 @@ function runTests() {
   }
 
   function getProcess() {
-    client.mainRoot.listProcesses(response => {
+    client.mainRoot.listProcesses().then(response => {
       ok(response.processes.length >= 2, "Got at least the parent process and one child");
       is(response.processes.length, processCount + 1,
          "Got one additional process on the second call to listProcesses");
