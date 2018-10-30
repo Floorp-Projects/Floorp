@@ -22,11 +22,84 @@ enum class EditAction
   // action is being handled but editor is doing something.
   eNotEditing,
 
+  // eInsertText indicates to insert some characters.
+  eInsertText,
+
+  // eInsertParagraphSeparator indicates to insert a paragraph separator such
+  // as <p>, <div> or just \n in TextEditor.
+  eInsertParagraphSeparator,
+
+  // eDeleteSelection indicates to delete selected content or content around
+  // caret if selection is collapsed.
+  eDeleteSelection,
+
+  // eDeleteBackward indicates to remove previous character element of caret.
+  // This may be set even when Selection is not collapsed.
+  eDeleteBackward,
+
+  // eDeleteForward indicates to remove next character or element of caret.
+  // This may be set even when Selection is not collapsed.
+  eDeleteForward,
+
+  // eDeleteWordBackward indicates to remove previous word.  If caret is in
+  // a word, remove characters between word start and caret.
+  // This may be set even when Selection is not collapsed.
+  eDeleteWordBackward,
+
+  // eDeleteWordForward indicates to remove next word.  If caret is in a
+  // word, remove characters between caret and word end.
+  // This may be set even when Selection is not collapsed.
+  eDeleteWordForward,
+
+  // eDeleteToBeginningOfSoftLine indicates to remove characters between
+  // caret and previous visual line break.
+  // This may be set even when Selection is not collapsed.
+  eDeleteToBeginningOfSoftLine,
+
+  // eDeleteToEndOfSoftLine indicates to remove characters between caret and
+  // next visual line break.
+  // This may be set even when Selection is not collapsed.
+  eDeleteToEndOfSoftLine,
+
+  // eStartComposition indicates that user starts composition.
+  eStartComposition,
+
+  // eUpdateComposition indicates that user updates composition with
+  // new composition string and IME selections.
+  eUpdateComposition,
+
+  // eCommitComposition indicates that user commits composition.
+  eCommitComposition,
+
+  // eEndComposition indicates that user ends composition.
+  eEndComposition,
+
+  // eUndo/eRedo indicate to undo/redo a transaction.
+  eUndo,
+  eRedo,
+
   // eSetTextDirection indicates that setting text direction (LTR or RTL).
   eSetTextDirection,
 
+  // eCut indicates to delete selected content and copy it to the clipboard.
+  eCut,
+
+  // eCopy indicates to copy selected content to the clipboard.
+  eCopy,
+
+  // ePaste indicates to paste clipboard data.
+  ePaste,
+
+  // eDrop indicates that user drops dragging item into the editor.
+  eDrop,
+
+  // eReplaceText indicates to replace a part of range in editor with
+  // specific text.  For example, user select a correct word in suggestions
+  // of spellchecker or a suggestion in list of autocomplete.
+  eReplaceText,
+
   // The following edit actions are not user's operation.  They are caused
-  // by if UI does something.
+  // by if UI does something or web apps does something with JS.
 
   // eUnknown indicates some special edit actions, e.g., batching of some
   // nsI*Editor method calls.  This shouldn't be set while handling a user
@@ -50,6 +123,19 @@ enum class EditAction
 
   // eJoinNodes indicates to join 2 nodes.
   eJoinNodes,
+
+  // eSetCharacterSet indicates to set character-set of the document.
+  eSetCharacterSet,
+
+  // eSetWrapWidth indicates to set wrap width.
+  eSetWrapWidth,
+
+  // eSetText indicates to set new text of TextEditor, e.g., setting
+  // HTMLInputElement.value.
+  eSetText,
+
+  // eHidePassword indicates that editor hides password with mask characters.
+  eHidePassword,
 };
 
 // This is int32_t instead of int16_t because nsIInlineSpellChecker.idl's

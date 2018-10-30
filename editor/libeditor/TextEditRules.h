@@ -151,7 +151,8 @@ public:
 
   /**
    * HideLastPasswordInput() is called while Nodify() is calling
-   * TextEditor::HideLastPasswordInput().
+   * TextEditor::HideLastPasswordInput().  It guarantees that there is a
+   * AutoEditActionDataSetter instance in the editor.
    */
   MOZ_CAN_RUN_SCRIPT nsresult HideLastPasswordInput(Selection& aSelection);
 
