@@ -146,6 +146,7 @@ function requestsReducer(state = Requests(), action) {
         ...state,
         requests: mapSet(requests, newRequest.id, newRequest),
         selectedId: newRequest.id,
+        preselectedId: selectedId,
       };
     }
 
