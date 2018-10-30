@@ -18,6 +18,7 @@
   <string name="menu_help">Hjälp</string>
   <string name="menu_rights">Dina rättigheter</string>
   <string name="menu_trackers_blocked_title">Trackers blockerade</string>
+  <string name="menu_content_blocking">Innehållsblockering</string>
   <string name="menu_custom_tab_branding">Levereras av %1$s</string>
   <string name="share_dialog_title">Dela via</string>
   <string name="notification_erase_text">Radera webbhistorik</string>
@@ -25,6 +26,8 @@
   <string name="notification_action_erase_and_open">Radera och öppna</string>
   <string name="shortcut_erase_short_label">Radera</string>
   <string name="shortcut_erase_long_label">Radera webbhistorik</string>
+  <string name="shortcut_erase_and_open_short_label">Radera &amp; öppna</string>
+  <string name="shortcut_erase_and_open_long_label">Radera och öppna %1$s</string>
   <string name="text_selection_search_action">Sök privat</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ger dig full kontroll.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Anv&#228;nd den som en privat webbl&#228;sare:\n  "<ul>"\n    "<li>S&#246;k och surfa direkt i appen</li>"\n    "<li>Blockera trackers (eller uppdatera inst&#228;llningar att till&#229;ta trackers)</li>"\n    "<li>Radera f&#246;r att ta bort kakor samt s&#246;k- och webbhistorik</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#228;r utvecklad av Mozilla. V&#229;rt uppdrag &#228;r att fr&#228;mja ett h&#228;lsosamt, &#246;ppet Internet.<br/>\n<a href="%2$s">L&#228;s mer</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Sekretess &amp; säkerhet</string>
@@ -35,14 +38,19 @@
   <string name="preference_category_web_content">Webbinnehåll</string>
   <string name="preference_category_switching_apps">Växla appar</string>
   <string name="preference_category_general">Allmänt</string>
+  <string name="preference_general_summary">Standard webbläsare, flikar, språk</string>
   <string name="preference_category_data_collection_use">Datainsamling &amp; användning</string>
   <string name="preference_category_search">Sök</string>
   <string name="preference_show_search_suggestions">Få sökförslag</string>
   <string name="preference_show_search_suggestions_summary">%1$s skickar det du skriver i adressfältet till din sökmotor</string>
   <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_search_engine_label">Sökmotorer</string>
   <string name="preference_state_on">På</string>
   <string name="preference_state_off">Av</string>
   <string name="preference_subitem_autocomplete">Autokomplettera webbadress</string>
+  <string name="preference_switch_autocomplete_user_list">För sidor du lägger till</string>
+  <string name="preference_category_autocomplete_manage_sites">Hantera sidor</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Hantera sidor</string>
   <string name="preference_autocomplete_action_add">+ Lägg till anpassad webbadress</string>
   <string name="preference_autocomplete_title_add">Lägg till anpassad webbadress</string>
   <string name="custom_autocomplete_quick_add">Lägg till anpassad webbadress</string>
@@ -151,6 +159,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Det kan vara ett problem med serverns konfiguration, eller det kan vara\nn&#229;gon som f&#246;rs&#246;ker imitera servern.</li>"\n  "<li>Om du har anslutit till den h&#228;r servern med framg&#229;ng i det f&#246;rflutna, kan felet\nvara tillf&#228;lligt, och du kan f&#246;rs&#246;ka igen senare.</li>\n</ul>]]></string>
   <string name="error_generic_title">Hoppsan</string>
   <string name="error_generic_message">Vi kan inte ladda den här sidan av någon anledning.</string>
+  <string name="contextmenu_open_in_app">Öppna med app</string>
   <string name="contextmenu_link_share">Dela länk</string>
   <string name="contextmenu_link_copy">Kopiera länkadress</string>
   <string name="contextmenu_image_share">Dela bild</string>
@@ -224,4 +233,16 @@
   <string name="tip_autocomplete_url">Autokomplettera webbadresser för webbplatser som du använder mest\n Tryck länge på vilken URL som helst i adressfältet</string>
   <string name="tip_open_in_new_tab">Öppna en länk i en ny flik\n Tryck länge på en länk på en sida</string>
   <string name="tip_request_desktop">Vill du hellre se webbplatsen anpassad för datorer?%1$s Meny &gt; Begär datorwebbplats</string>
+  <string name="tip_disable_tips2">Stäng av tips på startskärmen</string>
+  <string name="new_tab_opened_snackbar">Ny flik öppnad</string>
+  <string name="open_new_tab_snackbar">Växla</string>
+  <string name="preference_open_new_tab">Byt till länk i ny flik omedelbart</string>
+  <string name="preference_category_safe_browsing">Säker surfning</string>
+  <string name="preference_exceptions">Undantag</string>
+  <string name="preference_exceptions_menu_remove">Ta bort</string>
+  <string name="preference_exceptions_remove_all_button_label">Ta bort alla webbplatser</string>
+  <string name="tab_crash_report_close_tab_button_label">Stäng flik</string>
+  <string name="fatal_crash_report_close_button_label">Stäng</string>
+  <string name="fatal_crash_report_restart_firefox_label">Starta om %1$s</string>
+  <string name="crash_report_send_crash_label">Skicka kraschrapport till Mozilla</string>
 </resources>

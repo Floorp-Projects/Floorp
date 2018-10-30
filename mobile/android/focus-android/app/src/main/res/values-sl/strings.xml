@@ -18,6 +18,7 @@
   <string name="menu_help">Pomoč</string>
   <string name="menu_rights">Vaše pravice</string>
   <string name="menu_trackers_blocked_title">Zavrnjeni sledilci</string>
+  <string name="menu_content_blocking">Zavračanje vsebine</string>
   <string name="menu_custom_tab_branding">Omogoča: %1$s</string>
   <string name="share_dialog_title">Deli preko</string>
   <string name="notification_erase_text">Počisti zgodovino brskanja</string>
@@ -25,6 +26,7 @@
   <string name="notification_action_erase_and_open">Izbriši in odpri</string>
   <string name="shortcut_erase_short_label">Izbriši</string>
   <string name="shortcut_erase_long_label">Počisti zgodovino brskanja</string>
+  <string name="shortcut_erase_and_open_short_label">Izbriši in odpri</string>
   <string name="text_selection_search_action">Iščite zasebno</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s daje nadzor v va&#353;e roke.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Uporabljajte ga kot zaseben brskalnik:\n  "<ul>"\n    "<li>I&#353;&#269;ite in brskajte naravnost iz aplikacije</li>"\n    "<li>Zavra&#269;ajte sledilce (ali spremenite nastavitve zavra&#269;anja sledilcev)</li>"\n    "<li>Bri&#353;ite pi&#353;kotke ter zgodovino strani in iskanja</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s razvija Mozilla. Na&#353;e poslanstvo je spodbujati zdrav in odprt internet.<br/>\n<a href="%2$s">Ve&#269; o tem</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Zasebnost in varnost</string>
@@ -35,14 +37,17 @@
   <string name="preference_category_web_content">Spletna vsebina</string>
   <string name="preference_category_switching_apps">Preklapljanje aplikacij</string>
   <string name="preference_category_general">Splošno</string>
+  <string name="preference_general_summary">Privzeti brskalnik, zavihki, jezik</string>
   <string name="preference_category_data_collection_use">Zbiranje in uporaba podatkov</string>
   <string name="preference_category_search">Iskanje</string>
   <string name="preference_show_search_suggestions">Prejemaj predloge iskanja</string>
   <string name="preference_show_search_suggestions_summary">%1$s bo natipkano v naslovno vrstico poslal iskalniku</string>
   <string name="preference_search_engine_default">Privzet</string>
+  <string name="preference_search_engine_label">Iskalnik</string>
   <string name="preference_state_on">Vključeno</string>
   <string name="preference_state_off">Izklopljeno</string>
   <string name="preference_subitem_autocomplete">Samodejno dopolnjevanje URL</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Upravljanje strani</string>
   <string name="preference_autocomplete_action_add">+ Dodaj URL po meri</string>
   <string name="preference_autocomplete_title_add">Dodaj URL po meri</string>
   <string name="custom_autocomplete_quick_add">Dodaj spletni naslov po meri</string>
@@ -151,6 +156,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Te&#382;ava je morda v nastavitvah stre&#382;nika ali pa nekdo posku&#353;a\nta stre&#382;nik opona&#353;ati.</li>"\n  "<li>&#268;e ste se v preteklosti &#382;e uspe&#353;no povezali na ta stre&#382;nik, je morda\nnapaka za&#269;asna in lahko znova poskusite kasneje.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Iz neznanega razloga ne moremo naložiti strani.</string>
+  <string name="contextmenu_open_in_app">Odpri z aplikacijo</string>
   <string name="contextmenu_link_share">Deli povezavo</string>
   <string name="contextmenu_link_copy">Kopiraj naslov povezave</string>
   <string name="contextmenu_image_share">Deli sliko</string>
@@ -224,4 +230,17 @@
   <string name="tip_autocomplete_url">Samodejno dokončajte spletne naslove za strani, ki jih najpogosteje obiskujete\n Pridržite prst na kateremkoli spletnem naslovu v naslovni vrstici</string>
   <string name="tip_open_in_new_tab">Odprite povezavo v novem zavihku\n Pridržite prst na katerikoli povezavi na strani</string>
   <string name="tip_request_desktop">Želite uporabljati polno različico strani?%1$s Meni &gt; Zahtevaj stran za namizja</string>
+  <string name="tip_disable_tips2">Izključi namige na začetnem zaslonu</string>
+  <string name="new_tab_opened_snackbar">Odprt nov zavihek</string>
+  <string name="open_new_tab_snackbar">Preklopi</string>
+  <string name="preference_category_safe_browsing">Varno brskanje</string>
+  <string name="preference_exceptions">Izjeme</string>
+  <string name="preference_exceptions_menu_remove">Odstrani</string>
+  <string name="preference_exceptions_remove_all_button_label">Odstrani vse spletne strani</string>
+  <string name="tab_crash_report_headline">Oprostite. S tem zavihkom imamo težavo.</string>
+  <string name="tab_crash_report_close_tab_button_label">Zapri zavihek</string>
+  <string name="fatal_crash_report_title">Oprostite. %1$s je naletel na težavo in se sesul.</string>
+  <string name="fatal_crash_report_close_button_label">Zapri</string>
+  <string name="fatal_crash_report_restart_firefox_label">Ponovno zaženi %1$s</string>
+  <string name="crash_report_send_crash_label">Pošlji poročilo o sesutju Mozilli</string>
 </resources>

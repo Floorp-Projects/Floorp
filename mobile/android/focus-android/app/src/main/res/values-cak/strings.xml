@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Tikanöx o ketz\'ib\'äx ri taq ochochib\'äl</string>
   <string name="teaser">Ruyonil ichinan okem pa k\'amaya\'l.</string>
   <string name="feedback_erase">Ri runatab\'al okem pa k\'amaya\'l xyuj el.</string>
+  <string name="feedback_erase_custom_tab">Xyuj ri ruwi\' runatab\'al okem pa k\'amaya\'l.</string>
   <string name="search_hint">Tikanöx %1$s</string>
   <string name="menu_share">Tikomonïx…</string>
   <string name="menu_report_site_issue">Tiya\' Rutzijol ri Ruk\'ayewal Ruxaq K\'amaya\'l</string>
@@ -18,6 +19,7 @@
   <string name="menu_help">To\'ïk</string>
   <string name="menu_rights">Taq Ach\'ojib\'al</string>
   <string name="menu_trackers_blocked_title">Eq\'aton ojqanela\'</string>
+  <string name="menu_content_blocking">Ruq\'atik Rupam</string>
   <string name="menu_custom_tab_branding">B\'anon ruma %1$s</string>
   <string name="share_dialog_title">Tikomonïx b\'ey</string>
   <string name="notification_erase_text">Tiyuj runatab\'al okem pa k\'amaya\'l</string>
@@ -25,6 +27,8 @@
   <string name="notification_action_erase_and_open">Tiyuj chuqa\' Tijaq</string>
   <string name="shortcut_erase_short_label">Tiyuj</string>
   <string name="shortcut_erase_long_label">Tiyuj runatab\'al okem pa k\'amaya\'l</string>
+  <string name="shortcut_erase_and_open_short_label">Tiyuj &amp; tijaq</string>
+  <string name="shortcut_erase_and_open_long_label">Tiyuj chuqa\' tijaq %1$s</string>
   <string name="text_selection_search_action">Tikanöx chi ichinem</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s nuya\' ronojel pan aq\'a\'.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Tawokisaj achi\'el jun ichina okik\'amaya\'l:\n  "<ul>"\n    "<li>Tikan&#246;x chuqa\' tokis&#228;x ri chokoy</li>"\n    "<li>Keq\'at ojqanela\' (o kek\'ex taq cha\'oj richin niya\' q\'ij chi ke ri ojqanela\')</li>"\n    "<li>Tiyuj richin yeyuj el taq kaxlawey chuqa\' runatab\'al kanox&#239;k chuqa\' okem pa k\'amaya\'l</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Xsamajin ruma ri Mozilla. Ri taqel qataqanem ja ri niqay&#228;k qak\'u\'x richin jun jaq&#228;l chuqa\' raxin&#228;q k\'amaya\'l.<br/>\n<a href="%2$s">Tetam&#228;x ch\'aqa\' chik</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Ichinanem &amp; Jikomal</string>
@@ -35,6 +39,7 @@
   <string name="preference_category_web_content">Ajk\'amaya\'l Rupam</string>
   <string name="preference_category_switching_apps">Jaloj chi kikojol Chokoy</string>
   <string name="preference_category_general">Chijun</string>
+  <string name="preference_general_summary">Okik\'amaya\'l, taq ruwi\', ch\'ab\'äl e k\'o wi</string>
   <string name="preference_category_data_collection_use">Kimolik Tzij &amp; Okisaxïk</string>
   <string name="preference_category_search">Tikanöx</string>
   <string name="preference_show_search_suggestions">Kechilab\'ëx ri yekanöx</string>
@@ -151,6 +156,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Rik\'in jub\'a\' k\'o jun k\'ayewal rik\'in ri runuk\'ulem k\'uxasamaj o rik\'in jub\'a\' k\'o najowan nik\'exon ri k\'uxasamaj.</li>"\n  "<li>We atokin&#228;q chik pa re k\'uxasamaj re\' ojer kan, rik\'in jub\'a\' xa jun jumej sachoj ruma ri\' yatik&#239;r natojtob\'ej pa jun chik ti ramaj.</li>\n</ul>]]></string>
   <string name="error_generic_title">Uy.</string>
   <string name="error_generic_message">Man qetaman ta achike ruma man yojtikïr ta niqasamajij re ruxaq re\'.</string>
+  <string name="contextmenu_open_in_app">Tijaq rik\'in chokoy</string>
   <string name="contextmenu_link_share">Tikomonïx ri ximöy</string>
   <string name="contextmenu_link_copy">Tiwachib\'ëx ri rochochib\'al ximonel</string>
   <string name="contextmenu_image_share">Tikomonïx wachib\'äl</string>
@@ -224,4 +230,14 @@
   <string name="tip_autocomplete_url">Ruyon ke\'atz\'aqatisaj ri taq URLs kichin ri taq ruxan yalan ye\'awokisaj\n Tapitz\'itz\'ej xa b\'achike URL pa rukajtz\'ik ochochib\'äl</string>
   <string name="tip_open_in_new_tab">Tijaq jun ximonel pa jun k\'ak\'a\' ruwi\'\n Tapitz\'itz\'ej xab\'achike ximonel pa jun ruxaq</string>
   <string name="tip_request_desktop">"¿La nawajo\' natzu\' ri ruxaq ruk\'amaya\'l ruwa kematz\'ib\'?%1$s\n    K\'utsamajib\'äl &gt; Tik\'utüx jun ruxaq ruk\'amaya\'l ruwa kematz\'ib\'"</string>
+  <string name="tip_disable_tips2">Tichup ri taq chilab\'enïk pa ri tikirib\'äl ruwäch</string>
+  <string name="new_tab_opened_snackbar">K\'ak\'a\' ruwi\' jaqon</string>
+  <string name="open_new_tab_snackbar">Tiq\'ax pa</string>
+  <string name="preference_category_safe_browsing">¡Tachajij awi\' richin Yatok pa K\'amaya\'l!</string>
+  <string name="preference_exceptions">Taq man relik ta</string>
+  <string name="preference_exceptions_menu_remove">Tiyuj</string>
+  <string name="preference_exceptions_remove_all_button_label">Keyuj ronojel ajk\'amaya\'l ruxaq</string>
+  <string name="tab_crash_report_close_tab_button_label">Titz\'apïx Ruwi\'</string>
+  <string name="fatal_crash_report_close_button_label">Titz\'apïx</string>
+  <string name="fatal_crash_report_restart_firefox_label">Titikirisäx chik %1$s</string>
 </resources>

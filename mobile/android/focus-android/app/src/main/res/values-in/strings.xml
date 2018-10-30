@@ -18,6 +18,7 @@
   <string name="menu_help">Bantuan</string>
   <string name="menu_rights">Hak Anda</string>
   <string name="menu_trackers_blocked_title">Pelacak terblokir</string>
+  <string name="menu_content_blocking">Pemblokiran Konten</string>
   <string name="menu_custom_tab_branding">Diberdayakan oleh %1$s</string>
   <string name="share_dialog_title">Bagikan via</string>
   <string name="notification_erase_text">Hapus riwayat penjelajahan</string>
@@ -25,6 +26,8 @@
   <string name="notification_action_erase_and_open">Hapus dan Buka</string>
   <string name="shortcut_erase_short_label">Hapus</string>
   <string name="shortcut_erase_long_label">Hapus riwayat penjelajahan</string>
+  <string name="shortcut_erase_and_open_short_label">Hapus &amp; buka</string>
+  <string name="shortcut_erase_and_open_long_label">Hapus dan buka %1$s</string>
   <string name="text_selection_search_action">Mencari Secara Pribadi</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s menempatkan Anda dalam kendali.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakan sebagai peramban privat:\n  "<ul>"\n    "<li>Cari dan menjelajah langsung di dalam aplikasi</li>"\n    "<li>Memblokir pelacak (atau ubah di setelan untuk izinkan pelacak)</li>"\n    "<li>Hapus untuk menghilangkan kuki termasuk juga riwayat pencarian dan penjelajahan</li>"\n  "</ul>"\n "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s diproduksi oleh Mozilla. Misi kami adalah untuk memelihara Internet yang sehat dan terbuka.<br/>" "<a href="%2$s">Pelajari lebih lanjut</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Privasi &amp; Keamanan</string>
@@ -35,14 +38,18 @@
   <string name="preference_category_web_content">Konten Web</string>
   <string name="preference_category_switching_apps">Mengganti Aplikasi</string>
   <string name="preference_category_general">Umum</string>
+  <string name="preference_general_summary">Peramban, tab, dan bahasa baku</string>
   <string name="preference_category_data_collection_use">Pengumpulan Data &amp; Penggunaan</string>
   <string name="preference_category_search">Cari</string>
   <string name="preference_show_search_suggestions">Dapatkan saran pencarian</string>
   <string name="preference_show_search_suggestions_summary">%1$s akan mengirim apa yang Anda ketik di bilah alamat ke mesin pencari Anda</string>
   <string name="preference_search_engine_default">Baku</string>
+  <string name="preference_search_engine_label">Mesin pencari</string>
   <string name="preference_state_on">Aktif</string>
   <string name="preference_state_off">Nonaktif</string>
   <string name="preference_subitem_autocomplete">Lengkapi-otomatis URL</string>
+  <string name="preference_category_autocomplete_manage_sites">Kelola situs</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Kelola situs</string>
   <string name="preference_autocomplete_action_add">+ Tambah URL ubahsuai</string>
   <string name="preference_autocomplete_title_add">Tambah URL ubahsuai</string>
   <string name="custom_autocomplete_quick_add">Tambahkan URL kustom</string>
@@ -151,6 +158,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Hal ini mungkin dikarenakan ada masalah terkait dengan konfigurasi server, atau bisa jadi ada seseorang mencoba untuk berkedok sebagai server.</li>"\n  "<li>Jika Anda berhasil tersambung ke server ini sebelumnya, gangguan dapat bersifat sementara, dan Anda dapat mencoba kembali nanti.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Kami tidak dapat memuat laman ini karena sejumlah alasan.</string>
+  <string name="contextmenu_open_in_app">Buka dengan aplikasi</string>
   <string name="contextmenu_link_share">Bagikan tautan</string>
   <string name="contextmenu_link_copy">Salin alamat tautan</string>
   <string name="contextmenu_image_share">Bagikan gambar</string>
@@ -224,4 +232,8 @@
   <string name="tip_autocomplete_url">Lengkapi otomatis URL untuk situs yang sering dikunjungi\n Ketuk lama URL di bilah alamat</string>
   <string name="tip_open_in_new_tab">Buka tautan di tab baru\n Tekan lama tautan di laman</string>
   <string name="tip_request_desktop">Lebih suka melihat situs desktop?%1$s Menu &gt; Minta situs desktop</string>
+  <string name="preference_category_safe_browsing">Penjelajahan Aman</string>
+  <string name="preference_exceptions">Kekecualian</string>
+  <string name="preference_exceptions_menu_remove">Hapus</string>
+  <string name="preference_exceptions_remove_all_button_label">Hapus semua situs web</string>
 </resources>

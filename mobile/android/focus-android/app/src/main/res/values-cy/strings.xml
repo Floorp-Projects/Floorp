@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Chwilio neu gyfeiriad</string>
   <string name="teaser">Pori preifat awtomatig.\nPori. Dileu. Eto.</string>
   <string name="feedback_erase">Mae eich hanes pori wedi cael ei ddileu.</string>
+  <string name="feedback_erase_custom_tab">Mae hanes pori\'r Tab wedi cael ei ddileu.</string>
   <string name="search_hint">Chwilio am %1$s</string>
   <string name="menu_share">Rhannu…</string>
   <string name="menu_report_site_issue">Adrodd ar Fater Gwefan</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Cymorth</string>
   <string name="menu_rights">Eich Hawliau</string>
   <string name="menu_trackers_blocked_title">Rhwystro tracwyr</string>
+  <string name="menu_trackers_blocked_subtitle">Gall ddiffodd hwn atal rhai problemau ar y wefan</string>
+  <string name="menu_content_blocking">Rhwystro Cynnwys</string>
+  <string name="menu_content_blocking_subtitle">Diffodd i drwsio rhai gwefannau</string>
   <string name="menu_custom_tab_branding">Grym %1$s</string>
   <string name="share_dialog_title">Rhannu drwy</string>
   <string name="notification_erase_text">Dileu\'r hanes pori</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Dileu ac Agor</string>
   <string name="shortcut_erase_short_label">Dileu</string>
   <string name="shortcut_erase_long_label">Dileu\'r hanes pori</string>
+  <string name="shortcut_erase_and_open_short_label">Dileu ac agor</string>
+  <string name="shortcut_erase_and_open_long_label">Dileu ac agor %1$s</string>
   <string name="text_selection_search_action">Chwilio\'n Breifat</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Gyda %1$s chi sy\'n rheoli.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Ei ddefnyddio fel porwr preifat:\n  "<ul>"\n    "<li>Chwilio a phori o fewn yr ap</li>"\n    "<li>Rhwystro tracwyr (neu ddiweddaru\'r gosodiadau i ganiat&#225;u tracwyr)</li>"\n    "<li>Dileu cwcis, yn ogystal &#226; hanes chwilio a phori</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Mae %1$s wedi ei gynhyrchu gan Mozilla. Ein amcan yw i hybu Rhyngrwyd iach ac agored.<br/>\n<a href="%2$s">Dysgu rhagor</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Preifatrwydd a Diogelwch</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Cynnwys Gwe</string>
   <string name="preference_category_switching_apps">Newid Apiau</string>
   <string name="preference_category_general">Cyffredinol</string>
+  <string name="preference_general_summary">Porwr rhagosodedig, tabiau, iaith</string>
   <string name="preference_category_data_collection_use">Casglu a Defnydd Data</string>
   <string name="preference_category_search">Chwilio</string>
   <string name="preference_show_search_suggestions">Derbyn awgrymiadau chwilio</string>
   <string name="preference_show_search_suggestions_summary">Bydd %1$s yn anfon yr hyn rydych yn ei deipio yn y bar cyfeiriad i\'ch peiriant chwilio</string>
   <string name="preference_search_engine_default">Rhagosodiad</string>
+  <string name="preference_search_engine_label">Peiriant chwilio</string>
   <string name="preference_state_on">Ymlaen</string>
   <string name="preference_state_off">Diffodd</string>
   <string name="preference_subitem_autocomplete">AwtoGwblhau URL</string>
+  <string name="preference_switch_autocomplete_topsites">Am Hoff Wefannau</string>
+  <string name="preference_autocomplete_topsite_summary">Galluogi i awtogwblhau dros 450 URL poblogaidd yn y bar cyfeiriad.</string>
+  <string name="preference_switch_autocomplete_user_list">Eich Gwefannau Chi</string>
+  <string name="preference_autocomplete_user_list_summary">Galluogi i awtogwblhau dros 450 URL poblogaidd yn y bar cyfeiriad.</string>
+  <string name="preference_category_autocomplete_manage_sites">Rheoli gwefannau</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Rheoli gwefannau</string>
   <string name="preference_autocomplete_action_add">+ Ychwanegu URL cyfaddas</string>
   <string name="preference_autocomplete_title_add">Ychwanegu URL cyfaddas</string>
   <string name="custom_autocomplete_quick_add">Ychwanegu URL cyfaddas</string>
+  <string name="add_custom_autocomplete_label">Ychwanegu dolen i awtogwblhau</string>
   <string name="preference_category_cookies">Cwcis a Data Gwefan</string>
   <string name="preference_category_data_choices">Dewisiadau Data</string>
   <string name="preference_autocomplete_title_remove">Tynnu URLau cyfaddas</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Gall ei alluogi achosi i rai tudalennau i ymddwyn yn rhyfedd</string>
   <string name="preference_privacy_category_cookies">Rhwystro cwcis</string>
   <string name="preference_privacy_should_block_cookies_no_option">Na</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Rhwystro cwcis trydydd parti\'n unig</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Rhwystro cwcis trydydd parti\'n unig</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Iawn</string>
   <string name="preference_security_biometric">Defnyddio ôl bys i ddatgloi ap</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Llwytho</string>
   <string name="accessibility_announcement_loading_finished">Gwefan wedi ei lwytho</string>
   <string name="content_description_menu">Rhagor o ddewisiadau</string>
+  <string name="indicator_content_description_menu">Rhagor o fotymau dewis</string>
   <string name="content_description_forward">Symud ymlaen</string>
   <string name="content_description_reload">Ail-lwytho\'r wefan</string>
   <string name="content_description_back">Symud nôl</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Gall hwn fod yn anhawster gyda ffurfweddiad y gweinydd neu gall fod \nyn rhywun sy\'n ceisio dynwared y gweinydd.</li>" \n  "<li>Os ydych wedi cysylltu\'n llwyddiannus gyda\'r gweinydd yn y gorffennol, efallai \nmai gwall dros dro ydyw ac i geisio eto.</li>" \n"</ul>]]></string>
   <string name="error_generic_title">Wps</string>
   <string name="error_generic_message">Methu llwytho\'r dudalen am ryw reswm.</string>
+  <string name="contextmenu_open_in_app">Agor gydag ap</string>
   <string name="contextmenu_link_share">Rhannu dolen</string>
   <string name="contextmenu_link_copy">Copïo cyfeiriad dolen</string>
   <string name="contextmenu_image_share">Rhannu delwedd</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">Gosod URLau awtogwblhau i\'ch gwefannau gorau\n Pwyso\'n hir unrhyw URL yn y bar cyfeiriad</string>
   <string name="tip_open_in_new_tab">Agor dolen mewn tab newydd\n Pwyso\'n hir ar unrhyw ddolen ar dudalen</string>
   <string name="tip_request_desktop">Gwell gweld gwefan bwrdd gwaith lawn?%1$s Dewislen &gt; Gwefan bwrdd gwaith</string>
+  <string name="tip_disable_tips2">Diffodd awgrymiadau ar y sgrin cychwyn</string>
+  <string name="new_tab_opened_snackbar">Tab newydd wedi\'i agor</string>
+  <string name="open_new_tab_snackbar">Newid</string>
+  <string name="preference_open_new_tab">Newid i ddolen mewn tab newydd ar unwaith</string>
+  <string name="preference_category_safe_browsing">Pori Diogel</string>
+  <string name="preference_safe_browsing_title">Rhwystro gwefannau peryglus a thwyllodrus posib</string>
+  <string name="preference_safe_browsing_summary">Rhwystro gwefannau twyllodrys ac ymosodol, rhai drwgwar, a meddalwedd diangen hysbys.</string>
+  <string name="preference_exceptions">Eithriadau</string>
+  <string name="preference_exceptions_description">Rydych chi wedi analluogi Rhwystro Cynnwys y gwefannau hyn.</string>
+  <string name="preference_exceptions_menu_remove">Tynnu</string>
+  <string name="preference_exceptions_remove_all_button_label">Tynnu pob gwefan</string>
+  <string name="tab_crash_report_title">Tab wedi Chwalu</string>
+  <string name="tab_crash_report_headline">Ymddiheuriadau. Rydym yn cael anhawster gyda\'r tab hwn.</string>
+  <string name="tab_crash_report_description">Fel porwr preifat, fyddwn ni byth yn cadw ac felly\'n methu adfer y tab hwn.</string>
+  <string name="tab_crash_report_close_tab_button_label">Cau Tab</string>
+  <string name="fatal_crash_report_title">Ymddiheuriadau. Cafodd %1$s anhawster a chwalu.</string>
+  <string name="fatal_crash_report_description">Fel porwr preifat, fyddwn ni byth yn cadw ac felly\'n methu adfer eich sesiwn pori diwethaf.</string>
+  <string name="fatal_crash_report_close_button_label">Cau</string>
+  <string name="fatal_crash_report_restart_firefox_label">Ailgychwyn %1$s</string>
+  <string name="crash_report_send_crash_label">Anfon adroddiad chwalu at Mozilla</string>
 </resources>

@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Arama yapın veya adres yazın</string>
   <string name="teaser">Otomatik gizli gezinti.\nGez ve sil. Hepsi bu kadar.</string>
   <string name="feedback_erase">Gezinti geçmişiniz silinmiştir.</string>
+  <string name="feedback_erase_custom_tab">Sekmenin gezinti geçmişi silinmiştir.</string>
   <string name="search_hint">%1$s terimini ara</string>
   <string name="menu_share">Paylaş…</string>
   <string name="menu_report_site_issue">Siteyle ilgili sorun bildir</string>
@@ -18,6 +19,7 @@
   <string name="menu_help">Yardım</string>
   <string name="menu_rights">Haklarınız</string>
   <string name="menu_trackers_blocked_title">Engellenen takipçi</string>
+  <string name="menu_trackers_blocked_subtitle">Bunu kapatmak bazı site sorunlarını düzeltebilir</string>
   <string name="menu_custom_tab_branding">%1$s</string>
   <string name="share_dialog_title">Paylaş</string>
   <string name="notification_erase_text">Gezinti geçmişini sil</string>
@@ -25,6 +27,8 @@
   <string name="notification_action_erase_and_open">Sil ve aç</string>
   <string name="shortcut_erase_short_label">Sil</string>
   <string name="shortcut_erase_long_label">Gezinti geçmişini sil</string>
+  <string name="shortcut_erase_and_open_short_label">Sil ve aç</string>
+  <string name="shortcut_erase_and_open_long_label">Sil ve %1$s’u aç</string>
   <string name="text_selection_search_action">Gizli arama</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s kontrol&#252; size verir.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Onu gizlilik odakl&#305; bir taray&#305;c&#305; olarak kullanabilirsiniz:\n  "<ul>"\n    "<li>Do&#287;rudan uygulamada arama yapabilir ve web&#8217;de gezinebilirsiniz</li>"\n    "<li>Takip&#231;ileri engelleyebilirsiniz (veya belli takip&#231;ilere izin verebilirsiniz)</li>"\n    "<li>Tek d&#252;&#287;meyle &#231;erezleri, arama ve gezinti ge&#231;mi&#351;inizi silebilirsiniz</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla taraf&#305;ndan geli&#351;tirilmi&#351;tir. Misyonumuz daha sa&#287;l&#305;kl&#305; ve a&#231;&#305;k bir internet yaratmakt&#305;r.<br/>\n<a href="%2$s">Daha fazla bilgi al&#305;n</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Gizlilik ve Güvenlik</string>
@@ -35,14 +39,18 @@
   <string name="preference_category_web_content">Web içeriği</string>
   <string name="preference_category_switching_apps">Uygulama geçişi</string>
   <string name="preference_category_general">Genel</string>
+  <string name="preference_general_summary">Varsayılan tarayıcı, sekmeler, dil</string>
   <string name="preference_category_data_collection_use">Veri toplanması ve kullanımı</string>
   <string name="preference_category_search">Arama</string>
   <string name="preference_show_search_suggestions">Arama önerilerini göster</string>
   <string name="preference_show_search_suggestions_summary">%1$s, adres çubuğuna yazdıklarını arama motorunuza gönderecektir</string>
   <string name="preference_search_engine_default">Varsayılan</string>
+  <string name="preference_search_engine_label">Arama motoru</string>
   <string name="preference_state_on">Açık</string>
   <string name="preference_state_off">Kapalı</string>
   <string name="preference_subitem_autocomplete">Otomatik adres tamamlama</string>
+  <string name="preference_category_autocomplete_manage_sites">Siteleri yönet</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Siteleri yönet</string>
   <string name="preference_autocomplete_action_add">+ Özel adres ekle</string>
   <string name="preference_autocomplete_title_add">Özel adres ekle</string>
   <string name="custom_autocomplete_quick_add">Özel adres ekle</string>
@@ -224,4 +232,7 @@
   <string name="tip_autocomplete_url">En çok kullandığınız sitelerin adreslerini otomatik tamamlayabilirsiniz\n Adres çubuğundaki herhangi bir adrese basılı tutun</string>
   <string name="tip_open_in_new_tab">Bağlantıları yeni sekmede açabilirsiniz\n Bir sayfadaki herhangi bir bağlantıya uzun basın</string>
   <string name="tip_request_desktop">Sitenin bilgisayar sürümünü görmek mü istiyorsunuz?%1$s Menü &gt; Masaüstü sitesini iste</string>
+  <string name="new_tab_opened_snackbar">Yeni sekme açıldı</string>
+  <string name="open_new_tab_snackbar">Geç</string>
+  <string name="preference_open_new_tab">Hemen yeni sekmedeki bağlantıya geç</string>
 </resources>

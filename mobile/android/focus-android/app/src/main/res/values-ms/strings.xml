@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Cari atau masukkan alamat</string>
   <string name="teaser">Pelayaran peribadi automatik.\nLayar. Buang. Ulang.</string>
   <string name="feedback_erase">Sejarah pelayaran anda telah dibuang.</string>
+  <string name="feedback_erase_custom_tab">Sejarah pelayaran tab telah dibuang.</string>
   <string name="search_hint">Cari %1$s</string>
   <string name="menu_share">Kongsi…</string>
   <string name="menu_report_site_issue">Laporkan Isu Laman</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Bantuan</string>
   <string name="menu_rights">Hak Anda</string>
   <string name="menu_trackers_blocked_title">Penjejak disekat</string>
+  <string name="menu_trackers_blocked_subtitle">Menyahaktifkan ini boleh membetulkan beberapa masalah laman</string>
+  <string name="menu_content_blocking">Sekatan Kandungan</string>
+  <string name="menu_content_blocking_subtitle">Nyahaktifkan untuk membetulkan beberapa laman</string>
   <string name="menu_custom_tab_branding">Dikuasakan oleh %1$s</string>
   <string name="share_dialog_title">Kongsi via</string>
   <string name="notification_erase_text">Buang sejarah pelayaran</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Buang dan Buka</string>
   <string name="shortcut_erase_short_label">Buang</string>
   <string name="shortcut_erase_long_label">Buang sejarah pelayaran</string>
+  <string name="shortcut_erase_and_open_short_label">Buang &amp; buka</string>
+  <string name="shortcut_erase_and_open_long_label">Buang dan buka %1$s</string>
   <string name="text_selection_search_action">Cari secara Rahsia</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s membolehkan anda mengawal.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakannya sebagai pelayar peribadi:\n  "<ul>"\n    "<li>Cari dan melayar terus dalam app</li>"\n    "<li>Sekat penjejak (atau kemaskini tetapan untuk izinkan penjejak)</li>"\n    "<li>Padam untuk menghapuskan kuki serta sejarah carian dan pelayaran</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s dihasilkan oleh Mozilla. Misi kami adalah untuk memupuk internet yang sihat dan terbuka.<br/>\n<a href="%2$s">Ketahui selanjutnya</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Privasi &amp; Keselamatan</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Kandungan Web</string>
   <string name="preference_category_switching_apps">Aplikasi Penukaran</string>
   <string name="preference_category_general">Umum</string>
+  <string name="preference_general_summary">Pelayar, tab, bahasa piawai</string>
   <string name="preference_category_data_collection_use">Pengumpulan Data &amp; Penggunaan</string>
   <string name="preference_category_search">Carian</string>
   <string name="preference_show_search_suggestions">Dapatkan cadangan carian</string>
   <string name="preference_show_search_suggestions_summary">%1$s akan menghantar apa yang anda taip dalam bar alamat kepada enjin carian</string>
   <string name="preference_search_engine_default">Piawai</string>
+  <string name="preference_search_engine_label">Enjin carian</string>
   <string name="preference_state_on">Aktif</string>
   <string name="preference_state_off">Nyahaktif</string>
   <string name="preference_subitem_autocomplete">Auto-lengkap URL</string>
+  <string name="preference_switch_autocomplete_topsites">Untuk Laman Teratas</string>
+  <string name="preference_autocomplete_topsite_summary">Dayakan untuk autolengkap lebih daripada 450 URL popular di bar alamat.</string>
+  <string name="preference_switch_autocomplete_user_list">Untuk Laman Yang Anda Tambah</string>
+  <string name="preference_autocomplete_user_list_summary">Dayakan untuk autolengkap lebih daripada 450 URL popular di bar alamat.</string>
+  <string name="preference_category_autocomplete_manage_sites">Urus laman</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Urus laman</string>
   <string name="preference_autocomplete_action_add">+ Tambah URL penyesuaian</string>
   <string name="preference_autocomplete_title_add">Tambah URL penyesuaian</string>
   <string name="custom_autocomplete_quick_add">Tambah URL penyesuaian</string>
+  <string name="add_custom_autocomplete_label">Tambah pautan untuk autolengkap</string>
   <string name="preference_category_cookies">Kuki dan Data Laman</string>
   <string name="preference_category_data_choices">Pilihan Data</string>
   <string name="preference_autocomplete_title_remove">Buang URLs penyesuaian</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Sesetengah halaman mungkin tidak berfungsi dengan sempurna jika ciri ini diaktifkan</string>
   <string name="preference_privacy_category_cookies">Sekat kuki</string>
   <string name="preference_privacy_should_block_cookies_no_option">Tidak</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Sekat kuki penjejak pihak ke-3 sahaja</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Sekat kuki pihak ke-3 sahaja</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ya</string>
   <string name="preference_security_biometric">Guna cap jari untuk membuka aplikasi</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Memuatkan</string>
   <string name="accessibility_announcement_loading_finished">Laman web dimuatkan</string>
   <string name="content_description_menu">Pilihan lain</string>
+  <string name="indicator_content_description_menu">Butang pilihan lain</string>
   <string name="content_description_forward">Navigasi depan</string>
   <string name="content_description_reload">Muat semula laman web</string>
   <string name="content_description_back">Navigasi undur</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ini mungkin masalah dengan konfigurasi pelayan, atau boleh jadi\nada pihak yang cuba menyamar sebagai pelayan.</li>"\n  "<li>Jika anda pernah berjaya mendapatkan hubungan dengan pelayan ini dulu, ralat ini mungkin\nsementara dan anda boleh cuba lagi nanti.</li>\n</ul>]]></string>
   <string name="error_generic_title">Oops</string>
   <string name="error_generic_message">Kami tidak dapat memuat halaman ini untuk sebab-sebab tertentu.</string>
+  <string name="contextmenu_open_in_app">Buka dengan aplikasi</string>
   <string name="contextmenu_link_share">Kongsi pautan</string>
   <string name="contextmenu_link_copy">Salin alamat pautan</string>
   <string name="contextmenu_image_share">Kongsi imej</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">Autolengkap URL untuk laman yang kerap dilawati\n Tekan lama-lama URL dalam bar alamat</string>
   <string name="tip_open_in_new_tab">Buka pautan dalam tab baru\n Tekan lama-lama pautan atau halaman</string>
   <string name="tip_request_desktop">Mahu paparan laman desktop?%1$s Menu &gt; Pinta laman desktop</string>
+  <string name="tip_disable_tips2">Nyahaktifkan panduan pada skrin mula</string>
+  <string name="new_tab_opened_snackbar">Tab baru dibuka</string>
+  <string name="open_new_tab_snackbar">Tukar</string>
+  <string name="preference_open_new_tab">Tukar ke pautan dalam tab baharu dengan segera</string>
+  <string name="preference_category_safe_browsing">Pelayaran Selamat</string>
+  <string name="preference_safe_browsing_title">Sekat laman yang berpotensi berbahaya dan menipu</string>
+  <string name="preference_safe_browsing_summary">Sekat laman yang dilaporkan menipu dan menyerang, laman perisian hasad dan laman perisian yang tidak diingini.</string>
+  <string name="preference_exceptions">Pengecualian</string>
+  <string name="preference_exceptions_description">Anda telah nyahaktifkan Sekatan Kandungan untuk laman web ini.</string>
+  <string name="preference_exceptions_menu_remove">Buang</string>
+  <string name="preference_exceptions_remove_all_button_label">Buang semua laman web</string>
+  <string name="tab_crash_report_title">Tab Ranap</string>
+  <string name="tab_crash_report_headline">Maaf. Kami ada masalah dengan tab ini.</string>
+  <string name="tab_crash_report_description">Sebagai pelayar peribadi, kami tidak pernah menyimpan dan tidak boleh memulihkan tab ini.</string>
+  <string name="tab_crash_report_close_tab_button_label">Tutup Tab</string>
+  <string name="fatal_crash_report_title">Maaf. %1$s ada masalah dan ranap.</string>
+  <string name="fatal_crash_report_description">Sebagai pelayar peribadi, kami tidak pernah menyimpan dan tidak boleh memulihkan sesi pelayaran.</string>
+  <string name="fatal_crash_report_close_button_label">Tutup</string>
+  <string name="fatal_crash_report_restart_firefox_label">Mula semula %1$s</string>
+  <string name="crash_report_send_crash_label">Hantar laporan ranap ke Mozilla</string>
 </resources>

@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Введіть запит чи адресу</string>
   <string name="teaser">Автоматичний приватний перегляд.\nПереглядайте. Видаляйте. Повторюйте.</string>
   <string name="feedback_erase">Ваша історія перегляду була очищена.</string>
+  <string name="feedback_erase_custom_tab">Історію перегляду було стерто.</string>
   <string name="search_hint">Шукати %1$s</string>
   <string name="menu_share">Поділитися…</string>
   <string name="menu_report_site_issue">Повідомити про сайт</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Допомога</string>
   <string name="menu_rights">Ваші права</string>
   <string name="menu_trackers_blocked_title">Заблоковано стеження</string>
+  <string name="menu_trackers_blocked_subtitle">Вимкнення цієї функції може вирішити деякі проблеми з сайтом</string>
+  <string name="menu_content_blocking">Блокування вмісту</string>
+  <string name="menu_content_blocking_subtitle">Вимкнути для вирішення проблем з деякими сайтами</string>
   <string name="menu_custom_tab_branding">За підтримки %1$s</string>
   <string name="share_dialog_title">Поділитись через</string>
   <string name="notification_erase_text">Стерти історію перегляду</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Стерти і відкрити</string>
   <string name="shortcut_erase_short_label">Стерти</string>
   <string name="shortcut_erase_long_label">Стерти історію перегляду</string>
+  <string name="shortcut_erase_and_open_short_label">Стерти і відкрити</string>
+  <string name="shortcut_erase_and_open_long_label">Стерти і відкрити %1$s</string>
   <string name="text_selection_search_action">Приватний пошук</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1085;&#1072;&#1076;&#1072;&#1108; &#1074;&#1072;&#1084; &#1082;&#1086;&#1085;&#1090;&#1088;&#1086;&#1083;&#1100;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1042;&#1080;&#1082;&#1086;&#1088;&#1080;&#1089;&#1090;&#1086;&#1074;&#1091;&#1081;&#1090;&#1077; &#1081;&#1086;&#1075;&#1086; &#1074; &#1103;&#1082;&#1086;&#1089;&#1090;&#1110; &#1087;&#1088;&#1080;&#1074;&#1072;&#1090;&#1085;&#1086;&#1075;&#1086; &#1073;&#1088;&#1072;&#1091;&#1079;&#1077;&#1088;&#1072;:\n  "<ul>"\n    "<li>&#1047;&#1076;&#1110;&#1081;&#1089;&#1085;&#1102;&#1081;&#1090;&#1077; &#1087;&#1086;&#1096;&#1091;&#1082; &#1110; &#1087;&#1077;&#1088;&#1077;&#1075;&#1083;&#1103;&#1076; &#1073;&#1077;&#1079;&#1087;&#1086;&#1089;&#1077;&#1088;&#1077;&#1076;&#1085;&#1100;&#1086; &#1074; &#1087;&#1088;&#1086;&#1075;&#1088;&#1072;&#1084;&#1110;</li>"\n    "<li>&#1041;&#1083;&#1086;&#1082;&#1091;&#1081;&#1090;&#1077; &#1089;&#1090;&#1077;&#1078;&#1077;&#1085;&#1085;&#1103; (&#1072;&#1073;&#1086; &#1079;&#1084;&#1110;&#1085;&#1110;&#1090;&#1100; &#1085;&#1072;&#1083;&#1072;&#1096;&#1090;&#1091;&#1074;&#1072;&#1085;&#1085;&#1103;, &#1097;&#1086;&#1073; &#1076;&#1086;&#1079;&#1074;&#1086;&#1083;&#1080;&#1090;&#1080; &#1081;&#1086;&#1075;&#1086;)</li>"\n    "<li>&#1042;&#1080;&#1076;&#1072;&#1083;&#1103;&#1081;&#1090;&#1077; &#1082;&#1091;&#1082;&#1080;, &#1072; &#1090;&#1072;&#1082;&#1086;&#1078; &#1110;&#1089;&#1090;&#1086;&#1088;&#1110;&#1102; &#1087;&#1086;&#1096;&#1091;&#1082;&#1091; &#1090;&#1072; &#1087;&#1077;&#1088;&#1077;&#1075;&#1083;&#1103;&#1076;&#1091;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1089;&#1090;&#1074;&#1086;&#1088;&#1077;&#1085;&#1086; &#1074; Mozilla. &#1053;&#1072;&#1096;&#1086;&#1102; &#1084;&#1110;&#1089;&#1110;&#1108;&#1102; &#1108; &#1089;&#1087;&#1088;&#1080;&#1103;&#1085;&#1085;&#1103; &#1088;&#1086;&#1079;&#1074;&#1080;&#1090;&#1082;&#1091; &#1079;&#1076;&#1086;&#1088;&#1086;&#1074;&#1086;&#1075;&#1086; &#1090;&#1072; &#1074;&#1110;&#1076;&#1082;&#1088;&#1080;&#1090;&#1086;&#1075;&#1086; &#1030;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090;&#1091;.<br/>\n<a href="%2$s">&#1044;&#1086;&#1082;&#1083;&#1072;&#1076;&#1085;&#1110;&#1096;&#1077;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Приватність і безпека</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Веб-вміст</string>
   <string name="preference_category_switching_apps">Перемикання програм</string>
   <string name="preference_category_general">Загальні</string>
+  <string name="preference_general_summary">Типовий браузер, вкладки, мова</string>
   <string name="preference_category_data_collection_use">Збір даних і використання</string>
   <string name="preference_category_search">Пошук</string>
   <string name="preference_show_search_suggestions">Отримувати пошукові пропозиції</string>
   <string name="preference_show_search_suggestions_summary">%1$s буде відправляти провайдеру пошуку текст, введений в рядку адреси</string>
   <string name="preference_search_engine_default">Типовий</string>
+  <string name="preference_search_engine_label">Засіб пошуку</string>
   <string name="preference_state_on">Увімкнено</string>
   <string name="preference_state_off">Вимкнено</string>
   <string name="preference_subitem_autocomplete">Автозавершення URL</string>
+  <string name="preference_switch_autocomplete_topsites">Для популярних сайтів</string>
+  <string name="preference_autocomplete_topsite_summary">Увімкнути для автозавершення понад 450 популярних URL в панелі адреси.</string>
+  <string name="preference_switch_autocomplete_user_list">Для доданих вами сайтів</string>
+  <string name="preference_autocomplete_user_list_summary">Увімкнути для автозавершення понад 450 популярних URL в панелі адреси.</string>
+  <string name="preference_category_autocomplete_manage_sites">Керувати сайтами</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Керувати сайтами</string>
   <string name="preference_autocomplete_action_add">+ Додати власну URL-адресу</string>
   <string name="preference_autocomplete_title_add">Додати власну URL-адресу</string>
   <string name="custom_autocomplete_quick_add">Додати власну URL-адресу</string>
+  <string name="add_custom_autocomplete_label">Додати посилання для автозавершення</string>
   <string name="preference_category_cookies">Куки і дані сайтів</string>
   <string name="preference_category_data_choices">Вибір даних</string>
   <string name="preference_autocomplete_title_remove">Вилучити власні URL-адреси</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Увімкнення цієї функції може викликати непередбачувану поведінку деяких сторінок</string>
   <string name="preference_privacy_category_cookies">Блокувати куки</string>
   <string name="preference_privacy_should_block_cookies_no_option">Так</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Блокувати лише сторонні куки стеження</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Блокувати лише сторонні куки</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Так</string>
   <string name="preference_security_biometric">Використовувати відбиток пальця для розблокування</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Завантаження</string>
   <string name="accessibility_announcement_loading_finished">Веб-сайт завантажено</string>
   <string name="content_description_menu">Додатково</string>
+  <string name="indicator_content_description_menu">Кнопка додаткових налаштувань</string>
   <string name="content_description_forward">Перехід уперед</string>
   <string name="content_description_reload">Перезавантажити веб-сайт</string>
   <string name="content_description_back">Перейти назад</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1062;&#1077; &#1084;&#1086;&#1078;&#1077; &#1073;&#1091;&#1090;&#1080; &#1087;&#1088;&#1086;&#1073;&#1083;&#1077;&#1084;&#1086;&#1102; &#1082;&#1086;&#1085;&#1092;&#1110;&#1075;&#1091;&#1088;&#1072;&#1094;&#1110;&#1111; &#1089;&#1077;&#1088;&#1074;&#1077;&#1088;&#1072;, &#1072;&#1073;&#1086; &#1093;&#1090;&#1086;&#1089;&#1100; &#1085;&#1072;&#1084;&#1072;&#1075;&#1072;&#1108;&#1090;&#1100;&#1089;&#1103;\n &#1074;&#1080;&#1076;&#1072;&#1090;&#1080; &#1089;&#1077;&#1073;&#1077; &#1079;&#1072; &#1094;&#1077;&#1081; &#1089;&#1077;&#1088;&#1074;&#1077;&#1088;.</li>"\n  "<li>&#1071;&#1082;&#1097;&#1086; &#1074;&#1080; &#1088;&#1072;&#1085;&#1110;&#1096;&#1077; &#1091;&#1089;&#1087;&#1110;&#1096;&#1085;&#1086; &#1087;&#1110;&#1076;&#1082;&#1083;&#1102;&#1095;&#1072;&#1083;&#1080;&#1089;&#1103; &#1076;&#1086; &#1094;&#1100;&#1086;&#1075;&#1086; &#1089;&#1077;&#1088;&#1074;&#1077;&#1088;&#1072;, &#1087;&#1086;&#1084;&#1080;&#1083;&#1082;&#1072; &#1084;&#1086;&#1078;&#1077; \n&#1073;&#1091;&#1090;&#1080; &#1090;&#1080;&#1084;&#1095;&#1072;&#1089;&#1086;&#1074;&#1086;&#1102; &#1110; &#1074;&#1080; &#1084;&#1086;&#1078;&#1077;&#1090;&#1077; &#1087;&#1086;&#1074;&#1090;&#1086;&#1088;&#1080;&#1090;&#1080; &#1089;&#1087;&#1088;&#1086;&#1073;&#1091; &#1087;&#1110;&#1079;&#1085;&#1110;&#1096;&#1077;.</li>\n</ul>]]></string>
   <string name="error_generic_title">Отакої</string>
   <string name="error_generic_message">Ми чомусь не можемо завантажити цю сторінку.</string>
+  <string name="contextmenu_open_in_app">Відкрити в додатку</string>
   <string name="contextmenu_link_share">Поділитись посиланням</string>
   <string name="contextmenu_link_copy">Копіювати адресу посилання</string>
   <string name="contextmenu_image_share">Поділитись зображенням</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">Автозавершення популярних URL-адрес\n Тривалий дотик до URL в адресному рядку</string>
   <string name="tip_open_in_new_tab">Відкривайте посилання в новій вкладці\n Тривалий дотик до посилання на сторінці</string>
   <string name="tip_request_desktop">Бажаєте бачити повну версію сайту?%1$s Меню &gt; Повна версія сайту</string>
+  <string name="tip_disable_tips2">Вимкнути поради у домівці</string>
+  <string name="new_tab_opened_snackbar">Відкрито нову вкладку</string>
+  <string name="open_new_tab_snackbar">Перемкнути</string>
+  <string name="preference_open_new_tab">Негайно перемикати на посилання в новій вкладці</string>
+  <string name="preference_category_safe_browsing">Безпечний перегляд</string>
+  <string name="preference_safe_browsing_title">Блокувати потенційно небезпечні та підозрілі сайти</string>
+  <string name="preference_safe_browsing_summary">Блокувати відомі підозрілі та зловмисні сайти, шкідливі сайти та сайти з небажаним програмним забезпеченням.</string>
+  <string name="preference_exceptions">Винятки</string>
+  <string name="preference_exceptions_description">Ви вимкнули блокування вмісту для цих веб-сайтів.</string>
+  <string name="preference_exceptions_menu_remove">Вилучити</string>
+  <string name="preference_exceptions_remove_all_button_label">Вилучити всі веб-сайти</string>
+  <string name="tab_crash_report_title">Збій вкладки</string>
+  <string name="tab_crash_report_headline">Вибачте. Виникли проблеми з цією вкладкою.</string>
+  <string name="tab_crash_report_description">Так як це приватний браузер, ми ніколи не зберігаємо і не можемо відновити цю вкладку.</string>
+  <string name="tab_crash_report_close_tab_button_label">Закрити вкладку</string>
+  <string name="fatal_crash_report_title">Вибачте. Виникла проблема з %1$s і стався збій.</string>
+  <string name="fatal_crash_report_description">Так як це приватний браузер, ми ніколи не зберігаємо і не можемо відновити ваш останній сеанс перегляду.</string>
+  <string name="fatal_crash_report_close_button_label">Закрити</string>
+  <string name="fatal_crash_report_restart_firefox_label">Перезапустити %1$s</string>
+  <string name="crash_report_send_crash_label">Надіслати звіт про збій в Mozilla</string>
 </resources>
