@@ -1646,18 +1646,6 @@ class JSScript : public js::gc::TenuredCell
     /* Number of type sets used in this script for dynamic type monitoring. */
     uint16_t nTypeSets_ = 0;
 
-    // Bit fields.
-
-  public:
-    // The kinds of the optional arrays.
-    enum ArrayKind {
-        CONSTS,
-        OBJECTS,
-        TRYNOTES,
-        SCOPENOTES,
-        ARRAY_KIND_BITS
-    };
-
   private:
     struct BitFields
     {
@@ -1792,7 +1780,9 @@ class JSScript : public js::gc::TenuredCell
 
         // True if the debugger's onNewScript hook has not yet been called.
         bool hideScriptFromDebugger_ : 1;
-    } bitFields_;
+    };
+
+    BitFields bitFields_ = {}; // Zero-initialize bitfield flags.
 
     //
     // End of fields.  Start methods.

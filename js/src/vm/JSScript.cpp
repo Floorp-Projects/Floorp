@@ -3254,16 +3254,16 @@ JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry, const ReadOnlyCompileOp
     sourceStart_(sourceStart),
     sourceEnd_(sourceEnd),
     toStringStart_(toStringStart),
-    toStringEnd_(toStringEnd),
-#ifdef MOZ_VTUNE
-    vtuneMethodId_(vtune::GenerateUniqueMethodID()),
-#endif
-    bitFields_{} // zeroes everything -- some fields custom-assigned below
+    toStringEnd_(toStringEnd)
 {
     // See JSScript.h for further details.
     MOZ_ASSERT(toStringStart <= sourceStart);
     MOZ_ASSERT(sourceStart <= sourceEnd);
     MOZ_ASSERT(sourceEnd <= toStringEnd);
+
+#ifdef MOZ_VTUNE
+    vtuneMethodId_ = vtune::GenerateUniqueMethodID();
+#endif
 
     bitFields_.noScriptRval_ = options.noScriptRval;
     bitFields_.selfHosted_ = options.selfHostingMode;
@@ -3283,13 +3283,11 @@ JSScript::createInitialized(JSContext* cx, const ReadOnlyCompileOptions& options
         return nullptr;
     }
 
-    uint8_t* stubEntry =
 #ifndef JS_CODEGEN_NONE
-        cx->runtime()->jitRuntime()->interpreterStub().value
+    uint8_t* stubEntry = cx->runtime()->jitRuntime()->interpreterStub().value;
 #else
-        nullptr
+    uint8_t* stubEntry = nullptr;
 #endif
-        ;
 
     return new (script) JSScript(cx->realm(), stubEntry, options, sourceObject,
                                  sourceStart, sourceEnd, toStringStart, toStringEnd);
