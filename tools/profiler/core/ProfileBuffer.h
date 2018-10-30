@@ -13,10 +13,9 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/RefCounted.h"
 
-// A resizeable circular buffer.
-// This class is used as a queue of entries which, outside of construction and
-// calls to SetCapacity, never allocates. This makes it safe to use in the
-// profiler's "critical section".
+// A fixed-capacity circular buffer.
+// This class is used as a queue of entries which, after construction, never
+// allocates. This makes it safe to use in the profiler's "critical section".
 // Entries are appended at the end. Once the queue capacity has been reached,
 // adding a new entry will evict an old entry from the start of the queue.
 // Positions in the queue are represented as 64-bit unsigned integers which
@@ -36,19 +35,6 @@ public:
   explicit ProfileBuffer(uint32_t aCapacity);
 
   ~ProfileBuffer();
-
-  uint32_t Length() { return mRangeEnd - mRangeStart; }
-
-  // Set the buffer capacity to at least aMinCapacity. aMinCapacity must not be
-  // zero and at least Length(). Otherwise, it triggers abort. This method
-  // allocates. The allocation is fallible and the return value indicates success.
-  bool SetMinCapacity(uint32_t aMinCapacity);
-
-  // Set the buffer capacity to exactly aNewCapacity. aNewCapacity must be a
-  // power of two, non-zero, and at least Length(). Otherwise, it triggers abort.
-  // This method allocates. The allocation is fallible and the return value
-  // indicates success.
-  bool SetCapacityPow2(uint32_t aNewCapacity);
 
   // Add |aEntry| to the buffer, ignoring what kind of entry it is.
   void AddEntry(const ProfileBufferEntry& aEntry);
