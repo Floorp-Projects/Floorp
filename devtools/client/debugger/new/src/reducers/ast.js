@@ -1,149 +1,162 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.initialASTState = initialASTState;
-exports.getSymbols = getSymbols;
-exports.hasSymbols = hasSymbols;
-exports.isSymbolsLoading = isSymbolsLoading;
-exports.isEmptyLineInSource = isEmptyLineInSource;
-exports.getEmptyLines = getEmptyLines;
-exports.getPausePoints = getPausePoints;
-exports.getPausePoint = getPausePoint;
-exports.hasPausePoints = hasPausePoints;
-exports.getOutOfScopeLocations = getOutOfScopeLocations;
-exports.getPreview = getPreview;
-exports.getSourceMetaData = getSourceMetaData;
-exports.hasSourceMetaData = hasSourceMetaData;
-exports.getInScopeLines = getInScopeLines;
-exports.isLineInScope = isLineInScope;
-
-var _immutable = require("devtools/client/shared/vendor/immutable");
-
-var I = _interopRequireWildcard(_immutable);
-
-var _makeRecord = require("../utils/makeRecord");
-
-var _makeRecord2 = _interopRequireDefault(_makeRecord);
-
-var _ast = require("../utils/ast");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
 
 /**
  * Ast reducer
  * @module reducers/ast
  */
-function initialASTState() {
-  return (0, _makeRecord2.default)({
-    symbols: I.Map(),
-    emptyLines: I.Map(),
-    outOfScopeLocations: null,
-    inScopeLines: null,
-    preview: null,
-    pausePoints: I.Map(),
-    sourceMetaData: I.Map()
-  })();
+
+import * as I from "immutable";
+import makeRecord from "../utils/makeRecord";
+import { findEmptyLines } from "../utils/ast";
+
+import type {
+  AstLocation,
+  SymbolDeclarations,
+  PausePoints,
+  PausePoint
+} from "../workers/parser";
+
+import type { Map } from "immutable";
+import type { Location, Source } from "../types";
+import type { Action, DonePromiseAction } from "../actions/types";
+import type { Record } from "../utils/makeRecord";
+
+type EmptyLinesType = number[];
+
+export type Symbols = SymbolDeclarations | {| loading: true |};
+export type SymbolsMap = Map<string, Symbols>;
+export type EmptyLinesMap = Map<string, EmptyLinesType>;
+
+export type SourceMetaDataType = {
+  framework: ?string
+};
+
+export type SourceMetaDataMap = Map<string, SourceMetaDataType>;
+export type PausePointsMap = Map<string, PausePoints>;
+
+export type Preview =
+  | {| updating: true |}
+  | null
+  | {|
+      updating: false,
+      expression: string,
+      location: AstLocation,
+      cursorPos: any,
+      tokenPos: AstLocation,
+      result: Object,
+      extra: Object
+    |};
+
+export type ASTState = {
+  symbols: SymbolsMap,
+  emptyLines: EmptyLinesMap,
+  outOfScopeLocations: ?Array<AstLocation>,
+  inScopeLines: ?Array<Number>,
+  preview: Preview,
+  pausePoints: PausePointsMap,
+  sourceMetaData: SourceMetaDataMap
+};
+
+export function initialASTState() {
+  return makeRecord(
+    ({
+      symbols: I.Map(),
+      emptyLines: I.Map(),
+      outOfScopeLocations: null,
+      inScopeLines: null,
+      preview: null,
+      pausePoints: I.Map(),
+      sourceMetaData: I.Map()
+    }: ASTState)
+  )();
 }
 
-function update(state = initialASTState(), action) {
+function update(
+  state: Record<ASTState> = initialASTState(),
+  action: Action
+): Record<ASTState> {
   switch (action.type) {
-    case "SET_SYMBOLS":
-      {
-        const {
-          sourceId
-        } = action;
-
-        if (action.status === "start") {
-          return state.setIn(["symbols", sourceId], {
-            loading: true
-          });
-        }
-
-        const value = action.value;
-        return state.setIn(["symbols", sourceId], value);
+    case "SET_SYMBOLS": {
+      const { sourceId } = action;
+      if (action.status === "start") {
+        return state.setIn(["symbols", sourceId], { loading: true });
       }
 
-    case "SET_PAUSE_POINTS":
-      {
-        const {
-          sourceText,
-          sourceId,
-          pausePoints
-        } = action;
-        const emptyLines = (0, _ast.findEmptyLines)(sourceText, pausePoints);
-        return state.setIn(["pausePoints", sourceId], pausePoints).setIn(["emptyLines", sourceId], emptyLines);
+      const value = ((action: any): DonePromiseAction).value;
+      return state.setIn(["symbols", sourceId], value);
+    }
+
+    case "SET_PAUSE_POINTS": {
+      const { sourceText, sourceId, pausePoints } = action;
+      const emptyLines = findEmptyLines(sourceText, pausePoints);
+
+      return state
+        .setIn(["pausePoints", sourceId], pausePoints)
+        .setIn(["emptyLines", sourceId], emptyLines);
+    }
+
+    case "OUT_OF_SCOPE_LOCATIONS": {
+      return state.set("outOfScopeLocations", action.locations);
+    }
+
+    case "IN_SCOPE_LINES": {
+      return state.set("inScopeLines", action.lines);
+    }
+
+    case "CLEAR_SELECTION": {
+      return state.set("preview", null);
+    }
+
+    case "SET_PREVIEW": {
+      if (action.status == "start") {
+        return state.set("preview", { updating: true });
       }
 
-    case "OUT_OF_SCOPE_LOCATIONS":
-      {
-        return state.set("outOfScopeLocations", action.locations);
-      }
-
-    case "IN_SCOPE_LINES":
-      {
-        return state.set("inScopeLines", action.lines);
-      }
-
-    case "CLEAR_SELECTION":
-      {
+      if (!action.value) {
         return state.set("preview", null);
       }
 
-    case "SET_PREVIEW":
-      {
-        if (action.status == "start") {
-          return state.set("preview", {
-            updating: true
-          });
-        }
-
-        if (!action.value) {
-          return state.set("preview", null);
-        } // NOTE: if the preview does not exist, it has been cleared
-
-
-        if (state.get("preview")) {
-          return state.set("preview", { ...action.value,
-            updating: false
-          });
-        }
-
-        return state;
+      // NOTE: if the preview does not exist, it has been cleared
+      if (state.get("preview")) {
+        return state.set("preview", {
+          ...action.value,
+          updating: false
+        });
       }
 
-    case "RESUME":
-      {
-        return state.set("outOfScopeLocations", null);
-      }
+      return state;
+    }
 
-    case "NAVIGATE":
-      {
-        return initialASTState();
-      }
+    case "RESUME": {
+      return state.set("outOfScopeLocations", null);
+    }
 
-    case "SET_SOURCE_METADATA":
-      {
-        return state.setIn(["sourceMetaData", action.sourceId], action.sourceMetaData);
-      }
+    case "NAVIGATE": {
+      return initialASTState();
+    }
 
-    default:
-      {
-        return state;
-      }
+    case "SET_SOURCE_METADATA": {
+      return state.setIn(
+        ["sourceMetaData", action.sourceId],
+        action.sourceMetaData
+      );
+    }
+
+    default: {
+      return state;
+    }
   }
-} // NOTE: we'd like to have the app state fully typed
+}
+
+// NOTE: we'd like to have the app state fully typed
 // https://github.com/devtools-html/debugger.html/blob/master/src/reducers/sources.js#L179-L185
+type OuterState = { ast: Record<ASTState> };
 
-
-function getSymbols(state, source) {
+export function getSymbols(state: OuterState, source?: Source): ?Symbols {
   if (!source) {
     return null;
   }
@@ -151,7 +164,7 @@ function getSymbols(state, source) {
   return state.ast.symbols.get(source.id) || null;
 }
 
-function hasSymbols(state, source) {
+export function hasSymbols(state: OuterState, source: Source): boolean {
   const symbols = getSymbols(state, source);
 
   if (!symbols) {
@@ -161,9 +174,8 @@ function hasSymbols(state, source) {
   return !symbols.loading;
 }
 
-function isSymbolsLoading(state, source) {
+export function isSymbolsLoading(state: OuterState, source: Source): boolean {
   const symbols = getSymbols(state, source);
-
   if (!symbols) {
     return false;
   }
@@ -171,12 +183,16 @@ function isSymbolsLoading(state, source) {
   return symbols.loading;
 }
 
-function isEmptyLineInSource(state, line, selectedSourceId) {
+export function isEmptyLineInSource(
+  state: OuterState,
+  line: number,
+  selectedSourceId: string
+) {
   const emptyLines = getEmptyLines(state, selectedSourceId);
   return emptyLines && emptyLines.includes(line);
 }
 
-function getEmptyLines(state, sourceId) {
+export function getEmptyLines(state: OuterState, sourceId: string) {
   if (!sourceId) {
     return null;
   }
@@ -184,63 +200,62 @@ function getEmptyLines(state, sourceId) {
   return state.ast.emptyLines.get(sourceId);
 }
 
-function getPausePoints(state, sourceId) {
+export function getPausePoints(
+  state: OuterState,
+  sourceId: string
+): ?PausePoints {
   return state.ast.pausePoints.get(sourceId);
 }
 
-function getPausePoint(state, location) {
+export function getPausePoint(
+  state: OuterState,
+  location: ?Location
+): ?PausePoint {
   if (!location) {
     return;
   }
 
-  const {
-    column,
-    line,
-    sourceId
-  } = location;
+  const { column, line, sourceId } = location;
   const pausePoints = getPausePoints(state, sourceId);
-
   if (!pausePoints) {
     return;
   }
 
   const linePoints = pausePoints[String(line)];
-
   if (linePoints && column) {
     return linePoints[String(column)];
   }
 }
 
-function hasPausePoints(state, sourceId) {
+export function hasPausePoints(state: OuterState, sourceId: string): boolean {
   const pausePoints = getPausePoints(state, sourceId);
   return !!pausePoints;
 }
 
-function getOutOfScopeLocations(state) {
+export function getOutOfScopeLocations(state: OuterState) {
   return state.ast.get("outOfScopeLocations");
 }
 
-function getPreview(state) {
+export function getPreview(state: OuterState) {
   return state.ast.get("preview");
 }
 
 const emptySourceMetaData = {};
-
-function getSourceMetaData(state, sourceId) {
+export function getSourceMetaData(state: OuterState, sourceId: string) {
   return state.ast.sourceMetaData.get(sourceId) || emptySourceMetaData;
 }
 
-function hasSourceMetaData(state, sourceId) {
+export function hasSourceMetaData(state: OuterState, sourceId: string) {
   return state.ast.hasIn(["sourceMetaData", sourceId]);
 }
 
-function getInScopeLines(state) {
+export function getInScopeLines(state: OuterState) {
   return state.ast.get("inScopeLines");
 }
 
-function isLineInScope(state, line) {
+export function isLineInScope(state: OuterState, line: number) {
   const linesInScope = state.ast.get("inScopeLines");
   return linesInScope && linesInScope.includes(line);
 }
 
-exports.default = update;
+export default update;

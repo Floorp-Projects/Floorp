@@ -1,58 +1,62 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.HighlightLine = undefined;
-
-var _react = require("devtools/client/shared/vendor/react");
-
-var _editor = require("../../utils/editor/index");
-
-var _sourceDocuments = require("../../utils/editor/source-documents");
-
-var _source = require("../../utils/source");
-
-var _reactRedux = require("devtools/client/shared/vendor/react-redux");
-
-var _selectors = require("../../selectors/index");
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function isDebugLine(selectedFrame, selectedLocation) {
+
+// @flow
+import { Component } from "react";
+import { toEditorLine, endOperation, startOperation } from "../../utils/editor";
+import { getDocument, hasDocument } from "../../utils/editor/source-documents";
+import { isLoaded } from "../../utils/source";
+
+import { connect } from "react-redux";
+import {
+  getVisibleSelectedFrame,
+  getSelectedLocation,
+  getSelectedSource,
+  getPauseCommand
+} from "../../selectors";
+
+import type { Frame, Location, Source } from "../../types";
+import type { Command } from "../../reducers/types";
+
+type Props = {
+  pauseCommand: Command,
+  selectedFrame: Frame,
+  selectedLocation: Location,
+  selectedSource: Source
+};
+
+function isDebugLine(selectedFrame: Frame, selectedLocation: Location) {
   if (!selectedFrame) {
     return;
   }
 
-  return selectedFrame.location.sourceId == selectedLocation.sourceId && selectedFrame.location.line == selectedLocation.line;
+  return (
+    selectedFrame.location.sourceId == selectedLocation.sourceId &&
+    selectedFrame.location.line == selectedLocation.line
+  );
 }
 
 function isDocumentReady(selectedSource, selectedLocation) {
-  return selectedLocation && (0, _source.isLoaded)(selectedSource) && (0, _sourceDocuments.hasDocument)(selectedLocation.sourceId);
+  return (
+    selectedLocation &&
+    isLoaded(selectedSource) &&
+    hasDocument(selectedLocation.sourceId)
+  );
 }
 
-class HighlightLine extends _react.Component {
-  constructor(...args) {
-    var _temp;
+export class HighlightLine extends Component<Props> {
+  isStepping: boolean = false;
+  previousEditorLine: ?number = null;
 
-    return _temp = super(...args), this.isStepping = false, this.previousEditorLine = null, _temp;
-  }
-
-  shouldComponentUpdate(nextProps) {
-    const {
-      selectedLocation,
-      selectedSource
-    } = nextProps;
+  shouldComponentUpdate(nextProps: Props) {
+    const { selectedLocation, selectedSource } = nextProps;
     return this.shouldSetHighlightLine(selectedLocation, selectedSource);
   }
 
-  shouldSetHighlightLine(selectedLocation, selectedSource) {
-    const {
-      sourceId,
-      line
-    } = selectedLocation;
-    const editorLine = (0, _editor.toEditorLine)(sourceId, line);
+  shouldSetHighlightLine(selectedLocation: Location, selectedSource: Source) {
+    const { sourceId, line } = selectedLocation;
+    const editorLine = toEditorLine(sourceId, line);
 
     if (!isDocumentReady(selectedSource, selectedLocation)) {
       return false;
@@ -65,70 +69,66 @@ class HighlightLine extends _react.Component {
     return true;
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps: Props) {
     const {
       pauseCommand,
       selectedLocation,
       selectedFrame,
       selectedSource
     } = this.props;
-
     if (pauseCommand) {
       this.isStepping = true;
     }
 
-    (0, _editor.startOperation)();
-    this.clearHighlightLine(prevProps.selectedLocation, prevProps.selectedSource);
+    startOperation();
+    this.clearHighlightLine(
+      prevProps.selectedLocation,
+      prevProps.selectedSource
+    );
     this.setHighlightLine(selectedLocation, selectedFrame, selectedSource);
-    (0, _editor.endOperation)();
+    endOperation();
   }
 
-  setHighlightLine(selectedLocation, selectedFrame, selectedSource) {
-    const {
-      sourceId,
-      line
-    } = selectedLocation;
-
+  setHighlightLine(
+    selectedLocation: Location,
+    selectedFrame: Frame,
+    selectedSource: Source
+  ) {
+    const { sourceId, line } = selectedLocation;
     if (!this.shouldSetHighlightLine(selectedLocation, selectedSource)) {
       return;
     }
-
     this.isStepping = false;
-    const editorLine = (0, _editor.toEditorLine)(sourceId, line);
+    const editorLine = toEditorLine(sourceId, line);
     this.previousEditorLine = editorLine;
 
     if (!line || isDebugLine(selectedFrame, selectedLocation)) {
       return;
     }
 
-    const doc = (0, _sourceDocuments.getDocument)(sourceId);
+    const doc = getDocument(sourceId);
     doc.addLineClass(editorLine, "line", "highlight-line");
   }
 
-  clearHighlightLine(selectedLocation, selectedSource) {
+  clearHighlightLine(selectedLocation: Location, selectedSource: Source) {
     if (!isDocumentReady(selectedSource, selectedLocation)) {
       return;
     }
 
-    const {
-      line,
-      sourceId
-    } = selectedLocation;
-    const editorLine = (0, _editor.toEditorLine)(sourceId, line);
-    const doc = (0, _sourceDocuments.getDocument)(sourceId);
+    const { line, sourceId } = selectedLocation;
+    const editorLine = toEditorLine(sourceId, line);
+    const doc = getDocument(sourceId);
     doc.removeLineClass(editorLine, "line", "highlight-line");
   }
 
   render() {
     return null;
   }
-
 }
 
-exports.HighlightLine = HighlightLine;
-exports.default = (0, _reactRedux.connect)(state => ({
-  pauseCommand: (0, _selectors.getPauseCommand)(state),
-  selectedFrame: (0, _selectors.getVisibleSelectedFrame)(state),
-  selectedLocation: (0, _selectors.getSelectedLocation)(state),
-  selectedSource: (0, _selectors.getSelectedSource)(state)
+export default connect(state => ({
+  pauseCommand: getPauseCommand(state),
+  selectedFrame: getVisibleSelectedFrame(state),
+  selectedLocation: getSelectedLocation(state),
+  selectedSource: getSelectedSource(state)
 }))(HighlightLine);

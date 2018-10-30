@@ -1,64 +1,59 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Workers = undefined;
-
-var _react = require("devtools/client/shared/vendor/react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactRedux = require("devtools/client/shared/vendor/react-redux");
-
-var _actions = require("../../actions/index");
-
-var _actions2 = _interopRequireDefault(_actions);
-
-var _selectors = require("../../selectors/index");
-
-var _path = require("../../utils/path");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-class Workers extends _react.PureComponent {
+
+import React, { PureComponent } from "react";
+import { connect } from "react-redux";
+import type { List } from "immutable";
+
+import "./Workers.css";
+
+import actions from "../../actions";
+import { getWorkers } from "../../selectors";
+import { basename } from "../../utils/path";
+import type { Worker } from "../../types";
+
+export class Workers extends PureComponent {
+  props: {
+    workers: List<Worker>,
+    openWorkerToolbox: string => void
+  };
+
   renderWorkers(workers) {
-    const {
-      openWorkerToolbox
-    } = this.props;
-    return workers.map(worker => _react2.default.createElement("div", {
-      className: "worker",
-      key: worker.actor,
-      onClick: () => openWorkerToolbox(worker)
-    }, _react2.default.createElement("img", {
-      className: "domain"
-    }), (0, _path.basename)(worker.url)));
+    const { openWorkerToolbox } = this.props;
+    return workers.map(worker => (
+      <div
+        className="worker"
+        key={worker.actor}
+        onClick={() => openWorkerToolbox(worker)}
+      >
+        <img className="domain" />
+        {basename(worker.url)}
+      </div>
+    ));
   }
 
   renderNoWorkersPlaceholder() {
-    return _react2.default.createElement("div", {
-      className: "pane-info"
-    }, L10N.getStr("noWorkersText"));
+    return <div className="pane-info">{L10N.getStr("noWorkersText")}</div>;
   }
 
   render() {
-    const {
-      workers
-    } = this.props;
-    return _react2.default.createElement("div", {
-      className: "pane workers-list"
-    }, workers && workers.size > 0 ? this.renderWorkers(workers) : this.renderNoWorkersPlaceholder());
+    const { workers } = this.props;
+    return (
+      <div className="pane workers-list">
+        {workers && workers.size > 0
+          ? this.renderWorkers(workers)
+          : this.renderNoWorkersPlaceholder()}
+      </div>
+    );
   }
-
 }
 
-exports.Workers = Workers;
-
 const mapStateToProps = state => ({
-  workers: (0, _selectors.getWorkers)(state)
+  workers: getWorkers(state)
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Workers);
+export default connect(
+  mapStateToProps,
+  actions
+)(Workers);

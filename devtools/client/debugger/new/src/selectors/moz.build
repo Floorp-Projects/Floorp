@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DevToolsModules(
+DebuggerModules(
     'breakpointAtLocation.js',
     'breakpoints.js',
     'breakpointSources.js',
