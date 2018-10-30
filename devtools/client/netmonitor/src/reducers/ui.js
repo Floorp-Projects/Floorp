@@ -156,6 +156,7 @@ function ui(state = UI(), action) {
     case RESET_COLUMNS:
       return resetColumns(state);
     case REMOVE_SELECTED_CUSTOM_REQUEST:
+      return openNetworkDetails(state, { open: true });
     case SEND_CUSTOM_REQUEST:
       return openNetworkDetails(state, { open: false });
     case SELECT_DETAILS_PANEL_TAB:
