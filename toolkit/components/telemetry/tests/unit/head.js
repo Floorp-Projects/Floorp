@@ -367,6 +367,9 @@ if (runningInParent) {
   // Turn off Health Ping submission.
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.HealthPingEnabled, false);
 
+  // Speed up child process accumulations
+  Services.prefs.setIntPref(TelemetryUtils.Preferences.IPCBatchTimeout, 10);
+
   // Ensure we're not in a GeckoView-like environment by default
   Services.prefs.setBoolPref("toolkit.telemetry.isGeckoViewMode", false);
 
