@@ -8,6 +8,21 @@
 
 namespace mozilla {
 
+/**
+ * EditAction indicates which operation or command causes running the methods
+ * of editors.
+ */
+enum class EditAction
+{
+  // eNone indicates no edit action is being handled.
+  eNone,
+
+  // eNotEditing indicates that something is retrieved or initializing
+  // something at creating, destroying or focus move etc, i.e., not edit
+  // action is being handled but editor is doing something.
+  eNotEditing,
+};
+
 // This is int32_t instead of int16_t because nsIInlineSpellChecker.idl's
 // spellCheckAfterEditorChange is defined to take it as a long.
 // TODO: Make each name eFoo and investigate whether the numeric values
