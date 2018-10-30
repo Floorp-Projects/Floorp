@@ -78,8 +78,7 @@ enum PromiseSlots {
 // concept defined by the HTML spec:
 // https://html.spec.whatwg.org/multipage/interaction.html#triggered-by-user-activation
 // This flag is only effective when the
-// PROMISE_FLAG_REQUIRES_USER_INTERACTION_HANDLING is set.  Also, it is only
-// possible to set this flag on pending promises.
+// PROMISE_FLAG_REQUIRES_USER_INTERACTION_HANDLING is set.
 #define PROMISE_FLAG_HAD_USER_INTERACTION_UPON_CREATION 0x40
 
 class AutoSetNewObjectMetadata;
