@@ -336,6 +336,8 @@ TextEditor::UpdateMetaCharset(nsIDocument& aDocument,
 nsresult
 TextEditor::InitRules()
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   if (!mRules) {
     // instantiate the rules for this text editor
     mRules = new TextEditRules();
@@ -723,8 +725,10 @@ nsresult
 TextEditor::DeleteSelectionAsSubAction(EDirection aDirection,
                                        EStripWrappers aStripWrappers)
 {
-  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
+  MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mPlaceholderBatch);
+
+  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
 
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -733,18 +737,12 @@ TextEditor::DeleteSelectionAsSubAction(EDirection aDirection,
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  // pre-process
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-
   // If there is an existing selection when an extended delete is requested,
   //  platforms that use "caret-style" caret positioning collapse the
   //  selection to the  start and then create a new selection.
   //  Platforms that use "selection-style" caret positioning just delete the
   //  existing selection without extending it.
-  if (!selection->IsCollapsed()) {
+  if (!SelectionRefPtr()->IsCollapsed()) {
     switch (aDirection) {
       case eNextWord:
       case ePreviousWord:
@@ -755,7 +753,7 @@ TextEditor::DeleteSelectionAsSubAction(EDirection aDirection,
           break;
         }
         ErrorResult error;
-        selection->CollapseToStart(error);
+        SelectionRefPtr()->CollapseToStart(error);
         if (NS_WARN_IF(error.Failed())) {
           return error.StealNSResult();
         }
@@ -774,8 +772,7 @@ TextEditor::DeleteSelectionAsSubAction(EDirection aDirection,
   subActionInfo.collapsedAction = aDirection;
   subActionInfo.stripWrappers = aStripWrappers;
   bool cancel, handled;
-  nsresult rv =
-    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -784,7 +781,9 @@ TextEditor::DeleteSelectionAsSubAction(EDirection aDirection,
   }
   if (!cancel) {
     // post-process
-    rv = rules->DidDoAction(selection, subActionInfo, rv);
+    rv = rules->DidDoAction(subActionInfo, rv);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "TextEditRules::DidDoAction() failed");
   }
   return rv;
 }
@@ -793,17 +792,14 @@ nsresult
 TextEditor::DeleteSelectionWithTransaction(EDirection aDirection,
                                            EStripWrappers aStripWrappers)
 {
-  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
 
   RefPtr<EditAggregateTransaction> deleteSelectionTransaction;
   nsCOMPtr<nsINode> deleteNode;
   int32_t deleteCharOffset = 0, deleteCharLength = 0;
-  if (!selection->IsCollapsed() || aDirection != eNone) {
+  if (!SelectionRefPtr()->IsCollapsed() || aDirection != eNone) {
     deleteSelectionTransaction =
       CreateTxnForDeleteSelection(aDirection,
                                   getter_AddRefs(deleteNode),
@@ -824,10 +820,10 @@ TextEditor::DeleteSelectionWithTransaction(EDirection aDirection,
   if (mRules && mRules->AsHTMLEditRules()) {
     if (!deleteNode) {
       RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->WillDeleteSelection(*selection);
+      htmlEditRules->WillDeleteSelection();
     } else if (!deleteCharData) {
       RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->WillDeleteNode(*selection, *deleteNode);
+      htmlEditRules->WillDeleteNode(*deleteNode);
     }
   }
 
@@ -836,7 +832,7 @@ TextEditor::DeleteSelectionWithTransaction(EDirection aDirection,
     if (!deleteNode) {
       AutoActionListenerArray listeners(mActionListeners);
       for (auto& listener : listeners) {
-        listener->WillDeleteSelection(selection);
+        listener->WillDeleteSelection(SelectionRefPtr());
       }
     } else if (deleteCharData) {
       AutoActionListenerArray listeners(mActionListeners);
@@ -852,7 +848,7 @@ TextEditor::DeleteSelectionWithTransaction(EDirection aDirection,
   if (mRules && mRules->AsHTMLEditRules() && deleteCharData) {
     MOZ_ASSERT(deleteNode);
     RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-    htmlEditRules->DidDeleteText(*selection, *deleteNode, deleteCharOffset, 1);
+    htmlEditRules->DidDeleteText(*deleteNode, deleteCharOffset, 1);
   }
 
   if (mTextServicesDocument && NS_SUCCEEDED(rv) &&
@@ -866,7 +862,7 @@ TextEditor::DeleteSelectionWithTransaction(EDirection aDirection,
     AutoActionListenerArray listeners(mActionListeners);
     if (!deleteNode) {
       for (auto& listener : mActionListeners) {
-        listener->DidDeleteSelection(selection);
+        listener->DidDeleteSelection(SelectionRefPtr());
       }
     } else if (deleteCharData) {
       for (auto& listener : mActionListeners) {
@@ -1032,6 +1028,7 @@ TextEditor::InsertTextAsAction(const nsAString& aStringToInsert)
 nsresult
 TextEditor::InsertTextAsSubAction(const nsAString& aStringToInsert)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mPlaceholderBatch);
 
   if (!mRules) {
@@ -1048,11 +1045,6 @@ TextEditor::InsertTextAsSubAction(const nsAString& aStringToInsert)
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, editSubAction, nsIEditor::eNext);
 
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-
   nsAutoString resultString;
   // XXX can we trust instring to outlive subActionInfo,
   // XXX and subActionInfo not to refer to instring in its dtor?
@@ -1063,8 +1055,7 @@ TextEditor::InsertTextAsSubAction(const nsAString& aStringToInsert)
   subActionInfo.maxLength = mMaxTextLength;
 
   bool cancel, handled;
-  nsresult rv =
-    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1075,7 +1066,7 @@ TextEditor::InsertTextAsSubAction(const nsAString& aStringToInsert)
     return NS_OK;
   }
   // post-process
-  rv = rules->DidDoAction(selection, subActionInfo, NS_OK);
+  rv = rules->DidDoAction(subActionInfo, NS_OK);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1098,6 +1089,8 @@ TextEditor::InsertLineBreak()
 nsresult
 TextEditor::InsertParagraphSeparatorAsAction()
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1111,15 +1104,10 @@ TextEditor::InsertParagraphSeparatorAsAction()
                                       EditSubAction::eInsertParagraphSeparator,
                                       nsIEditor::eNext);
 
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-
   EditSubActionInfo subActionInfo(EditSubAction::eInsertParagraphSeparator);
   subActionInfo.maxLength = mMaxTextLength;
   bool cancel, handled;
-  nsresult rv = rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // XXX DidDoAction() won't be called when WillDoAction() returns error.
     //     Perhaps, we should move the code between WillDoAction() and
@@ -1130,7 +1118,7 @@ TextEditor::InsertParagraphSeparatorAsAction()
 
   if (!cancel && !handled) {
     // get the (collapsed) selection location
-    nsRange* firstRange = selection->GetRangeAt(0);
+    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
     }
@@ -1169,16 +1157,16 @@ TextEditor::InsertParagraphSeparatorAsAction()
       MOZ_ASSERT(!pointAfterInsertedLineBreak.GetChild(),
         "After inserting text into a text node, pointAfterInsertedLineBreak."
         "GetChild() should be nullptr");
-      rv = selection->Collapse(pointAfterInsertedLineBreak);
+      rv = SelectionRefPtr()->Collapse(pointAfterInsertedLineBreak);
       if (NS_SUCCEEDED(rv)) {
         // see if we're at the end of the editor range
-        EditorRawDOMPoint endPoint = EditorBase::GetEndPoint(*selection);
+        EditorRawDOMPoint endPoint(EditorBase::GetEndPoint(*SelectionRefPtr()));
         if (endPoint == pointAfterInsertedLineBreak) {
           // SetInterlinePosition(true) means we want the caret to stick to the
           // content on the "right".  We want the caret to stick to whatever is
           // past the break.  This is because the break is on the same line we
           // were on, but the next content will be on the following line.
-          selection->SetInterlinePosition(true, IgnoreErrors());
+          SelectionRefPtr()->SetInterlinePosition(true, IgnoreErrors());
         }
       }
     }
@@ -1186,7 +1174,9 @@ TextEditor::InsertParagraphSeparatorAsAction()
 
   if (!cancel) {
     // post-process, always called if WillInsertBreak didn't return cancel==true
-    rv = rules->DidDoAction(selection, subActionInfo, rv);
+    rv = rules->DidDoAction(subActionInfo, rv);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "TextEditRules::DidDoAction() failed");
   }
   return rv;
 }
@@ -1264,6 +1254,7 @@ TextEditor::ReplaceTextAsAction(const nsAString& aString,
 nsresult
 TextEditor::SetTextAsSubAction(const nsAString& aString)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mPlaceholderBatch);
 
   if (NS_WARN_IF(!mRules)) {
@@ -1277,19 +1268,13 @@ TextEditor::SetTextAsSubAction(const nsAString& aString)
                                       *this, EditSubAction::eSetText,
                                       nsIEditor::eNext);
 
-  // pre-process
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_NULL_POINTER;
-  }
   EditSubActionInfo subActionInfo(EditSubAction::eSetText);
   subActionInfo.inString = &aString;
   subActionInfo.maxLength = mMaxTextLength;
 
   bool cancel;
   bool handled;
-  nsresult rv =
-    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1311,7 +1296,7 @@ TextEditor::SetTextAsSubAction(const nsAString& aString)
       if (NS_WARN_IF(!rootElement)) {
         return NS_ERROR_FAILURE;
       }
-      rv = selection->Collapse(rootElement, 0);
+      rv = SelectionRefPtr()->Collapse(rootElement, 0);
     } else {
       rv = EditorBase::SelectEntireDocument();
     }
@@ -1322,7 +1307,11 @@ TextEditor::SetTextAsSubAction(const nsAString& aString)
     }
   }
   // post-process
-  return rules->DidDoAction(selection, subActionInfo, rv);
+  rv = rules->DidDoAction(subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -1730,8 +1719,7 @@ TextEditor::Undo(uint32_t aCount)
 
     EditSubActionInfo subActionInfo(EditSubAction::eUndo);
     bool cancel, handled;
-    rv = rules->WillDoAction(SelectionRefPtr(), subActionInfo,
-                             &cancel, &handled);
+    rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
     if (!cancel && NS_SUCCEEDED(rv)) {
       RefPtr<TransactionManager> transactionManager(mTransactionManager);
       for (uint32_t i = 0; i < aCount; ++i) {
@@ -1741,7 +1729,9 @@ TextEditor::Undo(uint32_t aCount)
         }
         DoAfterUndoTransaction();
       }
-      rv = rules->DidDoAction(SelectionRefPtr(), subActionInfo, rv);
+      rv = rules->DidDoAction(subActionInfo, rv);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "TextEditRules::DidDoAction() failed");
     }
   }
 
@@ -1790,8 +1780,7 @@ TextEditor::Redo(uint32_t aCount)
 
     EditSubActionInfo subActionInfo(EditSubAction::eRedo);
     bool cancel, handled;
-    rv = rules->WillDoAction(SelectionRefPtr(), subActionInfo,
-                             &cancel, &handled);
+    rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
     if (!cancel && NS_SUCCEEDED(rv)) {
       RefPtr<TransactionManager> transactionManager(mTransactionManager);
       for (uint32_t i = 0; i < aCount; ++i) {
@@ -1801,7 +1790,9 @@ TextEditor::Redo(uint32_t aCount)
         }
         DoAfterRedoTransaction();
       }
-      rv = rules->DidDoAction(SelectionRefPtr(), subActionInfo, rv);
+      rv = rules->DidDoAction(subActionInfo, rv);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "TextEditRules::DidDoAction() failed");
     }
   }
 
@@ -2030,6 +2021,8 @@ TextEditor::ComputeValueInternal(const nsAString& aFormatType,
                                  uint32_t aDocumentEncoderFlags,
                                  nsAString& aOutputString) const
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
@@ -2037,13 +2030,9 @@ TextEditor::ComputeValueInternal(const nsAString& aFormatType,
   subActionInfo.outString = &aOutputString;
   subActionInfo.flags = aDocumentEncoderFlags;
   subActionInfo.outputFormat = &aFormatType;
-  Selection* selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
+
   bool cancel, handled;
-  nsresult rv =
-    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
@@ -2065,7 +2054,11 @@ TextEditor::ComputeValueInternal(const nsAString& aFormatType,
   }
 
   // XXX Why don't we call TextEditRules::DidDoAction() here?
-  return encoder->EncodeToString(aOutputString);
+  rv = encoder->EncodeToString(aOutputString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -2136,6 +2129,8 @@ TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
 nsresult
 TextEditor::InsertWithQuotationsAsSubAction(const nsAString& aQuotedText)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
@@ -2152,11 +2147,6 @@ TextEditor::InsertWithQuotationsAsSubAction(const nsAString& aQuotedText)
     quotedStuff.Append(char16_t('\n'));
   }
 
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eInsertText,
                                       nsIEditor::eNext);
@@ -2166,7 +2156,7 @@ TextEditor::InsertWithQuotationsAsSubAction(const nsAString& aQuotedText)
   //     sub-action rather than using eInsertElement.
   EditSubActionInfo subActionInfo(EditSubAction::eInsertElement);
   bool cancel, handled;
-  rv = rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2345,7 +2335,7 @@ TextEditor::HideLastPasswordInput()
   }
 
   RefPtr<TextEditRules> rules(mRules);
-  nsresult rv = rules->HideLastPasswordInput(*SelectionRefPtr());
+  nsresult rv = rules->HideLastPasswordInput();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

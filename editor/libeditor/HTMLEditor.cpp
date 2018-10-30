@@ -592,6 +592,8 @@ HTMLEditor::SetFlags(uint32_t aFlags)
 nsresult
 HTMLEditor::InitRules()
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   if (!mRules) {
     // instantiate the rules for the html editor
     mRules = new HTMLEditRules();
@@ -1667,8 +1669,7 @@ HTMLEditor::InsertElementAtSelection(Element* aElement,
   // hand off to the rules system, see if it has anything to say about this
   bool cancel, handled;
   EditSubActionInfo subActionInfo(EditSubAction::eInsertElement);
-  nsresult rv =
-    rules->WillDoAction(SelectionRefPtr(), subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
@@ -1742,8 +1743,11 @@ HTMLEditor::InsertElementAtSelection(Element* aElement,
       }
     }
   }
-  rv = rules->DidDoAction(SelectionRefPtr(), subActionInfo, rv);
-  return rv;
+  rv = rules->DidDoAction(subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 template<typename PT, typename CT>
@@ -2238,8 +2242,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
   subActionInfo.blockType = &aListType;
   subActionInfo.entireList = entireList;
   subActionInfo.bulletType = &aBulletType;
-  nsresult rv =
-    rules->WillDoAction(SelectionRefPtr(), subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
@@ -2304,7 +2307,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
     }
   }
 
-  rv = rules->DidDoAction(SelectionRefPtr(), subActionInfo, rv);
+  rv = rules->DidDoAction(subActionInfo, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2334,15 +2337,14 @@ HTMLEditor::RemoveList(const nsAString&)
 
   EditSubActionInfo subActionInfo(EditSubAction::eRemoveList);
   bool cancel, handled;
-  nsresult rv =
-    rules->WillDoAction(SelectionRefPtr(), subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
 
   // no default behavior for this yet.  what would it mean?
 
-  rv = rules->DidDoAction(SelectionRefPtr(), subActionInfo, rv);
+  rv = rules->DidDoAction(subActionInfo, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2352,6 +2354,8 @@ HTMLEditor::RemoveList(const nsAString&)
 nsresult
 HTMLEditor::MakeDefinitionListItemWithTransaction(nsAtom& aTagName)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -2370,16 +2374,10 @@ HTMLEditor::MakeDefinitionListItemWithTransaction(nsAtom& aTagName)
                                EditSubAction::eCreateOrChangeDefinitionList,
                                nsIEditor::eNext);
 
-  // pre-process
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
   nsDependentAtomString tagName(&aTagName);
   EditSubActionInfo subActionInfo(EditSubAction::eCreateOrChangeDefinitionList);
   subActionInfo.blockType = &tagName;
-  nsresult rv =
-    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
@@ -2388,12 +2386,18 @@ HTMLEditor::MakeDefinitionListItemWithTransaction(nsAtom& aTagName)
     // todo: no default for now.  we count on rules to handle it.
   }
 
-  return rules->DidDoAction(selection, subActionInfo, rv);
+  rv = rules->DidDoAction(subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult
 HTMLEditor::InsertBasicBlockWithTransaction(nsAtom& aTagName)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -2412,20 +2416,16 @@ HTMLEditor::InsertBasicBlockWithTransaction(nsAtom& aTagName)
                                       EditSubAction::eCreateOrRemoveBlock,
                                       nsIEditor::eNext);
 
-  // pre-process
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsDependentAtomString tagName(&aTagName);
   EditSubActionInfo subActionInfo(EditSubAction::eCreateOrRemoveBlock);
   subActionInfo.blockType = &tagName;
-  nsresult rv =
-   rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
 
-  if (!handled && selection->IsCollapsed()) {
-    nsRange* firstRange = selection->GetRangeAt(0);
+  if (!handled && SelectionRefPtr()->IsCollapsed()) {
+    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
     }
@@ -2474,13 +2474,17 @@ HTMLEditor::InsertBasicBlockWithTransaction(nsAtom& aTagName)
 
     // reposition selection to inside the block
     ErrorResult error;
-    selection->Collapse(RawRangeBoundary(newBlock, 0), error);
+    SelectionRefPtr()->Collapse(RawRangeBoundary(newBlock, 0), error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
   }
 
-  return rules->DidDoAction(selection, subActionInfo, rv);
+  rv = rules->DidDoAction(subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2546,8 +2550,10 @@ HTMLEditor::OutdentAsAction()
 nsresult
 HTMLEditor::IndentOrOutdentAsSubAction(EditSubAction aIndentOrOutdent)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mRules);
   MOZ_ASSERT(mPlaceholderBatch);
+
   MOZ_ASSERT(aIndentOrOutdent == EditSubAction::eIndent ||
              aIndentOrOutdent == EditSubAction::eOutdent);
 
@@ -2559,21 +2565,15 @@ HTMLEditor::IndentOrOutdentAsSubAction(EditSubAction aIndentOrOutdent)
                                       *this, aIndentOrOutdent,
                                       nsIEditor::eNext);
 
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-
   EditSubActionInfo subActionInfo(aIndentOrOutdent);
-  nsresult rv =
-    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
 
-  if (!handled && selection->IsCollapsed() &&
+  if (!handled && SelectionRefPtr()->IsCollapsed() &&
       aIndentOrOutdent == EditSubAction::eIndent) {
-    nsRange* firstRange = selection->GetRangeAt(0);
+    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
     }
@@ -2623,7 +2623,7 @@ HTMLEditor::IndentOrOutdentAsSubAction(EditSubAction aIndentOrOutdent)
     }
     // put a space in it so layout will draw the list item
     ErrorResult error;
-    selection->Collapse(RawRangeBoundary(newBQ, 0), error);
+    SelectionRefPtr()->Collapse(RawRangeBoundary(newBQ, 0), error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -2632,17 +2632,18 @@ HTMLEditor::IndentOrOutdentAsSubAction(EditSubAction aIndentOrOutdent)
       return rv;
     }
     // Reposition selection to before the space character.
-    firstRange = selection->GetRangeAt(0);
+    firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
     }
-    selection->Collapse(RawRangeBoundary(firstRange->GetStartContainer(), 0),
-                        error);
+    SelectionRefPtr()->Collapse(
+                         RawRangeBoundary(firstRange->GetStartContainer(), 0),
+                         error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
   }
-  rv = rules->DidDoAction(selection, subActionInfo, rv);
+  rv = rules->DidDoAction(subActionInfo, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2674,13 +2675,12 @@ HTMLEditor::Align(const nsAString& aAlignType)
   // Find out if the selection is collapsed:
   EditSubActionInfo subActionInfo(EditSubAction::eSetOrClearAlignment);
   subActionInfo.alignType = &aAlignType;
-  nsresult rv =
-   rules->WillDoAction(SelectionRefPtr(), subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = rules->DidDoAction(SelectionRefPtr(), subActionInfo, rv);
+  rv = rules->DidDoAction(subActionInfo, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4635,16 +4635,18 @@ HTMLEditor::SetIsCSSEnabled(bool aIsCSSPrefChecked)
 nsresult
 HTMLEditor::SetCSSBackgroundColorWithTransaction(const nsAString& aColor)
 {
-  NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (NS_WARN_IF(!mRules)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   CommitComposition();
 
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_STATE(selection);
-
-  bool isCollapsed = selection->IsCollapsed();
+  bool isCollapsed = SelectionRefPtr()->IsCollapsed();
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
@@ -4657,16 +4659,17 @@ HTMLEditor::SetCSSBackgroundColorWithTransaction(const nsAString& aColor)
   //     element, using EditSubAction::eSetTextProperty.
   bool cancel, handled;
   EditSubActionInfo subActionInfo(EditSubAction::eSetTextProperty);
-  nsresult rv =
-    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
   if (!cancel && !handled) {
     // Loop through the ranges in the selection
-    for (uint32_t i = 0; i < selection->RangeCount(); i++) {
-      RefPtr<nsRange> range = selection->GetRangeAt(i);
-      NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
+    for (uint32_t i = 0; i < SelectionRefPtr()->RangeCount(); i++) {
+      RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(i);
+      if (NS_WARN_IF(!range)) {
+        return NS_ERROR_FAILURE;
+      }
 
       nsCOMPtr<Element> cachedBlockParent;
 
@@ -4782,8 +4785,10 @@ HTMLEditor::SetCSSBackgroundColorWithTransaction(const nsAString& aColor)
   }
   if (!cancel) {
     // Post-process
-    rv = rules->DidDoAction(selection, subActionInfo, rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = rules->DidDoAction(subActionInfo, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
   return NS_OK;
 }
@@ -5415,7 +5420,7 @@ HTMLEditor::OnModifyDocument()
 
   RefPtr<HTMLEditRules> htmlRules = mRules->AsHTMLEditRules();
   if (IsEditActionDataAvailable()) {
-    htmlRules->OnModifyDocument(*SelectionRefPtr());
+    htmlRules->OnModifyDocument();
     return;
   }
 
@@ -5424,7 +5429,7 @@ HTMLEditor::OnModifyDocument()
     return;
   }
 
-  htmlRules->OnModifyDocument(*SelectionRefPtr());
+  htmlRules->OnModifyDocument();
 }
 
 } // namespace mozilla
