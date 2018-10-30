@@ -7,7 +7,7 @@
 #define mozilla_EditorBase_h
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
-#include "mozilla/EditAction.h"         // for EditSubAction
+#include "mozilla/EditAction.h"         // for EditAction and EditSubAction
 #include "mozilla/EditorDOMPoint.h"     // for EditorDOMPoint
 #include "mozilla/Maybe.h"              // for Maybe
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
@@ -682,6 +682,41 @@ public:
    */
  void ReinitializeSelection(Element& aElement);
 
+protected: // AutoEditActionDataSetter, this shouldn't be accessed by friends.
+  /**
+   * AutoEditActionDataSetter grabs some necessary objects for handling any
+   * edit actions and store the edit action what we're handling.  When this is
+   * created, its pointer is set to the mEditActionData, and this guarantees
+   * the lifetime of grabbing objects until it's destroyed.
+   */
+  class MOZ_STACK_CLASS AutoEditActionDataSetter final
+  {
+  public:
+    AutoEditActionDataSetter(const EditorBase& aEditorBase,
+                             EditAction aEditAction);
+    ~AutoEditActionDataSetter();
+
+    bool CanHandle() const
+    {
+      return mSelection && mEditorBase.IsInitialized();
+    }
+
+    const RefPtr<Selection>& SelectionRefPtr() const { return mSelection; }
+    EditAction GetEditAction() const { return mEditAction; }
+
+  private:
+    EditorBase& mEditorBase;
+    RefPtr<Selection> mSelection;
+    // EditAction may be nested, for example, a command may be executed
+    // from mutation event listener which is run while editor changes
+    // the DOM tree.  In such case, we need to handle edit action separately.
+    AutoEditActionDataSetter* mParentData;
+    EditAction mEditAction;
+
+    AutoEditActionDataSetter() = delete;
+    AutoEditActionDataSetter(const AutoEditActionDataSetter& aOther) = delete;
+  };
+
 protected: // May be called by friends.
   /****************************************************************************
    * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
@@ -691,6 +726,35 @@ protected: // May be called by friends.
    * to do that for you, you need to create a wrapper method in public scope
    * and call it.
    ****************************************************************************/
+
+  bool IsEditActionDataAvailable() const
+  {
+    return mEditActionData && mEditActionData->CanHandle();
+  }
+
+  /**
+   * SelectionRefPtr() returns cached Selection.  This is pretty faster than
+   * EditorBase::GetSelection() if available.
+   * Note that this never returns nullptr unless public methods ignore
+   * result of AutoEditActionDataSetter::CanHandle() and keep handling edit
+   * action but any methods should stop handling edit action if it returns
+   * false.
+   */
+  const RefPtr<Selection>& SelectionRefPtr() const
+  {
+    MOZ_ASSERT(mEditActionData);
+    return mEditActionData->SelectionRefPtr();
+  }
+
+  /**
+   * GetEditAction() returns EditAction which is being handled.  If some
+   * edit actions are nested, this returns the innermost edit action.
+   */
+  EditAction GetEditAction() const
+  {
+    return mEditActionData ? mEditActionData->GetEditAction() :
+                             EditAction::eNone;
+  }
 
   /**
    * InsertTextWithTransaction() inserts aStringToInsert to aPointToInsert or
@@ -1902,6 +1966,8 @@ protected: // Shouldn't be used by friend classes
 private:
   nsCOMPtr<nsISelectionController> mSelectionController;
   nsCOMPtr<nsIDocument> mDocument;
+
+  AutoEditActionDataSetter* mEditActionData;
 
 
   /**
