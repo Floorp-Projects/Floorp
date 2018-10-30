@@ -3241,8 +3241,7 @@ PrivateScriptData::traceChildren(JSTracer* trc)
     }
 }
 
-JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry, const ReadOnlyCompileOptions& options,
-                   HandleObject sourceObject,
+JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry, HandleObject sourceObject,
                    uint32_t sourceStart, uint32_t sourceEnd,
                    uint32_t toStringStart, uint32_t toStringEnd)
   :
@@ -3265,18 +3264,13 @@ JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry, const ReadOnlyCompileOp
     vtuneMethodId_ = vtune::GenerateUniqueMethodID();
 #endif
 
-    bitFields_.noScriptRval_ = options.noScriptRval;
-    bitFields_.selfHosted_ = options.selfHostingMode;
-    bitFields_.treatAsRunOnce_ = options.isRunOnce;
-    bitFields_.hideScriptFromDebugger_ = options.hideScriptFromDebugger;
-
     setSourceObject(sourceObject);
 }
 
 /* static */ JSScript*
-JSScript::createInitialized(JSContext* cx, const ReadOnlyCompileOptions& options,
-                            HandleObject sourceObject, uint32_t sourceStart, uint32_t sourceEnd,
-                            uint32_t toStringStart, uint32_t toStringEnd)
+JSScript::New(JSContext* cx, HandleObject sourceObject,
+              uint32_t sourceStart, uint32_t sourceEnd,
+              uint32_t toStringStart, uint32_t toStringEnd)
 {
     void* script = Allocate<JSScript>(cx);
     if (!script) {
@@ -3289,7 +3283,7 @@ JSScript::createInitialized(JSContext* cx, const ReadOnlyCompileOptions& options
     uint8_t* stubEntry = nullptr;
 #endif
 
-    return new (script) JSScript(cx->realm(), stubEntry, options, sourceObject,
+    return new (script) JSScript(cx->realm(), stubEntry, sourceObject,
                                  sourceStart, sourceEnd, toStringStart, toStringEnd);
 }
 
@@ -3298,11 +3292,17 @@ JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
                  HandleObject sourceObject, uint32_t sourceStart, uint32_t sourceEnd,
                  uint32_t toStringStart, uint32_t toStringEnd)
 {
-    RootedScript script(cx, createInitialized(cx, options, sourceObject, sourceStart, sourceEnd,
-                                              toStringStart, toStringEnd));
+    RootedScript script(cx, JSScript::New(cx, sourceObject, sourceStart, sourceEnd,
+                                          toStringStart, toStringEnd));
     if (!script) {
         return nullptr;
     }
+
+    // Record compile options that get checked at runtime.
+    script->bitFields_.noScriptRval_ = options.noScriptRval;
+    script->bitFields_.selfHosted_ = options.selfHostingMode;
+    script->bitFields_.treatAsRunOnce_ = options.isRunOnce;
+    script->bitFields_.hideScriptFromDebugger_ = options.hideScriptFromDebugger;
 
     if (cx->runtime()->lcovOutput().isEnabled()) {
         if (!script->initScriptName(cx)) {
