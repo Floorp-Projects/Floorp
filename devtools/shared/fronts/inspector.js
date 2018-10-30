@@ -7,6 +7,7 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const telemetry = new Telemetry();
 const TELEMETRY_EYEDROPPER_OPENED = "DEVTOOLS_EYEDROPPER_OPENED_COUNT";
 const TELEMETRY_EYEDROPPER_OPENED_MENU = "DEVTOOLS_MENU_EYEDROPPER_OPENED_COUNT";
+const SHOW_ALL_ANONYMOUS_CONTENT_PREF = "devtools.inspector.showAllAnonymousContent";
 
 const {
   Front,
@@ -19,9 +20,15 @@ const {
   inspectorSpec,
   walkerSpec,
 } = require("devtools/shared/specs/inspector");
+
+const Services = require("Services");
 const defer = require("devtools/shared/defer");
 loader.lazyRequireGetter(this, "nodeConstants",
   "devtools/shared/dom-node-constants");
+loader.lazyRequireGetter(this, "Selection",
+  "devtools/client/framework/selection", true);
+loader.lazyRequireGetter(this, "flags",
+  "devtools/shared/flags");
 
 /**
  * Client side of the DOM walker.
@@ -449,14 +456,34 @@ exports.WalkerFront = WalkerFront;
  * inspector-related actors, including the walker.
  */
 var InspectorFront = FrontClassWithSpec(inspectorSpec, {
-  initialize: function(client, tabForm) {
+  initialize: async function(client, tabForm) {
     Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.inspectorActor;
+    this._client = client;
     this._highlighters = new Map();
 
     // XXX: This is the first actor type in its hierarchy to use the protocol
     // library, so we're going to self-own on the client side for now.
     this.manage(this);
+
+    // async initialization
+    await Promise.all([
+      this._getWalker(),
+      this._getHighlighter(),
+    ]);
+
+    this.selection = new Selection(this.walker);
+  },
+
+  _getWalker: async function() {
+    const showAllAnonymousContent = Services.prefs.getBoolPref(
+      SHOW_ALL_ANONYMOUS_CONTENT_PREF);
+    this.walker = await this.getWalker({ showAllAnonymousContent });
+  },
+
+  _getHighlighter: async function() {
+    const autohide = !flags.testing;
+    this.highlighter = await this.getHighlighter(autohide);
   },
 
   hasHighlighter(type) {
@@ -490,30 +517,6 @@ var InspectorFront = FrontClassWithSpec(inspectorSpec, {
     }
     return front;
   },
-
-  getWalker: custom(function(options = {}) {
-    return this._getWalker(options).then(walker => {
-      this.walker = walker;
-      return walker;
-    });
-  }, {
-    impl: "_getWalker",
-  }),
-
-  getPageStyle: custom(function() {
-    return this._getPageStyle().then(pageStyle => {
-      // We need a walker to understand node references from the
-      // node style.
-      if (this.walker) {
-        return pageStyle;
-      }
-      return this.getWalker().then(() => {
-        return pageStyle;
-      });
-    });
-  }, {
-    impl: "_getPageStyle",
-  }),
 
   pickColorFromPage: custom(async function(options) {
     await this._pickColorFromPage(options);
