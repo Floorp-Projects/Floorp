@@ -58,7 +58,6 @@ const FILE_UPDATE_SETTINGS_INI       = "update-settings.ini";
 const FILE_UPDATE_SETTINGS_INI_BAK   = "update-settings.ini.bak";
 const FILE_UPDATER_INI               = "updater.ini";
 const FILE_UPDATES_XML               = "updates.xml";
-const FILE_UPDATE_CONFIG             = "update-config.json";
 const FILE_UPDATE_LOG                = "update.log";
 const FILE_UPDATE_MAR                = "update.mar";
 const FILE_UPDATE_STATUS             = "update.status";
@@ -581,15 +580,6 @@ function getGREDir() {
  */
 function getGREBinDir() {
   return Services.dirsvc.get(NS_GRE_BIN_DIR, Ci.nsIFile);
-}
-
-/**
- * Returns the file containing update configuration
- */
-function getUpdateConfigFile() {
-  let configFile = getUpdatesRootDir();
-  configFile.append(FILE_UPDATE_CONFIG);
-  return configFile;
 }
 
 /**
