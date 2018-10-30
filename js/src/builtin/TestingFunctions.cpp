@@ -4703,7 +4703,7 @@ AssertionTypeToString(irregexp::RegExpAssertion::AssertionType type)
 }
 
 static JSObject*
-ConvertRegExpTreeToObject(JSContext* cx, irregexp::RegExpTree* tree)
+ConvertRegExpTreeToObject(JSContext* cx, LifoAlloc& alloc, irregexp::RegExpTree* tree)
 {
     RootedObject obj(cx, JS_NewPlainObject(cx));
     if (!obj) {
@@ -4750,18 +4750,18 @@ ConvertRegExpTreeToObject(JSContext* cx, irregexp::RegExpTree* tree)
         return JS_SetProperty(cx, obj, name, val);
     };
 
-    auto TreeProp = [&ObjectProp](JSContext* cx, HandleObject obj,
-                                  const char* name, irregexp::RegExpTree* tree) {
-        RootedObject treeObj(cx, ConvertRegExpTreeToObject(cx, tree));
+    auto TreeProp = [&ObjectProp, &alloc](JSContext* cx, HandleObject obj,
+                                          const char* name, irregexp::RegExpTree* tree) {
+        RootedObject treeObj(cx, ConvertRegExpTreeToObject(cx, alloc, tree));
         if (!treeObj) {
             return false;
         }
         return ObjectProp(cx, obj, name, treeObj);
     };
 
-    auto TreeVectorProp = [&ObjectProp](JSContext* cx, HandleObject obj,
-                                        const char* name,
-                                        const irregexp::RegExpTreeVector& nodes) {
+    auto TreeVectorProp = [&ObjectProp, &alloc](JSContext* cx, HandleObject obj,
+                                                const char* name,
+                                                const irregexp::RegExpTreeVector& nodes) {
         size_t len = nodes.length();
         RootedObject array(cx, JS_NewArrayObject(cx, len));
         if (!array) {
@@ -4769,7 +4769,7 @@ ConvertRegExpTreeToObject(JSContext* cx, irregexp::RegExpTree* tree)
         }
 
         for (size_t i = 0; i < len; i++) {
-            RootedObject child(cx, ConvertRegExpTreeToObject(cx, nodes[i]));
+            RootedObject child(cx, ConvertRegExpTreeToObject(cx, alloc, nodes[i]));
             if (!child) {
                 return false;
             }
@@ -4823,8 +4823,8 @@ ConvertRegExpTreeToObject(JSContext* cx, irregexp::RegExpTree* tree)
         return ObjectProp(cx, obj, name, array);
     };
 
-    auto ElemProp = [&ObjectProp](JSContext* cx, HandleObject obj,
-                                  const char* name, const irregexp::TextElementVector& elements) {
+    auto ElemProp = [&ObjectProp, &alloc](JSContext* cx, HandleObject obj, const char* name,
+                                          const irregexp::TextElementVector& elements) {
         size_t len = elements.length();
         RootedObject array(cx, JS_NewArrayObject(cx, len));
         if (!array) {
@@ -4833,7 +4833,7 @@ ConvertRegExpTreeToObject(JSContext* cx, irregexp::RegExpTree* tree)
 
         for (size_t i = 0; i < len; i++) {
             const irregexp::TextElement& element = elements[i];
-            RootedObject elemTree(cx, ConvertRegExpTreeToObject(cx, element.tree()));
+            RootedObject elemTree(cx, ConvertRegExpTreeToObject(cx, alloc, element.tree()));
             if (!elemTree) {
                 return false;
             }
@@ -4884,8 +4884,7 @@ ConvertRegExpTreeToObject(JSContext* cx, irregexp::RegExpTree* tree)
         if (!BooleanProp(cx, obj, "is_negated", t->is_negated())) {
             return nullptr;
         }
-        LifoAlloc* alloc = &cx->tempLifoAlloc();
-        if (!CharRangesProp(cx, obj, "ranges", t->ranges(alloc))) {
+        if (!CharRangesProp(cx, obj, "ranges", t->ranges(&alloc))) {
             return nullptr;
         }
         return obj;
@@ -5022,8 +5021,10 @@ ParseRegExp(JSContext* cx, unsigned argc, Value* vp)
     CompileOptions options(cx);
     frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
 
+    // Data lifetime is controlled by LifoAllocScope.
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
     irregexp::RegExpCompileData data;
-    if (!irregexp::ParsePattern(dummyTokenStream, cx->tempLifoAlloc(), pattern,
+    if (!irregexp::ParsePattern(dummyTokenStream, allocScope.alloc(), pattern,
                                 flags & MultilineFlag, match_only,
                                 flags & UnicodeFlag, flags & IgnoreCaseFlag,
                                 flags & GlobalFlag, flags & StickyFlag,
@@ -5032,7 +5033,7 @@ ParseRegExp(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    RootedObject obj(cx, ConvertRegExpTreeToObject(cx, data.tree));
+    RootedObject obj(cx, ConvertRegExpTreeToObject(cx, allocScope.alloc(), data.tree));
     if (!obj) {
         return false;
     }
