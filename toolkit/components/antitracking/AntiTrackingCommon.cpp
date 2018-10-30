@@ -218,10 +218,6 @@ ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN ||
              aRejectedReason == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
 
-  if (!AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions()) {
-    return;
-  }
-
   nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
   if (NS_WARN_IF(!docShell)) {
     return;
@@ -370,12 +366,6 @@ GetTopWindow(nsPIDOMWindowInner* aWindow)
 
 } // anonymous
 
-/* static */ bool
-AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions()
-{
-  return StaticPrefs::browser_contentblocking_enabled();
-}
-
 /* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
 AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipal,
                                                          nsPIDOMWindowInner* aParentWindow,
@@ -404,11 +394,6 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipa
         nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     LOG(("Disabled by network.cookie.cookieBehavior pref (%d), bailing out early",
          StaticPrefs::network_cookie_cookieBehavior()));
-    return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
-  }
-
-  if (!ShouldHonorContentBlockingCookieRestrictions()) {
-    LOG(("The content blocking pref has been disabled, bail out early"));
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
@@ -674,13 +659,6 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
   }
 
   if (behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
-    // Now, we have to also honour the Content Blocking pref.
-    if (!ShouldHonorContentBlockingCookieRestrictions()) {
-      LOG(("The content blocking pref has been disabled, bail out early by "
-           "by pretending our window isn't a third-party window"));
-      return true;
-    }
-
     if (CheckContentBlockingAllowList(aWindow)) {
       LOG(("Allowing access even though our behavior is reject foreign"));
       return true;
@@ -699,13 +677,6 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
   }
 
   MOZ_ASSERT(behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
-
-  // Now, we have to also honour the Content Blocking pref.
-  if (!ShouldHonorContentBlockingCookieRestrictions()) {
-    LOG(("The content blocking pref has been disabled, bail out early by "
-         "by pretending our window isn't a tracking window"));
-    return true;
-  }
 
   if (CheckContentBlockingAllowList(aWindow)) {
     return true;
@@ -882,13 +853,6 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
   }
 
   if (behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
-    // Now, we have to also honour the Content Blocking pref.
-    if (!ShouldHonorContentBlockingCookieRestrictions()) {
-      LOG(("The content blocking pref has been disabled, bail out early by "
-           "by pretending our window isn't a third-party window"));
-      return true;
-    }
-
     if (CheckContentBlockingAllowList(aChannel)) {
       LOG(("Allowing access even though our behavior is reject foreign"));
       return true;
@@ -907,13 +871,6 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
   }
 
   MOZ_ASSERT(behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
-
-  // Now, we have to also honour the Content Blocking pref.
-  if (!ShouldHonorContentBlockingCookieRestrictions()) {
-    LOG(("The content blocking pref has been disabled, bail out early by "
-         "pretending our channel isn't a tracking channel"));
-    return true;
-  }
 
   if (CheckContentBlockingAllowList(aChannel)) {
     return true;
@@ -1027,12 +984,6 @@ AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner*
         nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     LOG(("Disabled by the pref (%d), bail out early",
          StaticPrefs::network_cookie_cookieBehavior()));
-    return true;
-  }
-
-  // Now, we have to also honour the Content Blocking pref.
-  if (!ShouldHonorContentBlockingCookieRestrictions()) {
-    LOG(("The content blocking pref has been disabled, bail out early"));
     return true;
   }
 

@@ -16,7 +16,6 @@ async function callRequestStorageAccess(callback) {
   // We only grant storage exceptions when the reject tracker behavior is enabled.
   let rejectTrackers = SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior") ==
                          SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER &&
-                       SpecialPowers.Services.prefs.getBoolPref("browser.contentblocking.enabled") &&
                        !isOnContentBlockingAllowList();
   if (rejectTrackers) {
     let p;

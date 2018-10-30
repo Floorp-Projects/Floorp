@@ -1652,8 +1652,7 @@ nsDocument::~nsDocument()
     // fastblock is enabled and we're not a private document.  We always report
     // the all probe, and for the rest, report each category's probe depending
     // on whether the respective bit has been set in our enum set.
-    if (StaticPrefs::browser_contentblocking_enabled() &&
-        StaticPrefs::browser_fastblock_enabled() &&
+    if (StaticPrefs::browser_fastblock_enabled() &&
         !nsContentUtils::IsInPrivateBrowsing(this)) {
       for (auto label : mTrackerBlockedReasons) {
         AccumulateCategorical(label);
@@ -12957,8 +12956,7 @@ void
 nsIDocument::MaybeAllowStorageForOpener()
 {
   if (StaticPrefs::network_cookie_cookieBehavior() !=
-        nsICookieService::BEHAVIOR_REJECT_TRACKER ||
-      !AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions()) {
+        nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     return;
   }
 
@@ -13966,8 +13964,7 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
 
   bool granted = true;
   bool isTrackingWindow = false;
-  if (AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions() &&
-      StaticPrefs::network_cookie_cookieBehavior() ==
+  if (StaticPrefs::network_cookie_cookieBehavior() ==
         nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     // Only do something special for third-party tracking content.
     if (nsContentUtils::StorageDisabledByAntiTracking(this, nullptr)) {

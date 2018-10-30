@@ -725,8 +725,7 @@ nsHttpChannel::CheckFastBlocked()
         Preferences::AddUintVarCache(&sFastBlockLimit, "browser.fastblock.limit");
     }
 
-    if (!StaticPrefs::browser_contentblocking_enabled() ||
-        !StaticPrefs::browser_fastblock_enabled()) {
+    if (!StaticPrefs::browser_fastblock_enabled()) {
         LOG(("FastBlock disabled by pref [this=%p]\n", this));
 
         return false;
