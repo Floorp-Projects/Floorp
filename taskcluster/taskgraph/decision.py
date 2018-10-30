@@ -176,7 +176,6 @@ def get_decision_parameters(config, options):
 
     """
     product_dir = config['product-dir']
-    root = options.get('root') or GECKO
 
     parameters = {n: options[n] for n in [
         'base_repository',
@@ -212,7 +211,7 @@ def get_decision_parameters(config, options):
     parameters['build_number'] = 1
     parameters['version'] = get_version(product_dir)
     parameters['app_version'] = get_app_version(product_dir)
-    parameters['hg_branch'] = get_hg_revision_branch(root, revision=parameters['head_rev'])
+    parameters['hg_branch'] = get_hg_revision_branch(GECKO, revision=parameters['head_rev'])
     parameters['next_version'] = None
     parameters['release_type'] = ''
     parameters['release_eta'] = ''
