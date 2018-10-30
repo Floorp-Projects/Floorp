@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include shared.inc
+%include ../../../toolkit/themes/osx/global/shared.inc
 %define toolbarButtonPressed :hover:active:not([disabled="true"]):not([cui-areatype="menu-panel"])
 
 @namespace html url("http://www.w3.org/1999/xhtml");
@@ -461,8 +461,6 @@ html|input.urlbar-input {
 }
 
 #editBMPanel_folderMenuList {
-  @hudButton@
-  background-clip: padding-box;
   margin: 0;
   min-height: 22px;
   padding-top: 2px;
@@ -475,18 +473,16 @@ html|input.urlbar-input {
   box-shadow: var(--focus-ring-box-shadow);
 }
 
-#editBMPanel_folderMenuList[open="true"],
-#editBMPanel_folderMenuList:hover:active {
-  @hudButtonPressed@
-}
-
 #editBMPanel_folderMenuList > .menulist-dropmarker {
   -moz-appearance: none;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
   display: -moz-box;
   -moz-box-align: center;
   padding-inline-end: 4px;
   width: 7px;
-  list-style-image: url("chrome://global/skin/icons/panel-dropmarker.png");
 }
 
 /**** folder tree and tag selector ****/
@@ -523,29 +519,14 @@ html|input.urlbar-input {
 
 #editBookmarkPanel .expander-up,
 #editBookmarkPanel .expander-down {
-  @hudButton@
+  -moz-appearance: none; /* override button.css */
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
   margin: 0;
   margin-inline-start: 4px;
   min-width: 27px;
   min-height: 22px;
-}
-
-#editBookmarkPanel .expander-up:-moz-focusring,
-#editBookmarkPanel .expander-down:-moz-focusring {
-  box-shadow: var(--focus-ring-box-shadow);
-}
-
-#editBookmarkPanel .expander-up:hover:active,
-#editBookmarkPanel .expander-down:hover:active {
-  @hudButtonPressed@
-}
-
-#editBookmarkPanel .expander-up {
-  list-style-image: url("chrome://browser/skin/panel-expander-open.png");
-}
-
-#editBookmarkPanel .expander-down {
-  list-style-image: url("chrome://browser/skin/panel-expander-closed.png");
 }
 
 #editBookmarkPanel .expander-up > .button-box > .button-icon,
@@ -558,19 +539,12 @@ html|input.urlbar-input {
   display: none;
 }
 
-@media (min-resolution: 2dppx) {
-  #editBookmarkPanel .expander-up {
-    list-style-image: url("chrome://browser/skin/panel-expander-open@2x.png");
-  }
+#editBookmarkPanel .expander-up {
+  list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
+}
 
-  #editBookmarkPanel .expander-down {
-    list-style-image: url("chrome://browser/skin/panel-expander-closed@2x.png");
-  }
-
-  #editBookmarkPanel .expander-up > .button-box > .button-icon,
-  #editBookmarkPanel .expander-down > .button-box > .button-icon {
-    width: 9px;
-  }
+#editBookmarkPanel .expander-down {
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
 }
 
 #editBMPanel_tagsField > moz-input-box > html|*.textbox-input::placeholder {
