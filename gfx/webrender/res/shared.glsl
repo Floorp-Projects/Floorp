@@ -113,6 +113,22 @@
             return 0.0;
         return 0.5 + dist * (0.8431027 * dist * dist - 1.14453603);
     }
+
+    /// Component-wise selection.
+    ///
+    /// The idea of using this is to ensure both potential branches are executed before
+    /// selecting the result, to avoid observable timing differences based on the condition.
+    ///
+    /// Example usage: color = if_then_else(LessThanEqual(color, vec3(0.5)), vec3(0.0), vec3(1.0));
+    ///
+    /// The above example sets each component to 0.0 or 1.0 independently depending on whether
+    /// their values are below or above 0.5.
+    ///
+    /// This is written as a macro in order to work with vectors of any dimension.
+    ///
+    /// Note: Some older android devices don't support mix with bvec. If we ever run into them
+    /// the only option we have is to polyfill it with a branch per component.
+    #define if_then_else(cond, then_branch, else_branch) mix(else_branch, then_branch, cond)
 #endif
 
 //======================================================================================

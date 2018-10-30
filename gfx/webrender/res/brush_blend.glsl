@@ -136,13 +136,13 @@ vec3 Brightness(vec3 Cs, float amount) {
 vec3 SrgbToLinear(vec3 color) {
     vec3 c1 = color / 12.92;
     vec3 c2 = pow(color / 1.055 + vec3(0.055 / 1.055), vec3(2.4));
-    return mix(c1, c2, lessThanEqual(color, vec3(0.04045)));
+    return if_then_else(lessThanEqual(color, vec3(0.04045)), c1, c2);
 }
 
 vec3 LinearToSrgb(vec3 color) {
     vec3 c1 = color * 12.92;
     vec3 c2 = vec3(1.055) * pow(color, vec3(1.0 / 2.4)) - vec3(0.055);
-    return mix(c1, c2, lessThanEqual(color, vec3(0.0031308)));
+    return if_then_else(lessThanEqual(color, vec3(0.0031308)), c1, c2);
 }
 
 Fragment brush_fs() {
