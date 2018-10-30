@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import requests
+from taskcluster.notify import Notify
 from operator import itemgetter
 
 from mozilla_version.gecko import GeckoVersion
@@ -210,3 +211,43 @@ def get_branch_by_version(version):
         raise Exception(
             'Unsupported version type {}: {}'.format(
                 version.version_type.name, version))
+
+
+def email_release_drivers(
+    addresses, product, version, build_number,
+    revision, task_group_id,
+):
+    # Send an email to the mailing after the build
+    email_buglist_string = create_bugs_url(product, version, revision)
+
+    content = """\
+A new build has been started:
+
+Commit: https://hg.mozilla.org/{path}/rev/{revision}
+Task group: https://tools.taskcluster.net/push-inspector/#/{task_group_id}
+
+{email_buglist_string}
+""".format(path=get_branch_by_version(version), revision=revision,
+           task_group_id=task_group_id,
+           email_buglist_string=email_buglist_string)
+
+    # On r-d, we prefix the subject of the email in order to simplify filtering
+    subject_prefix = ""
+    if product in {"fennec"}:
+        subject_prefix = "[mobile] "
+    if product in {"firefox", "devedition"}:
+        subject_prefix = "[desktop] "
+
+    subject = '{} Build of {} {} build {}'.format(subject_prefix, product, version, build_number)
+
+    notify_options = {}
+    if 'TASKCLUSTER_PROXY_URL' in os.environ:
+        base_url = os.environ['TASKCLUSTER_PROXY_URL'].rstrip('/')
+        notify_options['baseUrl'] = '{}/notify/v1'.format(base_url)
+    notify = Notify(notify_options)
+    for address in addresses:
+        notify.email({
+            'address': address,
+            'subject': subject,
+            'content': content,
+        })
