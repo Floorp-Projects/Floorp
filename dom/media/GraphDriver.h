@@ -116,8 +116,8 @@ public:
   explicit GraphDriver(MediaStreamGraphImpl* aGraphImpl);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GraphDriver);
-  /* For SystemClockDriver, this waits until it's time to process more data.
-   * For other drivers, this is a no-op. */
+  /* For {System,Offline}ClockDriver, this waits until it's time to process
+   * more data.  For AudioCallbackDriver, this is a no-op. */
   virtual void WaitForNextIteration() = 0;
   /* Wakes up the graph if it is waiting. */
   virtual void WakeUp() = 0;
@@ -254,6 +254,8 @@ class ThreadedDriver : public GraphDriver
 public:
   explicit ThreadedDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~ThreadedDriver();
+  void WaitForNextIteration() override;
+  void WakeUp() override;
   void Start() override;
   void Revive() override;
   void Shutdown() override;
@@ -276,7 +278,10 @@ public:
   {
     return mThreadRunning;
   }
-
+  /*
+   * Return the TimeDuration to wait before the next rendering iteration.
+   */
+  virtual TimeDuration WaitInterval() = 0;
   /* When the graph wakes up to do an iteration, implementations return the
    * range of time that will be processed.  This is called only once per
    * iteration; it may determine the interval from state in a previous
@@ -299,9 +304,8 @@ class SystemClockDriver : public ThreadedDriver
 public:
   explicit SystemClockDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~SystemClockDriver();
+  TimeDuration WaitInterval() override;
   MediaTime GetIntervalForIteration() override;
-  void WaitForNextIteration() override;
-  void WakeUp() override;
   void MarkAsFallback();
   bool IsFallback();
   SystemClockDriver* AsSystemClockDriver() override {
@@ -328,9 +332,8 @@ class OfflineClockDriver : public ThreadedDriver
 public:
   OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl, GraphTime aSlice);
   virtual ~OfflineClockDriver();
+  TimeDuration WaitInterval() override;
   MediaTime GetIntervalForIteration() override;
-  void WaitForNextIteration() override;
-  void WakeUp() override;
   TimeStamp GetCurrentTimeStamp() override;
   OfflineClockDriver* AsOfflineClockDriver() override {
     return this;
