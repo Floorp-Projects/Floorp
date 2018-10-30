@@ -50,7 +50,8 @@ TextEditRules::CheckBidiLevelForDeletion(
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsFrameSelection> frameSelection = SelectionRef().GetFrameSelection();
+  RefPtr<nsFrameSelection> frameSelection =
+    SelectionRefPtr()->GetFrameSelection();
   if (NS_WARN_IF(!frameSelection)) {
     return NS_ERROR_FAILURE;
   }
@@ -96,7 +97,8 @@ TextEditRules::UndefineCaretBidiLevel()
    * So we set the caret Bidi level to UNDEFINED here, and the caret code will
    * set it correctly later
    */
-  RefPtr<nsFrameSelection> frameSelection = SelectionRef().GetFrameSelection();
+  RefPtr<nsFrameSelection> frameSelection =
+    SelectionRefPtr()->GetFrameSelection();
   if (frameSelection) {
     frameSelection->UndefineCaretBidiLevel();
   }

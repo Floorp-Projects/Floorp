@@ -1415,6 +1415,8 @@ EditorBase::CreateNodeWithTransaction(
               nsAtom& aTagName,
               const EditorDOMPointBase<PT, CT>& aPointToInsert)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   // XXX We need offset at new node for mRangeUpdater.  Therefore, we need
@@ -1450,13 +1452,8 @@ EditorBase::CreateNodeWithTransaction(
   }
 
   if (mRules && mRules->AsHTMLEditRules() && newElement) {
-    Selection* selection = GetSelection();
-    if (selection) {
-      RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->DidCreateNode(*selection, *newElement);
-    } else {
-      NS_WARNING("Selection has gone");
-    }
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->DidCreateNode(*newElement);
   }
 
   if (!mActionListeners.IsEmpty()) {
@@ -1501,6 +1498,8 @@ EditorBase::InsertNodeWithTransaction(
               nsIContent& aContentToInsert,
               const EditorDOMPointBase<PT, CT>& aPointToInsert)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -1517,13 +1516,8 @@ EditorBase::InsertNodeWithTransaction(
   mRangeUpdater.SelAdjInsertNode(aPointToInsert);
 
   if (mRules && mRules->AsHTMLEditRules()) {
-    Selection* selection = GetSelection();
-    if (selection) {
-      RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->DidInsertNode(*selection, aContentToInsert);
-    } else {
-      NS_WARNING("Selection has gone");
-    }
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->DidInsertNode(aContentToInsert);
   }
 
   if (!mActionListeners.IsEmpty()) {
@@ -1568,6 +1562,8 @@ EditorBase::SplitNodeWithTransaction(
               const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
               ErrorResult& aError)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   if (NS_WARN_IF(!aStartOfRightNode.IsSet()) ||
       NS_WARN_IF(!aStartOfRightNode.GetContainerAsContent())) {
     aError.Throw(NS_ERROR_INVALID_ARG);
@@ -1597,14 +1593,8 @@ EditorBase::SplitNodeWithTransaction(
                                 newNode);
 
   if (mRules && mRules->AsHTMLEditRules() && newNode) {
-    Selection* selection = GetSelection();
-    if (selection) {
-      RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->DidSplitNode(*selection,
-                                  *aStartOfRightNode.GetContainer(), *newNode);
-    } else {
-      NS_WARNING("Selection has gone");
-    }
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->DidSplitNode(*aStartOfRightNode.GetContainer(), *newNode);
   }
 
   if (mInlineSpellChecker) {
@@ -1649,6 +1639,8 @@ nsresult
 EditorBase::JoinNodesWithTransaction(nsINode& aLeftNode,
                                      nsINode& aRightNode)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   nsCOMPtr<nsINode> parent = aLeftNode.GetParentNode();
   MOZ_ASSERT(parent);
 
@@ -1680,13 +1672,8 @@ EditorBase::JoinNodesWithTransaction(nsINode& aLeftNode,
                                 (int32_t)oldLeftNodeLen);
 
   if (mRules && mRules->AsHTMLEditRules()) {
-    Selection* selection = GetSelection();
-    if (selection) {
-      RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->DidJoinNodes(*selection, aLeftNode, aRightNode);
-    } else {
-      NS_WARNING("Selection has gone");
-    }
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->DidJoinNodes(aLeftNode, aRightNode);
   }
 
   if (mInlineSpellChecker) {
@@ -1727,18 +1714,15 @@ EditorBase::DeleteNode(nsINode* aNode)
 nsresult
 EditorBase::DeleteNodeWithTransaction(nsINode& aNode)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eCreateNode,
                                       nsIEditor::ePrevious);
 
   if (mRules && mRules->AsHTMLEditRules()) {
-    Selection* selection = GetSelection();
-    if (selection) {
-      RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->WillDeleteNode(*selection, aNode);
-    } else {
-      NS_WARNING("Selection has gone");
-    }
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->WillDeleteNode(aNode);
   }
 
   // FYI: DeleteNodeTransaction grabs aNode while it's alive.  So, it's safe
@@ -2820,6 +2804,8 @@ EditorBase::InsertTextIntoTextNodeWithTransaction(
               int32_t aOffset,
               bool aSuppressIME)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   RefPtr<EditTransactionBase> transaction;
   bool isIMETransaction = false;
   RefPtr<Text> insertedTextNode = &aTextNode;
@@ -2851,14 +2837,9 @@ EditorBase::InsertTextIntoTextNodeWithTransaction(
   EndUpdateViewBatch();
 
   if (mRules && mRules->AsHTMLEditRules() && insertedTextNode) {
-    Selection* selection = GetSelection();
-    if (selection) {
-      RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->DidInsertText(*selection, *insertedTextNode,
-                                   insertedOffset, aStringToInsert);
-    } else {
-      NS_WARNING("Selection has gone");
-    }
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->DidInsertText(*insertedTextNode,
+                                 insertedOffset, aStringToInsert);
   }
 
   // let listeners know what happened
@@ -3021,10 +3002,10 @@ EditorBase::SetTextImpl(const nsAString& aString,
   if (mRules && mRules->AsHTMLEditRules()) {
     RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
     if (length) {
-      htmlEditRules->DidDeleteText(*SelectionRefPtr(), aCharData, 0, length);
+      htmlEditRules->DidDeleteText(aCharData, 0, length);
     }
     if (!aString.IsEmpty()) {
-      htmlEditRules->DidInsertText(*SelectionRefPtr(), aCharData, 0, aString);
+      htmlEditRules->DidInsertText(aCharData, 0, aString);
     }
   }
 
@@ -3049,6 +3030,8 @@ EditorBase::DeleteTextWithTransaction(CharacterData& aCharData,
                                       uint32_t aOffset,
                                       uint32_t aLength)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   RefPtr<DeleteTextTransaction> transaction =
     DeleteTextTransaction::MaybeCreate(*this, aCharData, aOffset, aLength);
   if (NS_WARN_IF(!transaction)) {
@@ -3070,13 +3053,8 @@ EditorBase::DeleteTextWithTransaction(CharacterData& aCharData,
   nsresult rv = DoTransactionInternal(transaction);
 
   if (mRules && mRules->AsHTMLEditRules()) {
-    RefPtr<Selection> selection = GetSelection();
-    if (selection) {
-      RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->DidDeleteText(*selection, aCharData, aOffset, aLength);
-    } else {
-      NS_WARNING("Selection has gone");
-    }
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->DidDeleteText(aCharData, aOffset, aLength);
   }
 
   // Let listeners know what happened

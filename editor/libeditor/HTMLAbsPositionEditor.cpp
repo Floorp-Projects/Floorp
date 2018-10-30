@@ -47,6 +47,8 @@ using namespace dom;
 nsresult
 HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   AutoEditActionDataSetter editActionData(
                              *this,
                              EditAction::eSetPositionToAbsoluteOrStatic);
@@ -64,8 +66,6 @@ HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled)
 
   // the line below does not match the code; should it be removed?
   // Find out if the selection is collapsed:
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   EditSubActionInfo subActionInfo(
                       aEnabled ? EditSubAction::eSetPositionToAbsolute :
@@ -74,12 +74,16 @@ HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled)
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
   nsresult rv =
-    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+    rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (NS_FAILED(rv) || cancel) {
     return rv;
   }
 
-  return rules->DidDoAction(selection, subActionInfo, rv);
+  rv = rules->DidDoAction(subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 already_AddRefed<Element>
@@ -155,6 +159,8 @@ HTMLEditor::SetZIndex(Element& aElement,
 nsresult
 HTMLEditor::AddZIndex(int32_t aChange)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   AutoEditActionDataSetter editActionData(
                              *this,
                              EditAction::eIncreaseOrDecreaseZIndex);
@@ -172,20 +178,21 @@ HTMLEditor::AddZIndex(int32_t aChange)
 
   // brade: can we get rid of this comment?
   // Find out if the selection is collapsed:
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   EditSubActionInfo subActionInfo(aChange < 0 ? EditSubAction::eDecreaseZIndex :
                                                 EditSubAction::eIncreaseZIndex);
   bool cancel, handled;
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
-  nsresult rv =
-    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
 
-  return rules->DidDoAction(selection, subActionInfo, rv);
+  rv = rules->DidDoAction(subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 int32_t
