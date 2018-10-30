@@ -16,7 +16,7 @@ import android.support.v4.content.pm.ShortcutManagerCompat;
 import android.support.v4.graphics.drawable.IconCompat;
 import android.text.TextUtils;
 
-import org.mozilla.focus.activity.IntentReceiverActivity;
+import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.utils.UrlUtils;
 
 import java.util.UUID;
@@ -66,7 +66,7 @@ public class HomeScreen {
     }
 
     private static Intent createShortcutIntent(Context context, String url, boolean blockingEnabled, boolean requestDesktop) {
-        final Intent shortcutIntent = new Intent(context, IntentReceiverActivity.class);
+        final Intent shortcutIntent = new Intent(context, MainActivity.class);
         shortcutIntent.setAction(Intent.ACTION_VIEW);
         shortcutIntent.setData(Uri.parse(url));
         shortcutIntent.putExtra(BLOCKING_ENABLED, blockingEnabled);

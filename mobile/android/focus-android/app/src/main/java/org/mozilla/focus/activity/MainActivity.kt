@@ -24,9 +24,11 @@ import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
+import org.mozilla.focus.session.IntentProcessor
 import org.mozilla.focus.session.removeAndCloseAllSessions
 import org.mozilla.focus.session.ui.SessionsSheetFragment
 import org.mozilla.focus.settings.ExperimentsSettingsFragment
+import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.telemetry.SentryWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
@@ -45,6 +47,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
     protected open val currentSessionForActivity: Session
         get() = components.sessionManager.selectedSessionOrThrow
+
+    private val intentProcessor by lazy { IntentProcessor(components.sessionManager) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,6 +75,10 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val intent = SafeIntent(intent)
+
+        if (intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG)) {
+            intentProcessor.handleNewIntent(this, intent)
+        }
 
         if (intent.isLauncherIntent) {
             TelemetryWrapper.openFromIconEvent()
@@ -190,6 +198,10 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         }
 
         val action = intent.action
+
+        if (intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG)) {
+            intentProcessor.handleNewIntent(this, intent)
+        }
 
         if (ACTION_OPEN == action) {
             TelemetryWrapper.openNotificationActionEvent()
