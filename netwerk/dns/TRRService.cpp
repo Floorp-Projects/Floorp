@@ -393,7 +393,7 @@ TRRService::MaybeConfirm()
   } else {
     LOG(("TRRService starting confirmation test %s %s\n",
          mPrivateURI.get(), host.get()));
-    mConfirmer = new TRR(this, host, TRRTYPE_NS, false);
+    mConfirmer = new TRR(this, host, TRRTYPE_NS, EmptyCString(), false);
     NS_DispatchToMainThread(mConfirmer);
   }
 }
@@ -582,7 +582,8 @@ TRRService::TRRBlacklist(const nsACString &aHost, const nsACString &aOriginSuffi
       LOG(("TRR: verify if '%s' resolves as NS\n", check.get()));
 
       // check if there's an NS entry for this name
-      RefPtr<TRR> trr = new TRR(this, check, TRRTYPE_NS, privateBrowsing);
+      RefPtr<TRR> trr = new TRR(this, check, TRRTYPE_NS, aOriginSuffix,
+                                privateBrowsing);
       NS_DispatchToMainThread(trr);
     }
   }
@@ -632,7 +633,8 @@ TRRService::TRRIsOkay(enum TrrOkay aReason)
 }
 
 AHostResolver::LookupStatus
-TRRService::CompleteLookup(nsHostRecord *rec, nsresult status, AddrInfo *aNewRRSet, bool pb)
+TRRService::CompleteLookup(nsHostRecord *rec, nsresult status, AddrInfo *aNewRRSet, bool pb,
+                           const nsACString &aOriginSuffix)
 {
   // this is an NS check for the TRR blacklist or confirmationNS check
 
@@ -676,7 +678,7 @@ TRRService::CompleteLookup(nsHostRecord *rec, nsresult status, AddrInfo *aNewRRS
     LOG(("TRR verified %s to be fine!\n", newRRSet->mHostName.get()));
   } else {
     LOG(("TRR says %s doesn't resolve as NS!\n", newRRSet->mHostName.get()));
-    TRRBlacklist(newRRSet->mHostName, nsCString(""), pb, false);
+    TRRBlacklist(newRRSet->mHostName, aOriginSuffix, pb, false);
   }
   return LOOKUP_OK;
 }
