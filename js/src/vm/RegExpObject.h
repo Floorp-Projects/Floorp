@@ -70,21 +70,20 @@ class RegExpObject : public NativeObject
 
     template<typename CharT>
     static RegExpObject*
-    create(JSContext* cx, const CharT* chars, size_t length, RegExpFlag flags, LifoAlloc& alloc,
-           NewObjectKind newKind);
+    create(JSContext* cx, const CharT* chars, size_t length,
+           RegExpFlag flags, NewObjectKind newKind);
 
     template<typename CharT>
     static RegExpObject*
     create(JSContext* cx, const CharT* chars, size_t length, RegExpFlag flags,
-           frontend::TokenStreamAnyChars& ts, LifoAlloc& alloc, NewObjectKind kind);
+           frontend::TokenStreamAnyChars& ts, NewObjectKind kind);
 
     static RegExpObject*
-    create(JSContext* cx, HandleAtom atom, RegExpFlag flags, LifoAlloc& alloc,
-           NewObjectKind newKind);
+    create(JSContext* cx, HandleAtom source, RegExpFlag flags, NewObjectKind newKind);
 
     static RegExpObject*
-    create(JSContext* cx, HandleAtom atom, RegExpFlag flags, frontend::TokenStreamAnyChars& ts,
-           LifoAlloc& alloc, NewObjectKind newKind);
+    create(JSContext* cx, HandleAtom source, RegExpFlag flags,
+           frontend::TokenStreamAnyChars& ts, NewObjectKind newKind);
 
     /*
      * Compute the initial shape to associate with fresh RegExp objects,

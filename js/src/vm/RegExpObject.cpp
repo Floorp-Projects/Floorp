@@ -209,8 +209,7 @@ const Class RegExpObject::protoClass_ = {
 template<typename CharT>
 RegExpObject*
 RegExpObject::create(JSContext* cx, const CharT* chars, size_t length, RegExpFlag flags,
-                     frontend::TokenStreamAnyChars& tokenStream, LifoAlloc& alloc,
-                     NewObjectKind newKind)
+                     frontend::TokenStreamAnyChars& tokenStream, NewObjectKind newKind)
 {
     static_assert(mozilla::IsSame<CharT, char16_t>::value,
                   "this code may need updating if/when CharT encodes UTF-8");
@@ -220,18 +219,17 @@ RegExpObject::create(JSContext* cx, const CharT* chars, size_t length, RegExpFla
         return nullptr;
     }
 
-    return create(cx, source, flags, tokenStream, alloc, newKind);
+    return create(cx, source, flags, tokenStream, newKind);
 }
 
 template RegExpObject*
 RegExpObject::create(JSContext* cx, const char16_t* chars, size_t length, RegExpFlag flags,
-                     frontend::TokenStreamAnyChars& tokenStream, LifoAlloc& alloc,
-                     NewObjectKind newKind);
+                     frontend::TokenStreamAnyChars& tokenStream, NewObjectKind newKind);
 
 template<typename CharT>
 RegExpObject*
-RegExpObject::create(JSContext* cx, const CharT* chars, size_t length, RegExpFlag flags,
-                     LifoAlloc& alloc, NewObjectKind newKind)
+RegExpObject::create(JSContext* cx, const CharT* chars, size_t length,
+                     RegExpFlag flags, NewObjectKind newKind)
 {
     static_assert(mozilla::IsSame<CharT, char16_t>::value,
                   "this code may need updating if/when CharT encodes UTF-8");
@@ -241,19 +239,21 @@ RegExpObject::create(JSContext* cx, const CharT* chars, size_t length, RegExpFla
         return nullptr;
     }
 
-    return create(cx, source, flags, alloc, newKind);
+    return create(cx, source, flags, newKind);
 }
 
 template RegExpObject*
-RegExpObject::create(JSContext* cx, const char16_t* chars, size_t length, RegExpFlag flags,
-                     LifoAlloc& alloc, NewObjectKind newKind);
+RegExpObject::create(JSContext* cx, const char16_t* chars, size_t length,
+                     RegExpFlag flags, NewObjectKind newKind);
 
 RegExpObject*
 RegExpObject::create(JSContext* cx, HandleAtom source, RegExpFlag flags,
-                     frontend::TokenStreamAnyChars& tokenStream,
-                     LifoAlloc& alloc, NewObjectKind newKind)
+                     frontend::TokenStreamAnyChars& tokenStream, NewObjectKind newKind)
 {
-    if (!irregexp::ParsePatternSyntax(tokenStream, alloc, source, flags & UnicodeFlag)) {
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    if (!irregexp::ParsePatternSyntax(tokenStream, allocScope.alloc(),
+                                      source, flags & UnicodeFlag))
+    {
         return nullptr;
     }
 
@@ -268,13 +268,15 @@ RegExpObject::create(JSContext* cx, HandleAtom source, RegExpFlag flags,
 }
 
 RegExpObject*
-RegExpObject::create(JSContext* cx, HandleAtom source, RegExpFlag flags, LifoAlloc& alloc,
-                     NewObjectKind newKind)
+RegExpObject::create(JSContext* cx, HandleAtom source, RegExpFlag flags, NewObjectKind newKind)
 {
     CompileOptions dummyOptions(cx);
     TokenStream dummyTokenStream(cx, dummyOptions, (const char16_t*) nullptr, 0, nullptr);
 
-    if (!irregexp::ParsePatternSyntax(dummyTokenStream, alloc, source, flags & UnicodeFlag)) {
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    if (!irregexp::ParsePatternSyntax(dummyTokenStream, allocScope.alloc(),
+                                      source, flags & UnicodeFlag))
+    {
         return nullptr;
     }
 
@@ -1050,11 +1052,11 @@ RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re, HandleAtom pa
     CompileOptions options(cx);
     frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
 
-    LifoAllocScope scope(&cx->tempLifoAlloc());
-
-    /* Parse the pattern. */
+    /* Parse the pattern. The RegExpCompileData is allocated in LifoAlloc and
+     * will only be live while LifoAllocScope is on stack. */
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
     irregexp::RegExpCompileData data;
-    if (!irregexp::ParsePattern(dummyTokenStream, cx->tempLifoAlloc(), pattern,
+    if (!irregexp::ParsePattern(dummyTokenStream, allocScope.alloc(), pattern,
                                 re->multiline(), mode == MatchOnly, re->unicode(),
                                 re->ignoreCase(), re->global(), re->sticky(), &data))
     {
@@ -1064,7 +1066,8 @@ RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re, HandleAtom pa
     re->parenCount = data.capture_count;
 
     JitCodeTables tables;
-    irregexp::RegExpCode code = irregexp::CompilePattern(cx, re, &data, input,
+    irregexp::RegExpCode code = irregexp::CompilePattern(cx, allocScope.alloc(),
+                                                         re, &data, input,
                                                          false /* global() */,
                                                          re->ignoreCase(),
                                                          input->hasLatin1Chars(),
@@ -1515,7 +1518,7 @@ js::XDRScriptRegExpObject(XDRState<mode>* xdr, MutableHandle<RegExpObject*> objp
     MOZ_TRY(xdr->codeUint32(&flagsword));
     if (mode == XDR_DECODE) {
         RegExpObject* reobj = RegExpObject::create(xdr->cx(), source, RegExpFlag(flagsword),
-                                                   xdr->lifoAlloc(), TenuredObject);
+                                                   TenuredObject);
         if (!reobj) {
             return xdr->fail(JS::TranscodeResult_Throw);
         }
@@ -1539,7 +1542,7 @@ js::CloneScriptRegExpObject(JSContext* cx, RegExpObject& reobj)
     RootedAtom source(cx, reobj.getSource());
     cx->markAtom(source);
 
-    return RegExpObject::create(cx, source, reobj.getFlags(), cx->tempLifoAlloc(), TenuredObject);
+    return RegExpObject::create(cx, source, reobj.getFlags(), TenuredObject);
 }
 
 JS_FRIEND_API(RegExpShared*)

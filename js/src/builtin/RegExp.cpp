@@ -185,9 +185,10 @@ js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res, Handle<RegExpObject*>
 static bool
 CheckPatternSyntaxSlow(JSContext* cx, HandleAtom pattern, RegExpFlag flags)
 {
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
     CompileOptions options(cx);
     frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
-    return irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), pattern,
+    return irregexp::ParsePatternSyntax(dummyTokenStream, allocScope.alloc(), pattern,
                                         flags & UnicodeFlag);
 }
 
