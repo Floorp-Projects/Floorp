@@ -33,6 +33,7 @@ tasks:
         scopes:
           - queue:create-task:aws-provisioner-v1/github-worker
           - queue:scheduler-id:${scheduler_id}
+          - secrets:get:project/mobile/android-components/public-tokens
         payload:
           maxRunTime: 3600
           image: mozillamobile/android-components:1.8

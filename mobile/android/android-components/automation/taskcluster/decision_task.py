@@ -37,10 +37,10 @@ def fetch_module_names():
     return re.findall('module: (.*)', output, re.M)
 
 
-def create_task(name, description, command):
-    return create_raw_task(name, description, "./gradlew --no-daemon clean %s" % command)
+def create_task(name, description, command, scopes = []):
+    return create_raw_task(name, description, "./gradlew --no-daemon clean %s" % command, scopes)
 
-def create_raw_task(name, description, full_command):
+def create_raw_task(name, description, full_command, scopes = []):
     created = datetime.datetime.now()
     expires = taskcluster.fromNow('1 year')
     deadline = taskcluster.fromNow('1 day')
@@ -57,10 +57,12 @@ def create_raw_task(name, description, full_command):
         "deadline": taskcluster.stringDate(deadline),
         "dependencies": [ TASK_ID ],
         "routes": [],
-        "scopes": [],
+        "scopes": scopes,
         "requires": "all-completed",
         "payload": {
-            "features": {},
+            "features": {
+                'taskclusterProxy': True
+            },
             "maxRunTime": 7200,
             "image": "mozillamobile/android-components:1.8",
             "command": [
@@ -69,7 +71,10 @@ def create_raw_task(name, description, full_command):
                 "-cx",
                 "export TERM=dumb && git fetch %s %s && git config advice.detachedHead false && git checkout %s && %s" % (REPO_URL, BRANCH, COMMIT, full_command)
             ],
-            "artifacts": {}
+            "artifacts": {},
+            "env": {
+                "TASK_GROUP_ID": TASK_ID
+            }
         },
         "provisionerId": "aws-provisioner-v1",
         "metadata": {
@@ -85,7 +90,11 @@ def create_module_task(module):
     return create_task(
         name='Android Components - Module ' + module,
         description='Building and testing module ' + module,
-        command=" ".join(map(lambda x: module + ":" + x, ['assemble', 'test', 'lint'])))
+        command="-Pcoverage " + " ".join(map(lambda x: module + ":" + x, ['assemble', 'test', 'lint']))  +
+            " && automation/taskcluster/action/upload_coverage_report.sh",
+        scopes = [
+            "secrets:get:project/mobile/android-components/public-tokens"
+        ])
 
 
 def create_detekt_task():
