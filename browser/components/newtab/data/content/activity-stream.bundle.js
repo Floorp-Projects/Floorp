@@ -762,11 +762,13 @@ class SnippetsProvider {
   }
 
   _showRemoteSnippets() {
-    const snippetsEl = document.getElementById(this.elementId);
+    let snippetsEl = document.getElementById(this.elementId);
     const payload = this.snippetsMap.get("snippets");
 
     if (!snippetsEl) {
-      throw new Error(`No element was found with id '${this.elementId}'.`);
+      snippetsEl = document.createElement("div");
+      snippetsEl.id = "snippets";
+      document.getElementById("snippets-container").appendChild(snippetsEl);
     }
 
     // This could happen if fetching failed
@@ -1219,7 +1221,8 @@ class ASRouterContent {
   }
 
   _mount() {
-    this.containerElement = global.document.getElementById("snippets-container");
+    this.containerElement = document.createElement("asr-container");
+    global.document.body.appendChild(this.containerElement);
     react_dom__WEBPACK_IMPORTED_MODULE_7___default.a.render(react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(ASRouterUISurface, null), this.containerElement);
   }
 
