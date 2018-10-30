@@ -2883,6 +2883,12 @@ XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
     return MaybeSilentSendFailure(NS_ERROR_DOM_NETWORK_ERR);
   }
 
+  // non-GET requests aren't allowed for blob.
+  if (IsBlobURI(mRequestURL) && !mRequestMethod.EqualsLiteral("GET")) {
+    mFlagSend = true; // so CloseRequestWithError sets us to DONE.
+    return MaybeSilentSendFailure(NS_ERROR_DOM_NETWORK_ERR);
+  }
+
   // XXX We should probably send a warning to the JS console
   //     if there are no event listeners set and we are doing
   //     an asynchronous call.
