@@ -60,7 +60,7 @@ function debugTargetListenerMiddleware(store) {
         const { client } = runtime.runtimeDetails;
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.TAB)) {
-          client.addListener("tabListChanged", onTabsUpdated);
+          client.mainRoot.on("tabListChanged", onTabsUpdated);
         }
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.EXTENSION)) {
@@ -81,7 +81,7 @@ function debugTargetListenerMiddleware(store) {
         const { client } = runtime.runtimeDetails;
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.TAB)) {
-          client.removeListener("tabListChanged", onTabsUpdated);
+          client.mainRoot.off("tabListChanged", onTabsUpdated);
         }
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.EXTENSION)) {
