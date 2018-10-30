@@ -1862,7 +1862,9 @@ js::StartDynamicModuleImport(JSContext* cx, HandleValue referencingPrivate, Hand
     }
 
     if (!importHook(cx, referencingPrivate, specifier, promise)) {
-        if (!RejectPromiseWithPendingError(cx, promise)) {
+        // If there's no exception pending then the script is terminating
+        // anyway, so just return nullptr.
+        if (!cx->isExceptionPending() || !RejectPromiseWithPendingError(cx, promise)) {
             return nullptr;
         }
         return promise;
