@@ -116,8 +116,8 @@ public:
   explicit GraphDriver(MediaStreamGraphImpl* aGraphImpl);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GraphDriver);
-  /* For real-time graphs, this waits until it's time to process more data. For
-   * offline graphs, this is a no-op. */
+  /* For SystemClockDriver, this waits until it's time to process more data.
+   * For other drivers, this is a no-op. */
   virtual void WaitForNextIteration() = 0;
   /* Wakes up the graph if it is waiting. */
   virtual void WakeUp() = 0;
