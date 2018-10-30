@@ -5,18 +5,18 @@
 "use strict";
 
 const { Cc, Ci } = require("chrome");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
-const events = require("devtools/shared/event-emitter");
 const { accessibleWalkerSpec } = require("devtools/shared/specs/accessibility");
-const { AccessibleActor } = require("devtools/server/actors/accessibility/accessible");
 const { isXUL } = require("devtools/server/actors/highlighters/utils/markup");
-const { isWindowIncluded } = require("devtools/shared/layout/utils");
 const { CustomHighlighterActor, register } =
   require("devtools/server/actors/highlighters");
 
-const { isDefunct } = require("devtools/server/actors/utils/accessibility");
+loader.lazyRequireGetter(this, "AccessibleActor", "devtools/server/actors/accessibility/accessible", true);
+loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/shared/DevToolsUtils");
+loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(this, "isDefunct", "devtools/server/actors/utils/accessibility", true);
+loader.lazyRequireGetter(this, "isWindowIncluded", "devtools/shared/layout/utils", true);
 
 const nsIAccessibleEvent = Ci.nsIAccessibleEvent;
 const nsIAccessibleStateChangeEvent = Ci.nsIAccessibleStateChangeEvent;
