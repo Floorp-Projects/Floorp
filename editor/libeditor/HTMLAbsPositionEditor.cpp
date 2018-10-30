@@ -47,6 +47,13 @@ using namespace dom;
 nsresult
 HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled)
 {
+  AutoEditActionDataSetter editActionData(
+                             *this,
+                             EditAction::eSetPositionToAbsoluteOrStatic);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
@@ -78,12 +85,12 @@ HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled)
 already_AddRefed<Element>
 HTMLEditor::GetAbsolutelyPositionedSelectionContainer()
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
     return nullptr;
   }
 
-  RefPtr<Element> element = GetSelectionContainerElement(*selection);
+  RefPtr<Element> element = GetSelectionContainerElement(*SelectionRefPtr());
   if (NS_WARN_IF(!element)) {
     return nullptr;
   }
@@ -148,6 +155,13 @@ HTMLEditor::SetZIndex(Element& aElement,
 nsresult
 HTMLEditor::AddZIndex(int32_t aChange)
 {
+  AutoEditActionDataSetter editActionData(
+                             *this,
+                             EditAction::eIncreaseOrDecreaseZIndex);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
@@ -177,6 +191,11 @@ HTMLEditor::AddZIndex(int32_t aChange)
 int32_t
 HTMLEditor::GetZIndex(Element& aElement)
 {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return 0;
+  }
+
   nsAutoString zIndexStr;
 
   nsresult rv =
@@ -249,6 +268,11 @@ HTMLEditor::RefreshGrabber()
 {
   if (NS_WARN_IF(!mAbsolutelyPositionedObject)) {
     return NS_ERROR_FAILURE;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   nsresult rv = RefreshGrabberInternal();

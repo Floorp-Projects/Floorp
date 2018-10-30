@@ -252,6 +252,11 @@ HTMLEditor::SetAllResizersPosition()
 NS_IMETHODIMP
 HTMLEditor::RefreshResizers()
 {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   nsresult rv = RefreshResizersInternal();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -510,6 +515,11 @@ HTMLEditor::ShowResizersInternal(Element& aResizedElement)
 NS_IMETHODIMP
 HTMLEditor::HideResizers()
 {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   nsresult rv = HideResizersInternal();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -722,6 +732,11 @@ HTMLEditor::OnMouseDown(int32_t aClientX,
   aTarget->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
 
   if (anonclass.EqualsLiteral("mozResizer")) {
+    AutoEditActionDataSetter editActionData(*this, EditAction::eResizeElement);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+
     // If we have an anonymous element and that element is a resizer,
     // let's start resizing!
     aEvent->PreventDefault();
@@ -732,6 +747,11 @@ HTMLEditor::OnMouseDown(int32_t aClientX,
   }
 
   if (anonclass.EqualsLiteral("mozGrabber")) {
+    AutoEditActionDataSetter editActionData(*this, EditAction::eMoveElement);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+
     // If we have an anonymous element and that element is a grabber,
     // let's start moving the element!
     mGrabberUsedCount++;
@@ -749,12 +769,22 @@ HTMLEditor::OnMouseUp(int32_t aClientX,
                       Element* aTarget)
 {
   if (mIsResizing) {
+    AutoEditActionDataSetter editActionData(*this, EditAction::eResizeElement);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+
     // we are resizing and release the mouse button, so let's
     // end the resizing process
     mIsResizing = false;
     HideShadowAndInfo();
     SetFinalSize(aClientX, aClientY);
   } else if (mIsMoving || mGrabberClicked) {
+    AutoEditActionDataSetter editActionData(*this, EditAction::eMoveElement);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+
     if (mIsMoving) {
       mPositioningShadow->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                                   NS_LITERAL_STRING("hidden"), true);
@@ -994,6 +1024,11 @@ HTMLEditor::OnMouseMove(MouseEvent* aMouseEvent)
   MOZ_ASSERT(aMouseEvent);
 
   if (mIsResizing) {
+    AutoEditActionDataSetter editActionData(*this, EditAction::eResizeElement);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+
     // we are resizing and the mouse pointer's position has changed
     // we have to resdisplay the shadow
     int32_t clientX = aMouseEvent->ClientX();
@@ -1014,6 +1049,11 @@ HTMLEditor::OnMouseMove(MouseEvent* aMouseEvent)
                                         newHeight);
 
     return SetResizingInfoPosition(newX, newY, newWidth, newHeight);
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eMoveElement);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   if (mGrabberClicked) {
