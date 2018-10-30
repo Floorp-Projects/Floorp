@@ -205,7 +205,6 @@ GeckoViewPermission.prototype = {
         type: "GeckoView:ContentPermission",
         uri: aRequest.principal.URI.displaySpec,
         perm: perm.type,
-        access: perm.access !== "unused" ? perm.access : null,
     }).then(granted => {
       if (!granted) {
         return false;
