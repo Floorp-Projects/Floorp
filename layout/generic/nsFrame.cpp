@@ -1192,6 +1192,7 @@ nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
   mMayHaveRoundedCorners = true;
 }
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 void
 nsIFrame::AssertNewStyleIsSane(ComputedStyle& aNewStyle)
 {
@@ -1210,6 +1211,7 @@ nsIFrame::AssertNewStyleIsSane(ComputedStyle& aNewStyle)
     (mComputedStyle->GetPseudo() == nsCSSAnonBoxes::firstLetterContinuation() &&
      aNewStyle.GetPseudo() == nsCSSAnonBoxes::mozText()));
 }
+#endif
 
 void
 nsIFrame::ReparentFrameViewTo(nsViewManager* aViewManager,
