@@ -9,7 +9,7 @@ A collection of often used browser icons.
 Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
 
 ```Groovy
-implementation "org.mozilla.photon:ui-icons:{latest-version}"
+implementation "org.mozilla.components:ui-icons:{latest-version}"
 ```
 
 ## License
