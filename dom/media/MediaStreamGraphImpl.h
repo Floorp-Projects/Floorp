@@ -865,11 +865,6 @@ public:
    */
   const bool mRealtime;
   /**
-   * True when a non-realtime MediaStreamGraph has started to process input.  This
-   * value is only accessed on the main thread.
-   */
-  bool mNonRealtimeProcessing;
-  /**
    * True when a change has happened which requires us to recompute the stream
    * blocking order.
    */

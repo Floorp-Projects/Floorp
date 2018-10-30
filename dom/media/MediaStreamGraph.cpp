@@ -3673,7 +3673,6 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
   , mDetectedNotRunning(false)
   , mPostedRunInStableState(false)
   , mRealtime(aDriverRequested != OFFLINE_THREAD_DRIVER)
-  , mNonRealtimeProcessing(false)
   , mStreamOrderDirty(false)
   , mAbstractMainThread(aMainThread)
   , mSelfRef(this)
@@ -4323,9 +4322,6 @@ MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
   NS_ASSERTION(!graph->mRealtime, "non-realtime only");
 
-  if (graph->mNonRealtimeProcessing)
-    return;
-
   class Message : public ControlMessage {
   public:
     explicit Message(MediaStreamGraphImpl* aGraph, uint32_t aTicksToProcess)
@@ -4335,6 +4331,8 @@ MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
     {}
     void Run() override
     {
+      MOZ_ASSERT(mGraph->mEndTime == 0,
+                 "StartNonRealtimeProcessing should be called only once");
       mGraph->mEndTime =
         mGraph->RoundUpToEndOfAudioBlock(mGraph->mStateComputedTime +
                                          mTicksToProcess);
@@ -4344,7 +4342,6 @@ MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
     uint32_t mTicksToProcess;
   };
 
-  graph->mNonRealtimeProcessing = true;
   graph->AppendMessage(MakeUnique<Message>(graph, aTicksToProcess));
 }
 
