@@ -2,20 +2,21 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
     <link rel="stylesheet" media="screen, projection" type="text/css"
-          href="chrome://global/skin/in-content/common.css"/>
+          href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" type="text/css"
-          href="chrome://browser/content/aboutconfig/aboutconfig.css"/>
+          href="chrome://browser/content/aboutconfig/aboutconfig.css">
     <link rel="localization" href="browser/aboutConfig.ftl">
     <script type="application/javascript"
             src="chrome://browser/content/aboutconfig/aboutconfig.js"></script>
     <title data-l10n-id="about-config-title"></title>
   </head>
 
-  <body>
+  <body onload="onLoad();">
+    <ul id="list"></ul>
   </body>
- </html>
+</html>
