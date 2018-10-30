@@ -4986,11 +4986,7 @@ ShellModuleDynamicImportHook(JSContext* cx, HandleValue referencingPrivate, Hand
     args[2].setObject(*promise);
 
     RootedValue result(cx);
-    if (!JS_CallFunctionValue(cx, nullptr, hookValue, args, &result)) {
-        return false;
-    }
-
-    return true;
+    return JS_CallFunctionValue(cx, nullptr, hookValue, args, &result);
 }
 
 static bool
