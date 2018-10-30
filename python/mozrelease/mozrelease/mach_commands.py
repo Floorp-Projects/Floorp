@@ -52,6 +52,34 @@ class MachCommands(MachCommandBase):
             current_revision=revision,
         ))
 
+    @SubCommand('release', 'send-buglist-email',
+                description="Send an email with the bugs since the last release.")
+    @CommandArgument('--address',
+                     required=True,
+                     action='append',
+                     dest='addresses',
+                     help="The email address to send the bug list to "
+                          "(may be specified more than once.")
+    @CommandArgument('--version',
+                     type=GeckoVersion.parse,
+                     required=True,
+                     help="The version being built.")
+    @CommandArgument('--product',
+                     required=True,
+                     help="The product being built.")
+    @CommandArgument('--revision',
+                     required=True,
+                     help="The revision being built.")
+    @CommandArgument('--build-number',
+                     required=True,
+                     help="The build number")
+    @CommandArgument('--task-group-id',
+                     help="The task group of the build.")
+    def buglist_email(self, **options):
+        self.setup_logging()
+        from mozrelease.buglist_creator import email_release_drivers
+        email_release_drivers(**options)
+
     def setup_logging(self, quiet=False, verbose=True):
         """
         Set up Python logging for all loggers, sending results to stderr (so
