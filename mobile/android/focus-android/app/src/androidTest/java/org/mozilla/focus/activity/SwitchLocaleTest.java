@@ -18,11 +18,12 @@ import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.helpers.TestHelper;
 
@@ -64,21 +65,22 @@ public class SwitchLocaleTest {
         }
     };
 
+    @Rule
+    public TestRule watcher = new TestWatcher() {
+        protected void starting(Description description) {
+            System.out.println("Starting test: " + description.getMethodName());
+            if (description.getMethodName().equals("FrenchLocaleTest")) {
+                changeLocale("fr");
+            }
+        }
+    };
+
     public SwitchLocaleTest() throws UiObjectNotFoundException {
-    }
-
-    @BeforeClass
-    public static void setupBeforeClass() {
-        changeLocale("fr");
-    }
-
-    @AfterClass
-    public static void tearDownAfterClass() {
-        changeLocale("en");
     }
 
     @After
     public void tearDown() {
+        changeLocale("en");
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
