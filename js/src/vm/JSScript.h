@@ -1801,14 +1801,13 @@ class JSScript : public js::gc::TenuredCell
                            js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
   private:
-    JSScript(JS::Realm* realm, uint8_t* stubEntry, const JS::ReadOnlyCompileOptions& options,
-             js::HandleObject sourceObject, uint32_t sourceStart, uint32_t sourceEnd,
+    JSScript(JS::Realm* realm, uint8_t* stubEntry, js::HandleObject sourceObject,
+             uint32_t sourceStart, uint32_t sourceEnd,
              uint32_t toStringStart, uint32_t toStringend);
 
-    static JSScript* createInitialized(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                                       js::HandleObject sourceObject,
-                                       uint32_t sourceStart, uint32_t sourceEnd,
-                                       uint32_t toStringStart, uint32_t toStringEnd);
+    static JSScript* New(JSContext* cx, js::HandleObject sourceObject,
+                         uint32_t sourceStart, uint32_t sourceEnd,
+                         uint32_t toStringStart, uint32_t toStringEnd);
 
   public:
     static JSScript* Create(JSContext* cx,
