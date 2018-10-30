@@ -7,7 +7,7 @@ DIRS += [
     'Preview',
 ]
 
-DevToolsModules(
+DebuggerModules(
     'Breakpoint.js',
     'Breakpoints.js',
     'CallSite.js',

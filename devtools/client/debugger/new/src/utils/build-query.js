@@ -1,19 +1,16 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = buildQuery;
-
-var _escapeRegExp = require("devtools/client/shared/vendor/lodash").escapeRegExp;
-
-var _escapeRegExp2 = _interopRequireDefault(_escapeRegExp);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
+import escapeRegExp from "lodash/escapeRegExp";
+
+import type { SearchModifiers } from "../types";
+
+type QueryOptions = {
+  isGlobal?: boolean,
+  ignoreSpaces?: boolean
+};
 
 /**
  * Ignore doing outline matches for less than 3 whitespaces
@@ -21,11 +18,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @memberof utils/source-search
  * @static
  */
-function ignoreWhiteSpace(str) {
+function ignoreWhiteSpace(str: string): string {
   return /^\s{0,2}$/.test(str) ? "(?!\\s*.*)" : str;
 }
 
-function wholeMatch(query, wholeWord) {
+function wholeMatch(query: string, wholeWord: boolean): string {
   if (query === "" || !wholeWord) {
     return query;
   }
@@ -33,7 +30,7 @@ function wholeMatch(query, wholeWord) {
   return `\\b${query}\\b`;
 }
 
-function buildFlags(caseSensitive, isGlobal) {
+function buildFlags(caseSensitive: boolean, isGlobal: boolean): ?RegExp$flags {
   if (caseSensitive && isGlobal) {
     return "g";
   }
@@ -49,28 +46,24 @@ function buildFlags(caseSensitive, isGlobal) {
   return;
 }
 
-function buildQuery(originalQuery, modifiers, {
-  isGlobal = false,
-  ignoreSpaces = false
-}) {
-  const {
-    caseSensitive,
-    regexMatch,
-    wholeWord
-  } = modifiers;
+export default function buildQuery(
+  originalQuery: string,
+  modifiers: SearchModifiers,
+  { isGlobal = false, ignoreSpaces = false }: QueryOptions
+): RegExp {
+  const { caseSensitive, regexMatch, wholeWord } = modifiers;
 
   if (originalQuery === "") {
     return new RegExp(originalQuery);
   }
 
   let query = originalQuery;
-
   if (ignoreSpaces) {
     query = ignoreWhiteSpace(query);
   }
 
   if (!regexMatch) {
-    query = (0, _escapeRegExp2.default)(query);
+    query = escapeRegExp(query);
   }
 
   query = wholeMatch(query, wholeWord);

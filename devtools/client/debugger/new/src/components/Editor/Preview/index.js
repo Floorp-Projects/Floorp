@@ -1,93 +1,66 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _react = require("devtools/client/shared/vendor/react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactRedux = require("devtools/client/shared/vendor/react-redux");
-
-var _Popup = require("./Popup");
-
-var _Popup2 = _interopRequireDefault(_Popup);
-
-var _selectors = require("../../../selectors/index");
-
-var _actions = require("../../../actions/index");
-
-var _actions2 = _interopRequireDefault(_actions);
-
-var _editor = require("../../../utils/editor/index");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
+
+import React, { PureComponent } from "react";
+import { connect } from "react-redux";
+
+import Popup from "./Popup";
+
+import { getPreview, getSelectedSource, getIsPaused } from "../../../selectors";
+import actions from "../../../actions";
+import { toEditorRange } from "../../../utils/editor";
+
+import type { Source } from "../../../types";
+
+import type { Preview as PreviewType } from "../../../reducers/ast";
+
+type Props = {
+  editor: any,
+  editorRef: ?HTMLDivElement,
+  selectedSource: Source,
+  preview: PreviewType,
+  isPaused: Boolean,
+  clearPreview: () => void,
+  setPopupObjectProperties: Object => void,
+  addExpression: (string, ?Object) => void,
+  updatePreview: (any, any, any) => void
+};
+
+type State = {
+  selecting: boolean
+};
+
 function inPopup(e) {
-  const {
-    relatedTarget
-  } = e;
+  const { relatedTarget } = e;
 
   if (!relatedTarget) {
     return true;
   }
 
-  const pop = relatedTarget.closest(".tooltip") || relatedTarget.closest(".popover") || relatedTarget.classList.contains("debug-expression");
+  const pop =
+    relatedTarget.closest(".tooltip") ||
+    relatedTarget.closest(".popover") ||
+    relatedTarget.classList.contains("debug-expression");
+
   return pop;
 }
 
-function getElementFromPos(pos) {
+function getElementFromPos(pos: DOMRect) {
   // $FlowIgnore
-  return document.elementFromPoint(pos.x + pos.width / 2, pos.y + pos.height / 2);
+  return document.elementFromPoint(
+    pos.x + pos.width / 2,
+    pos.y + pos.height / 2
+  );
 }
 
-class Preview extends _react.PureComponent {
+class Preview extends PureComponent<Props, State> {
+  target = null;
   constructor(props) {
     super(props);
-    this.target = null;
-
-    this.onTokenEnter = ({
-      target,
-      tokenPos
-    }) => {
-      this.props.updatePreview(target, tokenPos, this.props.editor.codeMirror);
-    };
-
-    this.onTokenLeave = e => {
-      if (!inPopup(e)) {
-        this.props.clearPreview();
-      }
-    };
-
-    this.onMouseUp = () => {
-      this.setState({
-        selecting: false
-      });
-      return true;
-    };
-
-    this.onMouseDown = () => {
-      this.setState({
-        selecting: true
-      });
-      return true;
-    };
-
-    this.onScroll = () => {
-      this.props.clearPreview();
-    };
-
-    this.onClose = e => {
-      this.props.clearPreview();
-    };
-
-    this.state = {
-      selecting: false
-    };
+    this.state = { selecting: false };
   }
 
   componentDidMount() {
@@ -99,13 +72,10 @@ class Preview extends _react.PureComponent {
     this.updateHighlight(prevProps);
   }
 
-  updateListeners(prevProps) {
-    const {
-      isPaused
-    } = this.props;
-    const {
-      codeMirror
-    } = this.props.editor;
+  updateListeners(prevProps: ?Props) {
+    const { isPaused } = this.props;
+
+    const { codeMirror } = this.props.editor;
     const codeMirrorWrapper = codeMirror.getWrapperElement();
     const wasNotPaused = !prevProps || !prevProps.isPaused;
     const wasPaused = prevProps && prevProps.isPaused;
@@ -127,9 +97,7 @@ class Preview extends _react.PureComponent {
   }
 
   updateHighlight(prevProps) {
-    const {
-      preview
-    } = this.props;
+    const { preview } = this.props;
 
     if (preview && !preview.updating) {
       const target = getElementFromPos(preview.cursorPos);
@@ -142,12 +110,36 @@ class Preview extends _react.PureComponent {
     }
   }
 
-  render() {
-    const {
-      selectedSource,
-      preview
-    } = this.props;
+  onTokenEnter = ({ target, tokenPos }) => {
+    this.props.updatePreview(target, tokenPos, this.props.editor.codeMirror);
+  };
 
+  onTokenLeave = e => {
+    if (!inPopup(e)) {
+      this.props.clearPreview();
+    }
+  };
+
+  onMouseUp = () => {
+    this.setState({ selecting: false });
+    return true;
+  };
+
+  onMouseDown = () => {
+    this.setState({ selecting: true });
+    return true;
+  };
+
+  onScroll = () => {
+    this.props.clearPreview();
+  };
+
+  onClose = e => {
+    this.props.clearPreview();
+  };
+
+  render() {
+    const { selectedSource, preview } = this.props;
     if (!this.props.editor || !selectedSource || this.state.selecting) {
       return null;
     }
@@ -156,43 +148,41 @@ class Preview extends _react.PureComponent {
       return null;
     }
 
-    const {
-      result,
-      expression,
-      location,
-      cursorPos,
-      extra
-    } = preview;
+    const { result, expression, location, cursorPos, extra } = preview;
     const value = result;
-
     if (typeof value == "undefined" || value.optimizedOut) {
       return null;
     }
 
-    const editorRange = (0, _editor.toEditorRange)(selectedSource.id, location);
-    return _react2.default.createElement(_Popup2.default, {
-      value: value,
-      editor: this.props.editor,
-      editorRef: this.props.editorRef,
-      range: editorRange,
-      expression: expression,
-      popoverPos: cursorPos,
-      extra: extra,
-      onClose: this.onClose
-    });
-  }
+    const editorRange = toEditorRange(selectedSource.id, location);
 
+    return (
+      <Popup
+        value={value}
+        editor={this.props.editor}
+        editorRef={this.props.editorRef}
+        range={editorRange}
+        expression={expression}
+        popoverPos={cursorPos}
+        extra={extra}
+        onClose={this.onClose}
+      />
+    );
+  }
 }
 
 const mapStateToProps = state => ({
-  preview: (0, _selectors.getPreview)(state),
-  isPaused: (0, _selectors.getIsPaused)(state),
-  selectedSource: (0, _selectors.getSelectedSource)(state)
+  preview: getPreview(state),
+  isPaused: getIsPaused(state),
+  selectedSource: getSelectedSource(state)
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, {
-  clearPreview: _actions2.default.clearPreview,
-  setPopupObjectProperties: _actions2.default.setPopupObjectProperties,
-  addExpression: _actions2.default.addExpression,
-  updatePreview: _actions2.default.updatePreview
-})(Preview);
+export default connect(
+  mapStateToProps,
+  {
+    clearPreview: actions.clearPreview,
+    setPopupObjectProperties: actions.setPopupObjectProperties,
+    addExpression: actions.addExpression,
+    updatePreview: actions.updatePreview
+  }
+)(Preview);
