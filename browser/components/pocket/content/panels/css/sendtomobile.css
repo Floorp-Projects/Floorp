@@ -2,10 +2,6 @@
     top: -5px;
 }
 
-.pkt_ext_saved_sendtomobile.pkt_ext_ho2_v1 .pkt_ext_loadingspinner {
-    top: 110px;
-}
-
 .pkt_ext_save_title_wrapper {
     position: relative;
     display: inline-flex;
@@ -93,13 +89,6 @@
     height: 60px;
     width: 155px;
     cursor: pointer;
-}
-
-.pkt_ext_ho2_v1 {
-    background-color: #EBEBEB;
-    border-top: 1px solid #C3C3C3;
-    padding: 17px;
-    height: 144px;
 }
 
 .pkt_ext_experiment_saved_tile {
