@@ -951,24 +951,25 @@ ReadableStream::constructor(JSContext* cx, unsigned argc, Value* vp)
 }
 
 // Streams spec, 3.2.4.1. get locked
-static MOZ_MUST_USE bool
-ReadableStream_locked_impl(JSContext* cx, const CallArgs& args)
+static bool
+ReadableStream_locked(JSContext* cx, unsigned argc, Value* vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // Step 1: If ! IsReadableStream(this) is false, throw a TypeError exception.
     Rooted<ReadableStream*> stream(cx);
-    stream = &UncheckedUnwrap(&args.thisv().toObject())->as<ReadableStream>();
+    if (!UnwrapThisForNonGenericMethod(cx,
+                                       args.thisv(),
+                                       "ReadableStream",
+                                       "get locked",
+                                       &stream))
+    {
+        return false;
+    }
 
     // Step 2: Return ! IsReadableStreamLocked(this).
     args.rval().setBoolean(stream->locked());
     return true;
-}
-
-static bool
-ReadableStream_locked(JSContext* cx, unsigned argc, Value* vp)
-{
-    // Step 1: If ! IsReadableStream(this) is false, throw a TypeError exception.
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsMaybeWrapped<ReadableStream>, ReadableStream_locked_impl>(cx,
-                                                                                            args);
 }
 
 // Streams spec, 3.2.4.2. cancel ( reason )
@@ -2121,10 +2122,20 @@ ReadableStreamReaderGenericRelease(JSContext* cx, Handle<ReadableStreamReader*> 
  * another compartment.
  */
 static bool
-ReadableStreamDefaultReader_releaseLock_impl(JSContext* cx, const CallArgs& args)
+ReadableStreamDefaultReader_releaseLock(JSContext* cx, unsigned argc, Value* vp)
 {
+    // Step 1: If ! IsReadableStreamDefaultReader(this) is false,
+    //         throw a TypeError exception.
+    CallArgs args = CallArgsFromVp(argc, vp);
     Rooted<ReadableStreamDefaultReader*> reader(cx);
-    reader = &UncheckedUnwrap(&args.thisv().toObject())->as<ReadableStreamDefaultReader>();
+    if (!UnwrapThisForNonGenericMethod(cx,
+                                       args.thisv(),
+                                       "ReadableStreamDefaultReader",
+                                       "releaseLock",
+                                       &reader))
+    {
+        return false;
+    }
 
     // Step 2: If this.[[ownerReadableStream]] is undefined, return.
     if (!ReaderHasStream(reader)) {
@@ -2147,16 +2158,6 @@ ReadableStreamDefaultReader_releaseLock_impl(JSContext* cx, const CallArgs& args
 
     // Step 4: Perform ! ReadableStreamReaderGenericRelease(this).
     return ReadableStreamReaderGenericRelease(cx, reader);
-}
-
-static bool
-ReadableStreamDefaultReader_releaseLock(JSContext* cx, unsigned argc, Value* vp)
-{
-    // Step 1: If ! IsReadableStreamDefaultReader(this) is false,
-    //         throw a TypeError exception.
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsMaybeWrapped<ReadableStreamDefaultReader>,
-                                ReadableStreamDefaultReader_releaseLock_impl>(cx, args);
 }
 
 static const JSFunctionSpec ReadableStreamDefaultReader_methods[] = {
@@ -2592,11 +2593,21 @@ ReadableStreamControllerGetDesiredSizeUnchecked(ReadableStreamController* contro
 // Streams spec, 3.8.4.1. get desiredSize
 // and
 // Streams spec, 3.10.4.2. get desiredSize
-static MOZ_MUST_USE bool
-ReadableStreamController_desiredSize_impl(JSContext* cx, const CallArgs& args)
+static bool
+ReadableStreamDefaultController_desiredSize(JSContext* cx, unsigned argc, Value* vp)
 {
+    // Step 1: If ! IsReadableStreamDefaultController(this) is false, throw a
+    //         TypeError exception.
+    CallArgs args = CallArgsFromVp(argc, vp);
     Rooted<ReadableStreamController*> controller(cx);
-    controller = &args.thisv().toObject().as<ReadableStreamController>();
+    if (!UnwrapThisForNonGenericMethod(cx,
+                                       args.thisv(),
+                                       "ReadableStreamDefaultController",
+                                       "get desiredSize",
+                                       &controller))
+    {
+        return false;
+    }
 
     // Streams spec, 3.9.8. steps 1-4.
     // 3.9.8. Step 1: Let stream be controller.[[controlledReadableStream]].
@@ -2618,16 +2629,7 @@ ReadableStreamController_desiredSize_impl(JSContext* cx, const CallArgs& args)
     // Step 2: Return ! ReadableStreamDefaultControllerGetDesiredSize(this).
     args.rval().setNumber(ReadableStreamControllerGetDesiredSizeUnchecked(controller));
     return true;
-}
 
-static bool
-ReadableStreamDefaultController_desiredSize(JSContext* cx, unsigned argc, Value* vp)
-{
-    // Step 1: If ! IsReadableStreamDefaultController(this) is false, throw a
-    //         TypeError exception.
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<Is<ReadableStreamDefaultController>,
-                                ReadableStreamController_desiredSize_impl>(cx, args);
 }
 
 static MOZ_MUST_USE bool
@@ -2664,15 +2666,22 @@ VerifyControllerStateForClosing(JSContext* cx, Handle<ReadableStreamController*>
 
 /**
  * Streams spec, 3.8.4.2 close()
- *
- * Note: can operate on unwrapped ReadableStreamDefaultController instances from
- * another compartment.
  */
-static MOZ_MUST_USE bool
-ReadableStreamDefaultController_close_impl(JSContext* cx, const CallArgs& args)
+static bool
+ReadableStreamDefaultController_close(JSContext* cx, unsigned argc, Value* vp)
 {
+    // Step 1: If ! IsReadableStreamDefaultController(this) is false, throw a
+    //         TypeError exception.
+    CallArgs args = CallArgsFromVp(argc, vp);
     Rooted<ReadableStreamDefaultController*> controller(cx);
-    controller = &args.thisv().toObject().unwrapAs<ReadableStreamDefaultController>();
+    if (!UnwrapThisForNonGenericMethod(cx,
+                                       args.thisv(),
+                                       "ReadableStreamDefaultController",
+                                       "close",
+                                       &controller))
+    {
+        return false;
+    }
 
     // Steps 2-3.
     if (!VerifyControllerStateForClosing(cx, controller)) {
@@ -2687,23 +2696,22 @@ ReadableStreamDefaultController_close_impl(JSContext* cx, const CallArgs& args)
     return true;
 }
 
+// Streams spec, 3.8.4.3. enqueue ( chunk )
 static bool
-ReadableStreamDefaultController_close(JSContext* cx, unsigned argc, Value* vp)
+ReadableStreamDefaultController_enqueue(JSContext* cx, unsigned argc, Value* vp)
 {
     // Step 1: If ! IsReadableStreamDefaultController(this) is false, throw a
     //         TypeError exception.
-
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsMaybeWrapped<ReadableStreamDefaultController>,
-                                ReadableStreamDefaultController_close_impl>(cx, args);
-}
-
-// Streams spec, 3.8.4.3. enqueue ( chunk )
-static MOZ_MUST_USE bool
-ReadableStreamDefaultController_enqueue_impl(JSContext* cx, const CallArgs& args)
-{
     Rooted<ReadableStreamDefaultController*> controller(cx);
-    controller = &args.thisv().toObject().unwrapAs<ReadableStreamDefaultController>();
+    if (!UnwrapThisForNonGenericMethod(cx,
+                                       args.thisv(),
+                                       "ReadableStreamDefaultController",
+                                       "enqueue",
+                                       &controller))
+    {
+        return false;
+    }
 
     // Step 2: If this.[[closeRequested]] is true, throw a TypeError exception.
     if (ControllerFlags(controller) & ControllerFlag_CloseRequested) {
@@ -2729,27 +2737,25 @@ ReadableStreamDefaultController_enqueue_impl(JSContext* cx, const CallArgs& args
     return true;
 }
 
+/**
+ * Streams spec, 3.8.4.4. error ( e )
+ */
 static bool
-ReadableStreamDefaultController_enqueue(JSContext* cx, unsigned argc, Value* vp)
+ReadableStreamDefaultController_error(JSContext* cx, unsigned argc, Value* vp)
 {
     // Step 1: If ! IsReadableStreamDefaultController(this) is false, throw a
     //         TypeError exception.
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsMaybeWrapped<ReadableStreamDefaultController>,
-                                ReadableStreamDefaultController_enqueue_impl>(cx, args);
-}
 
-/**
- * Streams spec, 3.8.4.4. error ( e )
- *
- * Note: can operate on unwrapped ReadableStreamDefaultController instances from
- * another compartment.
- */
-static MOZ_MUST_USE bool
-ReadableStreamDefaultController_error_impl(JSContext* cx, const CallArgs& args)
-{
+    CallArgs args = CallArgsFromVp(argc, vp);
     Rooted<ReadableStreamDefaultController*> controller(cx);
-    controller = &args.thisv().toObject().unwrapAs<ReadableStreamDefaultController>();
+    if (!UnwrapThisForNonGenericMethod(cx,
+                                       args.thisv(),
+                                       "ReadableStreamDefaultController",
+                                       "enqueue",
+                                       &controller))
+    {
+        return false;
+    }
 
     // Step 2: Let stream be this.[[controlledReadableStream]].
     // Step 3: If stream.[[state]] is not "readable", throw a TypeError exception.
@@ -2765,17 +2771,6 @@ ReadableStreamDefaultController_error_impl(JSContext* cx, const CallArgs& args)
     }
     args.rval().setUndefined();
     return true;
-}
-
-static bool
-ReadableStreamDefaultController_error(JSContext* cx, unsigned argc, Value* vp)
-{
-    // Step 1: If ! IsReadableStreamDefaultController(this) is false, throw a
-    //         TypeError exception.
-
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsMaybeWrapped<ReadableStreamDefaultController>,
-                                ReadableStreamDefaultController_error_impl>(cx, args);
 }
 
 static const JSPropertySpec ReadableStreamDefaultController_properties[] = {
