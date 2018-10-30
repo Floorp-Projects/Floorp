@@ -256,6 +256,8 @@
   height: 16px;
   margin: 0 4px;
   vertical-align: text-bottom;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .request-list-item.selected .requests-file-type-icon {

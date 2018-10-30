@@ -1,6 +1,5 @@
 import os
 import shutil
-import subprocess
 import unittest
 
 import mozharness.base.log as log
@@ -37,6 +36,7 @@ class TestLog(unittest.TestCase):
         l.log_message('blah')
         self.assertTrue(os.path.exists(get_log_file_path()))
         del(l)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -545,8 +545,7 @@ public class GeckoViewActivity extends AppCompatActivity {
 
         @Override
         public void onContentPermissionRequest(final GeckoSession session, final String uri,
-                                             final int type, final String access,
-                                             final Callback callback) {
+                                             final int type, final Callback callback) {
             final int resId;
             if (PERMISSION_GEOLOCATION == type) {
                 resId = R.string.request_geolocation;

@@ -62,7 +62,7 @@
 #include "UIKitDirProvider.h"
 #endif
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
 #include "mozilla/SandboxSettings.h"
 #include "nsIUUIDGenerator.h"
 #include "mozilla/Unused.h"
@@ -81,7 +81,7 @@
 
 #define PREF_OVERRIDE_DIRNAME "preferences"
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
 static already_AddRefed<nsIFile> GetProcessSandboxTempDir(GeckoProcessType type);
 static nsresult DeleteDirIfExists(nsIFile *dir);
 static bool IsContentSandboxDisabled();
@@ -772,7 +772,8 @@ nsXREDirProvider::LoadPluginProcessTempDir()
 static bool
 IsContentSandboxDisabled()
 {
-  return !BrowserTabsRemoteAutostart() || (!IsContentSandboxEnabled());
+  return !mozilla::BrowserTabsRemoteAutostart() ||
+      (!mozilla::IsContentSandboxEnabled());
 }
 
 //
@@ -799,7 +800,7 @@ GetProcessSandboxTempDir(GeckoProcessType type)
       "security.sandbox.plugin.tempDirSuffix";
 
   nsAutoString tempDirSuffix;
-  rv = Preferences::GetString(prefKey, tempDirSuffix);
+  rv = mozilla::Preferences::GetString(prefKey, tempDirSuffix);
   if (NS_WARN_IF(NS_FAILED(rv)) || tempDirSuffix.IsEmpty()) {
     return nullptr;
   }
@@ -839,7 +840,7 @@ CreateProcessSandboxTempDir(GeckoProcessType procType)
 
   nsresult rv;
   nsAutoString tempDirSuffix;
-  Preferences::GetString(pref, tempDirSuffix);
+  mozilla::Preferences::GetString(pref, tempDirSuffix);
   if (tempDirSuffix.IsEmpty()) {
     nsCOMPtr<nsIUUIDGenerator> uuidgen =
       do_GetService("@mozilla.org/uuid-generator;1", &rv);
@@ -863,14 +864,14 @@ CreateProcessSandboxTempDir(GeckoProcessType procType)
 #endif
 
     // Save the pref
-    rv = Preferences::SetString(pref, tempDirSuffix);
+    rv = mozilla::Preferences::SetString(pref, tempDirSuffix);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       // If we fail to save the pref we don't want to create the temp dir,
       // because we won't be able to clean it up later.
       return nullptr;
     }
 
-    nsCOMPtr<nsIPrefService> prefsvc = Preferences::GetService();
+    nsCOMPtr<nsIPrefService> prefsvc = mozilla::Preferences::GetService();
     if (!prefsvc || NS_FAILED((rv = prefsvc->SavePrefFile(nullptr)))) {
       // Again, if we fail to save the pref file we might not be able to clean
       // up the temp directory, so don't create one.  Note that in the case
@@ -1035,7 +1036,7 @@ nsXREDirProvider::InitializeUserPrefs()
     // can access the profile directory during initialization. Afterwards, clear
     // it so that no other code can inadvertently access it until we get to
     // profile-do-change.
-    AutoRestore<bool> ar(mProfileNotified);
+    mozilla::AutoRestore<bool> ar(mProfileNotified);
     mProfileNotified = true;
 
     mozilla::Preferences::InitializeUserPrefs();
@@ -1166,7 +1167,7 @@ nsXREDirProvider::DoShutdown()
 
 #ifdef DEBUG
       // Not having this causes large intermittent leaks. See bug 1340425.
-      if (JSContext* cx = dom::danger::GetJSContext()) {
+      if (JSContext* cx = mozilla::dom::danger::GetJSContext()) {
         JS_GC(cx);
       }
 #endif
@@ -1180,10 +1181,10 @@ nsXREDirProvider::DoShutdown()
 
   if (XRE_IsParentProcess()) {
 #if defined(MOZ_CONTENT_SANDBOX)
-    Unused << DeleteDirIfExists(mContentProcessSandboxTempDir);
+    mozilla::Unused << DeleteDirIfExists(mContentProcessSandboxTempDir);
 #endif
 #if defined(MOZ_SANDBOX)
-    Unused << DeleteDirIfExists(mPluginProcessSandboxTempDir);
+    mozilla::Unused << DeleteDirIfExists(mPluginProcessSandboxTempDir);
 #endif
   }
 }

@@ -92,12 +92,7 @@ add_task(async function testReloadExitedAddon() {
   // The actor id should be the same after the reload
   equal(newAddonActor.actor, addonTargetActor.actor);
 
-  const onAddonListChanged = new Promise((resolve) => {
-    client.addListener("addonListChanged", function listener() {
-      client.removeListener("addonListChanged", listener);
-      resolve();
-    });
-  });
+  const onAddonListChanged = client.mainRoot.once("addonListChanged");
 
   // Install an upgrade version of the first add-on.
   const addonUpgradeFile = getSupportFile("addons/web-extension-upgrade");

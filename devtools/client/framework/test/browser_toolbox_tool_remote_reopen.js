@@ -108,6 +108,10 @@ function test() {
       }
 
       for (const actor of pool.__poolMap.keys()) {
+        // Ignore the root front as it is only release on client close
+        if (actor == "root") {
+          continue;
+        }
         // Bug 1056342: Profiler fails today because of framerate actor, but
         // this appears more complex to rework, so leave it for that bug to
         // resolve.

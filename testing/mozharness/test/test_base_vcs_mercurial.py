@@ -4,7 +4,6 @@ import shutil
 import tempfile
 import unittest
 
-import mozharness.base.errors as errors
 import mozharness.base.vcs.mercurial as mercurial
 
 test_string = '''foo
@@ -14,7 +13,8 @@ baz'''
 HG = ['hg'] + mercurial.HG_OPTIONS
 
 # Known default .hgrc
-os.environ['HGRCPATH'] = os.path.abspath(os.path.join(os.path.dirname(__file__), 'helper_files', '.hgrc'))
+os.environ['HGRCPATH'] = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                      'helper_files', '.hgrc'))
 
 
 def cleanup():
@@ -39,7 +39,8 @@ def get_mercurial_vcs_obj():
 def get_revisions(dest):
     m = get_mercurial_vcs_obj()
     retval = []
-    for rev in m.get_output_from_command(HG + ['log', '-R', dest, '--template', '{node}\n']).split('\n'):
+    command = HG + ['log', '-R', dest, '--template', '{node}\n']
+    for rev in m.get_output_from_command(command).split('\n'):
         rev = rev.strip()
         if not rev:
             continue
@@ -70,7 +71,9 @@ class TestMakeAbsolute(unittest.TestCase):
 
         def test_relative_file_path(self):
             m = get_mercurial_vcs_obj()
-            self.assertEquals(m._make_absolute("file://foo/bar"), "file://%s/foo/bar" % os.getcwd())
+            self.assertEquals(
+                m._make_absolute("file://foo/bar"),
+                "file://%s/foo/bar" % os.getcwd())
 
 
 class TestHg(unittest.TestCase):
@@ -330,7 +333,7 @@ class TestHg(unittest.TestCase):
         self.failUnless(os.path.exists(os.path.join(self.wc, 'test.txt')))
 
     def test_make_hg_url(self):
-        #construct an hg url specific to revision, branch and filename and try to pull it down
+        # construct an hg url specific to revision, branch and filename and try to pull it down
         file_url = mercurial.make_hg_url(
             "hg.mozilla.org",
             '//build/tools/',
@@ -338,7 +341,10 @@ class TestHg(unittest.TestCase):
             filename="/lib/python/util/hg.py",
             protocol='https',
         )
-        expected_url = "https://hg.mozilla.org/build/tools/raw-file/FIREFOX_3_6_12_RELEASE/lib/python/util/hg.py"
+        expected_url = (
+            "https://hg.mozilla.org/build/tools/raw-file/"
+            "FIREFOX_3_6_12_RELEASE/lib/python/util/hg.py"
+        )
         self.assertEquals(file_url, expected_url)
 
     def test_make_hg_url_no_filename(self):
@@ -368,6 +374,7 @@ class TestHg(unittest.TestCase):
         )
         expected_url = "ssh://hg.mozilla.org/build/tools"
         self.assertEquals(repo_url, expected_url)
+
 
 if __name__ == '__main__':
     unittest.main()

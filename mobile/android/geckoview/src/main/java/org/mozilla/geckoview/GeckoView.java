@@ -12,6 +12,7 @@ import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.util.ActivityUtils;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -27,6 +28,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.annotation.NonNull;
+import android.support.annotation.UiThread;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.SparseArray;
@@ -210,7 +212,10 @@ public class GeckoView extends FrameLayout {
      *
      * @param color Cover color.
      */
+    @UiThread
     public void coverUntilFirstPaint(final int color) {
+        ThreadUtils.assertOnUiThread();
+
         if (mSurfaceView != null) {
             mSurfaceView.setBackgroundColor(color);
         }
@@ -225,7 +230,10 @@ public class GeckoView extends FrameLayout {
      *
      * @return True if view should be pinned on the screen.
      */
+    @UiThread
     public boolean shouldPinOnScreen() {
+        ThreadUtils.assertOnUiThread();
+
         return mDisplay.shouldPinOnScreen();
     }
 
@@ -235,7 +243,10 @@ public class GeckoView extends FrameLayout {
         }
     }
 
+    @UiThread
     public GeckoSession releaseSession() {
+        ThreadUtils.assertOnUiThread();
+
         if (mSession == null) {
             return null;
         }
@@ -274,6 +285,7 @@ public class GeckoView extends FrameLayout {
      *
      * @param session The session to be attached.
      */
+    @UiThread
     public void setSession(@NonNull final GeckoSession session) {
         if (!session.isOpen()) {
             throw new IllegalArgumentException("Session must be open before attaching");
@@ -289,8 +301,11 @@ public class GeckoView extends FrameLayout {
      * @param session The session to be attached.
      * @param runtime The runtime to be used for opening the session.
      */
+    @UiThread
     public void setSession(@NonNull final GeckoSession session,
                            @Nullable final GeckoRuntime runtime) {
+        ThreadUtils.assertOnUiThread();
+
         if (mSession != null && mSession.isOpen()) {
             throw new IllegalStateException("Current session is open");
         }
@@ -365,11 +380,15 @@ public class GeckoView extends FrameLayout {
         return mSession.getEventDispatcher();
     }
 
+    @UiThread
     public PanZoomController getPanZoomController() {
+        ThreadUtils.assertOnUiThread();
         return mSession.getPanZoomController();
     }
 
+    @UiThread
     public DynamicToolbarAnimator getDynamicToolbarAnimator() {
+        ThreadUtils.assertOnUiThread();
         return mSession.getDynamicToolbarAnimator();
     }
 

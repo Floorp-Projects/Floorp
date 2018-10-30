@@ -265,8 +265,7 @@ WSRunObject::InsertBreak(Selection& aSelection,
   }
 
   RefPtr<Element> newBrElement =
-    mHTMLEditor->InsertBrElementWithTransaction(aSelection, pointToInsert,
-                                                aSelect);
+    mHTMLEditor->InsertBrElementWithTransaction(pointToInsert, aSelect);
   if (NS_WARN_IF(!newBrElement)) {
     return nullptr;
   }
@@ -1898,8 +1897,7 @@ WSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
         // they type 2 spaces.
 
         RefPtr<Element> brElement =
-          htmlEditor->InsertBrElementWithTransaction(*selection,
-                                                     aRun->EndPoint());
+          htmlEditor->InsertBrElementWithTransaction(aRun->EndPoint());
         if (NS_WARN_IF(!brElement)) {
           return NS_ERROR_FAILURE;
         }

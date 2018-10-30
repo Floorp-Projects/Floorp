@@ -164,7 +164,7 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
     }
     // HACK !!! Context click places the caret but the context menu consumes
     // the event; so we need to check resizing state ourselves
-    htmlEditor->CheckSelectionStateForAnonymousButtons(selection);
+    htmlEditor->CheckSelectionStateForAnonymousButtons();
 
     // Prevent bubbling if we changed selection or
     //   for all context clicks

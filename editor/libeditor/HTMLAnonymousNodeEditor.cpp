@@ -328,12 +328,14 @@ HTMLEditor::HideAnonymousEditingUIsIfUnnecessary()
 }
 
 NS_IMETHODIMP
-HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
+HTMLEditor::CheckSelectionStateForAnonymousButtons()
 {
-  if (NS_WARN_IF(!aSelection)) {
-    return NS_ERROR_INVALID_ARG;
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
-  nsresult rv = RefereshEditingUI(*aSelection);
+
+  nsresult rv = RefereshEditingUI();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -341,8 +343,10 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
 }
 
 nsresult
-HTMLEditor::RefereshEditingUI(Selection& aSelection)
+HTMLEditor::RefereshEditingUI()
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   // First, we need to remove unnecessary editing UI now since some of them
   // may be disabled while them are visible.
   HideAnonymousEditingUIsIfUnnecessary();
@@ -360,7 +364,7 @@ HTMLEditor::RefereshEditingUI(Selection& aSelection)
   }
 
   // let's get the containing element of the selection
-  RefPtr<Element> focusElement = GetSelectionContainerElement(aSelection);
+  RefPtr<Element> focusElement = GetSelectionContainerElement();
   if (NS_WARN_IF(!focusElement)) {
     return NS_OK;
   }
@@ -384,8 +388,7 @@ HTMLEditor::RefereshEditingUI(Selection& aSelection)
   if (IsObjectResizerEnabled() || IsInlineTableEditorEnabled()) {
     // Resizing or Inline Table Editing is enabled, we need to check if the
     // selection is contained in a table cell
-    cellElement =
-      GetElementOrParentByTagNameAtSelection(aSelection, *nsGkAtoms::td);
+    cellElement = GetElementOrParentByTagNameAtSelection(*nsGkAtoms::td);
   }
 
   if (IsObjectResizerEnabled() && cellElement) {

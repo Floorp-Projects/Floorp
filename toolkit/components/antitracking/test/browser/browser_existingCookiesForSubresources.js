@@ -76,7 +76,6 @@ add_task(async function() {
   await SpecialPowers.pushPrefEnv({"set": [
     ["browser.contentblocking.allowlist.annotations.enabled", true],
     ["browser.contentblocking.allowlist.storage.enabled", true],
-    ["browser.contentblocking.enabled", true],
     ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
   ]});
 
