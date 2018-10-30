@@ -19,6 +19,7 @@ import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.UiThread;
 import android.text.InputType;
 import android.util.Log;
 import android.view.InputDevice;
@@ -436,7 +437,10 @@ public class SessionAccessibility {
       *
       * @param view View instance.
       */
+    @UiThread
     public void setView(final View view) {
+        ThreadUtils.assertOnUiThread();
+
         if (mView != null) {
             mView.setAccessibilityDelegate(null);
         }

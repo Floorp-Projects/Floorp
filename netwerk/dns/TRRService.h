@@ -43,7 +43,8 @@ public:
   nsresult GetCredentials(nsCString &result);
   uint32_t GetRequestTimeout() { return mTRRTimeout; }
 
-  LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *, bool pb) override;
+  LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *, bool pb,
+                              const nsACString &aOriginSuffix) override;
   LookupStatus CompleteLookupByType(nsHostRecord *, nsresult, const nsTArray<nsCString> *, uint32_t, bool pb) override;
   void TRRBlacklist(const nsACString &host, const nsACString &originSuffix,
                     bool privateBrowsing, bool aParentsToo);

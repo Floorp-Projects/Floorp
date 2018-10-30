@@ -8,7 +8,6 @@ add_task(async function() {
     ["dom.storage_access.enabled", true],
     ["browser.contentblocking.allowlist.annotations.enabled", true],
     ["browser.contentblocking.allowlist.storage.enabled", true],
-    ["browser.contentblocking.enabled", true],
     ["browser.fastblock.enabled", false],
     ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
     ["privacy.trackingprotection.enabled", false],

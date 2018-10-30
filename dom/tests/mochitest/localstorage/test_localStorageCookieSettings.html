@@ -16,7 +16,6 @@ SimpleTest.waitForExplicitFinish();
 
 // Set cookies behavior to "always reject".
 SpecialPowers.pushPrefEnv({"set": [
-  ["browser.contentblocking.enabled", true],
   ["network.cookie.cookieBehavior", 2],
 ]}, test1);
 
