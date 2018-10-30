@@ -88,11 +88,7 @@ public:
     /**
      * Notify the XUL document that a subtree has been added
      */
-    nsresult AddSubtreeToDocument(nsIContent* aContent);
-    /**
-     * Notify the XUL document that a subtree has been removed
-     */
-    nsresult RemoveSubtreeFromDocument(nsIContent* aContent);
+    void AddSubtreeToDocument(nsIContent* aContent);
     /**
      * This is invoked whenever the prototype for this document is loaded
      * and should be walked, regardless of whether the XUL cache is
@@ -155,11 +151,7 @@ protected:
     nsresult ApplyPersistentAttributesToElements(const nsAString &aID,
                                                  nsCOMArray<Element>& aElements);
 
-    nsresult
-    AddElementToDocumentPre(Element* aElement);
-
-    nsresult
-    AddElementToDocumentPost(Element* aElement);
+    void AddElementToDocumentPost(Element* aElement);
 
     static void DirectionChanged(const char* aPrefName, XULDocument* aData);
 

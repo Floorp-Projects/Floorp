@@ -40,7 +40,8 @@ function FrameTitle({
 }
 
 function FrameLocation({
-  frame
+  frame,
+  displayFullUrl = false
 }) {
   if (!frame.source) {
     return null;
@@ -55,10 +56,14 @@ function FrameLocation({
     }));
   }
 
-  const filename = (0, _source.getFilename)(frame.source);
+  const {
+    location,
+    source
+  } = frame;
+  const filename = displayFullUrl ? (0, _source.getFileURL)(source, false) : (0, _source.getFilename)(source);
   return _react2.default.createElement("div", {
     className: "location"
-  }, `${filename}: ${frame.location.line}`);
+  }, `${filename}:${location.line}`);
 }
 
 FrameLocation.displayName = "FrameLocation";
@@ -100,25 +105,30 @@ class FrameComponent extends _react.Component {
       frame,
       selectedFrame,
       hideLocation,
-      shouldMapDisplayName
+      shouldMapDisplayName,
+      displayFullUrl,
+      getFrameTitle
     } = this.props;
     const className = (0, _classnames2.default)("frame", {
       selected: selectedFrame && selectedFrame.id === frame.id
     });
+    const title = getFrameTitle ? getFrameTitle(`${(0, _source.getFileURL)(frame.source, false)}:${frame.location.line}`) : undefined;
     return _react2.default.createElement("li", {
       key: frame.id,
       className: className,
       onMouseDown: e => this.onMouseDown(e, frame, selectedFrame),
       onKeyUp: e => this.onKeyUp(e, frame, selectedFrame),
       onContextMenu: e => this.onContextMenu(e),
-      tabIndex: 0
+      tabIndex: 0,
+      title: title
     }, _react2.default.createElement(FrameTitle, {
       frame: frame,
       options: {
         shouldMapDisplayName
       }
     }), !hideLocation && _react2.default.createElement(FrameLocation, {
-      frame: frame
+      frame: frame,
+      displayFullUrl: displayFullUrl
     }));
   }
 

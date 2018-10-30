@@ -18,6 +18,7 @@
 #include "private/pprio.h"
 #include "nss.h"
 #include "pk11pqg.h"
+#include "pk11pub.h"
 #include "tls13esni.h"
 
 static const sslSocketOps ssl_default_ops = { /* No SSL. */
@@ -4102,6 +4103,7 @@ SSLExp_SetResumptionToken(PRFileDesc *fd, const PRUint8 *token,
                           unsigned int len)
 {
     sslSocket *ss = ssl_FindSocket(fd);
+    sslSessionID *sid = NULL;
 
     if (!ss) {
         SSL_DBG(("%d: SSL[%d]: bad socket in SSL_SetResumptionToken",
@@ -4115,7 +4117,7 @@ SSLExp_SetResumptionToken(PRFileDesc *fd, const PRUint8 *token,
     if (ss->firstHsDone || ss->ssl3.hs.ws != idle_handshake ||
         ss->sec.isServer || len == 0 || !token) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        goto done;
+        goto loser;
     }
 
     // We override any previously set session.
@@ -4126,41 +4128,44 @@ SSLExp_SetResumptionToken(PRFileDesc *fd, const PRUint8 *token,
 
     PRINT_BUF(50, (ss, "incoming resumption token", token, len));
 
-    ss->sec.ci.sid = ssl3_NewSessionID(ss, PR_FALSE);
-    if (!ss->sec.ci.sid) {
-        goto done;
+    sid = ssl3_NewSessionID(ss, PR_FALSE);
+    if (!sid) {
+        goto loser;
     }
 
     /* Populate NewSessionTicket values */
-    SECStatus rv = ssl_DecodeResumptionToken(ss->sec.ci.sid, token, len);
+    SECStatus rv = ssl_DecodeResumptionToken(sid, token, len);
     if (rv != SECSuccess) {
         // If decoding fails, we assume the token is bad.
         PORT_SetError(SSL_ERROR_BAD_RESUMPTION_TOKEN_ERROR);
-        ssl_FreeSID(ss->sec.ci.sid);
-        ss->sec.ci.sid = NULL;
-        goto done;
+        goto loser;
     }
 
-    // Make sure that the token is valid.
-    if (!ssl_IsResumptionTokenValid(ss)) {
-        ssl_FreeSID(ss->sec.ci.sid);
-        ss->sec.ci.sid = NULL;
+    // Make sure that the token is currently usable.
+    if (!ssl_IsResumptionTokenUsable(ss, sid)) {
         PORT_SetError(SSL_ERROR_BAD_RESUMPTION_TOKEN_ERROR);
-        goto done;
+        goto loser;
     }
 
+    // Generate a new random session ID for this ticket.
+    rv = PK11_GenerateRandom(sid->u.ssl3.sessionID, SSL3_SESSIONID_BYTES);
+    if (rv != SECSuccess) {
+        goto loser; // Code set by PK11_GenerateRandom.
+    }
+    sid->u.ssl3.sessionIDLength = SSL3_SESSIONID_BYTES;
     /* Use the sid->cached as marker that this is from an external cache and
      * we don't have to look up anything in the NSS internal cache. */
-    ss->sec.ci.sid->cached = in_external_cache;
-    // This has to be 2 to not free this in sendClientHello.
-    ss->sec.ci.sid->references = 2;
-    ss->sec.ci.sid->lastAccessTime = ssl_TimeSec();
+    sid->cached = in_external_cache;
+    sid->lastAccessTime = ssl_TimeSec();
+
+    ss->sec.ci.sid = sid;
 
     ssl_ReleaseSSL3HandshakeLock(ss);
     ssl_Release1stHandshakeLock(ss);
     return SECSuccess;
 
-done:
+loser:
+    ssl_FreeSID(sid);
     ssl_ReleaseSSL3HandshakeLock(ss);
     ssl_Release1stHandshakeLock(ss);
 
@@ -4217,6 +4222,7 @@ SSLExp_GetResumptionTokenInfo(const PRUint8 *tokenData, unsigned int tokenLen,
     } else {
         token.maxEarlyDataSize = 0;
     }
+    token.expirationTime = sid.expirationTime;
 
     token.length = PR_MIN(sizeof(SSLResumptionTokenInfo), len);
     PORT_Memcpy(tokenOut, &token, token.length);
