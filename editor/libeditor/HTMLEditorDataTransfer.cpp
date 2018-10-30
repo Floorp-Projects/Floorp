@@ -175,10 +175,14 @@ HTMLEditor::LoadHTML(const nsAString& aInputString)
 NS_IMETHODIMP
 HTMLEditor::InsertHTML(const nsAString& aInString)
 {
-  const nsString& empty = EmptyString();
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertHTML);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
-  return DoInsertHTMLWithContext(aInString, empty, empty, empty,
-                                 nullptr,  nullptr, 0, true, true, false);
+  return DoInsertHTMLWithContext(aInString, EmptyString(), EmptyString(),
+                                 EmptyString(), nullptr,  nullptr, 0,
+                                 true, true, false);
 }
 
 nsresult
@@ -1557,6 +1561,11 @@ HTMLEditor::PasteInternal(int32_t aClipboardType,
 nsresult
 HTMLEditor::PasteTransferable(nsITransferable* aTransferable)
 {
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   // Use an invalid value for the clipboard type as data comes from aTransferable
   // and we don't currently implement a way to put that in the data transfer yet.
   if (!FireClipboardEvent(ePaste, nsIClipboard::kGlobalClipboard)) {
@@ -1574,6 +1583,11 @@ HTMLEditor::PasteTransferable(nsITransferable* aTransferable)
 NS_IMETHODIMP
 HTMLEditor::PasteNoFormatting(int32_t aSelectionType)
 {
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   if (!FireClipboardEvent(ePasteNoFormatting, aSelectionType)) {
     return NS_OK;
   }
@@ -1697,6 +1711,11 @@ HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   MOZ_ASSERT(aClipboardType == nsIClipboard::kGlobalClipboard ||
              aClipboardType == nsIClipboard::kSelectionClipboard);
 
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   if (IsPlaintextEditor()) {
     // XXX In this case, we don't dispatch ePaste event.  Why?
     return PasteAsPlaintextQuotation(aClipboardType);
@@ -1810,6 +1829,11 @@ HTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType)
 nsresult
 HTMLEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
 {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   // The whole operation should be undoable in one transaction:
   // XXX Why isn't enough to use only AutoPlaceholderBatch here?
   AutoTransactionBatch bundleAllTransactions(*this);
@@ -1917,12 +1941,22 @@ HTMLEditor::InsertAsQuotation(const nsAString& aQuotedText,
                               nsINode** aNodeInserted)
 {
   if (IsPlaintextEditor()) {
+    AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
     AutoPlaceholderBatch treatAsOneTransaction(*this);
     nsresult rv = InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     return NS_OK;
+  }
+
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eInsertBlockquoteElement);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
@@ -2046,6 +2080,11 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
 NS_IMETHODIMP
 HTMLEditor::Rewrap(bool aRespectNewlines)
 {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eRewrap);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   // Rewrap makes no sense if there's no wrap column; default to 72.
   int32_t wrapWidth = WrapWidth();
   if (wrapWidth <= 0) {
@@ -2093,11 +2132,16 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                    bool aInsertHTML,
                                    nsINode** aNodeInserted)
 {
-
   // Don't let anyone insert HTML when we're in plaintext mode.
   if (IsPlaintextEditor()) {
     NS_ASSERTION(!aInsertHTML,
       "InsertAsCitedQuotation: trying to insert html into plaintext editor");
+
+    AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+
     AutoPlaceholderBatch treatAsOneTransaction(*this);
     nsresult rv = InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2106,10 +2150,15 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
     return NS_OK;
   }
 
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eInsertBlockquoteElement);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  nsresult rv =
-    InsertAsCitedQuotationInternal(aQuotedText, aCitation, aInsertHTML,
-                                   aNodeInserted);
+  nsresult rv = InsertAsCitedQuotationInternal(aQuotedText, aCitation,
+                                               aInsertHTML, aNodeInserted);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

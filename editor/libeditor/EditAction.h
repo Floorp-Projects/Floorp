@@ -29,6 +29,9 @@ enum class EditAction
   // as <p>, <div> or just \n in TextEditor.
   eInsertParagraphSeparator,
 
+  // eInsertLineBreak indicates to insert a <br> element in HTMLEditor.
+  eInsertLineBreak,
+
   // eDeleteSelection indicates to delete selected content or content around
   // caret if selection is collapsed.
   eDeleteSelection,
@@ -93,10 +96,37 @@ enum class EditAction
   // eDrop indicates that user drops dragging item into the editor.
   eDrop,
 
+  // eIndent indicates that to indent selected line(s).
+  eIndent,
+
+  // eOutdent indicates that to outdent selected line(s).
+  eOutdent,
+
   // eReplaceText indicates to replace a part of range in editor with
   // specific text.  For example, user select a correct word in suggestions
   // of spellchecker or a suggestion in list of autocomplete.
   eReplaceText,
+
+  // eInsertTableRowElement indicates to insert table rows (i.e., <tr>
+  // elements).
+  eInsertTableRowElement,
+
+  // eRemoveTableRowElement indicates to remove table row elements.
+  eRemoveTableRowElement,
+
+  // eInsertTableColumn indicates to insert cell elements to each row.
+  eInsertTableColumn,
+
+  // eRemoveTableColumn indicates to remove cell elements from each row.
+  eRemoveTableColumn,
+
+  // eResizeElement indicates that user resizes an element size with dragging
+  // a resizer which is provided by Gecko.
+  eResizeElement,
+
+  // eMoveElement indicates that user moves an element with grabber which is
+  // provided by Gecko.
+  eMoveElement,
 
   // The following edit actions are not user's operation.  They are caused
   // by if UI does something or web apps does something with JS.
@@ -124,18 +154,186 @@ enum class EditAction
   // eJoinNodes indicates to join 2 nodes.
   eJoinNodes,
 
+  // eInsertBlockElement indicates to insert a block-level element like <div>,
+  // <pre>, <li>, <dd> etc.
+  eInsertBlockElement,
+
+  // eInsertHorizontalRuleElement indicates to insert a <hr> element.
+  eInsertHorizontalRuleElement,
+
+  // eInsertLinkElement indicates to insert an anchor element which has
+  // href attribute.
+  eInsertLinkElement,
+
+  // eInsertUnorderedListElement, eInsertOrderedListElement and
+  // eInsertDefinitionListLElement indicate to insert <ul>, <ol> or <dl>
+  // element.
+  eInsertUnorderedListElement,
+  eInsertOrderedListElement,
+  eInsertDefinitionListElementv,
+
+  // eRemoveListElement indicates to remove parent list related elements.
+  eRemoveListElement,
+
+  // eInsertBlockquoteElement indicates to insert a <blockquote> element.
+  eInsertBlockquoteElement,
+
+  // eNormalizeTable indicates to normalize table.  E.g., if a row does
+  // not have enough number of cells, inserts empty cells.
+  eNormalizeTable,
+
+  // eRemoveTableElement indicates to remove <table> element.
+  eRemoveTableElement,
+
+  // eRemoveTableCellContents indicates to remove any children in a table
+  // cell element.
+  eDeleteTableCellContents,
+
+  // eInsertTableCellElement indicates to insert table cell elements (i.e.,
+  // <td> or <th>).
+  eInsertTableCellElement,
+
+  // eRemoveTableCellEelement indicates to remove table cell elements.
+  eRemoveTableCellElement,
+
+  // eJoinTableCellElements indicates to join table cell elements.
+  eJoinTableCellElements,
+
+  // eSplitTableCellElement indicates to split table cell elements.
+  eSplitTableCellElement,
+
+  // eSetTableCellElementType indicates to set table cell element type to
+  // <td> or <th>.
+  eSetTableCellElementType,
+
+  // eSetInlineStyleProperty indicates to set CSS another inline style property
+  // which is not defined below.
+  eSetInlineStyleProperty,
+
+  // eRemoveInlineStyleProperty indicates to remove a CSS text property which
+  // is not defined below.
+  eRemoveInlineStyleProperty,
+
+  // <b> or font-weight.
+  eSetFontWeightProperty,
+  eRemoveFontWeightProperty,
+
+  // <i> or text-style: italic/oblique.
+  eSetTextStyleProperty,
+  eRemoveTextStyleProperty,
+
+  // <u> or text-decoration: underline.
+  eSetTextDecorationPropertyUnderline,
+  eRemoveTextDecorationPropertyUnderline,
+
+  // <strike> or text-decoration: line-through.
+  eSetTextDecorationPropertyLineThrough,
+  eRemoveTextDecorationPropertyLineThrough,
+
+  // <sup> or text-align: super.
+  eSetVerticalAlignPropertySuper,
+  eRemoveVerticalAlignPropertySuper,
+
+  // <sub> or text-align: sub.
+  eSetVerticalAlignPropertySub,
+  eRemoveVerticalAlignPropertySub,
+
+  // <font face="foo"> or font-family.
+  eSetFontFamilyProperty,
+  eRemoveFontFamilyProperty,
+
+  // <font color="foo"> or color.
+  eSetColorProperty,
+  eRemoveColorProperty,
+
+  // <span style="background-color: foo">
+  eSetBackgroundColorPropertyInline,
+  eRemoveBackgroundColorPropertyInline,
+
+  // eRemoveAllInlineStyleProperties indicates to remove all CSS inline
+  // style properties.
+  eRemoveAllInlineStyleProperties,
+
+  // eIncrementFontSize indicates to increment font-size.
+  eIncrementFontSize,
+
+  // eDecrementFontSize indicates to decrement font-size.
+  eDecrementFontSize,
+
+  // eSetAlignment indicates to set alignment of selected content but different
+  // from the following.
+  eSetAlignment,
+
+  // eAlign* and eJustify indicates to align contents in block with left
+  // edge, right edge, center or justify the text.
+  eAlignLeft,
+  eAlignRight,
+  eAlignCenter,
+  eJustify,
+
+  // eSetBackgroundColor indicates to set background color.
+  eSetBackgroundColor,
+
+  // eSetPositionToAbsoluteOrStatic indicates to set position property value
+  // to "absolute" or "static".
+  eSetPositionToAbsoluteOrStatic,
+
+  // eIncreaseOrDecreaseZIndex indicates to change z-index of an element.
+  eIncreaseOrDecreaseZIndex,
+
+  // eAddOverrideStyleSheet indicates to add override style sheet.
+  eAddOverrideStyleSheet,
+
+  // eRemoveOverrideStyleSheet indicates to remove override style sheet.
+  eRemoveOverrideStyleSheet,
+
+  // eReplaceOverrideStyleSheet indicates to replace added override style
+  // sheet with new override style sheet.
+  eReplaceOverrideStyleSheet,
+
+  // eEnableStyleSheet indicates to apply a style sheet.
+  eEnableStyleSheet,
+
+  // eEnableOrDisableCSS indicates to enable or disable CSS mode of HTMLEditor.
+  eEnableOrDisableCSS,
+
+  // eEnableOrDisableAbsolutePositionEditor indicates to enable or disable
+  // absolute positioned element editing UI.
+  eEnableOrDisableAbsolutePositionEditor,
+
+  // eEnableOrDisableResizer indicates to enable or disable resizers of
+  // <img>, <table> and absolutely positioned element.
+  eEnableOrDisableResizer,
+
+  // eEnableOrDisableInlineTableEditingUI indicates to enable or disable
+  // inline table editing UI.
+  eEnableOrDisableInlineTableEditingUI,
+
   // eSetCharacterSet indicates to set character-set of the document.
   eSetCharacterSet,
 
   // eSetWrapWidth indicates to set wrap width.
   eSetWrapWidth,
 
+  // eRewrap indicates to rewrap for current wrap width.
+  eRewrap,
+
   // eSetText indicates to set new text of TextEditor, e.g., setting
   // HTMLInputElement.value.
   eSetText,
 
+  // eSetHTML indicates to set body of HTMLEditor.
+  eSetHTML,
+
+  // eInsertHTML indicates to insert HTML source code.
+  eInsertHTML,
+
   // eHidePassword indicates that editor hides password with mask characters.
   eHidePassword,
+
+  // eCreateBogusNode indicates that editor wants to create a bogus node after
+  // the editor is modified, asynchronously.
+  eCreateBogusNode,
 };
 
 // This is int32_t instead of int16_t because nsIInlineSpellChecker.idl's

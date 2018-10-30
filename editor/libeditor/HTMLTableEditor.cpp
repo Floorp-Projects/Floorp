@@ -170,6 +170,12 @@ NS_IMETHODIMP
 HTMLEditor::InsertTableCell(int32_t aNumberOfCellsToInsert,
                             bool aInsertAfterSelectedCell)
 {
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eInsertTableCellElement);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   nsresult rv =
     InsertTableCellsWithTransaction(aNumberOfCellsToInsert,
       aInsertAfterSelectedCell ? InsertPosition::eAfterSelectedCell :
@@ -262,6 +268,12 @@ HTMLEditor::GetFirstRow(Element* aTableOrElementInTable,
   if (NS_WARN_IF(!aTableOrElementInTable) || NS_WARN_IF(!aFirstRowElement)) {
     return NS_ERROR_INVALID_ARG;
   }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   ErrorResult error;
   RefPtr<Element> firstRowElement =
     GetFirstTableRowElement(*aTableOrElementInTable, error);
@@ -403,6 +415,12 @@ NS_IMETHODIMP
 HTMLEditor::InsertTableColumn(int32_t aNumberOfColumnsToInsert,
                               bool aInsertAfterSelectedCell)
 {
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eInsertTableColumn);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   nsresult rv =
     InsertTableColumnsWithTransaction(aNumberOfColumnsToInsert,
       aInsertAfterSelectedCell ? InsertPosition::eAfterSelectedCell :
@@ -591,6 +609,12 @@ NS_IMETHODIMP
 HTMLEditor::InsertTableRow(int32_t aNumberOfRowsToInsert,
                            bool aInsertAfterSelectedCell)
 {
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eInsertTableRowElement);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   nsresult rv =
     InsertTableRowsWithTransaction(aNumberOfRowsToInsert,
       aInsertAfterSelectedCell ? InsertPosition::eAfterSelectedCell :
@@ -851,20 +875,25 @@ HTMLEditor::DeleteTableElementAndChildrenWithTransaction(Selection& aSelection,
 NS_IMETHODIMP
 HTMLEditor::DeleteTable()
 {
-  RefPtr<Selection> selection;
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eRemoveTableElement);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   RefPtr<Element> table;
-  nsresult rv = GetCellContext(getter_AddRefs(selection),
+  nsresult rv = GetCellContext(nullptr,
                                getter_AddRefs(table),
                                nullptr, nullptr, nullptr, nullptr, nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  if (NS_WARN_IF(!selection) || NS_WARN_IF(!table)) {
+  if (NS_WARN_IF(!table)) {
     return NS_ERROR_FAILURE;
   }
 
   AutoPlaceholderBatch treateAsOneTransaction(*this);
-  rv = DeleteTableElementAndChildrenWithTransaction(*selection, *table);
+  rv = DeleteTableElementAndChildrenWithTransaction(*SelectionRefPtr(), *table);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -874,6 +903,12 @@ HTMLEditor::DeleteTable()
 NS_IMETHODIMP
 HTMLEditor::DeleteTableCell(int32_t aNumberOfCellsToDelete)
 {
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eRemoveTableCellElement);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   nsresult rv = DeleteTableCellWithTransaction(aNumberOfCellsToDelete);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1151,6 +1186,12 @@ HTMLEditor::DeleteTableCellWithTransaction(int32_t aNumberOfCellsToDelete)
 NS_IMETHODIMP
 HTMLEditor::DeleteTableCellContents()
 {
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eDeleteTableCellContents);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   nsresult rv = DeleteTableCellContentsWithTransaction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1230,6 +1271,12 @@ HTMLEditor::DeleteTableCellContentsWithTransaction()
 NS_IMETHODIMP
 HTMLEditor::DeleteTableColumn(int32_t aNumberOfColumnsToDelete)
 {
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eRemoveTableColumn);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   nsresult rv =
     DeleteSelectedTableColumnsWithTransaction(aNumberOfColumnsToDelete);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1461,6 +1508,12 @@ HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
 NS_IMETHODIMP
 HTMLEditor::DeleteTableRow(int32_t aNumberOfRowsToDelete)
 {
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eRemoveTableRowElement);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   nsresult rv = DeleteSelectedTableRowsWithTransaction(aNumberOfRowsToDelete);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1722,12 +1775,14 @@ HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
 NS_IMETHODIMP
 HTMLEditor::SelectTable()
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_OK; // Don't fail if we didn't find a table.
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
+
   RefPtr<Element> table =
-    GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::table);
+    GetElementOrParentByTagNameAtSelection(*SelectionRefPtr(),
+                                           *nsGkAtoms::table);
   if (NS_WARN_IF(!table)) {
     return NS_OK; // Don't fail if we didn't find a table.
   }
@@ -1742,12 +1797,13 @@ HTMLEditor::SelectTable()
 NS_IMETHODIMP
 HTMLEditor::SelectTableCell()
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
+
   RefPtr<Element> cell =
-    GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::td);
+    GetElementOrParentByTagNameAtSelection(*SelectionRefPtr(), *nsGkAtoms::td);
   if (NS_WARN_IF(!cell)) {
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
@@ -1767,9 +1823,9 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
     return NS_ERROR_INVALID_ARG;
   }
 
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   RefPtr<Element> table =
@@ -1802,7 +1858,7 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
 
   // Suppress nsISelectionListener notification
   //  until all selection changes are finished
-  SelectionBatcher selectionBatcher(selection);
+  SelectionBatcher selectionBatcher(SelectionRefPtr());
 
   // Examine all cell nodes in current selection and
   //  remove those outside the new block cell region
@@ -1816,14 +1872,14 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
     std::max(startCellIndexes.mRow, endCellIndexes.mRow);
 
   RefPtr<Element> cell;
-  cell = GetFirstSelectedTableCellElement(*selection, error);
+  cell = GetFirstSelectedTableCellElement(*SelectionRefPtr(), error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
   if (!cell) {
     return NS_OK;
   }
-  RefPtr<nsRange> range = selection->GetRangeAt(0);
+  RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(0);
   MOZ_ASSERT(range);
   while (cell) {
     CellIndexes currentCellIndexes(*cell, error);
@@ -1834,18 +1890,18 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
         currentCellIndexes.mRow > maxRow ||
         currentCellIndexes.mColumn < maxColumn ||
         currentCellIndexes.mColumn > maxColumn) {
-      selection->RemoveRange(*range, IgnoreErrors());
+      SelectionRefPtr()->RemoveRange(*range, IgnoreErrors());
       // Since we've removed the range, decrement pointer to next range
       MOZ_ASSERT(mSelectedCellIndex > 0);
       mSelectedCellIndex--;
     }
-    cell = GetNextSelectedTableCellElement(*selection, error);
+    cell = GetNextSelectedTableCellElement(*SelectionRefPtr(), error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
     if (cell) {
       MOZ_ASSERT(mSelectedCellIndex > 0);
-      range = selection->GetRangeAt(mSelectedCellIndex - 1);
+      range = SelectionRefPtr()->GetRangeAt(mSelectedCellIndex - 1);
     }
   }
 
@@ -1881,12 +1937,13 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
 NS_IMETHODIMP
 HTMLEditor::SelectAllTableCells()
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
+
   RefPtr<Element> cell =
-    GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::td);
+    GetElementOrParentByTagNameAtSelection(*SelectionRefPtr(), *nsGkAtoms::td);
   if (NS_WARN_IF(!cell)) {
     // Don't fail if we didn't find a cell.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
@@ -1909,7 +1966,7 @@ HTMLEditor::SelectAllTableCells()
 
   // Suppress nsISelectionListener notification
   //  until all selection changes are finished
-  SelectionBatcher selectionBatcher(selection);
+  SelectionBatcher selectionBatcher(SelectionRefPtr());
 
   // It is now safe to clear the selection
   // BE SURE TO RESET IT BEFORE LEAVING!
@@ -1955,13 +2012,13 @@ HTMLEditor::SelectAllTableCells()
 NS_IMETHODIMP
 HTMLEditor::SelectTableRow()
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    // Don't fail if we didn't find a cell.
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
+
   RefPtr<Element> cell =
-    GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::td);
+    GetElementOrParentByTagNameAtSelection(*SelectionRefPtr(), *nsGkAtoms::td);
   if (NS_WARN_IF(!cell)) {
     // Don't fail if we didn't find a cell.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
@@ -1997,7 +2054,7 @@ HTMLEditor::SelectTableRow()
 
   // Suppress nsISelectionListener notification
   //  until all selection changes are finished
-  SelectionBatcher selectionBatcher(selection);
+  SelectionBatcher selectionBatcher(SelectionRefPtr());
 
   // It is now safe to clear the selection
   // BE SURE TO RESET IT BEFORE LEAVING!
@@ -2041,13 +2098,13 @@ HTMLEditor::SelectTableRow()
 NS_IMETHODIMP
 HTMLEditor::SelectTableColumn()
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    // Don't fail if we didn't find a cell.
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
+
   RefPtr<Element> cell =
-    GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::td);
+    GetElementOrParentByTagNameAtSelection(*SelectionRefPtr(), *nsGkAtoms::td);
   if (NS_WARN_IF(!cell)) {
     // Don't fail if we didn't find a cell.
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
@@ -2079,7 +2136,7 @@ HTMLEditor::SelectTableColumn()
 
   // Suppress nsISelectionListener notification
   //  until all selection changes are finished
-  SelectionBatcher selectionBatcher(selection);
+  SelectionBatcher selectionBatcher(SelectionRefPtr());
 
   // It is now safe to clear the selection
   // BE SURE TO RESET IT BEFORE LEAVING!
@@ -2123,6 +2180,12 @@ HTMLEditor::SelectTableColumn()
 NS_IMETHODIMP
 HTMLEditor::SplitTableCell()
 {
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eSplitTableCellElement);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   RefPtr<Element> table;
   RefPtr<Element> cell;
   int32_t startRowIndex, startColIndex, actualRowSpan, actualColSpan;
@@ -2401,7 +2464,13 @@ HTMLEditor::SwitchTableCellHeaderType(Element* aSourceCell,
     return NS_ERROR_INVALID_ARG;
   }
 
-  AutoPlaceholderBatch treateAsOneTransaction(*this);
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eSetTableCellElementType);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
   // Prevent auto insertion of BR in new cell created by
   // ReplaceContainerAndCloneAttributesWithTransaction().
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
@@ -2411,12 +2480,7 @@ HTMLEditor::SwitchTableCellHeaderType(Element* aSourceCell,
   // Save current selection to restore when done.
   // This is needed so ReplaceContainerAndCloneAttributesWithTransaction()
   // can monitor selection when replacing nodes.
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  AutoSelectionRestorer restoreSelectionLater(*selection, *this);
+  AutoSelectionRestorer restoreSelectionLater(*SelectionRefPtr(), *this);
 
   // Set to the opposite of current type
   nsAtom* newCellName =
@@ -2442,6 +2506,12 @@ HTMLEditor::SwitchTableCellHeaderType(Element* aSourceCell,
 NS_IMETHODIMP
 HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
 {
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eJoinTableCellElements);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   RefPtr<Element> table;
   RefPtr<Element> targetCell;
   int32_t startRowIndex, startColIndex;
@@ -2467,13 +2537,8 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
   //  is retained after joining. This leaves the target cell selected
   //  as well as the "non-contiguous" cells, so user can see what happened.
 
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-
   ErrorResult error;
-  CellAndIndexes firstSelectedCell(*this, *selection, error);
+  CellAndIndexes firstSelectedCell(*this, *SelectionRefPtr(), error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -2481,7 +2546,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
   bool joinSelectedCells = false;
   if (firstSelectedCell.mElement) {
     RefPtr<Element> secondCell =
-      GetNextSelectedTableCellElement(*selection, error);
+      GetNextSelectedTableCellElement(*SelectionRefPtr(), error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -2695,20 +2760,19 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
       }
     }
     // Cleanup selection: remove ranges where cells were deleted
-    RefPtr<Selection> selection = GetSelection();
-    NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-
-    uint32_t rangeCount = selection->RangeCount();
+    uint32_t rangeCount = SelectionRefPtr()->RangeCount();
 
     RefPtr<nsRange> range;
     for (uint32_t i = 0; i < rangeCount; i++) {
-      range = selection->GetRangeAt(i);
-      NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
+      range = SelectionRefPtr()->GetRangeAt(i);
+      if (NS_WARN_IF(!range)) {
+        return NS_ERROR_FAILURE;
+      }
 
       RefPtr<Element> deletedCell;
       HTMLEditor::GetCellFromRange(range, getter_AddRefs(deletedCell));
       if (!deletedCell) {
-        selection->RemoveRange(*range, IgnoreErrors());
+        SelectionRefPtr()->RemoveRange(*range, IgnoreErrors());
         rangeCount--;
         i--;
       }
@@ -2727,7 +2791,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
     }
 
     // Fixup disturbances in table layout
-    DebugOnly<nsresult> rv = NormalizeTable(*selection, *table);
+    DebugOnly<nsresult> rv = NormalizeTable(*SelectionRefPtr(), *table);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to normalize the table");
   } else {
     // Joining with cell to the right -- get rowspan and colspan data of target
@@ -3047,18 +3111,20 @@ HTMLEditor::FixBadColSpan(Element* aTable,
 NS_IMETHODIMP
 HTMLEditor::NormalizeTable(Element* aTableOrElementInTable)
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNormalizeTable);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
+
   if (!aTableOrElementInTable) {
     aTableOrElementInTable =
-      GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::table);
+      GetElementOrParentByTagNameAtSelection(*SelectionRefPtr(),
+                                             *nsGkAtoms::table);
     if (!aTableOrElementInTable) {
       return NS_OK; // Don't throw error even if the element is not in <table>.
     }
   }
-  nsresult rv = NormalizeTable(*selection, *aTableOrElementInTable);
+  nsresult rv = NormalizeTable(*SelectionRefPtr(), *aTableOrElementInTable);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3169,18 +3235,20 @@ HTMLEditor::GetCellIndexes(Element* aCellElement,
   if (NS_WARN_IF(!aRowIndex) || NS_WARN_IF(!aColumnIndex)) {
     return NS_ERROR_INVALID_ARG;
   }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   *aRowIndex = 0;
   *aColumnIndex = 0;
 
   if (!aCellElement) {
     // Use cell element which contains anchor of Selection when aCellElement is
     // nullptr.
-    RefPtr<Selection> selection = GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
     ErrorResult error;
-    CellIndexes cellIndexes(*this, *selection, error);
+    CellIndexes cellIndexes(*this, *SelectionRefPtr(), error);
     if (error.Failed()) {
       return error.StealNSResult();
     }
@@ -3296,17 +3364,19 @@ HTMLEditor::GetTableSize(Element* aTableOrElementInTable,
     return NS_ERROR_INVALID_ARG;
   }
 
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   *aRowCount = 0;
   *aColumnCount = 0;
 
   Element* tableOrElementInTable = aTableOrElementInTable;
   if (!tableOrElementInTable) {
-    RefPtr<Selection> selection = GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
     tableOrElementInTable =
-      GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::table);
+      GetElementOrParentByTagNameAtSelection(*SelectionRefPtr(),
+                                             *nsGkAtoms::table);
     if (NS_WARN_IF(!tableOrElementInTable)) {
       return NS_ERROR_FAILURE;
     }
@@ -3371,6 +3441,11 @@ HTMLEditor::GetCellDataAt(Element* aTableElement,
     return NS_ERROR_INVALID_ARG;
   }
 
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   *aStartRowIndex = 0;
   *aStartColumnIndex = 0;
   *aRowSpan = 0;
@@ -3385,13 +3460,10 @@ HTMLEditor::GetCellDataAt(Element* aTableElement,
   // them.
   RefPtr<Element> table = aTableElement;
   if (!table) {
-    RefPtr<Selection> selection = GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
     // Get the selected table or the table enclosing the selection anchor.
     table =
-      GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::table);
+      GetElementOrParentByTagNameAtSelection(*SelectionRefPtr(),
+                                             *nsGkAtoms::table);
     if (NS_WARN_IF(!table)) {
       return NS_ERROR_FAILURE;
     }
@@ -3470,17 +3542,19 @@ HTMLEditor::GetCellAt(Element* aTableElement,
     return NS_ERROR_INVALID_ARG;
   }
 
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   *aCellElement = nullptr;
 
   Element* tableElement = aTableElement;
   if (!tableElement) {
-    RefPtr<Selection> selection = GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
     // Get the selected table or the table enclosing the selection anchor.
     tableElement =
-      GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::table);
+      GetElementOrParentByTagNameAtSelection(*SelectionRefPtr(),
+                                             *nsGkAtoms::table);
     if (NS_WARN_IF(!tableElement)) {
       return NS_ERROR_FAILURE;
     }
@@ -3704,22 +3778,19 @@ HTMLEditor::GetFirstSelectedCell(nsRange** aFirstSelectedRange,
     return NS_ERROR_INVALID_ARG;
   }
 
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   *aFirstSelectedCellElement = nullptr;
   if (aFirstSelectedRange) {
     *aFirstSelectedRange = nullptr;
   }
 
-  // XXX Oddly, when there is no ranges of Selection, we return error.
-  //     However, despite of that we return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND
-  //     when first range of Selection does not select a table cell element.
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-
   ErrorResult error;
   RefPtr<Element> firstSelectedCellElement =
-    GetFirstSelectedTableCellElement(*selection, error);
+    GetFirstSelectedTableCellElement(*SelectionRefPtr(), error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -3732,7 +3803,7 @@ HTMLEditor::GetFirstSelectedCell(nsRange** aFirstSelectedRange,
 
   if (aFirstSelectedRange) {
     // Returns the first range only when the caller requested the range.
-    RefPtr<nsRange> firstRange = selection->GetRangeAt(0);
+    RefPtr<nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
     MOZ_ASSERT(firstRange);
     firstRange.forget(aFirstSelectedRange);
   }
@@ -3786,19 +3857,19 @@ HTMLEditor::GetNextSelectedCell(nsRange** aNextSelectedCellRange,
     return NS_ERROR_INVALID_ARG;
   }
 
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   *aNextSelectedCellElement = nullptr;
   if (aNextSelectedCellRange) {
     *aNextSelectedCellRange = nullptr;
   }
 
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-
   ErrorResult error;
   RefPtr<Element> nextSelectedCellElement =
-    GetNextSelectedTableCellElement(*selection, error);
+    GetNextSelectedTableCellElement(*SelectionRefPtr(), error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -3811,7 +3882,7 @@ HTMLEditor::GetNextSelectedCell(nsRange** aNextSelectedCellRange,
   if (aNextSelectedCellRange) {
     MOZ_ASSERT(mSelectedCellIndex > 0);
     *aNextSelectedCellRange =
-      do_AddRef(selection->GetRangeAt(mSelectedCellIndex - 1)).take();
+      do_AddRef(SelectionRefPtr()->GetRangeAt(mSelectedCellIndex - 1)).take();
   }
   nextSelectedCellElement.forget(aNextSelectedCellElement);
   return NS_OK;
@@ -3867,19 +3938,18 @@ HTMLEditor::GetFirstSelectedCellInTable(int32_t* aRowIndex,
       NS_WARN_IF(!aCellElement)) {
     return NS_ERROR_INVALID_ARG;
   }
-  
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   *aRowIndex = 0;
   *aColumnIndex = 0;
   *aCellElement = nullptr;
 
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-
   ErrorResult error;
-  CellAndIndexes result(*this, *selection, error);
+  CellAndIndexes result(*this, *SelectionRefPtr(), error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -4008,15 +4078,15 @@ HTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
   *aCellOrRowOrTableElement = nullptr;
   *aSelectedCount = 0;
 
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   bool isCellSelected = false;
   ErrorResult aRv;
   RefPtr<Element> cellOrRowOrTableElement =
-    GetSelectedOrParentTableElement(*selection, aRv, &isCellSelected);
+    GetSelectedOrParentTableElement(*SelectionRefPtr(), aRv, &isCellSelected);
   if (NS_WARN_IF(aRv.Failed())) {
     return aRv.StealNSResult();
   }
@@ -4026,7 +4096,7 @@ HTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
 
   if (isCellSelected) {
     aTagName.AssignLiteral("td");
-    *aSelectedCount = selection->RangeCount();
+    *aSelectedCount = SelectionRefPtr()->RangeCount();
     cellOrRowOrTableElement.forget(aCellOrRowOrTableElement);
     return NS_OK;
   }
@@ -4130,9 +4200,9 @@ HTMLEditor::GetSelectedCellsType(Element* aElement,
   NS_ENSURE_ARG_POINTER(aSelectionType);
   *aSelectionType = 0;
 
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   // Be sure we have a table element
@@ -4145,7 +4215,8 @@ HTMLEditor::GetSelectedCellsType(Element* aElement,
     }
   } else {
     table =
-      GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::table);
+      GetElementOrParentByTagNameAtSelection(*SelectionRefPtr(),
+                                             *nsGkAtoms::table);
     if (NS_WARN_IF(!table)) {
       return NS_ERROR_FAILURE;
     }
@@ -4159,7 +4230,7 @@ HTMLEditor::GetSelectedCellsType(Element* aElement,
 
   // Traverse all selected cells
   RefPtr<Element> selectedCell =
-    GetFirstSelectedTableCellElement(*selection, error);
+    GetFirstSelectedTableCellElement(*SelectionRefPtr(), error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -4191,7 +4262,8 @@ HTMLEditor::GetSelectedCellsType(Element* aElement,
         break;
       }
     }
-    selectedCell = GetNextSelectedTableCellElement(*selection, ignoredError);
+    selectedCell =
+      GetNextSelectedTableCellElement(*SelectionRefPtr(), ignoredError);
     NS_WARNING_ASSERTION(!ignoredError.Failed(),
       "Failed to get next selected table cell element");
   }
@@ -4206,7 +4278,8 @@ HTMLEditor::GetSelectedCellsType(Element* aElement,
   indexArray.Clear();
 
   // Start at first cell again
-  selectedCell = GetFirstSelectedTableCellElement(*selection, ignoredError);
+  selectedCell = GetFirstSelectedTableCellElement(*SelectionRefPtr(),
+                                                  ignoredError);
   while (selectedCell) {
     CellIndexes selectedCellIndexes(*selectedCell, error);
     if (NS_WARN_IF(error.Failed())) {
@@ -4223,7 +4296,8 @@ HTMLEditor::GetSelectedCellsType(Element* aElement,
         break;
       }
     }
-    selectedCell = GetNextSelectedTableCellElement(*selection, ignoredError);
+    selectedCell =
+      GetNextSelectedTableCellElement(*SelectionRefPtr(), ignoredError);
     NS_WARNING_ASSERTION(!ignoredError.Failed(),
       "Failed to get next selected table cell element");
   }

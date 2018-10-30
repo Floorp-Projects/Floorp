@@ -333,6 +333,12 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
   if (NS_WARN_IF(!aSelection)) {
     return NS_ERROR_INVALID_ARG;
   }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   nsresult rv = RefereshEditingUI(*aSelection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

@@ -210,6 +210,11 @@ HTMLEditor::DoInlineTableEditingAction(const Element& aElement)
     return NS_OK;
   }
 
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   RefPtr<Element> tableElement = GetEnclosingTable(mInlineEditedCell);
   int32_t rowCount, colCount;
   nsresult rv = GetTableSize(tableElement, &rowCount, &colCount);
@@ -219,31 +224,61 @@ HTMLEditor::DoInlineTableEditingAction(const Element& aElement)
   bool hideResizersWithInlineTableUI = (mResizedObject == tableElement);
 
   if (anonclass.EqualsLiteral("mozTableAddColumnBefore")) {
+    AutoEditActionDataSetter editActionData(*this,
+                                            EditAction::eInsertTableColumn);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
     DebugOnly<nsresult> rv =
       InsertTableColumnsWithTransaction(1, InsertPosition::eBeforeSelectedCell);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Failed to insert a column before the selected cell");
   } else if (anonclass.EqualsLiteral("mozTableAddColumnAfter")) {
+    AutoEditActionDataSetter editActionData(*this,
+                                            EditAction::eInsertTableColumn);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
     DebugOnly<nsresult> rv =
       InsertTableColumnsWithTransaction(1, InsertPosition::eAfterSelectedCell);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Failed to insert a column after the selected cell");
   } else if (anonclass.EqualsLiteral("mozTableAddRowBefore")) {
+    AutoEditActionDataSetter editActionData(*this,
+                                            EditAction::eInsertTableRowElement);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
     DebugOnly<nsresult> rv =
       InsertTableRowsWithTransaction(1, InsertPosition::eBeforeSelectedCell);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Failed to insert a row before the selected cell");
   } else if (anonclass.EqualsLiteral("mozTableAddRowAfter")) {
+    AutoEditActionDataSetter editActionData(*this,
+                                            EditAction::eInsertTableRowElement);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
     DebugOnly<nsresult> rv =
       InsertTableRowsWithTransaction(1, InsertPosition::eAfterSelectedCell);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Failed to insert a row after the selected cell");
   } else if (anonclass.EqualsLiteral("mozTableRemoveColumn")) {
+    AutoEditActionDataSetter editActionData(*this,
+                                            EditAction::eRemoveTableColumn);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
     DebugOnly<nsresult> rv = DeleteSelectedTableColumnsWithTransaction(1);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Failed to delete the selected table column");
     hideUI = (colCount == 1);
   } else if (anonclass.EqualsLiteral("mozTableRemoveRow")) {
+    AutoEditActionDataSetter editActionData(*this,
+                                            EditAction::eRemoveTableRowElement);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
     DebugOnly<nsresult> rv = DeleteSelectedTableRowsWithTransaction(1);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Failed to delete the selected table row");
@@ -291,6 +326,11 @@ HTMLEditor::RemoveMouseClickListener(Element* aElement)
 NS_IMETHODIMP
 HTMLEditor::RefreshInlineTableEditingUI()
 {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   nsresult rv = RefreshInlineTableEditingUIInternal();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

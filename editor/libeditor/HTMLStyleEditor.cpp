@@ -59,6 +59,13 @@ HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
                                       nsAtom* aAttribute,
                                       const nsAString& aValue)
 {
+  AutoEditActionDataSetter editActionData(
+    *this,
+    HTMLEditUtils::GetEditActionForFormatText(aProperty, aAttribute, true));
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   AutoTransactionBatch treatAsOneTransaction(*this);
 
   if (&aProperty == nsGkAtoms::sup) {
@@ -91,6 +98,12 @@ HTMLEditor::SetInlineProperty(const nsAString& aProperty,
     return NS_ERROR_INVALID_ARG;
   }
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
+  AutoEditActionDataSetter editActionData(
+    *this,
+    HTMLEditUtils::GetEditActionForFormatText(*property, attribute, true));
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   return SetInlinePropertyInternal(*property, attribute, aValue);
 }
 
@@ -1201,7 +1214,18 @@ HTMLEditor::GetInlineProperty(nsAtom* aProperty,
                               bool* aAny,
                               bool* aAll)
 {
-  NS_ENSURE_TRUE(aProperty && aFirst && aAny && aAll, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aProperty) ||
+      NS_WARN_IF(!aFirst) ||
+      NS_WARN_IF(!aAny) ||
+      NS_WARN_IF(!aAll)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   const nsAString *val = nullptr;
   if (!aValue.IsEmpty())
     val = &aValue;
@@ -1233,7 +1257,18 @@ HTMLEditor::GetInlinePropertyWithAttrValue(nsAtom* aProperty,
                                            bool* aAll,
                                            nsAString& outValue)
 {
-  NS_ENSURE_TRUE(aProperty && aFirst && aAny && aAll, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aProperty) ||
+      NS_WARN_IF(!aFirst) ||
+      NS_WARN_IF(!aAny) ||
+      NS_WARN_IF(!aAll)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   const nsAString *val = nullptr;
   if (!aValue.IsEmpty())
     val = &aValue;
@@ -1243,6 +1278,12 @@ HTMLEditor::GetInlinePropertyWithAttrValue(nsAtom* aProperty,
 NS_IMETHODIMP
 HTMLEditor::RemoveAllInlineProperties()
 {
+  AutoEditActionDataSetter editActionData(
+    *this, EditAction::eRemoveAllInlineStyleProperties);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
@@ -1254,12 +1295,38 @@ HTMLEditor::RemoveAllInlineProperties()
   return NS_OK;
 }
 
+nsresult
+HTMLEditor::RemoveInlinePropertyAsAction(nsAtom& aProperty,
+                                         nsAtom* aAttribute)
+{
+  AutoEditActionDataSetter editActionData(
+    *this,
+    HTMLEditUtils::GetEditActionForFormatText(aProperty, aAttribute, false));
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  nsresult rv = RemoveInlinePropertyInternal(&aProperty, aAttribute);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 HTMLEditor::RemoveInlineProperty(const nsAString& aProperty,
                                  const nsAString& aAttribute)
 {
   RefPtr<nsAtom> property = NS_Atomize(aProperty);
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
+
+  AutoEditActionDataSetter editActionData(
+    *this,
+    HTMLEditUtils::GetEditActionForFormatText(*property, attribute, false));
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   return RemoveInlinePropertyInternal(property, attribute);
 }
 
@@ -1423,12 +1490,24 @@ HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
 NS_IMETHODIMP
 HTMLEditor::IncreaseFontSize()
 {
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eIncrementFontSize);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   return RelativeFontChange(FontSize::incr);
 }
 
 NS_IMETHODIMP
 HTMLEditor::DecreaseFontSize()
 {
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eDecrementFontSize);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   return RelativeFontChange(FontSize::decr);
 }
 
@@ -1749,9 +1828,17 @@ NS_IMETHODIMP
 HTMLEditor::GetFontFaceState(bool* aMixed,
                              nsAString& outFace)
 {
-  NS_ENSURE_TRUE(aMixed, NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!aMixed)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   *aMixed = true;
   outFace.Truncate();
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   bool first, any, all;
 
@@ -1797,6 +1884,11 @@ HTMLEditor::GetFontColorState(bool* aMixed,
 
   *aMixed = true;
   aOutColor.Truncate();
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   bool first, any, all;
   nsresult rv =

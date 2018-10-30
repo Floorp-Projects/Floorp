@@ -244,6 +244,13 @@ public:
     if (mIsObjectResizingEnabled == aEnable) {
       return;
     }
+
+    AutoEditActionDataSetter editActionData(
+      *this, EditAction::eEnableOrDisableResizer);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return;
+    }
+
     mIsObjectResizingEnabled = aEnable;
     RefPtr<Selection> selection = GetSelection();
     if (NS_WARN_IF(!selection)) {
@@ -265,6 +272,13 @@ public:
     if (mIsInlineTableEditingEnabled == aEnable) {
       return;
     }
+
+    AutoEditActionDataSetter editActionData(
+      *this, EditAction::eEnableOrDisableInlineTableEditingUI);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return;
+    }
+
     mIsInlineTableEditingEnabled = aEnable;
     RefPtr<Selection> selection = GetSelection();
     if (NS_WARN_IF(!selection)) {
@@ -287,6 +301,13 @@ public:
     if (mIsAbsolutelyPositioningEnabled == aEnable) {
       return;
     }
+
+    AutoEditActionDataSetter editActionData(
+      *this, EditAction::eEnableOrDisableAbsolutePositionEditor);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return;
+    }
+
     mIsAbsolutelyPositioningEnabled = aEnable;
     RefPtr<Selection> selection = GetSelection();
     if (NS_WARN_IF(!selection)) {
@@ -356,15 +377,13 @@ public:
                                           bool* aAny,
                                           bool* aAll,
                                           nsAString& outValue);
-  nsresult RemoveInlineProperty(nsAtom* aProperty,
-                                nsAtom* aAttribute)
-  {
-    nsresult rv = RemoveInlinePropertyInternal(aProperty, aAttribute);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
-  }
+
+  /**
+   * RemoveInlinePropertyAsAction() removes a property which changes inline
+   * style of text.  E.g., bold, italic, super and sub.
+   */
+  nsresult RemoveInlinePropertyAsAction(nsAtom& aProperty,
+                                        nsAtom* aAttribute);
 
   /**
    * GetFontColorState() returns foreground color information in first
@@ -981,7 +1000,8 @@ protected: // May be called by friends.
   /**
    * OnModifyDocument() is called when the editor is changed.  This should
    * be called only by HTMLEditRules::DocumentModifiedWorker() to call
-   * HTMLEditRules::OnModifyDocument().
+   * HTMLEditRules::OnModifyDocument() with AutoEditActionDataSetter
+   * instance.
    */
   MOZ_CAN_RUN_SCRIPT void OnModifyDocument();
 
