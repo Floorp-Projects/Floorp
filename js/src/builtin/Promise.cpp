@@ -4510,7 +4510,6 @@ PromiseObject::setHadUserInteractionUponCreation(bool state)
 void
 PromiseObject::copyUserInteractionFlagsFrom(PromiseObject& rhs)
 {
-    MOZ_ASSERT(state() == JS::PromiseState::Pending);
     setRequiresUserInteractionHandling(rhs.requiresUserInteractionHandling());
     setHadUserInteractionUponCreation(rhs.hadUserInteractionUponCreation());
 }
