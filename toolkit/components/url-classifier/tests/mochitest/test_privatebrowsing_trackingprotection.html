@@ -109,7 +109,6 @@ function checkLoads(aWindow, aBlocked) {
 
 SpecialPowers.pushPrefEnv(
   {"set": [
-      ["browser.contentblocking.enabled", true],
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.pbmode.enabled", true],
   ]}, test);
