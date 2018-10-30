@@ -1347,11 +1347,11 @@ VariableDeclarator:
         ParseNode* result;
         if (binding->isKind(ParseNodeKind::Name)) {
             // `var foo [= bar]``
-            MOZ_TRY(checkBinding(binding->template as<NameNode>().atom()->asPropertyName()));
-
-            BINJS_TRY_VAR(result, factory_.newName(binding->template as<NameNode>().atom()->asPropertyName(), tokenizer_->pos(start), cx_));
+            NameNode* bindingNameNode = &binding->template as<NameNode>();
+            MOZ_TRY(checkBinding(bindingNameNode->atom()->asPropertyName()));
+            result = bindingNameNode;
             if (init) {
-                result->as<NameNode>().setInitializer(init);
+                BINJS_TRY(factory_.finishInitializerAssignment(bindingNameNode, init));
             }
         } else {
             // `var pattern = bar`
