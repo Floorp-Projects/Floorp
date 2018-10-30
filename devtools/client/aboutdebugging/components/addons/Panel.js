@@ -119,6 +119,9 @@ class AddonsPanel extends Component {
         });
 
         this.setState({ extensions });
+
+        const { AboutDebugging } = window;
+        AboutDebugging.emit("addons-updated");
       }, error => {
         throw new Error("Client error while listing addons: " + error);
       });
