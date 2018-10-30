@@ -1,45 +1,66 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.clientCommands = exports.setupCommands = undefined;
-
-var _breakpoint = require("../../utils/breakpoint/index");
-
-var _create = require("./create");
-
-var _devtoolsServices = require("Services");
-
-var _devtoolsServices2 = _interopRequireDefault(_devtoolsServices);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-let bpClients;
-let threadClient;
-let tabTarget;
-let debuggerClient;
-let supportsWasm;
 
-function setupCommands(dependencies) {
+// @flow
+
+import type {
+  BreakpointId,
+  BreakpointResult,
+  Frame,
+  FrameId,
+  Location,
+  Script,
+  Source,
+  SourceId,
+  Worker
+} from "../../types";
+
+import type {
+  TabTarget,
+  DebuggerClient,
+  Grip,
+  ThreadClient,
+  ObjectClient,
+  BPClients
+} from "./types";
+
+import type { PausePoints } from "../../workers/parser";
+
+import { makePendingLocationId } from "../../utils/breakpoint";
+
+import { createSource, createBreakpointLocation } from "./create";
+
+import Services from "devtools-services";
+
+let bpClients: BPClients;
+let threadClient: ThreadClient;
+let tabTarget: TabTarget;
+let debuggerClient: DebuggerClient;
+let supportsWasm: boolean;
+
+type Dependencies = {
+  threadClient: ThreadClient,
+  tabTarget: TabTarget,
+  debuggerClient: DebuggerClient,
+  supportsWasm: boolean
+};
+
+function setupCommands(dependencies: Dependencies): { bpClients: BPClients } {
   threadClient = dependencies.threadClient;
   tabTarget = dependencies.tabTarget;
   debuggerClient = dependencies.debuggerClient;
   supportsWasm = dependencies.supportsWasm;
   bpClients = {};
-  return {
-    bpClients
-  };
+
+  return { bpClients };
 }
 
-function createObjectClient(grip) {
+function createObjectClient(grip: Grip) {
   return debuggerClient.createObjectClient(grip);
 }
 
-function releaseActor(actor) {
+function releaseActor(actor: String) {
   if (!actor) {
     return;
   }
@@ -47,81 +68,73 @@ function releaseActor(actor) {
   return debuggerClient.release(actor);
 }
 
-function sendPacket(packet, callback = r => r) {
+function sendPacket(packet: Object, callback?: Function = r => r) {
   return debuggerClient.request(packet).then(callback);
 }
 
-function resume() {
+function resume(): Promise<*> {
   return new Promise(resolve => {
     threadClient.resume(resolve);
   });
 }
 
-function stepIn() {
+function stepIn(): Promise<*> {
   return new Promise(resolve => {
     threadClient.stepIn(resolve);
   });
 }
 
-function stepOver() {
+function stepOver(): Promise<*> {
   return new Promise(resolve => {
     threadClient.stepOver(resolve);
   });
 }
 
-function stepOut() {
+function stepOut(): Promise<*> {
   return new Promise(resolve => {
     threadClient.stepOut(resolve);
   });
 }
 
-function rewind() {
+function rewind(): Promise<*> {
   return new Promise(resolve => {
     threadClient.rewind(resolve);
   });
 }
 
-function reverseStepIn() {
+function reverseStepIn(): Promise<*> {
   return new Promise(resolve => {
     threadClient.reverseStepIn(resolve);
   });
 }
 
-function reverseStepOver() {
+function reverseStepOver(): Promise<*> {
   return new Promise(resolve => {
     threadClient.reverseStepOver(resolve);
   });
 }
 
-function reverseStepOut() {
+function reverseStepOut(): Promise<*> {
   return new Promise(resolve => {
     threadClient.reverseStepOut(resolve);
   });
 }
 
-function breakOnNext() {
+function breakOnNext(): Promise<*> {
   return threadClient.breakOnNext();
 }
 
-function sourceContents(sourceId) {
-  const sourceClient = threadClient.source({
-    actor: sourceId
-  });
+function sourceContents(sourceId: SourceId): Source {
+  const sourceClient = threadClient.source({ actor: sourceId });
   return sourceClient.source();
 }
 
-function getBreakpointByLocation(location) {
-  const id = (0, _breakpoint.makePendingLocationId)(location);
+function getBreakpointByLocation(location: Location) {
+  const id = makePendingLocationId(location);
   const bpClient = bpClients[id];
 
   if (bpClient) {
-    const {
-      actor,
-      url,
-      line,
-      column,
-      condition
-    } = bpClient.location;
+    const { actor, url, line, column, condition } = bpClient.location;
     return {
       id: bpClient.actor,
       condition,
@@ -133,53 +146,53 @@ function getBreakpointByLocation(location) {
       }
     };
   }
-
   return null;
 }
 
-function setXHRBreakpoint(path, method) {
+function setXHRBreakpoint(path: string, method: string) {
   return threadClient.setXHRBreakpoint(path, method);
 }
 
-function removeXHRBreakpoint(path, method) {
+function removeXHRBreakpoint(path: string, method: string) {
   return threadClient.removeXHRBreakpoint(path, method);
 }
 
-function setBreakpoint(location, condition, noSliding) {
-  const sourceClient = threadClient.source({
-    actor: location.sourceId
-  });
-  return sourceClient.setBreakpoint({
-    line: location.line,
-    column: location.column,
-    condition,
-    noSliding
-  }).then(([{
-    actualLocation
-  }, bpClient]) => {
-    actualLocation = (0, _create.createBreakpointLocation)(location, actualLocation);
-    const id = (0, _breakpoint.makePendingLocationId)(actualLocation);
-    bpClients[id] = bpClient;
-    bpClient.location.line = actualLocation.line;
-    bpClient.location.column = actualLocation.column;
-    bpClient.location.url = actualLocation.sourceUrl || "";
-    return {
-      id,
-      actualLocation
-    };
-  });
+function setBreakpoint(
+  location: Location,
+  condition: boolean,
+  noSliding: boolean
+): Promise<BreakpointResult> {
+  const sourceClient = threadClient.source({ actor: location.sourceId });
+
+  return sourceClient
+    .setBreakpoint({
+      line: location.line,
+      column: location.column,
+      condition,
+      noSliding
+    })
+    .then(([{ actualLocation }, bpClient]) => {
+      actualLocation = createBreakpointLocation(location, actualLocation);
+      const id = makePendingLocationId(actualLocation);
+      bpClients[id] = bpClient;
+      bpClient.location.line = actualLocation.line;
+      bpClient.location.column = actualLocation.column;
+      bpClient.location.url = actualLocation.sourceUrl || "";
+
+      return { id, actualLocation };
+    });
 }
 
-function removeBreakpoint(generatedLocation) {
+function removeBreakpoint(
+  generatedLocation: Location
+): Promise<void> | ?BreakpointResult {
   try {
-    const id = (0, _breakpoint.makePendingLocationId)(generatedLocation);
+    const id = makePendingLocationId(generatedLocation);
     const bpClient = bpClients[id];
-
     if (!bpClient) {
       console.warn("No breakpoint to delete on server");
       return Promise.resolve();
     }
-
     delete bpClients[id];
     return bpClient.remove();
   } catch (_error) {
@@ -187,56 +200,70 @@ function removeBreakpoint(generatedLocation) {
   }
 }
 
-function setBreakpointCondition(breakpointId, location, condition, noSliding) {
+function setBreakpointCondition(
+  breakpointId: BreakpointId,
+  location: Location,
+  condition: boolean,
+  noSliding: boolean
+) {
   const bpClient = bpClients[breakpointId];
   delete bpClients[breakpointId];
-  return bpClient.setCondition(threadClient, condition, noSliding).then(_bpClient => {
-    bpClients[breakpointId] = _bpClient;
-    return {
-      id: breakpointId
-    };
-  });
+
+  return bpClient
+    .setCondition(threadClient, condition, noSliding)
+    .then(_bpClient => {
+      bpClients[breakpointId] = _bpClient;
+      return { id: breakpointId };
+    });
 }
 
-async function evaluateInFrame(script, frameId) {
-  return evaluate(script, {
-    frameId
-  });
+async function evaluateInFrame(script: Script, frameId: string) {
+  return evaluate(script, { frameId });
 }
 
-async function evaluateExpressions(scripts, frameId) {
-  return Promise.all(scripts.map(script => evaluate(script, {
-    frameId
-  })));
+async function evaluateExpressions(scripts: Script[], frameId?: string) {
+  return Promise.all(scripts.map(script => evaluate(script, { frameId })));
 }
 
-function evaluate(script, {
-  frameId
-} = {}) {
-  const params = frameId ? {
-    frameActor: frameId
-  } : {};
+type EvaluateParam = { frameId?: FrameId };
 
+function evaluate(
+  script: ?Script,
+  { frameId }: EvaluateParam = {}
+): Promise<mixed> {
+  const params = frameId ? { frameActor: frameId } : {};
   if (!tabTarget || !tabTarget.activeConsole || !script) {
     return Promise.resolve({});
   }
 
   return new Promise(resolve => {
-    tabTarget.activeConsole.evaluateJSAsync(script, result => resolve(result), params);
+    tabTarget.activeConsole.evaluateJSAsync(
+      script,
+      result => resolve(result),
+      params
+    );
   });
 }
 
-function autocomplete(input, cursor, frameId) {
+function autocomplete(
+  input: string,
+  cursor: number,
+  frameId: string
+): Promise<mixed> {
   if (!tabTarget || !tabTarget.activeConsole || !input) {
     return Promise.resolve({});
   }
-
   return new Promise(resolve => {
-    tabTarget.activeConsole.autocomplete(input, cursor, result => resolve(result), frameId);
+    tabTarget.activeConsole.autocomplete(
+      input,
+      cursor,
+      result => resolve(result),
+      frameId
+    );
   });
 }
 
-function debuggeeCommand(script) {
+function debuggeeCommand(script: Script): ?Promise<void> {
   tabTarget.activeConsole.evaluateJS(script, () => {}, {});
 
   if (!debuggerClient) {
@@ -244,52 +271,35 @@ function debuggeeCommand(script) {
   }
 
   const consoleActor = tabTarget.form.consoleActor;
-
   const request = debuggerClient._activeRequests.get(consoleActor);
-
   request.emit("json-reply", {});
-
   debuggerClient._activeRequests.delete(consoleActor);
 
   return Promise.resolve();
 }
 
-function navigate(url) {
-  return tabTarget.activeTab.navigateTo({
-    url
-  });
+function navigate(url: string): Promise<*> {
+  return tabTarget.activeTab.navigateTo({ url });
 }
 
-function reload() {
+function reload(): Promise<*> {
   return tabTarget.activeTab.reload();
 }
 
-function getProperties(grip) {
+function getProperties(grip: Grip): Promise<*> {
   const objClient = threadClient.pauseGrip(grip);
+
   return objClient.getPrototypeAndProperties().then(resp => {
-    const {
-      ownProperties,
-      safeGetterValues
-    } = resp;
-
+    const { ownProperties, safeGetterValues } = resp;
     for (const name in safeGetterValues) {
-      const {
-        enumerable,
-        writable,
-        getterValue
-      } = safeGetterValues[name];
-      ownProperties[name] = {
-        enumerable,
-        writable,
-        value: getterValue
-      };
+      const { enumerable, writable, getterValue } = safeGetterValues[name];
+      ownProperties[name] = { enumerable, writable, value: getterValue };
     }
-
     return resp;
   });
 }
 
-async function getFrameScopes(frame) {
+async function getFrameScopes(frame: Frame): Promise<*> {
   if (frame.scope) {
     return frame.scope;
   }
@@ -297,51 +307,44 @@ async function getFrameScopes(frame) {
   return threadClient.getEnvironment(frame.id);
 }
 
-function pauseOnExceptions(shouldPauseOnExceptions, shouldPauseOnCaughtExceptions) {
-  return threadClient.pauseOnExceptions(shouldPauseOnExceptions, // Providing opposite value because server
-  // uses "shouldIgnoreCaughtExceptions"
-  !shouldPauseOnCaughtExceptions);
+function pauseOnExceptions(
+  shouldPauseOnExceptions: boolean,
+  shouldPauseOnCaughtExceptions: boolean
+): Promise<*> {
+  return threadClient.pauseOnExceptions(
+    shouldPauseOnExceptions,
+    // Providing opposite value because server
+    // uses "shouldIgnoreCaughtExceptions"
+    !shouldPauseOnCaughtExceptions
+  );
 }
 
-function prettyPrint(sourceId, indentSize) {
-  const sourceClient = threadClient.source({
-    actor: sourceId
-  });
+function prettyPrint(sourceId: SourceId, indentSize: number): Promise<*> {
+  const sourceClient = threadClient.source({ actor: sourceId });
   return sourceClient.prettyPrint(indentSize);
 }
 
-async function blackBox(sourceId, isBlackBoxed) {
-  const sourceClient = threadClient.source({
-    actor: sourceId
-  });
-
+async function blackBox(sourceId: SourceId, isBlackBoxed: boolean): Promise<*> {
+  const sourceClient = threadClient.source({ actor: sourceId });
   if (isBlackBoxed) {
     await sourceClient.unblackBox();
   } else {
     await sourceClient.blackBox();
   }
 
-  return {
-    isBlackBoxed: !isBlackBoxed
-  };
+  return { isBlackBoxed: !isBlackBoxed };
 }
 
-function disablePrettyPrint(sourceId) {
-  const sourceClient = threadClient.source({
-    actor: sourceId
-  });
+function disablePrettyPrint(sourceId: SourceId): Promise<*> {
+  const sourceClient = threadClient.source({ actor: sourceId });
   return sourceClient.disablePrettyPrint();
 }
 
-async function setPausePoints(sourceId, pausePoints) {
-  return sendPacket({
-    to: sourceId,
-    type: "setPausePoints",
-    pausePoints
-  });
+async function setPausePoints(sourceId: SourceId, pausePoints: PausePoints) {
+  return sendPacket({ to: sourceId, type: "setPausePoints", pausePoints });
 }
 
-async function setSkipPausing(shouldSkip) {
+async function setSkipPausing(shouldSkip: boolean) {
   return threadClient.request({
     skip: shouldSkip,
     to: threadClient.actor,
@@ -349,31 +352,29 @@ async function setSkipPausing(shouldSkip) {
   });
 }
 
-function interrupt() {
+function interrupt(): Promise<*> {
   return threadClient.interrupt();
 }
 
-function eventListeners() {
+function eventListeners(): Promise<*> {
   return threadClient.eventListeners();
 }
 
-function pauseGrip(func) {
+function pauseGrip(func: Function): ObjectClient {
   return threadClient.pauseGrip(func);
 }
 
 async function fetchSources() {
-  const {
-    sources
-  } = await threadClient.getSources(); // NOTE: this happens when we fetch sources and then immediately navigate
+  const { sources } = await threadClient.getSources();
 
+  // NOTE: this happens when we fetch sources and then immediately navigate
   if (!sources) {
     return;
   }
 
-  return sources.map(source => (0, _create.createSource)(source, {
-    supportsWasm
-  }));
+  return sources.map(source => createSource(source, { supportsWasm }));
 }
+
 /**
  * Temporary helper to check if the current server will support a call to
  * listWorkers. On Fennec 60 or older, the call will silently crash and prevent
@@ -382,44 +383,45 @@ async function fetchSources() {
  *
  * See https://bugzilla.mozilla.org/show_bug.cgi?id=1443550 for more details.
  */
-
-
 async function checkServerSupportsListWorkers() {
-  const root = await tabTarget.root; // root is not available on all debug targets.
-
+  const root = await tabTarget.root;
+  // root is not available on all debug targets.
   if (!root) {
     return false;
   }
 
   const deviceFront = await debuggerClient.mainRoot.getFront("device");
   const description = await deviceFront.getDescription();
-  const isFennec = description.apptype === "mobile/android";
 
+  const isFennec = description.apptype === "mobile/android";
   if (!isFennec) {
     // Explicitly return true early to avoid calling Services.vs.compare.
     // This would force us to extent the Services shim provided by
     // devtools-modules, used when this code runs in a tab.
     return true;
-  } // We are only interested in Fennec release versions here.
+  }
+
+  // We are only interested in Fennec release versions here.
   // We assume that the server fix for Bug 1443550 will land in FF61.
-
-
   const version = description.platformversion;
-  return _devtoolsServices2.default.vc.compare(version, "61.0") >= 0;
+  return Services.vc.compare(version, "61.0") >= 0;
 }
 
-async function fetchWorkers() {
+async function fetchWorkers(): Promise<{ workers: Worker[] }> {
   // Temporary workaround for Bug 1443550
   // XXX: Remove when FF60 for Android is no longer used or available.
-  const supportsListWorkers = await checkServerSupportsListWorkers(); // NOTE: The Worker and Browser Content toolboxes do not have a parent
+  const supportsListWorkers = await checkServerSupportsListWorkers();
+
+  // NOTE: The Worker and Browser Content toolboxes do not have a parent
   // with a listWorkers function
   // TODO: there is a listWorkers property, but it is not a function on the
   // parent. Investigate what it is
-
-  if (!threadClient._parent || typeof threadClient._parent.listWorkers != "function" || !supportsListWorkers) {
-    return Promise.resolve({
-      workers: []
-    });
+  if (
+    !threadClient._parent ||
+    typeof threadClient._parent.listWorkers != "function" ||
+    !supportsListWorkers
+  ) {
+    return Promise.resolve({ workers: [] });
   }
 
   return threadClient._parent.listWorkers();
@@ -466,5 +468,5 @@ const clientCommands = {
   setPausePoints,
   setSkipPausing
 };
-exports.setupCommands = setupCommands;
-exports.clientCommands = clientCommands;
+
+export { setupCommands, clientCommands };

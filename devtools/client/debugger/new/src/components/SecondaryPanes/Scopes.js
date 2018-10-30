@@ -1,48 +1,61 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _react = require("devtools/client/shared/vendor/react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactRedux = require("devtools/client/shared/vendor/react-redux");
-
-var _actions = require("../../actions/index");
-
-var _actions2 = _interopRequireDefault(_actions);
-
-var _firefox = require("../../client/firefox");
-
-var _selectors = require("../../selectors/index");
-
-var _scopes = require("../../utils/pause/scopes/index");
-
-var _devtoolsReps = require("devtools/client/shared/components/reps/reps.js");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const {
-  ObjectInspector
-} = _devtoolsReps.objectInspector;
 
-class Scopes extends _react.PureComponent {
-  constructor(props, ...args) {
+// @flow
+import React, { PureComponent } from "react";
+import { connect } from "react-redux";
+import actions from "../../actions";
+import { createObjectClient } from "../../client/firefox";
+
+import {
+  getSelectedSource,
+  getSelectedFrame,
+  getGeneratedFrameScope,
+  getOriginalFrameScope,
+  isPaused as getIsPaused,
+  getPauseReason
+} from "../../selectors";
+import { getScopes } from "../../utils/pause/scopes";
+
+import { objectInspector } from "devtools-reps";
+import type { Pause, Why } from "../../types";
+import type { NamedValue } from "../../utils/pause/scopes/types";
+
+import "./Scopes.css";
+
+const { ObjectInspector } = objectInspector;
+
+type Props = {
+  isPaused: Pause,
+  selectedFrame: Object,
+  generatedFrameScopes: Object,
+  originalFrameScopes: Object | null,
+  isLoading: boolean,
+  why: Why,
+  openLink: string => void
+};
+
+type State = {
+  originalScopes: ?(NamedValue[]),
+  generatedScopes: ?(NamedValue[]),
+  showOriginal: boolean
+};
+
+class Scopes extends PureComponent<Props, State> {
+  constructor(props: Props, ...args) {
     const {
       why,
       selectedFrame,
       originalFrameScopes,
       generatedFrameScopes
     } = props;
+
     super(props, ...args);
+
     this.state = {
-      originalScopes: (0, _scopes.getScopes)(why, selectedFrame, originalFrameScopes),
-      generatedScopes: (0, _scopes.getScopes)(why, selectedFrame, generatedFrameScopes),
+      originalScopes: getScopes(why, selectedFrame, originalFrameScopes),
+      generatedScopes: getScopes(why, selectedFrame, generatedFrameScopes),
       showOriginal: true
     };
   }
@@ -56,57 +69,71 @@ class Scopes extends _react.PureComponent {
     } = this.props;
     const isPausedChanged = isPaused !== nextProps.isPaused;
     const selectedFrameChanged = selectedFrame !== nextProps.selectedFrame;
-    const originalFrameScopesChanged = originalFrameScopes !== nextProps.originalFrameScopes;
-    const generatedFrameScopesChanged = generatedFrameScopes !== nextProps.generatedFrameScopes;
+    const originalFrameScopesChanged =
+      originalFrameScopes !== nextProps.originalFrameScopes;
+    const generatedFrameScopesChanged =
+      generatedFrameScopes !== nextProps.generatedFrameScopes;
 
-    if (isPausedChanged || selectedFrameChanged || originalFrameScopesChanged || generatedFrameScopesChanged) {
+    if (
+      isPausedChanged ||
+      selectedFrameChanged ||
+      originalFrameScopesChanged ||
+      generatedFrameScopesChanged
+    ) {
       this.setState({
-        originalScopes: (0, _scopes.getScopes)(nextProps.why, nextProps.selectedFrame, nextProps.originalFrameScopes),
-        generatedScopes: (0, _scopes.getScopes)(nextProps.why, nextProps.selectedFrame, nextProps.generatedFrameScopes)
+        originalScopes: getScopes(
+          nextProps.why,
+          nextProps.selectedFrame,
+          nextProps.originalFrameScopes
+        ),
+        generatedScopes: getScopes(
+          nextProps.why,
+          nextProps.selectedFrame,
+          nextProps.generatedFrameScopes
+        )
       });
     }
   }
 
   render() {
-    const {
-      isPaused,
-      isLoading,
-      openLink
-    } = this.props;
-    const {
-      originalScopes,
-      generatedScopes,
-      showOriginal
-    } = this.state;
-    const scopes = showOriginal && originalScopes || generatedScopes;
+    const { isPaused, isLoading, openLink } = this.props;
+    const { originalScopes, generatedScopes, showOriginal } = this.state;
+
+    const scopes = (showOriginal && originalScopes) || generatedScopes;
 
     if (scopes && !isLoading) {
-      return _react2.default.createElement("div", {
-        className: "pane scopes-list"
-      }, _react2.default.createElement(ObjectInspector, {
-        roots: scopes,
-        autoExpandAll: false,
-        autoExpandDepth: 1,
-        disableWrap: true,
-        focusable: false,
-        dimTopLevelWindow: true,
-        openLink: openLink,
-        createObjectClient: grip => (0, _firefox.createObjectClient)(grip)
-      }), originalScopes ? _react2.default.createElement("div", {
-        className: "scope-type-toggle"
-      }, _react2.default.createElement("a", {
-        href: "",
-        onClick: e => {
-          e.preventDefault();
-          this.setState({
-            showOriginal: !showOriginal
-          });
-        }
-      }, showOriginal ? L10N.getStr("scopes.toggleToGenerated") : L10N.getStr("scopes.toggleToOriginal"))) : null);
+      return (
+        <div className="pane scopes-list">
+          <ObjectInspector
+            roots={scopes}
+            autoExpandAll={false}
+            autoExpandDepth={1}
+            disableWrap={true}
+            focusable={false}
+            dimTopLevelWindow={true}
+            openLink={openLink}
+            createObjectClient={grip => createObjectClient(grip)}
+          />
+          {originalScopes ? (
+            <div className="scope-type-toggle">
+              <a
+                href=""
+                onClick={e => {
+                  e.preventDefault();
+                  this.setState({ showOriginal: !showOriginal });
+                }}
+              >
+                {showOriginal
+                  ? L10N.getStr("scopes.toggleToGenerated")
+                  : L10N.getStr("scopes.toggleToOriginal")}
+              </a>
+            </div>
+          ) : null}
+        </div>
+      );
     }
 
     let stateText = L10N.getStr("scopes.notPaused");
-
     if (isPaused) {
       if (isLoading) {
         stateText = L10N.getStr("loadingText");
@@ -115,42 +142,48 @@ class Scopes extends _react.PureComponent {
       }
     }
 
-    return _react2.default.createElement("div", {
-      className: "pane scopes-list"
-    }, _react2.default.createElement("div", {
-      className: "pane-info"
-    }, stateText));
+    return (
+      <div className="pane scopes-list">
+        <div className="pane-info">{stateText}</div>
+      </div>
+    );
   }
-
 }
 
 const mapStateToProps = state => {
-  const selectedFrame = (0, _selectors.getSelectedFrame)(state);
-  const selectedSource = (0, _selectors.getSelectedSource)(state);
+  const selectedFrame = getSelectedFrame(state);
+  const selectedSource = getSelectedSource(state);
+
   const {
     scope: originalFrameScopes,
     pending: originalPending
-  } = (0, _selectors.getOriginalFrameScope)(state, selectedSource && selectedSource.id, selectedFrame && selectedFrame.id) || {
-    scope: null,
-    pending: false
-  };
+  } = getOriginalFrameScope(
+    state,
+    selectedSource && selectedSource.id,
+    selectedFrame && selectedFrame.id
+  ) || { scope: null, pending: false };
+
   const {
     scope: generatedFrameScopes,
     pending: generatedPending
-  } = (0, _selectors.getGeneratedFrameScope)(state, selectedFrame && selectedFrame.id) || {
+  } = getGeneratedFrameScope(state, selectedFrame && selectedFrame.id) || {
     scope: null,
     pending: false
   };
+
   return {
     selectedFrame,
-    isPaused: (0, _selectors.isPaused)(state),
+    isPaused: getIsPaused(state),
     isLoading: generatedPending || originalPending,
-    why: (0, _selectors.getPauseReason)(state),
+    why: getPauseReason(state),
     originalFrameScopes,
     generatedFrameScopes
   };
 };
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, {
-  openLink: _actions2.default.openLink
-})(Scopes);
+export default connect(
+  mapStateToProps,
+  {
+    openLink: actions.openLink
+  }
+)(Scopes);

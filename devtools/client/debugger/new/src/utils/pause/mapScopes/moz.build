@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DevToolsModules(
+DebuggerModules(
     'buildGeneratedBindingList.js',
     'filtering.js',
     'findGeneratedBindingFromPosition.js',

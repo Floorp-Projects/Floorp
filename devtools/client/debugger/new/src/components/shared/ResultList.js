@@ -1,61 +1,43 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _react = require("devtools/client/shared/vendor/react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _classnames = require("devtools/client/debugger/new/dist/vendors").vendored["classnames"];
-
-var _classnames2 = _interopRequireDefault(_classnames);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-class ResultList extends _react.Component {
-  constructor(props) {
-    super(props);
 
-    _initialiseProps.call(this);
-  }
+// @flow
+import React, { Component } from "react";
+import classnames from "classnames";
 
-  render() {
-    const {
-      size,
-      items,
-      role
-    } = this.props;
-    return _react2.default.createElement("ul", {
-      className: (0, _classnames2.default)("result-list", size),
-      id: "result-list",
-      role: role,
-      "aria-live": "polite"
-    }, items.map(this.renderListItem));
-  }
+import "./ResultList.css";
 
-}
-
-exports.default = ResultList;
-ResultList.defaultProps = {
-  size: "small",
-  role: "listbox"
+type Props = {
+  items: Array<any>,
+  selected: number,
+  selectItem: (
+    event: SyntheticKeyboardEvent<HTMLElement>,
+    item: any,
+    index: number
+  ) => void,
+  size: string,
+  role: string
 };
 
-var _initialiseProps = function () {
-  this.renderListItem = (item, index) => {
+export default class ResultList extends Component<Props> {
+  displayName: "ResultList";
+
+  static defaultProps = {
+    size: "small",
+    role: "listbox"
+  };
+
+  constructor(props: Props) {
+    super(props);
+  }
+
+  renderListItem = (item: any, index: number) => {
     if (item.value === "/" && item.title === "") {
       item.title = "(index)";
     }
 
-    const {
-      selectItem,
-      selected
-    } = this.props;
+    const { selectItem, selected } = this.props;
     const props = {
       onClick: event => selectItem(event, item, index),
       key: `${item.id}${item.value}${index}`,
@@ -64,18 +46,42 @@ var _initialiseProps = function () {
       "aria-labelledby": `${item.id}-title`,
       "aria-describedby": `${item.id}-subtitle`,
       role: "option",
-      className: (0, _classnames2.default)("result-item", {
+      className: classnames("result-item", {
         selected: index === selected
       })
     };
-    return _react2.default.createElement("li", props, item.icon && _react2.default.createElement("div", null, _react2.default.createElement("img", {
-      className: item.icon
-    })), _react2.default.createElement("div", {
-      id: `${item.id}-title`,
-      className: "title"
-    }, item.title), item.subtitle != item.title ? _react2.default.createElement("div", {
-      id: `${item.id}-subtitle`,
-      className: "subtitle"
-    }, item.subtitle) : null);
+
+    return (
+      <li {...props}>
+        {item.icon && (
+          <div>
+            <img className={item.icon} />
+          </div>
+        )}
+        <div id={`${item.id}-title`} className="title">
+          {item.title}
+        </div>
+        {item.subtitle != item.title ? (
+          <div id={`${item.id}-subtitle`} className="subtitle">
+            {item.subtitle}
+          </div>
+        ) : null}
+      </li>
+    );
   };
-};
+
+  render() {
+    const { size, items, role } = this.props;
+
+    return (
+      <ul
+        className={classnames("result-list", size)}
+        id="result-list"
+        role={role}
+        aria-live="polite"
+      >
+        {items.map(this.renderListItem)}
+      </ul>
+    );
+  }
+}

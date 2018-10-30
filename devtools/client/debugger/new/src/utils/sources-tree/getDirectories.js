@@ -1,15 +1,14 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getDirectories = getDirectories;
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
+
 // import { createParentMap } from "./utils";
-function _traverse(subtree, source) {
+import type { TreeNode, TreeDirectory, ParentMap } from "./types";
+import type { Source } from "../../types";
+
+function _traverse(subtree: TreeNode, source: Source) {
   if (subtree.type === "source") {
     if (subtree.contents.id === source.id) {
       return subtree;
@@ -22,30 +21,36 @@ function _traverse(subtree, source) {
   return matches && matches.filter(Boolean)[0];
 }
 
-function findSourceItem(sourceTree, source) {
+function findSourceItem(sourceTree: TreeDirectory, source: Source): ?TreeNode {
   return _traverse(sourceTree, source);
 }
 
-function getAncestors(sourceTree, parentMap, item) {
+function getAncestors(
+  sourceTree: TreeDirectory,
+  parentMap: ParentMap,
+  item: ?TreeNode
+) {
   if (!item) {
     return null;
   }
 
   const directories = [];
-  directories.push(item);
 
+  directories.push(item);
   while (true) {
     item = parentMap.get(item);
-
     if (!item) {
       return directories;
     }
-
     directories.push(item);
   }
 }
 
-function getDirectories(source, parentMap, sourceTree) {
+export function getDirectories(
+  source: Source,
+  parentMap: ParentMap,
+  sourceTree: TreeDirectory
+) {
   const item = findSourceItem(sourceTree, source);
   const ancestors = getAncestors(sourceTree, parentMap, item);
   return ancestors || [sourceTree];

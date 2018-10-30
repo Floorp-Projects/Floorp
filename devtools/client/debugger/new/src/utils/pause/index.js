@@ -1,29 +1,8 @@
-"use strict";
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
+// @flow
 
-var _why = require("./why");
-
-Object.keys(_why).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _why[key];
-    }
-  });
-});
-
-var _stepping = require("./stepping");
-
-Object.keys(_stepping).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _stepping[key];
-    }
-  });
-});
+export * from "./why";
+export * from "./stepping";

@@ -1,120 +1,113 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _propTypes = require("devtools/client/shared/vendor/react-prop-types");
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-var _react = require("devtools/client/shared/vendor/react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactRedux = require("devtools/client/shared/vendor/react-redux");
-
-var _immutable = require("devtools/client/shared/vendor/immutable");
-
-var _actions = require("../../actions/index");
-
-var _actions2 = _interopRequireDefault(_actions);
-
-var _selectors = require("../../selectors/index");
-
-var _Svg = require("devtools/client/debugger/new/dist/vendors").vendored["Svg"];
-
-var _Svg2 = _interopRequireDefault(_Svg);
-
-var _prefs = require("../../utils/prefs");
-
-var _Breakpoints = require("./Breakpoints/index");
-
-var _Breakpoints2 = _interopRequireDefault(_Breakpoints);
-
-var _Expressions = require("./Expressions");
-
-var _Expressions2 = _interopRequireDefault(_Expressions);
-
-var _devtoolsSplitter = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-splitter"];
-
-var _devtoolsSplitter2 = _interopRequireDefault(_devtoolsSplitter);
-
-var _Frames = require("./Frames/index");
-
-var _Frames2 = _interopRequireDefault(_Frames);
-
-var _EventListeners = require("./EventListeners");
-
-var _EventListeners2 = _interopRequireDefault(_EventListeners);
-
-var _Workers = require("./Workers");
-
-var _Workers2 = _interopRequireDefault(_Workers);
-
-var _Accordion = require("../shared/Accordion");
-
-var _Accordion2 = _interopRequireDefault(_Accordion);
-
-var _CommandBar = require("./CommandBar");
-
-var _CommandBar2 = _interopRequireDefault(_CommandBar);
-
-var _UtilsBar = require("./UtilsBar");
-
-var _UtilsBar2 = _interopRequireDefault(_UtilsBar);
-
-var _FrameworkComponent = require("./FrameworkComponent");
-
-var _FrameworkComponent2 = _interopRequireDefault(_FrameworkComponent);
-
-var _XHRBreakpoints = require("./XHRBreakpoints");
-
-var _XHRBreakpoints2 = _interopRequireDefault(_XHRBreakpoints);
-
-var _Scopes = require("./Scopes");
-
-var _Scopes2 = _interopRequireDefault(_Scopes);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
+
+import PropTypes from "prop-types";
+import React, { Component } from "react";
+import { connect } from "react-redux";
+import { List } from "immutable";
+
+import actions from "../../actions";
+import {
+  getTopFrame,
+  getBreakpoints,
+  getBreakpointsDisabled,
+  getBreakpointsLoading,
+  getExpressions,
+  getIsWaitingOnBreak,
+  getShouldPauseOnExceptions,
+  getShouldPauseOnCaughtExceptions,
+  getWorkers,
+  getExtra
+} from "../../selectors";
+
+import Svg from "../shared/Svg";
+import { prefs, features } from "../../utils/prefs";
+
+import Breakpoints from "./Breakpoints";
+import Expressions from "./Expressions";
+import SplitBox from "devtools-splitter";
+import Frames from "./Frames";
+import EventListeners from "./EventListeners";
+import Workers from "./Workers";
+import Accordion from "../shared/Accordion";
+import CommandBar from "./CommandBar";
+import UtilsBar from "./UtilsBar";
+import FrameworkComponent from "./FrameworkComponent";
+import XHRBreakpoints from "./XHRBreakpoints";
+
+import Scopes from "./Scopes";
+
+import "./SecondaryPanes.css";
+
+import type { Expression } from "../../types";
+import type { WorkersList } from "../../reducers/types";
+
+type AccordionPaneItem = {
+  header: string,
+  component: any,
+  opened?: boolean,
+  onToggle?: () => void,
+  shouldOpen?: () => boolean,
+  buttons?: any
+};
+
 function debugBtn(onClick, type, className, tooltip) {
-  return _react2.default.createElement("button", {
-    onClick: onClick,
-    className: `${type} ${className}`,
-    key: type,
-    title: tooltip
-  }, _react2.default.createElement(_Svg2.default, {
-    name: type,
-    title: tooltip,
-    "aria-label": tooltip
-  }));
+  return (
+    <button
+      onClick={onClick}
+      className={`${type} ${className}`}
+      key={type}
+      title={tooltip}
+    >
+      <Svg name={type} title={tooltip} aria-label={tooltip} />
+    </button>
+  );
 }
 
-class SecondaryPanes extends _react.Component {
-  constructor(props) {
+type State = {
+  showExpressionsInput: boolean,
+  showXHRInput: boolean
+};
+
+type Props = {
+  expressions: List<Expression>,
+  extra: Object,
+  hasFrames: boolean,
+  horizontal: boolean,
+  breakpoints: Object,
+  breakpointsDisabled: boolean,
+  breakpointsLoading: boolean,
+  isWaitingOnBreak: boolean,
+  shouldPauseOnExceptions: boolean,
+  shouldPauseOnCaughtExceptions: boolean,
+  workers: WorkersList,
+  toggleAllBreakpoints: Function,
+  toggleShortcutsModal: Function,
+  evaluateExpressions: Function,
+  pauseOnExceptions: (boolean, boolean) => void,
+  breakOnNext: () => void
+};
+
+class SecondaryPanes extends Component<Props, State> {
+  constructor(props: Props) {
     super(props);
-
-    this.onExpressionAdded = () => {
-      this.setState({
-        showExpressionsInput: false
-      });
-    };
-
-    this.onXHRAdded = () => {
-      this.setState({
-        showXHRInput: false
-      });
-    };
 
     this.state = {
       showExpressionsInput: false,
       showXHRInput: false
     };
   }
+
+  onExpressionAdded = () => {
+    this.setState({ showExpressionsInput: false });
+  };
+
+  onXHRAdded = () => {
+    this.setState({ showXHRInput: false });
+  };
 
   renderBreakpointsToggle() {
     const {
@@ -123,15 +116,18 @@ class SecondaryPanes extends _react.Component {
       breakpointsDisabled,
       breakpointsLoading
     } = this.props;
-    const isIndeterminate = !breakpointsDisabled && breakpoints.some(x => x.disabled);
+    const isIndeterminate =
+      !breakpointsDisabled && breakpoints.some(x => x.disabled);
 
-    if (_prefs.features.skipPausing || breakpoints.size == 0) {
+    if (features.skipPausing || breakpoints.size == 0) {
       return null;
     }
 
     const inputProps = {
       type: "checkbox",
-      "aria-label": breakpointsDisabled ? L10N.getStr("breakpoints.enable") : L10N.getStr("breakpoints.disable"),
+      "aria-label": breakpointsDisabled
+        ? L10N.getStr("breakpoints.enable")
+        : L10N.getStr("breakpoints.disable"),
       className: "breakpoints-toggle",
       disabled: breakpointsLoading,
       key: "breakpoints-toggle",
@@ -146,164 +142,187 @@ class SecondaryPanes extends _react.Component {
           input.indeterminate = isIndeterminate;
         }
       },
-      title: breakpointsDisabled ? L10N.getStr("breakpoints.enable") : L10N.getStr("breakpoints.disable")
+      title: breakpointsDisabled
+        ? L10N.getStr("breakpoints.enable")
+        : L10N.getStr("breakpoints.disable")
     };
-    return _react2.default.createElement("input", inputProps);
+
+    return <input {...inputProps} />;
   }
 
   watchExpressionHeaderButtons() {
-    const {
-      expressions
-    } = this.props;
+    const { expressions } = this.props;
+
     const buttons = [];
 
     if (expressions.size) {
-      buttons.push(debugBtn(evt => {
-        evt.stopPropagation();
-        this.props.evaluateExpressions();
-      }, "refresh", "refresh", L10N.getStr("watchExpressions.refreshButton")));
+      buttons.push(
+        debugBtn(
+          evt => {
+            evt.stopPropagation();
+            this.props.evaluateExpressions();
+          },
+          "refresh",
+          "refresh",
+          L10N.getStr("watchExpressions.refreshButton")
+        )
+      );
     }
 
-    buttons.push(debugBtn(evt => {
-      if (_prefs.prefs.expressionsVisible) {
-        evt.stopPropagation();
-      }
+    buttons.push(
+      debugBtn(
+        evt => {
+          if (prefs.expressionsVisible) {
+            evt.stopPropagation();
+          }
+          this.setState({ showExpressionsInput: true });
+        },
+        "plus",
+        "plus",
+        L10N.getStr("expressions.placeholder")
+      )
+    );
 
-      this.setState({
-        showExpressionsInput: true
-      });
-    }, "plus", "plus", L10N.getStr("expressions.placeholder")));
     return buttons;
   }
 
   xhrBreakpointsHeaderButtons() {
     const buttons = [];
-    buttons.push(debugBtn(evt => {
-      if (_prefs.prefs.expressionsVisible) {
-        evt.stopPropagation();
-      }
 
-      this.setState({
-        showXHRInput: true
-      });
-    }, "plus", "plus", L10N.getStr("xhrBreakpoints.placeholder")));
+    buttons.push(
+      debugBtn(
+        evt => {
+          if (prefs.expressionsVisible) {
+            evt.stopPropagation();
+          }
+          this.setState({ showXHRInput: true });
+        },
+        "plus",
+        "plus",
+        L10N.getStr("xhrBreakpoints.placeholder")
+      )
+    );
+
     return buttons;
   }
 
-  getScopeItem() {
+  getScopeItem(): AccordionPaneItem {
     return {
       header: L10N.getStr("scopes.header"),
       className: "scopes-pane",
-      component: _react2.default.createElement(_Scopes2.default, null),
-      opened: _prefs.prefs.scopesVisible,
+      component: <Scopes />,
+      opened: prefs.scopesVisible,
       onToggle: opened => {
-        _prefs.prefs.scopesVisible = opened;
+        prefs.scopesVisible = opened;
       }
     };
   }
 
   getComponentItem() {
     const {
-      extra: {
-        react
-      }
+      extra: { react }
     } = this.props;
+
     return {
       header: react.displayName,
       className: "component-pane",
-      component: _react2.default.createElement(_FrameworkComponent2.default, null),
-      opened: _prefs.prefs.componentVisible,
+      component: <FrameworkComponent />,
+      opened: prefs.componentVisible,
       onToggle: opened => {
-        _prefs.prefs.componentVisible = opened;
+        prefs.componentVisible = opened;
       }
     };
   }
 
-  getWatchItem() {
+  getWatchItem(): AccordionPaneItem {
     return {
       header: L10N.getStr("watchExpressions.header"),
       className: "watch-expressions-pane",
       buttons: this.watchExpressionHeaderButtons(),
-      component: _react2.default.createElement(_Expressions2.default, {
-        showInput: this.state.showExpressionsInput,
-        onExpressionAdded: this.onExpressionAdded
-      }),
-      opened: _prefs.prefs.expressionsVisible,
+      component: (
+        <Expressions
+          showInput={this.state.showExpressionsInput}
+          onExpressionAdded={this.onExpressionAdded}
+        />
+      ),
+      opened: prefs.expressionsVisible,
       onToggle: opened => {
-        _prefs.prefs.expressionsVisible = opened;
+        prefs.expressionsVisible = opened;
       }
     };
   }
 
-  getXHRItem() {
+  getXHRItem(): AccordionPaneItem {
     return {
       header: L10N.getStr("xhrBreakpoints.header"),
       className: "xhr-breakpoints-pane",
       buttons: this.xhrBreakpointsHeaderButtons(),
-      component: _react2.default.createElement(_XHRBreakpoints2.default, {
-        showInput: this.state.showXHRInput,
-        onXHRAdded: this.onXHRAdded
-      }),
+      component: (
+        <XHRBreakpoints
+          showInput={this.state.showXHRInput}
+          onXHRAdded={this.onXHRAdded}
+        />
+      ),
       opened: true,
       onToggle: () => {}
     };
   }
 
-  getCallStackItem() {
+  getCallStackItem(): AccordionPaneItem {
     return {
       header: L10N.getStr("callStack.header"),
       className: "call-stack-pane",
-      component: _react2.default.createElement(_Frames2.default, null),
-      opened: _prefs.prefs.callStackVisible,
+      component: <Frames />,
+      opened: prefs.callStackVisible,
       onToggle: opened => {
-        _prefs.prefs.callStackVisible = opened;
+        prefs.callStackVisible = opened;
       }
     };
   }
 
-  getWorkersItem() {
+  getWorkersItem(): AccordionPaneItem {
     return {
       header: L10N.getStr("workersHeader"),
       className: "workers-pane",
-      component: _react2.default.createElement(_Workers2.default, null),
-      opened: _prefs.prefs.workersVisible,
+      component: <Workers />,
+      opened: prefs.workersVisible,
       onToggle: opened => {
-        _prefs.prefs.workersVisible = opened;
+        prefs.workersVisible = opened;
       }
     };
   }
 
-  getBreakpointsItem() {
+  getBreakpointsItem(): AccordionPaneItem {
     const {
       shouldPauseOnExceptions,
       shouldPauseOnCaughtExceptions,
       pauseOnExceptions
     } = this.props;
+
     return {
       header: L10N.getStr("breakpoints.header"),
       className: "breakpoints-pane",
       buttons: [this.renderBreakpointsToggle()],
-      component: _react2.default.createElement(_Breakpoints2.default, {
-        shouldPauseOnExceptions: shouldPauseOnExceptions,
-        shouldPauseOnCaughtExceptions: shouldPauseOnCaughtExceptions,
-        pauseOnExceptions: pauseOnExceptions
-      }),
-      opened: _prefs.prefs.breakpointsVisible,
+      component: (
+        <Breakpoints
+          shouldPauseOnExceptions={shouldPauseOnExceptions}
+          shouldPauseOnCaughtExceptions={shouldPauseOnCaughtExceptions}
+          pauseOnExceptions={pauseOnExceptions}
+        />
+      ),
+      opened: prefs.breakpointsVisible,
       onToggle: opened => {
-        _prefs.prefs.breakpointsVisible = opened;
+        prefs.breakpointsVisible = opened;
       }
     };
   }
 
   getStartItems() {
-    const {
-      extra,
-      workers
-    } = this.props;
-    const items = [];
+    const { extra, workers } = this.props;
 
+    const items: Array<AccordionPaneItem> = [];
     if (this.props.horizontal) {
-      if (_prefs.features.workers && workers.size > 0) {
+      if (features.workers && workers.size > 0) {
         items.push(this.getWorkersItem());
       }
 
@@ -316,7 +335,7 @@ class SecondaryPanes extends _react.Component {
       items.push(this.getCallStackItem());
 
       if (this.props.horizontal) {
-        if (_prefs.features.componentPane && extra && extra.react) {
+        if (features.componentPane && extra && extra.react) {
           items.push(this.getComponentItem());
         }
 
@@ -324,15 +343,15 @@ class SecondaryPanes extends _react.Component {
       }
     }
 
-    if (_prefs.features.xhrBreakpoints) {
+    if (features.xhrBreakpoints) {
       items.push(this.getXHRItem());
     }
 
-    if (_prefs.features.eventListeners) {
+    if (features.eventListeners) {
       items.push({
         header: L10N.getStr("eventListenersHeader"),
         className: "event-listeners-pane",
-        component: _react2.default.createElement(_EventListeners2.default, null)
+        component: <EventListeners />
       });
     }
 
@@ -340,29 +359,25 @@ class SecondaryPanes extends _react.Component {
   }
 
   renderHorizontalLayout() {
-    return _react2.default.createElement(_Accordion2.default, {
-      items: this.getItems()
-    });
+    return <Accordion items={this.getItems()} />;
   }
 
   getEndItems() {
-    const {
-      extra,
-      workers
-    } = this.props;
-    let items = [];
+    const { extra, workers } = this.props;
+
+    let items: Array<AccordionPaneItem> = [];
 
     if (this.props.horizontal) {
       return [];
     }
 
-    if (_prefs.features.workers && workers.size > 0) {
+    if (features.workers && workers.size > 0) {
       items.push(this.getWorkersItem());
     }
 
     items.push(this.getWatchItem());
 
-    if (_prefs.features.componentPane && extra && extra.react) {
+    if (features.componentPane && extra && extra.react) {
       items.push(this.getComponentItem());
     }
 
@@ -378,64 +393,70 @@ class SecondaryPanes extends _react.Component {
   }
 
   renderVerticalLayout() {
-    return _react2.default.createElement(_devtoolsSplitter2.default, {
-      initialSize: "300px",
-      minSize: 10,
-      maxSize: "50%",
-      splitterSize: 1,
-      startPanel: _react2.default.createElement(_Accordion2.default, {
-        items: this.getStartItems()
-      }),
-      endPanel: _react2.default.createElement(_Accordion2.default, {
-        items: this.getEndItems()
-      })
-    });
+    return (
+      <SplitBox
+        initialSize="300px"
+        minSize={10}
+        maxSize="50%"
+        splitterSize={1}
+        startPanel={<Accordion items={this.getStartItems()} />}
+        endPanel={<Accordion items={this.getEndItems()} />}
+      />
+    );
   }
 
   renderUtilsBar() {
-    if (!_prefs.features.shortcuts) {
+    if (!features.shortcuts) {
       return;
     }
 
-    return _react2.default.createElement(_UtilsBar2.default, {
-      horizontal: this.props.horizontal,
-      toggleShortcutsModal: this.props.toggleShortcutsModal
-    });
+    return (
+      <UtilsBar
+        horizontal={this.props.horizontal}
+        toggleShortcutsModal={this.props.toggleShortcutsModal}
+      />
+    );
   }
 
   render() {
-    return _react2.default.createElement("div", {
-      className: "secondary-panes-wrapper"
-    }, _react2.default.createElement(_CommandBar2.default, {
-      horizontal: this.props.horizontal
-    }), _react2.default.createElement("div", {
-      className: "secondary-panes"
-    }, this.props.horizontal ? this.renderHorizontalLayout() : this.renderVerticalLayout()), this.renderUtilsBar());
+    return (
+      <div className="secondary-panes-wrapper">
+        <CommandBar horizontal={this.props.horizontal} />
+        <div className="secondary-panes">
+          {this.props.horizontal
+            ? this.renderHorizontalLayout()
+            : this.renderVerticalLayout()}
+        </div>
+        {this.renderUtilsBar()}
+      </div>
+    );
   }
-
 }
 
 SecondaryPanes.contextTypes = {
-  shortcuts: _propTypes2.default.object
+  shortcuts: PropTypes.object
 };
 
 const mapStateToProps = state => ({
-  expressions: (0, _selectors.getExpressions)(state),
-  extra: (0, _selectors.getExtra)(state),
-  hasFrames: !!(0, _selectors.getTopFrame)(state),
-  breakpoints: (0, _selectors.getBreakpoints)(state),
-  breakpointsDisabled: (0, _selectors.getBreakpointsDisabled)(state),
-  breakpointsLoading: (0, _selectors.getBreakpointsLoading)(state),
-  isWaitingOnBreak: (0, _selectors.getIsWaitingOnBreak)(state),
-  shouldPauseOnExceptions: (0, _selectors.getShouldPauseOnExceptions)(state),
-  shouldPauseOnCaughtExceptions: (0, _selectors.getShouldPauseOnCaughtExceptions)(state),
-  workers: (0, _selectors.getWorkers)(state)
+  expressions: getExpressions(state),
+  extra: getExtra(state),
+  hasFrames: !!getTopFrame(state),
+  breakpoints: getBreakpoints(state),
+  breakpointsDisabled: getBreakpointsDisabled(state),
+  breakpointsLoading: getBreakpointsLoading(state),
+  isWaitingOnBreak: getIsWaitingOnBreak(state),
+  shouldPauseOnExceptions: getShouldPauseOnExceptions(state),
+  shouldPauseOnCaughtExceptions: getShouldPauseOnCaughtExceptions(state),
+  workers: getWorkers(state)
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, {
-  toggleAllBreakpoints: _actions2.default.toggleAllBreakpoints,
-  toggleShortcutsModal: _actions2.default.toggleShortcutsModal,
-  evaluateExpressions: _actions2.default.evaluateExpressions,
-  pauseOnExceptions: _actions2.default.pauseOnExceptions,
-  breakOnNext: _actions2.default.breakOnNext
-})(SecondaryPanes);
+export default connect(
+  mapStateToProps,
+  {
+    toggleAllBreakpoints: actions.toggleAllBreakpoints,
+    toggleShortcutsModal: actions.toggleShortcutsModal,
+    evaluateExpressions: actions.evaluateExpressions,
+    pauseOnExceptions: actions.pauseOnExceptions,
+    breakOnNext: actions.breakOnNext
+  }
+)(SecondaryPanes);
