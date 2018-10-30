@@ -1812,12 +1812,12 @@ class JSScript : public js::gc::TenuredCell
 
   private:
     JSScript(JS::Realm* realm, uint8_t* stubEntry, const JS::ReadOnlyCompileOptions& options,
-             js::HandleObject sourceObject, uint32_t bufStart, uint32_t bufEnd,
+             js::HandleObject sourceObject, uint32_t sourceStart, uint32_t sourceEnd,
              uint32_t toStringStart, uint32_t toStringend);
 
     static JSScript* createInitialized(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                                        js::HandleObject sourceObject,
-                                       uint32_t bufStart, uint32_t bufEnd,
+                                       uint32_t sourceStart, uint32_t sourceEnd,
                                        uint32_t toStringStart, uint32_t toStringEnd);
 
   public:
