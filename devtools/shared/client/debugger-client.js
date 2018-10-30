@@ -24,7 +24,7 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "WebConsoleClient", "devtools/shared/webconsole/client", true);
 loader.lazyRequireGetter(this, "AddonClient", "devtools/shared/client/addon-client");
 loader.lazyRequireGetter(this, "RootFront", "devtools/shared/fronts/root", true);
-loader.lazyRequireGetter(this, "BrowsingContextFront", "devtools/shared/fronts/targets/browsing-context", true);
+loader.lazyRequireGetter(this, "BrowsingContextTargetFront", "devtools/shared/fronts/targets/browsing-context", true);
 loader.lazyRequireGetter(this, "WorkerTargetFront", "devtools/shared/fronts/targets/worker", true);
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
@@ -373,7 +373,7 @@ DebuggerClient.prototype = {
   attachTarget: async function(targetActor) {
     let front = this._frontPool.actor(targetActor);
     if (!front) {
-      front = new BrowsingContextFront(this, { actor: targetActor });
+      front = new BrowsingContextTargetFront(this, { actor: targetActor });
       this._frontPool.manage(front);
     }
 

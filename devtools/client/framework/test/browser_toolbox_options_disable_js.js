@@ -75,7 +75,7 @@ async function toggleJS(toolbox) {
 
   let { javascriptEnabled } = toolbox.target.activeTab.configureOptions;
   is(javascriptEnabled, !cbx.checked,
-    "BrowsingContextFront's configureOptions is correct before the toggle");
+    "BrowsingContextTargetFront's configureOptions is correct before the toggle");
 
   const browserLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   cbx.click();
@@ -83,7 +83,7 @@ async function toggleJS(toolbox) {
 
   ({ javascriptEnabled } = toolbox.target.activeTab.configureOptions);
   is(javascriptEnabled, !cbx.checked,
-    "BrowsingContextFront's configureOptions is correctly updated");
+    "BrowsingContextTargetFront's configureOptions is correctly updated");
 }
 
 async function testJSDisabled() {
