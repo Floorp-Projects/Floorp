@@ -3,30 +3,10 @@
 var PKT_SENDTOMOBILE = (function() {
 
     var width = 350;
-    var variant1Height = 312;
-    var variant2Height = 200;
+    var ctaHeight = 200;
     var confirmHeight = 275;
     var premDetailsHeight = 110;
     var email = null;
-
-    function _swapPlaceholder(data) {
-        var info = {};
-
-        if (!data.item_preview) {
-            info.domain = data.fallback_domain;
-            info.title = data.fallback_title;
-        } else {
-            info.domain = data.item_preview.resolved_domain;
-            info.title = data.item_preview.title;
-            info.has_image = (data.item_preview.top_image_url) ? 1 : 0;
-
-            if (data.item_preview.top_image_url) {
-                info.image_src = getImageCacheUrl(data.item_preview.top_image_url, "w225");
-            }
-        }
-
-        $("#pkt_ext_swap").replaceWith(Handlebars.templates.ho2_articleinfo(info));
-    }
 
     function _initPanelOneClicks() {
         $("#pkt_ext_sendtomobile_button").click(function() {
@@ -49,22 +29,10 @@ var PKT_SENDTOMOBILE = (function() {
         $("body").addClass("pkt_ext_ho2_experiment");
         var height = (adjustHeight) ? premDetailsHeight : 0;
 
-        if (ho2 == "show_prompt_preview") {
-            height += variant1Height;
-            $("body").append(Handlebars.templates.ho2_sharebutton_v1());
-            thePKT_SAVED.sendMessage("resizePanel", { width, height });
-            thePKT_SAVED.sendMessage("getArticleInfo", {}, function(data) {
-                _swapPlaceholder(data);
-            });
-        } else if (ho2 == "show_prompt_no_preview") {
-            height += variant2Height;
-            $("body").append(Handlebars.templates.ho2_sharebutton_v2());
-            thePKT_SAVED.sendMessage("resizePanel", { width, height });
-        } else if (ho2 == "show_prompt_get_app") {
-            height += variant2Height;
-            $("body").append(Handlebars.templates.ho2_sharebutton_v3());
-            thePKT_SAVED.sendMessage("resizePanel", { width, height });
-        }
+        // Show "Send to your phone" CTA
+        height += ctaHeight;
+        $("body").append(Handlebars.templates.ho2_sharebutton());
+        thePKT_SAVED.sendMessage("resizePanel", { width, height });
 
         _initPanelOneClicks();
     }
@@ -76,23 +44,3 @@ var PKT_SENDTOMOBILE = (function() {
         create,
     };
 }());
-
-
-/**
- * This function is based on getImageCacheUrl in:
- * https://github.com/Pocket/Web/blob/master/public_html/a/j/shared.js
- */
-function getImageCacheUrl(url, resize, fallback) {
-    if (!url)
-        return false;
-    // The full URL should be included in the get parameters such that the image cache can request it.
-    var query = {
-        "url": url,
-    };
-    if (resize)
-        query.resize = resize;
-    if (fallback)
-        query.f = fallback;
-
-    return "https://d33ypg4xwx0n86.cloudfront.net/direct?" + $.param(query);
-}
