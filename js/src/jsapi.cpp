@@ -4570,9 +4570,6 @@ JS::SetPromiseUserInputEventHandlingState(JS::HandleObject promiseObj_,
     }
 
     auto& promise = promiseObj->as<PromiseObject>();
-    if (promise.state() != JS::PromiseState::Pending) {
-      return false;
-    }
 
     switch (state) {
       case JS::PromiseUserInputEventHandlingState::DontCare:
