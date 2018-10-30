@@ -370,10 +370,13 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
     AudioNodeStream::EXTERNAL_OUTPUT;
   mStream = AudioNodeStream::Create(aContext, engine, flags, graph);
   mStream->AddMainThreadListener(this);
-  mStream->AddAudioOutput(&gWebAudioOutputKey);
 
-  if (!aIsOffline && aAllowedToStart) {
-    graph->NotifyWhenGraphStarted(mStream);
+  if (!aIsOffline) {
+    mStream->AddAudioOutput(&gWebAudioOutputKey);
+
+    if (aAllowedToStart) {
+      graph->NotifyWhenGraphStarted(mStream);
+    }
   }
 }
 
