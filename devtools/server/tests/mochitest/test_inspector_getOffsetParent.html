@@ -25,8 +25,8 @@ var gBodyNode;
 addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
   const { target } = await attachURL(url);
-  const inspector = target.getInspector();
-  gWalker = await inspector.getWalker();
+  const inspector = await target.getInspector();
+  gWalker = inspector.walker;
   gBodyNode = await gWalker.querySelector(gWalker.rootNode, "body");
   gHTMLNode = await gWalker.querySelector(gWalker.rootNode, "html");
   runNextTest();

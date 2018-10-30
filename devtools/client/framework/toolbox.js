@@ -2754,7 +2754,7 @@ Toolbox.prototype = {
     }
 
     this._destroyingInspector = (async function() {
-      if (!this._inspector) {
+      if (!this._inspector && !this._initInspector) {
         return;
       }
 

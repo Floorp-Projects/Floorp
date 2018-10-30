@@ -28,10 +28,9 @@ function assertOwnership() {
 addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
   const { target } = await attachURL(url);
-  const inspector = target.getInspector();
+  const inspector = await target.getInspector();
   gTarget = target;
-  gWalker = await inspector.getWalker();
-  ok(gWalker, "getWalker() should return an actor.");
+  gWalker = inspector.walker;
   runNextTest();
 });
 
