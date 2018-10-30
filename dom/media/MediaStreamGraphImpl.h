@@ -203,11 +203,6 @@ public:
    */
   void SignalMainThreadCleanup();
 
-  bool Running() const
-  {
-    return LifecycleStateRef() == LIFECYCLE_RUNNING;
-  }
-
   /* This is the end of the current iteration, that is, the current time of the
    * graph. */
   GraphTime IterationEnd() const;
