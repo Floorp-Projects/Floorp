@@ -49,7 +49,6 @@ add_task(async function() {
   await SpecialPowers.pushPrefEnv({"set": [
     ["browser.contentblocking.allowlist.annotations.enabled", true],
     ["browser.contentblocking.allowlist.storage.enabled", true],
-    ["browser.contentblocking.enabled", true],
     ["browser.fastblock.enabled", false],
     ["privacy.trackingprotection.enabled", true],
     // the test doesn't open a private window, so we don't care about this pref's value
