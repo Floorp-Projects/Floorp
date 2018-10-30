@@ -171,7 +171,7 @@ class SingletonDispatcher extends Dispatcher {
       }
     }
 
-    this.listeners = null;
+    this.listeners = [];
   }
 
   handleEvent(event) {
