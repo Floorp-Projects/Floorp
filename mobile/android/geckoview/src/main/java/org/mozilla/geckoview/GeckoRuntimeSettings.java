@@ -8,6 +8,8 @@ package org.mozilla.geckoview;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Collections;
+import java.util.Map;
 
 import android.app.Service;
 import android.graphics.Rect;
@@ -17,6 +19,7 @@ import android.os.Parcelable;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.util.ArrayMap;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -435,6 +438,15 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mScreenHeightOverride = settings.mScreenHeightOverride;
         mCrashHandler = settings.mCrashHandler;
         mLocale = settings.mLocale;
+    }
+
+    /* package */ Map<String, Object> getPrefsMap() {
+        final ArrayMap<String, Object> prefs = new ArrayMap<>(mPrefs.length);
+        for (final Pref<?> pref : mPrefs) {
+            prefs.put(pref.name, pref.get());
+        }
+
+        return Collections.unmodifiableMap(prefs);
     }
 
     /* package */ void flush() {

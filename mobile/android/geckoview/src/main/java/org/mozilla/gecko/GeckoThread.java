@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 public class GeckoThread extends Thread {
@@ -145,6 +146,7 @@ public class GeckoThread extends Thread {
         public String[] args;
         public Bundle extras;
         public int flags;
+        public Map<String, Object> prefs;
 
         public int prefsFd;
         public int prefMapFd;
@@ -472,7 +474,7 @@ public class GeckoThread extends Thread {
             env.add(0, "MOZ_CRASHREPORTER=1");
         }
 
-        GeckoLoader.setupGeckoEnvironment(context, context.getFilesDir().getPath(), env);
+        GeckoLoader.setupGeckoEnvironment(context, context.getFilesDir().getPath(), env, mInitInfo.prefs);
 
         // And go.
         GeckoLoader.nativeRun(args,

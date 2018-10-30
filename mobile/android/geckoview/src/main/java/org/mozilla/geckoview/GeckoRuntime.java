@@ -209,6 +209,7 @@ public final class GeckoRuntime implements Parcelable {
         info.args = settings.getArguments();
         info.extras = settings.getExtras();
         info.flags = flags;
+        info.prefs = settings.getPrefsMap();
 
         if (!GeckoThread.init(info)) {
             Log.w(LOGTAG, "init failed (could not initiate GeckoThread)");
