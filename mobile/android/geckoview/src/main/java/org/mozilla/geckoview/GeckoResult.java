@@ -544,7 +544,8 @@ public class GeckoResult<T> {
     public interface OnValueListener<T, U> {
         /**
          * Called when a {@link GeckoResult} is completed with a value. Will be
-         * called on the main thread.
+         * called on the same thread where the GeckoResult was created or on
+         * the {@link Handler} provided via {@link #withHandler(Handler)}.
          *
          * @param value The value of the {@link GeckoResult}
          * @return Result used to complete the next result in the chain. May be null.
@@ -560,8 +561,9 @@ public class GeckoResult<T> {
      */
     public interface OnExceptionListener<V> {
         /**
-         * Called when a {@link GeckoResult} is completed with an exception. Will be
-         * called on the main thread.
+         * Called when a {@link GeckoResult} is completed with an exception.
+         * Will be called on the same thread where the GeckoResult was created
+         * or on the {@link Handler} provided via {@link #withHandler(Handler)}.
          *
          * @param exception Exception that completed the result.
          * @return Result used to complete the next result in the chain. May be null.
