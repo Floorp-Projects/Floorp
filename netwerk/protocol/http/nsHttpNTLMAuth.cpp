@@ -35,7 +35,6 @@
 #include "nsIChannel.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/net/HttpAuthUtils.h"
-#include "mozilla/ClearOnShutdown.h"
 
 namespace mozilla {
 namespace net {
@@ -45,8 +44,6 @@ static const char kAllowNonFqdn[] = "network.automatic-ntlm-auth.allow-non-fqdn"
 static const char kTrustedURIs[]  = "network.automatic-ntlm-auth.trusted-uris";
 static const char kForceGeneric[] = "network.auth.force-generic-ntlm";
 static const char kSSOinPBmode[] = "network.auth.private-browsing-sso";
-
-StaticRefPtr<nsHttpNTLMAuth> nsHttpNTLMAuth::gSingleton;
 
 static bool
 IsNonFqdn(nsIURI *uri)
@@ -147,21 +144,6 @@ NS_IMPL_ISUPPORTS0(nsNTLMSessionState)
 
 //-----------------------------------------------------------------------------
 
-already_AddRefed<nsIHttpAuthenticator>
-nsHttpNTLMAuth::GetOrCreate()
-{
-    nsCOMPtr<nsIHttpAuthenticator> authenticator;
-    if (gSingleton) {
-      authenticator = gSingleton;
-    } else {
-      gSingleton = new nsHttpNTLMAuth();
-      ClearOnShutdown(&gSingleton);
-      authenticator = gSingleton;
-    }
-
-    return authenticator.forget();
-}
-
 NS_IMPL_ISUPPORTS(nsHttpNTLMAuth, nsIHttpAuthenticator)
 
 NS_IMETHODIMP
@@ -186,7 +168,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
     // If native NTLM auth apis are available and enabled through prefs,
     // try to use them.
     if (PL_strcasecmp(challenge, "NTLM") == 0) {
-        nsCOMPtr<nsIAuthModule> module;
+        nsCOMPtr<nsISupports> module;
 
         // Check to see if we should default to our generic NTLM auth module
         // through UseGenericNTLM. (We use native auth by default if the
@@ -201,7 +183,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
                 // Try logging in with the user's default credentials. If
                 // successful, |identityInvalid| is false, which will trigger
                 // a default credentials attempt once we return.
-                module = nsIAuthModule::CreateInstance("sys-ntlm");
+                module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "sys-ntlm");
             }
 #ifdef XP_WIN
             else {
@@ -210,7 +192,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
                 // Note, for servers that use LMv1 a weak hash of the user's password
                 // will be sent. We rely on windows internal apis to decide whether
                 // we should support this older, less secure version of the protocol.
-                module = nsIAuthModule::CreateInstance("sys-ntlm");
+                module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "sys-ntlm");
                 *identityInvalid = true;
             }
 #endif // XP_WIN
@@ -238,7 +220,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
             // Use our internal NTLM implementation. Note, this is less secure,
             // see bug 520607 for details.
             LOG(("Trying to fall back on internal ntlm auth.\n"));
-            module = nsIAuthModule::CreateInstance("ntlm");
+            module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "ntlm");
 
             mUseNative = false;
 
@@ -254,7 +236,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
 
         // A non-null continuation state implies that we failed to authenticate.
         // Blow away the old authentication state, and use the new one.
-        module.forget(continuationState);
+        module.swap(*continuationState);
     }
     return NS_OK;
 }
