@@ -54,7 +54,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     private static final String PREF_SEQ_COUNT = "telemetry-seqCount";
 
     private static final String NAME = "core";
-    private static final int VERSION_VALUE = 9; // For version history, see toolkit/components/telemetry/docs/core-ping.rst
+    private static final int VERSION_VALUE = 10; // For version history, see toolkit/components/telemetry/docs/core-ping.rst
 
     private static final String DEFAULT_BROWSER = "defaultBrowser";
     private static final String ARCHITECTURE = "arch";
@@ -78,6 +78,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     private static final String VERSION_ATTR = "v";
     private static final String FLASH_USAGE = "flashUsage";
     private static final String ACCESSIBILITY_SERVICES = "accessibilityServices";
+    private static final String HAD_CANARY_CLIENT_ID = "bug_1501329_affected";
 
     public TelemetryCorePingBuilder(final Context context) {
         initPayloadConstants(context);
@@ -133,6 +134,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
                 SEQ,
                 TIMEZONE_OFFSET,
                 VERSION_ATTR,
+                HAD_CANARY_CLIENT_ID,
         };
     }
 
@@ -141,6 +143,11 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
             throw new IllegalArgumentException("Expected non-null clientID");
         }
         payload.put(CLIENT_ID, clientID);
+        return this;
+    }
+
+    public TelemetryCorePingBuilder setHadCanaryClientId(final boolean hadCanaryClientId) {
+        payload.put(HAD_CANARY_CLIENT_ID, hadCanaryClientId);
         return this;
     }
 
