@@ -26,10 +26,10 @@ const {
 const cols = {
   status: true,
   method: true,
+  domain: true,
   file: true,
   protocol: false,
   scheme: false,
-  domain: true,
   remoteip: false,
   cause: true,
   type: true,
