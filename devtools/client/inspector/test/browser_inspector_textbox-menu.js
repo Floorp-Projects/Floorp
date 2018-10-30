@@ -80,23 +80,21 @@ add_task(async function() {
   EventUtils.synthesizeMouseAtCenter(tag, {}, inspector.panelWin);
 });
 
-async function checkTextBox(textBox, toolbox) {
-  let textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
-  ok(!textboxContextMenu, "The menu is  closed");
+async function checkTextBox(textBox, {textBoxContextMenuPopup}) {
+  is(textBoxContextMenuPopup.state, "closed", "The menu is closed");
 
   info("Simulating context click on the textbox and expecting the menu to open");
-  const onContextMenu = toolbox.once("menu-open");
-  synthesizeContextMenuEvent(textBox);
+  const onContextMenu = once(textBoxContextMenuPopup, "popupshown");
+  EventUtils.synthesizeMouse(textBox, 2, 2, {type: "contextmenu", button: 2},
+                             textBox.ownerDocument.defaultView);
   await onContextMenu;
 
-  textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
-  ok(textboxContextMenu, "The menu is now visible");
+  is(textBoxContextMenuPopup.state, "open", "The menu is now visible");
 
   info("Closing the menu");
-  const onContextMenuHidden = toolbox.once("menu-close");
-  EventUtils.sendKey("ESCAPE", toolbox.win);
+  const onContextMenuHidden = once(textBoxContextMenuPopup, "popuphidden");
+  textBoxContextMenuPopup.hidePopup();
   await onContextMenuHidden;
 
-  textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
-  ok(!textboxContextMenu, "The menu is closed again");
+  is(textBoxContextMenuPopup.state, "closed", "The menu is closed again");
 }

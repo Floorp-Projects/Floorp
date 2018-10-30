@@ -27,7 +27,6 @@ DevToolsModules(
     'source-map-url-service.js',
     'target-from-url.js',
     'target.js',
-    'toolbox-context-menu.js',
     'toolbox-highlighter-utils.js',
     'toolbox-host-manager.js',
     'toolbox-hosts.js',

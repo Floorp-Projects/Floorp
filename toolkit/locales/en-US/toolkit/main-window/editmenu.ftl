@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ### This file contains the entities needed for the 'edit' menu
-### It's currently only used for the Browser Console and Developer Toolbox
+### It's currently only used for the Browser Console
 
 editmenu-undo =
     .label = Undo

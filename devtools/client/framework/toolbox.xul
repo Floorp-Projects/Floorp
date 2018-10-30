@@ -9,6 +9,8 @@
 <!DOCTYPE window [
 <!ENTITY % toolboxDTD SYSTEM "chrome://devtools/locale/toolbox.dtd" >
 %toolboxDTD;
+<!ENTITY % editMenuStrings SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuStrings;
 <!ENTITY % globalKeysDTD SYSTEM "chrome://global/locale/globalKeys.dtd">
 %globalKeysDTD;
 ]>
@@ -21,10 +23,31 @@
   <script type="application/javascript"
           src="chrome://global/content/viewSourceUtils.js"/>
 
-  <script type="application/javascript"
-          src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript"
           src="chrome://devtools/content/framework/toolbox-init.js"/>
+
+#include ../../../toolkit/content/editMenuCommands.inc.xul
+#include ../../../toolkit/content/editMenuKeys.inc.xul
+
+  <popupset>
+    <menupopup id="toolbox-textbox-context-popup">
+      <menuitem id="cMenu_undo" label="&undoCmd.label;"
+                accesskey="&undoCmd.accesskey;" command="cmd_undo"/>
+      <menuseparator/>
+      <menuitem id="cMenu_cut" label="&cutCmd.label;"
+                accesskey="&cutCmd.accesskey;" command="cmd_cut"/>
+      <menuitem id="cMenu_copy" label="&copyCmd.label;"
+                accesskey="&copyCmd.accesskey;" command="cmd_copy"/>
+      <menuitem id="cMenu_paste" label="&pasteCmd.label;"
+                accesskey="&pasteCmd.accesskey;" command="cmd_paste"/>
+      <menuitem id="cMenu_delete" label="&deleteCmd.label;"
+                accesskey="&deleteCmd.accesskey;" command="cmd_delete"/>
+      <menuseparator/>
+      <menuitem id="cMenu_selectAll" label="&selectAllCmd.label;"
+                accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"/>
+    </menupopup>
+  </popupset>
 
   <vbox id="toolbox-container" flex="1">
     <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-notificationbox"/>

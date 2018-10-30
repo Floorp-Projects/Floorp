@@ -1579,7 +1579,13 @@ class JSTerm extends Component {
   }
 
   onContextMenu(e) {
-    this.props.serviceContainer.openEditContextMenu(e);
+    // The toolbox does it's own edit menu handling with
+    // toolbox-textbox-context-popup and friends. For now, fall
+    // back to use that if running inside the toolbox, but use our
+    // own menu when running in the Browser Console (see Bug 1476097).
+    if (this.props.hud.isBrowserConsole) {
+      this.props.serviceContainer.openEditContextMenu(e);
+    }
   }
 
   destroy() {
