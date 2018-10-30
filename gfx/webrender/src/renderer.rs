@@ -1625,7 +1625,7 @@ impl From<ResourceCacheError> for RendererError {
 }
 
 impl Renderer {
-    /// Initializes webrender and creates a `Renderer` and `RenderApiSender`.
+    /// Initializes WebRender and creates a `Renderer` and `RenderApiSender`.
     ///
     /// # Examples
     /// Initializes a `Renderer` with some reasonable values. For more information see
