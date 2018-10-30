@@ -110,6 +110,12 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8)
     }
 
     _outputCapturePin = GetOutputPin(_captureFilter, PIN_CATEGORY_CAPTURE);
+    if (_outputCapturePin == NULL)
+    {
+        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, 0,
+                     "Failed to get output capture pin");
+        return -1;
+    }
 
     // Create the sink filte used for receiving Captured frames.
     _sinkFilter = new CaptureSinkFilter(SINK_FILTER_NAME, NULL, &hr,
@@ -129,7 +135,14 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8)
                      "Failed to add the send filter to the graph.");
         return -1;
     }
+
     _inputSendPin = GetInputPin(_sinkFilter);
+    if (_inputSendPin == NULL)
+    {
+        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, 0,
+                     "Failed to get input send pin");
+        return -1;
+    }
 
     // Temporary connect here.
     // This is done so that no one else can use the capture device.
