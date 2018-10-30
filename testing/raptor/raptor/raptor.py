@@ -7,6 +7,7 @@ from __future__ import absolute_import
 
 import json
 import os
+import subprocess
 import sys
 import time
 
@@ -341,6 +342,61 @@ class Raptor(object):
         self.log.info("finished")
 
 
+def view_gecko_profile(ffox_bin):
+    # automatically load the latest talos gecko-profile archive in perf-html.io
+    LOG = get_default_logger(component='raptor-view-gecko-profile')
+
+    if sys.platform.startswith('win') and not ffox_bin.endswith(".exe"):
+        ffox_bin = ffox_bin + ".exe"
+
+    if not os.path.exists(ffox_bin):
+        LOG.info("unable to find Firefox bin, cannot launch view-gecko-profile")
+        return
+
+    profile_zip = os.environ.get('RAPTOR_LATEST_GECKO_PROFILE_ARCHIVE', None)
+    if profile_zip is None or not os.path.exists(profile_zip):
+        LOG.info("No local talos gecko profiles were found so not launching perf-html.io")
+        return
+
+    # need the view-gecko-profile tool, it's in repo/testing/tools
+    repo_dir = os.environ.get('MOZ_DEVELOPER_REPO_DIR', None)
+    if repo_dir is None:
+        LOG.info("unable to find MOZ_DEVELOPER_REPO_DIR, can't launch view-gecko-profile")
+        return
+
+    view_gp = os.path.join(repo_dir, 'testing', 'tools',
+                           'view_gecko_profile', 'view_gecko_profile.py')
+    if not os.path.exists(view_gp):
+        LOG.info("unable to find the view-gecko-profile tool, cannot launch it")
+        return
+
+    command = ['python',
+               view_gp,
+               '-b', ffox_bin,
+               '-p', profile_zip]
+
+    LOG.info('Auto-loading this profile in perfhtml.io: %s' % profile_zip)
+    LOG.info(command)
+
+    # if the view-gecko-profile tool fails to launch for some reason, we don't
+    # want to crash talos! just dump error and finsh up talos as usual
+    try:
+        view_profile = subprocess.Popen(command,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
+        # that will leave it running in own instance and let talos finish up
+    except Exception as e:
+        LOG.info("failed to launch view-gecko-profile tool, exeption: %s" % e)
+        return
+
+    time.sleep(5)
+    ret = view_profile.poll()
+    if ret is None:
+        LOG.info("view-gecko-profile successfully started as pid %d" % view_profile.pid)
+    else:
+        LOG.error('view-gecko-profile process failed to start, poll returned: %s' % ret)
+
+
 def main(args=sys.argv[1:]):
     args = parse_args()
     commandline.setup_logging('raptor', args, {'tbpl': sys.stdout})
@@ -397,6 +453,14 @@ def main(args=sys.argv[1:]):
             LOG.critical("TEST-UNEXPECTED-FAIL: test '%s' timed out loading test page: %s"
                          % (_page['test_name'], _page['url']))
         os.sys.exit(1)
+
+    # when running raptor locally with gecko profiling on, use the view-gecko-profile
+    # tool to automatically load the latest gecko profile in perf-html.io
+    if args.gecko_profile and args.run_local:
+        if os.environ.get('DISABLE_PROFILE_LAUNCH', '0') == '1':
+            LOG.info("Not launching perf-html.io because DISABLE_PROFILE_LAUNCH=1")
+        else:
+            view_gecko_profile(args.binary)
 
 
 if __name__ == "__main__":
