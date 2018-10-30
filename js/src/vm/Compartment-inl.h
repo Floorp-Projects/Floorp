@@ -9,9 +9,15 @@
 
 #include "vm/Compartment.h"
 
+#include <type_traits>
+
+#include "jsapi.h"
+#include "jsfriendapi.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
+#include "js/Wrapper.h"
 #include "vm/Iteration.h"
+#include "vm/JSObject.h"
 
 #include "vm/JSContext-inl.h"
 
@@ -98,5 +104,93 @@ JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp)
     MOZ_ASSERT_IF(cacheResult, obj == cacheResult);
     return true;
 }
+
+namespace js {
+namespace detail {
+
+template<class T>
+bool
+UnwrapThisSlowPath(JSContext* cx,
+                   HandleValue val,
+                   const char* className,
+                   const char* methodName,
+                   MutableHandle<T*> unwrappedResult)
+{
+    if (!val.isObject()) {
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                                   className, methodName, InformalValueTypeName(val));
+        return false;
+    }
+
+    JSObject* obj = &val.toObject();
+    if (IsWrapper(obj)) {
+        obj = CheckedUnwrap(obj);
+        if (!obj) {
+            ReportAccessDenied(cx);
+            return false;
+        }
+    }
+
+    if (!obj->is<T>()) {
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                                   className, methodName, InformalValueTypeName(val));
+        return false;
+    }
+
+    unwrappedResult.set(&obj->as<T>());
+    return true;
+}
+
+} // namespace detail
+
+/**
+ * Remove all wrappers from `val` and try to downcast the result to `T`.
+ *
+ * DANGER: The value stored in `unwrappedResult` may not be same-compartment
+ * with `cx`.
+ *
+ * This throws a TypeError if the value isn't an object, cannot be unwrapped,
+ * or isn't an instance of the expected type.
+ *
+ * Terminology note: The term "non-generic method" comes from ECMA-262. A
+ * non-generic method is one that checks the type of `this`, typically because
+ * it needs access to internal slots. Generic methods do not type-check. For
+ * example, `Array.prototype.join` is generic; it can be applied to anything
+ * with a `.length` property and elements.
+ */
+template<class T>
+inline bool
+UnwrapThisForNonGenericMethod(JSContext* cx,
+                              HandleValue val,
+                              const char* className,
+                              const char* methodName,
+                              MutableHandle<T*> unwrappedResult)
+{
+    static_assert(!std::is_convertible<T*, Wrapper*>::value,
+                  "T can't be a Wrapper type; this function discards wrappers");
+
+    cx->check(val);
+    if (val.isObject() && val.toObject().is<T>()) {
+        unwrappedResult.set(&val.toObject().as<T>());
+        return true;
+    }
+    return detail::UnwrapThisSlowPath(cx, val, className, methodName, unwrappedResult);
+}
+
+/**
+ * Extra signature so callers don't have to specify T explicitly.
+ */
+template<class T>
+inline bool
+UnwrapThisForNonGenericMethod(JSContext* cx,
+                              HandleValue val,
+                              const char* className,
+                              const char* methodName,
+                              Rooted<T*>* out)
+{
+    return UnwrapThisForNonGenericMethod(cx, val, className, methodName, MutableHandle<T*>(out));
+}
+
+} // namespace js
 
 #endif /* vm_Compartment_inl_h */

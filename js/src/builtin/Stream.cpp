@@ -309,81 +309,16 @@ ToUnwrapped(JSContext* cx, JSObject* obj)
 }
 
 /**
- * Checks that |obj| is an unwrapped instance of T or throws an error.
- */
-template<class T>
-static T*
-ToUnwrapped(JSContext* cx, JSObject* obj, const char* description)
-{
-    if (IsWrapper(obj)) {
-        obj = CheckedUnwrap(obj);
-        if (!obj) {
-            ReportAccessDenied(cx);
-            return nullptr;
-        }
-    }
-
-    if (!obj->is<T>()) {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                                   description, T::class_->name,
-                                   InformalValueTypeName(ObjectValue(*obj)));
-        return nullptr;
-    }
-
-    return &obj->as<T>();
-}
-
-/**
- * Checks that |obj| is an unwrapped instance of T or throws an error.
+ * Unwrap v as an object of type T, throwing if it can't be unwrapped.
  *
- * If the caller can ensure that failure to unwrap is the only possible
- * source of exceptions, it may omit the error messages.
+ * This overload must be used only if v is an ObjectValue and the result of a
+ * successful unwrap is certain to be of type T.
  */
-template<class T>
+template <class T>
 static T*
-ToUnwrapped(JSContext* cx, JSObject* obj, const char* className, const char* methodName)
+ToUnwrapped(JSContext* cx, HandleValue v)
 {
-    if (IsWrapper(obj)) {
-        obj = CheckedUnwrap(obj);
-        if (!obj) {
-            ReportAccessDenied(cx);
-            return nullptr;
-        }
-    }
-
-    if (!obj->is<T>()) {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                                   className, methodName, InformalValueTypeName(ObjectValue(*obj)));
-        return nullptr;
-    }
-
-    return &obj->as<T>();
-}
-
-/**
- * Converts the given value to an object and ensures that it is an unwrapped
- * instance of T.
- *
- * Throws exceptions if the value isn't an object, cannot be unwrapped, or
- * isn't an instance of the expected type.
- *
- * If the caller can ensure that failure to unwrap is the only possible
- * source of exceptions, it may omit the error messages.
- */
-template<class T>
-static T*
-ToUnwrapped(JSContext* cx,
-            HandleValue val,
-            const char* className = "",
-            const char* methodName = "")
-{
-    if (!val.isObject()) {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                                   className, methodName, InformalValueTypeName(val));
-        return nullptr;
-    }
-
-    return ToUnwrapped<T>(cx, &val.toObject(), className, methodName);
+    return ToUnwrapped<T>(cx, &v.toObject());
 }
 
 /**
@@ -1045,8 +980,7 @@ ReadableStream_cancel(JSContext* cx, unsigned argc, Value* vp)
     // Step 1: If ! IsReadableStream(this) is false, return a promise rejected
     //         with a TypeError exception.
     Rooted<ReadableStream*> stream(cx);
-    stream = ToUnwrapped<ReadableStream>(cx, args.thisv(), "ReadableStream", "cancel");
-    if (!stream) {
+    if (!UnwrapThisForNonGenericMethod(cx, args.thisv(), "ReadableStream", "cancel", &stream)) {
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
@@ -1078,8 +1012,7 @@ ReadableStream_getReader(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1: If ! IsReadableStream(this) is false, throw a TypeError exception.
     Rooted<ReadableStream*> stream(cx);
-    stream = ToUnwrapped<ReadableStream>(cx, args.thisv(), "ReadableStream", "getReader");
-    if (!stream) {
+    if (!UnwrapThisForNonGenericMethod(cx, args.thisv(), "ReadableStream", "getReader", &stream)) {
         return false;
     }
 
@@ -1146,8 +1079,7 @@ ReadableStream_tee(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1: If ! IsReadableStream(this) is false, throw a TypeError exception.
     Rooted<ReadableStream*> stream(cx);
-    stream = ToUnwrapped<ReadableStream>(cx, args.thisv(), "ReadableStream", "tee");
-    if (!stream) {
+    if (!UnwrapThisForNonGenericMethod(cx, args.thisv(), "ReadableStream", "tee", &stream)) {
         return false;
     }
 
@@ -2085,10 +2017,13 @@ ReadableStreamDefaultReader_closed(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1: If ! IsReadableStreamDefaultReader(this) is false, return a promise
     //         rejected with a TypeError exception.
-    auto reader = ToUnwrapped<ReadableStreamDefaultReader>(cx, args.thisv(),
-                                                           "ReadableStreamDefaultReader",
-                                                           "get closed");
-    if (!reader) {
+    Rooted<ReadableStreamDefaultReader*> reader(cx);
+    if (!UnwrapThisForNonGenericMethod(cx,
+                                       args.thisv(),
+                                       "ReadableStreamDefaultReader",
+                                       "get closed",
+                                       &reader))
+    {
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
@@ -2115,9 +2050,12 @@ ReadableStreamDefaultReader_cancel(JSContext* cx, unsigned argc, Value* vp)
     // Step 1: If ! IsReadableStreamDefaultReader(this) is false, return a promise
     //         rejected with a TypeError exception.
     Rooted<ReadableStreamDefaultReader*> reader(cx);
-    reader = ToUnwrapped<ReadableStreamDefaultReader>(cx, args.thisv(),
-                                                      "ReadableStreamDefaultReader", "cancel");
-    if (!reader) {
+    if (!UnwrapThisForNonGenericMethod(cx,
+                                       args.thisv(),
+                                       "ReadableStreamDefaultReader",
+                                       "cancel",
+                                       &reader))
+    {
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
@@ -2147,9 +2085,12 @@ ReadableStreamDefaultReader_read(JSContext* cx, unsigned argc, Value* vp)
     // Step 1: If ! IsReadableStreamDefaultReader(this) is false, return a promise
     //         rejected with a TypeError exception.
     Rooted<ReadableStreamDefaultReader*> reader(cx);
-    reader = ToUnwrapped<ReadableStreamDefaultReader>(cx, args.thisv(),
-                                                      "ReadableStreamDefaultReader", "read");
-    if (!reader) {
+    if (!UnwrapThisForNonGenericMethod(cx,
+                                       args.thisv(),
+                                       "ReadableStreamDefaultReader",
+                                       "read",
+                                       &reader))
+    {
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
