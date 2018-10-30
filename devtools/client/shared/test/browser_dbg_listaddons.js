@@ -48,7 +48,7 @@ function test() {
 
 function testFirstAddon() {
   let addonListChanged = false;
-  gClient.addOneTimeListener("addonListChanged", () => {
+  gClient.mainRoot.once("addonListChanged").then(() => {
     addonListChanged = true;
   });
 
@@ -65,7 +65,7 @@ function testFirstAddon() {
 
 function testSecondAddon() {
   let addonListChanged = false;
-  gClient.addOneTimeListener("addonListChanged", function() {
+  gClient.mainRoot.once("addonListChanged").then(() => {
     addonListChanged = true;
   });
 
@@ -84,7 +84,7 @@ function testSecondAddon() {
 
 function testRemoveFirstAddon() {
   let addonListChanged = false;
-  gClient.addOneTimeListener("addonListChanged", function() {
+  gClient.mainRoot.once("addonListChanged").then(() => {
     addonListChanged = true;
   });
 
@@ -98,7 +98,7 @@ function testRemoveFirstAddon() {
 
 function testRemoveSecondAddon() {
   let addonListChanged = false;
-  gClient.addOneTimeListener("addonListChanged", function() {
+  gClient.mainRoot.once("addonListChanged").then(() => {
     addonListChanged = true;
   });
 
