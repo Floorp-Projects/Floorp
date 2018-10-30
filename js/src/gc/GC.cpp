@@ -6115,28 +6115,19 @@ GCRuntime::beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
 }
 
 #ifdef JS_GC_ZEAL
-
 bool
 GCRuntime::shouldYieldForZeal(ZealMode mode)
 {
-    return useZeal && isIncremental && hasZealMode(mode);
-}
+    bool yield = useZeal && isIncremental && hasZealMode(mode);
 
-IncrementalProgress
-GCRuntime::maybeYieldForSweepingZeal(FreeOp* fop, SliceBudget& budget)
-{
-    /*
-     * Check whether we need to yield for GC zeal. We always yield when running
-     * in incremental multi-slice zeal mode so RunDebugGC can reset the slice
-     * budget.
-     */
-    if (initialState != State::Sweep && shouldYieldForZeal(ZealMode::IncrementalMultipleSlices)) {
-        return NotFinished;
+    // Only yield on the first sweep slice for this mode.
+    bool firstSweepSlice = initialState != State::Sweep;
+    if (mode == ZealMode::IncrementalMultipleSlices && !firstSweepSlice) {
+        yield = false;
     }
 
-    return Finished;
+    return yield;
 }
-
 #endif
 
 IncrementalProgress
@@ -6689,37 +6680,41 @@ class SweepActionCall final : public SweepAction<GCRuntime*, Args...>
     void assertFinished() const override { }
 };
 
-#ifdef JS_GC_ZEAL
 // Implementation of the SweepAction interface that yields in a specified zeal
-// mode and then calls another action.
+// mode.
 template <typename... Args>
 class SweepActionMaybeYield final : public SweepAction<GCRuntime*, Args...>
 {
-    using Action = SweepAction<GCRuntime*, Args...>;
-
     ZealMode mode;
-    UniquePtr<Action> action;
-    bool triggered;
+    bool isYielding;
 
   public:
-    SweepActionMaybeYield(UniquePtr<Action> action, ZealMode mode)
-      : mode(mode), action(std::move(action)), triggered(false) {}
+    explicit SweepActionMaybeYield(ZealMode mode)
+      : mode(mode), isYielding(false) {}
 
     IncrementalProgress run(GCRuntime* gc, Args... args) override {
-        if (!triggered && gc->shouldYieldForZeal(mode)) {
-            triggered = true;
+#ifdef JS_GC_ZEAL
+        if (!isYielding && gc->shouldYieldForZeal(mode)) {
+            isYielding = true;
             return NotFinished;
         }
 
-        triggered = false;
-        return action->run(gc, args...);
+        isYielding = false;
+#endif
+        return Finished;
     }
 
     void assertFinished() const override {
-        MOZ_ASSERT(!triggered);
+        MOZ_ASSERT(!isYielding);
     }
-};
+
+    // These actions should be skipped if GC zeal is not configured.
+#ifndef JS_GC_ZEAL
+    bool shouldSkip() override {
+        return true;
+    }
 #endif
+};
 
 // Implementation of the SweepAction interface that calls a list of actions in
 // sequence.
@@ -6736,7 +6731,11 @@ class SweepActionSequence final : public SweepAction<Args...>
   public:
     bool init(UniquePtr<Action>* acts, size_t count) {
         for (size_t i = 0; i < count; i++) {
-            if (!actions.emplaceBack(std::move(acts[i]))) {
+            auto& action = acts[i];
+            if (action->shouldSkip()) {
+                continue;
+            }
+            if (!actions.emplaceBack(std::move(action))) {
                 return false;
             }
         }
@@ -6865,14 +6864,14 @@ Call(IncrementalProgress (GCRuntime::*method)(Args...)) {
    return MakeUnique<SweepActionCall<Args...>>(method);
 }
 
-template <typename... Args>
-static UniquePtr<SweepAction<GCRuntime*, Args...>>
-MaybeYield(ZealMode zealMode, UniquePtr<SweepAction<GCRuntime*, Args...>> action) {
-#ifdef JS_GC_ZEAL
-    return js::MakeUnique<SweepActionMaybeYield<Args...>>(std::move(action), zealMode);
-#else
-    return action;
-#endif
+static UniquePtr<SweepAction<GCRuntime*, FreeOp*, SliceBudget&>>
+MaybeYield(ZealMode zealMode) {
+    return js::MakeUnique<SweepActionMaybeYield<FreeOp*, SliceBudget&>>(zealMode);
+}
+
+static UniquePtr<SweepAction<GCRuntime*, FreeOp*, SliceBudget&, Zone*>>
+MaybeYieldInZoneLoop(ZealMode zealMode) {
+    return js::MakeUnique<SweepActionMaybeYield<FreeOp*, SliceBudget&, Zone*>>(zealMode);
 }
 
 template <typename... Args, typename... Rest>
@@ -6939,25 +6938,23 @@ GCRuntime::initSweepActions()
             Sequence(
                 Call(&GCRuntime::endMarkingSweepGroup),
                 Call(&GCRuntime::beginSweepingSweepGroup),
-#ifdef JS_GC_ZEAL
-                Call(&GCRuntime::maybeYieldForSweepingZeal),
-#endif
-                MaybeYield(ZealMode::YieldBeforeSweepingAtoms,
-                           Call(&GCRuntime::sweepAtomsTable)),
-                MaybeYield(ZealMode::YieldBeforeSweepingCaches,
-                           Call(&GCRuntime::sweepWeakCaches)),
+                MaybeYield(ZealMode::IncrementalMultipleSlices),
+                MaybeYield(ZealMode::YieldBeforeSweepingAtoms),
+                Call(&GCRuntime::sweepAtomsTable),
+                MaybeYield(ZealMode::YieldBeforeSweepingCaches),
+                Call(&GCRuntime::sweepWeakCaches),
                 ForEachZoneInSweepGroup(rt,
                     Sequence(
-                        MaybeYield(ZealMode::YieldBeforeSweepingTypes,
-                                   Call(&GCRuntime::sweepTypeInformation)),
-                        MaybeYield(ZealMode::YieldBeforeSweepingObjects,
-                                   ForEachAllocKind(ForegroundObjectFinalizePhase.kinds,
-                                                    Call(&GCRuntime::finalizeAllocKind))),
-                        MaybeYield(ZealMode::YieldBeforeSweepingNonObjects,
-                                   ForEachAllocKind(ForegroundNonObjectFinalizePhase.kinds,
-                                                    Call(&GCRuntime::finalizeAllocKind))),
-                        MaybeYield(ZealMode::YieldBeforeSweepingShapeTrees,
-                                   Call(&GCRuntime::sweepShapeTree)),
+                        MaybeYieldInZoneLoop(ZealMode::YieldBeforeSweepingTypes),
+                        Call(&GCRuntime::sweepTypeInformation),
+                        MaybeYieldInZoneLoop(ZealMode::YieldBeforeSweepingObjects),
+                        ForEachAllocKind(ForegroundObjectFinalizePhase.kinds,
+                                         Call(&GCRuntime::finalizeAllocKind)),
+                        MaybeYieldInZoneLoop(ZealMode::YieldBeforeSweepingNonObjects),
+                        ForEachAllocKind(ForegroundNonObjectFinalizePhase.kinds,
+                                         Call(&GCRuntime::finalizeAllocKind)),
+                        MaybeYieldInZoneLoop(ZealMode::YieldBeforeSweepingShapeTrees),
+                        Call(&GCRuntime::sweepShapeTree),
                         Call(&GCRuntime::releaseSweptEmptyArenas))),
                 Call(&GCRuntime::endSweepingSweepGroup)));
 

@@ -2201,6 +2201,7 @@ const svg = {
   breadcrumb: __webpack_require__(3603),
   breakpoint: __webpack_require__(350),
   "column-breakpoint": __webpack_require__(998),
+  "column-marker": __webpack_require__(3801),
   "case-match": __webpack_require__(351),
   choo: __webpack_require__(1290),
   close: __webpack_require__(352),
@@ -7525,6 +7526,13 @@ function createStructuredSelector(selectors) {
     }, {});
   });
 }
+
+/***/ }),
+
+/***/ 3801:
+/***/ (function(module, exports) {
+
+module.exports = "<svg viewBox=\"0 0 9 12\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><g id=\"columnmarkergroup\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\"><polygon id=\"columnmarker\" fill=\"#1B1B1D\" points=\"0 0 4 0 9 6 4 12 0 12\"></polygon></g></svg>"
 
 /***/ }),
 
