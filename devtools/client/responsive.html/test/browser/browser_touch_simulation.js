@@ -61,6 +61,16 @@ async function testWithNoTouch(ui) {
     await EventUtils.synthesizeClick(div);
     is(div.dataset.isDelay, "false",
       "300ms delay between touch events and mouse events should not work");
+
+    // Assuming that this test runs on devices having no touch screen device.
+    ok(!content.document.defaultView.matchMedia("(pointer: coarse)").matches,
+       "pointer: coarse shouldn't be matched");
+    ok(!content.document.defaultView.matchMedia("(hover: none)").matches,
+       "hover: none shouldn't be matched");
+    ok(!content.document.defaultView.matchMedia("(any-pointer: coarse)").matches,
+       "any-pointer: coarse shouldn't be matched");
+    ok(!content.document.defaultView.matchMedia("(any-hover: none)").matches,
+       "any-hover: none shouldn't be matched");
   });
 }
 
@@ -98,6 +108,15 @@ async function testWithTouch(ui) {
           { type: "mousemove", isSynthesized: false }, content);
     isnot(div.style.backgroundColor, "blue",
       "mouseout or mouseleave should not work");
+
+    ok(content.document.defaultView.matchMedia("(pointer: coarse)").matches,
+       "pointer: coarse should be matched");
+    ok(content.document.defaultView.matchMedia("(hover: none)").matches,
+       "hover: none should be matched");
+    ok(content.document.defaultView.matchMedia("(any-pointer: coarse)").matches,
+       "any-pointer: coarse should be matched");
+    ok(content.document.defaultView.matchMedia("(any-hover: none)").matches,
+       "any-hover: none should be matched");
   });
 }
 
