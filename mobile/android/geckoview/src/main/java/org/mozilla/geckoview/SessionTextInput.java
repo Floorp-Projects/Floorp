@@ -25,6 +25,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.UiThread;
 import android.text.Editable;
 import android.text.InputType;
 import android.util.Log;
@@ -352,6 +353,7 @@ public final class SessionTextInput {
      * @return Current text input View or null if not set.
      * @see #setView(View)
      */
+    @UiThread
     public @Nullable View getView() {
         ThreadUtils.assertOnUiThread();
         return mInputConnection != null ? mInputConnection.getView() : null;
@@ -366,6 +368,7 @@ public final class SessionTextInput {
      * @param view Text input View or null to clear current View.
      * @see #getView()
      */
+    @UiThread
     public synchronized void setView(final @Nullable View view) {
         ThreadUtils.assertOnUiThread();
 
@@ -404,6 +407,7 @@ public final class SessionTextInput {
      * @param event KeyEvent instance.
      * @return True if the event was handled.
      */
+    @UiThread
     public boolean onKeyPreIme(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
         return mEditable.onKeyPreIme(getView(), keyCode, event);
@@ -416,6 +420,7 @@ public final class SessionTextInput {
      * @param event KeyEvent instance.
      * @return True if the event was handled.
      */
+    @UiThread
     public boolean onKeyDown(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
         return mEditable.onKeyDown(getView(), keyCode, event);
@@ -428,6 +433,7 @@ public final class SessionTextInput {
      * @param event KeyEvent instance.
      * @return True if the event was handled.
      */
+    @UiThread
     public boolean onKeyUp(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
         return mEditable.onKeyUp(getView(), keyCode, event);
@@ -440,6 +446,7 @@ public final class SessionTextInput {
      * @param event KeyEvent instance.
      * @return True if the event was handled.
      */
+    @UiThread
     public boolean onKeyLongPress(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
         return mEditable.onKeyLongPress(getView(), keyCode, event);
@@ -453,6 +460,7 @@ public final class SessionTextInput {
      * @param event KeyEvent instance.
      * @return True if the event was handled.
      */
+    @UiThread
     public boolean onKeyMultiple(final int keyCode, final int repeatCount,
                                  final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
@@ -464,6 +472,7 @@ public final class SessionTextInput {
      *
      * @param delegate TextInputDelegate instance or null to restore to default.
      */
+    @UiThread
     public void setDelegate(@Nullable final GeckoSession.TextInputDelegate delegate) {
         ThreadUtils.assertOnUiThread();
         mDelegate = delegate;
@@ -474,6 +483,7 @@ public final class SessionTextInput {
      *
      * @return TextInputDelegate instance or a default instance if no delegate has been set.
      */
+    @UiThread
     public GeckoSession.TextInputDelegate getDelegate() {
         ThreadUtils.assertOnUiThread();
         if (mDelegate == null) {
