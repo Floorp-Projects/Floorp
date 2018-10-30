@@ -939,25 +939,24 @@ EditorBase::EndTransactionInternal()
 void
 EditorBase::BeginPlaceholderTransaction(nsAtom* aTransactionName)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mPlaceholderBatch >= 0, "negative placeholder batch count!");
+
   if (!mPlaceholderBatch) {
     NotifyEditorObservers(eNotifyEditorObserversOfBefore);
     // time to turn on the batch
     BeginUpdateViewBatch();
     mPlaceholderTransaction = nullptr;
     mPlaceholderName = aTransactionName;
-    RefPtr<Selection> selection = GetSelection();
-    if (selection) {
-      mSelState.emplace();
-      mSelState->SaveSelection(selection);
-      // Composition transaction can modify multiple nodes and it merges text
-      // node for ime into single text node.
-      // So if current selection is into IME text node, it might be failed
-      // to restore selection by UndoTransaction.
-      // So we need update selection by range updater.
-      if (mPlaceholderName == nsGkAtoms::IMETxnName) {
-        mRangeUpdater.RegisterSelectionState(*mSelState);
-      }
+    mSelState.emplace();
+    mSelState->SaveSelection(SelectionRefPtr());
+    // Composition transaction can modify multiple nodes and it merges text
+    // node for ime into single text node.
+    // So if current selection is into IME text node, it might be failed
+    // to restore selection by UndoTransaction.
+    // So we need update selection by range updater.
+    if (mPlaceholderName == nsGkAtoms::IMETxnName) {
+      mRangeUpdater.RegisterSelectionState(*mSelState);
     }
   }
   mPlaceholderBatch++;
@@ -966,20 +965,18 @@ EditorBase::BeginPlaceholderTransaction(nsAtom* aTransactionName)
 void
 EditorBase::EndPlaceholderTransaction()
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mPlaceholderBatch > 0,
              "zero or negative placeholder batch count when ending batch!");
-  if (mPlaceholderBatch == 1) {
-    RefPtr<Selection> selection = GetSelection();
 
+  if (mPlaceholderBatch == 1) {
     // By making the assumption that no reflow happens during the calls
     // to EndUpdateViewBatch and ScrollSelectionIntoView, we are able to
     // allow the selection to cache a frame offset which is used by the
     // caret drawing code. We only enable this cache here; at other times,
     // we have no way to know whether reflow invalidates it
     // See bugs 35296 and 199412.
-    if (selection) {
-      selection->SetCanCacheFrameOffset(true);
-    }
+    SelectionRefPtr()->SetCanCacheFrameOffset(true);
 
     // time to turn off the batch
     EndUpdateViewBatch();
@@ -990,9 +987,7 @@ EditorBase::EndPlaceholderTransaction()
     ScrollSelectionIntoView(false);
 
     // cached for frame offset are Not available now
-    if (selection) {
-      selection->SetCanCacheFrameOffset(false);
-    }
+    SelectionRefPtr()->SetCanCacheFrameOffset(false);
 
     if (mSelState) {
       // we saved the selection state, but never got to hand it to placeholder
@@ -3256,6 +3251,8 @@ EditorBase::DoJoinNodes(nsINode* aNodeToKeep,
                         nsINode* aNodeToJoin,
                         nsINode* aParent)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   MOZ_ASSERT(aNodeToKeep);
   MOZ_ASSERT(aNodeToJoin);
   MOZ_ASSERT(aParent);
@@ -3399,11 +3396,11 @@ EditorBase::DoJoinNodes(nsINode* aNodeToKeep,
 
   if (allowedTransactionsToChangeSelection) {
     // Editor wants us to set selection at join point.
-    RefPtr<Selection> selection = GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
-    selection->Collapse(aNodeToKeep, AssertedCast<int32_t>(firstNodeLength));
+    DebugOnly<nsresult> rv =
+      SelectionRefPtr()->Collapse(aNodeToKeep,
+                                  AssertedCast<int32_t>(firstNodeLength));
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to collapse Selection at end of the node");
   }
 
   return err.StealNSResult();
@@ -4163,14 +4160,12 @@ EditorBase::JoinNodesDeepWithTransaction(nsIContent& aLeftNode,
 void
 EditorBase::BeginUpdateViewBatch()
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mUpdateCount >= 0, "bad state");
 
   if (!mUpdateCount) {
     // Turn off selection updates and notifications.
-    RefPtr<Selection> selection = GetSelection();
-    if (selection) {
-      selection->StartBatchChanges();
-    }
+    SelectionRefPtr()->StartBatchChanges();
   }
 
   mUpdateCount++;
@@ -4179,6 +4174,7 @@ EditorBase::BeginUpdateViewBatch()
 void
 EditorBase::EndUpdateViewBatch()
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mUpdateCount > 0, "bad state");
 
   if (mUpdateCount <= 0) {
@@ -4191,10 +4187,7 @@ EditorBase::EndUpdateViewBatch()
   }
 
   // Turn selection updating and notifications back on.
-  RefPtr<Selection> selection = GetSelection();
-  if (selection) {
-    selection->EndBatchChanges();
-  }
+  SelectionRefPtr()->EndBatchChanges();
 
   HTMLEditor* htmlEditor = AsHTMLEditor();
   if (!htmlEditor) {
@@ -4207,10 +4200,6 @@ EditorBase::EndUpdateViewBatch()
   // to a document may result in multiple events, some of them quite hard
   // to listen too (in particular when an ancestor of the selection is
   // changed but the selection itself is not changed).
-  if (NS_WARN_IF(!selection)) {
-    return;
-  }
-
   DebugOnly<nsresult> rv = htmlEditor->RefereshEditingUI();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RefereshEditingUI() failed");
 }
@@ -4278,13 +4267,10 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
                                         int32_t* aOffset,
                                         int32_t* aLength)
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return nullptr;
-  }
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   // Check whether the selection is collapsed and we should do nothing:
-  if (NS_WARN_IF(selection->IsCollapsed() && aAction == eNone)) {
+  if (NS_WARN_IF(SelectionRefPtr()->IsCollapsed() && aAction == eNone)) {
     return nullptr;
   }
 
@@ -4292,8 +4278,10 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
   RefPtr<EditAggregateTransaction> aggregateTransaction =
     EditAggregateTransaction::Create();
 
-  for (uint32_t rangeIdx = 0; rangeIdx < selection->RangeCount(); ++rangeIdx) {
-    RefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
+  for (uint32_t rangeIdx = 0;
+       rangeIdx < SelectionRefPtr()->RangeCount();
+       ++rangeIdx) {
+    RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(rangeIdx);
     if (NS_WARN_IF(!range)) {
       return nullptr;
     }
@@ -4530,33 +4518,44 @@ EditorBase::CreateRange(nsINode* aStartContainer,
 nsresult
 EditorBase::AppendNodeToSelectionAsRange(nsINode* aNode)
 {
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (NS_WARN_IF(!aNode)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   nsCOMPtr<nsINode> parentNode = aNode->GetParentNode();
-  NS_ENSURE_TRUE(parentNode, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!parentNode)) {
+    return NS_ERROR_FAILURE;
+  }
 
   int32_t offset = GetChildOffset(aNode, parentNode);
 
   RefPtr<nsRange> range;
   nsresult rv = CreateRange(parentNode, offset, parentNode, offset + 1,
                             getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (NS_WARN_IF(!range)) {
+    return NS_ERROR_FAILURE;
+  }
 
   ErrorResult err;
-  selection->AddRange(*range, err);
+  SelectionRefPtr()->AddRange(*range, err);
+  NS_WARNING_ASSERTION(!err.Failed(), "Failed to add range to Selection");
   return err.StealNSResult();
 }
 
 nsresult
 EditorBase::ClearSelection()
 {
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   ErrorResult rv;
-  selection->RemoveAllRanges(rv);
+  SelectionRefPtr()->RemoveAllRanges(rv);
+  NS_WARNING_ASSERTION(!rv.Failed(),
+                       "Failed to remove all ranges from Selection");
   return rv.StealNSResult();
 }
 
@@ -4708,18 +4707,21 @@ EditorBase::InitializeSelectionAncestorLimit(nsIContent& aAncestorLimit)
 nsresult
 EditorBase::InitializeSelection(EventTarget* aFocusEventTarget)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   nsCOMPtr<nsINode> targetNode = do_QueryInterface(aFocusEventTarget);
-  NS_ENSURE_TRUE(targetNode, NS_ERROR_INVALID_ARG);
+  if (NS_WARN_IF(!targetNode)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   nsCOMPtr<nsIContent> selectionRootContent = FindSelectionRoot(targetNode);
   if (!selectionRootContent) {
     return NS_OK;
   }
 
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_STATE(selection);
-
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-  NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_INITIALIZED);
+  if (NS_WARN_IF(!presShell)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   nsCOMPtr<nsISelectionController> selectionController =
     GetSelectionController();
@@ -4729,9 +4731,11 @@ EditorBase::InitializeSelection(EventTarget* aFocusEventTarget)
 
   // Init the caret
   RefPtr<nsCaret> caret = presShell->GetCaret();
-  NS_ENSURE_TRUE(caret, NS_ERROR_UNEXPECTED);
+  if (NS_WARN_IF(!caret)) {
+    return NS_ERROR_FAILURE;
+  }
   caret->SetIgnoreUserModify(false);
-  caret->SetSelection(selection);
+  caret->SetSelection(SelectionRefPtr());
   selectionController->SetCaretReadOnly(IsReadonly());
   selectionController->SetCaretEnabled(true);
 
@@ -4751,7 +4755,7 @@ EditorBase::InitializeSelection(EventTarget* aFocusEventTarget)
   if (selectionRootContent->GetParent()) {
     InitializeSelectionAncestorLimit(*selectionRootContent);
   } else {
-    selection->SetAncestorLimiter(nullptr);
+    SelectionRefPtr()->SetAncestorLimiter(nullptr);
   }
 
   // If there is composition when this is called, we may need to restore IME
@@ -4760,7 +4764,7 @@ EditorBase::InitializeSelection(EventTarget* aFocusEventTarget)
   if (mComposition && mComposition->IsMovingToNewTextNode()) {
     // We need to look for the new text node from current selection.
     // XXX If selection is changed during reframe, this doesn't work well!
-    nsRange* firstRange = selection->GetRangeAt(0);
+    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
     }

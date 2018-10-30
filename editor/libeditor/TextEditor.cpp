@@ -881,17 +881,14 @@ TextEditor::DeleteSelectionWithTransaction(EDirection aDirection,
 already_AddRefed<Element>
 TextEditor::DeleteSelectionAndCreateElement(nsAtom& aTag)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   nsresult rv = DeleteSelectionAndPrepareToCreateNode();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
 
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return nullptr;
-  }
-
-  EditorRawDOMPoint pointToInsert(selection->AnchorRef());
+  EditorRawDOMPoint pointToInsert(SelectionRefPtr()->AnchorRef());
   if (!pointToInsert.IsSet()) {
     return nullptr;
   }
@@ -904,7 +901,7 @@ TextEditor::DeleteSelectionAndCreateElement(nsAtom& aTag)
   NS_WARNING_ASSERTION(advanced,
                        "Failed to move offset next to the new element");
   ErrorResult error;
-  selection->Collapse(afterNewElement, error);
+  SelectionRefPtr()->Collapse(afterNewElement, error);
   if (NS_WARN_IF(error.Failed())) {
     // XXX Even if it succeeded to create new element, this returns error
     //     when Selection.Collapse() fails something.  This could occur with
@@ -918,28 +915,25 @@ TextEditor::DeleteSelectionAndCreateElement(nsAtom& aTag)
 nsresult
 TextEditor::DeleteSelectionAndPrepareToCreateNode()
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (NS_WARN_IF(!selection->GetAnchorFocusRange())) {
+  if (NS_WARN_IF(!SelectionRefPtr()->GetAnchorFocusRange())) {
     return NS_OK;
   }
 
-  if (!selection->GetAnchorFocusRange()->Collapsed()) {
+  if (!SelectionRefPtr()->GetAnchorFocusRange()->Collapsed()) {
     nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    MOZ_ASSERT(selection->GetAnchorFocusRange() &&
-               selection->GetAnchorFocusRange()->Collapsed(),
+    MOZ_ASSERT(SelectionRefPtr()->GetAnchorFocusRange() &&
+               SelectionRefPtr()->GetAnchorFocusRange()->Collapsed(),
                "Selection not collapsed after delete");
   }
 
   // If the selection is a chardata node, split it if necessary and compute
   // where to put the new node
-  EditorDOMPoint atAnchor(selection->AnchorRef());
+  EditorDOMPoint atAnchor(SelectionRefPtr()->AnchorRef());
   if (NS_WARN_IF(!atAnchor.IsSet()) || !atAnchor.IsInDataNode()) {
     return NS_OK;
   }
@@ -954,7 +948,7 @@ TextEditor::DeleteSelectionAndPrepareToCreateNode()
       return NS_ERROR_FAILURE;
     }
     ErrorResult error;
-    selection->Collapse(atAnchorContainer, error);
+    SelectionRefPtr()->Collapse(atAnchorContainer, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -967,7 +961,7 @@ TextEditor::DeleteSelectionAndPrepareToCreateNode()
       return NS_ERROR_FAILURE;
     }
     ErrorResult error;
-    selection->Collapse(afterAnchorContainer, error);
+    SelectionRefPtr()->Collapse(afterAnchorContainer, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -985,7 +979,7 @@ TextEditor::DeleteSelectionAndPrepareToCreateNode()
     return NS_ERROR_FAILURE;
   }
   MOZ_ASSERT(atRightNode.IsSetAndValid());
-  selection->Collapse(atRightNode, error);
+  SelectionRefPtr()->Collapse(atRightNode, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -1803,17 +1797,14 @@ TextEditor::Redo(uint32_t aCount)
 bool
 TextEditor::CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed)
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (!selection) {
-    return false;
-  }
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (aPasswordFieldAllowed == ePasswordFieldNotAllowed &&
       IsPasswordEditor()) {
     return false;
   }
 
-  return !selection->IsCollapsed();
+  return !SelectionRefPtr()->IsCollapsed();
 }
 
 bool
@@ -1821,20 +1812,20 @@ TextEditor::FireClipboardEvent(EventMessage aEventMessage,
                                int32_t aSelectionType,
                                bool* aActionTaken)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   if (aEventMessage == ePaste) {
     CommitComposition();
   }
 
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-  NS_ENSURE_TRUE(presShell, false);
-
-  RefPtr<Selection> selection = GetSelection();
-  if (!selection) {
+  if (NS_WARN_IF(!presShell)) {
     return false;
   }
 
   if (!nsCopySupport::FireClipboardEvent(aEventMessage, aSelectionType,
-                                         presShell, selection, aActionTaken)) {
+                                         presShell, SelectionRefPtr(),
+                                         aActionTaken)) {
     return false;
   }
 
@@ -1935,6 +1926,8 @@ TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
                                  uint32_t aDocumentEncoderFlags,
                                  const nsACString& aCharset) const
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   nsCOMPtr<nsIDocumentEncoder> docEncoder;
   if (!mCachedDocumentEncoder ||
       !mCachedDocumentEncoderType.Equals(aFormatType)) {
@@ -1975,11 +1968,7 @@ TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   // We do this either if the OutputSelectionOnly flag is set,
   // in which case we use our existing selection ...
   if (aDocumentEncoderFlags & nsIDocumentEncoder::OutputSelectionOnly) {
-    RefPtr<Selection> selection = GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return nullptr;
-    }
-    rv = docEncoder->SetSelection(selection);
+    rv = docEncoder->SetSelection(SelectionRefPtr());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
@@ -2179,10 +2168,9 @@ TextEditor::SharedOutputString(uint32_t aFlags,
                                bool* aIsCollapsed,
                                nsAString& aResult)
 {
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  *aIsCollapsed = selection->IsCollapsed();
+  *aIsCollapsed = SelectionRefPtr()->IsCollapsed();
 
   if (!*aIsCollapsed) {
     aFlags |= nsIDocumentEncoder::OutputSelectionOnly;
