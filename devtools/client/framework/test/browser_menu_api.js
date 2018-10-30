@@ -66,7 +66,7 @@ async function testMenuPopup(toolbox) {
       disabled: true,
     }),
     new MenuItem({
-      l10nID: "editmenu-undo",
+      l10nID: "foo",
     }),
   ];
 
@@ -132,7 +132,7 @@ async function testSubmenu(toolbox) {
     },
   }));
   menu.append(new MenuItem({
-    l10nID: "editmenu-copy",
+    l10nID: "submenu-parent",
     submenu: submenu,
   }));
   menu.append(new MenuItem({
@@ -152,7 +152,7 @@ async function testSubmenu(toolbox) {
   is(menus.length, 2, "Correct number of menus");
   ok(!menus[0].hasAttribute("label"), "No label: should be set by localization");
   ok(!menus[0].hasAttribute("disabled"), "Correct disabled state");
-  is(menus[0].getAttribute("data-l10n-id"), "editmenu-copy", "Correct localization attribute");
+  is(menus[0].getAttribute("data-l10n-id"), "submenu-parent", "Correct localization attribute");
 
   is(menus[1].getAttribute("accesskey"), "A", "Correct accesskey");
   ok(menus[1].hasAttribute("disabled"), "Correct disabled state");
