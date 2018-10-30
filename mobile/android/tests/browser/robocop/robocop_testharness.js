@@ -56,7 +56,9 @@ function testOneFile(uri) {
   let principal = SpecialPowers.Cc["@mozilla.org/systemprincipal;1"]
                                .createInstance(SpecialPowers.Ci.nsIPrincipal);
 
-  let testScope = SpecialPowers.Cu.Sandbox(principal);
+  let testScope =
+    SpecialPowers.Cu.Sandbox(principal, { sandboxName: uri,
+                                          wantGlobalProperties: ["ChromeUtils"] });
 
   // Populate test environment with test harness prerequisites.
   testScope.Components = SpecialPowers.Components;
