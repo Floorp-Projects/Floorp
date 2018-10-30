@@ -298,6 +298,10 @@ public:
   Selection* GetSelection(SelectionType aSelectionType =
                                           SelectionType::eNormal) const
   {
+    if (aSelectionType == SelectionType::eNormal &&
+        IsEditActionDataAvailable()) {
+      return SelectionRefPtr().get();
+    }
     nsISelectionController* sc = GetSelectionController();
     if (!sc) {
       return nullptr;
