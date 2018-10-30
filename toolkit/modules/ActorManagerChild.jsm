@@ -212,7 +212,7 @@ class SingletonDispatcher extends Dispatcher {
       this.mm.removeMessageListener(msg, this);
     }
     for (let [event, listener, options] of this.listeners) {
-      this.window.removeEventListener(event, listener, options);
+      this.mm.removeEventListener(event, listener, options);
     }
 
     for (let actor of this.instances.values()) {
@@ -242,10 +242,16 @@ class SingletonDispatcher extends Dispatcher {
     }
   }
 
+  handleActorEvent(actor, event) {
+    if (event.target.ownerGlobal == this.window) {
+      this.getActor(actor).handleEvent(event);
+    }
+  }
+
   addEventListener(event, actor, options) {
     let listener = this.handleActorEvent.bind(this, actor);
     this.listeners.push([event, listener, options]);
-    this.window.addEventListener(event, listener, options);
+    this.mm.addEventListener(event, listener, options);
   }
 }
 
