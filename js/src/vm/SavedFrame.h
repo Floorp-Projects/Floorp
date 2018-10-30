@@ -97,14 +97,6 @@ class SavedFrame : public NativeObject {
         RootedIterator end() { return RootedIterator(); }
     };
 
-    static bool isSavedFrameOrWrapper(JSObject& obj) {
-        auto unwrapped = CheckedUnwrap(&obj);
-        if (!unwrapped) {
-            return false;
-        }
-        return unwrapped->is<SavedFrame>();
-    }
-
     struct Lookup;
     struct HashPolicy;
 
