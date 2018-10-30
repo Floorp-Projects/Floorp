@@ -126,6 +126,18 @@ mozlint:
             - 'python/mozlint/**'
             - 'tools/lint/**'
 
+mozrelease:
+    description: python/mozrelease unit tests
+    python-version: [2]
+    treeherder:
+        symbol: release
+    run:
+        using: python-test
+        subsuite: mozrelease
+    when:
+        files-changed:
+            - 'python/mozrelease/**'
+
 mozterm:
     description: python/mozterm unit tests
     python-version: [2, 3]
