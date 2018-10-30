@@ -400,12 +400,11 @@ OfflineClockDriver::GetCurrentTimeStamp()
 }
 
 void
-SystemClockDriver::WaitForNextIteration()
+ThreadedDriver::WaitForNextIteration()
 {
   GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
 
   TimeDuration timeout = TimeDuration::Forever();
-  TimeStamp now = TimeStamp::Now();
 
   // This lets us avoid hitting the Atomic twice when we know we won't sleep
   bool another = GraphImpl()->mNeedAnotherIteration; // atomic
@@ -417,29 +416,18 @@ SystemClockDriver::WaitForNextIteration()
   // (EnsureNextIteration sets mNeedAnotherIteration, then tests
   // mGraphDriverAsleep
   if (another || GraphImpl()->mNeedAnotherIteration) { // atomic
-    int64_t timeoutMS = MEDIA_GRAPH_TARGET_PERIOD_MS -
-      int64_t((now - mCurrentTimeStamp).ToMilliseconds());
-    // Make sure timeoutMS doesn't overflow 32 bits by waking up at
-    // least once a minute, if we need to wake up at all
-    timeoutMS = std::max<int64_t>(0, std::min<int64_t>(timeoutMS, 60*1000));
-    timeout = TimeDuration::FromMilliseconds(timeoutMS);
-    LOG(LogLevel::Verbose,
-        ("%p: Waiting for next iteration; at %f, timeout=%f",
-         GraphImpl(),
-         (now - mInitialTimeStamp).ToSeconds(),
-         timeoutMS / 1000.0));
+    timeout = WaitInterval();
     if (!another) {
       GraphImpl()->mGraphDriverAsleep = false; // atomic
       another = true;
     }
   }
   if (!timeout.IsZero()) {
-    GraphImpl()->GetMonitor().Wait(timeout);
+    CVStatus status = GraphImpl()->GetMonitor().Wait(timeout);
     LOG(LogLevel::Verbose,
-        ("%p: Resuming after timeout; at %f, elapsed=%f",
+        ("%p: Resuming after %s",
          GraphImpl(),
-         (TimeStamp::Now() - mInitialTimeStamp).ToSeconds(),
-         (TimeStamp::Now() - now).ToSeconds()));
+         status == CVStatus::Timeout ? "timeout" : "wake-up"));
   }
 
   if (!another) {
@@ -448,11 +436,30 @@ SystemClockDriver::WaitForNextIteration()
   GraphImpl()->mNeedAnotherIteration = false; // atomic
 }
 
-void SystemClockDriver::WakeUp()
+void
+ThreadedDriver::WakeUp()
 {
   GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
   GraphImpl()->mGraphDriverAsleep = false; // atomic
   GraphImpl()->GetMonitor().Notify();
+}
+
+TimeDuration
+SystemClockDriver::WaitInterval()
+{
+  TimeStamp now = TimeStamp::Now();
+  int64_t timeoutMS = MEDIA_GRAPH_TARGET_PERIOD_MS -
+    int64_t((now - mCurrentTimeStamp).ToMilliseconds());
+  // Make sure timeoutMS doesn't overflow 32 bits by waking up at
+  // least once a minute, if we need to wake up at all
+  timeoutMS = std::max<int64_t>(0, std::min<int64_t>(timeoutMS, 60*1000));
+  LOG(LogLevel::Verbose,
+      ("%p: Waiting for next iteration; at %f, timeout=%f",
+       GraphImpl(),
+       (now - mInitialTimeStamp).ToSeconds(),
+       timeoutMS / 1000.0));
+
+  return TimeDuration::FromMilliseconds(timeoutMS);
 }
 
 OfflineClockDriver::OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl, GraphTime aSlice)
@@ -472,16 +479,11 @@ OfflineClockDriver::GetIntervalForIteration()
   return GraphImpl()->MillisecondsToMediaTime(mSlice);
 }
 
-void
-OfflineClockDriver::WaitForNextIteration()
+TimeDuration
+OfflineClockDriver::WaitInterval()
 {
-  // No op: we want to go as fast as possible when we are offline
-}
-
-void
-OfflineClockDriver::WakeUp()
-{
-  MOZ_ASSERT(false, "An offline graph should not have to wake up.");
+  // We want to go as fast as possible when we are offline
+  return 0;
 }
 
 AsyncCubebTask::AsyncCubebTask(AudioCallbackDriver* aDriver,
