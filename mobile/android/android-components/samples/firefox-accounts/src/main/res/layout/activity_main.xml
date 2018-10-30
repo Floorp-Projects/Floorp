@@ -58,7 +58,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/checkboxKeys"
         android:layout_gravity="center"
-        android:text="@string/log_out" />
+        android:text="" />
 
     <TextView
         android:layout_width="match_parent"
