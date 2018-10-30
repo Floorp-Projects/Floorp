@@ -3546,6 +3546,7 @@ public class GeckoSession extends LayerSession
          * @param session Session instance.
          * @param reason Reason for the reset.
          */
+        @UiThread
         void restartInput(@NonNull GeckoSession session, @RestartReason int reason);
 
         /**
@@ -3555,6 +3556,7 @@ public class GeckoSession extends LayerSession
          * @param session Session instance.
          * @see #hideSoftInput
          * */
+        @UiThread
         void showSoftInput(@NonNull GeckoSession session);
 
         /**
@@ -3564,6 +3566,7 @@ public class GeckoSession extends LayerSession
          * @param session Session instance.
          * @see #showSoftInput
          * */
+        @UiThread
         void hideSoftInput(@NonNull GeckoSession session);
 
         /**
@@ -3576,6 +3579,7 @@ public class GeckoSession extends LayerSession
          * @param compositionStart Composition start offset, or -1 if there is no composition.
          * @param compositionEnd Composition end offset, or -1 if there is no composition.
          */
+        @UiThread
         void updateSelection(@NonNull GeckoSession session, int selStart, int selEnd,
                              int compositionStart, int compositionEnd);
 
@@ -3588,6 +3592,7 @@ public class GeckoSession extends LayerSession
          * @param request The extract text request.
          * @param text The extracted text.
          */
+        @UiThread
         void updateExtractedText(@NonNull GeckoSession session,
                                  @NonNull ExtractedTextRequest request,
                                  @NonNull ExtractedText text);
@@ -3600,6 +3605,7 @@ public class GeckoSession extends LayerSession
          * @param session Session instance.
          * @param info Cursor-anchor information.
          */
+        @UiThread
         void updateCursorAnchorInfo(@NonNull GeckoSession session, @NonNull CursorAnchorInfo info);
 
         @Retention(RetentionPolicy.SOURCE)
@@ -3639,6 +3645,7 @@ public class GeckoSession extends LayerSession
          *                  SessionTextInput#onProvideAutofillVirtualStructure} and can be used
          *                  with {@link SessionTextInput#autofill}.
          */
+        @UiThread
         void notifyAutoFill(@NonNull GeckoSession session, @AutoFillNotification int notification,
                             int virtualId);
     }
