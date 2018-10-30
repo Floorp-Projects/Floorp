@@ -1,0 +1,93 @@
+{
+  "title": "OnboardingMessage",
+  "description": "A template with a title, icon, button and description. No markup allowed.",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "title": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "The message displayed in the title of the onboarding card"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "string_id": {
+              "type": "string"
+            }
+          },
+          "required": ["string_id"],
+          "description": "Id of localized string for onboarding card title"
+        }
+      ],
+      "description": "Id of localized string or message override."
+    },
+    "text": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "The message displayed in the description of the onboarding card"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "string_id": {
+              "type": "string"
+            }
+          },
+          "required": ["string_id"],
+          "description": "Id of localized string for onboarding card description"
+        }
+      ],
+      "description": "Id of localized string or message override."
+    },
+    "icon": {
+      "allOf": [
+        {
+          "type": "string",
+          "description": "Image associated with the onboarding card"
+        }
+      ]
+    },
+    "button_label": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "The label of the onboarding card's action button"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "string_id": {
+              "type": "string"
+            }
+          },
+          "required": ["string_id"],
+          "description": "Id of localized string for onboarding card button"
+        }
+      ],
+      "description": "Id of localized string or message override."
+    },
+    "button_action": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Action dispatched by the button."
+        },
+        "data": {
+          "properties": {
+            "args": {
+              "type": "string",
+              "description": "Additional parameters for button action, for example which link the button should open."
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["title", "text", "icon", "button_label", "button_action"]
+}
+
