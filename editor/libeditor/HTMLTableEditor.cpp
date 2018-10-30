@@ -1401,6 +1401,8 @@ nsresult
 HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
                                              int32_t aColumnIndex)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   // XXX Why don't this method remove proper <col> (and <colgroup>)?
   ErrorResult error;
   IgnoredErrorResult ignoredError;
@@ -1473,10 +1475,6 @@ HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
 
     if (tableSize.mRowCount == 1) {
       // We're deleting the last row.  So, let's remove the <table> now.
-      RefPtr<Selection> selection = GetSelection();
-      if (NS_WARN_IF(!selection)) {
-        return NS_ERROR_FAILURE;
-      }
       nsresult rv = DeleteTableElementAndChildrenWithTransaction(aTableElement);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -3958,12 +3956,9 @@ HTMLEditor::SetSelectionAfterTableEdit(Element* aTable,
                                        int32_t aDirection,
                                        bool aSelected)
 {
-  if (NS_WARN_IF(!aTable) || Destroyed()) {
-    return;
-  }
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  RefPtr<Selection> selection = GetSelection();
-  if (!selection) {
+  if (NS_WARN_IF(!aTable) || Destroyed()) {
     return;
   }
 
@@ -4026,7 +4021,9 @@ HTMLEditor::SetSelectionAfterTableEdit(Element* aTable,
     if (NS_WARN_IF(!atTable.IsSetAndValid())) {
       return;
     }
-    selection->Collapse(atTable);
+    DebugOnly<nsresult> rv = SelectionRefPtr()->Collapse(atTable);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to collapse Selection at the table");
     return;
   }
   // Last resort: Set selection to start of doc

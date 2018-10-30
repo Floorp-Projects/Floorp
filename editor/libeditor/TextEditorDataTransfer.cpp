@@ -70,10 +70,9 @@ TextEditor::InsertTextAt(const nsAString& aStringToInsert,
                          int32_t aDestOffset,
                          bool aDoDeleteSelection)
 {
-  if (aDestinationNode) {
-    RefPtr<Selection> selection = GetSelection();
-    NS_ENSURE_STATE(selection);
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
+  if (aDestinationNode) {
     nsCOMPtr<nsINode> targetNode = aDestinationNode;
     int32_t targetOffset = aDestOffset;
 
@@ -88,7 +87,8 @@ TextEditor::InsertTextAt(const nsAString& aStringToInsert,
     }
 
     ErrorResult error;
-    selection->Collapse(RawRangeBoundary(targetNode, targetOffset), error);
+    SelectionRefPtr()->Collapse(RawRangeBoundary(targetNode, targetOffset),
+                                error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }

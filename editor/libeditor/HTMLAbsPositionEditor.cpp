@@ -564,6 +564,8 @@ HTMLEditor::SetPositionToAbsoluteOrStatic(Element& aElement,
 nsresult
 HTMLEditor::SetPositionToAbsolute(Element& aElement)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   int32_t x, y;
@@ -580,10 +582,6 @@ HTMLEditor::SetPositionToAbsolute(Element& aElement)
   // container
   nsINode* parentNode = aElement.GetParentNode();
   if (parentNode->GetChildCount() == 1) {
-    RefPtr<Selection> selection = GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
     RefPtr<Element> newBrElement =
       InsertBrElementWithTransaction(EditorRawDOMPoint(parentNode, 0));
     if (NS_WARN_IF(!newBrElement)) {
