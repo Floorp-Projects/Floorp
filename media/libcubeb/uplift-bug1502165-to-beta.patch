@@ -1,0 +1,22 @@
+diff --git a/media/libcubeb/src/cubeb_audiounit.cpp b/media/libcubeb/src/cubeb_audiounit.cpp
+--- a/media/libcubeb/src/cubeb_audiounit.cpp
++++ b/media/libcubeb/src/cubeb_audiounit.cpp
+@@ -3408,17 +3408,17 @@ audiounit_get_devices_of_type(cubeb_devi
+                                    devices.data());
+   if (ret != noErr) {
+     return vector<AudioObjectID>();
+   }
+ 
+   // Remove the aggregate device from the list of devices (if any).
+   for (auto it = devices.begin(); it != devices.end();) {
+     CFStringRef name = get_device_name(*it);
+-    if (CFStringFind(name, CFSTR("CubebAggregateDevice"), 0).location !=
++    if (name && CFStringFind(name, CFSTR("CubebAggregateDevice"), 0).location !=
+         kCFNotFound) {
+       it = devices.erase(it);
+     } else {
+       it++;
+     }
+   }
+ 
+   /* Expected sorted but did not find anything in the docs. */
