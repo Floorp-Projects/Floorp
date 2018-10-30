@@ -82,11 +82,11 @@ class VersionControlCommands(object):
 
         if update_only:
             if repo.name == 'git':
-                bootstrap.update_git_tools(vcs, self._context.state_dir)
+                bootstrap.update_git_tools(vcs, self._context.state_dir, self._context.topdir)
             else:
                 bootstrap.update_vct(vcs, self._context.state_dir)
         else:
             if repo.name == 'git':
-                bootstrap.configure_git(vcs, self._context.state_dir)
+                bootstrap.configure_git(vcs, self._context.state_dir, self._context.topdir)
             else:
                 bootstrap.configure_mercurial(vcs, self._context.state_dir)
