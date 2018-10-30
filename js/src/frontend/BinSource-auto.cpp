@@ -3631,10 +3631,16 @@ BinASTParser<Tok>::parseInterfaceForInOfBinding(const size_t start, const BinKin
     // Restored by `kindGuard`.
     variableDeclarationKind_ = kind_;
     MOZ_TRY(checkBinding(binding->template as<NameNode>().atom()->asPropertyName()));
-    auto pnk =
-        kind_ == VariableDeclarationKind::Let
-            ? ParseNodeKind::Let
-            : ParseNodeKind::Var;
+    ParseNodeKind pnk;
+    switch (kind_) {
+      case VariableDeclarationKind::Var:
+        pnk = ParseNodeKind::Var;
+        break;
+      case VariableDeclarationKind::Let:
+        return raiseError("Let is not supported in this preview release");
+      case VariableDeclarationKind::Const:
+        return raiseError("Const is not supported in this preview release");
+    }
     BINJS_TRY_DECL(result, factory_.newDeclarationList(pnk, tokenizer_->pos(start)));
     factory_.addList(result, binding);
     return result;
@@ -5007,11 +5013,9 @@ BinASTParser<Tok>::parseInterfaceVariableDeclaration(const size_t start, const B
         pnk = ParseNodeKind::Var;
         break;
       case VariableDeclarationKind::Let:
-        pnk = ParseNodeKind::Let;
-        break;
+        return raiseError("Let is not supported in this preview release");
       case VariableDeclarationKind::Const:
-        pnk = ParseNodeKind::Const;
-        break;
+        return raiseError("Const is not supported in this preview release");
     }
     declarators->setKind(pnk);
     auto result = declarators;
