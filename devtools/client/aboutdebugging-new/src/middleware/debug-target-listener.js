@@ -68,7 +68,7 @@ function debugTargetListenerMiddleware(store) {
         }
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.WORKER)) {
-          client.addListener("workerListChanged", onWorkersUpdated);
+          client.mainRoot.on("workerListChanged", onWorkersUpdated);
           client.addListener("serviceWorkerRegistrationListChanged", onWorkersUpdated);
           client.mainRoot.on("processListChanged", onWorkersUpdated);
           client.addListener("registration-changed", onWorkersUpdated);
@@ -89,7 +89,7 @@ function debugTargetListenerMiddleware(store) {
         }
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.WORKER)) {
-          client.removeListener("workerListChanged", onWorkersUpdated);
+          client.mainRoot.off("workerListChanged", onWorkersUpdated);
           client.removeListener("serviceWorkerRegistrationListChanged", onWorkersUpdated);
           client.mainRoot.off("processListChanged", onWorkersUpdated);
           client.removeListener("registration-changed", onWorkersUpdated);
