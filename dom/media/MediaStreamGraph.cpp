@@ -1230,18 +1230,6 @@ MediaStreamGraphImpl::ProduceDataForStreamsBlockByBlock(uint32_t aStreamIndex,
                "Something went wrong with rounding to block boundaries");
 }
 
-bool
-MediaStreamGraphImpl::AllFinishedStreamsNotified()
-{
-  MOZ_ASSERT(OnGraphThread());
-  for (MediaStream* stream : AllStreams()) {
-    if (stream->mFinished && !stream->mNotifiedFinished) {
-      return false;
-    }
-  }
-  return true;
-}
-
 void
 MediaStreamGraphImpl::RunMessageAfterProcessing(UniquePtr<ControlMessage> aMessage)
 {
@@ -1451,7 +1439,6 @@ MediaStreamGraphImpl::UpdateMainThreadState()
   MOZ_ASSERT(OnGraphThread());
   MonitorAutoLock lock(mMonitor);
   bool finalUpdate = mForceShutDown ||
-    (mProcessedTime >= mEndTime && AllFinishedStreamsNotified()) ||
     (IsEmpty() && mBackMessageQueue.IsEmpty());
   PrepareUpdatesToMainThreadState(finalUpdate);
   if (finalUpdate) {
