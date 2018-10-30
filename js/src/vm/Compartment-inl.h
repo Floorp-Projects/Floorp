@@ -191,6 +191,68 @@ UnwrapThisForNonGenericMethod(JSContext* cx,
     return UnwrapThisForNonGenericMethod(cx, val, className, methodName, MutableHandle<T*>(out));
 }
 
+/**
+ * Read a private slot that is known to point to a particular type of object.
+ *
+ * Some internal slots specified in various standards effectively have static
+ * types. For example, the [[ownerReadableStream]] slot of a stream reader is
+ * guaranteed to be a ReadableStream. However, because of compartments, we
+ * sometimes store a cross-compartment wrapper in that slot. And since wrappers
+ * can be nuked, that wrapper may become a dead object proxy.
+ *
+ * UnwrapInternalSlot() copes with the cross-compartment and dead object cases,
+ * but not plain bugs where the slot hasn't been initialized or doesn't contain
+ * the expected type of object. Call this only if the slot is certain to
+ * contain either an instance of T, a wrapper for a T, or a dead object.
+ *
+ * cx and unwrappedObj are not required to be same-compartment.
+ *
+ * DANGER: The result stored in `unwrappedResult` will not necessarily be
+ * same-compartment with either cx or obj.
+ */
+template <class T>
+MOZ_MUST_USE bool
+UnwrapInternalSlot(JSContext* cx,
+                   Handle<NativeObject*> unwrappedObj,
+                   uint32_t slot,
+                   MutableHandle<T*> unwrappedResult)
+{
+    static_assert(!std::is_convertible<T*, Wrapper*>::value,
+                  "T can't be a Wrapper type; this function discards wrappers");
+
+    JSObject* result = &unwrappedObj->getFixedSlot(slot).toObject();
+    if (IsProxy(result)) {
+        if (JS_IsDeadWrapper(result)) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+            return false;
+        }
+
+        // It would probably be OK to do an unchecked unwrap here, but we allow
+        // arbitrary security policies, so check anyway.
+        result = CheckedUnwrap(result);
+        if (!result) {
+            ReportAccessDenied(cx);
+            return false;
+        }
+    }
+
+    unwrappedResult.set(&result->as<T>());
+    return true;
+}
+
+/**
+ * Extra signature so callers don't have to specify T explicitly.
+ */
+template <class T>
+inline MOZ_MUST_USE bool
+UnwrapInternalSlot(JSContext* cx,
+                   Handle<NativeObject*> obj,
+                   uint32_t slot,
+                   Rooted<T*>* unwrappedResult)
+{
+    return UnwrapInternalSlot(cx, obj, slot, MutableHandle<T*>(unwrappedResult));
+}
+
 } // namespace js
 
 #endif /* vm_Compartment_inl_h */
