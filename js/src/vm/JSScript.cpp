@@ -3242,7 +3242,8 @@ PrivateScriptData::traceChildren(JSTracer* trc)
 }
 
 JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry, const ReadOnlyCompileOptions& options,
-                   HandleObject sourceObject, uint32_t bufStart, uint32_t bufEnd,
+                   HandleObject sourceObject,
+                   uint32_t sourceStart, uint32_t sourceEnd,
                    uint32_t toStringStart, uint32_t toStringEnd)
   :
 #ifndef JS_CODEGEN_NONE
@@ -3250,8 +3251,8 @@ JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry, const ReadOnlyCompileOp
     jitCodeSkipArgCheck_(stubEntry),
 #endif
     realm_(realm),
-    sourceStart_(bufStart),
-    sourceEnd_(bufEnd),
+    sourceStart_(sourceStart),
+    sourceEnd_(sourceEnd),
     toStringStart_(toStringStart),
     toStringEnd_(toStringEnd),
 #ifdef MOZ_VTUNE
@@ -3259,13 +3260,10 @@ JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry, const ReadOnlyCompileOp
 #endif
     bitFields_{} // zeroes everything -- some fields custom-assigned below
 {
-    // bufStart and bufEnd specify the range of characters parsed by the
-    // Parser to produce this script. toStringStart and toStringEnd specify
-    // the range of characters to be returned for Function.prototype.toString.
-    MOZ_ASSERT(bufStart <= bufEnd);
-    MOZ_ASSERT(toStringStart <= toStringEnd);
-    MOZ_ASSERT(toStringStart <= bufStart);
-    MOZ_ASSERT(toStringEnd >= bufEnd);
+    // See JSScript.h for further details.
+    MOZ_ASSERT(toStringStart <= sourceStart);
+    MOZ_ASSERT(sourceStart <= sourceEnd);
+    MOZ_ASSERT(sourceEnd <= toStringEnd);
 
     bitFields_.noScriptRval_ = options.noScriptRval;
     bitFields_.selfHosted_ = options.selfHostingMode;
@@ -3277,8 +3275,7 @@ JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry, const ReadOnlyCompileOp
 
 /* static */ JSScript*
 JSScript::createInitialized(JSContext* cx, const ReadOnlyCompileOptions& options,
-                            HandleObject sourceObject,
-                            uint32_t bufStart, uint32_t bufEnd,
+                            HandleObject sourceObject, uint32_t sourceStart, uint32_t sourceEnd,
                             uint32_t toStringStart, uint32_t toStringEnd)
 {
     void* script = Allocate<JSScript>(cx);
@@ -3295,15 +3292,15 @@ JSScript::createInitialized(JSContext* cx, const ReadOnlyCompileOptions& options
         ;
 
     return new (script) JSScript(cx->realm(), stubEntry, options, sourceObject,
-                                 bufStart, bufEnd, toStringStart, toStringEnd);
+                                 sourceStart, sourceEnd, toStringStart, toStringEnd);
 }
 
 /* static */ JSScript*
 JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
-                 HandleObject sourceObject, uint32_t bufStart, uint32_t bufEnd,
+                 HandleObject sourceObject, uint32_t sourceStart, uint32_t sourceEnd,
                  uint32_t toStringStart, uint32_t toStringEnd)
 {
-    RootedScript script(cx, createInitialized(cx, options, sourceObject, bufStart, bufEnd,
+    RootedScript script(cx, createInitialized(cx, options, sourceObject, sourceStart, sourceEnd,
                                               toStringStart, toStringEnd));
     if (!script) {
         return nullptr;
