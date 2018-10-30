@@ -34,6 +34,33 @@ class AccessibilityStartup {
   }
 
   /**
+   * Determine which features are supported based on the version of the server. Also, sync
+   * the state of the accessibility front/actor.
+   * @return {Promise}
+   *         A promise that returns true when accessibility front is fully in sync with
+   *         the actor.
+   */
+  async prepareAccessibility() {
+    // We must call a method on an accessibility front here (such as getWalker), in
+    // oreder to be able to check actor's backward compatibility via actorHasMethod.
+    // See targe.js@getActorDescription for more information.
+    this._walker = await this._accessibility.getWalker();
+
+    this._supports = {};
+    // Only works with FF61+ targets
+    this._supports.enableDisable =
+      await this.target.actorHasMethod("accessibility", "enable");
+
+    if (this._supports.enableDisable) {
+      this._supports.relations =
+        await this.target.actorHasMethod("accessible", "getRelations");
+      await this._accessibility.bootstrap();
+    }
+
+    return true;
+  }
+
+  /**
    * Fully initialize accessibility front. Also add listeners for accessibility
    * service lifecycle events that affect the state of the tool tab highlight.
    * @return {Promise}
@@ -42,20 +69,22 @@ class AccessibilityStartup {
   initAccessibility() {
     if (!this._initAccessibility) {
       this._initAccessibility = (async function() {
-        this._accessibility = this.target.getFront("accessibility");
-        // We must call a method on an accessibility front here (such as getWalker), in
-        // oreder to be able to check actor's backward compatibility via actorHasMethod.
-        // See targe.js@getActorDescription for more information.
-        this._walker = await this._accessibility.getWalker();
-        this._supports = {};
-        // Only works with FF61+ targets
-        this._supports.enableDisable =
-          await this.target.actorHasMethod("accessibility", "enable");
+        await Promise.race([
+          this.toolbox.isOpen,
+          this.toolbox.once("accessibility-init"),
+        ]);
 
-        if (this._supports.enableDisable) {
-          this._supports.relations =
-            await this.target.actorHasMethod("accessible", "getRelations");
-          await this._accessibility.bootstrap();
+        this._accessibility = this.target.getFront("accessibility");
+        // When target is being destroyed (for example on remoteness change), it
+        // destroy accessibility front. In case when a11y is not fully initialized, that
+        // may result in unresolved promises.
+        const prepared = await Promise.race([
+          this.prepareAccessibility(),
+          this.target.once("close"), // does not have a value.
+        ]);
+        // If the target is being destroyed, no need to continue.
+        if (!prepared) {
+          return;
         }
 
         this._updateToolHighlight();
