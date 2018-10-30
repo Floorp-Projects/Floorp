@@ -21,3 +21,4 @@ function test(arr) {
 }
 
 test([123]);
+test(new Int32Array([123]));
