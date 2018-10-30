@@ -11,7 +11,6 @@ import os
 import posixpath
 import sys
 import traceback
-import subprocess
 from collections import namedtuple
 from datetime import datetime
 
@@ -21,7 +20,7 @@ else:
     from tasks_win import run_all_tests
 
 from progressbar import ProgressBar, NullProgressBar
-from results import TestOutput
+from results import TestOutput, escape_cmdline
 from structuredlog import TestLogger
 
 TESTS_LIB_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -429,7 +428,7 @@ def run_test_remote(test, device, prefix, options):
                        posixpath.join(options.remote_test_root, 'modules/'),
                        posixpath.join(options.remote_test_root, 'tests'))
     if options.show_cmd:
-        print(subprocess.list2cmdline(cmd))
+        print(escape_cmdline(cmd))
 
     env = {}
     if test.tz_pacific:
@@ -615,7 +614,7 @@ def print_test_summary(num_tests, failures, complete, doing, options):
 
         def show_test(res):
             if options.show_failed:
-                print('    ' + subprocess.list2cmdline(res.cmd))
+                print('    ' + escape_cmdline(res.cmd))
             else:
                 print('    ' + ' '.join(res.test.jitflags + [res.test.relpath_tests]))
 
