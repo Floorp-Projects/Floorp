@@ -11,7 +11,7 @@ envs {
     pipInstallOptions = "--trusted-host pypi.python.org --no-cache-dir"
 
     // Setup a miniconda environment.
-    conda "Miniconda3", "Miniconda3-latest", "64", ["glean_parser"]
+    conda "Miniconda3", "Miniconda3-latest", "64", ["glean_parser==0.3.1"]
 }
 
 // Setup the python environment before the build starts.
