@@ -87,16 +87,14 @@ function checkGetTabFailures() {
     .then(
       response => ok(false, "getTab unexpectedly succeed with a wrong tabId"),
       response => {
-        is(response.error, "noTab");
-        is(response.message, "Unable to find tab with tabId '-999'");
+        is(response, "Protocol error (noTab): Unable to find tab with tabId '-999'");
       }
     )
     .then(() => gClient.getTab({ outerWindowID: -999 }))
     .then(
       response => ok(false, "getTab unexpectedly succeed with a wrong outerWindowID"),
       response => {
-        is(response.error, "noTab");
-        is(response.message, "Unable to find tab with outerWindowID '-999'");
+        is(response, "Protocol error (noTab): Unable to find tab with outerWindowID '-999'");
       }
     )
     .then(checkSelectedTargetActor);
