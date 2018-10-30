@@ -405,10 +405,13 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
 template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::addScopeName(AssertedScopeKind scopeKind, HandleAtom name,
                                 ParseContext::Scope* scope, DeclarationKind declKind,
-                                bool isCaptured)
+                                bool isCaptured, bool allowDuplicateName)
 {
     auto ptr = scope->lookupDeclaredNameForAdd(name);
     if (ptr) {
+        if (allowDuplicateName) {
+            return Ok();
+        }
         return raiseError("Variable redeclaration");
     }
 

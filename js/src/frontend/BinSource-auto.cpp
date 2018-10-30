@@ -2118,6 +2118,7 @@ BinASTParser<Tok>::parseInterfaceAssertedBoundName(const size_t start, const Bin
     const BinField expected_fields[2] = { BinField::Name, BinField::IsCaptured };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
+    const bool allowDuplicateName = false;
 
     RootedAtom name(cx_);
     MOZ_TRY_VAR(name, tokenizer_->readIdentifierName());
@@ -2126,7 +2127,7 @@ BinASTParser<Tok>::parseInterfaceAssertedBoundName(const size_t start, const Bin
     ParseContext::Scope* scope;
     DeclarationKind declKind;
     MOZ_TRY(getBoundScope(scopeKind, scope, declKind));
-    MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured));
+    MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured, allowDuplicateName));
     auto result = Ok();
     return result;
 }
@@ -2224,6 +2225,7 @@ BinASTParser<Tok>::parseInterfaceAssertedDeclaredName(const size_t start, const 
     const BinField expected_fields[3] = { BinField::Name, BinField::Kind, BinField::IsCaptured };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
+    const bool allowDuplicateName = false;
 
     RootedAtom name(cx_);
     MOZ_TRY_VAR(name, tokenizer_->readIdentifierName());
@@ -2234,7 +2236,7 @@ BinASTParser<Tok>::parseInterfaceAssertedDeclaredName(const size_t start, const 
     ParseContext::Scope* scope;
     DeclarationKind declKind;
     MOZ_TRY(getDeclaredScope(scopeKind, kind_, scope, declKind));
-    MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured));
+    MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured, allowDuplicateName));
     auto result = Ok();
     return result;
 }
@@ -2317,6 +2319,7 @@ BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(const size_t st
     const BinField expected_fields[3] = { BinField::Index, BinField::Name, BinField::IsCaptured };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
+    bool allowDuplicateName = !parseContext_->sc()->strict();
 
     BINJS_MOZ_TRY_DECL(index, tokenizer_->readUnsignedLong());
 
@@ -2346,7 +2349,7 @@ BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(const size_t st
     ParseContext::Scope* scope;
     DeclarationKind declKind;
     MOZ_TRY(getBoundScope(scopeKind, scope, declKind));
-    MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured));
+    MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured, allowDuplicateName));
     auto result = Ok();
     return result;
 }
