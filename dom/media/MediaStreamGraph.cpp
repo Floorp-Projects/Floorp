@@ -2666,13 +2666,6 @@ MediaStream::RunAfterPendingUpdates(already_AddRefed<nsIRunnable> aRunnable)
   MediaStreamGraphImpl* graph = GraphImpl();
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
 
-  // Special case when a non-realtime graph has not started, to ensure the
-  // runnable will run in finite time.
-  if (!(graph->mRealtime || graph->mNonRealtimeProcessing)) {
-    runnable->Run();
-    return;
-  }
-
   class Message : public ControlMessage {
   public:
     Message(MediaStream* aStream, already_AddRefed<nsIRunnable> aRunnable)
