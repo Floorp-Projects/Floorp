@@ -471,10 +471,6 @@ public:
   {
     mConsumers.RemoveElement(aPort);
   }
-  uint32_t ConsumerCount() const
-  {
-    return mConsumers.Length();
-  }
   StreamTracks& GetStreamTracks() { return mTracks; }
   GraphTime GetStreamTracksStartTime() const { return mTracksStartTime; }
 
