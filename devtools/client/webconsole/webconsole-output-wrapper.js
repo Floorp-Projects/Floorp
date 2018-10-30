@@ -10,8 +10,7 @@ const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 const actions = require("devtools/client/webconsole/actions/index");
-const { createEditContextMenu } = require("devtools/client/framework/toolbox-context-menu");
-const { createContextMenu } = require("devtools/client/webconsole/utils/context-menu");
+const { createContextMenu, createEditContextMenu } = require("devtools/client/webconsole/utils/context-menu");
 const { configureStore } = require("devtools/client/webconsole/store");
 
 const { isPacketPrivate } = require("devtools/client/webconsole/utils/messages");
@@ -165,7 +164,7 @@ WebConsoleOutputWrapper.prototype = {
 
       serviceContainer.openEditContextMenu = (e) => {
         const { screenX, screenY } = e;
-        const menu = createEditContextMenu(window, "webconsole-menu");
+        const menu = createEditContextMenu();
         // Emit the "menu-open" event for testing.
         menu.once("open", () => this.emit("menu-open"));
         menu.popup(screenX, screenY, { doc: this.owner.chromeWindow.document });
