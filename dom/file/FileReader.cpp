@@ -88,6 +88,33 @@ public:
   }
 };
 
+class FileReader::AsyncWaitRunnable final : public CancelableRunnable
+{
+public:
+  explicit AsyncWaitRunnable(FileReader* aReader)
+    : CancelableRunnable("FileReader::AsyncWaitRunnable")
+    , mReader(aReader)
+  {}
+
+  NS_IMETHOD
+  Run() override
+  {
+    if (mReader) {
+      mReader->InitialAsyncWait();
+    }
+    return NS_OK;
+  }
+
+  void
+  Abort()
+  {
+    mReader = nullptr;
+  }
+
+public:
+  RefPtr<FileReader> mReader;
+};
+
 void
 FileReader::RootResultArrayBuffer()
 {
@@ -446,7 +473,8 @@ FileReader::ReadFileContent(Blob& aBlob,
     }
   }
 
-  aRv = DoAsyncWait();
+  mAsyncWaitRunnable = new AsyncWaitRunnable(this);
+  aRv = NS_DispatchToCurrentThread(mAsyncWaitRunnable);
   if (NS_WARN_IF(aRv.Failed())) {
     FreeFileData();
     return;
@@ -454,6 +482,20 @@ FileReader::ReadFileContent(Blob& aBlob,
 
   //FileReader should be in loading state here
   mReadyState = LOADING;
+}
+
+void
+FileReader::InitialAsyncWait()
+{
+  mAsyncWaitRunnable = nullptr;
+
+  nsresult rv = DoAsyncWait();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mReadyState = EMPTY;
+    FreeFileData();
+    return;
+  }
+
   DispatchProgressEvent(NS_LITERAL_STRING(LOADSTART_STR));
 }
 
@@ -774,6 +816,11 @@ FileReader::Abort()
 
   ClearProgressEventTimer();
 
+  if (mAsyncWaitRunnable) {
+    mAsyncWaitRunnable->Abort();
+    mAsyncWaitRunnable = nullptr;
+  }
+
   mReadyState = DONE;
 
   // XXX The spec doesn't say this
@@ -830,6 +877,11 @@ void
 FileReader::Shutdown()
 {
   mReadyState = DONE;
+
+  if (mAsyncWaitRunnable) {
+    mAsyncWaitRunnable->Abort();
+    mAsyncWaitRunnable = nullptr;
+  }
 
   if (mAsyncStream) {
     mAsyncStream->Close();
