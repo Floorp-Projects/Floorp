@@ -1,10 +1,7 @@
 import os
 import shutil
-import subprocess
-import sys
 import unittest
 
-import mozharness.base.log as log
 import mozharness.base.script as script
 import mozharness.mozilla.l10n.locales as locales
 
@@ -12,9 +9,11 @@ ALL_LOCALES = ['ar', 'be', 'de', 'es-ES']
 
 MH_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+
 def cleanup():
     if os.path.exists('test_logs'):
         shutil.rmtree('test_logs')
+
 
 class LocalesTest(locales.LocalesMixin, script.BaseScript):
     def __init__(self, **kwargs):
@@ -27,8 +26,10 @@ class LocalesTest(locales.LocalesMixin, script.BaseScript):
         self.config = {}
         self.log_obj = None
 
+
 class TestLocalesMixin(unittest.TestCase):
     BASE_ABS_DIRS = ['abs_log_dir', 'abs_work_dir', 'base_work_dir']
+
     def setUp(self):
         cleanup()
 
@@ -74,7 +75,9 @@ class TestLocalesMixin(unittest.TestCase):
 
     def test_parse_locales_file(self):
         l = LocalesTest()
-        self.assertEqual(ALL_LOCALES, l.parse_locales_file(os.path.join(MH_DIR, 'test/helper_files/locales.txt')))
+        self.assertEqual(
+            ALL_LOCALES,
+            l.parse_locales_file(os.path.join(MH_DIR, 'test/helper_files/locales.txt')))
 
     def _get_query_abs_dirs_obj(self):
         l = LocalesTest()
@@ -111,7 +114,8 @@ class TestLocalesMixin(unittest.TestCase):
         l.config['locales_dir'] = "locales_dir"
         dirs = l.query_abs_dirs().keys()
         dirs.sort()
-        expected_dirs = self.BASE_ABS_DIRS + ['abs_mozilla_dir', 'abs_locales_src_dir', 'abs_l10n_dir']
+        expected_dirs = self.BASE_ABS_DIRS + [
+            'abs_mozilla_dir', 'abs_locales_src_dir', 'abs_l10n_dir']
         expected_dirs.sort()
         self.assertEqual(dirs, expected_dirs)
 
@@ -123,9 +127,12 @@ class TestLocalesMixin(unittest.TestCase):
         l.config['objdir'] = "objdir"
         dirs = l.query_abs_dirs().keys()
         dirs.sort()
-        expected_dirs = self.BASE_ABS_DIRS + ['abs_mozilla_dir', 'abs_locales_src_dir', 'abs_l10n_dir', 'abs_objdir', 'abs_locales_dir']
+        expected_dirs = self.BASE_ABS_DIRS + [
+            'abs_mozilla_dir', 'abs_locales_src_dir', 'abs_l10n_dir',
+            'abs_objdir', 'abs_locales_dir']
         expected_dirs.sort()
         self.assertEqual(dirs, expected_dirs)
+
 
 if __name__ == '__main__':
     unittest.main()
