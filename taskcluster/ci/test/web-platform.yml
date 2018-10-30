@@ -29,7 +29,7 @@ web-platform-tests:
             linux.*/debug: 18
             macosx64.*/opt: 8
             macosx64/debug: 16
-            windows10-64-ccov/debug: 15
+            windows10.*/debug: 18
             macosx64-ccov/debug: 24
             default: 12
     max-run-time:
