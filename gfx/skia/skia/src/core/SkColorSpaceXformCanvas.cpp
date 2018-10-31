@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+#include "SkCanvasVirtualEnforcer.h"
 #include "SkColorFilter.h"
 #include "SkColorSpaceXformCanvas.h"
 #include "SkColorSpaceXformer.h"
@@ -29,11 +30,11 @@ namespace {
     };
 };
 
-class SkColorSpaceXformCanvas : public SkNoDrawCanvas {
+class SkColorSpaceXformCanvas : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
 public:
     SkColorSpaceXformCanvas(SkCanvas* target, sk_sp<SkColorSpace> targetCS,
                             std::unique_ptr<SkColorSpaceXformer> xformer)
-        : SkNoDrawCanvas(SkIRect::MakeSize(target->getBaseLayerSize()))
+        : SkCanvasVirtualEnforcer<SkNoDrawCanvas>(SkIRect::MakeSize(target->getBaseLayerSize()))
         , fTarget(target)
         , fTargetCS(targetCS)
         , fXformer(std::move(xformer))
@@ -89,8 +90,9 @@ public:
                       const SkPaint& paint) override {
         fTarget->drawPoints(mode, count, pts, fXformer->apply(paint));
     }
-    void onDrawVerticesObject(const SkVertices* vertices, SkBlendMode mode,
-                              const SkPaint& paint) override {
+
+    void onDrawVerticesObject(const SkVertices* vertices, const SkVertices::Bone bones[], int boneCount,
+                              SkBlendMode mode, const SkPaint& paint) override {
         sk_sp<SkVertices> copy;
         if (vertices->hasColors()) {
             int count = vertices->vertexCount();
@@ -98,11 +100,12 @@ public:
             fXformer->apply(xformed.begin(), vertices->colors(), count);
             copy = SkVertices::MakeCopy(vertices->mode(), count, vertices->positions(),
                                         vertices->texCoords(), xformed.begin(),
+                                        vertices->boneIndices(), vertices->boneWeights(),
                                         vertices->indexCount(), vertices->indices());
             vertices = copy.get();
         }
 
-        fTarget->drawVertices(vertices, mode, fXformer->apply(paint));
+        fTarget->drawVertices(vertices, bones, boneCount, mode, fXformer->apply(paint));
     }
 
     void onDrawText(const void* ptr, size_t len,
@@ -119,11 +122,6 @@ public:
                         const SkScalar* xs, SkScalar y,
                         const SkPaint& paint) override {
         fTarget->drawPosTextH(ptr, len, xs, y, fXformer->apply(paint));
-    }
-    void onDrawTextOnPath(const void* ptr, size_t len,
-                          const SkPath& path, const SkMatrix* matrix,
-                          const SkPaint& paint) override {
-        fTarget->drawTextOnPath(ptr, len, path, matrix, fXformer->apply(paint));
     }
     void onDrawTextRSXform(const void* ptr, size_t len,
                            const SkRSXform* xforms, const SkRect* cull,
@@ -265,13 +263,6 @@ public:
         return kNoLayer_SaveLayerStrategy;
     }
 
-#ifdef SK_SUPPORT_LEGACY_DRAWFILTER
-    SkDrawFilter* setDrawFilter(SkDrawFilter* filter) override {
-        SkCanvas::setDrawFilter(filter);
-        return fTarget->setDrawFilter(filter);
-    }
-#endif
-
     // Everything from here on should be uninteresting strictly proxied state-change calls.
     void willSave()    override { fTarget->save(); }
     void willRestore() override { fTarget->restore(); }
@@ -330,13 +321,14 @@ public:
 private:
     sk_sp<SkImage> prepareImage(const SkImage* image) {
         GrContext* gr = fTarget->getGrContext();
+        // If fTarget is GPU-accelerated, we want to upload to a texture before applying the
+        // transform. This way, we can get cache hits in the texture cache and the transform gets
+        // applied on the GPU.
         if (gr) {
-            // If fTarget is GPU-accelerated, we want to upload to a texture
-            // before applying the transform. This way, we can get cache hits
-            // in the texture cache and the transform gets applied on the GPU.
             sk_sp<SkImage> textureImage = image->makeTextureImage(gr, nullptr);
-            if (textureImage)
+            if (textureImage) {
                 return fXformer->apply(textureImage.get());
+            }
         }
         // TODO: Extract a sub image corresponding to the src rect in order
         // to xform only the useful part of the image. Sub image could be reduced

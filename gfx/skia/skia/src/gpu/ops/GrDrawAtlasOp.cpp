@@ -13,7 +13,8 @@
 #include "SkRandom.h"
 #include "SkRectPriv.h"
 
-static sk_sp<GrGeometryProcessor> make_gp(bool hasColors,
+static sk_sp<GrGeometryProcessor> make_gp(const GrShaderCaps* shaderCaps,
+                                          bool hasColors,
                                           GrColor color,
                                           const SkMatrix& viewMatrix) {
     using namespace GrDefaultGeoProcFactory;
@@ -22,7 +23,7 @@ static sk_sp<GrGeometryProcessor> make_gp(bool hasColors,
         gpColor.fType = Color::kPremulGrColorAttribute_Type;
     }
 
-    return GrDefaultGeoProcFactory::Make(gpColor, Coverage::kSolid_Type,
+    return GrDefaultGeoProcFactory::Make(shaderCaps, gpColor, Coverage::kSolid_Type,
                                          LocalCoords::kHasExplicit_Type, viewMatrix);
 }
 
@@ -119,16 +120,19 @@ SkString GrDrawAtlasOp::dumpInfo() const {
 
 void GrDrawAtlasOp::onPrepareDraws(Target* target) {
     // Setup geometry processor
-    sk_sp<GrGeometryProcessor> gp(make_gp(this->hasColors(), this->color(), this->viewMatrix()));
+    sk_sp<GrGeometryProcessor> gp(make_gp(target->caps().shaderCaps(),
+                                          this->hasColors(),
+                                          this->color(),
+                                          this->viewMatrix()));
 
     int instanceCount = fGeoData.count();
-    size_t vertexStride = gp->getVertexStride();
-    SkASSERT(vertexStride ==
-             sizeof(SkPoint) + sizeof(SkPoint) + (this->hasColors() ? sizeof(GrColor) : 0));
+    size_t vertexStride =
+            sizeof(SkPoint) + sizeof(SkPoint) + (this->hasColors() ? sizeof(GrColor) : 0);
+    SkASSERT(vertexStride == gp->debugOnly_vertexStride());
 
-    QuadHelper helper;
     int numQuads = this->quadCount();
-    void* verts = helper.init(target, vertexStride, numQuads);
+    QuadHelper helper(target, vertexStride, numQuads);
+    void* verts = helper.vertices();
     if (!verts) {
         SkDebugf("Could not allocate vertices\n");
         return;
@@ -142,34 +146,35 @@ void GrDrawAtlasOp::onPrepareDraws(Target* target) {
         memcpy(vertPtr, args.fVerts.begin(), allocSize);
         vertPtr += allocSize;
     }
-    helper.recordDraw(target, gp.get(), fHelper.makePipeline(target));
+    auto pipe = fHelper.makePipeline(target);
+    helper.recordDraw(target, std::move(gp), pipe.fPipeline, pipe.fFixedDynamicState);
 }
 
-bool GrDrawAtlasOp::onCombineIfPossible(GrOp* t, const GrCaps& caps) {
+GrOp::CombineResult GrDrawAtlasOp::onCombineIfPossible(GrOp* t, const GrCaps& caps) {
     GrDrawAtlasOp* that = t->cast<GrDrawAtlasOp>();
 
     if (!fHelper.isCompatible(that->fHelper, caps, this->bounds(), that->bounds())) {
-        return false;
+        return CombineResult::kCannotCombine;
     }
 
     // We currently use a uniform viewmatrix for this op.
     if (!this->viewMatrix().cheapEqualTo(that->viewMatrix())) {
-        return false;
+        return CombineResult::kCannotCombine;
     }
 
     if (this->hasColors() != that->hasColors()) {
-        return false;
+        return CombineResult::kCannotCombine;
     }
 
     if (!this->hasColors() && this->color() != that->color()) {
-        return false;
+        return CombineResult::kCannotCombine;
     }
 
     fGeoData.push_back_n(that->fGeoData.count(), that->fGeoData.begin());
     fQuadCount += that->quadCount();
 
     this->joinBounds(*that);
-    return true;
+    return CombineResult::kMerged;
 }
 
 GrDrawOp::FixedFunctionFlags GrDrawAtlasOp::fixedFunctionFlags() const {
@@ -177,16 +182,15 @@ GrDrawOp::FixedFunctionFlags GrDrawAtlasOp::fixedFunctionFlags() const {
 }
 
 GrDrawOp::RequiresDstTexture GrDrawAtlasOp::finalize(const GrCaps& caps,
-                                                     const GrAppliedClip* clip,
-                                                     GrPixelConfigIsClamped dstIsClamped) {
+                                                     const GrAppliedClip* clip) {
     GrProcessorAnalysisColor gpColor;
     if (this->hasColors()) {
         gpColor.setToUnknown();
     } else {
         gpColor.setToConstant(fColor);
     }
-    auto result = fHelper.xpRequiresDstTexture(caps, clip, dstIsClamped,
-                                               GrProcessorAnalysisCoverage::kNone, &gpColor);
+    auto result = fHelper.xpRequiresDstTexture(caps, clip, GrProcessorAnalysisCoverage::kNone,
+                                               &gpColor);
     if (gpColor.isConstant(&fColor)) {
         fHasColors = false;
     }
@@ -253,8 +257,9 @@ GR_DRAW_OP_TEST_DEFINE(GrDrawAtlasOp) {
         aaType = GrAAType::kMSAA;
     }
 
-    return GrDrawAtlasOp::Make(std::move(paint), viewMatrix, aaType, spriteCount, xforms.begin(),
-                               texRects.begin(), hasColors ? colors.begin() : nullptr);
+    return GrDrawAtlasOp::Make(context, std::move(paint), viewMatrix, aaType, spriteCount,
+                               xforms.begin(), texRects.begin(),
+                               hasColors ? colors.begin() : nullptr);
 }
 
 #endif

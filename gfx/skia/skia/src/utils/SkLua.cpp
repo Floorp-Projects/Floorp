@@ -15,21 +15,24 @@
 #include "SkCanvas.h"
 #include "SkColorFilter.h"
 #include "SkData.h"
-#include "SkDocument.h"
 #include "SkFontStyle.h"
 #include "SkGradientShader.h"
 #include "SkImage.h"
 #include "SkMakeUnique.h"
 #include "SkMatrix.h"
+#include "SkPDFDocument.h"
 #include "SkPaint.h"
 #include "SkPath.h"
 #include "SkPictureRecorder.h"
 #include "SkPixelRef.h"
 #include "SkRRect.h"
+#include "SkShaper.h"
 #include "SkString.h"
 #include "SkSurface.h"
 #include "SkTextBlob.h"
+#include "SkTo.h"
 #include "SkTypeface.h"
+#include <new>
 
 extern "C" {
     #include "lua.h"
@@ -1895,7 +1898,7 @@ static int lsk_newDocumentPDF(lua_State* L) {
     if (!file->isValid()) {
         return 0;
     }
-    sk_sp<SkDocument> doc = SkDocument::MakePDF(file.get());
+    sk_sp<SkDocument> doc = SkPDF::MakeDocument(file.get());
     if (!doc) {
         return 0;
     }
@@ -1960,7 +1963,6 @@ static int lsk_newRRect(lua_State* L) {
     return 1;
 }
 
-#include "SkTextBox.h"
 // Sk.newTextBlob(text, rect, paint)
 static int lsk_newTextBlob(lua_State* L) {
     const char* text = lua_tolstring(L, 1, nullptr);
@@ -1968,14 +1970,14 @@ static int lsk_newTextBlob(lua_State* L) {
     lua2rect(L, 2, &bounds);
     const SkPaint& paint = *get_obj<SkPaint>(L, 3);
 
-    SkTextBox box;
-    box.setMode(SkTextBox::kLineBreak_Mode);
-    box.setBox(bounds);
-    box.setText(text, strlen(text), paint);
+    SkShaper shaper(nullptr);
 
-    SkScalar newBottom;
-    push_ref<SkTextBlob>(L, box.snapshotTextBlob(&newBottom));
-    SkLua(L).pushScalar(newBottom);
+    SkTextBlobBuilder builder;
+    SkPoint end = shaper.shape(&builder, paint, text, strlen(text), true,
+                               { bounds.left(), bounds.top() }, bounds.width());
+
+    push_ref<SkTextBlob>(L, builder.make());
+    SkLua(L).pushScalar(end.fY);
     return 2;
 }
 

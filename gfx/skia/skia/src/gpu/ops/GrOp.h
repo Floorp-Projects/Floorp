@@ -11,6 +11,7 @@
 #include "../private/SkAtomics.h"
 #include "GrGpuResource.h"
 #include "GrNonAtomicRef.h"
+#include "GrTracing.h"
 #include "GrXferProcessor.h"
 #include "SkMatrix.h"
 #include "SkRect.h"
@@ -30,13 +31,11 @@ class GrRenderTargetOpList;
  * subclasses complete freedom to decide how/when to combine in order to produce fewer draw calls
  * and minimize state changes.
  *
- * Ops of the same subclass may be merged using combineIfPossible. When two ops merge, one
- * takes on the union of the data and the other is left empty. The merged op becomes responsible
- * for drawing the data from both the original ops.
- *
- * If there are any possible optimizations which might require knowing more about the full state of
- * the draw, e.g. whether or not the GrOp is allowed to tweak alpha for coverage, then this
- * information will be communicated to the GrOp prior to geometry generation.
+ * Ops of the same subclass may be merged or chained using combineIfPossible. When two ops merge,
+ * one takes on the union of the data and the other is left empty. The merged op becomes responsible
+ * for drawing the data from both the original ops. When ops are chained each op maintains its own
+ * data but they are linked in a list and the head op becomes responsible for executing the work for
+ * the chain.
  *
  * The bounds of the op must contain all the vertices in device space *irrespective* of the clip.
  * The bounds are used in determining which clip elements must be applied and thus the bounds cannot
@@ -51,6 +50,9 @@ class GrRenderTargetOpList;
     #define GrOP_INFO(...)
 #endif
 
+// Print out op information at flush time
+#define GR_FLUSH_TIME_OP_SPEW 0
+
 // A helper macro to generate a class static id
 #define DEFINE_OP_CLASS_ID \
     static uint32_t ClassID() { \
@@ -60,7 +62,6 @@ class GrRenderTargetOpList;
 
 class GrOp : private SkNoncopyable {
 public:
-    GrOp(uint32_t classID);
     virtual ~GrOp();
 
     virtual const char* name() const = 0;
@@ -71,13 +72,27 @@ public:
         // This default implementation assumes the op has no proxies
     }
 
-    bool combineIfPossible(GrOp* that, const GrCaps& caps) {
-        if (this->classID() != that->classID()) {
-            return false;
-        }
+    enum class CombineResult {
+        /**
+         * The op that combineIfPossible was called on now represents its own work plus that of
+         * the passed op. The passed op should be destroyed without being flushed. Currently it
+         * is not legal to merge an op passed to combineIfPossible() the passed op is already in a
+         * chain (though the op on which combineIfPossible() was called may be).
+         */
+        kMerged,
+        /**
+         * The caller *may* (but is not required) to chain these ops together. If they are chained
+         * then prepare() and execute() will be called on the head op but not the other ops in the
+         * chain. The head op will prepare and execute on behalf of all the ops in the chain.
+         */
+        kMayChain,
+        /**
+         * The ops cannot be combined.
+         */
+        kCannotCombine
+    };
 
-        return this->onCombineIfPossible(that, caps);
-    }
+    CombineResult combineIfPossible(GrOp* that, const GrCaps& caps);
 
     const SkRect& bounds() const {
         SkASSERT(kUninitialized_BoundsFlag != fBoundsFlags);
@@ -100,6 +115,8 @@ public:
         return SkToBool(fBoundsFlags & kZeroArea_BoundsFlag);
     }
 
+#ifdef SK_DEBUG
+    // All GrOp-derived classes should be allocated in and deleted from a GrMemoryPool
     void* operator new(size_t size);
     void operator delete(void* target);
 
@@ -109,6 +126,7 @@ public:
     void operator delete(void* target, void* placement) {
         ::operator delete(target, placement);
     }
+#endif
 
     /**
      * Helper for safely down-casting to a GrOp subclass
@@ -134,21 +152,16 @@ public:
     }
 
     /**
-     * This is called to notify the op that it has been recorded into a GrOpList. Ops can use this
-     * to begin preparations for the flush of the op list. Note that the op still may either be
-     * combined into another op or have another op combined into it via combineIfPossible() after
-     * this call is made.
-     */
-    virtual void wasRecorded(GrRenderTargetOpList*) {}
-
-    /**
      * Called prior to executing. The op should perform any resource creation or data transfers
      * necessary before execute() is called.
      */
     void prepare(GrOpFlushState* state) { this->onPrepare(state); }
 
     /** Issues the op's commands to GrGpu. */
-    void execute(GrOpFlushState* state) { this->onExecute(state); }
+    void execute(GrOpFlushState* state) {
+        TRACE_EVENT0("skia", name());
+        this->onExecute(state);
+    }
 
     /** Used for spewing information about ops when debugging. */
     virtual SkString dumpInfo() const {
@@ -158,7 +171,48 @@ public:
         return string;
     }
 
+    /**
+     * A helper for iterating over an op chain in a range for loop that also downcasts to a GrOp
+     * subclass. E.g.:
+     *     for (MyOpSubClass& op : ChainRange<MyOpSubClass>(this)) {
+     *         // ...
+     *     }
+     */
+    template <typename OpSubclass> class ChainRange {
+    private:
+        class Iter {
+        public:
+            explicit Iter(const GrOp* head) : fCurr(head) {}
+            inline Iter& operator++() { return *this = Iter(fCurr->nextInChain()); }
+            const OpSubclass& operator*() const { return fCurr->cast<OpSubclass>(); }
+            bool operator!=(const Iter& that) const { return fCurr != that.fCurr; }
+
+        private:
+            const GrOp* fCurr;
+        };
+        const GrOp* fHead;
+
+    public:
+        explicit ChainRange(const GrOp* head) : fHead(head) {}
+        Iter begin() { return Iter(fHead); }
+        Iter end() { return Iter(nullptr); }
+    };
+
+    void setNextInChain(GrOp*);
+    /** Returns true if this is the head of a chain (including a length 1 chain). */
+    bool isChainHead() const { return !fChainHead || (fChainHead == this); }
+    /** Gets the head op of the chain. */
+    const GrOp* chainHead() const { return fChainHead ? fChainHead : this; }
+    /** Returns true if this is the tail of a chain (including a length 1 chain). */
+    bool isChainTail() const { return !fNextInChain; }
+    /** Returns true if this is part of chain with length > 1. */
+    bool isChained() const { return SkToBool(fChainHead); }
+    /** The next op in the chain. */
+    const GrOp* nextInChain() const { return fNextInChain; }
+
 protected:
+    GrOp(uint32_t classID);
+
     /**
      * Indicates that the op will produce geometry that extends beyond its bounds for the
      * purpose of ensuring that the fragment shader runs on partially covered pixels for
@@ -209,7 +263,9 @@ protected:
     static uint32_t GenOpClassID() { return GenID(&gCurrOpClassID); }
 
 private:
-    virtual bool onCombineIfPossible(GrOp*, const GrCaps& caps) = 0;
+    virtual CombineResult onCombineIfPossible(GrOp*, const GrCaps&) {
+        return CombineResult::kCannotCombine;
+    }
 
     virtual void onPrepare(GrOpFlushState*) = 0;
     virtual void onExecute(GrOpFlushState*) = 0;
@@ -241,11 +297,13 @@ private:
         SkDEBUGCODE(kUninitialized_BoundsFlag   = 0x4)
     };
 
+    GrOp*                               fNextInChain = nullptr;
+    GrOp*                               fChainHead = nullptr;    // null if this is not in a chain.
     const uint16_t                      fClassID;
     uint16_t                            fBoundsFlags;
 
     static uint32_t GenOpID() { return GenID(&gCurrOpUniqueID); }
-    mutable uint32_t                    fUniqueID;
+    mutable uint32_t                    fUniqueID = SK_InvalidUniqueID;
     SkRect                              fBounds;
 
     static int32_t                      gCurrOpUniqueID;

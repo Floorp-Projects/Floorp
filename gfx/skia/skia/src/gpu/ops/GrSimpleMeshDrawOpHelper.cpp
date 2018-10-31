@@ -14,7 +14,7 @@
 GrSimpleMeshDrawOpHelper::GrSimpleMeshDrawOpHelper(const MakeArgs& args, GrAAType aaType,
                                                    Flags flags)
         : fProcessors(args.fProcessorSet)
-        , fPipelineFlags(args.fSRGBFlags)
+        , fPipelineFlags(0)
         , fAAType((int)aaType)
         , fRequiresDstTexture(false)
         , fUsesLocalCoords(false)
@@ -64,8 +64,8 @@ bool GrSimpleMeshDrawOpHelper::isCompatible(const GrSimpleMeshDrawOpHelper& that
 }
 
 GrDrawOp::RequiresDstTexture GrSimpleMeshDrawOpHelper::xpRequiresDstTexture(
-        const GrCaps& caps, const GrAppliedClip* clip, GrPixelConfigIsClamped dstIsClamped,
-        GrProcessorAnalysisCoverage geometryCoverage, GrProcessorAnalysisColor* geometryColor) {
+        const GrCaps& caps, const GrAppliedClip* clip, GrProcessorAnalysisCoverage geometryCoverage,
+        GrProcessorAnalysisColor* geometryColor) {
     SkDEBUGCODE(fDidAnalysis = true);
     GrProcessorSet::Analysis analysis;
     if (fProcessors) {
@@ -78,7 +78,7 @@ GrDrawOp::RequiresDstTexture GrSimpleMeshDrawOpHelper::xpRequiresDstTexture(
         bool isMixedSamples = this->aaType() == GrAAType::kMixedSamples;
         GrColor overrideColor;
         analysis = fProcessors->finalize(*geometryColor, coverage, clip, isMixedSamples, caps,
-                                         dstIsClamped, &overrideColor);
+                                         &overrideColor);
         if (analysis.inputColorIsOverridden()) {
             *geometryColor = overrideColor;
         }
@@ -93,10 +93,10 @@ GrDrawOp::RequiresDstTexture GrSimpleMeshDrawOpHelper::xpRequiresDstTexture(
 }
 
 GrDrawOp::RequiresDstTexture GrSimpleMeshDrawOpHelper::xpRequiresDstTexture(
-        const GrCaps& caps, const GrAppliedClip* clip, GrPixelConfigIsClamped dstIsClamped,
-        GrProcessorAnalysisCoverage geometryCoverage, GrColor* geometryColor) {
+        const GrCaps& caps, const GrAppliedClip* clip, GrProcessorAnalysisCoverage geometryCoverage,
+        GrColor* geometryColor) {
     GrProcessorAnalysisColor color = *geometryColor;
-    auto result = this->xpRequiresDstTexture(caps, clip, dstIsClamped, geometryCoverage, &color);
+    auto result = this->xpRequiresDstTexture(caps, clip, geometryCoverage, &color);
     color.isConstant(geometryColor);
     return result;
 }
@@ -134,17 +134,29 @@ GrPipeline::InitArgs GrSimpleMeshDrawOpHelper::pipelineInitArgs(
     return args;
 }
 
-GrPipeline* GrSimpleMeshDrawOpHelper::internalMakePipeline(GrMeshDrawOp::Target* target,
-                                                           const GrPipeline::InitArgs& args) {
+auto GrSimpleMeshDrawOpHelper::internalMakePipeline(GrMeshDrawOp::Target* target,
+                                                    const GrPipeline::InitArgs& args,
+                                                    int numPrimitiveProcessorProxies)
+        -> PipelineAndFixedDynamicState {
     // A caller really should only call this once as the processor set and applied clip get
     // moved into the GrPipeline.
     SkASSERT(!fMadePipeline);
     SkDEBUGCODE(fMadePipeline = true);
+    auto clip = target->detachAppliedClip();
+    GrPipeline::FixedDynamicState* fixedDynamicState = nullptr;
+    if (clip.scissorState().enabled() || numPrimitiveProcessorProxies) {
+        fixedDynamicState = target->allocFixedDynamicState(clip.scissorState().rect());
+        if (numPrimitiveProcessorProxies) {
+            fixedDynamicState->fPrimitiveProcessorTextures =
+                    target->allocPrimitiveProcessorTextureArray(numPrimitiveProcessorProxies);
+        }
+    }
     if (fProcessors) {
-        return target->allocPipeline(args, std::move(*fProcessors), target->detachAppliedClip());
+        return {target->allocPipeline(args, std::move(*fProcessors), std::move(clip)),
+                fixedDynamicState};
     } else {
-        return target->allocPipeline(args, GrProcessorSet::MakeEmptySet(),
-                                     target->detachAppliedClip());
+        return {target->allocPipeline(args, GrProcessorSet::MakeEmptySet(), std::move(clip)),
+                fixedDynamicState};
     }
 }
 
@@ -169,11 +181,12 @@ bool GrSimpleMeshDrawOpHelperWithStencil::isCompatible(
            fStencilSettings == that.fStencilSettings;
 }
 
-const GrPipeline* GrSimpleMeshDrawOpHelperWithStencil::makePipeline(
-        GrMeshDrawOp::Target* target) {
+auto GrSimpleMeshDrawOpHelperWithStencil::makePipeline(GrMeshDrawOp::Target* target,
+                                                       int numPrimitiveProcessorTextures)
+        -> PipelineAndFixedDynamicState {
     auto args = INHERITED::pipelineInitArgs(target);
     args.fUserStencil = fStencilSettings;
-    return this->internalMakePipeline(target, args);
+    return this->internalMakePipeline(target, args, numPrimitiveProcessorTextures);
 }
 
 SkString GrSimpleMeshDrawOpHelperWithStencil::dumpInfo() const {

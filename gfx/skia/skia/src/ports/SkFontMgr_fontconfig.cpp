@@ -31,10 +31,10 @@
 class SkData;
 
 // FC_POSTSCRIPT_NAME was added with b561ff20 which ended up in 2.10.92
-// Ubuntu 12.04 is on 2.8.0, 13.10 is on 2.10.93
-// Debian 7 is on 2.9.0, 8 is on 2.11
-// OpenSUSE 12.2 is on 2.9.0, 12.3 is on 2.10.2, 13.1 2.11.0
-// Fedora 19 is on 2.10.93
+// Ubuntu 14.04 is on 2.11.0
+// Debian 8 is on 2.11
+// OpenSUSE Leap 42.1 is on 2.11.0 (42.3 is on 2.11.1)
+// Fedora 24 is on 2.11.94
 #ifndef FC_POSTSCRIPT_NAME
 #    define FC_POSTSCRIPT_NAME  "postscriptname"
 #endif
@@ -178,6 +178,7 @@ enum SkWeakReturn {
 };
 /** Ideally there  would exist a call like
  *  FcResult FcPatternIsWeak(pattern, object, id, FcBool* isWeak);
+ *  Sometime after 2.12.4 FcPatternGetWithBinding was added which can retrieve the binding.
  *
  *  However, there is no such call and as of Fc 2.11.0 even FcPatternEquals ignores the weak bit.
  *  Currently, the only reliable way of finding the weak bit is by its effect on matching.
@@ -285,21 +286,21 @@ static void remove_weak(FcPattern* pattern, const char object[]) {
     }
 }
 
-static int map_range(SkFixed value,
-                     SkFixed old_min, SkFixed old_max,
-                     SkFixed new_min, SkFixed new_max)
+static int map_range(SkScalar value,
+                     SkScalar old_min, SkScalar old_max,
+                     SkScalar new_min, SkScalar new_max)
 {
     SkASSERT(old_min < old_max);
     SkASSERT(new_min <= new_max);
-    return new_min + SkMulDiv(value - old_min, new_max - new_min, old_max - old_min);
+    return new_min + ((value - old_min) * (new_max - new_min) / (old_max - old_min));
 }
 
 struct MapRanges {
-    SkFixed old_val;
-    SkFixed new_val;
+    SkScalar old_val;
+    SkScalar new_val;
 };
 
-static SkFixed map_ranges_fixed(SkFixed val, MapRanges const ranges[], int rangesCount) {
+static SkScalar map_ranges(SkScalar val, MapRanges const ranges[], int rangesCount) {
     // -Inf to [0]
     if (val < ranges[0].old_val) {
         return ranges[0].new_val;
@@ -318,46 +319,44 @@ static SkFixed map_ranges_fixed(SkFixed val, MapRanges const ranges[], int range
     return ranges[rangesCount-1].new_val;
 }
 
-static int map_ranges(int val, MapRanges const ranges[], int rangesCount) {
-    return SkFixedRoundToInt(map_ranges_fixed(SkIntToFixed(val), ranges, rangesCount));
-}
-
-template<int n> struct SkTFixed {
-    static_assert(-32768 <= n && n <= 32767, "SkTFixed_n_not_in_range");
-    static const SkFixed value = static_cast<SkFixed>(n << 16);
-};
+#ifndef FC_WEIGHT_DEMILIGHT
+#define FC_WEIGHT_DEMILIGHT        65
+#endif
 
 static SkFontStyle skfontstyle_from_fcpattern(FcPattern* pattern) {
     typedef SkFontStyle SkFS;
 
-    static const MapRanges weightRanges[] = {
-        { SkTFixed<FC_WEIGHT_THIN>::value,       SkTFixed<SkFS::kThin_Weight>::value },
-        { SkTFixed<FC_WEIGHT_EXTRALIGHT>::value, SkTFixed<SkFS::kExtraLight_Weight>::value },
-        { SkTFixed<FC_WEIGHT_LIGHT>::value,      SkTFixed<SkFS::kLight_Weight>::value },
-        { SkTFixed<FC_WEIGHT_REGULAR>::value,    SkTFixed<SkFS::kNormal_Weight>::value },
-        { SkTFixed<FC_WEIGHT_MEDIUM>::value,     SkTFixed<SkFS::kMedium_Weight>::value },
-        { SkTFixed<FC_WEIGHT_DEMIBOLD>::value,   SkTFixed<SkFS::kSemiBold_Weight>::value },
-        { SkTFixed<FC_WEIGHT_BOLD>::value,       SkTFixed<SkFS::kBold_Weight>::value },
-        { SkTFixed<FC_WEIGHT_EXTRABOLD>::value,  SkTFixed<SkFS::kExtraBold_Weight>::value },
-        { SkTFixed<FC_WEIGHT_BLACK>::value,      SkTFixed<SkFS::kBlack_Weight>::value },
-        { SkTFixed<FC_WEIGHT_EXTRABLACK>::value, SkTFixed<SkFS::kExtraBlack_Weight>::value },
+    // FcWeightToOpenType was buggy until 2.12.4
+    static constexpr MapRanges weightRanges[] = {
+        { FC_WEIGHT_THIN,       SkFS::kThin_Weight },
+        { FC_WEIGHT_EXTRALIGHT, SkFS::kExtraLight_Weight },
+        { FC_WEIGHT_LIGHT,      SkFS::kLight_Weight },
+        { FC_WEIGHT_DEMILIGHT,  350 },
+        { FC_WEIGHT_BOOK,       380 },
+        { FC_WEIGHT_REGULAR,    SkFS::kNormal_Weight },
+        { FC_WEIGHT_MEDIUM,     SkFS::kMedium_Weight },
+        { FC_WEIGHT_DEMIBOLD,   SkFS::kSemiBold_Weight },
+        { FC_WEIGHT_BOLD,       SkFS::kBold_Weight },
+        { FC_WEIGHT_EXTRABOLD,  SkFS::kExtraBold_Weight },
+        { FC_WEIGHT_BLACK,      SkFS::kBlack_Weight },
+        { FC_WEIGHT_EXTRABLACK, SkFS::kExtraBlack_Weight },
     };
-    int weight = map_ranges(get_int(pattern, FC_WEIGHT, FC_WEIGHT_REGULAR),
-                            weightRanges, SK_ARRAY_COUNT(weightRanges));
+    SkScalar weight = map_ranges(get_int(pattern, FC_WEIGHT, FC_WEIGHT_REGULAR),
+                                 weightRanges, SK_ARRAY_COUNT(weightRanges));
 
-    static const MapRanges widthRanges[] = {
-        { SkTFixed<FC_WIDTH_ULTRACONDENSED>::value, SkTFixed<SkFS::kUltraCondensed_Width>::value },
-        { SkTFixed<FC_WIDTH_EXTRACONDENSED>::value, SkTFixed<SkFS::kExtraCondensed_Width>::value },
-        { SkTFixed<FC_WIDTH_CONDENSED>::value,      SkTFixed<SkFS::kCondensed_Width>::value },
-        { SkTFixed<FC_WIDTH_SEMICONDENSED>::value,  SkTFixed<SkFS::kSemiCondensed_Width>::value },
-        { SkTFixed<FC_WIDTH_NORMAL>::value,         SkTFixed<SkFS::kNormal_Width>::value },
-        { SkTFixed<FC_WIDTH_SEMIEXPANDED>::value,   SkTFixed<SkFS::kSemiExpanded_Width>::value },
-        { SkTFixed<FC_WIDTH_EXPANDED>::value,       SkTFixed<SkFS::kExpanded_Width>::value },
-        { SkTFixed<FC_WIDTH_EXTRAEXPANDED>::value,  SkTFixed<SkFS::kExtraExpanded_Width>::value },
-        { SkTFixed<FC_WIDTH_ULTRAEXPANDED>::value,  SkTFixed<SkFS::kUltraExpanded_Width>::value },
+    static constexpr MapRanges widthRanges[] = {
+        { FC_WIDTH_ULTRACONDENSED, SkFS::kUltraCondensed_Width },
+        { FC_WIDTH_EXTRACONDENSED, SkFS::kExtraCondensed_Width },
+        { FC_WIDTH_CONDENSED,      SkFS::kCondensed_Width },
+        { FC_WIDTH_SEMICONDENSED,  SkFS::kSemiCondensed_Width },
+        { FC_WIDTH_NORMAL,         SkFS::kNormal_Width },
+        { FC_WIDTH_SEMIEXPANDED,   SkFS::kSemiExpanded_Width },
+        { FC_WIDTH_EXPANDED,       SkFS::kExpanded_Width },
+        { FC_WIDTH_EXTRAEXPANDED,  SkFS::kExtraExpanded_Width },
+        { FC_WIDTH_ULTRAEXPANDED,  SkFS::kUltraExpanded_Width },
     };
-    int width = map_ranges(get_int(pattern, FC_WIDTH, FC_WIDTH_NORMAL),
-                           widthRanges, SK_ARRAY_COUNT(widthRanges));
+    SkScalar width = map_ranges(get_int(pattern, FC_WIDTH, FC_WIDTH_NORMAL),
+                                widthRanges, SK_ARRAY_COUNT(widthRanges));
 
     SkFS::Slant slant = SkFS::kUpright_Slant;
     switch (get_int(pattern, FC_SLANT, FC_SLANT_ROMAN)) {
@@ -367,7 +366,7 @@ static SkFontStyle skfontstyle_from_fcpattern(FcPattern* pattern) {
         default: SkASSERT(false); break;
     }
 
-    return SkFontStyle(weight, width, slant);
+    return SkFontStyle(SkScalarRoundToInt(weight), SkScalarRoundToInt(width), slant);
 }
 
 static void fcpattern_from_skfontstyle(SkFontStyle style, FcPattern* pattern) {
@@ -375,30 +374,33 @@ static void fcpattern_from_skfontstyle(SkFontStyle style, FcPattern* pattern) {
 
     typedef SkFontStyle SkFS;
 
-    static const MapRanges weightRanges[] = {
-        { SkTFixed<SkFS::kThin_Weight>::value,       SkTFixed<FC_WEIGHT_THIN>::value },
-        { SkTFixed<SkFS::kExtraLight_Weight>::value, SkTFixed<FC_WEIGHT_EXTRALIGHT>::value },
-        { SkTFixed<SkFS::kLight_Weight>::value,      SkTFixed<FC_WEIGHT_LIGHT>::value },
-        { SkTFixed<SkFS::kNormal_Weight>::value,     SkTFixed<FC_WEIGHT_REGULAR>::value },
-        { SkTFixed<SkFS::kMedium_Weight>::value,     SkTFixed<FC_WEIGHT_MEDIUM>::value },
-        { SkTFixed<SkFS::kSemiBold_Weight>::value,   SkTFixed<FC_WEIGHT_DEMIBOLD>::value },
-        { SkTFixed<SkFS::kBold_Weight>::value,       SkTFixed<FC_WEIGHT_BOLD>::value },
-        { SkTFixed<SkFS::kExtraBold_Weight>::value,  SkTFixed<FC_WEIGHT_EXTRABOLD>::value },
-        { SkTFixed<SkFS::kBlack_Weight>::value,      SkTFixed<FC_WEIGHT_BLACK>::value },
-        { SkTFixed<SkFS::kExtraBlack_Weight>::value, SkTFixed<FC_WEIGHT_EXTRABLACK>::value },
+    // FcWeightFromOpenType was buggy until 2.12.4
+    static constexpr MapRanges weightRanges[] = {
+        { SkFS::kThin_Weight,       FC_WEIGHT_THIN },
+        { SkFS::kExtraLight_Weight, FC_WEIGHT_EXTRALIGHT },
+        { SkFS::kLight_Weight,      FC_WEIGHT_LIGHT },
+        { 350,                      FC_WEIGHT_DEMILIGHT },
+        { 380,                      FC_WEIGHT_BOOK },
+        { SkFS::kNormal_Weight,     FC_WEIGHT_REGULAR },
+        { SkFS::kMedium_Weight,     FC_WEIGHT_MEDIUM },
+        { SkFS::kSemiBold_Weight,   FC_WEIGHT_DEMIBOLD },
+        { SkFS::kBold_Weight,       FC_WEIGHT_BOLD },
+        { SkFS::kExtraBold_Weight,  FC_WEIGHT_EXTRABOLD },
+        { SkFS::kBlack_Weight,      FC_WEIGHT_BLACK },
+        { SkFS::kExtraBlack_Weight, FC_WEIGHT_EXTRABLACK },
     };
     int weight = map_ranges(style.weight(), weightRanges, SK_ARRAY_COUNT(weightRanges));
 
-    static const MapRanges widthRanges[] = {
-        { SkTFixed<SkFS::kUltraCondensed_Width>::value, SkTFixed<FC_WIDTH_ULTRACONDENSED>::value },
-        { SkTFixed<SkFS::kExtraCondensed_Width>::value, SkTFixed<FC_WIDTH_EXTRACONDENSED>::value },
-        { SkTFixed<SkFS::kCondensed_Width>::value,      SkTFixed<FC_WIDTH_CONDENSED>::value },
-        { SkTFixed<SkFS::kSemiCondensed_Width>::value,  SkTFixed<FC_WIDTH_SEMICONDENSED>::value },
-        { SkTFixed<SkFS::kNormal_Width>::value,         SkTFixed<FC_WIDTH_NORMAL>::value },
-        { SkTFixed<SkFS::kSemiExpanded_Width>::value,   SkTFixed<FC_WIDTH_SEMIEXPANDED>::value },
-        { SkTFixed<SkFS::kExpanded_Width>::value,       SkTFixed<FC_WIDTH_EXPANDED>::value },
-        { SkTFixed<SkFS::kExtraExpanded_Width>::value,  SkTFixed<FC_WIDTH_EXTRAEXPANDED>::value },
-        { SkTFixed<SkFS::kUltraExpanded_Width>::value,  SkTFixed<FC_WIDTH_ULTRAEXPANDED>::value },
+    static constexpr MapRanges widthRanges[] = {
+        { SkFS::kUltraCondensed_Width, FC_WIDTH_ULTRACONDENSED },
+        { SkFS::kExtraCondensed_Width, FC_WIDTH_EXTRACONDENSED },
+        { SkFS::kCondensed_Width,      FC_WIDTH_CONDENSED },
+        { SkFS::kSemiCondensed_Width,  FC_WIDTH_SEMICONDENSED },
+        { SkFS::kNormal_Width,         FC_WIDTH_NORMAL },
+        { SkFS::kSemiExpanded_Width,   FC_WIDTH_SEMIEXPANDED },
+        { SkFS::kExpanded_Width,       FC_WIDTH_EXPANDED },
+        { SkFS::kExtraExpanded_Width,  FC_WIDTH_EXTRAEXPANDED },
+        { SkFS::kUltraExpanded_Width,  FC_WIDTH_ULTRAEXPANDED },
     };
     int width = map_ranges(style.width(), widthRanges, SK_ARRAY_COUNT(widthRanges));
 
@@ -440,6 +442,17 @@ public:
 
     std::unique_ptr<SkFontData> onMakeFontData() const override {
         return skstd::make_unique<SkFontData>(*fData);
+    }
+
+    sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {
+        std::unique_ptr<SkFontData> data = this->cloneFontData(args);
+        if (!data) {
+            return nullptr;
+        }
+        return sk_make_sp<SkTypeface_stream>(std::move(data),
+                                             fFamilyName,
+                                             this->fontStyle(),
+                                             this->isFixedPitch());
     }
 
 private:
@@ -510,6 +523,21 @@ public:
             info->fType = SkAdvancedTypefaceMetrics::kOther_Font;
         }
         return info;
+    }
+
+    sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {
+        std::unique_ptr<SkFontData> data = this->cloneFontData(args);
+        if (!data) {
+            return nullptr;
+        }
+
+        SkString familyName;
+        this->getFamilyName(&familyName);
+
+        return sk_make_sp<SkTypeface_stream>(std::move(data),
+                                             familyName,
+                                             this->fontStyle(),
+                                             this->isFixedPitch());
     }
 
     ~SkTypeface_fontconfig() override {

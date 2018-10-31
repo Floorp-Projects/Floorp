@@ -10,6 +10,7 @@
 #ifndef SkDrawLooper_DEFINED
 #define SkDrawLooper_DEFINED
 
+#include "../private/SkNoncopyable.h"
 #include "SkBlurTypes.h"
 #include "SkFlattenable.h"
 #include "SkPoint.h"
@@ -84,7 +85,6 @@ public:
         SkVector        fOffset;
         SkColor         fColor;
         SkBlurStyle     fStyle;
-        SkBlurQuality   fQuality;
     };
     /**
      *  If this looper can be interpreted as having two layers, such that
@@ -97,8 +97,20 @@ public:
      */
     virtual bool asABlurShadow(BlurShadowRec*) const;
 
-    SK_TO_STRING_PUREVIRT()
-    SK_DEFINE_FLATTENABLE_TYPE(SkDrawLooper)
+    static SkFlattenable::Type GetFlattenableType() {
+        return kSkDrawLooper_Type;
+    }
+
+    SkFlattenable::Type getFlattenableType() const override {
+        return kSkDrawLooper_Type;
+    }
+
+    static sk_sp<SkDrawLooper> Deserialize(const void* data, size_t size,
+                                          const SkDeserialProcs* procs = nullptr) {
+        return sk_sp<SkDrawLooper>(static_cast<SkDrawLooper*>(
+                                  SkFlattenable::Deserialize(
+                                  kSkDrawLooper_Type, data, size, procs).release()));
+    }
 
 protected:
     sk_sp<SkDrawLooper> makeColorSpace(SkColorSpaceXformer* xformer) const {

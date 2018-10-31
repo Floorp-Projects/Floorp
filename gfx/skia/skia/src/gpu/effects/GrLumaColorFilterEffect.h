@@ -11,18 +11,16 @@
 #ifndef GrLumaColorFilterEffect_DEFINED
 #define GrLumaColorFilterEffect_DEFINED
 #include "SkTypes.h"
-#if SK_SUPPORT_GPU
 #include "GrFragmentProcessor.h"
 #include "GrCoordTransform.h"
 class GrLumaColorFilterEffect : public GrFragmentProcessor {
 public:
 #include "SkColorData.h"
 
-    GrColor4f constantOutputForConstantInput(GrColor4f input) const override {
-        float luma = SK_ITU_BT709_LUM_COEFF_R * input.fRGBA[0] +
-                     SK_ITU_BT709_LUM_COEFF_G * input.fRGBA[1] +
-                     SK_ITU_BT709_LUM_COEFF_B * input.fRGBA[2];
-        return GrColor4f(0, 0, 0, luma);
+    SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const override {
+        float luma = SK_ITU_BT709_LUM_COEFF_R * input.fR + SK_ITU_BT709_LUM_COEFF_G * input.fG +
+                     SK_ITU_BT709_LUM_COEFF_B * input.fB;
+        return {0, 0, 0, luma};
     }
     static std::unique_ptr<GrFragmentProcessor> Make() {
         return std::unique_ptr<GrFragmentProcessor>(new GrLumaColorFilterEffect());
@@ -40,5 +38,4 @@ private:
     GR_DECLARE_FRAGMENT_PROCESSOR_TEST
     typedef GrFragmentProcessor INHERITED;
 };
-#endif
 #endif

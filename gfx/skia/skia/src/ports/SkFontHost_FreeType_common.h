@@ -46,7 +46,8 @@ protected:
     {}
 
     void generateGlyphImage(FT_Face face, const SkGlyph& glyph, const SkMatrix& bitmapTransform);
-    void generateGlyphPath(FT_Face face, SkPath* path);
+    bool generateGlyphPath(FT_Face face, SkPath* path);
+    bool generateFacePath(FT_Face face, SkGlyphID glyphID, SkPath* path);
 private:
     typedef SkScalerContext INHERITED;
 };
@@ -76,6 +77,7 @@ public:
             const SkFontArguments::VariationPosition position,
             SkFixed* axisValues,
             const SkString& name);
+        static bool GetAxes(FT_Face face, AxisDefinitions* axes);
 
     private:
         FT_Face openFace(SkStreamAsset* stream, int ttcIndex, FT_Stream ftStream) const;
@@ -83,15 +85,20 @@ public:
         mutable SkMutex fLibraryMutex;
     };
 
+    /** Fetch units/EM from "head" table if needed (ie for bitmap fonts) */
+    static int GetUnitsPerEm(FT_Face face);
 protected:
     SkTypeface_FreeType(const SkFontStyle& style, bool isFixedPitch)
         : INHERITED(style, isFixedPitch)
     {}
 
+    std::unique_ptr<SkFontData> cloneFontData(const SkFontArguments&) const;
     virtual SkScalerContext* onCreateScalerContext(const SkScalerContextEffects&,
                                                    const SkDescriptor*) const override;
     void onFilterRec(SkScalerContextRec*) const override;
+    void getGlyphToUnicodeMap(SkUnichar*) const override;
     std::unique_ptr<SkAdvancedTypefaceMetrics> onGetAdvancedMetrics() const override;
+    void getPostScriptGlyphNames(SkString* dstArray) const override;
     int onGetUPEM() const override;
     bool onGetKerningPairAdjustments(const uint16_t glyphs[], int count,
                                      int32_t adjustments[]) const override;
@@ -103,6 +110,8 @@ protected:
 
     int onGetVariationDesignPosition(SkFontArguments::VariationPosition::Coordinate coordinates[],
                                      int coordinateCount) const override;
+    int onGetVariationDesignParameters(SkFontParameters::Variation::Axis parameters[],
+                                       int parameterCount) const override;
     int onGetTableTags(SkFontTableTag tags[]) const override;
     size_t onGetTableData(SkFontTableTag, size_t offset,
                           size_t length, void* data) const override;

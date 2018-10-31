@@ -22,11 +22,15 @@ struct Setting : public Expression {
     : INHERITED(offset, kSetting_Kind, value->fType)
     , fName(std::move(name))
     , fValue(std::move(value)) {
-        ASSERT(fValue->isConstant());
+        SkASSERT(fValue->isConstant());
     }
 
     std::unique_ptr<Expression> constantPropagate(const IRGenerator& irGenerator,
                                                   const DefinitionMap& definitions) override;
+
+    std::unique_ptr<Expression> clone() const override {
+        return std::unique_ptr<Expression>(new Setting(fOffset, fName, fValue->clone()));
+    }
 
     String description() const override {
         return fName;

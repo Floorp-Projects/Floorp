@@ -16,6 +16,7 @@
 class GrSurface;
 class GrVkCopyPipeline;
 class GrVkGpu;
+class GrVkPipelineLayout;
 class GrVkUniformBuffer;
 class GrVkVertexBuffer;
 struct SkIPoint;
@@ -30,7 +31,8 @@ public:
     bool copySurfaceAsDraw(GrVkGpu* gpu,
                            GrSurface* dst, GrSurfaceOrigin dstOrigin,
                            GrSurface* src, GrSurfaceOrigin srcOrigin,
-                           const SkIRect& srcRect, const SkIPoint& dstPoint);
+                           const SkIRect& srcRect, const SkIPoint& dstPoint,
+                           bool canDiscardOutsideDstRect);
 
     void destroyResources(GrVkGpu* gpu);
     void abandonResources();
@@ -44,7 +46,7 @@ private:
     VkPipelineShaderStageCreateInfo fShaderStageInfo[2];
 
     GrVkDescriptorSetManager::Handle fSamplerDSHandle;
-    VkPipelineLayout fPipelineLayout;
+    GrVkPipelineLayout* fPipelineLayout;
 
     sk_sp<GrVkVertexBuffer> fVertexBuffer;
     std::unique_ptr<GrVkUniformBuffer> fUniformBuffer;

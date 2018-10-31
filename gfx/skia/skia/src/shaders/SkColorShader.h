@@ -34,10 +34,10 @@ public:
 
         uint32_t getFlags() const override;
         void shadeSpan(int x, int y, SkPMColor span[], int count) override;
-        void shadeSpan4f(int x, int y, SkPM4f[], int count) override;
+        void shadeSpan4f(int x, int y, SkPMColor4f[], int count) override;
 
     private:
-        SkPM4f      fPM4f;
+        SkPMColor4f fPMColor4f;
         SkPMColor   fPMColor;
         uint32_t    fFlags;
 
@@ -50,7 +50,6 @@ public:
     std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
 #endif
 
-    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkColorShader)
 
 protected:
@@ -90,10 +89,10 @@ public:
 
         uint32_t getFlags() const override;
         void shadeSpan(int x, int y, SkPMColor span[], int count) override;
-        void shadeSpan4f(int x, int y, SkPM4f[], int count) override;
+        void shadeSpan4f(int x, int y, SkPMColor4f[], int count) override;
 
     private:
-        SkPM4f      fPM4f;
+        SkPMColor4f fPMColor4f;
         SkPMColor   fPMColor;
         uint32_t    fFlags;
 
@@ -106,7 +105,6 @@ public:
     std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
 #endif
 
-    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkColorShader)
 
 protected:

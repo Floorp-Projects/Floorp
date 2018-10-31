@@ -9,6 +9,7 @@
 #include "SkBitmapController.h"
 #include "SkBitmapProcState.h"
 #include "SkColorData.h"
+#include "SkMacros.h"
 #include "SkPaint.h"
 #include "SkShader.h"   // for tilemodes
 #include "SkUtilsArm.h"
@@ -36,9 +37,7 @@ SkBitmapProcInfo::SkBitmapProcInfo(const SkBitmapProvider& provider,
     , fBMState(nullptr)
 {}
 
-SkBitmapProcInfo::~SkBitmapProcInfo() {
-    SkInPlaceDeleteCheck(fBMState, fBMStateStorage.get());
-}
+SkBitmapProcInfo::~SkBitmapProcInfo() {}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -85,9 +84,8 @@ bool SkBitmapProcInfo::init(const SkMatrix& inv, const SkPaint& paint) {
     fInvMatrix = inv;
     fFilterQuality = paint.getFilterQuality();
 
-    SkDefaultBitmapController controller;
-    fBMState = controller.requestBitmap(fProvider, inv, paint.getFilterQuality(),
-                                        fBMStateStorage.get(), fBMStateStorage.size());
+    fBMState = SkBitmapController::RequestBitmap(fProvider, inv, paint.getFilterQuality(), &fAlloc);
+
     // Note : we allow the controller to return an empty (zero-dimension) result. Should we?
     if (nullptr == fBMState || fBMState->pixmap().info().isEmpty()) {
         return false;

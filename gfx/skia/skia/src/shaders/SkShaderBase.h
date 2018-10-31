@@ -9,9 +9,13 @@
 #define SkShaderBase_DEFINED
 
 #include "SkFilterQuality.h"
+#include "SkFlattenablePriv.h"
 #include "SkMask.h"
 #include "SkMatrix.h"
+#include "SkNoncopyable.h"
+#include "SkPM4f.h"
 #include "SkShader.h"
+#include "SkTLazy.h"
 
 #if SK_SUPPORT_GPU
 #include "GrFPArgs.h"
@@ -60,23 +64,16 @@ public:
      *  ContextRec acts as a parameter bundle for creating Contexts.
      */
     struct ContextRec {
-        enum DstType {
-            kPMColor_DstType, // clients prefer shading into PMColor dest
-            kPM4f_DstType,    // clients prefer shading into PM4f dest
-        };
-
         ContextRec(const SkPaint& paint, const SkMatrix& matrix, const SkMatrix* localM,
-                   DstType dstType, SkColorSpace* dstColorSpace)
+                   SkColorSpace* dstColorSpace)
             : fPaint(&paint)
             , fMatrix(&matrix)
             , fLocalMatrix(localM)
-            , fPreferredDstType(dstType)
             , fDstColorSpace(dstColorSpace) {}
 
         const SkPaint*  fPaint;            // the current paint associated with the draw
         const SkMatrix* fMatrix;           // the current matrix in the canvas
         const SkMatrix* fLocalMatrix;      // optional local matrix
-        const DstType   fPreferredDstType; // the "natural" client dest type
         SkColorSpace*   fDstColorSpace;    // the color space of the dest surface (if any)
     };
 
@@ -102,7 +99,7 @@ public:
          */
         virtual void shadeSpan(int x, int y, SkPMColor[], int count) = 0;
 
-        virtual void shadeSpan4f(int x, int y, SkPM4f[], int count);
+        virtual void shadeSpan4f(int x, int y, SkPMColor4f[], int count);
 
         // Notification from blitter::blitMask in case we need to see the non-alpha channels
         virtual void set3DMask(const SkMask*) {}
@@ -173,12 +170,6 @@ public:
         return this->onMakeColorSpace(xformer);
     }
 
-    bool isRasterPipelineOnly(const SkMatrix& ctm) const {
-        // We always use RP when perspective is present.
-        return ctm.hasPerspective() || fLocalMatrix.hasPerspective()
-                                    || this->onIsRasterPipelineOnly(ctm);
-    }
-
     struct StageRec {
         SkRasterPipeline*   fPipeline;
         SkArenaAlloc*       fAlloc;
@@ -191,9 +182,16 @@ public:
     // If this returns false, then we draw nothing (do not fall back to shader context)
     bool appendStages(const StageRec&) const;
 
-    bool computeTotalInverse(const SkMatrix& ctm,
-                             const SkMatrix* outerLocalMatrix,
-                             SkMatrix* totalInverse) const;
+    bool SK_WARN_UNUSED_RESULT computeTotalInverse(const SkMatrix& ctm,
+                                                   const SkMatrix* outerLocalMatrix,
+                                                   SkMatrix* totalInverse) const;
+
+    // Returns the total local matrix for this shader:
+    //
+    //   M = postLocalMatrix x shaderLocalMatrix x preLocalMatrix
+    //
+    SkTCopyOnFirstWrite<SkMatrix> totalLocalMatrix(const SkMatrix* preLocalMatrix,
+                                                   const SkMatrix* postLocalMatrix = nullptr) const;
 
 #ifdef SK_SUPPORT_LEGACY_SHADER_ISABITMAP
     virtual bool onIsABitmap(SkBitmap*, SkMatrix*, TileMode[2]) const {
@@ -204,8 +202,6 @@ public:
     virtual SkImage* onIsAImage(SkMatrix*, TileMode[2]) const {
         return nullptr;
     }
-
-    SK_TO_STRING_VIRT()
 
     SK_DEFINE_FLATTENABLE_TYPE(SkShaderBase)
     SK_DECLARE_FLATTENABLE_REGISTRAR_GROUP()
@@ -240,8 +236,6 @@ protected:
 
     // Default impl creates shadercontext and calls that (not very efficient)
     virtual bool onAppendStages(const StageRec&) const;
-
-    virtual bool onIsRasterPipelineOnly(const SkMatrix& ctm) const { return false; }
 
 private:
     // This is essentially const, but not officially so it can be modified in constructors.

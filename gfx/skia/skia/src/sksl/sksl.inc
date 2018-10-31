@@ -73,6 +73,7 @@ $genIType clamp($genIType x, $genIType minVal, $genIType maxVal);
 $genIType clamp($genIType x, int minVal, int maxVal);
 //$genUType clamp($genUType x, $genUType minVal, $genUType maxVal);
 //$genUType clamp($genUType x, uint minVal, uint maxVal);
+$genType saturate($genType x);
 $genType mix($genType x, $genType y, $genType a);
 $genType mix($genType x, $genType y, float a);
 //$genDType mix($genDType x, $genDType y, $genDType a);
@@ -102,7 +103,7 @@ $genType fma($genType a, $genType b, $genType c);
 $genHType fma($genHType a, $genHType b, $genHType c);
 $genDType fma($genDType a, $genDType b, $genDType c);
 //$genDType fma($genDType a, $genDType b, $genDType c);
-$genType frexp($genType x, out $genIType exp);
+sk_has_side_effects $genType frexp($genType x, out $genIType exp);
 //$genDType frexp($genDType x, out $genIType exp);
 $genType ldexp($genType x, in $genIType exp);
 //$genDType ldexp($genDType x, in $genIType exp);
@@ -378,13 +379,10 @@ $gfloat4 textureOffset($gsampler2DArray sampler, float3 P, int2 offset, float bi
 float textureOffset(sampler1DArrayShadow sampler, float3 P, int offset);
 float textureOffset(sampler1DArrayShadow sampler, float3 P, int offset, float bias);
 float textureOffset(sampler2DArrayShadow sampler, float4 P, int2 offset);
-*/
 float4 texelFetch(samplerBuffer sampler, int P);
-
 $gfloat4 texelFetch($gsampler1D sampler, int P, int lod);
 $gfloat4 texelFetch($gsampler2D sampler, int2 P, int lod);
 $gfloat4 texelFetch($gsampler2DRect sampler, int2 P);
-/*
 $gfloat4 texelFetch($gsampler3D sampler, int3 P, int lod);
 $gfloat4 texelFetch($gsampler1DArray sampler, int2 P, int lod);
 $gfloat4 texelFetch($gsampler2DArray sampler, int3 P, int lod);

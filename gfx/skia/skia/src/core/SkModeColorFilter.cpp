@@ -12,13 +12,12 @@
 #include "SkColorData.h"
 #include "SkColorSpaceXformer.h"
 #include "SkModeColorFilter.h"
-#include "SkPM4f.h"
 #include "SkPM4fPriv.h"
 #include "SkRandom.h"
 #include "SkRasterPipeline.h"
 #include "SkReadBuffer.h"
 #include "SkString.h"
-#include "SkUtils.h"
+#include "SkUTF.h"
 #include "SkValidationUtils.h"
 #include "SkWriteBuffer.h"
 
@@ -27,18 +26,7 @@
 SkModeColorFilter::SkModeColorFilter(SkColor color, SkBlendMode mode) {
     fColor = color;
     fMode = mode;
-    // cache
-    fPMColor = SkPreMultiplyColor(fColor);
 }
-
-#ifndef SK_IGNORE_TO_STRING
-void SkModeColorFilter::toString(SkString* str) const {
-    str->append("SkModeColorFilter: color: 0x");
-    str->appendHex(fColor);
-    str->append(" mode: ");
-    str->append(SkBlendMode_Name(fMode));
-}
-#endif
 
 bool SkModeColorFilter::asColorMode(SkColor* color, SkBlendMode* mode) const {
     if (color) {
@@ -78,7 +66,7 @@ void SkModeColorFilter::onAppendStages(SkRasterPipeline* p,
                                        SkArenaAlloc* scratch,
                                        bool shaderIsOpaque) const {
     p->append(SkRasterPipeline::move_src_dst);
-    p->append_constant_color(scratch, SkPM4f_from_SkColor(fColor, dst));
+    p->append_constant_color(scratch, premul_in_dst_colorspace(fColor, dst));
     SkBlendMode_AppendStages(fMode, p);
 }
 
@@ -103,7 +91,7 @@ std::unique_ptr<GrFragmentProcessor> SkModeColorFilter::asFragmentProcessor(
         return nullptr;
     }
 
-    auto constFP = GrConstColorProcessor::Make(SkColorToPremulGrColor4f(fColor, dstColorSpaceInfo),
+    auto constFP = GrConstColorProcessor::Make(SkColorToPMColor4f(fColor, dstColorSpaceInfo),
                                                GrConstColorProcessor::InputMode::kIgnore);
     auto fp = GrXfermodeFragmentProcessor::MakeFromSrcProcessor(std::move(constFP), fMode);
     if (!fp) {

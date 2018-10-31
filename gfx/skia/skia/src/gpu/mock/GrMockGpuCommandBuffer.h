@@ -24,8 +24,6 @@ public:
     void insertEventMarker(const char*) override {}
 
 private:
-    void submit() override {}
-
     typedef GrGpuTextureCommandBuffer INHERITED;
 };
 
@@ -47,11 +45,10 @@ public:
 
     int numDraws() const { return fNumDraws; }
 
-    void submit() override { fGpu->submitCommandBuffer(this); }
-
 private:
-    void onDraw(const GrPipeline&, const GrPrimitiveProcessor&, const GrMesh[],
-                const GrPipeline::DynamicState[], int meshCount, const SkRect& bounds) override {
+    void onDraw(const GrPrimitiveProcessor&, const GrPipeline&,
+                const GrPipeline::FixedDynamicState*, const GrPipeline::DynamicStateArrays*,
+                const GrMesh[], int meshCount, const SkRect& bounds) override {
         ++fNumDraws;
     }
     void onClear(const GrFixedClip&, GrColor) override {}

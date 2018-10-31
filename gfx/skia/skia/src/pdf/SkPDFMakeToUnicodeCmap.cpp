@@ -6,8 +6,10 @@
  */
 
 #include "SkPDFMakeToUnicodeCmap.h"
+
 #include "SkPDFUtils.h"
-#include "SkUtils.h"
+#include "SkTo.h"
+#include "SkUTF.h"
 
 static void append_tounicode_header(SkDynamicMemoryWStream* cmap,
                                     bool multibyte) {
@@ -79,12 +81,12 @@ static void write_glyph(SkDynamicMemoryWStream* cmap,
     }
 }
 
-static void append_bfchar_section(const SkTDArray<BFChar>& bfchar,
+static void append_bfchar_section(const std::vector<BFChar>& bfchar,
                                   bool multiByte,
                                   SkDynamicMemoryWStream* cmap) {
     // PDF spec defines that every bf* list can have at most 100 entries.
-    for (int i = 0; i < bfchar.count(); i += 100) {
-        int count = bfchar.count() - i;
+    for (size_t i = 0; i < bfchar.size(); i += 100) {
+        int count = SkToInt(bfchar.size() - i);
         count = SkMin32(count, 100);
         cmap->writeDecAsText(count);
         cmap->writeText(" beginbfchar\n");
@@ -99,12 +101,12 @@ static void append_bfchar_section(const SkTDArray<BFChar>& bfchar,
     }
 }
 
-static void append_bfrange_section(const SkTDArray<BFRange>& bfrange,
+static void append_bfrange_section(const std::vector<BFRange>& bfrange,
                                    bool multiByte,
                                    SkDynamicMemoryWStream* cmap) {
     // PDF spec defines that every bf* list can have at most 100 entries.
-    for (int i = 0; i < bfrange.count(); i += 100) {
-        int count = bfrange.count() - i;
+    for (size_t i = 0; i < bfrange.size(); i += 100) {
+        int count = SkToInt(bfrange.size() - i);
         count = SkMin32(count, 100);
         cmap->writeDecAsText(count);
         cmap->writeText(" beginbfrange\n");
@@ -147,27 +149,23 @@ static void append_bfrange_section(const SkTDArray<BFRange>& bfrange,
 // For the worst case (having 65536 continuous unicode and we use every other
 // one of them), the possible savings by aggressive optimization is 416KB
 // pre-compressed and does not provide enough motivation for implementation.
-void SkPDFAppendCmapSections(const SkTDArray<SkUnichar>& glyphToUnicode,
+void SkPDFAppendCmapSections(const SkUnichar* glyphToUnicode,
                              const SkBitSet* subset,
                              SkDynamicMemoryWStream* cmap,
                              bool multiByteGlyphs,
                              SkGlyphID firstGlyphID,
                              SkGlyphID lastGlyphID) {
-    if (glyphToUnicode.isEmpty()) {
-        return;
-    }
     int glyphOffset = 0;
     if (!multiByteGlyphs) {
         glyphOffset = firstGlyphID - 1;
     }
 
-    SkTDArray<BFChar> bfcharEntries;
-    SkTDArray<BFRange> bfrangeEntries;
+    std::vector<BFChar> bfcharEntries;
+    std::vector<BFRange> bfrangeEntries;
 
     BFRange currentRangeEntry = {0, 0, 0};
     bool rangeEmpty = true;
-    const int limit =
-            SkMin32(lastGlyphID + 1, glyphToUnicode.count()) - glyphOffset;
+    const int limit = (int)lastGlyphID + 1 - glyphOffset;
 
     for (int i = firstGlyphID - glyphOffset; i < limit + 1; ++i) {
         bool inSubset = i < limit &&
@@ -184,11 +182,9 @@ void SkPDFAppendCmapSections(const SkTDArray<SkUnichar>& glyphToUnicode,
                     currentRangeEntry.fUnicode + i - currentRangeEntry.fStart;
             if (!inSubset || !inRange) {
                 if (currentRangeEntry.fEnd > currentRangeEntry.fStart) {
-                    bfrangeEntries.push(currentRangeEntry);
+                    bfrangeEntries.push_back(currentRangeEntry);
                 } else {
-                    BFChar* entry = bfcharEntries.append();
-                    entry->fGlyphId = currentRangeEntry.fStart;
-                    entry->fUnicode = currentRangeEntry.fUnicode;
+                    bfcharEntries.push_back({currentRangeEntry.fStart, currentRangeEntry.fUnicode});
                 }
                 rangeEmpty = true;
             }
@@ -210,7 +206,7 @@ void SkPDFAppendCmapSections(const SkTDArray<SkUnichar>& glyphToUnicode,
 }
 
 sk_sp<SkPDFStream> SkPDFMakeToUnicodeCmap(
-        const SkTDArray<SkUnichar>& glyphToUnicode,
+        const SkUnichar* glyphToUnicode,
         const SkBitSet* subset,
         bool multiByteGlyphs,
         SkGlyphID firstGlyphID,

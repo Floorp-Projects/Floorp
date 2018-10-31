@@ -7,28 +7,23 @@
 
 
 #include "GrPathRendererChain.h"
-
 #include "GrCaps.h"
 #include "GrShaderCaps.h"
-#include "gl/GrGLCaps.h"
 #include "GrContext.h"
 #include "GrContextPriv.h"
 #include "GrGpu.h"
-
 #include "ccpr/GrCoverageCountingPathRenderer.h"
-
 #include "ops/GrAAConvexPathRenderer.h"
 #include "ops/GrAAHairLinePathRenderer.h"
 #include "ops/GrAALinearizingConvexPathRenderer.h"
 #include "ops/GrSmallPathRenderer.h"
 #include "ops/GrDashLinePathRenderer.h"
 #include "ops/GrDefaultPathRenderer.h"
-#include "ops/GrMSAAPathRenderer.h"
 #include "ops/GrStencilAndCoverPathRenderer.h"
 #include "ops/GrTessellatingPathRenderer.h"
 
 GrPathRendererChain::GrPathRendererChain(GrContext* context, const Options& options) {
-    const GrCaps& caps = *context->caps();
+    const GrCaps& caps = *context->contextPriv().caps();
     if (options.fGpuPathRenderers & GpuPathRenderers::kDashLine) {
         fChain.push_back(sk_make_sp<GrDashLinePathRenderer>());
     }
@@ -39,25 +34,17 @@ GrPathRendererChain::GrPathRendererChain(GrContext* context, const Options& opti
             fChain.push_back(std::move(pr));
         }
     }
-#ifndef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    if (options.fGpuPathRenderers & GpuPathRenderers::kMSAA) {
-        if (caps.sampleShadingSupport()) {
-            fChain.push_back(sk_make_sp<GrMSAAPathRenderer>());
-        }
-    }
-#endif
-
-    // AA hairline path renderer is very specialized - no other renderer can do this job well
-    fChain.push_back(sk_make_sp<GrAAHairLinePathRenderer>());
-
     if (options.fGpuPathRenderers & GpuPathRenderers::kCoverageCounting) {
-        bool drawCachablePaths = !options.fAllowPathMaskCaching;
-        if (auto ccpr = GrCoverageCountingPathRenderer::CreateIfSupported(*context->caps(),
-                                                                          drawCachablePaths)) {
+        using AllowCaching = GrCoverageCountingPathRenderer::AllowCaching;
+        if (auto ccpr = GrCoverageCountingPathRenderer::CreateIfSupported(
+                                caps, AllowCaching(options.fAllowPathMaskCaching))) {
             fCoverageCountingPathRenderer = ccpr.get();
             context->contextPriv().addOnFlushCallbackObject(fCoverageCountingPathRenderer);
             fChain.push_back(std::move(ccpr));
         }
+    }
+    if (options.fGpuPathRenderers & GpuPathRenderers::kAAHairline) {
+        fChain.push_back(sk_make_sp<GrAAHairLinePathRenderer>());
     }
     if (options.fGpuPathRenderers & GpuPathRenderers::kAAConvex) {
         fChain.push_back(sk_make_sp<GrAAConvexPathRenderer>());

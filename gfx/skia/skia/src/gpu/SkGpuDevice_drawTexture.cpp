@@ -10,6 +10,7 @@
 #include "GrCaps.h"
 #include "GrColorSpaceXform.h"
 #include "GrRenderTargetContext.h"
+#include "GrShape.h"
 #include "GrStyle.h"
 #include "GrTextureAdjuster.h"
 #include "GrTextureMaker.h"
@@ -87,28 +88,19 @@ static bool can_ignore_bilerp_constraint(const GrTextureProducer& producer,
 }
 
 /**
- * Checks whether the paint, matrix, and constraint are compatible with using
- * GrRenderTargetContext::drawTextureAffine. It is more effecient than the GrTextureProducer
- * general case.
+ * Checks whether the paint is compatible with using GrRenderTargetContext::drawTexture. It is more
+ * efficient than the GrTextureProducer general case.
  */
-static bool can_use_draw_texture_affine(const SkPaint& paint, GrAA aa, const SkMatrix& ctm,
-                                        SkCanvas::SrcRectConstraint constraint) {
-// This is disabled in Chrome until crbug.com/802408 and crbug.com/801783 can be sorted out.
-#ifdef SK_DISABLE_TEXTURE_OP_AA
-    if (GrAA::kYes == aa) {
-        return false;
-    }
-#endif
+static bool can_use_draw_texture(const SkPaint& paint) {
     return (!paint.getColorFilter() && !paint.getShader() && !paint.getMaskFilter() &&
             !paint.getImageFilter() && paint.getFilterQuality() < kMedium_SkFilterQuality &&
-            paint.getBlendMode() == SkBlendMode::kSrcOver && !ctm.hasPerspective() &&
-            SkCanvas::kFast_SrcRectConstraint == constraint);
+            paint.getBlendMode() == SkBlendMode::kSrcOver);
 }
 
-static void draw_texture_affine(const SkPaint& paint, const SkMatrix& ctm, const SkRect* src,
-                                const SkRect* dst, GrAA aa, sk_sp<GrTextureProxy> proxy,
-                                SkColorSpace* colorSpace, const GrClip& clip,
-                                GrRenderTargetContext* rtc) {
+static void draw_texture(const SkPaint& paint, const SkMatrix& ctm, const SkRect* src,
+                         const SkRect* dst, GrAA aa, SkCanvas::SrcRectConstraint constraint,
+                         sk_sp<GrTextureProxy> proxy, SkAlphaType alphaType,
+                         SkColorSpace* colorSpace, const GrClip& clip, GrRenderTargetContext* rtc) {
     SkASSERT(!(SkToBool(src) && !SkToBool(dst)));
     SkRect srcRect = src ? *src : SkRect::MakeWH(proxy->width(), proxy->height());
     SkRect dstRect = dst ? *dst : srcRect;
@@ -119,8 +111,9 @@ static void draw_texture_affine(const SkPaint& paint, const SkMatrix& ctm, const
         SkAssertResult(srcRect.intersect(SkRect::MakeIWH(proxy->width(), proxy->height())));
         srcToDst.mapRect(&dstRect, srcRect);
     }
-    auto csxf = GrColorSpaceXform::Make(colorSpace, proxy->config(),
-                                        rtc->colorSpaceInfo().colorSpace());
+    auto textureXform =
+        GrColorSpaceXform::Make(colorSpace                        , alphaType,
+                                rtc->colorSpaceInfo().colorSpace(), kPremul_SkAlphaType);
     GrSamplerState::Filter filter;
     switch (paint.getFilterQuality()) {
         case kNone_SkFilterQuality:
@@ -133,11 +126,19 @@ static void draw_texture_affine(const SkPaint& paint, const SkMatrix& ctm, const
         case kHigh_SkFilterQuality:
             SK_ABORT("Quality level not allowed.");
     }
-    GrColor color = GrPixelConfigIsAlphaOnly(proxy->config())
-                            ? SkColorToPremulGrColor(paint.getColor())
-                            : SkColorAlphaToGrColor(paint.getColor());
-    rtc->drawTextureAffine(clip, std::move(proxy), filter, color, srcRect, dstRect, aa, ctm,
-                           std::move(csxf));
+    GrColor color;
+    sk_sp<GrColorSpaceXform> paintColorXform = nullptr;
+    if (GrPixelConfigIsAlphaOnly(proxy->config())) {
+        // Leave the color unpremul if we're going to transform it in the vertex shader
+        paintColorXform = rtc->colorSpaceInfo().refColorSpaceXformFromSRGB();
+        color = paintColorXform ? SkColorToUnpremulGrColor(paint.getColor())
+                                : SkColorToPremulGrColor(paint.getColor());
+    } else {
+        color = GrColorPackA4(paint.getAlpha());
+    }
+    GrQuadAAFlags aaFlags = aa == GrAA::kYes ? GrQuadAAFlags::kAll : GrQuadAAFlags::kNone;
+    rtc->drawTexture(clip, std::move(proxy), filter, color, srcRect, dstRect, aaFlags, constraint,
+                     ctm, std::move(textureXform), std::move(paintColorXform));
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -148,9 +149,9 @@ void SkGpuDevice::drawPinnedTextureProxy(sk_sp<GrTextureProxy> proxy, uint32_t p
                                          SkCanvas::SrcRectConstraint constraint,
                                          const SkMatrix& viewMatrix, const SkPaint& paint) {
     GrAA aa = GrAA(paint.isAntiAlias());
-    if (can_use_draw_texture_affine(paint, aa, this->ctm(), constraint)) {
-        draw_texture_affine(paint, viewMatrix, srcRect, dstRect, aa, std::move(proxy), colorSpace,
-                            this->clip(), fRenderTargetContext.get());
+    if (can_use_draw_texture(paint)) {
+        draw_texture(paint, viewMatrix, srcRect, dstRect, aa, constraint, std::move(proxy),
+                     alphaType, colorSpace, this->clip(), fRenderTargetContext.get());
         return;
     }
     GrTextureAdjuster adjuster(this->context(), std::move(proxy), alphaType, pinnedUniqueID,
@@ -163,7 +164,7 @@ void SkGpuDevice::drawTextureMaker(GrTextureMaker* maker, int imageW, int imageH
                                    SkCanvas::SrcRectConstraint constraint,
                                    const SkMatrix& viewMatrix, const SkPaint& paint) {
     GrAA aa = GrAA(paint.isAntiAlias());
-    if (can_use_draw_texture_affine(paint, aa, viewMatrix, constraint)) {
+    if (can_use_draw_texture(paint)) {
         sk_sp<SkColorSpace> cs;
         // We've done enough checks above to allow us to pass ClampNearest() and not check for
         // scaling adjustments.
@@ -173,8 +174,8 @@ void SkGpuDevice::drawTextureMaker(GrTextureMaker* maker, int imageW, int imageH
         if (!proxy) {
             return;
         }
-        draw_texture_affine(paint, viewMatrix, srcRect, dstRect, aa, std::move(proxy), cs.get(),
-                            this->clip(), fRenderTargetContext.get());
+        draw_texture(paint, viewMatrix, srcRect, dstRect, aa, constraint, std::move(proxy),
+                     maker->alphaType(), cs.get(), this->clip(), fRenderTargetContext.get());
         return;
     }
     this->drawTextureProducer(maker, srcRect, dstRect, constraint, viewMatrix, paint);
@@ -321,28 +322,8 @@ void SkGpuDevice::drawTextureProducerImpl(GrTextureProducer* producer,
         return;
     }
 
-    // First see if we can do the draw + mask filter direct to the dst.
-    if (viewMatrix.isScaleTranslate()) {
-        SkRect devClippedDstRect;
-        viewMatrix.mapRectScaleTranslate(&devClippedDstRect, clippedDstRect);
+    GrShape shape(clippedDstRect, GrStyle::SimpleFill());
 
-        SkStrokeRec rec(SkStrokeRec::kFill_InitStyle);
-        if (as_MFB(mf)->directFilterRRectMaskGPU(fContext.get(),
-                                                 fRenderTargetContext.get(),
-                                                 std::move(grPaint),
-                                                 this->clip(),
-                                                 viewMatrix,
-                                                 rec,
-                                                 SkRRect::MakeRect(clippedDstRect),
-                                                 SkRRect::MakeRect(devClippedDstRect))) {
-            return;
-        }
-    }
-
-    SkPath rectPath;
-    rectPath.addRect(clippedDstRect);
-    rectPath.setIsVolatile(true);
-    GrBlurUtils::drawPathWithMaskFilter(this->context(), fRenderTargetContext.get(), this->clip(),
-                                        rectPath, std::move(grPaint), aa, viewMatrix, mf,
-                                        GrStyle::SimpleFill(), true);
+    GrBlurUtils::drawShapeWithMaskFilter(this->context(), fRenderTargetContext.get(), this->clip(),
+                                         shape, std::move(grPaint), viewMatrix, mf);
 }

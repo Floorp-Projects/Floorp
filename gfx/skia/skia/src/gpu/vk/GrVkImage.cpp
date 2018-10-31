@@ -12,6 +12,60 @@
 
 #define VK_CALL(GPU, X) GR_VK_CALL(GPU->vkInterface(), X)
 
+VkPipelineStageFlags GrVkImage::LayoutToPipelineSrcStageFlags(const VkImageLayout layout) {
+    if (VK_IMAGE_LAYOUT_GENERAL == layout) {
+        return VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+    } else if (VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL == layout ||
+               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL == layout) {
+        return VK_PIPELINE_STAGE_TRANSFER_BIT;
+    } else if (VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL == layout) {
+        return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    } else if (VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL == layout ||
+               VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL == layout) {
+        return VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+    } else if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL == layout) {
+        return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    } else if (VK_IMAGE_LAYOUT_PREINITIALIZED == layout) {
+        return VK_PIPELINE_STAGE_HOST_BIT;
+    }
+
+    SkASSERT(VK_IMAGE_LAYOUT_UNDEFINED == layout);
+    return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+}
+
+VkAccessFlags GrVkImage::LayoutToSrcAccessMask(const VkImageLayout layout) {
+    // Currently we assume we will never being doing any explict shader writes (this doesn't include
+    // color attachment or depth/stencil writes). So we will ignore the
+    // VK_MEMORY_OUTPUT_SHADER_WRITE_BIT.
+
+    // We can only directly access the host memory if we are in preinitialized or general layout,
+    // and the image is linear.
+    // TODO: Add check for linear here so we are not always adding host to general, and we should
+    //       only be in preinitialized if we are linear
+    VkAccessFlags flags = 0;;
+    if (VK_IMAGE_LAYOUT_GENERAL == layout) {
+        flags = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT |
+                VK_ACCESS_TRANSFER_WRITE_BIT |
+                VK_ACCESS_TRANSFER_READ_BIT |
+                VK_ACCESS_SHADER_READ_BIT |
+                VK_ACCESS_HOST_WRITE_BIT | VK_ACCESS_HOST_READ_BIT;
+    } else if (VK_IMAGE_LAYOUT_PREINITIALIZED == layout) {
+        flags = VK_ACCESS_HOST_WRITE_BIT;
+    } else if (VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL == layout) {
+        flags = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+    } else if (VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL == layout) {
+        flags = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    } else if (VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL == layout) {
+        flags = VK_ACCESS_TRANSFER_WRITE_BIT;
+    } else if (VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL == layout) {
+        flags = VK_ACCESS_TRANSFER_READ_BIT;
+    } else if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL == layout) {
+        flags = VK_ACCESS_SHADER_READ_BIT;
+    }
+    return flags;
+}
+
 VkImageAspectFlags vk_format_to_aspect_flags(VkFormat format) {
     switch (format) {
         case VK_FORMAT_S8_UINT:
@@ -28,10 +82,15 @@ VkImageAspectFlags vk_format_to_aspect_flags(VkFormat format) {
 void GrVkImage::setImageLayout(const GrVkGpu* gpu, VkImageLayout newLayout,
                                VkAccessFlags dstAccessMask,
                                VkPipelineStageFlags dstStageMask,
-                               bool byRegion) {
+                               bool byRegion, bool releaseFamilyQueue) {
     SkASSERT(VK_IMAGE_LAYOUT_UNDEFINED != newLayout &&
              VK_IMAGE_LAYOUT_PREINITIALIZED != newLayout);
     VkImageLayout currentLayout = this->currentLayout();
+
+    if (releaseFamilyQueue && fInfo.fCurrentQueueFamily == fInitialQueueFamily) {
+        // We never transfered the image to this queue and we are releasing it so don't do anything.
+        return;
+    }
 
     // If the old and new layout are the same and the layout is a read only layout, there is no need
     // to put in a barrier.
@@ -42,10 +101,32 @@ void GrVkImage::setImageLayout(const GrVkGpu* gpu, VkImageLayout newLayout,
         return;
     }
 
-    VkAccessFlags srcAccessMask = GrVkMemory::LayoutToSrcAccessMask(currentLayout);
-    VkPipelineStageFlags srcStageMask = GrVkMemory::LayoutToPipelineStageFlags(currentLayout);
+    VkAccessFlags srcAccessMask = GrVkImage::LayoutToSrcAccessMask(currentLayout);
+    VkPipelineStageFlags srcStageMask = GrVkImage::LayoutToPipelineSrcStageFlags(currentLayout);
 
     VkImageAspectFlags aspectFlags = vk_format_to_aspect_flags(fInfo.fFormat);
+
+    uint32_t srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    uint32_t dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    if (fInfo.fCurrentQueueFamily != VK_QUEUE_FAMILY_IGNORED &&
+        gpu->queueIndex() != fInfo.fCurrentQueueFamily) {
+        // The image still is owned by its original queue family and we need to transfer it into
+        // ours.
+        SkASSERT(!releaseFamilyQueue);
+        SkASSERT(fInfo.fCurrentQueueFamily == fInitialQueueFamily);
+
+        srcQueueFamilyIndex = fInfo.fCurrentQueueFamily;
+        dstQueueFamilyIndex = gpu->queueIndex();
+        fInfo.fCurrentQueueFamily = gpu->queueIndex();
+    } else if (releaseFamilyQueue) {
+        // We are releasing the image so we must transfer the image back to its original queue
+        // family.
+        SkASSERT(fInfo.fCurrentQueueFamily == gpu->queueIndex());
+        srcQueueFamilyIndex = fInfo.fCurrentQueueFamily;
+        dstQueueFamilyIndex = fInitialQueueFamily;
+        fInfo.fCurrentQueueFamily = fInitialQueueFamily;
+    }
+
     VkImageMemoryBarrier imageMemoryBarrier = {
         VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,          // sType
         nullptr,                                         // pNext
@@ -53,15 +134,15 @@ void GrVkImage::setImageLayout(const GrVkGpu* gpu, VkImageLayout newLayout,
         dstAccessMask,                                   // inputMask
         currentLayout,                                   // oldLayout
         newLayout,                                       // newLayout
-        VK_QUEUE_FAMILY_IGNORED,                         // srcQueueFamilyIndex
-        VK_QUEUE_FAMILY_IGNORED,                         // dstQueueFamilyIndex
+        srcQueueFamilyIndex,                             // srcQueueFamilyIndex
+        dstQueueFamilyIndex,                             // dstQueueFamilyIndex
         fInfo.fImage,                                    // image
         { aspectFlags, 0, fInfo.fLevelCount, 0, 1 }      // subresourceRange
     };
 
     gpu->addImageMemoryBarrier(srcStageMask, dstStageMask, byRegion, &imageMemoryBarrier);
 
-    fInfo.fImageLayout = newLayout;
+    this->updateImageLayout(newLayout);
 }
 
 bool GrVkImage::InitImageInfo(const GrVkGpu* gpu, const ImageDesc& imageDesc, GrVkImageInfo* info) {
@@ -84,14 +165,10 @@ bool GrVkImage::InitImageInfo(const GrVkGpu* gpu, const ImageDesc& imageDesc, Gr
     SkASSERT(VK_IMAGE_TILING_OPTIMAL == imageDesc.fImageTiling ||
              VK_SAMPLE_COUNT_1_BIT == vkSamples);
 
-    // sRGB format images may need to be aliased to linear for various reasons (legacy mode):
-    VkImageCreateFlags createFlags = GrVkFormatIsSRGB(imageDesc.fFormat, nullptr)
-        ? VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT : 0;
-
     const VkImageCreateInfo imageCreateInfo = {
         VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,         // sType
         nullptr,                                     // pNext
-        createFlags,                                 // VkImageCreateFlags
+        0,                                           // VkImageCreateFlags
         imageDesc.fImageType,                        // VkImageType
         imageDesc.fFormat,                           // VkFormat
         { imageDesc.fWidth, imageDesc.fHeight, 1 },  // VkExtent3D
@@ -120,6 +197,7 @@ bool GrVkImage::InitImageInfo(const GrVkGpu* gpu, const ImageDesc& imageDesc, Gr
     info->fImageLayout = initialLayout;
     info->fFormat = imageDesc.fFormat;
     info->fLevelCount = imageDesc.fLevels;
+    info->fCurrentQueueFamily = VK_QUEUE_FAMILY_IGNORED;
     return true;
 }
 
@@ -139,6 +217,9 @@ GrVkImage::~GrVkImage() {
 }
 
 void GrVkImage::releaseImage(const GrVkGpu* gpu) {
+    if (fInfo.fCurrentQueueFamily != fInitialQueueFamily) {
+        this->setImageLayout(gpu, this->currentLayout(), 0, 0, false, true);
+    }
     if (fResource) {
         fResource->unref(gpu);
         fResource = nullptr;

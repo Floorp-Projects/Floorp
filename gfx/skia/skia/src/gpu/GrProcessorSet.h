@@ -141,8 +141,7 @@ public:
      */
     Analysis finalize(const GrProcessorAnalysisColor& colorInput,
                       const GrProcessorAnalysisCoverage coverageInput, const GrAppliedClip*,
-                      bool isMixedSamples, const GrCaps&, GrPixelConfigIsClamped,
-                      GrColor* inputColorOverride);
+                      bool isMixedSamples, const GrCaps&, GrColor* inputColorOverride);
 
     bool isFinalized() const { return SkToBool(kFinalized_Flag & fFlags); }
 
@@ -156,7 +155,7 @@ public:
     void visitProxies(const std::function<void(GrSurfaceProxy*)>& func) const {
         for (int i = 0; i < this->numFragmentProcessors(); ++i) {
             GrFragmentProcessor::TextureAccessIter iter(this->fragmentProcessor(i));
-            while (const GrResourceIOProcessor::TextureSampler* sampler = iter.next()) {
+            while (const GrFragmentProcessor::TextureSampler* sampler = iter.next()) {
                 func(sampler->proxy());
             }
         }

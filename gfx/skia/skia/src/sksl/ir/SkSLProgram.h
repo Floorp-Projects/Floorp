@@ -18,6 +18,9 @@
 #include "SkSLProgramElement.h"
 #include "SkSLSymbolTable.h"
 
+// name of the render target width uniform
+#define SKSL_RTWIDTH_NAME "u_skRTWidth"
+
 // name of the render target height uniform
 #define SKSL_RTHEIGHT_NAME "u_skRTHeight"
 
@@ -39,6 +42,10 @@ struct Program {
             : fKind(kInt_Kind)
             , fValue(i) {}
 
+            Value(unsigned int i)
+            : fKind(kInt_Kind)
+            , fValue(i) {}
+
             std::unique_ptr<Expression> literal(const Context& context, int offset) const {
                 switch (fKind) {
                     case Program::Settings::Value::kBool_Kind:
@@ -50,7 +57,7 @@ struct Program {
                                                                           offset,
                                                                           fValue));
                     default:
-                        ASSERT(false);
+                        SkASSERT(false);
                         return nullptr;
                 }
             }
@@ -71,6 +78,8 @@ struct Program {
         // if false, sk_FragCoord is exactly the same as gl_FragCoord. If true, the y coordinate
         // must be flipped.
         bool fFlipY = false;
+        // If true the destination fragment color is read sk_FragColor. It must be declared inout.
+        bool fFragColorIsInOut = false;
         // if true, Setting objects (e.g. sk_Caps.fbFetchSupport) should be replaced with their
         // constant equivalents during compilation
         bool fReplaceSettings = true;
@@ -82,6 +91,9 @@ struct Program {
     };
 
     struct Inputs {
+        // if true, this program requires the render target width uniform to be defined
+        bool fRTWidth;
+
         // if true, this program requires the render target height uniform to be defined
         bool fRTHeight;
 
@@ -90,26 +102,115 @@ struct Program {
         bool fFlipY;
 
         void reset() {
+            fRTWidth = false;
             fRTHeight = false;
             fFlipY = false;
         }
 
         bool isEmpty() {
-            return !fRTHeight && !fFlipY;
+            return !fRTWidth && !fRTHeight && !fFlipY;
         }
+    };
+
+    class iterator {
+    public:
+        ProgramElement& operator*() {
+            if (fIter1 != fEnd1) {
+                return **fIter1;
+            }
+            return **fIter2;
+        }
+
+        iterator& operator++() {
+            if (fIter1 != fEnd1) {
+                ++fIter1;
+                return *this;
+            }
+            ++fIter2;
+            return *this;
+        }
+
+        bool operator==(const iterator& other) const {
+            return fIter1 == other.fIter1 && fIter2 == other.fIter2;
+        }
+
+        bool operator!=(const iterator& other) const {
+            return !(*this == other);
+        }
+
+    private:
+        using inner = std::vector<std::unique_ptr<ProgramElement>>::iterator;
+
+        iterator(inner begin1, inner end1, inner begin2, inner end2)
+        : fIter1(begin1)
+        , fEnd1(end1)
+        , fIter2(begin2)
+        , fEnd2(end2) {}
+
+        inner fIter1;
+        inner fEnd1;
+        inner fIter2;
+        inner fEnd2;
+
+        friend struct Program;
+    };
+
+    class const_iterator {
+    public:
+        const ProgramElement& operator*() {
+            if (fIter1 != fEnd1) {
+                return **fIter1;
+            }
+            return **fIter2;
+        }
+
+        const_iterator& operator++() {
+            if (fIter1 != fEnd1) {
+                ++fIter1;
+                return *this;
+            }
+            ++fIter2;
+            return *this;
+        }
+
+        bool operator==(const const_iterator& other) const {
+            return fIter1 == other.fIter1 && fIter2 == other.fIter2;
+        }
+
+        bool operator!=(const const_iterator& other) const {
+            return !(*this == other);
+        }
+
+    private:
+        using inner = std::vector<std::unique_ptr<ProgramElement>>::const_iterator;
+
+        const_iterator(inner begin1, inner end1, inner begin2, inner end2)
+        : fIter1(begin1)
+        , fEnd1(end1)
+        , fIter2(begin2)
+        , fEnd2(end2) {}
+
+        inner fIter1;
+        inner fEnd1;
+        inner fIter2;
+        inner fEnd2;
+
+        friend struct Program;
     };
 
     enum Kind {
         kFragment_Kind,
         kVertex_Kind,
         kGeometry_Kind,
-        kFragmentProcessor_Kind
+        kFragmentProcessor_Kind,
+        kPipelineStage_Kind
     };
 
     Program(Kind kind,
             std::unique_ptr<String> source,
             Settings settings,
-            Context* context,
+            std::shared_ptr<Context> context,
+            std::vector<std::unique_ptr<ProgramElement>>* inheritedElements,
             std::vector<std::unique_ptr<ProgramElement>> elements,
             std::shared_ptr<SymbolTable> symbols,
             Inputs inputs)
@@ -118,18 +219,57 @@ struct Program {
     , fSettings(settings)
     , fContext(context)
     , fSymbols(symbols)
-    , fElements(std::move(elements))
-    , fInputs(inputs) {}
+    , fInputs(inputs)
+    , fInheritedElements(inheritedElements)
+    , fElements(std::move(elements)) {}
+
+    iterator begin() {
+        if (fInheritedElements) {
+            return iterator(fInheritedElements->begin(), fInheritedElements->end(),
+                            fElements.begin(), fElements.end());
+        }
+        return iterator(fElements.begin(), fElements.end(), fElements.end(), fElements.end());
+    }
+
+    iterator end() {
+        if (fInheritedElements) {
+            return iterator(fInheritedElements->end(), fInheritedElements->end(),
+                            fElements.end(), fElements.end());
+        }
+        return iterator(fElements.end(), fElements.end(), fElements.end(), fElements.end());
+    }
+
+    const_iterator begin() const {
+        if (fInheritedElements) {
+            return const_iterator(fInheritedElements->begin(), fInheritedElements->end(),
+                                  fElements.begin(), fElements.end());
+        }
+        return const_iterator(fElements.begin(), fElements.end(), fElements.end(), fElements.end());
+    }
+
+    const_iterator end() const {
+        if (fInheritedElements) {
+            return const_iterator(fInheritedElements->end(), fInheritedElements->end(),
+                                  fElements.end(), fElements.end());
+        }
+        return const_iterator(fElements.end(), fElements.end(), fElements.end(), fElements.end());
+    }
 
     Kind fKind;
     std::unique_ptr<String> fSource;
     Settings fSettings;
-    Context* fContext;
+    std::shared_ptr<Context> fContext;
     // it's important to keep fElements defined after (and thus destroyed before) fSymbols,
     // because destroying elements can modify reference counts in symbols
     std::shared_ptr<SymbolTable> fSymbols;
-    std::vector<std::unique_ptr<ProgramElement>> fElements;
     Inputs fInputs;
+    bool fIsOptimized = false;
+
+private:
+    std::vector<std::unique_ptr<ProgramElement>>* fInheritedElements;
+    std::vector<std::unique_ptr<ProgramElement>> fElements;
+
+    friend class Compiler;
 };
 
 } // namespace

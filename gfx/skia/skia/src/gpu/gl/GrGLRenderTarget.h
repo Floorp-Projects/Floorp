@@ -61,8 +61,6 @@ public:
         }
     }
 
-    GrBackendObject getRenderTargetHandle() const override { return fRTFBOID; }
-
     GrBackendRenderTarget getBackendRenderTarget() const override;
 
     bool canAttemptStencilAttachment() const override;
@@ -86,7 +84,7 @@ private:
     // Constructor for instances wrapping backend objects.
     GrGLRenderTarget(GrGLGpu*, const GrSurfaceDesc&, const IDDesc&, GrGLStencilAttachment*);
 
-    static GrRenderTargetFlags ComputeFlags(const GrGLCaps&, const IDDesc&);
+    void setFlags(const GrGLCaps&, const IDDesc&);
 
     GrGLGpu* getGLGpu() const;
     bool completeStencilAttachment() override;
