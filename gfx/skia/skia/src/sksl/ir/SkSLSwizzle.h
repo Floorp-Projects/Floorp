@@ -56,6 +56,12 @@ static const Type& get_type(const Context& context, Expression& value, size_t co
             case 3: return *context.fShort3_Type;
             case 4: return *context.fShort4_Type;
         }
+    } else if (base == *context.fByte_Type) {
+        switch (count) {
+            case 2: return *context.fByte2_Type;
+            case 3: return *context.fByte3_Type;
+            case 4: return *context.fByte4_Type;
+        }
     } else if (base == *context.fUInt_Type) {
         switch (count) {
             case 2: return *context.fUInt2_Type;
@@ -68,6 +74,12 @@ static const Type& get_type(const Context& context, Expression& value, size_t co
             case 3: return *context.fUShort3_Type;
             case 4: return *context.fUShort4_Type;
         }
+    } else if (base == *context.fUByte_Type) {
+        switch (count) {
+            case 2: return *context.fUByte2_Type;
+            case 3: return *context.fUByte3_Type;
+            case 4: return *context.fUByte4_Type;
+        }
     } else if (base == *context.fBool_Type) {
         switch (count) {
             case 2: return *context.fBool2_Type;
@@ -79,29 +91,29 @@ static const Type& get_type(const Context& context, Expression& value, size_t co
 }
 
 /**
- * Represents a vector swizzle operation such as 'float21, 2, 3).zyx'.
+ * Represents a vector swizzle operation such as 'float2(1, 2, 3).zyx'.
  */
 struct Swizzle : public Expression {
     Swizzle(const Context& context, std::unique_ptr<Expression> base, std::vector<int> components)
     : INHERITED(base->fOffset, kSwizzle_Kind, get_type(context, *base, components.size()))
     , fBase(std::move(base))
     , fComponents(std::move(components)) {
-        ASSERT(fComponents.size() >= 1 && fComponents.size() <= 4);
+        SkASSERT(fComponents.size() >= 1 && fComponents.size() <= 4);
     }
 
     std::unique_ptr<Expression> constantPropagate(const IRGenerator& irGenerator,
                                                   const DefinitionMap& definitions) override {
         if (fBase->fKind == Expression::kConstructor_Kind && fBase->isConstant()) {
             // we're swizzling a constant vector, e.g. float4(1).x. Simplify it.
-            ASSERT(fBase->fKind == Expression::kConstructor_Kind);
+            SkASSERT(fBase->fKind == Expression::kConstructor_Kind);
             if (fType == *irGenerator.fContext.fInt_Type) {
-                ASSERT(fComponents.size() == 1);
+                SkASSERT(fComponents.size() == 1);
                 int64_t value = ((Constructor&) *fBase).getIVecComponent(fComponents[0]);
                 return std::unique_ptr<Expression>(new IntLiteral(irGenerator.fContext,
                                                                   -1,
                                                                   value));
             } else if (fType == *irGenerator.fContext.fFloat_Type) {
-                ASSERT(fComponents.size() == 1);
+                SkASSERT(fComponents.size() == 1);
                 double value = ((Constructor&) *fBase).getFVecComponent(fComponents[0]);
                 return std::unique_ptr<Expression>(new FloatLiteral(irGenerator.fContext,
                                                                     -1,
@@ -113,6 +125,10 @@ struct Swizzle : public Expression {
 
     bool hasSideEffects() const override {
         return fBase->hasSideEffects();
+    }
+
+    std::unique_ptr<Expression> clone() const override {
+        return std::unique_ptr<Expression>(new Swizzle(fType, fBase->clone(), fComponents));
     }
 
     String description() const override {
@@ -127,6 +143,16 @@ struct Swizzle : public Expression {
     const std::vector<int> fComponents;
 
     typedef Expression INHERITED;
+
+private:
+    Swizzle(const Type& type, std::unique_ptr<Expression> base, std::vector<int> components)
+    : INHERITED(base->fOffset, kSwizzle_Kind, type)
+    , fBase(std::move(base))
+    , fComponents(std::move(components)) {
+        SkASSERT(fComponents.size() >= 1 && fComponents.size() <= 4);
+    }
+
+
 };
 
 } // namespace

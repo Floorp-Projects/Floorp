@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+#include "SkAtomics.h"
 #include "SkBitmapCache.h"
 #include "SkImage.h"
 #include "SkResourceCache.h"
@@ -26,65 +27,27 @@ void SkNotifyBitmapGenIDIsStale(uint32_t bitmapGenID) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-/**
- This function finds the bounds of the bitmap *within its pixelRef*.
- If the bitmap lacks a pixelRef, it will return an empty rect, since
- that doesn't make sense.  This may be a useful enough function that
- it should be somewhere else (in SkBitmap?).
- */
-static SkIRect get_bounds_from_bitmap(const SkBitmap& bm) {
-    if (!(bm.pixelRef())) {
-        return SkIRect::MakeEmpty();
-    }
-    SkIPoint origin = bm.pixelRefOrigin();
-    return SkIRect::MakeXYWH(origin.fX, origin.fY, bm.width(), bm.height());
-}
-
-/**
- *  This function finds the bounds of the image. Today this is just the entire bounds,
- *  but in the future we may support subsets within an image, in which case this should
- *  return that subset (see get_bounds_from_bitmap).
- */
-static SkIRect get_bounds_from_image(const SkImage* image) {
-    SkASSERT(image->width() > 0 && image->height() > 0);
-    return SkIRect::MakeWH(image->width(), image->height());
-}
-
-SkBitmapCacheDesc SkBitmapCacheDesc::Make(uint32_t imageID, int origWidth, int origHeight) {
+SkBitmapCacheDesc SkBitmapCacheDesc::Make(uint32_t imageID, SkColorType colorType,
+                                          SkColorSpace* colorSpace, const SkIRect& subset) {
     SkASSERT(imageID);
-    SkASSERT(origWidth > 0 && origHeight > 0);
-    return { imageID, 0, 0, {0, 0, origWidth, origHeight} };
-}
-
-SkBitmapCacheDesc SkBitmapCacheDesc::Make(const SkBitmap& bm, int scaledWidth, int scaledHeight) {
-    SkASSERT(bm.width() > 0 && bm.height() > 0);
-    SkASSERT(scaledWidth > 0 && scaledHeight > 0);
-    SkASSERT(scaledWidth != bm.width() || scaledHeight != bm.height());
-
-    return { bm.getGenerationID(), scaledWidth, scaledHeight, get_bounds_from_bitmap(bm) };
+    SkASSERT(subset.width() > 0 && subset.height() > 0);
+    return { imageID,
+             colorType,
+             colorSpace ? colorSpace->toXYZD50Hash() : 0,
+             colorSpace ? colorSpace->transferFnHash() : 0,
+             subset };
 }
 
 SkBitmapCacheDesc SkBitmapCacheDesc::Make(const SkBitmap& bm) {
-    SkASSERT(bm.width() > 0 && bm.height() > 0);
-    SkASSERT(bm.pixelRefOrigin() == SkIPoint::Make(0, 0));
-
-    return { bm.getGenerationID(), 0, 0, get_bounds_from_bitmap(bm) };
-}
-
-SkBitmapCacheDesc SkBitmapCacheDesc::Make(const SkImage* image, int scaledWidth, int scaledHeight) {
-    SkASSERT(image->width() > 0 && image->height() > 0);
-    SkASSERT(scaledWidth > 0 && scaledHeight > 0);
-
-    // If the dimensions are the same, should we set them to 0,0?
-    //SkASSERT(scaledWidth != image->width() || scaledHeight != image->height());
-
-    return { image->uniqueID(), scaledWidth, scaledHeight, get_bounds_from_image(image) };
+    SkASSERT(bm.pixelRef());
+    SkIPoint origin = bm.pixelRefOrigin();
+    SkIRect bounds = SkIRect::MakeXYWH(origin.fX, origin.fY, bm.width(), bm.height());
+    return Make(bm.getGenerationID(), bm.colorType(), bm.colorSpace(), bounds);
 }
 
 SkBitmapCacheDesc SkBitmapCacheDesc::Make(const SkImage* image) {
-    SkASSERT(image->width() > 0 && image->height() > 0);
-
-    return { image->uniqueID(), 0, 0, get_bounds_from_image(image) };
+    SkIRect bounds = SkIRect::MakeWH(image->width(), image->height());
+    return Make(image->uniqueID(), image->colorType(), image->colorSpace(), bounds);
 }
 
 namespace {
@@ -95,12 +58,6 @@ public:
     BitmapKey(const SkBitmapCacheDesc& desc) : fDesc(desc) {
         this->init(&gBitmapKeyNamespaceLabel, SkMakeResourceCacheSharedIDForBitmap(fDesc.fImageID),
                    sizeof(fDesc));
-    }
-
-    void dump() const {
-        SkDebugf("-- add [%d %d] %d [%d %d %d %d]\n",
-                 fDesc.fScaledWidth, fDesc.fScaledHeight, fDesc.fImageID,
-             fDesc.fSubset.x(), fDesc.fSubset.y(), fDesc.fSubset.width(), fDesc.fSubset.height());
     }
 
     const SkBitmapCacheDesc fDesc;
@@ -134,14 +91,9 @@ public:
     {
         SkASSERT(!(fDM && fMalloc));    // can't have both
 
-        // We need an ID to return with the bitmap/pixelref.
-        // If they are not scaling, we can return the same ID as the key/desc
-        // If they are scaling, we need a new ID
-        if (desc.fScaledWidth == 0 && desc.fScaledHeight == 0) {
-            fPrUniqueID = desc.fImageID;
-        } else {
-            fPrUniqueID = SkNextID::ImageID();
-        }
+        // We need an ID to return with the bitmap/pixelref. We can't necessarily use the key/desc
+        // ID - lazy images cache the same ID with multiple keys (in different color types).
+        fPrUniqueID = SkNextID::ImageID();
         REC_TRACE(" Rec(%d): [%d %d] %d\n",
                   sk_atomic_inc(&gRecCounter), fInfo.width(), fInfo.height(), fPrUniqueID);
     }
@@ -277,16 +229,13 @@ void SkBitmapCache::PrivateDeleteRec(Rec* rec) { delete rec; }
 
 SkBitmapCache::RecPtr SkBitmapCache::Alloc(const SkBitmapCacheDesc& desc, const SkImageInfo& info,
                                            SkPixmap* pmap) {
-    // Ensure that the caller is self-consistent:
-    //  - if they are scaling, the info matches the scaled size
-    //  - if they are not, the info matches the subset (i.e. the subset is the entire image)
-    if (desc.fScaledWidth == 0 && desc.fScaledHeight == 0) {
-        SkASSERT(info.width() == desc.fSubset.width());
-        SkASSERT(info.height() == desc.fSubset.height());
-    } else {
-        SkASSERT(info.width() == desc.fScaledWidth);
-        SkASSERT(info.height() == desc.fScaledHeight);
-    }
+    // Ensure that the info matches the subset (i.e. the subset is the entire image)
+    SkASSERT(info.width() == desc.fSubset.width());
+    SkASSERT(info.height() == desc.fSubset.height());
+    SkASSERT(info.colorType() == desc.fColorType);
+    SkASSERT((info.colorSpace() ? info.colorSpace()->toXYZD50Hash() : 0) == desc.fCSXYZHash);
+    SkASSERT((info.colorSpace() ? info.colorSpace()->transferFnHash() : 0) ==
+             desc.fCSTransferFnHash);
 
     const size_t rb = info.minRowBytes();
     size_t size = info.computeByteSize(rb);
@@ -330,26 +279,17 @@ static unsigned gMipMapKeyNamespaceLabel;
 
 struct MipMapKey : public SkResourceCache::Key {
 public:
-    MipMapKey(uint32_t imageID, const SkIRect& subset, SkDestinationSurfaceColorMode colorMode)
-        : fImageID(imageID)
-        , fColorMode(static_cast<uint32_t>(colorMode))
-        , fSubset(subset)
-    {
-        SkASSERT(fImageID);
-        SkASSERT(!subset.isEmpty());
-        this->init(&gMipMapKeyNamespaceLabel, SkMakeResourceCacheSharedIDForBitmap(fImageID),
-                   sizeof(fImageID) + sizeof(fColorMode) + sizeof(fSubset));
+    MipMapKey(const SkBitmapCacheDesc& desc) : fDesc(desc) {
+        this->init(&gMipMapKeyNamespaceLabel, SkMakeResourceCacheSharedIDForBitmap(fDesc.fImageID),
+                   sizeof(fDesc));
     }
 
-    uint32_t    fImageID;
-    uint32_t    fColorMode;
-    SkIRect     fSubset;
+    const SkBitmapCacheDesc fDesc;
 };
 
 struct MipMapRec : public SkResourceCache::Rec {
-    MipMapRec(uint32_t imageID, const SkIRect& subset, SkDestinationSurfaceColorMode colorMode,
-              const SkMipMap* result)
-        : fKey(imageID, subset, colorMode)
+    MipMapRec(const SkBitmapCacheDesc& desc, const SkMipMap* result)
+        : fKey(desc)
         , fMipMap(result)
     {
         fMipMap->attachToCacheAndRef();
@@ -387,11 +327,8 @@ private:
 }
 
 const SkMipMap* SkMipMapCache::FindAndRef(const SkBitmapCacheDesc& desc,
-                                          SkDestinationSurfaceColorMode colorMode,
                                           SkResourceCache* localCache) {
-    SkASSERT(desc.fScaledWidth == 0);
-    SkASSERT(desc.fScaledHeight == 0);
-    MipMapKey key(desc.fImageID, desc.fSubset, colorMode);
+    MipMapKey key(desc);
     const SkMipMap* result;
 
     if (!CHECK_LOCAL(localCache, find, Find, key, MipMapRec::Finder, &result)) {
@@ -405,13 +342,10 @@ static SkResourceCache::DiscardableFactory get_fact(SkResourceCache* localCache)
                       : SkResourceCache::GetDiscardableFactory();
 }
 
-const SkMipMap* SkMipMapCache::AddAndRef(const SkBitmap& src,
-                                         SkDestinationSurfaceColorMode colorMode,
-                                         SkResourceCache* localCache) {
-    SkMipMap* mipmap = SkMipMap::Build(src, colorMode, get_fact(localCache));
+const SkMipMap* SkMipMapCache::AddAndRef(const SkBitmap& src, SkResourceCache* localCache) {
+    SkMipMap* mipmap = SkMipMap::Build(src, get_fact(localCache));
     if (mipmap) {
-        MipMapRec* rec = new MipMapRec(src.getGenerationID(), get_bounds_from_bitmap(src),
-                                       colorMode, mipmap);
+        MipMapRec* rec = new MipMapRec(SkBitmapCacheDesc::Make(src), mipmap);
         CHECK_LOCAL(localCache, add, Add, rec);
         src.pixelRef()->notifyAddedToCache();
     }

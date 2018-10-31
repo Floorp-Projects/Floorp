@@ -17,14 +17,114 @@
 #include "SkMatrixPriv.h"
 #include "SkPointPriv.h"
 #include "SkRect.h"
-
-static sk_sp<GrGeometryProcessor> create_gp() {
-    using namespace GrDefaultGeoProcFactory;
-    return GrDefaultGeoProcFactory::Make(Color::kPremulGrColorAttribute_Type, Coverage::kSolid_Type,
-                                         LocalCoords::kHasExplicit_Type, SkMatrix::I());
-}
+#include "glsl/GrGLSLColorSpaceXformHelper.h"
+#include "glsl/GrGLSLGeometryProcessor.h"
+#include "glsl/GrGLSLVarying.h"
 
 namespace {
+
+class LatticeGP : public GrGeometryProcessor {
+public:
+    struct Vertex {
+        SkPoint fPosition;
+        SkPoint fTextureCoords;
+        SkRect fTextureDomain;
+        GrColor fColor;
+    };
+
+    static sk_sp<GrGeometryProcessor> Make(const GrTextureProxy* proxy,
+                                           sk_sp<GrColorSpaceXform> csxf,
+                                           GrSamplerState::Filter filter) {
+        return sk_sp<GrGeometryProcessor>(new LatticeGP(proxy, std::move(csxf), filter));
+    }
+
+    const char* name() const override { return "LatticeGP"; }
+
+    void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
+        b->add32(GrColorSpaceXform::XformKey(fColorSpaceXform.get()));
+    }
+
+    GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps& caps) const override {
+        class GLSLProcessor : public GrGLSLGeometryProcessor {
+        public:
+            void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc,
+                         FPCoordTransformIter&& transformIter) override {
+                const auto& latticeGP = proc.cast<LatticeGP>();
+                this->setTransformDataHelper(SkMatrix::I(), pdman, &transformIter);
+                fColorSpaceXformHelper.setData(pdman, latticeGP.fColorSpaceXform.get());
+            }
+
+        private:
+            void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
+                using Interpolation = GrGLSLVaryingHandler::Interpolation;
+                const auto& latticeGP = args.fGP.cast<LatticeGP>();
+                fColorSpaceXformHelper.emitCode(args.fUniformHandler,
+                                                latticeGP.fColorSpaceXform.get());
+
+                args.fVaryingHandler->emitAttributes(latticeGP);
+                this->writeOutputPosition(args.fVertBuilder, gpArgs, latticeGP.kPositions.name());
+                this->emitTransforms(args.fVertBuilder,
+                                     args.fVaryingHandler,
+                                     args.fUniformHandler,
+                                     latticeGP.kTextureCoords.asShaderVar(),
+                                     args.fFPCoordTransformHandler);
+                args.fFragBuilder->codeAppend("float2 textureCoords;");
+                args.fVaryingHandler->addPassThroughAttribute(latticeGP.kTextureCoords,
+                                                              "textureCoords");
+                args.fFragBuilder->codeAppend("float4 textureDomain;");
+                args.fVaryingHandler->addPassThroughAttribute(
+                        latticeGP.kTextureDomain, "textureDomain", Interpolation::kCanBeFlat);
+                args.fVaryingHandler->addPassThroughAttribute(latticeGP.kColors, args.fOutputColor,
+                                                              Interpolation::kCanBeFlat);
+                args.fFragBuilder->codeAppendf("%s = ", args.fOutputColor);
+                args.fFragBuilder->appendTextureLookupAndModulate(
+                        args.fOutputColor,
+                        args.fTexSamplers[0],
+                        "clamp(textureCoords, textureDomain.xy, textureDomain.zw)",
+                        kFloat2_GrSLType,
+                        &fColorSpaceXformHelper);
+                args.fFragBuilder->codeAppend(";");
+                args.fFragBuilder->codeAppendf("%s = half4(1);", args.fOutputCoverage);
+            }
+            GrGLSLColorSpaceXformHelper fColorSpaceXformHelper;
+        };
+        return new GLSLProcessor;
+    }
+
+private:
+    LatticeGP(const GrTextureProxy* proxy, sk_sp<GrColorSpaceXform> csxf,
+              GrSamplerState::Filter filter)
+            : INHERITED(kLatticeGP_ClassID), fColorSpaceXform(std::move(csxf)) {
+        fSampler.reset(proxy->textureType(), proxy->config(), filter);
+        this->setTextureSamplerCnt(1);
+        this->setVertexAttributeCnt(4);
+    }
+
+    const Attribute& onVertexAttribute(int i) const override {
+        return IthAttribute(i, kPositions, kTextureCoords, kTextureDomain, kColors);
+    }
+
+    const TextureSampler& onTextureSampler(int) const override { return fSampler; }
+
+    static constexpr Attribute kPositions =
+            {"position", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
+    static constexpr Attribute kTextureCoords =
+            {"textureCoords", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
+    static constexpr Attribute kTextureDomain =
+            {"textureDomain", kFloat4_GrVertexAttribType, kFloat4_GrSLType};
+    static constexpr Attribute kColors =
+            {"color", kUByte4_norm_GrVertexAttribType, kHalf4_GrSLType};
+
+    sk_sp<GrColorSpaceXform> fColorSpaceXform;
+    TextureSampler fSampler;
+
+    typedef GrGeometryProcessor INHERITED;
+};
+
+constexpr GrPrimitiveProcessor::Attribute LatticeGP::kPositions;
+constexpr GrPrimitiveProcessor::Attribute LatticeGP::kTextureCoords;
+constexpr GrPrimitiveProcessor::Attribute LatticeGP::kTextureDomain;
+constexpr GrPrimitiveProcessor::Attribute LatticeGP::kColors;
 
 class NonAALatticeOp final : public GrMeshDrawOp {
 private:
@@ -36,25 +136,35 @@ public:
     static const int kVertsPerRect = 4;
     static const int kIndicesPerRect = 6;
 
-    static std::unique_ptr<GrDrawOp> Make(GrPaint&& paint, const SkMatrix& viewMatrix,
-                                          int imageWidth, int imageHeight,
-                                          std::unique_ptr<SkLatticeIter> iter, const SkRect& dst) {
-        return Helper::FactoryHelper<NonAALatticeOp>(std::move(paint), viewMatrix, imageWidth,
-                                                     imageHeight, std::move(iter), dst);
+    static std::unique_ptr<GrDrawOp> Make(GrContext* context,
+                                          GrPaint&& paint,
+                                          const SkMatrix& viewMatrix,
+                                          sk_sp<GrTextureProxy> proxy,
+                                          sk_sp<GrColorSpaceXform> colorSpaceXForm,
+                                          GrSamplerState::Filter filter,
+                                          std::unique_ptr<SkLatticeIter> iter,
+                                          const SkRect& dst) {
+        SkASSERT(proxy);
+        return Helper::FactoryHelper<NonAALatticeOp>(context, std::move(paint), viewMatrix,
+                                                     std::move(proxy),
+                                                     std::move(colorSpaceXForm), filter,
+                                                     std::move(iter), dst);
     }
 
     NonAALatticeOp(Helper::MakeArgs& helperArgs, GrColor color, const SkMatrix& viewMatrix,
-                   int imageWidth, int imageHeight, std::unique_ptr<SkLatticeIter> iter,
+                   sk_sp<GrTextureProxy> proxy, sk_sp<GrColorSpaceXform> colorSpaceXform,
+                   GrSamplerState::Filter filter, std::unique_ptr<SkLatticeIter> iter,
                    const SkRect& dst)
-            : INHERITED(ClassID()), fHelper(helperArgs, GrAAType::kNone) {
+            : INHERITED(ClassID())
+            , fHelper(helperArgs, GrAAType::kNone)
+            , fProxy(std::move(proxy))
+            , fColorSpaceXform(std::move(colorSpaceXform))
+            , fFilter(filter) {
         Patch& patch = fPatches.push_back();
         patch.fViewMatrix = viewMatrix;
         patch.fColor = color;
         patch.fIter = std::move(iter);
         patch.fDst = dst;
-
-        fImageWidth = imageWidth;
-        fImageHeight = imageHeight;
 
         // setup bounds
         this->setTransformedBounds(patch.fDst, viewMatrix, HasAABloat::kNo, IsZeroArea::kNo);
@@ -63,6 +173,7 @@ public:
     const char* name() const override { return "NonAALatticeOp"; }
 
     void visitProxies(const VisitProxyFunc& func) const override {
+        func(fProxy.get());
         fHelper.visitProxies(func);
     }
 
@@ -82,22 +193,29 @@ public:
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
-    RequiresDstTexture finalize(const GrCaps& caps, const GrAppliedClip* clip,
-                                GrPixelConfigIsClamped dstIsClamped) override {
-        return fHelper.xpRequiresDstTexture(caps, clip, dstIsClamped,
-                                            GrProcessorAnalysisCoverage::kNone,
-                                            &fPatches.front().fColor);
+    RequiresDstTexture finalize(const GrCaps& caps, const GrAppliedClip* clip) override {
+        auto opaque = GrColorIsOpaque(fPatches[0].fColor) && GrPixelConfigIsOpaque(fProxy->config())
+                              ? GrProcessorAnalysisColor::Opaque::kYes
+                              : GrProcessorAnalysisColor::Opaque::kNo;
+        auto analysisColor = GrProcessorAnalysisColor(opaque);
+        auto result = fHelper.xpRequiresDstTexture(
+                caps, clip, GrProcessorAnalysisCoverage::kNone, &analysisColor);
+        analysisColor.isConstant(&fPatches[0].fColor);
+        return result;
     }
 
 private:
     void onPrepareDraws(Target* target) override {
-        sk_sp<GrGeometryProcessor> gp(create_gp());
+        auto gp = LatticeGP::Make(fProxy.get(), fColorSpaceXform, fFilter);
         if (!gp) {
             SkDebugf("Couldn't create GrGeometryProcessor\n");
             return;
         }
 
-        size_t vertexStride = gp->getVertexStride();
+        static constexpr size_t kVertexStide =
+                sizeof(SkPoint) + sizeof(SkPoint) + sizeof(SkRect) + sizeof(uint32_t);
+        SkASSERT(kVertexStide == gp->debugOnly_vertexStride());
+
         int patchCnt = fPatches.count();
         int numRects = 0;
         for (int i = 0; i < patchCnt; i++) {
@@ -109,9 +227,9 @@ private:
         }
 
         sk_sp<const GrBuffer> indexBuffer = target->resourceProvider()->refQuadIndexBuffer();
-        PatternHelper helper(GrPrimitiveType::kTriangles);
-        void* vertices = helper.init(target, vertexStride, indexBuffer.get(), kVertsPerRect,
-                                     kIndicesPerRect, numRects);
+        PatternHelper helper(target, GrPrimitiveType::kTriangles, kVertexStide, indexBuffer.get(),
+                             kVertsPerRect, kIndicesPerRect, numRects);
+        void* vertices = helper.vertices();
         if (!vertices || !indexBuffer) {
             SkDebugf("Could not allocate vertices\n");
             return;
@@ -128,50 +246,68 @@ private:
                 patch.fIter->mapDstScaleTranslate(patch.fViewMatrix);
             }
 
-            SkRect srcR, dstR;
+            SkIRect srcR;
+            SkRect dstR;
             intptr_t patchVerts = verts;
+            Sk4f scales(1.f / fProxy->width(), 1.f / fProxy->height(),
+                        1.f / fProxy->width(), 1.f / fProxy->height());
+            static const Sk4f kDomainOffsets(0.5f, 0.5f, -0.5f, -0.5f);
+            static const Sk4f kFlipOffsets(0.f, 1, 0.f, 1.f);
+            static const Sk4f kFlipMuls(1.f, -1.f, 1.f, -1.f);
             while (patch.fIter->next(&srcR, &dstR)) {
-                SkPoint* positions = reinterpret_cast<SkPoint*>(verts);
-                SkPointPriv::SetRectTriStrip(positions, dstR.fLeft, dstR.fTop, dstR.fRight,
-                                             dstR.fBottom, vertexStride);
-
-                // Setup local coords
-                static const int kLocalOffset = sizeof(SkPoint) + sizeof(GrColor);
-                SkPoint* coords = reinterpret_cast<SkPoint*>(verts + kLocalOffset);
-                SkPointPriv::SetRectTriStrip(coords, srcR.fLeft, srcR.fTop, srcR.fRight,
-                                             srcR.fBottom, vertexStride);
-
-                static const int kColorOffset = sizeof(SkPoint);
-                GrColor* vertColor = reinterpret_cast<GrColor*>(verts + kColorOffset);
-                for (int j = 0; j < 4; ++j) {
-                    *vertColor = patch.fColor;
-                    vertColor = (GrColor*)((intptr_t)vertColor + vertexStride);
+                auto vertices = reinterpret_cast<LatticeGP::Vertex*>(verts);
+                SkPointPriv::SetRectTriStrip(&vertices->fPosition, dstR, kVertexStide);
+                Sk4f coords(SkIntToScalar(srcR.fLeft), SkIntToScalar(srcR.fTop),
+                            SkIntToScalar(srcR.fRight), SkIntToScalar(srcR.fBottom));
+                Sk4f domain = coords + kDomainOffsets;
+                coords *= scales;
+                domain *= scales;
+                if (fProxy->origin() == kBottomLeft_GrSurfaceOrigin) {
+                    coords = kFlipMuls * coords + kFlipOffsets;
+                    domain = SkNx_shuffle<0, 3, 2, 1>(kFlipMuls * domain + kFlipOffsets);
                 }
-                verts += kVertsPerRect * vertexStride;
+                SkPointPriv::SetRectTriStrip(&vertices->fTextureCoords, coords[0], coords[1],
+                                             coords[2], coords[3], kVertexStide);
+                for (int j = 0; j < kVertsPerRect; ++j) {
+                    vertices[j].fTextureDomain = {domain[0], domain[1], domain[2], domain[3]};
+                }
+
+                for (int j = 0; j < kVertsPerRect; ++j) {
+                    vertices[j].fColor = patch.fColor;
+                }
+                verts += kVertsPerRect * kVertexStide;
             }
 
             // If we didn't handle it above, apply the matrix here.
             if (!isScaleTranslate) {
                 SkPoint* positions = reinterpret_cast<SkPoint*>(patchVerts);
-                SkMatrixPriv::MapPointsWithStride(patch.fViewMatrix, positions, vertexStride,
+                SkMatrixPriv::MapPointsWithStride(patch.fViewMatrix, positions, kVertexStide,
                                                   kVertsPerRect * patch.fIter->numRectsToDraw());
             }
         }
-        helper.recordDraw(target, gp.get(), fHelper.makePipeline(target));
+        auto pipe = fHelper.makePipeline(target, 1);
+        pipe.fFixedDynamicState->fPrimitiveProcessorTextures[0] = fProxy.get();
+        helper.recordDraw(target, std::move(gp), pipe.fPipeline, pipe.fFixedDynamicState);
     }
 
-    bool onCombineIfPossible(GrOp* t, const GrCaps& caps) override {
+    CombineResult onCombineIfPossible(GrOp* t, const GrCaps& caps) override {
         NonAALatticeOp* that = t->cast<NonAALatticeOp>();
-        if (!fHelper.isCompatible(that->fHelper, caps, this->bounds(), that->bounds())) {
-            return false;
+        if (fProxy != that->fProxy) {
+            return CombineResult::kCannotCombine;
         }
-
-        SkASSERT(this->fImageWidth == that->fImageWidth &&
-                 this->fImageHeight == that->fImageHeight);
+        if (fFilter != that->fFilter) {
+            return CombineResult::kCannotCombine;
+        }
+        if (GrColorSpaceXform::Equals(fColorSpaceXform.get(), that->fColorSpaceXform.get())) {
+            return CombineResult::kCannotCombine;
+        }
+        if (!fHelper.isCompatible(that->fHelper, caps, this->bounds(), that->bounds())) {
+            return CombineResult::kCannotCombine;
+        }
 
         fPatches.move_back_n(that->fPatches.count(), that->fPatches.begin());
         this->joinBounds(*that);
-        return true;
+        return CombineResult::kMerged;
     }
 
     struct Patch {
@@ -183,8 +319,9 @@ private:
 
     Helper fHelper;
     SkSTArray<1, Patch, true> fPatches;
-    int fImageWidth;
-    int fImageHeight;
+    sk_sp<GrTextureProxy> fProxy;
+    sk_sp<GrColorSpaceXform> fColorSpaceXform;
+    GrSamplerState::Filter fFilter;
 
     typedef GrMeshDrawOp INHERITED;
 };
@@ -192,15 +329,22 @@ private:
 }  // anonymous namespace
 
 namespace GrLatticeOp {
-std::unique_ptr<GrDrawOp> MakeNonAA(GrPaint&& paint, const SkMatrix& viewMatrix, int imageWidth,
-                                    int imageHeight, std::unique_ptr<SkLatticeIter> iter,
+std::unique_ptr<GrDrawOp> MakeNonAA(GrContext* context,
+                                    GrPaint&& paint,
+                                    const SkMatrix& viewMatrix,
+                                    sk_sp<GrTextureProxy> proxy,
+                                    sk_sp<GrColorSpaceXform> colorSpaceXform,
+                                    GrSamplerState::Filter filter,
+                                    std::unique_ptr<SkLatticeIter> iter,
                                     const SkRect& dst) {
-    return NonAALatticeOp::Make(std::move(paint), viewMatrix, imageWidth, imageHeight,
-                                std::move(iter), dst);
+    return NonAALatticeOp::Make(context, std::move(paint), viewMatrix, std::move(proxy),
+                                std::move(colorSpaceXform), filter, std::move(iter), dst);
 }
 };
 
 #if GR_TEST_UTILS
+#include "GrContextPriv.h"
+#include "GrProxyProvider.h"
 
 /** Randomly divides subset into count divs. */
 static void init_random_divs(int divs[], int count, int subsetStart, int subsetStop,
@@ -239,7 +383,6 @@ static void init_random_divs(int divs[], int count, int subsetStart, int subsetS
 
 GR_DRAW_OP_TEST_DEFINE(NonAALatticeOp) {
     SkCanvas::Lattice lattice;
-    int imgW, imgH;
     // We loop because our random lattice code can produce an invalid lattice in the case where
     // there is a single div separator in both x and y and both are aligned with the left and top
     // edge of the image subset, respectively.
@@ -248,19 +391,26 @@ GR_DRAW_OP_TEST_DEFINE(NonAALatticeOp) {
     std::unique_ptr<SkCanvas::Lattice::RectType[]> flags;
     std::unique_ptr<SkColor[]> colors;
     SkIRect subset;
+    GrSurfaceDesc desc;
+    desc.fConfig = kRGBA_8888_GrPixelConfig;
+    desc.fWidth = random->nextRangeU(1, 1000);
+    desc.fHeight = random->nextRangeU(1, 1000);
+    GrSurfaceOrigin origin =
+            random->nextBool() ? kTopLeft_GrSurfaceOrigin : kBottomLeft_GrSurfaceOrigin;
+    auto proxy = context->contextPriv().proxyProvider()->createProxy(
+            desc, origin, SkBackingFit::kExact, SkBudgeted::kYes);
+
     do {
-        imgW = random->nextRangeU(1, 1000);
-        imgH = random->nextRangeU(1, 1000);
         if (random->nextBool()) {
-            subset.fLeft = random->nextULessThan(imgW);
-            subset.fRight = random->nextRangeU(subset.fLeft + 1, imgW);
-            subset.fTop = random->nextULessThan(imgH);
-            subset.fBottom = random->nextRangeU(subset.fTop + 1, imgH);
+            subset.fLeft = random->nextULessThan(desc.fWidth);
+            subset.fRight = random->nextRangeU(subset.fLeft + 1, desc.fWidth);
+            subset.fTop = random->nextULessThan(desc.fHeight);
+            subset.fBottom = random->nextRangeU(subset.fTop + 1, desc.fHeight);
         } else {
-            subset.setXYWH(0, 0, imgW, imgH);
+            subset.setXYWH(0, 0, desc.fWidth, desc.fHeight);
         }
-        // SkCanvas::Lattice allows bounds to be null. However, SkCanvas creates a temp Lattice with a
-        // non-null bounds before creating a SkLatticeIter since SkLatticeIter requires a bounds.
+        // SkCanvas::Lattice allows bounds to be null. However, SkCanvas creates a temp Lattice with
+        // a non-null bounds before creating a SkLatticeIter since SkLatticeIter requires a bounds.
         lattice.fBounds = &subset;
         lattice.fXCount = random->nextRangeU(1, subset.width());
         lattice.fYCount = random->nextRangeU(1, subset.height());
@@ -285,8 +435,7 @@ GR_DRAW_OP_TEST_DEFINE(NonAALatticeOp) {
             lattice.fRectTypes = nullptr;
             lattice.fColors = nullptr;
         }
-    } while (!SkLatticeIter::Valid(imgW, imgH, lattice));
-
+    } while (!SkLatticeIter::Valid(desc.fWidth, desc.fHeight, lattice));
     SkRect dst;
     dst.fLeft = random->nextRangeScalar(-2000.5f, 1000.f);
     dst.fTop = random->nextRangeScalar(-2000.5f, 1000.f);
@@ -294,7 +443,11 @@ GR_DRAW_OP_TEST_DEFINE(NonAALatticeOp) {
     dst.fBottom = dst.fTop + random->nextRangeScalar(0.5f, 1000.f);
     std::unique_ptr<SkLatticeIter> iter(new SkLatticeIter(lattice, dst));
     SkMatrix viewMatrix = GrTest::TestMatrixPreservesRightAngles(random);
-    return NonAALatticeOp::Make(std::move(paint), viewMatrix, imgW, imgH, std::move(iter), dst);
+    auto csxf = GrTest::TestColorXform(random);
+    GrSamplerState::Filter filter =
+            random->nextBool() ? GrSamplerState::Filter::kNearest : GrSamplerState::Filter::kBilerp;
+    return NonAALatticeOp::Make(context, std::move(paint), viewMatrix, std::move(proxy),
+                                std::move(csxf), filter, std::move(iter), dst);
 }
 
 #endif

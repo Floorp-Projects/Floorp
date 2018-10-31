@@ -106,18 +106,30 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
 
     async start() {
       // In some cases, such as a preloaded browser used for about:newtab, browser code
-      // will force a new frameloader on next navigation to ensure balanced process
-      // assignment.  If this case will happen here, navigate to about:blank first to get
-      // this out of way so that we stay within one process while RDM is open.
-      const { newFrameloader } = E10SUtils.shouldLoadURIInBrowser(
-        tab.linkedBrowser,
-        "about:blank"
+      // will force a new frameloader on next navigation to remote content to ensure
+      // balanced process assignment.  If this case will happen here, navigate to
+      // about:blank first to get this out of way so that we stay within one process while
+      // RDM is open. Some process selection rules are specific to remote content, so we
+      // use `http://example.com` as a test for what a remote navigation would cause.
+      const {
+        requiredRemoteType,
+        mustChangeProcess,
+        newFrameloader,
+      } = E10SUtils.shouldLoadURIInBrowser(
+         tab.linkedBrowser,
+        "http://example.com"
       );
       if (newFrameloader) {
         debug(`Tab will force a new frameloader on navigation, load about:blank first`);
         await loadURIWithNewFrameLoader(tab.linkedBrowser, "about:blank", {
           flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
           triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+        });
+      }
+      if (mustChangeProcess) {
+        debug(`Tab will force a process flip on navigation, load about:blank first`);
+        gBrowser.updateBrowserRemoteness(tab.linkedBrowser, true, {
+          remoteType: requiredRemoteType,
         });
       }
 

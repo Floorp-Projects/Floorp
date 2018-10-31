@@ -11,6 +11,8 @@
 #include "SkSafe_math.h"
 #include "SkScalar.h"
 #include "SkTypes.h"
+
+#include <algorithm>
 #include <limits>
 #include <type_traits>
 
@@ -97,7 +99,14 @@ struct SkNx {
         Half::Store3(ptr,                   a.fLo, b.fLo, c.fLo);
         Half::Store3(ptr + 3*N/2*sizeof(T), a.fHi, b.fHi, c.fHi);
     }
+    AI static void Store2(void* vptr, const SkNx& a, const SkNx& b) {
+        auto ptr = (char*)vptr;
+        Half::Store2(ptr,                   a.fLo, b.fLo);
+        Half::Store2(ptr + 2*N/2*sizeof(T), a.fHi, b.fHi);
+    }
 
+    AI T min() const { return SkTMin(fLo.min(), fHi.min()); }
+    AI T max() const { return SkTMax(fLo.max(), fHi.max()); }
     AI bool anyTrue() const { return fLo.anyTrue() || fHi.anyTrue(); }
     AI bool allTrue() const { return fLo.allTrue() && fHi.allTrue(); }
 
@@ -200,7 +209,14 @@ struct SkNx<1,T> {
         b.store(ptr + 1*sizeof(T));
         c.store(ptr + 2*sizeof(T));
     }
+    AI static void Store2(void* vptr, const SkNx& a, const SkNx& b) {
+        auto ptr = (char*)vptr;
+        a.store(ptr + 0*sizeof(T));
+        b.store(ptr + 1*sizeof(T));
+    }
 
+    AI T min() const { return fVal; }
+    AI T max() const { return fVal; }
     AI bool anyTrue() const { return fVal != 0; }
     AI bool allTrue() const { return fVal != 0; }
 
@@ -283,7 +299,10 @@ private:
 #define V template <int N, typename T> AI static SkNx<N,T>
     V operator+ (T x, const SkNx<N,T>& y) { return SkNx<N,T>(x) +  y; }
     V operator- (T x, const SkNx<N,T>& y) { return SkNx<N,T>(x) -  y; }
+    template <int N> AI static SkNx<N, float> operator-(int x, const SkNx<N, float>& y) { return SkNx<N,float>(x) - y; }
+    template <int N> AI static SkNx<N, uint16_t> operator-(int x, const SkNx<N, uint16_t>& y) { return SkNx<N,uint16_t>(x) - y; }
     V operator* (T x, const SkNx<N,T>& y) { return SkNx<N,T>(x) *  y; }
+    template <int N> AI static SkNx<N, uint16_t> operator*(int x, const SkNx<N, uint16_t>& y) { return SkNx<N,uint16_t>(x) * y; }
     V operator/ (T x, const SkNx<N,T>& y) { return SkNx<N,T>(x) /  y; }
     V operator& (T x, const SkNx<N,T>& y) { return SkNx<N,T>(x) &  y; }
     V operator| (T x, const SkNx<N,T>& y) { return SkNx<N,T>(x) |  y; }
@@ -291,6 +310,7 @@ private:
     V operator==(T x, const SkNx<N,T>& y) { return SkNx<N,T>(x) == y; }
     V operator!=(T x, const SkNx<N,T>& y) { return SkNx<N,T>(x) != y; }
     V operator<=(T x, const SkNx<N,T>& y) { return SkNx<N,T>(x) <= y; }
+    template <int N> AI static SkNx<N, float> operator<=(int x, const SkNx<N, float>& y) { return SkNx<N,float>(x) <= y; }
     V operator>=(T x, const SkNx<N,T>& y) { return SkNx<N,T>(x) >= y; }
     V operator< (T x, const SkNx<N,T>& y) { return SkNx<N,T>(x) <  y; }
     V operator> (T x, const SkNx<N,T>& y) { return SkNx<N,T>(x) >  y; }
@@ -391,6 +411,7 @@ typedef SkNx<16, uint16_t> Sk16h;
 typedef SkNx<4,  int32_t> Sk4i;
 typedef SkNx<8,  int32_t> Sk8i;
 typedef SkNx<4, uint32_t> Sk4u;
+typedef SkNx<8, uint32_t> Sk8u;
 
 // Include platform specific specializations if available.
 #if !defined(SKNX_NO_SIMD) && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2

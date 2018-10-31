@@ -114,12 +114,12 @@ SkRect SkMatrixImageFilter::computeFastBounds(const SkRect& src) const {
 }
 
 SkIRect SkMatrixImageFilter::onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm,
-                                                MapDirection direction) const {
+                                                MapDirection dir, const SkIRect* inputRect) const {
     SkMatrix matrix;
     if (!ctm.invert(&matrix)) {
         return src;
     }
-    if (kForward_MapDirection == direction) {
+    if (kForward_MapDirection == dir) {
         matrix.postConcat(fTransform);
     } else {
         SkMatrix transformInverse;
@@ -131,29 +131,15 @@ SkIRect SkMatrixImageFilter::onFilterNodeBounds(const SkIRect& src, const SkMatr
     matrix.postConcat(ctm);
     SkRect floatBounds;
     matrix.mapRect(&floatBounds, SkRect::Make(src));
-    return floatBounds.roundOut();
-}
+    SkIRect result = floatBounds.roundOut();
 
-#ifndef SK_IGNORE_TO_STRING
-void SkMatrixImageFilter::toString(SkString* str) const {
-    str->appendf("SkMatrixImageFilter: (");
-
-    str->appendf("transform: (%f %f %f %f %f %f %f %f %f)",
-                 fTransform[SkMatrix::kMScaleX],
-                 fTransform[SkMatrix::kMSkewX],
-                 fTransform[SkMatrix::kMTransX],
-                 fTransform[SkMatrix::kMSkewY],
-                 fTransform[SkMatrix::kMScaleY],
-                 fTransform[SkMatrix::kMTransY],
-                 fTransform[SkMatrix::kMPersp0],
-                 fTransform[SkMatrix::kMPersp1],
-                 fTransform[SkMatrix::kMPersp2]);
-
-    str->append("<dt>FilterLevel:</dt><dd>");
-    static const char* gFilterLevelStrings[] = { "None", "Low", "Medium", "High" };
-    str->append(gFilterLevelStrings[fFilterQuality]);
-    str->append("</dd>");
-
-    str->appendf(")");
-}
+#ifndef SK_IGNORE_MATRIX_IMAGE_FILTER_FIX
+    if (kReverse_MapDirection == dir && kNone_SkFilterQuality != fFilterQuality) {
+        // When filtering we might need some pixels in the source that might be otherwise
+        // clipped off.
+        result.outset(1, 1);
+    }
 #endif
+
+    return result;
+}

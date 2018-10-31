@@ -11,33 +11,22 @@
 #include "SkSurfaceCharacterization.h"
 
 #if SK_SUPPORT_GPU
+#include "GrCCPerOpListPaths.h"
 #include "GrOpList.h"
+
+#include <map>
 #endif
 
-#ifdef SK_RASTER_RECORDER_IMPLEMENTATION
-class SkImage; // DDL TODO: rm this since it is just for the temporary placeholder implementation
-#endif
-
+class SkDeferredDisplayListPriv;
 class SkSurface;
-
 /*
  * This class contains pre-processed gpu operations that can be replayed into
  * an SkSurface via draw(SkDeferredDisplayList*).
  *
  * TODO: we probably need to expose this class so users can query it for memory usage.
  */
-class SkDeferredDisplayList {
+class SK_API SkDeferredDisplayList {
 public:
-
-#ifdef SK_RASTER_RECORDER_IMPLEMENTATION
-    SkDeferredDisplayList(const SkSurfaceCharacterization& characterization, sk_sp<SkImage> image)
-            : fCharacterization(characterization)
-            , fImage(std::move(image)) {
-    }
-
-    // DDL TODO: remove this. It is just scaffolding to get something up & running
-    bool draw(SkSurface*) const;
-#endif
 
 #if SK_SUPPORT_GPU
     // This object is the source from which the lazy proxy backing the DDL will pull its backing
@@ -56,27 +45,31 @@ public:
 
     SkDeferredDisplayList(const SkSurfaceCharacterization& characterization,
                           sk_sp<LazyProxyData>);
+    ~SkDeferredDisplayList();
 
     const SkSurfaceCharacterization& characterization() const {
         return fCharacterization;
     }
 
+    // Provides access to functions that aren't part of the public API.
+    SkDeferredDisplayListPriv priv();
+    const SkDeferredDisplayListPriv priv() const;
+
 private:
     friend class GrDrawingManager; // for access to 'fOpLists' and 'fLazyProxyData'
     friend class SkDeferredDisplayListRecorder; // for access to 'fLazyProxyData'
+    friend class SkDeferredDisplayListPriv;
 
     const SkSurfaceCharacterization fCharacterization;
 
-#ifdef SK_RASTER_RECORDER_IMPLEMENTATION
-    sk_sp<SkImage>               fImage;
-#else
-
 #if SK_SUPPORT_GPU
+    // This needs to match the same type in GrCoverageCountingPathRenderer.h
+    using PendingPathsMap = std::map<uint32_t, sk_sp<GrCCPerOpListPaths>>;
+
     SkTArray<sk_sp<GrOpList>>    fOpLists;
+    PendingPathsMap              fPendingPaths;  // This is the path data from CCPR.
 #endif
     sk_sp<LazyProxyData>         fLazyProxyData;
-
-#endif
 };
 
 #endif

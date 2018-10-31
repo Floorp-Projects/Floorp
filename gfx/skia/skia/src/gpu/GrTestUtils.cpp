@@ -285,13 +285,13 @@ TestDashPathEffect::TestDashPathEffect(const SkScalar* intervals, int count, SkS
                                    &fInitialDashIndex, &fIntervalLength, &fPhase);
 }
 
-    bool TestDashPathEffect::filterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
-                                     const SkRect* cullRect) const {
+    bool TestDashPathEffect::onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
+                                          const SkRect* cullRect) const {
     return SkDashPath::InternalFilter(dst, src, rec, cullRect, fIntervals.get(), fCount,
                                       fInitialDashLength, fInitialDashIndex, fIntervalLength);
 }
 
-SkPathEffect::DashType TestDashPathEffect::asADash(DashInfo* info) const {
+SkPathEffect::DashType TestDashPathEffect::onAsADash(DashInfo* info) const {
     if (info) {
         if (info->fCount >= fCount && info->fIntervals) {
             memcpy(info->fIntervals, fIntervals.get(), fCount * sizeof(SkScalar));
@@ -317,6 +317,7 @@ sk_sp<SkColorSpace> TestColorSpace(SkRandom* random) {
 }
 
 sk_sp<GrColorSpaceXform> TestColorXform(SkRandom* random) {
+    // TODO: Add many more kinds of xforms here
     static sk_sp<GrColorSpaceXform> gXforms[3];
     static bool gOnce;
     if (!gOnce) {
@@ -325,10 +326,10 @@ sk_sp<GrColorSpaceXform> TestColorXform(SkRandom* random) {
         sk_sp<SkColorSpace> spin = SkColorSpace::MakeSRGB()->makeColorSpin();
         // No gamut change
         gXforms[0] = nullptr;
-        // To different gamut (with automatic transfer function)
-        gXforms[1] = GrColorSpaceXform::Make(srgb.get(), kSRGBA_8888_GrPixelConfig, spin.get());
-        // To different gamut (with manual transfer function)
-        gXforms[2] = GrColorSpaceXform::Make(spin.get(), kRGBA_8888_GrPixelConfig, srgb.get());
+        gXforms[1] = GrColorSpaceXform::Make(srgb.get(), kPremul_SkAlphaType,
+                                             spin.get(), kPremul_SkAlphaType);
+        gXforms[2] = GrColorSpaceXform::Make(spin.get(), kPremul_SkAlphaType,
+                                             srgb.get(), kPremul_SkAlphaType);
     }
     return gXforms[random->nextULessThan(static_cast<uint32_t>(SK_ARRAY_COUNT(gXforms)))];
 }
@@ -337,8 +338,7 @@ TestAsFPArgs::TestAsFPArgs(GrProcessorTestData* d)
     : fViewMatrixStorage(TestMatrix(d->fRandom))
     , fColorSpaceInfoStorage(skstd::make_unique<GrColorSpaceInfo>(TestColorSpace(d->fRandom),
                                                                   kRGBA_8888_GrPixelConfig))
-    , fArgs(d->context(), &fViewMatrixStorage, nullptr, kNone_SkFilterQuality,
-            fColorSpaceInfoStorage.get())
+    , fArgs(d->context(), &fViewMatrixStorage, kNone_SkFilterQuality, fColorSpaceInfoStorage.get())
 {}
 
 TestAsFPArgs::~TestAsFPArgs() {}

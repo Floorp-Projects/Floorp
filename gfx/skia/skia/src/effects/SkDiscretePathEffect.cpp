@@ -81,8 +81,8 @@ private:
     uint32_t fSeed;
 };
 
-bool SkDiscretePathEffect::filterPath(SkPath* dst, const SkPath& src,
-                                      SkStrokeRec* rec, const SkRect*) const {
+bool SkDiscretePathEffect::onFilterPath(SkPath* dst, const SkPath& src,
+                                        SkStrokeRec* rec, const SkRect*) const {
     bool doFill = rec->isFillStyle();
 
     SkPathMeasure   meas(src, doFill);
@@ -102,6 +102,8 @@ bool SkDiscretePathEffect::filterPath(SkPath* dst, const SkPath& src,
             meas.getSegment(0, length, dst, true);  // to short for us to mangle
         } else {
             int         n = SkScalarRoundToInt(length / fSegLength);
+            constexpr int kMaxReasonableIterations = 100000;
+            n = SkTMin(n, kMaxReasonableIterations);
             SkScalar    delta = length / n;
             SkScalar    distance = 0;
 
@@ -141,11 +143,3 @@ void SkDiscretePathEffect::flatten(SkWriteBuffer& buffer) const {
     buffer.writeScalar(fPerterb);
     buffer.writeUInt(fSeedAssist);
 }
-
-#ifndef SK_IGNORE_TO_STRING
-void SkDiscretePathEffect::toString(SkString* str) const {
-    str->appendf("SkDiscretePathEffect: (");
-    str->appendf("segLength: %.2f deviation: %.2f seed %d", fSegLength, fPerterb, fSeedAssist);
-    str->append(")");
-}
-#endif

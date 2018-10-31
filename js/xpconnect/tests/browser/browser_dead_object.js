@@ -10,17 +10,17 @@ add_task(async function test() {
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   let browser = gBrowser.selectedBrowser;
   let innerWindowId = browser.innerWindowID;
-  let contentDocDead = await ContentTask.spawn(browser,{innerWindowId}, async function(args){
+  let contentDocDead = await ContentTask.spawn(browser, {innerWindowId}, async function(args) {
     let doc = content.document;
     let {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm", {});
     let promise = TestUtils.topicObserved("inner-window-nuked", (subject, data) => {
       let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
       return id == args.innerWindowId;
     });
-    content.location = "about:home";
+    content.location = "http://example.org/";
     await promise;
     return Cu.isDeadWrapper(doc);
   });
   is(contentDocDead, true, "wrapper is dead");
-  BrowserTestUtils.removeTab(newTab); 
+  BrowserTestUtils.removeTab(newTab);
 });

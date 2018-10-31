@@ -62,7 +62,18 @@ struct DWRITE_FONT_AXIS_RANGE {
     FLOAT maxValue;
 };
 
-struct DWRITE_GLYPH_IMAGE_DATA;
+struct DWRITE_GLYPH_IMAGE_DATA
+{
+    const void* imageData;
+    UINT32 imageDataSize;
+    UINT32 uniqueDataId;
+    UINT32 pixelsPerEm;
+    D2D1_SIZE_U pixelSize;
+    D2D1_POINT_2L horizontalLeftOrigin;
+    D2D1_POINT_2L horizontalRightOrigin;
+    D2D1_POINT_2L verticalTopOrigin;
+    D2D1_POINT_2L verticalBottomOrigin;
+};
 
 interface DWRITE_DECLARE_INTERFACE("27F2A904-4EB8-441D-9678-0563F53E3E2F") IDWriteFontFace4
     : public IDWriteFontFace3

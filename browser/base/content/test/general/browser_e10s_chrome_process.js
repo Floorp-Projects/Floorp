@@ -32,8 +32,8 @@ function makeTest(name, startURL, startProcessIsRemote, endURL, endProcessIsRemo
   };
 }
 
-const CHROME_PROCESS = Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-const CONTENT_PROCESS = Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
+const CHROME_PROCESS = E10SUtils.NOT_REMOTE;
+const WEB_CONTENT_PROCESS = E10SUtils.WEB_REMOTE_TYPE;
 const PATH = (getRootDirectory(gTestPath) + "test_process_flags_chrome.html").replace("chrome://mochitests", "");
 
 const CHROME = "chrome://mochitests" + PATH;
@@ -49,25 +49,25 @@ registerCleanupFunction(() => {
 });
 
 function test_url(url, chromeResult, contentResult) {
-  is(E10SUtils.canLoadURIInProcess(url, CHROME_PROCESS),
+  is(E10SUtils.canLoadURIInRemoteType(url, CHROME_PROCESS),
      chromeResult, "Check URL in chrome process.");
-  is(E10SUtils.canLoadURIInProcess(url, CONTENT_PROCESS),
-     contentResult, "Check URL in content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url, WEB_CONTENT_PROCESS),
+     contentResult, "Check URL in web content process.");
 
-  is(E10SUtils.canLoadURIInProcess(url + "#foo", CHROME_PROCESS),
+  is(E10SUtils.canLoadURIInRemoteType(url + "#foo", CHROME_PROCESS),
      chromeResult, "Check URL with ref in chrome process.");
-  is(E10SUtils.canLoadURIInProcess(url + "#foo", CONTENT_PROCESS),
-     contentResult, "Check URL with ref in content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "#foo", WEB_CONTENT_PROCESS),
+     contentResult, "Check URL with ref in web content process.");
 
-  is(E10SUtils.canLoadURIInProcess(url + "?foo", CHROME_PROCESS),
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo", CHROME_PROCESS),
      chromeResult, "Check URL with query in chrome process.");
-  is(E10SUtils.canLoadURIInProcess(url + "?foo", CONTENT_PROCESS),
-     contentResult, "Check URL with query in content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo", WEB_CONTENT_PROCESS),
+     contentResult, "Check URL with query in web content process.");
 
-  is(E10SUtils.canLoadURIInProcess(url + "?foo#bar", CHROME_PROCESS),
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo#bar", CHROME_PROCESS),
      chromeResult, "Check URL with query and ref in chrome process.");
-  is(E10SUtils.canLoadURIInProcess(url + "?foo#bar", CONTENT_PROCESS),
-     contentResult, "Check URL with query and ref in content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo#bar", WEB_CONTENT_PROCESS),
+     contentResult, "Check URL with query and ref in web content process.");
 }
 
 add_task(async function test_chrome() {

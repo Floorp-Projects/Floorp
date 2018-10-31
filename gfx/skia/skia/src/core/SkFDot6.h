@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkFDot6_DEFINED
 #define SkFDot6_DEFINED
 
 #include "SkFixed.h"
-#include "SkScalar.h"
 #include "SkMath.h"
+#include "SkScalar.h"
+#include "SkTo.h"
 
 typedef int32_t SkFDot6;
 
@@ -41,7 +41,7 @@ inline SkFDot6 SkScalarRoundToFDot6(SkScalar x, int shift = 0)
 #define SK_FDot6Half        (32)
 
 #ifdef SK_DEBUG
-    inline SkFDot6 SkIntToFDot6(S16CPU x) {
+    inline SkFDot6 SkIntToFDot6(int x) {
         SkASSERT(SkToS16(x) == x);
         return x << 6;
     }

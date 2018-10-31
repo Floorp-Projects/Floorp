@@ -12,6 +12,9 @@
 #include "SkTypes.h"
 #include "SkSafe_math.h"
 #include <float.h>
+#include <math.h>
+#include <cstring>
+
 
 #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
     #include <xmmintrin.h>
@@ -64,16 +67,18 @@ static inline float sk_float_pow(float base, float exp) {
     #define sk_float_log2(x)        log2f(x)
 #endif
 
+static inline bool sk_float_isfinite(float x) {
+    return SkFloatBits_IsFinite(SkFloat2Bits(x));
+}
+
+static inline bool sk_float_isinf(float x) {
+    return SkFloatBits_IsInf(SkFloat2Bits(x));
+}
+
 #ifdef SK_BUILD_FOR_WIN
-    #define sk_float_isfinite(x)    _finite(x)
     #define sk_float_isnan(x)       _isnan(x)
-    static inline int sk_float_isinf(float x) {
-        return x && (x + x == x);
-    }
 #else
-    #define sk_float_isfinite(x)    isfinite(x)
     #define sk_float_isnan(x)       isnan(x)
-    #define sk_float_isinf(x)       isinf(x)
 #endif
 
 #define sk_double_isnan(a)          sk_float_isnan(a)
@@ -123,7 +128,7 @@ static inline int64_t sk_float_saturate2int64(float x) {
 #define sk_double_round(x)          floor((x) + 0.5)
 #define sk_double_ceil(x)           ceil(x)
 #define sk_double_floor2int(x)      (int)floor(x)
-#define sk_double_round2int(x)      (int)floor((x) + 0.5f)
+#define sk_double_round2int(x)      (int)floor((x) + 0.5)
 #define sk_double_ceil2int(x)       (int)ceil(x)
 
 // Cast double to float, ignoring any warning about too-large finite values being cast to float.
@@ -136,10 +141,9 @@ static inline float sk_double_to_float(double x) {
     return static_cast<float>(x);
 }
 
-static const uint32_t kIEEENotANumber = 0x7fffffff;
-#define SK_FloatNaN                 (*SkTCast<const float*>(&kIEEENotANumber))
-#define SK_FloatInfinity            (+(float)INFINITY)
-#define SK_FloatNegativeInfinity    (-(float)INFINITY)
+#define SK_FloatNaN                 NAN
+#define SK_FloatInfinity            (+INFINITY)
+#define SK_FloatNegativeInfinity    (-INFINITY)
 
 static inline float sk_float_rsqrt_portable(float x) {
     // Get initial estimate.
@@ -197,6 +201,13 @@ static inline float sk_float_rsqrt(float x) {
 __attribute__((no_sanitize("float-divide-by-zero")))
 #endif
 static inline float sk_ieee_float_divide(float numer, float denom) {
+    return numer / denom;
+}
+
+#ifdef __clang__
+__attribute__((no_sanitize("float-divide-by-zero")))
+#endif
+static inline double sk_ieee_double_divide(double numer, double denom) {
     return numer / denom;
 }
 

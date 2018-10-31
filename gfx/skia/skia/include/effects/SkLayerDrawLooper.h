@@ -75,8 +75,6 @@ public:
 
     bool asABlurShadow(BlurShadowRec* rec) const override;
 
-    SK_TO_STRING_OVERRIDE()
-
     Factory getFactory() const override { return CreateProc; }
     static sk_sp<SkFlattenable> CreateProc(SkReadBuffer& buffer);
 

@@ -6,6 +6,7 @@
  */
 
 #include "SkMultiPictureDocument.h"
+
 #include "SkMultiPictureDocumentPriv.h"
 #include "SkNWayCanvas.h"
 #include "SkPicture.h"
@@ -13,6 +14,7 @@
 #include "SkSerialProcs.h"
 #include "SkStream.h"
 #include "SkTArray.h"
+#include "SkTo.h"
 
 #include <limits.h>
 
@@ -110,16 +112,16 @@ int SkMultiPictureDocumentReadPageCount(SkStreamSeekable* stream) {
         stream = nullptr;
         return 0;
     }
-    uint32_t versionNumber = stream->readU32();
-    if (versionNumber != kVersion) {
+    uint32_t versionNumber;
+    if (!stream->readU32(&versionNumber) || versionNumber != kVersion) {
         return 0;
     }
-    uint32_t pageCount = stream->readU32();
-    if (pageCount > INT_MAX) {
+    uint32_t pageCount;
+    if (!stream->readU32(&pageCount) || pageCount > INT_MAX) {
         return 0;
     }
     // leave stream position right here.
-    return (int)pageCount;
+    return SkTo<int>(pageCount);
 }
 
 bool SkMultiPictureDocumentReadPageSizes(SkStreamSeekable* stream,
@@ -193,7 +195,7 @@ bool SkMultiPictureDocumentRead(SkStreamSeekable* stream,
     // PagerCanvas::onDrawAnnotation().
     picture->playback(&canvas);
     if (canvas.fIndex != dstArrayCount) {
-        SkDEBUGF(("Malformed SkMultiPictureDocument\n"));
+        SkDEBUGF("Malformed SkMultiPictureDocument\n");
     }
     return true;
 }

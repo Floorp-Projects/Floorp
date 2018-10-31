@@ -39,11 +39,11 @@ namespace SkSL {
 class SectionAndParameterHelper {
 public:
     SectionAndParameterHelper(const Program& program, ErrorReporter& errors) {
-        for (const auto& p : program.fElements) {
-            switch (p->fKind) {
+        for (const auto& p : program) {
+            switch (p.fKind) {
                 case ProgramElement::kVar_Kind: {
-                    const VarDeclarations* decls = (const VarDeclarations*) p.get();
-                    for (const auto& raw : decls->fVars) {
+                    const VarDeclarations& decls = (const VarDeclarations&) p;
+                    for (const auto& raw : decls.fVars) {
                         const VarDeclaration& decl = (VarDeclaration&) *raw;
                         if (IsParameter(*decl.fVar)) {
                             fParameters.push_back(decl.fVar);
@@ -52,28 +52,27 @@ public:
                     break;
                 }
                 case ProgramElement::kSection_Kind: {
-                    const Section* s = (const Section*) p.get();
-                    if (IsSupportedSection(s->fName.c_str())) {
-                        if (SectionAcceptsArgument(s->fName.c_str())) {
-                            if (!s->fArgument.size()) {
-                                errors.error(s->fOffset,
-                                             ("section '@" + s->fName +
-                                              "' requires one parameter").c_str());
-                            }
-                        } else if (s->fArgument.size()) {
-                            errors.error(s->fOffset,
-                                         ("section '@" + s->fName + "' has no parameters").c_str());
+                    const Section& s = (const Section&) p;
+                    if (IsSupportedSection(s.fName.c_str())) {
+                        if (SectionRequiresArgument(s.fName.c_str()) && !s.fArgument.size()) {
+                            errors.error(s.fOffset,
+                                         ("section '@" + s.fName +
+                                          "' requires one parameter").c_str());
+                        }
+                        if (!SectionAcceptsArgument(s.fName.c_str()) && s.fArgument.size()) {
+                            errors.error(s.fOffset,
+                                         ("section '@" + s.fName + "' has no parameters").c_str());
                         }
                     } else {
-                        errors.error(s->fOffset,
-                                     ("unsupported section '@" + s->fName + "'").c_str());
+                        errors.error(s.fOffset,
+                                     ("unsupported section '@" + s.fName + "'").c_str());
                     }
-                    if (!SectionPermitsDuplicates(s->fName.c_str()) &&
-                            fSections.find(s->fName) != fSections.end()) {
-                        errors.error(s->fOffset,
-                                     ("duplicate section '@" + s->fName + "'").c_str());
+                    if (!SectionPermitsDuplicates(s.fName.c_str()) &&
+                            fSections.find(s.fName) != fSections.end()) {
+                        errors.error(s.fOffset,
+                                     ("duplicate section '@" + s.fName + "'").c_str());
                     }
-                    fSections[s->fName].push_back(s);
+                    fSections[s.fName].push_back(&s);
                     break;
                 }
                 default:
@@ -83,12 +82,12 @@ public:
     }
 
     const Section* getSection(const char* name) {
-        ASSERT(!SectionPermitsDuplicates(name));
+        SkASSERT(!SectionPermitsDuplicates(name));
         auto found = fSections.find(name);
         if (found == fSections.end()) {
             return nullptr;
         }
-        ASSERT(found->second.size() == 1);
+        SkASSERT(found->second.size() == 1);
         return found->second[0];
     }
 
@@ -133,6 +132,12 @@ public:
     static bool SectionAcceptsArgument(const char* name) {
         return !strcmp(name, COORD_TRANSFORM_SECTION) ||
                !strcmp(name, SAMPLER_PARAMS_SECTION) ||
+               !strcmp(name, SET_DATA_SECTION) ||
+               !strcmp(name, TEST_CODE_SECTION);
+    }
+
+    static bool SectionRequiresArgument(const char* name) {
+        return !strcmp(name, SAMPLER_PARAMS_SECTION) ||
                !strcmp(name, SET_DATA_SECTION) ||
                !strcmp(name, TEST_CODE_SECTION);
     }

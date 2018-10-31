@@ -38,7 +38,8 @@ struct Layout {
         kBlendSupportHSLHue_Flag         = 1 << 15,
         kBlendSupportHSLSaturation_Flag  = 1 << 16,
         kBlendSupportHSLColor_Flag       = 1 << 17,
-        kBlendSupportHSLLuminosity_Flag  = 1 << 18
+        kBlendSupportHSLLuminosity_Flag  = 1 << 18,
+        kTracked_Flag                    = 1 << 19
     };
 
     enum Primitive {
@@ -73,6 +74,23 @@ struct Layout {
         kKey_Key,
         // key is 0 or 1 depending on whether the matrix is an identity matrix
         kIdentity_Key,
+    };
+
+    enum class CType {
+        kDefault,
+        kFloat,
+        kInt32,
+        kSkRect,
+        kSkIRect,
+        kGrColor4f,
+        kSkPMColor4f,
+        kSkPMColor,
+        kSkPoint,
+        kSkIPoint,
+        kSkMatrix,
+        kSkMatrix44,
+        kGrTextureProxy,
+        kGrFragmentProcessor,
     };
 
     static const char* FormatToStr(Format format) {
@@ -119,9 +137,45 @@ struct Layout {
         return false;
     }
 
+    static const char* CTypeToStr(CType ctype) {
+        switch (ctype) {
+            case CType::kDefault:
+                return nullptr;
+            case CType::kFloat:
+                return "float";
+            case CType::kInt32:
+                return "int32_t";
+            case CType::kSkRect:
+                return "SkRect";
+            case CType::kSkIRect:
+                return "SkIRect";
+            case CType::kGrColor4f:
+                return "GrColor4f";
+            case CType::kSkPMColor4f:
+                return "SkPMColor4f";
+            case CType::kSkPMColor:
+                return "SkPMColor";
+            case CType::kSkPoint:
+                return "SkPoint";
+            case CType::kSkIPoint:
+                return "SkIPoint";
+            case CType::kSkMatrix:
+                return "SkMatrix";
+            case CType::kSkMatrix44:
+                return "SkMatrix44";
+            case CType::kGrTextureProxy:
+                return "sk_sp<GrTextureProxy>";
+            case CType::kGrFragmentProcessor:
+                return "std::unique_ptr<GrFragmentProcessor>";
+            default:
+                SkASSERT(false);
+                return nullptr;
+        }
+    }
+
     Layout(int flags, int location, int offset, int binding, int index, int set, int builtin,
            int inputAttachmentIndex, Format format, Primitive primitive, int maxVertices,
-           int invocations, String when, Key key, StringFragment ctype)
+           int invocations, String when, Key key, CType ctype)
     : fFlags(flags)
     , fLocation(location)
     , fOffset(offset)
@@ -151,7 +205,8 @@ struct Layout {
     , fPrimitive(kUnspecified_Primitive)
     , fMaxVertices(-1)
     , fInvocations(-1)
-    , fKey(kNo_Key) {}
+    , fKey(kNo_Key)
+    , fCType(CType::kDefault) {}
 
     String description() const {
         String result;
@@ -181,7 +236,7 @@ struct Layout {
             separator = ", ";
         }
         if (fInputAttachmentIndex >= 0) {
-            result += separator + "input_attachment_index = " + to_string(fBuiltin);
+            result += separator + "input_attachment_index = " + to_string(fInputAttachmentIndex);
             separator = ", ";
         }
         if (Format::kUnspecified != fFormat) {
@@ -264,6 +319,10 @@ struct Layout {
             result += separator + "push_constant";
             separator = ", ";
         }
+        if (fFlags & kTracked_Flag) {
+            result += separator + "tracked";
+            separator = ", ";
+        }
         switch (fPrimitive) {
             case kPoints_Primitive:
                 result += separator + "points";
@@ -311,6 +370,9 @@ struct Layout {
         if (result.size() > 0) {
             result = "layout (" + result + ")";
         }
+        if (fKey) {
+            result += "/* key */";
+        }
         return result;
     }
 
@@ -351,7 +413,7 @@ struct Layout {
     int fInvocations;
     String fWhen;
     Key fKey;
-    StringFragment fCType;
+    CType fCType;
 };
 
 } // namespace

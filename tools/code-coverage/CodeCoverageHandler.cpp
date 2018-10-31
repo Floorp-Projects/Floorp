@@ -11,10 +11,15 @@
 #include <signal.h>
 #include <unistd.h>
 #endif
+#include "mozilla/dom/ScriptSettings.h" // for AutoJSAPI
 #include "mozilla/CodeCoverageHandler.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "nsAppRunner.h"
+#include "nsIOutputStream.h"
+#include "nsNetUtil.h"
+#include "nsPrintfCString.h"
+#include "prtime.h"
 
 using namespace mozilla;
 
@@ -33,7 +38,48 @@ void CodeCoverageHandler::FlushCounters()
   CrossProcessMutexAutoLock lock(*CodeCoverageHandler::Get()->GetMutex());
 
   __gcov_flush();
+
   printf_stderr("[CodeCoverage] flush completed.\n");
+
+  const char* outDir = getenv("JS_CODE_COVERAGE_OUTPUT_DIR");
+  if (!outDir || *outDir == 0) {
+    return;
+  }
+
+  dom::AutoJSAPI jsapi;
+  jsapi.Init();
+  size_t length;
+  char* result = js::GetCodeCoverageSummary(jsapi.cx(), &length);
+  if (!result) {
+    return;
+  }
+
+  nsCOMPtr<nsIFile> file;
+
+  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(outDir), false, getter_AddRefs(file));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  rv = file->AppendNative(nsPrintfCString("%lu-%d.info", PR_Now() / PR_USEC_PER_MSEC, getpid()));
+
+  rv = file->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0666);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<nsIOutputStream> outputStream;
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), file);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  char* data = result;
+  while (length) {
+    uint32_t n = 0;
+    rv = outputStream->Write(data, length, &n);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    data += n;
+    length -= n;
+  }
+
+  free(result);
+
+  printf_stderr("[CodeCoverage] JS flush completed.\n");
 }
 
 void CodeCoverageHandler::FlushCountersSignalHandler(int)
