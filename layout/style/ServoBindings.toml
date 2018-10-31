@@ -208,13 +208,7 @@ whitelist-types = [
     "mozilla::gfx::Float",
     "mozilla::gfx::FontVariation",
     "mozilla::StyleImageLayerAttachment",
-    "mozilla::StyleComputedFontStretchRange",
-    "mozilla::StyleComputedFontStyleDescriptor",
-    "mozilla::StyleComputedFontWeightRange",
-    "mozilla::StyleFontDisplay",
     "mozilla::StyleUnicodeRange",
-    "mozilla::StyleFontLanguageOverride",
-    "mozilla::StyleFontFaceSourceListComponent",
     "gfxFontFeature",
     "gfxFontVariation",
     ".*ThreadSafe.*Holder",
@@ -389,9 +383,15 @@ opaque-types = [
 # All cbindgen-types are in mod "structs::root::mozilla".
 cbindgen-types = [
     { gecko = "mozilla::StyleAppearance", servo = "values::specified::Appearance" },
+    { gecko = "mozilla::StyleComputedFontStretchRange", servo = "font_face::ComputedFontStretchRange" },
+    { gecko = "mozilla::StyleComputedFontStyleDescriptor", servo = "font_face::ComputedFontStyleDescriptor" },
+    { gecko = "mozilla::StyleComputedFontWeightRange", servo = "font_face::ComputedFontWeightRange" },
     { gecko = "mozilla::StyleComputedTimingFunction", servo = "values::computed::easing::TimingFunction" },
     { gecko = "mozilla::StyleDisplay", servo = "values::specified::Display" },
     { gecko = "mozilla::StyleDisplayMode", servo = "gecko::media_features::DisplayMode" },
+    { gecko = "mozilla::StyleFontDisplay", servo = "font_face::FontDisplay" },
+    { gecko = "mozilla::StyleFontFaceSourceListComponent", servo = "font_face::FontFaceSourceListComponent" },
+    { gecko = "mozilla::StyleFontLanguageOverride", servo = "values::computed::font::FontLanguageOverride" },
 ]
 
 mapped-generic-types = [

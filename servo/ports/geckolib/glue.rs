@@ -2494,14 +2494,7 @@ macro_rules! simple_font_descriptor_getter {
             read_locked_arc(rule, |rule: &FontFaceRule| {
                 match rule.$field {
                     None => return false,
-                    Some(ref f) => {
-                        // FIXME(emilio): We should probably teach bindgen about
-                        // cbindgen.toml and making it hide the types and use
-                        // the rust ones instead. This would make transmute()
-                        // calls unnecessary.
-                        // unsafe: cbindgen guarantees the same representation.
-                        *out = ::std::mem::transmute(f.$compute());
-                    }
+                    Some(ref f) => *out = f.$compute(),
                 }
                 true
             })
@@ -2568,9 +2561,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetSources(
 
         {
             let mut set_next = |component: FontFaceSourceListComponent| {
-                // transmute: cbindgen ensures they have the same representation.
-                *iter.next().expect("miscalculated length") =
-                    ::std::mem::transmute(component);
+                *iter.next().expect("miscalculated length") = component;
             };
 
             for source in sources.iter() {
