@@ -244,9 +244,9 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    macro(JSOP_BITOR,     15, "bitor",      "|",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_BITXOR,    16, "bitxor",     "^",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_BITAND,    17, "bitand",     "&",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_BITOR,     15, "bitor",      "|",          1,  2,  1, JOF_BYTE) \
+    macro(JSOP_BITXOR,    16, "bitxor",     "^",          1,  2,  1, JOF_BYTE) \
+    macro(JSOP_BITAND,    17, "bitand",     "&",          1,  2,  1, JOF_BYTE) \
     /*
      * Pops the top two values from the stack and pushes the result of
      * comparing them.
@@ -255,12 +255,12 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    macro(JSOP_EQ,        18, "eq",         "==",         1,  2,  1, JOF_BYTE|JOF_ARITH|JOF_DETECTING) \
-    macro(JSOP_NE,        19, "ne",         "!=",         1,  2,  1, JOF_BYTE|JOF_ARITH|JOF_DETECTING) \
-    macro(JSOP_LT,        20, "lt",         "<",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_LE,        21, "le",         "<=",         1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_GT,        22, "gt",         ">",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_GE,        23, "ge",         ">=",         1,  2,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_EQ,        18, "eq",         "==",         1,  2,  1, JOF_BYTE|JOF_DETECTING) \
+    macro(JSOP_NE,        19, "ne",         "!=",         1,  2,  1, JOF_BYTE|JOF_DETECTING) \
+    macro(JSOP_LT,        20, "lt",         "<",          1,  2,  1, JOF_BYTE) \
+    macro(JSOP_LE,        21, "le",         "<=",         1,  2,  1, JOF_BYTE) \
+    macro(JSOP_GT,        22, "gt",         ">",          1,  2,  1, JOF_BYTE) \
+    macro(JSOP_GE,        23, "ge",         ">=",         1,  2,  1, JOF_BYTE) \
     /*
      * Pops the top two values 'lval' and 'rval' from the stack, then pushes
      * the result of the operation applied to the operands.
@@ -269,8 +269,8 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    macro(JSOP_LSH,       24, "lsh",        "<<",         1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_RSH,       25, "rsh",        ">>",         1,  2,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_LSH,       24, "lsh",        "<<",         1,  2,  1, JOF_BYTE) \
+    macro(JSOP_RSH,       25, "rsh",        ">>",         1,  2,  1, JOF_BYTE) \
     /*
      * Pops the top two values 'lval' and 'rval' from the stack, then pushes
      * 'lval >>> rval'.
@@ -279,7 +279,7 @@
      *   Operands:
      *   Stack: lval, rval => (lval >>> rval)
      */ \
-    macro(JSOP_URSH,      26, "ursh",       ">>>",        1,  2,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_URSH,      26, "ursh",       ">>>",        1,  2,  1, JOF_BYTE) \
     /*
      * Pops the top two values 'lval' and 'rval' from the stack, then pushes
      * the result of 'lval + rval'.
@@ -288,7 +288,7 @@
      *   Operands:
      *   Stack: lval, rval => (lval + rval)
      */ \
-    macro(JSOP_ADD,       27, "add",        "+",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_ADD,       27, "add",        "+",          1,  2,  1, JOF_BYTE) \
     /*
      * Pops the top two values 'lval' and 'rval' from the stack, then pushes
      * the result of applying the arithmetic operation to them.
@@ -297,10 +297,10 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    macro(JSOP_SUB,       28, "sub",        "-",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_MUL,       29, "mul",        "*",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_DIV,       30, "div",        "/",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_MOD,       31, "mod",        "%",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_SUB,       28, "sub",        "-",          1,  2,  1, JOF_BYTE) \
+    macro(JSOP_MUL,       29, "mul",        "*",          1,  2,  1, JOF_BYTE) \
+    macro(JSOP_DIV,       30, "div",        "/",          1,  2,  1, JOF_BYTE) \
+    macro(JSOP_MOD,       31, "mod",        "%",          1,  2,  1, JOF_BYTE) \
     /*
      * Pops the value 'val' from the stack, then pushes '!val'.
      *   Category: Operators
@@ -308,7 +308,7 @@
      *   Operands:
      *   Stack: val => (!val)
      */ \
-    macro(JSOP_NOT,       32, "not",        "!",          1,  1,  1, JOF_BYTE|JOF_ARITH|JOF_DETECTING) \
+    macro(JSOP_NOT,       32, "not",        "!",          1,  1,  1, JOF_BYTE|JOF_DETECTING) \
     /*
      * Pops the value 'val' from the stack, then pushes '~val'.
      *   Category: Operators
@@ -316,7 +316,7 @@
      *   Operands:
      *   Stack: val => (~val)
      */ \
-    macro(JSOP_BITNOT,    33, "bitnot",     "~",          1,  1,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_BITNOT,    33, "bitnot",     "~",          1,  1,  1, JOF_BYTE) \
     /*
      * Pops the value 'val' from the stack, then pushes '-val'.
      *   Category: Operators
@@ -324,7 +324,7 @@
      *   Operands:
      *   Stack: val => (-val)
      */ \
-    macro(JSOP_NEG,       34, "neg",        "- ",         1,  1,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_NEG,       34, "neg",        "- ",         1,  1,  1, JOF_BYTE) \
     /*
      * Pops the value 'val' from the stack, then pushes '+val'.
      * ('+val' is the value converted to a number.)
@@ -333,7 +333,7 @@
      *   Operands:
      *   Stack: val => (+val)
      */ \
-    macro(JSOP_POS,       35, "pos",        "+ ",         1,  1,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_POS,       35, "pos",        "+ ",         1,  1,  1, JOF_BYTE) \
     /*
      * Looks up name on the environment chain and deletes it, pushes 'true'
      * onto the stack if succeeded (if the property was present and deleted or
@@ -685,8 +685,8 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    macro(JSOP_STRICTEQ,  72, "stricteq",   "===",        1,  2,  1, JOF_BYTE|JOF_DETECTING|JOF_ARITH) \
-    macro(JSOP_STRICTNE,  73, "strictne",   "!==",        1,  2,  1, JOF_BYTE|JOF_DETECTING|JOF_ARITH) \
+    macro(JSOP_STRICTEQ,  72, "stricteq",   "===",        1,  2,  1, JOF_BYTE|JOF_DETECTING) \
+    macro(JSOP_STRICTNE,  73, "strictne",   "!==",        1,  2,  1, JOF_BYTE|JOF_DETECTING) \
     \
     /*
      * Sometimes we know when emitting that an operation will always throw.
@@ -1538,7 +1538,7 @@
      *   Operands:
      *   Stack: lval, rval => (lval ** rval)
      */ \
-    macro(JSOP_POW,           150, "pow",     "**",       1,  2,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_POW,           150, "pow",     "**",       1,  2,  1, JOF_BYTE) \
     \
     /*
      * Pops the top of stack value as 'v', sets pending exception as 'v',
