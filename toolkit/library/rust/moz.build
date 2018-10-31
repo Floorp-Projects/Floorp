@@ -6,7 +6,7 @@
 
 include('gkrust-features.mozbuild')
 
-RustLibrary('gkrust', gkrust_features, '..')
+RustLibrary('gkrust', gkrust_features)
 
 # Target directory doesn't matter a lot here, since we can't share panic=abort
 # compilation artifacts with gkrust.

@@ -1,77 +1,76 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _react = require("devtools/client/shared/vendor/react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _classnames = require("devtools/client/debugger/new/dist/vendors").vendored["classnames"];
-
-var _classnames2 = _interopRequireDefault(_classnames);
-
-var _Svg = require("devtools/client/debugger/new/dist/vendors").vendored["Svg"];
-
-var _Svg2 = _interopRequireDefault(_Svg);
-
-var _frames = require("../../../utils/pause/frames/index");
-
-var _source = require("../../../utils/source");
-
-var _FrameMenu = require("./FrameMenu");
-
-var _FrameMenu2 = _interopRequireDefault(_FrameMenu);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function FrameTitle({
-  frame,
-  options = {}
-}) {
-  const displayName = (0, _frames.formatDisplayName)(frame, { ...options,
-    maxLength: null
-  });
-  return _react2.default.createElement("div", {
-    className: "title"
-  }, displayName);
+
+// @flow
+import React, { Component } from "react";
+import classNames from "classnames";
+import Svg from "../../shared/Svg";
+
+import { formatDisplayName } from "../../../utils/pause/frames";
+import { getFilename, getFileURL } from "../../../utils/source";
+import FrameMenu from "./FrameMenu";
+
+import type { Frame } from "../../../types";
+import type { LocalFrame } from "./types";
+
+type FrameTitleProps = {
+  frame: Frame,
+  options: Object
+};
+
+function FrameTitle({ frame, options = {} }: FrameTitleProps) {
+  const displayName = formatDisplayName(frame, { ...options, maxLength: null });
+  return <div className="title">{displayName}</div>;
 }
 
-function FrameLocation({
-  frame,
-  displayFullUrl = false
-}) {
+type FrameLocationProps = { frame: LocalFrame, displayFullUrl: boolean };
+
+function FrameLocation({ frame, displayFullUrl = false }: FrameLocationProps) {
   if (!frame.source) {
     return null;
   }
 
   if (frame.library) {
-    return _react2.default.createElement("div", {
-      className: "location"
-    }, frame.library, _react2.default.createElement(_Svg2.default, {
-      name: frame.library.toLowerCase(),
-      className: "annotation-logo"
-    }));
+    return (
+      <div className="location">
+        {frame.library}
+        <Svg name={frame.library.toLowerCase()} className="annotation-logo" />
+      </div>
+    );
   }
 
-  const {
-    location,
-    source
-  } = frame;
-  const filename = displayFullUrl ? (0, _source.getFileURL)(source, false) : (0, _source.getFilename)(source);
-  return _react2.default.createElement("div", {
-    className: "location"
-  }, `${filename}:${location.line}`);
+  const { location, source } = frame;
+  const filename = displayFullUrl
+    ? getFileURL(source, false)
+    : getFilename(source);
+
+  return <div className="location">{`${filename}:${location.line}`}</div>;
 }
 
 FrameLocation.displayName = "FrameLocation";
 
-class FrameComponent extends _react.Component {
-  onContextMenu(event) {
+type FrameComponentProps = {
+  frame: LocalFrame,
+  selectedFrame: LocalFrame,
+  copyStackTrace: Function,
+  toggleFrameworkGrouping: Function,
+  selectFrame: Function,
+  frameworkGroupingOn: boolean,
+  hideLocation: boolean,
+  shouldMapDisplayName: boolean,
+  toggleBlackBox: Function,
+  displayFullUrl: boolean,
+  getFrameTitle?: string => string
+};
+
+export default class FrameComponent extends Component<FrameComponentProps> {
+  static defaultProps = {
+    hideLocation: false,
+    shouldMapDisplayName: true
+  };
+
+  onContextMenu(event: SyntheticKeyboardEvent<HTMLElement>) {
     const {
       frame,
       copyStackTrace,
@@ -79,26 +78,33 @@ class FrameComponent extends _react.Component {
       toggleBlackBox,
       frameworkGroupingOn
     } = this.props;
-    (0, _FrameMenu2.default)(frame, frameworkGroupingOn, {
-      copyStackTrace,
-      toggleFrameworkGrouping,
-      toggleBlackBox
-    }, event);
+    FrameMenu(
+      frame,
+      frameworkGroupingOn,
+      { copyStackTrace, toggleFrameworkGrouping, toggleBlackBox },
+      event
+    );
   }
 
-  onMouseDown(e, frame, selectedFrame) {
+  onMouseDown(
+    e: SyntheticKeyboardEvent<HTMLElement>,
+    frame: Frame,
+    selectedFrame: Frame
+  ) {
     if (e.which == 3) {
       return;
     }
-
     this.props.selectFrame(frame);
   }
 
-  onKeyUp(event, frame, selectedFrame) {
+  onKeyUp(
+    event: SyntheticKeyboardEvent<HTMLElement>,
+    frame: Frame,
+    selectedFrame: Frame
+  ) {
     if (event.key != "Enter") {
       return;
     }
-
     this.props.selectFrame(frame);
   }
 
@@ -111,34 +117,34 @@ class FrameComponent extends _react.Component {
       displayFullUrl,
       getFrameTitle
     } = this.props;
-    const className = (0, _classnames2.default)("frame", {
+
+    const className = classNames("frame", {
       selected: selectedFrame && selectedFrame.id === frame.id
     });
-    const title = getFrameTitle ? getFrameTitle(`${(0, _source.getFileURL)(frame.source, false)}:${frame.location.line}`) : undefined;
-    return _react2.default.createElement("li", {
-      key: frame.id,
-      className: className,
-      onMouseDown: e => this.onMouseDown(e, frame, selectedFrame),
-      onKeyUp: e => this.onKeyUp(e, frame, selectedFrame),
-      onContextMenu: e => this.onContextMenu(e),
-      tabIndex: 0,
-      title: title
-    }, _react2.default.createElement(FrameTitle, {
-      frame: frame,
-      options: {
-        shouldMapDisplayName
-      }
-    }), !hideLocation && _react2.default.createElement(FrameLocation, {
-      frame: frame,
-      displayFullUrl: displayFullUrl
-    }));
-  }
 
+    const title = getFrameTitle
+      ? getFrameTitle(
+          `${getFileURL(frame.source, false)}:${frame.location.line}`
+        )
+      : undefined;
+
+    return (
+      <li
+        key={frame.id}
+        className={className}
+        onMouseDown={e => this.onMouseDown(e, frame, selectedFrame)}
+        onKeyUp={e => this.onKeyUp(e, frame, selectedFrame)}
+        onContextMenu={e => this.onContextMenu(e)}
+        tabIndex={0}
+        title={title}
+      >
+        <FrameTitle frame={frame} options={{ shouldMapDisplayName }} />
+        {!hideLocation && (
+          <FrameLocation frame={frame} displayFullUrl={displayFullUrl} />
+        )}
+      </li>
+    );
+  }
 }
 
-exports.default = FrameComponent;
-FrameComponent.defaultProps = {
-  hideLocation: false,
-  shouldMapDisplayName: true
-};
 FrameComponent.displayName = "Frame";

@@ -44,6 +44,39 @@ const gXULDOMParser = new DOMParser();
 gXULDOMParser.forceEnableXULXBL();
 
 const MozElementMixin = Base => class MozElement extends Base {
+
+  /*
+   * Implements attribute inheritance by a child element. Uses XBL @inherit
+   * syntax of |to=from|.
+   *
+   * @param {element} child
+   *        A child element that inherits an attribute.
+   * @param {string} attr
+   *        An attribute to inherit. Optionally in the form of |to=from|, where
+   *        |to| is an attribute defined on custom element, whose value will be
+   *        inherited to |from| attribute, defined a child element. Note |from| may
+   *        take a special value of "text" to propogate attribute value as
+   *        a child's text.
+   */
+  inheritAttribute(child, attr) {
+    let attrName = attr;
+    let attrNewName = attr;
+    let split = attrName.split("=");
+    if (split.length == 2) {
+      attrName = split[1];
+      attrNewName = split[0];
+    }
+
+    if (attrNewName === "text") {
+      child.textContent =
+        this.hasAttribute(attrName) ? this.getAttribute(attrName) : "";
+    } else if (this.hasAttribute(attrName)) {
+      child.setAttribute(attrNewName, this.getAttribute(attrName));
+    } else {
+      child.removeAttribute(attrNewName);
+    }
+  }
+
   /**
    * Sometimes an element may not want to run connectedCallback logic during
    * parse. This could be because we don't want to initialize the element before

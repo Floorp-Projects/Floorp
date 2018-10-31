@@ -1,10 +1,3 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.copyToTheClipboard = copyToTheClipboard;
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -13,8 +6,11 @@ exports.copyToTheClipboard = copyToTheClipboard;
  * Clipboard function taken from
  * https://dxr.mozilla.org/mozilla-central/source/devtools/shared/platform/content/clipboard.js
  */
-function copyToTheClipboard(string) {
-  const doCopy = function (e) {
+
+// @flow
+
+export function copyToTheClipboard(string: string) {
+  const doCopy = function(e: any) {
     e.clipboardData.setData("text/plain", string);
     e.preventDefault();
   };

@@ -1,109 +1,113 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.updateFrameLocation = updateFrameLocation;
-exports.mapDisplayNames = mapDisplayNames;
-exports.mapFrames = mapFrames;
-
-var _selectors = require("../../selectors/index");
-
-var _assert = require("../../utils/assert");
-
-var _assert2 = _interopRequireDefault(_assert);
-
-var _ast = require("../../utils/ast");
-
-var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function updateFrameLocation(frame, sourceMaps) {
+
+// @flow
+
+import { getFrames, getSymbols, getSource } from "../../selectors";
+import assert from "../../utils/assert";
+import { findClosestFunction } from "../../utils/ast";
+
+import type { Frame } from "../../types";
+import type { State } from "../../reducers/types";
+import type { ThunkArgs } from "../types";
+
+import { isGeneratedId } from "devtools-source-map";
+
+export function updateFrameLocation(frame: Frame, sourceMaps: any) {
   if (frame.isOriginal) {
     return Promise.resolve(frame);
   }
-
-  return sourceMaps.getOriginalLocation(frame.location).then(loc => ({ ...frame,
+  return sourceMaps.getOriginalLocation(frame.location).then(loc => ({
+    ...frame,
     location: loc,
     generatedLocation: frame.generatedLocation || frame.location
   }));
 }
 
-function updateFrameLocations(frames, sourceMaps) {
+function updateFrameLocations(
+  frames: Frame[],
+  sourceMaps: any
+): Promise<Frame[]> {
   if (!frames || frames.length == 0) {
     return Promise.resolve(frames);
   }
 
-  return Promise.all(frames.map(frame => updateFrameLocation(frame, sourceMaps)));
+  return Promise.all(
+    frames.map(frame => updateFrameLocation(frame, sourceMaps))
+  );
 }
 
-function mapDisplayNames(frames, getState) {
+export function mapDisplayNames(
+  frames: Frame[],
+  getState: () => State
+): Frame[] {
   return frames.map(frame => {
     if (frame.isOriginal) {
       return frame;
     }
-
-    const source = (0, _selectors.getSource)(getState(), frame.location.sourceId);
+    const source = getSource(getState(), frame.location.sourceId);
 
     if (!source) {
       return frame;
     }
 
-    const symbols = (0, _selectors.getSymbols)(getState(), source);
+    const symbols = getSymbols(getState(), source);
 
     if (!symbols || !symbols.functions) {
       return frame;
     }
 
-    const originalFunction = (0, _ast.findClosestFunction)(symbols, frame.location);
+    const originalFunction = findClosestFunction(symbols, frame.location);
 
     if (!originalFunction) {
       return frame;
     }
 
     const originalDisplayName = originalFunction.name;
-    return { ...frame,
-      originalDisplayName
-    };
+    return { ...frame, originalDisplayName };
   });
 }
 
-function isWasmOriginalSourceFrame(frame, getState) {
-  if ((0, _devtoolsSourceMap.isGeneratedId)(frame.location.sourceId)) {
+function isWasmOriginalSourceFrame(frame, getState: () => State): boolean {
+  if (isGeneratedId(frame.location.sourceId)) {
     return false;
   }
+  const generatedSource = getSource(
+    getState(),
+    frame.generatedLocation.sourceId
+  );
 
-  const generatedSource = (0, _selectors.getSource)(getState(), frame.generatedLocation.sourceId);
   return Boolean(generatedSource && generatedSource.isWasm);
 }
 
-async function expandFrames(frames, sourceMaps, getState) {
+async function expandFrames(
+  frames: Frame[],
+  sourceMaps: any,
+  getState: () => State
+): Promise<Frame[]> {
   const result = [];
-
   for (let i = 0; i < frames.length; ++i) {
     const frame = frames[i];
-
     if (frame.isOriginal || !isWasmOriginalSourceFrame(frame, getState)) {
       result.push(frame);
       continue;
     }
-
-    const originalFrames = await sourceMaps.getOriginalStackFrames(frame.generatedLocation);
-
+    const originalFrames = await sourceMaps.getOriginalStackFrames(
+      frame.generatedLocation
+    );
     if (!originalFrames) {
       result.push(frame);
       continue;
     }
 
-    (0, _assert2.default)(originalFrames.length > 0, "Expected at least one original frame"); // First entry has not specific location -- use one from original frame.
-
-    originalFrames[0] = { ...originalFrames[0],
+    assert(originalFrames.length > 0, "Expected at least one original frame");
+    // First entry has not specific location -- use one from original frame.
+    originalFrames[0] = {
+      ...originalFrames[0],
       location: frame.location
     };
+
     originalFrames.forEach((originalFrame, j) => {
       // Keep outer most frame with true actor ID, and generate uniquie
       // one for the nested frames.
@@ -122,9 +126,9 @@ async function expandFrames(frames, sourceMaps, getState) {
       });
     });
   }
-
   return result;
 }
+
 /**
  * Map call stack frame locations and display names to originals.
  * e.g.
@@ -134,16 +138,9 @@ async function expandFrames(frames, sourceMaps, getState) {
  * @memberof actions/pause
  * @static
  */
-
-
-function mapFrames() {
-  return async function ({
-    dispatch,
-    getState,
-    sourceMaps
-  }) {
-    const frames = (0, _selectors.getFrames)(getState());
-
+export function mapFrames() {
+  return async function({ dispatch, getState, sourceMaps }: ThunkArgs) {
+    const frames = getFrames(getState());
     if (!frames) {
       return;
     }
@@ -151,6 +148,7 @@ function mapFrames() {
     let mappedFrames = await updateFrameLocations(frames, sourceMaps);
     mappedFrames = await expandFrames(mappedFrames, sourceMaps, getState);
     mappedFrames = mapDisplayNames(mappedFrames, getState);
+
     dispatch({
       type: "MAP_FRAMES",
       frames: mappedFrames

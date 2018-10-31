@@ -1,20 +1,17 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.fetchExtra = fetchExtra;
-exports.getExtra = getExtra;
-
-var _selectors = require("../../selectors/index");
-
-var _preview = require("../../utils/preview");
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
+
+import { inComponent, getSelectedFrame } from "../../selectors";
+import { isImmutablePreview } from "../../utils/preview";
+
+import type { ThunkArgs } from "../types";
+
 async function getReactProps(evaluate, displayName) {
-  const componentNames = await evaluate(`
+  const componentNames = await evaluate(
+    `
     if(this.hasOwnProperty('_reactInternalFiber')) {
       let componentNames = [];
       let componentNode = this._reactInternalFiber;
@@ -27,27 +24,27 @@ async function getReactProps(evaluate, displayName) {
     else {
       [this._reactInternalInstance.getName()];
     }
-    `);
-  const items = componentNames.result.preview && componentNames.result.preview.items;
-  let extra = {
-    displayName
-  };
+    `
+  );
 
+  const items =
+    componentNames.result.preview && componentNames.result.preview.items;
+
+  let extra = { displayName };
   if (items) {
-    extra = {
-      displayName,
-      componentStack: items
-    };
+    extra = { displayName, componentStack: items };
   }
 
   return extra;
 }
 
-async function getImmutableProps(expression, evaluate) {
+async function getImmutableProps(expression: string, evaluate) {
   // NOTE: it's possible the expression is a statement e.g `_this.fields;`
   expression = expression.replace(/;$/, "");
+
   const immutableEntries = await evaluate(`${expression}.toJS()`);
   const immutableType = await evaluate(`${expression}.constructor.name`);
+
   return {
     type: immutableType.result,
     entries: immutableEntries.result
@@ -56,26 +53,23 @@ async function getImmutableProps(expression, evaluate) {
 
 async function getExtraProps(getState, expression, result, evaluate) {
   const props = {};
-  const component = (0, _selectors.inComponent)(getState());
+
+  const component = inComponent(getState());
 
   if (component) {
     props.react = await getReactProps(evaluate, component);
   }
 
-  if ((0, _preview.isImmutablePreview)(result)) {
+  if (isImmutablePreview(result)) {
     props.immutable = await getImmutableProps(expression, evaluate);
   }
 
   return props;
 }
 
-function fetchExtra() {
-  return async function ({
-    dispatch,
-    getState
-  }) {
-    const frame = (0, _selectors.getSelectedFrame)(getState());
-
+export function fetchExtra() {
+  return async function({ dispatch, getState }: ThunkArgs) {
+    const frame = getSelectedFrame(getState());
     if (!frame) {
       return;
     }
@@ -88,20 +82,17 @@ function fetchExtra() {
   };
 }
 
-function getExtra(expression, result) {
-  return async ({
-    dispatch,
-    getState,
-    client,
-    sourceMaps
-  }) => {
-    const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
-
+export function getExtra(expression: string, result: Object) {
+  return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
+    const selectedFrame = getSelectedFrame(getState());
     if (!selectedFrame) {
       return {};
     }
 
-    const extra = await getExtraProps(getState, expression, result, expr => client.evaluateInFrame(expr, selectedFrame.id));
+    const extra = await getExtraProps(getState, expression, result, expr =>
+      client.evaluateInFrame(expr, selectedFrame.id)
+    );
+
     return extra;
   };
 }

@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DevToolsModules(
+DebuggerModules(
     'addBreakpoint.js',
     'index.js',
     'remapLocations.js',

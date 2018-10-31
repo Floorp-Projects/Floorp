@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DevToolsModules(
+DebuggerModules(
     'Frame.js',
     'FrameMenu.js',
     'Group.js',

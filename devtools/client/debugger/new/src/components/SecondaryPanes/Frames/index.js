@@ -1,106 +1,116 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Frames = undefined;
-
-var _react = require("devtools/client/shared/vendor/react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactRedux = require("devtools/client/shared/vendor/react-redux");
-
-var _Frame = require("./Frame");
-
-var _Frame2 = _interopRequireDefault(_Frame);
-
-var _Group = require("./Group");
-
-var _Group2 = _interopRequireDefault(_Group);
-
-var _WhyPaused = require("./WhyPaused");
-
-var _WhyPaused2 = _interopRequireDefault(_WhyPaused);
-
-var _actions = require("../../../actions/index");
-
-var _actions2 = _interopRequireDefault(_actions);
-
-var _frames = require("../../../utils/pause/frames/index");
-
-var _clipboard = require("../../../utils/clipboard");
-
-var _selectors = require("../../../selectors/index");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
+
+import React, { Component } from "react";
+import { connect } from "react-redux";
+
+import type { Frame, Why } from "../../../types";
+
+import FrameComponent from "./Frame";
+import Group from "./Group";
+
+import renderWhyPaused from "./WhyPaused";
+
+import actions from "../../../actions";
+import { collapseFrames, formatCopyName } from "../../../utils/pause/frames";
+import { copyToTheClipboard } from "../../../utils/clipboard";
+
+import {
+  getFrameworkGroupingState,
+  getSelectedFrame,
+  isPaused as getIsPaused,
+  getCallStackFrames,
+  getPauseReason
+} from "../../../selectors";
+
+import type { LocalFrame } from "./types";
+
+import "./Frames.css";
+
 const NUM_FRAMES_SHOWN = 7;
 
-class Frames extends _react.Component {
-  constructor(props) {
+type Props = {
+  frames: Array<Frame>,
+  frameworkGroupingOn: boolean,
+  selectedFrame: Object,
+  why: Why,
+  selectFrame: Function,
+  toggleBlackBox: Function,
+  toggleFrameworkGrouping: Function,
+  disableFrameTruncate: boolean,
+  displayFullUrl: boolean,
+  getFrameTitle?: string => string
+};
+
+type State = {
+  showAllFrames: boolean
+};
+
+class Frames extends Component<Props, State> {
+  renderFrames: Function;
+  toggleFramesDisplay: Function;
+  truncateFrames: Function;
+  copyStackTrace: Function;
+  toggleFrameworkGrouping: Function;
+  renderToggleButton: Function;
+
+  constructor(props: Props) {
     super(props);
-
-    this.toggleFramesDisplay = () => {
-      this.setState(prevState => ({
-        showAllFrames: !prevState.showAllFrames
-      }));
-    };
-
-    this.copyStackTrace = () => {
-      const {
-        frames
-      } = this.props;
-      const framesToCopy = frames.map(f => (0, _frames.formatCopyName)(f)).join("\n");
-      (0, _clipboard.copyToTheClipboard)(framesToCopy);
-    };
-
-    this.toggleFrameworkGrouping = () => {
-      const {
-        toggleFrameworkGrouping,
-        frameworkGroupingOn
-      } = this.props;
-      toggleFrameworkGrouping(!frameworkGroupingOn);
-    };
 
     this.state = {
       showAllFrames: !!props.disableFrameTruncate
     };
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    const {
-      frames,
-      selectedFrame,
-      frameworkGroupingOn
-    } = this.props;
-    const {
-      showAllFrames
-    } = this.state;
-    return frames !== nextProps.frames || selectedFrame !== nextProps.selectedFrame || showAllFrames !== nextState.showAllFrames || frameworkGroupingOn !== nextProps.frameworkGroupingOn;
+  shouldComponentUpdate(nextProps: Props, nextState: State): boolean {
+    const { frames, selectedFrame, frameworkGroupingOn } = this.props;
+    const { showAllFrames } = this.state;
+    return (
+      frames !== nextProps.frames ||
+      selectedFrame !== nextProps.selectedFrame ||
+      showAllFrames !== nextState.showAllFrames ||
+      frameworkGroupingOn !== nextProps.frameworkGroupingOn
+    );
   }
 
-  collapseFrames(frames) {
-    const {
-      frameworkGroupingOn
-    } = this.props;
+  toggleFramesDisplay = (): void => {
+    this.setState(prevState => ({
+      showAllFrames: !prevState.showAllFrames
+    }));
+  };
 
+  collapseFrames(frames: Array<Frame>) {
+    const { frameworkGroupingOn } = this.props;
     if (!frameworkGroupingOn) {
       return frames;
     }
 
-    return (0, _frames.collapseFrames)(frames);
+    return collapseFrames(frames);
   }
 
-  truncateFrames(frames) {
-    const numFramesToShow = this.state.showAllFrames ? frames.length : NUM_FRAMES_SHOWN;
+  truncateFrames(frames: Array<Frame>): Array<Frame> {
+    const numFramesToShow = this.state.showAllFrames
+      ? frames.length
+      : NUM_FRAMES_SHOWN;
+
     return frames.slice(0, numFramesToShow);
   }
 
-  renderFrames(frames) {
+  copyStackTrace = () => {
+    const { frames } = this.props;
+    const framesToCopy = frames.map(f => formatCopyName(f)).join("\n");
+    copyToTheClipboard(framesToCopy);
+  };
+
+  toggleFrameworkGrouping = () => {
+    const { toggleFrameworkGrouping, frameworkGroupingOn } = this.props;
+    toggleFrameworkGrouping(!frameworkGroupingOn);
+  };
+
+  renderFrames(frames: LocalFrame[]) {
     const {
       selectFrame,
       selectedFrame,
@@ -109,85 +119,107 @@ class Frames extends _react.Component {
       displayFullUrl,
       getFrameTitle
     } = this.props;
+
     const framesOrGroups = this.truncateFrames(this.collapseFrames(frames));
-    return _react2.default.createElement("ul", null, framesOrGroups.map(frameOrGroup => frameOrGroup.id ? _react2.default.createElement(_Frame2.default, {
-      frame: frameOrGroup,
-      toggleFrameworkGrouping: this.toggleFrameworkGrouping,
-      copyStackTrace: this.copyStackTrace,
-      frameworkGroupingOn: frameworkGroupingOn,
-      selectFrame: selectFrame,
-      selectedFrame: selectedFrame,
-      toggleBlackBox: toggleBlackBox,
-      key: String(frameOrGroup.id),
-      displayFullUrl: displayFullUrl,
-      getFrameTitle: getFrameTitle
-    }) : _react2.default.createElement(_Group2.default, {
-      group: frameOrGroup,
-      toggleFrameworkGrouping: this.toggleFrameworkGrouping,
-      copyStackTrace: this.copyStackTrace,
-      frameworkGroupingOn: frameworkGroupingOn,
-      selectFrame: selectFrame,
-      selectedFrame: selectedFrame,
-      toggleBlackBox: toggleBlackBox,
-      key: frameOrGroup[0].id,
-      displayFullUrl: displayFullUrl,
-      getFrameTitle: getFrameTitle
-    })));
+    type FrameOrGroup = LocalFrame | LocalFrame[];
+
+    return (
+      <ul>
+        {framesOrGroups.map(
+          (frameOrGroup: FrameOrGroup) =>
+            frameOrGroup.id ? (
+              <FrameComponent
+                frame={frameOrGroup}
+                toggleFrameworkGrouping={this.toggleFrameworkGrouping}
+                copyStackTrace={this.copyStackTrace}
+                frameworkGroupingOn={frameworkGroupingOn}
+                selectFrame={selectFrame}
+                selectedFrame={selectedFrame}
+                toggleBlackBox={toggleBlackBox}
+                key={String(frameOrGroup.id)}
+                displayFullUrl={displayFullUrl}
+                getFrameTitle={getFrameTitle}
+              />
+            ) : (
+              <Group
+                group={frameOrGroup}
+                toggleFrameworkGrouping={this.toggleFrameworkGrouping}
+                copyStackTrace={this.copyStackTrace}
+                frameworkGroupingOn={frameworkGroupingOn}
+                selectFrame={selectFrame}
+                selectedFrame={selectedFrame}
+                toggleBlackBox={toggleBlackBox}
+                key={frameOrGroup[0].id}
+                displayFullUrl={displayFullUrl}
+                getFrameTitle={getFrameTitle}
+              />
+            )
+        )}
+      </ul>
+    );
   }
 
-  renderToggleButton(frames) {
-    const buttonMessage = this.state.showAllFrames ? L10N.getStr("callStack.collapse") : L10N.getStr("callStack.expand");
-    frames = this.collapseFrames(frames);
+  renderToggleButton(frames: LocalFrame[]) {
+    const buttonMessage = this.state.showAllFrames
+      ? L10N.getStr("callStack.collapse")
+      : L10N.getStr("callStack.expand");
 
+    frames = this.collapseFrames(frames);
     if (frames.length <= NUM_FRAMES_SHOWN) {
       return null;
     }
 
-    return _react2.default.createElement("div", {
-      className: "show-more-container"
-    }, _react2.default.createElement("button", {
-      className: "show-more",
-      onClick: this.toggleFramesDisplay
-    }, buttonMessage));
+    return (
+      <div className="show-more-container">
+        <button className="show-more" onClick={this.toggleFramesDisplay}>
+          {buttonMessage}
+        </button>
+      </div>
+    );
   }
 
   render() {
-    const {
-      frames,
-      disableFrameTruncate,
-      why
-    } = this.props;
+    const { frames, disableFrameTruncate, why } = this.props;
 
     if (!frames) {
-      return _react2.default.createElement("div", {
-        className: "pane frames"
-      }, _react2.default.createElement("div", {
-        className: "pane-info empty"
-      }, L10N.getStr("callStack.notPaused")));
+      return (
+        <div className="pane frames">
+          <div className="pane-info empty">
+            {L10N.getStr("callStack.notPaused")}
+          </div>
+        </div>
+      );
     }
 
-    return _react2.default.createElement("div", {
-      className: "pane frames"
-    }, this.renderFrames(frames), (0, _WhyPaused2.default)(why), disableFrameTruncate ? null : this.renderToggleButton(frames));
+    return (
+      <div className="pane frames">
+        {this.renderFrames(frames)}
+        {renderWhyPaused(why)}
+        {disableFrameTruncate ? null : this.renderToggleButton(frames)}
+      </div>
+    );
   }
-
 }
 
 const mapStateToProps = state => ({
-  frames: (0, _selectors.getCallStackFrames)(state),
-  why: (0, _selectors.getPauseReason)(state),
-  frameworkGroupingOn: (0, _selectors.getFrameworkGroupingState)(state),
-  selectedFrame: (0, _selectors.getSelectedFrame)(state),
-  pause: (0, _selectors.isPaused)(state)
+  frames: getCallStackFrames(state),
+  why: getPauseReason(state),
+  frameworkGroupingOn: getFrameworkGroupingState(state),
+  selectedFrame: getSelectedFrame(state),
+  pause: getIsPaused(state)
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, {
-  selectFrame: _actions2.default.selectFrame,
-  toggleBlackBox: _actions2.default.toggleBlackBox,
-  toggleFrameworkGrouping: _actions2.default.toggleFrameworkGrouping,
-  disableFrameTruncate: false,
-  displayFullUrl: false
-})(Frames); // Export the non-connected component in order to use it outside of the debugger
-// panel (e.g. console, netmonitor, …).
+export default connect(
+  mapStateToProps,
+  {
+    selectFrame: actions.selectFrame,
+    toggleBlackBox: actions.toggleBlackBox,
+    toggleFrameworkGrouping: actions.toggleFrameworkGrouping,
+    disableFrameTruncate: false,
+    displayFullUrl: false
+  }
+)(Frames);
 
-exports.Frames = Frames;
+// Export the non-connected component in order to use it outside of the debugger
+// panel (e.g. console, netmonitor, …).
+export { Frames };

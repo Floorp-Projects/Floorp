@@ -1,28 +1,21 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = renderWhyPaused;
-
-var _react = require("devtools/client/shared/vendor/react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _pause = require("../../../utils/pause/index");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function renderExceptionSummary(exception) {
+
+// @flow
+import React from "react";
+
+import { getPauseReason } from "../../../utils/pause";
+import type { Grip, ExceptionReason } from "../../../types";
+
+import "./WhyPaused.css";
+
+function renderExceptionSummary(exception: string | Grip) {
   if (typeof exception === "string") {
     return exception;
   }
 
   const preview = exception.preview;
-
   if (!preview || !preview.name || !preview.message) {
     return;
   }
@@ -30,32 +23,34 @@ function renderExceptionSummary(exception) {
   return `${preview.name}: ${preview.message}`;
 }
 
-function renderMessage(why) {
+function renderMessage(why: ExceptionReason) {
   if (why.type == "exception" && why.exception) {
-    return _react2.default.createElement("div", {
-      className: "message warning"
-    }, renderExceptionSummary(why.exception));
+    return (
+      <div className={"message warning"}>
+        {renderExceptionSummary(why.exception)}
+      </div>
+    );
   }
 
   if (typeof why.message == "string") {
-    return _react2.default.createElement("div", {
-      className: "message"
-    }, why.message);
+    return <div className={"message"}>{why.message}</div>;
   }
 
   return null;
 }
 
-function renderWhyPaused(why) {
-  const reason = (0, _pause.getPauseReason)(why);
+export default function renderWhyPaused(why: Object) {
+  const reason = getPauseReason(why);
 
   if (!reason) {
     return null;
   }
 
-  return _react2.default.createElement("div", {
-    className: "pane why-paused"
-  }, _react2.default.createElement("div", null, L10N.getStr(reason)), renderMessage(why));
+  return (
+    <div className={"pane why-paused"}>
+      <div>{L10N.getStr(reason)}</div>
+      {renderMessage(why)}
+    </div>
+  );
 }
-
 renderWhyPaused.displayName = "whyPaused";

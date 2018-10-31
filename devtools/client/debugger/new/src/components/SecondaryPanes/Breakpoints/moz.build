@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DevToolsModules(
+DebuggerModules(
     'Breakpoint.js',
     'BreakpointsContextMenu.js',
     'ExceptionOption.js',
