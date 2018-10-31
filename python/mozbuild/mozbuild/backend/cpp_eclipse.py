@@ -38,7 +38,7 @@ class CppEclipseBackend(CommonBackend):
     def _init(self):
         CommonBackend._init(self)
 
-        self._paths_to_defines = {}
+        self._args_for_dirs = {}
         self._project_name = 'Gecko'
         self._workspace_dir = self._get_workspace_path()
         self._project_dir = os.path.join(self._workspace_dir, self._project_name)
@@ -79,7 +79,15 @@ class CppEclipseBackend(CommonBackend):
         # Note that unlike VS, Eclipse' indexer seem to crawl the headers and
         # isn't picky about the local includes.
         if isinstance(obj, ComputedFlags):
-            defs = self._paths_to_defines.setdefault(reldir, [])
+            args = self._args_for_dirs.setdefault(reldir, {'includes': [], 'defines': []})
+
+            includes = args["includes"]
+            if "BASE_INCLUDES" in obj.flags and obj.flags["BASE_INCLUDES"]:
+                includes += obj.flags["BASE_INCLUDES"]
+            if "LOCAL_INCLUDES" in obj.flags and obj.flags["LOCAL_INCLUDES"]:
+                includes += obj.flags["LOCAL_INCLUDES"]
+
+            defs = args["defines"]
             if "DEFINES" in obj.flags and obj.flags["DEFINES"]:
                 defs += obj.flags["DEFINES"]
             if "LIBRARY_DEFINES" in obj.flags and obj.flags["LIBRARY_DEFINES"]:
@@ -206,6 +214,10 @@ class CppEclipseBackend(CommonBackend):
                 raise
 
     def _write_language_settings(self, fh):
+        def add_abs_include_path(absinclude):
+            assert(absinclude[:3] == "-I/")
+            return LANGUAGE_SETTINGS_TEMPLATE_DIR_INCLUDE.replace("@INCLUDE_PATH@", absinclude[2:])
+
         def add_objdir_include_path(relpath):
             p = os.path.join(self.environment.topobjdir, relpath)
             return LANGUAGE_SETTINGS_TEMPLATE_DIR_INCLUDE.replace("@INCLUDE_PATH@", p)
@@ -267,10 +279,12 @@ class CppEclipseBackend(CommonBackend):
         dirsettings_template += add_objdir_include_path('ipc/ipdl/_ipdlheaders')
         dirsettings_template += add_define('MOZILLA_INTERNAL_API', '1')
 
-        for path, defines in self._paths_to_defines.items():
+        for path, args in self._args_for_dirs.items():
             dirsettings = dirsettings_template
             dirsettings = dirsettings.replace('@RELATIVE_PATH@', path)
-            for d in defines:
+            for i in args["includes"]:
+                dirsettings += add_abs_include_path(i)
+            for d in args["defines"]:
                 assert(d[:2] == u"-D" or d[:2] == u"-U")
                 if d[:2] == u"-U":
                     # gfx/harfbuzz/src uses -UDEBUG, at least on Mac
