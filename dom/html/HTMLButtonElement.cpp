@@ -175,18 +175,19 @@ HTMLButtonElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 bool
-HTMLButtonElement::IsDisabledForEvents(EventMessage aMessage)
+HTMLButtonElement::IsDisabledForEvents(WidgetEvent* aEvent)
 {
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
   nsIFrame* formFrame = do_QueryFrame(formControlFrame);
-  return IsElementDisabledForEvents(aMessage, formFrame);
+  return IsElementDisabledForEvents(aEvent, formFrame);
 }
 
 void
 HTMLButtonElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = false;
-  if (IsDisabledForEvents(aVisitor.mEvent->mMessage)) {
+
+  if (IsDisabledForEvents(aVisitor.mEvent)) {
     return;
   }
 

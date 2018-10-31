@@ -3603,7 +3603,8 @@ nsDOMWindowUtils::IsNodeDisabledForEvents(nsINode* aNode, bool* aRetVal)
   while (node) {
     if (node->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
       nsCOMPtr<nsIFormControl> fc = do_QueryInterface(node);
-      if (fc && fc->IsDisabledForEvents(eVoidEvent)) {
+      WidgetEvent event(true, eVoidEvent);
+      if (fc && fc->IsDisabledForEvents(&event)) {
         *aRetVal = true;
         break;
       }
