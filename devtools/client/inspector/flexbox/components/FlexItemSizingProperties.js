@@ -155,14 +155,6 @@ class FlexItemSizingProperties extends PureComponent {
 
     const reasons = [];
 
-    // First output a sentence for telling users about whether there was enough room or
-    // not on the line.
-    if (lineGrowthState === "growing") {
-      reasons.push(getStr("flexbox.itemSizing.extraRoomOnLine"));
-    } else if (lineGrowthState === "shrinking") {
-      reasons.push(getStr("flexbox.itemSizing.notEnoughRoomOnLine"));
-    }
-
     // Then tell users whether the item was set to grow, shrink or none of them.
     if (nonZeroFlexGrowDefined && lineGrowthState !== "shrinking") {
       reasons.push(getStr("flexbox.itemSizing.setToGrow"));
