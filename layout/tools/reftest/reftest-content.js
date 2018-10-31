@@ -1072,7 +1072,8 @@ function DoAssertionCheck()
 function LoadURI(uri)
 {
     var flags = webNavigation().LOAD_FLAGS_NONE;
-    webNavigation().loadURI(uri, flags, null, null, null);
+    var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+    webNavigation().loadURI(uri, flags, null, null, null, systemPrincipal);
 }
 
 function LogWarning(str)
