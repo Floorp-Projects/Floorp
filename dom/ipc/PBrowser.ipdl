@@ -890,6 +890,11 @@ child:
      */
     async SetWidgetNativeData(WindowsHandle aHandle);
 
+    /**
+     * Requests the content blocking log, which is sent back in response.
+     */
+    async GetContentBlockingLog() returns(nsString log, bool success);
+
 /*
  * FIXME: write protocol!
 
