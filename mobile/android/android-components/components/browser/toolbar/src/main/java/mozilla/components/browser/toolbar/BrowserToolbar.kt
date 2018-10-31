@@ -6,6 +6,7 @@ package mozilla.components.browser.toolbar
 
 import android.content.Context
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.support.annotation.DrawableRes
 import android.support.annotation.VisibleForTesting
 import android.util.AttributeSet
@@ -366,7 +367,7 @@ class BrowserToolbar @JvmOverloads constructor(
     /**
      * An action button to be added to the toolbar.
      *
-     * @param imageResource The drawable to be shown.
+     * @param imageDrawable The drawable to be shown.
      * @param contentDescription The content description to use.
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
      * @param background A custom (stateful) background drawable resource to be used.
@@ -374,17 +375,18 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param listener Callback that will be invoked whenever the button is pressed
      */
     open class Button(
-        imageResource: Int,
+        imageDrawable: Drawable,
         contentDescription: String,
         visible: () -> Boolean = { true },
-        @DrawableRes background: Int? = null,
-        private val padding: Padding = defaultActionPadding,
+        @DrawableRes background: Int = 0,
+        val padding: Padding = DEFAULT_PADDING,
         listener: () -> Unit
-    ) : Toolbar.ActionButton(imageResource, contentDescription, visible, background, listener = listener) {
+    ) : Toolbar.ActionButton(imageDrawable, contentDescription, visible, background, padding, listener) {
+
         override fun createView(parent: ViewGroup): View {
-            val view = super.createView(parent)
-            view.setPadding(padding)
-            return view
+            return super.createView(parent).apply {
+                setPadding(padding)
+            }
         }
     }
 
@@ -392,8 +394,8 @@ class BrowserToolbar @JvmOverloads constructor(
      * An action button with two states, selected and unselected. When the button is pressed, the
      * state changes automatically.
      *
-     * @param imageResource The drawable to be shown if the button is in unselected state.
-     * @param imageResourceSelected The drawable to be shown if the button is in selected state.
+     * @param image The drawable to be shown if the button is in unselected state.
+     * @param imageSelected The drawable to be shown if the button is in selected state.
      * @param contentDescription The content description to use if the button is in unselected state.
      * @param contentDescriptionSelected The content description to use if the button is in selected state.
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
@@ -403,25 +405,27 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param listener Callback that will be invoked whenever the checked state changes.
      */
     open class ToggleButton(
-        @DrawableRes imageResource: Int,
-        @DrawableRes imageResourceSelected: Int,
+        image: Drawable,
+        imageSelected: Drawable,
         contentDescription: String,
         contentDescriptionSelected: String,
         visible: () -> Boolean = { true },
         selected: Boolean = false,
-        @DrawableRes background: Int? = null,
-        private val padding: Padding = defaultActionPadding,
+        @DrawableRes background: Int = 0,
+        val padding: Padding = DEFAULT_PADDING,
         listener: (Boolean) -> Unit
     ) : Toolbar.ActionToggleButton(
-        imageResource,
-        imageResourceSelected,
+        image,
+        imageSelected,
         contentDescription,
         contentDescriptionSelected,
         visible,
         selected,
         background,
-        listener = listener
+        padding,
+        listener
     ) {
+
         override fun createView(parent: ViewGroup): View {
             return super.createView(parent).apply {
                 setPadding(padding)
@@ -430,9 +434,9 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     companion object {
-        internal const val ACTION_PADDING_DP = 16
-        private val defaultActionPadding =
-            Padding(ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP)
         private const val DEFAULT_TOOLBAR_HEIGHT_DP = 56
+        internal const val ACTION_PADDING_DP = 16
+        internal val DEFAULT_PADDING =
+            Padding(ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP)
     }
 }

@@ -4,7 +4,9 @@
 
 package org.mozilla.samples.toolbar
 
+import android.content.res.Resources
 import android.os.Bundle
+import android.support.annotation.DrawableRes
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -56,7 +58,11 @@ class ToolbarActivity : AppCompatActivity() {
             view?.let {
                 val result = autoCompleteProvider.autocomplete(value)
                 view.applyAutocompleteResult(
-                        InlineAutocompleteEditText.AutocompleteResult(result.text, result.source, result.size, { result.url }))
+                    InlineAutocompleteEditText.AutocompleteResult(
+                        result.text,
+                        result.source,
+                        result.size
+                    ) { result.url })
             }
         }
     }
@@ -93,16 +99,18 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val back = BrowserToolbar.Button(
-            mozilla.components.ui.icons.R.drawable.mozac_ic_back,
-            "Back") {
+            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_back),
+            "Back"
+        ) {
             simulateReload()
         }
 
         toolbar.addNavigationAction(back)
 
         val forward = BrowserToolbar.Button(
-                mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
-                "Forward") {
+            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_forward),
+            "Forward"
+        ) {
             simulateReload()
         }
 
@@ -113,7 +121,7 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val reload = BrowserToolbar.Button(
-            mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
+            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_refresh),
             "Reload") {
             simulateReload()
         }
@@ -246,7 +254,7 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val grid = BrowserToolbar.Button(
-                mozilla.components.ui.icons.R.drawable.mozac_ic_grid,
+            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_grid),
                 "Grid",
                 background = R.drawable.button_background) {
             // Do nothing
@@ -255,7 +263,7 @@ class ToolbarActivity : AppCompatActivity() {
         toolbar.addNavigationAction(grid)
 
         val back = BrowserToolbar.Button(
-                mozilla.components.ui.icons.R.drawable.mozac_ic_back,
+            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_back),
                 "Back",
                 visible = ::canGoBack,
                 background = R.drawable.button_background) {
@@ -267,7 +275,7 @@ class ToolbarActivity : AppCompatActivity() {
         toolbar.addNavigationAction(back)
 
         val forward = BrowserToolbar.Button(
-                mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
+            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_forward),
                 "Forward",
                 visible = ::canGoForward,
                 background = R.drawable.button_background) {
@@ -283,9 +291,9 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val reload = ReloadPageAction(
-            reloadImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
+            reloadImage = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_refresh),
             reloadContentDescription = "Reload",
-            stopImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
+            stopImage = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_stop),
             stopContentDescription = "Stop",
             isLoading = { loading },
             background = R.drawable.pageaction_background
@@ -300,8 +308,8 @@ class ToolbarActivity : AppCompatActivity() {
         toolbar.addPageAction(reload)
 
         val pin = BrowserToolbar.ToggleButton(
-            imageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_pin,
-            imageResourceSelected = mozilla.components.ui.icons.R.drawable.mozac_ic_pin_filled,
+            image = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_pin),
+            imageSelected = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_pin),
             contentDescription = "Pin",
             contentDescriptionSelected = "Unpin",
             background = R.drawable.toggle_background) {
@@ -311,8 +319,8 @@ class ToolbarActivity : AppCompatActivity() {
         toolbar.addBrowserAction(pin)
 
         val turbo = BrowserToolbar.ToggleButton(
-            imageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_rocket,
-            imageResourceSelected = mozilla.components.ui.icons.R.drawable.mozac_ic_rocket_filled,
+            image = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_rocket),
+            imageSelected = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_rocket_filled),
             contentDescription = "Turbo: Off",
             contentDescriptionSelected = "Turbo: On",
             background = R.drawable.toggle_background) {
@@ -329,7 +337,7 @@ class ToolbarActivity : AppCompatActivity() {
 
         toolbar.addBrowserAction(space)
 
-        val brand = Toolbar.ActionImage(R.drawable.brand)
+        val brand = Toolbar.ActionImage(resources.getThemedDrawable(R.drawable.brand))
 
         toolbar.addBrowserAction(brand)
 
@@ -422,4 +430,6 @@ class ToolbarActivity : AppCompatActivity() {
         // Update toolbar buttons to reflect loading state
         toolbar.invalidateActions()
     }
+
+    private fun Resources.getThemedDrawable(@DrawableRes resId: Int) = getDrawable(resId, theme)
 }

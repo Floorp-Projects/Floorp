@@ -6,6 +6,7 @@ package mozilla.components.concept.toolbar
 
 import android.widget.LinearLayout
 import mozilla.components.support.base.android.Padding
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,5 +36,11 @@ class ActionSpaceTest {
         assertEquals(view.paddingTop, 20)
         assertEquals(view.paddingRight, 24)
         assertEquals(view.paddingBottom, 28)
+    }
+
+    @Test
+    fun `bind is not implemented`() {
+        val button = Toolbar.ActionSpace(0)
+        assertEquals(Unit, button.bind(mock()))
     }
 }

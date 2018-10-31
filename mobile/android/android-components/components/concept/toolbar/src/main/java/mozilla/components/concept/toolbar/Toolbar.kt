@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.toolbar
 
+import android.graphics.drawable.Drawable
 import android.support.annotation.DrawableRes
 import android.support.v7.widget.AppCompatImageButton
 import android.support.v7.widget.AppCompatImageView
@@ -128,32 +129,33 @@ interface Toolbar {
     /**
      * An action button to be added to the toolbar.
      *
-     * @param imageResource The drawable to be shown.
+     * @param imageDrawable The drawable to be shown.
      * @param contentDescription The content description to use.
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
-     * @param background A custom (stateful) background drawable resource to be used.
      * @param padding A optional custom padding.
      * @param listener Callback that will be invoked whenever the button is pressed
      */
     open class ActionButton(
-        @DrawableRes private val imageResource: Int,
-        private val contentDescription: String,
+        val imageDrawable: Drawable? = null,
+        val contentDescription: String,
         override val visible: () -> Boolean = { true },
-        @DrawableRes private val background: Int? = null,
+        private val background: Int = 0,
         private val padding: Padding? = null,
         private val listener: () -> Unit
     ) : Action {
+
         override fun createView(parent: ViewGroup): View = AppCompatImageButton(parent.context).also { imageButton ->
-            imageButton.setImageResource(imageResource)
+            imageButton.setImageDrawable(imageDrawable)
             imageButton.contentDescription = contentDescription
             imageButton.setOnClickListener { listener.invoke() }
 
-            if (background == null) {
+            if (background == 0) {
                 val outValue = TypedValue()
                 parent.context.theme.resolveAttribute(
-                        android.R.attr.selectableItemBackgroundBorderless,
-                        outValue,
-                        true)
+                    android.R.attr.selectableItemBackgroundBorderless,
+                    outValue,
+                    true
+                )
                 imageButton.setBackgroundResource(outValue.resourceId)
             } else {
                 imageButton.setBackgroundResource(background)
@@ -168,26 +170,25 @@ interface Toolbar {
      * An action button with two states, selected and unselected. When the button is pressed, the
      * state changes automatically.
      *
-     * @param imageResource The drawable to be shown if the button is in unselected state.
-     * @param imageResourceSelected The drawable to be shown if the button is in selected state.
+     * @param imageDrawable The drawable to be shown if the button is in unselected state.
+     * @param imageSelectedDrawable The  drawable to be shown if the button is in selected state.
      * @param contentDescription The content description to use if the button is in unselected state.
      * @param contentDescriptionSelected The content description to use if the button is in selected state.
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
      * @param selected Sets whether this button should be selected initially.
-     * @param background A custom (stateful) background drawable resource to be used.
      * @param padding A optional custom padding.
      * @param listener Callback that will be invoked whenever the checked state changes.
      */
     open class ActionToggleButton(
-        @DrawableRes private val imageResource: Int,
-        @DrawableRes private val imageResourceSelected: Int,
+        internal val imageDrawable: Drawable,
+        internal val imageSelectedDrawable: Drawable,
         private val contentDescription: String,
         private val contentDescriptionSelected: String,
         override val visible: () -> Boolean = { true },
         private var selected: Boolean = false,
-        @DrawableRes private val background: Int? = null,
+        @DrawableRes private val background: Int = 0,
         private val padding: Padding? = null,
-        private val listener: (Boolean) -> Unit = {}
+        private val listener: (Boolean) -> Unit
     ) : Action {
         private var view: WeakReference<ImageButton>? = null
 
@@ -199,7 +200,7 @@ interface Toolbar {
 
             updateViewState()
 
-            if (background == null) {
+            if (background == 0) {
                 val outValue = TypedValue()
                 parent.context.theme.resolveAttribute(
                         android.R.attr.selectableItemBackgroundBorderless,
@@ -252,10 +253,10 @@ interface Toolbar {
                 it.isSelected = selected
 
                 if (selected) {
-                    it.setImageResource(imageResourceSelected)
+                    it.setImageDrawable(imageSelectedDrawable)
                     it.contentDescription = contentDescriptionSelected
                 } else {
-                    it.setImageResource(imageResource)
+                    it.setImageDrawable(imageDrawable)
                     it.contentDescription = contentDescription
                 }
             }
@@ -285,30 +286,29 @@ interface Toolbar {
     /**
      * An action that just shows a static, non-clickable image.
      *
-     * @param imageResource The drawable to be shown.
+     * @param imageDrawable The drawable to be shown.
      * @param contentDescription Optional content description to be used. If no content description
      *                           is provided then this view will be treated as not important for
      *                           accessibility.
      * @param padding A optional custom padding.
      */
     open class ActionImage(
-        @DrawableRes private val imageResource: Int,
+        private val imageDrawable: Drawable,
         private val contentDescription: String? = null,
         private val padding: Padding? = null
     ) : Action {
-        override fun createView(parent: ViewGroup): View = AppCompatImageView(parent.context).also {
-            val drawable = parent.context.resources.getDrawable(imageResource, parent.context.theme)
-            it.minimumWidth = drawable.intrinsicWidth
 
-            it.setImageDrawable(drawable)
+        override fun createView(parent: ViewGroup): View = AppCompatImageView(parent.context).also { image ->
+            image.minimumWidth = imageDrawable.intrinsicWidth
+            image.setImageDrawable(imageDrawable)
 
-            it.contentDescription = contentDescription
-            it.importantForAccessibility = if (contentDescription.isNullOrEmpty()) {
+            image.contentDescription = contentDescription
+            image.importantForAccessibility = if (contentDescription.isNullOrEmpty()) {
                 View.IMPORTANT_FOR_ACCESSIBILITY_NO
             } else {
                 View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
             }
-            padding?.let { pd -> it.setPadding(pd) }
+            padding?.let { pd -> image.setPadding(pd) }
         }
 
         override fun bind(view: View) = Unit

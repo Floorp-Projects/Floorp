@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.drawable.ClipDrawable
-import android.support.annotation.DrawableRes
+import android.graphics.drawable.Drawable
 import android.support.v7.widget.RecyclerView
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -135,15 +135,15 @@ class UrlBoxProgressView(
  * <code>isLoading</code> lambda.
  */
 class ReloadPageAction(
-    @DrawableRes private val reloadImageResource: Int,
+    private val reloadImage: Drawable,
     private val reloadContentDescription: String,
-    private val stopImageResource: Int,
+    private val stopImage: Drawable,
     private val stopContentDescription: String,
     private val isLoading: () -> Boolean,
-    background: Int? = null,
+    background: Int = 0,
     listener: () -> Unit
 ) : BrowserToolbar.Button(
-    reloadImageResource,
+    reloadImage,
     reloadContentDescription,
     listener = listener,
     background = background
@@ -157,10 +157,10 @@ class ReloadPageAction(
         val button = view as ImageButton
 
         if (loading) {
-            button.setImageResource(stopImageResource)
+            button.setImageDrawable(stopImage)
             button.contentDescription = stopContentDescription
         } else {
-            button.setImageResource(reloadImageResource)
+            button.setImageDrawable(reloadImage)
             button.contentDescription = reloadContentDescription
         }
     }

@@ -6,7 +6,9 @@ package mozilla.components.concept.toolbar
 
 import android.widget.LinearLayout
 import mozilla.components.support.base.android.Padding
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -16,8 +18,8 @@ import org.robolectric.RuntimeEnvironment
 class ActionButtonTest {
 
     @Test
-    fun `Toolbar ActionButton must set padding`() {
-        var button = Toolbar.ActionButton(0, "imageResource") {}
+    fun `set padding`() {
+        var button = Toolbar.ActionButton(mock(), "imageResource") {}
         val linearLayout = LinearLayout(RuntimeEnvironment.application)
         var view = button.createView(linearLayout)
 
@@ -27,7 +29,7 @@ class ActionButtonTest {
         assertEquals(view.paddingBottom, 0)
 
         button = Toolbar.ActionButton(
-            0, "imageResource",
+            mock(), "imageResource",
             padding = Padding(16, 20, 24, 28)
         ) {}
 
@@ -37,5 +39,18 @@ class ActionButtonTest {
         assertEquals(view.paddingTop, 20)
         assertEquals(view.paddingRight, 24)
         assertEquals(view.paddingBottom, 28)
+    }
+
+    @Test
+    fun `constructor with drawables`() {
+        val visibilityListener = { false }
+        val button = Toolbar.ActionButton(mock(), "image", visibilityListener, 0, null) { }
+        assertNotNull(button.imageDrawable)
+        assertEquals("image", button.contentDescription)
+        assertEquals(visibilityListener, button.visible)
+        assertEquals(Unit, button.bind(mock()))
+
+        val buttonVisibility = Toolbar.ActionButton(mock(), "image") {}
+        assertEquals(true, buttonVisibility.visible())
     }
 }

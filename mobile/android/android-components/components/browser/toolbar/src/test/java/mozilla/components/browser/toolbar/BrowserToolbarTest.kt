@@ -15,6 +15,7 @@ import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.android.Padding
+import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -269,7 +270,7 @@ class BrowserToolbarTest {
 
         toolbar.displayToolbar = displayToolbar
 
-        val action = BrowserToolbar.Button(0, "Hello") {
+        val action = BrowserToolbar.Button(mock(), "Hello") {
             // Do nothing
         }
 
@@ -286,7 +287,7 @@ class BrowserToolbarTest {
 
         toolbar.displayToolbar = displayToolbar
 
-        val action = BrowserToolbar.Button(0, "World") {
+        val action = BrowserToolbar.Button(mock(), "World") {
             // Do nothing
         }
 
@@ -323,7 +324,7 @@ class BrowserToolbarTest {
         val displayToolbar = mock(DisplayToolbar::class.java)
         toolbar.displayToolbar = displayToolbar
 
-        val action = BrowserToolbar.Button(0, "Back") {
+        val action = BrowserToolbar.Button(mock(), "Back") {
             // Do nothing
         }
 
@@ -480,7 +481,7 @@ class BrowserToolbarTest {
 
     @Test
     fun `BrowserToolbar Button must set padding`() {
-        var button = BrowserToolbar.Button(0, "imageResource", visible = { true }) {}
+        var button = BrowserToolbar.Button(mock(), "imageResource", visible = { true }) {}
         val linearLayout = LinearLayout(RuntimeEnvironment.application)
         var view = button.createView(linearLayout)
         val padding = Padding(0, 0, 0, 0)
@@ -488,20 +489,20 @@ class BrowserToolbarTest {
         assertEquals(view.paddingTop, ACTION_PADDING_DP)
         assertEquals(view.paddingRight, ACTION_PADDING_DP)
         assertEquals(view.paddingBottom, ACTION_PADDING_DP)
-        button = BrowserToolbar.Button(0, "imageResource", padding = padding.copy(left = 16)) {}
+        button = BrowserToolbar.Button(mock(), "imageResource", padding = padding.copy(left = 16)) {}
         view = button.createView(linearLayout)
         assertEquals(view.paddingLeft, 16)
-        button = BrowserToolbar.Button(0, "imageResource", padding = padding.copy(top = 16)) {}
+        button = BrowserToolbar.Button(mock(), "imageResource", padding = padding.copy(top = 16)) {}
         view = button.createView(linearLayout)
         assertEquals(view.paddingTop, 16)
-        button = BrowserToolbar.Button(0, "imageResource", padding = padding.copy(right = 16)) {}
+        button = BrowserToolbar.Button(mock(), "imageResource", padding = padding.copy(right = 16)) {}
         view = button.createView(linearLayout)
         assertEquals(view.paddingRight, 16)
-        button = BrowserToolbar.Button(0, "imageResource", padding = padding.copy(bottom = 16)) {}
+        button = BrowserToolbar.Button(mock(), "imageResource", padding = padding.copy(bottom = 16)) {}
         view = button.createView(linearLayout)
         assertEquals(view.paddingBottom, 16)
         button = BrowserToolbar.Button(
-            0, "imageResource",
+            mock(), "imageResource",
             padding = Padding(16, 20, 24, 28)
         ) {}
         view = button.createView(linearLayout)
@@ -515,8 +516,8 @@ class BrowserToolbarTest {
     @Test
     fun `BrowserToolbar ToggleButton must set padding`() {
         var button = BrowserToolbar.ToggleButton(
-            0,
-            0,
+            mock(),
+            mock(),
             "imageResource",
             "",
             visible = { true },
@@ -525,15 +526,14 @@ class BrowserToolbarTest {
         ) {}
         val linearLayout = LinearLayout(RuntimeEnvironment.application)
         var view = button.createView(linearLayout)
-        val padding = Padding(0, 0, 0, 0)
         assertEquals(view.paddingLeft, ACTION_PADDING_DP)
         assertEquals(view.paddingTop, ACTION_PADDING_DP)
         assertEquals(view.paddingRight, ACTION_PADDING_DP)
         assertEquals(view.paddingBottom, ACTION_PADDING_DP)
 
         button = BrowserToolbar.ToggleButton(
-            0,
-            0,
+            mock(),
+            mock(),
             "imageResource",
             "",
             visible = { true },
@@ -547,6 +547,32 @@ class BrowserToolbarTest {
         assertEquals(view.paddingTop, 20)
         assertEquals(view.paddingRight, 24)
         assertEquals(view.paddingBottom, 28)
+
+        button = BrowserToolbar.ToggleButton(
+            mock(),
+            mock(),
+            "imageResource",
+            "",
+            selected = false,
+            background = 0
+        ) {}
+
+        assertTrue(button.visible())
+    }
+
+    @Test
+    fun `hint changes edit and display urlView`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+
+        assertNull(toolbar.displayToolbar.urlView.hint)
+        assertNull(toolbar.editToolbar.urlView.hint)
+
+        toolbar.hint = "hint"
+
+        assertEquals("hint", toolbar.displayToolbar.urlView.hint)
+        assertEquals("hint", toolbar.editToolbar.urlView.hint)
+
+        assertEquals(toolbar.displayToolbar.urlView.hint.toString(), toolbar.hint)
     }
 
     @Test
@@ -600,6 +626,8 @@ class BrowserToolbarTest {
 
         assertEquals(typeface, toolbar.displayToolbar.urlView.typeface)
         assertEquals(typeface, toolbar.editToolbar.urlView.typeface)
+
+        assertEquals(toolbar.displayToolbar.urlView.typeface, toolbar.typeface)
     }
 
     @Test
@@ -612,5 +640,82 @@ class BrowserToolbarTest {
 
         BrowserToolbar(application, attributeSet)
         verify(application).obtainStyledAttributes(attributeSet, R.styleable.BrowserToolbar, 0, 0)
+    }
+
+    @Test
+    fun `displaySiteSecurityIcon getter and setter`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        assertEquals(toolbar.displayToolbar.iconView.isVisible(), toolbar.displaySiteSecurityIcon)
+
+        toolbar.displaySiteSecurityIcon = false
+        assertEquals(View.GONE, toolbar.displayToolbar.iconView.visibility)
+
+        toolbar.displaySiteSecurityIcon = true
+        assertEquals(View.VISIBLE, toolbar.displayToolbar.iconView.visibility)
+    }
+
+    @Test
+    fun `urlBoxView getter`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        assertEquals(toolbar.displayToolbar.urlBoxView, toolbar.urlBoxView)
+    }
+
+    @Test
+    fun `browserActionMargin getter`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        assertEquals(toolbar.displayToolbar.browserActionMargin, toolbar.browserActionMargin)
+    }
+
+    @Test
+    fun `urlBoxMargin getter`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        assertEquals(toolbar.displayToolbar.urlBoxMargin, toolbar.urlBoxMargin)
+    }
+
+    @Test
+    fun `onUrlClicked getter`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        assertEquals(toolbar.displayToolbar.onUrlClicked, toolbar.onUrlClicked)
+    }
+
+    @Test
+    fun `setUrlTextPadding applies padding to urlView`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        toolbar.setUrlTextPadding(5, 5, 5, 5)
+        assertEquals(5, toolbar.displayToolbar.urlView.paddingLeft)
+        assertEquals(5, toolbar.displayToolbar.urlView.paddingTop)
+        assertEquals(5, toolbar.displayToolbar.urlView.paddingRight)
+        assertEquals(5, toolbar.displayToolbar.urlView.paddingBottom)
+    }
+
+    @Test
+    fun `Button constructor with drawable`() {
+        val buttonDefault = BrowserToolbar.Button(mock(), "imageDrawable") {}
+
+        assertEquals(true, buttonDefault.visible())
+        assertEquals(BrowserToolbar.DEFAULT_PADDING, buttonDefault.padding)
+        assertEquals("imageDrawable", buttonDefault.contentDescription)
+
+        val button = BrowserToolbar.Button(mock(), "imageDrawable", visible = { false }) {}
+
+        assertEquals(false, button.visible())
+    }
+
+    @Test
+    fun `ToggleButton constructor with drawable`() {
+        val buttonDefault =
+            BrowserToolbar.ToggleButton(mock(), mock(), "imageDrawable", "imageSelectedDrawable") {}
+
+        assertEquals(true, buttonDefault.visible())
+        assertEquals(BrowserToolbar.DEFAULT_PADDING, buttonDefault.padding)
+
+        val button = BrowserToolbar.ToggleButton(
+            mock(),
+            mock(),
+            "imageDrawable",
+            "imageSelectedDrawable",
+            visible = { false }) {}
+
+        assertEquals(false, button.visible())
     }
 }

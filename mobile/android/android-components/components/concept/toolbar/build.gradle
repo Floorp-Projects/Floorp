@@ -28,8 +28,11 @@ dependencies {
     implementation Deps.support_appcompat
     api project(':support-base')
     implementation project(':support-ktx')
+
     testImplementation Deps.testing_junit
     testImplementation Deps.testing_robolectric
+    testImplementation Deps.testing_mockito
+    testImplementation project(':support-test')
 }
 
 apply from: '../../../publish.gradle'
