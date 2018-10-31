@@ -74,7 +74,6 @@ enum {
                                        JSOP_NEW, JSOP_EVAL, JSOP_CALLITER */
     JOF_GNAME           = 1 << 13,  /* predicted global name */
     JOF_TYPESET         = 1 << 14,  /* has an entry in a script's type sets */
-    JOF_ARITH           = 1 << 15   /* unary or binary arithmetic opcode */
 };
 
 /* Shorthand for type from format. */
