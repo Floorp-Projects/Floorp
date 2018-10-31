@@ -392,6 +392,7 @@ cbindgen-types = [
     { gecko = "mozilla::StyleFontDisplay", servo = "font_face::FontDisplay" },
     { gecko = "mozilla::StyleFontFaceSourceListComponent", servo = "font_face::FontFaceSourceListComponent" },
     { gecko = "mozilla::StyleFontLanguageOverride", servo = "values::computed::font::FontLanguageOverride" },
+    { gecko = "mozilla::StylePathCommand", servo = "values::specified::svg_path::PathCommand" },
 ]
 
 mapped-generic-types = [
