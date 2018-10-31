@@ -125,7 +125,8 @@ public:
                                             bool forceCommitment) override;
   MOZ_MUST_USE nsresult GetTransactionSecurityInfo(nsISupports **) override;
   MOZ_MUST_USE nsresult NudgeTunnel(NudgeTunnelCallback *callback);
-  MOZ_MUST_USE nsresult SetProxiedTransaction(nsAHttpTransaction *aTrans);
+  MOZ_MUST_USE nsresult SetProxiedTransaction(nsAHttpTransaction *aTrans,
+                                              nsAHttpTransaction *aSpdyConnectTransaction = nullptr);
   void     newIODriver(nsIAsyncInputStream *aSocketIn,
                        nsIAsyncOutputStream *aSocketOut,
                        nsIAsyncInputStream **outSocketIn,
@@ -156,6 +157,7 @@ private:
 
 private:
   RefPtr<nsAHttpTransaction> mTransaction;
+  nsWeakPtr mWeakTrans; // SpdyConnectTransaction *
   nsCOMPtr<nsISupports> mSecInfo;
   nsCOMPtr<nsITimer> mTimer;
   RefPtr<NudgeTunnelCallback> mNudgeCallback;
