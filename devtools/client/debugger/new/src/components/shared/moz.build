@@ -7,7 +7,7 @@ DIRS += [
     'Button',
 ]
 
-DevToolsModules(
+DebuggerModules(
     'Accordion.js',
     'Badge.js',
     'BracketArrow.js',

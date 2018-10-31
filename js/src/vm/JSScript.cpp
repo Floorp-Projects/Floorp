@@ -1438,6 +1438,24 @@ JSScript::destroyScriptName()
     realm()->scriptNameMap->remove(p);
 }
 
+void
+JSScript::resetScriptCounts()
+{
+    if (!hasScriptCounts()) {
+        return;
+    }
+
+    ScriptCounts& sc = getScriptCounts();
+
+    for (PCCounts& elem : sc.pcCounts_) {
+        elem.numExec() = 0;
+    }
+
+    for (PCCounts& elem : sc.throwCounts_) {
+        elem.numExec() = 0;
+    }
+}
+
 bool
 JSScript::hasScriptName()
 {

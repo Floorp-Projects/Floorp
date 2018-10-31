@@ -1,101 +1,102 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.createUIState = undefined;
-exports.getSelectedPrimaryPaneTab = getSelectedPrimaryPaneTab;
-exports.getActiveSearch = getActiveSearch;
-exports.getContextMenu = getContextMenu;
-exports.getFrameworkGroupingState = getFrameworkGroupingState;
-exports.getShownSource = getShownSource;
-exports.getPaneCollapse = getPaneCollapse;
-exports.getHighlightedLineRange = getHighlightedLineRange;
-exports.getConditionalPanelLine = getConditionalPanelLine;
-exports.getOrientation = getOrientation;
-
-var _makeRecord = require("../utils/makeRecord");
-
-var _makeRecord2 = _interopRequireDefault(_makeRecord);
-
-var _prefs = require("../utils/prefs");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
 
 /**
  * UI reducer
  * @module reducers/ui
  */
-const createUIState = exports.createUIState = (0, _makeRecord2.default)({
-  selectedPrimaryPaneTab: "sources",
-  activeSearch: null,
-  contextMenu: {},
-  shownSource: null,
-  startPanelCollapsed: _prefs.prefs.startPanelCollapsed,
-  endPanelCollapsed: _prefs.prefs.endPanelCollapsed,
-  frameworkGroupingOn: _prefs.prefs.frameworkGroupingOn,
-  highlightedLineRange: undefined,
-  conditionalPanelLine: null,
-  orientation: "horizontal"
-});
 
-function update(state = createUIState(), action) {
+import makeRecord from "../utils/makeRecord";
+import { prefs } from "../utils/prefs";
+
+import type { Source } from "../types";
+
+import type { Action, panelPositionType } from "../actions/types";
+import type { Record } from "../utils/makeRecord";
+
+export type ActiveSearchType = "project" | "file";
+
+export type OrientationType = "horizontal" | "vertical";
+
+export type SelectedPrimaryPaneTabType = "sources" | "outline";
+
+export type UIState = {
+  selectedPrimaryPaneTab: SelectedPrimaryPaneTabType,
+  activeSearch: ?ActiveSearchType,
+  contextMenu: any,
+  shownSource: ?Source,
+  startPanelCollapsed: boolean,
+  endPanelCollapsed: boolean,
+  frameworkGroupingOn: boolean,
+  orientation: OrientationType,
+  highlightedLineRange?: {
+    start?: number,
+    end?: number,
+    sourceId?: number
+  },
+  conditionalPanelLine: null | number
+};
+
+export const createUIState = makeRecord(
+  ({
+    selectedPrimaryPaneTab: "sources",
+    activeSearch: null,
+    contextMenu: {},
+    shownSource: null,
+    startPanelCollapsed: prefs.startPanelCollapsed,
+    endPanelCollapsed: prefs.endPanelCollapsed,
+    frameworkGroupingOn: prefs.frameworkGroupingOn,
+    highlightedLineRange: undefined,
+    conditionalPanelLine: null,
+    orientation: "horizontal"
+  }: UIState)
+);
+
+function update(
+  state: Record<UIState> = createUIState(),
+  action: Action
+): Record<UIState> {
   switch (action.type) {
-    case "TOGGLE_ACTIVE_SEARCH":
-      {
-        return state.set("activeSearch", action.value);
+    case "TOGGLE_ACTIVE_SEARCH": {
+      return state.set("activeSearch", action.value);
+    }
+
+    case "TOGGLE_FRAMEWORK_GROUPING": {
+      prefs.frameworkGroupingOn = action.value;
+      return state.set("frameworkGroupingOn", action.value);
+    }
+
+    case "SET_CONTEXT_MENU": {
+      return state.set("contextMenu", action.contextMenu);
+    }
+
+    case "SET_ORIENTATION": {
+      return state.set("orientation", action.orientation);
+    }
+
+    case "SHOW_SOURCE": {
+      return state.set("shownSource", action.source);
+    }
+
+    case "TOGGLE_PANE": {
+      if (action.position == "start") {
+        prefs.startPanelCollapsed = action.paneCollapsed;
+        return state.set("startPanelCollapsed", action.paneCollapsed);
       }
 
-    case "TOGGLE_FRAMEWORK_GROUPING":
-      {
-        _prefs.prefs.frameworkGroupingOn = action.value;
-        return state.set("frameworkGroupingOn", action.value);
-      }
-
-    case "SET_CONTEXT_MENU":
-      {
-        return state.set("contextMenu", action.contextMenu);
-      }
-
-    case "SET_ORIENTATION":
-      {
-        return state.set("orientation", action.orientation);
-      }
-
-    case "SHOW_SOURCE":
-      {
-        return state.set("shownSource", action.source);
-      }
-
-    case "TOGGLE_PANE":
-      {
-        if (action.position == "start") {
-          _prefs.prefs.startPanelCollapsed = action.paneCollapsed;
-          return state.set("startPanelCollapsed", action.paneCollapsed);
-        }
-
-        _prefs.prefs.endPanelCollapsed = action.paneCollapsed;
-        return state.set("endPanelCollapsed", action.paneCollapsed);
-      }
+      prefs.endPanelCollapsed = action.paneCollapsed;
+      return state.set("endPanelCollapsed", action.paneCollapsed);
+    }
 
     case "HIGHLIGHT_LINES":
-      const {
-        start,
-        end,
-        sourceId
-      } = action.location;
+      const { start, end, sourceId } = action.location;
       let lineRange = {};
 
       if (start && end && sourceId) {
-        lineRange = {
-          start,
-          end,
-          sourceId
-        };
+        lineRange = { start, end, sourceId };
       }
 
       return state.set("highlightedLineRange", lineRange);
@@ -113,50 +114,53 @@ function update(state = createUIState(), action) {
     case "SET_PRIMARY_PANE_TAB":
       return state.set("selectedPrimaryPaneTab", action.tabName);
 
-    case "CLOSE_PROJECT_SEARCH":
-      {
-        if (state.get("activeSearch") === "project") {
-          return state.set("activeSearch", null);
-        }
-
-        return state;
+    case "CLOSE_PROJECT_SEARCH": {
+      if (state.get("activeSearch") === "project") {
+        return state.set("activeSearch", null);
       }
+      return state;
+    }
 
-    case "NAVIGATE":
-      {
-        return state.set("activeSearch", null).set("highlightedLineRange", {});
-      }
+    case "NAVIGATE": {
+      return state.set("activeSearch", null).set("highlightedLineRange", {});
+    }
 
-    default:
-      {
-        return state;
-      }
+    default: {
+      return state;
+    }
   }
-} // NOTE: we'd like to have the app state fully typed
+}
+
+// NOTE: we'd like to have the app state fully typed
 // https://github.com/devtools-html/debugger.html/blob/master/src/reducers/sources.js#L179-L185
+type OuterState = { ui: Record<UIState> };
 
-
-function getSelectedPrimaryPaneTab(state) {
+export function getSelectedPrimaryPaneTab(
+  state: OuterState
+): SelectedPrimaryPaneTabType {
   return state.ui.get("selectedPrimaryPaneTab");
 }
 
-function getActiveSearch(state) {
+export function getActiveSearch(state: OuterState): ActiveSearchType {
   return state.ui.get("activeSearch");
 }
 
-function getContextMenu(state) {
+export function getContextMenu(state: OuterState): any {
   return state.ui.get("contextMenu");
 }
 
-function getFrameworkGroupingState(state) {
+export function getFrameworkGroupingState(state: OuterState): boolean {
   return state.ui.get("frameworkGroupingOn");
 }
 
-function getShownSource(state) {
+export function getShownSource(state: OuterState): Source {
   return state.ui.get("shownSource");
 }
 
-function getPaneCollapse(state, position) {
+export function getPaneCollapse(
+  state: OuterState,
+  position: panelPositionType
+): boolean {
   if (position == "start") {
     return state.ui.get("startPanelCollapsed");
   }
@@ -164,16 +168,16 @@ function getPaneCollapse(state, position) {
   return state.ui.get("endPanelCollapsed");
 }
 
-function getHighlightedLineRange(state) {
+export function getHighlightedLineRange(state: OuterState) {
   return state.ui.get("highlightedLineRange");
 }
 
-function getConditionalPanelLine(state) {
+export function getConditionalPanelLine(state: OuterState): null | number {
   return state.ui.get("conditionalPanelLine");
 }
 
-function getOrientation(state) {
+export function getOrientation(state: OuterState): boolean {
   return state.ui.get("orientation");
 }
 
-exports.default = update;
+export default update;

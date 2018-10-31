@@ -129,7 +129,8 @@ Lock::Find(void* aNativeLock)
 {
   MOZ_RELEASE_ASSERT(IsRecordingOrReplaying());
 
-  AutoReadSpinLock ex(gLocksLock);
+  Maybe<AutoReadSpinLock> ex;
+  ex.emplace(gLocksLock);
 
   if (gLocks) {
     LockMap::iterator iter = gLocks->find(aNativeLock);
@@ -147,6 +148,7 @@ Lock::Find(void* aNativeLock)
         // held by idling threads that have not diverged from the recording.
         // This will cause the process to deadlock, so rewind instead.
         if (lock->mOwner && Thread::GetById(lock->mOwner)->IsIdle()) {
+          ex.reset();
           EnsureNotDivergedFromRecording();
           Unreachable();
         }

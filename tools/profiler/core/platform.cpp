@@ -44,7 +44,6 @@
 #include "ProfilerIOInterposeObserver.h"
 #include "mozilla/AutoProfilerLabel.h"
 #include "mozilla/ExtensionPolicyService.h"
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Scheduler.h"
 #include "mozilla/StackWalk.h"
 #include "mozilla/StaticPtr.h"
@@ -344,8 +343,6 @@ private:
 
 CorePS* CorePS::sInstance = nullptr;
 
-static const uint32_t kInitialProfileBufferCapacity = 4096;
-
 class SamplerThread;
 
 static SamplerThread*
@@ -393,7 +390,7 @@ private:
     , mCapacity(aCapacity)
     , mInterval(aInterval)
     , mFeatures(AdjustFeatures(aFeatures, aFilterCount))
-    , mBuffer(MakeUnique<ProfileBuffer>(std::min(kInitialProfileBufferCapacity, aCapacity)))
+    , mBuffer(MakeUnique<ProfileBuffer>(aCapacity))
       // The new sampler thread doesn't start sampling immediately because the
       // main loop within Run() is blocked until this function's caller unlocks
       // gPSMutex.
@@ -670,49 +667,6 @@ public:
         MOZ_RELEASE_ASSERT(bufferPosition, "should have unregistered this thread");
         return *bufferPosition < bufferRangeStart;
       });
-  }
-
-  static void EnsureAdequateBufferCapacity(PSLockRef aLockRef)
-  {
-    ProfileBuffer& buffer = Buffer(aLockRef);
-    uint32_t maxCapacity = RoundUpPow2(Capacity(aLockRef));
-    uint32_t minCapacity = std::min(kInitialProfileBufferCapacity, maxCapacity);
-    uint32_t usedSize = buffer.Length();
-    uint32_t currentCapacity = buffer.mCapacity;
-    // The usedSize should always be between 25% and 90% of the capacity.
-    // If the usedSize exceeds 90% of the capacity, enlarge the capacity.
-    // Enlarging the capacity will at least double it, so then the usedSize
-    // will be a bit above 45% of the new capacity.
-    // If the usedSize goes below 25% of the capacity, shrink the capacity.
-    // Shrinking the capacity will at least halve it, so then the usedSize will
-    // be at most 70% of the new capacity.
-    uint32_t minDesiredCapacity = usedSize * 100 / 90;
-    uint32_t maxDesiredCapacity = usedSize * 100 / 25;
-
-    // Clamp the desired capacities to the hard minimum and maximum.
-    minDesiredCapacity = Clamp(minDesiredCapacity, minCapacity, maxCapacity);
-    maxDesiredCapacity = Clamp(maxDesiredCapacity, minCapacity, maxCapacity);
-
-    // Now find newCapacity such that newCapacity is a power of two and such that
-    // minDesiredCapacity <= newCapacity <= maxDesiredCapacity.
-    // Such a value exists, because either maxDesiredCapacity >= 2 * minDesiredCapacity
-    // (if no clamping happened above), or at least one of them is a power of two (because
-    // both minCapacity and maxCapacity are powers of two).
-    // Usually multiple such values exist; in that case we want to find the one that is
-    // closer to the current capacity.
-    uint32_t newCapacity = currentCapacity;
-    while (newCapacity < minDesiredCapacity) {
-      // Enlarge the buffer.
-      newCapacity *= 2;
-    }
-    while (newCapacity > maxDesiredCapacity) {
-      // Shrink the buffer.
-      newCapacity /= 2;
-    }
-
-    MOZ_RELEASE_ASSERT(newCapacity >= minCapacity);
-    MOZ_RELEASE_ASSERT(newCapacity <= maxCapacity);
-    buffer.SetCapacityPow2(newCapacity);
   }
 
 private:
@@ -2310,14 +2264,6 @@ SamplerThread::Run()
         CorePS::Lul(lock)->MaybeShowStats();
 #endif
       }
-
-      // This needs to be done outside the profiler's "critical section".
-      // The buffer entries are added just after stackwalking *while the target
-      // thread is suspended*, and during that time we can't allocate, so we
-      // can't grow the buffer as we add the entries. Instead, we need to grow the
-      // buffer ahead of time, by using some heuristic to predict whether growing
-      // the buffer is necessary.
-      ActivePS::EnsureAdequateBufferCapacity(lock);
     }
     // gPSMutex is not held after this point.
 
