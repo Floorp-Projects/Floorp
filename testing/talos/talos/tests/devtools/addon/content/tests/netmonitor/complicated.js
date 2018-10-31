@@ -23,10 +23,5 @@ module.exports = async function() {
 
   await closeToolboxAndLog("complicated.netmonitor", toolbox);
 
-  // After switching TabClient to a Front, DAMP became frequently intermittent on
-  // windows pgo builds (https://bugzilla.mozilla.org/show_bug.cgi?id=1480953).
-  // Pausing before switching to the next test seems to fix the issue.
-  await new Promise(r => setTimeout(r, 1000));
-
   await testTeardown();
 };
