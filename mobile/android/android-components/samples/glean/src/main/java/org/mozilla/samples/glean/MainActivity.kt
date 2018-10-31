@@ -15,6 +15,7 @@ open class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         GleanMetrics.Basic.os.set("Android")
+        GleanMetrics.Basic.clientId.generateAndSet()
 
         // Generate an event when user clicks on the button.
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
