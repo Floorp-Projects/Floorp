@@ -197,12 +197,14 @@ ListenForCheckpointThreadMain(void*)
 {
   while (true) {
     uint8_t data = 0;
-    ssize_t rv = read(gCheckpointReadFd, &data, 1);
+    ssize_t rv = HANDLE_EINTR(read(gCheckpointReadFd, &data, 1));
     if (rv > 0) {
       NS_DispatchToMainThread(NewRunnableFunction("NewCheckpoint", NewCheckpoint,
                                                   /* aTemporary = */ false));
     } else {
-      MOZ_RELEASE_ASSERT(errno == EINTR);
+      MOZ_RELEASE_ASSERT(errno == EIO);
+      MOZ_RELEASE_ASSERT(HasDivergedFromRecording());
+      Thread::WaitForever();
     }
   }
 }
