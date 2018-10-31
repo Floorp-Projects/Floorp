@@ -380,19 +380,19 @@ opaque-types = [
 
 # All cbindgen-types are in mod "structs::root::mozilla".
 cbindgen-types = [
-    { gecko = "mozilla::StyleAppearance", servo = "values::specified::Appearance" },
-    { gecko = "mozilla::StyleComputedFontStretchRange", servo = "font_face::ComputedFontStretchRange" },
-    { gecko = "mozilla::StyleComputedFontStyleDescriptor", servo = "font_face::ComputedFontStyleDescriptor" },
-    { gecko = "mozilla::StyleComputedFontWeightRange", servo = "font_face::ComputedFontWeightRange" },
-    { gecko = "mozilla::StyleComputedTimingFunction", servo = "values::computed::easing::TimingFunction" },
-    { gecko = "mozilla::StyleDisplay", servo = "values::specified::Display" },
-    { gecko = "mozilla::StyleDisplayMode", servo = "gecko::media_features::DisplayMode" },
-    { gecko = "mozilla::StyleFillRule", servo = "values::generics::basic_shape::FillRule" },
-    { gecko = "mozilla::StyleFontDisplay", servo = "font_face::FontDisplay" },
-    { gecko = "mozilla::StyleFontFaceSourceListComponent", servo = "font_face::FontFaceSourceListComponent" },
-    { gecko = "mozilla::StyleFontLanguageOverride", servo = "values::computed::font::FontLanguageOverride" },
-    { gecko = "mozilla::StylePathCommand", servo = "values::specified::svg_path::PathCommand" },
-    { gecko = "mozilla::StyleUnicodeRange", servo = "cssparser::UnicodeRange" },
+    { gecko = "StyleAppearance", servo = "values::specified::Appearance" },
+    { gecko = "StyleComputedFontStretchRange", servo = "font_face::ComputedFontStretchRange" },
+    { gecko = "StyleComputedFontStyleDescriptor", servo = "font_face::ComputedFontStyleDescriptor" },
+    { gecko = "StyleComputedFontWeightRange", servo = "font_face::ComputedFontWeightRange" },
+    { gecko = "StyleComputedTimingFunction", servo = "values::computed::easing::TimingFunction" },
+    { gecko = "StyleDisplay", servo = "values::specified::Display" },
+    { gecko = "StyleDisplayMode", servo = "gecko::media_features::DisplayMode" },
+    { gecko = "StyleFillRule", servo = "values::generics::basic_shape::FillRule" },
+    { gecko = "StyleFontDisplay", servo = "font_face::FontDisplay" },
+    { gecko = "StyleFontFaceSourceListComponent", servo = "font_face::FontFaceSourceListComponent" },
+    { gecko = "StyleFontLanguageOverride", servo = "values::computed::font::FontLanguageOverride" },
+    { gecko = "StylePathCommand", servo = "values::specified::svg_path::PathCommand" },
+    { gecko = "StyleUnicodeRange", servo = "cssparser::UnicodeRange" },
 ]
 
 mapped-generic-types = [
