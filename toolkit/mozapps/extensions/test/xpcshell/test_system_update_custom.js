@@ -1,22 +1,13 @@
 // Tests that system add-on upgrades work.
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-
-BootstrapMonitor.init();
-
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2");
-
-var testserver = new HttpServer();
-testserver.registerDirectory("/data/", do_get_file("data/system_addons"));
-testserver.start();
-var root = testserver.identity.primaryScheme + "://" +
-           testserver.identity.primaryHost + ":" +
-           testserver.identity.primaryPort + "/data/";
-Services.prefs.setCharPref(PREF_SYSTEM_ADDON_UPDATE_URL, root + "update.xml");
 
 let distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "empty"], true);
 registerDirectory("XREAppFeat", distroDir);
-initSystemAddonDirs();
+
+AddonTestUtils.usePrivilegedSignatures = id => "system";
+
+add_task(() => initSystemAddonDirs());
 
 /**
  * Defines the set of initial conditions to run each test against. Each should
@@ -57,8 +48,8 @@ const TEST_CONDITIONS = {
 
   // Runs tests with updated system add-ons installed
   withProfileSet: {
-    setup() {
-      buildPrefilledUpdatesDir();
+    async setup() {
+      await buildPrefilledUpdatesDir();
       distroDir.leafName = "empty";
     },
     initialState: [
@@ -72,8 +63,8 @@ const TEST_CONDITIONS = {
 
   // Runs tests with both default and updated system add-ons installed
   withBothSets: {
-    setup() {
-      buildPrefilledUpdatesDir();
+    async setup() {
+      await buildPrefilledUpdatesDir();
       distroDir.leafName = "hidden";
     },
     initialState: [
@@ -92,10 +83,17 @@ add_task(async function test_addon_update() {
   Services.prefs.setBoolPref(PREF_SYSTEM_ADDON_UPDATE_ENABLED, true);
   await setupSystemAddonConditions(TEST_CONDITIONS.blank, distroDir);
 
-  await updateAllSystemAddons(await buildSystemAddonUpdates([
-    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
-  ], root), testserver);
+  let updateXML = buildSystemAddonUpdates([
+    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi",
+      xpi: await getSystemAddonXPI(2, "2.0") },
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi",
+      xpi: await getSystemAddonXPI(3, "2.0") },
+  ]);
+  await Promise.all([
+    updateAllSystemAddons(updateXML),
+    promiseWebExtensionStartup("system2@tests.mozilla.org"),
+    promiseWebExtensionStartup("system3@tests.mozilla.org"),
+  ]);
 
   await verifySystemAddonState(TEST_CONDITIONS.blank.initialState, [
     {isUpgrade: false, version: null},
@@ -113,10 +111,13 @@ add_task(async function test_app_update_disabled() {
   await setupSystemAddonConditions(TEST_CONDITIONS.blank, distroDir);
 
   Services.prefs.setBoolPref(PREF_SYSTEM_ADDON_UPDATE_ENABLED, false);
-  await updateAllSystemAddons(await buildSystemAddonUpdates([
-    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
-  ], root), testserver);
+  let updateXML = buildSystemAddonUpdates([
+    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi",
+      xpi: await getSystemAddonXPI(2, "2.0") },
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi",
+      xpi: await getSystemAddonXPI(3, "2.0") },
+  ]);
+  await updateAllSystemAddons(updateXML);
   Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_UPDATE_ENABLED);
 
   await verifySystemAddonState(TEST_CONDITIONS.blank.initialState, undefined, false, distroDir);
@@ -131,10 +132,13 @@ add_task(async function test_safe_mode() {
   await setupSystemAddonConditions(TEST_CONDITIONS.blank, distroDir);
 
   Services.prefs.setBoolPref(PREF_SYSTEM_ADDON_UPDATE_ENABLED, false);
-  await updateAllSystemAddons(await buildSystemAddonUpdates([
-    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
-  ], root), testserver);
+  let updateXML = buildSystemAddonUpdates([
+    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi",
+      xpi: await getSystemAddonXPI(2, "2.0") },
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi",
+      xpi: await getSystemAddonXPI(3, "2.0") },
+  ]);
+  await updateAllSystemAddons(updateXML);
   Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_UPDATE_ENABLED);
 
   await verifySystemAddonState(TEST_CONDITIONS.blank.initialState, undefined, false, distroDir);
@@ -148,10 +152,13 @@ add_task(async function test_safe_mode() {
 add_task(async function test_match_default() {
   await setupSystemAddonConditions(TEST_CONDITIONS.withAppSet, distroDir);
 
-  await installSystemAddons(await buildSystemAddonUpdates([
-    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
-  ], root), testserver);
+  let installXML = buildSystemAddonUpdates([
+    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi",
+      xpi: await getSystemAddonXPI(2, "2.0") },
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi",
+      xpi: await getSystemAddonXPI(3, "2.0") },
+  ]);
+  await installSystemAddons(installXML);
 
   // Shouldn't have installed an updated set
   await verifySystemAddonState(TEST_CONDITIONS.withAppSet.initialState, undefined, false, distroDir);
@@ -163,10 +170,13 @@ add_task(async function test_match_default() {
 add_task(async function test_match_default_revert() {
   await setupSystemAddonConditions(TEST_CONDITIONS.withBothSets, distroDir);
 
-  await installSystemAddons(await buildSystemAddonUpdates([
-    { id: "system1@tests.mozilla.org", version: "1.0", path: "system1_1.xpi" },
-    { id: "system2@tests.mozilla.org", version: "1.0", path: "system2_1.xpi" },
-  ], root), testserver);
+  let installXML = buildSystemAddonUpdates([
+    { id: "system1@tests.mozilla.org", version: "1.0", path: "system1_1.xpi",
+      xpi: await getSystemAddonXPI(1, "1.0") },
+    { id: "system2@tests.mozilla.org", version: "1.0", path: "system2_1.xpi",
+      xpi: await getSystemAddonXPI(2, "1.0") },
+  ]);
+  await installSystemAddons(installXML);
 
   // This should revert to the default set instead of installing new versions
   // into an updated set.
@@ -185,10 +195,13 @@ add_task(async function test_match_default_revert() {
 add_task(async function test_match_current() {
   await setupSystemAddonConditions(TEST_CONDITIONS.withBothSets, distroDir);
 
-  await installSystemAddons(await buildSystemAddonUpdates([
-    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
-  ], root), testserver);
+  let installXML = buildSystemAddonUpdates([
+    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi",
+      xpi: await getSystemAddonXPI(2, "2.0") },
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi",
+      xpi: await getSystemAddonXPI(3, "2.0") },
+  ]);
+  await installSystemAddons(installXML);
 
   // This should remain with the current set instead of creating a new copy
   let set = JSON.parse(Services.prefs.getCharPref(PREF_SYSTEM_ADDON_SET));
@@ -204,10 +217,15 @@ add_task(async function test_no_download() {
   await setupSystemAddonConditions(TEST_CONDITIONS.withBothSets, distroDir);
 
   // The missing file here is unneeded since there is a local version already
-  await installSystemAddons(await buildSystemAddonUpdates([
+  let installXML = buildSystemAddonUpdates([
     { id: "system2@tests.mozilla.org", version: "2.0", path: "missing.xpi" },
-    { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi" },
-  ], root), testserver);
+    { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi",
+      xpi: await getSystemAddonXPI(4, "1.0") },
+  ]);
+  await Promise.all([
+    installSystemAddons(installXML),
+    promiseWebExtensionStartup("system4@tests.mozilla.org"),
+  ]);
 
   await verifySystemAddonState(TEST_CONDITIONS.withBothSets.initialState, [
     {isUpgrade: false, version: "1.0"},
@@ -224,15 +242,29 @@ add_task(async function test_no_download() {
 add_task(async function test_double_update() {
   await setupSystemAddonConditions(TEST_CONDITIONS.withAppSet, distroDir);
 
-  await installSystemAddons(await buildSystemAddonUpdates([
-    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" },
-  ], root), testserver);
+  let installXML = buildSystemAddonUpdates([
+    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi",
+      xpi: await getSystemAddonXPI(2, "2.0") },
+    { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi",
+      xpi: await getSystemAddonXPI(3, "1.0") },
+  ]);
+  await Promise.all([
+    installSystemAddons(installXML),
+    promiseWebExtensionStartup("system2@tests.mozilla.org"),
+    promiseWebExtensionStartup("system3@tests.mozilla.org"),
+  ]);
 
-  await installSystemAddons(await buildSystemAddonUpdates([
-    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
-    { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi" },
-  ], root), testserver);
+  installXML = buildSystemAddonUpdates([
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi",
+      xpi: await getSystemAddonXPI(3, "2.0") },
+    { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi",
+      xpi: await getSystemAddonXPI(4, "1.0") },
+  ]);
+  await Promise.all([
+    installSystemAddons(installXML),
+    promiseWebExtensionStartup("system3@tests.mozilla.org"),
+    promiseWebExtensionStartup("system4@tests.mozilla.org"),
+  ]);
 
   await verifySystemAddonState(TEST_CONDITIONS.withAppSet.initialState, [
     {isUpgrade: false, version: null},
@@ -249,10 +281,17 @@ add_task(async function test_double_update() {
 add_task(async function test_update_purges() {
   await setupSystemAddonConditions(TEST_CONDITIONS.withBothSets, distroDir);
 
-  await installSystemAddons(await buildSystemAddonUpdates([
-    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" },
-  ], root), testserver);
+  let installXML = buildSystemAddonUpdates([
+    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi",
+      xpi: await getSystemAddonXPI(2, "2.0") },
+    { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi",
+      xpi: await getSystemAddonXPI(3, "1.0") },
+  ]);
+  await Promise.all([
+    installSystemAddons(installXML),
+    promiseWebExtensionStartup("system2@tests.mozilla.org"),
+    promiseWebExtensionStartup("system3@tests.mozilla.org"),
+  ]);
 
   await verifySystemAddonState(TEST_CONDITIONS.withBothSets.initialState, [
     {isUpgrade: false, version: "1.0"},
@@ -262,7 +301,7 @@ add_task(async function test_update_purges() {
     {isUpgrade: false, version: null},
   ], false, distroDir);
 
-  await installSystemAddons(await buildSystemAddonUpdates(null), testserver);
+  await installSystemAddons(buildSystemAddonUpdates(null));
 
   let dirs = await getSystemAddonDirectories();
   Assert.equal(dirs.length, 1);
