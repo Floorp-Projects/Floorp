@@ -104,10 +104,10 @@ public:
     }
 
     void calcAngles();
-    bool collapsed(double startT, double endT) const;
-    static void ComputeOneSum(const SkOpAngle* baseAngle, SkOpAngle* nextAngle,
+    SkOpSpanBase::Collapsed collapsed(double startT, double endT) const;
+    static bool ComputeOneSum(const SkOpAngle* baseAngle, SkOpAngle* nextAngle,
                               SkOpAngle::IncludeType );
-    static void ComputeOneSumReverse(SkOpAngle* baseAngle, SkOpAngle* nextAngle,
+    static bool ComputeOneSumReverse(SkOpAngle* baseAngle, SkOpAngle* nextAngle,
                                      SkOpAngle::IncludeType );
     int computeSum(SkOpSpanBase* start, SkOpSpanBase* end, SkOpAngle::IncludeType includeType);
 
@@ -212,8 +212,8 @@ public:
 
     const SkOpPtT* existing(double t, const SkOpSegment* opp) const;
     SkOpSegment* findNextOp(SkTDArray<SkOpSpanBase*>* chase, SkOpSpanBase** nextStart,
-                             SkOpSpanBase** nextEnd, bool* unsortable, SkPathOp op,
-                             int xorMiMask, int xorSuMask);
+                             SkOpSpanBase** nextEnd, bool* unsortable, bool* simple,
+                             SkPathOp op, int xorMiMask, int xorSuMask);
     SkOpSegment* findNextWinding(SkTDArray<SkOpSpanBase*>* chase, SkOpSpanBase** nextStart,
                                   SkOpSpanBase** nextEnd, bool* unsortable);
     SkOpSegment* findNextXor(SkOpSpanBase** nextStart, SkOpSpanBase** nextEnd, bool* unsortable);
@@ -251,7 +251,7 @@ public:
         return fBounds.fTop == fBounds.fBottom;
     }
 
-    SkOpSegment* isSimple(SkOpSpanBase** end, int* step) {
+    SkOpSegment* isSimple(SkOpSpanBase** end, int* step) const {
         return nextChase(end, step, nullptr, nullptr);
     }
 
@@ -274,14 +274,14 @@ public:
     }
 
     void markAllDone();
-    SkOpSpanBase* markAndChaseDone(SkOpSpanBase* start, SkOpSpanBase* end);
+    bool markAndChaseDone(SkOpSpanBase* start, SkOpSpanBase* end, SkOpSpanBase** found);
     bool markAndChaseWinding(SkOpSpanBase* start, SkOpSpanBase* end, int winding,
             SkOpSpanBase** lastPtr);
     bool markAndChaseWinding(SkOpSpanBase* start, SkOpSpanBase* end, int winding,
             int oppWinding, SkOpSpanBase** lastPtr);
-    SkOpSpanBase* markAngle(int maxWinding, int sumWinding, const SkOpAngle* angle);
-    SkOpSpanBase* markAngle(int maxWinding, int sumWinding, int oppMaxWinding, int oppSumWinding,
-                         const SkOpAngle* angle);
+    bool markAngle(int maxWinding, int sumWinding, const SkOpAngle* angle, SkOpSpanBase** result);
+    bool markAngle(int maxWinding, int sumWinding, int oppMaxWinding, int oppSumWinding,
+                         const SkOpAngle* angle, SkOpSpanBase** result);
     void markDone(SkOpSpan* );
     bool markWinding(SkOpSpan* , int winding);
     bool markWinding(SkOpSpan* , int winding, int oppWinding);

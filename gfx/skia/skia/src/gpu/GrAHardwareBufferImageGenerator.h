@@ -9,6 +9,10 @@
 
 #include "SkImageGenerator.h"
 
+#include "GrTypesPriv.h"
+
+class GrGpuResource;
+
 extern "C" {
     typedef struct AHardwareBuffer AHardwareBuffer;
 }
@@ -27,31 +31,41 @@ extern "C" {
 class GrAHardwareBufferImageGenerator : public SkImageGenerator {
 public:
     static std::unique_ptr<SkImageGenerator> Make(AHardwareBuffer*, SkAlphaType,
-                                                  sk_sp<SkColorSpace>);
+                                                  sk_sp<SkColorSpace>, GrSurfaceOrigin);
 
     ~GrAHardwareBufferImageGenerator() override;
+
+    typedef void* DeleteImageCtx;
+    typedef void (*DeleteImageProc)(DeleteImageCtx);
+
+    static void DeleteGLTexture(void* ctx);
+
+#ifdef SK_VULKAN
+    static void DeleteVkImage(void* ctx);
+#endif
 
 protected:
 
     bool onIsValid(GrContext*) const override;
 
-#if SK_SUPPORT_GPU
     TexGenType onCanGenerateTexture() const override { return TexGenType::kCheap; }
     sk_sp<GrTextureProxy> onGenerateTexture(GrContext*, const SkImageInfo&, const SkIPoint&,
-                                            SkTransferFunctionBehavior,
                                             bool willNeedMipMaps) override;
-#endif
 
 private:
-    GrAHardwareBufferImageGenerator(const SkImageInfo&, AHardwareBuffer*, SkAlphaType);
+    GrAHardwareBufferImageGenerator(const SkImageInfo&, AHardwareBuffer*, SkAlphaType,
+                                    bool isProtectedContent, uint32_t bufferFormat,
+                                    GrSurfaceOrigin surfaceOrigin);
     sk_sp<GrTextureProxy> makeProxy(GrContext* context);
-    void clear();
 
-    static void deleteImageTexture(void* ctx);
+    void releaseTextureRef();
 
-    AHardwareBuffer* fGraphicBuffer;
-    GrTexture* fOriginalTexture = nullptr;
-    uint32_t fOwningContextID;
+    static void ReleaseRefHelper_TextureReleaseProc(void* ctx);
+
+    AHardwareBuffer* fHardwareBuffer;
+    uint32_t         fBufferFormat;
+    const bool       fIsProtectedContent;
+    GrSurfaceOrigin  fSurfaceOrigin;
 
     typedef SkImageGenerator INHERITED;
 };

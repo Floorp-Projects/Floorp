@@ -78,8 +78,11 @@ public:
         return string;
     }
 
-    static std::unique_ptr<GrDrawOp> Make(GrPaint&& paint, const SkMatrix& viewMatrix,
-                                          const SkRect& rect, const SkStrokeRec& stroke,
+    static std::unique_ptr<GrDrawOp> Make(GrContext* context,
+                                          GrPaint&& paint,
+                                          const SkMatrix& viewMatrix,
+                                          const SkRect& rect,
+                                          const SkStrokeRec& stroke,
                                           GrAAType aaType) {
         if (!allowed_stroke(stroke)) {
             return nullptr;
@@ -91,7 +94,8 @@ public:
         if (stroke.getStyle() == SkStrokeRec::kHairline_Style && aaType != GrAAType::kMSAA) {
             flags |= Helper::Flags::kSnapVerticesToPixelCenters;
         }
-        return Helper::FactoryHelper<NonAAStrokeRectOp>(std::move(paint), flags, viewMatrix, rect,
+        return Helper::FactoryHelper<NonAAStrokeRectOp>(context, std::move(paint), flags,
+                                                        viewMatrix, rect,
                                                         stroke, aaType);
     }
 
@@ -129,10 +133,9 @@ public:
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
-    RequiresDstTexture finalize(const GrCaps& caps, const GrAppliedClip* clip,
-                                GrPixelConfigIsClamped dstIsClamped) override {
-        return fHelper.xpRequiresDstTexture(caps, clip, dstIsClamped,
-                                            GrProcessorAnalysisCoverage::kNone, &fColor);
+    RequiresDstTexture finalize(const GrCaps& caps, const GrAppliedClip* clip) override {
+        return fHelper.xpRequiresDstTexture(caps, clip, GrProcessorAnalysisCoverage::kNone,
+                                            &fColor);
     }
 
 private:
@@ -144,13 +147,14 @@ private:
             LocalCoords::Type localCoordsType = fHelper.usesLocalCoords()
                                                         ? LocalCoords::kUsePosition_Type
                                                         : LocalCoords::kUnused_Type;
-            gp = GrDefaultGeoProcFactory::Make(color, Coverage::kSolid_Type, localCoordsType,
+            gp = GrDefaultGeoProcFactory::Make(target->caps().shaderCaps(), color,
+                                               Coverage::kSolid_Type, localCoordsType,
                                                fViewMatrix);
         }
 
-        size_t vertexStride = gp->getVertexStride();
+        static constexpr size_t kVertexStride = sizeof(GrDefaultGeoProcFactory::PositionAttr);
 
-        SkASSERT(vertexStride == sizeof(GrDefaultGeoProcFactory::PositionAttr));
+        SkASSERT(kVertexStride == gp->debugOnly_vertexStride());
 
         int vertexCount = kVertsPerHairlineRect;
         if (fStrokeWidth > 0) {
@@ -161,7 +165,7 @@ private:
         int firstVertex;
 
         void* verts =
-                target->makeVertexSpace(vertexStride, vertexCount, &vertexBuffer, &firstVertex);
+                target->makeVertexSpace(kVertexStride, vertexCount, &vertexBuffer, &firstVertex);
 
         if (!verts) {
             SkDebugf("Could not allocate vertices\n");
@@ -184,17 +188,14 @@ private:
             vertex[4].set(fRect.fLeft, fRect.fTop);
         }
 
-        GrMesh mesh(primType);
-        mesh.setNonIndexedNonInstanced(vertexCount);
-        mesh.setVertexData(vertexBuffer, firstVertex);
-        target->draw(gp.get(), fHelper.makePipeline(target), mesh);
+        GrMesh* mesh = target->allocMesh(primType);
+        mesh->setNonIndexedNonInstanced(vertexCount);
+        mesh->setVertexData(vertexBuffer, firstVertex);
+        auto pipe = fHelper.makePipeline(target);
+        target->draw(std::move(gp), pipe.fPipeline, pipe.fFixedDynamicState, mesh);
     }
 
-    bool onCombineIfPossible(GrOp* t, const GrCaps&) override {
-        // NonAA stroke rects cannot combine right now
-        // TODO make these combinable.
-        return false;
-    }
+    // TODO: override onCombineIfPossible
 
     Helper fHelper;
     GrColor fColor;
@@ -211,12 +212,13 @@ private:
 }  // anonymous namespace
 
 namespace GrRectOpFactory {
-std::unique_ptr<GrDrawOp> MakeNonAAStroke(GrPaint&& paint,
+std::unique_ptr<GrDrawOp> MakeNonAAStroke(GrContext* context,
+                                          GrPaint&& paint,
                                           const SkMatrix& viewMatrix,
                                           const SkRect& rect,
                                           const SkStrokeRec& stroke,
                                           GrAAType aaType) {
-    return NonAAStrokeRectOp::Make(std::move(paint), viewMatrix, rect, stroke, aaType);
+    return NonAAStrokeRectOp::Make(context, std::move(paint), viewMatrix, rect, stroke, aaType);
 }
 }  // namespace GrRectOpFactory
 
@@ -235,7 +237,7 @@ GR_DRAW_OP_TEST_DEFINE(NonAAStrokeRectOp) {
     if (fsaaType == GrFSAAType::kUnifiedMSAA) {
         aaType = random->nextBool() ? GrAAType::kMSAA : GrAAType::kNone;
     }
-    return NonAAStrokeRectOp::Make(std::move(paint), viewMatrix, rect, strokeRec, aaType);
+    return NonAAStrokeRectOp::Make(context, std::move(paint), viewMatrix, rect, strokeRec, aaType);
 }
 
 #endif

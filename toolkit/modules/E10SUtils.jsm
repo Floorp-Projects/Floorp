@@ -90,10 +90,14 @@ var E10SUtils = {
   PRIVILEGED_REMOTE_TYPE,
   LARGE_ALLOCATION_REMOTE_TYPE,
 
-  canLoadURIInProcess(aURL, aProcess) {
-    let remoteType = aProcess == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
-                     ? DEFAULT_REMOTE_TYPE : NOT_REMOTE;
-    return remoteType == this.getRemoteTypeForURI(aURL, true, remoteType);
+  canLoadURIInRemoteType(aURL, aRemoteType = DEFAULT_REMOTE_TYPE) {
+    // We need a strict equality here because the value of `NOT_REMOTE` is
+    // `null`, and there is a possibility that `undefined` is passed as the
+    // second argument, which might result a load in the parent process.
+    let preferredRemoteType = aRemoteType === NOT_REMOTE
+      ? NOT_REMOTE
+      : DEFAULT_REMOTE_TYPE;
+    return aRemoteType == this.getRemoteTypeForURI(aURL, true, preferredRemoteType);
   },
 
   getRemoteTypeForURI(aURL, aMultiProcess,

@@ -8,6 +8,7 @@
 #ifndef SkStrokeRec_DEFINED
 #define SkStrokeRec_DEFINED
 
+#include "../private/SkMacros.h"
 #include "SkPaint.h"
 
 class SkPath;
@@ -29,9 +30,8 @@ public:
         kStroke_Style,
         kStrokeAndFill_Style
     };
-    enum {
-        kStyleCount = kStrokeAndFill_Style + 1
-    };
+
+    static constexpr int kStyleCount = kStrokeAndFill_Style + 1;
 
     Style getStyle() const;
     SkScalar getWidth() const { return fWidth; }
@@ -113,6 +113,9 @@ public:
      * effect).
      */
     static SkScalar GetInflationRadius(const SkPaint&, SkPaint::Style);
+
+    static SkScalar GetInflationRadius(SkPaint::Join, SkScalar miterLimit, SkPaint::Cap,
+                                       SkScalar strokeWidth);
 
     /**
      * Compare if two SkStrokeRecs have an equal effect on a path.

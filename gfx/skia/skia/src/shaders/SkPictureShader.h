@@ -8,8 +8,8 @@
 #ifndef SkPictureShader_DEFINED
 #define SkPictureShader_DEFINED
 
-#include "SkAtomics.h"
 #include "SkShaderBase.h"
+#include <atomic>
 
 class SkArenaAlloc;
 class SkBitmap;
@@ -28,7 +28,6 @@ public:
     static sk_sp<SkShader> Make(sk_sp<SkPicture>, TileMode, TileMode, const SkMatrix*,
                                 const SkRect*);
 
-    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkPictureShader)
 
 #if SK_SUPPORT_GPU
@@ -41,15 +40,13 @@ protected:
     bool onAppendStages(const StageRec&) const override;
     Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
     sk_sp<SkShader> onMakeColorSpace(SkColorSpaceXformer* xformer) const override;
-    bool onIsRasterPipelineOnly(const SkMatrix&) const override;
 
 private:
     SkPictureShader(sk_sp<SkPicture>, TileMode, TileMode, const SkMatrix*, const SkRect*,
                     sk_sp<SkColorSpace>);
 
-    sk_sp<SkShader> refBitmapShader(const SkMatrix&, const SkMatrix* localMatrix,
+    sk_sp<SkShader> refBitmapShader(const SkMatrix&, SkTCopyOnFirstWrite<SkMatrix>* localMatrix,
                                     SkColorSpace* dstColorSpace,
-                                    SkMatrix* compositeLocalMatrix,
                                     const int maxTextureSize = 0) const;
 
     class PictureShaderContext : public Context {
@@ -76,8 +73,8 @@ private:
     // forces a deferred color space xform.
     sk_sp<SkColorSpace>    fColorSpace;
 
-    const uint32_t         fUniqueID;
-    mutable SkAtomic<bool> fAddedToCache;
+    const uint32_t            fUniqueID;
+    mutable std::atomic<bool> fAddedToCache;
 
     typedef SkShaderBase INHERITED;
 };

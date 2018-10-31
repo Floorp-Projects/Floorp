@@ -18,6 +18,7 @@
 #include "SkRect.h"
 #include "SkPointPriv.h"
 #include "ops/GrSimpleMeshDrawOpHelper.h"
+#include <new>
 
 GR_DECLARE_STATIC_UNIQUE_KEY(gAAFillRectIndexBufferKey);
 
@@ -171,15 +172,16 @@ private:
 public:
     DEFINE_OP_CLASS_ID
 
-    static std::unique_ptr<GrDrawOp> Make(GrPaint&& paint,
+    static std::unique_ptr<GrDrawOp> Make(GrContext* context,
+                                          GrPaint&& paint,
                                           const SkMatrix& viewMatrix,
                                           const SkRect& rect,
                                           const SkRect& devRect,
                                           const SkMatrix* localMatrix,
                                           const GrUserStencilSettings* stencil) {
         SkASSERT(view_matrix_ok_for_aa_fill_rect(viewMatrix));
-        return Helper::FactoryHelper<AAFillRectOp>(std::move(paint), viewMatrix, rect, devRect,
-                                                   localMatrix, stencil);
+        return Helper::FactoryHelper<AAFillRectOp>(context, std::move(paint), viewMatrix, rect,
+                                                   devRect, localMatrix, stencil);
     }
 
     AAFillRectOp(const Helper::MakeArgs& helperArgs,
@@ -227,11 +229,10 @@ public:
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
-    RequiresDstTexture finalize(const GrCaps& caps, const GrAppliedClip* clip,
-                                GrPixelConfigIsClamped dstIsClamped) override {
+    RequiresDstTexture finalize(const GrCaps& caps, const GrAppliedClip* clip) override {
         GrColor color = this->first()->color();
         auto result = fHelper.xpRequiresDstTexture(
-                caps, clip, dstIsClamped, GrProcessorAnalysisCoverage::kSingleChannel, &color);
+                caps, clip, GrProcessorAnalysisCoverage::kSingleChannel, &color);
         this->first()->setColor(color);
         return result;
     }
@@ -240,26 +241,33 @@ private:
     void onPrepareDraws(Target* target) override {
         using namespace GrDefaultGeoProcFactory;
 
+        size_t vertexStride = sizeof(SkPoint) + sizeof(GrColor);
         Color color(Color::kPremulGrColorAttribute_Type);
-        Coverage::Type coverageType = fHelper.compatibleWithAlphaAsCoverage()
-                                              ? Coverage::kSolid_Type
-                                              : Coverage::kAttribute_Type;
-        LocalCoords lc = fHelper.usesLocalCoords() ? LocalCoords::kHasExplicit_Type
-                                                   : LocalCoords::kUnused_Type;
+        Coverage::Type coverageType = Coverage::kSolid_Type;
+        if (!fHelper.compatibleWithAlphaAsCoverage()) {
+            coverageType = Coverage::kAttribute_Type;
+            vertexStride += sizeof(float);
+        }
+        LocalCoords lc = LocalCoords::kUnused_Type;
+        if (fHelper.usesLocalCoords()) {
+            lc = LocalCoords::kHasExplicit_Type;
+            vertexStride += sizeof(SkPoint);
+        }
+
         sk_sp<GrGeometryProcessor> gp =
-                GrDefaultGeoProcFactory::Make(color, coverageType, lc, SkMatrix::I());
+                GrDefaultGeoProcFactory::Make(target->caps().shaderCaps(), color, coverageType,
+                                              lc, SkMatrix::I());
         if (!gp) {
             SkDebugf("Couldn't create GrGeometryProcessor\n");
             return;
         }
 
-        size_t vertexStride = gp->getVertexStride();
+        SkASSERT(vertexStride == gp->debugOnly_vertexStride());
 
         sk_sp<const GrBuffer> indexBuffer = get_index_buffer(target->resourceProvider());
-        PatternHelper helper(GrPrimitiveType::kTriangles);
-        void* vertices =
-                helper.init(target, vertexStride, indexBuffer.get(), kVertsPerAAFillRect,
-                            kIndicesPerAAFillRect, fRectCnt);
+        PatternHelper helper(target, GrPrimitiveType::kTriangles, vertexStride, indexBuffer.get(),
+                             kVertsPerAAFillRect, kIndicesPerAAFillRect, fRectCnt);
+        void* vertices = helper.vertices();
         if (!vertices || !indexBuffer) {
             SkDebugf("Could not allocate vertices\n");
             return;
@@ -282,19 +290,20 @@ private:
                                            fHelper.compatibleWithAlphaAsCoverage(), localMatrix);
             info = this->next(info);
         }
-        helper.recordDraw(target, gp.get(), fHelper.makePipeline(target));
+        auto pipe = fHelper.makePipeline(target);
+        helper.recordDraw(target, std::move(gp), pipe.fPipeline, pipe.fFixedDynamicState);
     }
 
-    bool onCombineIfPossible(GrOp* t, const GrCaps& caps) override {
+    CombineResult onCombineIfPossible(GrOp* t, const GrCaps& caps) override {
         AAFillRectOp* that = t->cast<AAFillRectOp>();
         if (!fHelper.isCompatible(that->fHelper, caps, this->bounds(), that->bounds())) {
-            return false;
+            return CombineResult::kCannotCombine;
         }
 
         fRectData.push_back_n(that->fRectData.count(), that->fRectData.begin());
         fRectCnt += that->fRectCnt;
         this->joinBounds(*that);
-        return true;
+        return CombineResult::kMerged;
     }
 
     struct RectInfo {
@@ -360,17 +369,23 @@ private:
 
 namespace GrRectOpFactory {
 
-std::unique_ptr<GrDrawOp> MakeAAFill(GrPaint&& paint, const SkMatrix& viewMatrix,
-                                     const SkRect& rect, const GrUserStencilSettings* stencil) {
+std::unique_ptr<GrDrawOp> MakeAAFill(GrContext* context,
+                                     GrPaint&& paint,
+                                     const SkMatrix& viewMatrix,
+                                     const SkRect& rect,
+                                     const GrUserStencilSettings* stencil) {
     if (!view_matrix_ok_for_aa_fill_rect(viewMatrix)) {
         return nullptr;
     }
     SkRect devRect;
     viewMatrix.mapRect(&devRect, rect);
-    return AAFillRectOp::Make(std::move(paint), viewMatrix, rect, devRect, nullptr, stencil);
+    return AAFillRectOp::Make(context, std::move(paint), viewMatrix, rect, devRect,
+                              nullptr, stencil);
 }
 
-std::unique_ptr<GrDrawOp> MakeAAFillWithLocalMatrix(GrPaint&& paint, const SkMatrix& viewMatrix,
+std::unique_ptr<GrDrawOp> MakeAAFillWithLocalMatrix(GrContext* context,
+                                                    GrPaint&& paint,
+                                                    const SkMatrix& viewMatrix,
                                                     const SkMatrix& localMatrix,
                                                     const SkRect& rect) {
     if (!view_matrix_ok_for_aa_fill_rect(viewMatrix)) {
@@ -378,11 +393,15 @@ std::unique_ptr<GrDrawOp> MakeAAFillWithLocalMatrix(GrPaint&& paint, const SkMat
     }
     SkRect devRect;
     viewMatrix.mapRect(&devRect, rect);
-    return AAFillRectOp::Make(std::move(paint), viewMatrix, rect, devRect, &localMatrix, nullptr);
+    return AAFillRectOp::Make(context, std::move(paint), viewMatrix, rect, devRect,
+                              &localMatrix, nullptr);
 }
 
-std::unique_ptr<GrDrawOp> MakeAAFillWithLocalRect(GrPaint&& paint, const SkMatrix& viewMatrix,
-                                                  const SkRect& rect, const SkRect& localRect) {
+std::unique_ptr<GrDrawOp> MakeAAFillWithLocalRect(GrContext* context,
+                                                  GrPaint&& paint,
+                                                  const SkMatrix& viewMatrix,
+                                                  const SkRect& rect,
+                                                  const SkRect& localRect) {
     if (!view_matrix_ok_for_aa_fill_rect(viewMatrix)) {
         return nullptr;
     }
@@ -392,7 +411,8 @@ std::unique_ptr<GrDrawOp> MakeAAFillWithLocalRect(GrPaint&& paint, const SkMatri
     if (!localMatrix.setRectToRect(rect, localRect, SkMatrix::kFill_ScaleToFit)) {
         return nullptr;
     }
-    return AAFillRectOp::Make(std::move(paint), viewMatrix, rect, devRect, &localMatrix, nullptr);
+    return AAFillRectOp::Make(context, std::move(paint), viewMatrix, rect, devRect,
+                              &localMatrix, nullptr);
 }
 
 }  // namespace GrRectOpFactory
@@ -416,9 +436,10 @@ GR_DRAW_OP_TEST_DEFINE(AAFillRectOp) {
     if (random->nextBool()) {
         m = GrTest::TestMatrix(random);
     }
-    const GrUserStencilSettings* stencil =
-            random->nextBool() ? nullptr : GrGetRandomStencil(random, context);
-    return AAFillRectOp::Make(std::move(paint), viewMatrix, rect, devRect, localMatrix, stencil);
+    const GrUserStencilSettings* stencil = random->nextBool() ? nullptr
+                                                              : GrGetRandomStencil(random, context);
+    return AAFillRectOp::Make(context, std::move(paint), viewMatrix, rect,
+                              devRect, localMatrix, stencil);
 }
 
 #endif

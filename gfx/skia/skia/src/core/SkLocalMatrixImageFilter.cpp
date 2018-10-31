@@ -52,9 +52,9 @@ sk_sp<SkSpecialImage> SkLocalMatrixImageFilter::onFilterImage(SkSpecialImage* so
     return this->filterInput(0, source, localCtx, offset);
 }
 
-SkIRect SkLocalMatrixImageFilter::onFilterBounds(const SkIRect& src, const SkMatrix& matrix,
-                                                 MapDirection direction) const {
-    return this->getInput(0)->filterBounds(src, SkMatrix::Concat(matrix, fLocalM), direction);
+SkIRect SkLocalMatrixImageFilter::onFilterBounds(const SkIRect& src, const SkMatrix& ctm,
+                                                 MapDirection dir, const SkIRect* inputRect) const {
+    return this->getInput(0)->filterBounds(src, SkMatrix::Concat(ctm, fLocalM), dir, inputRect);
 }
 
 sk_sp<SkImageFilter> SkLocalMatrixImageFilter::onMakeColorSpace(SkColorSpaceXformer* xformer)
@@ -67,10 +67,3 @@ const {
     }
     return this->refMe();
 }
-
-#ifndef SK_IGNORE_TO_STRING
-void SkLocalMatrixImageFilter::toString(SkString* str) const {
-    str->append("SkLocalMatrixImageFilter: (");
-    str->append(")");
-}
-#endif

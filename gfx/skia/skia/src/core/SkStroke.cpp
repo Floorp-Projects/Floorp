@@ -6,9 +6,14 @@
  */
 
 #include "SkStrokerPriv.h"
+
 #include "SkGeometry.h"
+#include "SkMacros.h"
 #include "SkPathPriv.h"
 #include "SkPointPriv.h"
+#include "SkTo.h"
+
+#include <utility>
 
 enum {
     kTangent_RecursiveLimit,
@@ -165,7 +170,7 @@ private:
     SkStrokerPriv::CapProc  fCapper;
     SkStrokerPriv::JoinProc fJoiner;
 
-    SkPath  fInner, fOuter; // outer is our working answer, inner is temp
+    SkPath  fInner, fOuter, fCusper; // outer is our working answer, inner is temp
 
     enum StrokeType {
         kOuter_StrokeType = 1,      // use sign-opposite values later to flip perpendicular axis
@@ -321,6 +326,10 @@ void SkPathStroker::finishContour(bool close, bool currIsLine) {
             fCapper(&fOuter, fFirstPt, -fFirstNormal, fFirstOuterPt,
                     fPrevIsLine ? &fInner : nullptr);
             fOuter.close();
+        }
+        if (!fCusper.isEmpty()) {
+            fOuter.addPath(fCusper);
+            fCusper.rewind();
         }
     }
     // since we may re-use fInner, we rewind instead of reset, to save on
@@ -607,13 +616,13 @@ SkPathStroker::ReductionType SkPathStroker::CheckCubicLinear(const SkPoint cubic
     }
     SkScalar tValues[3];
     int count = SkFindCubicMaxCurvature(cubic, tValues);
-    if (count == 0) {
-        return kLine_ReductionType;
-    }
     int rCount = 0;
     // Now loop over the t-values, and reject any that evaluate to either end-point
     for (int index = 0; index < count; ++index) {
         SkScalar t = tValues[index];
+        if (0 >= t || t >= 1) {
+            continue;
+        }
         SkEvalCubicAt(cubic, t, &reduction[rCount], nullptr, nullptr);
         if (reduction[rCount] != cubic[0] && reduction[rCount] != cubic[3]) {
             ++rCount;
@@ -674,7 +683,7 @@ SkPathStroker::ReductionType SkPathStroker::CheckQuadLinear(const SkPoint quad[3
         return kQuad_ReductionType;
     }
     SkScalar t = SkFindQuadMaxCurvature(quad);
-    if (0 == t) {
+    if (0 == t || 1 == t) {
         return kLine_ReductionType;
     }
     *reduction = SkEvalQuadAt(quad, t);
@@ -980,7 +989,8 @@ static bool sharp_angle(const SkPoint quad[3]) {
     SkScalar smallerLen = SkPointPriv::LengthSqd(smaller);
     SkScalar largerLen = SkPointPriv::LengthSqd(larger);
     if (smallerLen > largerLen) {
-        SkTSwap(smaller, larger);
+        using std::swap;
+        swap(smaller, larger);
         largerLen = smallerLen;
     }
     if (!smaller.setLength(largerLen)) {
@@ -1153,6 +1163,7 @@ bool SkPathStroker::cubicStroke(const SkPoint cubic[4], SkQuadConstruct* quadPts
     SkQuadConstruct half;
     if (!half.initWithStart(quadPts)) {
         addDegenerateLine(quadPts);
+        --fRecursionDepth;
         return true;
     }
     if (!this->cubicStroke(cubic, &half)) {
@@ -1160,6 +1171,7 @@ bool SkPathStroker::cubicStroke(const SkPoint cubic[4], SkQuadConstruct* quadPts
     }
     if (!half.initWithEnd(quadPts)) {
         addDegenerateLine(quadPts);
+        --fRecursionDepth;
         return true;
     }
     if (!this->cubicStroke(cubic, &half)) {
@@ -1281,6 +1293,12 @@ void SkPathStroker::cubicTo(const SkPoint& pt1, const SkPoint& pt2,
         this->init(kInner_StrokeType, &quadPts, lastT, nextT);
         (void) this->cubicStroke(cubic, &quadPts);
         lastT = nextT;
+    }
+    SkScalar cusp = SkFindCubicCusp(cubic);
+    if (cusp > 0) {
+        SkPoint cuspLoc;
+        SkEvalCubicAt(cubic, cusp, &cuspLoc, nullptr, nullptr);
+        fCusper.addCircle(cuspLoc.fX, cuspLoc.fY, fRadius);
     }
     // emit the join even if one stroke succeeded but the last one failed
     // this avoids reversing an inner stroke with a partial path followed by another moveto

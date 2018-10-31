@@ -27,7 +27,6 @@ protected:
     void drawRRect(const SkRRect& rr, const SkPaint& paint) override;
     void drawPath(const SkPath& path,
                   const SkPaint& paint,
-                  const SkMatrix* prePathMatrix = nullptr,
                   bool pathIsMutable = false) override;
 
     void drawBitmap(const SkBitmap& bitmap, SkScalar x, SkScalar y, const SkPaint& paint) override;
@@ -36,16 +35,9 @@ protected:
     void drawBitmapRect(const SkBitmap&,
                         const SkRect* srcOrNull, const SkRect& dst,
                         const SkPaint& paint, SkCanvas::SrcRectConstraint) override;
-
-    void drawText(const void* text, size_t len,
-                  SkScalar x, SkScalar y, const SkPaint& paint) override;
-    void drawPosText(const void* text, size_t len,
-                     const SkScalar pos[], int scalarsPerPos,
-                     const SkPoint& offset, const SkPaint& paint) override;
-    void drawTextOnPath(const void* text, size_t len,
-                        const SkPath& path, const SkMatrix* matrix,
-                        const SkPaint& paint) override;
-    void drawVertices(const SkVertices*, SkBlendMode, const SkPaint& paint) override;
+    void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
+    void drawVertices(const SkVertices*, const SkVertices::Bone bones[], int boneCount, SkBlendMode,
+                      const SkPaint& paint) override;
 
     void drawDevice(SkBaseDevice*, int x, int y,
                     const SkPaint&) override;

@@ -56,7 +56,7 @@ SkColorShader::ColorShaderContext::ColorShaderContext(const SkColorShader& shade
 
     SkColor4f c4 = SkColor4f::FromColor(shader.fColor);
     c4.fA *= rec.fPaint->getAlpha() / 255.0f;
-    fPM4f = c4.premul();
+    fPMColor4f = c4.premul();
 
     fFlags = kConstInY32_Flag;
     if (255 == a) {
@@ -68,9 +68,9 @@ void SkColorShader::ColorShaderContext::shadeSpan(int x, int y, SkPMColor span[]
     sk_memset32(span, fPMColor, count);
 }
 
-void SkColorShader::ColorShaderContext::shadeSpan4f(int x, int y, SkPM4f span[], int count) {
+void SkColorShader::ColorShaderContext::shadeSpan4f(int x, int y, SkPMColor4f span[], int count) {
     for (int i = 0; i < count; ++i) {
-        span[i] = fPM4f;
+        span[i] = fPMColor4f;
     }
 }
 
@@ -91,23 +91,10 @@ SkShader::GradientType SkColorShader::asAGradient(GradientInfo* info) const {
 #include "effects/GrConstColorProcessor.h"
 std::unique_ptr<GrFragmentProcessor> SkColorShader::asFragmentProcessor(
         const GrFPArgs& args) const {
-    GrColor4f color = SkColorToPremulGrColor4f(fColor, *args.fDstColorSpaceInfo);
+    SkPMColor4f color = SkColorToPMColor4f(fColor, *args.fDstColorSpaceInfo);
     return GrConstColorProcessor::Make(color, GrConstColorProcessor::InputMode::kModulateA);
 }
 
-#endif
-
-#ifndef SK_IGNORE_TO_STRING
-void SkColorShader::toString(SkString* str) const {
-    str->append("SkColorShader: (");
-
-    str->append("Color: ");
-    str->appendHex(fColor);
-
-    this->INHERITED::toString(str);
-
-    str->append(")");
-}
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -118,29 +105,41 @@ static unsigned unit_to_byte(float unit) {
     return (unsigned)(unit * 255 + 0.5);
 }
 
-static SkColor unit_to_skcolor(const SkColor4f& unit, SkColorSpace* cs) {
-    return SkColorSetARGB(unit_to_byte(unit.fA), unit_to_byte(unit.fR),
-                          unit_to_byte(unit.fG), unit_to_byte(unit.fB));
+static SkColor to_skcolor(SkColor4f color, SkColorSpace* cs) {
+    SkColorSpaceXformSteps steps{cs                 , kUnpremul_SkAlphaType,
+                                 sk_srgb_singleton(), kUnpremul_SkAlphaType};
+    steps.apply(color.vec());
+    color = color.pin();
+    return SkColorSetARGB(unit_to_byte(color.fA), unit_to_byte(color.fR),
+                          unit_to_byte(color.fG), unit_to_byte(color.fB));
 }
 
 SkColor4Shader::SkColor4Shader(const SkColor4f& color, sk_sp<SkColorSpace> space)
     : fColorSpace(std::move(space))
     , fColor4(color)
-    , fCachedByteColor(unit_to_skcolor(color.pin(), space.get()))
+    , fCachedByteColor(to_skcolor(color, fColorSpace.get()))
 {}
 
 sk_sp<SkFlattenable> SkColor4Shader::CreateProc(SkReadBuffer& buffer) {
     SkColor4f color;
+    sk_sp<SkColorSpace> colorSpace;
     buffer.readColor4f(&color);
     if (buffer.readBool()) {
-        // TODO how do we unflatten colorspaces
+        sk_sp<SkData> data = buffer.readByteArrayAsData();
+        colorSpace = data ? SkColorSpace::Deserialize(data->data(), data->size()) : nullptr;
     }
-    return SkShader::MakeColorShader(color, nullptr);
+    return SkShader::MakeColorShader(color, std::move(colorSpace));
 }
 
 void SkColor4Shader::flatten(SkWriteBuffer& buffer) const {
     buffer.writeColor4f(fColor4);
-    buffer.writeBool(false);    // TODO how do we flatten colorspaces?
+    sk_sp<SkData> colorSpaceData = fColorSpace ? fColorSpace->serialize() : nullptr;
+    if (colorSpaceData) {
+        buffer.writeBool(true);
+        buffer.writeDataAsByteArray(colorSpaceData.get());
+    } else {
+        buffer.writeBool(false);
+    }
 }
 
 uint32_t SkColor4Shader::Color4Context::getFlags() const {
@@ -172,7 +171,7 @@ SkColor4Shader::Color4Context::Color4Context(const SkColor4Shader& shader,
 
     SkColor4f c4 = shader.fColor4;
     c4.fA *= rec.fPaint->getAlpha() * (1 / 255.0f);
-    fPM4f = c4.premul();
+    fPMColor4f = c4.premul();
 
     fFlags = kConstInY32_Flag;
     if (255 == a) {
@@ -184,9 +183,9 @@ void SkColor4Shader::Color4Context::shadeSpan(int x, int y, SkPMColor span[], in
     sk_memset32(span, fPMColor, count);
 }
 
-void SkColor4Shader::Color4Context::shadeSpan4f(int x, int y, SkPM4f span[], int count) {
+void SkColor4Shader::Color4Context::shadeSpan4f(int x, int y, SkPMColor4f span[], int count) {
     for (int i = 0; i < count; ++i) {
-        span[i] = fPM4f;
+        span[i] = fPMColor4f;
     }
 }
 
@@ -211,30 +210,14 @@ SkShader::GradientType SkColor4Shader::asAGradient(GradientInfo* info) const {
 
 std::unique_ptr<GrFragmentProcessor> SkColor4Shader::asFragmentProcessor(
         const GrFPArgs& args) const {
-    // Construct an xform assuming float inputs. The color space can have a transfer function on
-    // it, which will be applied below.
-    auto colorSpaceXform = GrColorSpaceXform::Make(fColorSpace.get(), kRGBA_float_GrPixelConfig,
-                                                   args.fDstColorSpaceInfo->colorSpace());
-    GrColor4f color = GrColor4f::FromSkColor4f(fColor4);
-    if (colorSpaceXform) {
-        color = colorSpaceXform->clampedXform(color);
-    }
+    SkColorSpaceXformSteps steps{ fColorSpace.get(),                     kUnpremul_SkAlphaType,
+                                  args.fDstColorSpaceInfo->colorSpace(), kUnpremul_SkAlphaType };
+    SkColor4f color = fColor4;
+    steps.apply(color.vec());
     return GrConstColorProcessor::Make(color.premul(),
                                        GrConstColorProcessor::InputMode::kModulateA);
 }
 
-#endif
-
-#ifndef SK_IGNORE_TO_STRING
-void SkColor4Shader::toString(SkString* str) const {
-    str->append("SkColor4Shader: (");
-
-    str->append("RGBA:");
-    for (int i = 0; i < 4; ++i) {
-        str->appendf(" %g", fColor4.vec()[i]);
-    }
-    str->append(" )");
-}
 #endif
 
 sk_sp<SkShader> SkColor4Shader::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
@@ -251,12 +234,13 @@ sk_sp<SkShader> SkShader::MakeColorShader(const SkColor4f& color, sk_sp<SkColorS
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool SkColorShader::onAppendStages(const StageRec& rec) const {
-    rec.fPipeline->append_constant_color(rec.fAlloc, SkPM4f_from_SkColor(fColor, rec.fDstCS));
+    rec.fPipeline->append_constant_color(rec.fAlloc,
+            premul_in_dst_colorspace(fColor, rec.fDstCS));
     return true;
 }
 
 bool SkColor4Shader::onAppendStages(const StageRec& rec) const {
-    rec.fPipeline->append_constant_color(
-                     rec.fAlloc, to_colorspace(fColor4, fColorSpace.get(), rec.fDstCS).premul());
+    rec.fPipeline->append_constant_color(rec.fAlloc,
+            premul_in_dst_colorspace(fColor4, fColorSpace.get(), rec.fDstCS));
     return true;
 }

@@ -11,7 +11,7 @@
 #include "SkColorShader.h"
 #include "SkComposeShader.h"
 #include "SkEmptyShader.h"
-#include "SkFlattenable.h"
+#include "SkFlattenablePriv.h"
 #include "SkImageShader.h"
 #include "SkLocalMatrixShader.h"
 #include "SkMatrixImageFilter.h"
@@ -50,6 +50,7 @@ void SkFlattenable::PrivateInitializer::InitCore() {
 
     // Now initialize any optional/additional effects (implemented in src/ports)
     InitEffects();
+    InitImageFilters();
 
     // Finalize flattenable initialization.
     SkFlattenable::Finalize();

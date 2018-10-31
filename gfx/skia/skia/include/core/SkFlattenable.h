@@ -17,61 +17,6 @@ class SkWriteBuffer;
 struct SkSerialProcs;
 struct SkDeserialProcs;
 
-/*
- *  Flattening is straight-forward:
- *      1. call getFactory() so we have a function-ptr to recreate the subclass
- *      2. call flatten(buffer) to write out enough data for the factory to read
- *
- *  Unflattening is easy for the caller: new_instance = factory(buffer)
- *
- *  The complexity of supporting this is as follows.
- *
- *  If your subclass wants to control unflattening, use this macro in your declaration:
- *      SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS
- *  This will provide a getFactory(), and require that the subclass implements CreateProc.
- *
- *  For older buffers (before the DEEPFLATTENING change, the macros below declare
- *  a thin factory DeepCreateProc. It checks the version of the buffer, and if it is pre-deep,
- *  then it calls through to a (usually protected) constructor, passing the buffer.
- *  If the buffer is newer, then it directly calls the "real" factory: CreateProc.
- */
-
-#define SK_DECLARE_FLATTENABLE_REGISTRAR_GROUP() static void InitializeFlattenables();
-
-#define SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_START(flattenable) \
-    void flattenable::InitializeFlattenables() {
-
-#define SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_END \
-    }
-
-#define SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(flattenable) \
-    SkFlattenable::Register(#flattenable, flattenable::CreateProc, \
-                            flattenable::GetFlattenableType());
-
-#define SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(flattenable)    \
-    private:                                                                \
-    static sk_sp<SkFlattenable> CreateProc(SkReadBuffer&);                        \
-    friend class SkFlattenable::PrivateInitializer;                         \
-    public:                                                                 \
-    Factory getFactory() const override { return CreateProc; }
-
-/** For SkFlattenable derived objects with a valid type
-    This macro should only be used in base class objects in core
-  */
-#define SK_DEFINE_FLATTENABLE_TYPE(flattenable) \
-    static Type GetFlattenableType() {          \
-        return k##flattenable##_Type;           \
-    }                                           \
-    Type getFlattenableType() const override {  \
-        return k##flattenable##_Type;           \
-    }                                           \
-    static sk_sp<flattenable> Deserialize(const void* data, size_t size,                \
-                                          const SkDeserialProcs* procs = nullptr) {     \
-        return sk_sp<flattenable>(static_cast<flattenable*>(                            \
-                                  SkFlattenable::Deserialize(                           \
-                                  k##flattenable##_Type, data, size, procs).release()));\
-    }
-
 /** \class SkFlattenable
 
  SkFlattenable is the base class for objects that need to be flattened
@@ -92,7 +37,7 @@ public:
         kSkShaderBase_Type,
         kSkUnused_Type,     // used to be SkUnitMapper
         kSkUnused_Type2,
-        kSkUnused_Type3,    // used to be SkNormalSource
+        kSkNormalSource_Type,
     };
 
     typedef sk_sp<SkFlattenable> (*Factory)(SkReadBuffer&);
@@ -113,7 +58,15 @@ public:
      *
      *  If the flattenable is registered, there is no need to override.
      */
-    virtual const char* getTypeName() const { return FactoryToName(getFactory()); }
+    virtual const char* getTypeName() const {
+    #ifdef SK_DISABLE_READBUFFER
+        // Should not be reachable by PathKit WebAssembly Code.
+        SkASSERT(false);
+        return nullptr;
+    #else
+        return FactoryToName(getFactory());
+    #endif
+    }
 
     static Factory NameToFactory(const char name[]);
     static const char* FactoryToName(Factory);
@@ -135,6 +88,8 @@ public:
     // public ways to serialize / deserialize
     //
     sk_sp<SkData> serialize(const SkSerialProcs* = nullptr) const;
+    size_t serialize(void* memory, size_t memory_size,
+                     const SkSerialProcs* = nullptr) const;
     static sk_sp<SkFlattenable> Deserialize(Type, const void* data, size_t length,
                                             const SkDeserialProcs* procs = nullptr);
 
@@ -143,6 +98,7 @@ protected:
     public:
         static void InitCore();
         static void InitEffects();
+        static void InitImageFilters();
     };
 
 private:

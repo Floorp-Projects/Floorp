@@ -11,13 +11,12 @@
 #ifndef GrPremulInputFragmentProcessor_DEFINED
 #define GrPremulInputFragmentProcessor_DEFINED
 #include "SkTypes.h"
-#if SK_SUPPORT_GPU
 #include "GrFragmentProcessor.h"
 #include "GrCoordTransform.h"
 class GrPremulInputFragmentProcessor : public GrFragmentProcessor {
 public:
-    GrColor4f constantOutputForConstantInput(GrColor4f input) const override {
-        return input.premul();
+    SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const override {
+        return SkColor4f{input.fR, input.fG, input.fB, input.fA}.premul();
     }
     static std::unique_ptr<GrFragmentProcessor> Make() {
         return std::unique_ptr<GrFragmentProcessor>(new GrPremulInputFragmentProcessor());
@@ -37,5 +36,4 @@ private:
     GR_DECLARE_FRAGMENT_PROCESSOR_TEST
     typedef GrFragmentProcessor INHERITED;
 };
-#endif
 #endif

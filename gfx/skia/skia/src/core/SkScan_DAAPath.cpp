@@ -22,7 +22,7 @@
 #include "SkScanPriv.h"
 #include "SkTSort.h"
 #include "SkTemplates.h"
-#include "SkUtils.h"
+#include "SkUTF.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -150,21 +150,23 @@ public:
 };
 
 template<class Deltas> static SK_ALWAYS_INLINE
-void gen_alpha_deltas(const SkPath& path, const SkIRect& clipBounds, Deltas& result,
-        SkBlitter* blitter, bool skipRect, bool pathContainedInClip) {
+void gen_alpha_deltas(const SkPath& path, const SkIRect& clippedIR, const SkIRect& clipBounds,
+        Deltas& result, SkBlitter* blitter, bool skipRect, bool pathContainedInClip) {
     // 1. Build edges
     SkEdgeBuilder builder;
-    SkIRect ir               = path.getBounds().roundOut();
-    int  count               = builder.build_edges(path, &clipBounds, 0, pathContainedInClip,
-                                                   SkEdgeBuilder::kBezier);
+    // We have to use clipBounds instead of clippedIR to build edges because of "canCullToTheRight":
+    // if the builder finds a right edge past the right clip, it won't build that right edge.
+    int  count = builder.build_edges(path, &clipBounds, 0, pathContainedInClip,
+                                     SkEdgeBuilder::kBezier);
+
     if (count == 0) {
         return;
     }
     SkBezier** list = builder.bezierList();
 
     // 2. Try to find the rect part because blitAntiRect is so much faster than blitCoverageDeltas
-    int rectTop = ir.fBottom;   // the rect is initialized to be empty as top = bot
-    int rectBot = ir.fBottom;
+    int rectTop = clippedIR.fBottom;   // the rect is initialized to be empty as top = bot
+    int rectBot = clippedIR.fBottom;
     if (skipRect) {             // only find that rect is skipRect == true
         YLessThan lessThan;     // sort edges in YX order
         SkTQSort(list, list + count - 1, lessThan);
@@ -180,8 +182,9 @@ void gen_alpha_deltas(const SkPath& path, const SkIRect& clipBounds, Deltas& res
             }
 
             SkAnalyticEdge l, r;
-            l.setLine(lb->fP0, lb->fP1);
-            r.setLine(rb->fP0, rb->fP1);
+            if (!l.setLine(lb->fP0, lb->fP1) || !r.setLine(rb->fP0, rb->fP1)) {
+                continue;
+            }
 
             SkFixed xorUpperY = l.fUpperY ^ r.fUpperY;
             SkFixed xorLowerY = l.fLowerY ^ r.fLowerY;
@@ -196,7 +199,7 @@ void gen_alpha_deltas(const SkPath& path, const SkIRect& clipBounds, Deltas& res
                         SkAlpha ra = (r.fUpperX - SkIntToFixed(R)) >> 8;
                         result.setAntiRect(L - 1, rectTop, R - L, rectBot - rectTop, la, ra);
                     } else { // too thin to use blitAntiRect; reset the rect region to be emtpy
-                        rectTop = rectBot = ir.fBottom;
+                        rectTop = rectBot = clippedIR.fBottom;
                     }
                 }
                 break;
@@ -265,7 +268,7 @@ void gen_alpha_deltas(const SkPath& path, const SkIRect& clipBounds, Deltas& res
             if (lowerCeil <= upperFloor + SK_Fixed1) { // only one row is affected by the currE
                 SkFixed rowHeight = currE->fLowerY - currE->fUpperY;
                 SkFixed nextX = currE->fX + SkFixedMul(currE->fDX, rowHeight);
-                if (iy >= clipBounds.fTop && iy < clipBounds.fBottom) {
+                if (iy >= clippedIR.fTop && iy < clippedIR.fBottom) {
                     add_coverage_delta_segment<true>(iy, rowHeight, currE, nextX, &result);
                 }
                 continue;
@@ -305,7 +308,7 @@ void gen_alpha_deltas(const SkPath& path, const SkIRect& clipBounds, Deltas& res
 
             // last partial row
             if (SkIntToFixed(iy) < currE->fLowerY &&
-                    iy >= clipBounds.fTop && iy < clipBounds.fBottom) {
+                    iy >= clippedIR.fTop && iy < clippedIR.fBottom) {
                 rowHeight = currE->fLowerY - SkIntToFixed(iy);
                 nextX = currE->fX + SkFixedMul(currE->fDX, rowHeight);
                 add_coverage_delta_segment<true>(iy, rowHeight, currE, nextX, &result);
@@ -330,6 +333,7 @@ void SkScan::DAAFillPath(const SkPath& path, SkBlitter* blitter, const SkIRect& 
     // The overhead of even constructing SkCoverageDeltaList/Mask is too big.
     // So TryBlitFatAntiRect and return if it's successful.
     if (!isInverse && TryBlitFatAntiRect(blitter, path, clipBounds)) {
+        SkDAARecord::SetEmpty(record);
         return;
     }
 
@@ -357,14 +361,16 @@ void SkScan::DAAFillPath(const SkPath& path, SkBlitter* blitter, const SkIRect& 
         if (!forceRLE && !isInverse && SkCoverageDeltaMask::Suitable(clippedIR)) {
             record->fType = SkDAARecord::Type::kMask;
             SkCoverageDeltaMask deltaMask(alloc, clippedIR);
-            gen_alpha_deltas(path, clipBounds, deltaMask, blitter, skipRect, containedInClip);
+            gen_alpha_deltas(path, clippedIR, clipBounds, deltaMask, blitter, skipRect,
+                             containedInClip);
             deltaMask.convertCoverageToAlpha(isEvenOdd, isInverse, isConvex);
             record->fMask = deltaMask.prepareSkMask();
         } else {
             record->fType = SkDAARecord::Type::kList;
             SkCoverageDeltaList* deltaList = alloc->make<SkCoverageDeltaList>(
-                    alloc, clippedIR.fTop, clippedIR.fBottom, forceRLE);
-            gen_alpha_deltas(path, clipBounds, *deltaList, blitter, skipRect, containedInClip);
+                    alloc, clippedIR, forceRLE);
+            gen_alpha_deltas(path, clippedIR, clipBounds, *deltaList, blitter, skipRect,
+                             containedInClip);
             record->fList = deltaList;
         }
     }
@@ -374,8 +380,7 @@ void SkScan::DAAFillPath(const SkPath& path, SkBlitter* blitter, const SkIRect& 
         if (record->fType == SkDAARecord::Type::kMask) {
             blitter->blitMask(record->fMask, clippedIR);
         } else {
-            blitter->blitCoverageDeltas(record->fList,
-                                        clipBounds, isEvenOdd, isInverse, isConvex, alloc);
+            blitter->blitCoverageDeltas(record->fList, clipBounds, isEvenOdd, isInverse, isConvex);
         }
     }
 }

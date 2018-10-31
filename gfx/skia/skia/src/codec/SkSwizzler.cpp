@@ -475,7 +475,7 @@ static void fast_swizzle_rgba_to_rgba_premul(
     // sampling, deltaSrc should equal bpp.
     SkASSERT(deltaSrc == bpp);
 
-    SkOpts::RGBA_to_rgbA((uint32_t*) dst, src + offset, width);
+    SkOpts::RGBA_to_rgbA((uint32_t*) dst, (const uint32_t*)(src + offset), width);
 }
 
 static void fast_swizzle_rgba_to_bgra_premul(
@@ -486,7 +486,7 @@ static void fast_swizzle_rgba_to_bgra_premul(
     // sampling, deltaSrc should equal bpp.
     SkASSERT(deltaSrc == bpp);
 
-    SkOpts::RGBA_to_bgrA((uint32_t*) dst, src + offset, width);
+    SkOpts::RGBA_to_bgrA((uint32_t*) dst, (const uint32_t*)(src + offset), width);
 }
 
 static void swizzle_rgba_to_bgra_unpremul(
@@ -510,7 +510,7 @@ static void fast_swizzle_rgba_to_bgra_unpremul(
     // sampling, deltaSrc should equal bpp.
     SkASSERT(deltaSrc == bpp);
 
-    SkOpts::RGBA_to_BGRA((uint32_t*) dst, src + offset, width);
+    SkOpts::RGBA_to_BGRA((uint32_t*) dst, (const uint32_t*)(src + offset), width);
 }
 
 // 16-bits per component kRGB and kRGBA
@@ -705,7 +705,7 @@ static void fast_swizzle_cmyk_to_rgba(
     // sampling, deltaSrc should equal bpp.
     SkASSERT(deltaSrc == bpp);
 
-    SkOpts::inverted_CMYK_to_RGB1((uint32_t*) dst, src + offset, width);
+    SkOpts::inverted_CMYK_to_RGB1((uint32_t*) dst, (const uint32_t*)(src + offset), width);
 }
 
 static void fast_swizzle_cmyk_to_bgra(
@@ -716,7 +716,7 @@ static void fast_swizzle_cmyk_to_bgra(
     // sampling, deltaSrc should equal bpp.
     SkASSERT(deltaSrc == bpp);
 
-    SkOpts::inverted_CMYK_to_BGR1((uint32_t*) dst, src + offset, width);
+    SkOpts::inverted_CMYK_to_BGR1((uint32_t*) dst, (const uint32_t*)(src + offset), width);
 }
 
 static void swizzle_cmyk_to_565(
@@ -890,6 +890,7 @@ SkSwizzler* SkSwizzler::CreateSwizzler(const SkEncodedInfo& encodedInfo,
                         return nullptr;
                 }
                 break;
+            case SkEncodedInfo::kXAlpha_Color:
             case SkEncodedInfo::kGrayAlpha_Color:
                 switch (dstInfo.colorType()) {
                     case kRGBA_8888_SkColorType:
@@ -963,6 +964,10 @@ SkSwizzler* SkSwizzler::CreateSwizzler(const SkEncodedInfo& encodedInfo,
                         return nullptr;
                 }
                 break;
+            case SkEncodedInfo::k565_Color:
+                // Treat 565 exactly like RGB (since it's still encoded as 8 bits per component).
+                // We just mark as 565 when we have a hint that there are only 5/6/5 "significant"
+                // bits in each channel.
             case SkEncodedInfo::kRGB_Color:
                 switch (dstInfo.colorType()) {
                     case kRGBA_8888_SkColorType:

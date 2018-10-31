@@ -13,8 +13,7 @@
 std::atomic<bool> gSkUseAnalyticAA{true};
 std::atomic<bool> gSkForceAnalyticAA{false};
 
-    std::atomic<bool> gSkUseDeltaAA{false};
-
+std::atomic<bool> gSkUseDeltaAA{false};
 std::atomic<bool> gSkForceDeltaAA{false};
 
 static inline void blitrect(SkBlitter* blitter, const SkIRect& r) {

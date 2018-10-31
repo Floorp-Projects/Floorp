@@ -2726,45 +2726,6 @@ GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
     return size;
 }
 
-#ifdef DEBUG
-Zone*
-GCMarker::stackContainsCrossZonePointerTo(const Cell* target)
-{
-    MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
-
-    Zone* targetZone = target->asTenured().zone();
-
-    for (MarkStackIter iter(stack); !iter.done(); iter.next()) {
-        if (iter.peekTag() != MarkStack::ObjectTag) {
-            continue;
-        }
-
-        auto source = iter.peekPtr().as<JSObject>();
-        Zone* sourceZone = source->zone();
-        if (sourceZone == targetZone) {
-            continue;
-        }
-
-        // The private slot of proxy objects might contain a cross-compartment
-        // pointer.
-        if (source->is<ProxyObject>()) {
-            Value value = source->as<ProxyObject>().private_();
-            MOZ_ASSERT_IF(!IsCrossCompartmentWrapper(source),
-                          IsObjectValueInCompartment(value, source->compartment()));
-            if (value.isObject() && &value.toObject() == target) {
-                return sourceZone;
-            }
-        }
-
-        if (Debugger::isDebuggerCrossCompartmentEdge(source, target)) {
-            return sourceZone;
-        }
-    }
-
-    return nullptr;
-}
-#endif // DEBUG
-
 
 /*** Tenuring Tracer *****************************************************************************/
 

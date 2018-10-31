@@ -5,10 +5,12 @@
  * found in the LICENSE file.
  */
 
+#include "SkPDFMetadata.h"
+
 #include "SkMD5.h"
 #include "SkMilestone.h"
-#include "SkPDFMetadata.h"
 #include "SkPDFTypes.h"
+#include "SkTo.h"
 #include "SkUtils.h"
 
 #include <utility>
@@ -17,6 +19,19 @@
 #define SKPDF_STRING_IMPL(X) #X
 #define SKPDF_PRODUCER "Skia/PDF m" SKPDF_STRING(SK_MILESTONE)
 #define SKPDF_CUSTOM_PRODUCER_KEY "ProductionLibrary"
+
+static constexpr SkTime::DateTime kZeroTime = {0, 0, 0, 0, 0, 0, 0, 0};
+
+static bool operator!=(const SkTime::DateTime& u, const SkTime::DateTime& v) {
+    return u.fTimeZoneMinutes != v.fTimeZoneMinutes ||
+           u.fYear != v.fYear ||
+           u.fMonth != v.fMonth ||
+           u.fDayOfWeek != v.fDayOfWeek ||
+           u.fDay != v.fDay ||
+           u.fHour != v.fHour ||
+           u.fMinute != v.fMinute ||
+           u.fSecond != v.fSecond;
+}
 
 static SkString pdf_date(const SkTime::DateTime& dt) {
     int timeZoneMinutes = SkToInt(dt.fTimeZoneMinutes);
@@ -60,22 +75,22 @@ static SkString to_utf16be(const char* src, size_t len) {
     const char* const end = src + len;
     size_t n = 1;  // BOM
     for (const char* ptr = src; ptr < end;) {
-        SkUnichar u = SkUTF8_NextUnicharWithError(&ptr, end);
+        SkUnichar u = SkUTF::NextUTF8(&ptr, end);
         if (u < 0) {
             break;
         }
-        n += SkUTF16_FromUnichar(u);
+        n += SkUTF::ToUTF16(u);
     }
     ret.resize(2 * n);
     char* out = ret.writable_str();
     write_utf16be(&out, 0xFEFF);  // BOM
     for (const char* ptr = src; ptr < end;) {
-        SkUnichar u = SkUTF8_NextUnicharWithError(&ptr, end);
+        SkUnichar u = SkUTF::NextUTF8(&ptr, end);
         if (u < 0) {
             break;
         }
         uint16_t utf16[2];
-        size_t l = SkUTF16_FromUnichar(u, utf16);
+        size_t l = SkUTF::ToUTF16(u, utf16);
         write_utf16be(&out, utf16[0]);
         if (l == 2) {
             write_utf16be(&out, utf16[1]);
@@ -101,18 +116,18 @@ static SkString convert(const char* src) {
 namespace {
 static const struct {
     const char* const key;
-    SkString SkDocument::PDFMetadata::*const valuePtr;
+    SkString SkPDF::Metadata::*const valuePtr;
 } gMetadataKeys[] = {
-        {"Title", &SkDocument::PDFMetadata::fTitle},
-        {"Author", &SkDocument::PDFMetadata::fAuthor},
-        {"Subject", &SkDocument::PDFMetadata::fSubject},
-        {"Keywords", &SkDocument::PDFMetadata::fKeywords},
-        {"Creator", &SkDocument::PDFMetadata::fCreator},
+        {"Title", &SkPDF::Metadata::fTitle},
+        {"Author", &SkPDF::Metadata::fAuthor},
+        {"Subject", &SkPDF::Metadata::fSubject},
+        {"Keywords", &SkPDF::Metadata::fKeywords},
+        {"Creator", &SkPDF::Metadata::fCreator},
 };
 }  // namespace
 
 sk_sp<SkPDFObject> SkPDFMetadata::MakeDocumentInformationDict(
-        const SkDocument::PDFMetadata& metadata) {
+        const SkPDF::Metadata& metadata) {
     auto dict = sk_make_sp<SkPDFDict>();
     for (const auto keyValuePtr : gMetadataKeys) {
         const SkString& value = metadata.*(keyValuePtr.valuePtr);
@@ -126,17 +141,17 @@ sk_sp<SkPDFObject> SkPDFMetadata::MakeDocumentInformationDict(
         dict->insertString("Producer", convert(metadata.fProducer));
         dict->insertString(SKPDF_CUSTOM_PRODUCER_KEY, convert(SKPDF_PRODUCER));
     }
-    if (metadata.fCreation.fEnabled) {
-        dict->insertString("CreationDate", pdf_date(metadata.fCreation.fDateTime));
+    if (metadata.fCreation != kZeroTime) {
+        dict->insertString("CreationDate", pdf_date(metadata.fCreation));
     }
-    if (metadata.fModified.fEnabled) {
-        dict->insertString("ModDate", pdf_date(metadata.fModified.fDateTime));
+    if (metadata.fModified != kZeroTime) {
+        dict->insertString("ModDate", pdf_date(metadata.fModified));
     }
-    return dict;
+    return std::move(dict);
 }
 
 SkPDFMetadata::UUID SkPDFMetadata::CreateUUID(
-        const SkDocument::PDFMetadata& metadata) {
+        const SkPDF::Metadata& metadata) {
     // The main requirement is for the UUID to be unique; the exact
     // format of the data that will be hashed is not important.
     SkMD5 md5;
@@ -147,14 +162,8 @@ SkPDFMetadata::UUID SkPDFMetadata::CreateUUID(
     SkTime::DateTime dateTime;
     SkTime::GetDateTime(&dateTime);
     md5.write(&dateTime, sizeof(dateTime));
-    if (metadata.fCreation.fEnabled) {
-        md5.write(&metadata.fCreation.fDateTime,
-                  sizeof(metadata.fCreation.fDateTime));
-    }
-    if (metadata.fModified.fEnabled) {
-        md5.write(&metadata.fModified.fDateTime,
-                  sizeof(metadata.fModified.fDateTime));
-    }
+    md5.write(&metadata.fCreation, sizeof(metadata.fCreation));
+    md5.write(&metadata.fModified, sizeof(metadata.fModified));
 
     for (const auto keyValuePtr : gMetadataKeys) {
         md5.writeText(keyValuePtr.key);
@@ -184,7 +193,7 @@ sk_sp<SkPDFObject> SkPDFMetadata::MakePdfId(const UUID& doc,
             SkString(reinterpret_cast<const char*>(&doc), sizeof(UUID)));
     array->appendString(
             SkString(reinterpret_cast<const char*>(&instance), sizeof(UUID)));
-    return array;
+    return std::move(array);
 }
 
 // Convert a block of memory to hexadecimal.  Input and output pointers will be
@@ -297,7 +306,7 @@ const SkString escape_xml(const SkString& input,
 }
 
 sk_sp<SkPDFObject> SkPDFMetadata::MakeXMPObject(
-        const SkDocument::PDFMetadata& metadata,
+        const SkPDF::Metadata& metadata,
         const UUID& doc,
         const UUID& instance) {
     static const char templateString[] =
@@ -334,17 +343,17 @@ sk_sp<SkPDFObject> SkPDFMetadata::MakeXMPObject(
 
     SkString creationDate;
     SkString modificationDate;
-    if (metadata.fCreation.fEnabled) {
+    if (metadata.fCreation != kZeroTime) {
         SkString tmp;
-        metadata.fCreation.fDateTime.toISO8601(&tmp);
+        metadata.fCreation.toISO8601(&tmp);
         SkASSERT(0 == count_xml_escape_size(tmp));
         // YYYY-mm-ddTHH:MM:SS[+|-]ZZ:ZZ; no need to escape
         creationDate = SkStringPrintf("<xmp:CreateDate>%s</xmp:CreateDate>\n",
                                       tmp.c_str());
     }
-    if (metadata.fModified.fEnabled) {
+    if (metadata.fModified != kZeroTime) {
         SkString tmp;
-        metadata.fModified.fDateTime.toISO8601(&tmp);
+        metadata.fModified.toISO8601(&tmp);
         SkASSERT(0 == count_xml_escape_size(tmp));
         modificationDate = SkStringPrintf(
                 "<xmp:ModifyDate>%s</xmp:ModifyDate>\n", tmp.c_str());

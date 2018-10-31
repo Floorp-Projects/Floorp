@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "SkAtomics.h"
 #include "SkBitmap.h"
+
+#include "SkAtomics.h"
 #include "SkColorData.h"
-#include "SkColorTable.h"
 #include "SkConvertPixels.h"
 #include "SkData.h"
 #include "SkFilterQuality.h"
@@ -24,11 +24,13 @@
 #include "SkRect.h"
 #include "SkScalar.h"
 #include "SkTemplates.h"
+#include "SkTo.h"
 #include "SkUnPreMultiply.h"
 #include "SkWriteBuffer.h"
 #include "SkWritePixelsRec.h"
 
-#include <string.h>
+#include <cstring>
+#include <utility>
 
 static bool reset_return_false(SkBitmap* bm) {
     bm->reset();
@@ -81,7 +83,8 @@ SkBitmap& SkBitmap::operator=(SkBitmap&& other) {
 }
 
 void SkBitmap::swap(SkBitmap& other) {
-    SkTSwap(*this, other);
+    using std::swap;
+    swap(*this, other);
     SkDEBUGCODE(this->validate();)
 }
 
@@ -381,11 +384,17 @@ void* SkBitmap::getAddr(int x, int y) const {
     if (base) {
         base += y * this->rowBytes();
         switch (this->colorType()) {
+            case kRGBA_F32_SkColorType:
+                base += x << 4;
+                break;
             case kRGBA_F16_SkColorType:
                 base += x << 3;
                 break;
+            case kRGB_888x_SkColorType:
             case kRGBA_8888_SkColorType:
             case kBGRA_8888_SkColorType:
+            case kRGB_101010x_SkColorType:
+            case kRGBA_1010102_SkColorType:
                 base += x << 2;
                 break;
             case kARGB_4444_SkColorType:
@@ -473,20 +482,19 @@ bool SkBitmap::extractSubset(SkBitmap* result, const SkIRect& subset) const {
 ///////////////////////////////////////////////////////////////////////////////
 
 bool SkBitmap::readPixels(const SkImageInfo& requestedDstInfo, void* dstPixels, size_t dstRB,
-                          int x, int y, SkTransferFunctionBehavior behavior) const {
+                          int x, int y) const {
     SkPixmap src;
     if (!this->peekPixels(&src)) {
         return false;
     }
-    return src.readPixels(requestedDstInfo, dstPixels, dstRB, x, y, behavior);
+    return src.readPixels(requestedDstInfo, dstPixels, dstRB, x, y);
 }
 
 bool SkBitmap::readPixels(const SkPixmap& dst, int srcX, int srcY) const {
     return this->readPixels(dst.info(), dst.writable_addr(), dst.rowBytes(), srcX, srcY);
 }
 
-bool SkBitmap::writePixels(const SkPixmap& src, int dstX, int dstY,
-                           SkTransferFunctionBehavior behavior) {
+bool SkBitmap::writePixels(const SkPixmap& src, int dstX, int dstY) {
     if (!SkImageInfoValidConversion(this->info(), src.info())) {
         return false;
     }
@@ -498,8 +506,7 @@ bool SkBitmap::writePixels(const SkPixmap& src, int dstX, int dstY,
 
     void* dstPixels = this->getAddr(rec.fX, rec.fY);
     const SkImageInfo dstInfo = this->info().makeWH(rec.fInfo.width(), rec.fInfo.height());
-    SkConvertPixels(dstInfo, dstPixels, this->rowBytes(), rec.fInfo, rec.fPixels, rec.fRowBytes,
-                    nullptr, behavior);
+    SkConvertPixels(dstInfo, dstPixels, this->rowBytes(), rec.fInfo, rec.fPixels, rec.fRowBytes);
     this->notifyPixelsChanged();
     return true;
 }
@@ -519,8 +526,7 @@ static bool GetBitmapAlpha(const SkBitmap& src, uint8_t* SK_RESTRICT alpha, int 
         return false;
     }
     SkConvertPixels(SkImageInfo::MakeA8(pmap.width(), pmap.height()), alpha, alphaRowBytes,
-                    pmap.info(), pmap.addr(), pmap.rowBytes(), nullptr,
-                    SkTransferFunctionBehavior::kRespect);
+                    pmap.info(), pmap.addr(), pmap.rowBytes());
     return true;
 }
 
@@ -536,6 +542,9 @@ bool SkBitmap::extractAlpha(SkBitmap* dst, const SkPaint* paint,
     SkMatrix    identity;
     SkMask      srcM, dstM;
 
+    if (this->width() == 0 || this->height() == 0) {
+        return false;
+    }
     srcM.fBounds.set(0, 0, this->width(), this->height());
     srcM.fRowBytes = SkAlign4(this->width());
     srcM.fFormat = SkMask::kA8_Format;
@@ -630,35 +639,6 @@ void SkBitmap::validate() const {
 }
 #endif
 
-#ifndef SK_IGNORE_TO_STRING
-#include "SkString.h"
-void SkBitmap::toString(SkString* str) const {
-
-    static const char* gColorTypeNames[kLastEnum_SkColorType + 1] = {
-        "UNKNOWN", "A8", "565", "4444", "RGBA", "BGRA", "INDEX8",
-    };
-
-    str->appendf("bitmap: ((%d, %d) %s", this->width(), this->height(),
-                 gColorTypeNames[this->colorType()]);
-
-    str->append(" (");
-    if (this->isOpaque()) {
-        str->append("opaque");
-    } else {
-        str->append("transparent");
-    }
-    if (this->isImmutable()) {
-        str->append(", immutable");
-    } else {
-        str->append(", not-immutable");
-    }
-    str->append(")");
-
-    str->appendf(" pixelref:%p", this->pixelRef());
-    str->append(")");
-}
-#endif
-
 ///////////////////////////////////////////////////////////////////////////////
 
 bool SkBitmap::peekPixels(SkPixmap* pmap) const {
@@ -675,8 +655,8 @@ bool SkBitmap::peekPixels(SkPixmap* pmap) const {
 
 #ifdef SK_DEBUG
 void SkImageInfo::validate() const {
-    SkASSERT(fWidth >= 0);
-    SkASSERT(fHeight >= 0);
+    SkASSERT(fDimensions.width() >= 0);
+    SkASSERT(fDimensions.height() >= 0);
     SkASSERT(SkColorTypeIsValid(fColorType));
     SkASSERT(SkAlphaTypeIsValid(fAlphaType));
 }

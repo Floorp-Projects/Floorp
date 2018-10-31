@@ -25,6 +25,7 @@ typedef std::unordered_map<const Variable*, std::unique_ptr<Expression>*> Defini
  */
 struct Expression : public IRNode {
     enum Kind {
+        kAppendStage_Kind,
         kBinary_Kind,
         kBoolLiteral_Kind,
         kConstructor_Kind,
@@ -104,6 +105,8 @@ struct Expression : public IRNode {
     virtual int coercionCost(const Type& target) const {
         return fType.coercionCost(target);
     }
+
+    virtual std::unique_ptr<Expression> clone() const = 0;
 
     const Kind fKind;
     const Type& fType;

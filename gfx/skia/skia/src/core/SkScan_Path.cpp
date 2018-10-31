@@ -5,19 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "SkScanPriv.h"
 #include "SkBlitter.h"
 #include "SkEdge.h"
 #include "SkEdgeBuilder.h"
 #include "SkGeometry.h"
+#include "SkMacros.h"
 #include "SkPath.h"
 #include "SkQuadClipper.h"
 #include "SkRasterClip.h"
 #include "SkRectPriv.h"
 #include "SkRegion.h"
 #include "SkSafe32.h"
-#include "SkTemplates.h"
+#include "SkScanPriv.h"
 #include "SkTSort.h"
+#include "SkTemplates.h"
+
+#include <utility>
 
 #define kEDGE_HEAD_Y    SK_MinS32
 #define kEDGE_TAIL_Y    SK_MaxS32
@@ -232,7 +235,8 @@ static void walk_convex_edges(SkEdge* prevHead, SkPath::FillType,
 
         if (leftE->fX > riteE->fX || (leftE->fX == riteE->fX &&
                                       leftE->fDX > riteE->fDX)) {
-            SkTSwap(leftE, riteE);
+            using std::swap;
+            swap(leftE, riteE);
         }
 
         int local_bot = SkMin32(leftE->fLastY, riteE->fLastY);
@@ -550,7 +554,9 @@ SkScanClipper::SkScanClipper(SkBlitter* blitter, const SkRegion* clip,
 ///////////////////////////////////////////////////////////////////////////////
 
 static bool clip_to_limit(const SkRegion& orig, SkRegion* reduced) {
-    const int32_t limit = 32767;
+    // need to limit coordinates such that the width/height of our rect can be represented
+    // in SkFixed (16.16). See skbug.com/7998
+    const int32_t limit = 32767 >> 1;
 
     SkIRect limitR;
     limitR.set(-limit, -limit, limit, limit);
@@ -755,7 +761,7 @@ void SkScan::FillTriangle(const SkPoint pts[], const SkRasterClip& clip,
         return;
     }
 
-    SkIRect ir = r.round();
+    SkIRect ir = conservative_round_to_int(r);
     if (ir.isEmpty() || !SkIRect::Intersects(ir, clip.getBounds())) {
         return;
     }

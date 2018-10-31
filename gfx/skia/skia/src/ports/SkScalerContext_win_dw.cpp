@@ -4,15 +4,17 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+#include "SkDWriteNTDDI_VERSION.h"
 
 #include "SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
 #undef GetGlyphIndices
 
-#include "SkDraw.h"
+#include "SkCodec.h"
 #include "SkDWrite.h"
 #include "SkDWriteGeometrySink.h"
+#include "SkDraw.h"
 #include "SkEndian.h"
 #include "SkGlyph.h"
 #include "SkHRESULT.h"
@@ -29,10 +31,12 @@
 #include "SkScalerContext_win_dw.h"
 #include "SkSharedMutex.h"
 #include "SkTScopedComPtr.h"
+#include "SkTo.h"
 #include "SkTypeface_win_dw.h"
 
 #include <dwrite.h>
 #include <dwrite_1.h>
+#include <dwrite_3.h>
 
 /* Note:
  * In versions 8 and 8.1 of Windows, some calls in DWrite are not thread safe.
@@ -382,13 +386,7 @@ uint16_t SkScalerContext_DW::generateCharToGlyph(SkUnichar uni) {
     return index;
 }
 
-void SkScalerContext_DW::generateAdvance(SkGlyph* glyph) {
-    //Delta is the difference between the right/left side bearing metric
-    //and where the right/left side bearing ends up after hinting.
-    //DirectWrite does not provide this information.
-    glyph->fRsbDelta = 0;
-    glyph->fLsbDelta = 0;
-
+bool SkScalerContext_DW::generateAdvance(SkGlyph* glyph) {
     glyph->fAdvanceX = 0;
     glyph->fAdvanceY = 0;
 
@@ -399,7 +397,7 @@ void SkScalerContext_DW::generateAdvance(SkGlyph* glyph) {
         DWRITE_MEASURING_MODE_GDI_NATURAL == fMeasuringMode)
     {
         SkAutoExclusive l(DWriteFactoryMutex);
-        HRVM(this->getDWriteTypeface()->fDWriteFontFace->GetGdiCompatibleGlyphMetrics(
+        HRBM(this->getDWriteTypeface()->fDWriteFontFace->GetGdiCompatibleGlyphMetrics(
                  fTextSizeMeasure,
                  1.0f, // pixelsPerDip
                  // This parameter does not act like the lpmat2 parameter to GetGlyphOutlineW.
@@ -411,7 +409,7 @@ void SkScalerContext_DW::generateAdvance(SkGlyph* glyph) {
              "Could not get gdi compatible glyph metrics.");
     } else {
         SkAutoExclusive l(DWriteFactoryMutex);
-        HRVM(this->getDWriteTypeface()->fDWriteFontFace->GetDesignGlyphMetrics(&glyphId, 1, &gm),
+        HRBM(this->getDWriteTypeface()->fDWriteFontFace->GetDesignGlyphMetrics(&glyphId, 1, &gm),
              "Could not get design metrics.");
     }
 
@@ -434,6 +432,7 @@ void SkScalerContext_DW::generateAdvance(SkGlyph* glyph) {
 
     glyph->fAdvanceX = SkScalarToFloat(advance.fX);
     glyph->fAdvanceY = SkScalarToFloat(advance.fY);
+    return true;
 }
 
 HRESULT SkScalerContext_DW::getBoundingBox(SkGlyph* glyph,
@@ -531,6 +530,18 @@ bool SkScalerContext_DW::isColorGlyph(const SkGlyph& glyph) {
     return getColorGlyphRun(glyph, &colorLayer);
 }
 
+bool SkScalerContext_DW::isPngGlyph(const SkGlyph& glyph) {
+    if (!this->getDWriteTypeface()->fDWriteFontFace4) {
+        return false;
+    }
+
+    DWRITE_GLYPH_IMAGE_FORMATS f;
+    IDWriteFontFace4* fontFace4 = this->getDWriteTypeface()->fDWriteFontFace4.get();
+    HRBM(fontFace4->GetGlyphImageFormats(glyph.getGlyphID(), 0, UINT32_MAX, &f),
+         "Cannot get glyph image formats.");
+    return f & DWRITE_GLYPH_IMAGE_FORMATS_PNG;
+}
+
 bool SkScalerContext_DW::getColorGlyphRun(const SkGlyph& glyph,
                                           IDWriteColorGlyphRunEnumerator** colorGlyph)
 {
@@ -560,16 +571,143 @@ bool SkScalerContext_DW::getColorGlyphRun(const SkGlyph& glyph,
     return true;
 }
 
+void SkScalerContext_DW::generateColorMetrics(SkGlyph* glyph) {
+    SkTScopedComPtr<IDWriteColorGlyphRunEnumerator> colorLayers;
+    HRVM(getColorGlyphRun(*glyph, &colorLayers), "Could not get color glyph run");
+    SkASSERT(colorLayers.get());
+
+    SkRect bounds = SkRect::MakeEmpty();
+    BOOL hasNextRun = FALSE;
+    while (SUCCEEDED(colorLayers->MoveNext(&hasNextRun)) && hasNextRun) {
+        const DWRITE_COLOR_GLYPH_RUN* colorGlyph;
+        HRVM(colorLayers->GetCurrentRun(&colorGlyph), "Could not get current color glyph run");
+
+        SkPath path;
+        SkTScopedComPtr<IDWriteGeometrySink> geometryToPath;
+        HRVM(SkDWriteGeometrySink::Create(&path, &geometryToPath),
+            "Could not create geometry to path converter.");
+        {
+            SkAutoExclusive l(DWriteFactoryMutex);
+            HRVM(colorGlyph->glyphRun.fontFace->GetGlyphRunOutline(
+                    colorGlyph->glyphRun.fontEmSize,
+                    colorGlyph->glyphRun.glyphIndices,
+                    colorGlyph->glyphRun.glyphAdvances,
+                    colorGlyph->glyphRun.glyphOffsets,
+                    colorGlyph->glyphRun.glyphCount,
+                    colorGlyph->glyphRun.isSideways,
+                    colorGlyph->glyphRun.bidiLevel % 2, //rtl
+                    geometryToPath.get()),
+                "Could not create glyph outline.");
+        }
+        bounds.join(path.getBounds());
+    }
+    SkMatrix matrix = fSkXform;
+    if (this->isSubpixel()) {
+        matrix.postTranslate(SkFixedToScalar(glyph->getSubXFixed()),
+                             SkFixedToScalar(glyph->getSubYFixed()));
+    }
+    matrix.mapRect(&bounds);
+    // Round float bound values into integer.
+    SkIRect ibounds = bounds.roundOut();
+
+    glyph->fWidth = ibounds.fRight - ibounds.fLeft;
+    glyph->fHeight = ibounds.fBottom - ibounds.fTop;
+    glyph->fLeft = ibounds.fLeft;
+    glyph->fTop = ibounds.fTop;
+}
+
+#ifdef USE_PNG
+namespace {
+struct Context {
+    SkTScopedComPtr<IDWriteFontFace4> fontFace4;
+    void* glyphDataContext;
+    Context(IDWriteFontFace4* face4, void* context)
+        : fontFace4(SkRefComPtr(face4))
+        , glyphDataContext(context)
+    {}
+};
+
+static void ReleaseProc(const void* ptr, void* context) {
+    Context* ctx = (Context*)context;
+    ctx->fontFace4->ReleaseGlyphImageData(ctx->glyphDataContext);
+    delete ctx;
+}
+}
+
+void SkScalerContext_DW::generatePngMetrics(SkGlyph* glyph) {
+    SkASSERT(isPngGlyph(*glyph));
+    SkASSERT(glyph->fMaskFormat == SkMask::Format::kARGB32_Format);
+    SkASSERT(this->getDWriteTypeface()->fDWriteFontFace4);
+
+    IDWriteFontFace4* fontFace4 = this->getDWriteTypeface()->fDWriteFontFace4.get();
+    DWRITE_GLYPH_IMAGE_DATA glyphData;
+    void* glyphDataContext;
+    HRVM(fontFace4->GetGlyphImageData(glyph->getGlyphID(),
+                                      fTextSizeRender,
+                                      DWRITE_GLYPH_IMAGE_FORMATS_PNG,
+                                      &glyphData,
+                                      &glyphDataContext),
+         "Glyph image data could not be acquired.");
+
+    Context* context = new Context(fontFace4, glyphDataContext);
+    sk_sp<SkData> data = SkData::MakeWithProc(glyphData.imageData,
+                                              glyphData.imageDataSize,
+                                              &ReleaseProc,
+                                              context);
+
+    std::unique_ptr<SkCodec> codec = SkCodec::MakeFromData(std::move(data));
+    if (!codec) {
+        return;
+    }
+
+    SkImageInfo info = codec->getInfo();
+    SkRect bounds = SkRect::MakeLTRB(SkIntToScalar(info.bounds().fLeft),
+                                     SkIntToScalar(info.bounds().fTop),
+                                     SkIntToScalar(info.bounds().fRight),
+                                     SkIntToScalar(info.bounds().fBottom));
+
+    SkMatrix matrix = fSkXform;
+    SkScalar scale = fTextSizeRender / glyphData.pixelsPerEm;
+    matrix.preScale(scale, scale);
+    matrix.preTranslate(-glyphData.horizontalLeftOrigin.x, -glyphData.horizontalLeftOrigin.y);
+    if (this->isSubpixel()) {
+        matrix.postTranslate(SkFixedToScalar(glyph->getSubXFixed()),
+                             SkFixedToScalar(glyph->getSubYFixed()));
+    }
+    matrix.mapRect(&bounds);
+    bounds.roundOut();
+
+    glyph->fWidth = bounds.width();
+    glyph->fHeight = bounds.height();
+    glyph->fLeft = bounds.left();
+    glyph->fTop = bounds.top();
+    return;
+}
+#endif
+
 void SkScalerContext_DW::generateMetrics(SkGlyph* glyph) {
     glyph->fWidth = 0;
     glyph->fHeight = 0;
     glyph->fLeft = 0;
     glyph->fTop = 0;
+    glyph->fMaskFormat = fRec.fMaskFormat;
 
-    this->generateAdvance(glyph);
+    if (!this->generateAdvance(glyph)) {
+        return;
+    }
 
     if (fIsColorFont && isColorGlyph(*glyph)) {
         glyph->fMaskFormat = SkMask::kARGB32_Format;
+        generateColorMetrics(glyph);
+        return;
+    }
+
+    if (fIsColorFont && isPngGlyph(*glyph)) {
+#ifdef USE_PNG
+        glyph->fMaskFormat = SkMask::kARGB32_Format;
+        generatePngMetrics(glyph);
+#endif
+        return;
     }
 
     RECT bbox;
@@ -864,11 +1002,15 @@ void SkScalerContext_DW::generateColorGlyphImage(const SkGlyph& glyph) {
 
     SkMatrix matrix = fSkXform;
     matrix.postTranslate(-SkIntToScalar(glyph.fLeft), -SkIntToScalar(glyph.fTop));
+    if (this->isSubpixel()) {
+        matrix.postTranslate(SkFixedToScalar(glyph.getSubXFixed()),
+                             SkFixedToScalar(glyph.getSubYFixed()));
+    }
     SkRasterClip rc(SkIRect::MakeWH(glyph.fWidth, glyph.fHeight));
     SkDraw draw;
     draw.fDst = SkPixmap(SkImageInfo::MakeN32(glyph.fWidth, glyph.fHeight, kPremul_SkAlphaType),
                          glyph.fImage,
-                         glyph.ComputeRowBytes(glyph.fWidth, SkMask::Format::kARGB32_Format));
+                         glyph.rowBytesUsingFormat(SkMask::Format::kARGB32_Format));
     draw.fMatrix = &matrix;
     draw.fRC = &rc;
 
@@ -919,6 +1061,50 @@ void SkScalerContext_DW::generateColorGlyphImage(const SkGlyph& glyph) {
     }
 }
 
+#ifdef USE_PNG
+void SkScalerContext_DW::generatePngGlyphImage(const SkGlyph& glyph) {
+    SkASSERT(isPngGlyph(glyph));
+    SkASSERT(glyph.fMaskFormat == SkMask::Format::kARGB32_Format);
+    SkASSERT(this->getDWriteTypeface()->fDWriteFontFace4);
+
+    IDWriteFontFace4* fontFace4 = this->getDWriteTypeface()->fDWriteFontFace4.get();
+    DWRITE_GLYPH_IMAGE_DATA glyphData;
+    void* glyphDataContext;
+    HRVM(fontFace4->GetGlyphImageData(glyph.getGlyphID(),
+                                      fTextSizeRender,
+                                      DWRITE_GLYPH_IMAGE_FORMATS_PNG,
+                                      &glyphData,
+                                      &glyphDataContext),
+         "Glyph image data could not be acquired.");
+    Context* context = new Context(fontFace4, glyphDataContext);
+    sk_sp<SkData> data = SkData::MakeWithProc(glyphData.imageData,
+                                              glyphData.imageDataSize,
+                                              &ReleaseProc,
+                                              context);
+    sk_sp<SkImage> image = SkImage::MakeFromEncoded(std::move(data));
+
+    SkBitmap dstBitmap;
+    dstBitmap.setInfo(SkImageInfo::Make(glyph.fWidth, glyph.fHeight,
+                                        kN32_SkColorType,
+                                        kPremul_SkAlphaType),
+                      glyph.rowBytes());
+    dstBitmap.setPixels(glyph.fImage);
+
+    SkCanvas canvas(dstBitmap);
+    canvas.clear(SK_ColorTRANSPARENT);
+    canvas.translate(-glyph.fLeft, -glyph.fTop);
+    if (this->isSubpixel()) {
+        canvas.translate(SkFixedToScalar(glyph.getSubXFixed()),
+                         SkFixedToScalar(glyph.getSubYFixed()));
+    }
+    canvas.concat(fSkXform);
+    SkScalar ratio = fTextSizeRender / glyphData.pixelsPerEm;
+    canvas.scale(ratio, ratio);
+    canvas.translate(-glyphData.horizontalLeftOrigin.x, -glyphData.horizontalLeftOrigin.y);
+    canvas.drawImage(image, 0, 0, nullptr);
+}
+#endif
+
 void SkScalerContext_DW::generateImage(const SkGlyph& glyph) {
     //Create the mask.
     DWRITE_RENDERING_MODE renderingMode = fRenderingMode;
@@ -929,7 +1115,18 @@ void SkScalerContext_DW::generateImage(const SkGlyph& glyph) {
     }
 
     if (SkMask::kARGB32_Format == glyph.fMaskFormat) {
-        generateColorGlyphImage(glyph);
+        if (fIsColorFont) {
+            if (isColorGlyph(glyph)) {
+                generateColorGlyphImage(glyph);
+                return;
+#ifdef USE_PNG
+            } else if (isPngGlyph(glyph)) {
+                generatePngGlyphImage(glyph);
+                return;
+#endif
+            }
+        }
+        SkDEBUGFAIL("Could not generate image from the given color font format.");
         return;
     }
 
@@ -976,20 +1173,20 @@ void SkScalerContext_DW::generateImage(const SkGlyph& glyph) {
     }
 }
 
-void SkScalerContext_DW::generatePath(SkGlyphID glyph, SkPath* path) {
+bool SkScalerContext_DW::generatePath(SkGlyphID glyph, SkPath* path) {
     SkASSERT(path);
 
     path->reset();
 
     SkTScopedComPtr<IDWriteGeometrySink> geometryToPath;
-    HRVM(SkDWriteGeometrySink::Create(path, &geometryToPath),
+    HRBM(SkDWriteGeometrySink::Create(path, &geometryToPath),
          "Could not create geometry to path converter.");
     UINT16 glyphId = SkTo<UINT16>(glyph);
     {
         SkAutoExclusive l(DWriteFactoryMutex);
         //TODO: convert to<->from DIUs? This would make a difference if hinting.
         //It may not be needed, it appears that DirectWrite only hints at em size.
-        HRVM(this->getDWriteTypeface()->fDWriteFontFace->GetGlyphRunOutline(
+        HRBM(this->getDWriteTypeface()->fDWriteFontFace->GetGlyphRunOutline(
              SkScalarToFloat(fTextSizeRender),
              &glyphId,
              nullptr, //advances
@@ -1002,6 +1199,7 @@ void SkScalerContext_DW::generatePath(SkGlyphID glyph, SkPath* path) {
     }
 
     path->transform(fSkXform);
+    return true;
 }
 
 #endif//defined(SK_BUILD_FOR_WIN)

@@ -10965,7 +10965,8 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling)
 
         MUST_MATCH_TOKEN_MOD(TokenKind::RightParen, TokenStream::Operand, JSMSG_PAREN_AFTER_ARGS);
 
-        if (!context->runtime()->moduleDynamicImportHook && !abortIfSyntaxParser()) {
+        if (!context->runtime()->moduleDynamicImportHook) {
+            error(JSMSG_NO_DYNAMIC_IMPORT);
             return null();
         }
 

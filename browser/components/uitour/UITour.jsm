@@ -1365,12 +1365,12 @@ var UITour = {
   },
 
   showNewTab(aWindow, aBrowser) {
+    aWindow.gURLBar.focus();
     let url = "about:newtab";
     aWindow.openLinkIn(url, "current", {
       targetBrowser: aBrowser,
       triggeringPrincipal: Services.scriptSecurityManager.createCodebasePrincipal(Services.io.newURI(url), {}),
     });
-    aWindow.gURLBar.focus();
   },
 
   _hideAnnotationsForPanel(aEvent, aShouldClosePanel, aTargetPositionCallback) {

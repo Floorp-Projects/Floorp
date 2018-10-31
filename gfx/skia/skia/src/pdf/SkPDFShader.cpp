@@ -11,7 +11,7 @@
 #include "SkData.h"
 #include "SkPDFCanon.h"
 #include "SkPDFDevice.h"
-#include "SkPDFDocument.h"
+#include "SkPDFDocumentPriv.h"
 #include "SkPDFFormXObject.h"
 #include "SkPDFGradientShader.h"
 #include "SkPDFGraphicState.h"
@@ -72,7 +72,7 @@ static sk_sp<SkPDFStream> make_image_shader(SkPDFDocument* doc,
     SkISize patternDeviceSize = {SkScalarCeilToInt(deviceBounds.width()),
                                  SkScalarCeilToInt(deviceBounds.height())};
     auto patternDevice = sk_make_sp<SkPDFDevice>(patternDeviceSize, doc);
-    SkCanvas canvas(patternDevice.get());
+    SkCanvas canvas(patternDevice);
 
     SkRect patternBBox = SkRect::Make(image->bounds());
 
@@ -245,8 +245,9 @@ static sk_sp<SkPDFStream> make_image_shader(SkPDFDocument* doc,
     }
 
     auto imageShader = sk_make_sp<SkPDFStream>(patternDevice->content());
+    sk_sp<SkPDFDict> resourceDict = patternDevice->makeResourceDict();
     SkPDFUtils::PopulateTilingPatternDict(imageShader->dict(), patternBBox,
-                                          patternDevice->makeResourceDict(), finalMatrix);
+                                          std::move(resourceDict), finalMatrix);
     return imageShader;
 }
 
@@ -283,8 +284,8 @@ static sk_sp<SkPDFObject> make_fallback_shader(SkPDFDocument* doc,
     }
     // Clamp the bitmap size to about 1M pixels
     static const SkScalar kMaxBitmapArea = 1024 * 1024;
-    SkScalar rasterScale = SkIntToScalar(doc->rasterDpi()) / SkPDFUtils::kDpiForRasterScaleOne;
-    SkScalar bitmapArea = rasterScale * surfaceBBox.width() * rasterScale * surfaceBBox.height();
+    SkScalar bitmapArea = surfaceBBox.width() * surfaceBBox.height();
+    SkScalar rasterScale = 1.0f;
     if (bitmapArea > kMaxBitmapArea) {
         rasterScale *= SkScalarSqrt(kMaxBitmapArea / bitmapArea);
     }

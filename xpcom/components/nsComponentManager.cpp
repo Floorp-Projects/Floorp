@@ -1045,7 +1045,7 @@ nsComponentManagerImpl::CreateInstance(const nsCID& aClass,
     rv = factory->CreateInstance(aDelegate, aIID, aResult);
     if (NS_SUCCEEDED(rv) && !*aResult) {
       NS_ERROR("Factory did not return an object but returned success!");
-      rv = NS_ERROR_SERVICE_NOT_FOUND;
+      rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
     }
   } else {
     // Translate error values
@@ -1128,7 +1128,7 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char* aContractID,
     rv = factory->CreateInstance(aDelegate, aIID, aResult);
     if (NS_SUCCEEDED(rv) && !*aResult) {
       NS_ERROR("Factory did not return an object but returned success!");
-      rv = NS_ERROR_SERVICE_NOT_FOUND;
+      rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
     }
   } else {
     // Translate error values
@@ -1289,7 +1289,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
   }
   if (NS_SUCCEEDED(rv) && !service) {
     NS_ERROR("Factory did not return an object but returned success");
-    return NS_ERROR_SERVICE_NOT_FOUND;
+    return NS_ERROR_SERVICE_NOT_AVAILABLE;
   }
 
 #ifdef DEBUG
@@ -1490,7 +1490,7 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
   }
   if (NS_SUCCEEDED(rv) && !service) {
     NS_ERROR("Factory did not return an object but returned success");
-    return NS_ERROR_SERVICE_NOT_FOUND;
+    return NS_ERROR_SERVICE_NOT_AVAILABLE;
   }
 
 #ifdef DEBUG

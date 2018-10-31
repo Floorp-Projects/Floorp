@@ -8,6 +8,7 @@
 #define SkPictureImageGenerator_DEFINED
 
 #include "SkImageGenerator.h"
+#include "SkPaint.h"
 #include "SkTLazy.h"
 
 class SkPictureImageGenerator : public SkImageGenerator {
@@ -23,7 +24,6 @@ protected:
 #if SK_SUPPORT_GPU
     TexGenType onCanGenerateTexture() const override { return TexGenType::kExpensive; }
     sk_sp<GrTextureProxy> onGenerateTexture(GrContext*, const SkImageInfo&, const SkIPoint&,
-                                            SkTransferFunctionBehavior,
                                             bool willNeedMipMaps) override;
 #endif
 

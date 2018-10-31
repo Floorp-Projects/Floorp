@@ -6,7 +6,9 @@
  */
 
 #include "SkPictureRecord.h"
+
 #include "SkCanvasPriv.h"
+#include "SkClipOpPriv.h"
 #include "SkDrawShadowInfo.h"
 #include "SkImage_Base.h"
 #include "SkMatrixPriv.h"
@@ -14,9 +16,9 @@
 #include "SkPixelRef.h"
 #include "SkRRect.h"
 #include "SkRSXform.h"
-#include "SkTextBlob.h"
 #include "SkTSearch.h"
-#include "SkClipOpPriv.h"
+#include "SkTextBlob.h"
+#include "SkTo.h"
 
 #define HEAP_BLOCK_SIZE 4096
 
@@ -34,14 +36,6 @@ SkPictureRecord::SkPictureRecord(const SkISize& dimensions, uint32_t flags)
     , fInitialSaveCount(kNoInitialSave) {
 }
 
-SkPictureRecord::~SkPictureRecord() {
-    fImageRefs.unrefAll();
-    fPictureRefs.unrefAll();
-    fDrawableRefs.unrefAll();
-    fTextBlobRefs.unrefAll();
-    fVerticesRefs.unrefAll();
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkPictureRecord::onFlush() {
@@ -53,7 +47,7 @@ void SkPictureRecord::onFlush() {
 void SkPictureRecord::willSave() {
     // record the offset to us, making it non-positive to distinguish a save
     // from a clip entry.
-    fRestoreOffsetStack.push(-(int32_t)fWriter.bytesWritten());
+    fRestoreOffsetStack.push_back(-(int32_t)fWriter.bytesWritten());
     this->recordSave();
 
     this->INHERITED::willSave();
@@ -70,7 +64,7 @@ void SkPictureRecord::recordSave() {
 SkCanvas::SaveLayerStrategy SkPictureRecord::getSaveLayerStrategy(const SaveLayerRec& rec) {
     // record the offset to us, making it non-positive to distinguish a save
     // from a clip entry.
-    fRestoreOffsetStack.push(-(int32_t)fWriter.bytesWritten());
+    fRestoreOffsetStack.push_back(-(int32_t)fWriter.bytesWritten());
     this->recordSaveLayer(rec);
 
     (void)this->INHERITED::getSaveLayerStrategy(rec);
@@ -598,20 +592,6 @@ void SkPictureRecord::onDrawPosTextH(const void* text, size_t byteLength, const 
     this->validate(initialOffset, size);
 }
 
-void SkPictureRecord::onDrawTextOnPath(const void* text, size_t byteLength, const SkPath& path,
-                                       const SkMatrix* matrix, const SkPaint& paint) {
-    // op + paint index + length + 'length' worth of data + path index + matrix
-    const SkMatrix& m = matrix ? *matrix : SkMatrix::I();
-    size_t size = 3 * kUInt32Size + SkAlign4(byteLength) + kUInt32Size +
-        SkMatrixPriv::WriteToMemory(m, nullptr);
-    size_t initialOffset = this->addDraw(DRAW_TEXT_ON_PATH, &size);
-    this->addPaint(paint);
-    this->addText(text, byteLength);
-    this->addPath(path);
-    this->addMatrix(m);
-    this->validate(initialOffset, size);
-}
-
 void SkPictureRecord::onDrawTextRSXform(const void* text, size_t byteLength,
                                         const SkRSXform xform[], const SkRect* cull,
                                         const SkPaint& paint) {
@@ -688,14 +668,17 @@ void SkPictureRecord::onDrawDrawable(SkDrawable* drawable, const SkMatrix* matri
     this->validate(initialOffset, size);
 }
 
-void SkPictureRecord::onDrawVerticesObject(const SkVertices* vertices, SkBlendMode mode,
-                                           const SkPaint& paint) {
-    // op + paint index + vertices index + mode
-    size_t size = 4 * kUInt32Size;
+void SkPictureRecord::onDrawVerticesObject(const SkVertices* vertices,
+                                           const SkVertices::Bone bones[], int boneCount,
+                                           SkBlendMode mode, const SkPaint& paint) {
+    // op + paint index + vertices index + number of bones + bone matrices + mode
+    size_t size = 5 * kUInt32Size + boneCount * sizeof(SkVertices::Bone);
     size_t initialOffset = this->addDraw(DRAW_VERTICES_OBJECT, &size);
 
     this->addPaint(paint);
     this->addVertices(vertices);
+    this->addInt(boneCount);
+    fWriter.write(bones, boneCount * sizeof(SkVertices::Bone));
     this->addInt(static_cast<uint32_t>(mode));
 
     this->validate(initialOffset, size);
@@ -804,15 +787,28 @@ void SkPictureRecord::onDrawAnnotation(const SkRect& rect, const char key[], SkD
 
 ///////////////////////////////////////////////////////////////////////////////
 
-template <typename T> int find_or_append_uniqueID(SkTDArray<const T*>& array, const T* obj) {
-    int index = array.select([&](const T* elem) {
-        return elem->uniqueID() == obj->uniqueID();
-    });
-    if (index < 0) {
-        index = array.count();
-        *array.append() = SkRef(obj);
+// De-duping helper.
+
+template <typename T>
+static bool equals(T* a, T* b) { return a->uniqueID() == b->uniqueID(); }
+
+template <>
+bool equals(SkDrawable* a, SkDrawable* b) {
+    // SkDrawable's generationID is not a stable unique identifier.
+    return a == b;
+}
+
+template <typename T>
+static int find_or_append(SkTArray<sk_sp<T>>& array, T* obj) {
+    for (int i = 0; i < array.count(); i++) {
+        if (equals(array[i].get(), obj)) {
+            return i;
+        }
     }
-    return index;
+
+    array.push_back(sk_ref_sp(obj));
+
+    return array.count() - 1;
 }
 
 sk_sp<SkSurface> SkPictureRecord::onNewSurface(const SkImageInfo& info, const SkSurfaceProps&) {
@@ -821,7 +817,7 @@ sk_sp<SkSurface> SkPictureRecord::onNewSurface(const SkImageInfo& info, const Sk
 
 void SkPictureRecord::addImage(const SkImage* image) {
     // convention for images is 0-based index
-    this->addInt(find_or_append_uniqueID(fImageRefs, image));
+    this->addInt(find_or_append(fImages, image));
 }
 
 void SkPictureRecord::addMatrix(const SkMatrix& matrix) {
@@ -856,18 +852,12 @@ void SkPictureRecord::addPatch(const SkPoint cubics[12]) {
 
 void SkPictureRecord::addPicture(const SkPicture* picture) {
     // follow the convention of recording a 1-based index
-    this->addInt(find_or_append_uniqueID(fPictureRefs, picture) + 1);
+    this->addInt(find_or_append(fPictures, picture) + 1);
 }
 
 void SkPictureRecord::addDrawable(SkDrawable* drawable) {
-    int index = fDrawableRefs.find(drawable);
-    if (index < 0) {    // not found
-        index = fDrawableRefs.count();
-        *fDrawableRefs.append() = drawable;
-        drawable->ref();
-    }
     // follow the convention of recording a 1-based index
-    this->addInt(index + 1);
+    this->addInt(find_or_append(fDrawables, drawable) + 1);
 }
 
 void SkPictureRecord::addPoint(const SkPoint& point) {
@@ -918,12 +908,12 @@ void SkPictureRecord::addText(const void* text, size_t byteLength) {
 
 void SkPictureRecord::addTextBlob(const SkTextBlob* blob) {
     // follow the convention of recording a 1-based index
-    this->addInt(find_or_append_uniqueID(fTextBlobRefs, blob) + 1);
+    this->addInt(find_or_append(fTextBlobs, blob) + 1);
 }
 
 void SkPictureRecord::addVertices(const SkVertices* vertices) {
     // follow the convention of recording a 1-based index
-    this->addInt(find_or_append_uniqueID(fVerticesRefs, vertices) + 1);
+    this->addInt(find_or_append(fVertices, vertices) + 1);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
