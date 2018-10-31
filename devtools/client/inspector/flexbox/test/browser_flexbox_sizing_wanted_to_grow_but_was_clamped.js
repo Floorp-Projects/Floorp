@@ -29,7 +29,7 @@ add_task(async function() {
 
   info("Check that the flexibility sizing section displays the right info");
   const reasons = [...sizingContainer.querySelectorAll(".reasons li")];
-  const expectedReason = getStr("flexbox.itemSizing.growthAttemptWhenClamped");
+  const expectedReason = getStr("flexbox.itemSizing.growthAttemptButMaxClamped");
   ok(reasons.some(r => r.textContent === expectedReason),
      "The 'wanted to grow but was clamped' reason was found");
 });
