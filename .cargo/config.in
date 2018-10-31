@@ -12,11 +12,6 @@ git = "https://github.com/servo/serde"
 branch = "deserialize_from_enums8"
 replace-with = "vendored-sources"
 
-[source."https://github.com/retep998/winapi-rs"]
-git = "https://github.com/froydnj/winapi-rs"
-branch = "aarch64"
-replace-with = "vendored-sources"
-
 [source.vendored-sources]
 directory = '@top_srcdir@/third_party/rust'
 
