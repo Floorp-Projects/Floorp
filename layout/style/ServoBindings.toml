@@ -103,8 +103,6 @@ rusty-enums = [
     "mozilla::dom::PlaybackDirection",
     "mozilla::dom::FillMode",
     "mozilla::HalfCorner",
-    "mozilla::StyleDisplay",
-    "mozilla::StyleDisplayMode",
     "mozilla::StyleFloatEdge",
     "mozilla::StyleShapeRadius",
     "mozilla::StyleWindowDragging",
@@ -189,7 +187,6 @@ whitelist-types = [
     "mozilla::ServoStyleSheetInner",
     "mozilla::ServoStyleSetSizes",
     "mozilla::ServoTraversalStatistics",
-    "mozilla::StyleDisplayMode",
     "mozilla::css::LoaderReusableStyleSheets",
     "mozilla::css::SheetLoadData",
     "mozilla::css::SheetLoadDataHolder",
@@ -393,6 +390,8 @@ opaque-types = [
 cbindgen-types = [
     { gecko = "mozilla::StyleAppearance", servo = "values::specified::Appearance" },
     { gecko = "mozilla::StyleComputedTimingFunction", servo = "values::computed::easing::TimingFunction" },
+    { gecko = "mozilla::StyleDisplay", servo = "values::specified::Display" },
+    { gecko = "mozilla::StyleDisplayMode", servo = "gecko::media_features::DisplayMode" },
 ]
 
 mapped-generic-types = [
