@@ -5871,6 +5871,12 @@ pref("dom.xhr.lowercase_header.enabled", true);
 // this can be removed.
 pref("dom.clients.openwindow_favors_same_process", true);
 
+#ifdef RELEASE_OR_BETA
+pref("toolkit.aboutPerformance.showInternals", false);
+#else
+pref("toolkit.aboutPerformance.showInternals", true);
+#endif
+
 // When a crash happens, whether to include heap regions of the crash context
 // in the minidump. Enabled by default on nightly and aurora.
 #ifdef RELEASE_OR_BETA

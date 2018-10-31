@@ -606,7 +606,8 @@ var State = {
 
     let previous = this._buffer[Math.max(this._buffer.length - 2, 0)].tabs;
     let current = this._latest.tabs;
-    return Object.keys(current).map(id => {
+    let counters = [];
+    for (let id of Object.keys(current)) {
       let tab = current[id];
       let oldest;
       for (let index = 0; index <= this._buffer.length - 2; ++index) {
@@ -618,7 +619,7 @@ var State = {
       let prev = previous[id];
       let host = tab.host;
 
-      let type = "tab";
+      let type = "other";
       let name = `${host} (${id})`;
       let image = "chrome://mozapps/skin/places/defaultFavicon.svg";
       let found = tabFinder.get(parseInt(id));
@@ -626,10 +627,10 @@ var State = {
         if (found.tabbrowser) {
           name = found.tab.getAttribute("label");
           image = found.tab.getAttribute("image");
+          type = "tab";
         } else {
           name = {id: "preloaded-tab",
                   title: found.tab.linkedBrowser.contentTitle};
-          type = "other";
         }
       } else if (id == 1) {
         name = BRAND_NAME;
@@ -642,7 +643,11 @@ var State = {
         type = "addon";
       } else if (id == 0 && !tab.isWorker) {
         name = {id: "ghost-windows"};
-        type = "other";
+      }
+
+      if (type != "tab" && type != "addon" &&
+          !Services.prefs.getBoolPref("toolkit.aboutPerformance.showInternals", false)) {
+        continue;
       }
 
       // Create a map of all the child items from the previous time we read the
@@ -701,12 +706,13 @@ var State = {
         durationSinceStartOfBuffer =
           duration - oldest.duration - (oldest.durationFromFormerChildren || 0);
       }
-      return ({id, name, image, type,
-               totalDispatches: dispatches, totalDuration: duration,
-               durationSincePrevious, dispatchesSincePrevious,
-               durationSinceStartOfBuffer, dispatchesSinceStartOfBuffer,
-               children});
-    });
+      counters.push({id, name, image, type,
+                     totalDispatches: dispatches, totalDuration: duration,
+                     durationSincePrevious, dispatchesSincePrevious,
+                     durationSinceStartOfBuffer, dispatchesSinceStartOfBuffer,
+                     children});
+    }
+    return counters;
   },
 };
 
