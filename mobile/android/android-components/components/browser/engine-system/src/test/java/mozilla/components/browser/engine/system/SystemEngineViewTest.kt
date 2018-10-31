@@ -28,6 +28,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -865,5 +866,34 @@ class SystemEngineViewTest {
                 TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD, TrackingProtectionPolicy.SOCIAL)
         )
         assertEquals(setOf(UrlMatcher.ADVERTISING, UrlMatcher.SOCIAL), urlMatcher.enabledCategories)
+    }
+
+    @Test
+    fun `permission requests are forwarded to observers`() {
+        val permissionRequest: android.webkit.PermissionRequest = mock()
+        `when`(permissionRequest.resources).thenReturn(emptyArray())
+        `when`(permissionRequest.origin).thenReturn(Uri.parse("https://mozilla.org"))
+
+        val engineSession = SystemEngineSession()
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        engineView.render(engineSession)
+
+        var observedPermissionRequest: PermissionRequest? = null
+        var cancelledPermissionRequest: PermissionRequest? = null
+        engineSession.register(object : EngineSession.Observer {
+            override fun onContentPermissionRequest(permissionRequest: PermissionRequest) {
+                observedPermissionRequest = permissionRequest
+            }
+
+            override fun onCancelContentPermissionRequest(permissionRequest: PermissionRequest) {
+                cancelledPermissionRequest = permissionRequest
+            }
+        })
+
+        engineView.currentWebView.webChromeClient.onPermissionRequest(permissionRequest)
+        assertNotNull(observedPermissionRequest)
+
+        engineView.currentWebView.webChromeClient.onPermissionRequestCanceled(permissionRequest)
+        assertNotNull(cancelledPermissionRequest)
     }
 }

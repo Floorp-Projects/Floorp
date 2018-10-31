@@ -6,6 +6,7 @@ package mozilla.components.concept.engine
 
 import android.graphics.Bitmap
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.permission.PermissionRequest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -27,6 +28,7 @@ class EngineSessionTest {
 
         val observer = mock(EngineSession.Observer::class.java)
         val emptyBitmap = spy(Bitmap::class.java)
+        val permissionRequest = mock(PermissionRequest::class.java)
         session.register(observer)
 
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
@@ -43,6 +45,9 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
         session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
+        session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
+        session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
+        session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onLocationChange("https://www.firefox.com")
@@ -58,6 +63,9 @@ class EngineSessionTest {
         verify(observer).onFindResult(0, 1, true)
         verify(observer).onFullScreenChange(true)
         verify(observer).onThumbnailChange(emptyBitmap)
+        verify(observer).onAppPermissionRequest(permissionRequest)
+        verify(observer).onContentPermissionRequest(permissionRequest)
+        verify(observer).onCancelContentPermissionRequest(permissionRequest)
         verifyNoMoreInteractions(observer)
     }
 
@@ -66,6 +74,8 @@ class EngineSessionTest {
         val session = spy(DummyEngineSession())
         val observer = mock(EngineSession.Observer::class.java)
         val otherHitResult = HitResult.UNKNOWN("file://foobaz")
+        val permissionRequest = mock(PermissionRequest::class.java)
+        val otherPermissionRequest = mock(PermissionRequest::class.java)
         val emptyBitmap = spy(Bitmap::class.java)
         session.register(observer)
 
@@ -81,6 +91,9 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
         session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
+        session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
+        session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
+        session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
         session.unregister(observer)
 
         session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
@@ -95,6 +108,9 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, false) }
         session.notifyInternalObservers { onFullScreenChange(false) }
         session.notifyInternalObservers { onThumbnailChange(null) }
+        session.notifyInternalObservers { onContentPermissionRequest(otherPermissionRequest) }
+        session.notifyInternalObservers { onCancelContentPermissionRequest(otherPermissionRequest) }
+        session.notifyInternalObservers { onAppPermissionRequest(otherPermissionRequest) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -108,6 +124,9 @@ class EngineSessionTest {
         verify(observer).onFindResult(0, 1, true)
         verify(observer).onFullScreenChange(true)
         verify(observer).onThumbnailChange(emptyBitmap)
+        verify(observer).onAppPermissionRequest(permissionRequest)
+        verify(observer).onContentPermissionRequest(permissionRequest)
+        verify(observer).onCancelContentPermissionRequest(permissionRequest)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
@@ -120,6 +139,9 @@ class EngineSessionTest {
         verify(observer, never()).onFindResult(0, 1, false)
         verify(observer, never()).onFullScreenChange(false)
         verify(observer, never()).onThumbnailChange(null)
+        verify(observer, never()).onAppPermissionRequest(otherPermissionRequest)
+        verify(observer, never()).onContentPermissionRequest(otherPermissionRequest)
+        verify(observer, never()).onCancelContentPermissionRequest(otherPermissionRequest)
         verifyNoMoreInteractions(observer)
     }
 
@@ -128,6 +150,8 @@ class EngineSessionTest {
         val session = spy(DummyEngineSession())
         val observer = mock(EngineSession.Observer::class.java)
         val otherObserver = mock(EngineSession.Observer::class.java)
+        val permissionRequest = mock(PermissionRequest::class.java)
+        val otherPermissionRequest = mock(PermissionRequest::class.java)
         val otherHitResult = HitResult.UNKNOWN("file://foobaz")
         val emptyBitmap = spy(Bitmap::class.java)
         session.register(observer)
@@ -145,6 +169,9 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
         session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
+        session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
+        session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
+        session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
 
         session.unregisterObservers()
 
@@ -160,6 +187,9 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, false) }
         session.notifyInternalObservers { onFullScreenChange(false) }
         session.notifyInternalObservers { onThumbnailChange(null) }
+        session.notifyInternalObservers { onContentPermissionRequest(otherPermissionRequest) }
+        session.notifyInternalObservers { onCancelContentPermissionRequest(otherPermissionRequest) }
+        session.notifyInternalObservers { onAppPermissionRequest(otherPermissionRequest) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -173,6 +203,9 @@ class EngineSessionTest {
         verify(observer).onFindResult(0, 1, true)
         verify(observer).onFullScreenChange(true)
         verify(observer).onThumbnailChange(emptyBitmap)
+        verify(observer).onAppPermissionRequest(permissionRequest)
+        verify(observer).onContentPermissionRequest(permissionRequest)
+        verify(observer).onCancelContentPermissionRequest(permissionRequest)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
@@ -185,6 +218,9 @@ class EngineSessionTest {
         verify(observer, never()).onFindResult(0, 1, false)
         verify(observer, never()).onFullScreenChange(false)
         verify(observer, never()).onThumbnailChange(null)
+        verify(observer, never()).onAppPermissionRequest(otherPermissionRequest)
+        verify(observer, never()).onContentPermissionRequest(otherPermissionRequest)
+        verify(observer, never()).onCancelContentPermissionRequest(otherPermissionRequest)
         verify(otherObserver, never()).onLocationChange("https://www.firefox.com")
         verify(otherObserver, never()).onProgress(100)
         verify(otherObserver, never()).onLoadingStateChange(false)
@@ -197,6 +233,9 @@ class EngineSessionTest {
         verify(otherObserver, never()).onFindResult(0, 1, false)
         verify(otherObserver, never()).onFullScreenChange(false)
         verify(otherObserver, never()).onThumbnailChange(null)
+        verify(observer, never()).onAppPermissionRequest(otherPermissionRequest)
+        verify(observer, never()).onContentPermissionRequest(otherPermissionRequest)
+        verify(observer, never()).onCancelContentPermissionRequest(otherPermissionRequest)
     }
 
     @Test
@@ -204,6 +243,8 @@ class EngineSessionTest {
         val session = spy(DummyEngineSession())
         val observer = mock(EngineSession.Observer::class.java)
         val otherHitResult = HitResult.UNKNOWN("file://foobaz")
+        val permissionRequest = mock(PermissionRequest::class.java)
+        val otherPermissionRequest = mock(PermissionRequest::class.java)
         val emptyBitmap = spy(Bitmap::class.java)
         session.register(observer)
 
@@ -219,6 +260,9 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
         session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
+        session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
+        session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
+        session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
 
         session.close()
 
@@ -234,6 +278,9 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, false) }
         session.notifyInternalObservers { onFullScreenChange(false) }
         session.notifyInternalObservers { onThumbnailChange(null) }
+        session.notifyInternalObservers { onContentPermissionRequest(otherPermissionRequest) }
+        session.notifyInternalObservers { onCancelContentPermissionRequest(otherPermissionRequest) }
+        session.notifyInternalObservers { onAppPermissionRequest(otherPermissionRequest) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -247,6 +294,9 @@ class EngineSessionTest {
         verify(observer).onFindResult(0, 1, true)
         verify(observer).onFullScreenChange(true)
         verify(observer).onThumbnailChange(emptyBitmap)
+        verify(observer).onAppPermissionRequest(permissionRequest)
+        verify(observer).onContentPermissionRequest(permissionRequest)
+        verify(observer).onCancelContentPermissionRequest(permissionRequest)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
@@ -259,6 +309,9 @@ class EngineSessionTest {
         verify(observer, never()).onFindResult(0, 1, false)
         verify(observer, never()).onFullScreenChange(false)
         verify(observer, never()).onThumbnailChange(null)
+        verify(observer, never()).onAppPermissionRequest(otherPermissionRequest)
+        verify(observer, never()).onContentPermissionRequest(otherPermissionRequest)
+        verify(observer, never()).onCancelContentPermissionRequest(otherPermissionRequest)
         verifyNoMoreInteractions(observer)
     }
 
@@ -266,6 +319,7 @@ class EngineSessionTest {
     fun `registered observers are instance specific`() {
         val session = spy(DummyEngineSession())
         val otherSession = spy(DummyEngineSession())
+        val permissionRequest = mock(PermissionRequest::class.java)
         val emptyBitmap = spy(Bitmap::class.java)
         val observer = mock(EngineSession.Observer::class.java)
         session.register(observer)
@@ -283,6 +337,9 @@ class EngineSessionTest {
         otherSession.notifyInternalObservers { onFindResult(0, 1, true) }
         otherSession.notifyInternalObservers { onFullScreenChange(true) }
         otherSession.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
+        otherSession.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
+        otherSession.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
+        otherSession.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
         verify(observer, never()).onLocationChange("https://www.mozilla.org")
         verify(observer, never()).onProgress(25)
         verify(observer, never()).onLoadingStateChange(true)
@@ -295,6 +352,9 @@ class EngineSessionTest {
         verify(observer, never()).onFindResult(0, 1, true)
         verify(observer, never()).onFullScreenChange(true)
         verify(observer, never()).onThumbnailChange(emptyBitmap)
+        verify(observer, never()).onAppPermissionRequest(permissionRequest)
+        verify(observer, never()).onContentPermissionRequest(permissionRequest)
+        verify(observer, never()).onCancelContentPermissionRequest(permissionRequest)
 
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
         session.notifyInternalObservers { onProgress(25) }
@@ -308,6 +368,9 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
         session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
+        session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
+        session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
+        session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
         verify(observer, times(1)).onLocationChange("https://www.mozilla.org")
         verify(observer, times(1)).onProgress(25)
         verify(observer, times(1)).onLoadingStateChange(true)
@@ -320,6 +383,9 @@ class EngineSessionTest {
         verify(observer, times(1)).onFindResult(0, 1, true)
         verify(observer, times(1)).onFullScreenChange(true)
         verify(observer, times(1)).onThumbnailChange(emptyBitmap)
+        verify(observer, times(1)).onAppPermissionRequest(permissionRequest)
+        verify(observer, times(1)).onContentPermissionRequest(permissionRequest)
+        verify(observer, times(1)).onCancelContentPermissionRequest(permissionRequest)
         verifyNoMoreInteractions(observer)
     }
 
@@ -428,6 +494,9 @@ class EngineSessionTest {
         defaultObserver.onLoadingStateChange(true)
         defaultObserver.onThumbnailChange(spy(Bitmap::class.java))
         defaultObserver.onFullScreenChange(true)
+        defaultObserver.onAppPermissionRequest(mock(PermissionRequest::class.java))
+        defaultObserver.onContentPermissionRequest(mock(PermissionRequest::class.java))
+        defaultObserver.onCancelContentPermissionRequest(mock(PermissionRequest::class.java))
     }
 
     @Test

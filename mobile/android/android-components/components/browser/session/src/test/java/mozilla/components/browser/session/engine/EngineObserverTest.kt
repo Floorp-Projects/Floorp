@@ -3,11 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package mozilla.components.browser.session.engine
+
 import android.graphics.Bitmap
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.permission.PermissionRequest
+import mozilla.components.support.base.observer.Consumable
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -15,6 +18,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 
 class EngineObserverTest {
 
@@ -41,9 +45,7 @@ class EngineObserverTest {
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
             override fun captureThumbnail(): Bitmap? = null
-            override fun saveState(): Map<String, Any> {
-                return emptyMap()
-            }
+            override fun saveState(): Map<String, Any> = emptyMap()
 
             override fun loadData(data: String, mimeType: String, encoding: String) {
                 notifyObservers { onLocationChange(data) }
@@ -92,10 +94,7 @@ class EngineObserverTest {
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
             override fun captureThumbnail(): Bitmap? = null
-            override fun saveState(): Map<String, Any> {
-                return emptyMap()
-            }
-
+            override fun saveState(): Map<String, Any> = emptyMap()
             override fun loadData(data: String, mimeType: String, encoding: String) {}
             override fun loadUrl(url: String) {
                 if (url.startsWith("https://")) {
@@ -135,10 +134,7 @@ class EngineObserverTest {
 
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
             override fun captureThumbnail(): Bitmap? = null
-            override fun saveState(): Map<String, Any> {
-                return emptyMap()
-            }
-
+            override fun saveState(): Map<String, Any> = emptyMap()
             override fun loadUrl(url: String) {}
             override fun loadData(data: String, mimeType: String, encoding: String) {}
             override fun clearData() {}
@@ -254,5 +250,43 @@ class EngineObserverTest {
         val emptyBitmap = spy(Bitmap::class.java)
         observer.onThumbnailChange(emptyBitmap)
         assertEquals(emptyBitmap, session.thumbnail)
+    }
+
+    @Test
+    fun engineSessionObserverWithContentPermissionRequests() {
+        val permissionRequest = mock(PermissionRequest::class.java)
+        val session = Session("")
+        val observer = EngineObserver(session)
+
+        assertTrue(session.contentPermissionRequest.isConsumed())
+        observer.onContentPermissionRequest(permissionRequest)
+        assertFalse(session.contentPermissionRequest.isConsumed())
+
+        observer.onCancelContentPermissionRequest(permissionRequest)
+        assertTrue(session.contentPermissionRequest.isConsumed())
+    }
+
+    @Test
+    fun engineSessionObserverWithAppPermissionRequests() {
+        val permissionRequest = mock(PermissionRequest::class.java)
+        val session = Session("")
+        val observer = EngineObserver(session)
+
+        assertTrue(session.appPermissionRequest.isConsumed())
+        observer.onAppPermissionRequest(permissionRequest)
+        assertFalse(session.appPermissionRequest.isConsumed())
+    }
+
+    @Test
+    fun engineObserverConsumesContentPermissionRequestIfNewPageStartsLoading() {
+        val permissionRequest = mock(PermissionRequest::class.java)
+        val session = Session("https://www.mozilla.org")
+        session.contentPermissionRequest = Consumable.from(permissionRequest)
+
+        val observer = EngineObserver(session)
+        observer.onLocationChange("https://getpocket.com")
+
+        verify(permissionRequest).reject()
+        assertTrue(session.contentPermissionRequest.isConsumed())
     }
 }

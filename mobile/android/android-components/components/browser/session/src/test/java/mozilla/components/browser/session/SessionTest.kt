@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -294,7 +295,7 @@ class SessionTest {
     }
 
     @Test
-    fun `HitResult will not be set on Session if consued by observer`() {
+    fun `HitResult will not be set on Session if consumed by observer`() {
         var callbackExecuted = false
 
         val session = Session("https://www.mozilla.org")
@@ -538,6 +539,8 @@ class SessionTest {
     fun `session observer has default methods`() {
         val session = Session("")
         val defaultObserver = object : Session.Observer {}
+        val contentPermissionRequest: PermissionRequest = mock()
+        val appPermissionRequest: PermissionRequest = mock()
 
         defaultObserver.onUrlChanged(session, "")
         defaultObserver.onTitleChanged(session, "")
@@ -555,5 +558,62 @@ class SessionTest {
         defaultObserver.onDesktopModeChanged(session, true)
         defaultObserver.onFullScreenChanged(session, true)
         defaultObserver.onThumbnailChanged(session, spy(Bitmap::class.java))
+        defaultObserver.onContentPermissionRequested(session, contentPermissionRequest)
+        defaultObserver.onAppPermissionRequested(session, appPermissionRequest)
+    }
+
+    @Test
+    fun `permission requests will be set on session if no observer consumes them`() {
+        val contentPermissionRequest: PermissionRequest = mock()
+        val appPermissionRequest: PermissionRequest = mock()
+
+        val session = Session("https://www.mozilla.org")
+        session.contentPermissionRequest = Consumable.from(contentPermissionRequest)
+        session.appPermissionRequest = Consumable.from(appPermissionRequest)
+        assertFalse(session.contentPermissionRequest.isConsumed())
+
+        var contentPermissionRequestIsSet = false
+        var appPermissionRequestIsSet = false
+        session.contentPermissionRequest.consume {
+            contentPermissionRequestIsSet = true
+            true
+        }
+        session.appPermissionRequest.consume {
+            appPermissionRequestIsSet = true
+            true
+        }
+        assertTrue(contentPermissionRequestIsSet)
+        assertTrue(appPermissionRequestIsSet)
+    }
+
+    @Test
+    fun `permission requests will not be set on session if consumed by observer`() {
+        var contentPermissionCallbackExecuted = false
+        var appPermissionCallbackExecuted = false
+
+        val session = Session("https://www.mozilla.org")
+        session.register(object : Session.Observer {
+            override fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean {
+                contentPermissionCallbackExecuted = true
+                return true
+            }
+
+            override fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean {
+                appPermissionCallbackExecuted = true
+                return true
+            }
+        })
+
+        val contentPermissionRequest: PermissionRequest = mock()
+        session.contentPermissionRequest = Consumable.from(contentPermissionRequest)
+
+        val appPermissionRequestIsSet: PermissionRequest = mock()
+        session.appPermissionRequest = Consumable.from(appPermissionRequestIsSet)
+
+        assertTrue(contentPermissionCallbackExecuted)
+        assertTrue(session.contentPermissionRequest.isConsumed())
+
+        assertTrue(appPermissionCallbackExecuted)
+        assertTrue(session.appPermissionRequest.isConsumed())
     }
 }

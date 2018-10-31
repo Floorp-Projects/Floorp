@@ -14,6 +14,7 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.expectException
@@ -49,6 +50,7 @@ import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_NONE
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_VIDEO
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.ERROR_CATEGORY_UNKNOWN
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.ERROR_UNKNOWN
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.SessionFinder
@@ -156,6 +158,74 @@ class GeckoEngineSessionTest {
             contentType = "image/png",
             userAgent = null,
             cookie = null)
+    }
+
+    @Test
+    fun permissionDelegateNotifiesObservers() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+
+        var observedContentPermissionRequests: MutableList<PermissionRequest> = mutableListOf()
+        var observedAppPermissionRequests: MutableList<PermissionRequest> = mutableListOf()
+        engineSession.register(object : EngineSession.Observer {
+            override fun onContentPermissionRequest(permissionRequest: PermissionRequest) {
+                observedContentPermissionRequests.add(permissionRequest)
+            }
+
+            override fun onAppPermissionRequest(permissionRequest: PermissionRequest) {
+                observedAppPermissionRequests.add(permissionRequest)
+            }
+        })
+
+        engineSession.geckoSession.permissionDelegate.onContentPermissionRequest(
+            engineSession.geckoSession,
+            "originContent",
+            PERMISSION_GEOLOCATION,
+            null,
+            mock(GeckoSession.PermissionDelegate.Callback::class.java)
+        )
+
+        engineSession.geckoSession.permissionDelegate.onContentPermissionRequest(
+            engineSession.geckoSession,
+            null,
+            PERMISSION_GEOLOCATION,
+            null,
+            mock(GeckoSession.PermissionDelegate.Callback::class.java)
+        )
+
+        engineSession.geckoSession.permissionDelegate.onMediaPermissionRequest(
+            engineSession.geckoSession,
+            "originMedia",
+            emptyArray(),
+            emptyArray(),
+            mock(GeckoSession.PermissionDelegate.MediaCallback::class.java)
+        )
+
+        engineSession.geckoSession.permissionDelegate.onMediaPermissionRequest(
+            engineSession.geckoSession,
+            null,
+            null,
+            null,
+            mock(GeckoSession.PermissionDelegate.MediaCallback::class.java)
+        )
+
+        engineSession.geckoSession.permissionDelegate.onAndroidPermissionsRequest(
+            engineSession.geckoSession,
+            emptyArray(),
+            mock(GeckoSession.PermissionDelegate.Callback::class.java)
+        )
+
+        engineSession.geckoSession.permissionDelegate.onAndroidPermissionsRequest(
+            engineSession.geckoSession,
+            null,
+            mock(GeckoSession.PermissionDelegate.Callback::class.java)
+        )
+
+        assertEquals(4, observedContentPermissionRequests.size)
+        assertEquals("originContent", observedContentPermissionRequests[0].uri)
+        assertEquals("", observedContentPermissionRequests[1].uri)
+        assertEquals("originMedia", observedContentPermissionRequests[2].uri)
+        assertEquals("", observedContentPermissionRequests[3].uri)
+        assertEquals(2, observedAppPermissionRequests.size)
     }
 
     @Test

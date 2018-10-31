@@ -10,6 +10,7 @@ import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.support.base.observer.Consumable
 
 @Suppress("TooManyFunctions")
@@ -19,6 +20,11 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
         session.url = url
         session.searchTerms = ""
         session.title = ""
+
+        session.contentPermissionRequest.consume {
+            it.reject()
+            true
+        }
     }
 
     override fun onTitleChange(title: String) {
@@ -89,5 +95,17 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
 
     override fun onThumbnailChange(bitmap: Bitmap?) {
         session.thumbnail = bitmap
+    }
+
+    override fun onContentPermissionRequest(permissionRequest: PermissionRequest) {
+        session.contentPermissionRequest = Consumable.from(permissionRequest)
+    }
+
+    override fun onCancelContentPermissionRequest(permissionRequest: PermissionRequest) {
+        session.contentPermissionRequest = Consumable.empty()
+    }
+
+    override fun onAppPermissionRequest(permissionRequest: PermissionRequest) {
+        session.appPermissionRequest = Consumable.from(permissionRequest)
     }
 }

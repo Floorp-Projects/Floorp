@@ -35,6 +35,7 @@ import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
+import mozilla.components.browser.engine.system.permission.SystemPermissionRequest
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
@@ -302,14 +303,12 @@ class SystemEngineView @JvmOverloads constructor(
             session?.internalNotifyObservers { onFullScreenChange(false) }
         }
 
+        override fun onPermissionRequestCanceled(request: PermissionRequest) {
+            session?.internalNotifyObservers { onCancelContentPermissionRequest(SystemPermissionRequest(request)) }
+        }
+
         override fun onPermissionRequest(request: PermissionRequest) {
-            if (request.resources.contains(PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID)) {
-                // For now we automatically grant playing protected media (EME APIs).
-                // See https://github.com/mozilla-mobile/android-components/issues/1128
-                request.grant(arrayOf(PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID))
-            } else {
-                super.onPermissionRequest(request)
-            }
+            session?.internalNotifyObservers { onContentPermissionRequest(SystemPermissionRequest(request)) }
         }
     }
 

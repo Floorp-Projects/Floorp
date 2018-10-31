@@ -6,6 +6,7 @@ package mozilla.components.concept.engine
 
 import android.graphics.Bitmap
 import android.support.annotation.CallSuper
+import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 
@@ -36,6 +37,9 @@ abstract class EngineSession(
         fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) = Unit
         fun onFullScreenChange(enabled: Boolean) = Unit
         fun onThumbnailChange(bitmap: Bitmap?) = Unit
+        fun onAppPermissionRequest(permissionRequest: PermissionRequest) = permissionRequest.reject()
+        fun onContentPermissionRequest(permissionRequest: PermissionRequest) = permissionRequest.reject()
+        fun onCancelContentPermissionRequest(permissionRequest: PermissionRequest) = Unit
 
         @Suppress("LongParameterList")
         fun onExternalResource(

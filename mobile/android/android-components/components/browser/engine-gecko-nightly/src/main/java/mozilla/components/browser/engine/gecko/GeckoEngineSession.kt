@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import kotlinx.coroutines.experimental.CompletableDeferred
 import kotlinx.coroutines.experimental.runBlocking
+import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
@@ -67,6 +68,7 @@ class GeckoEngineSession(
         geckoSession.progressDelegate = createProgressDelegate()
         geckoSession.contentDelegate = createContentDelegate()
         geckoSession.trackingProtectionDelegate = createTrackingProtectionDelegate()
+        geckoSession.permissionDelegate = createPermissionDelegate()
     }
 
     /**
@@ -398,6 +400,45 @@ class GeckoEngineSession(
     private fun createTrackingProtectionDelegate() = GeckoSession.TrackingProtectionDelegate {
         session, uri, _ ->
             session?.let { uri?.let { notifyObservers { onTrackerBlocked(it) } } }
+    }
+
+    private fun createPermissionDelegate() = object : GeckoSession.PermissionDelegate {
+        override fun onContentPermissionRequest(
+            session: GeckoSession?,
+            uri: String?,
+            type: Int,
+            access: String?,
+            callback: GeckoSession.PermissionDelegate.Callback
+        ) {
+            val request = GeckoPermissionRequest.Content(uri ?: "", type, callback)
+            notifyObservers { onContentPermissionRequest(request) }
+        }
+
+        override fun onMediaPermissionRequest(
+            session: GeckoSession?,
+            uri: String?,
+            video: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
+            audio: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
+            callback: GeckoSession.PermissionDelegate.MediaCallback
+        ) {
+            val request = GeckoPermissionRequest.Media(
+                    uri ?: "",
+                    video?.toList() ?: emptyList(),
+                    audio?.toList() ?: emptyList(),
+                    callback)
+            notifyObservers { onContentPermissionRequest(request) }
+        }
+
+        override fun onAndroidPermissionsRequest(
+            session: GeckoSession?,
+            permissions: Array<out String>?,
+            callback: GeckoSession.PermissionDelegate.Callback
+        ) {
+            val request = GeckoPermissionRequest.App(
+                    permissions?.toList() ?: emptyList(),
+                    callback)
+            notifyObservers { onAppPermissionRequest(request) }
+        }
     }
 
     @Suppress("ComplexMethod")
