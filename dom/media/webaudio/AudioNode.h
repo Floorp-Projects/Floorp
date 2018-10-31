@@ -268,7 +268,8 @@ private:
   RefPtr<AudioContext> mContext;
 
 protected:
-  // Must be set in the constructor. Must not be null unless finished.
+  // Set in the constructor of all nodes except offline AudioDestinationNode.
+  // Must not become null until finished.
   RefPtr<AudioNodeStream> mStream;
 
 private:
