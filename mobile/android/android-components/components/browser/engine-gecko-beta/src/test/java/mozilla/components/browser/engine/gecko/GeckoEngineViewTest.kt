@@ -11,7 +11,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoView
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
@@ -23,7 +22,7 @@ class GeckoEngineViewTest {
         val engineView = GeckoEngineView(RuntimeEnvironment.application)
         val engineSession = mock(GeckoEngineSession::class.java)
         val geckoSession = mock(GeckoSession::class.java)
-        val geckoView = mock(GeckoView::class.java)
+        val geckoView = mock(NestedGeckoView::class.java)
 
         `when`(engineSession.geckoSession).thenReturn(geckoSession)
         engineView.currentGeckoView = geckoView

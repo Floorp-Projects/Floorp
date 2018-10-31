@@ -57,7 +57,6 @@ class SystemEngineView @JvmOverloads constructor(
     internal var currentUrl = ""
     private var session: SystemEngineSession? = null
     internal var fullScreenCallback: WebChromeClient.CustomViewCallback? = null
-
     init {
         // Currently this implementation supports only a single WebView. Eventually this
         // implementation should be able to maintain at least two WebView instances to be able to
@@ -106,7 +105,7 @@ class SystemEngineView @JvmOverloads constructor(
     }
 
     private fun createWebView(context: Context): WebView {
-        val webView = WebView(context)
+        val webView = NestedWebView(context)
         webView.tag = "mozac_system_engine_webview"
         webView.webViewClient = createWebViewClient()
         webView.webChromeClient = createWebChromeClient()

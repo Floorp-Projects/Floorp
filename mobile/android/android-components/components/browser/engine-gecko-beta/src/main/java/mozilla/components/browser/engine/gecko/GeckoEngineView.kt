@@ -9,7 +9,6 @@ import android.util.AttributeSet
 import android.widget.FrameLayout
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
-import org.mozilla.geckoview.GeckoView
 
 /**
  * Gecko-based EngineView implementation.
@@ -20,7 +19,7 @@ class GeckoEngineView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView {
 
-    internal var currentGeckoView = object : GeckoView(context) {
+    internal var currentGeckoView = object : NestedGeckoView(context) {
         override fun onDetachedFromWindow() {
             // We are releasing the session before GeckoView gets detached from the window. Otherwise
             // GeckoView will close the session automatically and we do not want that.

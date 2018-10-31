@@ -149,6 +149,7 @@ dependencies {
     geckoReleaseArmImplementation Gecko.geckoview_release_arm
     geckoReleaseX86Implementation Gecko.geckoview_release_x86
     geckoReleaseAarch64Implementation Gecko.geckoview_release_aarch64
+    implementation Deps.support_design
 
     implementation Deps.kotlin_stdlib
     implementation Deps.kotlin_coroutines
