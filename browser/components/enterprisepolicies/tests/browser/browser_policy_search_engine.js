@@ -159,6 +159,10 @@ add_task(async function test_opensearch_disabled() {
 });
 
 add_task(async function test_AddSearchProvider() {
+  if (!Services.prefs.getBoolPref("dom.sidebar.enabled", false)) {
+    return;
+  }
+
   // Mock the modal error dialog
   let mockPrompter = {
     promptCount: 0,
