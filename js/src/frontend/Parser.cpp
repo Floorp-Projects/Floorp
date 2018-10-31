@@ -5851,7 +5851,7 @@ GeneralParser<ParseHandler, Unit>::importDeclaration()
 
 template <class ParseHandler, typename Unit>
 inline typename ParseHandler::Node
-GeneralParser<ParseHandler, Unit>::importDeclarationOrImportExpr(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::importDeclarationOrImportMeta(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Import));
 
@@ -5860,7 +5860,7 @@ GeneralParser<ParseHandler, Unit>::importDeclarationOrImportExpr(YieldHandling y
         return null();
     }
 
-    if (tt == TokenKind::Dot || tt == TokenKind::LeftParen) {
+    if (tt == TokenKind::Dot) {
         return expressionStatement(yieldHandling);
     }
 
@@ -8447,7 +8447,7 @@ GeneralParser<ParseHandler, Unit>::statement(YieldHandling yieldHandling)
 
       // ImportDeclaration (only inside modules)
       case TokenKind::Import:
-        return importDeclarationOrImportExpr(yieldHandling);
+        return importDeclarationOrImportMeta(yieldHandling);
 
       // ExportDeclaration (only inside modules)
       case TokenKind::Export:
@@ -8653,7 +8653,7 @@ GeneralParser<ParseHandler, Unit>::statementListItem(YieldHandling yieldHandling
 
       // ImportDeclaration (only inside modules)
       case TokenKind::Import:
-        return importDeclarationOrImportExpr(yieldHandling);
+        return importDeclarationOrImportMeta(yieldHandling);
 
       // ExportDeclaration (only inside modules)
       case TokenKind::Export:
@@ -9578,7 +9578,7 @@ GeneralParser<ParseHandler, Unit>::memberExpr(YieldHandling yieldHandling,
             return null();
         }
     } else if (tt == TokenKind::Import) {
-        lhs = importExpr(yieldHandling);
+        lhs = importMeta();
         if (!lhs) {
             return null();
         }
@@ -10871,9 +10871,16 @@ GeneralParser<ParseHandler, Unit>::tryNewTarget(BinaryNodeType* newTarget)
 
 template <class ParseHandler, typename Unit>
 typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::importMeta()
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Import));
+
+    uint32_t begin = pos().begin;
+
+    if (parseGoal() != ParseGoal::Module) {
+        errorAt(begin, JSMSG_IMPORT_OUTSIDE_MODULE);
+        return null();
+    }
 
     NullaryNodeType importHolder = handler.newPosHolder(pos());
     if (!importHolder) {
@@ -10884,40 +10891,25 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling)
     if (!tokenStream.getToken(&next)) {
         return null();
     }
-
-    if (next == TokenKind::Dot) {
-        if (!tokenStream.getToken(&next)) {
-            return null();
-        }
-        if (next != TokenKind::Meta) {
-            error(JSMSG_UNEXPECTED_TOKEN, "meta", TokenKindToDesc(next));
-            return null();
-        }
-
-        if (parseGoal() != ParseGoal::Module) {
-            errorAt(pos().begin, JSMSG_IMPORT_META_OUTSIDE_MODULE);
-            return null();
-        }
-
-        NullaryNodeType metaHolder = handler.newPosHolder(pos());
-        if (!metaHolder) {
-            return null();
-        }
-
-        return handler.newImportMeta(importHolder, metaHolder);
-    } else if (next == TokenKind::LeftParen) {
-        Node arg = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-        if (!arg) {
-            return null();
-        }
-
-        MUST_MATCH_TOKEN_MOD(TokenKind::RightParen, TokenStream::Operand, JSMSG_PAREN_AFTER_ARGS);
-
-        return handler.newCallImport(importHolder, arg);
-    } else {
-        error(JSMSG_UNEXPECTED_TOKEN_NO_EXPECT, TokenKindToDesc(next));
+    if (next != TokenKind::Dot) {
+        error(JSMSG_UNEXPECTED_TOKEN, "dot", TokenKindToDesc(next));
         return null();
     }
+
+    if (!tokenStream.getToken(&next)) {
+        return null();
+    }
+    if (next != TokenKind::Meta) {
+        error(JSMSG_UNEXPECTED_TOKEN, "meta", TokenKindToDesc(next));
+        return null();
+    }
+
+    NullaryNodeType metaHolder = handler.newPosHolder(pos());
+    if (!metaHolder) {
+        return null();
+        }
+
+    return handler.newImportMeta(importHolder, metaHolder);
 }
 
 template <class ParseHandler, typename Unit>
