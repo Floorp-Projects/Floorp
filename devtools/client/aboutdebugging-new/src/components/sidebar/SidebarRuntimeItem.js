@@ -94,22 +94,25 @@ class SidebarRuntimeItem extends PureComponent {
       {
         isSelected,
         selectable: isConnected,
-        className: "sidebar-runtime-item",
         onSelect: () => {
           dispatch(Actions.selectPage(id, runtimeId));
         },
       },
-      dom.img(
+      dom.div(
         {
-          className: "sidebar-runtime-item__icon " +
-            `${isConnected ? "sidebar-runtime-item__icon--connected" : "" }`,
-          src: icon,
-          alt: connectionStatus,
-          title: connectionStatus,
-        }
-      ),
-      deviceName ? this.renderNameWithDevice(name, deviceName) : this.renderName(name),
-      !isConnected ? this.renderConnectButton() : null
+          className: "sidebar-runtime-item__container",
+        },
+        dom.img(
+          {
+            className: "sidebar-runtime-item__icon ",
+            src: icon,
+            alt: connectionStatus,
+            title: connectionStatus,
+          }
+        ),
+        deviceName ? this.renderNameWithDevice(name, deviceName) : this.renderName(name),
+        !isConnected ? this.renderConnectButton() : null
+      )
     );
   }
 }

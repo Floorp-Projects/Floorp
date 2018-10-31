@@ -30,12 +30,31 @@ class SidebarItem extends PureComponent {
     };
   }
 
-  onItemClick() {
+  // temporary handler until a router is in place
+  onItemClick(evt) {
+    evt.preventDefault();
     this.props.onSelect();
   }
 
+  renderContent() {
+    const { children, selectable } = this.props;
+
+    if (selectable) {
+      return dom.a(
+        {
+          className: "sidebar-item__link js-sidebar-link",
+          href: "#", // to be changed with a path when a router is in place
+          onClick: (evt) => this.onItemClick(evt),
+        },
+        children
+      );
+    }
+
+    return children;
+  }
+
   render() {
-    const {children, className, isSelected, selectable } = this.props;
+    const {className, isSelected, selectable } = this.props;
 
     return dom.li(
       {
@@ -46,9 +65,8 @@ class SidebarItem extends PureComponent {
                       ""
                    ) +
                    (selectable ? " sidebar-item--selectable" : ""),
-        onClick: selectable ? () => this.onItemClick() : null,
       },
-      children
+      this.renderContent()
     );
   }
 }

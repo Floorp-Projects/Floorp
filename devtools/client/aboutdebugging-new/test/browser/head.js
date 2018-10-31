@@ -89,9 +89,11 @@ async function selectConnectPage(doc) {
     return element.textContent === "Connect";
   });
   ok(connectSidebarItem, "Sidebar contains a Connect item");
+  const connectLink = connectSidebarItem.querySelector(".js-sidebar-link");
+  ok(connectLink, "Sidebar contains a Connect link");
 
-  info("Click on the Connect item in the sidebar");
-  connectSidebarItem.click();
+  info("Click on the Connect link in the sidebar");
+  connectLink.click();
 
   info("Wait until Connect page is displayed");
   await waitUntil(() => doc.querySelector(".js-connect-page"));
