@@ -7,29 +7,3 @@
 BROWSER_CHROME_MANIFESTS += [
     'browser.ini',
 ]
-
-addons = [
-    'browser_bug596336_1',
-    'browser_bug596336_2',
-    'browser_dragdrop1',
-    'browser_dragdrop2',
-    'browser_dragdrop_incompat',
-    'browser_installssl',
-    'browser_theme',
-    'browser_update1_1',
-    'browser_update1_2',
-    'options_signed',
-]
-
-output_dir = OBJDIR_FILES._tests.testing.mochitest.browser.toolkit.mozapps.extensions.test.browser.addons
-
-for addon in addons:
-    indir = 'addons/%s' % addon
-    xpi = '%s.xpi' % indir
-
-    GENERATED_FILES += [xpi]
-    GENERATED_FILES[xpi].script = '../create_xpi.py'
-    GENERATED_FILES[xpi].inputs = [indir]
-
-    output_dir += ['!%s' % xpi]
-
