@@ -1,20 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style>
-#grow-not-grow {
-  display:flex;
-  width:500px;
-  border:1px solid;
-}
-#grow-not-grow div:first-child {
-  flex-grow:1;
-  flex-basis:100px;
-  max-width:50px;
-}
-#grow-not-grow div:last-child {
-  flex-grow: 1;
-}
-
 #want-to-grow-more-than-max {
   width: 500px;
   display: flex;
@@ -23,11 +9,38 @@
   flex: 1;
   max-width: 200px;
 }
+
+#did-not-grow-or-shrink {
+  width: 500px;
+  display: flex;
+}
+#did-not-grow-or-shrink div {
+  flex: 0 300px;
+}
+
+#just-enough-space-for-clamped-items {
+  display:flex;
+  width:100px;
+  height:40px
+}
+#just-enough-space-for-clamped-items div:first-child {
+  flex: 1 300px;
+  max-width: 20px;
+  background: teal;
+}
+#just-enough-space-for-clamped-items div:last-child {
+  flex: 1 10px;
+  min-width: 80px;
+  background: salmon;
+}
 </style>
-<div id="grow-not-grow">
-  <div>item 1</div>
-  <div>item 2</div>
-</div>
 <div id="want-to-grow-more-than-max">
   <div>item wants to grow more</div>
+</div>
+<div id="did-not-grow-or-shrink">
+  <div>item did not grow or shrink</div>
+</div>
+<div id="just-enough-space-for-clamped-items">
+ <div></div>
+ <div></div>
 </div>
