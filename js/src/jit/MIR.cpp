@@ -98,7 +98,7 @@ MDefinition::PrintOpcodeName(GenericPrinter& out, Opcode op)
 #endif
 
 static MConstant*
-EvaluateConstantOperands(TempAllocator& alloc, MBinaryInstruction* ins)
+EvaluateConstantOperands(TempAllocator& alloc, MBinaryInstruction* ins, bool* ptypeChange = nullptr)
 {
     MDefinition* left = ins->getOperand(0);
     MDefinition* right = ins->getOperand(1);
@@ -189,6 +189,9 @@ EvaluateConstantOperands(TempAllocator& alloc, MBinaryInstruction* ins)
     // denominator), decline folding.
     MOZ_ASSERT(ins->type() == MIRType::Int32);
     if (!retVal.isInt32()) {
+        if (ptypeChange) {
+            *ptypeChange = true;
+        }
         return nullptr;
     }
 
@@ -2719,9 +2722,7 @@ MUrsh::infer(BaselineInspector* inspector, jsbytecode* pc)
         return;
     }
 
-    // defaultIfEmpty: if we haven't seen anything, assume no double has been seen:
-    // unsigned right shift only produces a double if the result overflows a signed int32, which is rare.
-    if (inspector->hasSeenDoubleResult(pc, /* defaultIfEmpty: */ false)) {
+    if (inspector->hasSeenDoubleResult(pc)) {
         specialization_ = MIRType::Double;
         setResultType(MIRType::Double);
         return;
@@ -2939,19 +2940,10 @@ MBinaryArithInstruction::setNumberSpecialization(TempAllocator& alloc, BaselineI
 
     // Try to specialize as int32.
     if (getOperand(0)->type() == MIRType::Int32 && getOperand(1)->type() == MIRType::Int32) {
-        // The defaultIfEmpty logic here is a little complex, so here's some pseudocode:
-        // If both arguments are integers, and this code/IC has never been ran:
-        //   If opcode is Div:
-        //     Assume the result is a double. (i.e. int/int division usually produces a double)
-        //   Else (if opcode is not Div):
-        //     Assume the result is an int. (i.e. int (op) int usually produces an int)
+        bool seenDouble = inspector->hasSeenDoubleResult(pc);
 
-        // Note, however, if we assume an int incorrectly (e.g. an int+int addition that
-        // overflows), we might bailout repeatedly. The "repeated bailout, let's not ion
-        // compile this" logic should catch this scenario.
-        bool defaultIfEmpty = op() == Opcode::Div;
-        bool seenDouble = inspector->hasSeenDoubleResult(pc, defaultIfEmpty);
-
+        // Use int32 specialization if the operation doesn't overflow on its
+        // constant operands and if the operation has never overflowed.
         if (!seenDouble && !constantDoubleResult(alloc)) {
             setInt32Specialization();
         }
@@ -2961,8 +2953,9 @@ MBinaryArithInstruction::setNumberSpecialization(TempAllocator& alloc, BaselineI
 bool
 MBinaryArithInstruction::constantDoubleResult(TempAllocator& alloc)
 {
-    MConstant* constantResult = EvaluateConstantOperands(alloc, this);
-    return constantResult != nullptr && constantResult->type() == MIRType::Double;
+    bool typeChange = false;
+    EvaluateConstantOperands(alloc, this, &typeChange);
+    return typeChange;
 }
 
 MDefinition*

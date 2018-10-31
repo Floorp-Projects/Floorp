@@ -2929,14 +2929,12 @@ class ICUnaryArith_Fallback : public ICFallbackStub
         extra_ = 0;
     }
 
-    static const uint16_t SAW_DOUBLE_RESULT_BIT = 0x1;
-
   public:
-    bool sawDoubleResult() const {
-        return extra_ & SAW_DOUBLE_RESULT_BIT;
+    bool sawDoubleResult() {
+        return extra_;
     }
     void setSawDoubleResult() {
-        extra_ |= SAW_DOUBLE_RESULT_BIT;
+        extra_ = 1;
     }
 
     // Compiler for this stub kind.
