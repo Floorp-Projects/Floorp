@@ -391,6 +391,7 @@ opaque-types = [
 
 # All cbindgen-types are in mod "structs::root::mozilla".
 cbindgen-types = [
+    { gecko = "mozilla::StyleAppearance", servo = "values::specified::Appearance" },
     { gecko = "mozilla::StyleComputedTimingFunction", servo = "values::computed::easing::TimingFunction" },
 ]
 
