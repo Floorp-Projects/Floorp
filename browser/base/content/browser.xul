@@ -418,16 +418,16 @@ xmlns="http://www.w3.org/1999/xhtml"
 
     <menupopup id="toolbar-context-menu"
                onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator')); ToolbarContextMenu.updateDownloadsAutoHide(this); ToolbarContextMenu.updateExtension(this)">
-      <menuitem oncommand="ToolbarContextMenu.removeExtensionForContextAction(this.parentElement)"
-                accesskey="&customizeMenu.removeExtension.accesskey;"
-                label="&customizeMenu.removeExtension.label;"
-                contexttype="toolbaritem"
-                class="customize-context-removeExtension"/>
       <menuitem oncommand="ToolbarContextMenu.openAboutAddonsForContextAction(this.parentElement)"
                 accesskey="&customizeMenu.manageExtension.accesskey;"
                 label="&customizeMenu.manageExtension.label;"
                 contexttype="toolbaritem"
                 class="customize-context-manageExtension"/>
+      <menuitem oncommand="ToolbarContextMenu.removeExtensionForContextAction(this.parentElement)"
+                accesskey="&customizeMenu.removeExtension.accesskey;"
+                label="&customizeMenu.removeExtension.label;"
+                contexttype="toolbaritem"
+                class="customize-context-removeExtension"/>
       <menuseparator/>
       <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
                 accesskey="&customizeMenu.pinToOverflowMenu.accesskey;"
