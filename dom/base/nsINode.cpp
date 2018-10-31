@@ -2716,25 +2716,6 @@ nsINode::AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
   AddSizeOfExcludingThis(aSizes, aNodeSize);
 }
 
-#define EVENT(name_, id_, type_, struct_)                                    \
-  EventHandlerNonNull* nsINode::GetOn##name_() {                             \
-    EventListenerManager *elm = GetExistingListenerManager();                \
-    return elm ? elm->GetEventHandler(nsGkAtoms::on##name_) : nullptr;       \
-  }                                                                          \
-  void nsINode::SetOn##name_(EventHandlerNonNull* handler)                   \
-  {                                                                          \
-    EventListenerManager *elm = GetOrCreateListenerManager();                \
-    if (elm) {                                                               \
-      elm->SetEventHandler(nsGkAtoms::on##name_, handler);                   \
-    }                                                                        \
-  }
-#define TOUCH_EVENT EVENT
-#define DOCUMENT_ONLY_EVENT EVENT
-#include "mozilla/EventNameList.h"
-#undef DOCUMENT_ONLY_EVENT
-#undef TOUCH_EVENT
-#undef EVENT
-
 bool
 nsINode::Contains(const nsINode* aOther) const
 {
