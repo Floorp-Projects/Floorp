@@ -957,13 +957,6 @@ const JSPropertySpec DataViewObject::properties[] = {
     JS_PS_END
 };
 
-JS_FRIEND_API(bool)
-JS_IsDataViewObject(JSObject* obj)
-{
-    obj = CheckedUnwrap(obj);
-    return obj ? obj->is<DataViewObject>() : false;
-}
-
 JS_FRIEND_API(uint32_t)
 JS_GetDataViewByteOffset(JSObject* obj)
 {

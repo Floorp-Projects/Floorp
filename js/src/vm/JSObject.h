@@ -13,6 +13,7 @@
 #include "js/Conversions.h"
 #include "js/GCVector.h"
 #include "js/HeapAPI.h"
+#include "js/Wrapper.h"
 #include "vm/Printer.h"
 #include "vm/Shape.h"
 #include "vm/StringType.h"
@@ -535,6 +536,27 @@ class JSObject : public js::gc::Cell
         return *static_cast<const T*>(this);
     }
 
+    /*
+     * True if either this or CheckedUnwrap(this) is an object of class T.
+     * (Only two objects are checked, regardless of how many wrappers there
+     * are.)
+     *
+     * /!\ Note: This can be true at one point, but false later for the same
+     * object, thanks to js::NukeCrossCompartmentWrapper and friends.
+     */
+    template <class T>
+    bool canUnwrapAs();
+
+    /*
+     * Unwrap and downcast to class T.
+     *
+     * Precondition: `this->canUnwrapAs<T>()`. Note that it's not enough to
+     * have checked this at some point in the past; if there's any doubt as to
+     * whether js::Nuke* could have been called in the meantime, check again.
+     */
+    template <class T>
+    T& unwrapAs();
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
     void dump(js::GenericPrinter& fp) const;
     void dump() const;
@@ -588,6 +610,39 @@ js::HandleBase<JSObject*, Wrapper>::as() const
     const JS::Handle<JSObject*>& self = *static_cast<const JS::Handle<JSObject*>*>(this);
     MOZ_ASSERT(self->template is<U>());
     return Handle<U*>::fromMarkedLocation(reinterpret_cast<U* const*>(self.address()));
+}
+
+template <class T>
+bool
+JSObject::canUnwrapAs()
+{
+    static_assert(!std::is_convertible<T*, js::Wrapper*>::value,
+                  "T can't be a Wrapper type; this function discards wrappers");
+
+    if (is<T>()) {
+        return true;
+    }
+    JSObject* obj = js::CheckedUnwrap(this);
+    return obj && obj->is<T>();
+}
+
+template <class T>
+T&
+JSObject::unwrapAs()
+{
+    static_assert(!std::is_convertible<T*, js::Wrapper*>::value,
+                  "T can't be a Wrapper type; this function discards wrappers");
+
+    if (is<T>()) {
+        return as<T>();
+    }
+
+    // Since the caller just called canUnwrapAs<T>(), which does a
+    // CheckedUnwrap, this does not need to repeat the security check.
+    JSObject* unwrapped = js::UncheckedUnwrap(this);
+    MOZ_ASSERT(js::CheckedUnwrap(this) == unwrapped,
+               "check that the security check we skipped really is redundant");
+    return unwrapped->as<T>();
 }
 
 /*

@@ -381,12 +381,12 @@ TabTarget.prototype = {
   // Temporary fix for bug #1493131 - inspector has a different life cycle
   // than most other fronts because it is closely related to the toolbox.
   // TODO: remove once inspector is separated from the toolbox
-  getInspector(typeName) {
+  async getInspector(typeName) {
     // the front might have been destroyed and no longer have an actor ID
     if (this._inspector && this._inspector.actorID) {
       return this._inspector;
     }
-    this._inspector = getFront(this.client, "inspector", this.form);
+    this._inspector = await getFront(this.client, "inspector", this.form);
     return this._inspector;
   },
 
