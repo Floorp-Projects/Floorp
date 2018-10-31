@@ -44,7 +44,7 @@ internal object StringsStorageEngine {
      * @param storeName the name of the desired string store
      * @param clearStore whether or not to clearStore the requested string store
      *
-     * @return the list of strings recorded in the requested store
+     * @return the strings recorded in the requested store
      */
     @Synchronized
     public fun getSnapshot(storeName: String, clearStore: Boolean): MutableMap<String, String>? {
