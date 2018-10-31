@@ -141,7 +141,8 @@ var IdentityHandler = {
     // Don't show identity data for pages with an unknown identity or if any
     // mixed content is loaded (mixed display content is loaded by default).
     if (identityMode === this.IDENTITY_MODE_UNKNOWN ||
-        (aState & Ci.nsIWebProgressListener.STATE_IS_BROKEN)) {
+        (aState & Ci.nsIWebProgressListener.STATE_IS_BROKEN) ||
+        (aState & Ci.nsIWebProgressListener.STATE_IS_INSECURE)) {
       result.secure = false;
       return result;
     }
