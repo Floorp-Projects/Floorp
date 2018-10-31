@@ -16,6 +16,8 @@ from mach.decorators import (
 @CommandProvider
 class Bootstrap(object):
     """Bootstrap system and mach for optimal development experience."""
+    def __init__(self, context):
+        self._context = context
 
     @Command('bootstrap', category='devenv',
              description='Install required system packages for building.')
@@ -32,9 +34,12 @@ class Bootstrap(object):
     def bootstrap(self, application_choice=None, no_interactive=False, no_system_changes=False):
         from mozboot.bootstrap import Bootstrapper
 
-        bootstrapper = Bootstrapper(choice=application_choice,
-                                    no_interactive=no_interactive,
-                                    no_system_changes=no_system_changes)
+        bootstrapper = Bootstrapper(
+            choice=application_choice,
+            no_interactive=no_interactive,
+            no_system_changes=no_system_changes,
+            mach_context=self._context,
+        )
         bootstrapper.bootstrap()
 
 

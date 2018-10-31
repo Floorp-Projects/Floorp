@@ -55,6 +55,7 @@ with Files('mach/docs/**'):
 
 PYTHON_UNITTEST_MANIFESTS += [
     'mach/mach/test/python.ini',
+    'mozboot/mozboot/test/python.ini',
     'mozbuild/dumbmake/test/python.ini',
     'mozlint/test/python.ini',
     'mozrelease/test/python.ini',
