@@ -4,12 +4,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE dialog [
-<!ENTITY % historyDTD SYSTEM "chrome://mozapps/locale/update/history.dtd">
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-%historyDTD;
-%brandDTD;
-]>
+<!DOCTYPE dialog>
 
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://mozapps/content/update/updates.css"?>
@@ -20,20 +15,21 @@
         style="width: 35em;"
         buttons="cancel"
         defaultButton="cancel"
-        buttonlabelcancel="&closebutton.label;"
-        title="&history.title;"
+        data-l10n-id="close-button-label"
+        data-l10n-attrs="buttonlabelcancel"
         onload="gUpdateHistory.onLoad();">
+
+  <linkset>
+    <link rel="localization" href="toolkit/updates/history.ftl"/>
+  </linkset>
 
   <script type="application/javascript"
           src="chrome://mozapps/content/update/history.js"/>
 
-  <stringbundle id="updateBundle"
-                src="chrome://mozapps/locale/update/updates.properties"/>
-
-  <label>&history2.intro;</label>
+  <label data-l10n-id="history-intro"></label>
   <separator class="thin"/>
   <richlistbox id="historyItems" flex="1">
-    <label>&noupdates.label;</label>
+    <label data-l10n-id="no-updates-label"></label>
   </richlistbox>
   <separator class="thin"/>
 </dialog>

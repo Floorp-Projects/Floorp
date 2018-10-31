@@ -161,7 +161,7 @@
      *   Operands: int32_t offset
      *   Stack: cond =>
      */ \
-    macro(JSOP_IFEQ,      7,  "ifeq",       NULL,         5,  1,  0, JOF_JUMP|JOF_DETECTING) \
+    macro(JSOP_IFEQ,      7,  "ifeq",       NULL,         5,  1,  0, JOF_JUMP|JOF_DETECTING|JOF_IC) \
     /*
      * Pops the top of stack value, converts it into a boolean, if the result is
      * 'true', jumps to a 32-bit offset from the current bytecode.
@@ -170,7 +170,7 @@
      *   Operands: int32_t offset
      *   Stack: cond =>
      */ \
-    macro(JSOP_IFNE,      8,  "ifne",       NULL,         5,  1,  0, JOF_JUMP) \
+    macro(JSOP_IFNE,      8,  "ifne",       NULL,         5,  1,  0, JOF_JUMP|JOF_IC) \
     \
     /*
      * Pushes the 'arguments' object for the current function activation.
@@ -244,9 +244,9 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    macro(JSOP_BITOR,     15, "bitor",      "|",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_BITXOR,    16, "bitxor",     "^",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_BITAND,    17, "bitand",     "&",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_BITOR,     15, "bitor",      "|",          1,  2,  1, JOF_BYTE|JOF_IC) \
+    macro(JSOP_BITXOR,    16, "bitxor",     "^",          1,  2,  1, JOF_BYTE|JOF_IC) \
+    macro(JSOP_BITAND,    17, "bitand",     "&",          1,  2,  1, JOF_BYTE|JOF_IC) \
     /*
      * Pops the top two values from the stack and pushes the result of
      * comparing them.
@@ -255,12 +255,12 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    macro(JSOP_EQ,        18, "eq",         "==",         1,  2,  1, JOF_BYTE|JOF_ARITH|JOF_DETECTING) \
-    macro(JSOP_NE,        19, "ne",         "!=",         1,  2,  1, JOF_BYTE|JOF_ARITH|JOF_DETECTING) \
-    macro(JSOP_LT,        20, "lt",         "<",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_LE,        21, "le",         "<=",         1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_GT,        22, "gt",         ">",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_GE,        23, "ge",         ">=",         1,  2,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_EQ,        18, "eq",         "==",         1,  2,  1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    macro(JSOP_NE,        19, "ne",         "!=",         1,  2,  1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    macro(JSOP_LT,        20, "lt",         "<",          1,  2,  1, JOF_BYTE|JOF_IC) \
+    macro(JSOP_LE,        21, "le",         "<=",         1,  2,  1, JOF_BYTE|JOF_IC) \
+    macro(JSOP_GT,        22, "gt",         ">",          1,  2,  1, JOF_BYTE|JOF_IC) \
+    macro(JSOP_GE,        23, "ge",         ">=",         1,  2,  1, JOF_BYTE|JOF_IC) \
     /*
      * Pops the top two values 'lval' and 'rval' from the stack, then pushes
      * the result of the operation applied to the operands.
@@ -269,8 +269,8 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    macro(JSOP_LSH,       24, "lsh",        "<<",         1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_RSH,       25, "rsh",        ">>",         1,  2,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_LSH,       24, "lsh",        "<<",         1,  2,  1, JOF_BYTE|JOF_IC) \
+    macro(JSOP_RSH,       25, "rsh",        ">>",         1,  2,  1, JOF_BYTE|JOF_IC) \
     /*
      * Pops the top two values 'lval' and 'rval' from the stack, then pushes
      * 'lval >>> rval'.
@@ -279,7 +279,7 @@
      *   Operands:
      *   Stack: lval, rval => (lval >>> rval)
      */ \
-    macro(JSOP_URSH,      26, "ursh",       ">>>",        1,  2,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_URSH,      26, "ursh",       ">>>",        1,  2,  1, JOF_BYTE|JOF_IC) \
     /*
      * Pops the top two values 'lval' and 'rval' from the stack, then pushes
      * the result of 'lval + rval'.
@@ -288,7 +288,7 @@
      *   Operands:
      *   Stack: lval, rval => (lval + rval)
      */ \
-    macro(JSOP_ADD,       27, "add",        "+",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_ADD,       27, "add",        "+",          1,  2,  1, JOF_BYTE|JOF_IC) \
     /*
      * Pops the top two values 'lval' and 'rval' from the stack, then pushes
      * the result of applying the arithmetic operation to them.
@@ -297,10 +297,10 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    macro(JSOP_SUB,       28, "sub",        "-",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_MUL,       29, "mul",        "*",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_DIV,       30, "div",        "/",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
-    macro(JSOP_MOD,       31, "mod",        "%",          1,  2,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_SUB,       28, "sub",        "-",          1,  2,  1, JOF_BYTE|JOF_IC) \
+    macro(JSOP_MUL,       29, "mul",        "*",          1,  2,  1, JOF_BYTE|JOF_IC) \
+    macro(JSOP_DIV,       30, "div",        "/",          1,  2,  1, JOF_BYTE|JOF_IC) \
+    macro(JSOP_MOD,       31, "mod",        "%",          1,  2,  1, JOF_BYTE|JOF_IC) \
     /*
      * Pops the value 'val' from the stack, then pushes '!val'.
      *   Category: Operators
@@ -308,7 +308,7 @@
      *   Operands:
      *   Stack: val => (!val)
      */ \
-    macro(JSOP_NOT,       32, "not",        "!",          1,  1,  1, JOF_BYTE|JOF_ARITH|JOF_DETECTING) \
+    macro(JSOP_NOT,       32, "not",        "!",          1,  1,  1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     /*
      * Pops the value 'val' from the stack, then pushes '~val'.
      *   Category: Operators
@@ -316,7 +316,7 @@
      *   Operands:
      *   Stack: val => (~val)
      */ \
-    macro(JSOP_BITNOT,    33, "bitnot",     "~",          1,  1,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_BITNOT,    33, "bitnot",     "~",          1,  1,  1, JOF_BYTE|JOF_IC) \
     /*
      * Pops the value 'val' from the stack, then pushes '-val'.
      *   Category: Operators
@@ -324,7 +324,7 @@
      *   Operands:
      *   Stack: val => (-val)
      */ \
-    macro(JSOP_NEG,       34, "neg",        "- ",         1,  1,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_NEG,       34, "neg",        "- ",         1,  1,  1, JOF_BYTE|JOF_IC) \
     /*
      * Pops the value 'val' from the stack, then pushes '+val'.
      * ('+val' is the value converted to a number.)
@@ -333,7 +333,7 @@
      *   Operands:
      *   Stack: val => (+val)
      */ \
-    macro(JSOP_POS,       35, "pos",        "+ ",         1,  1,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_POS,       35, "pos",        "+ ",         1,  1,  1, JOF_BYTE|JOF_IC) \
     /*
      * Looks up name on the environment chain and deletes it, pushes 'true'
      * onto the stack if succeeded (if the property was present and deleted or
@@ -372,7 +372,7 @@
      *   Operands:
      *   Stack: val => (typeof val)
      */ \
-    macro(JSOP_TYPEOF,    39, js_typeof_str,NULL,         1,  1,  1, JOF_BYTE|JOF_DETECTING) \
+    macro(JSOP_TYPEOF,    39, js_typeof_str,NULL,         1,  1,  1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     /*
      * Pops the top value on the stack and pushes 'undefined'.
      *   Category: Operators
@@ -394,7 +394,7 @@
      *   Operands:
      *   Stack: callee, this, args => rval
      */ \
-    macro(JSOP_SPREADCALL,41, "spreadcall", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET) \
+    macro(JSOP_SPREADCALL,41, "spreadcall", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
      * spreadcall variant of JSOP_NEW
      *
@@ -405,7 +405,7 @@
      *   Operands:
      *   Stack: callee, this, args, newTarget => rval
      */ \
-    macro(JSOP_SPREADNEW, 42, "spreadnew",  NULL,         1,  4,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET) \
+    macro(JSOP_SPREADNEW, 42, "spreadnew",  NULL,         1,  4,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
      * spreadcall variant of JSOP_EVAL
      *
@@ -418,7 +418,7 @@
      *   Operands:
      *   Stack: callee, this, args => rval
      */ \
-    macro(JSOP_SPREADEVAL,43, "spreadeval", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY) \
+    macro(JSOP_SPREADEVAL,43, "spreadeval", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
     \
     /*
      * Duplicates the Nth value from the top onto the stack.
@@ -469,7 +469,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => val
      */ \
-    macro(JSOP_STRICTSETPROP,   48, "strict-setprop",    NULL,         5,  2,  1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
+    macro(JSOP_STRICTSETPROP,   48, "strict-setprop",    NULL,         5,  2,  1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Pops a environment and value from the stack, assigns value to the given
      * name, and pushes the value back on the stack. If the set failed, then
@@ -479,7 +479,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
-    macro(JSOP_STRICTSETNAME,   49, "strict-setname",    NULL,         5,  2,  1,  JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
+    macro(JSOP_STRICTSETNAME,   49, "strict-setname",    NULL,         5,  2,  1,  JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * spreadcall variant of JSOP_EVAL
      *
@@ -492,7 +492,7 @@
      *   Operands:
      *   Stack: callee, this, args => rval
      */ \
-    macro(JSOP_STRICTSPREADEVAL,      50, "strict-spreadeval", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT) \
+    macro(JSOP_STRICTSPREADEVAL,      50, "strict-spreadeval", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Ensures the result of a class's heritage expression is either null or a constructor.
      *   Category: Literals
@@ -517,7 +517,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj => obj[name]
      */ \
-    macro(JSOP_GETPROP,   53, "getprop",    NULL,         5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET) \
+    macro(JSOP_GETPROP,   53, "getprop",    NULL,         5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
     /*
      * Pops the top two values on the stack as 'val' and 'obj' and performs
      * 'obj.prop = val', pushing 'val' back onto the stack.
@@ -526,7 +526,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => val
      */ \
-    macro(JSOP_SETPROP,   54, "setprop",    NULL,         5,  2,  1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY) \
+    macro(JSOP_SETPROP,   54, "setprop",    NULL,         5,  2,  1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Pops the top two values on the stack as 'propval' and 'obj', pushes
      * 'propval' property of 'obj' onto the stack.
@@ -535,7 +535,7 @@
      *   Operands:
      *   Stack: obj, propval => obj[propval]
      */ \
-    macro(JSOP_GETELEM,   55, "getelem",    NULL,         1,  2,  1, JOF_BYTE |JOF_ELEM|JOF_TYPESET) \
+    macro(JSOP_GETELEM,   55, "getelem",    NULL,         1,  2,  1, JOF_BYTE |JOF_ELEM|JOF_TYPESET|JOF_IC) \
     /*
      * Pops the top three values on the stack as 'val', 'propval' and 'obj',
      * sets 'propval' property of 'obj' as 'val', pushes 'val' onto the
@@ -545,7 +545,7 @@
      *   Operands:
      *   Stack: obj, propval, val => val
      */ \
-    macro(JSOP_SETELEM,   56, "setelem",    NULL,         1,  3,  1, JOF_BYTE |JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY) \
+    macro(JSOP_SETELEM,   56, "setelem",    NULL,         1,  3,  1, JOF_BYTE |JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Pops the top three values on the stack as 'val', 'propval' and 'obj',
      * sets 'propval' property of 'obj' as 'val', pushes 'val' onto the
@@ -556,7 +556,7 @@
      *   Operands:
      *   Stack: obj, propval, val => val
      */ \
-    macro(JSOP_STRICTSETELEM,   57, "strict-setelem",    NULL,         1,  3,  1, JOF_BYTE |JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
+    macro(JSOP_STRICTSETELEM,   57, "strict-setelem",    NULL,         1,  3,  1, JOF_BYTE |JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Invokes 'callee' with 'this' and 'args', pushes return value onto the
      * stack.
@@ -566,7 +566,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
-    macro(JSOP_CALL,      58, "call",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
+    macro(JSOP_CALL,      58, "call",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
      * Looks up name on the environment chain and pushes its value onto the stack.
      *   Category: Variables and Scopes
@@ -574,7 +574,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => val
      */ \
-    macro(JSOP_GETNAME,   59, "getname",    NULL,         5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET) \
+    macro(JSOP_GETNAME,   59, "getname",    NULL,         5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
     /*
      * Pushes numeric constant onto the stack.
      *   Category: Literals
@@ -640,7 +640,7 @@
      *   Operands: int32_t offset
      *   Stack: cond => cond
      */ \
-    macro(JSOP_OR,        68, "or",         NULL,         5,  1,  1, JOF_JUMP|JOF_DETECTING) \
+    macro(JSOP_OR,        68, "or",         NULL,         5,  1,  1, JOF_JUMP|JOF_DETECTING|JOF_IC) \
     /*
      * Converts the top of stack value into a boolean, if the result is 'false',
      * jumps to a 32-bit offset from the current bytecode.
@@ -649,7 +649,7 @@
      *   Operands: int32_t offset
      *   Stack: cond => cond
      */ \
-    macro(JSOP_AND,       69, "and",        NULL,         5,  1,  1, JOF_JUMP|JOF_DETECTING) \
+    macro(JSOP_AND,       69, "and",        NULL,         5,  1,  1, JOF_JUMP|JOF_DETECTING|JOF_IC) \
     \
     /*
      * Pops the top of stack value as 'i', if 'low <= i <= high',
@@ -664,7 +664,7 @@
      *   Stack: i =>
      *   len: len
      */ \
-    macro(JSOP_TABLESWITCH, 70, "tableswitch", NULL,     -1,  1,  0,  JOF_TABLESWITCH|JOF_DETECTING) \
+    macro(JSOP_TABLESWITCH, 70, "tableswitch", NULL,     -1,  1,  0,  JOF_TABLESWITCH|JOF_DETECTING|JOF_IC) \
     \
     /*
      * Prologue emitted in scripts expected to run once, which deoptimizes code
@@ -685,8 +685,8 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    macro(JSOP_STRICTEQ,  72, "stricteq",   "===",        1,  2,  1, JOF_BYTE|JOF_DETECTING|JOF_ARITH) \
-    macro(JSOP_STRICTNE,  73, "strictne",   "!==",        1,  2,  1, JOF_BYTE|JOF_DETECTING|JOF_ARITH) \
+    macro(JSOP_STRICTEQ,  72, "stricteq",   "===",        1,  2,  1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    macro(JSOP_STRICTNE,  73, "strictne",   "!==",        1,  2,  1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     \
     /*
      * Sometimes we know when emitting that an operation will always throw.
@@ -708,7 +708,7 @@
      *   Operands:
      *   Stack: val => iter
      */ \
-    macro(JSOP_ITER,      75, "iter",       NULL,         1,  1,  1,  JOF_BYTE) \
+    macro(JSOP_ITER,      75, "iter",       NULL,         1,  1,  1,  JOF_BYTE|JOF_IC) \
     /*
      * Pushes the next iterated value onto the stack. If no value is available,
      * MagicValue(JS_NO_ITER_VALUE) is pushed.
@@ -718,7 +718,7 @@
      *   Operands:
      *   Stack: iter => iter, val
      */ \
-    macro(JSOP_MOREITER,  76, "moreiter",   NULL,         1,  1,  2,  JOF_BYTE) \
+    macro(JSOP_MOREITER,  76, "moreiter",   NULL,         1,  1,  2,  JOF_BYTE|JOF_IC) \
     /*
      * Pushes a boolean indicating whether the value on top of the stack is
      * MagicValue(JS_NO_ITER_VALUE).
@@ -737,7 +737,7 @@
      *   Operands:
      *   Stack: iter =>
      */ \
-    macro(JSOP_ENDITER,   78, "enditer",    NULL,         1,  1,  0,  JOF_BYTE) \
+    macro(JSOP_ENDITER,   78, "enditer",    NULL,         1,  1,  0,  JOF_BYTE|JOF_IC) \
     \
     /*
      * Invokes 'callee' with 'this' and 'args', pushes return value onto the
@@ -750,7 +750,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
-    macro(JSOP_FUNAPPLY,  79, "funapply",   NULL,         3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
+    macro(JSOP_FUNAPPLY,  79, "funapply",   NULL,         3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     \
     /*
      * Pushes deep-cloned object literal or singleton onto the stack.
@@ -779,7 +779,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1], newTarget => rval
      *   nuses: (argc+3)
      */ \
-    macro(JSOP_NEW,       82, "new",   NULL,         3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
+    macro(JSOP_NEW,       82, "new",   NULL,         3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_IC|JOF_IC) \
     /*
      * Pushes newly created object onto the stack with provided [[Prototype]].
      *
@@ -847,7 +847,7 @@
      *   Operands: (uint32_t extra)
      *   Stack: => obj
      */ \
-    macro(JSOP_NEWINIT,   89, "newinit",    NULL,         5,  0,  1, JOF_UINT8) \
+    macro(JSOP_NEWINIT,   89, "newinit",    NULL,         5,  0,  1, JOF_UINT8|JOF_IC) \
     /*
      * Pushes newly created array onto the stack.
      *
@@ -857,7 +857,7 @@
      *   Operands: uint32_t length
      *   Stack: => obj
      */ \
-    macro(JSOP_NEWARRAY,  90, "newarray",   NULL,         5,  0,  1, JOF_UINT32) \
+    macro(JSOP_NEWARRAY,  90, "newarray",   NULL,         5,  0,  1, JOF_UINT32|JOF_IC) \
     /*
      * Pushes newly created object onto the stack.
      *
@@ -868,7 +868,7 @@
      *   Operands: uint32_t baseobjIndex
      *   Stack: => obj
      */ \
-    macro(JSOP_NEWOBJECT, 91, "newobject",  NULL,         5,  0,  1, JOF_OBJECT) \
+    macro(JSOP_NEWOBJECT, 91, "newobject",  NULL,         5,  0,  1, JOF_OBJECT|JOF_IC) \
     \
     /*
      * Initialize the home object for functions with super bindings.
@@ -892,7 +892,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => obj
      */ \
-    macro(JSOP_INITPROP,  93, "initprop",   NULL,         5,  2,  1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
+    macro(JSOP_INITPROP,  93, "initprop",   NULL,         5,  2,  1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     \
     /*
      * Initialize a numeric property in an object literal, like '{1: x}'.
@@ -904,7 +904,7 @@
      *   Operands:
      *   Stack: obj, id, val => obj
      */ \
-    macro(JSOP_INITELEM,  94, "initelem",   NULL,         1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
+    macro(JSOP_INITELEM,  94, "initelem",   NULL,         1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     \
     /*
      * Pops the top three values on the stack as 'val', 'index' and 'obj', sets
@@ -918,7 +918,7 @@
      *   Operands:
      *   Stack: obj, index, val => obj, (index + 1)
      */ \
-    macro(JSOP_INITELEM_INC,95, "initelem_inc", NULL,     1,  3,  2, JOF_BYTE|JOF_ELEM|JOF_PROPINIT) \
+    macro(JSOP_INITELEM_INC,95, "initelem_inc", NULL,     1,  3,  2, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_IC) \
     \
     /*
      * Initialize an array element.
@@ -930,7 +930,7 @@
      *   Operands: uint32_t index
      *   Stack: obj, val => obj
      */ \
-    macro(JSOP_INITELEM_ARRAY,96, "initelem_array", NULL, 5,  2,  1,  JOF_UINT32|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
+    macro(JSOP_INITELEM_ARRAY,96, "initelem_array", NULL, 5,  2,  1,  JOF_UINT32|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     \
     /*
      * Initialize a getter in an object literal.
@@ -1017,7 +1017,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: receiver, obj => obj[name]
      */ \
-    macro(JSOP_GETPROP_SUPER,   104, "getprop-super", NULL, 5,  2,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET) \
+    macro(JSOP_GETPROP_SUPER,   104, "getprop-super", NULL, 5,  2,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
     /*
      * Pops the top three values on the stack as 'val' and 'obj', and 'receiver',
      * and performs 'obj.prop = val', pushing 'val' back onto the stack.
@@ -1067,7 +1067,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
-    macro(JSOP_FUNCALL,   108,"funcall",    NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
+    macro(JSOP_FUNCALL,   108,"funcall",    NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     \
     /*
      * Another no-op.
@@ -1090,7 +1090,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => env
      */ \
-    macro(JSOP_BINDNAME,  110,"bindname",   NULL,         5,  0,  1,  JOF_ATOM|JOF_NAME) \
+    macro(JSOP_BINDNAME,  110,"bindname",   NULL,         5,  0,  1,  JOF_ATOM|JOF_NAME|JOF_IC) \
     /*
      * Pops an environment and value from the stack, assigns value to the
      * given name, and pushes the value back on the stack
@@ -1099,7 +1099,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
-    macro(JSOP_SETNAME,   111,"setname",    NULL,         5,  2,  1,  JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY) \
+    macro(JSOP_SETNAME,   111,"setname",    NULL,         5,  2,  1,  JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
     \
     /* Exception handling ops. */ \
     /*
@@ -1122,7 +1122,7 @@
      *   Operands:
      *   Stack: id, obj => (id in obj)
      */ \
-    macro(JSOP_IN,        113,js_in_str,    js_in_str,    1,  2,  1, JOF_BYTE) \
+    macro(JSOP_IN,        113,js_in_str,    js_in_str,    1,  2,  1, JOF_BYTE|JOF_IC) \
     /*
      * Pops the top two values 'obj' and 'ctor' from the stack, then pushes
      * 'obj instanceof ctor'.  This will throw a 'TypeError' if 'obj' is not an
@@ -1132,7 +1132,7 @@
      *   Operands:
      *   Stack: obj, ctor => (obj instanceof ctor)
      */ \
-    macro(JSOP_INSTANCEOF,114,js_instanceof_str,js_instanceof_str,1,2,1,JOF_BYTE) \
+    macro(JSOP_INSTANCEOF,114,js_instanceof_str,js_instanceof_str,1,2,1,JOF_BYTE|JOF_IC) \
     \
     /*
      * Invokes debugger.
@@ -1167,7 +1167,7 @@
      *   Operands:
      *   Stack: lval, rval =>
      */ \
-    macro(JSOP_RETSUB,    117,"retsub",     NULL,         1,  2,  0,  JOF_BYTE) \
+    macro(JSOP_RETSUB,    117,"retsub",     NULL,         1,  2,  0,  JOF_BYTE|JOF_IC) \
     \
     /* More exception handling ops. */ \
     /*
@@ -1232,7 +1232,7 @@
      *   Operands: int32_t offset
      *   Stack: lval, rval => lval(if lval !== rval)
      */ \
-    macro(JSOP_CASE,      121,"case",       NULL,         5,  2,  1,  JOF_JUMP) \
+    macro(JSOP_CASE,      121,"case",       NULL,         5,  2,  1,  JOF_JUMP|JOF_IC) \
     /*
      * This appears after all cases in a JSOP_CONDSWITCH, whether there is a
      * 'default:' label in the switch statement or not. Pop the switch operand
@@ -1257,7 +1257,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
-    macro(JSOP_EVAL,      123,"eval",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY) \
+    macro(JSOP_EVAL,      123,"eval",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
     \
     /* ECMA-compliant call to eval op. */ \
     /*
@@ -1271,7 +1271,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
-    macro(JSOP_STRICTEVAL,       124, "strict-eval",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT) \
+    macro(JSOP_STRICTEVAL,       124, "strict-eval",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * LIKE JSOP_GETELEM but takes receiver on stack, and the propval is
      * evaluated before the obj.
@@ -1280,7 +1280,7 @@
      *   Operands:
      *   Stack: receiver, propval, obj => obj[propval]
      */ \
-    macro(JSOP_GETELEM_SUPER, 125, "getelem-super", NULL, 1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_TYPESET) \
+    macro(JSOP_GETELEM_SUPER, 125, "getelem-super", NULL, 1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
     macro(JSOP_UNUSED126, 126, "unused126", NULL, 5,  0,  1, JOF_UINT32) \
     \
     /*
@@ -1402,7 +1402,7 @@
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: => aliasedVar
      */ \
-    macro(JSOP_GETALIASEDVAR, 136,"getaliasedvar",NULL,      5,  0,  1,  JOF_ENVCOORD|JOF_NAME|JOF_TYPESET) \
+    macro(JSOP_GETALIASEDVAR, 136,"getaliasedvar",NULL,      5,  0,  1,  JOF_ENVCOORD|JOF_NAME|JOF_TYPESET|JOF_IC) \
     /*
      * Sets aliased variable as the top of stack value.
      *   Category: Variables and Scopes
@@ -1410,7 +1410,7 @@
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: v => v
      */ \
-    macro(JSOP_SETALIASEDVAR, 137,"setaliasedvar",NULL,      5,  1,  1,  JOF_ENVCOORD|JOF_NAME|JOF_PROPSET|JOF_DETECTING) \
+    macro(JSOP_SETALIASEDVAR, 137,"setaliasedvar",NULL,      5,  1,  1,  JOF_ENVCOORD|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_IC) \
     \
     /*
      * Checks if the value of the local variable is the
@@ -1447,7 +1447,7 @@
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: v => v
      */ \
-    macro(JSOP_INITALIASEDLEXICAL,  141, "initaliasedlexical",  NULL, 5,  1,  1, JOF_ENVCOORD|JOF_NAME|JOF_PROPINIT|JOF_DETECTING) \
+    macro(JSOP_INITALIASEDLEXICAL,  141, "initaliasedlexical",  NULL, 5,  1,  1, JOF_ENVCOORD|JOF_NAME|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
      * Pushes a JS_UNINITIALIZED_LEXICAL value onto the stack, representing an
      * uninitialized lexical binding.
@@ -1471,7 +1471,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => intrinsic[name]
      */ \
-    macro(JSOP_GETINTRINSIC,  143, "getintrinsic",  NULL, 5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET) \
+    macro(JSOP_GETINTRINSIC,  143, "getintrinsic",  NULL, 5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
     /*
      * Stores the top stack value in the specified intrinsic.
      *   Category: Variables and Scopes
@@ -1489,7 +1489,7 @@
      *   Stack: callee, this => rval
      *   nuses: 2
      */ \
-    macro(JSOP_CALLITER,      145, "calliter",      NULL, 3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
+    macro(JSOP_CALLITER,      145, "calliter",      NULL, 3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
      * Initialize a non-configurable, non-writable, non-enumerable data-property on an object.
      *
@@ -1500,7 +1500,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => obj
      */ \
-    macro(JSOP_INITLOCKEDPROP, 146, "initlockedprop", NULL, 5,  2,  1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
+    macro(JSOP_INITLOCKEDPROP, 146, "initlockedprop", NULL, 5,  2,  1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
      * Initialize a non-enumerable data-property on an object.
      *
@@ -1511,7 +1511,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => obj
      */ \
-    macro(JSOP_INITHIDDENPROP, 147,"inithiddenprop", NULL, 5,  2,  1,  JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
+    macro(JSOP_INITHIDDENPROP, 147,"inithiddenprop", NULL, 5,  2,  1,  JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
      * Push "new.target"
      *
@@ -1538,7 +1538,7 @@
      *   Operands:
      *   Stack: lval, rval => (lval ** rval)
      */ \
-    macro(JSOP_POW,           150, "pow",     "**",       1,  2,  1, JOF_BYTE|JOF_ARITH) \
+    macro(JSOP_POW,           150, "pow",     "**",       1,  2,  1, JOF_BYTE|JOF_IC) \
     \
     /*
      * Pops the top of stack value as 'v', sets pending exception as 'v',
@@ -1586,7 +1586,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => val
      */ \
-    macro(JSOP_GETGNAME,      154,"getgname",  NULL,       5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_GNAME) \
+    macro(JSOP_GETGNAME,      154,"getgname",  NULL,       5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_GNAME|JOF_IC) \
     /*
      * Pops the top two values on the stack as 'val' and 'env', sets property
      * of 'env' as 'val' and pushes 'val' back on the stack.
@@ -1598,7 +1598,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
-    macro(JSOP_SETGNAME,      155,"setgname",  NULL,       5,  2,  1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSLOPPY) \
+    macro(JSOP_SETGNAME,      155,"setgname",  NULL,       5,  2,  1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSLOPPY|JOF_IC) \
     \
     /*
      * Pops the top two values on the stack as 'val' and 'env', sets property
@@ -1612,7 +1612,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
-    macro(JSOP_STRICTSETGNAME, 156, "strict-setgname",  NULL,       5,  2,  1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSTRICT) \
+    macro(JSOP_STRICTSETGNAME, 156, "strict-setgname",  NULL,       5,  2,  1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Pushes the implicit 'this' value for calls to the associated name onto
      * the stack; only used when the implicit this might be derived from a
@@ -1667,7 +1667,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: val => val
      */ \
-    macro(JSOP_INITGLEXICAL,  161,"initglexical", NULL,   5,  1,  1,  JOF_ATOM|JOF_NAME|JOF_PROPINIT|JOF_GNAME) \
+    macro(JSOP_INITGLEXICAL,  161,"initglexical", NULL,   5,  1,  1,  JOF_ATOM|JOF_NAME|JOF_PROPINIT|JOF_GNAME|JOF_IC) \
     \
     /* Defines the new mutable binding on global lexical environment.
      *
@@ -1706,7 +1706,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1], newTarget => rval
      *   nuses: (argc+3)
      */ \
-    macro(JSOP_SUPERCALL,     165,"supercall",  NULL,     3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
+    macro(JSOP_SUPERCALL,     165,"supercall",  NULL,     3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
      * spreadcall variant of JSOP_SUPERCALL.
      *
@@ -1717,7 +1717,7 @@
      *   Operands:
      *   Stack: callee, this, args, newTarget => rval
      */ \
-    macro(JSOP_SPREADSUPERCALL, 166, "spreadsupercall", NULL, 1,  4,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET) \
+    macro(JSOP_SPREADSUPERCALL, 166, "spreadsupercall", NULL, 1,  4,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
      * Push a default constructor for a base class literal.
      *
@@ -1812,7 +1812,7 @@
      *   Operands:
      *   Stack: obj, id, val => obj
      */ \
-    macro(JSOP_INITHIDDENELEM,  175, "inithiddenelem",   NULL,         1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
+    macro(JSOP_INITHIDDENELEM,  175, "inithiddenelem",   NULL,         1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
      * Gets the value of a module import by name and pushes it onto the stack.
      *   Category: Variables and Scopes
@@ -1820,7 +1820,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => val
      */ \
-    macro(JSOP_GETIMPORT,     176,"getimport",  NULL,     5,  0,  1,  JOF_ATOM|JOF_NAME|JOF_TYPESET) \
+    macro(JSOP_GETIMPORT,     176,"getimport",  NULL,     5,  0,  1,  JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
     /*
      * Examines the top stack value, asserting that it's either a self-hosted
      * function or a self-hosted intrinsic. This opcode does nothing in a
@@ -1896,7 +1896,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj => obj[name]
      */ \
-    macro(JSOP_CALLPROP,      184,"callprop",   NULL,     5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET) \
+    macro(JSOP_CALLPROP,      184,"callprop",   NULL,     5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
     /*
      * Determines the 'this' value for current function frame and pushes it onto
      * the stack. Emitted in the prologue of functions with a this-binding.
@@ -1981,7 +1981,7 @@
      *   Operands:
      *   Stack: obj, propval => obj[propval]
      */ \
-    macro(JSOP_CALLELEM,      193, "callelem",   NULL,    1,  2,  1, JOF_BYTE |JOF_ELEM|JOF_TYPESET) \
+    macro(JSOP_CALLELEM,      193, "callelem",   NULL,    1,  2,  1, JOF_BYTE |JOF_ELEM|JOF_TYPESET|JOF_IC) \
     \
     /*
      * '__proto__: v' inside an object initializer.
@@ -2005,7 +2005,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env => v
      */ \
-    macro(JSOP_GETBOUNDNAME,  195,"getboundname",NULL,    5,  1,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET) \
+    macro(JSOP_GETBOUNDNAME,  195,"getboundname",NULL,    5,  1,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
     \
     /*
      * Pops the top stack value as 'val' and pushes 'typeof val'.  Note that
@@ -2017,7 +2017,7 @@
      *   Operands:
      *   Stack: val => (typeof val)
      */ \
-    macro(JSOP_TYPEOFEXPR,    196,"typeofexpr",  NULL,    1,  1,  1, JOF_BYTE|JOF_DETECTING) \
+    macro(JSOP_TYPEOFEXPR,    196,"typeofexpr",  NULL,    1,  1,  1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     \
     /* Lexical environment support. */ \
     /*
@@ -2157,7 +2157,7 @@
      *   Operands:
      *   Stack: id, obj => (obj.hasOwnProperty(id))
      */ \
-    macro(JSOP_HASOWN,        211, "hasown",     NULL,    1,  2,  1, JOF_BYTE) \
+    macro(JSOP_HASOWN,        211, "hasown",     NULL,    1,  2,  1, JOF_BYTE|JOF_IC) \
     /*
      * Initializes generator frame, creates a generator and pushes it on the
      * stack.
@@ -2186,7 +2186,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => global
      */ \
-    macro(JSOP_BINDGNAME,     214, "bindgname",    NULL,  5,  0,  1,  JOF_ATOM|JOF_NAME|JOF_GNAME) \
+    macro(JSOP_BINDGNAME,     214, "bindgname",    NULL,  5,  0,  1,  JOF_ATOM|JOF_NAME|JOF_GNAME|JOF_IC) \
     \
     /*
      * Pushes 8-bit int immediate integer operand onto the stack.
@@ -2213,7 +2213,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj => obj['length']
      */ \
-    macro(JSOP_LENGTH,        217, "length",       NULL,  5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET) \
+    macro(JSOP_LENGTH,        217, "length",       NULL,  5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
     \
     /*
      * Pushes a JS_ELEMENTS_HOLE value onto the stack, representing an omitted
@@ -2286,7 +2286,7 @@
      *   Operands:
      *   Stack: => rest
      */ \
-    macro(JSOP_REST,          224, "rest",         NULL,  1,  0,  1,  JOF_BYTE|JOF_TYPESET) \
+    macro(JSOP_REST,          224, "rest",         NULL,  1,  0,  1,  JOF_BYTE|JOF_TYPESET|JOF_IC) \
     \
     /*
      * Replace the top-of-stack value propertyNameValue with
@@ -2320,7 +2320,7 @@
      *   Operands: uint8_t BITFIELD
      *   Stack: =>
      */ \
-    macro(JSOP_LOOPENTRY,     227, "loopentry",    NULL,  2,  0,  0,  JOF_UINT8) \
+    macro(JSOP_LOOPENTRY,     227, "loopentry",    NULL,  2,  0,  0,  JOF_UINT8|JOF_IC) \
     /*
      * Converts the value on the top of the stack to a String
      *   Category: Other
@@ -2355,7 +2355,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
-    macro(JSOP_CALL_IGNORES_RV, 231, "call-ignores-rv", NULL, 3, -1, 1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
+    macro(JSOP_CALL_IGNORES_RV, 231, "call-ignores-rv", NULL, 3, -1, 1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
      * Push "import.meta"
      *

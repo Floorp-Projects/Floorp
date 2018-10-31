@@ -124,13 +124,6 @@ js::DebuggerEnvironment::owner() const
 }
 
 inline js::Debugger*
-js::DebuggerFrame::owner() const
-{
-    JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();
-    return Debugger::fromJSObject(dbgobj);
-}
-
-inline js::Debugger*
 js::DebuggerObject::owner() const
 {
     JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();

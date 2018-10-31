@@ -98,7 +98,6 @@
   locale/@AB_CD@/mozapps/update/updates.dtd                       (%chrome/mozapps/update/updates.dtd)
   locale/@AB_CD@/mozapps/update/updates.properties                (%chrome/mozapps/update/updates.properties)
 #endif
-  locale/@AB_CD@/mozapps/update/history.dtd                       (%chrome/mozapps/update/history.dtd)
 % locale pluginproblem @AB_CD@ %locale/@AB_CD@/pluginproblem/
   locale/@AB_CD@/pluginproblem/pluginproblem.dtd                  (%chrome/pluginproblem/pluginproblem.dtd)
 % locale alerts @AB_CD@ %locale/@AB_CD@/alerts/

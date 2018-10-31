@@ -168,7 +168,9 @@ const FlexItemActor = ActorClassWithSpec(flexItemSpec, {
       [dimension]: "",
     };
 
-    if (this.element.nodeType === this.element.ELEMENT_NODE) {
+    const isElementNode = this.element.nodeType === this.element.ELEMENT_NODE;
+
+    if (isElementNode) {
       for (const name in properties) {
         let value = "";
         // Look first on the element style.
@@ -192,12 +194,20 @@ const FlexItemActor = ActorClassWithSpec(flexItemSpec, {
       }
     }
 
+    // Also find some computed sizing properties that will be useful for this item.
+    const { flexGrow, flexShrink } = isElementNode
+      ? CssLogic.getComputedStyle(this.element)
+      : { flexGrow: null, flexShrink: null };
+    const computedStyle = { flexGrow, flexShrink };
+
     const form = {
       actor: this.actorID,
       // The flex item sizing data.
       flexItemSizing: this.flexItemSizing,
       // The authored style properties of the flex item.
       properties,
+      // The computed style properties of the flex item.
+      computedStyle,
     };
 
     // If the WalkerActor already knows the flex item element, then also return its

@@ -18,6 +18,16 @@
   -moz-user-select: none;
 }
 
+.sidebar-item__link {
+  display: block;
+  height: 100%;
+}
+
+.sidebar-item__link,
+.sidebar-item__link:hover {
+  color: inherit; /* do not apply usual link colors, but grab this element parent's */
+}
+
 .sidebar-item:not(.sidebar-item--selectable) {
   color: var(--grey-40);
 }

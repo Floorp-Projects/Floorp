@@ -45,14 +45,14 @@ struct OriginComparator
   }
 };
 
-ExpandedPrincipal::ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList)
+ExpandedPrincipal::ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aAllowList)
   : BasePrincipal(eExpandedPrincipal)
 {
   // We force the principals to be sorted by origin so that ExpandedPrincipal
   // origins can have a canonical form.
   OriginComparator c;
-  for (size_t i = 0; i < aWhiteList.Length(); ++i) {
-    mPrincipals.InsertElementSorted(aWhiteList[i], c);
+  for (size_t i = 0; i < aAllowList.Length(); ++i) {
+    mPrincipals.InsertElementSorted(aAllowList[i], c);
   }
 }
 
@@ -65,10 +65,10 @@ ExpandedPrincipal::~ExpandedPrincipal()
 { }
 
 already_AddRefed<ExpandedPrincipal>
-ExpandedPrincipal::Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aWhiteList,
+ExpandedPrincipal::Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aAllowList,
                           const OriginAttributes& aAttrs)
 {
-  RefPtr<ExpandedPrincipal> ep = new ExpandedPrincipal(aWhiteList);
+  RefPtr<ExpandedPrincipal> ep = new ExpandedPrincipal(aAllowList);
 
   nsAutoCString origin;
   origin.AssignLiteral("[Expanded Principal [");
@@ -110,7 +110,7 @@ ExpandedPrincipal::SubsumesInternal(nsIPrincipal* aOther,
   if (Cast(aOther)->Is<ExpandedPrincipal>()) {
     auto* expanded = Cast(aOther)->As<ExpandedPrincipal>();
 
-    for (auto& other : expanded->WhiteList()) {
+    for (auto& other : expanded->AllowList()) {
       // Use SubsumesInternal rather than Subsumes here, since OriginAttribute
       // checks are only done between non-expanded sub-principals, and we don't
       // need to incur the extra virtual call overhead.
@@ -158,7 +158,7 @@ ExpandedPrincipal::GetURI(nsIURI** aURI)
 }
 
 const nsTArray<nsCOMPtr<nsIPrincipal>>&
-ExpandedPrincipal::WhiteList()
+ExpandedPrincipal::AllowList()
 {
   return mPrincipals;
 }
@@ -207,7 +207,7 @@ ExpandedPrincipal::PrincipalToInherit(nsIURI* aRequestedURI)
     // with forced principal inheritance, and creation of XML documents from
     // XMLHttpRequests or fetch requests. For URIs that normally inherit a
     // principal (such as data: URIs), we fall back to the last principal in the
-    // whitelist.
+    // allowlist.
     for (const auto& principal : mPrincipals) {
       if (Cast(principal)->MayLoadInternal(aRequestedURI)) {
         return principal;
@@ -316,16 +316,16 @@ ExpandedPrincipal::GetSiteIdentifier(SiteIdentifier& aSite)
   // Call GetSiteIdentifier on each of our principals and return a new
   // ExpandedPrincipal.
 
-  nsTArray<nsCOMPtr<nsIPrincipal>> whitelist;
+  nsTArray<nsCOMPtr<nsIPrincipal>> allowlist;
   for (const auto& principal : mPrincipals) {
     SiteIdentifier site;
     nsresult rv = Cast(principal)->GetSiteIdentifier(site);
     NS_ENSURE_SUCCESS(rv, rv);
-    whitelist.AppendElement(site.GetPrincipal());
+    allowlist.AppendElement(site.GetPrincipal());
   }
 
   RefPtr<ExpandedPrincipal> expandedPrincipal =
-    ExpandedPrincipal::Create(whitelist, OriginAttributesRef());
+    ExpandedPrincipal::Create(allowlist, OriginAttributesRef());
   MOZ_ASSERT(expandedPrincipal, "ExpandedPrincipal::Create returned nullptr?");
 
   aSite.Init(expandedPrincipal);

@@ -1593,7 +1593,7 @@ StartMacOSContentSandbox()
   info.hasWindowServer = !Preferences::GetBool(
       "security.sandbox.content.mac.disconnect-windowserver");
 
-  // These paths are used to whitelist certain directories used by the testing
+  // These paths are used to allowlist certain directories used by the testing
   // system. They should not be considered a public API, and are only intended
   // for use in automation.
   nsAutoCString testingReadPath1;
@@ -2956,17 +2956,17 @@ ContentChild::RecvDomainSetChanged(const uint32_t& aSetType,
 
   nsCOMPtr<nsIDomainSet> set;
   switch(aSetType) {
-    case BLACKLIST:
-      mPolicy->GetBlacklist(getter_AddRefs(set));
+    case BLOCKLIST:
+      mPolicy->GetBlocklist(getter_AddRefs(set));
       break;
-    case SUPER_BLACKLIST:
-      mPolicy->GetSuperBlacklist(getter_AddRefs(set));
+    case SUPER_BLOCKLIST:
+      mPolicy->GetSuperBlocklist(getter_AddRefs(set));
       break;
-    case WHITELIST:
-      mPolicy->GetWhitelist(getter_AddRefs(set));
+    case ALLOWLIST:
+      mPolicy->GetAllowlist(getter_AddRefs(set));
       break;
-    case SUPER_WHITELIST:
-      mPolicy->GetSuperWhitelist(getter_AddRefs(set));
+    case SUPER_ALLOWLIST:
+      mPolicy->GetSuperAllowlist(getter_AddRefs(set));
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected setType");

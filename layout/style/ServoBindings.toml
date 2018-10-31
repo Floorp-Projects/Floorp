@@ -103,8 +103,6 @@ rusty-enums = [
     "mozilla::dom::PlaybackDirection",
     "mozilla::dom::FillMode",
     "mozilla::HalfCorner",
-    "mozilla::StyleDisplay",
-    "mozilla::StyleDisplayMode",
     "mozilla::StyleFloatEdge",
     "mozilla::StyleShapeRadius",
     "mozilla::StyleWindowDragging",
@@ -122,7 +120,6 @@ rusty-enums = [
     "mozilla::StyleBoxDirection",
     "mozilla::StyleTextJustify",
     "mozilla::StyleHyphens",
-    "mozilla::StyleFillRule",
     "mozilla::StyleShapeSourceType",
     "mozilla::StyleBasicShapeType",
     "nsStyleImageLayers_Size_DimensionType",
@@ -189,7 +186,6 @@ whitelist-types = [
     "mozilla::ServoStyleSheetInner",
     "mozilla::ServoStyleSetSizes",
     "mozilla::ServoTraversalStatistics",
-    "mozilla::StyleDisplayMode",
     "mozilla::css::LoaderReusableStyleSheets",
     "mozilla::css::SheetLoadData",
     "mozilla::css::SheetLoadDataHolder",
@@ -211,13 +207,6 @@ whitelist-types = [
     "mozilla::gfx::Float",
     "mozilla::gfx::FontVariation",
     "mozilla::StyleImageLayerAttachment",
-    "mozilla::StyleComputedFontStretchRange",
-    "mozilla::StyleComputedFontStyleDescriptor",
-    "mozilla::StyleComputedFontWeightRange",
-    "mozilla::StyleFontDisplay",
-    "mozilla::StyleUnicodeRange",
-    "mozilla::StyleFontLanguageOverride",
-    "mozilla::StyleFontFaceSourceListComponent",
     "gfxFontFeature",
     "gfxFontVariation",
     ".*ThreadSafe.*Holder",
@@ -388,6 +377,24 @@ opaque-types = [
                                 # don't align properly on Linux 32-bit
     "mozilla::SchedulerGroup", # Non-standard-layout packing of field into superclass
 ]
+
+# All cbindgen-types are in mod "structs::root::mozilla".
+cbindgen-types = [
+    { gecko = "StyleAppearance", servo = "values::specified::Appearance" },
+    { gecko = "StyleComputedFontStretchRange", servo = "font_face::ComputedFontStretchRange" },
+    { gecko = "StyleComputedFontStyleDescriptor", servo = "font_face::ComputedFontStyleDescriptor" },
+    { gecko = "StyleComputedFontWeightRange", servo = "font_face::ComputedFontWeightRange" },
+    { gecko = "StyleComputedTimingFunction", servo = "values::computed::easing::TimingFunction" },
+    { gecko = "StyleDisplay", servo = "values::specified::Display" },
+    { gecko = "StyleDisplayMode", servo = "gecko::media_features::DisplayMode" },
+    { gecko = "StyleFillRule", servo = "values::generics::basic_shape::FillRule" },
+    { gecko = "StyleFontDisplay", servo = "font_face::FontDisplay" },
+    { gecko = "StyleFontFaceSourceListComponent", servo = "font_face::FontFaceSourceListComponent" },
+    { gecko = "StyleFontLanguageOverride", servo = "values::computed::font::FontLanguageOverride" },
+    { gecko = "StylePathCommand", servo = "values::specified::svg_path::PathCommand" },
+    { gecko = "StyleUnicodeRange", servo = "cssparser::UnicodeRange" },
+]
+
 mapped-generic-types = [
     { generic = true, gecko = "mozilla::RustCell", servo = "::std::cell::Cell" },
     { generic = false, gecko = "ServoNodeData", servo = "AtomicRefCell<ElementData>" },
@@ -398,7 +405,6 @@ mapped-generic-types = [
     { generic = false, gecko = "mozilla::ServoComputedValueFlags", servo = "::properties::computed_value_flags::ComputedValueFlags" },
     { generic = true, gecko = "mozilla::ServoRawOffsetArc", servo = "::servo_arc::RawOffsetArc" },
     { generic = false, gecko = "ComputedStyleStrong", servo = "::gecko_bindings::sugar::ownership::Strong<::properties::ComputedValues>" },
-    { generic = false, gecko = "mozilla::StyleComputedTimingFunction", servo = "::values::computed::easing::TimingFunction" },
 ]
 fixups = [
     { pat = "\\broot\\s*::\\s*nsString\\b", rep = "::nsstring::nsStringRepr" },

@@ -3031,6 +3031,11 @@ WriteExtraData(nsIFile* extraFile,
     WriteAnnotation(fd, key, value);
   }
 
+  if (content && currentSessionId) {
+    WriteAnnotation(fd, Annotation::TelemetrySessionId,
+                    nsDependentCString(currentSessionId));
+  }
+
   if (writeCrashTime) {
     time_t crashTime = time(nullptr);
     char crashTimeString[32];

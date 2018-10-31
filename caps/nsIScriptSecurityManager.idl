@@ -127,11 +127,11 @@ interface nsIScriptSecurityManager : nsISupports
                                       in unsigned long flags);
 
     /**
-     * Returns true if the URI is from a domain that is white-listed through
+     * Returns true if the URI is from a domain that is allow-listed through
      * prefs to be allowed to use file:// URIs.
      * @param aUri the URI to be tested
      */
-    bool inFileURIWhitelist(in nsIURI aUri);
+    bool inFileURIAllowlist(in nsIURI aUri);
 
     ///////////////// Principals ///////////////////////
 
@@ -274,7 +274,7 @@ interface nsIScriptSecurityManager : nsISupports
      *
      * If domainPolicyEnabled is false, this simply returns the current value
      * of javascript.enabled. Otherwise, it returns the same value, but taking
-     * the various blacklist/whitelist exceptions into account.
+     * the various blocklist/allowlist exceptions into account.
      */
     bool policyAllowsScript(in nsIURI aDomain);
 };

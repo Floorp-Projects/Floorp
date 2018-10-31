@@ -47,7 +47,7 @@ function validatedWebRemoteType(aPreferredRemoteType, aTargetUri, aCurrentUri) {
   // If the domain is whitelisted to allow it to use file:// URIs, then we have
   // to run it in a file content process, in case it uses file:// sub-resources.
   const sm = Services.scriptSecurityManager;
-  if (sm.inFileURIWhitelist(aTargetUri)) {
+  if (sm.inFileURIAllowlist(aTargetUri)) {
     return FILE_REMOTE_TYPE;
   }
 

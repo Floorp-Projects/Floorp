@@ -192,6 +192,7 @@ class FlexboxInspector {
 
       flexItems.push({
         actorID: flexItemFront.actorID,
+        computedStyle: flexItemFront.computedStyle,
         flexItemSizing: flexItemFront.flexItemSizing,
         nodeFront: itemNodeFront,
         properties: flexItemFront.properties,

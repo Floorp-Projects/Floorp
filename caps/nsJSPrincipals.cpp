@@ -211,7 +211,7 @@ ReadPrincipalInfo(JSStructuredCloneReader* aReader,
             if (!ReadPrincipalInfo(aReader, tag, sub)) {
                 return false;
             }
-            expanded.whitelist().AppendElement(sub);
+            expanded.allowlist().AppendElement(sub);
         }
 
         aInfo = expanded;
@@ -307,12 +307,12 @@ WritePrincipalInfo(JSStructuredCloneWriter* aWriter, const PrincipalInfo& aInfo)
     if (aInfo.type() == PrincipalInfo::TExpandedPrincipalInfo) {
         const ExpandedPrincipalInfo& expanded = aInfo;
         if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_EXPANDED_PRINCIPAL, 0) ||
-            !JS_WriteUint32Pair(aWriter, expanded.whitelist().Length(), 0)) {
+            !JS_WriteUint32Pair(aWriter, expanded.allowlist().Length(), 0)) {
             return false;
         }
 
-        for (uint32_t i = 0; i < expanded.whitelist().Length(); i++) {
-            if (!WritePrincipalInfo(aWriter, expanded.whitelist()[i])) {
+        for (uint32_t i = 0; i < expanded.allowlist().Length(); i++) {
+            if (!WritePrincipalInfo(aWriter, expanded.allowlist()[i])) {
                 return false;
             }
         }
