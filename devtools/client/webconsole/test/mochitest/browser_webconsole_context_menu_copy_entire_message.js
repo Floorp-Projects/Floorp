@@ -109,7 +109,7 @@ add_task(async function() {
   is(lines[0], `Error: "error object"`, "Error object first line has expected text");
   ok(lines[1].startsWith(`\twrapper data:text/html`),
     "Error stacktrace first line starts with expected value");
-  ok(lines[2].startsWith(`\tlogStuff data:text/html`),
+  ok(lines[2].startsWith(`\twindow.logStuff data:text/html`),
     "Error stacktrace second line starts with expected value");
 
   observer.destroy();

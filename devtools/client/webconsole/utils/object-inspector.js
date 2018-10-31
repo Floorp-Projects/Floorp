@@ -10,6 +10,7 @@ const reps = require("devtools/client/shared/components/reps/reps");
 const { REPS, MODE, objectInspector } = reps;
 const ObjectInspector = createFactory(objectInspector.ObjectInspector);
 const { Grip } = REPS;
+const StackTrace = createFactory(require("devtools/client/shared/components/StackTrace"));
 
 /**
  * Create and return an ObjectInspector for the given grip.
@@ -52,6 +53,16 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
     onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
     recordTelemetryEvent: serviceContainer.recordTelemetryEvent,
     openLink: serviceContainer.openLink,
+    renderStacktrace: stacktrace => StackTrace({
+      stacktrace,
+      onViewSourceInDebugger: serviceContainer
+        ? serviceContainer.onViewSourceInDebugger || serviceContainer.onViewSource
+        : null,
+      onViewSourceInScratchpad: serviceContainer
+        ? serviceContainer.onViewSourceInScratchpad || serviceContainer.onViewSource
+        : null,
+      sourceMapService: serviceContainer ? serviceContainer.sourceMapService : null,
+    }),
   };
 
   if (!(typeof grip === "string" || (grip && grip.type === "longString"))) {
