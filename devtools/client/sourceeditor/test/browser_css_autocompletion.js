@@ -85,13 +85,13 @@ add_task(async function test() {
 async function runTests() {
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   await target.attach();
-  inspector = target.getFront("inspector");
-  const walker = await inspector.getWalker();
+  inspector = await target.getInspector();
+  const walker = inspector.walker;
   completer = new CSSCompleter({walker: walker,
                                 cssProperties: getClientCssProperties()});
   await checkStateAndMoveOn();
   await completer.walker.release();
-  inspector.destroy();
+  await target.destroy();
   inspector = null;
   completer = null;
 }

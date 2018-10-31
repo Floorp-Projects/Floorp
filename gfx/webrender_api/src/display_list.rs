@@ -654,7 +654,7 @@ impl Write for UnsafeVecWriter {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         unsafe {
             ptr::copy_nonoverlapping(buf.as_ptr(), self.0, buf.len());
-            self.0 = self.0.offset(buf.len() as isize);
+            self.0 = self.0.add(buf.len());
         }
         Ok(buf.len())
     }
@@ -663,7 +663,7 @@ impl Write for UnsafeVecWriter {
     fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
         unsafe {
             ptr::copy_nonoverlapping(buf.as_ptr(), self.0, buf.len());
-            self.0 = self.0.offset(buf.len() as isize);
+            self.0 = self.0.add(buf.len());
         }
         Ok(())
     }
@@ -704,7 +704,7 @@ fn serialize_fast<T: Serialize>(vec: &mut Vec<u8>, e: &T) {
     vec.reserve(size.0);
 
     let old_len = vec.len();
-    let ptr = unsafe { vec.as_mut_ptr().offset(old_len as isize) };
+    let ptr = unsafe { vec.as_mut_ptr().add(old_len) };
     let mut w = UnsafeVecWriter(ptr);
     bincode::serialize_into(&mut w, e).unwrap();
 
@@ -744,7 +744,7 @@ where I: ExactSizeIterator + Clone,
     vec.reserve(size.0);
 
     let old_len = vec.len();
-    let ptr = unsafe { vec.as_mut_ptr().offset(old_len as isize) };
+    let ptr = unsafe { vec.as_mut_ptr().add(old_len) };
     let mut w = UnsafeVecWriter(ptr);
     let mut count2 = 0;
 
@@ -777,7 +777,7 @@ impl<'a, 'b> UnsafeReader<'a, 'b> {
     #[inline(always)]
     fn new(buf: &'b mut &'a [u8]) -> UnsafeReader<'a, 'b> {
         unsafe {
-            let end = buf.as_ptr().offset(buf.len() as isize);
+            let end = buf.as_ptr().add(buf.len());
             let start = buf.as_ptr();
             UnsafeReader { start, end, slice: buf }
         }
@@ -797,9 +797,9 @@ impl<'a, 'b> UnsafeReader<'a, 'b> {
     fn read_internal(&mut self, buf: &mut [u8]) {
         // this is safe because we panic if start + buf.len() > end
         unsafe {
-            assert!(self.start.offset(buf.len() as isize) <= self.end, "UnsafeReader: read past end of target");
+            assert!(self.start.add(buf.len()) <= self.end, "UnsafeReader: read past end of target");
             ptr::copy_nonoverlapping(self.start, buf.as_mut_ptr(), buf.len());
-            self.start = self.start.offset(buf.len() as isize);
+            self.start = self.start.add(buf.len());
         }
     }
 }

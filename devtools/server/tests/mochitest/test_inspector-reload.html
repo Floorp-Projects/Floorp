@@ -24,11 +24,9 @@ let gWalker = null;
 addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
   const { target, doc } = await attachURL(url);
-  const inspector = target.getInspector();
+  const inspector = await target.getInspector();
   gInspectee = doc;
-  const walker = await inspector.getWalker();
-  ok(walker, "getWalker() should return an actor.");
-  dump(walker.actorID + "\n");
+  const walker = inspector.walker;
   gWalker = await inspector.getWalker();
   ok(walker === gWalker, "getWalker() twice should return the same walker.");
   runNextTest();

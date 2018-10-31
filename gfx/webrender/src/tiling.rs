@@ -17,6 +17,7 @@ use gpu_types::{TransformData, TransformPalette, ZBufferIdGenerator};
 use internal_types::{CacheTextureId, FastHashMap, SavedTargetIndex, TextureSource};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
+use picture::SurfaceInfo;
 use prim_store::{PrimitiveStore, DeferredResolve};
 use profiler::FrameProfileCounters;
 use render_backend::FrameResources;
@@ -50,6 +51,7 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub use_dual_source_blending: bool,
     pub clip_scroll_tree: &'a ClipScrollTree,
     pub resources: &'a FrameResources,
+    pub surfaces: &'a [SurfaceInfo],
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]

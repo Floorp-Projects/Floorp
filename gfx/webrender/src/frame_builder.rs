@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, DeviceIntPoint, DevicePixelScale, LayoutPixel, PicturePixel, RasterPixel};
-use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FontRenderMode, PictureRect};
+use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FontRenderMode};
 use api::{LayoutPoint, LayoutRect, LayoutSize, PipelineId, RasterSpace, WorldPoint, WorldRect, WorldPixel};
 use clip::{ClipDataStore, ClipStore};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
@@ -12,8 +12,8 @@ use gpu_cache::GpuCache;
 use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
 use hit_test::{HitTester, HitTestingRun};
 use internal_types::{FastHashMap, PlaneSplitter};
-use picture::{PictureCompositeMode, PictureSurface, PictureUpdateContext, RasterConfig};
-use prim_store::{PrimitiveIndex, PrimitiveStore, SpaceMapper, PictureIndex};
+use picture::{PictureSurface, PictureUpdateContext, SurfaceInfo, ROOT_SURFACE_INDEX};
+use prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_backend::{FrameResources, FrameId};
 use render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree};
@@ -32,7 +32,7 @@ use tiling::{SpecialRenderPasses};
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum ChasePrimitive {
     Nothing,
-    Index(PrimitiveIndex),
+    Id(PrimitiveDebugId),
     LocalRect(LayoutRect),
 }
 
@@ -85,6 +85,7 @@ pub struct FrameBuildingState<'a> {
     pub transforms: &'a mut TransformPalette,
     pub resources: &'a mut FrameResources,
     pub segment_builder: SegmentBuilder,
+    pub surfaces: &'a mut Vec<SurfaceInfo>,
 }
 
 /// Immutable context of a picture when processing children.
@@ -97,7 +98,6 @@ pub struct PictureContext {
     pub allow_subpixel_aa: bool,
     pub is_passthrough: bool,
     pub raster_space: RasterSpace,
-    pub local_spatial_node_index: SpatialNodeIndex,
     pub surface_spatial_node_index: SpatialNodeIndex,
     pub raster_spatial_node_index: SpatialNodeIndex,
 }
@@ -109,15 +109,10 @@ pub struct PictureState {
     pub has_non_root_coord_system: bool,
     pub is_cacheable: bool,
     pub local_rect_changed: bool,
-    /// Union rectangle of all the items in this picture.
-    pub rect: PictureRect,
     pub map_local_to_pic: SpaceMapper<LayoutPixel, PicturePixel>,
     pub map_pic_to_world: SpaceMapper<PicturePixel, WorldPixel>,
     pub map_pic_to_raster: SpaceMapper<PicturePixel, RasterPixel>,
     pub map_raster_to_world: SpaceMapper<RasterPixel, WorldPixel>,
-    /// Mapping from local space to the containing block, which is the root for
-    /// plane splitting and affects backface visibility.
-    pub map_local_to_containing_block: SpaceMapper<LayoutPixel, LayoutPixel>,
     /// If the plane splitter, the primitives get added to it insted of
     /// batching into their parent pictures.
     pub plane_splitter: Option<PlaneSplitter>,
@@ -196,10 +191,11 @@ impl FrameBuilder {
         scene_properties: &SceneProperties,
         transform_palette: &mut TransformPalette,
         resources: &mut FrameResources,
+        surfaces: &mut Vec<SurfaceInfo>,
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
 
-        if self.prim_store.primitives.is_empty() {
+        if self.prim_store.pictures.is_empty() {
             return None
         }
 
@@ -222,22 +218,20 @@ impl FrameBuilder {
             ),
         };
 
-        let mut frame_state = FrameBuildingState {
-            render_tasks,
-            profile_counters,
-            clip_store: &mut self.clip_store,
-            resource_cache,
-            gpu_cache,
-            special_render_passes,
-            transforms: transform_palette,
-            resources,
-            segment_builder: SegmentBuilder::new(),
-        };
+        // Construct a dummy root surface, that represents the
+        // main framebuffer surface.
+        let root_surface = SurfaceInfo::new(
+            ROOT_SPATIAL_NODE_INDEX,
+            ROOT_SPATIAL_NODE_INDEX,
+            world_rect,
+            clip_scroll_tree,
+        );
+        surfaces.push(root_surface);
 
-        let pic_update_context = PictureUpdateContext {
-            surface_spatial_node_index: ROOT_SPATIAL_NODE_INDEX,
-            raster_spatial_node_index: ROOT_SPATIAL_NODE_INDEX,
-        };
+        let pic_update_context = PictureUpdateContext::new(
+            ROOT_SURFACE_INDEX,
+            ROOT_SPATIAL_NODE_INDEX,
+        );
 
         // The first major pass of building a frame is to walk the picture
         // tree. This pass must be quick (it should never touch individual
@@ -250,44 +244,48 @@ impl FrameBuilder {
             self.root_pic_index,
             &pic_update_context,
             &frame_context,
+            surfaces,
         );
 
-        let prim_context = PrimitiveContext::new(
-            &clip_scroll_tree.spatial_nodes[root_spatial_node_index.0],
-            root_spatial_node_index,
-        );
+        let mut frame_state = FrameBuildingState {
+            render_tasks,
+            profile_counters,
+            clip_store: &mut self.clip_store,
+            resource_cache,
+            gpu_cache,
+            special_render_passes,
+            transforms: transform_palette,
+            resources,
+            segment_builder: SegmentBuilder::new(),
+            surfaces,
+        };
 
-        let (pic_context, mut pic_state, mut instances) = self
+        let (pic_context, mut pic_state, mut prim_list) = self
             .prim_store
             .pictures[self.root_pic_index.0]
             .take_context(
                 self.root_pic_index,
-                &prim_context,
-                root_spatial_node_index,
                 root_spatial_node_index,
                 root_spatial_node_index,
                 true,
                 &mut frame_state,
                 &frame_context,
-                false,
             )
             .unwrap();
 
         self.prim_store.prepare_primitives(
-            &mut instances,
+            &mut prim_list,
             &pic_context,
             &mut pic_state,
             &frame_context,
             &mut frame_state,
         );
 
-        let pic_rect = Some(pic_state.rect);
         let pic = &mut self.prim_store.pictures[self.root_pic_index.0];
         pic.restore_context(
-            instances,
+            prim_list,
             pic_context,
             pic_state,
-            pic_rect,
             &mut frame_state,
         );
 
@@ -304,11 +302,11 @@ impl FrameBuilder {
         );
 
         let render_task_id = frame_state.render_tasks.add(root_render_task);
-        pic.raster_config = Some(RasterConfig {
-            composite_mode: PictureCompositeMode::Blit,
-            surface: Some(PictureSurface::RenderTask(render_task_id)),
-            raster_spatial_node_index: ROOT_SPATIAL_NODE_INDEX,
-        });
+        frame_state
+            .surfaces
+            .first_mut()
+            .unwrap()
+            .surface = Some(PictureSurface::RenderTask(render_task_id));
         Some(render_task_id)
     }
 
@@ -349,6 +347,7 @@ impl FrameBuilder {
         );
 
         let mut render_tasks = RenderTaskTree::new(frame_id);
+        let mut surfaces = Vec::new();
 
         let screen_size = self.screen_rect.size.to_i32();
         let mut special_render_passes = SpecialRenderPasses::new(&screen_size);
@@ -365,6 +364,7 @@ impl FrameBuilder {
             scene_properties,
             &mut transform_palette,
             resources,
+            &mut surfaces,
         );
 
         resource_cache.block_until_all_resources_added(gpu_cache,
@@ -411,6 +411,7 @@ impl FrameBuilder {
                 use_dual_source_blending,
                 clip_scroll_tree,
                 resources,
+                surfaces: &surfaces,
             };
 
             pass.build(

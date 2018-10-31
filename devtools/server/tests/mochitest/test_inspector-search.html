@@ -35,10 +35,9 @@ window.onload = function() {
 
     const { target, doc } = await attachURL(url);
     inspectee = doc;
-    inspector = target.getInspector();
+    inspector = await target.getInspector();
 
-    const walkerFront = await inspector.getWalker();
-    ok(walkerFront, "getWalker() should return an actor.");
+    const walkerFront = inspector.walker;
 
     walkerActor = DebuggerServer.searchAllConnectionsForActor(walkerFront.actorID);
     ok(walkerActor,

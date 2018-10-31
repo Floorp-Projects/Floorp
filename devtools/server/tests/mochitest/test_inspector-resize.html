@@ -25,13 +25,13 @@ window.onload = function() {
     const url = document.getElementById("inspectorContent").href;
 
     const { target, doc } = await attachURL(url);
-    inspector = target.getInspector();
+    inspector = await target.getInspector();
     win = doc.defaultView;
     runNextTest();
   });
 
   addAsyncTest(async function() {
-    const walker = await inspector.getWalker();
+    const walker = inspector.walker;
 
     // We can't receive events from the walker if we haven't first executed a
     // method on the actor to initialize it.

@@ -4,9 +4,7 @@
 "use strict";
 
 const TP_PREF = "privacy.trackingprotection.enabled";
-const FB_PREF = "browser.fastblock.enabled";
 const TPC_PREF = "network.cookie.cookieBehavior";
-const FB_UI_PREF = "browser.contentblocking.fastblock.control-center.ui.enabled";
 const TP_UI_PREF = "browser.contentblocking.trackingprotection.control-center.ui.enabled";
 const RT_UI_PREF = "browser.contentblocking.rejecttrackers.control-center.ui.enabled";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
@@ -66,10 +64,8 @@ add_task(async function testOpenPreferencesFromPrefsButton() {
 // links to about:preferences
 add_task(async function testOpenPreferencesFromAddBlockingButtons() {
   SpecialPowers.pushPrefEnv({set: [
-    [FB_PREF, false],
     [TP_PREF, false],
     [TPC_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT],
-    [FB_UI_PREF, true],
     [TP_UI_PREF, true],
     [RT_UI_PREF, true],
   ]});

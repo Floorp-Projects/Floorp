@@ -481,18 +481,18 @@ HTMLTextAreaElement::GetAttributeMappingFunction() const
 }
 
 bool
-HTMLTextAreaElement::IsDisabledForEvents(EventMessage aMessage)
+HTMLTextAreaElement::IsDisabledForEvents(WidgetEvent* aEvent)
 {
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
   nsIFrame* formFrame = do_QueryFrame(formControlFrame);
-  return IsElementDisabledForEvents(aMessage, formFrame);
+  return IsElementDisabledForEvents(aEvent, formFrame);
 }
 
 void
 HTMLTextAreaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = false;
-  if (IsDisabledForEvents(aVisitor.mEvent->mMessage)) {
+  if (IsDisabledForEvents(aVisitor.mEvent)) {
     return;
   }
 

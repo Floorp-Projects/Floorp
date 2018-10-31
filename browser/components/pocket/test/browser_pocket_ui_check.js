@@ -1,17 +1,5 @@
 "use strict";
 
-function checkWindowProperties(expectPresent, l) {
-  for (let name of l) {
-    is(!!window.hasOwnProperty(name), expectPresent, "property " + name + (expectPresent ? " is" : " is not") + " present");
-  }
-}
-function checkElements(expectPresent, l) {
-  for (let id of l) {
-    let el = document.getElementById(id) || gNavToolbox.palette.querySelector("#" + id);
-    is(!!el, expectPresent, "element " + id + (expectPresent ? " is" : " is not") + " present");
-  }
-}
-
 add_task(async function test_setup() {
   let clearValue = Services.prefs.prefHasUserValue("extensions.pocket.enabled");
   let enabledOnStartup = Services.prefs.getBoolPref("extensions.pocket.enabled");

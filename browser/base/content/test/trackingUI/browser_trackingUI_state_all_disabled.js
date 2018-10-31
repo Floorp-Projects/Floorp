@@ -6,7 +6,6 @@
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
 const TP_PREF = "privacy.trackingprotection.enabled";
-const FB_PREF = "browser.fastblock.enabled";
 const COOKIE_PREF = "network.cookie.cookieBehavior";
 const ANIMATIONS_PREF = "toolkit.cosmeticAnimations.enabled";
 
@@ -15,7 +14,6 @@ const ANIMATIONS_PREF = "toolkit.cosmeticAnimations.enabled";
 add_task(async function testContentBlockingAllDisabled() {
   await SpecialPowers.pushPrefEnv({set: [
     [TP_PREF, false],
-    [FB_PREF, false],
     [COOKIE_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT],
   ]});
   await UrlClassifierTestUtils.addTestTrackers();

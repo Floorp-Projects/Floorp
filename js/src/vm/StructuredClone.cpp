@@ -1827,16 +1827,16 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
             break;
 
           case ESClass::Other: {
-            if (JS_IsTypedArrayObject(obj)) {
+            if (obj->canUnwrapAs<TypedArrayObject>()) {
                 return writeTypedArray(obj);
             }
-            if (JS_IsDataViewObject(obj)) {
+            if (obj->canUnwrapAs<DataViewObject>()) {
                 return writeDataView(obj);
             }
             if (wasm::IsSharedWasmMemoryObject(obj)) {
                 return writeSharedWasmMemory(obj);
             }
-            if (SavedFrame::isSavedFrameOrWrapper(*obj)) {
+            if (obj->canUnwrapAs<SavedFrame>()) {
                 return traverseSavedFrame(obj);
             }
             break;
@@ -2072,7 +2072,7 @@ JSStructuredCloneWriter::write(HandleValue v)
                 if (!startWrite(key) || !startWrite(val)) {
                     return false;
                 }
-            } else if (cls == ESClass::Set || SavedFrame::isSavedFrameOrWrapper(*obj)) {
+            } else if (cls == ESClass::Set || obj->canUnwrapAs<SavedFrame>()) {
                 key = otherEntries.popCopy();
                 checkStack();
 

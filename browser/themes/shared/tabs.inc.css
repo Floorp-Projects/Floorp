@@ -719,7 +719,7 @@
 .tabs-newtab-button,
 #TabsToolbar > #new-tab-button ,
 #TabsToolbar > toolbarpaletteitem > #new-tab-button {
-  list-style-image: url(chrome://browser/skin/tabbrowser/newtab.svg);
+  list-style-image: url(chrome://browser/skin/add.svg);
 }
 
 /* All tabs button and menupopup */
