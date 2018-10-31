@@ -1526,11 +1526,7 @@ MediaStreamGraphImpl::ForceShutDown(media::ShutdownTicket* aShutdownTicket)
   mForceShutdownTicket = aShutdownTicket;
   MonitorAutoLock lock(mMonitor);
   mForceShutDown = true;
-  if (IsNonRealtime()) {
-    // Start the graph if it has not been started already, but don't produce anything.
-    // This method will return early if the graph is already started.
-    StartNonRealtimeProcessing(0);
-  } else if (LifecycleStateRef() == LIFECYCLE_THREAD_NOT_STARTED) {
+  if (LifecycleStateRef() == LIFECYCLE_THREAD_NOT_STARTED) {
     // We *could* have just sent this a message to start up, so don't
     // yank the rug out from under it.  Tell it to startup and let it
     // shut down.
@@ -1793,10 +1789,7 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
       }
     }
 
-    // Don't start the thread for a non-realtime graph until it has been
-    // explicitly started by StartNonRealtimeProcessing.
-    if (LifecycleStateRef() == LIFECYCLE_THREAD_NOT_STARTED &&
-        (mRealtime || mNonRealtimeProcessing)) {
+    if (LifecycleStateRef() == LIFECYCLE_THREAD_NOT_STARTED) {
       LifecycleStateRef() = LIFECYCLE_RUNNING;
       // Start the thread now. We couldn't start it earlier because
       // the graph might exit immediately on finding it has no streams. The
@@ -2672,13 +2665,6 @@ MediaStream::RunAfterPendingUpdates(already_AddRefed<nsIRunnable> aRunnable)
   MOZ_ASSERT(NS_IsMainThread());
   MediaStreamGraphImpl* graph = GraphImpl();
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
-
-  // Special case when a non-realtime graph has not started, to ensure the
-  // runnable will run in finite time.
-  if (!(graph->mRealtime || graph->mNonRealtimeProcessing)) {
-    runnable->Run();
-    return;
-  }
 
   class Message : public ControlMessage {
   public:
@@ -3673,6 +3659,8 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
                                            AbstractThread* aMainThread)
   : MediaStreamGraph(aSampleRate)
   , mFirstCycleBreaker(0)
+  // An offline graph is not initially processing.
+  , mEndTime(aDriverRequested == OFFLINE_THREAD_DRIVER ? 0 : GRAPH_TIME_MAX)
   , mPortCount(0)
   , mInputDeviceID(nullptr)
   , mOutputDeviceID(nullptr)
@@ -3680,13 +3668,11 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
   , mGraphDriverAsleep(false)
   , mMonitor("MediaStreamGraphImpl")
   , mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED)
-  , mEndTime(GRAPH_TIME_MAX)
   , mForceShutDown(false)
   , mPostedRunInStableStateEvent(false)
   , mDetectedNotRunning(false)
   , mPostedRunInStableState(false)
   , mRealtime(aDriverRequested != OFFLINE_THREAD_DRIVER)
-  , mNonRealtimeProcessing(false)
   , mStreamOrderDirty(false)
   , mAbstractMainThread(aMainThread)
   , mSelfRef(this)
@@ -3854,11 +3840,6 @@ MediaStreamGraph::DestroyNonRealtimeInstance(MediaStreamGraph* aGraph)
 
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(aGraph);
 
-  if (!graph->mNonRealtimeProcessing) {
-    // Start the graph, but don't produce anything
-    graph->StartNonRealtimeProcessing(0);
-  }
-
   graph->ForceShutDown(nullptr);
 }
 
@@ -3904,13 +3885,6 @@ MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
     nsCOMPtr<nsIHandleReportCallback> mHandleReport;
     nsCOMPtr<nsISupports> mHandlerData;
   };
-
-  // When a non-realtime graph has not started, there is no thread yet, so
-  // collect sizes on this thread.
-  if (!(mRealtime || mNonRealtimeProcessing)) {
-    CollectSizesForMemoryReport(do_AddRef(aHandleReport), do_AddRef(aData));
-    return NS_OK;
-  }
 
   AppendMessage(MakeUnique<Message>(this, aHandleReport, aData));
 
@@ -4348,14 +4322,27 @@ MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
   NS_ASSERTION(!graph->mRealtime, "non-realtime only");
 
-  if (graph->mNonRealtimeProcessing)
-    return;
+  class Message : public ControlMessage {
+  public:
+    explicit Message(MediaStreamGraphImpl* aGraph, uint32_t aTicksToProcess)
+      : ControlMessage(nullptr)
+      , mGraph(aGraph)
+      , mTicksToProcess(aTicksToProcess)
+    {}
+    void Run() override
+    {
+      MOZ_ASSERT(mGraph->mEndTime == 0,
+                 "StartNonRealtimeProcessing should be called only once");
+      mGraph->mEndTime =
+        mGraph->RoundUpToEndOfAudioBlock(mGraph->mStateComputedTime +
+                                         mTicksToProcess);
+    }
+    // The graph owns this message.
+    MediaStreamGraphImpl* MOZ_NON_OWNING_REF mGraph;
+    uint32_t mTicksToProcess;
+  };
 
-  graph->mEndTime =
-    graph->RoundUpToEndOfAudioBlock(graph->mStateComputedTime +
-                                    aTicksToProcess);
-  graph->mNonRealtimeProcessing = true;
-  graph->EnsureRunInStableState();
+  graph->AppendMessage(MakeUnique<Message>(graph, aTicksToProcess));
 }
 
 void

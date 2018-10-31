@@ -40,15 +40,12 @@ static uint8_t gWebAudioOutputKey;
 class OfflineDestinationNodeEngine final : public AudioNodeEngine
 {
 public:
-  OfflineDestinationNodeEngine(AudioDestinationNode* aNode,
-                               uint32_t aNumberOfChannels,
-                               uint32_t aLength,
-                               float aSampleRate)
+  explicit OfflineDestinationNodeEngine(AudioDestinationNode* aNode)
     : AudioNodeEngine(aNode)
     , mWriteIndex(0)
-    , mNumberOfChannels(aNumberOfChannels)
-    , mLength(aLength)
-    , mSampleRate(aSampleRate)
+    , mNumberOfChannels(aNode->ChannelCount())
+    , mLength(aNode->Length())
+    , mSampleRate(aNode->Context()->SampleRate())
     , mBufferAllocated(false)
   {
   }
@@ -338,12 +335,16 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(AudioDestinationNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(AudioDestinationNode, AudioNode)
 
+const AudioNodeStream::Flags kStreamFlags =
+  AudioNodeStream::NEED_MAIN_THREAD_CURRENT_TIME |
+  AudioNodeStream::NEED_MAIN_THREAD_FINISHED |
+  AudioNodeStream::EXTERNAL_OUTPUT;
+
 AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
                                            bool aIsOffline,
                                            bool aAllowedToStart,
                                            uint32_t aNumberOfChannels,
-                                           uint32_t aLength,
-                                           float aSampleRate)
+                                           uint32_t aLength)
   : AudioNode(aContext, aNumberOfChannels,
               ChannelCountMode::Explicit, ChannelInterpretation::Speakers)
   , mFramesToProduce(aLength)
@@ -353,26 +354,23 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   , mAudible(AudioChannelService::AudibleState::eAudible)
   , mCreatedTime(TimeStamp::Now())
 {
-  nsPIDOMWindowInner* window = aContext->GetParentObject();
-  MediaStreamGraph* graph =
-    aIsOffline
-      ? MediaStreamGraph::CreateNonRealtimeInstance(aSampleRate, window)
-      : MediaStreamGraph::GetInstance(
-          MediaStreamGraph::AUDIO_THREAD_DRIVER, window, aSampleRate);
-  AudioNodeEngine* engine = aIsOffline ?
-                            new OfflineDestinationNodeEngine(this, aNumberOfChannels,
-                                                             aLength, aSampleRate) :
-                            static_cast<AudioNodeEngine*>(new DestinationNodeEngine(this));
+  if (aIsOffline) {
+    // The stream is created on demand to avoid creating a graph thread that
+    // may not be used.
+    return;
+  }
 
-  AudioNodeStream::Flags flags =
-    AudioNodeStream::NEED_MAIN_THREAD_CURRENT_TIME |
-    AudioNodeStream::NEED_MAIN_THREAD_FINISHED |
-    AudioNodeStream::EXTERNAL_OUTPUT;
-  mStream = AudioNodeStream::Create(aContext, engine, flags, graph);
+  MediaStreamGraph* graph =
+    MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
+                                  aContext->GetParentObject(),
+                                  aContext->SampleRate());
+  AudioNodeEngine* engine = new DestinationNodeEngine(this);
+
+  mStream = AudioNodeStream::Create(aContext, engine, kStreamFlags, graph);
   mStream->AddMainThreadListener(this);
   mStream->AddAudioOutput(&gWebAudioOutputKey);
 
-  if (!aIsOffline && aAllowedToStart) {
+  if (aAllowedToStart) {
     graph->NotifyWhenGraphStarted(mStream);
   }
 }
@@ -394,6 +392,31 @@ size_t
 AudioDestinationNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+}
+
+AudioNodeStream*
+AudioDestinationNode::Stream()
+{
+  if (mStream) {
+    return mStream;
+  }
+
+  AudioContext* context = Context();
+  if (!context) { // This node has been unlinked.
+    return nullptr;
+  }
+
+  MOZ_ASSERT(mIsOffline, "Realtime streams are created in constructor");
+
+  MediaStreamGraph* graph =
+    MediaStreamGraph::CreateNonRealtimeInstance(context->SampleRate(),
+                                                context->GetParentObject());
+  AudioNodeEngine* engine = new OfflineDestinationNodeEngine(this);
+
+  mStream = AudioNodeStream::Create(context, engine, kStreamFlags, graph);
+  mStream->AddMainThreadListener(this);
+
+  return mStream;
 }
 
 void
@@ -504,8 +527,10 @@ AudioDestinationNode::OfflineShutdown()
   MOZ_ASSERT(Context() && Context()->IsOffline(),
              "Should only be called on a valid OfflineAudioContext");
 
-  MediaStreamGraph::DestroyNonRealtimeInstance(mStream->Graph());
-  mOfflineRenderingRef.Drop(this);
+  if (mStream) {
+    MediaStreamGraph::DestroyNonRealtimeInstance(mStream->Graph());
+    mOfflineRenderingRef.Drop(this);
+  }
 }
 
 JSObject*
@@ -519,7 +544,7 @@ AudioDestinationNode::StartRendering(Promise* aPromise)
 {
   mOfflineRenderingPromise = aPromise;
   mOfflineRenderingRef.Take(this);
-  mStream->Graph()->StartNonRealtimeProcessing(mFramesToProduce);
+  Stream()->Graph()->StartNonRealtimeProcessing(mFramesToProduce);
 }
 
 NS_IMETHODIMP
