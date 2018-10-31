@@ -412,8 +412,6 @@ struct HelperThread
     static void ThreadMain(void* arg);
     void threadLoop();
 
-    static void WakeupAll();
-
     void ensureRegisteredWithProfiler();
     void unregisterWithProfilerIfNeeded();
 
