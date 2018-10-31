@@ -31,6 +31,8 @@ ChromeUtils.defineModuleGetter(this, "LightweightThemePersister",
   "resource://gre/modules/addons/LightweightThemePersister.jsm");
 ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
   "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
+ChromeUtils.defineModuleGetter(this, "AppConstants",
+  "resource://gre/modules/AppConstants.jsm");
 ChromeUtils.defineModuleGetter(this, "ServiceRequest",
   "resource://gre/modules/ServiceRequest.jsm");
 
@@ -946,7 +948,10 @@ function _prefObserver(aSubject, aTopic, aData) {
 }
 
 function _persistImages(aData, aCallback) {
-  LightweightThemePersister.persistImages(aData, aCallback);
+  if (AppConstants.platform != "android") {
+    // On Android, the LightweightThemeConsumer is responsible for doing this.
+    LightweightThemePersister.persistImages(aData, aCallback);
+  }
 }
 
 AddonManagerPrivate.registerProvider(LightweightThemeManager, [
