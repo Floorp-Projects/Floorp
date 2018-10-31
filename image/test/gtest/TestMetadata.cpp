@@ -153,6 +153,7 @@ TEST_F(ImageDecoderMetadata, JPG) { CheckMetadata(GreenJPGTestCase()); }
 TEST_F(ImageDecoderMetadata, BMP) { CheckMetadata(GreenBMPTestCase()); }
 TEST_F(ImageDecoderMetadata, ICO) { CheckMetadata(GreenICOTestCase()); }
 TEST_F(ImageDecoderMetadata, Icon) { CheckMetadata(GreenIconTestCase()); }
+TEST_F(ImageDecoderMetadata, WebP) { CheckMetadata(GreenWebPTestCase()); }
 
 TEST_F(ImageDecoderMetadata, AnimatedGIF)
 {

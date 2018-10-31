@@ -125,6 +125,7 @@ TEST_F(ImageDecodeToSurface, JPG) { RunDecodeToSurface(GreenJPGTestCase()); }
 TEST_F(ImageDecodeToSurface, BMP) { RunDecodeToSurface(GreenBMPTestCase()); }
 TEST_F(ImageDecodeToSurface, ICO) { RunDecodeToSurface(GreenICOTestCase()); }
 TEST_F(ImageDecodeToSurface, Icon) { RunDecodeToSurface(GreenIconTestCase()); }
+TEST_F(ImageDecodeToSurface, WebP) { RunDecodeToSurface(GreenWebPTestCase()); }
 
 TEST_F(ImageDecodeToSurface, AnimatedGIF)
 {
