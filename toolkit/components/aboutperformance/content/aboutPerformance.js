@@ -9,6 +9,7 @@
 const { PerformanceStats } = ChromeUtils.import("resource://gre/modules/PerformanceStats.jsm", {});
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm", {});
+const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
 const { ExtensionParent } = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm", {});
 
 const {WebExtensionPolicy} = Cu.getGlobalForObject(Services);
@@ -80,6 +81,13 @@ function performanceCountersEnabled() {
 function extensionCountersEnabled() {
   return Services.prefs.getBoolPref("extensions.webextensions.enablePerformanceCounters", false);
 }
+
+// The ids of system add-ons, so that we can hide them when the
+// toolkit.aboutPerformance.showInternals pref is false.
+// The API to access addons is async, so we cache the list during init.
+// The list is unlikely to change while the about:performance
+// tab is open, so not updating seems fine.
+var gSystemAddonIds = new Set();
 
 let tabFinder = {
   update() {
@@ -640,7 +648,7 @@ var State = {
         let addon = WebExtensionPolicy.getByHostname(host);
         name = `${addon.name} (${addon.id})`;
         image = "chrome://mozapps/skin/extensions/extensionGeneric-16.svg";
-        type = "addon";
+        type = gSystemAddonIds.has(addon.id) ? "system-addon" : "addon";
       } else if (id == 0 && !tab.isWorker) {
         name = {id: "ghost-windows"};
       }
@@ -1052,6 +1060,8 @@ var View = {
     row.appendChild(elt);
 
     elt = document.createElement("td");
+    if (type == "system-addon")
+      type = "addon";
     document.l10n.setAttributes(elt, "type-" + type);
     row.appendChild(elt);
 
@@ -1401,6 +1411,13 @@ var go = async function() {
     let opt = document.querySelector(".options");
     opt.style.display = "none";
     opt.nextElementSibling.style.display = "none";
+
+    let addons = await AddonManager.getAddonsByTypes(["extension"]);
+    for (let addon of addons) {
+      if (addon.isSystem) {
+        gSystemAddonIds.add(addon.id);
+      }
+    }
   } else {
     document.getElementById("dispatch-table").parentNode.style.display = "none";
   }
