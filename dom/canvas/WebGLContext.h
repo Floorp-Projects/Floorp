@@ -1050,8 +1050,6 @@ public:
         retval.set(GetParameter(cx, pname, rv));
     }
 
-    void GetParameterIndexed(JSContext* cx, GLenum pname, GLuint index,
-                             JS::MutableHandle<JS::Value> retval);
     bool IsEnabled(GLenum cap);
 
 private:
