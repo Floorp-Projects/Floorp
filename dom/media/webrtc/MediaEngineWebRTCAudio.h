@@ -136,6 +136,9 @@ private:
   // Current state of the resource for this source.
   MediaEngineSourceState mState;
 
+  // The current preferences for the APM's various processing stages.
+  MediaEnginePrefs mCurrentPrefs;
+
   // The SourecMediaStream on which to append data for this microphone. Set in
   // SetTrack as part of the initialization, and nulled in ::Deallocate.
   RefPtr<SourceMediaStream> mStream;
