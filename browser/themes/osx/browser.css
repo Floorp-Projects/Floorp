@@ -506,6 +506,18 @@ html|input.urlbar-input {
   box-shadow: var(--focus-ring-box-shadow);
 }
 
+#editBMPanel_folderTree > treechildren::-moz-tree-row(blur,selected),
+#editBMPanel_tagsSelector:not(:focus) > richlistitem[selected] {
+  background-color: var(--arrowpanel-dimmed);
+}
+
+#editBMPanel_folderTree > treechildren::-moz-tree-twisty(blur,selected),
+#editBMPanel_folderTree > treechildren::-moz-tree-image(blur,selected),
+#editBMPanel_folderTree > treechildren::-moz-tree-cell-text(blur,selected),
+#editBMPanel_tagsSelector:not(:focus) > richlistitem[selected] {
+  color: inherit;
+}
+
 #editBMPanel_folderTree {
   border-bottom: none;
   border-bottom-left-radius: 0;
