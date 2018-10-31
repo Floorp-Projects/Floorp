@@ -11,10 +11,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.nio.charset.StandardCharsets
-import java.security.Key
-import java.security.KeyStore
-import java.security.SecureRandom
-import java.security.Security
+import java.security.*
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -71,7 +68,7 @@ class KeystoreTest {
         var cipher: Cipher? = null
         try {
             cipher = keystore.createEncryptCipher()
-        } catch (ex: KeystoreException) {
+        } catch (ex: GeneralSecurityException) {
             caught = true
         } finally {
             Assert.assertTrue("unexpected success", caught)
@@ -96,7 +93,7 @@ class KeystoreTest {
         var cipher: Cipher? = null
         try {
             cipher = keystore.createDecryptCipher(iv)
-        } catch (ex: KeystoreException) {
+        } catch (ex: GeneralSecurityException) {
             caught = true
         } finally {
             Assert.assertTrue("unexpected success", caught)

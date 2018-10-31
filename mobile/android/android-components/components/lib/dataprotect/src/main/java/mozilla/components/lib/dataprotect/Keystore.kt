@@ -8,6 +8,7 @@ import android.annotation.TargetApi
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import java.security.GeneralSecurityException
 import java.security.InvalidKeyException
 import java.security.Key
 import java.security.KeyStore
@@ -166,22 +167,20 @@ open class Keystore(
      *
      * @return `true` if a new key was generated; `false` if the key already exists and can
      * be used.
-     * @throws KeystoreException If the key could not be created
+     * @throws GeneralSecurityException If the key could not be created
      */
+    @Throws(GeneralSecurityException::class)
     fun generateKey(): Boolean {
         val key = wrapper.getKeyFor(label)
         if (key != null) {
             when (key) {
                 is SecretKey -> return false
-                else -> throw KeystoreException("unsupported key type")
+                else -> throw InvalidKeyException("unsupported key type")
             }
         }
 
-        try {
-            wrapper.makeKeyFor(label)
-        } catch (e: Exception) {
-            throw KeystoreException(e.message, e)
-        }
+        wrapper.makeKeyFor(label)
+
         return true
     }
 
@@ -207,24 +206,18 @@ open class Keystore(
      *
      * @param plain The "plaintext" data to encrypt
      * @return The encrypted data to be stored
-     * @throws KeystoreException If the data could not be encrypted
+     * @throws GeneralSecurityException If the data could not be encrypted
      */
-    @Throws(KeystoreException::class)
+    @Throws(GeneralSecurityException::class)
     open fun encryptBytes(plain: ByteArray): ByteArray {
-        try {
-            // 5116-style interface  = [ inputs || ciphertext || atag ]
-            // - inputs = [ version = 0x02 || cipher.iv (always 12 bytes) ]
-            // - cipher.doFinal() provides [ ciphertext || atag ]
-            val cipher = createEncryptCipher()
-            val cdata = cipher.doFinal(plain)
-            val nonce = cipher.iv
+        // 5116-style interface  = [ inputs || ciphertext || atag ]
+        // - inputs = [ version = 0x02 || cipher.iv (always 12 bytes) ]
+        // - cipher.doFinal() provides [ ciphertext || atag ]
+        val cipher = createEncryptCipher()
+        val cdata = cipher.doFinal(plain)
+        val nonce = cipher.iv
 
-            return byteArrayOf(ENCRYPTED_VERSION.toByte()) + nonce + cdata
-        } catch (e: KeystoreException) {
-            throw e
-        } catch (e: Exception) {
-            throw KeystoreException("encryption failed", e)
-        }
+        return byteArrayOf(ENCRYPTED_VERSION.toByte()) + nonce + cdata
     }
 
     /**
@@ -240,21 +233,15 @@ open class Keystore(
      */
     @Throws(KeystoreException::class)
     open fun decryptBytes(encrypted: ByteArray): ByteArray {
-        try {
-            val version = encrypted[0].toInt()
-            if (version != ENCRYPTED_VERSION) {
-                throw IllegalArgumentException("unsupported encrypted version: $version")
-            }
-
-            val iv = encrypted.sliceArray(1..CIPHER_NONCE_LEN)
-            val cdata = encrypted.sliceArray((CIPHER_NONCE_LEN + 1)..encrypted.size - 1)
-            val cipher = createDecryptCipher(iv)
-            return cipher.doFinal(cdata)
-        } catch (e: KeystoreException) {
-            throw e
-        } catch (e: Exception) {
-            throw KeystoreException(e.message, e)
+        val version = encrypted[0].toInt()
+        if (version != ENCRYPTED_VERSION) {
+            throw KeystoreException("unsupported encrypted version: $version")
         }
+
+        val iv = encrypted.sliceArray(1..CIPHER_NONCE_LEN)
+        val cdata = encrypted.sliceArray((CIPHER_NONCE_LEN + 1)..encrypted.size - 1)
+        val cipher = createDecryptCipher(iv)
+        return cipher.doFinal(cdata)
     }
 
     /**
@@ -268,19 +255,15 @@ open class Keystore(
      * ciphertext or decryption will fail.
      *
      * @return The [Cipher], initialized and ready to encrypt data with.
-     * @throws KeystoreException If the Cipher could not be created and initialized
+     * @throws GeneralSecurityException If the Cipher could not be created and initialized
      */
-    @Throws(KeystoreException::class)
+    @Throws(GeneralSecurityException::class)
     open fun createEncryptCipher(): Cipher {
-        try {
-            val key = getKey() ?: throw InvalidKeyException("unknown label: $label")
-            val cipher = Cipher.getInstance(CIPHER_SPEC)
-            cipher.init(Cipher.ENCRYPT_MODE, key)
+        val key = getKey() ?: throw InvalidKeyException("unknown label: $label")
+        val cipher = Cipher.getInstance(CIPHER_SPEC)
+        cipher.init(Cipher.ENCRYPT_MODE, key)
 
-            return cipher
-        } catch (e: Exception) {
-            throw KeystoreException(e.message, e)
-        }
+        return cipher
     }
 
     /**
@@ -295,18 +278,14 @@ open class Keystore(
      *
      * @param iv The initialization vector/nonce to decrypt with
      * @return The [Cipher], initialized and ready to decrypt data with.
-     * @throws KeystoreException If the cipher could not be created and initialized
+     * @throws GeneralSecurityException If the cipher could not be created and initialized
      */
-    @Throws(KeystoreException::class)
+    @Throws(GeneralSecurityException::class)
     open fun createDecryptCipher(iv: ByteArray): Cipher {
-        try {
-            val key = getKey() ?: throw InvalidKeyException("unknown label: $label")
-            val cipher = Cipher.getInstance(CIPHER_SPEC)
-            cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(CIPHER_TAG_LEN, iv))
+        val key = getKey() ?: throw InvalidKeyException("unknown label: $label")
+        val cipher = Cipher.getInstance(CIPHER_SPEC)
+        cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(CIPHER_TAG_LEN, iv))
 
-            return cipher
-        } catch (e: Exception) {
-            throw KeystoreException(e.message, e)
-        }
+        return cipher
     }
 }
