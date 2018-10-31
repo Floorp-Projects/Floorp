@@ -25,7 +25,9 @@ import mozilla.components.service.fxa.Profile
 open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener {
 
     private lateinit var whenAccount: Deferred<FirefoxAccount>
-    private var scopes: Array<String> = arrayOf("profile")
+    private var scopesWithoutKeys: Array<String> = arrayOf("profile")
+    private var scopesWithKeys: Array<String> = arrayOf("profile", "https://identity.mozilla.com/apps/oldsync")
+    private var scopes: Array<String> = scopesWithoutKeys
     private var wantsKeys: Boolean = false
 
     companion object {
@@ -95,6 +97,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
         findViewById<CheckBox>(R.id.checkboxKeys).setOnCheckedChangeListener { _, isChecked ->
             wantsKeys = isChecked
+            scopes = if (isChecked) scopesWithKeys else scopesWithoutKeys
         }
     }
 
