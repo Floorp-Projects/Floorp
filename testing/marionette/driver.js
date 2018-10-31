@@ -3229,6 +3229,8 @@ GeckoDriver.prototype._handleUserPrompts = async function() {
     return;
   }
 
+  let {textContent} = this.dialog.ui.infoBody;
+
   let behavior = this.capabilities.get("unhandledPromptBehavior");
   switch (behavior) {
     case UnhandledPromptBehavior.Accept:
@@ -3237,7 +3239,8 @@ GeckoDriver.prototype._handleUserPrompts = async function() {
 
     case UnhandledPromptBehavior.AcceptAndNotify:
       await this.acceptDialog();
-      throw new UnexpectedAlertOpenError();
+      throw new UnexpectedAlertOpenError(
+          `Accepted user prompt dialog: ${textContent}`);
 
     case UnhandledPromptBehavior.Dismiss:
       await this.dismissDialog();
@@ -3245,10 +3248,12 @@ GeckoDriver.prototype._handleUserPrompts = async function() {
 
     case UnhandledPromptBehavior.DismissAndNotify:
       await this.dismissDialog();
-      throw new UnexpectedAlertOpenError();
+      throw new UnexpectedAlertOpenError(
+          `Dismissed user prompt dialog: ${textContent}`);
 
     case UnhandledPromptBehavior.Ignore:
-      throw new UnexpectedAlertOpenError();
+      throw new UnexpectedAlertOpenError(
+          "Encountered unhandled user prompt dialog");
 
     default:
       throw new TypeError(`Unknown unhandledPromptBehavior "${behavior}"`);
