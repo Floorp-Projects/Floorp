@@ -1882,11 +1882,20 @@ class PeerConnectionObserver {
   }
 
   onStateChange(state) {
-    switch (state) {
-      case "SignalingState":
-        this.dispatchEvent(new this._win.Event("signalingstatechange"));
-        break;
+    if (!this._dompc) {
+      return;
+    }
 
+    if (state == "SignalingState") {
+      this.dispatchEvent(new this._win.Event("signalingstatechange"));
+      return;
+    }
+
+    if (!this._dompc._pc) {
+      return;
+    }
+
+    switch (state) {
       case "IceConnectionState":
         let connState = this._dompc._pc.iceConnectionState;
         this._dompc._queueTaskWithClosedCheck(() => {
