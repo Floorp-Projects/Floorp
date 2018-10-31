@@ -233,6 +233,7 @@ class CppEclipseBackend(CommonBackend):
 
         # Add OS_COMPILE_CXXFLAGS args (same as OS_COMPILE_CFLAGS):
         dirsettings_template = dirsettings_template.replace('@PREINCLUDE_FILE_PATH@', os.path.join(self.environment.topobjdir, 'dist/include/mozilla-config.h'))
+        dirsettings_template += add_define('MOZILLA_CLIENT', '1')
 
         # Add EXTRA_INCLUDES args:
         dirsettings_template += add_objdir_include_path('dist/include')
@@ -240,6 +241,7 @@ class CppEclipseBackend(CommonBackend):
         # Add OS_INCLUDES args:
         # XXX media/webrtc/trunk/webrtc's moz.builds reset this.
         dirsettings_template += add_objdir_include_path('dist/include/nspr')
+        dirsettings_template += add_objdir_include_path('dist/include/nss')
 
         # Finally, add anything else that makes things work better.
         #
