@@ -1,43 +1,37 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.tokenAtTextPosition = tokenAtTextPosition;
-exports.getExpressionFromCoords = getExpressionFromCoords;
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function tokenAtTextPosition(cm, {
-  line,
-  column
-}) {
+
+// @flow
+
+import type { ColumnPosition } from "../../types";
+
+type Token = {
+  startColumn: number,
+  endColumn: number,
+  type: string
+};
+
+export function tokenAtTextPosition(
+  cm: any,
+  { line, column }: ColumnPosition
+): Token | null {
   if (line < 0 || line >= cm.lineCount()) {
     return null;
   }
 
-  const token = cm.getTokenAt({
-    line: line - 1,
-    ch: column
-  });
-
+  const token = cm.getTokenAt({ line: line - 1, ch: column });
   if (!token) {
     return null;
   }
 
-  return {
-    startColumn: token.start,
-    endColumn: token.end,
-    type: token.type
-  };
-} // The strategy of querying codeMirror tokens was borrowed
+  return { startColumn: token.start, endColumn: token.end, type: token.type };
+}
+
+// The strategy of querying codeMirror tokens was borrowed
 // from Chrome's inital implementation in JavaScriptSourceFrame.js#L414
-
-
-function getExpressionFromCoords(cm, coord) {
+export function getExpressionFromCoords(cm: any, coord: ColumnPosition) {
   const token = tokenAtTextPosition(cm, coord);
-
   if (!token) {
     return null;
   }
@@ -46,7 +40,6 @@ function getExpressionFromCoords(cm, coord) {
   const endHighlight = token.endColumn;
   const lineNumber = coord.line;
   const line = cm.doc.getLine(coord.line - 1);
-
   while (startHighlight > 1 && line.charAt(startHighlight - 1) === ".") {
     const tokenBefore = tokenAtTextPosition(cm, {
       line: coord.line,
@@ -67,17 +60,8 @@ function getExpressionFromCoords(cm, coord) {
   }
 
   const location = {
-    start: {
-      line: lineNumber,
-      column: startHighlight
-    },
-    end: {
-      line: lineNumber,
-      column: endHighlight
-    }
+    start: { line: lineNumber, column: startHighlight },
+    end: { line: lineNumber, column: endHighlight }
   };
-  return {
-    expression,
-    location
-  };
+  return { expression, location };
 }

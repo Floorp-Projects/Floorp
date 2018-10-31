@@ -3,10 +3,6 @@ job-defaults:
         by-test-platform:
             android-em-7.0-x86/opt: geckoview-androidTest.apk
             default: null
-    tier:
-        by-test-platform:
-            android-em-7.0-x86/opt: 3
-            default: default
     serviceworker-e10s:
         by-test-platform:
             linux64/debug: both
@@ -59,6 +55,10 @@ crashtest:
         by-test-platform:
             android-em.*: 7200
             default: 3600
+    tier:
+        by-test-platform:
+            android-em-7.0-x86/opt: 3
+            default: default
 
 jsreftest:
     description: "JS Reftest run"

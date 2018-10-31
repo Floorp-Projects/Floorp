@@ -1,64 +1,83 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getSelectedFrame = exports.getAllPopupObjectProperties = exports.createPauseState = undefined;
-exports.getPauseReason = getPauseReason;
-exports.getPauseCommand = getPauseCommand;
-exports.isStepping = isStepping;
-exports.isPaused = isPaused;
-exports.getIsPaused = getIsPaused;
-exports.getPreviousPauseFrameLocation = getPreviousPauseFrameLocation;
-exports.isEvaluatingExpression = isEvaluatingExpression;
-exports.getPopupObjectProperties = getPopupObjectProperties;
-exports.getIsWaitingOnBreak = getIsWaitingOnBreak;
-exports.getShouldPauseOnExceptions = getShouldPauseOnExceptions;
-exports.getShouldPauseOnCaughtExceptions = getShouldPauseOnCaughtExceptions;
-exports.getCanRewind = getCanRewind;
-exports.getExtra = getExtra;
-exports.getFrames = getFrames;
-exports.getGeneratedFrameScope = getGeneratedFrameScope;
-exports.getOriginalFrameScope = getOriginalFrameScope;
-exports.getFrameScopes = getFrameScopes;
-exports.getSelectedFrameBindings = getSelectedFrameBindings;
-exports.getFrameScope = getFrameScope;
-exports.getSelectedScope = getSelectedScope;
-exports.getSelectedScopeMappings = getSelectedScopeMappings;
-exports.getSelectedFrameId = getSelectedFrameId;
-exports.getTopFrame = getTopFrame;
-exports.getDebuggeeUrl = getDebuggeeUrl;
-exports.getSkipPausing = getSkipPausing;
-exports.getChromeScopes = getChromeScopes;
-
-var _reselect = require("devtools/client/debugger/new/dist/vendors").vendored["reselect"];
-
-var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
-
-var _prefs = require("../utils/prefs");
-
-var _sources = require("./sources");
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
 /* eslint complexity: ["error", 30]*/
 
 /**
  * Pause reducer
  * @module reducers/pause
  */
-const createPauseState = exports.createPauseState = () => ({ ...emptyPauseState,
+
+import { createSelector } from "reselect";
+import { isGeneratedId } from "devtools-source-map";
+import { prefs } from "../utils/prefs";
+import { getSelectedSource } from "./sources";
+
+import type { OriginalScope } from "../utils/pause/mapScopes";
+import type { Action } from "../actions/types";
+import type { State } from "./types";
+import type { Why, Scope, SourceId, FrameId, MappedLocation } from "../types";
+
+export type Command =
+  | null
+  | "stepOver"
+  | "stepIn"
+  | "stepOut"
+  | "resume"
+  | "rewind"
+  | "reverseStepOver"
+  | "reverseStepIn"
+  | "reverseStepOut"
+  | "expression";
+
+export type PauseState = {
+  extra: ?Object,
+  why: ?Why,
+  isWaitingOnBreak: boolean,
+  frames: ?(any[]),
+  frameScopes: {
+    generated: {
+      [FrameId]: {
+        pending: boolean,
+        scope: Scope
+      }
+    },
+    original: {
+      [FrameId]: {
+        pending: boolean,
+        scope: OriginalScope
+      }
+    },
+    mappings: {
+      [FrameId]: {
+        [string]: string | null
+      }
+    }
+  },
+  selectedFrameId: ?string,
+  loadedObjects: Object,
+  shouldPauseOnExceptions: boolean,
+  shouldPauseOnCaughtExceptions: boolean,
+  canRewind: boolean,
+  debuggeeUrl: string,
+  command: Command,
+  previousLocation: ?MappedLocation,
+  skipPausing: boolean
+};
+
+export const createPauseState = (): PauseState => ({
+  ...emptyPauseState,
   extra: {},
   isWaitingOnBreak: false,
-  shouldPauseOnExceptions: _prefs.prefs.pauseOnExceptions,
-  shouldPauseOnCaughtExceptions: _prefs.prefs.pauseOnCaughtExceptions,
+  shouldPauseOnExceptions: prefs.pauseOnExceptions,
+  shouldPauseOnCaughtExceptions: prefs.pauseOnCaughtExceptions,
   canRewind: false,
   debuggeeUrl: "",
   command: null,
   previousLocation: null,
-  skipPausing: _prefs.prefs.skipPausing
+  skipPausing: prefs.skipPausing
 });
 
 const emptyPauseState = {
@@ -73,194 +92,179 @@ const emptyPauseState = {
   why: null
 };
 
-function update(state = createPauseState(), action) {
+function update(
+  state: PauseState = createPauseState(),
+  action: Action
+): PauseState {
   switch (action.type) {
-    case "PAUSED":
-      {
-        const {
-          selectedFrameId,
-          frames,
-          loadedObjects,
-          why
-        } = action; // turn this into an object keyed by object id
+    case "PAUSED": {
+      const { selectedFrameId, frames, loadedObjects, why } = action;
 
-        const objectMap = {};
-        loadedObjects.forEach(obj => {
-          objectMap[obj.value.objectId] = obj;
-        });
-        return { ...state,
-          isWaitingOnBreak: false,
-          selectedFrameId,
-          frames,
-          frameScopes: { ...emptyPauseState.frameScopes
-          },
-          loadedObjects: objectMap,
-          why
-        };
-      }
+      // turn this into an object keyed by object id
+      const objectMap = {};
+      loadedObjects.forEach(obj => {
+        objectMap[obj.value.objectId] = obj;
+      });
 
-    case "MAP_FRAMES":
-      {
-        return { ...state,
-          frames: action.frames
-        };
-      }
+      return {
+        ...state,
+        isWaitingOnBreak: false,
+        selectedFrameId,
+        frames,
+        frameScopes: { ...emptyPauseState.frameScopes },
+        loadedObjects: objectMap,
+        why
+      };
+    }
 
-    case "ADD_EXTRA":
-      {
-        return { ...state,
-          extra: action.extra
-        };
-      }
+    case "MAP_FRAMES": {
+      return { ...state, frames: action.frames };
+    }
 
-    case "ADD_SCOPES":
-      {
-        const {
-          frame,
-          status,
-          value
-        } = action;
-        const selectedFrameId = frame.id;
-        const generated = { ...state.frameScopes.generated,
-          [selectedFrameId]: {
-            pending: status !== "done",
-            scope: value
-          }
-        };
-        return { ...state,
-          frameScopes: { ...state.frameScopes,
-            generated
-          }
-        };
-      }
+    case "ADD_EXTRA": {
+      return { ...state, extra: action.extra };
+    }
+
+    case "ADD_SCOPES": {
+      const { frame, status, value } = action;
+      const selectedFrameId = frame.id;
+
+      const generated = {
+        ...state.frameScopes.generated,
+        [selectedFrameId]: {
+          pending: status !== "done",
+          scope: value
+        }
+      };
+      return {
+        ...state,
+        frameScopes: {
+          ...state.frameScopes,
+          generated
+        }
+      };
+    }
 
     case "TRAVEL_TO":
-      return { ...state,
+      return {
+        ...state,
         ...action.data.paused
       };
 
-    case "MAP_SCOPES":
-      {
-        const {
-          frame,
-          status,
-          value
-        } = action;
-        const selectedFrameId = frame.id;
-        const original = { ...state.frameScopes.original,
-          [selectedFrameId]: {
-            pending: status !== "done",
-            scope: value && value.scope
-          }
-        };
-        const mappings = { ...state.frameScopes.mappings,
-          [selectedFrameId]: value && value.mappings
-        };
-        return { ...state,
-          frameScopes: { ...state.frameScopes,
-            original,
-            mappings
-          }
-        };
-      }
+    case "MAP_SCOPES": {
+      const { frame, status, value } = action;
+      const selectedFrameId = frame.id;
 
-    case "BREAK_ON_NEXT":
-      return { ...state,
-        isWaitingOnBreak: true
+      const original = {
+        ...state.frameScopes.original,
+        [selectedFrameId]: {
+          pending: status !== "done",
+          scope: value && value.scope
+        }
       };
 
+      const mappings = {
+        ...state.frameScopes.mappings,
+        [selectedFrameId]: value && value.mappings
+      };
+      return {
+        ...state,
+        frameScopes: {
+          ...state.frameScopes,
+          original,
+          mappings
+        }
+      };
+    }
+
+    case "BREAK_ON_NEXT":
+      return { ...state, isWaitingOnBreak: true };
+
     case "SELECT_FRAME":
-      return { ...state,
+      return {
+        ...state,
         selectedFrameId: action.frame.id
       };
 
     case "SET_POPUP_OBJECT_PROPERTIES":
       if (!action.properties) {
-        return { ...state
-        };
+        return { ...state };
       }
 
-      return { ...state,
-        loadedObjects: { ...state.loadedObjects,
+      return {
+        ...state,
+        loadedObjects: {
+          ...state.loadedObjects,
           [action.objectId]: action.properties
         }
       };
 
     case "CONNECT":
-      return { ...createPauseState(),
+      return {
+        ...createPauseState(),
         debuggeeUrl: action.url,
         canRewind: action.canRewind
       };
 
     case "PAUSE_ON_EXCEPTIONS":
-      const {
-        shouldPauseOnExceptions,
-        shouldPauseOnCaughtExceptions
-      } = action;
-      _prefs.prefs.pauseOnExceptions = shouldPauseOnExceptions;
-      _prefs.prefs.pauseOnCaughtExceptions = shouldPauseOnCaughtExceptions; // Preserving for the old debugger
+      const { shouldPauseOnExceptions, shouldPauseOnCaughtExceptions } = action;
 
-      _prefs.prefs.ignoreCaughtExceptions = !shouldPauseOnCaughtExceptions;
-      return { ...state,
+      prefs.pauseOnExceptions = shouldPauseOnExceptions;
+      prefs.pauseOnCaughtExceptions = shouldPauseOnCaughtExceptions;
+
+      // Preserving for the old debugger
+      prefs.ignoreCaughtExceptions = !shouldPauseOnCaughtExceptions;
+
+      return {
+        ...state,
         shouldPauseOnExceptions,
         shouldPauseOnCaughtExceptions
       };
 
-    case "COMMAND":
-      {
-        return action.status === "start" ? { ...state,
-          ...emptyPauseState,
-          command: action.command,
-          previousLocation: getPauseLocation(state, action)
-        } : { ...state,
-          command: null
-        };
-      }
+    case "COMMAND": {
+      return action.status === "start"
+        ? {
+            ...state,
+            ...emptyPauseState,
+            command: action.command,
+            previousLocation: getPauseLocation(state, action)
+          }
+        : { ...state, command: null };
+    }
 
     case "RESUME":
-      return { ...state,
-        ...emptyPauseState
-      };
+      return { ...state, ...emptyPauseState };
 
     case "EVALUATE_EXPRESSION":
-      return { ...state,
+      return {
+        ...state,
         command: action.status === "start" ? "expression" : null
       };
 
     case "NAVIGATE":
-      return { ...state,
-        ...emptyPauseState,
-        debuggeeUrl: action.url
-      };
+      return { ...state, ...emptyPauseState, debuggeeUrl: action.url };
 
-    case "TOGGLE_SKIP_PAUSING":
-      {
-        const {
-          skipPausing
-        } = action;
-        _prefs.prefs.skipPausing = skipPausing;
-        return { ...state,
-          skipPausing
-        };
-      }
+    case "TOGGLE_SKIP_PAUSING": {
+      const { skipPausing } = action;
+      prefs.skipPausing = skipPausing;
+
+      return { ...state, skipPausing };
+    }
   }
 
   return state;
 }
 
 function getPauseLocation(state, action) {
-  const {
-    frames,
-    previousLocation
-  } = state; // NOTE: We store the previous location so that we ensure that we
-  // do not stop at the same location twice when we step over.
+  const { frames, previousLocation } = state;
 
+  // NOTE: We store the previous location so that we ensure that we
+  // do not stop at the same location twice when we step over.
   if (action.command !== "stepOver") {
     return null;
   }
 
   const frame = frames && frames[0];
-
   if (!frame) {
     return previousLocation;
   }
@@ -269,7 +273,10 @@ function getPauseLocation(state, action) {
     location: frame.location,
     generatedLocation: frame.generatedLocation
   };
-} // Selectors
+}
+
+// Selectors
+
 // Unfortunately, it's really hard to make these functions accept just
 // the state that we care about and still type it with Flow. The
 // problem is that we want to re-export all selectors from a single
@@ -277,78 +284,80 @@ function getPauseLocation(state, action) {
 // top-level app state, so we'd have to "wrap" them to automatically
 // pick off the piece of state we're interested in. It's impossible
 // (right now) to type those wrapped functions.
-
+type OuterState = State;
 
 const getPauseState = state => state.pause;
 
-const getAllPopupObjectProperties = exports.getAllPopupObjectProperties = (0, _reselect.createSelector)(getPauseState, pauseWrapper => pauseWrapper.loadedObjects);
+export const getAllPopupObjectProperties = createSelector(
+  getPauseState,
+  pauseWrapper => pauseWrapper.loadedObjects
+);
 
-function getPauseReason(state) {
+export function getPauseReason(state: OuterState): ?Why {
   return state.pause.why;
 }
 
-function getPauseCommand(state) {
+export function getPauseCommand(state: OuterState): Command {
   return state.pause && state.pause.command;
 }
 
-function isStepping(state) {
+export function isStepping(state: OuterState) {
   return ["stepIn", "stepOver", "stepOut"].includes(getPauseCommand(state));
 }
 
-function isPaused(state) {
+export function isPaused(state: OuterState) {
   return !!getFrames(state);
 }
 
-function getIsPaused(state) {
+export function getIsPaused(state: OuterState) {
   return !!getFrames(state);
 }
 
-function getPreviousPauseFrameLocation(state) {
+export function getPreviousPauseFrameLocation(state: OuterState) {
   return state.pause.previousLocation;
 }
 
-function isEvaluatingExpression(state) {
+export function isEvaluatingExpression(state: OuterState) {
   return state.pause.command === "expression";
 }
 
-function getPopupObjectProperties(state, objectId) {
+export function getPopupObjectProperties(state: OuterState, objectId: string) {
   return getAllPopupObjectProperties(state)[objectId];
 }
 
-function getIsWaitingOnBreak(state) {
+export function getIsWaitingOnBreak(state: OuterState) {
   return state.pause.isWaitingOnBreak;
 }
 
-function getShouldPauseOnExceptions(state) {
+export function getShouldPauseOnExceptions(state: OuterState) {
   return state.pause.shouldPauseOnExceptions;
 }
 
-function getShouldPauseOnCaughtExceptions(state) {
+export function getShouldPauseOnCaughtExceptions(state: OuterState) {
   return state.pause.shouldPauseOnCaughtExceptions;
 }
 
-function getCanRewind(state) {
+export function getCanRewind(state: OuterState) {
   return state.pause.canRewind;
 }
 
-function getExtra(state) {
+export function getExtra(state: OuterState) {
   return state.pause.extra;
 }
 
-function getFrames(state) {
+export function getFrames(state: OuterState) {
   return state.pause.frames;
 }
 
-function getGeneratedFrameId(frameId) {
+function getGeneratedFrameId(frameId: string): string {
   if (frameId.includes("-originalFrame")) {
     // The mapFrames can add original stack frames -- get generated frameId.
     return frameId.substr(0, frameId.lastIndexOf("-originalFrame"));
   }
-
   return frameId;
 }
 
-function getGeneratedFrameScope(state, frameId) {
+export function getGeneratedFrameScope(state: OuterState, frameId: ?string) {
   if (!frameId) {
     return null;
   }
@@ -356,12 +365,19 @@ function getGeneratedFrameScope(state, frameId) {
   return getFrameScopes(state).generated[getGeneratedFrameId(frameId)];
 }
 
-function getOriginalFrameScope(state, sourceId, frameId) {
+export function getOriginalFrameScope(
+  state: OuterState,
+  sourceId: ?SourceId,
+  frameId: ?string
+): ?{
+  pending: boolean,
+  +scope: OriginalScope | Scope
+} {
   if (!frameId || !sourceId) {
     return null;
   }
 
-  const isGenerated = (0, _devtoolsSourceMap.isGeneratedId)(sourceId);
+  const isGenerated = isGeneratedId(sourceId);
   const original = getFrameScopes(state).original[getGeneratedFrameId(frameId)];
 
   if (!isGenerated && original && (original.pending || original.scope)) {
@@ -371,46 +387,57 @@ function getOriginalFrameScope(state, sourceId, frameId) {
   return null;
 }
 
-function getFrameScopes(state) {
+export function getFrameScopes(state: OuterState) {
   return state.pause.frameScopes;
 }
 
-function getSelectedFrameBindings(state) {
+export function getSelectedFrameBindings(state: OuterState) {
   const scopes = getFrameScopes(state);
   const selectedFrameId = getSelectedFrameId(state);
-
   if (!scopes || !selectedFrameId) {
     return null;
   }
 
   const frameScope = scopes.generated[selectedFrameId];
-
   if (!frameScope || frameScope.pending) {
     return;
   }
 
   let currentScope = frameScope.scope;
   let frameBindings = [];
-
   while (currentScope && currentScope.type != "object") {
     if (currentScope.bindings) {
       const bindings = Object.keys(currentScope.bindings.variables);
-      const args = [].concat(...currentScope.bindings.arguments.map(argument => Object.keys(argument)));
+      const args = [].concat(
+        ...currentScope.bindings.arguments.map(argument =>
+          Object.keys(argument)
+        )
+      );
+
       frameBindings = [...frameBindings, ...bindings, ...args];
     }
-
     currentScope = currentScope.parent;
   }
 
   return frameBindings;
 }
 
-function getFrameScope(state, sourceId, frameId) {
-  return getOriginalFrameScope(state, sourceId, frameId) || getGeneratedFrameScope(state, frameId);
+export function getFrameScope(
+  state: OuterState,
+  sourceId: ?SourceId,
+  frameId: ?string
+): ?{
+  pending: boolean,
+  +scope: OriginalScope | Scope
+} {
+  return (
+    getOriginalFrameScope(state, sourceId, frameId) ||
+    getGeneratedFrameScope(state, frameId)
+  );
 }
 
-function getSelectedScope(state) {
-  const source = (0, _sources.getSelectedSource)(state);
+export function getSelectedScope(state: OuterState) {
+  const source = getSelectedSource(state);
   const frameId = getSelectedFrameId(state);
 
   if (!source) {
@@ -418,7 +445,6 @@ function getSelectedScope(state) {
   }
 
   const frameScope = getFrameScope(state, source.id, frameId);
-
   if (!frameScope) {
     return null;
   }
@@ -426,9 +452,12 @@ function getSelectedScope(state) {
   return frameScope.scope || null;
 }
 
-function getSelectedScopeMappings(state) {
+export function getSelectedScopeMappings(
+  state: OuterState
+): {
+  [string]: string | null
+} | null {
   const frameId = getSelectedFrameId(state);
-
   if (!frameId) {
     return null;
   }
@@ -436,35 +465,39 @@ function getSelectedScopeMappings(state) {
   return getFrameScopes(state).mappings[frameId];
 }
 
-function getSelectedFrameId(state) {
+export function getSelectedFrameId(state: OuterState) {
   return state.pause.selectedFrameId;
 }
 
-function getTopFrame(state) {
+export function getTopFrame(state: OuterState) {
   const frames = getFrames(state);
   return frames && frames[0];
 }
 
-const getSelectedFrame = exports.getSelectedFrame = (0, _reselect.createSelector)(getSelectedFrameId, getFrames, (selectedFrameId, frames) => {
-  if (!frames) {
-    return null;
+export const getSelectedFrame = createSelector(
+  getSelectedFrameId,
+  getFrames,
+  (selectedFrameId, frames) => {
+    if (!frames) {
+      return null;
+    }
+
+    return frames.find(frame => frame.id == selectedFrameId);
   }
+);
 
-  return frames.find(frame => frame.id == selectedFrameId);
-});
-
-function getDebuggeeUrl(state) {
+export function getDebuggeeUrl(state: OuterState) {
   return state.pause.debuggeeUrl;
 }
 
-function getSkipPausing(state) {
+export function getSkipPausing(state: OuterState) {
   return state.pause.skipPausing;
-} // NOTE: currently only used for chrome
+}
 
-
-function getChromeScopes(state) {
+// NOTE: currently only used for chrome
+export function getChromeScopes(state: OuterState) {
   const frame = getSelectedFrame(state);
   return frame ? frame.scopeChain : undefined;
 }
 
-exports.default = update;
+export default update;

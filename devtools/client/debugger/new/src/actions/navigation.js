@@ -1,36 +1,27 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.willNavigate = willNavigate;
-exports.navigate = navigate;
-exports.connect = connect;
-exports.navigated = navigated;
-
-var _editor = require("../utils/editor/index");
-
-var _sourceQueue = require("../utils/source-queue");
-
-var _sourceQueue2 = _interopRequireDefault(_sourceQueue);
-
-var _sources = require("../reducers/sources");
-
-var _utils = require("../utils/utils");
-
-var _sources2 = require("./sources/index");
-
-var _debuggee = require("./debuggee");
-
-var _parser = require("../workers/parser/index");
-
-var _wasm = require("../utils/wasm");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
+
+import { clearDocuments } from "../utils/editor";
+import sourceQueue from "../utils/source-queue";
+import { getSources } from "../reducers/sources";
+import { waitForMs } from "../utils/utils";
+
+import { newSources } from "./sources";
+import { updateWorkers } from "./debuggee";
+
+import {
+  clearASTs,
+  clearSymbols,
+  clearScopes,
+  clearSources
+} from "../workers/parser";
+
+import { clearWasmStates } from "../utils/wasm";
+
+import type { Action, ThunkArgs } from "./types";
 
 /**
  * Redux actions for the navigation state
@@ -41,26 +32,21 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @memberof actions/navigation
  * @static
  */
-function willNavigate(event) {
-  return async function ({
-    dispatch,
-    getState,
-    client,
-    sourceMaps
-  }) {
+export function willNavigate(event: Object) {
+  return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
     await sourceMaps.clearSourceMaps();
-    (0, _wasm.clearWasmStates)();
-    (0, _editor.clearDocuments)();
-    (0, _parser.clearSymbols)();
-    (0, _parser.clearASTs)();
-    (0, _parser.clearScopes)();
-    (0, _parser.clearSources)();
+    clearWasmStates();
+    clearDocuments();
+    clearSymbols();
+    clearASTs();
+    clearScopes();
+    clearSources();
     dispatch(navigate(event.url));
   };
 }
 
-function navigate(url) {
-  _sourceQueue2.default.clear();
+export function navigate(url: string): Action {
+  sourceQueue.clear();
 
   return {
     type: "NAVIGATE",
@@ -68,35 +54,23 @@ function navigate(url) {
   };
 }
 
-function connect(url, canRewind) {
-  return async function ({
-    dispatch
-  }) {
-    await dispatch((0, _debuggee.updateWorkers)());
-    dispatch({
-      type: "CONNECT",
-      url,
-      canRewind
-    });
+export function connect(url: string, canRewind: boolean) {
+  return async function({ dispatch }: ThunkArgs) {
+    await dispatch(updateWorkers());
+    dispatch(({ type: "CONNECT", url, canRewind }: Action));
   };
 }
+
 /**
  * @memberof actions/navigation
  * @static
  */
-
-
-function navigated() {
-  return async function ({
-    dispatch,
-    getState,
-    client
-  }) {
-    await (0, _utils.waitForMs)(100);
-
-    if (Object.keys((0, _sources.getSources)(getState())).length == 0) {
+export function navigated() {
+  return async function({ dispatch, getState, client }: ThunkArgs) {
+    await waitForMs(100);
+    if (Object.keys(getSources(getState())).length == 0) {
       const sources = await client.fetchSources();
-      dispatch((0, _sources2.newSources)(sources));
+      dispatch(newSources(sources));
     }
   };
 }

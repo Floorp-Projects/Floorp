@@ -1,26 +1,8 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _redux = require("devtools/client/shared/vendor/redux");
-
-var _waitService = require("./middleware/wait-service");
-
-var _log = require("./middleware/log");
-
-var _history = require("./middleware/history");
-
-var _promise = require("./middleware/promise");
-
-var _thunk = require("./middleware/thunk");
-
-var _timing = require("./middleware/timing");
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
 
 /* global window */
 
@@ -28,6 +10,26 @@ var _timing = require("./middleware/timing");
  * Redux store utils
  * @module utils/create-store
  */
+
+import { createStore, applyMiddleware } from "redux";
+import { waitUntilService } from "./middleware/wait-service";
+import { log } from "./middleware/log";
+import { history } from "./middleware/history";
+import { promise } from "./middleware/promise";
+import { thunk } from "./middleware/thunk";
+import { timing } from "./middleware/timing";
+
+/**
+ * @memberof utils/create-store
+ * @static
+ */
+type ReduxStoreOptions = {
+  makeThunkArgs?: Function,
+  history?: Array<Object>,
+  middleware?: Function[],
+  log?: boolean,
+  timing?: boolean
+};
 
 /**
  * This creates a dispatcher with all the standard middleware in place
@@ -42,15 +44,20 @@ var _timing = require("./middleware/timing");
  * @memberof utils/create-store
  * @static
  */
-const configureStore = (opts = {}) => {
-  const middleware = [(0, _thunk.thunk)(opts.makeThunkArgs), _promise.promise, // Order is important: services must go last as they always
-  // operate on "already transformed" actions. Actions going through
-  // them shouldn't have any special fields like promises, they
-  // should just be normal JSON objects.
-  _waitService.waitUntilService];
+const configureStore = (opts: ReduxStoreOptions = {}) => {
+  const middleware = [
+    thunk(opts.makeThunkArgs),
+    promise,
+
+    // Order is important: services must go last as they always
+    // operate on "already transformed" actions. Actions going through
+    // them shouldn't have any special fields like promises, they
+    // should just be normal JSON objects.
+    waitUntilService
+  ];
 
   if (opts.history) {
-    middleware.push((0, _history.history)(opts.history));
+    middleware.push(history(opts.history));
   }
 
   if (opts.middleware) {
@@ -58,16 +65,20 @@ const configureStore = (opts = {}) => {
   }
 
   if (opts.log) {
-    middleware.push(_log.log);
+    middleware.push(log);
   }
 
   if (opts.timing) {
-    middleware.push(_timing.timing);
-  } // Hook in the redux devtools browser extension if it exists
+    middleware.push(timing);
+  }
 
+  // Hook in the redux devtools browser extension if it exists
+  const devtoolsExt =
+    typeof window === "object" && window.devToolsExtension
+      ? window.devToolsExtension()
+      : f => f;
 
-  const devtoolsExt = typeof window === "object" && window.devToolsExtension ? window.devToolsExtension() : f => f;
-  return (0, _redux.applyMiddleware)(...middleware)(devtoolsExt(_redux.createStore));
+  return applyMiddleware(...middleware)(devtoolsExt(createStore));
 };
 
-exports.default = configureStore;
+export default configureStore;

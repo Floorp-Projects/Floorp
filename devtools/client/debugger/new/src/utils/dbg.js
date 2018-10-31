@@ -1,76 +1,67 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.setupHelper = setupHelper;
-
-var _timings = require("./timings");
-
-var timings = _interopRequireWildcard(_timings);
-
-var _prefs = require("./prefs");
-
-var _devtoolsEnvironment = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-environment"];
-
-var _pausePoints = require("./pause/pausePoints");
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function findSource(dbg, url) {
+
+// @flow
+
+import * as timings from "./timings";
+import { prefs, asyncStore, features } from "./prefs";
+import { isDevelopment, isTesting } from "devtools-environment";
+import { formatPausePoints } from "./pause/pausePoints";
+
+function findSource(dbg: any, url: string) {
   const sources = dbg.selectors.getSourceList();
   return sources.find(s => (s.url || "").includes(url));
 }
 
-function findSources(dbg, url) {
+function findSources(dbg: any, url: string) {
   const sources = dbg.selectors.getSourceList();
   return sources.filter(s => (s.url || "").includes(url));
 }
 
-function sendPacket(dbg, packet, callback) {
+function sendPacket(dbg: any, packet: any, callback: () => void) {
   dbg.client.sendPacket(packet, callback || console.log);
 }
 
-function sendPacketToThread(dbg, packet, callback) {
-  sendPacket(dbg, {
-    to: dbg.connection.tabConnection.threadClient.actor,
-    ...packet
-  }, callback);
+function sendPacketToThread(dbg: Object, packet: any, callback: () => void) {
+  sendPacket(
+    dbg,
+    { to: dbg.connection.tabConnection.threadClient.actor, ...packet },
+    callback
+  );
 }
 
-function evaluate(dbg, expression, callback) {
+function evaluate(dbg: Object, expression: any, callback: () => void) {
   dbg.client.evaluate(expression).then(callback || console.log);
 }
 
-function bindSelectors(obj) {
+function bindSelectors(obj: Object): Object {
   return Object.keys(obj.selectors).reduce((bound, selector) => {
-    bound[selector] = (a, b, c) => obj.selectors[selector](obj.store.getState(), a, b, c);
-
+    bound[selector] = (a, b, c) =>
+      obj.selectors[selector](obj.store.getState(), a, b, c);
     return bound;
   }, {});
 }
 
 function getCM() {
-  const cm = document.querySelector(".CodeMirror");
+  const cm: any = document.querySelector(".CodeMirror");
   return cm && cm.CodeMirror;
 }
 
-function _formatPausePoints(dbg, url) {
+function _formatPausePoints(dbg: Object, url: string) {
   const source = dbg.helpers.findSource(url);
   const pausePoints = dbg.selectors.getPausePoints(source);
-  console.log((0, _pausePoints.formatPausePoints)(source.text, pausePoints));
+  console.log(formatPausePoints(source.text, pausePoints));
 }
 
-function setupHelper(obj) {
+export function setupHelper(obj: Object) {
   const selectors = bindSelectors(obj);
-  const dbg = { ...obj,
+  const dbg: Object = {
+    ...obj,
     selectors,
-    prefs: _prefs.prefs,
-    asyncStore: _prefs.asyncStore,
-    features: _prefs.features,
+    prefs,
+    asyncStore,
+    features,
     timings,
     getCM,
     helpers: {
@@ -87,9 +78,10 @@ function setupHelper(obj) {
       events: {}
     }
   };
+
   window.dbg = dbg;
 
-  if ((0, _devtoolsEnvironment.isDevelopment)() && !(0, _devtoolsEnvironment.isTesting)()) {
+  if (isDevelopment() && !isTesting()) {
     console.group("Development Notes");
     const baseUrl = "https://devtools-html.github.io/debugger.html";
     const localDevelopmentUrl = `${baseUrl}/docs/dbg.html`;

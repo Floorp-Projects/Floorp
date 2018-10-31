@@ -1,32 +1,32 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.onMouseOver = onMouseOver;
-
-var _ = require("./index");
-
-var _lodash = require("devtools/client/shared/vendor/lodash");
+import { getTokenLocation } from ".";
+import { isEqual } from "lodash";
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function isInvalidTarget(target) {
+
+function isInvalidTarget(target: HTMLElement) {
   if (!target || !target.innerText) {
     return true;
   }
 
   const tokenText = target.innerText.trim();
-  const cursorPos = target.getBoundingClientRect(); // exclude literal tokens where it does not make sense to show a preview
+  const cursorPos = target.getBoundingClientRect();
 
-  const invalidType = ["cm-atom", ""].includes(target.className); // exclude syntax where the expression would be a syntax error
+  // exclude literal tokens where it does not make sense to show a preview
+  const invalidType = ["cm-atom", ""].includes(target.className);
 
-  const invalidToken = tokenText === "" || tokenText.match(/^[(){}\|&%,.;=<>\+-/\*\s](?=)/); // exclude codemirror elements that are not tokens
+  // exclude syntax where the expression would be a syntax error
+  const invalidToken =
+    tokenText === "" || tokenText.match(/^[(){}\|&%,.;=<>\+-/\*\s](?=)/);
 
-  const invalidTarget = target.parentElement && !target.parentElement.closest(".CodeMirror-line") || cursorPos.top == 0;
+  // exclude codemirror elements that are not tokens
+  const invalidTarget =
+    (target.parentElement &&
+      !target.parentElement.closest(".CodeMirror-line")) ||
+    cursorPos.top == 0;
+
   const invalidClasses = ["editor-mount"];
-
   if (invalidClasses.some(className => target.classList.contains(className))) {
     return true;
   }
@@ -42,7 +42,7 @@ function dispatch(codeMirror, eventName, data) {
   codeMirror.constructor.signal(codeMirror, eventName, data);
 }
 
-function invalidLeaveTarget(target) {
+function invalidLeaveTarget(target: ?HTMLElement) {
   if (!target || target.closest(".popover")) {
     return true;
   }
@@ -50,7 +50,7 @@ function invalidLeaveTarget(target) {
   return false;
 }
 
-function onMouseOver(codeMirror) {
+export function onMouseOver(codeMirror) {
   let prevTokenPos = null;
 
   function onMouseLeave(event) {
@@ -70,18 +70,17 @@ function onMouseOver(codeMirror) {
   }
 
   return enterEvent => {
-    const {
-      target
-    } = enterEvent;
+    const { target } = enterEvent;
 
     if (isInvalidTarget(target)) {
       return;
     }
 
-    const tokenPos = (0, _.getTokenLocation)(codeMirror, target);
+    const tokenPos = getTokenLocation(codeMirror, target);
 
-    if (!(0, _lodash.isEqual)(prevTokenPos, tokenPos)) {
+    if (!isEqual(prevTokenPos, tokenPos)) {
       addMouseLeave(target);
+
       dispatch(codeMirror, "tokenenter", {
         event: enterEvent,
         target,

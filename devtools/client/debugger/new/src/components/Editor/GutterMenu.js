@@ -1,30 +1,28 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.gutterMenu = gutterMenu;
-
-var _react = require("devtools/client/shared/vendor/react");
-
-var _devtoolsContextmenu = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-contextmenu"];
-
-var _reactRedux = require("devtools/client/shared/vendor/react-redux");
-
-var _editor = require("../../utils/editor/index");
-
-var _selectors = require("../../selectors/index");
-
-var _actions = require("../../actions/index");
-
-var _actions2 = _interopRequireDefault(_actions);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function gutterMenu({
+
+import { Component } from "react";
+import { showMenu } from "devtools-contextmenu";
+import { connect } from "react-redux";
+import { lineAtHeight } from "../../utils/editor";
+import {
+  getContextMenu,
+  getEmptyLines,
+  getSelectedLocation,
+  getSelectedSource,
+  getVisibleBreakpoints,
+  isPaused as getIsPaused
+} from "../../selectors";
+
+import actions from "../../actions";
+
+type Props = {
+  setContextMenu: Function,
+  contextMenu: Object
+};
+
+export function gutterMenu({
   breakpoint,
   line,
   event,
@@ -38,6 +36,7 @@ function gutterMenu({
 }) {
   event.stopPropagation();
   event.preventDefault();
+
   const gutterItems = {
     addBreakpoint: {
       id: "node-menu-add-breakpoint",
@@ -68,12 +67,12 @@ function gutterMenu({
       label: L10N.getStr("editor.continueToHere.label")
     }
   };
+
   const toggleBreakpointItem = {
     accesskey: L10N.getStr("shortcuts.toggleBreakpoint.accesskey"),
     disabled: false,
     click: () => {
       toggleBreakpoint(line);
-
       if (isCbPanelOpen) {
         closeConditionalPanel();
       }
@@ -81,13 +80,17 @@ function gutterMenu({
     accelerator: L10N.getStr("toggleBreakpoint.key"),
     ...(breakpoint ? gutterItems.removeBreakpoint : gutterItems.addBreakpoint)
   };
+
   const conditionalBreakpoint = {
     accesskey: L10N.getStr("editor.addConditionalBreakpoint.accesskey"),
     disabled: false,
     click: () => openConditionalPanel(line),
     accelerator: L10N.getStr("toggleCondPanel.key"),
-    ...(breakpoint && breakpoint.condition ? gutterItems.editConditional : gutterItems.addConditional)
+    ...(breakpoint && breakpoint.condition
+      ? gutterItems.editConditional
+      : gutterItems.addConditional)
   };
+
   const items = [toggleBreakpointItem, conditionalBreakpoint];
 
   if (isPaused) {
@@ -105,15 +108,19 @@ function gutterMenu({
       accesskey: L10N.getStr("editor.disableBreakpoint.accesskey"),
       disabled: false,
       click: () => toggleDisabledBreakpoint(line),
-      ...(breakpoint.disabled ? gutterItems.enableBreakpoint : gutterItems.disableBreakpoint)
+      ...(breakpoint.disabled
+        ? gutterItems.enableBreakpoint
+        : gutterItems.disableBreakpoint)
     };
     items.push(disableBreakpoint);
   }
 
-  (0, _devtoolsContextmenu.showMenu)(event, items);
+  showMenu(event, items);
 }
 
-class GutterContextMenuComponent extends _react.Component {
+class GutterContextMenuComponent extends Component {
+  props: Props;
+
   constructor() {
     super();
   }
@@ -129,46 +136,40 @@ class GutterContextMenuComponent extends _react.Component {
   }
 
   showMenu(nextProps) {
-    const {
-      contextMenu,
-      ...props
-    } = nextProps;
-    const {
-      event
-    } = contextMenu;
+    const { contextMenu, ...props } = nextProps;
+    const { event } = contextMenu;
     const sourceId = props.selectedSource ? props.selectedSource.id : "";
-    const line = (0, _editor.lineAtHeight)(props.editor, sourceId, event);
-    const breakpoint = nextProps.breakpoints.find(bp => bp.location.line === line);
+    const line = lineAtHeight(props.editor, sourceId, event);
+    const breakpoint = nextProps.breakpoints.find(
+      bp => bp.location.line === line
+    );
 
     if (props.emptyLines && props.emptyLines.includes(line)) {
       return;
     }
 
-    gutterMenu({
-      event,
-      sourceId,
-      line,
-      breakpoint,
-      ...props
-    });
+    gutterMenu({ event, sourceId, line, breakpoint, ...props });
   }
 
   render() {
     return null;
   }
-
 }
 
 const mapStateToProps = state => {
-  const selectedSource = (0, _selectors.getSelectedSource)(state);
+  const selectedSource = getSelectedSource(state);
+
   return {
-    selectedLocation: (0, _selectors.getSelectedLocation)(state),
+    selectedLocation: getSelectedLocation(state),
     selectedSource: selectedSource,
-    breakpoints: (0, _selectors.getVisibleBreakpoints)(state),
-    isPaused: (0, _selectors.isPaused)(state),
-    contextMenu: (0, _selectors.getContextMenu)(state),
-    emptyLines: (0, _selectors.getEmptyLines)(state, selectedSource.id)
+    breakpoints: getVisibleBreakpoints(state),
+    isPaused: getIsPaused(state),
+    contextMenu: getContextMenu(state),
+    emptyLines: getEmptyLines(state, selectedSource.id)
   };
 };
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(GutterContextMenuComponent);
+export default connect(
+  mapStateToProps,
+  actions
+)(GutterContextMenuComponent);
