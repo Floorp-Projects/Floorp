@@ -24,9 +24,16 @@
 #define SK_OUTCOLOR_BUILTIN            10004
 #define SK_TRANSFORMEDCOORDS2D_BUILTIN 10005
 #define SK_TEXTURESAMPLERS_BUILTIN     10006
+#define SK_OUT_BUILTIN                 10007
+#define SK_LASTFRAGCOLOR_BUILTIN       10008
+#define SK_MAIN_X_BUILTIN              10009
+#define SK_MAIN_Y_BUILTIN              10010
+#define SK_WIDTH_BUILTIN               10011
+#define SK_HEIGHT_BUILTIN              10012
 #define SK_FRAGCOORD_BUILTIN              15
-#define SK_VERTEXID_BUILTIN                5
-#define SK_INSTANCEID_BUILTIN              6
+#define SK_CLOCKWISE_BUILTIN              17
+#define SK_VERTEXID_BUILTIN               42
+#define SK_INSTANCEID_BUILTIN             43
 #define SK_CLIPDISTANCE_BUILTIN            3
 #define SK_INVOCATIONID_BUILTIN            8
 #define SK_POSITION_BUILTIN                0
@@ -56,6 +63,26 @@ public:
         kPermitInvalidStaticTests_Flag = 1,
     };
 
+    struct FormatArg {
+        enum class Kind {
+            kInput,
+            kOutput,
+            kUniform,
+            kChildProcessor
+        };
+
+        FormatArg(Kind kind)
+                : fKind(kind) {}
+
+        FormatArg(Kind kind, int index)
+                : fKind(kind)
+                , fIndex(index) {}
+
+        Kind fKind;
+
+        int fIndex;
+    };
+
     Compiler(Flags flags = kNone_Flags);
 
     ~Compiler() override;
@@ -63,19 +90,29 @@ public:
     std::unique_ptr<Program> convertProgram(Program::Kind kind, String text,
                                             const Program::Settings& settings);
 
-    bool toSPIRV(const Program& program, OutputStream& out);
+    bool optimize(Program& program);
 
-    bool toSPIRV(const Program& program, String* out);
+    std::unique_ptr<Program> specialize(Program& program,
+                    const std::unordered_map<SkSL::String, SkSL::Program::Settings::Value>& inputs);
 
-    bool toGLSL(const Program& program, OutputStream& out);
+    bool toSPIRV(Program& program, OutputStream& out);
 
-    bool toGLSL(const Program& program, String* out);
+    bool toSPIRV(Program& program, String* out);
 
-    bool toMetal(const Program& program, OutputStream& out);
+    bool toGLSL(Program& program, OutputStream& out);
 
-    bool toCPP(const Program& program, String name, OutputStream& out);
+    bool toGLSL(Program& program, String* out);
 
-    bool toH(const Program& program, String name, OutputStream& out);
+    bool toMetal(Program& program, OutputStream& out);
+
+    bool toMetal(Program& program, String* out);
+
+    bool toCPP(Program& program, String name, OutputStream& out);
+
+    bool toH(Program& program, String name, OutputStream& out);
+
+    bool toPipelineStage(const Program& program, String* out,
+                         std::vector<FormatArg>* outFormatArgs);
 
     void error(int offset, String msg) override;
 
@@ -85,6 +122,10 @@ public:
 
     int errorCount() override {
         return fErrorCount;
+    }
+
+    Context& context() {
+        return *fContext;
     }
 
     static const char* OperatorName(Token::Kind token);
@@ -127,13 +168,19 @@ private:
 
     Position position(int offset);
 
+    std::vector<std::unique_ptr<ProgramElement>> fVertexInclude;
+    std::shared_ptr<SymbolTable> fVertexSymbolTable;
+    std::vector<std::unique_ptr<ProgramElement>> fFragmentInclude;
+    std::shared_ptr<SymbolTable> fFragmentSymbolTable;
+    std::vector<std::unique_ptr<ProgramElement>> fGeometryInclude;
+    std::shared_ptr<SymbolTable> fGeometrySymbolTable;
+
     std::shared_ptr<SymbolTable> fTypes;
     IRGenerator* fIRGenerator;
-    String fSkiaVertText; // FIXME store parsed version instead
     int fFlags;
 
     const String* fSource;
-    Context fContext;
+    std::shared_ptr<Context> fContext;
     int fErrorCount;
     String fErrorText;
 };

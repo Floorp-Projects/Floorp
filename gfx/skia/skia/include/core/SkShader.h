@@ -59,12 +59,10 @@ public:
          */
         kDecal_TileMode,
 
-        kLast_TileMode = kDecal_TileMode
+        kLast_TileMode = kDecal_TileMode,
     };
 
-    enum {
-        kTileModeCount = kLast_TileMode + 1
-    };
+    static constexpr int kTileModeCount = kLast_TileMode + 1;
 
     /**
      *  Returns the local matrix.
@@ -141,7 +139,7 @@ public:
         kRadial_GradientType,
         kSweep_GradientType,
         kConical_GradientType,
-        kLast_GradientType = kConical_GradientType
+        kLast_GradientType = kConical_GradientType,
     };
 
     struct GradientInfo {

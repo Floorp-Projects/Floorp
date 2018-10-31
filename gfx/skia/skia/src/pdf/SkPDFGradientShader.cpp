@@ -8,8 +8,10 @@
 #include "SkPDFGradientShader.h"
 
 #include "SkOpts.h"
-#include "SkPDFDocument.h"
+#include "SkPDFCanon.h"
+#include "SkPDFDocumentPriv.h"
 #include "SkPDFFormXObject.h"
+#include "SkPDFGraphicState.h"
 #include "SkPDFResourceDict.h"
 #include "SkPDFUtils.h"
 
@@ -208,10 +210,7 @@ static sk_sp<SkPDFDict> createInterpolationFunction(const ColorTuple& color1,
     c1->appendColorComponent(color2[2]);
     retval->insertObject("C1", std::move(c1));
 
-    auto domain = sk_make_sp<SkPDFArray>();
-    domain->appendScalar(0);
-    domain->appendScalar(1.0f);
-    retval->insertObject("Domain", std::move(domain));
+    retval->insertObject("Domain", SkPDFMakeArray(0, 1));
 
     retval->insertInt("FunctionType", 2);
     retval->insertScalar("N", 1.0f);
@@ -224,8 +223,8 @@ static sk_sp<SkPDFDict> gradientStitchCode(const SkShader::GradientInfo& info) {
 
     // normalize color stops
     int colorCount = info.fColorCount;
-    SkTDArray<SkColor>    colors(info.fColors, colorCount);
-    SkTDArray<SkScalar>   colorOffsets(info.fColorOffsets, colorCount);
+    std::vector<SkColor>  colors(info.fColors, info.fColors + colorCount);
+    std::vector<SkScalar> colorOffsets(info.fColorOffsets, info.fColorOffsets + colorCount);
 
     int i = 1;
     while (i < colorCount - 1) {
@@ -237,8 +236,8 @@ static sk_sp<SkPDFDict> gradientStitchCode(const SkShader::GradientInfo& info) {
         // remove points that are between 2 coincident points
         if ((colorOffsets[i - 1] == colorOffsets[i]) && (colorOffsets[i] == colorOffsets[i + 1])) {
             colorCount -= 1;
-            colors.remove(i);
-            colorOffsets.remove(i);
+            colors.erase(colors.begin() + i);
+            colorOffsets.erase(colorOffsets.begin() + i);
         } else {
             i++;
         }
@@ -270,10 +269,7 @@ static sk_sp<SkPDFDict> gradientStitchCode(const SkShader::GradientInfo& info) {
     auto bounds = sk_make_sp<SkPDFArray>();
     auto functions = sk_make_sp<SkPDFArray>();
 
-    auto domain = sk_make_sp<SkPDFArray>();
-    domain->appendScalar(0);
-    domain->appendScalar(1.0f);
-    retval->insertObject("Domain", std::move(domain));
+    retval->insertObject("Domain", SkPDFMakeArray(0, 1));
     retval->insertInt("FunctionType", 3);
 
     for (int i = 1; i < colorCount; i++) {
@@ -577,18 +573,6 @@ static bool split_perspective(const SkMatrix in, SkMatrix* affine,
     return true;
 }
 
-static sk_sp<SkPDFArray> make_range_object() {
-    auto range = sk_make_sp<SkPDFArray>();
-    range->reserve(6);
-    range->appendInt(0);
-    range->appendInt(1);
-    range->appendInt(0);
-    range->appendInt(1);
-    range->appendInt(0);
-    range->appendInt(1);
-    return range;
-}
-
 static sk_sp<SkPDFStream> make_ps_function(
         std::unique_ptr<SkStreamAsset> psCode,
         sk_sp<SkPDFArray> domain,
@@ -614,8 +598,6 @@ static sk_sp<SkPDFDict> make_function_shader(SkPDFCanon* canon,
                              info.fTileMode == SkShader::kClamp_TileMode &&
                              !finalMatrix.hasPerspective();
 
-    auto domain = sk_make_sp<SkPDFArray>();
-
     int32_t shadingType = 1;
     auto pdfShader = sk_make_sp<SkPDFDict>();
     // The two point radial gradient further references
@@ -632,43 +614,35 @@ static sk_sp<SkPDFDict> make_function_shader(SkPDFCanon* canon,
         extend->appendBool(true);
         pdfShader->insertObject("Extend", std::move(extend));
 
-        auto coords = sk_make_sp<SkPDFArray>();
+        sk_sp<SkPDFArray> coords;
         if (state.fType == SkShader::kConical_GradientType) {
-            coords->reserve(6);
             SkScalar r1 = info.fRadius[0];
             SkScalar r2 = info.fRadius[1];
             SkPoint pt1 = info.fPoint[0];
             SkPoint pt2 = info.fPoint[1];
             FixUpRadius(pt1, r1, pt2, r2);
 
-            coords->appendScalar(pt1.fX);
-            coords->appendScalar(pt1.fY);
-            coords->appendScalar(r1);
-
-            coords->appendScalar(pt2.fX);
-            coords->appendScalar(pt2.fY);
-            coords->appendScalar(r2);
+            coords = SkPDFMakeArray(pt1.x(),
+                                    pt1.y(),
+                                    r1,
+                                    pt2.x(),
+                                    pt2.y(),
+                                    r2);
         } else if (state.fType == SkShader::kRadial_GradientType) {
-            coords->reserve(6);
             const SkPoint& pt1 = info.fPoint[0];
-
-            coords->appendScalar(pt1.fX);
-            coords->appendScalar(pt1.fY);
-            coords->appendScalar(0);
-
-            coords->appendScalar(pt1.fX);
-            coords->appendScalar(pt1.fY);
-            coords->appendScalar(info.fRadius[0]);
+            coords = SkPDFMakeArray(pt1.x(),
+                                    pt1.y(),
+                                    0,
+                                    pt1.x(),
+                                    pt1.y(),
+                                    info.fRadius[0]);
         } else {
-            coords->reserve(4);
             const SkPoint& pt1 = info.fPoint[0];
             const SkPoint& pt2 = info.fPoint[1];
-
-            coords->appendScalar(pt1.fX);
-            coords->appendScalar(pt1.fY);
-
-            coords->appendScalar(pt2.fX);
-            coords->appendScalar(pt2.fY);
+            coords = SkPDFMakeArray(pt1.x(),
+                                    pt1.y(),
+                                    pt2.x(),
+                                    pt2.y());
         }
 
         pdfShader->insertObject("Coords", std::move(coords));
@@ -726,12 +700,6 @@ static sk_sp<SkPDFDict> make_function_shader(SkPDFCanon* canon,
         if (!SkPDFUtils::InverseTransformBBox(finalMatrix, &bbox)) {
             return nullptr;
         }
-        domain->reserve(4);
-        domain->appendScalar(bbox.fLeft);
-        domain->appendScalar(bbox.fRight);
-        domain->appendScalar(bbox.fTop);
-        domain->appendScalar(bbox.fBottom);
-
         SkDynamicMemoryWStream functionCode;
 
         SkShader::GradientInfo infoCopy = info;
@@ -761,11 +729,15 @@ static sk_sp<SkPDFDict> make_function_shader(SkPDFCanon* canon,
             default:
                 SkASSERT(false);
         }
+        auto domain = SkPDFMakeArray(bbox.left(),
+                                     bbox.right(),
+                                     bbox.top(),
+                                     bbox.bottom());
         pdfShader->insertObject("Domain", domain);
 
         sk_sp<SkPDFArray>& rangeObject = canon->fRangeObject;
         if (!rangeObject) {
-            rangeObject = make_range_object();
+            rangeObject = SkPDFMakeArray(0, 1, 0, 1, 0, 1);
         }
         pdfShader->insertObjRef("Function",
                                 make_ps_function(functionCode.detachAsStream(), std::move(domain),
@@ -787,17 +759,20 @@ static sk_sp<SkPDFObject> find_pdf_shader(SkPDFDocument* doc,
                                           SkPDFGradientShader::Key key,
                                           bool keyHasAlpha);
 
-static sk_sp<SkPDFDict> get_gradient_resource_dict(SkPDFObject* functionShader,
-                                                   SkPDFObject* gState) {
-    SkTDArray<SkPDFObject*> patterns;
+static sk_sp<SkPDFDict> get_gradient_resource_dict(sk_sp<SkPDFObject> functionShader,
+                                                   sk_sp<SkPDFObject> gState) {
+    std::vector<sk_sp<SkPDFObject>> patternShaders;
     if (functionShader) {
-        patterns.push(functionShader);
+        patternShaders.push_back(std::move(functionShader));
     }
-    SkTDArray<SkPDFObject*> graphicStates;
+    std::vector<sk_sp<SkPDFObject>> graphicStates;
     if (gState) {
-        graphicStates.push(gState);
+        graphicStates.push_back(std::move(gState));
     }
-    return SkPDFResourceDict::Make(&graphicStates, &patterns, nullptr, nullptr);
+    return SkPDFMakeResourceDict(std::move(graphicStates),
+                                 std::move(patternShaders),
+                                 std::vector<sk_sp<SkPDFObject>>(),
+                                 std::vector<sk_sp<SkPDFFont>>());
 }
 
 // Creates a content stream which fills the pattern P0 across bounds.
@@ -855,7 +830,7 @@ static sk_sp<SkPDFObject> create_smask_graphic_state(SkPDFDocument* doc,
 
     SkASSERT(!gradient_has_alpha(luminosityState));
     sk_sp<SkPDFObject> luminosityShader = find_pdf_shader(doc, std::move(luminosityState), false);
-    sk_sp<SkPDFDict> resources = get_gradient_resource_dict(luminosityShader.get(), nullptr);
+    sk_sp<SkPDFDict> resources = get_gradient_resource_dict(std::move(luminosityShader), nullptr);
     SkRect bbox = SkRect::Make(state.fBBox);
     sk_sp<SkPDFObject> alphaMask = SkPDFMakeFormXObject(create_pattern_fill_content(-1, bbox),
                                                         SkPDFUtils::RectToArray(bbox),
@@ -888,7 +863,7 @@ static sk_sp<SkPDFStream> make_alpha_function_shader(SkPDFDocument* doc,
     sk_sp<SkPDFObject> alphaGs = create_smask_graphic_state(doc, state);
 
     sk_sp<SkPDFDict> resourceDict =
-            get_gradient_resource_dict(colorShader.get(), alphaGs.get());
+            get_gradient_resource_dict(std::move(colorShader), std::move(alphaGs));
 
     std::unique_ptr<SkStreamAsset> colorStream(create_pattern_fill_content(0, bbox));
     auto alphaFunctionShader = sk_make_sp<SkPDFStream>(std::move(colorStream));

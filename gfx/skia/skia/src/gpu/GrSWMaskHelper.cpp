@@ -9,6 +9,7 @@
 
 #include "GrContext.h"
 #include "GrContextPriv.h"
+#include "GrProxyProvider.h"
 #include "GrShape.h"
 #include "GrSurfaceContext.h"
 #include "GrTextureProxy.h"
@@ -92,25 +93,28 @@ bool GrSWMaskHelper::init(const SkIRect& resultBounds) {
 }
 
 sk_sp<GrTextureProxy> GrSWMaskHelper::toTextureProxy(GrContext* context, SkBackingFit fit) {
-    GrSurfaceDesc desc;
-    desc.fOrigin = kTopLeft_GrSurfaceOrigin;
-    desc.fWidth = fPixels->width();
-    desc.fHeight = fPixels->height();
-    desc.fConfig = kAlpha_8_GrPixelConfig;
+    SkImageInfo ii = SkImageInfo::MakeA8(fPixels->width(), fPixels->height());
+    size_t rowBytes = fPixels->rowBytes();
 
-    sk_sp<GrSurfaceContext> sContext = context->contextPriv().makeDeferredSurfaceContext(
-                                                                                desc,
-                                                                                GrMipMapped::kNo,
-                                                                                fit,
-                                                                                SkBudgeted::kYes);
-    if (!sContext || !sContext->asTextureProxy()) {
+    sk_sp<SkData> data = fPixels->detachPixelsAsData();
+    if (!data) {
         return nullptr;
     }
 
-    SkImageInfo ii = SkImageInfo::MakeA8(desc.fWidth, desc.fHeight);
-    if (!sContext->writePixels(ii, fPixels->addr(), fPixels->rowBytes(), 0, 0)) {
+    sk_sp<SkImage> img = SkImage::MakeRasterData(ii, std::move(data), rowBytes);
+    if (!img) {
         return nullptr;
     }
 
-    return sContext->asTextureProxyRef();
+    // TODO: http://skbug.com/8422: Although this fixes http://skbug.com/8351, it seems like these
+    // should just participate in the normal allocation process and not need the pending IO flag.
+    auto surfaceFlags = GrInternalSurfaceFlags::kNone;
+    if (!context->contextPriv().resourceProvider()) {
+        // In DDL mode, this texture proxy will be instantiated at flush time, therfore it cannot
+        // have pending IO.
+        surfaceFlags |= GrInternalSurfaceFlags::kNoPendingIO;
+    }
+
+    return context->contextPriv().proxyProvider()->createTextureProxy(
+            std::move(img), kNone_GrSurfaceFlags, 1, SkBudgeted::kYes, fit, surfaceFlags);
 }

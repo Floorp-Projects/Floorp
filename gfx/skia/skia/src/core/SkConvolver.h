@@ -109,7 +109,7 @@ public:
     // SIMD padding which happens outside of this class.
 
     void addFilterValue( ConvolutionFixed val ) {
-        fFilterValues.push( val );
+        fFilterValues.push_back( val );
     }
 private:
     struct FilterInstance {

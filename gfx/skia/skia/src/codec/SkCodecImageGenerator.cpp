@@ -35,18 +35,16 @@ SkCodecImageGenerator::SkCodecImageGenerator(std::unique_ptr<SkCodec> codec, sk_
     , fData(std::move(data))
 {}
 
-SkData* SkCodecImageGenerator::onRefEncodedData() {
-    return SkRef(fData.get());
+sk_sp<SkData> SkCodecImageGenerator::onRefEncodedData() {
+    return fData;
 }
 
 bool SkCodecImageGenerator::onGetPixels(const SkImageInfo& requestInfo, void* requestPixels,
-                                        size_t requestRowBytes, const Options& opts) {
+                                        size_t requestRowBytes, const Options&) {
     SkPixmap dst(requestInfo, requestPixels, requestRowBytes);
 
-    auto decode = [this, &opts](const SkPixmap& pm) {
-        SkCodec::Options codecOpts;
-        codecOpts.fPremulBehavior = opts.fBehavior;
-        SkCodec::Result result = fCodec->getPixels(pm, &codecOpts);
+    auto decode = [this](const SkPixmap& pm) {
+        SkCodec::Result result = fCodec->getPixels(pm);
         switch (result) {
             case SkCodec::kSuccess:
             case SkCodec::kIncompleteInput:

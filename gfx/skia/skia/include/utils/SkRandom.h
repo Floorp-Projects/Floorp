@@ -45,14 +45,6 @@ public:
      */
     int32_t nextS() { return (int32_t)this->nextU(); }
 
-    /** Return the next pseudo random number as an unsigned 16bit value.
-     */
-    U16CPU nextU16() { return this->nextU() >> 16; }
-
-    /** Return the next pseudo random number as a signed 16bit value.
-     */
-    S16CPU nextS16() { return this->nextS() >> 16; }
-
     /**
      *  Returns value [0...1) as an IEEE float
      */
@@ -125,14 +117,6 @@ public:
     bool nextBiasedBool(SkScalar fractionTrue) {
         SkASSERT(fractionTrue >= 0 && fractionTrue <= SK_Scalar1);
         return this->nextUScalar1() <= fractionTrue;
-    }
-
-    /**
-     *  Return the next pseudo random number as a signed 64bit value.
-     */
-    int64_t next64() {
-        int64_t hi = this->nextS();
-        return (hi << 32) | this->nextU();
     }
 
     /** Reset the random object.

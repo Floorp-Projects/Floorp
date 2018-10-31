@@ -22,13 +22,6 @@ sk_sp<SkSurface> SkLiteRecorder::onNewSurface(const SkImageInfo&, const SkSurfac
     return nullptr;
 }
 
-#ifdef SK_SUPPORT_LEGACY_DRAWFILTER
-SkDrawFilter* SkLiteRecorder::setDrawFilter(SkDrawFilter* df) {
-    fDL->setDrawFilter(df);
-    return this->INHERITED::setDrawFilter(df);
-}
-#endif
-
 void SkLiteRecorder::onFlush() { fDL->flush(); }
 
 void SkLiteRecorder::willSave() { fDL->save(); }
@@ -113,11 +106,6 @@ void SkLiteRecorder::onDrawPosTextH(const void* text, size_t bytes,
                                     const SkPaint& paint) {
     fDL->drawPosTextH(text, bytes, xs, y, paint);
 }
-void SkLiteRecorder::onDrawTextOnPath(const void* text, size_t bytes,
-                                      const SkPath& path, const SkMatrix* matrix,
-                                      const SkPaint& paint) {
-    fDL->drawTextOnPath(text, bytes, path, matrix, paint);
-}
 void SkLiteRecorder::onDrawTextRSXform(const void* text, size_t bytes,
                                        const SkRSXform xform[], const SkRect* cull,
                                        const SkPaint& paint) {
@@ -182,9 +170,10 @@ void SkLiteRecorder::onDrawPoints(SkCanvas::PointMode mode,
                                   const SkPaint& paint) {
     fDL->drawPoints(mode, count, pts, paint);
 }
-void SkLiteRecorder::onDrawVerticesObject(const SkVertices* vertices, SkBlendMode mode,
-                                          const SkPaint& paint) {
-    fDL->drawVertices(vertices, mode, paint);
+void SkLiteRecorder::onDrawVerticesObject(const SkVertices* vertices,
+                                          const SkVertices::Bone bones[], int boneCount,
+                                          SkBlendMode mode, const SkPaint& paint) {
+    fDL->drawVertices(vertices, bones, boneCount, mode, paint);
 }
 void SkLiteRecorder::onDrawAtlas(const SkImage* atlas,
                                  const SkRSXform xforms[],

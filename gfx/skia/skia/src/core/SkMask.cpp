@@ -6,16 +6,18 @@
  */
 
 #include "SkMask.h"
+
 #include "SkMalloc.h"
 #include "SkSafeMath.h"
+#include "SkTo.h"
 
 /** returns the product if it is positive and fits in 31 bits. Otherwise this
     returns 0.
  */
 static int32_t safeMul32(int32_t a, int32_t b) {
     int64_t size = sk_64_mul(a, b);
-    if (size > 0 && sk_64_isS32(size)) {
-        return sk_64_asS32(size);
+    if (size > 0 && SkTFitsIn<int32_t>(size)) {
+        return size;
     }
     return 0;
 }
@@ -51,6 +53,38 @@ void SkMask::FreeImage(void* image) {
     sk_free(image);
 }
 
+SkMask SkMask::PrepareDestination(int radiusX, int radiusY, const SkMask& src) {
+    SkSafeMath safe;
+
+    SkMask dst;
+    // dstW = srcW + 2 * radiusX;
+    size_t dstW = safe.add(src.fBounds.width(), safe.add(radiusX, radiusX));
+    // dstH = srcH + 2 * radiusY;
+    size_t dstH = safe.add(src.fBounds.height(), safe.add(radiusY, radiusY));
+
+    if (!SkTFitsIn<int>(dstW) || !SkTFitsIn<int>(dstH)) {
+        dst.fBounds.setEmpty();
+        dst.fRowBytes = 0;
+    } else {
+        dst.fBounds.set(0, 0, SkTo<int>(dstW), SkTo<int>(dstH));
+        dst.fBounds.offset(src.fBounds.x(), src.fBounds.y());
+        dst.fBounds.offset(-radiusX, -radiusY);
+        dst.fRowBytes = SkTo<uint32_t>(dstW);
+    }
+
+    dst.fImage = nullptr;
+    dst.fFormat = SkMask::kA8_Format;
+
+    size_t toAlloc = safe.mul(dstW, dstH);
+
+    if (safe && src.fImage != nullptr) {
+        dst.fImage = SkMask::AllocImage(toAlloc);
+    }
+
+    return dst;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 
 static const int gMaskFormatToShift[] = {
@@ -59,6 +93,7 @@ static const int gMaskFormatToShift[] = {
     0,  // 3D
     2,  // ARGB32
     1,  // LCD16
+    0,  // SDF
 };
 
 static int maskFormatToShift(SkMask::Format format) {

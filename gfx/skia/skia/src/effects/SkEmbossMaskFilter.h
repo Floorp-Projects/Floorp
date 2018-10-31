@@ -8,6 +8,7 @@
 #ifndef SkEmbossMaskFilter_DEFINED
 #define SkEmbossMaskFilter_DEFINED
 
+#include "SkFlattenablePriv.h"
 #include "SkMaskFilterBase.h"
 
 /** \class SkEmbossMaskFilter
@@ -32,7 +33,6 @@ public:
     bool filterMask(SkMask* dst, const SkMask& src, const SkMatrix&,
                     SkIPoint* margin) const override;
 
-    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkEmbossMaskFilter)
 
 protected:

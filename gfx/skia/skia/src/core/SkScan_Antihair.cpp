@@ -5,13 +5,16 @@
  * found in the LICENSE file.
  */
 
-
 #include "SkScan.h"
+
 #include "SkBlitter.h"
 #include "SkColorData.h"
+#include "SkFDot6.h"
 #include "SkLineClipper.h"
 #include "SkRasterClip.h"
-#include "SkFDot6.h"
+#include "SkTo.h"
+
+#include <utility>
 
 /*  Our attempt to compute the worst case "bounds" for the horizontal and
     vertical cases has some numerical bug in it, and we sometimes undervalue
@@ -343,8 +346,9 @@ static void do_anti_hairline(SkFDot6 x0, SkFDot6 y0, SkFDot6 x1, SkFDot6 y1,
 
     if (SkAbs32(x1 - x0) > SkAbs32(y1 - y0)) {   // mostly horizontal
         if (x0 > x1) {    // we want to go left-to-right
-            SkTSwap<SkFDot6>(x0, x1);
-            SkTSwap<SkFDot6>(y0, y1);
+            using std::swap;
+            swap(x0, x1);
+            swap(y0, y1);
         }
 
         istart = SkFDot6Floor(x0);
@@ -416,8 +420,9 @@ static void do_anti_hairline(SkFDot6 x0, SkFDot6 y0, SkFDot6 x1, SkFDot6 y1,
         }
     } else {   // mostly vertical
         if (y0 > y1) {  // we want to go top-to-bottom
-            SkTSwap<SkFDot6>(x0, x1);
-            SkTSwap<SkFDot6>(y0, y1);
+            using std::swap;
+            swap(x0, x1);
+            swap(y0, y1);
         }
 
         istart = SkFDot6Floor(y0);

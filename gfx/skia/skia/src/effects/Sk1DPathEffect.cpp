@@ -16,8 +16,8 @@
 // Put in a governor to limit crash values from looping too long (and allocating too much ram).
 #define MAX_REASONABLE_ITERATIONS   100000
 
-bool Sk1DPathEffect::filterPath(SkPath* dst, const SkPath& src,
-                                SkStrokeRec*, const SkRect*) const {
+bool Sk1DPathEffect::onFilterPath(SkPath* dst, const SkPath& src,
+                                  SkStrokeRec*, const SkRect*) const {
     SkPathMeasure   meas(src, false);
     do {
         int governor = MAX_REASONABLE_ITERATIONS;
@@ -64,15 +64,15 @@ SkPath1DPathEffect::SkPath1DPathEffect(const SkPath& path, SkScalar advance, SkS
     fInitialOffset = phase;
 
     if ((unsigned)style > kMorph_Style) {
-        SkDEBUGF(("SkPath1DPathEffect style enum out of range %d\n", style));
+        SkDEBUGF("SkPath1DPathEffect style enum out of range %d\n", style);
     }
     fStyle = style;
 }
 
-bool SkPath1DPathEffect::filterPath(SkPath* dst, const SkPath& src,
-                            SkStrokeRec* rec, const SkRect* cullRect) const {
+bool SkPath1DPathEffect::onFilterPath(SkPath* dst, const SkPath& src,
+                                      SkStrokeRec* rec, const SkRect* cullRect) const {
     rec->setFillStyle();
-    return this->INHERITED::filterPath(dst, src, rec, cullRect);
+    return this->INHERITED::onFilterPath(dst, src, rec, cullRect);
 }
 
 static bool morphpoints(SkPoint dst[], const SkPoint src[], int count,
@@ -171,6 +171,11 @@ void SkPath1DPathEffect::flatten(SkWriteBuffer& buffer) const {
 
 SkScalar SkPath1DPathEffect::next(SkPath* dst, SkScalar distance,
                                   SkPathMeasure& meas) const {
+#if defined(IS_FUZZING_WITH_LIBFUZZER)
+    if (dst->countPoints() > 100000) {
+        return fAdvance;
+    }
+#endif
     switch (fStyle) {
         case kTranslate_Style: {
             SkPoint pos;
@@ -193,16 +198,6 @@ SkScalar SkPath1DPathEffect::next(SkPath* dst, SkScalar distance,
     }
     return fAdvance;
 }
-
-
-#ifndef SK_IGNORE_TO_STRING
-void SkPath1DPathEffect::toString(SkString* str) const {
-    str->appendf("SkPath1DPathEffect: (");
-    // TODO: add path and style
-    str->appendf("advance: %.2f phase %.2f", fAdvance, fInitialOffset);
-    str->appendf(")");
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
