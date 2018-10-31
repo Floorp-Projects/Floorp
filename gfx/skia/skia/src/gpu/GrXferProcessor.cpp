@@ -6,8 +6,9 @@
  */
 
 #include "GrXferProcessor.h"
+
+#include "GrCaps.h"
 #include "GrPipeline.h"
-#include "gl/GrGLCaps.h"
 
 GrXferProcessor::GrXferProcessor(ClassID classID)
         : INHERITED(classID)
@@ -159,14 +160,12 @@ GrXPFactory::AnalysisProperties GrXPFactory::GetAnalysisProperties(
         const GrXPFactory* factory,
         const GrProcessorAnalysisColor& color,
         const GrProcessorAnalysisCoverage& coverage,
-        const GrCaps& caps,
-        GrPixelConfigIsClamped dstIsClamped) {
+        const GrCaps& caps) {
     AnalysisProperties result;
     if (factory) {
-        result = factory->analysisProperties(color, coverage, caps, dstIsClamped);
+        result = factory->analysisProperties(color, coverage, caps);
     } else {
-        result = GrPorterDuffXPFactory::SrcOverAnalysisProperties(color, coverage, caps,
-                                                                  dstIsClamped);
+        result = GrPorterDuffXPFactory::SrcOverAnalysisProperties(color, coverage, caps);
     }
     SkASSERT(!(result & AnalysisProperties::kRequiresDstTexture));
     if ((result & AnalysisProperties::kReadsDstInShader) &&
@@ -183,11 +182,10 @@ sk_sp<const GrXferProcessor> GrXPFactory::MakeXferProcessor(const GrXPFactory* f
                                                             const GrProcessorAnalysisColor& color,
                                                             GrProcessorAnalysisCoverage coverage,
                                                             bool hasMixedSamples,
-                                                            const GrCaps& caps,
-                                                            GrPixelConfigIsClamped dstIsClamped) {
+                                                            const GrCaps& caps) {
     SkASSERT(!hasMixedSamples || caps.shaderCaps()->dualSourceBlendingSupport());
     if (factory) {
-        return factory->makeXferProcessor(color, coverage, hasMixedSamples, caps, dstIsClamped);
+        return factory->makeXferProcessor(color, coverage, hasMixedSamples, caps);
     } else {
         return GrPorterDuffXPFactory::MakeSrcOverXferProcessor(color, coverage, hasMixedSamples,
                                                                caps);

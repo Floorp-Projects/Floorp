@@ -6,8 +6,8 @@
 */
 
 #include "SkHighContrastFilter.h"
-#include "SkPM4f.h"
 #include "SkArenaAlloc.h"
+#include "SkColorData.h"
 #include "SkRasterPipeline.h"
 #include "SkReadBuffer.h"
 #include "SkString.h"
@@ -45,8 +45,6 @@ public:
                         SkArenaAlloc* scratch,
                         bool shaderIsOpaque) const override;
 
-    SK_TO_STRING_OVERRIDE()
-
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkHighContrast_Filter)
 
 protected:
@@ -75,9 +73,7 @@ void SkHighContrast_Filter::onAppendStages(SkRasterPipeline* p,
         square->G = 2.0f; square->A = 1.0f;
         square->B = square->C = square->D = square->E = square->F = 0;
 
-        p->append(SkRasterPipeline::parametric_r, square);
-        p->append(SkRasterPipeline::parametric_g, square);
-        p->append(SkRasterPipeline::parametric_b, square);
+        p->append(SkRasterPipeline::parametric, square);
     }
 
     if (fConfig.fGrayscale) {
@@ -124,9 +120,7 @@ void SkHighContrast_Filter::onAppendStages(SkRasterPipeline* p,
         sqrt->G = 0.5f; sqrt->A = 1.0f;
         sqrt->B = sqrt->C = sqrt->D = sqrt->E = sqrt->F = 0;
 
-        p->append(SkRasterPipeline::parametric_r, sqrt);
-        p->append(SkRasterPipeline::parametric_g, sqrt);
-        p->append(SkRasterPipeline::parametric_b, sqrt);
+        p->append(SkRasterPipeline::parametric, sqrt);
     }
 
     if (!shaderIsOpaque) {
@@ -157,12 +151,6 @@ sk_sp<SkColorFilter> SkHighContrastFilter::Make(
     return sk_make_sp<SkHighContrast_Filter>(config);
 }
 
-#ifndef SK_IGNORE_TO_STRING
-void SkHighContrast_Filter::toString(SkString* str) const {
-    str->append("SkHighContrastColorFilter ");
-}
-#endif
-
 SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_START(SkHighContrastFilter)
     SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkHighContrast_Filter)
 SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_END
@@ -189,8 +177,7 @@ private:
     HighContrastFilterEffect(const SkHighContrastConfig& config, bool linearize)
         : INHERITED(kHighContrastFilterEffect_ClassID, kNone_OptimizationFlags)
         , fConfig(config)
-        , fLinearize(linearize) {
-    }
+        , fLinearize(linearize) {}
 
     GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
@@ -256,10 +243,6 @@ void GLHighContrastFilterEffect::emitCode(EmitArgs& args) {
     fContrastUni = args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf_GrSLType,
                                                     "contrast", &contrast);
 
-    if (nullptr == args.fInputColor) {
-        args.fInputColor = "half4(1)";
-    }
-
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
 
     fragBuilder->codeAppendf("half4 color = %s;", args.fInputColor);
@@ -316,7 +299,7 @@ void GLHighContrastFilterEffect::emitCode(EmitArgs& args) {
         fragBuilder->codeAppendf("l = 1.0 - l;");
         // Convert back from HSL to RGB.
         SkString hue2rgbFuncName;
-        static const GrShaderVar gHue2rgbArgs[] = {
+        const GrShaderVar gHue2rgbArgs[] = {
             GrShaderVar("p", kHalf_GrSLType),
             GrShaderVar("q", kHalf_GrSLType),
             GrShaderVar("t", kHalf_GrSLType),
@@ -356,7 +339,7 @@ void GLHighContrastFilterEffect::emitCode(EmitArgs& args) {
     fragBuilder->codeAppendf("}");
 
     // Clamp.
-    fragBuilder->codeAppendf("color = clamp(color, 0, 1);");
+    fragBuilder->codeAppendf("color = saturate(color);");
 
     if (hcfe.linearize()) {
         fragBuilder->codeAppend("color.rgb = sqrt(color.rgb);");
@@ -372,7 +355,7 @@ void GLHighContrastFilterEffect::emitCode(EmitArgs& args) {
 
 std::unique_ptr<GrFragmentProcessor> SkHighContrast_Filter::asFragmentProcessor(
         GrContext*, const GrColorSpaceInfo& csi) const {
-    bool linearize = !csi.isGammaCorrect();
+    bool linearize = !csi.isLinearlyBlended();
     return HighContrastFilterEffect::Make(fConfig, linearize);
 }
 #endif

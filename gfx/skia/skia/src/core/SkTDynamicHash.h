@@ -242,8 +242,16 @@ private:
 
     void maybeGrow() {
         if (100 * (int64_t(fCount + fDeleted) + 1) > int64_t(fCapacity) * kGrowPercent) {
-            SkASSERT_RELEASE(fCapacity <= std::numeric_limits<int>::max() / 2);
-            this->resize(fCapacity > 0 ? fCapacity * 2 : 4);
+            auto newCapacity = fCapacity > 0 ? fCapacity : 4;
+
+            // Only grow the storage when most non-empty entries are
+            // in active use.  Otherwise, just purge the tombstones.
+            if (fCount > fDeleted) {
+                SkASSERT_RELEASE(newCapacity <= std::numeric_limits<int>::max() / 2);
+                newCapacity *= 2;
+            }
+            SkASSERT(newCapacity > fCount + 1);
+            this->resize(newCapacity);
         }
     }
 

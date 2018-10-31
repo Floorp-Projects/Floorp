@@ -1,20 +1,16 @@
 /*
- * Copyright 2016 Google Inc.
+ * Copyright 2018 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
 
-// It is not safe to #include any header file here unless it has been vetted for ODR safety:
-// all symbols used must be file-scoped static or in an anonymous namespace.  This applies
-// to _all_ header files:  C standard library, C++ standard library, Skia... everything.
-
-#include <immintrin.h>   // ODR safe
-#include <stdint.h>      // ODR safe
-
 // As described in https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85525, MinGW will produce
 // unaligned instructions for this code, resulting in a crash.
 #if defined(__AVX2__) && !defined(__MINGW32__)
+
+#include <immintrin.h>
+#include <stdint.h>
 
 namespace hsw {
 
@@ -103,6 +99,12 @@ namespace hsw {
 
 }
 
+#include "SkOpts.h"
+
+#define SK_OPTS_NS hsw
+#include "SkRasterPipeline_opts.h"
+#include "SkUtils_opts.h"
+
 namespace SkOpts {
     // See SkOpts.h, writing SkConvolutionFilter1D::ConvolutionFixed as the underlying type.
     extern void (*convolve_vertically)(const int16_t* filter, int filterLen,
@@ -110,6 +112,18 @@ namespace SkOpts {
                                        uint8_t* out, bool hasAlpha);
     void Init_hsw() {
         convolve_vertically = hsw::convolve_vertically;
+
+    #define M(st) stages_highp[SkRasterPipeline::st] = (StageFn)SK_OPTS_NS::st;
+        SK_RASTER_PIPELINE_STAGES(M)
+        just_return_highp = (StageFn)SK_OPTS_NS::just_return;
+        start_pipeline_highp = SK_OPTS_NS::start_pipeline;
+    #undef M
+
+    #define M(st) stages_lowp[SkRasterPipeline::st] = (StageFn)SK_OPTS_NS::lowp::st;
+        SK_RASTER_PIPELINE_STAGES(M)
+        just_return_lowp = (StageFn)SK_OPTS_NS::lowp::just_return;
+        start_pipeline_lowp = SK_OPTS_NS::lowp::start_pipeline;
+    #undef M
     }
 }
 

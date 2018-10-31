@@ -17,13 +17,8 @@
 #include "SkRect.h"
 
 void GrGpuRTCommandBuffer::clear(const GrFixedClip& clip, GrColor color) {
-#ifdef SK_DEBUG
-    GrRenderTarget* rt = fRenderTarget;
-    SkASSERT(rt);
-    SkASSERT(!clip.scissorEnabled() ||
-             (SkIRect::MakeWH(rt->width(), rt->height()).contains(clip.scissorRect()) &&
-              SkIRect::MakeWH(rt->width(), rt->height()) != clip.scissorRect()));
-#endif
+    SkASSERT(fRenderTarget);
+
     this->onClear(clip, color);
 }
 
@@ -31,33 +26,49 @@ void GrGpuRTCommandBuffer::clearStencilClip(const GrFixedClip& clip, bool inside
     this->onClearStencilClip(clip, insideStencilMask);
 }
 
-bool GrGpuRTCommandBuffer::draw(const GrPipeline& pipeline,
-                                const GrPrimitiveProcessor& primProc,
-                                const GrMesh meshes[],
-                                const GrPipeline::DynamicState dynamicStates[],
-                                int meshCount,
-                                const SkRect& bounds) {
+bool GrGpuRTCommandBuffer::draw(const GrPrimitiveProcessor& primProc, const GrPipeline& pipeline,
+                                const GrPipeline::FixedDynamicState* fixedDynamicState,
+                                const GrPipeline::DynamicStateArrays* dynamicStateArrays,
+                                const GrMesh meshes[], int meshCount, const SkRect& bounds) {
 #ifdef SK_DEBUG
-    SkASSERT(!primProc.hasInstanceAttribs() || this->gpu()->caps()->instanceAttribSupport());
-    SkASSERT(!primProc.willUsePrimitiveRestart() || this->gpu()->caps()->usePrimitiveRestart());
+    SkASSERT(!primProc.hasInstanceAttributes() || this->gpu()->caps()->instanceAttribSupport());
     for (int i = 0; i < meshCount; ++i) {
         SkASSERT(!GrPrimTypeRequiresGeometryShaderSupport(meshes[i].primitiveType()) ||
                  this->gpu()->caps()->shaderCaps()->geometryShaderSupport());
-        SkASSERT(primProc.hasVertexAttribs() == meshes[i].hasVertexData());
-        SkASSERT(primProc.hasInstanceAttribs() == meshes[i].isInstanced());
+        SkASSERT(primProc.hasVertexAttributes() == meshes[i].hasVertexData());
+        SkASSERT(primProc.hasInstanceAttributes() == meshes[i].isInstanced());
     }
 #endif
+    SkASSERT(!pipeline.isScissorEnabled() || fixedDynamicState ||
+             (dynamicStateArrays && dynamicStateArrays->fScissorRects));
+
     auto resourceProvider = this->gpu()->getContext()->contextPriv().resourceProvider();
 
-    if (pipeline.isBad() || !primProc.instantiate(resourceProvider)) {
+    if (pipeline.isBad()) {
         return false;
     }
+    if (fixedDynamicState && fixedDynamicState->fPrimitiveProcessorTextures) {
+        for (int i = 0; i < primProc.numTextureSamplers(); ++i) {
+            if (!fixedDynamicState->fPrimitiveProcessorTextures[i]->instantiate(resourceProvider)) {
+                return false;
+            }
+        }
+    }
+    if (dynamicStateArrays && dynamicStateArrays->fPrimitiveProcessorTextures) {
+        int n = primProc.numTextureSamplers() * meshCount;
+        const auto* textures = dynamicStateArrays->fPrimitiveProcessorTextures;
+        for (int i = 0; i < n; ++i) {
+            if (!textures[i]->instantiate(resourceProvider)) {
+                return false;
+            }
+        }
+    }
 
-    if (primProc.numAttribs() > this->gpu()->caps()->maxVertexAttributes()) {
+    if (primProc.numVertexAttributes() > this->gpu()->caps()->maxVertexAttributes()) {
         this->gpu()->stats()->incNumFailedDraws();
         return false;
     }
-    this->onDraw(pipeline, primProc, meshes, dynamicStates, meshCount, bounds);
+    this->onDraw(primProc, pipeline, fixedDynamicState, dynamicStateArrays, meshes, meshCount,
+                 bounds);
     return true;
 }
-

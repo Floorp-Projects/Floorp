@@ -8,8 +8,11 @@
 #include "GrPathProcessor.h"
 
 #include "GrShaderCaps.h"
+#include "SkTo.h"
 #include "gl/GrGLGpu.h"
+#include "gl/GrGLVaryingHandler.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
+#include "glsl/GrGLSLPrimitiveProcessor.h"
 #include "glsl/GrGLSLUniformHandler.h"
 #include "glsl/GrGLSLVarying.h"
 

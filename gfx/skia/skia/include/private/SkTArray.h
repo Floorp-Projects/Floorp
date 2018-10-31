@@ -8,6 +8,7 @@
 #ifndef SkTArray_DEFINED
 #define SkTArray_DEFINED
 
+#include "../private/SkSafe32.h"
 #include "../private/SkTLogic.h"
 #include "../private/SkTemplates.h"
 #include "SkTypes.h"
@@ -297,18 +298,19 @@ public:
 
     /** Swaps the contents of this array with that array. Does a pointer swap if possible,
         otherwise copies the T values. */
-    void swap(SkTArray* that) {
-        if (this == that) {
+    void swap(SkTArray& that) {
+        using std::swap;
+        if (this == &that) {
             return;
         }
-        if (fOwnMemory && that->fOwnMemory) {
-            SkTSwap(fItemArray, that->fItemArray);
-            SkTSwap(fCount, that->fCount);
-            SkTSwap(fAllocCount, that->fAllocCount);
+        if (fOwnMemory && that.fOwnMemory) {
+            swap(fItemArray, that.fItemArray);
+            swap(fCount, that.fCount);
+            swap(fAllocCount, that.fAllocCount);
         } else {
             // This could be more optimal...
-            SkTArray copy(std::move(*that));
-            *that = std::move(*this);
+            SkTArray copy(std::move(that));
+            that = std::move(*this);
             *this = std::move(copy);
         }
     }
@@ -516,7 +518,8 @@ private:
         SkASSERT(fAllocCount >= 0);
         SkASSERT(-delta <= fCount);
 
-        int newCount = fCount + delta;
+        // Move into 64bit math temporarily, to avoid local overflows
+        int64_t newCount = fCount + delta;
 
         // We allow fAllocCount to be in the range [newCount, 3*newCount]. We also never shrink
         // when we're currently using preallocated memory, would allocate less than
@@ -527,8 +530,9 @@ private:
             return;
         }
 
+
         // Whether we're growing or shrinking, we leave at least 50% extra space for future growth.
-        int newAllocCount = newCount + ((newCount + 1) >> 1);
+        int64_t newAllocCount = newCount + ((newCount + 1) >> 1);
         // Align the new allocation count to kMinHeapAllocCount.
         static_assert(SkIsPow2(kMinHeapAllocCount), "min alloc count not power of two.");
         newAllocCount = (newAllocCount + (kMinHeapAllocCount - 1)) & ~(kMinHeapAllocCount - 1);
@@ -536,7 +540,9 @@ private:
         if (newAllocCount == fAllocCount) {
             return;
         }
-        fAllocCount = newAllocCount;
+
+        fAllocCount = Sk64_pin_to_s32(newAllocCount);
+        SkASSERT(fAllocCount >= newCount);
         void* newMemArray = sk_malloc_throw(fAllocCount, sizeof(T));
         this->move(newMemArray);
         if (fOwnMemory) {
@@ -557,6 +563,10 @@ private:
     bool fOwnMemory : 1;
     bool fReserved : 1;
 };
+
+template <typename T, bool M> static inline void swap(SkTArray<T, M>& a, SkTArray<T, M>& b) {
+    a.swap(b);
+}
 
 template<typename T, bool MEM_MOVE> constexpr int SkTArray<T, MEM_MOVE>::kMinHeapAllocCount;
 

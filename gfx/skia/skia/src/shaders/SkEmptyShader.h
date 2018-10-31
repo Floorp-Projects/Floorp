@@ -20,7 +20,6 @@ class SkEmptyShader : public SkShaderBase {
 public:
     SkEmptyShader() {}
 
-    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkEmptyShader)
 
 protected:

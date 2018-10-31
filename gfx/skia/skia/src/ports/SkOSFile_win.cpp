@@ -10,10 +10,13 @@
 
 #include "SkLeanWindows.h"
 #include "SkMalloc.h"
+#include "SkNoncopyable.h"
 #include "SkOSFile.h"
+#include "SkStringUtils.h"
 #include "SkTFitsIn.h"
 
 #include <io.h>
+#include <new>
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -250,7 +253,10 @@ static bool get_the_file(HANDLE handle, SkString* name, WIN32_FIND_DATAW* dataPt
     }
     // if we get here, we've found a file/dir
     if (name) {
-        name->setUTF16((uint16_t*)dataPtr->cFileName);
+        const uint16_t* utf16name = (const uint16_t*)dataPtr->cFileName;
+        const uint16_t* ptr = utf16name;
+        while (*ptr != 0) { ++ptr; }
+        *name = SkStringFromUTF16(utf16name, ptr - utf16name);
     }
     return true;
 }
