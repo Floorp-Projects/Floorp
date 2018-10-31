@@ -30,7 +30,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=618176
     function start() {
       messageManager.addMessageListener("test", recvTest);
       messageManager.loadFrameScript(FRAME_SCRIPT, true);
-      setTimeout(function () { document.getElementById("browser").loadURI(TEST_PAGE); }, 0);
+      let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+      setTimeout(function () {
+        document.getElementById("browser").loadURI(TEST_PAGE, {triggeringPrincipal});
+      }, 0);
     }
 
     function finish() {
