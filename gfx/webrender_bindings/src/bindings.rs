@@ -1903,7 +1903,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                 clip_node_id,
                                 transform_style,
                                 mix_blend_mode,
-                                filters,
+                                &filters,
                                 glyph_raster_space);
 }
 
