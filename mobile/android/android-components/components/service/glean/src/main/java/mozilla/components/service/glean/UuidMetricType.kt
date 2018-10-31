@@ -18,12 +18,11 @@ import mozilla.components.support.base.log.logger.Logger
  * The uuid API exposes the [generateAndSet] and [set] methods.
  */
 data class UuidMetricType(
-    override val applicationProperty: Boolean,
     override val disabled: Boolean,
     override val category: String,
+    override val lifetime: Lifetime,
     override val name: String,
-    override val sendInPings: List<String>,
-    override val userProperty: Boolean
+    override val sendInPings: List<String>
 ) : CommonMetricData {
     private val logger = Logger("glean/UuidMetricType")
 

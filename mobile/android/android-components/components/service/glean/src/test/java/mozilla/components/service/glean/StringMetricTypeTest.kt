@@ -25,12 +25,11 @@ class StringMetricTypeTest {
     fun `The API saves to its storage engine`() {
         // Define a 'stringMetric' string metric, which will be stored in "store1"
         val stringMetric = StringMetricType(
-            applicationProperty = true,
             disabled = false,
             category = "telemetry",
+            lifetime = Lifetime.Application,
             name = "string_metric",
-            sendInPings = listOf("store1"),
-            userProperty = false
+            sendInPings = listOf("store1")
         )
 
         // Record two strings of the same type, with a little delay.
@@ -54,12 +53,11 @@ class StringMetricTypeTest {
     fun `The API truncates long string values`() {
         // Define a 'stringMetric' string metric, which will be stored in "store1"
         val stringMetric = StringMetricType(
-            applicationProperty = true,
             disabled = false,
             category = "telemetry",
+            lifetime = Lifetime.Application,
             name = "string_metric",
-            sendInPings = listOf("store1"),
-            userProperty = false
+            sendInPings = listOf("store1")
         )
 
         stringMetric.set("0123456789012345678901234567890123456789012345678901234567890123456789")
@@ -78,12 +76,11 @@ class StringMetricTypeTest {
         // Define a 'stringMetric' string metric, which will be stored in
         // "store1". It's disabled so it should not record anything.
         val stringMetric = StringMetricType(
-            applicationProperty = false,
             disabled = true,
             category = "telemetry",
+            lifetime = Lifetime.Ping,
             name = "stringMetric",
-            sendInPings = listOf("store1"),
-            userProperty = false
+            sendInPings = listOf("store1")
         )
 
         // Attempt to store the string.
@@ -98,12 +95,11 @@ class StringMetricTypeTest {
         // Define a 'stringMetric' string metric, which will be stored in "store1". It's disabled
         // so it should not record anything.
         val stringMetric = StringMetricType(
-            applicationProperty = true,
             disabled = true,
             category = "telemetry",
+            lifetime = Lifetime.Application,
             name = "stringMetric",
-            sendInPings = listOf("store1"),
-            userProperty = false
+            sendInPings = listOf("store1")
         )
 
         // Attempt to store the string.

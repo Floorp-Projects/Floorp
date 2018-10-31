@@ -17,12 +17,11 @@ import mozilla.components.support.base.log.logger.Logger
  * data and making sure that limits are enforced.
  */
 data class StringMetricType(
-    override val applicationProperty: Boolean,
     override val disabled: Boolean,
     override val category: String,
+    override val lifetime: Lifetime,
     override val name: String,
-    override val sendInPings: List<String>,
-    override val userProperty: Boolean
+    override val sendInPings: List<String>
 ) : CommonMetricData {
     private val logger = Logger("glean/StringMetricType")
 

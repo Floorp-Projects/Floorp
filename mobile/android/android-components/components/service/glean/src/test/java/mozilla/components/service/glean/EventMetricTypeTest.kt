@@ -27,12 +27,11 @@ class EventMetricTypeTest {
     fun `The API records to its storage engine`() {
         // Define a 'click' event, which will be stored in "store1"
         val click = EventMetricType(
-            applicationProperty = true,
             disabled = false,
             category = "ui",
+            lifetime = Lifetime.Application,
             name = "click",
             sendInPings = listOf("store1"),
-            userProperty = false,
             objects = listOf("buttonA", "buttonB")
         )
 
@@ -65,12 +64,11 @@ class EventMetricTypeTest {
         // Define a 'click' event, which will be stored in "store1". It's disabled
         // so it should not record anything.
         val click = EventMetricType(
-            applicationProperty = false,
             disabled = true,
             category = "ui",
+            lifetime = Lifetime.Ping,
             name = "click",
             sendInPings = listOf("store1"),
-            userProperty = false,
             objects = listOf("buttonA")
         )
 
@@ -87,12 +85,11 @@ class EventMetricTypeTest {
         // Define a 'click' event, which will be stored in "store1". It's disabled
         // so it should not record anything.
         val click = EventMetricType(
-            applicationProperty = true,
             disabled = true,
             category = "ui",
+            lifetime = Lifetime.Application,
             name = "click",
             sendInPings = listOf("store1"),
-            userProperty = false,
             objects = listOf("buttonA")
         )
 
@@ -107,12 +104,11 @@ class EventMetricTypeTest {
     @Test
     fun `'objectId' is in the object set`() {
         val click = EventMetricType(
-            applicationProperty = true,
             disabled = false,
             category = "ui",
+            lifetime = Lifetime.Application,
             name = "click",
             sendInPings = listOf("store1"),
-            userProperty = false,
             objects = listOf("object1")
         )
 
@@ -126,12 +122,11 @@ class EventMetricTypeTest {
     @Test
     fun `'value' is properly recorded and truncated`() {
         val click = EventMetricType(
-            applicationProperty = true,
             disabled = false,
             category = "ui",
+            lifetime = Lifetime.Application,
             name = "click",
             sendInPings = listOf("store1"),
-            userProperty = false,
             objects = listOf("buttonA", "buttonB")
         )
 
@@ -155,12 +150,11 @@ class EventMetricTypeTest {
     @Test
     fun `using 'extra' without declaring allowed keys must not be recorded`() {
         val testEvent = EventMetricType(
-            applicationProperty = true,
             disabled = false,
             category = "ui",
+            lifetime = Lifetime.Application,
             name = "testEvent",
             sendInPings = listOf("store1"),
-            userProperty = false,
             objects = listOf("buttonA")
         )
 
@@ -175,12 +169,11 @@ class EventMetricTypeTest {
     @Test
     fun `unknown 'extra' keys must not be recorded`() {
         val testEvent = EventMetricType(
-            applicationProperty = true,
             disabled = false,
             category = "ui",
+            lifetime = Lifetime.Application,
             name = "testEvent",
             sendInPings = listOf("store1"),
-            userProperty = false,
             allowedExtraKeys = listOf("extra1", "extra2"),
             objects = listOf("buttonA")
         )
@@ -196,12 +189,11 @@ class EventMetricTypeTest {
     @Test
     fun `'extra' keys must be recorded and truncated if needed`() {
         val testEvent = EventMetricType(
-            applicationProperty = true,
             disabled = false,
             category = "ui",
+            lifetime = Lifetime.Application,
             name = "testEvent",
             sendInPings = listOf("store1"),
-            userProperty = false,
             allowedExtraKeys = listOf("extra1", "truncatedExtra"),
             objects = listOf("buttonA")
         )

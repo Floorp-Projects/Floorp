@@ -27,12 +27,11 @@ class UuidMetricTypeTest {
     fun `The API saves to its storage engine`() {
         // Define a 'uuidMetric' uuid metric, which will be stored in "store1"
         val uuidMetric = UuidMetricType(
-            applicationProperty = true,
             disabled = false,
             category = "telemetry",
+            lifetime = Lifetime.Application,
             name = "uuid_metric",
-            sendInPings = listOf("store1"),
-            userProperty = false
+            sendInPings = listOf("store1")
         )
 
         // Record two uuids of the same type, with a little delay.
@@ -58,12 +57,11 @@ class UuidMetricTypeTest {
         // Define a 'uuidMetric' uuid metric, which will be stored in
         // "store1". It's disabled so it should not record anything.
         val uuidMetric = UuidMetricType(
-            applicationProperty = false,
             disabled = true,
             category = "telemetry",
+            lifetime = Lifetime.Ping,
             name = "uuidMetric",
-            sendInPings = listOf("store1"),
-            userProperty = false
+            sendInPings = listOf("store1")
         )
 
         // Attempt to store the uuid.
@@ -78,12 +76,11 @@ class UuidMetricTypeTest {
         // Define a 'uuidMetric' uuid metric, which will be stored in "store1". It's disabled
         // so it should not record anything.
         val uuidMetric = UuidMetricType(
-            applicationProperty = true,
             disabled = true,
             category = "telemetry",
+            lifetime = Lifetime.Application,
             name = "uuidMetric",
-            sendInPings = listOf("store1"),
-            userProperty = false
+            sendInPings = listOf("store1")
         )
 
         // Attempt to store the uuid.

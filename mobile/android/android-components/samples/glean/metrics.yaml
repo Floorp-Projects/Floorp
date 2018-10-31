@@ -32,7 +32,7 @@ basic:
 
   client_id:
     type: uuid
-    user_property: true
+    lifetime: user
     description: >
       A UUID identifying a profile and allowing user-oriented correlation of
       data.
