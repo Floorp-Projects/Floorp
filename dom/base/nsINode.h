@@ -1998,17 +1998,20 @@ protected:
                                                 mozilla::ErrorResult&);
 
 public:
-  /* Event stuff that documents and elements share.  This needs to be
-     NS_IMETHOD because some subclasses implement DOM methods with
-     this exact name and signature and then the calling convention
-     needs to match.
+  /* Event stuff that documents and elements share.
 
      Note that we include DOCUMENT_ONLY_EVENT events here so that we
      can forward all the document stuff to this implementation.
   */
-#define EVENT(name_, id_, type_, struct_)                             \
-  mozilla::dom::EventHandlerNonNull* GetOn##name_();                  \
-  void SetOn##name_(mozilla::dom::EventHandlerNonNull* listener);
+#define EVENT(name_, id_, type_, struct_)                               \
+  mozilla::dom::EventHandlerNonNull* GetOn##name_()                     \
+  {                                                                     \
+    return GetEventHandler(nsGkAtoms::on##name_);                       \
+  }                                                                     \
+  void SetOn##name_(mozilla::dom::EventHandlerNonNull* handler)         \
+  {                                                                     \
+    SetEventHandler(nsGkAtoms::on##name_, handler);                     \
+  }
 #define TOUCH_EVENT EVENT
 #define DOCUMENT_ONLY_EVENT EVENT
 #include "mozilla/EventNameList.h"
