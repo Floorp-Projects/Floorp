@@ -479,7 +479,8 @@ public:
       AutoLockFile Lock(Filename);
 
       if (!Lock.success()) {
-        continue;
+        fprintf(stderr, "Unable to lock file %s\n", Filename.c_str());
+        exit(1);
       }
 
       std::vector<std::string> Lines;
