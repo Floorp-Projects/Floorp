@@ -471,6 +471,10 @@ add_task(async function test_payer_address_picker() {
  * Test that we can correctly add an address from a private window
  */
 add_task(async function test_private_persist_addresses() {
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    todo(false, "Cannot test OS key store login on official builds.");
+    return;
+  }
   let prefilledGuids = await setup();
 
   is((await formAutofillStorage.addresses.getAll()).length, 1,
@@ -569,7 +573,7 @@ add_task(async function test_private_persist_addresses() {
     });
 
     info("clicking pay");
-    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+    await loginAndCompletePayment(frame);
 
     // Add a handler to complete the payment above.
     info("acknowledging the completion from the merchant page");

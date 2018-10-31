@@ -12,6 +12,10 @@ async function setup(addresses = [], cards = []) {
 }
 
 async function add_link(aOptions = {}) {
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    todo(false, "Cannot test OS key store login on official builds.");
+    return;
+  }
   let tabOpenFn = aOptions.isPrivate ? withNewTabInPrivateWindow : BrowserTestUtils.withNewTab;
   await tabOpenFn({
     gBrowser,
@@ -257,7 +261,7 @@ async function add_link(aOptions = {}) {
          "The saved card should be associated with the billing address");
     }, aOptions);
 
-    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+    await loginAndCompletePayment(frame);
 
     // Add a handler to complete the payment above.
     info("acknowledging the completion from the merchant page");
