@@ -8903,8 +8903,7 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
         if (!scope) {
             return false;
         }
-        script = frontend::CompileEvalScript(cx, cx->tempLifoAlloc(), env, scope,
-                                             options, srcBuf);
+        script = frontend::CompileEvalScript(cx, env, scope, options, srcBuf);
         if (script) {
             script->setActiveEval();
         }
@@ -8914,8 +8913,7 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
         // circumvent the fresh lexical scope that all eval have, so that the
         // users of executeInGlobal, like the web console, may add new bindings to
         // the global scope.
-        script = frontend::CompileGlobalScript(cx, cx->tempLifoAlloc(), scopeKind, options,
-                                               srcBuf);
+        script = frontend::CompileGlobalScript(cx, scopeKind, options, srcBuf);
     }
 
     if (!script) {

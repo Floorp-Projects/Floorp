@@ -203,11 +203,6 @@ public:
    */
   void SignalMainThreadCleanup();
 
-  bool Running() const
-  {
-    return LifecycleStateRef() == LIFECYCLE_RUNNING;
-  }
-
   /* This is the end of the current iteration, that is, the current time of the
    * graph. */
   GraphTime IterationEnd() const;
@@ -223,11 +218,6 @@ public:
    * mMonitor must be held.
    */
   void PrepareUpdatesToMainThreadState(bool aFinalUpdate);
-  /**
-   * Returns false if there is any stream that has finished but not yet finished
-   * playing out.
-   */
-  bool AllFinishedStreamsNotified();
   /**
    * If we are rendering in non-realtime mode, we don't want to send messages to
    * the main thread at each iteration for performance reasons. We instead

@@ -375,6 +375,11 @@ var Impl = {
 
     if (aOptions.addEnvironment) {
       pingData.environment = aOptions.overrideEnvironment || TelemetryEnvironment.currentEnvironment;
+
+      // On Android store a flag if the client ID was reset from a canary ID.
+      if (AppConstants.platform == "android" && ClientID.wasCanaryClientID()) {
+        pingData.environment.profile.wasCanary = true;
+      }
     }
 
     return pingData;
@@ -662,13 +667,21 @@ var Impl = {
         this._clientID = await ClientID.getClientID();
 
         // Fix-up a canary client ID if detected.
-        const uploadEnabled = Services.prefs.getBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, false);
-        if (uploadEnabled && this._clientID == Utils.knownClientID) {
-          this._log.trace("Upload enabled, but got canary client ID. Resetting.");
+        if (IS_UNIFIED_TELEMETRY) {
+          // On desktop respect the upload preference.
+          const uploadEnabled = Services.prefs.getBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, false);
+          if (uploadEnabled && this._clientID == Utils.knownClientID) {
+            this._log.trace("Upload enabled, but got canary client ID. Resetting.");
+            this._clientID = await ClientID.resetClientID();
+          } else if (!uploadEnabled && this._clientID != Utils.knownClientID) {
+            this._log.trace("Upload disabled, but got a valid client ID. Setting canary client ID.");
+            this._clientID = await ClientID.setClientID(TelemetryUtils.knownClientID);
+          }
+        } else if (this._clientID == Utils.knownClientID) {
+          // On Fennec (non-unified Telemetry) we might have set a canary client ID in the past by mistake.
+          // We now always reset to a valid random client ID if this is detected (Bug 1501329).
+          this._log.trace("Not unified, but got canary client ID. Resetting.");
           this._clientID = await ClientID.resetClientID();
-        } else if (!uploadEnabled && this._clientID != Utils.knownClientID) {
-          this._log.trace("Upload disabled, but got a valid client ID. Setting canary client ID.");
-          this._clientID = await ClientID.setClientID(TelemetryUtils.knownClientID);
         }
 
         await TelemetrySend.setup(this._testMode);

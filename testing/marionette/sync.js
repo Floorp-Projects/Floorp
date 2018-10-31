@@ -9,11 +9,12 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {
   error,
+  stack,
   TimeoutError,
 } = ChromeUtils.import("chrome://marionette/content/error.js", {});
 const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 
-XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
 this.EXPORTED_SYMBOLS = [
   "IdlePromise",
@@ -185,6 +186,7 @@ function TimedPromise(fn, {timeout = 1500, throws = TimeoutError} = {}) {
         let err = new throws();
         reject(err);
       } else {
+        log.warn(`TimedPromise timed out after ${timeout} ms`, stack());
         resolve();
       }
     };
@@ -255,7 +257,7 @@ function Sleep(timeout) {
 function MessageManagerDestroyedPromise(messageManager) {
   return new Promise(resolve => {
     function observe(subject, topic) {
-      logger.debug(`Received observer notification ${topic}`);
+      log.debug(`Received observer notification ${topic}`);
 
       if (subject == messageManager) {
         Services.obs.removeObserver(this, "message-manager-disconnect");

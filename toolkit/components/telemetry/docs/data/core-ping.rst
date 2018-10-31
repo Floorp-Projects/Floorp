@@ -27,7 +27,7 @@ Structure:
 .. code-block:: js
 
     {
-      "v": 9, // ping format version
+      "v": 10, // ping format version
       "clientId": <string>, // client id, e.g.
                             // "c641eacf-c30c-4171-b403-f077724e848a"
       "seq": <positive integer>, // running ping counter, e.g. 3
@@ -62,6 +62,8 @@ Structure:
                                                     // interact with our android products.
       "flashUsage": <integer>, // number of times flash plugin is played since last upload
       "defaultBrowser": <boolean> // true if the user has set Firefox as default browser
+      "bug_1501329_affected": <boolean>  // true if Firefox previously used canary clientId
+                                         // when submitting telemetry
 
     }
 

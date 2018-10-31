@@ -106,17 +106,17 @@
           </vbox>
 
           <button id="tracking-action-unblock"
-                  class="tracking-protection-button"
+                  class="panel-button tracking-protection-button"
                   label="&trackingProtection.unblock4.label;"
                   accesskey="&trackingProtection.unblock4.accesskey;"
                   oncommand="ContentBlocking.disableForCurrentPage(); gIdentityHandler.recordClick('unblock');" />
           <button id="tracking-action-unblock-private"
-                  class="tracking-protection-button"
+                  class="panel-button tracking-protection-button"
                   label="&trackingProtection.unblockPrivate4.label;"
                   accesskey="&trackingProtection.unblockPrivate4.accesskey;"
                   oncommand="ContentBlocking.disableForCurrentPage(); gIdentityHandler.recordClick('unblock_private');" />
           <button id="tracking-action-block"
-                  class="tracking-protection-button"
+                  class="panel-button tracking-protection-button"
                   label="&trackingProtection.block5.label;"
                   accesskey="&trackingProtection.block5.accesskey;"
                   oncommand="ContentBlocking.enableForCurrentPage(); gIdentityHandler.recordClick('block');" />
@@ -188,6 +188,7 @@
         <button when-connection="secure-cert-user-overridden"
                 label="&identity.removeCertException.label;"
                 accesskey="&identity.removeCertException.accesskey;"
+                class="panel-button"
                 oncommand="gIdentityHandler.removeCertException()"/>
 
         <!-- Connection is Not Secure -->
@@ -230,10 +231,12 @@
         <button when-mixedcontent="active-blocked"
                 label="&identity.disableMixedContentBlocking.label;"
                 accesskey="&identity.disableMixedContentBlocking.accesskey;"
+                class="panel-button"
                 oncommand="gIdentityHandler.disableMixedContentProtection()"/>
         <button when-mixedcontent="active-loaded"
                 label="&identity.enableMixedContentBlocking.label;"
                 accesskey="&identity.enableMixedContentBlocking.accesskey;"
+                class="panel-button"
                 oncommand="gIdentityHandler.enableMixedContentProtection()"/>
       </vbox>
 

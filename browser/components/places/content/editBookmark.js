@@ -641,15 +641,15 @@ var gEditItemOverlay = {
   toggleFolderTreeVisibility() {
     var expander = this._element("foldersExpander");
     var folderTreeRow = this._element("folderTreeRow");
+    expander.classList.toggle("expander-up", folderTreeRow.collapsed);
+    expander.classList.toggle("expander-down", !folderTreeRow.collapsed);
     if (!folderTreeRow.collapsed) {
-      expander.className = "expander-down";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextdown"));
       folderTreeRow.collapsed = true;
       this._element("chooseFolderSeparator").hidden =
         this._element("chooseFolderMenuItem").hidden = false;
     } else {
-      expander.className = "expander-up";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextup"));
       folderTreeRow.collapsed = false;
@@ -802,8 +802,9 @@ var gEditItemOverlay = {
     var tagsSelector = this._element("tagsSelector");
     var tagsSelectorRow = this._element("tagsSelectorRow");
     var expander = this._element("tagsSelectorExpander");
+    expander.classList.toggle("expander-up", tagsSelectorRow.collapsed);
+    expander.classList.toggle("expander-down", !tagsSelectorRow.collapsed);
     if (tagsSelectorRow.collapsed) {
-      expander.className = "expander-up";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextup"));
       tagsSelectorRow.collapsed = false;
@@ -813,7 +814,6 @@ var gEditItemOverlay = {
       tagsSelector.addEventListener("mousedown", this);
       tagsSelector.addEventListener("keypress", this);
     } else {
-      expander.className = "expander-down";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextdown"));
       tagsSelectorRow.collapsed = true;

@@ -441,7 +441,7 @@ class BytecodeParser
     };
 
     JSContext* cx_;
-    LifoAllocScope allocScope_;
+    LifoAlloc& alloc_;
     RootedScript script_;
 
     Bytecode** codeArray_;
@@ -454,9 +454,9 @@ class BytecodeParser
 #endif
 
   public:
-    BytecodeParser(JSContext* cx, JSScript* script)
+    BytecodeParser(JSContext* cx, LifoAlloc& alloc, JSScript* script)
       : cx_(cx),
-        allocScope_(&cx->tempLifoAlloc()),
+        alloc_(alloc),
         script_(cx, script),
         codeArray_(nullptr)
 #ifdef DEBUG
@@ -540,11 +540,10 @@ class BytecodeParser
 
   private:
     LifoAlloc& alloc() {
-        return allocScope_.alloc();
+        return alloc_;
     }
 
     void reportOOM() {
-        allocScope_.releaseEarly();
         ReportOutOfMemory(cx_);
     }
 
@@ -1003,7 +1002,8 @@ BytecodeParser::parse()
 bool
 js::ReconstructStackDepth(JSContext* cx, JSScript* script, jsbytecode* pc, uint32_t* depth, bool* reachablePC)
 {
-    BytecodeParser parser(cx, script);
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    BytecodeParser parser(cx, allocScope.alloc(), script);
     if (!parser.parse()) {
         return false;
     }
@@ -1030,8 +1030,9 @@ static MOZ_MUST_USE bool
 DisassembleAtPC(JSContext* cx, JSScript* scriptArg, bool lines,
                 jsbytecode* pc, bool showAll, Sprinter* sp)
 {
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
     RootedScript script(cx, scriptArg);
-    BytecodeParser parser(cx, script);
+    BytecodeParser parser(cx, allocScope.alloc(), script);
     parser.setStackDump();
     if (!parser.parse()) {
         return false;
@@ -2262,7 +2263,8 @@ static bool
 DecompileAtPCForStackDump(JSContext* cx, HandleScript script,
                           const OffsetAndDefIndex& offsetAndDefIndex, Sprinter* sp)
 {
-    BytecodeParser parser(cx, script);
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    BytecodeParser parser(cx, allocScope.alloc(), script);
     parser.setStackDump();
     if (!parser.parse()) {
         return false;
@@ -2385,7 +2387,8 @@ DecompileExpressionFromStack(JSContext* cx, int spindex, int skipStackHits, Hand
         return true;
     }
 
-    BytecodeParser parser(cx, frameIter.script());
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    BytecodeParser parser(cx, allocScope.alloc(), frameIter.script());
     if (!parser.parse()) {
         return false;
     }
@@ -2489,7 +2492,8 @@ DecompileArgumentFromStack(JSContext* cx, int formalIndex, UniqueChars* res)
         return true;
     }
 
-    BytecodeParser parser(cx, script);
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    BytecodeParser parser(cx, allocScope.alloc(), script);
     if (!parser.parse()) {
         return false;
     }
@@ -2749,7 +2753,8 @@ GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, Sprinter& sp)
 
     RootedScript script(cx, sac.script);
 
-    BytecodeParser parser(cx, script);
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    BytecodeParser parser(cx, allocScope.alloc(), script);
     if (!parser.parse()) {
         return false;
     }

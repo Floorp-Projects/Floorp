@@ -6005,8 +6005,7 @@ JS_NewRegExpObject(JSContext* cx, const char* bytes, size_t length, unsigned fla
         return nullptr;
     }
 
-    return RegExpObject::create(cx, chars.get(), length, RegExpFlag(flags), cx->tempLifoAlloc(),
-                                GenericObject);
+    return RegExpObject::create(cx, chars.get(), length, RegExpFlag(flags), GenericObject);
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -6015,8 +6014,7 @@ JS_NewUCRegExpObject(JSContext* cx, const char16_t* chars, size_t length, unsign
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
 
-    return RegExpObject::create(cx, chars, length, RegExpFlag(flags), cx->tempLifoAlloc(),
-                                GenericObject);
+    return RegExpObject::create(cx, chars, length, RegExpFlag(flags), GenericObject);
 }
 
 JS_PUBLIC_API(bool)

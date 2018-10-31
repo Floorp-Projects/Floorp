@@ -1113,7 +1113,11 @@ MediaStreamGraphImpl::ShouldUpdateMainThread()
   }
 
   TimeStamp now = TimeStamp::Now();
-  if ((now - mLastMainThreadUpdate).ToMilliseconds() > CurrentDriver()->IterationDuration()) {
+  // For offline graphs, update now if there is no pending iteration or if it
+  // has been long enough since the last update.
+  if (!mNeedAnotherIteration ||
+      ((now - mLastMainThreadUpdate).ToMilliseconds() >
+       CurrentDriver()->IterationDuration())) {
     mLastMainThreadUpdate = now;
     return true;
   }
@@ -1226,18 +1230,6 @@ MediaStreamGraphImpl::ProduceDataForStreamsBlockByBlock(uint32_t aStreamIndex,
                "Something went wrong with rounding to block boundaries");
 }
 
-bool
-MediaStreamGraphImpl::AllFinishedStreamsNotified()
-{
-  MOZ_ASSERT(OnGraphThread());
-  for (MediaStream* stream : AllStreams()) {
-    if (stream->mFinished && !stream->mNotifiedFinished) {
-      return false;
-    }
-  }
-  return true;
-}
-
 void
 MediaStreamGraphImpl::RunMessageAfterProcessing(UniquePtr<ControlMessage> aMessage)
 {
@@ -1344,14 +1336,16 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
     stream->mStartBlocking = mStateComputedTime;
   }
 
-  // The loop is woken up so soon that IterationEnd() barely advances and we
-  // end up having aEndBlockingDecision == mStateComputedTime.
-  // Since stream blocking is computed in the interval of
-  // [mStateComputedTime, aEndBlockingDecision), it won't be computed at all.
-  // We should ensure next iteration so that pending blocking changes will be
-  // computed in next loop.
+  // If the loop is woken up so soon that IterationEnd() barely advances or
+  // if an offline graph is not currently rendering, we end up having
+  // aEndBlockingDecisions == mStateComputedTime.
+  // Since the process interval [mStateComputedTime, aEndBlockingDecision) is
+  // empty, Process() will not find any unblocked stream and so will not
+  // ensure another iteration.  If the graph should be rendering, then ensure
+  // another iteration to render.
   if (ensureNextIteration ||
-      aEndBlockingDecisions == mStateComputedTime) {
+      (aEndBlockingDecisions == mStateComputedTime &&
+       mStateComputedTime < mEndTime)) {
     EnsureNextIteration();
   }
 }
@@ -1445,7 +1439,6 @@ MediaStreamGraphImpl::UpdateMainThreadState()
   MOZ_ASSERT(OnGraphThread());
   MonitorAutoLock lock(mMonitor);
   bool finalUpdate = mForceShutDown ||
-    (mProcessedTime >= mEndTime && AllFinishedStreamsNotified()) ||
     (IsEmpty() && mBackMessageQueue.IsEmpty());
   PrepareUpdatesToMainThreadState(finalUpdate);
   if (finalUpdate) {
@@ -3639,21 +3632,6 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
   port->SetGraphImpl(GraphImpl());
   GraphImpl()->AppendMessage(MakeUnique<Message>(port));
   return port.forget();
-}
-
-void
-ProcessedMediaStream::QueueFinish()
-{
-  class Message : public ControlMessage {
-  public:
-    explicit Message(ProcessedMediaStream* aStream)
-      : ControlMessage(aStream) {}
-    void Run() override
-    {
-      mStream->FinishOnGraphThread();
-    }
-  };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this));
 }
 
 void

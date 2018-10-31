@@ -51,7 +51,7 @@ CompileSourceBuffer(JSContext* cx, const ReadOnlyCompileOptions& options,
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
 
-    script.set(frontend::CompileGlobalScript(cx, cx->tempLifoAlloc(), scopeKind, options, srcBuf));
+    script.set(frontend::CompileGlobalScript(cx, scopeKind, options, srcBuf));
     return !!script;
 }
 
@@ -491,8 +491,7 @@ Evaluate(JSContext* cx, ScopeKind scopeKind, HandleObject env,
     MOZ_ASSERT_IF(!IsGlobalLexicalEnvironment(env), scopeKind == ScopeKind::NonSyntactic);
 
     options.setIsRunOnce(true);
-    RootedScript script(cx, frontend::CompileGlobalScript(cx, cx->tempLifoAlloc(),
-                                                          scopeKind, options, srcBuf));
+    RootedScript script(cx, frontend::CompileGlobalScript(cx, scopeKind, options, srcBuf));
     if (!script) {
         return false;
     }

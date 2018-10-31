@@ -1276,7 +1276,7 @@ impl DisplayListBuilder {
         clip_node_id: Option<ClipId>,
         transform_style: TransformStyle,
         mix_blend_mode: MixBlendMode,
-        filters: Vec<FilterOp>,
+        filters: &[FilterOp],
         raster_space: RasterSpace,
     ) {
         let item = SpecificDisplayItem::PushStackingContext(PushStackingContextDisplayItem {
@@ -1289,7 +1289,7 @@ impl DisplayListBuilder {
         });
 
         self.push_item(item, info);
-        self.push_iter(&filters);
+        self.push_iter(filters);
     }
 
     pub fn pop_stacking_context(&mut self) {

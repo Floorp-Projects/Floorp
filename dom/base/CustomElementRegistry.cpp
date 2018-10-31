@@ -773,9 +773,6 @@ CustomElementRegistry::Define(JSContext* aCx,
                               const ElementDefinitionOptions& aOptions,
                               ErrorResult& aRv)
 {
-  // Note: No calls that might run JS or trigger CC before this point, or
-  // there's a (vanishingly small) chance of our constructor being nulled
-  // before we access it.
   JS::Rooted<JSObject*> constructor(aCx, aFunctionConstructor.CallableOrNull());
 
   JS::Rooted<JSObject*> constructorUnwrapped(aCx, js::CheckedUnwrap(constructor));

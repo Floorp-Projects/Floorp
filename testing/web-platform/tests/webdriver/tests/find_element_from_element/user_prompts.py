@@ -2,37 +2,38 @@
 
 import pytest
 
-from tests.support.asserts import assert_dialog_handled, assert_error, assert_success
+from tests.support.asserts import (
+    assert_error,
+    assert_same_element,
+    assert_success,
+    assert_dialog_handled,
+)
+from tests.support.inline import inline
 
 
-def fullscreen(session):
+def find_element(session, element_id, using, value):
     return session.transport.send(
-        "POST", "session/{session_id}/window/fullscreen".format(**vars(session)))
-
-
-def is_fullscreen(session):
-    # At the time of writing, WebKit does not conform to the
-    # Fullscreen API specification.
-    #
-    # Remove the prefixed fallback when
-    # https://bugs.webkit.org/show_bug.cgi?id=158125 is fixed.
-    return session.execute_script("""
-        return !!(window.fullScreen || document.webkitIsFullScreen)
-        """)
+        "POST", "session/{session_id}/element/{element_id}/element".format(
+            session_id=session.session_id,
+            element_id=element_id),
+        {"using": using, "value": value})
 
 
 @pytest.fixture
 def check_user_prompt_closed_without_exception(session, create_dialog):
     def check_user_prompt_closed_without_exception(dialog_type, retval):
-        assert not is_fullscreen(session)
+        session.url = inline("<div><p>bar</p><div>")
+        outer_element = session.find.css("div", all=False)
+        inner_element = session.find.css("p", all=False)
 
         create_dialog(dialog_type, text=dialog_type)
 
-        response = fullscreen(session)
-        assert_success(response)
+        response = find_element(session, outer_element.id, "css selector", "p")
+        value = assert_success(response)
 
         assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
-        assert is_fullscreen(session)
+
+        assert_same_element(session, value, inner_element)
 
     return check_user_prompt_closed_without_exception
 
@@ -40,15 +41,15 @@ def check_user_prompt_closed_without_exception(session, create_dialog):
 @pytest.fixture
 def check_user_prompt_closed_with_exception(session, create_dialog):
     def check_user_prompt_closed_with_exception(dialog_type, retval):
-        assert not is_fullscreen(session)
+        session.url = inline("<div><p>bar</p><div>")
+        outer_element = session.find.css("div", all=False)
 
         create_dialog(dialog_type, text=dialog_type)
 
-        response = fullscreen(session)
+        response = find_element(session, outer_element.id, "css selector", "p")
         assert_error(response, "unexpected alert open")
 
         assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
-        assert not is_fullscreen(session)
 
     return check_user_prompt_closed_with_exception
 
@@ -56,17 +57,16 @@ def check_user_prompt_closed_with_exception(session, create_dialog):
 @pytest.fixture
 def check_user_prompt_not_closed_but_exception(session, create_dialog):
     def check_user_prompt_not_closed_but_exception(dialog_type):
-        assert not is_fullscreen(session)
+        session.url = inline("<div><p>bar</p><div>")
+        outer_element = session.find.css("div", all=False)
 
         create_dialog(dialog_type, text=dialog_type)
 
-        response = fullscreen(session)
+        response = find_element(session, outer_element.id, "css selector", "p")
         assert_error(response, "unexpected alert open")
 
         assert session.alert.text == dialog_type
         session.alert.dismiss()
-
-        assert not is_fullscreen(session)
 
     return check_user_prompt_not_closed_but_exception
 
