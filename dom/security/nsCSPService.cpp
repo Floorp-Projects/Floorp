@@ -32,7 +32,6 @@ CSPService::CSPService()
 
 CSPService::~CSPService()
 {
-  mAppStatusCache.Clear();
 }
 
 NS_IMPL_ISUPPORTS(CSPService, nsIContentPolicy, nsIChannelEventSink)
