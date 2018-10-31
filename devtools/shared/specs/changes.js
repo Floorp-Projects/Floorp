@@ -33,6 +33,7 @@ const changesSpec = generateActorSpec({
         changes: RetVal("array:json"),
       },
     },
+    "start": {},  // no arguments, no response
   },
 });
 
