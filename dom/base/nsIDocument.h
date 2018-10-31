@@ -1115,15 +1115,19 @@ public:
    */
   bool GetHasTrackingContentLoaded()
   {
-    return mHasTrackingContentLoaded;
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT);
   }
 
   /**
    * Set the tracking content loaded flag for this document.
    */
-  void SetHasTrackingContentLoaded(bool aHasTrackingContentLoaded)
+  void SetHasTrackingContentLoaded(bool aHasTrackingContentLoaded,
+                                   const nsAString& aOriginBlocked)
   {
-    mHasTrackingContentLoaded = aHasTrackingContentLoaded;
+    RecordContentBlockingLog(aOriginBlocked,
+                             nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT,
+                             aHasTrackingContentLoaded);
   }
 
   /**
@@ -4212,9 +4216,6 @@ protected:
 
   // True if a document load has a CSP with unsafe-inline attached.
   bool mHasUnsafeInlineCSP : 1;
-
-  // True if a document has loaded Tracking Content
-  bool mHasTrackingContentLoaded : 1;
 
   // True if DisallowBFCaching has been called on this document.
   bool mBFCacheDisallowed : 1;
