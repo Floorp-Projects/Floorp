@@ -442,6 +442,30 @@ class MachCommands(MachCommandBase):
 
         return 0
 
+    @SubCommand('android', 'build-geckoview_example',
+                """Build geckoview_example """)
+    @CommandArgument('args', nargs=argparse.REMAINDER)
+    def android_build_geckoview_example(self, args):
+        self.gradle(self.substs['GRADLE_ANDROID_BUILD_GECKOVIEW_EXAMPLE_TASKS'] + args,
+                    verbose=True)
+
+        print('Execute `mach android install-geckoview_example` '
+              'to push the geckoview_example and test APKs to a device.')
+
+        return 0
+
+    @SubCommand('android', 'install-geckoview_example',
+                """Install geckoview_example """)
+    @CommandArgument('args', nargs=argparse.REMAINDER)
+    def android_install_geckoview_example(self, args):
+        self.gradle(self.substs['GRADLE_ANDROID_INSTALL_GECKOVIEW_EXAMPLE_TASKS'] + args,
+                    verbose=True)
+
+        print('Execute `mach android build-geckoview_example` '
+              'to just build the geckoview_example and test APKs.')
+
+        return 0
+
     @SubCommand('android', 'geckoview-docs',
                 """Create GeckoView javadoc and optionally upload to Github""")
     @CommandArgument('--archive', action='store_true',
