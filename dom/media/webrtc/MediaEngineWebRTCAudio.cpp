@@ -32,10 +32,6 @@ using namespace webrtc;
 #define MAX_CHANNELS 2
 #define MAX_SAMPLING_FREQ 48000 // Hz - multiple of 100
 
-#ifdef MOZ_PULSEAUDIO
-static uint32_t sInputStreamsOpen = 0;
-#endif
-
 namespace mozilla {
 
 #ifdef LOG
@@ -656,23 +652,7 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>&)
     return NS_ERROR_FAILURE;
   }
 
-  // On Linux with PulseAudio, we still only allow a certain number of audio
-  // input stream in each content process, because of issues related to audio
-  // remoting and PulseAudio.
-#ifdef MOZ_PULSEAUDIO
-  // When remoting, cubeb reports it's using the "remote" backend instead of the
-  // backend on the other side of the IPC.
-  const char* backend = cubeb_get_backend_id(CubebUtils::GetCubebContext());
-  if (strstr(backend, "remote") &&
-      sInputStreamsOpen == CubebUtils::GetMaxInputStreams()) {
-    LOG(("%p Already capturing audio in this process, aborting", this));
-    return NS_ERROR_FAILURE;
-  }
 
-  sInputStreamsOpen++;
-#endif
-
-  AssertIsOnOwningThread();
 
   mInputProcessing = new AudioInputProcessing(
     mDeviceMaxChannelCount, mStream, mTrackID, mPrincipal);
@@ -711,10 +691,7 @@ MediaEngineWebRTCMicrophoneSource::Stop(const RefPtr<const AllocationHandle>&)
     return NS_OK;
   }
 
-#ifdef MOZ_PULSEAUDIO
-  MOZ_ASSERT(sInputStreamsOpen > 0);
-  sInputStreamsOpen--;
-#endif
+
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
   NS_DispatchToMainThread(media::NewRunnableFrom(
