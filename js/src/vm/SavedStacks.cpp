@@ -1132,7 +1132,7 @@ JS_PUBLIC_API(bool)
 IsMaybeWrappedSavedFrame(JSObject* obj)
 {
     MOZ_ASSERT(obj);
-    return js::SavedFrame::isSavedFrameOrWrapper(*obj);
+    return obj->canUnwrapAs<js::SavedFrame>();
 }
 
 JS_PUBLIC_API(bool)

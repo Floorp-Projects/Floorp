@@ -428,21 +428,26 @@ html|input.urlbar-input {
   border: 1px solid var(--panel-separator-color);
   margin: 0;
   padding: 0;
-  height: 20px;
+  height: 24px;
 }
 
 #editBMPanel_newFolderButton {
   -moz-appearance: none;
-  border: 0 solid var(--panel-separator-color);
-  border-inline-end-width: 1px;
+  -moz-box-flex: 1;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
+  border: none;
   padding: 0 9px;
   margin: 0;
-  min-width: 21px;
-  min-height: 20px;
-  height: 20px;
+  min-height: 24px;
+  height: 24px;
   color: inherit;
-  list-style-image: url("chrome://browser/skin/panel-plus-sign.png");
-  position: relative;
+  list-style-image: url("chrome://browser/skin/add.svg");
+}
+
+#editBMPanel_newFolderButton:hover {
+  background-color: var(--arrowpanel-dimmed);
 }
 
 #editBMPanel_newFolderButton:hover:active {
@@ -451,6 +456,11 @@ html|input.urlbar-input {
 
 #editBMPanel_newFolderButton:-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow);
+}
+
+#editBMPanel_newFolderButton .button-text {
+  -moz-box-flex: 1; /* push the button icon to the start side */
+  text-align: start;
 }
 
 #editBMPanel_folderMenuList {
@@ -536,11 +546,6 @@ html|input.urlbar-input {
 
 #editBookmarkPanel .expander-down {
   list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
-}
-
-#editBMPanel_tagsField > moz-input-box > html|*.textbox-input::placeholder {
-  opacity: 1.0;
-  color: #bbb;
 }
 
 /* ----- SIDEBAR ELEMENTS ----- */

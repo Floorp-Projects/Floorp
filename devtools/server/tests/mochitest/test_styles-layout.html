@@ -20,10 +20,8 @@ let gStyles = null;
 addTest(async function() {
   const url = document.getElementById("inspectorContent").href;
   const { target } = await attachURL(url);
-  const inspector = target.getInspector();
-  const walker = await inspector.getWalker();
-  ok(walker, "getWalker() should return an actor.");
-  gWalker = walker;
+  const inspector = await target.getInspector();
+  gWalker = inspector.walker;
   gStyles = await inspector.getPageStyle();
   runNextTest();
 });
