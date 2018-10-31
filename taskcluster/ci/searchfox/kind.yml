@@ -87,8 +87,6 @@ jobs:
             - linux64-rust-macos
             - linux64-cbindgen
 
-    # NOTE: Windows Searchfox jobs aren't working quite yet (bug 1418415).
-
     win64-searchfox/debug:
         description: "Win64 Searchfox Debug (clang-cl)"
         index:
@@ -98,10 +96,12 @@ jobs:
             platform: windows2012-64/debug
         worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
         worker:
-            max-run-time: 7200
+            max-run-time: 36000
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
                 PERFHERDER_EXTRA_OPTIONS: searchfox
+                RUSTC_BOOTSTRAP: "1"
+                MOZSEARCH_PLATFORM: "windows"
         run:
             using: mozharness
             options: [append-env-variables-from-configs]
