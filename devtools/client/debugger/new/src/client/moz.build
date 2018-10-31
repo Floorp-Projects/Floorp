@@ -7,7 +7,7 @@ DIRS += [
     'firefox',
 ]
 
-DevToolsModules(
+DebuggerModules(
     'firefox.js',
     'index.js',
 )

@@ -13,17 +13,6 @@
 
 <input type="file" id="file" />
 
-<script type="text/js-worker" id="worker-src">
-onmessage = function(e) {
-  var data = new FormData();
-  data.append('Filedata', e.data.slice(0, 127), encodeURI(e.data.name));
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', location.href, false);
-  xhr.send(data);
-  postMessage("No crash \\o/");
-}
-</script>
-
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
@@ -35,9 +24,7 @@ function onOpened(message) {
   var input = document.getElementById('file');
   SpecialPowers.wrap(input).mozSetFileArray([message.data]);
 
-  var blob = new Blob([ document.getElementById("worker-src").textContent ],
-                      { type: "text/javascript" });
-  var worker = new Worker(URL.createObjectURL(blob));
+  var worker = new Worker("test_bug1317725.js");
   worker.onerror = function(e) {
     ok(false, "We should not see any error.");
     SimpleTest.finish();

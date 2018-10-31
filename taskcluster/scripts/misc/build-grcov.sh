@@ -5,7 +5,7 @@ set -x -e -v
 
 OWNER=marco-c
 PROJECT=grcov
-PROJECT_REVISION=41d69126e0d821fd2eea3c4aae4986a289e0dd95
+PROJECT_REVISION=4ad0dbc35b9614e45812e179176f48bb1f70ccab
 
 # This script is for building rust-size
 case "$(uname -s)" in

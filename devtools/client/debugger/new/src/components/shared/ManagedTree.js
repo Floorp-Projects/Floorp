@@ -1,101 +1,63 @@
-"use strict";
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
+// @flow
+import React, { Component } from "react";
+import "./ManagedTree.css";
 
-var _react = require("devtools/client/shared/vendor/react");
+const { Tree } = require("devtools-components");
 
-var _react2 = _interopRequireDefault(_react);
+export type Item = {
+  contents: any,
+  name: string,
+  path: string
+};
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+type Props = {
+  autoExpandAll: boolean,
+  autoExpandDepth: number,
+  getChildren: Object => Object[],
+  getPath: (Object, index?: number) => string,
+  getParent: Item => any,
+  getRoots: () => any,
+  highlightItems?: Array<Item>,
+  itemHeight: number,
+  listItems?: Array<Item>,
+  onFocus?: (item: any) => void,
+  onExpand?: (item: Item, expanded: Set<string>) => void,
+  onCollapse?: (item: Item, expanded: Set<string>) => void,
+  renderItem: any,
+  disabledFocus?: boolean,
+  focused?: any,
+  expanded?: any
+};
 
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+type State = {
+  expanded: any,
+  focusedItem: ?Item
+};
 
-const {
-  Tree
-} = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-components"];
-
-class ManagedTree extends _react.Component {
-  constructor(props) {
+class ManagedTree extends Component<Props, State> {
+  constructor(props: Props) {
     super(props);
-
-    this.setExpanded = (item, isExpanded, shouldIncludeChildren) => {
-      const expandItem = i => {
-        const path = this.props.getPath(i);
-
-        if (isExpanded) {
-          expanded.add(path);
-        } else {
-          expanded.delete(path);
-        }
-      };
-
-      const {
-        expanded
-      } = this.state;
-      expandItem(item);
-
-      if (shouldIncludeChildren) {
-        let parents = [item];
-
-        while (parents.length) {
-          const children = [];
-
-          for (const parent of parents) {
-            if (parent.contents && parent.contents.length) {
-              for (const child of parent.contents) {
-                expandItem(child);
-                children.push(child);
-              }
-            }
-          }
-
-          parents = children;
-        }
-      }
-
-      this.setState({
-        expanded
-      });
-
-      if (isExpanded && this.props.onExpand) {
-        this.props.onExpand(item, expanded);
-      } else if (!isExpanded && this.props.onCollapse) {
-        this.props.onCollapse(item, expanded);
-      }
-    };
-
-    this.focusItem = item => {
-      if (!this.props.disabledFocus && this.state.focusedItem !== item) {
-        this.setState({
-          focusedItem: item
-        });
-
-        if (this.props.onFocus) {
-          this.props.onFocus(item);
-        }
-      }
-    };
-
     this.state = {
       expanded: props.expanded || new Set(),
       focusedItem: null
     };
   }
 
-  componentWillReceiveProps(nextProps) {
-    const {
-      listItems,
-      highlightItems,
-      focused
-    } = this.props;
-
+  componentWillReceiveProps(nextProps: Props) {
+    const { listItems, highlightItems, focused } = this.props;
     if (nextProps.listItems && nextProps.listItems != listItems) {
       this.expandListItems(nextProps.listItems);
     }
 
-    if (nextProps.highlightItems && nextProps.highlightItems != highlightItems && nextProps.highlightItems.length) {
+    if (
+      nextProps.highlightItems &&
+      nextProps.highlightItems != highlightItems &&
+      nextProps.highlightItems.length
+    ) {
       this.highlightItem(nextProps.highlightItems);
     }
 
@@ -104,28 +66,67 @@ class ManagedTree extends _react.Component {
     }
   }
 
-  expandListItems(listItems) {
-    const {
-      expanded
-    } = this.state;
+  setExpanded = (
+    item: Item,
+    isExpanded: boolean,
+    shouldIncludeChildren: boolean
+  ) => {
+    const expandItem = i => {
+      const path = this.props.getPath(i);
+      if (isExpanded) {
+        expanded.add(path);
+      } else {
+        expanded.delete(path);
+      }
+    };
+    const { expanded } = this.state;
+    expandItem(item);
+
+    if (shouldIncludeChildren) {
+      let parents = [item];
+      while (parents.length) {
+        const children = [];
+        for (const parent of parents) {
+          if (parent.contents && parent.contents.length) {
+            for (const child of parent.contents) {
+              expandItem(child);
+              children.push(child);
+            }
+          }
+        }
+        parents = children;
+      }
+    }
+    this.setState({ expanded });
+
+    if (isExpanded && this.props.onExpand) {
+      this.props.onExpand(item, expanded);
+    } else if (!isExpanded && this.props.onCollapse) {
+      this.props.onCollapse(item, expanded);
+    }
+  };
+
+  expandListItems(listItems: Array<Item>) {
+    const { expanded } = this.state;
     listItems.forEach(item => expanded.add(this.props.getPath(item)));
     this.focusItem(listItems[0]);
-    this.setState({
-      expanded
-    });
+    this.setState({ expanded });
   }
 
-  highlightItem(highlightItems) {
-    const {
-      expanded
-    } = this.state; // This file is visible, so we highlight it.
-
+  highlightItem(highlightItems: Array<Item>) {
+    const { expanded } = this.state;
+    // This file is visible, so we highlight it.
     if (expanded.has(this.props.getPath(highlightItems[0]))) {
       this.focusItem(highlightItems[0]);
     } else {
       // Look at folders starting from the top-level until finds a
       // closed folder and highlights this folder
-      const index = highlightItems.reverse().findIndex(item => !expanded.has(this.props.getPath(item)) && item.name !== "root");
+      const index = highlightItems
+        .reverse()
+        .findIndex(
+          item =>
+            !expanded.has(this.props.getPath(item)) && item.name !== "root"
+        );
 
       if (highlightItems[index]) {
         this.focusItem(highlightItems[index]);
@@ -133,26 +134,37 @@ class ManagedTree extends _react.Component {
     }
   }
 
-  render() {
-    const {
-      expanded,
-      focusedItem
-    } = this.state;
-    return _react2.default.createElement("div", {
-      className: "managed-tree"
-    }, _react2.default.createElement(Tree, _extends({}, this.props, {
-      isExpanded: item => expanded.has(this.props.getPath(item)),
-      focused: focusedItem,
-      getKey: this.props.getPath,
-      onExpand: item => this.setExpanded(item, true, false),
-      onCollapse: item => this.setExpanded(item, false, false),
-      onFocus: this.focusItem,
-      renderItem: (...args) => this.props.renderItem(...args, {
-        setExpanded: this.setExpanded
-      })
-    })));
-  }
+  focusItem = (item: Item) => {
+    if (!this.props.disabledFocus && this.state.focusedItem !== item) {
+      this.setState({ focusedItem: item });
 
+      if (this.props.onFocus) {
+        this.props.onFocus(item);
+      }
+    }
+  };
+
+  render() {
+    const { expanded, focusedItem } = this.state;
+    return (
+      <div className="managed-tree">
+        <Tree
+          {...this.props}
+          isExpanded={item => expanded.has(this.props.getPath(item))}
+          focused={focusedItem}
+          getKey={this.props.getPath}
+          onExpand={item => this.setExpanded(item, true, false)}
+          onCollapse={item => this.setExpanded(item, false, false)}
+          onFocus={this.focusItem}
+          renderItem={(...args) =>
+            this.props.renderItem(...args, {
+              setExpanded: this.setExpanded
+            })
+          }
+        />
+      </div>
+    );
+  }
 }
 
-exports.default = ManagedTree;
+export default ManagedTree;

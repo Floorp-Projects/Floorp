@@ -7,6 +7,6 @@ DIRS += [
 
 ]
 
-DevToolsModules(
+DebuggerModules(
     'setInScopeLines.js',
 )

@@ -1,100 +1,87 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.nodeHasChildren = nodeHasChildren;
-exports.isExactUrlMatch = isExactUrlMatch;
-exports.isPathDirectory = isPathDirectory;
-exports.isDirectory = isDirectory;
-exports.getSourceFromNode = getSourceFromNode;
-exports.isSource = isSource;
-exports.getFileExtension = getFileExtension;
-exports.isNotJavaScript = isNotJavaScript;
-exports.isInvalidUrl = isInvalidUrl;
-exports.partIsFile = partIsFile;
-exports.createDirectoryNode = createDirectoryNode;
-exports.createSourceNode = createSourceNode;
-exports.createParentMap = createParentMap;
-exports.getRelativePath = getRelativePath;
-
-var _url = require("../../utils/url");
-
-var _source = require("../source");
-
-var _getURL = require("./getURL");
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
+
+import { parse } from "../../utils/url";
+
+import type { TreeNode, TreeSource, TreeDirectory, ParentMap } from "./types";
+import type { Source } from "../../types";
+import { isPretty } from "../source";
+import { getURL } from "./getURL";
 const IGNORED_URLS = ["debugger eval code", "XStringBundle"];
 
-function nodeHasChildren(item) {
+export function nodeHasChildren(item: TreeNode): boolean {
   return Array.isArray(item.contents) && item.type === "directory";
 }
 
-function isExactUrlMatch(pathPart, debuggeeUrl) {
+export function isExactUrlMatch(pathPart: string, debuggeeUrl: string) {
   // compare to hostname with an optional 'www.' prefix
-  const {
-    host
-  } = (0, _url.parse)(debuggeeUrl);
-
+  const { host } = parse(debuggeeUrl);
   if (!host) {
     return false;
   }
-
   return host.replace(/^www\./, "") === pathPart.replace(/^www\./, "");
 }
 
-function isPathDirectory(path) {
+export function isPathDirectory(path: string) {
   // Assume that all urls point to files except when they end with '/'
   // Or directory node has children
   const parts = path.split("/").filter(p => p !== "");
   return parts.length === 0 || path.slice(-1) === "/";
 }
 
-function isDirectory(item) {
-  return (isPathDirectory(item.path) || item.type === "directory") && item.name != "(index)";
+export function isDirectory(item: TreeNode) {
+  return (
+    (isPathDirectory(item.path) || item.type === "directory") &&
+    item.name != "(index)"
+  );
 }
 
-function getSourceFromNode(item) {
-  const {
-    contents
-  } = item;
-
+export function getSourceFromNode(item: TreeNode): ?Source {
+  const { contents } = item;
   if (!isDirectory(item) && !Array.isArray(contents)) {
     return contents;
   }
 }
 
-function isSource(item) {
+export function isSource(item: TreeNode) {
   return item.type === "source";
 }
 
-function getFileExtension(source) {
-  const parsedUrl = (0, _getURL.getURL)(source).path;
-
+export function getFileExtension(source: Source): string {
+  const parsedUrl = getURL(source).path;
   if (!parsedUrl) {
     return "";
   }
-
   return parsedUrl.split(".").pop();
 }
 
-function isNotJavaScript(source) {
+export function isNotJavaScript(source: Source): boolean {
   return ["css", "svg", "png"].includes(getFileExtension(source));
 }
 
-function isInvalidUrl(url, source) {
-  return IGNORED_URLS.indexOf(url) != -1 || !source.url || !url.group || (0, _source.isPretty)(source) || isNotJavaScript(source);
+export function isInvalidUrl(url: Object, source: Source) {
+  return (
+    IGNORED_URLS.indexOf(url) != -1 ||
+    !source.url ||
+    !url.group ||
+    isPretty(source) ||
+    isNotJavaScript(source)
+  );
 }
 
-function partIsFile(index, parts, url) {
+export function partIsFile(index: number, parts: Array<string>, url: Object) {
   const isLastPart = index === parts.length - 1;
   return !isDirectory(url) && isLastPart;
 }
 
-function createDirectoryNode(name, path, contents) {
+export function createDirectoryNode(
+  name: string,
+  path: string,
+  contents: TreeNode[]
+): TreeDirectory {
   return {
     type: "directory",
     name,
@@ -103,7 +90,11 @@ function createDirectoryNode(name, path, contents) {
   };
 }
 
-function createSourceNode(name, path, contents) {
+export function createSourceNode(
+  name: string,
+  path: string,
+  contents: Source
+): TreeSource {
   return {
     type: "source",
     name,
@@ -112,14 +103,13 @@ function createSourceNode(name, path, contents) {
   };
 }
 
-function createParentMap(tree) {
+export function createParentMap(tree: TreeNode): ParentMap {
   const map = new WeakMap();
 
   function _traverse(subtree) {
     if (subtree.type === "directory") {
       for (const child of subtree.contents) {
         map.set(child, subtree);
-
         _traverse(child);
       }
     }
@@ -134,15 +124,11 @@ function createParentMap(tree) {
   return map;
 }
 
-function getRelativePath(url) {
-  const {
-    pathname
-  } = (0, _url.parse)(url);
-
+export function getRelativePath(url: string) {
+  const { pathname } = parse(url);
   if (!pathname) {
     return url;
   }
-
   const path = pathname.split("/");
   path.shift();
   return path.join("/");

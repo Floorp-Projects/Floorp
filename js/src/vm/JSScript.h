@@ -2369,6 +2369,7 @@ class JSScript : public js::gc::TenuredCell
     void destroyScriptCounts();
     void destroyScriptName();
     void clearHasScriptCounts();
+    void resetScriptCounts();
 
     jsbytecode* main() const {
         return code() + mainOffset();

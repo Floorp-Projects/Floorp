@@ -1,14 +1,8 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.waitUntilService = waitUntilService;
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
 /* global window */
 
 /**
@@ -31,22 +25,21 @@ exports.waitUntilService = waitUntilService;
  * }
  * ```
  */
-const NAME = exports.NAME = "@@service/waitUntil";
+export const NAME = "@@service/waitUntil";
+import type { ThunkArgs } from "../../types";
 
-function waitUntilService({
-  dispatch,
-  getState
-}) {
+export function waitUntilService({ dispatch, getState }: ThunkArgs) {
   let pending = [];
 
   function checkPending(action) {
     const readyRequests = [];
-    const stillPending = []; // Find the pending requests whose predicates are satisfied with
+    const stillPending = [];
+
+    // Find the pending requests whose predicates are satisfied with
     // this action. Wait to run the requests until after we update the
     // pending queue because the request handler may synchronously
     // dispatch again and run this service (that use case is
     // completely valid).
-
     for (const request of pending) {
       if (request.predicate(action)) {
         readyRequests.push(request);
@@ -56,18 +49,16 @@ function waitUntilService({
     }
 
     pending = stillPending;
-
     for (const request of readyRequests) {
       request.run(dispatch, getState, action);
     }
   }
 
-  return next => action => {
+  return (next: Function) => (action: Object) => {
     if (action.type === NAME) {
       pending.push(action);
       return null;
     }
-
     const result = next(action);
     checkPending(action);
     return result;

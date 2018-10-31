@@ -1,80 +1,59 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _react = require("devtools/client/shared/vendor/react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactRedux = require("devtools/client/shared/vendor/react-redux");
-
-var _actions = require("../../actions/index");
-
-var _actions2 = _interopRequireDefault(_actions);
-
-var _firefox = require("../../client/firefox");
-
-var _selectors = require("../../selectors/index");
-
-var _devtoolsReps = require("devtools/client/shared/components/reps/reps.js");
-
-var _preview = require("../../utils/preview");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
+import React, { PureComponent } from "react";
+import { connect } from "react-redux";
+import actions from "../../actions";
+
+import { createObjectClient } from "../../client/firefox";
+import { getSelectedFrame, getAllPopupObjectProperties } from "../../selectors";
+
+import { objectInspector } from "devtools-reps";
+import { isReactComponent } from "../../utils/preview";
+
+import type { Frame } from "../../types";
+
 const {
   component: ObjectInspector,
   utils: {
     createNode,
     getChildren,
-    loadProperties: {
-      loadItemProperties
-    }
+    loadProperties: { loadItemProperties }
   }
-} = _devtoolsReps.objectInspector;
+} = objectInspector;
 
-class FrameworkComponent extends _react.PureComponent {
+type Props = {
+  selectedFrame: Frame,
+  popupObjectProperties: Object,
+  setPopupObjectProperties: (Object, Object) => void
+};
+
+class FrameworkComponent extends PureComponent<Props> {
   async componentWillMount() {
     const expression = "this;";
-    const {
-      selectedFrame,
-      setPopupObjectProperties
-    } = this.props;
+    const { selectedFrame, setPopupObjectProperties } = this.props;
     const value = selectedFrame.this;
-    const root = createNode({
-      name: expression,
-      contents: {
-        value
-      }
-    });
-    const properties = await loadItemProperties(root, _firefox.createObjectClient);
 
+    const root = createNode({ name: expression, contents: { value } });
+    const properties = await loadItemProperties(root, createObjectClient);
     if (properties) {
       setPopupObjectProperties(value, properties);
     }
   }
 
   renderReactComponent() {
-    const {
-      selectedFrame,
-      popupObjectProperties
-    } = this.props;
+    const { selectedFrame, popupObjectProperties } = this.props;
     const expression = "this;";
     const value = selectedFrame.this;
     const root = {
       name: expression,
       path: expression,
-      contents: {
-        value
-      }
+      contents: { value }
     };
-    const loadedRootProperties = popupObjectProperties[value.actor];
 
+    const loadedRootProperties = popupObjectProperties[value.actor];
     if (!loadedRootProperties) {
       return null;
     }
@@ -83,39 +62,42 @@ class FrameworkComponent extends _react.PureComponent {
       item: root,
       loadedProperties: new Map([[root.path, loadedRootProperties]])
     });
+
     roots = roots.filter(r => ["state", "props"].includes(r.name));
-    return _react2.default.createElement("div", {
-      className: "pane framework-component"
-    }, _react2.default.createElement(ObjectInspector, {
-      roots: roots,
-      autoExpandAll: false,
-      autoExpandDepth: 0,
-      disableWrap: true,
-      focusable: false,
-      dimTopLevelWindow: true,
-      createObjectClient: grip => (0, _firefox.createObjectClient)(grip)
-    }));
+
+    return (
+      <div className="pane framework-component">
+        <ObjectInspector
+          roots={roots}
+          autoExpandAll={false}
+          autoExpandDepth={0}
+          disableWrap={true}
+          focusable={false}
+          dimTopLevelWindow={true}
+          createObjectClient={grip => createObjectClient(grip)}
+        />
+      </div>
+    );
   }
 
   render() {
-    const {
-      selectedFrame
-    } = this.props;
-
-    if (selectedFrame && (0, _preview.isReactComponent)(selectedFrame.this)) {
+    const { selectedFrame } = this.props;
+    if (selectedFrame && isReactComponent(selectedFrame.this)) {
       return this.renderReactComponent();
     }
 
     return null;
   }
-
 }
 
 const mapStateToProps = state => ({
-  selectedFrame: (0, _selectors.getSelectedFrame)(state),
-  popupObjectProperties: (0, _selectors.getAllPopupObjectProperties)(state)
+  selectedFrame: getSelectedFrame(state),
+  popupObjectProperties: getAllPopupObjectProperties(state)
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, {
-  setPopupObjectProperties: _actions2.default.setPopupObjectProperties
-})(FrameworkComponent);
+export default connect(
+  mapStateToProps,
+  {
+    setPopupObjectProperties: actions.setPopupObjectProperties
+  }
+)(FrameworkComponent);

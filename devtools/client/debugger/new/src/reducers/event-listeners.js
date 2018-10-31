@@ -1,10 +1,3 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getEventListeners = getEventListeners;
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -13,6 +6,7 @@ exports.getEventListeners = getEventListeners;
  * Event listeners reducer
  * @module reducers/event-listeners
  */
+
 const initialEventListenersState = {
   activeEventNames: [],
   listeners: [],
@@ -22,10 +16,9 @@ const initialEventListenersState = {
 function update(state = initialEventListenersState, action, emit) {
   switch (action.type) {
     case "UPDATE_EVENT_BREAKPOINTS":
-      state.activeEventNames = action.eventNames; // emit("activeEventNames", state.activeEventNames);
-
+      state.activeEventNames = action.eventNames;
+      // emit("activeEventNames", state.activeEventNames);
       break;
-
     case "FETCH_EVENT_LISTENERS":
       if (action.status === "begin") {
         state.fetchingListeners = true;
@@ -33,9 +26,7 @@ function update(state = initialEventListenersState, action, emit) {
         state.fetchingListeners = false;
         state.listeners = action.listeners;
       }
-
       break;
-
     case "NAVIGATE":
       return initialEventListenersState;
   }
@@ -43,8 +34,8 @@ function update(state = initialEventListenersState, action, emit) {
   return state;
 }
 
-function getEventListeners(state) {
+export function getEventListeners(state) {
   return state.eventListeners.listeners;
 }
 
-exports.default = update;
+export default update;

@@ -1,22 +1,3 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.createQuickOpenState = undefined;
-exports.default = update;
-exports.getQuickOpenEnabled = getQuickOpenEnabled;
-exports.getQuickOpenQuery = getQuickOpenQuery;
-exports.getQuickOpenType = getQuickOpenType;
-
-var _makeRecord = require("../utils/makeRecord");
-
-var _makeRecord2 = _interopRequireDefault(_makeRecord);
-
-var _quickOpen = require("../utils/quick-open");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -25,47 +6,69 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * Quick Open reducer
  * @module reducers/quick-open
  */
-const createQuickOpenState = exports.createQuickOpenState = (0, _makeRecord2.default)({
+
+import makeRecord from "../utils/makeRecord";
+import { parseQuickOpenQuery } from "../utils/quick-open";
+import type { Action } from "../actions/types";
+import type { Record } from "../utils/makeRecord";
+
+export type QuickOpenType =
+  | "sources"
+  | "functions"
+  | "variables"
+  | "goto"
+  | "gotoSource";
+
+type QuickOpenState = {
+  enabled: boolean,
+  query: string,
+  searchType: QuickOpenType
+};
+
+export const createQuickOpenState = makeRecord({
   enabled: false,
   query: "",
   searchType: "sources"
 });
 
-function update(state = createQuickOpenState(), action) {
+export default function update(
+  state: Record<QuickOpenState> = createQuickOpenState(),
+  action: Action
+): Record<QuickOpenState> {
   switch (action.type) {
     case "OPEN_QUICK_OPEN":
       if (action.query != null) {
         return state.merge({
           enabled: true,
           query: action.query,
-          searchType: (0, _quickOpen.parseQuickOpenQuery)(action.query)
+          searchType: parseQuickOpenQuery(action.query)
         });
       }
-
       return state.set("enabled", true);
-
     case "CLOSE_QUICK_OPEN":
       return createQuickOpenState();
-
     case "SET_QUICK_OPEN_QUERY":
       return state.merge({
         query: action.query,
-        searchType: (0, _quickOpen.parseQuickOpenQuery)(action.query)
+        searchType: parseQuickOpenQuery(action.query)
       });
-
     default:
       return state;
   }
 }
 
-function getQuickOpenEnabled(state) {
+type OuterState = {
+  quickOpen: Record<QuickOpenState>
+};
+
+export function getQuickOpenEnabled(state: OuterState): boolean {
   return state.quickOpen.get("enabled");
 }
 
-function getQuickOpenQuery(state) {
+export function getQuickOpenQuery(state: OuterState) {
   return state.quickOpen.get("query");
 }
 
-function getQuickOpenType(state) {
+export function getQuickOpenType(state: OuterState): QuickOpenType {
   return state.quickOpen.get("searchType");
 }
