@@ -28,6 +28,12 @@ include = [
   "StyleDisplay",
   "StyleDisplayMode",
   "StyleFillRule",
-  "StylePathCommand"
+  "StylePathCommand",
+
+  "Appearance",
+  "Display",
+  "DisplayMode",
+  "FillRule",
+  "PathCommand"
 ]
 item_types = ["enums", "structs", "typedefs"]
