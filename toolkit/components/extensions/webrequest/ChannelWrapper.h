@@ -30,7 +30,7 @@
 #include "nsIThreadRetargetableStreamListener.h"
 #include "nsPointerHashKeys.h"
 #include "nsInterfaceHashtable.h"
-#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsWrapperCache.h"
 
 #define NS_CHANNELWRAPPER_IID \

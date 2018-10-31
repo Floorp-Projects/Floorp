@@ -13,7 +13,6 @@
 #include "nsCOMPtr.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsInterfaceHashtable.h"
-#include "nsWeakReference.h"
 #include "nsXBLDocumentInfo.h"
 #include "nsXBLProtoImpl.h"
 #include "nsXBLProtoImplMethod.h"

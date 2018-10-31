@@ -18,7 +18,6 @@
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "nsIDocument.h"
-#include "nsIWeakReference.h"
 #include "mozilla/AbstractThread.h"
 #include "nsClassHashtable.h"
 #include "nsISupportsImpl.h"

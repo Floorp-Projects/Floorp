@@ -35,7 +35,7 @@
 
 #include "mozilla/BasePrincipal.h"
 #include "nsTArray.h"
-#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 
 class nsWebBrowserInitInfo
 {

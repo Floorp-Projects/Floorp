@@ -26,7 +26,6 @@
 #include "nsITimer.h"
 #include "nsIZipWriter.h"
 #include "nsIZipReader.h"
-#include "nsWeakReference.h"
 #include "nsZipArchive.h"
 #include "mozilla/Omnijar.h"
 #include "prenv.h"

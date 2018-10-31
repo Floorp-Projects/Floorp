@@ -141,7 +141,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 
-#include "nsIWeakReferenceUtils.h"
 #include "nsWeakReference.h"
 
 #include "nsArrayEnumerator.h"

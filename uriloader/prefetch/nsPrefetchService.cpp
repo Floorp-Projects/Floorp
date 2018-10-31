@@ -95,7 +95,7 @@ nsPrefetchNode::nsPrefetchNode(nsPrefetchService *aService,
     , mBytesRead(0)
     , mShouldFireLoadEvent(false)
 {
-    nsCOMPtr<nsIWeakReference> source = do_GetWeakReference(aSource);
+    nsWeakPtr source = do_GetWeakReference(aSource);
     mSources.AppendElement(source);
 }
 
@@ -747,7 +747,7 @@ nsPrefetchService::Preload(nsIURI *aURI,
         if ((mCurrentNodes[i]->mPolicyType == aPolicyType) &&
             NS_SUCCEEDED(mCurrentNodes[i]->mURI->Equals(aURI, &equals)) &&
             equals) {
-            nsCOMPtr<nsIWeakReference> source = do_GetWeakReference(aSource);
+            nsWeakPtr source = do_GetWeakReference(aSource);
             if (mCurrentNodes[i]->mSources.IndexOf(source) ==
                 mCurrentNodes[i]->mSources.NoIndex) {
                 LOG(("URL is already being preloaded, add a new reference "
@@ -831,7 +831,7 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
         bool equals;
         if (NS_SUCCEEDED(mCurrentNodes[i]->mURI->Equals(aURI, &equals)) &&
             equals) {
-            nsCOMPtr<nsIWeakReference> source = do_GetWeakReference(aSource);
+            nsWeakPtr source = do_GetWeakReference(aSource);
             if (mCurrentNodes[i]->mSources.IndexOf(source) ==
                 mCurrentNodes[i]->mSources.NoIndex) {
                 LOG(("URL is already being prefetched, add a new reference "
@@ -853,7 +853,7 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
         bool equals;
         RefPtr<nsPrefetchNode> node = nodeIt->get();
         if (NS_SUCCEEDED(node->mURI->Equals(aURI, &equals)) && equals) {
-            nsCOMPtr<nsIWeakReference> source = do_GetWeakReference(aSource);
+            nsWeakPtr source = do_GetWeakReference(aSource);
             if (node->mSources.IndexOf(source) ==
                 node->mSources.NoIndex) {
                 LOG(("URL is already being prefetched, add a new reference "
@@ -900,7 +900,7 @@ nsPrefetchService::CancelPrefetchPreloadURI(nsIURI* aURI,
         bool equals;
         if (NS_SUCCEEDED(mCurrentNodes[i]->mURI->Equals(aURI, &equals)) &&
             equals) {
-            nsCOMPtr<nsIWeakReference> source = do_GetWeakReference(aSource);
+            nsWeakPtr source = do_GetWeakReference(aSource);
             if (mCurrentNodes[i]->mSources.IndexOf(source) !=
                 mCurrentNodes[i]->mSources.NoIndex) {
                 mCurrentNodes[i]->mSources.RemoveElement(source);
@@ -922,7 +922,7 @@ nsPrefetchService::CancelPrefetchPreloadURI(nsIURI* aURI,
         bool equals;
         RefPtr<nsPrefetchNode> node = nodeIt->get();
         if (NS_SUCCEEDED(node->mURI->Equals(aURI, &equals)) && equals) {
-            nsCOMPtr<nsIWeakReference> source = do_GetWeakReference(aSource);
+            nsWeakPtr source = do_GetWeakReference(aSource);
             if (node->mSources.IndexOf(source) !=
                 node->mSources.NoIndex) {
 

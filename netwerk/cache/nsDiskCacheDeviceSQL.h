@@ -18,7 +18,7 @@
 #include "nsCOMArray.h"
 #include "nsInterfaceHashtable.h"
 #include "nsClassHashtable.h"
-#include "nsWeakReference.h"
+#include "nsIWeakReference.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 

@@ -8,7 +8,7 @@
 
 #include "txXMLEventHandler.h"
 #include "nsCOMPtr.h"
-#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 #include "txOutputFormat.h"
 
 class nsITransformObserver;
