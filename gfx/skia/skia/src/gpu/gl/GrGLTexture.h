@@ -24,7 +24,6 @@ public:
         GrGLenum fWrapT;
         GrGLenum fMaxMipMapLevel;
         GrGLenum fSwizzleRGBA[4];
-        GrGLenum fSRGBDecode;
         void invalidate() { memset(this, 0xff, sizeof(TexParams)); }
     };
 
@@ -32,6 +31,9 @@ public:
         GrGLTextureInfo             fInfo;
         GrBackendObjectOwnership    fOwnership;
     };
+
+    static GrTextureType TextureTypeFromTarget(GrGLenum textureTarget);
+
     GrGLTexture(GrGLGpu*, SkBudgeted, const GrSurfaceDesc&, const IDDesc&, GrMipMapsStatus);
 
     ~GrGLTexture() override {
@@ -39,7 +41,6 @@ public:
         SkASSERT(!fReleaseHelper);
     }
 
-    GrBackendObject getTextureHandle() const override;
     GrBackendTexture getBackendTexture() const override;
 
     void textureParamsModified() override { fTexParams.invalidate(); }
@@ -60,15 +61,17 @@ public:
         fTexParamsTimestamp = timestamp;
     }
 
-    GrGLuint textureID() const { return fInfo.fID; }
+    GrGLuint textureID() const { return fID; }
 
-    GrGLenum target() const { return fInfo.fTarget; }
+    GrGLenum target() const;
 
     bool hasBaseLevelBeenBoundToFBO() const { return fBaseLevelHasBeenBoundToFBO; }
     void baseLevelWasBoundToFBO() { fBaseLevelHasBeenBoundToFBO = true; }
 
     static sk_sp<GrGLTexture> MakeWrapped(GrGLGpu*, const GrSurfaceDesc&, GrMipMapsStatus,
                                           const IDDesc&);
+
+    void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const override;
 
 protected:
     // Constructor for subclasses.
@@ -82,8 +85,6 @@ protected:
 
     void onAbandon() override;
     void onRelease() override;
-    void setMemoryBacking(SkTraceMemoryDump* traceMemoryDump,
-                          const SkString& dumpName) const override;
 
     bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) override;
 
@@ -98,9 +99,8 @@ private:
 
     TexParams                       fTexParams;
     GrGpu::ResetTimestamp           fTexParamsTimestamp;
-    // Holds the texture target and ID. A pointer to this may be shared to external clients for
-    // direct interaction with the GL object.
-    GrGLTextureInfo                 fInfo;
+    GrGLuint                        fID;
+    GrGLenum                        fFormat;
     GrBackendObjectOwnership        fTextureIDOwnership;
     bool                            fBaseLevelHasBeenBoundToFBO = false;
 

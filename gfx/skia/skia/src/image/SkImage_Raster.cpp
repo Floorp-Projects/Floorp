@@ -9,8 +9,6 @@
 #include "SkBitmap.h"
 #include "SkBitmapProcShader.h"
 #include "SkCanvas.h"
-#include "SkColorSpaceXform_Base.h"
-#include "SkColorSpaceXformPriv.h"
 #include "SkColorTable.h"
 #include "SkConvertPixels.h"
 #include "SkData.h"
@@ -37,7 +35,7 @@ static bool is_not_subset(const SkBitmap& bm) {
 
 class SkImage_Raster : public SkImage_Base {
 public:
-    static bool ValidArgs(const Info& info, size_t rowBytes, size_t* minSize) {
+    static bool ValidArgs(const SkImageInfo& info, size_t rowBytes, size_t* minSize) {
         const int maxDimension = SK_MaxS32 >> 2;
 
         if (info.width() <= 0 || info.height() <= 0) {
@@ -78,9 +76,6 @@ public:
     SkImageInfo onImageInfo() const override {
         return fBitmap.info();
     }
-    SkAlphaType onAlphaType() const override {
-        return fBitmap.alphaType();
-    }
 
     bool onReadPixels(const SkImageInfo&, void*, size_t, int srcX, int srcY, CachingHint) const override;
     bool onPeekPixels(SkPixmap*) const override;
@@ -108,8 +103,7 @@ public:
         SkASSERT(bitmapMayBeMutable || fBitmap.isImmutable());
     }
 
-    sk_sp<SkImage> onMakeColorSpace(sk_sp<SkColorSpace>, SkColorType,
-                                    SkTransferFunctionBehavior) const override;
+    sk_sp<SkImage> onMakeColorSpace(sk_sp<SkColorSpace>) const override;
 
     bool onIsValid(GrContext* context) const override { return true; }
 
@@ -138,7 +132,8 @@ static void release_data(void* addr, void* context) {
     data->unref();
 }
 
-SkImage_Raster::SkImage_Raster(const Info& info, sk_sp<SkData> data, size_t rowBytes, uint32_t id)
+SkImage_Raster::SkImage_Raster(const SkImageInfo& info, sk_sp<SkData> data, size_t rowBytes,
+                               uint32_t id)
     : INHERITED(info.width(), info.height(), id)
 {
     void* addr = const_cast<void*>(data->data());
@@ -178,16 +173,12 @@ sk_sp<GrTextureProxy> SkImage_Raster::asTextureProxyRef(GrContext* context,
         return nullptr;
     }
 
-    if (texColorSpace) {
-        *texColorSpace = sk_ref_sp(fBitmap.colorSpace());
-    }
-
     uint32_t uniqueID;
     sk_sp<GrTextureProxy> tex = this->refPinnedTextureProxy(&uniqueID);
     if (tex) {
         GrTextureAdjuster adjuster(context, fPinnedProxy, fBitmap.alphaType(), fPinnedUniqueID,
                                    fBitmap.colorSpace());
-        return adjuster.refTextureProxySafeForParams(params, scaleAdjust);
+        return adjuster.refTextureProxyForParams(params, dstColorSpace, texColorSpace, scaleAdjust);
     }
 
     return GrRefCachedBitmapTextureProxy(context, fBitmap, params, scaleAdjust);
@@ -316,7 +307,7 @@ sk_sp<SkImage> SkMakeImageFromRasterBitmapPriv(const SkBitmap& bm, SkCopyPixelsM
 }
 
 sk_sp<SkImage> SkMakeImageFromRasterBitmap(const SkBitmap& bm, SkCopyPixelsMode cpm) {
-    if (!SkImageInfoIsValidAllowNumericalCS(bm.info()) || bm.rowBytes() < bm.info().minRowBytes()) {
+    if (!SkImageInfoIsValid(bm.info()) || bm.rowBytes() < bm.info().minRowBytes()) {
         return nullptr;
     }
 
@@ -343,9 +334,7 @@ bool SkImage_Raster::onAsLegacyBitmap(SkBitmap* bitmap) const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-sk_sp<SkImage> SkImage_Raster::onMakeColorSpace(sk_sp<SkColorSpace> target,
-                                                SkColorType targetColorType,
-                                                SkTransferFunctionBehavior premulBehavior) const {
+sk_sp<SkImage> SkImage_Raster::onMakeColorSpace(sk_sp<SkColorSpace> target) const {
     SkPixmap src;
     SkAssertResult(fBitmap.peekPixels(&src));
 
@@ -358,11 +347,14 @@ sk_sp<SkImage> SkImage_Raster::onMakeColorSpace(sk_sp<SkColorSpace> target,
         src.setColorSpace(SkColorSpace::MakeSRGB());
     }
 
-    SkImageInfo dstInfo = fBitmap.info().makeColorType(targetColorType).makeColorSpace(target);
+    SkImageInfo dstInfo = fBitmap.info().makeColorSpace(target);
+#if defined(SK_LEGACY_MAKE_COLOR_SPACE_IMPL)
+    dstInfo = dstInfo.makeColorType(kN32_SkColorType);
+#endif
     SkBitmap dst;
     dst.allocPixels(dstInfo);
 
-    SkAssertResult(dst.writePixels(src, 0, 0, premulBehavior));
+    SkAssertResult(dst.writePixels(src, 0, 0));
     dst.setImmutable();
     return SkImage::MakeFromBitmap(dst);
 }

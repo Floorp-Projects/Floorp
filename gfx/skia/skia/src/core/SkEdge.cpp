@@ -5,10 +5,13 @@
  * found in the LICENSE file.
  */
 
-
 #include "SkEdge.h"
+
 #include "SkFDot6.h"
 #include "SkMathPriv.h"
+#include "SkTo.h"
+
+#include <utility>
 
 /*
     In setLine, setQuadratic, setCubic, the first thing we do is to convert
@@ -52,8 +55,9 @@ int SkEdge::setLine(const SkPoint& p0, const SkPoint& p1, const SkIRect* clip,
     int winding = 1;
 
     if (y0 > y1) {
-        SkTSwap(x0, x1);
-        SkTSwap(y0, y1);
+        using std::swap;
+        swap(x0, x1);
+        swap(y0, y1);
         winding = -1;
     }
 
@@ -203,8 +207,9 @@ bool SkQuadraticEdge::setQuadraticWithoutUpdate(const SkPoint pts[3], int shift)
     int winding = 1;
     if (y0 > y2)
     {
-        SkTSwap(x0, x2);
-        SkTSwap(y0, y2);
+        using std::swap;
+        swap(x0, x2);
+        swap(y0, y2);
         winding = -1;
     }
     SkASSERT(y0 <= y1 && y1 <= y2);
@@ -376,10 +381,11 @@ bool SkCubicEdge::setCubicWithoutUpdate(const SkPoint pts[4], int shift, bool so
     int winding = 1;
     if (sortY && y0 > y3)
     {
-        SkTSwap(x0, x3);
-        SkTSwap(x1, x2);
-        SkTSwap(y0, y3);
-        SkTSwap(y1, y2);
+        using std::swap;
+        swap(x0, x3);
+        swap(x1, x2);
+        swap(y0, y3);
+        swap(y1, y2);
         winding = -1;
     }
 

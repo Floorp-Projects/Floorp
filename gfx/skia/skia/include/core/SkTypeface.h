@@ -8,14 +8,16 @@
 #ifndef SkTypeface_DEFINED
 #define SkTypeface_DEFINED
 
-#include "../private/SkBitmaskEnum.h"
+#include "../private/SkNoncopyable.h"
 #include "../private/SkOnce.h"
 #include "../private/SkWeakRefCnt.h"
 #include "SkFontArguments.h"
+#include "SkFontParameters.h"
 #include "SkFontStyle.h"
 #include "SkRect.h"
 #include "SkString.h"
 
+class SkData;
 class SkDescriptor;
 class SkFontData;
 class SkFontDescriptor;
@@ -72,6 +74,20 @@ public:
     int getVariationDesignPosition(SkFontArguments::VariationPosition::Coordinate coordinates[],
                                    int coordinateCount) const;
 
+    /** Copy into 'parameters' (allocated by the caller) the design variation parameters.
+     *
+     *  @param parameters the buffer into which to write the design variation parameters.
+     *  @param coordinateCount the number of entries available through 'parameters'.
+     *
+     *  @return The number of axes, or -1 if there is an error.
+     *  If 'parameters != nullptr' and 'parameterCount >= numAxes' then 'parameters' will be
+     *  filled with the variation parameters describing the position of this typeface in design
+     *  variation space. It is possible the number of axes can be retrieved but actual parameters
+     *  cannot.
+     */
+    int getVariationDesignParameters(SkFontParameters::Variation::Axis parameters[],
+                                     int parameterCount) const;
+
     /** Return a 32bit value for this typeface, unique for the underlying font
         data. Will never return 0.
      */
@@ -111,17 +127,47 @@ public:
         not a valid font file, returns nullptr. Ownership of the stream is
         transferred, so the caller must not reference it again.
     */
-    static sk_sp<SkTypeface> MakeFromStream(SkStreamAsset* stream, int index = 0);
+    static sk_sp<SkTypeface> MakeFromStream(std::unique_ptr<SkStreamAsset> stream, int index = 0);
+
+    /** Return a new typeface given a SkData. If the data is null, or is not a valid font file,
+     *  returns nullptr.
+     */
+    static sk_sp<SkTypeface> MakeFromData(sk_sp<SkData>, int index = 0);
 
     /** Return a new typeface given font data and configuration. If the data
         is not valid font data, returns nullptr.
     */
     static sk_sp<SkTypeface> MakeFromFontData(std::unique_ptr<SkFontData>);
 
+    /** Return a new typeface based on this typeface but parameterized as specified in the
+        SkFontArguments. If the SkFontArguments does not supply an argument for a parameter
+        in the font then the value from this typeface will be used as the value for that
+        argument. If the cloned typeface would be exaclty the same as this typeface then
+        this typeface may be ref'ed and returned. May return nullptr on failure.
+    */
+    sk_sp<SkTypeface> makeClone(const SkFontArguments&) const;
+
+    /**
+     *  A typeface can serialize just a descriptor (names, etc.), or it can also include the
+     *  actual font data (which can be large). This enum controls how serialize() decides what
+     *  to serialize.
+     */
+    enum class SerializeBehavior {
+        kDoIncludeData,
+        kDontIncludeData,
+        kIncludeDataIfLocal,
+    };
+
     /** Write a unique signature to a stream, sufficient to reconstruct a
         typeface referencing the same font when Deserialize is called.
      */
-    void serialize(SkWStream*) const;
+    void serialize(SkWStream*, SerializeBehavior = SerializeBehavior::kIncludeDataIfLocal) const;
+
+    /**
+     *  Same as serialize(SkWStream*, ...) but returns the serialized data in SkData, instead of
+     *  writing it to a stream.
+     */
+    sk_sp<SkData> serialize(SerializeBehavior = SerializeBehavior::kIncludeDataIfLocal) const;
 
     /** Given the data previously written by serialize(), return a new instance
         of a typeface referring to the same font. If that font is not available,
@@ -308,6 +354,8 @@ protected:
     SkTypeface(const SkFontStyle& style, bool isFixedPitch = false);
     virtual ~SkTypeface();
 
+    virtual sk_sp<SkTypeface> onMakeClone(const SkFontArguments&) const;
+
     /** Sets the fixedPitch bit. If used, must be called in the constructor. */
     void setIsFixedPitch(bool isFixedPitch) { fIsFixedPitch = isFixedPitch; }
     /** Sets the font style. If used, must be called in the constructor. */
@@ -316,9 +364,19 @@ protected:
     virtual SkScalerContext* onCreateScalerContext(const SkScalerContextEffects&,
                                                    const SkDescriptor*) const = 0;
     virtual void onFilterRec(SkScalerContextRec*) const = 0;
+    friend class SkScalerContext;  // onFilterRec
 
     //  Subclasses *must* override this method to work with the PDF backend.
     virtual std::unique_ptr<SkAdvancedTypefaceMetrics> onGetAdvancedMetrics() const;
+    // For type1 postscript fonts only, set the glyph names for each glyph.
+    // destination array is non-null, and points to an array of size this->countGlyphs().
+    // Backends that do not suport type1 fonts should not override.
+    virtual void getPostScriptGlyphNames(SkString*) const {}
+
+    // The mapping from glyph to Unicode; array indices are glyph ids.
+    // For each glyph, give the default Unicode value, if it exists.
+    // dstArray is non-null, and points to an array of size this->countGlyphs().
+    virtual void getGlyphToUnicodeMap(SkUnichar* dstArray) const;
 
     virtual SkStreamAsset* onOpenStream(int* ttcIndex) const = 0;
     // TODO: make pure virtual.
@@ -327,6 +385,9 @@ protected:
     virtual int onGetVariationDesignPosition(
         SkFontArguments::VariationPosition::Coordinate coordinates[],
         int coordinateCount) const = 0;
+
+    virtual int onGetVariationDesignParameters(
+        SkFontParameters::Variation::Axis parameters[], int parameterCount) const;
 
     virtual void onGetFontDescriptor(SkFontDescriptor*, bool* isLocal) const = 0;
 
@@ -371,10 +432,7 @@ private:
     };
     static SkFontStyle FromOldStyle(Style oldStyle);
     static SkTypeface* GetDefaultTypeface(Style style = SkTypeface::kNormal);
-    friend class GrPathRendering;  // GetDefaultTypeface
-    friend class SkGlyphCache;     // GetDefaultTypeface
-    friend class SkPaint;          // GetDefaultTypeface
-    friend class SkScalerContext;  // GetDefaultTypeface
+    friend class SkPaintPriv;      // GetDefaultTypeface
 
 private:
     SkFontID            fUniqueID;

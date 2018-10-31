@@ -24,13 +24,10 @@ class GrGLSLVaryingHandler;
 class SkString;
 class GrShaderCaps;
 
-typedef SkSTArray<8, GrGLSLFragmentProcessor*, true> GrGLSLFragProcs;
-
 class GrGLSLProgramBuilder {
 public:
     using UniformHandle      = GrGLSLUniformHandler::UniformHandle;
     using SamplerHandle      = GrGLSLUniformHandler::SamplerHandle;
-    using TexelBufferHandle  = GrGLSLUniformHandler::TexelBufferHandle;
 
     virtual ~GrGLSLProgramBuilder() {}
 
@@ -52,21 +49,12 @@ public:
         return this->uniformHandler()->samplerSwizzle(handle);
     }
 
-    const GrShaderVar& texelBufferVariable(TexelBufferHandle handle) const {
-        return this->uniformHandler()->texelBufferVariable(handle);
-    }
-
-    // Handles for program uniforms (other than per-effect uniforms)
-    struct BuiltinUniformHandles {
-        UniformHandle       fRTAdjustmentUni;
-
-        // We use the render target height to provide a y-down frag coord when specifying
-        // origin_upper_left is not supported.
-        UniformHandle       fRTHeightUni;
-    };
-
-    // Used to add a uniform for the RenderTarget height (used for frag position) without mangling
+    // Used to add a uniform for the RenderTarget width (used for sk_Width) without mangling
     // the name of the uniform inside of a stage.
+    void addRTWidthUniform(const char* name);
+
+    // Used to add a uniform for the RenderTarget height (used for sk_Height and frag position)
+    // without mangling the name of the uniform inside of a stage.
     void addRTHeightUniform(const char* name);
 
     // Generates a name for a variable. The generated string will be name prefixed by the prefix
@@ -96,24 +84,23 @@ public:
     const GrPrimitiveProcessor& fPrimProc;
     GrProgramDesc*              fDesc;
 
-    BuiltinUniformHandles fUniformHandles;
+    GrGLSLBuiltinUniformHandles fUniformHandles;
 
     std::unique_ptr<GrGLSLPrimitiveProcessor> fGeometryProcessor;
     std::unique_ptr<GrGLSLXferProcessor> fXferProcessor;
-    GrGLSLFragProcs fFragmentProcessors;
+    std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fFragmentProcessors;
+    int fFragmentProcessorCnt;
 
 protected:
-    explicit GrGLSLProgramBuilder(const GrPipeline&,
-                                  const GrPrimitiveProcessor&,
-                                  GrProgramDesc*);
+    explicit GrGLSLProgramBuilder(const GrPrimitiveProcessor&, const GrPipeline&, GrProgramDesc*);
 
     void addFeature(GrShaderFlags shaders, uint32_t featureBit, const char* extensionName);
 
     bool emitAndInstallProcs();
 
-    void cleanupFragmentProcessors();
-
     void finalizeShaders();
+
+    bool fragColorIsInOut() const { return fFS.primaryColorOutputIsInOut(); }
 
 private:
     // reset is called by program creator between each processor's emit code.  It increments the
@@ -149,16 +136,11 @@ private:
                                     int index,
                                     int transformedCoordVarsIdx,
                                     const SkString& input,
-                                    SkString output);
+                                    SkString output,
+                                    SkTArray<std::unique_ptr<GrGLSLFragmentProcessor>>*);
     void emitAndInstallXferProc(const SkString& colorIn, const SkString& coverageIn);
-    void emitSamplers(const GrResourceIOProcessor& processor,
-                      SkTArray<SamplerHandle>* outTexSamplerHandles,
-                      SkTArray<TexelBufferHandle>* outTexelBufferHandles);
-    SamplerHandle emitSampler(GrSLType samplerType, GrPixelConfig, const char* name,
-                              GrShaderFlags visibility);
-    TexelBufferHandle emitTexelBuffer(GrPixelConfig, const char* name, GrShaderFlags visibility);
+    SamplerHandle emitSampler(GrTextureType, GrPixelConfig, const char* name);
     void emitFSOutputSwizzle(bool hasSecondaryOutput);
-    void updateSamplerCounts(GrShaderFlags visibility);
     bool checkSamplerCounts();
 
 #ifdef SK_DEBUG
@@ -168,9 +150,6 @@ private:
 #endif
 
     // These are used to check that we don't excede the allowable number of resources in a shader.
-    // The sampler counts include both normal texure samplers as well as texel buffers.
-    int                         fNumVertexSamplers;
-    int                         fNumGeometrySamplers;
     int                         fNumFragmentSamplers;
     SkSTArray<4, GrShaderVar>   fTransformedCoordVars;
 };

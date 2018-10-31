@@ -13,7 +13,6 @@
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
 #include "glsl/GrGLSLProgramDataManager.h"
 #include "glsl/GrGLSLUniformHandler.h"
-#include "../private/GrGLSL.h"
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -55,7 +54,7 @@ void GrGLConvexPolyEffect::emitCode(EmitArgs& args) {
                                                              "1));\n",
                                  edgeArrayName, i);
         if (GrProcessorEdgeTypeIsAA(cpe.getEdgeType())) {
-            fragBuilder->codeAppend("\t\tedge = clamp(edge, 0.0, 1.0);\n");
+            fragBuilder->codeAppend("\t\tedge = saturate(edge);\n");
         } else {
             fragBuilder->codeAppend("\t\tedge = edge >= 0.5 ? 1.0 : 0.0;\n");
         }
@@ -104,14 +103,14 @@ std::unique_ptr<GrFragmentProcessor> GrConvexPolyEffect::Make(GrClipEdgeType typ
     // skip the draw or omit the clip element.
     if (!SkPathPriv::CheapComputeFirstDirection(path, &dir)) {
         if (GrProcessorEdgeTypeIsInverseFill(type)) {
-            return GrConstColorProcessor::Make(GrColor4f::OpaqueWhite(),
+            return GrConstColorProcessor::Make(SK_PMColor4fWHITE,
                                                GrConstColorProcessor::InputMode::kModulateRGBA);
         }
         // This could use kIgnore instead of kModulateRGBA but it would trigger a debug print
         // about a coverage processor not being compatible with the alpha-as-coverage optimization.
         // We don't really care about this unlikely case so we just use kModulateRGBA to suppress
         // the print.
-        return GrConstColorProcessor::Make(GrColor4f::TransparentBlack(),
+        return GrConstColorProcessor::Make(SK_PMColor4fTRANSPARENT,
                                            GrConstColorProcessor::InputMode::kModulateRGBA);
     }
 

@@ -33,10 +33,23 @@ public:
 
     static String ParameterType(const Context& context, const Type& type, const Layout& layout);
 
+    static Layout::CType ParameterCType(const Context& context, const Type& type,
+                                        const Layout& layout);
+
     static String FieldType(const Context& context, const Type& type, const Layout& layout);
+
+    // Either the field type, or a const reference of the field type if the field type is complex.
+    static String AccessType(const Context& context, const Type& type, const Layout& layout);
 
     static String FieldName(const char* varName) {
         return String::printf("f%c%s", toupper(varName[0]), varName + 1);
+    }
+
+    static String CoordTransformName(const String& arg, int index) {
+        if (arg.size()) {
+            return HCodeGenerator::FieldName(arg.c_str()) + "CoordTransform";
+        }
+        return "fCoordTransform" + to_string(index);
     }
 
     static String GetHeader(const Program& program, ErrorReporter& errors);

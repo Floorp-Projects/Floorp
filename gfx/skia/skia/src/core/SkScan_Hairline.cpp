@@ -13,6 +13,8 @@
 #include "SkFDot6.h"
 #include "SkLineClipper.h"
 
+#include <utility>
+
 static void horiline(int x, int stopx, SkFixed fy, SkFixed dy,
                      SkBlitter* blitter) {
     SkASSERT(x < stopx);
@@ -110,8 +112,9 @@ void SkScan::HairLineRgn(const SkPoint array[], int arrayCount, const SkRegion* 
 
         if (SkAbs32(dx) > SkAbs32(dy)) { // mostly horizontal
             if (x0 > x1) {   // we want to go left-to-right
-                SkTSwap<SkFDot6>(x0, x1);
-                SkTSwap<SkFDot6>(y0, y1);
+                using std::swap;
+                swap(x0, x1);
+                swap(y0, y1);
             }
             int ix0 = SkFDot6Round(x0);
             int ix1 = SkFDot6Round(x1);
@@ -125,8 +128,9 @@ void SkScan::HairLineRgn(const SkPoint array[], int arrayCount, const SkRegion* 
             horiline(ix0, ix1, startY, slope, blitter);
         } else {              // mostly vertical
             if (y0 > y1) {   // we want to go top-to-bottom
-                SkTSwap<SkFDot6>(x0, x1);
-                SkTSwap<SkFDot6>(y0, y1);
+                using std::swap;
+                swap(x0, x1);
+                swap(y0, y1);
             }
             int iy0 = SkFDot6Round(y0);
             int iy1 = SkFDot6Round(y1);
@@ -345,6 +349,13 @@ static bool quick_cubic_niceness_check(const SkPoint pts[4]) {
            lt_90(pts[2], pts[3], pts[0]);
 }
 
+typedef SkNx<2, uint32_t> Sk2x32;
+
+static inline Sk2x32 sk2s_is_finite(const Sk2s& x) {
+    const Sk2x32 exp_mask = Sk2x32(0xFF << 23);
+    return (Sk2x32::Load(&x) & exp_mask) != exp_mask;
+}
+
 static void hair_cubic(const SkPoint pts[4], const SkRegion* clip, SkBlitter* blitter,
                        SkScan::HairRgnProc lineproc) {
     const int lines = compute_cubic_segs(pts);
@@ -368,12 +379,17 @@ static void hair_cubic(const SkPoint pts[4], const SkRegion* clip, SkBlitter* bl
     Sk2s B = coeff.fB;
     Sk2s C = coeff.fC;
     Sk2s D = coeff.fD;
+    Sk2x32 is_finite(~0);   // start out as true
     for (int i = 1; i < lines; ++i) {
         t = t + dt;
-        (((A * t + B) * t + C) * t + D).store(&tmp[i]);
+        Sk2s p = ((A * t + B) * t + C) * t + D;
+        is_finite &= sk2s_is_finite(p);
+        p.store(&tmp[i]);
     }
-    tmp[lines] = pts[3];
-    lineproc(tmp, lines + 1, clip, blitter);
+    if (is_finite.allTrue()) {
+        tmp[lines] = pts[3];
+        lineproc(tmp, lines + 1, clip, blitter);
+    } // else some point(s) are non-finite, so don't draw
 }
 
 static SkRect compute_nocheck_cubic_bounds(const SkPoint pts[4]) {

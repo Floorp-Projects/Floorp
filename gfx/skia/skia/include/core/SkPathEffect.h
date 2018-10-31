@@ -58,14 +58,13 @@ public:
      *  If this method returns true, the caller will apply (as needed) the
      *  resulting stroke-rec to dst and then draw.
      */
-    virtual bool filterPath(SkPath* dst, const SkPath& src,
-                            SkStrokeRec*, const SkRect* cullR) const = 0;
+    bool filterPath(SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect* cullR) const;
 
     /**
      *  Compute a conservative bounds for its effect, given the src bounds.
      *  The baseline implementation just assigns src to dst.
      */
-    virtual void computeFastBounds(SkRect* dst, const SkRect& src) const;
+    void computeFastBounds(SkRect* dst, const SkRect& src) const;
 
     /** \class PointData
 
@@ -112,7 +111,7 @@ public:
      *  Does applying this path effect to 'src' yield a set of points? If so,
      *  optionally return the points in 'results'.
      */
-    virtual bool asPoints(PointData* results, const SkPath& src,
+    bool asPoints(PointData* results, const SkPath& src,
                           const SkStrokeRec&, const SkMatrix&,
                           const SkRect* cullR) const;
 
@@ -143,20 +142,44 @@ public:
                                         //   mod the sum of all intervals
     };
 
-    virtual DashType asADash(DashInfo* info) const;
+    DashType asADash(DashInfo* info) const;
 
-    SK_TO_STRING_PUREVIRT()
-    SK_DEFINE_FLATTENABLE_TYPE(SkPathEffect)
+    static void InitializeFlattenables();
+
+    static SkFlattenable::Type GetFlattenableType() {
+        return kSkPathEffect_Type;
+    }
+
+    SkFlattenable::Type getFlattenableType() const override {
+        return kSkPathEffect_Type;
+    }
+
+    static sk_sp<SkPathEffect> Deserialize(const void* data, size_t size,
+                                          const SkDeserialProcs* procs = nullptr) {
+        return sk_sp<SkPathEffect>(static_cast<SkPathEffect*>(
+                                  SkFlattenable::Deserialize(
+                                  kSkPathEffect_Type, data, size, procs).release()));
+    }
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
     /// Override for subclasses as appropriate.
     virtual bool exposedInAndroidJavaAPI() const { return false; }
 #endif
 
-    SK_DECLARE_FLATTENABLE_REGISTRAR_GROUP()
-
 protected:
     SkPathEffect() {}
+
+    virtual bool onFilterPath(SkPath*, const SkPath&, SkStrokeRec*, const SkRect*) const = 0;
+    virtual SkRect onComputeFastBounds(const SkRect& src) const {
+        return src;
+    }
+    virtual bool onAsPoints(PointData*, const SkPath&, const SkStrokeRec&, const SkMatrix&,
+                            const SkRect*) const {
+        return false;
+    }
+    virtual DashType onAsADash(DashInfo*) const {
+        return kNone_DashType;
+    }
 
 private:
     // illegal

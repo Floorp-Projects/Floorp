@@ -17,25 +17,11 @@
     data members or virtual methods. */
 class GrSurfaceProxyPriv {
 public:
-    bool isInstantiated() const { return SkToBool(fProxy->fTarget); }
-
-    // This should only be called after a successful call to instantiate
-    GrSurface* peekSurface() const {
-        SkASSERT(fProxy->fTarget);
-        return fProxy->fTarget;
-    }
-
-    // If the proxy is already instantiated, return its backing GrTexture; if not,
-    // return null
-    GrTexture* peekTexture() const {
-        return fProxy->fTarget ? fProxy->fTarget->asTexture() : nullptr;
-    }
-
-    // This should only be called after a successful call to instantiate
-    GrRenderTarget* peekRenderTarget() const {
-        SkASSERT(fProxy->fTarget && fProxy->fTarget->asRenderTarget());
-        return fProxy->fTarget ? fProxy->fTarget->asRenderTarget() : nullptr;
-    }
+    // Beware! Woe betide anyone whosoever calls this method.
+    // The refs on proxies and their backing GrSurfaces shift around based on whether the proxy
+    // is instantiated or not. Additionally, the lifetime of a proxy (and a GrSurface) also
+    // depends on the read and write refs (So this method can validly return 0).
+    int32_t getProxyRefCnt() const { return fProxy->getProxyRefCnt(); }
 
     // Beware! This call is only guaranteed to tell you if the proxy in question has
     // any pending IO in its current state. It won't tell you about the IO state in the
@@ -59,7 +45,7 @@ public:
     void assign(sk_sp<GrSurface> surface) { fProxy->assign(std::move(surface)); }
 
     bool requiresNoPendingIO() const {
-        return fProxy->fFlags & GrResourceProvider::kNoPendingIO_Flag;
+        return fProxy->fSurfaceFlags & GrInternalSurfaceFlags::kNoPendingIO;
     }
 
     // Don't abuse this call!!!!!!!
@@ -74,11 +60,14 @@ public:
         return fProxy->fLazyInstantiationType;
     }
 
-    void testingOnly_setLazyInstantiationType(GrSurfaceProxy::LazyInstantiationType lazyType) {
-        fProxy->fLazyInstantiationType = lazyType;
+    bool isSafeToUninstantiate() const {
+        return SkToBool(fProxy->fTarget) &&
+               SkToBool(fProxy->fLazyInstantiateCallback) &&
+               GrSurfaceProxy::LazyInstantiationType::kUninstantiate == lazyInstantiationType();
     }
 
-    static bool AttachStencilIfNeeded(GrResourceProvider*, GrSurface*, bool needsStencil);
+    static bool SK_WARN_UNUSED_RESULT AttachStencilIfNeeded(GrResourceProvider*, GrSurface*,
+                                                            bool needsStencil);
 
 private:
     explicit GrSurfaceProxyPriv(GrSurfaceProxy* proxy) : fProxy(proxy) {}

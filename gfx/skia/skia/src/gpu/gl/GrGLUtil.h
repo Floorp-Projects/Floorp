@@ -11,6 +11,7 @@
 #include "gl/GrGLInterface.h"
 #include "GrGLDefines.h"
 #include "GrStencilSettings.h"
+#include "GrTypesPriv.h"
 
 class SkMatrix;
 
@@ -18,24 +19,26 @@ class SkMatrix;
 
 typedef uint32_t GrGLVersion;
 typedef uint32_t GrGLSLVersion;
-typedef uint32_t GrGLDriverVersion;
+typedef uint64_t GrGLDriverVersion;
 
-#define GR_GL_VER(major, minor) ((static_cast<int>(major) << 16) | \
-                                 static_cast<int>(minor))
-#define GR_GLSL_VER(major, minor) ((static_cast<int>(major) << 16) | \
-                                   static_cast<int>(minor))
-#define GR_GL_DRIVER_VER(major, minor) ((static_cast<int>(major) << 16) | \
-                                        static_cast<int>(minor))
+#define GR_GL_VER(major, minor) ((static_cast<uint32_t>(major) << 16) | \
+                                 static_cast<uint32_t>(minor))
+#define GR_GLSL_VER(major, minor) ((static_cast<uint32_t>(major) << 16) | \
+                                    static_cast<uint32_t>(minor))
+#define GR_GL_DRIVER_VER(major, minor, point) ((static_cast<uint64_t>(major) << 32) | \
+                                               (static_cast<uint64_t>(minor) << 16) | \
+                                                static_cast<uint64_t>(point))
 
 #define GR_GL_INVALID_VER GR_GL_VER(0, 0)
 #define GR_GLSL_INVALID_VER GR_GLSL_VER(0, 0)
-#define GR_GL_DRIVER_UNKNOWN_VER GR_GL_DRIVER_VER(0, 0)
+#define GR_GL_DRIVER_UNKNOWN_VER GR_GL_DRIVER_VER(0, 0, 0)
 
 /**
  * The Vendor and Renderer enum values are lazily updated as required.
  */
 enum GrGLVendor {
     kARM_GrGLVendor,
+    kGoogle_GrGLVendor,
     kImagination_GrGLVendor,
     kIntel_GrGLVendor,
     kQualcomm_GrGLVendor,
@@ -46,26 +49,32 @@ enum GrGLVendor {
 };
 
 enum GrGLRenderer {
-    kTegra2_GrGLRenderer,
-    kTegra3_GrGLRenderer,
+    kTegra_PreK1_GrGLRenderer,  // Legacy Tegra architecture (pre-K1).
+    kTegra_GrGLRenderer,  // Tegra with the same architecture as NVIDIA desktop GPUs (K1+).
     kPowerVR54x_GrGLRenderer,
     kPowerVRRogue_GrGLRenderer,
     kAdreno3xx_GrGLRenderer,
-    kAdreno4xx_GrGLRenderer,
+    kAdreno430_GrGLRenderer,
+    kAdreno4xx_other_GrGLRenderer,
     kAdreno5xx_GrGLRenderer,
     kOSMesa_GrGLRenderer,
+    kGoogleSwiftShader_GrGLRenderer,
     kIntelIrisPro_GrGLRenderer,
     /** Either HD 4xxx or Iris 4xxx */
     kIntel4xxx_GrGLRenderer,
     /** Either HD 6xxx or Iris 6xxx */
     kIntel6xxx_GrGLRenderer,
+    kIntelSandyBridge_GrGLRenderer,
+    kIntelBayTrail_GrGLRenderer,
+    kIntelSkylake_GrGLRenderer,
     kGalliumLLVM_GrGLRenderer,
+    kMali4xx_GrGLRenderer,
     /** T-6xx, T-7xx, or T-8xx */
     kMaliT_GrGLRenderer,
     kANGLE_GrGLRenderer,
 
-    kAMDRadeonHD7xxx_GrGLRenderer, // AMD Radeon HD 7000 Series
-    kAMDRadeonR9M4xx_GrGLRenderer, // AMD Radeon R9 M400 Series
+    kAMDRadeonHD7xxx_GrGLRenderer,  // AMD Radeon HD 7000 Series
+    kAMDRadeonR9M4xx_GrGLRenderer,  // AMD Radeon R9 M400 Series
 
     kOther_GrGLRenderer
 };
@@ -76,6 +85,7 @@ enum GrGLDriver {
     kNVIDIA_GrGLDriver,
     kIntel_GrGLDriver,
     kANGLE_GrGLDriver,
+    kSwiftShader_GrGLDriver,
     kQualcomm_GrGLDriver,
     kUnknown_GrGLDriver
 };
@@ -94,6 +104,7 @@ enum class GrGLANGLEVendor {
 
 enum class GrGLANGLERenderer {
     kUnknown,
+    kSandyBridge,
     kIvyBridge,
     kSkylake
 };
@@ -159,7 +170,7 @@ GrGLVersion GrGLGetVersionFromString(const char* versionString);
 GrGLStandard GrGLGetStandardInUseFromString(const char* versionString);
 GrGLSLVersion GrGLGetGLSLVersionFromString(const char* versionString);
 GrGLVendor GrGLGetVendorFromString(const char* vendorString);
-GrGLRenderer GrGLGetRendererFromString(const char* rendererString);
+GrGLRenderer GrGLGetRendererFromStrings(const char* rendererString, const GrGLExtensions&);
 void GrGLGetANGLEInfoFromString(const char* rendererString, GrGLANGLEBackend*,
                                 GrGLANGLEVendor*, GrGLANGLERenderer*);
 
@@ -247,7 +258,5 @@ void GrGLClearErr(const GrGLInterface* gl);
 #define GR_GL_GET_ERROR(IFACE) (IFACE)->fFunctions.fGetError()
 
 GrGLenum GrToGLStencilFunc(GrStencilTest test);
-
-GrPixelConfig GrGLSizedFormatToPixelConfig(GrGLenum sizedFormat);
 
 #endif

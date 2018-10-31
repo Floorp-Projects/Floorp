@@ -30,40 +30,12 @@ void blit_row_color32(SkPMColor* dst, const SkPMColor* src, int count, SkPMColor
     invA += invA >> 7;
     SkASSERT(invA < 256);  // We've should have already handled alpha == 0 externally.
 
-#if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-    __m128i colorHighAndRound = _mm_add_epi16(_mm_unpacklo_epi8(_mm_setzero_si128(), _mm_set1_epi32(color)), _mm_set1_epi16(128));
-    __m128i invA_16x = _mm_set1_epi16(invA);
-    #define BLIT_ROW_COLOR32_FN(px, lohi) \
-        _mm_srli_epi16(_mm_add_epi16(_mm_mullo_epi16(_mm_unpack ## lohi ## _epi8(px, _mm_setzero_si128()), invA_16x), colorHighAndRound), 8)
-    while (count >= 4) {
-        __m128i px = _mm_loadu_si128((const __m128i*)src);
-        _mm_storeu_si128((__m128i*)dst,
-            _mm_packus_epi16(BLIT_ROW_COLOR32_FN(px, lo), BLIT_ROW_COLOR32_FN(px, hi)));
-        src += 4;
-        dst += 4;
-        count -= 4;
-    }
-    if (count >= 2) {
-        __m128i px = _mm_loadl_epi64((const __m128i*)src);
-        _mm_storel_epi64((__m128i*)dst,
-            _mm_packus_epi16(BLIT_ROW_COLOR32_FN(px, lo), _mm_setzero_si128()));
-        src += 2;
-        dst += 2;
-        count -= 2;
-    }
-    if (count >= 1) {
-        __m128i px = _mm_cvtsi32_si128(*src);
-        *dst = _mm_cvtsi128_si32(
-            _mm_packus_epi16(BLIT_ROW_COLOR32_FN(px, lo), _mm_setzero_si128()));
-    }
-#else
     Sk16h colorHighAndRound = Sk4px::DupPMColor(color).widenHi() + Sk16h(128);
     Sk16b invA_16x(invA);
 
     Sk4px::MapSrc(count, dst, src, [&](const Sk4px& src4) -> Sk4px {
         return (src4 * invA_16x).addNarrowHi(colorHighAndRound);
     });
-#endif
 }
 
 #if defined(SK_ARM_HAS_NEON)

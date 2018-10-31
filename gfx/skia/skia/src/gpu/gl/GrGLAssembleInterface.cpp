@@ -9,11 +9,11 @@
 #include "gl/GrGLAssembleInterface.h"
 #include "GrGLUtil.h"
 
-#define GET_PROC(F) functions->f ## F = (GrGL ## F ## Proc) get(ctx, "gl" #F)
-#define GET_PROC_SUFFIX(F, S) functions->f ## F = (GrGL ## F ## Proc) get(ctx, "gl" #F #S)
-#define GET_PROC_LOCAL(F) GrGL ## F ## Proc F = (GrGL ## F ## Proc) get(ctx, "gl" #F)
+#define GET_PROC(F) functions->f##F = (GrGL##F##Fn*)get(ctx, "gl" #F)
+#define GET_PROC_SUFFIX(F, S) functions->f##F = (GrGL##F##Fn*)get(ctx, "gl" #F #S)
+#define GET_PROC_LOCAL(F) GrGL##F##Fn* F = (GrGL##F##Fn*)get(ctx, "gl" #F)
 
-#define GET_EGL_PROC_SUFFIX(F, S) functions->fEGL ## F = (GrEGL ## F ## Proc) get(ctx, "egl" #F #S)
+#define GET_EGL_PROC_SUFFIX(F, S) functions->fEGL##F = (GrEGL##F##Fn*)get(ctx, "egl" #F #S)
 
 sk_sp<const GrGLInterface> GrGLMakeAssembledInterface(void *ctx, GrGLGetProc get) {
     GET_PROC_LOCAL(GetString);
@@ -36,13 +36,13 @@ sk_sp<const GrGLInterface> GrGLMakeAssembledInterface(void *ctx, GrGLGetProc get
     return nullptr;
 }
 
-static void get_egl_query_and_display(GrEGLQueryStringProc* queryString, GrEGLDisplay* display,
+static void get_egl_query_and_display(GrEGLQueryStringFn** queryString, GrEGLDisplay* display,
                                       void* ctx, GrGLGetProc get) {
-    *queryString = (GrEGLQueryStringProc) get(ctx, "eglQueryString");
+    *queryString = (GrEGLQueryStringFn*)get(ctx, "eglQueryString");
     *display = GR_EGL_NO_DISPLAY;
     if (*queryString) {
-        GrEGLGetCurrentDisplayProc getCurrentDisplay =
-            (GrEGLGetCurrentDisplayProc) get(ctx, "eglGetCurrentDisplay");
+        GrEGLGetCurrentDisplayFn* getCurrentDisplay =
+                (GrEGLGetCurrentDisplayFn*)get(ctx, "eglGetCurrentDisplay");
         if (getCurrentDisplay) {
             *display = getCurrentDisplay();
         } else {
@@ -69,7 +69,7 @@ sk_sp<const GrGLInterface> GrGLMakeAssembledGLInterface(void *ctx, GrGLGetProc g
         return nullptr;
     }
 
-    GrEGLQueryStringProc queryString;
+    GrEGLQueryStringFn* queryString;
     GrEGLDisplay display;
     get_egl_query_and_display(&queryString, &display, ctx, get);
     GrGLExtensions extensions;
@@ -411,7 +411,7 @@ sk_sp<const GrGLInterface> GrGLMakeAssembledGLInterface(void *ctx, GrGLGetProc g
     interface->fStandard = kGL_GrGLStandard;
     interface->fExtensions.swap(&extensions);
 
-    return interface;
+    return std::move(interface);
 }
 
 sk_sp<const GrGLInterface> GrGLMakeAssembledGLESInterface(void *ctx, GrGLGetProc get) {
@@ -429,7 +429,7 @@ sk_sp<const GrGLInterface> GrGLMakeAssembledGLESInterface(void *ctx, GrGLGetProc
 
     GET_PROC_LOCAL(GetIntegerv);
     GET_PROC_LOCAL(GetStringi);
-    GrEGLQueryStringProc queryString;
+    GrEGLQueryStringFn* queryString;
     GrEGLDisplay display;
     get_egl_query_and_display(&queryString, &display, ctx, get);
     GrGLExtensions extensions;
@@ -446,7 +446,16 @@ sk_sp<const GrGLInterface> GrGLMakeAssembledGLESInterface(void *ctx, GrGLGetProc
     GET_PROC(BindAttribLocation);
     GET_PROC(BindBuffer);
     GET_PROC(BindTexture);
-    GET_PROC_SUFFIX(BindVertexArray, OES);
+
+    if (version >= GR_GL_VER(3,0)) {
+        GET_PROC(BindVertexArray);
+        GET_PROC(DeleteVertexArrays);
+        GET_PROC(GenVertexArrays);
+    } else if (extensions.has("GL_OES_vertex_array_object")) {
+        GET_PROC_SUFFIX(BindVertexArray, OES);
+        GET_PROC_SUFFIX(DeleteVertexArrays, OES);
+        GET_PROC_SUFFIX(GenVertexArrays, OES);
+    }
 
     if (version >= GR_GL_VER(3,0) && extensions.has("GL_EXT_blend_func_extended")) {
         GET_PROC_SUFFIX(BindFragDataLocation, EXT);
@@ -483,7 +492,6 @@ sk_sp<const GrGLInterface> GrGLMakeAssembledGLESInterface(void *ctx, GrGLGetProc
     GET_PROC(DeleteProgram);
     GET_PROC(DeleteShader);
     GET_PROC(DeleteTextures);
-    GET_PROC_SUFFIX(DeleteVertexArrays, OES);
     GET_PROC(DepthMask);
     GET_PROC(Disable);
     GET_PROC(DisableVertexAttribArray);
@@ -515,7 +523,6 @@ sk_sp<const GrGLInterface> GrGLMakeAssembledGLESInterface(void *ctx, GrGLGetProc
     GET_PROC(GenBuffers);
     GET_PROC(GenerateMipmap);
     GET_PROC(GenTextures);
-    GET_PROC_SUFFIX(GenVertexArrays, OES);
     GET_PROC(GetBufferParameteriv);
     GET_PROC(GetError);
     GET_PROC(GetIntegerv);
@@ -659,12 +666,18 @@ sk_sp<const GrGLInterface> GrGLMakeAssembledGLESInterface(void *ctx, GrGLGetProc
 
     if (extensions.has("GL_EXT_multisampled_render_to_texture")) {
         GET_PROC_SUFFIX(FramebufferTexture2DMultisample, EXT);
-        functions->fRenderbufferStorageMultisampleES2EXT = (GrGLRenderbufferStorageMultisampleProc) get(ctx, "glRenderbufferStorageMultisampleEXT");
+        functions->fRenderbufferStorageMultisampleES2EXT =
+                (GrGLRenderbufferStorageMultisampleFn*)get(ctx,
+                                                           "glRenderbufferStorageMultisampleEXT");
     } else if (extensions.has("GL_IMG_multisampled_render_to_texture")) {
         GET_PROC_SUFFIX(FramebufferTexture2DMultisample, IMG);
-        functions->fRenderbufferStorageMultisampleES2EXT = (GrGLRenderbufferStorageMultisampleProc) get(ctx, "glRenderbufferStorageMultisampleIMG");
+        functions->fRenderbufferStorageMultisampleES2EXT =
+                (GrGLRenderbufferStorageMultisampleFn*)get(ctx,
+                                                           "glRenderbufferStorageMultisampleIMG");
     } else if (extensions.has("GL_APPLE_framebuffer_multisample")) {
-        functions->fRenderbufferStorageMultisampleES2APPLE = (GrGLRenderbufferStorageMultisampleProc) get(ctx, "glRenderbufferStorageMultisampleAPPLE");
+        functions->fRenderbufferStorageMultisampleES2APPLE =
+                (GrGLRenderbufferStorageMultisampleFn*)get(ctx,
+                                                           "glRenderbufferStorageMultisampleAPPLE");
         GET_PROC_SUFFIX(ResolveMultisampleFramebuffer, APPLE);
     }
 
@@ -837,7 +850,7 @@ sk_sp<const GrGLInterface> GrGLMakeAssembledGLESInterface(void *ctx, GrGLGetProc
     interface->fStandard = kGLES_GrGLStandard;
     interface->fExtensions.swap(&extensions);
 
-    return interface;
+    return std::move(interface);
 }
 
 SK_API const GrGLInterface* GrGLAssembleInterface(void *ctx, GrGLGetProc get) {

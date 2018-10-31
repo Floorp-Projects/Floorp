@@ -10,15 +10,43 @@
 
 #include "SkMath.h"
 
-#if defined(SK_BUILD_FOR_IOS) && (defined(SK_BUILD_FOR_ARM32) || defined(SK_BUILD_FOR_ARM64))
-// iOS on ARM starts processes with the Flush-To-Zero (FTZ) and
-// Denormals-Are-Zero (DAZ) bits in the fpscr register set.
-// Algorithms that rely on denormalized numbers need alternative implementations.
-// This can also be controlled in SSE with the MXCSR register,
-// x87 with FSTCW/FLDCW, and mips with FCSR. This should be detected at runtime,
-// or the library built one way or the other more generally (by the build).
-#define SK_CPU_FLUSH_TO_ZERO
+/**
+ *  Return the integer square root of value, with a bias of bitBias
+ */
+int32_t SkSqrtBits(int32_t value, int bitBias);
+
+/** Return the integer square root of n, treated as a SkFixed (16.16)
+ */
+static inline int32_t SkSqrt32(int32_t n) { return SkSqrtBits(n, 15); }
+
+/**
+ *  Returns (value < 0 ? 0 : value) efficiently (i.e. no compares or branches)
+ */
+static inline int SkClampPos(int value) {
+    return value & ~(value >> 31);
+}
+
+/**
+ * Stores numer/denom and numer%denom into div and mod respectively.
+ */
+template <typename In, typename Out>
+inline void SkTDivMod(In numer, In denom, Out* div, Out* mod) {
+#ifdef SK_CPU_ARM32
+    // If we wrote this as in the else branch, GCC won't fuse the two into one
+    // divmod call, but rather a div call followed by a divmod.  Silly!  This
+    // version is just as fast as calling __aeabi_[u]idivmod manually, but with
+    // prettier code.
+    //
+    // This benches as around 2x faster than the code in the else branch.
+    const In d = numer/denom;
+    *div = static_cast<Out>(d);
+    *mod = static_cast<Out>(numer-d*denom);
+#else
+    // On x86 this will just be a single idiv.
+    *div = static_cast<Out>(numer/denom);
+    *mod = static_cast<Out>(numer%denom);
 #endif
+}
 
 /** Returns -1 if n < 0, else returns 0
  */

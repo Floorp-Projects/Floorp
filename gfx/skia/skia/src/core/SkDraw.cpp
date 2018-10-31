@@ -5,7 +5,7 @@
  * found in the LICENSE file.
  */
 
-#define __STDC_LIMIT_MACROS
+#include "SkDraw.h"
 
 #include "SkArenaAlloc.h"
 #include "SkAutoBlitterChoose.h"
@@ -14,28 +14,28 @@
 #include "SkCanvas.h"
 #include "SkColorData.h"
 #include "SkDevice.h"
-#include "SkDraw.h"
 #include "SkDrawProcs.h"
-#include "SkFindAndPlaceGlyph.h"
 #include "SkMaskFilterBase.h"
+#include "SkMacros.h"
 #include "SkMatrix.h"
 #include "SkMatrixUtils.h"
 #include "SkPaint.h"
 #include "SkPathEffect.h"
+#include "SkPathPriv.h"
+#include "SkRRect.h"
 #include "SkRasterClip.h"
 #include "SkRectPriv.h"
-#include "SkRRect.h"
-#include "SkScalerContext.h"
 #include "SkScan.h"
 #include "SkShader.h"
 #include "SkString.h"
 #include "SkStroke.h"
 #include "SkStrokeRec.h"
-#include "SkTemplates.h"
-#include "SkTextMapStateProc.h"
-#include "SkThreadedBMPDevice.h"
 #include "SkTLazy.h"
+#include "SkTemplates.h"
+#include "SkTo.h"
 #include "SkUtils.h"
+
+#include <utility>
 
 static SkPaint make_paint_with_image(
     const SkPaint& origPaint, const SkBitmap& bitmap, SkMatrix* matrix = nullptr) {
@@ -48,9 +48,7 @@ static SkPaint make_paint_with_image(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkDraw::SkDraw() {
-    sk_bzero(this, sizeof(*this));
-}
+SkDraw::SkDraw() {}
 
 bool SkDraw::computeConservativeLocalClipBounds(SkRect* localBounds) const {
     if (fRC->isEmpty()) {
@@ -219,7 +217,7 @@ void SkDraw::drawPaint(const SkPaint& paint) const {
     }
 
     // normal case: use a blitter
-    SkAutoBlitterChoose blitter(fDst, *fMatrix, paint);
+    SkAutoBlitterChoose blitter(*this, nullptr, paint);
     SkScan::FillIRect(devRect, *fRC, blitter.get());
 }
 
@@ -496,7 +494,7 @@ void SkDraw::drawPoints(SkCanvas::PointMode mode, size_t count,
 
     PtProcRec rec;
     if (!device && rec.init(mode, paint, fMatrix, fRC)) {
-        SkAutoBlitterChoose blitter(fDst, *fMatrix, paint);
+        SkAutoBlitterChoose blitter(*this, nullptr, paint);
 
         SkPoint             devPts[MAX_DEV_PTS];
         const SkMatrix*     matrix = fMatrix;
@@ -511,6 +509,9 @@ void SkDraw::drawPoints(SkCanvas::PointMode mode, size_t count,
                 n = MAX_DEV_PTS;
             }
             matrix->mapPoints(devPts, pts, n);
+            if (!SkScalarsAreFinite(&devPts[0].fX, n * 2)) {
+                return;
+            }
             proc(rec, devPts, n, bltr);
             pts += n - backup;
             SkASSERT(SkToInt(count) >= n);
@@ -530,18 +531,22 @@ void SkDraw::drawPoints(SkCanvas::PointMode mode, size_t count,
                 SkScalar radius = SkScalarHalf(width);
 
                 if (newPaint.getStrokeCap() == SkPaint::kRound_Cap) {
-                    SkPath      path;
-                    SkMatrix    preMatrix;
+                    if (device) {
+                        for (size_t i = 0; i < count; ++i) {
+                            SkRect r = SkRect::MakeLTRB(pts[i].fX - radius, pts[i].fY - radius,
+                                                        pts[i].fX + radius, pts[i].fY + radius);
+                            device->drawOval(r, newPaint);
+                        }
+                    } else {
+                        SkPath     path;
+                        SkMatrix   preMatrix;
 
-                    path.addCircle(0, 0, radius);
-                    for (size_t i = 0; i < count; i++) {
-                        preMatrix.setTranslate(pts[i].fX, pts[i].fY);
-                        // pass true for the last point, since we can modify
-                        // then path then
-                        path.setIsVolatile((count-1) == i);
-                        if (device) {
-                            device->drawPath(path, newPaint, &preMatrix, (count-1) == i);
-                        } else {
+                        path.addCircle(0, 0, radius);
+                        for (size_t i = 0; i < count; i++) {
+                            preMatrix.setTranslate(pts[i].fX, pts[i].fY);
+                            // pass true for the last point, since we can modify
+                            // then path then
+                            path.setIsVolatile((count-1) == i);
                             this->drawPath(path, newPaint, &preMatrix, (count-1) == i);
                         }
                     }
@@ -657,7 +662,7 @@ void SkDraw::drawPoints(SkCanvas::PointMode mode, size_t count,
                     path.moveTo(pts[i]);
                     path.lineTo(pts[i+1]);
                     if (device) {
-                        device->drawPath(path, p, nullptr, true);
+                        device->drawPath(path, p, true);
                     } else {
                         this->drawPath(path, p, nullptr, true);
                     }
@@ -718,11 +723,11 @@ SkDraw::RectType SkDraw::ComputeRectType(const SkPaint& paint,
 }
 
 static const SkPoint* rect_points(const SkRect& r) {
-    return SkTCast<const SkPoint*>(&r);
+    return reinterpret_cast<const SkPoint*>(&r);
 }
 
 static SkPoint* rect_points(SkRect& r) {
-    return SkTCast<SkPoint*>(&r);
+    return reinterpret_cast<SkPoint*>(&r);
 }
 
 static void draw_rect_as_path(const SkDraw& orig, const SkRect& prePaintRect,
@@ -783,6 +788,9 @@ void SkDraw::drawRect(const SkRect& prePaintRect, const SkPaint& paint,
             bbox.outset(SkScalarHalf(ssize.x()), SkScalarHalf(ssize.y()));
         }
     }
+    if (SkPathPriv::TooBigForMath(bbox)) {
+        return;
+    }
 
     if (!SkRectPriv::FitsInFixed(bbox) && rtype != kHair_RectType) {
         draw_rect_as_path(*this, prePaintRect, paint, matrix);
@@ -794,7 +802,7 @@ void SkDraw::drawRect(const SkRect& prePaintRect, const SkPaint& paint,
         return;
     }
 
-    SkAutoBlitterChoose blitterStorage(fDst, *matrix, paint);
+    SkAutoBlitterChoose blitterStorage(*this, matrix, paint);
     const SkRasterClip& clip = *fRC;
     SkBlitter*          blitter = blitterStorage.get();
 
@@ -842,7 +850,7 @@ void SkDraw::drawDevMask(const SkMask& srcM, const SkPaint& paint) const {
     }
     SkAutoMaskFreeImage ami(dstM.fImage);
 
-    SkAutoBlitterChoose blitterChooser(fDst, *fMatrix, paint);
+    SkAutoBlitterChoose blitterChooser(*this, nullptr, paint);
     SkBlitter* blitter = blitterChooser.get();
 
     SkAAClipBlitterWrapper wrapper;
@@ -862,7 +870,8 @@ static SkScalar fast_len(const SkVector& vec) {
     SkScalar x = SkScalarAbs(vec.fX);
     SkScalar y = SkScalarAbs(vec.fY);
     if (x < y) {
-        SkTSwap(x, y);
+        using std::swap;
+        swap(x, y);
     }
     return x + SkScalarHalf(y);
 }
@@ -916,7 +925,7 @@ void SkDraw::drawRRect(const SkRRect& rrect, const SkPaint& paint) const {
         // Transform the rrect into device space.
         SkRRect devRRect;
         if (rrect.transform(*fMatrix, &devRRect)) {
-            SkAutoBlitterChoose blitter(fDst, *fMatrix, paint);
+            SkAutoBlitterChoose blitter(*this, nullptr, paint);
             if (as_MFB(paint.getMaskFilter())->filterRRect(devRRect, *fMatrix,
                                                            *fRC, blitter.get())) {
                 return; // filterRRect() called the blitter, so we're done
@@ -931,33 +940,33 @@ DRAW_PATH:
     this->drawPath(path, paint, nullptr, true);
 }
 
-SkScalar SkDraw::ComputeResScaleForStroking(const SkMatrix& matrix) {
-    if (!matrix.hasPerspective()) {
-        SkScalar sx = SkPoint::Length(matrix[SkMatrix::kMScaleX], matrix[SkMatrix::kMSkewY]);
-        SkScalar sy = SkPoint::Length(matrix[SkMatrix::kMSkewX],  matrix[SkMatrix::kMScaleY]);
-        if (SkScalarsAreFinite(sx, sy)) {
-            SkScalar scale = SkTMax(sx, sy);
-            if (scale > 0) {
-                return scale;
+SkScalar SkDraw::ComputeResScaleForStroking(const SkMatrix& matrix, SkScalar* overscale) {
+    // Not sure how to handle perspective differently, so we just don't try (yet)
+    SkScalar sx = SkPoint::Length(matrix[SkMatrix::kMScaleX], matrix[SkMatrix::kMSkewY]);
+    SkScalar sy = SkPoint::Length(matrix[SkMatrix::kMSkewX],  matrix[SkMatrix::kMScaleY]);
+    if (SkScalarsAreFinite(sx, sy)) {
+        SkScalar scale = SkTMax(sx, sy);
+        if (scale > 0) {
+            static const SkScalar kMaxStrokeScale = 1e5f;
+            if (overscale && scale > kMaxStrokeScale) {
+                *overscale = scale / kMaxStrokeScale;
+                scale = kMaxStrokeScale;
             }
+            return scale;
         }
     }
     return 1;
 }
 
 void SkDraw::drawDevPath(const SkPath& devPath, const SkPaint& paint, bool drawCoverage,
-                         SkBlitter* customBlitter, bool doFill, SkInitOnceData* iData) const {
+                         SkBlitter* customBlitter, bool doFill) const {
+    if (SkPathPriv::TooBigForMath(devPath)) {
+        return;
+    }
     SkBlitter* blitter = nullptr;
     SkAutoBlitterChoose blitterStorage;
-    SkAutoBlitterChoose* blitterStoragePtr = &blitterStorage;
-    if (iData) {
-        // we're in the threaded init-once phase; the blitter has to be allocated in the thread
-        // allocator so it will remain valid later during the draw phase.
-        blitterStoragePtr = iData->fAlloc->make<SkAutoBlitterChoose>();
-    }
     if (nullptr == customBlitter) {
-        blitterStoragePtr->choose(fDst, *fMatrix, paint, drawCoverage);
-        blitter = blitterStoragePtr->get();
+        blitter = blitterStorage.choose(*this, nullptr, paint, drawCoverage);
     } else {
         blitter = customBlitter;
     }
@@ -966,9 +975,6 @@ void SkDraw::drawDevPath(const SkPath& devPath, const SkPaint& paint, bool drawC
         SkStrokeRec::InitStyle style = doFill ? SkStrokeRec::kFill_InitStyle
         : SkStrokeRec::kHairline_InitStyle;
         if (as_MFB(paint.getMaskFilter())->filterPath(devPath, *fMatrix, *fRC, blitter, style)) {
-            if (iData) {
-                iData->setEmptyDrawFn();
-            }
             return; // filterPath() called the blitter, so we're done
         }
     }
@@ -1014,45 +1020,16 @@ void SkDraw::drawDevPath(const SkPath& devPath, const SkPaint& paint, bool drawC
         }
     }
 
-    if (iData == nullptr) {
-        proc(devPath, *fRC, blitter); // proceed directly if we're not in threaded init-once
-    } else if (!doFill || !paint.isAntiAlias()) {
-        // TODO remove true in the if statement above so we can proceed to DAA.
-
-        // We're in threaded init-once but we can't use DAA. Hence we'll stop here and hand all the
-        // remaining work to draw phase. This is a simple example of how to add init-once to
-        // existing drawXXX commands: simply send in SkInitOnceData, do as much init work as
-        // possible, and finally wrap the remaining work into iData->fElement->fDrawFn.
-        iData->fElement->setDrawFn([proc, devPath, blitter](SkArenaAlloc* alloc,
-                const SkThreadedBMPDevice::DrawState& ds, const SkIRect& tileBounds) {
-            SkThreadedBMPDevice::TileDraw tileDraw(ds, tileBounds);
-            proc(devPath, *tileDraw.fRC, blitter);
-        });
-    } else {
-        // We can use DAA to do scan conversion in the init-once phase.
-        SkDAARecord* record = iData->fAlloc->make<SkDAARecord>(iData->fAlloc);
-        SkNullBlitter nullBlitter; // We don't want to blit anything during the init phase
-        SkScan::AntiFillPath(devPath, *fRC, &nullBlitter, record);
-        iData->fElement->setDrawFn([record, devPath, blitter](SkArenaAlloc* alloc,
-                    const SkThreadedBMPDevice::DrawState& ds, const SkIRect& tileBounds) {
-            SkASSERT(record->fType != SkDAARecord::Type::kToBeComputed);
-            SkThreadedBMPDevice::TileDraw tileDraw(ds, tileBounds);
-            SkScan::AntiFillPath(devPath, *tileDraw.fRC, blitter, record);
-        });
-    }
+    proc(devPath, *fRC, blitter);
 }
 
 void SkDraw::drawPath(const SkPath& origSrcPath, const SkPaint& origPaint,
                       const SkMatrix* prePathMatrix, bool pathIsMutable,
-                      bool drawCoverage, SkBlitter* customBlitter,
-                      SkInitOnceData* iData) const {
+                      bool drawCoverage, SkBlitter* customBlitter) const {
     SkDEBUGCODE(this->validate();)
 
     // nothing to draw
     if (fRC->isEmpty()) {
-        if (iData) {
-            iData->setEmptyDrawFn();
-        }
         return;
     }
 
@@ -1062,10 +1039,8 @@ void SkDraw::drawPath(const SkPath& origSrcPath, const SkPaint& origPaint,
     SkPath*         tmpPath = &tmpPathStorage;
     SkMatrix        tmpMatrix;
     const SkMatrix* matrix = fMatrix;
-    if (iData) {
-        tmpPath = iData->fAlloc->make<SkPath>();
-    }
     tmpPath->setIsVolatile(true);
+    SkPathPriv::SetIsBadForDAA(*tmpPath, SkPathPriv::IsBadForDAA(origSrcPath));
 
     if (prePathMatrix) {
         if (origPaint.getPathEffect() || origPaint.getStyle() != SkPaint::kFill_Style) {
@@ -1117,9 +1092,17 @@ void SkDraw::drawPath(const SkPath& origSrcPath, const SkPaint& origPaint,
         if (this->computeConservativeLocalClipBounds(&cullRect)) {
             cullRectPtr = &cullRect;
         }
+        SkScalar overscale = SK_Scalar1;
         doFill = paint->getFillPath(*pathPtr, tmpPath, cullRectPtr,
-                                    ComputeResScaleForStroking(*fMatrix));
+                                    ComputeResScaleForStroking(*fMatrix, &overscale));
         pathPtr = tmpPath;
+        if (overscale != SK_Scalar1) {
+            if (matrix != &tmpMatrix) {
+                tmpMatrix = *matrix;
+                matrix = &tmpMatrix;
+            }
+            tmpMatrix.postScale(overscale, overscale);
+        }
     }
 
     // avoid possibly allocating a new path in transform if we can
@@ -1128,7 +1111,7 @@ void SkDraw::drawPath(const SkPath& origSrcPath, const SkPaint& origPaint,
     // transform the path into device space
     pathPtr->transform(*matrix, devPathPtr);
 
-    this->drawDevPath(*devPathPtr, *paint, drawCoverage, customBlitter, doFill, iData);
+    this->drawDevPath(*devPathPtr, *paint, drawCoverage, customBlitter, doFill);
 }
 
 void SkDraw::drawBitmapAsMask(const SkBitmap& bitmap, const SkPaint& paint) const {
@@ -1344,302 +1327,6 @@ void SkDraw::drawSprite(const SkBitmap& bitmap, int x, int y, const SkPaint& ori
     draw.drawRect(r, paintWithShader);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-#include "SkPaintPriv.h"
-#include "SkScalerContext.h"
-#include "SkGlyphCache.h"
-#include "SkTextToPathIter.h"
-#include "SkUtils.h"
-
-bool SkDraw::ShouldDrawTextAsPaths(const SkPaint& paint, const SkMatrix& ctm, SkScalar sizeLimit) {
-    // hairline glyphs are fast enough so we don't need to cache them
-    if (SkPaint::kStroke_Style == paint.getStyle() && 0 == paint.getStrokeWidth()) {
-        return true;
-    }
-
-    // we don't cache perspective
-    if (ctm.hasPerspective()) {
-        return true;
-    }
-
-    // Glyphs like Emojis can't be rendered as a path.
-    if (paint.getTypeface() && paint.getTypeface()->hasColorGlyphs()) {
-      return false;
-    }
-
-    SkMatrix textM;
-    SkPaintPriv::MakeTextMatrix(&textM, paint);
-    return SkPaint::TooBigToUseCache(ctm, textM, sizeLimit);
-}
-
-void SkDraw::drawText_asPaths(const char text[], size_t byteLength, SkScalar x, SkScalar y,
-                              const SkPaint& paint) const {
-    SkDEBUGCODE(this->validate();)
-
-    SkTextToPathIter iter(text, byteLength, paint, true);
-
-    SkMatrix    matrix;
-    matrix.setScale(iter.getPathScale(), iter.getPathScale());
-    matrix.postTranslate(x, y);
-
-    const SkPath* iterPath;
-    SkScalar xpos, prevXPos = 0;
-
-    while (iter.next(&iterPath, &xpos)) {
-        matrix.postTranslate(xpos - prevXPos, 0);
-        if (iterPath) {
-            this->drawPath(*iterPath, iter.getPaint(), &matrix, false);
-        }
-        prevXPos = xpos;
-    }
-}
-
-// disable warning : local variable used without having been initialized
-#if defined _WIN32
-#pragma warning ( push )
-#pragma warning ( disable : 4701 )
-#endif
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class DrawOneGlyph {
-public:
-    DrawOneGlyph(const SkDraw& draw, const SkPaint& paint, SkGlyphCache* cache, SkBlitter* blitter)
-        : fUseRegionToDraw(UsingRegionToDraw(draw.fRC))
-        , fGlyphCache(cache)
-        , fBlitter(blitter)
-        , fClip(fUseRegionToDraw ? &draw.fRC->bwRgn() : nullptr)
-        , fDraw(draw)
-        , fPaint(paint)
-        , fClipBounds(PickClipBounds(draw)) { }
-
-    void operator()(const SkGlyph& glyph, SkPoint position, SkPoint rounding) {
-        position += rounding;
-        // Prevent glyphs from being drawn outside of or straddling the edge of device space.
-        // Comparisons written a little weirdly so that NaN coordinates are treated safely.
-        auto gt = [](float a, int b) { return !(a <= (float)b); };
-        auto lt = [](float a, int b) { return !(a >= (float)b); };
-        if (gt(position.fX, INT_MAX - (INT16_MAX + UINT16_MAX)) ||
-            lt(position.fX, INT_MIN - (INT16_MIN + 0 /*UINT16_MIN*/)) ||
-            gt(position.fY, INT_MAX - (INT16_MAX + UINT16_MAX)) ||
-            lt(position.fY, INT_MIN - (INT16_MIN + 0 /*UINT16_MIN*/))) {
-            return;
-        }
-
-        int left = SkScalarFloorToInt(position.fX);
-        int top  = SkScalarFloorToInt(position.fY);
-        SkASSERT(glyph.fWidth > 0 && glyph.fHeight > 0);
-
-        left += glyph.fLeft;
-        top  += glyph.fTop;
-
-        int right   = left + glyph.fWidth;
-        int bottom  = top  + glyph.fHeight;
-
-        SkMask mask;
-        mask.fBounds.set(left, top, right, bottom);
-        SkASSERT(!mask.fBounds.isEmpty());
-
-        if (fUseRegionToDraw) {
-            SkRegion::Cliperator clipper(*fClip, mask.fBounds);
-
-            if (!clipper.done() && this->getImageData(glyph, &mask)) {
-                const SkIRect& cr = clipper.rect();
-                do {
-                    this->blitMask(mask, cr);
-                    clipper.next();
-                } while (!clipper.done());
-            }
-        } else {
-            SkIRect  storage;
-            SkIRect* bounds = &mask.fBounds;
-
-            // this extra test is worth it, assuming that most of the time it succeeds
-            // since we can avoid writing to storage
-            if (!fClipBounds.containsNoEmptyCheck(mask.fBounds)) {
-                if (!storage.intersectNoEmptyCheck(mask.fBounds, fClipBounds))
-                    return;
-                bounds = &storage;
-            }
-
-            if (this->getImageData(glyph, &mask)) {
-                this->blitMask(mask, *bounds);
-            }
-        }
-    }
-
-private:
-    static bool UsingRegionToDraw(const SkRasterClip* rClip) {
-        return rClip->isBW() && !rClip->isRect();
-    }
-
-    static SkIRect PickClipBounds(const SkDraw& draw) {
-        const SkRasterClip& rasterClip = *draw.fRC;
-
-        if (rasterClip.isBW()) {
-            return rasterClip.bwRgn().getBounds();
-        } else {
-            return rasterClip.aaRgn().getBounds();
-        }
-    }
-
-    bool getImageData(const SkGlyph& glyph, SkMask* mask) {
-        uint8_t* bits = (uint8_t*)(fGlyphCache->findImage(glyph));
-        if (nullptr == bits) {
-            return false;  // can't rasterize glyph
-        }
-        mask->fImage    = bits;
-        mask->fRowBytes = glyph.rowBytes();
-        mask->fFormat   = static_cast<SkMask::Format>(glyph.fMaskFormat);
-        return true;
-    }
-
-    void blitMask(const SkMask& mask, const SkIRect& clip) const {
-        if (SkMask::kARGB32_Format == mask.fFormat) {
-            SkBitmap bm;
-            bm.installPixels(
-                SkImageInfo::MakeN32Premul(mask.fBounds.width(), mask.fBounds.height()),
-                (SkPMColor*)mask.fImage, mask.fRowBytes);
-
-            fDraw.drawSprite(bm, mask.fBounds.x(), mask.fBounds.y(), fPaint);
-        } else {
-            fBlitter->blitMask(mask, clip);
-        }
-    }
-
-    const bool            fUseRegionToDraw;
-    SkGlyphCache  * const fGlyphCache;
-    SkBlitter     * const fBlitter;
-    const SkRegion* const fClip;
-    const SkDraw&         fDraw;
-    const SkPaint&        fPaint;
-    const SkIRect         fClipBounds;
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-SkScalerContextFlags SkDraw::scalerContextFlags() const {
-    SkScalerContextFlags flags = SkScalerContextFlags::kBoostContrast;
-    if (!fDst.colorSpace()) {
-        flags = kFakeGammaAndBoostContrast;
-    }
-    return flags;
-}
-
-void SkDraw::drawText(const char text[], size_t byteLength, SkScalar x, SkScalar y,
-                      const SkPaint& paint, const SkSurfaceProps* props) const {
-    SkASSERT(byteLength == 0 || text != nullptr);
-
-    SkDEBUGCODE(this->validate();)
-
-    // nothing to draw
-    if (text == nullptr || byteLength == 0 || fRC->isEmpty()) {
-        return;
-    }
-
-    // SkScalarRec doesn't currently have a way of representing hairline stroke and
-    // will fill if its frame-width is 0.
-    if (ShouldDrawTextAsPaths(paint, *fMatrix)) {
-        this->drawText_asPaths(text, byteLength, x, y, paint);
-        return;
-    }
-
-    SkAutoGlyphCache cache(paint, props, this->scalerContextFlags(), fMatrix);
-
-    // The Blitter Choose needs to be live while using the blitter below.
-    SkAutoBlitterChoose    blitterChooser(fDst, *fMatrix, paint);
-    SkAAClipBlitterWrapper wrapper(*fRC, blitterChooser.get());
-    DrawOneGlyph           drawOneGlyph(*this, paint, cache.get(), wrapper.getBlitter());
-
-    SkFindAndPlaceGlyph::ProcessText(
-        paint.getTextEncoding(), text, byteLength,
-        {x, y}, *fMatrix, paint.getTextAlign(), cache.get(), drawOneGlyph);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-
-void SkDraw::drawPosText_asPaths(const char text[], size_t byteLength, const SkScalar pos[],
-                                 int scalarsPerPosition, const SkPoint& offset,
-                                 const SkPaint& origPaint, const SkSurfaceProps* props) const {
-    // setup our std paint, in hopes of getting hits in the cache
-    SkPaint paint(origPaint);
-    SkScalar matrixScale = paint.setupForAsPaths();
-
-    SkMatrix matrix;
-    matrix.setScale(matrixScale, matrixScale);
-
-    // Temporarily jam in kFill, so we only ever ask for the raw outline from the cache.
-    paint.setStyle(SkPaint::kFill_Style);
-    paint.setPathEffect(nullptr);
-
-    SkPaint::GlyphCacheProc glyphCacheProc = SkPaint::GetGlyphCacheProc(paint.getTextEncoding(),
-                                                                        paint.isDevKernText(),
-                                                                        true);
-    SkAutoGlyphCache cache(paint, props, this->scalerContextFlags(), nullptr);
-
-    const char*        stop = text + byteLength;
-    SkTextAlignProc    alignProc(paint.getTextAlign());
-    SkTextMapStateProc tmsProc(SkMatrix::I(), offset, scalarsPerPosition);
-
-    // Now restore the original settings, so we "draw" with whatever style/stroking.
-    paint.setStyle(origPaint.getStyle());
-    paint.setPathEffect(origPaint.refPathEffect());
-
-    while (text < stop) {
-        const SkGlyph& glyph = glyphCacheProc(cache.get(), &text);
-        if (glyph.fWidth) {
-            const SkPath* path = cache->findPath(glyph);
-            if (path) {
-                SkPoint tmsLoc;
-                tmsProc(pos, &tmsLoc);
-                SkPoint loc;
-                alignProc(tmsLoc, glyph, &loc);
-
-                matrix[SkMatrix::kMTransX] = loc.fX;
-                matrix[SkMatrix::kMTransY] = loc.fY;
-                this->drawPath(*path, paint, &matrix, false);
-            }
-        }
-        pos += scalarsPerPosition;
-    }
-}
-
-void SkDraw::drawPosText(const char text[], size_t byteLength, const SkScalar pos[],
-                         int scalarsPerPosition, const SkPoint& offset, const SkPaint& paint,
-                         const SkSurfaceProps* props) const {
-    SkASSERT(byteLength == 0 || text != nullptr);
-    SkASSERT(1 == scalarsPerPosition || 2 == scalarsPerPosition);
-
-    SkDEBUGCODE(this->validate();)
-
-    // nothing to draw
-    if (text == nullptr || byteLength == 0 || fRC->isEmpty()) {
-        return;
-    }
-
-    if (ShouldDrawTextAsPaths(paint, *fMatrix)) {
-        this->drawPosText_asPaths(text, byteLength, pos, scalarsPerPosition, offset, paint, props);
-        return;
-    }
-
-    SkAutoGlyphCache cache(paint, props, this->scalerContextFlags(), fMatrix);
-
-    // The Blitter Choose needs to be live while using the blitter below.
-    SkAutoBlitterChoose    blitterChooser(fDst, *fMatrix, paint);
-    SkAAClipBlitterWrapper wrapper(*fRC, blitterChooser.get());
-    DrawOneGlyph           drawOneGlyph(*this, paint, cache.get(), wrapper.getBlitter());
-    SkPaint::Align         textAlignment = paint.getTextAlign();
-
-    SkFindAndPlaceGlyph::ProcessPosText(
-        paint.getTextEncoding(), text, byteLength,
-        offset, *fMatrix, pos, scalarsPerPosition, textAlignment, cache.get(), drawOneGlyph);
-}
-
-#if defined _WIN32
-#pragma warning ( pop )
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef SK_DEBUG
@@ -1664,15 +1351,11 @@ void SkDraw::validate() const {
 #include "SkRegion.h"
 #include "SkBlitter.h"
 
-static bool compute_bounds(const SkPath& devPath, const SkIRect* clipBounds,
-                           const SkMaskFilter* filter, const SkMatrix* filterMatrix,
-                           SkIRect* bounds) {
-    if (devPath.isEmpty()) {
-        return false;
-    }
-
+bool SkDraw::ComputeMaskBounds(const SkRect& devPathBounds, const SkIRect* clipBounds,
+                               const SkMaskFilter* filter, const SkMatrix* filterMatrix,
+                               SkIRect* bounds) {
     //  init our bounds from the path
-    *bounds = devPath.getBounds().makeOutset(SK_ScalarHalf, SK_ScalarHalf).roundOut();
+    *bounds = devPathBounds.makeOutset(SK_ScalarHalf, SK_ScalarHalf).roundOut();
 
     SkIPoint margin = SkIPoint::Make(0, 0);
     if (filter) {
@@ -1741,8 +1424,13 @@ bool SkDraw::DrawToMask(const SkPath& devPath, const SkIRect* clipBounds,
                         const SkMaskFilter* filter, const SkMatrix* filterMatrix,
                         SkMask* mask, SkMask::CreateMode mode,
                         SkStrokeRec::InitStyle style) {
+    if (devPath.isEmpty()) {
+        return false;
+    }
+
     if (SkMask::kJustRenderImage_CreateMode != mode) {
-        if (!compute_bounds(devPath, clipBounds, filter, filterMatrix, &mask->fBounds))
+        if (!ComputeMaskBounds(devPath.getBounds(), clipBounds, filter,
+                               filterMatrix, &mask->fBounds))
             return false;
     }
 
