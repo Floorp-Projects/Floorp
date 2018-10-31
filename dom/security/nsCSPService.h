@@ -30,8 +30,5 @@ public:
 protected:
   virtual ~CSPService();
 
-private:
-  // Maps origins to app status.
-  nsDataHashtable<nsCStringHashKey, uint16_t> mAppStatusCache;
 };
 #endif /* nsCSPService_h___ */
