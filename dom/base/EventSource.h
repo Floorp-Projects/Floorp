@@ -22,7 +22,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsITimer.h"
 #include "nsIHttpChannel.h"
-#include "nsWeakReference.h"
 #include "nsDeque.h"
 
 class nsPIDOMWindowInner;

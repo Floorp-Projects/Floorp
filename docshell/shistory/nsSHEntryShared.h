@@ -12,10 +12,10 @@
 #include "nsCOMPtr.h"
 #include "nsExpirationTracker.h"
 #include "nsIBFCacheEntry.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsRect.h"
 #include "nsString.h"
 #include "nsStubMutationObserver.h"
-#include "nsWeakPtr.h"
 
 #include "mozilla/Attributes.h"
 

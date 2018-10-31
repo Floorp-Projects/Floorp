@@ -16,9 +16,9 @@
 #include "nsIPresentationDeviceProvider.h"
 #include "nsIPresentationControlService.h"
 #include "nsITimer.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsWeakPtr.h"
 
 class nsITCPDeviceInfo;
 

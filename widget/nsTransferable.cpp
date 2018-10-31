@@ -33,7 +33,6 @@ Notes to self:
 #include "nsNetUtil.h"
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
-#include "nsIWeakReferenceUtils.h"
 #include "nsILoadContext.h"
 #include "mozilla/UniquePtr.h"
 

@@ -15,7 +15,6 @@
 #include "nsIObserverService.h"
 #include "nsIScriptError.h"
 #include "nsITimer.h"
-#include "nsIWeakReference.h"
 #include "nsPluginHost.h"
 #include "nsPrintfCString.h"
 #include "VideoUtils.h"

@@ -9,8 +9,8 @@
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/KeyboardMap.h"
-#include "nsWeakPtr.h"
 #include "nsIDOMEventListener.h"
+#include "nsIWeakReferenceUtils.h"
 
 class nsAtom;
 class nsXBLPrototypeHandler;

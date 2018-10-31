@@ -6,11 +6,6 @@
 #ifndef nsEditingSession_h__
 #define nsEditingSession_h__
 
-
-#ifndef nsWeakReference_h__
-#include "nsWeakReference.h"            // for nsSupportsWeakReference, etc
-#endif
-
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS
 #include "nsIWeakReferenceUtils.h"      // for nsWeakPtr

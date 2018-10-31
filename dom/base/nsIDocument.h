@@ -31,13 +31,13 @@
 #include "nsIURI.h"                      // for use in inline functions
 #include "nsIUUIDGenerator.h"
 #include "nsIWebProgressListener.h"      // for nsIWebProgressListener
+#include "nsIWeakReferenceUtils.h"       // for nsWeakPtr
 #include "nsPIDOMWindow.h"               // for use in inline functions
 #include "nsPropertyTable.h"             // for member
 #include "nsStringFwd.h"
 #include "nsTHashtable.h"                // for member
 #include "nsURIHashKey.h"
 #include "mozilla/net/ReferrerPolicy.h"  // for member
-#include "nsWeakReference.h"
 #include "mozilla/UseCounter.h"
 #include "mozilla/WeakPtr.h"
 #include "Units.h"
