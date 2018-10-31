@@ -1952,11 +1952,7 @@ XULDocument::DirectionChanged(const char* aPrefName, XULDocument* aDoc)
 JSObject*
 XULDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  JSObject* obj = XULDocument_Binding::Wrap(aCx, this, aGivenProto);
-  if (!obj) {
-      MOZ_CRASH("Looks like bug 1488480/1405521, with XULDocument_Binding::Wrap failing");
-  }
-  return obj;
+  return XULDocument_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom
