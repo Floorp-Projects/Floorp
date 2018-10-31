@@ -293,7 +293,6 @@ SystemClockDriver::SystemClockDriver(MediaStreamGraphImpl* aGraphImpl)
   : ThreadedDriver(aGraphImpl),
     mInitialTimeStamp(TimeStamp::Now()),
     mLastTimeStamp(TimeStamp::Now()),
-    mWaitState(WAITSTATE_RUNNING),
     mIsFallback(false)
 {}
 
@@ -412,7 +411,6 @@ SystemClockDriver::WaitForNextIteration()
   bool another = GraphImpl()->mNeedAnotherIteration; // atomic
   if (!another) {
     GraphImpl()->mGraphDriverAsleep = true; // atomic
-    mWaitState = WAITSTATE_WAITING_INDEFINITELY;
   }
   // NOTE: mNeedAnotherIteration while also atomic may have changed before
   // we could set mGraphDriverAsleep, so we must re-test it.
@@ -430,10 +428,10 @@ SystemClockDriver::WaitForNextIteration()
          GraphImpl(),
          (now - mInitialTimeStamp).ToSeconds(),
          timeoutMS / 1000.0));
-    if (mWaitState == WAITSTATE_WAITING_INDEFINITELY) {
+    if (!another) {
       GraphImpl()->mGraphDriverAsleep = false; // atomic
+      another = true;
     }
-    mWaitState = WAITSTATE_WAITING_FOR_NEXT_ITERATION;
   }
   if (!timeout.IsZero()) {
     GraphImpl()->GetMonitor().Wait(timeout);
@@ -444,23 +442,15 @@ SystemClockDriver::WaitForNextIteration()
          (TimeStamp::Now() - now).ToSeconds()));
   }
 
-  if (mWaitState == WAITSTATE_WAITING_INDEFINITELY) {
+  if (!another) {
     GraphImpl()->mGraphDriverAsleep = false; // atomic
   }
-  // Note: this can race against the EnsureNextIteration setting
-  // WAITSTATE_RUNNING and setting mGraphDriverAsleep to false, so you can
-  // have an iteration with WAITSTATE_WAKING_UP instead of RUNNING.
-  mWaitState = WAITSTATE_RUNNING;
   GraphImpl()->mNeedAnotherIteration = false; // atomic
 }
 
 void SystemClockDriver::WakeUp()
 {
   GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
-  // Note: this can race against the thread setting WAITSTATE_RUNNING and
-  // setting mGraphDriverAsleep to false, so you can have an iteration
-  // with WAITSTATE_WAKING_UP instead of RUNNING.
-  mWaitState = WAITSTATE_WAKING_UP;
   GraphImpl()->mGraphDriverAsleep = false; // atomic
   GraphImpl()->GetMonitor().Notify();
 }
