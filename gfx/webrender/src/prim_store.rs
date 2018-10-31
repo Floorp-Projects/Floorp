@@ -3167,7 +3167,7 @@ impl PrimitiveInstance {
                         }
                         PrimitiveOpacity::from_alpha(opacity_binding.current * color.a)
                     }
-                    BrushKind::Clear => PrimitiveOpacity::opaque(),
+                    BrushKind::Clear => PrimitiveOpacity::translucent(),
                 }
             }
         };
