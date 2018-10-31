@@ -40,7 +40,7 @@ const ActionSchemas = {
             },
             value: {
               description: "Value to set the preference to",
-              type: ["string", "number", "boolean"],
+              type: ["string", "integer", "boolean"],
             },
           },
         },

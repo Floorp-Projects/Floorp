@@ -1,5 +1,6 @@
-// setVariable triggering a setter doesn't crash or explode.
-// It should throw WouldRunDebuggee, but that isn't implemented yet.
+// setVariable triggering a setter throws WouldRunDebuggee.
+
+load(libdir + "asserts.js");
 
 function test(code) {
     var g = newGlobal();
@@ -7,14 +8,14 @@ function test(code) {
     var dbg = Debugger(g);
     var hits = 0;
     dbg.onDebuggerStatement = function (frame) {
-        var env = frame.environment.find("x");
-        try {
-            env.setVariable("x", 0);
-        } catch (exc) {
-        }
+        var env = frame.older.environment.find("x");
+        assertThrowsInstanceOf(
+            () => env.setVariable("x", 0),
+            Debugger.DebuggeeWouldRun);
         hits++;
     };
     g.eval(code);
+    assertEq(hits, 1);
 }
 
 test("Object.defineProperty(this, 'x', {set: function (v) {}}); d();");

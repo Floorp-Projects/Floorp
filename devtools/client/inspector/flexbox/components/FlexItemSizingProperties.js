@@ -131,7 +131,7 @@ class FlexItemSizingProperties extends PureComponent {
     );
   }
 
-  renderFlexibilitySection(flexItemSizing, properties) {
+  renderFlexibilitySection(flexItemSizing, properties, computedStyle) {
     const {
       mainDeltaSize,
       mainBaseSize,
@@ -140,40 +140,37 @@ class FlexItemSizingProperties extends PureComponent {
       clampState,
     } = flexItemSizing;
 
-    // Don't attempt to display anything useful if everything is 0.
+    // Don't display anything if all interesting sizes are 0.
     if (!mainFinalSize && !mainBaseSize && !mainDeltaSize) {
       return null;
     }
 
-    const flexGrow = properties["flex-grow"];
-    const nonZeroFlexGrowDefined = flexGrow && parseFloat(flexGrow) !== 0;
-    const flexShrink = properties["flex-shrink"];
-    const flexShrink0 = parseFloat(flexShrink) === 0;
+    // Also don't display anything if the item did not grow or shrink.
     const grew = mainDeltaSize > 0;
     const shrank = mainDeltaSize < 0;
+    if (!grew && !shrank) {
+      return null;
+    }
+
+    const definedFlexGrow = properties["flex-grow"];
+    const computedFlexGrow = computedStyle.flexGrow;
+    const definedFlexShrink = properties["flex-shrink"];
+    const computedFlexShrink = computedStyle.flexShrink;
     const wasClamped = clampState !== "unclamped";
 
     const reasons = [];
 
-    // First output a sentence for telling users about whether there was enough room or
-    // not on the line.
-    if (lineGrowthState === "growing") {
-      reasons.push(getStr("flexbox.itemSizing.extraRoomOnLine"));
-    } else if (lineGrowthState === "shrinking") {
-      reasons.push(getStr("flexbox.itemSizing.notEnoughRoomOnLine"));
-    }
-
-    // Then tell users whether the item was set to grow, shrink or none of them.
-    if (nonZeroFlexGrowDefined && lineGrowthState !== "shrinking") {
+    // Tell users whether the item was set to grow or shrink.
+    if (computedFlexGrow && lineGrowthState === "growing") {
       reasons.push(getStr("flexbox.itemSizing.setToGrow"));
     }
-    if (flexShrink && !flexShrink0 && lineGrowthState !== "growing") {
+    if (computedFlexShrink && lineGrowthState === "shrinking") {
       reasons.push(getStr("flexbox.itemSizing.setToShrink"));
     }
-    if (!nonZeroFlexGrowDefined && !grew && !shrank && lineGrowthState === "growing") {
+    if (!computedFlexGrow && !grew && !shrank && lineGrowthState === "growing") {
       reasons.push(getStr("flexbox.itemSizing.notSetToGrow"));
     }
-    if (!grew && !shrank && lineGrowthState === "shrinking") {
+    if (!computedFlexShrink && !grew && !shrank && lineGrowthState === "shrinking") {
       reasons.push(getStr("flexbox.itemSizing.notSetToShrink"));
     }
 
@@ -181,57 +178,32 @@ class FlexItemSizingProperties extends PureComponent {
 
     if (grew) {
       // If the item grew.
-      if (flexGrow) {
+      if (definedFlexGrow) {
         // It's normally because it was set to grow (flex-grow is non 0).
-        property = this.renderCssProperty("flex-grow", flexGrow);
+        property = this.renderCssProperty("flex-grow", definedFlexGrow);
       }
 
-      if (wasClamped) {
+      if (wasClamped && clampState === "clamped_to_max") {
         // It may have wanted to grow more than it did, because it was later max-clamped.
-        reasons.push(getStr("flexbox.itemSizing.growthAttemptWhenClamped"));
+        reasons.push(getStr("flexbox.itemSizing.growthAttemptButMaxClamped"));
+      } else if (wasClamped && clampState === "clamped_to_min") {
+        // Or it may have wanted to grow less, but was later min-clamped to a larger size.
+        reasons.push(getStr("flexbox.itemSizing.growthAttemptButMinClamped"));
       }
     } else if (shrank) {
       // If the item shrank.
-      if (flexShrink && !flexShrink0) {
+      if (definedFlexShrink && computedFlexShrink) {
         // It's either because flex-shrink is non 0.
-        property = this.renderCssProperty("flex-shrink", flexShrink);
-      } else {
+        property = this.renderCssProperty("flex-shrink", definedFlexShrink);
+      } else if (computedFlexShrink) {
         // Or also because it's default value is 1 anyway.
-        property = this.renderCssProperty("flex-shrink", "1", true);
+        property = this.renderCssProperty("flex-shrink", computedFlexShrink, true);
       }
 
       if (wasClamped) {
         // It might have wanted to shrink more (to accomodate all items) but couldn't
         // because it was later min-clamped.
         reasons.push(getStr("flexbox.itemSizing.shrinkAttemptWhenClamped"));
-      }
-    } else if (lineGrowthState === "growing" && nonZeroFlexGrowDefined) {
-      property = this.renderCssProperty("flex-grow", flexGrow);
-      if (!wasClamped) {
-        // The item did not grow or shrink. There was room on the line and flex-grow was
-        // set, other items have likely used up all of the space.
-        reasons.push(getStr("flexbox.itemSizing.growthAttemptButSiblings"));
-      }
-    } else if (lineGrowthState === "shrinking") {
-      // The item did not grow or shrink and there wasn't enough room on the line.
-      if (!flexShrink0) {
-        // flex-shrink was set (either defined in CSS, or via its default value of 1).
-        // but the item didn't shrink.
-        if (flexShrink) {
-          property = this.renderCssProperty("flex-shrink", flexShrink);
-        } else {
-          property = this.renderCssProperty("flex-shrink", 1, true);
-        }
-
-        reasons.push(getStr("flexbox.itemSizing.shrinkAttemptButCouldnt"));
-
-        if (wasClamped) {
-          // Maybe it was clamped.
-          reasons.push(getStr("flexbox.itemSizing.shrinkAttemptWhenClamped"));
-        }
-      } else {
-        // flex-shrink was set to 0, so it didn't shrink.
-        property = this.renderCssProperty("flex-shrink", flexShrink);
       }
     }
 
@@ -316,6 +288,7 @@ class FlexItemSizingProperties extends PureComponent {
       flexItem,
     } = this.props;
     const {
+      computedStyle,
       flexItemSizing,
       properties,
     } = flexItem;
@@ -336,7 +309,7 @@ class FlexItemSizingProperties extends PureComponent {
     return (
       dom.ul({ className: "flex-item-sizing" },
         this.renderBaseSizeSection(flexItemSizing, properties, dimension),
-        this.renderFlexibilitySection(flexItemSizing, properties),
+        this.renderFlexibilitySection(flexItemSizing, properties, computedStyle),
         this.renderMinimumSizeSection(flexItemSizing, properties, dimension),
         this.renderMaximumSizeSection(flexItemSizing, properties, dimension),
         this.renderFinalSizeSection(flexItemSizing)

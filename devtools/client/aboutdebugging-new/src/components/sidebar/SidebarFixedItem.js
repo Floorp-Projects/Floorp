@@ -41,23 +41,27 @@ class SidebarFixedItem extends PureComponent {
       {
         isSelected,
         selectable: true,
-        className: "sidebar-fixed-item",
         onSelect: () => {
           dispatch(Actions.selectPage(id, runtimeId));
         },
       },
-      dom.img(
+      dom.div(
         {
-          className: "sidebar-fixed-item__icon",
-          src: icon,
-        }
-      ),
-      dom.span(
-        {
-          className: "ellipsis-text",
-          title: name,
+          className: "sidebar-fixed-item__container",
         },
-        name
+        dom.img(
+          {
+            className: "sidebar-fixed-item__icon",
+            src: icon,
+          }
+        ),
+        dom.span(
+          {
+            className: "ellipsis-text",
+            title: name,
+          },
+          name
+        )
       )
     );
   }

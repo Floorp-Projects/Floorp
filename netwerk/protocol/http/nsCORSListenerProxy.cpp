@@ -966,10 +966,10 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   }
 
   if (!mHasBeenCrossSite &&
-      NS_SUCCEEDED(mRequestingPrincipal->CheckMayLoad(uri, false, false)) &&
+      NS_SUCCEEDED(mRequestingPrincipal->CheckMayLoad(uri, true, false)) &&
       (originalURI == uri ||
        NS_SUCCEEDED(mRequestingPrincipal->CheckMayLoad(originalURI,
-                                                       false, false)))) {
+                                                       true, false)))) {
     return NS_OK;
   }
 

@@ -12,6 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 // This needs to match GeckoSessionSettings.java
 const USER_AGENT_MODE_MOBILE = 0;
+const USER_AGENT_MODE_DESKTOP = 1;
 
 // Handles GeckoView content settings including:
 // * tracking protection
@@ -47,7 +48,7 @@ class GeckoViewContentSettings extends GeckoViewContentModule {
       return;
     }
     let utils = content.windowUtils;
-    utils.setDesktopModeViewport(aMode != USER_AGENT_MODE_MOBILE);
+    utils.setDesktopModeViewport(aMode === USER_AGENT_MODE_DESKTOP);
     this._userAgentMode = aMode;
   }
 

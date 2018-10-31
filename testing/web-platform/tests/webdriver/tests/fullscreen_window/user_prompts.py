@@ -3,22 +3,12 @@
 import pytest
 
 from tests.support.asserts import assert_dialog_handled, assert_error, assert_success
+from tests.support.helpers import is_fullscreen
 
 
 def fullscreen(session):
     return session.transport.send(
         "POST", "session/{session_id}/window/fullscreen".format(**vars(session)))
-
-
-def is_fullscreen(session):
-    # At the time of writing, WebKit does not conform to the
-    # Fullscreen API specification.
-    #
-    # Remove the prefixed fallback when
-    # https://bugs.webkit.org/show_bug.cgi?id=158125 is fixed.
-    return session.execute_script("""
-        return !!(window.fullScreen || document.webkitIsFullScreen)
-        """)
 
 
 @pytest.fixture

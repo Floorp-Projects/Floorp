@@ -91,6 +91,13 @@ enum {
     JSSLOT_DEBUGFRAME_COUNT
 };
 
+inline js::Debugger*
+js::DebuggerFrame::owner() const
+{
+    JSObject* dbgobj = &getReservedSlot(JSSLOT_DEBUGFRAME_OWNER).toObject();
+    return Debugger::fromJSObject(dbgobj);
+}
+
 const ClassOps DebuggerFrame::classOps_ = {
     nullptr,    /* addProperty */
     nullptr,    /* delProperty */

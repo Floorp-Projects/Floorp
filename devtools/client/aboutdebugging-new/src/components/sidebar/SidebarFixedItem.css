@@ -10,12 +10,13 @@
  *  +--------+----------------+
  */
 
-.sidebar-fixed-item {
+.sidebar-fixed-item__container {
   align-items: center;
   border-radius: 2px;
   display: grid;
   grid-template-columns: 34px 1fr;
   font-size: 16px;
+  height: 100%;
 }
 
 .sidebar-fixed-item__icon {

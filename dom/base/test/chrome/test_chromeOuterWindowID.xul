@@ -83,9 +83,9 @@ windows.
     ok(nonRemote && !nonRemote.isRemoteBrowser,
        "Should have found a non-remote browser in test window " + num);
 
-    remote.loadURI(page);
+    BrowserTestUtils.loadURI(remote, page);
     await BrowserTestUtils.browserLoaded(remote);
-    nonRemote.loadURI(page);
+    BrowserTestUtils.loadURI(nonRemote, page);
     await BrowserTestUtils.browserLoaded(nonRemote);
 
     let result = {};

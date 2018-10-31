@@ -37,6 +37,15 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
     protocol.Actor.prototype.destroy.call(this);
   },
 
+  start: function() {
+    /**
+     * This function currently does nothing and returns nothing. It exists only
+     * so that the client can trigger the creation of the ChangesActor through
+     * the front, without triggering side effects, and with a sensible semantic
+     * meaning.
+     */
+  },
+
   changeCount: function() {
     return this.changes.length;
   },
@@ -51,23 +60,36 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
   },
 
   allChanges: function() {
+    /**
+     * This function is called by all change event consumers on the client
+     * to get their initial state synchronized with the ChangesActor. We
+     * set a flag when this function is called so we know that it's worthwhile
+     * to send events.
+     */
+    this._changesHaveBeenRequested = true;
     return this.changes.slice();
   },
 
   pushChange: function(change) {
     this.changes.push(change);
-    this.emit("add-change", change);
+    if (this._changesHaveBeenRequested) {
+      this.emit("add-change", change);
+    }
   },
 
   popChange: function() {
     const change = this.changes.pop();
-    this.emit("remove-change", change);
+    if (this._changesHaveBeenRequested) {
+      this.emit("remove-change", change);
+    }
     return change;
   },
 
   clearChanges: function() {
     this.changes.length = 0;
-    this.emit("clear-changes");
+    if (this._changesHaveBeenRequested) {
+      this.emit("clear-changes");
+    }
   },
 });
 

@@ -18,9 +18,11 @@ add_task(async function() {
   const { document, tab } = await openAboutDebugging();
 
   const connectSidebarItem = findSidebarItemByText("Connect", document);
+  const connectLink = connectSidebarItem.querySelector(".js-sidebar-link");
   ok(connectSidebarItem, "Found the Connect sidebar item");
 
   const thisFirefoxSidebarItem = findSidebarItemByText("This Firefox", document);
+  const thisFirefoxLink = thisFirefoxSidebarItem.querySelector(".js-sidebar-link");
   ok(thisFirefoxSidebarItem, "Found the ThisFirefox sidebar item");
   ok(isSidebarItemSelected(thisFirefoxSidebarItem),
     "ThisFirefox sidebar item is selected by default");
@@ -32,7 +34,7 @@ add_task(async function() {
   await waitUntil(() => findDebugTargetByText("TAB1", document));
 
   info("Click on the Connect item in the sidebar");
-  connectSidebarItem.click();
+  connectLink.click();
 
   info("Wait until Connect page is displayed");
   await waitUntil(() => document.querySelector(".js-connect-page"));
@@ -43,7 +45,7 @@ add_task(async function() {
   const backgroundTab2 = await addTab(TAB_URL_2, { background: true });
 
   info("Click on the ThisFirefox item in the sidebar");
-  thisFirefoxSidebarItem.click();
+  thisFirefoxLink.click();
 
   info("Wait until ThisFirefox page is displayed");
   await waitUntil(() => document.querySelector(".js-runtime-page"));

@@ -363,10 +363,13 @@ DoCORSChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo,
     return NS_OK;
   }
 
-  nsIPrincipal* loadingPrincipal = aLoadInfo->LoadingPrincipal();
+  // We use the triggering principal here, rather than the loading principal
+  // to ensure that anonymous CORS content in the browser resources and in
+  // WebExtensions is allowed to load.
+  nsIPrincipal* principal = aLoadInfo->TriggeringPrincipal();
   RefPtr<nsCORSListenerProxy> corsListener =
     new nsCORSListenerProxy(aInAndOutListener,
-                            loadingPrincipal,
+                            principal,
                             aLoadInfo->GetCookiePolicy() ==
                               nsILoadInfo::SEC_COOKIES_INCLUDE);
   // XXX: @arg: DataURIHandling::Allow
