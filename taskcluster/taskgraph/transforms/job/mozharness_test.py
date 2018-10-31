@@ -74,7 +74,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
     artifacts = [
         # (artifact name prefix, in-image path)
-        ("public/logs/", "{workdir}/workspace/build/logs/".format(**run)),
+        ("public/logs/", "{workdir}/workspace/logs/".format(**run)),
         ("public/test", "{workdir}/artifacts/".format(**run)),
         ("public/test_info/", "{workdir}/workspace/build/blobber_upload_dir/".format(**run)),
     ]
@@ -344,7 +344,7 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
         'type': 'directory',
     } for (prefix, path) in [
         # (artifact name prefix, in-image path relative to homedir)
-        ("public/logs/", "workspace/build/upload/logs/"),
+        ("public/logs/", "workspace/build/logs/"),
         ("public/test", "artifacts/"),
         ("public/test_info/", "workspace/build/blobber_upload_dir/"),
     ]]
@@ -422,7 +422,7 @@ def mozharness_test_on_script_engine_autophone(config, job, taskdesc):
     artifacts = [
         # (artifact name prefix, in-image path)
         ("public/test/", "/builds/worker/artifacts"),
-        ("public/logs/", "/builds/worker/workspace/build/upload/logs"),
+        ("public/logs/", "/builds/worker/workspace/build/logs"),
         ("public/test_info/", "/builds/worker/workspace/build/blobber_upload_dir"),
     ]
 
