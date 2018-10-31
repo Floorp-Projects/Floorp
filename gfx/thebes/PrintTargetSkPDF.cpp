@@ -7,6 +7,7 @@
 
 #include "mozilla/gfx/2D.h"
 #include "nsString.h"
+#include "SkPDFDocument.h"
 #include <vector>
 
 namespace mozilla {
@@ -48,18 +49,16 @@ PrintTargetSkPDF::BeginPrinting(const nsAString& aTitle,
   // because it's only now that we are given aTitle which we want for the
   // PDF metadata.
 
-  SkDocument::PDFMetadata metadata;
+  SkPDF::Metadata metadata;
   metadata.fTitle = NS_ConvertUTF16toUTF8(aTitle).get();
   metadata.fCreator = "Firefox";
   SkTime::DateTime now;
   SkTime::GetDateTime(&now);
-  metadata.fCreation.fEnabled = true;
-  metadata.fCreation.fDateTime = now;
-  metadata.fModified.fEnabled = true;
-  metadata.fModified.fDateTime = now;
+  metadata.fCreation = now;
+  metadata.fModified = now;
 
   // SkDocument stores a non-owning raw pointer to aStream
-  mPDFDoc = SkDocument::MakePDF(mOStream.get(), metadata);
+  mPDFDoc = SkPDF::MakeDocument(mOStream.get(), metadata);
 
   return mPDFDoc ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -125,9 +124,9 @@ already_AddRefed<DrawTarget>
 PrintTargetSkPDF::GetReferenceDrawTarget()
 {
   if (!mRefDT) {
-    SkDocument::PDFMetadata metadata;
+    SkPDF::Metadata metadata;
     // SkDocument stores a non-owning raw pointer to aStream
-    mRefPDFDoc = SkDocument::MakePDF(&mRefOStream, metadata);
+    mRefPDFDoc = SkPDF::MakeDocument(&mRefOStream, metadata);
     if (!mRefPDFDoc) {
       return nullptr;
     }
