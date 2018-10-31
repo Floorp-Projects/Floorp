@@ -19,7 +19,7 @@
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
 #include "nscore.h"
-#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsAutoPtr.h"
 #include "nsQueryObject.h"
 

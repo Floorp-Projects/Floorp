@@ -117,7 +117,7 @@ public:
 
     nsCOMPtr<nsIURI>                      mURI;
     nsCOMPtr<nsIURI>                      mReferrerURI;
-    nsTArray<nsCOMPtr<nsIWeakReference>>  mSources;
+    nsTArray<nsWeakPtr>                   mSources;
 
     // The policy type to be used for fetching the resource.
     nsContentPolicyType                   mPolicyType;

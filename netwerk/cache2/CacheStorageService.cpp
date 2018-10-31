@@ -29,7 +29,6 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
-#include "nsWeakReference.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/DebugOnly.h"

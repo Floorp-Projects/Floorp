@@ -93,7 +93,7 @@
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #include "nsViewManager.h"
-#include "nsWeakReference.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsWindowWatcher.h"
 #include "PermissionMessageUtils.h"
 #include "PuppetWidget.h"

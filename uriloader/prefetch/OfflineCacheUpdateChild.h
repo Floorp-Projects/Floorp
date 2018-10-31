@@ -15,8 +15,8 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIURI.h"
+#include "nsIWeakReference.h"
 #include "nsString.h"
-#include "nsWeakReference.h"
 
 class nsPIDOMWindowInner;
 

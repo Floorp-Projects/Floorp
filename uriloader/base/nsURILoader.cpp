@@ -22,7 +22,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsIInputStream.h"
 #include "nsIStreamConverterService.h"
-#include "nsWeakReference.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsIHttpChannel.h"
 #include "nsIMultiPartChannel.h"
 #include "netCore.h"

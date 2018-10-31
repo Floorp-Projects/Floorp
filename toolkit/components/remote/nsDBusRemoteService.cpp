@@ -14,7 +14,6 @@
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/Base64.h"
 #include "nsIServiceManager.h"
-#include "nsIWeakReference.h"
 #include "nsIWidget.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCID.h"

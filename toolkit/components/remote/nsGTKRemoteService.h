@@ -13,6 +13,7 @@
 #include <gtk/gtk.h>
 
 #include "nsIRemoteService.h"
+#include "nsIWeakReference.h"
 #include "nsInterfaceHashtable.h"
 #include "nsXRemoteService.h"
 #include "mozilla/Attributes.h"

@@ -8,9 +8,9 @@
 #define WindowDestroyedEvent_h
 
 #include "nsGlobalWindow.h"
-#include "nsThreadUtils.h"
-#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsString.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 

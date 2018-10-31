@@ -116,7 +116,7 @@ private:
     nsCOMPtr<nsIURI> mManifestURI;
     nsCOMPtr<nsIURI> mDocumentURI;
     nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
-    nsCOMPtr<nsIWeakReference> mDocument;
+    nsWeakPtr mDocument;
     bool mDidReleaseThis;
 };
 

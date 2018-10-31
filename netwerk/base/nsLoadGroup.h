@@ -11,7 +11,6 @@
 #include "nsPILoadGroupInternal.h"
 #include "nsAgg.h"
 #include "nsCOMPtr.h"
-#include "nsWeakPtr.h"
 #include "nsWeakReference.h"
 #include "nsISupportsPriority.h"
 #include "PLDHashTable.h"

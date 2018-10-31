@@ -9,7 +9,6 @@
 
 #include "nsISupports.h"
 #include "mozilla/dom/EventTarget.h"
-#include "nsWeakReference.h"
 
 class nsPIDOMWindowOuter;
 class nsIControllers;

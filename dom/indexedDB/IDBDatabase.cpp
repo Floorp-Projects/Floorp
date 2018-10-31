@@ -45,6 +45,7 @@
 #include "nsIScriptError.h"
 #include "nsISupportsPrimitives.h"
 #include "nsThreadUtils.h"
+#include "nsIWeakReferenceUtils.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
 #include "ScriptErrorHelper.h"
@@ -918,7 +919,7 @@ IDBDatabase::GetOrCreateFileActorForBlob(Blob* aBlob)
   // a) it is unique per blob, b) it is reference-counted so that we can
   // guarantee that it stays alive, and c) it doesn't hold the actual File
   // alive.
-  nsCOMPtr<nsIWeakReference> weakRef = do_GetWeakReference(aBlob);
+  nsWeakPtr weakRef = do_GetWeakReference(aBlob);
   MOZ_ASSERT(weakRef);
 
   PBackgroundIDBDatabaseFileChild* actor = nullptr;
@@ -1074,7 +1075,7 @@ IDBDatabase::ExpireFileActors(bool aExpireAll)
 
       bool shouldExpire = aExpireAll;
       if (!shouldExpire) {
-        nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(key);
+        nsWeakPtr weakRef = do_QueryInterface(key);
         MOZ_ASSERT(weakRef);
 
         nsCOMPtr<nsISupports> referent = do_QueryReferent(weakRef);

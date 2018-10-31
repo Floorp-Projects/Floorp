@@ -14,7 +14,7 @@
 #ifdef MOZ_XUL
 #include "nsITreeBoxObject.h"
 #endif
-#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 #include "mozilla/Attributes.h"
 
 class nsIContent;

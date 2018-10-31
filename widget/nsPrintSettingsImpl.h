@@ -8,9 +8,9 @@
 #define nsPrintSettingsImpl_h__
 
 #include "nsIPrintSettings.h"  
+#include "nsIWeakReferenceUtils.h"
 #include "nsMargin.h"  
 #include "nsString.h"
-#include "nsWeakReference.h"  
 
 #define NUM_HEAD_FOOT 3
 

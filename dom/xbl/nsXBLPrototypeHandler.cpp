@@ -29,6 +29,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptError.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsGkAtoms.h"
@@ -874,7 +875,7 @@ nsXBLPrototypeHandler::ConstructPrototype(Element* aKeyElement,
   if (aKeyElement) {
     mType |= NS_HANDLER_TYPE_XUL;
     MOZ_ASSERT(!mPrototypeBinding);
-    nsCOMPtr<nsIWeakReference> weak = do_GetWeakReference(aKeyElement);
+    nsWeakPtr weak = do_GetWeakReference(aKeyElement);
     if (!weak) {
       return;
     }

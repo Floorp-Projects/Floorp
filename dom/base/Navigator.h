@@ -17,7 +17,6 @@
 #include "nsInterfaceHashtable.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsWeakPtr.h"
 #include "mozilla/dom/MediaKeySystemAccessManager.h"
 
 class nsPluginArray;

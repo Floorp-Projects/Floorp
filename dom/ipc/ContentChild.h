@@ -20,7 +20,6 @@
 #include "nsTHashtable.h"
 #include "nsRefPtrHashtable.h"
 
-#include "nsWeakPtr.h"
 #include "nsIWindowProvider.h"
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)

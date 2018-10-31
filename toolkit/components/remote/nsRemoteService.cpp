@@ -20,7 +20,6 @@
 #include "nsAppShellCID.h"
 #include "nsInterfaceHashtable.h"
 #include "mozilla/ModuleUtils.h"
-#include "nsIWeakReference.h"
 #include "nsGTKToolkit.h"
 #include "nsICommandLineRunner.h"
 #include "nsCommandLine.h"

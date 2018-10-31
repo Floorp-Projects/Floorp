@@ -14,7 +14,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "nsWeakPtr.h"
 #include "nsIControllers.h"
 #include "nsCycleCollectionParticipant.h"
 

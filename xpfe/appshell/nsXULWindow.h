@@ -31,7 +31,6 @@
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
 #include "nsIXULBrowserWindow.h"
-#include "nsIWeakReference.h"
 #include "nsIWidgetListener.h"
 #include "nsITabParent.h"
 #include "nsIXULStore.h"
@@ -162,7 +161,7 @@ protected:
    nsCOMPtr<nsIWidget>     mWindow;
    nsCOMPtr<nsIDocShell>   mDocShell;
    nsCOMPtr<nsPIDOMWindowOuter>  mDOMWindow;
-   nsCOMPtr<nsIWeakReference> mParentWindow;
+   nsWeakPtr               mParentWindow;
    nsCOMPtr<nsIPrompt>     mPrompter;
    nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
    nsCOMPtr<nsIXULBrowserWindow> mXULBrowserWindow;

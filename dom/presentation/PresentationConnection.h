@@ -14,7 +14,7 @@
 #include "mozilla/dom/PresentationConnectionCloseEventBinding.h"
 #include "nsIPresentationListener.h"
 #include "nsIRequest.h"
-#include "nsWeakReference.h"
+#include "nsIWeakReferenceUtils.h"
 
 namespace mozilla {
 namespace dom {

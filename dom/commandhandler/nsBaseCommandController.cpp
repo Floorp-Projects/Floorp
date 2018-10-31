@@ -6,11 +6,9 @@
 
 #include "nsString.h"
 #include "nsIComponentManager.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsBaseCommandController.h"
 #include "nsControllerCommandTable.h"
-
-#include "nsString.h"
-#include "nsWeakPtr.h"
 
 NS_IMPL_ADDREF(nsBaseCommandController)
 NS_IMPL_RELEASE(nsBaseCommandController)

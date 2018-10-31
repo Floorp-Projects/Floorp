@@ -10,7 +10,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
-#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"

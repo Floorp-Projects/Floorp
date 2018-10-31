@@ -2434,7 +2434,7 @@ nsOfflineCacheUpdate::AddObserver(nsIOfflineCacheUpdateObserver *aObserver,
     NS_ENSURE_TRUE(mState >= STATE_INITIALIZED, NS_ERROR_NOT_INITIALIZED);
 
     if (aHoldWeak) {
-        nsCOMPtr<nsIWeakReference> weakRef = do_GetWeakReference(aObserver);
+        nsWeakPtr weakRef = do_GetWeakReference(aObserver);
         mWeakObservers.AppendObject(weakRef);
     } else {
         mObservers.AppendObject(aObserver);

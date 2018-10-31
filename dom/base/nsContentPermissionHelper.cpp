@@ -27,7 +27,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIDocument.h"
-#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 
 using mozilla::Unused;          // <snicker>
 using namespace mozilla::dom;

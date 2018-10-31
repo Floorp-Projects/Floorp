@@ -24,7 +24,7 @@ nsObserverList::AddObserver(nsIObserver* anObserver, bool ownsWeak)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIWeakReference> weak = do_GetWeakReference(anObserver);
+  nsWeakPtr weak = do_GetWeakReference(anObserver);
   if (!weak) {
     return NS_NOINTERFACE;
   }
@@ -46,7 +46,7 @@ nsObserverList::RemoveObserver(nsIObserver* anObserver)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIWeakReference> observerRef = do_GetWeakReference(anObserver);
+  nsWeakPtr observerRef = do_GetWeakReference(anObserver);
   if (!observerRef) {
     return NS_ERROR_FAILURE;
   }

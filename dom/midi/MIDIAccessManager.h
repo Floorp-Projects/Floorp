@@ -11,7 +11,6 @@
 #include "nsIObserver.h"
 #include "mozilla/dom/MIDITypes.h"
 #include "mozilla/Observer.h"
-#include "nsWeakPtr.h"
 
 namespace mozilla {
 namespace dom {
