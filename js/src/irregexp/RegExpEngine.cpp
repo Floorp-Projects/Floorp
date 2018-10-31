@@ -1735,17 +1735,16 @@ IsNativeRegExpEnabled(JSContext* cx)
 }
 
 RegExpCode
-irregexp::CompilePattern(JSContext* cx, HandleRegExpShared shared, RegExpCompileData* data,
-                         HandleLinearString sample, bool is_global, bool ignore_case,
-                         bool is_latin1, bool match_only, bool force_bytecode, bool sticky,
-                         bool unicode, RegExpShared::JitCodeTables& tables)
+irregexp::CompilePattern(JSContext* cx, LifoAlloc& alloc, HandleRegExpShared shared,
+                         RegExpCompileData* data, HandleLinearString sample, bool is_global,
+                         bool ignore_case, bool is_latin1, bool match_only, bool force_bytecode,
+                         bool sticky, bool unicode, RegExpShared::JitCodeTables& tables)
 {
     if ((data->capture_count + 1) * 2 - 1 > RegExpMacroAssembler::kMaxRegister) {
         JS_ReportErrorASCII(cx, "regexp too big");
         return RegExpCode();
     }
 
-    LifoAlloc& alloc = cx->tempLifoAlloc();
     RegExpCompiler compiler(cx, &alloc, data->capture_count, ignore_case, is_latin1, match_only,
                             unicode);
 

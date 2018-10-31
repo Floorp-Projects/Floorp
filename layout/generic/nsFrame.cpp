@@ -1192,6 +1192,27 @@ nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
   mMayHaveRoundedCorners = true;
 }
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+void
+nsIFrame::AssertNewStyleIsSane(ComputedStyle& aNewStyle)
+{
+  MOZ_DIAGNOSTIC_ASSERT(PresShell() == aNewStyle.PresContextForFrame()->PresShell());
+  MOZ_DIAGNOSTIC_ASSERT(
+    aNewStyle.GetPseudo() == mComputedStyle->GetPseudo() ||
+    // ::first-line continuations are weird, this should probably be fixed via
+    // bug 1465474.
+    (mComputedStyle->GetPseudo() == nsCSSPseudoElements::firstLine() &&
+     aNewStyle.GetPseudo() == nsCSSAnonBoxes::mozLineFrame()) ||
+    // ::first-letter continuations are broken, in particular floating ones, see
+    // bug 1490281. The construction code tries to fix this up after the fact,
+    // then restyling undoes it...
+    (mComputedStyle->GetPseudo() == nsCSSAnonBoxes::mozText() &&
+     aNewStyle.GetPseudo() == nsCSSAnonBoxes::firstLetterContinuation()) ||
+    (mComputedStyle->GetPseudo() == nsCSSAnonBoxes::firstLetterContinuation() &&
+     aNewStyle.GetPseudo() == nsCSSAnonBoxes::mozText()));
+}
+#endif
+
 void
 nsIFrame::ReparentFrameViewTo(nsViewManager* aViewManager,
                               nsView*        aNewParentView,

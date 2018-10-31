@@ -4357,7 +4357,6 @@ BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(const size_t start, con
     BINJS_TRY_VAR(reobj, RegExpObject::create(cx_,
         pattern,
         reflags,
-        alloc_,
         TenuredObject));
 
     BINJS_TRY_DECL(result, factory_.newRegExp(reobj, tokenizer_->pos(start), *this));

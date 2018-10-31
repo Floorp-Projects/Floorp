@@ -616,6 +616,8 @@ io = {
 
   running: true,
 
+  polling: false,
+
   init(details) {
     this.comspec = details.comspec;
 
@@ -668,6 +670,16 @@ io = {
 
     handlers = handlers.filter(handler => handler.event);
 
+    // Our poll loop is only useful if we've got at least 1 thing to poll other than our own
+    // signal.
+    if (handlers.length == 1) {
+      this.polling = false;
+    } else if (!this.polling && this.running) {
+      // Restart the poll loop if necessary:
+      setTimeout(this.loop.bind(this), 0);
+      this.polling = true;
+    }
+
     this.eventHandlers = handlers;
 
     let handles = handlers.map(handler => handler.event);
@@ -676,7 +688,7 @@ io = {
 
   loop() {
     this.poll();
-    if (this.running) {
+    if (this.running && this.polling) {
       setTimeout(this.loop.bind(this), 0);
     }
   },

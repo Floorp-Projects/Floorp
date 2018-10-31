@@ -1654,7 +1654,7 @@ impl YamlFrameReader {
             clip_node_id,
             transform_style,
             mix_blend_mode,
-            filters,
+            &filters,
             raster_space,
         );
 

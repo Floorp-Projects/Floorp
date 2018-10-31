@@ -29,7 +29,7 @@
              control="editBMPanel_folderMenuList"/>
       <hbox flex="1" align="center">
         <menulist id="editBMPanel_folderMenuList"
-                  class="folder-icon"
+                  class="folder-icon panel-button"
                   flex="1"
                   oncommand="gEditItemOverlay.onFolderMenuListCommand(event).catch(Components.utils.reportError);">
           <menupopup>
@@ -48,7 +48,7 @@
           </menupopup>
         </menulist>
         <button id="editBMPanel_foldersExpander"
-                class="expander-down"
+                class="expander-down panel-button"
                 tooltiptext="&editBookmarkOverlay.foldersExpanderDown.tooltip;"
                 tooltiptextdown="&editBookmarkOverlay.foldersExpanderDown.tooltip;"
                 tooltiptextup="&editBookmarkOverlay.expanderUp.tooltip;"
@@ -98,7 +98,7 @@
                  placeholder="&editBookmarkOverlay.tagsEmptyDesc.label;"
                  onchange="gEditItemOverlay.onTagsFieldChange();"/>
         <button id="editBMPanel_tagsSelectorExpander"
-                class="expander-down"
+                class="expander-down panel-button"
                 tooltiptext="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
                 tooltiptextdown="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
                 tooltiptextup="&editBookmarkOverlay.expanderUp.tooltip;"

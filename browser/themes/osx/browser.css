@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include shared.inc
+%include ../../../toolkit/themes/osx/global/shared.inc
 %define toolbarButtonPressed :hover:active:not([disabled="true"]):not([cui-areatype="menu-panel"])
 
 @namespace html url("http://www.w3.org/1999/xhtml");
@@ -25,6 +25,8 @@
   --arrowpanel-dimmed-further: hsla(0,0%,80%,.45);
   --arrowpanel-dimmed-even-further: hsla(0,0%,80%,.8);
 
+  --arrowpanel-field-background: rgba(249,249,250,.3);
+
   --urlbar-separator-color: hsla(0,0%,16%,.2);
 
   --toolbox-border-bottom-color: #e1e1e2;
@@ -43,6 +45,8 @@
   --arrowpanel-dimmed: rgba(249,249,250,.1);
   --arrowpanel-dimmed-further: rgba(249,249,250,.15);
   --arrowpanel-dimmed-even-further: rgba(249,249,250,.2);
+
+  --arrowpanel-field-background: rgba(12,12,13,.3);
 }
 
 #navigator-toolbox {
@@ -398,12 +402,10 @@ html|input.urlbar-input {
 #editBookmarkPanelRows > vbox > textbox,
 #editBookmarkPanelRows > vbox > hbox > textbox {
   -moz-appearance: none;
-  background: linear-gradient(#fafafa, #fff);
-  background-clip: padding-box;
-  border-radius: 3px;
-  border: 1px solid rgba(0,0,0,.3) !important;
-  box-shadow: inset 0 1px 1px 1px rgba(0,0,0,.05),
-              0 1px rgba(255,255,255,.3);
+  background-color: var(--arrowpanel-field-background);
+  color: inherit;
+  border-radius: 2px;
+  border: 1px solid var(--panel-separator-color) !important;
   margin: 0;
   padding: 3px 6px;
 }
@@ -420,49 +422,38 @@ html|input.urlbar-input {
    editBookmark.css. */
 
 #editBMPanel_newFolderBox {
-  background: linear-gradient(#fff, #f2f2f2);
-  background-origin: padding-box;
-  background-clip: padding-box;
-  border-radius: 0 0 3px 3px;
-  border: 1px solid #a5a5a5;
-  box-shadow: inset 0 1px rgba(255,255,255,.8),
-              inset 0 0 1px rgba(255,255, 255,.25),
-              0 1px rgba(255,255,255,.3);
+  background-color: var(--arrowpanel-field-background);
+  color: inherit;
+  border-radius: 0 2px;
+  border: 1px solid var(--panel-separator-color);
   margin: 0;
   padding: 0;
-  height:  20px;
+  height: 20px;
 }
 
 #editBMPanel_newFolderButton {
   -moz-appearance: none;
-  border: 0 solid #a5a5a5;
+  border: 0 solid var(--panel-separator-color);
   border-inline-end-width: 1px;
   padding: 0 9px;
   margin: 0;
   min-width: 21px;
   min-height: 20px;
-  height:  20px;
-  color: #fff;
+  height: 20px;
+  color: inherit;
   list-style-image: url("chrome://browser/skin/panel-plus-sign.png");
   position: relative;
 }
 
 #editBMPanel_newFolderButton:hover:active {
-  background: linear-gradient(rgba(40,40,40,.9), rgba(70,70,70,.9));
-  box-shadow: inset 0 0 3px rgba(0,0,0,.2), inset 0 1px 7px rgba(0,0,0,.4);
+  background-color: var(--arrowpanel-dimmed-further);
 }
 
 #editBMPanel_newFolderButton:-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow);
 }
 
-#editBMPanel_newFolderButton .button-text {
-  display: none;
-}
-
 #editBMPanel_folderMenuList {
-  @hudButton@
-  background-clip: padding-box;
   margin: 0;
   min-height: 22px;
   padding-top: 2px;
@@ -475,18 +466,16 @@ html|input.urlbar-input {
   box-shadow: var(--focus-ring-box-shadow);
 }
 
-#editBMPanel_folderMenuList[open="true"],
-#editBMPanel_folderMenuList:hover:active {
-  @hudButtonPressed@
-}
-
 #editBMPanel_folderMenuList > .menulist-dropmarker {
   -moz-appearance: none;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
   display: -moz-box;
   -moz-box-align: center;
   padding-inline-end: 4px;
   width: 7px;
-  list-style-image: url("chrome://global/skin/icons/panel-dropmarker.png");
 }
 
 /**** folder tree and tag selector ****/
@@ -494,12 +483,10 @@ html|input.urlbar-input {
 #editBMPanel_folderTree,
 #editBMPanel_tagsSelector {
   -moz-appearance: none;
-  background: linear-gradient(#fafafa, #fff);
-  background-clip: padding-box;
-  border-radius: 3px;
-  border: 1px solid rgba(0,0,0,.3);
-  box-shadow: inset 0 1px 1px 1px rgba(0,0,0,.05),
-              0 1px rgba(255,255,255,.3);
+  background-color: var(--arrowpanel-field-background);
+  color: inherit;
+  border-radius: 2px;
+  border: 1px solid var(--panel-separator-color);
   margin: 0;
 }
 
@@ -523,29 +510,14 @@ html|input.urlbar-input {
 
 #editBookmarkPanel .expander-up,
 #editBookmarkPanel .expander-down {
-  @hudButton@
+  -moz-appearance: none; /* override button.css */
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
   margin: 0;
   margin-inline-start: 4px;
   min-width: 27px;
   min-height: 22px;
-}
-
-#editBookmarkPanel .expander-up:-moz-focusring,
-#editBookmarkPanel .expander-down:-moz-focusring {
-  box-shadow: var(--focus-ring-box-shadow);
-}
-
-#editBookmarkPanel .expander-up:hover:active,
-#editBookmarkPanel .expander-down:hover:active {
-  @hudButtonPressed@
-}
-
-#editBookmarkPanel .expander-up {
-  list-style-image: url("chrome://browser/skin/panel-expander-open.png");
-}
-
-#editBookmarkPanel .expander-down {
-  list-style-image: url("chrome://browser/skin/panel-expander-closed.png");
 }
 
 #editBookmarkPanel .expander-up > .button-box > .button-icon,
@@ -558,19 +530,12 @@ html|input.urlbar-input {
   display: none;
 }
 
-@media (min-resolution: 2dppx) {
-  #editBookmarkPanel .expander-up {
-    list-style-image: url("chrome://browser/skin/panel-expander-open@2x.png");
-  }
+#editBookmarkPanel .expander-up {
+  list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
+}
 
-  #editBookmarkPanel .expander-down {
-    list-style-image: url("chrome://browser/skin/panel-expander-closed@2x.png");
-  }
-
-  #editBookmarkPanel .expander-up > .button-box > .button-icon,
-  #editBookmarkPanel .expander-down > .button-box > .button-icon {
-    width: 9px;
-  }
+#editBookmarkPanel .expander-down {
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
 }
 
 #editBMPanel_tagsField > moz-input-box > html|*.textbox-input::placeholder {
