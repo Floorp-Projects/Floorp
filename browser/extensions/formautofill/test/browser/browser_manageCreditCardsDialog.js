@@ -153,19 +153,15 @@ add_task(async function test_hasEditLoginPrompt() {
   let selRecords = win.document.querySelector(TEST_SELECTORS.selRecords);
   let btnRemove = win.document.querySelector(TEST_SELECTORS.btnRemove);
   let btnAdd = win.document.querySelector(TEST_SELECTORS.btnAdd);
-  // let btnEdit = win.document.querySelector(TEST_SELECTORS.btnEdit);
+  let btnEdit = win.document.querySelector(TEST_SELECTORS.btnEdit);
 
   EventUtils.synthesizeMouseAtCenter(selRecords.children[0], {}, win);
 
-  // Login dialog should show when trying to edit a credit card record.
-  // TODO: test disabled because re-auth is not implemented yet (bug 1429265).
-  /*
   let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(); // cancel
   EventUtils.synthesizeMouseAtCenter(btnEdit, {}, win);
   await osKeyStoreLoginShown;
   await new Promise(resolve => waitForFocus(resolve, win));
   await new Promise(resolve => executeSoon(resolve));
-  */
 
   // Login is not required for removing credit cards.
   EventUtils.synthesizeMouseAtCenter(btnRemove, {}, win);

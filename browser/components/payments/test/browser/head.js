@@ -328,6 +328,12 @@ async function spawnInDialogForMerchantTask(merchantTaskFn, dialogTaskFn, taskAr
   });
 }
 
+async function loginAndCompletePayment(frame) {
+  let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+  await osKeyStoreLoginShown;
+}
+
 async function setupFormAutofillStorage() {
   await formAutofillStorage.initialize();
 }
