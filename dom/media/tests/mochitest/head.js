@@ -422,8 +422,7 @@ function setupEnvironment() {
       ['media.getusermedia.screensharing.enabled', true],
       ['media.getusermedia.window.focus_source.enabled', false],
       ['media.recorder.audio_node.enabled', true],
-      ['media.webaudio.audiocontextoptions-samplerate.enabled', true],
-      ['media.cubeb_max_input_streams', 10000]
+      ['media.webaudio.audiocontextoptions-samplerate.enabled', true]
     ]
   };
 
