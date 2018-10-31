@@ -74,8 +74,7 @@ SendCallToMiddleman(size_t aCallId, CallArguments* aArguments, bool aDiverged)
   const Redirection& redirection = gRedirections[aCallId];
   MOZ_RELEASE_ASSERT(redirection.mMiddlemanCall);
 
-  Maybe<MonitorAutoLock> lock;
-  lock.emplace(*gMonitor);
+  MonitorAutoLock lock(*gMonitor);
 
   // Allocate and fill in a new MiddlemanCall.
   size_t id = gMiddlemanCalls.length();
@@ -120,12 +119,7 @@ SendCallToMiddleman(size_t aCallId, CallArguments* aArguments, bool aDiverged)
 
   // Perform the calls synchronously in the middleman.
   InfallibleVector<char> outputData;
-  if (!child::SendMiddlemanCallRequest(inputData.begin(), inputData.length(), &outputData)) {
-    // This thread is not allowed to perform middleman calls anymore. Release
-    // the lock and block until the process rewinds.
-    lock.reset();
-    Thread::WaitForever();
-  }
+  child::SendMiddlemanCallRequest(inputData.begin(), inputData.length(), &outputData);
 
   // Decode outputs for the calls just sent, and perform the ReplayOutput phase
   // on any older dependent calls we sent.

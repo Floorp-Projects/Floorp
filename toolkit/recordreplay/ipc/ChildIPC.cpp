@@ -70,6 +70,10 @@ static bool gDebuggerRunsInMiddleman;
 // Any response received to the last MiddlemanCallRequest message.
 static MiddlemanCallResponseMessage* gCallResponseMessage;
 
+// Whether some thread has sent a MiddlemanCallRequest and is waiting for
+// gCallResponseMessage to be filled in.
+static bool gWaitingForCallResponse;
+
 // Processing routine for incoming channel messages.
 static void
 ChannelMessageHandler(Message* aMsg)
@@ -168,6 +172,7 @@ ChannelMessageHandler(Message* aMsg)
   }
   case MessageType::MiddlemanCallResponse: {
     MonitorAutoLock lock(*gMonitor);
+    MOZ_RELEASE_ASSERT(gWaitingForCallResponse);
     MOZ_RELEASE_ASSERT(!gCallResponseMessage);
     gCallResponseMessage = (MiddlemanCallResponseMessage*) aMsg;
     aMsg = nullptr; // Avoid freeing the message below.
@@ -564,6 +569,9 @@ NotifyPaintComplete()
   NS_DispatchToMainThread(NewRunnableFunction("PaintFromMainThread", PaintFromMainThread));
 }
 
+// Whether we have repainted since diverging from the recording.
+static bool gDidRepaint;
+
 void
 Repaint(size_t* aWidth, size_t* aHeight)
 {
@@ -577,16 +585,18 @@ Repaint(size_t* aWidth, size_t* aHeight)
     return;
   }
 
-  // Ignore the request to repaint if the compositor thread has already
-  // diverged from the recording. In this case we have already done a repaint
-  // and the last graphics we sent will still be correct.
-  Thread* compositorThread = Thread::GetById(gCompositorThreadId);
-  if (!compositorThread->WillDivergeFromRecordingSoon()) {
-    // Allow the compositor to diverge from the recording so it can perform
-    // any paint we are about to trigger, or finish any in flight paint that
+  // Ignore the request to repaint if we already triggered a repaint, in which
+  // case the last graphics we sent will still be correct.
+  if (!gDidRepaint) {
+    gDidRepaint = true;
+
+    // Allow other threads to diverge from the recording so the compositor can
+    // perform any paint we are about to trigger, or finish any in flight paint
     // that existed at the point we are paused at.
-    Thread::GetById(gCompositorThreadId)->SetShouldDivergeFromRecording();
-    Thread::ResumeSingleIdleThread(gCompositorThreadId);
+    for (size_t i = MainThreadId + 1; i <= MaxRecordedThreadId; i++) {
+      Thread::GetById(i)->SetShouldDivergeFromRecording();
+    }
+    Thread::ResumeIdleThreads();
 
     // Create an artifical vsync to see if graphics have changed since the last
     // paint and a new paint is needed.
@@ -594,10 +604,14 @@ Repaint(size_t* aWidth, size_t* aHeight)
 
     // Wait for the compositor to finish all in flight paints, including any
     // one we just triggered.
-    MonitorAutoLock lock(*gMonitor);
-    while (gNumPendingPaints) {
-      gMonitor->Wait();
+    {
+      MonitorAutoLock lock(*gMonitor);
+      while (gNumPendingPaints) {
+        gMonitor->Wait();
+      }
     }
+
+    Thread::WaitForIdleThreads();
   }
 
   if (gDrawTargetBuffer) {
@@ -608,14 +622,6 @@ Repaint(size_t* aWidth, size_t* aHeight)
     *aWidth = 0;
     *aHeight = 0;
   }
-}
-
-static bool
-CompositorCanPerformMiddlemanCalls()
-{
-  // After repainting finishes the compositor is not allowed to send call
-  // requests to the middleman anymore.
-  return !!gNumPendingPaints;
 }
 
 bool
@@ -710,27 +716,17 @@ HitBreakpoint(bool aRecordingEndpoint, const uint32_t* aBreakpoints, size_t aNum
     });
 }
 
-bool
+void
 SendMiddlemanCallRequest(const char* aInputData, size_t aInputSize,
                          InfallibleVector<char>* aOutputData)
 {
-  Thread* thread = Thread::Current();
-
-  // Middleman calls can only be made from the main and compositor threads.
-  // These two threads cannot simultaneously send call requests or other
-  // messages, as doing so will race both here and in Channel::SendMessage.
-  // CompositorCanPerformMiddlemanCalls() ensures that the main thread is
-  // not actively sending messages at times when the compositor performs
-  // middleman calls.
-  MOZ_RELEASE_ASSERT(thread->IsMainThread() || thread->Id() == gCompositorThreadId);
-
-  if (thread->Id() == gCompositorThreadId && !CompositorCanPerformMiddlemanCalls()) {
-    return false;
-  }
-
+  AutoPassThroughThreadEvents pt;
   MonitorAutoLock lock(*gMonitor);
 
-  MOZ_RELEASE_ASSERT(!gCallResponseMessage);
+  while (gWaitingForCallResponse) {
+    gMonitor->Wait();
+  }
+  gWaitingForCallResponse = true;
 
   MiddlemanCallRequestMessage* msg = MiddlemanCallRequestMessage::New(aInputData, aInputSize);
   gChannel->SendMessage(*msg);
@@ -744,9 +740,9 @@ SendMiddlemanCallRequest(const char* aInputData, size_t aInputSize,
 
   free(gCallResponseMessage);
   gCallResponseMessage = nullptr;
+  gWaitingForCallResponse = false;
 
   gMonitor->Notify();
-  return true;
 }
 
 void
