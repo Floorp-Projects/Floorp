@@ -62,7 +62,7 @@ AutoLockFile::AutoLockFile(const std::string &Filename) {
 
   WaitForSingleObject(Handle, INFINITE);
 
-  FileDescriptor = _open(Filename.c_str(), _O_RDWR | _O_CREAT, 0666);
+  FileDescriptor = _open(Filename.c_str(), _O_RDWR | _O_CREAT | _O_BINARY, 0666);
 }
 
 AutoLockFile::~AutoLockFile() {

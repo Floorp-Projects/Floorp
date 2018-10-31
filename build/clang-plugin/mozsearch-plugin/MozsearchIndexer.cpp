@@ -489,7 +489,7 @@ public:
       // there. This ensures that header files that are included multiple times
       // in different ways are analyzed completely.
       char Buffer[65536];
-      FILE *Fp = Lock.openFile("r");
+      FILE *Fp = Lock.openFile("rb");
       if (!Fp) {
         fprintf(stderr, "Unable to open input file %s\n", Filename.c_str());
         exit(1);
@@ -509,7 +509,7 @@ public:
 
       // Overwrite the output file with the merged data. Since we have the lock,
       // this will happen atomically.
-      Fp = Lock.openFile("w");
+      Fp = Lock.openFile("wb");
       if (!Fp) {
         fprintf(stderr, "Unable to open output file %s\n", Filename.c_str());
         exit(1);
