@@ -194,10 +194,10 @@ union FileDescOrError {
 struct DomainPolicyClone
 {
     bool        active;
-    URIParams[] blacklist;
-    URIParams[] whitelist;
-    URIParams[] superBlacklist;
-    URIParams[] superWhitelist;
+    URIParams[] blocklist;
+    URIParams[] allowlist;
+    URIParams[] superBlocklist;
+    URIParams[] superAllowlist;
 };
 
 struct AndroidSystemInfo

@@ -249,8 +249,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
     } catch (e) {
       ok(true, "can't have two live domain policies");
     }
-    var sbRef = policy.superBlacklist;
-    isnot(sbRef, null, "superBlacklist non-null");
+    var sbRef = policy.superBlocklist;
+    isnot(sbRef, null, "superBlocklist non-null");
     ok(!sbRef.contains(makeURI('http://www.example.com')));
     sbRef.add(makeURI('http://www.example.com/foopy'));
     ok(sbRef.contains(makeURI('http://www.example.com')));
@@ -273,18 +273,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
     ok(!sbRef.contains(makeURI('http://www.example.com')),
        "Disabling domain policy clears the set");
     policy = ssm.activateDomainPolicy();
-    ok(policy.superBlacklist);
-    isnot(sbRef, policy.superBlacklist, "Mint new sets each time!");
+    ok(policy.superBlocklist);
+    isnot(sbRef, policy.superBlocklist, "Mint new sets each time!");
     policy.deactivate();
-    is(policy.blacklist, null, "blacklist nulled out");
+    is(policy.blocklist, null, "blocklist nulled out");
     policy = ssm.activateDomainPolicy();
-    isnot(policy.blacklist, null, "non-null again");
-    isnot(policy.blacklist, sbRef, "freshly minted");
+    isnot(policy.blocklist, null, "non-null again");
+    isnot(policy.blocklist, sbRef, "freshly minted");
     policy.deactivate();
 
     //
     // Now, create and apply a mock-policy. We check the same policy both as
-    // a blacklist and as a whitelist.
+    // a blocklist and as a allowlist.
     //
 
     window.testPolicy = {
@@ -303,20 +303,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
     };
 
     policy = ssm.activateDomainPolicy();
-    info("Testing Blacklist-style Domain Policy");
+    info("Testing Blocklist-style Domain Policy");
     return testDomainPolicy(true, testPolicy.exceptions,
                             testPolicy.superExceptions, testPolicy.exempt,
-                            testPolicy.notExempt, policy.blacklist,
-                            policy.superBlacklist, rootWin);
+                            testPolicy.notExempt, policy.blocklist,
+                            policy.superBlocklist, rootWin);
   }).then(function() {
     policy.deactivate();
     policy = ssm.activateDomainPolicy();
-    info("Testing Whitelist-style Domain Policy");
+    info("Testing Allowlist-style Domain Policy");
     setScriptEnabledForBrowser(false);
     return testDomainPolicy(false, testPolicy.exceptions,
                             testPolicy.superExceptions, testPolicy.exempt,
-                            testPolicy.notExempt, policy.whitelist,
-                            policy.superWhitelist, rootWin);
+                            testPolicy.notExempt, policy.allowlist,
+                            policy.superAllowlist, rootWin);
   }).then(function() {
     setScriptEnabledForBrowser(true);
     policy.deactivate();
