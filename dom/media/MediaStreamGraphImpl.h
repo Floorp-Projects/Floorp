@@ -326,12 +326,12 @@ public:
    * Returns smallest value of t such that t is a multiple of
    * WEBAUDIO_BLOCK_SIZE and t >= aTime.
    */
-  GraphTime RoundUpToEndOfAudioBlock(GraphTime aTime);
+  static GraphTime RoundUpToEndOfAudioBlock(GraphTime aTime);
   /**
    * Returns smallest value of t such that t is a multiple of
    * WEBAUDIO_BLOCK_SIZE and t > aTime.
    */
-  GraphTime RoundUpToNextAudioBlock(GraphTime aTime);
+  static GraphTime RoundUpToNextAudioBlock(GraphTime aTime);
   /**
    * Produce data for all streams >= aStreamIndex for the current time interval.
    * Advances block by block, each iteration producing data for all streams
@@ -672,6 +672,10 @@ public:
    */
   GraphTime mProcessedTime = 0;
   /**
+   * The graph should stop processing at this time.
+   */
+  GraphTime mEndTime;
+  /**
    * Date of the last time we updated the main thread with the graph state.
    */
   TimeStamp mLastMainThreadUpdate;
@@ -812,11 +816,6 @@ public:
 #endif
     return mLifecycleState;
   }
-  /**
-   * The graph should stop processing at or after this time.
-   * Only set on main thread. Read on both main and MSG thread.
-   */
-  Atomic<GraphTime> mEndTime;
 
   /**
    * True when we need to do a forced shutdown during application shutdown.
@@ -865,11 +864,6 @@ public:
    * audio.
    */
   const bool mRealtime;
-  /**
-   * True when a non-realtime MediaStreamGraph has started to process input.  This
-   * value is only accessed on the main thread.
-   */
-  bool mNonRealtimeProcessing;
   /**
    * True when a change has happened which requires us to recompute the stream
    * blocking order.

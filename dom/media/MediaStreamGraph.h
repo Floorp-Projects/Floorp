@@ -370,10 +370,8 @@ public:
    * graph thread receives the next graph update.
    *
    * If the graph has been shut down or destroyed, then the runnable will be
-   * dispatched to the event queue immediately.  If the graph is non-realtime
-   * and has not started, then the runnable will be run
-   * synchronously/immediately.  (There are no pending updates in these
-   * situations.)
+   * dispatched to the event queue immediately.  (There are no pending updates
+   * in this situation.)
    *
    * Main thread only.
    */
@@ -434,11 +432,6 @@ public:
 #endif
   void SetAudioOutputVolumeImpl(void* aKey, float aVolume);
   void AddAudioOutputImpl(void* aKey);
-  // Returns true if this stream has an audio output.
-  bool HasAudioOutput() const
-  {
-    return !mAudioOutputs.IsEmpty();
-  }
   void RemoveAudioOutputImpl(void* aKey);
   void AddVideoOutputImpl(already_AddRefed<MediaStreamVideoSink> aSink,
                           TrackID aID);
