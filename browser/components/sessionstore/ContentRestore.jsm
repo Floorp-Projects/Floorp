@@ -199,7 +199,7 @@ ContentRestoreInternal.prototype = {
                        Utils.makeInputStream(loadArguments.postData) : null;
         let triggeringPrincipal = loadArguments.triggeringPrincipal
                                   ? Utils.deserializePrincipal(loadArguments.triggeringPrincipal)
-                                  : null;
+                                  : Services.scriptSecurityManager.createNullPrincipal({});
 
         if (loadArguments.userContextId) {
           webNavigation.setOriginAttributesBeforeLoading({ userContextId: loadArguments.userContextId });
