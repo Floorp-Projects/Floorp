@@ -126,6 +126,7 @@
 
   skin/classic/browser/accessibility.svg              (../shared/icons/accessibility.svg)
   skin/classic/browser/accessibility-active.svg       (../shared/icons/accessibility-active.svg)
+  skin/classic/browser/add.svg                        (../shared/icons/add.svg)
   skin/classic/browser/arrow-left.svg                 (../shared/icons/arrow-left.svg)
   skin/classic/browser/back.svg                       (../shared/icons/back.svg)
   skin/classic/browser/back-12.svg                    (../shared/icons/back-12.svg)
@@ -202,7 +203,6 @@
   skin/classic/browser/tabbrowser/loading-30fps.svg            (../shared/tabbrowser/loading-30fps.svg)
   skin/classic/browser/tabbrowser/loading-burst.svg            (../shared/tabbrowser/loading-burst.svg)
   skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
-  skin/classic/browser/tabbrowser/newtab.svg                   (../shared/tabbrowser/newtab.svg)
   skin/classic/browser/tabbrowser/indicator-tab-attention.svg  (../shared/tabbrowser/indicator-tab-attention.svg)
   skin/classic/browser/tabbrowser/pendingpaint.png             (../shared/tabbrowser/pendingpaint.png)
   skin/classic/browser/tabbrowser/tab-audio-playing.svg        (../shared/tabbrowser/tab-audio-playing.svg)
