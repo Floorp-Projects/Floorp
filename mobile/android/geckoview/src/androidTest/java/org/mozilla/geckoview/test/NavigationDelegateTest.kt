@@ -205,7 +205,6 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    @Ignore
     @Test fun redirectLoad() {
         val redirectUri = if (sessionRule.env.isAutomation) {
             "http://example.org/tests/robocop/robocop_blank_02.html"
