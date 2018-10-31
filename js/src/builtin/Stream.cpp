@@ -24,22 +24,6 @@ enum ReaderType {
 };
 
 /**
- * Memory layout for ReadableByteStreamControllers, starting after the
- * slots shared among all types of controllers.
- *
- * PendingPullIntos is guaranteed to be in the  same compartment as the
- * controller, but might contain wrappers for objects from other compartments.
- *
- * AutoAllocateSize is a primitive (numeric) value.
- */
-enum ByteControllerSlots {
-    ByteControllerSlot_BYOBRequest = ReadableStreamController::SlotCount,
-    ByteControllerSlot_PendingPullIntos,
-    ByteControllerSlot_AutoAllocateSize,
-    ByteControllerSlotCount
-};
-
-/**
  * Memory layout for TeeState instances.
  *
  * The Reason1 and Reason2 slots store opaque values, which might be
@@ -2591,10 +2575,8 @@ ReadableStreamControllerCancelSteps(JSContext* cx,
 
     // Step 1 of 3.10.5.1: If this.[[pendingPullIntos]] is not empty,
     if (!unwrappedController->is<ReadableStreamDefaultController>()) {
-        Value unwrappedVal =
-            unwrappedController->getFixedSlot(ByteControllerSlot_PendingPullIntos);
-        RootedNativeObject unwrappedPendingPullIntos(cx);
-        unwrappedPendingPullIntos = &unwrappedVal.toObject().as<NativeObject>();
+        RootedNativeObject unwrappedPendingPullIntos(cx,
+            unwrappedController->as<ReadableByteStreamController>().pendingPullIntos());
 
         if (unwrappedPendingPullIntos->getDenseInitializedLength() != 0) {
             // Step a: Let firstDescriptor be the first element of
@@ -2688,10 +2670,8 @@ DequeueValue(JSContext* cx,
  */
 static JSObject*
 ReadableStreamDefaultControllerPullSteps(JSContext* cx,
-                                         Handle<ReadableStreamController*> unwrappedController)
+                                         Handle<ReadableStreamDefaultController*> unwrappedController)
 {
-    MOZ_ASSERT(unwrappedController->is<ReadableStreamDefaultController>());
-
     // Step 1: Let stream be this.[[controlledReadableStream]].
     Rooted<ReadableStream*> unwrappedStream(cx, unwrappedController->stream());
 
@@ -3062,7 +3042,7 @@ ReadableStreamDefaultControllerEnqueue(JSContext* cx,
 
 static MOZ_MUST_USE bool
 ReadableByteStreamControllerClearPendingPullIntos(JSContext* cx,
-                                                  Handle<ReadableStreamController*> controller);
+                                                  Handle<ReadableByteStreamController*> controller);
 
 /**
  * Streams spec, 3.9.7. ReadableStreamDefaultControllerError ( controller, e )
@@ -3214,10 +3194,10 @@ CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream
     }
 
     // Step 12: Set this.[[autoAllocateChunkSize]] to autoAllocateChunkSize.
-    controller->setFixedSlot(ByteControllerSlot_AutoAllocateSize, autoAllocateChunkSize);
+    controller->setAutoAllocateChunkSize(autoAllocateChunkSize);
 
     // Step 13: Set this.[[pendingPullIntos]] to a new empty List.
-    if (!SetNewList(cx, controller, ByteControllerSlot_PendingPullIntos)) {
+    if (!SetNewList(cx, controller, ReadableByteStreamController::Slot_PendingPullIntos)) {
         return nullptr;
     }
 
@@ -3333,7 +3313,7 @@ CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream
     // Omitted.
 
     // Step 13: Set this.[[pendingPullIntos]] to a new empty List.
-    if (!SetNewList(cx, controller, ByteControllerSlot_PendingPullIntos)) {
+    if (!SetNewList(cx, controller, ReadableByteStreamController::Slot_PendingPullIntos)) {
         return nullptr;
     }
 
@@ -3406,7 +3386,7 @@ static const ClassOps ReadableByteStreamControllerClassOps = {
     nullptr,        /* trace   */
 };
 
-CLASS_SPEC(ReadableByteStreamController, 3, 9, ClassSpec::DontDefineConstructor,
+CLASS_SPEC(ReadableByteStreamController, 3, SlotCount, ClassSpec::DontDefineConstructor,
            JSCLASS_BACKGROUND_FINALIZE, &ReadableByteStreamControllerClassOps);
 
 
@@ -3427,7 +3407,8 @@ ReadableByteStreamControllerHandleQueueDrain(JSContext* cx,
  * function's operation are created in the current cx compartment.
  */
 static MOZ_MUST_USE JSObject*
-ReadableByteStreamControllerPullSteps(JSContext* cx, Handle<ReadableStreamController*> controller)
+ReadableByteStreamControllerPullSteps(JSContext* cx,
+                                      Handle<ReadableByteStreamController*> controller)
 {
     // Step 1: Let stream be this.[[controlledReadableStream]].
     Rooted<ReadableStream*> stream(cx, controller->stream());
@@ -3524,7 +3505,7 @@ ReadableByteStreamControllerPullSteps(JSContext* cx, Handle<ReadableStreamContro
     }
 
     // Step 4: Let autoAllocateChunkSize be this.[[autoAllocateChunkSize]].
-    val = controller->getFixedSlot(ByteControllerSlot_AutoAllocateSize);
+    val = controller->autoAllocateChunkSize();
 
     // Step 5: If autoAllocateChunkSize is not undefined,
     if (!val.isUndefined()) {
@@ -3557,7 +3538,9 @@ ReadableByteStreamControllerPullSteps(JSContext* cx, Handle<ReadableStreamContro
         }
 
         // Step 5.d: Append pullIntoDescriptor as the last element of this.[[pendingPullIntos]].
-        if (!AppendToListAtSlot(cx, controller, ByteControllerSlot_PendingPullIntos,
+        if (!AppendToListAtSlot(cx,
+                                controller,
+                                ReadableByteStreamController::Slot_PendingPullIntos,
                                 pullIntoDescriptor))
         {
             return nullptr;
@@ -3593,10 +3576,14 @@ static MOZ_MUST_USE JSObject*
 ReadableStreamControllerPullSteps(JSContext* cx, Handle<ReadableStreamController*> controller)
 {
     if (controller->is<ReadableStreamDefaultController>()) {
-        return ReadableStreamDefaultControllerPullSteps(cx, controller);
+        Rooted<ReadableStreamDefaultController*> defaultController(cx,
+            &controller->as<ReadableStreamDefaultController>());
+        return ReadableStreamDefaultControllerPullSteps(cx, defaultController);
     }
 
-    return ReadableByteStreamControllerPullSteps(cx, controller);
+    Rooted<ReadableByteStreamController*> byteController(cx,
+        &controller->as<ReadableByteStreamController>());
+    return ReadableByteStreamControllerPullSteps(cx, byteController);
 }
 
 
@@ -3613,7 +3600,7 @@ ReadableStreamControllerPullSteps(JSContext* cx, Handle<ReadableStreamController
 
 static MOZ_MUST_USE bool
 ReadableByteStreamControllerInvalidateBYOBRequest(JSContext* cx,
-                                                  Handle<ReadableStreamController*> controller);
+                                                  Handle<ReadableByteStreamController*> controller);
 
 /**
  * Streams spec, 3.12.5. ReadableByteStreamControllerClearPendingPullIntos ( controller )
@@ -3624,17 +3611,15 @@ ReadableByteStreamControllerInvalidateBYOBRequest(JSContext* cx,
  */
 static MOZ_MUST_USE bool
 ReadableByteStreamControllerClearPendingPullIntos(JSContext* cx,
-                                                  Handle<ReadableStreamController*> controller)
+                                                  Handle<ReadableByteStreamController*> controller)
 {
-    MOZ_ASSERT(controller->is<ReadableByteStreamController>());
-
     // Step 1: Perform ! ReadableByteStreamControllerInvalidateBYOBRequest(controller).
     if (!ReadableByteStreamControllerInvalidateBYOBRequest(cx, controller)) {
         return false;
     }
 
     // Step 2: Set controller.[[pendingPullIntos]] to a new empty List.
-    return SetNewList(cx, controller, ByteControllerSlot_PendingPullIntos);
+    return SetNewList(cx, controller, ReadableByteStreamController::Slot_PendingPullIntos);
 }
 
 /**
@@ -3665,8 +3650,7 @@ ReadableByteStreamControllerClose(JSContext* cx, Handle<ReadableByteStreamContro
     }
 
     // Step 5: If controller.[[pendingPullIntos]] is not empty,
-    RootedValue val(cx, controller->getFixedSlot(ByteControllerSlot_PendingPullIntos));
-    RootedNativeObject pendingPullIntos(cx, &val.toObject().as<NativeObject>());
+    RootedNativeObject pendingPullIntos(cx, controller->pendingPullIntos());
     if (pendingPullIntos->getDenseInitializedLength() != 0) {
         // Step a: Let firstPendingPullInto be the first element of
         //         controller.[[pendingPullIntos]].
@@ -3744,12 +3728,10 @@ ReadableByteStreamControllerHandleQueueDrain(JSContext* cx,
  */
 static MOZ_MUST_USE bool
 ReadableByteStreamControllerInvalidateBYOBRequest(JSContext* cx,
-                                                  Handle<ReadableStreamController*> controller)
+                                                  Handle<ReadableByteStreamController*> controller)
 {
-    MOZ_ASSERT(controller->is<ReadableByteStreamController>());
-
     // Step 1: If controller.[[byobRequest]] is undefined, return.
-    RootedValue byobRequestVal(cx, controller->getFixedSlot(ByteControllerSlot_BYOBRequest));
+    RootedValue byobRequestVal(cx, controller->byobRequest());
     if (byobRequestVal.isUndefined()) {
         return true;
     }
@@ -3767,7 +3749,7 @@ ReadableByteStreamControllerInvalidateBYOBRequest(JSContext* cx,
     byobRequest->setFixedSlot(BYOBRequestSlot_View, UndefinedValue());
 
     // Step 4: Set controller.[[byobRequest]] to undefined.
-    controller->setFixedSlot(ByteControllerSlot_BYOBRequest, UndefinedValue());
+    controller->clearBYOBRequest();
 
     return true;
 }
