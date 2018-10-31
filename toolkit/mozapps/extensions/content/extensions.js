@@ -2632,7 +2632,7 @@ var gDetailView = {
     gCategories.select(category);
 
     document.getElementById("detail-name").textContent = aAddon.name;
-    var icon = AddonManager.getPreferredIconURL(aAddon, 64, window);
+    var icon = AddonManager.getPreferredIconURL(aAddon, 32, window);
     document.getElementById("detail-icon").src = icon ? icon : "";
     document.getElementById("detail-creator").setCreator(aAddon.creator, aAddon.homepageURL);
 
