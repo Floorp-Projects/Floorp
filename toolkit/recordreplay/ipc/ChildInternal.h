@@ -126,7 +126,7 @@ void EndIdleTime();
 bool DebuggerRunsInMiddleman();
 
 // Send messages operating on middleman calls.
-bool SendMiddlemanCallRequest(const char* aInputData, size_t aInputSize,
+void SendMiddlemanCallRequest(const char* aInputData, size_t aInputSize,
                               InfallibleVector<char>* aOutputData);
 void SendResetMiddlemanCalls();
 
