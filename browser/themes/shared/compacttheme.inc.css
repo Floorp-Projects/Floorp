@@ -31,10 +31,6 @@
   --chrome-color: #18191a;
 }
 
-#tabbrowser-tabs:-moz-lwtheme {
-  --tab-line-color: #0a84ff;
-}
-
 /* Change the base colors for the browser chrome */
 
 #TabsToolbar,
