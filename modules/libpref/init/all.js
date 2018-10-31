@@ -2241,9 +2241,12 @@ pref("network.auth.private-browsing-sso", false);
 
 // Control how throttling of http responses works - number of ms that each
 // suspend and resume period lasts (prefs named appropriately)
-// This feature is occasionally causing visible regressions (download too slow for
-// too long time, jitter in video/audio in background tabs...)
+#ifdef ANDROID
+// disabled because of bug 1382274
 pref("network.http.throttle.enable", false);
+#else
+pref("network.http.throttle.enable", true);
+#endif
 
 // Make HTTP throttling v2 algorithm Nightly-only due to bug 1462906
 #ifdef NIGHTLY_BUILD
