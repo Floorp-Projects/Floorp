@@ -12677,8 +12677,8 @@
   "SANDBOX_HAS_USER_NAMESPACES": {
     "record_in_processes": ["main"],
     "alert_emails": ["gcp@mozilla.com", "jld@mozilla.com"],
-    "bug_numbers": [1098428, 1370578, 1461546],
-    "expires_in_version": "65",
+    "bug_numbers": [1098428, 1370578, 1461546, 1464220],
+    "expires_in_version": "70",
     "releaseChannelCollection": "opt-out",
     "kind": "boolean",
     "operating_systems": ["linux"],
