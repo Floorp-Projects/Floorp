@@ -264,11 +264,11 @@ class SystemWebView(context: Context, attrs: AttributeSet) : NestedWebView(conte
             override fun onShowCustomView(view: View, webviewCallback: WebChromeClient.CustomViewCallback) {
                 val fullscreenCallback = IWebView.FullscreenCallback { webviewCallback.onCustomViewHidden() }
 
-                callback!!.onEnterFullScreen(fullscreenCallback, view)
+                callback?.onEnterFullScreen(fullscreenCallback, view)
             }
 
             override fun onHideCustomView() {
-                callback!!.onExitFullScreen()
+                callback?.onExitFullScreen()
             }
         }
     }
