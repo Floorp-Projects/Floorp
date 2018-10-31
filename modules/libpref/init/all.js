@@ -5956,3 +5956,9 @@ pref("dom.datatransfer.mozAtAPIs", true);
 #ifdef MOZ_LIBPRIO
 pref("prio.enabled", false);
 #endif
+
+#ifdef NIGHTLY_BUILD
+pref("dom.sidebar.enabled", false);
+#else
+pref("dom.sidebar.enabled", true);
+#endif
