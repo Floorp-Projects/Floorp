@@ -23,7 +23,7 @@ class UuidsStorageEngineTest {
     @Test
     fun `setValue() properly sets the value in all stores`() {
         val storeNames = listOf("store1", "store2")
-        val uuid = UUID.randomUUID()
+        val uuid = UUID.fromString("ce2adeb8-843a-4232-87a5-a099ed1e7bb3")
 
         // Record the uuid in the stores, without providing optional arguments.
         UuidsStorageEngine.record(
@@ -51,7 +51,7 @@ class UuidsStorageEngineTest {
     fun `getSnapshot() correctly clears the stores`() {
         val storeNames = listOf("store1", "store2")
 
-        val uuid = UUID.randomUUID()
+        val uuid = UUID.fromString("ce2adeb8-843a-4232-87a5-a099ed1e7bb3")
 
         // Record the uuid in the stores, without providing optional arguments.
         UuidsStorageEngine.record(

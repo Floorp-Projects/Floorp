@@ -44,7 +44,7 @@ class UuidMetricTypeTest {
         assertEquals(true, snapshot.containsKey("telemetry.uuid_metric"))
         assertEquals(uuid, snapshot.get("telemetry.uuid_metric"))
 
-        val uuid2 = UUID.randomUUID()
+        val uuid2 = UUID.fromString("ce2adeb8-843a-4232-87a5-a099ed1e7bb3")
         uuidMetric.set(uuid2)
         // Check that data was properly recorded.
         val snapshot2 = UuidsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
