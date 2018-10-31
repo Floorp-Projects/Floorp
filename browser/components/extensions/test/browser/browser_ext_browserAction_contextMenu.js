@@ -142,7 +142,7 @@ add_task(async function browseraction_contextmenu_manage_extension() {
   function checkVisibility(menu, visible) {
     let removeExtension = menu.querySelector(".customize-context-removeExtension");
     let manageExtension = menu.querySelector(".customize-context-manageExtension");
-    let separator = manageExtension.nextElementSibling;
+    let separator = removeExtension.nextElementSibling;
 
     info(`Check visibility`);
     let expected = visible ? "visible" : "hidden";

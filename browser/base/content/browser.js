@@ -6403,8 +6403,8 @@ var ToolbarContextMenu = {
 
   updateExtension(popup) {
     let removeExtension = popup.querySelector(".customize-context-removeExtension");
-    let manageExtension = removeExtension.nextElementSibling;
-    let separator = manageExtension.nextElementSibling;
+    let manageExtension = popup.querySelector(".customize-context-manageExtension");
+    let separator = removeExtension.nextElementSibling;
     let node = this._getUnwrappedTriggerNode(popup);
     let isWebExt = node && node.hasAttribute("data-extensionid");
     removeExtension.hidden = manageExtension.hidden = separator.hidden = !isWebExt;
