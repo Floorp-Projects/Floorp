@@ -18,18 +18,6 @@ class GrTextureMaker : public GrTextureProducer {
 public:
     enum class AllowedTexGenType : bool { kCheap, kAny };
 
-    /**
-     *  Returns a texture that is safe for use with the params. If the size of the returned texture
-     *  does not match width()/height() then the contents of the original must be scaled to fit
-     *  the texture. Additionally, the 'scaleAdjust' must be applied to the texture matrix
-     *  in order to correct the absolute texture coordinates.
-     *  Places the color space of the texture in (*texColorSpace).
-     */
-    sk_sp<GrTextureProxy> refTextureProxyForParams(const GrSamplerState&,
-                                                   SkColorSpace* dstColorSpace,
-                                                   sk_sp<SkColorSpace>* texColorSpace,
-                                                   SkScalar scaleAdjust[2]);
-
     std::unique_ptr<GrFragmentProcessor> createFragmentProcessor(
             const SkMatrix& textureMatrix,
             const SkRect& constraintRect,
@@ -40,8 +28,7 @@ public:
 
 protected:
     GrTextureMaker(GrContext* context, int width, int height, bool isAlphaOnly)
-        : INHERITED(width, height, isAlphaOnly)
-        , fContext(context) {}
+        : INHERITED(context, width, height, isAlphaOnly) {}
 
     /**
      *  Return the maker's "original" texture. It is the responsibility of the maker to handle any
@@ -60,24 +47,14 @@ protected:
      */
     virtual sk_sp<SkColorSpace> getColorSpace(SkColorSpace* dstColorSpace) = 0;
 
-    /**
-     *  Return a new (uncached) texture that is the stretch of the maker's original.
-     *
-     *  The base-class handles general logic for this, and only needs access to the following
-     *  method:
-     *  - refOriginalTextureProxy()
-     *
-     *  Subclass may override this if they can handle creating the texture more directly than
-     *  by copying.
-     */
-    virtual sk_sp<GrTextureProxy> generateTextureProxyForParams(const CopyParams&,
-                                                                bool willBeMipped,
-                                                                SkColorSpace* dstColorSpace);
-
     GrContext* context() const { return fContext; }
 
 private:
-    GrContext*  fContext;
+    sk_sp<GrTextureProxy> onRefTextureProxyForParams(const GrSamplerState&,
+                                                     SkColorSpace* dstColorSpace,
+                                                     sk_sp<SkColorSpace>* proxyColorSpace,
+                                                     bool willBeMipped,
+                                                     SkScalar scaleAdjust[2]) override;
 
     typedef GrTextureProducer INHERITED;
 };

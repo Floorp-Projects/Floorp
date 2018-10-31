@@ -9,6 +9,8 @@
 
 #include "GrContext.h"
 #include "GrDeferredProxyUploader.h"
+#include "GrMemoryPool.h"
+#include "GrRenderTargetPriv.h"
 #include "GrSurfaceProxy.h"
 #include "GrTextureProxyPriv.h"
 
@@ -24,11 +26,13 @@ uint32_t GrOpList::CreateUniqueID() {
     return id;
 }
 
-GrOpList::GrOpList(GrResourceProvider* resourceProvider,
+GrOpList::GrOpList(GrResourceProvider* resourceProvider, sk_sp<GrOpMemoryPool> opMemoryPool,
                    GrSurfaceProxy* surfaceProxy, GrAuditTrail* auditTrail)
-    : fAuditTrail(auditTrail)
-    , fUniqueID(CreateUniqueID())
-    , fFlags(0) {
+        : fOpMemoryPool(std::move(opMemoryPool))
+        , fAuditTrail(auditTrail)
+        , fUniqueID(CreateUniqueID())
+        , fFlags(0) {
+    SkASSERT(fOpMemoryPool);
     fTarget.setProxy(sk_ref_sp(surfaceProxy), kWrite_GrIOType);
     fTarget.get()->setLastOpList(this);
 
@@ -69,7 +73,7 @@ void GrOpList::endFlush() {
 void GrOpList::instantiateDeferredProxies(GrResourceProvider* resourceProvider) {
     for (int i = 0; i < fDeferredProxies.count(); ++i) {
         if (resourceProvider->explicitlyAllocateGPUResources()) {
-            SkASSERT(fDeferredProxies[i]->priv().isInstantiated());
+            SkASSERT(fDeferredProxies[i]->isInstantiated());
         } else {
             fDeferredProxies[i]->instantiate(resourceProvider);
         }
@@ -93,6 +97,9 @@ void GrOpList::addDependency(GrOpList* dependedOn) {
     }
 
     fDependencies.push_back(dependedOn);
+    dependedOn->addDependent(this);
+
+    SkDEBUGCODE(this->validate());
 }
 
 // Convert from a GrSurface-based dependency to a GrOpList one
@@ -103,11 +110,13 @@ void GrOpList::addDependency(GrSurfaceProxy* dependedOn, const GrCaps& caps) {
 
         GrOpList* opList = dependedOn->getLastOpList();
         if (opList == this) {
-            // self-read - presumably for dst reads
+            // self-read - presumably for dst reads. We can't make it closed in the self-read case.
         } else {
             this->addDependency(opList);
 
-            // Can't make it closed in the self-read case
+            // We are closing 'opList' here bc the current contents of it are what 'this' opList
+            // depends on. We need a break in 'opList' so that the usage of that state has a
+            // chance to execute.
             opList->makeClosed(caps);
         }
     }
@@ -119,19 +128,106 @@ void GrOpList::addDependency(GrSurfaceProxy* dependedOn, const GrCaps& caps) {
     }
 }
 
-bool GrOpList::isInstantiated() const {
-    return fTarget.get()->priv().isInstantiated();
+bool GrOpList::dependsOn(const GrOpList* dependedOn) const {
+    for (int i = 0; i < fDependencies.count(); ++i) {
+        if (fDependencies[i] == dependedOn) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+void GrOpList::addDependent(GrOpList* dependent) {
+    fDependents.push_back(dependent);
 }
 
 #ifdef SK_DEBUG
-void GrOpList::dump() const {
-    SkDebugf("--------------------------------------------------------------\n");
-    SkDebugf("node: %d -> RT: %d\n", fUniqueID, fTarget.get() ? fTarget.get()->uniqueID().asUInt()
-                                                              : -1);
-    SkDebugf("relies On (%d): ", fDependencies.count());
-    for (int i = 0; i < fDependencies.count(); ++i) {
-        SkDebugf("%d, ", fDependencies[i]->fUniqueID);
+bool GrOpList::isDependedent(const GrOpList* dependent) const {
+    for (int i = 0; i < fDependents.count(); ++i) {
+        if (fDependents[i] == dependent) {
+            return true;
+        }
     }
-    SkDebugf("\n");
+
+    return false;
+}
+
+void GrOpList::validate() const {
+    // TODO: check for loops and duplicates
+
+    for (int i = 0; i < fDependencies.count(); ++i) {
+        SkASSERT(fDependencies[i]->isDependedent(this));
+    }
+}
+#endif
+
+bool GrOpList::isInstantiated() const { return fTarget.get()->isInstantiated(); }
+
+void GrOpList::closeThoseWhoDependOnMe(const GrCaps& caps) {
+    for (int i = 0; i < fDependents.count(); ++i) {
+        if (!fDependents[i]->isClosed()) {
+            fDependents[i]->makeClosed(caps);
+        }
+    }
+}
+
+bool GrOpList::isFullyInstantiated() const {
+    if (!this->isInstantiated()) {
+        return false;
+    }
+
+    GrSurfaceProxy* proxy = fTarget.get();
+    bool needsStencil = proxy->asRenderTargetProxy()
+                                        ? proxy->asRenderTargetProxy()->needsStencil()
+                                        : false;
+
+    if (needsStencil) {
+        GrRenderTarget* rt = proxy->peekRenderTarget();
+
+        if (!rt->renderTargetPriv().getStencilAttachment()) {
+            return false;
+        }
+    }
+
+    GrSurface* surface = proxy->peekSurface();
+    if (surface->wasDestroyed()) {
+        return false;
+    }
+
+    return true;
+}
+
+#ifdef SK_DEBUG
+static const char* op_to_name(GrLoadOp op) {
+    return GrLoadOp::kLoad == op ? "load" : GrLoadOp::kClear == op ? "clear" : "discard";
+}
+
+void GrOpList::dump(bool printDependencies) const {
+    SkDebugf("--------------------------------------------------------------\n");
+    SkDebugf("opListID: %d - proxyID: %d - surfaceID: %d\n", fUniqueID,
+             fTarget.get() ? fTarget.get()->uniqueID().asUInt() : -1,
+             fTarget.get() && fTarget.get()->peekSurface()
+                     ? fTarget.get()->peekSurface()->uniqueID().asUInt()
+                     : -1);
+    SkDebugf("ColorLoadOp: %s %x StencilLoadOp: %s\n",
+             op_to_name(fColorLoadOp),
+             GrLoadOp::kClear == fColorLoadOp ? fLoadClearColor : 0x0,
+             op_to_name(fStencilLoadOp));
+
+    if (printDependencies) {
+        SkDebugf("I rely On (%d): ", fDependencies.count());
+        for (int i = 0; i < fDependencies.count(); ++i) {
+            SkDebugf("%d, ", fDependencies[i]->fUniqueID);
+        }
+        SkDebugf("\n");
+
+        SkDebugf("(%d) Rely On Me: ", fDependents.count());
+        for (int i = 0; i < fDependents.count(); ++i) {
+            SkDebugf("%d, ", fDependents[i]->fUniqueID);
+        }
+        SkDebugf("\n");
+    }
 }
 #endif

@@ -14,12 +14,12 @@
  * Creates an instance of the decoder
  * Called only by NewFromStream
  */
-SkBmpRLECodec::SkBmpRLECodec(int width, int height, const SkEncodedInfo& info,
+SkBmpRLECodec::SkBmpRLECodec(SkEncodedInfo&& info,
                              std::unique_ptr<SkStream> stream,
                              uint16_t bitsPerPixel, uint32_t numColors,
                              uint32_t bytesPerColor, uint32_t offset,
                              SkCodec::SkScanlineOrder rowOrder)
-    : INHERITED(width, height, info, std::move(stream), bitsPerPixel, rowOrder)
+    : INHERITED(std::move(info), std::move(stream), bitsPerPixel, rowOrder)
     , fColorTable(nullptr)
     , fNumColors(numColors)
     , fBytesPerColor(bytesPerColor)
@@ -275,7 +275,7 @@ SkCodec::Result SkBmpRLECodec::onPrepareToDecode(const SkImageInfo& dstInfo,
  */
 int SkBmpRLECodec::decodeRows(const SkImageInfo& info, void* dst, size_t dstRowBytes,
         const Options& opts) {
-    const int width = this->getInfo().width();
+    const int width = this->dimensions().width();
     int height = info.height();
 
     // Account for sampling.
@@ -284,7 +284,7 @@ int SkBmpRLECodec::decodeRows(const SkImageInfo& info, void* dst, size_t dstRowB
     // Set the background as transparent.  Then, if the RLE code skips pixels,
     // the skipped pixels will be transparent.
     if (dst) {
-        SkSampler::Fill(dstInfo, dst, dstRowBytes, SK_ColorTRANSPARENT, opts.fZeroInitialized);
+        SkSampler::Fill(dstInfo, dst, dstRowBytes, opts.fZeroInitialized);
     }
 
     // Adjust the height and the dst if the previous call to decodeRows() left us
@@ -332,7 +332,7 @@ int SkBmpRLECodec::decodeRows(const SkImageInfo& info, void* dst, size_t dstRowB
 
 int SkBmpRLECodec::decodeRLE(const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes) {
     // Use the original width to count the number of pixels in each row.
-    const int width = this->getInfo().width();
+    const int width = this->dimensions().width();
 
     // This tells us the number of rows that we are meant to decode.
     const int height = dstInfo.height();
@@ -522,9 +522,8 @@ int SkBmpRLECodec::decodeRLE(const SkImageInfo& dstInfo, void* dst, size_t dstRo
 }
 
 bool SkBmpRLECodec::skipRows(int count) {
-    const SkImageInfo rowInfo = SkImageInfo::Make(this->getInfo().width(), count, kN32_SkColorType,
-            kUnpremul_SkAlphaType);
-
+    const SkImageInfo rowInfo = SkImageInfo::Make(this->dimensions().width(), count,
+                                                  kN32_SkColorType, kUnpremul_SkAlphaType);
     return count == this->decodeRows(rowInfo, nullptr, 0, this->options());
 }
 
@@ -563,5 +562,5 @@ SkSampler* SkBmpRLECodec::getSampler(bool /*createIfNecessary*/) {
 
 int SkBmpRLECodec::setSampleX(int sampleX){
     fSampleX = sampleX;
-    return get_scaled_dimension(this->getInfo().width(), sampleX);
+    return get_scaled_dimension(this->dimensions().width(), sampleX);
 }

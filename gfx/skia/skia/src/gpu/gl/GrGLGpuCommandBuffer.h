@@ -19,14 +19,7 @@ class GrGLRenderTarget;
 
 class GrGLGpuTextureCommandBuffer : public GrGpuTextureCommandBuffer {
 public:
-    GrGLGpuTextureCommandBuffer(GrGLGpu* gpu, GrTexture* texture, GrSurfaceOrigin origin)
-        : INHERITED(texture, origin)
-        , fGpu(gpu) {
-    }
-
-    ~GrGLGpuTextureCommandBuffer() override {}
-
-    void submit() override {}
+    GrGLGpuTextureCommandBuffer(GrGLGpu* gpu) : fGpu(gpu) {}
 
     void copy(GrSurface* src, GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
               const SkIPoint& dstPoint) override {
@@ -35,6 +28,10 @@ public:
 
     void insertEventMarker(const char* msg) override {
         fGpu->insertEventMarker(msg);
+    }
+
+    void reset() {
+        fTexture = nullptr;
     }
 
 private:
@@ -50,16 +47,7 @@ class GrGLGpuRTCommandBuffer : public GrGpuRTCommandBuffer {
  * pass through functions to corresponding calls in the GrGLGpu class.
  */
 public:
-    GrGLGpuRTCommandBuffer(GrGLGpu* gpu, GrRenderTarget* rt, GrSurfaceOrigin origin,
-                           const GrGpuRTCommandBuffer::LoadAndStoreInfo& colorInfo,
-                           const GrGpuRTCommandBuffer::StencilLoadAndStoreInfo& stencilInfo)
-            : INHERITED(rt, origin)
-            , fGpu(gpu)
-            , fColorLoadAndStoreInfo(colorInfo)
-            , fStencilLoadAndStoreInfo(stencilInfo) {
-    }
-
-    ~GrGLGpuRTCommandBuffer() override {}
+    GrGLGpuRTCommandBuffer(GrGLGpu* gpu) : fGpu(gpu) {}
 
     void begin() override;
     void end() override {}
@@ -79,19 +67,26 @@ public:
         fGpu->copySurface(fRenderTarget, fOrigin, src, srcOrigin, srcRect, dstPoint);
     }
 
-    void submit() override {}
+    void set(GrRenderTarget*, GrSurfaceOrigin,
+             const GrGpuRTCommandBuffer::LoadAndStoreInfo&,
+             const GrGpuRTCommandBuffer::StencilLoadAndStoreInfo&);
+
+    void reset() {
+        fRenderTarget = nullptr;
+    }
 
 private:
     GrGpu* gpu() override { return fGpu; }
 
-    void onDraw(const GrPipeline& pipeline,
-                const GrPrimitiveProcessor& primProc,
+    void onDraw(const GrPrimitiveProcessor& primProc,
+                const GrPipeline& pipeline,
+                const GrPipeline::FixedDynamicState* fixedDynamicState,
+                const GrPipeline::DynamicStateArrays* dynamicStateArrays,
                 const GrMesh mesh[],
-                const GrPipeline::DynamicState dynamicStates[],
                 int meshCount,
                 const SkRect& bounds) override {
         SkASSERT(pipeline.renderTarget() == fRenderTarget);
-        fGpu->draw(pipeline, primProc, mesh, dynamicStates, meshCount);
+        fGpu->draw(primProc, pipeline, fixedDynamicState, dynamicStateArrays, mesh, meshCount);
     }
 
     void onClear(const GrFixedClip& clip, GrColor color) override {

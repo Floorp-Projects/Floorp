@@ -37,7 +37,7 @@ std::unique_ptr<GrGLContext> GrGLContext::Make(sk_sp<const GrGLInterface> interf
 
     args.fVendor = GrGLGetVendor(interface.get());
 
-    args.fRenderer = GrGLGetRendererFromString(renderer);
+    args.fRenderer = GrGLGetRendererFromStrings(renderer, interface->fExtensions);
 
     GrGLGetANGLEInfoFromString(renderer, &args.fANGLEBackend, &args.fANGLEVendor,
                                &args.fANGLERenderer);
@@ -50,6 +50,21 @@ std::unique_ptr<GrGLContext> GrGLContext::Make(sk_sp<const GrGLInterface> interf
      * 06/18/2015 - This bug does not affect the nexus 6 (which has an Adreno 4xx).
      */
     if (kAdreno3xx_GrGLRenderer == args.fRenderer) {
+        args.fGLSLGeneration = k110_GrGLSLGeneration;
+    }
+
+    // Many ES3 drivers only advertise the ES2 image_external extension, but support the _essl3
+    // extension, and require that it be enabled to work with ESSL3. Other devices require the ES2
+    // extension to be enabled, even when using ESSL3. Some devices appear to only support the ES2
+    // extension. As an extreme (optional) solution, we can fallback to using ES2 shading language
+    // if we want to prioritize external texture support. skbug.com/7713
+    if (kGLES_GrGLStandard == interface->fStandard &&
+        options.fPreferExternalImagesOverES3 &&
+        !options.fDisableDriverCorrectnessWorkarounds &&
+        interface->hasExtension("GL_OES_EGL_image_external") &&
+        args.fGLSLGeneration >= k330_GrGLSLGeneration &&
+        !interface->hasExtension("GL_OES_EGL_image_external_essl3") &&
+        !interface->hasExtension("OES_EGL_image_external_essl3")) {
         args.fGLSLGeneration = k110_GrGLSLGeneration;
     }
 

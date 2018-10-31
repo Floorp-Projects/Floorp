@@ -12,84 +12,56 @@
 #include "SkDescriptor.h"
 #include "SkFontDescriptor.h"
 #include "SkFontStyle.h"
+#include "SkPaint.h"
+#include "SkRemoteGlyphCache.h"
 #include "SkScalerContext.h"
 #include "SkTypeface.h"
 
-#include <thread>
-
 class SkTypefaceProxy;
-
-class SkRemoteScalerContext {
-public:
-    virtual ~SkRemoteScalerContext() {}
-    // TODO: do metrics need effects?
-    virtual void generateFontMetrics(
-            const SkTypefaceProxy& tf,
-            const SkScalerContextRec& rec,
-            SkPaint::FontMetrics*) = 0;
-    virtual void generateMetrics(
-            const SkTypefaceProxy& tf,
-            const SkScalerContextRec& rec,
-            SkGlyph* glyph) = 0;
-    virtual void generateImage(
-            const SkTypefaceProxy& tf,
-            const SkScalerContextRec& rec,
-            const SkGlyph& glyph)  = 0;
-    virtual void generateMetricsAndImage(
-            const SkTypefaceProxy& tf,
-            const SkScalerContextRec& rec,
-            SkArenaAlloc* alloc,
-            SkGlyph* glyph)  = 0;
-    virtual void generatePath(
-            const SkTypefaceProxy& tf,
-            const SkScalerContextRec& rec,
-            SkGlyphID glyph, SkPath* path) = 0;
-};
+class SkStrikeCache;
 
 class SkScalerContextProxy : public SkScalerContext {
 public:
-    SkScalerContextProxy(
-            sk_sp<SkTypeface> tf,
-            const SkScalerContextEffects& effects,
-            const SkDescriptor* desc,
-            SkRemoteScalerContext* rsc);
+    SkScalerContextProxy(sk_sp<SkTypeface> tf,
+                         const SkScalerContextEffects& effects,
+                         const SkDescriptor* desc,
+                         sk_sp<SkStrikeClient::DiscardableHandleManager> manager);
+
+    void initCache(SkGlyphCache*, SkStrikeCache*);
 
 protected:
-    unsigned generateGlyphCount(void) override { SK_ABORT("Should never be called."); return 0;}
-    uint16_t generateCharToGlyph(SkUnichar uni) override {
-        SK_ABORT("Should never be called.");
-        return 0;
-    }
-    void generateAdvance(SkGlyph* glyph) override { this->generateMetrics(glyph); }
+    unsigned generateGlyphCount() override;
+    uint16_t generateCharToGlyph(SkUnichar) override;
+    bool generateAdvance(SkGlyph* glyph) override;
     void generateMetrics(SkGlyph* glyph) override;
     void generateImage(const SkGlyph& glyph) override;
-    void generatePath(SkGlyphID glyphID, SkPath* path) override;
+    bool generatePath(SkGlyphID glyphID, SkPath* path) override;
     void generateFontMetrics(SkPaint::FontMetrics* metrics) override;
+    SkTypefaceProxy* getProxyTypeface() const;
 
 private:
-    // Copied from SkGlyphCache
-    // so we don't grow our arrays a lot
-    static constexpr size_t kMinGlyphCount = 8;
-    static constexpr size_t kMinGlyphImageSize = 16 /* height */ * 8 /* width */;
-    static constexpr size_t kMinAllocAmount = kMinGlyphImageSize * kMinGlyphCount;
-    SkArenaAlloc  fAlloc{kMinAllocAmount};
-
-    SkTypefaceProxy* typefaceProxy();
-    SkRemoteScalerContext* const fRemote;
+    sk_sp<SkStrikeClient::DiscardableHandleManager> fDiscardableManager;
+    SkGlyphCache* fCache = nullptr;
+    SkStrikeCache* fStrikeCache = nullptr;
     typedef SkScalerContext INHERITED;
 };
 
 class SkTypefaceProxy : public SkTypeface {
 public:
-    SkTypefaceProxy(
-            SkFontID fontId,
-            const SkFontStyle& style,
-            bool isFixed,
-            SkRemoteScalerContext* rsc)
+    SkTypefaceProxy(SkFontID fontId,
+                    int glyphCount,
+                    const SkFontStyle& style,
+                    bool isFixed,
+                    sk_sp<SkStrikeClient::DiscardableHandleManager> manager,
+                    bool isLogging = true)
             : INHERITED{style, false}
             , fFontId{fontId}
-            , fRsc{rsc} { }
-    SkFontID fontID() const {return fFontId;}
+            , fGlyphCount{glyphCount}
+            , fIsLogging{isLogging}
+            , fDiscardableManager{std::move(manager)} {}
+    SkFontID remoteTypefaceID() const {return fFontId;}
+    int glyphCount() const {return fGlyphCount;}
+    bool isLogging() const {return fIsLogging;}
 
 protected:
     int onGetUPEM() const override { SK_ABORT("Should never be called."); return 0; }
@@ -101,13 +73,23 @@ protected:
         SK_ABORT("Should never be called.");
         return nullptr;
     }
+    sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {
+        SK_ABORT("Should never be called.");
+        return nullptr;
+    }
     int onGetVariationDesignPosition(SkFontArguments::VariationPosition::Coordinate coordinates[],
                                      int coordinateCount) const override {
         SK_ABORT("Should never be called.");
         return 0;
     }
-    void onGetFamilyName(SkString* familyName) const override {
+    int onGetVariationDesignParameters(SkFontParameters::Variation::Axis parameters[],
+                                       int parameterCount) const override {
         SK_ABORT("Should never be called.");
+        return 0;
+    }
+    void onGetFamilyName(SkString* familyName) const override {
+        // Used by SkStrikeCache::DumpMemoryStatistics.
+        *familyName = "";
     }
     SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override {
         SK_ABORT("Should never be called.");
@@ -123,23 +105,20 @@ protected:
     }
     SkScalerContext* onCreateScalerContext(const SkScalerContextEffects& effects,
                                            const SkDescriptor* desc) const override {
-        //std::cout << fFontId << fThreadId;
-
         return new SkScalerContextProxy(sk_ref_sp(const_cast<SkTypefaceProxy*>(this)), effects,
-                                         desc, fRsc);
-
+                                        desc, fDiscardableManager);
     }
     void onFilterRec(SkScalerContextRec* rec) const override {
-        // Add all the device information here.
-        //rec->fPost2x2[0][0] = 0.5f;
-
-        // This would be the best place to run the host SkTypeface_* onFilterRec.
-        // Can we move onFilterRec to the FongMgr, that way we don't need to cross the boundary to
-        // filter.
+        // The rec filtering is already applied by the server when generating
+        // the glyphs.
     }
     void onGetFontDescriptor(SkFontDescriptor*, bool*) const override {
         SK_ABORT("Should never be called.");
     }
+    void getGlyphToUnicodeMap(SkUnichar*) const override {
+        SK_ABORT("Should never be called.");
+    }
+
     std::unique_ptr<SkAdvancedTypefaceMetrics> onGetAdvancedMetrics() const override {
         SK_ABORT("Should never be called.");
         return nullptr;
@@ -150,8 +129,7 @@ protected:
         return 0;
     }
     int onCountGlyphs() const override {
-        SK_ABORT("Should never be called.");
-        return 0;
+        return this->glyphCount();
     }
 
     void* onGetCTFontRef() const override {
@@ -160,9 +138,11 @@ protected:
     }
 
 private:
-    const SkFontID fFontId;
-    // const std::thread::id fThreadId;  // TODO: figure out a good solutions for this.
-    SkRemoteScalerContext* const fRsc;
+    const SkFontID                                  fFontId;
+    const int                                       fGlyphCount;
+    const bool                                      fIsLogging;
+    sk_sp<SkStrikeClient::DiscardableHandleManager> fDiscardableManager;
+
 
     typedef SkTypeface INHERITED;
 };

@@ -6,7 +6,10 @@
  */
 
 #include "SkLuaCanvas.h"
+
 #include "SkLua.h"
+#include "SkStringUtils.h"
+#include "SkTo.h"
 
 extern "C" {
     #include "lua.h"
@@ -51,11 +54,9 @@ void AutoCallLua::pushEncodedText(SkPaint::TextEncoding enc, const void* text,
         case SkPaint::kUTF8_TextEncoding:
             this->pushString((const char*)text, length, "text");
             break;
-        case SkPaint::kUTF16_TextEncoding: {
-            SkString str;
-            str.setUTF16((const uint16_t*)text, length);
-            this->pushString(str, "text");
-        } break;
+        case SkPaint::kUTF16_TextEncoding:
+            this->pushString(SkStringFromUTF16((const uint16_t*)text, length), "text");
+            break;
         case SkPaint::kGlyphID_TextEncoding:
             this->pushArrayU16((const uint16_t*)text, SkToInt(length >> 1),
                                "glyphs");
@@ -275,14 +276,6 @@ void SkLuaCanvas::onDrawPosTextH(const void* text, size_t byteLength, const SkSc
     lua.pushPaint(paint, "paint");
 }
 
-void SkLuaCanvas::onDrawTextOnPath(const void* text, size_t byteLength, const SkPath& path,
-                                   const SkMatrix* matrix, const SkPaint& paint) {
-    AUTO_LUA("drawTextOnPath");
-    lua.pushPath(path, "path");
-    lua.pushEncodedText(paint.getTextEncoding(), text, byteLength);
-    lua.pushPaint(paint, "paint");
-}
-
 void SkLuaCanvas::onDrawTextRSXform(const void* text, size_t byteLength, const SkRSXform xform[],
                                     const SkRect* cull, const SkPaint& paint) {
     AUTO_LUA("drawTextRSXform");
@@ -313,7 +306,8 @@ void SkLuaCanvas::onDrawDrawable(SkDrawable* drawable, const SkMatrix* matrix) {
     this->INHERITED::onDrawDrawable(drawable, matrix);
 }
 
-void SkLuaCanvas::onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint& paint) {
+void SkLuaCanvas::onDrawVerticesObject(const SkVertices*, const SkVertices::Bone[], int,
+                                       SkBlendMode, const SkPaint& paint) {
     AUTO_LUA("drawVertices");
     lua.pushPaint(paint, "paint");
 }

@@ -84,13 +84,15 @@ public:
 
 private:
     SkPath::Iter    fIter;
-    const SkPath*   fPath;
+    SkPath          fPath;
     SkScalar        fTolerance;
     SkScalar        fLength;            // relative to the current contour
-    int             fFirstPtIndex;      // relative to the current contour
+    unsigned        fFirstPtIndex;      // relative to the current contour
     bool            fIsClosed;          // relative to the current contour
     bool            fForceClosed;
-
+#if defined(IS_FUZZING_WITH_LIBFUZZER)
+    int             fSubdivisionsMax;
+#endif
     struct Segment {
         SkScalar    fDistance;  // total distance up to this point
         unsigned    fPtIndex; // index into the fPts array
@@ -107,12 +109,12 @@ private:
 
     void     buildSegments();
     SkScalar compute_quad_segs(const SkPoint pts[3], SkScalar distance,
-                                int mint, int maxt, int ptIndex);
+                                int mint, int maxt, unsigned ptIndex);
     SkScalar compute_conic_segs(const SkConic&, SkScalar distance,
                                 int mint, const SkPoint& minPt,
-                                int maxt, const SkPoint& maxPt, int ptIndex);
+                                int maxt, const SkPoint& maxPt, unsigned ptIndex);
     SkScalar compute_cubic_segs(const SkPoint pts[3], SkScalar distance,
-                                int mint, int maxt, int ptIndex);
+                                int mint, int maxt, unsigned ptIndex);
     const Segment* distanceToSegment(SkScalar distance, SkScalar* t);
     bool quad_too_curvy(const SkPoint pts[3]);
     bool conic_too_curvy(const SkPoint& firstPt, const SkPoint& midTPt,const SkPoint& lastPt);

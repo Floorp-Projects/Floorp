@@ -6,8 +6,8 @@
  */
 
 #include "SkColorFilter.h"
+#include "SkColorSpacePriv.h"
 #include "SkColorSpaceXformer.h"
-#include "SkColorSpaceXform_Base.h"
 #include "SkDrawLooper.h"
 #include "SkGradientShader.h"
 #include "SkImage.h"
@@ -16,22 +16,23 @@
 #include "SkImagePriv.h"
 #include "SkShaderBase.h"
 
-SkColorSpaceXformer::SkColorSpaceXformer(sk_sp<SkColorSpace> dst,
-                                         std::unique_ptr<SkColorSpaceXform> fromSRGB)
+SkColorSpaceXformer::SkColorSpaceXformer(sk_sp<SkColorSpace> dst)
     : fDst(std::move(dst))
-    , fFromSRGB(std::move(fromSRGB))
-    , fReentryCount(0) {}
+    , fFromSRGBSteps(sk_srgb_singleton(), kUnpremul_SkAlphaType,
+                     fDst.get()         , kUnpremul_SkAlphaType)
+    , fReentryCount(0) {
+
+    SkRasterPipeline p(&fAlloc);
+    p.append(SkRasterPipeline::load_bgra, &fFromSRGBSrc);
+    fFromSRGBSteps.apply(&p);
+    p.append(SkRasterPipeline::store_bgra, &fFromSRGBDst);
+    fFromSRGB = p.compile();
+}
 
 SkColorSpaceXformer::~SkColorSpaceXformer() {}
 
 std::unique_ptr<SkColorSpaceXformer> SkColorSpaceXformer::Make(sk_sp<SkColorSpace> dst) {
-    std::unique_ptr<SkColorSpaceXform> fromSRGB = SkColorSpaceXform_Base::New(
-            SkColorSpace::MakeSRGB().get(), dst.get(), SkTransferFunctionBehavior::kIgnore);
-
-    return fromSRGB
-        ? std::unique_ptr<SkColorSpaceXformer>(new SkColorSpaceXformer(std::move(dst),
-                                                                       std::move(fromSRGB)))
-        : nullptr;
+    return std::unique_ptr<SkColorSpaceXformer>(new SkColorSpaceXformer{std::move(dst)});
 }
 
 // So what's up with these caches?
@@ -98,7 +99,7 @@ sk_sp<SkImage> SkColorSpaceXformer::apply(const SkImage* src) {
     const AutoCachePurge autoPurge(this);
     return this->cachedApply<SkImage>(src, &fImageCache,
         [](const SkImage* img, SkColorSpaceXformer* xformer) {
-            return img->makeColorSpace(xformer->fDst, SkTransferFunctionBehavior::kIgnore);
+            return img->makeColorSpace(xformer->fDst);
         });
 }
 
@@ -109,7 +110,7 @@ sk_sp<SkImage> SkColorSpaceXformer::apply(const SkBitmap& src) {
         return nullptr;
     }
 
-    sk_sp<SkImage> xformed = image->makeColorSpace(fDst, SkTransferFunctionBehavior::kIgnore);
+    sk_sp<SkImage> xformed = image->makeColorSpace(fDst);
     // We want to be sure we don't let the kNever_SkCopyPixelsMode image escape this stack frame.
     SkASSERT(xformed != image);
     return xformed;
@@ -137,9 +138,9 @@ sk_sp<SkShader> SkColorSpaceXformer::apply(const SkShader* shader) {
 }
 
 void SkColorSpaceXformer::apply(SkColor* xformed, const SkColor* srgb, int n) {
-    SkAssertResult(fFromSRGB->apply(SkColorSpaceXform::kBGRA_8888_ColorFormat, xformed,
-                                    SkColorSpaceXform::kBGRA_8888_ColorFormat, srgb,
-                                    n, kUnpremul_SkAlphaType));
+    fFromSRGBSrc.pixels = const_cast<SkColor*>(srgb);
+    fFromSRGBDst.pixels = xformed;
+    fFromSRGB(0,0,n,1);
 }
 
 SkColor SkColorSpaceXformer::apply(SkColor srgb) {

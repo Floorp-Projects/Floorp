@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const TP_PB_ENABLED_PREF = "privacy.trackingprotection.pbmode.enabled";
-const CB_ENABLED_PREF = "browser.contentblocking.enabled";
 
 /**
  * Opens a new private window and loads "about:privatebrowsing" there.

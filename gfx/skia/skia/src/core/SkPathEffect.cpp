@@ -12,17 +12,32 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkPathEffect::computeFastBounds(SkRect* dst, const SkRect& src) const {
-    *dst = src;
-}
-
-bool SkPathEffect::asPoints(PointData* results, const SkPath& src,
-                    const SkStrokeRec&, const SkMatrix&, const SkRect*) const {
+bool SkPathEffect::filterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
+                              const SkRect* bounds) const {
+    SkPath tmp, *tmpDst = dst;
+    if (dst == &src) {
+        tmpDst = &tmp;
+    }
+    if (this->onFilterPath(tmpDst, src, rec, bounds)) {
+        if (dst == &src) {
+            *dst = tmp;
+        }
+        return true;
+    }
     return false;
 }
 
+void SkPathEffect::computeFastBounds(SkRect* dst, const SkRect& src) const {
+    *dst = this->onComputeFastBounds(src);
+}
+
+bool SkPathEffect::asPoints(PointData* results, const SkPath& src,
+                    const SkStrokeRec& rec, const SkMatrix& mx, const SkRect* rect) const {
+    return this->onAsPoints(results, src, rec, mx, rect);
+}
+
 SkPathEffect::DashType SkPathEffect::asADash(DashInfo* info) const {
-    return kNone_DashType;
+    return this->onAsADash(info);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -51,24 +66,9 @@ protected:
     sk_sp<SkPathEffect> fPE0;
     sk_sp<SkPathEffect> fPE1;
 
-    SK_TO_STRING_OVERRIDE()
-
 private:
     typedef SkPathEffect INHERITED;
 };
-
-#ifndef SK_IGNORE_TO_STRING
-void SkPairPathEffect::toString(SkString* str) const {
-    str->appendf("first: ");
-    if (fPE0) {
-        fPE0->toString(str);
-    }
-    str->appendf(" second: ");
-    if (fPE1) {
-        fPE1->toString(str);
-    }
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -94,19 +94,6 @@ public:
         return sk_sp<SkPathEffect>(new SkComposePathEffect(outer, inner));
     }
 
-    bool filterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
-                    const SkRect* cullRect) const override {
-        SkPath          tmp;
-        const SkPath*   ptr = &src;
-
-        if (fPE1->filterPath(&tmp, src, rec, cullRect)) {
-            ptr = &tmp;
-        }
-        return fPE0->filterPath(dst, *ptr, rec, cullRect);
-    }
-
-
-    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkComposePathEffect)
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
@@ -116,6 +103,17 @@ public:
 protected:
     SkComposePathEffect(sk_sp<SkPathEffect> outer, sk_sp<SkPathEffect> inner)
         : INHERITED(outer, inner) {}
+
+    bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
+                      const SkRect* cullRect) const override {
+        SkPath          tmp;
+        const SkPath*   ptr = &src;
+
+        if (fPE1->filterPath(&tmp, src, rec, cullRect)) {
+            ptr = &tmp;
+        }
+        return fPE0->filterPath(dst, *ptr, rec, cullRect);
+    }
 
 private:
     // illegal
@@ -131,14 +129,6 @@ sk_sp<SkFlattenable> SkComposePathEffect::CreateProc(SkReadBuffer& buffer) {
     sk_sp<SkPathEffect> pe1(buffer.readPathEffect());
     return SkComposePathEffect::Make(std::move(pe0), std::move(pe1));
 }
-
-#ifndef SK_IGNORE_TO_STRING
-void SkComposePathEffect::toString(SkString* str) const {
-    str->appendf("SkComposePathEffect: (");
-    this->INHERITED::toString(str);
-    str->appendf(")");
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -164,15 +154,6 @@ public:
         return sk_sp<SkPathEffect>(new SkSumPathEffect(first, second));
     }
 
-    bool filterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
-                    const SkRect* cullRect) const override {
-        // use bit-or so that we always call both, even if the first one succeeds
-        return fPE0->filterPath(dst, src, rec, cullRect) |
-               fPE1->filterPath(dst, src, rec, cullRect);
-    }
-
-
-    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkSumPathEffect)
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
@@ -181,7 +162,14 @@ public:
 
 protected:
     SkSumPathEffect(sk_sp<SkPathEffect> first, sk_sp<SkPathEffect> second)
-    : INHERITED(first, second) {}
+        : INHERITED(first, second) {}
+
+    bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
+                      const SkRect* cullRect) const override {
+        // use bit-or so that we always call both, even if the first one succeeds
+        return fPE0->filterPath(dst, src, rec, cullRect) |
+               fPE1->filterPath(dst, src, rec, cullRect);
+    }
 
 private:
     // illegal
@@ -197,14 +185,6 @@ sk_sp<SkFlattenable> SkSumPathEffect::CreateProc(SkReadBuffer& buffer) {
     sk_sp<SkPathEffect> pe1(buffer.readPathEffect());
     return SkSumPathEffect::Make(pe0, pe1);
 }
-
-#ifndef SK_IGNORE_TO_STRING
-void SkSumPathEffect::toString(SkString* str) const {
-    str->appendf("SkSumPathEffect: (");
-    this->INHERITED::toString(str);
-    str->appendf(")");
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 

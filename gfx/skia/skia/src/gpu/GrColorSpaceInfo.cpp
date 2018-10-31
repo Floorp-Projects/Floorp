@@ -6,6 +6,7 @@
  */
 
 #include "GrColorSpaceInfo.h"
+#include "SkColorSpacePriv.h"
 
 GrColorSpaceInfo::GrColorSpaceInfo(sk_sp<SkColorSpace> colorSpace, GrPixelConfig config)
         : fColorSpace(std::move(colorSpace))
@@ -15,10 +16,9 @@ GrColorSpaceInfo::GrColorSpaceInfo(sk_sp<SkColorSpace> colorSpace, GrPixelConfig
 GrColorSpaceXform* GrColorSpaceInfo::colorSpaceXformFromSRGB() const {
     // TODO: Make this atomic if we start accessing this on multiple threads.
     if (!fInitializedColorSpaceXformFromSRGB) {
-        // sRGB sources are very common (SkColor, etc...), so we cache that gamut transformation
-        auto srgbColorSpace = SkColorSpace::MakeSRGB();
-        fColorXformFromSRGB = GrColorSpaceXform::MakeGamutXform(srgbColorSpace.get(),
-                                                                fColorSpace.get());
+        // sRGB sources are very common (SkColor, etc...), so we cache that transformation
+        fColorXformFromSRGB = GrColorSpaceXform::Make(sk_srgb_singleton(), kUnpremul_SkAlphaType,
+                                                      fColorSpace.get(),   kUnpremul_SkAlphaType);
         fInitializedColorSpaceXformFromSRGB = true;
     }
     // You can't be color-space aware in legacy mode

@@ -98,6 +98,22 @@ public:
         return skstd::make_unique<SkFontData>(this->makeStream(), fIndex,
                                               fAxes.begin(), fAxes.count());
     }
+    sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {
+        std::unique_ptr<SkFontData> data = this->cloneFontData(args);
+        if (!data) {
+            return nullptr;
+        }
+        return sk_make_sp<SkTypeface_AndroidSystem>(fPathName,
+                                                    fFile,
+                                                    fIndex,
+                                                    data->getAxis(),
+                                                    data->getAxisCount(),
+                                                    this->fontStyle(),
+                                                    this->isFixedPitch(),
+                                                    fFamilyName,
+                                                    fLang,
+                                                    fVariantStyle);
+    }
 
     const SkString fPathName;
     int fIndex;
@@ -136,6 +152,17 @@ public:
         return skstd::make_unique<SkFontData>(*fData);
     }
 
+    sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {
+        std::unique_ptr<SkFontData> data = this->cloneFontData(args);
+        if (!data) {
+            return nullptr;
+        }
+        return sk_make_sp<SkTypeface_AndroidStream>(std::move(data),
+                                                    this->fontStyle(),
+                                                    this->isFixedPitch(),
+                                                    fFamilyName);
+    }
+
 private:
     const std::unique_ptr<const SkFontData> fData;
     typedef SkTypeface_Android INHERITED;
@@ -160,8 +187,8 @@ public:
 
             std::unique_ptr<SkStreamAsset> stream = SkStream::MakeFromFile(pathName.c_str());
             if (!stream) {
-                SkDEBUGF(("Requested font file %s does not exist or cannot be opened.\n",
-                          pathName.c_str()));
+                SkDEBUGF("Requested font file %s does not exist or cannot be opened.\n",
+                         pathName.c_str());
                 continue;
             }
 
@@ -173,8 +200,8 @@ public:
             if (!scanner.scanFont(stream.get(), ttcIndex,
                                   &familyName, &style, &isFixedWidth, &axisDefinitions))
             {
-                SkDEBUGF(("Requested font file %s exists, but is not a valid font.\n",
-                          pathName.c_str()));
+                SkDEBUGF("Requested font file %s exists, but is not a valid font.\n",
+                         pathName.c_str());
                 continue;
             }
 
@@ -240,7 +267,7 @@ public:
     }
 
 private:
-    SkTArray<sk_sp<SkTypeface_AndroidSystem>, true> fStyles;
+    SkTArray<sk_sp<SkTypeface_AndroidSystem>> fStyles;
 
     friend struct NameToFamily;
     friend class SkFontMgr_Android;
@@ -488,7 +515,7 @@ private:
 
     SkTypeface_FreeType::Scanner fScanner;
 
-    SkTArray<sk_sp<SkFontStyleSet_Android>, true> fStyleSets;
+    SkTArray<sk_sp<SkFontStyleSet_Android>> fStyleSets;
     sk_sp<SkFontStyleSet> fDefaultStyleSet;
 
     SkTArray<NameToFamily, true> fNameToFamilyMap;
@@ -550,11 +577,11 @@ sk_sp<SkFontMgr> SkFontMgr_New_Android(const SkFontMgr_Android_CustomFonts* cust
     if (custom) {
         SkASSERT(0 <= custom->fSystemFontUse);
         SkASSERT(custom->fSystemFontUse < SK_ARRAY_COUNT(gSystemFontUseStrings));
-        SkDEBUGF(("SystemFontUse: %s BasePath: %s Fonts: %s FallbackFonts: %s\n",
-                  gSystemFontUseStrings[custom->fSystemFontUse],
-                  custom->fBasePath,
-                  custom->fFontsXml,
-                  custom->fFallbackFontsXml));
+        SkDEBUGF("SystemFontUse: %s BasePath: %s Fonts: %s FallbackFonts: %s\n",
+                 gSystemFontUseStrings[custom->fSystemFontUse],
+                 custom->fBasePath,
+                 custom->fFontsXml,
+                 custom->fFallbackFontsXml);
     }
     return sk_make_sp<SkFontMgr_Android>(custom);
 }

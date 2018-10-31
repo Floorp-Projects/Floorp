@@ -261,7 +261,7 @@ fuzzy-if(cocoaWidget,0-15,0-19679) fuzzy-if(winWidget,0-1,0-8800) fuzzy-if(!coco
 
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,0-1,0-800000) == markers-and-group-opacity-01.svg markers-and-group-opacity-01-ref.svg
 == marker-attribute-01.svg pass.svg
-== marker-dynamic-opacity.html marker-dynamic-opacity-ref.html
+fuzzy-if(skiaContent,0-1,0-1) == marker-dynamic-opacity.html marker-dynamic-opacity-ref.html
 == marker-effects-01.svg marker-effects-01-ref.svg
 fuzzy-if(skiaContent,0-1,0-100) == marker-viewBox-01.svg marker-viewBox-01-ref.svg
 fuzzy-if(skiaContent,0-1,0-100) == marker-orientation-01.svg marker-orientation-01-ref.svg

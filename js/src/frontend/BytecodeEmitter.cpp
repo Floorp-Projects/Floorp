@@ -8901,10 +8901,6 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
         break;
 
       case ParseNodeKind::CallImport:
-        if (!cx->runtime()->moduleDynamicImportHook) {
-            reportError(nullptr, JSMSG_NO_DYNAMIC_IMPORT);
-            return false;
-        }
         if (!emitTree(pn->as<BinaryNode>().right()) || !emit1(JSOP_DYNAMIC_IMPORT)) {
             return false;
         }

@@ -13,6 +13,7 @@
 #include <unordered_map>
 
 #include "SkSLCodeGenerator.h"
+#include "SkSLMemoryLayout.h"
 #include "SkSLStringStream.h"
 #include "ir/SkSLBinaryExpression.h"
 #include "ir/SkSLBoolLiteral.h"
@@ -52,6 +53,9 @@ namespace SkSL {
  */
 class MetalCodeGenerator : public CodeGenerator {
 public:
+    static constexpr const char* SAMPLER_SUFFIX = "Smplr";
+    static constexpr const char* PACKED_PREFIX = "packed_";
+
     enum Precedence {
         kParentheses_Precedence    =  1,
         kPostfix_Precedence        =  2,
@@ -76,8 +80,11 @@ public:
     MetalCodeGenerator(const Context* context, const Program* program, ErrorReporter* errors,
                       OutputStream* out)
     : INHERITED(program, errors, out)
+    , fReservedWords({"atan2", "rsqrt", "dfdx", "dfdy", "vertex", "fragment"})
     , fLineEnding("\n")
-    , fContext(*context) {}
+    , fContext(*context) {
+        this->setupIntrinsics();
+    }
 
     bool generateCode() override;
 
@@ -87,6 +94,26 @@ protected:
     static constexpr Requirements kInputs_Requirement   = 1 << 0;
     static constexpr Requirements kOutputs_Requirement  = 1 << 1;
     static constexpr Requirements kUniforms_Requirement = 1 << 2;
+    static constexpr Requirements kGlobals_Requirement  = 1 << 3;
+
+    enum IntrinsicKind {
+        kSpecial_IntrinsicKind,
+        kMetal_IntrinsicKind,
+    };
+
+    enum SpecialIntrinsic {
+        kTexture_SpecialIntrinsic,
+        kMod_SpecialIntrinsic,
+    };
+
+    enum MetalIntrinsic {
+        kLessThan_MetalIntrinsic,
+        kLessThanEqual_MetalIntrinsic,
+        kGreaterThan_MetalIntrinsic,
+        kGreaterThanEqual_MetalIntrinsic,
+    };
+
+    void setupIntrinsics();
 
     void write(const char* s);
 
@@ -105,6 +132,17 @@ protected:
     void writeInputStruct();
 
     void writeOutputStruct();
+
+    void writeInterfaceBlocks();
+
+    void writeFields(const std::vector<Type::Field>& fields, int parentOffset,
+                     const InterfaceBlock* parentIntf = nullptr);
+
+    int size(const Type* type, bool isPacked) const;
+
+    int alignment(const Type* type, bool isPacked) const;
+
+    void writeGlobalStruct();
 
     void writePrecisionModifier();
 
@@ -128,6 +166,8 @@ protected:
 
     void writeVarInitializer(const Variable& var, const Expression& value);
 
+    void writeName(const String& name);
+
     void writeVarDeclarations(const VarDeclarations& decl, bool global);
 
     void writeFragCoord();
@@ -141,6 +181,8 @@ protected:
     void writeMinAbsHack(Expression& absExpr, Expression& otherExpr);
 
     void writeFunctionCall(const FunctionCall& c);
+
+    void writeSpecialIntrinsic(const FunctionCall& c, SpecialIntrinsic kind);
 
     void writeConstructor(const Constructor& c);
 
@@ -194,6 +236,16 @@ protected:
 
     Requirements requirements(const Statement& e);
 
+    typedef std::pair<IntrinsicKind, int32_t> Intrinsic;
+    std::unordered_map<String, Intrinsic> fIntrinsicMap;
+    std::unordered_set<String> fReservedWords;
+    std::vector<const VarDeclaration*> fInitNonConstGlobalVars;
+    std::vector<const Variable*> fTextures;
+    std::unordered_map<const Type::Field*, const InterfaceBlock*> fInterfaceBlockMap;
+    std::unordered_map<const InterfaceBlock*, String> fInterfaceBlockNameMap;
+    int fAnonInterfaceCount = 0;
+    int fPaddingCount = 0;
+    bool fNeedsGlobalStructInit = false;
     const char* fLineEnding;
     const Context& fContext;
     StringStream fHeader;

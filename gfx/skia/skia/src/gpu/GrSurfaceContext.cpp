@@ -6,12 +6,10 @@
  */
 
 #include "GrSurfaceContext.h"
-
 #include "GrContextPriv.h"
 #include "GrDrawingManager.h"
 #include "GrOpList.h"
 #include "SkGr.h"
-
 #include "../private/GrAuditTrail.h"
 
 #define ASSERT_SINGLE_OWNER \
@@ -36,9 +34,6 @@ GrSurfaceContext::GrSurfaceContext(GrContext* context,
         , fSingleOwner(singleOwner)
 #endif
 {
-    // We never should have a sRGB pixel config with a non-SRGB gamma color space.
-    SkASSERT(!GrPixelConfigIsSRGB(config) ||
-             (fColorSpaceInfo.colorSpace() && fColorSpaceInfo.colorSpace()->gammaCloseToSRGB()));
 }
 
 bool GrSurfaceContext::readPixels(const SkImageInfo& dstInfo, void* dstBuffer,
@@ -49,7 +44,8 @@ bool GrSurfaceContext::readPixels(const SkImageInfo& dstInfo, void* dstBuffer,
     GR_AUDIT_TRAIL_AUTO_FRAME(fAuditTrail, "GrSurfaceContext::readPixels");
 
     // TODO: this seems to duplicate code in SkImage_Gpu::onReadPixels
-    if (kUnpremul_SkAlphaType == dstInfo.alphaType()) {
+    if (kUnpremul_SkAlphaType == dstInfo.alphaType() &&
+        !GrPixelConfigIsOpaque(this->asSurfaceProxy()->config())) {
         flags |= GrContextPriv::kUnpremul_PixelOpsFlag;
     }
     auto colorType = SkColorTypeToGrColorType(dstInfo.colorType());
@@ -84,8 +80,13 @@ bool GrSurfaceContext::copy(GrSurfaceProxy* src, const SkIRect& srcRect, const S
     ASSERT_SINGLE_OWNER
     RETURN_FALSE_IF_ABANDONED
     SkDEBUGCODE(this->validate();)
-    GR_AUDIT_TRAIL_AUTO_FRAME(fAuditTrail, "GrSurfaceContext::onCopy");
+    GR_AUDIT_TRAIL_AUTO_FRAME(fAuditTrail, "GrSurfaceContext::copy");
 
-    return this->getOpList()->copySurface(*fContext->caps(),
-                                          this->asSurfaceProxy(), src, srcRect, dstPoint);
+    if (!fContext->contextPriv().caps()->canCopySurface(this->asSurfaceProxy(), src, srcRect,
+                                                        dstPoint)) {
+        return false;
+    }
+
+    return this->getOpList()->copySurface(fContext, this->asSurfaceProxy(),
+                                          src, srcRect, dstPoint);
 }

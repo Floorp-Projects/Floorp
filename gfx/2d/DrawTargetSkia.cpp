@@ -12,6 +12,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Vector.h"
 
 #include "skia/include/core/SkSurface.h"
 #include "skia/include/core/SkTypeface.h"
@@ -38,7 +39,6 @@
 #ifdef MOZ_WIDGET_COCOA
 #include "BorrowedContext.h"
 #include <ApplicationServices/ApplicationServices.h>
-#include "mozilla/Vector.h"
 #include "ScaledFontMac.h"
 #include "CGTextDrawing.h"
 #endif
@@ -1441,16 +1441,6 @@ DrawTargetSkia::DrawGlyphs(ScaledFont* aFont,
       paint.mPaint.setHinting(SkPaint::kNo_Hinting);
     }
     break;
-  case FontType::GDI:
-  {
-    if (!shouldLCDRenderText && aaEnabled) {
-      // If we have non LCD GDI text, render the fonts as cleartype and convert them
-      // to grayscale. This seems to be what Chrome and IE are doing on Windows 7.
-      // This also applies if cleartype is disabled system wide.
-      paint.mPaint.setFlags(paint.mPaint.getFlags() | SkPaint::kGenA8FromLCD_Flag);
-    }
-    break;
-  }
 #ifdef XP_WIN
   case FontType::DWRITE:
   {
@@ -1470,29 +1460,20 @@ DrawTargetSkia::DrawGlyphs(ScaledFont* aFont,
 
   paint.mPaint.setSubpixelText(useSubpixelText);
 
-  const uint32_t heapSize = 64;
-  uint16_t indicesOnStack[heapSize];
-  SkPoint offsetsOnStack[heapSize];
-  std::vector<uint16_t> indicesOnHeap;
-  std::vector<SkPoint> offsetsOnHeap;
-  uint16_t* indices = indicesOnStack;
-  SkPoint* offsets = offsetsOnStack;
-  if (aBuffer.mNumGlyphs > heapSize) {
-    // Heap allocation/ deallocation is slow, use it only if we need a
-    // bigger(>heapSize) buffer.
-    indicesOnHeap.resize(aBuffer.mNumGlyphs);
-    offsetsOnHeap.resize(aBuffer.mNumGlyphs);
-    indices = (uint16_t*)&indicesOnHeap.front();
-    offsets = (SkPoint*)&offsetsOnHeap.front();
+  Vector<uint16_t, 64> indices;
+  Vector<SkPoint, 64> offsets;
+  if (!indices.resizeUninitialized(aBuffer.mNumGlyphs) ||
+      !offsets.resizeUninitialized(aBuffer.mNumGlyphs)) {
+    gfxDebug() << "Failed allocating Skia text buffers for GlyphBuffer";
+    return;
   }
 
-  for (unsigned int i = 0; i < aBuffer.mNumGlyphs; i++) {
+  for (uint32_t i = 0; i < aBuffer.mNumGlyphs; i++) {
     indices[i] = aBuffer.mGlyphs[i].mIndex;
-    offsets[i].fX = SkFloatToScalar(aBuffer.mGlyphs[i].mPosition.x);
-    offsets[i].fY = SkFloatToScalar(aBuffer.mGlyphs[i].mPosition.y);
+    offsets[i] = PointToSkPoint(aBuffer.mGlyphs[i].mPosition);
   }
 
-  mCanvas->drawPosText(indices, aBuffer.mNumGlyphs*2, offsets, paint.mPaint);
+  mCanvas->drawPosText(indices.begin(), indices.length() * sizeof(uint16_t), offsets.begin(), paint.mPaint);
 }
 
 void
@@ -2037,9 +2018,10 @@ DrawTargetSkia::GetNativeSurface(NativeSurfaceType aType)
 {
 #ifdef USE_SKIA_GPU
   if (aType == NativeSurfaceType::OPENGL_TEXTURE && mSurface) {
-    GrBackendObject handle = mSurface->getTextureHandle(SkSurface::kFlushRead_BackendHandleAccess);
-    if (handle) {
-      return (void*)(uintptr_t)reinterpret_cast<GrGLTextureInfo *>(handle)->fID;
+    GrBackendTexture tex = mSurface->getBackendTexture(SkSurface::kFlushRead_BackendHandleAccess);
+    GrGLTextureInfo info;
+    if (tex.getGLTextureInfo(&info)) {
+      return (void*)(uintptr_t)info.fID;
     }
   }
 #endif

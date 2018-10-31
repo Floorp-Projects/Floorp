@@ -11,6 +11,7 @@
 #include "GrPathRenderer.h"
 
 #include "GrTypesPriv.h"
+#include "SkNoncopyable.h"
 #include "SkTypes.h"
 #include "SkTArray.h"
 
@@ -27,7 +28,7 @@ class GrPathRendererChain : public SkNoncopyable {
 public:
     struct Options {
         bool fAllowPathMaskCaching = false;
-        GpuPathRenderers fGpuPathRenderers = GpuPathRenderers::kDefault;
+        GpuPathRenderers fGpuPathRenderers = GpuPathRenderers::kAll;
     };
     GrPathRendererChain(GrContext* context, const Options&);
 
