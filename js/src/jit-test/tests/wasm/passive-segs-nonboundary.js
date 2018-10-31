@@ -370,6 +370,7 @@ function checkMiscPrefixed(opcode, expect_failure) {
 
 checkMiscPrefixed([0x0a, 0x00], false); // memory.copy, flags=0
 checkMiscPrefixed([0x0b, 0x00], false); // memory.fill, flags=0
+checkMiscPrefixed([0x0b, 0x80, 0x00], false); // memory.fill, flags=0 (long encoding)
 checkMiscPrefixed([0x0f], true);        // table.copy+1, which is currently unassigned
 
 //-----------------------------------------------------------
