@@ -139,9 +139,9 @@ class OriginKeyStore : public nsISupports
 
           aString.AssignLiteral("[Expanded Principal [");
 
-          for (uint32_t i = 0; i < info.whitelist().Length(); i++) {
+          for (uint32_t i = 0; i < info.allowlist().Length(); i++) {
             nsAutoCString str;
-            PrincipalInfoToString(info.whitelist()[i], str);
+            PrincipalInfoToString(info.allowlist()[i], str);
 
             if (i != 0) {
               aString.AppendLiteral(", ");

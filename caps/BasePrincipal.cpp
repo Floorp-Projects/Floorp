@@ -497,7 +497,7 @@ BasePrincipal::ContentScriptAddonPolicy()
   }
 
   auto expanded = As<ExpandedPrincipal>();
-  for (auto& prin : expanded->WhiteList()) {
+  for (auto& prin : expanded->AllowList()) {
     if (auto policy = BasePrincipal::Cast(prin)->AddonPolicy()) {
       return policy;
     }

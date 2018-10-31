@@ -170,7 +170,7 @@ public:
   //
   // For most principal types, this returns the principal itself. For expanded
   // principals, it returns the first sub-principal which subsumes the given URI
-  // (or, if no URI is given, the last whitelist principal).
+  // (or, if no URI is given, the last allowlist principal).
   nsIPrincipal* PrincipalToInherit(nsIURI* aRequestedURI = nullptr);
 
   /**
