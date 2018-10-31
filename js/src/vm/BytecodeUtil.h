@@ -74,6 +74,7 @@ enum {
                                        JSOP_NEW, JSOP_EVAL, JSOP_CALLITER */
     JOF_GNAME           = 1 << 13,  /* predicted global name */
     JOF_TYPESET         = 1 << 14,  /* has an entry in a script's type sets */
+    JOF_IC              = 1 << 15,  /* Baseline may use an IC for this op */
 };
 
 /* Shorthand for type from format. */
@@ -763,6 +764,12 @@ GetBytecodeInteger(jsbytecode* pc)
       default:
         MOZ_CRASH("Bad op");
     }
+}
+
+inline bool
+BytecodeOpHasIC(JSOp op)
+{
+    return CodeSpec[op].format & JOF_IC;
 }
 
 /*

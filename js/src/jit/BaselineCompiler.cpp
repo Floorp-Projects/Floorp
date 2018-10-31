@@ -587,6 +587,8 @@ BaselineCompiler::emitOutOfLinePostBarrierSlot()
 bool
 BaselineCompiler::emitIC(ICStub* stub, bool isForOp)
 {
+    MOZ_ASSERT_IF(isForOp, BytecodeOpHasIC(JSOp(*pc)));
+
     if (!stub) {
         return false;
     }
