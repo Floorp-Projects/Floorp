@@ -43,7 +43,6 @@ function testWindowlessBrowser(chromePrivileged) {
   ok(win.outerWidth == 0, "window.outerWidth should be 0 in a windowless browser");
   ok(win.outerHeight == 0, "window.outerHeight should be 0 in a windowless browser");
   
-  ok(win.sidebar, "window.sidebar should be defined");
   ok(win.external, "window.external should be defined");
   
   var exception;

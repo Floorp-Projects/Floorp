@@ -618,13 +618,11 @@ private:
       return NS_OK;
     }
 
-    ErrorResult result;
     nsCOMPtr<nsIInputStream> body;
-    result = NS_NewCStringInputStream(getter_AddRefs(body),
-                                      NS_ConvertUTF16toUTF8(aCN->Buffer()));
-    if (NS_WARN_IF(result.Failed())) {
-      MOZ_ASSERT(!result.IsErrorWithMessage());
-      return result.StealNSResult();
+    nsresult rv = NS_NewCStringInputStream(getter_AddRefs(body),
+                                           NS_ConvertUTF16toUTF8(aCN->Buffer()));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
 
     RefPtr<InternalResponse> ir =
@@ -650,7 +648,9 @@ private:
     // For now we have to wait until the Put Promise is fulfilled before we can
     // continue since Cache does not yet support starting a read that is being
     // written to.
+    ErrorResult result;
     RefPtr<Promise> cachePromise = aCache->Put(aCx, request, *response, result);
+    result.WouldReportJSException();
     if (NS_WARN_IF(result.Failed())) {
       // No exception here because there are no ReadableStreams involved here.
       MOZ_ASSERT(!result.IsJSException());

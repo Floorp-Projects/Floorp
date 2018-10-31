@@ -1,10 +1,11 @@
 const TESTPAGE = `${SECURE_TESTROOT}webapi_checkavailable.html`;
-const XPI_URL = `${SECURE_TESTROOT}addons/browser_webapi_install.xpi`;
-const XPI_SHA = "sha256:d4bab17ff9ba5f635e97c84021f4c527c502250d62ab7f6e6c9e8ee28822f772";
+const XPI_URL = `${SECURE_TESTROOT}../xpinstall/amosigned.xpi`;
 
-const ID = "webapi_install@tests.mozilla.org";
+const XPI_SHA = "sha256:91121ed2c27f670f2307b9aebdd30979f147318c7fb9111c254c14ddbb84e4b0";
+
+const ID = "amosigned-xpi@tests.mozilla.org";
 // eh, would be good to just stat the real file instead of this...
-const XPI_LEN = 4782;
+const XPI_LEN = 4287;
 
 function waitForClear() {
   const MSG = "WebAPICleanup";
@@ -38,6 +39,10 @@ add_task(async function setup() {
 // with properties that the AddonInstall object is expected to have when
 // that event is triggered.
 async function testInstall(browser, args, steps, description) {
+  promisePopupNotificationShown("addon-webext-permissions").then(panel => {
+    panel.button.click();
+  });
+
   let success = await ContentTask.spawn(browser, {args, steps}, async function(opts) {
     let { args, steps } = opts;
     let install = await content.navigator.mozAddonManager.createInstall(args);
@@ -203,24 +208,21 @@ function makeRegularTest(options, what) {
 
     await promptPromise;
 
-    let version = Services.prefs.getIntPref("webapitest.active_version");
-    is(version, 1, "the install really did work");
-
     // Sanity check to ensure that the test in makeInstallTest() that
     // installs.size == 0 means we actually did clean up.
     ok(AddonManager.webAPI.installs.size > 0, "webAPI is tracking the AddonInstall");
 
-    let addons = await promiseAddonsByIDs([ID]);
-    isnot(addons[0], null, "Found the addon");
+    let addon = await promiseAddonByID(ID);
+    isnot(addon, null, "Found the addon");
 
     // Check that the expected installTelemetryInfo has been stored in the addon details.
-    Assert.deepEqual(addons[0].installTelemetryInfo, {source: "test-host", method: "amWebAPI"},
+    Assert.deepEqual(addon.installTelemetryInfo, {source: "test-host", method: "amWebAPI"},
                      "Got the expected addon.installTelemetryInfo");
 
-    await addons[0].uninstall();
+    await addon.uninstall();
 
-    addons = await promiseAddonsByIDs([ID]);
-    is(addons[0], null, "Addon was uninstalled");
+    addon = await promiseAddonByID(ID);
+    is(addon, null, "Addon was uninstalled");
   });
 }
 
