@@ -341,9 +341,6 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     BinaryNodeType newImportMeta(NullaryNodeType importHolder, NullaryNodeType metaHolder) {
         return NodeGeneric;
     }
-    BinaryNodeType newCallImport(NullaryNodeType importHolder, Node singleArg) {
-        return NodeGeneric;
-    }
 
     BinaryNodeType newSetThis(Node thisName, Node value) { return value; }
 

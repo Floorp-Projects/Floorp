@@ -882,14 +882,6 @@ class NameResolver
             break;
           }
 
-          case ParseNodeKind::CallImport: {
-            BinaryNode* node = &cur->as<BinaryNode>();
-            if (!resolve(node->right(), prefix)) {
-                return false;
-            }
-            break;
-          }
-
           case ParseNodeKind::Dot: {
             // Super prop nodes do not have a meaningful LHS
             PropertyAccess* prop = &cur->as<PropertyAccess>();

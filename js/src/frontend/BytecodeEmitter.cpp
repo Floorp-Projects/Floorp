@@ -1291,11 +1291,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
-      case ParseNodeKind::CallImport:
-        MOZ_ASSERT(pn->is<BinaryNode>());
-        *answer = true;
-        return true;
-
       // Every part of a loop might be effect-free, but looping infinitely *is*
       // an effect.  (Language lawyer trivia: C++ says threads can be assumed
       // to exit or have side effects, C++14 [intro.multithread]p27, so a C++
@@ -8876,10 +8871,6 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
             return false;
         }
         break;
-
-      case ParseNodeKind::CallImport:
-        reportError(nullptr, JSMSG_NO_DYNAMIC_IMPORT);
-        return false;
 
       case ParseNodeKind::SetThis:
         if (!emitSetThis(&pn->as<BinaryNode>())) {
