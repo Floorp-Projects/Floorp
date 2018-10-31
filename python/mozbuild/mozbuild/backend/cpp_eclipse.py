@@ -15,6 +15,7 @@ import xml.etree.ElementTree as ET
 from .common import CommonBackend
 
 from ..frontend.data import (
+    ComputedFlags,
     Defines,
 )
 from mozbuild.base import ExecutionSummary
@@ -77,8 +78,12 @@ class CppEclipseBackend(CommonBackend):
 
         # Note that unlike VS, Eclipse' indexer seem to crawl the headers and
         # isn't picky about the local includes.
-        if isinstance(obj, Defines):
-            self._paths_to_defines.setdefault(reldir, {}).update(obj.defines)
+        if isinstance(obj, ComputedFlags):
+            defs = self._paths_to_defines.setdefault(reldir, [])
+            if "DEFINES" in obj.flags and obj.flags["DEFINES"]:
+                defs += obj.flags["DEFINES"]
+            if "LIBRARY_DEFINES" in obj.flags and obj.flags["LIBRARY_DEFINES"]:
+                defs += obj.flags["LIBRARY_DEFINES"]
 
         return True
 
@@ -263,10 +268,20 @@ class CppEclipseBackend(CommonBackend):
         for path, defines in self._paths_to_defines.items():
             dirsettings = dirsettings_template
             dirsettings = dirsettings.replace('@RELATIVE_PATH@', path)
-            for k, v in defines.items():
-                if v == True:
-                    v = ""
-                dirsettings += add_define(k, str(v))
+            for d in defines:
+                assert(d[:2] == u"-D" or d[:2] == u"-U")
+                if d[:2] == u"-U":
+                    # gfx/harfbuzz/src uses -UDEBUG, at least on Mac
+                    # netwerk/sctp/src uses -U__APPLE__ on Mac
+                    # XXX We should make this code smart enough to remove existing defines.
+                    continue
+                d = d[2:] # get rid of leading "-D"
+                name_value = d.split("=", 1)
+                name = name_value[0]
+                value = ""
+                if len(name_value) == 2:
+                    value = name_value[1]
+                dirsettings += add_define(name, str(value))
             dirsettings += LANGUAGE_SETTINGS_TEMPLATE_DIR_FOOTER
             fh.write(dirsettings)
 
