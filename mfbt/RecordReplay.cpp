@@ -50,10 +50,6 @@ namespace recordreplay {
   Macro(InternalEndDisallowThreadEvents, (), ())                \
   Macro(InternalRecordReplayBytes,                              \
         (void* aData, size_t aSize), (aData, aSize))            \
-  Macro(NotifyUnrecordedWait,                                   \
-        (const std::function<void()>& aCallback, bool aOnlyWhenDiverged), \
-        (aCallback, aOnlyWhenDiverged))                         \
-  Macro(MaybeWaitForCheckpointSave, (), ())                     \
   Macro(InternalInvalidateRecording, (const char* aWhy), (aWhy)) \
   Macro(InternalDestroyPLDHashTableCallbacks,                   \
         (const PLDHashTableOps* aOps), (aOps))                  \

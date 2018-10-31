@@ -1137,11 +1137,29 @@ DirectUnlockMutex(pthread_mutex_t* aMutex)
 // Handle a redirection which releases a mutex, waits in some way for a cvar,
 // and reacquires the mutex before returning.
 static ssize_t
-WaitForCvar(pthread_mutex_t* aMutex, bool aRecordReturnValue,
+WaitForCvar(pthread_mutex_t* aMutex, pthread_cond_t* aCond, bool aRecordReturnValue,
             const std::function<ssize_t()>& aCallback)
 {
   Lock* lock = Lock::Find(aMutex);
   if (!lock) {
+    if (IsReplaying() && !AreThreadEventsPassedThrough()) {
+      Thread* thread = Thread::Current();
+      if (thread->MaybeWaitForCheckpointSave([=]() { pthread_mutex_unlock(aMutex); })) {
+        // We unlocked the mutex while the thread idled, so don't wait on the
+        // condvar: the state the thread is waiting on may have changed and it
+        // might not want to continue waiting. Returning immediately means this
+        // this is a spurious wakeup, which is allowed by the pthreads API and
+        // should be handled correctly by callers.
+        pthread_mutex_lock(aMutex);
+        return 0;
+      }
+      thread->NotifyUnrecordedWait([=]() {
+          pthread_mutex_lock(aMutex);
+          pthread_cond_broadcast(aCond);
+          pthread_mutex_unlock(aMutex);
+        });
+    }
+
     AutoEnsurePassThroughThreadEvents pt;
     return aCallback();
   }
@@ -1170,7 +1188,7 @@ Preamble_pthread_cond_wait(CallArguments* aArguments)
   auto& cond = aArguments->Arg<0, pthread_cond_t*>();
   auto& mutex = aArguments->Arg<1, pthread_mutex_t*>();
   aArguments->Rval<ssize_t>() =
-    WaitForCvar(mutex, false,
+    WaitForCvar(mutex, cond, false,
                 [=]() { return OriginalCall(pthread_cond_wait, ssize_t, cond, mutex); });
   return PreambleResult::Veto;
 }
@@ -1182,7 +1200,7 @@ Preamble_pthread_cond_timedwait(CallArguments* aArguments)
   auto& mutex = aArguments->Arg<1, pthread_mutex_t*>();
   auto& timeout = aArguments->Arg<2, timespec*>();
   aArguments->Rval<ssize_t>() =
-    WaitForCvar(mutex, true,
+    WaitForCvar(mutex, cond, true,
                 [=]() { return OriginalCall(pthread_cond_timedwait, ssize_t,
                                             cond, mutex, timeout); });
   return PreambleResult::Veto;
@@ -1195,7 +1213,7 @@ Preamble_pthread_cond_timedwait_relative_np(CallArguments* aArguments)
   auto& mutex = aArguments->Arg<1, pthread_mutex_t*>();
   auto& timeout = aArguments->Arg<2, timespec*>();
   aArguments->Rval<ssize_t>() =
-    WaitForCvar(mutex, true,
+    WaitForCvar(mutex, cond, true,
                 [=]() { return OriginalCall(pthread_cond_timedwait_relative_np, ssize_t,
                                             cond, mutex, timeout); });
   return PreambleResult::Veto;
