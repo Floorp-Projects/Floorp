@@ -32,9 +32,7 @@ XPCOMUtils.defineLazyGetter(
 XPCOMUtils.defineLazyGetter(
   this, "VR_USER_AGENT",
   function() {
-    return MOBILE_USER_AGENT
-           .getService(Ci.nsIHttpProtocolHandler).userAgent
-           .replace(/Android \d+; [a-zA-Z]+/, "VR");
+    return MOBILE_USER_AGENT.replace(/Mobile/, "Mobile VR");
   });
 
 // This needs to match GeckoSessionSettings.java
