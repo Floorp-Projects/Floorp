@@ -5,15 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PaintWorkletGlobalScope.h"
+
 #include "mozilla/dom/WorkletPrincipal.h"
 #include "mozilla/dom/PaintWorkletGlobalScopeBinding.h"
 #include "mozilla/dom/FunctionBinding.h"
+#include "PaintWorkletImpl.h"
 
 namespace mozilla {
 namespace dom {
 
-PaintWorkletGlobalScope::PaintWorkletGlobalScope(WorkletImpl* aImpl)
-  : WorkletGlobalScope(aImpl)
+PaintWorkletGlobalScope::PaintWorkletGlobalScope(PaintWorkletImpl* aImpl)
+  : mImpl(aImpl)
 {
 }
 
@@ -33,6 +35,11 @@ PaintWorkletGlobalScope::RegisterPaint(const nsAString& aType,
                                        VoidFunction& aProcessorCtor)
 {
   // Nothing to do here, yet.
+}
+
+WorkletImpl* PaintWorkletGlobalScope::Impl() const
+{
+  return mImpl;
 }
 
 } // dom namespace
