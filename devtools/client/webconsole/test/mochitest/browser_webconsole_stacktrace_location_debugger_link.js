@@ -19,16 +19,12 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test-stacktrace-location-debugger-link.html";
 
 add_task(async function() {
-  Services.prefs.setBoolPref("devtools.webconsole.filter.log", true);
-  registerCleanupFunction(async function() {
-    Services.prefs.clearUserPref("devtools.webconsole.filter.log");
-  });
-
   const hud = await openNewTabAndConsole(TEST_URI);
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
 
   await testOpenInDebugger(hud, toolbox, "console.trace()");
+  await testOpenInDebugger(hud, toolbox, "myErrorObject");
 });
 
 async function testOpenInDebugger(hud, toolbox, text) {

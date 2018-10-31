@@ -44,11 +44,6 @@ void
 HTMLOptGroupElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = false;
-  // Do not process any DOM events if the element is disabled
-  // XXXsmaug This is not the right thing to do. But what is?
-  if (IsDisabled()) {
-    return;
-  }
 
   if (nsIFrame* frame = GetPrimaryFrame()) {
     // FIXME(emilio): This poking at the style of the frame is broken unless we

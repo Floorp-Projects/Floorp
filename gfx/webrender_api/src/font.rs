@@ -217,15 +217,15 @@ impl SyntheticItalics {
         SyntheticItalics { angle: (degrees.max(-89.0).min(89.0) * Self::ANGLE_SCALE) as i16 }
     }
 
-    pub fn to_degrees(&self) -> f32 {
+    pub fn to_degrees(self) -> f32 {
         self.angle as f32 / Self::ANGLE_SCALE
     }
 
-    pub fn to_radians(&self) -> f32 {
+    pub fn to_radians(self) -> f32 {
         self.to_degrees().to_radians()
     }
 
-    pub fn to_skew(&self) -> f32 {
+    pub fn to_skew(self) -> f32 {
         self.to_radians().tan()
     }
 
@@ -237,7 +237,7 @@ impl SyntheticItalics {
         SyntheticItalics { angle: 0 }
     }
 
-    pub fn is_enabled(&self) -> bool {
+    pub fn is_enabled(self) -> bool {
         self.angle != 0
     }
 }

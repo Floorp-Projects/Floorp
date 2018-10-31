@@ -2269,8 +2269,7 @@ js::DefineTypedArrayElement(JSContext* cx, HandleObject obj, uint64_t index,
 JS_FRIEND_API(bool)
 JS_IsTypedArrayObject(JSObject* obj)
 {
-    obj = CheckedUnwrap(obj);
-    return obj ? obj->is<TypedArrayObject>() : false;
+    return obj->canUnwrapAs<TypedArrayObject>();
 }
 
 JS_FRIEND_API(uint32_t)

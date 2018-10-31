@@ -2069,12 +2069,6 @@ extern JS_FRIEND_API(bool)
 JS_IsDetachedArrayBufferObject(JSObject* obj);
 
 /**
- * Check whether obj supports JS_GetDataView* APIs.
- */
-JS_FRIEND_API(bool)
-JS_IsDataViewObject(JSObject* obj);
-
-/**
  * Create a new DataView using the given buffer for storage. The given buffer
  * must be an ArrayBuffer or SharedArrayBuffer (or a cross-compartment wrapper
  * of either type), and the offset and length must fit within the bounds of the

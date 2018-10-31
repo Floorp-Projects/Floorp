@@ -29,9 +29,8 @@ window.onload = function() {
     const url = document.getElementById("inspectorContent").href;
 
     const { target } = await attachURL(url);
-    inspector = target.getInspector();
-    walkerFront = await inspector.getWalker();
-    ok(walkerFront, "getWalker() should return an actor.");
+    inspector = await target.getInspector();
+    walkerFront = inspector.walker;
 
     runNextTest();
   });

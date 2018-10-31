@@ -60,6 +60,8 @@ if [ -d $1/.git ]; then
   rev=$(cd $1 && git rev-parse --verify HEAD)
   date=$(cd $1 && git show -s --format=%ci HEAD)
   dirty=$(cd $1 && git diff-index --name-only HEAD)
+  pre_rev=$(grep -o '[[:xdigit:]]\{40\}' README_MOZILLA)
+  commits=$(cd $1 && git log --pretty=format:'%h - %s' $pre_rev..$rev)
 fi
 
 if [ -n "$rev" ]; then
@@ -70,6 +72,7 @@ if [ -n "$rev" ]; then
   fi
   sed -i.bak -e "/The git commit ID used was/ s/[0-9a-f]\{40\}\(-dirty\)\{0,1\} .\{1,100\}/$version ($date)/" README_MOZILLA
   rm README_MOZILLA.bak
+  echo -e "Pick commits:\n$commits"
 else
   echo "Remember to update README_MOZILLA with the version details."
 fi
