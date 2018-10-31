@@ -381,6 +381,21 @@ class NavigationDelegateTest : BaseSessionTest() {
         assertThat("User agent should be reported as mobile",
                     userAgent, containsString(mobileSubStr));
 
+        val vrSubStr = "Mobile VR"
+        sessionRule.session.settings.setInt(
+                GeckoSessionSettings.USER_AGENT_MODE, GeckoSessionSettings.USER_AGENT_MODE_VR)
+
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+
+        assertThat("User agent should be set to VR",
+                sessionRule.session.evaluateJS(userAgentJs) as String,
+                containsString(vrSubStr))
+
+        userAgent = sessionRule.waitForResult(sessionRule.session.getUserAgent())
+        assertThat("User agent should be reported as VR",
+                userAgent, containsString(vrSubStr))
+
     }
 
     @Test fun telemetrySnapshots() {

@@ -705,16 +705,16 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         auto* basePrin = BasePrincipal::Cast(aPrincipal);
         if (basePrin->Is<ExpandedPrincipal>()) {
             auto expanded = basePrin->As<ExpandedPrincipal>();
-            for (auto& prin : expanded->WhiteList()) {
+            for (auto& prin : expanded->AllowList()) {
                 nsresult rv = CheckLoadURIWithPrincipal(prin,
                                                         aTargetURI,
                                                         aFlags);
                 if (NS_SUCCEEDED(rv)) {
-                    // Allow access if it succeeded with one of the white listed principals
+                    // Allow access if it succeeded with one of the allowlisted principals
                     return NS_OK;
                 }
             }
-            // None of our whitelisted principals worked.
+            // None of our allowlisted principals worked.
             return NS_ERROR_DOM_BAD_URI;
         }
         NS_ERROR("Non-system principals or expanded principal passed to CheckLoadURIWithPrincipal "
@@ -1008,7 +1008,7 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
                     return NS_OK;
                 }
             } else if (targetScheme.EqualsLiteral("chrome")) {
-                // Allow the load only if the chrome package is whitelisted.
+                // Allow the load only if the chrome package is allowlisted.
                 nsCOMPtr<nsIXULChromeRegistry> reg(
                         do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
                 if (reg) {
@@ -1033,11 +1033,11 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
                              &hasFlags);
     NS_ENSURE_SUCCESS(rv, rv);
     if (hasFlags) {
-        // Allow domains that were whitelisted in the prefs. In 99.9% of cases,
+        // Allow domains that were allowlisted in the prefs. In 99.9% of cases,
         // this array is empty.
-        bool isWhitelisted;
-        MOZ_ALWAYS_SUCCEEDS(InFileURIWhitelist(aSourceURI, &isWhitelisted));
-        if (isWhitelisted) {
+        bool isAllowlisted;
+        MOZ_ALWAYS_SUCCEEDS(InFileURIAllowlist(aSourceURI, &isAllowlisted));
+        if (isAllowlisted) {
             return NS_OK;
         }
 
@@ -1195,13 +1195,13 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::InFileURIWhitelist(nsIURI* aUri, bool* aResult)
+nsScriptSecurityManager::InFileURIAllowlist(nsIURI* aUri, bool* aResult)
 {
     MOZ_ASSERT(aUri);
     MOZ_ASSERT(aResult);
 
     *aResult = false;
-    for (nsIURI* uri : EnsureFileURIWhitelist()) {
+    for (nsIURI* uri : EnsureFileURIAllowlist()) {
         if (EqualOrSubdomain(aUri, uri)) {
             *aResult = true;
             return NS_OK;
@@ -1299,7 +1299,7 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
 {
 // XXX Special case for Exception ?
 
-    // We give remote-XUL whitelisted domains a free pass here. See bug 932906.
+    // We give remote-XUL allowlisted domains a free pass here. See bug 932906.
     JS::Rooted<JS::Realm*> contextRealm(cx, JS::GetCurrentRealmOrNull(cx));
     MOZ_RELEASE_ASSERT(contextRealm);
     if (!xpc::AllowContentXBLScope(contextRealm)) {
@@ -1533,11 +1533,11 @@ nsScriptSecurityManager::ScriptSecurityPrefChanged(const char* aPref)
         Preferences::GetBool(sJSEnabledPrefName, mIsJavaScriptEnabled);
     sStrictFileOriginPolicy =
         Preferences::GetBool(sFileOriginPolicyPrefName, false);
-    mFileURIWhitelist.reset();
+    mFileURIAllowlist.reset();
 }
 
 void
-nsScriptSecurityManager::AddSitesToFileURIWhitelist(const nsCString& aSiteList)
+nsScriptSecurityManager::AddSitesToFileURIAllowlist(const nsCString& aSiteList)
 {
     for (uint32_t base = SkipPast<IsWhitespace>(aSiteList, 0), bound = 0;
          base < aSiteList.Length();
@@ -1550,8 +1550,8 @@ nsScriptSecurityManager::AddSitesToFileURIWhitelist(const nsCString& aSiteList)
         // Check if the URI is schemeless. If so, add both http and https.
         nsAutoCString unused;
         if (NS_FAILED(sIOService->ExtractScheme(site, unused))) {
-            AddSitesToFileURIWhitelist(NS_LITERAL_CSTRING("http://") + site);
-            AddSitesToFileURIWhitelist(NS_LITERAL_CSTRING("https://") + site);
+            AddSitesToFileURIAllowlist(NS_LITERAL_CSTRING("http://") + site);
+            AddSitesToFileURIAllowlist(NS_LITERAL_CSTRING("https://") + site);
             continue;
         }
 
@@ -1559,11 +1559,11 @@ nsScriptSecurityManager::AddSitesToFileURIWhitelist(const nsCString& aSiteList)
         nsCOMPtr<nsIURI> uri;
         nsresult rv = NS_NewURI(getter_AddRefs(uri), site, nullptr, nullptr, sIOService);
         if (NS_SUCCEEDED(rv)) {
-            mFileURIWhitelist.ref().AppendElement(uri);
+            mFileURIAllowlist.ref().AppendElement(uri);
         } else {
             nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
             if (console) {
-                nsAutoString msg = NS_LITERAL_STRING("Unable to to add site to file:// URI whitelist: ") +
+                nsAutoString msg = NS_LITERAL_STRING("Unable to to add site to file:// URI allowlist: ") +
                                    NS_ConvertASCIItoUTF16(site);
                 console->LogStringMessage(msg.get());
             }
@@ -1657,16 +1657,16 @@ nsScriptSecurityManager::PolicyAllowsScript(nsIURI* aURI, bool *aRv)
     }
 
     // We have a domain policy. Grab the appropriate set of exceptions to the
-    // rule (either the blacklist or the whitelist, depending on whether script
+    // rule (either the blocklist or the allowlist, depending on whether script
     // is enabled or disabled by default).
     nsCOMPtr<nsIDomainSet> exceptions;
     nsCOMPtr<nsIDomainSet> superExceptions;
     if (*aRv) {
-        mDomainPolicy->GetBlacklist(getter_AddRefs(exceptions));
-        mDomainPolicy->GetSuperBlacklist(getter_AddRefs(superExceptions));
+        mDomainPolicy->GetBlocklist(getter_AddRefs(exceptions));
+        mDomainPolicy->GetSuperBlocklist(getter_AddRefs(superExceptions));
     } else {
-        mDomainPolicy->GetWhitelist(getter_AddRefs(exceptions));
-        mDomainPolicy->GetSuperWhitelist(getter_AddRefs(superExceptions));
+        mDomainPolicy->GetAllowlist(getter_AddRefs(exceptions));
+        mDomainPolicy->GetSuperAllowlist(getter_AddRefs(superExceptions));
     }
 
     bool contains;
@@ -1686,10 +1686,10 @@ nsScriptSecurityManager::PolicyAllowsScript(nsIURI* aURI, bool *aRv)
 }
 
 const nsTArray<nsCOMPtr<nsIURI>>&
-nsScriptSecurityManager::EnsureFileURIWhitelist()
+nsScriptSecurityManager::EnsureFileURIAllowlist()
 {
-    if (mFileURIWhitelist.isSome()) {
-        return mFileURIWhitelist.ref();
+    if (mFileURIAllowlist.isSome()) {
+        return mFileURIAllowlist.ref();
     }
 
     //
@@ -1698,7 +1698,7 @@ nsScriptSecurityManager::EnsureFileURIWhitelist()
     // have come to depend on. See bug 995943.
     //
 
-    mFileURIWhitelist.emplace();
+    mFileURIAllowlist.emplace();
     nsAutoCString policies;
     mozilla::Preferences::GetCString("capability.policy.policynames", policies);
     for (uint32_t base = SkipPast<IsWhitespaceOrComma>(policies, 0), bound = 0;
@@ -1725,8 +1725,8 @@ nsScriptSecurityManager::EnsureFileURIWhitelist()
                                    NS_LITERAL_CSTRING(".sites");
         nsAutoCString siteList;
         Preferences::GetCString(domainPrefName.get(), siteList);
-        AddSitesToFileURIWhitelist(siteList);
+        AddSitesToFileURIAllowlist(siteList);
     }
 
-    return mFileURIWhitelist.ref();
+    return mFileURIAllowlist.ref();
 }

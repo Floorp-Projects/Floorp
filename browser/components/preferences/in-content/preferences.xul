@@ -18,14 +18,12 @@
 
 <!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-<!ENTITY % historyDTD SYSTEM "chrome://mozapps/locale/update/history.dtd">
 <!ENTITY % certManagerDTD SYSTEM "chrome://pippki/locale/certManager.dtd">
 <!ENTITY % deviceManangerDTD SYSTEM "chrome://pippki/locale/deviceManager.dtd">
 <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
 <!ENTITY % aboutDialogDTD SYSTEM "chrome://browser/locale/aboutDialog.dtd" >
 %aboutDialogDTD;
 %brandDTD;
-%historyDTD;
 %certManagerDTD;
 %deviceManangerDTD;
 %sanitizeDTD;
@@ -52,6 +50,7 @@
     <link rel="localization" href="browser/preferences/permissions.ftl"/>
     <link rel="localization" href="browser/preferences/selectBookmark.ftl"/>
     <link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
+    <link rel="localization" href="toolkit/updates/history.ftl"/>
   </linkset>
 
   <html:link rel="shortcut icon"

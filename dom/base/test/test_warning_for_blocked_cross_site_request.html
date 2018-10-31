@@ -9,13 +9,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=713980
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
-  <!-- Load a cross-origin webfont without CORS (common pain point -->
+  <!-- Load a cross-origin webfont without CORS (common pain point) and some
+       other styles that require anonymous CORS -->
   <style>
     @font-face {
       font-family: "bad_cross_origin_webfont";
       src: url('http://example.org/tests/dom/security/test/csp/file_CSP.sjs?testid=font_bad&type=application/octet-stream');
     }
     div#bad_webfont { font-family: "bad_cross_origin_webfont"; }
+
+    div#bad_shape_outside { shape-outside: url('http://example.org/tests/dom/security/test/csp/file_CSP.sjs?testid=bad_shape_outside&type=image/png'); }
+
+    div#bad_mask_image { mask-image: url('http://example.org/tests/dom/security/test/csp/file_CSP.sjs?testid=bad_mask_image&type=image/svg+xml'); }
   </style>
 </head>
 <body>
@@ -25,23 +30,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=713980
 SimpleTest.waitForExplicitFinish();
 
 var tests = {
+  xhr : {
+    uri_test : "http://invalid",
+    result : null,
+    category: "CORSAllowOriginNotMatchingOrigin"
+  },
   font : {
     uri_test : "font_bad",
     result : null,
     category: "CORSMissingAllowOrigin",
   },
-  xhr : {
-    uri_test : "http://invalid",
+  shape_outside : {
+    uri_test : "bad_shape_outside",
     result : null,
-    category: "CORSAllowOriginNotMatchingOrigin"
+    category: "CORSMissingAllowOrigin",
+    ignore_windowID: true,
+  },
+  mask_image : {
+    uri_test : "bad_mask_image",
+    result : null,
+    category: "CORSMissingAllowOrigin",
+    ignore_windowID: true,
   },
 }
 
 function testsComplete() {
   for (var testName in tests) {
     var test = tests[testName];
-    if (test.result == null)
+    if (test.result == null) {
+      info("Still waiting on (at least) " + testName + ".");
       return false;
+    }
   }
   return true;
 }
@@ -63,7 +82,9 @@ SpecialPowers.registerConsoleListener(function CORSMsgListener(aMsg) {
       ok(aMsg.category == category,
          "Got warning message with category \"" + aMsg.category + "\", expected \"" + category + "\"");
       // Got the message we wanted - make sure it is destined for a valid inner window
-      ok(aMsg.windowID != 0, "Valid (non-zero) windowID for the cross-site request blocked message.");
+      if(!test.ignore_windowID) {
+        ok(aMsg.windowID != 0, "Valid (non-zero) windowID for the cross-site request blocked message.");
+      }
       break;
     }
   }
@@ -83,11 +104,23 @@ var xhr = new XMLHttpRequest();
 xhr.open("GET", "http://example.org/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?allowOrigin=http://invalid", true);
 xhr.send(null);
 
+let badDiv;
+
 // Create a div that triggers a cross-origin webfont request
 // We do this in Javascript in order to guarantee the console listener has
 // already been registered; otherwise, there could be a race.
-var badDiv = document.createElement('div');
+badDiv = document.createElement('div');
 badDiv.setAttribute('id', 'bad_webfont');
+document.body.appendChild(badDiv);
+
+// Create a div that triggers a cross-origin request for a shape-outside image
+badDiv = document.createElement('div');
+badDiv.setAttribute('id', 'bad_shape_outside');
+document.body.appendChild(badDiv);
+
+// Create a div that triggers a cross-origin request for a mask-image
+badDiv = document.createElement('div');
+badDiv.setAttribute('id', 'bad_mask_image');
 document.body.appendChild(badDiv);
 </script>
 

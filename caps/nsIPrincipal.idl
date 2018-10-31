@@ -362,11 +362,11 @@ interface nsIExpandedPrincipal : nsISupports
    * When an expanded principal is used as a triggering principal for a
    * request that inherits a security context, one of its constitutent
    * principals is inherited rather than the expanded principal itself. The
-   * last principal in the whitelist is the default principal to inherit.
+   * last principal in the allowlist is the default principal to inherit.
    *
    * Note: this list is not reference counted, it is shared, so
    * should not be changed and should only be used ephemerally.
    */
   [noscript, notxpcom, nostdcall]
-  PrincipalArray WhiteList();
+  PrincipalArray AllowList();
 };

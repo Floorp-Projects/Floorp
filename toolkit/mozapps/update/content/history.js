@@ -20,8 +20,6 @@ var gUpdateHistory = {
       while (this._view.hasChildNodes())
         this._view.firstChild.remove();
 
-      var bundle = document.getElementById("updateBundle");
-
       for (var i = 0; i < uc; ++i) {
         var update = um.getUpdateAt(i);
 
@@ -36,8 +34,8 @@ var gUpdateHistory = {
         var element = document.createXULElement("richlistitem");
         element.className = "update";
         this._view.appendChild(element);
-        element.name = bundle.getFormattedString("updateFullName",
-          [update.name, update.buildID]);
+        element.setAttribute("data-l10n-attrs", "name");
+        document.l10n.setAttributes(element, "update-full-name", { name: update.name, buildID: update.buildID});
         element.installDate = this._formatDate(update.installDate);
         if (update.detailsURL)
           element.detailsURL = update.detailsURL;

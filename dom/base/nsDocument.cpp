@@ -2418,7 +2418,7 @@ nsIDocument::MaybeDowngradePrincipal(nsIPrincipal* aPrincipal)
                                  "an expanded principal");
 
     auto* expanded = basePrin->As<ExpandedPrincipal>();
-    return do_AddRef(expanded->WhiteList().LastElement());
+    return do_AddRef(expanded->AllowList().LastElement());
   }
 
   if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {

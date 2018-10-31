@@ -86,6 +86,7 @@ var TelemetryUtils = {
     FirstShutdownPingEnabled: "toolkit.telemetry.firstShutdownPing.enabled",
     HealthPingEnabled: "toolkit.telemetry.healthping.enabled",
     HybridContentEnabled: "toolkit.telemetry.hybridContent.enabled",
+    IPCBatchTimeout: "toolkit.telemetry.ipcBatchTimeout",
     OverrideOfficialCheck: "toolkit.telemetry.send.overrideOfficialCheck",
     OverridePreRelease: "toolkit.telemetry.testing.overridePreRelease",
     OverrideUpdateChannel: "toolkit.telemetry.overrideUpdateChannel",
