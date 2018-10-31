@@ -47,21 +47,26 @@ namespace recordreplay {
 // saving its output or adding a preamble.
 #define FOR_EACH_REDIRECTION(MACRO)                              \
   /* System call wrappers */                                     \
-  MACRO(kevent, RR_SaveRvalHadErrorNegative<RR_WriteBuffer<3, 4, struct kevent>>) \
+  MACRO(kevent, RR_SaveRvalHadErrorNegative<RR_WriteBuffer<3, 4, struct kevent>>, \
+        nullptr, nullptr, Preamble_WaitForever)                  \
   MACRO(kevent64, RR_SaveRvalHadErrorNegative<RR_WriteBuffer<3, 4, struct kevent64_s>>) \
   MACRO(mprotect, nullptr, Preamble_mprotect)                    \
   MACRO(mmap, nullptr, Preamble_mmap)                            \
   MACRO(munmap, nullptr, Preamble_munmap)                        \
-  MACRO(read, RR_SaveRvalHadErrorNegative<RR_WriteBufferViaRval<1, 2>>) \
+  MACRO(read, RR_SaveRvalHadErrorNegative<RR_WriteBufferViaRval<1, 2>>, \
+        nullptr, nullptr, Preamble_SetError<EIO>)                \
   MACRO(__read_nocancel, RR_SaveRvalHadErrorNegative<RR_WriteBufferViaRval<1, 2>>) \
   MACRO(pread, RR_SaveRvalHadErrorNegative<RR_WriteBufferViaRval<1, 2>>) \
-  MACRO(write, RR_SaveRvalHadErrorNegative)                      \
+  MACRO(write, RR_SaveRvalHadErrorNegative,                      \
+        nullptr, nullptr, MiddlemanPreamble_write)               \
   MACRO(__write_nocancel, RR_SaveRvalHadErrorNegative)           \
   MACRO(open, RR_SaveRvalHadErrorNegative)                       \
   MACRO(__open_nocancel, RR_SaveRvalHadErrorNegative)            \
   MACRO(recv, RR_SaveRvalHadErrorNegative<RR_WriteBufferViaRval<1, 2>>) \
-  MACRO(recvmsg, RR_SaveRvalHadErrorNegative<RR_recvmsg>)        \
-  MACRO(sendmsg, RR_SaveRvalHadErrorNegative)                    \
+  MACRO(recvmsg, RR_SaveRvalHadErrorNegative<RR_recvmsg>,        \
+        nullptr, nullptr, Preamble_WaitForever)                  \
+  MACRO(sendmsg, RR_SaveRvalHadErrorNegative,                    \
+        nullptr, nullptr, MiddlemanPreamble_sendmsg)             \
   MACRO(shm_open, RR_SaveRvalHadErrorNegative)                   \
   MACRO(socket, RR_SaveRvalHadErrorNegative)                     \
   MACRO(kqueue, RR_SaveRvalHadErrorNegative)                     \
@@ -115,7 +120,8 @@ namespace recordreplay {
                              RR_WriteBufferFixedSize<5, sizeof(size_t)>, \
                              RR_WriteBufferFixedSize<6, sizeof(size_t)>>>) \
   MACRO(getrusage,                                               \
-        RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<1, sizeof(struct rusage)>>) \
+        RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<1, sizeof(struct rusage)>>, \
+        nullptr, nullptr, Preamble_PassThrough)                  \
   MACRO(__getrlimit,                                             \
         RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<1, sizeof(struct rlimit)>>) \
   MACRO(__setrlimit, RR_SaveRvalHadErrorNegative)                \
@@ -139,7 +145,8 @@ namespace recordreplay {
                     RR_WriteBufferFixedSize<1, sizeof(fd_set)>,  \
                     RR_WriteBufferFixedSize<2, sizeof(fd_set)>,  \
                     RR_WriteBufferFixedSize<3, sizeof(fd_set)>,  \
-                    RR_WriteOptionalBufferFixedSize<4, sizeof(timeval)>>>) \
+                    RR_WriteOptionalBufferFixedSize<4, sizeof(timeval)>>>, \
+        nullptr, nullptr, Preamble_WaitForever)                  \
   MACRO(__process_policy, RR_SaveRvalHadErrorNegative)           \
   MACRO(__kdebug_trace, RR_SaveRvalHadErrorNegative)             \
   MACRO(guarded_kqueue_np,                                       \
@@ -184,7 +191,8 @@ namespace recordreplay {
   MACRO(arc4random, RR_ScalarRval)                               \
   MACRO(mach_absolute_time, RR_ScalarRval, Preamble_mach_absolute_time, \
         nullptr, Preamble_PassThrough)                           \
-  MACRO(mach_msg, RR_Compose<RR_ScalarRval, RR_WriteBuffer<0, 3>>) \
+  MACRO(mach_msg, RR_Compose<RR_ScalarRval, RR_WriteBuffer<0, 3>>, \
+        nullptr, nullptr, Preamble_WaitForever)                  \
   MACRO(mach_timebase_info,                                      \
         RR_Compose<RR_ScalarRval, RR_WriteBufferFixedSize<0, sizeof(mach_timebase_info_data_t)>>) \
   MACRO(mach_vm_allocate, nullptr, Preamble_mach_vm_allocate)    \
@@ -299,7 +307,8 @@ namespace recordreplay {
         Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CFTypeArg<1>>) \
   MACRO(CFStringCreateArrayBySeparatingStrings, RR_ScalarRval)   \
   MACRO(CFStringCreateMutable, RR_ScalarRval)                    \
-  MACRO(CFStringCreateWithBytes, RR_ScalarRval)                  \
+  MACRO(CFStringCreateWithBytes, RR_ScalarRval, nullptr,         \
+        Middleman_Compose<Middleman_Buffer<1, 2>, Middleman_CreateCFTypeRval>) \
   MACRO(CFStringCreateWithBytesNoCopy, RR_ScalarRval)            \
   MACRO(CFStringCreateWithCharactersNoCopy, RR_ScalarRval, nullptr, \
         Middleman_Compose<Middleman_Buffer<1, 2, UniChar>, Middleman_CreateCFTypeRval>) \
@@ -881,11 +890,12 @@ Middleman_UpdateCFTypeArg(MiddlemanCallContext& aCx)
   Middleman_SystemOutput(aCx, &arg, /* aUpdating = */ true);
 }
 
+template <int Error = EAGAIN>
 static PreambleResult
 Preamble_SetError(CallArguments* aArguments)
 {
   aArguments->Rval<ssize_t>() = -1;
-  errno = EAGAIN;
+  errno = Error;
   return PreambleResult::Veto;
 }
 
@@ -915,6 +925,19 @@ RR_recvmsg(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
     nbytes -= iovbytes;
   }
   MOZ_RELEASE_ASSERT(nbytes == 0);
+}
+
+static PreambleResult
+MiddlemanPreamble_sendmsg(CallArguments* aArguments)
+{
+  // Silently pretend that sends succeed after diverging from the recording.
+  size_t totalSize = 0;
+  auto msg = aArguments->Arg<1, msghdr*>();
+  for (int i = 0; i < msg->msg_iovlen; i++) {
+    totalSize += msg->msg_iov[i].iov_len;
+  }
+  aArguments->Rval<size_t>() = totalSize;
+  return PreambleResult::Veto;
 }
 
 static PreambleResult
@@ -994,6 +1017,14 @@ Preamble_munmap(CallArguments* aArguments)
 
   DeallocateMemory(address, size, MemoryKind::Tracked);
   aArguments->Rval<ssize_t>() = 0;
+  return PreambleResult::Veto;
+}
+
+static PreambleResult
+MiddlemanPreamble_write(CallArguments* aArguments)
+{
+  // Silently pretend that writes succeed after diverging from the recording.
+  aArguments->Rval<size_t>() = aArguments->Arg<2, size_t>();
   return PreambleResult::Veto;
 }
 
