@@ -346,6 +346,17 @@ var gSitePermissionsManager = {
 
   onPermissionSelect() {
     this._setRemoveButtonState();
+
+    // If any item is selected, it should be the only item tabable
+    // in the richlistbox for accessibility reasons.
+    this._list.children.forEach((item) => {
+      let menulist = item.getElementsByTagName("menulist")[0];
+      if (!item.selected) {
+        menulist.setAttribute("tabindex", -1);
+      } else {
+        menulist.removeAttribute("tabindex");
+      }
+    });
   },
 
   onPermissionChange(perm, capability) {
