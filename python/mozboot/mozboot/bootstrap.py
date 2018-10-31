@@ -9,6 +9,10 @@ import platform
 import sys
 import os
 import subprocess
+from six.moves.configparser import (
+    Error as ConfigParserError,
+    RawConfigParser,
+)
 
 # Don't forgot to add new mozboot modules to the bootstrap download
 # list in bin/bootstrap.py!
@@ -185,17 +189,54 @@ lines:
 Then restart your shell.
 '''
 
+TELEMETRY_OPT_IN_PROMPT = '''
+Would you like to enable build system telemetry?
+
+Mozilla collects data about local builds in order to make builds faster and
+improve developer tooling. To learn more about the data we intend to collect
+read here:
+https://firefox-source-docs.mozilla.org/build/buildsystem/telemetry.html.
+
+If you have questions, please ask in #build in irc.mozilla.org. If you would
+like to opt out of data collection, select (N) at the prompt.
+
+Your choice'''
+
+
+def update_or_create_build_telemetry_config(path):
+    """Write a mach config file enabling build telemetry to `path`. If the file does not exist,
+    create it. If it exists, add the new setting to the existing data.
+
+    This is standalone from mach's `ConfigSettings` so we can use it during bootstrap
+    without a source checkout.
+    """
+    config = RawConfigParser()
+    if os.path.exists(path):
+        try:
+            config.read([path])
+        except ConfigParserError as e:
+            print('Your mach configuration file at `{path}` is not parseable:\n{error}'.format(
+                path=path, error=e))
+            return False
+    if not config.has_section('build'):
+        config.add_section('build')
+    config.set('build', 'telemetry', 'true')
+    with open(path, 'wb') as f:
+        config.write(f)
+    return True
+
 
 class Bootstrapper(object):
     """Main class that performs system bootstrap."""
 
     def __init__(self, finished=FINISHED, choice=None, no_interactive=False,
-                 hg_configure=False, no_system_changes=False):
+                 hg_configure=False, no_system_changes=False, mach_context=None):
         self.instance = None
         self.finished = finished
         self.choice = choice
         self.hg_configure = hg_configure
         self.no_system_changes = no_system_changes
+        self.mach_context = mach_context
         cls = None
         args = {'no_interactive': no_interactive,
                 'no_system_changes': no_system_changes}
@@ -336,6 +377,20 @@ class Bootstrapper(object):
         self.instance.ensure_stylo_packages(state_dir, checkout_root)
         self.instance.ensure_node_packages(state_dir, checkout_root)
 
+    def check_telemetry_opt_in(self, state_dir):
+        # We can't prompt the user.
+        if self.instance.no_interactive:
+            return
+        # Don't prompt if the user already has a setting for this value.
+        if self.mach_context is not None and 'telemetry' in self.mach_context.settings.build:
+            return
+        choice = self.instance.prompt_yesno(prompt=TELEMETRY_OPT_IN_PROMPT)
+        if choice:
+            cfg_file = os.path.join(state_dir, 'machrc')
+            if update_or_create_build_telemetry_config(cfg_file):
+                print('\nThanks for enabling build telemetry! You can change this setting at ' +
+                      'any time by editing the config file `{}`\n'.format(cfg_file))
+
     def bootstrap(self):
         if self.choice is None:
             # Like ['1. Firefox for Desktop', '2. Firefox for Android Artifact Mode', ...].
@@ -360,6 +415,8 @@ class Bootstrapper(object):
             (checkout_type, checkout_root) = r
             have_clone = bool(checkout_type)
 
+            if state_dir_available:
+                self.check_telemetry_opt_in(state_dir)
             self.maybe_install_private_packages_or_exit(state_dir,
                                                         state_dir_available,
                                                         have_clone,
@@ -434,6 +491,8 @@ class Bootstrapper(object):
         if not have_clone:
             print(SOURCE_ADVERTISE)
 
+        if state_dir_available:
+            self.check_telemetry_opt_in(state_dir)
         self.maybe_install_private_packages_or_exit(state_dir,
                                                     state_dir_available,
                                                     have_clone,

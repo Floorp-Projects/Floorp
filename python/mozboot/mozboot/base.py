@@ -431,6 +431,20 @@ class BaseBootstrapper(object):
         else:
             raise Exception("Error! Reached max attempts of entering option.")
 
+    def prompt_yesno(self, prompt):
+        ''' Prompts the user with prompt and requires a yes/no answer.'''
+        valid = False
+        while not valid:
+            choice = raw_input(prompt + ' [Y/n]: ').strip().lower()[:1]
+            if choice == '':
+                choice = 'y'
+            if choice not in ('y', 'n'):
+                print('ERROR! Please enter y or n!')
+            else:
+                valid = True
+
+        return choice == 'y'
+
     def _ensure_package_manager_updated(self):
         if self.package_manager_updated:
             return
