@@ -1,0 +1,84 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+FINAL_LIBRARY = 'js'
+
+FILES_PER_UNIFIED_FILE = 6
+
+# Includes should be relative to parent path
+LOCAL_INCLUDES += [
+    '!..',
+    '..'
+]
+
+include('../js-config.mozbuild')
+include('../js-cxxflags.mozbuild')
+
+
+# Generate frontend/ReservedWordsGenerated.h from frontend/ReservedWords.h
+GENERATED_FILES += ['ReservedWordsGenerated.h']
+ReservedWordsGenerated = GENERATED_FILES['ReservedWordsGenerated.h']
+ReservedWordsGenerated.script = 'GenerateReservedWords.py'
+ReservedWordsGenerated.inputs += ['ReservedWords.h']
+
+
+UNIFIED_SOURCES += [
+    'BytecodeCompiler.cpp',
+    'BytecodeControlStructures.cpp',
+    'BytecodeEmitter.cpp',
+    'CallOrNewEmitter.cpp',
+    'CForEmitter.cpp',
+    'DoWhileEmitter.cpp',
+    'ElemOpEmitter.cpp',
+    'EmitterScope.cpp',
+    'ExpressionStatementEmitter.cpp',
+    'FoldConstants.cpp',
+    'ForInEmitter.cpp',
+    'ForOfEmitter.cpp',
+    'ForOfLoopControl.cpp',
+    'IfEmitter.cpp',
+    'JumpList.cpp',
+    'NameFunctions.cpp',
+    'NameOpEmitter.cpp',
+    'ParseNode.cpp',
+    'PropOpEmitter.cpp',
+    'SwitchEmitter.cpp',
+    'TDZCheckCache.cpp',
+    'TokenStream.cpp',
+    'TryEmitter.cpp',
+    'WhileEmitter.cpp',
+]
+
+# Parser.cpp cannot be built in unified mode because of explicit
+#   template instantiations.
+SOURCES += [
+    'Parser.cpp',
+]
+
+if CONFIG['JS_BUILD_BINAST']:
+    # Using SOURCES, as UNIFIED_SOURCES causes mysterious bugs on 32-bit platforms.
+    # These parts of BinAST are designed only to test evolutions of the
+    # specification.
+    SOURCES += ['BinTokenReaderTester.cpp']
+    # These parts of BinAST should eventually move to release.
+    SOURCES += [
+        'BinSource-auto.cpp',
+        'BinSource.cpp',
+        'BinSourceRuntimeSupport.cpp',
+        'BinToken.cpp',
+        'BinTokenReaderBase.cpp',
+        'BinTokenReaderMultipart.cpp',
+    ]
+
+    # Instrument BinAST files for fuzzing as we have a fuzzing target for BinAST.
+    if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
+        include('/tools/fuzzing/libfuzzer-flags.mozbuild')
+
+        SOURCES['BinSource-auto.cpp'].flags += libfuzzer_flags
+        SOURCES['BinSource.cpp'].flags += libfuzzer_flags
+        SOURCES['BinToken.cpp'].flags += libfuzzer_flags
+        SOURCES['BinTokenReaderBase.cpp'].flags += libfuzzer_flags
+        SOURCES['BinTokenReaderMultipart.cpp'].flags += libfuzzer_flags
