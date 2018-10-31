@@ -42,6 +42,7 @@ LOCAL_INCLUDES += [
     'skia/include/codec',
     'skia/include/config',
     'skia/include/core',
+    'skia/include/docs',
     'skia/include/effects',
     'skia/include/encode',
     'skia/include/gpu',
@@ -50,7 +51,7 @@ LOCAL_INCLUDES += [
     'skia/include/private',
     'skia/include/utils',
     'skia/include/utils/mac',
-    'skia/include/views',
+    'skia/src/codec',
     'skia/src/core',
     'skia/src/gpu',
     'skia/src/gpu/effects',
@@ -61,6 +62,7 @@ LOCAL_INCLUDES += [
     'skia/src/opts',
     'skia/src/sfnt',
     'skia/src/shaders',
+    'skia/src/shaders/gradients',
     'skia/src/sksl',
     'skia/src/utils',
     'skia/src/utils/mac',
@@ -68,23 +70,11 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    if CONFIG['CC_TYPE'] in ('gcc', 'clang'):
-        DEFINES['SK_JUMPER_USE_ASSEMBLY'] = 0
-    elif CONFIG['CPU_ARCH'] == 'x86':
-        SOURCES['skia/src/jumper/SkJumper_generated_win.S'].flags += ['-safeseh']
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
     UNIFIED_SOURCES += [
         'skia/src/fonts/SkFontMgr_indirect.cpp',
         'skia/src/fonts/SkRemotableFontMgr.cpp',
-    ]
-
-# Work around a crash when jumping into assembly on platforms where
-# Clang has 4-byte stack alignment.
-if CONFIG['CPU_ARCH'] == 'x86' and CONFIG['CC_TYPE'] == 'clang':
-    SOURCES['skia/src/jumper/SkJumper.cpp'].flags += [
-        '-mstack-alignment=16',
-        '-mstackrealign'
     ]
 
 # We should autogenerate these SSE related flags.
@@ -97,7 +87,7 @@ if CONFIG['INTEL_ARCHITECTURE'] and (CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 
     SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['-msse4.1']
     SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-msse4.2']
     SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-mavx']
-    SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-mavx2']
+    SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-mavx2', '-mf16c', '-mfma']
 elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl') and CONFIG['INTEL_ARCHITECTURE']:
     # MSVC doesn't need special compiler flags, but Skia needs to be told that these files should
     # be built with the required SSE level or it will simply compile in stubs and cause runtime crashes
@@ -212,25 +202,24 @@ def generate_separated_sources(platform_sources):
     'skia/src/android/',
     'skia/src/atlastext/',
     'skia/src/c/',
-    'skia/src/effects/Gr',
-    'skia/src/effects/Sk',
+    'skia/src/effects/',
     'skia/src/fonts/',
-    'skia/src/jumper/SkJumper_generated_win.S',
     'skia/src/ports/SkImageEncoder',
     'skia/src/ports/SkImageGenerator',
     'skia/src/gpu/vk/',
     'SkBitmapRegion',
     'SkLite',
+    'SkLight',
+    'SkNormal',
     'codec',
     'SkWGL',
     'SkMemory_malloc',
     'third_party',
+    'Sk3D',
+    'SkAnimCodecPlayer',
     'SkCamera',
     'SkCanvasStack',
     'SkCanvasStateUtils',
-    'SkCurveMeasure',
-    'SkDeferredCanvas',
-    'SkDumpCanvas',
     'SkFrontBufferedStream',
     'SkInterpolator',
     'SkMultiPictureDocument',
@@ -243,6 +232,7 @@ def generate_separated_sources(platform_sources):
     'SkWhitelistTypefaces',
     'SkXPS',
     'SkCreateCGImageRef',
+    'skia/src/ports/SkGlobalInitialization',
   ]
 
   def isblacklisted(value):
@@ -254,17 +244,16 @@ def generate_separated_sources(platform_sources):
 
   separated = defaultdict(set, {
     'common': {
-      'skia/src/core/SkBlurImageFilter.cpp',
-      'skia/src/core/SkGpuBlurUtils.cpp',
-      'skia/src/effects/GrCircleBlurFragmentProcessor.cpp',
-      'skia/src/effects/SkBlurMask.cpp',
-      'skia/src/effects/SkBlurMaskFilter.cpp',
+      'skia/src/codec/SkMasks.cpp',
+      'skia/src/effects/imagefilters/SkBlurImageFilter.cpp',
       'skia/src/effects/SkDashPathEffect.cpp',
-      'skia/src/effects/SkImageSource.cpp',
       'skia/src/gpu/gl/GrGLMakeNativeInterface_none.cpp',
       'skia/src/ports/SkDiscardableMemory_none.cpp',
+      'skia/src/ports/SkGlobalInitialization_none.cpp',
+      'skia/src/ports/SkGlobalInitialization_none_imagefilters.cpp',
       'skia/src/ports/SkMemory_mozalloc.cpp',
       'skia/src/ports/SkImageGenerator_none.cpp',
+      'skia/third_party/skcms/skcms.cc',
     },
     'android': {
       # 'skia/src/ports/SkDebug_android.cpp',
@@ -277,9 +266,6 @@ def generate_separated_sources(platform_sources):
     'linux': {
       'skia/src/ports/SkFontHost_cairo.cpp',
       'skia/src/ports/SkFontHost_FreeType_common.cpp',
-    },
-    'no-mingw': {
-      'skia/src/jumper/SkJumper_generated_win.S',
     },
     'intel': set(),
     'arm': set(),
@@ -347,6 +333,7 @@ opt_whitelist = [
   'SkJumper',
   'SkSpriteBlitter',
   'SkMatrix.cpp',
+  'skcms',
 ]
 
 # Unfortunately for now the gpu and pathops directories are
@@ -366,11 +353,13 @@ unified_blacklist = [
   'SkPDFFont.cpp',
   'SkPictureData.cpp',
   'skia/src/gpu/effects/',
+  'skia/src/gpu/gradients/',
   'GrResourceCache',
   'GrResourceProvider',
   'GrAA',
   'GrGL',
   'GrCCPathProcessor',
+  'GrCCStrokeGeometry',
   'GrMSAAPathRenderer.cpp',
   'GrNonAAFillRect',
   'GrPathUtils',
@@ -386,9 +375,9 @@ unified_blacklist = [
   'SkRTree.cpp',
   'SkVertices.cpp',
   'SkJumper',
+  'SkSLHCodeGenerator.cpp',
   'SkSLLexer.cpp',
   'SkSLLayoutLexer.cpp',
-  'SkThreadedBMPDevice.cpp',
 ] + opt_whitelist
 
 def write_sources(f, values, indent):
@@ -456,10 +445,6 @@ def write_mozbuild(sources):
   write_sources(f, sources['linux'], 4)
 
   f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':\n")
-  f.write("    if CONFIG['CC_TYPE'] not in ('gcc', 'clang') and CONFIG['CPU_ARCH'] != 'aarch64':\n")
-  write_list(f, "SOURCES", sources['no-mingw'], 8)
-  # Windows-specific files don't get unification because of nasty headers.
-  # Luckily there are not many files in this.
   write_list(f, "SOURCES", sources['win'], 4)
 
   f.write("if CONFIG['INTEL_ARCHITECTURE']:\n")
