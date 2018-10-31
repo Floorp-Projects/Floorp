@@ -3407,6 +3407,21 @@ TabChild::RecvSetWidgetNativeData(const WindowsHandle& aWidgetNativeData)
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+TabChild::RecvGetContentBlockingLog(GetContentBlockingLogResolver&& aResolve)
+{
+  bool success = false;
+  nsAutoString result;
+
+  if (nsCOMPtr<nsIDocument> doc = GetDocument()) {
+    result = doc->GetContentBlockingLog()->Stringify();
+    success = true;
+  }
+
+  aResolve(Tuple<const nsString&, const bool&>(result, success));
+  return IPC_OK();
+}
+
 mozilla::plugins::PPluginWidgetChild*
 TabChild::AllocPPluginWidgetChild()
 {

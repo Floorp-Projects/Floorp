@@ -752,6 +752,8 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvSetWidgetNativeData(const WindowsHandle& aWidgetNativeData) override;
 
+  virtual mozilla::ipc::IPCResult RecvGetContentBlockingLog(GetContentBlockingLogResolver&& aResolve) override;
+
 private:
   void HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
                        const ScrollableLayerGuid& aGuid);
