@@ -6,7 +6,7 @@
 
 #include "PaintWorkletImpl.h"
 
-#include "mozilla/dom/PaintWorkletGlobalScope.h"
+#include "PaintWorkletGlobalScope.h"
 #include "mozilla/dom/Worklet.h"
 #include "mozilla/dom/WorkletThread.h"
 
