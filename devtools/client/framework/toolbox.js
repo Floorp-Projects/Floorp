@@ -8,7 +8,6 @@ const SOURCE_MAP_WORKER = "resource://devtools/client/shared/source-map/worker.j
 const SOURCE_MAP_WORKER_ASSETS = "resource://devtools/client/shared/source-map/assets/";
 
 const MAX_ORDINAL = 99;
-const SHOW_ALL_ANONYMOUS_CONTENT_PREF = "devtools.inspector.showAllAnonymousContent";
 const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsoleEnabled";
 const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
 const DISABLE_AUTOHIDE_PREF = "ui.popup.disable_autohide";
@@ -41,8 +40,6 @@ loader.lazyRequireGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm", true);
 loader.lazyRequireGetter(this, "getHighlighterUtils",
   "devtools/client/framework/toolbox-highlighter-utils", true);
-loader.lazyRequireGetter(this, "Selection",
-  "devtools/client/framework/selection", true);
 loader.lazyRequireGetter(this, "flags",
   "devtools/shared/flags");
 loader.lazyRequireGetter(this, "KeyShortcuts",
@@ -2690,32 +2687,18 @@ Toolbox.prototype = {
         // Temporary fix for bug #1493131 - inspector has a different life cycle
         // than most other fronts because it is closely related to the toolbox.
         // TODO: replace with getFront once inspector is separated from the toolbox
-        this._inspector = this.target.getInspector();
+        // TODO: remove these bindings
+        this._inspector = await this.target.getInspector();
+        this._walker = this.inspector.walker;
+        this._highlighter = this.inspector.highlighter;
+        this._selection = this.inspector.selection;
 
-        await Promise.all([
-          this._getWalker(),
-          this._getHighlighter(),
-        ]);
-
-        this._selection = new Selection(this._walker);
-
-        this._selection.on("new-node-front", this._onNewSelectedNodeFront);
         this.walker.on("highlighter-ready", this._highlighterReady);
         this.walker.on("highlighter-hide", this._highlighterHidden);
+        this._selection.on("new-node-front", this._onNewSelectedNodeFront);
       }.bind(this))();
     }
     return this._initInspector;
-  },
-
-  _getWalker: async function() {
-    const showAllAnonymousContent = Services.prefs.getBoolPref(
-      SHOW_ALL_ANONYMOUS_CONTENT_PREF);
-    this._walker = await this._inspector.getWalker({ showAllAnonymousContent });
-  },
-
-  _getHighlighter: async function() {
-    const autohide = !flags.testing;
-    this._highlighter = await this._inspector.getHighlighter(autohide);
   },
 
   _onNewSelectedNodeFront: function() {
@@ -2771,7 +2754,7 @@ Toolbox.prototype = {
     }
 
     this._destroyingInspector = (async function() {
-      if (!this._inspector) {
+      if (!this._inspector && !this._initInspector) {
         return;
       }
 

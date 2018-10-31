@@ -34,7 +34,7 @@ function promisePocketDisabled() {
   }).then(() => {
     // wait for a full unload of pocket
     return BrowserTestUtils.waitForCondition(() => {
-      return !window.hasOwnProperty("pktUI");
+      return !window.hasOwnProperty("pktUI") || !window.pktUI;
     });
   });
 }
@@ -46,4 +46,17 @@ function promisePocketReset() {
   }
   info("reset is disabling pocket addon");
   return promisePocketDisabled();
+}
+
+function checkWindowProperties(expectPresent, l) {
+  for (let name of l) {
+    is(window.hasOwnProperty(name) && !!window[name], expectPresent, "property " + name + (expectPresent ? " is" : " is not") + " present");
+  }
+}
+
+function checkElements(expectPresent, l) {
+  for (let id of l) {
+    let el = document.getElementById(id) || gNavToolbox.palette.querySelector("#" + id);
+    is(!!el, expectPresent, "element " + id + (expectPresent ? " is" : " is not") + " present");
+  }
 }

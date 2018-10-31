@@ -430,10 +430,10 @@ var PocketOverlay = {
       }
       this.removeStyles(window);
       // remove script getters/objects
-      delete window.Pocket;
-      delete window.pktApi;
-      delete window.pktUI;
-      delete window.pktUIMessaging;
+      window.Pocket = undefined;
+      window.pktApi = undefined;
+      window.pktUI = undefined;
+      window.pktUIMessaging = undefined;
     }
 
     PocketContextMenu.shutdown();
