@@ -13,6 +13,10 @@ const { ExtensionParent } = ChromeUtils.import("resource://gre/modules/Extension
 
 const {WebExtensionPolicy} = Cu.getGlobalForObject(Services);
 
+// Time in ms before we start changing the sort order again after receiving a
+// mousemove event.
+const TIME_BEFORE_SORTING_AGAIN = 5000;
+
 // about:performance observes notifications on this topic.
 // if a notification is sent, this causes the page to be updated immediately,
 // regardless of whether the page is on pause.
@@ -1006,6 +1010,19 @@ var View = {
     row.parentNode.insertBefore(this._fragment, row.nextSibling);
     this._fragment = document.createDocumentFragment();
   },
+  displayEnergyImpact(elt, energyImpact) {
+    if (!energyImpact)
+      elt.textContent = "–";
+    else {
+      let impact = "high";
+      if (energyImpact < 1)
+        impact = "low";
+      else if (energyImpact < 25)
+        impact = "medium";
+      document.l10n.setAttributes(elt, "energy-impact-" + impact,
+                                  {value: energyImpact});
+    }
+  },
   appendRow(name, energyImpact, tooltip, type, image = "") {
     let row = document.createElement("tr");
 
@@ -1033,17 +1050,7 @@ var View = {
     row.appendChild(elt);
 
     elt = document.createElement("td");
-    if (!energyImpact)
-      elt.textContent = "–";
-    else {
-      let impact = "high";
-      if (energyImpact < 1)
-        impact = "low";
-      else if (energyImpact < 25)
-        impact = "medium";
-      document.l10n.setAttributes(elt, "energy-impact-" + impact,
-                                  {value: energyImpact});
-    }
+    this.displayEnergyImpact(elt, energyImpact);
     row.appendChild(elt);
 
     if (tooltip)
@@ -1140,7 +1147,12 @@ var Control = {
       tabbrowser.selectedTab = tab;
       tabbrowser.ownerGlobal.focus();
     });
+
+    tbody.addEventListener("mousemove", () => {
+      this._lastMouseEvent = Date.now();
+    });
   },
+  _lastMouseEvent: 0,
   async update() {
     let mode = this._displayMode;
     if (this._autoRefreshInterval || !State._buffer[0]) {
@@ -1164,6 +1176,32 @@ var Control = {
       // Make sure that we do not keep obsolete stuff around.
       View.DOMCache.trimTo(state.deltas);
     } else {
+      // If the mouse has been moved recently, update the data displayed
+      // without moving any item to avoid the risk of users clicking an action
+      // button for the wrong item.
+      if (Date.now() - this._lastMouseEvent < TIME_BEFORE_SORTING_AGAIN) {
+        let energyImpactPerId = new Map();
+        for (let {id, dispatchesSincePrevious,
+                  durationSincePrevious} of State.getCounters()) {
+          let energyImpact = this._computeEnergyImpact(dispatchesSincePrevious,
+                                                       durationSincePrevious);
+          energyImpactPerId.set(id, energyImpact);
+        }
+
+        let row = document.getElementById("dispatch-tbody").firstChild;
+        while (row) {
+          if (row.windowId && energyImpactPerId.has(row.windowId)) {
+            // We update the value in the Energy Impact column, but don't
+            // update the children, as if the child count changes there's a
+            // risk of making other rows move up or down.
+            const kEnergyImpactColumn = 2;
+            let elt = row.childNodes[kEnergyImpactColumn];
+            View.displayEnergyImpact(elt, energyImpactPerId.get(row.windowId));
+          }
+          row = row.nextSibling;
+        }
+        return;
+      }
 
       let selectedId = -1;
       // Reset the selectedRow field and the _openItems set each time we redraw
