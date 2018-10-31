@@ -37,6 +37,15 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
     protocol.Actor.prototype.destroy.call(this);
   },
 
+  start: function() {
+    /**
+     * This function currently does nothing and returns nothing. It exists only
+     * so that the client can trigger the creation of the ChangesActor through
+     * the front, without triggering side effects, and with a sensible semantic
+     * meaning.
+     */
+  },
+
   changeCount: function() {
     return this.changes.length;
   },
