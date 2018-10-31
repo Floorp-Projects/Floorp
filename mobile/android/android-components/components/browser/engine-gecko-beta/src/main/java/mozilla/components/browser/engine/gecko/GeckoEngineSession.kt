@@ -382,8 +382,12 @@ class GeckoEngineSession(
         override fun onCloseRequest(session: GeckoSession) = Unit
 
         override fun onTitleChange(session: GeckoSession, title: String) {
-            currentUrl?.let {
-                settings.historyTrackingDelegate?.onTitleChanged(it, title, privateMode)
+            currentUrl?.let { url ->
+                settings.historyTrackingDelegate?.let { delegate ->
+                    runBlocking {
+                        delegate.onTitleChanged(url, title, privateMode)
+                    }
+                }
             }
             notifyObservers { onTitleChange(title) }
         }

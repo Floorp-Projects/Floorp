@@ -19,6 +19,9 @@ import android.webkit.WebView
 import android.webkit.ValueCallback
 import android.webkit.WebViewClient
 import android.webkit.WebView.HitTestResult
+import kotlinx.coroutines.experimental.CompletableDeferred
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
@@ -227,7 +230,7 @@ class SystemEngineViewTest {
     }
 
     @Test
-    fun `WebView client notifies configured history delegate of url visits`() {
+    fun `WebView client notifies configured history delegate of url visits`() = runBlocking {
         val engineSession = SystemEngineSession()
 
         val engineView = SystemEngineView(RuntimeEnvironment.application)
@@ -257,20 +260,21 @@ class SystemEngineViewTest {
 
         val engineView = SystemEngineView(RuntimeEnvironment.application)
         val historyDelegate = object : HistoryTrackingDelegate {
-            override fun onVisited(uri: String, isReload: Boolean, privateMode: Boolean) {
+            override suspend fun onVisited(uri: String, isReload: Boolean, privateMode: Boolean) {
                 fail()
             }
 
-            override fun onTitleChanged(uri: String, title: String, privateMode: Boolean) {
+            override suspend fun onTitleChanged(uri: String, title: String, privateMode: Boolean) {
                 fail()
             }
 
-            override fun getVisited(uris: List<String>, callback: (List<Boolean>) -> Unit, privateMode: Boolean) {
+            override fun getVisited(uris: List<String>, privateMode: Boolean): Deferred<List<Boolean>> {
                 fail()
+                return CompletableDeferred(listOf())
             }
 
-            override fun getVisited(callback: (List<String>) -> Unit, privateMode: Boolean) {
-                callback(listOf("https://www.mozilla.com"))
+            override fun getVisited(privateMode: Boolean): Deferred<List<String>> {
+                return CompletableDeferred(listOf("https://www.mozilla.com"))
             }
         }
 
@@ -285,12 +289,14 @@ class SystemEngineViewTest {
         engineSession.settings.historyTrackingDelegate = historyDelegate
 
         val historyValueCallback: ValueCallback<Array<String>> = mock()
-        engineView.currentWebView.webChromeClient.getVisitedHistory(historyValueCallback)
+        runBlocking {
+            engineView.currentWebView.webChromeClient.getVisitedHistory(historyValueCallback)
+        }
         verify(historyValueCallback).onReceiveValue(arrayOf("https://www.mozilla.com"))
     }
 
     @Test
-    fun `WebView client notifies configured history delegate of title changes`() {
+    fun `WebView client notifies configured history delegate of title changes`() = runBlocking {
         val engineSession = SystemEngineSession()
 
         val engineView = SystemEngineView(RuntimeEnvironment.application)

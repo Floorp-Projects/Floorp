@@ -4,15 +4,23 @@
 
 package mozilla.components.feature.storage
 
+import kotlinx.coroutines.experimental.CompletableDeferred
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
+import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
+import org.junit.Assert.fail
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
@@ -31,7 +39,7 @@ class HistoryTrackingFeatureTest {
     }
 
     @Test
-    fun `history delegate doesn't interact with storage in private mode`() {
+    fun `history delegate doesn't interact with storage in private mode`() = runBlocking {
         val storage: HistoryStorage = mock()
         val delegate = HistoryDelegate(storage)
 
@@ -41,23 +49,13 @@ class HistoryTrackingFeatureTest {
         delegate.onTitleChanged("http://www.mozilla.org", "Mozilla", true)
         verify(storage, never()).recordObservation(any(), any())
 
-        val systemCallback = mock<(List<String>) -> Unit>()
-        delegate.getVisited(systemCallback, true)
-        verify(systemCallback).invoke(listOf())
-        verify(storage, never()).getVisited(systemCallback)
-
-        val geckoCallback = mock<(List<Boolean>) -> Unit>()
-        delegate.getVisited(listOf("http://www.mozilla.com"), geckoCallback, true)
-        verify(geckoCallback).invoke(listOf(false))
-        verify(storage, never()).getVisited(listOf("http://www.mozilla.com"), geckoCallback)
-
-        delegate.getVisited(listOf("http://www.mozilla.com", "http://www.firefox.com"), geckoCallback, true)
-        verify(geckoCallback).invoke(listOf(false, false))
-        verify(storage, never()).getVisited(listOf("http://www.mozilla.com", "http://www.firefox.com"), geckoCallback)
+        assertEquals(0, delegate.getVisited(true).await().size)
+        assertEquals(listOf(false), delegate.getVisited(listOf("http://www.mozilla.com"), true).await())
+        assertEquals(listOf(false, false), delegate.getVisited(listOf("http://www.mozilla.com", "http://www.firefox.com"), true).await())
     }
 
     @Test
-    fun `history delegate passes through onVisited calls`() {
+    fun `history delegate passes through onVisited calls`() = runBlocking {
         val storage: HistoryStorage = mock()
         val delegate = HistoryDelegate(storage)
 
@@ -69,7 +67,7 @@ class HistoryTrackingFeatureTest {
     }
 
     @Test
-    fun `history delegate passes through onTitleChanged calls`() {
+    fun `history delegate passes through onTitleChanged calls`() = runBlocking {
         val storage: HistoryStorage = mock()
         val delegate = HistoryDelegate(storage)
 
@@ -78,16 +76,50 @@ class HistoryTrackingFeatureTest {
     }
 
     @Test
-    fun `history delegate passes through getVisited calls`() {
-        val storage: HistoryStorage = mock()
+    fun `history delegate passes through getVisited calls`() = runBlocking {
+        class TestHistoryStorage : HistoryStorage {
+            var getVisitedListCalled = false
+            var getVisitedPlainCalled = false
+
+            override suspend fun recordVisit(uri: String, visitType: VisitType) {
+                fail()
+            }
+
+            override suspend fun recordObservation(uri: String, observation: PageObservation) {
+                fail()
+            }
+
+            override fun getVisited(uris: List<String>): Deferred<List<Boolean>> {
+                getVisitedListCalled = true
+                assertEquals(listOf("http://www.mozilla.org", "http://www.firefox.com"), uris)
+                return CompletableDeferred(listOf())
+            }
+
+            override fun getVisited(): Deferred<List<String>> {
+                getVisitedPlainCalled = true
+                return CompletableDeferred(listOf())
+            }
+
+            override fun getSuggestions(query: String, limit: Int): List<SearchResult> {
+                fail()
+                return listOf()
+            }
+
+            override fun cleanup() {
+                fail()
+            }
+        }
+        val storage = TestHistoryStorage()
         val delegate = HistoryDelegate(storage)
 
-        val systemCallback = mock<(List<String>) -> Unit>()
-        delegate.getVisited(systemCallback, false)
-        verify(storage).getVisited(systemCallback)
+        assertFalse(storage.getVisitedPlainCalled)
+        assertFalse(storage.getVisitedListCalled)
 
-        val geckoCallback = mock<(List<Boolean>) -> Unit>()
-        delegate.getVisited(listOf("http://www.mozilla.org", "http://www.firefox.com"), geckoCallback, false)
-        verify(storage).getVisited(listOf("http://www.mozilla.org", "http://www.firefox.com"), geckoCallback)
+        delegate.getVisited(false).await()
+        assertTrue(storage.getVisitedPlainCalled)
+        assertFalse(storage.getVisitedListCalled)
+
+        delegate.getVisited(listOf("http://www.mozilla.org", "http://www.firefox.com"), false).await()
+        assertTrue(storage.getVisitedListCalled)
     }
 }

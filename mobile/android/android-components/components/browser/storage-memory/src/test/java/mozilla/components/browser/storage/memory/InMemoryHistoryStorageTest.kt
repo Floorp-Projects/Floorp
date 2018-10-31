@@ -4,17 +4,15 @@
 
 package mozilla.components.browser.storage.memory
 
+import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.VisitType
-import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.reset
 
 class InMemoryHistoryStorageTest {
     @Test
-    fun `store can be used to track visit information`() {
+    fun `store can be used to track visit information`() = runBlocking {
         val history = InMemoryHistoryStorage()
 
         assertEquals(0, history.pages.size)
@@ -42,86 +40,61 @@ class InMemoryHistoryStorageTest {
     }
 
     @Test
-    fun `store can be used to record and retrieve history via webview-style callbacks`() {
+    fun `store can be used to record and retrieve history via webview-style callbacks`() = runBlocking {
         val history = InMemoryHistoryStorage()
 
-        val callback = mock<(List<String>) -> Unit>()
-
         // Empty.
-        history.getVisited(callback)
-        verify(callback).invoke(listOf())
-        reset(callback)
-        history.getVisited(callback)
-        verify(callback).invoke(listOf())
-        reset(callback)
+        assertEquals(0, history.getVisited().await().size)
 
         // Regular visits are tracked.
         history.recordVisit("https://www.mozilla.org", VisitType.LINK)
-        history.getVisited(callback)
-        verify(callback).invoke(listOf("https://www.mozilla.org"))
-        reset(callback)
+        assertEquals(listOf("https://www.mozilla.org"), history.getVisited().await())
 
         // Multiple visits can be tracked, results ordered by "URL's first seen first".
         history.recordVisit("https://www.firefox.com", VisitType.LINK)
-        history.getVisited(callback)
-        verify(callback).invoke(listOf("https://www.mozilla.org", "https://www.firefox.com"))
-        reset(callback)
+        assertEquals(listOf("https://www.mozilla.org", "https://www.firefox.com"), history.getVisited().await())
 
         // Visits marked as reloads can be tracked.
         history.recordVisit("https://www.firefox.com", VisitType.RELOAD)
-        history.getVisited(callback)
-        verify(callback).invoke(listOf("https://www.mozilla.org", "https://www.firefox.com"))
-        reset(callback)
+        assertEquals(listOf("https://www.mozilla.org", "https://www.firefox.com"), history.getVisited().await())
 
         // Visited urls are certainly a set.
         history.recordVisit("https://www.firefox.com", VisitType.LINK)
         history.recordVisit("https://www.mozilla.org", VisitType.LINK)
         history.recordVisit("https://www.wikipedia.org", VisitType.LINK)
-        history.getVisited(callback)
-        verify(callback).invoke(listOf("https://www.mozilla.org", "https://www.firefox.com", "https://www.wikipedia.org"))
+        assertEquals(
+            listOf("https://www.mozilla.org", "https://www.firefox.com", "https://www.wikipedia.org"),
+            history.getVisited().await()
+        )
     }
 
     @Test
-    fun `store can be used to record and retrieve history via gecko-style callbacks`() {
+    fun `store can be used to record and retrieve history via gecko-style callbacks`() = runBlocking {
         val history = InMemoryHistoryStorage()
 
-        // Empty.
-        val callback = mock<(List<Boolean>) -> Unit>()
-
-        history.getVisited(listOf(), callback)
-        verify(callback).invoke(listOf())
-        reset(callback)
+        assertEquals(0, history.getVisited(listOf()).await().size)
 
         // Regular visits are tracked
         history.recordVisit("https://www.mozilla.org", VisitType.LINK)
-        history.getVisited(listOf("https://www.mozilla.org"), callback)
-        verify(callback).invoke(listOf(true))
-        reset(callback)
+        assertEquals(listOf(true), history.getVisited(listOf("https://www.mozilla.org")).await())
 
         // Duplicate requests are handled.
-        history.getVisited(listOf("https://www.mozilla.org", "https://www.mozilla.org"), callback)
-        verify(callback).invoke(listOf(true, true))
-        reset(callback)
+        assertEquals(listOf(true, true), history.getVisited(listOf("https://www.mozilla.org", "https://www.mozilla.org")).await())
 
         // Visit map is returned in correct order.
-        history.getVisited(listOf("https://www.mozilla.org", "https://www.unknown.com"), callback)
-        verify(callback).invoke(listOf(true, false))
-        reset(callback)
+        assertEquals(listOf(true, false), history.getVisited(listOf("https://www.mozilla.org", "https://www.unknown.com")).await())
 
-        history.getVisited(listOf("https://www.unknown.com", "https://www.mozilla.org"), callback)
-        verify(callback).invoke(listOf(false, true))
-        reset(callback)
+        assertEquals(listOf(false, true), history.getVisited(listOf("https://www.unknown.com", "https://www.mozilla.org")).await())
 
         // Multiple visits can be tracked. Reloads can be tracked.
         history.recordVisit("https://www.firefox.com", VisitType.LINK)
         history.recordVisit("https://www.mozilla.org", VisitType.RELOAD)
         history.recordVisit("https://www.wikipedia.org", VisitType.LINK)
-        history.getVisited(listOf("https://www.firefox.com", "https://www.wikipedia.org", "https://www.unknown.com", "https://www.mozilla.org"), callback)
-        verify(callback).invoke(listOf(true, true, false, true))
+        assertEquals(listOf(true, true, false, true), history.getVisited(listOf("https://www.firefox.com", "https://www.wikipedia.org", "https://www.unknown.com", "https://www.mozilla.org")).await())
     }
 
     @Test
-    fun `store can be used to track page meta information - title changes`() {
+    fun `store can be used to track page meta information - title changes`() = runBlocking {
         val history = InMemoryHistoryStorage()
         assertEquals(0, history.pageMeta.size)
 

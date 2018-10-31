@@ -33,6 +33,7 @@ import android.webkit.WebView.HitTestResult.SRC_ANCHOR_TYPE
 import android.webkit.WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
+import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
@@ -119,7 +120,9 @@ class SystemEngineView @JvmOverloads constructor(
         override fun doUpdateVisitedHistory(view: WebView, url: String, isReload: Boolean) {
             // TODO private browsing not supported for SystemEngine
             // https://github.com/mozilla-mobile/android-components/issues/649
-            session?.settings?.historyTrackingDelegate?.onVisited(url, isReload, privateMode = false)
+            runBlocking {
+                session?.settings?.historyTrackingDelegate?.onVisited(url, isReload, privateMode = false)
+            }
         }
 
         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
@@ -261,9 +264,11 @@ class SystemEngineView @JvmOverloads constructor(
         override fun getVisitedHistory(callback: ValueCallback<Array<String>>) {
             // TODO private browsing not supported for SystemEngine
             // https://github.com/mozilla-mobile/android-components/issues/649
-            session?.settings?.historyTrackingDelegate?.getVisited({
-                callback.onReceiveValue(it.toTypedArray())
-            }, privateMode = false)
+            session?.settings?.historyTrackingDelegate?.let {
+                runBlocking {
+                    callback.onReceiveValue(it.getVisited(false).await().toTypedArray())
+                }
+            }
         }
 
         override fun onProgressChanged(view: WebView?, newProgress: Int) {
@@ -274,10 +279,12 @@ class SystemEngineView @JvmOverloads constructor(
             val titleOrEmpty = title ?: ""
             // TODO private browsing not supported for SystemEngine
             // https://github.com/mozilla-mobile/android-components/issues/649
-            if (currentUrl.isNotEmpty()) {
-                session?.settings?.historyTrackingDelegate?.onTitleChanged(
-                        currentUrl, titleOrEmpty, privateMode = false
-                )
+            currentUrl.takeIf { it.isNotEmpty() }?.let { url ->
+                session?.settings?.historyTrackingDelegate?.let { delegate ->
+                    runBlocking {
+                        delegate.onTitleChanged(url, titleOrEmpty, privateMode = false)
+                    }
+                }
             }
             session?.internalNotifyObservers {
                 onTitleChange(titleOrEmpty)

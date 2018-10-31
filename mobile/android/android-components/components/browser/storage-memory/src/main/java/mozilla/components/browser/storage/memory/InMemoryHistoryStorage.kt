@@ -5,6 +5,8 @@
 package mozilla.components.browser.storage.memory
 
 import android.support.annotation.VisibleForTesting
+import kotlinx.coroutines.experimental.CompletableDeferred
+import kotlinx.coroutines.experimental.Deferred
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
@@ -24,7 +26,7 @@ class InMemoryHistoryStorage : HistoryStorage {
     @VisibleForTesting
     internal val pageMeta: HashMap<String, PageObservation> = hashMapOf()
 
-    override fun recordVisit(uri: String, visitType: VisitType) {
+    override suspend fun recordVisit(uri: String, visitType: VisitType) {
         val now = System.currentTimeMillis()
 
         synchronized(pages) {
@@ -36,14 +38,14 @@ class InMemoryHistoryStorage : HistoryStorage {
         }
     }
 
-    override fun recordObservation(uri: String, observation: PageObservation) {
+    override suspend fun recordObservation(uri: String, observation: PageObservation) {
         synchronized(pageMeta) {
             pageMeta[uri] = observation
         }
     }
 
-    override fun getVisited(uris: List<String>, callback: (List<Boolean>) -> Unit) {
-        callback(synchronized(pages) {
+    override fun getVisited(uris: List<String>): Deferred<List<Boolean>> {
+        return CompletableDeferred(synchronized(pages) {
             uris.map {
                 if (pages[it] != null && pages[it]!!.size > 0) {
                     return@map true
@@ -53,9 +55,9 @@ class InMemoryHistoryStorage : HistoryStorage {
         })
     }
 
-    override fun getVisited(callback: (List<String>) -> Unit) {
-        callback(synchronized(pages) {
-            (pages.keys.toList())
+    override fun getVisited(): Deferred<List<String>> {
+        return CompletableDeferred(synchronized(pages) {
+            pages.keys.toList()
         })
     }
 

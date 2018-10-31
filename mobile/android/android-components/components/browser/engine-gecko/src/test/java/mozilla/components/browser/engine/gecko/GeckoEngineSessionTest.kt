@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import android.os.Handler
 import android.os.Message
+import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
@@ -378,7 +379,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WebView client notifies configured history delegate of title changes`() {
+    fun `WebView client notifies configured history delegate of title changes`() = runBlocking {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         val historyDelegate: HistoryTrackingDelegate = mock()
 
@@ -398,7 +399,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WebView client notifies configured history delegate of title changes for private sessions`() {
+    fun `WebView client notifies configured history delegate of title changes for private sessions`() = runBlocking {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java), privateMode = true)
         val historyDelegate: HistoryTrackingDelegate = mock()
 

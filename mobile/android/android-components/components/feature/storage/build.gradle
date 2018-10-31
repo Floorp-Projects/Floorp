@@ -27,6 +27,7 @@ dependencies {
     implementation project(':support-ktx')
 
     implementation Deps.kotlin_stdlib
+    implementation Deps.kotlin_coroutines
 
     testImplementation Deps.testing_junit
     testImplementation Deps.testing_robolectric

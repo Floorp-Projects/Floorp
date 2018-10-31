@@ -5,6 +5,8 @@
 package mozilla.components.feature.storage
 
 import android.support.annotation.VisibleForTesting
+import kotlinx.coroutines.experimental.CompletableDeferred
+import kotlinx.coroutines.experimental.Deferred
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.storage.HistoryStorage
@@ -23,7 +25,7 @@ class HistoryTrackingFeature(engine: Engine, historyStorage: HistoryStorage) {
 
 @VisibleForTesting
 internal class HistoryDelegate(private val historyStorage: HistoryStorage) : HistoryTrackingDelegate {
-    override fun onVisited(uri: String, isReload: Boolean, privateMode: Boolean) {
+    override suspend fun onVisited(uri: String, isReload: Boolean, privateMode: Boolean) {
         if (privateMode) {
             return
         }
@@ -34,26 +36,25 @@ internal class HistoryDelegate(private val historyStorage: HistoryStorage) : His
         historyStorage.recordVisit(uri, visitType)
     }
 
-    override fun onTitleChanged(uri: String, title: String, privateMode: Boolean) {
+    override suspend fun onTitleChanged(uri: String, title: String, privateMode: Boolean) {
         if (privateMode) {
             return
         }
         historyStorage.recordObservation(uri, PageObservation(title = title))
     }
 
-    override fun getVisited(uris: List<String>, callback: (List<Boolean>) -> Unit, privateMode: Boolean) {
+    override fun getVisited(uris: List<String>, privateMode: Boolean): Deferred<List<Boolean>> {
         if (privateMode) {
-            callback(List(uris.size) { false })
-            return
+            return CompletableDeferred(List(uris.size) { false })
         }
-        historyStorage.getVisited(uris, callback)
+
+        return historyStorage.getVisited(uris)
     }
 
-    override fun getVisited(callback: (List<String>) -> Unit, privateMode: Boolean) {
+    override fun getVisited(privateMode: Boolean): Deferred<List<String>> {
         if (privateMode) {
-            callback(listOf())
-            return
+            return CompletableDeferred(listOf())
         }
-        historyStorage.getVisited(callback)
+        return historyStorage.getVisited()
     }
 }

@@ -4,31 +4,33 @@
 
 package mozilla.components.concept.engine.history
 
+import kotlinx.coroutines.experimental.Deferred
+
 /**
  * An interface used for providing history information to an engine (e.g. for link highlighting),
  * and receiving history updates from the engine (visits to URLs, title changes).
  *
- * Even though this interface is defined at the "concept" layer, it's get* methods are tailored to
+ * Even though this interface is defined at the "concept" layer, its get* methods are tailored to
  * two types of engines which we support (system's WebView and GeckoView).
  */
 interface HistoryTrackingDelegate {
     /**
      * A URI visit happened that an engine considers worthy of being recorded in browser's history.
      */
-    fun onVisited(uri: String, isReload: Boolean = false, privateMode: Boolean)
+    suspend fun onVisited(uri: String, isReload: Boolean = false, privateMode: Boolean)
 
     /**
      * Title changed for a given URI.
      */
-    fun onTitleChanged(uri: String, title: String, privateMode: Boolean)
+    suspend fun onTitleChanged(uri: String, title: String, privateMode: Boolean)
 
     /**
      * An engine needs to know "visited" (true/false) status for provided URIs.
      */
-    fun getVisited(uris: List<String>, callback: (List<Boolean>) -> Unit, privateMode: Boolean)
+    fun getVisited(uris: List<String>, privateMode: Boolean): Deferred<List<Boolean>>
 
     /**
      * An engine needs to know a list of all visited URIs.
      */
-    fun getVisited(callback: (List<String>) -> Unit, privateMode: Boolean)
+    fun getVisited(privateMode: Boolean): Deferred<List<String>>
 }
