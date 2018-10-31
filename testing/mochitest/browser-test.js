@@ -1047,10 +1047,14 @@ Tester.prototype = {
     try {
       this._scriptLoader.loadSubScript(headPath, scope);
     } catch (ex) {
-      // Ignore if no head.js exists, but report all other errors.  Note this
-      // will also ignore an existing head.js attempting to import a missing
-      // module - see bug 755558 for why this strategy is preferred anyway.
-      if (!/^Error opening input stream/.test(ex.toString())) {
+      // Bug 755558 - Ignore loadSubScript errors due to a missing head.js.
+      const isImportError = /^Error opening input stream/.test(ex.toString());
+
+      // Bug 1503169 - head.js may call loadSubScript, and generate similar errors.
+      // Only swallow errors that are strictly related to loading head.js.
+      const containsHeadPath = ex.toString().includes(headPath);
+
+      if (!isImportError || !containsHeadPath) {
        this.currentTest.addResult(new testResult({
          name: "head.js import threw an exception",
          ex,
