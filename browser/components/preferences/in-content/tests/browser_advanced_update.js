@@ -140,8 +140,11 @@ add_task(async function() {
   for (let i = 0; i < updates.length; ++i) {
     update = updates[i];
     updateData = mockUpdateManager.getUpdateAt(i);
-
-    is(update.name, updateData.name + " (" + updateData.buildID + ")", "Wrong update name");
+    const l10nAttrs = frameDoc.l10n.getAttributes(update);
+    Assert.deepEqual(l10nAttrs, {
+      id: "update-full-name",
+      args: { name: updateData.name, buildID: updateData.buildID },
+    }, "Wrong update name");
     is(update.installDate, formatInstallDate(updateData.installDate), "Wrong update installDate");
     is(update.detailsURL, updateData.detailsURL, "Wrong update detailsURL");
     is(update.status, updateData.statusText, "Wrong update status");
