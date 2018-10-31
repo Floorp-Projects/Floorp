@@ -388,6 +388,12 @@ opaque-types = [
                                 # don't align properly on Linux 32-bit
     "mozilla::SchedulerGroup", # Non-standard-layout packing of field into superclass
 ]
+
+# All cbindgen-types are in mod "structs::root::mozilla".
+cbindgen-types = [
+    { gecko = "mozilla::StyleComputedTimingFunction", servo = "values::computed::easing::TimingFunction" },
+]
+
 mapped-generic-types = [
     { generic = true, gecko = "mozilla::RustCell", servo = "::std::cell::Cell" },
     { generic = false, gecko = "ServoNodeData", servo = "AtomicRefCell<ElementData>" },
@@ -398,7 +404,6 @@ mapped-generic-types = [
     { generic = false, gecko = "mozilla::ServoComputedValueFlags", servo = "::properties::computed_value_flags::ComputedValueFlags" },
     { generic = true, gecko = "mozilla::ServoRawOffsetArc", servo = "::servo_arc::RawOffsetArc" },
     { generic = false, gecko = "ComputedStyleStrong", servo = "::gecko_bindings::sugar::ownership::Strong<::properties::ComputedValues>" },
-    { generic = false, gecko = "mozilla::StyleComputedTimingFunction", servo = "::values::computed::easing::TimingFunction" },
 ]
 fixups = [
     { pat = "\\broot\\s*::\\s*nsString\\b", rep = "::nsstring::nsStringRepr" },
