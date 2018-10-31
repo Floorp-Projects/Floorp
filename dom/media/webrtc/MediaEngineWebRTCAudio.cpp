@@ -203,6 +203,8 @@ MediaEngineWebRTCMicrophoneSource::Reconfigure(
 
   ApplySettings(outputPrefs);
 
+  mCurrentPrefs = outputPrefs;
+
   return NS_OK;
 }
 
@@ -496,6 +498,8 @@ MediaEngineWebRTCMicrophoneSource::Allocate(
       return NS_OK;
     }));
 
+  mCurrentPrefs = outputPrefs;
+
   return rv;
 }
 
@@ -654,10 +658,8 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>&)
 
 
 
-  if (!mInputProcessing) {
-    mInputProcessing = new AudioInputProcessing(
-      mDeviceMaxChannelCount, mStream, mTrackID, mPrincipal);
-  }
+  mInputProcessing = new AudioInputProcessing(
+    mDeviceMaxChannelCount, mStream, mTrackID, mPrincipal);
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
@@ -672,6 +674,8 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>&)
 
       return NS_OK;
     }));
+
+  ApplySettings(mCurrentPrefs);
 
   MOZ_ASSERT(mState != kReleased);
   mState = kStarted;
