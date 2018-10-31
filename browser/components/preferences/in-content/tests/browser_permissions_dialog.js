@@ -343,36 +343,6 @@ add_task(async function checkDefaultPermissionState() {
   Services.prefs.setIntPref("permissions.default.desktop-notification", SitePermissions.UNKNOWN);
 });
 
-add_task(async function testTabBehaviour() {
-  // Test tab behaviour inside the permissions setting dialog when site permissions are selected.
-  // Only selected items in the richlistbox should be tabable for accessibility reasons.
-
-  SitePermissions.set(URI, "desktop-notification", SitePermissions.ALLOW);
-  let u = Services.io.newURI("http://www.test.com");
-  SitePermissions.set(u, "desktop-notification", SitePermissions.ALLOW);
-
-  await openPermissionsDialog();
-  let doc = sitePermissionsDialog.document;
-
-  EventUtils.synthesizeKey("KEY_Tab", {}, sitePermissionsDialog);
-  let richlistbox = doc.getElementById("permissionsBox");
-  is(richlistbox, doc.activeElement.closest("#permissionsBox"), "The richlistbox is focused after pressing tab once.");
-
-  EventUtils.synthesizeKey("KEY_ArrowDown", {}, sitePermissionsDialog);
-  EventUtils.synthesizeKey("KEY_Tab", {}, sitePermissionsDialog);
-  let menulist = doc.getElementById("permissionsBox").children[1].getElementsByTagName("menulist")[0];
-  is(menulist, doc.activeElement, "The menulist inside the selected richlistitem is focused now");
-
-  EventUtils.synthesizeKey("KEY_Tab", {}, sitePermissionsDialog);
-  let removeButton = doc.getElementById("removePermission");
-  is(removeButton, doc.activeElement, "The focus moves outside the richlistbox and onto the remove button");
-
-  SitePermissions.remove(URI, "desktop-notification");
-  SitePermissions.remove(u, "desktop-notification");
-
-  doc.getElementById("cancel").click();
-});
-
 add_task(async function removeTab() {
   gBrowser.removeCurrentTab();
 });
