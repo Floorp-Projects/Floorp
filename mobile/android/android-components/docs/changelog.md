@@ -52,7 +52,9 @@ permalink: /changelog/
   }
 
   ```
-  For a full working example, take a look at our [Firefox Accounts sample application](https://github.com/mozilla-mobile/android-components/blob/master/samples/firefox-accounts/src/main/java/org/mozilla/samples/fxa/MainActivity.kt#L25).
+* **browser-engine-system, browser-engine-gecko, browser-engine-gecko-beta and browser-engine-gecko-nightly**:
+  Adding support for using `SystemEngineView` and `GeckoEngineView` in a `CoordinatorLayout`.
+  This allows to create nice transitions like hiding the toolbar when scrolls.
 
 # 0.29.0
 
