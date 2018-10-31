@@ -148,8 +148,8 @@ static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
         i->fStandard = kGL_GrGLStandard;
     }
 
-    GrGLFunction<GrGLGetStringProc> getString = WrapGL(context, &glGetString_mozilla);
-    GrGLFunction<GrGLGetIntegervProc> getIntegerv = WrapGL(context, &GLContext::fGetIntegerv);
+    GrGLFunction<GrGLGetStringFn> getString = WrapGL(context, &glGetString_mozilla);
+    GrGLFunction<GrGLGetIntegervFn> getIntegerv = WrapGL(context, &GLContext::fGetIntegerv);
 
     GrGLExtensions extensions;
     if (!extensions.init(i->fStandard, getString, nullptr, getIntegerv)) {
@@ -311,7 +311,7 @@ SkiaGLGlue::SkiaGLGlue(GLContext* context)
     : mGLContext(context)
 {
     mGrGLInterface.reset(CreateGrGLInterfaceFromGLContext(mGLContext));
-    mGrContext.reset(GrContext::Create(kOpenGL_GrBackend, (GrBackendContext)mGrGLInterface.get()));
+    mGrContext = GrContext::MakeGL(mGrGLInterface);
 }
 
 SkiaGLGlue::~SkiaGLGlue()
