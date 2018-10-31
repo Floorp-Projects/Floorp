@@ -370,17 +370,6 @@ Other Measurements\n\
       └───0.00 MB (-09.09%) ── (fake child) [!]\n\
 \n\
 End of P8\n\
-P9\n\
-\n\
-WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
-Explicit Allocations\n\
-\n\
-0.00 MB (100.0%) -- explicit\n\
-└──0.00 MB (100.0%) ── threads/stacks/DNS Resolver #N (tid=NNN) [3]\n\
-\n\
-Other Measurements\n\
-\n\
-End of P9\n\
 ";
 
   // This is the output for a verbose diff.
@@ -479,17 +468,6 @@ Other Measurements\n\
       └────2 B (-09.09%) ── (fake child) [!]\n\
 \n\
 End of P8\n\
-P9\n\
-\n\
-WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
-Explicit Allocations\n\
-\n\
-5,000 B (100.0%) -- explicit\n\
-└──5,000 B (100.0%) ── threads/stacks/DNS Resolver #N (tid=NNN) [3]\n\
-\n\
-Other Measurements\n\
-\n\
-End of P9\n\
 ";
 
   // This is the output for the crash reports diff.
