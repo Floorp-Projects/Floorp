@@ -294,7 +294,7 @@ cbindgen = check_prog('CBINDGEN', add_rustup_path('cbindgen'), paths=toolchain_s
 @checking('cbindgen version')
 @imports(_from='textwrap', _import='dedent')
 def cbindgen_version(cbindgen):
-    cbindgen_min_version = Version('0.6.6')
+    cbindgen_min_version = Version('0.6.7')
 
     # cbindgen x.y.z
     version = Version(check_cmd_output(cbindgen, '--version').strip().split(" ")[1])

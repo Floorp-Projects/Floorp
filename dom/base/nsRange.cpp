@@ -171,6 +171,7 @@ struct IsItemInRangeComparator
   nsINode* mNode;
   uint32_t mStartOffset;
   uint32_t mEndOffset;
+  nsContentUtils::ComparePointsCache* mCache;
 
   int operator()(const nsRange* const aRange) const
   {
@@ -178,13 +179,13 @@ struct IsItemInRangeComparator
       nsContentUtils::ComparePoints(
         mNode, static_cast<int32_t>(mEndOffset),
         aRange->GetStartContainer(),
-        static_cast<int32_t>(aRange->StartOffset()));
+        static_cast<int32_t>(aRange->StartOffset()), nullptr, mCache);
     if (cmp == 1) {
       cmp =
         nsContentUtils::ComparePoints(
           mNode, static_cast<int32_t>(mStartOffset),
           aRange->GetEndContainer(),
-          static_cast<int32_t>(aRange->EndOffset()));
+          static_cast<int32_t>(aRange->EndOffset()), nullptr, mCache);
       if (cmp == -1) {
         return 0;
       }
@@ -228,7 +229,8 @@ nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
     }
   }
 
-  IsItemInRangeComparator comparator = { aNode, aStartOffset, aEndOffset };
+  nsContentUtils::ComparePointsCache cache;
+  IsItemInRangeComparator comparator = { aNode, aStartOffset, aEndOffset, &cache };
   if (!ancestorSelections.IsEmpty()) {
     for (auto iter = ancestorSelections.ConstIter(); !iter.Done(); iter.Next()) {
       Selection* selection = iter.Get()->GetKey();
@@ -254,7 +256,7 @@ nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
               nsContentUtils::ComparePoints(
                 aNode, static_cast<int32_t>(aEndOffset),
                 middlePlus1->GetStartContainer(),
-                static_cast<int32_t>(middlePlus1->StartOffset())) > 0) {
+                static_cast<int32_t>(middlePlus1->StartOffset()), nullptr, &cache) > 0) {
               result = 1;
           // if node start < end of middle - 1, result = -1
           } else if (middle >= 1 &&
@@ -262,7 +264,7 @@ nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
               nsContentUtils::ComparePoints(
                 aNode, static_cast<int32_t>(aStartOffset),
                 middleMinus1->GetEndContainer(),
-                static_cast<int32_t>(middleMinus1->EndOffset())) < 0) {
+                static_cast<int32_t>(middleMinus1->EndOffset()), nullptr, &cache) < 0) {
             result = -1;
           } else {
             break;

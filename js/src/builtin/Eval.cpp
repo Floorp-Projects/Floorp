@@ -322,9 +322,7 @@ EvalKernel(JSContext* cx, HandleValue v, EvalType evalType, AbstractFramePtr cal
                                                   ? SourceBufferHolder::GiveOwnership
                                                   : SourceBufferHolder::NoOwnership;
         SourceBufferHolder srcBuf(chars, linearStr->length(), ownership);
-        JSScript* compiled = frontend::CompileEvalScript(cx, cx->tempLifoAlloc(),
-                                                         env, enclosing,
-                                                         options, srcBuf);
+        JSScript* compiled = frontend::CompileEvalScript(cx, env, enclosing, options, srcBuf);
         if (!compiled) {
             return false;
         }
@@ -408,9 +406,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
                                                   ? SourceBufferHolder::GiveOwnership
                                                   : SourceBufferHolder::NoOwnership;
         SourceBufferHolder srcBuf(chars, linearStr->length(), ownership);
-        JSScript* compiled = frontend::CompileEvalScript(cx, cx->tempLifoAlloc(),
-                                                         env, enclosing,
-                                                         options, srcBuf);
+        JSScript* compiled = frontend::CompileEvalScript(cx, env, enclosing, options, srcBuf);
         if (!compiled) {
             return false;
         }

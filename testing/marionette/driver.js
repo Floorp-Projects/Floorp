@@ -1410,8 +1410,8 @@ GeckoDriver.prototype.getWindowRect = async function() {
  * Set the window position and size of the browser on the operating
  * system window manager.
  *
- * The supplied |width| and |height| values refer to the window outerWidth
- * and outerHeight values, which include browser chrome and OS-level
+ * The supplied `width` and `height` values refer to the window `outerWidth`
+ * and `outerHeight` values, which include browser chrome and OS-level
  * window borders.
  *
  * @param {number} x
@@ -1426,7 +1426,7 @@ GeckoDriver.prototype.getWindowRect = async function() {
  *     Height to resize the window to.
  *
  * @return {Object.<string, number>}
- *     Object with |x| and |y| coordinates and |width| and |height|
+ *     Object with `x` and `y` coordinates and `width` and `height`
  *     dimensions.
  *
  * @throws {UnsupportedOperationError}
@@ -2054,6 +2054,7 @@ GeckoDriver.prototype.findElement = async function(cmd) {
  */
 GeckoDriver.prototype.findElements = async function(cmd) {
   const win = assert.open(this.getCurrentWindow());
+  await this._handleUserPrompts();
 
   let {using, value} = cmd.parameters;
   let startNode;
@@ -3228,6 +3229,8 @@ GeckoDriver.prototype._handleUserPrompts = async function() {
     return;
   }
 
+  let {textContent} = this.dialog.ui.infoBody;
+
   let behavior = this.capabilities.get("unhandledPromptBehavior");
   switch (behavior) {
     case UnhandledPromptBehavior.Accept:
@@ -3236,7 +3239,8 @@ GeckoDriver.prototype._handleUserPrompts = async function() {
 
     case UnhandledPromptBehavior.AcceptAndNotify:
       await this.acceptDialog();
-      throw new UnexpectedAlertOpenError();
+      throw new UnexpectedAlertOpenError(
+          `Accepted user prompt dialog: ${textContent}`);
 
     case UnhandledPromptBehavior.Dismiss:
       await this.dismissDialog();
@@ -3244,10 +3248,12 @@ GeckoDriver.prototype._handleUserPrompts = async function() {
 
     case UnhandledPromptBehavior.DismissAndNotify:
       await this.dismissDialog();
-      throw new UnexpectedAlertOpenError();
+      throw new UnexpectedAlertOpenError(
+          `Dismissed user prompt dialog: ${textContent}`);
 
     case UnhandledPromptBehavior.Ignore:
-      throw new UnexpectedAlertOpenError();
+      throw new UnexpectedAlertOpenError(
+          "Encountered unhandled user prompt dialog");
 
     default:
       throw new TypeError(`Unknown unhandledPromptBehavior "${behavior}"`);

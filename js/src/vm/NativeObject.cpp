@@ -2040,12 +2040,6 @@ DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
 {
     // Optimized NativeDefineProperty() version for known absent properties.
 
-#ifdef DEBUG
-    // Indexed properties of typed arrays should have been handled by SetTypedArrayElement.
-    uint64_t index;
-    MOZ_ASSERT_IF(obj->is<TypedArrayObject>(), !IsTypedArrayIndex(id, &index));
-#endif
-
     // Dispense with custom behavior of exotic native objects first.
     if (obj->is<ArrayObject>()) {
         // Array's length property is non-configurable, so we shouldn't
@@ -2059,7 +2053,35 @@ DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                 return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
             }
         }
-    }  else if (obj->is<ArgumentsObject>()) {
+    } else if (obj->is<TypedArrayObject>()) {
+        // 9.4.5.5 step 2. Indexed properties of typed arrays are special.
+        uint64_t index;
+        if (IsTypedArrayIndex(id, &index)) {
+            // This method is only called for non-existent properties, which
+            // means any absent indexed property must be out of range.
+            MOZ_ASSERT(index >= obj->as<TypedArrayObject>().length());
+
+            // Steps 1-2 are enforced by the caller.
+
+            // Step 3.
+            // We still need to call ToNumber, because of its possible side
+            // effects.
+            double d;
+            if (!ToNumber(cx, v, &d)) {
+                return false;
+            }
+
+            // Steps 4-5.
+            // ToNumber may have detached the array buffer.
+            if (obj->as<TypedArrayObject>().hasDetachedBuffer()) {
+                return result.failSoft(JSMSG_TYPED_ARRAY_DETACHED);
+            }
+
+            // Steps 6-9.
+            // We (wrongly) ignore out of range defines.
+            return result.failSoft(JSMSG_BAD_INDEX);
+        }
+    } else if (obj->is<ArgumentsObject>()) {
         // If this method is called with either |length| or |@@iterator|, the
         // property was previously deleted and hence should already be marked
         // as overridden.
@@ -2939,8 +2961,6 @@ SetExistingProperty(JSContext* cx, HandleId id, HandleValue v, HandleValue recei
 {
     // Step 5 for dense elements.
     if (prop.isDenseOrTypedArrayElement()) {
-        MOZ_ASSERT(!pobj->is<TypedArrayObject>());
-
         // Step 5.a.
         if (pobj->denseElementsAreFrozen()) {
             return result.fail(JSMSG_READ_ONLY);
@@ -2948,7 +2968,14 @@ SetExistingProperty(JSContext* cx, HandleId id, HandleValue v, HandleValue recei
 
         // Pure optimization for the common case:
         if (receiver.isObject() && pobj == &receiver.toObject()) {
-            return SetDenseElement(cx, pobj, JSID_TO_INT(id), v, result);
+            uint32_t index = JSID_TO_INT(id);
+
+            if (pobj->is<TypedArrayObject>()) {
+                Rooted<TypedArrayObject*> tobj(cx, &pobj->as<TypedArrayObject>());
+                return SetTypedArrayElement(cx, tobj, index, v, result);
+            }
+
+            return SetDenseElement(cx, pobj, index, v, result);
         }
 
         // Steps 5.b-f.
@@ -3012,17 +3039,6 @@ js::NativeSetProperty(JSContext* cx, HandleNativeObject obj, HandleId id, Handle
         bool done;
         if (!LookupOwnPropertyInline<CanGC>(cx, pobj, id, &prop, &done)) {
             return false;
-        }
-
-        if (pobj->is<TypedArrayObject>()) {
-            uint64_t index;
-            if (IsTypedArrayIndex(id, &index)) {
-                Rooted<TypedArrayObject*> tobj(cx, &pobj->as<TypedArrayObject>());
-                return SetTypedArrayElement(cx, tobj, index, v, result);
-            }
-
-            // This case should have been handled.
-            MOZ_ASSERT(!prop.isDenseOrTypedArrayElement());
         }
 
         if (prop) {
