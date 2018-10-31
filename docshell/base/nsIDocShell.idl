@@ -1262,4 +1262,15 @@ interface nsIDocShell : nsIDocShellTreeItem
    * can return null if the docshell has no message manager.
    */
   [infallible] readonly attribute ContentFrameMessageManager messageManager;
+
+  /**
+   * Asynchronously retrieve a JSON string representing a log of the
+   * content blocking events happened so far in the current tab from the
+   * content process.
+   *
+   * This returns a Promise which resolves to a string on success, and is
+   * rejected on failure.  For documentation on the string format, please
+   * see nsISecureBrowserUI.contentBlockingLogJSON.
+   */
+  Promise getContentBlockingLog();
 };

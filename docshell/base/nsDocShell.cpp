@@ -3927,6 +3927,27 @@ nsDocShell::GetMessageManager(ContentFrameMessageManager** aMessageManager)
 }
 
 NS_IMETHODIMP
+nsDocShell::GetContentBlockingLog(Promise** aPromise)
+{
+  NS_ENSURE_ARG_POINTER(aPromise);
+
+  if (!mContentViewer) {
+    *aPromise = nullptr;
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIDocument* doc = mContentViewer->GetDocument();
+  ErrorResult rv;
+  RefPtr<Promise> promise = Promise::Create(doc->GetOwnerGlobal(), rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+  promise->MaybeResolve(doc->GetContentBlockingLog()->Stringify());
+  promise.forget(aPromise);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::SetDeviceSizeIsPageSize(bool aValue)
 {
   if (mDeviceSizeIsPageSize != aValue) {
