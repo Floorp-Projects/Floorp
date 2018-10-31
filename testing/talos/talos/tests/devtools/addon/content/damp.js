@@ -157,7 +157,10 @@ Damp.prototype = {
   },
 
   async addTab(url) {
-    let tab = this._win.gBrowser.selectedTab = this._win.gBrowser.addTrustedTab(url);
+    // Disable opening animation to avoid intermittents and prevent having to wait for
+    // animation's end. (See bug 1480953)
+    let tab = this._win.gBrowser.selectedTab = this._win.gBrowser.addTrustedTab(url,
+      { skipAnimation: true });
     let browser = tab.linkedBrowser;
     await awaitBrowserLoaded(browser);
     return tab;
@@ -175,11 +178,6 @@ Damp.prototype = {
       });
     }
     window.performance.measure("pending paints", "pending paints.start");
-  },
-
-  closeCurrentTab() {
-    this._win.BrowserCloseTabOrWindow();
-    return this._win.gBrowser.selectedTab;
   },
 
   reloadPage(onReload) {
@@ -203,7 +201,9 @@ Damp.prototype = {
   },
 
   async testTeardown(url) {
-    this.closeCurrentTab();
+    // Disable closing animation to avoid intermittents and prevent having to wait for
+    // animation's end. (See bug 1480953)
+    this._win.gBrowser.removeCurrentTab({ animate: false });
 
     // Force freeing memory now so that it doesn't happen during the next test
     await this.garbageCollect();
