@@ -314,8 +314,8 @@ intrinsic_SubstringKernel(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args[0].isString());
-    MOZ_RELEASE_ASSERT(args[1].isInt32());
-    MOZ_RELEASE_ASSERT(args[2].isInt32());
+    MOZ_ASSERT(args[1].isInt32());
+    MOZ_ASSERT(args[2].isInt32());
 
     RootedString str(cx, args[0].toString());
     int32_t begin = args[1].toInt32();
@@ -333,7 +333,6 @@ intrinsic_SubstringKernel(JSContext* cx, unsigned argc, Value* vp)
 static void
 ThrowErrorWithType(JSContext* cx, JSExnType type, const CallArgs& args)
 {
-    MOZ_RELEASE_ASSERT(args[0].isInt32());
     uint32_t errorNumber = args[0].toInt32();
 
 #ifdef DEBUG
@@ -408,7 +407,7 @@ intrinsic_GetErrorMessage(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
-    MOZ_RELEASE_ASSERT(args[0].isInt32());
+    MOZ_ASSERT(args[0].isInt32());
 
     const JSErrorFormatString* errorString = GetErrorMessage(nullptr, args[0].toInt32());
     MOZ_ASSERT(errorString);
@@ -429,8 +428,8 @@ intrinsic_CreateModuleSyntaxError(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 4);
     MOZ_ASSERT(args[0].isObject());
-    MOZ_RELEASE_ASSERT(args[1].isInt32());
-    MOZ_RELEASE_ASSERT(args[2].isInt32());
+    MOZ_ASSERT(args[1].isInt32());
+    MOZ_ASSERT(args[2].isInt32());
     MOZ_ASSERT(args[3].isString());
 
     RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
@@ -552,7 +551,7 @@ intrinsic_FinishBoundFunctionInit(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 3);
     MOZ_ASSERT(IsCallable(args[1]));
-    MOZ_RELEASE_ASSERT(args[2].isInt32());
+    MOZ_ASSERT(args[2].isInt32());
 
     RootedFunction bound(cx, &args[0].toObject().as<JSFunction>());
     RootedObject targetObj(cx, &args[1].toObject());
@@ -575,7 +574,6 @@ intrinsic_DecompileArg(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
-    MOZ_RELEASE_ASSERT(args[0].isInt32());
 
     HandleValue value = args[1];
     JSString* str = DecompileArgument(cx, args[0].toInt32(), value);
@@ -595,7 +593,6 @@ intrinsic_DefineDataProperty(JSContext* cx, unsigned argc, Value* vp)
     // JSOP_INITELEM in the bytecode emitter so we shouldn't get here.
     MOZ_ASSERT(args.length() == 4);
     MOZ_ASSERT(args[0].isObject());
-    MOZ_RELEASE_ASSERT(args[3].isInt32());
 
     RootedObject obj(cx, &args[0].toObject());
     RootedId id(cx);
@@ -644,7 +641,7 @@ intrinsic_DefineProperty(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 6);
     MOZ_ASSERT(args[0].isObject());
     MOZ_ASSERT(args[1].isString() || args[1].isNumber() || args[1].isSymbol());
-    MOZ_RELEASE_ASSERT(args[2].isInt32());
+    MOZ_ASSERT(args[2].isInt32());
     MOZ_ASSERT(args[5].isBoolean());
 
     RootedObject obj(cx, &args[0].toObject());
@@ -745,7 +742,7 @@ intrinsic_UnsafeSetReservedSlot(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 3);
     MOZ_ASSERT(args[0].isObject());
-    MOZ_RELEASE_ASSERT(args[1].isInt32());
+    MOZ_ASSERT(args[1].isInt32());
 
     args[0].toObject().as<NativeObject>().setReservedSlot(args[1].toPrivateUint32(), args[2]);
     args.rval().setUndefined();
@@ -758,7 +755,7 @@ intrinsic_UnsafeGetReservedSlot(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
     MOZ_ASSERT(args[0].isObject());
-    MOZ_RELEASE_ASSERT(args[1].isInt32());
+    MOZ_ASSERT(args[1].isInt32());
 
     args.rval().set(args[0].toObject().as<NativeObject>().getReservedSlot(args[1].toPrivateUint32()));
     return true;
@@ -1015,9 +1012,6 @@ intrinsic_ArrayBufferCopyData(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 6);
-    MOZ_RELEASE_ASSERT(args[1].isInt32());
-    MOZ_RELEASE_ASSERT(args[3].isInt32());
-    MOZ_RELEASE_ASSERT(args[4].isInt32());
 
     bool isWrapped = args[5].toBoolean();
     Rooted<T*> toBuffer(cx);
@@ -1197,9 +1191,6 @@ intrinsic_MoveTypedArrayElements(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 4);
-    MOZ_RELEASE_ASSERT(args[1].isInt32());
-    MOZ_RELEASE_ASSERT(args[2].isInt32());
-    MOZ_RELEASE_ASSERT(args[3].isInt32());
 
     Rooted<TypedArrayObject*> tarray(cx, &args[0].toObject().as<TypedArrayObject>());
     uint32_t to = uint32_t(args[1].toInt32());
@@ -1295,7 +1286,6 @@ intrinsic_SetFromTypedArrayApproach(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 4);
-    MOZ_RELEASE_ASSERT(args[3].isInt32());
 
     Rooted<TypedArrayObject*> target(cx, &args[0].toObject().as<TypedArrayObject>());
     MOZ_ASSERT(!target->hasDetachedBuffer(),
@@ -1542,7 +1532,6 @@ intrinsic_SetDisjointTypedElements(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 3);
-    MOZ_RELEASE_ASSERT(args[1].isInt32());
 
     Rooted<TypedArrayObject*> target(cx, &args[0].toObject().as<TypedArrayObject>());
     MOZ_ASSERT(!target->hasDetachedBuffer(),
@@ -1570,7 +1559,6 @@ intrinsic_SetOverlappingTypedElements(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 3);
-    MOZ_RELEASE_ASSERT(args[1].isInt32());
 
     Rooted<TypedArrayObject*> target(cx, &args[0].toObject().as<TypedArrayObject>());
     cx->check(target);
@@ -1654,8 +1642,8 @@ intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 4);
     MOZ_ASSERT(args[0].isObject());
     MOZ_ASSERT(args[1].isObject());
-    MOZ_RELEASE_ASSERT(args[2].isInt32());
-    MOZ_RELEASE_ASSERT(args[3].isInt32());
+    MOZ_ASSERT(args[2].isInt32());
+    MOZ_ASSERT(args[3].isInt32());
 
     Rooted<TypedArrayObject*> source(cx, &args[0].toObject().as<TypedArrayObject>());
     MOZ_ASSERT(!source->hasDetachedBuffer());
@@ -2025,14 +2013,12 @@ intrinsic_AddContentTelemetry(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
-    MOZ_RELEASE_ASSERT(args[0].isInt32());
 
     int id = args[0].toInt32();
     MOZ_ASSERT(id < JS_TELEMETRY_END);
     MOZ_ASSERT(id >= 0);
 
     if (!cx->realm()->isProbablySystemCode()) {
-        MOZ_RELEASE_ASSERT(args[1].isInt32());
         cx->runtime()->addTelemetry(id, args[1].toInt32());
     }
 
@@ -2045,7 +2031,7 @@ intrinsic_WarnDeprecatedStringMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
-    MOZ_RELEASE_ASSERT(args[0].isInt32());
+    MOZ_ASSERT(args[0].isInt32());
     MOZ_ASSERT(args[1].isString());
 
     uint32_t id = uint32_t(args[0].toInt32());

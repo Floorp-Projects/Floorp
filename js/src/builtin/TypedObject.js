@@ -65,7 +65,7 @@ function TypedObjectGet(descr, typedObj, offset) {
 function TypedObjectGetDerived(descr, typedObj, offset) {
   assert(!TypeDescrIsSimpleType(descr),
          "getDerived() used with simple type");
-  return NewDerivedTypedObject(descr, typedObj, offset | 0);
+  return NewDerivedTypedObject(descr, typedObj, offset);
 }
 
 function TypedObjectGetDerivedIf(descr, typedObj, offset, cond) {
@@ -76,7 +76,7 @@ function TypedObjectGetOpaque(descr, typedObj, offset) {
   assert(!TypeDescrIsSimpleType(descr),
          "getDerived() used with simple type");
   var opaqueTypedObj = NewOpaqueTypedObject(descr);
-  AttachTypedObject(opaqueTypedObj, typedObj, offset | 0);
+  AttachTypedObject(opaqueTypedObj, typedObj, offset);
   return opaqueTypedObj;
 }
 
@@ -88,29 +88,29 @@ function TypedObjectGetScalar(descr, typedObj, offset) {
   var type = DESCR_TYPE(descr);
   switch (type) {
   case JS_SCALARTYPEREPR_INT8:
-    return Load_int8(typedObj, offset | 0);
+    return Load_int8(typedObj, offset);
 
   case JS_SCALARTYPEREPR_UINT8:
   case JS_SCALARTYPEREPR_UINT8_CLAMPED:
-    return Load_uint8(typedObj, offset | 0);
+    return Load_uint8(typedObj, offset);
 
   case JS_SCALARTYPEREPR_INT16:
-    return Load_int16(typedObj, offset | 0);
+    return Load_int16(typedObj, offset);
 
   case JS_SCALARTYPEREPR_UINT16:
-    return Load_uint16(typedObj, offset | 0);
+    return Load_uint16(typedObj, offset);
 
   case JS_SCALARTYPEREPR_INT32:
-    return Load_int32(typedObj, offset | 0);
+    return Load_int32(typedObj, offset);
 
   case JS_SCALARTYPEREPR_UINT32:
-    return Load_uint32(typedObj, offset | 0);
+    return Load_uint32(typedObj, offset);
 
   case JS_SCALARTYPEREPR_FLOAT32:
-    return Load_float32(typedObj, offset | 0);
+    return Load_float32(typedObj, offset);
 
   case JS_SCALARTYPEREPR_FLOAT64:
-    return Load_float64(typedObj, offset | 0);
+    return Load_float64(typedObj, offset);
   }
 
   assert(false, "Unhandled scalar type: " + type);
@@ -121,13 +121,13 @@ function TypedObjectGetReference(descr, typedObj, offset) {
   var type = DESCR_TYPE(descr);
   switch (type) {
   case JS_REFERENCETYPEREPR_ANY:
-    return Load_Any(typedObj, offset | 0);
+    return Load_Any(typedObj, offset);
 
   case JS_REFERENCETYPEREPR_OBJECT:
-    return Load_Object(typedObj, offset | 0);
+    return Load_Object(typedObj, offset);
 
   case JS_REFERENCETYPEREPR_STRING:
-    return Load_string(typedObj, offset | 0);
+    return Load_string(typedObj, offset);
   }
 
   assert(false, "Unhandled scalar type: " + type);
@@ -212,38 +212,38 @@ function TypedObjectSetScalar(descr, typedObj, offset, fromValue) {
   var type = DESCR_TYPE(descr);
   switch (type) {
   case JS_SCALARTYPEREPR_INT8:
-    return Store_int8(typedObj, offset | 0,
+    return Store_int8(typedObj, offset,
                       TO_INT32(fromValue) & 0xFF);
 
   case JS_SCALARTYPEREPR_UINT8:
-    return Store_uint8(typedObj, offset | 0,
+    return Store_uint8(typedObj, offset,
                        TO_UINT32(fromValue) & 0xFF);
 
   case JS_SCALARTYPEREPR_UINT8_CLAMPED:
     var v = ClampToUint8(+fromValue);
-    return Store_int8(typedObj, offset | 0, v);
+    return Store_int8(typedObj, offset, v);
 
   case JS_SCALARTYPEREPR_INT16:
-    return Store_int16(typedObj, offset | 0,
+    return Store_int16(typedObj, offset,
                        TO_INT32(fromValue) & 0xFFFF);
 
   case JS_SCALARTYPEREPR_UINT16:
-    return Store_uint16(typedObj, offset | 0,
+    return Store_uint16(typedObj, offset,
                         TO_UINT32(fromValue) & 0xFFFF);
 
   case JS_SCALARTYPEREPR_INT32:
-    return Store_int32(typedObj, offset | 0,
+    return Store_int32(typedObj, offset,
                        TO_INT32(fromValue));
 
   case JS_SCALARTYPEREPR_UINT32:
-    return Store_uint32(typedObj, offset | 0,
+    return Store_uint32(typedObj, offset,
                         TO_UINT32(fromValue));
 
   case JS_SCALARTYPEREPR_FLOAT32:
-    return Store_float32(typedObj, offset | 0, +fromValue);
+    return Store_float32(typedObj, offset, +fromValue);
 
   case JS_SCALARTYPEREPR_FLOAT64:
-    return Store_float64(typedObj, offset | 0, +fromValue);
+    return Store_float64(typedObj, offset, +fromValue);
   }
 
   assert(false, "Unhandled scalar type: " + type);
@@ -254,14 +254,14 @@ function TypedObjectSetReference(descr, typedObj, offset, name, fromValue) {
   var type = DESCR_TYPE(descr);
   switch (type) {
   case JS_REFERENCETYPEREPR_ANY:
-    return Store_Any(typedObj, offset | 0, name, fromValue);
+    return Store_Any(typedObj, offset, name, fromValue);
 
   case JS_REFERENCETYPEREPR_OBJECT:
     var value = (fromValue === null ? fromValue : ToObject(fromValue));
-    return Store_Object(typedObj, offset | 0, name, value);
+    return Store_Object(typedObj, offset, name, value);
 
   case JS_REFERENCETYPEREPR_STRING:
-    return Store_string(typedObj, offset | 0, name, ToString(fromValue));
+    return Store_string(typedObj, offset, name, ToString(fromValue));
   }
 
   assert(false, "Unhandled scalar type: " + type);
