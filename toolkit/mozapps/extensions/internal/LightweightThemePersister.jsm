@@ -46,14 +46,29 @@ var LightweightThemePersister = {
         let current = LightweightThemeManager.currentThemeWithFallback;
         if (current && current.id == aData.id) {
           _prefs.setBoolPref("persisted." + key, true);
+        } else {
+          themeStillCurrent = false;
         }
-        if (--numFilesToPersist == 0 && aCallback) {
-          aCallback();
+        if (--numFilesToPersist == 0) {
+          if (themeStillCurrent) {
+            _prefs.setStringPref("persistedThemeID", _versionCode(aData));
+          }
+          if (aCallback) {
+            aCallback();
+          }
         }
       };
     }
 
+    if (_prefs.getStringPref("persistedThemeID", "") == _versionCode(aData)) {
+      if (aCallback) {
+        aCallback();
+      }
+      return;
+    }
+
     let numFilesToPersist = 0;
+    let themeStillCurrent = true;
     for (let key in PERSIST_FILES) {
       _prefs.setBoolPref("persisted." + key, false);
       if (aData[key]) {
@@ -125,4 +140,8 @@ function _getLocalImageURI(localFileName) {
 
 function _version(aThemeData) {
   return aThemeData.version || "";
+}
+
+function _versionCode(aThemeData) {
+  return aThemeData.id + "-" + _version(aThemeData);
 }
