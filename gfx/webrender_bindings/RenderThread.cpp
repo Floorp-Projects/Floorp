@@ -394,7 +394,7 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId,
   // removed the relevant renderer. And after that happens we should never reach
   // this code at all; it would bail out at the mRenderers.find check above.
   MOZ_ASSERT(pipelineMgr);
-  pipelineMgr->NotifyPipelinesUpdated(info);
+  pipelineMgr->NotifyPipelinesUpdated(info, aRender);
 
   layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
     "NotifyDidRenderRunnable",

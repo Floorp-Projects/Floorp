@@ -56,7 +56,7 @@ public:
   // This is called from the Renderer thread to notify this class about the
   // pipelines in the most recently completed render. A copy of the update
   // information is put into mUpdatesQueue.
-  void NotifyPipelinesUpdated(wr::WrPipelineInfo aInfo);
+  void NotifyPipelinesUpdated(wr::WrPipelineInfo aInfo, bool aRender);
 
   // This is run on the compositor thread to process mUpdatesQueue. We make
   // this a public entry point because we need to invoke it from other places.
@@ -238,12 +238,33 @@ private:
 
   // The lock that protects mUpdatesQueue
   Mutex mUpdatesLock;
-  // Queue to store rendered pipeline epoch information. This is populated from
-  // the Renderer thread after a render, and is read from the compositor thread
-  // to free resources (e.g. textures) that are no longer needed. Each entry
-  // in the queue is a pair that holds the pipeline id and Some(x) for
-  // a render of epoch x, or Nothing() for a removed pipeline.
-  std::queue<std::pair<wr::PipelineId, Maybe<wr::Epoch>>> mUpdatesQueue;
+  // Used for checking if PipelineUpdates could be processed.
+  Atomic<uint64_t> mUpdatesCount;
+  struct PipelineUpdates {
+    PipelineUpdates(const uint64_t aUpdatesCount, const bool aRendered)
+      : mUpdatesCount(aUpdatesCount)
+      , mRendered(aRendered)
+    {}
+    bool NeedsToWait(const uint64_t aUpdatesCount) {
+      MOZ_ASSERT(mUpdatesCount <= aUpdatesCount);
+      // XXX Add support of delaying releasing TextureHosts for multiple rendering.
+      // See Bug 1500017.
+      if (mUpdatesCount == aUpdatesCount && !mRendered) {
+        // RenderTextureHosts related to this might be still used by GPU.
+        return true;
+      }
+      return false;
+    }
+    const uint64_t mUpdatesCount;
+    const bool mRendered;
+    // Queue to store rendered pipeline epoch information. This is populated from
+    // the Renderer thread after a render, and is read from the compositor thread
+    // to free resources (e.g. textures) that are no longer needed. Each entry
+    // in the queue is a pair that holds the pipeline id and Some(x) for
+    // a render of epoch x, or Nothing() for a removed pipeline.
+    std::queue<std::pair<wr::PipelineId, Maybe<wr::Epoch>>> mQueue;
+  };
+  std::queue<UniquePtr<PipelineUpdates>> mUpdatesQueues;
 };
 
 } // namespace layers
