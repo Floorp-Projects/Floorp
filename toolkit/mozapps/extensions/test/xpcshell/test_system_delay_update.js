@@ -4,31 +4,22 @@
 
 // This verifies that delaying a system add-on update works.
 
-ChromeUtils.import("resource://testing-common/httpd.js");
+PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
+
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
 const IGNORE_ID = "system_delay_ignore@tests.mozilla.org";
 const COMPLETE_ID = "system_delay_complete@tests.mozilla.org";
 const DEFER_ID = "system_delay_defer@tests.mozilla.org";
+const DEFER2_ID = "system_delay_defer2@tests.mozilla.org";
 const DEFER_ALSO_ID = "system_delay_defer_also@tests.mozilla.org";
 const NORMAL_ID = "system1@tests.mozilla.org";
-
-const TEST_IGNORE_PREF = "delaytest.ignore";
 
 const distroDir = FileUtils.getDir("ProfD", ["sysfeatures"], true);
 registerDirectory("XREAppFeat", distroDir);
 
-let testserver = new HttpServer();
-testserver.registerDirectory("/data/", do_get_file("data/system_addons"));
-testserver.start();
-let root = `${testserver.identity.primaryScheme}://${testserver.identity.primaryHost}:${testserver.identity.primaryPort}/data/`;
-Services.prefs.setCharPref(PREF_SYSTEM_ADDON_UPDATE_URL, root + "update.xml");
-
-
-// Note that we would normally use BootstrapMonitor but it currently requires
-// the objects in `data` to be serializable, and we need a real reference to the
-// `instanceID` symbol to test.
+AddonTestUtils.usePrivilegedSignatures = id => "system";
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
@@ -104,55 +95,91 @@ function promiseInstallDeferred(addonID1, addonID2) {
   });
 }
 
+// Tests below have webextension background scripts inline.
+/* globals browser */
 
 // add-on registers upgrade listener, and ignores update.
 add_task(async function() {
   // discard system addon updates
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, "");
 
-  do_get_file("data/system_addons/system_delay_ignore.xpi").copyTo(distroDir, "system_delay_ignore@tests.mozilla.org.xpi");
-  do_get_file("data/system_addons/system1_1.xpi").copyTo(distroDir, "system1@tests.mozilla.org.xpi");
+  let xpi = await getSystemAddonXPI(1, "1.0");
+  xpi.copyTo(distroDir, "system1@tests.mozilla.org.xpi");
+
+  // Version 1.0 of an extension that ignores updates.
+  function background() {
+    browser.runtime.onUpdateAvailable.addListener(() => {
+      browser.test.sendMessage("got-update");
+    });
+  }
+
+  xpi = await createTempWebExtensionFile({
+    background,
+
+    manifest: {
+      version: "1.0",
+      applications: {gecko: {id: IGNORE_ID}},
+    },
+  });
+  xpi.copyTo(distroDir, `${IGNORE_ID}.xpi`);
+
+  // Version 2.0 of the same extension.
+  let xpi2 = await createTempWebExtensionFile({
+    manifest: {
+      version: "2.0",
+      applications: {gecko: {id: IGNORE_ID}},
+    },
+  });
 
   await overrideBuiltIns({ "system": [IGNORE_ID, NORMAL_ID] });
 
-  await promiseStartupManager();
+  let extension = ExtensionTestUtils.expectExtension(IGNORE_ID);
+
+  await Promise.all([
+    promiseStartupManager(),
+    extension.awaitStartup(),
+  ]);
+
   let updateList = [
-    { id: IGNORE_ID, version: "2.0", path: "system_delay_ignore_2.xpi" },
-    { id: NORMAL_ID, version: "2.0", path: "system1_2.xpi" },
+    { id: IGNORE_ID, version: "2.0",
+      path: "system_delay_ignore_2.xpi", xpi: xpi2 },
+    { id: NORMAL_ID, version: "2.0", path: "system1_2.xpi",
+      xpi: await getSystemAddonXPI(1, "2.0") },
   ];
 
-  let postponed = promiseInstallPostponed(IGNORE_ID, NORMAL_ID);
-  await installSystemAddons(await buildSystemAddonUpdates(updateList, root), testserver);
-  await postponed;
+  await Promise.all([
+    promiseInstallPostponed(IGNORE_ID, NORMAL_ID),
+    installSystemAddons(buildSystemAddonUpdates(updateList)),
+    extension.awaitMessage("got-update"),
+  ]);
 
   // addon upgrade has been delayed.
   let addon_postponed = await promiseAddonByID(IGNORE_ID);
   Assert.notEqual(addon_postponed, null);
   Assert.equal(addon_postponed.version, "1.0");
-  Assert.equal(addon_postponed.name, "System Test Delay Update Ignore");
   Assert.ok(addon_postponed.isCompatible);
   Assert.ok(!addon_postponed.appDisabled);
   Assert.ok(addon_postponed.isActive);
   Assert.equal(addon_postponed.type, "extension");
-  Assert.ok(Services.prefs.getBoolPref(TEST_IGNORE_PREF));
 
   // other addons in the set are delayed as well.
   addon_postponed = await promiseAddonByID(NORMAL_ID);
   Assert.notEqual(addon_postponed, null);
   Assert.equal(addon_postponed.version, "1.0");
-  Assert.equal(addon_postponed.name, "System Add-on 1");
   Assert.ok(addon_postponed.isCompatible);
   Assert.ok(!addon_postponed.appDisabled);
   Assert.ok(addon_postponed.isActive);
   Assert.equal(addon_postponed.type, "extension");
 
   // restarting allows upgrades to proceed
-  await promiseRestartManager();
+  await Promise.all([
+    promiseRestartManager(),
+    extension.awaitStartup(),
+  ]);
 
   let addon_upgraded = await promiseAddonByID(IGNORE_ID);
   Assert.notEqual(addon_upgraded, null);
   Assert.equal(addon_upgraded.version, "2.0");
-  Assert.equal(addon_upgraded.name, "System Test Delay Update Ignore");
   Assert.ok(addon_upgraded.isCompatible);
   Assert.ok(!addon_upgraded.appDisabled);
   Assert.ok(addon_upgraded.isActive);
@@ -161,7 +188,6 @@ add_task(async function() {
   addon_upgraded = await promiseAddonByID(NORMAL_ID);
   Assert.notEqual(addon_upgraded, null);
   Assert.equal(addon_upgraded.version, "2.0");
-  Assert.equal(addon_upgraded.name, "System Add-on 1");
   Assert.ok(addon_upgraded.isCompatible);
   Assert.ok(!addon_upgraded.appDisabled);
   Assert.ok(addon_upgraded.isActive);
@@ -175,23 +201,57 @@ add_task(async function() {
   // discard system addon updates
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, "");
 
-  do_get_file("data/system_addons/system_delay_complete.xpi").copyTo(distroDir, "system_delay_complete@tests.mozilla.org.xpi");
-  do_get_file("data/system_addons/system1_1.xpi").copyTo(distroDir, "system1@tests.mozilla.org.xpi");
+  let xpi = await getSystemAddonXPI(1, "1.0");
+  xpi.copyTo(distroDir, "system1@tests.mozilla.org.xpi");
+
+  // Version 1.0 of an extension that listens for and immediately
+  // applies updates.
+  function background() {
+    browser.runtime.onUpdateAvailable.addListener(function listener() {
+      browser.runtime.onUpdateAvailable.removeListener(listener);
+      browser.test.sendMessage("got-update");
+      browser.runtime.reload();
+    });
+  }
+
+  xpi = await createTempWebExtensionFile({
+    background,
+
+    manifest: {
+      version: "1.0",
+      applications: {gecko: {id: COMPLETE_ID}},
+    },
+  });
+  xpi.copyTo(distroDir, `${COMPLETE_ID}.xpi`);
+
+  // Version 2.0 of the same extension.
+  let xpi2 = await createTempWebExtensionFile({
+    manifest: {
+      version: "2.0",
+      applications: {gecko: {id: COMPLETE_ID}},
+    },
+  });
 
   await overrideBuiltIns({ "system": [COMPLETE_ID, NORMAL_ID] });
 
-  await promiseStartupManager();
+  let extension = ExtensionTestUtils.expectExtension(COMPLETE_ID);
+
+  await Promise.all([
+    promiseStartupManager(),
+    extension.awaitStartup(),
+  ]);
 
   let updateList = [
-    { id: COMPLETE_ID, version: "2.0", path: "system_delay_complete_2.xpi" },
-    { id: NORMAL_ID, version: "2.0", path: "system1_2.xpi" },
+    { id: COMPLETE_ID, version: "2.0",
+      path: "system_delay_complete_2.xpi", xpi: xpi2 },
+    { id: NORMAL_ID, version: "2.0", path: "system1_2.xpi",
+      xpi: await getSystemAddonXPI(1, "2.0") },
   ];
 
   // initial state
   let addon_allowed = await promiseAddonByID(COMPLETE_ID);
   Assert.notEqual(addon_allowed, null);
   Assert.equal(addon_allowed.version, "1.0");
-  Assert.equal(addon_allowed.name, "System Test Delay Update Complete");
   Assert.ok(addon_allowed.isCompatible);
   Assert.ok(!addon_allowed.appDisabled);
   Assert.ok(addon_allowed.isActive);
@@ -200,23 +260,23 @@ add_task(async function() {
   addon_allowed = await promiseAddonByID(NORMAL_ID);
   Assert.notEqual(addon_allowed, null);
   Assert.equal(addon_allowed.version, "1.0");
-  Assert.equal(addon_allowed.name, "System Add-on 1");
   Assert.ok(addon_allowed.isCompatible);
   Assert.ok(!addon_allowed.appDisabled);
   Assert.ok(addon_allowed.isActive);
   Assert.equal(addon_allowed.type, "extension");
 
-  let resumed = promiseInstallResumed(COMPLETE_ID, NORMAL_ID);
-  await installSystemAddons(await buildSystemAddonUpdates(updateList, root), testserver);
-
-  // update is initially postponed, then resumed
-  await resumed;
+  // We should see that the onUpdateListener executed, then see the
+  // update resume.
+  await Promise.all([
+    extension.awaitMessage("got-update"),
+    promiseInstallResumed(COMPLETE_ID, NORMAL_ID),
+    installSystemAddons(buildSystemAddonUpdates(updateList)),
+  ]);
 
   // addon upgrade has been allowed
   addon_allowed = await promiseAddonByID(COMPLETE_ID);
   Assert.notEqual(addon_allowed, null);
   Assert.equal(addon_allowed.version, "2.0");
-  Assert.equal(addon_allowed.name, "System Test Delay Update Complete");
   Assert.ok(addon_allowed.isCompatible);
   Assert.ok(!addon_allowed.appDisabled);
   Assert.ok(addon_allowed.isActive);
@@ -226,19 +286,20 @@ add_task(async function() {
   addon_allowed = await promiseAddonByID(NORMAL_ID);
   Assert.notEqual(addon_allowed, null);
   Assert.equal(addon_allowed.version, "2.0");
-  Assert.equal(addon_allowed.name, "System Add-on 1");
   Assert.ok(addon_allowed.isCompatible);
   Assert.ok(!addon_allowed.appDisabled);
   Assert.ok(addon_allowed.isActive);
   Assert.equal(addon_allowed.type, "extension");
 
   // restarting changes nothing
-  await promiseRestartManager();
+  await Promise.all([
+    promiseRestartManager(),
+    extension.awaitStartup(),
+  ]);
 
   let addon_upgraded = await promiseAddonByID(COMPLETE_ID);
   Assert.notEqual(addon_upgraded, null);
   Assert.equal(addon_upgraded.version, "2.0");
-  Assert.equal(addon_upgraded.name, "System Test Delay Update Complete");
   Assert.ok(addon_upgraded.isCompatible);
   Assert.ok(!addon_upgraded.appDisabled);
   Assert.ok(addon_upgraded.isActive);
@@ -247,7 +308,6 @@ add_task(async function() {
   addon_upgraded = await promiseAddonByID(NORMAL_ID);
   Assert.notEqual(addon_upgraded, null);
   Assert.equal(addon_upgraded.version, "2.0");
-  Assert.equal(addon_upgraded.name, "System Add-on 1");
   Assert.ok(addon_upgraded.isCompatible);
   Assert.ok(!addon_upgraded.appDisabled);
   Assert.ok(addon_upgraded.isActive);
@@ -256,32 +316,69 @@ add_task(async function() {
   await promiseShutdownManager();
 });
 
-// add-on registers upgrade listener, initially defers update then allows upgrade
+function delayBackground() {
+  browser.test.onMessage.addListener(msg => {
+    browser.runtime.reload();
+    browser.test.sendMessage("reloaded");
+  });
+  browser.runtime.onUpdateAvailable.addListener(async function listener() {
+    browser.runtime.onUpdateAvailable.removeListener(listener);
+    browser.test.sendMessage("got-update");
+  });
+}
+
+// Upgrade listener initially defers then proceeds after a pause.
 add_task(async function() {
   // discard system addon updates
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, "");
 
-  do_get_file("data/system_addons/system_delay_defer.xpi").copyTo(distroDir, "system_delay_defer@tests.mozilla.org.xpi");
-  do_get_file("data/system_addons/system1_1.xpi").copyTo(distroDir, "system1@tests.mozilla.org.xpi");
+  let xpi = await getSystemAddonXPI(1, "1.0");
+  xpi.copyTo(distroDir, "system1@tests.mozilla.org.xpi");
+
+  // Version 1.0 of an extension that delays upgrades.
+  xpi = await createTempWebExtensionFile({
+    background: delayBackground,
+    manifest: {
+      version: "1.0",
+      applications: {gecko: {id: DEFER_ID}},
+    },
+  });
+  xpi.copyTo(distroDir, `${DEFER_ID}.xpi`);
+
+  // Version 2.0 of the same xtension.
+  let xpi2 = await createTempWebExtensionFile({
+    manifest: {
+      version: "2.0",
+      applications: {gecko: {id: DEFER_ID}},
+    },
+  });
 
   await overrideBuiltIns({ "system": [DEFER_ID, NORMAL_ID] });
 
-  await promiseStartupManager();
+  let extension = ExtensionTestUtils.expectExtension(DEFER_ID);
+
+  await Promise.all([
+    promiseStartupManager(),
+    extension.awaitStartup(),
+  ]);
 
   let updateList = [
-    { id: DEFER_ID, version: "2.0", path: "system_delay_defer_2.xpi" },
-    { id: NORMAL_ID, version: "2.0", path: "system1_2.xpi" },
+    { id: DEFER_ID, version: "2.0",
+      path: "system_delay_defer_2.xpi", xpi: xpi2 },
+    { id: NORMAL_ID, version: "2.0", path: "system1_2.xpi",
+      xpi: await getSystemAddonXPI(1, "2.0") },
   ];
 
-  let postponed = promiseInstallPostponed(DEFER_ID, NORMAL_ID);
-  await installSystemAddons(await buildSystemAddonUpdates(updateList, root), testserver);
-  await postponed;
+  await Promise.all([
+    promiseInstallPostponed(DEFER_ID, NORMAL_ID),
+    installSystemAddons(buildSystemAddonUpdates(updateList)),
+    extension.awaitMessage("got-update"),
+  ]);
 
   // upgrade is initially postponed
   let addon_postponed = await promiseAddonByID(DEFER_ID);
   Assert.notEqual(addon_postponed, null);
   Assert.equal(addon_postponed.version, "1.0");
-  Assert.equal(addon_postponed.name, "System Test Delay Update Defer");
   Assert.ok(addon_postponed.isCompatible);
   Assert.ok(!addon_postponed.appDisabled);
   Assert.ok(addon_postponed.isActive);
@@ -291,23 +388,22 @@ add_task(async function() {
   addon_postponed = await promiseAddonByID(NORMAL_ID);
   Assert.notEqual(addon_postponed, null);
   Assert.equal(addon_postponed.version, "1.0");
-  Assert.equal(addon_postponed.name, "System Add-on 1");
   Assert.ok(addon_postponed.isCompatible);
   Assert.ok(!addon_postponed.appDisabled);
   Assert.ok(addon_postponed.isActive);
   Assert.equal(addon_postponed.type, "extension");
 
   let deferred = promiseInstallDeferred(DEFER_ID, NORMAL_ID);
-  // add-on will not allow upgrade until fake event fires
-  AddonManagerPrivate.callAddonListeners("onFakeEvent");
 
-  await deferred;
+  // Tell the extension to proceed with the update.
+  extension.sendMessage("go");
+
+  await Promise.all([deferred, extension.awaitMessage("reloaded")]);
 
   // addon upgrade has been allowed
   let addon_allowed = await promiseAddonByID(DEFER_ID);
   Assert.notEqual(addon_allowed, null);
   Assert.equal(addon_allowed.version, "2.0");
-  Assert.equal(addon_allowed.name, "System Test Delay Update Defer");
   Assert.ok(addon_allowed.isCompatible);
   Assert.ok(!addon_allowed.appDisabled);
   Assert.ok(addon_allowed.isActive);
@@ -317,7 +413,6 @@ add_task(async function() {
   addon_allowed = await promiseAddonByID(NORMAL_ID);
   Assert.notEqual(addon_allowed, null);
   Assert.equal(addon_allowed.version, "2.0");
-  Assert.equal(addon_allowed.name, "System Add-on 1");
   Assert.ok(addon_allowed.isCompatible);
   Assert.ok(!addon_allowed.appDisabled);
   Assert.ok(addon_allowed.isActive);
@@ -329,7 +424,6 @@ add_task(async function() {
   let addon_upgraded = await promiseAddonByID(DEFER_ID);
   Assert.notEqual(addon_upgraded, null);
   Assert.equal(addon_upgraded.version, "2.0");
-  Assert.equal(addon_upgraded.name, "System Test Delay Update Defer");
   Assert.ok(addon_upgraded.isCompatible);
   Assert.ok(!addon_upgraded.appDisabled);
   Assert.ok(addon_upgraded.isActive);
@@ -338,7 +432,6 @@ add_task(async function() {
   addon_upgraded = await promiseAddonByID(NORMAL_ID);
   Assert.notEqual(addon_upgraded, null);
   Assert.equal(addon_upgraded.version, "2.0");
-  Assert.equal(addon_upgraded.name, "System Add-on 1");
   Assert.ok(addon_upgraded.isCompatible);
   Assert.ok(!addon_upgraded.appDisabled);
   Assert.ok(addon_upgraded.isActive);
@@ -347,32 +440,74 @@ add_task(async function() {
   await promiseShutdownManager();
 });
 
-// multiple add-ons registers upgrade listeners, initially defers then each unblock in turn.
+// Multiple add-ons register update listeners, initially defers then
+// each unblock in turn.
 add_task(async function() {
   // discard system addon updates.
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, "");
 
-  do_get_file("data/system_addons/system_delay_defer.xpi").copyTo(distroDir, "system_delay_defer@tests.mozilla.org.xpi");
-  do_get_file("data/system_addons/system_delay_defer_also.xpi").copyTo(distroDir, "system_delay_defer_also@tests.mozilla.org.xpi");
+  let updateList = [];
 
-  await overrideBuiltIns({ "system": [DEFER_ID, DEFER_ALSO_ID] });
+  let xpi = await createTempWebExtensionFile({
+    background: delayBackground,
+    manifest: {
+      version: "1.0",
+      applications: {gecko: {id: DEFER2_ID}},
+    },
+  });
+  xpi.copyTo(distroDir, `${DEFER2_ID}.xpi`);
 
-  await promiseStartupManager();
+  xpi = await createTempWebExtensionFile({
+    manifest: {
+      version: "2.0",
+      applications: {gecko: {id: DEFER2_ID}},
+    },
+  });
+  updateList.push({
+    id: DEFER2_ID, version: "2.0", path: "system_delay_defer_2.xpi", xpi,
+  });
 
-  let updateList = [
-    { id: DEFER_ID, version: "2.0", path: "system_delay_defer_2.xpi" },
-    { id: DEFER_ALSO_ID, version: "2.0", path: "system_delay_defer_also_2.xpi" },
-  ];
+  xpi = await createTempWebExtensionFile({
+    background: delayBackground,
+    manifest: {
+      version: "1.0",
+      applications: {gecko: {id: DEFER_ALSO_ID}},
+    },
+  });
+  xpi.copyTo(distroDir, `${DEFER_ALSO_ID}.xpi`);
 
-  let postponed = promiseInstallPostponed(DEFER_ID, DEFER_ALSO_ID);
-  await installSystemAddons(await buildSystemAddonUpdates(updateList, root), testserver);
-  await postponed;
+  xpi = await createTempWebExtensionFile({
+    manifest: {
+      version: "2.0",
+      applications: {gecko: {id: DEFER_ALSO_ID}},
+    },
+  });
+  updateList.push({
+    id: DEFER_ALSO_ID, version: "2.0", path: "system_delay_defer_also_2.xpi", xpi,
+  });
+
+  await overrideBuiltIns({ "system": [DEFER2_ID, DEFER_ALSO_ID] });
+
+  let extension1 = ExtensionTestUtils.expectExtension(DEFER2_ID);
+  let extension2 = ExtensionTestUtils.expectExtension(DEFER_ALSO_ID);
+
+  await Promise.all([
+    promiseStartupManager(),
+    extension1.awaitStartup(),
+    extension2.awaitStartup(),
+  ]);
+
+  await Promise.all([
+    promiseInstallPostponed(DEFER2_ID, DEFER_ALSO_ID),
+    installSystemAddons(buildSystemAddonUpdates(updateList)),
+    extension1.awaitMessage("got-update"),
+    extension2.awaitMessage("got-update"),
+  ]);
 
   // upgrade is initially postponed
-  let addon_postponed = await promiseAddonByID(DEFER_ID);
+  let addon_postponed = await promiseAddonByID(DEFER2_ID);
   Assert.notEqual(addon_postponed, null);
   Assert.equal(addon_postponed.version, "1.0");
-  Assert.equal(addon_postponed.name, "System Test Delay Update Defer");
   Assert.ok(addon_postponed.isCompatible);
   Assert.ok(!addon_postponed.appDisabled);
   Assert.ok(addon_postponed.isActive);
@@ -382,21 +517,21 @@ add_task(async function() {
   addon_postponed = await promiseAddonByID(DEFER_ALSO_ID);
   Assert.notEqual(addon_postponed, null);
   Assert.equal(addon_postponed.version, "1.0");
-  Assert.equal(addon_postponed.name, "System Test Delay Update Defer Also");
   Assert.ok(addon_postponed.isCompatible);
   Assert.ok(!addon_postponed.appDisabled);
   Assert.ok(addon_postponed.isActive);
   Assert.equal(addon_postponed.type, "extension");
 
-  let deferred = promiseInstallDeferred(DEFER_ID, DEFER_ALSO_ID);
-  // add-on will not allow upgrade until fake event fires
-  AddonManagerPrivate.callAddonListeners("onFakeEvent");
+  let deferred = promiseInstallDeferred(DEFER2_ID, DEFER_ALSO_ID);
+
+  // Let one extension request that the update proceed.
+  extension1.sendMessage("go");
+  await extension1.awaitMessage("reloaded");
 
   // Upgrade blockers still present.
-  addon_postponed = await promiseAddonByID(DEFER_ID);
+  addon_postponed = await promiseAddonByID(DEFER2_ID);
   Assert.notEqual(addon_postponed, null);
   Assert.equal(addon_postponed.version, "1.0");
-  Assert.equal(addon_postponed.name, "System Test Delay Update Defer");
   Assert.ok(addon_postponed.isCompatible);
   Assert.ok(!addon_postponed.appDisabled);
   Assert.ok(addon_postponed.isActive);
@@ -405,21 +540,25 @@ add_task(async function() {
   addon_postponed = await promiseAddonByID(DEFER_ALSO_ID);
   Assert.notEqual(addon_postponed, null);
   Assert.equal(addon_postponed.version, "1.0");
-  Assert.equal(addon_postponed.name, "System Test Delay Update Defer Also");
   Assert.ok(addon_postponed.isCompatible);
   Assert.ok(!addon_postponed.appDisabled);
   Assert.ok(addon_postponed.isActive);
   Assert.equal(addon_postponed.type, "extension");
 
-  AddonManagerPrivate.callAddonListeners("onOtherFakeEvent");
+  // Let the second extension allow the update to proceed.
+  extension2.sendMessage("go");
 
-  await deferred;
+  await Promise.all([
+    extension2.awaitMessage("reloaded"),
+    deferred,
+    extension1.awaitStartup(),
+    extension2.awaitStartup(),
+  ]);
 
   // addon upgrade has been allowed
-  let addon_allowed = await promiseAddonByID(DEFER_ID);
+  let addon_allowed = await promiseAddonByID(DEFER2_ID);
   Assert.notEqual(addon_allowed, null);
   Assert.equal(addon_allowed.version, "2.0");
-  Assert.equal(addon_allowed.name, "System Test Delay Update Defer");
   Assert.ok(addon_allowed.isCompatible);
   Assert.ok(!addon_allowed.appDisabled);
   Assert.ok(addon_allowed.isActive);
@@ -429,19 +568,21 @@ add_task(async function() {
   addon_allowed = await promiseAddonByID(DEFER_ALSO_ID);
   Assert.notEqual(addon_allowed, null);
   // do_check_eq(addon_allowed.version, "2.0");
-  Assert.equal(addon_allowed.name, "System Test Delay Update Defer Also");
   Assert.ok(addon_allowed.isCompatible);
   Assert.ok(!addon_allowed.appDisabled);
   Assert.ok(addon_allowed.isActive);
   Assert.equal(addon_allowed.type, "extension");
 
   // restarting changes nothing
-  await promiseRestartManager();
+  await Promise.all([
+    promiseRestartManager(),
+    extension1.awaitStartup(),
+    extension2.awaitStartup(),
+  ]);
 
-  let addon_upgraded = await promiseAddonByID(DEFER_ID);
+  let addon_upgraded = await promiseAddonByID(DEFER2_ID);
   Assert.notEqual(addon_upgraded, null);
   Assert.equal(addon_upgraded.version, "2.0");
-  Assert.equal(addon_upgraded.name, "System Test Delay Update Defer");
   Assert.ok(addon_upgraded.isCompatible);
   Assert.ok(!addon_upgraded.appDisabled);
   Assert.ok(addon_upgraded.isActive);
@@ -450,7 +591,6 @@ add_task(async function() {
   addon_upgraded = await promiseAddonByID(DEFER_ALSO_ID);
   Assert.notEqual(addon_upgraded, null);
   Assert.equal(addon_upgraded.version, "2.0");
-  Assert.equal(addon_upgraded.name, "System Test Delay Update Defer Also");
   Assert.ok(addon_upgraded.isCompatible);
   Assert.ok(!addon_upgraded.appDisabled);
   Assert.ok(addon_upgraded.isActive);

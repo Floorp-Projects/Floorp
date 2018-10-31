@@ -1,22 +1,10 @@
 // Tests that system add-on upgrades fail to upgrade in expected cases.
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-
-BootstrapMonitor.init();
-
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2");
-
-var testserver = new HttpServer();
-testserver.registerDirectory("/data/", do_get_file("data/system_addons"));
-testserver.start();
-var root = testserver.identity.primaryScheme + "://" +
-           testserver.identity.primaryHost + ":" +
-           testserver.identity.primaryPort + "/data/";
-Services.prefs.setCharPref(PREF_SYSTEM_ADDON_UPDATE_URL, root + "update.xml");
 
 let distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "empty"], true);
 registerDirectory("XREAppFeat", distroDir);
-initSystemAddonDirs();
+add_task(() => initSystemAddonDirs());
 
 /**
  * Defines the set of initial conditions to run each test against. Each should
@@ -57,8 +45,8 @@ const TEST_CONDITIONS = {
 
   // Runs tests with updated system add-ons installed
   withProfileSet: {
-    setup() {
-      buildPrefilledUpdatesDir();
+    async setup() {
+      await buildPrefilledUpdatesDir();
       distroDir.leafName = "empty";
     },
     initialState: [
@@ -72,8 +60,8 @@ const TEST_CONDITIONS = {
 
   // Runs tests with both default and updated system add-ons installed
   withBothSets: {
-    setup() {
-      buildPrefilledUpdatesDir();
+    async setup() {
+      await buildPrefilledUpdatesDir();
       distroDir.leafName = "hidden";
     },
     initialState: [
@@ -131,33 +119,6 @@ const TESTS = {
     fails: true,
     updateList: [
       { id: "system1@tests.mozilla.org", version: "1.0", path: "system1_1_badcert.xpi" },
-      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" },
-    ],
-  },
-
-  // An unpacked add-on should stop updates.
-  notPacked: {
-    fails: true,
-    updateList: [
-      { id: "system6@tests.mozilla.org", version: "1.0", path: "system6_1_unpack.xpi" },
-      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" },
-    ],
-  },
-
-  // A non-bootstrap add-on should stop updates.
-  notBootstrap: {
-    fails: true,
-    updateList: [
-      { id: "system6@tests.mozilla.org", version: "1.0", path: "system6_2_notBootstrap.xpi" },
-      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" },
-    ],
-  },
-
-  // A non-multiprocess add-on should stop updates.
-  notMultiprocess: {
-    fails: true,
-    updateList: [
-      { id: "system6@tests.mozilla.org", version: "1.0", path: "system6_3_notMultiprocess.xpi" },
       { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" },
     ],
   },
