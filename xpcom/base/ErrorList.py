@@ -180,8 +180,6 @@ with modules["XPCOM"]:
     # Used by nsCycleCollectionParticipant
     errors["NS_SUCCESS_INTERRUPTED_TRAVERSE"] = SUCCESS(2)
     # DEPRECATED
-    errors["NS_ERROR_SERVICE_NOT_FOUND"] = SUCCESS(22)
-    # DEPRECATED
     errors["NS_ERROR_SERVICE_IN_USE"] = SUCCESS(23)
 
 # =======================================================================

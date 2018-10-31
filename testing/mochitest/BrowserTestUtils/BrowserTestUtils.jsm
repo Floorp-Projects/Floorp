@@ -599,12 +599,8 @@ var BrowserTestUtils = {
         if (url) {
           let browser = win.gBrowser.selectedBrowser;
 
-          // Retrieve the given browser's current process type.
-          let process =
-              browser.isRemoteBrowser ? Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
-              : Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
           if (win.gMultiProcessBrowser &&
-              !E10SUtils.canLoadURIInProcess(url, process)) {
+              !E10SUtils.canLoadURIInRemoteType(url, browser.remoteType)) {
             await this.waitForEvent(browser, "XULFrameLoaderCreated");
           }
 
@@ -647,14 +643,10 @@ var BrowserTestUtils = {
       return;
     }
 
-    // Retrieve the given browser's current process type.
-    let process = browser.isRemoteBrowser ? Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
-                                          : Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-
     // If the new URI can't load in the browser's current process then we
     // should wait for the new frameLoader to be created. This will happen
     // asynchronously when the browser's remoteness changes.
-    if (!E10SUtils.canLoadURIInProcess(uri, process)) {
+    if (!E10SUtils.canLoadURIInRemoteType(uri, browser.remoteType)) {
       await this.waitForEvent(browser, "XULFrameLoaderCreated");
     }
   },
