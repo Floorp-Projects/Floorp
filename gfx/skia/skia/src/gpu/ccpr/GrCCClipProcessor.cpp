@@ -7,26 +7,28 @@
 
 #include "GrCCClipProcessor.h"
 
+#include "GrCCClipPath.h"
 #include "GrTexture.h"
 #include "GrTextureProxy.h"
 #include "SkMakeUnique.h"
 #include "glsl/GrGLSLFragmentProcessor.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
 
-GrCCClipProcessor::GrCCClipProcessor(const ClipPath* clipPath, MustCheckBounds mustCheckBounds,
-                                         SkPath::FillType overrideFillType)
+GrCCClipProcessor::GrCCClipProcessor(const GrCCClipPath* clipPath, MustCheckBounds mustCheckBounds,
+                                     SkPath::FillType overrideFillType)
         : INHERITED(kGrCCClipProcessor_ClassID, kCompatibleWithCoverageAsAlpha_OptimizationFlag)
         , fClipPath(clipPath)
         , fMustCheckBounds((bool)mustCheckBounds)
         , fOverrideFillType(overrideFillType)
         , fAtlasAccess(sk_ref_sp(fClipPath->atlasLazyProxy()), GrSamplerState::Filter::kNearest,
-                       GrSamplerState::WrapMode::kClamp, kFragment_GrShaderFlag) {
-    this->addTextureSampler(&fAtlasAccess);
+                       GrSamplerState::WrapMode::kClamp) {
+    SkASSERT(fAtlasAccess.proxy());
+    this->setTextureSamplerCnt(1);
 }
 
 std::unique_ptr<GrFragmentProcessor> GrCCClipProcessor::clone() const {
     return skstd::make_unique<GrCCClipProcessor>(fClipPath, MustCheckBounds(fMustCheckBounds),
-                                                   fOverrideFillType);
+                                                 fOverrideFillType);
 }
 
 void GrCCClipProcessor::onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const {

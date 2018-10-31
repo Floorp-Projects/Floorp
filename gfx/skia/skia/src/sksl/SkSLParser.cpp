@@ -46,6 +46,10 @@
 #include "ir/SkSLModifiers.h"
 #include "ir/SkSLType.h"
 
+#ifndef SKSL_STANDALONE
+#include "SkOnce.h"
+#endif
+
 namespace SkSL {
 
 #define MAX_PARSE_DEPTH 50
@@ -73,12 +77,66 @@ private:
     Parser* fParser;
 };
 
+std::unordered_map<String, Parser::LayoutToken>* Parser::layoutTokens;
+
+void Parser::InitLayoutMap() {
+    layoutTokens = new std::unordered_map<String, LayoutToken>;
+    #define TOKEN(name, text) (*layoutTokens)[text] = LayoutToken::name;
+    TOKEN(LOCATION,                     "location");
+    TOKEN(OFFSET,                       "offset");
+    TOKEN(BINDING,                      "binding");
+    TOKEN(INDEX,                        "index");
+    TOKEN(SET,                          "set");
+    TOKEN(BUILTIN,                      "builtin");
+    TOKEN(INPUT_ATTACHMENT_INDEX,       "input_attachment_index");
+    TOKEN(ORIGIN_UPPER_LEFT,            "origin_upper_left");
+    TOKEN(OVERRIDE_COVERAGE,            "override_coverage");
+    TOKEN(BLEND_SUPPORT_ALL_EQUATIONS,  "blend_support_all_equations");
+    TOKEN(BLEND_SUPPORT_MULTIPLY,       "blend_support_multiply");
+    TOKEN(BLEND_SUPPORT_SCREEN,         "blend_support_screen");
+    TOKEN(BLEND_SUPPORT_OVERLAY,        "blend_support_overlay");
+    TOKEN(BLEND_SUPPORT_DARKEN,         "blend_support_darken");
+    TOKEN(BLEND_SUPPORT_LIGHTEN,        "blend_support_lighten");
+    TOKEN(BLEND_SUPPORT_COLORDODGE,     "blend_support_colordodge");
+    TOKEN(BLEND_SUPPORT_COLORBURN,      "blend_support_colorburn");
+    TOKEN(BLEND_SUPPORT_HARDLIGHT,      "blend_support_hardlight");
+    TOKEN(BLEND_SUPPORT_SOFTLIGHT,      "blend_support_softlight");
+    TOKEN(BLEND_SUPPORT_DIFFERENCE,     "blend_support_difference");
+    TOKEN(BLEND_SUPPORT_EXCLUSION,      "blend_support_exclusion");
+    TOKEN(BLEND_SUPPORT_HSL_HUE,        "blend_support_hsl_hue");
+    TOKEN(BLEND_SUPPORT_HSL_SATURATION, "blend_support_hsl_saturation");
+    TOKEN(BLEND_SUPPORT_HSL_COLOR,      "blend_support_hsl_color");
+    TOKEN(BLEND_SUPPORT_HSL_LUMINOSITY, "blend_support_hsl_luminosity");
+    TOKEN(PUSH_CONSTANT,                "push_constant");
+    TOKEN(POINTS,                       "points");
+    TOKEN(LINES,                        "lines");
+    TOKEN(LINE_STRIP,                   "line_strip");
+    TOKEN(LINES_ADJACENCY,              "lines_adjacency");
+    TOKEN(TRIANGLES,                    "triangles");
+    TOKEN(TRIANGLE_STRIP,               "triangle_strip");
+    TOKEN(TRIANGLES_ADJACENCY,          "triangles_adjacency");
+    TOKEN(MAX_VERTICES,                 "max_vertices");
+    TOKEN(INVOCATIONS,                  "invocations");
+    TOKEN(WHEN,                         "when");
+    TOKEN(KEY,                          "key");
+    TOKEN(TRACKED,                      "tracked");
+    TOKEN(CTYPE,                        "ctype");
+    TOKEN(GRCOLOR4F,                    "GrColor4f");
+    TOKEN(SKPMCOLOR4F,                  "SkPMColor4f");
+    TOKEN(SKRECT,                       "SkRect");
+    TOKEN(SKIRECT,                      "SkIRect");
+    TOKEN(SKPMCOLOR,                    "SkPMColor");
+    #undef TOKEN
+}
+
 Parser::Parser(const char* text, size_t length, SymbolTable& types, ErrorReporter& errors)
 : fText(text)
 , fPushback(Token::INVALID, -1, -1)
 , fTypes(types)
 , fErrors(errors) {
     fLexer.start(text, length);
+    static const bool layoutMapInitialized = []{ return (void)InitLayoutMap(), true; }();
+    (void) layoutMapInitialized;
 }
 
 /* (directive | section | declaration)* END_OF_FILE */
@@ -133,7 +191,7 @@ Token Parser::nextToken() {
 }
 
 void Parser::pushback(Token t) {
-    ASSERT(fPushback.fKind == Token::INVALID);
+    SkASSERT(fPushback.fKind == Token::INVALID);
     fPushback = std::move(t);
 }
 
@@ -664,6 +722,32 @@ Layout::Key Parser::layoutKey() {
     return Layout::kKey_Key;
 }
 
+Layout::CType Parser::layoutCType() {
+    if (this->expect(Token::EQ, "'='")) {
+        Token t = this->nextToken();
+        String text = this->text(t);
+        auto found = layoutTokens->find(text);
+        if (found != layoutTokens->end()) {
+            switch (found->second) {
+                case LayoutToken::GRCOLOR4F:
+                    return Layout::CType::kGrColor4f;
+                case LayoutToken::SKPMCOLOR4F:
+                    return Layout::CType::kSkPMColor4f;
+                case LayoutToken::SKRECT:
+                    return Layout::CType::kSkRect;
+                case LayoutToken::SKIRECT:
+                    return Layout::CType::kSkIRect;
+                case LayoutToken::SKPMCOLOR:
+                    return Layout::CType::kSkPMColor;
+                default:
+                    break;
+            }
+        }
+        this->error(t, "unsupported ctype");
+    }
+    return Layout::CType::kDefault;
+}
+
 /* LAYOUT LPAREN IDENTIFIER (EQ INT_LITERAL)? (COMMA IDENTIFIER (EQ INT_LITERAL)?)* RPAREN */
 Layout Parser::layout() {
     int flags = 0;
@@ -679,8 +763,8 @@ Layout Parser::layout() {
     int maxVertices = -1;
     int invocations = -1;
     String when;
-    StringFragment ctype;
     Layout::Key key = Layout::kNo_Key;
+    Layout::CType ctype = Layout::CType::kDefault;
     if (this->checkNext(Token::LAYOUT)) {
         if (!this->expect(Token::LPAREN, "'('")) {
             return Layout(flags, location, offset, binding, index, set, builtin,
@@ -690,10 +774,9 @@ Layout Parser::layout() {
         for (;;) {
             Token t = this->nextToken();
             String text = this->text(t);
-            fLayoutLexer.start(text.c_str(), text.size());
-            int token = fLayoutLexer.next().fKind;
-            if (token != LayoutToken::INVALID) {
-                switch (token) {
+            auto found = layoutTokens->find(text);
+            if (found != layoutTokens->end()) {
+                switch (found->second) {
                     case LayoutToken::LOCATION:
                         location = this->layoutInt();
                         break;
@@ -772,6 +855,9 @@ Layout Parser::layout() {
                     case LayoutToken::PUSH_CONSTANT:
                         flags |= Layout::kPushConstant_Flag;
                         break;
+                    case LayoutToken::TRACKED:
+                        flags |= Layout::kTracked_Flag;
+                        break;
                     case LayoutToken::POINTS:
                         primitive = Layout::kPoints_Primitive;
                         break;
@@ -806,13 +892,16 @@ Layout Parser::layout() {
                         key = this->layoutKey();
                         break;
                     case LayoutToken::CTYPE:
-                        ctype = this->layoutIdentifier();
+                        ctype = this->layoutCType();
+                        break;
+                    default:
+                        this->error(t, ("'" + text + "' is not a valid layout qualifier").c_str());
                         break;
                 }
-            } else if (Layout::ReadFormat(this->text(t), &format)) {
+            } else if (Layout::ReadFormat(text, &format)) {
                // AST::ReadFormat stored the result in 'format'.
             } else {
-                this->error(t, ("'" + this->text(t) + "' is not a valid layout qualifier").c_str());
+                this->error(t, ("'" + text + "' is not a valid layout qualifier").c_str());
             }
             if (this->checkNext(Token::RPAREN)) {
                 break;
@@ -1198,7 +1287,7 @@ std::unique_ptr<ASTStatement> Parser::switchStatement() {
     // parts of the compiler may rely upon this assumption.
     if (this->peek().fKind == Token::DEFAULT) {
         Token defaultStart;
-        ASSERT_RESULT(this->expect(Token::DEFAULT, "'default'", &defaultStart));
+        SkAssertResult(this->expect(Token::DEFAULT, "'default'", &defaultStart));
         if (!this->expect(Token::COLON, "':'")) {
             return nullptr;
         }
@@ -1449,6 +1538,7 @@ std::unique_ptr<ASTExpression> Parser::assignmentExpression() {
                 result = std::unique_ptr<ASTExpression>(new ASTBinaryExpression(std::move(result),
                                                                                 std::move(t),
                                                                                 std::move(right)));
+                return result;
             }
             default:
                 return result;

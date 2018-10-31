@@ -10,6 +10,15 @@
 
 #include "SkImageFilter.h"
 
+struct ArithmeticFPInputs {
+    ArithmeticFPInputs() {
+        memset(this, 0, sizeof(*this));
+    }
+
+    float k[4];
+    bool enforcePMColor;
+};
+
 class SK_API SkArithmeticImageFilter {
 public:
     static sk_sp<SkImageFilter> Make(float k1, float k2, float k3, float k4, bool enforcePMColor,
@@ -17,7 +26,7 @@ public:
                                      sk_sp<SkImageFilter> foreground,
                                      const SkImageFilter::CropRect* cropRect);
 
-    SK_DECLARE_FLATTENABLE_REGISTRAR_GROUP();
+    static void InitializeFlattenables();
 
 private:
     SkArithmeticImageFilter();  // can't instantiate

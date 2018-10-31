@@ -71,21 +71,6 @@ std::unique_ptr<GrFragmentProcessor> SkColorFilterShader::asFragmentProcessor(
 }
 #endif
 
-#ifndef SK_IGNORE_TO_STRING
-void SkColorFilterShader::toString(SkString* str) const {
-    str->append("SkColorFilterShader: (");
-
-    str->append("Shader: ");
-    as_SB(fShader)->toString(str);
-    str->append(" Filter: ");
-    // TODO: add "fFilter->toString(str);" once SkColorFilter::toString is added
-
-    this->INHERITED::toString(str);
-
-    str->append(")");
-}
-#endif
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 sk_sp<SkShader> SkShader::makeWithColorFilter(sk_sp<SkColorFilter> filter) const {

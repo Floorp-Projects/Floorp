@@ -8,8 +8,9 @@
 #ifndef SkBitSet_DEFINED
 #define SkBitSet_DEFINED
 
-#include "SkTDArray.h"
 #include "SkTemplates.h"
+
+#include <vector>
 
 class SkBitSet {
 public:
@@ -20,9 +21,6 @@ public:
             fBitData.reset((uint32_t*)sk_calloc_throw(fDwordCount * sizeof(uint32_t)));
         }
     }
-
-    SkBitSet(const SkBitSet&) = delete;
-    SkBitSet& operator=(const SkBitSet&) = delete;
 
     /** Set the value of the index-th bit to true.  */
     void set(int index) {
@@ -48,7 +46,7 @@ public:
 
     /** Export indices of set bits to T array. */
     template<typename T>
-    void exportTo(SkTDArray<T>* array) const {
+    void exportTo(std::vector<T>* array) const {
         static_assert(std::is_integral<T>::value, "T is integral");
         SkASSERT(array);
         uint32_t* data = reinterpret_cast<uint32_t*>(fBitData.get());
@@ -58,7 +56,7 @@ public:
                 unsigned int index = i * 32;
                 for (unsigned int j = 0; j < 32; ++j) {
                     if (0x1 & (value >> j)) {
-                        array->push(index + j);
+                        array->push_back(index + j);
                     }
                 }
             }

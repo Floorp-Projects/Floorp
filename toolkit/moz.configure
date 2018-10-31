@@ -821,6 +821,7 @@ def skia_includes(skia):
             '/gfx/skia',
             '/gfx/skia/skia/include/config',
             '/gfx/skia/skia/include/core',
+            '/gfx/skia/skia/include/docs',
             '/gfx/skia/skia/include/gpu',
             '/gfx/skia/skia/include/utils',
         ]

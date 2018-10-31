@@ -14,6 +14,7 @@
 #include "SkColorSpace.h"
 #include "SkFilterQuality.h"
 #include "SkFlattenable.h"
+#include "SkImageInfo.h"
 #include "SkMatrix.h"
 #include "SkRect.h"
 
@@ -41,11 +42,14 @@ public:
     // consumer of the DAG's output.
     class OutputProperties {
     public:
-        explicit OutputProperties(SkColorSpace* colorSpace) : fColorSpace(colorSpace) {}
+        explicit OutputProperties(SkColorType colorType, SkColorSpace* colorSpace)
+            : fColorType(colorType), fColorSpace(colorSpace) {}
 
+        SkColorType colorType() const { return fColorType; }
         SkColorSpace* colorSpace() const { return fColorSpace; }
 
     private:
+        SkColorType fColorType;
         // This will be a pointer to the device's color space, and our lifetime is bounded by
         // the device, so we can store a bare pointer.
         SkColorSpace* fColorSpace;
@@ -97,9 +101,6 @@ public:
             : fRect(rect), fFlags(flags) {}
         uint32_t flags() const { return fFlags; }
         const SkRect& rect() const { return fRect; }
-#ifndef SK_IGNORE_TO_STRING
-        void toString(SkString* str) const;
-#endif
 
         /**
          *  Apply this cropRect to the imageBounds. If a given edge of the cropRect is not
@@ -157,9 +158,13 @@ public:
      * be exact, but should never be smaller than the real answer. The default
      * implementation recursively unions all input bounds, or returns the
      * source rect if no inputs.
+     *
+     * In kReverse mode, 'inputRect' is the device-space bounds of the input pixels. In kForward
+     * mode it should always be null. If 'inputRect' is null in kReverse mode the resulting
+     * answer may be incorrect.
      */
     SkIRect filterBounds(const SkIRect& src, const SkMatrix& ctm,
-                         MapDirection = kReverse_MapDirection) const;
+                         MapDirection, const SkIRect* inputRect = nullptr) const;
 
 #if SK_SUPPORT_GPU
     static sk_sp<SkSpecialImage> DrawWithFP(GrContext* context,
@@ -247,9 +252,22 @@ public:
                                                  SkFilterQuality quality,
                                                  sk_sp<SkImageFilter> input);
 
-    SK_TO_STRING_PUREVIRT()
-    SK_DEFINE_FLATTENABLE_TYPE(SkImageFilter)
-    SK_DECLARE_FLATTENABLE_REGISTRAR_GROUP()
+    static void InitializeFlattenables();
+
+    static SkFlattenable::Type GetFlattenableType() {
+        return kSkImageFilter_Type;
+    }
+
+    SkFlattenable::Type getFlattenableType() const override {
+        return kSkImageFilter_Type;
+    }
+
+    static sk_sp<SkImageFilter> Deserialize(const void* data, size_t size,
+                                          const SkDeserialProcs* procs = nullptr) {
+        return sk_sp<SkImageFilter>(static_cast<SkImageFilter*>(
+                                  SkFlattenable::Deserialize(
+                                  kSkImageFilter_Type, data, size, procs).release()));
+    }
 
 protected:
     class Common {
@@ -266,16 +284,14 @@ protected:
 
         const CropRect& cropRect() const { return fCropRect; }
         int             inputCount() const { return fInputs.count(); }
-        sk_sp<SkImageFilter>* inputs() const { return fInputs.get(); }
+        sk_sp<SkImageFilter>* inputs() { return fInputs.begin(); }
 
-        sk_sp<SkImageFilter>  getInput(int index) const { return fInputs[index]; }
+        sk_sp<SkImageFilter> getInput(int index) { return fInputs[index]; }
 
     private:
         CropRect fCropRect;
         // most filters accept at most 2 input-filters
-        SkAutoSTArray<2, sk_sp<SkImageFilter>> fInputs;
-
-        void allocInputs(int count);
+        SkSTArray<2, sk_sp<SkImageFilter>, true> fInputs;
     };
 
     SkImageFilter(sk_sp<SkImageFilter> const* inputs, int inputCount, const CropRect* cropRect);
@@ -325,18 +341,22 @@ protected:
      * and returns the union of those results. If a derived class has special
      * recursion requirements (e.g., it has an input which does not participate
      * in bounds computation), it can be overridden here.
+     * In kReverse mode, 'inputRect' is the device-space bounds of the input pixels. In kForward
+     * mode it should always be null. If 'inputRect' is null in kReverse mode the resulting
+     * answer may be incorrect.
      *
      * Note that this function is *not* responsible for mapping the rect for
      * this node's filter bounds requirements (i.e., calling
      * onFilterNodeBounds()); that is handled by filterBounds().
      */
-    virtual SkIRect onFilterBounds(const SkIRect&, const SkMatrix&, MapDirection) const;
+    virtual SkIRect onFilterBounds(const SkIRect&, const SkMatrix& ctm,
+                                   MapDirection, const SkIRect* inputRect) const;
 
     /**
      * Performs a forwards or reverse mapping of the given rect to accommodate
      * this filter's margin requirements. kForward_MapDirection is used to
      * determine the destination pixels which would be touched by filtering
-     * the given given source rect (e.g., given source bitmap bounds,
+     * the given source rect (e.g., given source bitmap bounds,
      * determine the optimal bounds of the filtered offscreen bitmap).
      * kReverse_MapDirection is used to determine which pixels of the
      * input(s) would be required to fill the given destination rect
@@ -344,8 +364,12 @@ protected:
      * inverse of the other. For example, blurring expands the given rect
      * in both forward and reverse directions. Unlike
      * onFilterBounds(), this function is non-recursive.
+     * In kReverse mode, 'inputRect' will be the device space bounds of the input pixels. In
+     * kForward mode, 'inputRect' should always be null. If 'inputRect' is null in kReverse mode
+     * the resulting answer may be incorrect.
      */
-    virtual SkIRect onFilterNodeBounds(const SkIRect&, const SkMatrix&, MapDirection) const;
+    virtual SkIRect onFilterNodeBounds(const SkIRect&, const SkMatrix& ctm,
+                                       MapDirection, const SkIRect* inputRect) const;
 
     // Helper function which invokes filter processing on the input at the
     // specified "index". If the input is null, it returns "src" and leaves
@@ -389,8 +413,8 @@ protected:
      *  which are not capable of processing a smaller source bitmap into a
      *  larger destination.
      */
-    sk_sp<SkSpecialImage> applyCropRect(const Context&, SkSpecialImage* src, SkIPoint* srcOffset,
-                                        SkIRect* bounds) const;
+    sk_sp<SkSpecialImage> applyCropRectAndPad(const Context&, SkSpecialImage* src,
+                                              SkIPoint* srcOffset, SkIRect* bounds) const;
 
     /**
      *  Creates a modified Context for use when recursing up the image filter DAG.
@@ -421,6 +445,15 @@ protected:
         return sk_ref_sp(const_cast<SkImageFilter*>(this));
     }
 
+    // If 'srcBounds' will sample outside the border of 'originalSrcBounds' (i.e., the sample
+    // will wrap around to the other side) we must preserve the far side of the src along that
+    // axis (e.g., if we will sample beyond the left edge of the src, the right side must be
+    // preserved for the repeat sampling to work).
+    static SkIRect DetermineRepeatedSrcBound(const SkIRect& srcBounds,
+                                             const SkIVector& filterOffset,
+                                             const SkISize& filterSize,
+                                             const SkIRect& originalSrcBounds);
+
 private:
     // For makeColorSpace().
     friend class SkColorSpaceXformer;
@@ -439,8 +472,7 @@ private:
     bool fUsesSrcInput;
     CropRect fCropRect;
     uint32_t fUniqueID; // Globally unique
-    mutable SkTArray<SkImageFilterCacheKey> fCacheKeys;
-    mutable SkMutex fMutex;
+
     typedef SkFlattenable INHERITED;
 };
 
