@@ -1060,7 +1060,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     ListNodeType lexicalDeclaration(YieldHandling yieldHandling, DeclarationKind kind);
 
     inline BinaryNodeType importDeclaration();
-    Node importDeclarationOrImportExpr(YieldHandling yieldHandling);
+    Node importDeclarationOrImportMeta(YieldHandling yieldHandling);
 
     BinaryNodeType exportFrom(uint32_t begin, Node specList);
     BinaryNodeType exportBatch(uint32_t begin);
@@ -1160,7 +1160,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 
     bool tryNewTarget(BinaryNodeType* newTarget);
 
-    BinaryNodeType importExpr(YieldHandling yieldHandling);
+    BinaryNodeType importMeta();
 
     CodeNodeType methodDefinition(uint32_t toStringStart, PropertyType propType,
                                   HandleAtom funName);

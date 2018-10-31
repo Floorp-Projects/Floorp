@@ -572,10 +572,6 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<BinaryNode>(ParseNodeKind::ImportMeta, JSOP_NOP, importHolder, metaHolder);
     }
 
-    BinaryNodeType newCallImport(NullaryNodeType importHolder, Node singleArg) {
-        return new_<BinaryNode>(ParseNodeKind::CallImport, JSOP_NOP, importHolder, singleArg);
-    }
-
     UnaryNodeType newExprStatement(Node expr, uint32_t end) {
         MOZ_ASSERT(expr->pn_pos.end <= end);
         return new_<UnaryNode>(ParseNodeKind::ExpressionStatement,
