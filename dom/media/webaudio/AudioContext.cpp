@@ -165,8 +165,7 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow,
                                           aIsOffline,
                                           allowedToStart,
                                           aNumberOfChannels,
-                                          aLength,
-                                          aSampleRate);
+                                          aLength);
 
   // The context can't be muted until it has a destination.
   if (mute) {
