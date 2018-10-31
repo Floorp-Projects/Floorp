@@ -8,6 +8,7 @@
 #ifndef SkMatrixConvolutionImageFilter_DEFINED
 #define SkMatrixConvolutionImageFilter_DEFINED
 
+#include "SkFlattenable.h"
 #include "SkImageFilter.h"
 #include "SkScalar.h"
 #include "SkSize.h"
@@ -67,8 +68,7 @@ public:
                                      sk_sp<SkImageFilter> input,
                                      const CropRect* cropRect = nullptr);
 
-    SK_TO_STRING_OVERRIDE()
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkMatrixConvolutionImageFilter)
+    Factory getFactory() const override { return CreateProc; }
 
 protected:
     SkMatrixConvolutionImageFilter(const SkISize& kernelSize,
@@ -85,10 +85,14 @@ protected:
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
                                         SkIPoint* offset) const override;
     sk_sp<SkImageFilter> onMakeColorSpace(SkColorSpaceXformer*) const override;
-    SkIRect onFilterNodeBounds(const SkIRect&, const SkMatrix&, MapDirection) const override;
+    SkIRect onFilterNodeBounds(const SkIRect&, const SkMatrix& ctm,
+                               MapDirection, const SkIRect* inputRect) const override;
     bool affectsTransparentBlack() const override;
 
 private:
+    static sk_sp<SkFlattenable> CreateProc(SkReadBuffer&);
+    friend class SkFlattenable::PrivateInitializer;
+
     SkISize   fKernelSize;
     SkScalar* fKernel;
     SkScalar  fGain;
@@ -100,19 +104,23 @@ private:
     template <class PixelFetcher, bool convolveAlpha>
     void filterPixels(const SkBitmap& src,
                       SkBitmap* result,
+                      SkIVector& offset,
                       const SkIRect& rect,
                       const SkIRect& bounds) const;
     template <class PixelFetcher>
     void filterPixels(const SkBitmap& src,
                       SkBitmap* result,
+                      SkIVector& offset,
                       const SkIRect& rect,
                       const SkIRect& bounds) const;
     void filterInteriorPixels(const SkBitmap& src,
                               SkBitmap* result,
+                              SkIVector& offset,
                               const SkIRect& rect,
                               const SkIRect& bounds) const;
     void filterBorderPixels(const SkBitmap& src,
                             SkBitmap* result,
+                            SkIVector& offset,
                             const SkIRect& rect,
                             const SkIRect& bounds) const;
 

@@ -8,6 +8,7 @@
 #ifndef Sk1DPathEffect_DEFINED
 #define Sk1DPathEffect_DEFINED
 
+#include "SkFlattenable.h"
 #include "SkPathEffect.h"
 #include "SkPath.h"
 
@@ -16,10 +17,9 @@ class SkPathMeasure;
 // This class is not exported to java.
 class SK_API Sk1DPathEffect : public SkPathEffect {
 public:
-    virtual bool filterPath(SkPath* dst, const SkPath& src,
-                            SkStrokeRec*, const SkRect*) const override;
-
 protected:
+    bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect*) const override;
+
     /** Called at the start of each contour, returns the initial offset
         into that contour.
     */
@@ -58,21 +58,21 @@ public:
     */
     static sk_sp<SkPathEffect> Make(const SkPath& path, SkScalar advance, SkScalar phase, Style);
 
-    virtual bool filterPath(SkPath*, const SkPath&,
-                            SkStrokeRec*, const SkRect*) const override;
-
-    SK_TO_STRING_OVERRIDE()
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkPath1DPathEffect)
+    Factory getFactory() const override { return CreateProc; }
 
 protected:
     SkPath1DPathEffect(const SkPath& path, SkScalar advance, SkScalar phase, Style);
     void flatten(SkWriteBuffer&) const override;
+    bool onFilterPath(SkPath*, const SkPath&, SkStrokeRec*, const SkRect*) const override;
 
     // overrides from Sk1DPathEffect
     SkScalar begin(SkScalar contourLength) const override;
     SkScalar next(SkPath*, SkScalar, SkPathMeasure&) const override;
 
 private:
+    static sk_sp<SkFlattenable> CreateProc(SkReadBuffer&);
+    friend class SkFlattenable::PrivateInitializer;
+
     SkPath      fPath;          // copied from constructor
     SkScalar    fAdvance;       // copied from constructor
     SkScalar    fInitialOffset; // computed from phase

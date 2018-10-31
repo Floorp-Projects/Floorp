@@ -19,6 +19,8 @@
 #include "glsl/GrGLSLShaderBuilder.h"
 #include "glsl/GrGLSLUniformHandler.h"
 
+#include <utility>
+
 static bool can_ignore_rect(GrTextureProxy* proxy, const SkRect& domain) {
     if (GrProxyProvider::IsFunctionallyExact(proxy)) {
         const SkIRect kFullRect = SkIRect::MakeWH(proxy->width(), proxy->height());
@@ -160,7 +162,7 @@ void GrTextureDomain::GLDomain::sampleTexture(GrGLSLShaderBuilder* builder,
 void GrTextureDomain::GLDomain::setData(const GrGLSLProgramDataManager& pdman,
                                         const GrTextureDomain& textureDomain,
                                         GrSurfaceProxy* proxy) {
-    GrTexture* tex = proxy->priv().peekTexture();
+    GrTexture* tex = proxy->peekTexture();
     SkASSERT(fHasMode && textureDomain.mode() == fMode);
     if (kIgnore_Mode != textureDomain.mode()) {
         SkScalar wInv = SK_Scalar1 / tex->width();
@@ -184,7 +186,8 @@ void GrTextureDomain::GLDomain::setData(const GrGLSLProgramDataManager& pdman,
             values[3] = 1.0f - values[3];
             // The top and bottom were just flipped, so correct the ordering
             // of elements so that values = (l, t, r, b).
-            SkTSwap(values[1], values[3]);
+            using std::swap;
+            swap(values[1], values[3]);
         }
         if (0 != memcmp(values, fPrevDomain, kPrevDomainCount * sizeof(float))) {
             pdman.set4fv(fDomainUni, 1, values);
@@ -231,7 +234,7 @@ GrTextureDomainEffect::GrTextureDomainEffect(sk_sp<GrTextureProxy> proxy,
     SkASSERT(mode != GrTextureDomain::kRepeat_Mode ||
              filterMode == GrSamplerState::Filter::kNearest);
     this->addCoordTransform(&fCoordTransform);
-    this->addTextureSampler(&fTextureSampler);
+    this->setTextureSamplerCnt(1);
 }
 
 GrTextureDomainEffect::GrTextureDomainEffect(const GrTextureDomainEffect& that)
@@ -240,7 +243,7 @@ GrTextureDomainEffect::GrTextureDomainEffect(const GrTextureDomainEffect& that)
         , fTextureDomain(that.fTextureDomain)
         , fTextureSampler(that.fTextureSampler) {
     this->addCoordTransform(&fCoordTransform);
-    this->addTextureSampler(&fTextureSampler);
+    this->setTextureSamplerCnt(1);
 }
 
 void GrTextureDomainEffect::onGetGLSLProcessorKey(const GrShaderCaps& caps,
@@ -331,7 +334,7 @@ GrDeviceSpaceTextureDecalFragmentProcessor::GrDeviceSpaceTextureDecalFragmentPro
         , fTextureSampler(proxy, GrSamplerState::ClampNearest())
         , fTextureDomain(proxy.get(), GrTextureDomain::MakeTexelDomain(subset),
                          GrTextureDomain::kDecal_Mode) {
-    this->addTextureSampler(&fTextureSampler);
+    this->setTextureSamplerCnt(1);
     fDeviceSpaceOffset.fX = deviceSpaceOffset.fX - subset.fLeft;
     fDeviceSpaceOffset.fY = deviceSpaceOffset.fY - subset.fTop;
 }
@@ -343,7 +346,7 @@ GrDeviceSpaceTextureDecalFragmentProcessor::GrDeviceSpaceTextureDecalFragmentPro
         , fTextureSampler(that.fTextureSampler)
         , fTextureDomain(that.fTextureDomain)
         , fDeviceSpaceOffset(that.fDeviceSpaceOffset) {
-    this->addTextureSampler(&fTextureSampler);
+    this->setTextureSamplerCnt(1);
 }
 
 std::unique_ptr<GrFragmentProcessor> GrDeviceSpaceTextureDecalFragmentProcessor::clone() const {
@@ -380,7 +383,7 @@ GrGLSLFragmentProcessor* GrDeviceSpaceTextureDecalFragmentProcessor::onCreateGLS
             const GrDeviceSpaceTextureDecalFragmentProcessor& dstdfp =
                     fp.cast<GrDeviceSpaceTextureDecalFragmentProcessor>();
             GrSurfaceProxy* proxy = dstdfp.textureSampler(0).proxy();
-            GrTexture* texture = proxy->priv().peekTexture();
+            GrTexture* texture = proxy->peekTexture();
 
             fGLDomain.setData(pdman, dstdfp.fTextureDomain, proxy);
             float iw = 1.f / texture->width();

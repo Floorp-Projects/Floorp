@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2014 Google Inc.
  *
@@ -11,9 +10,12 @@
 
 #include "../private/SkOnce.h"
 #include "../private/SkTemplates.h"
+#include "../private/SkTo.h"
 #include "GrTypes.h"
 #include "SkData.h"
 #include "SkString.h"
+
+#include <new>
 
 uint32_t GrResourceKeyHash(const uint32_t* data, size_t size);
 
@@ -79,6 +81,22 @@ protected:
         return &fKey[kMetaDataCnt];
     }
 
+#ifdef SK_DEBUG
+    void dump() const {
+        if (!this->isValid()) {
+            SkDebugf("Invalid Key\n");
+        } else {
+            SkDebugf("hash: %d ", this->hash());
+            SkDebugf("domain: %d ", this->domain());
+            SkDebugf("size: %dB ", this->internalSize());
+            for (size_t i = 0; i < this->internalSize(); ++i) {
+                SkDebugf("%d ", fKey[i]);
+            }
+            SkDebugf("\n");
+        }
+    }
+#endif
+
     /** Used to initialize a key. */
     class Builder {
     public:
@@ -139,9 +157,8 @@ private:
 
     friend class TestResource; // For unit test to access kMetaDataCnt.
 
-    // bmp textures require 7 uint32_t values (5 for the base key, and two more for image
-    // cacherator's decode format.
-    SkAutoSTMalloc<kMetaDataCnt + 7, uint32_t> fKey;
+    // bmp textures require 5 uint32_t values.
+    SkAutoSTMalloc<kMetaDataCnt + 5, uint32_t> fKey;
 };
 
 /**
@@ -229,7 +246,7 @@ public:
     static Domain GenerateDomain();
 
     /** Creates an invalid unique key. It must be initialized using a Builder object before use. */
-    GrUniqueKey() {}
+    GrUniqueKey() : fTag(nullptr) {}
 
     GrUniqueKey(const GrUniqueKey& that) { *this = that; }
 
@@ -241,7 +258,7 @@ public:
     GrUniqueKey& operator=(const GrUniqueKey& that) {
         this->INHERITED::operator=(that);
         this->setCustomData(sk_ref_sp(that.getCustomData()));
-        SkDEBUGCODE(fTag = that.fTag;)
+        fTag = that.fTag;
         return *this;
     }
 
@@ -257,14 +274,20 @@ public:
         return fData.get();
     }
 
-    SkDEBUGCODE(const char* tag() const { return fTag.c_str(); })
+    const char* tag() const { return fTag; }
+
+#ifdef SK_DEBUG
+    void dump(const char* label) const {
+        SkDebugf("%s tag: %s\n", label, fTag ? fTag : "None");
+        this->INHERITED::dump();
+    }
+#endif
 
     class Builder : public INHERITED::Builder {
     public:
         Builder(GrUniqueKey* key, Domain type, int data32Count, const char* tag = nullptr)
                 : INHERITED::Builder(key, type, data32Count) {
-            SkDEBUGCODE(key->fTag = tag;)
-            (void) tag;  // suppress unused named param warning.
+            key->fTag = tag;
         }
 
         /** Used to build a key that wraps another key and adds additional data. */
@@ -277,8 +300,7 @@ public:
             const uint32_t* srcData = innerKey.data();
             (*innerKeyData++) = innerKey.domain();
             memcpy(innerKeyData, srcData, innerKey.dataSize());
-            SkDEBUGCODE(key->fTag = tag;)
-            (void) tag;  // suppress unused named param warning.
+            key->fTag = tag;
         }
 
     private:
@@ -290,7 +312,7 @@ public:
 
 private:
     sk_sp<SkData> fData;
-    SkDEBUGCODE(SkString fTag;)
+    const char* fTag;
 };
 
 /**
@@ -316,18 +338,22 @@ static inline void gr_init_static_unique_key_once(SkAlignedSTStorage<1,GrUniqueK
 // The cache listens for these messages to purge junk resources proactively.
 class GrUniqueKeyInvalidatedMessage {
 public:
-    explicit GrUniqueKeyInvalidatedMessage(const GrUniqueKey& key) : fKey(key) {}
-
-    GrUniqueKeyInvalidatedMessage(const GrUniqueKeyInvalidatedMessage& that) : fKey(that.fKey) {}
-
-    GrUniqueKeyInvalidatedMessage& operator=(const GrUniqueKeyInvalidatedMessage& that) {
-        fKey = that.fKey;
-        return *this;
+    GrUniqueKeyInvalidatedMessage(const GrUniqueKey& key, uint32_t contextUniqueID)
+            : fKey(key), fContextID(contextUniqueID) {
+        SkASSERT(SK_InvalidUniqueID != contextUniqueID);
     }
+
+    GrUniqueKeyInvalidatedMessage(const GrUniqueKeyInvalidatedMessage&) = default;
+
+    GrUniqueKeyInvalidatedMessage& operator=(const GrUniqueKeyInvalidatedMessage&) = default;
 
     const GrUniqueKey& key() const { return fKey; }
 
+    bool shouldSend(uint32_t inboxID) const { return fContextID == inboxID; }
+
 private:
     GrUniqueKey fKey;
+    uint32_t fContextID;
 };
+
 #endif

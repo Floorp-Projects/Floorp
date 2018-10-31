@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2012 Google Inc.
  *
@@ -9,14 +8,18 @@
 #ifndef SkPathRef_DEFINED
 #define SkPathRef_DEFINED
 
-#include "../private/SkAtomics.h"
-#include "../private/SkTDArray.h"
+#include "SkAtomics.h"
 #include "SkMatrix.h"
+#include "SkMutex.h"
 #include "SkPoint.h"
 #include "SkRRect.h"
 #include "SkRect.h"
 #include "SkRefCnt.h"
+#include "SkTDArray.h"
 #include "SkTemplates.h"
+#include "SkTo.h"
+
+#include <limits>
 
 class SkRBuffer;
 class SkWBuffer;
@@ -306,12 +309,12 @@ public:
      */
     uint32_t genID() const;
 
-    struct GenIDChangeListener {
+    struct GenIDChangeListener : SkRefCnt {
         virtual ~GenIDChangeListener() {}
         virtual void onChange() = 0;
     };
 
-    void addGenIDChangeListener(GenIDChangeListener* listener);
+    void addGenIDChangeListener(sk_sp<GenIDChangeListener>);  // Threadsafe.
 
     bool isValid() const;
     SkDEBUGCODE(void validate() const { SkASSERT(this->isValid()); } )
@@ -405,7 +408,7 @@ private:
             fFreeSpace = 0;
             fVerbCnt = 0;
             fPointCnt = 0;
-            this->makeSpace(minSize);
+            this->makeSpace(minSize, true);
             fVerbCnt = verbCount;
             fPointCnt = pointCount;
             fFreeSpace -= newSize;
@@ -435,24 +438,28 @@ private:
 
     /**
      * Ensures that the free space available in the path ref is >= size. The verb and point counts
-     * are not changed.
+     * are not changed. May allocate extra capacity, unless |exact| is true.
      */
-    void makeSpace(size_t size) {
+    void makeSpace(size_t size, bool exact = false) {
         SkDEBUGCODE(this->validate();)
         if (size <= fFreeSpace) {
             return;
         }
         size_t growSize = size - fFreeSpace;
         size_t oldSize = this->currSize();
-        // round to next multiple of 8 bytes
-        growSize = (growSize + 7) & ~static_cast<size_t>(7);
-        // we always at least double the allocation
-        if (growSize < oldSize) {
-            growSize = oldSize;
+
+        if (!exact) {
+            // round to next multiple of 8 bytes
+            growSize = (growSize + 7) & ~static_cast<size_t>(7);
+            // we always at least double the allocation
+            if (growSize < oldSize) {
+                growSize = oldSize;
+            }
+            if (growSize < kMinSize) {
+                growSize = kMinSize;
+            }
         }
-        if (growSize < kMinSize) {
-            growSize = kMinSize;
-        }
+
         constexpr size_t maxSize = std::numeric_limits<size_t>::max();
         size_t newSize;
         if (growSize <= maxSize - oldSize) {
@@ -495,13 +502,13 @@ private:
     void setIsOval(bool isOval, bool isCCW, unsigned start) {
         fIsOval = isOval;
         fRRectOrOvalIsCCW = isCCW;
-        fRRectOrOvalStartIdx = start;
+        fRRectOrOvalStartIdx = SkToU8(start);
     }
 
     void setIsRRect(bool isRRect, bool isCCW, unsigned start) {
         fIsRRect = isRRect;
         fRRectOrOvalIsCCW = isCCW;
-        fRRectOrOvalStartIdx = start;
+        fRRectOrOvalStartIdx = SkToU8(start);
     }
 
     // called only by the editor. Note that this is not a const function.
@@ -538,21 +545,23 @@ private:
     mutable uint32_t    fGenerationID;
     SkDEBUGCODE(int32_t fEditorsAttached;) // assert that only one editor in use at any time.
 
-    SkTDArray<GenIDChangeListener*> fGenIDChangeListeners;  // pointers are owned
+    SkMutex                         fGenIDChangeListenersMutex;
+    SkTDArray<GenIDChangeListener*> fGenIDChangeListeners;  // pointers are reffed
 
     mutable uint8_t  fBoundsIsDirty;
-    mutable SkBool8  fIsFinite;    // only meaningful if bounds are valid
+    mutable bool     fIsFinite;    // only meaningful if bounds are valid
 
-    SkBool8  fIsOval;
-    SkBool8  fIsRRect;
+    bool     fIsOval;
+    bool     fIsRRect;
     // Both the circle and rrect special cases have a notion of direction and starting point
     // The next two variables store that information for either.
-    SkBool8  fRRectOrOvalIsCCW;
+    bool     fRRectOrOvalIsCCW;
     uint8_t  fRRectOrOvalStartIdx;
     uint8_t  fSegmentMask;
 
     friend class PathRefTest_Private;
     friend class ForceIsRRect_Private; // unit test isRRect
+    friend class SkPath;
 };
 
 #endif

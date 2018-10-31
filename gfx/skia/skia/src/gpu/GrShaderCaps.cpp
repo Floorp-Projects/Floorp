@@ -22,7 +22,6 @@ GrShaderCaps::GrShaderCaps(const GrContextOptions& options) {
     fDstReadInShaderSupport = false;
     fDualSourceBlendingSupport = false;
     fIntegerSupport = false;
-    fTexelBufferSupport = false;
     fImageLoadStoreSupport = false;
     fDropsTileOnZeroDivide = false;
     fFBFetchSupport = false;
@@ -38,13 +37,18 @@ GrShaderCaps::GrShaderCaps(const GrContextOptions& options) {
     fMustObfuscateUniformColor = false;
     fMustGuardDivisionEvenAfterExplicitZeroCheck = false;
     fCanUseFragCoord = true;
-    fInterpolantsAreInaccurate = false;
+    fIncompleteShortIntPrecision = false;
+    fAddAndTrueToLoopCondition = false;
+    fUnfoldShortCircuitAsTernary = false;
+    fEmulateAbsIntFunction = false;
+    fRewriteDoWhileLoops = false;
+    fRemovePowWithConstantExponent = false;
     fFlatInterpolationSupport = false;
     fPreferFlatInterpolation = false;
     fNoPerspectiveInterpolationSupport = false;
     fExternalTextureSupport = false;
-    fTexelFetchSupport = false;
     fVertexIDSupport = false;
+    fFPManipulationSupport = false;
     fFloatIs32Bits = true;
     fHalfIs32Bits = false;
 
@@ -55,22 +59,16 @@ GrShaderCaps::GrShaderCaps(const GrContextOptions& options) {
     fFragCoordConventionsExtensionString = nullptr;
     fSecondaryOutputExtensionString = nullptr;
     fExternalTextureExtensionString = nullptr;
-    fTexelBufferExtensionString = nullptr;
+    fSecondExternalTextureExtensionString = nullptr;
     fNoPerspectiveInterpolationExtensionString = nullptr;
     fFBFetchColorName = nullptr;
     fFBFetchExtensionString = nullptr;
     fImageLoadStoreExtensionString = nullptr;
-    fMaxVertexSamplers = 0;
-    fMaxGeometrySamplers = 0;
     fMaxFragmentSamplers = 0;
-    fMaxCombinedSamplers = 0;
     fAdvBlendEqInteraction = kNotSupported_AdvBlendEqInteraction;
-
-    // TODO: Default this to 0 and only enable image multitexturing when a "safe" threshold is
-    // known for a GPU class.
-    fDisableImageMultitexturingDstRectAreaThreshold = std::numeric_limits<size_t>::max();
 }
 
+#ifdef SK_ENABLE_DUMP_GPU
 void GrShaderCaps::dumpJSON(SkJSONWriter* writer) const {
     writer->beginObject();
 
@@ -81,7 +79,6 @@ void GrShaderCaps::dumpJSON(SkJSONWriter* writer) const {
     writer->appendBool("Dst Read In Shader Support", fDstReadInShaderSupport);
     writer->appendBool("Dual Source Blending Support", fDualSourceBlendingSupport);
     writer->appendBool("Integer Support", fIntegerSupport);
-    writer->appendBool("Texel Buffer Support", fTexelBufferSupport);
     writer->appendBool("Image Load Store Support", fImageLoadStoreSupport);
 
     static const char* kAdvBlendEqInteractionStr[] = {
@@ -109,27 +106,30 @@ void GrShaderCaps::dumpJSON(SkJSONWriter* writer) const {
     writer->appendBool("Must guard division even after explicit zero check",
                        fMustGuardDivisionEvenAfterExplicitZeroCheck);
     writer->appendBool("Can use gl_FragCoord", fCanUseFragCoord);
-    writer->appendBool("Interpolants are inaccurate", fInterpolantsAreInaccurate);
+    writer->appendBool("Incomplete short int precision", fIncompleteShortIntPrecision);
+    writer->appendBool("Add and true to loops workaround", fAddAndTrueToLoopCondition);
+    writer->appendBool("Unfold short circuit as ternary", fUnfoldShortCircuitAsTernary);
+    writer->appendBool("Emulate abs(int) function", fEmulateAbsIntFunction);
+    writer->appendBool("Rewrite do while loops", fRewriteDoWhileLoops);
+    writer->appendBool("Rewrite pow with constant exponent", fRemovePowWithConstantExponent);
     writer->appendBool("Flat interpolation support", fFlatInterpolationSupport);
     writer->appendBool("Prefer flat interpolation", fPreferFlatInterpolation);
     writer->appendBool("No perspective interpolation support", fNoPerspectiveInterpolationSupport);
     writer->appendBool("External texture support", fExternalTextureSupport);
-    writer->appendBool("texelFetch support", fTexelFetchSupport);
     writer->appendBool("sk_VertexID support", fVertexIDSupport);
+    writer->appendBool("Floating point manipulation support", fFPManipulationSupport);
     writer->appendBool("float == fp32", fFloatIs32Bits);
     writer->appendBool("half == fp32", fHalfIs32Bits);
 
-    writer->appendS32("Max VS Samplers", fMaxVertexSamplers);
-    writer->appendS32("Max GS Samplers", fMaxGeometrySamplers);
     writer->appendS32("Max FS Samplers", fMaxFragmentSamplers);
-    writer->appendS32("Max Combined Samplers", fMaxFragmentSamplers);
     writer->appendString("Advanced blend equation interaction",
                          kAdvBlendEqInteractionStr[fAdvBlendEqInteraction]);
-    writer->appendU64("Disable image multitexturing dst area threshold",
-                      fDisableImageMultitexturingDstRectAreaThreshold);
 
     writer->endObject();
 }
+#else
+void GrShaderCaps::dumpJSON(SkJSONWriter* writer) const { }
+#endif
 
 void GrShaderCaps::applyOptionsOverrides(const GrContextOptions& options) {
     if (options.fDisableDriverCorrectnessWorkarounds) {
@@ -143,12 +143,14 @@ void GrShaderCaps::applyOptionsOverrides(const GrContextOptions& options) {
         SkASSERT(!fMustObfuscateUniformColor);
         SkASSERT(!fMustGuardDivisionEvenAfterExplicitZeroCheck);
         SkASSERT(fCanUseFragCoord);
-        SkASSERT(!fInterpolantsAreInaccurate);
+        SkASSERT(!fIncompleteShortIntPrecision);
+        SkASSERT(!fAddAndTrueToLoopCondition);
+        SkASSERT(!fUnfoldShortCircuitAsTernary);
+        SkASSERT(!fEmulateAbsIntFunction);
+        SkASSERT(!fRewriteDoWhileLoops);
+        SkASSERT(!fRemovePowWithConstantExponent);
     }
 #if GR_TEST_UTILS
     fDualSourceBlendingSupport = fDualSourceBlendingSupport && !options.fSuppressDualSourceBlending;
-    if (options.fDisableImageMultitexturing) {
-        fDisableImageMultitexturingDstRectAreaThreshold = 0;
-    }
 #endif
 }

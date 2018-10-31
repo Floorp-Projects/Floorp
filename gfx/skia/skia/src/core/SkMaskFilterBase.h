@@ -12,19 +12,22 @@
 #include "SkFlattenable.h"
 #include "SkMask.h"
 #include "SkMaskFilter.h"
+#include "SkNoncopyable.h"
 #include "SkPaint.h"
 #include "SkStrokeRec.h"
 
 class GrClip;
 class GrContext;
 struct GrFPArgs;
-class GrRenderTargetContext;
-class GrPaint;
 class GrFragmentProcessor;
+class GrPaint;
 class GrRenderTarget;
+class GrRenderTargetContext;
 class GrResourceProvider;
+class GrShape;
 class GrTexture;
 class GrTextureProxy;
+
 class SkBitmap;
 class SkBlitter;
 class SkCachedData;
@@ -54,7 +57,7 @@ public:
         @return true if the dst mask was correctly created.
     */
     virtual bool filterMask(SkMask* dst, const SkMask& src, const SkMatrix&,
-                            SkIPoint* margin) const;
+                            SkIPoint* margin) const = 0;
 
 #if SK_SUPPORT_GPU
     /**
@@ -87,8 +90,6 @@ public:
      *    canFilterMaskGPU is called
      *    if (it returns true)
      *        the returned mask rect is used for quick rejecting
-     *        either directFilterMaskGPU or directFilterRRectMaskGPU is then called
-     *        if (neither of them handle the blur)
      *            the mask rect is used to generate the mask
      *            filterMaskGPU is called to filter the mask
      *
@@ -97,34 +98,22 @@ public:
      *        filterMaskGPU(devShape, ...)
      * this would hide the RRect special case and the mask generation
      */
-    virtual bool canFilterMaskGPU(const SkRRect& devRRect,
+    virtual bool canFilterMaskGPU(const GrShape&,
+                                  const SkIRect& devSpaceShapeBounds,
                                   const SkIRect& clipBounds,
                                   const SkMatrix& ctm,
-                                  SkRect* maskRect) const;
+                                  SkIRect* maskRect) const;
 
     /**
      *  Try to directly render the mask filter into the target. Returns true if drawing was
      *  successful. If false is returned then paint is unmodified.
      */
     virtual bool directFilterMaskGPU(GrContext*,
-                                     GrRenderTargetContext* renderTargetContext,
+                                     GrRenderTargetContext*,
                                      GrPaint&& paint,
                                      const GrClip&,
                                      const SkMatrix& viewMatrix,
-                                     const SkStrokeRec& strokeRec,
-                                     const SkPath& path) const;
-    /**
-     *  Try to directly render a rounded rect mask filter into the target.  Returns
-     *  true if drawing was successful.  If false is returned then paint is unmodified.
-     */
-    virtual bool directFilterRRectMaskGPU(GrContext*,
-                                          GrRenderTargetContext* renderTargetContext,
-                                          GrPaint&& paint,
-                                          const GrClip&,
-                                          const SkMatrix& viewMatrix,
-                                          const SkStrokeRec& strokeRec,
-                                          const SkRRect& rrect,
-                                          const SkRRect& devRRect) const;
+                                     const GrShape& shape) const;
 
     /**
      * This function is used to implement filters that require an explicit src mask. It should only
@@ -155,7 +144,6 @@ public:
     struct BlurRec {
         SkScalar        fSigma;
         SkBlurStyle     fStyle;
-        SkBlurQuality   fQuality;
     };
     /**
      *  If this filter can be represented by a BlurRec, return true and (if not null) fill in the

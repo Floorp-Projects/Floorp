@@ -8,7 +8,6 @@
 #ifndef GrOnFlushResourceProvider_DEFINED
 #define GrOnFlushResourceProvider_DEFINED
 
-#include "GrTypes.h"
 #include "GrDeferredUpload.h"
 #include "GrOpFlushState.h"
 #include "GrResourceProvider.h"
@@ -21,7 +20,6 @@ class GrOnFlushResourceProvider;
 class GrRenderTargetOpList;
 class GrRenderTargetContext;
 class GrSurfaceProxy;
-
 class SkColorSpace;
 class SkSurfaceProps;
 
@@ -31,7 +29,7 @@ class SkSurfaceProps;
  */
 class GrOnFlushCallbackObject {
 public:
-    virtual ~GrOnFlushCallbackObject() { }
+    virtual ~GrOnFlushCallbackObject() {}
 
     /*
      * The onFlush callback allows subsystems (e.g., text, path renderers) to create atlases
@@ -66,13 +64,21 @@ public:
  */
 class GrOnFlushResourceProvider {
 public:
+    explicit GrOnFlushResourceProvider(GrDrawingManager* drawingMgr) : fDrawingMgr(drawingMgr) {}
+
     sk_sp<GrRenderTargetContext> makeRenderTargetContext(const GrSurfaceDesc&,
+                                                         GrSurfaceOrigin,
                                                          sk_sp<SkColorSpace>,
                                                          const SkSurfaceProps*);
 
     sk_sp<GrRenderTargetContext> makeRenderTargetContext(sk_sp<GrSurfaceProxy>,
                                                          sk_sp<SkColorSpace>,
                                                          const SkSurfaceProps*);
+
+    // Proxy unique key management. See GrProxyProvider.
+    bool assignUniqueKeyToProxy(const GrUniqueKey&, GrTextureProxy*);
+    void removeUniqueKeyFromProxy(const GrUniqueKey&, GrTextureProxy*);
+    sk_sp<GrTextureProxy> findOrCreateProxyByUniqueKey(const GrUniqueKey&, GrSurfaceOrigin);
 
     bool instatiateProxy(GrSurfaceProxy*);
 
@@ -83,16 +89,14 @@ public:
     sk_sp<const GrBuffer> findOrMakeStaticBuffer(GrBufferType, size_t, const void* data,
                                                  const GrUniqueKey&);
 
+    uint32_t contextUniqueID() const;
     const GrCaps* caps() const;
 
 private:
-    explicit GrOnFlushResourceProvider(GrDrawingManager* drawingMgr) : fDrawingMgr(drawingMgr) {}
     GrOnFlushResourceProvider(const GrOnFlushResourceProvider&) = delete;
     GrOnFlushResourceProvider& operator=(const GrOnFlushResourceProvider&) = delete;
 
     GrDrawingManager* fDrawingMgr;
-
-    friend class GrDrawingManager; // to construct this type.
 };
 
 #endif

@@ -9,7 +9,6 @@
 #define SkWebpCodec_DEFINED
 
 #include "SkCodec.h"
-#include "SkColorSpace.h"
 #include "SkEncodedImageFormat.h"
 #include "SkFrameHolder.h"
 #include "SkImageInfo.h"
@@ -47,8 +46,8 @@ protected:
     }
 
 private:
-    SkWebpCodec(int width, int height, const SkEncodedInfo&, sk_sp<SkColorSpace>,
-                std::unique_ptr<SkStream>, WebPDemuxer*, sk_sp<SkData>, SkEncodedOrigin);
+    SkWebpCodec(SkEncodedInfo&&, std::unique_ptr<SkStream>, WebPDemuxer*, sk_sp<SkData>,
+                SkEncodedOrigin);
 
     SkAutoTCallVProc<WebPDemuxer, WebPDemuxDelete> fDemux;
 
@@ -61,10 +60,6 @@ private:
         Frame(int i, SkEncodedInfo::Alpha alpha)
             : INHERITED(i)
             , fReportedAlpha(alpha)
-        {}
-        Frame(Frame&& other)
-            : INHERITED(other.frameId())
-            , fReportedAlpha(other.fReportedAlpha)
         {}
 
     protected:

@@ -9,14 +9,14 @@
 #include "glsl/GrGLSLVarying.h"
 #include "glsl/GrGLSLProgramBuilder.h"
 
-void GrGLSLVaryingHandler::addPassThroughAttribute(const GrGeometryProcessor::Attribute* input,
+void GrGLSLVaryingHandler::addPassThroughAttribute(const GrGeometryProcessor::Attribute& input,
                                                    const char* output,
                                                    Interpolation interpolation) {
+    SkASSERT(input.isInitialized());
     SkASSERT(!fProgramBuilder->primitiveProcessor().willUseGeoShader());
-    GrSLType type = GrVertexAttribTypeToSLType(input->fType);
-    GrGLSLVarying v(type);
-    this->addVarying(input->fName, &v, interpolation);
-    fProgramBuilder->fVS.codeAppendf("%s = %s;", v.vsOut(), input->fName);
+    GrGLSLVarying v(input.gpuType());
+    this->addVarying(input.name(), &v, interpolation);
+    fProgramBuilder->fVS.codeAppendf("%s = %s;", v.vsOut(), input.name());
     fProgramBuilder->fFS.codeAppendf("%s = %s;", output, v.fsIn());
 }
 
@@ -67,13 +67,13 @@ void GrGLSLVaryingHandler::addVarying(const char* name, GrGLSLVarying* varying,
 }
 
 void GrGLSLVaryingHandler::emitAttributes(const GrGeometryProcessor& gp) {
-    int vaCount = gp.numAttribs();
+    int vaCount = gp.numVertexAttributes();
     for (int i = 0; i < vaCount; i++) {
-        const GrGeometryProcessor::Attribute& attr = gp.getAttrib(i);
-        this->addAttribute(GrShaderVar(attr.fName,
-                                       GrVertexAttribTypeToSLType(attr.fType),
-                                       GrShaderVar::kIn_TypeModifier,
-                                       GrShaderVar::kNonArray));
+        this->addAttribute(gp.vertexAttribute(i).asShaderVar());
+    }
+    int iaCount = gp.numInstanceAttributes();
+    for (int i = 0; i < iaCount; i++) {
+        this->addAttribute(gp.instanceAttribute(i).asShaderVar());
     }
 }
 

@@ -8,9 +8,13 @@
 #ifndef GrSimpleMeshDrawOpHelper_DEFINED
 #define GrSimpleMeshDrawOpHelper_DEFINED
 
+#include "GrContext.h"
+#include "GrContextPriv.h"
+#include "GrMemoryPool.h" // only here bc of the templated FactoryHelper
 #include "GrMeshDrawOp.h"
 #include "GrOpFlushState.h"
 #include "GrPipeline.h"
+#include <new>
 
 struct SkRect;
 
@@ -32,7 +36,7 @@ public:
      * which is public or made accessible via 'friend'.
      */
     template <typename Op, typename... OpArgs>
-    static std::unique_ptr<GrDrawOp> FactoryHelper(GrPaint&& paint, OpArgs... opArgs);
+    static std::unique_ptr<GrDrawOp> FactoryHelper(GrContext*, GrPaint&& paint, OpArgs... opArgs);
 
     enum class Flags : uint32_t {
         kNone = 0x0,
@@ -63,7 +67,6 @@ public:
      *                      color from its geometry processor instead.
      */
     GrDrawOp::RequiresDstTexture xpRequiresDstTexture(const GrCaps& caps, const GrAppliedClip* clip,
-                                                      GrPixelConfigIsClamped dstIsClamped,
                                                       GrProcessorAnalysisCoverage geometryCoverage,
                                                       GrProcessorAnalysisColor* geometryColor);
 
@@ -73,7 +76,6 @@ public:
      * changed the op must override its geometry processor color output with the new color.
      */
     GrDrawOp::RequiresDstTexture xpRequiresDstTexture(const GrCaps&, const GrAppliedClip*,
-                                                      GrPixelConfigIsClamped dstIsClamped,
                                                       GrProcessorAnalysisCoverage geometryCoverage,
                                                       GrColor* geometryColor);
 
@@ -84,9 +86,12 @@ public:
 
     bool compatibleWithAlphaAsCoverage() const { return fCompatibleWithAlphaAsCoveage; }
 
+    using PipelineAndFixedDynamicState = GrOpFlushState::PipelineAndFixedDynamicState;
     /** Makes a pipeline that consumes the processor set and the op's applied clip. */
-    GrPipeline* makePipeline(GrMeshDrawOp::Target* target) {
-        return this->internalMakePipeline(target, this->pipelineInitArgs(target));
+    PipelineAndFixedDynamicState makePipeline(GrMeshDrawOp::Target* target,
+                                              int numPrimitiveProcessorTextures = 0) {
+        return this->internalMakePipeline(target, this->pipelineInitArgs(target),
+                                          numPrimitiveProcessorTextures);
     }
 
     struct MakeArgs {
@@ -94,7 +99,6 @@ public:
         MakeArgs() = default;
 
         GrProcessorSet* fProcessorSet;
-        uint32_t fSRGBFlags;
 
         friend class GrSimpleMeshDrawOpHelper;
     };
@@ -113,7 +117,9 @@ protected:
 
     GrPipeline::InitArgs pipelineInitArgs(GrMeshDrawOp::Target* target) const;
 
-    GrPipeline* internalMakePipeline(GrMeshDrawOp::Target*, const GrPipeline::InitArgs&);
+    PipelineAndFixedDynamicState internalMakePipeline(GrMeshDrawOp::Target*,
+                                                      const GrPipeline::InitArgs&,
+                                                      int numPrimitiveProcessorTextures);
 
 private:
     GrProcessorSet* fProcessors;
@@ -135,13 +141,16 @@ class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
 public:
     using MakeArgs = GrSimpleMeshDrawOpHelper::MakeArgs;
     using Flags = GrSimpleMeshDrawOpHelper::Flags;
+    using PipelineAndFixedDynamicState = GrOpFlushState::PipelineAndFixedDynamicState;
+
     using GrSimpleMeshDrawOpHelper::visitProxies;
 
     // using declarations can't be templated, so this is a pass through function instead.
     template <typename Op, typename... OpArgs>
-    static std::unique_ptr<GrDrawOp> FactoryHelper(GrPaint&& paint, OpArgs... opArgs) {
+    static std::unique_ptr<GrDrawOp> FactoryHelper(GrContext* context, GrPaint&& paint,
+                                                   OpArgs... opArgs) {
         return GrSimpleMeshDrawOpHelper::FactoryHelper<Op, OpArgs...>(
-                std::move(paint), std::forward<OpArgs>(opArgs)...);
+                context, std::move(paint), std::forward<OpArgs>(opArgs)...);
     }
 
     GrSimpleMeshDrawOpHelperWithStencil(const MakeArgs&, GrAAType, const GrUserStencilSettings*,
@@ -156,7 +165,8 @@ public:
     bool isCompatible(const GrSimpleMeshDrawOpHelperWithStencil& that, const GrCaps&,
                       const SkRect& thisBounds, const SkRect& thatBounds) const;
 
-    const GrPipeline* makePipeline(GrMeshDrawOp::Target*);
+    PipelineAndFixedDynamicState makePipeline(GrMeshDrawOp::Target*,
+                                              int numPrimitiveProcessorTextures = 0);
 
     SkString dumpInfo() const;
 
@@ -166,20 +176,24 @@ private:
 };
 
 template <typename Op, typename... OpArgs>
-std::unique_ptr<GrDrawOp> GrSimpleMeshDrawOpHelper::FactoryHelper(GrPaint&& paint,
+std::unique_ptr<GrDrawOp> GrSimpleMeshDrawOpHelper::FactoryHelper(GrContext* context,
+                                                                  GrPaint&& paint,
                                                                   OpArgs... opArgs) {
+    GrOpMemoryPool* pool = context->contextPriv().opMemoryPool();
+
     MakeArgs makeArgs;
-    makeArgs.fSRGBFlags = GrPipeline::SRGBFlagsFromPaint(paint);
     GrColor color = paint.getColor();
+
     if (paint.isTrivial()) {
         makeArgs.fProcessorSet = nullptr;
-        return std::unique_ptr<GrDrawOp>(new Op(makeArgs, color, std::forward<OpArgs>(opArgs)...));
+        return pool->allocate<Op>(makeArgs, color, std::forward<OpArgs>(opArgs)...);
     } else {
-        char* mem = (char*)GrOp::operator new(sizeof(Op) + sizeof(GrProcessorSet));
+        char* mem = (char*) pool->allocate(sizeof(Op) + sizeof(GrProcessorSet));
         char* setMem = mem + sizeof(Op);
         makeArgs.fProcessorSet = new (setMem) GrProcessorSet(std::move(paint));
-        return std::unique_ptr<GrDrawOp>(
-                new (mem) Op(makeArgs, color, std::forward<OpArgs>(opArgs)...));
+
+        return std::unique_ptr<GrDrawOp>(new (mem) Op(makeArgs, color,
+                                                      std::forward<OpArgs>(opArgs)...));
     }
 }
 

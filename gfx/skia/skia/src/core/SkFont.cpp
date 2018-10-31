@@ -6,8 +6,10 @@
  */
 
 #include "SkFont.h"
+
+#include "SkTo.h"
 #include "SkTypeface.h"
-#include "SkUtils.h"
+#include "SkUTF.h"
 
 SkFont::SkFont(sk_sp<SkTypeface> face, SkScalar size, SkScalar scaleX, SkScalar skewX, MaskType mt,
                uint32_t flags)
@@ -66,10 +68,10 @@ int SkFont::textToGlyphs(const void* text, size_t byteLength, SkTextEncoding enc
 
     switch (encoding) {
         case kUTF8_SkTextEncoding:
-            count = SkUTF8_CountUnichars((const char*)text, byteLength);
+            count = SkUTF::CountUTF8((const char*)text, byteLength);
             break;
         case kUTF16_SkTextEncoding:
-            count = SkUTF16_CountUnichars((const uint16_t*)text, byteLength);
+            count = SkUTF::CountUTF16((const uint16_t*)text, byteLength);
             break;
         case kUTF32_SkTextEncoding:
             count = SkToInt(byteLength >> 2);
@@ -121,9 +123,6 @@ sk_sp<SkFont> SkFont::Testing_CreateFromPaint(const SkPaint& paint) {
     }
     if (paint.isEmbeddedBitmapText()) {
         flags |= kEmbeddedBitmaps_Flag;
-    }
-    if (paint.getFlags() & SkPaint::kGenA8FromLCD_Flag) {
-        flags |= kGenA8FromLCD_Flag;
     }
     if (paint.isFakeBoldText()) {
         flags |= kEmbolden_Flag;

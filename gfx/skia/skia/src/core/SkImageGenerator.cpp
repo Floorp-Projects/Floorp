@@ -14,8 +14,7 @@ SkImageGenerator::SkImageGenerator(const SkImageInfo& info, uint32_t uniqueID)
     , fUniqueID(kNeedNewImageUniqueID == uniqueID ? SkNextID::ImageID() : uniqueID)
 {}
 
-bool SkImageGenerator::getPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
-                                 const Options* opts) {
+bool SkImageGenerator::getPixels(const SkImageInfo& info, void* pixels, size_t rowBytes) {
     if (kUnknown_SkColorType == info.colorType()) {
         return false;
     }
@@ -27,14 +26,7 @@ bool SkImageGenerator::getPixels(const SkImageInfo& info, void* pixels, size_t r
     }
 
     Options defaultOpts;
-    if (!opts) {
-        opts = &defaultOpts;
-    }
-    return this->onGetPixels(info, pixels, rowBytes, *opts);
-}
-
-bool SkImageGenerator::getPixels(const SkImageInfo& info, void* pixels, size_t rowBytes) {
-    return this->getPixels(info, pixels, rowBytes, nullptr);
+    return this->onGetPixels(info, pixels, rowBytes, defaultOpts);
 }
 
 bool SkImageGenerator::queryYUV8(SkYUVSizeInfo* sizeInfo, SkYUVColorSpace* colorSpace) const {
@@ -66,18 +58,16 @@ bool SkImageGenerator::getYUV8Planes(const SkYUVSizeInfo& sizeInfo, void* planes
 
 sk_sp<GrTextureProxy> SkImageGenerator::generateTexture(GrContext* ctx, const SkImageInfo& info,
                                                         const SkIPoint& origin,
-                                                        SkTransferFunctionBehavior behavior,
                                                         bool willNeedMipMaps) {
     SkIRect srcRect = SkIRect::MakeXYWH(origin.x(), origin.y(), info.width(), info.height());
     if (!SkIRect::MakeWH(fInfo.width(), fInfo.height()).contains(srcRect)) {
         return nullptr;
     }
-    return this->onGenerateTexture(ctx, info, origin, behavior, willNeedMipMaps);
+    return this->onGenerateTexture(ctx, info, origin, willNeedMipMaps);
 }
 
 sk_sp<GrTextureProxy> SkImageGenerator::onGenerateTexture(GrContext*, const SkImageInfo&,
                                                           const SkIPoint&,
-                                                          SkTransferFunctionBehavior,
                                                           bool willNeedMipMaps) {
     return nullptr;
 }

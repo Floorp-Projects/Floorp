@@ -38,9 +38,19 @@ public:
     virtual bool isPathRendering() const override { return true; }
 
 private:
-    GrPathProcessor(GrColor, const SkMatrix& viewMatrix, const SkMatrix& localMatrix);
+    const Attribute& onVertexAttribute(int i) const final {
+        SK_ABORT("No vertex attributes");
+        static constexpr Attribute kBogus;
+        return kBogus;
+    }
 
-    bool hasExplicitLocalCoords() const override { return false; }
+    const Attribute& onInstanceAttribute(int i) const final {
+        SK_ABORT("No instanced attributes");
+        static constexpr Attribute kBogus;
+        return kBogus;
+    }
+
+    GrPathProcessor(GrColor, const SkMatrix& viewMatrix, const SkMatrix& localMatrix);
 
     GrColor fColor;
     const SkMatrix fViewMatrix;

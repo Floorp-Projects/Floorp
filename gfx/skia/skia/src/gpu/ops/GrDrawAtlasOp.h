@@ -20,10 +20,15 @@ private:
 public:
     DEFINE_OP_CLASS_ID
 
-    static std::unique_ptr<GrDrawOp> Make(GrPaint&& paint, const SkMatrix& viewMatrix,
-                                          GrAAType aaType, int spriteCount, const SkRSXform* xforms,
-                                          const SkRect* rects, const SkColor* colors) {
-        return Helper::FactoryHelper<GrDrawAtlasOp>(std::move(paint), viewMatrix, aaType,
+    static std::unique_ptr<GrDrawOp> Make(GrContext* context,
+                                          GrPaint&& paint,
+                                          const SkMatrix& viewMatrix,
+                                          GrAAType aaType,
+                                          int spriteCount,
+                                          const SkRSXform* xforms,
+                                          const SkRect* rects,
+                                          const SkColor* colors) {
+        return Helper::FactoryHelper<GrDrawAtlasOp>(context, std::move(paint), viewMatrix, aaType,
                                                     spriteCount, xforms, rects, colors);
     }
 
@@ -41,8 +46,7 @@ public:
 
     FixedFunctionFlags fixedFunctionFlags() const override;
 
-    RequiresDstTexture finalize(const GrCaps& caps, const GrAppliedClip* clip,
-                                GrPixelConfigIsClamped dstIsClamped) override;
+    RequiresDstTexture finalize(const GrCaps& caps, const GrAppliedClip* clip) override;
 
 private:
     void onPrepareDraws(Target*) override;
@@ -52,7 +56,7 @@ private:
     bool hasColors() const { return fHasColors; }
     int quadCount() const { return fQuadCount; }
 
-    bool onCombineIfPossible(GrOp* t, const GrCaps&) override;
+    CombineResult onCombineIfPossible(GrOp* t, const GrCaps&) override;
 
     struct Geometry {
         GrColor fColor;

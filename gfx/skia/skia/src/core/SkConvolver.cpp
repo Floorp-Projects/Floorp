@@ -145,7 +145,7 @@ void SkConvolutionFilter1D::AddFilter(int filterOffset,
     instance.fOffset = filterOffset;
     instance.fTrimmedLength = filterLength;
     instance.fLength = filterSize;
-    fFilters.push(instance);
+    fFilters.push_back(instance);
 
     fMaxFilter = SkTMax(fMaxFilter, filterLength);
 }

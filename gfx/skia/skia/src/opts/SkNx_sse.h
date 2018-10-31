@@ -8,12 +8,31 @@
 #ifndef SkNx_sse_DEFINED
 #define SkNx_sse_DEFINED
 
-#include <immintrin.h>
+#include "SkTypes.h"
+
+#if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE41
+    #include <smmintrin.h>
+#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSSE3
+    #include <tmmintrin.h>
+#else
+    #include <emmintrin.h>
+#endif
 
 // This file may assume <= SSE2, but must check SK_CPU_SSE_LEVEL for anything more recent.
 // If you do, make sure this is in a static inline function... anywhere else risks violating ODR.
 
 namespace {
+
+// Emulate _mm_floor_ps() with SSE2:
+//   - roundtrip through integers via truncation
+//   - subtract 1 if that's too big (possible for negative values).
+// This restricts the domain of our inputs to a maximum somehwere around 2^31.
+// Seems plenty big.
+AI static __m128 emulate_mm_floor_ps(__m128 v) {
+    __m128 roundtrip = _mm_cvtepi32_ps(_mm_cvttps_epi32(v));
+    __m128 too_big = _mm_cmpgt_ps(roundtrip, v);
+    return _mm_sub_ps(roundtrip, _mm_and_ps(too_big, _mm_set1_ps(1.0f)));
+}
 
 template <>
 class SkNx<2, float> {
@@ -28,6 +47,17 @@ public:
     AI SkNx(float a, float b) : fVec(_mm_setr_ps(a,b,0,0)) {}
 
     AI void store(void* ptr) const { _mm_storel_pi((__m64*)ptr, fVec); }
+
+    AI static void Load2(const void* ptr, SkNx* x, SkNx* y) {
+        const float* m = (const float*)ptr;
+        *x = SkNx{m[0], m[2]};
+        *y = SkNx{m[1], m[3]};
+    }
+
+    AI static void Store2(void* dst, const SkNx& a, const SkNx& b) {
+        auto vals = _mm_unpacklo_ps(a.fVec, b.fVec);
+        _mm_storeu_ps((float*)dst, vals);
+    }
 
     AI static void Store3(void* dst, const SkNx& a, const SkNx& b, const SkNx& c) {
         auto lo = _mm_setr_ps(a[0], b[0], c[0], a[1]),
@@ -60,7 +90,15 @@ public:
     AI static SkNx Min(const SkNx& l, const SkNx& r) { return _mm_min_ps(l.fVec, r.fVec); }
     AI static SkNx Max(const SkNx& l, const SkNx& r) { return _mm_max_ps(l.fVec, r.fVec); }
 
-    AI SkNx    abs() const { return _mm_andnot_ps(_mm_set1_ps(-0.0f), fVec); }
+    AI SkNx abs() const { return _mm_andnot_ps(_mm_set1_ps(-0.0f), fVec); }
+    AI SkNx floor() const {
+    #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE41
+        return _mm_floor_ps(fVec);
+    #else
+        return emulate_mm_floor_ps(fVec);
+    #endif
+    }
+
     AI SkNx   sqrt() const { return _mm_sqrt_ps (fVec);  }
     AI SkNx  rsqrt() const { return _mm_rsqrt_ps(fVec); }
     AI SkNx invert() const { return _mm_rcp_ps(fVec); }
@@ -129,11 +167,15 @@ public:
     }
 
     AI SkNx operator - () const { return _mm_xor_ps(_mm_set1_ps(-0.0f), fVec); }
+    AI SkNx operator ~ () const { return _mm_xor_ps(fVec, _mm_castsi128_ps(_mm_cmpeq_epi32(_mm_castps_si128(fVec), _mm_castps_si128(fVec)))); }
+    AI SkNx operator ! () const { return ~*this; }
 
     AI SkNx operator + (const SkNx& o) const { return _mm_add_ps(fVec, o.fVec); }
     AI SkNx operator - (const SkNx& o) const { return _mm_sub_ps(fVec, o.fVec); }
     AI SkNx operator * (const SkNx& o) const { return _mm_mul_ps(fVec, o.fVec); }
     AI SkNx operator / (const SkNx& o) const { return _mm_div_ps(fVec, o.fVec); }
+    AI SkNx operator & (const SkNx& o) const { return _mm_and_ps(fVec, o.fVec); }
+    AI SkNx operator | (const SkNx& o) const { return _mm_or_ps(fVec, o.fVec); }
 
     AI SkNx operator == (const SkNx& o) const { return _mm_cmpeq_ps (fVec, o.fVec); }
     AI SkNx operator != (const SkNx& o) const { return _mm_cmpneq_ps(fVec, o.fVec); }
@@ -150,14 +192,7 @@ public:
     #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE41
         return _mm_floor_ps(fVec);
     #else
-        // Emulate _mm_floor_ps() with SSE2:
-        //   - roundtrip through integers via truncation
-        //   - subtract 1 if that's too big (possible for negative values).
-        // This restricts the domain of our inputs to a maximum somehwere around 2^31.
-        // Seems plenty big.
-        __m128 roundtrip = _mm_cvtepi32_ps(_mm_cvttps_epi32(fVec));
-        __m128 too_big = _mm_cmpgt_ps(roundtrip, fVec);
-        return _mm_sub_ps(roundtrip, _mm_and_ps(too_big, _mm_set1_ps(1.0f)));
+        return emulate_mm_floor_ps(fVec);
     #endif
     }
 
@@ -171,6 +206,18 @@ public:
         return pun.fs[k&3];
     }
 
+    AI float min() const {
+        SkNx min = Min(*this, _mm_shuffle_ps(fVec, fVec, _MM_SHUFFLE(2,3,0,1)));
+        min = Min(min, _mm_shuffle_ps(min.fVec, min.fVec, _MM_SHUFFLE(0,1,2,3)));
+        return min[0];
+    }
+
+    AI float max() const {
+        SkNx max = Max(*this, _mm_shuffle_ps(fVec, fVec, _MM_SHUFFLE(2,3,0,1)));
+        max = Max(max, _mm_shuffle_ps(max.fVec, max.fVec, _MM_SHUFFLE(0,1,2,3)));
+        return max[0];
+    }
+
     AI bool allTrue() const { return 0xffff == _mm_movemask_epi8(_mm_castps_si128(fVec)); }
     AI bool anyTrue() const { return 0x0000 != _mm_movemask_epi8(_mm_castps_si128(fVec)); }
 
@@ -182,6 +229,8 @@ public:
                          _mm_andnot_ps(fVec, e.fVec));
     #endif
     }
+
+    operator __m128() const { return fVec; }
 
     __m128 fVec;
 };
@@ -216,6 +265,8 @@ public:
     AI SkNx operator & (const SkNx& o) const { return _mm_and_si128(fVec, o.fVec); }
     AI SkNx operator | (const SkNx& o) const { return _mm_or_si128(fVec, o.fVec);  }
     AI SkNx operator ^ (const SkNx& o) const { return _mm_xor_si128(fVec, o.fVec); }
+
+    AI SkNx operator ~ () const { return _mm_xor_si128(fVec, _mm_cmpeq_epi32(fVec, fVec)); }
 
     AI SkNx operator << (int bits) const { return _mm_slli_epi32(fVec, bits); }
     AI SkNx operator >> (int bits) const { return _mm_srai_epi32(fVec, bits); }
@@ -264,6 +315,55 @@ public:
 #endif
     }
 
+    operator __m128i() const { return fVec; }
+
+    __m128i fVec;
+};
+
+template <>
+class SkNx<2, uint32_t> {
+public:
+    AI SkNx(const __m128i& vec) : fVec(vec) {}
+
+    AI SkNx() {}
+    AI SkNx(uint32_t val) : fVec(_mm_set1_epi32(val)) {}
+    AI static SkNx Load(const void* ptr) { return _mm_loadl_epi64((const __m128i*)ptr); }
+    AI SkNx(uint32_t a, uint32_t b) : fVec(_mm_setr_epi32(a,b,0,0)) {}
+
+    AI void store(void* ptr) const { _mm_storel_epi64((__m128i*)ptr, fVec); }
+
+    AI SkNx operator + (const SkNx& o) const { return _mm_add_epi32(fVec, o.fVec); }
+    AI SkNx operator - (const SkNx& o) const { return _mm_sub_epi32(fVec, o.fVec); }
+    AI SkNx operator * (const SkNx& o) const { return mullo32(fVec, o.fVec);       }
+
+    AI SkNx operator & (const SkNx& o) const { return _mm_and_si128(fVec, o.fVec); }
+    AI SkNx operator | (const SkNx& o) const { return _mm_or_si128(fVec, o.fVec);  }
+    AI SkNx operator ^ (const SkNx& o) const { return _mm_xor_si128(fVec, o.fVec); }
+
+    AI SkNx operator << (int bits) const { return _mm_slli_epi32(fVec, bits); }
+    AI SkNx operator >> (int bits) const { return _mm_srli_epi32(fVec, bits); }
+
+    AI SkNx operator == (const SkNx& o) const { return _mm_cmpeq_epi32 (fVec, o.fVec); }
+    AI SkNx operator != (const SkNx& o) const { return (*this == o) ^ 0xffffffff; }
+    // operator < and > take a little extra fiddling to make work for unsigned ints.
+
+    AI uint32_t operator[](int k) const {
+        SkASSERT(0 <= k && k < 2);
+        union { __m128i v; uint32_t us[4]; } pun = {fVec};
+        return pun.us[k&1];
+    }
+
+    AI SkNx thenElse(const SkNx& t, const SkNx& e) const {
+#if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE41
+        return _mm_blendv_epi8(e.fVec, t.fVec, fVec);
+#else
+        return _mm_or_si128(_mm_and_si128   (fVec, t.fVec),
+                            _mm_andnot_si128(fVec, e.fVec));
+#endif
+    }
+
+    AI bool allTrue() const { return 0xff == (_mm_movemask_epi8(fVec) & 0xff); }
+
     __m128i fVec;
 };
 
@@ -287,10 +387,14 @@ public:
     AI SkNx operator | (const SkNx& o) const { return _mm_or_si128(fVec, o.fVec);  }
     AI SkNx operator ^ (const SkNx& o) const { return _mm_xor_si128(fVec, o.fVec); }
 
+    AI SkNx operator ~ () const { return _mm_xor_si128(fVec, _mm_cmpeq_epi32(fVec, fVec)); }
+
     AI SkNx operator << (int bits) const { return _mm_slli_epi32(fVec, bits); }
     AI SkNx operator >> (int bits) const { return _mm_srli_epi32(fVec, bits); }
 
     AI SkNx operator == (const SkNx& o) const { return _mm_cmpeq_epi32 (fVec, o.fVec); }
+    AI SkNx operator != (const SkNx& o) const { return (*this == o) ^ 0xffffffff; }
+
     // operator < and > take a little extra fiddling to make work for unsigned ints.
 
     AI uint32_t operator[](int k) const {
@@ -314,6 +418,8 @@ public:
 
         return SkNx{v20[1], v31[1], v20[3], v31[3]};
     }
+
+    operator __m128i() const { return fVec; }
 
     __m128i fVec;
 };
@@ -382,6 +488,8 @@ public:
         union { __m128i v; uint16_t us[8]; } pun = {fVec};
         return pun.us[k&3];
     }
+
+    operator __m128i() const { return fVec; }
 
     __m128i fVec;
 };
@@ -458,12 +566,17 @@ public:
         _mm_storeu_si128((__m128i*)ptr + 3, _mm_unpackhi_epi32(rg4567, ba4567));
     }
 
+    AI SkNx operator ~ () const { return _mm_xor_si128(fVec, _mm_cmpeq_epi16(fVec, fVec)); }
+
     AI SkNx operator + (const SkNx& o) const { return _mm_add_epi16(fVec, o.fVec); }
     AI SkNx operator - (const SkNx& o) const { return _mm_sub_epi16(fVec, o.fVec); }
     AI SkNx operator * (const SkNx& o) const { return _mm_mullo_epi16(fVec, o.fVec); }
     AI SkNx operator & (const SkNx& o) const { return _mm_and_si128(fVec, o.fVec); }
     AI SkNx operator | (const SkNx& o) const { return _mm_or_si128(fVec, o.fVec); }
-
+    AI SkNx operator < (const SkNx& o) const {
+        auto flip = _mm_set1_epi16(short(0x8000));
+        return _mm_cmplt_epi16(_mm_xor_si128(flip, fVec), _mm_xor_si128(flip, o.fVec));
+    }
     AI SkNx operator << (int bits) const { return _mm_slli_epi16(fVec, bits); }
     AI SkNx operator >> (int bits) const { return _mm_srli_epi16(fVec, bits); }
 
@@ -473,6 +586,12 @@ public:
         const uint16_t top = 0x8000; // Keep this separate from _mm_set1_epi16 or MSVC will whine.
         const __m128i top_8x = _mm_set1_epi16(top);
         return _mm_add_epi8(top_8x, _mm_min_epi16(_mm_sub_epi8(a.fVec, top_8x),
+                                                  _mm_sub_epi8(b.fVec, top_8x)));
+    }
+    AI static SkNx Max(const SkNx& a, const SkNx& b) {
+        const uint16_t top = 0x8000;
+        const __m128i top_8x = _mm_set1_epi16(top);
+        return _mm_add_epi8(top_8x, _mm_max_epi16(_mm_sub_epi8(a.fVec, top_8x),
                                                   _mm_sub_epi8(b.fVec, top_8x)));
     }
 
@@ -491,6 +610,8 @@ public:
         return pun.us[k&7];
     }
 
+    operator __m128i() const { return fVec; }
+
     __m128i fVec;
 };
 
@@ -498,6 +619,7 @@ template <>
 class SkNx<4, uint8_t> {
 public:
     AI SkNx() {}
+    AI SkNx(uint8_t val) : fVec(_mm_set1_epi8(val)) {}
     AI SkNx(const __m128i& vec) : fVec(vec) {}
     AI SkNx(uint8_t a, uint8_t b, uint8_t c, uint8_t d)
         : fVec(_mm_setr_epi8(a,b,c,d, 0,0,0,0, 0,0,0,0, 0,0,0,0)) {}
@@ -611,9 +733,8 @@ template <> AI /*static*/ Sk4i SkNx_cast<int32_t, float>(const Sk4f& src) {
 }
 
 template<> AI /*static*/ Sk4h SkNx_cast<uint16_t, int32_t>(const Sk4i& src) {
-#if 0 && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE41
-    // TODO: This seems to be causing code generation problems.   Investigate?
-    return _mm_packus_epi32(src.fVec);
+#if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE41
+    return _mm_packus_epi32(src.fVec, src.fVec);
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSSE3
     // With SSSE3, we can just shuffle the low 2 bytes from each lane right into place.
     const int _ = ~0;
@@ -625,7 +746,28 @@ template<> AI /*static*/ Sk4h SkNx_cast<uint16_t, int32_t>(const Sk4i& src) {
 #endif
 }
 
+template<> AI /*static*/ Sk8h SkNx_cast<uint16_t, int32_t>(const Sk8i& src) {
+#if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE41
+    return _mm_packus_epi32(src.fLo.fVec, src.fHi.fVec);
+#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSSE3
+    // With SSSE3, we can just shuffle the low 2 bytes from each lane right into place.
+    const int _ = ~0;
+    __m128i mask = _mm_setr_epi8(0,1, 4,5, 8,9, 12,13, _,_,_,_,_,_,_,_);
+    return _mm_unpacklo_epi64(_mm_shuffle_epi8(src.fLo.fVec, mask),
+                              _mm_shuffle_epi8(src.fHi.fVec, mask));
+#else
+    // With SSE2, we have to sign extend our input, making _mm_packs_epi32 do the pack we want.
+    __m128i x = _mm_srai_epi32(_mm_slli_epi32(src.fLo.fVec, 16), 16);
+    __m128i y = _mm_srai_epi32(_mm_slli_epi32(src.fHi.fVec, 16), 16);
+    return _mm_packs_epi32(x,y);
+#endif
+}
+
 template<> AI /*static*/ Sk4h SkNx_cast<uint16_t, float>(const Sk4f& src) {
+    return SkNx_cast<uint16_t>(SkNx_cast<int32_t>(src));
+}
+
+template<> AI /*static*/ Sk8h SkNx_cast<uint16_t, float>(const Sk8f& src) {
     return SkNx_cast<uint16_t>(SkNx_cast<int32_t>(src));
 }
 
@@ -705,6 +847,9 @@ template<> AI /*static*/ Sk4i SkNx_cast<int32_t, uint16_t>(const Sk4h& src) {
     return _mm_unpacklo_epi16(src.fVec, _mm_setzero_si128());
 }
 
+template<> AI /*static*/ Sk4u SkNx_cast<uint32_t, uint16_t>(const Sk4h& src) {
+    return _mm_unpacklo_epi16(src.fVec, _mm_setzero_si128());
+}
 
 template<> AI /*static*/ Sk4b SkNx_cast<uint8_t, int32_t>(const Sk4i& src) {
     return _mm_packus_epi16(_mm_packus_epi16(src.fVec, src.fVec), src.fVec);
@@ -716,6 +861,23 @@ template<> AI /*static*/ Sk4b SkNx_cast<uint8_t, uint32_t>(const Sk4u& src) {
 
 template<> AI /*static*/ Sk4i SkNx_cast<int32_t, uint32_t>(const Sk4u& src) {
     return src.fVec;
+}
+
+template<> AI /*static*/ Sk4u SkNx_cast<uint32_t, int32_t>(const Sk4i& src) {
+    return src.fVec;
+}
+
+template<> AI /*static*/ Sk4h SkNx_cast<uint16_t, uint32_t>(const Sk4u& src) {
+    return SkNx_cast<uint16_t>(SkNx_cast<int32_t>(src));
+}
+
+template<> AI /*static*/ Sk8h SkNx_cast<uint16_t, uint32_t>(const Sk8u& src) {
+    return SkNx_cast<uint16_t>(SkNx_cast<int32_t>(src));
+}
+
+template<> AI /*static*/ Sk8u SkNx_cast<uint32_t, uint16_t>(const Sk8h& src) {
+    return Sk8u(_mm_unpacklo_epi16(src.fVec, _mm_setzero_si128()),
+                _mm_unpackhi_epi16(src.fVec, _mm_setzero_si128()));
 }
 
 AI static Sk4i Sk4f_round(const Sk4f& x) {

@@ -16,7 +16,8 @@
 
 #include "ops/GrOp.h"
 
-GrPipeline::GrPipeline(const InitArgs& args, GrProcessorSet&& processors,
+GrPipeline::GrPipeline(const InitArgs& args,
+                       GrProcessorSet&& processors,
                        GrAppliedClip&& appliedClip) {
     SkASSERT(args.fProxy);
     SkASSERT(processors.isFinalized());
@@ -24,10 +25,13 @@ GrPipeline::GrPipeline(const InitArgs& args, GrProcessorSet&& processors,
     fProxy.reset(args.fProxy);
 
     fFlags = args.fFlags;
-    fScissorState = appliedClip.scissorState();
     if (appliedClip.hasStencilClip()) {
         fFlags |= kHasStencilClip_Flag;
     }
+    if (appliedClip.scissorState().enabled()) {
+        fFlags |= kScissorEnabled_Flag;
+    }
+
     fWindowRectsState = appliedClip.windowRectsState();
     if (!args.fUserStencil->isDisabled(fFlags & kHasStencilClip_Flag)) {
         fFlags |= kStencilEnabled_Flag;
@@ -76,7 +80,7 @@ GrPipeline::GrPipeline(const InitArgs& args, GrProcessorSet&& processors,
 void GrPipeline::addDependenciesTo(GrOpList* opList, const GrCaps& caps) const {
     for (int i = 0; i < fFragmentProcessors.count(); ++i) {
         GrFragmentProcessor::TextureAccessIter iter(fFragmentProcessors[i].get());
-        while (const GrResourceIOProcessor::TextureSampler* sampler = iter.next()) {
+        while (const GrFragmentProcessor::TextureSampler* sampler = iter.next()) {
             opList->addDependency(sampler->proxy(), caps);
         }
     }
@@ -89,15 +93,14 @@ void GrPipeline::addDependenciesTo(GrOpList* opList, const GrCaps& caps) const {
 
 GrXferBarrierType GrPipeline::xferBarrierType(const GrCaps& caps) const {
     if (fDstTextureProxy.get() &&
-        fDstTextureProxy.get()->priv().peekTexture() == fProxy.get()->priv().peekTexture()) {
+        fDstTextureProxy.get()->peekTexture() == fProxy.get()->peekTexture()) {
         return kTexture_GrXferBarrierType;
     }
     return this->getXferProcessor().xferBarrierType(caps);
 }
 
-GrPipeline::GrPipeline(GrRenderTargetProxy* proxy, ScissorState scissorState, SkBlendMode blendmode)
+GrPipeline::GrPipeline(GrRenderTargetProxy* proxy, GrScissorTest scissorTest, SkBlendMode blendmode)
         : fProxy(proxy)
-        , fScissorState()
         , fWindowRectsState()
         , fUserStencilSettings(&GrUserStencilSettings::kUnused)
         , fFlags()
@@ -105,7 +108,7 @@ GrPipeline::GrPipeline(GrRenderTargetProxy* proxy, ScissorState scissorState, Sk
         , fFragmentProcessors()
         , fNumColorProcessors(0) {
     SkASSERT(proxy);
-    if (ScissorState::kEnabled == scissorState) {
-        fScissorState.set({0, 0, 0, 0}); // caller will use the DynamicState struct.
+    if (GrScissorTest::kEnabled == scissorTest) {
+        fFlags |= kScissorEnabled_Flag;
     }
 }

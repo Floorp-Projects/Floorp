@@ -22,11 +22,10 @@ class SkMaskSwizzler : public SkSampler {
 public:
 
     /*
-     * Create a new swizzler
      * @param masks Unowned pointer to helper class
      */
     static SkMaskSwizzler* CreateMaskSwizzler(const SkImageInfo& dstInfo,
-                                              const SkImageInfo& srcInfo,
+                                              bool srcIsOpaque,
                                               SkMasks* masks,
                                               uint32_t bitsPerPixel,
                                               const SkCodec::Options& options);
@@ -39,10 +38,10 @@ public:
     /**
      * Implement fill using a custom width.
      */
-    void fill(const SkImageInfo& info, void* dst, size_t rowBytes, uint64_t colorOrIndex,
-            SkCodec::ZeroInitialized zeroInit) override {
+    void fill(const SkImageInfo& info, void* dst, size_t rowBytes,
+              SkCodec::ZeroInitialized zeroInit) override {
         const SkImageInfo fillInfo = info.makeWH(fDstWidth, info.height());
-        SkSampler::Fill(fillInfo, dst, rowBytes, colorOrIndex, zeroInit);
+        SkSampler::Fill(fillInfo, dst, rowBytes, zeroInit);
     }
 
     /**

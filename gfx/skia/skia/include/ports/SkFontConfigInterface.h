@@ -10,6 +10,7 @@
 
 #include "SkFontStyle.h"
 #include "SkRefCnt.h"
+#include "SkStream.h"
 #include "SkTypeface.h"
 
 class SkFontMgr;
@@ -29,14 +30,12 @@ public:
      *  unref(). The default SkFontConfigInterface is the result of calling
      *  GetSingletonDirectInterface.
      */
-    static SkFontConfigInterface* RefGlobal();
+    static sk_sp<SkFontConfigInterface> RefGlobal();
 
     /**
-     *  Replace the current global instance with the specified one, safely
-     *  ref'ing the new instance, and unref'ing the previous. Returns its
-     *  parameter (the new global instance).
+     *  Replace the current global instance with the specified one.
      */
-    static SkFontConfigInterface* SetGlobal(SkFontConfigInterface*);
+    static void SetGlobal(sk_sp<SkFontConfigInterface> fc);
 
     /**
      *  This should be treated as private to the impl of SkFontConfigInterface.
@@ -99,7 +98,9 @@ public:
      *  openStream(), but derived classes may implement more complex caching schemes.
      */
     virtual sk_sp<SkTypeface> makeTypeface(const FontIdentity& identity) {
-        return SkTypeface::MakeFromStream(this->openStream(identity), identity.fTTCIndex);
+        return SkTypeface::MakeFromStream(std::unique_ptr<SkStreamAsset>(this->openStream(identity)),
+                                          identity.fTTCIndex);
+
     }
 
     /**

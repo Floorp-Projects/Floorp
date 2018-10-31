@@ -21,18 +21,18 @@ public:
     /**
      * GrStencilAttachment is not part of the public API.
      */
-    GrStencilAttachment* getStencilAttachment() const { return fRenderTarget->fStencilAttachment; }
+    GrStencilAttachment* getStencilAttachment() const {
+        return fRenderTarget->fStencilAttachment.get();
+    }
 
     /**
      * Attaches the GrStencilAttachment onto the render target. If stencil is a nullptr then the
      * currently attached GrStencilAttachment will be removed if one was previously attached. This
      * function returns false if there were any failure in attaching the GrStencilAttachment.
      */
-    bool attachStencilAttachment(sk_sp<GrStencilAttachment> stencil);
+    void attachStencilAttachment(sk_sp<GrStencilAttachment> stencil);
 
     int numStencilBits() const;
-
-    GrRenderTargetFlags flags() const { return fRenderTarget->fFlags; }
 
 private:
     explicit GrRenderTargetPriv(GrRenderTarget* renderTarget) : fRenderTarget(renderTarget) {}

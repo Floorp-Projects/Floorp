@@ -8,6 +8,7 @@
 #ifndef SkPictureImageFilter_DEFINED
 #define SkPictureImageFilter_DEFINED
 
+#include "SkFlattenable.h"
 #include "SkImageFilter.h"
 #include "SkPicture.h"
 
@@ -24,8 +25,8 @@ public:
      */
     static sk_sp<SkImageFilter> Make(sk_sp<SkPicture> picture, const SkRect& cropRect);
 
-    SK_TO_STRING_OVERRIDE()
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkPictureImageFilter)
+
+    Factory getFactory() const override { return CreateProc; }
 
 protected:
     /*  Constructs an SkPictureImageFilter object from an SkReadBuffer.
@@ -42,6 +43,8 @@ protected:
 private:
     explicit SkPictureImageFilter(sk_sp<SkPicture> picture);
     SkPictureImageFilter(sk_sp<SkPicture> picture, const SkRect& cropRect, sk_sp<SkColorSpace>);
+    static sk_sp<SkFlattenable> CreateProc(SkReadBuffer&);
+    friend class SkFlattenable::PrivateInitializer;
 
     sk_sp<SkPicture>    fPicture;
     SkRect              fCropRect;

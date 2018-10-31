@@ -8,6 +8,7 @@
 #ifndef SkOverdrawCanvas_DEFINED
 #define SkOverdrawCanvas_DEFINED
 
+#include "SkCanvasVirtualEnforcer.h"
 #include "SkNWayCanvas.h"
 
 /**
@@ -15,7 +16,7 @@
  *  increments the alpha channel of each pixel every time it would have been touched
  *  by a draw call.  This is useful for detecting overdraw.
  */
-class SK_API SkOverdrawCanvas : public SkNWayCanvas {
+class SK_API SkOverdrawCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> {
 public:
     /* Does not take ownership of canvas */
     SkOverdrawCanvas(SkCanvas*);
@@ -23,8 +24,6 @@ public:
     void onDrawText(const void*, size_t, SkScalar, SkScalar, const SkPaint&) override;
     void onDrawPosText(const void*, size_t, const SkPoint[], const SkPaint&) override;
     void onDrawPosTextH(const void*, size_t, const SkScalar[], SkScalar, const SkPaint&) override;
-    void onDrawTextOnPath(const void*, size_t, const SkPath&, const SkMatrix*,
-                          const SkPaint&) override;
     void onDrawTextRSXform(const void*, size_t, const SkRSXform[], const SkRect*,
                            const SkPaint&) override;
     void onDrawTextBlob(const SkTextBlob*, SkScalar, SkScalar, const SkPaint&) override;
@@ -38,7 +37,8 @@ public:
     void onDrawDRRect(const SkRRect&, const SkRRect&, const SkPaint&) override;
     void onDrawRRect(const SkRRect&, const SkPaint&) override;
     void onDrawPoints(PointMode, size_t, const SkPoint[], const SkPaint&) override;
-    void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override;
+    void onDrawVerticesObject(const SkVertices*, const SkVertices::Bone bones[], int boneCount,
+                              SkBlendMode, const SkPaint&) override;
     void onDrawAtlas(const SkImage*, const SkRSXform[], const SkRect[], const SkColor[],
                      int, SkBlendMode, const SkRect*, const SkPaint*) override;
     void onDrawPath(const SkPath&, const SkPaint&) override;
@@ -56,6 +56,9 @@ public:
     void onDrawDrawable(SkDrawable*, const SkMatrix*) override;
     void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;
 
+    void onDrawAnnotation(const SkRect&, const char key[], SkData* value) override;
+    void onDrawShadowRec(const SkPath&, const SkDrawShadowRec&) override;
+
 private:
     void drawPosTextCommon(const void*, size_t, const SkScalar[], int, const SkPoint&,
                            const SkPaint&);
@@ -64,7 +67,7 @@ private:
 
     SkPaint   fPaint;
 
-    typedef SkNWayCanvas INHERITED;
+    typedef SkCanvasVirtualEnforcer<SkNWayCanvas> INHERITED;
 };
 
 #endif

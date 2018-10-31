@@ -77,7 +77,8 @@ public:
                       OutputStream* out)
     : INHERITED(program, errors, out)
     , fLineEnding("\n")
-    , fContext(*context) {}
+    , fContext(*context)
+    , fProgramKind(program->fKind) {}
 
     bool generateCode() override;
 
@@ -102,7 +103,9 @@ protected:
 
     void writeType(const Type& type);
 
-    void writeExtension(const Extension& ext);
+    void writeExtension(const String& name);
+
+    void writeExtension(const String& name, bool require);
 
     void writeInterfaceBlock(const InterfaceBlock& intf);
 
@@ -116,7 +119,7 @@ protected:
 
     void writeModifiers(const Modifiers& modifiers, bool globalContext);
 
-    void writeGlobalVars(const VarDeclaration& vs);
+    virtual void writeInputVars();
 
     virtual void writeVarInitializer(const Variable& var, const Expression& value);
 
@@ -148,13 +151,15 @@ protected:
 
     void writeConstructor(const Constructor& c, Precedence parentPrecedence);
 
-    void writeFieldAccess(const FieldAccess& f);
+    virtual void writeFieldAccess(const FieldAccess& f);
 
     virtual void writeSwizzle(const Swizzle& swizzle);
 
     static Precedence GetBinaryPrecedence(Token::Kind op);
 
     virtual void writeBinaryExpression(const BinaryExpression& b, Precedence parentPrecedence);
+    void writeShortCircuitWorkaroundExpression(const BinaryExpression& b,
+                                               Precedence parentPrecedence);
 
     void writeTernaryExpression(const TernaryExpression& t, Precedence parentPrecedence);
 
@@ -188,13 +193,14 @@ protected:
 
     virtual void writeSwitchStatement(const SwitchStatement& s);
 
-    void writeReturnStatement(const ReturnStatement& r);
+    virtual void writeReturnStatement(const ReturnStatement& r);
 
     virtual void writeProgramElement(const ProgramElement& e);
 
     const char* fLineEnding;
     const Context& fContext;
-    StringStream fHeader;
+    StringStream fExtensions;
+    StringStream fGlobals;
     StringStream fExtraFunctions;
     String fFunctionHeader;
     Program::Kind fProgramKind;
@@ -209,10 +215,29 @@ protected:
     // true if we have run into usages of dFdx / dFdy
     bool fFoundDerivatives = false;
     bool fFoundImageDecl = false;
+    bool fFoundExternalSamplerDecl = false;
     bool fFoundGSInvocations = false;
     bool fSetupFragPositionGlobal = false;
     bool fSetupFragPositionLocal = false;
     bool fSetupFragCoordWorkaround = false;
+
+    // We map function names to function class so we can quickly deal with function calls that need
+    // extra processing
+    enum class FunctionClass {
+        kAbs,
+        kAtan,
+        kDeterminant,
+        kDerivative,
+        kFract,
+        kInverse,
+        kInverseSqrt,
+        kMin,
+        kPow,
+        kSaturate,
+        kTexture,
+        kTranspose
+    };
+    static std::unordered_map<StringFragment, FunctionClass>* fFunctionClasses;
 
     typedef CodeGenerator INHERITED;
 };
