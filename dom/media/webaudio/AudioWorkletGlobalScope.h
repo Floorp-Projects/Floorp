@@ -13,10 +13,9 @@
 
 namespace mozilla {
 
-class WorkletImpl;
+class AudioWorkletImpl;
 
 namespace dom {
-
 
 class AudioWorkletGlobalScope final : public WorkletGlobalScope
 {
@@ -24,7 +23,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioWorkletGlobalScope, WorkletGlobalScope);
 
-  explicit AudioWorkletGlobalScope(WorkletImpl* aImpl);
+  explicit AudioWorkletGlobalScope(AudioWorkletImpl* aImpl);
 
   bool
   WrapGlobalObject(JSContext* aCx,
@@ -35,6 +34,8 @@ public:
                     VoidFunction& aProcessorCtor,
                     ErrorResult& aRv);
 
+  WorkletImpl* Impl() const override;
+
   uint64_t CurrentFrame() const;
 
   double CurrentTime() const;
@@ -43,6 +44,8 @@ public:
 
 private:
   ~AudioWorkletGlobalScope() = default;
+
+  const RefPtr<AudioWorkletImpl> mImpl;
 
   uint64_t mCurrentFrame;
   double mCurrentTime;

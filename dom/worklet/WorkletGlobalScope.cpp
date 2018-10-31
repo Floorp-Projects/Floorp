@@ -36,8 +36,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkletGlobalScope)
   NS_INTERFACE_MAP_ENTRY(WorkletGlobalScope)
 NS_INTERFACE_MAP_END
 
-WorkletGlobalScope::WorkletGlobalScope(WorkletImpl* aImpl)
-  : mImpl(aImpl)
+WorkletGlobalScope::WorkletGlobalScope()
 {
 }
 
@@ -55,7 +54,8 @@ already_AddRefed<Console>
 WorkletGlobalScope::GetConsole(JSContext* aCx, ErrorResult& aRv)
 {
   if (!mConsole) {
-    const WorkletLoadInfo& loadInfo = mImpl->LoadInfo();
+    MOZ_ASSERT(Impl());
+    const WorkletLoadInfo& loadInfo = Impl()->LoadInfo();
     mConsole = Console::CreateForWorklet(aCx, this,
                                          loadInfo.OuterWindowID(),
                                          loadInfo.InnerWindowID(), aRv);
