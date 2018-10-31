@@ -200,11 +200,7 @@ ImageDocument::Init()
 JSObject*
 ImageDocument::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  JSObject* obj = ImageDocument_Binding::Wrap(aCx, this, aGivenProto);
-  if (!obj) {
-      MOZ_CRASH("Looks like bug 1488480/1405521, with ImageDocument::WrapNode failing");
-  }
-  return obj;
+  return ImageDocument_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsresult

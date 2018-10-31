@@ -3496,7 +3496,7 @@ class CGConstructorEnabled(CGAbstractMethod):
         return body.define()
 
 
-def CreateBindingJSObject(descriptor, properties, failureCode = ""):
+def CreateBindingJSObject(descriptor, properties):
     objDecl = "BindingJSObjectCreator<%s> creator(aCx);\n" % descriptor.nativeType
 
     # We don't always need to root obj, but there are a variety
@@ -3521,14 +3521,12 @@ def CreateBindingJSObject(descriptor, properties, failureCode = ""):
             """
             creator.CreateObject(aCx, sClass.ToJSClass(), proto, aObject, aReflector);
             """)
-    return objDecl + create + fill(
+    return objDecl + create + dedent(
         """
         if (!aReflector) {
-          $*{failureCode}
           return false;
         }
-        """,
-        failureCode=failureCode)
+        """)
 
 
 def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode,
@@ -3698,15 +3696,14 @@ def SetImmutablePrototype(descriptor, failureCode):
         failureCode=failureCode)
 
 
-def DeclareProto(noProto = "", wrapFail = ""):
+def DeclareProto():
     """
     Declare the canonicalProto and proto we have for our wrapping operation.
     """
-    return fill(
+    return dedent(
         """
         JS::Handle<JSObject*> canonicalProto = GetProtoObjectHandle(aCx);
         if (!canonicalProto) {
-          $*{noProto}
           return false;
         }
         JS::Rooted<JSObject*> proto(aCx);
@@ -3717,16 +3714,13 @@ def DeclareProto(noProto = "", wrapFail = ""):
           // to wrap the proto here.
           if (js::GetContextCompartment(aCx) != js::GetObjectCompartment(proto)) {
             if (!JS_WrapObject(aCx, &proto)) {
-              $*{wrapFail}
               return false;
             }
           }
         } else {
           proto = canonicalProto;
         }
-        """,
-        noProto=noProto,
-        wrapFail=wrapFail)
+        """)
 
 
 class CGWrapWithCacheMethod(CGAbstractMethod):
@@ -3753,47 +3747,6 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             return false;
             """)
 
-        isDocument = False
-        iface = self.descriptor.interface
-        while iface:
-            if iface.identifier.name == "Document":
-                isDocument = True
-                break
-            iface = iface.parent
-
-        if isDocument:
-            noGlobal = fill(
-                """
-                MOZ_CRASH("Looks like bug 1488480/1405521, with ${name} not having a global");
-                """,
-                name = self.descriptor.name)
-            noProto = fill(
-                """
-                MOZ_CRASH("Looks like bug 1488480/1405521, with ${name} not having a proto");
-                """,
-                name = self.descriptor.name)
-            protoWrapFail = fill(
-                """
-                MOZ_CRASH("Looks like bug 1488480/1405521, with ${name} failing to wrap a custom proto");
-                """,
-                name = self.descriptor.name)
-            createObjectFailed = fill(
-                """
-                MOZ_CRASH("Looks like bug 1488480/1405521, with ${name} failing to CreateObject/CreateProxyObject");
-                """,
-                name = self.descriptor.name)
-            expandoAllocFail = fill(
-                """
-                MOZ_CRASH("Looks like bug 1488480/1405521, with ${name} failing to EnsureExpandoObject or JS_InitializePropertiesFromCompatibleNativeObject");
-                """,
-                name = self.descriptor.name)
-        else:
-            noGlobal = ""
-            noProto = ""
-            protoWrapFail = ""
-            createObjectFailed = ""
-            expandoAllocFail = ""
-
         return fill(
             """
             static_assert(!IsBaseOf<NonRefcountedDOMObject, ${nativeType}>::value,
@@ -3809,7 +3762,6 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
             JS::Rooted<JSObject*> global(aCx, FindAssociatedGlobal(aCx, aObject->GetParentObject()));
             if (!global) {
-              $*{noGlobal}
               return false;
             }
             MOZ_ASSERT(JS_IsGlobalObject(global));
@@ -3850,14 +3802,11 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
             return true;
             """,
-            noGlobal=noGlobal,
             nativeType=self.descriptor.nativeType,
             assertInheritance=AssertInheritanceChain(self.descriptor),
-            declareProto=DeclareProto(noProto, protoWrapFail),
-            createObject=CreateBindingJSObject(self.descriptor, self.properties,
-                                               createObjectFailed),
+            declareProto=DeclareProto(),
+            createObject=CreateBindingJSObject(self.descriptor, self.properties),
             unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor,
-                                                            expandoAllocFail +
                                                             failureCode),
             slots=InitMemberSlots(self.descriptor, failureCode),
             setImmutablePrototype=SetImmutablePrototype(self.descriptor,
