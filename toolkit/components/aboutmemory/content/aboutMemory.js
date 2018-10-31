@@ -793,6 +793,10 @@ function makeDReportMap(aJSONReports) {
     let process = jr.process.replace(pidRegex, pidSubst);
     let path = jr.path.replace(pidRegex, pidSubst);
 
+    // Strip TIDs and threadpool IDs.
+    path = path.replace(/\(tid=(\d+)\)/, "(tid=NNN)");
+    path = path.replace(/#\d+ \(tid=NNN\)/, "#N (tid=NNN)");
+
     // Strip addresses:
     // - .../js-zone(0x12345678)/...
     // - .../zone(0x12345678)/...
