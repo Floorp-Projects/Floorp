@@ -207,7 +207,6 @@ whitelist-types = [
     "mozilla::gfx::Float",
     "mozilla::gfx::FontVariation",
     "mozilla::StyleImageLayerAttachment",
-    "mozilla::StyleUnicodeRange",
     "gfxFontFeature",
     "gfxFontVariation",
     ".*ThreadSafe.*Holder",
@@ -393,6 +392,7 @@ cbindgen-types = [
     { gecko = "mozilla::StyleFontFaceSourceListComponent", servo = "font_face::FontFaceSourceListComponent" },
     { gecko = "mozilla::StyleFontLanguageOverride", servo = "values::computed::font::FontLanguageOverride" },
     { gecko = "mozilla::StylePathCommand", servo = "values::specified::svg_path::PathCommand" },
+    { gecko = "mozilla::StyleUnicodeRange", servo = "cssparser::UnicodeRange" },
 ]
 
 mapped-generic-types = [
