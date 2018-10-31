@@ -678,6 +678,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   {
     ErrorResult error;
     bool bodyUsed = response->GetBodyUsed(error);
+    error.WouldReportJSException();
     if (NS_WARN_IF(error.Failed())) {
       autoCancel.SetCancelErrorResult(aCx, error);
       return;
@@ -759,6 +760,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   if (body) {
     ErrorResult error;
     response->SetBodyUsed(aCx, error);
+    error.WouldReportJSException();
     if (NS_WARN_IF(error.Failed())) {
       autoCancel.SetCancelErrorResult(aCx, error);
       return;

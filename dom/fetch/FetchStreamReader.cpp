@@ -119,9 +119,7 @@ FetchStreamReader::CloseAndRelease(JSContext* aCx, nsresult aStatus)
 
   RefPtr<FetchStreamReader> kungFuDeathGrip = this;
 
-  if (aCx) {
-    MOZ_ASSERT(mReader);
-
+  if (aCx && mReader) {
     RefPtr<DOMException> error = DOMException::Create(aStatus);
 
     JS::Rooted<JS::Value> errorValue(aCx);
@@ -156,6 +154,8 @@ FetchStreamReader::StartConsuming(JSContext* aCx,
 {
   MOZ_DIAGNOSTIC_ASSERT(!mReader);
   MOZ_DIAGNOSTIC_ASSERT(aStream);
+
+  aRv.MightThrowJSException();
 
   JS::Rooted<JSObject*> reader(aCx,
                                JS::ReadableStreamGetReader(aCx, aStream,

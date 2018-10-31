@@ -8,5 +8,5 @@
 interface External
 {
   void AddSearchProvider(DOMString aDescriptionURL);
-  unsigned long IsSearchProviderInstalled(DOMString aSearchURL);
+  void IsSearchProviderInstalled();
 };

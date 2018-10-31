@@ -5888,6 +5888,12 @@ pref("dom.xhr.lowercase_header.enabled", true);
 // this can be removed.
 pref("dom.clients.openwindow_favors_same_process", true);
 
+#ifdef RELEASE_OR_BETA
+pref("toolkit.aboutPerformance.showInternals", false);
+#else
+pref("toolkit.aboutPerformance.showInternals", true);
+#endif
+
 // When a crash happens, whether to include heap regions of the crash context
 // in the minidump. Enabled by default on nightly and aurora.
 #ifdef RELEASE_OR_BETA
@@ -5941,4 +5947,10 @@ pref("dom.datatransfer.mozAtAPIs", true);
 // Whether or not Prio is supported on this platform.
 #ifdef MOZ_LIBPRIO
 pref("prio.enabled", false);
+#endif
+
+#ifdef NIGHTLY_BUILD
+pref("dom.sidebar.enabled", false);
+#else
+pref("dom.sidebar.enabled", true);
 #endif
