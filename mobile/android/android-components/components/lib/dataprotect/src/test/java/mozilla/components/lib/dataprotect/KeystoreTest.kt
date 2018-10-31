@@ -11,7 +11,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.nio.charset.StandardCharsets
-import java.security.*
+import java.security.Key
+import java.security.KeyStore
+import java.security.GeneralSecurityException
+import java.security.SecureRandom
+import java.security.Security
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey

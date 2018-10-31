@@ -15,4 +15,3 @@ class KeystoreException(
     message: String? = null,
     cause: Throwable? = null
 ) : GeneralSecurityException(message, cause)
-
