@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DevToolsModules(
+DebuggerModules(
     'breakOnNext.js',
     'commands.js',
     'continueToHere.js',

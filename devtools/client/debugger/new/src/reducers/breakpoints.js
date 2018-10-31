@@ -1,148 +1,129 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.initialBreakpointsState = initialBreakpointsState;
-exports.getBreakpoints = getBreakpoints;
-exports.getBreakpoint = getBreakpoint;
-exports.getBreakpointsDisabled = getBreakpointsDisabled;
-exports.getBreakpointsLoading = getBreakpointsLoading;
-exports.getBreakpointsForSource = getBreakpointsForSource;
-exports.getBreakpointForLine = getBreakpointForLine;
-exports.getHiddenBreakpoint = getHiddenBreakpoint;
-exports.getHiddenBreakpointLocation = getHiddenBreakpointLocation;
-
-var _immutable = require("devtools/client/shared/vendor/immutable");
-
-var I = _interopRequireWildcard(_immutable);
-
-var _makeRecord = require("../utils/makeRecord");
-
-var _makeRecord2 = _interopRequireDefault(_makeRecord);
-
-var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
-
-var _breakpoint = require("../utils/breakpoint/index");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
 
 /**
  * Breakpoints reducer
  * @module reducers/breakpoints
  */
-function initialBreakpointsState(xhrBreakpoints = []) {
-  return (0, _makeRecord2.default)({
-    breakpoints: I.Map(),
-    xhrBreakpoints: I.List(xhrBreakpoints),
-    breakpointsDisabled: false
-  })();
+
+import * as I from "immutable";
+import makeRecord from "../utils/makeRecord";
+
+import { isGeneratedId } from "devtools-source-map";
+import { makeLocationId } from "../utils/breakpoint";
+
+import type { XHRBreakpoint, Breakpoint, Location } from "../types";
+import type { Action, DonePromiseAction } from "../actions/types";
+import type { Record } from "../utils/makeRecord";
+
+export type BreakpointsMap = I.Map<string, Breakpoint>;
+export type XHRBreakpointsList = I.List<XHRBreakpoint>;
+
+export type BreakpointsState = {
+  breakpoints: BreakpointsMap,
+  xhrBreakpoints: XHRBreakpointsList
+};
+
+export function initialBreakpointsState(
+  xhrBreakpoints?: any[] = []
+): Record<BreakpointsState> {
+  return makeRecord(
+    ({
+      breakpoints: I.Map(),
+      xhrBreakpoints: I.List(xhrBreakpoints),
+      breakpointsDisabled: false
+    }: BreakpointsState)
+  )();
 }
 
-function update(state = initialBreakpointsState(), action) {
+function update(
+  state: Record<BreakpointsState> = initialBreakpointsState(),
+  action: Action
+) {
   switch (action.type) {
-    case "ADD_BREAKPOINT":
-      {
-        return addBreakpoint(state, action);
-      }
+    case "ADD_BREAKPOINT": {
+      return addBreakpoint(state, action);
+    }
 
-    case "SYNC_BREAKPOINT":
-      {
-        return syncBreakpoint(state, action);
-      }
+    case "SYNC_BREAKPOINT": {
+      return syncBreakpoint(state, action);
+    }
 
-    case "ENABLE_BREAKPOINT":
-      {
-        return addBreakpoint(state, action);
-      }
+    case "ENABLE_BREAKPOINT": {
+      return addBreakpoint(state, action);
+    }
 
-    case "DISABLE_BREAKPOINT":
-      {
-        return updateBreakpoint(state, action);
-      }
+    case "DISABLE_BREAKPOINT": {
+      return updateBreakpoint(state, action);
+    }
 
-    case "DISABLE_ALL_BREAKPOINTS":
-      {
-        return updateAllBreakpoints(state, action);
-      }
+    case "DISABLE_ALL_BREAKPOINTS": {
+      return updateAllBreakpoints(state, action);
+    }
 
-    case "ENABLE_ALL_BREAKPOINTS":
-      {
-        return updateAllBreakpoints(state, action);
-      }
+    case "ENABLE_ALL_BREAKPOINTS": {
+      return updateAllBreakpoints(state, action);
+    }
 
-    case "SET_BREAKPOINT_CONDITION":
-      {
-        return updateBreakpoint(state, action);
-      }
+    case "SET_BREAKPOINT_CONDITION": {
+      return updateBreakpoint(state, action);
+    }
 
-    case "REMOVE_BREAKPOINT":
-      {
-        return removeBreakpoint(state, action);
-      }
+    case "REMOVE_BREAKPOINT": {
+      return removeBreakpoint(state, action);
+    }
 
-    case "REMAP_BREAKPOINTS":
-      {
-        return remapBreakpoints(state, action);
-      }
+    case "REMAP_BREAKPOINTS": {
+      return remapBreakpoints(state, action);
+    }
 
-    case "NAVIGATE":
-      {
-        return initialBreakpointsState();
-      }
+    case "NAVIGATE": {
+      return initialBreakpointsState();
+    }
 
-    case "SET_XHR_BREAKPOINT":
-      {
-        return addXHRBreakpoint(state, action);
-      }
+    case "SET_XHR_BREAKPOINT": {
+      return addXHRBreakpoint(state, action);
+    }
 
-    case "REMOVE_XHR_BREAKPOINT":
-      {
-        return removeXHRBreakpoint(state, action);
-      }
+    case "REMOVE_XHR_BREAKPOINT": {
+      return removeXHRBreakpoint(state, action);
+    }
 
-    case "UPDATE_XHR_BREAKPOINT":
-      {
-        return updateXHRBreakpoint(state, action);
-      }
+    case "UPDATE_XHR_BREAKPOINT": {
+      return updateXHRBreakpoint(state, action);
+    }
 
-    case "ENABLE_XHR_BREAKPOINT":
-      {
-        return updateXHRBreakpoint(state, action);
-      }
+    case "ENABLE_XHR_BREAKPOINT": {
+      return updateXHRBreakpoint(state, action);
+    }
 
-    case "DISABLE_XHR_BREAKPOINT":
-      {
-        return updateXHRBreakpoint(state, action);
-      }
+    case "DISABLE_XHR_BREAKPOINT": {
+      return updateXHRBreakpoint(state, action);
+    }
   }
 
   return state;
 }
 
 function addXHRBreakpoint(state, action) {
-  const {
-    xhrBreakpoints
-  } = state;
-  const {
-    breakpoint
-  } = action;
-  const {
-    path,
-    method
-  } = breakpoint;
-  const existingBreakpointIndex = state.xhrBreakpoints.findIndex(bp => bp.path === path && bp.method === method);
+  const { xhrBreakpoints } = state;
+  const { breakpoint } = action;
+  const { path, method } = breakpoint;
+
+  const existingBreakpointIndex = state.xhrBreakpoints.findIndex(
+    bp => bp.path === path && bp.method === method
+  );
 
   if (existingBreakpointIndex === -1) {
     return state.set("xhrBreakpoints", xhrBreakpoints.push(breakpoint));
   } else if (xhrBreakpoints.get(existingBreakpointIndex) !== breakpoint) {
-    return state.set("xhrBreakpoints", xhrBreakpoints.set(existingBreakpointIndex, breakpoint));
+    return state.set(
+      "xhrBreakpoints",
+      xhrBreakpoints.set(existingBreakpointIndex, breakpoint)
+    );
   }
 
   return state;
@@ -150,49 +131,39 @@ function addXHRBreakpoint(state, action) {
 
 function removeXHRBreakpoint(state, action) {
   const {
-    breakpoint: {
-      path,
-      method
-    }
+    breakpoint: { path, method }
   } = action;
-  const {
-    xhrBreakpoints
-  } = state;
-  const index = xhrBreakpoints.findIndex(bp => bp.path === path && bp.method === method);
+  const { xhrBreakpoints } = state;
+
+  const index = xhrBreakpoints.findIndex(
+    bp => bp.path === path && bp.method === method
+  );
+
   return state.set("xhrBreakpoints", xhrBreakpoints.delete(index));
 }
 
 function updateXHRBreakpoint(state, action) {
-  const {
-    breakpoint,
-    index
-  } = action;
-  const {
-    xhrBreakpoints
-  } = state;
+  const { breakpoint, index } = action;
+  const { xhrBreakpoints } = state;
   return state.set("xhrBreakpoints", xhrBreakpoints.set(index, breakpoint));
 }
 
 function addBreakpoint(state, action) {
   if (action.status === "start" && action.breakpoint) {
-    const {
-      breakpoint
-    } = action;
-    const locationId = (0, _breakpoint.makeLocationId)(breakpoint.location);
+    const { breakpoint } = action;
+    const locationId = makeLocationId(breakpoint.location);
     return state.setIn(["breakpoints", locationId], breakpoint);
-  } // when the action completes, we can commit the breakpoint
+  }
 
-
+  // when the action completes, we can commit the breakpoint
   if (action.status === "done") {
-    const {
-      value
-    } = action;
+    const { value } = ((action: any): DonePromiseAction);
     return syncBreakpoint(state, value);
-  } // Remove the optimistic update
+  }
 
-
+  // Remove the optimistic update
   if (action.status === "error" && action.breakpoint) {
-    const locationId = (0, _breakpoint.makeLocationId)(action.breakpoint.location);
+    const locationId = makeLocationId(action.breakpoint.location);
     return state.deleteIn(["breakpoints", locationId]);
   }
 
@@ -200,115 +171,125 @@ function addBreakpoint(state, action) {
 }
 
 function syncBreakpoint(state, data) {
-  const {
-    breakpoint,
-    previousLocation
-  } = data;
+  const { breakpoint, previousLocation } = data;
 
   if (previousLocation) {
-    state = state.deleteIn(["breakpoints", (0, _breakpoint.makeLocationId)(previousLocation)]);
+    state = state.deleteIn(["breakpoints", makeLocationId(previousLocation)]);
   }
 
   if (!breakpoint) {
     return state;
   }
 
-  const locationId = (0, _breakpoint.makeLocationId)(breakpoint.location);
+  const locationId = makeLocationId(breakpoint.location);
   return state.setIn(["breakpoints", locationId], breakpoint);
 }
 
 function updateBreakpoint(state, action) {
-  const {
-    breakpoint
-  } = action;
-  const locationId = (0, _breakpoint.makeLocationId)(breakpoint.location);
+  const { breakpoint } = action;
+  const locationId = makeLocationId(breakpoint.location);
   return state.setIn(["breakpoints", locationId], breakpoint);
 }
 
 function updateAllBreakpoints(state, action) {
-  const {
-    breakpoints
-  } = action;
+  const { breakpoints } = action;
   breakpoints.forEach(breakpoint => {
-    const locationId = (0, _breakpoint.makeLocationId)(breakpoint.location);
+    const locationId = makeLocationId(breakpoint.location);
     state = state.setIn(["breakpoints", locationId], breakpoint);
   });
   return state;
 }
 
 function remapBreakpoints(state, action) {
-  const breakpoints = action.breakpoints.reduce((updatedBreakpoints, breakpoint) => {
-    const locationId = (0, _breakpoint.makeLocationId)(breakpoint.location);
-    return { ...updatedBreakpoints,
-      [locationId]: breakpoint
-    };
-  }, {});
+  const breakpoints = action.breakpoints.reduce(
+    (updatedBreakpoints, breakpoint) => {
+      const locationId = makeLocationId(breakpoint.location);
+      return { ...updatedBreakpoints, [locationId]: breakpoint };
+    },
+    {}
+  );
+
   return state.set("breakpoints", I.Map(breakpoints));
 }
 
 function removeBreakpoint(state, action) {
-  const {
-    breakpoint
-  } = action;
-  const id = (0, _breakpoint.makeLocationId)(breakpoint.location);
+  const { breakpoint } = action;
+  const id = makeLocationId(breakpoint.location);
   return state.deleteIn(["breakpoints", id]);
-} // Selectors
+}
+
+// Selectors
 // TODO: these functions should be moved out of the reducer
 
+type OuterState = { breakpoints: Record<BreakpointsState> };
 
-function getBreakpoints(state) {
+export function getBreakpoints(state: OuterState) {
   return state.breakpoints.breakpoints;
 }
 
-function getBreakpoint(state, location) {
+export function getBreakpoint(
+  state: OuterState,
+  location: Location
+): Breakpoint {
   const breakpoints = getBreakpoints(state);
-  return breakpoints.get((0, _breakpoint.makeLocationId)(location));
+  return breakpoints.get(makeLocationId(location));
 }
 
-function getBreakpointsDisabled(state) {
+export function getBreakpointsDisabled(state: OuterState): boolean {
   return state.breakpoints.breakpoints.every(x => x.disabled);
 }
 
-function getBreakpointsLoading(state) {
+export function getBreakpointsLoading(state: OuterState) {
   const breakpoints = getBreakpoints(state);
-  const isLoading = !!breakpoints.valueSeq().filter(bp => bp.loading).first();
+  const isLoading = !!breakpoints
+    .valueSeq()
+    .filter(bp => bp.loading)
+    .first();
+
   return breakpoints.size > 0 && isLoading;
 }
 
-function getBreakpointsForSource(state, sourceId) {
+export function getBreakpointsForSource(state: OuterState, sourceId: string) {
   if (!sourceId) {
     return I.Map();
   }
 
-  const isGeneratedSource = (0, _devtoolsSourceMap.isGeneratedId)(sourceId);
+  const isGeneratedSource = isGeneratedId(sourceId);
   const breakpoints = getBreakpoints(state);
+
   return breakpoints.filter(bp => {
-    const location = isGeneratedSource ? bp.generatedLocation || bp.location : bp.location;
+    const location = isGeneratedSource
+      ? bp.generatedLocation || bp.location
+      : bp.location;
     return location.sourceId === sourceId;
   });
 }
 
-function getBreakpointForLine(state, sourceId, line) {
+export function getBreakpointForLine(
+  state: OuterState,
+  sourceId: string,
+  line: number | null
+): ?Breakpoint {
   if (!sourceId) {
     return I.Map();
   }
-
   const breakpoints = getBreakpointsForSource(state, sourceId);
   return breakpoints.find(breakpoint => breakpoint.location.line === line);
 }
 
-function getHiddenBreakpoint(state) {
-  return getBreakpoints(state).valueSeq().filter(breakpoint => breakpoint.hidden).first();
+export function getHiddenBreakpoint(state: OuterState) {
+  return getBreakpoints(state)
+    .valueSeq()
+    .filter(breakpoint => breakpoint.hidden)
+    .first();
 }
 
-function getHiddenBreakpointLocation(state) {
+export function getHiddenBreakpointLocation(state: OuterState) {
   const hiddenBreakpoint = getHiddenBreakpoint(state);
-
   if (!hiddenBreakpoint) {
     return null;
   }
-
   return hiddenBreakpoint.location;
 }
 
-exports.default = update;
+export default update;

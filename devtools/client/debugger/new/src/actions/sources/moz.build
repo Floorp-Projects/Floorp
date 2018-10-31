@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DevToolsModules(
+DebuggerModules(
     'blackbox.js',
     'index.js',
     'loadSourceText.js',

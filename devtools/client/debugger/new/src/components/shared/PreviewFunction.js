@@ -1,61 +1,63 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _react = require("devtools/client/shared/vendor/react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _lodash = require("devtools/client/shared/vendor/lodash");
-
-var _frames = require("../../utils/pause/frames/index");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function getFunctionName(func) {
+
+// @flow
+
+import React, { Component } from "react";
+
+import { times, zip, flatten } from "lodash";
+
+import { simplifyDisplayName } from "../../utils/pause/frames";
+
+import "./PreviewFunction.css";
+
+type FunctionType = {
+  name: string,
+  displayName?: string,
+  userDisplayName?: string,
+  parameterNames?: string[]
+};
+
+type Props = { func: FunctionType };
+
+function getFunctionName(func: FunctionType) {
   const name = func.userDisplayName || func.displayName || func.name;
-  return (0, _frames.simplifyDisplayName)(name);
+  return simplifyDisplayName(name);
 }
 
-class PreviewFunction extends _react.Component {
-  renderFunctionName(func) {
+export default class PreviewFunction extends Component<Props> {
+  renderFunctionName(func: FunctionType) {
     const name = getFunctionName(func);
-    return _react2.default.createElement("span", {
-      className: "function-name"
-    }, name);
+    return <span className="function-name">{name}</span>;
   }
 
-  renderParams(func) {
-    const {
-      parameterNames = []
-    } = func;
-    const params = parameterNames.filter(i => i).map(param => _react2.default.createElement("span", {
-      className: "param",
-      key: param
-    }, param));
-    const commas = (0, _lodash.times)(params.length - 1).map((_, i) => _react2.default.createElement("span", {
-      className: "delimiter",
-      key: i
-    }, ", ")); // $FlowIgnore
+  renderParams(func: FunctionType) {
+    const { parameterNames = [] } = func;
+    const params = parameterNames.filter(i => i).map(param => (
+      <span className="param" key={param}>
+        {param}
+      </span>
+    ));
 
-    return (0, _lodash.flatten)((0, _lodash.zip)(params, commas));
+    const commas = times(params.length - 1).map((_, i) => (
+      <span className="delimiter" key={i}>
+        {", "}
+      </span>
+    ));
+
+    // $FlowIgnore
+    return flatten(zip(params, commas));
   }
 
   render() {
-    return _react2.default.createElement("span", {
-      className: "function-signature"
-    }, this.renderFunctionName(this.props.func), _react2.default.createElement("span", {
-      className: "paren"
-    }, "("), this.renderParams(this.props.func), _react2.default.createElement("span", {
-      className: "paren"
-    }, ")"));
+    return (
+      <span className="function-signature">
+        {this.renderFunctionName(this.props.func)}
+        <span className="paren">(</span>
+        {this.renderParams(this.props.func)}
+        <span className="paren">)</span>
+      </span>
+    );
   }
-
 }
-
-exports.default = PreviewFunction;

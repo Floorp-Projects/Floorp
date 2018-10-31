@@ -7,35 +7,48 @@ const fs = require("fs");
 const _path = require("path");
 const { execFileSync } = require("child_process");
 
-const mappings = {
-  "./source-editor": "devtools/client/sourceeditor/editor",
-  "../editor/source-editor": "devtools/client/sourceeditor/editor",
-  "./test-flag": "devtools/shared/flags",
-  "./fronts-device": "devtools/shared/fronts/device",
-  immutable: "devtools/client/shared/vendor/immutable",
-  lodash: "devtools/client/shared/vendor/lodash",
-  react: "devtools/client/shared/vendor/react",
-  "react-dom": "devtools/client/shared/vendor/react-dom",
-  "react-dom-factories": "devtools/client/shared/vendor/react-dom-factories",
-  "react-redux": "devtools/client/shared/vendor/react-redux",
-  redux: "devtools/client/shared/vendor/redux",
-  "prop-types": "devtools/client/shared/vendor/react-prop-types",
-  "devtools-services": "Services",
-
-  "wasmparser/dist/WasmParser": "devtools/client/shared/vendor/WasmParser",
-  "wasmparser/dist/WasmDis": "devtools/client/shared/vendor/WasmDis",
-
-  // The excluded files below should not be required while the Debugger runs
-  // in Firefox. Here, "devtools/shared/flags" is used as a dummy module.
+const EXCLUDED_FILES = {
   "../assets/panel/debugger.properties": "devtools/shared/flags",
   "devtools-connection": "devtools/shared/flags",
   "chrome-remote-interface": "devtools/shared/flags",
-  "devtools-launchpad": "devtools/shared/flags",
-
-  "devtools-reps": "devtools/client/shared/components/reps/reps.js",
-  "devtools-source-map": "devtools/client/shared/source-map/index.js",
+  "devtools-launchpad": "devtools/shared/flags"
 };
+
+const mappings =  Object.assign(
+  {
+    "./source-editor": "devtools/client/sourceeditor/editor",
+    "../editor/source-editor": "devtools/client/sourceeditor/editor",
+    "./test-flag": "devtools/shared/flags",
+    "./fronts-device": "devtools/shared/fronts/device",
+    immutable: "devtools/client/shared/vendor/immutable",
+    lodash: "devtools/client/shared/vendor/lodash",
+    react: "devtools/client/shared/vendor/react",
+    "react-dom": "devtools/client/shared/vendor/react-dom",
+    "react-dom-factories": "devtools/client/shared/vendor/react-dom-factories",
+    "react-redux": "devtools/client/shared/vendor/react-redux",
+    redux: "devtools/client/shared/vendor/redux",
+    "prop-types": "devtools/client/shared/vendor/react-prop-types",
+    "devtools-services": "Services",
+    "wasmparser/dist/WasmParser": "devtools/client/shared/vendor/WasmParser",
+    "wasmparser/dist/WasmDis": "devtools/client/shared/vendor/WasmDis"
+  },
+  EXCLUDED_FILES
+);
+
 const mappingValues = Object.values(mappings);
+
+// Add two additional mappings that cannot be reused when creating the
+// webpack bundles.
+mappings["devtools-reps"] = "devtools/client/shared/components/reps/reps.js";
+mappings["devtools-source-map"] = "devtools/client/shared/source-map/index.js";
+
+function isRequire(t, node) {
+  return node && t.isCallExpression(node) && node.callee.name == "require";
+}
+
+function isImport(t, node) {
+  return node && t.isImportDeclaration(node);
+}
 
 // List of vendored modules.
 // Should be synchronized with vendors.js
@@ -53,17 +66,13 @@ const VENDORS = [
   "react-aria-components/src/tabs",
   "react-transition-group/Transition",
   "reselect",
-  "Svg",
+  "Svg"
 ];
 
 const moduleMapping = {
   Telemetry: "devtools/client/shared/telemetry",
   asyncStorage: "devtools/shared/async-storage"
 };
-
-function isRequire(t, node) {
-  return node && t.isCallExpression(node) && node.callee.name == "require";
-}
 
 /*
  * Updates devtools-modules imports such as
@@ -191,7 +200,7 @@ function transformMC({ types: t }) {
       }
     }
   };
-}
+};
 
 Babel.registerPlugin("transform-mc", transformMC);
 

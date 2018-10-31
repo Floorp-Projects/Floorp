@@ -1,51 +1,59 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.statusType = undefined;
-exports.initialProjectTextSearchState = initialProjectTextSearchState;
-exports.getTextSearchResults = getTextSearchResults;
-exports.getTextSearchStatus = getTextSearchStatus;
-exports.getTextSearchQuery = getTextSearchQuery;
-
-var _immutable = require("devtools/client/shared/vendor/immutable");
-
-var I = _interopRequireWildcard(_immutable);
-
-var _makeRecord = require("../utils/makeRecord");
-
-var _makeRecord2 = _interopRequireDefault(_makeRecord);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
 // @format
 
 /**
  * Project text search reducer
  * @module reducers/project-text-search
  */
-const statusType = exports.statusType = {
+
+import * as I from "immutable";
+import makeRecord from "../utils/makeRecord";
+
+import type { Action } from "../actions/types";
+import type { Record } from "../utils/makeRecord";
+import type { List } from "immutable";
+
+export type Search = {
+  id: string,
+  filepath: string,
+  matches: I.List<any>
+};
+export type StatusType = "INITIAL" | "FETCHING" | "DONE" | "ERROR";
+export const statusType = {
   initial: "INITIAL",
   fetching: "FETCHING",
   done: "DONE",
   error: "ERROR"
 };
 
-function initialProjectTextSearchState() {
-  return (0, _makeRecord2.default)({
-    query: "",
-    results: I.List(),
-    status: statusType.initial
-  })();
+export type ResultRecord = Record<Search>;
+export type ResultList = List<ResultRecord>;
+export type ProjectTextSearchState = {
+  query: string,
+  results: ResultList,
+  status: string
+};
+
+export function initialProjectTextSearchState(): Record<
+  ProjectTextSearchState
+> {
+  return makeRecord(
+    ({
+      query: "",
+      results: I.List(),
+      status: statusType.initial
+    }: ProjectTextSearchState)
+  )();
 }
 
-function update(state = initialProjectTextSearchState(), action) {
+function update(
+  state: Record<ProjectTextSearchState> = initialProjectTextSearchState(),
+  action: Action
+): Record<ProjectTextSearchState> {
   switch (action.type) {
     case "ADD_QUERY":
       const actionCopy = action;
@@ -59,14 +67,10 @@ function update(state = initialProjectTextSearchState(), action) {
 
     case "ADD_SEARCH_RESULT":
       const results = state.get("results");
-      return state.merge({
-        results: results.push(action.result)
-      });
+      return state.merge({ results: results.push(action.result) });
 
     case "UPDATE_STATUS":
-      return state.merge({
-        status: action.status
-      });
+      return state.merge({ status: action.status });
 
     case "CLEAR_SEARCH_RESULTS":
       return state.merge({
@@ -82,20 +86,21 @@ function update(state = initialProjectTextSearchState(), action) {
         status: statusType.initial
       });
   }
-
   return state;
 }
 
-function getTextSearchResults(state) {
+type OuterState = { projectTextSearch: Record<ProjectTextSearchState> };
+
+export function getTextSearchResults(state: OuterState) {
   return state.projectTextSearch.get("results");
 }
 
-function getTextSearchStatus(state) {
+export function getTextSearchStatus(state: OuterState) {
   return state.projectTextSearch.get("status");
 }
 
-function getTextSearchQuery(state) {
+export function getTextSearchQuery(state: OuterState) {
   return state.projectTextSearch.get("query");
 }
 
-exports.default = update;
+export default update;

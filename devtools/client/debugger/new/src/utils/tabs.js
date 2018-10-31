@@ -1,16 +1,13 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getHiddenTabs = getHiddenTabs;
-exports.getFramework = getFramework;
-exports.getTabMenuItems = getTabMenuItems;
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
+import type { Source } from "../types";
+import type { TabList } from "../reducers";
+
+type SourcesList = Source[];
 /*
  * Finds the hidden tabs by comparing the tabs' top offset.
  * hidden tabs will have a great top offset.
@@ -20,9 +17,12 @@ exports.getTabMenuItems = getTabMenuItems;
  *
  * @returns Immutable.list
  */
-function getHiddenTabs(sourceTabs, sourceTabEls) {
-  sourceTabEls = [].slice.call(sourceTabEls);
 
+export function getHiddenTabs(
+  sourceTabs: SourcesList,
+  sourceTabEls: Array<any>
+) {
+  sourceTabEls = [].slice.call(sourceTabEls);
   function getTopOffset() {
     const topOffsets = sourceTabEls.map(t => t.getBoundingClientRect().top);
     return Math.min(...topOffsets);
@@ -41,7 +41,7 @@ function getHiddenTabs(sourceTabs, sourceTabEls) {
   });
 }
 
-function getFramework(tabs, url) {
+export function getFramework(tabs: TabList[], url: string) {
   const tab = tabs.find(t => t.url === url);
 
   if (tab) {
@@ -51,7 +51,7 @@ function getFramework(tabs, url) {
   return "";
 }
 
-function getTabMenuItems() {
+export function getTabMenuItems() {
   return {
     closeTab: {
       id: "node-menu-close-tab",

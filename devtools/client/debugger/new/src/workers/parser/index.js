@@ -1,48 +1,106 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getPausePoints = exports.getFramework = exports.mapExpression = exports.hasSyntaxError = exports.clearSources = exports.setSource = exports.hasSource = exports.getSymbols = exports.clearSymbols = exports.clearScopes = exports.getScopes = exports.clearASTs = exports.getNextStep = exports.findOutOfScopeLocations = exports.stop = exports.start = undefined;
-
-var _devtoolsUtils = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-utils"];
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const {
-  WorkerDispatcher
-} = _devtoolsUtils.workerUtils;
+
+// @flow
+
+import { workerUtils } from "devtools-utils";
+const { WorkerDispatcher } = workerUtils;
+
+import type { AstLocation, AstPosition, PausePoints } from "./types";
+import type { Location, Source, SourceId } from "../../types";
+import type { SourceScope } from "./getScopes/visitor";
+import type { SymbolDeclarations } from "./getSymbols";
+
 const dispatcher = new WorkerDispatcher();
+export const start = (url: string, win: any = window) =>
+  dispatcher.start(url, win);
+export const stop = () => dispatcher.stop();
 
-const start = exports.start = (url, win=window) => dispatcher.start(url, win);
+export const findOutOfScopeLocations = async (
+  sourceId: string,
+  position: AstPosition
+): Promise<AstLocation[]> =>
+  dispatcher.invoke("findOutOfScopeLocations", sourceId, position);
 
-const stop = exports.stop = () => dispatcher.stop();
+export const getNextStep = async (
+  sourceId: SourceId,
+  pausedPosition: AstPosition
+): Promise<?Location> =>
+  dispatcher.invoke("getNextStep", sourceId, pausedPosition);
 
-const findOutOfScopeLocations = exports.findOutOfScopeLocations = async (sourceId, position) => dispatcher.invoke("findOutOfScopeLocations", sourceId, position);
+export const clearASTs = async (): Promise<void> =>
+  dispatcher.invoke("clearASTs");
 
-const getNextStep = exports.getNextStep = async (sourceId, pausedPosition) => dispatcher.invoke("getNextStep", sourceId, pausedPosition);
+export const getScopes = async (location: Location): Promise<SourceScope[]> =>
+  dispatcher.invoke("getScopes", location);
 
-const clearASTs = exports.clearASTs = async () => dispatcher.invoke("clearASTs");
+export const clearScopes = async (): Promise<void> =>
+  dispatcher.invoke("clearScopes");
 
-const getScopes = exports.getScopes = async location => dispatcher.invoke("getScopes", location);
+export const clearSymbols = async (): Promise<void> =>
+  dispatcher.invoke("clearSymbols");
 
-const clearScopes = exports.clearScopes = async () => dispatcher.invoke("clearScopes");
+export const getSymbols = async (
+  sourceId: string
+): Promise<SymbolDeclarations> => dispatcher.invoke("getSymbols", sourceId);
 
-const clearSymbols = exports.clearSymbols = async () => dispatcher.invoke("clearSymbols");
+export const hasSource = async (sourceId: SourceId): Promise<Source> =>
+  dispatcher.invoke("hasSource", sourceId);
 
-const getSymbols = exports.getSymbols = async sourceId => dispatcher.invoke("getSymbols", sourceId);
+export const setSource = async (source: Source): Promise<void> =>
+  dispatcher.invoke("setSource", source);
 
-const hasSource = exports.hasSource = async sourceId => dispatcher.invoke("hasSource", sourceId);
+export const clearSources = async (): Promise<void> =>
+  dispatcher.invoke("clearSources");
 
-const setSource = exports.setSource = async source => dispatcher.invoke("setSource", source);
+export const hasSyntaxError = async (input: string): Promise<string | false> =>
+  dispatcher.invoke("hasSyntaxError", input);
 
-const clearSources = exports.clearSources = async () => dispatcher.invoke("clearSources");
+export const mapExpression = async (
+  expression: string,
+  mappings: {
+    [string]: string | null
+  } | null,
+  bindings: string[],
+  shouldMapBindings?: boolean,
+  shouldMapAwait?: boolean
+): Promise<{ expression: string }> =>
+  dispatcher.invoke(
+    "mapExpression",
+    expression,
+    mappings,
+    bindings,
+    shouldMapBindings,
+    shouldMapAwait
+  );
 
-const hasSyntaxError = exports.hasSyntaxError = async input => dispatcher.invoke("hasSyntaxError", input);
+export const getFramework = async (sourceId: string): Promise<?string> =>
+  dispatcher.invoke("getFramework", sourceId);
 
-const mapExpression = exports.mapExpression = async (expression, mappings, bindings, shouldMapBindings, shouldMapAwait) => dispatcher.invoke("mapExpression", expression, mappings, bindings, shouldMapBindings, shouldMapAwait);
+export const getPausePoints = async (sourceId: string): Promise<PausePoints> =>
+  dispatcher.invoke("getPausePoints", sourceId);
 
-const getFramework = exports.getFramework = async sourceId => dispatcher.invoke("getFramework", sourceId);
+export type {
+  SourceScope,
+  BindingData,
+  BindingLocation,
+  BindingLocationType,
+  BindingDeclarationLocation,
+  BindingMetaValue,
+  BindingType
+} from "./getScopes";
 
-const getPausePoints = exports.getPausePoints = async sourceId => dispatcher.invoke("getPausePoints", sourceId);
+export type {
+  AstLocation,
+  AstPosition,
+  PausePoint,
+  PausePoints
+} from "./types";
+
+export type {
+  ClassDeclaration,
+  SymbolDeclaration,
+  SymbolDeclarations,
+  FunctionDeclaration
+} from "./getSymbols";

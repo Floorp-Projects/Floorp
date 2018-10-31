@@ -1,29 +1,19 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.asyncStore = exports.features = exports.prefs = undefined;
-
-var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
-
-var _devtoolsEnvironment = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-environment"];
-
-var _devtoolsServices = require("Services");
-
-var _devtoolsServices2 = _interopRequireDefault(_devtoolsServices);
-
-var _asyncStoreHelper = require("./asyncStoreHelper");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const prefsSchemaVersion = "1.0.5";
-const pref = _devtoolsServices2.default.pref;
 
-if ((0, _devtoolsEnvironment.isDevelopment)()) {
+// @flow
+
+import { PrefsHelper } from "devtools-modules";
+import { isDevelopment } from "devtools-environment";
+import Services from "devtools-services";
+import { asyncStoreHelper } from "./asyncStoreHelper";
+
+const prefsSchemaVersion = "1.0.5";
+
+const pref = Services.pref;
+
+if (isDevelopment()) {
   pref("devtools.debugger.alphabetize-outline", false);
   pref("devtools.debugger.auto-pretty-print", false);
   pref("devtools.source-map.client-service.enabled", true);
@@ -71,7 +61,7 @@ if ((0, _devtoolsEnvironment.isDevelopment)()) {
   pref("devtools.debugger.features.xhr-breakpoints", true);
 }
 
-const prefs = exports.prefs = new _devtoolsModules.PrefsHelper("devtools", {
+export const prefs = new PrefsHelper("devtools", {
   alphabetizeOutline: ["Bool", "debugger.alphabetize-outline"],
   autoPrettyPrint: ["Bool", "debugger.auto-pretty-print"],
   clientSourceMapsEnabled: ["Bool", "source-map.client-service.enabled"],
@@ -99,7 +89,8 @@ const prefs = exports.prefs = new _devtoolsModules.PrefsHelper("devtools", {
   projectDirectoryRoot: ["Char", "debugger.project-directory-root", ""],
   skipPausing: ["Bool", "debugger.skip-pausing"]
 });
-const features = exports.features = new _devtoolsModules.PrefsHelper("devtools.debugger.features", {
+
+export const features = new PrefsHelper("devtools.debugger.features", {
   asyncStepping: ["Bool", "async-stepping"],
   wasm: ["Bool", "wasm"],
   shortcuts: ["Bool", "shortcuts"],
@@ -120,7 +111,8 @@ const features = exports.features = new _devtoolsModules.PrefsHelper("devtools.d
   componentPane: ["Bool", "component-pane"],
   xhrBreakpoints: ["Bool", "xhr-breakpoints"]
 });
-const asyncStore = exports.asyncStore = (0, _asyncStoreHelper.asyncStoreHelper)("debugger", {
+
+export const asyncStore = asyncStoreHelper("debugger", {
   pendingBreakpoints: ["pending-breakpoints", {}],
   tabs: ["tabs", []],
   xhrBreakpoints: ["xhr-breakpoints", []]

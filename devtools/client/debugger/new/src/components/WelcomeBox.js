@@ -1,109 +1,113 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.WelcomeBox = undefined;
-
-var _react = require("devtools/client/shared/vendor/react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactRedux = require("devtools/client/shared/vendor/react-redux");
-
-var _actions = require("../actions/index");
-
-var _actions2 = _interopRequireDefault(_actions);
-
-var _selectors = require("../selectors/index");
-
-var _text = require("../utils/text");
-
-var _Button = require("./shared/Button/index");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-class WelcomeBox extends _react.Component {
-  renderToggleButton() {
-    const {
-      horizontal,
-      endPanelCollapsed,
-      togglePaneCollapse
-    } = this.props;
 
+// @flow
+import React, { Component } from "react";
+
+import { connect } from "react-redux";
+
+import actions from "../actions";
+import { getPaneCollapse } from "../selectors";
+import { formatKeyShortcut } from "../utils/text";
+
+import { PaneToggleButton } from "./shared/Button";
+import type { ActiveSearchType } from "../reducers/ui";
+
+import "./WelcomeBox.css";
+
+type Props = {
+  horizontal: boolean,
+  endPanelCollapsed: boolean,
+  togglePaneCollapse: Function,
+  setActiveSearch: (?ActiveSearchType) => any,
+  openQuickOpen: (query?: string) => void,
+  toggleShortcutsModal: () => void
+};
+
+export class WelcomeBox extends Component<Props> {
+  renderToggleButton() {
+    const { horizontal, endPanelCollapsed, togglePaneCollapse } = this.props;
     if (horizontal) {
       return;
     }
 
-    return _react2.default.createElement(_Button.PaneToggleButton, {
-      position: "end",
-      collapsed: !endPanelCollapsed,
-      horizontal: horizontal,
-      handleClick: togglePaneCollapse
-    });
+    return (
+      <PaneToggleButton
+        position="end"
+        collapsed={!endPanelCollapsed}
+        horizontal={horizontal}
+        handleClick={togglePaneCollapse}
+      />
+    );
   }
 
   render() {
-    const searchSourcesShortcut = (0, _text.formatKeyShortcut)(L10N.getStr("sources.search.key2"));
-    const searchProjectShortcut = (0, _text.formatKeyShortcut)(L10N.getStr("projectTextSearch.key"));
-    const allShortcutsShortcut = (0, _text.formatKeyShortcut)(L10N.getStr("allShortcut.key"));
+    const searchSourcesShortcut = formatKeyShortcut(
+      L10N.getStr("sources.search.key2")
+    );
+
+    const searchProjectShortcut = formatKeyShortcut(
+      L10N.getStr("projectTextSearch.key")
+    );
+
+    const allShortcutsShortcut = formatKeyShortcut(
+      L10N.getStr("allShortcut.key")
+    );
+
     const allShortcutsLabel = L10N.getStr("welcome.allShortcuts");
     const searchSourcesLabel = L10N.getStr("welcome.search2").substring(2);
     const searchProjectLabel = L10N.getStr("welcome.findInFiles2").substring(2);
-    const {
-      setActiveSearch,
-      openQuickOpen,
-      toggleShortcutsModal
-    } = this.props;
-    return _react2.default.createElement("div", {
-      className: "welcomebox"
-    }, _react2.default.createElement("div", {
-      className: "alignlabel"
-    }, _react2.default.createElement("div", {
-      className: "shortcutFunction"
-    }, _react2.default.createElement("p", {
-      className: "welcomebox__searchSources",
-      role: "button",
-      tabIndex: "0",
-      onClick: () => openQuickOpen()
-    }, _react2.default.createElement("span", {
-      className: "shortcutKey"
-    }, searchSourcesShortcut), _react2.default.createElement("span", {
-      className: "shortcutLabel"
-    }, searchSourcesLabel)), _react2.default.createElement("p", {
-      className: "welcomebox__searchProject",
-      role: "button",
-      tabIndex: "0",
-      onClick: setActiveSearch.bind(null, "project")
-    }, _react2.default.createElement("span", {
-      className: "shortcutKey"
-    }, searchProjectShortcut), _react2.default.createElement("span", {
-      className: "shortcutLabel"
-    }, searchProjectLabel)), _react2.default.createElement("p", {
-      className: "welcomebox__allShortcuts",
-      role: "button",
-      tabIndex: "0",
-      onClick: () => toggleShortcutsModal()
-    }, _react2.default.createElement("span", {
-      className: "shortcutKey"
-    }, allShortcutsShortcut), _react2.default.createElement("span", {
-      className: "shortcutLabel"
-    }, allShortcutsLabel))), this.renderToggleButton()));
-  }
+    const { setActiveSearch, openQuickOpen, toggleShortcutsModal } = this.props;
 
+    return (
+      <div className="welcomebox">
+        <div className="alignlabel">
+          <div className="shortcutFunction">
+            <p
+              className="welcomebox__searchSources"
+              role="button"
+              tabIndex="0"
+              onClick={() => openQuickOpen()}
+            >
+              <span className="shortcutKey">{searchSourcesShortcut}</span>
+              <span className="shortcutLabel">{searchSourcesLabel}</span>
+            </p>
+            <p
+              className="welcomebox__searchProject"
+              role="button"
+              tabIndex="0"
+              onClick={setActiveSearch.bind(null, "project")}
+            >
+              <span className="shortcutKey">{searchProjectShortcut}</span>
+              <span className="shortcutLabel">{searchProjectLabel}</span>
+            </p>
+            <p
+              className="welcomebox__allShortcuts"
+              role="button"
+              tabIndex="0"
+              onClick={() => toggleShortcutsModal()}
+            >
+              <span className="shortcutKey">{allShortcutsShortcut}</span>
+              <span className="shortcutLabel">{allShortcutsLabel}</span>
+            </p>
+          </div>
+          {this.renderToggleButton()}
+        </div>
+      </div>
+    );
+  }
 }
 
-exports.WelcomeBox = WelcomeBox;
-
 const mapStateToProps = state => ({
-  endPanelCollapsed: (0, _selectors.getPaneCollapse)(state, "end")
+  endPanelCollapsed: getPaneCollapse(state, "end")
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, {
-  togglePaneCollapse: _actions2.default.togglePaneCollapse,
-  setActiveSearch: _actions2.default.setActiveSearch,
-  openQuickOpen: _actions2.default.openQuickOpen
-})(WelcomeBox);
+export default connect(
+  mapStateToProps,
+  {
+    togglePaneCollapse: actions.togglePaneCollapse,
+    setActiveSearch: actions.setActiveSearch,
+    openQuickOpen: actions.openQuickOpen
+  }
+)(WelcomeBox);

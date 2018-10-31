@@ -9,7 +9,7 @@ DIRS += [
     'scopes',
 ]
 
-DevToolsModules(
+DebuggerModules(
     'index.js',
     'pausePoints.js',
     'stepping.js',

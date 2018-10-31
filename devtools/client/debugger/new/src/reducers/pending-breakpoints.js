@@ -1,71 +1,64 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getPendingBreakpoints = getPendingBreakpoints;
-exports.getPendingBreakpointList = getPendingBreakpointList;
-exports.getPendingBreakpointsForSource = getPendingBreakpointsForSource;
-
-var _sources = require("./sources");
-
-var _breakpoint = require("../utils/breakpoint/index");
-
-var _source = require("../utils/source");
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
 
 /**
  * Pending breakpoints reducer
  * @module reducers/pending-breakpoints
  */
-function update(state = {}, action) {
+
+import { getSourcesByURL } from "./sources";
+
+import {
+  createPendingBreakpoint,
+  makePendingLocationId
+} from "../utils/breakpoint";
+import { isGenerated } from "../utils/source";
+
+import type { SourcesState } from "./sources";
+import type { PendingBreakpoint, Source } from "../types";
+import type { Action, DonePromiseAction } from "../actions/types";
+
+export type PendingBreakpointsState = { [string]: PendingBreakpoint };
+
+function update(state: PendingBreakpointsState = {}, action: Action) {
   switch (action.type) {
-    case "ADD_BREAKPOINT":
-      {
-        return addBreakpoint(state, action);
-      }
+    case "ADD_BREAKPOINT": {
+      return addBreakpoint(state, action);
+    }
 
-    case "SYNC_BREAKPOINT":
-      {
-        return syncBreakpoint(state, action);
-      }
+    case "SYNC_BREAKPOINT": {
+      return syncBreakpoint(state, action);
+    }
 
-    case "ENABLE_BREAKPOINT":
-      {
-        return addBreakpoint(state, action);
-      }
+    case "ENABLE_BREAKPOINT": {
+      return addBreakpoint(state, action);
+    }
 
-    case "DISABLE_BREAKPOINT":
-      {
-        return updateBreakpoint(state, action);
-      }
+    case "DISABLE_BREAKPOINT": {
+      return updateBreakpoint(state, action);
+    }
 
-    case "DISABLE_ALL_BREAKPOINTS":
-      {
-        return updateAllBreakpoints(state, action);
-      }
+    case "DISABLE_ALL_BREAKPOINTS": {
+      return updateAllBreakpoints(state, action);
+    }
 
-    case "ENABLE_ALL_BREAKPOINTS":
-      {
-        return updateAllBreakpoints(state, action);
-      }
+    case "ENABLE_ALL_BREAKPOINTS": {
+      return updateAllBreakpoints(state, action);
+    }
 
-    case "SET_BREAKPOINT_CONDITION":
-      {
-        return updateBreakpoint(state, action);
-      }
+    case "SET_BREAKPOINT_CONDITION": {
+      return updateBreakpoint(state, action);
+    }
 
-    case "REMOVE_BREAKPOINT":
-      {
-        if (action.breakpoint.hidden) {
-          return state;
-        }
-
-        return removeBreakpoint(state, action);
+    case "REMOVE_BREAKPOINT": {
+      if (action.breakpoint.hidden) {
+        return state;
       }
+      return removeBreakpoint(state, action);
+    }
   }
 
   return state;
@@ -74,34 +67,29 @@ function update(state = {}, action) {
 function addBreakpoint(state, action) {
   if (action.breakpoint.hidden || action.status !== "done") {
     return state;
-  } // when the action completes, we can commit the breakpoint
-
-
+  }
+  // when the action completes, we can commit the breakpoint
   const {
     breakpoint,
     previousLocation
-  } = action.value;
+  } = ((action: any): DonePromiseAction).value;
 
   if (previousLocation) {
-    const previousLocationId = (0, _breakpoint.makePendingLocationId)(previousLocation);
+    const previousLocationId = makePendingLocationId(previousLocation);
     state = deleteBreakpoint(state, previousLocationId);
   }
 
-  const locationId = (0, _breakpoint.makePendingLocationId)(breakpoint.location);
-  const pendingBreakpoint = (0, _breakpoint.createPendingBreakpoint)(breakpoint);
-  return { ...state,
-    [locationId]: pendingBreakpoint
-  };
+  const locationId = makePendingLocationId(breakpoint.location);
+  const pendingBreakpoint = createPendingBreakpoint(breakpoint);
+
+  return { ...state, [locationId]: pendingBreakpoint };
 }
 
 function syncBreakpoint(state, action) {
-  const {
-    breakpoint,
-    previousLocation
-  } = action;
+  const { breakpoint, previousLocation } = action;
 
   if (previousLocation) {
-    const previousLocationId = (0, _breakpoint.makePendingLocationId)(previousLocation);
+    const previousLocationId = makePendingLocationId(previousLocation);
     state = deleteBreakpoint(state, previousLocationId);
   }
 
@@ -109,43 +97,35 @@ function syncBreakpoint(state, action) {
     return state;
   }
 
-  const locationId = (0, _breakpoint.makePendingLocationId)(breakpoint.location);
-  const pendingBreakpoint = (0, _breakpoint.createPendingBreakpoint)(breakpoint);
-  return { ...state,
-    [locationId]: pendingBreakpoint
-  };
+  const locationId = makePendingLocationId(breakpoint.location);
+  const pendingBreakpoint = createPendingBreakpoint(breakpoint);
+
+  return { ...state, [locationId]: pendingBreakpoint };
 }
 
 function updateBreakpoint(state, action) {
-  const {
-    breakpoint
-  } = action;
-  const locationId = (0, _breakpoint.makePendingLocationId)(breakpoint.location);
-  const pendingBreakpoint = (0, _breakpoint.createPendingBreakpoint)(breakpoint);
-  return { ...state,
-    [locationId]: pendingBreakpoint
-  };
+  const { breakpoint } = action;
+  const locationId = makePendingLocationId(breakpoint.location);
+  const pendingBreakpoint = createPendingBreakpoint(breakpoint);
+
+  return { ...state, [locationId]: pendingBreakpoint };
 }
 
 function updateAllBreakpoints(state, action) {
-  const {
-    breakpoints
-  } = action;
+  const { breakpoints } = action;
   breakpoints.forEach(breakpoint => {
-    const locationId = (0, _breakpoint.makePendingLocationId)(breakpoint.location);
-    const pendingBreakpoint = (0, _breakpoint.createPendingBreakpoint)(breakpoint);
-    state = { ...state,
-      [locationId]: pendingBreakpoint
-    };
+    const locationId = makePendingLocationId(breakpoint.location);
+    const pendingBreakpoint = createPendingBreakpoint(breakpoint);
+
+    state = { ...state, [locationId]: pendingBreakpoint };
   });
   return state;
 }
 
 function removeBreakpoint(state, action) {
-  const {
-    breakpoint
-  } = action;
-  const locationId = (0, _breakpoint.makePendingLocationId)(breakpoint.location);
+  const { breakpoint } = action;
+
+  const locationId = makePendingLocationId(breakpoint.location);
   const pendingBp = state[locationId];
 
   if (!pendingBp && action.status == "start") {
@@ -156,31 +136,42 @@ function removeBreakpoint(state, action) {
 }
 
 function deleteBreakpoint(state, locationId) {
-  state = { ...state
-  };
+  state = { ...state };
   delete state[locationId];
   return state;
-} // Selectors
+}
+
+// Selectors
 // TODO: these functions should be moved out of the reducer
 
+type OuterState = {
+  pendingBreakpoints: PendingBreakpointsState,
+  sources: SourcesState
+};
 
-function getPendingBreakpoints(state) {
+export function getPendingBreakpoints(state: OuterState) {
   return state.pendingBreakpoints;
 }
 
-function getPendingBreakpointList(state) {
-  return Object.values(getPendingBreakpoints(state));
+export function getPendingBreakpointList(
+  state: OuterState
+): PendingBreakpoint[] {
+  return (Object.values(getPendingBreakpoints(state)): any);
 }
 
-function getPendingBreakpointsForSource(state, source) {
-  const sources = (0, _sources.getSourcesByURL)(state, source.url);
-
-  if (sources.length > 1 && (0, _source.isGenerated)(source)) {
+export function getPendingBreakpointsForSource(
+  state: OuterState,
+  source: Source
+): PendingBreakpoint[] {
+  const sources = getSourcesByURL(state, source.url);
+  if (sources.length > 1 && isGenerated(source)) {
     // Don't return pending breakpoints for duplicated generated sources
     return [];
   }
 
-  return getPendingBreakpointList(state).filter(pendingBreakpoint => pendingBreakpoint.location.sourceUrl === source.url);
+  return getPendingBreakpointList(state).filter(
+    pendingBreakpoint => pendingBreakpoint.location.sourceUrl === source.url
+  );
 }
 
-exports.default = update;
+export default update;

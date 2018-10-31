@@ -1,75 +1,70 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.updatePreview = updatePreview;
-exports.setPreview = setPreview;
-exports.clearPreview = clearPreview;
-
-var _preview = require("../utils/preview");
-
-var _ast = require("../utils/ast");
-
-var _promise = require("./utils/middleware/promise");
-
-var _getExpression = require("../utils/editor/get-expression");
-
-var _source = require("../utils/source");
-
-var _selectors = require("../selectors/index");
-
-var _expressions = require("./expressions");
-
-var _pause = require("./pause/index");
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function findExpressionMatch(state, codeMirror, tokenPos) {
-  const source = (0, _selectors.getSelectedSource)(state);
 
+// @flow
+import { isConsole } from "../utils/preview";
+import { findBestMatchExpression } from "../utils/ast";
+import { PROMISE } from "./utils/middleware/promise";
+import { getExpressionFromCoords } from "../utils/editor/get-expression";
+import { isOriginal } from "../utils/source";
+
+import {
+  getPreview,
+  isLineInScope,
+  isSelectedFrameVisible,
+  getSelectedSource,
+  getSelectedFrame,
+  getSymbols
+} from "../selectors";
+
+import { getMappedExpression } from "./expressions";
+import { getExtra } from "./pause";
+
+import type { Action, ThunkArgs } from "./types";
+import type { ColumnPosition } from "../types";
+import type { AstLocation } from "../workers/parser";
+
+function findExpressionMatch(state, codeMirror, tokenPos) {
+  const source = getSelectedSource(state);
   if (!source) {
     return;
   }
 
-  const symbols = (0, _selectors.getSymbols)(state, source);
+  const symbols = getSymbols(state, source);
+
   let match;
-
   if (!symbols || symbols.loading) {
-    match = (0, _getExpression.getExpressionFromCoords)(codeMirror, tokenPos);
+    match = getExpressionFromCoords(codeMirror, tokenPos);
   } else {
-    match = (0, _ast.findBestMatchExpression)(symbols, tokenPos);
+    match = findBestMatchExpression(symbols, tokenPos);
   }
-
   return match;
 }
 
-function updatePreview(target, tokenPos, codeMirror) {
-  return ({
-    dispatch,
-    getState,
-    client,
-    sourceMaps
-  }) => {
+export function updatePreview(
+  target: HTMLElement,
+  tokenPos: Object,
+  codeMirror: any
+) {
+  return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const cursorPos = target.getBoundingClientRect();
 
-    if (!(0, _selectors.isSelectedFrameVisible)(getState()) || !(0, _selectors.isLineInScope)(getState(), tokenPos.line)) {
+    if (
+      !isSelectedFrameVisible(getState()) ||
+      !isLineInScope(getState(), tokenPos.line)
+    ) {
       return;
     }
 
     const match = findExpressionMatch(getState(), codeMirror, tokenPos);
-
     if (!match) {
       return;
     }
 
-    const {
-      expression,
-      location
-    } = match;
+    const { expression, location } = match;
 
-    if ((0, _preview.isConsole)(expression)) {
+    if (isConsole(expression)) {
       return;
     }
 
@@ -77,27 +72,25 @@ function updatePreview(target, tokenPos, codeMirror) {
   };
 }
 
-function setPreview(expression, location, tokenPos, cursorPos) {
-  return async ({
-    dispatch,
-    getState,
-    client,
-    sourceMaps
-  }) => {
+export function setPreview(
+  expression: string,
+  location: AstLocation,
+  tokenPos: ColumnPosition,
+  cursorPos: ClientRect
+) {
+  return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     await dispatch({
       type: "SET_PREVIEW",
-      [_promise.PROMISE]: async function () {
-        const source = (0, _selectors.getSelectedSource)(getState());
-
+      [PROMISE]: (async function() {
+        const source = getSelectedSource(getState());
         if (!source) {
           return;
         }
 
-        const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
+        const selectedFrame = getSelectedFrame(getState());
 
-        if (location && (0, _source.isOriginal)(source)) {
-          const mapResult = await dispatch((0, _expressions.getMappedExpression)(expression));
-
+        if (location && isOriginal(source)) {
+          const mapResult = await dispatch(getMappedExpression(expression));
           if (mapResult) {
             expression = mapResult.expression;
           }
@@ -107,15 +100,17 @@ function setPreview(expression, location, tokenPos, cursorPos) {
           return;
         }
 
-        const {
-          result
-        } = await client.evaluateInFrame(expression, selectedFrame.id);
+        const { result } = await client.evaluateInFrame(
+          expression,
+          selectedFrame.id
+        );
 
         if (result === undefined) {
           return;
         }
 
-        const extra = await dispatch((0, _pause.getExtra)(expression, result));
+        const extra = await dispatch(getExtra(expression, result));
+
         return {
           expression,
           result,
@@ -124,25 +119,22 @@ function setPreview(expression, location, tokenPos, cursorPos) {
           cursorPos,
           extra
         };
-      }()
+      })()
     });
   };
 }
 
-function clearPreview() {
-  return ({
-    dispatch,
-    getState,
-    client
-  }) => {
-    const currentSelection = (0, _selectors.getPreview)(getState());
-
+export function clearPreview() {
+  return ({ dispatch, getState, client }: ThunkArgs) => {
+    const currentSelection = getPreview(getState());
     if (!currentSelection) {
       return;
     }
 
-    return dispatch({
-      type: "CLEAR_SELECTION"
-    });
+    return dispatch(
+      ({
+        type: "CLEAR_SELECTION"
+      }: Action)
+    );
   };
 }
