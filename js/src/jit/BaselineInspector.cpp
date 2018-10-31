@@ -760,17 +760,25 @@ BaselineInspector::hasSeenNonStringIterMore(jsbytecode* pc)
     return stub->toIteratorMore_Fallback()->hasNonStringResult();
 }
 
+// defaultIfEmpty: if we've not seen *anything* (neither double nor non-double),
+// return this value. This can happen with, for example, a never-taken branch
+// inside a hot loop.
 bool
-BaselineInspector::hasSeenDoubleResult(jsbytecode* pc)
+BaselineInspector::hasSeenDoubleResult(jsbytecode* pc, bool defaultIfEmpty)
 {
     if (!hasBaselineScript()) {
         return false;
     }
 
     const ICEntry& entry = icEntryFromPC(pc);
-    ICStub* stub = entry.fallbackStub();
+    ICFallbackStub* stub = entry.fallbackStub();
 
     MOZ_ASSERT(stub->isUnaryArith_Fallback() || stub->isBinaryArith_Fallback());
+
+    // If no attached stubs, and no failures, then this IC has never been executed.
+    if (stub->state().numOptimizedStubs() == 0 && !entry.fallbackStub()->state().hasFailures()) {
+        return defaultIfEmpty;
+    }
 
     if (stub->isUnaryArith_Fallback()) {
         return stub->toUnaryArith_Fallback()->sawDoubleResult();
