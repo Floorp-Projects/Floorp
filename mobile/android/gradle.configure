@@ -250,6 +250,28 @@ set_config('GRADLE_ANDROID_ARCHIVE_COVERAGE_ARTIFACTS_TASKS',
            gradle_android_archive_coverage_artifacts_tasks)
 
 
+@depends(gradle_android_build_config)
+def gradle_android_build_geckoview_example_tasks(build_config):
+    '''Gradle tasks run by |mach android build-geckoview_example|.'''
+    return [
+        'geckoview_example:assemble{geckoview_example.variant.name}'.format(geckoview_example=build_config.geckoview_example),
+        'geckoview_example:assemble{geckoview_example.variant.name}AndroidTest'.format(geckoview_example=build_config.geckoview_example),
+    ]
+
+set_config('GRADLE_ANDROID_BUILD_GECKOVIEW_EXAMPLE_TASKS', gradle_android_build_geckoview_example_tasks)
+
+
+@depends(gradle_android_build_config)
+def gradle_android_install_geckoview_example_tasks(build_config):
+    '''Gradle tasks run by |mach android install-geckoview_example|.'''
+    return [
+        'geckoview_example:install{geckoview_example.variant.name}'.format(geckoview_example=build_config.geckoview_example),
+        'geckoview_example:install{geckoview_example.variant.name}AndroidTest'.format(geckoview_example=build_config.geckoview_example),
+    ]
+
+set_config('GRADLE_ANDROID_INSTALL_GECKOVIEW_EXAMPLE_TASKS', gradle_android_install_geckoview_example_tasks)
+
+
 @depends(
     gradle_android_app_tasks,
     gradle_android_test_tasks,
