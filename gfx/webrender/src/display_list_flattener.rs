@@ -24,10 +24,10 @@ use hit_test::{HitTestingItem, HitTestingRun};
 use image::simplify_repeated_primitive;
 use internal_types::{FastHashMap, FastHashSet};
 use picture::{Picture3DContext, PictureCompositeMode, PictureIdGenerator, PicturePrimitive, PrimitiveList};
-use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor, PrimitiveInstance};
-use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveOpacity, PrimitiveKey, PrimitiveSceneData};
+use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor, PrimitiveInstance, PrimitiveDataInterner};
+use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveOpacity, PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind};
 use prim_store::{BorderSource, BrushSegment, BrushSegmentVec, PrimitiveContainer, PrimitiveDataHandle, PrimitiveStore};
-use prim_store::{OpacityBinding, ScrollNodeAndClipChain, TextRunPrimitive, PictureIndex};
+use prim_store::{OpacityBinding, ScrollNodeAndClipChain, TextRunPrimitive, PictureIndex, register_prim_chase_id};
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
 use scene::{Scene, ScenePipeline, StackingContextHelpers};
@@ -803,6 +803,12 @@ impl<'a> DisplayListFlattener<'a> {
                     .clip_interner
                     .intern(&item, || {
                         ClipItemSceneData {
+                            // The only type of clip items that exist in the per-primitive
+                            // clip items are box shadows, and they don't contribute a
+                            // local clip rect, so just provide max_rect here. In the future,
+                            // we intend to make box shadows a primitive effect, in which
+                            // case the entire clip_items API on primitives can be removed.
+                            clip_rect: LayoutRect::max_rect(),
                         }
                     });
 
@@ -828,12 +834,25 @@ impl<'a> DisplayListFlattener<'a> {
         spatial_node_index: SpatialNodeIndex,
         container: PrimitiveContainer,
     ) -> PrimitiveInstance {
-        let prim_key = PrimitiveKey::new(info.is_backface_visible);
+        let prim_key = PrimitiveKey::new(
+            info.is_backface_visible,
+            info.rect,
+            info.clip_rect,
+        );
+
+        // Get a tight bounding / culling rect for this primitive
+        // from its local rect intersection with minimal local
+        // clip rect.
+        let culling_rect = info.clip_rect
+            .intersection(&info.rect)
+            .unwrap_or(LayoutRect::zero());
 
         let prim_data_handle = self.resources
             .prim_interner
             .intern(&prim_key, || {
                 PrimitiveSceneData {
+                    culling_rect,
+                    is_backface_visible: info.is_backface_visible,
                 }
             });
 
@@ -844,7 +863,9 @@ impl<'a> DisplayListFlattener<'a> {
         );
 
         PrimitiveInstance::new(
-            prim_index,
+            PrimitiveInstanceKind::Primitive {
+                prim_index,
+            },
             prim_data_handle,
             clip_chain_id,
             spatial_node_index,
@@ -880,7 +901,7 @@ impl<'a> DisplayListFlattener<'a> {
         prim_instance: PrimitiveInstance,
     ) {
         // Add primitive to the top-most stacking context on the stack.
-        if cfg!(debug_assertions) && self.prim_store.chase_id == Some(prim_instance.prim_index) {
+        if prim_instance.is_chased() {
             println!("\tadded to stacking context at {}", self.sc_stack.len());
         }
         let stacking_context = self.sc_stack.last_mut().unwrap();
@@ -911,10 +932,10 @@ impl<'a> DisplayListFlattener<'a> {
                     clip_and_scroll.spatial_node_index,
                     container,
                 );
-                if cfg!(debug_assertions) && ChasePrimitive::LocalRect(info.rect) == self.config.chase_primitive {
-                    println!("Chasing {:?} by local rect", prim_instance.prim_index);
-                    self.prim_store.chase_id = Some(prim_instance.prim_index);
-                }
+                self.register_chase_primitive_by_rect(
+                    &info.rect,
+                    &prim_instance,
+                );
                 self.add_primitive_to_hit_testing_list(info, clip_and_scroll);
                 self.add_primitive_to_draw_list(prim_instance);
             }
@@ -966,6 +987,7 @@ impl<'a> DisplayListFlattener<'a> {
                 let extra_instance = sc.cut_flat_item_sequence(
                     &mut self.picture_id_generator,
                     &mut self.prim_store,
+                    &self.resources.prim_interner,
                 );
                 (sc.is_3d(), extra_instance)
             },
@@ -1012,11 +1034,18 @@ impl<'a> DisplayListFlattener<'a> {
         // clip node doesn't affect the stacking context rect.
         let should_isolate = clipping_node.is_some();
 
-        let prim_key = PrimitiveKey::new(is_backface_visible);
+        let prim_key = PrimitiveKey::new(
+            is_backface_visible,
+            LayoutRect::zero(),
+            LayoutRect::max_rect(),
+        );
+
         let primitive_data_handle = self.resources
             .prim_interner
             .intern(&prim_key, || {
                 PrimitiveSceneData {
+                    culling_rect: LayoutRect::zero(),
+                    is_backface_visible,
                 }
             }
         );
@@ -1079,7 +1108,7 @@ impl<'a> DisplayListFlattener<'a> {
         // Add picture for this actual stacking context contents to render into.
         let prim_list = PrimitiveList::new(
             stacking_context.primitives,
-            &self.prim_store.primitives,
+            &self.resources.prim_interner,
         );
         let leaf_picture = PicturePrimitive::new_image(
             self.picture_id_generator.next(),
@@ -1091,33 +1120,24 @@ impl<'a> DisplayListFlattener<'a> {
             stacking_context.requested_raster_space,
             prim_list,
             stacking_context.spatial_node_index,
+            max_clip,
         );
         let leaf_pic_index = self.prim_store.create_picture(leaf_picture);
-
-        // Create a brush primitive that draws this picture.
-        let leaf_prim = BrushPrimitive::new_picture(leaf_pic_index);
-
-        // Add the brush to the parent picture.
-        let leaf_prim_index = self.prim_store.add_primitive(
-            &LayoutRect::zero(),
-            &max_clip,
-            PrimitiveContainer::Brush(leaf_prim),
-        );
 
         // Create a chain of pictures based on presence of filters,
         // mix-blend-mode and/or 3d rendering context containers.
 
-        if cfg!(debug_assertions) && Some(leaf_prim_index) == self.prim_store.chase_id {
-            println!("\tis a leaf primitive for a stacking context");
-        }
-
         let mut current_pic_index = leaf_pic_index;
         let mut cur_instance = PrimitiveInstance::new(
-            leaf_prim_index,
+            PrimitiveInstanceKind::Picture { pic_index: leaf_pic_index },
             stacking_context.primitive_data_handle,
             stacking_context.clip_chain_id,
             stacking_context.spatial_node_index,
         );
+
+        if cur_instance.is_chased() {
+            println!("\tis a leaf primitive for a stacking context");
+        }
 
         // If establishing a 3d context, the `cur_instance` represents
         // a picture with all the *trailing* immediate children elements.
@@ -1127,7 +1147,7 @@ impl<'a> DisplayListFlattener<'a> {
 
             let prim_list = PrimitiveList::new(
                 prims,
-                &self.prim_store.primitives,
+                &self.resources.prim_interner,
             );
 
             // This is the acttual picture representing our 3D hierarchy root.
@@ -1144,16 +1164,12 @@ impl<'a> DisplayListFlattener<'a> {
                 stacking_context.requested_raster_space,
                 prim_list,
                 stacking_context.spatial_node_index,
+                max_clip,
             );
 
             current_pic_index = self.prim_store.create_picture(container_picture);
-            let container_prim = BrushPrimitive::new_picture(current_pic_index);
 
-            cur_instance.prim_index = self.prim_store.add_primitive(
-                &LayoutRect::zero(),
-                &max_clip,
-                PrimitiveContainer::Brush(container_prim),
-            );
+            cur_instance.kind = PrimitiveInstanceKind::Picture { pic_index: current_pic_index };
         }
 
         // For each filter, create a new image with that composite mode.
@@ -1161,7 +1177,7 @@ impl<'a> DisplayListFlattener<'a> {
             let filter = filter.sanitize();
             let prim_list = PrimitiveList::new(
                 vec![cur_instance.clone()],
-                &self.prim_store.primitives,
+                &self.resources.prim_interner,
             );
 
             let filter_picture = PicturePrimitive::new_image(
@@ -1174,19 +1190,14 @@ impl<'a> DisplayListFlattener<'a> {
                 stacking_context.requested_raster_space,
                 prim_list,
                 stacking_context.spatial_node_index,
+                max_clip,
             );
             let filter_pic_index = self.prim_store.create_picture(filter_picture);
             current_pic_index = filter_pic_index;
 
-            let filter_prim = BrushPrimitive::new_picture(filter_pic_index);
+            cur_instance.kind = PrimitiveInstanceKind::Picture { pic_index: current_pic_index };
 
-            cur_instance.prim_index = self.prim_store.add_primitive(
-                &LayoutRect::zero(),
-                &max_clip,
-                PrimitiveContainer::Brush(filter_prim),
-            );
-
-            if cfg!(debug_assertions) && Some(cur_instance.prim_index) == self.prim_store.chase_id {
+            if cur_instance.is_chased() {
                 println!("\tis a composite picture for a stacking context with {:?}", filter);
             }
 
@@ -1199,7 +1210,7 @@ impl<'a> DisplayListFlattener<'a> {
         if let Some(mix_blend_mode) = stacking_context.composite_ops.mix_blend_mode {
             let prim_list = PrimitiveList::new(
                 vec![cur_instance.clone()],
-                &self.prim_store.primitives,
+                &self.resources.prim_interner,
             );
 
             let blend_picture = PicturePrimitive::new_image(
@@ -1212,19 +1223,14 @@ impl<'a> DisplayListFlattener<'a> {
                 stacking_context.requested_raster_space,
                 prim_list,
                 stacking_context.spatial_node_index,
+                max_clip,
             );
             let blend_pic_index = self.prim_store.create_picture(blend_picture);
             current_pic_index = blend_pic_index;
 
-            let blend_prim = BrushPrimitive::new_picture(blend_pic_index);
+            cur_instance.kind = PrimitiveInstanceKind::Picture { pic_index: blend_pic_index };
 
-            cur_instance.prim_index = self.prim_store.add_primitive(
-                &LayoutRect::zero(),
-                &max_clip,
-                PrimitiveContainer::Brush(blend_prim),
-            );
-
-            if cfg!(debug_assertions) && Some(cur_instance.prim_index) == self.prim_store.chase_id {
+            if cur_instance.is_chased() {
                 println!("\tis a mix-blend picture for a stacking context with {:?}", mix_blend_mode);
             }
         }
@@ -1305,9 +1311,9 @@ impl<'a> DisplayListFlattener<'a> {
         viewport_size: &LayoutSize,
         content_size: &LayoutSize,
     ) {
-        if let ChasePrimitive::Index(prim_index) = self.config.chase_primitive {
-            println!("Chasing {:?} by index", prim_index);
-            self.prim_store.chase_id = Some(prim_index);
+        if let ChasePrimitive::Id(id) = self.config.chase_primitive {
+            println!("Chasing {:?} by index", id);
+            register_prim_chase_id(id);
         }
 
         self.push_reference_frame(
@@ -1366,6 +1372,7 @@ impl<'a> DisplayListFlattener<'a> {
             .clip_interner
             .intern(&ClipItemKey::rectangle(clip_region.main, ClipMode::Clip), || {
                 ClipItemSceneData {
+                    clip_rect: clip_region.main,
                 }
             });
 
@@ -1384,6 +1391,7 @@ impl<'a> DisplayListFlattener<'a> {
                 .clip_interner
                 .intern(&ClipItemKey::image_mask(image_mask), || {
                     ClipItemSceneData {
+                        clip_rect: image_mask.get_local_clip_rect().unwrap_or(LayoutRect::max_rect()),
                     }
                 });
 
@@ -1403,6 +1411,7 @@ impl<'a> DisplayListFlattener<'a> {
                 .clip_interner
                 .intern(&ClipItemKey::rounded_rect(region.rect, region.radii, region.mode), || {
                     ClipItemSceneData {
+                        clip_rect: region.get_local_clip_rect().unwrap_or(LayoutRect::max_rect()),
                     }
                 });
 
@@ -1537,7 +1546,7 @@ impl<'a> DisplayListFlattener<'a> {
                     if !prims.is_empty() {
                         let prim_list = PrimitiveList::new(
                             prims,
-                            &self.prim_store.primitives,
+                            &self.resources.prim_interner,
                         );
 
                         // Create a picture that the shadow primitives will be added to. If the
@@ -1555,28 +1564,30 @@ impl<'a> DisplayListFlattener<'a> {
                             raster_space,
                             prim_list,
                             pending_shadow.clip_and_scroll.spatial_node_index,
+                            max_clip,
                         );
 
                         // Create the primitive to draw the shadow picture into the scene.
                         let shadow_pic_index = self.prim_store.create_picture(shadow_pic);
-                        let shadow_prim = BrushPrimitive::new_picture(shadow_pic_index);
-                        let shadow_prim_index = self.prim_store.add_primitive(
-                            &LayoutRect::zero(),
-                            &max_clip,
-                            PrimitiveContainer::Brush(shadow_prim),
+
+                        let shadow_prim_key = PrimitiveKey::new(
+                            true,
+                            LayoutRect::zero(),
+                            LayoutRect::max_rect(),
                         );
 
-                        let shadow_prim_key = PrimitiveKey::new(true);
                         let shadow_prim_data_handle = self.resources
                             .prim_interner
                             .intern(&shadow_prim_key, || {
                                 PrimitiveSceneData {
+                                    culling_rect: LayoutRect::zero(),
+                                    is_backface_visible: true,
                                 }
                             }
                         );
 
                         let shadow_prim_instance = PrimitiveInstance::new(
-                            shadow_prim_index,
+                            PrimitiveInstanceKind::Picture { pic_index: shadow_pic_index },
                             shadow_prim_data_handle,
                             pending_shadow.clip_and_scroll.clip_chain_id,
                             pending_shadow.clip_and_scroll.spatial_node_index,
@@ -1597,10 +1608,10 @@ impl<'a> DisplayListFlattener<'a> {
                             pending_primitive.clip_and_scroll.spatial_node_index,
                             pending_primitive.container,
                         );
-                        if cfg!(debug_assertions) && ChasePrimitive::LocalRect(pending_primitive.info.rect) == self.config.chase_primitive {
-                            println!("Chasing {:?} by local rect", prim_instance.prim_index);
-                            self.prim_store.chase_id = Some(prim_instance.prim_index);
-                        }
+                        self.register_chase_primitive_by_rect(
+                            &pending_primitive.info.rect,
+                            &prim_instance,
+                        );
                         self.add_primitive_to_hit_testing_list(&pending_primitive.info, pending_primitive.clip_and_scroll);
                         self.add_primitive_to_draw_list(prim_instance);
                     }
@@ -1610,6 +1621,26 @@ impl<'a> DisplayListFlattener<'a> {
 
         debug_assert!(items.is_empty());
         self.pending_shadow_items = items;
+    }
+
+    #[cfg(debug_assertions)]
+    fn register_chase_primitive_by_rect(
+        &mut self,
+        rect: &LayoutRect,
+        prim_instance: &PrimitiveInstance,
+    ) {
+        if ChasePrimitive::LocalRect(*rect) == self.config.chase_primitive {
+            println!("Chasing {:?} by local rect", prim_instance.id);
+            register_prim_chase_id(prim_instance.id);
+        }
+    }
+
+    #[cfg(not(debug_assertions))]
+    fn register_chase_primitive_by_rect(
+        &mut self,
+        _rect: &LayoutRect,
+        _prim_instance: &PrimitiveInstance,
+    ) {
     }
 
     pub fn add_solid_rectangle(
@@ -2249,6 +2280,7 @@ impl FlattenedStackingContext {
         &mut self,
         picture_id_generator: &mut PictureIdGenerator,
         prim_store: &mut PrimitiveStore,
+        prim_interner: &PrimitiveDataInterner,
     ) -> Option<PrimitiveInstance> {
         if !self.is_3d() || self.primitives.is_empty() {
             return None
@@ -2263,7 +2295,7 @@ impl FlattenedStackingContext {
 
         let prim_list = PrimitiveList::new(
             mem::replace(&mut self.primitives, Vec::new()),
-            &prim_store.primitives,
+            prim_interner,
         );
 
         let container_picture = PicturePrimitive::new_image(
@@ -2276,18 +2308,13 @@ impl FlattenedStackingContext {
             self.requested_raster_space,
             prim_list,
             self.spatial_node_index,
+            LayoutRect::max_rect(),
         );
 
         let pic_index = prim_store.create_picture(container_picture);
-        let container_prim = BrushPrimitive::new_picture(pic_index);
-        let cut_prim_index = prim_store.add_primitive(
-            &LayoutRect::zero(),
-            &LayoutRect::max_rect(),
-            PrimitiveContainer::Brush(container_prim),
-        );
 
         Some(PrimitiveInstance::new(
-            cut_prim_index,
+            PrimitiveInstanceKind::Picture { pic_index },
             self.primitive_data_handle,
             self.clip_chain_id,
             self.spatial_node_index,
