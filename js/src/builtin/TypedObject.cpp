@@ -2551,7 +2551,7 @@ js::NewDerivedTypedObject(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 3);
     MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypeDescr>());
     MOZ_ASSERT(args[1].isObject() && args[1].toObject().is<TypedObject>());
-    MOZ_RELEASE_ASSERT(args[2].isInt32());
+    MOZ_ASSERT(args[2].isInt32());
 
     Rooted<TypeDescr*> descr(cx, &args[0].toObject().as<TypeDescr>());
     Rooted<TypedObject*> typedObj(cx, &args[1].toObject().as<TypedObject>());
@@ -2572,7 +2572,7 @@ js::AttachTypedObject(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 3);
-    MOZ_RELEASE_ASSERT(args[2].isInt32());
+    MOZ_ASSERT(args[2].isInt32());
 
     OutlineTypedObject& handle = args[0].toObject().as<OutlineTypedObject>();
     TypedObject& target = args[1].toObject().as<TypedObject>();
@@ -2590,7 +2590,7 @@ js::SetTypedObjectOffset(JSContext*, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
     MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypedObject>());
-    MOZ_RELEASE_ASSERT(args[1].isInt32());
+    MOZ_ASSERT(args[1].isInt32());
 
     OutlineTypedObject& typedObj = args[0].toObject().as<OutlineTypedObject>();
     int32_t offset = args[1].toInt32();
@@ -2709,7 +2709,7 @@ js::StoreScalar##T::Func(JSContext* cx, unsigned argc, Value* vp)               
     CallArgs args = CallArgsFromVp(argc, vp);                                   \
     MOZ_ASSERT(args.length() == 3);                                             \
     MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypedObject>());     \
-    MOZ_RELEASE_ASSERT(args[1].isInt32());                                      \
+    MOZ_ASSERT(args[1].isInt32());                                              \
     MOZ_ASSERT(args[2].isNumber());                                             \
                                                                                 \
     TypedObject& typedObj = args[0].toObject().as<TypedObject>();               \
@@ -2733,7 +2733,7 @@ js::StoreReference##_name::Func(JSContext* cx, unsigned argc, Value* vp)        
     CallArgs args = CallArgsFromVp(argc, vp);                                   \
     MOZ_ASSERT(args.length() == 4);                                             \
     MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypedObject>());     \
-    MOZ_RELEASE_ASSERT(args[1].isInt32());                                      \
+    MOZ_ASSERT(args[1].isInt32());                                              \
     MOZ_ASSERT(args[2].isString() || args[2].isNull());                         \
                                                                                 \
     TypedObject& typedObj = args[0].toObject().as<TypedObject>();               \
@@ -2761,7 +2761,7 @@ js::LoadScalar##T::Func(JSContext* cx, unsigned argc, Value* vp)                
     CallArgs args = CallArgsFromVp(argc, vp);                                           \
     MOZ_ASSERT(args.length() == 2);                                                     \
     MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypedObject>());             \
-    MOZ_RELEASE_ASSERT(args[1].isInt32());                                              \
+    MOZ_ASSERT(args[1].isInt32());                                                      \
                                                                                         \
     TypedObject& typedObj = args[0].toObject().as<TypedObject>();                       \
     int32_t offset = args[1].toInt32();                                                 \
@@ -2782,7 +2782,7 @@ js::LoadReference##_name::Func(JSContext* cx, unsigned argc, Value* vp)         
     CallArgs args = CallArgsFromVp(argc, vp);                                   \
     MOZ_ASSERT(args.length() == 2);                                             \
     MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypedObject>());     \
-    MOZ_RELEASE_ASSERT(args[1].isInt32());                                      \
+    MOZ_ASSERT(args[1].isInt32());                                              \
                                                                                 \
     TypedObject& typedObj = args[0].toObject().as<TypedObject>();               \
     int32_t offset = args[1].toInt32();                                         \
