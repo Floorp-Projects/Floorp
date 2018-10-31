@@ -27,10 +27,10 @@ enum DomainSetChangeType{
 
 enum DomainSetType{
     NO_TYPE,
-    BLACKLIST,
-    SUPER_BLACKLIST,
-    WHITELIST,
-    SUPER_WHITELIST
+    BLOCKLIST,
+    SUPER_BLOCKLIST,
+    ALLOWLIST,
+    SUPER_ALLOWLIST
 };
 
 class DomainSet final : public nsIDomainSet
@@ -61,10 +61,10 @@ public:
 private:
     virtual ~DomainPolicy();
 
-    RefPtr<DomainSet> mBlacklist;
-    RefPtr<DomainSet> mSuperBlacklist;
-    RefPtr<DomainSet> mWhitelist;
-    RefPtr<DomainSet> mSuperWhitelist;
+    RefPtr<DomainSet> mBlocklist;
+    RefPtr<DomainSet> mSuperBlocklist;
+    RefPtr<DomainSet> mAllowlist;
+    RefPtr<DomainSet> mSuperAllowlist;
 };
 
 } /* namespace mozilla */
