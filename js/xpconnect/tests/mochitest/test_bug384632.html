@@ -24,8 +24,8 @@ var obj = {};
 propBag.setProperty("foopy", obj);
 ok(SpecialPowers.unwrap(propBag.getProperty("foopy")) === obj,
    "nsIVariant works with regular objects");
-propBag.setProperty("foopy1", sidebar);
-ok(SpecialPowers.unwrap(propBag.getProperty("foopy1")) === sidebar,
+propBag.setProperty("foopy1", external);
+ok(SpecialPowers.unwrap(propBag.getProperty("foopy1")) === external,
    "nsIVariant works with bizarre objects");
 
 </script>
