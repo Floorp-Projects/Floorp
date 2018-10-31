@@ -5,6 +5,8 @@
 package mozilla.components.service.fxa
 
 import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.async
 import org.mozilla.fxaclient.internal.Config as InternalConfig
 
@@ -23,7 +25,7 @@ class Config internal constructor(internal val inner: InternalConfig) : AutoClos
          * Set up endpoints used in the production Firefox Accounts instance.
          */
         fun release(): Deferred<Config> {
-            return async {
+            return GlobalScope.async(Dispatchers.IO) {
                 Config(InternalConfig.release())
             }
         }
@@ -34,7 +36,7 @@ class Config internal constructor(internal val inner: InternalConfig) : AutoClos
          * @param content_base Hostname of the FxA auth service provider
          */
         fun custom(content_base: String): Deferred<Config> {
-            return async {
+            return GlobalScope.async(Dispatchers.IO) {
                 Config(InternalConfig.custom(content_base))
             }
         }

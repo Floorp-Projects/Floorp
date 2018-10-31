@@ -17,16 +17,20 @@ import android.support.v4.content.ContextCompat
 import android.widget.Toast
 import android.widget.ArrayAdapter
 import android.widget.ListView
+import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaException
 import org.mozilla.sync15.logins.SyncResult
+import kotlin.coroutines.experimental.CoroutineContext
 
-open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener {
+open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope {
 
     private var scopes: Array<String> = arrayOf("profile", "https://identity.mozilla.com/apps/oldsync")
     private var wantsKeys: Boolean = true
@@ -35,6 +39,10 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     private lateinit var adapter: ArrayAdapter<String>
     private lateinit var activityContext: MainActivity
     private lateinit var whenAccount: Deferred<FirefoxAccount>
+
+    private lateinit var job: Job
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
 
     companion object {
         const val CLIENT_ID = "12cc4070a481bc73"
@@ -47,6 +55,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        job = Job()
 
         listView = findViewById(R.id.logins_list_view)
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1)
@@ -57,7 +66,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             try {
                 val savedJSON = getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE)
                         .getString(FXA_STATE_KEY, "")
-                FirefoxAccount.fromJSONString(savedJSON).await()
+                FirefoxAccount.fromJSONString(savedJSON)
             } catch (e: FxaException) {
                 Config.custom(CONFIG_URL).await().use { config ->
                     FirefoxAccount(config, CLIENT_ID, REDIRECT_URL)
@@ -68,16 +77,15 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             launch {
                 val url = whenAccount.await().beginOAuthFlow(scopes, wantsKeys).await()
-                launch(UI) { openWebView(url) }
+                openWebView(url)
             }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        if (this::whenAccount.isInitialized) {
-            launch { whenAccount.await().close() }
-        }
+        runBlocking { whenAccount.await().close() }
+        job.cancel()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -129,7 +137,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             }.whenComplete { syncLogins ->
                 runOnUiThread {
                     Toast.makeText(this@MainActivity, "Logins success", Toast.LENGTH_SHORT).show()
-                    for (i in 0..syncLogins.size - 1) {
+                    for (i in 0 until syncLogins.size) {
                         adapter.addAll("Login: " + syncLogins[i].hostname)
                         adapter.notifyDataSetChanged()
                     }

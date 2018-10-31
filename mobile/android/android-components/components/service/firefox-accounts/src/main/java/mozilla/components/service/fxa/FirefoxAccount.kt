@@ -4,14 +4,21 @@
 
 package mozilla.components.service.fxa
 
+import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.plus
 import org.mozilla.fxaclient.internal.FirefoxAccount as InternalFxAcct
 
 /**
  * FirefoxAccount represents the authentication state of a client.
  */
 class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : AutoCloseable {
+
+    private val job = Job()
+    private val scope = CoroutineScope(Dispatchers.IO) + job
 
     /**
      * Construct a FirefoxAccount from a [Config], a clientId, and a redirectUri.
@@ -22,7 +29,10 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
     constructor(config: Config, clientId: String, redirectUri: String)
             : this(InternalFxAcct(config.inner, clientId, redirectUri))
 
-    override fun close() = inner.close()
+    override fun close() {
+        job.cancel()
+        inner.close()
+    }
 
     /**
      * Constructs a URL used to begin the OAuth flow for the requested scopes and keys.
@@ -32,11 +42,11 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
      * @return Deferred<String> that resolves to the flow URL when complete
      */
     fun beginOAuthFlow(scopes: Array<String>, wantsKeys: Boolean): Deferred<String> {
-        return async { inner.beginOAuthFlow(scopes, wantsKeys) }
+        return scope.async { inner.beginOAuthFlow(scopes, wantsKeys) }
     }
 
     fun beginPairingFlow(pairingUrl: String, scopes: Array<String>): Deferred<String> {
-        return async { inner.beginPairingFlow(pairingUrl, scopes) }
+        return scope.async { inner.beginPairingFlow(pairingUrl, scopes) }
     }
 
     /**
@@ -78,7 +88,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
      * Modifies the FirefoxAccount state.
      */
     fun completeOAuthFlow(code: String, state: String): Deferred<OAuthInfo> {
-        return async { OAuthInfo.fromInternal(inner.completeOAuthFlow(code, state)) }
+        return scope.async { OAuthInfo.fromInternal(inner.completeOAuthFlow(code, state)) }
     }
 
     /**
@@ -90,7 +100,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
      * @return [OAuthInfo] that stores the token, along with its scopes and keys when complete
      */
     fun getCachedOAuthToken(scopes: Array<String>): Deferred<OAuthInfo?> {
-        return async {
+        return scope.async {
             inner.getCachedOAuthToken(scopes)?.let { OAuthInfo.fromInternal(it) }
         }
     }
@@ -109,10 +119,10 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
          * Restores the account's authentication state from a JSON string produced by
          * [FirefoxAccount.toJSONString].
          *
-         * @return Deferred<[FirefoxAccount]> representing the authentication state
+         * @return [FirefoxAccount] representing the authentication state
          */
-        fun fromJSONString(json: String): Deferred<FirefoxAccount> {
-            return async { FirefoxAccount(InternalFxAcct.fromJSONString(json)) }
+        fun fromJSONString(json: String): FirefoxAccount {
+            return FirefoxAccount(InternalFxAcct.fromJSONString(json))
         }
     }
 }
