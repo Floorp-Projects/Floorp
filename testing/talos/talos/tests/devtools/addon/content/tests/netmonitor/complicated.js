@@ -22,5 +22,6 @@ module.exports = async function() {
   await exportHar("complicated.netmonitor", toolbox);
 
   await closeToolboxAndLog("complicated.netmonitor", toolbox);
+
   await testTeardown();
 };
