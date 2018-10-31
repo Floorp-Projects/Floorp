@@ -842,6 +842,7 @@ private:
     ErrorResult error;
     RefPtr<Promise> cachePromise =
       mCacheCreator->Cache_()->Put(jsapi.cx(), request, *response, error);
+    error.WouldReportJSException();
     if (NS_WARN_IF(error.Failed())) {
       nsresult rv = error.StealNSResult();
       channel->Cancel(rv);

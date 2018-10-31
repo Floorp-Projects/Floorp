@@ -58,6 +58,8 @@ namespace {
 void
 AbortStream(JSContext* aCx, JS::Handle<JSObject*> aStream, ErrorResult& aRv)
 {
+  aRv.MightThrowJSException();
+
   bool isReadable;
   if (!JS::ReadableStreamIsReadable(aCx, aStream, &isReadable)) {
     aRv.StealExceptionFromJSContext(aCx);
@@ -1119,8 +1121,10 @@ FetchBody<Derived>::GetBodyUsed(ErrorResult& aRv) const
     return true;
   }
 
-  // If this stream is disturbed or locked, return true.
+  // If this stream is disturbed, return true.
   if (mReadableStreamBody) {
+    aRv.MightThrowJSException();
+
     AutoJSAPI jsapi;
     if (!jsapi.Init(mOwner)) {
       aRv.Throw(NS_ERROR_FAILURE);
@@ -1130,16 +1134,12 @@ FetchBody<Derived>::GetBodyUsed(ErrorResult& aRv) const
     JSContext* cx = jsapi.cx();
     JS::Rooted<JSObject*> body(cx, mReadableStreamBody);
     bool disturbed;
-    bool locked;
-    bool readable;
-    if (!JS::ReadableStreamIsDisturbed(cx, body, &disturbed) ||
-        !JS::ReadableStreamIsLocked(cx, body, &locked) ||
-        !JS::ReadableStreamIsReadable(cx, body, &readable)) {
+    if (!JS::ReadableStreamIsDisturbed(cx, body, &disturbed)) {
       aRv.StealExceptionFromJSContext(cx);
       return false;
     }
 
-    return disturbed || locked || !readable;
+    return disturbed;
   }
 
   return false;
@@ -1182,6 +1182,8 @@ FetchBody<Derived>::SetBodyUsed(JSContext* aCx, ErrorResult& aRv)
   // If we already have a ReadableStreamBody and it has been created by DOM, we
   // have to lock it now because it can have been shared with other objects.
   if (mReadableStreamBody) {
+    aRv.MightThrowJSException();
+
     JS::Rooted<JSObject*> readableStreamObj(aCx, mReadableStreamBody);
 
     JS::ReadableStreamMode mode;
@@ -1223,6 +1225,8 @@ already_AddRefed<Promise>
 FetchBody<Derived>::ConsumeBody(JSContext* aCx, FetchConsumeType aType,
                                 ErrorResult& aRv)
 {
+  aRv.MightThrowJSException();
+
   RefPtr<AbortSignalImpl> signalImpl = DerivedClass()->GetSignalImpl();
   if (signalImpl && signalImpl->Aborted()) {
     aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
@@ -1431,6 +1435,8 @@ FetchBody<Derived>::LockStream(JSContext* aCx,
                                JS::HandleObject aStream,
                                ErrorResult& aRv)
 {
+  aRv.MightThrowJSException();
+
 #if DEBUG
   JS::ReadableStreamMode streamMode;
   if (!JS::ReadableStreamGetMode(aCx, aStream, &streamMode)) {
@@ -1483,6 +1489,8 @@ FetchBody<Derived>::MaybeTeeReadableStreamBody(JSContext* aCx,
   if (!mReadableStreamBody) {
     return;
   }
+
+  aRv.MightThrowJSException();
 
   JS::Rooted<JSObject*> stream(aCx, mReadableStreamBody);
 

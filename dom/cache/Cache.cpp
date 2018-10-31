@@ -205,6 +205,7 @@ public:
     // its state could be the wrong one. The spec doesn't say anything
     // about it, yet (bug 1384006)
     RefPtr<Promise> put = mCache->PutAll(aCx, mRequestList, responseList, result);
+    result.WouldReportJSException();
     if (NS_WARN_IF(result.Failed())) {
       // TODO: abort the fetch requests we have running (bug 1157434)
       mPromise->MaybeReject(result);
