@@ -602,36 +602,6 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
     return JS::NullValue();
 }
 
-void
-WebGLContext::GetParameterIndexed(JSContext* cx, GLenum pname, GLuint index,
-                                  JS::MutableHandle<JS::Value> retval)
-{
-    const FuncScope funcScope(*this, "getParameterIndexed");
-    if (IsContextLost()) {
-        retval.setNull();
-        return;
-    }
-
-    switch (pname) {
-        case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
-        {
-            if (index >= mGLMaxTransformFeedbackSeparateAttribs) {
-                ErrorInvalidValue("`index` should be less than MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS");
-                retval.setNull();
-                return;
-            }
-            retval.setNull(); // See bug 903594
-            return;
-        }
-
-        default:
-            break;
-    }
-
-    ErrorInvalidEnumInfo("pname", pname);
-    retval.setNull();
-}
-
 bool
 WebGLContext::IsEnabled(GLenum cap)
 {
