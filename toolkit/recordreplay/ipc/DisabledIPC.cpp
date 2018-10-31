@@ -75,12 +75,6 @@ DrawTargetForRemoteDrawing(LayoutDeviceIntSize aSize)
   MOZ_CRASH();
 }
 
-bool
-SuppressMessageAfterDiverge(IPC::Message* aMsg)
-{
-  MOZ_CRASH();
-}
-
 } // namespace child
 
 namespace parent {
