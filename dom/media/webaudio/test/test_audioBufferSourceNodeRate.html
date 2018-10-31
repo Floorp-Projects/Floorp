@@ -37,14 +37,6 @@ source2.detune.value = -1200; // one octave -> 50% slowdown
 source2.connect(off2.destination);
 source2.start(0);
 
-var finished = 0;
-function finish() {
-  finished++;
-  if (finished == 2) {
-    SimpleTest.finish();
-  }
-}
-
 off.startRendering().then((renderedPlaybackRate) => {
   // we don't care about comparing the value here, we just want to know whether
   // the second part is noisy.
