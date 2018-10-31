@@ -659,7 +659,7 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
 
     const ElemSegment& seg = *instance->passiveElemSegments_[segIndex];
     MOZ_RELEASE_ASSERT(!seg.active());
-    const Table& table = *instance->tables()[seg.tableIndex];
+    const Table& table = *instance->tables()[0];
 
     // We are proposing to copy
     //

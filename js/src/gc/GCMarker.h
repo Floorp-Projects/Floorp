@@ -308,11 +308,7 @@ class GCMarker : public JSTracer
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 #ifdef DEBUG
-
     bool shouldCheckCompartments() { return strictCompartmentChecking; }
-
-    JS::Zone* stackContainsCrossZonePointerTo(const gc::Cell* cell);
-
 #endif
 
     void markEphemeronValues(gc::Cell* markedCell, gc::WeakEntryVector& entry);
