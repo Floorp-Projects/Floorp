@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function nsSidebar() {
 }
@@ -18,6 +19,10 @@ nsSidebar.prototype = {
   // The capitalization, although nonstandard here, is to match other browsers'
   // APIs and is therefore important.
   AddSearchProvider(engineURL) {
+    if (!Services.prefs.getBoolPref("dom.sidebar.enabled", false)) {
+      return;
+    }
+
     if (!this.mm) {
       Cu.reportError(`Installing a search provider from this context is not currently supported: ${Error().stack}.`);
       return;
@@ -32,9 +37,7 @@ nsSidebar.prototype = {
   // This function exists to implement window.external.IsSearchProviderInstalled(),
   // for compatibility with other browsers.  The function has been deprecated
   // and so will not be implemented.
-  IsSearchProviderInstalled(engineURL) {
-    return 0;
-  },
+  IsSearchProviderInstalled() {},
 
   classID: Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
