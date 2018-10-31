@@ -1,79 +1,54 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.setContextMenu = setContextMenu;
-exports.setPrimaryPaneTab = setPrimaryPaneTab;
-exports.closeActiveSearch = closeActiveSearch;
-exports.setActiveSearch = setActiveSearch;
-exports.updateActiveFileSearch = updateActiveFileSearch;
-exports.toggleFrameworkGrouping = toggleFrameworkGrouping;
-exports.showSource = showSource;
-exports.togglePaneCollapse = togglePaneCollapse;
-exports.highlightLineRange = highlightLineRange;
-exports.flashLineRange = flashLineRange;
-exports.clearHighlightLineRange = clearHighlightLineRange;
-exports.openConditionalPanel = openConditionalPanel;
-exports.closeConditionalPanel = closeConditionalPanel;
-exports.clearProjectDirectoryRoot = clearProjectDirectoryRoot;
-exports.setProjectDirectoryRoot = setProjectDirectoryRoot;
-exports.setOrientation = setOrientation;
-
-var _selectors = require("../selectors/index");
-
-var _select = require("../actions/sources/select");
-
-var _editor = require("../utils/editor/index");
-
-var _fileSearch = require("./file-search");
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function setContextMenu(type, event) {
-  return ({
-    dispatch
-  }) => {
-    dispatch({
-      type: "SET_CONTEXT_MENU",
-      contextMenu: {
-        type,
-        event
-      }
-    });
+
+// @flow
+
+import {
+  getActiveSearch,
+  getPaneCollapse,
+  getQuickOpenEnabled,
+  getSource,
+  getFileSearchQuery,
+  getProjectDirectoryRoot
+} from "../selectors";
+import { selectSource } from "../actions/sources/select";
+import type { ThunkArgs, panelPositionType } from "./types";
+import { getEditor } from "../utils/editor";
+import { searchContents } from "./file-search";
+
+import type {
+  ActiveSearchType,
+  OrientationType,
+  SelectedPrimaryPaneTabType
+} from "../reducers/ui";
+
+export function setContextMenu(type: string, event: any) {
+  return ({ dispatch }: ThunkArgs) => {
+    dispatch({ type: "SET_CONTEXT_MENU", contextMenu: { type, event } });
   };
 }
 
-function setPrimaryPaneTab(tabName) {
-  return {
-    type: "SET_PRIMARY_PANE_TAB",
-    tabName
-  };
+export function setPrimaryPaneTab(tabName: SelectedPrimaryPaneTabType) {
+  return { type: "SET_PRIMARY_PANE_TAB", tabName };
 }
 
-function closeActiveSearch() {
+export function closeActiveSearch() {
   return {
     type: "TOGGLE_ACTIVE_SEARCH",
     value: null
   };
 }
 
-function setActiveSearch(activeSearch) {
-  return ({
-    dispatch,
-    getState
-  }) => {
-    const activeSearchState = (0, _selectors.getActiveSearch)(getState());
-
+export function setActiveSearch(activeSearch?: ActiveSearchType) {
+  return ({ dispatch, getState }: ThunkArgs) => {
+    const activeSearchState = getActiveSearch(getState());
     if (activeSearchState === activeSearch) {
       return;
     }
 
-    if ((0, _selectors.getQuickOpenEnabled)(getState())) {
-      dispatch({
-        type: "CLOSE_QUICK_OPEN"
-      });
+    if (getQuickOpenEnabled(getState())) {
+      dispatch({ type: "CLOSE_QUICK_OPEN" });
     }
 
     dispatch({
@@ -83,26 +58,19 @@ function setActiveSearch(activeSearch) {
   };
 }
 
-function updateActiveFileSearch() {
-  return ({
-    dispatch,
-    getState
-  }) => {
-    const isFileSearchOpen = (0, _selectors.getActiveSearch)(getState()) === "file";
-    const fileSearchQuery = (0, _selectors.getFileSearchQuery)(getState());
-
+export function updateActiveFileSearch() {
+  return ({ dispatch, getState }: ThunkArgs) => {
+    const isFileSearchOpen = getActiveSearch(getState()) === "file";
+    const fileSearchQuery = getFileSearchQuery(getState());
     if (isFileSearchOpen && fileSearchQuery) {
-      const editor = (0, _editor.getEditor)();
-      dispatch((0, _fileSearch.searchContents)(fileSearchQuery, editor));
+      const editor = getEditor();
+      dispatch(searchContents(fileSearchQuery, editor));
     }
   };
 }
 
-function toggleFrameworkGrouping(toggleValue) {
-  return ({
-    dispatch,
-    getState
-  }) => {
+export function toggleFrameworkGrouping(toggleValue: boolean) {
+  return ({ dispatch, getState }: ThunkArgs) => {
     dispatch({
       type: "TOGGLE_FRAMEWORK_GROUPING",
       value: toggleValue
@@ -110,18 +78,14 @@ function toggleFrameworkGrouping(toggleValue) {
   };
 }
 
-function showSource(sourceId) {
-  return ({
-    dispatch,
-    getState
-  }) => {
-    const source = (0, _selectors.getSource)(getState(), sourceId);
-
+export function showSource(sourceId: string) {
+  return ({ dispatch, getState }: ThunkArgs) => {
+    const source = getSource(getState(), sourceId);
     if (!source) {
       return;
     }
 
-    if ((0, _selectors.getPaneCollapse)(getState(), "start")) {
+    if (getPaneCollapse(getState(), "start")) {
       dispatch({
         type: "TOGGLE_PANE",
         position: "start",
@@ -130,25 +94,19 @@ function showSource(sourceId) {
     }
 
     dispatch(setPrimaryPaneTab("sources"));
-    dispatch({
-      type: "SHOW_SOURCE",
-      source: null
-    });
-    dispatch((0, _select.selectSource)(source.id));
-    dispatch({
-      type: "SHOW_SOURCE",
-      source
-    });
+
+    dispatch({ type: "SHOW_SOURCE", source: null });
+    dispatch(selectSource(source.id));
+    dispatch({ type: "SHOW_SOURCE", source });
   };
 }
 
-function togglePaneCollapse(position, paneCollapsed) {
-  return ({
-    dispatch,
-    getState
-  }) => {
-    const prevPaneCollapse = (0, _selectors.getPaneCollapse)(getState(), position);
-
+export function togglePaneCollapse(
+  position: panelPositionType,
+  paneCollapsed: boolean
+) {
+  return ({ dispatch, getState }: ThunkArgs) => {
+    const prevPaneCollapse = getPaneCollapse(getState(), position);
     if (prevPaneCollapse === paneCollapsed) {
       return;
     }
@@ -160,40 +118,44 @@ function togglePaneCollapse(position, paneCollapsed) {
     });
   };
 }
+
 /**
  * @memberof actions/sources
  * @static
  */
-
-
-function highlightLineRange(location) {
+export function highlightLineRange(location: {
+  start: number,
+  end: number,
+  sourceId: number
+}) {
   return {
     type: "HIGHLIGHT_LINES",
     location
   };
 }
 
-function flashLineRange(location) {
-  return ({
-    dispatch
-  }) => {
+export function flashLineRange(location: {
+  start: number,
+  end: number,
+  sourceId: number
+}) {
+  return ({ dispatch }: ThunkArgs) => {
     dispatch(highlightLineRange(location));
     setTimeout(() => dispatch(clearHighlightLineRange()), 200);
   };
 }
+
 /**
  * @memberof actions/sources
  * @static
  */
-
-
-function clearHighlightLineRange() {
+export function clearHighlightLineRange() {
   return {
     type: "CLEAR_HIGHLIGHT_LINES"
   };
 }
 
-function openConditionalPanel(line) {
+export function openConditionalPanel(line: ?number) {
   if (!line) {
     return;
   }
@@ -204,30 +166,28 @@ function openConditionalPanel(line) {
   };
 }
 
-function closeConditionalPanel() {
+export function closeConditionalPanel() {
   return {
     type: "CLOSE_CONDITIONAL_PANEL"
   };
 }
 
-function clearProjectDirectoryRoot() {
+export function clearProjectDirectoryRoot() {
   return {
     type: "SET_PROJECT_DIRECTORY_ROOT",
     url: ""
   };
 }
 
-function setProjectDirectoryRoot(newRoot) {
-  return ({
-    dispatch,
-    getState
-  }) => {
-    const curRoot = (0, _selectors.getProjectDirectoryRoot)(getState());
-
+export function setProjectDirectoryRoot(newRoot: string) {
+  return ({ dispatch, getState }: ThunkArgs) => {
+    const curRoot = getProjectDirectoryRoot(getState());
     if (newRoot && curRoot) {
       const newRootArr = newRoot.replace(/\/+/g, "/").split("/");
-      const curRootArr = curRoot.replace(/^\//, "").replace(/\/+/g, "/").split("/");
-
+      const curRootArr = curRoot
+        .replace(/^\//, "")
+        .replace(/\/+/g, "/")
+        .split("/");
       if (newRootArr[0] !== curRootArr[0]) {
         newRootArr.splice(0, 2);
         newRoot = `${curRoot}/${newRootArr.join("/")}`;
@@ -241,9 +201,6 @@ function setProjectDirectoryRoot(newRoot) {
   };
 }
 
-function setOrientation(orientation) {
-  return {
-    type: "SET_ORIENTATION",
-    orientation
-  };
+export function setOrientation(orientation: OrientationType) {
+  return { type: "SET_ORIENTATION", orientation };
 }

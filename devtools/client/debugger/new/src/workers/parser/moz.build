@@ -7,6 +7,6 @@ DIRS += [
     'getScopes',
 ]
 
-DevToolsModules(
+DebuggerModules(
     'index.js',
 )

@@ -1,32 +1,23 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.createEditor = createEditor;
-
-var _sourceEditor = require("devtools/client/sourceeditor/editor");
-
-var _sourceEditor2 = _interopRequireDefault(_sourceEditor);
-
-var _prefs = require("../prefs");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function createEditor() {
+
+// @flow
+
+import SourceEditor from "./source-editor";
+import { features } from "../prefs";
+
+export function createEditor() {
   const gutters = ["breakpoints", "hit-markers", "CodeMirror-linenumbers"];
 
-  if (_prefs.features.codeFolding) {
+  if (features.codeFolding) {
     gutters.push("CodeMirror-foldgutter");
   }
 
-  return new _sourceEditor2.default({
+  return new SourceEditor({
     mode: "javascript",
-    foldGutter: _prefs.features.codeFolding,
-    enableCodeFolding: _prefs.features.codeFolding,
+    foldGutter: features.codeFolding,
+    enableCodeFolding: features.codeFolding,
     readOnly: true,
     lineNumbers: true,
     theme: "mozilla",

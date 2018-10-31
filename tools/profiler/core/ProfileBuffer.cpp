@@ -16,14 +16,19 @@
 using namespace mozilla;
 
 ProfileBuffer::ProfileBuffer(uint32_t aCapacity)
-  : mEntries(nullptr)
-  , mEntryIndexMask(0)
+  : mEntryIndexMask(0)
   , mRangeStart(0)
   , mRangeEnd(0)
   , mCapacity(0)
 {
-  bool succeeded = SetMinCapacity(aCapacity);
-  MOZ_RELEASE_ASSERT(succeeded, "Couldn't allocate initial ProfileBuffer storage");
+  // Round aCapacity up to the nearest power of two, so that we can index
+  // mEntries with a simple mask and don't need to do a slow modulo operation.
+  const uint32_t UINT32_MAX_POWER_OF_TWO = 1 << 31;
+  MOZ_RELEASE_ASSERT(aCapacity <= UINT32_MAX_POWER_OF_TWO,
+                     "aCapacity is larger than what we support");
+  mCapacity = RoundUpPow2(aCapacity);
+  mEntryIndexMask = mCapacity - 1;
+  mEntries = MakeUnique<ProfileBufferEntry[]>(mCapacity);
 }
 
 ProfileBuffer::~ProfileBuffer()
@@ -31,101 +36,6 @@ ProfileBuffer::~ProfileBuffer()
   while (mStoredMarkers.peek()) {
     delete mStoredMarkers.popHead();
   }
-}
-
-bool
-ProfileBuffer::SetMinCapacity(uint32_t aMinCapacity)
-{
-  // Round aMinCapacity up to the nearest power of two, so that we can index
-  // mEntries with a simple mask and don't need to do a slow modulo operation.
-  const uint32_t UINT32_MAX_POWER_OF_TWO = 1 << 31;
-  MOZ_RELEASE_ASSERT(aMinCapacity <= UINT32_MAX_POWER_OF_TWO,
-                     "aMinCapacity is larger than what we support");
-  return SetCapacityPow2(RoundUpPow2(aMinCapacity));
-}
-
-static uint64_t
-RoundDownToMultipleOfPow2(uint64_t aNumber, uint64_t aMultiplier)
-{
-  return aNumber & ~(aMultiplier - 1);
-}
-
-bool
-ProfileBuffer::SetCapacityPow2(uint32_t aNewCapacity)
-{
-  MOZ_RELEASE_ASSERT(aNewCapacity != 0, "can't set ProfileBuffer capacity to zero");
-  MOZ_RELEASE_ASSERT(IsPowerOfTwo(aNewCapacity), "aNewCapacity needs to be a power of two");
-
-  if (aNewCapacity == mCapacity) {
-    return true;
-  }
-
-  MOZ_RELEASE_ASSERT(Length() <= aNewCapacity, "can't make the capacity smaller than the used size");
-
-  auto newEntries = MakeUniqueFallible<ProfileBufferEntry[]>(aNewCapacity);
-  if (!newEntries) {
-    return false;
-  }
-
-  uint32_t newIndexMask = aNewCapacity - 1;
-
-  if (mCapacity != 0 && mRangeStart != mRangeEnd) {
-    // Copy existing data from mEntries into newEntries. Make sure that every
-    // entry preserves its position in buffer space.
-    // If the range wraps around in the old or in the new buffer, we need to
-    // copy the data in two chunks: [start, wrapIndex), [wrapIndex, end)
-    // If the range wraps in both the old and the new buffer, the wrap index
-    // will be the same in both buffers.
-    //
-    // If range doesn't wrap around:
-    //
-    //           +- wrapIndex
-    //           |+- mRangeStart
-    //           ||   +- mRangeEnd
-    //           vv   v
-    // ...-+-----+-----+-----+-----+-----+-----+-----+-----+-...
-    //     |     |[---]|     |     |     |     |     |     |
-    // ...-+-----+-----+-----+-----+-----+-----+-----+-----+-...
-    //     |      [---]            |                       |
-    // ...-+-----+-----+-----+-----+-----+-----+-----+-----+-...
-    //     ^^^^^^^ smaller capacity
-    //     ^^^^^^^^^^^^^^^^^^^^^^^^^ larger capacity
-    //
-    // If range wraps around:
-    //
-    //                         +- mRangeStart
-    //                         |   +- wrapIndex
-    //                         |   | +- mRangeEnd
-    //                         v   v v
-    // ...-+-----+-----+-----+-----+-----+-----+-----+-----+-...
-    //     |     |     |     | [---+-]   |     |     |     |
-    // ...-+-----+-----+-----+-----+-----+-----+-----+-----+-...
-    //     |                   [---+-]                     |
-    // ...-+-----+-----+-----+-----+-----+-----+-----+-----+-...
-    //     ^^^^^^^ smaller capacity
-    //     ^^^^^^^^^^^^^^^^^^^^^^^^^ larger capacity
-    uint64_t wrapIndex =
-      RoundDownToMultipleOfPow2(mRangeEnd, std::min(aNewCapacity, mCapacity));
-    if (wrapIndex <= mRangeStart) {
-      // There is no wrapping. Copy the entire range as one chunk.
-      PodCopy(&newEntries[mRangeStart & newIndexMask],
-              &mEntries[mRangeStart & mEntryIndexMask],
-              mRangeEnd - mRangeStart);
-    } else {
-      // Copy the range in two separate chunks.
-      PodCopy(&newEntries[mRangeStart & newIndexMask],
-              &mEntries[mRangeStart & mEntryIndexMask],
-              wrapIndex - mRangeStart);
-      PodCopy(&newEntries[wrapIndex & newIndexMask],
-              &mEntries[wrapIndex & mEntryIndexMask],
-              mRangeEnd - wrapIndex);
-    }
-  }
-
-  mCapacity = aNewCapacity;
-  mEntryIndexMask = newIndexMask;
-  mEntries = std::move(newEntries);
-  return true;
 }
 
 // Called from signal, call only reentrant functions

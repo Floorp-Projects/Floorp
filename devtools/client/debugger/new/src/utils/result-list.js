@@ -1,18 +1,17 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.scrollList = scrollList;
-
-var _devtoolsEnvironment = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-environment"];
-
-var _Modal = require("../components/shared/Modal");
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function scrollList(resultList, index, delayed = false) {
+
+// @flow
+
+import { isFirefox } from "devtools-environment";
+import { transitionTimeout } from "../components/shared/Modal";
+
+export function scrollList(
+  resultList: Element[],
+  index: number,
+  delayed: boolean = false
+): void {
   if (!resultList.hasOwnProperty(index)) {
     return;
   }
@@ -20,11 +19,8 @@ function scrollList(resultList, index, delayed = false) {
   const resultEl = resultList[index];
 
   const scroll = () => {
-    if ((0, _devtoolsEnvironment.isFirefox)()) {
-      resultEl.scrollIntoView({
-        block: "center",
-        behavior: "smooth"
-      });
+    if (isFirefox()) {
+      resultEl.scrollIntoView({ block: "center", behavior: "smooth" });
     } else {
       chromeScrollList(resultEl, index);
     }
@@ -32,25 +28,26 @@ function scrollList(resultList, index, delayed = false) {
 
   if (delayed) {
     // Wait for Modal Transition timeout before scrolling to resultEl.
-    setTimeout(scroll, _Modal.transitionTimeout + 10);
+    setTimeout(scroll, transitionTimeout + 10);
     return;
   }
 
   scroll();
 }
 
-function chromeScrollList(elem, index) {
-  const resultsEl = elem.parentNode;
+function chromeScrollList(elem: Element, index: number): void {
+  const resultsEl: any = elem.parentNode;
 
   if (!resultsEl || resultsEl.children.length === 0) {
     return;
   }
 
-  const resultsHeight = resultsEl.clientHeight;
-  const itemHeight = resultsEl.children[0].clientHeight;
-  const numVisible = resultsHeight / itemHeight;
-  const positionsToScroll = index - numVisible + 1;
-  const itemOffset = resultsHeight % itemHeight;
-  const scroll = positionsToScroll * (itemHeight + 2) + itemOffset;
+  const resultsHeight: number = resultsEl.clientHeight;
+  const itemHeight: number = resultsEl.children[0].clientHeight;
+  const numVisible: number = resultsHeight / itemHeight;
+  const positionsToScroll: number = index - numVisible + 1;
+  const itemOffset: number = resultsHeight % itemHeight;
+  const scroll: number = positionsToScroll * (itemHeight + 2) + itemOffset;
+
   resultsEl.scrollTop = Math.max(0, scroll);
 }

@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DevToolsModules(
+DebuggerModules(
     'addToTree.js',
     'collapseTree.js',
     'createTree.js',

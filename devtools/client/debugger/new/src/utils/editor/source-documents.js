@@ -1,77 +1,60 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getDocument = getDocument;
-exports.hasDocument = hasDocument;
-exports.setDocument = setDocument;
-exports.removeDocument = removeDocument;
-exports.clearDocuments = clearDocuments;
-exports.updateLineNumberFormat = updateLineNumberFormat;
-exports.updateDocument = updateDocument;
-exports.clearEditor = clearEditor;
-exports.showLoading = showLoading;
-exports.showErrorMessage = showErrorMessage;
-exports.showSourceText = showSourceText;
-
-var _source = require("../source");
-
-var _wasm = require("../wasm");
-
-var _ui = require("../ui");
-
-var _sourceEditor = require("devtools/client/sourceeditor/editor");
-
-var _sourceEditor2 = _interopRequireDefault(_sourceEditor);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-let sourceDocs = {};
 
-function getDocument(key) {
+// @flow
+
+import { getMode } from "../source";
+
+import { isWasm, getWasmLineNumberFormatter, renderWasmText } from "../wasm";
+import { resizeBreakpointGutter, resizeToggleButton } from "../ui";
+import SourceEditor from "./source-editor";
+
+import type { Source } from "../../types";
+import type { SymbolDeclarations } from "../../workers/parser";
+type SourceDocuments = { [string]: Object };
+
+let sourceDocs: SourceDocuments = {};
+
+export function getDocument(key: string) {
   return sourceDocs[key];
 }
 
-function hasDocument(key) {
+export function hasDocument(key: string): boolean {
   return !!getDocument(key);
 }
 
-function setDocument(key, doc) {
+export function setDocument(key: string, doc: any) {
   sourceDocs[key] = doc;
 }
 
-function removeDocument(key) {
+export function removeDocument(key: string) {
   delete sourceDocs[key];
 }
 
-function clearDocuments() {
+export function clearDocuments() {
   sourceDocs = {};
 }
 
-function resetLineNumberFormat(editor) {
+function resetLineNumberFormat(editor: SourceEditor) {
   const cm = editor.codeMirror;
   cm.setOption("lineNumberFormatter", number => number);
-  (0, _ui.resizeBreakpointGutter)(cm);
-  (0, _ui.resizeToggleButton)(cm);
+  resizeBreakpointGutter(cm);
+  resizeToggleButton(cm);
 }
 
-function updateLineNumberFormat(editor, sourceId) {
-  if (!(0, _wasm.isWasm)(sourceId)) {
+export function updateLineNumberFormat(editor: SourceEditor, sourceId: string) {
+  if (!isWasm(sourceId)) {
     return resetLineNumberFormat(editor);
   }
-
   const cm = editor.codeMirror;
-  const lineNumberFormatter = (0, _wasm.getWasmLineNumberFormatter)(sourceId);
+  const lineNumberFormatter = getWasmLineNumberFormatter(sourceId);
   cm.setOption("lineNumberFormatter", lineNumberFormatter);
-  (0, _ui.resizeBreakpointGutter)(cm);
-  (0, _ui.resizeToggleButton)(cm);
+  resizeBreakpointGutter(cm);
+  resizeToggleButton(cm);
 }
 
-function updateDocument(editor, source) {
+export function updateDocument(editor: SourceEditor, source: Source) {
   if (!source) {
     return;
   }
@@ -79,20 +62,19 @@ function updateDocument(editor, source) {
   const sourceId = source.id;
   const doc = getDocument(sourceId) || editor.createDocument();
   editor.replaceDocument(doc);
+
   updateLineNumberFormat(editor, sourceId);
 }
 
-function clearEditor(editor) {
+export function clearEditor(editor: SourceEditor) {
   const doc = editor.createDocument();
   editor.replaceDocument(doc);
   editor.setText("");
-  editor.setMode({
-    name: "text"
-  });
+  editor.setMode({ name: "text" });
   resetLineNumberFormat(editor);
 }
 
-function showLoading(editor) {
+export function showLoading(editor: SourceEditor) {
   let doc = getDocument("loading");
 
   if (doc) {
@@ -102,43 +84,30 @@ function showLoading(editor) {
     setDocument("loading", doc);
     doc.setValue(L10N.getStr("loadingText"));
     editor.replaceDocument(doc);
-    editor.setMode({
-      name: "text"
-    });
+    editor.setMode({ name: "text" });
   }
 }
 
-function showErrorMessage(editor, msg) {
+export function showErrorMessage(editor: Object, msg: string) {
   let error;
-
   if (msg.includes("WebAssembly binary source is not available")) {
     error = L10N.getStr("wasmIsNotAvailable");
   } else {
     error = L10N.getFormatStr("errorLoadingText3", msg);
   }
-
   const doc = editor.createDocument();
   editor.replaceDocument(doc);
   editor.setText(error);
-  editor.setMode({
-    name: "text"
-  });
+  editor.setMode({ name: "text" });
   resetLineNumberFormat(editor);
 }
 
-function setEditorText(editor, source) {
-  const {
-    text,
-    id: sourceId
-  } = source;
-
+function setEditorText(editor: Object, source: Source) {
+  const { text, id: sourceId } = source;
   if (source.isWasm) {
-    const wasmLines = (0, _wasm.renderWasmText)(sourceId, text); // cm will try to split into lines anyway, saving memory
-
-    const wasmText = {
-      split: () => wasmLines,
-      match: () => false
-    };
+    const wasmLines = renderWasmText(sourceId, (text: any));
+    // cm will try to split into lines anyway, saving memory
+    const wasmText = { split: () => wasmLines, match: () => false };
     editor.setText(wasmText);
   } else {
     editor.setText(text);
@@ -146,27 +115,28 @@ function setEditorText(editor, source) {
 }
 
 function setMode(editor, source, symbols) {
-  const mode = (0, _source.getMode)(source, symbols);
+  const mode = getMode(source, symbols);
   const currentMode = editor.codeMirror.getOption("mode");
-
   if (!currentMode || currentMode.name != mode.name) {
     editor.setMode(mode);
   }
 }
+
 /**
  * Handle getting the source document or creating a new
  * document with the correct mode and text.
  */
-
-
-function showSourceText(editor, source, symbols) {
+export function showSourceText(
+  editor: Object,
+  source: Source,
+  symbols?: SymbolDeclarations
+) {
   if (!source) {
     return;
   }
 
   if (hasDocument(source.id)) {
     const doc = getDocument(source.id);
-
     if (editor.codeMirror.doc === doc) {
       setMode(editor, source, symbols);
       return;
@@ -181,6 +151,7 @@ function showSourceText(editor, source, symbols) {
   const doc = editor.createDocument();
   setDocument(source.id, doc);
   editor.replaceDocument(doc);
+
   setEditorText(editor, source);
   setMode(editor, source, symbols);
   updateLineNumberFormat(editor, source.id);

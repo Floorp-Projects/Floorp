@@ -1,52 +1,39 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.createPrettySource = createPrettySource;
-exports.togglePrettyPrint = togglePrettyPrint;
-
-var _assert = require("../../utils/assert");
-
-var _assert2 = _interopRequireDefault(_assert);
-
-var _telemetry = require("../../utils/telemetry");
-
-var _breakpoints = require("../breakpoints/index");
-
-var _ast = require("../ast");
-
-var _prettyPrint = require("../../workers/pretty-print/index");
-
-var _parser = require("../../workers/parser/index");
-
-var _source = require("../../utils/source");
-
-var _loadSourceText = require("./loadSourceText");
-
-var _pause = require("../pause/index");
-
-var _sources = require("../sources/index");
-
-var _selectors = require("../../selectors/index");
-
-var _select = require("./select");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function createPrettySource(sourceId) {
-  return async ({
-    dispatch,
-    getState,
-    sourceMaps
-  }) => {
-    const source = (0, _selectors.getSourceFromId)(getState(), sourceId);
-    const url = (0, _source.getPrettySourceURL)(source.url);
+
+// @flow
+
+import assert from "../../utils/assert";
+import { recordEvent } from "../../utils/telemetry";
+import { remapBreakpoints } from "../breakpoints";
+
+import { setPausePoints, setSymbols } from "../ast";
+import { prettyPrint } from "../../workers/pretty-print";
+import { setSource } from "../../workers/parser";
+import { getPrettySourceURL, isLoaded } from "../../utils/source";
+import { loadSourceText } from "./loadSourceText";
+import { mapFrames } from "../pause";
+import { selectSpecificLocation } from "../sources";
+
+import {
+  getSource,
+  getSourceFromId,
+  getSourceByURL,
+  getSelectedLocation
+} from "../../selectors";
+
+import type { Action, ThunkArgs } from "../types";
+import { selectSource } from "./select";
+import type { JsSource } from "../../types";
+
+export function createPrettySource(sourceId: string) {
+  return async ({ dispatch, getState, sourceMaps }: ThunkArgs) => {
+    const source = getSourceFromId(getState(), sourceId);
+    const url = getPrettySourceURL(source.url);
     const id = await sourceMaps.generatedToOriginalId(sourceId, url);
-    const prettySource = {
+
+    const prettySource: JsSource = {
       url,
       relativeUrl: url,
       id,
@@ -56,31 +43,27 @@ function createPrettySource(sourceId) {
       contentType: "text/javascript",
       loadedState: "loading"
     };
-    dispatch({
-      type: "ADD_SOURCE",
-      source: prettySource
-    });
-    dispatch((0, _select.selectSource)(prettySource.id));
-    const {
-      code,
-      mappings
-    } = await (0, _prettyPrint.prettyPrint)({
-      source,
-      url
-    });
+
+    dispatch(({ type: "ADD_SOURCE", source: prettySource }: Action));
+    dispatch(selectSource(prettySource.id));
+
+    const { code, mappings } = await prettyPrint({ source, url });
     await sourceMaps.applySourceMap(source.id, url, code, mappings);
-    const loadedPrettySource = { ...prettySource,
+
+    const loadedPrettySource: JsSource = {
+      ...prettySource,
       text: code,
       loadedState: "loaded"
     };
-    (0, _parser.setSource)(loadedPrettySource);
-    dispatch({
-      type: "UPDATE_SOURCE",
-      source: loadedPrettySource
-    });
+
+    setSource(loadedPrettySource);
+
+    dispatch(({ type: "UPDATE_SOURCE", source: loadedPrettySource }: Action));
+
     return prettySource;
   };
 }
+
 /**
  * Toggle the pretty printing of a source's text. All subsequent calls to
  * |getText| will return the pretty-toggled text. Nothing will happen for
@@ -93,54 +76,56 @@ function createPrettySource(sourceId) {
  *          A promise that resolves to [aSource, prettyText] or rejects to
  *          [aSource, error].
  */
-
-
-function togglePrettyPrint(sourceId) {
-  return async ({
-    dispatch,
-    getState,
-    client,
-    sourceMaps
-  }) => {
-    const source = (0, _selectors.getSource)(getState(), sourceId);
-
+export function togglePrettyPrint(sourceId: string) {
+  return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
+    const source = getSource(getState(), sourceId);
     if (!source) {
       return {};
     }
 
     if (!source.isPrettyPrinted) {
-      (0, _telemetry.recordEvent)("pretty_print");
+      recordEvent("pretty_print");
     }
 
-    if (!(0, _source.isLoaded)(source)) {
-      await dispatch((0, _loadSourceText.loadSourceText)(source));
+    if (!isLoaded(source)) {
+      await dispatch(loadSourceText(source));
     }
 
-    (0, _assert2.default)(sourceMaps.isGeneratedId(sourceId), "Pretty-printing only allowed on generated sources");
-    const selectedLocation = (0, _selectors.getSelectedLocation)(getState());
-    const url = (0, _source.getPrettySourceURL)(source.url);
-    const prettySource = (0, _selectors.getSourceByURL)(getState(), url);
+    assert(
+      sourceMaps.isGeneratedId(sourceId),
+      "Pretty-printing only allowed on generated sources"
+    );
+
+    const selectedLocation = getSelectedLocation(getState());
+    const url = getPrettySourceURL(source.url);
+    const prettySource = getSourceByURL(getState(), url);
+
     const options = {};
-
     if (selectedLocation) {
       options.location = await sourceMaps.getOriginalLocation(selectedLocation);
     }
 
     if (prettySource) {
       const _sourceId = prettySource.id;
-      return dispatch((0, _sources.selectSpecificLocation)({ ...options.location,
-        sourceId: _sourceId
-      }));
+      return dispatch(
+        selectSpecificLocation({ ...options.location, sourceId: _sourceId })
+      );
     }
 
     const newPrettySource = await dispatch(createPrettySource(sourceId));
-    await dispatch((0, _breakpoints.remapBreakpoints)(sourceId));
-    await dispatch((0, _pause.mapFrames)());
-    await dispatch((0, _ast.setPausePoints)(newPrettySource.id));
-    await dispatch((0, _ast.setSymbols)(newPrettySource.id));
-    dispatch((0, _sources.selectSpecificLocation)({ ...options.location,
-      sourceId: newPrettySource.id
-    }));
+
+    await dispatch(remapBreakpoints(sourceId));
+    await dispatch(mapFrames());
+    await dispatch(setPausePoints(newPrettySource.id));
+    await dispatch(setSymbols(newPrettySource.id));
+
+    dispatch(
+      selectSpecificLocation({
+        ...options.location,
+        sourceId: newPrettySource.id
+      })
+    );
+
     return newPrettySource;
   };
 }
