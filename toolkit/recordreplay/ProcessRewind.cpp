@@ -237,10 +237,10 @@ EnsureNotDivergedFromRecording()
   if (HasDivergedFromRecording()) {
     MOZ_RELEASE_ASSERT(gUnhandledDivergeAllowed);
 
-    // Crash instead of rewinding in the painting stress mode, for finding
-    // areas where middleman calls do not cover all painting logic.
-    if (parent::InRepaintStressMode()) {
-      MOZ_CRASH("Recording divergence in repaint stress mode");
+    // Crash instead of rewinding if a repaint is about to fail and is not
+    // allowed.
+    if (child::CurrentRepaintCannotFail()) {
+      MOZ_CRASH("Recording divergence while repainting");
     }
 
     PrintSpew("Unhandled recording divergence, restoring checkpoint...\n");

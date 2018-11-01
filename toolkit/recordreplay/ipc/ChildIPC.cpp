@@ -475,6 +475,9 @@ static Atomic<int32_t, SequentiallyConsistent, Behavior::DontPreserve> gNumPendi
 // ID of the compositor thread.
 static Atomic<size_t, SequentiallyConsistent, Behavior::DontPreserve> gCompositorThreadId;
 
+// Whether repaint failures are allowed, or if the process should crash.
+static bool gAllowRepaintFailures;
+
 already_AddRefed<gfx::DrawTarget>
 DrawTargetForRemoteDrawing(LayoutDeviceIntSize aSize)
 {
@@ -521,6 +524,17 @@ void
 NotifyPaintStart()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  // Initialize state on the first paint.
+  static bool gPainted;
+  if (!gPainted) {
+    gPainted = true;
+
+    // Repaint failures are not allowed in the repaint stress mode.
+    gAllowRepaintFailures =
+      Preferences::GetBool("devtools.recordreplay.allowRepaintFailures") &&
+      !parent::InRepaintStressMode();
+  }
 
   // A new paint cannot be triggered until the last one finishes and has been
   // sent to the middleman.
@@ -571,6 +585,9 @@ NotifyPaintComplete()
 // Whether we have repainted since diverging from the recording.
 static bool gDidRepaint;
 
+// Whether we are currently repainting.
+static bool gRepainting;
+
 void
 Repaint(size_t* aWidth, size_t* aHeight)
 {
@@ -588,6 +605,7 @@ Repaint(size_t* aWidth, size_t* aHeight)
   // case the last graphics we sent will still be correct.
   if (!gDidRepaint) {
     gDidRepaint = true;
+    gRepainting = true;
 
     // Allow other threads to diverge from the recording so the compositor can
     // perform any paint we are about to trigger, or finish any in flight paint
@@ -611,6 +629,7 @@ Repaint(size_t* aWidth, size_t* aHeight)
     }
 
     Thread::WaitForIdleThreads();
+    gRepainting = false;
   }
 
   if (gDrawTargetBuffer) {
@@ -621,6 +640,12 @@ Repaint(size_t* aWidth, size_t* aHeight)
     *aWidth = 0;
     *aHeight = 0;
   }
+}
+
+bool
+CurrentRepaintCannotFail()
+{
+  return gRepainting && !gAllowRepaintFailures;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
