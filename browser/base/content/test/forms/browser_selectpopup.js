@@ -499,7 +499,7 @@ async function performLargePopupTests(win) {
 
   // Dragging above the popup scrolls it up.
   EventUtils.synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top - 20, { type: "mousemove" }, win);
-  ok(selectPopup.scrollBox.scrollTop, scrollPos, "scroll position at drag up from option");
+  is(selectPopup.scrollBox.scrollTop, scrollPos, "scroll position at drag up from option");
 
   scrollPos = selectPopup.scrollBox.scrollTop;
   EventUtils.synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 25, { type: "mouseup" }, win);
