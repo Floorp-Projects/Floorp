@@ -89,7 +89,7 @@ class DateTimePickerChild extends ActorChild {
         break;
       }
       case "FormDateTime:PickerValueChanged": {
-        this._inputElement.updateDateTimeInputBox(aMessage.data.detail);
+        this._inputElement.updateDateTimeInputBox(aMessage.data);
         break;
       }
       default:
@@ -122,7 +122,7 @@ class DateTimePickerChild extends ActorChild {
         this.addListeners();
 
         let value = this._inputElement.getDateTimeInputBoxValue();
-        this.sendAsyncMessage("FormDateTime:OpenPicker", {
+        this.mm.sendAsyncMessage("FormDateTime:OpenPicker", {
           rect: this.getBoundingContentRect(this._inputElement),
           dir: this.getComputedDirection(this._inputElement),
           type: this._inputElement.type,
@@ -142,18 +142,18 @@ class DateTimePickerChild extends ActorChild {
       case "MozUpdateDateTimePicker": {
         let value = this._inputElement.getDateTimeInputBoxValue();
         value.type = this._inputElement.type;
-        this.sendAsyncMessage("FormDateTime:UpdatePicker", { value });
+        this.mm.sendAsyncMessage("FormDateTime:UpdatePicker", { value });
         break;
       }
       case "MozCloseDateTimePicker": {
-        this.sendAsyncMessage("FormDateTime:ClosePicker");
+        this.mm.sendAsyncMessage("FormDateTime:ClosePicker");
         this.close();
         break;
       }
       case "pagehide": {
         if (this._inputElement &&
             this._inputElement.ownerDocument == aEvent.target) {
-          this.sendAsyncMessage("FormDateTime:ClosePicker");
+          this.mm.sendAsyncMessage("FormDateTime:ClosePicker");
           this.close();
         }
         break;

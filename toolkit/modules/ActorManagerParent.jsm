@@ -153,7 +153,6 @@ let ACTORS = {
       events: {
         "MozOpenDateTimePicker": {},
       },
-      allFrames: true,
     },
   },
 
