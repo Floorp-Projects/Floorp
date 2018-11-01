@@ -110,7 +110,7 @@ nsWebPDecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
 
   SourceBufferIterator::State state = SourceBufferIterator::COMPLETE;
   if (!mIteratorComplete) {
-    state = aIterator.Advance(SIZE_MAX);
+    state = aIterator.AdvanceOrScheduleResume(SIZE_MAX, aOnResume);
 
     // We need to remember since we can't advance a complete iterator.
     mIteratorComplete = state == SourceBufferIterator::COMPLETE;
@@ -133,6 +133,8 @@ nsWebPDecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
       return ReadData();
     case SourceBufferIterator::COMPLETE:
       return ReadData();
+    case SourceBufferIterator::WAITING:
+      return LexerResult(Yield::NEED_MORE_DATA);
     default:
       MOZ_LOG(sWebPLog, LogLevel::Error,
           ("[this=%p] nsWebPDecoder::DoDecode -- bad state\n", this));
@@ -180,8 +182,16 @@ nsWebPDecoder::CreateFrame(const nsIntRect& aFrameRect)
   MOZ_ASSERT(!mDecoder);
 
   MOZ_LOG(sWebPLog, LogLevel::Debug,
-      ("[this=%p] nsWebPDecoder::CreateFrame -- frame %u, %d x %d\n",
-       this, mCurrentFrame, aFrameRect.width, aFrameRect.height));
+      ("[this=%p] nsWebPDecoder::CreateFrame -- frame %u, (%d, %d) %d x %d\n",
+       this, mCurrentFrame, aFrameRect.x, aFrameRect.y,
+       aFrameRect.width, aFrameRect.height));
+
+  if (aFrameRect.width <= 0 || aFrameRect.height <= 0) {
+    MOZ_LOG(sWebPLog, LogLevel::Error,
+        ("[this=%p] nsWebPDecoder::CreateFrame -- bad frame rect\n",
+         this));
+    return NS_ERROR_FAILURE;
+  }
 
   // If this is our first frame in an animation and it doesn't cover the
   // full frame, then we are transparent even if there is no alpha
@@ -220,6 +230,7 @@ nsWebPDecoder::CreateFrame(const nsIntRect& aFrameRect)
     return NS_ERROR_FAILURE;
   }
 
+  mFrameRect = aFrameRect;
   mPipe = std::move(*pipe);
   return NS_OK;
 }
@@ -419,7 +430,9 @@ nsWebPDecoder::ReadSingle(const uint8_t* aData, size_t aLength, const IntRect& a
     return LexerResult(Yield::NEED_MORE_DATA);
   }
 
-  if (width <= 0 || height <= 0 || stride <= 0) {
+  if (width != mFrameRect.width || height != mFrameRect.height ||
+      stride < mFrameRect.width * 4 ||
+      lastRow > mFrameRect.height) {
     MOZ_LOG(sWebPLog, LogLevel::Error,
         ("[this=%p] nsWebPDecoder::ReadSingle -- bad (w,h,s) = (%d, %d, %d)\n",
          this, width, height, stride));
