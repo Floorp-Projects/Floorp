@@ -462,8 +462,46 @@ description#identity-popup-content-verifier,
 /* Content Blocking action button */
 
 .tracking-protection-button {
+  list-style-image: url(chrome://browser/skin/tracking-protection.svg);
+  -moz-appearance: none;
   margin: 1em 0 0;
   display: none;
+  height: 32px;
+  background-color: var(--arrowpanel-dimmed);
+}
+
+.tracking-protection-button:hover {
+  background-color: var(--arrowpanel-dimmed-further);
+}
+
+.tracking-protection-button:hover:active {
+  background-color: var(--arrowpanel-dimmed-even-further);
+}
+
+.tracking-protection-button:-moz-focusring {
+  box-shadow: var(--focus-ring-box-shadow);
+}
+
+#tracking-action-block {
+  background-color: #8000d7;
+  color: #fff;
+}
+
+#tracking-action-block:hover {
+  background-color: #7100be;
+}
+
+#tracking-action-block:hover:active {
+  background-color: #6200a4;
+}
+
+#tracking-action-block .button-icon {
+  fill-opacity: 1;
+}
+
+#tracking-action-unblock,
+#tracking-action-unblock-private {
+  list-style-image: url(chrome://browser/skin/tracking-protection-disabled.svg);
 }
 
 #identity-popup-content-blocking-report-breakage {
