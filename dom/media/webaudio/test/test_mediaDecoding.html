@@ -265,7 +265,11 @@ function checkResampledBuffer(buffer, test, callback) {
   }
   // Take into account the resampling when checking the size
   var expectedLength = test.frames * buffer.sampleRate / test.sampleRate;
-  ok(Math.abs(buffer.length - expectedLength) < 1.0, "Correct length", "got " + buffer.length + ", expected about " + expectedLength);
+  SimpleTest.ok(
+    Math.abs(buffer.length - expectedLength) < 1.0,
+    "Correct length - got " + buffer.length +
+    ", expected about " + expectedLength
+  );
 
   // Playback the buffer in the original context, to resample back to the
   // original rate and compare with the decoded buffer without resampling.
