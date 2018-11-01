@@ -56,7 +56,6 @@ interface nsIBrowserElementAPI : nsISupports
   void goForward();
   void reload(in boolean hardReload);
   void stop();
-  DOMRequest purgeHistory();
   DOMRequest getScreenshot(in uint32_t width,
                                  in uint32_t height,
                                  [optional] in AString mimeType);

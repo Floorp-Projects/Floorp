@@ -270,7 +270,6 @@ BrowserElementChild.prototype = {
     let self = this;
 
     let mmCalls = {
-      "purge-history": this._recvPurgeHistory,
       "get-screenshot": this._recvGetScreenshot,
       "get-contentdimensions": this._recvGetContentDimensions,
       "send-mouse-event": this._recvSendMouseEvent,
@@ -880,20 +879,6 @@ BrowserElementChild.prototype = {
 
     debug("scroll event " + win);
     sendAsyncMsg("scroll", { top: win.scrollY, left: win.scrollX });
-  },
-
-  _recvPurgeHistory: function(data) {
-    debug("Received purgeHistory message: (" + data.json.id + ")");
-
-    let history = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
-
-    try {
-      if (history && history.count) {
-        history.legacySHistory.PurgeHistory(history.count);
-      }
-    } catch(e) {}
-
-    sendAsyncMsg('got-purge-history', { id: data.json.id, successRv: true });
   },
 
   _recvGetScreenshot: function(data) {

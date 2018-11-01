@@ -156,7 +156,6 @@ BrowserElementParent.prototype = {
       "error": this._fireEventFromMsg,
       "firstpaint": this._fireProfiledEventFromMsg,
       "documentfirstpaint": this._fireProfiledEventFromMsg,
-      "got-purge-history": this._gotDOMRequestResult,
       "got-screenshot": this._gotDOMRequestResult,
       "got-contentdimensions": this._gotDOMRequestResult,
       "got-can-go-back": this._gotDOMRequestResult,
@@ -631,9 +630,6 @@ BrowserElementParent.prototype = {
     zoom = Math.max(getIntPref("zoom.minPercent", 50), zoom);
     this._sendAsyncMsg('zoom', {zoom: zoom / 100.0});
   }),
-
-  purgeHistory: defineDOMRequestMethod('purge-history'),
-
 
   getScreenshot: function(_width, _height, _mimeType) {
     if (!this._isAlive()) {

@@ -177,22 +177,6 @@ nsBrowserElement::Stop(ErrorResult& aRv)
 }
 
 already_AddRefed<DOMRequest>
-nsBrowserElement::PurgeHistory(ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-
-  RefPtr<DOMRequest> req;
-  nsresult rv = mBrowserElementAPI->PurgeHistory(getter_AddRefs(req));
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  return req.forget();
-}
-
-already_AddRefed<DOMRequest>
 nsBrowserElement::GetScreenshot(uint32_t aWidth,
                                 uint32_t aHeight,
                                 const nsAString& aMimeType,

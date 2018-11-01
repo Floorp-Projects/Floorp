@@ -57,8 +57,6 @@ public:
   void Reload(bool aHardReload, ErrorResult& aRv);
   void Stop(ErrorResult& aRv);
 
-  already_AddRefed<dom::DOMRequest> PurgeHistory(ErrorResult& aRv);
-
   already_AddRefed<dom::DOMRequest>
   GetScreenshot(uint32_t aWidth,
                 uint32_t aHeight,
