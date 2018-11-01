@@ -6346,6 +6346,7 @@ exports.CSS_PROPERTIES = {
     "values": [
       "-moz-crisp-edges",
       "auto",
+      "crisp-edges",
       "inherit",
       "initial",
       "optimizequality",
