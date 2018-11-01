@@ -4101,9 +4101,6 @@ nsDocShell::LoadURI(const nsAString& aURI,
                     nsIInputStream* aHeaderStream,
                     nsIPrincipal* aTriggeringPrincipal)
 {
-#ifndef ANDROID
-  MOZ_ASSERT(aTriggeringPrincipal, "LoadURI: Need a valid triggeringPrincipal");
-#endif
   return LoadURIWithOptions(aURI, aLoadFlags, aReferringURI,
                             RP_Unset, aPostStream,
                             aHeaderStream, nullptr, aTriggeringPrincipal);
@@ -4138,11 +4135,6 @@ nsDocShell::LoadURIWithOptions(const nsAString& aURI,
   // Eliminate embedded newlines, which single-line text fields now allow:
   uriString.StripCRLF();
   NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
-
-#ifndef ANDROID
-  MOZ_ASSERT(aTriggeringPrincipal, "LoadURIWithOptions: Need a valid triggeringPrincipal");
-#endif
-
 
   rv = NS_NewURI(getter_AddRefs(uri), uriString);
   if (uri) {
@@ -9039,9 +9031,6 @@ public:
   NS_IMETHOD
   Run() override
   {
-#ifndef ANDROID
-    MOZ_ASSERT(mTriggeringPrincipal, "InternalLoadEvent: Should always have a principal here");
-#endif
     return mDocShell->InternalLoad(mURI, mOriginalURI, mResultPrincipalURI,
                                    mKeepResultPrincipalURIIfSet,
                                    mLoadReplace,
@@ -13118,9 +13107,6 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
                         bool aIsTrusted,
                         nsIPrincipal* aTriggeringPrincipal)
 {
-#ifndef ANDROID
-  MOZ_ASSERT(aTriggeringPrincipal, "Need a valid triggeringPrincipal");
-#endif
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
   if (!IsNavigationAllowed() || !IsOKToLoadURI(aURI)) {

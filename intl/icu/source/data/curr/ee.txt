@@ -1004,6 +1004,10 @@ ee{
         }
         VEF{
             "VEF",
+            "venezuelaga bolívar (2008–2018)",
+        }
+        VES{
+            "VES",
             "venezuelaga bolívar",
         }
         VND{
@@ -1095,7 +1099,7 @@ ee{
             "gaɖuɖu dodokpɔ dzesi xts",
         }
         XXX{
-            "XXX",
+            "¤",
             "gaɖuɖu manya",
         }
         YDD{
@@ -2222,6 +2226,10 @@ ee{
             other{"venezuelaga bolívar (1871–2008)"}
         }
         VEF{
+            one{"venezuelaga bolívar (2008–2018)"}
+            other{"venezuelaga bolívar (2008–2018)"}
+        }
+        VES{
             one{"venezuelaga bolívar"}
             other{"venezuelaga bolívar"}
         }
@@ -2382,5 +2390,5 @@ ee{
         one{"{1} {0}"}
         other{"{1} {0}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.88"}
 }

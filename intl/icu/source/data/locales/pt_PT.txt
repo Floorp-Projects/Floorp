@@ -149,14 +149,10 @@ pt_PT{
             ordinal{
                 other{"{0}.º lugar"}
             }
-            plural{
-                one{"{0} dia"}
-                other{"{0} dias"}
-            }
         }
         minimumGroupingDigits{"2"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.9"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -166,7 +162,7 @@ pt_PT{
                 "HH:mm",
                 "EEEE, d 'de' MMMM 'de' y G",
                 "d 'de' MMMM 'de' y G",
-                "dd/MM/y G",
+                "d MMM y G",
                 "d/M/y G",
                 "{1}, {0}",
                 "{1} 'às' {0}",
@@ -242,7 +238,7 @@ pt_PT{
                 "HH:mm",
                 "EEEE, d 'de' MMMM 'de' y G",
                 "d 'de' MMMM 'de' y G",
-                "dd/MM/y G",
+                "d MMM y G",
                 "d/M/y G",
                 "{1}, {0}",
                 "{1} 'às' {0}",
@@ -493,7 +489,7 @@ pt_PT{
                 "HH:mm",
                 "EEEE, d 'de' MMMM 'de' y G",
                 "d 'de' MMMM 'de' y G",
-                "dd/MM/y G",
+                "d MMM y G",
                 "d/M/y G",
                 "{1}, {0}",
                 "{1} 'às' {0}",
@@ -530,7 +526,7 @@ pt_PT{
                 "HH:mm",
                 "EEEE, d 'de' MMMM 'de' y G",
                 "d 'de' MMMM 'de' y G",
-                "dd/MM/y G",
+                "d MMM y G",
                 "d/M/y G",
                 "{1}, {0}",
                 "{1} 'às' {0}",
@@ -564,7 +560,7 @@ pt_PT{
                 "HH:mm",
                 "EEEE, d 'de' MMMM 'de' y G",
                 "d 'de' MMMM 'de' y G",
-                "dd/MM/y G",
+                "d MMM y G",
                 "d/M/y G",
                 "{1}, {0}",
                 "{1} 'às' {0}",
@@ -581,26 +577,21 @@ pt_PT{
         dash_connector{"travessão ou elemento de ligação"}
         divination_symbols{"símbolo de divinação"}
         east_asian_scripts{"escrita leste-asiática"}
-        female{"feminino"}
         food_drink{"comida e bebida"}
-        full_width_form_variant{"variante de largura inteira"}
-        half_width_form_variant{"variante de meia largura"}
         han_characters{"carácter Han"}
         hanzi_simplified{"hanzi (simplificado)"}
         hanzi_traditional{"hanzi (tradicional)"}
         ideographic_desc_characters{"carácter de descrição ideográfica"}
         letterlike_symbols{"símbolo parecido com uma letra"}
-        male{"masculino"}
-        middle_eastern_scripts{"escrita do Médio Oriente"}
+        limited_use{"de uso limitado"}
+        middle_eastern_scripts{"escrita médio-oriental"}
         other{"outro"}
-        small_form_variant{"variantes pequenas"}
         south_asian_scripts{"escrita sul-asiática"}
         southeast_asian_scripts{"escrita sudeste-asiática"}
         sport{"desporto"}
         travel{"viagens"}
-        travel_places{"viagem ou lugar"}
         vocalic_jamo{"jamo vogal"}
-        weather{"tempo"}
+        weather{"meteorologia"}
         western_asian_scripts{"escrita oeste-asiática"}
     }
     contextTransforms{
@@ -628,10 +619,6 @@ pt_PT{
                 future{
                     one{"dentro de {0} dia"}
                     other{"dentro de {0} dias"}
-                }
-                past{
-                    one{"há {0} dia"}
-                    other{"há {0} dias"}
                 }
             }
         }
@@ -667,11 +654,10 @@ pt_PT{
                     one{"dentro de {0} dia"}
                     other{"dentro de {0} dias"}
                 }
-                past{
-                    one{"há {0} dia"}
-                    other{"há {0} dias"}
-                }
             }
+        }
+        dayperiod{
+            dn{"am/pm"}
         }
         dayperiod-narrow{
             dn{"am/pm"}
@@ -685,10 +671,6 @@ pt_PT{
                     one{"dentro de {0} sexta-feira"}
                     other{"dentro de {0} sextas-feiras"}
                 }
-                past{
-                    one{"há {0} sexta-feira"}
-                    other{"há {0} sextas-feiras"}
-                }
             }
         }
         fri-narrow{
@@ -696,10 +678,6 @@ pt_PT{
                 future{
                     one{"dentro de {0} sex."}
                     other{"dentro de {0} sex."}
-                }
-                past{
-                    one{"há {0} sex."}
-                    other{"há {0} sex."}
                 }
             }
         }
@@ -726,10 +704,6 @@ pt_PT{
                     one{"dentro de {0} hora"}
                     other{"dentro de {0} horas"}
                 }
-                past{
-                    one{"há {0} hora"}
-                    other{"há {0} horas"}
-                }
             }
         }
         hour-narrow{
@@ -750,10 +724,6 @@ pt_PT{
                     one{"dentro de {0} h"}
                     other{"dentro de {0} h"}
                 }
-                past{
-                    one{"há {0} h"}
-                    other{"há {0} h"}
-                }
             }
         }
         minute{
@@ -761,10 +731,6 @@ pt_PT{
                 future{
                     one{"dentro de {0} minuto"}
                     other{"dentro de {0} minutos"}
-                }
-                past{
-                    one{"há {0} minuto"}
-                    other{"há {0} minutos"}
                 }
             }
         }
@@ -808,10 +774,6 @@ pt_PT{
                     one{"dentro de {0} seg."}
                     other{"dentro de {0} seg."}
                 }
-                past{
-                    one{"há {0} seg."}
-                    other{"há {0} seg."}
-                }
             }
         }
         mon-short{
@@ -837,10 +799,6 @@ pt_PT{
                     one{"dentro de {0} mês"}
                     other{"dentro de {0} meses"}
                 }
-                past{
-                    one{"há {0} mês"}
-                    other{"há {0} meses"}
-                }
             }
         }
         month-narrow{
@@ -861,10 +819,6 @@ pt_PT{
                     one{"dentro de {0} mês"}
                     other{"dentro de {0} meses"}
                 }
-                past{
-                    one{"há {0} mês"}
-                    other{"há {0} meses"}
-                }
             }
         }
         quarter{
@@ -877,10 +831,6 @@ pt_PT{
                 future{
                     one{"dentro de {0} trimestre"}
                     other{"dentro de {0} trimestres"}
-                }
-                past{
-                    one{"há {0} trimestre"}
-                    other{"há {0} trimestres"}
                 }
             }
         }
@@ -924,10 +874,6 @@ pt_PT{
                     one{"dentro de {0} sábado"}
                     other{"dentro de {0} sábados"}
                 }
-                past{
-                    one{"há {0} sábado"}
-                    other{"há {0} sábados"}
-                }
             }
         }
         sat-narrow{
@@ -935,10 +881,6 @@ pt_PT{
                 future{
                     one{"dentro de {0} sáb."}
                     other{"dentro de {0} sáb."}
-                }
-                past{
-                    one{"há {0} sáb."}
-                    other{"há {0} sáb."}
                 }
             }
         }
@@ -964,10 +906,6 @@ pt_PT{
                 future{
                     one{"dentro de {0} segundo"}
                     other{"dentro de {0} segundos"}
-                }
-                past{
-                    one{"há {0} segundo"}
-                    other{"há {0} segundos"}
                 }
             }
         }
@@ -1015,10 +953,6 @@ pt_PT{
                     one{"dentro de {0} dom."}
                     other{"dentro de {0} dom."}
                 }
-                past{
-                    one{"há {0} dom."}
-                    other{"há {0} dom."}
-                }
             }
         }
         sun-short{
@@ -1040,26 +974,13 @@ pt_PT{
                     one{"dentro de {0} quinta-feira"}
                     other{"dentro de {0} quintas-feiras"}
                 }
-                past{
-                    one{"há {0} quinta-feira"}
-                    other{"há {0} quintas-feiras"}
-                }
             }
         }
         thu-narrow{
-            relative{
-                "-1"{"qui. passada"}
-                "0"{"esta qui."}
-                "1"{"próxima qui."}
-            }
             relativeTime{
                 future{
                     one{"dentro de {0} qui."}
                     other{"dentro de {0} qui."}
-                }
-                past{
-                    one{"há {0} qui."}
-                    other{"há {0} qui."}
                 }
             }
         }
@@ -1093,10 +1014,6 @@ pt_PT{
                 future{
                     one{"dentro de {0} ter."}
                     other{"dentro de {0} ter."}
-                }
-                past{
-                    one{"há {0} ter."}
-                    other{"há {0} ter."}
                 }
             }
         }
@@ -1135,10 +1052,6 @@ pt_PT{
                     one{"dentro de {0} qua."}
                     other{"dentro de {0} qua."}
                 }
-                past{
-                    one{"há {0} qua."}
-                    other{"há {0} qua."}
-                }
             }
         }
         wed-short{
@@ -1164,10 +1077,6 @@ pt_PT{
                     one{"dentro de {0} semana"}
                     other{"dentro de {0} semanas"}
                 }
-                past{
-                    one{"há {0} semana"}
-                    other{"há {0} semanas"}
-                }
             }
         }
         week-narrow{
@@ -1189,10 +1098,6 @@ pt_PT{
                     one{"dentro de {0} sem."}
                     other{"dentro de {0} sem."}
                 }
-                past{
-                    one{"há {0} sem."}
-                    other{"há {0} sem."}
-                }
             }
         }
         weekday-narrow{
@@ -1206,10 +1111,6 @@ pt_PT{
                 future{
                     one{"dentro de {0} ano"}
                     other{"dentro de {0} anos"}
-                }
-                past{
-                    one{"há {0} ano"}
-                    other{"há {0} anos"}
                 }
             }
         }
@@ -1230,10 +1131,6 @@ pt_PT{
                 future{
                     one{"dentro de {0} ano"}
                     other{"dentro de {0} anos"}
-                }
-                past{
-                    one{"há {0} ano"}
-                    other{"há {0} anos"}
                 }
             }
         }

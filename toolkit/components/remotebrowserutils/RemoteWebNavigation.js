@@ -136,9 +136,7 @@ RemoteWebNavigation.prototype = {
     return this._currentURI;
   },
   set currentURI(aURI) {
-    // Bug 1498600 verify usages of systemPrincipal here
-    let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    this.loadURI(aURI.spec, null, null, null, systemPrincipal);
+    this.loadURI(aURI.spec, null, null, null);
   },
 
   referringURI: null,

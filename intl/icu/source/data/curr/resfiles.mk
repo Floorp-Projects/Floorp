@@ -1,6 +1,6 @@
 # © 2016 and later: Unicode, Inc. and others.
 # License & terms of use: http://www.unicode.org/copyright.html#License
-CURR_CLDR_VERSION = 33.1
+CURR_CLDR_VERSION = 34
 # A list of txt's to build
 # Note:
 #
@@ -85,50 +85,51 @@ CURR_SOURCE = af.txt af_NA.txt agq.txt ak.txt\
  es_MX.txt es_NI.txt es_PA.txt es_PE.txt es_PH.txt\
  es_PR.txt es_PY.txt es_SV.txt es_US.txt es_UY.txt\
  es_VE.txt et.txt eu.txt ewo.txt fa.txt\
- fa_AF.txt ff.txt ff_GN.txt ff_MR.txt fi.txt\
- fil.txt fo.txt fo_DK.txt fr.txt fr_BI.txt\
- fr_CA.txt fr_CD.txt fr_DJ.txt fr_DZ.txt fr_GN.txt\
- fr_HT.txt fr_KM.txt fr_LU.txt fr_MG.txt fr_MR.txt\
- fr_MU.txt fr_RW.txt fr_SC.txt fr_SY.txt fr_TN.txt\
- fr_VU.txt fur.txt fy.txt ga.txt gd.txt\
- gl.txt gsw.txt gu.txt guz.txt gv.txt\
- ha.txt ha_GH.txt haw.txt he.txt hi.txt\
- hr.txt hr_BA.txt hsb.txt hu.txt hy.txt\
- id.txt ig.txt ii.txt is.txt it.txt\
- ja.txt jgo.txt jmc.txt ka.txt kab.txt\
+ fa_AF.txt ff.txt fi.txt fil.txt fo.txt\
+ fo_DK.txt fr.txt fr_BI.txt fr_CA.txt fr_CD.txt\
+ fr_DJ.txt fr_DZ.txt fr_GN.txt fr_HT.txt fr_KM.txt\
+ fr_LU.txt fr_MG.txt fr_MR.txt fr_MU.txt fr_RW.txt\
+ fr_SC.txt fr_SY.txt fr_TN.txt fr_VU.txt fur.txt\
+ fy.txt ga.txt gd.txt gl.txt gsw.txt\
+ gu.txt guz.txt gv.txt ha.txt ha_GH.txt\
+ haw.txt he.txt hi.txt hr.txt hr_BA.txt\
+ hsb.txt hu.txt hy.txt ia.txt id.txt\
+ ig.txt ii.txt is.txt it.txt ja.txt\
+ jgo.txt jmc.txt jv.txt ka.txt kab.txt\
  kam.txt kde.txt kea.txt khq.txt ki.txt\
  kk.txt kkj.txt kl.txt kln.txt km.txt\
  kn.txt ko.txt kok.txt ks.txt ksb.txt\
- ksf.txt ksh.txt kw.txt ky.txt lag.txt\
- lb.txt lg.txt lkt.txt ln.txt ln_AO.txt\
- lo.txt lrc.txt lt.txt lu.txt luo.txt\
- luy.txt lv.txt mas.txt mas_TZ.txt mer.txt\
- mfe.txt mg.txt mgh.txt mgo.txt mk.txt\
- ml.txt mn.txt mr.txt ms.txt ms_BN.txt\
- ms_SG.txt mt.txt mua.txt my.txt mzn.txt\
- naq.txt nb.txt nd.txt nds.txt ne.txt\
- nl.txt nl_AW.txt nl_BQ.txt nl_CW.txt nl_SR.txt\
- nl_SX.txt nmg.txt nn.txt nnh.txt nus.txt\
- nyn.txt om.txt om_KE.txt or.txt os.txt\
- os_RU.txt pa.txt pa_Arab.txt pa_Guru.txt pl.txt\
- ps.txt pt.txt pt_AO.txt pt_CH.txt pt_CV.txt\
- pt_GQ.txt pt_GW.txt pt_LU.txt pt_MO.txt pt_MZ.txt\
- pt_PT.txt pt_ST.txt pt_TL.txt qu.txt qu_BO.txt\
- qu_EC.txt rm.txt rn.txt ro.txt ro_MD.txt\
- rof.txt ru.txt ru_BY.txt ru_KG.txt ru_KZ.txt\
- ru_MD.txt rw.txt rwk.txt sah.txt saq.txt\
- sbp.txt se.txt se_SE.txt seh.txt ses.txt\
- sg.txt shi.txt shi_Latn.txt shi_Tfng.txt si.txt\
- sk.txt sl.txt smn.txt sn.txt so.txt\
- so_DJ.txt so_ET.txt so_KE.txt sq.txt sq_MK.txt\
- sr.txt sr_Cyrl.txt sr_Latn.txt sv.txt sw.txt\
- sw_CD.txt sw_UG.txt ta.txt ta_LK.txt ta_MY.txt\
- ta_SG.txt te.txt teo.txt teo_KE.txt tg.txt\
- th.txt ti.txt ti_ER.txt to.txt tr.txt\
- tt.txt twq.txt tzm.txt ug.txt uk.txt\
- ur.txt ur_IN.txt uz.txt uz_Arab.txt uz_Cyrl.txt\
- uz_Latn.txt vai.txt vai_Latn.txt vai_Vaii.txt vi.txt\
- vun.txt wae.txt wo.txt xog.txt yav.txt\
+ ksf.txt ksh.txt ku.txt kw.txt ky.txt\
+ lag.txt lb.txt lg.txt lkt.txt ln.txt\
+ ln_AO.txt lo.txt lrc.txt lt.txt lu.txt\
+ luo.txt luy.txt lv.txt mas.txt mas_TZ.txt\
+ mer.txt mfe.txt mg.txt mgh.txt mgo.txt\
+ mi.txt mk.txt ml.txt mn.txt mr.txt\
+ ms.txt ms_BN.txt ms_SG.txt mt.txt mua.txt\
+ my.txt mzn.txt naq.txt nb.txt nd.txt\
+ nds.txt ne.txt nl.txt nl_AW.txt nl_BQ.txt\
+ nl_CW.txt nl_SR.txt nl_SX.txt nmg.txt nn.txt\
+ nnh.txt nus.txt nyn.txt om.txt om_KE.txt\
+ or.txt os.txt os_RU.txt pa.txt pa_Arab.txt\
+ pa_Guru.txt pl.txt ps.txt pt.txt pt_AO.txt\
+ pt_CH.txt pt_CV.txt pt_GQ.txt pt_GW.txt pt_LU.txt\
+ pt_MO.txt pt_MZ.txt pt_PT.txt pt_ST.txt pt_TL.txt\
+ qu.txt qu_BO.txt qu_EC.txt rm.txt rn.txt\
+ ro.txt ro_MD.txt rof.txt ru.txt ru_BY.txt\
+ ru_KG.txt ru_KZ.txt ru_MD.txt rw.txt rwk.txt\
+ sah.txt saq.txt sbp.txt sd.txt se.txt\
+ se_SE.txt seh.txt ses.txt sg.txt shi.txt\
+ shi_Latn.txt shi_Tfng.txt si.txt sk.txt sl.txt\
+ smn.txt sn.txt so.txt so_DJ.txt so_ET.txt\
+ so_KE.txt sq.txt sq_MK.txt sr.txt sr_Cyrl.txt\
+ sr_Latn.txt sv.txt sw.txt sw_CD.txt sw_UG.txt\
+ ta.txt ta_LK.txt ta_MY.txt ta_SG.txt te.txt\
+ teo.txt teo_KE.txt tg.txt th.txt ti.txt\
+ ti_ER.txt tk.txt to.txt tr.txt tt.txt\
+ twq.txt tzm.txt ug.txt uk.txt ur.txt\
+ ur_IN.txt uz.txt uz_Arab.txt uz_Cyrl.txt uz_Latn.txt\
+ vai.txt vai_Latn.txt vai_Vaii.txt vi.txt vun.txt\
+ wae.txt wo.txt xh.txt xog.txt yav.txt\
  yi.txt yo.txt yo_BJ.txt yue.txt yue_Hans.txt\
  yue_Hant.txt zgh.txt zh.txt zh_Hans.txt zh_Hans_HK.txt\
  zh_Hans_MO.txt zh_Hans_SG.txt zh_Hant.txt zh_Hant_HK.txt zh_Hant_MO.txt\

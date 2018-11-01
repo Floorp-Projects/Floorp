@@ -1495,18 +1495,6 @@ metadata:table(nofallback){
                 reason{"overlong"}
                 replacement{"MO"}
             }
-            cnhk{
-                reason{"overlong"}
-                replacement{"HK"}
-            }
-            cnmo{
-                reason{"overlong"}
-                replacement{"MO"}
-            }
-            cntw{
-                reason{"overlong"}
-                replacement{"TW"}
-            }
             cz10a{
                 reason{"deprecated"}
                 replacement{"cz110"}
@@ -4527,7 +4515,9 @@ metadata:table(nofallback){
         "eu_ES",
         "ewo_CM",
         "fa_IR",
-        "ff_SN",
+        "ff_Adlm_GN",
+        "ff_Latn",
+        "ff_Latn_SN",
         "fi_FI",
         "fil_PH",
         "fo_FO",
@@ -4553,7 +4543,7 @@ metadata:table(nofallback){
         "hsb_DE",
         "hu_HU",
         "hy_AM",
-        "ia_FR",
+        "ia_001",
         "id_ID",
         "ife_TG",
         "ig_NG",
@@ -4625,6 +4615,7 @@ metadata:table(nofallback){
         "mt_MT",
         "mua_CM",
         "my_MM",
+        "myv_RU",
         "mzn_IR",
         "naq_NA",
         "nb_NO",
@@ -4665,6 +4656,7 @@ metadata:table(nofallback){
         "sah_RU",
         "saq_KE",
         "sbp_TZ",
+        "sc_IT",
         "scn_IT",
         "sd_PK",
         "sdh_IR",

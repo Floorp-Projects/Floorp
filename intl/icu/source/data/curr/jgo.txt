@@ -19,7 +19,7 @@ jgo{
             "Fɛlâŋ",
         }
         XXX{
-            "XXX",
+            "¤",
             "ntɛ-ŋkáp yi pɛ́ ká kɛ́ jínɛ",
         }
     }

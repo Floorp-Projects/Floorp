@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ko{
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     zoneStrings{
         "Etc:UTC"{
             ls{"협정 세계시"}
@@ -110,7 +110,7 @@ ko{
             ls{"아르메니아 표준시"}
         }
         "meta:Atlantic"{
-            ld{"미 대서양 하계 표준시"}
+            ld{"대서양 하계 표준시"}
             lg{"대서양 시간"}
             ls{"대서양 표준시"}
         }

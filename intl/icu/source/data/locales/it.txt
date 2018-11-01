@@ -19,7 +19,9 @@ it{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
                 range{"{0}-{1}"}
             }
             patterns{
@@ -158,16 +160,16 @@ it{
                         other{"000 Mln"}
                     }
                     1000000000{
-                        one{"0 Mld"}
-                        other{"0 Mld"}
+                        one{"0 Mrd"}
+                        other{"0 Mrd"}
                     }
                     10000000000{
-                        one{"00 Mld"}
-                        other{"00 Mld"}
+                        one{"00 Mrd"}
+                        other{"00 Mrd"}
                     }
                     100000000000{
-                        one{"000 Mld"}
-                        other{"000 Mld"}
+                        one{"000 Mrd"}
+                        other{"000 Mrd"}
                     }
                     1000000000000{
                         one{"0 Bln"}
@@ -211,7 +213,7 @@ it{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.86"}
     calendar{
         buddhist{
             eras{
@@ -1049,6 +1051,10 @@ it{
         day-narrow{
             dn{"g"}
             relative{
+                "-1"{"ieri"}
+                "-2"{"l’altro ieri"}
+                "0"{"oggi"}
+                "1"{"domani"}
                 "2"{"dopodomani"}
             }
             relativeTime{
@@ -1065,6 +1071,10 @@ it{
         day-short{
             dn{"g"}
             relative{
+                "-1"{"ieri"}
+                "-2"{"l’altro ieri"}
+                "0"{"oggi"}
+                "1"{"domani"}
                 "2"{"dopodomani"}
             }
             relativeTime{
@@ -1365,6 +1375,11 @@ it{
         }
         quarter-narrow{
             dn{"trim."}
+            relative{
+                "-1"{"trim. scorso"}
+                "0"{"questo trim."}
+                "1"{"trim. prossimo"}
+            }
             relativeTime{
                 future{
                     one{"tra {0} trim."}
@@ -1378,6 +1393,11 @@ it{
         }
         quarter-short{
             dn{"trim."}
+            relative{
+                "-1"{"trim. scorso"}
+                "0"{"questo trim."}
+                "1"{"trim. prossimo"}
+            }
             relativeTime{
                 future{
                     one{"tra {0} trim."}
@@ -1887,8 +1907,13 @@ it{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

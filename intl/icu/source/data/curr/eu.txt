@@ -545,7 +545,7 @@ eu{
         }
         STN{
             "STN",
-            "Sao Tomeko eta Principeko dobra",
+            "Sao Tome eta Principeko dobra",
         }
         SYP{
             "SYP",
@@ -613,6 +613,10 @@ eu{
         }
         VEF{
             "VEF",
+            "Venezuelako bolivarra (2008–2018)",
+        }
+        VES{
+            "VES",
             "Venezuelako bolivarra",
         }
         VND{
@@ -644,7 +648,7 @@ eu{
             "CFP frankoa",
         }
         XXX{
-            "XXX",
+            "¤",
             "Moneta ezezaguna",
         }
         YER{
@@ -1292,8 +1296,8 @@ eu{
             other{"Sao Tomeko eta Principeko dobra (1977–2017)"}
         }
         STN{
-            one{"Sao Tomeko eta Principeko dobra"}
-            other{"Sao Tomeko eta Principeko dobra"}
+            one{"Sao Tome eta Principeko dobra"}
+            other{"Sao Tome eta Principeko dobra"}
         }
         SYP{
             one{"Siriako libera"}
@@ -1360,6 +1364,10 @@ eu{
             other{"Uzbekistango som"}
         }
         VEF{
+            one{"Venezuelako bolivar (2008–2018)"}
+            other{"Venezuelako bolivar (2008–2018)"}
+        }
+        VES{
             one{"Venezuelako bolivar"}
             other{"Venezuelako bolivar"}
         }
@@ -1412,5 +1420,5 @@ eu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
 }

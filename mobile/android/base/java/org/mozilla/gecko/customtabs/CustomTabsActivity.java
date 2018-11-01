@@ -61,6 +61,7 @@ import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.WebRequestError;
 
 import java.util.List;
 
@@ -630,7 +631,7 @@ public class CustomTabsActivity extends AppCompatActivity
 
     @Override
     public GeckoResult<String> onLoadError(final GeckoSession session, final String urlStr,
-                                           final int category, final int error) {
+                                           final WebRequestError error) {
         return null;
     }
 

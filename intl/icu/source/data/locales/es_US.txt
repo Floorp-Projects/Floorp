@@ -7,6 +7,18 @@ es_US{
         latn{
             patternsLong{
                 decimalFormat{
+                    1000000000{
+                        one{"0 billón"}
+                        other{"0 billones"}
+                    }
+                    10000000000{
+                        one{"00 billones"}
+                        other{"00 billones"}
+                    }
+                    100000000000{
+                        one{"000 billones"}
+                        other{"000 billones"}
+                    }
                     1000000000000{
                         one{"0 trillón"}
                         other{"0 trillones"}
@@ -51,11 +63,31 @@ es_US{
                         one{"0000 M ¤"}
                         other{"0000 M ¤"}
                     }
+                    10000000000{
+                        one{"¤00 B"}
+                        other{"¤00 B"}
+                    }
+                    100000000000{
+                        one{"¤000 B"}
+                        other{"¤000 B"}
+                    }
+                    1000000000000{
+                        one{"¤0 T"}
+                        other{"¤0 T"}
+                    }
+                    10000000000000{
+                        one{"¤00 T"}
+                        other{"¤00 T"}
+                    }
+                    100000000000000{
+                        one{"¤000 T"}
+                        other{"¤000 T"}
+                    }
                 }
                 decimalFormat{
                     1000{
-                        one{"0"}
-                        other{"0"}
+                        one{"0 K"}
+                        other{"0 K"}
                     }
                     10000{
                         one{"00 K"}
@@ -64,6 +96,18 @@ es_US{
                     100000{
                         one{"000 K"}
                         other{"000 K"}
+                    }
+                    1000000000{
+                        one{"0 B"}
+                        other{"0 B"}
+                    }
+                    10000000000{
+                        one{"00 B"}
+                        other{"00 B"}
+                    }
+                    100000000000{
+                        one{"000 B"}
+                        other{"000 B"}
                     }
                     1000000000000{
                         one{"0 T"}
@@ -81,7 +125,7 @@ es_US{
             }
         }
     }
-    Version{"2.1.38.73"}
+    Version{"2.1.43.65"}
     calendar{
         generic{
             DateTimePatterns{
@@ -105,6 +149,8 @@ es_US{
                 MMMEd{"E d MMM"}
                 MMMMd{"d 'de' MMM"}
                 MMMd{"d MMM"}
+                yyyyMEd{"E, d/M/y GGGGG"}
+                yyyyMMM{"MMM y G"}
             }
             intervalFormats{
                 Md{
@@ -145,7 +191,7 @@ es_US{
                 "EEEE, d 'de' MMMM 'de' y",
                 "d 'de' MMMM 'de' y",
                 "d MMM y",
-                "d/M/yy",
+                "d/M/y",
                 "{1} {0}",
                 "{1}, {0}",
                 "{1}, {0}",
@@ -224,6 +270,7 @@ es_US{
                 }
                 MEd{
                     M{"E, d/M – E, d/M"}
+                    d{"E, d/M – E, d/M"}
                 }
                 MMMEd{
                     M{"E d 'de' MMM – E d 'de' MMM"}
@@ -261,35 +308,44 @@ es_US{
                     d{"d–d 'de' MMM 'de' y"}
                 }
             }
+            quarters{
+                format{
+                    wide{
+                        "1.er trimestre",
+                        "2.º trimestre",
+                        "3.er trimestre",
+                        "4.º trimestre",
+                    }
+                }
+                stand-alone{
+                    wide{
+                        "1.er trimestre",
+                        "2.º trimestre",
+                        "3.er trimestre",
+                        "4.º trimestre",
+                    }
+                }
+            }
         }
     }
     characterLabel{
-        animal{"animal"}
-        body{"cuerpo"}
-        building{"edificio"}
+        arrows{"Flechas"}
         female{"mujer"}
-        flag{"bandera"}
         format_whitespace{"Formato y espacio duro"}
-        heart{"corazón"}
         keycap{"tecla"}
         letterlike_symbols{"Símbolos con letras"}
         limited_use{"Uso limitado"}
         male{"hombre"}
         modern_scripts{"Sistemas de escritura modernos"}
-        nature{"naturaleza"}
+        nonspacing{"Sin espaciado"}
         other{"Otros"}
-        person{"persona"}
         phonetic_alphabet{"Alfabeto fonético"}
-        place{"lugar"}
-        plant{"planta"}
         sign_standard_symbols{"Símbolos de señales/estándar"}
         smiley{"cara sonriente"}
         south_asian_scripts{"Sistemas de escritura de Asia Meridional"}
         southeast_asian_scripts{"Sistemas de escritura de Asia Sudoriental"}
-        sport{"deporte"}
         symbols{"Símbolos"}
         tone_marks{"Marcas tonales"}
-        travel{"viaje"}
         travel_places{"Viajes y destinos"}
         variant_forms{"Variantes"}
         weather{"tiempo"}
@@ -306,6 +362,7 @@ es_US{
         day{
             relative{
                 "-1"{"ayer"}
+                "-2"{"anteayer"}
                 "0"{"hoy"}
                 "1"{"mañana"}
                 "2"{"pasado mañana"}
@@ -329,14 +386,47 @@ es_US{
         fri{
             relativeTime{
                 future{
+                    one{"dentro de {0} viernes"}
                     other{"dentro de {0} viernes"}
+                }
+            }
+        }
+        fri-narrow{
+            relativeTime{
+                past{
+                    one{"hace {0} VI"}
+                    other{"hace {0} VI"}
                 }
             }
         }
         fri-short{
             relativeTime{
                 future{
+                    one{"dentro de {0} vie."}
                     other{"dentro de {0} vie."}
+                }
+            }
+        }
+        mon{
+            relativeTime{
+                future{
+                    one{"dentro de {0} lunes"}
+                    other{"dentro de {0} lunes"}
+                }
+                past{
+                    one{"hace {0} lunes"}
+                }
+            }
+        }
+        mon-narrow{
+            relativeTime{
+                future{
+                    one{"dentro de {0} LU"}
+                    other{"dentro de {0} LU"}
+                }
+                past{
+                    one{"hace {0} LU"}
+                    other{"hace {0} LU"}
                 }
             }
         }
@@ -344,6 +434,11 @@ es_US{
             relativeTime{
                 future{
                     one{"dentro de {0} lun."}
+                    other{"dentro de {0} lun."}
+                }
+                past{
+                    one{"hace {0} lun."}
+                    other{"hace {0} lun."}
                 }
             }
         }
@@ -354,17 +449,42 @@ es_US{
                 "1"{"el mes próximo"}
             }
         }
+        sat{
+            relativeTime{
+                future{
+                    one{"dentro de {0} sábado"}
+                    other{"dentro de {0} sábados"}
+                }
+            }
+        }
         sat-narrow{
             relativeTime{
                 future{
                     one{"dentro de {0} SA"}
+                }
+                past{
+                    one{"hace {0} SA"}
+                    other{"hace {0} SA"}
+                }
+            }
+        }
+        sun{
+            relativeTime{
+                future{
+                    one{"dentro de {0} domingo"}
+                    other{"dentro de {0} domingos"}
                 }
             }
         }
         sun-narrow{
             relativeTime{
                 future{
+                    one{"dentro de {0} DO"}
                     other{"dentro de {0} DO"}
+                }
+                past{
+                    one{"hace {0} DO"}
+                    other{"hace {0} DO"}
                 }
             }
         }
@@ -372,12 +492,14 @@ es_US{
             relativeTime{
                 future{
                     one{"dentro de {0} jueves"}
+                    other{"dentro de {0} jueves"}
                 }
             }
         }
         thu-narrow{
             relativeTime{
                 future{
+                    one{"dentro de {0} JU"}
                     other{"dentro de {0} JU"}
                 }
             }
@@ -393,6 +515,36 @@ es_US{
             relativeTime{
                 future{
                     one{"dentro de {0} miércoles"}
+                    other{"dentro de {0} miércoles"}
+                }
+            }
+        }
+        wed-narrow{
+            relativeTime{
+                future{
+                    one{"dentro de {0} MI"}
+                    other{"dentro de {0} MI"}
+                }
+                past{
+                    one{"hace {0} MI"}
+                    other{"hace {0} MI"}
+                }
+            }
+        }
+        wed-short{
+            relative{
+                "-1"{"el mie. pasado"}
+                "0"{"este mié."}
+                "1"{"el próximo mié."}
+            }
+            relativeTime{
+                future{
+                    one{"dentro de {0} mié."}
+                    other{"dentro de {0} mié."}
+                }
+                past{
+                    one{"hace {0} mié."}
+                    other{"hace {0} mié."}
                 }
             }
         }
@@ -402,6 +554,15 @@ es_US{
                 "0"{"esta semana"}
                 "1"{"la semana próxima"}
             }
+        }
+        weekOfMonth-narrow{
+            dn{"sem. de m"}
+        }
+        weekOfMonth-short{
+            dn{"sem. de m"}
+        }
+        weekdayOfMonth{
+            dn{"día de la semana del mes"}
         }
         weekdayOfMonth-narrow{
             dn{"día de sem. de mes"}

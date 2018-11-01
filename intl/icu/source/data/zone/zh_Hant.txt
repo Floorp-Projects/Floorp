@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh_Hant{
     %%Parent{"root"}
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     zoneStrings{
         "Etc:UTC"{
             ls{"世界標準時間"}

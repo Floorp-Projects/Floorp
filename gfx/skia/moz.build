@@ -255,8 +255,6 @@ UNIFIED_SOURCES += [
     'skia/src/utils/SkDashPath.cpp',
     'skia/src/utils/SkEventTracer.cpp',
     'skia/src/utils/SkFloatToDecimal.cpp',
-    'skia/src/utils/SkJSON.cpp',
-    'skia/src/utils/SkJSONWriter.cpp',
     'skia/src/utils/SkMatrix22.cpp',
     'skia/src/utils/SkOSPath.cpp',
     'skia/src/utils/SkPatchUtils.cpp',

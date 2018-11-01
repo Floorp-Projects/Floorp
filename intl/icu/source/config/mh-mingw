@@ -42,6 +42,11 @@ THREADSCFLAGS = -mthreads
 THREADSCXXFLAGS = -mthreads
 LIBCPPFLAGS =
 
+## Add 'd' suffix to the names of binary files with Debug configuration
+ifeq ($(ENABLE_DEBUG),1)
+ICULIBSUFFIX:=$(ICULIBSUFFIX)d#M#
+endif
+
 # Commands to link. Link with C++ in case static libraries are used.
 LINK.c=       $(CXX) $(CXXFLAGS) $(LDFLAGS)
 #LINK.cc=      $(CXX) $(CXXFLAGS) $(LDFLAGS)

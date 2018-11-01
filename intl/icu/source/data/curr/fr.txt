@@ -171,7 +171,7 @@ fr{
             "cruzeiro",
         }
         BSD{
-            "$BS",
+            "BSD",
             "dollar bahaméen",
         }
         BTN{
@@ -976,6 +976,10 @@ fr{
         }
         VEF{
             "VEF",
+            "bolivar vénézuélien (2008–2018)",
+        }
+        VES{
+            "VES",
             "bolivar vénézuélien",
         }
         VND{
@@ -1063,7 +1067,7 @@ fr{
             "(devise de test)",
         }
         XXX{
-            "XXX",
+            "¤",
             "devise inconnue ou non valide",
         }
         YDD{
@@ -2197,6 +2201,10 @@ fr{
             other{"bolivar vénézuélien (1871–2008)"}
         }
         VEF{
+            one{"bolivar vénézuélien (2008–2018)"}
+            other{"bolivars vénézuéliens (2008–2018)"}
+        }
+        VES{
             one{"bolivar vénézuélien"}
             other{"bolivars vénézuéliens"}
         }
@@ -2345,5 +2353,5 @@ fr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
 }

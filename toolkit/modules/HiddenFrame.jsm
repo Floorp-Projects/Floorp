@@ -105,9 +105,8 @@ HiddenFrame.prototype = {
     };
     this._webProgress.addProgressListener(this._listener, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
     let docShell = this._browser.docShell;
-    let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    docShell.createAboutBlankContentViewer(systemPrincipal);
+    docShell.createAboutBlankContentViewer(Services.scriptSecurityManager.getSystemPrincipal());
     docShell.useGlobalHistory = false;
-    this._browser.loadURI(XUL_PAGE, 0, null, null, null, systemPrincipal);
+    this._browser.loadURI(XUL_PAGE, 0, null, null, null);
   },
 };
