@@ -1423,6 +1423,20 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
         forceNewLayerData = true;
       }
 
+      // Refer to the comment on StackingContextHelper::mDeferredTransformItem
+      // for an overview of what this is about. This bit of code applies to the
+      // case where we are deferring a transform item, and we then need to defer
+      // another transform with a different ASR. In such a case we cannot just
+      // merge the deferred transforms, but need to force a new
+      // WebRenderLayerScrollData item to flush the old deferred transform, so
+      // that we can then start deferring the new one.
+      if (!forceNewLayerData &&
+          item->GetType() == DisplayItemType::TYPE_TRANSFORM &&
+          aSc.GetDeferredTransformItem() &&
+          (*aSc.GetDeferredTransformItem())->GetActiveScrolledRoot() != asr) {
+        forceNewLayerData = true;
+      }
+
       // If we're going to create a new layer data for this item, stash the
       // ASR so that if we recurse into a sublist they will know where to stop
       // walking up their ASR chain when building scroll metadata.
