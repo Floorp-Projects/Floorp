@@ -43,7 +43,6 @@ module.exports = {
     "isnot": false,
     "ok": false,
     "privateNoteIntentionalCrash": false,
-    "record": false,
     "registerCleanupFunction": false,
     "requestLongerTimeout": false,
     "setExpectedFailuresForSelfTest": false,

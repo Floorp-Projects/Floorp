@@ -267,16 +267,8 @@ SimpleTest.setExpected();
 /**
  * Something like assert.
 **/
-SimpleTest.ok = function (condition, name) {
-    if (arguments.length > 2) {
-      const diag = "Too many arguments passed to `ok(condition, name)`";
-      SimpleTest.record(false, name, diag);
-    } else {
-      SimpleTest.record(condition, name);
-    }
-};
+SimpleTest.ok = function (condition, name, diag, stack = null) {
 
-SimpleTest.record = function (condition, name, diag, stack) {
     var test = {'result': !!condition, 'name': name, 'diag': diag};
     if (SimpleTest.expected == 'fail') {
       if (!test.result) {
@@ -317,19 +309,19 @@ SimpleTest.is = function (a, b, name) {
     // Be lazy and use Object.is til we want to test a browser without it.
     var pass = Object.is(a, b);
     var diag = pass ? "" : "got " + repr(a) + ", expected " + repr(b)
-    SimpleTest.record(pass, name, diag);
+    SimpleTest.ok(pass, name, diag);
 };
 
 SimpleTest.isfuzzy = function (a, b, epsilon, name) {
   var pass = (a >= b - epsilon) && (a <= b + epsilon);
   var diag = pass ? "" : "got " + repr(a) + ", expected " + repr(b) + " epsilon: +/- " + repr(epsilon)
-  SimpleTest.record(pass, name, diag);
+  SimpleTest.ok(pass, name, diag);
 };
 
 SimpleTest.isnot = function (a, b, name) {
     var pass = !Object.is(a, b);
     var diag = pass ? "" : "didn't expect " + repr(a) + ", but got it";
-    SimpleTest.record(pass, name, diag);
+    SimpleTest.ok(pass, name, diag);
 };
 
 /**
@@ -1585,9 +1577,9 @@ SimpleTest.isDeeply = function (it, as, name) {
     var stack = [{ vals: [it, as] }];
     var seen = [];
     if ( SimpleTest._deepCheck(it, as, stack, seen)) {
-        SimpleTest.record(true, name);
+        SimpleTest.ok(true, name);
     } else {
-        SimpleTest.record(false, name, SimpleTest._formatStack(stack));
+        SimpleTest.ok(false, name, SimpleTest._formatStack(stack));
     }
 };
 
@@ -1610,7 +1602,6 @@ SimpleTest.isa = function (object, clas) {
 
 // Global symbols:
 var ok = SimpleTest.ok;
-var record = SimpleTest.record;
 var is = SimpleTest.is;
 var isfuzzy = SimpleTest.isfuzzy;
 var isnot = SimpleTest.isnot;
@@ -1640,9 +1631,8 @@ window.onerror = function simpletestOnerror(errorMsg, url, lineNumber,
     }
     if (!SimpleTest._ignoringAllUncaughtExceptions) {
         // Don't log if SimpleTest.finish() is already called, it would cause failures
-        if (!SimpleTest._alreadyFinished) {
-            SimpleTest.record(isExpected, message, error);
-        }
+        if (!SimpleTest._alreadyFinished)
+          SimpleTest.ok(isExpected, message, error);
         SimpleTest._expectingUncaughtException = false;
     } else {
         SimpleTest.todo(false, message + ": " + error);
