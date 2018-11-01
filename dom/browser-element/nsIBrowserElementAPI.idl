@@ -71,9 +71,6 @@ interface nsIBrowserElementAPI : nsISupports
   void findNext(in long direction);
   void clearMatch();
 
-  void addNextPaintListener(in jsval listener); // BrowserElementNextPaintEventCallback
-  void removeNextPaintListener(in jsval listener); // BrowserElementNextPaintEventCallback
-
   DOMRequest executeScript(in AString script, in jsval options);
 
   /**

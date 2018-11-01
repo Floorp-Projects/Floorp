@@ -362,36 +362,6 @@ nsBrowserElement::ClearMatch(ErrorResult& aRv)
   }
 }
 
-void
-nsBrowserElement::AddNextPaintListener(BrowserElementNextPaintEventCallback& aListener,
-                                       ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-
-  JS::Rooted<JS::Value> val(RootingCx(),
-                            JS::ObjectOrNullValue(aListener.CallbackOrNull()));
-  nsresult rv = mBrowserElementAPI->AddNextPaintListener(val);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-}
-
-void
-nsBrowserElement::RemoveNextPaintListener(BrowserElementNextPaintEventCallback& aListener,
-                                          ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-
-  JS::Rooted<JS::Value> val(RootingCx(),
-                            JS::ObjectOrNullValue(aListener.CallbackOrNull()));
-  nsresult rv = mBrowserElementAPI->RemoveNextPaintListener(val);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-}
-
 already_AddRefed<DOMRequest>
 nsBrowserElement::ExecuteScript(const nsAString& aScript,
                                 const BrowserElementExecuteScriptOptions& aOptions,
