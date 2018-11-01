@@ -36,16 +36,6 @@ interface nsIBrowserElementAPI : nsISupports
                       in uint32_t button,
                       in uint32_t clickCount,
                       in uint32_t mifiers);
-  void sendTouchEvent(in AString aType,
-                      [const, array, size_is(count)] in uint32_t aIdentifiers,
-                      [const, array, size_is(count)] in int32_t aXs,
-                      [const, array, size_is(count)] in int32_t aYs,
-                      [const, array, size_is(count)] in uint32_t aRxs,
-                      [const, array, size_is(count)] in uint32_t aRys,
-                      [const, array, size_is(count)] in float aRotationAngles,
-                      [const, array, size_is(count)] in float aForces,
-                      in uint32_t count,
-                      in long aModifiers);
   void goBack();
   void goForward();
   void reload(in boolean hardReload);

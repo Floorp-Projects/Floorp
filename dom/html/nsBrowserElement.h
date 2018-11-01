@@ -38,17 +38,6 @@ public:
                       uint32_t aClickCount,
                       uint32_t aModifiers,
                       ErrorResult& aRv);
-  void SendTouchEvent(const nsAString& aType,
-                      const dom::Sequence<uint32_t>& aIdentifiers,
-                      const dom::Sequence<int32_t>& aX,
-                      const dom::Sequence<int32_t>& aY,
-                      const dom::Sequence<uint32_t>& aRx,
-                      const dom::Sequence<uint32_t>& aRy,
-                      const dom::Sequence<float>& aRotationAngles,
-                      const dom::Sequence<float>& aForces,
-                      uint32_t aCount,
-                      uint32_t aModifiers,
-                      ErrorResult& aRv);
   void GoBack(ErrorResult& aRv);
   void GoForward(ErrorResult& aRv);
   void Reload(bool aHardReload, ErrorResult& aRv);
