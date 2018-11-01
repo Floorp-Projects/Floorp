@@ -37,7 +37,7 @@ function assertCollapsibility(debugTargetPaneEl, title, shouldCollapsed) {
   const titleEl = debugTargetPaneEl.querySelector(".js-debug-target-pane-title");
   const expectedTitle =
     shouldCollapsed
-      ? `${ title }(${ listEl.querySelectorAll(".js-debug-target-item").length })`
+      ? `${ title } (${ listEl.querySelectorAll(".js-debug-target-item").length })`
       : title;
   is(titleEl.textContent, expectedTitle, "Title should correct");
 }

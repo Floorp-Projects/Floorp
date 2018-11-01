@@ -47,6 +47,7 @@ MACH_MODULES = [
     'python/mozbuild/mozbuild/backend/mach_commands.py',
     'python/mozbuild/mozbuild/compilation/codecomplete.py',
     'python/mozbuild/mozbuild/frontend/mach_commands.py',
+    'python/mozrelease/mozrelease/mach_commands.py',
     'taskcluster/mach_commands.py',
     'testing/awsy/mach_commands.py',
     'testing/firefox-ui/mach_commands.py',
@@ -89,7 +90,7 @@ CATEGORIES = {
     'ci': {
         'short': 'CI',
         'long': 'Taskcluster commands',
-        'priority': 59
+        'priority': 59,
     },
     'devenv': {
         'short': 'Development Environment',
@@ -106,13 +107,18 @@ CATEGORIES = {
         'long': 'Potent potables and assorted snacks.',
         'priority': 10,
     },
+    'release': {
+        'short': 'Release automation',
+        'long': 'Commands for used in release automation.',
+        'priority': 5,
+    },
     'disabled': {
         'short': 'Disabled',
         'long': 'The disabled commands are hidden by default. Use -v to display them. '
         'These commands are unavailable for your current context, '
         'run "mach <command>" to see why.',
         'priority': 0,
-    }
+    },
 }
 
 
@@ -235,7 +241,8 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
         return False
 
-    def post_dispatch_handler(context, handler, args):
+    def post_dispatch_handler(context, handler, instance, result,
+                              start_time, end_time, args):
         """Perform global operations after command dispatch.
 
 
@@ -249,7 +256,24 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         if not context.settings.build.telemetry:
             return
 
-        # Every n-th operation
+        from mozbuild.telemetry import gather_telemetry
+        from mozbuild.base import MozbuildObject
+
+        if not isinstance(instance, MozbuildObject):
+            instance = MozbuildObject.from_environment()
+
+        try:
+            substs = instance.substs
+        except Exception:
+            substs = {}
+
+        # We gather telemetry for every operation...
+        gather_telemetry(command=handler.name, success=(result == 0),
+                         start_time=start_time, end_time=end_time,
+                         mach_context=context, substs=substs,
+                         paths=[instance.topsrcdir, instance.topobjdir])
+
+        # But only submit about every n-th operation
         if random.randint(1, TELEMETRY_SUBMISSION_FREQUENCY) != 1:
             return
 

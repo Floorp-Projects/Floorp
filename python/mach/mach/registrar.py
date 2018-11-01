@@ -5,6 +5,7 @@
 from __future__ import absolute_import, unicode_literals
 
 from .base import MachError
+import time
 
 INVALID_COMMAND_CONTEXT = r'''
 It looks like you tried to run a mach command from an invalid context. The %s
@@ -83,11 +84,15 @@ class MachRegistrar(object):
 
         fn = getattr(instance, handler.method)
 
+        start_time = time.time()
+
         if debug_command:
             import pdb
             result = pdb.runcall(fn, **kwargs)
         else:
             result = fn(**kwargs)
+
+        end_time = time.time()
 
         result = result or 0
         assert isinstance(result, (int, long))
@@ -95,7 +100,8 @@ class MachRegistrar(object):
         if context and not debug_command:
             postrun = getattr(context, 'post_dispatch_handler', None)
             if postrun:
-                postrun(context, handler, args=kwargs)
+                postrun(context, handler, instance, result,
+                        start_time, end_time, args=kwargs)
 
         return result
 

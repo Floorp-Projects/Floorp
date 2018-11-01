@@ -19,7 +19,7 @@
 #include "nsIDocShell.h"
 #include "nsIFile.h"
 #include "nsIServiceManager.h"
-#include "nsIWeakReference.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsIWidget.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCID.h"

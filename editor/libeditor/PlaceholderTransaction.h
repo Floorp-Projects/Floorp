@@ -9,8 +9,7 @@
 #include "EditAggregateTransaction.h"
 #include "mozilla/Maybe.h"
 #include "nsIAbsorbingTransaction.h"
-#include "nsCOMPtr.h"
-#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 
 namespace mozilla {
 

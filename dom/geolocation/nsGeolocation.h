@@ -15,9 +15,9 @@
 #include "nsTArray.h"
 #include "nsITimer.h"
 #include "nsIObserver.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsWrapperCache.h"
 
-#include "nsWeakPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
 #include "nsGeoPosition.h"

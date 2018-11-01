@@ -27,11 +27,11 @@
 #include "nsIPresShell.h"
 #include "nsISelectionController.h"
 #include "nsISupports.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
 #include "nsRange.h"
 #include "nsRefreshDriver.h"
-#include "nsWeakReference.h"
 #include "WritingModes.h"
 
 namespace mozilla {

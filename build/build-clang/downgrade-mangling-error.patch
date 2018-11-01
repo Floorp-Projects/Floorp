@@ -1,0 +1,33 @@
+Downgrade unimplemented mangling diagnostic from error to note.
+This codepath is exercised by MozsearchIndexer.cpp (the searchfox
+indexer) when indexing on Windows. We can do without having the
+unimplemented bits for now as long the compiler doesn't fail the
+build. See also https://bugs.llvm.org/show_bug.cgi?id=39294
+
+diff --git a/clang/lib/AST/ItaniumMangle.cpp b/clang/lib/AST/ItaniumMangle.cpp
+index b483187394..fb01348ebb 100644
+--- a/clang/lib/AST/ItaniumMangle.cpp
++++ b/clang/lib/AST/ItaniumMangle.cpp
+@@ -3557,20 +3557,21 @@ recurse:
+   case Expr::AsTypeExprClass:
+   case Expr::PseudoObjectExprClass:
+   case Expr::AtomicExprClass:
+   case Expr::FixedPointLiteralClass:
+   {
+     if (!NullOut) {
+       // As bad as this diagnostic is, it's better than crashing.
+       DiagnosticsEngine &Diags = Context.getDiags();
+-      unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
++      unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Remark,
+                                        "cannot yet mangle expression type %0");
+       Diags.Report(E->getExprLoc(), DiagID)
+         << E->getStmtClassName() << E->getSourceRange();
++      Out << "MOZ_WE_HACKED_AROUND_BUG_1418415";
+     }
+     break;
+   }
+ 
+   case Expr::CXXUuidofExprClass: {
+     const CXXUuidofExpr *UE = cast<CXXUuidofExpr>(E);
+     if (UE->isTypeOperand()) {
+       QualType UuidT = UE->getTypeOperand(Context.getASTContext());
