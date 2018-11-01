@@ -7,11 +7,6 @@
 enum BrowserFindCaseSensitivity { "case-sensitive", "case-insensitive" };
 enum BrowserFindDirection { "forward", "backward" };
 
-dictionary BrowserElementDownloadOptions {
-  DOMString? filename;
-  DOMString? referrer;
-};
-
 dictionary BrowserElementExecuteScriptOptions {
   DOMString? url;
   DOMString? origin;
@@ -69,12 +64,6 @@ interface BrowserElementPrivileged {
    Pref="dom.mozBrowserFramesEnabled",
    ChromeOnly]
   void stop();
-
-  [Throws,
-   Pref="dom.mozBrowserFramesEnabled",
-   ChromeOnly]
-  DOMRequest download(DOMString url,
-                      optional BrowserElementDownloadOptions options);
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
