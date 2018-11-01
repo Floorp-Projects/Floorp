@@ -59,7 +59,6 @@ public:
 
   already_AddRefed<dom::DOMRequest> GetCanGoBack(ErrorResult& aRv);
   already_AddRefed<dom::DOMRequest> GetCanGoForward(ErrorResult& aRv);
-  already_AddRefed<dom::DOMRequest> GetContentDimensions(ErrorResult& aRv);
 
   void FindAll(const nsAString& aSearchString, dom::BrowserFindCaseSensitivity aCaseSensitivity,
                ErrorResult& aRv);
