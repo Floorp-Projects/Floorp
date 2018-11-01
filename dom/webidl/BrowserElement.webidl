@@ -66,10 +66,4 @@ interface BrowserElementPrivileged {
    Pref="dom.mozBrowserFramesEnabled",
    ChromeOnly]
   DOMRequest getCanGoForward();
-
-  [Throws,
-   Pref="dom.mozBrowserFramesEnabled",
-   ChromeOnly]
-  DOMRequest getWebManifest();
-
 };

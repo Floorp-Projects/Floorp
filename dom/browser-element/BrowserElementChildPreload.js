@@ -16,12 +16,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/BrowserElementPromptService.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ManifestFinder",
-                               "resource://gre/modules/ManifestFinder.jsm");
-ChromeUtils.defineModuleGetter(this, "ManifestObtainer",
-                               "resource://gre/modules/ManifestObtainer.jsm");
-
-
 var kLongestReturnedString = 128;
 
 var Timer = Components.Constructor("@mozilla.org/timer;1",
@@ -284,7 +278,6 @@ BrowserElementChild.prototype = {
       "owner-visibility-change": this._recvOwnerVisibilityChange,
       "entered-fullscreen": this._recvEnteredFullscreen,
       "exit-fullscreen": this._recvExitFullscreen,
-      "get-web-manifest": this._recvGetWebManifest,
     }
 
     if (message.data.msg_name in mmCalls) {
@@ -528,13 +521,6 @@ BrowserElementChild.prototype = {
 
   },
 
-  _manifestChangedHandler: function(e) {
-    debug('Got manifestchanged: (' + e.target.href + ')');
-    let manifest = { href: e.target.href };
-    sendAsyncMsg('manifestchange', manifest);
-
-  },
-
   // Processes the "rel" field in <link> tags and forward to specific handlers.
   _linkAddedHandler: function(e) {
     let win = e.target.ownerGlobal;
@@ -550,7 +536,6 @@ BrowserElementChild.prototype = {
       'apple-touch-icon': this._iconChangedHandler.bind(this),
       'apple-touch-icon-precomposed': this._iconChangedHandler.bind(this),
       'search': this._openSearchHandler,
-      'manifest': this._manifestChangedHandler
     };
 
     debug('Got linkAdded: (' + e.target.href + ') ' + e.target.rel);
@@ -1035,27 +1020,6 @@ BrowserElementChild.prototype = {
   _recvStop: function(data) {
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
     webNav.stop(webNav.STOP_NETWORK);
-  },
-
-  async _recvGetWebManifest(data) {
-    debug(`Received GetWebManifest message: (${data.json.id})`);
-    let manifest = null;
-    let hasManifest = ManifestFinder.contentHasManifestLink(content);
-    if (hasManifest) {
-      try {
-        manifest = await ManifestObtainer.contentObtainManifest(content);
-      } catch (e) {
-        sendAsyncMsg('got-web-manifest', {
-          id: data.json.id,
-          errorMsg: `Error fetching web manifest: ${e}.`,
-        });
-        return;
-      }
-    }
-    sendAsyncMsg('got-web-manifest', {
-      id: data.json.id,
-      successRv: manifest
-    });
   },
 
   // The docShell keeps a weak reference to the progress listener, so we need

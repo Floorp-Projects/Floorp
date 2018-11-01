@@ -208,22 +208,4 @@ nsBrowserElement::GetCanGoForward(ErrorResult& aRv)
   return req.forget();
 }
 
-already_AddRefed<DOMRequest>
-nsBrowserElement::GetWebManifest(ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-
-  RefPtr<DOMRequest> req;
-  nsresult rv = mBrowserElementAPI->GetWebManifest(getter_AddRefs(req));
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  return req.forget();
-}
-
-
-
 } // namespace mozilla
