@@ -165,7 +165,6 @@ BrowserElementParent.prototype = {
       "got-set-input-method-active": this._gotDOMRequestResult,
       "scrollviewchange": this._handleScrollViewChange,
       "caretstatechanged": this._handleCaretStateChanged,
-      "execute-script-done": this._gotDOMRequestResult,
       "got-web-manifest": this._gotDOMRequestResult,
     };
 
@@ -580,19 +579,6 @@ BrowserElementParent.prototype = {
   stop: defineNoReturnMethod(function() {
     this._sendAsyncMsg('stop');
   }),
-
-  executeScript: function(script, options) {
-    if (!this._isAlive()) {
-      throw Components.Exception("Dead content process",
-                                 Cr.NS_ERROR_DOM_INVALID_STATE_ERR);
-    }
-
-    // Enforcing options.url or options.origin
-    if (!options.url && !options.origin) {
-      throw Components.Exception("Invalid argument", Cr.NS_ERROR_INVALID_ARG);
-    }
-    return this._sendDOMRequest('execute-script', {script, options});
-  },
 
   getWebManifest: defineDOMRequestMethod('get-web-manifest'),
   /**

@@ -17,7 +17,6 @@ class nsFrameLoader;
 namespace mozilla {
 
 namespace dom {
-struct BrowserElementExecuteScriptOptions;
 class DOMRequest;
 } // namespace dom
 
@@ -57,10 +56,6 @@ public:
 
   already_AddRefed<dom::DOMRequest> GetCanGoBack(ErrorResult& aRv);
   already_AddRefed<dom::DOMRequest> GetCanGoForward(ErrorResult& aRv);
-
-  already_AddRefed<dom::DOMRequest> ExecuteScript(const nsAString& aScript,
-                                                  const dom::BrowserElementExecuteScriptOptions& aOptions,
-                                                  ErrorResult& aRv);
 
   already_AddRefed<dom::DOMRequest> GetWebManifest(ErrorResult& aRv);
 
