@@ -9,16 +9,10 @@ en_GB{
         }
     }
     CurrencyPlurals{
-        MKD{
-            other{"Macedonian denari"}
-        }
         SHP{
             one{"St Helena pound"}
             other{"St Helena pounds"}
         }
-        XOF{
-            other{"West African CFA francs"}
-        }
     }
-    Version{"2.1.38.73"}
+    Version{"2.1.44.18"}
 }

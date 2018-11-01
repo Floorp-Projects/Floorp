@@ -106,6 +106,9 @@ print HEADER <<"EndOfHeaderComment";
 
 #if !U_DISABLE_RENAMING
 
+// Disable Renaming for Visual Studio's IntelliSense feature, so that 'Go-to-Definition' (F12) will work.
+#if !(defined(_MSC_VER) && defined(__INTELLISENSE__))
+
 /* We need the U_ICU_ENTRY_POINT_RENAME definition. There's a default one in unicode/uvernum.h we can use, but we will give
    the platform a chance to define it first.
    Normally (if utypes.h or umachine.h was included first) this will not be necessary as it will already be defined.
@@ -236,8 +239,15 @@ foreach(sort keys(%CFuncs)) {
 #    print HEADER "#define $_ $_$U_ICU_VERSION_SUFFIX\n";
 }
 
-print HEADER "\n#endif\n";
-print HEADER "\n#endif\n";
+
+print HEADER <<"EndOfHeaderFooter";
+
+#endif /* !(defined(_MSC_VER) && defined(__INTELLISENSE__)) */
+#endif /* U_DISABLE_RENAMING */
+#endif /* URENAME_H */
+
+EndOfHeaderFooter
+
 
 close HEADER;
 

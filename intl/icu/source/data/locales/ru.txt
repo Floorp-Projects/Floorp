@@ -25,7 +25,9 @@ ru{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                approximately{"≈{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -290,7 +292,7 @@ ru{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.45.15"}
     calendar{
         buddhist{
             eras{
@@ -307,10 +309,10 @@ ru{
         }
         chinese{
             DateTimePatterns{
-                "H:mm:ss zzzz",
-                "H:mm:ss z",
-                "H:mm:ss",
-                "H:mm",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d MMMM U",
                 "d MMMM U",
                 "dd.MM U",
@@ -643,10 +645,10 @@ ru{
         }
         generic{
             DateTimePatterns{
-                "H:mm:ss zzzz",
-                "H:mm:ss z",
-                "H:mm:ss",
-                "H:mm",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d MMMM y 'г'. G",
                 "d MMMM y 'г'. G",
                 "d MMM y 'г'. G",
@@ -813,10 +815,10 @@ ru{
                 "PM",
             }
             DateTimePatterns{
-                "H:mm:ss zzzz",
-                "H:mm:ss z",
-                "H:mm:ss",
-                "H:mm",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d MMMM y 'г'.",
                 "d MMMM y 'г'.",
                 "d MMM y 'г'.",
@@ -846,11 +848,11 @@ ru{
                 GyMMM{"LLL y G"}
                 GyMMMEd{"E, d MMM y 'г'. G"}
                 GyMMMd{"d MMM y 'г'. G"}
-                H{"H"}
-                Hm{"H:mm"}
-                Hms{"H:mm:ss"}
-                Hmsv{"H:mm:ss v"}
-                Hmv{"H:mm v"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, dd.MM"}
                 MMM{"LLL"}
@@ -1033,6 +1035,10 @@ ru{
                     "до н. э.",
                     "н. э.",
                 }
+                abbreviated%variant{
+                    "BCE",
+                    "н. э.",
+                }
                 narrow{
                     "до н.э.",
                     "н.э.",
@@ -1048,18 +1054,18 @@ ru{
             }
             intervalFormats{
                 H{
-                    H{"H–H"}
+                    H{"HH–HH"}
                 }
                 Hm{
-                    H{"H:mm–H:mm"}
-                    m{"H:mm–H:mm"}
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
                 }
                 Hmv{
-                    H{"H:mm–H:mm v"}
-                    m{"H:mm–H:mm v"}
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
                 }
                 Hv{
-                    H{"H–H v"}
+                    H{"HH–HH v"}
                 }
                 M{
                     M{"M–M"}
@@ -1837,6 +1843,7 @@ ru{
                     "Эпоха Тайсьо",
                     "Сьова",
                     "Эпоха Хэйсэй",
+                    "Qqqq",
                 }
             }
         }
@@ -1984,7 +1991,7 @@ ru{
         emoji{"эмодзи"}
         european_scripts{"письменности Европы"}
         female{"женщины"}
-        flag{"флаги"}
+        flag{"флаг"}
         flags{"флаги"}
         food_drink{"еда и напитки"}
         format{"форматирование"}
@@ -3161,8 +3168,13 @@ ru{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

@@ -26,7 +26,9 @@ te{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -238,7 +240,7 @@ te{
             }
         }
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.50"}
     calendar{
         buddhist{
             eras{
@@ -2494,8 +2496,13 @@ te{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

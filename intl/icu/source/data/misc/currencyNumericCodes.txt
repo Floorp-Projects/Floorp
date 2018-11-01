@@ -6,7 +6,7 @@
 // Corporation and others.  All Rights Reserved.
 //---------------------------------------------------------
 // Build tool: com.ibm.icu.dev.tool.currency.NumericCodeData
-// Build date: 2018-06-06T22:39:58Z
+// Build date: 2018-09-17T17:52:05Z
 //---------------------------------------------------------
 // >> !!! >>   THIS IS A MACHINE-GENERATED FILE   << !!! <<
 // >> !!! >>>            DO NOT EDIT             <<< !!! <<
@@ -270,9 +270,11 @@ currencyNumericCodes:table(nofallback){
         UYN:int{858}
         UYP:int{858}
         UYU:int{858}
+        UYW:int{927}
         UZS:int{860}
         VEB:int{862}
         VEF:int{937}
+        VES:int{928}
         VNC:int{704}
         VND:int{704}
         VUV:int{548}

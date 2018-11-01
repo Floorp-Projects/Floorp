@@ -592,6 +592,10 @@ fo{
         }
         VEF{
             "VEF",
+            "Venesuela bolívar (2008–2018)",
+        }
+        VES{
+            "VES",
             "Venesuela bolívar",
         }
         VND{
@@ -639,7 +643,7 @@ fo{
             "unse platin",
         }
         XXX{
-            "XXX",
+            "¤",
             "ókent gjaldoyra",
         }
         YER{
@@ -1344,6 +1348,10 @@ fo{
             other{"Usbekistan som"}
         }
         VEF{
+            one{"Venesuela bolívar (2008–2018)"}
+            other{"Venesuela bolívar (2008–2018)"}
+        }
+        VES{
             one{"Venesuela bolívar"}
             other{"Venesuela bolívar"}
         }
@@ -1412,5 +1420,5 @@ fo{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.41.34"}
 }

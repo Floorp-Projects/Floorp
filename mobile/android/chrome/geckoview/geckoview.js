@@ -7,6 +7,7 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -96,6 +97,64 @@ var ModuleManager = {
 
   forEach(aCallback) {
     this._modules.forEach(aCallback, this);
+  },
+
+  updateRemoteType(aRemoteType) {
+    debug `updateRemoteType remoteType=${aRemoteType}`;
+
+    const currentRemoteType = this.browser.getAttribute("remoteType") || E10SUtils.NOT_REMOTE;
+
+    if (aRemoteType && !this.settings.useMultiprocess) {
+      warn `Tried to create a remote browser in multiprocess mode`;
+      return false;
+    }
+
+    if (currentRemoteType === aRemoteType) {
+      // We're already using a child process of the correct type.
+      return false;
+    }
+
+    // Now we're switching the remoteness (value of "remote" attr).
+    debug `updateRemoteType: changing from '${currentRemoteType}' to '${aRemoteType}'`;
+
+    this.forEach(module => {
+      if (module.enabled && module.impl) {
+        module.impl.onDisable();
+      }
+    });
+
+    this.forEach(module => {
+      if (module.impl) {
+        module.impl.onDestroyBrowser();
+      }
+    });
+
+    const parent = this.browser.parentNode;
+    this.browser.remove();
+    if (aRemoteType) {
+      this.browser.setAttribute("remote", "true");
+      this.browser.setAttribute("remoteType", aRemoteType);
+    } else {
+      this.browser.setAttribute("remote", "false");
+      this.browser.removeAttribute("remoteType");
+    }
+
+    this.forEach(module => {
+      if (module.impl) {
+        module.impl.onInitBrowser();
+      }
+    });
+
+    parent.appendChild(this.browser);
+
+    this.forEach(module => {
+      if (module.enabled && module.impl) {
+        module.impl.onEnable();
+      }
+    });
+
+    this.browser.focus();
+    return true;
   },
 
   _updateSettings(aSettings) {
@@ -304,6 +363,13 @@ function createBrowser() {
   browser.setAttribute("type", "content");
   browser.setAttribute("primary", "true");
   browser.setAttribute("flex", "1");
+
+  const settings = window.arguments[0].QueryInterface(Ci.nsIAndroidView).initData.settings;
+  if (settings.useMultiprocess) {
+    browser.setAttribute("remote", "true");
+    browser.setAttribute("remoteType", E10SUtils.DEFAULT_REMOTE_TYPE);
+  }
+
   return browser;
 }
 

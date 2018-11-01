@@ -131,6 +131,9 @@ FetchStreamReader::CloseAndRelease(JSContext* aCx, nsresult aStatus)
       // "closed", return a new promise resolved with undefined.
       JS::ReadableStreamReaderCancel(aCx, reader, errorValue);
     }
+
+    // We don't want to propagate exceptions during the cleanup.
+    JS_ClearPendingException(aCx);
   }
 
   mStreamClosed = true;

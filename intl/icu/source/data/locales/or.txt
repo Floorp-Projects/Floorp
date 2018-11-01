@@ -20,19 +20,25 @@ or{
         " ଲ ଳ ଶ ଷ ସ ହ {କ\u0B4Dଷ}]"
     }
     ExemplarCharactersNumbers{"[\\- , . % ‰ + 0୦ 1୧ 2୨ 3୩ 4୪ 5୫ 6୬ 7୭ 8୮ 9୯]"}
+    ExemplarCharactersPunctuation{
+        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
+        "″]"
+    }
     MoreInformation{"?"}
     NumberElements{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"¤#,##,##0.00;(¤#,##,##0.00)"}
-                currencyFormat{"¤ #,##,##0.00"}
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##,##0.###"}
-                percentFormat{"#,##,##0%"}
+                percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
             patternsLong{
@@ -215,9 +221,9 @@ or{
         native{"orya"}
         orya{
             patterns{
-                currencyFormat{"¤#,##,##0.00"}
+                currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##,##0.###"}
-                percentFormat{"#,##,##0%"}
+                percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
             symbols{
@@ -234,7 +240,7 @@ or{
             }
         }
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
     calendar{
         generic{
             DateTimePatterns{
@@ -796,7 +802,7 @@ or{
         african_scripts{"ଆଫ୍ରିକୀୟ ସ୍କ୍ରିପ୍ଟ"}
         american_scripts{"ଆମେରିକୀୟ ସ୍କ୍ରିପ୍ଟ"}
         animal{"ପଶୁ"}
-        animals_nature{"ପ୍ରାଣୀ କିମ୍ବା ପ୍ରକୃତି"}
+        animals_nature{"ପଶୁ କିମ୍ବା ପ୍ରକୃତି"}
         arrows{"ତୀର"}
         body{"ଶରୀର"}
         box_drawing{"ବକ୍ସ ଅଙ୍କନ କରିବା"}
@@ -1709,8 +1715,13 @@ or{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

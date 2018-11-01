@@ -28,7 +28,9 @@ is{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -219,7 +221,7 @@ is{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -881,6 +883,19 @@ is{
                 }
             }
         }
+        ethiopic-amete-alem{
+            eras{
+                abbreviated{
+                    "ERA0",
+                }
+                narrow{
+                    "ERA0",
+                }
+                wide{
+                    "ERA0",
+                }
+            }
+        }
         generic{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -1276,6 +1291,10 @@ is{
                 narrow{
                     "f.k.",
                     "e.k.",
+                }
+                narrow%variant{
+                    "f.v.t.",
+                    "v.t.",
                 }
                 wide{
                     "fyrir Krist",
@@ -2261,6 +2280,149 @@ is{
                 }
             }
         }
+        japanese{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d. MMMM y G",
+                "d. MMMM y G",
+                "d.M.y G",
+                "d.M.y GGGGG",
+                "{1}, {0}",
+                "{1} 'kl'. {0}",
+                "{1} 'kl'. {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                E{"ccc"}
+                Ed{"E d."}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d. MMM y G"}
+                GyMMMd{"d. MMM y G"}
+                M{"L"}
+                MEd{"E, d.M."}
+                MMM{"LLL"}
+                MMMEd{"E, d. MMM"}
+                MMMMEd{"E, d. MMMM"}
+                MMMMd{"d. MMMM"}
+                MMMd{"d. MMM"}
+                Md{"d.M."}
+                d{"d"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"M.y G"}
+                yyyyMEd{"E, d.M.y G"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"E, d. MMM y G"}
+                yyyyMMMM{"MMMM y G"}
+                yyyyMMMd{"d. MMM y G"}
+                yyyyMd{"d.M.y G"}
+                yyyyQQQ{"QQQ y G"}
+                yyyyQQQQ{"QQQQ y G"}
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"M.–M."}
+                }
+                MEd{
+                    M{"E, d.M. – E, d.M."}
+                    d{"E, d. – E, d.M."}
+                }
+                MMM{
+                    M{"MMM–MMM"}
+                }
+                MMMEd{
+                    M{"E, d. MMM – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
+                }
+                MMMM{
+                    M{"MMMM–MMMM"}
+                }
+                MMMd{
+                    M{"d. MMM – d. MMM"}
+                    d{"d.–d. MMM"}
+                }
+                Md{
+                    M{"d.M.–d.M."}
+                    d{"d.–d.M."}
+                }
+                d{
+                    d{"d.–d."}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y G"}
+                }
+                yM{
+                    M{"M.–M.y G"}
+                    y{"M.y–M.y G"}
+                }
+                yMEd{
+                    M{"E, d.M. – E, d.M.y G"}
+                    d{"E, d. – E, d.M.y G"}
+                    y{"E, d.M.y – E, d.M.y G"}
+                }
+                yMMM{
+                    M{"MMM–MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                yMMMEd{
+                    M{"E, d. MMM – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
+                    y{"E, d. MMM y – E, d. MMM y G"}
+                }
+                yMMMM{
+                    M{"MMMM–MMMM y G"}
+                    y{"MMMM y – MMMM y G"}
+                }
+                yMMMd{
+                    M{"d. MMM – d. MMM y G"}
+                    d{"d.–d. MMM y G"}
+                    y{"d. MMM y – d. MMM y G"}
+                }
+                yMd{
+                    M{"d.M.–d.M.y G"}
+                    d{"d.–d.M.y G"}
+                    y{"d.M.y–d.M.y G"}
+                }
+            }
+        }
         persian{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -2914,6 +3076,9 @@ is{
         }
         hour-narrow{
             dn{"klst."}
+            relative{
+                "0"{"þessa stundina"}
+            }
             relativeTime{
                 future{
                     one{"+{0} klst."}
@@ -2927,6 +3092,9 @@ is{
         }
         hour-short{
             dn{"klst."}
+            relative{
+                "0"{"þessa stundina"}
+            }
             relativeTime{
                 future{
                     one{"eftir {0} klst."}
@@ -2956,6 +3124,9 @@ is{
         }
         minute-narrow{
             dn{"mín."}
+            relative{
+                "0"{"á þessari mínútu"}
+            }
             relativeTime{
                 future{
                     one{"+{0} mín."}
@@ -2969,6 +3140,9 @@ is{
         }
         minute-short{
             dn{"mín."}
+            relative{
+                "0"{"á þessari mínútu"}
+            }
             relativeTime{
                 future{
                     one{"eftir {0} mín."}
@@ -3208,6 +3382,9 @@ is{
         }
         second-narrow{
             dn{"sek."}
+            relative{
+                "0"{"núna"}
+            }
             relativeTime{
                 future{
                     one{"+{0} sek."}
@@ -3221,6 +3398,9 @@ is{
         }
         second-short{
             dn{"sek."}
+            relative{
+                "0"{"núna"}
+            }
             relativeTime{
                 future{
                     one{"eftir {0} sek."}
@@ -3484,7 +3664,7 @@ is{
             relativePeriod{"vika {0}"}
             relativeTime{
                 future{
-                    one{"eftir {0} vikur"}
+                    one{"eftir {0} viku"}
                     other{"eftir {0} vikur"}
                 }
                 past{
@@ -3637,8 +3817,13 @@ is{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

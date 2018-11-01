@@ -200,7 +200,7 @@ ee{
         }
         minimumGroupingDigits{"3"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.88"}
     calendar{
         generic{
             DateTimePatterns{
@@ -431,8 +431,8 @@ ee{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    one{"'kɔsiɖa' w 'lia' 'le' 'ƒe' y 'me'"}
-                    other{"'kɔsiɖa' w 'lia' 'le' 'ƒe' y 'me'"}
+                    one{"'kɔsiɖa' w 'lia' 'le' 'ƒe' Y 'me'"}
+                    other{"'kɔsiɖa' w 'lia' 'le' 'ƒe' Y 'me'"}
                 }
             }
             dayNames{

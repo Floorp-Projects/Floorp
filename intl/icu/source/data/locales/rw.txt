@@ -7,7 +7,7 @@ rw{
     NumberElements{
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -32,7 +32,7 @@ rw{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.38.72"}
+    Version{"2.1.44.88"}
     calendar{
         generic{
             DateTimePatterns{
@@ -126,7 +126,7 @@ rw{
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
                 yw{
-                    other{"'week' w 'of' y"}
+                    other{"'week' w 'of' Y"}
                 }
             }
             dayNames{

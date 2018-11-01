@@ -628,6 +628,10 @@ ksh{
         }
         VEF{
             "VEF",
+            "venezuelaanesche Bolívar (2008–2018)",
+        }
+        VES{
+            "VES",
             "venezuelaanesche Bolívar",
         }
         VND{
@@ -683,7 +687,7 @@ ksh{
             "Währong zum Prööfe",
         }
         XXX{
-            "XXX",
+            "¤",
             "onbikannte Währong",
         }
         YER{
@@ -908,5 +912,5 @@ ksh{
         other{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.41.34"}
 }

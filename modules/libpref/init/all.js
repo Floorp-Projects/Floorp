@@ -1097,6 +1097,7 @@ pref("devtools.recordreplay.enableRewinding", true);
 #endif
 
 pref("devtools.recordreplay.mvp.enabled", false);
+pref("devtools.recordreplay.timeline.enabled", false);
 
 // view source
 pref("view_source.syntax_highlight", true);

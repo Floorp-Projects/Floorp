@@ -103,7 +103,9 @@ yue_Hans{
         }
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}-{1}"}
             }
             patterns{
@@ -258,7 +260,7 @@ yue_Hans{
         native{"hanidec"}
         traditional{"hans"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -2392,6 +2394,7 @@ yue_Hans{
                     "大正",
                     "昭和",
                     "平成",
+                    "Qqqq",
                 }
             }
         }

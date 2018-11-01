@@ -1,10 +1,11 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 nl{
-    Version{"2.1.41.97"}
+    Version{"2.1.45.14"}
     zoneStrings{
         "Etc:UTC"{
             ls{"Gecoördineerde wereldtijd"}
+            ss{"UTC"}
         }
         "Europe:Dublin"{
             ld{"Ierse standaardtijd"}

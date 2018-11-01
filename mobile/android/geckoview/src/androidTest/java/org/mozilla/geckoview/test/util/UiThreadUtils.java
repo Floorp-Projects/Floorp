@@ -1,10 +1,18 @@
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.geckoview.test.util;
+
+import org.mozilla.geckoview.GeckoResult;
 
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.lang.reflect.InvocationTargetException;
@@ -70,6 +78,52 @@ public class UiThreadUtils {
         }
 
         return new RuntimeException(cause != null ? cause : e);
+    }
+
+    /**
+     * This waits for the given result and returns it's value. If
+     * the result failed with an exception, it is rethrown.
+     *
+     * @param result A {@link GeckoResult} instance.
+     * @param <T> The type of the value held by the {@link GeckoResult}
+     * @return The value of the completed {@link GeckoResult}.
+     */
+    public static <T> T waitForResult(@NonNull GeckoResult<T> result, long timeout) throws Throwable {
+        final ResultHolder<T> holder = new ResultHolder<>(result);
+
+        while (!holder.isComplete) {
+            loopUntilIdle(timeout);
+        }
+
+        if (holder.error != null) {
+            throw holder.error;
+        }
+
+        return holder.value;
+    }
+
+    private static class ResultHolder<T> {
+        public T value;
+        public Throwable error;
+        public boolean isComplete;
+
+        public ResultHolder(GeckoResult<T> result) {
+            result.then(new GeckoResult.OnValueListener<T, Void>() {
+                @Override
+                public GeckoResult<Void> onValue(T value) {
+                    ResultHolder.this.value = value;
+                    isComplete = true;
+                    return null;
+                }
+            }, new GeckoResult.OnExceptionListener<Void>() {
+                @Override
+                public GeckoResult<Void> onException(Throwable error) {
+                    ResultHolder.this.error = error;
+                    isComplete = true;
+                    return null;
+                }
+            });
+        }
     }
 
     public static void loopUntilIdle(final long timeout) {

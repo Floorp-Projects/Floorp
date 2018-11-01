@@ -22,7 +22,9 @@ km{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -35,80 +37,80 @@ km{
             patternsLong{
                 decimalFormat{
                     1000{
-                        other{"0ពាន់"}
+                        other{"0 ពាន់"}
                     }
                     10000{
-                        other{"0​មឺុន"}
+                        other{"00 ពាន់"}
                     }
                     100000{
-                        other{"0សែន"}
+                        other{"000ពាន់"}
                     }
                     1000000{
-                        other{"0លាន"}
+                        other{"0 លាន"}
                     }
                     10000000{
-                        other{"0​ដប់​លាន"}
+                        other{"00 លាន"}
                     }
                     100000000{
-                        other{"0​រយលាន"}
+                        other{"000 លាន"}
                     }
                     1000000000{
-                        other{"0​កោដិ"}
+                        other{"0 ប៊ីលាន"}
                     }
                     10000000000{
-                        other{"0​ដប់​កោដិ"}
+                        other{"00 ប៊ីលាន"}
                     }
                     100000000000{
-                        other{"0​រយ​កោដិ"}
+                        other{"000 ប៊ីលាន"}
                     }
                     1000000000000{
-                        other{"0​ពាន់​កោដិ"}
+                        other{"0 ទ្រីលាន"}
                     }
                     10000000000000{
-                        other{"0​មឺុន​កោដិ"}
+                        other{"00 ទ្រីលាន"}
                     }
                     100000000000000{
-                        other{"0​សែន​កោដិ"}
+                        other{"000 ទ្រីលាន"}
                     }
                 }
             }
             patternsShort{
                 currencyFormat{
                     1000{
-                        other{"¤0ពាន់"}
+                        other{"¤0 ពាន់"}
                     }
                     10000{
-                        other{"¤00ពាន់"}
+                        other{"¤00 ពាន់"}
                     }
                     100000{
-                        other{"¤000ពាន់"}
+                        other{"¤000 ពាន់"}
                     }
                     1000000{
-                        other{"¤0លាន"}
+                        other{"¤0 លាន"}
                     }
                     10000000{
-                        other{"¤0​ដប់​លាន"}
+                        other{"¤00 លាន"}
                     }
                     100000000{
-                        other{"¤0​រយលាន"}
+                        other{"¤000 លាន"}
                     }
                     1000000000{
-                        other{"¤0​កោដិ"}
+                        other{"¤0 ប៊ីលាន"}
                     }
                     10000000000{
-                        other{"¤0​ដប់​កោដិ"}
+                        other{"¤00 ប៊ីលាន"}
                     }
                     100000000000{
-                        other{"¤0​រយ​កោដិ"}
+                        other{"¤000 ប៊ីលាន"}
                     }
                     1000000000000{
-                        other{"¤0​ពាន់​កោដិ"}
+                        other{"¤0 ទ្រីលាន"}
                     }
                     10000000000000{
-                        other{"¤0​មឺុន​កោដិ"}
+                        other{"¤00 ទ្រីលាន"}
                     }
                     100000000000000{
-                        other{"¤0​សែន​កោដិ"}
+                        other{"¤000 ទ្រីលាន"}
                     }
                 }
                 decimalFormat{
@@ -116,37 +118,37 @@ km{
                         other{"0ពាន់"}
                     }
                     10000{
-                        other{"0​មឺុន"}
+                        other{"00 ពាន់"}
                     }
                     100000{
-                        other{"0សែន"}
+                        other{"000 ពាន់"}
                     }
                     1000000{
-                        other{"0លាន"}
+                        other{"0 លាន"}
                     }
                     10000000{
-                        other{"0​ដប់​លាន"}
+                        other{"00 លាន"}
                     }
                     100000000{
-                        other{"0​រយលាន"}
+                        other{"000 លាន"}
                     }
                     1000000000{
-                        other{"0​កោដិ"}
+                        other{"0 ប៊ីលាន"}
                     }
                     10000000000{
-                        other{"0​ដប់​កោដិ"}
+                        other{"00 ប៊ីលាន"}
                     }
                     100000000000{
-                        other{"0​រយ​កោដិ"}
+                        other{"000 ប៊ីលាន"}
                     }
                     1000000000000{
-                        other{"0​ពាន់​កោដិ"}
+                        other{"0 ទ្រីលាន"}
                     }
                     10000000000000{
-                        other{"0​មឺុន​កោដិ"}
+                        other{"00 ទ្រីលាន"}
                     }
                     100000000000000{
-                        other{"0​សែន​កោដិ"}
+                        other{"000 ទ្រីលាន"}
                     }
                 }
             }
@@ -176,7 +178,7 @@ km{
         minimumGroupingDigits{"1"}
         native{"khmr"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.88"}
     calendar{
         generic{
             DateTimePatterns{
@@ -376,10 +378,10 @@ km{
                 Ed{"d E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
-                Gy{"y នៃ G"}
-                GyMMM{"MMM y នៃ G"}
-                GyMMMEd{"E d MMM y នៃ G"}
-                GyMMMd{"d MMM y នៃ G"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E d MMM y G"}
+                GyMMMd{"d MMM y G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -420,10 +422,10 @@ km{
                 format{
                     abbreviated{
                         "អាទិត្យ",
-                        "ច័ន្ទ",
+                        "ចន្ទ",
                         "អង្គារ",
                         "ពុធ",
-                        "ព្រហស្បតិ៍",
+                        "ព្រហ",
                         "សុក្រ",
                         "សៅរ៍",
                     }
@@ -458,10 +460,10 @@ km{
                 stand-alone{
                     abbreviated{
                         "អាទិត្យ",
-                        "ច័ន្ទ",
+                        "ចន្ទ",
                         "អង្គារ",
                         "ពុធ",
-                        "ព្រហស្បតិ៍",
+                        "ព្រហ",
                         "សុក្រ",
                         "សៅរ៍",
                     }
@@ -485,7 +487,7 @@ km{
                     }
                     wide{
                         "អាទិត្យ",
-                        "ច័ន្ទ",
+                        "ចន្ទ",
                         "អង្គារ",
                         "ពុធ",
                         "ព្រហស្បតិ៍",
@@ -497,27 +499,27 @@ km{
             dayPeriod{
                 format{
                     abbreviated{
-                        afternoon1{"រសៀល"}
-                        evening1{"ល្ងាច"}
+                        afternoon1{"នៅពេលរសៀល"}
+                        evening1{"នៅពេល​ល្ងាច"}
                         midnight{"អធ្រាត្រ"}
-                        morning1{"ព្រឹក"}
-                        night1{"យប់"}
+                        morning1{"នៅពេល​ព្រឹក"}
+                        night1{"នៅពេល​យប់"}
                         noon{"ថ្ងៃត្រង់"}
                     }
                     narrow{
-                        afternoon1{"រសៀល"}
-                        evening1{"ល្ងាច"}
+                        afternoon1{"នៅពេលរសៀល"}
+                        evening1{"នៅពេល​ល្ងាច"}
                         midnight{"អធ្រាត្រ"}
-                        morning1{"ព្រឹក"}
-                        night1{"យប់"}
+                        morning1{"នៅពេល​ព្រឹក"}
+                        night1{"នៅពេល​យប់"}
                         noon{"ថ្ងៃត្រង់"}
                     }
                     wide{
-                        afternoon1{"រសៀល"}
-                        evening1{"ល្ងាច"}
+                        afternoon1{"នៅពេលរសៀល"}
+                        evening1{"នៅពេល​ល្ងាច"}
                         midnight{"អធ្រាត្រ"}
-                        morning1{"ព្រឹក"}
-                        night1{"យប់"}
+                        morning1{"នៅពេល​ព្រឹក"}
+                        night1{"នៅពេល​យប់"}
                         noon{"ថ្ងៃត្រង់"}
                     }
                 }

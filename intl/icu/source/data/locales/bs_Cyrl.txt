@@ -166,7 +166,7 @@ bs_Cyrl{
             }
         }
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.41.34"}
     calendar{
         buddhist{
             eras{
@@ -1035,6 +1035,7 @@ bs_Cyrl{
                     "Таишо",
                     "Шова",
                     "Хаисеи",
+                    "Qqqq",
                 }
             }
         }

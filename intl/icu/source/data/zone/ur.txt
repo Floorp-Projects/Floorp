@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ur{
-    Version{"2.1.41.97"}
+    Version{"2.1.44.3"}
     zoneStrings{
         "Etc:UTC"{
             ls{"کوآرڈینیٹڈ یونیورسل ٹائم"}
@@ -621,7 +621,7 @@ ur{
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} وقت"}
-        regionFormatDaylight{"{0} (+1)"}
-        regionFormatStandard{"{0} (+0)"}
+        regionFormatDaylight{"{0} ڈے لائٹ ٹائم"}
+        regionFormatStandard{"{0} اسٹینڈرڈ ٹائم"}
     }
 }

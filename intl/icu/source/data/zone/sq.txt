@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sq{
-    Version{"2.1.41.97"}
+    Version{"2.1.43.50"}
     zoneStrings{
         "Etc:UTC"{
             ls{"Ora universale e koordinuar"}
@@ -35,7 +35,7 @@ sq{
             ls{"Ora standarde e Afrikës Perëndimore"}
         }
         "meta:Alaska"{
-            ld{"Ora verore e Alsaskës"}
+            ld{"Ora verore e Alaskës"}
             lg{"Ora e Alaskës"}
             ls{"Ora standarde e Alaskës"}
         }
@@ -156,9 +156,9 @@ sq{
             ls{"Ora e Bolivisë"}
         }
         "meta:Brasilia"{
-            ld{"Ora verore e Brasilës"}
-            lg{"Ora e Brasilës"}
-            ls{"Ora standarde e Brasilës"}
+            ld{"Ora verore e Brazilisë"}
+            lg{"Ora e Brazilisë"}
+            ls{"Ora standarde e Brazilisë"}
         }
         "meta:Brunei"{
             ls{"Ora e Brunei-Durasalamit"}
@@ -289,9 +289,9 @@ sq{
             ls{"Ora standarde e Grenlandës Lindore"}
         }
         "meta:Greenland_Western"{
-            ld{"Ora verore e Grenlandës Perëndimore"}
-            lg{"Ora e Grenlandës Perëndimore"}
-            ls{"Ora standarde e Grenlandës Perëndimore"}
+            ld{"Ora verore e Grënlandës Perëndimore"}
+            lg{"Ora e Grënlandës Perëndimore"}
+            ls{"Ora standarde e Grënlandës Perëndimore"}
         }
         "meta:Guam"{
             ls{"Ora e Guamit"}
@@ -380,7 +380,7 @@ sq{
             ls{"Ora standarde e Krasnojarskut"}
         }
         "meta:Kyrgystan"{
-            ls{"Ora e Kirgistanit"}
+            ls{"Ora e Kirgizisë"}
         }
         "meta:Lanka"{
             ls{"Ora e Lankasë"}
@@ -416,7 +416,7 @@ sq{
             ls{"Ora e Ishujve Markezë"}
         }
         "meta:Marshall_Islands"{
-            ls{"Ora e Ishujve Marshallë"}
+            ls{"Ora e Ishujve Marshall"}
         }
         "meta:Mauritius"{
             ld{"Ora verore e Mauritiusit"}
