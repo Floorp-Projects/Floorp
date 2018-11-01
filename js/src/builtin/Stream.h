@@ -80,34 +80,11 @@ class ReadableStream : public NativeObject
 
     bool locked() const;
 
-    void desiredSize(bool* hasSize, double* size) const;
-
     JS::ReadableStreamMode mode() const;
     uint8_t embeddingFlags() const;
 
-    static MOZ_MUST_USE bool close(JSContext* cx, Handle<ReadableStream*> stream);
     static MOZ_MUST_USE JSObject* cancel(JSContext* cx, Handle<ReadableStream*> stream,
                                          HandleValue reason);
-    static MOZ_MUST_USE bool error(JSContext* cx, Handle<ReadableStream*> stream,
-                                   HandleValue error);
-
-    static MOZ_MUST_USE ReadableStreamReader* getReader(JSContext* cx,
-                                                        Handle<ReadableStream*> stream,
-                                                        JS::ReadableStreamReaderMode mode);
-
-    static MOZ_MUST_USE bool tee(JSContext* cx,
-                                 Handle<ReadableStream*> stream, bool cloneForBranch2,
-                                 MutableHandle<ReadableStream*> branch1Stream,
-                                 MutableHandle<ReadableStream*> branch2Stream);
-
-    static MOZ_MUST_USE bool enqueue(JSContext* cx, Handle<ReadableStream*> stream,
-                                     HandleValue chunk);
-    static MOZ_MUST_USE bool getExternalSource(JSContext* cx, Handle<ReadableStream*> stream,
-                                               void** source);
-    void releaseExternalSource();
-    static MOZ_MUST_USE bool updateDataAvailableFromSource(JSContext* cx,
-                                                           Handle<ReadableStream*> stream,
-                                                           uint32_t availableData);
 
     enum State {
          Readable  = 1 << 0,
@@ -187,13 +164,6 @@ class ReadableStreamDefaultReader : public ReadableStreamReader
     static const ClassSpec protoClassSpec_;
     static const Class protoClass_;
 };
-
-bool ReadableStreamReaderIsClosed(const JSObject* reader);
-
-MOZ_MUST_USE bool ReadableStreamReaderCancel(JSContext* cx, HandleObject reader,
-                                             HandleValue reason);
-
-MOZ_MUST_USE bool ReadableStreamReaderReleaseLock(JSContext* cx, HandleObject reader);
 
 /**
  * Common base class of both readable and writable stream controllers.
