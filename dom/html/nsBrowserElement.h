@@ -17,7 +17,6 @@ class nsFrameLoader;
 namespace mozilla {
 
 namespace dom {
-struct BrowserElementDownloadOptions;
 struct BrowserElementExecuteScriptOptions;
 class DOMRequest;
 enum class BrowserFindCaseSensitivity: uint8_t;
@@ -57,11 +56,6 @@ public:
   void GoForward(ErrorResult& aRv);
   void Reload(bool aHardReload, ErrorResult& aRv);
   void Stop(ErrorResult& aRv);
-
-  already_AddRefed<dom::DOMRequest>
-  Download(const nsAString& aUrl,
-           const dom::BrowserElementDownloadOptions& options,
-           ErrorResult& aRv);
 
   already_AddRefed<dom::DOMRequest> PurgeHistory(ErrorResult& aRv);
 
