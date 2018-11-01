@@ -18,10 +18,11 @@ nb{
     NumberElements{
         arab{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
+                accountingFormat{"¤ #,##0.00"}
                 currencyFormat{"¤ #,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
@@ -44,7 +45,7 @@ nb{
         }
         arabext{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -71,7 +72,7 @@ nb{
         }
         bali{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -97,7 +98,7 @@ nb{
         }
         beng{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -123,7 +124,7 @@ nb{
         }
         brah{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -149,7 +150,7 @@ nb{
         }
         cakm{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -175,7 +176,7 @@ nb{
         }
         cham{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -202,7 +203,7 @@ nb{
         default{"latn"}
         deva{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -228,7 +229,7 @@ nb{
         }
         fullwide{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -254,7 +255,7 @@ nb{
         }
         gujr{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -280,7 +281,7 @@ nb{
         }
         guru{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -306,7 +307,7 @@ nb{
         }
         hanidec{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -332,7 +333,7 @@ nb{
         }
         java{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -358,7 +359,7 @@ nb{
         }
         kali{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -384,7 +385,7 @@ nb{
         }
         khmr{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -410,7 +411,7 @@ nb{
         }
         knda{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -436,7 +437,7 @@ nb{
         }
         lana{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -462,7 +463,7 @@ nb{
         }
         lanatham{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -488,7 +489,7 @@ nb{
         }
         laoo{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -514,7 +515,9 @@ nb{
         }
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -641,40 +644,40 @@ nb{
                         other{"000k"}
                     }
                     1000000{
-                        one{"0 mill"}
-                        other{"0 mill"}
+                        one{"0 mill'.'"}
+                        other{"0 mill'.'"}
                     }
                     10000000{
-                        one{"00 mill"}
-                        other{"00 mill"}
+                        one{"00 mill'.'"}
+                        other{"00 mill'.'"}
                     }
                     100000000{
-                        one{"000 mill"}
-                        other{"000 mill"}
+                        one{"000 mill'.'"}
+                        other{"000 mill'.'"}
                     }
                     1000000000{
-                        one{"0 mrd"}
-                        other{"0 mrd"}
+                        one{"0 mrd'.'"}
+                        other{"0 mrd'.'"}
                     }
                     10000000000{
-                        one{"00 mrd"}
-                        other{"00 mrd"}
+                        one{"00 mrd'.'"}
+                        other{"00 mrd'.'"}
                     }
                     100000000000{
-                        one{"000 mrd"}
-                        other{"000 mrd"}
+                        one{"000 mrd'.'"}
+                        other{"000 mrd'.'"}
                     }
                     1000000000000{
-                        one{"0 bill"}
-                        other{"0 bill"}
+                        one{"0 bill'.'"}
+                        other{"0 bill'.'"}
                     }
                     10000000000000{
-                        one{"00 bill"}
-                        other{"00 bill"}
+                        one{"00 bill'.'"}
+                        other{"00 bill'.'"}
                     }
                     100000000000000{
-                        one{"000 bill"}
-                        other{"000 bill"}
+                        one{"000 bill'.'"}
+                        other{"000 bill'.'"}
                     }
                 }
             }
@@ -695,7 +698,7 @@ nb{
         }
         lepc{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -721,7 +724,7 @@ nb{
         }
         limb{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -747,7 +750,7 @@ nb{
         }
         minimalPairs{
             ordinal{
-                other{"Ta {0}. svingen til høyre."}
+                other{"Ta {0}. sving til høyre."}
             }
             plural{
                 one{"{0} dag"}
@@ -757,7 +760,7 @@ nb{
         minimumGroupingDigits{"1"}
         mlym{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -783,7 +786,7 @@ nb{
         }
         mong{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -809,7 +812,7 @@ nb{
         }
         mtei{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -835,7 +838,7 @@ nb{
         }
         mymr{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -861,7 +864,7 @@ nb{
         }
         mymrshan{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -888,7 +891,7 @@ nb{
         native{"latn"}
         nkoo{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -914,7 +917,7 @@ nb{
         }
         olck{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -940,7 +943,7 @@ nb{
         }
         orya{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -966,7 +969,7 @@ nb{
         }
         osma{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -992,7 +995,7 @@ nb{
         }
         saur{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -1018,7 +1021,7 @@ nb{
         }
         shrd{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -1044,7 +1047,7 @@ nb{
         }
         sora{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -1070,7 +1073,7 @@ nb{
         }
         sund{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -1096,7 +1099,7 @@ nb{
         }
         takr{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -1122,7 +1125,7 @@ nb{
         }
         talu{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -1148,7 +1151,7 @@ nb{
         }
         tamldec{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -1174,7 +1177,7 @@ nb{
         }
         telu{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -1200,7 +1203,7 @@ nb{
         }
         thai{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -1226,7 +1229,7 @@ nb{
         }
         tibt{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -1252,7 +1255,7 @@ nb{
         }
         vaii{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -1277,7 +1280,7 @@ nb{
             }
         }
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.2"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1369,9 +1372,11 @@ nb{
                 }
                 fallback{"{0}–{1}"}
                 h{
+                    a{"h a–h a"}
                     h{"h–h a"}
                 }
                 hv{
+                    a{"h a–h a v"}
                     h{"h–h a v"}
                 }
                 y{
@@ -1434,6 +1439,7 @@ nb{
                 GyMMM{"MMM r(U)"}
                 GyMMMEd{"E d. MMM r(U)"}
                 GyMMMd{"d. MMM r"}
+                H{"HH"}
                 M{"L."}
                 MEd{"E dd.MM."}
                 MMM{"LLL"}
@@ -1446,6 +1452,7 @@ nb{
                 UMMMd{"d. MMM U"}
                 UMd{"d.MM. U"}
                 d{"d."}
+                h{"h a"}
                 y{"r(U)"}
                 yMd{"dd.MM.r"}
                 yyyy{"r(U)"}
@@ -2513,9 +2520,11 @@ nb{
                 }
                 fallback{"{0}–{1}"}
                 h{
+                    a{"h a–h a"}
                     h{"h–h a"}
                 }
                 hv{
+                    a{"h a–h a v"}
                     h{"h–h a v"}
                 }
                 y{
@@ -3735,9 +3744,11 @@ nb{
                 }
                 fallback{"{0}–{1}"}
                 h{
+                    a{"h a–h a"}
                     h{"h–h a"}
                 }
                 hv{
+                    a{"h a–h a v"}
                     h{"h–h a v"}
                 }
                 y{
@@ -4612,9 +4623,11 @@ nb{
                 }
                 fallback{"{0}–{1}"}
                 h{
+                    a{"h a–h a"}
                     h{"h–h a"}
                 }
                 hv{
+                    a{"h a–h a v"}
                     h{"h–h a v"}
                 }
                 y{
@@ -4846,9 +4859,11 @@ nb{
                 }
                 fallback{"{0}–{1}"}
                 h{
+                    a{"h a–h a"}
                     h{"h–h a"}
                 }
                 hv{
+                    a{"h a–h a v"}
                     h{"h–h a v"}
                 }
                 y{
@@ -5068,9 +5083,11 @@ nb{
                 }
                 fallback{"{0}–{1}"}
                 h{
+                    a{"h a–h a"}
                     h{"h–h a"}
                 }
                 hv{
+                    a{"h a–h a v"}
                     h{"h–h a v"}
                 }
                 y{
@@ -5483,6 +5500,7 @@ nb{
                     "Taishō",
                     "Shōwa",
                     "Heisei",
+                    "Qqqq",
                 }
                 narrow{
                     "Taika (645–650)",
@@ -5721,6 +5739,7 @@ nb{
                     "T",
                     "S",
                     "H",
+                    "Q",
                 }
                 wide{
                     "Taika (645–650)",
@@ -5959,6 +5978,7 @@ nb{
                     "Taishō",
                     "Shōwa",
                     "Heisei",
+                    "Qqqq",
                 }
             }
             intervalFormats{
@@ -5995,9 +6015,11 @@ nb{
                 }
                 fallback{"{0}–{1}"}
                 h{
+                    a{"h a–h a"}
                     h{"h–h a"}
                 }
                 hv{
+                    a{"h a–h a v"}
                     h{"h–h a v"}
                 }
                 y{
@@ -6127,9 +6149,11 @@ nb{
                 }
                 fallback{"{0}–{1}"}
                 h{
+                    a{"h a–h a"}
                     h{"h–h a"}
                 }
                 hv{
+                    a{"h a–h a v"}
                     h{"h–h a v"}
                 }
                 y{
@@ -6352,9 +6376,11 @@ nb{
                 }
                 fallback{"{0}–{1}"}
                 h{
+                    a{"h a–h a"}
                     h{"h–h a"}
                 }
                 hv{
+                    a{"h a–h a v"}
                     h{"h–h a v"}
                 }
                 y{

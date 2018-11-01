@@ -13,7 +13,7 @@ en_BE{
             }
         }
     }
-    Version{"2.1.38.69"}
+    Version{"2.1.44.18"}
     calendar{
         generic{
             DateTimePatterns{
@@ -32,7 +32,6 @@ en_BE{
                 "{1}, {0}",
             }
             availableFormats{
-                MEd{"E, d/M"}
                 Md{"d/M"}
                 yyyyMEd{"E, d/M/y G"}
                 yyyyMd{"d/M/y G"}

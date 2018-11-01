@@ -39,7 +39,7 @@ wo{
             "Franc CFA bu Afrik Sowwu-jant",
         }
         XXX{
-            "XXX",
+            "¤",
             "Xaalis buñ Xamul",
         }
     }
@@ -88,5 +88,5 @@ wo{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.38.71"}
+    Version{"2.1.43.94"}
 }

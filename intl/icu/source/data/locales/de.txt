@@ -25,7 +25,9 @@ de{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"≈{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -216,7 +218,7 @@ de{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     calendar{
         buddhist{
             eras{
@@ -903,7 +905,7 @@ de{
                 }
                 MEd{
                     M{"E, dd.MM. – E, dd.MM."}
-                    d{"E, dd.MM. – E, dd.MM."}
+                    d{"E, dd. – E, dd.MM."}
                 }
                 MMM{
                     M{"MMM–MMM"}
@@ -921,7 +923,7 @@ de{
                 }
                 Md{
                     M{"dd.MM. – dd.MM."}
-                    d{"dd.MM. – dd.MM."}
+                    d{"dd.–dd.MM."}
                 }
                 d{
                     d{"d.–d."}
@@ -953,8 +955,8 @@ de{
                     y{"MM.y – MM.y"}
                 }
                 yMEd{
-                    M{"E, dd.MM.y – E, dd.MM.y"}
-                    d{"E, dd.MM.y – E, dd.MM.y"}
+                    M{"E, dd.MM. – E, dd.MM.y"}
+                    d{"E, dd. – E, dd.MM.y"}
                     y{"E, dd.MM.y – E, dd.MM.y"}
                 }
                 yMMM{
@@ -976,8 +978,8 @@ de{
                     y{"d. MMM y – d. MMM y"}
                 }
                 yMd{
-                    M{"dd.MM.y – dd.MM.y"}
-                    d{"dd.MM.y – dd.MM.y"}
+                    M{"dd.MM. – dd.MM.y"}
+                    d{"dd.–dd.MM.y"}
                     y{"dd.MM.y – dd.MM.y"}
                 }
             }
@@ -992,7 +994,7 @@ de{
                         "Juni",
                         "Juli",
                         "Aug.",
-                        "Sep.",
+                        "Sept.",
                         "Okt.",
                         "Nov.",
                         "Dez.",
@@ -1601,6 +1603,7 @@ de{
                     "Taishō",
                     "Shōwa",
                     "Heisei",
+                    "Qqqq",
                 }
             }
         }
@@ -2666,8 +2669,13 @@ de{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

@@ -837,7 +837,7 @@ it{
         }
         STN{
             "STN",
-            "dobra di Sao Tomé e Principe",
+            "dobra di Sao Tomé e Príncipe",
         }
         SUR{
             "SUR",
@@ -957,6 +957,10 @@ it{
         }
         VEF{
             "VEF",
+            "bolívar venezuelano (2008–2018)",
+        }
+        VES{
+            "VES",
             "bolívar venezuelano",
         }
         VND{
@@ -1040,7 +1044,7 @@ it{
             "codice di verifica della valuta",
         }
         XXX{
-            "XXX",
+            "¤",
             "valuta sconosciuta",
         }
         YDD{
@@ -1738,8 +1742,8 @@ it{
             other{"dobra di Sao Tomé e Principe (1977–2017)"}
         }
         STN{
-            one{"dobra di Sao Tomé e Principe"}
-            other{"dobra di Sao Tomé e Principe"}
+            one{"dobra di Sao Tomé e Príncipe"}
+            other{"dobra di Sao Tomé e Príncipe"}
         }
         SYP{
             one{"lira siriana"}
@@ -1814,6 +1818,10 @@ it{
             other{"bolivares venezuelani (1871–2008)"}
         }
         VEF{
+            one{"bolívar venezuelano (2008–2018)"}
+            other{"bolívares venezuelani (2008–2018)"}
+        }
+        VES{
             one{"bolívar venezuelano"}
             other{"bolívares venezuelani"}
         }
@@ -1870,5 +1878,5 @@ it{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.86"}
 }

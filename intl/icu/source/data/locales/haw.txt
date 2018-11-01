@@ -7,7 +7,7 @@ haw{
     NumberElements{
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -32,7 +32,7 @@ haw{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.38.69"}
+    Version{"2.1.43.94"}
     calendar{
         generic{
             DateTimePatterns{

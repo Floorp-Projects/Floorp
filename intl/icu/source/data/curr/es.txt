@@ -962,6 +962,10 @@ es{
             "UYU",
             "peso uruguayo",
         }
+        UYW{
+            "UYW",
+            "unidad previsional uruguayo",
+        }
         UZS{
             "UZS",
             "sum",
@@ -972,6 +976,10 @@ es{
         }
         VEF{
             "VEF",
+            "bolívar venezolano (2008–2018)",
+        }
+        VES{
+            "VES",
             "bolívar venezolano",
         }
         VND{
@@ -1059,7 +1067,7 @@ es{
             "código reservado para pruebas",
         }
         XXX{
-            "XXX",
+            "¤",
             "moneda desconocida",
         }
         YDD{
@@ -2100,6 +2108,10 @@ es{
             one{"peso uruguayo"}
             other{"pesos uruguayos"}
         }
+        UYW{
+            one{"unidad previsional uruguayo"}
+            other{"unidades previsionales uruguayos"}
+        }
         UZS{
             one{"sum"}
             other{"sums"}
@@ -2109,6 +2121,10 @@ es{
             other{"bolívares venezolanos (1871–2008)"}
         }
         VEF{
+            one{"bolívar venezolano (2008–2018)"}
+            other{"bolívares venezolanos (2008–2018)"}
+        }
+        VES{
             one{"bolívar venezolano"}
             other{"bolívares venezolanos"}
         }
@@ -2213,5 +2229,5 @@ es{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.88"}
 }

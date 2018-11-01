@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 de{
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     zoneStrings{
         "Etc:UTC"{
             ls{"Koordinierte Weltzeit"}
@@ -161,7 +161,7 @@ de{
             ls{"Brasília-Normalzeit"}
         }
         "meta:Brunei"{
-            ls{"Brunei-Zeit"}
+            ls{"Brunei-Darussalam-Zeit"}
         }
         "meta:Cape_Verde"{
             ld{"Cabo-Verde-Sommerzeit"}
@@ -533,9 +533,9 @@ de{
             ls{"Phoenixinseln-Zeit"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"Saint-Pierre-und-Miquelon-Sommerzeit"}
-            lg{"Saint-Pierre-und-Miquelon-Zeit"}
-            ls{"Saint-Pierre-und-Miquelon-Normalzeit"}
+            ld{"St.-Pierre-und-Miquelon-Sommerzeit"}
+            lg{"St.-Pierre-und-Miquelon-Zeit"}
+            ls{"St.-Pierre-und-Miquelon-Normalzeit"}
         }
         "meta:Pitcairn"{
             ls{"Pitcairninseln-Zeit"}
@@ -579,7 +579,7 @@ de{
             ls{"Singapur-Zeit"}
         }
         "meta:Solomon"{
-            ls{"Salomoninseln-Zeit"}
+            ls{"Salomonen-Zeit"}
         }
         "meta:South_Georgia"{
             ls{"Südgeorgische Zeit"}

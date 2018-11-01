@@ -142,7 +142,7 @@ ug{
         }
         native{"arabext"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.88"}
     calendar{
         buddhist{
             eras{
@@ -406,8 +406,8 @@ ug{
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
                 yw{
-                    one{"y، w-ھەپتە"}
-                    other{"y، w-ھەپتە"}
+                    one{"Y، w-ھەپتە"}
+                    other{"Y، w-ھەپتە"}
                 }
             }
             dayNames{

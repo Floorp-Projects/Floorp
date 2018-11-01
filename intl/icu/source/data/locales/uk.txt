@@ -22,11 +22,13 @@ uk{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"#,##0.00¤;(#,##0.00¤)"}
+                accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -288,7 +290,7 @@ uk{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
     calendar{
         buddhist{
             eras{
@@ -873,7 +875,7 @@ uk{
                         afternoon1{"день"}
                         am{"дп"}
                         evening1{"вечір"}
-                        midnight{"північ"}
+                        midnight{"опівніч"}
                         morning1{"ранок"}
                         night1{"ніч"}
                         noon{"полудень"}
@@ -1463,9 +1465,9 @@ uk{
         female{"жінка"}
         flag{"прапор"}
         flags{"прапори"}
-        food_drink{"їжа і напої"}
+        food_drink{"їжа та напої"}
         format{"формат"}
-        format_whitespace{"формат і пробільний знак"}
+        format_whitespace{"формат і знак пробілу"}
         full_width_form_variant{"варіант повної ширини"}
         geometric_shapes{"геометрична фігура"}
         half_width_form_variant{"варіант половинної ширини"}
@@ -1487,7 +1489,7 @@ uk{
         limited_use{"обмеженого вжитку"}
         male{"чоловік"}
         math_symbols{"математичний символ"}
-        middle_eastern_scripts{"письмо Середнього Сходу"}
+        middle_eastern_scripts{"письмо Близького Сходу"}
         miscellaneous{"некласифікований"}
         modern_scripts{"сучасне письмо"}
         modifier{"модифікатор"}
@@ -1507,7 +1509,7 @@ uk{
         rightwards_arrows{"Стрілки вправо"}
         sign_standard_symbols{"знак чи символ"}
         small_form_variant{"малі варіанти"}
-        smiley{"смалик"}
+        smiley{"смайлик"}
         smileys_people{"смайлик чи людина"}
         south_asian_scripts{"південноазійське письмо"}
         southeast_asian_scripts{"південно-східне азійське письмо"}
@@ -1523,7 +1525,7 @@ uk{
         vocalic_jamo{"Корейські голосні"}
         weather{"погода"}
         western_asian_scripts{"західноазійське письмо"}
-        whitespace{"Пробіл"}
+        whitespace{"пробіл"}
     }
     contextTransforms{
         day-format-except-narrow:intvector{
@@ -1587,7 +1589,7 @@ uk{
             }
         }
         day-narrow{
-            dn{"д."}
+            dn{"д"}
             relative{
                 "-1"{"учора"}
                 "-2"{"позавчора"}
@@ -1641,7 +1643,7 @@ uk{
             dn{"день року"}
         }
         dayOfYear-short{
-            dn{"день року"}
+            dn{"д. року"}
         }
         dayperiod{
             dn{"дп/пп"}
@@ -1765,7 +1767,7 @@ uk{
             }
         }
         hour-short{
-            dn{"год"}
+            dn{"год."}
             relative{
                 "0"{"цієї години"}
             }
@@ -1825,7 +1827,7 @@ uk{
             }
         }
         minute-short{
-            dn{"хв"}
+            dn{"хв."}
             relative{
                 "0"{"цієї хвилини"}
             }
@@ -1930,7 +1932,7 @@ uk{
             }
         }
         month-narrow{
-            dn{"міс."}
+            dn{"м"}
             relative{
                 "-1"{"минулого місяця"}
                 "0"{"цього місяця"}
@@ -2438,7 +2440,7 @@ uk{
             }
         }
         week-narrow{
-            dn{"тиж."}
+            dn{"т"}
             relative{
                 "-1"{"минулого тижня"}
                 "0"{"цього тижня"}
@@ -2487,7 +2489,7 @@ uk{
             dn{"тиждень місяця"}
         }
         weekOfMonth-narrow{
-            dn{"тиж. місяця"}
+            dn{"тиж. міс."}
         }
         weekOfMonth-short{
             dn{"тиж. місяця"}
@@ -2496,19 +2498,19 @@ uk{
             dn{"день тижня"}
         }
         weekday-narrow{
-            dn{"день тижня"}
+            dn{"д тижня"}
         }
         weekday-short{
-            dn{"день тижня"}
+            dn{"д. тижня"}
         }
         weekdayOfMonth{
             dn{"день місяця"}
         }
         weekdayOfMonth-narrow{
-            dn{"день місяця"}
+            dn{"д місяця"}
         }
         weekdayOfMonth-short{
-            dn{"день місяця"}
+            dn{"д. місяця"}
         }
         year{
             dn{"рік"}
@@ -2533,7 +2535,7 @@ uk{
             }
         }
         year-narrow{
-            dn{"р."}
+            dn{"р"}
             relative{
                 "-1"{"торік"}
                 "0"{"цього року"}
@@ -2580,10 +2582,10 @@ uk{
             dn{"часовий пояс"}
         }
         zone-narrow{
-            dn{"часовий пояс"}
+            dn{"час. п."}
         }
         zone-short{
-            dn{"часовий пояс"}
+            dn{"час. пояс"}
         }
     }
     listPattern{
@@ -2639,8 +2641,13 @@ uk{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

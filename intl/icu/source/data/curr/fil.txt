@@ -396,7 +396,7 @@ fil{
         }
         MRU{
             "MRU",
-            "Mauritanian Ouguiya",
+            "Ouguiya ng Mauritania",
         }
         MUR{
             "MUR",
@@ -556,7 +556,7 @@ fil{
         }
         STN{
             "STN",
-            "São Tomé & Príncipe Dobra",
+            "São Tomé & Príncipe Dobra (2018)",
         }
         SYP{
             "SYP",
@@ -628,6 +628,10 @@ fil{
         }
         VEF{
             "VEF",
+            "Bolívar ng Venezuela (2008–2018)",
+        }
+        VES{
+            "VES",
             "Bolívar ng Venezuela",
         }
         VND{
@@ -659,7 +663,7 @@ fil{
             "CFP Franc",
         }
         XXX{
-            "XXX",
+            "¤",
             "Hindi Kilalang Pera",
         }
         YER{
@@ -1377,6 +1381,10 @@ fil{
             other{"Uzbekistan som"}
         }
         VEF{
+            one{"bolívar ng Venezuela (2008–2018)"}
+            other{"bolívars ng Venezuela (2008–2018)"}
+        }
+        VES{
             one{"bolívar ng Venezuela"}
             other{"bolívars ng Venezuela"}
         }
@@ -1429,5 +1437,5 @@ fil{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
 }
