@@ -24,21 +24,6 @@ interface BrowserElementPrivileged {
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   Func="TouchEvent::PrefEnabled",
-   ChromeOnly]
-  void sendTouchEvent(DOMString type,
-                      sequence<unsigned long> identifiers,
-                      sequence<long> x,
-                      sequence<long> y,
-                      sequence<unsigned long> rx,
-                      sequence<unsigned long> ry,
-                      sequence<float> rotationAngles,
-                      sequence<float> forces,
-                      unsigned long count,
-                      unsigned long modifiers);
-
-  [Throws,
-   Pref="dom.mozBrowserFramesEnabled",
    ChromeOnly]
   void goBack();
 

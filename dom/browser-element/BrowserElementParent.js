@@ -534,31 +534,6 @@ BrowserElementParent.prototype = {
     });
   }),
 
-  sendTouchEvent: defineNoReturnMethod(function(type, identifiers, touchesX, touchesY,
-                                                radiisX, radiisY, rotationAngles, forces,
-                                                count, modifiers) {
-
-    let offset = this.getChildProcessOffset();
-    for (var i = 0; i < touchesX.length; i++) {
-      touchesX[i] += offset.x;
-    }
-    for (var i = 0; i < touchesY.length; i++) {
-      touchesY[i] += offset.y;
-    }
-    this._sendAsyncMsg("send-touch-event", {
-      "type": type,
-      "identifiers": identifiers,
-      "touchesX": touchesX,
-      "touchesY": touchesY,
-      "radiisX": radiisX,
-      "radiisY": radiisY,
-      "rotationAngles": rotationAngles,
-      "forces": forces,
-      "count": count,
-      "modifiers": modifiers
-    });
-  }),
-
   getCanGoBack: defineDOMRequestMethod('get-can-go-back'),
   getCanGoForward: defineDOMRequestMethod('get-can-go-forward'),
 
