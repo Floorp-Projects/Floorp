@@ -93,7 +93,7 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     // the Omnijar sources.  To do this, the Gradle build calls out to the
     // moz.build system, which can be re-entrant.  Official builds are driven by
     // the moz.build system and should never be re-entrant in this way.
-    if (!((variant.productFlavors*.name).contains('official'))) {
+    if (!mozconfig.substs.MOZILLA_OFFICIAL) {
         syncOmnijarFromDistDir.dependsOn buildOmnijars
     }
 
