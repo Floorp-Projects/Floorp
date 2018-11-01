@@ -168,7 +168,9 @@ function checkUptakeTelemetry(snapshot1, snapshot2, expectedIncrements) {
   for (const label of LABELS) {
     const key = LABELS.indexOf(label);
     const expected = expectedIncrements[label] || 0;
-    const actual = snapshot2.counts[key] - snapshot1.counts[key];
-    equal(expected, actual, `check histogram count for ${label}`);
+    let value1 = snapshot1.values[key] || 0;
+    let value2 = snapshot2.values[key] || 0;
+    const actual = value2 - value1;
+    equal(expected, actual, `check histogram values for ${label}`);
   }
 }

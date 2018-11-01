@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/GeckoViewContentModule.jsm");
+ChromeUtils.import("resource://gre/modules/GeckoViewChildModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -17,7 +17,7 @@ const USER_AGENT_MODE_DESKTOP = 1;
 // Handles GeckoView content settings including:
 // * tracking protection
 // * user agent mode
-class GeckoViewContentSettings extends GeckoViewContentModule {
+class GeckoViewSettingsChild extends GeckoViewChildModule {
   onInit() {
     debug `onInit`;
     this._userAgentMode = USER_AGENT_MODE_MOBILE;
@@ -29,6 +29,7 @@ class GeckoViewContentSettings extends GeckoViewContentModule {
     this.displayMode = this.settings.displayMode;
     this.useTrackingProtection = !!this.settings.useTrackingProtection;
     this.userAgentMode = this.settings.userAgentMode;
+    this.allowJavascript = this.settings.allowJavascript;
   }
 
   get useTrackingProtection() {
@@ -64,7 +65,15 @@ class GeckoViewContentSettings extends GeckoViewContentModule {
       docShell.displayMode = aMode;
     }
   }
+
+  get allowJavascript() {
+    return docShell.allowJavascript;
+  }
+
+  set allowJavascript(aAllowJavascript) {
+    docShell.allowJavascript = aAllowJavascript;
+  }
 }
 
-let {debug, warn} = GeckoViewContentSettings.initLogging("GeckoViewSettings");
-let module = GeckoViewContentSettings.create(this);
+let {debug, warn} = GeckoViewSettingsChild.initLogging("GeckoViewSettings");
+let module = GeckoViewSettingsChild.create(this);

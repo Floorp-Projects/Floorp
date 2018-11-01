@@ -4,14 +4,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=352728
 -->
 <head>
   <title>Test for Bug 352728</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=352728">Mozilla Bug 352728</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <!-- First make sure that a script consisting of multiple CDATA sections is
@@ -45,8 +45,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=352728
 function checkTypes(aNode, aNodeType, aTypeArray)
 {
   for (var i = 0; i < aTypeArray.length; ++i) {
-    ok(aNode instanceof aTypeArray[i], aNodeType + " type test " + i,
-       aNodeType + " should be a " + aTypeArray[i]);
+    ok(
+      aNode instanceof aTypeArray[i],
+      aNodeType + " type test " + i + " - " +
+      aNodeType + " should be a " + aTypeArray[i]
+    );
   }
 }
 
@@ -54,7 +57,7 @@ function checkInterfaces(aNode, aNodeType, aInterfaceArray)
 {
   for (var i = 0; i < aInterfaceArray.length; ++i) {
     ok(aNode instanceof SpecialPowers.Ci[aInterfaceArray[i]],
-       aNodeType + " interface test " + i,
+       aNodeType + " interface test " + i + " - " +
        aNodeType + " should be a " + aInterfaceArray[i]);
   }
 }
@@ -82,7 +85,7 @@ function testComment(aText)
     is(comment.nodeName, "#comment", "Check nodeName");
     is(comment.nodeType, Node.COMMENT_NODE, "Check nodeType");
   } catch (e) {
-    ok(0, "Correct functioning of comment stuff", "something broke: " + e);
+    ok(false, "Correct functioning of comment stuff - something broke: " + e);
   }
 }
 
@@ -101,15 +104,15 @@ function testCDATASection(aText, aShouldSucceed)
     is(cdataSection.nodeType, Node.CDATA_SECTION_NODE, "Check nodeType");
 
     if (!aShouldSucceed) {
-      ok(0, "Invalid CDATA section creation",
+      ok(0, "Invalid CDATA section creation - " +
 ]]>
          "Shouldn't create CDATA section with embedded \"]]&gt;\"");
 <![CDATA[
     }
   } catch (e) {
     if (aShouldSucceed) {
-      ok(0, "Correct functioning of CDATA section stuff",
-         "something broke: " + e);
+      ok(false,
+        "Correct functioning of CDATA section stuff - something broke: " + e);
     } else {
       is(e.name, "InvalidCharacterError", "Check exception");
       is(e.code, DOMException.INVALID_CHARACTER_ERR, "Check exception code");
@@ -133,15 +136,16 @@ function testPI(aTarget, aData, aShouldSucceed, aReason)
     is(pi.nodeValue, aData, "Check nodeValue");
     is(pi.localName, undefined, "Check localName")
     is(pi.namespaceURI, undefined, "Check namespaceURI");
-    
+
     is(pi.nodeType, Node.PROCESSING_INSTRUCTION_NODE, "Check nodeType");
 
     if (!aShouldSucceed) {
-      ok(0, "Invalid processing instruction creation", aReason);
+      ok(false, "Invalid processing instruction creation - " + aReason);
     }
   } catch (e) {
     if (aShouldSucceed) {
-      ok(0, "Correct functioning of processing instruction stuff",
+      ok(false,
+         "Correct functioning of processing instruction stuff - " +
          "something broke: " + e);
     } else {
       is(e.name, "InvalidCharacterError", "Check exception");

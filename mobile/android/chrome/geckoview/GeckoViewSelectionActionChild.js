@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/GeckoViewContentModule.jsm");
+ChromeUtils.import("resource://gre/modules/GeckoViewChildModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 // Dispatches GeckoView:ShowSelectionAction and GeckoView:HideSelectionAction to
 // the GeckoSession on accessible caret changes.
-class GeckoViewSelectionActionContent extends GeckoViewContentModule {
+class GeckoViewSelectionActionChild extends GeckoViewChildModule {
   constructor(aModuleName, aMessageManager) {
     super(aModuleName, aMessageManager);
 
@@ -246,5 +246,5 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
 }
 
 let {debug, warn} =
-    GeckoViewSelectionActionContent.initLogging("GeckoViewSelectionAction");
-let module = GeckoViewSelectionActionContent.create(this);
+    GeckoViewSelectionActionChild.initLogging("GeckoViewSelectionAction");
+let module = GeckoViewSelectionActionChild.create(this);

@@ -99,7 +99,7 @@ class IonBuilder
     AbortReasonOr<Ok> visitBlock(const CFGBlock* hblock, MBasicBlock* mblock);
     AbortReasonOr<Ok> visitControlInstruction(CFGControlInstruction* ins, bool* restarted);
     AbortReasonOr<Ok> visitTest(CFGTest* test);
-    AbortReasonOr<Ok> visitCompare(CFGCompare* compare);
+    AbortReasonOr<Ok> visitCondSwitchCase(CFGCondSwitchCase* switchCase);
     AbortReasonOr<Ok> visitLoopEntry(CFGLoopEntry* loopEntry);
     AbortReasonOr<Ok> visitReturn(CFGControlInstruction* ins);
     AbortReasonOr<Ok> visitGoto(CFGGoto* ins);

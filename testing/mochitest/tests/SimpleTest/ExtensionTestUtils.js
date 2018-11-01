@@ -55,19 +55,19 @@ ExtensionTestUtils.loadExtension = function(ext)
 
   function testHandler(kind, pass, msg, ...args) {
     if (kind == "test-eq") {
-      let [expected, actual, stack] = args;
-      SimpleTest.ok(pass, `${msg} - Expected: ${expected}, Actual: ${actual}`, undefined, stack);
+      let [expected, actual] = args;
+      SimpleTest.ok(pass, `${msg} - Expected: ${expected}, Actual: ${actual}`);
     } else if (kind == "test-log") {
       SimpleTest.info(msg);
     } else if (kind == "test-result") {
-      SimpleTest.ok(pass, msg, undefined, args[0]);
+      SimpleTest.ok(pass, msg);
     }
   }
 
   var handler = {
     testResult(kind, pass, msg, ...args) {
       if (kind == "test-done") {
-        SimpleTest.ok(pass, msg, undefined, args[0]);
+        SimpleTest.ok(pass, msg);
         return testResolve(msg);
       }
       testHandler(kind, pass, msg, ...args);

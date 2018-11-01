@@ -2,15 +2,15 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-/* exported IS_OOP, arraySum, clearHistograms, getSnapshots, promiseTelemetryRecorded */
+/* exported IS_OOP, valueSum, clearHistograms, getSnapshots, promiseTelemetryRecorded */
 
 ChromeUtils.defineModuleGetter(this, "ContentTaskUtils",
                                "resource://testing-common/ContentTaskUtils.jsm");
 
 const IS_OOP = Services.prefs.getBoolPref("extensions.webextensions.remote");
 
-function arraySum(arr) {
-  return arr.reduce((a, b) => a + b, 0);
+function valueSum(arr) {
+  return Object.values(arr).reduce((a, b) => a + b, 0);
 }
 
 function clearHistograms() {
@@ -37,7 +37,7 @@ function promiseTelemetryRecorded(id, process, expectedCount) {
   let condition = () => {
     let snapshot = Services.telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
                                                          false /* clear */)[process][id];
-    return snapshot && arraySum(snapshot.counts) >= expectedCount;
+    return snapshot && valueSum(snapshot.values) >= expectedCount;
   };
   return ContentTaskUtils.waitForCondition(condition);
 }
@@ -46,7 +46,7 @@ function promiseKeyedTelemetryRecorded(id, process, expectedKey, expectedCount) 
   let condition = () => {
     let snapshot = Services.telemetry.snapshotKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
                                                               false /* clear */)[process][id];
-    return snapshot && snapshot[expectedKey] && arraySum(snapshot[expectedKey].counts) >= expectedCount;
+    return snapshot && snapshot[expectedKey] && valueSum(snapshot[expectedKey].values) >= expectedCount;
   };
   return ContentTaskUtils.waitForCondition(condition);
 }

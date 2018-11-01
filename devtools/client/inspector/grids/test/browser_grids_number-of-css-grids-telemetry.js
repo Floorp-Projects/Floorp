@@ -44,6 +44,5 @@ function checkResults() {
   // Check for:
   //   - 1 CSS Grid Element
   checkTelemetry("DEVTOOLS_NUMBER_OF_CSS_GRIDS_IN_A_PAGE", "",
-    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "array");
+    {0: 0, 1: 1, 2: 0}, "array");
 }

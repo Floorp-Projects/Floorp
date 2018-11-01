@@ -187,6 +187,7 @@ public class GeckoSessionTestRule implements TestRule {
         enum Key {
             CHROME_URI,
             DISPLAY_MODE,
+            ALLOW_JAVASCRIPT,
             SCREEN_ID,
             USE_MULTIPROCESS,
             USE_PRIVATE_MODE,

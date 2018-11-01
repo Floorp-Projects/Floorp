@@ -7,9 +7,9 @@
 
 #include "mozcontainer.h"
 #include <gtk/gtk.h>
-#ifdef MOZ_WAYLAND
 #include <gdk/gdkx.h>
-#include <gdk/gdkwayland.h>
+#ifdef MOZ_WAYLAND
+#include "mozwayland/mozwayland.h"
 #include <wayland-egl.h>
 #endif
 #include <stdio.h>
