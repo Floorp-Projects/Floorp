@@ -506,6 +506,7 @@ def build_docker_worker_payload(config, task, task_def):
 
     if worker.get('taskcluster-proxy'):
         features['taskclusterProxy'] = True
+        worker['env']['TASKCLUSTER_PROXY_URL'] = 'http://taskcluster/'
 
     if worker.get('allow-ptrace'):
         features['allowPtrace'] = True
@@ -816,6 +817,7 @@ def build_generic_worker_payload(config, task, task_def):
 
     if worker.get('taskcluster-proxy'):
         features['taskclusterProxy'] = True
+        worker['env']['TASKCLUSTER_PROXY_URL'] = 'http://taskcluster/'
 
     if worker.get('run-as-administrator', False):
         features['runAsAdministrator'] = True

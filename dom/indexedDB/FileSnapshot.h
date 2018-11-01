@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/File.h"
 #include "nsISupports.h"
-#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 
 #define FILEIMPLSNAPSHOT_IID \
   {0x0dfc11b1, 0x75d3, 0x473b, {0x8c, 0x67, 0xb7, 0x23, 0xf4, 0x67, 0xd6, 0x73}}

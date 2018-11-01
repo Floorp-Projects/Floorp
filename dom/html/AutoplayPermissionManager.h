@@ -12,7 +12,6 @@
 #include "nsIContentPermissionPrompt.h"
 #include "nsISupports.h"
 #include "nsIWeakReferenceUtils.h"
-#include "nsWeakReference.h"
 
 class nsGlobalWindowInner;
 class nsIEventTarget;

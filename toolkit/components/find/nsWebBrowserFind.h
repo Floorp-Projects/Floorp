@@ -10,7 +10,7 @@
 #include "nsIWebBrowserFind.h"
 
 #include "nsCOMPtr.h"
-#include "nsWeakReference.h"
+#include "nsIWeakReferenceUtils.h"
 
 #include "nsIFind.h"
 

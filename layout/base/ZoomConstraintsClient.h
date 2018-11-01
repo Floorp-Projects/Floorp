@@ -11,7 +11,6 @@
 #include "mozilla/Maybe.h"
 #include "nsIDOMEventListener.h"
 #include "nsIObserver.h"
-#include "nsWeakPtr.h"
 
 class nsIDocument;
 class nsIPresShell;

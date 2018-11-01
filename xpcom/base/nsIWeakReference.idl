@@ -111,11 +111,3 @@ interface nsISupportsWeakReference : nsISupports
      */
     nsIWeakReference GetWeakReference();
   };
-
-
-%{C++
-#ifdef MOZILLA_INTERNAL_API
-#include "nsIWeakReferenceUtils.h"
-#endif
-%}
-

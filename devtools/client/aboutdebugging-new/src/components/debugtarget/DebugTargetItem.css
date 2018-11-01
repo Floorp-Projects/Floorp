@@ -6,34 +6,38 @@
  * The current layout of debug target item is
  *
  *  +--------+-----------------------------+----------------+
- *  |  Icon  | Information                 | Inspect button |
- *  |        |+---------------------------+|                |
- *  |        || Name                      ||                |
- *  |        |+---------------------------+|                |
- *  |        || Detail                    ||                |
- *  |        |+---------------------------+|                |
+ *  | [Icon] | Name                        | Action button  |
  *  +--------+-----------------------------+----------------+
+ *  |        | Detail                                       |
+ *  |        |                                              |
+ *  +--------+----------------------------------------------+
  */
 .debug-target-item {
   display: grid;
-  grid-template-columns: calc(var(--base-distance) * 10) auto max-content;
-  grid-template-rows: auto auto;
-  grid-row-gap: calc(var(--base-distance) * 5);
+  grid-template-columns: calc(var(--base-distance) * 9) 1fr max-content;
   grid-column-gap: calc(var(--base-distance) * 2);
+  grid-template-areas: "icon name   action"
+                       ".    detail detail";
+  margin-block-end: calc(var(--base-distance) * 4);
 }
 
 .debug-target-item__icon {
-  height: 36px;
-  width: 36px;
-  justify-self: center;
+  grid-area: icon;
+  width: 100%;
 }
 
-.debug-target-item__info {
+.debug-target-item__name {
+  grid-area: name;
   /* so as to ellipsis */
   min-width: 0;
+  font-size: calc(var(--base-distance) * 5);
 }
 
-.debug-target-item__info__name {
-  font-size: 20px;
-  margin-block-end: 2px;
+.debug-target-item__action {
+  grid-area: action;
+  align-self: center;
+}
+
+.debug-target-item__detail {
+  grid-area: detail;
 }

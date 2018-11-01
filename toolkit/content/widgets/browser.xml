@@ -1942,6 +1942,17 @@
           return true;
         ]]></body>
       </method>
+
+      <method name="getContentBlockingLog">
+        <body><![CDATA[
+          if (this.isRemoteBrowser) {
+            return this.frameLoader.tabParent.getContentBlockingLog();
+          }
+          return this.docShell ?
+                   this.docShell.getContentBlockingLog() :
+                   Promise.reject("docshell isn't available");
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>

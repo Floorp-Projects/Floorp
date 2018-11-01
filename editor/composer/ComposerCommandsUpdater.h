@@ -14,7 +14,6 @@
 #include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS
 #include "nsITimer.h"                   // for NS_DECL_NSITIMERCALLBACK, etc
 #include "nsITransactionListener.h"     // for nsITransactionListener
-#include "nsIWeakReferenceUtils.h"      // for nsWeakPtr
 #include "nscore.h"                     // for NS_IMETHOD, nsresult, etc
 
 class nsIDocShell;

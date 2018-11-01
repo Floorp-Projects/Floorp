@@ -62,7 +62,7 @@ protected:
 
   already_AddRefed<mozilla::dom::ChildSHistory> GetSessionHistory() const;
 
-  nsCOMPtr<nsIWeakReference> mInnerWindow;
+  nsWeakPtr mInnerWindow;
 };
 
 #endif /* nsHistory_h___ */

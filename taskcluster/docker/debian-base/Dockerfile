@@ -13,6 +13,10 @@ RUN mkdir /builds && \
 # Declare default working folder
 WORKDIR /builds/worker
 
+VOLUME /builds/worker/checkouts
+VOLUME /builds/worker/workspace
+VOLUME /builds/worker/tooltool-cache
+
 # Set variable normally configured at login, by the shells parent process, these
 # are taken from GNU su manual
 ENV HOME=/builds/worker \

@@ -17,6 +17,10 @@
   from { opacity: 1 }
   to   { opacity: 0 }
 }
+@keyframes translate {
+  from { transform: none }
+  to   { transform: translate(100px) }
+}
 </style>
 </head>
 <body>
@@ -1006,6 +1010,30 @@ function testSynchronizedAnimations() {
   }, 'Opacity animations on the same element continue running on the'
      + ' compositor when transform animations are synchronized with geometric'
      + ' animations');
+
+  promise_test(async t => {
+    const transitionElem = addDiv(t, {
+      style: 'margin-left: 0px; transition: margin-left 100s',
+    });
+    getComputedStyle(transitionElem).marginLeft;
+
+    await waitForFrame();
+
+    transitionElem.style.marginLeft = '100px';
+    const cssTransition = transitionElem.getAnimations()[0];
+
+    const animationElem = addDiv(t, {
+      class: 'compositable',
+      style: 'animation: translate 100s',
+    });
+    const cssAnimation = animationElem.getAnimations()[0];
+
+    await Promise.all([cssTransition.ready, cssAnimation.ready]);
+
+    assert_animation_property_state_equals(cssAnimation.effect.getProperties(),
+      [{ property: 'transform',
+         runningOnCompositor: true }]);
+  }, 'CSS Animations are NOT synchronized with CSS Transitions');
 
   promise_test(t => {
     const elemA = addDiv(t, { class: 'compositable' });

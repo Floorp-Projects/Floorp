@@ -7,7 +7,6 @@
 #include "nsISupports.h"
 #include "nsFakeSynthServices.h"
 #include "nsPrintfCString.h"
-#include "nsIWeakReferenceUtils.h"
 #include "SharedBuffer.h"
 #include "nsISimpleEnumerator.h"
 

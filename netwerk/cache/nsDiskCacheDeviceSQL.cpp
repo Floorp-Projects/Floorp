@@ -2381,7 +2381,7 @@ nsOfflineCacheDevice::CreateApplicationCache(const nsACString &group,
   if (!cache)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsIWeakReference> weak = do_GetWeakReference(cache);
+  nsWeakPtr weak = do_GetWeakReference(cache);
   if (!weak)
     return NS_ERROR_OUT_OF_MEMORY;
 

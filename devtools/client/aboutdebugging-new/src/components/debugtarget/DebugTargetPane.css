@@ -2,36 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.debug-target-pane__title {
-  align-items: center;
-  display: flex;
-}
-
-.debug-target-pane__title::before {
-  background-image: url(chrome://devtools/skin/images/aboutdebugging-collapse-icon.svg);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-  content: "";
-  display: inline-block;
-  fill: currentColor;
-  height: 1em;
-  margin-inline-end: 0.5em;
+.debug-target-pane__icon {
   transition: transform 150ms cubic-bezier(.07, .95, 0, 1);
-  width: 1em;
-  -moz-context-properties: fill;
 }
 
-.debug-target-pane__title,
-.debug-target-pane__title:active,
-.debug-target-pane__title:hover,
-.debug-target-pane__title:hover:active,
-.debug-target-pane__title:link,
-.debug-target-pane__title:visited {
-  text-decoration: none;
-  color: var(--text-color);
-}
-
-.debug-target-pane__title--collapsed::before {
+.debug-target-pane__icon--collapsed {
   transform: rotate(-90deg);
 }

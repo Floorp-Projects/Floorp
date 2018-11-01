@@ -8,7 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
-#include "nsWeakReference.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsTArray.h"
 #include "nsCycleCollectionNoteChild.h"
 

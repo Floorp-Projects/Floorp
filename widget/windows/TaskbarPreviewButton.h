@@ -15,7 +15,7 @@
 #include "mozilla/RefPtr.h"
 #include <nsITaskbarPreviewButton.h>
 #include <nsString.h>
-#include <nsWeakReference.h>
+#include "nsWeakReference.h"
 
 namespace mozilla {
 namespace widget {

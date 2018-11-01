@@ -20,8 +20,8 @@
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsHashKeys.h"                 // for nsUint64HashKey
 #include "nsISupportsImpl.h"            // for NS_INLINE_DECL_REFCOUNTING
+#include "nsIWeakReferenceUtils.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
-#include "nsWeakReference.h"
 
 #include <unordered_map>
 
