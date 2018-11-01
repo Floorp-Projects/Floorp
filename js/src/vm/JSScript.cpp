@@ -594,8 +594,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
 
     if (mode == XDR_DECODE) {
-        if (!JSScript::partiallyInit(cx, script, nscopes, nconsts, nobjects, ntrynotes,
-                                     nscopenotes, nyieldoffsets))
+        if (!JSScript::createPrivateScriptData(cx, script, nscopes, nconsts, nobjects,
+                                               ntrynotes, nscopenotes, nyieldoffsets))
         {
             return xdr->fail(JS::TranscodeResult_Throw);
         }
@@ -696,7 +696,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
 
     if (mode == XDR_DECODE) {
-        if (!script->createScriptData(cx, length, nsrcnotes, natoms)) {
+        if (!script->createSharedScriptData(cx, length, nsrcnotes, natoms)) {
             return xdr->fail(JS::TranscodeResult_Throw);
         }
     }
@@ -2931,11 +2931,11 @@ js::ScriptBytecodeHasher::Lookup::~Lookup()
 }
 
 bool
-JSScript::createScriptData(JSContext* cx, uint32_t codeLength, uint32_t srcnotesLength,
-                           uint32_t natoms)
+JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
+                                 uint32_t noteLength, uint32_t natoms)
 {
     MOZ_ASSERT(!scriptData());
-    SharedScriptData* ssd = SharedScriptData::new_(cx, codeLength, srcnotesLength, natoms);
+    SharedScriptData* ssd = SharedScriptData::new_(cx, codeLength, noteLength, natoms);
     if (!ssd) {
         return false;
     }
@@ -3241,8 +3241,8 @@ PrivateScriptData::traceChildren(JSTracer* trc)
     }
 }
 
-JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry, const ReadOnlyCompileOptions& options,
-                   HandleObject sourceObject, uint32_t bufStart, uint32_t bufEnd,
+JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry, HandleObject sourceObject,
+                   uint32_t sourceStart, uint32_t sourceEnd,
                    uint32_t toStringStart, uint32_t toStringEnd)
   :
 #ifndef JS_CODEGEN_NONE
@@ -3250,64 +3250,59 @@ JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry, const ReadOnlyCompileOp
     jitCodeSkipArgCheck_(stubEntry),
 #endif
     realm_(realm),
-    sourceStart_(bufStart),
-    sourceEnd_(bufEnd),
+    sourceStart_(sourceStart),
+    sourceEnd_(sourceEnd),
     toStringStart_(toStringStart),
-    toStringEnd_(toStringEnd),
-#ifdef MOZ_VTUNE
-    vtuneMethodId_(vtune::GenerateUniqueMethodID()),
-#endif
-    bitFields_{} // zeroes everything -- some fields custom-assigned below
+    toStringEnd_(toStringEnd)
 {
-    // bufStart and bufEnd specify the range of characters parsed by the
-    // Parser to produce this script. toStringStart and toStringEnd specify
-    // the range of characters to be returned for Function.prototype.toString.
-    MOZ_ASSERT(bufStart <= bufEnd);
-    MOZ_ASSERT(toStringStart <= toStringEnd);
-    MOZ_ASSERT(toStringStart <= bufStart);
-    MOZ_ASSERT(toStringEnd >= bufEnd);
+    // See JSScript.h for further details.
+    MOZ_ASSERT(toStringStart <= sourceStart);
+    MOZ_ASSERT(sourceStart <= sourceEnd);
+    MOZ_ASSERT(sourceEnd <= toStringEnd);
 
-    bitFields_.noScriptRval_ = options.noScriptRval;
-    bitFields_.selfHosted_ = options.selfHostingMode;
-    bitFields_.treatAsRunOnce_ = options.isRunOnce;
-    bitFields_.hideScriptFromDebugger_ = options.hideScriptFromDebugger;
+#ifdef MOZ_VTUNE
+    vtuneMethodId_ = vtune::GenerateUniqueMethodID();
+#endif
 
     setSourceObject(sourceObject);
 }
 
 /* static */ JSScript*
-JSScript::createInitialized(JSContext* cx, const ReadOnlyCompileOptions& options,
-                            HandleObject sourceObject,
-                            uint32_t bufStart, uint32_t bufEnd,
-                            uint32_t toStringStart, uint32_t toStringEnd)
+JSScript::New(JSContext* cx, HandleObject sourceObject,
+              uint32_t sourceStart, uint32_t sourceEnd,
+              uint32_t toStringStart, uint32_t toStringEnd)
 {
     void* script = Allocate<JSScript>(cx);
     if (!script) {
         return nullptr;
     }
 
-    uint8_t* stubEntry =
 #ifndef JS_CODEGEN_NONE
-        cx->runtime()->jitRuntime()->interpreterStub().value
+    uint8_t* stubEntry = cx->runtime()->jitRuntime()->interpreterStub().value;
 #else
-        nullptr
+    uint8_t* stubEntry = nullptr;
 #endif
-        ;
 
-    return new (script) JSScript(cx->realm(), stubEntry, options, sourceObject,
-                                 bufStart, bufEnd, toStringStart, toStringEnd);
+    return new (script) JSScript(cx->realm(), stubEntry, sourceObject,
+                                 sourceStart, sourceEnd, toStringStart, toStringEnd);
 }
 
 /* static */ JSScript*
 JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
-                 HandleObject sourceObject, uint32_t bufStart, uint32_t bufEnd,
+                 HandleObject sourceObject, uint32_t sourceStart, uint32_t sourceEnd,
                  uint32_t toStringStart, uint32_t toStringEnd)
 {
-    RootedScript script(cx, createInitialized(cx, options, sourceObject, bufStart, bufEnd,
-                                              toStringStart, toStringEnd));
+    RootedScript script(cx, JSScript::New(cx, sourceObject, sourceStart, sourceEnd,
+                                          toStringStart, toStringEnd));
     if (!script) {
         return nullptr;
     }
+
+    // Record compile options that get checked at runtime.
+    script->bitFields_.noScriptRval_ = options.noScriptRval;
+    script->bitFields_.selfHosted_ = options.selfHostingMode;
+    script->bitFields_.treatAsRunOnce_ = options.isRunOnce;
+    script->bitFields_.hideScriptFromDebugger_ = options.hideScriptFromDebugger;
 
     if (cx->runtime()->lcovOutput().isEnabled()) {
         if (!script->initScriptName(cx)) {
@@ -3368,9 +3363,9 @@ AllocScriptData(JSContext* cx, size_t size)
 }
 
 /* static */ bool
-JSScript::partiallyInit(JSContext* cx, HandleScript script, uint32_t nscopes,
-                        uint32_t nconsts, uint32_t nobjects, uint32_t ntrynotes,
-                        uint32_t nscopenotes, uint32_t nyieldoffsets)
+JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
+                                  uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
+                                  uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets)
 {
     cx->check(script);
 
@@ -3388,7 +3383,7 @@ JSScript::partiallyInit(JSContext* cx, HandleScript script, uint32_t nscopes,
 }
 
 /* static */ bool
-JSScript::initFunctionPrototype(JSContext* cx, Handle<JSScript*> script,
+JSScript::initFunctionPrototype(JSContext* cx, HandleScript script,
                                 HandleFunction functionProto)
 {
     uint32_t numScopes = 1;
@@ -3397,8 +3392,8 @@ JSScript::initFunctionPrototype(JSContext* cx, Handle<JSScript*> script,
     uint32_t numTryNotes = 0;
     uint32_t numScopeNotes = 0;
     uint32_t numYieldAndAwaitOffsets = 0;
-    if (!partiallyInit(cx, script, numScopes, numConsts, numObjects, numTryNotes,
-                       numScopeNotes, numYieldAndAwaitOffsets))
+    if (!createPrivateScriptData(cx, script, numScopes, numConsts, numObjects,
+                                 numTryNotes, numScopeNotes, numYieldAndAwaitOffsets))
     {
         return false;
     }
@@ -3412,19 +3407,22 @@ JSScript::initFunctionPrototype(JSContext* cx, Handle<JSScript*> script,
         return false;
     }
 
-    js::PrivateScriptData* data = script->data_;
-    data->scopes()[0].init(functionProtoScope);
+    mozilla::Span<GCPtrScope> scopes = script->data_->scopes();
+    scopes[0].init(functionProtoScope);
 
     uint32_t codeLength = 1;
-    uint32_t srcNotesLength = 1;
+    uint32_t noteLength = 1;
     uint32_t numAtoms = 0;
-    if (!script->createScriptData(cx, codeLength, srcNotesLength, numAtoms)) {
+    if (!script->createSharedScriptData(cx, codeLength, noteLength, numAtoms)) {
         return false;
     }
 
-    jsbytecode* code = script->code();
+    jsbytecode* code = script->scriptData_->code();
     code[0] = JSOP_RETRVAL;
-    code[1] = SRC_NULL;
+
+    jssrcnote* notes = script->scriptData_->notes();
+    notes[0] = SRC_NULL;
+
     return script->shareScriptData(cx);
 }
 
@@ -3519,10 +3517,10 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, frontend::Byt
         return false;
     }
     uint32_t natoms = bce->atomIndices->count();
-    if (!partiallyInit(cx, script,
-                       bce->scopeList.length(), bce->numberList.length(), bce->objectList.length,
-                       bce->tryNoteList.length(), bce->scopeNoteList.length(),
-                       bce->yieldAndAwaitOffsetList.length()))
+    if (!createPrivateScriptData(cx, script, bce->scopeList.length(), bce->numberList.length(),
+                                 bce->objectList.length, bce->tryNoteList.length(),
+                                 bce->scopeNoteList.length(),
+                                 bce->yieldAndAwaitOffsetList.length()))
     {
         return false;
     }
@@ -3532,14 +3530,14 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, frontend::Byt
     script->nTypeSets_ = bce->typesetCount;
     script->lineno_ = bce->firstLine;
 
-    if (!script->createScriptData(cx, prologueLength + mainLength, nsrcnotes, natoms)) {
+    if (!script->createSharedScriptData(cx, prologueLength + mainLength, nsrcnotes, natoms)) {
         return false;
     }
 
-    // Any fallible operation after JSScript::createScriptData should reset
-    // JSScript.scriptData_, in order to treat this script as uncompleted,
-    // in JSScript::isUncompleted.
-    // JSScript::shareScriptData resets it before returning false.
+    // Any fallible operation after JSScript::createSharedScriptData should
+    // reset JSScript.scriptData_, in order to treat this script as
+    // uncompleted, in JSScript::isUncompleted.  JSScript::shareScriptData
+    // resets it before returning false.
 
     jsbytecode* code = script->code();
     PodCopy<jsbytecode>(code, bce->prologue.code.begin(), prologueLength);

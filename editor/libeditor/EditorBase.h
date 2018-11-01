@@ -700,6 +700,11 @@ protected: // AutoEditActionDataSetter, this shouldn't be accessed by friends.
                              EditAction aEditAction);
     ~AutoEditActionDataSetter();
 
+    void UpdateEditAction(EditAction aEditAction)
+    {
+      mEditAction = aEditAction;
+    }
+
     bool CanHandle() const
     {
       return mSelection && mEditorBase.IsInitialized();

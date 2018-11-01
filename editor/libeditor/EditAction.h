@@ -68,14 +68,18 @@ enum class EditAction
   eStartComposition,
 
   // eUpdateComposition indicates that user updates composition with
-  // new composition string and IME selections.
+  // new non-empty composition string and IME selections.
   eUpdateComposition,
 
   // eCommitComposition indicates that user commits composition.
   eCommitComposition,
 
-  // eEndComposition indicates that user ends composition.
-  eEndComposition,
+  // eCancelComposition indicates that user cancels composition.
+  eCancelComposition,
+
+  // eDeleteByComposition indicates that user starts composition with
+  // empty string and there was selected content.
+  eDeleteByComposition,
 
   // eUndo/eRedo indicate to undo/redo a transaction.
   eUndo,

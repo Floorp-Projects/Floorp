@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, BorderRadius, BuiltDisplayList, ClipMode, ColorF, PictureRect};
+use api::{AlphaType, BorderRadius, BuiltDisplayList, ClipMode, ColorF, PictureRect, ColorU, LayoutPrimitiveInfo};
 use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, ExtendMode, DeviceRect, PictureToRasterTransform};
 use api::{FilterOp, GlyphInstance, GradientStop, ImageKey, ImageRendering, ItemRange, TileOffset};
 use api::{RasterSpace, LayoutPoint, LayoutRect, LayoutSideOffsets, LayoutSize, LayoutToWorldTransform};
@@ -303,6 +303,28 @@ pub struct PrimitiveSceneData {
     pub is_backface_visible: bool,
 }
 
+/// Information specific to a primitive type that
+/// uniquely identifies a primitive template by key.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub enum PrimitiveKeyKind {
+    /// Pictures and old style (non-interned) primitives specify the
+    /// Unused primitive key kind. In the future it might make sense
+    /// to instead have Option<PrimitiveKeyKind>. It should become
+    /// clearer as we port more primitives to be interned.
+    Unused,
+    /// Identifying key for a line decoration.
+    LineDecoration {
+        // If the cache_key is Some(..) it is a line decoration
+        // that relies on a render task (e.g. wavy). If the
+        // cache key is None, it uses a fast path to draw the
+        // line decoration as a solid rect.
+        cache_key: Option<LineDecorationCacheKey>,
+        color: ColorU,
+    },
+}
+
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -310,6 +332,7 @@ pub struct PrimitiveKey {
     pub is_backface_visible: bool,
     pub prim_rect: LayoutRectAu,
     pub clip_rect: LayoutRectAu,
+    pub kind: PrimitiveKeyKind,
 }
 
 impl PrimitiveKey {
@@ -317,11 +340,59 @@ impl PrimitiveKey {
         is_backface_visible: bool,
         prim_rect: LayoutRect,
         clip_rect: LayoutRect,
+        kind: PrimitiveKeyKind,
     ) -> Self {
         PrimitiveKey {
             is_backface_visible,
             prim_rect: prim_rect.to_au(),
             clip_rect: clip_rect.to_au(),
+            kind,
+        }
+    }
+
+    /// Construct a primitive instance that matches the type
+    /// of primitive key.
+    pub fn to_instance_kind(&self) -> PrimitiveInstanceKind {
+        match self.kind {
+            PrimitiveKeyKind::LineDecoration { .. } => {
+                PrimitiveInstanceKind::LineDecoration {
+                    cache_handle: None,
+                }
+            }
+            PrimitiveKeyKind::Unused => {
+                // Should never be hit as this method should not be
+                // called for old style primitives.
+                unreachable!();
+            }
+        }
+    }
+}
+
+/// The shared information for a given primitive. This is interned and retained
+/// both across frames and display lists, by comparing the matching PrimitiveKey.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum PrimitiveTemplateKind {
+    LineDecoration {
+        cache_key: Option<LineDecorationCacheKey>,
+        color: ColorF,
+    },
+    Unused,
+}
+
+/// Construct the primitive template data from a primitive key. This
+/// is invoked when a primitive key is created and the interner
+/// doesn't currently contain a primitive with this key.
+impl From<PrimitiveKeyKind> for PrimitiveTemplateKind {
+    fn from(item: PrimitiveKeyKind) -> Self {
+        match item {
+            PrimitiveKeyKind::Unused => PrimitiveTemplateKind::Unused,
+            PrimitiveKeyKind::LineDecoration { cache_key, color } => {
+                PrimitiveTemplateKind::LineDecoration {
+                    cache_key,
+                    color: color.into(),
+                }
+            }
         }
     }
 }
@@ -332,6 +403,12 @@ pub struct PrimitiveTemplate {
     pub is_backface_visible: bool,
     pub prim_rect: LayoutRect,
     pub clip_rect: LayoutRect,
+    pub kind: PrimitiveTemplateKind,
+    /// The GPU cache handle for a primitive template. Since this structure
+    /// is retained across display lists by interning, this GPU cache handle
+    /// also remains valid, which reduces the number of updates to the GPU
+    /// cache when a new display list is processed.
+    pub gpu_cache_handle: GpuCacheHandle,
 }
 
 impl From<PrimitiveKey> for PrimitiveTemplate {
@@ -340,6 +417,50 @@ impl From<PrimitiveKey> for PrimitiveTemplate {
             is_backface_visible: item.is_backface_visible,
             prim_rect: LayoutRect::from_au(item.prim_rect),
             clip_rect: LayoutRect::from_au(item.clip_rect),
+            kind: item.kind.into(),
+            gpu_cache_handle: GpuCacheHandle::new(),
+        }
+    }
+}
+
+impl PrimitiveTemplate {
+    /// Update the GPU cache for a given primitive template. This may be called multiple
+    /// times per frame, by each primitive reference that refers to this interned
+    /// template. The initial request call to the GPU cache ensures that work is only
+    /// done if the cache entry is invalid (due to first use or eviction).
+    pub fn update(
+        &mut self,
+        gpu_cache: &mut GpuCache,
+    ) {
+        match self.kind {
+            PrimitiveTemplateKind::LineDecoration { ref cache_key, ref color } => {
+                if let Some(mut request) = gpu_cache.request(&mut self.gpu_cache_handle) {
+                    // Work out the stretch parameters (for image repeat) based on the
+                    // line decoration parameters.
+
+                    match cache_key {
+                        Some(cache_key) => {
+                            request.push(color.premultiplied());
+                            request.push(PremultipliedColorF::WHITE);
+                            request.push([
+                                cache_key.size.width.to_f32_px(),
+                                cache_key.size.height.to_f32_px(),
+                                0.0,
+                                0.0,
+                            ]);
+                        }
+                        None => {
+                            request.push(color.premultiplied());
+                        }
+                    }
+
+                    request.write_segment(
+                        self.prim_rect,
+                        [0.0; 4],
+                    );
+                }
+            }
+            PrimitiveTemplateKind::Unused => {}
         }
     }
 }
@@ -490,13 +611,6 @@ pub enum BrushKind {
         visible_tiles: Vec<VisibleGradientTile>,
         stops_opacity: PrimitiveOpacity,
     },
-    LineDecoration {
-        color: ColorF,
-        style: LineStyle,
-        orientation: LineOrientation,
-        wavy_line_thickness: f32,
-        handle: Option<RenderTaskCacheEntryHandle>,
-    },
     Border {
         source: BorderSource,
     },
@@ -520,8 +634,6 @@ impl BrushKind {
             BrushKind::LinearGradient { .. } => true,
 
             BrushKind::Clear => false,
-
-            BrushKind::LineDecoration { .. } => false,
         }
     }
 
@@ -710,24 +822,6 @@ impl BrushPrimitive {
         }
     }
 
-    pub fn new_line_decoration(
-        color: ColorF,
-        style: LineStyle,
-        orientation: LineOrientation,
-        wavy_line_thickness: f32,
-    ) -> Self {
-        BrushPrimitive::new(
-            BrushKind::LineDecoration {
-                color,
-                style,
-                orientation,
-                wavy_line_thickness,
-                handle: None,
-            },
-            None,
-        )
-    }
-
     fn write_gpu_blocks(
         &self,
         request: &mut GpuDataRequest,
@@ -767,38 +861,6 @@ impl BrushPrimitive {
                     0.0,
                     0.0,
                 ]);
-            }
-            BrushKind::LineDecoration { style, ref color, orientation, wavy_line_thickness, .. } => {
-                // Work out the stretch parameters (for image repeat) based on the
-                // line decoration parameters.
-
-                let size = get_line_decoration_sizes(
-                    &local_rect.size,
-                    orientation,
-                    style,
-                    wavy_line_thickness,
-                );
-
-                match size {
-                    Some((inline_size, _)) => {
-                        let (sx, sy) = match orientation {
-                            LineOrientation::Horizontal => (inline_size, local_rect.size.height),
-                            LineOrientation::Vertical => (local_rect.size.width, inline_size),
-                        };
-
-                        request.push(color.premultiplied());
-                        request.push(PremultipliedColorF::WHITE);
-                        request.push([
-                            sx,
-                            sy,
-                            0.0,
-                            0.0,
-                        ]);
-                    }
-                    None => {
-                        request.push(color.premultiplied());
-                    }
-                }
             }
             // Solid rects also support opacity collapsing.
             BrushKind::Solid { color, ref opacity_binding, .. } => {
@@ -1428,6 +1490,12 @@ impl ClipData {
 pub enum PrimitiveContainer {
     TextRun(TextRunPrimitive),
     Brush(BrushPrimitive),
+    LineDecoration {
+        color: ColorF,
+        style: LineStyle,
+        orientation: LineOrientation,
+        wavy_line_thickness: f32,
+    },
 }
 
 impl PrimitiveContainer {
@@ -1448,9 +1516,6 @@ impl PrimitiveContainer {
                     BrushKind::Solid { ref color, .. } => {
                         color.a > 0.0
                     }
-                    BrushKind::LineDecoration { ref color, .. } => {
-                        color.a > 0.0
-                    }
                     BrushKind::Clear |
                     BrushKind::Image { .. } |
                     BrushKind::YuvImage { .. } |
@@ -1460,6 +1525,84 @@ impl PrimitiveContainer {
                         true
                     }
                 }
+            }
+            PrimitiveContainer::LineDecoration { ref color, .. } => {
+                color.a > 0.0
+            }
+        }
+    }
+
+    /// Convert a source primitive container into a key, and optionally
+    /// an old style PrimitiveDetails structure.
+    pub fn build(
+        self,
+        info: &mut LayoutPrimitiveInfo,
+    ) -> (PrimitiveKeyKind, Option<PrimitiveDetails>) {
+        match self {
+            PrimitiveContainer::TextRun(prim) => {
+                (PrimitiveKeyKind::Unused, Some(PrimitiveDetails::TextRun(prim)))
+            }
+            PrimitiveContainer::LineDecoration { color, style, orientation, wavy_line_thickness } => {
+                // For line decorations, we can construct the render task cache key
+                // here during scene building, since it doesn't depend on device
+                // pixel ratio or transform.
+
+                let size = get_line_decoration_sizes(
+                    &info.rect.size,
+                    orientation,
+                    style,
+                    wavy_line_thickness,
+                );
+
+                let cache_key = size.map(|(inline_size, block_size)| {
+                    let size = match orientation {
+                        LineOrientation::Horizontal => LayoutSize::new(inline_size, block_size),
+                        LineOrientation::Vertical => LayoutSize::new(block_size, inline_size),
+                    };
+
+                    // If dotted, adjust the clip rect to ensure we don't draw a final
+                    // partial dot.
+                    if style == LineStyle::Dotted {
+                        let clip_size = match orientation {
+                            LineOrientation::Horizontal => {
+                                LayoutSize::new(
+                                    inline_size * (info.rect.size.width / inline_size).floor(),
+                                    info.rect.size.height,
+                                )
+                            }
+                            LineOrientation::Vertical => {
+                                LayoutSize::new(
+                                    info.rect.size.width,
+                                    inline_size * (info.rect.size.height / inline_size).floor(),
+                                )
+                            }
+                        };
+                        let clip_rect = LayoutRect::new(
+                            info.rect.origin,
+                            clip_size,
+                        );
+                        info.clip_rect = clip_rect
+                            .intersection(&info.clip_rect)
+                            .unwrap_or(LayoutRect::zero());
+                    }
+
+                    LineDecorationCacheKey {
+                        style,
+                        orientation,
+                        wavy_line_thickness: Au::from_f32_px(wavy_line_thickness),
+                        size: size.to_au(),
+                    }
+                });
+
+                let key = PrimitiveKeyKind::LineDecoration {
+                    cache_key,
+                    color: color.into(),
+                };
+
+                (key, None)
+            }
+            PrimitiveContainer::Brush(prim) => {
+                (PrimitiveKeyKind::Unused, Some(PrimitiveDetails::Brush(prim)))
             }
         }
     }
@@ -1490,6 +1633,14 @@ impl PrimitiveContainer {
                     true,
                 ))
             }
+            PrimitiveContainer::LineDecoration { style, orientation, wavy_line_thickness, .. } => {
+                PrimitiveContainer::LineDecoration {
+                    color: shadow.color,
+                    style,
+                    orientation,
+                    wavy_line_thickness,
+                }
+            }
             PrimitiveContainer::Brush(ref brush) => {
                 match brush.kind {
                     BrushKind::Solid { .. } => {
@@ -1518,14 +1669,6 @@ impl PrimitiveContainer {
                             }
                         };
                         PrimitiveContainer::Brush(prim)
-                    }
-                    BrushKind::LineDecoration { style, orientation, wavy_line_thickness, .. } => {
-                        PrimitiveContainer::Brush(BrushPrimitive::new_line_decoration(
-                            shadow.color,
-                            style,
-                            orientation,
-                            wavy_line_thickness,
-                        ))
                     }
                     BrushKind::Image { request, stretch_size, .. } => {
                         PrimitiveContainer::Brush(BrushPrimitive::new(
@@ -1565,11 +1708,27 @@ pub struct PrimitiveDebugId(pub usize);
 
 #[derive(Clone, Debug)]
 pub enum PrimitiveInstanceKind {
+    /// Direct reference to a Picture
     Picture {
         pic_index: PictureIndex,
     },
-    Primitive {
+    /// An old style, non-interned primitive. Uses prim_index to
+    /// access the primitive details in the prim_store.
+    LegacyPrimitive {
         prim_index: PrimitiveIndex,
+    },
+    /// A line decoration. cache_handle refers to a cached render
+    /// task handle, if this line decoration is not a simple solid.
+    LineDecoration {
+        // TODO(gw): For now, we need to store some information in
+        //           the primitive instance that is created during
+        //           prepare_prims and read during the batching pass.
+        //           Once we unify the prepare_prims and batching to
+        //           occur at the same time, we can remove most of
+        //           the things we store here in the instance, and
+        //           use them directly. This will remove cache_handle,
+        //           but also the opacity, clip_task_id etc below.
+        cache_handle: Option<RenderTaskCacheEntryHandle>,
     },
 }
 
@@ -1721,18 +1880,9 @@ impl PrimitiveStore {
         &mut self,
         local_rect: &LayoutRect,
         local_clip_rect: &LayoutRect,
-        container: PrimitiveContainer,
+        details: PrimitiveDetails,
     ) -> PrimitiveIndex {
         let prim_index = self.primitives.len();
-
-        let details = match container {
-            PrimitiveContainer::Brush(brush) => {
-                PrimitiveDetails::Brush(brush)
-            }
-            PrimitiveContainer::TextRun(text_cpu) => {
-                PrimitiveDetails::TextRun(text_cpu)
-            }
-        };
 
         let prim = Primitive {
             local_rect: *local_rect,
@@ -1766,6 +1916,11 @@ impl PrimitiveStore {
         // handled by this optimization. In the future, we can easily extend
         // this to other primitives, such as text runs and gradients.
         match prim_instance.kind {
+            PrimitiveInstanceKind::LineDecoration { .. } => {
+                // TODO: Once rectangles and/or images are ported
+                //       to use interned primitives, we will need
+                //       to handle opacity collapse here.
+            }
             PrimitiveInstanceKind::Picture { pic_index } => {
                 let pic = &self.pictures[pic_index.0];
 
@@ -1776,7 +1931,7 @@ impl PrimitiveStore {
                     return self.get_opacity_collapse_prim(pic_index);
                 }
             }
-            PrimitiveInstanceKind::Primitive { prim_index } => {
+            PrimitiveInstanceKind::LegacyPrimitive { prim_index } => {
                 let prim = &self.primitives[prim_index.0];
                 match prim.details {
                     PrimitiveDetails::Brush(ref brush) => {
@@ -1790,7 +1945,6 @@ impl PrimitiveStore {
                             BrushKind::YuvImage { .. } |
                             BrushKind::LinearGradient { .. } |
                             BrushKind::RadialGradient { .. } |
-                            BrushKind::LineDecoration { .. } |
                             BrushKind::Clear => {}
                         }
                     }
@@ -1838,7 +1992,6 @@ impl PrimitiveStore {
                             BrushKind::YuvImage { .. } |
                             BrushKind::Border { .. } |
                             BrushKind::LinearGradient { .. } |
-                            BrushKind::LineDecoration { .. } |
                             BrushKind::RadialGradient { .. } => {
                                 unreachable!("bug: invalid prim type for opacity collapse");
                             }
@@ -1905,7 +2058,8 @@ impl PrimitiveStore {
                         }
                     }
                 }
-                PrimitiveInstanceKind::Primitive { .. } => {
+                PrimitiveInstanceKind::LineDecoration { .. } |
+                PrimitiveInstanceKind::LegacyPrimitive { .. } => {
                     None
                 }
             }
@@ -1957,7 +2111,13 @@ impl PrimitiveStore {
                 let pic = &self.pictures[pic_index.0];
                 (pic.local_rect, LayoutRect::max_rect())
             }
-            PrimitiveInstanceKind::Primitive { prim_index } => {
+            PrimitiveInstanceKind::LineDecoration { .. } => {
+                let prim_data = &frame_state
+                    .resources
+                    .prim_data_store[prim_instance.prim_data_handle];
+                (prim_data.prim_rect, prim_data.clip_rect)
+            }
+            PrimitiveInstanceKind::LegacyPrimitive { prim_index } => {
                 let prim = &self.primitives[prim_index.0];
                 (prim.local_rect, prim.local_clip_rect)
             }
@@ -2121,7 +2281,14 @@ impl PrimitiveStore {
                     );
                 }
             }
-            PrimitiveInstanceKind::Primitive { prim_index } => {
+            PrimitiveInstanceKind::LineDecoration { .. } => {
+                prim_instance.prepare_interned_prim_for_render(
+                    pic_state,
+                    frame_context,
+                    frame_state,
+                );
+            }
+            PrimitiveInstanceKind::LegacyPrimitive { prim_index } => {
                 let prim_details = &mut self.primitives[prim_index.0].details;
 
                 prim_instance.prepare_prim_for_render_inner(
@@ -2541,8 +2708,11 @@ impl PrimitiveInstance {
         primitives: &mut [Primitive],
     ) -> bool {
         let brush = match self.kind {
-            PrimitiveInstanceKind::Picture { .. } => return false,
-            PrimitiveInstanceKind::Primitive { prim_index } => {
+            PrimitiveInstanceKind::Picture { .. } |
+            PrimitiveInstanceKind::LineDecoration { .. } => {
+                return false;
+            }
+            PrimitiveInstanceKind::LegacyPrimitive { prim_index } => {
                 let prim = &mut primitives[prim_index.0];
                 match prim.details {
                     PrimitiveDetails::Brush(ref mut brush) => brush,
@@ -2619,9 +2789,91 @@ impl PrimitiveInstance {
 
         true
     }
-}
 
-impl PrimitiveInstance {
+    /// Prepare an interned primitive for rendering, by requesting
+    /// resources, render tasks etc. This is equivalent to the
+    /// prepare_prim_for_render_inner call for old style primitives.
+    fn prepare_interned_prim_for_render(
+        &mut self,
+        pic_state: &mut PictureState,
+        frame_context: &FrameBuildingContext,
+        frame_state: &mut FrameBuildingState,
+    ) {
+        let prim_data = &mut frame_state
+            .resources
+            .prim_data_store[self.prim_data_handle];
+
+        // Update the template this instane references, which may refresh the GPU
+        // cache with any shared template data.
+        prim_data.update(
+            frame_state.gpu_cache,
+        );
+
+        self.opacity = match prim_data.kind {
+            PrimitiveTemplateKind::LineDecoration { ref cache_key, ref color } => {
+                // Work out the device pixel size to be used to cache this line decoration.
+                if self.is_chased() {
+                    println!("\tline decoration opaque={}, key={:?}", self.opacity.is_opaque, cache_key);
+                }
+
+                // If we have a cache key, it's a wavy / dashed / dotted line. Otherwise, it's
+                // a simple solid line.
+                match cache_key {
+                    Some(cache_key) => {
+                        // TODO(gw): Do we ever need / want to support scales for text decorations
+                        //           based on the current transform?
+                        let scale_factor = TypedScale::new(1.0) * frame_context.device_pixel_scale;
+                        let task_size = (LayoutSize::from_au(cache_key.size) * scale_factor).ceil().to_i32();
+
+                        // Request a pre-rendered image task.
+                        // TODO(gw): This match is a bit untidy, but it should disappear completely
+                        //           once the prepare_prims and batching are unified. When that
+                        //           happens, we can use the cache handle immediately, and not need
+                        //           to temporarily store it in the primitive instance.
+                        match self.kind {
+                            PrimitiveInstanceKind::LineDecoration { ref mut cache_handle, .. } => {
+                                *cache_handle = Some(frame_state.resource_cache.request_render_task(
+                                    RenderTaskCacheKey {
+                                        size: task_size,
+                                        kind: RenderTaskCacheKeyKind::LineDecoration(cache_key.clone()),
+                                    },
+                                    frame_state.gpu_cache,
+                                    frame_state.render_tasks,
+                                    None,
+                                    false,
+                                    |render_tasks| {
+                                        let task = RenderTask::new_line_decoration(
+                                            task_size,
+                                            cache_key.style,
+                                            cache_key.orientation,
+                                            cache_key.wavy_line_thickness.to_f32_px(),
+                                            LayoutSize::from_au(cache_key.size),
+                                        );
+                                        let task_id = render_tasks.add(task);
+                                        pic_state.tasks.push(task_id);
+                                        task_id
+                                    }
+                                ));
+                            }
+                            PrimitiveInstanceKind::LegacyPrimitive { .. } |
+                            PrimitiveInstanceKind::Picture { .. } => {
+                                unreachable!();
+                            }
+                        }
+
+                        PrimitiveOpacity::translucent()
+                    }
+                    None => {
+                        PrimitiveOpacity::from_alpha(color.a)
+                    }
+                }
+            }
+            PrimitiveTemplateKind::Unused => {
+                unreachable!();
+            }
+        };
+    }
+
     fn prepare_prim_for_render_inner(
         &mut self,
         prim_local_rect: LayoutRect,
@@ -2869,95 +3121,6 @@ impl PrimitiveInstance {
                             }
                         } else {
                             PrimitiveOpacity::opaque()
-                        }
-                    }
-                    BrushKind::LineDecoration { color, ref mut handle, style, orientation, wavy_line_thickness } => {
-                        // Work out the device pixel size to be used to cache this line decoration.
-                        let size = get_line_decoration_sizes(
-                            &prim_local_rect.size,
-                            orientation,
-                            style,
-                            wavy_line_thickness,
-                        );
-
-                        if self.is_chased() {
-                            println!("\tline decoration opaque={}, sizes={:?}", self.opacity.is_opaque, size);
-                        }
-
-                        if let Some((inline_size, block_size)) = size {
-                            let size = match orientation {
-                                LineOrientation::Horizontal => LayoutSize::new(inline_size, block_size),
-                                LineOrientation::Vertical => LayoutSize::new(block_size, inline_size),
-                            };
-
-                            // If dotted, adjust the clip rect to ensure we don't draw a final
-                            // partial dot.
-                            if style == LineStyle::Dotted {
-                                let clip_size = match orientation {
-                                    LineOrientation::Horizontal => {
-                                        LayoutSize::new(
-                                            inline_size * (prim_local_rect.size.width / inline_size).floor(),
-                                            prim_local_rect.size.height,
-                                        )
-                                    }
-                                    LineOrientation::Vertical => {
-                                        LayoutSize::new(
-                                            prim_local_rect.size.width,
-                                            inline_size * (prim_local_rect.size.height / inline_size).floor(),
-                                        )
-                                    }
-                                };
-                                let clip_rect = LayoutRect::new(
-                                    prim_local_rect.origin,
-                                    clip_size,
-                                );
-                                self.combined_local_clip_rect = clip_rect
-                                    .intersection(&self.combined_local_clip_rect)
-                                    .unwrap_or(LayoutRect::zero());
-                            }
-
-                            // TODO(gw): Do we ever need / want to support scales for text decorations
-                            //           based on the current transform?
-                            let scale_factor = TypedScale::new(1.0) * frame_context.device_pixel_scale;
-                            let task_size = (size * scale_factor).ceil().to_i32();
-
-                            let cache_key = LineDecorationCacheKey {
-                                style,
-                                orientation,
-                                wavy_line_thickness: Au::from_f32_px(wavy_line_thickness),
-                                size: size.to_au(),
-                            };
-
-                            // Request a pre-rendered image task.
-                            *handle = Some(frame_state.resource_cache.request_render_task(
-                                RenderTaskCacheKey {
-                                    size: task_size,
-                                    kind: RenderTaskCacheKeyKind::LineDecoration(cache_key),
-                                },
-                                frame_state.gpu_cache,
-                                frame_state.render_tasks,
-                                None,
-                                false,
-                                |render_tasks| {
-                                    let task = RenderTask::new_line_decoration(
-                                        task_size,
-                                        style,
-                                        orientation,
-                                        wavy_line_thickness,
-                                        size,
-                                    );
-                                    let task_id = render_tasks.add(task);
-                                    pic_state.tasks.push(task_id);
-                                    task_id
-                                }
-                            ));
-                        }
-
-                        match style {
-                            LineStyle::Solid => PrimitiveOpacity::from_alpha(color.a),
-                            LineStyle::Dotted |
-                            LineStyle::Dashed |
-                            LineStyle::Wavy => PrimitiveOpacity::translucent(),
                         }
                     }
                     BrushKind::YuvImage { format, yuv_key, image_rendering, .. } => {

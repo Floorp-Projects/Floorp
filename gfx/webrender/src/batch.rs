@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize, LineStyle};
+use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize};
 use api::{DeviceUintRect, DeviceUintPoint, ExternalImageType, FilterOp, ImageRendering};
 use api::{YuvColorSpace, YuvFormat, WorldRect, ColorDepth};
 use clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore};
@@ -543,6 +543,96 @@ impl AlphaBatchBuilder {
             .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
 
         match prim_instance.kind {
+            PrimitiveInstanceKind::LineDecoration { ref cache_handle, .. } => {
+                // The GPU cache data is stored in the template and reused across
+                // frames and display lists.
+
+                let prim_data = &ctx
+                    .resources
+                    .prim_data_store[prim_instance.prim_data_handle];
+
+                let prim_cache_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
+
+                let (batch_kind, textures, prim_user_data, segment_user_data) = match cache_handle {
+                    Some(cache_handle) => {
+                        let rt_cache_entry = ctx
+                            .resource_cache
+                            .get_cached_render_task(cache_handle);
+                        let cache_item = ctx
+                            .resource_cache
+                            .get_texture_cache_item(&rt_cache_entry.handle);
+                        let textures = BatchTextures::color(cache_item.texture_id);
+                        (
+                            BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
+                            textures,
+                            [
+                                ShaderColorMode::Image as i32,
+                                RasterizationSpace::Local as i32,
+                                0,
+                            ],
+                            cache_item.uv_rect_handle.as_int(gpu_cache),
+                        )
+                    }
+                    None => {
+                        (
+                            BrushBatchKind::Solid,
+                            BatchTextures::no_texture(),
+                            [0; 3],
+                            0,
+                        )
+                    }
+                };
+
+                // TODO(gw): We can abstract some of the common code below into
+                //           helper methods, as we port more primitives to make
+                //           use of interning.
+
+                let blend_mode = if !prim_instance.opacity.is_opaque ||
+                    prim_instance.clip_task_id.is_some() ||
+                    transform_kind == TransformedRectKind::Complex
+                {
+                    BlendMode::PremultipliedAlpha
+                } else {
+                    BlendMode::None
+                };
+
+                let prim_header = PrimitiveHeader {
+                    local_rect: prim_data.prim_rect,
+                    local_clip_rect: prim_instance.combined_local_clip_rect,
+                    task_address,
+                    specific_prim_address: prim_cache_address,
+                    clip_task_address,
+                    transform_id,
+                };
+
+                let prim_header_index = prim_headers.push(
+                    &prim_header,
+                    z_id,
+                    prim_user_data,
+                );
+
+                let batch_key = BatchKey {
+                    blend_mode,
+                    kind: BatchKind::Brush(batch_kind),
+                    textures: textures,
+                };
+
+                let instance = PrimitiveInstanceData::from(BrushInstance {
+                    segment_index: 0,
+                    edge_flags: EdgeAaSegmentMask::all(),
+                    clip_task_address,
+                    brush_flags: BrushFlags::PERSPECTIVE_INTERPOLATION,
+                    prim_header_index,
+                    user_data: segment_user_data,
+                });
+
+                self.batch_list.push_single_instance(
+                    batch_key,
+                    bounding_rect,
+                    z_id,
+                    PrimitiveInstanceData::from(instance),
+                );
+            }
             PrimitiveInstanceKind::Picture { pic_index } => {
                 let picture = &ctx.prim_store.pictures[pic_index.0];
                 let non_segmented_blend_mode = BlendMode::PremultipliedAlpha;
@@ -564,7 +654,8 @@ impl AlphaBatchBuilder {
                             let prim_instance = &picture.prim_list.prim_instances[child.anchor];
                             let pic_index = match prim_instance.kind {
                                 PrimitiveInstanceKind::Picture { pic_index } => pic_index,
-                                PrimitiveInstanceKind::Primitive { .. } => {
+                                PrimitiveInstanceKind::LineDecoration { .. } |
+                                PrimitiveInstanceKind::LegacyPrimitive { .. } => {
                                     unreachable!();
                                 }
                             };
@@ -951,7 +1042,7 @@ impl AlphaBatchBuilder {
                     }
                 }
             }
-            PrimitiveInstanceKind::Primitive { prim_index } => {
+            PrimitiveInstanceKind::LegacyPrimitive { prim_index } => {
                 let prim = &ctx.prim_store.primitives[prim_index.0];
 
                 // If the primitive is internally decomposed into multiple sub-primitives we may not
@@ -1558,36 +1649,6 @@ impl BrushPrimitive {
                     ))
                 }
             }
-            BrushKind::LineDecoration { ref handle, style, .. } => {
-                match style {
-                    LineStyle::Solid => {
-                        Some(BrushBatchParameters::shared(
-                            BrushBatchKind::Solid,
-                            BatchTextures::no_texture(),
-                            [0; 3],
-                            0,
-                        ))
-                    }
-                    LineStyle::Dotted |
-                    LineStyle::Dashed |
-                    LineStyle::Wavy => {
-                        let rt_cache_entry = resource_cache
-                            .get_cached_render_task(handle.as_ref().unwrap());
-                        let cache_item = resource_cache.get_texture_cache_item(&rt_cache_entry.handle);
-                        let textures = BatchTextures::color(cache_item.texture_id);
-                        Some(BrushBatchParameters::shared(
-                            BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
-                            textures,
-                            [
-                                ShaderColorMode::Image as i32,
-                                RasterizationSpace::Local as i32,
-                                0,
-                            ],
-                            cache_item.uv_rect_handle.as_int(gpu_cache),
-                        ))
-                    }
-                }
-            }
             BrushKind::Border { ref source, .. } => {
                 match *source {
                     BorderSource::Image(request) => {
@@ -1769,7 +1830,6 @@ impl PrimitiveInstance {
                             AlphaType::Alpha => BlendMode::Alpha,
                         }
                     }
-                    BrushKind::LineDecoration { .. } |
                     BrushKind::Solid { .. } |
                     BrushKind::YuvImage { .. } |
                     BrushKind::RadialGradient { .. } |

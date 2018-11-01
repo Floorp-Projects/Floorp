@@ -114,14 +114,14 @@ async function test_telemetry_background() {
   keyedSnapshots = getKeyedSnapshots(process);
 
   for (let id of expectedNonEmptyHistograms) {
-    equal(arraySum(snapshots[id].counts), 1,
+    equal(valueSum(snapshots[id].values), 1,
           `Data recorded for histogram: ${id}.`);
   }
 
   for (let id of expectedNonEmptyKeyedHistograms) {
     Assert.deepEqual(Object.keys(keyedSnapshots[id]), [EXTENSION_ID1],
                      `Data recorded for histogram: ${id}.`);
-    equal(arraySum(keyedSnapshots[id][EXTENSION_ID1].counts), 1,
+    equal(valueSum(keyedSnapshots[id][EXTENSION_ID1].values), 1,
           `Data recorded for histogram: ${id}.`);
   }
 
@@ -140,14 +140,14 @@ async function test_telemetry_background() {
   keyedSnapshots = getKeyedSnapshots(process);
 
   for (let id of expectedNonEmptyHistograms) {
-    equal(arraySum(snapshots[id].counts), 2,
+    equal(valueSum(snapshots[id].values), 2,
           `Additional data recorded for histogram: ${id}.`);
   }
 
   for (let id of expectedNonEmptyKeyedHistograms) {
     Assert.deepEqual(Object.keys(keyedSnapshots[id]).sort(), [EXTENSION_ID1, EXTENSION_ID2],
                      `Additional data recorded for histogram: ${id}.`);
-    equal(arraySum(keyedSnapshots[id][EXTENSION_ID2].counts), 1,
+    equal(valueSum(keyedSnapshots[id][EXTENSION_ID2].values), 1,
           `Additional data recorded for histogram: ${id}.`);
   }
 
@@ -173,7 +173,7 @@ async function test_telemetry_background() {
   keyedSnapshots = getKeyedSnapshots(process);
 
   for (let id of expectedNonEmptyHistograms) {
-    equal(arraySum(snapshots[id].counts), expectedCount,
+    equal(valueSum(snapshots[id].values), expectedCount,
           `Data recorded in content script for histogram: ${id}.`);
   }
 
@@ -181,7 +181,7 @@ async function test_telemetry_background() {
     Assert.deepEqual(Object.keys(keyedSnapshots[id]).sort(),
                      IS_OOP ? [EXTENSION_ID1] : [EXTENSION_ID1, EXTENSION_ID2],
                      `Additional data recorded for histogram: ${id}.`);
-    equal(arraySum(keyedSnapshots[id][EXTENSION_ID1].counts), expectedKeyedCount,
+    equal(valueSum(keyedSnapshots[id][EXTENSION_ID1].values), expectedKeyedCount,
           `Additional data recorded for histogram: ${id}.`);
   }
 

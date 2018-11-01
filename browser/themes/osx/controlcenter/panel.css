@@ -9,7 +9,6 @@
   box-shadow: var(--focus-ring-box-shadow);
 }
 
-.tracking-protection-button,
 #identity-popup-securityView-body > button {
   min-height: 30px;
 }

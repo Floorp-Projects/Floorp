@@ -60,7 +60,7 @@ function clearMigrationHistogram() {
 function assertMigrationHistogramCount(category, expectedCount) {
   const histogram = Services.telemetry.getHistogramById(IDB_MIGRATE_RESULT_HISTOGRAM);
 
-  equal(histogram.snapshot().counts[CATEGORIES.indexOf(category)], expectedCount,
+  equal(histogram.snapshot().values[CATEGORIES.indexOf(category)], expectedCount,
         `Got the expected count on category "${category}" for histogram ${IDB_MIGRATE_RESULT_HISTOGRAM}`);
 }
 

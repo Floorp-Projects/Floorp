@@ -17,7 +17,7 @@ ChromeUtils.defineModuleGetter(this, "ContentSearch",
   "resource:///modules/ContentSearch.jsm");
 
 const SIMPLETEST_OVERRIDES =
-  ["ok", "is", "isnot", "todo", "todo_is", "todo_isnot", "info", "expectAssertions", "requestCompleteLog"];
+  ["ok", "record", "is", "isnot", "todo", "todo_is", "todo_isnot", "info", "expectAssertions", "requestCompleteLog"];
 
 setTimeout(testInit, 0);
 
@@ -88,8 +88,7 @@ function testInit() {
       // eslint-disable-next-line no-undef
       var webNav = content.window.docShell
                           .QueryInterface(Ci.nsIWebNavigation);
-      var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-      webNav.loadURI(url, null, null, null, null, systemPrincipal);
+      webNav.loadURI(url, null, null, null, null);
     };
 
     var listener = 'data:,function doLoad(e) { var data=e.detail&&e.detail.data;removeEventListener("contentEvent", function (e) { doLoad(e); }, false, true);sendAsyncMessage("chromeEvent", {"data":data}); };addEventListener("contentEvent", function (e) { doLoad(e); }, false, true);';
@@ -1289,7 +1288,15 @@ function testScope(aTester, aTest, expected) {
   aTest.allowFailure = expected == "fail";
 
   var self = this;
-  this.ok = function test_ok(condition, name, ex, stack) {
+  this.ok = function test_ok(condition, name) {
+    if (arguments.length > 2) {
+      const ex = "Too many arguments passed to ok(condition, name)`.";
+      self.record(false, name, ex);
+    } else {
+      self.record(condition, name);
+    }
+  };
+  this.record = function test_record(condition, name, ex, stack) {
     aTest.addResult(new testResult({
       name, pass: condition, ex,
       stack: stack || Components.stack.caller,
@@ -1297,11 +1304,11 @@ function testScope(aTester, aTest, expected) {
     }));
   };
   this.is = function test_is(a, b, name) {
-    self.ok(a == b, name, "Got " + a + ", expected " + b, false,
+    self.record(a == b, name, "Got " + a + ", expected " + b, false,
             Components.stack.caller);
   };
   this.isnot = function test_isnot(a, b, name) {
-    self.ok(a != b, name, "Didn't expect " + a + ", but got it", false,
+    self.record(a != b, name, "Didn't expect " + a + ", but got it", false,
             Components.stack.caller);
   };
   this.todo = function test_todo(condition, name, ex, stack) {

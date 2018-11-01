@@ -40,6 +40,7 @@ struct BytecodeEmitter;
 //     se.validateCaseCount(1);
 //     se.emitCond();
 //
+//     se.prepareForCaseValue();
 //     emit(c1_expr);
 //     se.emitCaseJump();
 //
@@ -57,9 +58,11 @@ struct BytecodeEmitter;
 //     se.validateCaseCount(2);
 //     se.emitCond();
 //
+//     se.prepareForCaseValue();
 //     emit(c1_expr);
 //     se.emitCaseJump();
 //
+//     se.prepareForCaseValue();
 //     emit(c2_expr);
 //     se.emitCaseJump();
 //
@@ -136,6 +139,7 @@ struct BytecodeEmitter;
 //
 //     se.emitCond();
 //
+//     se.prepareForCaseValue();
 //     emit(c1_expr);
 //     se.emitCaseJump();
 //
@@ -157,6 +161,7 @@ struct BytecodeEmitter;
 //
 //     se.emitCond();
 //
+//     se.prepareForCaseValue();
 //     emit(c1_expr);
 //     se.emitCaseJump();
 //
@@ -366,20 +371,26 @@ class MOZ_STACK_CLASS SwitchEmitter
     // +--------------------------------------------------------------+
     // |
     // | emitTable +-------+
-    // +---------->| Table |---------------------------->+-+
-    // |           +-------+                             ^ |
-    // |                                                 | |
-    // | emitCond  +------+                              | |
-    // +---------->| Cond |-+------------------------>+->+ |
-    //             +------+ |                         ^    |
-    //                      |                         |    |
-    //                      |    emitCase +------+    |    |
-    //                      +->+--------->| Case |->+-+    |
-    //                         ^          +------+  |      |
-    //                         |                    |      |
-    //                         +--------------------+      |
-    //                                                     |
-    // +---------------------------------------------------+
+    // +---------->| Table |----------------------------------->+-+
+    // |           +-------+                                    ^ |
+    // |                                                        | |
+    // | emitCond  +------+                                     | |
+    // +---------->| Cond |-+------------------------------->+->+ |
+    //             +------+ |                                ^    |
+    //                      |                                |    |
+    //   +------------------+                                |    |
+    //   |                                                   |    |
+    //   |prepareForCaseValue  +-----------+                 |    |
+    //   +----------+--------->| CaseValue |                 |    |
+    //              ^          +-----------+                 |    |
+    //              |             |                          |    |
+    //              |             | emitCaseJump +------+    |    |
+    //              |             +------------->| Case |->+-+    |
+    //              |                            +------+  |      |
+    //              |                                      |      |
+    //              +--------------------------------------+      |
+    //                                                            |
+    // +----------------------------------------------------------+
     // |
     // |                                              emitEnd +-----+
     // +-+----------------------------------------->+-------->| End |
@@ -413,7 +424,10 @@ class MOZ_STACK_CLASS SwitchEmitter
         // After calling emitTable.
         Table,
 
-        // After calling emitCase.
+        // After calling prepareForCaseValue.
+        CaseValue,
+
+        // After calling emitCaseJump.
         Case,
 
         // After calling emitCaseBody.
@@ -451,6 +465,7 @@ class MOZ_STACK_CLASS SwitchEmitter
     MOZ_MUST_USE bool emitCond();
     MOZ_MUST_USE bool emitTable(const TableGenerator& tableGen);
 
+    MOZ_MUST_USE bool prepareForCaseValue();
     MOZ_MUST_USE bool emitCaseJump();
 
     MOZ_MUST_USE bool emitCaseBody();

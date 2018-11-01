@@ -168,7 +168,7 @@ for (let [type, ext] of [
 assertEq(getJitCompilerOptions()['wasm.fold-offsets'], 1);
 
 for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
-    setJitCompilerOption('wasm.fold-offsets', foldOffsets);
+    setJitCompilerOption('wasm.fold-offsets', foldOffsets | 0);
 
     testLoad('i32', '', 0, 0, 0, 0x03020100);
     testLoad('i32', '', 1, 0, 1, 0x04030201);

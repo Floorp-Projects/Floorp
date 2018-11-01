@@ -38,7 +38,11 @@ function runTest() {
     seenLocationChange = true;
     ok(seenLoadStart, 'Location change after load start.');
     ok(!seenLoadEnd, 'Location change before load end.');
-    ok(e.detail.url, browserElementTestHelpers.emptyPage1, "event's reported location");
+    // XXX: Switched to from ok() to todo_is() in Bug 1467712. Follow up in 1503862
+    // Fails with: event's reported location -
+    //   got "http://example.com/tests/dom/browser-element/mochitest/file_browserElement_LoadEvents.html",
+    //   expected "http://example.com/tests/dom/browser-element/mochitest/file_empty.html"
+    todo_is(e.detail.url, browserElementTestHelpers.emptyPage1, "event's reported location");
   }
 
   function loadend(e) {
@@ -91,7 +95,7 @@ function runTest2() {
     seenLocationChange = true;
     ok(seenLoadStart, 'Location change after load start.');
     ok(!seenLoadEnd, 'Location change before load end.');
-    ok(e.detail.url, browserElementTestHelpers.emptyPage2, "event's reported location");
+    is(e.detail.url, browserElementTestHelpers.emptyPage2, "event's reported location");
   });
 
   iframe.addEventListener('mozbrowserloadend', function(e) {

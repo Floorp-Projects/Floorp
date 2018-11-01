@@ -83,6 +83,7 @@ SecurityReporter.prototype = {
     fetch(endpoint, {
       method: "POST",
       body: JSON.stringify(report),
+      credentials: "omit",
       headers: {
         "Content-Type": "application/json",
       },

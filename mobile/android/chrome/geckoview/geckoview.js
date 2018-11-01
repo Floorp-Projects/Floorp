@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyGetter(this, "WindowEventDispatcher",
  * ModuleManager creates and manages GeckoView modules. Each GeckoView module
  * normally consists of a JSM module file with an optional content module file.
  * The module file contains a class that extends GeckoViewModule, and the
- * content module file contains a class that extends GeckoViewContentModule. A
+ * content module file contains a class that extends GeckoViewChildModule. A
  * module usually pairs with a particular GeckoSessionHandler or delegate on the
  * Java side, and automatically receives module lifetime events such as
  * initialization, change in enabled state, and change in settings.
@@ -386,35 +386,35 @@ function startup() {
     name: "GeckoViewContent",
     onInit: {
       resource: "resource://gre/modules/GeckoViewContent.jsm",
-      frameScript: "chrome://geckoview/content/GeckoViewContent.js",
+      frameScript: "chrome://geckoview/content/GeckoViewContentChild.js",
     },
   }, {
     name: "GeckoViewNavigation",
     onInit: {
       resource: "resource://gre/modules/GeckoViewNavigation.jsm",
-      frameScript: "chrome://geckoview/content/GeckoViewNavigationContent.js",
+      frameScript: "chrome://geckoview/content/GeckoViewNavigationChild.js",
     },
   }, {
     name: "GeckoViewProgress",
     onEnable: {
       resource: "resource://gre/modules/GeckoViewProgress.jsm",
-      frameScript: "chrome://geckoview/content/GeckoViewProgressContent.js",
+      frameScript: "chrome://geckoview/content/GeckoViewProgressChild.js",
     },
   }, {
     name: "GeckoViewScroll",
     onEnable: {
-      frameScript: "chrome://geckoview/content/GeckoViewScrollContent.js",
+      frameScript: "chrome://geckoview/content/GeckoViewScrollChild.js",
     },
   }, {
     name: "GeckoViewSelectionAction",
     onEnable: {
-      frameScript: "chrome://geckoview/content/GeckoViewSelectionActionContent.js",
+      frameScript: "chrome://geckoview/content/GeckoViewSelectionActionChild.js",
     },
   }, {
     name: "GeckoViewSettings",
     onInit: {
       resource: "resource://gre/modules/GeckoViewSettings.jsm",
-      frameScript: "chrome://geckoview/content/GeckoViewContentSettings.js",
+      frameScript: "chrome://geckoview/content/GeckoViewSettingsChild.js",
     },
   }, {
     name: "GeckoViewTab",
