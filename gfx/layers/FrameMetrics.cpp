@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace layers {
 
-const FrameMetrics::ViewID FrameMetrics::NULL_SCROLL_ID = 0;
+const ScrollableLayerGuid::ViewID ScrollableLayerGuid::NULL_SCROLL_ID = 0;
 
 void
 FrameMetrics::RecalculateViewportOffset()

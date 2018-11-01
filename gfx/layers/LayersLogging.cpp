@@ -6,6 +6,7 @@
 
 #include "LayersLogging.h"
 #include <stdint.h>                     // for uint8_t
+#include "FrameMetrics.h"               // for FrameMetrics, etc
 #include "ImageTypes.h"                 // for ImageFormat
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4, Matrix
 #include "mozilla/gfx/Point.h"          // for IntSize
@@ -30,7 +31,7 @@ AppendToString(std::stringstream& aStream, const void* p,
 }
 
 void
-AppendToString(std::stringstream& aStream, FrameMetrics::ViewID n,
+AppendToString(std::stringstream& aStream, ScrollableLayerGuid::ViewID n,
                const char* pfx, const char* sfx)
 {
   aStream << pfx;
@@ -218,7 +219,7 @@ AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
   aStream << pfx;
   AppendToString(aStream, m.GetMetrics(), "{ [metrics=");
   AppendToString(aStream, m.GetBackgroundColor(), "] [color=");
-  if (m.GetScrollParentId() != FrameMetrics::NULL_SCROLL_ID) {
+  if (m.GetScrollParentId() != ScrollableLayerGuid::NULL_SCROLL_ID) {
     AppendToString(aStream, m.GetScrollParentId(), "] [scrollParent=");
   }
   if (m.HasScrollClip()) {

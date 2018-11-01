@@ -112,7 +112,7 @@ ClientTiledPaintedLayer::GetAncestorLayers(LayerMetricsWrapper* aOutScrollAncest
   for (LayerMetricsWrapper ancestor(this, LayerMetricsWrapper::StartAt::BOTTOM); ancestor; ancestor = ancestor.GetParent()) {
     hasTransformAnimation |= ancestor.HasTransformAnimation();
     const FrameMetrics& metrics = ancestor.Metrics();
-    if (!scrollAncestor && metrics.GetScrollId() != FrameMetrics::NULL_SCROLL_ID) {
+    if (!scrollAncestor && metrics.GetScrollId() != ScrollableLayerGuid::NULL_SCROLL_ID) {
       scrollAncestor = ancestor;
     }
     if (!metrics.GetDisplayPort().IsEmpty()) {

@@ -7,8 +7,8 @@
 #ifndef mozilla_layers_InputAPZContext_h
 #define mozilla_layers_InputAPZContext_h
 
-#include "FrameMetrics.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/layers/ScrollableLayerGuid.h"
 
 namespace mozilla {
 namespace layers {

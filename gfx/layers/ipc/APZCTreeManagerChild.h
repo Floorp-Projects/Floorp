@@ -91,7 +91,7 @@ protected:
                                                  const LayoutDeviceCoord& aSpanChange,
                                                  const Modifiers& aModifiers) override;
 
-  mozilla::ipc::IPCResult RecvCancelAutoscroll(const FrameMetrics::ViewID& aScrollId) override;
+  mozilla::ipc::IPCResult RecvCancelAutoscroll(const ScrollableLayerGuid::ViewID& aScrollId) override;
 
   virtual ~APZCTreeManagerChild();
 

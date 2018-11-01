@@ -310,7 +310,7 @@ public:
     return mLayer->GetScrollbarAnimationId();
   }
 
-  FrameMetrics::ViewID GetFixedPositionScrollContainerId() const
+  ScrollableLayerGuid::ViewID GetFixedPositionScrollContainerId() const
   {
     MOZ_ASSERT(IsValid());
     return mLayer->GetFixedPositionScrollContainerId();

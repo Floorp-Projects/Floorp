@@ -280,7 +280,7 @@ ClipManager::GetScrollLayer(const ActiveScrolledRoot* aASR)
   }
 
   Maybe<wr::WrClipId> scrollId =
-    mBuilder->GetScrollIdForDefinedScrollLayer(FrameMetrics::NULL_SCROLL_ID);
+    mBuilder->GetScrollIdForDefinedScrollLayer(ScrollableLayerGuid::NULL_SCROLL_ID);
   MOZ_ASSERT(scrollId.isSome());
   return scrollId;
 }
@@ -294,7 +294,7 @@ ClipManager::DefineScrollLayers(const ActiveScrolledRoot* aASR,
     // Recursion base case
     return Nothing();
   }
-  FrameMetrics::ViewID viewId = aASR->GetViewId();
+  ScrollableLayerGuid::ViewID viewId = aASR->GetViewId();
   Maybe<wr::WrClipId> scrollId = mBuilder->GetScrollIdForDefinedScrollLayer(viewId);
   if (scrollId) {
     // If we've already defined this scroll layer before, we can early-exit

@@ -11489,7 +11489,7 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
   if (scrollDirection.isSome()) {
     if (GetContent()->IsXULElement(nsGkAtoms::thumb)) {
       const bool thumbGetsLayer = aBuilder->GetCurrentScrollbarTarget() !=
-          layers::FrameMetrics::NULL_SCROLL_ID;
+          layers::ScrollableLayerGuid::NULL_SCROLL_ID;
       if (thumbGetsLayer) {
         result += CompositorHitTestFlags::eScrollbarThumb;
       } else {

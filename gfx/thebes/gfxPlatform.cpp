@@ -84,7 +84,6 @@
 #include "nsTArray.h"
 #include "nsIObserverService.h"
 #include "nsIScreenManager.h"
-#include "FrameMetrics.h"
 #include "MainThreadUtils.h"
 
 #include "nsWeakReference.h"

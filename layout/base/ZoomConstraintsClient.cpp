@@ -7,10 +7,11 @@
 #include "ZoomConstraintsClient.h"
 
 #include <inttypes.h>
-#include "FrameMetrics.h"
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
+#include "mozilla/layers/ScrollableLayerGuid.h"
+#include "mozilla/layers/ZoomConstraints.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Event.h"
@@ -201,7 +202,7 @@ ZoomConstraintsClient::RefreshZoomConstraints()
   }
 
   uint32_t presShellId = 0;
-  FrameMetrics::ViewID viewId = FrameMetrics::NULL_SCROLL_ID;
+  ScrollableLayerGuid::ViewID viewId = ScrollableLayerGuid::NULL_SCROLL_ID;
   bool scrollIdentifiersValid = APZCCallbackHelper::GetOrCreateScrollIdentifiers(
         mDocument->GetDocumentElement(),
         &presShellId, &viewId);
