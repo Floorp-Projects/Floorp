@@ -115,9 +115,6 @@ void NotifyFlushedRecording();
 // Notify the middleman about an AlwaysMarkMajorCheckpoints directive.
 void NotifyAlwaysMarkMajorCheckpoints();
 
-// Report a fatal error to the middleman process.
-void ReportFatalError(const char* aFormat, ...);
-
 // Mark a time span when the main thread is idle.
 void BeginIdleTime();
 void EndIdleTime();
@@ -129,6 +126,10 @@ bool DebuggerRunsInMiddleman();
 void SendMiddlemanCallRequest(const char* aInputData, size_t aInputSize,
                               InfallibleVector<char>* aOutputData);
 void SendResetMiddlemanCalls();
+
+// Return whether a repaint is in progress and is not allowed to trigger an
+// unhandled recording divergence per preferences.
+bool CurrentRepaintCannotFail();
 
 } // namespace child
 
