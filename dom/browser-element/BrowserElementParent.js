@@ -161,8 +161,6 @@ BrowserElementParent.prototype = {
       "requested-dom-fullscreen": this._requestedDOMFullscreen,
       "fullscreen-origin-change": this._fullscreenOriginChange,
       "exit-dom-fullscreen": this._exitDomFullscreen,
-      "got-visible": this._gotDOMRequestResult,
-      "got-set-input-method-active": this._gotDOMRequestResult,
       "scrollviewchange": this._handleScrollViewChange,
       "caretstatechanged": this._handleCaretStateChanged,
     };
