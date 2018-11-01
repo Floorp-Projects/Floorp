@@ -79,7 +79,12 @@ class CppEclipseBackend(CommonBackend):
         # Note that unlike VS, Eclipse' indexer seem to crawl the headers and
         # isn't picky about the local includes.
         if isinstance(obj, ComputedFlags):
-            args = self._args_for_dirs.setdefault(reldir, {'includes': [], 'defines': []})
+            args = self._args_for_dirs.setdefault('tree/' + reldir, {'includes': [], 'defines': []})
+            # use the same args for any objdirs we include:
+            if reldir == 'dom/bindings':
+                self._args_for_dirs.setdefault('generated-webidl', args)
+            if reldir == 'ipc/ipdl':
+                self._args_for_dirs.setdefault('generated-ipdl', args)
 
             includes = args["includes"]
             if "BASE_INCLUDES" in obj.flags and obj.flags["BASE_INCLUDES"]:
@@ -519,7 +524,7 @@ LANGUAGE_SETTINGS_TEMPLATE_HEADER = """<?xml version="1.0" encoding="UTF-8" stan
 				<language id="org.eclipse.cdt.core.g++">
 """
 
-LANGUAGE_SETTINGS_TEMPLATE_DIR_HEADER = """					<resource project-relative-path="tree/@RELATIVE_PATH@">
+LANGUAGE_SETTINGS_TEMPLATE_DIR_HEADER = """					<resource project-relative-path="@RELATIVE_PATH@">
 						<entry kind="includeFile" name="@PREINCLUDE_FILE_PATH@">
 							<flag value="LOCAL"/>
 						</entry>
