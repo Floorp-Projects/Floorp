@@ -209,44 +209,6 @@ nsBrowserElement::GetCanGoForward(ErrorResult& aRv)
 }
 
 already_AddRefed<DOMRequest>
-nsBrowserElement::ExecuteScript(const nsAString& aScript,
-                                const BrowserElementExecuteScriptOptions& aOptions,
-                                ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-
-  RefPtr<DOMRequest> req;
-  nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj = do_QueryInterface(mBrowserElementAPI);
-  MOZ_ASSERT(wrappedObj, "Failed to get wrapped JS from XPCOM component.");
-  MOZ_RELEASE_ASSERT(!js::IsWrapper(wrappedObj->GetJSObject()));
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(wrappedObj->GetJSObject())) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-  JSContext* cx = jsapi.cx();
-  JS::Rooted<JS::Value> options(cx);
-  aRv.MightThrowJSException();
-  if (!ToJSValue(cx, aOptions, &options)) {
-    aRv.StealExceptionFromJSContext(cx);
-    return nullptr;
-  }
-
-  nsresult rv = mBrowserElementAPI->ExecuteScript(aScript, options, getter_AddRefs(req));
-
-  if (NS_FAILED(rv)) {
-    if (rv == NS_ERROR_INVALID_ARG) {
-      aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    } else {
-      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    }
-    return nullptr;
-  }
-
-  return req.forget();
-}
-
-already_AddRefed<DOMRequest>
 nsBrowserElement::GetWebManifest(ErrorResult& aRv)
 {
   NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);

@@ -284,7 +284,6 @@ BrowserElementChild.prototype = {
       "owner-visibility-change": this._recvOwnerVisibilityChange,
       "entered-fullscreen": this._recvEnteredFullscreen,
       "exit-fullscreen": this._recvExitFullscreen,
-      "execute-script": this._recvExecuteScript,
       "get-web-manifest": this._recvGetWebManifest,
     }
 
@@ -874,90 +873,6 @@ BrowserElementChild.prototype = {
 
     debug("scroll event " + win);
     sendAsyncMsg("scroll", { top: win.scrollY, left: win.scrollX });
-  },
-
-  _recvExecuteScript: function(data) {
-    debug("Received executeScript message: (" + data.json.id + ")");
-
-    let domRequestID = data.json.id;
-
-    let sendError = errorMsg => sendAsyncMsg("execute-script-done", {
-      errorMsg,
-      id: domRequestID
-    });
-
-    let sendSuccess = successRv => sendAsyncMsg("execute-script-done", {
-      successRv,
-      id: domRequestID
-    });
-
-    let isJSON = obj => {
-      try {
-        JSON.stringify(obj);
-      } catch(e) {
-        return false;
-      }
-      return true;
-    }
-
-    let expectedOrigin = data.json.args.options.origin;
-    let expectedUrl = data.json.args.options.url;
-
-    if (expectedOrigin) {
-      if (expectedOrigin != content.location.origin) {
-        sendError("Origin mismatches");
-        return;
-      }
-    }
-
-    if (expectedUrl) {
-      let expectedURI
-      try {
-       expectedURI = Services.io.newURI(expectedUrl);
-      } catch(e) {
-        sendError("Malformed URL");
-        return;
-      }
-      let currentURI = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI;
-      if (!currentURI.equalsExceptRef(expectedURI)) {
-        sendError("URL mismatches");
-        return;
-      }
-    }
-
-    let sandbox = new Cu.Sandbox([content], {
-      sandboxPrototype: content,
-      sandboxName: "browser-api-execute-script",
-      allowWaivers: false,
-      sameZoneAs: content
-    });
-
-    try {
-      let sandboxRv = Cu.evalInSandbox(data.json.args.script, sandbox, "1.8");
-      if (sandboxRv instanceof sandbox.Promise) {
-        sandboxRv.then(rv => {
-          if (isJSON(rv)) {
-            sendSuccess(rv);
-          } else {
-            sendError("Value returned (resolve) by promise is not a valid JSON object");
-          }
-        }, error => {
-          if (isJSON(error)) {
-            sendError(error);
-          } else {
-            sendError("Value returned (reject) by promise is not a valid JSON object");
-          }
-        });
-      } else {
-        if (isJSON(sandboxRv)) {
-          sendSuccess(sandboxRv);
-        } else {
-          sendError("Script last expression must be a promise or a JSON object");
-        }
-      }
-    } catch(e) {
-      sendError(e.toString());
-    }
   },
 
   _mozScrollAreaChanged: function(e) {

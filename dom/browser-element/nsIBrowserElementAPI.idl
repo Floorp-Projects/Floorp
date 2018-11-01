@@ -53,8 +53,6 @@ interface nsIBrowserElementAPI : nsISupports
   DOMRequest getCanGoBack();
   DOMRequest getCanGoForward();
 
-  DOMRequest executeScript(in AString script, in jsval options);
-
   /**
    * Returns an object that represents a Web Manifest:
    * http://w3c.github.io/manifest/
