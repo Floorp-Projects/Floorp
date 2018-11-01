@@ -983,8 +983,7 @@ AttrEquals(Implementor* aElement, nsAtom* aNS, nsAtom* aName, nsAtom* aStr,
 
 #define WITH_COMPARATOR(ignore_case_, c_, expr_)    \
     if (ignore_case_) {                             \
-      const nsCaseInsensitiveStringComparator c_    \
-          = nsCaseInsensitiveStringComparator();    \
+      const nsCaseInsensitiveStringComparator c_;   \
       return expr_;                                 \
     } else {                                        \
       const nsDefaultStringComparator c_;           \
