@@ -156,7 +156,6 @@ BrowserElementParent.prototype = {
       "error": this._fireEventFromMsg,
       "firstpaint": this._fireProfiledEventFromMsg,
       "documentfirstpaint": this._fireProfiledEventFromMsg,
-      "got-screenshot": this._gotDOMRequestResult,
       "got-contentdimensions": this._gotDOMRequestResult,
       "got-can-go-back": this._gotDOMRequestResult,
       "got-can-go-forward": this._gotDOMRequestResult,
@@ -630,26 +629,6 @@ BrowserElementParent.prototype = {
     zoom = Math.max(getIntPref("zoom.minPercent", 50), zoom);
     this._sendAsyncMsg('zoom', {zoom: zoom / 100.0});
   }),
-
-  getScreenshot: function(_width, _height, _mimeType) {
-    if (!this._isAlive()) {
-      throw Components.Exception("Dead content process",
-                                 Cr.NS_ERROR_DOM_INVALID_STATE_ERR);
-    }
-
-    let width = parseInt(_width);
-    let height = parseInt(_height);
-    let mimeType = (typeof _mimeType === 'string') ?
-      _mimeType.trim().toLowerCase() : 'image/jpeg';
-    if (isNaN(width) || isNaN(height) || width < 0 || height < 0) {
-      throw Components.Exception("Invalid argument",
-                                 Cr.NS_ERROR_INVALID_ARG);
-    }
-
-    return this._sendDOMRequest('get-screenshot',
-                                {width: width, height: height,
-                                 mimeType: mimeType});
-  },
 
   getWebManifest: defineDOMRequestMethod('get-web-manifest'),
   /**
