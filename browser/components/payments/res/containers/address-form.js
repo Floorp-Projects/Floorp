@@ -180,6 +180,11 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
     } else {
       this.form.dataset.addressFields = "mailing-address tel";
     }
+    if (addressPage.selectedStateKey == "selectedPayerAddress") {
+      this.form.dataset.extraRequiredFields = addressPage.addressFields;
+    } else {
+      this.form.dataset.extraRequiredFields = "";
+    }
     this.formHandler.loadRecord(record);
 
     // Add validation to some address fields

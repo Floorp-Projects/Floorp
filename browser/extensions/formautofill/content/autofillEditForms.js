@@ -213,14 +213,22 @@ class EditAddress extends EditAutofillForm {
       postalCodeLabel,
       fieldsOrder: mailingFieldsOrder,
       postalCodePattern,
+      countryRequiredFields,
     } = this.getFormFormat(country);
     this._elements.addressLevel3Label.dataset.localization = addressLevel3Label;
     this._elements.addressLevel2Label.dataset.localization = addressLevel2Label;
     this._elements.addressLevel1Label.dataset.localization = addressLevel1Label;
     this._elements.postalCodeLabel.dataset.localization = postalCodeLabel;
     let addressFields = this._elements.form.dataset.addressFields;
+    let extraRequiredFields = this._elements.form.dataset.extraRequiredFields;
     let fieldClasses = EditAddress.computeVisibleFields(mailingFieldsOrder, addressFields);
-    this.arrangeFields(fieldClasses);
+    let requiredFields = new Set(countryRequiredFields);
+    if (extraRequiredFields) {
+      for (let extraRequiredField of extraRequiredFields.trim().split(/\s+/)) {
+        requiredFields.add(extraRequiredField);
+      }
+    }
+    this.arrangeFields(fieldClasses, requiredFields);
     this.updatePostalCodeValidation(postalCodePattern);
   }
 
@@ -228,8 +236,9 @@ class EditAddress extends EditAutofillForm {
    * Update address field visibility and order based on libaddressinput data.
    *
    * @param {object[]} fieldsOrder array of objects with `fieldId` and optional `newLine` properties
+   * @param {Set} requiredFields Set of `fieldId` strings that mark which fields are required
    */
-  arrangeFields(fieldsOrder) {
+  arrangeFields(fieldsOrder, requiredFields) {
     let fields = [
       "name",
       "organization",
@@ -245,9 +254,18 @@ class EditAddress extends EditAutofillForm {
     let inputs = [];
     for (let i = 0; i < fieldsOrder.length; i++) {
       let {fieldId, newLine} = fieldsOrder[i];
+
       let container = this._elements.form.querySelector(`#${fieldId}-container`);
       let containerInputs = [...container.querySelectorAll("input, textarea, select")];
-      containerInputs.forEach(function(input) { input.disabled = false; });
+      containerInputs.forEach(function(input) {
+        input.disabled = false;
+        // libaddressinput doesn't list 'country' or 'name' as required.
+        // The additional-name field should never get marked as required.
+        input.required = (fieldId == "country" ||
+                          fieldId == "name" ||
+                          requiredFields.has(fieldId)) &&
+                         input.id != "additional-name";
+      });
       inputs.push(...containerInputs);
       container.style.display = "flex";
       container.style.order = i;
