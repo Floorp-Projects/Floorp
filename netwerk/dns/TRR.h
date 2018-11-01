@@ -104,7 +104,7 @@ public:
     , mCnameLoop(aLoopCount)
     , mAllowRFC1918(false)
     , mTxtTtl(UINT32_MAX)
-    , mOriginSuffix(aRec->originSuffix)
+    , mOriginSuffix(aRec ? aRec->originSuffix : EmptyCString())
   {
 
   }
