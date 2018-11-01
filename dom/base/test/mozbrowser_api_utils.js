@@ -9,7 +9,6 @@ const METHODS = {
   stop: {},
   getCanGoBack: {},
   getCanGoForward: {},
-  executeScript: {},
   getWebManifest: {},
 };
 

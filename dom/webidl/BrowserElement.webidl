@@ -4,11 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-dictionary BrowserElementExecuteScriptOptions {
-  DOMString? url;
-  DOMString? origin;
-};
-
 [NoInterfaceObject]
 interface BrowserElement {
 };
@@ -71,12 +66,6 @@ interface BrowserElementPrivileged {
    Pref="dom.mozBrowserFramesEnabled",
    ChromeOnly]
   DOMRequest getCanGoForward();
-
-  [Throws,
-   Pref="dom.mozBrowserFramesEnabled",
-   ChromeOnly]
-  DOMRequest executeScript(DOMString script,
-                           optional BrowserElementExecuteScriptOptions options);
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
