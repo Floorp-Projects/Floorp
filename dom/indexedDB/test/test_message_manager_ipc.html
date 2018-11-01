@@ -275,7 +275,7 @@ function parentFrameScript(mm) {
       }
 
       case "ok": {
-        ok(data.condition, data.name, data.diag);
+        ok(data.condition, data.name + " - " + data.diag);
         break;
       }
 
