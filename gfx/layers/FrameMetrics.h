@@ -18,6 +18,7 @@
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 #include "mozilla/gfx/Logging.h"        // for Log
 #include "mozilla/layers/LayersTypes.h" // for ScrollDirection
+#include "mozilla/layers/ScrollableLayerGuid.h" // for ScrollableLayerGuid
 #include "mozilla/StaticPtr.h"          // for StaticAutoPtr
 #include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "nsString.h"
@@ -50,13 +51,9 @@ struct ScrollUpdateInfo {
  */
 struct FrameMetrics {
   friend struct IPC::ParamTraits<mozilla::layers::FrameMetrics>;
-public:
-  // We use IDs to identify frames across processes.
-  typedef uint64_t ViewID;
-  static const ViewID NULL_SCROLL_ID;   // This container layer does not scroll.
-  static const ViewID START_SCROLL_ID = 2;  // This is the ID that scrolling subframes
-                                        // will begin at.
 
+  typedef ScrollableLayerGuid::ViewID ViewID;
+public:
   MOZ_DEFINE_ENUM_WITH_BASE_AT_CLASS_SCOPE(
     ScrollOffsetUpdateType, uint8_t, (
       eNone,          // The default; the scroll offset was not updated
@@ -71,7 +68,7 @@ public:
   ));
 
   FrameMetrics()
-    : mScrollId(NULL_SCROLL_ID)
+    : mScrollId(ScrollableLayerGuid::NULL_SCROLL_ID)
     , mPresShellResolution(1)
     , mCompositionBounds(0, 0, 0, 0)
     , mDisplayPort(0, 0, 0, 0)
@@ -138,7 +135,7 @@ public:
 
   bool IsScrollable() const
   {
-    return mScrollId != NULL_SCROLL_ID;
+    return mScrollId != ScrollableLayerGuid::NULL_SCROLL_ID;
   }
 
   CSSToScreenScale2D DisplayportPixelsPerCSSPixel() const
@@ -925,14 +922,14 @@ typedef Maybe<LayerClip> MaybeLayerClip;  // for passing over IPDL
 struct ScrollMetadata {
   friend struct IPC::ParamTraits<mozilla::layers::ScrollMetadata>;
 
-  typedef FrameMetrics::ViewID ViewID;
+  typedef ScrollableLayerGuid::ViewID ViewID;
 public:
   static StaticAutoPtr<const ScrollMetadata> sNullMetadata;   // We sometimes need an empty metadata
 
   ScrollMetadata()
     : mMetrics()
     , mSnapInfo()
-    , mScrollParentId(FrameMetrics::NULL_SCROLL_ID)
+    , mScrollParentId(ScrollableLayerGuid::NULL_SCROLL_ID)
     , mBackgroundColor()
     , mContentDescription()
     , mLineScrollAmount(0, 0)
@@ -1168,180 +1165,7 @@ private:
   // Please add new fields above this comment.
 };
 
-/**
- * This class allows us to uniquely identify a scrollable layer. The
- * mLayersId identifies the layer tree (corresponding to a child process
- * and/or tab) that the scrollable layer belongs to. The mPresShellId
- * is a temporal identifier (corresponding to the document loaded that
- * contains the scrollable layer, which may change over time). The
- * mScrollId corresponds to the actual frame that is scrollable.
- */
-struct ScrollableLayerGuid {
-  LayersId mLayersId;
-  uint32_t mPresShellId;
-  FrameMetrics::ViewID mScrollId;
-
-  ScrollableLayerGuid()
-    : mLayersId{0}
-    , mPresShellId(0)
-    , mScrollId(0)
-  {
-  }
-
-  ScrollableLayerGuid(LayersId aLayersId, uint32_t aPresShellId,
-                      FrameMetrics::ViewID aScrollId)
-    : mLayersId(aLayersId)
-    , mPresShellId(aPresShellId)
-    , mScrollId(aScrollId)
-  {
-  }
-
-  ScrollableLayerGuid(LayersId aLayersId, const FrameMetrics& aMetrics)
-    : mLayersId(aLayersId)
-    , mPresShellId(aMetrics.GetPresShellId())
-    , mScrollId(aMetrics.GetScrollId())
-  {
-  }
-
-  ScrollableLayerGuid(const ScrollableLayerGuid& other)
-    : mLayersId(other.mLayersId)
-    , mPresShellId(other.mPresShellId)
-    , mScrollId(other.mScrollId)
-  {
-  }
-
-  ~ScrollableLayerGuid()
-  {
-  }
-
-  bool operator==(const ScrollableLayerGuid& other) const
-  {
-    return mLayersId == other.mLayersId
-        && mPresShellId == other.mPresShellId
-        && mScrollId == other.mScrollId;
-  }
-
-  bool operator!=(const ScrollableLayerGuid& other) const
-  {
-    return !(*this == other);
-  }
-
-  bool operator<(const ScrollableLayerGuid& other) const
-  {
-    if (mLayersId < other.mLayersId) {
-      return true;
-    }
-    if (mLayersId == other.mLayersId) {
-      if (mPresShellId < other.mPresShellId) {
-        return true;
-      }
-      if (mPresShellId == other.mPresShellId) {
-        return mScrollId < other.mScrollId;
-      }
-    }
-    return false;
-  }
-
-  // Helper structs to use as hash/equality functions in std::unordered_map. e.g.
-  // std::unordered_map<ScrollableLayerGuid,
-  //                    ValueType,
-  //                    ScrollableLayerGuid::HashFn> myMap;
-  // std::unordered_map<ScrollableLayerGuid,
-  //                    ValueType,
-  //                    ScrollableLayerGuid::HashIgnoringPresShellFn,
-  //                    ScrollableLayerGuid::EqualIgnoringPresShellFn> myMap;
-
-  struct HashFn
-  {
-    std::size_t operator()(const ScrollableLayerGuid& aGuid) const
-    {
-      return HashGeneric(uint64_t(aGuid.mLayersId),
-                         aGuid.mPresShellId,
-                         aGuid.mScrollId);
-    }
-  };
-
-  struct HashIgnoringPresShellFn
-  {
-    std::size_t operator()(const ScrollableLayerGuid& aGuid) const
-    {
-      return HashGeneric(uint64_t(aGuid.mLayersId),
-                         aGuid.mScrollId);
-    }
-  };
-
-  struct EqualIgnoringPresShellFn
-  {
-    bool operator()(const ScrollableLayerGuid& lhs, const ScrollableLayerGuid& rhs) const
-    {
-      return lhs.mLayersId == rhs.mLayersId
-          && lhs.mScrollId == rhs.mScrollId;
-    }
-  };
-};
-
-template <int LogLevel>
-gfx::Log<LogLevel>& operator<<(gfx::Log<LogLevel>& log, const ScrollableLayerGuid& aGuid) {
-  return log << '(' << uint64_t(aGuid.mLayersId) << ',' << aGuid.mPresShellId << ',' << aGuid.mScrollId << ')';
-}
-
-struct ZoomConstraints {
-  bool mAllowZoom;
-  bool mAllowDoubleTapZoom;
-  CSSToParentLayerScale mMinZoom;
-  CSSToParentLayerScale mMaxZoom;
-
-  ZoomConstraints()
-    : mAllowZoom(true)
-    , mAllowDoubleTapZoom(true)
-  {
-    MOZ_COUNT_CTOR(ZoomConstraints);
-  }
-
-  ZoomConstraints(bool aAllowZoom,
-                  bool aAllowDoubleTapZoom,
-                  const CSSToParentLayerScale& aMinZoom,
-                  const CSSToParentLayerScale& aMaxZoom)
-    : mAllowZoom(aAllowZoom)
-    , mAllowDoubleTapZoom(aAllowDoubleTapZoom)
-    , mMinZoom(aMinZoom)
-    , mMaxZoom(aMaxZoom)
-  {
-    MOZ_COUNT_CTOR(ZoomConstraints);
-  }
-
-  ZoomConstraints(const ZoomConstraints& other)
-    : mAllowZoom(other.mAllowZoom)
-    , mAllowDoubleTapZoom(other.mAllowDoubleTapZoom)
-    , mMinZoom(other.mMinZoom)
-    , mMaxZoom(other.mMaxZoom)
-  {
-    MOZ_COUNT_CTOR(ZoomConstraints);
-  }
-
-  ~ZoomConstraints()
-  {
-    MOZ_COUNT_DTOR(ZoomConstraints);
-  }
-
-  bool operator==(const ZoomConstraints& other) const
-  {
-    return mAllowZoom == other.mAllowZoom
-        && mAllowDoubleTapZoom == other.mAllowDoubleTapZoom
-        && mMinZoom == other.mMinZoom
-        && mMaxZoom == other.mMaxZoom;
-  }
-
-  bool operator!=(const ZoomConstraints& other) const
-  {
-    return !(*this == other);
-  }
-};
-
-
-typedef Maybe<ZoomConstraints> MaybeZoomConstraints;
-
-typedef std::map<FrameMetrics::ViewID,ScrollUpdateInfo> ScrollUpdatesMap;
+typedef std::map<ScrollableLayerGuid::ViewID,ScrollUpdateInfo> ScrollUpdatesMap;
 
 } // namespace layers
 } // namespace mozilla

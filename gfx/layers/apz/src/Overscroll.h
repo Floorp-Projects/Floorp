@@ -9,7 +9,6 @@
 
 #include "AsyncPanZoomAnimation.h"
 #include "AsyncPanZoomController.h"
-#include "FrameMetrics.h"
 #include "mozilla/TimeStamp.h"
 #include "nsThreadUtils.h"
 

@@ -2537,7 +2537,7 @@ nsDOMWindowUtils::SetAsyncScrollOffset(Element* aElement,
   if (!aElement) {
     return NS_ERROR_INVALID_ARG;
   }
-  FrameMetrics::ViewID viewId;
+  ScrollableLayerGuid::ViewID viewId;
   if (!nsLayoutUtils::FindIDFor(aElement, &viewId)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -2571,7 +2571,7 @@ nsDOMWindowUtils::SetAsyncZoom(Element* aRootElement, float aValue)
   if (!aRootElement) {
     return NS_ERROR_INVALID_ARG;
   }
-  FrameMetrics::ViewID viewId;
+  ScrollableLayerGuid::ViewID viewId;
   if (!nsLayoutUtils::FindIDFor(aRootElement, &viewId)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -2697,7 +2697,7 @@ nsDOMWindowUtils::ZoomToFocusedInput()
   }
 
   uint32_t presShellId;
-  FrameMetrics::ViewID viewId;
+  ScrollableLayerGuid::ViewID viewId;
   if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(document->GetDocumentElement(), &presShellId, &viewId)) {
     uint32_t flags = layers::DISABLE_ZOOM_OUT;
     if (!Preferences::GetBool("formhelper.autozoom")) {

@@ -35,7 +35,7 @@ public:
   ));
 
   RepaintRequest()
-    : mScrollId(FrameMetrics::NULL_SCROLL_ID)
+    : mScrollId(ScrollableLayerGuid::NULL_SCROLL_ID)
     , mPresShellResolution(1)
     , mCompositionBounds(0, 0, 0, 0)
     , mCumulativeResolution()
@@ -188,7 +188,7 @@ public:
     return mScrollGeneration;
   }
 
-  FrameMetrics::ViewID GetScrollId() const
+  ScrollableLayerGuid::ViewID GetScrollId() const
   {
     return mScrollId;
   }
@@ -244,7 +244,7 @@ protected:
 
 private:
   // A unique ID assigned to each scrollable frame.
-  FrameMetrics::ViewID mScrollId;
+  ScrollableLayerGuid::ViewID mScrollId;
 
   // The pres-shell resolution that has been induced on the document containing
   // this scroll frame as a result of zooming this scroll frame (whether via

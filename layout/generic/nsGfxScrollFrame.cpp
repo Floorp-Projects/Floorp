@@ -2127,7 +2127,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mLastUpdateFramesPos(-1, -1)
   , mHadDisplayPortAtLastFrameUpdate(false)
   , mDisplayPortAtLastFrameUpdate()
-  , mScrollParentID(mozilla::layers::FrameMetrics::NULL_SCROLL_ID)
+  , mScrollParentID(mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID)
   , mNeverHasVerticalScrollbar(false)
   , mNeverHasHorizontalScrollbar(false)
   , mHasVerticalScrollbar(false)
@@ -3014,7 +3014,7 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsAtom* aOrig
           nsIWidget* widget = presContext->GetNearestWidget();
           LayerManager* manager = widget ? widget->GetLayerManager() : nullptr;
           if (manager) {
-            mozilla::layers::FrameMetrics::ViewID id;
+            mozilla::layers::ScrollableLayerGuid::ViewID id;
             bool success = nsLayoutUtils::FindIDFor(content, &id);
             MOZ_ASSERT(success); // we have a displayport, we better have an ID
 
@@ -3215,9 +3215,9 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
   // We can't check will-change budget during display list building phase.
   // This means that we will build scroll bar layers for out of budget
   // will-change: scroll position.
-  const mozilla::layers::FrameMetrics::ViewID scrollTargetId = IsMaybeScrollingActive()
+  const mozilla::layers::ScrollableLayerGuid::ViewID scrollTargetId = IsMaybeScrollingActive()
     ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
-    : mozilla::layers::FrameMetrics::NULL_SCROLL_ID;
+    : mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID;
 
   scrollParts.Sort(HoveredStateComparator());
 

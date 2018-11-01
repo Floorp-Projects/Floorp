@@ -35,6 +35,7 @@ class nsDisplayListBuilder;
 namespace mozilla {
 struct ContainerLayerParameters;
 namespace layers {
+struct ScrollMetadata;
 class Layer;
 class LayerManager;
 } // namespace layers
@@ -49,7 +50,6 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
 public:
   typedef mozilla::CSSIntPoint CSSIntPoint;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
-  typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::ScrollSnapInfo ScrollSnapInfo;
 
   NS_DECL_QUERYFRAME_TARGET(nsIScrollableFrame)

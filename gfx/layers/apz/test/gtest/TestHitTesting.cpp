@@ -54,9 +54,9 @@ protected:
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, lm, layers);
 
-    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
-    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 80, 80));
-    SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID + 2, CSSRect(0, 0, 80, 80));
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
+    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 80, 80));
+    SetScrollableFrameMetrics(layers[3], ScrollableLayerGuid::START_SCROLL_ID + 2, CSSRect(0, 0, 80, 80));
   }
 
   void DisableApzOn(Layer* aLayer) {
@@ -81,13 +81,13 @@ protected:
       nsIntRegion(IntRect(200,300,100,100)),  // thebes(9) in bottom-right (below (8))
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID);
-    SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID);
-    SetScrollableFrameMetrics(layers[4], FrameMetrics::START_SCROLL_ID + 1);
-    SetScrollableFrameMetrics(layers[6], FrameMetrics::START_SCROLL_ID + 1);
-    SetScrollableFrameMetrics(layers[7], FrameMetrics::START_SCROLL_ID + 2);
-    SetScrollableFrameMetrics(layers[8], FrameMetrics::START_SCROLL_ID + 1);
-    SetScrollableFrameMetrics(layers[9], FrameMetrics::START_SCROLL_ID + 3);
+    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID);
+    SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID);
+    SetScrollableFrameMetrics(layers[4], ScrollableLayerGuid::START_SCROLL_ID + 1);
+    SetScrollableFrameMetrics(layers[6], ScrollableLayerGuid::START_SCROLL_ID + 1);
+    SetScrollableFrameMetrics(layers[7], ScrollableLayerGuid::START_SCROLL_ID + 2);
+    SetScrollableFrameMetrics(layers[8], ScrollableLayerGuid::START_SCROLL_ID + 1);
+    SetScrollableFrameMetrics(layers[9], ScrollableLayerGuid::START_SCROLL_ID + 3);
   }
 
   void CreateBug1148350LayerTree() {
@@ -98,7 +98,7 @@ protected:
       nsIntRegion(IntRect(0,0,200,200)),
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID);
+    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID);
   }
 };
 
@@ -119,7 +119,7 @@ TEST_F(APZHitTestingTester, HitTesting1) {
   uint32_t paintSequenceNumber = 0;
 
   // Now we have a root APZC that will match the page
-  SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID);
+  SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
   manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, paintSequenceNumber++);
   hit = GetTargetAPZC(ScreenPoint(15, 15));
   EXPECT_EQ(ApzcOf(root), hit.get());
@@ -128,7 +128,7 @@ TEST_F(APZHitTestingTester, HitTesting1) {
   EXPECT_EQ(ScreenPoint(15, 15), transformToGecko.TransformPoint(ParentLayerPoint(15, 15)));
 
   // Now we have a sub APZC with a better fit
-  SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID + 1);
+  SetScrollableFrameMetrics(layers[3], ScrollableLayerGuid::START_SCROLL_ID + 1);
   manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, paintSequenceNumber++);
   EXPECT_NE(ApzcOf(root), ApzcOf(layers[3]));
   hit = GetTargetAPZC(ScreenPoint(25, 25));
@@ -143,7 +143,7 @@ TEST_F(APZHitTestingTester, HitTesting1) {
   EXPECT_EQ(ApzcOf(root), hit.get());
 
   // Now test hit testing when we have two scrollable layers
-  SetScrollableFrameMetrics(layers[4], FrameMetrics::START_SCROLL_ID + 2);
+  SetScrollableFrameMetrics(layers[4], ScrollableLayerGuid::START_SCROLL_ID + 2);
   manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, paintSequenceNumber++);
   hit = GetTargetAPZC(ScreenPoint(15, 15));
   EXPECT_EQ(ApzcOf(layers[4]), hit.get());
@@ -296,8 +296,8 @@ TEST_F(APZHitTestingTester, HitTesting3) {
   };
   root = CreateLayerTree(layerTreeSyntax, layerVisibleRegions, transforms, lm, layers);
   // No actual room to scroll
-  SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
-  SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 50, 50));
+  SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
+  SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 50, 50));
 
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
 
@@ -579,7 +579,7 @@ TEST_F(APZHitTestingTester, HitTestingRespectsScrollClip_Bug1257288) {
   root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
 
   // Add root scroll metadata to the first painted layer.
-  SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID, CSSRect(0,0,200,200));
+  SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0,0,200,200));
 
   // Add root and subframe scroll metadata to the second painted layer.
   // Give the subframe metadata a scroll clip corresponding to the subframe's
@@ -587,10 +587,10 @@ TEST_F(APZHitTestingTester, HitTestingRespectsScrollClip_Bug1257288) {
   // Importantly, give the layer a layer clip which leaks outside of the
   // subframe's composition bounds.
   ScrollMetadata rootMetadata = BuildScrollMetadata(
-      FrameMetrics::START_SCROLL_ID, CSSRect(0,0,200,200),
+      ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0,0,200,200),
       ParentLayerRect(0,0,200,200));
   ScrollMetadata subframeMetadata = BuildScrollMetadata(
-      FrameMetrics::START_SCROLL_ID + 1, CSSRect(0,0,200,200),
+      ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0,0,200,200),
       ParentLayerRect(0,0,200,100));
   subframeMetadata.SetScrollClip(Some(LayerClip(ParentLayerIntRect(0,0,200,100))));
   layers[2]->SetScrollMetadata({subframeMetadata, rootMetadata});

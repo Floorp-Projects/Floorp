@@ -4852,7 +4852,8 @@ void AsyncPanZoomController::GetGuid(ScrollableLayerGuid* aGuidOut) const
 
 ScrollableLayerGuid AsyncPanZoomController::GetGuid() const
 {
-  return ScrollableLayerGuid(mLayersId, Metrics());
+  return ScrollableLayerGuid(mLayersId, Metrics().GetPresShellId(),
+                             Metrics().GetScrollId());
 }
 
 void AsyncPanZoomController::UpdateSharedCompositorFrameMetrics()

@@ -17,9 +17,9 @@
 #include "nsChangeHint.h"
 #include "nsFrameList.h"
 #include "mozilla/layout/FrameChildList.h"
+#include "mozilla/layers/ScrollableLayerGuid.h"
 #include "nsThreadUtils.h"
 #include "nsIPrincipal.h"
-#include "FrameMetrics.h"
 #include "nsIWidget.h"
 #include "nsCSSPropertyID.h"
 #include "nsStyleCoord.h"
@@ -92,6 +92,8 @@ struct RectCornerRadii;
 enum class ShapedTextFlags : uint16_t;
 } // namespace gfx
 namespace layers {
+struct FrameMetrics;
+struct ScrollMetadata;
 class Image;
 class StackingContextHelper;
 class Layer;
@@ -177,7 +179,7 @@ class nsLayoutUtils
 public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::ScrollMetadata ScrollMetadata;
-  typedef FrameMetrics::ViewID ViewID;
+  typedef mozilla::layers::ScrollableLayerGuid::ViewID ViewID;
   typedef mozilla::CSSPoint CSSPoint;
   typedef mozilla::CSSSize CSSSize;
   typedef mozilla::CSSIntSize CSSIntSize;
@@ -592,7 +594,7 @@ public:
    * Get the scroll id for the root scrollframe of the presshell of the given
    * prescontext. Returns NULL_SCROLL_ID if it couldn't be found.
    */
-  static FrameMetrics::ViewID ScrollIdForRootScrollFrame(nsPresContext* aPresContext);
+  static ViewID ScrollIdForRootScrollFrame(nsPresContext* aPresContext);
 
   /**
    * Return true if aPresContext's viewport has a displayport.
