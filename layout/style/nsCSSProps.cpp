@@ -618,15 +618,6 @@ const KTableEntry nsCSSProps::kTouchActionKTable[] = {
   { eCSSKeyword_UNKNOWN,      -1 }
 };
 
-const KTableEntry nsCSSProps::kTransitionTimingFunctionKTable[] = {
-  { eCSSKeyword_linear,       StyleTimingKeyword::Linear },
-  { eCSSKeyword_ease,         StyleTimingKeyword::Ease },
-  { eCSSKeyword_ease_in,      StyleTimingKeyword::EaseIn },
-  { eCSSKeyword_ease_out,     StyleTimingKeyword::EaseOut },
-  { eCSSKeyword_ease_in_out,  StyleTimingKeyword::EaseInOut },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kVerticalAlignKTable[] = {
   { eCSSKeyword_baseline, NS_STYLE_VERTICAL_ALIGN_BASELINE },
   { eCSSKeyword_sub, NS_STYLE_VERTICAL_ALIGN_SUB },
