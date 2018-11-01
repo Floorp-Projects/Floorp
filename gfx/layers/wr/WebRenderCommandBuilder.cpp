@@ -1511,14 +1511,14 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
           // stopAtAsr and |item|'s ASR in the ASR tree).
           mLayerScrollData.emplace_back();
           mLayerScrollData.back().Initialize(mManager->GetScrollData(), *deferred,
-              descendants, stopAtAsr, Some((*deferred)->GetTransform().GetMatrix()));
+              descendants, stopAtAsr, aSc.GetDeferredTransformMatrix());
         } else {
           // This is the "simple" case where we don't need to create two
           // WebRenderLayerScrollData items; we can just create one that also
           // holds the deferred transform matrix, if any.
           mLayerScrollData.emplace_back();
           mLayerScrollData.back().Initialize(mManager->GetScrollData(), item,
-              descendants, stopAtAsr, deferred ? Some((*deferred)->GetTransform().GetMatrix()) : Nothing());
+              descendants, stopAtAsr, aSc.GetDeferredTransformMatrix());
         }
       }
     }
