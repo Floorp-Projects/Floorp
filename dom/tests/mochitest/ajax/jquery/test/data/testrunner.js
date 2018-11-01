@@ -145,7 +145,7 @@ function test(name, callback, nowait) {
 			} else good++;
 			
 			if ( parent.SimpleTest ){
-				parent.SimpleTest.ok( _config.Test[i][0], name, _config.Test[i][1] );}
+				parent.SimpleTest.ok( _config.Test[i][0], `${name}: ${_config.Test[i][1]}` );}
 		}
 	
 		var li = document.createElement("li");

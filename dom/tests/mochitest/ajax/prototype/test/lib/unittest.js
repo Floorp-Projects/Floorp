@@ -591,7 +591,7 @@ Test.Unit.Testcase = Class.create(Test.Unit.Assertions, {
 if ( parent.SimpleTest && parent.runAJAXTest ) (function(){
 	var finish = Test.Unit.Logger.prototype.finish;
 	Test.Unit.Logger.prototype.finish = function(status,summary){
-		parent.SimpleTest.ok( status == "passed", this.testName, summary );
+		parent.SimpleTest.ok( status == "passed", `${this.testName}: ${summary}` );
 		return finish.apply( this, arguments );
 	};
 

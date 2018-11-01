@@ -33,17 +33,17 @@ addLoadEvent(function() {
 
   var equal, str1, str2;
   [equal, str1, str2] = compareSnapshots(s1, s2, true);
-  ok(equal, "Show/hide should have no effect",
+  ok(equal, "Show/hide should have no effect - " +
      "got " + str1 + " but expected " + str2);
 
   var viewer =
     SpecialPowers.wrap($("ourFrame")).contentWindow.docShell.contentViewer;
   viewer.fullZoom = 2;
-  
+
   s3 = snapshotWindow(window);
 
   [equal, str1, str2] = compareSnapshots(s1, s3, true);
-  ok(equal, "Zoom should have no effect",
+  ok(equal, "Zoom should have no effect - " +
      "got " + str1 + " but expected " + str2);
 
   $("display").style.display = "none";
