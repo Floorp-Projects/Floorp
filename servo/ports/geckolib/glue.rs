@@ -3468,6 +3468,14 @@ pub extern "C" fn Servo_ParseEasing(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn Servo_SerializeEasing(
+    easing: nsTimingFunctionBorrowed,
+    output: *mut nsAString,
+) {
+    easing.mTiming.to_css(&mut CssWriter::new(&mut *output)).unwrap();
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_GetProperties_Overriding_Animation(
     element: RawGeckoElementBorrowed,
     list: RawGeckoCSSPropertyIDListBorrowed,

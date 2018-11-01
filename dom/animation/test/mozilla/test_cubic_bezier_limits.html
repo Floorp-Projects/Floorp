@@ -19,7 +19,7 @@
 
 // We clamp +infinity or -inifinity value in floating point to
 // maximum floating point value or -maxinum floating point value.
-const max_float = 3.40282e+38;
+const max_float = '3.40282e38';
 
 test(function(t) {
   var div = addDiv(t);
@@ -37,12 +37,12 @@ test(function(t) {
 
   anim.effect.updateTiming({ easing: 'cubic-bezier(0, -1e+39, 0, 0)' });
   assert_equals(anim.effect.getComputedTiming().easing,
-    'cubic-bezier(0, ' + -max_float + ', 0, 0)',
+    'cubic-bezier(0, ' + '-' + max_float + ', 0, 0)',
     'y1 control point for effect easing is out of lower boundary');
 
   anim.effect.updateTiming({ easing: 'cubic-bezier(0, 0, 0, -1e+39)' });
   assert_equals(anim.effect.getComputedTiming().easing,
-    'cubic-bezier(0, 0, 0, ' + -max_float + ')',
+    'cubic-bezier(0, 0, 0, ' + '-' + max_float + ')',
     'y2 control point for effect easing is out of lower boundary');
 
 }, 'Clamp y1 and y2 control point out of boundaries for effect easing' );
@@ -63,12 +63,12 @@ test(function(t) {
 
   anim.effect.setKeyframes([ { easing: 'cubic-bezier(0, -1e+39, 0, 0)' }]);
   assert_equals(anim.effect.getKeyframes()[0].easing,
-    'cubic-bezier(0, ' + -max_float + ', 0, 0)',
+    'cubic-bezier(0, ' + '-' + max_float + ', 0, 0)',
     'y1 control point for keyframe easing is out of lower boundary');
 
   anim.effect.setKeyframes([ { easing: 'cubic-bezier(0, 0, 0, -1e+39)' }]);
   assert_equals(anim.effect.getKeyframes()[0].easing,
-    'cubic-bezier(0, 0, 0, ' + -max_float + ')',
+    'cubic-bezier(0, 0, 0, ' + '-' + max_float + ')',
     'y2 control point for keyframe easing is out of lower boundary');
 
 }, 'Clamp y1 and y2 control point out of boundaries for keyframe easing' );
@@ -89,12 +89,12 @@ test(function(t) {
 
   div.style.animation = 'anim 100s cubic-bezier(0, -1e+39, 0, 0)';
   assert_equals(div.getAnimations()[0].effect.getKeyframes()[0].easing,
-    'cubic-bezier(0, ' + -max_float + ', 0, 0)',
+    'cubic-bezier(0, ' + '-' + max_float + ', 0, 0)',
     'y1 control point for CSS animation is out of lower boundary');
 
   div.style.animation = 'anim 100s cubic-bezier(0, 0, 0, -1e+39)';
   assert_equals(div.getAnimations()[0].effect.getKeyframes()[0].easing,
-    'cubic-bezier(0, 0, 0, ' + -max_float + ')',
+    'cubic-bezier(0, 0, 0, ' + '-' + max_float + ')',
     'y2 control point for CSS animation is out of lower boundary');
 
 }, 'Clamp y1 and y2 control point out of boundaries for CSS animation' );
@@ -124,7 +124,7 @@ test(function(t) {
   flushComputedStyle(div);
   div.style.marginLeft = '0px';
   assert_equals(div.getAnimations()[0].effect.getKeyframes()[0].easing,
-    'cubic-bezier(0, ' + -max_float + ', 0, 0)',
+    'cubic-bezier(0, ' + '-' + max_float + ', 0, 0)',
     'y1 control point for CSS transition on lower boundary');
   div.style.transition = '';
   div.style.marginLeft = '';
@@ -133,7 +133,7 @@ test(function(t) {
   flushComputedStyle(div);
   div.style.marginLeft = '0px';
   assert_equals(div.getAnimations()[0].effect.getKeyframes()[0].easing,
-    'cubic-bezier(0, 0, 0, ' + -max_float + ')',
+    'cubic-bezier(0, 0, 0, ' + '-' + max_float + ')',
     'y2 control point for CSS transition on lower boundary');
 
 }, 'Clamp y1 and y2 control point out of boundaries for CSS transition' );
