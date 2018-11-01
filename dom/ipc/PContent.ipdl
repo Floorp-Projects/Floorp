@@ -913,11 +913,6 @@ parent:
 
     async CopyFavicon(URIParams oldURI, URIParams newURI, Principal aLoadingPrincipal, bool isPrivate);
 
-    // Tell the compositor to allocate a layer tree id for nested remote mozbrowsers.
-    sync AllocateLayerTreeId(ContentParentId cpId, TabId tabId)
-        returns (LayersId id);
-    async DeallocateLayerTreeId(ContentParentId cpId, LayersId id);
-
     /**
      * Notifies the parent about a recording device is starting or shutdown.
      * @param recordingStatus starting or shutdown

@@ -118,26 +118,21 @@ RenderFrameParent::Init(nsFrameLoader* aFrameLoader)
   RefPtr<LayerManager> lm = GetLayerManager(mFrameLoader);
 
   mAsyncPanZoomEnabled = lm && lm->AsyncPanZoomEnabled();
+  PCompositorBridgeChild* compositor = lm
+    ? lm->GetCompositorBridgeChild()
+    : nullptr;
 
-  TabParent* browser = TabParent::GetFrom(mFrameLoader);
-  if (XRE_IsParentProcess()) {
-    PCompositorBridgeChild* compositor = nullptr;
-    if (lm) {
-      compositor = lm->GetCompositorBridgeChild();
-    }
+  TabParent* browser = TabParent::GetFrom(aFrameLoader);
+  base::ProcessId pid = browser->Manager()->AsContentParent()->OtherPid();
 
-    // Our remote frame will push layers updates to the compositor,
-    // and we'll keep an indirect reference to that tree.
-    GPUProcessManager* gpm = GPUProcessManager::Get();
-    mLayersConnected = gpm->AllocateAndConnectLayerTreeId(
-      compositor,
-      browser->Manager()->AsContentParent()->OtherPid(),
-      &mLayersId,
-      &mCompositorOptions);
-  } else if (XRE_IsContentProcess()) {
-    ContentChild::GetSingleton()->SendAllocateLayerTreeId(browser->Manager()->ChildID(), browser->GetTabId(), &mLayersId);
-    mLayersConnected = CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId, &mCompositorOptions);
-  }
+  // Our remote frame will push layers updates to the compositor,
+  // and we'll keep an indirect reference to that tree.
+  GPUProcessManager* gpm = GPUProcessManager::Get();
+  mLayersConnected = gpm->AllocateAndConnectLayerTreeId(
+    compositor,
+    pid,
+    &mLayersId,
+    &mCompositorOptions);
 
   mInitted = true;
   return true;
@@ -239,12 +234,7 @@ void
 RenderFrameParent::ActorDestroy(ActorDestroyReason why)
 {
   if (mLayersId.IsValid()) {
-    if (XRE_IsParentProcess()) {
-      GPUProcessManager::Get()->UnmapLayerTreeId(mLayersId, OtherPid());
-    } else if (XRE_IsContentProcess()) {
-      TabParent* browser = TabParent::GetFrom(mFrameLoader);
-      ContentChild::GetSingleton()->SendDeallocateLayerTreeId(browser->Manager()->ChildID(), mLayersId);
-    }
+    GPUProcessManager::Get()->UnmapLayerTreeId(mLayersId, OtherPid());
   }
 
   mFrameLoader = nullptr;
