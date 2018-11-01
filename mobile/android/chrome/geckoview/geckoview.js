@@ -102,7 +102,7 @@ var ModuleManager = {
   updateRemoteType(aRemoteType) {
     debug `updateRemoteType remoteType=${aRemoteType}`;
 
-    const currentRemoteType = this.browser.getAttribute("remoteType");
+    const currentRemoteType = this.browser.getAttribute("remoteType") || E10SUtils.NOT_REMOTE;
 
     if (aRemoteType && !this.settings.useMultiprocess) {
       warn `Tried to create a remote browser in multiprocess mode`;
