@@ -14,6 +14,7 @@
 #include "SkEncodedOrigin.h"
 #include "SkImageInfo.h"
 #include "SkTypes.h"
+#include "SkEndian.h"
 
 #ifdef SK_PRINT_CODEC_MESSAGES
     #define SkCodecPrintf SkDebugf
