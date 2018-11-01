@@ -242,7 +242,7 @@ Task group: https://tools.taskcluster.net/push-inspector/#/{task_group_id}
     subject = '{} Build of {} {} build {}'.format(subject_prefix, product, version, build_number)
 
     notify_options = {}
-    if 'TASKCLUSTER_BASE_URL' in os.environ:
+    if 'TASKCLUSTER_PROXY_URL' in os.environ:
         base_url = os.environ['TASKCLUSTER_PROXY_URL'].rstrip('/')
         notify_options['baseUrl'] = '{}/notify/v1'.format(base_url)
     notify = Notify(notify_options)
