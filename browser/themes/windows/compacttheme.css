@@ -35,7 +35,7 @@
 
     /* Keep showing the correct color inside the tabs. */
     .tabbrowser-tab {
-      color: var(--chrome-color) !important;
+      color: var(--lwt-text-color) !important;
     }
 
     /* Because we're forcing the tabs toolbar to be [brighttext] to
@@ -93,7 +93,7 @@
   /* Show border on tabs with background colors and
    * show the tabs toolbar background color inside tabs. */
   .tabbrowser-tab {
-    background-color: var(--chrome-background-color) !important;
+    background-color: var(--lwt-accent-color) !important;
     border-top: 1px solid var(--tabs-border-color);
     background-clip: padding-box;
   }
