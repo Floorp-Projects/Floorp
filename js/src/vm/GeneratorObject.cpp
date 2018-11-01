@@ -116,6 +116,10 @@ js::GetGeneratorObjectForFrame(JSContext* cx, AbstractFramePtr frame)
     cx->check(frame);
     MOZ_ASSERT(frame.isGeneratorFrame());
 
+    if (!frame.hasInitialEnvironment()) {
+        return nullptr;
+    }
+
     // The ".generator" binding is always present and always "aliased".
     CallObject& callObj = frame.callObj();
     Shape* shape = callObj.lookup(cx, cx->names().dotGenerator);
