@@ -369,7 +369,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "e186e81ee44a"
+        "revision": "0144511c81cd"
     },
     "my": {
         "platforms": [
@@ -447,7 +447,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "113c42c31cd3"
+        "revision": "8af63a1abf87"
     },
     "ru": {
         "platforms": [
