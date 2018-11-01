@@ -18,7 +18,6 @@
 
   <script type="application/javascript"><![CDATA[
     ChromeUtils.import("resource://testing-common/ContentTask.jsm");
-    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
 
     var gFindBar = null;
@@ -53,7 +52,7 @@
           });
         });
       });
-      BrowserTestUtils.loadURI(gBrowser, "data:text/html,<form><input id='input' type='text' value='text inside an input element'></form>");
+      gBrowser.loadURI("data:text/html,<form><input id='input' type='text' value='text inside an input element'></form>");
       await promise;
       await onDocumentLoaded();
     }

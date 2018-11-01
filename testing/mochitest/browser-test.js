@@ -88,8 +88,7 @@ function testInit() {
       // eslint-disable-next-line no-undef
       var webNav = content.window.docShell
                           .QueryInterface(Ci.nsIWebNavigation);
-      var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-      webNav.loadURI(url, null, null, null, null, systemPrincipal);
+      webNav.loadURI(url, null, null, null, null);
     };
 
     var listener = 'data:,function doLoad(e) { var data=e.detail&&e.detail.data;removeEventListener("contentEvent", function (e) { doLoad(e); }, false, true);sendAsyncMessage("chromeEvent", {"data":data}); };addEventListener("contentEvent", function (e) { doLoad(e); }, false, true);';
