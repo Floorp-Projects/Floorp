@@ -27,7 +27,7 @@ public final class GeckoSessionSettings implements Parcelable {
     public static final int DISPLAY_MODE_STANDALONE = 2;
     public static final int DISPLAY_MODE_FULLSCREEN = 3;
 
-    // This needs to match GeckoViewContentSettings.js and GeckoViewSettings.jsm
+    // This needs to match GeckoViewSettingsChild.js and GeckoViewSettings.jsm
     public static final int USER_AGENT_MODE_MOBILE = 0;
     public static final int USER_AGENT_MODE_DESKTOP = 1;
     public static final int USER_AGENT_MODE_VR = 2;
