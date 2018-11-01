@@ -443,6 +443,9 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         # disable "GC poisoning" Bug# 1499043
         env['JSGC_DISABLE_POISONING'] = '1'
 
+        # needed to load unsigned raptor webext on moz-beta
+        env['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = '1'
+
         if self.repo_path is not None:
             env['MOZ_DEVELOPER_REPO_DIR'] = self.repo_path
         if self.obj_path is not None:
