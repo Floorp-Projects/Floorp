@@ -445,4 +445,38 @@ class ContentDelegateTest : BaseSessionTest() {
         assertThat("Should not have focused field",
                    countAutoFillNodes({ it.isFocused }), equalTo(0))
     }
+
+    private fun goFullscreen() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("full-screen-api.allow-trusted-requests-only" to false))
+        mainSession.loadTestPath(FULLSCREEN_PATH)
+        mainSession.waitForPageStop()
+        mainSession.evaluateJS("$('#fullscreen').requestFullscreen()")
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+            override  fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
+                assertThat("Div went fullscreen", fullScreen, equalTo(true))
+            }
+        })
+    }
+
+    private fun waitForFullscreenExit() {
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+            override  fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
+                assertThat("Div went fullscreen", fullScreen, equalTo(false))
+            }
+        })
+    }
+
+    @WithDevToolsAPI
+    @Test fun fullscreen() {
+        goFullscreen()
+        mainSession.evaluateJS("document.exitFullscreen()")
+        waitForFullscreenExit()
+    }
+
+    @WithDevToolsAPI
+    @Test fun sessionExitFullscreen() {
+        goFullscreen()
+        mainSession.exitFullScreen()
+        waitForFullscreenExit()
+    }
 }
