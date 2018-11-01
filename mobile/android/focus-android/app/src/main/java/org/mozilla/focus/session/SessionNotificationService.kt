@@ -26,6 +26,9 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
  * As long as a session is active this service will keep the notification (and our process) alive.
  */
 class SessionNotificationService : Service() {
+
+    private var shouldSendTaskRemovedTelemetry = true
+
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         val action = intent.action ?: return Service.START_NOT_STICKY
 
@@ -37,6 +40,7 @@ class SessionNotificationService : Service() {
 
             ACTION_ERASE -> {
                 TelemetryWrapper.eraseNotificationEvent()
+                shouldSendTaskRemovedTelemetry = false
 
                 components.sessionManager.removeAndCloseAllSessions()
 
@@ -50,7 +54,11 @@ class SessionNotificationService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent) {
-        TelemetryWrapper.eraseTaskRemoved()
+
+        // Do not double send telemetry for notification erase event
+        if (shouldSendTaskRemovedTelemetry) {
+            TelemetryWrapper.eraseTaskRemoved()
+        }
 
         components.sessionManager.removeAndCloseAllSessions()
 
