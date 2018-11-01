@@ -4,8 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-callback BrowserElementNextPaintEventCallback = void ();
-
 enum BrowserFindCaseSensitivity { "case-sensitive", "case-insensitive" };
 enum BrowserFindDirection { "forward", "backward" };
 
@@ -23,21 +21,7 @@ dictionary BrowserElementExecuteScriptOptions {
 interface BrowserElement {
 };
 
-BrowserElement implements BrowserElementCommon;
 BrowserElement implements BrowserElementPrivileged;
-
-[NoInterfaceObject]
-interface BrowserElementCommon {
-  [Throws,
-   Pref="dom.mozBrowserFramesEnabled",
-   ChromeOnly]
-  void addNextPaintListener(BrowserElementNextPaintEventCallback listener);
-
-  [Throws,
-   Pref="dom.mozBrowserFramesEnabled",
-   ChromeOnly]
-  void removeNextPaintListener(BrowserElementNextPaintEventCallback listener);
-};
 
 [NoInterfaceObject]
 interface BrowserElementPrivileged {

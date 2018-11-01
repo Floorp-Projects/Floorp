@@ -61,7 +61,6 @@ function BrowserElementParent() {
   this._domRequestReady = false;
   this._pendingAPICalls = [];
   this._pendingDOMRequests = {};
-  this._nextPaintListeners = [];
   this._pendingDOMFullscreen = false;
 
   Services.obs.addObserver(this, 'oop-frameloader-crashed', /* ownsWeak = */ true);
@@ -157,7 +156,6 @@ BrowserElementParent.prototype = {
       "error": this._fireEventFromMsg,
       "firstpaint": this._fireProfiledEventFromMsg,
       "documentfirstpaint": this._fireProfiledEventFromMsg,
-      "nextpaint": this._recvNextPaint,
       "got-purge-history": this._gotDOMRequestResult,
       "got-screenshot": this._gotDOMRequestResult,
       "got-contentdimensions": this._gotDOMRequestResult,
@@ -789,61 +787,6 @@ BrowserElementParent.prototype = {
     return this._sendDOMRequest('get-screenshot',
                                 {width: width, height: height,
                                  mimeType: mimeType});
-  },
-
-  _recvNextPaint: function(data) {
-    let listeners = this._nextPaintListeners;
-    this._nextPaintListeners = [];
-    for (let listener of listeners) {
-      try {
-        listener();
-      } catch (e) {
-        // If a listener throws we'll continue.
-      }
-    }
-  },
-
-  addNextPaintListener: function(listener) {
-    if (!this._isAlive()) {
-      throw Components.Exception("Dead content process",
-                                 Cr.NS_ERROR_DOM_INVALID_STATE_ERR);
-    }
-
-    let self = this;
-    let run = function() {
-      if (self._nextPaintListeners.push(listener) == 1)
-        self._sendAsyncMsg('activate-next-paint-listener');
-    };
-    if (!this._domRequestReady) {
-      this._pendingAPICalls.push(run);
-    } else {
-      run();
-    }
-  },
-
-  removeNextPaintListener: function(listener) {
-    if (!this._isAlive()) {
-      throw Components.Exception("Dead content process",
-                                 Cr.NS_ERROR_DOM_INVALID_STATE_ERR);
-    }
-
-    let self = this;
-    let run = function() {
-      for (let i = self._nextPaintListeners.length - 1; i >= 0; i--) {
-        if (self._nextPaintListeners[i] == listener) {
-          self._nextPaintListeners.splice(i, 1);
-          break;
-        }
-      }
-
-      if (self._nextPaintListeners.length == 0)
-        self._sendAsyncMsg('deactivate-next-paint-listener');
-    };
-    if (!this._domRequestReady) {
-      this._pendingAPICalls.push(run);
-    } else {
-      run();
-    }
   },
 
   getWebManifest: defineDOMRequestMethod('get-web-manifest'),
