@@ -176,30 +176,6 @@ nsBrowserElement::Stop(ErrorResult& aRv)
   }
 }
 
-already_AddRefed<DOMRequest>
-nsBrowserElement::GetScreenshot(uint32_t aWidth,
-                                uint32_t aHeight,
-                                const nsAString& aMimeType,
-                                ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-
-  RefPtr<DOMRequest> req;
-  nsresult rv = mBrowserElementAPI->GetScreenshot(aWidth, aHeight, aMimeType,
-                                                  getter_AddRefs(req));
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (rv == NS_ERROR_INVALID_ARG) {
-      aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    } else {
-      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    }
-    return nullptr;
-  }
-
-  return req.forget();
-}
-
 void
 nsBrowserElement::Zoom(float aZoom, ErrorResult& aRv)
 {

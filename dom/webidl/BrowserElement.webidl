@@ -68,13 +68,6 @@ interface BrowserElementPrivileged {
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
    ChromeOnly]
-  DOMRequest getScreenshot([EnforceRange] unsigned long width,
-                           [EnforceRange] unsigned long height,
-                           optional DOMString mimeType="");
-
-  [Throws,
-   Pref="dom.mozBrowserFramesEnabled",
-   ChromeOnly]
   void zoom(float zoom);
 
   [Throws,
