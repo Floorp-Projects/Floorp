@@ -6,7 +6,6 @@
 
 #include "nsISupports.idl"
 
-webidl DOMRequest;
 webidl FrameLoader;
 
 %{C++
@@ -40,6 +39,6 @@ interface nsIBrowserElementAPI : nsISupports
   void goForward();
   void reload(in boolean hardReload);
   void stop();
-  DOMRequest getCanGoBack();
-  DOMRequest getCanGoForward();
+  Promise getCanGoBack();
+  Promise getCanGoForward();
 };
