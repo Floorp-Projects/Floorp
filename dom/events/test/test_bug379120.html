@@ -5,14 +5,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=379120
 -->
 <head>
   <title>Test for Bug 379120</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=379120">Mozilla Bug 379120</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=379120
     var parser = new DOMParser();
     var originalDoc = parser.parseFromString(originalString, "text/xml");
 
-    var stylesheetText = 
+    var stylesheetText =
         "<xsl:stylesheet xmlns:xsl='http://www.w3.org/1999/XSL/Transform' " +
             "version='1.0' xmlns='http://www.w3.org/1999/xhtml'> " +
 
@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=379120
               "doctype-public='-//W3C//DTD XHTML 1.0 Transitional//EN' /> " +
 
           "<xsl:template match='/'>" +
-            "<div onload='var i = 1'/>" + 
+            "<div onload='var i = 1'/>" +
             "<xsl:apply-templates />" +
           "</xsl:template>" +
         "</xsl:stylesheet>";
@@ -47,10 +47,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=379120
     var transformedDocument = processor.transformToDocument (originalDoc);
     is(transformedDocument.documentElement.getAttribute("onload"),
        "var i = 1");
-    ok(transformedDocument.documentElement.onload === null,
-       "Shouldn't have onload handler",
-       "got " + repr(transformedDocument.documentElement.onload) +
-       ", expected null");;
+    is(transformedDocument.documentElement.onload, null, "Shouldn't have onload handler");
 </script>
 </pre>
 </body>

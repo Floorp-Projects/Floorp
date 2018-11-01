@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=390488
   </div>
 </p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -30,13 +30,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=390488
     }
     return stack;
   }
-  
+
   function getStack2() {
     var stack = new Error().stack;
     // Remove the two lines due to calling this
     return stack.substring(stack.indexOf("\n", stack.indexOf("\n")+1)+1);
   }
-  
+
   function simulateClick() {
     var evt = document.createEvent("MouseEvents");
     evt.initMouseEvent("click", true, true, window,
@@ -45,8 +45,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=390488
   }
 
   function matches(s, p, name) {
-    ok(s.match(p) != null, name,
-       "got " + uneval(s) + ", expected a string matching " + uneval(p));
+    ok(s.match(p) != null,
+      name + " - got " + uneval(s) + ", expected a string matching " + uneval(p));
   }
 
   function checkForStacks() {
