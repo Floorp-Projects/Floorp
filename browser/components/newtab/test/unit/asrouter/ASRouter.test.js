@@ -1,4 +1,5 @@
 import {_ASRouter, MessageLoaderUtils} from "lib/ASRouter.jsm";
+import {ASRouterTargeting, QueryCache} from "lib/ASRouterTargeting.jsm";
 import {
   CHILD_TO_PARENT_MESSAGE_NAME,
   FAKE_LOCAL_MESSAGES,
@@ -16,7 +17,6 @@ import {ASRouterTriggerListeners} from "lib/ASRouterTriggerListeners.jsm";
 import {CFRPageActions} from "lib/CFRPageActions.jsm";
 import {GlobalOverrider} from "test/unit/utils";
 import ProviderResponseSchema from "content-src/asrouter/schemas/provider-response.schema.json";
-import {QueryCache} from "lib/ASRouterTargeting.jsm";
 
 const MESSAGE_PROVIDER_PREF_NAME = "browser.newtabpage.activity-stream.asrouter.messageProviders";
 const FAKE_PROVIDERS = [FAKE_LOCAL_PROVIDER, FAKE_REMOTE_PROVIDER, FAKE_REMOTE_SETTINGS_PROVIDER];
@@ -206,12 +206,13 @@ describe("ASRouter", () => {
   describe("setState", () => {
     it("should broadcast a message to update the admin tool on a state change if the asrouter.devtoolsEnabled pref is", async () => {
       sandbox.stub(ASRouterPreferences, "devtoolsEnabled").get(() => true);
+      sandbox.stub(Router, "getTargetingParameters").resolves({});
       await Router.setState({foo: 123});
 
       assert.calledOnce(channel.sendAsyncMessage);
       assert.deepEqual(channel.sendAsyncMessage.firstCall.args[1], {
         type: "ADMIN_SET_STATE",
-        data: Object.assign({}, Router.state, {providerPrefs: ASRouterPreferences.providers, userPrefs: ASRouterPreferences.getAllUserPreferences()}),
+        data: Object.assign({}, Router.state, {providerPrefs: ASRouterPreferences.providers, userPrefs: ASRouterPreferences.getAllUserPreferences(), targetingParameters: {}}),
       });
     });
     it("should not send a message on a state change asrouter.devtoolsEnabled pref is on", async () => {
@@ -219,6 +220,47 @@ describe("ASRouter", () => {
       await Router.setState({foo: 123});
 
       assert.notCalled(channel.sendAsyncMessage);
+    });
+  });
+
+  describe("getTargetingParameters", () => {
+    it("should return the targeting parameters", async () => {
+      const stub = sandbox.stub().resolves("foo");
+      const obj = {foo: 1};
+      sandbox.stub(obj, "foo").get(stub);
+      const result = await Router.getTargetingParameters(obj, obj);
+
+      assert.calledTwice(stub);
+      assert.propertyVal(result, "foo", "foo");
+    });
+  });
+
+  describe("evaluateExpression", () => {
+    let stub;
+    beforeEach(async () => {
+      stub = sandbox.stub();
+      stub.resolves("foo");
+      sandbox.stub(ASRouterTargeting, "isMatch").callsFake(stub);
+    });
+    afterEach(() => {
+      sandbox.restore();
+    });
+    it("should call ASRouterTargeting to evaluate", async () => {
+      const targetStub = {sendAsyncMessage: sandbox.stub()};
+
+      await Router.evaluateExpression(targetStub, {});
+
+      assert.calledOnce(targetStub.sendAsyncMessage);
+      assert.equal(targetStub.sendAsyncMessage.firstCall.args[1].data.evaluationStatus.result, "foo");
+      assert.isTrue(targetStub.sendAsyncMessage.firstCall.args[1].data.evaluationStatus.success);
+    });
+    it("should catch evaluation errors", async () => {
+      stub.returns(Promise.reject(new Error("fake error")));
+      const targetStub = {sendAsyncMessage: sandbox.stub()};
+
+      await Router.evaluateExpression(targetStub, {});
+
+      assert.isFalse(targetStub.sendAsyncMessage.firstCall.args[1].data.evaluationStatus.success);
     });
   });
 
@@ -601,12 +643,14 @@ describe("ASRouter", () => {
 
     describe("#onMessage: ADMIN_CONNECT_STATE", () => {
       it("should send a message containing the whole state", async () => {
+        sandbox.stub(Router, "getTargetingParameters").resolves({});
         const msg = fakeAsyncMessage({type: "ADMIN_CONNECT_STATE"});
+
         await Router.onMessage(msg);
         assert.calledOnce(msg.target.sendAsyncMessage);
         assert.deepEqual(msg.target.sendAsyncMessage.firstCall.args[1], {
           type: "ADMIN_SET_STATE",
-          data: Object.assign({}, Router.state, {providerPrefs: ASRouterPreferences.providers, userPrefs: ASRouterPreferences.getAllUserPreferences()}),
+          data: Object.assign({}, Router.state, {providerPrefs: ASRouterPreferences.providers, userPrefs: ASRouterPreferences.getAllUserPreferences(), targetingParameters: {}}),
         });
       });
     });
@@ -903,6 +947,17 @@ describe("ASRouter", () => {
         await Router.onMessage(msg);
 
         assert.calledWith(ASRouterPreferences.setUserPreference, "foo", true);
+      });
+    });
+    describe("#onMessage: EVALUATE_JEXL_EXPRESSION", () => {
+      it("should call evaluateExpression", async () => {
+        const msg = fakeAsyncMessage({type: "EVALUATE_JEXL_EXPRESSION", data: {foo: true}});
+        sandbox.stub(Router, "evaluateExpression");
+
+        await Router.onMessage(msg);
+
+        assert.calledOnce(Router.evaluateExpression);
+        assert.calledWithExactly(Router.evaluateExpression, msg.target, msg.data.data);
       });
     });
   });

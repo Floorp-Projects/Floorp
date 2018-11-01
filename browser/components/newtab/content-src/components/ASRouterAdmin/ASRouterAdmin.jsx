@@ -9,12 +9,21 @@ export class ASRouterAdmin extends React.PureComponent {
     this.handleUserPrefToggle = this.handleUserPrefToggle.bind(this);
     this.onChangeMessageFilter = this.onChangeMessageFilter.bind(this);
     this.findOtherBundledMessagesOfSameTemplate = this.findOtherBundledMessagesOfSameTemplate.bind(this);
-    this.state = {messageFilter: "all"};
+    this.handleExpressionEval = this.handleExpressionEval.bind(this);
+    this.onChangeTargetingParameters = this.onChangeTargetingParameters.bind(this);
+    this.state = {messageFilter: "all", evaluationStatus: {}, stringTargetingParameters: null};
   }
 
   onMessage({data: action}) {
     if (action.type === "ADMIN_SET_STATE") {
       this.setState(action.data);
+      if (!this.state.stringTargetingParameters) {
+        const stringTargetingParameters = {};
+        for (const param of Object.keys(action.data.targetingParameters)) {
+          stringTargetingParameters[param] = JSON.stringify(action.data.targetingParameters[param], null, 2);
+        }
+        this.setState({stringTargetingParameters});
+      }
     }
   }
 
@@ -60,6 +69,41 @@ export class ASRouterAdmin extends React.PureComponent {
 
   resetPref() {
     ASRouterUtils.sendMessage({type: "RESET_PROVIDER_PREF"});
+  }
+
+  handleExpressionEval() {
+    const context = {};
+    for (const param of Object.keys(this.state.stringTargetingParameters)) {
+      const value = this.state.stringTargetingParameters[param];
+      context[param] = value ? JSON.parse(value) : null;
+    }
+    ASRouterUtils.sendMessage({
+      type: "EVALUATE_JEXL_EXPRESSION",
+      data: {
+        expression: this.refs.expressionInput.value,
+        context,
+      },
+    });
+  }
+
+  onChangeTargetingParameters(event) {
+    const {name} = event.target;
+    const {value} = event.target;
+    this.refs.evaluationStatus.innerText = "";
+
+    this.setState(({stringTargetingParameters}) => {
+      let targetingParametersError = null;
+      const updatedParameters = {...stringTargetingParameters};
+      updatedParameters[name] = value;
+      try {
+        JSON.parse(value);
+      } catch (e) {
+        console.log(`Error parsing value of parameter ${name}`); // eslint-disable-line no-console
+        targetingParametersError = {id: name};
+      }
+
+      return {stringTargetingParameters: updatedParameters, targetingParametersError};
+    });
   }
 
   renderMessageItem(msg) {
@@ -192,6 +236,38 @@ export class ASRouterAdmin extends React.PureComponent {
     </tbody></table>);
   }
 
+  renderTargetingParameters() {
+    // There was no error and the result is truthy
+    const success = this.state.evaluationStatus.success && !!this.state.evaluationStatus.result;
+
+    return (<table><tbody>
+      <tr><td><h2>Evaluate JEXL expression</h2></td></tr>
+      <tr>
+        <td>
+          <p><textarea ref="expressionInput" rows="10" cols="60" placeholder="Evaluate JEXL expressions and mock parameters by changing their values below" /></p>
+          <p>Status: <span ref="evaluationStatus">{success ? "✅" : "❌"}, Result: {JSON.stringify(this.state.evaluationStatus.result, null, 2)}</span></p>
+        </td>
+        <td>
+           <button className="ASRouterButton secondary" onClick={this.handleExpressionEval}>Evaluate</button>
+        </td>
+      </tr>
+      <tr><td><h2>Modify targeting parameters</h2></td></tr>
+      {this.state.stringTargetingParameters && Object.keys(this.state.stringTargetingParameters).map((param, i) => {
+        const value = this.state.stringTargetingParameters[param];
+        const errorState = this.state.targetingParametersError && this.state.targetingParametersError.id === param;
+        const className = errorState ? "errorState" : "";
+        const inputComp = (value && value.length) > 30 ?
+          <textarea name={param} className={className} value={value} rows="10" cols="60" onChange={this.onChangeTargetingParameters} /> :
+          <input name={param} className={className} value={value} onChange={this.onChangeTargetingParameters} />;
+
+        return (<tr key={i}>
+          <td>{param}</td>
+          <td>{inputComp}</td>
+          </tr>);
+      })}
+      </tbody></table>);
+  }
+
   render() {
     return (<div className="asrouter-admin outer-wrapper">
       <h1>AS Router Admin</h1>
@@ -203,6 +279,7 @@ export class ASRouterAdmin extends React.PureComponent {
       <h2>Messages</h2>
       {this.renderMessageFilter()}
       {this.renderMessages()}
+      {this.renderTargetingParameters()}
     </div>);
   }
 }

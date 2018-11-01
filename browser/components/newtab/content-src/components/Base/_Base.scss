@@ -26,10 +26,6 @@ main {
   padding-bottom: $snippets-container-height - $section-spacing - $base-gutter;
   width: $wrapper-default-width;
 
-  @media (min-width: $break-point-small) {
-    width: $wrapper-max-width-small;
-  }
-
   @media (min-width: $break-point-medium) {
     width: $wrapper-max-width-medium;
   }
