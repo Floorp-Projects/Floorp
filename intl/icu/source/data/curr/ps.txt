@@ -592,7 +592,11 @@ ps{
         }
         VEF{
             "VEF",
-            "VEF",
+            "VEF (2008–2018)",
+        }
+        VES{
+            "VES",
+            "VES",
         }
         VND{
             "₫",
@@ -623,8 +627,8 @@ ps{
             "XPF",
         }
         XXX{
-            "XXX",
-            "نامعلوم د اسعارو له",
+            "¤",
+            "نامعلومه مروجه پېسې",
         }
         YER{
             "YER",
@@ -1104,8 +1108,8 @@ ps{
             other{"MOP"}
         }
         MRO{
-            one{"MRO"}
-            other{"MRO"}
+            one{"MRO (1973–2017)"}
+            other{"MRO (1973–2017)"}
         }
         MRU{
             one{"MRU"}
@@ -1328,8 +1332,12 @@ ps{
             other{"UZS"}
         }
         VEF{
-            one{"VEF"}
-            other{"VEF"}
+            one{"VEF (2008–2018)"}
+            other{"VEF (2008–2018)"}
+        }
+        VES{
+            one{"VES"}
+            other{"VES"}
         }
         VND{
             one{"VND"}
@@ -1360,8 +1368,8 @@ ps{
             other{"XPF"}
         }
         XXX{
-            one{"د اسعارو د نامعلومو واحد"}
-            other{"نامعلوم د اسعارو له"}
+            one{"(د نامعلومه مروجه پېسو واحد)"}
+            other{"(نامعلومه مروجه پېسې)"}
         }
         YER{
             one{"YER"}
@@ -1376,5 +1384,5 @@ ps{
             other{"ZMW"}
         }
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.94"}
 }

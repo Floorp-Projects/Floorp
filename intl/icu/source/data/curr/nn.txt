@@ -968,6 +968,10 @@ nn{
         }
         VEF{
             "VEF",
+            "venezuelanske bolivar (2008–2018)",
+        }
+        VES{
+            "VES",
             "venezuelanske bolivar",
         }
         VND{
@@ -1055,7 +1059,7 @@ nn{
             "testvalutakode",
         }
         XXX{
-            "XXX",
+            "¤",
             "ukjend valuta",
         }
         YDD{
@@ -2080,6 +2084,10 @@ nn{
             other{"venezuelanske bolivar (1871–2008)"}
         }
         VEF{
+            one{"venezuelansk bolivar (2008–2018)"}
+            other{"venezuelanske bolivar (2008–2018)"}
+        }
+        VES{
             one{"venezuelansk bolivar"}
             other{"venezuelanske bolivar"}
         }
@@ -2204,5 +2212,5 @@ nn{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.94"}
 }

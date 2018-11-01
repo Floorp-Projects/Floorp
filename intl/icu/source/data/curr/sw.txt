@@ -168,7 +168,7 @@ sw{
         }
         DZD{
             "DZD",
-            "Dinar ya Algeria",
+            "Dinar ya Aljeria",
         }
         EGP{
             "EGP",
@@ -620,6 +620,10 @@ sw{
         }
         VEF{
             "VEF",
+            "Bolivar ya Venezuela (2008–2018)",
+        }
+        VES{
+            "VES",
             "Bolivar ya Venezuela",
         }
         VND{
@@ -651,7 +655,7 @@ sw{
             "Faranga ya CFP",
         }
         XXX{
-            "XXX",
+            "¤",
             "Sarafu isiyojulikana",
         }
         YER{
@@ -941,8 +945,8 @@ sw{
             other{"peso za Dominica"}
         }
         DZD{
-            one{"dinar ya Algeria"}
-            other{"dinar za Algeria"}
+            one{"dinar ya Aljeria"}
+            other{"dinar za Aljeria"}
         }
         EGP{
             one{"pauni ya Misri"}
@@ -1381,6 +1385,10 @@ sw{
             other{"som za Uzbekistan"}
         }
         VEF{
+            one{"Bolivar ya Venezuela (2008–2018)"}
+            other{"Bolivar za Venezuela (2008–2018)"}
+        }
+        VES{
             one{"Bolivar ya Venezuela"}
             other{"Bolivar za Venezuela"}
         }
@@ -1433,5 +1441,5 @@ sw{
         one{"{1} {0}"}
         other{"{1} {0}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
 }

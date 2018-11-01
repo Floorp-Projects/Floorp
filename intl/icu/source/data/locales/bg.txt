@@ -19,7 +19,9 @@ bg{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"⩾ {0}"}
+                approximately{"~{0}"}
+                atLeast{"≥ {0}"}
+                atMost{"≤ {0}"}
                 range{"{0} – {1}"}
             }
             patterns{
@@ -210,7 +212,7 @@ bg{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.94"}
     calendar{
         generic{
             DateTimePatterns{
@@ -573,7 +575,7 @@ bg{
                         evening1{"вечерта"}
                         midnight{"полунощ"}
                         morning1{"сутринта"}
-                        morning2{"на обед"}
+                        morning2{"на обяд"}
                         night1{"през нощта"}
                     }
                     narrow{
@@ -581,7 +583,7 @@ bg{
                         evening1{"вечерта"}
                         midnight{"полунощ"}
                         morning1{"сутринта"}
-                        morning2{"на обед"}
+                        morning2{"на обяд"}
                         night1{"през нощта"}
                     }
                     wide{
@@ -600,7 +602,7 @@ bg{
                         evening1{"вечерта"}
                         midnight{"полунощ"}
                         morning1{"сутринта"}
-                        morning2{"на обед"}
+                        morning2{"на обяд"}
                         night1{"през нощта"}
                         pm{"pm"}
                     }
@@ -610,7 +612,7 @@ bg{
                         evening1{"вечерта"}
                         midnight{"полунощ"}
                         morning1{"сутринта"}
-                        morning2{"наобед"}
+                        morning2{"на обяд"}
                         night1{"през нощта"}
                         pm{"pm"}
                     }
@@ -620,7 +622,7 @@ bg{
                         evening1{"вечерта"}
                         midnight{"полунощ"}
                         morning1{"сутринта"}
-                        morning2{"на обед"}
+                        morning2{"на обяд"}
                         night1{"през нощта"}
                         pm{"pm"}
                     }
@@ -990,7 +992,7 @@ bg{
         half_width_form_variant{"Варианти на форми с половин ширина"}
         han_characters{"Хан логограми"}
         han_radicals{"Хан радикали"}
-        hanja{"Ханджа"}
+        hanja{"Ханча"}
         hanzi_simplified{"Ханзи (опростен)"}
         hanzi_traditional{"Ханзи (традиционен)"}
         heart{"Сърце"}
@@ -1006,7 +1008,7 @@ bg{
         limited_use{"Ограничена употреба"}
         male{"Мъж"}
         math_symbols{"Математически символи"}
-        middle_eastern_scripts{"Средноевропейски писмени знаци"}
+        middle_eastern_scripts{"Близкоизточни писмени знаци"}
         miscellaneous{"Разни"}
         modern_scripts{"Модерни писмени знаци"}
         modifier{"Модификатори"}
@@ -1026,7 +1028,7 @@ bg{
         rightwards_arrows{"Сочещи надясно стрелки"}
         sign_standard_symbols{"Знак/стандартен символ"}
         small_form_variant{"Варианти на малки форми"}
-        smiley{"Усмихнато лице"}
+        smiley{"Емотикони"}
         smileys_people{"Емотикони и хора"}
         south_asian_scripts{"Южноазиатски писмености"}
         southeast_asian_scripts{"Югоизточноазиатски писмени знаци"}
@@ -1042,7 +1044,7 @@ bg{
         vocalic_jamo{"Джамо за гласни"}
         weather{"Времето"}
         western_asian_scripts{"Западноазиатски писмени знаци"}
-        whitespace{"Бели полета"}
+        whitespace{"Интервали"}
     }
     delimiters{
         alternateQuotationEnd{"“"}
@@ -1113,6 +1115,12 @@ bg{
         }
         dayOfYear{
             dn{"ден от годината"}
+        }
+        dayOfYear-narrow{
+            dn{"ден от г."}
+        }
+        dayOfYear-short{
+            dn{"ден от г."}
         }
         dayperiod{
             dn{"пр.об./сл.об."}
@@ -1507,7 +1515,7 @@ bg{
             }
         }
         second-short{
-            dn{"с"}
+            dn{"сек"}
             relativeTime{
                 future{
                     one{"след {0} сек"}
@@ -1800,6 +1808,12 @@ bg{
         }
         weekdayOfMonth{
             dn{"работен ден от месеца"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"раб. ден от мес."}
+        }
+        weekdayOfMonth-short{
+            dn{"раб. ден от мес."}
         }
         year{
             dn{"година"}

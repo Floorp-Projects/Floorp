@@ -5,7 +5,7 @@ pt_ST{
     Currencies{
         STN{
             "Db",
-            "São Tomé & Príncipe Dobra (2018)",
+            "dobra de São Tomé e Príncipe",
         }
     }
     Version{"2.1.39.11"}

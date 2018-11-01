@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 mn{
-    Version{"2.1.41.97"}
+    Version{"2.1.43.94"}
     zoneStrings{
         "Etc:UTC"{
             ls{"Олон улсын зохицуулалттай цаг"}
@@ -605,8 +605,8 @@ mn{
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0} цаг"}
-        regionFormatDaylight{"{0} зуны цаг"}
-        regionFormatStandard{"{0} стандарт цаг"}
+        regionFormat{"{0}-н цаг"}
+        regionFormatDaylight{"{0}-н зуны цаг"}
+        regionFormatStandard{"{0}-н стандарт цаг"}
     }
 }

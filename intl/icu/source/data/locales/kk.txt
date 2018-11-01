@@ -28,7 +28,9 @@ kk{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -219,7 +221,7 @@ kk{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.88"}
     calendar{
         generic{
             DateTimePatterns{
@@ -238,12 +240,12 @@ kk{
                 "{1} {0}",
             }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
+                Bh{"B h"}
+                Bhm{"B h:mm"}
+                Bhms{"B h:mm:ss"}
                 E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
+                EBhm{"E B h:mm"}
+                EBhms{"E B h:mm:ss"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d, E"}
@@ -460,13 +462,13 @@ kk{
             dayNames{
                 format{
                     abbreviated{
-                        "Жс",
-                        "Дс",
-                        "Сс",
-                        "Ср",
-                        "Бс",
-                        "Жм",
-                        "Сб",
+                        "жс",
+                        "дс",
+                        "сс",
+                        "ср",
+                        "бс",
+                        "жм",
+                        "сб",
                     }
                     narrow{
                         "Ж",
@@ -478,13 +480,13 @@ kk{
                         "С",
                     }
                     short{
-                        "Жс",
-                        "Дс",
-                        "Сс",
-                        "Ср",
-                        "Бс",
-                        "Жм",
-                        "Сб",
+                        "жс",
+                        "дс",
+                        "сс",
+                        "ср",
+                        "бс",
+                        "жм",
+                        "сб",
                     }
                     wide{
                         "жексенбі",
@@ -498,13 +500,13 @@ kk{
                 }
                 stand-alone{
                     abbreviated{
-                        "Жс",
-                        "Дс",
-                        "Сс",
-                        "Ср",
-                        "Бс",
-                        "Жм",
-                        "Сб",
+                        "жс",
+                        "дс",
+                        "сс",
+                        "ср",
+                        "бс",
+                        "жм",
+                        "сб",
                     }
                     narrow{
                         "Ж",
@@ -516,22 +518,22 @@ kk{
                         "С",
                     }
                     short{
-                        "Жс",
-                        "Дс",
-                        "Сс",
-                        "Ср",
-                        "Бс",
-                        "Жм",
-                        "Сб",
+                        "жс",
+                        "дс",
+                        "сс",
+                        "ср",
+                        "бс",
+                        "жм",
+                        "сб",
                     }
                     wide{
-                        "Жексенбі",
-                        "Дүйсенбі",
-                        "Сейсенбі",
-                        "Сәрсенбі",
-                        "Бейсенбі",
-                        "Жұма",
-                        "Сенбі",
+                        "жексенбі",
+                        "дүйсенбі",
+                        "сейсенбі",
+                        "сәрсенбі",
+                        "бейсенбі",
+                        "жұма",
+                        "сенбі",
                     }
                 }
             }
@@ -600,17 +602,13 @@ kk{
                     "б.з.д.",
                     "б.з.",
                 }
-                abbreviated%variant{
-                    "BCE",
-                    "CE",
-                }
                 wide{
                     "Біздің заманымызға дейін",
                     "біздің заманымыз",
                 }
                 wide%variant{
                     "біздің заманымызға дейін",
-                    "CE",
+                    "Біздің заманымыз",
                 }
             }
             intervalFormats{
@@ -755,18 +753,18 @@ kk{
                 }
                 stand-alone{
                     abbreviated{
-                        "Қаң.",
-                        "Ақп.",
-                        "Нау.",
-                        "Сәу.",
-                        "Мам.",
-                        "Мау.",
-                        "Шіл.",
-                        "Там.",
-                        "Қыр.",
-                        "Қаз.",
-                        "Қар.",
-                        "Жел.",
+                        "қаң.",
+                        "ақп.",
+                        "нау.",
+                        "сәу.",
+                        "мам.",
+                        "мау.",
+                        "шіл.",
+                        "там.",
+                        "қыр.",
+                        "қаз.",
+                        "қар.",
+                        "жел.",
                     }
                     narrow{
                         "Қ",
@@ -843,92 +841,92 @@ kk{
         }
     }
     characterLabel{
-        activities{"Спорт"}
+        activities{"әрекет"}
         african_scripts{"Африка жазулары"}
         american_scripts{"Америка жазулары"}
         animal{"жануар"}
-        animals_nature{"Жануарлар және табиғат"}
-        arrows{"Көрсеткілер"}
+        animals_nature{"жануар немесе табиғат"}
+        arrows{"көрсеткі"}
         body{"дене"}
-        box_drawing{"Псевдографика"}
+        box_drawing{"псевдографика"}
         braille{"Брайль жазуы"}
         building{"ғимарат"}
-        bullets_stars{"Маркерлер/жұлдызшалар"}
-        consonantal_jamo{"Дауыссыз чамо"}
-        currency_symbols{"Валюта таңбалары"}
-        dash_connector{"Тире/байланыс"}
-        digits{"Цифрлар"}
-        dingbats{"Дингбаттар"}
-        divination_symbols{"Оккульттық таңбалар"}
-        downwards_arrows{"Төмен қарайғы көрсеткілер"}
-        downwards_upwards_arrows{"Төмен және жоғарғы қарайғы көрсеткілер"}
+        bullets_stars{"тізім маркерлері/жұлдыздар"}
+        consonantal_jamo{"дауыссыз чамо"}
+        currency_symbols{"валюта таңбалары"}
+        dash_connector{"сызықша/байланыс"}
+        digits{"цифрлар"}
+        dingbats{"дингбаттар"}
+        divination_symbols{"оккульттық таңбалар"}
+        downwards_arrows{"төмен бағытталған көрсеткілер"}
+        downwards_upwards_arrows{"төмен және жоғары бағытталған көрсеткілер"}
         east_asian_scripts{"Шығыс Азия жазулары"}
-        emoji{"Эмодзи"}
+        emoji{"эмодзи"}
         european_scripts{"Еуропа жазулары"}
         female{"әйел"}
         flag{"ту"}
-        flags{"Тулар"}
-        food_drink{"Тамақ пен сусын"}
-        format{"Пішім"}
-        format_whitespace{"Пішім және бос орын"}
-        full_width_form_variant{"Толық енді форма нұсқалары"}
-        geometric_shapes{"Геометриялық пішіндер"}
-        half_width_form_variant{"Жартылай енді форма нұсқалары"}
-        han_characters{"Қытай иероглифтері"}
-        han_radicals{"Иероглиф кілттері"}
-        hanja{"Ханча"}
-        hanzi_simplified{"Қытай иероглифтері (жеңілдетілген)"}
-        hanzi_traditional{"Қытай иероглифтері (дәстүрлі)"}
+        flags{"тулар"}
+        food_drink{"тамақ пен сусын"}
+        format{"форматтау"}
+        format_whitespace{"форматтау және бос орын"}
+        full_width_form_variant{"толық енді форма нұсқалары"}
+        geometric_shapes{"геометриялық фигуралар"}
+        half_width_form_variant{"жарты енді форма нұсқалары"}
+        han_characters{"қытай иероглифтері"}
+        han_radicals{"иероглиф кілттері"}
+        hanja{"ханча"}
+        hanzi_simplified{"қытай иероглифтері (жеңілдетілген)"}
+        hanzi_traditional{"қытай иероглифтері (дәстүрлі)"}
         heart{"жүрек"}
-        historic_scripts{"Көне жазулар"}
-        ideographic_desc_characters{"Иероглифтерді сипаттау таңбалары"}
-        japanese_kana{"Жапондық кана жазуы"}
-        kanbun{"Камбун"}
-        kanji{"Канджи"}
+        historic_scripts{"көне жазулар"}
+        ideographic_desc_characters{"иероглифтерді сипаттау таңбалары"}
+        japanese_kana{"жапондық қана жазуы"}
+        kanbun{"камбун"}
+        kanji{"кандзи"}
         keycap{"перне"}
-        leftwards_arrows{"Солға қарайғы көрсеткілер"}
-        leftwards_rightwards_arrows{"Солға және оңға қарайғы көрсеткілер"}
-        letterlike_symbols{"Әріптік таңбалар"}
-        limited_use{"Шектеулі қолданыс таңбалары"}
-        male{"ер"}
-        math_symbols{"Математикалық таңбалар"}
+        leftwards_arrows{"солға бағытталған көрсеткілер"}
+        leftwards_rightwards_arrows{"солға және оңға бағытталған көрсеткілер"}
+        letterlike_symbols{"әріптік таңбалар"}
+        limited_use{"қолданысы шектеулі"}
+        male{"еркек"}
+        math_symbols{"математикалық таңбалар"}
         middle_eastern_scripts{"Таяу Шығыс жазулары"}
-        miscellaneous{"Әр түрлі"}
-        modern_scripts{"Қазіргі заман жазулары"}
-        modifier{"Модификатор"}
-        musical_symbols{"Музыкалық таңбалар"}
+        miscellaneous{"әр түрлі"}
+        modern_scripts{"қазіргі заман жазулары"}
+        modifier{"модификатор"}
+        musical_symbols{"музыкалық таңбалар"}
         nature{"табиғат"}
-        nonspacing{"Бос орынсыз таңбалар"}
-        numbers{"Сандар"}
-        objects{"Нысандар"}
-        other{"Басқа"}
-        paired{"Жұптасқан таңбалар"}
+        nonspacing{"бос орынсыз"}
+        numbers{"сандар"}
+        objects{"нысандар"}
+        other{"басқа"}
+        paired{"жұптасқан"}
         person{"адам"}
-        phonetic_alphabet{"Фонетикалық әліпби"}
-        pictographs{"Пиктограмма"}
+        phonetic_alphabet{"фонетикалық әліпби"}
+        pictographs{"пиктограммалар"}
         place{"орын"}
         plant{"өсімдік"}
-        punctuation{"Тыныс белгілері"}
-        rightwards_arrows{"Оңға қарайғы көрсеткілер"}
-        sign_standard_symbols{"Белгілер/стандартты таңбалар"}
-        small_form_variant{"Кіші форма нұсқалары"}
+        punctuation{"тыныс белгілері"}
+        rightwards_arrows{"оңға бағытталған көрсеткілер"}
+        sign_standard_symbols{"белгілер/стандартты таңбалар"}
+        small_form_variant{"кіші форма нұсқалары"}
         smiley{"смайл"}
-        smileys_people{"Смайлдар мен адамдар"}
+        smileys_people{"смайлдар мен адамдар"}
         south_asian_scripts{"Оңтүстік Азия жазулары"}
         southeast_asian_scripts{"Оңтүстік-Шығыс Азия жазулары"}
-        spacing{"Бос орындар"}
+        spacing{"бос орын"}
         sport{"спорт"}
-        symbols{"Таңбалар"}
-        technical_symbols{"Техникалық таңбалар"}
-        tone_marks{"Екпін белгілері"}
+        symbols{"таңбалар"}
+        technical_symbols{"техникалық таңбалар"}
+        tone_marks{"екпін белгілері"}
         travel{"саяхат"}
-        travel_places{"Саяхат"}
-        upwards_arrows{"Жоғары қарайғы көрсеткілер"}
-        variant_forms{"Құбылмалы формалар"}
-        vocalic_jamo{"Дауысты чамо"}
+        travel_places{"саяхат және орындар"}
+        upwards_arrows{"жоғары бағытталған көрсеткілер"}
+        variant_forms{"өзгермелі формалар"}
+        vocalic_jamo{"дауысты чамо"}
         weather{"ауа райы"}
         western_asian_scripts{"Батыс Азия жазулары"}
-        whitespace{"Бос орын"}
+        whitespace{"бос орын"}
     }
     delimiters{
         alternateQuotationEnd{"”"}

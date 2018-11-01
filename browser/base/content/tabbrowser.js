@@ -286,10 +286,7 @@ window._gBrowser = {
   _setupInitialBrowserAndTab() {
     // See browser.js for the meaning of window.arguments.
     let userContextId = window.arguments && window.arguments[6];
-
-    // Bug 1362774 will adjust this to only set `uriIsAboutBlank` when
-    // necessary. For now, we always pass it.
-    let browser = this._createBrowser({uriIsAboutBlank: true, userContextId});
+    let browser = this._createBrowser({uriIsAboutBlank: false, userContextId});
     browser.setAttribute("primary", "true");
     browser.setAttribute("blank", "true");
     if (gBrowserAllowScriptsToCloseInitialTabs) {

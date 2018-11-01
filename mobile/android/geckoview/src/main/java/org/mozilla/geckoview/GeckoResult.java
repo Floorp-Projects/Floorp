@@ -1,5 +1,6 @@
 package org.mozilla.geckoview;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.os.Handler;
@@ -180,6 +181,7 @@ public class GeckoResult<T> {
      * Construct an incomplete GeckoResult. Call {@link #complete(Object)} or
      * {@link #completeExceptionally(Throwable)} in order to fulfill the result.
      */
+    @WrapForJNI
     public GeckoResult() {
         if (ThreadUtils.isOnUiThread()) {
             mHandler = ThreadUtils.getUiHandler();
@@ -218,6 +220,7 @@ public class GeckoResult<T> {
      * @param <U> Type for the result.
      * @return The completed {@link GeckoResult}
      */
+    @WrapForJNI
     public static @NonNull <U> GeckoResult<U> fromValue(@Nullable final U value) {
         final GeckoResult<U> result = new GeckoResult<>();
         result.complete(value);
@@ -232,6 +235,7 @@ public class GeckoResult<T> {
      * @param <T> Type for the result if the result had been completed without exception.
      * @return The completed {@link GeckoResult}
      */
+    @WrapForJNI
     public static @NonNull <T> GeckoResult<T> fromException(@NonNull final Throwable error) {
         final GeckoResult<T> result = new GeckoResult<>();
         result.completeExceptionally(error);
@@ -501,6 +505,7 @@ public class GeckoResult<T> {
      * @param value The value used to complete the result.
      * @throws IllegalStateException If the result is already completed.
      */
+    @WrapForJNI
     public synchronized void complete(final T value) {
         if (mComplete) {
             throw new IllegalStateException("result is already complete");
@@ -520,6 +525,7 @@ public class GeckoResult<T> {
      * @param exception The {@link Throwable} used to complete the result.
      * @throws IllegalStateException If the result is already completed.
      */
+    @WrapForJNI
     public synchronized void completeExceptionally(@NonNull final Throwable exception) {
         if (mComplete) {
             throw new IllegalStateException("result is already complete");

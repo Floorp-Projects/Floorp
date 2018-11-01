@@ -25,7 +25,9 @@ ka{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"≈{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}-{1}"}
             }
             patterns{
@@ -219,7 +221,7 @@ ka{
         native{"latn"}
         traditional{"geor"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.50"}
     calendar{
         generic{
             DateTimePatterns{
@@ -1007,6 +1009,12 @@ ka{
         dayperiod{
             dn{"დღის ნახევარი"}
         }
+        dayperiod-narrow{
+            dn{"დღ. ნახევარი"}
+        }
+        dayperiod-short{
+            dn{"დღ. ნახევარი"}
+        }
         era{
             dn{"ეპოქა"}
         }
@@ -1657,11 +1665,23 @@ ka{
         weekOfMonth{
             dn{"თვის კვირა"}
         }
+        weekOfMonth-narrow{
+            dn{"თვ. კვირა"}
+        }
+        weekOfMonth-short{
+            dn{"თვ. კვირა"}
+        }
         weekday{
             dn{"კვირის დღე"}
         }
         weekdayOfMonth{
             dn{"კვირის დღე თვეში"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"კვ. დღე თვეში"}
+        }
+        weekdayOfMonth-short{
+            dn{"კვ. დღე თვეში"}
         }
         year{
             dn{"წელი"}
@@ -1719,6 +1739,12 @@ ka{
         }
         zone{
             dn{"დროის სარტყელი"}
+        }
+        zone-narrow{
+            dn{"დროის სარტყ."}
+        }
+        zone-short{
+            dn{"დროის სარტყ."}
         }
     }
     listPattern{

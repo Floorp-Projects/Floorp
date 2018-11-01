@@ -22,7 +22,9 @@ sl{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -287,7 +289,7 @@ sl{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     calendar{
         buddhist{
             eras{
@@ -1724,6 +1726,13 @@ sl{
         }
         day-narrow{
             dn{"dan"}
+            relative{
+                "-1"{"včeraj"}
+                "-2"{"predvčerajšnjim"}
+                "0"{"danes"}
+                "1"{"jutri"}
+                "2"{"pojutrišnjem"}
+            }
             relativeTime{
                 future{
                     few{"čez {0} dni"}
@@ -1741,6 +1750,13 @@ sl{
         }
         day-short{
             dn{"dan"}
+            relative{
+                "-1"{"včeraj"}
+                "-2"{"predvčerajšnjim"}
+                "0"{"danes"}
+                "1"{"jutri"}
+                "2"{"pojutrišnjem"}
+            }
             relativeTime{
                 future{
                     few{"čez {0} dni"}
@@ -2041,6 +2057,11 @@ sl{
         }
         month-narrow{
             dn{"mes."}
+            relative{
+                "-1"{"prejšnji mesec"}
+                "0"{"ta mesec"}
+                "1"{"naslednji mesec"}
+            }
             relativeTime{
                 future{
                     few{"čez {0} mes."}
@@ -2058,6 +2079,11 @@ sl{
         }
         month-short{
             dn{"mes."}
+            relative{
+                "-1"{"prejšnji mesec"}
+                "0"{"ta mesec"}
+                "1"{"naslednji mesec"}
+            }
             relativeTime{
                 future{
                     few{"čez {0} mes."}
@@ -2533,6 +2559,11 @@ sl{
         }
         week-narrow{
             dn{"ted."}
+            relative{
+                "-1"{"prejšnji teden"}
+                "0"{"ta teden"}
+                "1"{"naslednji teden"}
+            }
             relativePeriod{"v tednu {0}"}
             relativeTime{
                 future{
@@ -2551,6 +2582,11 @@ sl{
         }
         week-short{
             dn{"ted."}
+            relative{
+                "-1"{"prejšnji teden"}
+                "0"{"ta teden"}
+                "1"{"naslednji teden"}
+            }
             relativePeriod{"v tednu {0}"}
             relativeTime{
                 future{
@@ -2618,6 +2654,11 @@ sl{
         }
         year-narrow{
             dn{"leto"}
+            relative{
+                "-1"{"lani"}
+                "0"{"letos"}
+                "1"{"naslednje leto"}
+            }
             relativeTime{
                 future{
                     few{"čez {0} leta"}
@@ -2635,6 +2676,11 @@ sl{
         }
         year-short{
             dn{"leto"}
+            relative{
+                "-1"{"lani"}
+                "0"{"letos"}
+                "1"{"naslednje leto"}
+            }
             relativeTime{
                 future{
                     few{"čez {0} leta"}
@@ -2713,8 +2759,13 @@ sl{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rs}]",
             }
         }

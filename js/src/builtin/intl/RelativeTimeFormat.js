@@ -174,8 +174,12 @@ function Intl_RelativeTimeFormat_format(value, unit) {
     let relativeTimeFormat = this;
 
     // Step 2.
-    if (!IsObject(relativeTimeFormat) || (relativeTimeFormat = GuardToRelativeTimeFormat(relativeTimeFormat)) === null)
-        ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "RelativeTimeFormat", "format", "RelativeTimeFormat");
+    if (!IsObject(relativeTimeFormat) ||
+        (relativeTimeFormat = GuardToRelativeTimeFormat(relativeTimeFormat)) === null)
+    {
+        return callFunction(CallRelativeTimeFormatMethodIfWrapped, this, value, unit,
+                            "Intl_RelativeTimeFormat_format");
+    }
 
     // Ensure the RelativeTimeFormat internals are resolved.
     var internals = getRelativeTimeFormatInternals(relativeTimeFormat);
@@ -227,8 +231,8 @@ function Intl_RelativeTimeFormat_resolvedOptions() {
     var relativeTimeFormat;
     // Check "this RelativeTimeFormat object" per introduction of section 1.4.
     if (!IsObject(this) || (relativeTimeFormat = GuardToRelativeTimeFormat(this)) === null) {
-        ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "RelativeTimeFormat", "resolvedOptions",
-                       "RelativeTimeFormat");
+        return callFunction(CallRelativeTimeFormatMethodIfWrapped, this,
+                            "Intl_RelativeTimeFormat_resolvedOptions");
     }
 
     var internals = getRelativeTimeFormatInternals(relativeTimeFormat, "resolvedOptions");

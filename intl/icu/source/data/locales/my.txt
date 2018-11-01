@@ -26,7 +26,9 @@ my{
         default{"mymr"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0} နှင့်အထက်"}
+                atMost{"≤{0}"}
                 range{"{0} - {1}"}
             }
             patterns{
@@ -201,7 +203,7 @@ my{
         }
         native{"mymr"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.88"}
     calendar{
         generic{
             DateTimePatterns{
@@ -440,7 +442,7 @@ my{
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
                 yw{
-                    other{"y ခု w ပတ်မြောက်"}
+                    other{"Y ခု w ပတ်မြောက်"}
                 }
             }
             dayNames{
@@ -584,7 +586,7 @@ my{
             eras{
                 abbreviated{
                     "ဘီစီ",
-                    "အေဒီ",
+                    "အဒေီ",
                 }
                 abbreviated%variant{
                     "ဘီစီအီး",
@@ -1668,8 +1670,13 @@ my{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

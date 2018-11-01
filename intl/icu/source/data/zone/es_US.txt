@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_US{
     %%Parent{"es_419"}
-    Version{"2.1.38.73"}
+    Version{"2.1.43.65"}
     zoneStrings{
         "Etc:UTC"{
             ls{"hora universal coordinada"}
@@ -70,6 +70,9 @@ es_US{
             lg{"hora de Europa oriental"}
             ls{"hora estándar de Europa oriental"}
         }
+        "meta:Europe_Further_Eastern"{
+            ls{"hora del extremo oriental de Europa"}
+        }
         "meta:Europe_Western"{
             ld{"hora de verano de Europa occidental"}
             lg{"hora de Europa occidental"}
@@ -99,9 +102,6 @@ es_US{
         }
         "meta:Marshall_Islands"{
             ls{"hora de las Islas Marshall"}
-        }
-        "meta:Myanmar"{
-            ls{"hora de Myanmar (Birmania)"}
         }
         "meta:Norfolk"{
             ls{"hora de la isla Norfolk"}

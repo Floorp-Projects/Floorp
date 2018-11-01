@@ -1,7 +1,7 @@
-commit 4a3ba8eee90ea1414d4f7ee36563e6c9b28fda96
-Author: Yoshito Umaoka <y.umaoka@gmail.com>
-Date:   Wed Jun 20 05:34:56 2018 +0000
+commit 6cbd62e59e30f73b444be89ea71fd74275ac53a4
+Author: Shane Carr <shane@unicode.org>
+Date:   Mon Oct 29 23:52:44 2018 -0700
 
-    ICU-13823 Merged #13840 number parser memory overflow fix (r41541) to maint-62 for 62.1 GA.
+    ICU-20246 Fixing another integer overflow in number parsing.
     
-    X-SVN-Rev: 41542
+    (cherry picked from commit 53d8c8f3d181d87a6aa925b449b51c4a2c922a51)

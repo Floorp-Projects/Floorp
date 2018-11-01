@@ -547,7 +547,7 @@ uspoof_checkUnicodeString(const USpoofChecker *sc,
     return uspoof_check2UnicodeString(sc, id, NULL, status);
 }
 
-int32_t checkImpl(const SpoofImpl* This, const UnicodeString& id, CheckResult* checkResult, UErrorCode* status) {
+static int32_t checkImpl(const SpoofImpl* This, const UnicodeString& id, CheckResult* checkResult, UErrorCode* status) {
     U_ASSERT(This != NULL);
     U_ASSERT(checkResult != NULL);
     checkResult->clear();

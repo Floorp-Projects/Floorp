@@ -450,9 +450,6 @@ skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-long
 skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-narrow.js
 skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-short.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1473588
-skip script test262/intl402/RelativeTimeFormat/prototype/format/unit-plural.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #

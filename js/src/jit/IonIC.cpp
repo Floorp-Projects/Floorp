@@ -358,6 +358,28 @@ IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript, IonSetProperty
     return true;
 }
 
+// This helper handles ICState updates/transitions while attaching CacheIR stubs.
+template<typename IRGenerator, typename IC, typename... Args>
+static void
+TryAttachIonStub(JSContext* cx, IC* ic, IonScript* ionScript, Args&&... args)
+{
+    if (ic->state().maybeTransition()) {
+        ic->discardStubs(cx->zone());
+    }
+
+    if (ic->state().canAttachStub()) {
+        RootedScript script(cx, ic->script());
+        bool attached = false;
+        IRGenerator gen(cx, script, ic->pc(), ic->state().mode(), std::forward<Args>(args)...);
+        if (gen.tryAttachStub()) {
+            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
+        }
+        if (!attached) {
+            ic->state().trackNotAttached();
+        }
+    }
+}
+
 /* static */ bool
 IonGetNameIC::update(JSContext* cx, HandleScript outerScript, IonGetNameIC* ic,
                      HandleObject envChain, MutableHandleValue res)
@@ -366,22 +388,7 @@ IonGetNameIC::update(JSContext* cx, HandleScript outerScript, IonGetNameIC* ic,
     jsbytecode* pc = ic->pc();
     RootedPropertyName name(cx, ic->script()->getName(pc));
 
-    if (ic->state().maybeTransition()) {
-        ic->discardStubs(cx->zone());
-    }
-
-    if (ic->state().canAttachStub()) {
-        bool attached = false;
-        RootedScript script(cx, ic->script());
-        GetNameIRGenerator gen(cx, script, pc, ic->state().mode(), envChain, name);
-        if (gen.tryAttachStub()) {
-            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
-        }
-
-        if (!attached) {
-            ic->state().trackNotAttached();
-        }
-    }
+    TryAttachIonStub<GetNameIRGenerator, IonGetNameIC>(cx, ic, ionScript, envChain, name);
 
     RootedObject obj(cx);
     RootedObject holder(cx);
@@ -414,22 +421,7 @@ IonBindNameIC::update(JSContext* cx, HandleScript outerScript, IonBindNameIC* ic
     jsbytecode* pc = ic->pc();
     RootedPropertyName name(cx, ic->script()->getName(pc));
 
-    if (ic->state().maybeTransition()) {
-        ic->discardStubs(cx->zone());
-    }
-
-    if (ic->state().canAttachStub()) {
-        bool attached = false;
-        RootedScript script(cx, ic->script());
-        BindNameIRGenerator gen(cx, script, pc, ic->state().mode(), envChain, name);
-        if (gen.tryAttachStub()) {
-            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
-        }
-
-        if (!attached) {
-            ic->state().trackNotAttached();
-        }
-    }
+    TryAttachIonStub<BindNameIRGenerator, IonBindNameIC>(cx, ic, ionScript, envChain, name);
 
     RootedObject holder(cx);
     if (!LookupNameUnqualified(cx, name, envChain, &holder)) {
@@ -445,22 +437,7 @@ IonGetIteratorIC::update(JSContext* cx, HandleScript outerScript, IonGetIterator
 {
     IonScript* ionScript = outerScript->ionScript();
 
-    if (ic->state().maybeTransition()) {
-        ic->discardStubs(cx->zone());
-    }
-
-    if (ic->state().canAttachStub()) {
-        bool attached = false;
-        RootedScript script(cx, ic->script());
-        GetIteratorIRGenerator gen(cx, script, ic->pc(), ic->state().mode(), value);
-        if (gen.tryAttachStub()) {
-            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
-        }
-
-        if (!attached) {
-            ic->state().trackNotAttached();
-        }
-    }
+    TryAttachIonStub<GetIteratorIRGenerator, IonGetIteratorIC>(cx, ic, ionScript, value);
 
     return ValueToIterator(cx, value);
 }
@@ -471,24 +448,8 @@ IonHasOwnIC::update(JSContext* cx, HandleScript outerScript, IonHasOwnIC* ic,
 {
     IonScript* ionScript = outerScript->ionScript();
 
-    if (ic->state().maybeTransition()) {
-        ic->discardStubs(cx->zone());
-    }
-
-    jsbytecode* pc = ic->pc();
-
-    if (ic->state().canAttachStub()) {
-        bool attached = false;
-        RootedScript script(cx, ic->script());
-        HasPropIRGenerator gen(cx, script, pc, ic->state().mode(), CacheKind::HasOwn, idVal, val);
-        if (gen.tryAttachStub()) {
-            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
-        }
-
-        if (!attached) {
-            ic->state().trackNotAttached();
-        }
-    }
+    TryAttachIonStub<HasPropIRGenerator, IonHasOwnIC>(cx, ic, ionScript,
+                                                      CacheKind::HasOwn, idVal, val);
 
     bool found;
     if (!HasOwnProperty(cx, val, idVal, &found)) {
@@ -504,25 +465,9 @@ IonInIC::update(JSContext* cx, HandleScript outerScript, IonInIC* ic,
                 HandleValue key, HandleObject obj, bool* res)
 {
     IonScript* ionScript = outerScript->ionScript();
+    RootedValue objV(cx, ObjectValue(*obj));
 
-    if (ic->state().maybeTransition()) {
-        ic->discardStubs(cx->zone());
-    }
-
-    if (ic->state().canAttachStub()) {
-        bool attached = false;
-        RootedScript script(cx, ic->script());
-        RootedValue objV(cx, ObjectValue(*obj));
-        jsbytecode* pc = ic->pc();
-        HasPropIRGenerator gen(cx, script, pc, ic->state().mode(), CacheKind::In, key, objV);
-        if (gen.tryAttachStub()) {
-            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
-        }
-
-        if (!attached) {
-            ic->state().trackNotAttached();
-        }
-    }
+    TryAttachIonStub<HasPropIRGenerator, IonInIC>(cx, ic, ionScript, CacheKind::In, key, objV);
 
     return OperatorIn(cx, key, obj, res);
 }
@@ -532,26 +477,7 @@ IonInstanceOfIC::update(JSContext* cx, HandleScript outerScript, IonInstanceOfIC
 {
     IonScript* ionScript = outerScript->ionScript();
 
-    if (ic->state().maybeTransition()) {
-        ic->discardStubs(cx->zone());
-    }
-
-    if (ic->state().canAttachStub()) {
-        bool attached = false;
-        RootedScript script(cx, ic->script());
-        jsbytecode* pc = ic->pc();
-
-        InstanceOfIRGenerator gen(cx, script, pc, ic->state().mode(),
-                                  lhs, rhs);
-
-        if (gen.tryAttachStub()) {
-            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
-        }
-
-        if (!attached) {
-            ic->state().trackNotAttached();
-        }
-    }
+    TryAttachIonStub<InstanceOfIRGenerator, IonInstanceOfIC>(cx, ic, ionScript, lhs, rhs);
 
     return HasInstance(cx, rhs, lhs, res);
 }
@@ -585,22 +511,7 @@ IonUnaryArithIC::update(JSContext* cx, HandleScript outerScript, IonUnaryArithIC
         MOZ_CRASH("Unexpected op");
     }
 
-    if (ic->state().maybeTransition()) {
-        ic->discardStubs(cx->zone());
-    }
-
-    if (ic->state().canAttachStub()) {
-        bool attached = false;
-        UnaryArithIRGenerator gen(cx, script, pc, ic->state().mode(), op, val, res);
-
-        if (gen.tryAttachStub()) {
-             ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
-        }
-
-        if (!attached) {
-            ic->state().trackNotAttached();
-        }
-    }
+    TryAttachIonStub<UnaryArithIRGenerator, IonUnaryArithIC>(cx, ic, ionScript, op, val, res);
 
     return true;
 }
@@ -669,22 +580,9 @@ IonBinaryArithIC::update(JSContext* cx, HandleScript outerScript, IonBinaryArith
         MOZ_CRASH("Unhandled binary arith op");
     }
 
-    if (ic->state().maybeTransition()) {
-        ic->discardStubs(cx->zone());
-    }
+    TryAttachIonStub<BinaryArithIRGenerator, IonBinaryArithIC>(cx, ic, ionScript,
+                                                               op, lhs, rhs, ret);
 
-    if (ic->state().canAttachStub()) {
-        bool attached = false;
-        BinaryArithIRGenerator gen(cx, script, pc, ic->state().mode(),
-                                   op, lhs, rhs, ret);
-        if (gen.tryAttachStub()) {
-            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
-
-            if (!attached) {
-                ic->state().trackNotAttached();
-            }
-        }
-    }
     return true;
 }
 
@@ -753,22 +651,8 @@ IonCompareIC::update(JSContext* cx,
         return false;
     }
 
-    if (ic->state().maybeTransition()) {
-        ic->discardStubs(cx->zone());
-    }
+    TryAttachIonStub<CompareIRGenerator, IonCompareIC>(cx, ic, ionScript, op, lhs, rhs);
 
-    if (ic->state().canAttachStub()) {
-        bool attached = false;
-        CompareIRGenerator gen(cx, script, pc, ic->state().mode(),
-                               op, lhs, rhs);
-        if (gen.tryAttachStub()) {
-            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
-
-            if (!attached) {
-                ic->state().trackNotAttached();
-            }
-        }
-    }
     return true;
 }
 

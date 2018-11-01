@@ -4,7 +4,7 @@ so_KE{
     Currencies{
         KES{
             "Ksh",
-            "KES",
+            "Shilingka Kenya",
         }
     }
     Version{"2.1.38.69"}

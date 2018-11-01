@@ -25,7 +25,7 @@ kl{
             }
         }
     }
-    Version{"2.1.38.69"}
+    Version{"2.1.45.12"}
     calendar{
         gregorian{
             DateTimePatterns{
@@ -46,7 +46,7 @@ kl{
             dayNames{
                 format{
                     abbreviated{
-                        "sab",
+                        "sap",
                         "ata",
                         "mar",
                         "pin",
@@ -55,7 +55,7 @@ kl{
                         "arf",
                     }
                     short{
-                        "sab",
+                        "sap",
                         "ata",
                         "mar",
                         "pin",
@@ -64,7 +64,7 @@ kl{
                         "arf",
                     }
                     wide{
-                        "sabaat",
+                        "sapaat",
                         "ataasinngorneq",
                         "marlunngorneq",
                         "pingasunngorneq",
@@ -75,7 +75,7 @@ kl{
                 }
                 stand-alone{
                     short{
-                        "sab",
+                        "sap",
                         "ata",
                         "mar",
                         "pin",
@@ -84,7 +84,7 @@ kl{
                         "arf",
                     }
                     wide{
-                        "sabaat",
+                        "sapaat",
                         "ataasinngorneq",
                         "marlunngorneq",
                         "pingasunngorneq",

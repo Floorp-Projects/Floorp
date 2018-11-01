@@ -19,7 +19,9 @@ mk{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -213,7 +215,7 @@ mk{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -2416,6 +2418,11 @@ mk{
         }
         quarter-narrow{
             dn{"тромес."}
+            relative{
+                "-1"{"последното тромесечје"}
+                "0"{"ова тромесечје"}
+                "1"{"следното тромесечје"}
+            }
             relativeTime{
                 future{
                     one{"за {0} тромес."}
@@ -2429,6 +2436,11 @@ mk{
         }
         quarter-short{
             dn{"тромес."}
+            relative{
+                "-1"{"последното тромесечје"}
+                "0"{"ова тромесечје"}
+                "1"{"следното тромесечје"}
+            }
             relativeTime{
                 future{
                     one{"за {0} тромес."}
@@ -2938,8 +2950,13 @@ mk{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

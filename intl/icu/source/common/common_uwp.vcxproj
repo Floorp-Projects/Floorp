@@ -1,6 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- The following import will include the UWP configuration options for VS projects. -->
   <Import Project="..\allinone\Build.Windows.UWP.ProjectConfiguration.props" />
+  <!-- The following import will include the library configuration options for VS projects. -->
+  <Import Project="..\allinone\Build.Windows.Library.ProjectConfiguration.props" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -184,7 +187,7 @@
       <ProgramDataBaseFileName>.\x86\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin32uwp\icuuc62.dll</OutputFile>
+      <OutputFile>..\..\bin32uwp\icuuc63.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib32uwp\icuuc.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib32uwp\icuuc.lib</ImportLibrary>
     </Link>
@@ -200,7 +203,7 @@
       <ProgramDataBaseFileName>.\x86\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin32uwp\icuuc62d.dll</OutputFile>
+      <OutputFile>..\..\bin32uwp\icuuc63d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib32uwp\icuucd.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib32uwp\icuucd.lib</ImportLibrary>
     </Link>
@@ -216,7 +219,7 @@
       <ProgramDataBaseFileName>.\x64\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64uwp\icuuc62.dll</OutputFile>
+      <OutputFile>..\..\bin64uwp\icuuc63.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib64uwp\icuuc.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64uwp\icuuc.lib</ImportLibrary>
     </Link>
@@ -232,7 +235,7 @@
       <ProgramDataBaseFileName>.\x64\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64uwp\icuuc62d.dll</OutputFile>
+      <OutputFile>..\..\bin64uwp\icuuc63d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib64uwp\icuucd.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64uwp\icuucd.lib</ImportLibrary>
     </Link>
@@ -248,7 +251,7 @@
       <ProgramDataBaseFileName>.\ARM\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARMuwp\icuuc62.dll</OutputFile>
+      <OutputFile>..\..\binARMuwp\icuuc63.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARMuwp\icuuc.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARMuwp\icuuc.lib</ImportLibrary>
     </Link>
@@ -264,7 +267,7 @@
       <ProgramDataBaseFileName>.\ARM\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARMuwp\icuuc62d.dll</OutputFile>
+      <OutputFile>..\..\binARMuwp\icuuc63d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARMuwp\icuucd.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARMuwp\icuucd.lib</ImportLibrary>
     </Link>
@@ -304,6 +307,7 @@
     <ClCompile Include="ustack.cpp" />
     <ClCompile Include="ustrenum.cpp" />
     <ClCompile Include="utrie.cpp" />
+    <ClCompile Include="utrie_swap.cpp" />
     <ClCompile Include="utrie2.cpp" />
     <ClCompile Include="utrie2_builder.cpp" />
     <ClCompile Include="uvector.cpp" />
@@ -319,9 +323,7 @@
     <ClCompile Include="umutex.cpp" />
     <ClCompile Include="utrace.cpp" />
     <ClCompile Include="utypes.cpp" />
-    <ClCompile Include="wintz.cpp">
-      <ExcludedFromBuild>true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="wintz.cpp" />
     <ClCompile Include="ucnv.cpp" />
     <ClCompile Include="ucnv2022.cpp" />
     <ClCompile Include="ucnv_bld.cpp" />
@@ -394,6 +396,7 @@
     <ClCompile Include="ruleiter.cpp" />
     <ClCompile Include="ucase.cpp" />
     <ClCompile Include="uchar.cpp" />
+    <ClCompile Include="characterproperties.cpp" />
     <ClCompile Include="unames.cpp" />
     <ClCompile Include="unifiedcache.cpp" />
     <ClCompile Include="unifilt.cpp" />
@@ -439,9 +442,11 @@
     <ClCompile Include="ucharstrie.cpp" />
     <ClCompile Include="ucharstriebuilder.cpp" />
     <ClCompile Include="ucharstrieiterator.cpp" />
+    <ClCompile Include="ucptrie.cpp" />
     <ClCompile Include="uchriter.cpp" />
     <ClCompile Include="uinvchar.cpp" />
     <ClCompile Include="uiter.cpp" />
+    <ClCompile Include="umutablecptrie.cpp" />
     <ClCompile Include="unistr.cpp" />
     <ClCompile Include="unistr_case.cpp" />
     <ClCompile Include="unistr_case_locale.cpp" />
@@ -457,8 +462,6 @@
     <ClCompile Include="ustrtrns.cpp" />
     <ClCompile Include="utext.cpp" />
     <ClCompile Include="utf_impl.cpp" />
-    <ClCompile Include="listformatter.cpp" />
-    <ClCompile Include="ulistformatter.cpp" />
     <ClCompile Include="static_unicode_sets.cpp" />
   </ItemGroup>
   <ItemGroup>
