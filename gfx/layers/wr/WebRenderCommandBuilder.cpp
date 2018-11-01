@@ -1313,7 +1313,7 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
   mClipManager.BeginBuild(mManager, aBuilder);
 
   {
-    StackingContextHelper pageRootSc(sc, aBuilder, aFilters);
+    StackingContextHelper pageRootSc(sc, nullptr, aBuilder, aFilters);
     if (ShouldDumpDisplayList(aDisplayListBuilder)) {
       mBuilderDumpIndex = aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
     }
