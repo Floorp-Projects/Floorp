@@ -4256,7 +4256,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
   // ignore it
 
   bool needContentRepaint = false;
-  bool userAction = false;
+  RepaintUpdateType contentRepaintType = RepaintUpdateType::eNone;
   bool viewportUpdated = false;
 
   // We usually don't entertain viewport updates on the same transaction as
@@ -4393,7 +4393,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
         // incorrect scroll offset for a period of time.
         if (Metrics().HasPendingScroll(aLayerMetrics)) {
           needContentRepaint = true;
-          userAction = true;
+          contentRepaintType = RepaintUpdateType::eUserAction;
         }
 
         relativeDelta = Some(Metrics().ApplyRelativeScrollUpdateFrom(aLayerMetrics));
@@ -4474,12 +4474,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
   }
 
   if (needContentRepaint) {
-    // This repaint request is not driven by a user action on the APZ side
-    RepaintUpdateType updateType = RepaintUpdateType::eNone;
-    if (userAction) {
-      updateType = RepaintUpdateType::eUserAction;
-    }
-    RequestContentRepaint(updateType);
+    // This repaint request could be driven by a user action if we accept a
+    // relative scroll offset update
+    RequestContentRepaint(contentRepaintType);
   }
   UpdateSharedCompositorFrameMetrics();
 }
