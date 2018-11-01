@@ -6,7 +6,6 @@
 import AcceptedCards from "../components/accepted-cards.js";
 import CscInput from "../components/csc-input.js";
 import LabelledCheckbox from "../components/labelled-checkbox.js";
-import PaymentDialog from "./payment-dialog.js";
 import PaymentRequestPage from "../components/payment-request-page.js";
 import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
 import paymentRequest from "../paymentRequest.js";
@@ -383,7 +382,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
   onInvalidField(event) {
     let field = event.target;
     let container = field.closest(`#${field.id}-container`);
-    let errorTextSpan = PaymentDialog.maybeCreateFieldErrorElement(container);
+    let errorTextSpan = paymentRequest.maybeCreateFieldErrorElement(container);
     errorTextSpan.textContent = field.validationMessage;
   }
 
