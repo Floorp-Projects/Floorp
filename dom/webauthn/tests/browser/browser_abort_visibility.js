@@ -8,6 +8,8 @@ const TEST_URL = "https://example.com/browser/dom/webauthn/tests/browser/tab_web
 
 async function assertStatus(tab, expected) {
   let actual = await ContentTask.spawn(tab.linkedBrowser, null, async function () {
+      info("visbility state: " + content.document.visibilityState);
+      info("docshell active: " + docShell.isActive);
     return content.document.getElementById("status").value;
   });
   is(actual, expected, "webauthn request " + expected);
@@ -16,6 +18,8 @@ async function assertStatus(tab, expected) {
 async function waitForStatus(tab, expected) {
   await ContentTask.spawn(tab.linkedBrowser, [expected], async function (expected) {
     return ContentTaskUtils.waitForCondition(() => {
+      info("visbility state: " + content.document.visibilityState);
+      info("docshell active: " + docShell.isActive);
       return content.document.getElementById("status").value == expected;
     });
   });
@@ -37,6 +41,7 @@ function startMakeCredentialRequest(tab) {
 
     let status = content.document.getElementById("status");
 
+    info("Attempting to create credential for origin: " + content.document.nodePrincipal.origin);
     content.navigator.credentials.create({publicKey}).then(() => {
       status.value = "completed";
     }).catch(() => {
@@ -64,9 +69,11 @@ function startGetAssertionRequest(tab) {
 
     let status = content.document.getElementById("status");
 
+    info("Attempting to get credential for origin: " + content.document.nodePrincipal.origin);
     content.navigator.credentials.get({publicKey}).then(() => {
       status.value = "completed";
-    }).catch(() => {
+    }).catch((ex) => {
+      info("aborted: " + ex);
       status.value = "aborted";
     });
 
@@ -111,6 +118,13 @@ add_task(async function test_switch_tab() {
   BrowserTestUtils.removeTab(tab_get);
 });
 
+function waitForWindowActive(win, active) {
+  return Promise.all([
+    BrowserTestUtils.waitForEvent(win, active ? "focus" : "blur"),
+    BrowserTestUtils.waitForEvent(win, active ? "activate" : "deactivate"),
+  ]);
+}
+
 add_task(async function test_new_window_make() {
   // Create a new tab for the MakeCredential() request.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
@@ -119,10 +133,15 @@ add_task(async function test_new_window_make() {
   await startMakeCredentialRequest(tab);
   await assertStatus(tab, "pending");
 
+  let windowGonePromise = waitForWindowActive(window, false);
   // Open a new window. The tab will lose focus.
   let win = await BrowserTestUtils.openNewBrowserWindow();
+  await windowGonePromise;
   await waitForStatus(tab, "aborted");
+
+  let windowBackPromise = waitForWindowActive(window, true);
   await BrowserTestUtils.closeWindow(win);
+  await windowBackPromise;
 
   // Close tab.
   await BrowserTestUtils.removeTab(tab);
@@ -136,10 +155,15 @@ add_task(async function test_new_window_get() {
   await startGetAssertionRequest(tab);
   await assertStatus(tab, "pending");
 
+  let windowGonePromise = waitForWindowActive(window, false);
   // Open a new window. The tab will lose focus.
   let win = await BrowserTestUtils.openNewBrowserWindow();
+  await windowGonePromise;
   await waitForStatus(tab, "aborted");
+
+  let windowBackPromise = waitForWindowActive(window, true);
   await BrowserTestUtils.closeWindow(win);
+  await windowBackPromise;
 
   // Close tab.
   BrowserTestUtils.removeTab(tab);
@@ -153,22 +177,27 @@ add_task(async function test_minimize_make() {
     return;
   }
 
-  // Create a new tab for the MakeCredential() request.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+  // Create a new window for the MakeCredential() request.
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
 
   // Start a MakeCredential request.
   await startMakeCredentialRequest(tab);
   await assertStatus(tab, "pending");
 
   // Minimize the window.
-  window.minimize();
+  let windowGonePromise = waitForWindowActive(win, false);
+  win.minimize();
   await waitForStatus(tab, "aborted");
+  await windowGonePromise;
 
   // Restore the window.
-  await new Promise(resolve => SimpleTest.waitForFocus(resolve, window));
+  await new Promise(resolve => SimpleTest.waitForFocus(resolve, win));
 
-  // Close tab.
-  BrowserTestUtils.removeTab(tab);
+  // Close window and wait for main window to be focused again.
+  let windowBackPromise = waitForWindowActive(window, true);
+  await BrowserTestUtils.closeWindow(win);
+  await windowBackPromise;
 });
 
 add_task(async function test_minimize_get() {
@@ -179,20 +208,25 @@ add_task(async function test_minimize_get() {
     return;
   }
 
-  // Create a new tab for the GetAssertion() request.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+  // Create a new window for the GetAssertion() request.
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
 
   // Start a GetAssertion request.
   await startGetAssertionRequest(tab);
   await assertStatus(tab, "pending");
 
   // Minimize the window.
-  window.minimize();
+  let windowGonePromise = waitForWindowActive(win, false);
+  win.minimize();
   await waitForStatus(tab, "aborted");
+  await windowGonePromise;
 
   // Restore the window.
-  await new Promise(resolve => SimpleTest.waitForFocus(resolve, window));
+  await new Promise(resolve => SimpleTest.waitForFocus(resolve, win));
 
-  // Close tab.
-  BrowserTestUtils.removeTab(tab);
+  // Close window and wait for main window to be focused again.
+  let windowBackPromise = waitForWindowActive(window, true);
+  await BrowserTestUtils.closeWindow(win);
+  await windowBackPromise;
 });
