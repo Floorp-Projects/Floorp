@@ -196,8 +196,10 @@ function Intl_PluralRules_select(value) {
     let pluralRules = this;
 
     // Steps 2-3.
-    if (!IsObject(pluralRules) || (pluralRules = GuardToPluralRules(pluralRules)) === null)
-        ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "PluralRules", "select", "PluralRules");
+    if (!IsObject(pluralRules) || (pluralRules = GuardToPluralRules(pluralRules)) === null) {
+        return callFunction(CallPluralRulesMethodIfWrapped, this, value,
+                            "Intl_PluralRules_select");
+    }
 
     // Ensure the PluralRules internals are resolved.
     getPluralRulesInternals(pluralRules);
@@ -220,8 +222,8 @@ function Intl_PluralRules_resolvedOptions() {
 
     // Steps 2-3.
     if (!IsObject(pluralRules) || (pluralRules = GuardToPluralRules(pluralRules)) === null) {
-        ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "PluralRules", "resolvedOptions",
-                       "PluralRules");
+        return callFunction(CallPluralRulesMethodIfWrapped, this,
+                            "Intl_PluralRules_resolvedOptions");
     }
 
     var internals = getPluralRulesInternals(pluralRules);
