@@ -146,6 +146,9 @@ struct Document {
     frame_is_valid: bool,
     hit_tester_is_valid: bool,
     rendered_frame_is_valid: bool,
+    // We track this information to be able to display debugging information from the
+    // renderer.
+    has_built_scene: bool,
 
     resources: FrameResources,
 }
@@ -177,6 +180,7 @@ impl Document {
             frame_is_valid: false,
             hit_tester_is_valid: false,
             rendered_frame_is_valid: false,
+            has_built_scene: false,
             resources: FrameResources::new(),
         }
     }
@@ -293,7 +297,6 @@ impl Document {
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         resource_profile: &mut ResourceProfileCounters,
-        is_new_scene: bool,
     ) -> RenderedDocument {
         let accumulated_scale_factor = self.view.accumulated_scale_factor();
         let pan = self.view.pan.to_f32() / accumulated_scale_factor;
@@ -323,6 +326,9 @@ impl Document {
 
         self.frame_is_valid = true;
         self.hit_tester_is_valid = true;
+
+        let is_new_scene = self.has_built_scene;
+        self.has_built_scene = false;
 
         RenderedDocument {
             frame,
@@ -1041,6 +1047,7 @@ impl RenderBackend {
         }
 
         let doc = self.documents.get_mut(&document_id).unwrap();
+        doc.has_built_scene |= has_built_scene;
 
         // If there are any additions or removals of clip modes
         // during the scene build, apply them to the data store now.
@@ -1107,7 +1114,6 @@ impl RenderBackend {
                     &mut self.resource_cache,
                     &mut self.gpu_cache,
                     &mut profile_counters.resources,
-                    has_built_scene,
                 );
 
                 debug!("generated frame for document {:?} with {} passes",
@@ -1368,7 +1374,6 @@ impl RenderBackend {
                     &mut self.resource_cache,
                     &mut self.gpu_cache,
                     &mut profile_counters.resources,
-                    true,
                 );
                 //TODO: write down doc's pipeline info?
                 // it has `pipeline_epoch_map`,
@@ -1485,6 +1490,7 @@ impl RenderBackend {
                 frame_is_valid: false,
                 hit_tester_is_valid: false,
                 rendered_frame_is_valid: false,
+                has_built_scene: false,
                 resources: frame_resources,
             };
 

@@ -1270,12 +1270,13 @@ devtools.tool:
   registered:
     bug_numbers:
       - 1447302
+      - 1503568
     description: >
       Recorded on enable tool checkbox check/uncheck in Developer Tools options
       panel. Boolean stating if the tool was enabled or disabled by the user.
       Keyed by tool id. Current default tools with their id's are defined in
       https://dxr.mozilla.org/mozilla-central/source/devtools/client/definitions.js
-    expires: "65"
+    expires: "70"
     kind: boolean
     keyed: true
     notification_emails:
@@ -1289,10 +1290,11 @@ devtools.accessibility:
   node_inspected_count:
     bug_numbers:
       - 1447302
+      - 1503568
     description: >
       Number of times a DOM node was inspected from within the Accessibility
       tool.
-    expires: "65"
+    expires: "70"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
@@ -1304,9 +1306,10 @@ devtools.accessibility:
   opened_count:
     bug_numbers:
       - 1447302
+      - 1503568
     description: >
       Number of times the DevTools Accessibility tool has been opened.
-    expires: "65"
+    expires: "70"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
@@ -1318,10 +1321,11 @@ devtools.accessibility:
   picker_used_count:
     bug_numbers:
       - 1447302
+      - 1503568
     description: >
       Number of times the picker tool has been used in DevTools Accessibility
       panel.
-    expires: "65"
+    expires: "70"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
@@ -1333,11 +1337,12 @@ devtools.accessibility:
   select_accessible_for_node:
     bug_numbers:
       - 1447302
+      - 1503568
     description: >
       Number of times an accessible object was inspected from outside the
       Accessibility tool (navigation to Accessibility panel). Keyed by the
       source of user action (inspector context menu, browser context menu, etc).
-    expires: "65"
+    expires: "70"
     kind: uint
     keyed: true
     notification_emails:
@@ -1350,10 +1355,11 @@ devtools.accessibility:
   service_enabled_count:
     bug_numbers:
       - 1447302
+      - 1503568
     description: >
       Number of times platform accessibility has been enabled in DevTools
       Accessibility panel.
-    expires: "65"
+    expires: "70"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org

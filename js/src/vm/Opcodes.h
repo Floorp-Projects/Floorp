@@ -1224,15 +1224,15 @@
      */ \
     macro(JSOP_CONDSWITCH,120,"condswitch", NULL,         1,  0,  0,  JOF_BYTE) \
     /*
-     * Pops the top two values on the stack as 'rval' and 'lval', compare them
-     * with '===', if the result is 'true', jumps to a 32-bit offset from the
-     * current bytecode, re-pushes 'lval' onto the stack if 'false'.
+     * Pops the top two values on the stack as 'val' and 'cond'. If 'cond' is
+     * 'true', jumps to a 32-bit offset from the current bytecode, re-pushes
+     * 'val' onto the stack if 'false'.
      *   Category: Statements
      *   Type: Switch Statement
      *   Operands: int32_t offset
-     *   Stack: lval, rval => lval(if lval !== rval)
+     *   Stack: val, cond => val(if !cond)
      */ \
-    macro(JSOP_CASE,      121,"case",       NULL,         5,  2,  1,  JOF_JUMP|JOF_IC) \
+    macro(JSOP_CASE,      121,"case",       NULL,         5,  2,  1,  JOF_JUMP) \
     /*
      * This appears after all cases in a JSOP_CONDSWITCH, whether there is a
      * 'default:' label in the switch statement or not. Pop the switch operand

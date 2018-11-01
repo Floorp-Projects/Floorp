@@ -3,9 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/GeckoViewContentModule.jsm");
+ChromeUtils.import("resource://gre/modules/GeckoViewChildModule.jsm");
 
-class GeckoViewScrollContent extends GeckoViewContentModule {
+class GeckoViewScrollChild extends GeckoViewChildModule {
   onEnable() {
     debug `onEnable`;
     addEventListener("scroll", this, false);
@@ -35,5 +35,5 @@ class GeckoViewScrollContent extends GeckoViewContentModule {
   }
 }
 
-let {debug, warn} = GeckoViewScrollContent.initLogging("GeckoViewScroll");
-let module = GeckoViewScrollContent.create(this);
+let {debug, warn} = GeckoViewScrollChild.initLogging("GeckoViewScroll");
+let module = GeckoViewScrollChild.create(this);
