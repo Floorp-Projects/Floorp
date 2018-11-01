@@ -7,7 +7,6 @@ const METHODS = {
   goForward: {},
   reload: {},
   stop: {},
-  zoom: {},
   getCanGoBack: {},
   getCanGoForward: {},
   getContentDimensions: {},
