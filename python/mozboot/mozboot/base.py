@@ -268,29 +268,6 @@ class BaseBootstrapper(object):
             '%s does not yet implement ensure_node_packages()'
             % __name__)
 
-    def ensure_rust_package(self, crate_name, min_version):
-        cargo = self.which('cargo')
-        if not cargo:
-            cargo_home, cargo_bin = self.cargo_home()
-            cargo = os.path.join(cargo_bin, 'cargo')
-
-        list = subprocess.check_output([cargo, 'install', '--list'])
-        target = crate_name + ' v'
-        for line in list.splitlines():
-            if line.startswith(target):
-                version = line[len(target):-1]
-                if LooseVersion(version) >= LooseVersion(min_version):
-                    return
-                print('old version of {name} ({version}) found'.format(
-                    name=crate_name, version=version))
-                break
-        else:
-            print('{name} not found'.format(name=crate_name))
-
-        print('installing via cargo install.'.format(
-            name=crate_name))
-        subprocess.check_call([cargo, 'install', '--force', crate_name])
-
     def install_toolchain_artifact(self, state_dir, checkout_root, toolchain_job):
         mach_binary = os.path.join(checkout_root, 'mach')
         mach_binary = os.path.abspath(mach_binary)
