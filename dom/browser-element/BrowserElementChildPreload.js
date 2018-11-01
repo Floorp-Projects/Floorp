@@ -270,7 +270,6 @@ BrowserElementChild.prototype = {
     let self = this;
 
     let mmCalls = {
-      "get-contentdimensions": this._recvGetContentDimensions,
       "send-mouse-event": this._recvSendMouseEvent,
       "send-touch-event": this._recvSendTouchEvent,
       "get-can-go-back": this._recvCanGoBack,
@@ -964,14 +963,6 @@ BrowserElementChild.prototype = {
     }
   },
 
-  _recvGetContentDimensions: function(data) {
-    debug("Received getContentDimensions message: (" + data.json.id + ")");
-    sendAsyncMsg('got-contentdimensions', {
-      id: data.json.id,
-      successRv: this._getContentDimensions()
-    });
-  },
-
   _mozScrollAreaChanged: function(e) {
     sendAsyncMsg('scrollareachanged', {
       width: e.width,
@@ -991,13 +982,6 @@ BrowserElementChild.prototype = {
 
   _mozExitDomFullscreen: function(e) {
     sendAsyncMsg("exit-dom-fullscreen");
-  },
-
-  _getContentDimensions: function() {
-    return {
-      width: content.document.body.scrollWidth,
-      height: content.document.body.scrollHeight
-    }
   },
 
   _recvFireCtxCallback: function(data) {
