@@ -210,30 +210,6 @@ UNIFIED_SOURCES += [
     'ds/Bitmap.cpp',
     'ds/LifoAlloc.cpp',
     'ds/MemoryProtectionExceptionHandler.cpp',
-    'frontend/BytecodeCompiler.cpp',
-    'frontend/BytecodeControlStructures.cpp',
-    'frontend/BytecodeEmitter.cpp',
-    'frontend/CallOrNewEmitter.cpp',
-    'frontend/CForEmitter.cpp',
-    'frontend/DoWhileEmitter.cpp',
-    'frontend/ElemOpEmitter.cpp',
-    'frontend/EmitterScope.cpp',
-    'frontend/ExpressionStatementEmitter.cpp',
-    'frontend/FoldConstants.cpp',
-    'frontend/ForInEmitter.cpp',
-    'frontend/ForOfEmitter.cpp',
-    'frontend/ForOfLoopControl.cpp',
-    'frontend/IfEmitter.cpp',
-    'frontend/JumpList.cpp',
-    'frontend/NameFunctions.cpp',
-    'frontend/NameOpEmitter.cpp',
-    'frontend/ParseNode.cpp',
-    'frontend/PropOpEmitter.cpp',
-    'frontend/SwitchEmitter.cpp',
-    'frontend/TDZCheckCache.cpp',
-    'frontend/TokenStream.cpp',
-    'frontend/TryEmitter.cpp',
-    'frontend/WhileEmitter.cpp',
     'gc/Allocator.cpp',
     'gc/AtomMarking.cpp',
     'gc/Barrier.cpp',
@@ -373,8 +349,6 @@ UNIFIED_SOURCES += [
 
 # builtin/RegExp.cpp cannot be built in unified mode because it causes huge
 #   win32 test slowdowns
-# frontend/Parser.cpp cannot be built in unified mode because of explicit
-#   template instantiations.
 # jsmath.cpp cannot be built in unified mode because it needs to re-#define the
 #   RtlGenRandom declaration's calling convention in <ntsecapi.h> on Windows.
 # jsutil.cpp cannot be built in unified mode because it is needed for
@@ -391,7 +365,6 @@ UNIFIED_SOURCES += [
 #   files unlucky enough to be unified with it.
 SOURCES += [
     'builtin/RegExp.cpp',
-    'frontend/Parser.cpp',
     'gc/StoreBuffer.cpp',
     'jsmath.cpp',
     'jsutil.cpp',
@@ -465,15 +438,9 @@ else:
         'perf/pm_stub.cpp'
     ]
 
-GENERATED_FILES += ['frontend/ReservedWordsGenerated.h']
-ReservedWordsGenerated = GENERATED_FILES['frontend/ReservedWordsGenerated.h']
-ReservedWordsGenerated.script = 'frontend/GenerateReservedWords.py'
-ReservedWordsGenerated.inputs += [
-    'frontend/ReservedWords.h'
-]
-
 DIRS += [
     'build',
+    'frontend',
     'jit',
 ]
 
@@ -484,29 +451,6 @@ if CONFIG['ENABLE_WASM_CRANELIFT']:
     UNIFIED_SOURCES += [
         'wasm/WasmCraneliftCompile.cpp',
     ]
-
-if CONFIG['JS_BUILD_BINAST']:
-    # Using SOURCES, as UNIFIED_SOURCES causes mysterious bugs on 32-bit platforms.
-    # These parts of BinAST are designed only to test evolutions of the
-    # specification.
-    SOURCES += ['frontend/BinTokenReaderTester.cpp']
-    # These parts of BinAST should eventually move to release.
-    SOURCES += [
-        'frontend/BinSource-auto.cpp',
-        'frontend/BinSource.cpp',
-        'frontend/BinSourceRuntimeSupport.cpp',
-        'frontend/BinToken.cpp',
-        'frontend/BinTokenReaderBase.cpp',
-        'frontend/BinTokenReaderMultipart.cpp',
-    ]
-
-    # Instrument BinAST files for fuzzing as we have a fuzzing target for BinAST.
-    if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
-        SOURCES['frontend/BinSource-auto.cpp'].flags += libfuzzer_flags
-        SOURCES['frontend/BinSource.cpp'].flags += libfuzzer_flags
-        SOURCES['frontend/BinToken.cpp'].flags += libfuzzer_flags
-        SOURCES['frontend/BinTokenReaderBase.cpp'].flags += libfuzzer_flags
-        SOURCES['frontend/BinTokenReaderMultipart.cpp'].flags += libfuzzer_flags
 
 # Prepare self-hosted JS code for embedding
 GENERATED_FILES += [('selfhosted.out.h', 'selfhosted.js')]

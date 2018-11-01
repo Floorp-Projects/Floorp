@@ -791,6 +791,12 @@ AndroidBridge::PumpMessageLoop()
     return GeckoThread::PumpMessageLoop(msg);
 }
 
+NS_IMETHODIMP nsAndroidBridge::GetIsFennec(bool *aIsFennec)
+{
+    *aIsFennec = jni::IsFennec();
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsAndroidBridge::GetBrowserApp(nsIAndroidBrowserApp * *aBrowserApp)
 {
     nsAppShell* const appShell = nsAppShell::Get();

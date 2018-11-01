@@ -48,6 +48,14 @@ ScrollAnimationMSDPhysics::Update(const TimeStamp& aTime,
   mIsFirstIteration = false;
 }
 
+void
+ScrollAnimationMSDPhysics::ApplyContentShift(const CSSPoint& aShiftDelta)
+{
+  nsPoint shiftDelta = CSSPoint::ToAppUnits(aShiftDelta);
+  mStartPos += shiftDelta;
+  mDestination += shiftDelta;
+}
+
 double
 ScrollAnimationMSDPhysics::ComputeSpringConstant(const TimeStamp& aTime)
 {

@@ -4763,6 +4763,9 @@ pref("image.multithreaded_decoding.limit", -1);
 // How long in ms before we should start shutting down idle decoder threads.
 pref("image.multithreaded_decoding.idle_timeout", 600000);
 
+// Whether we attempt to decode WebP images or not.
+pref("image.webp.enabled", false);
+
 // Limit for the canvas image cache. 0 means we don't limit the size of the
 // cache.
 pref("canvas.image.cache.limit", 0);

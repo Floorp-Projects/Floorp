@@ -2,23 +2,26 @@
 
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 
-BootstrapMonitor.init();
-
-ChromeUtils.import("resource://testing-common/httpd.js");
 var gServer = new HttpServer();
 gServer.start(-1);
-
-// Build the test set
-var distroDir = FileUtils.getDir("ProfD", ["sysfeatures"], true);
-do_get_file("data/system_addons/system1_1.xpi").copyTo(distroDir, "system1@tests.mozilla.org.xpi");
-do_get_file("data/system_addons/system2_1.xpi").copyTo(distroDir, "system2@tests.mozilla.org.xpi");
-do_get_file("data/system_addons/system3_1.xpi").copyTo(distroDir, "system3@tests.mozilla.org.xpi");
-registerDirectory("XREAppFeat", distroDir);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "0");
 
 // Test with a missing features directory
 add_task(async function test_app_addons() {
+  // Build the test set
+  var distroDir = FileUtils.getDir("ProfD", ["sysfeatures"], true);
+  let xpi = await getSystemAddonXPI(1, "1.0");
+  xpi.copyTo(distroDir, "system1@tests.mozilla.org.xpi");
+
+  xpi = await getSystemAddonXPI(2, "1.0");
+  xpi.copyTo(distroDir, "system2@tests.mozilla.org.xpi");
+
+  xpi = await getSystemAddonXPI(3, "1.0");
+  xpi.copyTo(distroDir, "system3@tests.mozilla.org.xpi");
+
+  registerDirectory("XREAppFeat", distroDir);
+
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, `http://localhost:${gServer.identity.primaryPort}/get?%IDS%`);
   Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES, `http://localhost:${gServer.identity.primaryPort}/get?%IDS%`);

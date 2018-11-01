@@ -39,7 +39,11 @@
     {"process": "P7", "path": "p7/c", "kind": 2, "units": 0, "amount": 4, "description": "Desc."},
 
     {"process": "P8", "path": "p8/a/b", "kind": 2, "units": 0, "amount": 1, "description": "Desc."},
-    {"process": "P8", "path": "p8/a/g", "kind": 2, "units": 0, "amount": 2, "description": "Desc."}
+    {"process": "P8", "path": "p8/a/g", "kind": 2, "units": 0, "amount": 2, "description": "Desc."},
+
+    {"process": "P9", "path": "explicit/threads/stacks/DNS Resolver #1 (tid=33)", "kind": 0, "units": 0, "amount": 2000, "description": "Desc."},
+    {"process": "P9", "path": "explicit/threads/stacks/DNS Resolver #2 (tid=44)", "kind": 0, "units": 0, "amount": 4000, "description": "Desc."},
+    {"process": "P9", "path": "explicit/threads/stacks/DNS Resolver #3 (tid=45)", "kind": 0, "units": 0, "amount": 5000, "description": "Desc."}
   ]
 }
 
