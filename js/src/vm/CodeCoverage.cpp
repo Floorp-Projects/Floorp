@@ -631,7 +631,7 @@ LCovRealm::writeRealmName(JS::Realm* realm)
 LCovRuntime::LCovRuntime()
   : out_(),
     pid_(getpid()),
-    isEmpty_(false)
+    isEmpty_(true)
 {
 }
 
@@ -698,7 +698,10 @@ void
 LCovRuntime::writeLCovResult(LCovRealm& realm)
 {
     if (!out_.isInitialized()) {
-        return;
+        init();
+        if (!out_.isInitialized()) {
+          return;
+        }
     }
 
     uint32_t p = getpid();
@@ -713,6 +716,7 @@ LCovRuntime::writeLCovResult(LCovRealm& realm)
 
     realm.exportInto(out_, &isEmpty_);
     out_.flush();
+    finishFile();
 }
 
 } // namespace coverage
