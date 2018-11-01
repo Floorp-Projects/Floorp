@@ -249,7 +249,7 @@ TransactionBuilder::SetWindowParameters(const LayoutDeviceIntSize& aWindowSize,
 
 void
 TransactionBuilder::UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
-                                         const layers::FrameMetrics::ViewID& aScrollId,
+                                         const layers::ScrollableLayerGuid::ViewID& aScrollId,
                                          const wr::LayoutPoint& aScrollPosition)
 {
   wr_transaction_scroll_layer(mTxn, aPipelineId, aScrollId, aScrollPosition);
@@ -271,7 +271,7 @@ TransactionWrapper::AppendTransformProperties(const nsTArray<wr::WrTransformProp
 
 void
 TransactionWrapper::UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
-                                         const layers::FrameMetrics::ViewID& aScrollId,
+                                         const layers::ScrollableLayerGuid::ViewID& aScrollId,
                                          const wr::LayoutPoint& aScrollPosition)
 {
   wr_transaction_scroll_layer(mTxn, aPipelineId, aScrollId, aScrollPosition);
@@ -383,7 +383,7 @@ WebRenderAPI::SendTransaction(TransactionBuilder& aTxn)
 bool
 WebRenderAPI::HitTest(const wr::WorldPoint& aPoint,
                       wr::WrPipelineId& aOutPipelineId,
-                      layers::FrameMetrics::ViewID& aOutScrollId,
+                      layers::ScrollableLayerGuid::ViewID& aOutScrollId,
                       gfx::CompositorHitTestInfo& aOutHitInfo)
 {
   static_assert(DoesCompositorHitTestInfoFitIntoBits<16>(),
@@ -960,9 +960,9 @@ DisplayListBuilder::DefineStickyFrame(const wr::LayoutRect& aContentRect,
 }
 
 Maybe<wr::WrClipId>
-DisplayListBuilder::GetScrollIdForDefinedScrollLayer(layers::FrameMetrics::ViewID aViewId) const
+DisplayListBuilder::GetScrollIdForDefinedScrollLayer(layers::ScrollableLayerGuid::ViewID aViewId) const
 {
-  if (aViewId == layers::FrameMetrics::NULL_SCROLL_ID) {
+  if (aViewId == layers::ScrollableLayerGuid::NULL_SCROLL_ID) {
     return Some(wr::WrClipId::RootScrollNode());
   }
 
@@ -975,7 +975,7 @@ DisplayListBuilder::GetScrollIdForDefinedScrollLayer(layers::FrameMetrics::ViewI
 }
 
 wr::WrClipId
-DisplayListBuilder::DefineScrollLayer(const layers::FrameMetrics::ViewID& aViewId,
+DisplayListBuilder::DefineScrollLayer(const layers::ScrollableLayerGuid::ViewID& aViewId,
                                       const Maybe<wr::WrClipId>& aParentId,
                                       const wr::LayoutRect& aContentRect,
                                       const wr::LayoutRect& aClipRect)
@@ -1337,7 +1337,7 @@ DisplayListBuilder::PushBoxShadow(const wr::LayoutRect& aRect,
                         aClipMode);
 }
 
-Maybe<layers::FrameMetrics::ViewID>
+Maybe<layers::ScrollableLayerGuid::ViewID>
 DisplayListBuilder::GetContainingFixedPosScrollTarget(const ActiveScrolledRoot* aAsr)
 {
   return mActiveFixedPosTracker
@@ -1346,7 +1346,7 @@ DisplayListBuilder::GetContainingFixedPosScrollTarget(const ActiveScrolledRoot* 
 }
 
 void
-DisplayListBuilder::SetHitTestInfo(const layers::FrameMetrics::ViewID& aScrollId,
+DisplayListBuilder::SetHitTestInfo(const layers::ScrollableLayerGuid::ViewID& aScrollId,
                                    gfx::CompositorHitTestInfo aHitInfo)
 {
   static_assert(DoesCompositorHitTestInfoFitIntoBits<16>(),
@@ -1364,7 +1364,7 @@ DisplayListBuilder::ClearHitTestInfo()
 DisplayListBuilder::FixedPosScrollTargetTracker::FixedPosScrollTargetTracker(
     DisplayListBuilder& aBuilder,
     const ActiveScrolledRoot* aAsr,
-    layers::FrameMetrics::ViewID aScrollId)
+    layers::ScrollableLayerGuid::ViewID aScrollId)
   : mParentTracker(aBuilder.mActiveFixedPosTracker)
   , mBuilder(aBuilder)
   , mAsr(aAsr)
@@ -1378,7 +1378,7 @@ DisplayListBuilder::FixedPosScrollTargetTracker::~FixedPosScrollTargetTracker()
   mBuilder.mActiveFixedPosTracker = mParentTracker;
 }
 
-Maybe<layers::FrameMetrics::ViewID>
+Maybe<layers::ScrollableLayerGuid::ViewID>
 DisplayListBuilder::FixedPosScrollTargetTracker::GetScrollTargetForASR(const ActiveScrolledRoot* aAsr)
 {
   return aAsr == mAsr ? Some(mScrollId) : Nothing();

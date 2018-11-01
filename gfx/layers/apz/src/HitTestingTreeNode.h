@@ -7,11 +7,11 @@
 #ifndef mozilla_layers_HitTestingTreeNode_h
 #define mozilla_layers_HitTestingTreeNode_h
 
-#include "FrameMetrics.h"                   // for ScrollableLayerGuid
 #include "Layers.h"
 #include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/gfx/Matrix.h"             // for Matrix4x4
 #include "mozilla/layers/LayersTypes.h"     // for EventRegions
+#include "mozilla/layers/ScrollableLayerGuid.h" // for ScrollableLayerGuid
 #include "mozilla/Maybe.h"                  // for Maybe
 #include "mozilla/RefPtr.h"               // for nsRefPtr
 
@@ -118,14 +118,14 @@ public:
   // This can only be called if IsScrollbarNode() is true
   ScrollDirection GetScrollbarDirection() const;
   bool IsScrollThumbNode() const;  // Scroll thumb container layer.
-  FrameMetrics::ViewID GetScrollTargetId() const;
+  ScrollableLayerGuid::ViewID GetScrollTargetId() const;
   const ScrollbarData& GetScrollbarData() const;
   const uint64_t& GetScrollbarAnimationId() const;
 
   /* Fixed pos info */
 
-  void SetFixedPosData(FrameMetrics::ViewID aFixedPosTarget);
-  FrameMetrics::ViewID GetFixedPosTarget() const;
+  void SetFixedPosData(ScrollableLayerGuid::ViewID aFixedPosTarget);
+  ScrollableLayerGuid::ViewID GetFixedPosTarget() const;
 
   /* Convert |aPoint| into the LayerPixel space for the layer corresponding to
    * this node. |aTransform| is the complete (content + async) transform for
@@ -170,7 +170,7 @@ private:
   // This is set for scrollbar Container and Thumb layers.
   ScrollbarData mScrollbarData;
 
-  FrameMetrics::ViewID mFixedPosTarget;
+  ScrollableLayerGuid::ViewID mFixedPosTarget;
 
   /* Let {L,M} be the {layer, scrollable metrics} pair that this node
    * corresponds to in the layer tree. mEventRegions contains the event regions

@@ -13,8 +13,8 @@ TEST_F(APZCTreeManagerTester, ScrollablePaintedLayers) {
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
 
   // both layers have the same scrollId
-  SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID);
-  SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID);
+  SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID);
+  SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID);
   manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
 
   TestAsyncPanZoomController* nullAPZC = nullptr;
@@ -25,13 +25,13 @@ TEST_F(APZCTreeManagerTester, ScrollablePaintedLayers) {
   EXPECT_EQ(ApzcOf(layers[1]), ApzcOf(layers[2]));
 
   // Change the scrollId of layers[1], and verify the APZC changes
-  SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1);
+  SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1);
   manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
   EXPECT_NE(ApzcOf(layers[1]), ApzcOf(layers[2]));
 
   // Change the scrollId of layers[2] to match that of layers[1], ensure we get the same
   // APZC for both again
-  SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 1);
+  SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID + 1);
   manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
   EXPECT_EQ(ApzcOf(layers[1]), ApzcOf(layers[2]));
 }

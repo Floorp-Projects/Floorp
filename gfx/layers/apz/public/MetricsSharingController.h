@@ -25,7 +25,7 @@ public:
                                    CrossProcessMutexHandle aMutexHandle,
                                    LayersId aLayersId,
                                    uint32_t aApzcId) = 0;
-  virtual bool StopSharingMetrics(FrameMetrics::ViewID aScrollId,
+  virtual bool StopSharingMetrics(ScrollableLayerGuid::ViewID aScrollId,
                                   uint32_t aApzcId) = 0;
 
 protected:

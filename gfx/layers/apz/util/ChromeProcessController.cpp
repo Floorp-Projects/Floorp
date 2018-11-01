@@ -120,7 +120,7 @@ ChromeProcessController::GetRootDocument() const
 }
 
 nsIDocument*
-ChromeProcessController::GetRootContentDocument(const FrameMetrics::ViewID& aScrollId) const
+ChromeProcessController::GetRootContentDocument(const ScrollableLayerGuid::ViewID& aScrollId) const
 {
   nsIContent* content = nsLayoutUtils::FindContentFor(aScrollId);
   if (!content) {
@@ -155,7 +155,7 @@ ChromeProcessController::HandleDoubleTap(const mozilla::CSSPoint& aPoint,
   CSSRect zoomToRect = CalculateRectToZoomTo(document, point);
 
   uint32_t presShellId;
-  FrameMetrics::ViewID viewId;
+  ScrollableLayerGuid::ViewID viewId;
   if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(
       document->GetDocumentElement(), &presShellId, &viewId)) {
     APZThreadUtils::RunOnControllerThread(
@@ -278,10 +278,10 @@ ChromeProcessController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
 }
 
 void
-ChromeProcessController::NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId, const nsString& aEvent)
+ChromeProcessController::NotifyMozMouseScrollEvent(const ScrollableLayerGuid::ViewID& aScrollId, const nsString& aEvent)
 {
   if (MessageLoop::current() != mUILoop) {
-    mUILoop->PostTask(NewRunnableMethod<FrameMetrics::ViewID, nsString>(
+    mUILoop->PostTask(NewRunnableMethod<ScrollableLayerGuid::ViewID, nsString>(
       "layers::ChromeProcessController::NotifyMozMouseScrollEvent",
       this,
       &ChromeProcessController::NotifyMozMouseScrollEvent,
@@ -302,10 +302,10 @@ ChromeProcessController::NotifyFlushComplete()
 }
 
 void
-ChromeProcessController::NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId)
+ChromeProcessController::NotifyAsyncScrollbarDragRejected(const ScrollableLayerGuid::ViewID& aScrollId)
 {
   if (MessageLoop::current() != mUILoop) {
-    mUILoop->PostTask(NewRunnableMethod<FrameMetrics::ViewID>(
+    mUILoop->PostTask(NewRunnableMethod<ScrollableLayerGuid::ViewID>(
       "layers::ChromeProcessController::NotifyAsyncScrollbarDragRejected",
       this,
       &ChromeProcessController::NotifyAsyncScrollbarDragRejected,
@@ -317,10 +317,10 @@ ChromeProcessController::NotifyAsyncScrollbarDragRejected(const FrameMetrics::Vi
 }
 
 void
-ChromeProcessController::NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aScrollId)
+ChromeProcessController::NotifyAsyncAutoscrollRejected(const ScrollableLayerGuid::ViewID& aScrollId)
 {
   if (MessageLoop::current() != mUILoop) {
-    mUILoop->PostTask(NewRunnableMethod<FrameMetrics::ViewID>(
+    mUILoop->PostTask(NewRunnableMethod<ScrollableLayerGuid::ViewID>(
       "layers::ChromeProcessController::NotifyAsyncAutoscrollRejected",
       this,
       &ChromeProcessController::NotifyAsyncAutoscrollRejected,

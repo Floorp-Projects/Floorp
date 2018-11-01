@@ -13,7 +13,6 @@ include protocol PVideoBridge;
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 
-using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 
 namespace mozilla {

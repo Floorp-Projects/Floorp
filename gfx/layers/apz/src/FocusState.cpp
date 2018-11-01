@@ -21,8 +21,8 @@ FocusState::FocusState()
   , mFocusHasKeyEventListeners(false)
   , mReceivedUpdate(false)
   , mFocusLayersId{0}
-  , mFocusHorizontalTarget(FrameMetrics::NULL_SCROLL_ID)
-  , mFocusVerticalTarget(FrameMetrics::NULL_SCROLL_ID)
+  , mFocusHorizontalTarget(ScrollableLayerGuid::NULL_SCROLL_ID)
+  , mFocusVerticalTarget(ScrollableLayerGuid::NULL_SCROLL_ID)
 {
 }
 
@@ -88,8 +88,8 @@ FocusState::Update(LayersId aRootLayerTreeId,
   // Reset our internal state so we can recalculate it
   mFocusHasKeyEventListeners = false;
   mFocusLayersId = aRootLayerTreeId;
-  mFocusHorizontalTarget = FrameMetrics::NULL_SCROLL_ID;
-  mFocusVerticalTarget = FrameMetrics::NULL_SCROLL_ID;
+  mFocusHorizontalTarget = ScrollableLayerGuid::NULL_SCROLL_ID;
+  mFocusVerticalTarget = ScrollableLayerGuid::NULL_SCROLL_ID;
 
   // To update the focus state for the entire APZCTreeManager, we need
   // to traverse the focus tree to find the current leaf which is the global
@@ -203,7 +203,7 @@ FocusState::GetHorizontalTarget() const
   //   3. The target has not been layerized
   if (!IsCurrent(lock) ||
       mFocusHasKeyEventListeners ||
-      mFocusHorizontalTarget == FrameMetrics::NULL_SCROLL_ID) {
+      mFocusHorizontalTarget == ScrollableLayerGuid::NULL_SCROLL_ID) {
     return Nothing();
   }
   return Some(ScrollableLayerGuid(mFocusLayersId, 0, mFocusHorizontalTarget));
@@ -221,7 +221,7 @@ FocusState::GetVerticalTarget() const
   //   3. The target has not been layerized
   if (!IsCurrent(lock) ||
       mFocusHasKeyEventListeners ||
-      mFocusVerticalTarget == FrameMetrics::NULL_SCROLL_ID) {
+      mFocusVerticalTarget == ScrollableLayerGuid::NULL_SCROLL_ID) {
     return Nothing();
   }
   return Some(ScrollableLayerGuid(mFocusLayersId, 0, mFocusVerticalTarget));

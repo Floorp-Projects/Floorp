@@ -104,7 +104,6 @@
 #include "mozilla/gfx/Matrix.h"
 #include "UnitTransforms.h"
 #include "ClientLayerManager.h"
-#include "LayersLogging.h"
 #include "nsColorPickerProxy.h"
 #include "nsContentPermissionHelper.h"
 #include "nsNetUtil.h"
@@ -246,7 +245,7 @@ TabChildBase::DispatchMessageManagerMessage(const nsAString& aMessageName,
 bool
 TabChildBase::UpdateFrameHandler(const RepaintRequest& aRequest)
 {
-  MOZ_ASSERT(aRequest.GetScrollId() != FrameMetrics::NULL_SCROLL_ID);
+  MOZ_ASSERT(aRequest.GetScrollId() != ScrollableLayerGuid::NULL_SCROLL_ID);
 
   if (aRequest.IsRootContent()) {
     if (nsCOMPtr<nsIPresShell> shell = GetPresShell()) {
@@ -1431,7 +1430,7 @@ TabChild::StartScrollbarDrag(const layers::AsyncDragMetrics& aDragMetrics)
 
 void
 TabChild::ZoomToRect(const uint32_t& aPresShellId,
-                     const FrameMetrics::ViewID& aViewId,
+                     const ScrollableLayerGuid::ViewID& aViewId,
                      const CSSRect& aRect,
                      const uint32_t& aFlags)
 {

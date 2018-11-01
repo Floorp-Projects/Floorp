@@ -23,8 +23,8 @@ TEST_F(APZCSnappingTester, Bug1265510)
     nsIntRegion(IntRect(0, 100, 100, 100))
   };
   root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-  SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 100, 200));
-  SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 200));
+  SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 100, 200));
+  SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 200));
   SetScrollHandoff(layers[1], root);
 
   ScrollSnapInfo snap;
@@ -75,7 +75,7 @@ TEST_F(APZCSnappingTester, Snap_After_Pinch)
     nsIntRegion(IntRect(0, 0, 100, 100)),
   };
   root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-  SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 100, 200));
+  SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 100, 200));
 
   // Set up some basic scroll snapping
   ScrollSnapInfo snap;

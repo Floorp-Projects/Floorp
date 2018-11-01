@@ -30,7 +30,7 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
   , mLockCount(0)
   , mLayersId(aLayersId)
   , mScrollbarAnimationId(0)
-  , mFixedPosTarget(FrameMetrics::NULL_SCROLL_ID)
+  , mFixedPosTarget(ScrollableLayerGuid::NULL_SCROLL_ID)
   , mIsBackfaceHidden(false)
   , mOverride(EventRegionsOverride::NoOverride)
 {
@@ -135,7 +135,7 @@ HitTestingTreeNode::GetScrollbarDirection() const
   return *mScrollbarData.mDirection;
 }
 
-FrameMetrics::ViewID
+ScrollableLayerGuid::ViewID
 HitTestingTreeNode::GetScrollTargetId() const
 {
   return mScrollbarData.mTargetViewId;
@@ -154,12 +154,12 @@ HitTestingTreeNode::GetScrollbarData() const
 }
 
 void
-HitTestingTreeNode::SetFixedPosData(FrameMetrics::ViewID aFixedPosTarget)
+HitTestingTreeNode::SetFixedPosData(ScrollableLayerGuid::ViewID aFixedPosTarget)
 {
   mFixedPosTarget = aFixedPosTarget;
 }
 
-FrameMetrics::ViewID
+ScrollableLayerGuid::ViewID
 HitTestingTreeNode::GetFixedPosTarget() const
 {
   return mFixedPosTarget;
@@ -388,7 +388,7 @@ HitTestingTreeNode::Dump(const char* aPrefix) const
     mApzc ? Stringify(mApzc->GetGuid()).c_str() : nsPrintfCString("l=0x%" PRIx64, uint64_t(mLayersId)).get(),
     (mOverride & EventRegionsOverride::ForceDispatchToContent) ? "fdtc " : "",
     (mOverride & EventRegionsOverride::ForceEmptyHitRegion) ? "fehr " : "",
-    (mFixedPosTarget != FrameMetrics::NULL_SCROLL_ID) ? nsPrintfCString("fixed=%" PRIu64 " ", mFixedPosTarget).get() : "",
+    (mFixedPosTarget != ScrollableLayerGuid::NULL_SCROLL_ID) ? nsPrintfCString("fixed=%" PRIu64 " ", mFixedPosTarget).get() : "",
     Stringify(mEventRegions).c_str(), Stringify(mTransform).c_str(),
     mClipRegion ? Stringify(mClipRegion.ref()).c_str() : "none",
     mScrollbarData.mDirection.isSome() ? " scrollbar" : "",

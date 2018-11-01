@@ -274,7 +274,7 @@ SetPaintRequestTime(nsIContent* aContent, const TimeStamp& aPaintRequestTime)
 void
 APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest)
 {
-  if (aRequest.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
+  if (aRequest.GetScrollId() == ScrollableLayerGuid::NULL_SCROLL_ID) {
     return;
   }
   nsIContent* content = nsLayoutUtils::FindContentFor(aRequest.GetScrollId());
@@ -332,7 +332,7 @@ APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest)
 void
 APZCCallbackHelper::UpdateSubFrame(const RepaintRequest& aRequest)
 {
-  if (aRequest.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
+  if (aRequest.GetScrollId() == ScrollableLayerGuid::NULL_SCROLL_ID) {
     return;
   }
   nsIContent* content = nsLayoutUtils::FindContentFor(aRequest.GetScrollId());
@@ -357,7 +357,7 @@ APZCCallbackHelper::UpdateSubFrame(const RepaintRequest& aRequest)
 bool
 APZCCallbackHelper::GetOrCreateScrollIdentifiers(nsIContent* aContent,
                                                  uint32_t* aPresShellIdOut,
-                                                 FrameMetrics::ViewID* aViewIdOut)
+                                                 ScrollableLayerGuid::ViewID* aViewIdOut)
 {
     if (!aContent) {
       return false;
@@ -391,7 +391,7 @@ APZCCallbackHelper::InitializeRootDisplayport(nsIPresShell* aPresShell)
   }
 
   uint32_t presShellId;
-  FrameMetrics::ViewID viewId;
+  ScrollableLayerGuid::ViewID viewId;
   if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(content, &presShellId, &viewId)) {
     nsPresContext* pc = aPresShell->GetPresContext();
     // This code is only correct for root content or toplevel documents.
@@ -472,7 +472,7 @@ APZCCallbackHelper::ApplyCallbackTransform(const CSSPoint& aInput,
                                            const ScrollableLayerGuid& aGuid)
 {
     CSSPoint input = aInput;
-    if (aGuid.mScrollId == FrameMetrics::NULL_SCROLL_ID) {
+    if (aGuid.mScrollId == ScrollableLayerGuid::NULL_SCROLL_ID) {
         return input;
     }
     nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aGuid.mScrollId);
@@ -677,7 +677,7 @@ PrepareForSetTargetAPZCNotification(nsIWidget* aWidget,
                                     const LayoutDeviceIntPoint& aRefPoint,
                                     nsTArray<ScrollableLayerGuid>* aTargets)
 {
-  ScrollableLayerGuid guid(aGuid.mLayersId, 0, FrameMetrics::NULL_SCROLL_ID);
+  ScrollableLayerGuid guid(aGuid.mLayersId, 0, ScrollableLayerGuid::NULL_SCROLL_ID);
   nsPoint point =
     nsLayoutUtils::GetEventCoordinatesRelativeTo(aWidget, aRefPoint, aRootFrame);
   uint32_t flags = 0;
@@ -896,7 +896,7 @@ APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
 }
 
 void
-APZCCallbackHelper::NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId, const nsString& aEvent)
+APZCCallbackHelper::NotifyMozMouseScrollEvent(const ScrollableLayerGuid::ViewID& aScrollId, const nsString& aEvent)
 {
   nsCOMPtr<nsIContent> targetContent = nsLayoutUtils::FindContentFor(aScrollId);
   if (!targetContent) {
@@ -942,7 +942,7 @@ APZCCallbackHelper::IsScrollInProgress(nsIScrollableFrame* aFrame)
 }
 
 /* static */ void
-APZCCallbackHelper::NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId)
+APZCCallbackHelper::NotifyAsyncScrollbarDragRejected(const ScrollableLayerGuid::ViewID& aScrollId)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (nsIScrollableFrame* scrollFrame = nsLayoutUtils::FindScrollableFrameFor(aScrollId)) {
@@ -951,7 +951,7 @@ APZCCallbackHelper::NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID&
 }
 
 /* static */ void
-APZCCallbackHelper::NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aScrollId)
+APZCCallbackHelper::NotifyAsyncAutoscrollRejected(const ScrollableLayerGuid::ViewID& aScrollId)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
@@ -963,7 +963,7 @@ APZCCallbackHelper::NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aS
 }
 
 /* static */ void
-APZCCallbackHelper::CancelAutoscroll(const FrameMetrics::ViewID& aScrollId)
+APZCCallbackHelper::CancelAutoscroll(const ScrollableLayerGuid::ViewID& aScrollId)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();

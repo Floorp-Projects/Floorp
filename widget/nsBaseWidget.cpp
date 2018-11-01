@@ -1034,7 +1034,7 @@ nsBaseWidget::SetConfirmedTargetAPZC(uint64_t aInputBlockId,
 
 void
 nsBaseWidget::UpdateZoomConstraints(const uint32_t& aPresShellId,
-                                    const FrameMetrics::ViewID& aViewId,
+                                    const ScrollableLayerGuid::ViewID& aViewId,
                                     const Maybe<ZoomConstraints>& aConstraints)
 {
   if (!mCompositorSession || !mAPZC) {
@@ -1990,7 +1990,7 @@ nsBaseWidget::GetNativeTextEventDispatcherListener()
 
 void
 nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
-                         const FrameMetrics::ViewID& aViewId,
+                         const ScrollableLayerGuid::ViewID& aViewId,
                          const CSSRect& aRect,
                          const uint32_t& aFlags)
 {

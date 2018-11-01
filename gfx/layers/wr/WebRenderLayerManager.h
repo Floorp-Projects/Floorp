@@ -148,7 +148,7 @@ public:
   WebRenderBridgeChild* WrBridge() const { return mWrChild; }
 
   // See equivalent function in ClientLayerManager
-  void LogTestDataForCurrentPaint(FrameMetrics::ViewID aScrollId,
+  void LogTestDataForCurrentPaint(ScrollableLayerGuid::ViewID aScrollId,
                                   const std::string& aKey,
                                   const std::string& aValue) {
     MOZ_ASSERT(gfxPrefs::APZTestLoggingEnabled(), "don't call me");

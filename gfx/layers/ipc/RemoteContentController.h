@@ -66,14 +66,14 @@ public:
 
   virtual void UpdateOverscrollOffset(float aX, float aY, bool aIsRootContent) override;
 
-  virtual void NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId,
+  virtual void NotifyMozMouseScrollEvent(const ScrollableLayerGuid::ViewID& aScrollId,
                                          const nsString& aEvent) override;
 
   virtual void NotifyFlushComplete() override;
 
-  virtual void NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId) override;
+  virtual void NotifyAsyncScrollbarDragRejected(const ScrollableLayerGuid::ViewID& aScrollId) override;
 
-  virtual void NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aScrollId) override;
+  virtual void NotifyAsyncAutoscrollRejected(const ScrollableLayerGuid::ViewID& aScrollId) override;
 
   virtual void CancelAutoscroll(const ScrollableLayerGuid& aScrollId) override;
 

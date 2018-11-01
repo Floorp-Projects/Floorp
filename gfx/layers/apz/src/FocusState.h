@@ -10,8 +10,8 @@
 #include <unordered_map>    // for std::unordered_map
 #include <unordered_set>    // for std::unordered_set
 
-#include "FrameMetrics.h"   // for FrameMetrics::ViewID
 #include "mozilla/layers/FocusTarget.h" // for FocusTarget
+#include "mozilla/layers/ScrollableLayerGuid.h"   // for ViewID
 #include "mozilla/Mutex.h"  // for Mutex
 
 namespace mozilla {
@@ -167,8 +167,8 @@ private:
   // The scrollable layer corresponding to the scrollable frame that is used to
   // scroll the focused element. This depends on the direction the user is
   // scrolling.
-  FrameMetrics::ViewID mFocusHorizontalTarget;
-  FrameMetrics::ViewID mFocusVerticalTarget;
+  ScrollableLayerGuid::ViewID mFocusHorizontalTarget;
+  ScrollableLayerGuid::ViewID mFocusVerticalTarget;
 };
 
 } // namespace layers

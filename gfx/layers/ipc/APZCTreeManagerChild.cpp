@@ -186,7 +186,7 @@ APZCTreeManagerChild::RecvNotifyPinchGesture(const PinchGestureType& aType,
 }
 
 mozilla::ipc::IPCResult
-APZCTreeManagerChild::RecvCancelAutoscroll(const FrameMetrics::ViewID& aScrollId)
+APZCTreeManagerChild::RecvCancelAutoscroll(const ScrollableLayerGuid::ViewID& aScrollId)
 {
   // This will only get sent from the GPU process to the parent process, so
   // this function should never get called in the content process.

@@ -171,7 +171,7 @@ private:
    */
   void AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoot,
                                  Layer* aStartTraversalAt,
-                                 FrameMetrics::ViewID aTransformScrollId,
+                                 ScrollableLayerGuid::ViewID aTransformScrollId,
                                  const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
                                  const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,
                                  const ScreenMargin& aFixedLayerMargins,
@@ -233,7 +233,7 @@ private:
   // The following two fields are only needed on Fennec with C++ APZ, because
   // then we need to reposition the gecko scrollbar to deal with the
   // dynamic toolbar shifting content around.
-  FrameMetrics::ViewID mRootScrollableId;
+  ScrollableLayerGuid::ViewID mRootScrollableId;
   ScreenMargin mFixedLayerMargins;
 #endif
 };

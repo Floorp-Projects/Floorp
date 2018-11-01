@@ -106,7 +106,7 @@ using namespace mozilla::dom;
 using namespace mozilla::layout;
 using namespace mozilla::gfx;
 
-typedef FrameMetrics::ViewID ViewID;
+typedef ScrollableLayerGuid::ViewID ViewID;
 typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 
 #ifdef DEBUG
@@ -1030,8 +1030,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
   , mFirstClipChainToDestroy(nullptr)
   , mActiveScrolledRootForRootScrollframe(nullptr)
   , mMode(aMode)
-  , mCurrentScrollParentId(FrameMetrics::NULL_SCROLL_ID)
-  , mCurrentScrollbarTarget(FrameMetrics::NULL_SCROLL_ID)
+  , mCurrentScrollParentId(ScrollableLayerGuid::NULL_SCROLL_ID)
+  , mCurrentScrollbarTarget(ScrollableLayerGuid::NULL_SCROLL_ID)
   , mSVGEffectsBuildingDepth(0)
   , mFilterASR(nullptr)
   , mContainsBlendMode(false)
@@ -2608,7 +2608,7 @@ nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
     root->SetScaleToResolution(presShell->ScaleToResolution(),
                                containerParameters.mXScale);
 
-    auto callback = [root](FrameMetrics::ViewID aScrollId) -> bool {
+    auto callback = [root](ScrollableLayerGuid::ViewID aScrollId) -> bool {
       return nsLayoutUtils::ContainsMetricsWithId(root, aScrollId);
     };
     if (Maybe<ScrollMetadata> rootMetadata = nsLayoutUtils::GetRootMetadata(
@@ -5352,10 +5352,10 @@ nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(
   // we don't need to do it as often, and so that we can do it for other
   // display item types as well (reducing the need for as many instances of
   // this display item).
-  FrameMetrics::ViewID scrollId =
-    mScrollTarget.valueOrFrom([&]() -> FrameMetrics::ViewID {
+  ScrollableLayerGuid::ViewID scrollId =
+    mScrollTarget.valueOrFrom([&]() -> ScrollableLayerGuid::ViewID {
       const ActiveScrolledRoot* asr = GetActiveScrolledRoot();
-      Maybe<FrameMetrics::ViewID> fixedTarget =
+      Maybe<ScrollableLayerGuid::ViewID> fixedTarget =
         aBuilder.GetContainingFixedPosScrollTarget(asr);
       if (fixedTarget) {
         return *fixedTarget;
@@ -5363,7 +5363,7 @@ nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(
       if (asr) {
         return asr->GetViewId();
       }
-      return FrameMetrics::NULL_SCROLL_ID;
+      return ScrollableLayerGuid::NULL_SCROLL_ID;
     });
 
   // Insert a transparent rectangle with the hit-test info

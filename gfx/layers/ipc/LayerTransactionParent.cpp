@@ -768,7 +768,7 @@ LayerTransactionParent::RecvGetTransform(const LayerHandle& aLayerHandle,
 }
 
 mozilla::ipc::IPCResult
-LayerTransactionParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScrollID,
+LayerTransactionParent::RecvSetAsyncScrollOffset(const ScrollableLayerGuid::ViewID& aScrollID,
                                                  const float& aX, const float& aY)
 {
   if (mDestroyed || !mLayerManager || mLayerManager->IsDestroyed()) {
@@ -780,7 +780,7 @@ LayerTransactionParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aSc
 }
 
 mozilla::ipc::IPCResult
-LayerTransactionParent::RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollID,
+LayerTransactionParent::RecvSetAsyncZoom(const ScrollableLayerGuid::ViewID& aScrollID,
                                          const float& aValue)
 {
   if (mDestroyed || !mLayerManager || mLayerManager->IsDestroyed()) {

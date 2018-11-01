@@ -476,7 +476,7 @@ CrossProcessCompositorBridgeParent::ApplyAsyncProperties(
 void
 CrossProcessCompositorBridgeParent::SetTestAsyncScrollOffset(
     const LayersId& aLayersId,
-    const FrameMetrics::ViewID& aScrollId,
+    const ScrollableLayerGuid::ViewID& aScrollId,
     const CSSPoint& aPoint)
 {
   MOZ_ASSERT(aLayersId.IsValid());
@@ -493,7 +493,7 @@ CrossProcessCompositorBridgeParent::SetTestAsyncScrollOffset(
 void
 CrossProcessCompositorBridgeParent::SetTestAsyncZoom(
     const LayersId& aLayersId,
-    const FrameMetrics::ViewID& aScrollId,
+    const ScrollableLayerGuid::ViewID& aScrollId,
     const LayerToParentLayerScale& aZoom)
 {
   MOZ_ASSERT(aLayersId.IsValid());

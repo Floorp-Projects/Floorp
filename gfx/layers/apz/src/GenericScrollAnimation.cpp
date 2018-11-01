@@ -7,6 +7,7 @@
 #include "GenericScrollAnimation.h"
 
 #include "AsyncPanZoomController.h"
+#include "FrameMetrics.h"
 #include "gfxPrefs.h"
 #include "nsPoint.h"
 #include "ScrollAnimationPhysics.h"

@@ -102,8 +102,8 @@ static TimeStamp GetStartupTime() {
 class MockContentController : public GeckoContentController {
 public:
   MOCK_METHOD1(RequestContentRepaint, void(const RepaintRequest&));
-  MOCK_METHOD2(RequestFlingSnap, void(const FrameMetrics::ViewID& aScrollId, const mozilla::CSSPoint& aDestination));
-  MOCK_METHOD2(AcknowledgeScrollUpdate, void(const FrameMetrics::ViewID&, const uint32_t& aScrollGeneration));
+  MOCK_METHOD2(RequestFlingSnap, void(const ScrollableLayerGuid::ViewID& aScrollId, const mozilla::CSSPoint& aDestination));
+  MOCK_METHOD2(AcknowledgeScrollUpdate, void(const ScrollableLayerGuid::ViewID&, const uint32_t& aScrollGeneration));
   MOCK_METHOD5(HandleTap, void(TapType, const LayoutDevicePoint&, Modifiers, const ScrollableLayerGuid&, uint64_t));
   MOCK_METHOD4(NotifyPinchGesture, void(PinchGestureInput::PinchGestureType, const ScrollableLayerGuid&, LayoutDeviceCoord, Modifiers));
   // Can't use the macros with already_AddRefed :(
@@ -118,8 +118,8 @@ public:
   }
   MOCK_METHOD3(NotifyAPZStateChange, void(const ScrollableLayerGuid& aGuid, APZStateChange aChange, int aArg));
   MOCK_METHOD0(NotifyFlushComplete, void());
-  MOCK_METHOD1(NotifyAsyncScrollbarDragRejected, void(const FrameMetrics::ViewID&));
-  MOCK_METHOD1(NotifyAsyncAutoscrollRejected, void(const FrameMetrics::ViewID&));
+  MOCK_METHOD1(NotifyAsyncScrollbarDragRejected, void(const ScrollableLayerGuid::ViewID&));
+  MOCK_METHOD1(NotifyAsyncAutoscrollRejected, void(const ScrollableLayerGuid::ViewID&));
   MOCK_METHOD1(CancelAutoscroll, void(const ScrollableLayerGuid&));
 };
 

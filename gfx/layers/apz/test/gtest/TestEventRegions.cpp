@@ -21,9 +21,9 @@ protected:
       nsIntRegion(IntRect(0, 100, 200, 100)),   // bottom half
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegions, nullptr, lm, layers);
-    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID);
-    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1);
-    SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 2);
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
+    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1);
+    SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID + 2);
     SetScrollHandoff(layers[1], root);
     SetScrollHandoff(layers[2], root);
 
@@ -53,7 +53,7 @@ protected:
       nsIntRegion(IntRect(0, 150, 100, 100)),
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegions, nullptr, lm, layers);
-    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID);
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
 
     // Set up the event regions so that the child thebes layer is positioned far
     // away from the scrolling container layer.
@@ -83,9 +83,9 @@ protected:
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegions, nullptr, lm, layers);
 
-    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
-    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 200, 300));
-    SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 2, CSSRect(0, 0, 200, 100));
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
+    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 200, 300));
+    SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID + 2, CSSRect(0, 0, 200, 100));
     SetScrollHandoff(layers[2], layers[1]);
     SetScrollHandoff(layers[1], root);
 
@@ -115,8 +115,8 @@ protected:
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegions, nullptr, lm, layers);
 
-    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID);
-    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1);
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
+    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1);
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
     manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
@@ -145,8 +145,8 @@ protected:
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegions, layerTransforms, lm, layers);
 
-    SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 10, 10));
-    SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
+    SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 10, 10));
+    SetScrollableFrameMetrics(layers[3], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
     SetScrollHandoff(layers[3], layers[2]);
 
     EventRegions regions(nsIntRegion(IntRect(0, 0, 10, 10)));

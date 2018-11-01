@@ -226,7 +226,7 @@ CompositorBridgeChild::ShutDown()
 }
 
 bool
-CompositorBridgeChild::LookupCompositorFrameMetrics(const FrameMetrics::ViewID aId,
+CompositorBridgeChild::LookupCompositorFrameMetrics(const ScrollableLayerGuid::ViewID aId,
                                                     FrameMetrics& aFrame)
 {
   SharedFrameMetricsData* data = mFrameMetricsTable.Get(aId);
@@ -648,7 +648,7 @@ CompositorBridgeChild::SharedFrameMetricsData::CopyFrameMetrics(FrameMetrics* aF
   mMutex->Unlock();
 }
 
-FrameMetrics::ViewID
+ScrollableLayerGuid::ViewID
 CompositorBridgeChild::SharedFrameMetricsData::GetViewID()
 {
   const FrameMetrics* frame =

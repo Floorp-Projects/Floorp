@@ -9,8 +9,8 @@
 
 #include <stdint.h>                     // for uint64_t, uint32_t
 
-#include "FrameMetrics.h"               // for FrameMetrics, etc
 #include "mozilla/layers/LayersTypes.h" // for TouchBehaviorFlags
+#include "mozilla/layers/ScrollableLayerGuid.h" // for ScrollableLayerGuid, etc
 #include "nsTArrayForwardDeclare.h"     // for nsTArray, nsTArray_Impl, etc
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "Units.h"                      // for CSSRect, etc
@@ -79,7 +79,7 @@ public:
    * The different elements in the array of targets correspond to the targets
    * for the different touch points. In the case where the touch point has no
    * target, or the target is not a scrollable frame, the target's |mScrollId|
-   * should be set to FrameMetrics::NULL_SCROLL_ID.
+   * should be set to ScrollableLayerGuid::NULL_SCROLL_ID.
    */
   virtual void SetTargetAPZC(
       uint64_t aInputBlockId,

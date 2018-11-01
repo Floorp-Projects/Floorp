@@ -62,11 +62,11 @@ public:
   virtual void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                                     APZStateChange aChange,
                                     int aArg) override;
-  virtual void NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId,
+  virtual void NotifyMozMouseScrollEvent(const ScrollableLayerGuid::ViewID& aScrollId,
                                          const nsString& aEvent) override;
   virtual void NotifyFlushComplete() override;
-  virtual void NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId) override;
-  virtual void NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aScrollId) override;
+  virtual void NotifyAsyncScrollbarDragRejected(const ScrollableLayerGuid::ViewID& aScrollId) override;
+  virtual void NotifyAsyncAutoscrollRejected(const ScrollableLayerGuid::ViewID& aScrollId) override;
   virtual void CancelAutoscroll(const ScrollableLayerGuid& aGuid) override;
 private:
   nsCOMPtr<nsIWidget> mWidget;
@@ -77,7 +77,7 @@ private:
   void InitializeRoot();
   nsIPresShell* GetPresShell() const;
   nsIDocument* GetRootDocument() const;
-  nsIDocument* GetRootContentDocument(const FrameMetrics::ViewID& aScrollId) const;
+  nsIDocument* GetRootContentDocument(const ScrollableLayerGuid::ViewID& aScrollId) const;
   void HandleDoubleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
                        const ScrollableLayerGuid& aGuid);
 };

@@ -229,13 +229,13 @@ CompositorBridgeParentBase::StartSharingMetrics(ipc::SharedMemoryBasic::Handle a
 }
 
 bool
-CompositorBridgeParentBase::StopSharingMetrics(FrameMetrics::ViewID aScrollId,
+CompositorBridgeParentBase::StopSharingMetrics(ScrollableLayerGuid::ViewID aScrollId,
                                                uint32_t aApzcId)
 {
   if (!CompositorThreadHolder::IsInCompositorThread()) {
     MOZ_ASSERT(CompositorLoop());
     CompositorLoop()->PostTask(
-      NewRunnableMethod<FrameMetrics::ViewID, uint32_t>(
+      NewRunnableMethod<ScrollableLayerGuid::ViewID, uint32_t>(
         "layers::CompositorBridgeParent::StopSharingMetrics",
         this,
         &CompositorBridgeParentBase::StopSharingMetrics,
@@ -1469,7 +1469,7 @@ CompositorBridgeParent::RecvGetFrameUniformity(FrameUniformityData* aOutData)
 void
 CompositorBridgeParent::SetTestAsyncScrollOffset(
     const LayersId& aLayersId,
-    const FrameMetrics::ViewID& aScrollId,
+    const ScrollableLayerGuid::ViewID& aScrollId,
     const CSSPoint& aPoint)
 {
   if (mApzUpdater) {
@@ -1481,7 +1481,7 @@ CompositorBridgeParent::SetTestAsyncScrollOffset(
 void
 CompositorBridgeParent::SetTestAsyncZoom(
     const LayersId& aLayersId,
-    const FrameMetrics::ViewID& aScrollId,
+    const ScrollableLayerGuid::ViewID& aScrollId,
     const LayerToParentLayerScale& aZoom)
 {
   if (mApzUpdater) {

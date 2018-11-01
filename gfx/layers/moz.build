@@ -229,6 +229,7 @@ EXPORTS.mozilla.layers += [
     'RenderTrace.h',
     'RepaintRequest.h',
     'RotatedBuffer.h',
+    'ScrollableLayerGuid.h',
     'ShareableCanvasRenderer.h',
     'SourceSurfaceSharedData.h',
     'SourceSurfaceVolatileData.h',
@@ -255,6 +256,7 @@ EXPORTS.mozilla.layers += [
     'wr/WebRenderTextureHost.h',
     'wr/WebRenderTextureHostWrapper.h',
     'wr/WebRenderUserData.h',
+    'ZoomConstraints.h',
 ]
 
 if CONFIG['MOZ_X11']:
