@@ -103,6 +103,7 @@ SERIALIZED_PREDEFINED_TYPES = [
     "Opacity",
     "Resize",
     "TextAlign",
+    "TimingFunction",
     "TransformStyle",
     "background::BackgroundSize",
     "basic_shape::ClippingShape",
