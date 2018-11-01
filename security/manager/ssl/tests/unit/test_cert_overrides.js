@@ -17,54 +17,54 @@ function check_telemetry() {
   let histogram = Services.telemetry
                     .getHistogramById("SSL_CERT_ERROR_OVERRIDES")
                     .snapshot();
-  equal(histogram.counts[0], 0, "Should have 0 unclassified counts");
-  equal(histogram.counts[2], 9,
-        "Actual and expected SEC_ERROR_UNKNOWN_ISSUER counts should match");
-  equal(histogram.counts[3], 1,
-        "Actual and expected SEC_ERROR_CA_CERT_INVALID counts should match");
-  equal(histogram.counts[4], 0,
-        "Actual and expected SEC_ERROR_UNTRUSTED_ISSUER counts should match");
-  equal(histogram.counts[5], 1,
-        "Actual and expected SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE counts should match");
-  equal(histogram.counts[6], 0,
-        "Actual and expected SEC_ERROR_UNTRUSTED_CERT counts should match");
-  equal(histogram.counts[7], 0,
-        "Actual and expected SEC_ERROR_INADEQUATE_KEY_USAGE counts should match");
-  equal(histogram.counts[8], 2,
-        "Actual and expected SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED counts should match");
-  equal(histogram.counts[9], 13,
-        "Actual and expected SSL_ERROR_BAD_CERT_DOMAIN counts should match");
-  equal(histogram.counts[10], 5,
-        "Actual and expected SEC_ERROR_EXPIRED_CERTIFICATE counts should match");
-  equal(histogram.counts[11], 2,
-        "Actual and expected MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY counts should match");
-  equal(histogram.counts[12], 1,
-        "Actual and expected MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA counts should match");
-  equal(histogram.counts[13], 1,
-        "Actual and expected MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE counts should match");
-  equal(histogram.counts[14], 2,
-        "Actual and expected MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE counts should match");
-  equal(histogram.counts[15], 1,
-        "Actual and expected MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE counts should match");
-  equal(histogram.counts[16], 2,
-        "Actual and expected SEC_ERROR_INVALID_TIME counts should match");
-  equal(histogram.counts[17], 1,
-        "Actual and expected MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME counts should match");
-  equal(histogram.counts[19], 3,
-        "Actual and expected MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT counts should match");
-  equal(histogram.counts[20], 1,
-        "Actual and expected MOZILLA_PKIX_ERROR_MITM_DETECTED counts should match");
+  equal(histogram.values[0], 0, "Should have 0 unclassified values");
+  equal(histogram.values[2], 9,
+        "Actual and expected SEC_ERROR_UNKNOWN_ISSUER values should match");
+  equal(histogram.values[3], 1,
+        "Actual and expected SEC_ERROR_CA_CERT_INVALID values should match");
+  equal(histogram.values[4] || 0, 0,
+        "Actual and expected SEC_ERROR_UNTRUSTED_ISSUER values should match");
+  equal(histogram.values[5], 1,
+        "Actual and expected SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE values should match");
+  equal(histogram.values[6] || 0, 0,
+        "Actual and expected SEC_ERROR_UNTRUSTED_CERT values should match");
+  equal(histogram.values[7] || 0, 0,
+        "Actual and expected SEC_ERROR_INADEQUATE_KEY_USAGE values should match");
+  equal(histogram.values[8], 2,
+        "Actual and expected SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED values should match");
+  equal(histogram.values[9], 13,
+        "Actual and expected SSL_ERROR_BAD_CERT_DOMAIN values should match");
+  equal(histogram.values[10], 5,
+        "Actual and expected SEC_ERROR_EXPIRED_CERTIFICATE values should match");
+  equal(histogram.values[11], 2,
+        "Actual and expected MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY values should match");
+  equal(histogram.values[12], 1,
+        "Actual and expected MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA values should match");
+  equal(histogram.values[13], 1,
+        "Actual and expected MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE values should match");
+  equal(histogram.values[14], 2,
+        "Actual and expected MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE values should match");
+  equal(histogram.values[15], 1,
+        "Actual and expected MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE values should match");
+  equal(histogram.values[16], 2,
+        "Actual and expected SEC_ERROR_INVALID_TIME values should match");
+  equal(histogram.values[17], 1,
+        "Actual and expected MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME values should match");
+  equal(histogram.values[19], 3,
+        "Actual and expected MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT values should match");
+  equal(histogram.values[20], 1,
+        "Actual and expected MOZILLA_PKIX_ERROR_MITM_DETECTED values should match");
 
   let keySizeHistogram = Services.telemetry
                            .getHistogramById("CERT_CHAIN_KEY_SIZE_STATUS")
                            .snapshot();
-  equal(keySizeHistogram.counts[0], 0,
-        "Actual and expected unchecked key size counts should match");
-  equal(keySizeHistogram.counts[1], 16,
+  equal(keySizeHistogram.values[0], 0,
+        "Actual and expected unchecked key size values should match");
+  equal(keySizeHistogram.values[1], 16,
         "Actual and expected successful verifications of 2048-bit keys should match");
-  equal(keySizeHistogram.counts[2], 0,
+  equal(keySizeHistogram.values[2] || 0, 0,
         "Actual and expected successful verifications of 1024-bit keys should match");
-  equal(keySizeHistogram.counts[3], 68,
+  equal(keySizeHistogram.values[3], 68,
         "Actual and expected verification failures unrelated to key size should match");
 
   run_next_test();

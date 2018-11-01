@@ -48,10 +48,10 @@ function check_telemetry(expected_index, expected, expectedId = "") {
       // We clear the histogram every time so there should be only this one
       // category.
       equal(k, expectedId);
-      equal(errorSnapshot[k].counts[i], expected_value);
+      equal(errorSnapshot[k].values[i] || 0, expected_value);
     }
-    equal(VERIFICATION_HISTOGRAM.snapshot().counts[i], expected_value,
-      "count " + i + ": " + VERIFICATION_HISTOGRAM.snapshot().counts[i] +
+    equal(VERIFICATION_HISTOGRAM.snapshot().values[i] || 0, expected_value,
+      "count " + i + ": " + VERIFICATION_HISTOGRAM.snapshot().values[i] +
       " expected " + expected_value);
   }
   VERIFICATION_HISTOGRAM.clear();

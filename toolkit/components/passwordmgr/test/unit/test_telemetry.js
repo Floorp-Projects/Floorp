@@ -88,8 +88,7 @@ function testHistogram(histogramId, expectedNonZeroRanges) {
 
   // Compute the actual ranges in the format { range1: value1, range2: value2 }.
   let actualNonZeroRanges = {};
-  for (let [index, range] of snapshot.ranges.entries()) {
-    let value = snapshot.counts[index];
+  for (let [range, value] of Object.entries(snapshot.values)) {
     if (value > 0) {
       actualNonZeroRanges[range] = value;
     }

@@ -777,8 +777,6 @@ add_task(async function test_histograms() {
     equal(Object.keys(ping.histograms).length, 1);
     equal(ping.histograms[histId].sum, 0);
     equal(ping.histograms[histId].histogram_type, 1);
-    equal(ping.histograms[histId].counts.length, 10);
-    equal(ping.histograms[histId].ranges.length, 10);
   } finally {
     await cleanAndGo(engine, server);
     await Service.engineManager.unregister(engine);

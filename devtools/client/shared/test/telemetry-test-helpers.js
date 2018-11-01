@@ -103,13 +103,13 @@ class TelemetryHelpers {
         const result = keyedHistogram[key];
 
         if (result) {
-          actual = result.counts;
+          actual = result.values;
         } else {
           ok(false, `${histId}[${key}] exists`);
           return;
         }
       } else {
-        actual = Services.telemetry.getHistogramById(histId).snapshot().counts;
+        actual = Services.telemetry.getHistogramById(histId).snapshot().values;
       }
     }
 
@@ -119,7 +119,7 @@ class TelemetryHelpers {
         is(JSON.stringify(actual), JSON.stringify(expected), msg);
         break;
       case "hasentries":
-        const hasEntry = actual.some(num => num > 0);
+        const hasEntry = Object.values(actual).some(num => num > 0);
         if (key) {
           ok(hasEntry, `${histId}["${key}"] has at least one entry.`);
         } else {
@@ -193,9 +193,9 @@ class TelemetryHelpers {
           dump(`checkTelemetry("${histId}", "", ${snapshot}, "scalar");\n`);
         }
       } else if (typeof snapshot.histogram_type !== "undefined" &&
-                typeof snapshot.counts !== "undefined") {
+                typeof snapshot.values !== "undefined") {
         // Histogram
-        const actual = snapshot.counts;
+        const actual = snapshot.values;
 
         this.displayDataFromHistogramSnapshot(snapshot, "", histId, actual);
       } else {
@@ -234,7 +234,7 @@ class TelemetryHelpers {
       case Services.telemetry.HISTOGRAM_EXPONENTIAL:
       case Services.telemetry.HISTOGRAM_LINEAR:
         let total = 0;
-        for (const val of actual) {
+        for (const val of Object.values(actual)) {
           total += val;
         }
 
@@ -251,14 +251,14 @@ class TelemetryHelpers {
       case Services.telemetry.HISTOGRAM_BOOLEAN:
         actual = actual.toSource();
 
-        if (actual !== "[0, 0, 0]") {
+        if (actual !== "({})") {
           dump(`checkTelemetry("${histId}", ${key}, ${actual}, "array");\n`);
         }
         break;
       case Services.telemetry.HISTOGRAM_FLAG:
         actual = actual.toSource();
 
-        if (actual !== "[1, 0, 0]") {
+        if (actual !== "({0:1, 1:0})") {
           dump(`checkTelemetry("${histId}", ${key}, ${actual}, "array");\n`);
         }
         break;

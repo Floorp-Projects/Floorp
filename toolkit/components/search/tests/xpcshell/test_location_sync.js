@@ -45,15 +45,13 @@ add_task(async function test_simple() {
         case Ci.nsITelemetry.HISTOGRAM_FLAG:
           // flags are a special case in that they are initialized with a default
           // of one |0|.
-          deepEqual(snapshot.counts, [1, 0, 0], hid);
+          deepEqual(snapshot.values, {0: 1, 1: 0}, hid);
           break;
         case Ci.nsITelemetry.HISTOGRAM_BOOLEAN:
-          // booleans aren't initialized at all, so should have all zeros.
-          deepEqual(snapshot.counts, [0, 0, 0], hid);
-          break;
         case Ci.nsITelemetry.HISTOGRAM_EXPONENTIAL:
         case Ci.nsITelemetry.HISTOGRAM_LINEAR:
-          equal(snapshot.counts.reduce((a, b) => a + b), 0, hid);
+          // booleans, exponential and linear aren't initialized at all, so should be empty.
+          deepEqual(snapshot.values, {}, hid);
           break;
         default:
           ok(false, "unknown histogram type " + snapshot.histogram_type + " for " + hid);

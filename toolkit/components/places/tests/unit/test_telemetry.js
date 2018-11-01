@@ -167,6 +167,6 @@ add_task(async function test_execute() {
     let validate = histograms[histogramId];
     let snapshot = Services.telemetry.getHistogramById(histogramId).snapshot();
     validate(snapshot.sum);
-    Assert.ok(snapshot.counts.reduce((a, b) => a + b) > 0);
+    Assert.ok(Object.values(snapshot.values).reduce((a, b) => a + b, 0) > 0);
   }
 });
