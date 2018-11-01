@@ -11,6 +11,7 @@
 
 #include "mozilla/MemoryReporting.h"
 
+#include "ds/TraceableFifo.h"
 #include "js/CharacterEncoding.h"
 #include "js/GCVector.h"
 #include "js/Result.h"
@@ -70,7 +71,7 @@ struct AutoResolving;
 
 struct HelperThread;
 
-using JobQueue = GCVector<JSObject*, 0, SystemAllocPolicy>;
+using JobQueue = TraceableFifo<JSObject*, 0, SystemAllocPolicy>;
 
 class AutoLockScriptData;
 
