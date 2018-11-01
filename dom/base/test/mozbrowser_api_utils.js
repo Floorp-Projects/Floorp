@@ -2,7 +2,6 @@ const FRAME_URL = "http://example.org/";
 
 const METHODS = {
   sendMouseEvent: {},
-  sendTouchEvent: {},
   goBack: {},
   goForward: {},
   reload: {},

@@ -265,7 +265,6 @@ BrowserElementChild.prototype = {
 
     let mmCalls = {
       "send-mouse-event": this._recvSendMouseEvent,
-      "send-touch-event": this._recvSendTouchEvent,
       "get-can-go-back": this._recvCanGoBack,
       "get-can-go-forward": this._recvCanGoForward,
       "go-back": this._recvGoBack,
@@ -962,15 +961,6 @@ BrowserElementChild.prototype = {
     let utils = content.windowUtils;
     utils.sendMouseEventToWindow(json.type, json.x, json.y, json.button,
                                  json.clickCount, json.modifiers);
-  },
-
-  _recvSendTouchEvent: function(data) {
-    let json = data.json;
-    let utils = content.windowUtils;
-    utils.sendTouchEventToWindow(json.type, json.identifiers, json.touchesX,
-                                 json.touchesY, json.radiisX, json.radiisY,
-                                 json.rotationAngles, json.forces, json.count,
-                                 json.modifiers);
   },
 
   _recvCanGoBack: function(data) {
