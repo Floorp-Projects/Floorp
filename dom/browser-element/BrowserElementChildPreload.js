@@ -270,7 +270,6 @@ BrowserElementChild.prototype = {
     let self = this;
 
     let mmCalls = {
-      "get-screenshot": this._recvGetScreenshot,
       "get-contentdimensions": this._recvGetContentDimensions,
       "send-mouse-event": this._recvSendMouseEvent,
       "send-touch-event": this._recvSendTouchEvent,
@@ -881,28 +880,6 @@ BrowserElementChild.prototype = {
     sendAsyncMsg("scroll", { top: win.scrollY, left: win.scrollX });
   },
 
-  _recvGetScreenshot: function(data) {
-    debug("Received getScreenshot message: (" + data.json.id + ")");
-
-    let self = this;
-    let maxWidth = data.json.args.width;
-    let maxHeight = data.json.args.height;
-    let mimeType = data.json.args.mimeType;
-    let domRequestID = data.json.id;
-
-    let takeScreenshotClosure = function() {
-      self._takeScreenshot(maxWidth, maxHeight, mimeType, domRequestID);
-    };
-
-    let maxDelayMS = Services.prefs.getIntPref('dom.browserElement.maxScreenshotDelayMS', 2000);
-
-    // Try to wait for the event loop to go idle before we take the screenshot,
-    // but once we've waited maxDelayMS milliseconds, go ahead and take it
-    // anyway.
-    Cc['@mozilla.org/message-loop;1'].getService(Ci.nsIMessageLoop).postIdleTask(
-      takeScreenshotClosure, maxDelayMS);
-  },
-
   _recvExecuteScript: function(data) {
     debug("Received executeScript message: (" + data.json.id + ")");
 
@@ -1021,98 +998,6 @@ BrowserElementChild.prototype = {
       width: content.document.body.scrollWidth,
       height: content.document.body.scrollHeight
     }
-  },
-
-  /**
-   * Actually take a screenshot and foward the result up to our parent, given
-   * the desired maxWidth and maxHeight (in CSS pixels), and given the
-   * DOMRequest ID associated with the request from the parent.
-   */
-  _takeScreenshot: function(maxWidth, maxHeight, mimeType, domRequestID) {
-    // You can think of the screenshotting algorithm as carrying out the
-    // following steps:
-    //
-    // - Calculate maxWidth, maxHeight, and viewport's width and height in the
-    //   dimension of device pixels by multiply the numbers with
-    //   window.devicePixelRatio.
-    //
-    // - Let scaleWidth be the factor by which we'd need to downscale the
-    //   viewport pixel width so it would fit within maxPixelWidth.
-    //   (If the viewport's pixel width is less than maxPixelWidth, let
-    //   scaleWidth be 1.) Compute scaleHeight the same way.
-    //
-    // - Scale the viewport by max(scaleWidth, scaleHeight).  Now either the
-    //   viewport's width is no larger than maxWidth, the viewport's height is
-    //   no larger than maxHeight, or both.
-    //
-    // - Crop the viewport so its width is no larger than maxWidth and its
-    //   height is no larger than maxHeight.
-    //
-    // - Set mozOpaque to true and background color to solid white
-    //   if we are taking a JPEG screenshot, keep transparent if otherwise.
-    //
-    // - Return a screenshot of the page's viewport scaled and cropped per
-    //   above.
-    debug("Taking a screenshot: maxWidth=" + maxWidth +
-          ", maxHeight=" + maxHeight +
-          ", mimeType=" + mimeType +
-          ", domRequestID=" + domRequestID + ".");
-
-    if (!content) {
-      // If content is not loaded yet, bail out since even sendAsyncMessage
-      // fails...
-      debug("No content yet!");
-      return;
-    }
-
-    let devicePixelRatio = content.devicePixelRatio;
-
-    let maxPixelWidth = Math.round(maxWidth * devicePixelRatio);
-    let maxPixelHeight = Math.round(maxHeight * devicePixelRatio);
-
-    let contentPixelWidth = content.innerWidth * devicePixelRatio;
-    let contentPixelHeight = content.innerHeight * devicePixelRatio;
-
-    let scaleWidth = Math.min(1, maxPixelWidth / contentPixelWidth);
-    let scaleHeight = Math.min(1, maxPixelHeight / contentPixelHeight);
-
-    let scale = Math.max(scaleWidth, scaleHeight);
-
-    let canvasWidth =
-      Math.min(maxPixelWidth, Math.round(contentPixelWidth * scale));
-    let canvasHeight =
-      Math.min(maxPixelHeight, Math.round(contentPixelHeight * scale));
-
-    let transparent = (mimeType !== 'image/jpeg');
-
-    var canvas = content.document
-      .createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-    if (!transparent)
-      canvas.mozOpaque = true;
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
-
-    let ctx = canvas.getContext("2d", { willReadFrequently: true });
-    ctx.scale(scale * devicePixelRatio, scale * devicePixelRatio);
-
-    let flags = ctx.DRAWWINDOW_DRAW_VIEW |
-                ctx.DRAWWINDOW_USE_WIDGET_LAYERS |
-                ctx.DRAWWINDOW_DO_NOT_FLUSH |
-                ctx.DRAWWINDOW_ASYNC_DECODE_IMAGES;
-    ctx.drawWindow(content, 0, 0, content.innerWidth, content.innerHeight,
-                   transparent ? "rgba(255,255,255,0)" : "rgb(255,255,255)",
-                   flags);
-
-    // Take a JPEG screenshot by default instead of PNG with alpha channel.
-    // This requires us to unpremultiply the alpha channel, which
-    // is expensive on ARM processors because they lack a hardware integer
-    // division instruction.
-    canvas.toBlob(function(blob) {
-      sendAsyncMsg('got-screenshot', {
-        id: domRequestID,
-        successRv: blob
-      });
-    }, mimeType);
   },
 
   _recvFireCtxCallback: function(data) {

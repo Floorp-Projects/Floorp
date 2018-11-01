@@ -57,12 +57,6 @@ public:
   void Reload(bool aHardReload, ErrorResult& aRv);
   void Stop(ErrorResult& aRv);
 
-  already_AddRefed<dom::DOMRequest>
-  GetScreenshot(uint32_t aWidth,
-                uint32_t aHeight,
-                const nsAString& aMimeType,
-                ErrorResult& aRv);
-
   void Zoom(float aZoom, ErrorResult& aRv);
 
   already_AddRefed<dom::DOMRequest> GetCanGoBack(ErrorResult& aRv);
