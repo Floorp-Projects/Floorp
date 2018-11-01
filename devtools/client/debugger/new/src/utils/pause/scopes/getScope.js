@@ -40,7 +40,7 @@ function getScopeTitle(type, scope: RenderableScope) {
   if (type === "function" && scope.function) {
     return scope.function.displayName
       ? simplifyDisplayName(scope.function.displayName)
-      : L10N.getStr("anonymous");
+      : L10N.getStr("anonymousFunction");
   }
   return L10N.getStr("scopes.block");
 }

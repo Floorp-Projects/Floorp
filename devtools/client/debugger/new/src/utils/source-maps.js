@@ -44,7 +44,7 @@ export async function getMappedLocation(
   const source = getSource(state, location.sourceId);
 
   if (!source) {
-    throw new Error("Unknown source for location");
+    return location;
   }
 
   if (isOriginalId(location.sourceId)) {
