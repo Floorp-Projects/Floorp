@@ -8,6 +8,7 @@
 #define mozilla_dom_PendingAnimationTracker_h
 
 #include "mozilla/dom/Animation.h"
+#include "mozilla/TypedEnumBits.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocument.h"
 #include "nsTHashtable.h"
@@ -82,7 +83,6 @@ public:
 private:
   ~PendingAnimationTracker() { }
 
-  bool HasPlayPendingGeometricAnimations();
   void EnsurePaintIsScheduled();
 
   typedef nsTHashtable<nsRefPtrHashKey<dom::Animation>> AnimationSet;
@@ -96,13 +96,19 @@ private:
   AnimationSet mPausePendingSet;
   nsCOMPtr<nsIDocument> mDocument;
 
+public:
   enum class CheckState {
-    Indeterminate,
-    Absent,
-    Present
+    Indeterminate = 0,
+    Absent = 1 << 0,
+    AnimationsPresent = 1 << 1,
+    TransitionsPresent = 1 << 2,
   };
+
+private:
   CheckState mHasPlayPendingGeometricAnimations = CheckState::Indeterminate;
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(PendingAnimationTracker::CheckState)
 
 } // namespace mozilla
 
