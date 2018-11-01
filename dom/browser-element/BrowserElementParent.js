@@ -165,7 +165,6 @@ BrowserElementParent.prototype = {
       "got-set-input-method-active": this._gotDOMRequestResult,
       "scrollviewchange": this._handleScrollViewChange,
       "caretstatechanged": this._handleCaretStateChanged,
-      "got-web-manifest": this._gotDOMRequestResult,
     };
 
     let mmSecuritySensitiveCalls = {
@@ -178,7 +177,6 @@ BrowserElementParent.prototype = {
       "scrollareachanged": this._fireEventFromMsg,
       "titlechange": this._fireProfiledEventFromMsg,
       "opensearch": this._fireEventFromMsg,
-      "manifestchange": this._fireEventFromMsg,
       "metachange": this._fireEventFromMsg,
       "resize": this._fireEventFromMsg,
       "activitydone": this._fireEventFromMsg,
@@ -580,7 +578,6 @@ BrowserElementParent.prototype = {
     this._sendAsyncMsg('stop');
   }),
 
-  getWebManifest: defineDOMRequestMethod('get-web-manifest'),
   /**
    * Called when the visibility of the window which owns this iframe changes.
    */
