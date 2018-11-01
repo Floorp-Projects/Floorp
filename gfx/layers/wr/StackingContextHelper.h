@@ -120,7 +120,9 @@ private:
   // will get sent to APZ as part of a separate WebRenderLayerScrollData item,
   // and so we don't need to bother with any merging. (The merging probably
   // wouldn't even make sense because the coordinate spaces might be different
-  // in the face of async scrolling).
+  // in the face of async scrolling). This behaviour of forcing a
+  // WebRenderLayerScrollData item to be generated when the ASR changes is
+  // implemented in WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList.
   Maybe<nsDisplayTransform*> mDeferredTransformItem;
   Maybe<gfx::Matrix4x4> mDeferredAncestorTransform;
 
