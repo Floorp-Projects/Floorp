@@ -503,9 +503,9 @@ class OSXBootstrapper(BaseBootstrapper):
         return active_name.lower()
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
-        cbindgen_min_version = '0.6.7'
+        from mozboot import stylo
         # We installed clang via homebrew earlier.
-        self.ensure_rust_package('cbindgen', cbindgen_min_version)
+        self.install_toolchain_artifact(state_dir, checkout_root, stylo.MACOS_CBINDGEN)
 
     def ensure_node_packages(self, state_dir, checkout_root):
         # XXX from necessary?
