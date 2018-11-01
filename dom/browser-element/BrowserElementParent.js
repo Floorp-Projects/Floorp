@@ -156,7 +156,6 @@ BrowserElementParent.prototype = {
       "error": this._fireEventFromMsg,
       "firstpaint": this._fireProfiledEventFromMsg,
       "documentfirstpaint": this._fireProfiledEventFromMsg,
-      "got-contentdimensions": this._gotDOMRequestResult,
       "got-can-go-back": this._gotDOMRequestResult,
       "got-can-go-forward": this._gotDOMRequestResult,
       "requested-dom-fullscreen": this._requestedDOMFullscreen,
@@ -572,7 +571,6 @@ BrowserElementParent.prototype = {
 
   getCanGoBack: defineDOMRequestMethod('get-can-go-back'),
   getCanGoForward: defineDOMRequestMethod('get-can-go-forward'),
-  getContentDimensions: defineDOMRequestMethod('get-contentdimensions'),
 
   findAll: defineNoReturnMethod(function(searchString, caseSensitivity) {
     return this._sendAsyncMsg('find-all', {

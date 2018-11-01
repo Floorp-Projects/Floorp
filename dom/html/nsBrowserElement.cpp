@@ -208,22 +208,6 @@ nsBrowserElement::GetCanGoForward(ErrorResult& aRv)
   return req.forget();
 }
 
-already_AddRefed<DOMRequest>
-nsBrowserElement::GetContentDimensions(ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-
-  RefPtr<DOMRequest> req;
-  nsresult rv = mBrowserElementAPI->GetContentDimensions(getter_AddRefs(req));
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  return req.forget();
-}
-
 void
 nsBrowserElement::FindAll(const nsAString& aSearchString,
                           BrowserFindCaseSensitivity aCaseSensitivity,

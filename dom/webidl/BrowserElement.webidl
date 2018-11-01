@@ -78,11 +78,6 @@ interface BrowserElementPrivileged {
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
    ChromeOnly]
-  DOMRequest getContentDimensions();
-
-  [Throws,
-   Pref="dom.mozBrowserFramesEnabled",
-   ChromeOnly]
   void findAll(DOMString searchString, BrowserFindCaseSensitivity caseSensitivity);
 
   [Throws,

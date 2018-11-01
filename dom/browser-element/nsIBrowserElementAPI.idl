@@ -58,7 +58,6 @@ interface nsIBrowserElementAPI : nsISupports
   void stop();
   DOMRequest getCanGoBack();
   DOMRequest getCanGoForward();
-  DOMRequest getContentDimensions();
 
   void findAll(in AString searchString, in long caseSensitivity);
   void findNext(in long direction);
