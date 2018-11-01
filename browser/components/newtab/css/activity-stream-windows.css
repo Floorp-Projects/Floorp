@@ -338,9 +338,6 @@ main {
   margin: auto;
   padding-bottom: 68px;
   width: 274px; }
-  @media (min-width: 482px) {
-    main {
-      width: 402px; } }
   @media (min-width: 610px) {
     main {
       width: 530px; } }
@@ -411,20 +408,13 @@ main {
   list-style: none;
   margin: 0 -16px;
   padding: 0; }
-  @media (max-width: 482px) {
+  @media (max-width: 610px) {
     .top-sites-list :nth-child(2n+1) .context-menu {
       margin-inline-end: auto;
       margin-inline-start: auto;
       inset-inline-end: auto;
       inset-inline-start: -32px; }
     .top-sites-list :nth-child(2n) .context-menu {
-      margin-inline-end: 5px;
-      margin-inline-start: auto;
-      inset-inline-end: 0;
-      inset-inline-start: auto; } }
-  @media (min-width: 482px) and (max-width: 610px) {
-    .top-sites-list :nth-child(3n+2) .context-menu,
-    .top-sites-list :nth-child(3n) .context-menu {
       margin-inline-end: 5px;
       margin-inline-start: auto;
       inset-inline-end: 0;
@@ -465,7 +455,10 @@ main {
       margin-inline-start: auto;
       inset-inline-end: 0;
       inset-inline-start: auto; } }
-  @media not all and (min-width: 1122px) {
+  @media (max-width: 610px) {
+    .top-sites-list .hide-for-narrow {
+      display: none; } }
+  @media (min-width: 866px) and (max-width: 1122px) {
     .top-sites-list .hide-for-narrow {
       display: none; } }
   .top-sites-list li {
@@ -636,9 +629,6 @@ main {
   right: 0;
   top: 40px;
   width: 274px; }
-  @media (min-width: 482px) {
-    .edit-topsites-wrapper .modal {
-      width: 402px; } }
   @media (min-width: 610px) {
     .edit-topsites-wrapper .modal {
       width: 530px; } }
@@ -776,7 +766,7 @@ main {
     margin-inline-start: 10px;
     margin-inline-end: 0; }
 
-@media (max-width: 482px) {
+@media (max-width: 610px) {
   .topsite-form .fields-and-preview {
     flex-direction: column; }
     .topsite-form .fields-and-preview .top-site-outer {
@@ -1233,7 +1223,7 @@ a.firstrun-link {
       height: 97px;
       margin-inline-start: 15px;
       width: 142px; }
-    @media (max-width: 481px) {
+    @media (max-width: 609px) {
       .search-wrapper .logo-and-wordmark .logo {
         background-size: 64px;
         height: 64px;
@@ -1249,9 +1239,6 @@ a.firstrun-link {
     margin: 0 auto;
     position: relative;
     width: 224px; }
-    @media (min-width: 482px) {
-      .search-wrapper .search-inner-wrapper {
-        width: 352px; } }
     @media (min-width: 610px) {
       .search-wrapper .search-inner-wrapper {
         width: 480px; } }
@@ -1861,6 +1848,8 @@ a.firstrun-link {
     max-width: 750px;
     overflow: auto;
     font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace; }
+  .asrouter-admin .errorState {
+    border: 1px solid #D70022; }
 
 .pocket-logged-in-cta {
   font-size: 13px;
