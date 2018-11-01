@@ -30,59 +30,6 @@ using namespace js;
 
 TraceLoggerThreadState* traceLoggerState = nullptr;
 
-#if defined(MOZ_HAVE_RDTSC)
-
-uint64_t inline rdtsc() {
-    return ReadTimestampCounter();
-}
-
-#elif defined(__powerpc__)
-static __inline__ uint64_t
-rdtsc(void)
-{
-    uint64_t result=0;
-    uint32_t upper, lower,tmp;
-    __asm__ volatile(
-            "0:                  \n"
-            "\tmftbu   %0           \n"
-            "\tmftb    %1           \n"
-            "\tmftbu   %2           \n"
-            "\tcmpw    %2,%0        \n"
-            "\tbne     0b         \n"
-            : "=r"(upper),"=r"(lower),"=r"(tmp)
-            );
-    result = upper;
-    result = result<<32;
-    result = result|lower;
-
-    return result;
-
-}
-#elif defined(__arm__) || defined(__aarch64__)
-
-#include <sys/time.h>
-
-static __inline__ uint64_t
-rdtsc(void)
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    uint64_t ret = tv.tv_sec;
-    ret *= 1000000;
-    ret += tv.tv_usec;
-    return ret;
-}
-
-#else
-
-uint64_t inline
-rdtsc(void)
-{
-    return 0;
-}
-
-#endif // defined(MOZ_HAVE_RDTSC)
-
 static bool
 EnsureTraceLoggerState()
 {
@@ -175,7 +122,8 @@ TraceLoggerThread::initGraph()
 
     MOZ_ASSERT(traceLoggerState);
     bool graphFile = traceLoggerState->isGraphFileEnabled();
-    uint64_t start = rdtsc() - traceLoggerState->startupTime;
+    double delta = traceLoggerState->getTimeStampOffset(mozilla::TimeStamp::Now());
+    uint64_t start = static_cast<uint64_t>(delta);
     if (!graph->init(start, graphFile)) {
         graph = nullptr;
         return;
@@ -303,7 +251,7 @@ TraceLoggerThread::~TraceLoggerThread()
 {
     if (graph.get()) {
         if (!failed) {
-            graph->log(events);
+            graph->log(events, traceLoggerState->startTime);
         }
         graph = nullptr;
     }
@@ -768,11 +716,11 @@ TraceLoggerThread::log(uint32_t id)
     // we record the time it took to make more space. To log this information
     // we need 2 extra free entries.
     if (!events.hasSpaceForAdd(3)) {
-        uint64_t start = rdtsc() - traceLoggerState->startupTime;
+        mozilla::TimeStamp start = mozilla::TimeStamp::Now();
 
         if (!events.ensureSpaceBeforeAdd(3)) {
             if (graph.get()) {
-                graph->log(events);
+                graph->log(events, traceLoggerState->startTime);
             }
 
             // The data structures are full, and the graph file is not enabled
@@ -798,13 +746,13 @@ TraceLoggerThread::log(uint32_t id)
             entryStart.textId = TraceLogger_Internal;
 
             EventEntry& entryStop = events.pushUninitialized();
-            entryStop.time = rdtsc() - traceLoggerState->startupTime;
+            entryStop.time = mozilla::TimeStamp::Now();
             entryStop.textId = TraceLogger_Stop;
         }
 
     }
 
-    uint64_t time = rdtsc() - traceLoggerState->startupTime;
+    mozilla::TimeStamp time = mozilla::TimeStamp::Now();
 
     EventEntry& entry = events.pushUninitialized();
     entry.time = time;
@@ -1018,7 +966,7 @@ TraceLoggerThreadState::init()
             spewErrors = false;
     }
 
-    startupTime = rdtsc();
+    startTime = mozilla::TimeStamp::Now();
 
 #ifdef DEBUG
     initialized = true;
@@ -1248,7 +1196,7 @@ JS::ResetTraceLogger(void)
 }
 
 JS_PUBLIC_API(void)
-JS::StartTraceLogger(JSContext *cx)
+JS::StartTraceLogger(JSContext *cx, mozilla::TimeStamp profilerStart)
 {
     if (jit::JitOptions.enableTraceLogger || !traceLoggerState)  {
         return;
@@ -1259,7 +1207,7 @@ JS::StartTraceLogger(JSContext *cx)
     jit::JitOptions.enableTraceLogger = true;
 
     // Reset the start time to profile start so it aligns with sampling.
-    traceLoggerState->startupTime = rdtsc();
+    traceLoggerState->startTime = profilerStart;
 
     if (cx->traceLogger) {
         cx->traceLogger->enable();
