@@ -12,12 +12,18 @@ ga{
     }
     ExemplarCharacters{"[a á b c d e é f g h i í l m n o ó p r s t u ú]"}
     ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersPunctuation{
+        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
+        "″]"
+    }
     MoreInformation{"?"}
     NumberElements{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -319,7 +325,7 @@ ga{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1084,8 +1090,8 @@ ga{
         digits{"Digití"}
         dingbats{"Smísteoga"}
         divination_symbols{"Siombailí na Fáistine"}
-        downwards_arrows{"Saigheada Síos"}
-        downwards_upwards_arrows{"Saigheada Síos Suas"}
+        downwards_arrows{"saighead síos"}
+        downwards_upwards_arrows{"saighead síos suas"}
         east_asian_scripts{"Scripteanna na hÁise Thoir"}
         emoji{"Emoji"}
         european_scripts{"Scripteanna na hEorpa"}
@@ -1095,9 +1101,9 @@ ga{
         food_drink{"Bia agus Deoch"}
         format{"Formáid"}
         format_whitespace{"Formáid agus Spás Bán"}
-        full_width_form_variant{"Foirm Lánleithid"}
+        full_width_form_variant{"athraitheach leithid iomláin"}
         geometric_shapes{"Cruthanna Geoiméadracha"}
-        half_width_form_variant{"Foirm Leathleithid"}
+        half_width_form_variant{"athraitheach leathleithid"}
         han_characters{"Carachtair Han"}
         han_radicals{"Fréamhacha Han"}
         hanja{"Hanaí"}
@@ -1135,7 +1141,7 @@ ga{
         punctuation{"Poncaíocht"}
         rightwards_arrows{"Saighead Dheas"}
         sign_standard_symbols{"Comharthaí/Siombailí Coitianta"}
-        small_form_variant{"Foirmeacha Beaga"}
+        small_form_variant{"athraithigh bheaga"}
         smiley{"straoiseog"}
         smileys_people{"Straoiseoga nó Daoine"}
         south_asian_scripts{"Scripteanna na hÁise Theas"}
@@ -2328,8 +2334,13 @@ ga{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

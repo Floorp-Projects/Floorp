@@ -37,11 +37,11 @@ add_task(async function single_url() {
 });
 add_task(async function single_javascript() {
   await dropText("javascript:'bad'",
-                 ["about:blank"]);
+                 ["javascript:'bad'"]);
 });
 add_task(async function single_javascript_capital() {
   await dropText("jAvascript:'bad'",
-                 ["about:blank"]);
+                 ["javascript:'bad'"]);
 });
 add_task(async function single_url2() {
   await dropText("mochi.test/second",

@@ -580,7 +580,7 @@ lv{
         }
         SAR{
             "SAR",
-            "Saūda riāls",
+            "Saūda Arābijas riāls",
         }
         SBD{
             "SBD",
@@ -724,6 +724,10 @@ lv{
         }
         VEF{
             "VEF",
+            "Venecuēlas bolivārs (2008–2018)",
+        }
+        VES{
+            "VES",
             "Venecuēlas bolivārs",
         }
         VND{
@@ -807,7 +811,7 @@ lv{
             "Testa valūtas kods",
         }
         XXX{
-            "XXX",
+            "¤",
             "Nezināma valūta",
         }
         YER{
@@ -1717,6 +1721,11 @@ lv{
             zero{"Venecuēlas bolivāri (1871–2008)"}
         }
         VEF{
+            one{"Venecuēlas bolivārs (2008–2018)"}
+            other{"Venecuēlas bolivāri (2008–2018)"}
+            zero{"Venecuēlas bolivāri (2008–2018)"}
+        }
+        VES{
             one{"Venecuēlas bolivārs"}
             other{"Venecuēlas bolivāri"}
             zero{"Venecuēlas bolivāri"}
@@ -1812,5 +1821,5 @@ lv{
         other{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
 }

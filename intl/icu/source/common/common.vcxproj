@@ -2,7 +2,8 @@
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!-- The following import will include the 'default' configuration options for VS projects. -->
   <Import Project="..\allinone\Build.Windows.ProjectConfiguration.props" />
-
+  <!-- The following import will include the library configuration options for VS projects. -->
+  <Import Project="..\allinone\Build.Windows.Library.ProjectConfiguration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{73C0A65B-D1F2-4DE1-B3A6-15DAD2C23F3D}</ProjectGuid>
   </PropertyGroup>
@@ -85,7 +86,7 @@
       <ProgramDataBaseFileName>.\x86\Release/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin\icuuc62.dll</OutputFile>
+      <OutputFile>..\..\bin\icuuc63.dll</OutputFile>
       <AdditionalLibraryDirectories>.\..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\..\..\lib\icuuc.pdb</ProgramDatabaseFile>
       <DataExecutionPrevention>
@@ -105,7 +106,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin\icuuc62d.dll</OutputFile>
+      <OutputFile>..\..\bin\icuuc63d.dll</OutputFile>
       <AdditionalLibraryDirectories>.\..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\..\..\lib\icuucd.pdb</ProgramDatabaseFile>
       <DataExecutionPrevention>
@@ -124,7 +125,7 @@
       <ProgramDataBaseFileName>.\x64\Release/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64\icuuc62.dll</OutputFile>
+      <OutputFile>..\..\bin64\icuuc63.dll</OutputFile>
       <AdditionalLibraryDirectories>.\..\..\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\..\..\lib64\icuuc.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64\icuuc.lib</ImportLibrary>
@@ -142,7 +143,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64\icuuc62d.dll</OutputFile>
+      <OutputFile>..\..\bin64\icuuc63d.dll</OutputFile>
       <AdditionalLibraryDirectories>.\..\..\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\..\..\lib64\icuucd.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64\icuucd.lib</ImportLibrary>
@@ -182,6 +183,7 @@
     <ClCompile Include="ustack.cpp" />
     <ClCompile Include="ustrenum.cpp" />
     <ClCompile Include="utrie.cpp" />
+    <ClCompile Include="utrie_swap.cpp" />
     <ClCompile Include="utrie2.cpp" />
     <ClCompile Include="utrie2_builder.cpp" />
     <ClCompile Include="uvector.cpp" />
@@ -268,6 +270,7 @@
     <ClCompile Include="ruleiter.cpp" />
     <ClCompile Include="ucase.cpp" />
     <ClCompile Include="uchar.cpp" />
+    <ClCompile Include="characterproperties.cpp" />
     <ClCompile Include="unames.cpp" />
     <ClCompile Include="unifiedcache.cpp" />
     <ClCompile Include="unifilt.cpp" />
@@ -315,8 +318,10 @@
     <ClCompile Include="ucharstriebuilder.cpp" />
     <ClCompile Include="ucharstrieiterator.cpp" />
     <ClCompile Include="uchriter.cpp" />
+    <ClCompile Include="ucptrie.cpp" />
     <ClCompile Include="uinvchar.cpp" />
     <ClCompile Include="uiter.cpp" />
+    <ClCompile Include="umutablecptrie.cpp" />
     <ClCompile Include="unistr.cpp" />
     <ClCompile Include="unistr_case.cpp" />
     <ClCompile Include="unistr_case_locale.cpp" />
@@ -332,8 +337,6 @@
     <ClCompile Include="ustrtrns.cpp" />
     <ClCompile Include="utext.cpp" />
     <ClCompile Include="utf_impl.cpp" />
-    <ClCompile Include="listformatter.cpp" />
-    <ClCompile Include="ulistformatter.cpp" />
     <ClCompile Include="static_unicode_sets.cpp" />
     <ClInclude Include="localsvc.h" />
     <ClInclude Include="msvcres.h" />

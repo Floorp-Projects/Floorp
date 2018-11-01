@@ -604,6 +604,10 @@ zu{
         }
         VEF{
             "VEF",
+            "i-Venezuelan Bolívar (2008–2018)",
+        }
+        VES{
+            "VES",
             "i-Venezuelan Bolívar",
         }
         VND{
@@ -635,7 +639,7 @@ zu{
             "i-CFP Franc",
         }
         XXX{
-            "XXX",
+            "¤",
             "imali engaziwa",
         }
         YER{
@@ -1344,6 +1348,10 @@ zu{
             other{"i-Uzbekistan Som"}
         }
         VEF{
+            one{"i-Venezuelan Bolívar (2008–2018)"}
+            other{"i-Venezuelan Bolívar (2008–2018)"}
+        }
+        VES{
             one{"i-Venezuelan Bolívar"}
             other{"i-Venezuelan Bolívar"}
         }
@@ -1396,5 +1404,5 @@ zu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
 }

@@ -4305,7 +4305,7 @@ D7A4..D7AF    >FFFD                     # NA   <reserved-D7A4>..<reserved-D7AF>
 D7C7..D7CA    >FFFD                     # NA   <reserved-D7C7>..<reserved-D7CA>
 # D7CB..D7FB  valid                     # 5.2  HANGUL JONGSEONG NIEUN-RIEUL..HANGUL JONGSEONG PHIEUPH-THIEUTH
 D7FC..D7FF    >FFFD                     # NA   <reserved-D7FC>..<reserved-D7FF>
-D800..DFFF    >FFFD                     # 2.0  <surrogate-D800>..<surrogate-DFFF>
+# D800..DFFF    >FFFD                     # 2.0  <surrogate-D800>..<surrogate-DFFF>
 E000..F8FF    >FFFD                     # 1.1  <private-use-E000>..<private-use-F8FF>
 F900          >8C48                     # 1.1  CJK COMPATIBILITY IDEOGRAPH-F900
 F901          >66F4                     # 1.1  CJK COMPATIBILITY IDEOGRAPH-F901

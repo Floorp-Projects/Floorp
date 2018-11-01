@@ -15,7 +15,12 @@ ps{
         " ء ب پ ت ټ ث ج ځ چ څ ح خ د ډ ذ ر ړ ز ژ ږ س ش ښ ص ض ط ظ ع غ ف ق ک ګ گ ل م ن ڼ"
         " ه ة و ؤ ی ي ې ۍ ئ]"
     }
+    ExemplarCharactersIndex{
+        "[آ ا ء ب پ ت ټ ث ج ځ چ څ ح خ د ډ ذ ر ړ ز ژ ږ س ش ښ ص ض ط ظ ع غ ف ق ک ګ ل م ن"
+        " ڼ ه و ی]"
+    }
     ExemplarCharactersNumbers{"[\u200E \\- , ٫ ٬ . % ٪ ‰ ؉ + − 0۰ 1۱ 2۲ 3۳ 4۴ 5۵ 6۶ 7۷ 8۸ 9۹]"}
+    ExemplarCharactersPunctuation{"[، ; \\: ! ۔ ' ‘ ( ) \\[ \\] \\{ \\} /]"}
     MoreInformation{"?"}
     NumberElements{
         arabext{
@@ -41,7 +46,9 @@ ps{
         default{"arabext"}
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -230,7 +237,7 @@ ps{
         minimumGroupingDigits{"1"}
         native{"arabext"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.94"}
     calendar{
         default{"persian"}
         generic{
@@ -944,7 +951,7 @@ ps{
                 format{
                     abbreviated{
                         "محرم",
-                        "د صفرې د",
+                        "صفره",
                         "ربيع",
                         "ربيع II",
                         "جماعه",
@@ -988,7 +995,7 @@ ps{
                 stand-alone{
                     abbreviated{
                         "محرم",
-                        "د صفرې د",
+                        "صفره",
                         "ربيع",
                         "ربيع II",
                         "جماعه",
@@ -1130,25 +1137,25 @@ ps{
         }
     }
     characterLabel{
-        activities{"سرگرمی"}
-        african_scripts{"افریقی سکریپټ"}
-        american_scripts{"امریکی سکریپټ"}
-        animal{"د څارويو"}
-        animals_nature{"د څارويو او يا د قدرت"}
-        arrows{"تیر"}
-        body{"جسم"}
+        activities{"فعاليت"}
+        african_scripts{"افريقايي سکريپټ"}
+        american_scripts{"امريکايي سکريپټ"}
+        animal{"څاروی"}
+        animals_nature{"څاروی يا قدرت"}
+        arrows{"غشی"}
+        body{"وجود"}
         box_drawing{"د بکس انځور"}
         braille{"بریل"}
         building{"ودانۍ"}
         bullets_stars{"ګولۍ یا ستوری"}
         consonantal_jamo{"کنسینټل جامو"}
-        currency_symbols{"د اسعارو د سمبول"}
+        currency_symbols{"د پېسو سمبول"}
         dash_connector{"ډش یا نښلونکی"}
         digits{"عدد"}
         dingbats{"ڈنگبت"}
-        divination_symbols{"غیب دانی سمبول"}
-        downwards_arrows{"ښکته تیر"}
-        downwards_upwards_arrows{"ښکته پورته تیر"}
+        divination_symbols{"د اټکل سمبول"}
+        downwards_arrows{"ښکته غشی"}
+        downwards_upwards_arrows{"ښکته پورته غشی"}
         east_asian_scripts{"د ختيځې اسيا سکرېپټ"}
         emoji{"ایموجی"}
         european_scripts{"اروپایي سکرېپټ"}
@@ -1157,10 +1164,10 @@ ps{
         flags{"بيرغونه"}
         food_drink{"خواړه او څښاک"}
         format{"بڼه"}
-        format_whitespace{"بڼه او سپیټ اسپیس"}
-        full_width_form_variant{"بشپړ - چوک ويیرټ"}
-        geometric_shapes{"جاميټري شکل"}
-        half_width_form_variant{"نیم چوک ويیرټ"}
+        format_whitespace{"بڼه او سپين ځای"}
+        full_width_form_variant{"د بشپړ پراختيا بله بڼه"}
+        geometric_shapes{"جيوميتريکي شکل"}
+        half_width_form_variant{"د نيمايي پراختيا بله بڼه"}
         han_characters{"د حني کرکټر"}
         han_radicals{"د حني سخت دريځه"}
         hanja{"هانجا"}
@@ -1168,14 +1175,14 @@ ps{
         hanzi_traditional{"حنيزي (روايتي)"}
         heart{"زړه"}
         historic_scripts{"تاريخي سکرېپټ"}
-        ideographic_desc_characters{"د اډیګرافیک تفصیل کرکټر"}
+        ideographic_desc_characters{"د اډیګرافیک ډيسک کرکټر"}
         japanese_kana{"جاپاني کانا"}
         kanbun{"کنبن"}
         kanji{"کانجی"}
         keycap{"کیکاپ"}
-        leftwards_arrows{"پاتې دي تير"}
-        leftwards_rightwards_arrows{"پاتې دي سمه لار تير"}
-        letterlike_symbols{"خط لکه سمبول"}
+        leftwards_arrows{"کڼ اړخ ته غشی"}
+        leftwards_rightwards_arrows{"کڼ اړخ او ښۍ اړخ ته غشی"}
+        letterlike_symbols{"د توري په څېر سمبول"}
         limited_use{"د محدود استعمال"}
         male{"نارینه"}
         math_symbols{"ریاضی سمبول"}
@@ -1185,37 +1192,37 @@ ps{
         modifier{"بدلوونی"}
         musical_symbols{"د موسيقي سمبول"}
         nature{"قدرت"}
-        nonspacing{"ناپایه کول"}
-        numbers{"شمېره"}
+        nonspacing{"بې واټنه کول"}
+        numbers{"شمېرې"}
         objects{"څيز"}
         other{"نور"}
         paired{"جوړه"}
         person{"شخص"}
-        phonetic_alphabet{"صوتيک الفبا"}
+        phonetic_alphabet{"صوتي الفبا"}
         pictographs{"پکٹوګراف"}
         place{"ځای"}
         plant{"نبات"}
-        punctuation{"پنکچوییسن"}
-        rightwards_arrows{"سمه لار تیر"}
+        punctuation{"تنقيط"}
+        rightwards_arrows{"ښۍ اړخ ته غشی"}
         sign_standard_symbols{"نښه یا سمبول"}
-        small_form_variant{"کوچنۍ ويیرټ"}
-        smiley{"مسکراھٹ"}
-        smileys_people{"مسکراھٹ یا شخص"}
-        south_asian_scripts{"جنوبي اسیا سکرېپټ"}
-        southeast_asian_scripts{"د جنوب ختیځې آسیا سکرېپټ"}
-        spacing{"فاصله"}
-        sport{"کھیل"}
+        small_form_variant{"کوچنۍ بله بڼه"}
+        smiley{"مسکېدلې"}
+        smileys_people{"مسکېدلي يا شخص"}
+        south_asian_scripts{"د سويلي آسيا سکريپټ"}
+        southeast_asian_scripts{"د سويلي ختيځ آسيا سکريپټ"}
+        spacing{"واټن ورکول"}
+        sport{"لوبه"}
         symbols{"سمبول"}
         technical_symbols{"تخنیکي سمبول"}
         tone_marks{"ټون نښه"}
         travel{"سفر"}
         travel_places{"سفر یا ځای"}
-        upwards_arrows{"پورته تیرونه"}
-        variant_forms{"ويیرټ"}
+        upwards_arrows{"پورته غشي"}
+        variant_forms{"بله بڼه"}
         vocalic_jamo{"غږ جامو"}
         weather{"موسم"}
-        western_asian_scripts{"غربي آسیا د سکرېپټ"}
-        whitespace{"سپیټ اسپیس"}
+        western_asian_scripts{"لويديځ آسيايي سکريپټ"}
+        whitespace{"سپين ځای"}
     }
     delimiters{
         alternateQuotationEnd{"’"}
@@ -2033,13 +2040,13 @@ ps{
             start{"{0}, {1}"}
         }
         unit-narrow{
-            2{"{0} او {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
+            2{"{0} {1}"}
+            end{"{0} {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
         }
         unit-short{
-            2{"{0} او {1}"}
+            2{"{0} و {1}"}
             end{"{0}, {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
@@ -2049,5 +2056,37 @@ ps{
         UK{"بريتاني"}
         US{"امريکايي"}
         metric{"مېټرک"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

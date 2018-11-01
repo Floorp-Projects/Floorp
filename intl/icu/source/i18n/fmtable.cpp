@@ -734,7 +734,7 @@ CharString *Formattable::internalGetCharString(UErrorCode &status) {
       // not print scientific notation for magnitudes greater than -5 and smaller than some amount (+5?).
       if (fDecimalQuantity->isZero()) {
         fDecimalStr->append("0", -1, status);
-      } else if (std::abs(fDecimalQuantity->getMagnitude()) < 5) {
+      } else if (fDecimalQuantity->getMagnitude() != INT32_MIN && std::abs(fDecimalQuantity->getMagnitude()) < 5) {
         fDecimalStr->appendInvariantChars(fDecimalQuantity->toPlainString(), status);
       } else {
         fDecimalStr->appendInvariantChars(fDecimalQuantity->toScientificString(), status);

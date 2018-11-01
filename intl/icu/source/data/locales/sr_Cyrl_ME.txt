@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sr_Cyrl_ME{
-    Version{"2.1.38.69"}
+    Version{"2.1.44.88"}
     calendar{
         generic{
             intervalFormats{
@@ -27,9 +27,9 @@ sr_Cyrl_ME{
                     other{"W. 'сједмица' 'у' MMM"}
                 }
                 yw{
-                    few{"w. 'сједмица' 'у' y."}
-                    one{"w. 'сједмица' 'у' y."}
-                    other{"w. 'сједмица' 'у' y."}
+                    few{"w. 'сједмица' 'у' Y."}
+                    one{"w. 'сједмица' 'у' Y."}
+                    other{"w. 'сједмица' 'у' Y."}
                 }
             }
             dayNames{

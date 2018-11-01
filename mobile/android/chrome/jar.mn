@@ -8,8 +8,6 @@ chrome.jar:
 
 * content/about.xhtml                  (content/about.xhtml)
 * content/about.js                     (content/about.js)
-  content/config.xhtml                 (content/config.xhtml)
-  content/config.js                    (content/config.js)
   content/content.js                   (content/content.js)
   content/aboutAddons.xhtml            (content/aboutAddons.xhtml)
   content/aboutAddons.js               (content/aboutAddons.js)
@@ -56,7 +54,6 @@ chrome.jar:
 
 % content branding %content/branding/
 
-% override chrome://global/content/config.xul chrome://browser/content/config.xhtml
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
 % override chrome://mozapps/content/extensions/extensions.xul chrome://browser/content/aboutAddons.xhtml
 

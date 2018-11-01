@@ -265,8 +265,8 @@ case $platform in
         CXX=cl; export CXX
         RELEASE_CFLAGS='-Gy -MD'
         RELEASE_CXXFLAGS='-Gy -MD'
-        DEBUG_CFLAGS='-Zi -MDd'
-        DEBUG_CXXFLAGS='-Zi -MDd'
+        DEBUG_CFLAGS='-FS -Zi -MDd'
+        DEBUG_CXXFLAGS='-FS -Zi -MDd'
         DEBUG_LDFLAGS='-DEBUG'
         ;;
     Cygwin/MSVC2005)
@@ -324,8 +324,8 @@ case $platform in
         CXX=cl; export CXX
         RELEASE_CFLAGS='-Gy -MD'
         RELEASE_CXXFLAGS='-Gy -MD'
-        DEBUG_CFLAGS='-Zi -MDd'
-        DEBUG_CXXFLAGS='-Zi -MDd'
+        DEBUG_CFLAGS='-FS -Zi -MDd'
+        DEBUG_CXXFLAGS='-FS -Zi -MDd'
         DEBUG_LDFLAGS='-DEBUG'
         ;;
     *BSD)

@@ -12,12 +12,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "unicode/errorcode.h"
+#include "unicode/umutablecptrie.h"
 #include "unicode/unistr.h"
 #include "unicode/utf16.h"
 #include "normalizer2impl.h"
 #include "norms.h"
 #include "toolutil.h"
-#include "utrie2.h"
 #include "uvectr32.h"
 
 U_NAMESPACE_BEGIN
@@ -67,7 +67,7 @@ UChar32 Norm::combine(UChar32 trail) const {
 }
 
 Norms::Norms(UErrorCode &errorCode) {
-    normTrie=utrie2_open(0, 0, &errorCode);
+    normTrie = umutablecptrie_open(0, 0, &errorCode);
     normMem=utm_open("gennorm2 normalization structs", 10000, 0x110100, sizeof(Norm));
     // Default "inert" Norm struct at index 0. Practically immutable.
     norms=allocNorm();
@@ -75,7 +75,7 @@ Norms::Norms(UErrorCode &errorCode) {
 }
 
 Norms::~Norms() {
-    utrie2_close(normTrie);
+    umutablecptrie_close(normTrie);
     int32_t normsLength=utm_countItems(normMem);
     for(int32_t i=1; i<normsLength; ++i) {
         delete norms[i].mapping;
@@ -92,7 +92,7 @@ Norm *Norms::allocNorm() {
 }
 
 Norm *Norms::getNorm(UChar32 c) {
-    uint32_t i=utrie2_get32(normTrie, c);
+    uint32_t i = umutablecptrie_get(normTrie, c);
     if(i==0) {
         return nullptr;
     }
@@ -100,7 +100,7 @@ Norm *Norms::getNorm(UChar32 c) {
 }
 
 const Norm *Norms::getNorm(UChar32 c) const {
-    uint32_t i=utrie2_get32(normTrie, c);
+    uint32_t i = umutablecptrie_get(normTrie, c);
     if(i==0) {
         return nullptr;
     }
@@ -108,18 +108,18 @@ const Norm *Norms::getNorm(UChar32 c) const {
 }
 
 const Norm &Norms::getNormRef(UChar32 c) const {
-    return norms[utrie2_get32(normTrie, c)];
+    return norms[umutablecptrie_get(normTrie, c)];
 }
 
 Norm *Norms::createNorm(UChar32 c) {
-    uint32_t i=utrie2_get32(normTrie, c);
+    uint32_t i=umutablecptrie_get(normTrie, c);
     if(i!=0) {
         return norms+i;
     } else {
         /* allocate Norm */
         Norm *p=allocNorm();
         IcuToolErrorCode errorCode("gennorm2/createNorm()");
-        utrie2_set32(normTrie, c, (uint32_t)(p-norms), errorCode);
+        umutablecptrie_set(normTrie, c, (uint32_t)(p - norms), errorCode);
         return p;
     }
 }
@@ -153,27 +153,19 @@ UBool Norms::combinesWithCCBetween(const Norm &norm, uint8_t lowCC, int32_t high
     return FALSE;
 }
 
-U_CDECL_BEGIN
-
-static UBool U_CALLCONV
-enumRangeHandler(const void *context, UChar32 start, UChar32 end, uint32_t value) {
-    return ((Norms::Enumerator *)context)->rangeHandler(start, end, value);
-}
-
-U_CDECL_END
-
 void Norms::enumRanges(Enumerator &e) {
-    utrie2_enum(normTrie, nullptr, enumRangeHandler, &e);
+    UChar32 start = 0, end;
+    uint32_t i;
+    while ((end = umutablecptrie_getRange(normTrie, start, UCPMAP_RANGE_NORMAL, 0,
+                                          nullptr, nullptr, &i)) >= 0) {
+        if (i > 0) {
+            e.rangeHandler(start, end, norms[i]);
+        }
+        start = end + 1;
+    }
 }
 
 Norms::Enumerator::~Enumerator() {}
-
-UBool Norms::Enumerator::rangeHandler(UChar32 start, UChar32 end, uint32_t value) {
-    if(value!=0) {
-        rangeHandler(start, end, norms.getNormRefByIndex(value));
-    }
-    return TRUE;
-}
 
 void CompositionBuilder::rangeHandler(UChar32 start, UChar32 end, Norm &norm) {
     if(norm.mappingType!=Norm::ROUND_TRIP) { return; }

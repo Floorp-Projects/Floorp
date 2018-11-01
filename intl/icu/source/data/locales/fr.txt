@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fr{
-    AuxExemplarCharacters{"[á å ä ã ā ē í ì ī ñ ó ò ö ø ú ǔ]"}
+    AuxExemplarCharacters{"[á å ä ã ā ć ē í ì ī ĳ ñ ó ò ö õ ø ř š ſ ß ú ǔ]"}
     Ellipsis{
         final{"{0}…"}
         initial{"… {0}"}
@@ -15,14 +15,21 @@ fr{
         " x y ÿ z]"
     }
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
-    ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersNumbers{"[  \\- , . % ‰ + − 0 1 2 ² 3 ³ 4 5 6 7 8 9 ᵈ ᵉ ʳ ˢ]"}
     ExemplarCharactersPunctuation{"[\\- ‐ – — , ; \\: ! ? . … ’ \u0022 “ ” « » ( ) \\[ \\] § @ * / \\& # † ‡]"}
     MoreInformation{"?"}
     NumberElements{
+        arab{
+            symbols{
+                plusSign{"‏+"}
+            }
+        }
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                approximately{"≈{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -189,7 +196,7 @@ fr{
             symbols{
                 decimal{","}
                 exponential{"E"}
-                group{" "}
+                group{" "}
                 infinity{"∞"}
                 list{";"}
                 minusSign{"-"}
@@ -214,7 +221,7 @@ fr{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1839,14 +1846,14 @@ fr{
         activities{"activités"}
         african_scripts{"écritures africaines"}
         american_scripts{"écritures américaines"}
-        animal{"animal"}
+        animal{"animaux"}
         animals_nature{"animaux et nature"}
         arrows{"flèches"}
         body{"corps"}
-        box_drawing{"tracé de boîte"}
+        box_drawing{"filets"}
         braille{"écriture Braille"}
         building{"immeuble"}
-        bullets_stars{"puces / astérisques"}
+        bullets_stars{"étoiles et puces"}
         consonantal_jamo{"jamos consonnes"}
         currency_symbols{"symboles monétaires"}
         dash_connector{"tirets / connecteurs"}
@@ -1855,7 +1862,7 @@ fr{
         divination_symbols{"symboles divinatoires"}
         downwards_arrows{"flèches vers le bas"}
         downwards_upwards_arrows{"flèches vers le bas et le haut"}
-        east_asian_scripts{"écritures asiatiques orientales"}
+        east_asian_scripts{"écritures est-asiatiques"}
         emoji{"emojis"}
         european_scripts{"écritures européennes"}
         female{"féminin"}
@@ -1866,19 +1873,19 @@ fr{
         format_whitespace{"format et espacement"}
         full_width_form_variant{"variante de forme pleine-chasse"}
         geometric_shapes{"formes géométriques"}
-        half_width_form_variant{"variantes de forme en demi-largeur"}
+        half_width_form_variant{"variantes de forme demi-chasse"}
         han_characters{"caractères sinographiques"}
         han_radicals{"radicaux sinographiques"}
-        hanja{"sinogramme coréen hanja"}
-        hanzi_simplified{"sinogramme chinois simplifié"}
-        hanzi_traditional{"sinogramme chinois traditionnel"}
-        heart{"cœur"}
+        hanja{"sinogrammes coréens hanja"}
+        hanzi_simplified{"sinogrammes chinois simplifiés"}
+        hanzi_traditional{"sinogrammes chinois traditionnels"}
+        heart{"cœurs"}
         historic_scripts{"écritures historiques"}
         ideographic_desc_characters{"symboles de descript. sinographique"}
         japanese_kana{"syllabaire kana japonais"}
         kanbun{"kamboun"}
-        kanji{"sinogramme japonais kanji"}
-        keycap{"keycap"}
+        kanji{"sinogrammes japonais kanji"}
+        keycap{"touches"}
         leftwards_arrows{"flèches vers la gauche"}
         leftwards_rightwards_arrows{"flèches vers la gauche et la droite"}
         letterlike_symbols{"symboles de lettres"}
@@ -1894,33 +1901,33 @@ fr{
         nonspacing{"sans chasse"}
         numbers{"nombres"}
         objects{"objets"}
-        other{"autre"}
+        other{"autres"}
         paired{"en paire"}
-        person{"personne"}
+        person{"personnes"}
         phonetic_alphabet{"alphabet phonétique"}
         pictographs{"pictogrammes"}
-        place{"lieu"}
-        plant{"plante"}
+        place{"lieux"}
+        plant{"plantes"}
         punctuation{"ponctuation"}
         rightwards_arrows{"flèches vers la droite"}
-        sign_standard_symbols{"symboles de signe/norme"}
+        sign_standard_symbols{"signalisation"}
         small_form_variant{"petites variantes de forme"}
-        smiley{"smiley"}
+        smiley{"émoticône"}
         smileys_people{"émoticônes et personnes"}
-        south_asian_scripts{"écritures asiatiques du sud"}
-        southeast_asian_scripts{"écrtitures asiatiques du sud-est"}
+        south_asian_scripts{"écritures sud-asiatiques"}
+        southeast_asian_scripts{"écritures sud-est-asiatiques"}
         spacing{"avec chasse"}
         sport{"sport"}
         symbols{"symboles"}
         technical_symbols{"symboles techniques"}
-        tone_marks{"marques de ton"}
+        tone_marks{"marques tonales"}
         travel{"voyage"}
         travel_places{"voyage et lieux"}
         upwards_arrows{"flèches vers le haut"}
         variant_forms{"variantes de forme"}
         vocalic_jamo{"jamos voyelles"}
         weather{"météo"}
-        western_asian_scripts{"écritures asiatiques occidentales"}
+        western_asian_scripts{"écritures ouest-asiatiques"}
         whitespace{"espacement"}
     }
     contextTransforms{
@@ -1979,7 +1986,10 @@ fr{
         day-narrow{
             dn{"j"}
             relative{
+                "-1"{"hier"}
                 "-2"{"avant-hier"}
+                "0"{"aujourd’hui"}
+                "1"{"demain"}
                 "2"{"après-demain"}
             }
             relativeTime{
@@ -1996,7 +2006,10 @@ fr{
         day-short{
             dn{"j"}
             relative{
+                "-1"{"hier"}
                 "-2"{"avant-hier"}
+                "0"{"aujourd’hui"}
+                "1"{"demain"}
                 "2"{"après-demain"}
             }
             relativeTime{
@@ -2808,5 +2821,37 @@ fr{
         UK{"impérial"}
         US{"américain"}
         metric{"métrique"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

@@ -7,7 +7,7 @@ mgo{
             "shirè",
         }
         XXX{
-            "XXX",
+            "¤",
             "iku ikap mɔʼɔ",
         }
     }

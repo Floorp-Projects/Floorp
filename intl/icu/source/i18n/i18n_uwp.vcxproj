@@ -2,6 +2,8 @@
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!-- The following import will include the 'default' configuration options for VS UWP projects. -->
   <Import Project="..\allinone\Build.Windows.UWP.ProjectConfiguration.props" />
+  <!-- The following import will include the library configuration options for VS projects. -->
+  <Import Project="..\allinone\Build.Windows.Library.ProjectConfiguration.props" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -87,7 +89,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
-    <ResourceCompile>      
+    <ResourceCompile>
       <Culture>0x0409</Culture>
       <AdditionalIncludeDirectories>../common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
@@ -175,7 +177,7 @@
       <ProgramDataBaseFileName>.\x86\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin32uwp\icuin62.dll</OutputFile>
+      <OutputFile>..\..\bin32uwp\icuin63.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib32uwp\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib32uwp\icuin.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib32uwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -192,7 +194,7 @@
       <ProgramDataBaseFileName>.\x86\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin32uwp\icuin62d.dll</OutputFile>
+      <OutputFile>..\..\bin32uwp\icuin63d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib32uwp\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib32uwp\icuind.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib32uwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -209,7 +211,7 @@
       <ProgramDataBaseFileName>.\x64\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64uwp\icuin62.dll</OutputFile>
+      <OutputFile>..\..\bin64uwp\icuin63.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib64uwp\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64uwp\icuin.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib64uwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -226,7 +228,7 @@
       <ProgramDataBaseFileName>.\x64\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64uwp\icuin62d.dll</OutputFile>
+      <OutputFile>..\..\bin64uwp\icuin63d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib64uwp\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64uwp\icuind.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib64uwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -243,7 +245,7 @@
       <ProgramDataBaseFileName>.\ARM\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARMuwp\icuin62.dll</OutputFile>
+      <OutputFile>..\..\binARMuwp\icuin63.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARMuwp\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARMuwp\icuin.lib</ImportLibrary>
       <AdditionalDependencies>..\..\libARMuwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -260,13 +262,14 @@
       <ProgramDataBaseFileName>.\ARM\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARMuwp\icuin62d.dll</OutputFile>
+      <OutputFile>..\..\binARMuwp\icuin63d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARMuwp\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARMuwp\icuind.lib</ImportLibrary>
       <AdditionalDependencies>..\..\libARMuwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="erarules.cpp" />
     <ClCompile Include="region.cpp" />
     <ClCompile Include="uregion.cpp" />
     <ClCompile Include="alphaindex.cpp" />
@@ -351,6 +354,8 @@
     <ClCompile Include="indiancal.cpp" />
     <ClCompile Include="islamcal.cpp" />
     <ClCompile Include="japancal.cpp" />
+    <ClCompile Include="listformatter.cpp" />
+    <ClCompile Include="ulistformatter.cpp" />
     <ClCompile Include="measfmt.cpp" />
     <ClCompile Include="measunit.cpp" />
     <ClCompile Include="measure.cpp" />
@@ -393,6 +398,8 @@
     <ClCompile Include="numparse_affixes.cpp" />
     <ClCompile Include="numparse_compositions.cpp" />
     <ClCompile Include="numparse_validators.cpp" />
+    <ClCompile Include="numrange_fluent.cpp" />
+    <ClCompile Include="numrange_impl.cpp" />
     <ClCompile Include="numfmt.cpp" />
     <ClCompile Include="numsys.cpp" />
     <ClCompile Include="olsontz.cpp" />
@@ -513,6 +520,7 @@
     <ClInclude Include="collationtailoring.h" />
     <ClInclude Include="collationweights.h" />
     <ClInclude Include="dayperiodrules.h" />
+    <ClInclude Include="erarules.h" />
     <ClInclude Include="numsys_impl.h" />
     <ClInclude Include="region_impl.h" />
     <ClInclude Include="selfmtimpl.h" />
@@ -653,6 +661,7 @@
     <ClInclude Include="numparse_validators.h" />
     <ClInclude Include="numparse_types.h" />
     <ClInclude Include="numparse_utils.h" />
+    <ClInclude Include="numrange_impl.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="i18n.rc" />

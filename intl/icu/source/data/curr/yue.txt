@@ -1044,6 +1044,10 @@ yue{
         }
         VEF{
             "VEF",
+            "委內瑞拉玻利瓦 (VEF)",
+        }
+        VES{
+            "VES",
             "委內瑞拉玻利瓦",
         }
         VND{
@@ -2088,6 +2092,9 @@ yue{
             other{"委內瑞拉玻利瓦 (1871–2008)"}
         }
         VEF{
+            other{"委內瑞拉玻利瓦 (VEF)"}
+        }
+        VES{
             other{"委內瑞拉玻利瓦"}
         }
         VND{
@@ -2214,5 +2221,5 @@ yue{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
 }

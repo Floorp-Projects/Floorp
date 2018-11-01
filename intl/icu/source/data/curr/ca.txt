@@ -267,7 +267,7 @@ ca{
             "iuan xinès extracontinental",
         }
         CNY{
-            "¥",
+            "CNY",
             "iuan xinès",
         }
         COP{
@@ -280,7 +280,7 @@ ca{
         }
         CRC{
             "CRC",
-            "colón costa-riqueny",
+            "colon costa-riqueny",
         }
         CSD{
             "CSD",
@@ -753,7 +753,7 @@ ca{
         }
         NIO{
             "NIO",
-            "córdoba oro nicaragüenca",
+            "córdoba nicaragüenc",
         }
         NLG{
             "NLG",
@@ -929,7 +929,7 @@ ca{
         }
         SVC{
             "SVC",
-            "colón salvadorenc",
+            "colon salvadorenc",
         }
         SYP{
             "SYP",
@@ -1041,6 +1041,10 @@ ca{
         }
         VEF{
             "VEF",
+            "bolívar veneçolà (2008–2018)",
+        }
+        VES{
+            "VES",
             "bolívar veneçolà",
         }
         VND{
@@ -1286,7 +1290,7 @@ ca{
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
-        VEF{"VEF"}
+        VEF{"Bs F"}
         VND{"₫"}
         XCD{"$"}
         ZAR{"R"}
@@ -1559,7 +1563,7 @@ ca{
         }
         CNH{
             one{"iuan xinès extracontinental"}
-            other{"iuan xinès extracontinental"}
+            other{"iuans xinesos extracontinentals"}
         }
         CNX{
             one{"dòlar del Banc Popular Xinès"}
@@ -1567,7 +1571,7 @@ ca{
         }
         CNY{
             one{"iuan xinès"}
-            other{"iuan xinesos"}
+            other{"iuans xinesos"}
         }
         COP{
             one{"peso colombià"}
@@ -1578,8 +1582,8 @@ ca{
             other{"unidades de valor real colombianes"}
         }
         CRC{
-            one{"colón costa-riqueny"}
-            other{"colones costa-riquenys"}
+            one{"colon costa-riqueny"}
+            other{"colons costa-riquenys"}
         }
         CSD{
             one{"dinar serbi antic"}
@@ -2003,7 +2007,7 @@ ca{
         }
         MWK{
             one{"kwacha malawià"}
-            other{"kwachas malawians"}
+            other{"kwacha malawians"}
         }
         MXN{
             one{"peso mexicà"}
@@ -2046,8 +2050,8 @@ ca{
             other{"córdobas nicaragüenques"}
         }
         NIO{
-            one{"córdoba oro nicaragüenca"}
-            other{"córdobas oro nicaragüenques"}
+            one{"córdoba nicaragüenc"}
+            other{"córdobas nicaragüencs"}
         }
         NLG{
             one{"florí neerlandès"}
@@ -2115,7 +2119,7 @@ ca{
         }
         QAR{
             one{"rial de Qatar"}
-            other{"rials qatarians"}
+            other{"rials de Qatar"}
         }
         RHD{
             one{"dòlar rhodesià"}
@@ -2334,6 +2338,10 @@ ca{
             other{"bolívars veneçolans (1871–2008)"}
         }
         VEF{
+            one{"bolívar veneçolà (2008–2018)"}
+            other{"bolívars veneçolans (2008–2018)"}
+        }
+        VES{
             one{"bolívar veneçolà"}
             other{"bolívars veneçolans"}
         }
@@ -2494,5 +2502,5 @@ ca{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
 }

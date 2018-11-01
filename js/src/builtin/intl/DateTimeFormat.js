@@ -188,20 +188,15 @@ function getDateTimeFormatInternals(obj) {
 /**
  * 12.1.10 UnwrapDateTimeFormat( dtf )
  */
-function UnwrapDateTimeFormat(dtf, methodName) {
-    // Step 1 (not applicable in our implementation).
-
-    // Step 2.
-    if (IsObject(dtf) && (GuardToDateTimeFormat(dtf)) === null && dtf instanceof GetDateTimeFormatConstructor())
+function UnwrapDateTimeFormat(dtf) {
+    // Steps 2 and 4 (error handling moved to caller).
+    if (IsObject(dtf) &&
+        GuardToDateTimeFormat(dtf) === null &&
+        !IsWrappedDateTimeFormat(dtf) &&
+        dtf instanceof GetDateTimeFormatConstructor())
+    {
         dtf = dtf[intlFallbackSymbol()];
-
-    // Step 3.
-    if (!IsObject(dtf) || (dtf = GuardToDateTimeFormat(dtf)) === null) {
-        ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "DateTimeFormat", methodName,
-                       "DateTimeFormat");
     }
-
-    // Step 4.
     return dtf;
 }
 
@@ -803,7 +798,12 @@ function dateTimeFormatFormatToBind(date) {
  */
 function Intl_DateTimeFormat_format_get() {
     // Steps 1-3.
-    var dtf = UnwrapDateTimeFormat(this, "format");
+    var thisArg = UnwrapDateTimeFormat(this);
+    var dtf = thisArg;
+    if (!IsObject(dtf) || (dtf = GuardToDateTimeFormat(dtf)) === null) {
+        return callFunction(CallDateTimeFormatMethodIfWrapped, thisArg,
+                            "Intl_DateTimeFormat_format_get");
+    }
 
     var internals = getDateTimeFormatInternals(dtf);
 
@@ -831,9 +831,9 @@ function Intl_DateTimeFormat_formatToParts(date) {
     var dtf = this;
 
     // Steps 2-3.
-    if (!IsObject(dtf) || (dtf = GuardToDateTimeFormat(dtf)) == null) {
-        ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "DateTimeFormat", "formatToParts",
-                       "DateTimeFormat");
+    if (!IsObject(dtf) || (dtf = GuardToDateTimeFormat(dtf)) === null) {
+        return callFunction(CallDateTimeFormatMethodIfWrapped, this, date,
+                            "Intl_DateTimeFormat_formatToParts");
     }
 
     // Ensure the DateTimeFormat internals are resolved.
@@ -853,7 +853,12 @@ function Intl_DateTimeFormat_formatToParts(date) {
  */
 function Intl_DateTimeFormat_resolvedOptions() {
     // Steps 1-3.
-    var dtf = UnwrapDateTimeFormat(this, "resolvedOptions");
+    var thisArg = UnwrapDateTimeFormat(this);
+    var dtf = thisArg;
+    if (!IsObject(dtf) || (dtf = GuardToDateTimeFormat(dtf)) === null) {
+        return callFunction(CallDateTimeFormatMethodIfWrapped, thisArg,
+                            "Intl_DateTimeFormat_resolvedOptions");
+    }
 
     var internals = getDateTimeFormatInternals(dtf);
 

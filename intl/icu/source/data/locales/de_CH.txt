@@ -9,13 +9,29 @@ de_CH{
                 currencyFormat{"¤ #,##0.00;¤-#,##0.00"}
                 percentFormat{"#,##0%"}
             }
+            patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"0"}
+                        other{"0"}
+                    }
+                    10000{
+                        one{"0"}
+                        other{"0"}
+                    }
+                    100000{
+                        one{"0"}
+                        other{"0"}
+                    }
+                }
+            }
             symbols{
                 decimal{"."}
                 group{"’"}
             }
         }
     }
-    Version{"2.1.39.37"}
+    Version{"2.1.44.50"}
     calendar{
         gregorian{
             dayNames{
@@ -39,12 +55,6 @@ de_CH{
         }
         era-narrow{
             dn{"Epoche"}
-        }
-        quarter{
-            relative{
-                "-1"{"letztes Quartal"}
-                "0"{"dieses Quartal"}
-            }
         }
         weekOfMonth{
             dn{"Woche im Monat"}

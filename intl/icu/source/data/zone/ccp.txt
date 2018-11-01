@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ccp{
-    Version{"2.1.41.97"}
+    Version{"2.1.43.50"}
     zoneStrings{
         "Etc:UTC"{
             ls{"𑄘𑄇𑄴𑄘𑄨𑄠 𑄛𑄨𑄖𑄴𑄗𑄨𑄟𑄨𑄢𑄴 𑄃𑄧𑄇𑄴𑄖𑄧"}

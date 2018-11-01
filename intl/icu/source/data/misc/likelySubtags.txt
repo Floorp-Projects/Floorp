@@ -483,7 +483,7 @@ likelySubtags:table(nofallback){
     hui{"hui_Latn_ZZ"}
     hy{"hy_Armn_AM"}
     hz{"hz_Latn_NA"}
-    ia{"ia_Latn_FR"}
+    ia{"ia_Latn_001"}
     ian{"ian_Latn_ZZ"}
     iar{"iar_Latn_ZZ"}
     iba{"iba_Latn_MY"}

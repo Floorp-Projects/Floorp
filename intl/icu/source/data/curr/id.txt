@@ -1036,6 +1036,10 @@ id{
         }
         VEF{
             "VEF",
+            "Bolivar Venezuela (2008–2018)",
+        }
+        VES{
+            "VES",
             "Bolivar Venezuela",
         }
         VND{
@@ -1862,6 +1866,9 @@ id{
             other{"Bolivar Venezuela (1871–2008)"}
         }
         VEF{
+            other{"Bolivar Venezuela (2008–2018)"}
+        }
+        VES{
             other{"Bolivar Venezuela"}
         }
         VND{
@@ -1928,5 +1935,5 @@ id{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.20"}
 }

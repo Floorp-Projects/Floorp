@@ -684,7 +684,7 @@ hr{
         }
         MRO{
             "MRO",
-            "mauritanijska ouguja (1973–2017)",
+            "mauritanijska ouguja (1973. – 2017.)",
         }
         MRU{
             "MRU",
@@ -1044,6 +1044,10 @@ hr{
         }
         VEF{
             "VEF",
+            "venezuelanski bolivar (2008. – 2018.)",
+        }
+        VES{
+            "VES",
             "venezuelanski bolivar",
         }
         VND{
@@ -2151,9 +2155,9 @@ hr{
             other{"makaoških pataka"}
         }
         MRO{
-            few{"mauritanijske ouguje (1973–2017)"}
-            one{"mauritanijska ouguja (1973–2017)"}
-            other{"mauritanijskih ouguja (1973–2017)"}
+            few{"mauritanijske ouguje (1973. – 2017.)"}
+            one{"mauritanijska ouguja (1973. – 2017.)"}
+            other{"mauritanijskih ouguja (1973. – 2017.)"}
         }
         MRU{
             few{"mauritanijske ouguje"}
@@ -2601,6 +2605,11 @@ hr{
             other{"venezuelanskih bolivara (1871.–2008.)"}
         }
         VEF{
+            few{"venezuelanska bolivara (2008. – 2018.)"}
+            one{"venezuelanski bolivar (2008. – 2018.)"}
+            other{"venezuelanskih bolivara (2008. – 2018.)"}
+        }
+        VES{
             few{"venezuelanska bolivara"}
             one{"venezuelanski bolivar"}
             other{"venezuelanskih bolivara"}
@@ -2811,5 +2820,5 @@ hr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.50"}
 }

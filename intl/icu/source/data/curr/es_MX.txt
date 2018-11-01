@@ -3,6 +3,14 @@
 es_MX{
     %%Parent{"es_419"}
     Currencies{
+        BDT{
+            "BDT",
+            "taka bangladesí",
+        }
+        BTN{
+            "BTN",
+            "ngultrum butanés",
+        }
         CNH{
             "CNH",
             "CNH",
@@ -10,6 +18,30 @@ es_MX{
         ERN{
             "ERN",
             "nakfa",
+        }
+        KGS{
+            "KGS",
+            "som kirguís",
+        }
+        KHR{
+            "KHR",
+            "riel camboyano",
+        }
+        LAK{
+            "LAK",
+            "kip laosiano",
+        }
+        MRO{
+            "MRU",
+            "uguiya (1973–2017)",
+        }
+        MRU{
+            "UM",
+            "uguiya",
+        }
+        MVR{
+            "MVR",
+            "rupia de Maldivas",
         }
         MXN{
             "$",
@@ -31,6 +63,18 @@ es_MX{
             "UZS",
             "sum",
         }
+        VEF{
+            "VEF",
+            "bolívar venezolano (2008–2018)",
+        }
+        VES{
+            "VES",
+            "bolívar venezolano",
+        }
+        VND{
+            "VND",
+            "dong vietnamita",
+        }
         ZMW{
             "ZMW",
             "kwacha zambiano",
@@ -42,18 +86,50 @@ es_MX{
         RON{"lei"}
         SSP{"£"}
         SYP{"£"}
+        VEF{"Bs"}
     }
     CurrencyPlurals{
+        AMD{
+            one{"dram armenio"}
+            other{"drams armenios"}
+        }
+        BDT{
+            one{"taka bangladesí"}
+            other{"takas bangladesíes"}
+        }
         BGN{
             other{"levas búlgaras"}
+        }
+        BTN{
+            one{"ngultrum butanés"}
+            other{"gultrums bultaneses"}
         }
         CNH{
             one{"CNH"}
             other{"CNH"}
         }
+        KGS{
+            one{"som kirguís"}
+            other{"soms kirguises"}
+        }
+        KHR{
+            one{"riel camboyano"}
+            other{"rieles camboyanos"}
+        }
+        LAK{
+            one{"kip laosiano"}
+            other{"kips laosianos"}
+        }
         LVL{
             one{"lats letón"}
             other{"lats letones"}
+        }
+        MVR{
+            one{"rupia de Maldivas"}
+            other{"rupias de Maldivas"}
+        }
+        MWK{
+            one{"kwacha malauí"}
         }
         MYR{
             one{"ringit"}
@@ -61,15 +137,29 @@ es_MX{
         }
         STN{
             one{"dobra santotomense"}
-            other{"dobra santotomense"}
+            other{"dobras santotomenses"}
         }
         THB{
             one{"baht tailandés"}
-            other{"bats"}
+        }
+        TMT{
+            other{"manats turcomanos"}
         }
         UZS{
             one{"sum"}
             other{"sums"}
+        }
+        VEF{
+            one{"bolívar venezolano (2008–2018)"}
+            other{"bolívares venezolanos (2008–2018)"}
+        }
+        VES{
+            one{"bolívar venezolano"}
+            other{"bolivares venezolanos"}
+        }
+        VND{
+            one{"dong vietnamita"}
+            other{"dongs vietnamitas"}
         }
         XXX{
             one{"(moneda desconocida)"}
@@ -79,5 +169,5 @@ es_MX{
             other{"kwachas zambianos"}
         }
     }
-    Version{"2.1.38.73"}
+    Version{"2.1.44.5"}
 }

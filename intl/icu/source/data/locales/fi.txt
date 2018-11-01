@@ -23,7 +23,9 @@ fi{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"vähintään {0}"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -214,7 +216,7 @@ fi{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -492,7 +494,7 @@ fi{
                 Bhm{"h.mm B"}
                 Bhms{"h.mm.ss B"}
                 E{"ccc"}
-                EBhm{"E h.mm. B"}
+                EBhm{"E h.mm B"}
                 EBhms{"E h.mm.ss B"}
                 EHm{"E HH.mm"}
                 EHms{"E HH.mm.ss"}
@@ -677,6 +679,8 @@ fi{
                 Gy{"y G"}
                 GyMMM{"LLL y G"}
                 GyMMMEd{"E d. MMM y G"}
+                GyMMMMEd{"E d. MMMM y G"}
+                GyMMMMd{"d. MMMM y G"}
                 GyMMMd{"d. MMM y G"}
                 H{"H"}
                 Hm{"H.mm"}
@@ -687,6 +691,7 @@ fi{
                 MEd{"E d.M."}
                 MMM{"LLL"}
                 MMMEd{"ccc d. MMM"}
+                MMMMEd{"ccc d. MMMM"}
                 MMMMW{
                     one{"LLLL'n' W. 'viikko'"}
                     other{"LLLL'n' W. 'viikko'"}
@@ -708,7 +713,9 @@ fi{
                 yMMM{"LLL y"}
                 yMMMEd{"E d. MMM y"}
                 yMMMM{"LLLL y"}
+                yMMMMEd{"E d. MMMM y"}
                 yMMMMccccd{"cccc d. MMMM y"}
+                yMMMMd{"d. MMMM y"}
                 yMMMd{"d. MMM y"}
                 yMd{"d.M.y"}
                 yQQQ{"QQQ y"}
@@ -920,6 +927,14 @@ fi{
                 MMMM{
                     M{"LLL–LLLL"}
                 }
+                MMMMEd{
+                    M{"E d. MMMM – E d. MMMM"}
+                    d{"E d. – E d. MMMM"}
+                }
+                MMMMd{
+                    M{"d. MMMM – d. MMMM"}
+                    d{"d.–d. MMMM"}
+                }
                 MMMd{
                     M{"d. MMMM – d. MMMM"}
                     d{"d.–d. MMMM"}
@@ -974,6 +989,16 @@ fi{
                 yMMMM{
                     M{"LLL–LLLL y"}
                     y{"LLLL y – LLLL y"}
+                }
+                yMMMMEd{
+                    M{"E d. MMMM – E d. MMMM y"}
+                    d{"E d. – E d. MMMM y"}
+                    y{"E d. MMMM y – E d. MMMM y"}
+                }
+                yMMMMd{
+                    M{"d. MMMM – d. MMMM y"}
+                    d{"d.–d. MMMM y"}
+                    y{"d. MMMM y – d. MMMM y"}
                 }
                 yMMMd{
                     M{"d. MMMM – d. MMMM y"}
@@ -2455,8 +2480,13 @@ fi{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

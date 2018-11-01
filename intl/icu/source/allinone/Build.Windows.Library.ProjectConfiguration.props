@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2018 and later: Unicode, Inc. and others. License & terms of use: http://www.unicode.org/copyright.html -->
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- This file is used to set configurations that are common to *all* ICU library code (common, i18n, and io). -->
+  <!-- Note: These options are for *all* configurations for *all* library projects.  -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <!-- ICU does not use exceptions in library code. -->
+      <PreprocessorDefinitions>
+        _HAS_EXCEPTIONS=0;
+        %(PreprocessorDefinitions)
+      </PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <PropertyGroup>
+    <!-- Disable MSBuild warning about Linker OutputFile. -->
+    <!-- Ex: MSBuild complains that the common project creates "icuuc62.dll" rather than "common.dll". However, this is intentional. -->
+    <MSBuildWarningsAsMessages>MSB8012</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+</Project>
