@@ -284,9 +284,6 @@ BrowserElementChild.prototype = {
       "owner-visibility-change": this._recvOwnerVisibilityChange,
       "entered-fullscreen": this._recvEnteredFullscreen,
       "exit-fullscreen": this._recvExitFullscreen,
-      "find-all": this._recvFindAll,
-      "find-next": this._recvFindNext,
-      "clear-match": this._recvClearMatch,
       "execute-script": this._recvExecuteScript,
       "get-web-manifest": this._recvGetWebManifest,
     }
@@ -1144,53 +1141,6 @@ BrowserElementChild.prototype = {
       id: data.json.id,
       successRv: manifest
     });
-  },
-
-  _initFinder: function() {
-    if (!this._finder) {
-      let {Finder} = ChromeUtils.import("resource://gre/modules/Finder.jsm", {});
-      this._finder = new Finder(docShell);
-    }
-    let listener = {
-      onMatchesCountResult: (data) => {
-        sendAsyncMsg("findchange", {
-          active: true,
-          searchString: this._finder.searchString,
-          searchLimit: this._finder.matchesCountLimit,
-          activeMatchOrdinal: data.current,
-          numberOfMatches: data.total
-        });
-        this._finder.removeResultListener(listener);
-      }
-    };
-    this._finder.addResultListener(listener);
-  },
-
-  _recvFindAll: function(data) {
-    this._initFinder();
-    let searchString = data.json.searchString;
-    this._finder.caseSensitive = data.json.caseSensitive;
-    this._finder.fastFind(searchString, false, false);
-    this._finder.requestMatchesCount(searchString, this._finder.matchesCountLimit, false);
-  },
-
-  _recvFindNext: function(data) {
-    if (!this._finder) {
-      debug("findNext() called before findAll()");
-      return;
-    }
-    this._initFinder();
-    this._finder.findAgain(data.json.backward, false, false);
-    this._finder.requestMatchesCount(this._finder.searchString, this._finder.matchesCountLimit, false);
-  },
-
-  _recvClearMatch: function(data) {
-    if (!this._finder) {
-      debug("clearMach() called before findAll()");
-      return;
-    }
-    this._finder.removeSelection();
-    sendAsyncMsg("findchange", {active: false});
   },
 
   // The docShell keeps a weak reference to the progress listener, so we need

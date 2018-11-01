@@ -208,59 +208,6 @@ nsBrowserElement::GetCanGoForward(ErrorResult& aRv)
   return req.forget();
 }
 
-void
-nsBrowserElement::FindAll(const nsAString& aSearchString,
-                          BrowserFindCaseSensitivity aCaseSensitivity,
-                          ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-
-  uint32_t caseSensitivity;
-  if (aCaseSensitivity == BrowserFindCaseSensitivity::Case_insensitive) {
-    caseSensitivity = nsIBrowserElementAPI::FIND_CASE_INSENSITIVE;
-  } else {
-    caseSensitivity = nsIBrowserElementAPI::FIND_CASE_SENSITIVE;
-  }
-
-  nsresult rv = mBrowserElementAPI->FindAll(aSearchString, caseSensitivity);
-
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
-void
-nsBrowserElement::FindNext(BrowserFindDirection aDirection,
-                          ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-
-  uint32_t direction;
-  if (aDirection == BrowserFindDirection::Backward) {
-    direction = nsIBrowserElementAPI::FIND_BACKWARD;
-  } else {
-    direction = nsIBrowserElementAPI::FIND_FORWARD;
-  }
-
-  nsresult rv = mBrowserElementAPI->FindNext(direction);
-
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
-void
-nsBrowserElement::ClearMatch(ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-
-  nsresult rv = mBrowserElementAPI->ClearMatch();
-
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
 already_AddRefed<DOMRequest>
 nsBrowserElement::ExecuteScript(const nsAString& aScript,
                                 const BrowserElementExecuteScriptOptions& aOptions,

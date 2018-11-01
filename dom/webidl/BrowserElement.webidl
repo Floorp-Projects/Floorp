@@ -4,9 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-enum BrowserFindCaseSensitivity { "case-sensitive", "case-insensitive" };
-enum BrowserFindDirection { "forward", "backward" };
-
 dictionary BrowserElementExecuteScriptOptions {
   DOMString? url;
   DOMString? origin;
@@ -74,21 +71,6 @@ interface BrowserElementPrivileged {
    Pref="dom.mozBrowserFramesEnabled",
    ChromeOnly]
   DOMRequest getCanGoForward();
-
-  [Throws,
-   Pref="dom.mozBrowserFramesEnabled",
-   ChromeOnly]
-  void findAll(DOMString searchString, BrowserFindCaseSensitivity caseSensitivity);
-
-  [Throws,
-   Pref="dom.mozBrowserFramesEnabled",
-   ChromeOnly]
-  void findNext(BrowserFindDirection direction);
-
-  [Throws,
-   Pref="dom.mozBrowserFramesEnabled",
-   ChromeOnly]
-  void clearMatch();
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
