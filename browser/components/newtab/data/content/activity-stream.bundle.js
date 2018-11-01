@@ -1763,12 +1763,21 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
     this.handleUserPrefToggle = this.handleUserPrefToggle.bind(this);
     this.onChangeMessageFilter = this.onChangeMessageFilter.bind(this);
     this.findOtherBundledMessagesOfSameTemplate = this.findOtherBundledMessagesOfSameTemplate.bind(this);
-    this.state = { messageFilter: "all" };
+    this.handleExpressionEval = this.handleExpressionEval.bind(this);
+    this.onChangeTargetingParameters = this.onChangeTargetingParameters.bind(this);
+    this.state = { messageFilter: "all", evaluationStatus: {}, stringTargetingParameters: null };
   }
 
   onMessage({ data: action }) {
     if (action.type === "ADMIN_SET_STATE") {
       this.setState(action.data);
+      if (!this.state.stringTargetingParameters) {
+        const stringTargetingParameters = {};
+        for (const param of Object.keys(action.data.targetingParameters)) {
+          stringTargetingParameters[param] = JSON.stringify(action.data.targetingParameters[param], null, 2);
+        }
+        this.setState({ stringTargetingParameters });
+      }
     }
   }
 
@@ -1814,6 +1823,41 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
 
   resetPref() {
     _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_0__["ASRouterUtils"].sendMessage({ type: "RESET_PROVIDER_PREF" });
+  }
+
+  handleExpressionEval() {
+    const context = {};
+    for (const param of Object.keys(this.state.stringTargetingParameters)) {
+      const value = this.state.stringTargetingParameters[param];
+      context[param] = value ? JSON.parse(value) : null;
+    }
+    _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_0__["ASRouterUtils"].sendMessage({
+      type: "EVALUATE_JEXL_EXPRESSION",
+      data: {
+        expression: this.refs.expressionInput.value,
+        context
+      }
+    });
+  }
+
+  onChangeTargetingParameters(event) {
+    const { name } = event.target;
+    const { value } = event.target;
+    this.refs.evaluationStatus.innerText = "";
+
+    this.setState(({ stringTargetingParameters }) => {
+      let targetingParametersError = null;
+      const updatedParameters = Object.assign({}, stringTargetingParameters);
+      updatedParameters[name] = value;
+      try {
+        JSON.parse(value);
+      } catch (e) {
+        console.log(`Error parsing value of parameter ${name}`); // eslint-disable-line no-console
+        targetingParametersError = { id: name };
+      }
+
+      return { stringTargetingParameters: updatedParameters, targetingParametersError };
+    });
   }
 
   renderMessageItem(msg) {
@@ -2055,6 +2099,101 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
     );
   }
 
+  renderTargetingParameters() {
+    // There was no error and the result is truthy
+    const success = this.state.evaluationStatus.success && !!this.state.evaluationStatus.result;
+
+    return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+      "table",
+      null,
+      react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+        "tbody",
+        null,
+        react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+          "tr",
+          null,
+          react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+            "td",
+            null,
+            react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+              "h2",
+              null,
+              "Evaluate JEXL expression"
+            )
+          )
+        ),
+        react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+          "tr",
+          null,
+          react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+            "td",
+            null,
+            react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+              "p",
+              null,
+              react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("textarea", { ref: "expressionInput", rows: "10", cols: "60", placeholder: "Evaluate JEXL expressions and mock parameters by changing their values below" })
+            ),
+            react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+              "p",
+              null,
+              "Status: ",
+              react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+                "span",
+                { ref: "evaluationStatus" },
+                success ? "✅" : "❌",
+                ", Result: ",
+                JSON.stringify(this.state.evaluationStatus.result, null, 2)
+              )
+            )
+          ),
+          react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+            "td",
+            null,
+            react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+              "button",
+              { className: "ASRouterButton secondary", onClick: this.handleExpressionEval },
+              "Evaluate"
+            )
+          )
+        ),
+        react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+          "tr",
+          null,
+          react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+            "td",
+            null,
+            react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+              "h2",
+              null,
+              "Modify targeting parameters"
+            )
+          )
+        ),
+        this.state.stringTargetingParameters && Object.keys(this.state.stringTargetingParameters).map((param, i) => {
+          const value = this.state.stringTargetingParameters[param];
+          const errorState = this.state.targetingParametersError && this.state.targetingParametersError.id === param;
+          const className = errorState ? "errorState" : "";
+          const inputComp = (value && value.length) > 30 ? react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("textarea", { name: param, className: className, value: value, rows: "10", cols: "60", onChange: this.onChangeTargetingParameters }) : react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("input", { name: param, className: className, value: value, onChange: this.onChangeTargetingParameters });
+
+          return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+            "tr",
+            { key: i },
+            react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+              "td",
+              null,
+              param
+            ),
+            react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+              "td",
+              null,
+              inputComp
+            )
+          );
+        })
+      )
+    );
+  }
+
   render() {
     return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
       "div",
@@ -2092,7 +2231,8 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
         "Messages"
       ),
       this.renderMessageFilter(),
-      this.renderMessages()
+      this.renderMessages(),
+      this.renderTargetingParameters()
     );
   }
 }
