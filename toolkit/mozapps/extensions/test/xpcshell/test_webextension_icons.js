@@ -28,9 +28,8 @@ async function testSimpleIconsetParsing(manifest) {
         64: uri + "icon64.png",
     });
 
-    // iconURL should map to icons[48] and icons[64]
+    // iconURL should map to icons[48]
     equal(addon.iconURL, uri + "icon48.png");
-    equal(addon.icon64URL, uri + "icon64.png");
 
     // AddonManager gets the correct icon sizes from addon.icons
     equal(AddonManager.getPreferredIconURL(addon, 1), uri + "icon16.png");
@@ -91,7 +90,6 @@ async function testNoIconsParsing(manifest) {
   deepEqual(addon.icons, {});
 
   equal(addon.iconURL, null);
-  equal(addon.icon64URL, null);
 
   equal(AddonManager.getPreferredIconURL(addon, 128), null);
 

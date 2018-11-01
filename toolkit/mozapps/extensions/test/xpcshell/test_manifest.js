@@ -14,7 +14,6 @@ const ADDONS = [
       bootstrap: true,
       aboutURL: "chrome://test/content/about.xul",
       iconURL: "chrome://test/skin/icon.png",
-      icon64URL: "chrome://test/skin/icon64.png",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
@@ -45,8 +44,7 @@ const ADDONS = [
       optionsType: null,
       aboutURL: "chrome://test/content/about.xul",
       iconURL: "chrome://test/skin/icon.png",
-      icon64URL: "chrome://test/skin/icon64.png",
-      icons: {32: "chrome://test/skin/icon.png", 48: "chrome://test/skin/icon.png", 64: "chrome://test/skin/icon64.png"},
+      icons: {32: "chrome://test/skin/icon.png", 48: "chrome://test/skin/icon.png"},
       name: "Test Addon 1",
       description: "Test Description",
       creator: "Test Creator",
