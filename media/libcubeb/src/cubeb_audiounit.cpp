@@ -839,7 +839,6 @@ audiounit_reinit_stream(cubeb_stream * stm, device_flags_value flags)
       if (flags & DEV_INPUT && input_device != 0) {
         // Attempt to re-use the same device-id failed, so attempt again with
         // default input device.
-        audiounit_close_stream(stm);
         if (audiounit_set_device_info(stm, 0, io_side::INPUT) != CUBEB_OK ||
             audiounit_setup_stream(stm) != CUBEB_OK) {
           LOG("(%p) Second stream reinit failed.", stm);
