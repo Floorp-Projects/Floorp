@@ -95,5 +95,15 @@ StackingContextHelper::GetDeferredTransformItem() const
   return mDeferredTransformItem;
 }
 
+Maybe<gfx::Matrix4x4>
+StackingContextHelper::GetDeferredTransformMatrix() const
+{
+  if (mDeferredTransformItem) {
+    return Some((*mDeferredTransformItem)->GetTransform().GetMatrix());
+  } else {
+    return Nothing();
+  }
+}
+
 } // namespace layers
 } // namespace mozilla

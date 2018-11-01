@@ -63,6 +63,7 @@ public:
   }
 
   const Maybe<nsDisplayTransform*>& GetDeferredTransformItem() const;
+  Maybe<gfx::Matrix4x4> GetDeferredTransformMatrix() const;
 
   bool AffectsClipPositioning() const { return mAffectsClipPositioning; }
   Maybe<wr::WrClipId> ReferenceFrameId() const { return mReferenceFrameId; }
