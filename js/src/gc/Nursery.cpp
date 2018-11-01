@@ -412,7 +412,7 @@ js::Nursery::allocate(size_t size)
     position_ = position() + size;
     // We count this regardless of the profiler's state, assuming that it costs just as much to
     // count it, as to check the profiler's state and decide not to count it.
-    runtime()->gc.stats().noteNurseryAlloc();
+    stats().noteNurseryAlloc();
 
     JS_EXTRA_POISON(thing, JS_ALLOCATED_NURSERY_PATTERN, size, MemCheckKind::MakeUndefined);
 
@@ -652,9 +652,9 @@ js::Nursery::renderProfileJSON(JSONPrinter& json) const
     // and then there's no guarentee.
     if (runtime()->geckoProfiler().enabled()) {
         json.property("cells_allocated_nursery",
-            runtime()->gc.stats().allocsSinceMinorGCNursery());
+            stats().allocsSinceMinorGCNursery());
         json.property("cells_allocated_tenured",
-            runtime()->gc.stats().allocsSinceMinorGCTenured());
+            stats().allocsSinceMinorGCTenured());
     }
 
     json.beginObjectProperty("phase_times");
@@ -774,7 +774,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     lastCanary_ = nullptr;
 #endif
 
-    rt->gc.stats().beginNurseryCollection(reason);
+    stats().beginNurseryCollection(reason);
     gcTracer.traceMinorGCStart();
 
     maybeClearProfileDurations();
@@ -875,12 +875,12 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, sizeOfHeapCommitted());
     rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT, pretenureCount);
 
-    rt->gc.stats().endNurseryCollection(reason);
+    stats().endNurseryCollection(reason);
     gcTracer.traceMinorGCEnd();
     timeInChunkAlloc_ = mozilla::TimeDuration();
 
     if (enableProfiling_ && totalTime >= profileThreshold_) {
-        rt->gc.stats().maybePrintProfileHeaders();
+        stats().maybePrintProfileHeaders();
 
         fprintf(stderr, "MinorGC: %20s %5.1f%% %4u        ",
                 JS::gcreason::ExplainReason(reason),
@@ -954,7 +954,7 @@ js::Nursery::doCollection(JS::gcreason::Reason reason, TenureCountCache& tenureC
 
     startProfile(ProfileKey::MarkDebugger);
     {
-        gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::MARK_ROOTS);
+        gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_ROOTS);
         Debugger::traceAllForMovingGC(&mover);
     }
     endProfile(ProfileKey::MarkDebugger);
@@ -1324,6 +1324,11 @@ js::Nursery::currentEnd() const
 {
     MOZ_ASSERT(currentEnd_ == chunk(currentChunk_).end());
     return currentEnd_;
+}
+
+gcstats::Statistics&
+js::Nursery::stats() const {
+    return runtime()->gc.stats();
 }
 
 void
