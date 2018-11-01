@@ -5,7 +5,6 @@
 // This test verifies that system addon updates are correctly blocked by the
 // DisableSystemAddonUpdate enterprise policy.
 
-ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm");
 
 // Setting PREF_DISABLE_SECURITY tells the policy engine that we are in testing
@@ -17,21 +16,11 @@ registerCleanupFunction(() => {
 
 Services.policies; // Load policy engine
 
-BootstrapMonitor.init();
-
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2");
-
-var testserver = new HttpServer();
-testserver.registerDirectory("/data/", do_get_file("data/system_addons"));
-testserver.start();
-var root = testserver.identity.primaryScheme + "://" +
-           testserver.identity.primaryHost + ":" +
-           testserver.identity.primaryPort + "/data/";
-Services.prefs.setCharPref(PREF_SYSTEM_ADDON_UPDATE_URL, root + "update.xml");
 
 let distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "empty"], true);
 registerDirectory("XREAppFeat", distroDir);
-initSystemAddonDirs();
+add_task(() => initSystemAddonDirs());
 
 /**
  * Defines the set of initial conditions to run the test against.
@@ -65,10 +54,12 @@ add_task(async function test_update_disabled_by_policy() {
     },
   });
 
-  await updateAllSystemAddons(await buildSystemAddonUpdates([
-    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
-  ], root), testserver);
+  await updateAllSystemAddons(buildSystemAddonUpdates([
+    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi",
+      xpi: await getSystemAddonXPI(2, "2.0") },
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi",
+      xpi: await getSystemAddonXPI(3, "2.0") },
+  ]));
 
   await verifySystemAddonState(TEST_CONDITIONS.initialState, undefined, false, distroDir);
 

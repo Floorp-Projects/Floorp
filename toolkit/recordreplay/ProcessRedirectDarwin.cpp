@@ -2056,7 +2056,7 @@ RR_CGDataProviderCreateWithData(Stream& aEvents, CallArguments* aArguments, Erro
   auto& size = aArguments->Arg<2, size_t>();
   auto& releaseData = aArguments->Arg<3, CGDataProviderReleaseDataCallback>();
 
-  if (IsReplaying()) {
+  if (IsReplaying() && releaseData) {
     // Immediately release the data, since there is no data provider to do it for us.
     releaseData(info, data, size);
   }
@@ -2090,7 +2090,7 @@ Middleman_CGDataProviderCreateWithData(MiddlemanCallContext& aCx)
   }
 
   // Immediately release the data in the replaying process.
-  if (aCx.mPhase == MiddlemanCallPhase::ReplayInput) {
+  if (aCx.mPhase == MiddlemanCallPhase::ReplayInput && releaseData) {
     releaseData(info, data, size);
   }
 }
