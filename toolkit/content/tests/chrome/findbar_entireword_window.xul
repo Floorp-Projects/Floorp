@@ -20,7 +20,6 @@
           src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"/>
 
   <script type="application/javascript"><![CDATA[
-    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
     ChromeUtils.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
 
@@ -133,7 +132,7 @@
           });
         });
       });
-      BrowserTestUtils.loadURI(gBrowser, kBaseURL + "/sample_entireword_" + testName + ".html");
+      gBrowser.loadURI(kBaseURL + "/sample_entireword_" + testName + ".html");
       await promise;
       await onDocumentLoaded(testName);
     }

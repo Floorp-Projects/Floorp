@@ -16,7 +16,6 @@
   </tabbox>
   <script type="application/javascript" src="plugin-utils.js"/>
   <script type="application/javascript"><![CDATA[
-    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
     const ok = window.opener.wrappedJSObject.ok;
     const is = window.opener.wrappedJSObject.is;
     const done = window.opener.wrappedJSObject.done;
@@ -58,10 +57,10 @@
     function setup() {
       progressListener1 = new ProgressListener();
       browser1.addProgressListener(progressListener1, nsIWebProgress.NOTIFY_STATE_WINDOW);
-      BrowserTestUtils.loadURI(browser1, kURI);
+      browser1.loadURI(kURI, null, null);
       progressListener2 = new ProgressListener();
       browser2.addProgressListener(progressListener2, nsIWebProgress.NOTIFY_STATE_WINDOW);
-      BrowserTestUtils.loadURI(browser2, kURI);
+      browser2.loadURI(kURI, null, null);
     }
 
     window.addEventListener("load", setup, false);
