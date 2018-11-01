@@ -33,16 +33,7 @@ SimpleTest._stopOnLoad = true;
 /**
  * Something like assert.
 **/
-SimpleTest.ok = function (condition, name) {
-    if (arguments.length > 2) {
-        const diag = "Too many arguments passed to `ok(condition, name)`";
-        SimpleTest.record(false, name, diag);
-    } else {
-        SimpleTest.record(condition, name);
-    }
-}
-
-SimpleTest.record = function (condition, name, diag) {
+SimpleTest.ok = function (condition, name, diag) {
     var test = {'result': !!condition, 'name': name, 'diag': diag || ""};
     if (SimpleTest._logEnabled)
         SimpleTest._logResult(test, "TEST-PASS", "TEST-UNEXPECTED-FAIL");
@@ -54,12 +45,12 @@ SimpleTest.record = function (condition, name, diag) {
 **/
 SimpleTest.is = function (a, b, name) {
     var repr = MochiKit.Base.repr;
-    SimpleTest.record(a == b, name, "got " + repr(a) + ", expected " + repr(b));
+    SimpleTest.ok(a == b, name, "got " + repr(a) + ", expected " + repr(b));
 };
 
 SimpleTest.isnot = function (a, b, name) {
     var repr = MochiKit.Base.repr;
-    SimpleTest.record(a != b, name, "Didn't expect " + repr(a) + ", but got it.");
+    SimpleTest.ok(a != b, name, "Didn't expect " + repr(a) + ", but got it.");
 };
 
 //  --------------- Test.Builder/Test.More todo() -----------------
@@ -433,11 +424,11 @@ SimpleTest.isa = function (object, clas) {
 };
 
 if ( parent.SimpleTest && parent.runAJAXTest ) (function(){
-    var oldRecord = SimpleTest.record;
+    var oldOK = SimpleTest.ok;
 
-    SimpleTest.record = function(condition, name, diag, stack) {
-        parent.SimpleTest.record( condition, name, diag, stack );
-        return oldRecord( condition, name, diag, stack );
+    SimpleTest.ok = function(condition, name, diag) {
+        parent.SimpleTest.ok( condition, name, diag );
+        return oldOK( condition, name, diag );
     };
 
     var oldFinish = SimpleTest.finish;
@@ -450,7 +441,6 @@ if ( parent.SimpleTest && parent.runAJAXTest ) (function(){
 
 // Global symbols:
 var ok = SimpleTest.ok;
-var record = SimpleTest.record;
 var is = SimpleTest.is;
 var isnot = SimpleTest.isnot;
 var todo = SimpleTest.todo;

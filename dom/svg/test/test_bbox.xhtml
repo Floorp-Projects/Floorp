@@ -26,8 +26,7 @@ function run()
 
   function isFuzzy(a, b, error, name)
   {
-    ok(!(Math.abs(a - b) > error),
-      name + " - got " + a + ", expected " + b + " (within " + error + ")");
+    ok(!(Math.abs(a - b) > error), name, "got " + a + ", expected " + b + " (within " + error + ")");
   }
 
   function getBBox(id) {

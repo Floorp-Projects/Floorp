@@ -23,21 +23,20 @@ function starttest() {
     function() {
       //test log
       info("Logging some info")
-
+    
       //basic usage
-      ok(true, "test ok");
-      SimpleTest.record(true, "test ok", "diagnostic information");
+      ok(true, "test ok", "This should be true");
       is(0, 0, "is() test failed");
       isnot(0, 1, "isnot() test failed");
-
+    
       //todo tests
       todo(false, "test todo", "todo() test should not pass");
       todo_is(false, true, "test todo_is");
       todo_isnot(true, true, "test todo_isnot");
-
+    
       //misc
       SimpleTest.requestLongerTimeout(1);
-
+    
       //note: this test may alter runtimes as it waits
       var check = false;
       $('textB').focus();
@@ -56,7 +55,7 @@ function starttest() {
           manipulateElements();
         }
       );
-
+    
       //use helper functions
       function manipulateElements()
       {
