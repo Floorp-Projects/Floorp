@@ -123,11 +123,11 @@ ControlFlowGraph::init(TempAllocator& alloc, const CFGBlockVector& blocks)
             copy = CFGTest::CopyWithNewTargets(alloc, old, trueBranch, falseBranch);
             break;
           }
-          case CFGControlInstruction::Type_Compare: {
-            CFGCompare* old = ins->toCompare();
+          case CFGControlInstruction::Type_CondSwitchCase: {
+            CFGCondSwitchCase* old = ins->toCondSwitchCase();
             CFGBlock* trueBranch = &blocks_[old->trueBranch()->id()];
             CFGBlock* falseBranch = &blocks_[old->falseBranch()->id()];
-            copy = CFGCompare::CopyWithNewTargets(alloc, old, trueBranch, falseBranch);
+            copy = CFGCondSwitchCase::CopyWithNewTargets(alloc, old, trueBranch, falseBranch);
             break;
           }
           case CFGControlInstruction::Type_Return: {
@@ -1357,14 +1357,16 @@ ControlFlowGenerator::processCondSwitchCase(CFGState& state)
             return ControlStatus::Error;
         }
 
-        current->setStopIns(CFGCompare::NewFalseBranchIsDefault(alloc(), emptyBlock, emptyBlock2));
+        current->setStopIns(CFGCondSwitchCase::NewFalseBranchIsDefault(alloc(), emptyBlock,
+                                                                       emptyBlock2));
         current->setStopPc(pc);
 
         return processCondSwitchDefault(state);
     }
 
     CFGBlock* nextBlock = CFGBlock::New(alloc(), GetNextPc(pc));
-    current->setStopIns(CFGCompare::NewFalseBranchIsNextCompare(alloc(), emptyBlock, nextBlock));
+    current->setStopIns(CFGCondSwitchCase::NewFalseBranchIsNextCase(alloc(), emptyBlock,
+                                                                    nextBlock));
     current->setStopPc(pc);
 
     // Continue until the case condition.
