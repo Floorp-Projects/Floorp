@@ -4380,6 +4380,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
       // becomes incorrect for the purposes of calculating the LD transform. To
       // correct this we need to update mExpectedGeckoMetrics to be the
       // last thing we know was painted by Gecko.
+      Maybe<CSSPoint> relativeDelta;
       if (gfxPrefs::APZRelativeUpdate() && aLayerMetrics.IsRelative()) {
         APZC_LOG("%p relative updating scroll offset from %s by %s\n", this,
           ToString(Metrics().GetScrollOffset()).c_str(),
@@ -4395,7 +4396,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
           userAction = true;
         }
 
-        Metrics().ApplyRelativeScrollUpdateFrom(aLayerMetrics);
+        relativeDelta = Some(Metrics().ApplyRelativeScrollUpdateFrom(aLayerMetrics));
       } else {
         APZC_LOG("%p updating scroll offset from %s to %s\n", this,
           ToString(Metrics().GetScrollOffset()).c_str(),
@@ -4408,10 +4409,17 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
       mCompositedScrollOffset = Metrics().GetScrollOffset();
       mExpectedGeckoMetrics = aLayerMetrics;
 
-      // Cancel the animation (which might also trigger a repaint request)
-      // after we update the scroll offset above. Otherwise we can be left
-      // in a state where things are out of sync.
-      CancelAnimation();
+      // If we have applied a relative scroll update and a scroll animation is
+      // happening, attempt to apply a content shift and preserve the
+      // animation.
+      if (!mAnimation ||
+          relativeDelta.isNothing() ||
+          !mAnimation->ApplyContentShift(relativeDelta.value())) {
+        // Cancel the animation (which might also trigger a repaint request)
+        // after we update the scroll offset above. Otherwise we can be left
+        // in a state where things are out of sync.
+        CancelAnimation();
+      }
 
       // Since the scroll offset has changed, we need to recompute the
       // displayport margins and send them to layout. Otherwise there might be

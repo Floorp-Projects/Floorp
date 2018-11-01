@@ -1,22 +1,11 @@
 // Tests that system add-on upgrades work.
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-
-BootstrapMonitor.init();
-
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2");
-
-var testserver = new HttpServer();
-testserver.registerDirectory("/data/", do_get_file("data/system_addons"));
-testserver.start();
-var root = testserver.identity.primaryScheme + "://" +
-           testserver.identity.primaryHost + ":" +
-           testserver.identity.primaryPort + "/data/";
-Services.prefs.setCharPref(PREF_SYSTEM_ADDON_UPDATE_URL, root + "update.xml");
 
 let distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "empty"], true);
 registerDirectory("XREAppFeat", distroDir);
-initSystemAddonDirs();
+
+AddonTestUtils.usePrivilegedSignatures = id => "system";
 
 /**
  * Defines the set of initial conditions to run each test against. Each should
@@ -57,8 +46,8 @@ const TEST_CONDITIONS = {
 
   // Runs tests with updated system add-ons installed
   withProfileSet: {
-    setup() {
-      buildPrefilledUpdatesDir();
+    async setup() {
+      await buildPrefilledUpdatesDir();
       distroDir.leafName = "empty";
     },
     initialState: [
@@ -72,8 +61,8 @@ const TEST_CONDITIONS = {
 
   // Runs tests with both default and updated system add-ons installed
   withBothSets: {
-    setup() {
-      buildPrefilledUpdatesDir();
+    async setup() {
+      await buildPrefilledUpdatesDir();
       distroDir.leafName = "hidden";
     },
     initialState: [
@@ -101,11 +90,8 @@ const TEST_CONDITIONS = {
 const TESTS = {
   // Correct sizes and hashes should work
   checkSizeHash: {
-    updateList: [
-      { id: "system2@tests.mozilla.org", version: "3.0", path: "system2_3.xpi", size: 4697 },
-      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi", hashFunction: "sha1", hashValue: "a4c7198d56deb315511c02937fd96c696de6cb84" },
-      { id: "system5@tests.mozilla.org", version: "1.0", path: "system5_1.xpi", size: 4691, hashFunction: "sha1", hashValue: "6887b916a1a9a5338b0df4181f6187f5396861eb" },
-    ],
+    // updateList is populated in setup()
+    updateList: [ ],
     finalState: {
       blank: [
         { isUpgrade: false, version: null},
@@ -140,10 +126,41 @@ const TESTS = {
 };
 
 add_task(async function setup() {
+  await initSystemAddonDirs();
+
   // Initialise the profile
   await overrideBuiltIns({ "system": [] });
   await promiseStartupManager();
   await promiseShutdownManager();
+
+  let list = TESTS.checkSizeHash.updateList;
+  let xpi = await getSystemAddonXPI(2, "3.0");
+  list.push({
+    id: "system2@tests.mozilla.org",
+    version: "3.0",
+    path: "system2_3.xpi",
+    xpi,
+    size: xpi.fileSize,
+  });
+
+  xpi = await getSystemAddonXPI(3, "3.0");
+  let [hashFunction, hashValue] = do_get_file_hash(xpi, "sha1").split(":");
+  list.push({
+    id: "system3@tests.mozilla.org",
+    version: "3.0",
+    path: "system3_3.xpi",
+    xpi, hashFunction, hashValue,
+  });
+
+  xpi = await getSystemAddonXPI(5, "1.0");
+  [hashFunction, hashValue] = do_get_file_hash(xpi, "sha1").split(":");
+  list.push({
+    id: "system5@tests.mozilla.org",
+    version: "1.0",
+    path: "system5_1.xpi",
+    size: xpi.fileSize,
+    xpi, hashFunction, hashValue,
+  });
 });
 
 add_task(async function() {
@@ -154,7 +171,7 @@ add_task(async function() {
         let setup = TEST_CONDITIONS[setupName];
         let test = TESTS[testName];
 
-        await execSystemAddonTest(setupName, setup, test, distroDir, root, testserver);
+        await execSystemAddonTest(setupName, setup, test, distroDir);
     }
   }
 });

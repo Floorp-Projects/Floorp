@@ -53,6 +53,14 @@ ScrollAnimationBezierPhysics::Update(const TimeStamp& aTime,
   mIsFirstIteration = false;
 }
 
+void
+ScrollAnimationBezierPhysics::ApplyContentShift(const CSSPoint& aShiftDelta)
+{
+  nsPoint shiftDelta = CSSPoint::ToAppUnits(aShiftDelta);
+  mStartPos += shiftDelta;
+  mDestination += shiftDelta;
+}
+
 TimeDuration
 ScrollAnimationBezierPhysics::ComputeDuration(const TimeStamp& aTime)
 {
