@@ -45,10 +45,10 @@ interface BrowserElementPrivileged {
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
    ChromeOnly]
-  DOMRequest getCanGoBack();
+  Promise<boolean> getCanGoBack();
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
    ChromeOnly]
-  DOMRequest getCanGoForward();
+  Promise<boolean> getCanGoForward();
 };

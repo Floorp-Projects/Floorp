@@ -17,7 +17,7 @@ class nsFrameLoader;
 namespace mozilla {
 
 namespace dom {
-class DOMRequest;
+class Promise;
 } // namespace dom
 
 class ErrorResult;
@@ -43,8 +43,8 @@ public:
   void Reload(bool aHardReload, ErrorResult& aRv);
   void Stop(ErrorResult& aRv);
 
-  already_AddRefed<dom::DOMRequest> GetCanGoBack(ErrorResult& aRv);
-  already_AddRefed<dom::DOMRequest> GetCanGoForward(ErrorResult& aRv);
+  already_AddRefed<dom::Promise> GetCanGoBack(ErrorResult& aRv);
+  already_AddRefed<dom::Promise> GetCanGoForward(ErrorResult& aRv);
 
 protected:
   NS_IMETHOD_(already_AddRefed<nsFrameLoader>) GetFrameLoader() = 0;

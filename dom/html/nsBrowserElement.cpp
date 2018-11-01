@@ -9,7 +9,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/BrowserElementBinding.h"
-#include "mozilla/dom/DOMRequest.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
 
@@ -134,36 +134,36 @@ nsBrowserElement::Stop(ErrorResult& aRv)
   }
 }
 
-already_AddRefed<DOMRequest>
+already_AddRefed<Promise>
 nsBrowserElement::GetCanGoBack(ErrorResult& aRv)
 {
   NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
 
-  RefPtr<DOMRequest> req;
-  nsresult rv = mBrowserElementAPI->GetCanGoBack(getter_AddRefs(req));
+  RefPtr<Promise> p;
+  nsresult rv = mBrowserElementAPI->GetCanGoBack(getter_AddRefs(p));
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
-  return req.forget();
+  return p.forget();
 }
 
-already_AddRefed<DOMRequest>
+already_AddRefed<Promise>
 nsBrowserElement::GetCanGoForward(ErrorResult& aRv)
 {
   NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
 
-  RefPtr<DOMRequest> req;
-  nsresult rv = mBrowserElementAPI->GetCanGoForward(getter_AddRefs(req));
+  RefPtr<Promise> p;
+  nsresult rv = mBrowserElementAPI->GetCanGoForward(getter_AddRefs(p));
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
-  return req.forget();
+  return p.forget();
 }
 
 } // namespace mozilla
