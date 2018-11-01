@@ -189,12 +189,11 @@ def fill_template(config, tasks):
 
         # We use the in-tree image_builder image to build docker images, but
         # that can't be used to build the image_builder image itself,
-        # obviously. So we fall back to an image on docker hub, identified
-        # by hash.  After the image-builder image is updated, it's best to push
-        # and update this hash as well, to keep image-builder builds up to date.
+        # obviously. So we fall back to the last snapshot of the image that
+        # was uploaded to docker hub.
         if image_name == 'image_builder':
-            hash = 'sha256:c6622fd3e5794842ad83d129850330b26e6ba671e39c58ee288a616a3a1c4c73'
-            worker['docker-image'] = 'taskcluster/image_builder@' + hash
+            worker['docker-image'] = 'taskcluster/image_builder@sha256:' + \
+                '24ce54a1602453bc93515aecd9d4ad25a22115fbc4b209ddb5541377e9a37315'
             # Keep in sync with the Dockerfile used to generate the
             # docker image whose digest is referenced above.
             worker['volumes'] = [
