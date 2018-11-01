@@ -366,6 +366,7 @@ mochitest-headless:
     - mochitest-plain-headless
 
 android-hw-arm7-opt-unittests:
+    - jittest
     - mochitest-media
 
 android-hw-arm7-debug-unittests:

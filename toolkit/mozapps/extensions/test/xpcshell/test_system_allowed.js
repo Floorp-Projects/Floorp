@@ -1,18 +1,22 @@
 // Tests that only allowed built-in system add-ons are loaded on startup.
 
-BootstrapMonitor.init();
-
-// Build the test set
-var distroDir = FileUtils.getDir("ProfD", ["sysfeatures"], true);
-do_get_file("data/system_addons/system1_1.xpi").copyTo(distroDir, "system1@tests.mozilla.org.xpi");
-do_get_file("data/system_addons/system2_1.xpi").copyTo(distroDir, "system2@tests.mozilla.org.xpi");
-do_get_file("data/system_addons/system3_1.xpi").copyTo(distroDir, "system3@tests.mozilla.org.xpi");
-registerDirectory("XREAppFeat", distroDir);
-
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "0");
 
 // Ensure that only allowed add-ons are loaded.
 add_task(async function test_allowed_addons() {
+  // Build the test set
+  var distroDir = FileUtils.getDir("ProfD", ["sysfeatures"], true);
+  let xpi = await getSystemAddonXPI(1, "1.0");
+  xpi.copyTo(distroDir, "system1@tests.mozilla.org.xpi");
+
+  xpi = await getSystemAddonXPI(2, "1.0");
+  xpi.copyTo(distroDir, "system2@tests.mozilla.org.xpi");
+
+  xpi = await getSystemAddonXPI(3, "1.0");
+  xpi.copyTo(distroDir, "system3@tests.mozilla.org.xpi");
+
+  registerDirectory("XREAppFeat", distroDir);
+
   // 1 and 2 are allowed, 3 is not.
   let validAddons = { "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org"]};
   await overrideBuiltIns(validAddons);
