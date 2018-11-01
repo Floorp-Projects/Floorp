@@ -213,6 +213,17 @@ interface nsINetUtil : nsISupports
    */
   unsigned long parseAttributePolicyString(in AString aPolicyString);
 
+/**
+   * Convert referrer policy integer code (defined in nsIHttpChannel.idl) to
+   * string.
+   *
+   * @param aPolicy
+   *        the policy integer code (defined in nsIHttpChannel.idl)
+   * @return aPolicyString
+   *         referrer policy string from code
+   */
+  ACString getReferrerPolicyString(in unsigned long aPolicy);
+
 
   /**
    * This is a void method that is C++ implemented and always
