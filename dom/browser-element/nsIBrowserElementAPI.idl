@@ -23,12 +23,6 @@ webidl FrameLoader;
 [scriptable, uuid(57758c10-6036-11e5-a837-0800200c9a66)]
 interface nsIBrowserElementAPI : nsISupports
 {
-  const long FIND_CASE_SENSITIVE = 0;
-  const long FIND_CASE_INSENSITIVE = 1;
-
-  const long FIND_FORWARD = 0;
-  const long FIND_BACKWARD = 1;
-
   /**
    * Notify frame scripts that support the API to destroy.
    */
@@ -58,10 +52,6 @@ interface nsIBrowserElementAPI : nsISupports
   void stop();
   DOMRequest getCanGoBack();
   DOMRequest getCanGoForward();
-
-  void findAll(in AString searchString, in long caseSensitivity);
-  void findNext(in long direction);
-  void clearMatch();
 
   DOMRequest executeScript(in AString script, in jsval options);
 
