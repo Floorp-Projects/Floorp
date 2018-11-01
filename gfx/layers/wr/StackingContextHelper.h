@@ -80,7 +80,25 @@ private:
   gfx::Matrix mSnappingSurfaceTransform;
   bool mAffectsClipPositioning;
   Maybe<wr::WrClipId> mReferenceFrameId;
+
+  // The deferred transform item is used when building the WebRenderScrollData
+  // structure. The backstory is that APZ needs to know about transforms that
+  // apply to the different APZC instances. Prior to bug 1423370, we would do
+  // this by creating a new WebRenderLayerScrollData for each nsDisplayTransform
+  // item we encountered. However, this was unnecessarily expensive because it
+  // turned out a lot of nsDisplayTransform items didn't have new ASRs defined
+  // as descendants, so we'd create the WebRenderLayerScrollData and send it
+  // over to APZ even though the transform information was not needed in that
+  // case.
+  //
+  // In bug 1423370 and friends, this was optimized by "deferring" a
+  // nsDisplayTransform item when we encountered it during display list
+  // traversal. If we found a descendant of that transform item that had a
+  // new ASR or otherwise was "relevant to APZ", we would then pluck the
+  // transform matrix off the deferred item and put it on the
+  // WebRenderLayerScrollData instance created for that APZ-relevant descendant.
   Maybe<nsDisplayTransform*> mDeferredTransformItem;
+
   bool mIsPreserve3D;
   bool mRasterizeLocally;
 };

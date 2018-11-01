@@ -79,10 +79,10 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
     asr = asr->mParent;
   }
 
-  // aAncestorTransform, if present, is the transform from an ancestor
-  // nsDisplayTransform that was stored on the stacking context in order to
-  // propagate it downwards in the tree. (i.e. |aItem| is a strict descendant of
-  // the nsDisplayTranform which produced aAncestorTransform). We store this
+  // See the comments on StackingContextHelper::mDeferredTransformItem for an
+  // overview of what deferred transforms are.
+  // aAncestorTransform, if present, is the transform from a deferred transform
+  // item that is an ancestor of |aItem|. We store this transform value
   // separately from mTransform because in the case where we have multiple
   // scroll metadata on this layer item, the mAncestorTransform is associated
   // with the "topmost" scroll metadata, and the mTransform is associated with

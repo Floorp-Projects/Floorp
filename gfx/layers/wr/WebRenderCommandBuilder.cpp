@@ -1475,13 +1475,12 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
 
         int32_t descendants = mLayerScrollData.size() - layerCountBeforeRecursing;
 
-        // A deferred transform item is a nsDisplayTransform for which we did
-        // not create a dedicated WebRenderLayerScrollData item at the point
-        // that we encountered the item. Instead, we "deferred" the transform
-        // from that item to combine it into the WebRenderLayerScrollData produced
-        // by child display items. However, in the case where we have a child
-        // display item with a different ASR than the nsDisplayTransform item,
-        // we cannot do this, because it will not conform to APZ's expectations
+        // See the comments on StackingContextHelper::mDeferredTransformItem
+        // for an overview of what deferred transforms are.
+        // In the case where we deferred a transform, but have a child display
+        // item with a different ASR than the deferred transform item, we cannot
+        // put the transform on the WebRenderLayerScrollData item for the child.
+        // We cannot do this because it will not conform to APZ's expectations
         // with respect to how the APZ tree ends up structured. In particular,
         // the GetTransformToThis() for the child APZ (which is created for the
         // child item's ASR) will not include the transform when we actually do
@@ -1506,10 +1505,10 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
           descendants++;
 
           // This creates the WebRenderLayerScrollData for the deferred transform
-          // item. This holds the transform matrix. and the remaining ASRs
+          // item. This holds the transform matrix and the remaining ASRs
           // needed to complete the ASR chain (i.e. the ones from the stopAtAsr
           // down to the deferred transform item's ASR, which must be "between"
-          // stopAtAsr and |item|'s ASR in the ASR tree.
+          // stopAtAsr and |item|'s ASR in the ASR tree).
           mLayerScrollData.emplace_back();
           mLayerScrollData.back().Initialize(mManager->GetScrollData(), *deferred,
               descendants, stopAtAsr, Some((*deferred)->GetTransform().GetMatrix()));
