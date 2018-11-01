@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 uk{
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
     zoneStrings{
         "Etc:UTC"{
             ls{"за всесвітнім координованим часом"}
@@ -541,7 +541,7 @@ uk{
             ls{"за часом у Сінґапурі"}
         }
         "meta:Solomon"{
-            ls{"за часом на Соломонових островах"}
+            ls{"за часом на Соломонових Островах"}
         }
         "meta:South_Georgia"{
             ls{"за часом на острові Південна Джорджія"}

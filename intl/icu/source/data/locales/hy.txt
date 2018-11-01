@@ -21,7 +21,9 @@ hy{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -214,7 +216,7 @@ hy{
         native{"latn"}
         traditional{"armn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.50"}
     calendar{
         generic{
             DateTimePatterns{
@@ -373,12 +375,12 @@ hy{
         }
         gregorian{
             AmPmMarkers{
-                "ԿԱ",
-                "ԿՀ",
+                "AM",
+                "PM",
             }
             AmPmMarkersAbbr{
-                "ԿԱ",
-                "ԿՀ",
+                "AM",
+                "PM",
             }
             AmPmMarkersNarrow{
                 "ա",
@@ -564,33 +566,33 @@ hy{
                 stand-alone{
                     abbreviated{
                         afternoon1{"ցերեկ"}
-                        am{"ԿԱ"}
+                        am{"AM"}
                         evening1{"երեկո"}
                         midnight{"կեսգիշեր"}
                         morning1{"առավոտ"}
                         night1{"գիշեր"}
                         noon{"կեսօր"}
-                        pm{"ԿՀ"}
+                        pm{"PM"}
                     }
                     narrow{
                         afternoon1{"ցերեկ"}
-                        am{"ԿԱ"}
+                        am{"AM"}
                         evening1{"երեկո"}
                         midnight{"կեսգիշեր"}
                         morning1{"առավոտ"}
                         night1{"գիշեր"}
                         noon{"կեսօր"}
-                        pm{"ԿՀ"}
+                        pm{"PM"}
                     }
                     wide{
                         afternoon1{"ցերեկ"}
-                        am{"ԿԱ"}
+                        am{"AM"}
                         evening1{"երեկո"}
                         midnight{"կեսգիշեր"}
                         morning1{"առավոտ"}
                         night1{"գիշեր"}
                         noon{"կեսօր"}
-                        pm{"ԿՀ"}
+                        pm{"PM"}
                     }
                 }
             }

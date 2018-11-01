@@ -100,6 +100,16 @@ UCONFIG_CPPFLAGS=""
 # such as -std
 UCONFIG_CFLAGS=""
 
+# Check whether to install icu-config
+AC_ARG_ENABLE([icu-config],
+    AS_HELP_STRING([--enable-icu-config], [install icu-config]),
+        [case "${enableval}" in
+            yes) enable_icu_config=true ;;
+            no) enable_icu_config=false ;;
+            *) AC_MSG_ERROR([bad value '${enableval}' for --enable-icu-config]) ;;
+        esac], [enable_icu_config=true])
+AC_SUBST(INSTALL_ICU_CONFIG, [$enable_icu_config])
+
 # Check whether to build debug libraries
 AC_MSG_CHECKING([whether to build debug libraries])
 enabled=no
@@ -184,6 +194,8 @@ fi
 
 #AC_CHECK_PROG(AUTOCONF, autoconf, autoconf, true)
 #AC_CHECK_PROG(STRIP, strip, strip, true)
+
+AC_CHECK_PROGS(PYTHON3, python3)
 
 # Check for the platform make
 AC_PATH_PROGS(U_MAKE, gmake gnumake, make)
@@ -516,19 +528,6 @@ if [[ "$GXX" = yes ]]; then
         esac
     fi
 fi
-
-AC_MSG_CHECKING([[if #include <atomic> works]])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <atomic>]], [[]])], [ac_cv_header_atomic=yes], [ac_cv_header_atomic=no])
-AC_MSG_RESULT($ac_cv_header_atomic)
-if test $ac_cv_header_atomic = yes
-then
-	U_HAVE_ATOMIC=1
-else
-        U_HAVE_ATOMIC=0
-fi
-# Make this available via CPPFLAGS
-CONFIG_CPPFLAGS="${CONFIG_CPPFLAGS} -DU_HAVE_ATOMIC=${U_HAVE_ATOMIC}"
-AC_SUBST(U_HAVE_ATOMIC)
 
 AC_LANG_POP([C++])
 
@@ -1463,6 +1462,19 @@ if test "$tools" = false;
 then
         echo "## Note: you have disabled ICU's tools. This ICU cannot build its own data or tests."
         echo "## Expect build failures in the 'data', 'test', and other directories."
+fi
+
+if test -z "$PYTHON3";
+then
+    echo ""
+    echo "NOTICE: Unable to find Python 3. ICU versions 64 and later will require Python 3 to build."
+    echo "See ICU-10923 for more information: https://unicode-org.atlassian.net/browse/ICU-10923"
+    echo ""
+else
+    echo ""
+    echo "Found Python 3. You are all set for ICU 64, which will require Python 3 to build."
+    echo "For more info on Python 3 requirement, see: https://unicode-org.atlassian.net/browse/ICU-10923"
+    echo ""
 fi
 
 $as_unset _CXX_CXXSUFFIX

@@ -111,7 +111,9 @@ lo{
         }
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -266,7 +268,7 @@ lo{
         minimumGroupingDigits{"1"}
         native{"laoo"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.50"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -1845,6 +1847,7 @@ lo{
                     "ໄຕໂຊ",
                     "ໂຊວາ",
                     "ຮີຊີ",
+                    "Qqqq",
                 }
             }
         }

@@ -10,6 +10,7 @@ import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
+import org.mozilla.geckoview.WebRequestError
 
 import android.view.inputmethod.CursorAnchorInfo
 import android.view.inputmethod.ExtractedText
@@ -65,7 +66,7 @@ class Callbacks private constructor() {
         }
 
         override fun onLoadError(session: GeckoSession, uri: String?,
-                                 category: Int, error: Int): GeckoResult<String>? {
+                                 error: WebRequestError): GeckoResult<String>? {
             return null
         }
     }

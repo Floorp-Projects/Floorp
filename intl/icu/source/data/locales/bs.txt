@@ -17,7 +17,9 @@ bs{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0} – {1}"}
             }
             patterns{
@@ -231,10 +233,20 @@ bs{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Skrenite na {0}. križanju desno."}
+            }
+            plural{
+                few{"{0} sata"}
+                one{"{0} sat"}
+                other{"{0} sati"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.88"}
     calendar{
         generic{
             DateTimePatterns{
@@ -366,8 +378,8 @@ bs{
                 "popodne",
             }
             AmPmMarkersAbbr{
-                "prijepodne",
-                "popodne",
+                "AM",
+                "PM",
             }
             AmPmMarkersNarrow{
                 "prijepodne",
@@ -381,7 +393,7 @@ bs{
                 "EEEE, d. MMMM y.",
                 "d. MMMM y.",
                 "d. MMM y.",
-                "d.M.yy.",
+                "d. M. y.",
                 "{1} {0}",
                 "{1} 'u' {0}",
                 "{1} 'u' {0}",
@@ -445,9 +457,9 @@ bs{
                 yQQQ{"QQQ y."}
                 yQQQQ{"QQQQ y."}
                 yw{
-                    few{"w. 'sedmica' 'u' y."}
-                    one{"w. 'sedmica' 'u' y."}
-                    other{"w. 'sedmica' 'u' y."}
+                    few{"w. 'sedmica' 'u' Y."}
+                    one{"w. 'sedmica' 'u' Y."}
+                    other{"w. 'sedmica' 'u' Y."}
                 }
             }
             dayNames{
@@ -558,13 +570,13 @@ bs{
                 stand-alone{
                     abbreviated{
                         afternoon1{"poslijepodne"}
-                        am{"prijepodne"}
+                        am{"AM"}
                         evening1{"navečer"}
                         midnight{"ponoć"}
                         morning1{"ujutro"}
                         night1{"po noći"}
                         noon{"podne"}
-                        pm{"popodne"}
+                        pm{"PM"}
                     }
                     narrow{
                         afternoon1{"poslijepodne"}
@@ -593,6 +605,10 @@ bs{
                     "p. n. e.",
                     "n. e.",
                 }
+                abbreviated%variant{
+                    "p.n.e.",
+                    "n.e.",
+                }
                 narrow{
                     "p.n.e.",
                     "n.e.",
@@ -600,6 +616,10 @@ bs{
                 wide{
                     "prije nove ere",
                     "nove ere",
+                }
+                wide%variant{
+                    "P.n.e.",
+                    "Nove ere",
                 }
             }
             intervalFormats{
@@ -707,7 +727,7 @@ bs{
                         "maj",
                         "jun",
                         "jul",
-                        "avg",
+                        "aug",
                         "sep",
                         "okt",
                         "nov",
@@ -735,7 +755,7 @@ bs{
                         "maj",
                         "juni",
                         "juli",
-                        "avgust",
+                        "august",
                         "septembar",
                         "oktobar",
                         "novembar",
@@ -751,7 +771,7 @@ bs{
                         "maj",
                         "jun",
                         "jul",
-                        "avg",
+                        "aug",
                         "sep",
                         "okt",
                         "nov",
@@ -779,7 +799,7 @@ bs{
                         "maj",
                         "juni",
                         "juli",
-                        "avgust",
+                        "august",
                         "septembar",
                         "oktobar",
                         "novembar",

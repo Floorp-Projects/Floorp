@@ -1024,6 +1024,10 @@ vi{
         }
         VEF{
             "VEF",
+            "Bolívar Venezuela (2008–2018)",
+        }
+        VES{
+            "VES",
             "Bolívar Venezuela",
         }
         VND{
@@ -1731,6 +1735,9 @@ vi{
             other{"Som Uzbekistan"}
         }
         VEF{
+            other{"Bolívar Venezuela (2008–2018)"}
+        }
+        VES{
             other{"Bolívar Venezuela"}
         }
         VND{
@@ -1770,5 +1777,5 @@ vi{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
 }

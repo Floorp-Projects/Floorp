@@ -10,6 +10,8 @@ ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+  Utils: "resource://gre/modules/sessionstore/Utils.jsm",
   LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
@@ -38,6 +40,8 @@ class GeckoViewNavigation extends GeckoViewModule {
       "GeckoView:Reload",
       "GeckoView:Stop",
     ]);
+
+    this.messageManager.addMessageListener("Browser:LoadURI", this);
   }
 
   // Bundle event handler.
@@ -73,6 +77,12 @@ class GeckoViewNavigation extends GeckoViewModule {
           navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_POPUPS;
         }
 
+        if (this.settings.useMultiprocess) {
+          const remoteType =
+            E10SUtils.getRemoteTypeForURI(uri, true);
+          this.moduleManager.updateRemoteType(remoteType);
+        }
+
         this.browser.loadURI(uri, {
           flags: navFlags,
           referrerURI: referrer,
@@ -90,6 +100,23 @@ class GeckoViewNavigation extends GeckoViewModule {
   // Message manager event handler.
   receiveMessage(aMsg) {
     debug `receiveMessage: ${aMsg.name}`;
+
+    switch (aMsg.name) {
+      case "Browser:LoadURI":
+        // This is triggered by E10SUtils.redirectLoad(), and means
+        // we may need to change the remoteness of our browser and
+        // load the URI.
+        const { uri, flags, referrer, triggeringPrincipal } = aMsg.data.loadOptions;
+        const remoteType =
+          E10SUtils.getRemoteTypeForURI(uri, this.settings.useMultiprocess);
+
+        this.moduleManager.updateRemoteType(remoteType);
+        this.browser.loadURI(aMsg.data.loadOptions.uri, {
+          flags, referrerURI: referrer,
+          triggeringPrincipal: Utils.deserializePrincipal(triggeringPrincipal),
+        });
+        break;
+    }
   }
 
   waitAndSetupWindow(aSessionId, { opener, nextTabParentId }) {

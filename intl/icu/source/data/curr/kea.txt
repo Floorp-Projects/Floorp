@@ -141,7 +141,7 @@ kea{
         }
         GHC{
             "GHC",
-            "Sedi di Gana",
+            "Sedi di Gana (1979–2007)",
         }
         GMD{
             "GMD",
@@ -397,7 +397,7 @@ kea{
         }
         SDP{
             "SDP",
-            "Libra sudanes antigu",
+            "Libra sudanes antigu (1957–1998)",
         }
         SEK{
             "SEK",
@@ -508,7 +508,7 @@ kea{
             "XPF",
         }
         XXX{
-            "XXX",
+            "¤",
             "Mueda diskonxedu",
         }
         YER{
@@ -529,7 +529,7 @@ kea{
         }
         ZWD{
             "ZWD",
-            "Dola di Zimbabue",
+            "Dola di Zimbabue (1980–2008)",
         }
     }
     Currencies%narrow{
@@ -757,5 +757,5 @@ kea{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.39.11"}
+    Version{"2.1.43.65"}
 }

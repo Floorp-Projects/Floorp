@@ -9,7 +9,7 @@ wo{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -35,7 +35,7 @@ wo{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.38.71"}
+    Version{"2.1.43.94"}
     calendar{
         generic{
             DateTimePatterns{

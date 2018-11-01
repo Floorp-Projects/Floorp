@@ -9,6 +9,23 @@ fr_CA{
                         one{"0 mille"}
                         other{"0 mille"}
                     }
+                    10000{
+                        other{"00 mille"}
+                    }
+                    100000{
+                        other{"000 mille"}
+                    }
+                    1000000{
+                        one{"0 million"}
+                        other{"0 millions"}
+                    }
+                    10000000{
+                        one{"00 million"}
+                        other{"00 millions"}
+                    }
+                    100000000{
+                        other{"000 millions"}
+                    }
                 }
             }
             patternsShort{
@@ -63,6 +80,26 @@ fr_CA{
                     }
                 }
                 decimalFormat{
+                    1000{
+                        one{"0 k"}
+                        other{"0 k"}
+                    }
+                    10000{
+                        other{"00 k"}
+                    }
+                    100000{
+                        other{"000 k"}
+                    }
+                    1000000{
+                        one{"0 M"}
+                        other{"0 M"}
+                    }
+                    10000000{
+                        other{"00 M"}
+                    }
+                    100000000{
+                        other{"000 M"}
+                    }
                     1000000000{
                         one{"0 G"}
                         other{"0 G"}
@@ -89,9 +126,12 @@ fr_CA{
                     }
                 }
             }
+            symbols{
+                group{" "}
+            }
         }
     }
-    Version{"2.1.38.73"}
+    Version{"2.1.43.65"}
     calendar{
         coptic{
             monthNames{
@@ -217,6 +257,7 @@ fr_CA{
             }
             availableFormats{
                 Bh{"h 'h' B"}
+                Bhm{"h 'h' mm B"}
                 Bhms{"h 'h' mm 'min' ss 's' B"}
                 EBhm{"E h 'h' mm B"}
                 EBhms{"E h 'h' mm 'min' ss 's' B"}
@@ -350,7 +391,6 @@ fr_CA{
                         am{"a.m."}
                         evening1{"soir"}
                         morning1{"mat."}
-                        night1{"nuit"}
                         pm{"p.m."}
                     }
                     narrow{
@@ -363,7 +403,6 @@ fr_CA{
                     }
                     wide{
                         am{"a.m."}
-                        night1{"nuit"}
                         pm{"p.m."}
                     }
                 }
@@ -479,6 +518,83 @@ fr_CA{
                         "oct.",
                         "nov.",
                         "déc.",
+                    }
+                }
+            }
+        }
+        hebrew{
+            eras{
+                abbreviated{
+                    "AM",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "tis.",
+                        "hes.",
+                        "kis.",
+                        "téb.",
+                        "sché.",
+                        "ad.I",
+                        "adar",
+                        "nis.",
+                        "iyar",
+                        "siv.",
+                        "tam.",
+                        "av",
+                        "ell.",
+                        "ad.II",
+                    }
+                    narrow{
+                        "T",
+                        "H",
+                        "K",
+                        "T",
+                        "S",
+                        "A",
+                        "A",
+                        "N",
+                        "I",
+                        "S",
+                        "T",
+                        "A",
+                        "E",
+                        "A",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "tis.",
+                        "hes.",
+                        "kis.",
+                        "téb.",
+                        "sché.",
+                        "ad.I",
+                        "adar",
+                        "nis.",
+                        "iyar",
+                        "siv.",
+                        "tam.",
+                        "av",
+                        "ell.",
+                        "ad.II",
+                    }
+                    narrow{
+                        "T",
+                        "H",
+                        "K",
+                        "T",
+                        "S",
+                        "A",
+                        "A",
+                        "N",
+                        "I",
+                        "S",
+                        "T",
+                        "A",
+                        "E",
+                        "A",
                     }
                 }
             }
@@ -636,7 +752,6 @@ fr_CA{
         ideographic_desc_characters{"symboles de description sinographique"}
         keycap{"dessus de touche"}
         sign_standard_symbols{"signe ou symbole"}
-        smiley{"émoticône"}
         south_asian_scripts{"écritures d’Asie du Sud"}
         southeast_asian_scripts{"écritures d’Asie du Sud-Est"}
         western_asian_scripts{"écritures d’Asie de l’Ouest"}
@@ -646,16 +761,36 @@ fr_CA{
         alternateQuotationStart{"”"}
     }
     fields{
+        day{
+            relative{
+                "-1"{"hier"}
+                "-2"{"avant-hier"}
+                "0"{"aujourd’hui"}
+                "1"{"demain"}
+                "2"{"après-demain"}
+            }
+        }
         day-narrow{
             relative{
+                "-1"{"hier"}
                 "-2"{"avant-hier"}
+                "0"{"aujourd’hui"}
+                "1"{"demain"}
                 "2"{"après-demain"}
             }
         }
         day-short{
             relative{
+                "-1"{"hier"}
                 "-2"{"avant-hier"}
+                "0"{"aujourd’hui"}
+                "1"{"demain"}
                 "2"{"après-demain"}
+            }
+            relativeTime{
+                future{
+                    other{"dans {0} j"}
+                }
             }
         }
         dayOfYear{
@@ -688,13 +823,6 @@ fr_CA{
                 }
             }
         }
-        month-narrow{
-            relativeTime{
-                future{
-                    other{"+{0} m."}
-                }
-            }
-        }
         quarter{
             relative{
                 "-1"{"le trimestre dernier"}
@@ -702,8 +830,23 @@ fr_CA{
                 "1"{"le trimestre prochain"}
             }
         }
+        quarter-narrow{
+            relative{
+                "-1"{"trim. dernier"}
+                "0"{"ce trim."}
+                "1"{"trim.prochain"}
+            }
+        }
+        quarter-short{
+            relative{
+                "-1"{"trim. dernier"}
+                "0"{"ce trim."}
+                "1"{"trim. prochain"}
+            }
+        }
         sat-narrow{
             relative{
+                "-1"{"sam. dernier"}
                 "0"{"ce sam"}
                 "1"{"sam proch"}
             }
@@ -807,16 +950,8 @@ fr_CA{
                 }
             }
         }
-        year-narrow{
-            relative{
-                "0"{"cette année"}
-            }
-        }
         year-short{
             dn{"a"}
-            relative{
-                "0"{"cette année"}
-            }
         }
     }
 }

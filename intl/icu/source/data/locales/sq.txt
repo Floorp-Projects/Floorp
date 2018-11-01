@@ -28,7 +28,9 @@ sq{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{">{0}"}
+                approximately{"≈{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
                 range{"{0}-{1}"}
             }
             patterns{
@@ -217,10 +219,10 @@ sq{
                 other{"{0} libra"}
             }
         }
-        minimumGroupingDigits{"1"}
+        minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.50"}
     calendar{
         generic{
             DateTimePatterns{
@@ -283,6 +285,20 @@ sq{
                 yyyyQQQQ{"QQQQ, y G"}
             }
             intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
                 M{
                     M{"M – M"}
                 }
@@ -352,12 +368,12 @@ sq{
                 "e pasdites",
             }
             AmPmMarkersAbbr{
-                "e paradites",
-                "e pasdites",
+                "p.d.",
+                "m.d.",
             }
             AmPmMarkersNarrow{
-                "e paradites",
-                "e pasdites",
+                "p.d.",
+                "m.d.",
             }
             DateTimePatterns{
                 "h:mm:ss a, zzzz",
@@ -445,22 +461,22 @@ sq{
                         "Sht",
                     }
                     narrow{
-                        "D",
-                        "H",
-                        "M",
-                        "M",
-                        "E",
-                        "P",
-                        "Sh",
+                        "d",
+                        "h",
+                        "m",
+                        "m",
+                        "e",
+                        "p",
+                        "sh",
                     }
                     short{
-                        "Die",
-                        "Hën",
-                        "Mar",
-                        "Mër",
-                        "Enj",
-                        "Pre",
-                        "Sht",
+                        "die",
+                        "hën",
+                        "mar",
+                        "mër",
+                        "enj",
+                        "pre",
+                        "sht",
                     }
                     wide{
                         "e diel",
@@ -474,40 +490,40 @@ sq{
                 }
                 stand-alone{
                     abbreviated{
-                        "Die",
-                        "Hën",
-                        "Mar",
-                        "Mër",
-                        "Enj",
-                        "Pre",
-                        "Sht",
+                        "die",
+                        "hën",
+                        "mar",
+                        "mër",
+                        "enj",
+                        "pre",
+                        "sht",
                     }
                     narrow{
-                        "D",
-                        "H",
-                        "M",
-                        "M",
-                        "E",
-                        "P",
-                        "Sh",
+                        "d",
+                        "h",
+                        "m",
+                        "m",
+                        "e",
+                        "p",
+                        "sh",
                     }
                     short{
-                        "Die",
-                        "Hën",
-                        "Mar",
-                        "Mër",
-                        "Enj",
-                        "Pre",
-                        "Sht",
+                        "die",
+                        "hën",
+                        "mar",
+                        "mër",
+                        "enj",
+                        "pre",
+                        "sht",
                     }
                     wide{
-                        "E diel",
-                        "E hënë",
-                        "E martë",
-                        "E mërkurë",
-                        "E enjte",
-                        "E premte",
-                        "E shtunë",
+                        "e diel",
+                        "e hënë",
+                        "e martë",
+                        "e mërkurë",
+                        "e enjte",
+                        "e premte",
+                        "e shtunë",
                     }
                 }
             }
@@ -544,25 +560,25 @@ sq{
                 stand-alone{
                     abbreviated{
                         afternoon1{"pasdite"}
-                        am{"paradite"}
+                        am{"p.d."}
                         evening1{"mbrëmje"}
                         midnight{"mesnatë"}
                         morning1{"mëngjes"}
                         morning2{"paradite"}
                         night1{"natë"}
                         noon{"mesditë"}
-                        pm{"pasdite"}
+                        pm{"m.d."}
                     }
                     narrow{
                         afternoon1{"pasdite"}
-                        am{"paradite"}
+                        am{"p.d."}
                         evening1{"mbrëmje"}
                         midnight{"mesnatë"}
                         morning1{"mëngjes"}
                         morning2{"paradite"}
                         night1{"natë"}
                         noon{"mesditë"}
-                        pm{"pasdite"}
+                        pm{"m.d."}
                     }
                     wide{
                         afternoon1{"pasdite"}
@@ -745,46 +761,46 @@ sq{
                 }
                 stand-alone{
                     abbreviated{
-                        "Jan",
-                        "Shk",
-                        "Mar",
-                        "Pri",
-                        "Maj",
-                        "Qer",
-                        "Korr",
-                        "Gush",
-                        "Sht",
-                        "Tet",
-                        "Nën",
-                        "Dhj",
+                        "jan",
+                        "shk",
+                        "mar",
+                        "pri",
+                        "maj",
+                        "qer",
+                        "korr",
+                        "gush",
+                        "sht",
+                        "tet",
+                        "nën",
+                        "dhj",
                     }
                     narrow{
-                        "J",
-                        "Sh",
-                        "M",
-                        "P",
-                        "M",
-                        "Q",
-                        "K",
-                        "G",
-                        "Sh",
-                        "T",
-                        "N",
-                        "Dh",
+                        "j",
+                        "sh",
+                        "m",
+                        "p",
+                        "m",
+                        "q",
+                        "k",
+                        "g",
+                        "sh",
+                        "t",
+                        "n",
+                        "dh",
                     }
                     wide{
-                        "Janar",
-                        "Shkurt",
-                        "Mars",
-                        "Prill",
-                        "Maj",
-                        "Qershor",
-                        "Korrik",
-                        "Gusht",
-                        "Shtator",
-                        "Tetor",
-                        "Nëntor",
-                        "Dhjetor",
+                        "janar",
+                        "shkurt",
+                        "mars",
+                        "prill",
+                        "maj",
+                        "qershor",
+                        "korrik",
+                        "gusht",
+                        "shtator",
+                        "tetor",
+                        "nëntor",
+                        "dhjetor",
                     }
                 }
             }
@@ -1006,7 +1022,7 @@ sq{
             }
             relativeTime{
                 future{
-                    one{"pas {0} të premte"}
+                    one{"pas {0} të premteje"}
                     other{"pas {0} të premtesh"}
                 }
                 past{
@@ -1023,7 +1039,7 @@ sq{
             }
             relativeTime{
                 future{
-                    one{"pas {0} të premte"}
+                    one{"pas {0} të premteje"}
                     other{"pas {0} të premtesh"}
                 }
                 past{
@@ -1040,7 +1056,7 @@ sq{
             }
             relativeTime{
                 future{
-                    one{"pas {0} të premte"}
+                    one{"pas {0} të premteje"}
                     other{"pas {0} të premtesh"}
                 }
                 past{
@@ -1108,28 +1124,28 @@ sq{
             }
         }
         minute-narrow{
-            dn{"min."}
+            dn{"min"}
             relativeTime{
                 future{
-                    one{"pas {0} min."}
-                    other{"pas {0} min."}
+                    one{"pas {0} min"}
+                    other{"pas {0} min"}
                 }
                 past{
-                    one{"{0} min. më parë"}
-                    other{"{0} min. më parë"}
+                    one{"{0} min më parë"}
+                    other{"{0} min më parë"}
                 }
             }
         }
         minute-short{
-            dn{"min."}
+            dn{"min"}
             relativeTime{
                 future{
-                    one{"pas {0} min."}
-                    other{"pas {0} min."}
+                    one{"pas {0} min"}
+                    other{"pas {0} min"}
                 }
                 past{
-                    one{"{0} min. më parë"}
-                    other{"{0} min. më parë"}
+                    one{"{0} min më parë"}
+                    other{"{0} min më parë"}
                 }
             }
         }
@@ -1204,6 +1220,11 @@ sq{
         }
         month-narrow{
             dn{"muaj"}
+            relative{
+                "-1"{"muajin e kaluar"}
+                "0"{"këtë muaj"}
+                "1"{"muajin e ardhshëm"}
+            }
             relativeTime{
                 future{
                     one{"pas {0} muaji"}
@@ -1217,6 +1238,11 @@ sq{
         }
         month-short{
             dn{"muaj"}
+            relative{
+                "-1"{"muajin e kaluar"}
+                "0"{"këtë muaj"}
+                "1"{"muajin e ardhshëm"}
+            }
             relativeTime{
                 future{
                     one{"pas {0} muaji"}
@@ -1248,6 +1274,11 @@ sq{
         }
         quarter-narrow{
             dn{"tremujor"}
+            relative{
+                "-1"{"tremujorin e kaluar"}
+                "0"{"këtë tremujor"}
+                "1"{"tremujorin e ardhshëm"}
+            }
             relativeTime{
                 future{
                     one{"pas {0} tremujori"}
@@ -1261,6 +1292,11 @@ sq{
         }
         quarter-short{
             dn{"tremujor"}
+            relative{
+                "-1"{"tremujorin e kaluar"}
+                "0"{"këtë tremujor"}
+                "1"{"tremujorin e ardhshëm"}
+            }
             relativeTime{
                 future{
                     one{"pas {0} tremujori"}
@@ -1340,28 +1376,28 @@ sq{
             }
         }
         second-narrow{
-            dn{"sek."}
+            dn{"sek"}
             relativeTime{
                 future{
-                    one{"pas {0} sek."}
-                    other{"pas {0} sek."}
+                    one{"pas {0} sek"}
+                    other{"pas {0} sek"}
                 }
                 past{
-                    one{"{0} sek. më parë"}
-                    other{"{0} sek. më parë"}
+                    one{"{0} sek më parë"}
+                    other{"{0} sek më parë"}
                 }
             }
         }
         second-short{
-            dn{"sek."}
+            dn{"sek"}
             relativeTime{
                 future{
-                    one{"pas {0} sek."}
-                    other{"pas {0} sek."}
+                    one{"pas {0} sek"}
+                    other{"pas {0} sek"}
                 }
                 past{
-                    one{"{0} sek. më parë"}
-                    other{"{0} sek. më parë"}
+                    one{"{0} sek më parë"}
+                    other{"{0} sek më parë"}
                 }
             }
         }
@@ -1424,7 +1460,7 @@ sq{
             }
             relativeTime{
                 future{
-                    one{"pas {0} të enjte"}
+                    one{"pas {0} të enjteje"}
                     other{"pas {0} të enjtesh"}
                 }
                 past{
@@ -1441,7 +1477,7 @@ sq{
             }
             relativeTime{
                 future{
-                    one{"pas {0} të enjte"}
+                    one{"pas {0} të enjteje"}
                     other{"pas {0} të enjtesh"}
                 }
                 past{
@@ -1458,7 +1494,7 @@ sq{
             }
             relativeTime{
                 future{
-                    one{"pas {0} të enjte"}
+                    one{"pas {0} të enjteje"}
                     other{"pas {0} të enjtesh"}
                 }
                 past{
@@ -1590,6 +1626,11 @@ sq{
         }
         week-narrow{
             dn{"javë"}
+            relative{
+                "-1"{"javën e kaluar"}
+                "0"{"këtë javë"}
+                "1"{"javën e ardhshme"}
+            }
             relativePeriod{"java e {0}"}
             relativeTime{
                 future{
@@ -1604,6 +1645,11 @@ sq{
         }
         week-short{
             dn{"javë"}
+            relative{
+                "-1"{"javën e kaluar"}
+                "0"{"këtë javë"}
+                "1"{"javën e ardhshme"}
+            }
             relativePeriod{"java e {0}"}
             relativeTime{
                 future{
@@ -1646,6 +1692,24 @@ sq{
         year{
             dn{"vit"}
             relative{
+                "-1"{"vjet"}
+                "0"{"sivjet"}
+                "1"{"mot"}
+            }
+            relativeTime{
+                future{
+                    one{"pas {0} viti"}
+                    other{"pas {0} vjetësh"}
+                }
+                past{
+                    one{"{0} vit më parë"}
+                    other{"{0} vjet më parë"}
+                }
+            }
+        }
+        year-narrow{
+            dn{"vit"}
+            relative{
                 "-1"{"vitin e kaluar"}
                 "0"{"këtë vit"}
                 "1"{"vitin e ardhshëm"}
@@ -1661,21 +1725,13 @@ sq{
                 }
             }
         }
-        year-narrow{
-            dn{"vit"}
-            relativeTime{
-                future{
-                    one{"pas {0} viti"}
-                    other{"pas {0} vjetësh"}
-                }
-                past{
-                    one{"{0} vit më parë"}
-                    other{"{0} vjet më parë"}
-                }
-            }
-        }
         year-short{
             dn{"vit"}
+            relative{
+                "-1"{"vitin e kaluar"}
+                "0"{"këtë vit"}
+                "1"{"vitin e ardhshëm"}
+            }
             relativeTime{
                 future{
                     one{"pas {0} viti"}
@@ -1750,8 +1806,13 @@ sq{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

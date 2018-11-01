@@ -980,6 +980,10 @@ cy{
         }
         VEF{
             "VEF",
+            "Bolívar Venezuela (2008–2018)",
+        }
+        VES{
+            "VES",
             "Bolívar Venezuela",
         }
         VND{
@@ -3053,6 +3057,14 @@ cy{
             zero{"bolívar Venezuela (1871–2008)"}
         }
         VEF{
+            few{"bolívar Venezuela (2008–2018)"}
+            many{"bolívar Venezuela (2008–2018)"}
+            one{"bolívar Venezuela (2008–2018)"}
+            other{"bolívar Venezuela (2008–2018)"}
+            two{"bolívar Venezuela (2008–2018)"}
+            zero{"bolívar Venezuela (2008–2018)"}
+        }
+        VES{
             few{"bolívar Venezuela"}
             many{"bolívar Venezuela"}
             one{"bolívar Venezuela"}
@@ -3261,5 +3273,5 @@ cy{
         two{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pt_PT{
-    Version{"2.1.41.97"}
+    Version{"2.1.44.9"}
     zoneStrings{
         "Etc:UTC"{
             ls{"Hora Coordenada Universal"}
@@ -67,7 +67,7 @@ pt_PT{
         }
         "meta:America_Mountain"{
             ld{"Hora de verão da Montanha"}
-            lg{"Hora de Montanha"}
+            lg{"Hora da Montanha"}
             ls{"Hora padrão da Montanha"}
         }
         "meta:America_Pacific"{
@@ -154,9 +154,9 @@ pt_PT{
             ss{"AZOT"}
         }
         "meta:Bangladesh"{
-            ld{"Hora de verão do Bangladesh"}
-            lg{"Hora do Bangladesh"}
-            ls{"Hora padrão do Bangladesh"}
+            ld{"Hora de verão do Bangladeche"}
+            lg{"Hora do Bangladeche"}
+            ls{"Hora padrão do Bangladeche"}
         }
         "meta:Bhutan"{
             ls{"Hora do Butão"}

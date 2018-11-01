@@ -41,6 +41,8 @@ public:
     UBool errIfFailureAndReset(const char *fmt, ...);
     UBool errDataIfFailureAndReset();
     UBool errDataIfFailureAndReset(const char *fmt, ...);
+    UBool expectErrorAndReset(UErrorCode expectedError);
+    UBool expectErrorAndReset(UErrorCode expectedError, const char *fmt, ...);
 
     /** Sets an additional message string to be appended to failure output. */
     void setScope(const char* message);
@@ -54,7 +56,7 @@ private:
     const char *const testName;
     UnicodeString scopeMessage;
 
-    void errlog(UBool dataErr, const char* extraMessage) const;
+    void errlog(UBool dataErr, const UnicodeString& mainMessage, const char* extraMessage) const;
 };
 
 #endif

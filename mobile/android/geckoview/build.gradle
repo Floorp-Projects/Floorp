@@ -226,6 +226,8 @@ dependencies {
     androidTestImplementation 'com.android.support.test:rules:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     androidTestImplementation "com.android.support:support-annotations:$support_library_version"
+
+    androidTestImplementation 'org.eclipse.jetty:jetty-server:7.6.21.v20160908'
 }
 
 apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"

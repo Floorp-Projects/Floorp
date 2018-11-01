@@ -16,6 +16,10 @@ as{
         "ী \u09C1 \u09C2 \u09C3 ে ৈ ো ৌ \u09CD]"
     }
     ExemplarCharactersNumbers{"[\\- , . % ‰ + 0০ 1১ 2২ 3৩ 4৪ 5৫ 6৬ 7৭ 8৮ 9৯]"}
+    ExemplarCharactersPunctuation{
+        "[\\- ‐ – — , ; \\: ! ? . … । ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
+    }
     MoreInformation{"?"}
     NumberElements{
         beng{
@@ -41,7 +45,7 @@ as{
         default{"beng"}
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -230,7 +234,7 @@ as{
         minimumGroupingDigits{"1"}
         native{"beng"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.94"}
     calendar{
         generic{
             DateTimePatterns{
@@ -541,11 +545,15 @@ as{
                 }
                 abbreviated%variant{
                     "খ্ৰীষ্টপূৰ্ব",
-                    "CE",
+                    "চি. ই.",
                 }
                 wide{
                     "খ্ৰীষ্টপূৰ্ব",
                     "খ্ৰীষ্টাব্দ",
+                }
+                wide%variant{
+                    "খ্ৰীষ্টপূৰ্ব",
+                    "চি. ই.",
                 }
             }
             intervalFormats{
@@ -1697,8 +1705,13 @@ as{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

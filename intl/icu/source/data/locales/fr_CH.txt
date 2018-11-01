@@ -12,7 +12,7 @@ fr_CH{
             }
         }
     }
-    Version{"2.1.38.85"}
+    Version{"2.1.43.65"}
     calendar{
         generic{
             DateTimePatterns{

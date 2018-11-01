@@ -3231,6 +3231,9 @@ Preferences::HandleDirty()
 static nsresult
 openPrefFile(nsIFile* aFile, PrefValueKind aKind);
 
+static nsresult
+parsePrefData(const nsCString& aData, PrefValueKind aKind);
+
 // clang-format off
 static const char kPrefFileHeader[] =
   "// Mozilla User Preferences"
@@ -3888,6 +3891,11 @@ Preferences::GetInstanceForService()
       gCacheDataDesc = "AddObserver(\"profile-before-change\") failed";
       return nullptr;
     }
+  }
+
+  const char* defaultPrefs = getenv("MOZ_DEFAULT_PREFS");
+  if (defaultPrefs) {
+    parsePrefData(nsCString(defaultPrefs), PrefValueKind::Default);
   }
 
   gCacheDataDesc = "set by GetInstanceForService() (2)";
@@ -4613,6 +4621,20 @@ openPrefFile(nsIFile* aFile, PrefValueKind aKind)
   Parser parser;
   if (!parser.Parse(
         filename, aKind, NS_ConvertUTF16toUTF8(path).get(), startTime, data)) {
+    return NS_ERROR_FILE_CORRUPTED;
+  }
+
+  return NS_OK;
+}
+
+static nsresult
+parsePrefData(const nsCString& aData, PrefValueKind aKind)
+{
+  TimeStamp startTime = TimeStamp::Now();
+  const nsCString path = NS_LITERAL_CSTRING("$MOZ_DEFAULT_PREFS");
+
+  Parser parser;
+  if (!parser.Parse(path, aKind, path.get(), startTime, aData)) {
     return NS_ERROR_FILE_CORRUPTED;
   }
 

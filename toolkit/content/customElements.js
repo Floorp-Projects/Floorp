@@ -33,9 +33,11 @@ window.addEventListener("DOMContentLoaded", () => {
   for (let element of gElementsPendingConnection) {
     try {
       if (element.isConnected) {
+        element.isRunningDelayedConnectedCallback = true;
         element.connectedCallback();
       }
     } catch (ex) { console.error(ex); }
+    element.isRunningDelayedConnectedCallback = false;
   }
   gElementsPendingConnection.clear();
 }, { once: true, capture: true });
@@ -294,6 +296,7 @@ if (!isDummyDocument) {
     "chrome://global/content/elements/radio.js",
     "chrome://global/content/elements/textbox.js",
     "chrome://global/content/elements/tabbox.js",
+    "chrome://global/content/elements/tree.js",
   ]) {
     Services.scriptloader.loadSubScript(script, window);
   }

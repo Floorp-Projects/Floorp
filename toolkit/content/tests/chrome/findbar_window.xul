@@ -89,7 +89,7 @@
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       let promise = BrowserTestUtils.browserLoaded(gBrowser);
-      BrowserTestUtils.loadURI(gBrowser, "data:text/html,<h2 id='h2'>" + SEARCH_TEXT +
+      gBrowser.loadURI("data:text/html,<h2 id='h2'>" + SEARCH_TEXT +
         "</h2><h2><a href='" + SAMPLE_URL + "'>Link Test</a></h2><input id='text' type='text' value='" +
         SAMPLE_TEXT + "'></input><input id='button' type='button'></input><img id='img' width='50' height='50'/>");
       await promise;

@@ -29,7 +29,9 @@ hu{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -221,7 +223,7 @@ hu{
         minimumGroupingDigits{"4"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
     calendar{
         buddhist{
             eras{
@@ -875,6 +877,10 @@ hu{
                     "i. e.",
                     "i. sz.",
                 }
+                abbreviated%variant{
+                    "i.e.",
+                    "i.sz.",
+                }
                 narrow{
                     "ie.",
                     "isz.",
@@ -1358,6 +1364,20 @@ hu{
         persian{
             monthNames{
                 format{
+                    abbreviated{
+                        "farvardin",
+                        "ordibehesht",
+                        "khordad",
+                        "tir",
+                        "mordad",
+                        "shahrivar",
+                        "mehr",
+                        "aban",
+                        "azar",
+                        "dey",
+                        "bahman",
+                        "esfand",
+                    }
                     narrow{
                         "1",
                         "2",
@@ -2405,5 +2425,37 @@ hu{
         UK{"angol"}
         US{"amerikai"}
         metric{"metrikus"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

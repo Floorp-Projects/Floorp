@@ -77,6 +77,8 @@ static inline bool sk_float_isinf(float x) {
 
 #ifdef SK_BUILD_FOR_WIN
     #define sk_float_isnan(x)       _isnan(x)
+#elif defined(__clang__) || defined(__GNUC__)
+    #define sk_float_isnan(x)       __builtin_isnan(x)
 #else
     #define sk_float_isnan(x)       isnan(x)
 #endif

@@ -24,7 +24,9 @@ ta{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -236,7 +238,7 @@ ta{
         }
         traditional{"taml"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.50"}
     calendar{
         buddhist{
             eras{
@@ -2407,6 +2409,9 @@ ta{
         zone{
             dn{"நேர மண்டலம்"}
         }
+        zone-narrow{
+            dn{"மண்டலம்"}
+        }
         zone-short{
             dn{"மண்டலம்"}
         }
@@ -2464,8 +2469,13 @@ ta{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

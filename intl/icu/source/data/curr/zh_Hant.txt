@@ -1045,6 +1045,10 @@ zh_Hant{
         }
         VEF{
             "VEF",
+            "委內瑞拉玻利瓦 (2008–2018)",
+        }
+        VES{
+            "VES",
             "委內瑞拉玻利瓦",
         }
         VND{
@@ -1505,6 +1509,9 @@ zh_Hant{
         }
         CLP{
             other{"智利披索"}
+        }
+        CNH{
+            other{"人民幣（離岸）"}
         }
         CNY{
             other{"人民幣"}
@@ -2086,6 +2093,9 @@ zh_Hant{
             other{"委內瑞拉玻利瓦 (1871–2008)"}
         }
         VEF{
+            other{"委內瑞拉玻利瓦 (2008–2018)"}
+        }
+        VES{
             other{"委內瑞拉玻利瓦"}
         }
         VND{
@@ -2212,5 +2222,5 @@ zh_Hant{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
 }

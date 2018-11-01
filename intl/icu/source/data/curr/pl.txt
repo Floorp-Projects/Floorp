@@ -936,6 +936,10 @@ pl{
         }
         VEF{
             "VEF",
+            "boliwar wenezuelski (2008–2018)",
+        }
+        VES{
+            "VES",
             "boliwar wenezuelski",
         }
         VND{
@@ -1011,7 +1015,7 @@ pl{
             "testowy kod waluty",
         }
         XXX{
-            "XXX",
+            "¤",
             "nieznana waluta",
         }
         YDD{
@@ -2237,6 +2241,12 @@ pl{
             other{"boliwary wenezuelskiego (1871–2008)"}
         }
         VEF{
+            few{"boliwary wenezuelskie (2008–2018)"}
+            many{"boliwarów wenezuelskich (2008–2018)"}
+            one{"boliwar wenezuelski (2008–2018)"}
+            other{"boliwara wenezuelskiego (2008–2018)"}
+        }
+        VES{
             few{"boliwary wenezuelskie"}
             many{"boliwarów wenezuelskich"}
             one{"boliwar wenezuelski"}
@@ -2321,5 +2331,5 @@ pl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.50"}
 }

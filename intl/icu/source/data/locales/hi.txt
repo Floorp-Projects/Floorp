@@ -41,7 +41,9 @@ hi{
         }
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -222,11 +224,11 @@ hi{
         }
         minimalPairs{
             ordinal{
-                few{"{0}था दाहिना मोड़ लें॰"}
-                many{"{0}ठा दाहिना मोड़ लें॰"}
-                one{"{0}ला दाहिना मोड़ लें॰"}
-                other{"{0}वां दाहिना मोड़ लें॰"}
-                two{"{0}रा दाहिना मोड़ लें॰"}
+                few{"{0}था दाहिना मोड़ लें."}
+                many{"{0}ठा दाहिना मोड़ लें."}
+                one{"{0}ला दाहिना मोड़ लें."}
+                other{"{0}वां दाहिना मोड़ लें."}
+                two{"{0}रा दाहिना मोड़ लें."}
             }
             plural{
                 one{"{0} घंटा"}
@@ -236,7 +238,7 @@ hi{
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.50"}
     calendar{
         ethiopic{
             monthNames{
@@ -1239,6 +1241,7 @@ hi{
                     "ताईशो",
                     "शोवा",
                     "हेईसेई",
+                    "Qqqq",
                 }
             }
         }
@@ -1267,7 +1270,7 @@ hi{
         activities{"गतिविधि"}
         african_scripts{"अफ़्रीकी लिपि"}
         american_scripts{"अमेरिकी लिपि"}
-        animal{"जानवर"}
+        animal{"पशु"}
         animals_nature{"पशु और प्रकृति"}
         arrows{"तीर"}
         body{"शरीर"}
@@ -1280,7 +1283,7 @@ hi{
         dash_connector{"डैश या कनेक्टर"}
         digits{"अंक"}
         dingbats{"dingbat"}
-        divination_symbols{"अनुमान चिह्न"}
+        divination_symbols{"पूर्वानुमान चिह्न"}
         downwards_arrows{"नीचे की ओर वाला तीर"}
         downwards_upwards_arrows{"नीचे की ओर ऊपर की ओर तीर"}
         east_asian_scripts{"पूर्वी एशियाई लिपि"}
@@ -1292,24 +1295,24 @@ hi{
         food_drink{"खान-पान"}
         format{"प्रारूप"}
         format_whitespace{"प्रारूप और श्वेतरिक्ति"}
-        full_width_form_variant{"पूरी चौड़ाई वाला फार्म वेरिएंट"}
+        full_width_form_variant{"पूरी चौड़ाई वाला फ़ॉर्म वेरिएंट"}
         geometric_shapes{"ज्यामितीय आकार"}
-        half_width_form_variant{"half-width variant"}
-        han_characters{"Han character"}
-        han_radicals{"Han radical"}
-        hanja{"hanja"}
-        hanzi_simplified{"Hanzi (simplified)"}
-        hanzi_traditional{"Hanzi (traditional)"}
+        half_width_form_variant{"आधी चौड़ाई वेरिएंट"}
+        han_characters{"हान वर्ण"}
+        han_radicals{"हान मूलशब्द"}
+        hanja{"हांजा"}
+        hanzi_simplified{"चीनी हान वर्ण (सरलीकृत)"}
+        hanzi_traditional{"चीनी हान वर्ण (पारंपरिक)"}
         heart{"दिल"}
         historic_scripts{"ऐतिहासिक लिपि"}
-        ideographic_desc_characters{"ideographic desc. character"}
+        ideographic_desc_characters{"आइडियोग्राफ़िक विवरणात्मक वर्ण"}
         japanese_kana{"जापानी काना"}
-        kanbun{"kanbun"}
+        kanbun{"कानबुन"}
         kanji{"कांजी"}
         keycap{"कीकैप"}
         leftwards_arrows{"बाईं ओर तीर"}
         leftwards_rightwards_arrows{"दाईं व बाईं ओर वाला तीर"}
-        letterlike_symbols{"पत्र-जैसे प्रतीक"}
+        letterlike_symbols{"अक्षर सदृश चिह्न"}
         limited_use{"सीमित उपयोग"}
         male{"पुरुष"}
         math_symbols{"गणितीय प्रतीक"}
@@ -1321,7 +1324,7 @@ hi{
         nature{"प्रकृति"}
         nonspacing{"गैर रिक्ति"}
         numbers{"संख्या"}
-        objects{"वस्तुएं"}
+        objects{"वस्तु"}
         other{"अन्य"}
         paired{"युग्मित"}
         person{"व्यक्ति"}
@@ -1332,7 +1335,7 @@ hi{
         punctuation{"विराम चिह्न"}
         rightwards_arrows{"बाईं ओर तीर"}
         sign_standard_symbols{"चिह्न या प्रतीक"}
-        small_form_variant{"छोटे फार्म वेरिएंट"}
+        small_form_variant{"छोटे फ़ॉर्म वेरिएंट"}
         smiley{"स्माइली"}
         smileys_people{"स्माइली या लोग"}
         south_asian_scripts{"दक्षिण एशियाई लिपि"}
@@ -1346,7 +1349,7 @@ hi{
         travel_places{"यात्रा या स्थान"}
         upwards_arrows{"ऊपर की ओर तीर"}
         variant_forms{"विविध रूप"}
-        vocalic_jamo{"vocalic jamo"}
+        vocalic_jamo{"वोकेलिक जामो"}
         weather{"मौसम"}
         western_asian_scripts{"पश्चिमी एशियाई लिपि"}
         whitespace{"श्वेतरिक्ति"}
@@ -2193,8 +2196,13 @@ hi{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

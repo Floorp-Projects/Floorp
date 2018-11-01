@@ -59,7 +59,7 @@
         </taskdef>
     </target>
     <!-- target for generating ICU data -->
-    <target name="all" depends="locales, collation, rbnf, supplementalData, metadata, metaZones, windowsZones, likelySubtags, plurals, numberingSystems, translit, brkitr, keyTypeData, genderList, dayPeriods" />
+    <target name="all" depends="locales, collation, rbnf, supplementalData, metadata, metaZones, windowsZones, likelySubtags, plurals, pluralRanges, numberingSystems, translit, brkitr, keyTypeData, genderList, dayPeriods" />
     <!-- parallel target -->
     <target name="pall" depends="init">
         <parallel threadsPerProcessor ="1">
@@ -258,6 +258,18 @@
             </run>
         </cldr-build>
     </target>
+    <target name="pluralRanges" depends="init,setup" description="builds pluralRanges.txt from pluralRanges.xml">
+        <cldr-build toolName="org.unicode.cldr.icu.NewLdml2IcuConverter" destFile="pluralRanges.txt" noArgs="true">
+            <!-- launch the tool and generate the data after reading the config file -->
+            <run>
+                <args>
+                    <arg name="-s" value="${env.CLDR_DIR}/common/supplemental" />
+                    <arg name="-d" value="${env.ICU4C_DIR}/source/data/misc"/>
+                    <arg name="-t" value="pluralRanges"/>
+                </args>
+            </run>
+        </cldr-build>
+    </target>
     <target name="numberingSystems" depends="init,setup" description="builds numberingSystems.txt from numberingSystems.xml">
         <cldr-build toolName="org.unicode.cldr.icu.NewLdml2IcuConverter" destFile="numberingSystems.txt" noArgs="true">
             <!-- launch the tool and generate the data after reading the config file -->
@@ -413,6 +425,9 @@
             </fileset>
             <fileset id="plurals" dir="${env.ICU4C_DIR}/source/data/misc">
                 <include name="plurals.txt" />
+            </fileset>
+            <fileset id="pluralRanges" dir="${env.ICU4C_DIR}/source/data/misc">
+                <include name="pluralRanges.txt" />
             </fileset>
             <fileset id="numberingSystems" dir="${env.ICU4C_DIR}/source/data/misc">
                 <include name="numberingSystems.txt" />

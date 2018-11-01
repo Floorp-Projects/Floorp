@@ -965,7 +965,7 @@ createNormalizedAliasStrings(char *normalizedStrings, const char *origStringBloc
         if (currStrLen > 0) {
             int32_t normStrLen;
             ucnv_io_stripForCompare(normalizedStrings, origStringBlock);
-            normStrLen = uprv_strlen(normalizedStrings);
+            normStrLen = (int32_t)uprv_strlen(normalizedStrings);
             if (normStrLen > 0) {
                 uprv_memset(normalizedStrings + normStrLen, 0, currStrSize - normStrLen);
             }

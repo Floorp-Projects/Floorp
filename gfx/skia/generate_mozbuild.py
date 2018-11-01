@@ -222,6 +222,7 @@ def generate_separated_sources(platform_sources):
     'SkCanvasStateUtils',
     'SkFrontBufferedStream',
     'SkInterpolator',
+    'SkJSON',
     'SkMultiPictureDocument',
     'SkNullCanvas',
     'SkNWayCanvas',

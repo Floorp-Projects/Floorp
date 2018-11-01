@@ -5,7 +5,7 @@ pt_MZ{
     Currencies{
         MZN{
             "MTn",
-            "Metical de Moçambique",
+            "metical moçambicano",
         }
     }
     Version{"2.1.38.39"}

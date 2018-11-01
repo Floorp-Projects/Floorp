@@ -700,6 +700,10 @@ dsb{
         }
         VEF{
             "VEF",
+            "venezuelski bolívar (2008–2018)",
+        }
+        VES{
+            "VES",
             "venezuelski bolívar",
         }
         VND{
@@ -731,7 +735,7 @@ dsb{
             "CFP-frank",
         }
         XXX{
-            "XXX",
+            "¤",
             "njeznate pjenjeze",
         }
         YER{
@@ -1796,6 +1800,12 @@ dsb{
             two{"usbekiskej suma"}
         }
         VEF{
+            few{"venezuelske bolívary (2008–2018)"}
+            one{"venezuelski bolívar (2008–2018)"}
+            other{"venezuelskich bolívarow (2008–2018)"}
+            two{"venezuelskej bolívara (2008–2018)"}
+        }
+        VES{
             few{"venezuelske bolívary"}
             one{"venezuelski bolívar"}
             other{"venezuelskich bolívarow"}
@@ -1874,5 +1884,5 @@ dsb{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.41.34"}
 }

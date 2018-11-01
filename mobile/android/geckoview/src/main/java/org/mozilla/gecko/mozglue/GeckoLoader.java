@@ -20,6 +20,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Locale;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -89,9 +90,35 @@ public final class GeckoLoader {
         return tmpDir;
     }
 
+    private static String escapeDoubleQuotes(final String str) {
+        return str.replaceAll("\"", "\\\"");
+    }
+
+    private static void setupInitialPrefs(final Map<String, Object> prefs) {
+        if (prefs != null) {
+            final StringBuilder prefsEnv = new StringBuilder("MOZ_DEFAULT_PREFS=");
+            for (final String key : prefs.keySet()) {
+                prefsEnv.append(String.format("pref(\"%s\",", escapeDoubleQuotes(key)));
+                final Object value = prefs.get(key);
+                if (value instanceof String) {
+                    prefsEnv.append(String.format("\"%s\"", escapeDoubleQuotes(value.toString())));
+                } else if (value instanceof Boolean) {
+                    prefsEnv.append((Boolean)value ? "true" : "false");
+                } else {
+                    prefsEnv.append(value.toString());
+                }
+
+                prefsEnv.append(");\n");
+            }
+
+            putenv(prefsEnv.toString());
+        }
+    }
+
     public synchronized static void setupGeckoEnvironment(final Context context,
                                                           final String profilePath,
-                                                          final Collection<String> env) {
+                                                          final Collection<String> env,
+                                                          final Map<String, Object> prefs) {
         for (final String e : env) {
             putenv(e);
         }
@@ -143,6 +170,8 @@ public final class GeckoLoader {
         }
 
         putenv("MOZ_ANDROID_DEVICE_SDK_VERSION=" + Build.VERSION.SDK_INT);
+
+        setupInitialPrefs(prefs);
 
         // env from extras could have reset out linker flags; set them again.
         loadLibsSetupLocked(context);

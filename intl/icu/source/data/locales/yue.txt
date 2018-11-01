@@ -105,7 +105,9 @@ yue{
         }
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}-{1}"}
             }
             patterns{
@@ -118,7 +120,7 @@ yue{
             patternsLong{
                 decimalFormat{
                     1000{
-                        other{"0千"}
+                        other{"0"}
                     }
                     10000{
                         other{"0萬"}
@@ -158,7 +160,7 @@ yue{
             patternsShort{
                 currencyFormat{
                     1000{
-                        other{"¤0千"}
+                        other{"0"}
                     }
                     10000{
                         other{"¤0萬"}
@@ -196,7 +198,7 @@ yue{
                 }
                 decimalFormat{
                     1000{
-                        other{"0千"}
+                        other{"0"}
                     }
                     10000{
                         other{"0萬"}
@@ -260,7 +262,7 @@ yue{
         native{"hanidec"}
         traditional{"hant"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -2394,6 +2396,7 @@ yue{
                     "大正",
                     "昭和",
                     "平成",
+                    "Qqqq",
                 }
             }
         }

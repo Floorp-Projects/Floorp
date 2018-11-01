@@ -4,65 +4,14 @@ ru_UA{
     NumberElements{
         minimumGroupingDigits{"2"}
     }
-    Version{"2.1.38.39"}
+    Version{"2.1.43.65"}
     calendar{
-        generic{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d MMMM y 'г'. G",
-                "d MMMM y 'г'. G",
-                "d MMM y 'г'. G",
-                "dd.MM.y G",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
-        }
         gregorian{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d MMMM y 'г'.",
-                "d MMMM y 'г'.",
-                "d MMM y 'г'.",
-                "dd.MM.y",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
             availableFormats{
                 GyMMM{"LLL y 'г'. G"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
                 yMEd{"ccc, d.MM.y"}
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 yMMM{
                     y{"LLL y – LLL y"}
                 }

@@ -422,9 +422,11 @@ keyTypeData:table(nofallback){
             uyi{""}
             uyp{""}
             uyu{""}
+            uyw{""}
             uzs{""}
             veb{""}
             vef{""}
+            ves{""}
             vnd{""}
             vnn{""}
             vuv{""}
@@ -488,6 +490,7 @@ keyTypeData:table(nofallback){
             remove{""}
             title{""}
             upper{""}
+            zawgyi{""}
         }
         em{
             default{""}

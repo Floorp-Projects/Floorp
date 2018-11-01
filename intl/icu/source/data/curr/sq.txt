@@ -600,7 +600,11 @@ sq{
         }
         VEF{
             "VEF",
-            "Bolivari venezuelian",
+            "Bolivari venezuelian (2008–2018)",
+        }
+        VES{
+            "VES",
+            "Bolivari venezuelas",
         }
         VND{
             "₫",
@@ -631,7 +635,7 @@ sq{
             "Franga franceze e Polinezisë",
         }
         XXX{
-            "XXX",
+            "¤",
             "Valutë e panjohur",
         }
         YER{
@@ -1249,8 +1253,12 @@ sq{
             other{"soma uzbeke"}
         }
         VEF{
-            one{"bolivar venezuelian"}
-            other{"bolivarë venezuelian"}
+            one{"bolivar venezuelian (2008–2018)"}
+            other{"bolivarë venezuelian (2008–2018)"}
+        }
+        VES{
+            one{"bolivar venezuelas"}
+            other{"bolivarë venezuelas"}
         }
         VND{
             one{"dongë vietnameze"}
@@ -1301,5 +1309,5 @@ sq{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.50"}
 }

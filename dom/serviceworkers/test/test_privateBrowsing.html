@@ -27,10 +27,6 @@ function testOnWindow(aIsPrivate, aCallback) {
       win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
       SimpleTest.executeSoon(function() { aCallback(win); });
     }, true);
-
-    if (!aIsPrivate) {
-      BrowserTestUtils.loadURI(win.gBrowser, contentPage);
-    }
   }, {capture: true, once: true});
 }
 

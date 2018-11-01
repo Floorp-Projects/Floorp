@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh_Hant_HK{
-    Version{"2.1.39.11"}
+    Version{"2.1.43.65"}
     zoneStrings{
         "meta:Africa_Southern"{
             ls{"南非時間"}
@@ -99,6 +99,10 @@ zh_Hant_HK{
             ld{"費爾南多迪諾羅尼亞夏令時間"}
             lg{"費爾南多迪諾羅尼亞時間"}
             ls{"費爾南多迪諾羅尼亞標準時間"}
+        }
+        "meta:Omsk"{
+            ld{"鄂木斯克夏令時間"}
+            ls{"鄂木斯克標準時間"}
         }
         "meta:Papua_New_Guinea"{
             ls{"巴布亞新畿內亞時間"}
