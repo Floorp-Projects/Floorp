@@ -2259,21 +2259,11 @@ BaselineCompiler::emit_JSOP_CONDSWITCH()
 bool
 BaselineCompiler::emit_JSOP_CASE()
 {
-    frame.popRegsAndSync(2);
-    frame.push(R0);
-    frame.syncStack(0);
-
-    // Call IC.
-    ICCompare_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_))) {
-        return false;
-    }
-
-    Register payload = masm.extractInt32(R0, R0.scratchReg());
-    jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
+    frame.popRegsAndSync(1);
 
     Label done;
-    masm.branch32(Assembler::Equal, payload, Imm32(0), &done);
+    jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
+    masm.branchTestBooleanTruthy(/* branchIfTrue */ false, R0, &done);
     {
         // Pop the switch value if the case matches.
         masm.addToStackPtr(Imm32(sizeof(Value)));
