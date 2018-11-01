@@ -33,10 +33,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=430050
         if (evt.target == evt.currentTarget) {
           document.getElementById('b').setAttribute("src",
                                                     "data:text/plain,failed");
-          const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-          document.getElementById('b').loadURI('data:text/plain,succeeded', {
-            triggeringPrincipal: systemPrincipal
-          });
+          document.getElementById('b').loadURI('data:text/plain,succeeded',
+                                               null,
+                                               'UTF-8');
           document.getElementById('b').addEventListener("load", endTest);
         }
       }, true);
