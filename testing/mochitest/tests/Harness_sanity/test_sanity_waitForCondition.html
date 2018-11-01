@@ -11,9 +11,9 @@
 
 var captureFailure = false;
 var capturedFailures = [];
-window.ok = function (cond, name) {
+window.ok = function (cond, name, diag) {
   if (!captureFailure) {
-    SimpleTest.ok(cond, name);
+    SimpleTest.ok(cond, name, diag);
   } else {
     if (cond) {
       SimpleTest.ok(false, `Expect a failure with "${name}"`);
