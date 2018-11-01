@@ -57,8 +57,6 @@ public:
   already_AddRefed<dom::DOMRequest> GetCanGoBack(ErrorResult& aRv);
   already_AddRefed<dom::DOMRequest> GetCanGoForward(ErrorResult& aRv);
 
-  already_AddRefed<dom::DOMRequest> GetWebManifest(ErrorResult& aRv);
-
 protected:
   NS_IMETHOD_(already_AddRefed<nsFrameLoader>) GetFrameLoader() = 0;
 

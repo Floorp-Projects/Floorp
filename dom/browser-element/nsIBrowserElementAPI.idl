@@ -52,10 +52,4 @@ interface nsIBrowserElementAPI : nsISupports
   void stop();
   DOMRequest getCanGoBack();
   DOMRequest getCanGoForward();
-
-  /**
-   * Returns an object that represents a Web Manifest:
-   * http://w3c.github.io/manifest/
-   */
-  DOMRequest getWebManifest();
 };
