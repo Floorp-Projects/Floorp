@@ -213,7 +213,7 @@ add_old_configure_assignment('MOZ_X11', True, when=toolkit_gtk)
 
 # Wayland support
 # ==============================================================
-wayland_headers = pkg_check_modules('MOZ_WAYLAND', 'gtk+-wayland-3.0 >= 3.22',
+wayland_headers = pkg_check_modules('MOZ_WAYLAND', 'gtk+-wayland-3.0 >= 3.10',
                                     when=wayland)
 
 set_config('MOZ_WAYLAND', depends_if(wayland_headers)(lambda _: True))
