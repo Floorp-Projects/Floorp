@@ -570,8 +570,6 @@ public:
     const IPC::Principal& aTriggeringPrincipal,
     const uint32_t& aReferrerPolicy) override;
 
-  static bool AllocateLayerTreeId(TabParent* aTabParent, layers::LayersId* aId);
-
   static void
   BroadcastBlobURLRegistration(const nsACString& aURI,
                                BlobImpl* aBlobImpl,
@@ -870,10 +868,6 @@ private:
 
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
 
-  static bool AllocateLayerTreeId(ContentParent* aContent,
-                                  TabParent* aTopLevel, const TabId& aTabId,
-                                  layers::LayersId* aId);
-
   /**
    * Get or create the corresponding content parent array to |aContentProcessType|.
    */
@@ -1139,13 +1133,6 @@ public:
                                                   const bool& aInPrivateBrowsing) override;
 
   virtual void ProcessingError(Result aCode, const char* aMsgName) override;
-
-  virtual mozilla::ipc::IPCResult RecvAllocateLayerTreeId(const ContentParentId& aCpId,
-                                                          const TabId& aTabId,
-                                                          layers::LayersId* aId) override;
-
-  virtual mozilla::ipc::IPCResult RecvDeallocateLayerTreeId(const ContentParentId& aCpId,
-                                                            const layers::LayersId& aId) override;
 
   virtual mozilla::ipc::IPCResult RecvGraphicsError(const nsCString& aError) override;
 
