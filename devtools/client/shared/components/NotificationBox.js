@@ -202,7 +202,7 @@ class NotificationBox extends Component {
     return (
       button({
         key: props.label,
-        className: "notification-button",
+        className: "notificationButton",
         accesskey: props.accesskey,
         onClick: onClick},
         props.label
@@ -220,17 +220,20 @@ class NotificationBox extends Component {
         className: "notification",
         "data-key": notification.value,
         "data-type": notification.type},
-        div({className: "notificationInner"},
-          div({className: "details"},
-            div({
-              className: "messageImage",
-              "data-type": notification.type}),
-            span({className: "messageText"},
-              notification.label
-            ),
-            notification.buttons.map(props =>
-              this.renderButton(props, notification)
-            )
+        div(
+          {className: "notificationInner"},
+          div({
+            className: "messageImage",
+            "data-type": notification.type,
+          }),
+          span({
+            className: "messageText",
+            title: notification.label,
+          },
+            notification.label
+          ),
+          notification.buttons.map(props =>
+            this.renderButton(props, notification)
           ),
           div({
             className: "messageCloseButton",
