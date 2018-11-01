@@ -63,6 +63,7 @@ class RobocopTestRunner(MochitestDesktop):
         self.remoteProfile = posixpath.join(options.remoteTestRoot, "profile")
         self.remoteProfileCopy = posixpath.join(options.remoteTestRoot, "profile-copy")
 
+        self.remoteModulesDir = posixpath.join(options.remoteTestRoot, "modules/")
         self.remoteConfigFile = posixpath.join(options.remoteTestRoot, "robotium.config")
         self.remoteLogFile = posixpath.join(options.remoteTestRoot, "logs", "robocop.log")
 
@@ -242,7 +243,21 @@ class RobocopTestRunner(MochitestDesktop):
         ])
 
         self.extraPrefs = self.parseExtraPrefs(self.options.extraPrefs)
+        if self.options.testingModulesDir:
+            try:
+                self.device.push(self.options.testingModulesDir, self.remoteModulesDir)
+                self.device.chmod(self.remoteModulesDir, recursive=True, root=True)
+            except Exception:
+                self.log.error(
+                    "Automation Error: Unable to copy test modules to device.")
+                raise
+            savedTestingModulesDir = self.options.testingModulesDir
+            self.options.testingModulesDir = self.remoteModulesDir
+        else:
+            savedTestingModulesDir = None
         manifest = MochitestDesktop.buildProfile(self, self.options)
+        if savedTestingModulesDir:
+            self.options.testingModulesDir = savedTestingModulesDir
         self.localProfile = self.options.profilePath
         self.log.debug("Profile created at %s" % self.localProfile)
         # some files are not needed for robocop; save time by not pushing
