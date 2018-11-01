@@ -9,9 +9,6 @@ const METHODS = {
   stop: {},
   getCanGoBack: {},
   getCanGoForward: {},
-  findAll: {},
-  findNext: {},
-  clearMatch: {},
   executeScript: {},
   getWebManifest: {},
 };

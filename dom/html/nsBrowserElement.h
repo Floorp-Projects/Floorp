@@ -19,8 +19,6 @@ namespace mozilla {
 namespace dom {
 struct BrowserElementExecuteScriptOptions;
 class DOMRequest;
-enum class BrowserFindCaseSensitivity: uint8_t;
-enum class BrowserFindDirection: uint8_t;
 } // namespace dom
 
 class ErrorResult;
@@ -59,11 +57,6 @@ public:
 
   already_AddRefed<dom::DOMRequest> GetCanGoBack(ErrorResult& aRv);
   already_AddRefed<dom::DOMRequest> GetCanGoForward(ErrorResult& aRv);
-
-  void FindAll(const nsAString& aSearchString, dom::BrowserFindCaseSensitivity aCaseSensitivity,
-               ErrorResult& aRv);
-  void FindNext(dom::BrowserFindDirection aDirection, ErrorResult& aRv);
-  void ClearMatch(ErrorResult& aRv);
 
   already_AddRefed<dom::DOMRequest> ExecuteScript(const nsAString& aScript,
                                                   const dom::BrowserElementExecuteScriptOptions& aOptions,
