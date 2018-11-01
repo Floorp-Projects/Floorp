@@ -1070,6 +1070,9 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                                      isChrome ? chromeOnlyProperties : nullptr,
                                      unscopableNames, toStringTag, isGlobal);
     if (!proto) {
+      if (name && !strcmp(name, "Document")) {
+        MOZ_CRASH("Bug 1405521/1488480: CreateInterfacePrototypeObject failed for Document.prototype");
+      }
       return;
     }
 
@@ -1088,6 +1091,9 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                                       isChrome,
                                       defineOnGlobal);
     if (!interface) {
+      if (name && !strcmp(name, "Document")) {
+        MOZ_CRASH("Bug 1405521/1488480: CreateInterfaceObject failed for Document");
+      }
       if (protoCache) {
         // If we fail we need to make sure to clear the value of protoCache we
         // set above.
