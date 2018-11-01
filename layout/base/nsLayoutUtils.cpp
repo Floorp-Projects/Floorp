@@ -6550,7 +6550,7 @@ nsLayoutUtils::GetSamplingFilterForFrame(nsIFrame* aForFrame)
     return SamplingFilter::POINT;
   case NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY:
     return SamplingFilter::LINEAR;
-  case NS_STYLE_IMAGE_RENDERING_CRISPEDGES:
+  case NS_STYLE_IMAGE_RENDERING_CRISP_EDGES:
     return SamplingFilter::POINT;
   default:
     return defaultFilter;
