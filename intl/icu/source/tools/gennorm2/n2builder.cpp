@@ -29,7 +29,9 @@
 #include "unicode/errorcode.h"
 #include "unicode/localpointer.h"
 #include "unicode/putil.h"
+#include "unicode/ucptrie.h"
 #include "unicode/udata.h"
+#include "unicode/umutablecptrie.h"
 #include "unicode/uniset.h"
 #include "unicode/unistr.h"
 #include "unicode/usetiter.h"
@@ -41,7 +43,6 @@
 #include "norms.h"
 #include "toolutil.h"
 #include "unewdata.h"
-#include "utrie2.h"
 #include "uvectr32.h"
 #include "writesrc.h"
 
@@ -58,8 +59,8 @@ static UDataInfo dataInfo={
     0,
 
     { 0x4e, 0x72, 0x6d, 0x32 }, /* dataFormat="Nrm2" */
-    { 3, 0, 0, 0 },             /* formatVersion */
-    { 10, 0, 0, 0 }             /* dataVersion (Unicode version) */
+    { 4, 0, 0, 0 },             /* formatVersion */
+    { 11, 0, 0, 0 }             /* dataVersion (Unicode version) */
 };
 
 U_NAMESPACE_BEGIN
@@ -94,14 +95,14 @@ const HangulIterator::Range HangulIterator::ranges[4]={
 Normalizer2DataBuilder::Normalizer2DataBuilder(UErrorCode &errorCode) :
         norms(errorCode),
         phase(0), overrideHandling(OVERRIDE_PREVIOUS), optimization(OPTIMIZE_NORMAL),
-        norm16Trie(nullptr), norm16TrieLength(0) {
+        norm16TrieBytes(nullptr), norm16TrieLength(0) {
     memset(unicodeVersion, 0, sizeof(unicodeVersion));
     memset(indexes, 0, sizeof(indexes));
     memset(smallFCD, 0, sizeof(smallFCD));
 }
 
 Normalizer2DataBuilder::~Normalizer2DataBuilder() {
-    utrie2_close(norm16Trie);
+    delete[] norm16TrieBytes;
 }
 
 void
@@ -407,11 +408,13 @@ void Normalizer2DataBuilder::postProcess(Norm &norm) {
 
 class Norm16Writer : public Norms::Enumerator {
 public:
-    Norm16Writer(Norms &n, Normalizer2DataBuilder &b) : Norms::Enumerator(n), builder(b) {}
+    Norm16Writer(UMutableCPTrie *trie, Norms &n, Normalizer2DataBuilder &b) :
+            Norms::Enumerator(n), builder(b), norm16Trie(trie) {}
     void rangeHandler(UChar32 start, UChar32 end, Norm &norm) U_OVERRIDE {
-        builder.writeNorm16(start, end, norm);
+        builder.writeNorm16(norm16Trie, start, end, norm);
     }
     Normalizer2DataBuilder &builder;
+    UMutableCPTrie *norm16Trie;
 };
 
 void Normalizer2DataBuilder::setSmallFCD(UChar32 c) {
@@ -419,7 +422,7 @@ void Normalizer2DataBuilder::setSmallFCD(UChar32 c) {
     smallFCD[lead>>8]|=(uint8_t)1<<((lead>>5)&7);
 }
 
-void Normalizer2DataBuilder::writeNorm16(UChar32 start, UChar32 end, Norm &norm) {
+void Normalizer2DataBuilder::writeNorm16(UMutableCPTrie *norm16Trie, UChar32 start, UChar32 end, Norm &norm) {
     if((norm.leadCC|norm.trailCC)!=0) {
         for(UChar32 c=start; c<=end; ++c) {
             setSmallFCD(c);
@@ -484,7 +487,7 @@ void Normalizer2DataBuilder::writeNorm16(UChar32 start, UChar32 end, Norm &norm)
         norm16|=Normalizer2Impl::HAS_COMP_BOUNDARY_AFTER;
     }
     IcuToolErrorCode errorCode("gennorm2/writeNorm16()");
-    utrie2_setRange32(norm16Trie, start, end, (uint32_t)norm16, TRUE, errorCode);
+    umutablecptrie_setRange(norm16Trie, start, end, (uint32_t)norm16, errorCode);
 
     // Set the minimum code points for real data lookups in the quick check loops.
     UBool isDecompNo=
@@ -502,13 +505,13 @@ void Normalizer2DataBuilder::writeNorm16(UChar32 start, UChar32 end, Norm &norm)
     }
 }
 
-void Normalizer2DataBuilder::setHangulData() {
+void Normalizer2DataBuilder::setHangulData(UMutableCPTrie *norm16Trie) {
     HangulIterator hi;
     const HangulIterator::Range *range;
     // Check that none of the Hangul/Jamo code points have data.
     while((range=hi.nextRange())!=NULL) {
         for(UChar32 c=range->start; c<=range->end; ++c) {
-            if(utrie2_get32(norm16Trie, c)>Normalizer2Impl::INERT) {
+            if(umutablecptrie_get(norm16Trie, c)>Normalizer2Impl::INERT) {
                 fprintf(stderr,
                         "gennorm2 error: "
                         "illegal mapping/composition/ccc data for Hangul or Jamo U+%04lX\n",
@@ -524,13 +527,13 @@ void Normalizer2DataBuilder::setHangulData() {
     if(Hangul::JAMO_V_BASE<indexes[Normalizer2Impl::IX_MIN_COMP_NO_MAYBE_CP]) {
         indexes[Normalizer2Impl::IX_MIN_COMP_NO_MAYBE_CP]=Hangul::JAMO_V_BASE;
     }
-    utrie2_setRange32(norm16Trie, Hangul::JAMO_L_BASE, Hangul::JAMO_L_END,
-                      Normalizer2Impl::JAMO_L, TRUE, errorCode);
-    utrie2_setRange32(norm16Trie, Hangul::JAMO_V_BASE, Hangul::JAMO_V_END,
-                      Normalizer2Impl::JAMO_VT, TRUE, errorCode);
+    umutablecptrie_setRange(norm16Trie, Hangul::JAMO_L_BASE, Hangul::JAMO_L_END,
+                            Normalizer2Impl::JAMO_L, errorCode);
+    umutablecptrie_setRange(norm16Trie, Hangul::JAMO_V_BASE, Hangul::JAMO_V_END,
+                            Normalizer2Impl::JAMO_VT, errorCode);
     // JAMO_T_BASE+1: not U+11A7
-    utrie2_setRange32(norm16Trie, Hangul::JAMO_T_BASE+1, Hangul::JAMO_T_END,
-                      Normalizer2Impl::JAMO_VT, TRUE, errorCode);
+    umutablecptrie_setRange(norm16Trie, Hangul::JAMO_T_BASE+1, Hangul::JAMO_T_END,
+                            Normalizer2Impl::JAMO_VT, errorCode);
 
     // Hangul LV encoded as minYesNo
     uint32_t lv=indexes[Normalizer2Impl::IX_MIN_YES_NO];
@@ -542,49 +545,16 @@ void Normalizer2DataBuilder::setHangulData() {
     }
     // Set the first LV, then write all other Hangul syllables as LVT,
     // then overwrite the remaining LV.
-    // The UTrie2 should be able to compact this into 7 32-item blocks
-    // because JAMO_T_COUNT is 28 and the UTrie2 granularity is 4.
-    // (7*32=8*28 smallest common multiple)
-    utrie2_set32(norm16Trie, Hangul::HANGUL_BASE, lv, errorCode);
-    utrie2_setRange32(norm16Trie, Hangul::HANGUL_BASE+1, Hangul::HANGUL_END,
-                      lvt, TRUE, errorCode);
+    umutablecptrie_set(norm16Trie, Hangul::HANGUL_BASE, lv, errorCode);
+    umutablecptrie_setRange(norm16Trie, Hangul::HANGUL_BASE+1, Hangul::HANGUL_END, lvt, errorCode);
     UChar32 c=Hangul::HANGUL_BASE;
     while((c+=Hangul::JAMO_T_COUNT)<=Hangul::HANGUL_END) {
-        utrie2_set32(norm16Trie, c, lv, errorCode);
+        umutablecptrie_set(norm16Trie, c, lv, errorCode);
     }
     errorCode.assertSuccess();
 }
 
-namespace {
-
-struct Norm16Summary {
-    uint32_t maxNorm16;
-    // ANDing values yields 0 bits where any value has a 0.
-    // Used for worst-case HAS_COMP_BOUNDARY_AFTER.
-    uint32_t andedNorm16;
-};
-
-}  // namespace
-
-U_CDECL_BEGIN
-
-static UBool U_CALLCONV
-enumRangeMaxValue(const void *context, UChar32 /*start*/, UChar32 /*end*/, uint32_t value) {
-    Norm16Summary *p=(Norm16Summary *)context;
-    if(value>p->maxNorm16) {
-        p->maxNorm16=value;
-    }
-    p->andedNorm16&=value;
-    return TRUE;
-}
-
-U_CDECL_END
-
-void Normalizer2DataBuilder::processData() {
-    IcuToolErrorCode errorCode("gennorm2/processData()");
-    norm16Trie=utrie2_open(Normalizer2Impl::INERT, Normalizer2Impl::INERT, errorCode);
-    errorCode.assertSuccess();
-
+LocalUCPTriePointer Normalizer2DataBuilder::processData() {
     // Build composition lists before recursive decomposition,
     // so that we still have the raw, pair-wise mappings.
     CompositionBuilder compBuilder(norms);
@@ -652,13 +622,19 @@ void Normalizer2DataBuilder::processData() {
     indexes[Normalizer2Impl::IX_MIN_COMP_NO_MAYBE_CP]=0x110000;
     indexes[Normalizer2Impl::IX_MIN_LCCC_CP]=0x110000;
 
+    IcuToolErrorCode errorCode("gennorm2/processData()");
+    UMutableCPTrie *norm16Trie = umutablecptrie_open(
+        Normalizer2Impl::INERT, Normalizer2Impl::INERT, errorCode);
+    errorCode.assertSuccess();
+
     // Map each code point to its norm16 value,
     // including the properties that fit directly,
     // and the offset to the "extra data" if necessary.
-    Norm16Writer norm16Writer(norms, *this);
+    Norm16Writer norm16Writer(norm16Trie, norms, *this);
     norms.enumRanges(norm16Writer);
+    // TODO: iterate via getRange() instead of callback?
 
-    setHangulData();
+    setHangulData(norm16Trie);
 
     // Look for the "worst" norm16 value of any supplementary code point
     // corresponding to a lead surrogate, and set it as that surrogate's value.
@@ -670,22 +646,63 @@ void Normalizer2DataBuilder::processData() {
     // and select the best value that only breaks the composition and/or decomposition
     // inner loops if necessary.
     // However, that seems like overkill for an optimization for supplementary characters.
-    for(UChar lead=0xd800; lead<0xdc00; ++lead) {
-        uint32_t surrogateCPNorm16=utrie2_get32(norm16Trie, lead);
-        Norm16Summary summary={ surrogateCPNorm16, surrogateCPNorm16 };
-        utrie2_enumForLeadSurrogate(norm16Trie, lead, NULL, enumRangeMaxValue, &summary);
-        uint32_t norm16=summary.maxNorm16;
-        if(norm16>=(uint32_t)indexes[Normalizer2Impl::IX_LIMIT_NO_NO] &&
-                norm16>(uint32_t)indexes[Normalizer2Impl::IX_MIN_NO_NO]) {
-            // Set noNo ("worst" value) if it got into "less-bad" maybeYes or ccc!=0.
-            // Otherwise it might end up at something like JAMO_VT which stays in
-            // the inner decomposition quick check loop.
-            norm16=(uint32_t)indexes[Normalizer2Impl::IX_LIMIT_NO_NO]-1;
+    //
+    // First check that surrogate code *points* are inert.
+    // The parser should have rejected values/mappings for them.
+    uint32_t value;
+    UChar32 end = umutablecptrie_getRange(norm16Trie, 0xd800, UCPMAP_RANGE_NORMAL, 0,
+                                          nullptr, nullptr, &value);
+    if (value != Normalizer2Impl::INERT || end < 0xdfff) {
+        fprintf(stderr,
+                "gennorm2 error: not all surrogate code points are inert: U+d800..U+%04x=%lx\n",
+                (int)end, (long)value);
+        exit(U_INTERNAL_PROGRAM_ERROR);
+    }
+    uint32_t maxNorm16 = 0;
+    // ANDing values yields 0 bits where any value has a 0.
+    // Used for worst-case HAS_COMP_BOUNDARY_AFTER.
+    uint32_t andedNorm16 = 0;
+    end = 0;
+    for (UChar32 start = 0x10000;;) {
+        if (start > end) {
+            end = umutablecptrie_getRange(norm16Trie, start, UCPMAP_RANGE_NORMAL, 0,
+                                          nullptr, nullptr, &value);
+            if (end < 0) { break; }
         }
-        norm16=
-            (norm16&~Normalizer2Impl::HAS_COMP_BOUNDARY_AFTER)|
-            (summary.andedNorm16&Normalizer2Impl::HAS_COMP_BOUNDARY_AFTER);
-        utrie2_set32ForLeadSurrogateCodeUnit(norm16Trie, lead, norm16, errorCode);
+        if ((start & 0x3ff) == 0) {
+            // Data for a new lead surrogate.
+            maxNorm16 = andedNorm16 = value;
+        } else {
+            if (value > maxNorm16) {
+                maxNorm16 = value;
+            }
+            andedNorm16 &= value;
+        }
+        // Intersect each range with the code points for one lead surrogate.
+        UChar32 leadEnd = start | 0x3ff;
+        if (leadEnd <= end) {
+            // End of the supplementary block for a lead surrogate.
+            if (maxNorm16 >= (uint32_t)indexes[Normalizer2Impl::IX_LIMIT_NO_NO]) {
+                // Set noNo ("worst" value) if it got into "less-bad" maybeYes or ccc!=0.
+                // Otherwise it might end up at something like JAMO_VT which stays in
+                // the inner decomposition quick check loop.
+                maxNorm16 = (uint32_t)indexes[Normalizer2Impl::IX_LIMIT_NO_NO];
+            }
+            maxNorm16 =
+                (maxNorm16 & ~Normalizer2Impl::HAS_COMP_BOUNDARY_AFTER)|
+                (andedNorm16 & Normalizer2Impl::HAS_COMP_BOUNDARY_AFTER);
+            if (maxNorm16 != Normalizer2Impl::INERT) {
+                umutablecptrie_set(norm16Trie, U16_LEAD(start), maxNorm16, errorCode);
+            }
+            if (value == Normalizer2Impl::INERT) {
+                // Potentially skip inert supplementary blocks for several lead surrogates.
+                start = (end + 1) & ~0x3ff;
+            } else {
+                start = leadEnd + 1;
+            }
+        } else {
+            start = end + 1;
+        }
     }
 
     // Adjust supplementary minimum code points to break quick check loops at their lead surrogates.
@@ -705,14 +722,19 @@ void Normalizer2DataBuilder::processData() {
         indexes[Normalizer2Impl::IX_MIN_LCCC_CP]=U16_LEAD(minCP);
     }
 
-    utrie2_freeze(norm16Trie, UTRIE2_16_VALUE_BITS, errorCode);
-    norm16TrieLength=utrie2_serialize(norm16Trie, NULL, 0, errorCode);
+    LocalUCPTriePointer builtTrie(
+        umutablecptrie_buildImmutable(norm16Trie, UCPTRIE_TYPE_FAST, UCPTRIE_VALUE_BITS_16, errorCode));
+    norm16TrieLength=ucptrie_toBinary(builtTrie.getAlias(), nullptr, 0, errorCode);
     if(errorCode.get()!=U_BUFFER_OVERFLOW_ERROR) {
-        fprintf(stderr, "gennorm2 error: unable to freeze/serialize the normalization trie - %s\n",
+        fprintf(stderr, "gennorm2 error: unable to build/serialize the normalization trie - %s\n",
                 errorCode.errorName());
         exit(errorCode.reset());
     }
+    umutablecptrie_close(norm16Trie);
     errorCode.reset();
+    norm16TrieBytes=new uint8_t[norm16TrieLength];
+    ucptrie_toBinary(builtTrie.getAlias(), norm16TrieBytes, norm16TrieLength, errorCode);
+    errorCode.assertSuccess();
 
     int32_t offset=(int32_t)sizeof(indexes);
     indexes[Normalizer2Impl::IX_NORM_TRIE_OFFSET]=offset;
@@ -750,16 +772,13 @@ void Normalizer2DataBuilder::processData() {
         u_versionFromString(unicodeVersion, U_UNICODE_VERSION);
     }
     memcpy(dataInfo.dataVersion, unicodeVersion, 4);
+    return builtTrie;
 }
 
 void Normalizer2DataBuilder::writeBinaryFile(const char *filename) {
     processData();
 
     IcuToolErrorCode errorCode("gennorm2/writeBinaryFile()");
-    LocalArray<uint8_t> norm16TrieBytes(new uint8_t[norm16TrieLength]);
-    utrie2_serialize(norm16Trie, norm16TrieBytes.getAlias(), norm16TrieLength, errorCode);
-    errorCode.assertSuccess();
-
     UNewDataMemory *pData=
         udata_create(NULL, NULL, filename, &dataInfo,
                      haveCopyright ? U_COPYRIGHT_STRING : NULL, errorCode);
@@ -769,7 +788,7 @@ void Normalizer2DataBuilder::writeBinaryFile(const char *filename) {
         exit(errorCode.reset());
     }
     udata_writeBlock(pData, indexes, sizeof(indexes));
-    udata_writeBlock(pData, norm16TrieBytes.getAlias(), norm16TrieLength);
+    udata_writeBlock(pData, norm16TrieBytes, norm16TrieLength);
     udata_writeUString(pData, toUCharPtr(extraData.getBuffer()), extraData.length());
     udata_writeBlock(pData, smallFCD, sizeof(smallFCD));
     int32_t writtenSize=udata_finish(pData, errorCode);
@@ -787,7 +806,7 @@ void Normalizer2DataBuilder::writeBinaryFile(const char *filename) {
 
 void
 Normalizer2DataBuilder::writeCSourceFile(const char *filename) {
-    processData();
+    LocalUCPTriePointer norm16Trie = processData();
 
     IcuToolErrorCode errorCode("gennorm2/writeCSourceFile()");
     const char *basename=findBasename(filename);
@@ -797,54 +816,33 @@ Normalizer2DataBuilder::writeCSourceFile(const char *filename) {
     if(extension!=NULL) {
         dataName.truncate((int32_t)(extension-basename));
     }
+    const char *name=dataName.data();
     errorCode.assertSuccess();
 
-    LocalArray<uint8_t> norm16TrieBytes(new uint8_t[norm16TrieLength]);
-    utrie2_serialize(norm16Trie, norm16TrieBytes.getAlias(), norm16TrieLength, errorCode);
-    errorCode.assertSuccess();
-
-    FILE *f=usrc_create(path.data(), basename, "icu/source/tools/gennorm2/n2builder.cpp");
+    FILE *f=usrc_create(path.data(), basename, 2016, "icu/source/tools/gennorm2/n2builder.cpp");
     if(f==NULL) {
         fprintf(stderr, "gennorm2/writeCSourceFile() error: unable to create the output file %s\n",
                 filename);
         exit(U_FILE_ACCESS_ERROR);
-        return;
     }
     fputs("#ifdef INCLUDED_FROM_NORMALIZER2_CPP\n\n", f);
+
     char line[100];
-    sprintf(line, "static const UVersionInfo %s_formatVersion={", dataName.data());
+    sprintf(line, "static const UVersionInfo %s_formatVersion={", name);
     usrc_writeArray(f, line, dataInfo.formatVersion, 8, 4, "};\n");
-    sprintf(line, "static const UVersionInfo %s_dataVersion={", dataName.data());
+    sprintf(line, "static const UVersionInfo %s_dataVersion={", name);
     usrc_writeArray(f, line, dataInfo.dataVersion, 8, 4, "};\n\n");
-    sprintf(line, "static const int32_t %s_indexes[Normalizer2Impl::IX_COUNT]={\n",
-            dataName.data());
-    usrc_writeArray(f,
-        line,
-        indexes, 32, Normalizer2Impl::IX_COUNT,
-        "\n};\n\n");
-    sprintf(line, "static const uint16_t %s_trieIndex[%%ld]={\n", dataName.data());
-    usrc_writeUTrie2Arrays(f,
-        line, NULL,
-        norm16Trie,
-        "\n};\n\n");
-    sprintf(line, "static const uint16_t %s_extraData[%%ld]={\n", dataName.data());
-    usrc_writeArray(f,
-        line,
-        extraData.getBuffer(), 16, extraData.length(),
-        "\n};\n\n");
-    sprintf(line, "static const uint8_t %s_smallFCD[%%ld]={\n", dataName.data());
-    usrc_writeArray(f,
-        line,
-        smallFCD, 8, sizeof(smallFCD),
-        "\n};\n\n");
-    sprintf(line, "static const UTrie2 %s_trie={\n", dataName.data());
-    char line2[100];
-    sprintf(line2, "%s_trieIndex", dataName.data());
-    usrc_writeUTrie2Struct(f,
-        line,
-        norm16Trie, line2, NULL,
-        "};\n");
-    fputs("\n#endif  // INCLUDED_FROM_NORMALIZER2_CPP\n", f);
+    sprintf(line, "static const int32_t %s_indexes[Normalizer2Impl::IX_COUNT]={\n", name);
+    usrc_writeArray(f, line, indexes, 32, Normalizer2Impl::IX_COUNT, "\n};\n\n");
+
+    usrc_writeUCPTrie(f, name, norm16Trie.getAlias());
+
+    sprintf(line, "static const uint16_t %s_extraData[%%ld]={\n", name);
+    usrc_writeArray(f, line, extraData.getBuffer(), 16, extraData.length(), "\n};\n\n");
+    sprintf(line, "static const uint8_t %s_smallFCD[%%ld]={\n", name);
+    usrc_writeArray(f, line, smallFCD, 8, sizeof(smallFCD), "\n};\n\n");
+
+    fputs("#endif  // INCLUDED_FROM_NORMALIZER2_CPP\n", f);
     fclose(f);
 }
 

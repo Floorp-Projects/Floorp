@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 he{
-    Version{"2.1.41.97"}
+    Version{"2.1.43.94"}
     zoneStrings{
         "Etc:UTC"{
             ls{"זמן אוניברסלי מתואם"}
@@ -33,6 +33,11 @@ he{
             ld{"שעון אלסקה (קיץ)"}
             lg{"שעון אלסקה"}
             ls{"שעון אלסקה (חורף)"}
+        }
+        "meta:Almaty"{
+            ld{"שעון אלמטי (קיץ)"}
+            lg{"שעון אלמטי"}
+            ls{"שעון אלמטי (חורף)"}
         }
         "meta:Amazon"{
             ld{"שעון אמזונס (קיץ)"}
@@ -68,6 +73,16 @@ he{
             ld{"שעון אפיה (קיץ)"}
             lg{"שעון אפיה"}
             ls{"שעון אפיה (חורף)"}
+        }
+        "meta:Aqtau"{
+            ld{"שעון אקטאו (קיץ)"}
+            lg{"שעון אקטאו"}
+            ls{"שעון אקטאו (חורף)"}
+        }
+        "meta:Aqtobe"{
+            ld{"שעון אוקטובה (קיץ)"}
+            lg{"שעון אקטובה"}
+            ls{"שעון אוקטובה (חורף)"}
         }
         "meta:Arabian"{
             ld{"שעון חצי האי ערב (קיץ)"}
@@ -510,6 +525,11 @@ he{
         }
         "meta:Pyongyang"{
             ls{"שעון פיונגיאנג"}
+        }
+        "meta:Qyzylorda"{
+            ld{"שעון קיזילורדה (קיץ)"}
+            lg{"שעון קיזילורדה"}
+            ls{"שעון קיזילורדה (חורף)"}
         }
         "meta:Reunion"{
             ls{"שעון ראוניון"}

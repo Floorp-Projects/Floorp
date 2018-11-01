@@ -49,6 +49,121 @@ For new script codes see http://www.unicode.org/iso15924/codechanges.html
 
 ---------------------------------------------------------------------------- ***
 
+ICU 63 addition of ICU support of text layout properties InPC, InSC, vo
+
+* Command-line environment setup
+
+UNICODE_DATA=~/unidata/uni11/20180609
+CLDR_SRC=~/svn.cldr/uni
+ICU_ROOT=~/icu/mine
+ICU_SRC=$ICU_ROOT/src
+ICUDT=icudt62b
+ICU4C_DATA_IN=$ICU_SRC/icu4c/source/data/in
+ICU4C_UNIDATA=$ICU_SRC/icu4c/source/data/unidata
+export LD_LIBRARY_PATH=$ICU_ROOT/dbg/icu4c/lib
+
+*** Links
+
+https://unicode-org.atlassian.net/browse/ICU-8966 InPC & InSC
+https://unicode-org.atlassian.net/browse/ICU-12850 vo
+
+*** data files & enums & parser code
+
+* API additions
+- for each of the three new enumerated properties
+  + uchar.h: add the enum UProperty constant UCHAR_<long prop name>
+  + uchar.h: update UCHAR_INT_LIMIT
+  + uchar.h: add the enum U<long prop name>
+    with constants U_<short prop name>_<long value name>
+  + UProperty.java: add the constant <long prop name>
+  + UProperty.java: update INT_LIMIT
+  + UCharacter.java: add the interface <long prop name>
+    with constants <long value name>
+
+* process and/or copy files
+- $ICU_SRC/tools/unicode$ py/preparseucd.py $UNICODE_DATA $ICU_SRC
+  + This writes files (especially ppucd.txt) to the ICU4C unidata and testdata subfolders.
+  + It also writes tools/unicode/c/genprops/pnames_data.h with property and value
+    names and aliases.
+  + For debugging, and tweaking how ppucd.txt is written,
+    the tool has an --only_ppucd option:
+    py/preparseucd.py $UNICODE_DATA --only_ppucd path/to/ppucd/outputfile
+
+* preparseucd.py changes
+- add new property short names (uppercase) to _prop_and_value_re
+  so that ParseUCharHeader() parses the new enum constants
+
+* build ICU (make install)
+  so that the tools build can pick up the new definitions from the installed header files.
+
+  $ICU_ROOT/dbg/icu4c$ echo;echo; make -j7 install > out.txt 2>&1 ; tail -n 30 out.txt ; date
+
+* build Unicode tools using CMake+make
+
+$ICU_SRC/tools/unicode/c/icudefs.txt:
+
+# Location (--prefix) of where ICU was installed.
+set(ICU_INST_DIR /usr/local/google/home/mscherer/icu/mine/inst/icu4c)
+# Location of the ICU4C source tree.
+set(ICU4C_SRC_DIR /usr/local/google/home/mscherer/icu/mine/src/icu4c)
+
+  $ICU_ROOT/dbg$
+    mkdir -p tools/unicode/c
+    cd tools/unicode/c
+
+  $ICU_ROOT/dbg/tools/unicode/c$
+    cmake ../../../../../src/tools/unicode/c
+    make
+
+* generate core properties data files
+  $ICU_ROOT/dbg/tools/unicode/c$
+    genprops/genprops $ICU_SRC/icu4c
+- rebuild ICU (make install) & tools
+
+* write data for runtime, hardcoded for now
+- add genprops/layoutpropsbuilder.cpp with pieces from sibling files
+- generate new icu4c/source/common/ulayout_props_data.h
+- for each of the three new enumerated properties
+  + int property max value
+  + small, 8-bit UCPTrie
+    (A small 16-bit trie with bit fields for these three properties
+    is very nearly the same size as the sum of the three.)
+
+* wire into C++
+- uprops.cpp: #include ulayout_props_data.h
+- uprops.cpp: add getInPC() etc. functions
+- uprops.cpp: add lines to intProps[], include max values
+- uprops.h: add UPropertySource constants
+- uprops.cpp: add uprops_addPropertyStarts(src)
+- uniset_props.cpp: add to UnicodeSet_initInclusion()
+- intltest/ucdtest.cpp: write unit tests
+
+* update Java data files
+- refresh just the pnames.icu file with the new property [value] names, just to be safe
+- see $ICU_SRC/icu4c/source/data/icu4j-readme.txt
+- mkdir -p /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT
+- $ICU_ROOT/dbg/icu4c$ make ICU4J_ROOT=/tmp/icu4j icu4j-data-install
+- copy the big-endian Unicode data files to another location,
+  separate from the other data files,
+  and then refresh ICU4J
+    cd $ICU_ROOT/dbg/icu4c/data/out/icu4j
+    cp com/ibm/icu/impl/data/$ICUDT/pnames.icu /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT
+    jar uvf $ICU_SRC/icu4j/main/shared/data/icudata.jar -C /tmp/icu4j com/ibm/icu/impl/data/$ICUDT
+
+* wire into Java
+- UCharacterProperty.java: add new SRC_INPC etc. constants as in C++
+- UCharacterProperty.java: for each new property
+  + create a nested class to hold its CodePointTrie
+  + initialize it from a string literal
+  + paste in the initializer printed by genprops
+  + add a new IntProperty object to the intProps[] array
+  + use the correct max int value for each property, also printed by genprops
+- UCharacterProperty.java: add ulayout_addPropertyStarts(src, set)
+- UnicodeSet.java: add to getInclusions()
+- UCharacterTest.java: write unit tests
+
+---------------------------------------------------------------------------- ***
+
 Unicode 11.0 update for ICU 62
 
 http://www.unicode.org/versions/Unicode11.0.0/

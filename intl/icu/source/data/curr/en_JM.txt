@@ -8,5 +8,5 @@ en_JM{
             "Jamaican Dollar",
         }
     }
-    Version{"2.1.38.69"}
+    Version{"2.1.44.18"}
 }

@@ -820,7 +820,10 @@ UnicodeString DecimalQuantity::toScientificString() const {
     }
     result.append(u'E');
     int32_t _scale = upperPos + scale;
-    if (_scale < 0) {
+    if (_scale == INT32_MIN) {
+        result.append({u"-2147483648", -1});
+        return result;
+    } else if (_scale < 0) {
         _scale *= -1;
         result.append(u'-');
     } else {
@@ -1154,8 +1157,31 @@ const char16_t* DecimalQuantity::checkHealth() const {
 }
 
 bool DecimalQuantity::operator==(const DecimalQuantity& other) const {
-    // FIXME: Make a faster implementation.
-    return toString() == other.toString();
+    bool basicEquals =
+            scale == other.scale
+            && precision == other.precision
+            && flags == other.flags
+            && lOptPos == other.lOptPos
+            && lReqPos == other.lReqPos
+            && rReqPos == other.rReqPos
+            && rOptPos == other.rOptPos
+            && isApproximate == other.isApproximate;
+    if (!basicEquals) {
+        return false;
+    }
+
+    if (precision == 0) {
+        return true;
+    } else if (isApproximate) {
+        return origDouble == other.origDouble && origDelta == other.origDelta;
+    } else {
+        for (int m = getUpperDisplayMagnitude(); m >= getLowerDisplayMagnitude(); m--) {
+            if (getDigit(m) != other.getDigit(m)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
 UnicodeString DecimalQuantity::toString() const {

@@ -140,7 +140,7 @@ ufmt_uto64(const UChar     *buffer,
 {
     const UChar     *limit;
     int32_t         count;
-    int64_t        result;
+    uint64_t        result;
     
     
     /* intialize parameters */
@@ -160,7 +160,7 @@ ufmt_uto64(const UChar     *buffer,
     }
     
     *len = count;
-    return result;
+    return static_cast<int64_t>(result);
 }
 
 #define NIBBLE_PER_BYTE 2
@@ -235,7 +235,7 @@ ufmt_defaultCPToUnicode(const char *s, int32_t sSize,
         return 0;
 
     if(sSize <= 0) {
-        sSize = uprv_strlen(s) + 1;
+        sSize = static_cast<int32_t>(uprv_strlen(s)) + 1;
     }
     
     /* perform the conversion in one swoop */

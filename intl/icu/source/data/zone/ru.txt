@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ru{
-    Version{"2.1.41.97"}
+    Version{"2.1.45.15"}
     zoneStrings{
         "Etc:UTC"{
             ls{"Всемирное координированное время"}
@@ -564,13 +564,13 @@ ru{
             ls{"Самоа, стандартное время"}
         }
         "meta:Seychelles"{
-            ls{"Сейшельские острова"}
+            ls{"Сейшельские Острова"}
         }
         "meta:Singapore"{
             ls{"Сингапур"}
         }
         "meta:Solomon"{
-            ls{"Соломоновы острова"}
+            ls{"Соломоновы Острова"}
         }
         "meta:South_Georgia"{
             ls{"Южная Георгия"}
@@ -604,9 +604,9 @@ ru{
             ls{"Трук"}
         }
         "meta:Turkmenistan"{
-            ld{"Туркмения, летнее время"}
-            lg{"Туркмения"}
-            ls{"Туркмения, стандартное время"}
+            ld{"Туркменистан, летнее время"}
+            lg{"Туркменистан"}
+            ls{"Туркменистан, стандартное время"}
         }
         "meta:Tuvalu"{
             ls{"Тувалу"}

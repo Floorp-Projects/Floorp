@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 uz_Cyrl{
     %%Parent{"root"}
-    Version{"2.1.41.97"}
+    Version{"2.1.43.2"}
     zoneStrings{
         "Europe:Dublin"{
             ld{"Ирландия ёзги вақти"}

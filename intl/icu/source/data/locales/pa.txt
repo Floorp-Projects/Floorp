@@ -64,7 +64,9 @@ pa{
         }
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -254,7 +256,7 @@ pa{
         minimumGroupingDigits{"1"}
         native{"guru"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -282,6 +284,9 @@ pa{
                 wide{
                     "ਈਸਵੀ ਪੂਰਵ",
                 }
+            }
+            intervalFormats{
+                fallback{"{0} – {1}"}
             }
         }
         coptic{
@@ -508,6 +513,19 @@ pa{
                 }
             }
         }
+        ethiopic-amete-alem{
+            eras{
+                abbreviated{
+                    "ERA0",
+                }
+                narrow{
+                    "ERA0",
+                }
+                wide{
+                    "ERA0",
+                }
+            }
+        }
         generic{
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -570,6 +588,20 @@ pa{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
                 M{
                     M{"MM–MM"}
                 }
@@ -596,6 +628,24 @@ pa{
                     d{"d – d"}
                 }
                 fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
                 y{
                     y{"y – y G"}
                 }
@@ -1550,11 +1600,11 @@ pa{
         }
     }
     characterLabel{
-        activities{"ਸਰਗਰਮੀਆਂ"}
-        african_scripts{"ਅਫਰੀਕਨ ਲਿੱਪੀਆਂ"}
-        american_scripts{"ਅਮਰੀਕੀ ਲਿੱਪੀਆਂ"}
+        activities{"ਸਰਗਰਮੀ"}
+        african_scripts{"ਅਫਰੀਕੀ ਲਿਪੀ"}
+        american_scripts{"ਅਮਰੀਕੀ ਲਿਪੀ"}
         animal{"ਜਾਨਵਰ"}
-        animals_nature{"ਪਸ਼ੂ ਅਤੇ ਕੁਦਰਤ"}
+        animals_nature{"ਜਾਨਵਰ ਜਾਂ ਕੁਦਰਤ"}
         arrows{"ਤੀਰ"}
         body{"ਸਰੀਰ"}
         box_drawing{"ਬਾਕਸ ਡਰਾਇੰਗ"}
@@ -1563,15 +1613,15 @@ pa{
         bullets_stars{"ਬਿੰਦੀਆਂ/ਤਾਰੇ"}
         consonantal_jamo{"ਵਿਅੰਜਨਾਤਮਕ ਜਾਮੋ"}
         currency_symbols{"ਮੁਦਰਾ ਚਿੰਨ੍ਹ"}
-        dash_connector{"ਡੈਸ਼/ਕਨੈਕਟਰ"}
+        dash_connector{"ਡੈਸ਼ ਜਾਂ ਕਨੈਕਟਰ"}
         digits{"ਅੰਕ"}
-        dingbats{"ਡਿੰਗਬੈਟਸ"}
+        dingbats{"ਡਿੰਗਬੈਟ"}
         divination_symbols{"ਭਵਿੱਖਬਾਣੀ ਚਿੰਨ੍ਹ"}
         downwards_arrows{"ਹੇਠਾਂ ਨੂੰ ਤੀਰ"}
         downwards_upwards_arrows{"ਹੇਠ ਉੱਪਰ ਵੱਲ ਤੀਰ"}
-        east_asian_scripts{"ਪੂਰਬੀ ਏਸ਼ੀਆਈ ਲਿੱਪੀਆਂ"}
+        east_asian_scripts{"ਪੂਰਬੀ ਏਸ਼ੀਆਈ ਲਿਪੀ"}
         emoji{"ਇਮੋਜੀ"}
-        european_scripts{"ਯੂਰਪੀ ਲਿੱਪੀਆਂ"}
+        european_scripts{"ਯੂਰਪੀ ਲਿਪੀ"}
         female{"ਔਰਤ"}
         flag{"ਝੰਡਾ"}
         flags{"ਝੰਡੇ"}
@@ -1579,18 +1629,18 @@ pa{
         format{"ਬਣਤਰ"}
         format_whitespace{"ਬਣਤਰ ਅਤੇ ਖਾਲੀ ਸਥਾਨ"}
         full_width_form_variant{"ਪੂਰਨ-ਚੌੜਾਈ ਰੂਪੀ ਰੂਪਾਂਤਰ"}
-        geometric_shapes{"ਜਿਆਮਿਤੀ ਆਕ੍ਰਿਤੀਆਂ"}
+        geometric_shapes{"ਜਿਆਮਿਤੀ ਸ਼ਕਲ"}
         half_width_form_variant{"ਅਰਧ-ਚੌੜਾਈ ਰੂਪੀ ਰੂਪਾਂਤਰ"}
         han_characters{"ਹਾਨ ਅੱਖਰ"}
         han_radicals{"ਹਾਨ ਮੂਲ ਸ਼ਬਦ"}
         hanja{"ਹਾਂਜਾ"}
         hanzi_simplified{"ਹਾਂਜ਼ੀ (ਸਰਲ)"}
-        hanzi_traditional{"ਹਾਂਜ਼ੀ (ਰਿਵਾਇਤੀ)"}
+        hanzi_traditional{"ਹਾਂਜ਼ੀ (ਰਵਾਇਤੀ)"}
         heart{"ਦਿਲ"}
-        historic_scripts{"ਇਤਿਹਾਸਕ ਲਿੱਪੀਆਂ"}
+        historic_scripts{"ਇਤਿਹਾਸਕ ਲਿਪੀ"}
         ideographic_desc_characters{"ਇਡਿਓਗ੍ਰਾਫਿਕ ਵੇਰਵਾ ਅੱਖਰ"}
         japanese_kana{"ਜਪਾਨੀ ਕਾਨਾ"}
-        kanbun{"ਕਾਨਬੁਨ (ਚੀਨੀ ਕਲਾਸਿਕ)"}
+        kanbun{"ਕਾਨਬੁਨ"}
         kanji{"ਕਾਂਜੀ"}
         keycap{"ਕੀਕੈਪ"}
         leftwards_arrows{"ਖੱਬੇ ਪਾਸੇ ਵੱਲ ਤੀਰ"}
@@ -1599,9 +1649,9 @@ pa{
         limited_use{"ਸੀਮਿਤ ਵਰਤੋਂ"}
         male{"ਪੁਰਸ਼"}
         math_symbols{"ਗਣਿਤ ਚਿੰਨ੍ਹ"}
-        middle_eastern_scripts{"ਮੱਧ ਪੂਰਬੀ ਲਿੱਪੀਆਂ"}
+        middle_eastern_scripts{"ਮੱਧ ਪੂਰਬੀ ਲਿਪੀ"}
         miscellaneous{"ਫੁਟਕਲ"}
-        modern_scripts{"ਆਧੁਨਿਕ ਲਿੱਪੀਆਂ"}
+        modern_scripts{"ਆਧੁਨਿਕ ਲਿਪੀ"}
         modifier{"ਵਿਸ਼ੇਸ਼ਕ"}
         musical_symbols{"ਸੰਗੀਤ ਚਿੰਨ੍ਹ"}
         nature{"ਕੁਦਰਤ"}
@@ -1621,20 +1671,20 @@ pa{
         small_form_variant{"ਛੋਟੇ ਰੂਪ ਦੇ ਰੂਪਾਂਤਰ"}
         smiley{"ਸਮਾਈਲੀ"}
         smileys_people{"ਸਮਾਇਲੀ ਅਤੇ ਲੋਕ"}
-        south_asian_scripts{"ਦੱਖਣੀ ਏਸ਼ੀਆਈ ਲਿੱਪੀਆਂ"}
-        southeast_asian_scripts{"ਦੱਖਣ-ਪੂਰਬੀ ਏਸ਼ੀਆਈ ਲਿੱਪੀਆਂ"}
+        south_asian_scripts{"ਦੱਖਣੀ ਏਸ਼ੀਆਈ ਲਿਪੀ"}
+        southeast_asian_scripts{"ਦੱਖਣ-ਪੂਰਬੀ ਏਸ਼ੀਆਈ ਲਿਪੀ"}
         spacing{"ਵਿੱਥ"}
         sport{"ਖੇਡ"}
         symbols{"ਚਿੰਨ੍ਹ"}
         technical_symbols{"ਤਕਨੀਕੀ ਚਿੰਨ੍ਹ"}
         tone_marks{"ਧੁਨੀ ਨਿਸ਼ਾਨ"}
         travel{"ਯਾਤਰਾ"}
-        travel_places{"ਯਾਤਰਾ ਅਤੇ ਸਥਾਨ"}
+        travel_places{"ਸਫਰ ਜਾਂ ਥਾਂ"}
         upwards_arrows{"ਉੱਪਰ ਵੱਲ ਤੀਰ"}
         variant_forms{"ਭਿੰਨ ਰੂਪ"}
         vocalic_jamo{"ਵੋਕੈਲਿਕ ਜਾਮੋ"}
         weather{"ਮੌਸਮ"}
-        western_asian_scripts{"ਪੱਛਮੀ ਏਸ਼ੀਆਈ ਲਿੱਪੀਆਂ"}
+        western_asian_scripts{"ਪੱਛਮੀ ਏਸ਼ੀਆਈ ਲਿਪੀ"}
         whitespace{"ਵ੍ਹਾਈਟ ਸਪੇਸ"}
     }
     delimiters{
@@ -1664,6 +1714,11 @@ pa{
         }
         day-narrow{
             dn{"ਦਿਨ"}
+            relative{
+                "-1"{"ਬੀਤਿਆ ਕੱਲ੍ਹ"}
+                "0"{"ਅੱਜ"}
+                "1"{"ਭਲਕੇ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਦਿਨ ਵਿੱਚ"}
@@ -1677,6 +1732,11 @@ pa{
         }
         day-short{
             dn{"ਦਿਨ"}
+            relative{
+                "-1"{"ਬੀਤਿਆ ਕੱਲ੍ਹ"}
+                "0"{"ਅੱਜ"}
+                "1"{"ਭਲਕੇ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਦਿਨ ਵਿੱਚ"}
@@ -1784,6 +1844,9 @@ pa{
         }
         hour-narrow{
             dn{"ਘੰ"}
+            relative{
+                "0"{"ਇਸ ਘੰਟੇ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਘੰਟੇ ਵਿੱਚ"}
@@ -1797,6 +1860,9 @@ pa{
         }
         hour-short{
             dn{"ਘੰਟਾ"}
+            relative{
+                "0"{"ਇਸ ਘੰਟੇ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਘੰਟੇ ਵਿੱਚ"}
@@ -1826,6 +1892,9 @@ pa{
         }
         minute-narrow{
             dn{"ਮਿੰਟ"}
+            relative{
+                "0"{"ਇਸ ਮਿੰਟ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਮਿੰਟ ਵਿੱਚ"}
@@ -1839,6 +1908,9 @@ pa{
         }
         minute-short{
             dn{"ਮਿੰਟ"}
+            relative{
+                "0"{"ਇਸ ਮਿੰਟ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਮਿੰਟ ਵਿੱਚ"}
@@ -1982,11 +2054,11 @@ pa{
             }
             relativeTime{
                 future{
-                    one{"{0} ਤਿਮਾਹੀਆਂ ਵਿੱਚ"}
+                    one{"{0} ਤਿਮਾਹੀ ਵਿੱਚ"}
                     other{"{0} ਤਿਮਾਹੀਆਂ ਵਿੱਚ"}
                 }
                 past{
-                    one{"{0} ਤਿਮਾਹੀਆਂ ਪਹਿਲਾਂ"}
+                    one{"{0} ਤਿਮਾਹੀ ਪਹਿਲਾਂ"}
                     other{"{0} ਤਿਮਾਹੀਆਂ ਪਹਿਲਾਂ"}
                 }
             }
@@ -2078,6 +2150,9 @@ pa{
         }
         second-narrow{
             dn{"ਸਕਿੰਟ"}
+            relative{
+                "0"{"ਹੁਣ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਸਕਿੰਟ ਵਿੱਚ"}
@@ -2091,6 +2166,9 @@ pa{
         }
         second-short{
             dn{"ਸਕਿੰਟ"}
+            relative{
+                "0"{"ਹੁਣ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਸਕਿੰਟ ਵਿੱਚ"}
@@ -2456,7 +2534,7 @@ pa{
     }
     listPattern{
         or{
-            2{"{0} or {1}"}
+            2{"{0} ਜਾਂ {1}"}
             end{"{0}, or {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
@@ -2507,8 +2585,13 @@ pa{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

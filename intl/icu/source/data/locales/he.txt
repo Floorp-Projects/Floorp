@@ -34,7 +34,9 @@ he{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"⩾{0}+"}
+                approximately{"~{0}"}
+                atLeast{"≥{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -300,7 +302,7 @@ he{
         native{"latn"}
         traditional{"hebr"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.94"}
     calendar{
         buddhist{
             eras{
@@ -1837,6 +1839,7 @@ he{
                     "Taishō",
                     "Shōwa",
                     "Heisei",
+                    "Qqqq",
                 }
             }
         }
@@ -1962,8 +1965,8 @@ he{
     }
     characterLabel{
         activities{"פעילויות"}
-        african_scripts{"סקריפטים של שפות אפריקאיות"}
-        american_scripts{"סקריפטים של שפות אמריקאיות"}
+        african_scripts{"כתב של שפות אפריקאיות"}
+        american_scripts{"כתב של שפות אמריקאיות"}
         animal{"חיות"}
         animals_nature{"בעלי חיים וטבע"}
         arrows{"חצים"}
@@ -1980,9 +1983,9 @@ he{
         divination_symbols{"סמלי חיזוי עתידות"}
         downwards_arrows{"חצים כלפי מטה"}
         downwards_upwards_arrows{"חצים כלפי מעלה ומטה"}
-        east_asian_scripts{"סקריפטים של מזרח אסיה"}
+        east_asian_scripts{"כתב של מזרח אסיה"}
         emoji{"אמוג׳י"}
-        european_scripts{"סקריפטים אירופאיים"}
+        european_scripts{"כתב של שפות אירופיות"}
         female{"אישה"}
         flag{"דגל"}
         flags{"דגלים"}
@@ -1998,7 +2001,7 @@ he{
         hanzi_simplified{"האנזי (פשוטה)"}
         hanzi_traditional{"האנזי (מסורתית)"}
         heart{"לב"}
-        historic_scripts{"סקריפטים היסטוריים"}
+        historic_scripts{"מערכות כתב היסטוריות"}
         ideographic_desc_characters{"תווי תיאור אידיאוגרפי"}
         japanese_kana{"קאנה יפנית"}
         kanbun{"קאנבון"}
@@ -2010,9 +2013,9 @@ he{
         limited_use{"לשימוש מוגבל"}
         male{"גבר"}
         math_symbols{"סמלים מתמטיים"}
-        middle_eastern_scripts{"סקריפטים של המזרח התיכון"}
+        middle_eastern_scripts{"מערכות כתב של המזרח התיכון"}
         miscellaneous{"שונות"}
-        modern_scripts{"סקריפטים מודרניים"}
+        modern_scripts{"מערכות כתב מודרניות"}
         modifier{"סימן מחליף"}
         musical_symbols{"סמלים מוזיקליים"}
         nature{"טבע"}
@@ -2045,7 +2048,7 @@ he{
         variant_forms{"חלופות"}
         vocalic_jamo{"ג׳אמו ווקאלי"}
         weather{"מזג אוויר"}
-        western_asian_scripts{"סקריפטים ממערב אסיה"}
+        western_asian_scripts{"מערכות כתב ממערב אסיה"}
         whitespace{"רווח לבן"}
     }
     delimiters{
@@ -2139,7 +2142,7 @@ he{
             dn{"לפנה״צ/אחה״צ"}
         }
         dayperiod-narrow{
-            dn{"לפנה״צ/אחה״צ"}
+            dn{"AM/PM"}
         }
         dayperiod-short{
             dn{"AM/PM"}
@@ -3116,8 +3119,13 @@ he{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

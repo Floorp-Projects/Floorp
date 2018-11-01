@@ -4,11 +4,11 @@ nl_BE{
     NumberElements{
         latn{
             patterns{
-                currencyFormat{"#,##0.00 ¤"}
+                currencyFormat{"¤ #,##0.00"}
             }
         }
     }
-    Version{"2.1.38.39"}
+    Version{"2.1.43.2"}
     calendar{
         generic{
             DateTimePatterns{
@@ -67,7 +67,7 @@ nl_BE{
                 "EEEE d MMMM y",
                 "d MMMM y",
                 "d MMM y",
-                "d/MM/yy",
+                "d/MM/y",
                 "{1} {0}",
                 "{1} 'om' {0}",
                 "{1} 'om' {0}",

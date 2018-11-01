@@ -1,10 +1,10 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sl{
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     zoneStrings{
         "Etc:UTC"{
-            ls{"Univerzalni koordinirani čas"}
+            ls{"univerzalni koordinirani čas"}
         }
         "Europe:Dublin"{
             ld{"irski standardni čas"}

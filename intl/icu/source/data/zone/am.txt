@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 am{
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
     zoneStrings{
         "Etc:UTC"{
             ls{"የተቀነባበረ ሁለገብ ሰዓት"}
@@ -41,13 +41,13 @@ am{
         }
         "meta:America_Central"{
             ld{"የመካከለኛ የቀን ሰዓት አቆጣጠር"}
-            lg{"የመካከለኛ ሰዓት አቆጣጠር"}
-            ls{"የመካከለኛ መደበኛ ሰዓት አቆጣጠር"}
+            lg{"የሰሜን አሜሪካ የመካከለኛ ሰዓት አቆጣጠር"}
+            ls{"የሰሜን አሜሪካ የመካከለኛ መደበኛ ሰዓት አቆጣጠር"}
         }
         "meta:America_Eastern"{
-            ld{"የምዕራባዊ የቀን ሰዓት አቆጣጠር"}
-            lg{"የምዕራባዊ ሰዓት አቆጣጠር"}
-            ls{"የምዕራባዊ መደበኛ የሰዓት አቆጣጠር"}
+            ld{"ምስራቃዊ የቀን ሰዓት አቆጣጠር"}
+            lg{"ምስራቃዊ ሰዓት አቆጣጠር"}
+            ls{"ምስራቃዊ መደበኛ ሰዓት አቆጣጠር"}
         }
         "meta:America_Mountain"{
             ld{"የተራራ የቀንሰዓት አቆጣጠር"}

@@ -51,7 +51,9 @@ ko{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}~{1}"}
             }
             patterns{
@@ -205,9 +207,24 @@ ko{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     calendar{
         buddhist{
+            availableFormats{
+                GyMMM{"G y년 MMM"}
+                GyMMMEEEEd{"G y년 MMM d일 EEEE"}
+                GyMMMEd{"G y년 MMM d일 (E)"}
+                GyMMMd{"G y년 MMM d일"}
+                MMMEEEEd{"MMM d일 EEEE"}
+                MMMEd{"MMM d일 (E)"}
+                MMMMd{"MMMM d일"}
+                MMMd{"MMM d일"}
+                yyyyMMM{"G y년 MMM"}
+                yyyyMMMEEEEd{"G y년 MMM d일 EEEE"}
+                yyyyMMMEd{"G y년 MMM d일 (E)"}
+                yyyyMMMM{"G y년 MMMM"}
+                yyyyMMMd{"G y년 MMM d일"}
+            }
             eras{
                 abbreviated{
                     "불기",
@@ -245,14 +262,14 @@ ko{
                 EBhms{"E B h:mm:ss"}
                 EEEEd{"d일 EEEE"}
                 Ed{"d일 (E)"}
-                Gy{"U년"}
-                GyMMM{"U년 MMM"}
-                GyMMMEEEEd{"U년 MMM d일 EEEE"}
-                GyMMMEd{"U년 MMM d일 (E)"}
-                GyMMMd{"U년 MMM d일"}
+                Gy{"r년(U년)"}
+                GyMMM{"r년(U년) MMM"}
+                GyMMMEEEEd{"r년(U년) MMM d일 EEEE"}
+                GyMMMEd{"r년(U년) MMM d일 (E)"}
+                GyMMMd{"r년 MMM d일"}
                 H{"H시"}
                 Hm{"HH:mm"}
-                Hms{"H시 m분 s초"}
+                Hms{"HH:mm:ss"}
                 M{"MMM"}
                 MEEEEd{"M. d. EEEE"}
                 MEd{"M. d. (E)"}
@@ -262,29 +279,29 @@ ko{
                 MMMMd{"MMMM d일"}
                 MMMd{"MMM d일"}
                 Md{"M. d."}
-                UM{"U MM"}
-                UMMM{"U MMM"}
-                UMMMd{"U MMM d"}
-                UMd{"U MM-d"}
+                UM{"U년 MMM"}
+                UMMM{"U년 MMM"}
+                UMMMd{"U년 MMM d일"}
+                UMd{"U년 M. d."}
                 d{"d일"}
                 h{"a h시"}
                 hm{"a h:mm"}
                 hms{"a h:mm:ss"}
                 ms{"mm:ss"}
-                y{"U년"}
-                yMd{"U. M. d."}
-                yyyy{"U년"}
-                yyyyM{"U. M."}
-                yyyyMEEEEd{"U. M. d. EEEE"}
-                yyyyMEd{"U. M. d. (E)"}
-                yyyyMMM{"U년 MMM"}
-                yyyyMMMEEEEd{"U년 MMM d일 EEEE"}
-                yyyyMMMEd{"U년 MMM d일 (E)"}
-                yyyyMMMM{"U년 MMMM"}
-                yyyyMMMd{"U년 MMM d일"}
-                yyyyMd{"U. M. d."}
-                yyyyQQQ{"U년 QQQ"}
-                yyyyQQQQ{"U년 QQQQ"}
+                y{"r년(U년)"}
+                yMd{"r. M. d."}
+                yyyy{"r년(U년)"}
+                yyyyM{"r. M."}
+                yyyyMEEEEd{"r. M. d. EEEE"}
+                yyyyMEd{"r. M. d. (E)"}
+                yyyyMMM{"r년(U년) MMM"}
+                yyyyMMMEEEEd{"r년(U년) MMM d일 EEEE"}
+                yyyyMMMEd{"r년(U년) MMM d일 (E)"}
+                yyyyMMMM{"r년(U년) MMMM"}
+                yyyyMMMd{"r년 MMM d일"}
+                yyyyMd{"r. M. d."}
+                yyyyQQQ{"r년(U년) QQQ"}
+                yyyyQQQQ{"r년(U년) QQQQ"}
             }
             cyclicNameSets{
                 solarTerms{
@@ -1671,6 +1688,21 @@ ko{
             }
         }
         japanese{
+            availableFormats{
+                GyMMM{"G y년 MMM"}
+                GyMMMEEEEd{"G y년 MMM d일 EEEE"}
+                GyMMMEd{"G y년 MMM d일 (E)"}
+                GyMMMd{"G y년 MMM d일"}
+                MMMEEEEd{"MMM d일 EEEE"}
+                MMMEd{"MMM d일 (E)"}
+                MMMMd{"MMMM d일"}
+                MMMd{"MMM d일"}
+                yyyyMMM{"G y년 MMM"}
+                yyyyMMMEEEEd{"G y년 MMM d일 EEEE"}
+                yyyyMMMEd{"G y년 MMM d일 (E)"}
+                yyyyMMMM{"G y년 MMMM"}
+                yyyyMMMd{"G y년 MMM d일"}
+            }
             eras{
                 abbreviated{
                     "다이카 (645 ~ 650)",
@@ -1909,6 +1941,7 @@ ko{
                     "다이쇼",
                     "쇼와",
                     "헤이세이",
+                    "Qqqq",
                 }
             }
         }
@@ -1977,6 +2010,21 @@ ko{
             }
         }
         roc{
+            availableFormats{
+                GyMMM{"G y년 MMM"}
+                GyMMMEEEEd{"G y년 MMM d일 EEEE"}
+                GyMMMEd{"G y년 MMM d일 (E)"}
+                GyMMMd{"G y년 MMM d일"}
+                MMMEEEEd{"MMM d일 EEEE"}
+                MMMEd{"MMM d일 (E)"}
+                MMMMd{"MMMM d일"}
+                MMMd{"MMM d일"}
+                yyyyMMM{"G y년 MMM"}
+                yyyyMMMEEEEd{"G y년 MMM d일 EEEE"}
+                yyyyMMMEd{"G y년 MMM d일 (E)"}
+                yyyyMMMM{"G y년 MMMM"}
+                yyyyMMMd{"G y년 MMM d일"}
+            }
             eras{
                 abbreviated{
                     "중화민국전",
@@ -2027,7 +2075,7 @@ ko{
         ideographic_desc_characters{"상형 설명 문자"}
         japanese_kana{"일본어 가나"}
         kanbun{"간분"}
-        kanji{"칸지"}
+        kanji{"간지"}
         keycap{"키 캡"}
         leftwards_arrows{"왼쪽 방향 화살표"}
         leftwards_rightwards_arrows{"양방향 화살표"}
@@ -2815,8 +2863,13 @@ ko{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }
