@@ -1143,7 +1143,7 @@ InternalEnqueuePromiseJobCallback(JSContext* cx, JS::HandleObject promise,
 {
     MOZ_ASSERT(job);
     JS::JobQueueMayNotBeEmpty(cx);
-    if (!cx->jobQueue->append(job)) {
+    if (!cx->jobQueue->pushBack(job)) {
         ReportOutOfMemory(cx);
         return false;
     }
@@ -1178,7 +1178,7 @@ js::EnqueueJob(JSContext* cx, JS::HandleObject job)
 {
     MOZ_ASSERT(cx->jobQueue);
     JS::JobQueueMayNotBeEmpty(cx);
-    if (!cx->jobQueue->append(job)) {
+    if (!cx->jobQueue->pushBack(job)) {
         ReportOutOfMemory(cx);
         return false;
     }
@@ -1216,30 +1216,19 @@ js::RunJobs(JSContext* cx)
         RootedValue rval(cx);
 
         // Execute jobs in a loop until we've reached the end of the queue.
-        // Since executing a job can trigger enqueuing of additional jobs,
-        // it's crucial to re-check the queue length during each iteration.
-        for (size_t i = 0; i < cx->jobQueue->length(); i++) {
+        while (!cx->jobQueue->empty()) {
             // A previous job might have set this flag. E.g., the js shell
             // sets it if the `quit` builtin function is called.
             if (cx->stopDrainingJobQueue) {
                 break;
             }
 
-            job = cx->jobQueue->get()[i];
-
-            // It's possible that queue draining was interrupted prematurely,
-            // leaving the queue partly processed. In that case, slots for
-            // already-executed entries will contain nullptrs, which we should
-            // just skip.
-            if (!job) {
-                continue;
-            }
-
-            cx->jobQueue->get()[i] = nullptr;
+            job = cx->jobQueue->front();
+            cx->jobQueue->popFront();
 
             // If the next job is the last job in the job queue, allow
             // skipping the standard job queuing behavior.
-            if (i == cx->jobQueue->length() - 1) {
+            if (cx->jobQueue->empty()) {
                 JS::JobQueueIsEmpty(cx);
             }
 
