@@ -93,10 +93,19 @@ android {
         }
     }
 
+    // The "audience" flavour dimension distinguishes between _local_ builds (intended for
+    // development) and _official_ builds (intended for testing in automation and to ship in one of
+    // the Fennec distribution channels).
+    //
+    // The "skin" flavor dimension distinguishes between different user interfaces.  We sometimes
+    // want to develop significant new user interface pieces in-tree that don't ship (even in the
+    // Nightly channel) while under development.  A new "skin" flavour allows us to develop such
+    // pieces in Gradle without changing the mainline configuration.
+
     project.configureProductFlavors.delegate = it
     project.configureProductFlavors()
 
-    flavorDimensions "geckoBinaries"
+    flavorDimensions "audience", "geckoBinaries"
 
     sourceSets {
         main {
@@ -238,12 +247,11 @@ dependencies {
         implementation "com.google.android.gms:play-services-gcm:$google_play_services_version"
     }
 
-    // Include LeakCanary in local builds, but not in official builds.
-    if (mozconfig.substs.MOZILLA_OFFICIAL) {
-        implementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
-    } else {
-        implementation 'com.squareup.leakcanary:leakcanary-android:1.4-beta1'
-    }
+    // Include LeakCanary in local builds, but not in official builds.  Mach
+    // builds target the official audience, so LeakCanary will not be included
+    // in any Mach build.
+    localImplementation 'com.squareup.leakcanary:leakcanary-android:1.4-beta1'
+    officialImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
     testImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
 
     implementation project(path: ':geckoview')
@@ -358,7 +366,7 @@ android.applicationVariants.all { variant ->
     // this, the Gradle build calls out to the moz.build system, which can be
     // re-entrant.  Official builds are driven by the moz.build system and
     // should never be re-entrant in this way.
-    if (!mozconfig.substs.MOZILLA_OFFICIAL) {
+    if (!((variant.productFlavors*.name).contains('official'))) {
         syncPreprocessedJava.dependsOn rootProject.generateCodeAndResources
         syncPreprocessedRes.dependsOn rootProject.generateCodeAndResources
         rewriteManifestPackage.dependsOn rootProject.generateCodeAndResources
@@ -471,7 +479,9 @@ configurations.all {
 }
 
 android.applicationVariants.all { variant ->
-    if (!mozconfig.substs.MOZILLA_OFFICIAL) {
+    // Like 'local', 'localOld', or 'official'.
+    def audienceDimension = variant.productFlavors[0].name
+    if (!audienceDimension.equals('official')) {
         return
     }
 
