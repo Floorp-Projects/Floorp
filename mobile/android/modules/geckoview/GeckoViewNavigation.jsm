@@ -77,9 +77,11 @@ class GeckoViewNavigation extends GeckoViewModule {
           navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_POPUPS;
         }
 
-        const remoteType =
-          E10SUtils.getRemoteTypeForURI(uri, this.settings.useMultiprocess);
-        this.moduleManager.updateRemoteType(remoteType);
+        if (this.settings.useMultiprocess) {
+          const remoteType =
+            E10SUtils.getRemoteTypeForURI(uri, true);
+          this.moduleManager.updateRemoteType(remoteType);
+        }
 
         this.browser.loadURI(uri, {
           flags: navFlags,
