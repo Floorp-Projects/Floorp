@@ -31,6 +31,12 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+
+        components.historyStorage.cleanup()
+    }
+
     override fun onBackPressed() {
         supportFragmentManager.fragments.forEach {
             if (it is BackHandler && it.onBackPressed()) {

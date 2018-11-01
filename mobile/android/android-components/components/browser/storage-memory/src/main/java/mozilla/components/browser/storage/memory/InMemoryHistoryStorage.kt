@@ -117,4 +117,8 @@ class InMemoryHistoryStorage : HistoryStorage {
 
         return cost[lhsLength - 1]
     }
+
+    override fun cleanup() {
+        // GC will take care of our internal data structures, so there's nothing to do here.
+    }
 }

@@ -44,6 +44,11 @@ interface HistoryStorage {
      * @return A List of [SearchResult] matching the query, in no particular order.
      */
     fun getSuggestions(query: String): List<SearchResult>
+
+    /**
+     * Cleanup any allocated resources.
+     */
+    fun cleanup()
 }
 
 data class PageObservation(val title: String?)
