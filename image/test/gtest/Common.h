@@ -133,6 +133,9 @@ public:
   AutoInitializeImageLib();
 };
 
+/// Spins on the main thread to process any pending events.
+void SpinPendingEvents();
+
 /// Loads a file from the current directory. @return an nsIInputStream for it.
 already_AddRefed<nsIInputStream> LoadFile(const char* aRelativePath);
 

@@ -55,15 +55,7 @@ AutoInitializeImageLib::AutoInitializeImageLib()
   // Depending on initialization order, it is possible that our pref changes
   // have not taken effect yet because there are pending gfx-related events on
   // the main thread.
-  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-  EXPECT_TRUE(mainThread != nullptr);
-
-  bool processed;
-  do {
-    processed = false;
-    nsresult rv = mainThread->ProcessNextEvent(false, &processed);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
-  } while (processed);
+  SpinPendingEvents();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -101,6 +93,20 @@ AutoInitializeImageLib::AutoInitializeImageLib()
   if (!((a) < (b))) {                 \
     return rv;                        \
   }
+
+void
+SpinPendingEvents()
+{
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  EXPECT_TRUE(mainThread != nullptr);
+
+  bool processed;
+  do {
+    processed = false;
+    nsresult rv = mainThread->ProcessNextEvent(false, &processed);
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
+  } while (processed);
+}
 
 already_AddRefed<nsIInputStream>
 LoadFile(const char* aRelativePath)
