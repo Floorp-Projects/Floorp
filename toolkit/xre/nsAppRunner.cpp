@@ -3996,10 +3996,18 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
       saveDisplayArg = true;
     }
 
+    bool disableWayland = true;
+#if defined(MOZ_WAYLAND)
+    // Make X11 backend the default one.
+    // Enable Wayland backend only when GDK_BACKEND is set and
+    // Gtk+ >= 3.22 where we can expect recent enough
+    // compositor & libwayland interface.
+    disableWayland = (PR_GetEnv("GDK_BACKEND") == nullptr) ||
+                     (gtk_check_version(3, 22, 0) != nullptr);
+#endif
     // On Wayland disabled builds read X11 DISPLAY env exclusively
     // and don't care about different displays.
-#if !defined(MOZ_WAYLAND)
-    if (!display_name) {
+    if (disableWayland && !display_name) {
       display_name = PR_GetEnv("DISPLAY");
       if (!display_name) {
         PR_fprintf(PR_STDERR,
@@ -4007,7 +4015,6 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
         return 1;
       }
     }
-#endif
 
     if (display_name) {
       mGdkDisplay = gdk_display_open(display_name);
