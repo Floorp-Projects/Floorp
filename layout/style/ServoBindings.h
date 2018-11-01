@@ -603,6 +603,10 @@ bool Servo_ParseEasing(
   RawGeckoURLExtraData* data,
   nsTimingFunctionBorrowedMut output);
 
+void Servo_SerializeEasing(
+  nsTimingFunctionBorrowed easing,
+  nsAString* output);
+
 void Servo_GetComputedKeyframeValues(
   RawGeckoKeyframeListBorrowed keyframes,
   RawGeckoElementBorrowed element,
