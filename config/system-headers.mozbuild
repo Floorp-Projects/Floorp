@@ -1255,6 +1255,14 @@ if CONFIG['MOZ_SYSTEM_PNG']:
         'png.h',
     ]
 
+if CONFIG['MOZ_SYSTEM_WEBP']:
+    system_headers += [
+        'webp/decode.h',
+        'webp/demux.h',
+        'webp/mux_types.h',
+        'webp/types.h',
+    ]
+
 if CONFIG['MOZ_SYSTEM_ZLIB']:
     system_headers += [
         'zlib.h',

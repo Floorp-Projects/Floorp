@@ -1,22 +1,13 @@
 // Tests that system add-on upgrades work.
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-
-BootstrapMonitor.init();
-
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2");
-
-var testserver = new HttpServer();
-testserver.registerDirectory("/data/", do_get_file("data/system_addons"));
-testserver.start();
-var root = testserver.identity.primaryScheme + "://" +
-           testserver.identity.primaryHost + ":" +
-           testserver.identity.primaryPort + "/data/";
-Services.prefs.setCharPref(PREF_SYSTEM_ADDON_UPDATE_URL, root + "update.xml");
 
 let distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "empty"], true);
 registerDirectory("XREAppFeat", distroDir);
-initSystemAddonDirs();
+
+AddonTestUtils.usePrivilegedSignatures = id => "system";
+
+add_task(() => initSystemAddonDirs());
 
 /**
  * Defines the set of initial conditions to run each test against. Each should
@@ -57,8 +48,8 @@ const TEST_CONDITIONS = {
 
   // Runs tests with updated system add-ons installed
   withProfileSet: {
-    setup() {
-      buildPrefilledUpdatesDir();
+    async setup() {
+      await buildPrefilledUpdatesDir();
       distroDir.leafName = "empty";
     },
     initialState: [
@@ -72,8 +63,8 @@ const TEST_CONDITIONS = {
 
   // Runs tests with both default and updated system add-ons installed
   withBothSets: {
-    setup() {
-      buildPrefilledUpdatesDir();
+    async setup() {
+      await buildPrefilledUpdatesDir();
       distroDir.leafName = "hidden";
     },
     initialState: [
@@ -144,7 +135,7 @@ add_task(async function() {
         let setup = TEST_CONDITIONS[setupName];
         let test = TESTS[testName];
 
-        await execSystemAddonTest(setupName, setup, test, distroDir, root, testserver);
+        await execSystemAddonTest(setupName, setup, test, distroDir);
     }
   }
 });

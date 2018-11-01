@@ -3113,6 +3113,9 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                                         ${name}, aDefineOnGlobal,
                                         ${unscopableNames},
                                         ${isGlobal});
+            if (protoCache && !*protoCache) {
+              $*{maybeCrash}
+            }
             """,
             protoClass=protoClass,
             parentProto=parentProto,
@@ -3127,7 +3130,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             chromeProperties=chromeProperties,
             name='"' + self.descriptor.interface.identifier.name + '"' if needInterfaceObject else "nullptr",
             unscopableNames="unscopableNames" if self.haveUnscopables else "nullptr",
-            isGlobal=toStringBool(isGlobal))
+            isGlobal=toStringBool(isGlobal),
+            maybeCrash=maybecrash("dom::CreateInterfaceObjects failed for Document"))
 
         # If we fail after here, we must clear interface and prototype caches
         # using this code: intermediate failure must not expose the interface in
