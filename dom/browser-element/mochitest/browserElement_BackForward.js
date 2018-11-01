@@ -32,20 +32,20 @@ function runTest() {
 
 function checkCanGoBackAndForward(canGoBack, canGoForward, nextTest) {
   var seenCanGoBackResult = false;
-  iframe.getCanGoBack().onsuccess = function(e) {
+  iframe.getCanGoBack().then(function(result) {
     is(seenCanGoBackResult, false, "onsuccess handler shouldn't be called twice.");
     seenCanGoBackResult = true;
-    is(e.target.result, canGoBack);
+    is(result, canGoBack);
     maybeRunNextTest();
-  };
+  });
 
   var seenCanGoForwardResult = false;
-  iframe.getCanGoForward().onsuccess = function(e) {
+  iframe.getCanGoForward().then(function(result) {
     is(seenCanGoForwardResult, false, "onsuccess handler shouldn't be called twice.");
     seenCanGoForwardResult = true;
-    is(e.target.result, canGoForward);
+    is(result, canGoForward);
     maybeRunNextTest();
-  };
+  });
 
   function maybeRunNextTest() {
     if (seenCanGoBackResult && seenCanGoForwardResult) {
