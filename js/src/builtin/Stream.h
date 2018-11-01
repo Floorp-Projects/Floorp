@@ -41,6 +41,13 @@ class ReadableStream : public NativeObject
         SlotCount
     };
 
+    enum State {
+         Readable  = 1 << 0,
+         Closed    = 1 << 1,
+         Errored   = 1 << 2,
+         Disturbed = 1 << 3
+    };
+
   private:
     uint32_t stateBits() const { return getFixedSlot(Slot_State).toInt32(); }
     void initStateBits(uint32_t stateBits) { setFixedSlot(Slot_State, Int32Value(stateBits)); }
@@ -71,27 +78,17 @@ class ReadableStream : public NativeObject
     Value storedError() const { return getFixedSlot(Slot_StoredError); }
     void setStoredError(HandleValue value) { setFixedSlot(Slot_StoredError, value); }
 
+    JS::ReadableStreamMode mode() const;
+    uint8_t embeddingFlags() const;
+
+    bool locked() const;
+
   public:
     static ReadableStream* createDefaultStream(JSContext* cx, HandleValue underlyingSource,
                                                HandleValue size, HandleValue highWaterMark,
                                                HandleObject proto = nullptr);
     static ReadableStream* createExternalSourceStream(JSContext* cx, void* underlyingSource,
                                                       uint8_t flags, HandleObject proto = nullptr);
-
-    bool locked() const;
-
-    JS::ReadableStreamMode mode() const;
-    uint8_t embeddingFlags() const;
-
-    static MOZ_MUST_USE JSObject* cancel(JSContext* cx, Handle<ReadableStream*> stream,
-                                         HandleValue reason);
-
-    enum State {
-         Readable  = 1 << 0,
-         Closed    = 1 << 1,
-         Errored   = 1 << 2,
-         Disturbed = 1 << 3
-    };
 
   private:
     static MOZ_MUST_USE ReadableStream* createStream(JSContext* cx, HandleObject proto = nullptr);
@@ -156,8 +153,6 @@ class ReadableStreamReader : public NativeObject
 class ReadableStreamDefaultReader : public ReadableStreamReader
 {
   public:
-    static MOZ_MUST_USE JSObject* read(JSContext* cx, Handle<ReadableStreamDefaultReader*> reader);
-
     static bool constructor(JSContext* cx, unsigned argc, Value* vp);
     static const ClassSpec classSpec_;
     static const Class class_;
