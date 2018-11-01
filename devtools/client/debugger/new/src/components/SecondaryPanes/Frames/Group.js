@@ -123,7 +123,7 @@ export default class Group extends Component<Props, State> {
 
   renderDescription() {
     const frame = this.props.group[0];
-    const displayName = formatDisplayName(frame, { maxLength: null });
+    const displayName = formatDisplayName(frame);
     return (
       <li
         key={frame.id}
