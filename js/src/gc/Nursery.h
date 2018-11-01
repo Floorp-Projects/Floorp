@@ -531,6 +531,7 @@ class Nursery
     uintptr_t position() const { return position_; }
 
     JSRuntime* runtime() const { return runtime_; }
+    gcstats::Statistics& stats() const;
 
     /* Common internal allocator function. */
     void* allocate(size_t size);
