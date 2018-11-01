@@ -1044,6 +1044,10 @@ de{
         }
         VEF{
             "VEF",
+            "Venezolanischer Bolívar (2008–2018)",
+        }
+        VES{
+            "VES",
             "Venezolanischer Bolívar",
         }
         VND{
@@ -2232,7 +2236,7 @@ de{
         }
         STN{
             one{"São-toméischer Dobra"}
-            other{"São-toméische Dobra"}
+            other{"São-toméische Dobras"}
         }
         SUR{
             one{"Sowjetische Rubel"}
@@ -2351,6 +2355,10 @@ de{
             other{"Venezolanische Bolívares (1871–2008)"}
         }
         VEF{
+            one{"Venezolanischer Bolívar (2008–2018)"}
+            other{"Venezolanische Bolívares (2008–2018)"}
+        }
+        VES{
             one{"Venezolanischer Bolívar"}
             other{"Venezolanische Bolívares"}
         }
@@ -2519,5 +2527,5 @@ de{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
 }

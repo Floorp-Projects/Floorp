@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sr_Latn{
     %%Parent{"root"}
-    Version{"2.1.41.97"}
+    Version{"2.1.44.50"}
     zoneStrings{
         "Etc:UTC"{
             ls{"Koordinisano univerzalno vreme"}

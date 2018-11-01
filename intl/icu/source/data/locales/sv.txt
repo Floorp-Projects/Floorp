@@ -59,7 +59,9 @@ sv{
         }
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
                 range{"{0}‒{1}"}
             }
             patterns{
@@ -251,9 +253,12 @@ sv{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.94"}
     calendar{
         buddhist{
+            availableFormats{
+                yyyyMMMM{"MMMM y G"}
+            }
             eras{
                 abbreviated{
                     "BE",
@@ -273,6 +278,9 @@ sv{
                 Hmv{
                     H{"HH:mm–HH:mm v"}
                     m{"HH:mm–HH:mm v"}
+                }
+                hmv{
+                    h{"h:mm–h:mm a v"}
                 }
             }
         }
@@ -1630,6 +1638,7 @@ sv{
                     "Taishō",
                     "Shōwa",
                     "Heisei",
+                    "Qqqq",
                 }
             }
         }
@@ -1640,6 +1649,9 @@ sv{
                 }
                 narrow{
                     "AP",
+                }
+                wide{
+                    "Anno Persarum",
                 }
             }
             intervalFormats{
@@ -1751,7 +1763,7 @@ sv{
         arrows{"pilar"}
         body{"kropp"}
         box_drawing{"boxritning"}
-        braille{"blindskrift"}
+        braille{"punktskrift"}
         building{"byggnader"}
         bullets_stars{"punkter/stjärnor"}
         consonantal_jamo{"jamokonsonanter"}
@@ -1787,7 +1799,7 @@ sv{
         kanji{"japanska kanji"}
         keycap{"keycap"}
         leftwards_arrows{"vänsterpilar"}
-        leftwards_rightwards_arrows{"vänster/höger-pilar"}
+        leftwards_rightwards_arrows{"vänster-/högerpilar"}
         letterlike_symbols{"bokstavsliknande symboler"}
         limited_use{"begränsad användning"}
         male{"manlig"}
@@ -2110,8 +2122,8 @@ sv{
             }
             relativeTime{
                 future{
-                    one{"+{0} månd"}
-                    other{"+{0} månd"}
+                    one{"+{0} må."}
+                    other{"+{0} må."}
                 }
                 past{
                     one{"–{0} månd"}
@@ -2737,5 +2749,37 @@ sv{
         UK{"engelska enheter"}
         US{"USA-enheter"}
         metric{"SI-enheter"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

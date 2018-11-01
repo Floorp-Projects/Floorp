@@ -22,7 +22,9 @@ eu{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}-{1}"}
             }
             patterns{
@@ -213,7 +215,7 @@ eu{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
     calendar{
         buddhist{
             eras{
@@ -407,7 +409,7 @@ eu{
                 "HH:mm",
                 "y('e')'ko' MMMM'ren' d('a'), EEEE",
                 "y('e')'ko' MMMM'ren' d('a')",
-                "y MMM d",
+                "y('e')'ko' MMM d('a')",
                 "yy/M/d",
                 "{1} {0}",
                 "{1} {0}",
@@ -542,13 +544,13 @@ eu{
                         "lr.",
                     }
                     wide{
-                        "Igandea",
-                        "Astelehena",
-                        "Asteartea",
-                        "Asteazkena",
-                        "Osteguna",
-                        "Ostirala",
-                        "Larunbata",
+                        "igandea",
+                        "astelehena",
+                        "asteartea",
+                        "asteazkena",
+                        "osteguna",
+                        "ostirala",
+                        "larunbata",
                     }
                 }
             }
@@ -807,17 +809,17 @@ eu{
                     }
                     wide{
                         "urtarrila",
-                        "Otsaila",
-                        "Martxoa",
-                        "Apirila",
-                        "Maiatza",
-                        "Ekaina",
-                        "Uztaila",
-                        "Abuztua",
-                        "Iraila",
-                        "Urria",
-                        "Azaroa",
-                        "Abendua",
+                        "otsaila",
+                        "martxoa",
+                        "apirila",
+                        "maiatza",
+                        "ekaina",
+                        "uztaila",
+                        "abuztua",
+                        "iraila",
+                        "urria",
+                        "azaroa",
+                        "abendua",
                     }
                 }
             }
@@ -1066,12 +1068,12 @@ eu{
             }
             relativeTime{
                 future{
-                    one{"{0} ostiral barru"}
-                    other{"{0} ostiral barru"}
+                    one{"{0} or. barru"}
+                    other{"{0} or. barru"}
                 }
                 past{
-                    one{"Duela {0} ostiral"}
-                    other{"Duela {0} ostiral"}
+                    one{"Duela {0} or."}
+                    other{"Duela {0} or."}
                 }
             }
         }
@@ -1083,12 +1085,12 @@ eu{
             }
             relativeTime{
                 future{
-                    one{"{0} ostiral barru"}
-                    other{"{0} ostiral barru"}
+                    one{"{0} or. barru"}
+                    other{"{0} or. barru"}
                 }
                 past{
-                    one{"Duela {0} ostiral"}
-                    other{"Duela {0} ostiral"}
+                    one{"Duela {0} or."}
+                    other{"Duela {0} or."}
                 }
             }
         }
@@ -1218,12 +1220,12 @@ eu{
             }
             relativeTime{
                 future{
-                    one{"{0} astelehen barru"}
-                    other{"{0} astelehen barru"}
+                    one{"{0} al. barru"}
+                    other{"{0} al. barru"}
                 }
                 past{
-                    one{"Duela {0} astelehen"}
-                    other{"Duela {0} astelehen"}
+                    one{"Duela {0} al."}
+                    other{"Duela {0} al."}
                 }
             }
         }
@@ -1340,12 +1342,12 @@ eu{
             }
             relativeTime{
                 future{
-                    one{"{0} larunbat barru"}
-                    other{"{0} larunbat barru"}
+                    one{"{0} lr. barru"}
+                    other{"{0} lr. barru"}
                 }
                 past{
-                    one{"Duela {0} larunbat"}
-                    other{"Duela {0} larunbat"}
+                    one{"Duela {0} lr."}
+                    other{"Duela {0} lr."}
                 }
             }
         }
@@ -1357,12 +1359,12 @@ eu{
             }
             relativeTime{
                 future{
-                    one{"{0} larunbat barru"}
-                    other{"{0} larunbat barru"}
+                    one{"{0} lr. barru"}
+                    other{"{0} lr. barru"}
                 }
                 past{
-                    one{"Duela {0} larunbat"}
-                    other{"Duela {0} larunbat"}
+                    one{"Duela {0} lr."}
+                    other{"Duela {0} lr."}
                 }
             }
         }
@@ -1433,12 +1435,12 @@ eu{
             }
             relativeTime{
                 future{
-                    one{"{0} igande barru"}
-                    other{"{0} igande barru"}
+                    one{"{0} ig. barru"}
+                    other{"{0} ig. barru"}
                 }
                 past{
-                    one{"Duela {0} igande"}
-                    other{"Duela {0} igande"}
+                    one{"Duela {0} ig."}
+                    other{"Duela {0} ig."}
                 }
             }
         }
@@ -1450,12 +1452,12 @@ eu{
             }
             relativeTime{
                 future{
-                    one{"{0} igande barru"}
-                    other{"{0} igande barru"}
+                    one{"{0} ig. barru"}
+                    other{"{0} ig. barru"}
                 }
                 past{
-                    one{"Duela {0} igande"}
-                    other{"Duela {0} igande"}
+                    one{"Duela {0} ig."}
+                    other{"Duela {0} ig."}
                 }
             }
         }
@@ -1467,12 +1469,12 @@ eu{
             }
             relativeTime{
                 future{
-                    one{"{0} ostegun barru"}
-                    other{"{0} ostegun barru"}
+                    one{"{0} og. barru"}
+                    other{"{0} og. barru"}
                 }
                 past{
-                    one{"Duela {0} ostegun"}
-                    other{"Duela {0} ostegun"}
+                    one{"Duela {0} og."}
+                    other{"Duela {0} og."}
                 }
             }
         }
@@ -1484,12 +1486,12 @@ eu{
             }
             relativeTime{
                 future{
-                    one{"{0} ostegun barru"}
-                    other{"{0} ostegun barru"}
+                    one{"{0} og. barru"}
+                    other{"{0} og. barru"}
                 }
                 past{
-                    one{"Duela {0} ostegun"}
-                    other{"Duela {0} ostegun"}
+                    one{"Duela {0} og."}
+                    other{"Duela {0} og."}
                 }
             }
         }
@@ -1501,12 +1503,12 @@ eu{
             }
             relativeTime{
                 future{
-                    one{"{0} ostegun barru"}
-                    other{"{0} ostegun barru"}
+                    one{"{0} og. barru"}
+                    other{"{0} og. barru"}
                 }
                 past{
-                    one{"Duela {0} ostegun"}
-                    other{"Duela {0} ostegun"}
+                    one{"Duela {0} og."}
+                    other{"Duela {0} og."}
                 }
             }
         }
@@ -1552,12 +1554,12 @@ eu{
             }
             relativeTime{
                 future{
-                    one{"{0} astearte barru"}
-                    other{"{0} astearte barru"}
+                    one{"{0} ar. barru"}
+                    other{"{0} ar. barru"}
                 }
                 past{
-                    one{"Duela {0} astearte"}
-                    other{"Duela {0} astearte"}
+                    one{"Duela {0} ar."}
+                    other{"Duela {0} ar."}
                 }
             }
         }
@@ -1586,12 +1588,12 @@ eu{
             }
             relativeTime{
                 future{
-                    one{"{0} asteazken barru"}
-                    other{"{0} asteazken barru"}
+                    one{"{0} az. barru"}
+                    other{"{0} az. barru"}
                 }
                 past{
-                    one{"Duela {0} asteazken"}
-                    other{"Duela {0} asteazken"}
+                    one{"Duela {0} az."}
+                    other{"Duela {0} az."}
                 }
             }
         }
@@ -1603,12 +1605,12 @@ eu{
             }
             relativeTime{
                 future{
-                    one{"{0} asteazken barru"}
-                    other{"{0} asteazken barru"}
+                    one{"{0} az. barru"}
+                    other{"{0} az. barru"}
                 }
                 past{
-                    one{"Duela {0} asteazken"}
-                    other{"Duela {0} asteazken"}
+                    one{"Duela {0} az."}
+                    other{"Duela {0} az."}
                 }
             }
         }

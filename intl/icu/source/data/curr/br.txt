@@ -1040,6 +1040,10 @@ br{
         }
         VEF{
             "VEF",
+            "bolivar Venezuela (2008–2018)",
+        }
+        VES{
+            "VES",
             "bolivar Venezuela",
         }
         VND{
@@ -2910,6 +2914,13 @@ br{
             two{"volivar Venezuela (1871–2008)"}
         }
         VEF{
+            few{"bolivar Venezuela (2008–2018)"}
+            many{"a volivaroù Venezuela (2008–2018)"}
+            one{"bolivar Venezuela (2008–2018)"}
+            other{"bolivar Venezuela (2008–2018)"}
+            two{"volivar Venezuela (2008–2018)"}
+        }
+        VES{
             few{"bolivar Venezuela"}
             many{"a volivaroù Venezuela"}
             one{"bolivar Venezuela"}
@@ -3127,5 +3138,5 @@ br{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
 }

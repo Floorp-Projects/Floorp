@@ -26,7 +26,6 @@ class RemoteGeckoService : Service() {
             when (msg.what) {
                 CMD_CRASH_PARENT_NATIVE -> {
                     val settings = GeckoSessionSettings()
-                    settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false)
                     val session = GeckoSession(settings)
                     session.open(runtime!!)
                     session.loadUri("about:crashparent")

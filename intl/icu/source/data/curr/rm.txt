@@ -1024,6 +1024,10 @@ rm{
         }
         VEF{
             "VEF",
+            "bolivar venezuelan (2008–2018)",
+        }
+        VES{
+            "VES",
             "bolivar venezuelan",
         }
         VND{
@@ -1107,7 +1111,7 @@ rm{
             "code per verifitgar la valuta",
         }
         XXX{
-            "XXX",
+            "¤",
             "valuta nunenconuschenta",
         }
         YDD{
@@ -1273,5 +1277,5 @@ rm{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.94"}
 }

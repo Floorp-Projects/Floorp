@@ -355,7 +355,7 @@ strprepProfileLineFn(void *context,
     if (*s == '@') {
         /* special directive */
         s++;
-        length = fields[0][1] - s;
+        length = (int32_t)(fields[0][1] - s);
         if (length >= NORMALIZE_DIRECTIVE_LEN
             && uprv_strncmp(s, NORMALIZE_DIRECTIVE, NORMALIZE_DIRECTIVE_LEN) == 0) {
             options[NORMALIZE].doesOccur = TRUE;

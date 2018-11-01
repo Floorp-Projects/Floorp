@@ -48,7 +48,7 @@ cnmdptst.o cnormtst.o cnumtst.o crelativedateformattest.o crestst.o creststn.o c
 cucdapi.o cucdtst.o custrtst.o cstrcase.o cutiltst.o nucnvtst.o nccbtst.o bocu1tst.o \
 cbiditst.o cbididat.o eurocreg.o udatatst.o utf16tst.o utransts.o \
 ncnvfbts.o ncnvtst.o putiltst.o cstrtest.o udatpg_test.o utf8tst.o \
-stdnmtst.o usrchtst.o custrtrn.o sorttest.o trietest.o trie2test.o usettest.o \
+stdnmtst.o usrchtst.o custrtrn.o sorttest.o trietest.o trie2test.o ucptrietest.o usettest.o \
 uenumtst.o utmstest.o currtest.o \
 idnatest.o nfsprep.o spreptst.o sprpdata.o \
 hpmufn.o tracetst.o reapits.o uregiontest.o ulistfmttest.o\

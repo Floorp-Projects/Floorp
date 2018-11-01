@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pl{
-    Version{"2.1.41.97"}
+    Version{"2.1.43.50"}
     zoneStrings{
         "Etc:UTC"{
             ls{"uniwersalny czas koordynowany"}
@@ -301,7 +301,7 @@ pl{
             ls{"Kobdo (czas standardowy)"}
         }
         "meta:India"{
-            ls{"czas indyjski"}
+            ls{"czas indyjski standardowy"}
         }
         "meta:Indian_Ocean"{
             ls{"Ocean Indyjski"}
@@ -417,9 +417,9 @@ pl{
             ls{"Ułan Bator (czas standardowy)"}
         }
         "meta:Moscow"{
-            ld{"czas moskiewski letni"}
-            lg{"czas moskiewski"}
-            ls{"czas moskiewski standardowy"}
+            ld{"Moskwa (letni)"}
+            lg{"Moskwa"}
+            ls{"Moskwa (standardowy)"}
         }
         "meta:Myanmar"{
             ls{"Mjanma"}

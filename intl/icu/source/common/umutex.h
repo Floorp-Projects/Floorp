@@ -54,6 +54,21 @@ U_NAMESPACE_END
 
 #include <atomic>
 
+// Export an explicit template instantiation of std::atomic<int32_t>. 
+// When building DLLs for Windows this is required as it is used as a data member of the exported SharedObject class.
+// See digitlst.h, pluralaffix.h, datefmt.h, and others for similar examples.
+#if U_PF_WINDOWS <= U_PLATFORM && U_PLATFORM <= U_PF_CYGWIN && !defined(U_IN_DOXYGEN)
+  #if defined(__clang__)
+  // Suppress the warning that the explicit instantiation after explicit specialization has no effect.
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Winstantiation-after-specialization"
+  #endif
+template struct U_COMMON_API std::atomic<int32_t>;
+  #if defined(__clang__)
+  #pragma clang diagnostic pop
+  #endif
+#endif
+
 U_NAMESPACE_BEGIN
 
 typedef std::atomic<int32_t> u_atomic_int32_t;
@@ -205,7 +220,7 @@ umtx_atomic_dec(u_atomic_int32_t *p);
 
 U_NAMESPACE_END
 
-#endif  /* Low Level Atomic Ops Platfrom Chain */
+#endif  /* Low Level Atomic Ops Platform Chain */
 
 
 
@@ -319,7 +334,7 @@ U_NAMESPACE_END
  *************************************************************************************************/
 
 #if defined(U_USER_MUTEX_H)
-// #inlcude "U_USER_MUTEX_H"
+// #include "U_USER_MUTEX_H"
 #include U_MUTEX_XSTR(U_USER_MUTEX_H)
 
 #elif U_PLATFORM_USES_ONLY_WIN32_API
@@ -389,7 +404,7 @@ struct UConditionVar {
 #else
 
 /*
- *  Unknow platform type.
+ *  Unknown platform type.
  *      This is an error condition. ICU requires mutexes.
  */
 
@@ -401,7 +416,7 @@ struct UConditionVar {
 
 /**************************************************************************************
  *
- *  Mutex Implementation function declaratations.
+ *  Mutex Implementation function declarations.
  *     Declarations are platform neutral.
  *     Implementations, in umutex.cpp, are platform specific.
  *

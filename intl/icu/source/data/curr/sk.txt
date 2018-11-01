@@ -1044,6 +1044,10 @@ sk{
         }
         VEF{
             "VEF",
+            "venezuelský bolívar (2008–2018)",
+        }
+        VES{
+            "VES",
             "venezuelský bolívar",
         }
         VND{
@@ -2874,6 +2878,12 @@ sk{
             other{"venezuelských bolívarov (1871 – 2008)"}
         }
         VEF{
+            few{"venezuelské bolívary (2008–2018)"}
+            many{"venezuelského bolívaru (2008–2018)"}
+            one{"venezuelský bolívar (2008–2018)"}
+            other{"venezuelských bolívarov (2008–2018)"}
+        }
+        VES{
             few{"venezuelské bolívary"}
             many{"venezuelského bolívaru"}
             one{"venezuelský bolívar"}
@@ -3126,5 +3136,5 @@ sk{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
 }

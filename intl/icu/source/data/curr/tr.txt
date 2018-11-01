@@ -684,11 +684,11 @@ tr{
         }
         MRO{
             "MRO",
-            "Moritanya Ouguiyası (1973–2017)",
+            "Moritanya Ugiyası (1973–2017)",
         }
         MRU{
             "MRU",
-            "Moritanya Ouguiyası",
+            "Moritanya Ugiyası",
         }
         MTL{
             "MTL",
@@ -1049,6 +1049,10 @@ tr{
         }
         VEF{
             "VEF",
+            "Venezuela Bolivarı (2008–2018)",
+        }
+        VES{
+            "VES",
             "Venezuela Bolivarı",
         }
         VND{
@@ -1148,7 +1152,7 @@ tr{
             "ADB Hesap Birimi",
         }
         XXX{
-            "XXX",
+            "¤",
             "Bilinmeyen Para Birimi",
         }
         YDD{
@@ -1948,12 +1952,12 @@ tr{
             other{"Makao patakası"}
         }
         MRO{
-            one{"Moritanya ouguiyası (1973–2017)"}
-            other{"Moritanya ouguiyası (1973–2017)"}
+            one{"Moritanya ugiyası (1973–2017)"}
+            other{"Moritanya ugiyası (1973–2017)"}
         }
         MRU{
-            one{"Moritanya ouguiyası"}
-            other{"Moritanya ouguiyası"}
+            one{"Moritanya ugiyası"}
+            other{"Moritanya ugiyası"}
         }
         MTL{
             one{"Malta Lirası"}
@@ -2284,6 +2288,10 @@ tr{
             other{"Venezuela Bolivarı (1871–2008)"}
         }
         VEF{
+            one{"Venezuela bolivarı (2008–2018)"}
+            other{"Venezuela bolivarı (2008–2018)"}
+        }
+        VES{
             one{"Venezuela bolivarı"}
             other{"Venezuela bolivarı"}
         }
@@ -2392,5 +2400,5 @@ tr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
 }
