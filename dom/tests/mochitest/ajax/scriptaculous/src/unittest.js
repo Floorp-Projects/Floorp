@@ -571,10 +571,10 @@ if ( parent.SimpleTest && parent.runAJAXTest ) (function(){
 		var pass = match[1] - fail;
 
 		for ( var i = 0; i < pass; i++ )
-                	parent.SimpleTest.ok( true, this.testName, summary );
+                	parent.SimpleTest.ok( true, `${this.testName}: ${summary}` );
 
 		for ( var i = 0; i < fail; i++ )
-                	parent.SimpleTest.ok( false, this.testName, summary );
+                	parent.SimpleTest.ok( false, `${this.testName}: ${summary}` );
 
                 return finish.apply( this, arguments );
         };
