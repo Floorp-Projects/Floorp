@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+.flex-container {
+  display: flex;
+}
+
+.flex-container.vertical-writing-mode {
+  writing-mode: vertical-lr;
+}
+
+.column {
+  flex-direction: column;
+}
+
+.item {
+  min-width: 300px;
+  min-height: 200px;
+}
+</style>
+<div class="flex-container vertical-writing-mode">
+  <span class="row vertical item">Vertical Row Content</span>
+</div>
+<div class="flex-container vertical-writing-mode column">
+  <span class="column vertical item">Vertical Column Content</span>
+</div>
+<div class="flex-container">
+  <span class="row horizontal item">Horizontal Row Content</span>
+</div>
+<div class="flex-container column">
+  <span class="column horizontal item">Horizontal Column Content</span>
+</div>
