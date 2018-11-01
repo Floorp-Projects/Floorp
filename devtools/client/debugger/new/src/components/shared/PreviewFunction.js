@@ -8,7 +8,7 @@ import React, { Component } from "react";
 
 import { times, zip, flatten } from "lodash";
 
-import { simplifyDisplayName } from "../../utils/pause/frames";
+import { formatDisplayName } from "../../utils/pause/frames";
 
 import "./PreviewFunction.css";
 
@@ -21,14 +21,9 @@ type FunctionType = {
 
 type Props = { func: FunctionType };
 
-function getFunctionName(func: FunctionType) {
-  const name = func.userDisplayName || func.displayName || func.name;
-  return simplifyDisplayName(name);
-}
-
 export default class PreviewFunction extends Component<Props> {
   renderFunctionName(func: FunctionType) {
-    const name = getFunctionName(func);
+    const name = formatDisplayName(func);
     return <span className="function-name">{name}</span>;
   }
 

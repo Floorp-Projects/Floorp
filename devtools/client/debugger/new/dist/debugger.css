@@ -1799,6 +1799,7 @@ html .toggle-button.end.vertical svg {
 }
 
 .source-outline-tabs {
+  font-size: 12px;
   width: 100%;
   background: var(--theme-body-background);
   border-top: 1px solid var(--theme-splitter-color);
@@ -1813,9 +1814,9 @@ html .toggle-button.end.vertical svg {
 
 .source-outline-tabs .tab {
   background-color: var(--theme-toolbar-background);
-  border-bottom: 1px solid transparent;
-  border-color: var(--theme-splitter-color);
-  color: var(--theme-body-color);
+  border-top: 2px solid transparent;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  color: var(--theme-toolbar-color);
   cursor: default;
   display: inline-flex;
   flex: 1;
@@ -1823,23 +1824,31 @@ html .toggle-button.end.vertical svg {
   margin-bottom: 0px;
   margin-top: -1px;
   overflow: hidden;
-  padding: 8px 8px 7px 8px;
+  padding: 5px 8px 7px 8px;
   position: relative;
   transition: all 0.25s ease;
 }
 
-.source-outline-tabs .tab:first-child {
-  border-inline-end: 1px solid var(--theme-splitter-color);
+.source-outline-tabs .tab:not(.active):hover {
+  background-color: var(--theme-toolbar-hover);
+  border-top: 2px solid rgba(0, 0, 0, 0.2);
 }
 
-.source-outline-tabs .tab:hover {
-  background-color: var(--theme-toolbar-background-alt);
-  border-color: var(--theme-splitter-color);
+.theme-dark .source-outline-tabs .tab:hover {
+  border-top: 2px solid var(--tab-line-hover-color);
 }
 
 .source-outline-tabs .tab.active {
-  background-color: var(--theme-body-background);
-  border-bottom-color: transparent;
+  border-top: 2px solid var(--tab-line-selected-color);
+  color: var(--theme-toolbar-selected-color);
+}
+
+.theme-dark .source-outline-tabs .tab.active {
+  color: var(--theme-toolbar-selected-color);
+}
+
+.theme-dark .source-outline-tabs .tab.active:hover {
+  border-top: 2px solid var(--tab-line-selected-color);
 }
 
 .source-outline-tabs .tab.active path,
@@ -4251,9 +4260,8 @@ html .welcomebox .toggle-button-end.collapsed {
 }
 
 .source-tab {
-  border: 1px solid transparent;
-  border-top-left-radius: 2px;
-  border-top-right-radius: 2px;
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
   display: inline-flex;
   align-items: center;
   position: relative;
@@ -4262,26 +4270,29 @@ html .welcomebox .toggle-button-end.collapsed {
   max-width: 100%;
   overflow: hidden;
   padding: 5px;
-  margin-inline-start: 3px;
-  margin-top: 3px;
   cursor: default;
-  height: 27px;
+  height: 30px;
+  font-size: 12px;
 }
 
 .source-tab:first-child {
   margin-inline-start: 0;
 }
 
-.source-tab:hover {
-  background-color: var(--theme-toolbar-background-alt);
-  border-color: var(--theme-splitter-color);
+.source-tab:not(.active):hover {
+  background: linear-gradient(var(--theme-toolbar-hover) 28px, transparent 1px);
 }
 
 .source-tab.active {
-  color: var(--theme-body-color);
-  background-color: var(--theme-body-background);
-  border-color: var(--theme-splitter-color);
+  color: var(--theme-toolbar-selected-color);
   border-bottom-color: transparent;
+  border-left: 1px solid var(--theme-splitter-color);
+  border-right: 1px solid var(--theme-splitter-color);
+  background-color: var(--theme-body-background);
+}
+
+.theme-dark .source-tab.active {
+  color: var(--theme-toolbar-selected-color);
 }
 
 .source-tab.active path,
@@ -4342,7 +4353,7 @@ html[dir="rtl"] img.moreTabs {
   overflow: hidden;
   padding: 0 4px;
   align-self: center;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .source-tab .filename span {
@@ -4361,6 +4372,30 @@ html[dir="rtl"] img.moreTabs {
 
 .source-tab:hover .close-btn {
   visibility: visible;
+}
+
+.source-tab-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: transparent;
+  transition: transform 250ms var(--animation-curve), opacity 250ms var(--animation-curve);
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.source-tab:not(.active):hover .source-tab-line {
+  background: var(--tab-line-hover-color);
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.source-tab.active .source-tab-line {
+  background: var(--tab-line-selected-color);
+  opacity: 1;
+  transform: scaleX(1);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

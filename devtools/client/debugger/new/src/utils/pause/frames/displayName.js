@@ -7,7 +7,6 @@
 // eslint-disable-next-line max-len
 import type { LocalFrame } from "../../../components/SecondaryPanes/Frames/types";
 import { getFilename } from "../../source";
-import { endTruncateStr } from "../../../utils/utils";
 
 // Decodes an anonymous naming scheme that
 // spider monkey implements based on "Naming Anonymous JavaScript Functions"
@@ -17,9 +16,9 @@ const arrayProperty = /\[(.*?)\]$/;
 const functionProperty = /([\w\d]+)[\/\.<]*?$/;
 const annonymousProperty = /([\w\d]+)\(\^\)$/;
 
-export function simplifyDisplayName(displayName: string) {
+export function simplifyDisplayName(displayName: string | void): string | void {
   // if the display name has a space it has already been mapped
-  if (/\s/.exec(displayName)) {
+  if (!displayName || /\s/.exec(displayName)) {
     return displayName;
   }
 
@@ -74,27 +73,28 @@ function mapDisplayNames(frame, library) {
   );
 }
 
+function getFrameDisplayName(frame: LocalFrame): string {
+  const { displayName, originalDisplayName, userDisplayName, name } = frame;
+  return originalDisplayName || userDisplayName || displayName || name;
+}
+
 type formatDisplayNameParams = {
-  shouldMapDisplayName: boolean,
-  maxLength: number
+  shouldMapDisplayName: boolean
 };
 export function formatDisplayName(
   frame: LocalFrame,
-  { shouldMapDisplayName = true, maxLength = 25 }: formatDisplayNameParams = {}
-) {
-  let { displayName, originalDisplayName, library } = frame;
-  displayName = originalDisplayName || displayName;
+  { shouldMapDisplayName = true }: formatDisplayNameParams = {}
+): string {
+  const { library } = frame;
+  let displayName = getFrameDisplayName(frame);
   if (library && shouldMapDisplayName) {
     displayName = mapDisplayNames(frame, library);
   }
 
-  displayName = simplifyDisplayName(displayName);
-  return Number.isInteger(maxLength)
-    ? endTruncateStr(displayName, maxLength)
-    : displayName;
+  return simplifyDisplayName(displayName) || L10N.getStr("anonymousFunction");
 }
 
-export function formatCopyName(frame: LocalFrame) {
+export function formatCopyName(frame: LocalFrame): string {
   const displayName = formatDisplayName(frame);
   const fileName = getFilename(frame.source);
   const frameLocation = frame.location.line;
