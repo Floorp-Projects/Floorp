@@ -22,7 +22,9 @@ sk{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0} – {1}"}
             }
             patterns{
@@ -287,7 +289,7 @@ sk{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
     calendar{
         buddhist{
             eras{
@@ -715,10 +717,10 @@ sk{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    few{"w. 'týždeň' 'v' 'roku' Y"}
-                    many{"w. 'týždeň' 'v' 'roku' Y"}
-                    one{"w. 'týždeň' 'v' 'roku' Y"}
-                    other{"w. 'týždeň' 'v' 'roku' Y"}
+                    few{"w. 'týždeň' 'roka' Y"}
+                    many{"w. 'týždeň' 'roka' Y"}
+                    one{"w. 'týždeň' 'roka' Y"}
+                    other{"w. 'týždeň' 'roka' Y"}
                 }
             }
             dayNames{
@@ -2594,5 +2596,37 @@ sk{
         UK{"britský"}
         US{"americký"}
         metric{"metrický"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

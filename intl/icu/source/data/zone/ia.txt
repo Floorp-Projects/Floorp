@@ -1,0 +1,174 @@
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
+ia{
+    Version{"2.1.44.15"}
+    zoneStrings{
+        "Etc:UTC"{
+            ls{"Universal Tempore Coordinate"}
+        }
+        "Europe:Dublin"{
+            ld{"Hora estive irlandese"}
+        }
+        "Europe:London"{
+            ld{"Hora estive britannic"}
+        }
+        "meta:Alaska"{
+            ld{"hora estive de Alaska"}
+            lg{"hora de Alaska"}
+            ls{"hora normal de Alaska"}
+        }
+        "meta:America_Central"{
+            ld{"hora estive central"}
+            lg{"hora central"}
+            ls{"hora normal central"}
+        }
+        "meta:America_Eastern"{
+            ld{"hora estive del est"}
+            lg{"hora del est"}
+            ls{"hora normal del est"}
+        }
+        "meta:America_Mountain"{
+            ld{"hora estive del montanias"}
+            lg{"hora del montanias"}
+            ls{"hora normal del montanias"}
+        }
+        "meta:America_Pacific"{
+            ld{"hora estive pacific"}
+            lg{"hora pacific"}
+            ls{"hora normal pacific"}
+        }
+        "meta:Atlantic"{
+            ld{"hora estive atlantic"}
+            lg{"hora atlantic"}
+            ls{"hora normal atlantic"}
+        }
+        "meta:Azores"{
+            ld{"hora estive del Azores"}
+            lg{"hora del Azores"}
+            ls{"hora normal del Azores"}
+        }
+        "meta:Cuba"{
+            ld{"hora estive de Cuba"}
+            lg{"hora de Cuba"}
+            ls{"hora normal de Cuba"}
+        }
+        "meta:Europe_Central"{
+            ld{"hora estive de Europa central"}
+            lg{"hora de Europa central"}
+            ls{"hora normal de Europa central"}
+        }
+        "meta:Europe_Eastern"{
+            ld{"hora estive de Europa oriental"}
+            lg{"hora de Europa oriental"}
+            ls{"hora normal de Europa oriental"}
+        }
+        "meta:Europe_Further_Eastern"{
+            ls{"hora de Europa ultra-oriental"}
+        }
+        "meta:Europe_Western"{
+            ld{"hora estive de Europa occidental"}
+            lg{"hora de Europa occidental"}
+            ls{"hora normal de Europa occidental"}
+        }
+        "meta:GMT"{
+            ls{"hora medie de Greenwich"}
+        }
+        "meta:Greenland_Eastern"{
+            ld{"hora estive de Groenlandia oriental"}
+            lg{"hora de Groenlandia oriental"}
+            ls{"hora normal de Groenlandia oriental"}
+        }
+        "meta:Greenland_Western"{
+            ld{"hora estive de Groenlandia occidental"}
+            lg{"hora de Groenlandia occidental"}
+            ls{"hora normal de Groenlandia occidental"}
+        }
+        "meta:Hawaii_Aleutian"{
+            ld{"hora estive de Hawaii-Aleutianas"}
+            lg{"hora de Hawaii-Aleutianas"}
+            ls{"hora normal de Hawaii-Aleutianas"}
+        }
+        "meta:Irkutsk"{
+            ld{"hora estive de Irkutsk"}
+            lg{"hora de Irkutsk"}
+            ls{"hora normal de Irkutsk"}
+        }
+        "meta:Krasnoyarsk"{
+            ld{"hora estive de Krasnoyarsk"}
+            lg{"hora de Krasnoyarsk"}
+            ls{"hora normal de Krasnoyarsk"}
+        }
+        "meta:Magadan"{
+            ld{"hora estive de Magadan"}
+            lg{"hora de Magadan"}
+            ls{"hora normal de Magadan"}
+        }
+        "meta:Mexico_Northwest"{
+            ld{"hora estive del nordwest de Mexico"}
+            lg{"hora del nordwest de Mexico"}
+            ls{"hora normal del nordwest de Mexico"}
+        }
+        "meta:Mexico_Pacific"{
+            ld{"hora estive del Pacifico mexican"}
+            lg{"hora del Pacifico mexican"}
+            ls{"hora normal del Pacifico mexican"}
+        }
+        "meta:Moscow"{
+            ld{"hora estive de Moscova"}
+            lg{"hora de Moscova"}
+            ls{"hora normal de Moscova"}
+        }
+        "meta:Newfoundland"{
+            ld{"hora estive de Terranova"}
+            lg{"hora de Terranova"}
+            ls{"hora normal de Terranova"}
+        }
+        "meta:Novosibirsk"{
+            ld{"hora estive de Novosibirsk"}
+            lg{"hora de Novosibirsk"}
+            ls{"hora normal de Novosibirsk"}
+        }
+        "meta:Omsk"{
+            ld{"hora estive de Omsk"}
+            lg{"hora de Omsk"}
+            ls{"hora normal de Omsk"}
+        }
+        "meta:Pierre_Miquelon"{
+            ld{"hora estive de Saint-Pierre e Miquelon"}
+            lg{"hora de Saint-Pierre e Miquelon"}
+            ls{"hora normal de Saint-Pierre e Miquelon"}
+        }
+        "meta:Sakhalin"{
+            ld{"hora estive de Sachalin"}
+            lg{"hora de Sachalin"}
+            ls{"hora normal de Sachalin"}
+        }
+        "meta:Vladivostok"{
+            ld{"hora estive de Vladivostok"}
+            lg{"hora de Vladivostok"}
+            ls{"hora normal de Vladivostok"}
+        }
+        "meta:Volgograd"{
+            ld{"hora estive de Volgograd"}
+            lg{"hora de Volgograd"}
+            ls{"hora normal de Volgograd"}
+        }
+        "meta:Yakutsk"{
+            ld{"hora estive de Yakutsk"}
+            lg{"hora de Yakutsk"}
+            ls{"hora normal de Yakutsk"}
+        }
+        "meta:Yekaterinburg"{
+            ld{"hora estive de Ekaterinburg"}
+            lg{"hora de Ekaterinburg"}
+            ls{"hora normal de Ekaterinburg"}
+        }
+        fallbackFormat{"{1} ({0})"}
+        gmtFormat{"GMT{0}"}
+        gmtZeroFormat{"GMT"}
+        hourFormat{"+HH:mm;-HH:mm"}
+        regionFormat{"hora de {0}"}
+        regionFormatDaylight{"hora estive de {0}"}
+        regionFormatStandard{"hora normal de {0}"}
+    }
+}

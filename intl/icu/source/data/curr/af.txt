@@ -184,7 +184,7 @@ af{
         }
         EUR{
             "€",
-            "Euro",
+            "euro",
         }
         FJD{
             "FJD",
@@ -630,6 +630,10 @@ af{
             "VEF",
             "Venezolaanse bolivar",
         }
+        VES{
+            "VES",
+            "Venezolaanse Bolívar",
+        }
         VND{
             "₫",
             "Viëtnamese dong",
@@ -659,8 +663,8 @@ af{
             "CFP-frank",
         }
         XXX{
-            "XXX",
-            "Onbekende geldeenheid",
+            "¤",
+            "onbekende geldeenheid",
         }
         YER{
             "YER",
@@ -1378,8 +1382,12 @@ af{
             other{"Oezbekiese som"}
         }
         VEF{
-            one{"Venezolaanse bolivar"}
-            other{"Venezolaanse bolivar"}
+            one{"Venezolaanse bolívar (2008–2018)"}
+            other{"Venezolaanse bolívare (2008–2018)"}
+        }
+        VES{
+            one{"Venezolaanse bolívar"}
+            other{"Venezolaanse bolívare"}
         }
         VND{
             one{"Viëtnamese dong"}
@@ -1430,5 +1438,5 @@ af{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
 }

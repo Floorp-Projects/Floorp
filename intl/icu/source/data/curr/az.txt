@@ -956,6 +956,10 @@ az{
         }
         VEF{
             "VEF",
+            "Venesuela Bolivarı (2008–2018)",
+        }
+        VES{
+            "VES",
             "Venesuela Bolivarı",
         }
         VND{
@@ -1015,7 +1019,7 @@ az{
             "Platinum",
         }
         XXX{
-            "XXX",
+            "¤",
             "Naməlum Valyuta",
         }
         YDD{
@@ -2129,6 +2133,10 @@ az{
             other{"Venesuela bolivarı (1871–2008)"}
         }
         VEF{
+            one{"Venesuela bolivarı (2008–2018)"}
+            other{"Venesuela bolivarı (2008–2018)"}
+        }
+        VES{
             one{"Venesuela bolivarı"}
             other{"Venesuela bolivarı"}
         }
@@ -2253,5 +2261,5 @@ az{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.53"}
 }

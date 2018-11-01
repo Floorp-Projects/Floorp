@@ -2,7 +2,8 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!-- The following import will include the 'default' configuration options for VS projects. -->
   <Import Project="..\allinone\Build.Windows.ProjectConfiguration.props" />
-
+  <!-- The following import will include the library configuration options for VS projects. -->
+  <Import Project="..\allinone\Build.Windows.Library.ProjectConfiguration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{203EC78A-0531-43F0-A636-285439BDE025}</ProjectGuid>
   </PropertyGroup>
@@ -97,7 +98,7 @@
       <ProgramDataBaseFileName>.\x86\Release/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin\icudt62.dll</OutputFile>
+      <OutputFile>..\..\bin\icudt63.dll</OutputFile>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <ProgramDatabaseFile>.\x86\Release\icudt.pdb</ProgramDatabaseFile>
       <DataExecutionPrevention>
@@ -116,7 +117,7 @@
       <ProgramDataBaseFileName>.\x86\Debug/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin\icudt62.dll</OutputFile>
+      <OutputFile>..\..\bin\icudt63.dll</OutputFile>
       <ProgramDatabaseFile>.\x86\Debug/icudt.pdb</ProgramDatabaseFile>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
@@ -136,7 +137,7 @@
       <ProgramDataBaseFileName>.\x64\Release/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64\icudt62.dll</OutputFile>
+      <OutputFile>..\..\bin64\icudt63.dll</OutputFile>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <ProgramDatabaseFile>.\x64\Release\icudt.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64\icudt.lib</ImportLibrary>
@@ -153,7 +154,7 @@
       <ProgramDataBaseFileName>.\x64\Debug/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64\icudt62.dll</OutputFile>
+      <OutputFile>..\..\bin64\icudt63.dll</OutputFile>
       <ProgramDatabaseFile>.\x64\Debug/icudt.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64\icudt.lib</ImportLibrary>
     </Link>

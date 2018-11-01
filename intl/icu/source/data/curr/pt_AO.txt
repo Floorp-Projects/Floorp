@@ -5,7 +5,7 @@ pt_AO{
     Currencies{
         AOA{
             "Kz",
-            "Kwanza angolano",
+            "kwanza angolano",
         }
     }
     Version{"2.1.38.39"}

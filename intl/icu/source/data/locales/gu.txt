@@ -55,7 +55,9 @@ gu{
         }
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}-{1}"}
             }
             patterns{
@@ -250,7 +252,7 @@ gu{
         minimumGroupingDigits{"1"}
         native{"gujr"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.2"}
     calendar{
         buddhist{
             eras{
@@ -2148,7 +2150,7 @@ gu{
             }
             relativeTime{
                 future{
-                    one{"+{0} રવિવાર"}
+                    one{"{0} રવિવારમાં"}
                     other{"{0} રવિવારમાં"}
                 }
                 past{
@@ -2220,8 +2222,8 @@ gu{
                     other{"{0} ગુરુવારમાં"}
                 }
                 past{
-                    one{"-{0} ગુરુવાર"}
-                    other{"-{0} ગુરુવાર"}
+                    one{"{0} ગુરુ. પહેલાં"}
+                    other{"{0} ગુરુ. પહેલાં"}
                 }
             }
         }
@@ -2528,8 +2530,13 @@ gu{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

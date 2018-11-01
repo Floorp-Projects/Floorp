@@ -24,10 +24,10 @@
 #if !UCONFIG_NO_NORMALIZATION
 
 #include "unicode/errorcode.h"
+#include "unicode/umutablecptrie.h"
 #include "unicode/unistr.h"
 #include "normalizer2impl.h"  // for IX_COUNT
 #include "toolutil.h"
-#include "utrie2.h"
 #include "norms.h"
 
 U_NAMESPACE_BEGIN
@@ -95,9 +95,9 @@ private:
         return indexes[Normalizer2Impl::IX_MIN_MAYBE_YES]-
             ((2*Normalizer2Impl::MAX_DELTA+1)<<Normalizer2Impl::DELTA_SHIFT);
     }
-    void writeNorm16(UChar32 start, UChar32 end, Norm &norm);
-    void setHangulData();
-    void processData();
+    void writeNorm16(UMutableCPTrie *norm16Trie, UChar32 start, UChar32 end, Norm &norm);
+    void setHangulData(UMutableCPTrie *norm16Trie);
+    LocalUCPTriePointer processData();
 
     Norms norms;
 
@@ -107,7 +107,7 @@ private:
     Optimization optimization;
 
     int32_t indexes[Normalizer2Impl::IX_COUNT];
-    UTrie2 *norm16Trie;
+    uint8_t *norm16TrieBytes;
     int32_t norm16TrieLength;
     UnicodeString extraData;
     uint8_t smallFCD[0x100];

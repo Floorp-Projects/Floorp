@@ -19,7 +19,9 @@ id{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -173,7 +175,7 @@ id{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.20"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1369,7 +1371,7 @@ id{
                         "Mei",
                         "Jun",
                         "Jul",
-                        "Agt",
+                        "Agu",
                         "Sep",
                         "Okt",
                         "Nov",
@@ -1413,7 +1415,7 @@ id{
                         "Mei",
                         "Jun",
                         "Jul",
-                        "Agt",
+                        "Agu",
                         "Sep",
                         "Okt",
                         "Nov",
@@ -2217,6 +2219,7 @@ id{
                     "Taishō",
                     "Shōwa",
                     "Heisei",
+                    "Qqqq",
                 }
             }
         }
@@ -2392,7 +2395,7 @@ id{
         european_scripts{"Skrip Eropa"}
         female{"perempuan"}
         flag{"bendera"}
-        flags{"Bendera"}
+        flags{"bendera"}
         food_drink{"makanan & minuman"}
         format{"format"}
         format_whitespace{"format & spasi kosong"}
@@ -2492,6 +2495,9 @@ id{
         }
         day-narrow{
             dn{"h"}
+            relative{
+                "2"{"lusa"}
+            }
             relativeTime{
                 future{
                     other{"dalam {0} h"}
@@ -2503,6 +2509,9 @@ id{
         }
         day-short{
             dn{"h"}
+            relative{
+                "2"{"lusa"}
+            }
             relativeTime{
                 future{
                     other{"dalam {0} h"}
@@ -3196,5 +3205,37 @@ id{
         UK{"BR"}
         US{"AS"}
         metric{"Metrik"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

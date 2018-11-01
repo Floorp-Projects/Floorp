@@ -31,7 +31,7 @@ ckb{
         default{"arab"}
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -57,7 +57,7 @@ ckb{
         minimumGroupingDigits{"1"}
         native{"arab"}
     }
-    Version{"2.1.38.71"}
+    Version{"2.1.44.88"}
     calendar{
         generic{
             DateTimePatterns{
@@ -248,8 +248,8 @@ ckb{
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
                 yw{
-                    one{"هەفتەی w ی y"}
-                    other{"هەفتەی w ی y"}
+                    one{"هەفتەی w ی Y"}
+                    other{"هەفتەی w ی Y"}
                 }
             }
             dayNames{

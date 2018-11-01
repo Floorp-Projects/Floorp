@@ -24,6 +24,56 @@ es_419{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"¤0 K"}
+                        other{"¤0 K"}
+                    }
+                    10000{
+                        one{"¤00 K"}
+                        other{"¤00 K"}
+                    }
+                    100000{
+                        one{"¤000 K"}
+                        other{"¤000 K"}
+                    }
+                    1000000{
+                        one{"¤0 M"}
+                        other{"¤0 M"}
+                    }
+                    10000000{
+                        one{"¤00 M"}
+                        other{"¤00 M"}
+                    }
+                    100000000{
+                        one{"¤000 M"}
+                        other{"¤000 M"}
+                    }
+                    1000000000{
+                        one{"¤0000 M"}
+                        other{"¤0000 M"}
+                    }
+                    10000000000{
+                        one{"¤00 MRD"}
+                        other{"¤00 MRD"}
+                    }
+                    100000000000{
+                        one{"¤000 MRD"}
+                        other{"¤000 MRD"}
+                    }
+                    1000000000000{
+                        one{"¤0 B"}
+                        other{"¤0 B"}
+                    }
+                    10000000000000{
+                        one{"¤00 B"}
+                        other{"¤00 B"}
+                    }
+                    100000000000000{
+                        one{"¤000 B"}
+                        other{"¤000 B"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0 K"}
@@ -57,7 +107,7 @@ es_419{
             }
         }
     }
-    Version{"2.1.38.39"}
+    Version{"2.1.43.65"}
     calendar{
         coptic{
             monthNames{
@@ -594,9 +644,12 @@ es_419{
     characterLabel{
         african_scripts{"Símbolos de escritura de África"}
         american_scripts{"Símbolos de escritura de América"}
-        animals_nature{"Naturaleza y animales"}
-        body{"Cuerpo"}
+        animal{"animal"}
+        animals_nature{"naturaleza y animales"}
+        arrows{"flecha"}
+        body{"cuerpo"}
         box_drawing{"Cuadro de dibujo"}
+        building{"edificio"}
         consonantal_jamo{"Jamo consonántico"}
         currency_symbols{"símbolos de monedas"}
         dash_connector{"Guión/conector"}
@@ -604,7 +657,7 @@ es_419{
         dingbats{"Símbolos y viñetas"}
         downwards_upwards_arrows{"Flechas hacia arriba y hacia abajo"}
         european_scripts{"Símbolos de escritura de Europa"}
-        flags{"Indicadores"}
+        flags{"banderas"}
         format{"Formato"}
         format_whitespace{"formato y espacio duro"}
         full_width_form_variant{"Variantes de formato de ancho completo"}
@@ -624,23 +677,33 @@ es_419{
         miscellaneous{"Miscelánea"}
         modern_scripts{"sistemas de escritura modernos"}
         modifier{"Modificador"}
+        nature{"naturaleza"}
+        nonspacing{"sin espaciado"}
         other{"otros"}
         paired{"Asociado"}
+        person{"persona"}
         phonetic_alphabet{"alfabeto fonético"}
+        place{"lugar"}
+        plant{"planta"}
+        sign_standard_symbols{"señal o símbolo"}
         small_form_variant{"Variantes de formato pequeño"}
         smiley{"Caras sonrientes"}
         south_asian_scripts{"sistemas de escritura de Asia del Sur"}
         southeast_asian_scripts{"sistemas de escritura de Asia Sudoriental"}
+        sport{"deporte"}
         symbols{"símbolo"}
         tone_marks{"marcas tonales"}
+        travel{"viaje"}
         travel_places{"viajes y destinos"}
         variant_forms{"variantes"}
         vocalic_jamo{"Jamo vocálico"}
-        weather{"Clima"}
+        weather{"clima"}
         western_asian_scripts{"sistemas de escritura de Asia Occidental"}
         whitespace{"espacio duro"}
     }
     delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
         quotationEnd{"”"}
         quotationStart{"“"}
     }
@@ -868,5 +931,8 @@ es_419{
                 "0"{"este año"}
             }
         }
+    }
+    measurementSystemNames{
+        US{"anglosajón"}
     }
 }

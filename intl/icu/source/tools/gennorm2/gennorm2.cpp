@@ -266,6 +266,11 @@ void parseFile(std::ifstream &f, Normalizer2DataBuilder &builder) {
             fprintf(stderr, "gennorm2 error: parsing code point range from %s\n", line);
             exit(errorCode.reset());
         }
+        if (endCP >= 0xd800 && startCP <= 0xdfff) {
+                fprintf(stderr, "gennorm2 error: value or mapping for surrogate code points: %s\n",
+                        line);
+                exit(U_ILLEGAL_ARGUMENT_ERROR);
+        }
         delimiter=u_skipWhitespace(delimiter);
         if(*delimiter==':') {
             const char *s=u_skipWhitespace(delimiter+1);

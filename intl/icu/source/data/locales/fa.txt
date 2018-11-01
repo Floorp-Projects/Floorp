@@ -63,7 +63,9 @@ fa{
         default{"arabext"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"‎{0}+‎"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -248,13 +250,13 @@ fa{
             }
             plural{
                 one{"او {0} فیلم در هفته می‌بیند که کمدی است."}
-                other{"او {0} فیلم در هفته می‌بیند که کمدی هستند."}
+                other{"او {0} فیلم در هفته می‌بیند که کمدی‌اند."}
             }
         }
         minimumGroupingDigits{"1"}
         native{"arabext"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
     calendar{
         buddhist{
             eras{
@@ -1674,7 +1676,7 @@ fa{
         hanzi_traditional{"هانزی (سنتی)"}
         heart{"قلب"}
         historic_scripts{"دبیره‌های تاریخی"}
-        ideographic_desc_characters{"نویسه‌های توصیفی اندیش‌نگاری"}
+        ideographic_desc_characters{"نویسه‌های توصیفی اندیشه‌نگاری"}
         japanese_kana{"کانای ژاپنی"}
         kanbun{"کانبوم"}
         kanji{"کانجی"}
@@ -2630,8 +2632,13 @@ fa{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

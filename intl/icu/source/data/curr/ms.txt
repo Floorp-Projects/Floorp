@@ -604,6 +604,10 @@ ms{
         }
         VEF{
             "VEF",
+            "Bolivar Venezuela (2008–2018)",
+        }
+        VES{
+            "VES",
             "Bolivar Venezuela",
         }
         VND{
@@ -635,7 +639,7 @@ ms{
             "Franc CFP",
         }
         XXX{
-            "XXX",
+            "¤",
             "Mata Wang Tidak Diketahui",
         }
         YER{
@@ -1203,6 +1207,9 @@ ms{
             other{"Som Uzbekistan"}
         }
         VEF{
+            other{"Bolivar Venezuela (2008–2018)"}
+        }
+        VES{
             other{"Bolivar Venezuela"}
         }
         VND{
@@ -1242,5 +1249,5 @@ ms{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
 }

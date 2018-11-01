@@ -700,7 +700,7 @@ da{
         }
         PEN{
             "PEN",
-            "peruviansk sol",
+            "peruansk sol",
         }
         PES{
             "PES",
@@ -948,6 +948,10 @@ da{
         }
         VEF{
             "VEF",
+            "venezuelansk bolivar (2008–2018)",
+        }
+        VES{
+            "VES",
             "venezuelansk bolivar",
         }
         VND{
@@ -1027,7 +1031,7 @@ da{
             "testvalutakode",
         }
         XXX{
-            "XXX",
+            "¤",
             "ukendt valuta",
         }
         YDD{
@@ -1885,8 +1889,8 @@ da{
             other{"peruvianske inti"}
         }
         PEN{
-            one{"peruviansk sol"}
-            other{"peruvianske soles"}
+            one{"peruansk sol"}
+            other{"peruanske soles"}
         }
         PES{
             one{"peruviansk sol (1863–1965)"}
@@ -2133,8 +2137,12 @@ da{
             other{"Venezuelanske bolivar (1871–2008)"}
         }
         VEF{
+            one{"venezuelansk bolivar (2008–2018)"}
+            other{"venezuelanske bolivarer (2008–2018)"}
+        }
+        VES{
             one{"venezuelansk bolivar"}
-            other{"venezuelanske bolivar"}
+            other{"venezuelanske bolivarer"}
         }
         VND{
             one{"vietnamesisk dong"}
@@ -2241,5 +2249,5 @@ da{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
 }

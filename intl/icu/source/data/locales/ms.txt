@@ -25,7 +25,9 @@ ms{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -180,7 +182,7 @@ ms{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     calendar{
         buddhist{
             eras{
@@ -1790,7 +1792,7 @@ ms{
         japanese_kana{"Kana Jepun"}
         kanbun{"Kanbun"}
         kanji{"Kanji"}
-        keycap{"keycap"}
+        keycap{"butang kekunci"}
         leftwards_arrows{"anak panah ke kiri"}
         leftwards_rightwards_arrows{"anak panah ke kiri dan ke kanan"}
         letterlike_symbols{"Simbol Ala Huruf"}
@@ -2643,8 +2645,13 @@ ms{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

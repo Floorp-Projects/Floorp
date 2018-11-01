@@ -1,0 +1,612 @@
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
+tk{
+    Version{"2.1.43.65"}
+    zoneStrings{
+        "Etc:UTC"{
+            ls{"Utgaşdyrylýan ähliumumy wagt"}
+        }
+        "Europe:Dublin"{
+            ld{"Irlandiýa standart wagty"}
+        }
+        "Europe:London"{
+            ld{"Beýik Britaniýa tomusky wagty"}
+        }
+        "meta:Afghanistan"{
+            ls{"Owganystan wagty"}
+        }
+        "meta:Africa_Central"{
+            ls{"Merkezi Afrika wagty"}
+        }
+        "meta:Africa_Eastern"{
+            ls{"Gündogar Afrika wagty"}
+        }
+        "meta:Africa_Southern"{
+            ls{"Günorta Afrika standart wagty"}
+        }
+        "meta:Africa_Western"{
+            ld{"Günbatar Afrika tomusky wagty"}
+            lg{"Günbatar Afrika wagty"}
+            ls{"Günbatar Afrika standart wagty"}
+        }
+        "meta:Alaska"{
+            ld{"Alýaska tomusky wagty"}
+            lg{"Alýaska wagty"}
+            ls{"Alýaska standart wagty"}
+        }
+        "meta:Amazon"{
+            ld{"Amazon tomusky wagty"}
+            lg{"Amazon wagty"}
+            ls{"Amazon standart wagty"}
+        }
+        "meta:America_Central"{
+            ld{"Merkezi Amerika tomusky wagty"}
+            lg{"Merkezi Amerika"}
+            ls{"Merkezi Amerika standart wagty"}
+        }
+        "meta:America_Eastern"{
+            ld{"Demirgazyk Amerika gündogar tomusky wagty"}
+            lg{"Demirgazyk Amerika gündogar wagty"}
+            ls{"Demirgazyk Amerika gündogar standart wagty"}
+        }
+        "meta:America_Mountain"{
+            ld{"Demirgazyk Amerika dag tomusky wagty"}
+            lg{"Demirgazyk Amerika dag wagty"}
+            ls{"Demirgazyk Amerika dag standart wagty"}
+        }
+        "meta:America_Pacific"{
+            ld{"Demirgazyk Amerika Ýuwaş umman tomusky wagty"}
+            lg{"Demirgazyk Amerika Ýuwaş umman wagty"}
+            ls{"Demirgazyk Amerika Ýuwaş umman standart wagty"}
+        }
+        "meta:Apia"{
+            ld{"Apia tomusky wagty"}
+            lg{"Apia wagty"}
+            ls{"Apia standart wagty"}
+        }
+        "meta:Arabian"{
+            ld{"Arap ýurtlary tomusky wagty"}
+            lg{"Arap ýurtlary wagty"}
+            ls{"Arap ýurtlary standart wagty"}
+        }
+        "meta:Argentina"{
+            ld{"Argentina tomusky wagty"}
+            lg{"Argentina wagty"}
+            ls{"Argentina standart wagty"}
+        }
+        "meta:Argentina_Western"{
+            ld{"Günbatar Argentina tomusky wagty"}
+            lg{"Günbatar Argentina wagty"}
+            ls{"Günbatar Argentina standart wagty"}
+        }
+        "meta:Armenia"{
+            ld{"Ermenistan tomusky wagty"}
+            lg{"Ermenistan wagty"}
+            ls{"Ermenistan standart wagty"}
+        }
+        "meta:Atlantic"{
+            ld{"Atlantik tomusky wagty"}
+            lg{"Atlantik wagty"}
+            ls{"Atlantik standart wagty"}
+        }
+        "meta:Australia_Central"{
+            ld{"Merkezi Awstraliýa tomusky wagty"}
+            lg{"Merkezi Awstraliýa wagty"}
+            ls{"Merkezi Awstraliýa standart wagty"}
+        }
+        "meta:Australia_CentralWestern"{
+            ld{"Merkezi Awstraliýa günbatar tomusky wagty"}
+            lg{"Merkezi Awstraliýa günbatar wagty"}
+            ls{"Merkezi Awstraliýa günbatar standart wagty"}
+        }
+        "meta:Australia_Eastern"{
+            ld{"Gündogar Awstraliýa tomusky wagty"}
+            lg{"Gündogar Awstraliýa wagty"}
+            ls{"Gündogar Awstraliýa standart wagty"}
+        }
+        "meta:Australia_Western"{
+            ld{"Günbatar Awstraliýa tomusky wagty"}
+            lg{"Günbatar Awstraliýa wagty"}
+            ls{"Günbatar Awstraliýa standart wagty"}
+        }
+        "meta:Azerbaijan"{
+            ld{"Azerbaýjan tomusky wagty"}
+            lg{"Azerbaýjan wagty"}
+            ls{"Azerbaýjan standart wagty"}
+        }
+        "meta:Azores"{
+            ld{"Azor adalary tomusky wagty"}
+            lg{"Azor adalary wagty"}
+            ls{"Azor adalary standart wagty"}
+        }
+        "meta:Bangladesh"{
+            ld{"Bangladeş tomusky wagty"}
+            lg{"Bangladeş wagty"}
+            ls{"Bangladeş standart wagty"}
+        }
+        "meta:Bhutan"{
+            ls{"Butan wagty"}
+        }
+        "meta:Bolivia"{
+            ls{"Boliwiýa wagty"}
+        }
+        "meta:Brasilia"{
+            ld{"Braziliýa tomusky wagty"}
+            lg{"Braziliýa wagty"}
+            ls{"Braziliýa standart wagty"}
+        }
+        "meta:Brunei"{
+            ls{"Bruneý-Darussalam wagty"}
+        }
+        "meta:Cape_Verde"{
+            ld{"Kabo-Werde tomusky wagty"}
+            lg{"Kabo-Werde wagty"}
+            ls{"Kabo-Werde standart wagty"}
+        }
+        "meta:Chamorro"{
+            ls{"Çamorro wagty"}
+        }
+        "meta:Chatham"{
+            ld{"Çatem tomusky wagty"}
+            lg{"Çatem wagty"}
+            ls{"Çatem standart wagty"}
+        }
+        "meta:Chile"{
+            ld{"Çili tomusky wagty"}
+            lg{"Çili wagty"}
+            ls{"Çili standart wagty"}
+        }
+        "meta:China"{
+            ld{"Hytaý tomusky wagty"}
+            lg{"Hytaý wagty"}
+            ls{"Hytaý standart wagty"}
+        }
+        "meta:Choibalsan"{
+            ld{"Çoýbalsan tomusky wagt"}
+            lg{"Çoýbalsan wagty"}
+            ls{"Çoýbalsan standart wagty"}
+        }
+        "meta:Christmas"{
+            ls{"Roždestwo adasy wagty"}
+        }
+        "meta:Cocos"{
+            ls{"Kokos adalary wagty"}
+        }
+        "meta:Colombia"{
+            ld{"Kolumbiýa tomusky wagty"}
+            lg{"Kolumbiýa wagty"}
+            ls{"Kolumbiýa standart wagty"}
+        }
+        "meta:Cook"{
+            ld{"Kuk adalary tomusky wagty"}
+            lg{"Kuk adalary wagty"}
+            ls{"Kuk adalary standart wagty"}
+        }
+        "meta:Cuba"{
+            ld{"Kuba tomusky wagty"}
+            lg{"Kuba wagty"}
+            ls{"Kuba standart wagty"}
+        }
+        "meta:Davis"{
+            ls{"Deýwis wagty"}
+        }
+        "meta:DumontDUrville"{
+            ls{"Dýumon-d-Ýurwil wagty"}
+        }
+        "meta:East_Timor"{
+            ls{"Gündogar Timor wagty"}
+        }
+        "meta:Easter"{
+            ld{"Pasha adasy tomusky wagty"}
+            lg{"Pasha adasy wagty"}
+            ls{"Pasha adasy standart wagty"}
+        }
+        "meta:Ecuador"{
+            ls{"Ekwador wagty"}
+        }
+        "meta:Europe_Central"{
+            ld{"Merkezi Ýewropa tomusky wagty"}
+            lg{"Merkezi Ýewropa wagty"}
+            ls{"Merkezi Ýewropa standart wagty"}
+        }
+        "meta:Europe_Eastern"{
+            ld{"Gündogar Ýewropa tomusky wagty"}
+            lg{"Gündogar Ýewropa wagty"}
+            ls{"Gündogar Ýewropa standart wagty"}
+        }
+        "meta:Europe_Further_Eastern"{
+            ls{"Uzak Gündogar Ýewropa wagty"}
+        }
+        "meta:Europe_Western"{
+            ld{"Günbatar Ýewropa tomusky wagty"}
+            lg{"Günbatar Ýewropa wagty"}
+            ls{"Günbatar Ýewropa standart wagty"}
+        }
+        "meta:Falkland"{
+            ld{"Folklend adalary tomusky wagty"}
+            lg{"Folklend adalary wagty"}
+            ls{"Folklend adalary standart wagty"}
+        }
+        "meta:Fiji"{
+            ld{"Fiji tomusky wagty"}
+            lg{"Fiji wagty"}
+            ls{"Fiji standart wagty"}
+        }
+        "meta:French_Guiana"{
+            ls{"Fransuz Gwianasy wagty"}
+        }
+        "meta:French_Southern"{
+            ls{"Fransuz Günorta we Antarktika ýerleri wagty"}
+        }
+        "meta:GMT"{
+            ls{"Grinwiç boýunça orta wagt"}
+        }
+        "meta:Galapagos"{
+            ls{"Galapagos adalary wagty"}
+        }
+        "meta:Gambier"{
+            ls{"Gambýe wagty"}
+        }
+        "meta:Georgia"{
+            ld{"Gruziýa tomusky wagty"}
+            lg{"Gruziýa wagty"}
+            ls{"Gruziýa standart wagty"}
+        }
+        "meta:Gilbert_Islands"{
+            ls{"Gilberta adalary wagty"}
+        }
+        "meta:Greenland_Eastern"{
+            ld{"Gündogar Grenlandiýa tomusky wagty"}
+            lg{"Gündogar Grenlandiýa wagty"}
+            ls{"Gündogar Grenlandiýa standart wagty"}
+        }
+        "meta:Greenland_Western"{
+            ld{"Günbatar Grenlandiýa tomusky wagty"}
+            lg{"Günbatar Grenlandiýa wagty"}
+            ls{"Günbatar Grenlandiýa standart wagty"}
+        }
+        "meta:Gulf"{
+            ls{"Pars aýlagy standart wagty"}
+        }
+        "meta:Guyana"{
+            ls{"Gaýana wagty"}
+        }
+        "meta:Hawaii_Aleutian"{
+            ld{"Gawaý-Aleut tomusky wagty"}
+            lg{"Gawaý-Aleut wagty"}
+            ls{"Gawaý-Aleut standart wagty"}
+        }
+        "meta:Hong_Kong"{
+            ld{"Gonkong tomusky wagty"}
+            lg{"Gonkong wagty"}
+            ls{"Gonkong standart wagty"}
+        }
+        "meta:Hovd"{
+            ld{"Howd tomusky wagty"}
+            lg{"Howd wagty"}
+            ls{"Howd standart wagty"}
+        }
+        "meta:India"{
+            ls{"Hindistan standart wagty"}
+        }
+        "meta:Indian_Ocean"{
+            ls{"Hindi ummany wagty"}
+        }
+        "meta:Indochina"{
+            ls{"Hindihytaý wagty"}
+        }
+        "meta:Indonesia_Central"{
+            ls{"Merkezi Indoneziýa wagty"}
+        }
+        "meta:Indonesia_Eastern"{
+            ls{"Gündogar Indoneziýa wagty"}
+        }
+        "meta:Indonesia_Western"{
+            ls{"Günbatar Indoneziýa wagty"}
+        }
+        "meta:Iran"{
+            ld{"Eýran tomusky wagty"}
+            lg{"Eýran wagty"}
+            ls{"Eýran standart wagty"}
+        }
+        "meta:Irkutsk"{
+            ld{"Irkutsk tomusky wagty"}
+            lg{"Irkutsk wagty"}
+            ls{"Irkutsk standart wagty"}
+        }
+        "meta:Israel"{
+            ld{"Ysraýyl tomusky wagty"}
+            lg{"Ysraýyl wagty"}
+            ls{"Ysraýyl standart wagty"}
+        }
+        "meta:Japan"{
+            ld{"Ýaponiýa tomusky wagty"}
+            lg{"Ýaponiýa wagty"}
+            ls{"Ýaponiýa standart wagty"}
+        }
+        "meta:Kazakhstan_Eastern"{
+            ls{"Gündogar Gazagystan wagty"}
+        }
+        "meta:Kazakhstan_Western"{
+            ls{"Günbatar Gazagystan wagty"}
+        }
+        "meta:Korea"{
+            ld{"Koreýa tomusky wagty"}
+            lg{"Koreýa wagty"}
+            ls{"Koreýa standart wagty"}
+        }
+        "meta:Kosrae"{
+            ls{"Kosraýe wagty"}
+        }
+        "meta:Krasnoyarsk"{
+            ld{"Krasnoýarsk tomusky wagty"}
+            lg{"Krasnoýarsk wagty"}
+            ls{"Krasnoýarsk standart wagty"}
+        }
+        "meta:Kyrgystan"{
+            ls{"Gyrgyzystan wagty"}
+        }
+        "meta:Line_Islands"{
+            ls{"Laýn adalary wagty"}
+        }
+        "meta:Lord_Howe"{
+            ld{"Lord-Hau tomusky wagty"}
+            lg{"Lord-Hau wagty"}
+            ls{"Lord-Hau standart wagty"}
+        }
+        "meta:Macquarie"{
+            ls{"Makkuori adasy wagty"}
+        }
+        "meta:Magadan"{
+            ld{"Magadan tomusky wagty"}
+            lg{"Magadan wagty"}
+            ls{"Magadan standart wagty"}
+        }
+        "meta:Malaysia"{
+            ls{"Malaýziýa wagty"}
+        }
+        "meta:Maldives"{
+            ls{"Maldiwler wagty"}
+        }
+        "meta:Marquesas"{
+            ls{"Markiz adalary wagty"}
+        }
+        "meta:Marshall_Islands"{
+            ls{"Marşall adalary wagty"}
+        }
+        "meta:Mauritius"{
+            ld{"Mawrikiý tomusky wagty"}
+            lg{"Mawrikiý wagty"}
+            ls{"Mawrikiý standart wagty"}
+        }
+        "meta:Mawson"{
+            ls{"Mouson wagty"}
+        }
+        "meta:Mexico_Northwest"{
+            ld{"Demirgazyk-günbatar Meksika tomusky wagty"}
+            lg{"Demirgazyk-günbatar Meksika wagty"}
+            ls{"Demirgazyk-günbatar Meksika standart wagty"}
+        }
+        "meta:Mexico_Pacific"{
+            ld{"Meksikan Ýuwaş umman tomusky wagty"}
+            lg{"Meksikan Ýuwaş umman wagty"}
+            ls{"Meksikan Ýuwaş umman standart wagty"}
+        }
+        "meta:Mongolia"{
+            ld{"Ulan-Bator tomusky wagty"}
+            lg{"Ulan-Bator wagty"}
+            ls{"Ulan-Bator standart wagty"}
+        }
+        "meta:Moscow"{
+            ld{"Moskwa tomusky wagty"}
+            lg{"Moskwa wagty"}
+            ls{"Moskwa standart wagty"}
+        }
+        "meta:Myanmar"{
+            ls{"Mýanma wagty"}
+        }
+        "meta:Nauru"{
+            ls{"Nauru wagty"}
+        }
+        "meta:Nepal"{
+            ls{"Nepal wagty"}
+        }
+        "meta:New_Caledonia"{
+            ld{"Täze Kaledoniýa tomusky wagty"}
+            lg{"Täze Kaledoniýa wagty"}
+            ls{"Täze Kaledoniýa standart wagty"}
+        }
+        "meta:New_Zealand"{
+            ld{"Täze Zelandiýa tomusky wagty"}
+            lg{"Täze Zelandiýa wagty"}
+            ls{"Täze Zelandiýa standart wagty"}
+        }
+        "meta:Newfoundland"{
+            ld{"Nýufaundlend tomusky wagty"}
+            lg{"Nýufaundlend wagty"}
+            ls{"Nýufaundlend standart wagty"}
+        }
+        "meta:Niue"{
+            ls{"Niue wagty"}
+        }
+        "meta:Norfolk"{
+            ls{"Norfolk adasy wagty"}
+        }
+        "meta:Noronha"{
+            ld{"Fernandu-di-Noronýa tomusky wagty"}
+            lg{"Fernandu-di-Noronýa wagty"}
+            ls{"Fernandu-di-Noronýa standart wagty"}
+        }
+        "meta:Novosibirsk"{
+            ld{"Nowosibisk tomusky wagty"}
+            lg{"Nowosibirsk wagty"}
+            ls{"Nowosibirsk standart wagty"}
+        }
+        "meta:Omsk"{
+            ld{"Omsk tomusky wagty"}
+            lg{"Omsk wagty"}
+            ls{"Omsk standart wagty"}
+        }
+        "meta:Pakistan"{
+            ld{"Pakistan tomusky wagty"}
+            lg{"Pakistan wagty"}
+            ls{"Pakistan standart wagty"}
+        }
+        "meta:Palau"{
+            ls{"Palau wagty"}
+        }
+        "meta:Papua_New_Guinea"{
+            ls{"Papua - Täze Gwineýa wagty"}
+        }
+        "meta:Paraguay"{
+            ld{"Paragwaý tomusky wagty"}
+            lg{"Paragwaý wagty"}
+            ls{"Paragwaý standart wagty"}
+        }
+        "meta:Peru"{
+            ld{"Peru tomusky wagty"}
+            lg{"Peru wagty"}
+            ls{"Peru standart wagty"}
+        }
+        "meta:Philippines"{
+            ld{"Filippinler tomusky wagty"}
+            lg{"Filippinler wagty"}
+            ls{"Filippinler standart wagty"}
+        }
+        "meta:Phoenix_Islands"{
+            ls{"Feniks adalary wagty"}
+        }
+        "meta:Pierre_Miquelon"{
+            ld{"Sen-Pýer we Mikelon tomusky wagty"}
+            lg{"Sen-Pýer we Mikelon"}
+            ls{"Sen-Pýer we Mikelon standart wagty"}
+        }
+        "meta:Pitcairn"{
+            ls{"Pitkern wagty"}
+        }
+        "meta:Ponape"{
+            ls{"Ponape wagty"}
+        }
+        "meta:Pyongyang"{
+            ls{"Phenýan wagty"}
+        }
+        "meta:Reunion"{
+            ls{"Reýunýon wagty"}
+        }
+        "meta:Rothera"{
+            ls{"Rotera wagty"}
+        }
+        "meta:Sakhalin"{
+            ld{"Sahalin tomusky wagty"}
+            lg{"Sahalin wagty"}
+            ls{"Sahalin standart wagty"}
+        }
+        "meta:Samoa"{
+            ld{"Samoa tomusky wagty"}
+            lg{"Samoa wagty"}
+            ls{"Samoa standart wagty"}
+        }
+        "meta:Seychelles"{
+            ls{"Seýşel adalary wagty"}
+        }
+        "meta:Singapore"{
+            ls{"Singapur wagty"}
+        }
+        "meta:Solomon"{
+            ls{"Solomon adalary wagty"}
+        }
+        "meta:South_Georgia"{
+            ls{"Günorta Georgiýa wagty"}
+        }
+        "meta:Suriname"{
+            ls{"Surinam wagty"}
+        }
+        "meta:Syowa"{
+            ls{"Sýowa wagty"}
+        }
+        "meta:Tahiti"{
+            ls{"Taiti wagty"}
+        }
+        "meta:Taipei"{
+            ld{"Taýbeý tomusky wagty"}
+            lg{"Taýbeý wagty"}
+            ls{"Taýbeý standart wagty"}
+        }
+        "meta:Tajikistan"{
+            ls{"Täjigistan wagty"}
+        }
+        "meta:Tokelau"{
+            ls{"Tokelau wagty"}
+        }
+        "meta:Tonga"{
+            ld{"Tonga tomusky wagty"}
+            lg{"Tonga wagty"}
+            ls{"Tonga standart wagty"}
+        }
+        "meta:Truk"{
+            ls{"Çuuk wagty"}
+        }
+        "meta:Turkmenistan"{
+            ld{"Türkmenistan tomusky wagty"}
+            lg{"Türkmenistan wagty"}
+            ls{"Türkmenistan standart wagty"}
+        }
+        "meta:Tuvalu"{
+            ls{"Tuwalu wagty"}
+        }
+        "meta:Uruguay"{
+            ld{"Urugwaý tomusky wagty"}
+            lg{"Urugwaý wagty"}
+            ls{"Urugwaý standart wagty"}
+        }
+        "meta:Uzbekistan"{
+            ld{"Özbegistan tomusky wagty"}
+            lg{"Özbegistan wagty"}
+            ls{"Özbegistan standart wagty"}
+        }
+        "meta:Vanuatu"{
+            ld{"Wanuatu tomusky wagty"}
+            lg{"Wanuatu wagty"}
+            ls{"Wanuatu standart wagty"}
+        }
+        "meta:Venezuela"{
+            ls{"Wenesuela wagty"}
+        }
+        "meta:Vladivostok"{
+            ld{"Wladiwostok tomusky wagty"}
+            lg{"Wladiwostok wagty"}
+            ls{"Wladiwostok standart wagty"}
+        }
+        "meta:Volgograd"{
+            ld{"Wolgograd tomusky wagty"}
+            lg{"Wolgograd wagty"}
+            ls{"Wolgograd standart wagty"}
+        }
+        "meta:Vostok"{
+            ls{"Wostok wagty"}
+        }
+        "meta:Wake"{
+            ls{"Weýk adasy wagty"}
+        }
+        "meta:Wallis"{
+            ls{"Uollis we Futuna wagty"}
+        }
+        "meta:Yakutsk"{
+            ld{"Ýakutsk tomusky wagty"}
+            lg{"Ýakutsk wagty"}
+            ls{"Ýakutsk standart wagty"}
+        }
+        "meta:Yekaterinburg"{
+            ld{"Ýekaterinburg tomusky wagty"}
+            lg{"Ýekaterinburg wagty"}
+            ls{"Ýekaterinburg standart wagty"}
+        }
+        fallbackFormat{"{1} ({0})"}
+        gmtFormat{"GMT{0}"}
+        gmtZeroFormat{"GMT"}
+        hourFormat{"+HH:mm;-HH:mm"}
+        regionFormat{"{0} wagty"}
+        regionFormatDaylight{"{0} tomusky wagty"}
+        regionFormatStandard{"{0} standart wagty"}
+    }
+}

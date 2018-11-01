@@ -625,7 +625,9 @@ zh_Hant{
         }
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}-{1}"}
             }
             patterns{
@@ -1374,7 +1376,7 @@ zh_Hant{
             }
         }
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -4696,6 +4698,12 @@ zh_Hant{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "第1季",
+                        "第2季",
+                        "第3季",
+                        "第4季",
+                    }
                     narrow{
                         "1",
                         "2",
@@ -5737,6 +5745,7 @@ zh_Hant{
                     "大正",
                     "昭和",
                     "平成",
+                    "Qqqq",
                 }
                 narrow{
                     "大化",
@@ -5975,6 +5984,7 @@ zh_Hant{
                     "大正",
                     "昭和",
                     "平成",
+                    "Q",
                 }
                 wide{
                     "大化",
@@ -6213,6 +6223,7 @@ zh_Hant{
                     "大正",
                     "昭和",
                     "平成",
+                    "Qqqq",
                 }
             }
             intervalFormats{

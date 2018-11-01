@@ -1040,11 +1040,15 @@ fi{
         }
         VEB{
             "VEB",
-            "Venezuelan bolivar (1871–2008)",
+            "Venezuelan bolívar (1871–2008)",
         }
         VEF{
             "VEF",
-            "Venezuelan bolivar",
+            "Venezuelan bolívar (2008–2018)",
+        }
+        VES{
+            "VES",
+            "Venezuelan suvereeni bolívar",
         }
         VND{
             "VND",
@@ -2352,8 +2356,12 @@ fi{
             other{"Venezuelan bolivaria (1871–2008)"}
         }
         VEF{
-            one{"Venezuelan bolivar"}
-            other{"Venezuelan bolivaria"}
+            one{"Venezuelan bolívar (2008–2018)"}
+            other{"Venezuelan bolívaria (2008–2018)"}
+        }
+        VES{
+            one{"Venezuelan suvereeni bolívar"}
+            other{"Venezuelan suvereenia bolívaria"}
         }
         VND{
             one{"Vietnamin dong"}
@@ -2520,5 +2528,5 @@ fi{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
 }

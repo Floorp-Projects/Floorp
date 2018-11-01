@@ -78,7 +78,9 @@ ja{
         finance{"jpanfin"}
         latn{
             miscPatterns{
+                approximately{"約 {0}"}
                 atLeast{"{0} 以上"}
+                atMost{"{0} 以下"}
                 range{"{0}～{1}"}
             }
             patterns{
@@ -233,7 +235,7 @@ ja{
         native{"latn"}
         traditional{"jpan"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1218,6 +1220,44 @@ ja{
                 yyyyQQQQ{"Gy年QQQQ"}
             }
             intervalFormats{
+                Gy{
+                    G{"Gy年～Gy年"}
+                    y{"Gy年～y年"}
+                }
+                GyM{
+                    G{"Gy/MM～Gy/MM"}
+                    M{"Gy/MM～y/MM"}
+                    y{"Gy/MM～y/MM"}
+                }
+                GyMEd{
+                    G{"Gy/MM/dd(E)～Gy/MM/dd(E)"}
+                    M{"Gy/MM/dd(E)～y/MM/dd(E)"}
+                    d{"Gy/MM/dd(E)～y/MM/dd(E)"}
+                    y{"Gy/MM/dd(E)～y/MM/dd(E)"}
+                }
+                GyMMM{
+                    G{"Gy年M月～Gy年M月"}
+                    M{"Gy年M月～M月"}
+                    y{"Gy年M月～y年M月"}
+                }
+                GyMMMEd{
+                    G{"Gy年M月d日(E)～Gy年M月d日(E)"}
+                    M{"Gy年M月d日(E)～M月d日(E)"}
+                    d{"Gy年M月d日(E)～d日(E)"}
+                    y{"Gy年M月d日(E)～y年M月d日(E)"}
+                }
+                GyMMMd{
+                    G{"Gy年M月d日～Gy年M月d日"}
+                    M{"Gy年M月d日～M月d日"}
+                    d{"Gy年M月d日～d日"}
+                    y{"Gy年M月d日～y年M月d日"}
+                }
+                GyMd{
+                    G{"Gy/MM/dd～Gy/MM/dd"}
+                    M{"Gy/MM/dd～y/MM/dd"}
+                    d{"Gy/MM/dd～y/MM/dd"}
+                    y{"Gy/MM/dd～y/MM/dd"}
+                }
                 H{
                     H{"H時～H時"}
                 }
@@ -1577,6 +1617,44 @@ ja{
                 }
             }
             intervalFormats{
+                Gy{
+                    G{"Gy年～Gy年"}
+                    y{"Gy年～y年"}
+                }
+                GyM{
+                    G{"Gy/MM～Gy/MM"}
+                    M{"Gy/MM～y/MM"}
+                    y{"Gy/MM～y/MM"}
+                }
+                GyMEd{
+                    G{"Gy/MM/dd(E)～Gy/MM/dd(E)"}
+                    M{"Gy/MM/dd(E)～y/MM/dd(E)"}
+                    d{"Gy/MM/dd(E)～y/MM/dd(E)"}
+                    y{"Gy/MM/dd(E)～y/MM/dd(E)"}
+                }
+                GyMMM{
+                    G{"Gy年M月～Gy年M月"}
+                    M{"Gy年M月～M月"}
+                    y{"Gy年M月～y年M月"}
+                }
+                GyMMMEd{
+                    G{"Gy年M月d日(E)～Gy年M月d日(E)"}
+                    M{"Gy年M月d日(E)～M月d日(E)"}
+                    d{"Gy年M月d日(E)～d日(E)"}
+                    y{"Gy年M月d日(E)～y年M月d日(E)"}
+                }
+                GyMMMd{
+                    G{"Gy年M月d日～Gy年M月d日"}
+                    M{"Gy年M月d日～M月d日"}
+                    d{"Gy年M月d日～d日"}
+                    y{"Gy年M月d日～y年M月d日"}
+                }
+                GyMd{
+                    G{"Gy/MM/dd～Gy/MM/dd"}
+                    M{"Gy/MM/dd～y/MM/dd"}
+                    d{"Gy/MM/dd～y/MM/dd"}
+                    y{"Gy/MM/dd～y/MM/dd"}
+                }
                 H{
                     H{"H時～H時"}
                 }
@@ -2464,6 +2542,7 @@ ja{
                     "大正",
                     "昭和",
                     "平成",
+                    "ＱＱ",
                 }
                 narrow{
                     "大化",
@@ -2702,6 +2781,7 @@ ja{
                     "T",
                     "S",
                     "H",
+                    "Q",
                 }
             }
         }
@@ -3255,6 +3335,11 @@ ja{
         }
         quarter-narrow{
             dn{"四半期"}
+            relative{
+                "-1"{"前四半期"}
+                "0"{"今四半期"}
+                "1"{"翌四半期"}
+            }
             relativeTime{
                 future{
                     other{"{0}四半期後"}
@@ -3266,6 +3351,11 @@ ja{
         }
         quarter-short{
             dn{"四半期"}
+            relative{
+                "-1"{"前四半期"}
+                "0"{"今四半期"}
+                "1"{"翌四半期"}
+            }
             relativeTime{
                 future{
                     other{"{0} 四半期後"}
@@ -3714,5 +3804,37 @@ ja{
         UK{"英ヤード・ポンド法"}
         US{"米ヤード・ポンド法"}
         metric{"メートル法"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

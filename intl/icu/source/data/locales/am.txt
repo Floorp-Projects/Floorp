@@ -20,6 +20,10 @@ am{
         " ጡ ጢ ጣ ጤ ጥ ጦ ጧ ጨ ጩ ጪ ጫ ጬ ጭ ጮ ጯ ጰ ጱ ጲ ጳ ጴ ጵ ጶ ጷ ጸ ጹ ጺ ጻ ጼ ጽ ጾ ጿ ፀ ፁ ፂ ፃ ፄ ፅ ፆ"
         " ፈ ፉ ፊ ፋ ፌ ፍ ፎ ፏ ፐ ፑ ፒ ፓ ፔ ፕ ፖ ፗ]"
     }
+    ExemplarCharactersIndex{
+        "[ሀ ለ ሐ መ ሠ ረ ሰ ሸ ቀ ቈ በ ቨ ተ ቸ ኀ ኈ ነ ኘ አ ከ ኰ ኸ ወ ዐ ዘ ዠ የ ደ ጀ ገ ጐ ጠ ጨ ጰ ጸ ፀ ፈ ፐ"
+        "]"
+    }
     ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{"[‐ – , ፡ ፣ ፤ ፥ ፦ ! ? . ። ‹ › « » ( ) \\[ \\]]"}
     MoreInformation{"?"}
@@ -27,7 +31,9 @@ am{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -219,7 +225,7 @@ am{
         native{"latn"}
         traditional{"ethi"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.65"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -638,6 +644,19 @@ am{
                 }
             }
         }
+        ethiopic-amete-alem{
+            eras{
+                abbreviated{
+                    "ERA0",
+                }
+                narrow{
+                    "ERA0",
+                }
+                wide{
+                    "ERA0",
+                }
+            }
+        }
         generic{
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -667,7 +686,7 @@ am{
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
-                GyMMM{"MMM፣ y G"}
+                GyMMM{"G y MMM"}
                 GyMMMEd{"E MMM d፣ y G"}
                 GyMMMd{"MMM d፣ y G"}
                 H{"H"}
@@ -821,7 +840,7 @@ am{
                 "h:mm:ss a z",
                 "h:mm:ss a",
                 "h:mm a",
-                "EEEE ፣d MMMM y",
+                "y MMMM d, EEEE",
                 "d MMMM y",
                 "d MMM y",
                 "dd/MM/y",
@@ -848,8 +867,8 @@ am{
                 Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
-                GyMMMEd{"E፣ MMM d፣ y G"}
-                GyMMMd{"MMM d፣ y G"}
+                GyMMMEd{"G y MMM d, E"}
+                GyMMMd{"G y MMM d"}
                 H{"H"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -970,7 +989,7 @@ am{
             dayPeriod{
                 format{
                     abbreviated{
-                        afternoon1{"ከሰዓት1"}
+                        afternoon1{"ከሰዓት 7"}
                         evening1{"ማታ1"}
                         midnight{"እኩለ ሌሊት"}
                         morning1{"ጥዋት1"}
@@ -986,7 +1005,7 @@ am{
                         noon{"ቀ"}
                     }
                     wide{
-                        afternoon1{"ከሰዓት1"}
+                        afternoon1{"ከሰዓት 7 ሰዓት"}
                         evening1{"ማታ1"}
                         midnight{"እኩለ ሌሊት"}
                         morning1{"ጥዋት1"}
@@ -1075,7 +1094,7 @@ am{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"E፣ MMM d – E፣ MMM d"}
+                    M{"MMM d, E – MMM d, E"}
                     d{"E d – E d፣ MMM"}
                 }
                 MMMd{
@@ -1117,7 +1136,7 @@ am{
                 }
                 yMEd{
                     M{"E d/M/ – E d/M፣ y"}
-                    d{"E፣ d/M/y – E፣ d/M/y"}
+                    d{"y-MM-dd, E – y-MM-dd, E"}
                     y{"E፣ d/M/y – E፣ d/M/y"}
                 }
                 yMMM{
@@ -2258,8 +2277,13 @@ am{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

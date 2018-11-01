@@ -8,8 +8,8 @@ az_Cyrl{
     NumberElements{
         latn{
             patterns{
-                accountingFormat{"¤ #,##0.00"}
-                currencyFormat{"¤ #,##0.00"}
+                accountingFormat{"#,##0.00 ¤"}
+                currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
             }
@@ -27,7 +27,7 @@ az_Cyrl{
             }
         }
     }
-    Version{"2.1.38.69"}
+    Version{"2.1.44.53"}
     calendar{
         generic{
             DateTimePatterns{

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 et{
-    Version{"2.1.41.97"}
+    Version{"2.1.44.91"}
     zoneStrings{
         "Etc:UTC"{
             ls{"Koordineeritud maailmaaeg"}
@@ -654,8 +654,8 @@ et{
             ls{"Jakutski standardaeg"}
         }
         "meta:Yekaterinburg"{
-            ld{"Jakaterinburgi suveaeg"}
-            lg{"Jakaterinburgi aeg"}
+            ld{"Jekaterinburgi suveaeg"}
+            lg{"Jekaterinburgi aeg"}
             ls{"Jekaterinburgi standardaeg"}
         }
         fallbackFormat{"{1} ({0})"}

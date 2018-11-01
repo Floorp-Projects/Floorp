@@ -27,7 +27,9 @@ th{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}-{1}"}
             }
             patterns{
@@ -181,7 +183,7 @@ th{
         minimumGroupingDigits{"1"}
         native{"thai"}
     }
-    Version{"2.1.41.97"}
+    Version{"2.1.43.89"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -428,7 +430,7 @@ th{
                             "เกิงอู้",
                             "ซินเว่ย",
                             "เหรินเซิน",
-                            "กุ๋่ยโหย่ว",
+                            "กุ๋ยโหย่ว",
                             "เจ่ียซู",
                             "อี๋ฮ่าย",
                             "ปิ๋ิ่งจื่อ",
@@ -1228,7 +1230,7 @@ th{
                 MMMMEEEEd{"EEEEที่ d MMMM"}
                 MMMMEd{"E d MMMM"}
                 MMMMW{
-                    other{"สัปดาห์ที่ W ของ MMM"}
+                    other{"สัปดาห์ที่ W ของเดือนMMMM"}
                 }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
@@ -1256,7 +1258,7 @@ th{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ G y"}
                 yw{
-                    other{"สัปดาห์ที่ w ของ Y"}
+                    other{"สัปดาห์ที่ w ของปี Y"}
                 }
             }
             dayNames{
@@ -1357,7 +1359,7 @@ th{
                         midnight{"เที่ยงคืน"}
                         morning1{"เช้า"}
                         night1{"กลางคืน"}
-                        noon{"n"}
+                        noon{"เที่ยง"}
                     }
                     wide{
                         afternoon1{"ในตอนบ่าย"}
@@ -1411,7 +1413,7 @@ th{
             }
             eras{
                 abbreviated{
-                    "ปีก่อน ค.ศ.",
+                    "ก่อน ค.ศ.",
                     "ค.ศ.",
                 }
                 abbreviated%variant{
@@ -1427,7 +1429,7 @@ th{
                     "ส.ศ.",
                 }
                 wide{
-                    "ปีก่อนคริสต์ศักราช",
+                    "ปีก่อนคริสตกาล",
                     "คริสต์ศักราช",
                 }
                 wide%variant{
@@ -2332,6 +2334,7 @@ th{
                     "ทะอิโช",
                     "โชวะ",
                     "เฮเซ",
+                    "Qqqq",
                 }
             }
         }
@@ -2491,7 +2494,7 @@ th{
         african_scripts{"สคริปต์แอฟริกัน"}
         american_scripts{"สคริปต์อเมริกัน"}
         animal{"สัตว์"}
-        animals_nature{"สัตว์และธรรมชาติ"}
+        animals_nature{"สัตว์หรือธรรมชาติ"}
         arrows{"ลูกศร"}
         body{"ร่างกาย"}
         box_drawing{"การวาดกล่อง"}
@@ -2557,7 +2560,7 @@ th{
         sign_standard_symbols{"เครื่องหมาย/สัญลักษณ์มาตรฐาน"}
         small_form_variant{"รูปแบบขนาดเล็ก"}
         smiley{"หน้ายิ้ม"}
-        smileys_people{"หน้ายิ้มและรูปคน"}
+        smileys_people{"หน้ายิ้มหรือรูปคน"}
         south_asian_scripts{"สคริปต์เอเชียใต้"}
         southeast_asian_scripts{"สคริปต์เอเชียตะวันออกเฉียงใต้"}
         spacing{"การเว้นวรรค"}
@@ -2566,7 +2569,7 @@ th{
         technical_symbols{"สัญลักษณ์ทางเทคนิค"}
         tone_marks{"วรรณยุกต์"}
         travel{"การเดินทาง"}
-        travel_places{"การเดินทางและสถานที่"}
+        travel_places{"การเดินทางหรือสถานที่"}
         upwards_arrows{"ลูกศรขึ้น"}
         variant_forms{"รูปแบบที่เปลี่ยนแปลง"}
         vocalic_jamo{"สระภาษาเกาหลี"}
@@ -2890,6 +2893,11 @@ th{
         }
         quarter-narrow{
             dn{"ไตรมาส"}
+            relative{
+                "-1"{"ไตรมาสที่แล้ว"}
+                "0"{"ไตรมาสนี้"}
+                "1"{"ไตรมาสหน้า"}
+            }
             relativeTime{
                 future{
                     other{"ใน {0} ไตรมาส"}
@@ -2901,6 +2909,11 @@ th{
         }
         quarter-short{
             dn{"ไตรมาส"}
+            relative{
+                "-1"{"ไตรมาสที่แล้ว"}
+                "0"{"ไตรมาสนี้"}
+                "1"{"ไตรมาสหน้า"}
+            }
             relativeTime{
                 future{
                     other{"ใน {0} ไตรมาส"}
@@ -3232,7 +3245,7 @@ th{
             dn{"สัปดาห์ของเดือน"}
         }
         weekday{
-            dn{"วันในสัปดาห์"}
+            dn{"วันของสัปดาห์"}
         }
         weekday-narrow{
             dn{"วันของสัปดาห์"}
@@ -3360,8 +3373,13 @@ th{
         general{
             lenient{
                 "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
                 "[\$﹩＄$]",
                 "[£₤]",
+                "[¥￥]",
+                "[₩￦]",
                 "[₨₹{Rp}{Rs}]",
             }
         }

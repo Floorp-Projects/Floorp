@@ -35,7 +35,7 @@ kok{
             "USD",
         }
         XXX{
-            "XXX",
+            "¤",
             "XXX",
         }
     }
@@ -81,5 +81,5 @@ kok{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.38.69"}
+    Version{"2.1.44.88"}
 }

@@ -66,7 +66,7 @@ numbertest_affixutils.o numbertest_api.o numbertest_decimalquantity.o \
 numbertest_modifiers.o numbertest_patternmodifier.o numbertest_patternstring.o \
 numbertest_stringbuilder.o numbertest_stringsegment.o \
 numbertest_parse.o numbertest_doubleconversion.o numbertest_skeletons.o \
-static_unisets_test.o numfmtdatadriventest.o
+static_unisets_test.o numfmtdatadriventest.o numbertest_range.o erarulestest.o
 
 DEPS = $(OBJECTS:.o=.d)
 

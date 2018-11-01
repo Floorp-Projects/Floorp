@@ -1,0 +1,60 @@
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
+mi{
+    Version{"2.1.44.15"}
+    zoneStrings{
+        "Etc:UTC"{
+            ls{"Wā Aonui Kōtuitui"}
+        }
+        "meta:America_Central"{
+            ld{"Wā Awatea Waenga"}
+            lg{"Wā Waenga"}
+            ls{"Wā Arowhānui Waenga"}
+        }
+        "meta:America_Eastern"{
+            ld{"Wā Awatea Rāwhiti"}
+            lg{"Wā Rāwhiti"}
+            ls{"Wā Arowhānui Rāwhiti"}
+        }
+        "meta:America_Mountain"{
+            ld{"Wā Awatea Maunga"}
+            lg{"Wā Maunga"}
+            ls{"Wā Arowhānui Maunga"}
+        }
+        "meta:America_Pacific"{
+            ld{"Wā Awatea Kiwa"}
+            lg{"Wā Kiwa"}
+            ls{"Wā Arowhānui Kiwa"}
+        }
+        "meta:Atlantic"{
+            ld{"Wā Awatea Ranatiki"}
+            lg{"Wā Ranatiki"}
+            ls{"Wā Arowhānui Ranatiki"}
+        }
+        "meta:Europe_Central"{
+            ld{"Wā Raumati Uropi Waenga"}
+            lg{"Wā Uropi Waenga"}
+            ls{"Wā Arowhānui Uropi Waenga"}
+        }
+        "meta:Europe_Eastern"{
+            ld{"Wā Raumati Uropi Rāwhiti"}
+            lg{"Wā Uropi Rāwhiti"}
+            ls{"Wā Arowhānui Uropi Rāwhiti"}
+        }
+        "meta:Europe_Western"{
+            ld{"Wā Raumati Uropi Uru"}
+            lg{"Wā Uropi Uru"}
+            ls{"Wā Arowhānui Uropi Uru"}
+        }
+        "meta:GMT"{
+            ls{"Wā Toharite Greenwich"}
+        }
+        fallbackFormat{"{1} ({0})"}
+        gmtFormat{"GMT{0}"}
+        gmtZeroFormat{"GMT"}
+        hourFormat{"+HH:mm;-HH:mm"}
+        regionFormat{"{0}"}
+        regionFormatDaylight{"{0} (+1)"}
+        regionFormatStandard{"{0} (+0)"}
+    }
+}
