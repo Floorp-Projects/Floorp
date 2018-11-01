@@ -3,14 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/GeckoViewContentModule.jsm");
+ChromeUtils.import("resource://gre/modules/GeckoViewChildModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-class GeckoViewProgressContent extends GeckoViewContentModule {
+class GeckoViewProgressChild extends GeckoViewChildModule {
   onInit() {
     debug `onInit`;
   }
@@ -327,5 +327,5 @@ const ProgressTracker = {
 };
 
 
-let {debug, warn} = GeckoViewProgressContent.initLogging("GeckoViewProgress");
-let module = GeckoViewProgressContent.create(this);
+let {debug, warn} = GeckoViewProgressChild.initLogging("GeckoViewProgress");
+let module = GeckoViewProgressChild.create(this);

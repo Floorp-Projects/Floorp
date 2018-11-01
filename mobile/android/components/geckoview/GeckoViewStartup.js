@@ -77,7 +77,7 @@ GeckoViewStartup.prototype = {
           this.setResourceSubstitutions();
 
           Services.mm.loadFrameScript(
-              "chrome://geckoview/content/GeckoViewPromptContent.js", true);
+              "chrome://geckoview/content/GeckoViewPromptChild.js", true);
 
           GeckoViewUtils.addLazyGetter(this, "ContentCrashHandler", {
             module: "resource://gre/modules/ContentCrashHandler.jsm",

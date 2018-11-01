@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/GeckoViewContentModule.jsm");
+ChromeUtils.import("resource://gre/modules/GeckoViewChildModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
               .getService(Ci.nsISessionStoreUtils);
 
-class GeckoViewContent extends GeckoViewContentModule {
+class GeckoViewContentChild extends GeckoViewChildModule {
   onInit() {
     debug `onInit`;
 
@@ -382,5 +382,5 @@ class GeckoViewContent extends GeckoViewContentModule {
   }
 }
 
-let {debug, warn} = GeckoViewContent.initLogging("GeckoViewContent");
-let module = GeckoViewContent.create(this);
+let {debug, warn} = GeckoViewContentChild.initLogging("GeckoViewContent");
+let module = GeckoViewContentChild.create(this);

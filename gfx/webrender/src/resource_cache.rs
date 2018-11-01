@@ -1202,6 +1202,20 @@ impl ResourceCache {
         );
 
         tiles.retain(|tile, _| { tile_range.contains(tile) });
+
+        let texture_cache = &mut self.texture_cache;
+        match self.cached_images.try_get_mut(&key) {
+            Some(&mut ImageResult::Multi(ref mut entries)) => {
+                entries.retain(|key, entry| {
+                    if key.tile.is_none() || tile_range.contains(&key.tile.unwrap()) {
+                        return true;
+                    }
+                    texture_cache.mark_unused(&entry.texture_cache_handle);
+                    return false;
+                });
+            }
+            _ => {}
+        }
     }
 
     pub fn request_glyphs(

@@ -8,6 +8,15 @@
 #ifndef __nsWindow_h__
 #define __nsWindow_h__
 
+#include <gdk/gdk.h>
+#include <gtk/gtk.h>
+#ifdef MOZ_X11
+#include <gdk/gdkx.h>
+#include "X11UndefineNone.h"
+#endif /* MOZ_X11 */
+#ifdef MOZ_WAYLAND
+#include <gdk/gdkwayland.h>
+#endif
 #include "mozcontainer.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -16,20 +25,8 @@
 #include "nsGkAtoms.h"
 #include "nsRefPtrHashtable.h"
 #include "nsIFrame.h"
-
 #include "nsBaseWidget.h"
 #include "CompositorWidget.h"
-#include <gdk/gdk.h>
-#include <gtk/gtk.h>
-
-#ifdef MOZ_X11
-#include <gdk/gdkx.h>
-#include "X11UndefineNone.h"
-#endif /* MOZ_X11 */
-#ifdef MOZ_WAYLAND
-#include <gdk/gdkwayland.h>
-#endif
-
 #include "mozilla/widget/WindowSurface.h"
 #include "mozilla/widget/WindowSurfaceProvider.h"
 

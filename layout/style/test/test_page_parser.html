@@ -77,15 +77,15 @@
         // nothing else is set
         is(s.length, n, testset[curTest].rule + " prop count");
         for (var i = 0; i < s.length; i++) {
-          ok(s[i] in expected, testset[curTest].rule,
-             "Unexpected item #" + i + ": " + s[i]);
+          ok(s[i] in expected, testset[curTest].rule +
+             " - Unexpected item #" + i + ": " + s[i]);
         }
       } else {
         is(Object.keys(sheet.cssRules[0].style).length, 0,
             testset[curTest].rule + " rule has no properties");
       }
     } catch (e) {
-      ok(false, testset[curTest].rule, "During test: " + e);
+      ok(false, testset[curTest].rule + " - During test: " + e);
     }
   }
 </script>

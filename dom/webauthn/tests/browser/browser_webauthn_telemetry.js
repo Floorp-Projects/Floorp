@@ -30,10 +30,7 @@ function validateHistogramEntryCount(aHistogramName, aExpectedCount) {
   let hist = Services.telemetry.getHistogramById(aHistogramName);
   let resultIndexes = hist.snapshot();
 
-  let entriesSeen = 0;
-  for (let i = 0; i < resultIndexes.counts.length; i++) {
-    entriesSeen += resultIndexes.counts[i];
-  }
+  let entriesSeen = Object.values(resultIndexes.values).reduce((a,b) => a + b, 0);
 
   is(entriesSeen, aExpectedCount, "Expecting " + aExpectedCount + " histogram entries in " +
      aHistogramName);

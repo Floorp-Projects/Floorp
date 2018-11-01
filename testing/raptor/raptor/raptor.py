@@ -222,6 +222,13 @@ class Raptor(object):
             self.control_server.app_name = self.config['binary']
 
         else:
+            # For Firefox we need to set MOZ_MOZ_DISABLE_NONLOCAL_CONNECTIONS=1 env var before
+            # startup. This is because of restrictions on moz-beta that require webext to be
+            # signed unless disable non-local connections
+            if self.config['app'] == "firefox":
+                self.log.info("setting MOZ_DISABLE_NONLOCAL_CONNECTIONS=1")
+                os.environ['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = "1"
+
             # now start the desktop browser
             self.log.info("starting %s" % self.config['app'])
 
@@ -239,6 +246,11 @@ class Raptor(object):
             self.output_handler.proc = proc
 
             self.control_server.browser_proc = proc
+
+            # pageload tests need to be able to access non-local connections via mitmproxy
+            if self.config['app'] == "firefox" and test.get('playback', None) is not None:
+                self.log.info("setting MOZ_DISABLE_NONLOCAL_CONNECTIONS=0")
+                os.environ['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = "0"
 
             # if geckoProfile is enabled, initialize it
             if self.config['gecko_profile'] is True:

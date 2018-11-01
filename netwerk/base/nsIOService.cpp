@@ -1660,10 +1660,23 @@ nsIOService::ExtractCharsetFromContentType(const nsACString &aTypeHeader,
 // parse policyString to policy enum value (see ReferrerPolicy.h)
 NS_IMETHODIMP
 nsIOService::ParseAttributePolicyString(const nsAString& policyString,
-                                                uint32_t *outPolicyEnum)
+                                        uint32_t *outPolicyEnum)
 {
   NS_ENSURE_ARG(outPolicyEnum);
   *outPolicyEnum = (uint32_t)AttributeReferrerPolicyFromString(policyString);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIOService::GetReferrerPolicyString(uint32_t aPolicy,
+                                     nsACString &aResult)
+{
+  if (aPolicy >= ArrayLength(kReferrerPolicyString)) {
+    aResult.AssignLiteral("unknown");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  aResult.AssignASCII(ReferrerPolicyToString(static_cast<ReferrerPolicy>(aPolicy)));
   return NS_OK;
 }
 

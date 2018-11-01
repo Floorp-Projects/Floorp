@@ -82,9 +82,9 @@ async function run_userScripts_telemetry_test() {
   await promiseTelemetryRecorded(HISTOGRAM, process, 1);
   await promiseKeyedTelemetryRecorded(HISTOGRAM_KEYED, process, extensionId, 1);
 
-  equal(arraySum(getSnapshots(process)[HISTOGRAM].counts), 1,
+  equal(valueSum(getSnapshots(process)[HISTOGRAM].values), 1,
         `Data recorded for histogram: ${HISTOGRAM}.`);
-  equal(arraySum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId].counts), 1,
+  equal(valueSum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId].values), 1,
         `Data recorded for histogram: ${HISTOGRAM_KEYED} with key ${extensionId}.`);
 
   await contentPage.close();
@@ -94,9 +94,9 @@ async function run_userScripts_telemetry_test() {
   await extension2.awaitMessage("userScript-registered");
   let extensionId2 = extension2.extension.id;
 
-  equal(arraySum(getSnapshots(process)[HISTOGRAM].counts), 1,
+  equal(valueSum(getSnapshots(process)[HISTOGRAM].values), 1,
         `No data recorded for histogram after startup: ${HISTOGRAM}.`);
-  equal(arraySum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId].counts), 1,
+  equal(valueSum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId].values), 1,
         `No new data recorded for histogram after extension2 startup: ${HISTOGRAM_KEYED} with key ${extensionId}.`);
   ok(!(extensionId2 in getKeyedSnapshots(process)[HISTOGRAM_KEYED]),
      `No data recorded for histogram after startup: ${HISTOGRAM_KEYED} with key ${extensionId2}.`);
@@ -111,11 +111,11 @@ async function run_userScripts_telemetry_test() {
   await promiseTelemetryRecorded(HISTOGRAM, process, 2);
   await promiseKeyedTelemetryRecorded(HISTOGRAM_KEYED, process, extensionId2, 1);
 
-  equal(arraySum(getSnapshots(process)[HISTOGRAM].counts), 2,
+  equal(valueSum(getSnapshots(process)[HISTOGRAM].values), 2,
         `Data recorded for histogram: ${HISTOGRAM}.`);
-  equal(arraySum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId].counts), 1,
+  equal(valueSum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId].values), 1,
         `No new data recorded for histogram: ${HISTOGRAM_KEYED} with key ${extensionId}.`);
-  equal(arraySum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId2].counts), 1,
+  equal(valueSum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId2].values), 1,
         `Data recorded for histogram: ${HISTOGRAM_KEYED} with key ${extensionId2}.`);
 
   await contentPage.close();

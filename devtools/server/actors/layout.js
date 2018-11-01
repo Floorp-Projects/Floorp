@@ -100,10 +100,13 @@ const FlexboxActor = ActorClassWithSpec(flexboxSpec, {
     }
 
     const flexItemActors = [];
+    const { crossAxisDirection, mainAxisDirection } = flex;
 
     for (const line of flex.getLines()) {
       for (const item of line.getItems()) {
         flexItemActors.push(new FlexItemActor(this, item.node, {
+          crossAxisDirection,
+          mainAxisDirection,
           crossMaxSize: item.crossMaxSize,
           crossMinSize: item.crossMinSize,
           mainBaseSize: item.mainBaseSize,
@@ -155,8 +158,8 @@ const FlexItemActor = ActorClassWithSpec(flexItemSpec, {
       return this.actorID;
     }
 
-    const { flexDirection } = CssLogic.getComputedStyle(this.containerEl);
-    const dimension = flexDirection.startsWith("row") ? "width" : "height";
+    const { mainAxisDirection } = this.flexItemSizing;
+    const dimension = mainAxisDirection.startsWith("horizontal") ? "width" : "height";
 
     // Find the authored sizing properties for this item.
     const properties = {

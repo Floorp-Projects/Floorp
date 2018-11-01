@@ -10,8 +10,8 @@ add_task(async function() {
   let count = Services.telemetry
                       .getHistogramById("PLACES_DATABASE_CORRUPTION_HANDLING_STAGE")
                       .snapshot()
-                      .counts[3];
-  Assert.equal(count, 0, "There should be no telemetry");
+                      .values[3];
+  Assert.equal(count, undefined, "There should be no telemetry");
 
   Assert.equal(PlacesUtils.history.databaseStatus,
                PlacesUtils.history.DATABASE_STATUS_CORRUPT);
@@ -19,6 +19,6 @@ add_task(async function() {
   count = Services.telemetry
                   .getHistogramById("PLACES_DATABASE_CORRUPTION_HANDLING_STAGE")
                   .snapshot()
-                  .counts[3];
+                  .values[3];
   Assert.equal(count, 1, "Telemetry should have been added");
 });

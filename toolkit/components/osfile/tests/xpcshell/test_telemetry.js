@@ -15,7 +15,7 @@ function getCount(histogram) {
   }
 
   let total = 0;
-  for (let i of histogram.counts) {
+  for (let i of Object.values(histogram.values)) {
     total += i;
   }
   return total;

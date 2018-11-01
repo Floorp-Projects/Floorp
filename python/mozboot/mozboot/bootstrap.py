@@ -468,7 +468,8 @@ class Bootstrapper(object):
                 should_configure_git = self.hg_configure
 
             if should_configure_git:
-                configure_git(self.instance.which('git'), state_dir)
+                configure_git(self.instance.which('git'), state_dir,
+                              checkout_root)
 
         # Offer to clone if we're not inside a clone.
         have_clone = False

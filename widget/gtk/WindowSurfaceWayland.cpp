@@ -15,8 +15,8 @@
 #include "mozcontainer.h"
 #include "nsCOMArray.h"
 #include "mozilla/StaticMutex.h"
+#include "mozwayland/mozwayland.h"
 
-#include <gdk/gdkwayland.h>
 #include <sys/mman.h>
 #include <assert.h>
 #include <fcntl.h>

@@ -2105,6 +2105,10 @@ BytecodeEmitter::emitSwitch(SwitchStatement* switchStmt)
                 continue;
             }
 
+            if (!se.prepareForCaseValue()) {
+                return false;
+            }
+
             ParseNode* caseValue = caseClause->caseExpression();
             // If the expression is a literal, suppress line number emission so
             // that debugging works more naturally.

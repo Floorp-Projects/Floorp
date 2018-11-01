@@ -33,7 +33,7 @@ public:
   nsresult BeginPage() final;
   nsresult EndPage() final;
 
-  virtual already_AddRefed<DrawTarget>
+  already_AddRefed<DrawTarget>
   GetReferenceDrawTarget() final;
 
 private:
