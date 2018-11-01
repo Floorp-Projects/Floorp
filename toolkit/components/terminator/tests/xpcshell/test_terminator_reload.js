@@ -68,7 +68,7 @@ add_task(async function test_reload() {
     info("Testing histogram " + id);
     let snapshot = telemetrySnapshots[id];
     let count = 0;
-    for (let x of snapshot.counts) {
+    for (let x of Object.values(snapshot.values)) {
       count += x;
     }
     Assert.equal(count, 1, "We have added one item");

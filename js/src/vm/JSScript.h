@@ -1646,18 +1646,6 @@ class JSScript : public js::gc::TenuredCell
     /* Number of type sets used in this script for dynamic type monitoring. */
     uint16_t nTypeSets_ = 0;
 
-    // Bit fields.
-
-  public:
-    // The kinds of the optional arrays.
-    enum ArrayKind {
-        CONSTS,
-        OBJECTS,
-        TRYNOTES,
-        SCOPENOTES,
-        ARRAY_KIND_BITS
-    };
-
   private:
     struct BitFields
     {
@@ -1792,7 +1780,9 @@ class JSScript : public js::gc::TenuredCell
 
         // True if the debugger's onNewScript hook has not yet been called.
         bool hideScriptFromDebugger_ : 1;
-    } bitFields_;
+    };
+
+    BitFields bitFields_ = {}; // Zero-initialize bitfield flags.
 
     //
     // End of fields.  Start methods.
@@ -1811,14 +1801,13 @@ class JSScript : public js::gc::TenuredCell
                            js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
   private:
-    JSScript(JS::Realm* realm, uint8_t* stubEntry, const JS::ReadOnlyCompileOptions& options,
-             js::HandleObject sourceObject, uint32_t bufStart, uint32_t bufEnd,
+    JSScript(JS::Realm* realm, uint8_t* stubEntry, js::HandleObject sourceObject,
+             uint32_t sourceStart, uint32_t sourceEnd,
              uint32_t toStringStart, uint32_t toStringend);
 
-    static JSScript* createInitialized(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                                       js::HandleObject sourceObject,
-                                       uint32_t bufStart, uint32_t bufEnd,
-                                       uint32_t toStringStart, uint32_t toStringEnd);
+    static JSScript* New(JSContext* cx, js::HandleObject sourceObject,
+                         uint32_t sourceStart, uint32_t sourceEnd,
+                         uint32_t toStringStart, uint32_t toStringEnd);
 
   public:
     static JSScript* Create(JSContext* cx,
@@ -1827,13 +1816,13 @@ class JSScript : public js::gc::TenuredCell
                             uint32_t sourceStart, uint32_t sourceEnd,
                             uint32_t toStringStart, uint32_t toStringEnd);
 
-    // Three ways ways to initialize a JSScript. Callers of partiallyInit()
-    // are responsible for notifying the debugger after successfully creating
-    // any kind (function or other) of new JSScript.  However, callers of
-    // fullyInitFromEmitter() do not need to do this.
-    static bool partiallyInit(JSContext* cx, JS::Handle<JSScript*> script,
-                              uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
-                              uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets);
+    // NOTE: If you use createPrivateScriptData directly instead of via
+    // fullyInitFromEmitter, you are responsible for notifying the debugger
+    // after successfully creating the script.
+    static bool createPrivateScriptData(JSContext* cx, JS::Handle<JSScript*> script,
+                                        uint32_t nscopes, uint32_t nconsts,
+                                        uint32_t nobjects, uint32_t ntrynotes,
+                                        uint32_t nscopenotes, uint32_t nyieldoffsets);
 
   private:
     static void initFromFunctionBox(js::HandleScript script, js::frontend::FunctionBox* funbox);
@@ -2457,8 +2446,8 @@ class JSScript : public js::gc::TenuredCell
   private:
     bool makeTypes(JSContext* cx);
 
-    bool createScriptData(JSContext* cx, uint32_t codeLength, uint32_t srcnotesLength,
-                          uint32_t natoms);
+    bool createSharedScriptData(JSContext* cx, uint32_t codeLength,
+                                uint32_t noteLength, uint32_t natoms);
     bool shareScriptData(JSContext* cx);
     void freeScriptData();
     void setScriptData(js::SharedScriptData* data);

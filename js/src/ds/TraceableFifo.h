@@ -39,7 +39,7 @@ class TraceableFifo : public js::Fifo<T, MinInlineCapacity, AllocPolicy>
     explicit TraceableFifo(AllocPolicy alloc = AllocPolicy()) : Base(alloc) {}
 
     TraceableFifo(TraceableFifo&& rhs) : Base(std::move(rhs)) { }
-    TraceableFifo& operator=(TraceableFifo&& rhs) { return Base::operator=(std::move(rhs)); }
+    TraceableFifo& operator=(TraceableFifo&& rhs) = default;
 
     TraceableFifo(const TraceableFifo&) = delete;
     TraceableFifo& operator=(const TraceableFifo&) = delete;

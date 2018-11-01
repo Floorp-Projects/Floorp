@@ -20,13 +20,13 @@ html5 sandboxed iframe should not be able to perform top navigation with scripts
         ok(false, "event.data.name: got '" + event.data.name + "', expected 'newWindow'");
       }
       var diag = "top navigation was " + (event.data.blocked ? "" : "NOT ") + "blocked";
-      ok((testCase.shouldBeBlocked == event.data.blocked), testCase.desc, diag);
+      ok((testCase.shouldBeBlocked == event.data.blocked), testCase.desc + " - " + diag);
       runNextTest();
     };
     try {
       testWin[testCase.iframeName].eval(testCase.script);
     } catch(e) {
-      ok(testCase.shouldBeBlocked, testCase.desc, e.message);
+      ok(testCase.shouldBeBlocked, testCase.desc + " - " + e.message);
       runNextTest();
     }
   }

@@ -11,7 +11,7 @@ function test() {
   BrowserTestUtils.addTab(gBrowser, "data:text/html,<html><head><link href='about:logo' rel='shortcut icon'>");
 }
 
-function record(aName) {
+function recordEvent(aName) {
   info("got " + aName);
   if (!actual.includes(aName))
     actual.push(aName);
@@ -31,20 +31,20 @@ function record(aName) {
 
 function TabOpen(aEvent) {
   if (aEvent.target == tab)
-    record("TabOpen");
+    recordEvent("TabOpen");
 }
 
 var progressListener = {
   onLocationChange: function onLocationChange(aBrowser) {
     if (aBrowser == tab.linkedBrowser)
-      record("onLocationChange");
+      recordEvent("onLocationChange");
   },
   onStateChange: function onStateChange(aBrowser) {
     if (aBrowser == tab.linkedBrowser)
-      record("onStateChange");
+      recordEvent("onStateChange");
   },
   onLinkIconAvailable: function onLinkIconAvailable(aBrowser) {
     if (aBrowser == tab.linkedBrowser)
-      record("onLinkIconAvailable");
+      recordEvent("onLinkIconAvailable");
   },
 };

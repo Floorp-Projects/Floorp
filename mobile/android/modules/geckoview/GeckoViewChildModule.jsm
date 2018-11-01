@@ -4,13 +4,13 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["GeckoViewContentModule"];
+var EXPORTED_SYMBOLS = ["GeckoViewChildModule"];
 
 ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 
 GeckoViewUtils.initLogging("Module[C]", this);
 
-class GeckoViewContentModule {
+class GeckoViewChildModule {
   static initLogging(aModuleName) {
     this._moduleName = aModuleName;
     const tag = aModuleName.replace("GeckoView", "") + "[C]";

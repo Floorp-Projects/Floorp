@@ -536,6 +536,12 @@ typedef void (*GtkWindowHandleExported) (GtkWindow  *window,
                                          const char *handle,
                                          gpointer    user_data);
 #ifdef MOZ_WAYLAND
+#if !GTK_CHECK_VERSION(3,22,0)
+typedef void (*GdkWaylandWindowExported) (GdkWindow  *window,
+                                          const char *handle,
+                                          gpointer    user_data);
+#endif
+
 typedef struct {
     GtkWindow *window;
     WindowHandleExported callback;

@@ -174,10 +174,9 @@ webExtensionTargetPrototype._createFallbackWindow = function() {
 
 webExtensionTargetPrototype._destroyFallbackWindow = function() {
   if (this.fallbackWebNav) {
-    const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     // Explicitly close the fallback windowless browser to prevent it to leak
     // (and to prevent it to freeze devtools xpcshell tests).
-    this.fallbackWebNav.loadURI("about:blank", 0, null, null, null, systemPrincipal);
+    this.fallbackWebNav.loadURI("about:blank", 0, null, null, null);
     this.fallbackWebNav.close();
 
     this.fallbackWebNav = null;

@@ -10,28 +10,24 @@ add_task(async function testHistogramPacking() {
   const HISTOGRAM_SNAPSHOT = {
     sample_process: {
       HISTOGRAM_1_DATA: {
-        counts: [
-          1, 0, 0,
-        ],
-        ranges: [
-          0, 1, 2,
-        ],
-        max: 2,
-        min: 1,
-        sum: 1,
+        range: [1, 2],
+        bucket_count: 3,
         histogram_type: 4,
+        values: {
+          "0": 1,
+          "1": 0,
+        },
+        sum: 1,
       },
       TELEMETRY_TEST_HISTOGRAM_2_DATA: {
-        counts: [
-          1, 0, 0,
-        ],
-        ranges: [
-          0, 1, 2,
-        ],
-        max: 2,
-        min: 1,
-        sum: 1,
+        range: [1, 2],
+        bucket_count: 3,
         histogram_type: 4,
+        values: {
+          "0": 1,
+          "1": 0,
+        },
+        sum: 1,
       },
     },
   };
@@ -83,42 +79,36 @@ add_task(async function testKeyedHistogramPacking() {
     sample_process: {
       HISTOGRAM_1_DATA: {
         someKey: {
-          counts: [
-            1, 0, 0,
-          ],
-          ranges: [
-            0, 1, 2,
-          ],
-          max: 2,
-          min: 1,
-          sum: 1,
+          range: [1, 2],
+          bucket_count: 3,
           histogram_type: 4,
+          values: {
+            "0": 1,
+            "1": 0,
+          },
+          sum: 1,
         },
         otherKey: {
-          counts: [
-            1, 0, 0,
-          ],
-          ranges: [
-            0, 1, 2,
-          ],
-          max: 2,
-          min: 1,
-          sum: 1,
+          range: [1, 2],
+          bucket_count: 3,
           histogram_type: 4,
+          values: {
+            "0": 1,
+            "1": 0,
+          },
+          sum: 1,
         },
       },
       TELEMETRY_TEST_HISTOGRAM_2_DATA: {
         someKey: {
-          counts: [
-            1, 0, 0,
-          ],
-          ranges: [
-            0, 1, 2,
-          ],
-          max: 2,
-          min: 1,
-          sum: 1,
+          range: [1, 2],
+          bucket_count: 3,
           histogram_type: 4,
+          values: {
+            "0": 1,
+            "1": 0,
+          },
+          sum: 1,
         },
       },
     },
