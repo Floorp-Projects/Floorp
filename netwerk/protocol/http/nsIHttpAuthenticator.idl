@@ -219,8 +219,3 @@ interface nsIHttpAuthenticator : nsISupports
      */
     const unsigned long IDENTITY_ENCRYPTED = (1<<12);
 };
-
-%{C++
-#define NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX \
-    "@mozilla.org/network/http-authenticator;1?scheme="
-%}
