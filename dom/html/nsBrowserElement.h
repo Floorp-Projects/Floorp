@@ -19,7 +19,6 @@ namespace mozilla {
 namespace dom {
 struct BrowserElementDownloadOptions;
 struct BrowserElementExecuteScriptOptions;
-class BrowserElementNextPaintEventCallback;
 class DOMRequest;
 enum class BrowserFindCaseSensitivity: uint8_t;
 enum class BrowserFindDirection: uint8_t;
@@ -82,11 +81,6 @@ public:
                ErrorResult& aRv);
   void FindNext(dom::BrowserFindDirection aDirection, ErrorResult& aRv);
   void ClearMatch(ErrorResult& aRv);
-
-  void AddNextPaintListener(dom::BrowserElementNextPaintEventCallback& listener,
-                            ErrorResult& aRv);
-  void RemoveNextPaintListener(dom::BrowserElementNextPaintEventCallback& listener,
-                               ErrorResult& aRv);
 
   already_AddRefed<dom::DOMRequest> ExecuteScript(const nsAString& aScript,
                                                   const dom::BrowserElementExecuteScriptOptions& aOptions,

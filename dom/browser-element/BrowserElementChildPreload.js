@@ -114,8 +114,6 @@ function BrowserElementChild() {
   // Maps outer window id --> weak ref to window.  Used by modal dialog code.
   this._windowIDDict = {};
 
-  this._nextPaintHandler = null;
-
   this._isContentWindowCreated = false;
 
   this._init();
@@ -198,8 +196,6 @@ BrowserElementChild.prototype = {
     LISTENED_EVENTS.forEach(event => {
       removeEventListener(event.type, this, event.useCapture, event.wantsUntrusted);
     });
-
-    this._deactivateNextPaintListener();
 
     removeMessageListener("browser-element-api:call", this);
 
@@ -291,8 +287,6 @@ BrowserElementChild.prototype = {
       "owner-visibility-change": this._recvOwnerVisibilityChange,
       "entered-fullscreen": this._recvEnteredFullscreen,
       "exit-fullscreen": this._recvExitFullscreen,
-      "activate-next-paint-listener": this._activateNextPaintListener,
-      "deactivate-next-paint-listener": this._deactivateNextPaintListener,
       "find-all": this._recvFindAll,
       "find-next": this._recvFindNext,
       "clear-match": this._recvClearMatch,
@@ -705,27 +699,6 @@ BrowserElementChild.prototype = {
 
     addEventListener('MozAfterPaint', onMozAfterPaint, /* useCapture = */ true);
     return onMozAfterPaint;
-  },
-
-  _removeMozAfterPaintHandler: function(listener) {
-    removeEventListener('MozAfterPaint', listener,
-                        /* useCapture = */ true);
-  },
-
-  _activateNextPaintListener: function(e) {
-    if (!this._nextPaintHandler) {
-      this._nextPaintHandler = this._addMozAfterPaintHandler(() => {
-        this._nextPaintHandler = null;
-        sendAsyncMsg('nextpaint');
-      });
-    }
-  },
-
-  _deactivateNextPaintListener: function(e) {
-    if (this._nextPaintHandler) {
-      this._removeMozAfterPaintHandler(this._nextPaintHandler);
-      this._nextPaintHandler = null;
-    }
   },
 
   _windowCloseHandler: function(e) {
