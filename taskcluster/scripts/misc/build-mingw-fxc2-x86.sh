@@ -17,9 +17,9 @@ cd $WORKSPACE
 
 # --------------
 
-git clone -n https://github.com/tomrittervg/fxc2.git fxc2-clone
+git clone -n https://github.com/mozilla/fxc2.git fxc2-clone
 cd fxc2-clone
-git checkout 502ef40807a472ba845f1cbdeac95ecab1aea2fd # Asserts integrity of the clone (right?)
+git checkout 63ad74b7faa7033f2c1be9cc1cd0225241a1a9a5 # Asserts integrity of the clone (right?)
 make -j$(nproc) x86
 
 cp fxc2.exe $INSTALL_DIR/bin/
