@@ -96,7 +96,7 @@ function* testHarnessSteps()
       let message = event.data;
       switch (message.op) {
         case "ok":
-          ok(message.condition, message.name, message.diag);
+          ok(message.condition, message.name + " - " + message.diag);
           break;
 
         case "todo":

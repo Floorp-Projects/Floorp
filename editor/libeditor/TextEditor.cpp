@@ -1371,21 +1371,34 @@ TextEditor::OnCompositionStart(WidgetCompositionEvent& aCompositionStartEvent)
 }
 
 nsresult
-TextEditor::OnCompositionChange(WidgetCompositionEvent& aCompsitionChangeEvent)
+TextEditor::OnCompositionChange(WidgetCompositionEvent& aCompositionChangeEvent)
 {
-  MOZ_ASSERT(aCompsitionChangeEvent.mMessage == eCompositionChange,
+  MOZ_ASSERT(aCompositionChangeEvent.mMessage == eCompositionChange,
              "The event should be eCompositionChange");
 
-  EditAction editAction =
-    aCompsitionChangeEvent.IsFollowedByCompositionEnd() ?
-      EditAction::eCommitComposition : EditAction::eUpdateComposition;
-  AutoEditActionDataSetter editActionData(*this, editAction);
+  if (NS_WARN_IF(!mComposition)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  AutoEditActionDataSetter editActionData(*this,
+                                          EditAction::eUpdateComposition);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (!EnsureComposition(aCompsitionChangeEvent)) {
+  if (!EnsureComposition(aCompositionChangeEvent)) {
     return NS_OK;
+  }
+
+  // If:
+  // - new composition string is not empty,
+  // - there is no composition string in the DOM tree,
+  // - and there is non-collapsed Selection,
+  // the selected content will be removed by this composition.
+  if (aCompositionChangeEvent.mData.IsEmpty() &&
+      mComposition->String().IsEmpty() &&
+      !SelectionRefPtr()->IsCollapsed()) {
+    editActionData.UpdateEditAction(EditAction::eDeleteByComposition);
   }
 
   nsIPresShell* presShell = GetPresShell();
@@ -1404,7 +1417,8 @@ TextEditor::OnCompositionChange(WidgetCompositionEvent& aCompsitionChangeEvent)
   MOZ_ASSERT(!mPlaceholderBatch,
     "UpdateIMEComposition() must be called without place holder batch");
   TextComposition::CompositionChangeEventHandlingMarker
-    compositionChangeEventHandlingMarker(mComposition, &aCompsitionChangeEvent);
+    compositionChangeEventHandlingMarker(mComposition,
+                                         &aCompositionChangeEvent);
 
   RefPtr<nsCaret> caretP = presShell->GetCaret();
 
@@ -1414,7 +1428,7 @@ TextEditor::OnCompositionChange(WidgetCompositionEvent& aCompsitionChangeEvent)
 
     MOZ_ASSERT(mIsInEditSubAction,
       "AutoPlaceholderBatch should've notified the observes of before-edit");
-    rv = InsertTextAsSubAction(aCompsitionChangeEvent.mData);
+    rv = InsertTextAsSubAction(aCompositionChangeEvent.mData);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
       "Failed to insert new composition string");
 
@@ -1428,7 +1442,7 @@ TextEditor::OnCompositionChange(WidgetCompositionEvent& aCompsitionChangeEvent)
   // compositionend event, we don't need to notify editor observes of this
   // change.
   // NOTE: We must notify after the auto batch will be gone.
-  if (!aCompsitionChangeEvent.IsFollowedByCompositionEnd()) {
+  if (!aCompositionChangeEvent.IsFollowedByCompositionEnd()) {
     NotifyEditorObservers(eNotifyEditorObserversOfEnd);
   }
 
@@ -1442,7 +1456,10 @@ TextEditor::OnCompositionEnd(WidgetCompositionEvent& aCompositionEndEvent)
     return;
   }
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eEndComposition);
+  EditAction editAction =
+    aCompositionEndEvent.mData.IsEmpty() ? EditAction::eCancelComposition :
+                                           EditAction::eCommitComposition;
+  AutoEditActionDataSetter editActionData(*this, editAction);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return;
   }

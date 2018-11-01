@@ -117,18 +117,18 @@ function check_telemetry(aShouldBlockCount,
   let local = Services.telemetry
                       .getHistogramById("APPLICATION_REPUTATION_LOCAL")
                       .snapshot();
-  Assert.equal(local.counts[ALLOW_LIST], aListCounts[ALLOW_LIST],
+  Assert.equal(local.values[ALLOW_LIST] || 0, aListCounts[ALLOW_LIST] || 0,
                "Allow list counts don't match");
-  Assert.equal(local.counts[BLOCK_LIST], aListCounts[BLOCK_LIST],
+  Assert.equal(local.values[BLOCK_LIST] || 0, aListCounts[BLOCK_LIST] || 0,
                "Block list counts don't match");
-  Assert.equal(local.counts[NO_LIST], aListCounts[NO_LIST],
+  Assert.equal(local.values[NO_LIST] || 0, aListCounts[NO_LIST] || 0,
                "No list counts don't match");
 
   let shouldBlock = Services.telemetry
                             .getHistogramById("APPLICATION_REPUTATION_SHOULD_BLOCK")
                             .snapshot();
   // SHOULD_BLOCK = true
-  Assert.equal(shouldBlock.counts[1], aShouldBlockCount);
+  Assert.equal(shouldBlock.values[1], aShouldBlockCount);
 }
 
 function get_telemetry_counts() {
@@ -138,8 +138,8 @@ function get_telemetry_counts() {
   let shouldBlock = Services.telemetry
                             .getHistogramById("APPLICATION_REPUTATION_SHOULD_BLOCK")
                             .snapshot();
-  return { shouldBlock: shouldBlock.counts[1],
-           listCounts: local.counts };
+  return { shouldBlock: shouldBlock.values[1] || 0,
+           listCounts: local.values };
 }
 
 add_test(function test_nullSourceURI() {
@@ -228,7 +228,8 @@ add_test(function test_unlisted() {
                              "http://localhost:4444/download");
   let counts = get_telemetry_counts();
   let listCounts = counts.listCounts;
-  listCounts[NO_LIST]++;
+  let val = listCounts[NO_LIST] || 0;
+  listCounts[NO_LIST] = val + 1;
   gAppRep.queryReputation({
     sourceURI: exampleURI,
     fileSize: 12,

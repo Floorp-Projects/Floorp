@@ -200,13 +200,9 @@ class VsyncMarkerPayload : public ProfilerMarkerPayload
 public:
   explicit VsyncMarkerPayload(mozilla::TimeStamp aVsyncTimestamp)
     : ProfilerMarkerPayload(aVsyncTimestamp, aVsyncTimestamp)
-    , mVsyncTimestamp(aVsyncTimestamp)
   {}
 
   DECL_STREAM_PAYLOAD
-
-private:
-  mozilla::TimeStamp mVsyncTimestamp;
 };
 
 class NetworkMarkerPayload : public ProfilerMarkerPayload

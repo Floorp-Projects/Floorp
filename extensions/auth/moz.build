@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'nsAuthFactory.cpp',
     'nsAuthGSSAPI.cpp',
 ]
 
 SOURCES += [
     'nsAuthSASL.cpp',
     'nsHttpNegotiateAuth.cpp', # contains constants whose names conflict with constants in other files
+    'nsIAuthModule.cpp',       # includes windows.h recursively which conflicts with TimeStamp.h
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
@@ -26,6 +26,7 @@ else:
 
 LOCAL_INCLUDES += [
     '/netwerk/dns', # For nsDNSService2.h
+    '/security/manager/ssl',
 ]
 
 FINAL_LIBRARY = 'xul'

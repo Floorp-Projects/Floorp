@@ -39,7 +39,7 @@ private:
 
     void Reset();
 
-    typedef TimeStamp MS_TimeStamp;
+    typedef ::TimeStamp MS_TimeStamp;
 
 private:
     nsresult MakeSN(const char *principal, nsCString &result);

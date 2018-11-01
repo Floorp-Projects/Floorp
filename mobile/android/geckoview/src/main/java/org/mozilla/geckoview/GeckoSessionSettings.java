@@ -27,7 +27,7 @@ public final class GeckoSessionSettings implements Parcelable {
     public static final int DISPLAY_MODE_STANDALONE = 2;
     public static final int DISPLAY_MODE_FULLSCREEN = 3;
 
-    // This needs to match GeckoViewContentSettings.js and GeckoViewSettings.jsm
+    // This needs to match GeckoViewSettingsChild.js and GeckoViewSettings.jsm
     public static final int USER_AGENT_MODE_MOBILE = 0;
     public static final int USER_AGENT_MODE_DESKTOP = 1;
     public static final int USER_AGENT_MODE_VR = 2;
@@ -102,6 +102,11 @@ public final class GeckoSessionSettings implements Parcelable {
     public static final Key<Boolean> SUSPEND_MEDIA_WHEN_INACTIVE =
         new Key<Boolean>("suspendMediaWhenInactive", /* initOnly */ false, /* values */ null);
 
+    /*
+     * Key to specify if JavaScript should be allowed on this session.
+     */
+    public static final Key<Boolean> ALLOW_JAVASCRIPT =
+            new Key<Boolean>("allowJavascript", /* initOnly */ false, /* values */ null);
 
     private final GeckoSession mSession;
     private final GeckoBundle mBundle;
@@ -130,6 +135,7 @@ public final class GeckoSessionSettings implements Parcelable {
         mBundle.putBoolean(USE_PRIVATE_MODE.name, false);
         mBundle.putBoolean(USE_MULTIPROCESS.name, true);
         mBundle.putBoolean(SUSPEND_MEDIA_WHEN_INACTIVE.name, false);
+        mBundle.putBoolean(ALLOW_JAVASCRIPT.name, true);
         mBundle.putInt(USER_AGENT_MODE.name, USER_AGENT_MODE_MOBILE);
         mBundle.putInt(DISPLAY_MODE.name, DISPLAY_MODE_BROWSER);
     }

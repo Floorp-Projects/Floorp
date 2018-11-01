@@ -15,12 +15,12 @@ ChromeUtils.defineModuleGetter(this, "URLBAR_SELECTED_RESULT_METHODS",
                                "resource:///modules/BrowserUsageTelemetry.jsm");
 
 function checkHistogramResults(resultIndexes, expected, histogram) {
-  for (let i = 0; i < resultIndexes.counts.length; i++) {
+  for (let [i, val] of Object.entries(resultIndexes.values)) {
     if (i == expected) {
-      Assert.equal(resultIndexes.counts[i], 1,
+      Assert.equal(val, 1,
         `expected counts should match for ${histogram} index ${i}`);
     } else {
-      Assert.equal(resultIndexes.counts[i], 0,
+      Assert.equal(!!val, false,
         `unexpected counts should be zero for ${histogram} index ${i}`);
     }
   }

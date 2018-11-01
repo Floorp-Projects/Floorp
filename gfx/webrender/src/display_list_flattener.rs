@@ -24,7 +24,7 @@ use hit_test::{HitTestingItem, HitTestingRun};
 use image::simplify_repeated_primitive;
 use internal_types::{FastHashMap, FastHashSet};
 use picture::{Picture3DContext, PictureCompositeMode, PictureIdGenerator, PicturePrimitive, PrimitiveList};
-use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor, PrimitiveInstance, PrimitiveDataInterner};
+use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor, PrimitiveInstance, PrimitiveDataInterner, PrimitiveKeyKind};
 use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveOpacity, PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind};
 use prim_store::{BorderSource, BrushSegment, BrushSegmentVec, PrimitiveContainer, PrimitiveDataHandle, PrimitiveStore};
 use prim_store::{OpacityBinding, ScrollNodeAndClipChain, TextRunPrimitive, PictureIndex, register_prim_chase_id};
@@ -834,10 +834,17 @@ impl<'a> DisplayListFlattener<'a> {
         spatial_node_index: SpatialNodeIndex,
         container: PrimitiveContainer,
     ) -> PrimitiveInstance {
+        // Build a primitive key, and optionally an old
+        // style PrimitiveDetails structure from the
+        // source primitive container.
+        let mut info = info.clone();
+        let (prim_key_kind, prim_details) = container.build(&mut info);
+
         let prim_key = PrimitiveKey::new(
             info.is_backface_visible,
             info.rect,
             info.clip_rect,
+            prim_key_kind,
         );
 
         // Get a tight bounding / culling rect for this primitive
@@ -856,16 +863,27 @@ impl<'a> DisplayListFlattener<'a> {
                 }
             });
 
-        let prim_index = self.prim_store.add_primitive(
-            &info.rect,
-            &info.clip_rect,
-            container,
-        );
+        // If we are building an old style primitive, add it to
+        // the prim store, and create a primitive index for it.
+        // For an interned primitive, use the primitive key to
+        // create a matching primitive instance kind.
+        let instance_kind = match prim_details {
+            Some(prim_details) => {
+                let prim_index = self.prim_store.add_primitive(
+                    &info.rect,
+                    &info.clip_rect,
+                    prim_details,
+                );
+
+                PrimitiveInstanceKind::LegacyPrimitive { prim_index }
+            }
+            None => {
+                prim_key.to_instance_kind()
+            }
+        };
 
         PrimitiveInstance::new(
-            PrimitiveInstanceKind::Primitive {
-                prim_index,
-            },
+            instance_kind,
             prim_data_handle,
             clip_chain_id,
             spatial_node_index,
@@ -1038,6 +1056,7 @@ impl<'a> DisplayListFlattener<'a> {
             is_backface_visible,
             LayoutRect::zero(),
             LayoutRect::max_rect(),
+            PrimitiveKeyKind::Unused,
         );
 
         let primitive_data_handle = self.resources
@@ -1574,6 +1593,7 @@ impl<'a> DisplayListFlattener<'a> {
                             true,
                             LayoutRect::zero(),
                             LayoutRect::max_rect(),
+                            PrimitiveKeyKind::Unused,
                         );
 
                         let shadow_prim_data_handle = self.resources
@@ -1696,18 +1716,18 @@ impl<'a> DisplayListFlattener<'a> {
         color: &ColorF,
         style: LineStyle,
     ) {
-        let prim = BrushPrimitive::new_line_decoration(
-            *color,
+        let container = PrimitiveContainer::LineDecoration {
+            color: *color,
             style,
             orientation,
             wavy_line_thickness,
-        );
+        };
 
         self.add_primitive(
             clip_and_scroll,
             info,
             Vec::new(),
-            PrimitiveContainer::Brush(prim),
+            container,
         );
     }
 

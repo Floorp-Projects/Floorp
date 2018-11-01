@@ -23,7 +23,6 @@
 #include "nsNSSCertificateDB.h"
 #include "nsNSSComponent.h"
 #include "nsNSSVersion.h"
-#include "nsNTLMAuthModule.h"
 #include "nsNetCID.h"
 #include "nsPK11TokenDB.h"
 #include "nsPKCS11Slot.h"
@@ -144,7 +143,6 @@ NS_DEFINE_NAMED_CID(NS_CERTTREE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_CRYPTO_HASH_CID);
 NS_DEFINE_NAMED_CID(NS_CRYPTO_HMAC_CID);
-NS_DEFINE_NAMED_CID(NS_NTLMAUTHMODULE_CID);
 NS_DEFINE_NAMED_CID(NS_KEYMODULEOBJECT_CID);
 NS_DEFINE_NAMED_CID(NS_KEYMODULEOBJECTFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENTSIGNATUREVERIFIER_CID);
@@ -183,8 +181,6 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
     Constructor<nsCryptoHash, nullptr, ProcessRestriction::AnyProcess> },
   { &kNS_CRYPTO_HMAC_CID, false, nullptr,
     Constructor<nsCryptoHMAC, nullptr, ProcessRestriction::AnyProcess> },
-  { &kNS_NTLMAUTHMODULE_CID, false, nullptr,
-    Constructor<nsNTLMAuthModule, &nsNTLMAuthModule::InitTest> },
   { &kNS_KEYMODULEOBJECT_CID, false, nullptr,
     Constructor<nsKeyObject, nullptr, ProcessRestriction::AnyProcess> },
   { &kNS_KEYMODULEOBJECTFACTORY_CID, false, nullptr,
@@ -239,7 +235,6 @@ static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
   { NS_CRYPTO_HASH_CONTRACTID, &kNS_CRYPTO_HASH_CID },
   { NS_CRYPTO_HMAC_CONTRACTID, &kNS_CRYPTO_HMAC_CID },
   { "@mozilla.org/uriloader/psm-external-content-listener;1", &kNS_PSMCONTENTLISTEN_CID },
-  { NS_NTLMAUTHMODULE_CONTRACTID, &kNS_NTLMAUTHMODULE_CID },
   { NS_KEYMODULEOBJECT_CONTRACTID, &kNS_KEYMODULEOBJECT_CID },
   { NS_KEYMODULEOBJECTFACTORY_CONTRACTID, &kNS_KEYMODULEOBJECTFACTORY_CID },
   { NS_CONTENTSIGNATUREVERIFIER_CONTRACTID, &kNS_CONTENTSIGNATUREVERIFIER_CID },

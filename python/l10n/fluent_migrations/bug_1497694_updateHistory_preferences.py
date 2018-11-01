@@ -12,7 +12,7 @@ from fluent.migrate import REPLACE_IN_TEXT
 from fluent.migrate.helpers import VARIABLE_REFERENCE
 
 def migrate(ctx):
-    """Bug 1497687 - Migrate Update History in Update section of Preferences to use Fluent for localization, part {index}."""
+    """Bug 1497694 - Migrate Update History in Update section of Preferences to use Fluent for localization, part {index}."""
 
     ctx.add_transforms(
         "toolkit/toolkit/updates/history.ftl",
