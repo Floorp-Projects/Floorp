@@ -1141,10 +1141,6 @@ BrowserElementChild.prototype = {
     webNav.stop(webNav.STOP_NETWORK);
   },
 
-  _recvZoom: function(data) {
-    docShell.contentViewer.fullZoom = data.json.zoom;
-  },
-
   async _recvGetWebManifest(data) {
     debug(`Received GetWebManifest message: (${data.json.id})`);
     let manifest = null;

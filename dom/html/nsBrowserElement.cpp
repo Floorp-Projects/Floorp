@@ -176,18 +176,6 @@ nsBrowserElement::Stop(ErrorResult& aRv)
   }
 }
 
-void
-nsBrowserElement::Zoom(float aZoom, ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-
-  nsresult rv = mBrowserElementAPI->Zoom(aZoom);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-}
-
 already_AddRefed<DOMRequest>
 nsBrowserElement::GetCanGoBack(ErrorResult& aRv)
 {

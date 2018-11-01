@@ -56,7 +56,6 @@ interface nsIBrowserElementAPI : nsISupports
   void goForward();
   void reload(in boolean hardReload);
   void stop();
-  void zoom(in float zoom);
   DOMRequest getCanGoBack();
   DOMRequest getCanGoForward();
   DOMRequest getContentDimensions();
