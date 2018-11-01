@@ -7,7 +7,6 @@ const METHODS = {
   goForward: {},
   reload: {},
   stop: {},
-  purgeHistory: {},
   getScreenshot: {},
   zoom: {},
   getCanGoBack: {},
