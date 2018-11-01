@@ -2026,10 +2026,6 @@ RuntimeService::Cleanup()
 {
   AssertIsOnMainThread();
 
-  if (!mShuttingDown) {
-    Shutdown();
-  }
-
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_WARNING_ASSERTION(obs, "Failed to get observer service?!");
 
