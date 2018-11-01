@@ -87,7 +87,7 @@ jobs:
           - mozilla-central
       when:
           by-project:
-              mozilla-central: [{hour: 10, minute: 30}]
+              mozilla-central: [{hour: 10, minute: 0}]
               # No default
 
     - name: bouncer-check
