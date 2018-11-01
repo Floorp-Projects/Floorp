@@ -228,7 +228,11 @@ proto.report = function(failed, actual, expected, message, operator, truncate = 
  *        (string) Short explanation of the expected result
  */
 proto.ok = function(value, message) {
-  this.report(!value, value, true, message, "==");
+  if (arguments.length > 2) {
+    this.report(true, false, true, "Too many arguments passed to `Assert.ok()`", "==");
+  } else {
+    this.report(!value, value, true, message, "==");
+  }
 };
 
 /**
