@@ -620,16 +620,6 @@ BrowserElementParent.prototype = {
     return this._sendDOMRequest('execute-script', {script, options});
   },
 
-  /*
-   * The valid range of zoom scale is defined in preference "zoom.maxPercent" and "zoom.minPercent".
-   */
-  zoom: defineNoReturnMethod(function(zoom) {
-    zoom *= 100;
-    zoom = Math.min(getIntPref("zoom.maxPercent", 300), zoom);
-    zoom = Math.max(getIntPref("zoom.minPercent", 50), zoom);
-    this._sendAsyncMsg('zoom', {zoom: zoom / 100.0});
-  }),
-
   getWebManifest: defineDOMRequestMethod('get-web-manifest'),
   /**
    * Called when the visibility of the window which owns this iframe changes.

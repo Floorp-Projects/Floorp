@@ -57,8 +57,6 @@ public:
   void Reload(bool aHardReload, ErrorResult& aRv);
   void Stop(ErrorResult& aRv);
 
-  void Zoom(float aZoom, ErrorResult& aRv);
-
   already_AddRefed<dom::DOMRequest> GetCanGoBack(ErrorResult& aRv);
   already_AddRefed<dom::DOMRequest> GetCanGoForward(ErrorResult& aRv);
   already_AddRefed<dom::DOMRequest> GetContentDimensions(ErrorResult& aRv);
