@@ -142,4 +142,43 @@ class InMemoryHistoryStorageTest {
         assertEquals(PageObservation("Firefox"), history.pageMeta["https://www.firefox.com"])
         assertEquals(PageObservation("Мозилла"), history.pageMeta["https://www.mozilla.org"])
     }
+
+    @Test
+    fun `store can provide suggestions`() {
+        val history = InMemoryHistoryStorage()
+        assertEquals(0, history.getSuggestions("Mozilla").size)
+
+        history.recordVisit("http://www.firefox.com", VisitType.LINK)
+        val search = history.getSuggestions("Mozilla")
+        assertEquals(1, search.size)
+        assertEquals("http://www.firefox.com", search[0].url)
+
+        history.recordVisit("http://www.wikipedia.org", VisitType.LINK)
+        history.recordVisit("http://www.mozilla.org", VisitType.LINK)
+        history.recordVisit("http://www.moscow.ru", VisitType.LINK)
+        history.recordObservation("http://www.mozilla.org", PageObservation("Mozilla"))
+        history.recordObservation("http://www.firefox.com", PageObservation("Mozilla Firefox"))
+        history.recordObservation("http://www.moscow.ru", PageObservation("Moscow City"))
+
+        // Empty search.
+        assertEquals(4, history.getSuggestions("").size)
+
+        val search2 = history.getSuggestions("Mozilla")
+        assertEquals(4, search2.size)
+        assertEquals("http://www.mozilla.org", search2[0].id)
+        assertEquals("http://www.mozilla.org", search2[0].url)
+        assertEquals("Mozilla", search2[0].title)
+
+        assertEquals("http://www.firefox.com", search2[1].id)
+        assertEquals("http://www.firefox.com", search2[1].url)
+        assertEquals("Mozilla Firefox", search2[1].title)
+
+        assertEquals("http://www.moscow.ru", search2[2].id)
+        assertEquals("http://www.moscow.ru", search2[2].url)
+        assertEquals("Moscow City", search2[2].title)
+
+        assertEquals("http://www.wikipedia.org", search2[3].id)
+        assertEquals("http://www.wikipedia.org", search2[3].url)
+        assertEquals(null, search2[3].title)
+    }
 }

@@ -35,6 +35,13 @@ interface HistoryStorage {
      * @param callback will be invoked with a list of all visited page URIs.
      */
     fun getVisited(callback: (List<String>) -> Unit)
+
+    /**
+     * Retrieves suggestions matching the [query].
+     * @param query A query by which to query the underlying store.
+     * @return A List of [SearchResult] matching the query, in no particular order.
+     */
+    fun getSuggestions(query: String): List<SearchResult>
 }
 
 data class PageObservation(val title: String?)
@@ -50,3 +57,19 @@ enum class VisitType(val type: Int) {
     TYPED(2),
     RELOAD(9)
 }
+
+/**
+ * Encapsulates a set of properties which define a result of querying history storage.
+ *
+ * @property id A permanent identifier which might be used for caching or at the UI layer.
+ * @property url A URL of the page.
+ * @property score An unbounded, nonlinear score (larger is more relevant) which is used to rank
+ *  this [SearchResult] against others.
+ * @property title An optional title of the page.
+ */
+data class SearchResult(
+    val id: String,
+    val url: String,
+    val score: Int,
+    val title: String? = null
+)
