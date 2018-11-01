@@ -135,8 +135,6 @@ VsyncMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                   UniqueStacks& aUniqueStacks)
 {
   StreamType("VsyncTimestamp", aWriter);
-  aWriter.DoubleProperty("vsync",
-                         (mVsyncTimestamp - aProcessStartTime).ToMilliseconds());
 }
 
 static const char *GetNetworkState(NetworkLoadType aType)
