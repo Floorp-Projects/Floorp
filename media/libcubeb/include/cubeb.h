@@ -631,13 +631,9 @@ CUBEB_EXPORT int cubeb_device_collection_destroy(cubeb * context,
 /** Registers a callback which is called when the system detects
     a new device or a device is removed.
     @param context
-    @param devtype device type to include. Different callbacks and user pointers
-           can be registered for each devtype. The hybrid devtype
-           `CUBEB_DEVICE_TYPE_INPUT | CUBEB_DEVICE_TYPE_OUTPUT` is also valid
-           and will register the provided callback and user pointer in both sides.
+    @param devtype device type to include
     @param callback a function called whenever the system device list changes.
-           Passing NULL allow to unregister a function. You have to unregister
-           first before you register a new callback.
+           Passing NULL allow to unregister a function
     @param user_ptr pointer to user specified data which will be present in
            subsequent callbacks.
     @retval CUBEB_ERROR_NOT_SUPPORTED */
