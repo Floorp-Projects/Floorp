@@ -10,6 +10,14 @@
 #include "mozilla/ArrayUtils.h"
 #include "nsIProtocolHandler.h"
 
+#if defined(MOZ_WIDGET_ANDROID) && defined(RELEASE_OR_BETA)
+#define ABOUT_CONFIG_BLOCKED_GV
+#endif
+
+#ifdef ABOUT_CONFIG_BLOCKED_GV
+#include "mozilla/jni/Utils.h" // for mozilla::jni::IsFennec()
+#endif
+
 NS_IMPL_ISUPPORTS(nsAboutRedirector, nsIAboutModule)
 
 struct RedirEntry
@@ -173,6 +181,14 @@ nsAboutRedirector::NewChannel(nsIURI* aURI,
   if (XRE_IsContentProcess() && path.EqualsASCII("crashcontent")) {
     MOZ_CRASH("Crash via about:crashcontent");
   }
+
+#ifdef ABOUT_CONFIG_BLOCKED_GV
+  // We don't want to allow access to about:config from
+  // GeckoView on release or beta, but it's fine for Fennec.
+  if (path.EqualsASCII("config") && !mozilla::jni::IsFennec()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+#endif
 
   for (int i = 0; i < kRedirTotal; i++) {
     if (!strcmp(path.get(), kRedirMap[i].id)) {
