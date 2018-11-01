@@ -1,0 +1,94 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'ImageLib')
+
+SOURCES += [
+    'alpha_processing.c',
+    'dec.c',
+    'dec_clip_tables.c',
+    'filters.c',
+    'lossless.c',
+    'rescaler.c',
+    'upsampling.c',
+    'yuv.c',
+]
+
+LOCAL_INCLUDES += [
+    '/media/libwebp',
+]
+
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+    SOURCES += [
+        'alpha_processing_neon.c',
+        'dec_neon.c',
+        'filters_neon.c',
+        'lossless_neon.c',
+        'rescaler_neon.c',
+        'upsampling_neon.c',
+        'yuv_neon.c',
+    ]
+    DEFINES['WEBP_HAVE_NEON'] = 1;
+    for f in SOURCES:
+      if f.endswith('neon.c'):
+        SOURCES[f].flags += CONFIG['NEON_FLAGS']
+elif CONFIG['CPU_ARCH'] == 'aarch64':
+    SOURCES += [
+        'alpha_processing_neon.c',
+        'dec_neon.c',
+        'filters_neon.c',
+        'lossless_neon.c',
+        'rescaler_neon.c',
+        'upsampling_neon.c',
+        'yuv_neon.c',
+    ]
+    DEFINES['WEBP_HAVE_NEON'] = 1;
+elif CONFIG['INTEL_ARCHITECTURE']:
+    SOURCES += [
+        'alpha_processing_sse2.c',
+        'alpha_processing_sse41.c',
+        'dec_sse2.c',
+        'dec_sse41.c',
+        'filters_sse2.c',
+        'lossless_sse2.c',
+        'rescaler_sse2.c',
+        'upsampling_sse2.c',
+        'upsampling_sse41.c',
+        'yuv_sse2.c',
+        'yuv_sse41.c',
+    ]
+    DEFINES['WEBP_HAVE_SSE2'] = 1;
+    DEFINES['WEBP_HAVE_SSE41'] = 1;
+    for f in SOURCES:
+      if f.endswith('sse2.c'):
+        SOURCES[f].flags += CONFIG['SSE2_FLAGS']
+      elif f.endswith('sse41.c'):
+        SOURCES[f].flags += ['-msse4.1']
+elif CONFIG['CPU_ARCH'].startswith('mips'):
+    SOURCES += [
+        'alpha_processing_mips_dsp_r2.c',
+        'dec_mips32.c',
+        'dec_mips_dsp_r2.c',
+        'filters_mips_dsp_r2.c',
+        'lossless_mips_dsp_r2.c',
+        'lossless_msa.c',
+        'rescaler_mips32.c',
+        'rescaler_mips_dsp_r2.c',
+        'rescaler_msa.c',
+        'upsampling_mips_dsp_r2.c',
+        'upsampling_msa.c',
+        'yuv_mips32.c',
+        'yuv_mips_dsp_r2.c',
+    ]
+
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
+    CFLAGS += ['-Wno-unreachable-code']
+
+FINAL_LIBRARY = 'gkmedias'
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
