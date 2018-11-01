@@ -12,7 +12,7 @@
 #include "nsITaskbarProgress.h"
 #include "nsITaskbarOverlayIconController.h"
 #include "TaskbarPreview.h"
-#include <nsWeakReference.h>
+#include "nsWeakReference.h"
 
 namespace mozilla {
 namespace widget {

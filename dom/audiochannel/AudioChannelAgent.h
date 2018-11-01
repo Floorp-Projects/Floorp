@@ -10,7 +10,7 @@
 #include "nsIAudioChannelAgent.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
-#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 
 class nsPIDOMWindowInner;
 class nsPIDOMWindowOuter;

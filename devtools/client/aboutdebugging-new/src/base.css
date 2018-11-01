@@ -49,6 +49,10 @@
   */
   --alt-heading-icon-size: calc(var(--base-distance) * 6);
   --alt-heading-icon-gap: var(--base-distance);
+  --main-heading-icon-size: calc(var(--base-distance) * 16);
+  --main-heading-icon-gap: calc(var(--base-distance) * 3);
+  --main-subheading-icon-size: calc(var(--base-distance) * 5);
+  --main-subheading-heading-icon-gap: calc(var(--base-distance) * 2);
 }
 
 /*
@@ -106,6 +110,10 @@ a:active {
 */
 
 /* Main style for heading (i.e. h1) */
+/* +--------+-------------+
+*  | [Icon] | Lorem ipsum |
+*  +--------+-------------+
+*/
 .main-heading {
   font-size: 2.5em;
   font-weight: lighter;
@@ -113,12 +121,38 @@ a:active {
   color: var(--in-content-text-color);
   margin: 0;
   margin-bottom: .5em;
+
+  display: grid;
+  grid-template-columns: var(--main-heading-icon-size) 1fr;
+  grid-column-gap: var(--main-heading-icon-gap);
+  align-items: center;
 }
 
-/* Main style for a subheading (i.e. h2) */
+.main-heading__icon {
+  width: 100%;
+}
+
+/* Main style for a subheading (i.e. h2). It features an icon */
+/* +--------+-------------+
+*  | [Icon] | Lorem ipsum |
+*  +--------+-------------+
+*/
 .main-subheading {
-  line-height: 1.4em;
+  margin-block-start: calc(var(--base-distance) * 4);
   font-weight: 600;
+  font-size: 1.46em; /* import from .header-name in common.inc.css */
+  line-height: 1.3em; /* import from .header-name in common.inc.css */
+
+  display: grid;
+  grid-template-columns: var(--main-subheading-icon-size) 1fr;
+  grid-column-gap: var(--main-subheading-heading-icon-gap);
+  align-items: center;
+}
+
+.main-subheading__icon {
+  width: 100%;
+  fill: currentColor;
+  -moz-context-properties: fill;
 }
 
 /* Alternative style for a heading (i.e. h1) */
@@ -253,4 +287,10 @@ Form controls
 
 .badge--error {
   background: var(--error-50);
+}
+
+.undecorated-link,
+.undecorated-link:hover {
+  text-decoration: none;
+  color: currentColor;
 }

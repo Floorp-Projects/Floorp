@@ -24,7 +24,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
-#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 #include "mozilla/Attributes.h"
 #include "js/RootingAPI.h"
 #include "nsTObserverArray.h"

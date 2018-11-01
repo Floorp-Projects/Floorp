@@ -30,10 +30,17 @@ job-template:
       implementation: sign-and-push-addons
       channel:
          by-project:
-            # Only release langpacks are listed publicly
             mozilla-release:
                by-platform:
-                  macosx64.*: unlisted  # ja-JP-mac is only langpack on mac, and is unlisted always
+                  # ja-JP-mac is only langpack on mac, and is unlisted always
+                  macosx64.*: unlisted
+                  default: listed
+            mozilla-beta:
+               by-platform:
+                  # ja-JP-mac is only langpack on mac, and is unlisted always
+                  macosx64-nightly.*: unlisted
+                  macosx64-devedition.*: unlisted
+                  linux.*-devedition.*: unlisted
                   default: listed
             default: unlisted
       upstream-artifacts:   # See transforms

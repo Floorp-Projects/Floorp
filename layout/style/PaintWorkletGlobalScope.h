@@ -11,7 +11,7 @@
 
 namespace mozilla {
 
-class WorkletImpl;
+class PaintWorkletImpl;
 
 namespace dom {
 
@@ -20,7 +20,7 @@ class VoidFunction;
 class PaintWorkletGlobalScope final : public WorkletGlobalScope
 {
 public:
-  explicit PaintWorkletGlobalScope(WorkletImpl* aImpl);
+  explicit PaintWorkletGlobalScope(PaintWorkletImpl* aImpl);
 
   bool
   WrapGlobalObject(JSContext* aCx,
@@ -29,8 +29,12 @@ public:
   void
   RegisterPaint(const nsAString& aType, VoidFunction& aProcessorCtor);
 
+  WorkletImpl* Impl() const override;
+
 private:
   ~PaintWorkletGlobalScope() = default;
+
+  const RefPtr<PaintWorkletImpl> mImpl;
 };
 
 } // namespace dom

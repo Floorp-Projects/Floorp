@@ -11,7 +11,7 @@
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsIScriptLoaderObserver.h"
-#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsIParser.h"
 #include "nsIContent.h"
 #include "nsContentCreatorFunctions.h"

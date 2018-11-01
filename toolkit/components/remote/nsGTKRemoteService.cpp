@@ -16,7 +16,7 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsIServiceManager.h"
-#include "nsIWeakReference.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsIWidget.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCID.h"
@@ -70,7 +70,7 @@ nsGTKRemoteService::RegisterWindow(mozIDOMWindow* aWindow)
     (GtkWidget*) mainWidget->GetNativeData(NS_NATIVE_SHELLWIDGET);
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIWeakReference> weak = do_GetWeakReference(aWindow);
+  nsWeakPtr weak = do_GetWeakReference(aWindow);
   NS_ENSURE_TRUE(weak, NS_ERROR_FAILURE);
 
   mWindows.Put(widget, weak);

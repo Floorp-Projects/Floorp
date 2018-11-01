@@ -8,7 +8,7 @@
 #define xpcjsweakreference_h___
 
 #include "xpcIJSWeakReference.h"
-#include "nsIWeakReference.h"
+#include "nsIWeakReferenceUtils.h"
 #include "mozilla/Attributes.h"
 
 class xpcJSWeakReference final : public xpcIJSWeakReference
@@ -23,7 +23,7 @@ public:
     NS_DECL_XPCIJSWEAKREFERENCE
 
 private:
-    nsCOMPtr<nsIWeakReference> mReferent;
+    nsWeakPtr mReferent;
 };
 
 #endif // xpcjsweakreference_h___

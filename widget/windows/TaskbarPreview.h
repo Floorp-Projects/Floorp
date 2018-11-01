@@ -16,7 +16,7 @@
 #include <nsITaskbarPreview.h>
 #include <nsITaskbarPreviewController.h>
 #include <nsString.h>
-#include <nsWeakPtr.h>
+#include <nsIWeakReferenceUtils.h>
 #include <nsIDocShell.h>
 #include "WindowHook.h"
 

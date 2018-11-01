@@ -34,7 +34,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WorkletGlobalScope)
 
-  explicit WorkletGlobalScope(WorkletImpl* aImpl);
+  WorkletGlobalScope();
 
   nsIGlobalObject* GetParentObject() const
   {
@@ -56,7 +56,7 @@ public:
   already_AddRefed<Console>
   GetConsole(JSContext* aCx, ErrorResult& aRv);
 
-  WorkletImpl* Impl() const { return mImpl; }
+  virtual WorkletImpl* Impl() const = 0;
 
   void
   Dump(const Optional<nsAString>& aString) const;
@@ -65,7 +65,6 @@ protected:
   ~WorkletGlobalScope();;
 
 private:
-  const RefPtr<WorkletImpl> mImpl;
   RefPtr<Console> mConsole;
 };
 
