@@ -242,7 +242,7 @@ SwitchEmitter::emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault)
         return true;
     }
 
-    if (state_ == State::Case) {
+    if (caseIndex > 0) {
         // Link the last JSOP_CASE's SRC_NEXTCASE to current JSOP_CASE for the
         // benefit of IonBuilder.
         if (!bce_->setSrcNoteOffset(caseNoteIndex_, SrcNote::NextCase::NextCaseOffset,
@@ -263,7 +263,7 @@ SwitchEmitter::emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault)
     caseOffsets_[caseIndex] = caseJump.offset;
     lastCaseOffset_ = caseJump.offset;
 
-    if (state_ == State::Cond) {
+    if (caseIndex == 0) {
         // Switch note's second offset is to first JSOP_CASE.
         unsigned noteCount = bce_->notes().length();
         if (!bce_->setSrcNoteOffset(noteIndex_, 1, lastCaseOffset_ - top_)) {
@@ -279,10 +279,29 @@ SwitchEmitter::emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault)
 }
 
 bool
-SwitchEmitter::emitCaseJump()
+SwitchEmitter::prepareForCaseValue()
 {
     MOZ_ASSERT(kind_ == Kind::Cond);
     MOZ_ASSERT(state_ == State::Cond || state_ == State::Case);
+
+    if (!bce_->emit1(JSOP_DUP)) {
+        return false;
+    }
+
+    state_ = State::CaseValue;
+    return true;
+}
+
+bool
+SwitchEmitter::emitCaseJump()
+{
+    MOZ_ASSERT(kind_ == Kind::Cond);
+    MOZ_ASSERT(state_ == State::CaseValue);
+
+    if (!bce_->emit1(JSOP_STRICTEQ)) {
+        return false;
+    }
+
     if (!emitCaseOrDefaultJump(caseIndex_, false)) {
         return false;
     }

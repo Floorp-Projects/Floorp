@@ -118,7 +118,7 @@ class CFGBlock : public TempObject
 
 #define CFG_CONTROL_OPCODE_LIST(_)                                          \
     _(Test)                                                                 \
-    _(Compare)                                                              \
+    _(CondSwitchCase)                                                       \
     _(Goto)                                                                 \
     _(Return)                                                               \
     _(RetRVal)                                                              \
@@ -311,54 +311,57 @@ class CFGTableSwitch : public CFGControlInstruction
 };
 
 /**
- * CFGCompare
+ * CFGCondSwitchCase
  *
- * PEEK
- * PEEK
- * STRICTEQ
+ * IFEQ
  *    POP truePopAmount
  *    JUMP succ1
- * STRICTNEQ
+ * IFNE
  *    POP falsePopAmount
  *    JUMP succ2
  */
-class CFGCompare : public CFGAryControlInstruction<2>
+class CFGCondSwitchCase : public CFGAryControlInstruction<2>
 {
-    const size_t truePopAmount_;
-    const size_t falsePopAmount_;
+    const uint8_t truePopAmount_;
+    const uint8_t falsePopAmount_;
 
-    CFGCompare(CFGBlock* succ1, size_t truePopAmount, CFGBlock* succ2, size_t falsePopAmount)
+    CFGCondSwitchCase(CFGBlock* succ1, size_t truePopAmount, CFGBlock* succ2, size_t falsePopAmount)
       : truePopAmount_(truePopAmount),
         falsePopAmount_(falsePopAmount)
     {
+        MOZ_ASSERT(truePopAmount_ == truePopAmount,
+                   "truePopAmount should fit in uint8_t");
+        MOZ_ASSERT(falsePopAmount_ == falsePopAmount,
+                   "falsePopAmount should fit in uint8_t");
         replaceSuccessor(0, succ1);
         replaceSuccessor(1, succ2);
     }
 
   public:
-    CFG_CONTROL_HEADER(Compare);
+    CFG_CONTROL_HEADER(CondSwitchCase);
 
-    static CFGCompare* NewFalseBranchIsDefault(TempAllocator& alloc, CFGBlock* case_,
-                                               CFGBlock* default_)
+    static CFGCondSwitchCase* NewFalseBranchIsDefault(TempAllocator& alloc, CFGBlock* case_,
+                                                      CFGBlock* default_)
     {
         // True and false branch both go to a body and don't need the lhs and
         // rhs to the compare. Pop them.
-        return new(alloc) CFGCompare(case_, 2, default_, 2);
+        return new(alloc) CFGCondSwitchCase(case_, 2, default_, 2);
     }
 
-    static CFGCompare* NewFalseBranchIsNextCompare(TempAllocator& alloc, CFGBlock* case_,
-                                                   CFGBlock* nextCompare)
+    static CFGCondSwitchCase* NewFalseBranchIsNextCase(TempAllocator& alloc, CFGBlock* case_,
+                                                       CFGBlock* nextCase)
     {
-        // True branch goes to the body and don't need the lhs and
-        // rhs to the compare anymore. Pop them. The next compare still
+        // True branch goes to the body and doesn't need the lhs and
+        // rhs to the compare anymore. Pop them. The next case still
         // needs the lhs.
-        return new(alloc) CFGCompare(case_, 2, nextCompare, 1);
+        return new(alloc) CFGCondSwitchCase(case_, 2, nextCase, 1);
     }
 
-    static CFGCompare* CopyWithNewTargets(TempAllocator& alloc, CFGCompare* old,
-                                          CFGBlock* succ1, CFGBlock* succ2)
+    static CFGCondSwitchCase* CopyWithNewTargets(TempAllocator& alloc, CFGCondSwitchCase* old,
+                                                 CFGBlock* succ1, CFGBlock* succ2)
     {
-        return new(alloc) CFGCompare(succ1, old->truePopAmount(), succ2, old->falsePopAmount());
+        return new(alloc) CFGCondSwitchCase(succ1, old->truePopAmount(),
+                                            succ2, old->falsePopAmount());
     }
 
     CFGBlock* trueBranch() const {

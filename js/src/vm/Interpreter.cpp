@@ -2786,18 +2786,18 @@ CASE(JSOP_STRICTNE)
 }
 END_CASE(JSOP_STRICTNE)
 
+#undef STRICT_EQUALITY_OP
+
 CASE(JSOP_CASE)
 {
-    bool cond;
-    STRICT_EQUALITY_OP(==, cond);
+    bool cond = REGS.sp[-1].toBoolean();
+    REGS.sp--;
     if (cond) {
         REGS.sp--;
         BRANCH(GET_JUMP_OFFSET(REGS.pc));
     }
 }
 END_CASE(JSOP_CASE)
-
-#undef STRICT_EQUALITY_OP
 
 CASE(JSOP_LT)
 {
