@@ -152,3 +152,29 @@ macosx64-grcov:
     toolchains:
         - linux64-rust-1.28
         - linux64-clang-7
+
+macosx64-cbindgen:
+    description: "cbindgen toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TM(cbindgen)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
+    run:
+        using: toolchain-script
+        script: build-cbindgen.sh
+        arguments: ['x86_64-apple-darwin']
+        tooltool-downloads: internal
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/cbindgen.tar.xz
+    toolchains:
+        - linux64-cctools-port
+        - linux64-clang-7
+        - linux64-llvm-dsymutil
+        - linux64-rust-macos-1.30
