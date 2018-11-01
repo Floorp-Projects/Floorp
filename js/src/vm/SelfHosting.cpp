@@ -2702,6 +2702,23 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("GuardToRelativeTimeFormat",
                     intrinsic_GuardToBuiltin<RelativeTimeFormatObject>, 1,0,
                     IntlGuardToRelativeTimeFormat),
+
+    JS_FN("IsWrappedDateTimeFormat",
+          intrinsic_IsWrappedInstanceOfBuiltin<DateTimeFormatObject>, 1,0),
+    JS_FN("IsWrappedNumberFormat",
+          intrinsic_IsWrappedInstanceOfBuiltin<NumberFormatObject>, 1,0),
+
+    JS_FN("CallCollatorMethodIfWrapped",
+          CallNonGenericSelfhostedMethod<Is<CollatorObject>>, 2,0),
+    JS_FN("CallDateTimeFormatMethodIfWrapped",
+          CallNonGenericSelfhostedMethod<Is<DateTimeFormatObject>>, 2,0),
+    JS_FN("CallNumberFormatMethodIfWrapped",
+          CallNonGenericSelfhostedMethod<Is<NumberFormatObject>>, 2,0),
+    JS_FN("CallPluralRulesMethodIfWrapped",
+          CallNonGenericSelfhostedMethod<Is<PluralRulesObject>>, 2,0),
+    JS_FN("CallRelativeTimeFormatMethodIfWrapped",
+          CallNonGenericSelfhostedMethod<Is<RelativeTimeFormatObject>>, 2,0),
+
     JS_FN("GetDateTimeFormatConstructor",
           intrinsic_GetBuiltinIntlConstructor<GlobalObject::getOrCreateDateTimeFormatConstructor>,
           0,0),
