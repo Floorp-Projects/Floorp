@@ -12,6 +12,7 @@
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
 #include "nsPIDOMWindow.h"
+#include "jsapi.h"
 
 namespace mozilla {
 namespace dom {
@@ -160,6 +161,12 @@ FetchStreamReader::StartConsuming(JSContext* aCx,
 
   aRv.MightThrowJSException();
 
+  // Here, by spec, we can pick any global we want. Just to avoid extra
+  // cross-compartment steps, we want to create the reader in the same
+  // compartment of the owning Fetch Body object.
+  // The same global will be used to retrieve data from this reader.
+  JSAutoRealm ar(aCx, mGlobal->GetGlobalJSObject());
+
   JS::Rooted<JSObject*> reader(aCx,
                                JS::ReadableStreamGetReader(aCx, aStream,
                                                            JS::ReadableStreamReaderMode::Default));
@@ -195,8 +202,9 @@ FetchStreamReader::OnOutputStreamReady(nsIAsyncOutputStream* aStream)
     return WriteBuffer();
   }
 
-  // TODO: We need to verify this is the correct global per the spec.
-  //       See bug 1385890.
+  // Here we can retrieve data from the reader using any global we want because
+  // it is not observable. We want to use the reader's global, which is also the
+  // Response's one.
   AutoEntryScript aes(mGlobal, "ReadableStreamReader.read", !mWorkerRef);
 
   JS::Rooted<JSObject*> reader(aes.cx(), mReader);
