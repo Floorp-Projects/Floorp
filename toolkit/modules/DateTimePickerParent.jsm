@@ -84,9 +84,7 @@ var DateTimePickerParent = {
       case "popuphidden": {
         let browser = this.weakBrowser ? this.weakBrowser.get() : null;
         if (browser) {
-          browser.messageManager.sendAsyncMessage("FormDateTime:PickerClosed", {
-            browsingContextId: this._browsingContextId,
-          });
+          browser.messageManager.sendAsyncMessage("FormDateTime:PickerClosed");
         }
         this.picker.closePicker();
         this.close();
@@ -102,10 +100,7 @@ var DateTimePickerParent = {
     let browser = this.weakBrowser ? this.weakBrowser.get() : null;
     if (browser) {
       browser.messageManager.sendAsyncMessage(
-        "FormDateTime:PickerValueChanged", {
-          detail: aEvent.detail,
-          browsingContextId: this._browsingContextId,
-        });
+        "FormDateTime:PickerValueChanged", aEvent.detail);
     }
   },
 
@@ -121,7 +116,6 @@ var DateTimePickerParent = {
     this._anchor.width = rect.width;
     this._anchor.height = rect.height;
     this._anchor.hidden = false;
-    this._browsingContextId = aData.browsingContextId;
 
     debug("Opening picker with details: " + JSON.stringify(detail));
 
