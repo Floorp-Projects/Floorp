@@ -12,6 +12,7 @@
 #include "gfxRect.h"
 #include "nsRegionFwd.h"
 #include "mozilla/gfx/Rect.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 class gfxContext;
 class gfxDrawable;
@@ -197,6 +198,15 @@ public:
    */
   static void
   PaintFilter(const PaintFramesParams& aParams);
+
+  /**
+   * Try to build WebRender filters for a frame if the filters applied to it are supported.
+   */
+  static bool
+  BuildWebRenderFilters(nsIFrame *aFilteredFrame,
+                        const mozilla::LayoutDeviceIntRect& aPreFilterBounds,
+                        nsTArray<mozilla::wr::WrFilterOp>& aWrFilters,
+                        mozilla::LayoutDeviceIntRect& aPostFilterBounds);
 
   /**
    * @param aRenderingContext the target rendering context in which the paint
