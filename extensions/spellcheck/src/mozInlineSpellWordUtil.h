@@ -80,29 +80,27 @@ public:
  *    The basic operation is:
  *
  *    1. Call Init with the weak pointer to the editor that you're using.
- *    2. Call SetEnd to set where you want to stop spellchecking. We'll stop
- *       at the word boundary after that. If SetEnd is not called, we'll stop
- *       at the end of the document's root element.
- *    3. Call SetPosition to initialize the current position inside the
- *       previously given range.
- *    4. Call GetNextWord over and over until it returns false.
+ *    2. Call SetPositionAndEnd to to initialize the current position inside the
+ *       previously given range and set where you want to stop spellchecking. 
+ *       We'll stop at the word boundary after that. If SetEnd is not called,
+ *       we'll stop at the end of the root element.
+ *    3. Call GetNextWord over and over until it returns false.
  */
 
 class MOZ_STACK_CLASS mozInlineSpellWordUtil
 {
 public:
   mozInlineSpellWordUtil()
-    : mRootNode(nullptr),
+    : mIsContentEditableOrDesignMode(false), mRootNode(nullptr),
       mSoftBegin(nullptr, 0), mSoftEnd(nullptr, 0),
       mNextWordIndex(-1), mSoftTextValid(false) {}
 
   nsresult Init(mozilla::TextEditor* aTextEditor);
 
-  nsresult SetEnd(nsINode* aEndNode, int32_t aEndOffset);
-
   // sets the current position, this should be inside the range. If we are in
   // the middle of a word, we'll move to its start.
-  nsresult SetPosition(nsINode* aNode, int32_t aOffset);
+  nsresult SetPositionAndEnd(nsINode* aPositionNode, int32_t aPositionOffset,
+                             nsINode* aEndNode, int32_t aEndOffset);
 
   // Given a point inside or immediately following a word, this returns the
   // DOM range that exactly encloses that word's characters. The current
@@ -138,6 +136,7 @@ private:
 
   // cached stuff for the editor, set by Init
   nsCOMPtr<nsIDocument>         mDocument;
+  bool mIsContentEditableOrDesignMode;
 
   // range to check, see SetPosition and SetEnd
   nsINode*    mRootNode;
