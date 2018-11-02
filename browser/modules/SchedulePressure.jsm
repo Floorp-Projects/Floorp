@@ -7,6 +7,8 @@
 var EXPORTED_SYMBOLS = ["SchedulePressure"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
+  "resource://gre/modules/TelemetryStopwatch.jsm");
 XPCOMUtils.defineLazyPreferenceGetter(this, "SCHEDULE_PRESSURE_ENABLED",
   "browser.schedulePressure.enabled", true);
 XPCOMUtils.defineLazyPreferenceGetter(this, "TIMEOUT_AMOUNT",

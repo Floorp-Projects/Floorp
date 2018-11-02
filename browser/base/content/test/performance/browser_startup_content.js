@@ -82,6 +82,7 @@ const intermittently_loaded_whitelist = {
   ]),
   modules: new Set([
     "resource://gre/modules/sessionstore/Utils.jsm",
+    "resource://gre/modules/TelemetryStopwatch.jsm",
   ]),
 };
 

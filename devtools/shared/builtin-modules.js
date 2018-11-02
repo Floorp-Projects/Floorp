@@ -22,7 +22,6 @@ const {
   console,
   HeapSnapshot,
   StructuredCloneHolder,
-  TelemetryStopwatch,
 } = Cu.getGlobalForObject(jsmScope);
 
 // Create a single Sandbox to access global properties needed in this module.
@@ -219,7 +218,6 @@ exports.modules = {
   // pull it is destroyed. See bug 1402779.
   Promise,
   Services: Object.create(Services),
-  TelemetryStopwatch,
 };
 
 defineLazyGetter(exports.modules, "Debugger", () => {
