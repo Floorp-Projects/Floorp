@@ -27,8 +27,6 @@ layout/**
 memory/replace/dmd/test/**
 modules/**
 netwerk/cookie/test/browser/**
-netwerk/protocol/**
-netwerk/dns/**
 netwerk/test/browser/**
 netwerk/test/httpserver/**
 netwerk/test/mochitests/**
