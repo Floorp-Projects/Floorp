@@ -10012,13 +10012,13 @@ CreateSimpleClipRegion(const nsDisplayMasksAndClipPaths& aDisplayItem,
     return Nothing();
   }
 
-  auto& clipPath = style->mClipPath;
+  const auto& clipPath = style->mClipPath;
   if (clipPath.GetType() != StyleShapeSourceType::Shape) {
     return Nothing();
   }
 
-  auto& shape = clipPath.GetBasicShape();
-  if (shape->GetShapeType() == StyleBasicShapeType::Polygon) {
+  const auto& shape = clipPath.BasicShape();
+  if (shape.GetShapeType() == StyleBasicShapeType::Polygon) {
     return Nothing();
   }
 
@@ -10029,7 +10029,7 @@ CreateSimpleClipRegion(const nsDisplayMasksAndClipPaths& aDisplayItem,
   AutoTArray<wr::ComplexClipRegion, 1> clipRegions;
 
   wr::LayoutRect rect;
-  switch (shape->GetShapeType()) {
+  switch (shape.GetShapeType()) {
     case StyleBasicShapeType::Inset: {
       const nsRect insetRect =
         ShapeUtils::ComputeInsetRect(shape, refBox) + aDisplayItem.ToReferenceFrame();
@@ -10050,7 +10050,7 @@ CreateSimpleClipRegion(const nsDisplayMasksAndClipPaths& aDisplayItem,
       nsPoint center = ShapeUtils::ComputeCircleOrEllipseCenter(shape, refBox);
 
       nsSize radii;
-      if (shape->GetShapeType() == StyleBasicShapeType::Ellipse) {
+      if (shape.GetShapeType() == StyleBasicShapeType::Ellipse) {
         radii = ShapeUtils::ComputeEllipseRadii(shape, center, refBox);
       } else {
         nscoord radius = ShapeUtils::ComputeCircleRadius(shape, center, refBox);
