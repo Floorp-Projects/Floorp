@@ -102,6 +102,29 @@ MobileViewportManager::SetRestoreResolution(float aResolution)
   mRestoreResolution = Some(aResolution);
 }
 
+float
+MobileViewportManager::ComputeIntrinsicResolution() const
+{
+  ScreenIntSize displaySize = ViewAs<ScreenPixel>(mDisplaySize,
+      PixelCastJustification::LayoutDeviceIsScreenForBounds);
+  CSSToScreenScale intrinsicScale =
+      ComputeIntrinsicScale(mDocument->GetViewportInfo(displaySize),
+                            displaySize, mMobileViewportSize);
+  CSSToLayoutDeviceScale cssToDev =
+      mPresShell->GetPresContext()->CSSToDevPixelScale();
+  return (intrinsicScale / cssToDev).scale;
+}
+
+mozilla::CSSToScreenScale
+MobileViewportManager::ComputeIntrinsicScale(const nsViewportInfo& aViewportInfo,
+                                             const mozilla::ScreenIntSize& aDisplaySize,
+                                             const mozilla::CSSSize& aViewportSize) const
+{
+  CSSToScreenScale intrinsicScale = MaxScaleRatio(ScreenSize(aDisplaySize), aViewportSize);
+  MVM_LOG("%p: Intrinsic computed zoom is %f\n", this, intrinsicScale.scale);
+  return ClampZoom(intrinsicScale, aViewportInfo);
+}
+
 void
 MobileViewportManager::RequestReflow()
 {
@@ -170,7 +193,7 @@ MobileViewportManager::SetInitialViewport()
 
 CSSToScreenScale
 MobileViewportManager::ClampZoom(const CSSToScreenScale& aZoom,
-                                 const nsViewportInfo& aViewportInfo)
+                                 const nsViewportInfo& aViewportInfo) const
 {
   CSSToScreenScale zoom = aZoom;
   if (zoom < aViewportInfo.GetMinZoom()) {
@@ -231,9 +254,7 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
       defaultZoom = aViewportInfo.GetDefaultZoom();
       MVM_LOG("%p: default zoom from viewport is %f\n", this, defaultZoom.scale);
       if (!aViewportInfo.IsDefaultZoomValid()) {
-        defaultZoom = MaxScaleRatio(ScreenSize(aDisplaySize), aViewport);
-        MVM_LOG("%p: Intrinsic computed zoom is %f\n", this, defaultZoom.scale);
-        defaultZoom = ClampZoom(defaultZoom, aViewportInfo);
+        defaultZoom = ComputeIntrinsicScale(aViewportInfo, aDisplaySize, aViewport);
       }
     }
     MOZ_ASSERT(aViewportInfo.GetMinZoom() <= defaultZoom &&
