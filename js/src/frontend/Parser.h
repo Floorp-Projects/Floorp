@@ -877,23 +877,68 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     ListNodeType parse();
 
   private:
-    template<typename ConditionT>
+    /*
+     * Gets the next token and checks if it matches to the given `condition`.
+     * If it matches, returns true.
+     * If it doesn't match, calls `errorReport` to report the error, and
+     * returns false.
+     * If other error happens, it returns false but `errorReport` may not be
+     * called and other error will be thrown in that case.
+     *
+     * In any case, the already gotten token is not ungotten.
+     *
+     * The signature of `condition` is [...](TokenKind actual) -> bool, and
+     * the signature of `errorReport` is [...](TokenKind actual).
+     */
+    template<typename ConditionT, typename ErrorReportT>
     MOZ_MUST_USE bool mustMatchTokenInternal(ConditionT condition, Modifier modifier,
-                                             unsigned errorNumber);
+                                             ErrorReportT errorReport);
 
   public:
-    MOZ_MUST_USE bool mustMatchToken(TokenKind expected, Modifier modifier, unsigned errorNumber) {
-        return mustMatchTokenInternal([expected](TokenKind actual) { return actual == expected; },
-                                      modifier, errorNumber);
+    /*
+     * The following mustMatchToken variants follow the behavior and parameter
+     * types of mustMatchTokenInternal above.
+     *
+     * If modifier is omitted, `None` is used.
+     * If TokenKind is passed instead of `condition`, it checks if the next
+     * token is the passed token.
+     * If error number is passed instead of `errorReport`, it reports an
+     * error with the passed errorNumber.
+     */
+    MOZ_MUST_USE bool mustMatchToken(TokenKind expected, Modifier modifier, JSErrNum errorNumber) {
+        return mustMatchTokenInternal([expected](TokenKind actual) {
+                                          return actual == expected;
+                                      },
+                                      modifier,
+                                      [this, errorNumber](TokenKind) {
+                                          this->error(errorNumber);
+                                      });
     }
 
-    MOZ_MUST_USE bool mustMatchToken(TokenKind excpected, unsigned errorNumber) {
+    MOZ_MUST_USE bool mustMatchToken(TokenKind excpected, JSErrNum errorNumber) {
         return mustMatchToken(excpected, TokenStream::None, errorNumber);
     }
 
     template<typename ConditionT>
-    MOZ_MUST_USE bool mustMatchToken(ConditionT condition, unsigned errorNumber) {
-        return mustMatchTokenInternal(condition, TokenStream::None, errorNumber);
+    MOZ_MUST_USE bool mustMatchToken(ConditionT condition, JSErrNum errorNumber) {
+        return mustMatchTokenInternal(condition, TokenStream::None,
+                                      [this, errorNumber](TokenKind) {
+                                          this->error(errorNumber);
+                                      });
+    }
+
+    template<typename ErrorReportT>
+    MOZ_MUST_USE bool mustMatchToken(TokenKind expected, Modifier modifier,
+                                     ErrorReportT errorReport) {
+        return mustMatchTokenInternal([expected](TokenKind actual) {
+                                          return actual == expected;
+                                      },
+                                      modifier, errorReport);
+    }
+
+    template<typename ErrorReportT>
+    MOZ_MUST_USE bool mustMatchToken(TokenKind expected, ErrorReportT errorReport) {
+        return mustMatchToken(expected, TokenStream::None, errorReport);
     }
 
     /* Report the given error at the current offset. */
