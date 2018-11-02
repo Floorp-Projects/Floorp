@@ -2152,6 +2152,30 @@ WinUtils::RunningFromANetworkDrive()
 }
 
 /* static */
+bool
+WinUtils::GetModuleFullPath(HMODULE aModuleHandle, nsAString& aPath)
+{
+  size_t bufferSize = MAX_PATH;
+  size_t len = 0;
+  while (true) {
+    aPath.SetLength(bufferSize);
+    len = (size_t)::GetModuleFileNameW(aModuleHandle,
+                                       (char16ptr_t)aPath.BeginWriting(),
+                                       bufferSize);
+    if (!len) {
+      return false;
+    }
+    if (len == bufferSize && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+      bufferSize *= 2;
+      continue;
+    }
+    aPath.Truncate(len);
+    break;
+  }
+  return true;
+}
+
+/* static */
 bool WinUtils::CanonicalizePath(nsAString& aPath)
 {
   wchar_t tempPath[MAX_PATH + 1];

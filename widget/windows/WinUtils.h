@@ -512,6 +512,15 @@ public:
   static nsresult WriteBitmap(nsIFile* aFile, imgIContainer* aImage);
 
   /**
+   * Wrapper for ::GetModuleFileNameW().
+   * @param  aModuleHandle [in] The handle of a loaded module
+   * @param  aPath         [out] receives the full path of the module specified
+   *                       by aModuleBase.
+   * @return true if aPath was successfully populated.
+   */
+  static bool GetModuleFullPath(HMODULE aModuleHandle, nsAString& aPath);
+
+  /**
    * Wrapper for PathCanonicalize().
    * Upon success, the resulting output string length is <= MAX_PATH.
    * @param  aPath [in,out] The path to transform.
