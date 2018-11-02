@@ -214,8 +214,13 @@ function run_test() {
   library = ctypes.open(unicodefile.path);
   run_void_tests(library);
   library.close();
-  if (copy)
-    unicodefile.remove(false);
+  if (copy) {
+    // Tolerate remove() failure because Firefox may have the DLL open
+    // for examination.
+    try {
+      unicodefile.remove(false);
+    } catch (e) {}
+  }
 }
 
 function run_abstract_class_tests() {
