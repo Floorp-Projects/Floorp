@@ -11,6 +11,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "gTabWarmingEnabled",
