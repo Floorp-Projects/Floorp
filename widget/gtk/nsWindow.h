@@ -287,6 +287,7 @@ public:
     // descendant windows
     GtkWidget*         GetMozContainerWidget();
     GdkWindow*         GetGdkWindow() { return mGdkWindow; }
+    GtkWidget*         GetGtkWidget() { return mShell; }
     bool               IsDestroyed() { return mIsDestroyed; }
 
     void               DispatchDragEvent(mozilla::EventMessage aMsg,

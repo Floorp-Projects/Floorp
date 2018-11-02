@@ -7480,5 +7480,10 @@ nsWindow::GetTopLevelWindowActiveState(nsIFrame *aFrame)
       }
   }
 
-  return (gFocusWindow == window);
+  GtkWidget* widget = window->GetGtkWidget();
+  if (widget) {
+      return !(gtk_widget_get_state_flags(widget) & GTK_STATE_FLAG_BACKDROP);
+  }
+
+  return false;
 }
