@@ -59,7 +59,32 @@ const DEFAULT_COLOR = "#9400FF";
  */
 function clearRect(ctx, x1, y1, x2, y2, matrix = identity()) {
   const p = getPointsFromDiagonal(x1, y1, x2, y2, matrix);
-  ctx.clearRect(p[0].x, p[0].y, p[1].x - p[0].x, p[3].y - p[0].y);
+
+  // We are creating a clipping path and want it removed after we clear it's
+  // contents so we need to save the context.
+  ctx.save();
+
+  // Create a path to be cleared.
+  ctx.beginPath();
+  ctx.moveTo(Math.round(p[0].x), Math.round(p[0].y));
+  ctx.lineTo(Math.round(p[1].x), Math.round(p[1].y));
+  ctx.lineTo(Math.round(p[2].x), Math.round(p[2].y));
+  ctx.lineTo(Math.round(p[3].x), Math.round(p[3].y));
+  ctx.closePath();
+
+  // Restrict future drawing to the inside of the path.
+  ctx.clip();
+
+  // Clear any transforms applied to the canvas so that clearRect() really does
+  // clear everything.
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+  // Clear the contents of our clipped path by attempting to clear the canvas.
+  ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+  // Restore the context to the state it was before changing transforms and
+  // adding clipping paths.
+  ctx.restore();
 }
 
 /**

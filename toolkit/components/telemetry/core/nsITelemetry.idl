@@ -180,6 +180,15 @@ interface nsITelemetry : nsISupports
   readonly attribute uint32_t maximalNumberOfConcurrentThreads;
 
   /*
+   * An array of untrusted module load events. Each element describes one or
+   * more modules that were loaded, contextual information at the time of the
+   * event (including stack trace), and flags describing the module's
+   * trustworthiness.
+   */
+  [implicit_jscontext]
+  Promise getUntrustedModuleLoadEvents();
+
+  /*
    * Record the current thread's call stack on demand. Note that, the stack is
    * only captured at the first call. All subsequent calls result in incrementing
    * the capture counter without doing actual stack unwinding.

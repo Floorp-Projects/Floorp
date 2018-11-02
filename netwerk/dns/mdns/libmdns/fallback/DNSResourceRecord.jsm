@@ -4,19 +4,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* jshint esnext: true, moz: true */
 
-'use strict';
+"use strict";
 
-var EXPORTED_SYMBOLS = ['DNSResourceRecord'];
+var EXPORTED_SYMBOLS = ["DNSResourceRecord"];
 
-ChromeUtils.import('resource://gre/modules/Services.jsm');
-ChromeUtils.import('resource://gre/modules/DataReader.jsm');
-ChromeUtils.import('resource://gre/modules/DataWriter.jsm');
-ChromeUtils.import('resource://gre/modules/DNSRecord.jsm');
-ChromeUtils.import('resource://gre/modules/DNSTypes.jsm');
-
-function debug(msg) {
-  Services.console.logStringMessage('MulticastDNS: ' + msg);
-}
+ChromeUtils.import("resource://gre/modules/DataReader.jsm");
+ChromeUtils.import("resource://gre/modules/DataWriter.jsm");
+ChromeUtils.import("resource://gre/modules/DNSRecord.jsm");
+ChromeUtils.import("resource://gre/modules/DNSTypes.jsm");
 
 const DNS_RESOURCE_RECORD_DEFAULT_TTL = 120; // 120 seconds
 
@@ -24,7 +19,7 @@ class DNSResourceRecord extends DNSRecord {
   constructor(properties = {}) {
     super(properties);
 
-    this.ttl  = properties.ttl  || DNS_RESOURCE_RECORD_DEFAULT_TTL;
+    this.ttl  = properties.ttl || DNS_RESOURCE_RECORD_DEFAULT_TTL;
     this.data = properties.data || {};
   }
 
@@ -119,7 +114,7 @@ function _parseA(recordData, packetData) {
     parts.push(reader.getValue(1));
   }
 
-  return parts.join('.');
+  return parts.join(".");
 }
 
 /**
@@ -141,9 +136,9 @@ function _parseTXT(recordData, packetData) {
 
   let label = reader.getLabel(packetData);
   if (label.length > 0) {
-    let parts = label.split('.');
+    let parts = label.split(".");
     parts.forEach((part) => {
-      let [name] = part.split('=', 1);
+      let [name] = part.split("=", 1);
       let value = part.substr(name.length + 1);
       result[name] = value;
     });
@@ -172,7 +167,7 @@ function _parseSRV(recordData, packetData) {
 function _serializeA(data) {
   let writer = new DataWriter();
 
-  let parts = data.split('.');
+  let parts = data.split(".");
   for (let i = 0; i < 4; i++) {
     writer.putValue(parseInt(parts[i], 10) || 0);
   }
@@ -198,7 +193,7 @@ function _serializeTXT(data) {
   let writer = new DataWriter();
 
   for (let name in data) {
-    writer.putLengthString(name + '=' + data[name]);
+    writer.putLengthString(name + "=" + data[name]);
   }
 
   return writer.data;
@@ -211,8 +206,8 @@ function _serializeSRV(data) {
   let writer = new DataWriter();
 
   writer.putValue(data.priority || 0, 2);
-  writer.putValue(data.weight   || 0, 2);
-  writer.putValue(data.port     || 0, 2);
+  writer.putValue(data.weight || 0, 2);
+  writer.putValue(data.port || 0, 2);
   writer.putLabel(data.target);
 
   return writer.data;

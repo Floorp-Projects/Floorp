@@ -32,6 +32,7 @@ def check_opcode():
         opcode.get_opcodes(topsrcdir)
     except Exception as e:
         log_fail(e.args[0])
+        return False
 
     log_pass('ok')
     return True

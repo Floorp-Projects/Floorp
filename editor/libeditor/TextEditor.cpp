@@ -2106,10 +2106,8 @@ TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   // it still owns the data, we just have a pointer to it.
   // If it can't support a "text" output of the data the call will fail
   nsCOMPtr<nsISupports> genericDataObj;
-  uint32_t len;
   nsAutoCString flav;
-  rv = trans->GetAnyTransferData(flav, getter_AddRefs(genericDataObj),
-                                 &len);
+  rv = trans->GetAnyTransferData(flav, getter_AddRefs(genericDataObj));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2119,14 +2117,15 @@ TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
     return NS_OK;
   }
 
-  nsCOMPtr<nsISupportsString> textDataObj = do_QueryInterface(genericDataObj);
-  if (textDataObj && len > 0) {
+  if (nsCOMPtr<nsISupportsString> text = do_QueryInterface(genericDataObj)) {
     nsAutoString stuffToPaste;
-    textDataObj->GetData ( stuffToPaste );
-    AutoPlaceholderBatch treatAsOneTransaction(*this);
-    rv = InsertWithQuotationsAsSubAction(stuffToPaste);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    text->GetData(stuffToPaste);
+    if (!stuffToPaste.IsEmpty()) {
+      AutoPlaceholderBatch treatAsOneTransaction(*this);
+      rv = InsertWithQuotationsAsSubAction(stuffToPaste);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
   }
   return NS_OK;

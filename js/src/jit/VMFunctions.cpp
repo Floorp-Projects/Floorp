@@ -988,7 +988,7 @@ GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame, Handle<GeneratorObje
     // work. This function always returns false, so we're guaranteed to enter
     // the exception handler where we will clear the pc.
     JSScript* script = frame->script();
-    uint32_t offset = script->yieldAndAwaitOffsets()[genObj->yieldAndAwaitIndex()];
+    uint32_t offset = script->resumeOffsets()[genObj->resumeIndex()];
     jsbytecode* pc = script->offsetToPC(offset);
     frame->setOverridePc(pc);
 

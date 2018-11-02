@@ -759,13 +759,15 @@ CompositorBridgeParent::PauseComposition()
   if (!mPaused) {
     mPaused = true;
 
+    TimeStamp now = TimeStamp::Now();
     if (mCompositor) {
       mCompositor->Pause();
+      DidComposite(now, now);
     } else if (mWrBridge) {
       mWrBridge->Pause();
+      NotifyPipelineRendered(mWrBridge->PipelineId(), mWrBridge->GetCurrentEpoch(),
+                             now, now);
     }
-    TimeStamp now = TimeStamp::Now();
-    DidComposite(now, now);
   }
 
   // if anyone's waiting to make sure that composition really got paused, tell them

@@ -192,7 +192,6 @@ impl<'a> DisplayListFlattener<'a> {
 
 pub trait BorderSideHelpers {
     fn border_color(&self, is_inner_border: bool) -> ColorF;
-    fn is_opaque(&self) -> bool;
 }
 
 impl BorderSideHelpers for BorderSide {
@@ -220,11 +219,6 @@ impl BorderSideHelpers for BorderSide {
 
         let black = if lighter { 0.7 } else { 0.3 };
         ColorF::new(black, black, black, self.color.a)
-    }
-
-    /// Returns true if all pixels in this border style are opaque.
-    fn is_opaque(&self) -> bool {
-        self.color.a >= 1.0 && self.style.is_opaque()
     }
 }
 
@@ -962,12 +956,6 @@ fn add_corner_segment(
         return;
     }
 
-    let is_opaque =
-        side0.is_opaque() &&
-        side1.is_opaque() &&
-        radius.width <= 0.0 &&
-        radius.height <= 0.0;
-
     brush_segments.push(
         BrushSegment::new(
             image_rect,
@@ -981,7 +969,6 @@ fn add_corner_segment(
     border_segments.push(BorderSegmentInfo {
         handle: None,
         local_task_size: image_rect.size,
-        is_opaque,
         cache_key: RenderTaskCacheKey {
             size: DeviceIntSize::zero(),
             kind: RenderTaskCacheKeyKind::BorderCorner(
@@ -1035,8 +1022,6 @@ fn add_edge_segment(
         return;
     }
 
-    let is_opaque = side.is_opaque();
-
     brush_segments.push(
         BrushSegment::new(
             image_rect,
@@ -1050,7 +1035,6 @@ fn add_edge_segment(
     border_segments.push(BorderSegmentInfo {
         handle: None,
         local_task_size: size,
-        is_opaque,
         cache_key: RenderTaskCacheKey {
             size: DeviceIntSize::zero(),
             kind: RenderTaskCacheKeyKind::BorderEdge(

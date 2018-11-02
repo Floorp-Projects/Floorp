@@ -4,28 +4,28 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* jshint esnext: true, moz: true */
 
-'use strict';
+"use strict";
 
-var EXPORTED_SYMBOLS = ['DNSPacket'];
+var EXPORTED_SYMBOLS = ["DNSPacket"];
 
-ChromeUtils.import('resource://gre/modules/Services.jsm');
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.import('resource://gre/modules/DataReader.jsm');
-ChromeUtils.import('resource://gre/modules/DataWriter.jsm');
-ChromeUtils.import('resource://gre/modules/DNSRecord.jsm');
-ChromeUtils.import('resource://gre/modules/DNSResourceRecord.jsm');
+ChromeUtils.import("resource://gre/modules/DataReader.jsm");
+ChromeUtils.import("resource://gre/modules/DataWriter.jsm");
+ChromeUtils.import("resource://gre/modules/DNSRecord.jsm");
+ChromeUtils.import("resource://gre/modules/DNSResourceRecord.jsm");
 
 const DEBUG = true;
 
 function debug(msg) {
-  Services.console.logStringMessage('DNSPacket: ' + msg);
+  Services.console.logStringMessage("DNSPacket: " + msg);
 }
 
 let DNS_PACKET_SECTION_TYPES = [
-  'QD', // Question
-  'AN', // Answer
-  'NS', // Authority
-  'AR'  // Additional
+  "QD", // Question
+  "AN", // Answer
+  "NS", // Authority
+  "AR",  // Additional
 ];
 
 /**
@@ -133,7 +133,7 @@ class DNSPacket {
   static parse(data) {
     let reader = new DataReader(data);
     if (reader.getValue(2) !== 0x0000) {
-      throw new Error('Packet must start with 0x0000');
+      throw new Error("Packet must start with 0x0000");
     }
 
     let packet = new DNSPacket();
@@ -150,12 +150,10 @@ class DNSPacket {
     DNS_PACKET_SECTION_TYPES.forEach((sectionType) => {
       let recordCount = recordCounts[sectionType];
       for (let i = 0; i < recordCount; i++) {
-        if (sectionType === 'QD') {
+        if (sectionType === "QD") {
           packet.addRecord(sectionType,
               DNSRecord.parseFromPacketReader(reader));
-        }
-
-        else {
+        } else {
           packet.addRecord(sectionType,
               DNSResourceRecord.parseFromPacketReader(reader));
         }
@@ -163,7 +161,7 @@ class DNSPacket {
     });
 
     if (!reader.eof) {
-      DEBUG && debug('Did not complete parsing packet data');
+      DEBUG && debug("Did not complete parsing packet data");
     }
 
     return packet;
@@ -246,13 +244,13 @@ function _valueToFlags(value) {
     QR: (value & 0x8000) >> 15,
     OP: (value & 0x7800) >> 11,
     AA: (value & 0x0400) >> 10,
-    TC: (value & 0x0200) >>  9,
-    RD: (value & 0x0100) >>  8,
-    RA: (value & 0x0080) >>  7,
-    UN: (value & 0x0040) >>  6,
-    AD: (value & 0x0020) >>  5,
-    CD: (value & 0x0010) >>  4,
-    RC: (value & 0x000f) >>  0
+    TC: (value & 0x0200) >> 9,
+    RD: (value & 0x0100) >> 8,
+    RA: (value & 0x0080) >> 7,
+    UN: (value & 0x0040) >> 6,
+    AD: (value & 0x0020) >> 5,
+    CD: (value & 0x0010) >> 4,
+    RC: (value & 0x000f) >> 0,
   };
 }
 

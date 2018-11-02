@@ -4,18 +4,18 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* jshint esnext: true, moz: true */
 
-'use strict';
+"use strict";
 
-var EXPORTED_SYMBOLS = ['DNSRecord'];
+var EXPORTED_SYMBOLS = ["DNSRecord"];
 
-ChromeUtils.import('resource://gre/modules/DataWriter.jsm');
-ChromeUtils.import('resource://gre/modules/DNSTypes.jsm');
+ChromeUtils.import("resource://gre/modules/DataWriter.jsm");
+ChromeUtils.import("resource://gre/modules/DNSTypes.jsm");
 
 class DNSRecord {
   constructor(properties = {}) {
-    this.name       = properties.name       || '';
+    this.name       = properties.name || "";
     this.recordType = properties.recordType || DNS_RECORD_TYPES.ANY;
-    this.classCode  = properties.classCode  || DNS_CLASS_CODES.IN;
+    this.classCode  = properties.classCode || DNS_CLASS_CODES.IN;
     this.cacheFlush = properties.cacheFlush || false;
   }
 
@@ -23,14 +23,14 @@ class DNSRecord {
     let name       = reader.getLabel();
     let recordType = reader.getValue(2);
     let classCode  = reader.getValue(2);
-    let cacheFlush = (classCode & 0x8000) ? true : false;
+    let cacheFlush = !!((classCode & 0x8000));
     classCode &= 0xff;
 
     return new this({
-      name: name,
-      recordType: recordType,
-      classCode: classCode,
-      cacheFlush: cacheFlush
+      name,
+      recordType,
+      classCode,
+      cacheFlush,
     });
   }
 
@@ -62,7 +62,7 @@ class DNSRecord {
       name: this.name,
       recordType: this.recordType,
       classCode: this.classCode,
-      cacheFlush: this.cacheFlush
+      cacheFlush: this.cacheFlush,
     };
   }
 }

@@ -424,7 +424,6 @@ impl AlphaBatchContainer {
 struct SegmentInstanceData {
     textures: BatchTextures,
     user_data: i32,
-    is_opaque_override: Option<bool>,
 }
 
 /// Encapsulates the logic of building batches for items that are blended.
@@ -543,6 +542,116 @@ impl AlphaBatchBuilder {
             .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
 
         match prim_instance.kind {
+            PrimitiveInstanceKind::TextRun { ref run, .. } => {
+                let subpx_dir = run.used_font.get_subpx_dir();
+
+                // The GPU cache data is stored in the template and reused across
+                // frames and display lists.
+                let prim_data = &ctx
+                    .resources
+                    .prim_data_store[prim_instance.prim_data_handle];
+
+                let glyph_fetch_buffer = &mut self.glyph_fetch_buffer;
+                let alpha_batch_list = &mut self.batch_list.alpha_batch_list;
+                let prim_cache_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
+
+                let prim_header = PrimitiveHeader {
+                    local_rect: prim_data.prim_rect,
+                    local_clip_rect: prim_instance.combined_local_clip_rect,
+                    task_address,
+                    specific_prim_address: prim_cache_address,
+                    clip_task_address,
+                    transform_id,
+                };
+
+                ctx.resource_cache.fetch_glyphs(
+                    run.used_font.clone(),
+                    &run.glyph_keys,
+                    glyph_fetch_buffer,
+                    gpu_cache,
+                    |texture_id, mut glyph_format, glyphs| {
+                        debug_assert_ne!(texture_id, TextureSource::Invalid);
+
+                        // Ignore color and only sample alpha when shadowing.
+                        if run.shadow {
+                            glyph_format = glyph_format.ignore_color();
+                        }
+
+                        let subpx_dir = subpx_dir.limit_by(glyph_format);
+
+                        let textures = BatchTextures {
+                            colors: [
+                                texture_id,
+                                TextureSource::Invalid,
+                                TextureSource::Invalid,
+                            ],
+                        };
+
+                        let kind = BatchKind::TextRun(glyph_format);
+
+                        let (blend_mode, color_mode) = match glyph_format {
+                            GlyphFormat::Subpixel |
+                            GlyphFormat::TransformedSubpixel => {
+                                if run.used_font.bg_color.a != 0 {
+                                    (
+                                        BlendMode::SubpixelWithBgColor,
+                                        ShaderColorMode::FromRenderPassMode,
+                                    )
+                                } else if ctx.use_dual_source_blending {
+                                    (
+                                        BlendMode::SubpixelDualSource,
+                                        ShaderColorMode::SubpixelDualSource,
+                                    )
+                                } else {
+                                    (
+                                        BlendMode::SubpixelConstantTextColor(run.used_font.color.into()),
+                                        ShaderColorMode::SubpixelConstantTextColor,
+                                    )
+                                }
+                            }
+                            GlyphFormat::Alpha |
+                            GlyphFormat::TransformedAlpha => {
+                                (
+                                    BlendMode::PremultipliedAlpha,
+                                    ShaderColorMode::Alpha,
+                                )
+                            }
+                            GlyphFormat::Bitmap => {
+                                (
+                                    BlendMode::PremultipliedAlpha,
+                                    ShaderColorMode::Bitmap,
+                                )
+                            }
+                            GlyphFormat::ColorBitmap => {
+                                (
+                                    BlendMode::PremultipliedAlpha,
+                                    ShaderColorMode::ColorBitmap,
+                                )
+                            }
+                        };
+
+                        let prim_header_index = prim_headers.push(&prim_header, z_id, [0; 3]);
+                        let key = BatchKey::new(kind, blend_mode, textures);
+                        let base_instance = GlyphInstance::new(
+                            prim_header_index,
+                        );
+                        let batch = alpha_batch_list.set_params_and_get_batch(
+                            key,
+                            bounding_rect,
+                            z_id,
+                        );
+
+                        for glyph in glyphs {
+                            batch.push(base_instance.build(
+                                glyph.index_in_text_run,
+                                glyph.uv_rect_address.as_int(),
+                                (subpx_dir as u32 as i32) << 16 |
+                                (color_mode as u32 as i32),
+                            ));
+                        }
+                    },
+                );
+            }
             PrimitiveInstanceKind::LineDecoration { ref cache_handle, .. } => {
                 // The GPU cache data is stored in the template and reused across
                 // frames and display lists.
@@ -566,9 +675,9 @@ impl AlphaBatchBuilder {
                             BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
                             textures,
                             [
-                                ShaderColorMode::Image as i32,
+                                ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
                                 RasterizationSpace::Local as i32,
-                                0,
+                                get_shader_opacity(1.0),
                             ],
                             cache_item.uv_rect_handle.as_int(gpu_cache),
                         )
@@ -577,7 +686,7 @@ impl AlphaBatchBuilder {
                         (
                             BrushBatchKind::Solid,
                             BatchTextures::no_texture(),
-                            [0; 3],
+                            [get_shader_opacity(1.0), 0, 0],
                             0,
                         )
                     }
@@ -655,6 +764,7 @@ impl AlphaBatchBuilder {
                             let pic_index = match prim_instance.kind {
                                 PrimitiveInstanceKind::Picture { pic_index } => pic_index,
                                 PrimitiveInstanceKind::LineDecoration { .. } |
+                                PrimitiveInstanceKind::TextRun { .. } |
                                 PrimitiveInstanceKind::LegacyPrimitive { .. } => {
                                     unreachable!();
                                 }
@@ -749,9 +859,9 @@ impl AlphaBatchBuilder {
                                             textures,
                                         );
                                         let prim_header_index = prim_headers.push(&prim_header, z_id, [
-                                            ShaderColorMode::Image as i32,
+                                            ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
                                             RasterizationSpace::Screen as i32,
-                                            0,
+                                            get_shader_opacity(1.0),
                                         ]);
 
                                         let instance = BrushInstance {
@@ -814,9 +924,9 @@ impl AlphaBatchBuilder {
                                         let z_id_content = z_generator.next();
 
                                         let content_prim_header_index = prim_headers.push(&prim_header, z_id_content, [
-                                            ShaderColorMode::Image as i32,
+                                            ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
                                             RasterizationSpace::Screen as i32,
-                                            0,
+                                            get_shader_opacity(1.0),
                                         ]);
 
                                         let shadow_rect = picture.local_rect.translate(&offset);
@@ -830,9 +940,9 @@ impl AlphaBatchBuilder {
                                         };
 
                                         let shadow_prim_header_index = prim_headers.push(&shadow_prim_header, z_id_shadow, [
-                                            ShaderColorMode::Alpha as i32,
+                                            ShaderColorMode::Alpha as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
                                             RasterizationSpace::Screen as i32,
-                                            0,
+                                            get_shader_opacity(1.0),
                                         ]);
 
                                         let shadow_instance = BrushInstance {
@@ -1001,9 +1111,9 @@ impl AlphaBatchBuilder {
                                     .get_texture_address(gpu_cache)
                                     .as_int();
                                 let prim_header_index = prim_headers.push(&prim_header, z_id, [
-                                    ShaderColorMode::Image as i32,
+                                    ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
                                     RasterizationSpace::Screen as i32,
-                                    0,
+                                    get_shader_opacity(1.0),
                                 ]);
 
                                 let instance = BrushInstance {
@@ -1056,7 +1166,6 @@ impl AlphaBatchBuilder {
                             _ => false,
                         }
                     }
-                    _ => false,
                 };
 
                 let prim_cache_address = if is_multiple_primitives {
@@ -1093,13 +1202,15 @@ impl AlphaBatchBuilder {
                 match prim.details {
                     PrimitiveDetails::Brush(ref brush) => {
                         match brush.kind {
-                            BrushKind::Image { request, ref visible_tiles, .. } if !visible_tiles.is_empty() => {
+                            BrushKind::Image { alpha_type, request, ref opacity_binding, ref visible_tiles, .. } if !visible_tiles.is_empty() => {
                                 for tile in visible_tiles {
                                     if let Some((batch_kind, textures, user_data, uv_rect_address)) = get_image_tile_params(
                                             ctx.resource_cache,
                                             gpu_cache,
                                             deferred_resolves,
                                             request.with_tile(tile.tile_offset),
+                                            alpha_type,
+                                            get_shader_opacity(opacity_binding.current),
                                     ) {
                                         let prim_cache_address = gpu_cache.get_address(&tile.handle);
                                         let prim_header = PrimitiveHeader {
@@ -1184,102 +1295,7 @@ impl AlphaBatchBuilder {
                             }
                         }
                     }
-                    PrimitiveDetails::TextRun(ref text_cpu) => {
-                        let subpx_dir = text_cpu.used_font.get_subpx_dir();
-
-                        let glyph_fetch_buffer = &mut self.glyph_fetch_buffer;
-                        let alpha_batch_list = &mut self.batch_list.alpha_batch_list;
-
-                        ctx.resource_cache.fetch_glyphs(
-                            text_cpu.used_font.clone(),
-                            &text_cpu.glyph_keys,
-                            glyph_fetch_buffer,
-                            gpu_cache,
-                            |texture_id, mut glyph_format, glyphs| {
-                                debug_assert_ne!(texture_id, TextureSource::Invalid);
-
-                                // Ignore color and only sample alpha when shadowing.
-                                if text_cpu.shadow {
-                                    glyph_format = glyph_format.ignore_color();
-                                }
-
-                                let subpx_dir = subpx_dir.limit_by(glyph_format);
-
-                                let textures = BatchTextures {
-                                    colors: [
-                                        texture_id,
-                                        TextureSource::Invalid,
-                                        TextureSource::Invalid,
-                                    ],
-                                };
-
-                                let kind = BatchKind::TextRun(glyph_format);
-
-                                let (blend_mode, color_mode) = match glyph_format {
-                                    GlyphFormat::Subpixel |
-                                    GlyphFormat::TransformedSubpixel => {
-                                        if text_cpu.used_font.bg_color.a != 0 {
-                                            (
-                                                BlendMode::SubpixelWithBgColor,
-                                                ShaderColorMode::FromRenderPassMode,
-                                            )
-                                        } else if ctx.use_dual_source_blending {
-                                            (
-                                                BlendMode::SubpixelDualSource,
-                                                ShaderColorMode::SubpixelDualSource,
-                                            )
-                                        } else {
-                                            (
-                                                BlendMode::SubpixelConstantTextColor(text_cpu.used_font.color.into()),
-                                                ShaderColorMode::SubpixelConstantTextColor,
-                                            )
-                                        }
-                                    }
-                                    GlyphFormat::Alpha |
-                                    GlyphFormat::TransformedAlpha => {
-                                        (
-                                            BlendMode::PremultipliedAlpha,
-                                            ShaderColorMode::Alpha,
-                                        )
-                                    }
-                                    GlyphFormat::Bitmap => {
-                                        (
-                                            BlendMode::PremultipliedAlpha,
-                                            ShaderColorMode::Bitmap,
-                                        )
-                                    }
-                                    GlyphFormat::ColorBitmap => {
-                                        (
-                                            BlendMode::PremultipliedAlpha,
-                                            ShaderColorMode::ColorBitmap,
-                                        )
-                                    }
-                                };
-
-                                let prim_header_index = prim_headers.push(&prim_header, z_id, [0; 3]);
-                                let key = BatchKey::new(kind, blend_mode, textures);
-                                let base_instance = GlyphInstance::new(
-                                    prim_header_index,
-                                );
-                                let batch = alpha_batch_list.set_params_and_get_batch(
-                                    key,
-                                    bounding_rect,
-                                    z_id,
-                                );
-
-                                for glyph in glyphs {
-                                    batch.push(base_instance.build(
-                                        glyph.index_in_text_run,
-                                        glyph.uv_rect_address.as_int(),
-                                        (subpx_dir as u32 as i32) << 16 |
-                                        (color_mode as u32 as i32),
-                                    ));
-                                }
-                            },
-                        );
-                    }
                 }
-
             }
         }
     }
@@ -1340,16 +1356,8 @@ impl AlphaBatchBuilder {
             BrushSegmentTaskId::Empty => return,
         };
 
-        // If the segment instance data specifies opacity for that
-        // segment, use it. Otherwise, assume opacity for the segment
-        // from the overall primitive opacity.
-        let is_segment_opaque = match segment_data.is_opaque_override {
-            Some(is_opaque) => is_opaque,
-            None => prim_instance.opacity.is_opaque,
-        };
-
         let is_inner = segment.edge_flags.is_empty();
-        let needs_blending = !is_segment_opaque ||
+        let needs_blending = !prim_instance.opacity.is_opaque ||
                              segment.clip_task_id.needs_blending() ||
                              (!is_inner && transform_kind == TransformedRectKind::Complex);
 
@@ -1522,6 +1530,8 @@ fn get_image_tile_params(
     gpu_cache: &mut GpuCache,
     deferred_resolves: &mut Vec<DeferredResolve>,
     request: ImageRequest,
+    alpha_type: AlphaType,
+    shader_opacity: i32,
 ) -> Option<(BrushBatchKind, BatchTextures, [i32; 3], GpuCacheAddress)> {
 
     let cache_item = resolve_image(
@@ -1539,9 +1549,9 @@ fn get_image_tile_params(
             BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
             textures,
             [
-                ShaderColorMode::Image as i32,
+                ShaderColorMode::Image as i32 | ((alpha_type as i32) << 16),
                 RasterizationSpace::Local as i32,
-                0,
+                shader_opacity,
             ],
             gpu_cache.get_address(&cache_item.uv_rect_handle),
         ))
@@ -1593,7 +1603,6 @@ impl BrushBatchParameters {
                 SegmentInstanceData {
                     textures,
                     user_data: segment_user_data,
-                    is_opaque_override: None,
                 }
             ),
         }
@@ -1609,7 +1618,7 @@ impl BrushPrimitive {
         prim_instance: &PrimitiveInstance,
     ) -> Option<BrushBatchParameters> {
         match self.kind {
-            BrushKind::Image { request, ref source, .. } => {
+            BrushKind::Image { alpha_type, request, ref source, ref opacity_binding, .. } => {
                 let cache_item = match *source {
                     ImageSource::Default => {
                         resolve_image(
@@ -1641,9 +1650,9 @@ impl BrushPrimitive {
                         BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
                         textures,
                         [
-                            ShaderColorMode::Image as i32,
+                            ShaderColorMode::Image as i32 | ((alpha_type as i32) << 16),
                             RasterizationSpace::Local as i32,
-                            0,
+                            get_shader_opacity(opacity_binding.current),
                         ],
                         cache_item.uv_rect_handle.as_int(gpu_cache),
                     ))
@@ -1669,9 +1678,9 @@ impl BrushPrimitive {
                             BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
                             textures,
                             [
-                                ShaderColorMode::Image as i32,
+                                ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
                                 RasterizationSpace::Local as i32,
-                                0,
+                                get_shader_opacity(1.0),
                             ],
                             cache_item.uv_rect_handle.as_int(gpu_cache),
                         ))
@@ -1691,7 +1700,6 @@ impl BrushPrimitive {
                                 SegmentInstanceData {
                                     textures: BatchTextures::color(cache_item.texture_id),
                                     user_data: cache_item.uv_rect_handle.as_int(gpu_cache),
-                                    is_opaque_override: Some(segment.is_opaque),
                                 }
                             );
                         }
@@ -1699,20 +1707,20 @@ impl BrushPrimitive {
                         Some(BrushBatchParameters::instanced(
                             BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
                             [
-                                ShaderColorMode::Image as i32,
+                                ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
                                 RasterizationSpace::Local as i32,
-                                0,
+                                get_shader_opacity(1.0),
                             ],
                             segment_data,
                         ))
                     }
                 }
             }
-            BrushKind::Solid { .. } => {
+            BrushKind::Solid { ref opacity_binding, .. } => {
                 Some(BrushBatchParameters::shared(
                     BrushBatchKind::Solid,
                     BatchTextures::no_texture(),
-                    [0; 3],
+                    [get_shader_opacity(opacity_binding.current), 0, 0],
                     0,
                 ))
             }
@@ -1720,7 +1728,7 @@ impl BrushPrimitive {
                 Some(BrushBatchParameters::shared(
                     BrushBatchKind::Solid,
                     BatchTextures::no_texture(),
-                    [0; 3],
+                    [get_shader_opacity(1.0), 0, 0],
                     0,
                 ))
             }
@@ -1814,11 +1822,6 @@ impl PrimitiveInstance {
         details: &PrimitiveDetails,
     ) -> BlendMode {
         match *details {
-            // Can only resolve the TextRun's blend mode once glyphs are fetched.
-            PrimitiveDetails::TextRun(..) => {
-                BlendMode::PremultipliedAlpha
-            }
-
             PrimitiveDetails::Brush(ref brush) => {
                 match brush.kind {
                     BrushKind::Clear => {
@@ -1854,8 +1857,7 @@ impl PrimitiveInstance {
             PrimitiveDetails::Brush(BrushPrimitive { kind: BrushKind::YuvImage{ yuv_key, .. }, .. }) => {
                 yuv_key[0]
             }
-            PrimitiveDetails::Brush(_) |
-            PrimitiveDetails::TextRun(..) => {
+            PrimitiveDetails::Brush(_) => {
                 return true
             }
         };
@@ -2142,4 +2144,8 @@ fn get_buffer_kind(texture: TextureSource) -> ImageBufferKind {
         }
         _ => ImageBufferKind::Texture2DArray,
     }
+}
+
+fn get_shader_opacity(opacity: f32) -> i32 {
+    (opacity * 65535.0).round() as i32
 }
