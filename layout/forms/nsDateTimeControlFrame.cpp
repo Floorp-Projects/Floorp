@@ -18,6 +18,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
+#include "nsDOMTokenList.h"
 #include "nsNodeInfoManager.h"
 #include "nsIDateTimeInputArea.h"
 #include "nsIObserverService.h"
@@ -74,47 +75,6 @@ nsDateTimeControlFrame::OnMinMaxStepAttrChanged()
 }
 
 void
-nsDateTimeControlFrame::SetValueFromPicker(const DateTimeValue& aValue)
-{
-  nsCOMPtr<nsIDateTimeInputArea> inputAreaContent =
-    do_QueryInterface(mInputAreaContent);
-  if (inputAreaContent) {
-    AutoJSAPI api;
-    if (!api.Init(mContent->OwnerDoc()->GetScopeObject())) {
-      return;
-    }
-
-    JSObject* wrapper = mContent->GetWrapper();
-    if (!wrapper) {
-      return;
-    }
-
-    JSObject* scope = xpc::GetXBLScope(api.cx(), wrapper);
-    AutoJSAPI jsapi;
-    if (!scope || !jsapi.Init(scope)) {
-      return;
-    }
-
-    JS::Rooted<JS::Value> jsValue(jsapi.cx());
-    if (!ToJSValue(jsapi.cx(), aValue, &jsValue)) {
-      return;
-    }
-
-    inputAreaContent->SetValueFromPicker(jsValue);
-  }
-}
-
-void
-nsDateTimeControlFrame::SetPickerState(bool aOpen)
-{
-  nsCOMPtr<nsIDateTimeInputArea> inputAreaContent =
-    do_QueryInterface(mInputAreaContent);
-  if (inputAreaContent) {
-    inputAreaContent->SetPickerState(aOpen);
-  }
-}
-
-void
 nsDateTimeControlFrame::HandleFocusEvent()
 {
   nsCOMPtr<nsIDateTimeInputArea> inputAreaContent =
@@ -137,15 +97,26 @@ nsDateTimeControlFrame::HandleBlurEvent()
 bool
 nsDateTimeControlFrame::HasBadInput()
 {
-  nsCOMPtr<nsIDateTimeInputArea> inputAreaContent =
-    do_QueryInterface(mInputAreaContent);
+  // Incomplete field does not imply bad input.
+  Element* editWrapperElement = mInputAreaContent->GetComposedDoc()->
+    GetAnonymousElementByAttribute(mInputAreaContent,
+      nsGkAtoms::anonid, NS_LITERAL_STRING("edit-wrapper"));
 
-  bool result = false;
-  if (inputAreaContent) {
-    inputAreaContent->HasBadInput(&result);
+  for (Element* child = editWrapperElement->GetFirstElementChild(); child; child = child->GetNextElementSibling()) {
+    if (child->ClassList()->Contains(NS_LITERAL_STRING("datetime-edit-field"))) {
+      nsAutoString value;
+      child->GetAttr(kNameSpaceID_None, nsGkAtoms::value, value);
+      if (value.IsEmpty()) {
+        return false;
+      }
+    }
   }
 
-  return result;
+  // All fields are available but input element's value is empty implies
+  // it has been sanitized.
+  nsAutoString value;
+  HTMLInputElement::FromNode(mContent)->GetValue(value, CallerType::System);
+  return value.IsEmpty();
 }
 
 nscoord
@@ -338,30 +309,6 @@ nsDateTimeControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   NS_TrustedNewXULElement(getter_AddRefs(mInputAreaContent), nodeInfo.forget());
   aElements.AppendElement(mInputAreaContent);
 
-  nsCOMPtr<nsIDateTimeInputArea> inputAreaContent =
-    do_QueryInterface(mInputAreaContent);
-  if (inputAreaContent) {
-    // Propogate our tabindex.
-    nsAutoString tabIndexStr;
-    if (mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::tabindex,
-                                       tabIndexStr)) {
-      inputAreaContent->SetEditAttribute(NS_LITERAL_STRING("tabindex"),
-                                         tabIndexStr);
-    }
-
-    // Propagate our readonly state.
-    nsAutoString readonly;
-    if (mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::readonly,
-                                       readonly)) {
-      inputAreaContent->SetEditAttribute(NS_LITERAL_STRING("readonly"),
-                                         readonly);
-    }
-
-    SyncDisabledState();
-  }
-
   return NS_OK;
 }
 
@@ -383,14 +330,7 @@ nsDateTimeControlFrame::SyncDisabledState()
   if (!inputAreaContent) {
     return;
   }
-
-  EventStates eventStates = mContent->AsElement()->State();
-  if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
-    inputAreaContent->SetEditAttribute(NS_LITERAL_STRING("disabled"),
-                                       EmptyString());
-  } else {
-    inputAreaContent->RemoveEditAttribute(NS_LITERAL_STRING("disabled"));
-  }
+  inputAreaContent->UpdateEditAttributes();
 }
 
 nsresult
@@ -421,20 +361,8 @@ nsDateTimeControlFrame::AttributeChanged(int32_t aNameSpaceID,
               &nsIDateTimeInputArea::NotifyInputElementValueChanged));
           }
         } else {
-          if (aModType == MutationEvent_Binding::REMOVAL) {
-            if (inputAreaContent) {
-              nsAtomString name(aAttribute);
-              inputAreaContent->RemoveEditAttribute(name);
-            }
-          } else {
-            MOZ_ASSERT(aModType == MutationEvent_Binding::ADDITION ||
-                       aModType == MutationEvent_Binding::MODIFICATION);
-            if (inputAreaContent) {
-              nsAtomString name(aAttribute);
-              nsAutoString value;
-              contentAsInputElem->GetAttr(aNameSpaceID, aAttribute, value);
-              inputAreaContent->SetEditAttribute(name, value);
-            }
+          if (inputAreaContent) {
+            inputAreaContent->UpdateEditAttributes();
           }
         }
       }

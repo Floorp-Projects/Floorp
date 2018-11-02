@@ -2220,30 +2220,13 @@ void HTMLInputElement::GetDateTimeInputBoxValue(DateTimeValue& aValue)
   aValue = *mDateTimeInputBoxValue;
 }
 
-void
-HTMLInputElement::UpdateDateTimeInputBox(const DateTimeValue& aValue)
+Element* HTMLInputElement::GetDateTimeBoxElement()
 {
-  if (NS_WARN_IF(!IsDateTimeInputType(mType))) {
-    return;
-  }
-
   nsDateTimeControlFrame* frame = do_QueryFrame(GetPrimaryFrame());
   if (frame) {
-    frame->SetValueFromPicker(aValue);
+    return frame->GetInputAreaContent()->AsElement();
   }
-}
-
-void
-HTMLInputElement::SetDateTimePickerState(bool aOpen)
-{
-  if (NS_WARN_IF(!IsDateTimeInputType(mType))) {
-    return;
-  }
-
-  nsDateTimeControlFrame* frame = do_QueryFrame(GetPrimaryFrame());
-  if (frame) {
-    frame->SetPickerState(aOpen);
-  }
+  return nullptr;
 }
 
 void

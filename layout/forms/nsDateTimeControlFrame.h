@@ -74,12 +74,12 @@ public:
   nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                             int32_t aModType) override;
 
+  nsIContent* GetInputAreaContent() const { return mInputAreaContent; }
+
   void OnValueChanged();
   void OnMinMaxStepAttrChanged();
-  void SetValueFromPicker(const DateTimeValue& aValue);
   void HandleFocusEvent();
   void HandleBlurEvent();
-  void SetPickerState(bool aOpen);
   bool HasBadInput();
 
 private:
