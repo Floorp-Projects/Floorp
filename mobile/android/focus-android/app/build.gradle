@@ -59,6 +59,10 @@ android {
         }
     }
 
+    aaptOptions {
+        noCompress 'so'
+    }
+
     flavorDimensions "product", "abi"
 
     productFlavors {
