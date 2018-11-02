@@ -424,6 +424,10 @@ nsDocShell::~nsDocShell()
   // Avoid notifying observers while we're in the dtor.
   mIsBeingDestroyed = true;
 
+#ifdef MOZ_GECKO_PROFILER
+  profiler_unregister_pages(mHistoryID);
+#endif
+
   Destroy();
 
   if (mSessionHistory) {
@@ -11322,6 +11326,18 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
     }
   }
 
+#ifdef MOZ_GECKO_PROFILER
+  if (updateGHistory) {
+    uint32_t id = 0;
+    nsAutoCString spec;
+    if (mLSHE) {
+      mLSHE->GetID(&id);
+    }
+    aURI->GetSpec(spec);
+    profiler_register_page(mHistoryID, id, spec, IsFrame());
+  }
+#endif
+
   // If this is a POST request, we do not want to include this in global
   // history.
   if (updateGHistory && aAddToGlobalHistory && !ChannelIsPost(aChannel)) {
@@ -11631,6 +11647,12 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
     // AddToSessionHistory may not modify mOSHE.  In case it doesn't,
     // we'll just set mOSHE here.
     mOSHE = newSHEntry;
+
+#ifdef MOZ_GECKO_PROFILER
+    uint32_t id = 0;
+    GetOSHEId(&id);
+    profiler_register_page(mHistoryID, id, NS_ConvertUTF16toUTF8(aURL), IsFrame());
+#endif
 
   } else {
     newSHEntry = mOSHE;
