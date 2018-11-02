@@ -4953,11 +4953,11 @@ JS::ReadableStreamError(JSContext* cx, HandleObject streamObj, HandleValue error
 JS_PUBLIC_API(bool)
 JS::ReadableStreamReaderIsClosed(JSContext* cx, HandleObject readerObj, bool* result)
 {
-    RootedObject reader(cx, ToUnwrapped<NativeObject>(cx, readerObj));
+    Rooted<ReadableStreamReader*> reader(cx, ToUnwrapped<ReadableStreamReader>(cx, readerObj));
     if (!reader)
         return false;
 
-    *result = js::ReadableStreamReaderIsClosed(reader);
+    *result = reader->isClosed();
     return true;
 }
 
