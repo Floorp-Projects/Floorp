@@ -54,6 +54,10 @@
  */
 #define __try if(true)
 #define __except(x) else
+#ifdef GetExceptionCode
+#undef GetExceptionCode
+#endif
+#define GetExceptionCode() 0
 
 #endif /* __MINGW32__ */
 #endif /* defined(CHROMIUM_SANDBOX_BUILD) && defined(XP_WIN) */
