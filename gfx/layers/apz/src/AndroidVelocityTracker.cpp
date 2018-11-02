@@ -54,18 +54,29 @@ AndroidVelocityTracker::AddPosition(ParentLayerCoord aPos,
     Clear();
   }
 
-  mLastEventTime = aTimestampMs;
-
   // If we are axis-locked, adjust the position to reflect the fact that
   // no movement is happening.
   if (aIsAxisLocked && !mHistory.IsEmpty()) {
     aPos = mHistory[mHistory.Length() - 1].second - mAdditionalDelta;
   }
 
-  mHistory.AppendElement(std::make_pair(aTimestampMs, aPos + mAdditionalDelta));
-  if (mHistory.Length() > kHistorySize) {
-    mHistory.RemoveElementAt(0);
+  aPos += mAdditionalDelta;
+
+  if (aTimestampMs == mLastEventTime) {
+    // If we get a sample with the same timestamp as the previous one,
+    // just update its position. Two samples in the history with the
+    // same timestamp can lead to things like infinite velocities.
+    if (mHistory.Length() > 0) {
+      mHistory[mHistory.Length() - 1].second = aPos;
+    }
+  } else {
+    mHistory.AppendElement(std::make_pair(aTimestampMs, aPos));
+    if (mHistory.Length() > kHistorySize) {
+      mHistory.RemoveElementAt(0);
+    }
   }
+
+  mLastEventTime = aTimestampMs;
 
   if (mHistory.Length() < 2) {
     return Nothing();
