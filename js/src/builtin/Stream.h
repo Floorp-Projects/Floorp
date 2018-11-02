@@ -83,6 +83,7 @@ class ReadableStream : public NativeObject
     void desiredSize(bool* hasSize, double* size) const;
 
     JS::ReadableStreamMode mode() const;
+    uint8_t embeddingFlags() const;
 
     static MOZ_MUST_USE bool close(JSContext* cx, Handle<ReadableStream*> stream);
     static MOZ_MUST_USE JSObject* cancel(JSContext* cx, Handle<ReadableStream*> stream,
@@ -104,7 +105,6 @@ class ReadableStream : public NativeObject
     static MOZ_MUST_USE bool getExternalSource(JSContext* cx, Handle<ReadableStream*> stream,
                                                void** source);
     void releaseExternalSource();
-    uint8_t embeddingFlags() const;
     static MOZ_MUST_USE bool updateDataAvailableFromSource(JSContext* cx,
                                                            Handle<ReadableStream*> stream,
                                                            uint32_t availableData);
