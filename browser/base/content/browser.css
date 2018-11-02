@@ -10,11 +10,19 @@
   --lwt-additional-images: none;
   --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;
+
+  --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
+  --toolbar-bgimage: var(--toolbar-non-lwt-bgimage);
+  --toolbar-color: var(--toolbar-non-lwt-textcolor);
 }
 
 :root:-moz-lwtheme {
-  background-color: var(--lwt-accent-color) !important;
-  color: var(--lwt-text-color) !important;
+  --toolbar-bgcolor: rgba(255,255,255,.4);
+  --toolbar-bgimage: none;
+  --toolbar-color: inherit;
+
+  background-color: var(--lwt-accent-color);
+  color: var(--lwt-text-color);
 }
 
 :root:-moz-lwtheme[lwtheme-image] {
@@ -24,7 +32,7 @@
 }
 
 :root:-moz-lwtheme:-moz-window-inactive {
-  background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color)) !important;
+  background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
 }
 
 /* Set additional backgrounds alignment relative to toolbox */
