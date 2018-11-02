@@ -1903,9 +1903,6 @@ private:
   // For debugging bug 1407148.
   void AssertReadyStateIsNothing();
 
-  // Attach UA Shadow Root if it is not attached.
-  void AttachAndSetUAShadowRoot();
-
   // Contains the unique id of the sink device and the device info.
   // The initial value is ("", nullptr) and the default output device is used.
   // It can contain an invalid id and info if the device has been

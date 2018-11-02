@@ -256,6 +256,9 @@ public:
     return IsNodeInternal(aFirst, aArgs...);
   }
 
+  // Attach UA Shadow Root if it is not attached.
+  void AttachAndSetUAShadowRoot();
+
 protected:
   virtual ~nsGenericHTMLElement() {}
 
