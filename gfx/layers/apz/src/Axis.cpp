@@ -241,11 +241,13 @@ void Axis::EndTouch(uint32_t aTimestampMs) {
   APZThreadUtils::AssertOnControllerThread();
 
   mAxisLocked = false;
-  // If the velocity tracker wasn't able to compute a velocity, use the
-  // previous value of |mVelocity| (expected to be set during the last call
-  // to AddPosition()) as a fallback.
+  // If the velocity tracker wasn't able to compute a velocity, zero out
+  // the velocity to make sure we don't get a fling based on some old and
+  // no-longer-relevant value of mVelocity.
   if (Maybe<float> velocity = mVelocityTracker->ComputeVelocity(aTimestampMs)) {
     mVelocity = *velocity;
+  } else {
+    mVelocity = 0;
   }
   AXIS_LOG("%p|%s ending touch, computed velocity %f\n",
     mAsyncPanZoomController, Name(), mVelocity);
