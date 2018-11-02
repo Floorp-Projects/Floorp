@@ -42,6 +42,26 @@ using JS::SourceBufferHolder;
 // function bodies.
 class MOZ_STACK_CLASS BytecodeCompiler
 {
+  protected:
+    AutoKeepAtoms keepAtoms;
+
+    JSContext* cx;
+    const ReadOnlyCompileOptions& options;
+    SourceBufferHolder& sourceBuffer;
+
+    RootedScope enclosingScope;
+
+    RootedScriptSourceObject sourceObject;
+    ScriptSource* scriptSource;
+
+    Maybe<UsedNameTracker> usedNames;
+    Maybe<Parser<SyntaxParseHandler, char16_t>> syntaxParser;
+    Maybe<Parser<FullParseHandler, char16_t>> parser;
+
+    Directives directives;
+
+    RootedScript script;
+
   public:
     // Construct an object passing mandatory arguments.
     BytecodeCompiler(JSContext* cx,
@@ -113,25 +133,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
     bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter, SharedContext* sharedContext);
     bool handleParseFailure(const Directives& newDirectives, TokenStreamPosition& startPosition);
     bool deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObject environment);
-
-    AutoKeepAtoms keepAtoms;
-
-    JSContext* cx;
-    const ReadOnlyCompileOptions& options;
-    SourceBufferHolder& sourceBuffer;
-
-    RootedScope enclosingScope;
-
-    RootedScriptSourceObject sourceObject;
-    ScriptSource* scriptSource;
-
-    Maybe<UsedNameTracker> usedNames;
-    Maybe<Parser<SyntaxParseHandler, char16_t>> syntaxParser;
-    Maybe<Parser<FullParseHandler, char16_t>> parser;
-
-    Directives directives;
-
-    RootedScript script;
 };
 
 AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
