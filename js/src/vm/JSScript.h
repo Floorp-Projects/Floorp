@@ -671,7 +671,10 @@ class ScriptSource
     MOZ_MUST_USE bool initFromOptions(JSContext* cx,
                                       const JS::ReadOnlyCompileOptions& options,
                                       const mozilla::Maybe<uint32_t>& parameterListEnd = mozilla::Nothing());
-    MOZ_MUST_USE bool setSourceCopy(JSContext* cx, JS::SourceText<char16_t>& srcBuf);
+
+    template<typename Unit>
+    MOZ_MUST_USE bool setSourceCopy(JSContext* cx, JS::SourceText<Unit>& srcBuf);
+
     void setSourceRetrievable() { sourceRetrievable_ = true; }
     bool sourceRetrievable() const { return sourceRetrievable_; }
     bool hasSourceText() const { return hasUncompressedSource() || hasCompressedSource(); }
