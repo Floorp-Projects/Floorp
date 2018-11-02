@@ -6,10 +6,22 @@ package mozilla.components.service.glean
 
 import mozilla.components.support.base.log.logger.Logger
 
+/**
+ * Enumeration of different metric lifetimes.
+ */
 enum class Lifetime {
-    Ping,        // Metric is reset with each sent ping
-    Application, // Metric is reset on application restart
-    User         // Metric is reset with each user profile
+    /**
+     * The metric is reset with each sent ping
+     */
+    Ping,
+    /**
+     * The metric is reset on application restart
+     */
+    Application,
+    /**
+     * The metric is reset with each user profile
+     */
+    User
 }
 
 /**
