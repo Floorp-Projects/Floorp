@@ -55,7 +55,9 @@ decorate_task(
     // We have to use gBrowser instead of browser in most spots since we're
     // dealing with a new tab outside of the about:studies tab.
     const tab = await BrowserTestUtils.switchTab(gBrowser, () => {
-      ContentTask.spawn(browser, null, () => {
+      ContentTask.spawn(browser, null, async () => {
+        const doc = content.document;
+        await ContentTaskUtils.waitForCondition(() => doc.getElementById("shield-studies-update-preferences"));
         content.document.getElementById("shield-studies-update-preferences").click();
       });
     });
@@ -312,7 +314,10 @@ decorate_task(
 
     await ContentTask.spawn(browser, null, async () => {
       const doc = content.document;
-      await ContentTaskUtils.waitForCondition(() => doc.querySelector(".info-box-content > span").textContent);
+      await ContentTaskUtils.waitForCondition(() => {
+        const span = doc.querySelector(".info-box-content > span");
+        return span && span.textContent;
+      });
 
       is(
         doc.querySelector(".info-box-content > span").textContent,
