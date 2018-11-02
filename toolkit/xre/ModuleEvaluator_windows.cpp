@@ -195,7 +195,17 @@ ModuleEvaluator::IsModuleTrusted(ModuleLoadEvent::ModuleInfo& aDllInfo,
   }
   ToLowerCase(dllLeafLower); // To facilitate case-insensitive searching
 
-  static const int kScoreThreshold = 100;
+#if ENABLE_TESTS
+  int scoreThreshold = 100;
+  // For testing, these DLLs are hardcoded to pass through all criteria checks
+  // and still result in "untrusted" status.
+  if (dllLeafLower.EqualsLiteral("mozglue.dll") ||
+      dllLeafLower.EqualsLiteral("modules-test.dll")) {
+    scoreThreshold = 99999;
+  }
+#else
+  static const int scoreThreshold = 100;
+#endif
 
   int score = 0;
 
@@ -216,7 +226,7 @@ ModuleEvaluator::IsModuleTrusted(ModuleLoadEvent::ModuleInfo& aDllInfo,
     score += 50;
   }
 
-  if (score < kScoreThreshold) {
+  if (score < scoreThreshold) {
     ModuleVersionInfo vi;
     if (vi.GetFromImage(dllFullPath)) {
       aDllInfo.mFileVersion = vi.mFileVersion.ToString();
@@ -242,7 +252,7 @@ ModuleEvaluator::IsModuleTrusted(ModuleLoadEvent::ModuleInfo& aDllInfo,
     }
   }
 
-  if (score < kScoreThreshold) {
+  if (score < scoreThreshold) {
     if (aSvc) {
       UniquePtr<wchar_t[]> szSignedBy = aSvc->GetBinaryOrgName(dllFullPath.get());
       if (szSignedBy) {
@@ -261,7 +271,7 @@ ModuleEvaluator::IsModuleTrusted(ModuleLoadEvent::ModuleInfo& aDllInfo,
     }
   }
 
-  return Some(score >= kScoreThreshold);
+  return Some(score >= scoreThreshold);
 }
 
 } // namespace mozilla
