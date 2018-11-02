@@ -75,8 +75,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
         return createSourceAndParser(ParseGoal::Script) && createCompleteScript();
     }
 
-    JSScript* compileEvalScript(HandleObject environment, HandleScope enclosingScope);
-
     // Call this before calling compileModule.
     MOZ_MUST_USE bool prepareModuleParse() {
         return createSourceAndParser(ParseGoal::Module) && createCompleteScript();
@@ -154,6 +152,29 @@ class MOZ_STACK_CLASS GlobalScriptBytecodeCompiler final
             return nullptr;
         }
         return compileScript(nullptr, &globalsc_);
+    }
+};
+
+class MOZ_STACK_CLASS EvalScriptBytecodeCompiler final
+  : public BytecodeCompiler
+{
+    HandleObject environment_;
+    EvalSharedContext evalsc_;
+
+  public:
+    EvalScriptBytecodeCompiler(JSContext* cx, const ReadOnlyCompileOptions& options,
+                               SourceBufferHolder& sourceBuffer, HandleObject environment,
+                               HandleScope enclosingScope)
+      : BytecodeCompiler(cx, options, sourceBuffer),
+        environment_(environment),
+        evalsc_(cx, environment_, enclosingScope, directives, options.extraWarningsOption)
+    {}
+
+    JSScript* compile() {
+        if (!prepareScriptParse()) {
+            return nullptr;
+        }
+        return compileScript(environment_, &evalsc_);
     }
 };
 
@@ -421,19 +442,6 @@ BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
     MOZ_ASSERT_IF(!cx->helperThread(), !cx->isExceptionPending());
 
     return script;
-}
-
-JSScript*
-BytecodeCompiler::compileEvalScript(HandleObject environment, HandleScope enclosingScope)
-{
-    EvalSharedContext evalsc(cx, environment, enclosingScope,
-                             directives, options.extraWarningsOption);
-
-    if (!prepareScriptParse()) {
-        return nullptr;
-    }
-
-    return compileScript(environment, &evalsc);
 }
 
 ModuleObject*
@@ -748,12 +756,15 @@ frontend::CompileEvalScript(JSContext* cx, HandleObject environment,
                             ScriptSourceObject** sourceObjectOut)
 {
     AutoAssertReportedException assertException(cx);
-    BytecodeCompiler compiler(cx, options, srcBuf);
+
+    EvalScriptBytecodeCompiler compiler(cx, options, srcBuf, environment, enclosingScope);
     AutoInitializeSourceObject autoSSO(compiler, sourceObjectOut);
-    JSScript* script = compiler.compileEvalScript(environment, enclosingScope);
+
+    JSScript* script = compiler.compile();
     if (!script) {
         return nullptr;
     }
+
     assertException.reset();
     return script;
 
