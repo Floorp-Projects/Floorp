@@ -22,14 +22,14 @@ add_task(async function test_cancelEditAddressDialogWithESC() {
 });
 
 add_task(async function test_defaultCountry() {
-  SpecialPowers.pushPrefEnv({set: [[DEFAULT_REGION_PREF, "CA"]]});
+  await SpecialPowers.pushPrefEnv({set: [[DEFAULT_REGION_PREF, "CA"]]});
   await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
     let doc = win.document;
     is(doc.querySelector("#country").value, "CA",
                          "Default country set to Canada");
     doc.querySelector("#cancel").click();
   });
-  SpecialPowers.pushPrefEnv({set: [[DEFAULT_REGION_PREF, "DE"]]});
+  await SpecialPowers.pushPrefEnv({set: [[DEFAULT_REGION_PREF, "DE"]]});
   await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
     let doc = win.document;
     is(doc.querySelector("#country").value, "DE",
@@ -37,14 +37,14 @@ add_task(async function test_defaultCountry() {
     doc.querySelector("#cancel").click();
   });
   // Test unsupported country
-  SpecialPowers.pushPrefEnv({set: [[DEFAULT_REGION_PREF, "XX"]]});
+  await SpecialPowers.pushPrefEnv({set: [[DEFAULT_REGION_PREF, "XX"]]});
   await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
     let doc = win.document;
     is(doc.querySelector("#country").value, "",
                          "Default country set to empty");
     doc.querySelector("#cancel").click();
   });
-  SpecialPowers.pushPrefEnv({set: [[DEFAULT_REGION_PREF, "US"]]});
+  await SpecialPowers.pushPrefEnv({set: [[DEFAULT_REGION_PREF, "US"]]});
 });
 
 add_task(async function test_saveAddress() {
@@ -478,4 +478,37 @@ add_task(async function test_hiddenFieldRemovedWhenCountryChanged() {
   is(addresses[0]["address-level1"], undefined, "address-level1 should be removed");
   is(addresses[0].country, "DE", "country changed");
   await removeAllRecords();
+});
+
+add_task(async function test_countrySpecificFieldsGetRequiredness() {
+  await SpecialPowers.pushPrefEnv({set: [[DEFAULT_REGION_PREF, "RO"]]});
+  await testDialog(EDIT_ADDRESS_DIALOG_URL, async win => {
+    let doc = win.document;
+    is(doc.querySelector("#country").value, "RO",
+                         "Default country set to Romania");
+    let provinceField = doc.getElementById("address-level1");
+    ok(!provinceField.required, "address-level1 should not be marked as required");
+    is(provinceField.parentNode.style.display, "none",
+       "address-level1 is hidden for Romania");
+
+    doc.querySelector("#country").focus();
+    EventUtils.synthesizeKey("United States", {}, win);
+
+    await TestUtils.waitForCondition(() => {
+      return provinceField.parentNode.style.display != "none";
+    }, "Wait for address-level1 to become visible", 10);
+
+    ok(provinceField.required, "address-level1 should be marked as required");
+
+    doc.querySelector("#country").focus();
+    EventUtils.synthesizeKey("Romania", {}, win);
+
+    await TestUtils.waitForCondition(() => {
+      return provinceField.parentNode.style.display == "none";
+    }, "Wait for address-level1 to become hidden", 10);
+
+    ok(!provinceField.required, "address-level1 should not be marked as required");
+
+    doc.querySelector("#cancel").click();
+  });
 });
