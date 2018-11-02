@@ -3509,6 +3509,62 @@ GetOrCreateRetainedDisplayListBuilder(nsIFrame* aFrame, bool aRetainingEnabled,
   return retainedBuilder;
 }
 
+// #define PRINT_HITTESTINFO_STATS
+#ifdef PRINT_HITTESTINFO_STATS
+void
+PrintHitTestInfoStatsInternal(nsDisplayList& aList,
+                              int& aTotal,
+                              int& aHitTest,
+                              int& aVisible,
+                              int& aSpecial)
+{
+  for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
+    aTotal++;
+
+    if (i->GetChildren()) {
+      PrintHitTestInfoStatsInternal(
+        *i->GetChildren(), aTotal, aHitTest, aVisible, aSpecial);
+    }
+
+    if (i->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+      aHitTest++;
+
+      const auto& hitTestInfo =
+        static_cast<nsDisplayHitTestInfoItem*>(i)->HitTestFlags();
+
+      if (hitTestInfo.size() > 1) {
+        aSpecial++;
+        continue;
+      }
+
+      if (hitTestInfo == CompositorHitTestVisibleToHit) {
+        aVisible++;
+        continue;
+      }
+
+      aSpecial++;
+    }
+  }
+}
+
+void
+PrintHitTestInfoStats(nsDisplayList& aList)
+{
+  int total = 0;
+  int hitTest = 0;
+  int visible = 0;
+  int special = 0;
+
+  PrintHitTestInfoStatsInternal(
+    aList, total, hitTest, visible, special);
+
+  double ratio = (double)hitTest / (double)total;
+
+  printf("List %p: total items: %d, hit test items: %d, ratio: %f, visible: %d, special: %d\n",
+    &aList, total, hitTest, ratio, visible, special);
+}
+#endif
+
 nsresult
 nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
                           const nsRegion& aDirtyRegion, nscolor aBackstop,
@@ -3906,6 +3962,12 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       !aRenderingContext) {
     flags |= nsDisplayList::PAINT_IDENTICAL_DISPLAY_LIST;
   }
+
+#ifdef PRINT_HITTESTINFO_STATS
+  if (XRE_IsContentProcess()) {
+    PrintHitTestInfoStats(list);
+  }
+#endif
 
   TimeStamp paintStart = TimeStamp::Now();
   RefPtr<LayerManager> layerManager
