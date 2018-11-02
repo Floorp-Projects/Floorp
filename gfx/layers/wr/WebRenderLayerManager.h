@@ -12,9 +12,11 @@
 
 #include "gfxPrefs.h"
 #include "Layers.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/layers/APZTestData.h"
 #include "mozilla/layers/FocusTarget.h"
+#include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
 #include "mozilla/layers/WebRenderCommandBuilder.h"
@@ -133,6 +135,9 @@ public:
   void DiscardImages();
   void DiscardLocalImages();
 
+  wr::IpcResourceUpdateQueue& AsyncResourceUpdates();
+  void FlushAsyncResourceUpdates();
+
   // Methods to manage the compositor animation ids. Active animations are still
   // going, and when they end we discard them and remove them from the active
   // list.
@@ -219,6 +224,8 @@ private:
   WebRenderCommandBuilder mWebRenderCommandBuilder;
 
   size_t mLastDisplayListSize;
+
+  Maybe<wr::IpcResourceUpdateQueue> mAsyncResourceUpdates;
 };
 
 } // namespace layers

@@ -622,7 +622,7 @@ VectorImage::SendInvalidationNotifications()
                                          GetMaxSizedIntRect());
   }
 
-  UpdateImageContainer();
+  UpdateImageContainer(Nothing());
 }
 
 NS_IMETHODIMP_(IntRect)
