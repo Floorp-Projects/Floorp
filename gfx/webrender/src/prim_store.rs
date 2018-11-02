@@ -483,7 +483,7 @@ pub type PrimitiveDataInterner = intern::Interner<PrimitiveKey, PrimitiveSceneDa
 #[derive(Debug)]
 pub struct OpacityBinding {
     bindings: Vec<PropertyBinding<f32>>,
-    current: f32,
+    pub current: f32,
 }
 
 impl OpacityBinding {
@@ -502,7 +502,7 @@ impl OpacityBinding {
     // Resolve the current value of each opacity binding, and
     // store that as a single combined opacity. Returns true
     // if the opacity value changed from last time.
-    pub fn update(&mut self, scene_properties: &SceneProperties) -> bool {
+    pub fn update(&mut self, scene_properties: &SceneProperties) {
         let mut new_opacity = 1.0;
 
         for binding in &self.bindings {
@@ -510,10 +510,7 @@ impl OpacityBinding {
             new_opacity = new_opacity * opacity;
         }
 
-        let changed = new_opacity != self.current;
         self.current = new_opacity;
-
-        changed
     }
 }
 
@@ -852,8 +849,8 @@ impl BrushPrimitive {
             }
             // Images are drawn as a white color, modulated by the total
             // opacity coming from any collapsed property bindings.
-            BrushKind::Image { stretch_size, tile_spacing, color, ref opacity_binding, .. } => {
-                request.push(color.scale_alpha(opacity_binding.current).premultiplied());
+            BrushKind::Image { stretch_size, tile_spacing, color, .. } => {
+                request.push(color.premultiplied());
                 request.push(PremultipliedColorF::WHITE);
                 request.push([
                     stretch_size.width + tile_spacing.width,
@@ -863,8 +860,8 @@ impl BrushPrimitive {
                 ]);
             }
             // Solid rects also support opacity collapsing.
-            BrushKind::Solid { color, ref opacity_binding, .. } => {
-                request.push(color.scale_alpha(opacity_binding.current).premultiplied());
+            BrushKind::Solid { ref color, .. } => {
+                request.push(color.premultiplied());
             }
             BrushKind::Clear => {
                 // Opaque black with operator dest out
@@ -2927,12 +2924,7 @@ impl PrimitiveInstance {
                         // Set if we need to request the source image from the cache this frame.
                         if let Some(image_properties) = image_properties {
                             is_tiled = image_properties.tiling.is_some();
-
-                            // If the opacity changed, invalidate the GPU cache so that
-                            // the new color for this primitive gets uploaded.
-                            if opacity_binding.update(frame_context.scene_properties) {
-                                frame_state.gpu_cache.invalidate(&mut self.gpu_location);
-                            }
+                            opacity_binding.update(frame_context.scene_properties);
 
                             if *tile_spacing != LayoutSize::zero() && !is_tiled {
                                 *source = ImageSource::Cache {
@@ -3083,7 +3075,7 @@ impl PrimitiveInstance {
 
                                         let mut handle = GpuCacheHandle::new();
                                         if let Some(mut request) = frame_state.gpu_cache.request(&mut handle) {
-                                            request.push(ColorF::new(1.0, 1.0, 1.0, opacity_binding.current).premultiplied());
+                                            request.push(PremultipliedColorF::WHITE);
                                             request.push(PremultipliedColorF::WHITE);
                                             request.push([tile.rect.size.width, tile.rect.size.height, 0.0, 0.0]);
                                             request.write_segment(tile.rect, [0.0; 4]);
@@ -3321,13 +3313,7 @@ impl PrimitiveInstance {
                         }
                     }
                     BrushKind::Solid { ref color, ref mut opacity_binding, .. } => {
-                        // If the opacity changed, invalidate the GPU cache so that
-                        // the new color for this primitive gets uploaded. Also update
-                        // the opacity field that controls which batches this primitive
-                        // will be added to.
-                        if opacity_binding.update(frame_context.scene_properties) {
-                            frame_state.gpu_cache.invalidate(&mut self.gpu_location);
-                        }
+                        opacity_binding.update(frame_context.scene_properties);
                         PrimitiveOpacity::from_alpha(opacity_binding.current * color.a)
                     }
                     BrushKind::Clear => PrimitiveOpacity::translucent(),
