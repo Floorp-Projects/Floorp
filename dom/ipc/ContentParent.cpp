@@ -2127,7 +2127,7 @@ ContentParent::GetTestShellSingleton()
   return static_cast<TestShellParent*>(p);
 }
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
 void
 ContentParent::AppendSandboxParams(std::vector<std::string> &aArgs)
 {
@@ -2239,7 +2239,7 @@ ContentParent::AppendSandboxParams(std::vector<std::string> &aArgs)
   }
 #endif // DEBUG
 }
-#endif // XP_MACOSX
+#endif // XP_MACOSX && MOZ_CONTENT_SANDBOX
 
 bool
 ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PRIORITY_FOREGROUND */)
