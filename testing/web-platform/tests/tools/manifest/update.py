@@ -14,28 +14,18 @@ wpt_root = os.path.abspath(os.path.join(here, os.pardir, os.pardir))
 logger = get_logger()
 
 
-def update(tests_root, manifest, working_copy=False, cache_root=None, rebuild=False):
+def update(tests_root,
+           manifest,
+           manifest_path=None,
+           working_copy=False,
+           cache_root=None,
+           rebuild=False):
+    logger.warning("Deprecated; use manifest.load_and_update instead")
     logger.info("Updating manifest")
-    tree = None
-    if cache_root is None:
-        cache_root = os.path.join(tests_root, ".cache")
-    if not os.path.exists(cache_root):
-        try:
-            os.makedirs(cache_root)
-        except IOError:
-            cache_root = None
 
-    if not working_copy:
-        tree = vcs.Git.for_path(tests_root, manifest.url_base,
-                                cache_path=cache_root, rebuild=rebuild)
-    if tree is None:
-        tree = vcs.FileSystem(tests_root, manifest.url_base,
-                              cache_path=cache_root, rebuild=rebuild)
-
-    try:
-        return manifest.update(tree)
-    finally:
-        tree.dump_caches()
+    tree = vcs.get_tree(tests_root, manifest, manifest_path, cache_root,
+                        working_copy, rebuild)
+    return manifest.update(tree)
 
 
 def update_from_cli(**kwargs):
@@ -43,28 +33,16 @@ def update_from_cli(**kwargs):
     path = kwargs["path"]
     assert tests_root is not None
 
-    m = None
-
     if kwargs["download"]:
         download_from_github(path, tests_root)
 
-    if not kwargs.get("rebuild", False):
-        try:
-            m = manifest.load(tests_root, path)
-        except manifest.ManifestVersionMismatch:
-            logger.info("Manifest version changed, rebuilding")
-            m = None
-
-    if m is None:
-        m = manifest.Manifest(kwargs["url_base"])
-
-    changed = update(tests_root,
-                     m,
-                     working_copy=kwargs["work"],
-                     cache_root=kwargs["cache_root"],
-                     rebuild=kwargs["rebuild"])
-    if changed:
-        manifest.write(m, path)
+    manifest.load_and_update(tests_root,
+                             path,
+                             kwargs["url_base"],
+                             update=True,
+                             rebuild=kwargs["rebuild"],
+                             cache_root=kwargs["cache_root"],
+                             working_copy=kwargs["work"])
 
 
 def abs_path(path):
