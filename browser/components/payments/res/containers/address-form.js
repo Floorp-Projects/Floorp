@@ -209,9 +209,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
   handleEvent(event) {
     switch (event.type) {
       case "change": {
-        if (event.target.id == "country") {
-          this.updateRequiredState();
-        }
         this.updateSaveButtonState();
         break;
       }
