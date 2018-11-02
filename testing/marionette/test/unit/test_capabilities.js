@@ -382,7 +382,6 @@ add_test(function test_Capabilities_ctor() {
   ok(caps.get("timeouts") instanceof Timeouts);
   ok(caps.get("proxy") instanceof Proxy);
   equal(caps.get("setWindowRect"), false); // xpcshell does not populate appinfo
-  equal(caps.get("strictFileInteractability"), false);
 
   ok(caps.has("rotatable"));
 
@@ -414,7 +413,6 @@ add_test(function test_Capabilities_toJSON() {
   deepEqual(caps.get("timeouts").toJSON(), json.timeouts);
   equal(undefined, json.proxy);
   equal(caps.get("setWindowRect"), json.setWindowRect);
-  equal(caps.get("strictFileInteractability"), json.strictFileInteractability);
 
   equal(caps.get("rotatable"), json.rotatable);
 
@@ -466,11 +464,6 @@ add_test(function test_Capabilities_fromJSON() {
   caps = fromJSON({setWindowRect: false});
   equal(false, caps.get("setWindowRect"));
   Assert.throws(() => fromJSON({setWindowRect: true}), InvalidArgumentError);
-
-  caps = fromJSON({strictFileInteractability: false});
-  equal(false, caps.get("strictFileInteractability"));
-  caps = fromJSON({strictFileInteractability: true});
-  equal(true, caps.get("strictFileInteractability"));
 
   caps = fromJSON({"moz:accessibilityChecks": true});
   equal(true, caps.get("moz:accessibilityChecks"));

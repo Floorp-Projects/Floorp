@@ -2533,9 +2533,9 @@ GeckoDriver.prototype.getElementRect = async function(cmd) {
  *     Value to send to the element.
  *
  * @throws {InvalidArgumentError}
- *     If `id` or `text` are not strings.
+ *     If <var>id</var> or <var>text</var> are not strings.
  * @throws {NoSuchElementError}
- *     If element represented by reference `id` is unknown.
+ *     If element represented by reference <var>id</var> is unknown.
  * @throws {NoSuchWindowError}
  *     Top-level browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
@@ -2552,8 +2552,7 @@ GeckoDriver.prototype.sendKeysToElement = async function(cmd) {
   switch (this.context) {
     case Context.Chrome:
       let el = this.curBrowser.seenEls.get(webEl);
-      await interaction.sendKeysToElement(el, text,
-          {accessibilityChecks: this.a11yChecks});
+      await interaction.sendKeysToElement(el, text, this.a11yChecks);
       break;
 
     case Context.Content:
