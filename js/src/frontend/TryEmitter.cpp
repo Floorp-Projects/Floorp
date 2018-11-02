@@ -80,7 +80,7 @@ TryEmitter::emitTryEnd()
 
     // GOSUB to finally, if present.
     if (hasFinally() && controlInfo_) {
-        if (!bce_->emitJump(JSOP_GOSUB, &controlInfo_->gosubs)) {
+        if (!bce_->emitGoSub(&controlInfo_->gosubs)) {
             return false;
         }
     }
@@ -144,7 +144,7 @@ TryEmitter::emitCatchEnd()
 
     // gosub <finally>, if required.
     if (hasFinally()) {
-        if (!bce_->emitJump(JSOP_GOSUB, &controlInfo_->gosubs)) {
+        if (!bce_->emitGoSub(&controlInfo_->gosubs)) {
             return false;
         }
         MOZ_ASSERT(bce_->stackDepth == depth_);

@@ -680,6 +680,7 @@ IonBuilder::analyzeNewLoopTypes(const CFGBlock* loopEntryBlock)
               case JSOP_INT32:
               case JSOP_UINT16:
               case JSOP_UINT24:
+              case JSOP_RESUMEINDEX:
               case JSOP_BITAND:
               case JSOP_BITOR:
               case JSOP_BITXOR:
@@ -2283,6 +2284,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_setaliasedvar(EnvironmentCoordinate(pc));
 
       case JSOP_UINT24:
+      case JSOP_RESUMEINDEX:
         pushConstant(Int32Value(GET_UINT24(pc)));
         return Ok();
 
@@ -2586,7 +2588,6 @@ IonBuilder::inspectOpcode(JSOp op)
         // Intentionally not implemented.
         break;
 
-      case JSOP_UNUSED126:
       case JSOP_UNUSED206:
       case JSOP_LIMIT:
         break;
