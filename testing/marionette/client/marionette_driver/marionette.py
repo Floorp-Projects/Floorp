@@ -1256,6 +1256,9 @@ class Marionette(object):
         if capabilities is None:
             capabilities = {}
 
+        if capabilities is None:
+            capabilities = {"strictFileInteractability": True}
+
         if timeout is None:
             timeout = self.startup_timeout
 
