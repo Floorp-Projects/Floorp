@@ -1,0 +1,62 @@
+---
+language: rust
+dist: trusty
+sudo: false
+
+cache:
+  cargo: true
+  apt: true
+
+addons:
+  apt:
+    packages:
+    - libssl-dev
+
+matrix:
+  include:
+  - rust: nightly
+  - rust: stable
+    before_deploy: cargo doc --no-deps
+  allow_failures:
+    - rust: nightly
+
+before_script:
+  - cargo clean
+
+script:
+  # Build without unstable flag
+  - cargo build
+
+  # Test examples in README.
+  - rustdoc --test README.md -L target/debug -L target/debug/deps
+
+  # Check with unstable flag
+  - cargo check --features unstable
+
+  # Run tests, this includes lib tests and doc tests
+  - RUST_TEST_THREADS=1 cargo test
+
+  # Run integration tests
+  - cargo test -p h2-tests
+
+  # Run h2spec on stable
+  - if [ "${TRAVIS_RUST_VERSION}" = "stable" ]; then ./ci/h2spec.sh; fi
+
+deploy:
+  provider:  pages
+  skip_cleanup: true
+  github_token: $GH_TOKEN
+  target_branch: gh-pages
+  local_dir: target/doc
+  on:
+    branch: master
+    repo: carllerche/h2
+    rust: stable
+
+env:
+  global:
+    secure: LkjG3IYPu7GY7zuMdYyLtdvjR4a6elX6or1Du7LTBz4JSlQXYAaj6DxhfZfm4d1kECIlnJJ2T21BqDoJDnld5lLu6VcXQ2ZEo/2f2k77GQ/9w3erwcDtqxK02rPoslFNzSd2SCdafjGKdbcvGW2HVBEu5gYEfOdu1Cdy6Av3+vLPk5To50khBQY90Kk+cmSd7J0+CHw/wSXnVgIVoO4742+aj5pxZQLx3lsi3ZPzIh1VL4QOUlaI98ybrCVNxADQCeXRRDzj0d8NzeKlkm8eXpgpiMVRJWURMa3rU2sHU9wh+YjMyoqGZWv2LlzG5LBqde3RWPQ99ebxVhlly6RgEom8yvZbavcGJ4BA0OjviLYAMb1Wjlu1paLZikEqlvTojhpzz3PVuIBZHl+rUgnUfkuhfmMzTBJTPHPMP0GtqpIAGpyRwbv56DquuEiubl70FZmz52sXGDseoABv9jQ4SNJrDrA+bfIWkPpWwqnKaWIgGPl0n3GKeceQM3RshpaE59awYUDS4ybjtacb2Fr99fx25mTO2W4x5hcDqAvBohxRPXgRB2y0ZmrcJyCV3rfkiGFUK7H8ZBqNQ6GG/GYilgj40q6TgcnXxUxyKkykDiS9VU0QAjAwz0pkCNipJ+ImS1j0LHEOcKMKZ7OsGOuSqBmF24ewBs+XzXY7dTnM/Xc=
+
+notifications:
+  email:
+    on_success: never

@@ -1,0 +1,26 @@
+language: rust
+sudo: false
+
+cache: cargo
+
+matrix:
+  include:
+    - rust: stable
+    - rust: beta
+    - rust: nightly
+    # ensure wasm always builds
+    - rust: stable
+      script:
+        - rustup target add wasm32-unknown-unknown
+        - cargo build --target=wasm32-unknown-unknown
+    # minimum rustc version
+    - rust: 1.20.0
+      script: cargo build
+
+script:
+  - cargo test
+  - 'if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then cargo test --benches; fi'
+
+notifications:
+  email:
+    on_success: never

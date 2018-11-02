@@ -1,0 +1,24 @@
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+sudo: false
+before_script:
+  - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
+script:
+  - export CARGO_TARGET_DIR=`pwd`/target
+  - cargo build --verbose
+  - cargo test --verbose
+  - cargo test --verbose --features tokio
+  - rustdoc --test README.md -L target/debug -L target/debug/deps
+  - cargo doc --no-deps
+  - cargo doc --no-deps --manifest-path=bzip2-sys/Cargo.toml
+after_success:
+  - travis-cargo --only nightly doc-upload
+notifications:
+  email:
+    on_success: never
+env:
+  global:
+    secure: "PXNga5meeArqD5RcInRiqDIHCsVqYlBtx6NSAQfCcKgo8z3qE5A2ig3txIS0rWNWbv+j2nlmOes6mljLx3Bx9O99hXIM5d2/UKHrzCWm8vJYmK6cw51r58MmZh4TMNo+p5aBN2aclluv5W1pueC1ndQ3QPGcVE4JgboUQNPIveU="
