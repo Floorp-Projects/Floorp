@@ -20,9 +20,6 @@ loader.lazyGetter(this, "MenuItem", function() {
 loader.lazyGetter(this, "MenuList", function() {
   return createFactory(require("devtools/client/shared/components/menu/MenuList"));
 });
-loader.lazyGetter(this, "WebReplayPlayer", function() {
-  return createFactory(require("devtools/client/webreplay/components/WebReplayPlayer"));
-});
 
 loader.lazyRequireGetter(this, "getUnicodeUrl", "devtools/client/shared/unicode-url", true);
 
@@ -414,7 +411,6 @@ class ToolboxToolbar extends Component {
    * render functions for how each of the sections is rendered.
    */
   render() {
-    const {toolbox} = this.props;
     const classnames = ["devtools-tabbar"];
     const startButtons = this.renderToolboxButtonsStart();
     const endButtons = this.renderToolboxButtonsEnd();
@@ -426,7 +422,7 @@ class ToolboxToolbar extends Component {
       classnames.push("devtools-tabbar-has-end");
     }
 
-    const toolbar = this.props.canRender
+    return this.props.canRender
       ? (
         div(
           {
@@ -439,18 +435,6 @@ class ToolboxToolbar extends Component {
         )
       )
       : div({ className: classnames.join(" ") });
-
-    if (toolbox.target.canRewind) {
-      return div(
-        {},
-        WebReplayPlayer({
-          threadClient: toolbox.threadClient,
-        }),
-        toolbar,
-      );
-    }
-
-    return toolbar;
   }
 }
 
