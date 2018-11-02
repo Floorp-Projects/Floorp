@@ -6,7 +6,6 @@
 
 #include "nsISupports.idl"
 
-webidl DOMRequest;
 webidl FrameLoader;
 
 %{C++
@@ -23,12 +22,6 @@ webidl FrameLoader;
 [scriptable, uuid(57758c10-6036-11e5-a837-0800200c9a66)]
 interface nsIBrowserElementAPI : nsISupports
 {
-  const long FIND_CASE_SENSITIVE = 0;
-  const long FIND_CASE_INSENSITIVE = 1;
-
-  const long FIND_FORWARD = 0;
-  const long FIND_BACKWARD = 1;
-
   /**
    * Notify frame scripts that support the API to destroy.
    */
@@ -42,43 +35,10 @@ interface nsIBrowserElementAPI : nsISupports
                       in uint32_t button,
                       in uint32_t clickCount,
                       in uint32_t mifiers);
-  void sendTouchEvent(in AString aType,
-                      [const, array, size_is(count)] in uint32_t aIdentifiers,
-                      [const, array, size_is(count)] in int32_t aXs,
-                      [const, array, size_is(count)] in int32_t aYs,
-                      [const, array, size_is(count)] in uint32_t aRxs,
-                      [const, array, size_is(count)] in uint32_t aRys,
-                      [const, array, size_is(count)] in float aRotationAngles,
-                      [const, array, size_is(count)] in float aForces,
-                      in uint32_t count,
-                      in long aModifiers);
   void goBack();
   void goForward();
   void reload(in boolean hardReload);
   void stop();
-  DOMRequest download(in AString url,
-                            [optional] in jsval options);
-  DOMRequest purgeHistory();
-  DOMRequest getScreenshot(in uint32_t width,
-                                 in uint32_t height,
-                                 [optional] in AString mimeType);
-  void zoom(in float zoom);
-  DOMRequest getCanGoBack();
-  DOMRequest getCanGoForward();
-  DOMRequest getContentDimensions();
-
-  void findAll(in AString searchString, in long caseSensitivity);
-  void findNext(in long direction);
-  void clearMatch();
-
-  void addNextPaintListener(in jsval listener); // BrowserElementNextPaintEventCallback
-  void removeNextPaintListener(in jsval listener); // BrowserElementNextPaintEventCallback
-
-  DOMRequest executeScript(in AString script, in jsval options);
-
-  /**
-   * Returns an object that represents a Web Manifest:
-   * http://w3c.github.io/manifest/
-   */
-  DOMRequest getWebManifest();
+  Promise getCanGoBack();
+  Promise getCanGoForward();
 };

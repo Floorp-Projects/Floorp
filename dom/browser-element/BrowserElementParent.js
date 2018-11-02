@@ -49,19 +49,18 @@ function defineNoReturnMethod(fn) {
   };
 }
 
-function defineDOMRequestMethod(msgName) {
+function definePromiseMethod(msgName) {
   return function() {
-    return this._sendDOMRequest(msgName);
+    return this._sendAsyncRequest(msgName);
   };
 }
 
 function BrowserElementParent() {
   debug("Creating new BrowserElementParent object");
-  this._domRequestCounter = 0;
+  this._promiseCounter = 0;
   this._domRequestReady = false;
   this._pendingAPICalls = [];
-  this._pendingDOMRequests = {};
-  this._nextPaintListeners = [];
+  this._pendingPromises = {};
   this._pendingDOMFullscreen = false;
 
   Services.obs.addObserver(this, 'oop-frameloader-crashed', /* ownsWeak = */ true);
@@ -157,22 +156,13 @@ BrowserElementParent.prototype = {
       "error": this._fireEventFromMsg,
       "firstpaint": this._fireProfiledEventFromMsg,
       "documentfirstpaint": this._fireProfiledEventFromMsg,
-      "nextpaint": this._recvNextPaint,
-      "got-purge-history": this._gotDOMRequestResult,
-      "got-screenshot": this._gotDOMRequestResult,
-      "got-contentdimensions": this._gotDOMRequestResult,
-      "got-can-go-back": this._gotDOMRequestResult,
-      "got-can-go-forward": this._gotDOMRequestResult,
+      "got-can-go-back": this._gotAsyncResult,
+      "got-can-go-forward": this._gotAsyncResult,
       "requested-dom-fullscreen": this._requestedDOMFullscreen,
       "fullscreen-origin-change": this._fullscreenOriginChange,
       "exit-dom-fullscreen": this._exitDomFullscreen,
-      "got-visible": this._gotDOMRequestResult,
-      "got-set-input-method-active": this._gotDOMRequestResult,
       "scrollviewchange": this._handleScrollViewChange,
       "caretstatechanged": this._handleCaretStateChanged,
-      "findchange": this._handleFindChange,
-      "execute-script-done": this._gotDOMRequestResult,
-      "got-web-manifest": this._gotDOMRequestResult,
     };
 
     let mmSecuritySensitiveCalls = {
@@ -185,7 +175,6 @@ BrowserElementParent.prototype = {
       "scrollareachanged": this._fireEventFromMsg,
       "titlechange": this._fireProfiledEventFromMsg,
       "opensearch": this._fireEventFromMsg,
-      "manifestchange": this._fireEventFromMsg,
       "metachange": this._fireEventFromMsg,
       "resize": this._fireEventFromMsg,
       "activitydone": this._fireEventFromMsg,
@@ -435,12 +424,6 @@ BrowserElementParent.prototype = {
     this._frameElement.dispatchEvent(evt);
   },
 
-  _handleFindChange: function(data) {
-    let evt = this._createEvent("findchange", data.json,
-                                /* cancelable = */ false);
-    this._frameElement.dispatchEvent(evt);
-  },
-
   _createEvent: function(evtName, detail, cancelable) {
     // This will have to change if we ever want to send a CustomEvent with null
     // detail.  For now, it's OK.
@@ -458,29 +441,33 @@ BrowserElementParent.prototype = {
   },
 
   /**
-   * Kick off a DOMRequest in the child process.
+   * Kick off an async operation in the child process.
    *
-   * We'll fire an event called |msgName| on the child process, passing along
+   * We'll send a message called |msgName| to the child process, passing along
    * an object with two fields:
    *
-   *  - id:  the ID of this request.
-   *  - arg: arguments to pass to the child along with this request.
+   *  - id:  the ID of this async call.
+   *  - arg: arguments to pass to the child along with this async call.
    *
    * We expect the child to pass the ID back to us upon completion of the
-   * request.  See _gotDOMRequestResult.
+   * call.  See _gotAsyncResult.
    */
-  _sendDOMRequest: function(msgName, args) {
-    let id = 'req_' + this._domRequestCounter++;
-    let req = Services.DOMRequest.createRequest(this._window);
+  _sendAsyncRequest: function(msgName, args) {
+    let id = 'req_' + this._promiseCounter++;
+    let resolve, reject;
+    let p = new this._window.Promise((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
     let self = this;
     let send = function() {
       if (!self._isAlive()) {
         return;
       }
       if (self._sendAsyncMsg(msgName, {id: id, args: args})) {
-        self._pendingDOMRequests[id] = req;
+        self._pendingPromises[id] = { p, resolve, reject };
       } else {
-        Services.DOMRequest.fireErrorAsync(req, "fail");
+        reject(new this._window.DOMException("fail"));
       }
     };
     if (this._domRequestReady) {
@@ -489,35 +476,35 @@ BrowserElementParent.prototype = {
       // Child haven't been loaded.
       this._pendingAPICalls.push(send);
     }
-    return req;
+    return p;
   },
 
   /**
-   * Called when the child process finishes handling a DOMRequest.  data.json
-   * must have the fields [id, successRv], if the DOMRequest was successful, or
-   * [id, errorMsg], if the request was not successful.
+   * Called when the child process finishes handling an async call.  data.json
+   * must have the fields [id, successRv], if the async call was successful, or
+   * [id, errorMsg], if the call was not successful.
    *
    * The fields have the following meanings:
    *
-   *  - id:        the ID of the DOM request (see _sendDOMRequest)
-   *  - successRv: the request's return value, if the request succeeded
-   *  - errorMsg:  the message to pass to DOMRequest.fireError(), if the request
-   *               failed.
+   *  - id:        the ID of the async call (see _sendAsyncRequest)
+   *  - successRv: the call's return value, if the call succeeded
+   *  - errorMsg:  the message to pass to the Promise reject callback, if the
+   *               call failed.
    *
    */
-  _gotDOMRequestResult: function(data) {
-    let req = this._pendingDOMRequests[data.json.id];
-    delete this._pendingDOMRequests[data.json.id];
+  _gotAsyncResult: function(data) {
+    let p = this._pendingPromises[data.json.id];
+    delete this._pendingPromises[data.json.id];
 
     if ('successRv' in data.json) {
-      debug("Successful gotDOMRequestResult.");
+      debug("Successful gotAsyncResult.");
       let clientObj = Cu.cloneInto(data.json.successRv, this._window);
-      Services.DOMRequest.fireSuccess(req, clientObj);
+      p.resolve(clientObj);
     }
     else {
-      debug("Got error in gotDOMRequestResult.");
-      Services.DOMRequest.fireErrorAsync(req,
-        Cu.cloneInto(data.json.errorMsg, this._window));
+      debug("Got error in gotAsyncResult.");
+      p.reject(new this._window.DOMException(
+        Cu.cloneInto(data.json.errorMsg, this._window)));
     }
   },
 
@@ -549,51 +536,8 @@ BrowserElementParent.prototype = {
     });
   }),
 
-  sendTouchEvent: defineNoReturnMethod(function(type, identifiers, touchesX, touchesY,
-                                                radiisX, radiisY, rotationAngles, forces,
-                                                count, modifiers) {
-
-    let offset = this.getChildProcessOffset();
-    for (var i = 0; i < touchesX.length; i++) {
-      touchesX[i] += offset.x;
-    }
-    for (var i = 0; i < touchesY.length; i++) {
-      touchesY[i] += offset.y;
-    }
-    this._sendAsyncMsg("send-touch-event", {
-      "type": type,
-      "identifiers": identifiers,
-      "touchesX": touchesX,
-      "touchesY": touchesY,
-      "radiisX": radiisX,
-      "radiisY": radiisY,
-      "rotationAngles": rotationAngles,
-      "forces": forces,
-      "count": count,
-      "modifiers": modifiers
-    });
-  }),
-
-  getCanGoBack: defineDOMRequestMethod('get-can-go-back'),
-  getCanGoForward: defineDOMRequestMethod('get-can-go-forward'),
-  getContentDimensions: defineDOMRequestMethod('get-contentdimensions'),
-
-  findAll: defineNoReturnMethod(function(searchString, caseSensitivity) {
-    return this._sendAsyncMsg('find-all', {
-      searchString,
-      caseSensitive: caseSensitivity == Ci.nsIBrowserElementAPI.FIND_CASE_SENSITIVE
-    });
-  }),
-
-  findNext: defineNoReturnMethod(function(direction) {
-    return this._sendAsyncMsg('find-next', {
-      backward: direction == Ci.nsIBrowserElementAPI.FIND_BACKWARD
-    });
-  }),
-
-  clearMatch: defineNoReturnMethod(function() {
-    return this._sendAsyncMsg('clear-match');
-  }),
+  getCanGoBack: definePromiseMethod('get-can-go-back'),
+  getCanGoForward: definePromiseMethod('get-can-go-forward'),
 
   goBack: defineNoReturnMethod(function() {
     this._sendAsyncMsg('go-back');
@@ -611,242 +555,6 @@ BrowserElementParent.prototype = {
     this._sendAsyncMsg('stop');
   }),
 
-  executeScript: function(script, options) {
-    if (!this._isAlive()) {
-      throw Components.Exception("Dead content process",
-                                 Cr.NS_ERROR_DOM_INVALID_STATE_ERR);
-    }
-
-    // Enforcing options.url or options.origin
-    if (!options.url && !options.origin) {
-      throw Components.Exception("Invalid argument", Cr.NS_ERROR_INVALID_ARG);
-    }
-    return this._sendDOMRequest('execute-script', {script, options});
-  },
-
-  /*
-   * The valid range of zoom scale is defined in preference "zoom.maxPercent" and "zoom.minPercent".
-   */
-  zoom: defineNoReturnMethod(function(zoom) {
-    zoom *= 100;
-    zoom = Math.min(getIntPref("zoom.maxPercent", 300), zoom);
-    zoom = Math.max(getIntPref("zoom.minPercent", 50), zoom);
-    this._sendAsyncMsg('zoom', {zoom: zoom / 100.0});
-  }),
-
-  purgeHistory: defineDOMRequestMethod('purge-history'),
-
-
-  download: function(_url, _options) {
-    if (!this._isAlive()) {
-      return null;
-    }
-
-    let uri = Services.io.newURI(_url);
-    let url = uri.QueryInterface(Ci.nsIURL);
-
-    debug('original _options = ' + uneval(_options));
-
-    // Ensure we have _options, we always use it to send the filename.
-    _options = _options || {};
-    if (!_options.filename) {
-      _options.filename = url.fileName;
-    }
-
-    debug('final _options = ' + uneval(_options));
-
-    // Ensure we have a filename.
-    if (!_options.filename) {
-      throw Components.Exception("Invalid argument", Cr.NS_ERROR_INVALID_ARG);
-    }
-
-    let interfaceRequestor =
-      this._frameLoader.loadContext.QueryInterface(Ci.nsIInterfaceRequestor);
-    let req = Services.DOMRequest.createRequest(this._window);
-
-    function DownloadListener() {
-      debug('DownloadListener Constructor');
-    }
-    DownloadListener.prototype = {
-      extListener: null,
-      onStartRequest: function(aRequest, aContext) {
-        debug('DownloadListener - onStartRequest');
-        let extHelperAppSvc =
-          Cc['@mozilla.org/uriloader/external-helper-app-service;1'].
-          getService(Ci.nsIExternalHelperAppService);
-        let channel = aRequest.QueryInterface(Ci.nsIChannel);
-
-        // First, we'll ensure the filename doesn't have any leading
-        // periods. We have to do it here to avoid ending up with a filename
-        // that's only an extension with no extension (e.g. Sending in
-        // '.jpeg' without stripping the '.' would result in a filename of
-        // 'jpeg' where we want 'jpeg.jpeg'.
-        _options.filename = _options.filename.replace(/^\.+/, "");
-
-        let ext = null;
-        let mimeSvc = extHelperAppSvc.QueryInterface(Ci.nsIMIMEService);
-        try {
-          ext = '.' + mimeSvc.getPrimaryExtension(channel.contentType, '');
-        } catch (e) { ext = null; }
-
-        // Check if we need to add an extension to the filename.
-        if (ext && !_options.filename.endsWith(ext)) {
-          _options.filename += ext;
-        }
-        // Set the filename to use when saving to disk.
-        channel.contentDispositionFilename = _options.filename;
-
-        this.extListener =
-          extHelperAppSvc.doContent(
-              channel.contentType,
-              aRequest,
-              interfaceRequestor,
-              true);
-        this.extListener.onStartRequest(aRequest, aContext);
-      },
-      onStopRequest: function(aRequest, aContext, aStatusCode) {
-        debug('DownloadListener - onStopRequest (aStatusCode = ' +
-               aStatusCode + ')');
-        if (aStatusCode == Cr.NS_OK) {
-          // Everything looks great.
-          debug('DownloadListener - Download Successful.');
-          Services.DOMRequest.fireSuccess(req, aStatusCode);
-        }
-        else {
-          // In case of failure, we'll simply return the failure status code.
-          debug('DownloadListener - Download Failed!');
-          Services.DOMRequest.fireError(req, aStatusCode);
-        }
-
-        if (this.extListener) {
-          this.extListener.onStopRequest(aRequest, aContext, aStatusCode);
-        }
-      },
-      onDataAvailable: function(aRequest, aContext, aInputStream,
-                                aOffset, aCount) {
-        this.extListener.onDataAvailable(aRequest, aContext, aInputStream,
-                                         aOffset, aCount);
-      },
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamListener,
-                                              Ci.nsIRequestObserver])
-    };
-
-    let referrer = Services.io.newURI(_options.referrer);
-    let principal =
-      Services.scriptSecurityManager.createCodebasePrincipal(
-        referrer, this._frameLoader.loadContext.originAttributes);
-
-    let channel = NetUtil.newChannel({
-      uri: url,
-      loadingPrincipal: principal,
-      securityFlags: SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
-    });
-
-    // XXX We would set private browsing information prior to calling this.
-    channel.notificationCallbacks = interfaceRequestor;
-
-    // Since we're downloading our own local copy we'll want to bypass the
-    // cache and local cache if the channel let's us specify this.
-    let flags = Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS |
-                Ci.nsIChannel.LOAD_BYPASS_CACHE;
-    if (channel instanceof Ci.nsICachingChannel) {
-      debug('This is a caching channel. Forcing bypass.');
-      flags |= Ci.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
-    }
-
-    channel.loadFlags |= flags;
-
-    if (channel instanceof Ci.nsIHttpChannel) {
-      debug('Setting HTTP referrer = ' + (referrer && referrer.spec));
-      channel.referrer = referrer;
-      if (channel instanceof Ci.nsIHttpChannelInternal) {
-        channel.forceAllowThirdPartyCookie = true;
-      }
-    }
-
-    // Set-up complete, let's get things started.
-    channel.asyncOpen2(new DownloadListener());
-
-    return req;
-  },
-
-  getScreenshot: function(_width, _height, _mimeType) {
-    if (!this._isAlive()) {
-      throw Components.Exception("Dead content process",
-                                 Cr.NS_ERROR_DOM_INVALID_STATE_ERR);
-    }
-
-    let width = parseInt(_width);
-    let height = parseInt(_height);
-    let mimeType = (typeof _mimeType === 'string') ?
-      _mimeType.trim().toLowerCase() : 'image/jpeg';
-    if (isNaN(width) || isNaN(height) || width < 0 || height < 0) {
-      throw Components.Exception("Invalid argument",
-                                 Cr.NS_ERROR_INVALID_ARG);
-    }
-
-    return this._sendDOMRequest('get-screenshot',
-                                {width: width, height: height,
-                                 mimeType: mimeType});
-  },
-
-  _recvNextPaint: function(data) {
-    let listeners = this._nextPaintListeners;
-    this._nextPaintListeners = [];
-    for (let listener of listeners) {
-      try {
-        listener();
-      } catch (e) {
-        // If a listener throws we'll continue.
-      }
-    }
-  },
-
-  addNextPaintListener: function(listener) {
-    if (!this._isAlive()) {
-      throw Components.Exception("Dead content process",
-                                 Cr.NS_ERROR_DOM_INVALID_STATE_ERR);
-    }
-
-    let self = this;
-    let run = function() {
-      if (self._nextPaintListeners.push(listener) == 1)
-        self._sendAsyncMsg('activate-next-paint-listener');
-    };
-    if (!this._domRequestReady) {
-      this._pendingAPICalls.push(run);
-    } else {
-      run();
-    }
-  },
-
-  removeNextPaintListener: function(listener) {
-    if (!this._isAlive()) {
-      throw Components.Exception("Dead content process",
-                                 Cr.NS_ERROR_DOM_INVALID_STATE_ERR);
-    }
-
-    let self = this;
-    let run = function() {
-      for (let i = self._nextPaintListeners.length - 1; i >= 0; i--) {
-        if (self._nextPaintListeners[i] == listener) {
-          self._nextPaintListeners.splice(i, 1);
-          break;
-        }
-      }
-
-      if (self._nextPaintListeners.length == 0)
-        self._sendAsyncMsg('deactivate-next-paint-listener');
-    };
-    if (!this._domRequestReady) {
-      this._pendingAPICalls.push(run);
-    } else {
-      run();
-    }
-  },
-
-  getWebManifest: defineDOMRequestMethod('get-web-manifest'),
   /**
    * Called when the visibility of the window which owns this iframe changes.
    */

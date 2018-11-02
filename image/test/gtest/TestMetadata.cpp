@@ -60,7 +60,8 @@ CheckMetadata(const ImageTestCase& aTestCase,
   RefPtr<Decoder> decoder =
     DecoderFactory::CreateAnonymousMetadataDecoder(decoderType, sourceBuffer);
   ASSERT_TRUE(decoder != nullptr);
-  RefPtr<IDecodingTask> task = new AnonymousDecodingTask(WrapNotNull(decoder));
+  RefPtr<IDecodingTask> task =
+    new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ false);
 
   if (aBMPWithinICO == BMPWithinICO::YES) {
     static_cast<nsBMPDecoder*>(decoder.get())->SetIsWithinICO();
@@ -111,7 +112,7 @@ CheckMetadata(const ImageTestCase& aTestCase,
                                            DecoderFlags::FIRST_FRAME_ONLY,
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
-  task = new AnonymousDecodingTask(WrapNotNull(decoder));
+  task = new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ false);
 
   if (aBMPWithinICO == BMPWithinICO::YES) {
     static_cast<nsBMPDecoder*>(decoder.get())->SetIsWithinICO();
