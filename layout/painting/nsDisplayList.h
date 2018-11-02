@@ -3815,7 +3815,7 @@ protected:
       if (AtEndOfNestedList()) {
         // Pop the last item off the stack.
         mNext = mStack.LastElement();
-        EndNested(mNext);
+        ExitChildList(mNext);
         mStack.RemoveElementAt(mStack.Length() - 1);
         // We stored the item that was flattened, so advance to the next.
         mNext = mNext->GetAbove();
@@ -3823,7 +3823,7 @@ protected:
         // This item wants to be flattened. Store the current item on the stack,
         // and use the first item in the child list instead.
         mStack.AppendElement(mNext);
-        StartNested(mNext);
+        EnterChildList(mNext);
 
         nsDisplayList* childItems =
           mNext->GetType() != DisplayItemType::TYPE_TRANSFORM
@@ -3835,8 +3835,8 @@ protected:
     }
   }
 
-  virtual void EndNested(nsDisplayItem* aItem) {}
-  virtual void StartNested(nsDisplayItem* aItem) {}
+  virtual void ExitChildList(nsDisplayItem* aItem) {}
+  virtual void EnterChildList(nsDisplayItem* aItem) {}
 
   nsDisplayListBuilder* mBuilder;
   nsDisplayItem* mNext;
