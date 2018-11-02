@@ -14,6 +14,7 @@
 
 #include "File.h"
 #include "JSControl.h"
+#include "MiddlemanCall.h"
 #include "Monitor.h"
 
 namespace mozilla {
@@ -462,6 +463,14 @@ struct BinaryMessage : public Message
 typedef BinaryMessage<MessageType::MiddlemanCallRequest> MiddlemanCallRequestMessage;
 typedef BinaryMessage<MessageType::MiddlemanCallResponse> MiddlemanCallResponseMessage;
 typedef EmptyMessage<MessageType::ResetMiddlemanCalls> ResetMiddlemanCallsMessage;
+
+static inline MiddlemanCallResponseMessage*
+ProcessMiddlemanCallMessage(const MiddlemanCallRequestMessage& aMsg)
+{
+  InfallibleVector<char> outputData;
+  ProcessMiddlemanCall(aMsg.BinaryData(), aMsg.BinaryDataSize(), &outputData);
+  return MiddlemanCallResponseMessage::New(outputData.begin(), outputData.length());
+}
 
 class Channel
 {
