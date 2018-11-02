@@ -344,6 +344,10 @@ public:
     return (mMobileViewportManager != nullptr);
   }
 
+  RefPtr<MobileViewportManager> GetMobileViewportManager() const override {
+    return mMobileViewportManager;
+  }
+
   void UpdateViewportOverridden(bool aAfterInitialization) override;
 
   bool IsLayoutFlushObserver() override
