@@ -12,8 +12,6 @@ interface nsITabParent : nsISupports
 {
   void getChildProcessOffset(out int32_t aCssX, out int32_t aCssY);
 
-  readonly attribute boolean useAsyncPanZoom;
-
   /**
    * Manages the docshell active state of the remote browser. Setting the
    * docShell to be active will also cause it to render layers and upload
