@@ -122,10 +122,6 @@ Evaluate(JSContext* cx, AutoVector<JSObject*>& envChain, const ReadOnlyCompileOp
  * Evaluate the provided UTF-8 data in the scope of the current global of |cx|,
  * and return the completion value in |rval|.  If the data contains invalid
  * UTF-8, an error is reported.
- *
- * The |options.utf8| flag is asserted to be true.  At a future time this flag
- * will be removed and UTF-8-ness of source bytes will be entirely determined
- * by which compilation function is called.
  */
 extern JS_PUBLIC_API(bool)
 EvaluateUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -135,10 +131,6 @@ EvaluateUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
  * Evaluate the provided Latin-1 data (i.e. each byte directly corresponds to
  * the same Unicode code point) in the scope of the current global of |cx|, and
  * return the completion value in |rval|.
- *
- * The |options.utf8| flag is asserted to be false.  At a future time this flag
- * will be removed and UTF-8-ness of source bytes will be entirely determined
- * by which compilation function is called.
  *
  * This function may eventually be removed, such that *only* bytes containing
  * UTF-8 source text may be directly compiled.  Avoid using it if you can.
@@ -152,9 +144,6 @@ EvaluateLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
  * completion value in |rval|.  (The path itself is in the system encoding, not
  * [necessarily] UTF-8.)  If the contents contain any malformed UTF-8, an error
  * is reported.
- *
- * The |options.utf8| flag is asserted to be true.  At a future time this flag
- * will be removed.
  */
 extern JS_PUBLIC_API(bool)
 EvaluateUtf8Path(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -171,10 +160,6 @@ Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
  * Compile the provided UTF-8 data into a script.  If the data contains invalid
  * UTF-8, an error is reported.
  *
- * The |options.utf8| flag is asserted to be true.  At a future time this flag
- * will be removed and UTF-8-ness of source bytes will be entirely determined
- * by which compilation function is called.
- *
  * |script| is always set to the compiled script or to null in case of error.
  */
 extern JS_PUBLIC_API(bool)
@@ -184,10 +169,6 @@ CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
 /**
  * Compile the provided Latin-1 data (i.e. each byte directly corresponds to
  * the same Unicode code point) into a script.
- *
- * The |options.utf8| flag is asserted to be false.  At a future time this flag
- * will be removed and UTF-8-ness of source bytes will be entirely determined
- * by which compilation function is called.
  *
  * This function may eventually be removed, such that *only* bytes containing
  * UTF-8 source text may be directly compiled.  Avoid using it if you can.
@@ -203,9 +184,6 @@ CompileLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
  * contain any malformed UTF-8, an error is reported.
  *
  * |script| is always set to the compiled script or to null in case of error.
- *
- * The |options.utf8| flag is asserted to be true.  At a future time this flag
- * will be removed.
  */
 extern JS_PUBLIC_API(bool)
 CompileUtf8File(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -217,9 +195,6 @@ CompileUtf8File(JSContext* cx, const ReadOnlyCompileOptions& options,
  * the contents contain any malformed UTF-8, an error is reported.
  *
  * |script| is always set to the compiled script or to null in case of error.
- *
- * The |options.utf8| flag is asserted to be true.  At a future time this flag
- * will be removed.
  */
 extern JS_PUBLIC_API(bool)
 CompileUtf8Path(JSContext* cx, const ReadOnlyCompileOptions& options,
