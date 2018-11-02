@@ -225,6 +225,26 @@ nsAccUtils::GetARIAToken(dom::Element* aElement, nsAtom* aAttr)
   return nullptr;
 }
 
+nsStaticAtom*
+nsAccUtils::NormalizeARIAToken(dom::Element* aElement, nsAtom* aAttr)
+{
+  if (!HasDefinedARIAToken(aElement, aAttr)) {
+    return nsGkAtoms::_empty;
+  }
+
+  if (aAttr== nsGkAtoms::aria_current) {
+    static Element::AttrValuesArray tokens[] =
+      { nsGkAtoms::page, nsGkAtoms::step, nsGkAtoms::location_,
+        nsGkAtoms::date, nsGkAtoms::time, nsGkAtoms::_true, nullptr};
+    int32_t idx = aElement->FindAttrValueIn(kNameSpaceID_None,
+                                    aAttr, tokens, eCaseMatters);
+    // If the token is present, return it, otherwise TRUE as per spec.
+    return (idx >= 0) ? tokens[idx] : nsGkAtoms::_true;
+  }
+
+  return nullptr;
+}
+
 Accessible*
 nsAccUtils::GetSelectableContainer(Accessible* aAccessible, uint64_t aState)
 {

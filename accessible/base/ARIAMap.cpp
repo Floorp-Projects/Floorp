@@ -1302,6 +1302,7 @@ static const AttrCharacteristics gWAIUnivAttrMap[] = {
   {nsGkAtoms::aria_busy,                               ATTR_VALTOKEN | ATTR_GLOBAL },
   {nsGkAtoms::aria_checked,           ATTR_BYPASSOBJ | ATTR_VALTOKEN               }, /* exposes checkable obj attr */
   {nsGkAtoms::aria_controls,          ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {nsGkAtoms::aria_current,  ATTR_BYPASSOBJ_IF_FALSE | ATTR_VALTOKEN | ATTR_GLOBAL },
   {nsGkAtoms::aria_describedby,       ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
   {nsGkAtoms::aria_details,           ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
   {nsGkAtoms::aria_disabled,          ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
@@ -1474,6 +1475,15 @@ AttrIterator::Next(nsAString& aAttrName, nsAString& aAttrValue)
       nsAutoString value;
       if (mElement->GetAttr(kNameSpaceID_None, attrAtom, value)) {
         aAttrName.Assign(Substring(attrStr, 5));
+        if (attrFlags & ATTR_VALTOKEN) {
+          nsAtom* normalizedValue =
+            nsAccUtils::NormalizeARIAToken(mElement, attrAtom);
+          if (normalizedValue) {
+            nsDependentAtomString normalizedValueStr(normalizedValue);
+            aAttrValue.Assign(normalizedValueStr);
+            return true;
+          }
+        }
         aAttrValue.Assign(value);
         return true;
       }
