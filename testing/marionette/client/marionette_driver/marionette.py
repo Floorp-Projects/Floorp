@@ -1253,6 +1253,8 @@ class Marionette(object):
         :param timeout: Optional timeout in seconds for the server to be ready.
         :returns: A dictionary of the capabilities offered.
         """
+        if capabilities is None:
+            capabilities = {}
 
         if timeout is None:
             timeout = self.startup_timeout
@@ -1277,26 +1279,7 @@ class Marionette(object):
             self.socket_timeout)
         self.protocol, _ = self.client.connect()
 
-        body = capabilities
-        if body is None:
-            body = {}
-
-        # Duplicate capabilities object so the body we end up
-        # sending looks like this:
-        #
-        #     {acceptInsecureCerts: true, {capabilities: {acceptInsecureCerts: true}}}
-        #
-        # We do this because geckodriver sends the capabilities at the
-        # top-level, and after bug 1388424 removed support for overriding
-        # the session ID, we also do this with this client.  However,
-        # because this client is used with older Firefoxen (through upgrade
-        # tests et al.) we need to preserve backwards compatibility until
-        # Firefox 60.
-        if "capabilities" not in body and capabilities is not None:
-            body["capabilities"] = dict(capabilities)
-
-        resp = self._send_message("WebDriver:NewSession",
-                                  body)
+        resp = self._send_message("WebDriver:NewSession", capabilities)
         self.session_id = resp["sessionId"]
         self.session = resp["capabilities"]
         # fallback to processId can be removed in Firefox 55

@@ -495,7 +495,23 @@ class _ASRouter {
     }
   }
 
-  _updateAdminState(target) {
+  /**
+   * Used by ASRouter Admin returns all ASRouterTargeting.Environment
+   * and ASRouter._getMessagesContext parameters and values
+   */
+  async getTargetingParameters(environment, localContext) {
+    const targetingParameters = {};
+    for (const param of Object.keys(environment)) {
+      targetingParameters[param] = await environment[param];
+    }
+    for (const param of Object.keys(localContext)) {
+      targetingParameters[param] = await localContext[param];
+    }
+
+    return targetingParameters;
+  }
+
+  async _updateAdminState(target) {
     const channel = target || this.messageChannel;
     channel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
       type: "ADMIN_SET_STATE",
@@ -503,6 +519,7 @@ class _ASRouter {
         ...this.state,
         providerPrefs: ASRouterPreferences.providers,
         userPrefs: ASRouterPreferences.getAllUserPreferences(),
+        targetingParameters: await this.getTargetingParameters(ASRouterTargeting.Environment, this._getMessagesContext()),
       },
     });
   }
@@ -536,6 +553,18 @@ class _ASRouter {
      // Find a message that matches the targeting context as well as the trigger context (if one is provided)
      // If no trigger is provided, we should find a message WITHOUT a trigger property defined.
     return ASRouterTargeting.findMatchingMessage({messages, trigger, context, onError: this._handleTargetingError});
+  }
+
+  async evaluateExpression(target, {expression, context}) {
+    const channel = target || this.messageChannel;
+    let evaluationStatus;
+    try {
+      evaluationStatus = {result: await ASRouterTargeting.isMatch(expression, context), success: true};
+    } catch (e) {
+      evaluationStatus = {result: e, success: false};
+    }
+
+    channel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "ADMIN_SET_STATE", data: {...this.state, evaluationStatus}});
   }
 
   _orderBundle(bundle) {
@@ -992,7 +1021,7 @@ class _ASRouter {
           this._addPreviewEndpoint(action.data.endpoint.url, target.portID);
           await this.loadMessagesFromAllProviders();
         } else {
-          this._updateAdminState(target);
+          await this._updateAdminState(target);
         }
         break;
       case "IMPRESSION":
@@ -1018,6 +1047,8 @@ class _ASRouter {
       case "SET_PROVIDER_USER_PREF":
         ASRouterPreferences.setUserPreference(action.data.id, action.data.value);
         break;
+      case "EVALUATE_JEXL_EXPRESSION":
+        this.evaluateExpression(target, action.data);
     }
   }
 }

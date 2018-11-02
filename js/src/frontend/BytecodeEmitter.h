@@ -100,9 +100,7 @@ struct CGScopeNoteList {
 
 struct CGResumeOffsetList {
     Vector<uint32_t> list;
-    uint32_t numYields;
-    uint32_t numAwaits;
-    explicit CGResumeOffsetList(JSContext* cx) : list(cx), numYields(0), numAwaits(0) {}
+    explicit CGResumeOffsetList(JSContext* cx) : list(cx) {}
 
     MOZ_MUST_USE bool append(uint32_t offset) { return list.append(offset); }
     size_t length() const { return list.length(); }
@@ -208,6 +206,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     // resume in the JIT (because BaselineScript stores a resumeIndex => native
     // code array).
     CGResumeOffsetList resumeOffsetList;
+
+    // Number of yield instructions emitted. Does not include JSOP_AWAIT.
+    uint32_t        numYields;
 
     uint16_t        typesetCount;   /* Number of JOF_TYPESET opcodes generated */
 
@@ -658,6 +659,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter
                                            EmitLineNumberNote emitLineNote = EMIT_LINENOTE);
     MOZ_NEVER_INLINE MOZ_MUST_USE bool emitSwitch(SwitchStatement* switchStmt);
     MOZ_NEVER_INLINE MOZ_MUST_USE bool emitTry(TryNode* tryNode);
+
+    MOZ_MUST_USE bool emitGoSub(JumpList* jump);
 
     enum DestructuringFlavor {
         // Destructuring into a declaration.

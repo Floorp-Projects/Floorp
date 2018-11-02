@@ -511,7 +511,7 @@ this.downloads = class extends ExtensionAPI {
               }
             }
 
-            if (!saveAs) {
+            if (!saveAs || AppConstants.platform === "android") {
               return target;
             }
 

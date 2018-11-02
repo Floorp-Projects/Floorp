@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "رازداری کا نوٹس",
   "firstrun_continue_to_login": "جاری رکھیں",
   "firstrun_skip_login": "Skip this step",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "مینیو کھولیں",
   "pocket_learn_more": "مزید سیکھیں"
 };

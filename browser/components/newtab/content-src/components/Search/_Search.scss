@@ -46,7 +46,7 @@
       width: $wordmark-size;
     }
 
-    @media (max-width: $break-point-small - 1) {
+    @media (max-width: $break-point-medium - 1) {
       $logo-size-small: 64px;
       $wordmark-small-size: 100px;
 
@@ -70,11 +70,7 @@
     height: $search-height;
     margin: 0 auto;
     position: relative;
-    width: $searchbar-width-smallest;
-
-    @media (min-width: $break-point-small) {
-      width: $searchbar-width-small;
-    }
+    width: $searchbar-width-small;
 
     @media (min-width: $break-point-medium) {
       width: $searchbar-width-medium;

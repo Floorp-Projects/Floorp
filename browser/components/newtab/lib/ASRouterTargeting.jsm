@@ -63,7 +63,7 @@ function CachedTargetingGetter(property, options = null, updateInterval = FRECEN
 }
 
 function CheckBrowserNeedsUpdate(updateInterval = FRECENT_SITES_UPDATE_INTERVAL) {
-  const UpdateChecker = Cc["@mozilla.org/updates/update-checker;1"].createInstance(Ci.nsIUpdateChecker);
+  const UpdateChecker = Cc["@mozilla.org/updates/update-checker;1"];
   const checker = {
     _lastUpdated: 0,
     _value: null,
@@ -91,8 +91,9 @@ function CheckBrowserNeedsUpdate(updateInterval = FRECENT_SITES_UPDATE_INTERVAL)
           QueryInterface: ChromeUtils.generateQI(["nsIUpdateCheckListener"]),
         };
 
-        if (now - this._lastUpdated >= updateInterval) {
-          UpdateChecker.checkForUpdates(updateServiceListener, true);
+        if (UpdateChecker && (now - this._lastUpdated >= updateInterval)) {
+          const checkerInstance = UpdateChecker.createInstance(Ci.nsIUpdateChecker);
+          checkerInstance.checkForUpdates(updateServiceListener, true);
           this._lastUpdated = now;
         } else {
           resolve(this._value);
