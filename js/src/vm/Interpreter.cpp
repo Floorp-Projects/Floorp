@@ -2298,7 +2298,6 @@ CASE(EnableInterruptsPseudoOpcode)
 CASE(JSOP_NOP)
 CASE(JSOP_NOP_DESTRUCTURING)
 CASE(JSOP_TRY_DESTRUCTURING_ITERCLOSE)
-CASE(JSOP_UNUSED126)
 CASE(JSOP_UNUSED206)
 CASE(JSOP_CONDSWITCH)
 {
@@ -3646,6 +3645,7 @@ CASE(JSOP_UINT16)
 END_CASE(JSOP_UINT16)
 
 CASE(JSOP_UINT24)
+CASE(JSOP_RESUMEINDEX)
     PUSH_INT32((int32_t) GET_UINT24(REGS.pc));
 END_CASE(JSOP_UINT24)
 
@@ -4312,10 +4312,7 @@ END_CASE(JSOP_INITELEM_INC)
 
 CASE(JSOP_GOSUB)
 {
-    PUSH_BOOLEAN(false);
-    int32_t i = script->pcToOffset(REGS.pc) + JSOP_GOSUB_LENGTH;
     int32_t len = GET_JUMP_OFFSET(REGS.pc);
-    PUSH_INT32(i);
     ADVANCE_AND_DISPATCH(len);
 }
 
@@ -4337,11 +4334,12 @@ CASE(JSOP_RETSUB)
         cx->setPendingException(v);
         goto error;
     }
-    MOZ_ASSERT(rval.isInt32());
 
-    /* Increment the PC by this much. */
-    int32_t len = rval.toInt32() - int32_t(script->pcToOffset(REGS.pc));
-    ADVANCE_AND_DISPATCH(len);
+    MOZ_ASSERT(rval.toInt32() >= 0);
+
+    uint32_t offset = script->resumeOffsets()[rval.toInt32()];
+    REGS.pc = script->offsetToPC(offset);
+    ADVANCE_AND_DISPATCH(0);
 }
 
 CASE(JSOP_EXCEPTION)

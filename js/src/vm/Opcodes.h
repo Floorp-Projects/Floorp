@@ -1144,30 +1144,35 @@
     macro(JSOP_DEBUGGER,  115,"debugger",   NULL,         1,  0,  0, JOF_BYTE) \
     \
     /*
-     * Pushes 'false' and next bytecode's PC onto the stack, and jumps to
-     * a 32-bit offset from the current bytecode.
+     * This opcode is used for entering a 'finally' block. Jumps to a 32-bit
+     * offset from the current pc.
      *
-     * This opcode is used for entering 'finally' block.
+     * Note: this op doesn't actually push/pop any values, but it has a use
+     * count of 2 (for the 'false' + resumeIndex values pushed by preceding
+     * bytecode ops) because the 'finally' entry point does not expect these
+     * values on the stack. See also JSOP_FINALLY (it has a def count of 2).
+     *
      * When the execution resumes from 'finally' block, those stack values are
      * popped.
      *   Category: Statements
      *   Type: Exception Handling
      *   Operands: int32_t offset
-     *   Stack: =>
+     *   Stack: false, resumeIndex =>
      */ \
-    macro(JSOP_GOSUB,     116,"gosub",      NULL,         5,  0,  0,  JOF_JUMP) \
+    macro(JSOP_GOSUB,     116,"gosub",      NULL,         5,  2,  0,  JOF_JUMP) \
     /*
-     * Pops the top two values on the stack as 'rval' and 'lval', converts
-     * 'lval' into a boolean, raises error if the result is 'true',
-     * jumps to a 32-bit absolute PC: 'rval' if 'false'.
+     * This opcode is used for returning from a 'finally' block.
      *
-     * This opcode is used for returning from 'finally' block.
+     * Pops the top two values on the stack as 'rval' and 'lval'. Then:
+     * - If 'lval' is true, throws 'rval'.
+     * - If 'lval' is false, jumps to the resumeIndex stored in 'lval'.
+     *
      *   Category: Statements
      *   Type: Exception Handling
      *   Operands:
      *   Stack: lval, rval =>
      */ \
-    macro(JSOP_RETSUB,    117,"retsub",     NULL,         1,  2,  0,  JOF_BYTE|JOF_IC) \
+    macro(JSOP_RETSUB,    117,"retsub",     NULL,         1,  2,  0,  JOF_BYTE) \
     \
     /* More exception handling ops. */ \
     /*
@@ -1281,7 +1286,18 @@
      *   Stack: receiver, propval, obj => obj[propval]
      */ \
     macro(JSOP_GETELEM_SUPER, 125, "getelem-super", NULL, 1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
-    macro(JSOP_UNUSED126, 126, "unused126", NULL, 5,  0,  1, JOF_UINT32) \
+    /*
+     * Pushes a resumeIndex (stored as 24-bit operand) on the stack.
+     *
+     * Resume indexes are used for ops like JSOP_YIELD and JSOP_GOSUB.
+     * JSScript and BaselineScript have lists of resume entries (one for each
+     * resumeIndex); this lets the JIT resume at these ops from JIT code.
+     *
+     *   Category: Other
+     *   Operands: uint24_t resumeIndex
+     *   Stack: => resumeIndex
+     */ \
+    macro(JSOP_RESUMEINDEX, 126, "resume-index", NULL, 4,  0,  1, JOF_UINT24) \
     \
     /*
      * Defines the given function on the current scope.
@@ -1379,7 +1395,7 @@
      *   Category: Statements
      *   Type: Exception Handling
      *   Operands:
-     *   Stack: => false, (next bytecode's PC)
+     *   Stack: => false, resumeIndex
      */ \
     macro(JSOP_FINALLY,     135,"finally",    NULL,       1,  0,  2,  JOF_BYTE) \
     \

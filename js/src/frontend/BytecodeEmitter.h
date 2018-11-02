@@ -659,6 +659,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_NEVER_INLINE MOZ_MUST_USE bool emitSwitch(SwitchStatement* switchStmt);
     MOZ_NEVER_INLINE MOZ_MUST_USE bool emitTry(TryNode* tryNode);
 
+    MOZ_MUST_USE bool emitGoSub(JumpList* jump);
+
     enum DestructuringFlavor {
         // Destructuring into a declaration.
         DestructuringDeclaration,
