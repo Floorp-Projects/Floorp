@@ -1265,11 +1265,7 @@ HitForcedPauseBreakpoints(bool aRecordingBoundary)
 static void
 RecvMiddlemanCallRequest(const MiddlemanCallRequestMessage& aMsg)
 {
-  InfallibleVector<char> outputData;
-  ProcessMiddlemanCall(aMsg.BinaryData(), aMsg.BinaryDataSize(), &outputData);
-
-  MiddlemanCallResponseMessage* response =
-    MiddlemanCallResponseMessage::New(outputData.begin(), outputData.length());
+  MiddlemanCallResponseMessage* response = ProcessMiddlemanCallMessage(aMsg);
   gActiveChild->SendMessage(*response);
   free(response);
 }
