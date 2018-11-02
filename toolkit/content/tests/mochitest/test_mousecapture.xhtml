@@ -71,7 +71,9 @@ function selectionScrollCheck() {
     otherWindow.removeEventListener("scroll", selectionScrollDone);
 
     var selectedText = otherWindow.getSelection().toString().replace(/\r/g, "");
-    is(selectedText, "One\n\nTwo", "text is selected");
+    // We trim the end of the string because, per the below comment, we might
+    // select additional newlines, and that's OK.
+    is(selectedText.trimEnd(), "One\n\nTwo", "text is selected");
 
     // should have scrolled 20 pixels from the mousemove above and at least 6
     // extra 20-pixel increments from the selection scroll timer. "At least 6"
