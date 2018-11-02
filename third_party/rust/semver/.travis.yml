@@ -1,0 +1,18 @@
+language: rust
+rust:
+  - nightly
+  - beta
+  - stable
+sudo: false
+script:
+  - cargo build --verbose
+  - cargo test --verbose --features ci
+addons:
+  apt:
+    sources:
+      - kalakris-cmake
+    packages:
+      - cmake
+notifications:
+  email:
+    on_success: never

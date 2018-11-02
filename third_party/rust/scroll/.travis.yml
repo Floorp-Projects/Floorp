@@ -1,0 +1,12 @@
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+matrix:
+  allow_failures:
+    - rust: nightly
+
+script:
+  - cargo build --verbose --features=derive
+  - RUST_BACKTRACE=1 cargo test --all --verbose --features=derive

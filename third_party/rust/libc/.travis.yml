@@ -1,0 +1,123 @@
+language: rust
+rust: stable
+sudo: required
+dist: trusty
+services:
+  - docker
+install:
+  - if [ -z "$NO_ADD" ]; then rustup target add $TARGET; fi
+script:
+  - cargo build $OPT
+  - cargo build $OPT --no-default-features
+  - cargo generate-lockfile --manifest-path libc-test/Cargo.toml
+  - if [[ $TRAVIS_OS_NAME = "linux" ]]; then
+      sh ci/run-docker.sh $TARGET;
+    else
+      export CARGO_TARGET_DIR=`pwd`/target;
+      sh ci/run.sh $TARGET;
+    fi
+  - rustc ci/style.rs && ./style src
+env:
+  global:
+    secure: "e2/3QjgRN9atOuSHp22TrYG7QVKcYUWY48Hi9b60w+r1+BhPkTseIJLte7WefRhdXtqpjjUJTooKDhnurFOeHaCT+nmBgiv+FPU893sBl4bhesY4m0vgUJVbNZcs6lTImYekWVb+aqjGdgV/XAgCw7c3kPmrZV0MzGDWL64Xaps="
+matrix:
+  allow_failures:
+    # FIXME(#987) move back to include once 404 is fixed
+    - env: TARGET=s390x-unknown-linux-gnu
+  include:
+    # 1.13.0 compat
+    - env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+      rust: 1.13.0
+      script: rm -f Cargo.lock && cargo build
+      install:
+
+    # build documentation
+    - env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+      rust: nightly
+      script: sh ci/dox.sh
+
+    # stable compat
+    - env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+    - env: TARGET=i686-unknown-linux-gnu
+    - os: osx
+      env: TARGET=x86_64-apple-darwin NO_ADD=1
+      osx_image: xcode9.4
+    - os: osx
+      env: TARGET=i686-apple-darwin
+      osx_image: xcode9.4
+    - env: TARGET=arm-linux-androideabi
+    - env: TARGET=aarch64-linux-android
+    # FIXME(#826) should reenable
+    #- env: TARGET=i686-linux-android
+    - env: TARGET=x86_64-linux-android
+    - env: TARGET=x86_64-unknown-linux-musl
+    - env: TARGET=i686-unknown-linux-musl
+    - env: TARGET=arm-unknown-linux-gnueabihf
+    - env: TARGET=arm-unknown-linux-musleabihf
+    - env: TARGET=aarch64-unknown-linux-gnu
+    - env: TARGET=aarch64-unknown-linux-musl
+      # FIXME(#856)
+      rust: 1.22.1
+    - os: osx
+      osx_image: xcode9.4
+      env: TARGET=i386-apple-ios
+           CARGO_TARGET_I386_APPLE_IOS_RUNNER=$HOME/runtest
+           RUSTFLAGS=-Clink-arg=-mios-simulator-version-min=7.0
+      before_install:
+        rustc ./ci/ios/deploy_and_run_on_ios_simulator.rs -o $HOME/runtest
+    - os: osx
+      osx_image: xcode9.4
+      env: TARGET=x86_64-apple-ios
+           CARGO_TARGET_X86_64_APPLE_IOS_RUNNER=$HOME/runtest
+           RUSTFLAGS=-Clink-arg=-mios-simulator-version-min=7.0
+      before_install:
+        rustc ./ci/ios/deploy_and_run_on_ios_simulator.rs -o $HOME/runtest
+    - env: TARGET=x86_64-rumprun-netbsd
+    - env: TARGET=powerpc-unknown-linux-gnu
+    - env: TARGET=powerpc64-unknown-linux-gnu
+    - env: TARGET=powerpc64le-unknown-linux-gnu
+    - env: TARGET=mips-unknown-linux-musl
+    - env: TARGET=mipsel-unknown-linux-musl
+    - env: TARGET=mips64-unknown-linux-gnuabi64
+    - env: TARGET=mips64el-unknown-linux-gnuabi64
+    - env: TARGET=mips-unknown-linux-gnu
+    - env: TARGET=s390x-unknown-linux-gnu
+    - env: TARGET=sparc64-unknown-linux-gnu
+    - env: TARGET=asmjs-unknown-emscripten
+    - env: TARGET=wasm32-unknown-emscripten
+
+    # beta
+    - env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+      rust: beta
+    - os: osx
+      env: TARGET=x86_64-apple-darwin NO_ADD=1
+      osx_image: xcode9.4
+      rust: beta
+
+    # nightly
+    - env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+      rust: nightly
+    - os: osx
+      env: TARGET=x86_64-apple-darwin NO_ADD=1
+      osx_image: xcode9.4
+      rust: nightly
+    # not available on stable
+    # without --release the build fails
+    # see https://github.com/rust-lang/rust/issues/45417
+    - env: TARGET=x86_64-unknown-linux-gnux32 OPT="--release"
+      rust: nightly
+
+    # QEMU based targets that compile in an emulator
+    - env: TARGET=x86_64-unknown-freebsd
+  allow_failures:
+    - env: TARGET=i386-apple-ios
+           CARGO_TARGET_I386_APPLE_IOS_RUNNER=$HOME/runtest
+           RUSTFLAGS=-Clink-arg=-mios-simulator-version-min=7.0
+    - env: TARGET=x86_64-apple-ios
+           CARGO_TARGET_X86_64_APPLE_IOS_RUNNER=$HOME/runtest
+           RUSTFLAGS=-Clink-arg=-mios-simulator-version-min=7.0
+
+notifications:
+  email:
+    on_success: never
+  webhooks: https://buildbot.rust-lang.org/homu/travis

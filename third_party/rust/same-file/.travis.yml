@@ -1,0 +1,24 @@
+dist: trusty
+language: rust
+matrix:
+  include:
+    - os: linux
+      rust: 1.17.0
+    - os: linux
+      rust: stable
+    - os: linux
+      rust: beta
+    - os: linux
+      rust: nightly
+    - os: osx
+      rust: nightly
+script:
+  - cargo build --verbose
+  - cargo test --verbose
+  - cargo doc
+  - if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then
+      cargo bench --verbose;
+    fi
+branches:
+  only:
+    - master
