@@ -1178,9 +1178,11 @@ InsertParagraphCommand::DoCommand(const char* aCommandName,
     return NS_ERROR_FAILURE;
   }
 
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  return textEditor->InsertParagraphSeparatorAsAction();
+  HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return NS_OK; // Do nothing for now.
+  }
+  return htmlEditor->InsertParagraphSeparatorAsAction();
 }
 
 NS_IMETHODIMP

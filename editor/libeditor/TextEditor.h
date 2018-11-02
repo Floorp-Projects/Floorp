@@ -193,12 +193,6 @@ public:
   virtual nsresult InsertLineBreakAsAction();
 
   /**
-   * InsertParagraphSeparatorAsAction() is called when user tries to separate
-   * current paragraph with Enter key press in HTMLEditor or something.
-   */
-  nsresult InsertParagraphSeparatorAsAction();
-
-  /**
    * OnCompositionStart() is called when editor receives eCompositionStart
    * event which should be handled in this editor.
    */
@@ -386,12 +380,6 @@ protected: // Shouldn't be used by friend classes
    * TextEditor or <br> if it's HTMLEditor.
    */
   nsresult InsertLineBreakAsSubAction();
-
-  /**
-   * InsertParagraphSeparatorAsSubAction() inserts a line break if it's
-   * HTMLEditor and it's possible.
-   */
-  nsresult InsertParagraphSeparatorAsSubAction();
 
   nsresult InsertTextAt(const nsAString& aStringToInsert,
                         nsINode* aDestinationNode,
