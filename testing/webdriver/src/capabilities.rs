@@ -43,6 +43,9 @@ pub trait BrowserCapabilities {
     /// repositioning commands.
     fn set_window_rect(&mut self, &Capabilities) -> WebDriverResult<bool>;
 
+    /// Indicates that interactability checks will be applied to `<input type=file>`.
+    fn strict_file_interactability(&mut self, &Capabilities) -> WebDriverResult<bool>;
+
     fn accept_proxy(
         &mut self,
         proxy_settings: &Map<String, Value>,
@@ -123,7 +126,7 @@ impl SpecNewSessionParameters {
 
         for (key, value) in &capabilities {
             match &**key {
-                x @ "acceptInsecureCerts" | x @ "setWindowRect" => if !value.is_boolean() {
+                x @ "acceptInsecureCerts" | x @ "setWindowRect" | x @ "strictFileInteractability" => if !value.is_boolean() {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
                         format!("{} is not boolean: {}", x, value),
@@ -477,6 +480,15 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                             if value.as_bool().unwrap_or(false)
                                 && !browser_capabilities
                                     .set_window_rect(merged)
+                                    .unwrap_or(false)
+                            {
+                                return None;
+                            }
+                        }
+                        "strictFileInteractability" => {
+                            if value.as_bool().unwrap_or(false)
+                                && !browser_capabilities
+                                    .strict_file_interactability(merged)
                                     .unwrap_or(false)
                             {
                                 return None;
