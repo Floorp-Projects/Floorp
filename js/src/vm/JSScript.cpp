@@ -366,7 +366,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
     uint32_t length, lineno, column, nfixed, nslots;
     uint32_t natoms, nsrcnotes;
-    uint32_t nconsts, nobjects, nscopes, nregexps, ntrynotes, nscopenotes, nyieldoffsets;
+    uint32_t nconsts, nobjects, nscopes, nregexps, ntrynotes, nscopenotes, nresumeoffsets;
     uint32_t prologueLength;
     uint32_t funLength = 0;
     uint32_t nTypeSets = 0;
@@ -376,7 +376,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     JSContext* cx = xdr->cx();
     RootedScript script(cx);
     natoms = nsrcnotes = 0;
-    nconsts = nobjects = nscopes = nregexps = ntrynotes = nscopenotes = nyieldoffsets = 0;
+    nconsts = nobjects = nscopes = nregexps = ntrynotes = nscopenotes = nresumeoffsets = 0;
 
     if (mode == XDR_ENCODE) {
         script = scriptp.get();
@@ -427,8 +427,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         if (script->hasScopeNotes()) {
             nscopenotes = script->scopeNotes().size();
         }
-        if (script->hasYieldAndAwaitOffsets()) {
-            nyieldoffsets = script->yieldAndAwaitOffsets().size();
+        if (script->hasResumeOffsets()) {
+            nresumeoffsets = script->resumeOffsets().size();
         }
 
         nTypeSets = script->nTypeSets();
@@ -519,7 +519,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     MOZ_TRY(xdr->codeUint32(&nscopes));
     MOZ_TRY(xdr->codeUint32(&ntrynotes));
     MOZ_TRY(xdr->codeUint32(&nscopenotes));
-    MOZ_TRY(xdr->codeUint32(&nyieldoffsets));
+    MOZ_TRY(xdr->codeUint32(&nresumeoffsets));
     MOZ_TRY(xdr->codeUint32(&nTypeSets));
     MOZ_TRY(xdr->codeUint32(&funLength));
     MOZ_TRY(xdr->codeUint32(&scriptBits));
@@ -595,7 +595,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
     if (mode == XDR_DECODE) {
         if (!JSScript::createPrivateScriptData(cx, script, nscopes, nconsts, nobjects,
-                                               ntrynotes, nscopenotes, nyieldoffsets))
+                                               ntrynotes, nscopenotes, nresumeoffsets))
         {
             return xdr->fail(JS::TranscodeResult_Throw);
         }
@@ -958,8 +958,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         }
     }
 
-    if (nyieldoffsets) {
-        for (uint32_t& elem : data->yieldAndAwaitOffsets()) {
+    if (nresumeoffsets) {
+        for (uint32_t& elem : data->resumeOffsets()) {
             MOZ_TRY(xdr->codeUint32(&elem));
         }
     }
@@ -3055,7 +3055,7 @@ DefaultInitializeElements(void* arrayPtr, size_t length)
 
 /* static */ size_t
 PrivateScriptData::AllocationSize(uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
-                                  uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets)
+                                  uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nresumeoffsets)
 {
     size_t size = sizeof(PrivateScriptData);
 
@@ -3063,7 +3063,7 @@ PrivateScriptData::AllocationSize(uint32_t nscopes, uint32_t nconsts, uint32_t n
     if (nobjects) { size += sizeof(PackedSpan); }
     if (ntrynotes) { size += sizeof(PackedSpan); }
     if (nscopenotes) { size += sizeof(PackedSpan); }
-    if (nyieldoffsets) { size += sizeof(PackedSpan); }
+    if (nresumeoffsets) { size += sizeof(PackedSpan); }
 
     size += nscopes * sizeof(GCPtrScope);
 
@@ -3082,8 +3082,8 @@ PrivateScriptData::AllocationSize(uint32_t nscopes, uint32_t nconsts, uint32_t n
     if (nscopenotes) {
         size += nscopenotes * sizeof(ScopeNote);
     }
-    if (nyieldoffsets) {
-        size += nyieldoffsets * sizeof(uint32_t);
+    if (nresumeoffsets) {
+        size += nresumeoffsets * sizeof(uint32_t);
     }
 
     return size;
@@ -3122,7 +3122,8 @@ PrivateScriptData::initSpan(size_t* cursor, uint32_t scaledSpanOffset, size_t le
 
 // Initialize PackedSpans and placement-new the trailing arrays.
 PrivateScriptData::PrivateScriptData(uint32_t nscopes_, uint32_t nconsts, uint32_t nobjects,
-                                     uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets)
+                                     uint32_t ntrynotes, uint32_t nscopenotes,
+                                     uint32_t nresumeoffsets)
   : nscopes(nscopes_)
 {
     // Convert cursor possition to a packed offset.
@@ -3152,7 +3153,7 @@ PrivateScriptData::PrivateScriptData(uint32_t nscopes_, uint32_t nconsts, uint32
     if (nobjects) { packedOffsets.objectsSpanOffset = TakeSpan(&cursor); }
     if (ntrynotes) { packedOffsets.tryNotesSpanOffset = TakeSpan(&cursor); }
     if (nscopenotes) { packedOffsets.scopeNotesSpanOffset = TakeSpan(&cursor); }
-    if (nyieldoffsets) { packedOffsets.yieldOffsetsSpanOffset = TakeSpan(&cursor); }
+    if (nresumeoffsets) { packedOffsets.resumeOffsetsSpanOffset = TakeSpan(&cursor); }
 
     // Layout and initialize the scopes array. Manually insert padding so that
     // the subsequent |consts| array is aligned.
@@ -3190,22 +3191,22 @@ PrivateScriptData::PrivateScriptData(uint32_t nscopes_, uint32_t nconsts, uint32
     initSpan<ScopeNote>(&cursor, packedOffsets.scopeNotesSpanOffset, nscopenotes);
     static_assert(alignof(ScopeNote) >= alignof(uint32_t),
                   "Incompatible alignment");
-    initSpan<uint32_t>(&cursor, packedOffsets.yieldOffsetsSpanOffset, nyieldoffsets);
+    initSpan<uint32_t>(&cursor, packedOffsets.resumeOffsetsSpanOffset, nresumeoffsets);
 
     // Sanity check
     MOZ_ASSERT(AllocationSize(nscopes_, nconsts, nobjects,
-                              ntrynotes, nscopenotes, nyieldoffsets) == cursor);
+                              ntrynotes, nscopenotes, nresumeoffsets) == cursor);
 }
 
 /* static */ PrivateScriptData*
 PrivateScriptData::new_(JSContext* cx,
                         uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
-                        uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets,
+                        uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nresumeoffsets,
                         uint32_t* dataSize)
 {
     // Compute size including trailing arrays
     size_t size = AllocationSize(nscopes, nconsts, nobjects,
-                                 ntrynotes, nscopenotes, nyieldoffsets);
+                                 ntrynotes, nscopenotes, nresumeoffsets);
 
     // Allocate contiguous raw buffer
     void* raw = cx->pod_malloc<uint8_t>(size);
@@ -3221,7 +3222,7 @@ PrivateScriptData::new_(JSContext* cx,
     // Constuct the PrivateScriptData. Trailing arrays are uninitialized but
     // GCPtrs are put into a safe state.
     return new (raw) PrivateScriptData(nscopes, nconsts, nobjects,
-                                       ntrynotes, nscopenotes, nyieldoffsets);
+                                       ntrynotes, nscopenotes, nresumeoffsets);
 }
 
 void
@@ -3365,14 +3366,15 @@ AllocScriptData(JSContext* cx, size_t size)
 /* static */ bool
 JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
                                   uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
-                                  uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets)
+                                  uint32_t ntrynotes, uint32_t nscopenotes,
+                                  uint32_t nresumeoffsets)
 {
     cx->check(script);
 
     uint32_t dataSize;
 
     PrivateScriptData* data = PrivateScriptData::new_(cx, nscopes, nconsts, nobjects, ntrynotes,
-                                                      nscopenotes, nyieldoffsets, &dataSize);
+                                                      nscopenotes, nresumeoffsets, &dataSize);
     if (!data) {
         return false;
     }
@@ -3391,9 +3393,9 @@ JSScript::initFunctionPrototype(JSContext* cx, HandleScript script,
     uint32_t numObjects = 0;
     uint32_t numTryNotes = 0;
     uint32_t numScopeNotes = 0;
-    uint32_t numYieldAndAwaitOffsets = 0;
+    uint32_t nresumeoffsets = 0;
     if (!createPrivateScriptData(cx, script, numScopes, numConsts, numObjects,
-                                 numTryNotes, numScopeNotes, numYieldAndAwaitOffsets))
+                                 numTryNotes, numScopeNotes, nresumeoffsets))
     {
         return false;
     }
@@ -3520,7 +3522,7 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, frontend::Byt
     if (!createPrivateScriptData(cx, script, bce->scopeList.length(), bce->numberList.length(),
                                  bce->objectList.length, bce->tryNoteList.length(),
                                  bce->scopeNoteList.length(),
-                                 bce->yieldAndAwaitOffsetList.length()))
+                                 bce->resumeOffsetList.length()))
     {
         return false;
     }
@@ -3565,6 +3567,9 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, frontend::Byt
     if (bce->scopeNoteList.length() != 0) {
         bce->scopeNoteList.finish(data->scopeNotes(), prologueLength);
     }
+    if (bce->resumeOffsetList.length() != 0) {
+        bce->resumeOffsetList.finish(data->resumeOffsets(), prologueLength);
+    }
 
     script->bitFields_.strict_ = bce->sc->strict();
     script->bitFields_.explicitUseStrict_ = bce->sc->hasExplicitUseStrict();
@@ -3584,12 +3589,6 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, frontend::Byt
         initFromFunctionBox(script, bce->sc->asFunctionBox());
     } else if (bce->sc->isModuleContext()) {
         initFromModuleContext(script);
-    }
-
-    // Copy yield offsets last, as the generator kind is set in
-    // initFromFunctionBox.
-    if (bce->yieldAndAwaitOffsetList.length() != 0) {
-        bce->yieldAndAwaitOffsetList.finish(data->yieldAndAwaitOffsets(), prologueLength);
     }
 
 #ifdef DEBUG
