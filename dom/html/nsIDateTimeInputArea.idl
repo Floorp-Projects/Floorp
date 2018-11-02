@@ -36,24 +36,14 @@ interface nsIDateTimeInputArea : nsISupports
   void blurInnerTextBox();
 
   /**
-   * Called from DOM/Layout to know whether the current entered value is valid.
-   */
-  boolean hasBadInput();
-
-  /**
    * Set the current state of the picker, true if it's opened, false otherwise.
    */
   void setPickerState(in boolean isOpen);
 
   /**
-   * Set the attribute of the inner text boxes. Only "tabindex", "readonly",
-   * and "disabled" are allowed.
+   * Update the attribute of the inner text boxes by copying the attribute value
+   * from the input. Only values set to "tabindex", "readonly",
+   * and "disabled" attributes are copied.
    */
-  void setEditAttribute(in AString name, in AString value);
-
-  /**
-   * Remove the attribute of the inner text boxes. Only "tabindex", "readonly",
-   * and "disabled" are allowed.
-   */
-  void removeEditAttribute(in AString name);
+  void updateEditAttributes();
 };

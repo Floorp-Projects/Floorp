@@ -49,6 +49,7 @@
         this.mYearPageUpDownInterval = 10;
 
         this.buildEditFields();
+        this.updateEditAttributes();
 
         if (this.mInputElement.value) {
           this.setFieldsFromInputValue();
@@ -385,7 +386,7 @@
             }
           }
 
-          aField.setAttribute("rawValue", value);
+          aField.setAttribute("value", value);
 
           // Display formatted value based on locale.
           let minDigits = aField.getAttribute("mindigits");
@@ -1080,7 +1081,7 @@
             }
           }
 
-          aField.setAttribute("rawValue", value);
+          aField.setAttribute("value", value);
 
           let minDigits = aField.getAttribute("mindigits");
           let formatted = value.toLocaleString(this.mLocales, {
@@ -1120,6 +1121,7 @@
           }
 
           this.mDayPeriodField.textContent = aValue;
+          this.mDayPeriodField.setAttribute("value", aValue);
           this.updateResetButtonVisibility();
         ]]>
         </body>
@@ -1274,7 +1276,6 @@
         });
         this.mInputElement.removeEventListener("click", this,
                                                { mozSystemGroup: true });
-
         this.mInputElement = null;
       ]]>
       </destructor>
@@ -1324,6 +1325,12 @@
           field.readOnly = this.mInputElement.readOnly;
           field.setAttribute("aria-label", aLabel);
 
+          // Used to store the non-formatted value, cleared when value is
+          // cleared.
+          // nsDateTimeControlFrame::HasBadInput() will read this to decide
+          // if the input has value.
+          field.setAttribute("value", "");
+
           if (aIsNumeric) {
             field.classList.add("numeric");
             // Maximum value allowed.
@@ -1335,9 +1342,6 @@
             // Used to store what the user has already typed in the field,
             // cleared when value is cleared and when field is blurred.
             field.setAttribute("typeBuffer", "");
-            // Used to store the non-formatted number, clered when value is
-            // cleared.
-            field.setAttribute("rawValue", "");
             // Minimum digits to display, padded with leading 0s.
             field.setAttribute("mindigits", aMinDigits);
             // Maximum length for the field, will be advance to the next field
@@ -1389,6 +1393,7 @@
                 child.classList.contains("datetime-edit-field")) {
               this.mLastFocusedField = child;
               child.focus();
+              this.log("focused");
               break;
             }
           }
@@ -1444,25 +1449,6 @@
         </body>
       </method>
 
-      <method name="hasBadInput">
-        <body>
-        <![CDATA[
-          // Incomplete field does not imply bad input.
-          if (this.isAnyFieldEmpty()) {
-            return false;
-          }
-
-          // All fields are available but input element's value is empty implies
-          // it has been sanitized.
-          if (!this.mInputElement.value) {
-            return true;
-          }
-
-          return false;
-        ]]>
-        </body>
-      </method>
-
       <method name="advanceToNextField">
         <parameter name="aReverse"/>
         <body>
@@ -1500,17 +1486,10 @@
         </body>
       </method>
 
-      <method name="setEditAttribute">
-        <parameter name="aName"/>
-        <parameter name="aValue"/>
+      <method name="updateEditAttributes">
         <body>
         <![CDATA[
-          this.log("setAttribute: " + aName + "=" + aValue);
-
-          if (aName != "tabindex" && aName != "disabled" &&
-              aName != "readonly") {
-            return;
-          }
+          this.log("updateEditAttributes");
 
           let editRoot =
             document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
@@ -1518,54 +1497,18 @@
           for (let child = editRoot.firstChild; child; child = child.nextSibling) {
             if ((child instanceof HTMLSpanElement) &&
                 child.classList.contains("datetime-edit-field")) {
+              // "disabled" and "readonly" must be set as attributes because they
+              // are not defined properties of HTMLSpanElement, and the stylesheet
+              // checks the literal string attribute values.
+              child.setAttribute("disabled", this.mInputElement.disabled);
+              child.setAttribute("readonly", this.mInputElement.readOnly);
 
-              switch (aName) {
-                case "tabindex":
-                  child.setAttribute(aName, aValue);
-                  break;
-                case "disabled": {
-                  let value = this.mInputElement.disabled;
-                  child.setAttribute("disabled", value);
-                  child.disabled = value;
-                  break;
-                }
-                case "readonly": {
-                  let value = this.mInputElement.readOnly;
-                  child.setAttribute("readonly", value);
-                  child.readOnly = value;
-                  break;
-                }
-              }
-            }
-          }
-        ]]>
-        </body>
-      </method>
+              // Set property as well for convenience.
+              child.disabled = this.mInputElement.disabled;
+              child.readOnly = this.mInputElement.readOnly;
 
-      <method name="removeEditAttribute">
-        <parameter name="aName"/>
-        <body>
-        <![CDATA[
-          this.log("removeAttribute: " + aName);
-
-          if (aName != "tabindex" && aName != "disabled" &&
-              aName != "readonly") {
-            return;
-          }
-
-          let editRoot =
-            document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
-
-          for (let child = editRoot.firstChild; child; child = child.nextSibling) {
-            if ((child instanceof HTMLSpanElement) &&
-                child.classList.contains("datetime-edit-field")) {
-              child.removeAttribute(aName);
-              // Update property as well.
-              if (aName == "readonly") {
-                child.readOnly = false;
-              } else if (aName == "disabled") {
-                child.disabled = false;
-              }
+              // tabIndex works on all elements
+              child.tabIndex = this.mInputElement.tabIndex;
             }
           }
         ]]>
@@ -1587,7 +1530,7 @@
             return undefined;
           }
 
-          let value = aField.getAttribute("rawValue");
+          let value = aField.getAttribute("value");
           // Avoid returning 0 when field is empty.
           return (this.isEmpty(value) ? undefined : Number(value));
         ]]>
@@ -1599,9 +1542,9 @@
         <body>
         <![CDATA[
           aField.textContent = aField.placeholder;
+          aField.setAttribute("value", "");
           if (aField.classList.contains("numeric")) {
             aField.setAttribute("typeBuffer", "");
-            aField.setAttribute("rawValue", "");
           }
           this.updateResetButtonVisibility();
         ]]>

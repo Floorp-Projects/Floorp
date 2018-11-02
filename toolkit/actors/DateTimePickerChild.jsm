@@ -30,7 +30,9 @@ class DateTimePickerChild extends ActorChild {
    */
   close() {
     this.removeListeners();
-    this._inputElement.setDateTimePickerState(false);
+    if (this._inputElement.dateTimeBoxElement instanceof Ci.nsIDateTimeInputArea) {
+      this._inputElement.dateTimeBoxElement.setPickerState(false);
+    }
     this._inputElement = null;
   }
 
@@ -89,7 +91,9 @@ class DateTimePickerChild extends ActorChild {
         break;
       }
       case "FormDateTime:PickerValueChanged": {
-        this._inputElement.updateDateTimeInputBox(aMessage.data);
+        if (this._inputElement.dateTimeBoxElement instanceof Ci.nsIDateTimeInputArea) {
+          this._inputElement.dateTimeBoxElement.setValueFromPicker(aMessage.data);
+        }
         break;
       }
       default:
@@ -118,7 +122,11 @@ class DateTimePickerChild extends ActorChild {
         }
 
         this._inputElement = aEvent.originalTarget;
-        this._inputElement.setDateTimePickerState(true);
+
+        if (this._inputElement.dateTimeBoxElement instanceof Ci.nsIDateTimeInputArea) {
+          this._inputElement.dateTimeBoxElement.setPickerState(true);
+        }
+
         this.addListeners();
 
         let value = this._inputElement.getDateTimeInputBoxValue();
