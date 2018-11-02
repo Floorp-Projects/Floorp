@@ -512,24 +512,62 @@ public:
   static nsresult WriteBitmap(nsIFile* aFile, imgIContainer* aImage);
 
   /**
-   * This function normalizes the input path, converts short filenames to long
-   * filenames, and substitutes environment variables for system paths.
-   * The resulting output string length is guaranteed to be <= MAX_PATH.
+   * Wrapper for PathCanonicalize().
+   * Upon success, the resulting output string length is <= MAX_PATH.
+   * @param  aPath [in,out] The path to transform.
+   * @return true on success, false on failure.
    */
-  static bool SanitizePath(const wchar_t* aInputPath, nsAString& aOutput);
+  static bool CanonicalizePath(nsAString& aPath);
+
+  /**
+   * Converts short paths (e.g. "C:\\PROGRA~1\\XYZ") to full paths.
+   * Upon success, the resulting output string length is <= MAX_PATH.
+   * @param  aPath [in,out] The path to transform.
+   * @return true on success, false on failure.
+   */
+  static bool MakeLongPath(nsAString& aPath);
+
+  /**
+   * Wrapper for PathUnExpandEnvStringsW().
+   * Upon success, the resulting output string length is <= MAX_PATH.
+   * @param  aPath [in,out] The path to transform.
+   * @return true on success, false on failure.
+   */
+  static bool UnexpandEnvVars(nsAString& aPath);
 
   /**
    * Retrieve a semicolon-delimited list of DLL files derived from AppInit_DLLs
    */
   static bool GetAppInitDLLs(nsAString& aOutput);
 
+  enum class PathTransformFlags : uint32_t
+  {
+    Canonicalize = 1,
+    Lengthen = 2,
+    UnexpandEnvVars = 4,
+    Default = 7,
+  };
+
+  /**
+   * Given a path, transforms it in preparation to be reported via telemetry.
+   * That can include canonicalization, converting short to long paths,
+   * unexpanding environment strings, and removing potentially sensitive data
+   * from the path.
+   *
+   * @param  aPath  [in,out] The path to transform.
+   * @param  aFlags [in] Specifies which transformations to perform, allowing
+   *                the caller to skip operations they know have already been
+   *                performed.
+   * @return true on success, false on failure.
+   */
+  static bool PreparePathForTelemetry(nsAString& aPath,
+      PathTransformFlags aFlags = PathTransformFlags::Default);
+
+  static const nsTArray<Pair<nsString, nsDependentString>>& GetWhitelistedPaths();
+
 #ifdef ACCESSIBILITY
   static a11y::Accessible* GetRootAccessibleForHWND(HWND aHwnd);
 #endif
-
-private:
-  static void GetWhitelistedPaths(
-      nsTArray<mozilla::Pair<nsString,nsDependentString>>& aOutput);
 };
 
 #ifdef MOZ_PLACES
@@ -620,6 +658,8 @@ public:
 
   static int32_t GetICOCacheSecondsTimeout();
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(WinUtils::PathTransformFlags);
 
 } // namespace widget
 } // namespace mozilla
