@@ -185,8 +185,10 @@ MetadataDecodingTask::Run()
 // AnonymousDecodingTask implementation.
 ///////////////////////////////////////////////////////////////////////////////
 
-AnonymousDecodingTask::AnonymousDecodingTask(NotNull<Decoder*> aDecoder)
+AnonymousDecodingTask::AnonymousDecodingTask(NotNull<Decoder*> aDecoder,
+                                             bool aResumable)
   : mDecoder(aDecoder)
+  , mResumable(aResumable)
 { }
 
 void
@@ -208,6 +210,21 @@ AnonymousDecodingTask::Run()
     // Right now we don't do anything special for other kinds of yields, so just
     // keep working.
     MOZ_ASSERT(result.is<Yield>());
+  }
+}
+
+void
+AnonymousDecodingTask::Resume()
+{
+  // Anonymous decoders normally get all their data at once. We have tests
+  // where they don't; typically in these situations, the test re-runs them
+  // manually. However some tests want to verify Resume works, so they will
+  // explicitly request this behaviour.
+  if (mResumable) {
+    RefPtr<AnonymousDecodingTask> self(this);
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "image::AnonymousDecodingTask::Resume",
+      [self]() -> void { self->Run(); }));
   }
 }
 
