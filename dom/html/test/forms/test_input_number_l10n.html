@@ -40,8 +40,8 @@ function runTest(test) {
   elem.focus();
   elem.select();
   sendString(test.inputWithGrouping);
-  is(elem.value, String(test.value), "Test " + test.desc + " ('" + test.langTag +
-                                     "') localization with grouping separator");
+  is(elem.value, "", "Test " + test.desc + " ('" + test.langTag +
+                     "') localization with grouping separator");
   elem.value = 0;
   elem.select();
   sendString(test.inputWithoutGrouping);
