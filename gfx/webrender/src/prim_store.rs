@@ -547,7 +547,6 @@ pub struct BorderSegmentInfo {
     pub handle: Option<RenderTaskCacheEntryHandle>,
     pub local_task_size: LayoutSize,
     pub cache_key: RenderTaskCacheKey,
-    pub is_opaque: bool,
 }
 
 #[derive(Debug)]
@@ -3171,7 +3170,7 @@ impl PrimitiveInstance {
                                         frame_state.gpu_cache,
                                         frame_state.render_tasks,
                                         None,
-                                        segment.is_opaque,
+                                        false,          // TODO(gw): We don't calculate opacity for borders yet!
                                         |render_tasks| {
                                             let task = RenderTask::new_border_segment(
                                                 segment.cache_key.size,
