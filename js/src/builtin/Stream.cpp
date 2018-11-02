@@ -1487,14 +1487,7 @@ ReadableStreamErrorInternal(JSContext* cx, Handle<ReadableStream*> stream, Handl
     stream->setErrored();
 
     // Step 4: Set stream.[[storedError]] to e.
-    {
-        AutoRealm ar(cx, stream);
-        RootedValue wrappedError(cx, e);
-        if (!cx->compartment()->wrap(cx, &wrappedError)) {
-            return false;
-        }
-        stream->setStoredError(wrappedError);
-    }
+    stream->setStoredError(e);
 
     // Step 6: If reader is undefined, return (reordered).
     if (!stream->hasReader()) {
