@@ -297,6 +297,33 @@ class BaseProfilerCount;
 void profiler_add_sampled_counter(BaseProfilerCount* aCounter);
 void profiler_remove_sampled_counter(BaseProfilerCount* aCounter);
 
+// Register pages with the profiler.
+//
+// The `page` means every new history entry for docShells.
+// DocShellId + HistoryID is a unique pair to identify these pages.
+// We also keep these pairs inside markers to associate with the pages.
+// That allows us to see which markers belong to a specific page and filter the
+// markers by a page.
+// We register pages in these cases:
+// - If there is a navigation through a link or URL bar.
+// - If there is a navigation through `location.replace` or `history.pushState`.
+// We do not register pages in these cases:
+// - If there is a history navigation through the back and forward buttons.
+// - If there is a navigation through `history.replaceState` or anchor scrolls.
+//
+//   "aDocShellId" is the ID of the docShell that page belongs to.
+//   "aHistoryId"  is the ID of the history entry on the given docShell.
+//   "aUrl"        is the URL of the page.
+//   "aIsSubFrame" is true if the page is a sub frame.
+void profiler_register_page(const nsID& aDocShellId,
+                            uint32_t aHistoryId,
+                            const nsCString& aUrl,
+                            bool aIsSubFrame);
+// Unregister pages with the profiler.
+//
+// Take a docShellId and unregister all the page entries that have the given ID.
+void profiler_unregister_pages(const nsID& aRegisteredDocShellId);
+
 // Register and unregister a thread within a scope.
 #define AUTO_PROFILER_REGISTER_THREAD(name) \
   mozilla::AutoProfilerRegisterThread PROFILER_RAII(name)
