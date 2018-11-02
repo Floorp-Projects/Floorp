@@ -86,7 +86,7 @@ function readChannel(url) {
 }
 
 var UserAgentUpdates = {
-  init: function(callback) {
+  init(callback) {
     if (gInitialized) {
       return;
     }
@@ -99,7 +99,7 @@ var UserAgentUpdates = {
     Services.prefs.addObserver(PREF_UPDATES, this);
   },
 
-  uninit: function() {
+  uninit() {
     if (!gInitialized) {
       return;
     }
@@ -107,7 +107,7 @@ var UserAgentUpdates = {
     Services.prefs.removeObserver(PREF_UPDATES, this);
   },
 
-  _applyUpdate: function(update) {
+  _applyUpdate(update) {
     // Check pref again in case it has changed
     if (update && this._getPref(PREF_UPDATES_ENABLED, false)) {
       this._callback(update);
@@ -116,7 +116,7 @@ var UserAgentUpdates = {
     }
   },
 
-  _applySavedUpdate: function() {
+  _applySavedUpdate() {
     if (!this._getPref(PREF_UPDATES_ENABLED, false)) {
       // remove previous overrides
       this._applyUpdate(null);
@@ -154,7 +154,7 @@ var UserAgentUpdates = {
     this._scheduleUpdate();
   },
 
-  _saveToFile: function(update) {
+  _saveToFile(update) {
     let file = FileUtils.getFile(KEY_PREFDIR, [FILE_UPDATES], true);
     let path = file.path;
     let bytes = gEncoder.encode(JSON.stringify(update));
@@ -168,7 +168,7 @@ var UserAgentUpdates = {
     );
   },
 
-  _getPref: function(name, def) {
+  _getPref(name, def) {
     try {
       switch (typeof def) {
         case "number": return Services.prefs.getIntPref(name);
@@ -194,7 +194,7 @@ var UserAgentUpdates = {
     };
   },
 
-  _getUpdateURL: function() {
+  _getUpdateURL() {
     let url = this._getPref(PREF_UPDATES_URL, "");
     let params = this._getParameters();
     return url.replace(/%[A-Z_]+%/g, function(match) {
@@ -204,7 +204,7 @@ var UserAgentUpdates = {
     });
   },
 
-  _fetchUpdate: function(url, success, error) {
+  _fetchUpdate(url, success, error) {
     let request = new XMLHttpRequest();
     request.mozBackgroundRequest = true;
     request.timeout = this._getPref(PREF_UPDATES_TIMEOUT, 60000);
@@ -220,7 +220,7 @@ var UserAgentUpdates = {
     request.send();
   },
 
-  _update: function() {
+  _update() {
     let url = this._getUpdateURL();
     url && this._fetchUpdate(url,
       response => { // success
@@ -234,7 +234,7 @@ var UserAgentUpdates = {
       });
   },
 
-  _scheduleUpdate: function(retry) {
+  _scheduleUpdate(retry) {
     // only schedule updates in the main process
     if (gApp.processType !== Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
       return;
@@ -246,14 +246,14 @@ var UserAgentUpdates = {
     gUpdateTimer.registerTimer(TIMER_ID, this, Math.max(1, interval));
   },
 
-  notify: function(timer) {
+  notify(timer) {
     // timer notification
     if (this._getPref(PREF_UPDATES_ENABLED, false)) {
       this._update();
     }
   },
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     switch (topic) {
       case "nsPref:changed":
         if (data === PREF_UPDATES_ENABLED) {

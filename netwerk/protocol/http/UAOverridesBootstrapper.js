@@ -14,7 +14,7 @@ function UAOverridesBootstrapper() {
 
 UAOverridesBootstrapper.prototype = {
   init: function uaob_init() {
-    Services.obs.addObserver(this, "profile-change-net-teardown", false);
+    Services.obs.addObserver(this, "profile-change-net-teardown");
     UserAgentOverrides.init();
   },
 
@@ -26,7 +26,7 @@ UAOverridesBootstrapper.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
-  classID: Components.ID("{965b0ca8-155b-11e7-93ae-92361f002671}")
+  classID: Components.ID("{965b0ca8-155b-11e7-93ae-92361f002671}"),
 };
 
 const components = [UAOverridesBootstrapper];

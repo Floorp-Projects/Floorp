@@ -4,13 +4,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* jshint esnext: true, moz: true */
 
-'use strict';
+"use strict";
 
-var EXPORTED_SYMBOLS = ['DataWriter'];
+var EXPORTED_SYMBOLS = ["DataWriter"];
 
 class DataWriter {
   constructor(data, maxBytes = 512) {
-    if (typeof data === 'number') {
+    if (typeof data === "number") {
       maxBytes = data;
       data = undefined;
     }
@@ -35,7 +35,7 @@ class DataWriter {
   // `data` is `Uint8Array`
   putBytes(data) {
     if (this._cursor + data.length > this._data.length) {
-      throw new Error('DataWriter buffer is exceeded');
+      throw new Error("DataWriter buffer is exceeded");
     }
 
     for (let i = 0, length = data.length; i < length; i++) {
@@ -46,10 +46,10 @@ class DataWriter {
 
   putByte(byte) {
     if (this._cursor + 1 > this._data.length) {
-      throw new Error('DataWriter buffer is exceeded');
+      throw new Error("DataWriter buffer is exceeded");
     }
 
-    this._data[this._cursor] = byte
+    this._data[this._cursor] = byte;
     this._cursor++;
   }
 
@@ -64,8 +64,8 @@ class DataWriter {
 
   putLabel(label) {
     // Eliminate any trailing '.'s in the label (valid in text representation).
-    label = label.replace(/\.$/, '');
-    let parts = label.split('.');
+    label = label.replace(/\.$/, "");
+    let parts = label.split(".");
     parts.forEach((part) => {
       this.putLengthString(part);
     });
