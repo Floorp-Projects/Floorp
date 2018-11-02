@@ -4671,11 +4671,8 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
     return false;
   }
 
-  if (aNode->IsContent()) {
-    if (aNode->AsContent()->ChromeOnlyAccess() ||
-        aNode->AsContent()->IsInShadowTree()) {
-      return false;
-    }
+  if (aNode->ChromeOnlyAccess() || aNode->IsInShadowTree()) {
+    return false;
   }
 
   doc->MayDispatchMutationEvent(aTargetForSubtreeModified);
