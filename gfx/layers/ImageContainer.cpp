@@ -19,6 +19,7 @@
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/layers/SharedPlanarYCbCrImage.h"
+#include "mozilla/layers/SharedSurfacesChild.h" // for SharedSurfacesAnimation
 #include "mozilla/layers/SharedRGBImage.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -188,6 +189,15 @@ ImageContainer::EnsureImageClient()
       mAsyncContainerHandle = CompositableHandle();
     }
   }
+}
+
+SharedSurfacesAnimation*
+ImageContainer::EnsureSharedSurfacesAnimation()
+{
+  if (!mSharedAnimation) {
+    mSharedAnimation = new SharedSurfacesAnimation();
+  }
+  return mSharedAnimation;
 }
 
 ImageContainer::ImageContainer(Mode flag)
