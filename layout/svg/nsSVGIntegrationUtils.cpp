@@ -1151,6 +1151,18 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
                                        &dirtyRegion, aParams.imgParams, opacity);
 }
 
+bool
+nsSVGIntegrationUtils::BuildWebRenderFilters(nsIFrame *aFilteredFrame,
+                                             const mozilla::LayoutDeviceIntRect& aPreFilterBounds,
+                                             nsTArray<mozilla::wr::WrFilterOp>& aWrFilters,
+                                             mozilla::LayoutDeviceIntRect& aPostFilterBounds)
+{
+  return nsFilterInstance::BuildWebRenderFilters(aFilteredFrame,
+                                                 aPreFilterBounds,
+                                                 aWrFilters,
+                                                 aPostFilterBounds);
+}
+
 class PaintFrameCallback : public gfxDrawingCallback {
 public:
   PaintFrameCallback(nsIFrame* aFrame,

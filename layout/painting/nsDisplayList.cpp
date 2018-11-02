@@ -10379,16 +10379,10 @@ ClampStdDeviation(float aStdDeviation)
 }
 
 bool
-nsDisplayFilters::CreateWebRenderCommands(
-  mozilla::wr::DisplayListBuilder& aBuilder,
-  mozilla::wr::IpcResourceUpdateQueue& aResources,
-  const StackingContextHelper& aSc,
-  mozilla::layers::WebRenderLayerManager* aManager,
-  nsDisplayListBuilder* aDisplayListBuilder)
+nsDisplayFilters::CreateWebRenderCSSFilters(nsTArray<mozilla::wr::WrFilterOp>& wrFilters)
 {
-  // All CSS filters are supported by WebRender. SVG filters are not supported,
-  // those use NS_STYLE_FILTER_URL.
-  nsTArray<mozilla::wr::WrFilterOp> wrFilters;
+  // All CSS filters are supported by WebRender. SVG filters are not fully supported,
+  // those use NS_STYLE_FILTER_URL and are handled separately.
   const nsTArray<nsStyleFilter>& filters = mFrame->StyleEffects()->mFilters;
   for (const nsStyleFilter& filter : filters) {
     switch (filter.GetType()) {
@@ -10461,16 +10455,38 @@ nsDisplayFilters::CreateWebRenderCommands(
     }
   }
 
+  return true;
+}
+
+bool
+nsDisplayFilters::CreateWebRenderCommands(
+  mozilla::wr::DisplayListBuilder& aBuilder,
+  mozilla::wr::IpcResourceUpdateQueue& aResources,
+  const StackingContextHelper& aSc,
+  mozilla::layers::WebRenderLayerManager* aManager,
+  nsDisplayListBuilder* aDisplayListBuilder)
+{
   bool snap;
   float auPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsRect displayBounds = GetBounds(aDisplayListBuilder, &snap);
-  auto bounds = LayoutDeviceRect::FromAppUnits(displayBounds, auPerDevPixel);
-  // NOTE(emilio): this clip is going to be intersected with the clip that's
-  // currently on the clip stack for this item.
-  //
-  // FIXME(emilio, bug 1486557): clipping to "bounds" isn't really necessary.
+  auto postFilterBounds = LayoutDeviceIntRect::Round(
+    LayoutDeviceRect::FromAppUnits(displayBounds, auPerDevPixel)
+  );
+  auto preFilterBounds = LayoutDeviceIntRect::Round(
+    LayoutDeviceRect::FromAppUnits(mBounds, auPerDevPixel)
+  );
+
+  nsTArray<mozilla::wr::WrFilterOp> wrFilters;
+  if (!CreateWebRenderCSSFilters(wrFilters) &&
+      !nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame,
+                                                    preFilterBounds,
+                                                    wrFilters,
+                                                    postFilterBounds)) {
+    return false;
+  }
+
   wr::WrClipId clipId =
-    aBuilder.DefineClip(Nothing(), wr::ToRoundedLayoutRect(bounds));
+    aBuilder.DefineClip(Nothing(), wr::ToLayoutRect(postFilterBounds));
 
   float opacity = mFrame->StyleEffects()->mOpacity;
   StackingContextHelper sc(aSc,

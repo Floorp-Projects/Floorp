@@ -26,6 +26,7 @@
 #include "SVGContentUtils.h"
 #include "FilterSupport.h"
 #include "gfx2DGlue.h"
+#include "mozilla/Unused.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -100,6 +101,173 @@ nsFilterInstance::PaintFilteredFrame(nsIFrame *aFilteredFrame,
   if (instance.IsInitialized()) {
     instance.Render(aCtx, aImgParams, aOpacity);
   }
+}
+
+bool
+nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
+                                        const LayoutDeviceIntRect& aPreFilterBounds,
+                                        nsTArray<wr::WrFilterOp>& aWrFilters,
+                                        LayoutDeviceIntRect& aPostFilterBounds)
+{
+  aWrFilters.Clear();
+
+  auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
+  UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
+
+  // TODO: simply using an identity matrix here, was pulling the scale from a
+  // gfx context for the non-wr path.
+  gfxMatrix scaleMatrix;
+  gfxMatrix scaleMatrixInDevUnits =
+    scaleMatrix * nsSVGUtils::GetCSSPxToDevPxMatrix(aFilteredFrame);
+
+  // Hardcode inputIsTainted to true because we don't want JS to be able to
+  // read the rendered contents of aFilteredFrame.
+  bool inputIsTainted = true;
+  nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(),
+                            *metrics, filterChain, inputIsTainted,
+                            nullptr, scaleMatrixInDevUnits,
+                            nullptr, nullptr, nullptr, nullptr);
+
+  if (!instance.IsInitialized()) {
+    return false;
+  }
+
+  Maybe<LayoutDeviceIntRect> finalClip;
+  bool srgb = true;
+  // We currently apply the clip on the stacking context after applying filters,
+  // but primitive subregions imply clipping after each filter and not just the
+  // end of the chain. For some types of filter it doesn't matter, but for those
+  // which sample outside of the location of the destination pixel like blurs,
+  // only clipping after could produce incorrect results, so we bail out in this
+  // case.
+  // We can lift this restriction once we have added support for primitive
+  // subregions to WebRender's filters.
+
+  // During the loop this tracks whether any of the previous filters in the chain
+  // affected by the primitive subregion.
+  bool chainIsAffectedByPrimSubregion = false;
+  // During the loop this tracks whether the current filter is affected by the
+  // primitive subregion.
+  bool filterIsAffectedByPrimSubregion = false;
+
+  for (const auto& primitive : instance.mFilterDescription.mPrimitives) {
+    bool primIsSrgb = primitive.OutputColorSpace() == gfx::ColorSpace::SRGB;
+    if (srgb && !primIsSrgb) {
+      wr::WrFilterOp filterOp = { wr::WrFilterOpType::SrgbToLinear };
+      aWrFilters.AppendElement(filterOp);
+      srgb = false;
+    } else if (!srgb && primIsSrgb) {
+      wr::WrFilterOp filterOp = { wr::WrFilterOpType::LinearToSrgb };
+      aWrFilters.AppendElement(filterOp);
+      srgb = true;
+    }
+
+    const PrimitiveAttributes& attr = primitive.Attributes();
+    auto subregion = LayoutDeviceIntRect::FromUnknownRect(
+      primitive.PrimitiveSubregion() + aPreFilterBounds.TopLeft().ToUnknownPoint()
+    );
+
+    if (!subregion.Contains(aPreFilterBounds)) {
+      if (!aPostFilterBounds.Contains(subregion)) {
+        filterIsAffectedByPrimSubregion = true;
+      }
+
+      subregion = subregion.Intersect(aPostFilterBounds);
+
+      if (finalClip.isNothing()) {
+        finalClip = Some(subregion);
+      } else if (!subregion.IsEqualEdges(finalClip.value())) {
+        // We don't currently support rendering a chain of filters with different
+        // primitive subregions in WebRender so bail out in that situation.
+        return false;
+      }
+    }
+
+    bool filterIsNoop = false;
+
+    if (attr.is<OpacityAttributes>()) {
+      float opacity = attr.as<OpacityAttributes>().mOpacity;
+      wr::WrFilterOp filterOp = { wr::WrFilterOpType::Opacity, opacity };
+      aWrFilters.AppendElement(filterOp);
+    } else if (attr.is<GaussianBlurAttributes>()) {
+      if (chainIsAffectedByPrimSubregion) {
+        // There's a clip that needs to apply before the blur filter, but
+        // WebRender only lets us apply the clip at the end of the filter
+        // chain. Clipping after a blur is not equivalent to clipping before
+        // a blur, so bail out.
+        return false;
+      }
+
+      const GaussianBlurAttributes& blur = attr.as<GaussianBlurAttributes>();
+
+      const Size& stdDev = blur.mStdDeviation;
+      if (stdDev.width != stdDev.height) {
+        return false;
+      }
+
+      float radius = stdDev.width;
+      if (radius != 0.0) {
+        wr::WrFilterOp filterOp = { wr::WrFilterOpType::Blur, radius };
+        aWrFilters.AppendElement(filterOp);
+      } else {
+        filterIsNoop = true;
+      }
+    } else if (attr.is<DropShadowAttributes>()) {
+      if (chainIsAffectedByPrimSubregion) {
+        // We have to bail out for the same reason we would with a blur filter.
+        return false;
+      }
+
+      const DropShadowAttributes& shadow = attr.as<DropShadowAttributes>();
+
+      const Size& stdDev = shadow.mStdDeviation;
+      if (stdDev.width != stdDev.height) {
+        return false;
+      }
+
+      float radius = stdDev.width;
+      wr::WrFilterOp filterOp = {
+        wr::WrFilterOpType::DropShadow,
+        radius,
+        {(float)shadow.mOffset.x, (float)shadow.mOffset.y},
+        wr::ToColorF(shadow.mColor)
+      };
+
+      aWrFilters.AppendElement(filterOp);
+    } else {
+      return false;
+    }
+
+    if (filterIsNoop &&
+        aWrFilters.Length() > 0 &&
+        (aWrFilters.LastElement().filter_type == wr::WrFilterOpType::SrgbToLinear ||
+         aWrFilters.LastElement().filter_type == wr::WrFilterOpType::LinearToSrgb)) {
+      // We pushed a color space conversion filter in prevision of applying
+      // another filter which turned out to be a no-op, so the conversion is
+      // unnecessary. Remove it from the filter list.
+      // This is both an optimization and a way to pass the wptest
+      // css/filter-effects/filter-scale-001.html for which the needless
+      // sRGB->linear->no-op->sRGB roundtrip introduces a slight error and we
+      // cannot add fuzziness to the test.
+      Unused << aWrFilters.PopLastElement();
+      srgb = !srgb;
+    }
+
+    chainIsAffectedByPrimSubregion |= filterIsAffectedByPrimSubregion;
+  }
+
+  if (!srgb) {
+    wr::WrFilterOp filterOp = { wr::WrFilterOpType::LinearToSrgb };
+    aWrFilters.AppendElement(filterOp);
+  }
+
+  // Only adjust the post filter clip if we are able to render this without
+  // fallback.
+  if (finalClip.isSome()) {
+    aPostFilterBounds = finalClip.value();
+  }
+
+  return true;
 }
 
 nsRegion

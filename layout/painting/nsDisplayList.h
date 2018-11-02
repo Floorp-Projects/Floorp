@@ -7013,6 +7013,8 @@ public:
     mozilla::layers::WebRenderLayerManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) override;
 
+  bool CreateWebRenderCSSFilters(nsTArray<mozilla::wr::WrFilterOp>& wrFilters);
+
 private:
   // relative to mFrame
   nsRect mEffectsBounds;
