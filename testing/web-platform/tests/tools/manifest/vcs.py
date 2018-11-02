@@ -1,16 +1,19 @@
 import json
 import os
 import platform
+import stat
 import subprocess
+from collections import deque
 
 from .sourcefile import SourceFile
 
 
 class Git(object):
-    def __init__(self, repo_root, url_base, filters=None):
+    def __init__(self, repo_root, url_base, cache_path, rebuild=False):
         self.root = os.path.abspath(repo_root)
         self.git = Git.get_func(repo_root)
         self.url_base = url_base
+        # rebuild is a noop for now since we don't cache anything
 
     @staticmethod
     def get_func(repo_path):
@@ -27,10 +30,11 @@ class Git(object):
         return git
 
     @classmethod
-    def for_path(cls, path, url_base):
+    def for_path(cls, path, url_base, cache_path, rebuild=False):
         git = Git.get_func(path)
         try:
-            return cls(git("rev-parse", "--show-toplevel").rstrip(), url_base)
+            return cls(git("rev-parse", "--show-toplevel").rstrip(), url_base, cache_path,
+                       rebuild=rebuild)
         except subprocess.CalledProcessError:
             return None
 
@@ -77,14 +81,24 @@ class Git(object):
                                  hash,
                                  contents=contents), True
 
+    def dump_caches(self):
+        pass
+
 
 class FileSystem(object):
-    def __init__(self, root, url_base, mtime_filter):
+    def __init__(self, root, url_base, cache_path, rebuild=False):
         self.root = root
         self.url_base = url_base
+        if cache_path is not None:
+            self.mtime_cache = MtimeCache(cache_path, rebuild)
+            self.ignore_cache = GitIgnoreCache(cache_path, root, rebuild)
+        else:
+            self.mtime_cache = None
+            self.ignore_cache = None
         from gitignore import gitignore
-        self.path_filter = gitignore.PathFilter(self.root, extras=[".git/"])
-        self.mtime_filter = mtime_filter
+        self.path_filter = gitignore.PathFilter(self.root,
+                                                extras=[".git/"],
+                                                cache=self.ignore_cache)
 
     def __iter__(self):
         mtime_cache = self.mtime_cache
@@ -115,33 +129,65 @@ class CacheFile(object):
         self.modified = False
 
     def dump(self):
-        missing = set(self.data.keys()) - self.updated
-        if not missing or not self.modified:
+        if not self.modified:
             return
-        for item in missing:
-            del self.data[item]
         with open(self.path, 'w') as f:
             json.dump(self.data, f, indent=1)
 
-    def load(self):
+    def load(self, rebuild=False):
+        data = {}
         try:
-            with open(self.path, 'r') as f:
-                return json.load(f)
+            if not rebuild:
+                with open(self.path, 'r') as f:
+                    data = json.load(f)
+                data = self.check_valid(data)
         except IOError:
-            return {}
+            pass
+        return data
 
-    def update(self, rel_path, stat=None):
-        self.updated.add(rel_path)
-        try:
-            if stat is None:
-                stat = os.stat(os.path.join(self.root,
-                                            rel_path))
-        except Exception:
-            return True
+    def check_valid(self, data):
+        """Check if the cached data is valid and return an updated copy of the
+        cache containing only data that can be used."""
+        return data
 
+
+class MtimeCache(CacheFile):
+    file_name = "mtime.json"
+
+    def updated(self, rel_path, stat):
+        """Return a boolean indicating whether the file changed since the cache was last updated.
+
+        This implicitly updates the cache with the new mtime data."""
         mtime = stat.st_mtime
         if mtime != self.data.get(rel_path):
             self.modified = True
             self.data[rel_path] = mtime
             return True
         return False
+
+
+class GitIgnoreCache(CacheFile):
+    file_name = "gitignore.json"
+
+    def __init__(self, cache_root, ignore_path, rebuild=False):
+        self.ignore_path = ignore_path
+        super(GitIgnoreCache, self).__init__(cache_root, rebuild=False)
+
+    def check_valid(self, data):
+        mtime = os.path.getmtime(self.ignore_path)
+        if data.get("/gitignore_file") != [self.ignore_path, mtime]:
+            self.modified = True
+            data = {}
+            data["/gitignore_file"] = [self.ignore_path, mtime]
+        return data
+
+    def __contains__(self, key):
+        return key in self.data
+
+    def __getitem__(self, key):
+        return self.data[key]
+
+    def __setitem__(self, key, value):
+        if self.data.get(key) != value:
+            self.modified = True
+            self.data[key] = value
