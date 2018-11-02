@@ -789,22 +789,13 @@ var Impl = {
     return ret;
   },
 
-  /**
-   * Get the type of the dataset that needs to be collected, based on the preferences.
-   * @return {Integer} A value from nsITelemetry.DATASET_*.
-   */
-  getDatasetType() {
-    return Telemetry.canRecordExtended ? Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN
-                                       : Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
-  },
-
   getHistograms: function getHistograms(clearSubsession) {
-    let hls = Telemetry.snapshotHistograms(this.getDatasetType(), clearSubsession);
+    let hls = Telemetry.getSnapshotForHistograms("main", clearSubsession);
     return TelemetryUtils.packHistograms(hls, this._testing);
   },
 
   getKeyedHistograms(clearSubsession) {
-    let khs = Telemetry.snapshotKeyedHistograms(this.getDatasetType(), clearSubsession);
+    let khs = Telemetry.getSnapshotForKeyedHistograms("main", clearSubsession);
     return TelemetryUtils.packKeyedHistograms(khs, this._testing);
   },
 
@@ -825,8 +816,8 @@ var Impl = {
     }
 
     let scalarsSnapshot = keyed ?
-      Telemetry.snapshotKeyedScalars(this.getDatasetType(), clearSubsession) :
-      Telemetry.snapshotScalars(this.getDatasetType(), clearSubsession);
+      Telemetry.getSnapshotForKeyedScalars("main", clearSubsession) :
+      Telemetry.getSnapshotForScalars("main", clearSubsession);
 
     // Don't return the test scalars.
     let ret = {};
