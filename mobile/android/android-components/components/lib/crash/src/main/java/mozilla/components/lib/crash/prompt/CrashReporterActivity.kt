@@ -4,6 +4,7 @@
 
 package mozilla.components.lib.crash.prompt
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -17,12 +18,17 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.R
 
+private const val PREFERENCE_KEY_SEND_REPORT = "sendCrashReport"
+
 /**
  * Activity showing the crash reporter prompt asking the user for confirmation before submitting a crash report.
  */
 class CrashReporterActivity : AppCompatActivity() {
     private val crashReporter: CrashReporter by lazy { CrashReporter.requireInstance }
     private val crash: Crash by lazy { Crash.fromIntent(intent) }
+    private val sharedPreferences by lazy {
+        getSharedPreferences("mozac_lib_crash_settings", Context.MODE_PRIVATE)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(crashReporter.promptConfiguration.theme)
@@ -40,6 +46,9 @@ class CrashReporterActivity : AppCompatActivity() {
 
         titleView.text = getString(R.string.mozac_lib_crash_dialog_title, appName)
         sendCheckbox.text = getString(R.string.mozac_lib_crash_dialog_checkbox, organizationName)
+
+        sendCheckbox.isChecked = sharedPreferences.getBoolean(PREFERENCE_KEY_SEND_REPORT, true)
+
         restartButton.apply {
             text = getString(R.string.mozac_lib_crash_dialog_button_restart, appName)
             setOnClickListener { restart() }
@@ -72,6 +81,8 @@ class CrashReporterActivity : AppCompatActivity() {
     }
 
     private fun sendCrashReportIfNeeded(then: () -> Unit) {
+        sharedPreferences.edit().putBoolean(PREFERENCE_KEY_SEND_REPORT, sendCheckbox.isChecked).apply()
+
         if (!sendCheckbox.isChecked) {
             then()
             return
