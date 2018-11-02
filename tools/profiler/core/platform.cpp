@@ -3825,8 +3825,11 @@ profiler_add_marker_for_thread(int aThreadId,
 }
 
 void
-profiler_tracing(const char* aCategory, const char* aMarkerName,
-                 TracingKind aKind)
+profiler_tracing(const char* aCategory,
+                 const char* aMarkerName,
+                 TracingKind aKind,
+                 const Maybe<nsID>& aDocShellId,
+                 const Maybe<uint32_t>& aDocShellHistoryId)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -3837,13 +3840,18 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
     return;
   }
 
-  auto payload = MakeUnique<TracingMarkerPayload>(aCategory, aKind);
+  auto payload = MakeUnique<TracingMarkerPayload>(
+    aCategory, aKind, aDocShellId, aDocShellHistoryId);
   racy_profiler_add_marker(aMarkerName, std::move(payload));
 }
 
 void
-profiler_tracing(const char* aCategory, const char* aMarkerName,
-                 TracingKind aKind, UniqueProfilerBacktrace aCause)
+profiler_tracing(const char* aCategory,
+                 const char* aMarkerName,
+                 TracingKind aKind,
+                 UniqueProfilerBacktrace aCause,
+                 const Maybe<nsID>& aDocShellId,
+                 const Maybe<uint32_t>& aDocShellHistoryId)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -3854,8 +3862,8 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
     return;
   }
 
-  auto payload =
-    MakeUnique<TracingMarkerPayload>(aCategory, aKind, std::move(aCause));
+  auto payload = MakeUnique<TracingMarkerPayload>(
+    aCategory, aKind, aDocShellId, aDocShellHistoryId, std::move(aCause));
   racy_profiler_add_marker(aMarkerName, std::move(payload));
 }
 
