@@ -76,6 +76,11 @@ SOURCES += [
     'other/WebrtcTelemetry.cpp',
 ]
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    SOURCES += [
+        'other/UntrustedModules.cpp',
+    ]
+
 # KeyedStackCapturer entirely relies on profiler to be enabled.
 if CONFIG['MOZ_GECKO_PROFILER']:
     SOURCES += [
