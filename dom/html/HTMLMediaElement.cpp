@@ -4932,20 +4932,6 @@ HTMLMediaElement::AssertReadyStateIsNothing()
 #endif
 }
 
-void
-HTMLMediaElement::AttachAndSetUAShadowRoot()
-{
-  if (GetShadowRoot()) {
-    MOZ_ASSERT(GetShadowRoot()->IsUAWidget());
-    return;
-  }
-
-  // Add a closed shadow root to host video controls
-  RefPtr<ShadowRoot> shadowRoot =
-    AttachShadowWithoutNameChecks(ShadowRootMode::Closed);
-  shadowRoot->SetIsUAWidget();
-}
-
 nsresult
 HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
 {
