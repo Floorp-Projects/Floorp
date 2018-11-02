@@ -1,4 +1,5 @@
 import hashlib
+import json
 import os
 import urlparse
 from abc import ABCMeta, abstractmethod
@@ -366,7 +367,6 @@ class TestFilter(object):
             if include_tests:
                 yield test_type, test_path, include_tests
 
-
 class TagFilter(object):
     def __init__(self, tags):
         self.tags = set(tags)
@@ -378,8 +378,7 @@ class TagFilter(object):
 
 
 class ManifestLoader(object):
-    def __init__(self, test_paths, force_manifest_update=False, manifest_download=False,
-                 types=None, meta_filters=None):
+    def __init__(self, test_paths, force_manifest_update=False, manifest_download=False, types=None, meta_filters=None):
         do_delayed_imports()
         self.test_paths = test_paths
         self.force_manifest_update = force_manifest_update
@@ -400,12 +399,57 @@ class ManifestLoader(object):
             rv[manifest_file] = path_data
         return rv
 
-    def load_manifest(self, tests_path, manifest_path, metadata_path, url_base="/", **kwargs):
-        cache_root = os.path.join(metadata_path, ".cache")
-        if self.manifest_download:
+    def create_manifest(self, manifest_path, tests_path, url_base="/"):
+        self.update_manifest(manifest_path, tests_path, url_base, recreate=True,
+                             download=self.manifest_download)
+
+    def update_manifest(self, manifest_path, tests_path, url_base="/",
+                        recreate=False, download=False):
+        self.logger.info("Updating test manifest %s" % manifest_path)
+        manifest_log.setup()
+
+        json_data = None
+        if download:
+            # TODO: make this not github-specific
             download_from_github(manifest_path, tests_path)
-        return manifest.load_and_update(tests_path, manifest_path, url_base,
-                                        cache_root=cache_root, update=self.force_manifest_update)
+
+        if not recreate:
+            try:
+                with open(manifest_path) as f:
+                    json_data = json.load(f)
+            except IOError:
+                self.logger.info("Unable to find test manifest")
+            except ValueError:
+                self.logger.info("Unable to parse test manifest")
+
+        if not json_data:
+            self.logger.info("Creating test manifest")
+            manifest_file = manifest.Manifest(url_base)
+        else:
+            try:
+                manifest_file = manifest.Manifest.from_json(tests_path, json_data)
+            except manifest.ManifestVersionMismatch:
+                manifest_file = manifest.Manifest(url_base)
+
+        manifest_update.update(tests_path, manifest_file, True)
+
+        manifest.write(manifest_file, manifest_path)
+
+    def load_manifest(self, tests_path, manifest_path, url_base="/", **kwargs):
+        if (not os.path.exists(manifest_path) or
+            self.force_manifest_update):
+            self.update_manifest(manifest_path, tests_path, url_base, download=self.manifest_download)
+        try:
+            manifest_file = manifest.load(tests_path, manifest_path, types=self.types, meta_filters=self.meta_filters)
+        except manifest.ManifestVersionMismatch:
+            manifest_file = manifest.Manifest(url_base)
+        if manifest_file.url_base != url_base:
+            self.logger.info("Updating url_base in manifest from %s to %s" % (manifest_file.url_base,
+                                                                              url_base))
+            manifest_file.url_base = url_base
+            manifest.write(manifest_file, manifest_path)
+
+        return manifest_file
 
 
 def iterfilter(filters, iter):
@@ -465,12 +509,12 @@ class TestLoader(object):
                     self._test_ids += [item.id for item in test_dict[test_type]]
         return self._test_ids
 
-    def get_test(self, manifest_file, manifest_test, inherit_metadata, test_metadata):
+    def get_test(self, manifest_test, inherit_metadata, test_metadata):
         if test_metadata is not None:
             inherit_metadata.append(test_metadata)
             test_metadata = test_metadata.get_test(manifest_test.id)
 
-        return wpttest.from_manifest(manifest_file, manifest_test, inherit_metadata, test_metadata)
+        return wpttest.from_manifest(manifest_test, inherit_metadata, test_metadata)
 
     def load_dir_metadata(self, test_manifest, metadata_path, test_path):
         rv = []
@@ -493,29 +537,27 @@ class TestLoader(object):
 
     def iter_tests(self):
         manifest_items = []
-        manifests_by_url_base = {}
 
         for manifest in sorted(self.manifests.keys(), key=lambda x:x.url_base):
             manifest_iter = iterfilter(self.manifest_filters,
                                        manifest.itertypes(*self.test_types))
             manifest_items.extend(manifest_iter)
-            manifests_by_url_base[manifest.url_base] = manifest
 
         if self.chunker is not None:
             manifest_items = self.chunker(manifest_items)
 
         for test_type, test_path, tests in manifest_items:
-            manifest_file = manifests_by_url_base[iter(tests).next().url_base]
+            manifest_file = iter(tests).next().manifest
             metadata_path = self.manifests[manifest_file]["metadata_path"]
             inherit_metadata, test_metadata = self.load_metadata(manifest_file, metadata_path, test_path)
 
             for test in iterfilter(self.meta_filters,
-                                   self.iter_wpttest(manifest_file, inherit_metadata, test_metadata, tests)):
+                                   self.iter_wpttest(inherit_metadata, test_metadata, tests)):
                 yield test_path, test_type, test
 
-    def iter_wpttest(self, manifest_file, inherit_metadata, test_metadata, tests):
+    def iter_wpttest(self, inherit_metadata, test_metadata, tests):
         for manifest_test in tests:
-            yield self.get_test(manifest_file, manifest_test, inherit_metadata, test_metadata)
+            yield self.get_test(manifest_test, inherit_metadata, test_metadata)
 
     def _load_tests(self):
         """Read in the tests from the manifest file and add them to a queue"""
