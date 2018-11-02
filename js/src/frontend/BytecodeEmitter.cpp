@@ -116,6 +116,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
     tryNoteList(cx),
     scopeNoteList(cx),
     resumeOffsetList(cx),
+    numYields(0),
     typesetCount(0),
     hasSingletons(false),
     hasTryFinally(false),
@@ -744,7 +745,7 @@ NonLocalExitControl::prepareForNonLocalJump(NestableControl* target)
                 if (!flushPops(bce_)) {
                     return false;
                 }
-                if (!bce_->emitJump(JSOP_GOSUB, &finallyControl.gosubs)) { // ...
+                if (!bce_->emitGoSub(&finallyControl.gosubs)) { // ...
                     return false;
                 }
             }
@@ -2219,11 +2220,8 @@ BytecodeEmitter::emitYieldOp(JSOp op)
         return false;
     }
 
-
-    if (op == JSOP_AWAIT) {
-        resumeOffsetList.numAwaits++;
-    } else {
-        resumeOffsetList.numYields++;
+    if (op == JSOP_INITIALYIELD || op == JSOP_YIELD) {
+        numYields++;
     }
 
     uint32_t resumeIndex;
@@ -4440,6 +4438,31 @@ BytecodeEmitter::emitTry(TryNode* tryNode)
         return false;
     }
 
+    return true;
+}
+
+MOZ_MUST_USE bool
+BytecodeEmitter::emitGoSub(JumpList* jump)
+{
+    if (!emit1(JSOP_FALSE)) {
+        return false;
+    }
+
+    ptrdiff_t off;
+    if (!emitN(JSOP_RESUMEINDEX, 3, &off)) {
+        return false;
+    }
+
+    if (!emitJump(JSOP_GOSUB, jump)) {
+        return false;
+    }
+
+    uint32_t resumeIndex;
+    if (!allocateResumeIndexForCurrentOffset(&resumeIndex)) {
+        return false;
+    }
+
+    SET_UINT24(code(off), resumeIndex);
     return true;
 }
 

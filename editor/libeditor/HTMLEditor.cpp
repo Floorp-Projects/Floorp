@@ -871,10 +871,10 @@ HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
       aKeyboardEvent->PreventDefault(); // consumed
       if (aKeyboardEvent->IsShift()) {
         // Only inserts a <br> element.
-        return OnInputLineBreak();
+        return InsertLineBreakAsAction();
       }
       // uses rules to figure out what to insert
-      return OnInputParagraphSeparator();
+      return InsertParagraphSeparatorAsAction();
   }
 
   if (!aKeyboardEvent->IsInputtingText()) {
@@ -1122,16 +1122,85 @@ HTMLEditor::UpdateBaseURL()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HTMLEditor::InsertLineBreak()
+{
+  // XPCOM method's InsertLineBreak() should insert paragraph separator in
+  // HTMLEditor.
+  nsresult rv = InsertParagraphSeparatorAsSubAction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
 nsresult
-HTMLEditor::OnInputLineBreak()
+HTMLEditor::InsertLineBreakAsAction()
 {
   AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  // XXX This method may be called by "insertLineBreak" command.  So, using
+  //     TypingTxnName here is odd in such case.
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
   nsresult rv = InsertBrElementAtSelectionWithTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::InsertParagraphSeparatorAsAction()
+{
+  AutoEditActionDataSetter editActionData(
+                             *this,
+                             EditAction::eInsertParagraphSeparator);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  // XXX This may be called by execCommand() with "insertParagraph".
+  //     In such case, naming the transaction "TypingTxnName" is odd.
+  AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
+  nsresult rv = InsertParagraphSeparatorAsSubAction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::InsertParagraphSeparatorAsSubAction()
+{
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (!mRules) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  // Protect the edit rules object from dying
+  RefPtr<TextEditRules> rules(mRules);
+
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this,
+                                      EditSubAction::eInsertParagraphSeparator,
+                                      nsIEditor::eNext);
+
+  EditSubActionInfo subActionInfo(EditSubAction::eInsertParagraphSeparator);
+  subActionInfo.maxLength = mMaxTextLength;
+  bool cancel, handled;
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
+  if (cancel) {
+    return rv; // We don't need to call DidDoAction() if canceled.
+  }
+  // XXX DidDoAction() does nothing for eInsertParagraphSeparator.  However,
+  //     we should call it until we keep using this style.  Perhaps, each
+  //     editor method should call necessary method of
+  //     TextEditRules/HTMLEditRules directly.
+  rv = rules->DidDoAction(subActionInfo, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1244,7 +1313,7 @@ HTMLEditor::InsertBrElementAtSelectionWithTransaction()
 
   // calling it text insertion to trigger moz br treatment by rules
   // XXX Why do we use EditSubAction::eInsertText here?  Looks like
-  //     EditSubAction::eInsertParagraphSeparator or EditSubAction::eInsertNode
+  //     EditSubAction::eInsertLineBreak or EditSubAction::eInsertNode
   //     is better.
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eInsertText,

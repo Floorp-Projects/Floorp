@@ -47,22 +47,6 @@ function setExpectedUrlsWithoutScripts() {
   ACTIVITY_STREAM_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-debug-noscripts.html";
 }
 
-// Default expected URLs to files with scripts in them.
-setExpectedUrlsWithScripts();
-
-function addTestsWithPrivilegedContentProcessPref(test) {
-  add_task(async() => {
-    await setPrivilegedContentProcessPref(true);
-    setExpectedUrlsWithoutScripts();
-    await test();
-  });
-  add_task(async() => {
-    await setPrivilegedContentProcessPref(false);
-    setExpectedUrlsWithScripts();
-    await test();
-  });
-}
-
 function nextChangeNotificationPromise(aNewURL, testMessage) {
   return new Promise(resolve => {
     Services.obs.addObserver(function observer(aSubject, aTopic, aData) { // jshint unused:false
@@ -70,6 +54,32 @@ function nextChangeNotificationPromise(aNewURL, testMessage) {
       Assert.equal(aData, aNewURL, testMessage);
       resolve();
     }, "newtab-url-changed");
+  });
+}
+
+function setPrivilegedContentProcessPref(usePrivilegedContentProcess) {
+  if (usePrivilegedContentProcess === Services.prefs.getBoolPref(SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF)) {
+    return Promise.resolve();
+  }
+
+  let notificationPromise = nextChangeNotificationPromise("about:newtab");
+  Services.prefs.setBoolPref(SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF, usePrivilegedContentProcess);
+  return notificationPromise;
+}
+
+// Default expected URLs to files with scripts in them.
+setExpectedUrlsWithScripts();
+
+function addTestsWithPrivilegedContentProcessPref(test) {
+  add_task(async () => {
+    await setPrivilegedContentProcessPref(true);
+    setExpectedUrlsWithoutScripts();
+    await test();
+  });
+  add_task(async () => {
+    await setPrivilegedContentProcessPref(false);
+    setExpectedUrlsWithScripts();
+    await test();
   });
 }
 
@@ -92,16 +102,6 @@ function setupASPrerendered() {
 
   let notificationPromise = nextChangeNotificationPromise("about:newtab");
   Services.prefs.setBoolPref(ACTIVITY_STREAM_PRERENDER_PREF, true);
-  return notificationPromise;
-}
-
-function setPrivilegedContentProcessPref(usePrivilegedContentProcess) {
-  if (usePrivilegedContentProcess === Services.prefs.getBoolPref(SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF)) {
-    return Promise.resolve();
-  }
-
-  let notificationPromise = nextChangeNotificationPromise("about:newtab");
-  Services.prefs.setBoolPref(SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF, usePrivilegedContentProcess);
   return notificationPromise;
 }
 

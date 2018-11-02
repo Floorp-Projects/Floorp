@@ -55,6 +55,7 @@ function nextTest() {
   }
 
   let test = tests.shift();
+  opener.info("Running " + test[0]);
 
   // Create an iframe with an allowfullscreen and with an allow attribute.
   // The request should be denied or allowed, based on the current test.

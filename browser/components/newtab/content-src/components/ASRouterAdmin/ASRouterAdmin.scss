@@ -100,4 +100,8 @@
     overflow: auto;
     font-family: $monospace;
   }
+
+  .errorState {
+    border: 1px solid $red-60;
+  }
 }

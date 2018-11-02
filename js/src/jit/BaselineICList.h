@@ -81,9 +81,6 @@ namespace jit {
                                                  \
     _(GetProp_Fallback)                          \
                                                  \
-    _(RetSub_Fallback)                           \
-    _(RetSub_Resume)                             \
-                                                 \
     _(CacheIR_Regular)                           \
     _(CacheIR_Monitored)                         \
     _(CacheIR_Updated)                           \

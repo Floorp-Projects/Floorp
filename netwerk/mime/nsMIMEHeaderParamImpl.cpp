@@ -7,6 +7,7 @@
 #include <string.h>
 #include "prprf.h"
 #include "plstr.h"
+#include "prmem.h"
 #include "plbase64.h"
 #include "nsCRT.h"
 #include "nsMemory.h"
@@ -1159,11 +1160,13 @@ nsresult DecodeQOrBase64Str(const char *aEncoded, size_t aLen, char aQOrBase64,
                             const nsACString& aCharset, nsACString &aResult)
 {
   char *decodedText;
+  bool b64alloc = false;
   NS_ASSERTION(aQOrBase64 == 'Q' || aQOrBase64 == 'B', "Should be 'Q' or 'B'");
   if(aQOrBase64 == 'Q')
     decodedText = DecodeQ(aEncoded, aLen);
   else if (aQOrBase64 == 'B') {
     decodedText = PL_Base64Decode(aEncoded, aLen, nullptr);
+    b64alloc = true;
   } else {
     return NS_ERROR_INVALID_ARG;
   }
@@ -1178,7 +1181,11 @@ nsresult DecodeQOrBase64Str(const char *aEncoded, size_t aLen, char aQOrBase64,
                                     aCharset,
                                     IS_7BIT_NON_ASCII_CHARSET(PromiseFlatCString(aCharset).get()),
                                     true, utf8Text);
-  free(decodedText);
+  if (b64alloc) {
+    PR_Free(decodedText);
+  } else {
+    free(decodedText);
+  }
   if (NS_FAILED(rv)) {
     return rv;
   }

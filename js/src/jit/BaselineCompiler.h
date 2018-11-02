@@ -52,6 +52,7 @@ namespace jit {
     _(JSOP_INT32)              \
     _(JSOP_UINT16)             \
     _(JSOP_UINT24)             \
+    _(JSOP_RESUMEINDEX)        \
     _(JSOP_DOUBLE)             \
     _(JSOP_STRING)             \
     _(JSOP_SYMBOL)             \

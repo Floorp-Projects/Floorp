@@ -32,7 +32,7 @@ ForOfLoopControl::emitBeginCodeNeedingIteratorClose(BytecodeEmitter* bce)
     }
 
     MOZ_ASSERT(numYieldsAtBeginCodeNeedingIterClose_ == UINT32_MAX);
-    numYieldsAtBeginCodeNeedingIterClose_ = bce->resumeOffsetList.numYields;
+    numYieldsAtBeginCodeNeedingIterClose_ = bce->numYields;
 
     return true;
 }
@@ -86,7 +86,7 @@ ForOfLoopControl::emitEndCodeNeedingIteratorClose(BytecodeEmitter* bce)
     // If any yields were emitted, then this for-of loop is inside a star
     // generator and must handle the case of Generator.return. Like in
     // yield*, it is handled with a finally block.
-    uint32_t numYieldsEmitted = bce->resumeOffsetList.numYields;
+    uint32_t numYieldsEmitted = bce->numYields;
     if (numYieldsEmitted > numYieldsAtBeginCodeNeedingIterClose_) {
         if (!tryCatch_->emitFinally()) {
             return false;

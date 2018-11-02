@@ -22,20 +22,12 @@ $hover-transition-duration: 150ms;
   padding: 0;
 
   // Two columns
-  @media (max-width: $break-point-small) {
+  @media (max-width: $break-point-medium) {
     :nth-child(2n+1) {
       @include context-menu-open-middle;
     }
 
     :nth-child(2n) {
-      @include context-menu-open-left;
-    }
-  }
-
-  // Three columns
-  @media (min-width: $break-point-small) and (max-width: $break-point-medium) {
-    :nth-child(3n+2),
-    :nth-child(3n) {
       @include context-menu-open-left;
     }
   }
@@ -76,7 +68,13 @@ $hover-transition-duration: 150ms;
     }
   }
 
-  @media not all and (min-width: $break-point-widest) {
+  @media (max-width: $break-point-medium) {
+    .hide-for-narrow {
+      display: none;
+    }
+  }
+
+  @media (min-width: $break-point-large) and (max-width: $break-point-widest) {
     .hide-for-narrow {
       display: none;
     }
@@ -306,10 +304,6 @@ $hover-transition-duration: 150ms;
     top: 40px;
     width: $wrapper-default-width;
 
-    @media (min-width: $break-point-small) {
-      width: $wrapper-max-width-small;
-    }
-
     @media (min-width: $break-point-medium) {
       width: $wrapper-max-width-medium;
     }
@@ -515,7 +509,7 @@ $hover-transition-duration: 150ms;
     }
   }
 
-  @media (max-width: $break-point-small) {
+  @media (max-width: $break-point-medium) {
     .fields-and-preview {
       flex-direction: column;
 
