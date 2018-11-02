@@ -476,7 +476,65 @@ TextEditRules::WillInsertLineBreak(int32_t aMaxLength)
     return EditActionIgnored(rv);
   }
 
-  return EditActionIgnored();
+  // get the (collapsed) selection location
+  nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+  if (NS_WARN_IF(!firstRange)) {
+    return EditActionIgnored(NS_ERROR_FAILURE);
+  }
+
+  EditorRawDOMPoint pointToInsert(firstRange->StartRef());
+  if (NS_WARN_IF(!pointToInsert.IsSet())) {
+    return EditActionIgnored(NS_ERROR_FAILURE);
+  }
+  MOZ_ASSERT(pointToInsert.IsSetAndValid());
+
+  // Don't put text in places that can't have it.
+  if (!pointToInsert.IsInTextNode() &&
+      !TextEditorRef().CanContainTag(*pointToInsert.GetContainer(),
+                                     *nsGkAtoms::textTagName)) {
+    return EditActionIgnored(NS_ERROR_FAILURE);
+  }
+
+  nsCOMPtr<nsIDocument> doc = TextEditorRef().GetDocument();
+  if (NS_WARN_IF(!doc)) {
+    return EditActionIgnored(NS_ERROR_NOT_INITIALIZED);
+  }
+
+  // Don't change my selection in sub-transactions.
+  AutoTransactionsConserveSelection dontChangeMySelection(TextEditorRef());
+
+  // Insert a linefeed character.
+  EditorRawDOMPoint pointAfterInsertedLineBreak;
+  rv = TextEditorRef().InsertTextWithTransaction(
+                         *doc, NS_LITERAL_STRING("\n"), pointToInsert,
+                         &pointAfterInsertedLineBreak);
+  if (NS_WARN_IF(!pointAfterInsertedLineBreak.IsSet())) {
+    return EditActionIgnored(NS_ERROR_FAILURE);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditActionIgnored(rv);
+  }
+
+  // set the selection to the correct location
+  MOZ_ASSERT(!pointAfterInsertedLineBreak.GetChild(),
+    "After inserting text into a text node, pointAfterInsertedLineBreak."
+    "GetChild() should be nullptr");
+  rv = SelectionRefPtr()->Collapse(pointAfterInsertedLineBreak);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditActionIgnored(rv);
+  }
+
+  // see if we're at the end of the editor range
+  EditorRawDOMPoint endPoint(EditorBase::GetEndPoint(*SelectionRefPtr()));
+  if (endPoint == pointAfterInsertedLineBreak) {
+    // SetInterlinePosition(true) means we want the caret to stick to the
+    // content on the "right".  We want the caret to stick to whatever is
+    // past the break.  This is because the break is on the same line we
+    // were on, but the next content will be on the following line.
+    SelectionRefPtr()->SetInterlinePosition(true, IgnoreErrors());
+  }
+
+  return EditActionHandled();
 }
 
 nsresult
