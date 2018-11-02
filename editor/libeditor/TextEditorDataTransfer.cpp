@@ -107,20 +107,19 @@ TextEditor::InsertTextFromTransferable(nsITransferable* aTransferable)
   nsresult rv = NS_OK;
   nsAutoCString bestFlavor;
   nsCOMPtr<nsISupports> genericDataObj;
-  uint32_t len = 0;
   if (NS_SUCCEEDED(
         aTransferable->GetAnyTransferData(bestFlavor,
-                                          getter_AddRefs(genericDataObj),
-                                          &len)) &&
+                                          getter_AddRefs(genericDataObj))) &&
       (bestFlavor.EqualsLiteral(kUnicodeMime) ||
        bestFlavor.EqualsLiteral(kMozTextInternal))) {
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
-    nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
-    if (textDataObj && len > 0) {
-      nsAutoString stuffToPaste;
-      textDataObj->GetData(stuffToPaste);
-      NS_ASSERTION(stuffToPaste.Length() <= (len/2), "Invalid length!");
 
+    nsAutoString stuffToPaste;
+    if (nsCOMPtr<nsISupportsString> text = do_QueryInterface(genericDataObj)) {
+      text->GetData(stuffToPaste);
+    }
+
+    if (!stuffToPaste.IsEmpty()) {
       // Sanitize possible carriage returns in the string to be inserted
       nsContentUtils::PlatformToDOMLineBreaks(stuffToPaste);
 
