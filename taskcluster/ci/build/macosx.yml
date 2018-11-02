@@ -301,7 +301,7 @@ macosx64-ccov/debug:
         custom-build-variant-cfg: code-coverage-debug
         mozconfig-variant: code-coverage-debug
         tooltool-downloads: internal
-    run-on-projects: ['try']
+    run-on-projects: ['mozilla-central', 'try']
     toolchains:
         - linux64-cctools-port
         - linux64-clang-macosx-cross
