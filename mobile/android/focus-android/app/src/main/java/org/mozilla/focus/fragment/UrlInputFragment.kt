@@ -657,6 +657,8 @@ class UrlInputFragment :
         }
     }
 
+    // This isn't that complex, and is only used for l10n screenshots.
+    @Suppress("ComplexMethod")
     private fun handleL10NTrigger(input: String): Boolean {
         if (!AppConstants.isDevBuild) return false
 
@@ -669,6 +671,7 @@ class UrlInputFragment :
             "l10n:tip:4" -> updateSubtitle(Tip.createAutocompleteURLTip(requireContext()))
             "l10n:tip:5" -> updateSubtitle(Tip.createOpenInNewTabTip(requireContext()))
             "l10n:tip:6" -> updateSubtitle(Tip.createRequestDesktopTip(requireContext()))
+            "l10n:tip:7" -> updateSubtitle(Tip.createAllowlistTip(requireContext()))
             else -> triggerHandled = false
         }
 

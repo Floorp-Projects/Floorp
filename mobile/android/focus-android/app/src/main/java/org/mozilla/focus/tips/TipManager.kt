@@ -15,6 +15,7 @@ import org.mozilla.focus.R.string.tip_add_to_homescreen
 import org.mozilla.focus.R.string.tip_autocomplete_url
 import org.mozilla.focus.R.string.tip_disable_tips2
 import org.mozilla.focus.R.string.tip_disable_tracking_protection
+import org.mozilla.focus.R.string.tip_explain_allowlist
 import org.mozilla.focus.R.string.tip_open_in_new_tab
 import org.mozilla.focus.R.string.tip_request_desktop
 import org.mozilla.focus.R.string.tip_set_default_browser
@@ -32,6 +33,13 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
     companion object {
         private const val FORCE_SHOW_DISABLE_TIPS_LAUNCH_COUNT = 2
         private const val FORCE_SHOW_DISABLE_TIPS_INTERVAL = 30
+
+        fun createAllowlistTip(context: Context): Tip {
+            val id = tip_explain_allowlist
+            val name = context.resources.getString(id)
+
+            return Tip(id, name, { true })
+        }
 
         fun createTrackingProtectionTip(context: Context): Tip {
             val id = tip_disable_tracking_protection
@@ -174,6 +182,8 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
     }
 }
 
+// Yes, this a large class with a lot of functions. But it's very simple and still easy to read.
+@Suppress("TooManyFunctions")
 object TipManager {
     private const val MAX_TIPS_TO_DISPLAY = 3
 
@@ -183,6 +193,7 @@ object TipManager {
     private var tipsShown = 0
 
     private fun populateListOfTips(context: Context) {
+        addAllowlistTip(context)
         addTrackingProtectionTip(context)
         addHomescreenTip(context)
         addDefaultBrowserTip(context)
@@ -233,6 +244,11 @@ object TipManager {
 
     private fun getRandomTipIndex(): Int {
         return if (listOfTips.count() == 1) 0 else random.nextInt(listOfTips.count() - 1)
+    }
+
+    private fun addAllowlistTip(context: Context) {
+        val tip = Tip.createAllowlistTip(context)
+        listOfTips.add(tip)
     }
 
     private fun addTrackingProtectionTip(context: Context) {

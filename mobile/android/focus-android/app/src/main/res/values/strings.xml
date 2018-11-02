@@ -764,6 +764,11 @@ be temporary, and you can try again later.</li>
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Turn off tips on the start screen</string>
 
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature -->
+    <string name="tip_explain_allowlist">Trusted site?\n
+        Allowlist disables Tracking Protection for sites you know and trust.
+    </string>
+
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">New tab opened</string>
 
