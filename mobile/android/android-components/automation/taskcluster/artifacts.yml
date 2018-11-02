@@ -34,6 +34,9 @@
         public/build/concept.tabstray.maven.zip:
           path: /build/android-components/components/concept/tabstray/build/target.maven.zip
           name: concept-tabstray
+        public/build/browser.awesomebar.maven.zip:
+          path: /build/android-components/components/browser/awesomebar/build/target.maven.zip
+          name: browser-awesomebar
         public/build/browser.engine-gecko.maven.zip:
           path: /build/android-components/components/browser/engine-gecko/build/target.maven.zip
           name: browser-engine-gecko

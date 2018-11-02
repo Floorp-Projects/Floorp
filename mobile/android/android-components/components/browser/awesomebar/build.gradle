@@ -1,0 +1,48 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion Config.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion Config.minSdkVersion
+        targetSdkVersion Config.targetSdkVersion
+    }
+
+    lintOptions {
+        warningsAsErrors true
+        abortOnError true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    api project(':concept-awesomebar')
+
+    api Deps.support_recyclerview
+    implementation Deps.support_constraintlayout
+
+    implementation Deps.kotlin_stdlib
+    implementation Deps.kotlin_coroutines
+
+    testImplementation project(':support-test')
+
+    testImplementation Deps.testing_junit
+    testImplementation Deps.testing_robolectric
+    testImplementation Deps.testing_mockito
+}
+
+archivesBaseName = "browser-awesomebar"
+
+apply from: '../../../publish.gradle'
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

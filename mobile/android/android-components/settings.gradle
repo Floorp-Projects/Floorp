@@ -40,6 +40,7 @@ setupProject(':feature-downloads', 'components/feature/downloads', 'Feature impl
 // Browser components
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+setupProject(':browser-awesomebar', 'components/browser/awesomebar', 'A customizable awesomebar component for browsers.')
 setupProject(':browser-domains', 'components/browser/domains', 'Localized and customizable domain lists for auto-completion in browsers.')
 setupProject(':browser-engine-gecko', 'components/browser/engine-gecko', 'Engine implementation based on GeckoView.')
 setupProject(':browser-engine-gecko-beta', 'components/browser/engine-gecko-beta', 'Engine implementation based on GeckoView (Beta channel).')
