@@ -116,6 +116,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
     tryNoteList(cx),
     scopeNoteList(cx),
     resumeOffsetList(cx),
+    numYields(0),
     typesetCount(0),
     hasSingletons(false),
     hasTryFinally(false),
@@ -2219,11 +2220,8 @@ BytecodeEmitter::emitYieldOp(JSOp op)
         return false;
     }
 
-
-    if (op == JSOP_AWAIT) {
-        resumeOffsetList.numAwaits++;
-    } else {
-        resumeOffsetList.numYields++;
+    if (op == JSOP_INITIALYIELD || op == JSOP_YIELD) {
+        numYields++;
     }
 
     uint32_t resumeIndex;
