@@ -712,6 +712,9 @@ ReadableStream_locked(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static MOZ_MUST_USE JSObject*
+ReadableStreamCancel(JSContext* cx, Handle<ReadableStream*> stream, HandleValue reason);
+
 // Streams spec, 3.2.5.2. cancel ( reason )
 static MOZ_MUST_USE bool
 ReadableStream_cancel(JSContext* cx, unsigned argc, Value* vp)
@@ -734,7 +737,7 @@ ReadableStream_cancel(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Step 3: Return ! ReadableStreamCancel(this, reason).
-    RootedObject cancelPromise(cx, ReadableStream::cancel(cx, stream, args.get(0)));
+    RootedObject cancelPromise(cx, ::ReadableStreamCancel(cx, stream, args.get(0)));
     if (!cancelPromise) {
         return false;
     }
@@ -998,6 +1001,10 @@ TeeReaderReadHandler(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static MOZ_MUST_USE JSObject*
+ReadableStreamDefaultReaderRead(JSContext* cx,
+                                Handle<ReadableStreamDefaultReader*> unwrappedReader);
+
+static MOZ_MUST_USE JSObject*
 ReadableStreamTee_Pull(JSContext* cx, Handle<TeeState*> unwrappedTeeState)
 {
     // Step 1: Let reader be F.[[reader]], branch1 be F.[[branch1]],
@@ -1020,7 +1027,7 @@ ReadableStreamTee_Pull(JSContext* cx, Handle<TeeState*> unwrappedTeeState)
     Rooted<ReadableStreamDefaultReader*> unwrappedReader(cx,
         &unwrappedReaderObj->as<ReadableStreamDefaultReader>());
 
-    RootedObject readPromise(cx, ReadableStreamDefaultReader::read(cx, unwrappedReader));
+    RootedObject readPromise(cx, ::ReadableStreamDefaultReaderRead(cx, unwrappedReader));
     if (!readPromise) {
         return nullptr;
     }
@@ -1101,7 +1108,7 @@ ReadableStreamTee_Cancel(JSContext* cx, Handle<TeeState*> teeState,
         Rooted<PromiseObject*> promise(cx, teeState->promise());
 
         // Step b: Let cancelResult be ! ReadableStreamCancel(stream, compositeReason).
-        RootedObject cancelResult(cx, ReadableStream::cancel(cx, stream, compositeReasonVal));
+        RootedObject cancelResult(cx, ::ReadableStreamCancel(cx, stream, compositeReasonVal));
         {
             AutoRealm ar(cx, promise);
             if (!cancelResult) {
@@ -1337,8 +1344,8 @@ ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> stream);
  * Note: can operate on unwrapped ReadableStream instances from
  * another compartment. `reason` must be in the cx compartment.
  */
-/* static */ MOZ_MUST_USE JSObject*
-ReadableStream::cancel(JSContext* cx, Handle<ReadableStream*> stream, HandleValue reason)
+static MOZ_MUST_USE JSObject*
+ReadableStreamCancel(JSContext* cx, Handle<ReadableStream*> stream, HandleValue reason)
 {
     AssertSameCompartment(cx, reason);
 
@@ -1853,7 +1860,7 @@ ReadableStreamDefaultReader_read(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Step 3: Return ! ReadableStreamDefaultReaderRead(this).
-    JSObject* readPromise = ReadableStreamDefaultReader::read(cx, reader);
+    JSObject* readPromise = ::ReadableStreamDefaultReaderRead(cx, reader);
     if (!readPromise) {
         return false;
     }
@@ -1955,7 +1962,7 @@ ReadableStreamReaderGenericCancel(JSContext* cx, Handle<ReadableStreamReader*> r
     }
 
     // Step 3: Return ! ReadableStreamCancel(stream, reason).
-    return ReadableStream::cancel(cx, stream, reason);
+    return ::ReadableStreamCancel(cx, stream, reason);
 }
 
 /**
@@ -2107,9 +2114,9 @@ ReadableStreamControllerPullSteps(JSContext* cx, Handle<ReadableStreamController
  * Note: can operate on unwrapped ReadableStreamDefaultReader instances from
  * another compartment.
  */
-/* static */ MOZ_MUST_USE JSObject*
-ReadableStreamDefaultReader::read(JSContext* cx,
-                                  Handle<ReadableStreamDefaultReader*> unwrappedReader)
+static MOZ_MUST_USE JSObject*
+ReadableStreamDefaultReaderRead(JSContext* cx,
+                                Handle<ReadableStreamDefaultReader*> unwrappedReader)
 {
     // Step 1: Let stream be reader.[[ownerReadableStream]].
     // Step 2: Assert: stream is not undefined.
@@ -4294,7 +4301,7 @@ JS::ReadableStreamCancel(JSContext* cx, HandleObject streamObj, HandleValue reas
     if (!stream)
         return nullptr;
 
-    return ReadableStream::cancel(cx, stream, reason);
+    return ::ReadableStreamCancel(cx, stream, reason);
 }
 
 JS_PUBLIC_API(bool)
@@ -4658,5 +4665,5 @@ JS::ReadableStreamDefaultReaderRead(JSContext* cx, HandleObject readerObj)
     if (!reader)
         return nullptr;
 
-    return js::ReadableStreamDefaultReader::read(cx, reader);
+    return ::ReadableStreamDefaultReaderRead(cx, reader);
 }
