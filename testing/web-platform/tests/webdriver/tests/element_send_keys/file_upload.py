@@ -140,3 +140,47 @@ def test_single_file_appends_with_multiple_attribute(session, create_files):
     assert_success(response)
 
     assert_files_uploaded(session, element, files)
+
+
+def test_transparent(session, create_files):
+    files = create_files(["foo"])
+    session.url = inline("""<input type=file style="opacity: 0">""")
+    element = session.find.css("input", all=False)
+
+    response = element_send_keys(session, element, str(files[0]))
+    assert_success(response)
+    assert_files_uploaded(session, element, files)
+
+
+def test_obscured(session, create_files):
+    files = create_files(["foo"])
+    session.url = inline("""
+        <style>
+          div {
+            position: absolute;
+            width: 100vh;
+            height: 100vh;
+            background: blue;
+            top: 0;
+            left: 0;
+          }
+        </style>
+
+        <input type=file>
+        <div></div>
+        """)
+    element = session.find.css("input", all=False)
+
+    response = element_send_keys(session, element, str(files[0]))
+    assert_success(response)
+    assert_files_uploaded(session, element, files)
+
+
+def test_outside_viewport(session, create_files):
+    files = create_files(["foo"])
+    session.url = inline("""<input type=file style="margin-left: -100vh">""")
+    element = session.find.css("input", all=False)
+
+    response = element_send_keys(session, element, str(files[0]))
+    assert_success(response)
+    assert_files_uploaded(session, element, files)
