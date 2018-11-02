@@ -4,6 +4,13 @@
 
 %include ../shared/compacttheme.inc.css
 
+@media (-moz-windows-accent-color-in-titlebar) {
+  :root[tabsintitlebar]:not(:-moz-window-inactive) {
+    background-color: -moz-win-accentcolor;
+    color: -moz-win-accentcolortext;
+  }
+}
+
 /* The window background is white due to no accentcolor in the lightweight
    theme. It can't be changed to transparent when there is no compositor
    (Win 7 in classic / basic theme), or else dragging and focus become
@@ -114,20 +121,14 @@
     display: none !important;
   }
 
-  /* Use default window colors */
-  #TabsToolbar,
-  #navigator-toolbox {
-    background-color: transparent;
-  }
-
   /* Use proper menu text styling in Win7 classic mode (copied from browser.css) */
   @media (-moz-windows-compositor: 0),
          (-moz-windows-default-theme: 0) {
-    :root[tabsintitlebar]:not([inFullscreen]) .titlebar-color {
+    :root[tabsintitlebar]:not([inFullscreen]) {
       color: CaptionText;
     }
 
-    :root[tabsintitlebar]:not([inFullscreen]) .titlebar-color:-moz-window-inactive {
+    :root[tabsintitlebar]:not([inFullscreen]):-moz-window-inactive {
       color: InactiveCaptionText;
     }
 

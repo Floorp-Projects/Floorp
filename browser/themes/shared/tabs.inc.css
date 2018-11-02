@@ -489,7 +489,7 @@
 }
 
 .tabbrowser-tab[visuallyselected=true]:-moz-lwtheme {
-  color: var(--lwt-tab-text, var(--toolbar-color, inherit));
+  color: var(--lwt-tab-text, var(--toolbar-color));
 }
 
 .tab-line {
