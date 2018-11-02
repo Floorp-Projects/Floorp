@@ -42,7 +42,6 @@ import android.widget.TimePicker;
 import org.mozilla.focus.R;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
-import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource;
 
 import java.text.ParseException;
@@ -764,8 +763,8 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
     }
 
     @Override
-    public GeckoResult<AllowOrDeny> onPopupRequest(GeckoSession session, String targetUri) {
-        return GeckoResult.fromValue(AllowOrDeny.DENY);
+    public GeckoResult<Boolean> onPopupRequest(GeckoSession session, String targetUri) {
+        return GeckoResult.fromValue(true);
     }
 
     public void onFileCallbackResult(final int resultCode, final Intent data) {
