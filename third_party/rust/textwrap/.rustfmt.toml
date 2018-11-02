@@ -1,6 +1,0 @@
-array_layout = "Visual"
-control_style = "Legacy"
-fn_args_layout = "Visual"
-fn_call_style = "Visual"
-generics_indent = "Visual"
-struct_lit_width = 40
