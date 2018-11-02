@@ -768,7 +768,7 @@ TextEditRules::WillInsertText(EditSubAction aEditSubAction,
     // manage the password buffer
     mPasswordText.Insert(*outString, start);
 
-    if (LookAndFeel::GetEchoPassword() && !DontEchoPassword()) {
+    if (!DontEchoPassword()) {
       nsresult rv = HideLastPasswordInputInternal();
       mLastStart = start;
       mLastLength = outString->Length();
@@ -901,8 +901,7 @@ TextEditRules::WillSetText(bool* aCancel,
     return NS_OK;
   }
 
-  if (IsPasswordEditor() && LookAndFeel::GetEchoPassword() &&
-      !DontEchoPassword()) {
+  if (IsPasswordEditor() && !DontEchoPassword()) {
     // Echo password timer will implement on InsertText.
     return NS_OK;
   }
@@ -1865,7 +1864,19 @@ TextEditRules::IsMailEditor() const
 bool
 TextEditRules::DontEchoPassword() const
 {
-  return mTextEditor ? mTextEditor->DontEchoPassword() : false;
+  if (!mTextEditor) {
+    // XXX Why do we use echo password if editor is null?
+    return false;
+  }
+  if (!LookAndFeel::GetEchoPassword() || mTextEditor->DontEchoPassword()) {
+    return true;
+  }
+
+  if (mTextEditor->GetEditAction() != EditAction::eDrop &&
+      mTextEditor->GetEditAction() != EditAction::ePaste) {
+    return false;
+  }
+  return true;
 }
 
 } // namespace mozilla
