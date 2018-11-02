@@ -6,7 +6,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
 const { Services } = require("resource://gre/modules/Services.jsm");
 
 var systemAppOrigin = (function() {
@@ -247,32 +246,6 @@ TouchSimulator.prototype = {
   },
 
   sendTouchEvent(evt, target, name) {
-    function clone(obj) {
-      return Cu.cloneInto(obj, target);
-    }
-    // When running OOP b2g desktop, we need to send the touch events
-    // using the mozbrowser api on the unwrapped frame.
-    if (target.localName == "iframe" && target.mozbrowser === true) {
-      if (name == "touchstart") {
-        this.touchstartTime = Date.now();
-      } else if (name == "touchend") {
-        // If we have a "fast" tap, don't send a click as both will be turned
-        // into a click and that breaks eg. checkboxes.
-        if (Date.now() - this.touchstartTime < delay) {
-          this.cancelClick = true;
-        }
-      }
-      const unwrapped = XPCNativeWrapper.unwrap(target);
-      /* eslint-disable no-multi-spaces */
-      unwrapped.sendTouchEvent(name, clone([0]),       // event type, id
-                               clone([evt.clientX]),   // x
-                               clone([evt.clientY]),   // y
-                               clone([1]), clone([1]), // rx, ry
-                               clone([0]), clone([0]), // rotation, force
-                               1);                     // count
-      /* eslint-enable no-multi-spaces */
-      return;
-    }
     const document = target.ownerDocument;
     const content = this.getContent(target);
     if (!content) {
