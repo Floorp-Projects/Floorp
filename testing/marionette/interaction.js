@@ -540,41 +540,31 @@ interaction.setFormControlValue = function(el, value) {
  *     Element to send key events to.
  * @param {Array.<string>} value
  *     Sequence of keystrokes to send to the element.
- * @param {boolean=} strictFileInteractability
- *     Run interactability checks on `<input type=file>` elements.
- * @param {boolean=} accessibilityChecks
+ * @param {boolean=} [strict=false] strict
  *     Enforce strict accessibility tests.
- * @param {boolean=} webdriverClick
+ * @param {boolean=} [specCompat=false] specCompat
  *     Use WebDriver specification compatible interactability definition.
  */
-interaction.sendKeysToElement = async function(el, value,
-    {
-      strictFileInteractability = false,
-      accessibilityChecks = false,
-      webdriverClick = false,
-    } = {}) {
-  const a11y = accessibility.get(accessibilityChecks);
+interaction.sendKeysToElement = async function(
+    el, value, strict = false, specCompat = false) {
+  const a11y = accessibility.get(strict);
 
-  if (webdriverClick) {
-    await webdriverSendKeysToElement(
-        el, value, a11y, strictFileInteractability);
+  if (specCompat) {
+    await webdriverSendKeysToElement(el, value, a11y);
   } else {
     await legacySendKeysToElement(el, value, a11y);
   }
 };
 
-async function webdriverSendKeysToElement(el, value,
-    a11y, strictFileInteractability) {
+async function webdriverSendKeysToElement(el, value, a11y) {
   const win = getWindow(el);
 
-  if (el.type != "file" || strictFileInteractability) {
-    let containerEl = element.getContainer(el);
+  let containerEl = element.getContainer(el);
 
-    // TODO: Wait for element to be keyboard-interactible
-    if (!interaction.isKeyboardInteractable(containerEl)) {
-      throw new ElementNotInteractableError(
-          pprint`Element ${el} is not reachable by keyboard`);
-    }
+  // TODO: Wait for element to be keyboard-interactible
+  if (!interaction.isKeyboardInteractable(containerEl)) {
+    throw new ElementNotInteractableError(
+        pprint`Element ${el} is not reachable by keyboard`);
   }
 
   let acc = await a11y.getAccessible(el, true);

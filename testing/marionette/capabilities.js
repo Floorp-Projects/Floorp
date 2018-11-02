@@ -397,7 +397,6 @@ class Capabilities extends Map {
       ["proxy", new Proxy()],
       ["setWindowRect", appinfo.name == "firefox"],
       ["timeouts", new Timeouts()],
-      ["strictFileInteractability", false],
       ["unhandledPromptBehavior", UnhandledPromptBehavior.DismissAndNotify],
 
       // features
@@ -492,10 +491,6 @@ class Capabilities extends Map {
 
         case "timeouts":
           v = Timeouts.fromJSON(v);
-          break;
-
-        case "strictFileInteractability":
-          v = assert.boolean(v);
           break;
 
         case "unhandledPromptBehavior":
