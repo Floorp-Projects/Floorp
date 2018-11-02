@@ -3,6 +3,7 @@ import os
 from collections import defaultdict
 from six import iteritems, iterkeys, itervalues, string_types
 
+from . import vcs
 from .item import (ManualTest, WebDriverSpecTest, Stub, RefTestNode, RefTest,
                    TestharnessTest, SupportFile, ConformanceCheckerTest, VisualTest)
 from .log import get_logger
@@ -70,7 +71,10 @@ class TypeData(object):
         return bool(self.data)
 
     def __len__(self):
-        return len(self.data)
+        rv = len(self.data)
+        if self.json_data is not None:
+            rv += len(self.json_data)
+        return rv
 
     def __delitem__(self, key):
         del self.data[key]
@@ -109,6 +113,12 @@ class TypeData(object):
         self.load_all()
         return iteritems(self.data)
 
+    def values(self):
+        return self.itervalues()
+
+    def items(self):
+        return self.iteritems()
+
     def load(self, key):
         """Load a specific Item given a path"""
         if self.json_data is not None:
@@ -120,6 +130,10 @@ class TypeData(object):
                                                         path,
                                                         test)
                 data.add(manifest_item)
+            try:
+                del self.json_data[path]
+            except KeyError:
+                pass
             self.data[key] = data
         else:
             raise ValueError
@@ -155,12 +169,13 @@ class TypeData(object):
             rv |= set(to_os_path(item) for item in iterkeys(self.json_data))
         return rv
 
+
 class ManifestData(dict):
     def __init__(self, manifest, meta_filters=None):
         """Dictionary subclass containing a TypeData instance for each test type,
         keyed by type name"""
         self.initialized = False
-        for key, value in item_classes.iteritems():
+        for key, value in iteritems(item_classes):
             self[key] = TypeData(manifest, value, meta_filters=meta_filters)
         self.initialized = True
         self.json_obj = None
@@ -285,11 +300,22 @@ class Manifest(object):
         if deleted:
             changed = True
             for rel_path in deleted:
-                _, old_type = self._path_hash[rel_path]
-                if old_type in reftest_types:
-                    reftest_changes = True
-                del self._path_hash[rel_path]
-                del self._data[old_type][rel_path]
+                if rel_path in self._path_hash:
+                    _, old_type = self._path_hash[rel_path]
+                    if old_type in reftest_types:
+                        reftest_changes = True
+                    try:
+                        del self._path_hash[rel_path]
+                    except KeyError:
+                        pass
+                    try:
+                        del self._data[old_type][rel_path]
+                    except KeyError:
+                        pass
+                else:
+                    for test_data in itervalues(self._data):
+                        if rel_path in test_data:
+                            del test_data[rel_path]
 
         if reftest_changes:
             reftests, reftest_nodes, changed_hashes = self._compute_reftests(reftest_nodes)
@@ -335,7 +361,7 @@ class Manifest(object):
                 [t for t in sorted(test.to_json() for test in tests)]
                 for path, tests in iteritems(type_paths)
             }
-            for test_type, type_paths in self._data.iteritems() if type_paths
+            for test_type, type_paths in iteritems(self._data) if type_paths
         }
         rv = {"url_base": self.url_base,
               "paths": {from_os_path(k): v for k, v in iteritems(self._path_hash)},
@@ -370,6 +396,11 @@ class Manifest(object):
 def load(tests_root, manifest, types=None, meta_filters=None):
     logger = get_logger()
 
+    logger.warning("Prefer load_and_update instead")
+    return _load(logger, tests_root, manifest, types, meta_filters)
+
+
+def _load(logger, tests_root, manifest, types=None, meta_filters=None):
     # "manifest" is a path or file-like object.
     if isinstance(manifest, string_types):
         if os.path.exists(manifest):
@@ -393,6 +424,48 @@ def load(tests_root, manifest, types=None, meta_filters=None):
                               json.load(manifest),
                               types=types,
                               meta_filters=meta_filters)
+
+
+def load_and_update(tests_root,
+                    manifest_path,
+                    url_base,
+                    update=True,
+                    rebuild=False,
+                    metadata_path=None,
+                    cache_root=None,
+                    working_copy=False,
+                    types=None,
+                    meta_filters=None,
+                    write_manifest=True):
+    logger = get_logger()
+
+    manifest = None
+    if not rebuild:
+        try:
+            manifest = _load(logger,
+                             tests_root,
+                             manifest_path,
+                             types=types,
+                             meta_filters=meta_filters)
+        except ManifestVersionMismatch:
+            logger.info("Manifest version changed, rebuilding")
+
+        if manifest is not None and manifest.url_base != url_base:
+            logger.info("Manifest url base did not match, rebuilding")
+
+    if manifest is None:
+        manifest = Manifest(url_base, meta_filters=meta_filters)
+        update = True
+
+    if update:
+        tree = vcs.get_tree(tests_root, manifest, manifest_path, cache_root,
+                            working_copy, rebuild)
+        changed = manifest.update(tree)
+        if write_manifest and changed:
+            write(manifest, manifest_path)
+        tree.dump_caches()
+
+    return manifest
 
 
 def write(manifest, manifest_path):
