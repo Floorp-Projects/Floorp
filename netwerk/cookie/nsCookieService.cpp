@@ -4283,8 +4283,11 @@ nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
       return STATUS_REJECTED;
   }
 
-  // check default prefs
-  if (aCookieBehavior == nsICookieService::BEHAVIOR_REJECT) {
+  // check default prefs.
+  // Check aFirstPartyStorageAccessGranted when checking aCookieBehavior
+  // so that we take things such as the content blocking allow list into account.
+  if (aCookieBehavior == nsICookieService::BEHAVIOR_REJECT &&
+      !aFirstPartyStorageAccessGranted) {
     COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "cookies are disabled");
     *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL;
     return STATUS_REJECTED;
@@ -4292,8 +4295,6 @@ nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
 
   // check if cookie is foreign
   if (aIsForeign) {
-    // Check aFirstPartyStorageAccessGranted when rejecting all third-party cookies,
-    // so that we take things such as the content blocking allow list into account.
     if (aCookieBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN &&
         !aFirstPartyStorageAccessGranted) {
       COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
@@ -4301,19 +4302,12 @@ nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
       return STATUS_REJECTED;
     }
 
-    if (aCookieBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN) {
-      if (aNumOfCookies == 0) {
-        COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
-        *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;
-        return STATUS_REJECTED;
-      }
+    if (aCookieBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN &&
+        !aFirstPartyStorageAccessGranted && aNumOfCookies == 0) {
+      COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
+      *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;
+      return STATUS_REJECTED;
     }
-
-    MOZ_ASSERT(aCookieBehavior == nsICookieService::BEHAVIOR_ACCEPT ||
-               aCookieBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN ||
-               // But with permission granted.
-               aCookieBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
-               aCookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
     if (aThirdPartySession)
       return STATUS_ACCEPT_SESSION;
