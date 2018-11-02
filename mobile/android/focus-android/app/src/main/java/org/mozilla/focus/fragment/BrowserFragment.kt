@@ -63,6 +63,7 @@ import org.mozilla.focus.biometrics.BiometricAuthenticationDialogFragment
 import org.mozilla.focus.biometrics.BiometricAuthenticationHandler
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.broadcastreceiver.DownloadBroadcastReceiver
+import org.mozilla.focus.exceptions.ExceptionDomains
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.shouldRequestDesktopSite
 import org.mozilla.focus.findinpage.FindInPageCoordinator
@@ -92,6 +93,7 @@ import org.mozilla.focus.widget.AnimatedProgressBar
 import org.mozilla.focus.widget.FloatingEraseButton
 import org.mozilla.focus.widget.FloatingSessionsButton
 import java.lang.ref.WeakReference
+import java.net.URI
 
 /**
  * Fragment for displaying the browser UI.
@@ -266,7 +268,6 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         closeFindInPage = view.findViewById(R.id.close_find_in_page)
         closeFindInPage!!.setOnClickListener(this)
 
-        setBlockingEnabled(session.trackerBlockingEnabled)
         setShouldRequestDesktop(session.shouldRequestDesktopSite)
 
         LoadTimeObserver.addObservers(session, this)
@@ -318,6 +319,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         // values automatically yet.
         // We want to change that in Android Components: https://github.com/mozilla-mobile/android-components/issues/665
         sessionObserver.apply {
+            onTrackerBlockingEnabledChanged(session, session.trackerBlockingEnabled)
             onLoadingStateChanged(session, session.loading)
             onUrlChanged(session, session.url)
             onSecurityChanged(session, session.securityInfo)
@@ -1131,7 +1133,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
     fun reload() = getWebView()?.reload()
 
-    fun setBlockingEnabled(enabled: Boolean) {
+    fun setBlockingUI(enabled: Boolean) {
         val webView = getWebView()
         webView?.setBlockingEnabled(enabled)
 
@@ -1335,6 +1337,14 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         }
 
         override fun onUrlChanged(session: Session, url: String) {
+            val host = URI(url).host
+            val isException =
+                host != null && ExceptionDomains.load(requireContext()).contains(host)
+            if (isException) {
+                getWebView()?.setBlockingEnabled(false)
+            } else {
+                getWebView()?.setBlockingEnabled(true)
+            }
             urlView?.text = UrlUtils.stripUserInfo(url)
         }
 
@@ -1348,6 +1358,10 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
                 menu?.updateTrackers(all.size)
             }
+        }
+
+        override fun onTrackerBlockingEnabledChanged(session: Session, blockingEnabled: Boolean) {
+            setBlockingUI(blockingEnabled)
         }
 
         override fun onSecurityChanged(session: Session, securityInfo: Session.SecurityInfo) {

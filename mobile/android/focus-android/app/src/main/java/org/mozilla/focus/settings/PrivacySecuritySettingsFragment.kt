@@ -7,9 +7,12 @@ package org.mozilla.focus.settings
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import android.support.v7.preference.Preference
 import android.support.v7.preference.SwitchPreferenceCompat
 import org.mozilla.focus.R
 import org.mozilla.focus.biometrics.Biometrics
+import org.mozilla.focus.exceptions.ExceptionDomains
+import org.mozilla.focus.exceptions.ExceptionsListFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.widget.CookiesPreference
@@ -48,6 +51,11 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
                     }
             cookiesPreference.entries = cookiesStringsWV.toTypedArray()
             cookiesPreference.entryValues = cookiesStringsWV.toTypedArray()
+        }
+
+        val exceptionsPreference = findPreference(getString(R.string.pref_key_screen_exceptions))
+        if (ExceptionDomains.load(requireContext()).isEmpty()) {
+            exceptionsPreference.isEnabled = false
         }
     }
 
@@ -88,6 +96,14 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
         } else {
             switch.isEnabled = true
         }
+    }
+
+    override fun onPreferenceTreeClick(preference: Preference): Boolean {
+        when (preference.key) {
+            resources.getString(R.string.pref_key_screen_exceptions) ->
+                navigateToFragment(ExceptionsListFragment())
+        }
+        return super.onPreferenceTreeClick(preference)
     }
 
     private fun updateStealthToggleAvailability() {

@@ -61,7 +61,6 @@ abstract class WebFragment : LocaleAwareFragment() {
         webViewInstance!!.setCallback(createCallback())
 
         session?.let {
-            webViewInstance!!.setBlockingEnabled(it.trackerBlockingEnabled)
             webViewInstance!!.setRequestDesktop(it.shouldRequestDesktopSite)
         }
 
