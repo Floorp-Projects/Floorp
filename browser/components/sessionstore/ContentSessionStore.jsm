@@ -10,6 +10,9 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
+ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
+  "resource://gre/modules/TelemetryStopwatch.jsm");
+
 function debug(msg) {
   Services.console.logStringMessage("SessionStoreContent: " + msg);
 }

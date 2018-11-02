@@ -61,14 +61,9 @@ EXPORTS.mozilla += [
     'other/ProcessedStack.h',
 ]
 
-EXPORTS.mozilla.telemetry += [
-    'core/Stopwatch.h',
-]
-
 SOURCES += [
     'core/ipc/TelemetryIPC.cpp',
     'core/ipc/TelemetryIPCAccumulator.cpp',
-    'core/Stopwatch.cpp',
     'core/Telemetry.cpp',
     'core/TelemetryCommon.cpp',
     'core/TelemetryEvent.cpp',
@@ -103,6 +98,7 @@ EXTRA_JS_MODULES += [
     'app/TelemetryEnvironment.jsm',
     'app/TelemetryReportingPolicy.jsm',
     'app/TelemetrySend.jsm',
+    'app/TelemetryStopwatch.jsm',
     'app/TelemetryStorage.jsm',
     'app/TelemetryTimestamps.jsm',
     'app/TelemetryUtils.jsm',

@@ -2264,23 +2264,22 @@ TelemetryHistogram::Accumulate(HistogramID aID, const nsCString& aKey,
   }
 }
 
-bool
+void
 TelemetryHistogram::Accumulate(const char* name, uint32_t sample)
 {
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   if (!internal_CanRecordBase()) {
-    return false;
+    return;
   }
   HistogramID id;
   nsresult rv = internal_GetHistogramIdByName(locker, nsDependentCString(name), &id);
   if (NS_FAILED(rv)) {
-    return false;
+    return;
   }
   internal_Accumulate(locker, id, sample);
-  return true;
 }
 
-bool
+void
 TelemetryHistogram::Accumulate(const char* name,
                                const nsCString& key, uint32_t sample)
 {
@@ -2289,7 +2288,7 @@ TelemetryHistogram::Accumulate(const char* name,
   {
     StaticMutexAutoLock locker(gTelemetryHistogramMutex);
     if (!internal_CanRecordBase()) {
-      return false;
+      return;
     }
     HistogramID id;
     nsresult rv = internal_GetHistogramIdByName(locker, nsDependentCString(name), &id);
@@ -2297,7 +2296,7 @@ TelemetryHistogram::Accumulate(const char* name,
       // Check if we're allowed to record in the provided key, for this histogram.
       if (gHistogramInfos[id].allows_key(key)) {
         internal_Accumulate(locker, id, key, sample);
-        return true;
+        return;
       }
       // We're holding |gTelemetryHistogramMutex|, so we can't print a message
       // here.
@@ -2312,7 +2311,6 @@ TelemetryHistogram::Accumulate(const char* name,
       mozilla::Telemetry::ScalarID::TELEMETRY_ACCUMULATE_UNKNOWN_HISTOGRAM_KEYS,
       NS_ConvertASCIItoUTF16(name), 1);
   }
-  return false;
 }
 
 void
