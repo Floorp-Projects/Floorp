@@ -51,27 +51,6 @@ function runTest() {
         break;
       case "#click":
         ok(true, "Receive a click event.");
-        if (SpecialPowers.getIntPref("dom.w3c_touch_events.enabled") != 0) {
-          iframe.sendTouchEvent("touchstart", [1], [x], [y], [2], [2],
-                                [20], [0.5], 1, 0);
-        } else {
-          iframe.removeEventListener('mozbrowserlocationchange', onlocchange);
-          SimpleTest.finish();
-        }
-        break;
-      case "#touchstart":
-        ok(true, "Receive a touchstart event.");
-        iframe.sendTouchEvent("touchmove", [1], [x], [y], [2], [2],
-                              [20], [0.5], 1, 0);
-      case "#touchmove":
-        ok(true, "Receive a touchmove event.");
-        iframe.sendTouchEvent("touchend", [1], [x], [y], [2], [2],
-                              [20], [0.5], 1, 0);
-        break;
-      case "#touchend":
-        ok(true, "Receive a touchend event.");
-        iframe.sendTouchEvent("touchcancel", [1], [x], [y], [2], [2],
-                              [20], [0.5], 1, 0);
         iframe.removeEventListener('mozbrowserlocationchange', onlocchange);
         SimpleTest.finish();
         break;

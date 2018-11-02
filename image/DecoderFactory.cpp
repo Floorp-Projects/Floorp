@@ -246,7 +246,8 @@ DecoderFactory::CloneAnimationDecoder(Decoder* aDecoder)
   // get scheduled yet, or it has only decoded the first frame and has yet to
   // rediscover it is animated).
   DecoderType type = aDecoder->GetType();
-  MOZ_ASSERT(type == DecoderType::GIF || type == DecoderType::PNG,
+  MOZ_ASSERT(type == DecoderType::GIF || type == DecoderType::PNG ||
+             type == DecoderType::WEBP,
              "Calling CloneAnimationDecoder for non-animating DecoderType");
 
   RefPtr<Decoder> decoder = GetDecoder(type, nullptr, /* aIsRedecode = */ true);

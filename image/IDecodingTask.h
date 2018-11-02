@@ -109,22 +109,21 @@ class AnonymousDecodingTask final : public IDecodingTask
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AnonymousDecodingTask, override)
 
-  explicit AnonymousDecodingTask(NotNull<Decoder*> aDecoder);
+  explicit AnonymousDecodingTask(NotNull<Decoder*> aDecoder,
+                                 bool aResumable);
 
   void Run() override;
 
   bool ShouldPreferSyncRun() const override { return true; }
   TaskPriority Priority() const override { return TaskPriority::eLow; }
 
-  // Anonymous decoders normally get all their data at once. We have tests where
-  // they don't; in these situations, the test re-runs them manually. So no
-  // matter what, we don't want to resume by posting a task to the DecodePool.
-  void Resume() override { }
+  void Resume() override;
 
 private:
   virtual ~AnonymousDecodingTask() { }
 
   NotNull<RefPtr<Decoder>> mDecoder;
+  bool mResumable;
 };
 
 } // namespace image
