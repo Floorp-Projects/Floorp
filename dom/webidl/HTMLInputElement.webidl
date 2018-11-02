@@ -242,10 +242,7 @@ partial interface HTMLInputElement {
   DateTimeValue getDateTimeInputBoxValue();
 
   [Pref="dom.forms.datetime", ChromeOnly]
-  void updateDateTimeInputBox(optional DateTimeValue value);
-
-  [Pref="dom.forms.datetime", ChromeOnly]
-  void setDateTimePickerState(boolean open);
+  readonly attribute Element? dateTimeBoxElement;
 
   [Pref="dom.forms.datetime", ChromeOnly,
    BinaryName="getMinimumAsDouble"]
