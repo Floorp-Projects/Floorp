@@ -11,7 +11,7 @@
 "use strict";
 
 const Services = require("Services");
-const TelemetryStopwatch = require("TelemetryStopwatch");
+const { TelemetryStopwatch } = require("resource://gre/modules/TelemetryStopwatch.jsm");
 const { getNthPathExcluding } = require("devtools/shared/platform/stack");
 const { TelemetryEnvironment } = require("resource://gre/modules/TelemetryEnvironment.jsm");
 const WeakMapMap = require("devtools/client/shared/WeakMapMap");
