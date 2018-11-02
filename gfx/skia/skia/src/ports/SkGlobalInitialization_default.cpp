@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+#include "SkFlattenablePriv.h"
 #include "../../src/effects/SkDashImpl.h"
 #include "SkGradientShader.h"
 
