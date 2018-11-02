@@ -8,7 +8,7 @@ use api::{FilterOp, GlyphInstance, GradientStop, ImageKey, ImageRendering, ItemR
 use api::{RasterSpace, LayoutPoint, LayoutRect, LayoutSideOffsets, LayoutSize, LayoutToWorldTransform};
 use api::{LayoutVector2D, PremultipliedColorF, PropertyBinding, Shadow, YuvColorSpace, YuvFormat, LayoutRectAu};
 use api::{DeviceIntSideOffsets, WorldPixel, BoxShadowClipMode, NormalBorder, WorldRect, LayoutToWorldScale};
-use api::{PicturePixel, RasterPixel, ColorDepth, LineStyle, LineOrientation, LayoutSizeAu, AuHelpers};
+use api::{PicturePixel, RasterPixel, ColorDepth, LineStyle, LineOrientation, LayoutSizeAu, AuHelpers, LayoutVector2DAu};
 use app_units::Au;
 use border::{get_max_scale_for_border, build_border_instances, create_normal_border_prim};
 use clip_scroll_tree::{ClipScrollTree, CoordinateSystemId, SpatialNodeIndex};
@@ -17,8 +17,7 @@ use euclid::{TypedTransform3D, TypedRect, TypedScale};
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
 use frame_builder::PrimitiveContext;
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
-use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
-                ToGpuBlocks};
+use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest, ToGpuBlocks};
 use gpu_types::BrushFlags;
 use image::{self, Repetition};
 use intern;
@@ -26,7 +25,7 @@ use picture::{ClusterRange, PictureCompositeMode, PicturePrimitive, PictureUpdat
 use picture::{PrimitiveList, SurfaceInfo};
 #[cfg(debug_assertions)]
 use render_backend::FrameId;
-use render_task::{BlitSource, RenderTask, RenderTaskCacheKey, to_cache_size};
+use render_task::{BlitSource, RenderTask, RenderTaskCacheKey, RenderTaskTree, to_cache_size};
 use render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskCacheEntryHandle};
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{ImageProperties, ImageRequest, ResourceCache};
@@ -34,6 +33,7 @@ use scene::SceneProperties;
 use std::{cmp, fmt, mem, ops, usize};
 #[cfg(debug_assertions)]
 use std::sync::atomic::{AtomicUsize, Ordering};
+use tiling::SpecialRenderPasses;
 use util::{ScaleOffset, MatrixHelpers, MaxRect};
 use util::{pack_as_float, project_rect, raster_rect_to_device_pixels};
 use smallvec::SmallVec;
@@ -314,6 +314,13 @@ pub enum PrimitiveKeyKind {
     /// to instead have Option<PrimitiveKeyKind>. It should become
     /// clearer as we port more primitives to be interned.
     Unused,
+    /// A run of glyphs, with associated font information.
+    TextRun {
+        font: FontInstance,
+        offset: LayoutVector2DAu,
+        glyphs: Vec<GlyphInstance>,
+        shadow: bool,
+    },
     /// Identifying key for a line decoration.
     LineDecoration {
         // If the cache_key is Some(..) it is a line decoration
@@ -359,6 +366,15 @@ impl PrimitiveKey {
                     cache_handle: None,
                 }
             }
+            PrimitiveKeyKind::TextRun { ref font, shadow, .. } => {
+                PrimitiveInstanceKind::TextRun {
+                    run: TextRunPrimitive {
+                        used_font: font.clone(),
+                        glyph_keys: Vec::new(),
+                        shadow,
+                    }
+                }
+            }
             PrimitiveKeyKind::Unused => {
                 // Should never be hit as this method should not be
                 // called for old style primitives.
@@ -377,6 +393,11 @@ pub enum PrimitiveTemplateKind {
         cache_key: Option<LineDecorationCacheKey>,
         color: ColorF,
     },
+    TextRun {
+        font: FontInstance,
+        offset: LayoutVector2DAu,
+        glyphs: Vec<GlyphInstance>,
+    },
     Unused,
 }
 
@@ -387,6 +408,13 @@ impl From<PrimitiveKeyKind> for PrimitiveTemplateKind {
     fn from(item: PrimitiveKeyKind) -> Self {
         match item {
             PrimitiveKeyKind::Unused => PrimitiveTemplateKind::Unused,
+            PrimitiveKeyKind::TextRun { glyphs, font, offset, .. } => {
+                PrimitiveTemplateKind::TextRun {
+                    font,
+                    offset,
+                    glyphs,
+                }
+            }
             PrimitiveKeyKind::LineDecoration { cache_key, color } => {
                 PrimitiveTemplateKind::LineDecoration {
                     cache_key,
@@ -458,6 +486,42 @@ impl PrimitiveTemplate {
                         self.prim_rect,
                         [0.0; 4],
                     );
+                }
+            }
+            PrimitiveTemplateKind::TextRun { ref glyphs, ref font, ref offset, .. } => {
+                if let Some(mut request) = gpu_cache.request(&mut self.gpu_cache_handle) {
+                    request.push(ColorF::from(font.color).premultiplied());
+                    // this is the only case where we need to provide plain color to GPU
+                    let bg_color = ColorF::from(font.bg_color);
+                    request.push([bg_color.r, bg_color.g, bg_color.b, 1.0]);
+                    request.push([
+                        offset.x.to_f32_px(),
+                        offset.y.to_f32_px(),
+                        0.0,
+                        0.0,
+                    ]);
+
+                    let mut gpu_block = [0.0; 4];
+                    for (i, src) in glyphs.iter().enumerate() {
+                        // Two glyphs are packed per GPU block.
+
+                        if (i & 1) == 0 {
+                            gpu_block[0] = src.point.x;
+                            gpu_block[1] = src.point.y;
+                        } else {
+                            gpu_block[2] = src.point.x;
+                            gpu_block[3] = src.point.y;
+                            request.push(gpu_block);
+                        }
+                    }
+
+                    // Ensure the last block is added in the case
+                    // of an odd number of glyphs.
+                    if (glyphs.len() & 1) != 0 {
+                        request.push(gpu_block);
+                    }
+
+                    assert!(request.current_used_block_num() <= MAX_VERTEX_TEXTURE_WIDTH);
                 }
             }
             PrimitiveTemplateKind::Unused => {}
@@ -1129,43 +1193,22 @@ impl<'a> GradientGpuBlockBuilder<'a> {
 
 #[derive(Debug, Clone)]
 pub struct TextRunPrimitive {
-    pub specified_font: FontInstance,
     pub used_font: FontInstance,
-    pub offset: LayoutVector2D,
-    pub glyph_range: ItemRange<GlyphInstance>,
     pub glyph_keys: Vec<GlyphKey>,
-    pub glyph_gpu_blocks: Vec<GpuBlockData>,
     pub shadow: bool,
 }
 
 impl TextRunPrimitive {
-    pub fn new(
-        font: FontInstance,
-        offset: LayoutVector2D,
-        glyph_range: ItemRange<GlyphInstance>,
-        glyph_keys: Vec<GlyphKey>,
-        shadow: bool,
-    ) -> Self {
-        TextRunPrimitive {
-            specified_font: font.clone(),
-            used_font: font,
-            offset,
-            glyph_range,
-            glyph_keys,
-            glyph_gpu_blocks: Vec::new(),
-            shadow,
-        }
-    }
-
     pub fn update_font_instance(
         &mut self,
+        specified_font: &FontInstance,
         device_pixel_scale: DevicePixelScale,
         transform: &LayoutToWorldTransform,
         allow_subpixel_aa: bool,
         raster_space: RasterSpace,
     ) -> bool {
         // Get the current font size in device pixels
-        let device_font_size = self.specified_font.size.scale_by(device_pixel_scale.0);
+        let device_font_size = specified_font.size.scale_by(device_pixel_scale.0);
 
         // Determine if rasterizing glyphs in local or screen space.
         // Only support transforms that can be coerced to simple 2D transforms.
@@ -1198,13 +1241,13 @@ impl TextRunPrimitive {
         self.used_font = FontInstance {
             transform: font_transform,
             size: device_font_size,
-            ..self.specified_font.clone()
+            ..specified_font.clone()
         };
 
         // If subpixel AA is disabled due to the backing surface the glyphs
         // are being drawn onto, disable it (unless we are using the
         // specifial subpixel mode that estimates background color).
-        if !allow_subpixel_aa && self.specified_font.bg_color.a == 0 {
+        if !allow_subpixel_aa && self.used_font.bg_color.a == 0 {
             self.used_font.disable_subpixel_aa();
         }
 
@@ -1220,79 +1263,43 @@ impl TextRunPrimitive {
 
     fn prepare_for_render(
         &mut self,
+        specified_font: &FontInstance,
+        glyphs: &[GlyphInstance],
         device_pixel_scale: DevicePixelScale,
         transform: &LayoutToWorldTransform,
         allow_subpixel_aa: bool,
         raster_space: RasterSpace,
-        display_list: &BuiltDisplayList,
-        frame_building_state: &mut FrameBuildingState,
+        resource_cache: &mut ResourceCache,
+        gpu_cache: &mut GpuCache,
+        render_tasks: &mut RenderTaskTree,
+        special_render_passes: &mut SpecialRenderPasses,
     ) {
         let cache_dirty = self.update_font_instance(
+            specified_font,
             device_pixel_scale,
             transform,
             allow_subpixel_aa,
             raster_space,
         );
 
-        // Cache the glyph positions, if not in the cache already.
-        // TODO(gw): In the future, remove `glyph_instances`
-        //           completely, and just reference the glyphs
-        //           directly from the display list.
         if self.glyph_keys.is_empty() || cache_dirty {
             let subpx_dir = self.used_font.get_subpx_dir();
-            let src_glyphs = display_list.get(self.glyph_range);
 
-            // TODO(gw): If we support chunks() on AuxIter
-            //           in the future, this code below could
-            //           be much simpler...
-            let mut gpu_block = [0.0; 4];
-            for (i, src) in src_glyphs.enumerate() {
+            for src in glyphs {
                 let world_offset = self.used_font.transform.transform(&src.point);
                 let device_offset = device_pixel_scale.transform_point(&world_offset);
                 let key = GlyphKey::new(src.index, device_offset, subpx_dir);
                 self.glyph_keys.push(key);
-
-                // Two glyphs are packed per GPU block.
-
-                if (i & 1) == 0 {
-                    gpu_block[0] = src.point.x;
-                    gpu_block[1] = src.point.y;
-                } else {
-                    gpu_block[2] = src.point.x;
-                    gpu_block[3] = src.point.y;
-                    self.glyph_gpu_blocks.push(gpu_block.into());
-                }
-            }
-
-            // Ensure the last block is added in the case
-            // of an odd number of glyphs.
-            if (self.glyph_keys.len() & 1) != 0 {
-                self.glyph_gpu_blocks.push(gpu_block.into());
             }
         }
 
-        frame_building_state.resource_cache
-                            .request_glyphs(self.used_font.clone(),
-                                            &self.glyph_keys,
-                                            frame_building_state.gpu_cache,
-                                            frame_building_state.render_tasks,
-                                            frame_building_state.special_render_passes);
-    }
-
-    fn write_gpu_blocks(&self, request: &mut GpuDataRequest) {
-        request.push(ColorF::from(self.used_font.color).premultiplied());
-        // this is the only case where we need to provide plain color to GPU
-        let bg_color = ColorF::from(self.used_font.bg_color);
-        request.push([bg_color.r, bg_color.g, bg_color.b, 1.0]);
-        request.push([
-            self.offset.x,
-            self.offset.y,
-            0.0,
-            0.0,
-        ]);
-        request.extend_from_slice(&self.glyph_gpu_blocks);
-
-        assert!(request.current_used_block_num() <= MAX_VERTEX_TEXTURE_WIDTH);
+        resource_cache.request_glyphs(
+            self.used_font.clone(),
+            &self.glyph_keys,
+            gpu_cache,
+            render_tasks,
+            special_render_passes,
+        );
     }
 }
 
@@ -1484,7 +1491,12 @@ impl ClipData {
 }
 
 pub enum PrimitiveContainer {
-    TextRun(TextRunPrimitive),
+    TextRun {
+        font: FontInstance,
+        offset: LayoutVector2D,
+        glyphs: Vec<GlyphInstance>,
+        shadow: bool,
+    },
     Brush(BrushPrimitive),
     LineDecoration {
         color: ColorF,
@@ -1504,8 +1516,8 @@ impl PrimitiveContainer {
     //           primitive types to use this.
     pub fn is_visible(&self) -> bool {
         match *self {
-            PrimitiveContainer::TextRun(ref info) => {
-                info.specified_font.color.a > 0
+            PrimitiveContainer::TextRun { ref font, .. } => {
+                font.color.a > 0
             }
             PrimitiveContainer::Brush(ref brush) => {
                 match brush.kind {
@@ -1535,8 +1547,15 @@ impl PrimitiveContainer {
         info: &mut LayoutPrimitiveInfo,
     ) -> (PrimitiveKeyKind, Option<PrimitiveDetails>) {
         match self {
-            PrimitiveContainer::TextRun(prim) => {
-                (PrimitiveKeyKind::Unused, Some(PrimitiveDetails::TextRun(prim)))
+            PrimitiveContainer::TextRun { font, offset, glyphs, shadow, .. } => {
+                let key = PrimitiveKeyKind::TextRun {
+                    font,
+                    offset: offset.to_au(),
+                    glyphs,
+                    shadow,
+                };
+
+                (key, None)
             }
             PrimitiveContainer::LineDecoration { color, style, orientation, wavy_line_thickness } => {
                 // For line decorations, we can construct the render task cache key
@@ -1612,22 +1631,21 @@ impl PrimitiveContainer {
         prim_rect: &LayoutRect,
     ) -> PrimitiveContainer {
         match *self {
-            PrimitiveContainer::TextRun(ref info) => {
+            PrimitiveContainer::TextRun { ref font, offset, ref glyphs, .. } => {
                 let mut font = FontInstance {
                     color: shadow.color.into(),
-                    ..info.specified_font.clone()
+                    ..font.clone()
                 };
                 if shadow.blur_radius > 0.0 {
                     font.disable_subpixel_aa();
                 }
 
-                PrimitiveContainer::TextRun(TextRunPrimitive::new(
+                PrimitiveContainer::TextRun {
                     font,
-                    info.offset + shadow.offset,
-                    info.glyph_range,
-                    info.glyph_keys.clone(),
-                    true,
-                ))
+                    glyphs: glyphs.clone(),
+                    offset: offset + shadow.offset,
+                    shadow: true,
+                }
             }
             PrimitiveContainer::LineDecoration { style, orientation, wavy_line_thickness, .. } => {
                 PrimitiveContainer::LineDecoration {
@@ -1688,7 +1706,6 @@ impl PrimitiveContainer {
 
 pub enum PrimitiveDetails {
     Brush(BrushPrimitive),
-    TextRun(TextRunPrimitive),
 }
 
 pub struct Primitive {
@@ -1712,6 +1729,10 @@ pub enum PrimitiveInstanceKind {
     /// access the primitive details in the prim_store.
     LegacyPrimitive {
         prim_index: PrimitiveIndex,
+    },
+    /// A run of glyphs, with associated font parameters.
+    TextRun {
+        run: TextRunPrimitive,
     },
     /// A line decoration. cache_handle refers to a cached render
     /// task handle, if this line decoration is not a simple solid.
@@ -1912,6 +1933,7 @@ impl PrimitiveStore {
         // handled by this optimization. In the future, we can easily extend
         // this to other primitives, such as text runs and gradients.
         match prim_instance.kind {
+            PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 // TODO: Once rectangles and/or images are ported
                 //       to use interned primitives, we will need
@@ -1944,7 +1966,6 @@ impl PrimitiveStore {
                             BrushKind::Clear => {}
                         }
                     }
-                    PrimitiveDetails::TextRun(..) => {}
                 }
             }
         }
@@ -1992,9 +2013,6 @@ impl PrimitiveStore {
                                 unreachable!("bug: invalid prim type for opacity collapse");
                             }
                         }
-                    }
-                    PrimitiveDetails::TextRun(..) => {
-                        unreachable!("bug: invalid prim type for opacity collapse");
                     }
                 }
             }
@@ -2054,6 +2072,7 @@ impl PrimitiveStore {
                         }
                     }
                 }
+                PrimitiveInstanceKind::TextRun { .. } |
                 PrimitiveInstanceKind::LineDecoration { .. } |
                 PrimitiveInstanceKind::LegacyPrimitive { .. } => {
                     None
@@ -2107,6 +2126,7 @@ impl PrimitiveStore {
                 let pic = &self.pictures[pic_index.0];
                 (pic.local_rect, LayoutRect::max_rect())
             }
+            PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 let prim_data = &frame_state
                     .resources
@@ -2277,8 +2297,11 @@ impl PrimitiveStore {
                     );
                 }
             }
+            PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 prim_instance.prepare_interned_prim_for_render(
+                    prim_context,
+                    pic_context,
                     pic_state,
                     frame_context,
                     frame_state,
@@ -2291,7 +2314,6 @@ impl PrimitiveStore {
                     prim_local_rect,
                     prim_details,
                     prim_context,
-                    pic_context,
                     pic_state,
                     frame_context,
                     frame_state,
@@ -2705,6 +2727,7 @@ impl PrimitiveInstance {
     ) -> bool {
         let brush = match self.kind {
             PrimitiveInstanceKind::Picture { .. } |
+            PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 return false;
             }
@@ -2712,7 +2735,6 @@ impl PrimitiveInstance {
                 let prim = &mut primitives[prim_index.0];
                 match prim.details {
                     PrimitiveDetails::Brush(ref mut brush) => brush,
-                    PrimitiveDetails::TextRun(..) => return false,
                 }
             }
         };
@@ -2791,6 +2813,8 @@ impl PrimitiveInstance {
     /// prepare_prim_for_render_inner call for old style primitives.
     fn prepare_interned_prim_for_render(
         &mut self,
+        prim_context: &PrimitiveContext,
+        pic_context: &PictureContext,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
@@ -2805,10 +2829,15 @@ impl PrimitiveInstance {
             frame_state.gpu_cache,
         );
 
-        self.opacity = match prim_data.kind {
-            PrimitiveTemplateKind::LineDecoration { ref cache_key, ref color } => {
+        let is_chased = self.is_chased();
+
+        self.opacity = match (&mut self.kind, &mut prim_data.kind) {
+            (
+                PrimitiveInstanceKind::LineDecoration { ref mut cache_handle, .. },
+                PrimitiveTemplateKind::LineDecoration { ref cache_key, ref color }
+            ) => {
                 // Work out the device pixel size to be used to cache this line decoration.
-                if self.is_chased() {
+                if is_chased {
                     println!("\tline decoration opaque={}, key={:?}", self.opacity.is_opaque, cache_key);
                 }
 
@@ -2826,36 +2855,28 @@ impl PrimitiveInstance {
                         //           once the prepare_prims and batching are unified. When that
                         //           happens, we can use the cache handle immediately, and not need
                         //           to temporarily store it in the primitive instance.
-                        match self.kind {
-                            PrimitiveInstanceKind::LineDecoration { ref mut cache_handle, .. } => {
-                                *cache_handle = Some(frame_state.resource_cache.request_render_task(
-                                    RenderTaskCacheKey {
-                                        size: task_size,
-                                        kind: RenderTaskCacheKeyKind::LineDecoration(cache_key.clone()),
-                                    },
-                                    frame_state.gpu_cache,
-                                    frame_state.render_tasks,
-                                    None,
-                                    false,
-                                    |render_tasks| {
-                                        let task = RenderTask::new_line_decoration(
-                                            task_size,
-                                            cache_key.style,
-                                            cache_key.orientation,
-                                            cache_key.wavy_line_thickness.to_f32_px(),
-                                            LayoutSize::from_au(cache_key.size),
-                                        );
-                                        let task_id = render_tasks.add(task);
-                                        pic_state.tasks.push(task_id);
-                                        task_id
-                                    }
-                                ));
+                        *cache_handle = Some(frame_state.resource_cache.request_render_task(
+                            RenderTaskCacheKey {
+                                size: task_size,
+                                kind: RenderTaskCacheKeyKind::LineDecoration(cache_key.clone()),
+                            },
+                            frame_state.gpu_cache,
+                            frame_state.render_tasks,
+                            None,
+                            false,
+                            |render_tasks| {
+                                let task = RenderTask::new_line_decoration(
+                                    task_size,
+                                    cache_key.style,
+                                    cache_key.orientation,
+                                    cache_key.wavy_line_thickness.to_f32_px(),
+                                    LayoutSize::from_au(cache_key.size),
+                                );
+                                let task_id = render_tasks.add(task);
+                                pic_state.tasks.push(task_id);
+                                task_id
                             }
-                            PrimitiveInstanceKind::LegacyPrimitive { .. } |
-                            PrimitiveInstanceKind::Picture { .. } => {
-                                unreachable!();
-                            }
-                        }
+                        ));
 
                         PrimitiveOpacity::translucent()
                     }
@@ -2864,7 +2885,33 @@ impl PrimitiveInstance {
                     }
                 }
             }
-            PrimitiveTemplateKind::Unused => {
+            (
+                PrimitiveInstanceKind::TextRun { ref mut run, .. },
+                PrimitiveTemplateKind::TextRun { ref font, ref glyphs, .. }
+            ) => {
+                // The transform only makes sense for screen space rasterization
+                let transform = prim_context.spatial_node.world_content_transform.to_transform();
+
+                // TODO(gw): This match is a bit untidy, but it should disappear completely
+                //           once the prepare_prims and batching are unified. When that
+                //           happens, we can use the cache handle immediately, and not need
+                //           to temporarily store it in the primitive instance.
+                run.prepare_for_render(
+                    font,
+                    glyphs,
+                    frame_context.device_pixel_scale,
+                    &transform,
+                    pic_context.allow_subpixel_aa,
+                    pic_context.raster_space,
+                    frame_state.resource_cache,
+                    frame_state.gpu_cache,
+                    frame_state.render_tasks,
+                    frame_state.special_render_passes,
+                );
+
+                PrimitiveOpacity::translucent()
+            }
+            _ => {
                 unreachable!();
             }
         };
@@ -2875,7 +2922,6 @@ impl PrimitiveInstance {
         prim_local_rect: LayoutRect,
         prim_details: &mut PrimitiveDetails,
         prim_context: &PrimitiveContext,
-        pic_context: &PictureContext,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
@@ -2889,19 +2935,6 @@ impl PrimitiveInstance {
         );
 
         self.opacity = match *prim_details {
-            PrimitiveDetails::TextRun(ref mut text) => {
-                // The transform only makes sense for screen space rasterization
-                let transform = prim_context.spatial_node.world_content_transform.to_transform();
-                text.prepare_for_render(
-                    frame_context.device_pixel_scale,
-                    &transform,
-                    pic_context.allow_subpixel_aa,
-                    pic_context.raster_space,
-                    display_list,
-                    frame_state,
-                );
-                PrimitiveOpacity::translucent()
-            }
             PrimitiveDetails::Brush(ref mut brush) => {
                 match brush.kind {
                     BrushKind::Image {
@@ -3329,9 +3362,6 @@ impl PrimitiveInstance {
         let is_chased = self.is_chased();
         if let Some(mut request) = frame_state.gpu_cache.request(&mut self.gpu_location) {
             match *prim_details {
-                PrimitiveDetails::TextRun(ref mut text) => {
-                    text.write_gpu_blocks(&mut request);
-                }
                 PrimitiveDetails::Brush(ref mut brush) => {
                     brush.write_gpu_blocks(&mut request, prim_local_rect);
 
