@@ -958,7 +958,7 @@ var AddonTestUtils = {
     data = Object.assign({}, defaults, data);
 
     let props = ["id", "version", "type", "internalName", "updateURL",
-                 "optionsURL", "optionsType", "aboutURL", "iconURL", "icon64URL",
+                 "optionsURL", "optionsType", "aboutURL", "iconURL",
                  "skinnable", "bootstrap", "strictCompatibility",
                  "hasEmbeddedWebExtension"];
     rdf += this._writeProps(data, props);

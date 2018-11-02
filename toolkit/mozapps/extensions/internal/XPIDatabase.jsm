@@ -115,7 +115,7 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "version", "type",
                           "strictCompatibility", "locales", "targetApplications",
                           "targetPlatforms", "signedState",
                           "seen", "dependencies", "hasEmbeddedWebExtension",
-                          "userPermissions", "icons", "iconURL", "icon64URL",
+                          "userPermissions", "icons", "iconURL",
                           "blocklistState", "blocklistURL", "startupData",
                           "previewImage", "hidden", "installTelemetryInfo"];
 
@@ -807,10 +807,6 @@ AddonWrapper = class {
     return AddonManager.getPreferredIconURL(this, 48);
   }
 
-  get icon64URL() {
-    return AddonManager.getPreferredIconURL(this, 64);
-  }
-
   get icons() {
     let addon = addonFor(this);
     let icons = {};
@@ -831,10 +827,6 @@ AddonWrapper = class {
     if (canUseIconURLs && addon.iconURL) {
       icons[32] = addon.iconURL;
       icons[48] = addon.iconURL;
-    }
-
-    if (canUseIconURLs && addon.icon64URL) {
-      icons[64] = addon.icon64URL;
     }
 
     Object.freeze(icons);

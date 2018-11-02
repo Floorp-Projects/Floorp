@@ -37,6 +37,11 @@ def create_parser(mach_interface=False):
             help="How many samples to take with the profiler")
     add_arg('--symbolsPath', dest='symbols_path',
             help="Path to the symbols for the build we are testing")
+    add_arg('--page-cycles', dest="page_cycles", type=int,
+            help="How many times to repeat loading the test page (for page load tests); "
+                 "for benchmark tests this is how many times the benchmark test will be run")
+    add_arg('--page-timeout', dest="page_timeout", type=int,
+            help="How long to wait (ms) for one page_cycle to complete, before timing out")
     if not mach_interface:
         add_arg('--branchName', dest="branch_name", default='',
                 help="Name of the branch we are testing on")

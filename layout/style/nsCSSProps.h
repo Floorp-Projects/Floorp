@@ -351,7 +351,6 @@ public:
   static const KTableEntry kTextEmphasisStyleShapeKTable[];
   static const KTableEntry kTextOverflowKTable[];
   static const KTableEntry kTouchActionKTable[];
-  static const KTableEntry kTransitionTimingFunctionKTable[];
   static const KTableEntry kVerticalAlignKTable[];
   static const KTableEntry kWidthKTable[]; // also min-width, max-width
   static const KTableEntry kFlexBasisKTable[];

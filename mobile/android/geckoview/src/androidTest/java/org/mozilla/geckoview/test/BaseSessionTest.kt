@@ -41,6 +41,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val TITLE_CHANGE_HTML_PATH = "/assets/www/titleChange.html"
         const val TRACKERS_PATH = "/assets/www/trackers.html"
         const val UNKNOWN_HOST_URI = "http://www.test.invalid/"
+        const val FULLSCREEN_PATH = "/assets/www/fullscreen.html"
     }
 
     @get:Rule val sessionRule = GeckoSessionTestRule()

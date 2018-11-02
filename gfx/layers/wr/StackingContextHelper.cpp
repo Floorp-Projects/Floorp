@@ -23,6 +23,7 @@ StackingContextHelper::StackingContextHelper()
 }
 
 StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParentSC,
+                                             const ActiveScrolledRoot* aAsr,
                                              wr::DisplayListBuilder& aBuilder,
                                              const nsTArray<wr::WrFilterOp>& aFilters,
                                              const LayoutDeviceRect& aBounds,
@@ -80,6 +81,24 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
 
   mAffectsClipPositioning = mReferenceFrameId.isSome() ||
       (aBounds.TopLeft() != LayoutDevicePoint());
+
+  // If the parent stacking context has a deferred transform item, inherit it
+  // into this stacking context, as long as the ASR hasn't changed. Refer to
+  // the comments on StackingContextHelper::mDeferredTransformItem for an
+  // explanation of what goes in these fields.
+  if (aParentSC.mDeferredTransformItem &&
+      aAsr == (*aParentSC.mDeferredTransformItem)->GetActiveScrolledRoot()) {
+    if (mDeferredTransformItem) {
+      // If we are deferring another transform, put the combined transform from
+      // all the ancestor deferred items into mDeferredAncestorTransform
+      mDeferredAncestorTransform = aParentSC.GetDeferredTransformMatrix();
+    } else {
+      // We are not deferring another transform, so we can just inherit the
+      // parent stacking context's deferred data without any modification.
+      mDeferredTransformItem = aParentSC.mDeferredTransformItem;
+      mDeferredAncestorTransform = aParentSC.mDeferredAncestorTransform;
+    }
+  }
 }
 
 StackingContextHelper::~StackingContextHelper()
@@ -93,6 +112,25 @@ const Maybe<nsDisplayTransform*>&
 StackingContextHelper::GetDeferredTransformItem() const
 {
   return mDeferredTransformItem;
+}
+
+Maybe<gfx::Matrix4x4>
+StackingContextHelper::GetDeferredTransformMatrix() const
+{
+  if (mDeferredTransformItem) {
+    // See the comments on StackingContextHelper::mDeferredTransformItem for
+    // an explanation of what's stored in mDeferredTransformItem and
+    // mDeferredAncestorTransform. Here we need to return the combined transform
+    // transform from all the deferred ancestors, including
+    // mDeferredTransformItem.
+    gfx::Matrix4x4 result = (*mDeferredTransformItem)->GetTransform().GetMatrix();
+    if (mDeferredAncestorTransform) {
+      result = *mDeferredAncestorTransform * result;
+    }
+    return Some(result);
+  } else {
+    return Nothing();
+  }
 }
 
 } // namespace layers

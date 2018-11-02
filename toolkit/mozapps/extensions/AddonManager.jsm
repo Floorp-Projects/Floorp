@@ -2079,9 +2079,8 @@ var AddonManagerInternal = {
    *
    * @param  aAddon
    *         An addon object, meaning:
-   *         An object with either an icons property that is a key-value
-   *         list of icon size and icon URL, or an object having an iconURL
-   *         and icon64URL property.
+   *         An object with either an icons property that is a key-value list
+   *         of icon size and icon URL, or an object having an iconURL property.
    * @param  aSize
    *         Ideal icon size in pixels
    * @param  aWindow
@@ -2101,9 +2100,6 @@ var AddonManagerInternal = {
       if (aAddon.iconURL) {
         icons[32] = aAddon.iconURL;
         icons[48] = aAddon.iconURL;
-      }
-      if (aAddon.icon64URL) {
-        icons[64] = aAddon.icon64URL;
       }
     }
 

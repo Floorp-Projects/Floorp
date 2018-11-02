@@ -18,6 +18,8 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "nativeOSKeyStore",
                                    "@mozilla.org/security/oskeystore;1", Ci.nsIOSKeyStore);
+XPCOMUtils.defineLazyServiceGetter(this, "osReauthenticator",
+                                   "@mozilla.org/security/osreauthenticator;1", Ci.nsIOSReauthenticator);
 
 // Skip reauth during tests, only works in non-official builds.
 const TEST_ONLY_REAUTH = "extensions.formautofill.osKeyStore.unofficialBuildOnlyLogin";
@@ -57,30 +59,20 @@ var OSKeyStore = {
   },
 
   /**
-   * If the test pref exist and applicable,
-   * this method will dispatch a observer message and return
-   * to simulate successful reauth, or throw to simulate
-   * failed reauth.
+   * If the test pref exists, this method will dispatch a observer message and
+   * resolves to simulate successful reauth, or rejects to simulate failed reauth.
    *
-   * @returns {boolean} True when reauth should NOT be skipped,
-   *                    false when reauth has been skipped.
-   * @throws            If it needs to simulate reauth login failure.
+   * @returns {Promise<undefined>} Resolves when sucessful login, rejects when
+   *                               login fails.
    */
-  _maybeSkipReauthForTest() {
-    // Don't take test reauth pref in the following configurations.
-    if (nativeOSKeyStore.isNSSKeyStore ||
-        AppConstants.MOZILLA_OFFICIAL ||
-        !this._testReauth) {
-      return true;
-    }
-
+  async _reauthInTests() {
     // Skip this reauth because there is no way to mock the
     // native dialog in the testing environment, for now.
     log.debug("_ensureReauth: _testReauth: ", this._testReauth);
     switch (this._testReauth) {
       case "pass":
         Services.obs.notifyObservers(null, "oskeystore-testonly-reauth", "pass");
-        return false;
+        break;
       case "cancel":
         Services.obs.notifyObservers(null, "oskeystore-testonly-reauth", "cancel");
         throw new Components.Exception("Simulating user cancelling login dialog", Cr.NS_ERROR_FAILURE);
@@ -99,11 +91,13 @@ var OSKeyStore = {
    * This is why there aren't an |await| in the method. The method is marked as
    * |async| to communicate that it's async.
    *
-   * @param   {boolean} reauth Prompt the login dialog no matter it's logged in
-   *                           or not if it's set to true.
-   * @returns {Promise<boolean>} True if it's logged in or no password is set
-   *                             and false if it's still not logged in (prompt
-   *                             canceled or other error).
+   * @param   {boolean|string} reauth If it's set to true or a string, prompt
+   *                                  the reauth login dialog.
+   *                                  The string will be shown on the native OS
+   *                                  login dialog.
+   * @returns {Promise<boolean>}      True if it's logged in or no password is set
+   *                                  and false if it's still not logged in (prompt
+   *                                  canceled or other error).
    */
   async ensureLoggedIn(reauth = false) {
     if (this._pendingUnlockPromise) {
@@ -112,15 +106,30 @@ var OSKeyStore = {
     }
     log.debug("ensureLoggedIn: Creating new pending unlock promise. reauth: ", reauth);
 
-    // TODO: Implementing re-auth by passing this value to the native implementation
-    // in some way. Set this to false for now to ignore the reauth request (bug 1429265).
-    reauth = false;
+    let unlockPromise;
 
-    let unlockPromise = Promise.resolve().then(async () => {
-      if (reauth) {
-        reauth = this._maybeSkipReauthForTest();
-      }
+    // Decides who should handle reauth
+    if (typeof reauth == "boolean" && !reauth) {
+      unlockPromise = Promise.resolve();
+    } else if (!AppConstants.MOZILLA_OFFICIAL && this._testReauth) {
+      unlockPromise = this._reauthInTests();
+    } else if (AppConstants.platform == "win" ||
+               AppConstants.platform == "macosx") {
+      let reauthLabel = typeof reauth == "string" ? reauth : "";
+      // On Windows, this promise rejects when the user cancels login dialog, see bug 1502121.
+      // On macOS this resolves to false, so we would need to check it.
+      unlockPromise = osReauthenticator.asyncReauthenticateUser(reauthLabel)
+        .then(reauthResult => {
+          if (typeof reauthResult == "boolean" && !reauthResult) {
+            throw new Components.Exception("User canceled OS reauth entry", Cr.NS_ERROR_FAILURE);
+          }
+        });
+    } else {
+      log.debug("ensureLoggedIn: Skipping reauth on unsupported platforms");
+      unlockPromise = Promise.resolve();
+    }
 
+    unlockPromise = unlockPromise.then(async () => {
       if (!await nativeOSKeyStore.asyncSecretAvailable(this.STORE_LABEL)) {
         log.debug("ensureLoggedIn: Secret unavailable, attempt to generate new secret.");
         let recoveryPhrase = await nativeOSKeyStore.asyncGenerateSecret(this.STORE_LABEL);
@@ -170,10 +179,12 @@ var OSKeyStore = {
    *       don't show that dialog), apart from other errors (e.g., gracefully
    *       recover from that and still shows the dialog.)
    *
-   * @param   {string} cipherText Encrypted string including the algorithm details.
-   * @param   {boolean} reauth True if we want to force the prompt to show up
-   *                    even if the user is already logged in.
-   * @returns {Promise<string>} resolves to the decrypted string, or rejects otherwise.
+   * @param   {string}         cipherText Encrypted string including the algorithm details.
+   * @param   {boolean|string} reauth     If it's set to true or a string, prompt
+   *                                      the reauth login dialog.
+   *                                      The string may be shown on the native OS
+   *                                      login dialog.
+   * @returns {Promise<string>}           resolves to the decrypted string, or rejects otherwise.
    */
   async decrypt(cipherText, reauth = false) {
     if (!await this.ensureLoggedIn(reauth)) {
@@ -229,14 +240,6 @@ var OSKeyStore = {
    */
   async cleanup() {
     return nativeOSKeyStore.asyncDeleteSecret(this.STORE_LABEL);
-  },
-
-  /**
-   * Check if the implementation is using the NSS key store.
-   * If so, tests will be able to handle the reauth dialog.
-   */
-  get isNSSKeyStore() {
-    return nativeOSKeyStore.isNSSKeyStore;
   },
 };
 
