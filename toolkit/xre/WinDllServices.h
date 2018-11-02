@@ -7,11 +7,32 @@
 #ifndef mozilla_WinDllServices_h
 #define mozilla_WinDllServices_h
 
+#include "mozilla/CombinedStacks.h"
 #include "mozilla/glue/WindowsDllServices.h"
+#include "mozilla/ModuleEvaluator_windows.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 
 namespace mozilla {
+
+// Holds the data that telemetry requests, and will be later converted to the
+// telemetry payload.
+class UntrustedModuleLoadTelemetryData
+{
+public:
+  UntrustedModuleLoadTelemetryData() = default;
+  // Moves allowed, no copies.
+  UntrustedModuleLoadTelemetryData(UntrustedModuleLoadTelemetryData&&) = default;
+  UntrustedModuleLoadTelemetryData(
+      const UntrustedModuleLoadTelemetryData& aOther) = delete;
+
+  Vector<ModuleLoadEvent, 0, InfallibleAllocPolicy> mEvents;
+  Telemetry::CombinedStacks mStacks;
+  int mErrorModules = 0;
+};
+
+class UntrustedModulesManager;
 
 class DllServices : public mozilla::glue::DllServices
 {
@@ -21,6 +42,19 @@ public:
   static const char* kTopicDllLoadedMainThread;
   static const char* kTopicDllLoadedNonMainThread;
 
+  /**
+   * Processes pending untrusted module evaluation / examination, and returns
+   * a copy of the total data we've gathered for use by the untrusted modules
+   * telemetry ping.
+   *
+   * This function should be called on a background thread, and can take a
+   * while.
+   *
+   * @param  aOut [out] Receives a copy of internally-stored data.
+   * @return true upon success.
+   */
+  bool GetUntrustedModuleTelemetryData(UntrustedModuleLoadTelemetryData& aOut);
+
 private:
   DllServices();
   ~DllServices() = default;
@@ -29,6 +63,8 @@ private:
 
   void NotifyUntrustedModuleLoads(
     const Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy>& aEvents) override;
+
+  UniquePtr<UntrustedModulesManager> mUntrustedModulesManager;
 };
 
 } // namespace mozilla
