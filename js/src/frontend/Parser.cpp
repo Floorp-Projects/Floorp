@@ -73,25 +73,6 @@ using UsedNamePtr = UsedNameTracker::UsedNameMap::Ptr;
 
 using BindingNameVector = Vector<BindingName, 6>;
 
-// Read a token. Report an error and return null() if that token doesn't match
-// to the condition.  Do not use MUST_MATCH_TOKEN_INTERNAL directly.
-#define MUST_MATCH_TOKEN_INTERNAL(cond, modifier, errorReport, failureValue)                \
-    JS_BEGIN_MACRO                                                                          \
-        TokenKind token;                                                                    \
-        if (!tokenStream.getToken(&token, modifier))                                        \
-            return failureValue;                                                            \
-        if (!(cond)) {                                                                      \
-            errorReport;                                                                    \
-            return failureValue;                                                            \
-        }                                                                                   \
-    JS_END_MACRO
-
-#define MUST_MATCH_TOKEN_MOD_WITH_REPORT_OR(tt, modifier, errorReport, failureValue) \
-    MUST_MATCH_TOKEN_INTERNAL(token == tt, modifier, errorReport, failureValue)
-
-#define MUST_MATCH_TOKEN_MOD_WITH_REPORT(tt, modifier, errorReport) \
-    MUST_MATCH_TOKEN_MOD_WITH_REPORT_OR(tt, modifier, errorReport, null())
-
 template <class T, class U>
 static inline void
 PropagateTransitiveParseFlags(const T* inner, U* outer)
@@ -699,17 +680,17 @@ GeneralParser<ParseHandler, Unit>::asFinalParser() const
 }
 
 template <class ParseHandler, typename Unit>
-template <typename ConditionT>
+template <typename ConditionT, typename ErrorReportT>
 bool
 GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(ConditionT condition, Modifier modifier,
-                                                          unsigned errorNumber)
+                                                          ErrorReportT errorReport)
 {
     TokenKind actual;
     if (!tokenStream.getToken(&actual, modifier)) {
         return false;
     }
     if (!condition(actual)) {
-        error(errorNumber);
+        errorReport(actual);
         return false;
     }
     return true;
@@ -4250,10 +4231,14 @@ GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(InHandling in
     }
 
     if (bodyType == StatementListBody) {
-        MUST_MATCH_TOKEN_MOD_WITH_REPORT_OR(TokenKind::RightCurly, TokenStream::Operand,
-                                            reportMissingClosing(JSMSG_CURLY_AFTER_BODY,
-                                                                 JSMSG_CURLY_OPENED, openedPos),
-                                            false);
+        if (!mustMatchToken(TokenKind::RightCurly, TokenStream::Operand,
+                            [this, openedPos](TokenKind actual) {
+                                this->reportMissingClosing(JSMSG_CURLY_AFTER_BODY,
+                                                           JSMSG_CURLY_OPENED, openedPos);
+                            }))
+        {
+            return false;
+        }
         funbox->setEnd(anyChars);
     } else {
         MOZ_ASSERT(kind == FunctionSyntaxKind::Arrow);
@@ -5101,9 +5086,14 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(DeclarationKind kind,
         }
     }
 
-    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::RightCurly, TokenStream::Operand,
-                                     reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
-                                                          JSMSG_CURLY_OPENED, begin));
+    if (!mustMatchToken(TokenKind::RightCurly, TokenStream::Operand,
+                        [this, begin](TokenKind actual) {
+                            this->reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
+                                                       JSMSG_CURLY_OPENED, begin);
+                        }))
+    {
+        return null();
+    }
 
     handler.setEndPosition(literal, pos().end);
     return literal;
@@ -5202,9 +5192,14 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(DeclarationKind kind,
          }
      }
 
-     MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::RightBracket, TokenStream::Operand,
-                                      reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
-                                                           JSMSG_BRACKET_OPENED, begin));
+     if (!mustMatchToken(TokenKind::RightBracket, TokenStream::Operand,
+                         [this, begin](TokenKind actual) {
+                             this->reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
+                                                        JSMSG_BRACKET_OPENED, begin);
+                         }))
+     {
+         return null();
+     }
 
     handler.setEndPosition(literal, pos().end);
     return literal;
@@ -5265,9 +5260,13 @@ GeneralParser<ParseHandler, Unit>::blockStatement(YieldHandling yieldHandling,
         return null();
     }
 
-    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::RightCurly, TokenStream::Operand,
-                                     reportMissingClosing(errorNumber, JSMSG_CURLY_OPENED,
-                                                          openedPos));
+    if (!mustMatchToken(TokenKind::RightCurly, TokenStream::Operand,
+                        [this, errorNumber, openedPos](TokenKind actual) {
+                            this->reportMissingClosing(errorNumber, JSMSG_CURLY_OPENED, openedPos);
+                        }))
+    {
+        return null();
+    }
 
     return finishLexicalScope(scope, list);
 }
@@ -7142,10 +7141,14 @@ GeneralParser<ParseHandler, Unit>::forStatement(YieldHandling yieldHandling)
         }
     }
 
-    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::LeftParen, TokenStream::None,
-                                     error((token == TokenKind::Await && !pc->isAsync())
-                                           ? JSMSG_FOR_AWAIT_OUTSIDE_ASYNC
-                                           : JSMSG_PAREN_AFTER_FOR));
+    if (!mustMatchToken(TokenKind::LeftParen, [this](TokenKind actual) {
+                            this->error((actual == TokenKind::Await && !this->pc->isAsync())
+                                        ? JSMSG_FOR_AWAIT_OUTSIDE_ASYNC
+                                        : JSMSG_PAREN_AFTER_FOR);
+                        }))
+    {
+        return null();
+    }
 
     // ParseNodeKind::ForHead, ParseNodeKind::ForIn, or
     // ParseNodeKind::ForOf depending on the loop type.
@@ -7786,9 +7789,14 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling)
             return null();
         }
 
-        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::RightCurly, TokenStream::Operand,
-                                         reportMissingClosing(JSMSG_CURLY_AFTER_TRY,
-                                                              JSMSG_CURLY_OPENED, openedPos));
+        if (!mustMatchToken(TokenKind::RightCurly, TokenStream::Operand,
+                            [this, openedPos](TokenKind actual) {
+                                this->reportMissingClosing(JSMSG_CURLY_AFTER_TRY,
+                                                           JSMSG_CURLY_OPENED, openedPos);
+                            }))
+        {
+            return null();
+        }
     }
 
     LexicalScopeNodeType catchScope = null();
@@ -7908,9 +7916,14 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling)
             return null();
         }
 
-        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::RightCurly, TokenStream::Operand,
-                                         reportMissingClosing(JSMSG_CURLY_AFTER_FINALLY,
-                                                              JSMSG_CURLY_OPENED, openedPos));
+        if (!mustMatchToken(TokenKind::RightCurly, TokenStream::Operand,
+                            [this, openedPos](TokenKind actual) {
+                                this->reportMissingClosing(JSMSG_CURLY_AFTER_FINALLY,
+                                                           JSMSG_CURLY_OPENED, openedPos);
+                            }))
+        {
+            return null();
+        }
     } else {
         anyChars.ungetToken();
     }
@@ -7951,9 +7964,14 @@ GeneralParser<ParseHandler, Unit>::catchBlockStatement(YieldHandling yieldHandli
         return null();
     }
 
-    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::RightCurly, TokenStream::Operand,
-                                     reportMissingClosing(JSMSG_CURLY_AFTER_CATCH,
-                                                          JSMSG_CURLY_OPENED, openedPos));
+    if (!mustMatchToken(TokenKind::RightCurly, TokenStream::Operand,
+                        [this, openedPos](TokenKind actual) {
+                            this->reportMissingClosing(JSMSG_CURLY_AFTER_CATCH,
+                                                       JSMSG_CURLY_OPENED, openedPos);
+                        }))
+    {
+        return null();
+    }
 
     // The catch parameter names are not bound in the body scope, so remove
     // them before generating bindings.
@@ -10360,9 +10378,14 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(YieldHandling yieldHandling,
             }
         }
 
-        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::RightBracket, TokenStream::Operand,
-                                         reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
-                                                              JSMSG_BRACKET_OPENED, begin));
+        if (!mustMatchToken(TokenKind::RightBracket, TokenStream::Operand,
+                            [this, begin](TokenKind actual) {
+                                this->reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
+                                                           JSMSG_BRACKET_OPENED, begin);
+                            }))
+        {
+            return null();
+        }
     }
 
     handler.setEndPosition(literal, pos().end);
@@ -10867,9 +10890,14 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
         }
     }
 
-    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::RightCurly, TokenStream::Operand,
-                                     reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
-                                                          JSMSG_CURLY_OPENED, openedPos));
+    if (!mustMatchToken(TokenKind::RightCurly, TokenStream::Operand,
+                        [this, openedPos](TokenKind actual) {
+                            this->reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
+                                                       JSMSG_CURLY_OPENED, openedPos);
+                        }))
+    {
+        return null();
+    }
 
     handler.setEndPosition(literal, pos().end);
     return literal;
