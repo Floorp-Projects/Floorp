@@ -40,29 +40,43 @@ class ReadableStream : public NativeObject
         Slot_StoredError,
         SlotCount
     };
-
-    enum State {
-         Readable  = 1 << 0,
-         Closed    = 1 << 1,
-         Errored   = 1 << 2,
-         Disturbed = 1 << 3
+  private:
+    enum StateBits {
+        Readable  = 0, 
+        Closed    = 1,
+        Errored   = 2,
+        StateMask = 0x000000ff,
+        Disturbed = 0x00000100
     };
 
-  private:
     uint32_t stateBits() const { return getFixedSlot(Slot_State).toInt32(); }
-    void initStateBits(uint32_t stateBits) { setFixedSlot(Slot_State, Int32Value(stateBits)); }
-    void setStateBits(uint32_t stateBits) {
-        MOZ_ASSERT_IF(disturbed(), stateBits & Disturbed);
-        MOZ_ASSERT_IF(closed() || errored(), !(stateBits & Readable));
+    void initStateBits(uint32_t stateBits) {
+        MOZ_ASSERT((stateBits & ~Disturbed) <= Errored);
         setFixedSlot(Slot_State, Int32Value(stateBits));
+    }
+    void setStateBits(uint32_t stateBits) {
+#ifdef DEBUG
+        bool wasDisturbed = disturbed();
+        bool wasClosedOrErrored = closed() || errored();
+#endif
+        initStateBits(stateBits);
+        MOZ_ASSERT_IF(wasDisturbed, disturbed());
+        MOZ_ASSERT_IF(wasClosedOrErrored, !readable());
+    }
+
+    StateBits state() const { return StateBits(stateBits() & StateMask); }
+    void setState(StateBits state) {
+        MOZ_ASSERT(state <= Errored);
+        uint32_t current = stateBits() & ~StateMask;
+        setStateBits(current | state);
     }
 
   public:
-    bool readable() const { return stateBits() & Readable; }
-    bool closed() const { return stateBits() & Closed; }
-    void setClosed() { setStateBits((stateBits() & Disturbed) | Closed); }
-    bool errored() const { return stateBits() & Errored; }
-    void setErrored() { setStateBits((stateBits() & Disturbed) | Errored); }
+    bool readable() const { return state() == Readable; }
+    bool closed() const { return state() == Closed; }
+    void setClosed() { setState(Closed); }
+    bool errored() const { return state() == Errored; }
+    void setErrored() { setState(Errored); }
     bool disturbed() const { return stateBits() & Disturbed; }
     void setDisturbed() { setStateBits(stateBits() | Disturbed); }
 
