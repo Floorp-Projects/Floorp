@@ -6,6 +6,7 @@
 
 #include "frontend/BytecodeCompiler.h"
 
+#include "mozilla/Attributes.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Maybe.h"
 
@@ -75,13 +76,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
         return createSourceAndParser(ParseGoal::Script) && createCompleteScript();
     }
 
-    // Call this before calling compileModule.
-    MOZ_MUST_USE bool prepareModuleParse() {
-        return createSourceAndParser(ParseGoal::Module) && createCompleteScript();
-    }
-
-    ModuleObject* compileModule(HandleScope enclosingScope);
-
     // Call this before calling parseStandaloneFunction.
     MOZ_MUST_USE bool prepareStandaloneFunctionParse(const Maybe<uint32_t>& parameterListEnd) {
         return createSourceAndParser(ParseGoal::Script, parameterListEnd);
@@ -97,6 +91,16 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
   protected:
     JSScript* compileScript(HandleObject environment, SharedContext* sc);
+
+    MOZ_MUST_USE bool createSourceAndParser(ParseGoal goal,
+                                            const Maybe<uint32_t>& parameterListEnd = Nothing());
+
+    // This assumes the created script's offsets in the source used to parse it
+    // are the same as are used to compute its Function.prototype.toString()
+    // value.
+    MOZ_MUST_USE bool createCompleteScript();
+
+    MOZ_MUST_USE bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter, SharedContext* sharedContext);
 
   private:
     void assertSourceAndParserCreated() const {
@@ -114,13 +118,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
     bool createScriptSource(const Maybe<uint32_t>& parameterListEnd);
     bool canLazilyParse();
     bool createParser(ParseGoal goal);
-    bool createSourceAndParser(ParseGoal goal,
-                               const Maybe<uint32_t>& parameterListEnd = Nothing());
-
-    // This assumes the created script's offsets in the source used to parse it
-    // are the same as are used to compute its Function.prototype.toString()
-    // value.
-    bool createCompleteScript();
 
     // This uses explicitly-provided toString offsets as the created script's
     // offsets in the source.
@@ -128,7 +125,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     using TokenStreamPosition = frontend::TokenStreamPosition<char16_t>;
 
-    bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter, SharedContext* sharedContext);
     bool handleParseFailure(const Directives& newDirectives, TokenStreamPosition& startPosition);
     bool deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObject environment);
 };
@@ -176,6 +172,18 @@ class MOZ_STACK_CLASS EvalScriptBytecodeCompiler final
         }
         return compileScript(environment_, &evalsc_);
     }
+};
+
+class MOZ_STACK_CLASS ModuleBytecodeCompiler final
+  : public BytecodeCompiler
+{
+  public:
+    ModuleBytecodeCompiler(JSContext* cx, const ReadOnlyCompileOptions& options,
+                           SourceBufferHolder& sourceBuffer)
+      : BytecodeCompiler(cx, options, sourceBuffer)
+    {}
+
+    ModuleObject* compile();
 };
 
 AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
@@ -445,9 +453,11 @@ BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
 }
 
 ModuleObject*
-BytecodeCompiler::compileModule(HandleScope enclosingScope)
+ModuleBytecodeCompiler::compile()
 {
-    assertSourceParserAndScriptCreated();
+    if (!createSourceAndParser(ParseGoal::Module) || !createCompleteScript()) {
+        return nullptr;
+    }
 
     Rooted<ModuleObject*> module(cx, ModuleObject::create(cx));
     if (!module) {
@@ -458,6 +468,7 @@ BytecodeCompiler::compileModule(HandleScope enclosingScope)
 
     ModuleBuilder builder(cx, module, parser->anyChars);
 
+    RootedScope enclosingScope(cx, &cx->global()->emptyGlobalScope());
     ModuleSharedContext modulesc(cx, module, enclosingScope, builder);
     ParseNode* pn = parser->moduleBody(&modulesc);
     if (!pn) {
@@ -785,15 +796,10 @@ frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInpu
     options.setIsRunOnce(true);
     options.allowHTMLComments = false;
 
-    BytecodeCompiler compiler(cx, options, srcBuf);
+    ModuleBytecodeCompiler compiler(cx, options, srcBuf);
     AutoInitializeSourceObject autoSSO(compiler, sourceObjectOut);
 
-    if (!compiler.prepareModuleParse()) {
-        return nullptr;
-    }
-
-    RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
-    ModuleObject* module = compiler.compileModule(emptyGlobalScope);
+    ModuleObject* module = compiler.compile();
     if (!module) {
         return nullptr;
     }
