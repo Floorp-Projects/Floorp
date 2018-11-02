@@ -69,8 +69,8 @@
 #include "nsPluginFrame.h"
 #include "nsSliderFrame.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
-#include <mozilla/layers/AxisPhysicsModel.h>
-#include <mozilla/layers/AxisPhysicsMSDModel.h>
+#include "mozilla/layers/AxisPhysicsModel.h"
+#include "mozilla/layers/AxisPhysicsMSDModel.h"
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ScrollLinkedEffectDetector.h"
 #include "mozilla/Unused.h"
