@@ -137,14 +137,14 @@ STRUCT!{#[repr(packed)] struct DWM_PRESENT_PARAMETERS {
     eSampling: DWM_SOURCE_FRAME_SAMPLING,
 }}
 // pub const DWM_FRAME_DURATION_DEFAULT: i32 = -1;
-FN!{stdcall DwmDefWindowProc(
-    hWnd: HWND,
-    msg: UINT,
-    wParam: WPARAM,
-    lParam: LPARAM,
-    plResult: *mut LRESULT,
-) -> BOOL}
 extern "system" {
+    pub fn DwmDefWindowProc(
+        hWnd: HWND,
+        msg: UINT,
+        wParam: WPARAM,
+        lParam: LPARAM,
+        plResult: *mut LRESULT,
+    ) -> BOOL;
     pub fn DwmEnableBlurBehindWindow(
         hWnd: HWND,
         pBlurBehind: *const DWM_BLURBEHIND,

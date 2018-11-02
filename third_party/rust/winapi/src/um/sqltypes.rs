@@ -6,7 +6,7 @@
 // except according to those terms.
 //! This module defines the types used in ODBC
 use ctypes::*;
-#[cfg(target_arch = "x86_64")]
+#[cfg(target_pointer_width = "64")]
 use shared::basetsd::{INT64, UINT64};
 use shared::guiddef::GUID;
 use shared::windef::HWND;
@@ -18,11 +18,11 @@ pub type SQLDOUBLE = c_double;
 pub type SQLFLOAT = c_double;
 pub type SQLINTEGER = c_long;
 pub type SQLUINTEGER = c_ulong;
-#[cfg(target_arch = "x86_64")]
+#[cfg(target_pointer_width = "64")]
 pub type SQLLEN = INT64;
-#[cfg(target_arch = "x86_64")]
+#[cfg(target_pointer_width = "64")]
 pub type SQLULEN = UINT64;
-#[cfg(target_arch = "x86_64")]
+#[cfg(target_pointer_width = "64")]
 pub type SQLSETPOSIROW = UINT64;
 #[cfg(target_arch = "x86")]
 pub type SQLLEN = SQLINTEGER;

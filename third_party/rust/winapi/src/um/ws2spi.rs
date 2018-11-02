@@ -20,7 +20,7 @@ use um::winsock2::{
     LPWSAOVERLAPPED_COMPLETION_ROUTINE, LPWSAPROTOCOL_INFOW, LPWSAQUERYSET2W, LPWSAQUERYSETW,
     LPWSASERVICECLASSINFOW, SOCKET, WSAESETSERVICEOP, WSAEVENT, fd_set, timeval,
 };
-#[cfg(target_arch = "x86_64")]
+#[cfg(target_pointer_width = "64")]
 use um::winsock2::{LPWSANAMESPACE_INFOEXW, LPWSANAMESPACE_INFOW};
 use vc::vcruntime::size_t;
 pub const WSPDESCRIPTION_LEN: usize = 255;
@@ -427,7 +427,7 @@ FN!{stdcall LPWSCENUMPROTOCOLS(
     lpErrno: LPINT,
 ) -> c_int}
 extern "system" {
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn WSCEnumProtocols32(
         lpiProtocols: LPINT,
         lpProtocolBuffer: LPWSAPROTOCOL_INFOW,
@@ -444,7 +444,7 @@ FN!{stdcall LPWSCDEINSTALLPROVIDER(
     lpErrno: LPINT,
 ) -> c_int}
 extern "system" {
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn WSCDeinstallProvider32(
         lpProviderId: LPGUID,
         lpErrno: LPINT,
@@ -465,7 +465,7 @@ FN!{stdcall LPWSCINSTALLPROVIDER(
     lpErrno: LPINT,
 ) -> c_int}
 extern "system" {
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn WSCInstallProvider64_32(
         lpProviderId: LPGUID,
         lpszProviderDllPath: *const WCHAR,
@@ -487,7 +487,7 @@ FN!{stdcall LPWSCGETPROVIDERPATH(
     lpErrno: LPINT,
 ) -> c_int}
 extern "system" {
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn WSCGetProviderPath32(
         lpProviderId: LPGUID,
         lpszProviderDllPath: *mut WCHAR,
@@ -509,7 +509,7 @@ FN!{stdcall LPWSCUPDATEPROVIDER(
     dwNumberOfEntries: DWORD,
     lpErrno: LPINT,
 ) -> c_int}
-#[cfg(target_arch = "x86_64")]
+#[cfg(target_pointer_width = "64")]
 extern "system" {
     pub fn WSCUpdateProvider32(
         lpProviderId: LPGUID,
@@ -553,7 +553,7 @@ extern "system" {
         Flags: DWORD,
         lpErrno: LPINT,
     ) -> c_int;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn WSCSetProviderInfo32(
         lpProviderId: LPGUID,
         InfoType: WSC_PROVIDER_INFO_TYPE,
@@ -562,7 +562,7 @@ extern "system" {
         Flags: DWORD,
         lpErrno: LPINT,
     ) -> c_int;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn WSCGetProviderInfo32(
         lpProviderId: LPGUID,
         InfoType: WSC_PROVIDER_INFO_TYPE,
@@ -665,12 +665,12 @@ extern "system" {
         lpThreadId: LPWSATHREADID,
         lpErrno: LPINT,
     ) -> c_int;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn WSCEnumNameSpaceProviders32(
         lpdwBufferLength: LPDWORD,
         lpnspBuffer: LPWSANAMESPACE_INFOW,
     ) -> INT;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn WSCEnumNameSpaceProvidersEx32(
         lpdwBufferLength: LPDWORD,
         lpnspBuffer: LPWSANAMESPACE_INFOEXW,
@@ -691,7 +691,7 @@ FN!{stdcall LPWSCINSTALLNAMESPACE(
     lpProviderId: LPGUID,
 ) -> INT}
 extern "system" {
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn WSCInstallNameSpace32(
         lpszIdentifier: LPWSTR,
         lpszPathName: LPWSTR,
@@ -715,7 +715,7 @@ extern "system" {
         lpProviderId: LPGUID,
         lpProviderSpecific: LPBLOB,
     ) -> INT;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn WSCInstallNameSpaceEx32(
         lpszIdentifier: LPWSTR,
         lpszPathName: LPWSTR,
@@ -724,7 +724,7 @@ extern "system" {
         lpProviderId: LPGUID,
         lpProviderSpecific: LPBLOB,
     ) -> INT;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn WSCUnInstallNameSpace32(
         lpProviderId: LPGUID,
     ) -> INT;
@@ -738,12 +738,12 @@ FN!{stdcall LPWSCENABLENSPROVIDER(
     fEnable: BOOL,
 ) -> INT}
 extern "system" {
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn WSCEnableNSProvider32(
         lpProviderId: LPGUID,
         fEnable: BOOL,
     ) -> INT;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn WSCInstallProviderAndChains64_32(
         lpProviderId: LPGUID,
         lpszProviderDllPath: LPWSTR,
