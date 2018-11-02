@@ -12,6 +12,7 @@
 #define MALLOC_DECL(name, return_type, ...) \
   MOZ_MEMORY_API return_type name ## _impl(__VA_ARGS__);
 #include "malloc_decls.h"
+#include "mozilla/mozalloc.h"
 #endif
 
 #include <windows.h>
@@ -25,8 +26,11 @@
 
 #include "Authenticode.h"
 #include "CrashAnnotations.h"
+#include "MozglueUtils.h"
+#include "UntrustedDllsHandler.h"
 #include "nsAutoPtr.h"
 #include "nsWindowsDllInterceptor.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StackWalk_windows.h"
 #include "mozilla/UniquePtr.h"
@@ -41,6 +45,9 @@ using namespace mozilla;
 
 using CrashReporter::Annotation;
 using CrashReporter::AnnotationToString;
+
+static SRWLOCK gDllServicesLock = SRWLOCK_INIT;
+static glue::detail::DllServicesBase* gDllServices;
 
 #define DLL_BLOCKLIST_ENTRY(name, ...) \
   { name, __VA_ARGS__ },
@@ -80,6 +87,16 @@ printf_stderr(const char *fmt, ...)
   fclose(fp);
 }
 
+// This feature is enabled only on NIGHTLY, only for the main process.
+inline static bool
+IsUntrustedDllsHandlerEnabled()
+{
+#ifdef NIGHTLY_BUILD
+  return !(sInitFlags & eDllBlocklistInitFlagIsChildProcess);
+#else
+  return false;
+#endif
+}
 
 typedef MOZ_NORETURN_PTR void (__fastcall* BaseThreadInitThunk_func)(BOOL aIsInitialThread, void* aStartAddress, void* aThreadParam);
 static WindowsDllInterceptor::FuncHookType<BaseThreadInitThunk_func> stub_BaseThreadInitThunk;
@@ -454,6 +471,16 @@ DllBlocklist_TestBlocklistIntegrity()
 static NTSTATUS NTAPI
 patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle)
 {
+  if (IsUntrustedDllsHandlerEnabled()) {
+    glue::UntrustedDllsHandler::EnterLoaderCall();
+  }
+  // Warning: this must be at the top function scope.
+  auto exitLoaderCallScopeExit = MakeScopeExit([]() {
+    if (IsUntrustedDllsHandlerEnabled()) {
+      glue::UntrustedDllsHandler::ExitLoaderCall();
+    }
+  });
+
   // We have UCS2 (UTF16?), we want ASCII, but we also just want the filename portion
 #define DLLNAME_MAX 128
   char dllName[DLLNAME_MAX+1];
@@ -650,8 +677,27 @@ continue_loading:
   // holds the RtlLookupFunctionEntry lock.
   AutoSuppressStackWalking suppress;
 #endif
+  NTSTATUS ret;
+  HANDLE myHandle;
+  ret = stub_LdrLoadDll(filePath, flags, moduleFileName, &myHandle);
+  if (handle) {
+    *handle = myHandle;
+  }
 
-  NTSTATUS ret = stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
+  if (IsUntrustedDllsHandlerEnabled() && NT_SUCCESS(ret)) {
+    // Win32 HMODULEs use the bottom two bits as flags. Ensure those bits are
+    // cleared so we're left with the base address value.
+    glue::UntrustedDllsHandler::OnAfterModuleLoad(
+        (uintptr_t)myHandle & ~(uintptr_t)3, moduleFileName);
+    glue::AutoSharedLock lock(gDllServicesLock);
+    if (gDllServices) {
+      Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy> events;
+      if (glue::UntrustedDllsHandler::TakePendingEvents(events)) {
+        gDllServices->NotifyUntrustedModuleLoads(events);
+      }
+    }
+  }
+
   CallDllLoadHook(NT_SUCCESS(ret), ret, handle ? *handle : 0, moduleFileName);
   return ret;
 }
@@ -731,6 +777,10 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
 #if defined(NIGHTLY_BUILD)
   gStartAddressesToBlock = new mozilla::Vector<void*, 4>;
 #endif
+
+  if (IsUntrustedDllsHandlerEnabled()) {
+    glue::UntrustedDllsHandler::Init();
+  }
 
   // In order to be effective against AppInit DLLs, the blocklist must be
   // initialized before user32.dll is loaded into the process (bug 932100).
@@ -821,6 +871,9 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
 MFBT_API void
 DllBlocklist_Shutdown()
 {
+  if (IsUntrustedDllsHandlerEnabled()) {
+    glue::UntrustedDllsHandler::Shutdown();
+  }
 }
 #endif // DEBUG
 
@@ -884,56 +937,6 @@ DllBlocklist_CheckStatus()
 // This section is for DLL Services
 // ============================================================================
 
-
-static SRWLOCK gDllServicesLock = SRWLOCK_INIT;
-static mozilla::glue::detail::DllServicesBase* gDllServices;
-
-class MOZ_RAII AutoSharedLock final
-{
-public:
-  explicit AutoSharedLock(SRWLOCK& aLock)
-    : mLock(aLock)
-  {
-    ::AcquireSRWLockShared(&aLock);
-  }
-
-  ~AutoSharedLock()
-  {
-    ::ReleaseSRWLockShared(&mLock);
-  }
-
-  AutoSharedLock(const AutoSharedLock&) = delete;
-  AutoSharedLock(AutoSharedLock&&) = delete;
-  AutoSharedLock& operator=(const AutoSharedLock&) = delete;
-  AutoSharedLock& operator=(AutoSharedLock&&) = delete;
-
-private:
-  SRWLOCK& mLock;
-};
-
-class MOZ_RAII AutoExclusiveLock final
-{
-public:
-  explicit AutoExclusiveLock(SRWLOCK& aLock)
-    : mLock(aLock)
-  {
-    ::AcquireSRWLockExclusive(&aLock);
-  }
-
-  ~AutoExclusiveLock()
-  {
-    ::ReleaseSRWLockExclusive(&mLock);
-  }
-
-  AutoExclusiveLock(const AutoExclusiveLock&) = delete;
-  AutoExclusiveLock(AutoExclusiveLock&&) = delete;
-  AutoExclusiveLock& operator=(const AutoExclusiveLock&) = delete;
-  AutoExclusiveLock& operator=(AutoExclusiveLock&&) = delete;
-
-private:
-  SRWLOCK& mLock;
-};
-
 // These types are documented on MSDN but not provided in any SDK headers
 
 enum DllNotificationReason
@@ -986,7 +989,7 @@ DllLoadNotification(ULONG aReason, PCLDR_DLL_NOTIFICATION_DATA aNotificationData
     return;
   }
 
-  AutoSharedLock lock(gDllServicesLock);
+  glue::AutoSharedLock lock(gDllServicesLock);
   if (!gDllServices) {
     return;
   }
@@ -1002,8 +1005,7 @@ Authenticode* GetAuthenticode();
 MFBT_API void
 DllBlocklist_SetDllServices(mozilla::glue::detail::DllServicesBase* aSvc)
 {
-  AutoExclusiveLock lock(gDllServicesLock);
-
+  glue::AutoExclusiveLock lock(gDllServicesLock);
   if (aSvc) {
     aSvc->SetAuthenticodeImpl(GetAuthenticode());
 
@@ -1022,5 +1024,11 @@ DllBlocklist_SetDllServices(mozilla::glue::detail::DllServicesBase* aSvc)
   }
 
   gDllServices = aSvc;
-}
 
+  if (IsUntrustedDllsHandlerEnabled() && gDllServices) {
+    Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy> events;
+    if (glue::UntrustedDllsHandler::TakePendingEvents(events)) {
+      gDllServices->NotifyUntrustedModuleLoads(events);
+    }
+  }
+}
