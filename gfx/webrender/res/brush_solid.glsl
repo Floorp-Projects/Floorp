@@ -35,7 +35,9 @@ void brush_vs(
     vec4 unused
 ) {
     SolidBrush prim = fetch_solid_primitive(prim_address);
-    vColor = prim.color;
+
+    float opacity = float(user_data.x) / 65535.0;
+    vColor = prim.color * opacity;
 
 #ifdef WR_FEATURE_ALPHA_PASS
     vLocalPos = vi.local_pos;
