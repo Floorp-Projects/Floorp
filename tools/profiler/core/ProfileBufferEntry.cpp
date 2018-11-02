@@ -8,6 +8,7 @@
 #include "platform.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/Logging.h"
 
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
@@ -1215,6 +1216,7 @@ struct CounterKeyedSample
 
 typedef nsTArray<CounterKeyedSample> CounterKeyedSamples;
 
+static LazyLogModule sFuzzyfoxLog("Fuzzyfox");
 
 typedef nsDataHashtable<nsUint64HashKey, CounterKeyedSamples> CounterMap;
 
@@ -1347,6 +1349,10 @@ ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
       for (size_t i = 0; i < size; i++) {
         // Encode as deltas, and only encode if different than the last sample
         if (i == 0 || samples[i].mNumber != previousNumber || samples[i].mCount != previousCount) {
+          if (samples[i].mTime >= samples[i - 1].mTime) {
+            MOZ_LOG(sFuzzyfoxLog, mozilla::LogLevel::Error,
+              ("Fuzzyfox Profiler Assertion: %f >= %f", samples[i].mTime, samples[i - 1].mTime));
+          }
           MOZ_ASSERT(i == 0 ||
                      samples[i].mTime >= samples[i - 1].mTime);
           MOZ_ASSERT(samples[i].mNumber >= previousNumber);
