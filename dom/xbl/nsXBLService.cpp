@@ -555,17 +555,9 @@ nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
   nsCOMPtr<nsIDocument> document = aElement->OwnerDoc();
 
   nsAutoCString urlspec;
-  nsresult rv;
-  bool ok = nsContentUtils::GetWrapperSafeScriptFilename(document, aURL,
-                                                         urlspec, &rv);
+  nsresult rv = aURL->GetSpec(urlspec);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
-  }
-
-  if (ok) {
-    // Block an attempt to load a binding that has special wrapper
-    // automation needs.
-    return NS_OK;
   }
 
   if (binding) {

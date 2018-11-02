@@ -4187,62 +4187,6 @@ nsContentUtils::IsUtf8OnlyPlainTextType(const nsACString& aContentType)
          aContentType.EqualsLiteral(TEXT_VTT);
 }
 
-bool
-nsContentUtils::GetWrapperSafeScriptFilename(nsIDocument* aDocument,
-                                             nsIURI* aURI,
-                                             nsACString& aScriptURI,
-                                             nsresult* aRv)
-{
-  MOZ_ASSERT(aRv);
-  bool scriptFileNameModified = false;
-  *aRv = NS_OK;
-
-  *aRv = aURI->GetSpec(aScriptURI);
-  NS_ENSURE_SUCCESS(*aRv, false);
-
-  if (IsChromeDoc(aDocument)) {
-    nsCOMPtr<nsIChromeRegistry> chromeReg =
-      mozilla::services::GetChromeRegistryService();
-
-    if (!chromeReg) {
-      // If we're running w/o a chrome registry we won't modify any
-      // script file names.
-
-      return scriptFileNameModified;
-    }
-
-    bool docWrappersEnabled =
-      chromeReg->WrappersEnabled(aDocument->GetDocumentURI());
-
-    bool uriWrappersEnabled = chromeReg->WrappersEnabled(aURI);
-
-    nsIURI *docURI = aDocument->GetDocumentURI();
-
-    if (docURI && docWrappersEnabled && !uriWrappersEnabled) {
-      // aURI is a script from a URL that doesn't get wrapper
-      // automation. aDocument is a chrome document that does get
-      // wrapper automation. Prepend the chrome document's URI
-      // followed by the string " -> " to the URI of the script we're
-      // loading here so that script in that URI gets the same wrapper
-      // automation that the chrome document expects.
-      nsAutoCString spec;
-      *aRv = docURI->GetSpec(spec);
-      if (NS_WARN_IF(NS_FAILED(*aRv))) {
-        return false;
-      }
-
-      spec.AppendLiteral(" -> ");
-      spec.Append(aScriptURI);
-
-      aScriptURI = spec;
-
-      scriptFileNameModified = true;
-    }
-  }
-
-  return scriptFileNameModified;
-}
-
 // static
 bool
 nsContentUtils::IsInChromeDocshell(nsIDocument *aDocument)

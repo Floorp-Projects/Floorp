@@ -605,28 +605,6 @@ nsChromeRegistry::GetDirectionForLocale(const nsACString& aLocale)
   return uloc_isRightToLeft(locale.get());
 }
 
-NS_IMETHODIMP_(bool)
-nsChromeRegistry::WrappersEnabled(nsIURI *aURI)
-{
-  nsCOMPtr<nsIURL> chromeURL (do_QueryInterface(aURI));
-  if (!chromeURL)
-    return false;
-
-  bool isChrome = false;
-  nsresult rv = chromeURL->SchemeIs("chrome", &isChrome);
-  if (NS_FAILED(rv) || !isChrome)
-    return false;
-
-  nsAutoCString package;
-  rv = chromeURL->GetHostPort(package);
-  if (NS_FAILED(rv))
-    return false;
-
-  uint32_t flags;
-  rv = GetFlagsFromPackage(package, &flags);
-  return NS_SUCCEEDED(rv) && (flags & XPCNATIVEWRAPPERS);
-}
-
 already_AddRefed<nsChromeRegistry>
 nsChromeRegistry::GetSingleton()
 {
