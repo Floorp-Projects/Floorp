@@ -8,6 +8,8 @@
 #define mozilla_WinDllServices_h
 
 #include "mozilla/glue/WindowsDllServices.h"
+#include "mozilla/mozalloc.h"
+#include "mozilla/Vector.h"
 
 namespace mozilla {
 
@@ -24,6 +26,9 @@ private:
   ~DllServices() = default;
 
   void NotifyDllLoad(const bool aIsMainThread, const nsString& aDllName) override;
+
+  void NotifyUntrustedModuleLoads(
+    const Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy>& aEvents) override;
 };
 
 } // namespace mozilla
