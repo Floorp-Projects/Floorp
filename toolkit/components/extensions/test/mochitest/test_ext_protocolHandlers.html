@@ -16,6 +16,32 @@
 /* eslint-disable mozilla/balanced-listeners */
 /* global addMessageListener, sendAsyncMessage */
 
+function protocolChromeScript() {
+  addMessageListener("setup", () => {
+    let data = {};
+    const protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+                        .getService(Ci.nsIExternalProtocolService);
+    let protoInfo = protoSvc.getProtocolHandlerInfo("ext+foo");
+    data.preferredAction = protoInfo.preferredAction === protoInfo.useHelperApp;
+
+    let handlers = protoInfo.possibleApplicationHandlers;
+    data.handlers = handlers.length;
+
+    let handler = handlers.queryElementAt(0, Ci.nsIHandlerApp);
+    data.isWebHandler = handler instanceof Ci.nsIWebHandlerApp;
+    data.uriTemplate =  handler.uriTemplate;
+
+    // ext+ protocols should be set as default when there is only one
+    data.preferredApplicationHandler = protoInfo.preferredApplicationHandler == handler;
+    data.alwaysAskBeforeHandling = protoInfo.alwaysAskBeforeHandling;
+    const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"]
+                          .getService(Ci.nsIHandlerService);
+    handlerSvc.store(protoInfo);
+
+    sendAsyncMessage("handlerData", data);
+  });
+}
+
 add_task(async function test_protocolHandler() {
   let extensionData = {
     manifest: {
@@ -52,38 +78,15 @@ add_task(async function test_protocolHandler() {
 
   // Ensure that the protocol handler is configured, and set it as default to
   // bypass the dialog.
-  let chromeScript = SpecialPowers.loadChromeScript(() => {
-    addMessageListener("setup", () => {
-      let data = {};
-      const protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
-                         .getService(Ci.nsIExternalProtocolService);
-      let protoInfo = protoSvc.getProtocolHandlerInfo("ext+foo");
-      data.preferredAction = protoInfo.preferredAction === protoInfo.useHelperApp;
-      data.preferredApplicationHandler = !protoInfo.preferredApplicationHandler;
-
-      let handlers = protoInfo.possibleApplicationHandlers;
-      data.handlers = handlers.length;
-
-      let handler = handlers.queryElementAt(0, Ci.nsIHandlerApp);
-      data.isWebHandler = handler instanceof Ci.nsIWebHandlerApp;
-      data.uriTemplate =  handler.uriTemplate;
-
-      protoInfo.preferredApplicationHandler = handler;
-      protoInfo.alwaysAskBeforeHandling = false;
-      const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"]
-                           .getService(Ci.nsIHandlerService);
-      handlerSvc.store(protoInfo);
-
-      sendAsyncMessage("handlerData", data);
-    });
-  });
+  let chromeScript = SpecialPowers.loadChromeScript(protocolChromeScript);
 
   let msg = chromeScript.promiseOneMessage("handlerData");
   chromeScript.sendAsyncMessage("setup");
   let data = await msg;
   ok(data.preferredAction, "using a helper application is the preferred action");
-  ok(data.preferredApplicationHandler, "no preferred handler is set");
+  ok(data.preferredApplicationHandler, "handler was set as default handler");
   is(data.handlers, 1, "one handler is set");
+  ok(!data.alwaysAskBeforeHandling, "will not show dialog");
   ok(data.isWebHandler, "the handler is a web handler");
   is(data.uriTemplate, `${handlerUrl}?val=%s`, "correct url template");
   chromeScript.destroy();
@@ -116,6 +119,45 @@ add_task(async function test_protocolHandler() {
   ok(data.preferredApplicationHandler, "no preferred handler is set");
   is(data.handlers, 0, "no handler is set");
   chromeScript.destroy();
+});
+
+add_task(async function test_protocolHandler_two() {
+  let extensionData = {
+    manifest: {
+      "protocol_handlers": [
+        {
+          "protocol": "ext+foo",
+          "name": "a foo protocol handler",
+          "uriTemplate": "foo.html?val=%s",
+        },
+        {
+          "protocol": "ext+foo",
+          "name": "another foo protocol handler",
+          "uriTemplate": "foo2.html?val=%s",
+        },
+      ],
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+
+  // Ensure that the protocol handler is configured, and set it as default,
+  // but because there are two handlers, the dialog is not bypassed.  We
+  // don't test the actual dialog ui, it's been here forever and works based
+  // on the alwaysAskBeforeHandling value.
+  let chromeScript = SpecialPowers.loadChromeScript(protocolChromeScript);
+
+  let msg = chromeScript.promiseOneMessage("handlerData");
+  chromeScript.sendAsyncMessage("setup");
+  let data = await msg;
+  ok(data.preferredAction, "using a helper application is the preferred action");
+  ok(data.preferredApplicationHandler, "preferred handler is set");
+  is(data.handlers, 2, "two handlers are set");
+  ok(data.alwaysAskBeforeHandling, "will show dialog");
+  ok(data.isWebHandler, "the handler is a web handler");
+  chromeScript.destroy();
+  await extension.unload();
 });
 
 add_task(async function test_protocolHandler_https_target() {
