@@ -161,6 +161,7 @@ ThreadEventQueue<InnerQueueT>::GetEvent(bool aMayWait,
     }
 
     AUTO_PROFILER_LABEL("ThreadEventQueue::GetEvent::Wait", IDLE);
+    AUTO_PROFILER_THREAD_SLEEP;
     mEventsAvailable.Wait();
   }
 
