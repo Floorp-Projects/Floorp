@@ -38,7 +38,14 @@ this.protocolHandlers = class extends ExtensionAPI {
       handler.uriTemplate = handlerConfig.uriTemplate;
 
       let protoInfo = protocolService.getProtocolHandlerInfo(handlerConfig.protocol);
-      protoInfo.possibleApplicationHandlers.appendElement(handler);
+      let handlers =  protoInfo.possibleApplicationHandlers;
+      if (protoInfo.preferredApplicationHandler || handlers.length) {
+        protoInfo.alwaysAskBeforeHandling = true;
+      } else {
+        protoInfo.preferredApplicationHandler = handler;
+        protoInfo.alwaysAskBeforeHandling = false;
+      }
+      handlers.appendElement(handler);
       handlerService.store(protoInfo);
     }
   }
