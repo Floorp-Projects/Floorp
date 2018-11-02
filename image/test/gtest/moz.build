@@ -16,6 +16,7 @@ UNIFIED_SOURCES = [
     'TestDecoders.cpp',
     'TestDecodeToSurface.cpp',
     'TestDeinterlacingFilter.cpp',
+    'TestFrameAnimator.cpp',
     'TestLoader.cpp',
     'TestMetadata.cpp',
     'TestRemoveFrameRectFilter.cpp',
@@ -38,6 +39,9 @@ SOURCES += [
 
 TEST_HARNESS_FILES.gtest += [
     'animated-with-extra-image-sub-blocks.gif',
+    'blend.gif',
+    'blend.png',
+    'blend.webp',
     'corrupt-with-bad-bmp-height.ico',
     'corrupt-with-bad-bmp-width.ico',
     'corrupt-with-bad-ico-bpp.ico',

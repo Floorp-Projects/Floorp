@@ -532,7 +532,8 @@ nsWebPDecoder::ReadMultiple(WebPDemuxer* aDemuxer, bool aIsComplete)
         break;
     }
 
-    mFormat = iter.has_alpha ? SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8;
+    mFormat = iter.has_alpha || mCurrentFrame > 0 ? SurfaceFormat::B8G8R8A8
+                                                  : SurfaceFormat::B8G8R8X8;
     mTimeout = FrameTimeout::FromRawMilliseconds(iter.duration);
     nsIntRect frameRect(iter.x_offset, iter.y_offset, iter.width, iter.height);
 

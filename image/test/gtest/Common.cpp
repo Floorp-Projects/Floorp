@@ -336,7 +336,20 @@ CheckGeneratedImage(Decoder* aDecoder,
 {
   RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
   RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
-  const IntSize surfaceSize = surface->GetSize();
+  CheckGeneratedSurface(surface, aRect,
+                        BGRAColor::Green(),
+                        BGRAColor::Transparent(),
+                        aFuzz);
+}
+
+void
+CheckGeneratedSurface(SourceSurface* aSurface,
+                      const IntRect& aRect,
+                      const BGRAColor& aInnerColor,
+                      const BGRAColor& aOuterColor,
+                      uint8_t aFuzz /* = 0 */)
+{
+  const IntSize surfaceSize = aSurface->GetSize();
 
   // This diagram shows how the surface is divided into regions that the code
   // below tests for the correct content. The output rect is the bounds of the
@@ -350,30 +363,30 @@ CheckGeneratedImage(Decoder* aDecoder,
   // |             E             |
   // +---------------------------+
 
-  // Check that the output rect itself is green. (Region 'C'.)
-  EXPECT_TRUE(RectIsSolidColor(surface, aRect, BGRAColor::Green(), aFuzz));
+  // Check that the output rect itself is the inner color. (Region 'C'.)
+  EXPECT_TRUE(RectIsSolidColor(aSurface, aRect, aInnerColor, aFuzz));
 
-  // Check that the area above the output rect is transparent. (Region 'A'.)
-  EXPECT_TRUE(RectIsSolidColor(surface,
+  // Check that the area above the output rect is the outer color. (Region 'A'.)
+  EXPECT_TRUE(RectIsSolidColor(aSurface,
                                IntRect(0, 0, surfaceSize.width, aRect.Y()),
-                               BGRAColor::Transparent(), aFuzz));
+                               aOuterColor, aFuzz));
 
-  // Check that the area to the left of the output rect is transparent. (Region 'B'.)
-  EXPECT_TRUE(RectIsSolidColor(surface,
+  // Check that the area to the left of the output rect is the outer color. (Region 'B'.)
+  EXPECT_TRUE(RectIsSolidColor(aSurface,
                                IntRect(0, aRect.Y(), aRect.X(), aRect.YMost()),
-                               BGRAColor::Transparent(), aFuzz));
+                               aOuterColor, aFuzz));
 
-  // Check that the area to the right of the output rect is transparent. (Region 'D'.)
+  // Check that the area to the right of the output rect is the outer color. (Region 'D'.)
   const int32_t widthOnRight = surfaceSize.width - aRect.XMost();
-  EXPECT_TRUE(RectIsSolidColor(surface,
+  EXPECT_TRUE(RectIsSolidColor(aSurface,
                                IntRect(aRect.XMost(), aRect.Y(), widthOnRight, aRect.YMost()),
-                               BGRAColor::Transparent(), aFuzz));
+                               aOuterColor, aFuzz));
 
-  // Check that the area below the output rect is transparent. (Region 'E'.)
+  // Check that the area below the output rect is the outer color. (Region 'E'.)
   const int32_t heightBelow = surfaceSize.height - aRect.YMost();
-  EXPECT_TRUE(RectIsSolidColor(surface,
+  EXPECT_TRUE(RectIsSolidColor(aSurface,
                                IntRect(0, aRect.YMost(), surfaceSize.width, heightBelow),
-                               BGRAColor::Transparent(), aFuzz));
+                               aOuterColor, aFuzz));
 }
 
 void
@@ -588,6 +601,24 @@ ImageTestCase GreenFirstFrameAnimatedWebPTestCase()
 {
   return ImageTestCase("first-frame-green.webp", "image/webp", IntSize(100, 100),
                        TEST_CASE_IS_ANIMATED);
+}
+
+ImageTestCase BlendAnimatedGIFTestCase()
+{
+  return ImageTestCase("blend.gif", "image/gif", IntSize(100, 100),
+                       TEST_CASE_IS_ANIMATED);
+}
+
+ImageTestCase BlendAnimatedPNGTestCase()
+{
+  return ImageTestCase("blend.png", "image/png", IntSize(100, 100),
+                       TEST_CASE_IS_TRANSPARENT | TEST_CASE_IS_ANIMATED);
+}
+
+ImageTestCase BlendAnimatedWebPTestCase()
+{
+  return ImageTestCase("blend.webp", "image/webp", IntSize(100, 100),
+                       TEST_CASE_IS_TRANSPARENT | TEST_CASE_IS_ANIMATED);
 }
 
 ImageTestCase CorruptTestCase()
