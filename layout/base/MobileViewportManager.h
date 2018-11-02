@@ -44,6 +44,17 @@ public:
   void SetRestoreResolution(float aResolution,
                             mozilla::LayoutDeviceIntSize aDisplaySize);
 
+  /* Compute the "intrinsic resolution", which is the smallest resolution at
+   * which the layout viewport fills the visual viewport. (In typical
+   * scenarios, where the aspect ratios of the two viewports match, it's the
+   * resolution at which they are the same size.)
+   *
+   * The returned resolution is suitable for passing to
+   * nsIPresShell::SetResolutionAndScaleTo(). It's not in typed units for
+   * reasons explained at the declaration of FrameMetrics::mPresShellResolution.
+   */
+  float ComputeIntrinsicResolution() const;
+
 private:
   void SetRestoreResolution(float aResolution);
 
@@ -73,7 +84,7 @@ public:
 
   /* Helper to clamp the given zoom by the min/max in the viewport info. */
   mozilla::CSSToScreenScale ClampZoom(const mozilla::CSSToScreenScale& aZoom,
-                                      const nsViewportInfo& aViewportInfo);
+                                      const nsViewportInfo& aViewportInfo) const;
 
   /* Helper to update the given resolution according to changed display and viewport widths. */
   mozilla::LayoutDeviceToLayerScale
@@ -93,6 +104,11 @@ public:
 
   /* Updates the displayport margins for the presShell's root scrollable frame */
   void UpdateDisplayPortMargins();
+
+  /* Helper function for ComputeIntrinsicResolution(). */
+  mozilla::CSSToScreenScale ComputeIntrinsicScale(const nsViewportInfo& aViewportInfo,
+                                                  const mozilla::ScreenIntSize& aDisplaySize,
+                                                  const mozilla::CSSSize& aViewportSize) const;
 
   nsCOMPtr<nsIDocument> mDocument;
   nsIPresShell* MOZ_NON_OWNING_REF mPresShell; // raw ref since the presShell owns this
