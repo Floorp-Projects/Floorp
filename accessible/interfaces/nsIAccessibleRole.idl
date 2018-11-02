@@ -8,7 +8,7 @@
 /**
  * Defines cross platform (Gecko) roles.
  */
-[scriptable, builtinclass, uuid(05a9f33f-dcfd-4e7b-b825-138ba784c1f5)]
+[scriptable, builtinclass, uuid(ad7f32a5-6d5f-4154-a5b8-0fa7aed48936)]
 interface nsIAccessibleRole : nsISupports
 {
   /**
@@ -1031,5 +1031,12 @@ interface nsIAccessibleRole : nsISupports
    * history or a content view providing suggestions from reviewers.
    */
   const unsigned long ROLE_CONTENT_INSERTION = 177;
+
+  /**
+   * An html:form element with a label provided by WAI-ARIA.
+   * This may also be used if role="form" with a label should be exposed
+   * differently in the future.
+   */
+  const unsigned long ROLE_FORM_LANDMARK = 178;
 
 };

@@ -36,6 +36,31 @@ using namespace mozilla::dom;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
+// HTMLFormAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+role
+HTMLFormAccessible::NativeRole() const
+{
+  nsAutoString name;
+  const_cast<HTMLFormAccessible*>(this)->Name(name);
+  return name.IsEmpty() ? roles::FORM : roles::FORM_LANDMARK;
+}
+
+nsAtom*
+HTMLFormAccessible::LandmarkRole() const
+{
+  if (!HasOwnContent()) {
+    return nullptr;
+  }
+
+  // Only return xml-roles "form" if the form has an accessible name.
+  nsAutoString name;
+  const_cast<HTMLFormAccessible*>(this)->Name(name);
+  return name.IsEmpty() ? nullptr : nsGkAtoms::form;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // HTMLRadioButtonAccessible
 ////////////////////////////////////////////////////////////////////////////////
 

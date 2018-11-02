@@ -37,6 +37,7 @@ const ROLE_FOOTER = nsIAccessibleRole.ROLE_FOOTER;
 const ROLE_FOOTNOTE = nsIAccessibleRole.ROLE_FOOTNOTE;
 const ROLE_FLAT_EQUATION = nsIAccessibleRole.ROLE_FLAT_EQUATION;
 const ROLE_FORM = nsIAccessibleRole.ROLE_FORM;
+const ROLE_FORM_LANDMARK = nsIAccessibleRole.ROLE_FORM_LANDMARK;
 const ROLE_GRAPHIC = nsIAccessibleRole.ROLE_GRAPHIC;
 const ROLE_GRID_CELL = nsIAccessibleRole.ROLE_GRID_CELL;
 const ROLE_GROUPING = nsIAccessibleRole.ROLE_GROUPING;
