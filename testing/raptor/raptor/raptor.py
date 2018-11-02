@@ -214,6 +214,7 @@ class Raptor(object):
                                             "GeckoViewActivity",
                                             extra_args=extra_args,
                                             url='about:blank',
+                                            e10s=True,
                                             fail_if_running=False)
             except Exception:
                 self.log.error("Exception launching %s" % self.config['binary'])
