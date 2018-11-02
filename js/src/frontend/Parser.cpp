@@ -86,15 +86,6 @@ using BindingNameVector = Vector<BindingName, 6>;
         }                                                                                   \
     JS_END_MACRO
 
-#define MUST_MATCH_TOKEN_FUNC_MOD_OR(func, modifier, errorNumber, failureValue) \
-    MUST_MATCH_TOKEN_INTERNAL((func)(token), modifier, error(errorNumber), failureValue)
-
-#define MUST_MATCH_TOKEN_FUNC_OR(func, errorNumber, failureValue) \
-    MUST_MATCH_TOKEN_FUNC_MOD_OR(func, TokenStream::None, errorNumber, failureValue)
-
-#define MUST_MATCH_TOKEN_FUNC(func, errorNumber) \
-    MUST_MATCH_TOKEN_FUNC_OR(func, errorNumber, null())
-
 #define MUST_MATCH_TOKEN_MOD_WITH_REPORT_OR(tt, modifier, errorReport, failureValue) \
     MUST_MATCH_TOKEN_INTERNAL(token == tt, modifier, errorReport, failureValue)
 
@@ -708,15 +699,16 @@ GeneralParser<ParseHandler, Unit>::asFinalParser() const
 }
 
 template <class ParseHandler, typename Unit>
+template <typename ConditionT>
 bool
-GeneralParser<ParseHandler, Unit>::mustMatchToken(TokenKind expected, Modifier modifier,
-                                                  unsigned errorNumber)
+GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(ConditionT condition, Modifier modifier,
+                                                          unsigned errorNumber)
 {
     TokenKind actual;
     if (!tokenStream.getToken(&actual, modifier)) {
         return false;
     }
-    if (actual != expected) {
+    if (!condition(actual)) {
         error(errorNumber);
         return false;
     }
@@ -5699,7 +5691,9 @@ Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(TokenKind tt,
             return false;
         }
 
-        MUST_MATCH_TOKEN_FUNC_OR(TokenKindIsPossibleIdentifierName, JSMSG_NO_BINDING_NAME, false);
+        if (!mustMatchToken(TokenKindIsPossibleIdentifierName, JSMSG_NO_BINDING_NAME)) {
+            return false;
+        }
 
         NameNodeType importName = newName(context->names().star);
         if (!importName) {
@@ -6321,7 +6315,9 @@ GeneralParser<ParseHandler, Unit>::exportClause(uint32_t begin)
             return null();
         }
         if (foundAs) {
-            MUST_MATCH_TOKEN_FUNC(TokenKindIsPossibleIdentifierName, JSMSG_NO_EXPORT_NAME);
+            if (!mustMatchToken(TokenKindIsPossibleIdentifierName, JSMSG_NO_EXPORT_NAME)) {
+                return null();
+            }
         }
 
         NameNodeType exportName = newName(anyChars.currentName());
