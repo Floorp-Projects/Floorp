@@ -3850,7 +3850,8 @@ PresShell::ScheduleViewManagerFlush(PaintType aType)
 void
 nsIPresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent)
 {
-  AUTO_PROFILER_TRACING("Paint", "DispatchSynthMouseMove");
+  AUTO_PROFILER_TRACING_DOCSHELL(
+    "Paint", "DispatchSynthMouseMove", mPresContext->GetDocShell());
   nsEventStatus status = nsEventStatus_eIgnore;
   nsView* targetView = nsView::GetViewFor(aEvent->mWidget);
   if (!targetView)
@@ -4320,7 +4321,10 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     if (MOZ_LIKELY(!mIsDestroying)) {
       nsAutoScriptBlocker scriptBlocker;
 #ifdef MOZ_GECKO_PROFILER
-      AutoProfilerStyleMarker tracingStyleFlush(std::move(mStyleCause));
+      nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell();
+      DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
+      AutoProfilerStyleMarker tracingStyleFlush(
+        std::move(mStyleCause), docShellId, docShellHistoryId);
 #endif
 
       mPresContext->RestyleManager()->ProcessPendingRestyles();
@@ -4343,7 +4347,10 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     if (MOZ_LIKELY(!mIsDestroying)) {
       nsAutoScriptBlocker scriptBlocker;
 #ifdef MOZ_GECKO_PROFILER
-      AutoProfilerStyleMarker tracingStyleFlush(std::move(mStyleCause));
+      nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell();
+      DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
+      AutoProfilerStyleMarker tracingStyleFlush(
+        std::move(mStyleCause), docShellId, docShellHistoryId);
 #endif
 
       mPresContext->RestyleManager()->ProcessPendingRestyles();
@@ -8952,8 +8959,12 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   }
 
 #ifdef MOZ_GECKO_PROFILER
-  AutoProfilerTracing tracingLayoutFlush("Paint", "Reflow",
-                                          std::move(mReflowCause));
+  DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
+  AutoProfilerTracing tracingLayoutFlush("Paint",
+                                         "Reflow",
+                                         std::move(mReflowCause),
+                                         docShellId,
+                                         docShellHistoryId);
   mReflowCause = nullptr;
 #endif
 

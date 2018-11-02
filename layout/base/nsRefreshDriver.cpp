@@ -1701,7 +1701,8 @@ nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime)
   mFrameRequestCallbackDocs.Clear();
 
   if (!frameRequestCallbacks.IsEmpty()) {
-    AUTO_PROFILER_TRACING("Paint", "Scripts");
+    AUTO_PROFILER_TRACING_DOCSHELL(
+      "Paint", "Scripts", GetDocShell(mPresContext));
     for (const DocumentFrameCallbacks& docCallbacks : frameRequestCallbacks) {
       // XXXbz Bug 863140: GetInnerWindow can return the outer
       // window in some cases.
