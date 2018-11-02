@@ -24,18 +24,6 @@ enum ReaderType {
 };
 
 /**
- * Memory layout for ReadableStreamDefaultControllers, starting after the
- * slots shared among all types of controllers.
- *
- * StrategySize is treated as an opaque value when stored. The only use site
- * ensures that it's wrapped into the current cx compartment.
- */
-enum DefaultControllerSlots {
-    DefaultControllerSlot_StrategySize = ReadableStreamController::SlotCount,
-    DefaultControllerSlotCount
-};
-
-/**
  * Memory layout for ReadableByteStreamControllers, starting after the
  * slots shared among all types of controllers.
  *
@@ -2301,7 +2289,7 @@ CreateReadableStreamDefaultController(JSContext* cx, Handle<ReadableStream*> str
 
     // Step 8: Set this.[[strategySize]] to normalizedStrategy.[[size]] and
     //         this.[[strategyHWM]] to normalizedStrategy.[[highWaterMark]].
-    controller->setFixedSlot(DefaultControllerSlot_StrategySize, size);
+    controller->setStrategySize(size);
     controller->setStrategyHWM(highWaterMark);
 
     // Step 9: Let controller be this (implicit).
@@ -2581,7 +2569,7 @@ const Class ReadableStreamController::class_ = {
     "ReadableStreamController"
 };
 
-CLASS_SPEC(ReadableStreamDefaultController, 4, 7, ClassSpec::DontDefineConstructor, 0,
+CLASS_SPEC(ReadableStreamDefaultController, 4, SlotCount, ClassSpec::DontDefineConstructor, 0,
            JS_NULL_CLASS_OPS);
 
 /**
@@ -3031,8 +3019,7 @@ ReadableStreamDefaultControllerEnqueue(JSContext* cx,
         bool success = true;
 
         // Step b: If controller.[[strategySize]] is not undefined,
-        RootedValue strategySize(cx);
-        strategySize = controller->getFixedSlot(DefaultControllerSlot_StrategySize);
+        RootedValue strategySize(cx, controller->strategySize());
         if (!strategySize.isUndefined()) {
             // Step i: Set chunkSize to Call(stream.[[strategySize]], undefined, chunk).
             if (!cx->compartment()->wrap(cx, &strategySize)) {
