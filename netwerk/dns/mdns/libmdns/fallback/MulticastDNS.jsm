@@ -10,7 +10,6 @@ var EXPORTED_SYMBOLS = ["MulticastDNS"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.import("resource://gre/modules/DNSPacket.jsm");
 ChromeUtils.import("resource://gre/modules/DNSRecord.jsm");
@@ -19,8 +18,6 @@ ChromeUtils.import("resource://gre/modules/DNSTypes.jsm");
 
 const NS_NETWORK_LINK_TOPIC = "network:link-status-changed";
 
-let observerService     = Cc["@mozilla.org/observer-service;1"]
-                            .getService(Ci.nsIObserverService);
 let networkInfoService  = Cc["@mozilla.org/network-info-service;1"]
                             .createInstance(Ci.nsINetworkInfoService);
 
@@ -127,7 +124,7 @@ class MulticastDNS {
 
     if (!this._isNetworkLinkObserverAttached) {
       DEBUG && debug("Attaching observer " + NS_NETWORK_LINK_TOPIC);
-      observerService.addObserver(this._networkLinkObserver, NS_NETWORK_LINK_TOPIC);
+      Services.obs.addObserver(this._networkLinkObserver, NS_NETWORK_LINK_TOPIC);
       this._isNetworkLinkObserverAttached = true;
     }
   }
@@ -140,7 +137,7 @@ class MulticastDNS {
 
       this._networkLinkObserverTimeout = setTimeout(() => {
         DEBUG && debug("Detaching observer " + NS_NETWORK_LINK_TOPIC);
-        observerService.removeObserver(this._networkLinkObserver, NS_NETWORK_LINK_TOPIC);
+        Services.obs.removeObserver(this._networkLinkObserver, NS_NETWORK_LINK_TOPIC);
         this._isNetworkLinkObserverAttached = false;
         this._networkLinkObserverTimeout = null;
       }, 5000);
@@ -347,7 +344,7 @@ class MulticastDNS {
     // Go through services and find services to broadcast.
     let bcastServices = [];
     let nextBcastWait = undefined;
-    for (let [serviceKey, publishedService] of this._services) {
+    for (let [, publishedService] of this._services) {
       // if lastAdvertised is undefined, service hasn't finished it's initial
       // two broadcasts.
       if (publishedService.lastAdvertised === undefined) {

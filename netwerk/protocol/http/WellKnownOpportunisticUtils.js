@@ -22,20 +22,20 @@ WellKnownOpportunisticUtils.prototype = {
   classDescription: "Well-Known Opportunistic Utils",
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWellKnownOpportunisticUtils]),
 
-    verify(aJSON, aOrigin, aAlternatePort) {
-	try {
-	  let obj = JSON.parse(aJSON.toLowerCase());
-	  let ports = obj[aOrigin.toLowerCase()]["tls-ports"];
-	  if (!ports.includes(aAlternatePort)) {
-	    throw "invalid port";
-	  }
-	  this.lifetime = obj[aOrigin.toLowerCase()].lifetime;
-          this.mixed = obj[aOrigin.toLowerCase()]["mixed-scheme"];
-	} catch (e) {
-	  return;
-	}
-      this.valid = true;
-    },
+  verify(aJSON, aOrigin, aAlternatePort) {
+    try {
+      let obj = JSON.parse(aJSON.toLowerCase());
+      let ports = obj[aOrigin.toLowerCase()]["tls-ports"];
+      if (!ports.includes(aAlternatePort)) {
+        throw "invalid port";
+      }
+      this.lifetime = obj[aOrigin.toLowerCase()].lifetime;
+      this.mixed = obj[aOrigin.toLowerCase()]["mixed-scheme"];
+    } catch (e) {
+      return;
+    }
+    this.valid = true;
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WellKnownOpportunisticUtils]);
