@@ -6,7 +6,6 @@
 
 #include "nsPresContext.h"
 #include "nsContentUtils.h"
-#include "nsDocShell.h"
 #include "nsError.h"
 #include <new>
 #include "nsIContent.h"
@@ -1135,17 +1134,12 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
           AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
             "EventDispatcher::Dispatch", OTHER, typeStr);
 
-          nsCOMPtr<nsIDocShell> docShell;
-          docShell = nsContentUtils::GetDocShellForEventTarget(aEvent->mTarget);
-          DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
           profiler_add_marker(
             "DOMEvent",
             MakeUnique<DOMEventMarkerPayload>(typeStr,
                                               aEvent->mTimeStamp,
                                               "DOMEvent",
-                                              TRACING_INTERVAL_START,
-                                              docShellId,
-                                              docShellHistoryId));
+                                              TRACING_INTERVAL_START));
 
           EventTargetChainItem::HandleEventTargetChain(chain, postVisitor,
                                                        aCallback, cd);
@@ -1155,9 +1149,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
             MakeUnique<DOMEventMarkerPayload>(typeStr,
                                               aEvent->mTimeStamp,
                                               "DOMEvent",
-                                              TRACING_INTERVAL_END,
-                                              docShellId,
-                                              docShellHistoryId));
+                                              TRACING_INTERVAL_END));
         } else
 #endif
         {

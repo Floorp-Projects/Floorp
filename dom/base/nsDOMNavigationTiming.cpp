@@ -102,16 +102,14 @@ void
 nsDOMNavigationTiming::NotifyUnloadEventStart()
 {
   mUnloadStart = TimeStamp::Now();
-  PROFILER_TRACING_DOCSHELL(
-    "Navigation", "Unload", TRACING_INTERVAL_START, mDocShell);
+  PROFILER_TRACING("Navigation", "Unload", TRACING_INTERVAL_START);
 }
 
 void
 nsDOMNavigationTiming::NotifyUnloadEventEnd()
 {
   mUnloadEnd = TimeStamp::Now();
-  PROFILER_TRACING_DOCSHELL(
-    "Navigation", "Unload", TRACING_INTERVAL_END, mDocShell);
+  PROFILER_TRACING("Navigation", "Unload", TRACING_INTERVAL_END);
 }
 
 void
@@ -122,8 +120,7 @@ nsDOMNavigationTiming::NotifyLoadEventStart()
   }
   mLoadEventStart = TimeStamp::Now();
 
-  PROFILER_TRACING_DOCSHELL(
-    "Navigation", "Load", TRACING_INTERVAL_START, mDocShell);
+  PROFILER_TRACING("Navigation", "Load", TRACING_INTERVAL_START);
 
   if (IsTopLevelContentDocumentInContentProcess()) {
     TimeStamp now = TimeStamp::Now();
@@ -154,8 +151,7 @@ nsDOMNavigationTiming::NotifyLoadEventEnd()
   }
   mLoadEventEnd = TimeStamp::Now();
 
-  PROFILER_TRACING_DOCSHELL(
-    "Navigation", "Load", TRACING_INTERVAL_END, mDocShell);
+  PROFILER_TRACING("Navigation", "Load", TRACING_INTERVAL_END);
 
   if (IsTopLevelContentDocumentInContentProcess()) {
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_END_MS,
@@ -219,8 +215,7 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedStart(nsIURI* aURI)
   mLoadedURI = aURI;
   mDOMContentLoadedEventStart = TimeStamp::Now();
 
-  PROFILER_TRACING_DOCSHELL(
-    "Navigation", "DOMContentLoaded", TRACING_INTERVAL_START, mDocShell);
+  PROFILER_TRACING("Navigation", "DOMContentLoaded", TRACING_INTERVAL_START);
 
   if (IsTopLevelContentDocumentInContentProcess()) {
     TimeStamp now = TimeStamp::Now();
@@ -253,8 +248,7 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedEnd(nsIURI* aURI)
   mLoadedURI = aURI;
   mDOMContentLoadedEventEnd = TimeStamp::Now();
 
-  PROFILER_TRACING_DOCSHELL(
-    "Navigation", "DOMContentLoaded", TRACING_INTERVAL_END, mDocShell);
+  PROFILER_TRACING("Navigation", "DOMContentLoaded", TRACING_INTERVAL_END);
 
   if (IsTopLevelContentDocumentInContentProcess()) {
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_CONTENT_LOADED_END_MS,
@@ -362,12 +356,8 @@ nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer)
                            int(elapsed.ToMilliseconds()),
                            int(elapsedLongTask.ToMilliseconds()),spec.get());
 
-    DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
     profiler_add_marker(
-      "TTI", MakeUnique<UserTimingMarkerPayload>(NS_ConvertASCIItoUTF16(marker),
-                                                 mTTFI,
-                                                 docShellId,
-                                                 docShellHistoryId));
+      "TTI", MakeUnique<UserTimingMarkerPayload>(NS_ConvertASCIItoUTF16(marker), mTTFI));
   }
 #endif
   return;
