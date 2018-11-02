@@ -8,12 +8,18 @@
 
 #include "mozilla/Range.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/TextUtils.h"
+#include "mozilla/Utf8.h"
 
 #include <algorithm>
 #include <type_traits>
 
+#include "util/StringBuffer.h"
 #include "util/Unicode.h" // unicode::REPLACEMENT_CHARACTER
 #include "vm/JSContext.h"
+
+using mozilla::IsAscii;
+using mozilla::Utf8Unit;
 
 using namespace js;
 
@@ -605,5 +611,70 @@ JS::StringIsASCII(const char* s)
         }
         s++;
     }
+    return true;
+}
+
+bool
+StringBuffer::append(const Utf8Unit* units, size_t len)
+{
+    if (isLatin1()) {
+        Latin1CharBuffer& latin1 = latin1Chars();
+
+        while (len > 0) {
+            if (!IsAscii(*units)) {
+                break;
+            }
+
+            if (!latin1.append(units->toUnsignedChar())) {
+                return false;
+            }
+
+            ++units;
+            --len;
+        }
+        if (len == 0) {
+            return true;
+        }
+
+        // Non-ASCII doesn't *necessarily* mean we couldn't keep appending to
+        // |latin1|, but it's only possible for [U+0080, U+0100) code points,
+        // and handling the full complexity of UTF-8 only for that very small
+        // additional range isn't worth it.  Inflate to two-byte storage before
+        // appending the remaining code points.
+        if (!inflateChars()) {
+            return false;
+        }
+    }
+
+    UTF8Chars remainingUtf8(units, len);
+
+    // Determine how many UTF-16 code units are required to represent the
+    // remaining units.
+    size_t utf16Len = 0;
+    auto countInflated = [&utf16Len](char16_t c) -> LoopDisposition {
+        utf16Len++;
+        return LoopDisposition::Continue;
+    };
+    if (!InflateUTF8ToUTF16<OnUTF8Error::Throw>(cx, remainingUtf8, countInflated)) {
+        return false;
+    }
+
+    TwoByteCharBuffer& buf = twoByteChars();
+
+    size_t i = buf.length();
+    if (!buf.growByUninitialized(utf16Len)) {
+        return false;
+    }
+    MOZ_ASSERT(i + utf16Len == buf.length(),
+               "growByUninitialized assumed to increase length immediately");
+
+    char16_t* toFill = &buf[i];
+    auto appendUtf16 = [&toFill](char16_t unit) {
+        *toFill++ = unit;
+        return LoopDisposition::Continue;
+    };
+
+    MOZ_ALWAYS_TRUE(InflateUTF8ToUTF16<OnUTF8Error::Throw>(cx, remainingUtf8, appendUtf16));
+    MOZ_ASSERT(toFill == buf.end());
     return true;
 }
