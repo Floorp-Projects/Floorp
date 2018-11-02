@@ -879,8 +879,15 @@ RegisterScriptPathWithModuleLoader(JSContext* cx, HandleScript script, const cha
     return true;
 }
 
+enum class CompileUtf8
+{
+    InflateToUtf16,
+    DontInflate,
+};
+
 static MOZ_MUST_USE bool
-RunFile(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
+RunFile(JSContext* cx, const char* filename, FILE* file, CompileUtf8 compileMethod,
+        bool compileOnly)
 {
     SkipUTF8BOM(file);
 
@@ -906,9 +913,18 @@ RunFile(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
                .setIsRunOnce(true)
                .setNoScriptRval(true);
 
-        if (!JS::CompileUtf8File(cx, options, file, &script)) {
-            return false;
+        if (compileMethod == CompileUtf8::DontInflate) {
+            fprintf(stderr, "(compiling '%s' as UTF-8 without inflating)\n", filename);
+
+            if (!JS::CompileUtf8FileDontInflate(cx, options, file, &script)) {
+                return false;
+            }
+        } else {
+            if (!JS::CompileUtf8File(cx, options, file, &script)) {
+                return false;
+            }
         }
+
         MOZ_ASSERT(script);
     }
 
@@ -1363,6 +1379,7 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, bool compileOnly)
 enum FileKind
 {
     FileScript,
+    FileScriptUtf8, // FileScript, but don't inflate to UTF-16 before parsing
     FileModule,
     FileBinAST
 };
@@ -1385,7 +1402,7 @@ ReportCantOpenErrorUnknownEncoding(JSContext* cx, const char* filename)
 }
 
 static MOZ_MUST_USE bool
-Process(JSContext* cx, const char* filename, bool forceTTY, FileKind kind = FileScript)
+Process(JSContext* cx, const char* filename, bool forceTTY, FileKind kind)
 {
     FILE* file;
     if (forceTTY || !filename || strcmp(filename, "-") == 0) {
@@ -1403,7 +1420,12 @@ Process(JSContext* cx, const char* filename, bool forceTTY, FileKind kind = File
         // It's not interactive - just execute it.
         switch (kind) {
           case FileScript:
-            if (!RunFile(cx, filename, file, compileOnly)) {
+            if (!RunFile(cx, filename, file, CompileUtf8::InflateToUtf16, compileOnly)) {
+                return false;
+            }
+            break;
+          case FileScriptUtf8:
+            if (!RunFile(cx, filename, file, CompileUtf8::DontInflate, compileOnly)) {
                 return false;
             }
             break;
@@ -10278,6 +10300,7 @@ ProcessArgs(JSContext* cx, OptionParser* op)
     }
 
     MultiStringRange filePaths = op->getMultiStringOption('f');
+    MultiStringRange utf8FilePaths = op->getMultiStringOption('u');
     MultiStringRange codeChunks = op->getMultiStringOption('e');
     MultiStringRange modulePaths = op->getMultiStringOption('m');
     MultiStringRange binASTPaths(nullptr, nullptr);
@@ -10286,12 +10309,13 @@ ProcessArgs(JSContext* cx, OptionParser* op)
 #endif // JS_BUILD_BINAST
 
     if (filePaths.empty() &&
+        utf8FilePaths.empty() &&
         codeChunks.empty() &&
         modulePaths.empty() &&
         binASTPaths.empty() &&
         !op->getStringArg("script"))
     {
-        return Process(cx, nullptr, true); /* Interactive. */
+        return Process(cx, nullptr, true, FileScript); /* Interactive. */
     }
 
     if (const char* path = op->getStringOption("module-load-path")) {
@@ -10318,19 +10342,39 @@ ProcessArgs(JSContext* cx, OptionParser* op)
         return false;
     }
 
-    while (!filePaths.empty() || !codeChunks.empty() || !modulePaths.empty() || !binASTPaths.empty()) {
+    while (!filePaths.empty() ||
+           !utf8FilePaths.empty() ||
+           !codeChunks.empty() ||
+           !modulePaths.empty() ||
+           !binASTPaths.empty())
+    {
         size_t fpArgno = filePaths.empty() ? SIZE_MAX : filePaths.argno();
+        size_t ufpArgno = utf8FilePaths.empty() ? SIZE_MAX : utf8FilePaths.argno();
         size_t ccArgno = codeChunks.empty() ? SIZE_MAX : codeChunks.argno();
         size_t mpArgno = modulePaths.empty() ? SIZE_MAX : modulePaths.argno();
         size_t baArgno = binASTPaths.empty() ? SIZE_MAX : binASTPaths.argno();
 
-        if (fpArgno < ccArgno && fpArgno < mpArgno && fpArgno < baArgno) {
+        if (fpArgno < ufpArgno && fpArgno < ccArgno && fpArgno < mpArgno && fpArgno < baArgno) {
             char* path = filePaths.front();
             if (!Process(cx, path, false, FileScript)) {
                 return false;
             }
+
             filePaths.popFront();
-        } else if (ccArgno < fpArgno && ccArgno < mpArgno && ccArgno < baArgno) {
+            continue;
+        }
+
+        if (ufpArgno < fpArgno && ufpArgno < ccArgno && ufpArgno < mpArgno && ufpArgno < baArgno) {
+            char* path = utf8FilePaths.front();
+            if (!Process(cx, path, false, FileScriptUtf8)) {
+                return false;
+            }
+
+            utf8FilePaths.popFront();
+            continue;
+        }
+
+        if (ccArgno < fpArgno && ccArgno < ufpArgno && ccArgno < mpArgno && ccArgno < baArgno) {
             const char* code = codeChunks.front();
 
             JS::CompileOptions opts(cx);
@@ -10347,20 +10391,31 @@ ProcessArgs(JSContext* cx, OptionParser* op)
             if (sc->quitting) {
                 break;
             }
-        } else if (baArgno < fpArgno && baArgno < ccArgno && baArgno < mpArgno) {
+
+            continue;
+        }
+
+        if (baArgno < fpArgno && baArgno < ufpArgno && baArgno < ccArgno && baArgno < mpArgno) {
             char* path = binASTPaths.front();
             if (!Process(cx, path, false, FileBinAST)) {
                 return false;
             }
+
             binASTPaths.popFront();
-        } else {
-            MOZ_ASSERT(mpArgno < fpArgno && mpArgno < ccArgno && mpArgno < baArgno);
-            char* path = modulePaths.front();
-            if (!Process(cx, path, false, FileModule)) {
-                return false;
-            }
-            modulePaths.popFront();
+            continue;
         }
+
+        MOZ_ASSERT(mpArgno < fpArgno &&
+                   mpArgno < ufpArgno &&
+                   mpArgno < ccArgno &&
+                   mpArgno < baArgno);
+
+        char* path = modulePaths.front();
+        if (!Process(cx, path, false, FileModule)) {
+            return false;
+        }
+
+        modulePaths.popFront();
     }
 
     if (sc->quitting) {
@@ -10369,13 +10424,13 @@ ProcessArgs(JSContext* cx, OptionParser* op)
 
     /* The |script| argument is processed after all options. */
     if (const char* path = op->getStringArg("script")) {
-        if (!Process(cx, path, false)) {
+        if (!Process(cx, path, false, FileScript)) {
             return false;
         }
     }
 
     if (op->getBoolOption('i')) {
-        if (!Process(cx, nullptr, true)) {
+        if (!Process(cx, nullptr, true, FileScript)) {
             return false;
         }
     }
@@ -10983,6 +11038,9 @@ main(int argc, char** argv, char** envp)
     op.setVersion(JS_GetImplementationVersion());
 
     if (!op.addMultiStringOption('f', "file", "PATH", "File path to run")
+        || !op.addMultiStringOption('u', "utf8-file", "PATH",
+                                    "File path to run, directly parsing file contents as UTF-8 "
+                                    "without first inflating to UTF-16")
         || !op.addMultiStringOption('m', "module", "PATH", "Module path to run")
 #if defined(JS_BUILD_BINAST)
         || !op.addMultiStringOption('B', "binast", "PATH", "BinAST path to run")
