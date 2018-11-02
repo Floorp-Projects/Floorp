@@ -110,6 +110,18 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "type": "int",
             "help": "How many samples to take with the profiler"
         }],
+        [["--page-cycles"], {
+            "dest": "page_cycles",
+            "type": "int",
+            "help": "How many times to repeat loading the test page (for page load tests); "
+                    "for benchmark tests this is how many times the benchmark test will be run"
+        }],
+        [["--page-timeout"], {
+            "dest": "page_timeout",
+            "type": "int",
+            "help": "How long to wait (ms) for one page_cycle to complete, before timing out"
+        }],
+
     ] + testing_config_options + copy.deepcopy(code_coverage_config_options)
 
     def __init__(self, **kwargs):

@@ -18,7 +18,7 @@ namespace JS {
 // JSJITCOMPILER_ENABLE_TRACELOGGER to true.
 // This does nothing except return if the trace logger is already active.
 extern JS_PUBLIC_API(void)
-StartTraceLogger(JSContext *cx);
+StartTraceLogger(JSContext *cx, mozilla::TimeStamp profilerStart);
 
 // Stop trace logging events.  All textId's will be set to false, and the
 // global JSJITCOMPILER_ENABLE_TRACELOGGER will be set to false.
@@ -34,7 +34,7 @@ ResetTraceLogger(void);
 // Define empty inline functions for when trace logging compilation is not
 // enabled.  TraceLogging.cpp will not be built in that case so we need to
 // provide something for any routines that reference these.
-inline void StartTraceLogger(JSContext *cx) {}
+inline void StartTraceLogger(JSContext *cx, mozilla::TimeStamp profilerStart) {}
 inline void StopTraceLogger(JSContext *cx) {}
 inline void ResetTraceLogger(void) {}
 #endif

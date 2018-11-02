@@ -19,6 +19,7 @@
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/Sprintf.h"
 
@@ -2679,16 +2680,27 @@ ItemParticipatesIn3DContext(nsIFrame* aAncestor, nsDisplayItem* aItem)
 }
 
 static void
-WrapSeparatorTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                       nsDisplayList* aSource, nsDisplayList* aTarget,
-                       int aIndex) {
-  if (!aSource->IsEmpty()) {
-    nsDisplayTransform *sepIdItem =
-      MakeDisplayItem<nsDisplayTransform>(aBuilder, aFrame, aSource,
-                                        aBuilder->GetVisibleRect(), Matrix4x4(), aIndex);
-    sepIdItem->SetNoExtendContext();
-    aTarget->AppendToTop(sepIdItem);
+WrapSeparatorTransform(nsDisplayListBuilder* aBuilder,
+                       nsIFrame* aFrame,
+                       nsDisplayList* aNonParticipants,
+                       nsDisplayList* aParticipants,
+                       int aIndex,
+                       nsDisplayItem** aSeparator)
+{
+  if (aNonParticipants->IsEmpty()) {
+    return;
   }
+
+  nsDisplayTransform* item =
+    MakeDisplayItem<nsDisplayTransform>(aBuilder, aFrame, aNonParticipants,
+      aBuilder->GetVisibleRect(), Matrix4x4(), aIndex);
+  item->SetNoExtendContext();
+
+  if (*aSeparator == nullptr) {
+    *aSeparator = item;
+  }
+
+  aParticipants->AppendToTop(item);
 }
 
 // Try to compute a clip rect to bound the contents of the mask item
@@ -2810,6 +2822,60 @@ struct AutoCheckBuilder {
 
   nsDisplayListBuilder* mBuilder;
 };
+
+/**
+ * Helper class to track container creation. Stores the first tracked container.
+ * Used to find the innermost container for hit test information, and to notify
+ * callers whether a container item was created or not.
+ */
+struct ContainerTracker
+{
+  void TrackContainer(nsDisplayItem* aContainer)
+  {
+    MOZ_ASSERT(aContainer);
+
+    if (!mContainer) {
+      mContainer = aContainer;
+    }
+
+    mCreatedContainer = true;
+  }
+
+  void ResetCreatedContainer()
+  {
+    mCreatedContainer = false;
+  }
+
+  nsDisplayItem* mContainer = nullptr;
+  bool mCreatedContainer = false;
+};
+
+/**
+ * Adds hit test information |aHitTestInfo| on the container item |aContainer|,
+ * or if the container item is null, creates a separate hit test item that is
+ * added to the bottom of the display list |aList|.
+ */
+static void
+AddHitTestInfo(nsDisplayListBuilder* aBuilder,
+               nsDisplayList* aList,
+               nsDisplayItem* aContainer,
+               nsIFrame* aFrame,
+               mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo)
+{
+  nsDisplayHitTestInfoItem* hitTestItem;
+
+  if (aContainer) {
+    MOZ_ASSERT(aContainer->IsHitTestItem());
+    hitTestItem = static_cast<nsDisplayHitTestInfoItem*>(aContainer);
+    hitTestItem->SetHitTestInfo(std::move(aHitTestInfo));
+  } else {
+    // No container item was created for this frame. Create a separate
+    // nsDisplayCompositorHitTestInfo item instead.
+    hitTestItem = MakeDisplayItem<nsDisplayCompositorHitTestInfo>(
+      aBuilder, aFrame, std::move(aHitTestInfo));
+    aList->AppendToBottom(hitTestItem);
+  }
+}
 
 void
 nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
@@ -3041,6 +3107,9 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     clipForMask = ComputeClipForMaskItem(aBuilder, this);
   }
 
+
+  mozilla::UniquePtr<HitTestInfo> hitTestInfo;
+
   nsDisplayListCollection set(aBuilder);
   {
     DisplayListClipState::AutoSaveRestore nestedClipState(aBuilder);
@@ -3075,8 +3144,23 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
     aBuilder->AdjustWindowDraggingRegion(this);
 
-    aBuilder->BuildCompositorHitTestInfoIfNeeded(this, set.BorderBackground(),
-                                                 true);
+    if (gfxVars::UseWebRender()) {
+      aBuilder->BuildCompositorHitTestInfoIfNeeded(
+        this, set.BorderBackground(), true);
+    } else {
+      CompositorHitTestInfo info = aBuilder->BuildCompositorHitTestInfo()
+                                 ? GetCompositorHitTestInfo(aBuilder)
+                                 : CompositorHitTestInvisibleToHit;
+
+      if (info != CompositorHitTestInvisibleToHit) {
+        // Frame has hit test flags set, initialize the hit test info structure.
+        hitTestInfo = mozilla::MakeUnique<HitTestInfo>(aBuilder, this, info);
+
+        // Let child frames know the current hit test area and hit test flags.
+        aBuilder->SetCompositorHitTestInfo(
+          hitTestInfo->mArea, hitTestInfo->mFlags);
+      }
+    }
 
     MarkAbsoluteFramesForDisplayList(aBuilder);
     aBuilder->Check();
@@ -3179,9 +3263,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // Get the ASR to use for the container items that we create here.
   const ActiveScrolledRoot* containerItemASR = contASRTracker.GetContainerASR();
 
-  if (aCreatedContainerItem) {
-    *aCreatedContainerItem = false;
-  }
+  ContainerTracker ct;
 
   /* If adding both a nsDisplayBlendContainer and a nsDisplayBlendMode to the
    * same list, the nsDisplayBlendContainer should be added first. This only
@@ -3195,9 +3277,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     resultList.AppendToTop(
       nsDisplayBlendContainer::CreateForMixBlendMode(aBuilder, this, &resultList,
                                                      containerItemASR));
-    if (aCreatedContainerItem) {
-      *aCreatedContainerItem = true;
-    }
+    ct.TrackContainer(resultList.GetTop());
   }
 
   /* If there are any SVG effects, wrap the list up in an SVG effects item
@@ -3220,6 +3300,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       /* List now emptied, so add the new list to the top. */
       resultList.AppendToTop(MakeDisplayItem<nsDisplayFilters>(
         aBuilder, this, &resultList));
+      ct.TrackContainer(resultList.GetTop());
     }
 
     if (usingMask) {
@@ -3239,15 +3320,17 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       /* List now emptied, so add the new list to the top. */
       resultList.AppendToTop(MakeDisplayItem<nsDisplayMasksAndClipPaths>(
         aBuilder, this, &resultList, maskASR));
+      ct.TrackContainer(resultList.GetTop());
     }
+
+    // TODO(miko): We could probably create a wraplist here and avoid creating
+    // it later in |BuildDisplayListForChild()|.
+    ct.ResetCreatedContainer();
 
     // Also add the hoisted scroll info items. We need those for APZ scrolling
     // because nsDisplayMasksAndClipPaths items can't build active layers.
     aBuilder->ExitSVGEffectsContents();
     resultList.AppendToTop(&hoistedScrollInfoItemsStorage);
-    if (aCreatedContainerItem) {
-      *aCreatedContainerItem = false;
-    }
   }
 
   /* If the list is non-empty and there is CSS group opacity without SVG
@@ -3266,9 +3349,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                         containerItemASR,
                                         opacityItemForEventsAndPluginsOnly,
                                         needsActiveOpacityLayer));
-    if (aCreatedContainerItem) {
-      *aCreatedContainerItem = true;
-    }
+    ct.TrackContainer(resultList.GetTop());
   }
 
   /* If we're going to apply a transformation and don't have preserve-3d set, wrap
@@ -3289,10 +3370,15 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     nsDisplayList participants;
     int index = 1;
 
+    nsDisplayItem* separator = nullptr;
+
     while (nsDisplayItem* item = resultList.RemoveBottom()) {
-      if (ItemParticipatesIn3DContext(this, item) && !item->GetClip().HasClip()) {
+      if (ItemParticipatesIn3DContext(this, item) &&
+          !item->GetClip().HasClip()) {
         // The frame of this item participates the same 3D context.
-        WrapSeparatorTransform(aBuilder, this, &nonparticipants, &participants, index++);
+        WrapSeparatorTransform(
+          aBuilder, this, &nonparticipants, &participants, index++, &separator);
+
         participants.AppendToTop(item);
       } else {
         // The frame of the item doesn't participate the current
@@ -3305,7 +3391,13 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
         nonparticipants.AppendToTop(item);
       }
     }
-    WrapSeparatorTransform(aBuilder, this, &nonparticipants, &participants, index++);
+    WrapSeparatorTransform(
+      aBuilder, this, &nonparticipants, &participants, index++, &separator);
+
+    if (separator) {
+      ct.TrackContainer(separator);
+    }
+
     resultList.AppendToTop(&participants);
   }
 
@@ -3333,18 +3425,15 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                         &resultList, visibleRect, 0,
                                         allowAsyncAnimation);
     resultList.AppendToTop(transformItem);
+    ct.TrackContainer(transformItem);
 
     if (hasPerspective) {
       if (clipCapturedBy == ContainerItemType::ePerspective) {
         clipState.Restore();
       }
-      resultList.AppendToTop(
-        MakeDisplayItem<nsDisplayPerspective>(
+      resultList.AppendToTop(MakeDisplayItem<nsDisplayPerspective>(
           aBuilder, this, &resultList));
-    }
-
-    if (aCreatedContainerItem) {
-      *aCreatedContainerItem = true;
+      ct.TrackContainer(resultList.GetTop());
     }
   }
 
@@ -3355,9 +3444,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                        aBuilder->CurrentActiveScrolledRoot(),
                                        nsDisplayOwnLayerFlags::eNone,
                                        ScrollbarData{}, /* aForceActive = */ false));
-    if (aCreatedContainerItem) {
-      *aCreatedContainerItem = true;
-    }
+    ct.TrackContainer(resultList.GetTop());
   }
 
   /* If we have sticky positioning, wrap it in a sticky position item.
@@ -3379,9 +3466,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     resultList.AppendToTop(
         MakeDisplayItem<nsDisplayFixedPosition>(aBuilder, this, &resultList,
           fixedASR, containerItemASR));
-    if (aCreatedContainerItem) {
-      *aCreatedContainerItem = true;
-    }
+    ct.TrackContainer(resultList.GetTop());
   } else if (useStickyPosition) {
     // For position:sticky, the clip needs to be applied both to the sticky
     // container item and to the contents. The container item needs the clip
@@ -3401,9 +3486,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     resultList.AppendToTop(
         MakeDisplayItem<nsDisplayStickyPosition>(aBuilder, this, &resultList,
           stickyASR, aBuilder->CurrentActiveScrolledRoot()));
-    if (aCreatedContainerItem) {
-      *aCreatedContainerItem = true;
-    }
+    ct.TrackContainer(resultList.GetTop());
   }
 
   /* If there's blending, wrap up the list in a blend-mode item. Note
@@ -3417,12 +3500,25 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
         MakeDisplayItem<nsDisplayBlendMode>(aBuilder, this, &resultList,
                                           effects->mMixBlendMode,
                                           containerItemASR));
-    if (aCreatedContainerItem) {
-      *aCreatedContainerItem = true;
-    }
+    ct.TrackContainer(resultList.GetTop());
   }
 
-  CreateOwnLayerIfNeeded(aBuilder, &resultList, aCreatedContainerItem);
+  bool createdOwnLayer = false;
+  CreateOwnLayerIfNeeded(aBuilder, &resultList, &createdOwnLayer);
+  if (createdOwnLayer) {
+    ct.TrackContainer(resultList.GetTop());
+  }
+
+  if (aCreatedContainerItem) {
+    *aCreatedContainerItem = ct.mCreatedContainer;
+  }
+
+  if (hitTestInfo) {
+    // WebRender support is not yet implemented.
+    MOZ_ASSERT(!gfxVars::UseWebRender());
+    AddHitTestInfo(
+      aBuilder, &resultList, ct.mContainer, this, std::move(hitTestInfo));
+  }
 
   aList->AppendToTop(&resultList);
 }
@@ -11266,6 +11362,31 @@ nsIFrame::AddSizeOfExcludingThisForTree(nsWindowSizes& aSizes) const
   }
 }
 
+nsRect
+nsIFrame::GetCompositorHitTestArea(nsDisplayListBuilder* aBuilder)
+{
+  nsRect area;
+
+  nsIScrollableFrame* scrollFrame =
+    nsLayoutUtils::GetScrollableFrameFor(this);
+  if (scrollFrame) {
+    // If the frame is content of a scrollframe, then we need to pick up the
+    // area corresponding to the overflow rect as well. Otherwise the parts of
+    // the overflow that are not occupied by descendants get skipped and the
+    // APZ code sends touch events to the content underneath instead.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
+    area = GetScrollableOverflowRect();
+  } else {
+    area = nsRect(nsPoint(0, 0), GetSize());
+  }
+
+  if (!area.IsEmpty()) {
+    return area + aBuilder->ToReferenceFrame(this);
+  }
+
+  return area;
+}
+
 CompositorHitTestInfo
 nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
 {
@@ -11320,10 +11441,8 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
     // ancestor DOM elements. Refer to the documentation in TouchActionHelper.cpp
     // for details; this code is meant to be equivalent to that code, but woven
     // into the top-down recursive display list building process.
-    CompositorHitTestInfo inheritedTouchAction = CompositorHitTestInvisibleToHit;
-    if (nsDisplayCompositorHitTestInfo* parentInfo = aBuilder->GetCompositorHitTestInfo()) {
-      inheritedTouchAction = parentInfo->HitTestInfo() & CompositorHitTestTouchActionMask;
-    }
+    CompositorHitTestInfo inheritedTouchAction =
+      aBuilder->GetHitTestInfo() & CompositorHitTestTouchActionMask;
 
     nsIFrame* touchActionFrame = this;
     if (nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this)) {

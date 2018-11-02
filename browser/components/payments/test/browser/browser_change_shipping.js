@@ -11,6 +11,10 @@ async function setup() {
 }
 
 add_task(async function test_change_shipping() {
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    todo(false, "Cannot test OS key store login on official builds.");
+    return;
+  }
   await setup();
   await BrowserTestUtils.withNewTab({
     gBrowser,
@@ -108,7 +112,7 @@ add_task(async function test_change_shipping() {
     });
 
     info("clicking pay");
-    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+    await loginAndCompletePayment(frame);
 
     // Add a handler to complete the payment above.
     info("acknowledging the completion from the merchant page");
@@ -249,6 +253,10 @@ add_task(async function test_default_shippingOptions_allSelected() {
 });
 
 add_task(async function test_no_shippingchange_without_shipping() {
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    todo(false, "Cannot test OS key store login on official builds.");
+    return;
+  }
   await setup();
   await BrowserTestUtils.withNewTab({
     gBrowser,
@@ -272,7 +280,7 @@ add_task(async function test_no_shippingchange_without_shipping() {
     });
 
     info("clicking pay");
-    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+    await loginAndCompletePayment(frame);
 
     // Add a handler to complete the payment above.
     info("acknowledging the completion from the merchant page");

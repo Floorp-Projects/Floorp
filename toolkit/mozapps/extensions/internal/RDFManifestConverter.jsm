@@ -91,7 +91,7 @@ class InstallRDF extends Manifest {
     let result = {};
 
     let props = ["id", "version", "type", "updateURL", "optionsURL",
-                 "optionsType", "aboutURL", "iconURL", "icon64URL",
+                 "optionsType", "aboutURL", "iconURL",
                  "bootstrap", "unpack", "strictCompatibility",
                  "hasEmbeddedWebExtension"];
     this._readProps(root, result, props);

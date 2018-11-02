@@ -134,7 +134,6 @@ add_task(async function test_1() {
   checkAddon("addon1@tests.mozilla.org", addon, {
     install,
     iconURL: `jar:${uri.spec}!/icon.png`,
-    icon64URL: `jar:${uri.spec}!/icon64.png`,
     sourceURI: uri,
   });
   notEqual(addon.syncGUID, null);
@@ -205,7 +204,6 @@ add_task(async function test_1() {
     name: "Test 1",
     foreignInstall: false,
     iconURL: uri2 + "icon.png",
-    icon64URL: uri2 + "icon64.png",
     sourceURI: Services.io.newFileURI(XPIS.test_install1),
   });
 

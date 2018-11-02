@@ -4,10 +4,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
-ChromeUtils.import("resource://formautofill/OSKeyStore.jsm");
 ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm");
 
 let {formAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
@@ -226,7 +224,7 @@ addMessageListener("FormAutofillTest:CleanUpCreditCards", (msg) => {
 
 addMessageListener("FormAutofillTest:CanTestOSKeyStoreLogin", (msg) => {
   sendAsyncMessage("FormAutofillTest:CanTestOSKeyStoreLoginResult",
-    {canTest: OSKeyStore.isNSSKeyStore || !AppConstants.MOZILLA_OFFICIAL});
+    {canTest: OSKeyStoreTestUtils.canTestOSKeyStoreLogin()});
 });
 
 addMessageListener("FormAutofillTest:OSKeyStoreLogin", async (msg) => {

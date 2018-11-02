@@ -14,6 +14,10 @@ async function setup() {
 }
 
 add_task(async function test_retry_with_genericError() {
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    todo(false, "Cannot test OS key store login on official builds.");
+    return;
+  }
   await setup();
   await BrowserTestUtils.withNewTab({
     gBrowser,
@@ -30,7 +34,7 @@ add_task(async function test_retry_with_genericError() {
     });
 
     info("clicking the button to try pay the 1st time");
-    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+    await loginAndCompletePayment(frame);
 
     let retryUpdatePromise = spawnPaymentDialogTask(frame, async function checkDialog() {
       let {
@@ -71,8 +75,7 @@ add_task(async function test_retry_with_genericError() {
                                          PTU.ContentTasks.addRetryHandler);
 
     await retryUpdatePromise;
-
-    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+    await loginAndCompletePayment(frame);
 
     // We can only check the retry response after the closing as it only resolves upon complete.
     let {retryException} = await retryPromise;

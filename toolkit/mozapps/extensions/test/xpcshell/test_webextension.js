@@ -95,7 +95,6 @@ add_task(async function test_1() {
     isWebExtension: true,
     signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
     iconURL: `${uri}icon48.png`,
-    icon64URL: `${uri}icon64.png`,
   });
 
   // Should persist through a restart
@@ -122,7 +121,6 @@ add_task(async function test_1() {
     type: "extension",
     signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
     iconURL: `${uri}icon48.png`,
-    icon64URL: `${uri}icon64.png`,
   });
 
   await addon.disable();

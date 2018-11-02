@@ -41,6 +41,10 @@ add_task(async function test_show_manualAbort_dialog() {
 });
 
 add_task(async function test_show_completePayment() {
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    todo(false, "Cannot test OS key store login on official builds.");
+    return;
+  }
   let {address1GUID, card1GUID} = await addSampleAddressesAndBasicCard();
 
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
@@ -72,7 +76,7 @@ add_task(async function test_show_completePayment() {
       securityCode: "999",
     });
     info("clicking pay");
-    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+    await loginAndCompletePayment(frame);
 
     // Add a handler to complete the payment above.
     info("acknowledging the completion from the merchant page");
@@ -97,6 +101,11 @@ add_task(async function test_show_completePayment() {
 });
 
 add_task(async function test_show_completePayment2() {
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    todo(false, "Cannot test OS key store login on official builds.");
+    return;
+  }
+
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: BLANK_PAGE_URL,
@@ -131,7 +140,7 @@ add_task(async function test_show_completePayment2() {
     });
 
     info("clicking pay");
-    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+    await loginAndCompletePayment(frame);
 
     // Add a handler to complete the payment above.
     info("acknowledging the completion from the merchant page");

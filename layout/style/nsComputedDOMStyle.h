@@ -48,7 +48,6 @@ struct nsStyleFilter;
 class nsStyleGradient;
 struct nsStyleImage;
 class nsStyleSides;
-struct nsTimingFunction;
 
 class nsComputedDOMStyle final : public nsDOMCSSDeclaration
                                , public nsStubMutationObserver
@@ -231,8 +230,6 @@ private:
                           const nsStyleSides& aCropRect,
                           nsString& aString);
   already_AddRefed<CSSValue> GetScrollSnapPoints(const nsStyleCoord& aCoord);
-  void AppendTimingFunction(nsDOMCSSValueList *aValueList,
-                            const nsTimingFunction& aTimingFunction);
 
   bool ShouldHonorMinSizeAutoInAxis(mozilla::PhysicalAxis aAxis);
 
@@ -402,13 +399,11 @@ private:
   already_AddRefed<CSSValue> DoGetTransitionProperty();
   already_AddRefed<CSSValue> DoGetTransitionDuration();
   already_AddRefed<CSSValue> DoGetTransitionDelay();
-  already_AddRefed<CSSValue> DoGetTransitionTimingFunction();
 
   /* CSS Animations */
   already_AddRefed<CSSValue> DoGetAnimationName();
   already_AddRefed<CSSValue> DoGetAnimationDuration();
   already_AddRefed<CSSValue> DoGetAnimationDelay();
-  already_AddRefed<CSSValue> DoGetAnimationTimingFunction();
   already_AddRefed<CSSValue> DoGetAnimationIterationCount();
 
   /* CSS Flexbox properties */

@@ -232,7 +232,8 @@ class TraceLoggerGraph
                    mozilla::Maybe<uint32_t>& column);
 
     // Create a tree out of all the given events.
-    void log(ContinuousSpace<EventEntry>& events);
+    void log(ContinuousSpace<EventEntry>& events,
+             mozilla::TimeStamp startTime);
 
     static size_t treeSizeFlushLimit() {
         // Allow tree size to grow to 100MB.

@@ -446,6 +446,7 @@ def main(args=sys.argv[1:]):
             next_test['page_timeout'] = 120000
         if 'page_cycles' not in next_test.keys():
             next_test['page_cycles'] = 1
+
         raptor.run_test(next_test, timeout=int(next_test['page_timeout']))
 
     success = raptor.process_results()
