@@ -4,18 +4,23 @@ import os
 end_space = re.compile(r"([^\\]\s)*$")
 
 
-def fnmatch_translate(pat, path_name=False):
+def fnmatch_translate(pat, allow_component_only=True):
     parts = []
     seq = False
     i = 0
-    if pat[0] == "/" or path_name:
+    component_pattern = False
+    if pat[0] == "/":
         parts.append("^")
         any_char = "[^/]"
         if pat[0] == "/":
             pat = pat[1:]
     else:
         any_char = "."
-        parts.append("^(?:.*/)?")
+        if allow_component_only and "/" not in pat:
+            component_pattern = True
+            parts.append("^")
+        else:
+            parts.append("^(?:.*/)?")
     if pat[-1] == "/":
         # If the last character is / match this directory or any subdirectory
         pat = pat[:-1]
@@ -44,7 +49,7 @@ def fnmatch_translate(pat, path_name=False):
                     parts.append(c)
             elif c == "-":
                 parts.append(c)
-            elif not (path_name and c == "/"):
+            else:
                 parts += re.escape(c)
         elif c == "[":
             parts.append("[")
@@ -70,7 +75,7 @@ def fnmatch_translate(pat, path_name=False):
         raise ValueError
     parts.append(suffix)
     try:
-        return re.compile("".join(parts))
+        return component_pattern, re.compile("".join(parts))
     except Exception:
         raise
 
