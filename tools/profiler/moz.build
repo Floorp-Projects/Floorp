@@ -20,7 +20,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'public/shared-libraries.h',
     ]
     UNIFIED_SOURCES += [
-        'core/PageInformation.cpp',
         'core/platform.cpp',
         'core/ProfileBuffer.cpp',
         'core/ProfileBufferEntry.cpp',

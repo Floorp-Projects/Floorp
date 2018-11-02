@@ -7,7 +7,6 @@
 #include "Performance.h"
 
 #include "GeckoProfiler.h"
-#include "nsIDocShell.h"
 #include "nsRFPService.h"
 #include "PerformanceEntry.h"
 #include "PerformanceMainThread.h"
@@ -250,14 +249,9 @@ Performance::Mark(const nsAString& aName, ErrorResult& aRv)
 
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
-    nsCOMPtr<EventTarget> et = do_QueryInterface(GetOwner());
-    nsCOMPtr<nsIDocShell> docShell =
-      nsContentUtils::GetDocShellForEventTarget(et);
-    DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
     profiler_add_marker(
       "UserTiming",
-      MakeUnique<UserTimingMarkerPayload>(
-        aName, TimeStamp::Now(), docShellId, docShellHistoryId));
+      MakeUnique<UserTimingMarkerPayload>(aName, TimeStamp::Now()));
   }
 #endif
 }
@@ -353,18 +347,10 @@ Performance::Measure(const nsAString& aName,
       endMark.emplace(aEndMark.Value());
     }
 
-    nsCOMPtr<EventTarget> et = do_QueryInterface(GetOwner());
-    nsCOMPtr<nsIDocShell> docShell =
-      nsContentUtils::GetDocShellForEventTarget(et);
-    DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
-    profiler_add_marker("UserTiming",
-                        MakeUnique<UserTimingMarkerPayload>(aName,
-                                                            startMark,
-                                                            endMark,
-                                                            startTimeStamp,
-                                                            endTimeStamp,
-                                                            docShellId,
-                                                            docShellHistoryId));
+    profiler_add_marker(
+      "UserTiming",
+      MakeUnique<UserTimingMarkerPayload>(aName, startMark, endMark,
+                                          startTimeStamp, endTimeStamp));
   }
 #endif
 }
