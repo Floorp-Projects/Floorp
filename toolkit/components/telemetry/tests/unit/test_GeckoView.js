@@ -45,8 +45,8 @@ add_task(async function test_persistContentHistograms() {
   TelemetryGeckoView.deInitPersistence();
 
   // Clear the histograms for all processes.
-  Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true /* clear */);
-  Telemetry.snapshotKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true /* clear */);
+  Telemetry.getSnapshotForHistograms("main", true /* clear */);
+  Telemetry.getSnapshotForKeyedHistograms("main", true /* clear */);
 
   // Start the persistence system again, to unpersist the data.
   let loadPromise = waitGeckoViewLoadComplete();
@@ -55,8 +55,7 @@ add_task(async function test_persistContentHistograms() {
   await loadPromise;
 
   // Validate the snapshot data.
-  const snapshot =
-    Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false /* clear */);
+  const snapshot = Telemetry.getSnapshotForHistograms("main", false /* clear */);
   Assert.ok("parent" in snapshot, "The snapshot object must have a 'parent' entry.");
   Assert.ok("content" in snapshot, "The snapshot object must have a 'content' entry.");
   Assert.ok("TELEMETRY_TEST_MULTIPRODUCT" in snapshot.parent,
@@ -68,8 +67,7 @@ add_task(async function test_persistContentHistograms() {
   Assert.equal(snapshot.content.TELEMETRY_TEST_MULTIPRODUCT.sum, 73,
                "The TELEMETRY_TEST_MULTIPRODUCT must have the expected value in the content section.");
 
-  const keyedSnapshot =
-    Telemetry.snapshotKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false /* clear */);
+  const keyedSnapshot = Telemetry.getSnapshotForKeyedHistograms("main", false /* clear */);
   Assert.ok("parent" in keyedSnapshot, "The keyed snapshot object must have a 'parent' entry.");
   Assert.ok("content" in keyedSnapshot, "The keyed snapshot object must have a 'content' entry.");
   const parentData = keyedSnapshot.parent;
