@@ -67,6 +67,7 @@ class nsIReflowCallback;
 class nsCSSFrameConstructor;
 template<class E> class nsCOMArray;
 class AutoWeakFrame;
+class MobileViewportManager;
 class WeakFrame;
 class nsIScrollableFrame;
 class nsDisplayList;
@@ -376,6 +377,13 @@ public:
    * may have changed.
    */
   virtual void UpdateViewportOverridden(bool aAfterInitialization) = 0;
+
+  /**
+   * Get the MobileViewportManager used to manage the document's mobile
+   * viewport. Will return null in situations where we don't have a mobile
+   * viewport, and for documents that are not the root content document.
+   */
+  virtual RefPtr<MobileViewportManager> GetMobileViewportManager() const = 0;
 
   /**
    * Return true if the presshell expects layout flush.

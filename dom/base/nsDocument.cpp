@@ -11173,10 +11173,8 @@ nsIDocument::CleanupFullscreenState()
 
   // Restore the zoom level that was in place prior to entering fullscreen.
   if (nsIPresShell* shell = GetShell()) {
-    if (nsPresContext* context = shell->GetPresContext()) {
-      if (context->IsRootContentDocument()) {
-        shell->SetResolutionAndScaleTo(mSavedResolution);
-      }
+    if (shell->GetMobileViewportManager()) {
+      shell->SetResolutionAndScaleTo(mSavedResolution);
     }
   }
 
@@ -11584,19 +11582,17 @@ nsIDocument::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest)
   while (true) {
     child->SetFullscreenRoot(fullScreenRootDoc);
 
-    // When entering fullscreen, reset the RCD's zoom level to 1,
-    // otherwise the fullscreen content could be sized larger than the
-    // screen (since fullscreen is implemented using position:fixed and
+    // When entering fullscreen, reset the RCD's resolution to the intrinsic
+    // resolution, otherwise the fullscreen content could be sized larger than
+    // the screen (since fullscreen is implemented using position:fixed and
     // fixed elements are sized to the layout viewport).
     // This also ensures that things like video controls aren't zoomed in
     // when in fullscreen mode.
     if (nsIPresShell* shell = child->GetShell()) {
-      if (nsPresContext* context = shell->GetPresContext()) {
-        if (context->IsRootContentDocument()) {
-          // Save the previous resolution so it can be restored.
-          child->mSavedResolution = shell->GetResolution();
-          shell->SetResolutionAndScaleTo(1.0f);
-        }
+      if (RefPtr<MobileViewportManager> manager = shell->GetMobileViewportManager()) {
+        // Save the previous resolution so it can be restored.
+        child->mSavedResolution = shell->GetResolution();
+        shell->SetResolutionAndScaleTo(manager->ComputeIntrinsicResolution());
       }
     }
 
