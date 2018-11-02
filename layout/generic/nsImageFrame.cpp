@@ -768,16 +768,12 @@ nsImageFrame::InvalidateSelf(const nsIntRect* aLayerInvalidRect,
 {
   // Check if WebRender has interacted with this frame. If it has
   // we need to let it know that things have changed.
-  if (HasProperty(WebRenderUserDataProperty::Key())) {
-    RefPtr<WebRenderFallbackData> data = GetWebRenderUserData<WebRenderFallbackData>(this, static_cast<uint32_t>(DisplayItemType::TYPE_IMAGE));
-    if (data) {
-      data->SetInvalid(true);
-    }
-    SchedulePaint();
+  const auto type = DisplayItemType::TYPE_IMAGE;
+  if (WebRenderUserData::ProcessInvalidateForImage(this, type)) {
     return;
   }
 
-  InvalidateLayer(DisplayItemType::TYPE_IMAGE,
+  InvalidateLayer(type,
                   aLayerInvalidRect,
                   aFrameInvalidRect);
 

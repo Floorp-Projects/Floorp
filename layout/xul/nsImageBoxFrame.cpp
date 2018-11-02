@@ -912,18 +912,12 @@ nsImageBoxFrame::OnFrameUpdate(imgIRequest* aRequest)
 
   // Check if WebRender has interacted with this frame. If it has
   // we need to let it know that things have changed.
-  if (HasProperty(WebRenderUserDataProperty::Key())) {
-    uint32_t key = static_cast<uint32_t>(DisplayItemType::TYPE_XUL_IMAGE);
-    RefPtr<WebRenderFallbackData> data =
-      GetWebRenderUserData<WebRenderFallbackData>(this, key);
-    if (data) {
-      data->SetInvalid(true);
-    }
-    SchedulePaint();
+  const auto type = DisplayItemType::TYPE_XUL_IMAGE;
+  if (WebRenderUserData::ProcessInvalidateForImage(this, type)) {
     return NS_OK;
   }
 
-  InvalidateLayer(DisplayItemType::TYPE_XUL_IMAGE);
+  InvalidateLayer(type);
 
   return NS_OK;
 }

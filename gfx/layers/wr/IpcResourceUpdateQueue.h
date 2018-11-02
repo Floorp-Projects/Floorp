@@ -24,6 +24,12 @@ public:
   ShmSegmentsWriter(layers::WebRenderBridgeChild* aAllocator, size_t aChunkSize);
   ~ShmSegmentsWriter();
 
+  ShmSegmentsWriter(ShmSegmentsWriter&& aOther) noexcept;
+  ShmSegmentsWriter& operator=(ShmSegmentsWriter&& aOther) noexcept;
+
+  ShmSegmentsWriter(const ShmSegmentsWriter& aOther) = delete;
+  ShmSegmentsWriter& operator=(const ShmSegmentsWriter& aOther) = delete;
+
   layers::OffsetRange Write(Range<uint8_t> aBytes);
 
   template<typename T>
@@ -32,7 +38,7 @@ public:
     return Write(Range<uint8_t>((uint8_t*)aValues.begin().get(), aValues.length() * sizeof(T)));
   }
 
-  void Flush(nsTArray<layers::RefCountedShmem>& aSmallAllocs, nsTArray<ipc::Shmem>& aLargeAllocs);
+  void Flush(nsTArray<layers::RefCountedShmem>& aSmallAllocs, nsTArray<mozilla::ipc::Shmem>& aLargeAllocs);
 
   void Clear();
   bool IsEmpty() const;
@@ -44,7 +50,7 @@ protected:
   layers::OffsetRange AllocLargeChunk(size_t aSize);
 
   nsTArray<layers::RefCountedShmem> mSmallAllocs;
-  nsTArray<ipc::Shmem> mLargeAllocs;
+  nsTArray<mozilla::ipc::Shmem> mLargeAllocs;
   layers::WebRenderBridgeChild* mShmAllocator;
   size_t mCursor;
   size_t mChunkSize;
@@ -53,7 +59,7 @@ protected:
 class ShmSegmentsReader {
 public:
   ShmSegmentsReader(const nsTArray<layers::RefCountedShmem>& aSmallShmems,
-                    const nsTArray<ipc::Shmem>& aLargeShmems);
+                    const nsTArray<mozilla::ipc::Shmem>& aLargeShmems);
 
   bool Read(const layers::OffsetRange& aRange, wr::Vec<uint8_t>& aInto);
 
@@ -61,7 +67,7 @@ protected:
   bool ReadLarge(const layers::OffsetRange& aRange, wr::Vec<uint8_t>& aInto);
 
   const nsTArray<layers::RefCountedShmem>& mSmallAllocs;
-  const nsTArray<ipc::Shmem>& mLargeAllocs;
+  const nsTArray<mozilla::ipc::Shmem>& mLargeAllocs;
   size_t mChunkSize;
 };
 
@@ -74,6 +80,12 @@ public:
   // in the buffer which we account for here as well.
   // So we pick 64k - 2 * 4k - 16 = 57328 bytes as the default alloc size.
   explicit IpcResourceUpdateQueue(layers::WebRenderBridgeChild* aAllocator, size_t aChunkSize = 57328);
+
+  IpcResourceUpdateQueue(IpcResourceUpdateQueue&& aOther) noexcept;
+  IpcResourceUpdateQueue& operator=(IpcResourceUpdateQueue&& aOther) noexcept;
+
+  IpcResourceUpdateQueue(const IpcResourceUpdateQueue& aOther) = delete;
+  IpcResourceUpdateQueue& operator=(const IpcResourceUpdateQueue& aOther) = delete;
 
   bool AddImage(wr::ImageKey aKey,
                 const ImageDescriptor& aDescriptor,
@@ -126,12 +138,12 @@ public:
 
   void Flush(nsTArray<layers::OpUpdateResource>& aUpdates,
              nsTArray<layers::RefCountedShmem>& aSmallAllocs,
-             nsTArray<ipc::Shmem>& aLargeAllocs);
+             nsTArray<mozilla::ipc::Shmem>& aLargeAllocs);
 
   bool IsEmpty() const;
 
-  static void ReleaseShmems(ipc::IProtocol*, nsTArray<layers::RefCountedShmem>& aShmems);
-  static void ReleaseShmems(ipc::IProtocol*, nsTArray<ipc::Shmem>& aShmems);
+  static void ReleaseShmems(mozilla::ipc::IProtocol*, nsTArray<layers::RefCountedShmem>& aShms);
+  static void ReleaseShmems(mozilla::ipc::IProtocol*, nsTArray<mozilla::ipc::Shmem>& aShms);
 protected:
   ShmSegmentsWriter mWriter;
   nsTArray<layers::OpUpdateResource> mUpdates;
