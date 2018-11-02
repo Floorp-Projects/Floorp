@@ -69,6 +69,10 @@ class MOZ_STACK_CLASS BytecodeCompiler
                      SourceBufferHolder& sourceBuffer,
                      HandleScope enclosingScope);
 
+    ScriptSourceObject* sourceObjectPtr() const {
+        return sourceObject.get();
+    }
+
     // Call this before calling compile{Global,Eval}Script.
     MOZ_MUST_USE bool prepareScriptParse() {
         return createSourceAndParser(ParseGoal::Script) && createCompleteScript();
@@ -95,8 +99,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
                                       const Maybe<uint32_t>& parameterListEnd);
 
     bool compileStandaloneFunction(CodeNode* parsedFunction, MutableHandleFunction fun);
-
-    ScriptSourceObject* sourceObjectPtr() const;
 
   private:
     void assertSourceAndParserCreated() const {
@@ -556,12 +558,6 @@ BytecodeCompiler::compileStandaloneFunction(CodeNode* parsedFunction, MutableHan
 
     // Enqueue an off-thread source compression task after finishing parsing.
     return scriptSource->tryCompressOffThread(cx);
-}
-
-ScriptSourceObject*
-BytecodeCompiler::sourceObjectPtr() const
-{
-    return sourceObject.get();
 }
 
 ScriptSourceObject*
