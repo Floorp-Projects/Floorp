@@ -13,6 +13,8 @@
 
 namespace js {
 
+class ReadableStreamController;
+
 class ReadableStreamReader : public NativeObject
 {
   public:
@@ -22,16 +24,64 @@ class ReadableStreamReader : public NativeObject
 class ReadableStream : public NativeObject
 {
   public:
+    /**
+     * Memory layout of Stream instances.
+     *
+     * See https://streams.spec.whatwg.org/#rs-internal-slots for details on
+     * the stored state. [[state]] and [[disturbed]] are stored in
+     * StreamSlot_State as ReadableStream::State enum values.
+     *
+     * Of the stored values, Reader and StoredError might be cross-compartment
+     * wrappers. This can happen if the Reader was created by applying a
+     * different compartment's ReadableStream.prototype.getReader method.
+     *
+     * A stream's associated controller is always created from under the
+     * stream's constructor and thus cannot be in a different compartment.
+     */
+    enum Slots {
+        Slot_Controller,
+        Slot_Reader,
+        Slot_State,
+        Slot_StoredError,
+        SlotCount
+    };
+
+  private:
+    uint32_t stateBits() const { return getFixedSlot(Slot_State).toInt32(); }
+    void initStateBits(uint32_t stateBits) { setFixedSlot(Slot_State, Int32Value(stateBits)); }
+    void setStateBits(uint32_t stateBits) {
+        MOZ_ASSERT_IF(disturbed(), stateBits & Disturbed);
+        MOZ_ASSERT_IF(closed() || errored(), !(stateBits & Readable));
+        setFixedSlot(Slot_State, Int32Value(stateBits));
+    }
+
+  public:
+    bool readable() const { return stateBits() & Readable; }
+    bool closed() const { return stateBits() & Closed; }
+    void setClosed() { setStateBits((stateBits() & Disturbed) | Closed); }
+    bool errored() const { return stateBits() & Errored; }
+    void setErrored() { setStateBits((stateBits() & Disturbed) | Errored); }
+    bool disturbed() const { return stateBits() & Disturbed; }
+    void setDisturbed() { setStateBits(stateBits() | Disturbed); }
+
+    bool hasController() const { return !getFixedSlot(Slot_Controller).isUndefined(); }
+    inline ReadableStreamController* controller() const;
+    inline void setController(ReadableStreamController* controller);
+    void clearController() { setFixedSlot(Slot_Controller, JS::UndefinedValue()); }
+
+    bool hasReader() const { return !getFixedSlot(Slot_Reader).isUndefined(); }
+    void setReader(JSObject* reader) { setFixedSlot(Slot_Reader, JS::ObjectValue(*reader)); }
+    void clearReader() { setFixedSlot(Slot_Reader, JS::UndefinedValue()); }
+
+    Value storedError() const { return getFixedSlot(Slot_StoredError); }
+    void setStoredError(HandleValue value) { setFixedSlot(Slot_StoredError, value); }
+
+  public:
     static ReadableStream* createDefaultStream(JSContext* cx, HandleValue underlyingSource,
                                                HandleValue size, HandleValue highWaterMark,
                                                HandleObject proto = nullptr);
     static ReadableStream* createExternalSourceStream(JSContext* cx, void* underlyingSource,
                                                       uint8_t flags, HandleObject proto = nullptr);
-
-    bool readable() const;
-    bool closed() const;
-    bool errored() const;
-    bool disturbed() const;
 
     bool locked() const;
 
@@ -148,6 +198,36 @@ class CountQueuingStrategy : public NativeObject
     static const ClassSpec protoClassSpec_;
     static const Class protoClass_;
 };
+
+} // namespace js
+
+template <>
+inline bool
+JSObject::is<js::ReadableStreamController>() const
+{
+    return is<js::ReadableStreamDefaultController>() || is<js::ReadableByteStreamController>();
+}
+
+template <>
+inline bool
+JSObject::is<js::ReadableStreamReader>() const
+{
+    return is<js::ReadableStreamDefaultReader>();
+}
+
+namespace js {
+
+inline ReadableStreamController*
+ReadableStream::controller() const
+{
+    return &getFixedSlot(Slot_Controller).toObject().as<ReadableStreamController>();
+}
+
+inline void
+ReadableStream::setController(ReadableStreamController* controller)
+{
+    setFixedSlot(Slot_Controller, JS::ObjectValue(*controller));
+}
 
 } // namespace js
 
