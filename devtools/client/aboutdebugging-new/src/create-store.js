@@ -8,6 +8,7 @@ const Services = require("Services");
 
 const { applyMiddleware, createStore } = require("devtools/client/shared/vendor/redux");
 const { thunk } = require("devtools/client/shared/redux/middleware/thunk.js");
+const { waitUntilService } = require("devtools/client/shared/redux/middleware/wait-service.js");
 
 const rootReducer = require("./reducers/index");
 const { DebugTargetsState } = require("./reducers/debug-targets-state");
@@ -35,7 +36,8 @@ function configureStore() {
                                      errorLoggingMiddleware,
                                      extensionComponentDataMiddleware,
                                      tabComponentDataMiddleware,
-                                     workerComponentDataMiddleware);
+                                     workerComponentDataMiddleware,
+                                     waitUntilService);
 
   return createStore(rootReducer, initialState, middleware);
 }
