@@ -91,6 +91,9 @@
         public/build/service.firefox-accounts.maven.zip:
           path: /build/android-components/components/service/firefox-accounts/build/target.maven.zip
           name: service-firefox-accounts
+        public/build/feature.awesomebartabs.maven.zip:
+          path: /build/android-components/components/feature/awesomebar/build/target.maven.zip
+          name: feature-awesomebar
         public/build/feature.tabs.maven.zip:
           path: /build/android-components/components/feature/tabs/build/target.maven.zip
           name: feature-tabs
