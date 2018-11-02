@@ -190,10 +190,8 @@ def _init_manifest_cache():
             return c[manifest_path]
         # cache at most one path:manifest
         c.clear()
-        wpt_manifest = manifest.load(wpt_root, manifest_path)
-        if wpt_manifest is None:
-            wpt_manifest = manifest.Manifest()
-        update.update(wpt_root, wpt_manifest)
+        wpt_manifest = manifest.load_and_update(wpt_root, manifest_path, "/",
+                                                update=True)
         c[manifest_path] = wpt_manifest
         return c[manifest_path]
     return load
