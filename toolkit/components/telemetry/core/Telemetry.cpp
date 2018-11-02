@@ -62,6 +62,9 @@
 #include "nsITelemetry.h"
 #include "nsIXPConnect.h"
 #include "nsIXULAppInfo.h"
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+#include "other/UntrustedModules.h"
+#endif
 #include "nsJSUtils.h"
 #include "nsLocalFile.h"
 #include "nsNativeCharsetUtils.h"
@@ -729,6 +732,16 @@ TelemetryImpl::GetMaximalNumberOfConcurrentThreads(uint32_t *ret)
 {
   *ret = nsThreadManager::get().GetHighestNumberOfThreads();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetUntrustedModuleLoadEvents(JSContext *cx, Promise** aPromise)
+{
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+  return Telemetry::GetUntrustedModuleLoadEvents(cx, aPromise);
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP
