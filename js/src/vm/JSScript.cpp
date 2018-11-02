@@ -2001,16 +2001,18 @@ ScriptSource::setCompressedSource(JSContext* cx, UniqueChars&& compressed, size_
     return true;
 }
 
+template<typename Unit>
 bool
-ScriptSource::setSourceCopy(JSContext* cx, SourceText<char16_t>& srcBuf)
+ScriptSource::setSourceCopy(JSContext* cx, SourceText<Unit>& srcBuf)
 {
     MOZ_ASSERT(!hasSourceText());
 
     JSRuntime* runtime = cx->zone()->runtimeFromAnyThread();
     auto& cache = runtime->sharedImmutableStrings();
     auto deduped = cache.getOrCreate(srcBuf.get(), srcBuf.length(), [&srcBuf]() {
+        using CharT = typename SourceTypeTraits<Unit>::CharT;
         return srcBuf.ownsUnits()
-               ? UniqueTwoByteChars(srcBuf.takeChars())
+               ? UniquePtr<CharT[], JS::FreePolicy>(srcBuf.takeChars())
                : DuplicateString(srcBuf.get(), srcBuf.length());
     });
     if (!deduped) {
@@ -2018,9 +2020,11 @@ ScriptSource::setSourceCopy(JSContext* cx, SourceText<char16_t>& srcBuf)
         return false;
     }
 
-    setSource<char16_t>(std::move(*deduped));
+    setSource<Unit>(std::move(*deduped));
     return true;
 }
+
+template bool ScriptSource::setSourceCopy(JSContext* cx, SourceText<char16_t>& srcBuf);
 
 void
 ScriptSource::trace(JSTracer* trc)
