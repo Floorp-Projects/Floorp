@@ -450,7 +450,7 @@ var DownloadsPanel = {
     // Getting the data or creating the nsIURI might fail
     try {
       let data = {};
-      trans.getAnyTransferData({}, data, {});
+      trans.getAnyTransferData({}, data);
       let [url, name] = data.value
                             .QueryInterface(Ci.nsISupportsString)
                             .data

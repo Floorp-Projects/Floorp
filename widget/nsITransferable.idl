@@ -140,10 +140,8 @@ interface nsITransferable : nsISupports
     *
     * @param  aFlavor (out parameter) the flavor of data that was retrieved
     * @param  aData the data. Some variant of class in nsISupportsPrimitives.idl
-    * @param  aDataLen the length of the data
     */
-  void getAnyTransferData ( out ACString aFlavor, out nsISupports aData,
-                            out unsigned long aDataLen ) ;
+  void getAnyTransferData(out ACString aFlavor, out nsISupports aData);
 
     ///////////////////////////////
     // Setter part of interface 
