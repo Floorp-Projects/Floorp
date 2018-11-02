@@ -5139,7 +5139,13 @@ ScrollFrameHelper::ScrollEndEvent::Run()
 void
 ScrollFrameHelper::FireScrollEvent()
 {
-  AUTO_PROFILER_TRACING("Paint", "FireScrollEvent");
+  nsIContent* content = mOuter->GetContent();
+  nsPresContext* prescontext = mOuter->PresContext();
+#ifdef MOZ_GECKO_PROFILER
+  nsCOMPtr<nsIDocShell> docShell = prescontext->GetDocShell();
+  AUTO_PROFILER_TRACING_DOCSHELL("Paint", "FireScrollEvent", docShell);
+#endif
+
   MOZ_ASSERT(mScrollEvent);
   mScrollEvent->Revoke();
   mScrollEvent = nullptr;
@@ -5147,8 +5153,6 @@ ScrollFrameHelper::FireScrollEvent()
   ActiveLayerTracker::SetCurrentScrollHandlerFrame(mOuter);
   WidgetGUIEvent event(true, eScroll, nullptr);
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsIContent* content = mOuter->GetContent();
-  nsPresContext* prescontext = mOuter->PresContext();
   // Fire viewport scroll events at the document (where they
   // will bubble to the window)
   mozilla::layers::ScrollLinkedEffectDetector detector(content->GetComposedDoc());
