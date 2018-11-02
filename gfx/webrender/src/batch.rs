@@ -542,6 +542,116 @@ impl AlphaBatchBuilder {
             .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
 
         match prim_instance.kind {
+            PrimitiveInstanceKind::TextRun { ref run, .. } => {
+                let subpx_dir = run.used_font.get_subpx_dir();
+
+                // The GPU cache data is stored in the template and reused across
+                // frames and display lists.
+                let prim_data = &ctx
+                    .resources
+                    .prim_data_store[prim_instance.prim_data_handle];
+
+                let glyph_fetch_buffer = &mut self.glyph_fetch_buffer;
+                let alpha_batch_list = &mut self.batch_list.alpha_batch_list;
+                let prim_cache_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
+
+                let prim_header = PrimitiveHeader {
+                    local_rect: prim_data.prim_rect,
+                    local_clip_rect: prim_instance.combined_local_clip_rect,
+                    task_address,
+                    specific_prim_address: prim_cache_address,
+                    clip_task_address,
+                    transform_id,
+                };
+
+                ctx.resource_cache.fetch_glyphs(
+                    run.used_font.clone(),
+                    &run.glyph_keys,
+                    glyph_fetch_buffer,
+                    gpu_cache,
+                    |texture_id, mut glyph_format, glyphs| {
+                        debug_assert_ne!(texture_id, TextureSource::Invalid);
+
+                        // Ignore color and only sample alpha when shadowing.
+                        if run.shadow {
+                            glyph_format = glyph_format.ignore_color();
+                        }
+
+                        let subpx_dir = subpx_dir.limit_by(glyph_format);
+
+                        let textures = BatchTextures {
+                            colors: [
+                                texture_id,
+                                TextureSource::Invalid,
+                                TextureSource::Invalid,
+                            ],
+                        };
+
+                        let kind = BatchKind::TextRun(glyph_format);
+
+                        let (blend_mode, color_mode) = match glyph_format {
+                            GlyphFormat::Subpixel |
+                            GlyphFormat::TransformedSubpixel => {
+                                if run.used_font.bg_color.a != 0 {
+                                    (
+                                        BlendMode::SubpixelWithBgColor,
+                                        ShaderColorMode::FromRenderPassMode,
+                                    )
+                                } else if ctx.use_dual_source_blending {
+                                    (
+                                        BlendMode::SubpixelDualSource,
+                                        ShaderColorMode::SubpixelDualSource,
+                                    )
+                                } else {
+                                    (
+                                        BlendMode::SubpixelConstantTextColor(run.used_font.color.into()),
+                                        ShaderColorMode::SubpixelConstantTextColor,
+                                    )
+                                }
+                            }
+                            GlyphFormat::Alpha |
+                            GlyphFormat::TransformedAlpha => {
+                                (
+                                    BlendMode::PremultipliedAlpha,
+                                    ShaderColorMode::Alpha,
+                                )
+                            }
+                            GlyphFormat::Bitmap => {
+                                (
+                                    BlendMode::PremultipliedAlpha,
+                                    ShaderColorMode::Bitmap,
+                                )
+                            }
+                            GlyphFormat::ColorBitmap => {
+                                (
+                                    BlendMode::PremultipliedAlpha,
+                                    ShaderColorMode::ColorBitmap,
+                                )
+                            }
+                        };
+
+                        let prim_header_index = prim_headers.push(&prim_header, z_id, [0; 3]);
+                        let key = BatchKey::new(kind, blend_mode, textures);
+                        let base_instance = GlyphInstance::new(
+                            prim_header_index,
+                        );
+                        let batch = alpha_batch_list.set_params_and_get_batch(
+                            key,
+                            bounding_rect,
+                            z_id,
+                        );
+
+                        for glyph in glyphs {
+                            batch.push(base_instance.build(
+                                glyph.index_in_text_run,
+                                glyph.uv_rect_address.as_int(),
+                                (subpx_dir as u32 as i32) << 16 |
+                                (color_mode as u32 as i32),
+                            ));
+                        }
+                    },
+                );
+            }
             PrimitiveInstanceKind::LineDecoration { ref cache_handle, .. } => {
                 // The GPU cache data is stored in the template and reused across
                 // frames and display lists.
@@ -654,6 +764,7 @@ impl AlphaBatchBuilder {
                             let pic_index = match prim_instance.kind {
                                 PrimitiveInstanceKind::Picture { pic_index } => pic_index,
                                 PrimitiveInstanceKind::LineDecoration { .. } |
+                                PrimitiveInstanceKind::TextRun { .. } |
                                 PrimitiveInstanceKind::LegacyPrimitive { .. } => {
                                     unreachable!();
                                 }
@@ -1055,7 +1166,6 @@ impl AlphaBatchBuilder {
                             _ => false,
                         }
                     }
-                    _ => false,
                 };
 
                 let prim_cache_address = if is_multiple_primitives {
@@ -1185,102 +1295,7 @@ impl AlphaBatchBuilder {
                             }
                         }
                     }
-                    PrimitiveDetails::TextRun(ref text_cpu) => {
-                        let subpx_dir = text_cpu.used_font.get_subpx_dir();
-
-                        let glyph_fetch_buffer = &mut self.glyph_fetch_buffer;
-                        let alpha_batch_list = &mut self.batch_list.alpha_batch_list;
-
-                        ctx.resource_cache.fetch_glyphs(
-                            text_cpu.used_font.clone(),
-                            &text_cpu.glyph_keys,
-                            glyph_fetch_buffer,
-                            gpu_cache,
-                            |texture_id, mut glyph_format, glyphs| {
-                                debug_assert_ne!(texture_id, TextureSource::Invalid);
-
-                                // Ignore color and only sample alpha when shadowing.
-                                if text_cpu.shadow {
-                                    glyph_format = glyph_format.ignore_color();
-                                }
-
-                                let subpx_dir = subpx_dir.limit_by(glyph_format);
-
-                                let textures = BatchTextures {
-                                    colors: [
-                                        texture_id,
-                                        TextureSource::Invalid,
-                                        TextureSource::Invalid,
-                                    ],
-                                };
-
-                                let kind = BatchKind::TextRun(glyph_format);
-
-                                let (blend_mode, color_mode) = match glyph_format {
-                                    GlyphFormat::Subpixel |
-                                    GlyphFormat::TransformedSubpixel => {
-                                        if text_cpu.used_font.bg_color.a != 0 {
-                                            (
-                                                BlendMode::SubpixelWithBgColor,
-                                                ShaderColorMode::FromRenderPassMode,
-                                            )
-                                        } else if ctx.use_dual_source_blending {
-                                            (
-                                                BlendMode::SubpixelDualSource,
-                                                ShaderColorMode::SubpixelDualSource,
-                                            )
-                                        } else {
-                                            (
-                                                BlendMode::SubpixelConstantTextColor(text_cpu.used_font.color.into()),
-                                                ShaderColorMode::SubpixelConstantTextColor,
-                                            )
-                                        }
-                                    }
-                                    GlyphFormat::Alpha |
-                                    GlyphFormat::TransformedAlpha => {
-                                        (
-                                            BlendMode::PremultipliedAlpha,
-                                            ShaderColorMode::Alpha,
-                                        )
-                                    }
-                                    GlyphFormat::Bitmap => {
-                                        (
-                                            BlendMode::PremultipliedAlpha,
-                                            ShaderColorMode::Bitmap,
-                                        )
-                                    }
-                                    GlyphFormat::ColorBitmap => {
-                                        (
-                                            BlendMode::PremultipliedAlpha,
-                                            ShaderColorMode::ColorBitmap,
-                                        )
-                                    }
-                                };
-
-                                let prim_header_index = prim_headers.push(&prim_header, z_id, [0; 3]);
-                                let key = BatchKey::new(kind, blend_mode, textures);
-                                let base_instance = GlyphInstance::new(
-                                    prim_header_index,
-                                );
-                                let batch = alpha_batch_list.set_params_and_get_batch(
-                                    key,
-                                    bounding_rect,
-                                    z_id,
-                                );
-
-                                for glyph in glyphs {
-                                    batch.push(base_instance.build(
-                                        glyph.index_in_text_run,
-                                        glyph.uv_rect_address.as_int(),
-                                        (subpx_dir as u32 as i32) << 16 |
-                                        (color_mode as u32 as i32),
-                                    ));
-                                }
-                            },
-                        );
-                    }
                 }
-
             }
         }
     }
@@ -1807,11 +1822,6 @@ impl PrimitiveInstance {
         details: &PrimitiveDetails,
     ) -> BlendMode {
         match *details {
-            // Can only resolve the TextRun's blend mode once glyphs are fetched.
-            PrimitiveDetails::TextRun(..) => {
-                BlendMode::PremultipliedAlpha
-            }
-
             PrimitiveDetails::Brush(ref brush) => {
                 match brush.kind {
                     BrushKind::Clear => {
@@ -1847,8 +1857,7 @@ impl PrimitiveInstance {
             PrimitiveDetails::Brush(BrushPrimitive { kind: BrushKind::YuvImage{ yuv_key, .. }, .. }) => {
                 yuv_key[0]
             }
-            PrimitiveDetails::Brush(_) |
-            PrimitiveDetails::TextRun(..) => {
+            PrimitiveDetails::Brush(_) => {
                 return true
             }
         };

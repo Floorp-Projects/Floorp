@@ -27,7 +27,7 @@ use picture::{Picture3DContext, PictureCompositeMode, PictureIdGenerator, Pictur
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor, PrimitiveInstance, PrimitiveDataInterner, PrimitiveKeyKind};
 use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveOpacity, PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind};
 use prim_store::{BorderSource, BrushSegment, BrushSegmentVec, PrimitiveContainer, PrimitiveDataHandle, PrimitiveStore};
-use prim_store::{OpacityBinding, ScrollNodeAndClipChain, TextRunPrimitive, PictureIndex, register_prim_chase_id};
+use prim_store::{OpacityBinding, ScrollNodeAndClipChain, PictureIndex, register_prim_chase_id};
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
 use scene::{Scene, ScenePipeline, StackingContextHelpers};
@@ -553,6 +553,7 @@ impl<'a> DisplayListFlattener<'a> {
                     &text_info.color,
                     item.glyphs(),
                     text_info.glyph_options,
+                    pipeline_id,
                 );
             }
             SpecificDisplayItem::Rectangle(ref info) => {
@@ -2062,14 +2063,15 @@ impl<'a> DisplayListFlattener<'a> {
     pub fn add_text(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
-        run_offset: LayoutVector2D,
+        offset: LayoutVector2D,
         prim_info: &LayoutPrimitiveInfo,
         font_instance_key: &FontInstanceKey,
         text_color: &ColorF,
         glyph_range: ItemRange<GlyphInstance>,
         glyph_options: Option<GlyphOptions>,
+        pipeline_id: PipelineId,
     ) {
-        let prim = {
+        let container = {
             let instance_map = self.font_instances.read().unwrap();
             let font_instance = match instance_map.get(font_instance_key) {
                 Some(instance) => instance,
@@ -2097,7 +2099,7 @@ impl<'a> DisplayListFlattener<'a> {
                 flags |= options.flags;
             }
 
-            let prim_font = FontInstance::new(
+            let font = FontInstance::new(
                 font_instance.font_key,
                 font_instance.size,
                 *text_color,
@@ -2108,20 +2110,29 @@ impl<'a> DisplayListFlattener<'a> {
                 font_instance.platform_options,
                 font_instance.variations.clone(),
             );
-            TextRunPrimitive::new(
-                prim_font,
-                run_offset,
-                glyph_range,
-                Vec::new(),
-                false,
-            )
+
+            // TODO(gw): We can do better than a hash lookup here...
+            let display_list = self.scene.get_display_list_for_pipeline(pipeline_id);
+
+            // TODO(gw): It'd be nice not to have to allocate here for creating
+            //           the primitive key, when the common case is that the
+            //           hash will match and we won't end up creating a new
+            //           primitive template.
+            let glyphs = display_list.get(glyph_range).collect();
+
+            PrimitiveContainer::TextRun {
+                glyphs,
+                font,
+                offset,
+                shadow: false,
+            }
         };
 
         self.add_primitive(
             clip_and_scroll,
             prim_info,
             Vec::new(),
-            PrimitiveContainer::TextRun(prim),
+            container,
         );
     }
 
