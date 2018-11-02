@@ -43,7 +43,7 @@
 #include "FuzzerDefs.h"
 #endif
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
 #include "mozilla/Sandbox.h"
 #endif
 
@@ -267,7 +267,7 @@ int main(int argc, char* argv[], char* envp[])
 {
   mozilla::TimeStamp start = mozilla::TimeStamp::Now();
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
   if (argc > 1 && IsArg(argv[1], "contentproc")) {
     std::string err;
     if (!mozilla::EarlyStartMacSandboxIfEnabled(argc, argv, err)) {
