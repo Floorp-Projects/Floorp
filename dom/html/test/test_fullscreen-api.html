@@ -60,9 +60,15 @@ function finish() {
 
 function nextTest() {
   if (testWindow) {
+    info("Waiting for focus to return to main window");
+    window.addEventListener("focus", function() {
+      info("main window focused, starting next test");
+      SimpleTest.executeSoon(runNextTest);
+    }, {once: true});
     testWindow.close();
+  } else {
+    SimpleTest.executeSoon(runNextTest);
   }
-  SimpleTest.executeSoon(runNextTest);
 }
 
 var gHeadlessSkipList = [
@@ -130,10 +136,12 @@ function runNextTest() {
         waitForLoadAndPaint(testWindow, function() {
           SimpleTest.waitForFocus(function() {
             SimpleTest.waitForFocus(function() {
+              info("Were focused");
               // For the platforms that support reporting occlusion state (e.g. Mac),
               // we should wait until the docshell has been activated again,
               // otherwise, the fullscreen request might be denied.
               if (testWindow.document.hidden) {
+                info("Waiting for document to unhide");
                 waitForEvent(testWindow.document, "visibilitychange", (event) => {
                   return !testWindow.document.hidden;
                 }, testWindow.begin);
