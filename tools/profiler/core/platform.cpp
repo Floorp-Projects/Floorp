@@ -264,10 +264,16 @@ public:
       aProfSize += registeredThread->SizeOfIncludingThis(aMallocSizeOf);
     }
 
+    for (auto& registeredPage : sInstance->mRegisteredPages) {
+      aProfSize += registeredPage->SizeOfIncludingThis(aMallocSizeOf);
+    }
+
     // Measurement of the following things may be added later if DMD finds it
     // is worthwhile:
-    // - CorePS::mRegisteredThreads itself (its elements' children are measured
-    //   above)
+    // - CorePS::mRegisteredThreads itself (its elements' children are
+    // measured above)
+    // - CorePS::mRegisteredPages itself (its elements' children are
+    // measured above)
     // - CorePS::mInterposeObserver
 
 #if defined(USE_LUL_STACKWALK)
@@ -294,6 +300,38 @@ public:
     // to a raw pointer.
     sInstance->mRegisteredThreads.RemoveElementsBy(
       [&](UniquePtr<RegisteredThread>& rt) { return rt.get() == aRegisteredThread; });
+  }
+
+  PS_GET(nsTArray<RefPtr<PageInformation>>&, RegisteredPages)
+
+  static void AppendRegisteredPage(
+    PSLockRef,
+    RefPtr<PageInformation>&& aRegisteredPage)
+  {
+#ifdef DEBUG
+    struct RegisteredPageComparator
+    {
+      bool Equals(PageInformation* aA,
+                  PageInformation* aB) const
+      {
+        return aA->Equals(aB);
+      }
+    };
+    MOZ_ASSERT(!sInstance->mRegisteredPages.Contains(
+      aRegisteredPage, RegisteredPageComparator()));
+#endif
+    sInstance->mRegisteredPages.AppendElement(
+      std::move(aRegisteredPage));
+  }
+
+  static void RemoveRegisteredPages(PSLockRef,
+                                    const nsID& aRegisteredDocShellId)
+  {
+    // Remove RegisteredPage from mRegisteredPages by given DocShell Id.
+    sInstance->mRegisteredPages.RemoveElementsBy(
+      [&](RefPtr<PageInformation>& rd) {
+        return rd->DocShellId().Equals(aRegisteredDocShellId);
+      });
   }
 
   PS_GET(const nsTArray<BaseProfilerCount*>&, Counters)
@@ -331,6 +369,10 @@ private:
   // Info on all the registered threads.
   // ThreadIds in mRegisteredThreads are unique.
   nsTArray<UniquePtr<RegisteredThread>> mRegisteredThreads;
+
+  // Info on all the registered pages.
+  // DocShellId and DocShellHistoryId pairs in mRegisteredPages are unique.
+  nsTArray<RefPtr<PageInformation>> mRegisteredPages;
 
   // Non-owning pointers to all active counters
   nsTArray<BaseProfilerCount*> mCounters;
@@ -606,6 +648,20 @@ public:
     return array;
   }
 
+  static nsTArray<RefPtr<PageInformation>> ProfiledPages(PSLockRef aLock)
+  {
+    nsTArray<RefPtr<PageInformation>> array;
+    for (auto& d : CorePS::RegisteredPages(aLock)) {
+      array.AppendElement(d);
+    }
+    for (auto& d : sInstance->mDeadProfiledPages) {
+      array.AppendElement(d);
+    }
+    // We don't need to sort the DocShells like threads since we won't show them
+    // as a list.
+    return array;
+  }
+
   // Do a linear search through mLiveProfiledThreads to find the
   // ProfiledThreadData object for a RegisteredThread.
   static ProfiledThreadData* GetProfiledThreadData(PSLockRef,
@@ -669,6 +725,35 @@ public:
       });
   }
 
+  static void UnregisterPages(PSLockRef aLock,
+                              const nsID& aRegisteredDocShellId)
+  {
+    auto& registeredPages = CorePS::RegisteredPages(aLock);
+    for (size_t i = 0; i < registeredPages.Length(); i++) {
+      RefPtr<PageInformation>& page = registeredPages[i];
+      if (page->DocShellId().Equals(aRegisteredDocShellId)) {
+        page->NotifyUnregistered(sInstance->mBuffer->mRangeEnd);
+        sInstance->mDeadProfiledPages.AppendElement(std::move(page));
+        registeredPages.RemoveElementAt(i--);
+      }
+    }
+  }
+
+  static void DiscardExpiredPages(PSLockRef)
+  {
+    uint64_t bufferRangeStart = sInstance->mBuffer->mRangeStart;
+    // Discard any dead pages that were unregistered before
+    // bufferRangeStart.
+    sInstance->mDeadProfiledPages.RemoveElementsBy(
+      [bufferRangeStart](RefPtr<PageInformation>& aProfiledPage) {
+        Maybe<uint64_t> bufferPosition =
+          aProfiledPage->BufferPositionWhenUnregistered();
+        MOZ_RELEASE_ASSERT(bufferPosition,
+                           "should have unregistered this page");
+        return *bufferPosition < bufferRangeStart;
+      });
+  }
+
 private:
   // The singleton instance.
   static ActivePS* sInstance;
@@ -716,6 +801,12 @@ private:
   //    unregistered but for which there is still data in the profile buffer.
   nsTArray<LiveProfiledThreadData> mLiveProfiledThreads;
   nsTArray<UniquePtr<ProfiledThreadData>> mDeadProfiledThreads;
+
+  // Info on all the dead pages.
+  // Registered pages are being moved to this array after unregistration.
+  // We are keeping them in case we need them in the profile data.
+  // We are removing them when we ensure that we won't need them anymore.
+  nsTArray<RefPtr<PageInformation>> mDeadProfiledPages;
 
   // The current sampler thread. This class is not responsible for destroying
   // the SamplerThread object; the Destroy() method returns it so the caller
@@ -3440,6 +3531,60 @@ profiler_unregister_thread()
     //
     // Either way, TLSRegisteredThread should be empty.
     MOZ_RELEASE_ASSERT(!TLSRegisteredThread::RegisteredThread(lock));
+  }
+}
+
+void
+profiler_register_page(const nsID& aDocShellId,
+                           uint32_t aHistoryId,
+                           const nsCString& aUrl,
+                           bool aIsSubFrame)
+{
+  DEBUG_LOG("profiler_register_page(%s, %u, %s, %d)",
+            aDocShellId.ToString(),
+            aHistoryId,
+            aUrl.get(),
+            aIsSubFrame);
+
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  PSAutoLock lock(gPSMutex);
+
+  // If profiler is not active, delete all the previous page entries of the
+  // given DocShell since we won't need those.
+  if (!ActivePS::Exists(lock)) {
+    CorePS::RemoveRegisteredPages(lock, aDocShellId);
+  }
+
+  RefPtr<PageInformation> pageInfo =
+    new PageInformation(aDocShellId, aHistoryId, aUrl, aIsSubFrame);
+  CorePS::AppendRegisteredPage(lock, std::move(pageInfo));
+
+  // After appending the given page to CorePS, look for the expired
+  // pages and remove them if there are any.
+  if (ActivePS::Exists(lock)) {
+    ActivePS::DiscardExpiredPages(lock);
+  }
+}
+
+void
+profiler_unregister_pages(const nsID& aRegisteredDocShellId)
+{
+  if (!CorePS::Exists()) {
+    // This function can be called after the main thread has already shut down.
+    return;
+  }
+
+  PSAutoLock lock(gPSMutex);
+
+  // During unregistration, if the profiler is active, we have to keep the
+  // page information since there may be some markers associated with the given
+  // page. But if profiler is not active. we have no reason to keep the
+  // page information here because there can't be any marker associated with it.
+  if (ActivePS::Exists(lock)) {
+    ActivePS::UnregisterPages(lock, aRegisteredDocShellId);
+  } else {
+    CorePS::RemoveRegisteredPages(lock, aRegisteredDocShellId);
   }
 }
 
