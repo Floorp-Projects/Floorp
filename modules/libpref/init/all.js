@@ -5281,10 +5281,6 @@ pref("io.activity.intervalMilliseconds", 0);
 // to take effect.
 pref("jsloader.shareGlobal", true);
 
-// When we're asked to take a screenshot, don't wait more than 2000ms for the
-// event loop to become idle before actually taking the screenshot.
-pref("dom.browserElement.maxScreenshotDelayMS", 2000);
-
 // Whether we should show the placeholder when the element is focused but empty.
 pref("dom.placeholder.show_on_focus", true);
 
