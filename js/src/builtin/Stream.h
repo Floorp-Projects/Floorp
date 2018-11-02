@@ -301,7 +301,23 @@ class ReadableStreamController : public StreamController
 
 class ReadableStreamDefaultController : public ReadableStreamController
 {
+  private:
+    /**
+     * Memory layout for ReadableStreamDefaultControllers, starting after the
+     * slots shared among all types of controllers.
+     *
+     * StrategySize is treated as an opaque value when stored. The only use site
+     * ensures that it's wrapped into the current cx compartment.
+     */
+    enum Slots {
+        Slot_StrategySize = ReadableStreamController::SlotCount,
+        SlotCount
+    };
+
   public:
+    Value strategySize() const { return getFixedSlot(Slot_StrategySize); }
+    void setStrategySize(const Value& size) { setFixedSlot(Slot_StrategySize, size); }
+
     static bool constructor(JSContext* cx, unsigned argc, Value* vp);
     static const ClassSpec classSpec_;
     static const Class class_;
