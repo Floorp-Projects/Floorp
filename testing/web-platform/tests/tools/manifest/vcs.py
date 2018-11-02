@@ -62,7 +62,7 @@ class Git(object):
         try:
             return cls(git("rev-parse", "--show-toplevel").rstrip(), url_base, cache_path,
                        manifest_path=manifest_path, rebuild=rebuild)
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, OSError):
             return None
 
     def _local_changes(self):
