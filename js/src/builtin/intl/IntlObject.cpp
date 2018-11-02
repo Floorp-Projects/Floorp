@@ -20,6 +20,7 @@
 #include "builtin/intl/ICUStubs.h"
 #include "builtin/intl/NumberFormat.h"
 #include "builtin/intl/PluralRules.h"
+#include "builtin/intl/RelativeTimeFormat.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
@@ -572,6 +573,10 @@ GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global)
     if (!pluralRulesProto) {
         return false;
     }
+    RootedObject relativeTimeFmtProto(cx, CreateRelativeTimeFormatPrototype(cx, intl, global));
+    if (!relativeTimeFmtProto) {
+        return false;
+    }
 
     // The |Intl| object is fully set up now, so define the global property.
     RootedValue intlValue(cx, ObjectValue(*intl));
@@ -594,6 +599,7 @@ GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global)
     global->setReservedSlot(NUMBER_FORMAT, ObjectValue(*numberFormat));
     global->setReservedSlot(NUMBER_FORMAT_PROTO, ObjectValue(*numberFormatProto));
     global->setReservedSlot(PLURAL_RULES_PROTO, ObjectValue(*pluralRulesProto));
+    global->setReservedSlot(RELATIVE_TIME_FORMAT_PROTO, ObjectValue(*relativeTimeFmtProto));
 
     // Also cache |Intl| to implement spec language that conditions behavior
     // based on values being equal to "the standard built-in |Intl| object".
