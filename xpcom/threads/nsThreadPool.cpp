@@ -224,7 +224,10 @@ nsThreadPool::Run()
           TimeDuration delta = timeout - (now - idleSince);
           LOG(("THRD-P(%p) %s waiting [%f]\n", this, mName.BeginReading(),
                delta.ToMilliseconds()));
-          mEventsAvailable.Wait(delta);
+          {
+            AUTO_PROFILER_THREAD_SLEEP;
+            mEventsAvailable.Wait(delta);
+          }
           LOG(("THRD-P(%p) done waiting\n", this));
         }
       } else if (wasIdle) {
