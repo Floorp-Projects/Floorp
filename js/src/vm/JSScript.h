@@ -1237,7 +1237,7 @@ XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 //   * A possibly-empty array of JSObject* in objects()
 //   * A possibly-empty array of JSTryNote in tryNotes()
 //   * A possibly-empty array of ScopeNote in scopeNotes()
-//   * A possibly-empty array of uint32_t in yieldAndAwaitOffsets()
+//   * A possibly-empty array of uint32_t in resumeOffsets()
 //
 // Accessing any of these arrays just requires calling the appropriate public
 // Span-computing function.
@@ -1252,7 +1252,7 @@ XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 //   (OPTIONAL) PackedSpan for objects()
 //   (OPTIONAL) PackedSpan for tryNotes()
 //   (OPTIONAL) PackedSpan for scopeNotes()
-//   (OPTIONAL) PackedSpan for yieldAndAwaitOffsets()
+//   (OPTIONAL) PackedSpan for resumeOffsets()
 //   --
 //   (REQUIRED) All the GCPtrScopes that constitute scopes()
 //   --
@@ -1266,7 +1266,7 @@ XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 //   --
 //   (OPTIONAL) All the ScopeNotes that constitute scopeNotes()
 //   --
-//   (OPTIONAL) All the uint32_t's that constitute yieldAndAwaitOffsets()
+//   (OPTIONAL) All the uint32_t's that constitute resumeOffsets()
 //
 // The contents of PrivateScriptData indicate which optional items are present.
 // PrivateScriptData::packedOffsets contains bit-fields, one per array.
@@ -1303,7 +1303,7 @@ class alignas(JS::Value) PrivateScriptData final
         uint32_t objectsSpanOffset : 4;
         uint32_t tryNotesSpanOffset : 4;
         uint32_t scopeNotesSpanOffset : 4;
-        uint32_t yieldOffsetsSpanOffset : 4;
+        uint32_t resumeOffsetsSpanOffset : 4;
     };
 
     // Detect accidental size regressions.
@@ -1357,11 +1357,12 @@ class alignas(JS::Value) PrivateScriptData final
 
     // Size to allocate
     static size_t AllocationSize(uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
-                                 uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets);
+                                 uint32_t ntrynotes, uint32_t nscopenotes,
+                                 uint32_t nresumeoffsets);
 
     // Initialize header and PackedSpans
     PrivateScriptData(uint32_t nscopes_, uint32_t nconsts, uint32_t nobjects,
-                      uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets);
+                      uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nresumeoffsets);
 
   public:
 
@@ -1382,8 +1383,8 @@ class alignas(JS::Value) PrivateScriptData final
     mozilla::Span<ScopeNote> scopeNotes() {
         return packedOffsetToSpan<ScopeNote>(packedOffsets.scopeNotesSpanOffset);
     }
-    mozilla::Span<uint32_t> yieldAndAwaitOffsets() {
-        return packedOffsetToSpan<uint32_t>(packedOffsets.yieldOffsetsSpanOffset);
+    mozilla::Span<uint32_t> resumeOffsets() {
+        return packedOffsetToSpan<uint32_t>(packedOffsets.resumeOffsetsSpanOffset);
     }
 
     // Fast tests for if array exists
@@ -1391,13 +1392,14 @@ class alignas(JS::Value) PrivateScriptData final
     bool hasObjects() const { return packedOffsets.objectsSpanOffset != 0; }
     bool hasTryNotes() const { return packedOffsets.tryNotesSpanOffset != 0; }
     bool hasScopeNotes() const { return packedOffsets.scopeNotesSpanOffset != 0; }
-    bool hasYieldOffsets() const { return packedOffsets.yieldOffsetsSpanOffset != 0; }
+    bool hasResumeOffsets() const { return packedOffsets.resumeOffsetsSpanOffset != 0; }
 
     // Allocate a new PrivateScriptData. Headers and GCPtrs are initialized.
     // The size of allocation is returned as an out parameter.
     static PrivateScriptData* new_(JSContext* cx,
                                    uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
-                                   uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets,
+                                   uint32_t ntrynotes, uint32_t nscopenotes,
+                                   uint32_t nresumeoffsets,
                                    uint32_t* dataSize);
 
     void traceChildren(JSTracer* trc);
@@ -1822,7 +1824,7 @@ class JSScript : public js::gc::TenuredCell
     static bool createPrivateScriptData(JSContext* cx, JS::Handle<JSScript*> script,
                                         uint32_t nscopes, uint32_t nconsts,
                                         uint32_t nobjects, uint32_t ntrynotes,
-                                        uint32_t nscopenotes, uint32_t nyieldoffsets);
+                                        uint32_t nscopenotes, uint32_t nresumeoffsets);
 
   private:
     static void initFromFunctionBox(js::HandleScript script, js::frontend::FunctionBox* funbox);
@@ -2508,8 +2510,8 @@ class JSScript : public js::gc::TenuredCell
     bool hasObjects() const      { return data_->hasObjects(); }
     bool hasTrynotes() const     { return data_->hasTryNotes(); }
     bool hasScopeNotes() const   { return data_->hasScopeNotes(); }
-    bool hasYieldAndAwaitOffsets() const {
-        return data_->hasYieldOffsets();
+    bool hasResumeOffsets() const {
+        return data_->hasResumeOffsets();
     }
 
     mozilla::Span<const js::GCPtrScope> scopes() const {
@@ -2536,9 +2538,9 @@ class JSScript : public js::gc::TenuredCell
         return data_->scopeNotes();
     }
 
-    mozilla::Span<const uint32_t> yieldAndAwaitOffsets() const {
-        MOZ_ASSERT(hasYieldAndAwaitOffsets());
-        return data_->yieldAndAwaitOffsets();
+    mozilla::Span<const uint32_t> resumeOffsets() const {
+        MOZ_ASSERT(hasResumeOffsets());
+        return data_->resumeOffsets();
     }
 
     bool hasLoops();

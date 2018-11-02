@@ -115,7 +115,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
     scopeList(cx),
     tryNoteList(cx),
     scopeNoteList(cx),
-    yieldAndAwaitOffsetList(cx),
+    resumeOffsetList(cx),
     typesetCount(0),
     hasSingletons(false),
     hasTryFinally(false),
@@ -2189,6 +2189,23 @@ BytecodeEmitter::isRunOnceLambda()
 }
 
 bool
+BytecodeEmitter::allocateResumeIndexForCurrentOffset(uint32_t* resumeIndex)
+{
+    static constexpr uint32_t MaxResumeIndex = JS_BITMASK(24);
+
+    static_assert(MaxResumeIndex < uint32_t(GeneratorObject::RESUME_INDEX_CLOSING),
+                  "resumeIndex should not include magic GeneratorObject resumeIndex values");
+
+    *resumeIndex = resumeOffsetList.length();
+    if (*resumeIndex > MaxResumeIndex) {
+        reportError(nullptr, JSMSG_TOO_MANY_RESUME_INDEXES);
+        return false;
+    }
+
+    return resumeOffsetList.append(offset());
+}
+
+bool
 BytecodeEmitter::emitYieldOp(JSOp op)
 {
     if (op == JSOP_FINALYIELDRVAL) {
@@ -2202,23 +2219,19 @@ BytecodeEmitter::emitYieldOp(JSOp op)
         return false;
     }
 
-    uint32_t yieldAndAwaitIndex = yieldAndAwaitOffsetList.length();
-    if (yieldAndAwaitIndex >= JS_BIT(24)) {
-        reportError(nullptr, JSMSG_TOO_MANY_YIELDS);
-        return false;
-    }
 
     if (op == JSOP_AWAIT) {
-        yieldAndAwaitOffsetList.numAwaits++;
+        resumeOffsetList.numAwaits++;
     } else {
-        yieldAndAwaitOffsetList.numYields++;
+        resumeOffsetList.numYields++;
     }
 
-    SET_UINT24(code(off), yieldAndAwaitIndex);
-
-    if (!yieldAndAwaitOffsetList.append(offset())) {
+    uint32_t resumeIndex;
+    if (!allocateResumeIndexForCurrentOffset(&resumeIndex)) {
         return false;
     }
+
+    SET_UINT24(code(off), resumeIndex);
 
     return emit1(JSOP_DEBUGAFTERYIELD);
 }
@@ -9291,7 +9304,7 @@ CGScopeNoteList::finish(mozilla::Span<ScopeNote> array, uint32_t prologueLength)
 }
 
 void
-CGYieldAndAwaitOffsetList::finish(mozilla::Span<uint32_t> array, uint32_t prologueLength)
+CGResumeOffsetList::finish(mozilla::Span<uint32_t> array, uint32_t prologueLength)
 {
     MOZ_ASSERT(length() == array.size());
 

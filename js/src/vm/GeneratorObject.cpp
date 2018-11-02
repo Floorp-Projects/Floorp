@@ -93,8 +93,7 @@ GeneratorObject::suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame
         } while (false);
     }
 
-    uint32_t yieldAndAwaitIndex = GET_UINT24(pc);
-    genObj->setYieldAndAwaitIndex(yieldAndAwaitIndex);
+    genObj->setResumeIndex(pc);
     genObj->setEnvironmentChain(*frame.environmentChain());
     if (stack) {
         genObj->setExpressionStack(*stack);
@@ -186,7 +185,7 @@ GeneratorObject::resume(JSContext* cx, InterpreterActivation& activation,
     }
 
     JSScript* script = callee->nonLazyScript();
-    uint32_t offset = script->yieldAndAwaitOffsets()[genObj->yieldAndAwaitIndex()];
+    uint32_t offset = script->resumeOffsets()[genObj->resumeIndex()];
     activation.regs().pc = script->offsetToPC(offset);
 
     // Always push on a value, even if we are raising an exception. In the
@@ -303,7 +302,7 @@ GeneratorObject::isAfterYieldOrAwait(JSOp op)
 
     JSScript* script = callee().nonLazyScript();
     jsbytecode* code = script->code();
-    uint32_t nextOffset = script->yieldAndAwaitOffsets()[yieldAndAwaitIndex()];
+    uint32_t nextOffset = script->resumeOffsets()[resumeIndex()];
     if (code[nextOffset] != JSOP_DEBUGAFTERYIELD) {
         return false;
     }
