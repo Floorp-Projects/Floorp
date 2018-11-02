@@ -13,6 +13,10 @@
 #include "nsAccessibilityService.h"
 #include "nsViewManager.h"
 
+#include "mozilla/dom/TabParent.h"
+#include "mozilla/a11y/DocAccessibleParent.h"
+#include "mozilla/a11y/DocManager.h"
+
 #ifdef DEBUG
 #include <android/log.h>
 #define AALOG(args...)                                                         \
@@ -115,12 +119,15 @@ SessionAccessibility::SetText(int32_t aID, jni::String::Param aText)
 SessionAccessibility*
 SessionAccessibility::GetInstanceFor(ProxyAccessible* aAccessible)
 {
-  Accessible* outerDoc = aAccessible->OuterDocOfRemoteBrowser();
-  if (!outerDoc) {
+  auto tab = static_cast<dom::TabParent*>(aAccessible->Document()->Manager());
+  dom::Element* frame = tab->GetOwnerElement();
+  MOZ_ASSERT(frame);
+  if (!frame) {
     return nullptr;
   }
 
-  return GetInstanceFor(outerDoc);
+  Accessible* chromeDoc = GetExistingDocAccessible(frame->OwnerDoc());
+  return chromeDoc ? GetInstanceFor(chromeDoc) : nullptr;
 }
 
 SessionAccessibility*
