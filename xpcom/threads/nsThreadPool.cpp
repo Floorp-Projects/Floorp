@@ -442,7 +442,13 @@ nsThreadPool::ShutdownWithTimeout(int32_t aTimeoutMs)
     // If mThread is not null on the thread it means that it hasn't shutdown
     // context[i] corresponds to thread[i]
     if (thread->mThread && contexts[i]) {
-      currentThread->mRequestedShutdownContexts.RemoveElement(contexts[i]);
+      auto index = currentThread->mRequestedShutdownContexts.IndexOf(contexts[i]);
+      if (index != nsThread::ShutdownContexts::NoIndex) {
+        // We must leak the shutdown context just in case the leaked thread
+        // does get unstuck and completes before the main thread is done.
+        currentThread->mRequestedShutdownContexts[index].forget();
+        currentThread->mRequestedShutdownContexts.RemoveElementsAt(index, 1);
+      }
     }
   }
 
