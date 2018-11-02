@@ -41,6 +41,7 @@ void
 AndroidVelocityTracker::StartTracking(ParentLayerCoord aPos, uint32_t aTimestampMs)
 {
   Clear();
+  mHistory.AppendElement(std::make_pair(aTimestampMs, aPos));
   mLastEventTime = aTimestampMs;
 }
 
