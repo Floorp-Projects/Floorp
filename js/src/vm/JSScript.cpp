@@ -1832,17 +1832,27 @@ ScriptSource::appendSubstring(JSContext* cx, StringBuffer& buf, size_t start, si
     UncompressedSourceCache::AutoHoldEntry holder;
 
     if (hasSourceType<Utf8Unit>()) {
-        MOZ_CRASH("for now");
-        return false;
-    } else {
-        PinnedUnits<char16_t> units(cx, this, holder, start, len);
-        if (!units.asChars()) {
+        PinnedUnits<Utf8Unit> pinned(cx, this, holder, start, len);
+        if (!pinned.get()) {
             return false;
         }
         if (len > SourceDeflateLimit && !buf.ensureTwoByteChars()) {
             return false;
         }
-        return buf.append(units.asChars(), len);
+
+        const Utf8Unit* units = pinned.get();
+        return buf.append(units, len);
+    } else {
+        PinnedUnits<char16_t> pinned(cx, this, holder, start, len);
+        if (!pinned.get()) {
+            return false;
+        }
+        if (len > SourceDeflateLimit && !buf.ensureTwoByteChars()) {
+            return false;
+        }
+
+        const char16_t* units = pinned.get();
+        return buf.append(units, len);
     }
 }
 

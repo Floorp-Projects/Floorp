@@ -9,6 +9,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MaybeOneOf.h"
+#include "mozilla/Utf8.h"
 
 #include "js/Vector.h"
 #include "vm/JSContext.h"
@@ -158,6 +159,14 @@ class StringBuffer
     MOZ_MUST_USE bool append(const Latin1Char* chars, size_t len) {
         return append(chars, chars + len);
     }
+
+    /**
+     * Interpret the provided count of UTF-8 code units as UTF-8, and append
+     * the represented code points to this.  If the code units contain invalid
+     * UTF-8, leave the internal buffer in a consistent but unspecified state,
+     * report an error, and return false.
+     */
+    MOZ_MUST_USE bool append(const mozilla::Utf8Unit* units, size_t len);
 
     MOZ_MUST_USE bool append(const JS::ConstCharPtr chars, size_t len) {
         return append(chars.get(), chars.get() + len);
