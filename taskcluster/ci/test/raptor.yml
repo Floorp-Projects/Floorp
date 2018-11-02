@@ -10,7 +10,7 @@ job-defaults:
             windows10-64-ccov/.*: 3
             linux64-ccov/.*: 3
             android-hw-g5.*: 3
-            default: 2
+            default: 1
     virtualization:
         by-test-platform:
             windows10-64-ccov/.*: virtual
@@ -36,7 +36,7 @@ raptor-tp6-firefox:
     description: "Raptor tp6 on Firefox"
     try-name: raptor-tp6-firefox
     treeherder-symbol: Rap(tp6)
-    run-on-projects: ['try', 'mozilla-central', 'mozilla-beta']
+    run-on-projects: built-projects
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -61,7 +61,7 @@ raptor-speedometer-firefox:
     description: "Raptor Speedometer on Firefox"
     try-name: raptor-speedometer-firefox
     treeherder-symbol: Rap(sp)
-    run-on-projects: ['try', 'mozilla-central', 'mozilla-inbound', 'autoland']
+    run-on-projects: built-projects
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -87,6 +87,7 @@ raptor-speedometer-chrome:
     try-name: raptor-speedometer-chrome
     treeherder-symbol: Rap-C(sp)
     run-on-projects: ['try', 'mozilla-central']
+    tier: 2
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -97,7 +98,7 @@ raptor-stylebench-firefox:
     description: "Raptor StyleBench on Firefox"
     try-name: raptor-stylebench-firefox
     treeherder-symbol: Rap(sb)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects: built-projects
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -108,6 +109,7 @@ raptor-stylebench-chrome:
     try-name: raptor-stylebench-chrome
     treeherder-symbol: Rap-C(sb)
     run-on-projects: ['try', 'mozilla-central']
+    tier: 2
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -118,7 +120,7 @@ raptor-motionmark-htmlsuite-firefox:
     description: "Raptor MotionMark HtmlSuite on Firefox"
     try-name: raptor-motionmark-htmlsuite-firefox
     treeherder-symbol: Rap(mm-h)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects: built-projects
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -129,6 +131,7 @@ raptor-motionmark-htmlsuite-chrome:
     try-name: raptor-motionmark-htmlsuite-chrome
     treeherder-symbol: Rap-C(mm-h)
     run-on-projects: ['try', 'mozilla-central']
+    tier: 2
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -139,7 +142,7 @@ raptor-motionmark-animometer-firefox:
     description: "Raptor MotionMark Animometer on Firefox"
     try-name: raptor-motionmark-animometer-firefox
     treeherder-symbol: Rap(mm-a)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects: built-projects
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -150,6 +153,7 @@ raptor-motionmark-animometer-chrome:
     try-name: raptor-motionmark-animometer-chrome
     treeherder-symbol: Rap-C(mm-a)
     run-on-projects: ['try', 'mozilla-central']
+    tier: 2
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -160,7 +164,7 @@ raptor-webaudio-firefox:
     description: "Raptor WebAudio on Firefox"
     try-name: raptor-webaudio-firefox
     treeherder-symbol: Rap(wa)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects: built-projects
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -171,6 +175,7 @@ raptor-webaudio-chrome:
     try-name: raptor-webaudio-chrome
     treeherder-symbol: Rap-C(wa)
     run-on-projects: ['try', 'mozilla-central']
+    tier: 2
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -181,7 +186,7 @@ raptor-gdocs-firefox:
     description: "Raptor gdocs on Firefox"
     try-name: raptor-gdocs-firefox
     treeherder-symbol: Rap(gdocs)
-    run-on-projects: ['try', 'mozilla-central', 'mozilla-inbound', 'autoland']
+    run-on-projects: built-projects
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -191,7 +196,8 @@ raptor-gdocs-chrome:
     description: "Raptor gdocs on Chrome"
     try-name: raptor-gdocs-chrome
     treeherder-symbol: Rap-C(gdocs)
-    run-on-projects: ['try']
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -202,7 +208,7 @@ raptor-sunspider-firefox:
     description: "Raptor SunSpider on Firefox"
     try-name: raptor-sunspider-firefox
     treeherder-symbol: Rap(ss)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects: built-projects
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -213,6 +219,7 @@ raptor-sunspider-chrome:
     try-name: raptor-sunspider-chrome
     treeherder-symbol: Rap-C(ss)
     run-on-projects: ['try', 'mozilla-central']
+    tier: 2
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -223,7 +230,7 @@ raptor-unity-webgl-firefox:
     description: "Raptor Unity WebGL on Firefox"
     try-name: raptor-unity-webgl-firefox
     treeherder-symbol: Rap(ugl)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects: built-projects
     max-run-time: 3600
     mozharness:
         extra-options:
@@ -255,6 +262,7 @@ raptor-unity-webgl-chrome:
     try-name: raptor-unity-webgl-chrome
     treeherder-symbol: Rap-C(ugl)
     run-on-projects: ['try', 'mozilla-central']
+    tier: 2
     max-run-time: 3600
     mozharness:
         extra-options:
@@ -268,7 +276,7 @@ raptor-wasm-misc-firefox:
     description: "Raptor WASM Misc on Firefox"
     try-name: raptor-wasm-misc-firefox
     treeherder-symbol: Rap(wm)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects: built-projects
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -281,7 +289,7 @@ raptor-wasm-misc-baseline-firefox:
     description: "Raptor WASM Misc on Firefox with baseline JIT"
     try-name: raptor-wasm-misc-baseline-firefox
     treeherder-symbol: Rap(wm-b)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects: built-projects
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -294,7 +302,7 @@ raptor-wasm-misc-ion-firefox:
     description: "Raptor WASM Misc on Firefox with ION Monkey"
     try-name: raptor-wasm-misc-ion-firefox
     treeherder-symbol: Rap(wm-i)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects: built-projects
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -308,6 +316,7 @@ raptor-wasm-misc-chrome:
     try-name: raptor-wasm-misc-chrome
     treeherder-symbol: Rap-C(wm)
     run-on-projects: ['try', 'mozilla-central']
+    tier: 2
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -321,8 +330,7 @@ raptor-assorted-dom-firefox:
     description: "Raptor Assorted-Dom on Firefox"
     try-name: raptor-assorted-dom-firefox
     treeherder-symbol: Rap(dom)
-    run-on-projects: ['try', 'mozilla-central']
-    tier: 2
+    run-on-projects: built-projects
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -350,8 +358,7 @@ raptor-wasm-godot-firefox:
     description: "Raptor Wasm Godot on Firefox"
     try-name: raptor-wasm-godot-firefox
     treeherder-symbol: Rap(godot)
-    run-on-projects: ['try', 'mozilla-central']
-    tier: 2
+    run-on-projects: built-projects
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -373,8 +380,7 @@ raptor-wasm-godot-baseline-firefox:
     description: "Raptor Wasm Godot on Firefox with baseline JIT"
     try-name: raptor-wasm-godot-baseline-firefox
     treeherder-symbol: Rap(godot-b)
-    run-on-projects: ['try', 'mozilla-central']
-    tier: 2
+    run-on-projects: built-projects
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -384,8 +390,7 @@ raptor-wasm-godot-ion-firefox:
     description: "Raptor WASM godot on Firefox with ION Monkey"
     try-name: raptor-wasm-godot-ion-firefox
     treeherder-symbol: Rap(godot-i)
-    run-on-projects: ['try', 'mozilla-central']
-    tier: 2
+    run-on-projects: built-projects
     max-run-time: 1500
     mozharness:
         extra-options:
