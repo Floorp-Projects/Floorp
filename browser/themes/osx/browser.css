@@ -13,8 +13,6 @@
   --toolbar-non-lwt-bgcolor: #f9f9fa;
   --toolbar-non-lwt-textcolor: #0c0c0d;
   --toolbar-non-lwt-bgimage: none;
-  --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
-  --toolbar-bgimage: var(--toolbar-non-lwt-bgimage);
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) + 1px);
   --toolbarbutton-border-radius: 4px;
@@ -33,9 +31,6 @@
 }
 
 :root:-moz-lwtheme {
-  --toolbar-bgcolor: rgba(255,255,255,.4);
-  --toolbar-bgimage: none;
-
   --toolbox-border-bottom-color: rgba(0,0,0,.3);
 }
 
@@ -78,7 +73,7 @@
   text-shadow: inherit;
 }
 
-#main-window {
+:root {
   -moz-appearance: none;
   background-color: #eeeeee;
 }
@@ -145,10 +140,10 @@
   border-top: 1px solid rgba(0,0,0,0.65);
 }
 
-.browser-toolbar:not(#TabsToolbar) {
+.browser-toolbar:not(.titlebar-color) {
   -moz-appearance: none;
   background: var(--toolbar-bgcolor);
-  color: var(--toolbar-color, inherit);
+  color: var(--toolbar-color);
 }
 
 /* Draw the bottom border of the tabs toolbar when it's not using
@@ -590,7 +585,7 @@ html|input.urlbar-input {
 .browserContainer > findbar:-moz-lwtheme {
   background-color: var(--toolbar-bgcolor);
   background-image: none;
-  color: var(--toolbar-color, -moz-DialogText);
+  color: var(--toolbar-color);
 }
 
 .openintabs-menuitem {
