@@ -43,11 +43,15 @@ if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS.mozilla += [
+        'ModuleEvaluator_windows.h',
+        'ModuleVersionInfo_windows.h',
         'PolicyChecks.h',
         'WinDllServices.h',
     ]
     UNIFIED_SOURCES += [
         '/toolkit/mozapps/update/common/win_dirent.cpp',
+        'ModuleEvaluator_windows.cpp',
+        'ModuleVersionInfo_windows.cpp',
         'nsNativeAppSupportWin.cpp',
         'WinDllServices.cpp',
     ]
