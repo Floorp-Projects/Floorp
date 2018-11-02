@@ -139,6 +139,8 @@ public:
 
   NS_IMETHOD DeleteNode(nsINode* aNode) override;
 
+  NS_IMETHOD InsertLineBreak() override;
+
   virtual nsresult HandleKeyPressEvent(
                      WidgetKeyboardEvent* aKeyboardEvent) override;
   virtual nsIContent* GetFocusedContent() override;
@@ -171,10 +173,16 @@ public:
   virtual bool CanPasteTransferable(nsITransferable* aTransferable) override;
 
   /**
-   * OnInputLineBreak() is called when user inputs a line break with
+   * InsertLineBreakAsAction() is called when user inputs a line break with
    * Shift + Enter or something.
    */
-  nsresult OnInputLineBreak();
+  virtual nsresult InsertLineBreakAsAction() override;
+
+  /**
+   * InsertParagraphSeparatorAsAction() is called when user tries to separate
+   * current paragraph with Enter key press in HTMLEditor or something.
+   */
+  nsresult InsertParagraphSeparatorAsAction();
 
   /**
    * CreateElementWithDefaults() creates new element whose name is
@@ -997,6 +1005,12 @@ protected: // Called by helper classes.
 
 protected: // Shouldn't be used by friend classes
   virtual ~HTMLEditor();
+
+  /**
+   * InsertParagraphSeparatorAsSubAction() inserts a line break if it's
+   * HTMLEditor and it's possible.
+   */
+  nsresult InsertParagraphSeparatorAsSubAction();
 
   virtual nsresult SelectAllInternal() override;
 

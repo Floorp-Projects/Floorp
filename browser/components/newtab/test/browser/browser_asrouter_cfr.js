@@ -1,5 +1,7 @@
 const {CFRPageActions} =
   ChromeUtils.import("resource://activity-stream/lib/CFRPageActions.jsm", {});
+const {ASRouterTriggerListeners} =
+  ChromeUtils.import("resource://activity-stream/lib/ASRouterTriggerListeners.jsm", {});
 const {ASRouter} =
   ChromeUtils.import("resource://activity-stream/lib/ASRouter.jsm", {});
 
@@ -126,4 +128,30 @@ add_task(async function test_cfr_addon_install() {
   // running the test multiple times in a row
   Assert.ok(notification.id === "addon-progress-notification" ||
     notification.id === "addon-install-failed-notification", "Should try to install the addon");
+});
+
+add_task(async function test_onLocationChange_cb() {
+  let count = 0;
+  const triggerHandler = () => ++count;
+  const TEST_URL = "https://example.com/browser/browser/components/newtab/test/browser/blue_page.html";
+
+  ASRouterTriggerListeners.get("openURL").init(triggerHandler, ["example.com"]);
+
+  const browser = gBrowser.selectedBrowser;
+  await BrowserTestUtils.loadURI(browser, "http://example.com/");
+  await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+
+  Assert.equal(count, 1, "Count navigation to example.com");
+
+  // Anchor scroll triggers a location change event with the same document
+  // https://searchfox.org/mozilla-central/rev/8848b9741fc4ee4e9bc3ae83ea0fc048da39979f/uriloader/base/nsIWebProgressListener.idl#400-403
+  await BrowserTestUtils.loadURI(browser, "http://example.com/#foo");
+  await BrowserTestUtils.waitForLocationChange(gBrowser, "http://example.com/#foo");
+
+  Assert.equal(count, 1, "It should ignore same page navigation");
+
+  await BrowserTestUtils.loadURI(browser, TEST_URL);
+  await BrowserTestUtils.browserLoaded(browser, false, TEST_URL);
+
+  Assert.equal(count, 2, "We moved to a new document");
 });

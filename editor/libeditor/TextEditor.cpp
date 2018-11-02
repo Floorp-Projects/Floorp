@@ -414,7 +414,7 @@ TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
         return NS_OK;
       }
       aKeyboardEvent->PreventDefault();
-      return OnInputParagraphSeparator();
+      return InsertLineBreakAsAction();
   }
 
   if (!aKeyboardEvent->IsInputtingText()) {
@@ -443,17 +443,17 @@ TextEditor::OnInputText(const nsAString& aStringToInsert)
 }
 
 nsresult
-TextEditor::OnInputParagraphSeparator()
+TextEditor::InsertLineBreakAsAction()
 {
-  AutoEditActionDataSetter editActionData(
-                             *this,
-                             EditAction::eInsertParagraphSeparator);
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  // XXX This may be called by execCommand() with "insertParagraph".
+  //     In such case, naming the transaction "TypingTxnName" is odd.
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
-  nsresult rv = InsertParagraphSeparatorAsAction();
+  nsresult rv = InsertLineBreakAsSubAction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1070,18 +1070,21 @@ TextEditor::InsertTextAsSubAction(const nsAString& aStringToInsert)
 NS_IMETHODIMP
 TextEditor::InsertLineBreak()
 {
-  AutoEditActionDataSetter editActionData(
-                             *this,
-                             EditAction::eInsertParagraphSeparator);
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return InsertParagraphSeparatorAsAction();
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  nsresult rv = InsertLineBreakAsSubAction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult
-TextEditor::InsertParagraphSeparatorAsAction()
+TextEditor::InsertLineBreakAsSubAction()
 {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
@@ -1092,87 +1095,27 @@ TextEditor::InsertParagraphSeparatorAsAction()
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
-                                      EditSubAction::eInsertParagraphSeparator,
+                                      EditSubAction::eInsertLineBreak,
                                       nsIEditor::eNext);
 
-  EditSubActionInfo subActionInfo(EditSubAction::eInsertParagraphSeparator);
+  EditSubActionInfo subActionInfo(EditSubAction::eInsertLineBreak);
   subActionInfo.maxLength = mMaxTextLength;
   bool cancel, handled;
   nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
+  if (cancel) {
+    return rv; // We don't need to call DidDoAction() if canceled.
+  }
+  // XXX DidDoAction() does nothing for eInsertParagraphSeparator.  However,
+  //     we should call it until we keep using this style.  Perhaps, each
+  //     editor method should call necessary method of
+  //     TextEditRules/HTMLEditRules directly.
+  rv = rules->DidDoAction(subActionInfo, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    // XXX DidDoAction() won't be called when WillDoAction() returns error.
-    //     Perhaps, we should move the code between WillDoAction() and
-    //     DidDoAction() to a new method and guarantee that DidDoAction() is
-    //     always called after WillDoAction().
     return rv;
   }
-
-  if (!cancel && !handled) {
-    // get the (collapsed) selection location
-    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
-    if (NS_WARN_IF(!firstRange)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    EditorRawDOMPoint pointToInsert(firstRange->StartRef());
-    if (NS_WARN_IF(!pointToInsert.IsSet())) {
-      return NS_ERROR_FAILURE;
-    }
-    MOZ_ASSERT(pointToInsert.IsSetAndValid());
-
-    // don't put text in places that can't have it
-    if (!pointToInsert.IsInTextNode() &&
-        !CanContainTag(*pointToInsert.GetContainer(),
-                       *nsGkAtoms::textTagName)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // we need to get the doc
-    nsCOMPtr<nsIDocument> doc = GetDocument();
-    if (NS_WARN_IF(!doc)) {
-      return NS_ERROR_NOT_INITIALIZED;
-    }
-
-    // don't change my selection in subtransactions
-    AutoTransactionsConserveSelection dontChangeMySelection(*this);
-
-    // insert a linefeed character
-    EditorRawDOMPoint pointAfterInsertedLineBreak;
-    rv = InsertTextWithTransaction(*doc, NS_LITERAL_STRING("\n"), pointToInsert,
-                                   &pointAfterInsertedLineBreak);
-    if (NS_WARN_IF(!pointAfterInsertedLineBreak.IsSet())) {
-      rv = NS_ERROR_NULL_POINTER; // don't return here, so DidDoAction is called
-    }
-    if (NS_SUCCEEDED(rv)) {
-      // set the selection to the correct location
-      MOZ_ASSERT(!pointAfterInsertedLineBreak.GetChild(),
-        "After inserting text into a text node, pointAfterInsertedLineBreak."
-        "GetChild() should be nullptr");
-      rv = SelectionRefPtr()->Collapse(pointAfterInsertedLineBreak);
-      if (NS_SUCCEEDED(rv)) {
-        // see if we're at the end of the editor range
-        EditorRawDOMPoint endPoint(EditorBase::GetEndPoint(*SelectionRefPtr()));
-        if (endPoint == pointAfterInsertedLineBreak) {
-          // SetInterlinePosition(true) means we want the caret to stick to the
-          // content on the "right".  We want the caret to stick to whatever is
-          // past the break.  This is because the break is on the same line we
-          // were on, but the next content will be on the following line.
-          SelectionRefPtr()->SetInterlinePosition(true, IgnoreErrors());
-        }
-      }
-    }
-  }
-
-  if (!cancel) {
-    // post-process, always called if WillInsertBreak didn't return cancel==true
-    rv = rules->DidDoAction(subActionInfo, rv);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "TextEditRules::DidDoAction() failed");
-  }
-  return rv;
+  return NS_OK;
 }
 
 nsresult
