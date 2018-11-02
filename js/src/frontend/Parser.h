@@ -876,11 +876,25 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
      */
     ListNodeType parse();
 
+  private:
+    template<typename ConditionT>
+    MOZ_MUST_USE bool mustMatchTokenInternal(ConditionT condition, Modifier modifier,
+                                             unsigned errorNumber);
+
+  public:
+    MOZ_MUST_USE bool mustMatchToken(TokenKind expected, Modifier modifier, unsigned errorNumber) {
+        return mustMatchTokenInternal([expected](TokenKind actual) { return actual == expected; },
+                                      modifier, errorNumber);
+    }
+
     MOZ_MUST_USE bool mustMatchToken(TokenKind excpected, unsigned errorNumber) {
         return mustMatchToken(excpected, TokenStream::None, errorNumber);
     }
 
-    MOZ_MUST_USE bool mustMatchToken(TokenKind expected, Modifier modifier, unsigned errorNumber);
+    template<typename ConditionT>
+    MOZ_MUST_USE bool mustMatchToken(ConditionT condition, unsigned errorNumber) {
+        return mustMatchTokenInternal(condition, TokenStream::None, errorNumber);
+    }
 
     /* Report the given error at the current offset. */
     void error(unsigned errorNumber, ...);
