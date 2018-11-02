@@ -71,11 +71,8 @@ talos:
     - talos-tp5o
     - talos-perf-reftest
     - talos-perf-reftest-singletons
-    - talos-tp6
     - talos-tp6-stylo-threads
     - talos-tps
-    - talos-speedometer
-    - talos-motionmark
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
     # - talos-h2 Bug 1487031 - Disabled for not finding actionable regressions
 
@@ -215,10 +212,7 @@ windows-talos:
     - talos-svgr
     - talos-tp5o
     - talos-xperf
-    - talos-speedometer
-    - talos-tp6
     - talos-tps
-    - talos-motionmark
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
 
 macosx64-tests:
@@ -266,11 +260,8 @@ macosx64-talos:
     - talos-tp5o
     - talos-perf-reftest
     - talos-perf-reftest-singletons
-    - talos-tp6
     - talos-tp6-stylo-threads
     # - talos-tps # Bug 1453007 times out
-    - talos-speedometer
-    - talos-motionmark
     # - talos-h1 # too long to unpack profile- Bug 1442893
 
 macosx64-qr-tests:
