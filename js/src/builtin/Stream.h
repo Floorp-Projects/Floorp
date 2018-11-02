@@ -328,6 +328,32 @@ class ReadableStreamDefaultController : public ReadableStreamController
 class ReadableByteStreamController : public ReadableStreamController
 {
   public:
+    /**
+     * Memory layout for ReadableByteStreamControllers, starting after the
+     * slots shared among all types of controllers.
+     *
+     * PendingPullIntos is guaranteed to be in the  same compartment as the
+     * controller, but might contain wrappers for objects from other compartments.
+     *
+     * AutoAllocateSize is a primitive (numeric) value.
+     */
+    enum Slots {
+        Slot_BYOBRequest = ReadableStreamController::SlotCount,
+        Slot_PendingPullIntos,
+        Slot_AutoAllocateSize,
+        SlotCount
+    };
+
+    Value byobRequest() const { return getFixedSlot(Slot_BYOBRequest); }
+    void clearBYOBRequest() { setFixedSlot(Slot_BYOBRequest, JS::UndefinedValue()); }
+    NativeObject* pendingPullIntos() const {
+        return &getFixedSlot(Slot_PendingPullIntos).toObject().as<NativeObject>();
+    }
+    Value autoAllocateChunkSize() const { return getFixedSlot(Slot_AutoAllocateSize); }
+    void setAutoAllocateChunkSize(const Value & size) {
+        setFixedSlot(Slot_AutoAllocateSize, size);
+    }
+
     static bool constructor(JSContext* cx, unsigned argc, Value* vp);
     static const ClassSpec classSpec_;
     static const Class class_;
