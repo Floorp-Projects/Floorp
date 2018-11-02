@@ -48,6 +48,8 @@ interface ShadowRoot : DocumentFragment
   // For triggering UA Widget scope in tests.
   [ChromeOnly]
   void setIsUAWidget();
+  [ChromeOnly]
+  boolean isUAWidget();
 };
 
 ShadowRoot implements DocumentOrShadowRoot;

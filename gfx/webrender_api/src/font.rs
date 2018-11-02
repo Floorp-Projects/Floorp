@@ -376,3 +376,13 @@ pub struct GlyphInstance {
     pub point: LayoutPoint,
 }
 
+impl Eq for GlyphInstance {}
+
+impl Hash for GlyphInstance {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        // Note: this is inconsistent with the Eq impl for -0.0 (don't care).
+        self.index.hash(state);
+        self.point.x.to_bits().hash(state);
+        self.point.y.to_bits().hash(state);
+    }
+}

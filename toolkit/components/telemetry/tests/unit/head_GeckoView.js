@@ -53,8 +53,8 @@ function waitGeckoViewLoadComplete() {
 async function waitForHistogramSnapshotData(aHistogramName, aProcessName, aKeyed) {
   await ContentTaskUtils.waitForCondition(() => {
     const data = aKeyed
-      ? Telemetry.snapshotKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false)
-      : Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+      ? Telemetry.getSnapshotForKeyedHistograms("main", false)
+      : Telemetry.getSnapshotForHistograms("main", false);
 
     return (aProcessName in data)
            && (aHistogramName in data[aProcessName]);
@@ -71,8 +71,8 @@ async function waitForHistogramSnapshotData(aHistogramName, aProcessName, aKeyed
 async function waitForScalarSnapshotData(aScalarName, aProcessName, aKeyed) {
   await ContentTaskUtils.waitForCondition(() => {
     const data = aKeyed
-      ? Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false)
-      : Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+      ? Telemetry.getSnapshotForKeyedScalars("main", false)
+      : Telemetry.getSnapshotForScalars("main", false);
 
     return (aProcessName in data)
            && (aScalarName in data[aProcessName]);

@@ -25,7 +25,6 @@ window._gBrowser = {
 
     XPCOMUtils.defineLazyServiceGetters(this, {
       serializationHelper: ["@mozilla.org/network/serialization-helper;1", "nsISerializationHelper"],
-      mURIFixup: ["@mozilla.org/docshell/urifixup;1", "nsIURIFixup"],
     });
 
     Services.obs.addObserver(this, "contextual-identity-updated");
@@ -826,7 +825,7 @@ window._gBrowser = {
     // XXX https://bugzilla.mozilla.org/show_bug.cgi?id=22183#c239
     try {
       if (docElement.getAttribute("chromehidden").includes("location")) {
-        var uri = this.mURIFixup.createExposableURI(
+        var uri = Services.uriFixup.createExposableURI(
           aBrowser.currentURI);
         if (uri.scheme == "about")
           newTitle = uri.spec + sep + newTitle;
@@ -1249,7 +1248,7 @@ window._gBrowser = {
       // See if we can use the URI as the title.
       if (browser.currentURI.displaySpec) {
         try {
-          title = this.mURIFixup.createExposableURI(browser.currentURI).displaySpec;
+          title = Services.uriFixup.createExposableURI(browser.currentURI).displaySpec;
         } catch (ex) {
           title = browser.currentURI.displaySpec;
         }

@@ -52,32 +52,25 @@ async function openAboutDebugging(page, win) {
   const window = browser.contentWindow;
   const { AboutDebugging } = window;
 
-  info("Wait until the main about debugging container is available");
-  await waitUntil(() => document.querySelector(".app"));
-
-  info("Wait until the client connection was established");
-  await waitUntil(() => document.querySelector(".js-runtime-page"));
-
-  // Wait until the about:debugging target is visible in the tab list
-  // Otherwise, we might have a race condition where TAB1 is discovered by the initial
-  // listTabs from the watchRuntime action, instead of being discovered after the
-  // TAB_UPDATED event. See analysis in Bug 1493968.
-  info("Wait until tabs are displayed");
-  await waitUntilState(AboutDebugging.store, state => {
-    return state.debugTargets.tabs.length > 0;
-  });
-
-  info("Wait until pre-installed add-ons are displayed");
-  await waitUntilState(AboutDebugging.store, state => {
-    return state.debugTargets.installedExtensions.length > 0;
-  });
-
-  info("Wait until internal 'other workers' are displayed");
-  await waitUntilState(AboutDebugging.store, state => {
-    return state.debugTargets.otherWorkers.length > 0;
-  });
+  await Promise.all([
+    waitForDispatch(AboutDebugging.store, "REQUEST_EXTENSIONS_SUCCESS"),
+    waitForDispatch(AboutDebugging.store, "REQUEST_TABS_SUCCESS"),
+    waitForDispatch(AboutDebugging.store, "REQUEST_WORKERS_SUCCESS"),
+  ]);
 
   return { tab, document, window };
+}
+
+function waitForDispatch(store, type) {
+  return new Promise(resolve => {
+    store.dispatch({
+      type: "@@service/waitUntil",
+      predicate: action => action.type === type,
+      run: (dispatch, getState, action) => {
+        resolve(action);
+      },
+    });
+  });
 }
 
 /**

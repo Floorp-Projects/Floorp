@@ -253,6 +253,7 @@ bitflags! {
         const NEW_SCENE_INDICATOR   = 1 << 10;
         const SHOW_OVERDRAW         = 1 << 11;
         const GPU_CACHE_DBG         = 1 << 12;
+        const SLOW_FRAME_INDICATOR  = 1 << 13;
     }
 }
 
@@ -1540,6 +1541,8 @@ pub struct Renderer {
     new_frame_indicator: ChangeIndicator,
     #[cfg(feature = "debug_renderer")]
     new_scene_indicator: ChangeIndicator,
+    #[cfg(feature = "debug_renderer")]
+    slow_frame_indicator: ChangeIndicator,
 
     last_time: u64,
 
@@ -1987,6 +1990,8 @@ impl Renderer {
             new_frame_indicator: ChangeIndicator::new(),
             #[cfg(feature = "debug_renderer")]
             new_scene_indicator: ChangeIndicator::new(),
+            #[cfg(feature = "debug_renderer")]
+            slow_frame_indicator: ChangeIndicator::new(),
             max_texture_size: max_device_size,
             max_recorded_profiles: options.max_recorded_profiles,
             clear_color: options.clear_color,
@@ -2465,6 +2470,11 @@ impl Renderer {
         false
     }
 
+    pub fn notify_slow_frame(&mut self) {
+        #[cfg(feature = "debug_renderer")]
+        self.slow_frame_indicator.changed();
+    }
+
     /// Renders the current frame.
     ///
     /// A Frame is supplied by calling [`generate_frame()`][genframe].
@@ -2495,7 +2505,7 @@ impl Renderer {
     // avoid doing a full frame render.
     fn render_impl(
         &mut self,
-        framebuffer_size: Option<DeviceUintSize>
+        framebuffer_size: Option<DeviceUintSize>,
     ) -> Result<RendererStats, Vec<RendererError>> {
         profile_scope!("render");
         if self.active_documents.is_empty() {
@@ -2645,21 +2655,34 @@ impl Renderer {
                 }
             }
 
+            let mut x = 0.0;
             if self.debug_flags.contains(DebugFlags::NEW_FRAME_INDICATOR) {
                 if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
                     self.new_frame_indicator.changed();
                     self.new_frame_indicator.draw(
-                        0.0, 0.0,
+                        x, 0.0,
                         ColorU::new(0, 110, 220, 255),
                         debug_renderer,
                     );
+                    x += 160.0;
                 }
             }
 
             if self.debug_flags.contains(DebugFlags::NEW_SCENE_INDICATOR) {
                 if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
                     self.new_scene_indicator.draw(
-                        160.0, 0.0,
+                        x, 0.0,
+                        ColorU::new(0, 220, 110, 255),
+                        debug_renderer,
+                    );
+                    x += 160.0;
+                }
+            }
+
+            if self.debug_flags.contains(DebugFlags::SLOW_FRAME_INDICATOR) {
+                if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
+                    self.slow_frame_indicator.draw(
+                        x, 0.0,
                         ColorU::new(220, 30, 10, 255),
                         debug_renderer,
                     );

@@ -522,7 +522,7 @@ class ByteStreamChunk : public NativeObject
 
     static ByteStreamChunk* create(JSContext* cx, HandleObject buffer, uint32_t byteOffset,
                                    uint32_t byteLength)
-   {
+    {
         Rooted<ByteStreamChunk*> chunk(cx, NewBuiltinClassInstance<ByteStreamChunk>(cx));
         if (!chunk) {
             return nullptr;
@@ -532,7 +532,7 @@ class ByteStreamChunk : public NativeObject
         chunk->setFixedSlot(Slot_ByteOffset, Int32Value(byteOffset));
         chunk->setFixedSlot(Slot_ByteLength, Int32Value(byteLength));
         return chunk;
-   }
+    }
 };
 
 const Class ByteStreamChunk::class_ = {
@@ -572,7 +572,7 @@ class PullIntoDescriptor : public NativeObject
                                       uint32_t byteOffset, uint32_t byteLength,
                                       uint32_t bytesFilled, uint32_t elementSize,
                                       HandleObject ctor, uint32_t readerType)
-   {
+    {
         Rooted<PullIntoDescriptor*> descriptor(cx, NewBuiltinClassInstance<PullIntoDescriptor>(cx));
         if (!descriptor) {
             return nullptr;
@@ -586,7 +586,7 @@ class PullIntoDescriptor : public NativeObject
         descriptor->setFixedSlot(Slot_ElementSize, Int32Value(elementSize));
         descriptor->setFixedSlot(Slot_ReaderType, Int32Value(readerType));
         return descriptor;
-   }
+    }
 };
 
 const Class PullIntoDescriptor::class_ = {
@@ -609,8 +609,7 @@ class QueueEntry : public NativeObject
     Value value() { return getFixedSlot(Slot_Value); }
     double size() { return getFixedSlot(Slot_Size).toNumber(); }
 
-    static QueueEntry* create(JSContext* cx, HandleValue value, double size)
-   {
+    static QueueEntry* create(JSContext* cx, HandleValue value, double size) {
         Rooted<QueueEntry*> entry(cx, NewBuiltinClassInstance<QueueEntry>(cx));
         if (!entry) {
             return nullptr;
@@ -620,7 +619,7 @@ class QueueEntry : public NativeObject
         entry->setFixedSlot(Slot_Size, NumberValue(size));
 
         return entry;
-   }
+    }
 };
 
 const Class QueueEntry::class_ = {
@@ -727,7 +726,7 @@ class TeeState : public NativeObject
         state->setFixedSlot(TeeStateSlot_Stream, ObjectValue(*wrappedStream));
 
         return state;
-   }
+    }
 };
 
 const Class TeeState::class_ = {

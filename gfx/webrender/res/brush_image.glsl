@@ -26,6 +26,10 @@ flat varying vec2 vTileRepeat;
 
 #ifdef WR_VERTEX_SHADER
 
+// Must match the AlphaType enum.
+#define BLEND_MODE_ALPHA            0
+#define BLEND_MODE_PREMUL_ALPHA     1
+
 struct ImageBrushData {
     vec4 color;
     vec4 background_color;
@@ -105,7 +109,8 @@ void brush_vs(
     vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    int color_mode = user_data.x;
+    int color_mode = user_data.x & 0xffff;
+    int blend_mode = user_data.x >> 16;
     int raster_space = user_data.y;
 
     if (color_mode == COLOR_MODE_FROM_PASS) {
@@ -145,6 +150,17 @@ void brush_vs(
 
 #ifdef WR_FEATURE_ALPHA_PASS
     vTileRepeat = repeat.xy;
+
+    float opacity = float(user_data.z) / 65535.0;
+    switch (blend_mode) {
+        case BLEND_MODE_ALPHA:
+            image_data.color.a *= opacity;
+            break;
+        case BLEND_MODE_PREMUL_ALPHA:
+        default:
+            image_data.color *= opacity;
+            break;
+    }
 
     switch (color_mode) {
         case COLOR_MODE_ALPHA:

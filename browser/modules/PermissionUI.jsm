@@ -642,18 +642,9 @@ PersistentStoragePermissionPrompt.prototype = {
   },
 
   get popupOptions() {
-    let checkbox = {
-      // In PB mode, we don't want the "always remember" checkbox
-      show: !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal),
-    };
-    if (checkbox.show) {
-      checkbox.checked = true;
-      checkbox.label = gBrowserBundle.GetStringFromName("persistentStorage.remember");
-    }
     let learnMoreURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") + "storage-permissions";
     return {
-      checkbox,
       learnMoreURL,
       displayURI: false,
       name: this.principalName,
@@ -680,12 +671,20 @@ PersistentStoragePermissionPrompt.prototype = {
         accessKey:
           gBrowserBundle.GetStringFromName("persistentStorage.allow.accesskey"),
         action: Ci.nsIPermissionManager.ALLOW_ACTION,
+        scope: SitePermissions.SCOPE_PERSISTENT,
       },
       {
-        label: gBrowserBundle.GetStringFromName("persistentStorage.dontAllow"),
+        label: gBrowserBundle.GetStringFromName("persistentStorage.notNow.label"),
         accessKey:
-          gBrowserBundle.GetStringFromName("persistentStorage.dontAllow.accesskey"),
+          gBrowserBundle.GetStringFromName("persistentStorage.notNow.accesskey"),
         action: Ci.nsIPermissionManager.DENY_ACTION,
+      },
+      {
+        label: gBrowserBundle.GetStringFromName("persistentStorage.neverAllow.label"),
+        accessKey:
+          gBrowserBundle.GetStringFromName("persistentStorage.neverAllow.accesskey"),
+        action: SitePermissions.BLOCK,
+        scope: SitePermissions.SCOPE_PERSISTENT,
       },
     ];
   },

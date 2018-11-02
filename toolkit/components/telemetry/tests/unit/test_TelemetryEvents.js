@@ -44,7 +44,7 @@ function checkEventFormat(events) {
  * @param clearScalars - true if you want to clear the scalars
  */
 function checkEventSummary(summaries, clearScalars) {
-  let scalars = Telemetry.snapshotKeyedScalars(OPTOUT, clearScalars);
+  let scalars = Telemetry.getSnapshotForKeyedScalars("main", clearScalars);
 
   for (let [process, [category, eObject, method], count] of summaries) {
     let uniqueEventName = `${category}#${eObject}#${method}`;
@@ -59,7 +59,7 @@ function checkEventSummary(summaries, clearScalars) {
 }
 
 function checkRegistrationFailure(failureType) {
-  let snapshot = Telemetry.snapshotHistograms(OPTIN, true);
+  let snapshot = Telemetry.getSnapshotForHistograms("main", true);
   Assert.ok("parent" in snapshot,
             "There should be at least one parent histogram when checking for registration failures.");
   Assert.ok("TELEMETRY_EVENT_REGISTRATION_ERROR" in snapshot.parent,
@@ -71,7 +71,7 @@ function checkRegistrationFailure(failureType) {
 }
 
 function checkRecordingFailure(failureType) {
-  let snapshot = Telemetry.snapshotHistograms(OPTIN, true);
+  let snapshot = Telemetry.getSnapshotForHistograms("main", true);
   Assert.ok("parent" in snapshot,
             "There should be at least one parent histogram when checking for recording failures.");
   Assert.ok("TELEMETRY_EVENT_RECORDING_ERROR" in snapshot.parent,
@@ -111,7 +111,7 @@ add_task(async function test_event_summary_limit() {
 
   let snapshot = Telemetry.snapshotEvents(OPTIN, true);
   Assert.equal(snapshot.dynamic.length, limit + 1, "Should have recorded all events");
-  let scalarSnapshot = Telemetry.snapshotKeyedScalars(OPTOUT, true);
+  let scalarSnapshot = Telemetry.getSnapshotForKeyedScalars("main", true);
   Assert.equal(Object.keys(scalarSnapshot.dynamic["telemetry.dynamic_event_counts"]).length,
                limit, "Should not have recorded more than `limit` events");
 
@@ -540,7 +540,7 @@ add_task(async function test_dynamicEventRegistrationValidation() {
   Telemetry.clearEvents();
 
   // Test registration of invalid categories.
-  Telemetry.snapshotHistograms(OPTIN, true); // Clear histograms before we begin.
+  Telemetry.getSnapshotForHistograms("main", true); // Clear histograms before we begin.
   Assert.throws(() => Telemetry.registerEvents("telemetry+test+dynamic", {
       "test1": {
         methods: ["test1"],

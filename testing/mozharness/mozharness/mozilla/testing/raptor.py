@@ -567,12 +567,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         elif '--no-upload-results' not in options:
             if not self.gecko_profile:
                 self._validate_treeherder_data(parser)
-                if not self.run_local:
-                    # copy results to upload dir so they are included as an artifact
-                    self.info("copying raptor results to upload dir:")
-                    dest = os.path.join(env['MOZ_UPLOAD_DIR'], 'perfherder-data.json')
-                    self.info(str(dest))
-                    self._artifact_perf_data(dest)
+            if not self.run_local:
+                # copy results to upload dir so they are included as an artifact
+                self.info("copying raptor results to upload dir:")
+                dest = os.path.join(env['MOZ_UPLOAD_DIR'], 'perfherder-data.json')
+                self.info(str(dest))
+                self._artifact_perf_data(dest)
 
 
 class RaptorOutputParser(OutputParser):

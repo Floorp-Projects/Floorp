@@ -57,8 +57,8 @@ add_task(async function test_MultiprocessScalarSemantics() {
   await waitForScalarSnapshotData(ALL_PROCESSES_UINT_SCALAR, "content", false /* aKeyed */);
   await waitForScalarSnapshotData(CHILD_KEYED_UNSIGNED_INT, "content", true /* aKeyed */);
 
-  let snapshot = Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false /* clear */);
-  let keyedSnapshot = Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false /* clear */);
+  let snapshot = Telemetry.getSnapshotForScalars("main", false /* clear */);
+  let keyedSnapshot = Telemetry.getSnapshotForKeyedScalars("main", false /* clear */);
   Assert.equal(snapshot.content[CONTENT_ONLY_UINT_SCALAR], 14,
             `The ${CONTENT_ONLY_UINT_SCALAR} scalar must have the expected value in the content section.`);
   Assert.equal(snapshot.content[ALL_PROCESSES_UINT_SCALAR], 24,
@@ -96,10 +96,8 @@ add_task(async function test_MultiprocessScalarSemantics() {
   await waitForScalarSnapshotData(DEFAULT_PRODUCTS_SCALAR, "content", false /* aKeyed */);
 
   // Validate the snapshot data.
-  snapshot =
-    Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false /* clear */);
-  keyedSnapshot =
-    Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false /* clear */);
+  snapshot = Telemetry.getSnapshotForScalars("main", false /* clear */);
+  keyedSnapshot = Telemetry.getSnapshotForKeyedScalars("main", false /* clear */);
 
   Assert.ok("parent" in snapshot, "The snapshot object must have a 'content' entry.");
   Assert.ok("content" in snapshot, "The snapshot object must have a 'content' entry.");

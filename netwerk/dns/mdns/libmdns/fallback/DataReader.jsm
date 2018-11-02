@@ -4,9 +4,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* jshint esnext: true, moz: true */
 
-'use strict';
+"use strict";
 
-var EXPORTED_SYMBOLS = ['DataReader'];
+var EXPORTED_SYMBOLS = ["DataReader"];
 
 class DataReader {
   // `data` is `Uint8Array`
@@ -70,7 +70,7 @@ class DataReader {
       break;
     }
 
-    let label = parts.join('.');
+    let label = parts.join(".");
 
     return _decompressLabel(label, decompressData || this._data);
   }
@@ -100,7 +100,7 @@ function _uint8ArrayToValue(uint8Array) {
 function _uint8ArrayToString(uint8Array) {
   let length = uint8Array.length;
   if (length === 0) {
-    return '';
+    return "";
   }
 
   let results = [];
@@ -108,14 +108,14 @@ function _uint8ArrayToString(uint8Array) {
     results.push(String.fromCharCode.apply(null, uint8Array.subarray(i, i + 1024)));
   }
 
-  return results.join('');
+  return results.join("");
 }
 
 /**
  * @private
  */
 function _decompressLabel(label, decompressData) {
-  let result = '';
+  let result = "";
 
   for (let i = 0, length = label.length; i < length; i++) {
     if (label.charCodeAt(i) !== 0xc0) {

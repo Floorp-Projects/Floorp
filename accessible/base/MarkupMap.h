@@ -63,9 +63,13 @@ MARKUPMAP(figure,
           roles::FIGURE,
           Attr(xmlroles, figure))
 
-MARKUPMAP(form,
-          New_HyperText,
-          roles::FORM)
+MARKUPMAP(
+  form,
+  [](Element* aElement, Accessible* aContext) -> Accessible* {
+     return new HTMLFormAccessible(aElement, aContext->Document());
+  },
+  0
+)
 
 MARKUPMAP(footer,
           New_HTMLHeaderOrFooter,
