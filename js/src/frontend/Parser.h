@@ -876,6 +876,12 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
      */
     ListNodeType parse();
 
+    MOZ_MUST_USE bool mustMatchToken(TokenKind excpected, unsigned errorNumber) {
+        return mustMatchToken(excpected, TokenStream::None, errorNumber);
+    }
+
+    MOZ_MUST_USE bool mustMatchToken(TokenKind expected, Modifier modifier, unsigned errorNumber);
+
     /* Report the given error at the current offset. */
     void error(unsigned errorNumber, ...);
     void errorWithNotes(UniquePtr<JSErrorNotes> notes, unsigned errorNumber, ...);
@@ -1302,6 +1308,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 #if DEBUG
     using Base::checkOptionsCalled;
 #endif
+    using Base::mustMatchToken;
     using Base::error;
     using Base::errorAt;
     using Base::finishFunctionScopes;
@@ -1426,6 +1433,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     using Base::checkOptionsCalled;
 #endif
     using Base::context;
+    using Base::mustMatchToken;
     using Base::error;
     using Base::errorAt;
     using Base::finishFunctionScopes;
