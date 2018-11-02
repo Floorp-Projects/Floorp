@@ -458,7 +458,10 @@ TEST(GeckoProfiler, Markers)
   PROFILER_ADD_MARKER("M3");
   profiler_add_marker(
     "M4",
-    MakeUnique<TracingMarkerPayload>("C", TRACING_EVENT,
+    MakeUnique<TracingMarkerPayload>("C",
+                                     TRACING_EVENT,
+                                     mozilla::Nothing(),
+                                     mozilla::Nothing(),
                                      profiler_get_backtrace()));
 
   for (int i = 0; i < 10; i++) {
