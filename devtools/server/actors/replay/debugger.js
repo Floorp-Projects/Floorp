@@ -62,7 +62,6 @@ ReplayDebugger.prototype = {
   replayResumeBackward() { RecordReplayControl.resume(/* forward = */ false); },
   replayResumeForward() { RecordReplayControl.resume(/* forward = */ true); },
   replayTimeWarp: RecordReplayControl.timeWarp,
-  replayRecordingPosition: RecordReplayControl.recordingPosition,
 
   replayPause() {
     RecordReplayControl.pause();
