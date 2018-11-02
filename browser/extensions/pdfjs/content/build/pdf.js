@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.1.15';
-var pdfjsBuild = '991a574c';
+var pdfjsVersion = '2.1.26';
+var pdfjsBuild = 'f6bc9340';
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 var pdfjsDisplayAPI = __w_pdfjs_require__(7);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(19);
@@ -4226,7 +4226,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.1.15',
+    apiVersion: '2.1.26',
     source: {
       data: source.data,
       url: source.url,
@@ -5435,7 +5435,7 @@ var RenderTask = function RenderTaskClosure() {
   return RenderTask;
 }();
 var InternalRenderTask = function InternalRenderTaskClosure() {
-  let canvasInRendering = new WeakMap();
+  let canvasInRendering = new WeakSet();
   function InternalRenderTask(callback, params, objs, commonObjs, operatorList, pageNumber, canvasFactory, webGLContext, pdfBug = false) {
     this.callback = callback;
     this.params = params;
@@ -5468,7 +5468,7 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
         if (canvasInRendering.has(this._canvas)) {
           throw new Error('Cannot use the same canvas during multiple render() operations. ' + 'Use different canvas or ensure previous operations were ' + 'cancelled or completed.');
         }
-        canvasInRendering.set(this._canvas, this);
+        canvasInRendering.add(this._canvas);
       }
       if (this._pdfBug && _global_scope2.default.StepperManager && _global_scope2.default.StepperManager.enabled) {
         this.stepper = _global_scope2.default.StepperManager.create(this.pageNumber - 1);
@@ -5555,8 +5555,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.1.15';
-  exports.build = build = '991a574c';
+  exports.version = version = '2.1.26';
+  exports.build = build = 'f6bc9340';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
