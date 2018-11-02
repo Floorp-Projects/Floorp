@@ -37,26 +37,25 @@ struct ShapeUtils final
   // Compute the center of a circle or an ellipse.
   // @param aRefBox The reference box of the basic shape.
   // @return The point of the center.
-  static nsPoint ComputeCircleOrEllipseCenter(
-    const UniquePtr<StyleBasicShape>& aBasicShape,
-    const nsRect& aRefBox);
+  static nsPoint ComputeCircleOrEllipseCenter(const StyleBasicShape&,
+                                              const nsRect& aRefBox);
 
   // Compute the radius for a circle.
   // @param aCenter the center of the circle.
   // @param aRefBox the reference box of the circle.
   // @return The length of the radius in app units.
-  static nscoord ComputeCircleRadius(
-    const UniquePtr<StyleBasicShape>& aBasicShape,
-    const nsPoint& aCenter, const nsRect& aRefBox);
+  static nscoord ComputeCircleRadius(const StyleBasicShape&,
+                                     const nsPoint& aCenter,
+                                     const nsRect& aRefBox);
 
   // Compute the radii for an ellipse.
   // @param aCenter the center of the ellipse.
   // @param aRefBox the reference box of the ellipse.
   // @return The radii of the ellipse in app units. The width and height
   // represent the x-axis and y-axis radii of the ellipse.
-  static nsSize ComputeEllipseRadii(
-    const UniquePtr<StyleBasicShape>& aBasicShape,
-    const nsPoint& aCenter, const nsRect& aRefBox);
+  static nsSize ComputeEllipseRadii(const StyleBasicShape&,
+                                    const nsPoint& aCenter,
+                                    const nsRect& aRefBox);
 
   // Compute the rect for an inset. If the inset amount is larger than
   // aRefBox itself, this will return a rect the same shape as the inverse
@@ -70,28 +69,25 @@ struct ShapeUtils final
   // are taking here.
   // @param aRefBox the reference box of the inset.
   // @return The inset rect in app units.
-  static nsRect ComputeInsetRect(
-    const UniquePtr<StyleBasicShape>& aBasicShape,
-    const nsRect& aRefBox);
+  static nsRect ComputeInsetRect(const StyleBasicShape&,
+                                 const nsRect& aRefBox);
 
   // Compute the radii for an inset.
   // @param aRefBox the reference box of the inset.
   // @param aInsetRect the inset rect computed by ComputeInsetRect().
   // @param aRadii the returned radii in app units.
   // @return true if any of the radii is nonzero; false otherwise.
-  static bool ComputeInsetRadii(
-    const UniquePtr<StyleBasicShape>& aBasicShape,
-    const nsRect& aInsetRect,
-    const nsRect& aRefBox,
-    nscoord aRadii[8]);
+  static bool ComputeInsetRadii(const StyleBasicShape&,
+                                const nsRect& aInsetRect,
+                                const nsRect& aRefBox,
+                                nscoord aRadii[8]);
 
   // Compute the vertices for a polygon.
   // @param aRefBox the reference box of the polygon.
   // @return The vertices in app units; the coordinate space is the same
   //         as aRefBox.
-  static nsTArray<nsPoint> ComputePolygonVertices(
-    const UniquePtr<StyleBasicShape>& aBasicShape,
-    const nsRect& aRefBox);
+  static nsTArray<nsPoint> ComputePolygonVertices(const StyleBasicShape&,
+                                                  const nsRect& aRefBox);
 };
 
 } // namespace mozilla

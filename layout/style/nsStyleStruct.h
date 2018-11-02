@@ -345,7 +345,7 @@ struct nsStyleImage
   void SetGradientData(nsStyleGradient* aGradient);
   void SetElementId(already_AddRefed<nsAtom> aElementId);
   void SetCropRect(mozilla::UniquePtr<nsStyleSides> aCropRect);
-  void SetURLValue(already_AddRefed<URLValue> aData);
+  void SetURLValue(already_AddRefed<const URLValue> aURLValue);
 
   void ResolveImage(nsPresContext* aContext, const nsStyleImage* aOldImage) {
     MOZ_ASSERT(mType != eStyleImageType_Image || mImage);
@@ -387,7 +387,7 @@ struct nsStyleImage
 
   already_AddRefed<nsIURI> GetImageURI() const;
 
-  URLValue* GetURLValue() const;
+  const URLValue* GetURLValue() const;
 
   /**
    * Compute the actual crop rect in pixels, using the source image bounds.
@@ -472,9 +472,9 @@ private:
   union {
     nsStyleImageRequest* mImage;
     nsStyleGradient* mGradient;
-    URLValue* mURLValue; // See the comment in SetStyleImage's 'case
-                         // eCSSUnit_URL' section to know why we need to
-                         // store URLValues separately from mImage.
+    const URLValue* mURLValue; // See the comment in SetStyleImage's 'case
+                               // eCSSUnit_URL' section to know why we need to
+                               // store URLValues separately from mImage.
     nsAtom* mElementId;
   };
 
@@ -1911,20 +1911,20 @@ struct StyleShapeSource final
     return mType;
   }
 
-  css::URLValue* GetURL() const
+  const css::URLValue& URL() const
   {
     MOZ_ASSERT(mType == StyleShapeSourceType::URL, "Wrong shape source type!");
-    return mShapeImage
-      ? static_cast<css::URLValue*>(mShapeImage->GetURLValue())
-      : nullptr;
+    MOZ_ASSERT(mShapeImage && mShapeImage->GetURLValue());
+    return *mShapeImage->GetURLValue();
   }
 
-  void SetURL(css::URLValue* aValue);
+  void SetURL(const css::URLValue& aURLValue);
 
-  const UniquePtr<nsStyleImage>& GetShapeImage() const
+  const nsStyleImage& ShapeImage() const
   {
     MOZ_ASSERT(mType == StyleShapeSourceType::Image, "Wrong shape source type!");
-    return mShapeImage;
+    MOZ_ASSERT(mShapeImage);
+    return *mShapeImage;
   }
 
   // Iff we have "shape-outside:<image>" with an image URI (not a gradient),
@@ -1934,10 +1934,11 @@ struct StyleShapeSource final
 
   void SetShapeImage(UniquePtr<nsStyleImage> aShapeImage);
 
-  const UniquePtr<StyleBasicShape>& GetBasicShape() const
+  const StyleBasicShape& BasicShape() const
   {
     MOZ_ASSERT(mType == StyleShapeSourceType::Shape, "Wrong shape source type!");
-    return mBasicShape;
+    MOZ_ASSERT(mBasicShape);
+    return *mBasicShape;
   }
 
   void SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
@@ -1953,12 +1954,15 @@ struct StyleShapeSource final
 
   void SetReferenceBox(StyleGeometryBox aReferenceBox);
 
-  const StyleSVGPath* GetPath() const
+  const StyleSVGPath& Path() const
   {
     MOZ_ASSERT(mType == StyleShapeSourceType::Path, "Wrong shape source type!");
-    return mSVGPath.get();
+    MOZ_ASSERT(mSVGPath);
+    return *mSVGPath;
   }
   void SetPath(UniquePtr<StyleSVGPath> aPath);
+
+  void FinishStyle(nsPresContext*, const StyleShapeSource* aOldShapeSource);
 
 private:
   void* operator new(size_t) = delete;

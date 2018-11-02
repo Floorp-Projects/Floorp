@@ -59,24 +59,24 @@ static constexpr size_t kStyleStructSizeLimit = 504;
 #undef STYLE_STRUCT
 
 static bool
-DefinitelyEqualURIs(css::URLValue* aURI1,
-                    css::URLValue* aURI2)
+DefinitelyEqualURIs(const css::URLValue* aURI1,
+                    const css::URLValue* aURI2)
 {
   return aURI1 == aURI2 ||
          (aURI1 && aURI2 && aURI1->DefinitelyEqualURIs(*aURI2));
 }
 
 static bool
-DefinitelyEqualURIsAndPrincipal(css::URLValue* aURI1,
-                                css::URLValue* aURI2)
+DefinitelyEqualURIsAndPrincipal(const css::URLValue* aURI1,
+                                const css::URLValue* aURI2)
 {
   return aURI1 == aURI2 ||
          (aURI1 && aURI2 && aURI1->DefinitelyEqualURIsAndPrincipal(*aURI2));
 }
 
 static bool
-DefinitelyEqualImages(nsStyleImageRequest* aRequest1,
-                      nsStyleImageRequest* aRequest2)
+DefinitelyEqualImages(const nsStyleImageRequest* aRequest1,
+                      const nsStyleImageRequest* aRequest2)
 {
   if (aRequest1 == aRequest2) {
     return true;
@@ -980,15 +980,14 @@ StyleShapeSource::operator==(const StyleShapeSource& aOther) const
 }
 
 void
-StyleShapeSource::SetURL(css::URLValue* aValue)
+StyleShapeSource::SetURL(const css::URLValue& aValue)
 {
-  MOZ_ASSERT(aValue);
   if (mType != StyleShapeSourceType::Image &&
       mType != StyleShapeSourceType::URL) {
     DoDestroy();
     new (&mShapeImage) UniquePtr<nsStyleImage>(new nsStyleImage());
   }
-  mShapeImage->SetURLValue(do_AddRef(aValue));
+  mShapeImage->SetURLValue(do_AddRef(&aValue));
   mType = StyleShapeSourceType::URL;
 }
 
@@ -1034,6 +1033,22 @@ StyleShapeSource::SetPath(UniquePtr<StyleSVGPath> aPath)
 }
 
 void
+StyleShapeSource::FinishStyle(nsPresContext* aPresContext,
+                              const StyleShapeSource* aOldShapeSource)
+{
+  if (GetType() != StyleShapeSourceType::Image) {
+    return;
+  }
+
+  auto* oldShapeImage =
+    (aOldShapeSource &&
+     aOldShapeSource->GetType() == StyleShapeSourceType::Image)
+       ? &aOldShapeSource->ShapeImage() : nullptr;
+  mShapeImage->ResolveImage(aPresContext, oldShapeImage);
+}
+
+
+void
 StyleShapeSource::SetReferenceBox(StyleGeometryBox aReferenceBox)
 {
   DoDestroy();
@@ -1051,15 +1066,15 @@ StyleShapeSource::DoCopy(const StyleShapeSource& aOther)
       break;
 
     case StyleShapeSourceType::URL:
-      SetURL(aOther.GetURL());
+      SetURL(aOther.URL());
       break;
 
     case StyleShapeSourceType::Image:
-      SetShapeImage(MakeUnique<nsStyleImage>(*aOther.GetShapeImage()));
+      SetShapeImage(MakeUnique<nsStyleImage>(aOther.ShapeImage()));
       break;
 
     case StyleShapeSourceType::Shape:
-      SetBasicShape(MakeUnique<StyleBasicShape>(*aOther.GetBasicShape()),
+      SetBasicShape(MakeUnique<StyleBasicShape>(aOther.BasicShape()),
                     aOther.GetReferenceBox());
       break;
 
@@ -1068,7 +1083,7 @@ StyleShapeSource::DoCopy(const StyleShapeSource& aOther)
       break;
 
     case StyleShapeSourceType::Path:
-      SetPath(MakeUnique<StyleSVGPath>(*aOther.GetPath()));
+      SetPath(MakeUnique<StyleSVGPath>(aOther.Path()));
       break;
   }
 }
@@ -1251,7 +1266,7 @@ nsStyleSVGReset::FinishStyle(nsPresContext* aPresContext, const nsStyleSVGReset*
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mMask) {
     nsStyleImage& image = mMask.mLayers[i].mImage;
     if (image.GetType() == eStyleImageType_Image) {
-      css::URLValue* url = image.GetURLValue();
+      const auto* url = image.GetURLValue();
       // If the url is a local ref, it must be a <mask-resource>, so we don't
       // need to resolve the style image.
       if (url->IsLocalRef()) {
@@ -2322,7 +2337,9 @@ nsStyleImage::SetNull()
   } else if (mType == eStyleImageType_Element) {
     NS_RELEASE(mElementId);
   } else if (mType == eStyleImageType_URL) {
-    NS_RELEASE(mURLValue);
+    // FIXME: NS_RELEASE doesn't handle const gracefully (unlike RefPtr).
+    const_cast<css::URLValue*>(mURLValue)->Release();
+    mURLValue = nullptr;
   }
 
   mType = eStyleImageType_Null;
@@ -2384,9 +2401,9 @@ nsStyleImage::SetCropRect(UniquePtr<nsStyleSides> aCropRect)
 }
 
 void
-nsStyleImage::SetURLValue(already_AddRefed<URLValue> aValue)
+nsStyleImage::SetURLValue(already_AddRefed<const URLValue> aValue)
 {
-  RefPtr<URLValue> value = aValue;
+  RefPtr<const URLValue> value = aValue;
 
   if (mType != eStyleImageType_Null) {
     SetNull();
@@ -2656,12 +2673,13 @@ nsStyleImage::GetImageURI() const
   return uri.forget();
 }
 
-css::URLValue*
+const css::URLValue*
 nsStyleImage::GetURLValue() const
 {
   if (mType == eStyleImageType_Image) {
     return mImage->GetImageValue();
-  } else if (mType == eStyleImageType_URL) {
+  }
+  if (mType == eStyleImageType_URL) {
     return mURLValue;
   }
 
@@ -3557,22 +3575,13 @@ nsStyleDisplay::~nsStyleDisplay()
 }
 
 void
-nsStyleDisplay::FinishStyle(
-    nsPresContext* aPresContext, const nsStyleDisplay* aOldStyle)
+nsStyleDisplay::FinishStyle(nsPresContext* aPresContext,
+                            const nsStyleDisplay* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mShapeOutside.GetType() == StyleShapeSourceType::Image) {
-    const UniquePtr<nsStyleImage>& shapeImage = mShapeOutside.GetShapeImage();
-    if (shapeImage) {
-      const nsStyleImage* oldShapeImage =
-        (aOldStyle &&
-         aOldStyle->mShapeOutside.GetType() == StyleShapeSourceType::Image)
-          ?  &*aOldStyle->mShapeOutside.GetShapeImage() : nullptr;
-      shapeImage->ResolveImage(aPresContext, oldShapeImage);
-    }
-  }
-
+  mShapeOutside.FinishStyle(
+    aPresContext, aOldStyle ? &aOldStyle->mShapeOutside : nullptr);
   GenerateCombinedIndividualTransform();
 }
 
