@@ -82,6 +82,12 @@ class UTF8Chars : public mozilla::Range<unsigned char>
     UTF8Chars(const char* aBytes, size_t aLength)
       : Base(reinterpret_cast<unsigned char*>(const_cast<char*>(aBytes)), aLength)
     {}
+    UTF8Chars(mozilla::Utf8Unit* aUnits, size_t aLength)
+      : UTF8Chars(reinterpret_cast<char*>(aUnits), aLength)
+    {}
+    UTF8Chars(const mozilla::Utf8Unit* aUnits, size_t aLength)
+      : UTF8Chars(reinterpret_cast<const char*>(aUnits), aLength)
+    {}
 };
 
 /*
@@ -107,6 +113,10 @@ class UTF8CharsZ : public mozilla::RangedPtr<unsigned char>
     {
         MOZ_ASSERT(aBytes[aLength] == '\0');
     }
+
+    UTF8CharsZ(mozilla::Utf8Unit* aUnits, size_t aLength)
+      : UTF8CharsZ(reinterpret_cast<char*>(aUnits), aLength)
+    {}
 
     using Base::operator=;
 
