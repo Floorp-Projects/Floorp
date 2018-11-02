@@ -1,26 +1,13 @@
 const FRAME_URL = "http://example.org/";
 
 const METHODS = {
-  addNextPaintListener: {},
-  removeNextPaintListener: {},
   sendMouseEvent: {},
-  sendTouchEvent: {},
   goBack: {},
   goForward: {},
   reload: {},
   stop: {},
-  download: {},
-  purgeHistory: {},
-  getScreenshot: {},
-  zoom: {},
   getCanGoBack: {},
   getCanGoForward: {},
-  getContentDimensions: {},
-  findAll: {},
-  findNext: {},
-  clearMatch: {},
-  executeScript: {},
-  getWebManifest: {},
 };
 
 const ATTRIBUTES = [];
