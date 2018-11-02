@@ -1267,6 +1267,7 @@ public:
   // Shadow DOM v1
   already_AddRefed<ShadowRoot> AttachShadow(const ShadowRootInit& aInit,
                                             ErrorResult& aError);
+  bool CanAttachShadowDOM() const;
 
   already_AddRefed<ShadowRoot> AttachShadowWithoutNameChecks(ShadowRootMode aMode);
   void UnattachShadow();
