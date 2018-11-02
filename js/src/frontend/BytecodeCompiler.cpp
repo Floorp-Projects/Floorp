@@ -61,22 +61,23 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     RootedScript script;
 
-  public:
+  protected:
     // Construct an object passing mandatory arguments.
     BytecodeCompiler(JSContext* cx,
                      const ReadOnlyCompileOptions& options,
                      SourceBufferHolder& sourceBuffer);
 
+  public:
     ScriptSourceObject* sourceObjectPtr() const {
         return sourceObject.get();
     }
 
+  protected:
     // Call this before calling compile{Global,Eval}Script.
     MOZ_MUST_USE bool prepareScriptParse() {
         return createSourceAndParser(ParseGoal::Script) && createCompleteScript();
     }
 
-  protected:
     void assertSourceAndParserCreated() const {
         MOZ_ASSERT(sourceObject != nullptr);
         MOZ_ASSERT(scriptSource != nullptr);
