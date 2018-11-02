@@ -585,7 +585,7 @@ void MozBaseAssembler::WritePoolHeader(uint8_t* start, js::jit::Pool* p, bool is
 
   // Get the total size of the pool.
   const uintptr_t totalPoolSize = sizeof(PoolHeader) + p->getPoolSize();
-  const uintptr_t totalPoolInstructions = totalPoolSize / sizeof(Instruction);
+  const uintptr_t totalPoolInstructions = totalPoolSize / kInstructionSize;
 
   VIXL_ASSERT((totalPoolSize & 0x3) == 0);
   VIXL_ASSERT(totalPoolInstructions < (1 << 15));
