@@ -1065,19 +1065,19 @@ DebuggerFrame_maybeDecrementFrameScriptStepModeCount(FreeOp* fop, AbstractFrameP
  */
 class MOZ_RAII AutoSetGeneratorRunning
 {
-    int32_t yieldAwaitIndex_;
+    int32_t resumeIndex_;
     Rooted<GeneratorObject*> genObj_;
 
   public:
     AutoSetGeneratorRunning(JSContext* cx, Handle<GeneratorObject*> genObj)
-      : yieldAwaitIndex_(0),
+      : resumeIndex_(0),
         genObj_(cx, genObj)
     {
         if (genObj) {
             if (!genObj->isClosed() && genObj->isSuspended()) {
                 // Yielding or awaiting.
-                yieldAwaitIndex_ =
-                    genObj->getFixedSlot(GeneratorObject::YIELD_AND_AWAIT_INDEX_SLOT).toInt32();
+                resumeIndex_ =
+                    genObj->getFixedSlot(GeneratorObject::RESUME_INDEX_SLOT).toInt32();
                 genObj->setRunning();
             } else {
                 // Returning or throwing. The generator is already closed, if
@@ -1090,8 +1090,8 @@ class MOZ_RAII AutoSetGeneratorRunning
     ~AutoSetGeneratorRunning() {
         if (genObj_) {
             MOZ_ASSERT(genObj_->isRunning());
-            genObj_->setFixedSlot(GeneratorObject::YIELD_AND_AWAIT_INDEX_SLOT,
-                                  Int32Value(yieldAwaitIndex_));
+            genObj_->setFixedSlot(GeneratorObject::RESUME_INDEX_SLOT,
+                                  Int32Value(resumeIndex_));
         }
     }
 };

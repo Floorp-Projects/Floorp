@@ -2073,7 +2073,7 @@
      * interpretation.
      *   Category: Statements
      *   Type: Generator
-     *   Operands: uint24_t yieldAndAwaitIndex
+     *   Operands: uint24_t resumeIndex
      *   Stack: generator => generator
      */ \
     macro(JSOP_INITIALYIELD,  202,"initialyield", NULL,   4,  1,  1,  JOF_UINT24) \
@@ -2082,7 +2082,7 @@
      * returns 'rval1'. Pushes sent value from 'send()' onto the stack.
      *   Category: Statements
      *   Type: Generator
-     *   Operands: uint24_t yieldAndAwaitIndex
+     *   Operands: uint24_t resumeIndex
      *   Stack: rval1, gen => rval2
      */ \
     macro(JSOP_YIELD,         203,"yield",       NULL,    4,  2,  1,  JOF_UINT24) \
@@ -2133,7 +2133,7 @@
      * and returns 'promise'. Pushes resolved value onto the stack.
      *   Category: Statements
      *   Type: Generator
-     *   Operands: uint24_t yieldAndAwaitIndex
+     *   Operands: uint24_t resumeIndex
      *   Stack: promise, gen => resolved
      */ \
     macro(JSOP_AWAIT,         209, "await",        NULL,  4,  2,  1,  JOF_UINT24) \

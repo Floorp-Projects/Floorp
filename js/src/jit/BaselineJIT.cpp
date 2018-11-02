@@ -356,7 +356,7 @@ BaselineScript::New(JSScript* jsscript,
                     size_t retAddrEntries,
                     size_t pcMappingIndexEntries, size_t pcMappingSize,
                     size_t bytecodeTypeMapEntries,
-                    size_t yieldEntries,
+                    size_t resumeEntries,
                     size_t traceLoggerToggleOffsetEntries)
 {
     static const unsigned DataAlignment = sizeof(uintptr_t);
@@ -365,7 +365,7 @@ BaselineScript::New(JSScript* jsscript,
     size_t retAddrEntriesSize = retAddrEntries * sizeof(RetAddrEntry);
     size_t pcMappingIndexEntriesSize = pcMappingIndexEntries * sizeof(PCMappingIndexEntry);
     size_t bytecodeTypeMapSize = bytecodeTypeMapEntries * sizeof(uint32_t);
-    size_t yieldEntriesSize = yieldEntries * sizeof(uintptr_t);
+    size_t resumeEntriesSize = resumeEntries * sizeof(uintptr_t);
     size_t tlEntriesSize = traceLoggerToggleOffsetEntries * sizeof(uint32_t);
 
     size_t paddedICEntriesSize = AlignBytes(icEntriesSize, DataAlignment);
@@ -373,7 +373,7 @@ BaselineScript::New(JSScript* jsscript,
     size_t paddedPCMappingIndexEntriesSize = AlignBytes(pcMappingIndexEntriesSize, DataAlignment);
     size_t paddedPCMappingSize = AlignBytes(pcMappingSize, DataAlignment);
     size_t paddedBytecodeTypesMapSize = AlignBytes(bytecodeTypeMapSize, DataAlignment);
-    size_t paddedYieldEntriesSize = AlignBytes(yieldEntriesSize, DataAlignment);
+    size_t paddedResumeEntriesSize = AlignBytes(resumeEntriesSize, DataAlignment);
     size_t paddedTLEntriesSize = AlignBytes(tlEntriesSize, DataAlignment);
 
     size_t allocBytes = paddedICEntriesSize +
@@ -381,7 +381,7 @@ BaselineScript::New(JSScript* jsscript,
                         paddedPCMappingIndexEntriesSize +
                         paddedPCMappingSize +
                         paddedBytecodeTypesMapSize +
-                        paddedYieldEntriesSize +
+                        paddedResumeEntriesSize +
                         paddedTLEntriesSize;
 
     BaselineScript* script = jsscript->zone()->pod_malloc_with_extra<BaselineScript, uint8_t>(allocBytes);
@@ -416,8 +416,8 @@ BaselineScript::New(JSScript* jsscript,
     script->bytecodeTypeMapOffset_ = bytecodeTypeMapEntries ? offsetCursor : 0;
     offsetCursor += paddedBytecodeTypesMapSize;
 
-    script->yieldEntriesOffset_ = yieldEntries ? offsetCursor : 0;
-    offsetCursor += paddedYieldEntriesSize;
+    script->resumeEntriesOffset_ = resumeEntries ? offsetCursor : 0;
+    offsetCursor += paddedResumeEntriesSize;
 
     script->traceLoggerToggleOffsetsOffset_ = tlEntriesSize ? offsetCursor : 0;
     script->numTraceLoggerToggleOffsets_ = traceLoggerToggleOffsetEntries;
@@ -780,9 +780,9 @@ BaselineScript::retAddrEntryFromReturnAddress(uint8_t* returnAddr)
 }
 
 void
-BaselineScript::computeYieldAndAwaitNativeOffsets(JSScript* script)
+BaselineScript::computeResumeNativeOffsets(JSScript* script)
 {
-    if (!script->hasYieldAndAwaitOffsets()) {
+    if (!script->hasResumeOffsets()) {
         return;
     }
 
@@ -796,8 +796,8 @@ BaselineScript::computeYieldAndAwaitNativeOffsets(JSScript* script)
         return nativeCode;
     };
 
-    mozilla::Span<const uint32_t> pcOffsets = script->yieldAndAwaitOffsets();
-    uint8_t** nativeOffsets = yieldEntryList();
+    mozilla::Span<const uint32_t> pcOffsets = script->resumeOffsets();
+    uint8_t** nativeOffsets = resumeEntryList();
     std::transform(pcOffsets.begin(), pcOffsets.end(), nativeOffsets, computeNative);
 }
 
