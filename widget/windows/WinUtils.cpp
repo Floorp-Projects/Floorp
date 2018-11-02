@@ -17,6 +17,7 @@
 #include "KeyboardLayout.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
@@ -2151,27 +2152,50 @@ WinUtils::RunningFromANetworkDrive()
 }
 
 /* static */
-bool
-WinUtils::SanitizePath(const wchar_t* aInputPath, nsAString& aOutput)
+bool WinUtils::CanonicalizePath(nsAString& aPath)
 {
-  aOutput.Truncate();
-  wchar_t buffer[MAX_PATH + 1] = {0};
-  if (!PathCanonicalizeW(buffer, aInputPath)) {
+  wchar_t tempPath[MAX_PATH + 1];
+  if (!PathCanonicalizeW(tempPath,
+                         (char16ptr_t)PromiseFlatString(aPath).get())) {
     return false;
   }
-  wchar_t longBuffer[MAX_PATH + 1] = {0};
-  DWORD longResult = GetLongPathNameW(buffer, longBuffer, MAX_PATH);
-  if (longResult == 0 || longResult > MAX_PATH - 1) {
+  aPath = tempPath;
+  MOZ_ASSERT(aPath.Length() <= MAX_PATH);
+  return true;
+}
+
+/* static */
+bool WinUtils::MakeLongPath(nsAString& aPath)
+{
+  wchar_t tempPath[MAX_PATH + 1];
+  DWORD longResult = GetLongPathNameW((char16ptr_t)PromiseFlatString(aPath).get(),
+                                      tempPath,
+                                      ArrayLength(tempPath));
+  if (longResult > ArrayLength(tempPath)) {
+    // Our buffer is too short, and we're guaranteeing <= MAX_PATH results.
     return false;
+  } else if (longResult) {
+    // Success.
+    aPath = tempPath;
+    MOZ_ASSERT(aPath.Length() <= MAX_PATH);
   }
-  aOutput.SetLength(MAX_PATH + 1);
-  wchar_t* output = reinterpret_cast<wchar_t*>(aOutput.BeginWriting());
-  if (!PathUnExpandEnvStringsW(longBuffer, output, MAX_PATH)) {
-    return false;
+  // GetLongPathNameW returns 0 if the path is not found or is not rooted,
+  // but we shouldn't consider that a failure condition.
+  return true;
+}
+
+/* static */
+bool WinUtils::UnexpandEnvVars(nsAString& aPath)
+{
+  wchar_t tempPath[MAX_PATH + 1];
+  // PathUnExpandEnvStringsW returns false if it doesn't make any
+  // substitutions. Silently continue using the unaltered path.
+  if (PathUnExpandEnvStringsW((char16ptr_t)PromiseFlatString(aPath).get(),
+                              tempPath,
+                              ArrayLength(tempPath))) {
+    aPath = tempPath;
+    MOZ_ASSERT(aPath.Length() <= MAX_PATH);
   }
-  // Truncate to correct length
-  aOutput.Truncate(wcslen(char16ptr_t(aOutput.BeginReading())));
-  MOZ_ASSERT(aOutput.Length() <= MAX_PATH);
   return true;
 }
 
@@ -2184,19 +2208,27 @@ WinUtils::SanitizePath(const wchar_t* aInputPath, nsAString& aOutput)
  * necessary. Otherwise, the consumer should replace the system path with the
  * substitution.
  *
- * @see GetAppInitDLLs for an example of its usage.
+ * @see PreparePathForTelemetry for an example of its usage.
  */
 /* static */
-void
-WinUtils::GetWhitelistedPaths(
-    nsTArray<mozilla::Pair<nsString,nsDependentString>>& aOutput)
+const nsTArray<mozilla::Pair<nsString, nsDependentString>>&
+WinUtils::GetWhitelistedPaths()
 {
-  aOutput.Clear();
-  aOutput.AppendElement(mozilla::MakePair(
-                          nsString(NS_LITERAL_STRING("%ProgramFiles%")),
-                          nsDependentString()));
+  // We know the maximum number of items this array will hold, so avoid a heap
+  // allocation by using AutoTArray<T,N>
+  static const size_t kMaxWhitelistedItems = 2;
+  static StaticAutoPtr<AutoTArray<Pair<nsString, nsDependentString>,
+                                  kMaxWhitelistedItems>> sWhitelist;
+  if (sWhitelist) {
+    return *sWhitelist;
+  }
+  sWhitelist = new AutoTArray<Pair<nsString, nsDependentString>,
+                              kMaxWhitelistedItems>();
+  sWhitelist->AppendElement(mozilla::MakePair(
+                            nsString(NS_LITERAL_STRING("%ProgramFiles%")),
+                            nsDependentString()));
   // When no substitution is required, set the void flag
-  aOutput.LastElement().second().SetIsVoid(true);
+  sWhitelist->LastElement().second().SetIsVoid(true);
   wchar_t tmpPath[MAX_PATH + 1] = {0};
   if (GetTempPath(MAX_PATH, tmpPath)) {
     // GetTempPath's result always ends with a backslash, which we don't want
@@ -2204,12 +2236,18 @@ WinUtils::GetWhitelistedPaths(
     if (tmpPathLen) {
       tmpPath[tmpPathLen - 1] = 0;
     }
-    nsAutoString cleanTmpPath;
-    if (SanitizePath(tmpPath, cleanTmpPath)) {
-      aOutput.AppendElement(mozilla::MakePair(nsString(cleanTmpPath),
-                              nsDependentString(L"%TEMP%")));
+    nsAutoString cleanTmpPath(tmpPath);
+    if (UnexpandEnvVars(cleanTmpPath)) {
+      sWhitelist->AppendElement(mozilla::MakePair(nsString(cleanTmpPath),
+                                                  nsDependentString(L"%TEMP%")));
     }
   }
+  ClearOnShutdown(&sWhitelist);
+
+  // If we add more items to the whitelist, ensure we still don't invoke an
+  // unnecessary heap allocation.
+  MOZ_ASSERT(sWhitelist->Length() <= kMaxWhitelistedItems);
+  return *sWhitelist;
 }
 
 /**
@@ -2260,52 +2298,73 @@ WinUtils::GetAppInitDLLs(nsAString& aOutput)
   if (status != ERROR_SUCCESS) {
     return false;
   }
-  nsTArray<mozilla::Pair<nsString,nsDependentString>> whitelistedPaths;
-  GetWhitelistedPaths(whitelistedPaths);
   // For each token, split up the filename components and then check the
   // name of the file.
   const wchar_t kDelimiters[] = L", ";
   wchar_t* tokenContext = nullptr;
   wchar_t* token = wcstok_s(data.get(), kDelimiters, &tokenContext);
   while (token) {
-    nsAutoString cleanPath;
+    nsAutoString cleanPath(token);
     // Since these paths are short paths originating from the registry, we need
     // to canonicalize them, lengthen them, and sanitize them before we can
     // check them against the whitelist
-    if (SanitizePath(token, cleanPath)) {
-      bool needsStrip = true;
-      for (uint32_t i = 0; i < whitelistedPaths.Length(); ++i) {
-        const nsString& testPath = whitelistedPaths[i].first();
-        const nsDependentString& substitution = whitelistedPaths[i].second();
-        if (StringBeginsWith(cleanPath, testPath,
-                             nsCaseInsensitiveStringComparator())) {
-          if (!substitution.IsVoid()) {
-            cleanPath.Replace(0, testPath.Length(), substitution);
-          }
-          // Whitelisted paths may be used as-is provided that they have been
-          // previously sanitized.
-          needsStrip = false;
-          break;
-        }
-      }
+    if (PreparePathForTelemetry(cleanPath)) {
       if (!aOutput.IsEmpty()) {
         aOutput += L";";
       }
-      // For non-whitelisted paths, we strip the path component and just leave
-      // the filename.
-      if (needsStrip) {
-        // nsLocalFile doesn't like non-absolute paths. Since these paths might
-        // contain environment variables instead of roots, we can't use it.
-        wchar_t tmpPath[MAX_PATH + 1] = {0};
-        wcsncpy(tmpPath, cleanPath.get(), cleanPath.Length());
-        PathStripPath(tmpPath);
-        aOutput += tmpPath;
-      } else {
-        aOutput += cleanPath;
-      }
+      aOutput += cleanPath;
     }
     token = wcstok_s(nullptr, kDelimiters, &tokenContext);
   }
+  return true;
+}
+
+/* static */
+bool
+WinUtils::PreparePathForTelemetry(nsAString& aPath, PathTransformFlags aFlags)
+{
+  if (aFlags & PathTransformFlags::Canonicalize) {
+    if (!CanonicalizePath(aPath)) {
+      return false;
+    }
+  }
+  if (aFlags & PathTransformFlags::Lengthen) {
+    if (!MakeLongPath(aPath)) {
+      return false;
+    }
+  }
+  if (aFlags & PathTransformFlags::UnexpandEnvVars) {
+    if (!UnexpandEnvVars(aPath)) {
+      return false;
+    }
+  }
+
+  const nsTArray<Pair<nsString, nsDependentString>>& whitelistedPaths =
+      GetWhitelistedPaths();
+
+  for (uint32_t i = 0; i < whitelistedPaths.Length(); ++i) {
+    const nsString& testPath = whitelistedPaths[i].first();
+    const nsDependentString& substitution = whitelistedPaths[i].second();
+    if (StringBeginsWith(aPath, testPath,
+                         nsCaseInsensitiveStringComparator())) {
+      if (!substitution.IsVoid()) {
+        aPath.Replace(0, testPath.Length(), substitution);
+      }
+      return true;
+    }
+  }
+
+  // For non-whitelisted paths, we strip the path component and just leave
+  // the filename. We can't use nsLocalFile to do this because these paths may
+  // begin with environment variables, and nsLocalFile doesn't like
+  // non-absolute paths.
+  MOZ_ASSERT(aPath.Length() <= MAX_PATH);
+  wchar_t tmpPath[MAX_PATH + 1] = {0};
+  if (wcsncpy_s(tmpPath, ArrayLength(tmpPath), (char16ptr_t)aPath.BeginReading(),
+                aPath.Length())) {
+    return false;
+  }
+  aPath.Assign((char16ptr_t)::PathFindFileNameW(tmpPath));
   return true;
 }
 
