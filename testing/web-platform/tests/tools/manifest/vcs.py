@@ -1,12 +1,13 @@
+import json
 import os
-import subprocess
 import platform
+import subprocess
 
 from .sourcefile import SourceFile
 
 
 class Git(object):
-    def __init__(self, repo_root, url_base):
+    def __init__(self, repo_root, url_base, filters=None):
         self.root = os.path.abspath(repo_root)
         self.git = Git.get_func(repo_root)
         self.url_base = url_base
@@ -74,27 +75,73 @@ class Git(object):
                                  rel_path,
                                  self.url_base,
                                  hash,
-                                 contents=contents)
+                                 contents=contents), True
 
 
 class FileSystem(object):
-    def __init__(self, root, url_base):
+    def __init__(self, root, url_base, mtime_filter):
         self.root = root
         self.url_base = url_base
         from gitignore import gitignore
         self.path_filter = gitignore.PathFilter(self.root, extras=[".git/"])
+        self.mtime_filter = mtime_filter
 
     def __iter__(self):
-        paths = self.get_paths()
-        for path in paths:
-            yield SourceFile(self.root, path, self.url_base)
+        mtime_cache = self.mtime_cache
+        for dirpath, dirnames, filenames in self.path_filter(walk(".")):
+            for filename, path_stat in filenames:
+                # We strip the ./ prefix off the path
+                path = os.path.join(dirpath, filename)
+                if mtime_cache is None or mtime_cache.updated(path, path_stat):
+                    yield SourceFile(self.root, path, self.url_base), True
+                else:
+                    yield path, False
+        self.ignore_cache.dump()
 
-    def get_paths(self):
-        for dirpath, dirnames, filenames in os.walk(self.root):
-            for filename in filenames:
-                path = os.path.relpath(os.path.join(dirpath, filename), self.root)
-                if self.path_filter(path):
-                    yield path
+    def dump_caches(self):
+        for cache in [self.mtime_cache, self.ignore_cache]:
+            if cache is not None:
+                cache.dump()
 
-            dirnames[:] = [item for item in dirnames if self.path_filter(
-                           os.path.relpath(os.path.join(dirpath, item), self.root) + "/")]
+
+class CacheFile(object):
+    file_name = None
+
+    def __init__(self, cache_root, rebuild=False):
+        if not os.path.exists(cache_root):
+            os.makedirs(cache_root)
+        self.path = os.path.join(cache_root, self.file_name)
+        self.data = self.load(rebuild)
+        self.modified = False
+
+    def dump(self):
+        missing = set(self.data.keys()) - self.updated
+        if not missing or not self.modified:
+            return
+        for item in missing:
+            del self.data[item]
+        with open(self.path, 'w') as f:
+            json.dump(self.data, f, indent=1)
+
+    def load(self):
+        try:
+            with open(self.path, 'r') as f:
+                return json.load(f)
+        except IOError:
+            return {}
+
+    def update(self, rel_path, stat=None):
+        self.updated.add(rel_path)
+        try:
+            if stat is None:
+                stat = os.stat(os.path.join(self.root,
+                                            rel_path))
+        except Exception:
+            return True
+
+        mtime = stat.st_mtime
+        if mtime != self.data.get(rel_path):
+            self.modified = True
+            self.data[rel_path] = mtime
+            return True
+        return False
