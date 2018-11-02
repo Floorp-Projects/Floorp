@@ -6,6 +6,40 @@
 const testPageURL =
   "https://example.com/browser/dom/quota/test/browser_permissionsPrompt.html";
 
+add_task(async function testPermissionTemporaryDenied() {
+  registerPopupEventHandler("popupshowing", function () {
+    ok(true, "prompt showing");
+  });
+  registerPopupEventHandler("popupshown", function () {
+    ok(true, "prompt shown");
+    triggerSecondaryCommand(this);
+  });
+  registerPopupEventHandler("popuphidden", function () {
+    ok(true, "prompt hidden");
+  });
+
+  info("Creating tab");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+
+  info("Loading test page: " + testPageURL);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL);
+  await waitForMessage(false, gBrowser);
+
+  is(getPermission(testPageURL, "persistent-storage"),
+     Ci.nsIPermissionManager.UNKNOWN_ACTION,
+     "Correct permission set");
+
+  let tempBlock = SitePermissions.getAllForBrowser(gBrowser.selectedBrowser)
+                                 .find(p => p.id == "persistent-storage" &&
+                                            p.state == SitePermissions.BLOCK &&
+                                            p.scope == SitePermissions.SCOPE_TEMPORARY);
+  ok(tempBlock, "Should have a temporary block permission on active browser");
+
+  unregisterAllPopupEventHandlers();
+  gBrowser.removeCurrentTab();
+  removePermission(testPageURL, "persistent-storage");
+});
+
 add_task(async function testPermissionDenied() {
   removePermission(testPageURL, "persistent-storage");
 
@@ -14,7 +48,7 @@ add_task(async function testPermissionDenied() {
   });
   registerPopupEventHandler("popupshown", function () {
     ok(true, "prompt shown");
-    triggerSecondaryCommand(this);
+    triggerSecondaryCommand(this, 1);
   });
   registerPopupEventHandler("popuphidden", function () {
     ok(true, "prompt hidden");
