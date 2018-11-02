@@ -681,15 +681,18 @@ TraceLoggerGraph::disable(uint64_t timestamp)
 }
 
 void
-TraceLoggerGraph::log(ContinuousSpace<EventEntry>& events)
+TraceLoggerGraph::log(ContinuousSpace<EventEntry>& events, mozilla::TimeStamp startTime)
 {
     for (uint32_t i = 0; i < events.size(); i++) {
+        mozilla::TimeDuration delta = events[i].time-startTime;
+        uint64_t timeOffset = static_cast<uint64_t>(delta.ToMicroseconds());
+
         if (events[i].textId == TraceLogger_Stop) {
-            stopEvent(events[i].time);
+            stopEvent(timeOffset);
         } else if (TLTextIdIsTreeEvent(events[i].textId)) {
-            startEvent(events[i].textId, events[i].time);
+            startEvent(events[i].textId, timeOffset);
         } else {
-            logTimestamp(events[i].textId, events[i].time);
+            logTimestamp(events[i].textId, timeOffset);
         }
     }
 }

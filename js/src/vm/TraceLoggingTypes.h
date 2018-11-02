@@ -314,11 +314,11 @@ class ContinuousSpace {
 // The layout of the event log in memory and in the log file.
 // Readable by JS using TypedArrays.
 struct EventEntry {
-    uint64_t time;
+    mozilla::TimeStamp time;
     uint32_t textId;
-    EventEntry(uint64_t time, uint32_t textId)
-      : time(time), textId(textId)
-    { }
+    EventEntry()
+      : textId(0)
+    {}
 };
 
 #endif /* TraceLoggingTypes_h */

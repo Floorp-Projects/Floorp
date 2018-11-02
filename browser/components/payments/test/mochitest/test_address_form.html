@@ -60,7 +60,7 @@ function checkAddressForm(customEl, expectedAddress) {
 function sendStringAndCheckValidity(element, string, isValid) {
   fillField(element, string);
   ok(element.checkValidity() == isValid,
-     `${element.id} should be ${isValid ? "valid" : "invalid"} (${string})`);
+     `${element.id} should be ${isValid ? "valid" : "invalid"} ("${string}")`);
 }
 
 add_task(async function test_initialState() {
@@ -278,8 +278,9 @@ add_task(async function test_edit() {
 
 add_task(async function test_restricted_address_fields() {
   let form = new AddressForm();
-  form.dataset.nextButtonLabel = "Next";
   form.dataset.errorGenericSave = "Generic error";
+  form.dataset.fieldRequiredSymbol = "*";
+  form.dataset.nextButtonLabel = "Next";
   await form.promiseReady;
   display.appendChild(form);
   await form.requestStore.setState({
@@ -312,15 +313,23 @@ add_task(async function test_restricted_address_fields() {
      "country should be hidden");
   ok(!isHidden(form.form.querySelector("#email")),
      "email should be visible");
-  ok(!isHidden(form.form.querySelector("#tel")),
+  let telField = form.form.querySelector("#tel");
+  ok(!isHidden(telField),
      "tel should be visible");
+  let telContainer = telField.closest(`#${telField.id}-container`);
+  ok(telContainer.hasAttribute("required"), "tel container should have required attribute");
+  let telSpan = telContainer.querySelector("span");
+  is(telSpan.getAttribute("fieldRequiredSymbol"), "*",
+     "tel span should have asterisk as fieldRequiredSymbol");
+  is(getComputedStyle(telSpan, "::after").content, "attr(fieldRequiredSymbol)",
+     "Asterisk should be on tel");
 
   fillField(form.form.querySelector("#given-name"), "John");
   fillField(form.form.querySelector("#family-name"), "Smith");
   ok(form.saveButton.disabled, "Save button should be disabled due to empty fields");
   fillField(form.form.querySelector("#email"), "john@example.com");
-  todo(form.saveButton.disabled,
-       "Save button should be disabled due to empty fields - Bug 1483412");
+  ok(form.saveButton.disabled,
+     "Save button should be disabled due to empty fields");
   fillField(form.form.querySelector("#tel"), "+15555555555");
   ok(!form.saveButton.disabled, "Save button should be enabled with all required fields filled");
 

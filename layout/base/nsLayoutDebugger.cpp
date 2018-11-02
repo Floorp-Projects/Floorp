@@ -186,6 +186,17 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
     aStream << ")";
   }
 
+  if (aItem->HasHitTestInfo()) {
+    auto* hitTestInfoItem = static_cast<nsDisplayHitTestInfoItem*>(aItem);
+
+    aStream << nsPrintfCString(" hitTestInfo(0x%x)",
+      hitTestInfoItem->HitTestFlags().serialize());
+
+    nsRect area = hitTestInfoItem->HitTestArea();
+    aStream << nsPrintfCString(" hitTestArea(%d,%d,%d,%d)",
+      area.x, area.y, area.width, area.height);
+  }
+
   // Display item specific debug info
   aItem->WriteDebugInfo(aStream);
 

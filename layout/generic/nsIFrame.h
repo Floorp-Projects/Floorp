@@ -4134,6 +4134,11 @@ public:
   void SetMayHaveWillChangeBudget(bool aHasBudget) { mMayHaveWillChangeBudget = aHasBudget; }
 
   /**
+   * Returns the hit test area of the frame.
+   */
+  nsRect GetCompositorHitTestArea(nsDisplayListBuilder* aBuilder);
+
+  /**
    * Returns the set of flags indicating the properties of the frame that the
    * compositor might care about for hit-testing purposes. Note that this function
    * must be called during Gecko display list construction time (i.e while the

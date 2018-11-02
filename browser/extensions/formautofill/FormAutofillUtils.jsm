@@ -451,6 +451,19 @@ this.FormAutofillUtils = {
     return this._collators[country];
   },
 
+  // Based on the list of fields abbreviations in
+  // https://github.com/googlei18n/libaddressinput/wiki/AddressValidationMetadata
+  FIELDS_LOOKUP: {
+    N: "name",
+    O: "organization",
+    A: "street-address",
+    S: "address-level1",
+    C: "address-level2",
+    D: "address-level3",
+    Z: "postal-code",
+    n: "newLine",
+  },
+
   /**
    * Parse a country address format string and outputs an array of fields.
    * Spaces, commas, and other literals are ignored in this implementation.
@@ -468,22 +481,10 @@ this.FormAutofillUtils = {
     if (!fmt) {
       throw new Error("fmt string is missing.");
     }
-    // Based on the list of fields abbreviations in
-    // https://github.com/googlei18n/libaddressinput/wiki/AddressValidationMetadata
-    const fieldsLookup = {
-      N: "name",
-      O: "organization",
-      A: "street-address",
-      S: "address-level1",
-      C: "address-level2",
-      D: "address-level3",
-      Z: "postal-code",
-      n: "newLine",
-    };
 
     return fmt.match(/%[^%]/g).reduce((parsed, part) => {
       // Take the first letter of each segment and try to identify it
-      let fieldId = fieldsLookup[part[1]];
+      let fieldId = this.FIELDS_LOOKUP[part[1]];
       // Early return if cannot identify part.
       if (!fieldId) {
         return parsed;
@@ -498,6 +499,23 @@ this.FormAutofillUtils = {
       }
       return parsed.concat({fieldId});
     }, []);
+  },
+
+  /**
+   * Parse a require string and outputs an array of fields.
+   * Spaces, commas, and other literals are ignored in this implementation.
+   * For example, a require string "ACS" should return:
+   * ["street-address", "address-level2", "address-level1"]
+   *
+   * @param   {string} requireString Country address require string
+   * @returns {array<string>} List of fields
+   */
+  parseRequireString(requireString) {
+    if (!requireString) {
+      throw new Error("requireString string is missing.");
+    }
+
+    return requireString.split("").map(fieldId => this.FIELDS_LOOKUP[fieldId]);
   },
 
   /**
@@ -808,16 +826,15 @@ this.FormAutofillUtils = {
   getFormFormat(country) {
     const dataset = this.getCountryAddressData(country);
     return {
-      // Phillipines doesn't specify a sublocality_name_type but
-      // has one referenced in their fmt value.
+      // When particular values are missing for a country, the
+      // data/ZZ value should be used instead.
       addressLevel3Label: dataset.sublocality_name_type || "suburb",
-      // Many locales don't specify a locality_name_type but
-      // have one referenced in their fmt value.
       addressLevel2Label: dataset.locality_name_type || "city",
       addressLevel1Label: dataset.state_name_type || "province",
       postalCodeLabel: dataset.zip_name_type || "postalCode",
-      fieldsOrder: this.parseAddressFormat(dataset.fmt || "%N%n%O%n%A%n%C, %S %Z"),
+      fieldsOrder: this.parseAddressFormat(dataset.fmt || "%N%n%O%n%A%n%C"),
       postalCodePattern: dataset.zip,
+      countryRequiredFields: this.parseRequireString(dataset.require || "AC"),
     };
   },
 

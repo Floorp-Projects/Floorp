@@ -700,7 +700,6 @@ private:
   DECL_GFX_PREF(Live, "layout.display-list.flatten-transform", LayoutFlattenTransform, bool, true);
 
   DECL_GFX_PREF(Once, "layout.frame_rate",                     LayoutFrameRate, int32_t, -1);
-  DECL_GFX_PREF(Once, "layout.less-event-region-items",        LessEventRegionItems, bool, true);
   DECL_GFX_PREF(Live, "layout.min-active-layer-size",          LayoutMinActiveLayerSize, int, 64);
   DECL_GFX_PREF(Once, "layout.paint_rects_separately",         LayoutPaintRectsSeparately, bool, true);
 

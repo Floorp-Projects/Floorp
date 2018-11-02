@@ -5,8 +5,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ComputedTimingFunction.h"
+#include "mozilla/ServoBindings.h"
 #include "nsAlgorithm.h" // For clamped()
-#include "nsStyleUtil.h"
 
 namespace mozilla {
 
@@ -178,24 +178,32 @@ ComputedTimingFunction::Compare(const ComputedTimingFunction& aRhs) const
 void
 ComputedTimingFunction::AppendToString(nsAString& aResult) const
 {
+  nsTimingFunction timing;
   switch (mType) {
     case Type::CubicBezier:
-      nsStyleUtil::AppendCubicBezierTimingFunction(mTimingFunction.X1(),
-                                                   mTimingFunction.Y1(),
-                                                   mTimingFunction.X2(),
-                                                   mTimingFunction.Y2(),
-                                                   aResult);
+      timing.mTiming = StyleComputedTimingFunction::CubicBezier(
+        mTimingFunction.X1(),
+        mTimingFunction.Y1(),
+        mTimingFunction.X2(),
+        mTimingFunction.Y2());
       break;
     case Type::Step:
-      nsStyleUtil::AppendStepsTimingFunction(mSteps.mSteps,
-                                             mSteps.mPos,
-                                             aResult);
+      timing.mTiming = StyleComputedTimingFunction::Steps(
+        mSteps.mSteps,
+        mSteps.mPos);
+      break;
+    case Type::Linear:
+    case Type::Ease:
+    case Type::EaseIn:
+    case Type::EaseOut:
+    case Type::EaseInOut:
+      timing.mTiming = StyleComputedTimingFunction::Keyword(
+        static_cast<StyleTimingKeyword>(mType));
       break;
     default:
-      nsStyleUtil::AppendCubicBezierKeywordTimingFunction(
-        StyleTimingKeyword(uint8_t(mType)), aResult);
-      break;
+      MOZ_ASSERT_UNREACHABLE("Unsupported timing type");
   }
+  Servo_SerializeEasing(&timing, &aResult);
 }
 
 /* static */ int32_t

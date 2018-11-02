@@ -304,7 +304,7 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     }
 
     if (payerRequested) {
-      let fieldNames = new Set(); // default: ["name", "tel", "email"]
+      let fieldNames = new Set();
       if (paymentOptions.requestPayerName) {
         fieldNames.add("name");
       }

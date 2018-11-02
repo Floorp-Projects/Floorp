@@ -4576,56 +4576,6 @@ nsComputedDOMStyle::DoGetTransitionProperty()
   return valueList.forget();
 }
 
-void
-nsComputedDOMStyle::AppendTimingFunction(nsDOMCSSValueList *aValueList,
-                                         const nsTimingFunction& aTimingFunction)
-{
-  RefPtr<nsROCSSPrimitiveValue> timingFunction = new nsROCSSPrimitiveValue;
-
-  nsAutoString tmp;
-  switch (aTimingFunction.mTiming.tag) {
-    case StyleComputedTimingFunction::Tag::CubicBezier:
-      nsStyleUtil::AppendCubicBezierTimingFunction(
-        aTimingFunction.mTiming.cubic_bezier.x1,
-        aTimingFunction.mTiming.cubic_bezier.y1,
-        aTimingFunction.mTiming.cubic_bezier.x2,
-        aTimingFunction.mTiming.cubic_bezier.y2,
-        tmp);
-      break;
-    case StyleComputedTimingFunction::Tag::Steps:
-      nsStyleUtil::AppendStepsTimingFunction(
-        aTimingFunction.mTiming.steps._0,
-        aTimingFunction.mTiming.steps._1,
-        tmp);
-      break;
-    case StyleComputedTimingFunction::Tag::Keyword:
-      nsStyleUtil::AppendCubicBezierKeywordTimingFunction(
-        aTimingFunction.mTiming.keyword._0,
-        tmp);
-      break;
-  }
-  timingFunction->SetString(tmp);
-  aValueList->AppendCSSValue(timingFunction.forget());
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetTransitionTimingFunction()
-{
-  const nsStyleDisplay* display = StyleDisplay();
-
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
-
-  MOZ_ASSERT(display->mTransitionTimingFunctionCount > 0,
-             "first item must be explicit");
-  uint32_t i = 0;
-  do {
-    AppendTimingFunction(valueList,
-                         display->mTransitions[i].GetTimingFunction());
-  } while (++i < display->mTransitionTimingFunctionCount);
-
-  return valueList.forget();
-}
-
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetAnimationName()
 {
@@ -4692,24 +4642,6 @@ nsComputedDOMStyle::DoGetAnimationDuration()
     duration->SetTime((float)animation->GetDuration() / (float)PR_MSEC_PER_SEC);
     valueList->AppendCSSValue(duration.forget());
   } while (++i < display->mAnimationDurationCount);
-
-  return valueList.forget();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetAnimationTimingFunction()
-{
-  const nsStyleDisplay* display = StyleDisplay();
-
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
-
-  MOZ_ASSERT(display->mAnimationTimingFunctionCount > 0,
-             "first item must be explicit");
-  uint32_t i = 0;
-  do {
-    AppendTimingFunction(valueList,
-                         display->mAnimations[i].GetTimingFunction());
-  } while (++i < display->mAnimationTimingFunctionCount);
 
   return valueList.forget();
 }

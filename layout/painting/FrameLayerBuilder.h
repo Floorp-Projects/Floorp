@@ -53,7 +53,8 @@ enum class DisplayItemEntryType
   PUSH_OPACITY_WITH_BG,
   POP_OPACITY,
   PUSH_TRANSFORM,
-  POP_TRANSFORM
+  POP_TRANSFORM,
+  HIT_TEST_INFO
 };
 
 /**

@@ -15,6 +15,10 @@ async function setup() {
 }
 
 add_task(async function test_complete_success() {
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    todo(false, "Cannot test OS key store login on official builds.");
+    return;
+  }
   await setup();
   await BrowserTestUtils.withNewTab({
     gBrowser,
@@ -32,7 +36,7 @@ add_task(async function test_complete_success() {
       securityCode: "123",
     });
 
-    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+    await loginAndCompletePayment(frame);
 
     // Add a handler to complete the payment above.
     info("acknowledging the completion from the merchant page");
@@ -47,6 +51,10 @@ add_task(async function test_complete_success() {
 });
 
 add_task(async function test_complete_fail() {
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    todo(false, "Cannot test OS key store login on official builds.");
+    return;
+  }
   await setup();
   await BrowserTestUtils.withNewTab({
     gBrowser,
@@ -65,7 +73,7 @@ add_task(async function test_complete_fail() {
     });
 
     info("clicking pay");
-    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+    await loginAndCompletePayment(frame);
 
     info("acknowledging the completion from the merchant page");
     let {completeException} = await ContentTask.spawn(browser,
@@ -81,6 +89,10 @@ add_task(async function test_complete_fail() {
 });
 
 add_task(async function test_complete_timeout() {
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    todo(false, "Cannot test OS key store login on official builds.");
+    return;
+  }
   await setup();
   await BrowserTestUtils.withNewTab({
     gBrowser,
@@ -102,7 +114,7 @@ add_task(async function test_complete_timeout() {
     });
 
     info("clicking pay");
-    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+    await loginAndCompletePayment(frame);
 
     info("acknowledging the completion from the merchant page after a delay");
     let {completeException} = await ContentTask.spawn(browser,
