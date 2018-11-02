@@ -27,6 +27,9 @@ valid_data = [
         {"script": 50, "pageLoad": 25},
         {"script": 500},
     ]),
+    ("strictFileInteractability", [
+        True, False, None,
+    ]),
     ("unhandledPromptBehavior", [
         "dismiss",
         "accept",
@@ -94,6 +97,9 @@ invalid_data = [
         {"pageLoad": 2**53},
         {"pageLoad": {"value": 10}},
         {"pageLoad": 10, "invalid": 10},
+    ]),
+    ("strictFileInteractability", [
+        1, [], {}, "false",
     ]),
     ("unhandledPromptBehavior", [
         1, [], {}, False,
