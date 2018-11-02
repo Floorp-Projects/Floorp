@@ -15,6 +15,7 @@ const TEST_3RD_PARTY_PAGE_WITH_SVG = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPar
 const TEST_4TH_PARTY_PAGE = TEST_4TH_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
 
 const BEHAVIOR_ACCEPT         = Ci.nsICookieService.BEHAVIOR_ACCEPT;
+const BEHAVIOR_LIMIT_FOREIGN  = Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN;
 const BEHAVIOR_REJECT_FOREIGN = Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN;
 const BEHAVIOR_REJECT_TRACKER = Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
 
@@ -144,6 +145,21 @@ this.AntiTracking = {
 
         this._createTask({
           name,
+          cookieBehavior: BEHAVIOR_LIMIT_FOREIGN,
+          blockingByContentBlockingRTUI: true,
+          allowList: true,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+          accessRemoval: null, // only passed with non-blocking callback
+          callbackAfterRemoval: null,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
           cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
           blockingByContentBlockingRTUI: true,
           allowList: true,
@@ -255,7 +271,8 @@ this.AntiTracking = {
       let listener = {
         onSecurityChange(webProgress, request, oldState, state,
                          contentBlockingLogJSON) {
-          if (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER) {
+          if ((state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER) ||
+              (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN)) {
             ++cookieBlocked;
           }
           let contentBlockingLog = {};
