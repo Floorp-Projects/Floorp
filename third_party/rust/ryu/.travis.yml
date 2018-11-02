@@ -1,0 +1,13 @@
+language: rust
+
+rust:
+  - nightly
+  - beta
+  - stable
+
+matrix:
+  include:
+    - rust: 1.15.0
+      script:
+        - cargo build
+        - cargo build --features small
