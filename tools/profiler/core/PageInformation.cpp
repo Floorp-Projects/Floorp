@@ -25,6 +25,17 @@ return DocShellHistoryId() == aOtherPageInfo->DocShellHistoryId() &&
   IsSubFrame() == aOtherPageInfo->IsSubFrame();
 }
 
+void
+PageInformation::StreamJSON(SpliceableJSONWriter& aWriter)
+{
+  aWriter.StartObjectElement();
+  aWriter.StringProperty("docshellId", nsIDToCString(DocShellId()).get());
+  aWriter.DoubleProperty("historyId", DocShellHistoryId());
+  aWriter.StringProperty("url", Url().get());
+  aWriter.BoolProperty("isSubFrame", IsSubFrame());
+  aWriter.EndObject();
+}
+
 size_t
 PageInformation::SizeOfIncludingThis(
   mozilla::MallocSizeOf aMallocSizeOf) const
