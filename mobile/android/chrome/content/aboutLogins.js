@@ -5,6 +5,7 @@
 ChromeUtils.import("resource://services-common/utils.js"); /* global: CommonUtils */
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm");
 
 XPCOMUtils.defineLazyGetter(window, "gChromeWin", () =>
   window.docShell.rootTreeItem.domWindow
