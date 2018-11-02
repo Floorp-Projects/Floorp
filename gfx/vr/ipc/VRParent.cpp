@@ -114,6 +114,12 @@ VRParent::Init(base::ProcessId aParentPid,
                MessageLoop* aIOLoop,
                IPC::Channel* aChannel)
 {
+  // Initialize the thread manager before starting IPC. Otherwise, messages
+  // may be posted to the main thread and we won't be able to process them.
+  if (NS_WARN_IF(NS_FAILED(nsThreadManager::get().Init()))) {
+    return false;
+  }
+
   // Now it's safe to start IPC.
   if (NS_WARN_IF(!Open(aChannel, aParentPid, aIOLoop))) {
     return false;
@@ -136,6 +142,10 @@ VRParent::Init(base::ProcessId aParentPid,
 #if defined(XP_WIN)
   DeviceManagerDx::Init();
 #endif
+  if (NS_FAILED(NS_InitMinimalXPCOM())) {
+    return false;
+  }
+
   return true;
 }
 
