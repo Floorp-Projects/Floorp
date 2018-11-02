@@ -1091,8 +1091,6 @@ interface nsIDocShell : nsIDocShellTreeItem
                                                                   in string asyncCause);
   [noscript,notxpcom,nostdcall] void notifyJSRunToCompletionStop();
 
-  [noscript] void GetOSHEId(out uint32_t aSHEntryId);
-
   /**
    * This attribute determines whether a document which is not about:blank has
    * already be loaded by this docShell.
