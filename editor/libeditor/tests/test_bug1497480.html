@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1497480
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1497480</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/AddTask.js"></script>
+  <script src="spellcheck.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1497480">Mozilla Bug 1497480</a>
+<p id="display"></p>
+
+<div id="outOfTarget" contenteditable>Bug 1497480</div>
+<div id="light"></div>
+
+<script>
+
+/** Test for Bug 1497480 **/
+let gMisspeltWords = [];
+let onSpellCheck = SpecialPowers.Cu.import(
+  "resource://testing-common/AsyncSpellCheckTestHelper.jsm", null).onSpellCheck;
+
+const template = document.createElement("template");
+template.innerHTML = `<div id="target" contenteditable>Test</div>`;
+
+let shadow = document.getElementById("light").attachShadow({mode: "closed"});
+shadow.appendChild(template.content.cloneNode(true));
+
+let target = shadow.getElementById("target");
+let outOfTarget = document.getElementById("outOfTarget");
+
+function getEditor() {
+  var win = window;
+  var editingSession = SpecialPowers.wrap(win).docShell.editingSession;
+  return editingSession.getEditorForWindow(win);
+}
+
+// Wait for the page to be ready for testing
+add_task(async function() {
+  await new Promise((resolve) => {
+    SimpleTest.waitForFocus(() => {
+      SimpleTest.executeSoon(resolve);
+    }, window);
+  });
+
+  // Wait for first full spell-checking.
+  await new Promise((resolve) => {
+    onSpellCheck(outOfTarget, function() {
+      resolve();
+    });
+  });
+});
+
+// Should perform spell-checking when anchor navigates away from ShadowDOM.
+add_task(async function() {
+  synthesizeMouseAtCenter(target, {}, window);
+  sendString(" spellechek");
+  gMisspeltWords.push("spellechek");
+  synthesizeMouseAtCenter(outOfTarget, {}, window);
+  await new Promise((resolve) => {
+    onSpellCheck(target, function() {
+      ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+         "Spell-checking should be performed when anchor navigates away from ShadowDOM");
+      SimpleTest.executeSoon(resolve);
+    });
+  });
+});
+
+// Should perform spell-checking when pressing enter in contenteditable in ShadowDOM.
+add_task(async function() {
+  synthesizeMouseAtCenter(target, {}, window);
+  sendString(" spellechck");
+  gMisspeltWords.push("spellechck");
+  synthesizeKey("KEY_Enter", {}, window);
+  await new Promise((resolve) => {
+    onSpellCheck(target, function() {
+      ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+         "Spell-checking should be performed when pressing enter in contenteditable in ShadowDOM");
+      SimpleTest.executeSoon(resolve);
+    });
+  });
+});
+
+</script>
+</body>
+</html>
