@@ -105,6 +105,14 @@ public:
                                     nsAtom* aAttr);
 
   /**
+   * If the given ARIA attribute has a specific known token value, return it.
+   * If the specification demands for a fallback value for unknown attribute 
+   * values, return that. For all others, return a nullptr.
+   */
+  static nsStaticAtom* NormalizeARIAToken(mozilla::dom::Element* aElement,
+                                          nsAtom* aAttr);
+
+  /**
    * Return document accessible for the given DOM node.
    */
   static DocAccessible* GetDocAccessibleFor(nsINode* aNode)

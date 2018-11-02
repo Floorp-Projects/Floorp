@@ -51,6 +51,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("sortOther", {"sort": "other"}, true);
       testAttrs("roledescr", {"roledescription": "spreadshit"}, true);
       testAttrs("currentPage", {"current": "page"}, true);
+      testAttrs("currentStep", {"current": "step"}, true);
+      testAttrs("currentLocation", {"current": "location"}, true);
+      testAttrs("currentDate", {"current": "date"}, true);
+      testAttrs("currentTime", {"current": "time"}, true);
+      testAttrs("currentTrue", {"current": "true"}, true);
+      testAttrs("currentOther", {"current": "true"}, true);
+      testAbsentAttrs("currentFalse", {"current": "true"});
+      testAttrs("currentSpan", {"current": "page"}, true);
 
       // inherited attributes by subdocuments
       var subdoc = getAccessible("iframe").firstChild;
@@ -187,6 +195,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   <div id="sortOther" role="columnheader" aria-sort="other"></div>
   <div id="roledescr" aria-roledescription="spreadshit"></div>
   <div id="currentPage" aria-current="page"></div>
+  <div id="currentStep" aria-current="step"></div>
+  <div id="currentLocation" aria-current="location"></div>
+  <div id="currentDate" aria-current="date"></div>
+  <div id="currentTime" aria-current="time"></div>
+  <div id="currentTrue" aria-current="true"></div>
+  <div id="currentOther" aria-current="other"></div>
+  <div id="currentFalse" aria-current="false"></div>
+
+  <!-- aria-current on a span which must create an accessible -->
+  <ol>
+    <li><a href="...">Page 1</a></li>
+    <li><a href="...">Page 2</a></li>
+    <li><span id="currentSpan" aria-current="page">This page</span></li>
+  </ol>
 
   <!-- inherited from iframe -->
   <iframe id="iframe" src="data:text/html,<html><body></body></html>"
