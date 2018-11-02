@@ -8,7 +8,7 @@ import sys
 from collections import OrderedDict
 from six import iteritems
 
-from ..manifest import manifest, update
+from ..manifest import manifest
 
 here = os.path.dirname(__file__)
 wpt_root = os.path.abspath(os.path.join(here, os.pardir, os.pardir))
