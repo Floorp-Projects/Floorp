@@ -734,3 +734,81 @@ add_task(async function test_hiddenFieldRemovedWhenCountryChanged() {
   });
   await cleanupFormAutofillStorage();
 });
+
+add_task(async function test_countrySpecificFieldsGetRequiredness() {
+  await setup();
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData: [PTU.MethodData.basicCard],
+        details: Object.assign({}, PTU.Details.twoShippingOptions, PTU.Details.total2USD),
+        options: PTU.Options.requestShippingOption,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
+
+    await navigateToAddAddressPage(frame);
+
+    const EXPECTED_ADDRESS = {
+      "country": "MO",
+      "given-name": "First",
+      "family-name": "Last",
+      "street-address": "12345 FooFoo Bar",
+    };
+    await fillInShippingAddressForm(frame, EXPECTED_ADDRESS);
+    await submitAddressForm(frame, EXPECTED_ADDRESS, {expectPersist: true});
+
+    await navigateToAddAddressPage(frame);
+
+    await selectPaymentDialogShippingAddressByCountry(frame, "MO");
+
+    await spawnPaymentDialogTask(frame, async () => {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+
+      let editLink = content.document.querySelector("address-picker .edit-link");
+      is(editLink.textContent, "Edit", "Edit link text");
+
+      editLink.click();
+
+      await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "address-page" && !!state["address-page"].guid;
+      }, "Check edit page state");
+
+      let provinceField = content.document.getElementById("address-level1");
+      let provinceContainer = provinceField.parentNode;
+      is(provinceContainer.style.display, "none", "Province should be hidden for Macau");
+
+      let countryField = content.document.getElementById("country");
+      await content.fillField(countryField, "CA");
+      info("changed selected country to Canada");
+
+      isnot(provinceContainer.style.display, "none", "Province should be visible for Canada");
+      ok(provinceContainer.hasAttribute("required"),
+         "Province container should have required attribute");
+      let provinceSpan = provinceContainer.querySelector("span");
+      is(provinceSpan.getAttribute("fieldRequiredSymbol"), "*",
+         "Province span should have asterisk as fieldRequiredSymbol");
+      is(content.window.getComputedStyle(provinceSpan, "::after").content,
+         "attr(fieldRequiredSymbol)",
+         "Asterisk should be on Province");
+
+      let addressBackButton = content.document.querySelector("address-form .back-button");
+      addressBackButton.click();
+
+      await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "payment-summary";
+      }, "Switched back to payment-summary");
+    });
+
+    info("clicking cancel");
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
+
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+  });
+  await cleanupFormAutofillStorage();
+});
