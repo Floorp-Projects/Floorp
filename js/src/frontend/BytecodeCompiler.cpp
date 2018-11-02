@@ -75,7 +75,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
         return createSourceAndParser(ParseGoal::Script) && createCompleteScript();
     }
 
-    JSScript* compileGlobalScript(ScopeKind scopeKind);
     JSScript* compileEvalScript(HandleObject environment, HandleScope enclosingScope);
 
     // Call this before calling compileModule.
@@ -98,6 +97,9 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     bool compileStandaloneFunction(CodeNode* parsedFunction, MutableHandleFunction fun);
 
+  protected:
+    JSScript* compileScript(HandleObject environment, SharedContext* sc);
+
   private:
     void assertSourceAndParserCreated() const {
         MOZ_ASSERT(sourceObject != nullptr);
@@ -111,7 +113,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
         MOZ_ASSERT(script != nullptr);
     }
 
-    JSScript* compileScript(HandleObject environment, SharedContext* sc);
     bool createScriptSource(const Maybe<uint32_t>& parameterListEnd);
     bool canLazilyParse();
     bool createParser(ParseGoal goal);
@@ -132,6 +133,28 @@ class MOZ_STACK_CLASS BytecodeCompiler
     bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter, SharedContext* sharedContext);
     bool handleParseFailure(const Directives& newDirectives, TokenStreamPosition& startPosition);
     bool deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObject environment);
+};
+
+class MOZ_STACK_CLASS GlobalScriptBytecodeCompiler final
+  : public BytecodeCompiler
+{
+    GlobalSharedContext globalsc_;
+
+  public:
+    GlobalScriptBytecodeCompiler(JSContext* cx, const ReadOnlyCompileOptions& options,
+                                 SourceBufferHolder& sourceBuffer, ScopeKind scopeKind)
+      : BytecodeCompiler(cx, options, sourceBuffer),
+        globalsc_(cx, scopeKind, directives, options.extraWarningsOption)
+    {
+        MOZ_ASSERT(scopeKind == ScopeKind::Global || scopeKind == ScopeKind::NonSyntactic);
+    }
+
+    JSScript* compile() {
+        if (!prepareScriptParse()) {
+            return nullptr;
+        }
+        return compileScript(nullptr, &globalsc_);
+    }
 };
 
 AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
@@ -401,18 +424,6 @@ BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
 }
 
 JSScript*
-BytecodeCompiler::compileGlobalScript(ScopeKind scopeKind)
-{
-    GlobalSharedContext globalsc(cx, scopeKind, directives, options.extraWarningsOption);
-
-    if (!prepareScriptParse()) {
-        return nullptr;
-    }
-
-    return compileScript(nullptr, &globalsc);
-}
-
-JSScript*
 BytecodeCompiler::compileEvalScript(HandleObject environment, HandleScope enclosingScope)
 {
     EvalSharedContext evalsc(cx, environment, enclosingScope,
@@ -651,13 +662,17 @@ frontend::CompileGlobalScript(JSContext* cx, ScopeKind scopeKind,
                               ScriptSourceObject** sourceObjectOut)
 {
     MOZ_ASSERT(scopeKind == ScopeKind::Global || scopeKind == ScopeKind::NonSyntactic);
+
     AutoAssertReportedException assertException(cx);
-    BytecodeCompiler compiler(cx, options, srcBuf);
+
+    GlobalScriptBytecodeCompiler compiler(cx, options, srcBuf, scopeKind);
     AutoInitializeSourceObject autoSSO(compiler, sourceObjectOut);
-    JSScript* script = compiler.compileGlobalScript(scopeKind);
+
+    JSScript* script = compiler.compile();
     if (!script) {
         return nullptr;
     }
+
     assertException.reset();
     return script;
 }
