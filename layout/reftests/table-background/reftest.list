@@ -47,8 +47,8 @@ fuzzy-if(d2d,0-1,0-24606) fuzzy-if(skiaContent,0-1,0-17000) == border-collapse-o
 fuzzy-if(d2d,0-1,0-11000) fuzzy-if(skiaContent,0-1,0-11000) == border-collapse-opacity-table-row.html border-collapse-opacity-table-row-ref.html
 fuzzy-if(d2d||skiaContent,0-1,0-60000) == border-collapse-opacity-table.html border-collapse-opacity-table-ref.html
 fuzzy-if(d2d,0-1,0-2478) fuzzy-if(skiaContent,0-1,0-2500) == border-separate-opacity-table-cell.html border-separate-opacity-table-cell-ref.html
-fuzzy-if(d2d,0-1,0-38000) == border-separate-opacity-table-column-group.html border-separate-opacity-table-column-group-ref.html
-fuzzy-if(d2d,0-1,0-13000) == border-separate-opacity-table-column.html border-separate-opacity-table-column-ref.html
+fuzzy-if(d2d,0-1,0-38000) fuzzy-if(webrender&&gtkWidget,1-1,4078-4078) == border-separate-opacity-table-column-group.html border-separate-opacity-table-column-group-ref.html
+fuzzy-if(d2d,0-1,0-13000) fuzzy-if(webrender&&gtkWidget,1-1,1329-1329) == border-separate-opacity-table-column.html border-separate-opacity-table-column-ref.html
 fuzzy-if(d2d,0-1,0-37170) fuzzy-if(skiaContent,0-1,0-38000) == border-separate-opacity-table-row-group.html border-separate-opacity-table-row-group-ref.html
 fuzzy-if(d2d,0-1,0-12390) fuzzy-if(skiaContent,0-1,0-13000) == border-separate-opacity-table-row.html border-separate-opacity-table-row-ref.html
 fuzzy-if(d2d||skiaContent,0-1,0-95000) == border-separate-opacity-table.html border-separate-opacity-table-ref.html

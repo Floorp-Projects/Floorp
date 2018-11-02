@@ -265,6 +265,10 @@ The following prefs are for testing purpose only.
 
   If true, allows recording opt-in Telemetry on the Release channel. Requires a restart.
 
+``toolkit.telemetry.untrustedModulesPing.frequency``
+
+  Interval, in seconds, between "untrustedModules" ping transmissions.
+
 ``toolkit.telemetry.healthping.enabled``
 
   If false, sending health pings is disabled. Defaults to true.

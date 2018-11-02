@@ -58,8 +58,8 @@ function runImageClipboardTests(aCBSvc, aImageType)
   xfer.addDataFlavor(aImageType);
   aCBSvc.getData(xfer, knsIClipboard.kGlobalClipboard);
 
-  var typeObj = {}, dataObj = {}, lenObj = {};
-  xfer.getAnyTransferData(typeObj, dataObj, lenObj);
+  var typeObj = {}, dataObj = {};
+  xfer.getAnyTransferData(typeObj, dataObj);
   var gotValue = (null != dataObj.value);
   ok(gotValue, aImageType + " - getData() returned a value");
   if (gotValue)

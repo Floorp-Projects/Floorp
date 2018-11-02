@@ -249,6 +249,27 @@ public:
   virtual Relation RelationByType(RelationType aType) const override;
 };
 
+/**
+ * Used for HTML form element.
+ */
+class HTMLFormAccessible : public HyperTextAccessibleWrap
+{
+public:
+
+  HTMLFormAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+    HyperTextAccessibleWrap(aContent, aDoc) {}
+
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLFormAccessible,
+                                       HyperTextAccessibleWrap)
+
+  // Accessible
+  virtual nsAtom* LandmarkRole() const override;
+  virtual a11y::role NativeRole() const override;
+
+protected:
+  virtual ~HTMLFormAccessible() = default;
+};
+
 } // namespace a11y
 } // namespace mozilla
 

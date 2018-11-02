@@ -26,7 +26,7 @@ var gUpdatedOverrides;
 var gOverrideForHostCache = new Map;
 var gInitialized = false;
 var gOverrideFunctions = [
-  function (aHttpChannel) { return UserAgentOverrides.getOverrideForURI(aHttpChannel.URI); }
+  function(aHttpChannel) { return UserAgentOverrides.getOverrideForURI(aHttpChannel.URI); },
 ];
 var gBuiltUAs = new Map;
 
@@ -90,7 +90,7 @@ var UserAgentOverrides = {
       let userAgent = overrides.get(searchHost);
 
       while (!userAgent) {
-        let dot = searchHost.indexOf('.');
+        let dot = searchHost.indexOf(".");
         if (dot === -1) {
           return null;
         }
@@ -121,11 +121,10 @@ var UserAgentOverrides = {
     Services.prefs.removeObserver(PREF_OVERRIDES_ENABLED, buildOverrides);
 
     Services.obs.removeObserver(HTTP_on_useragent_request, "http-on-useragent-request");
-  }
+  },
 };
 
-function getUserAgentFromOverride(override)
-{
+function getUserAgentFromOverride(override) {
   let userAgent = gBuiltUAs.get(override);
   if (userAgent !== undefined) {
     return userAgent;
@@ -147,7 +146,6 @@ function buildOverrides() {
   if (!Services.prefs.getBoolPref(PREF_OVERRIDES_ENABLED))
     return;
 
-  let builtUAs = new Map;
   let domains = gPrefBranch.getChildList("");
 
   for (let domain of domains) {

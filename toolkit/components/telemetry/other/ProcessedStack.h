@@ -9,6 +9,9 @@
 #include <string>
 #include <vector>
 #include "nsString.h"
+#if defined(MOZ_GECKO_PROFILER)
+#include "shared-libraries.h"
+#endif // MOZ_GECKO_PROFILER
 
 namespace mozilla {
 namespace Telemetry {
@@ -58,6 +61,18 @@ private:
 // different needs (current thread X main thread, stopping the thread, etc).
 ProcessedStack
 GetStackAndModules(const std::vector<uintptr_t> &aPCs);
+
+// This class optimizes repeated calls to GetStackAndModules.
+class BatchProcessedStackGenerator
+{
+public:
+  BatchProcessedStackGenerator();
+  ProcessedStack GetStackAndModules(const std::vector<uintptr_t> &aPCs);
+private:
+#if defined(MOZ_GECKO_PROFILER)
+  SharedLibraryInfo mSortedRawModules;
+#endif
+};
 
 } // namespace Telemetry
 } // namespace mozilla

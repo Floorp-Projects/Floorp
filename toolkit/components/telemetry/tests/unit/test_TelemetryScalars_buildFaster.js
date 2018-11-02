@@ -84,8 +84,7 @@ add_task({
   Telemetry.scalarSet(TEST_SCALAR2, true);
 
   // Check the values we tried to store.
-  const scalars =
-    Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false).parent;
+  const scalars = Telemetry.getSnapshotForScalars("main", false).parent;
 
   // Check that they are serialized to the correct format.
   Assert.equal(typeof(scalars[TEST_SCALAR1]), "number",
@@ -122,8 +121,7 @@ add_task(async function test_keyedDynamicBuiltin() {
   Telemetry.keyedScalarSet(TEST_SCALAR1, "test-key", 3785);
 
   // Check the values we tried to store.
-  const scalars =
-    Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false).parent;
+  const scalars = Telemetry.getSnapshotForKeyedScalars("main", false).parent;
 
   // Check that they are serialized to the correct format.
   Assert.equal(typeof(scalars[TEST_SCALAR1]), "object",

@@ -147,7 +147,7 @@ add_task(async function test_disableDataUpload() {
   }
 
   // Check that the optin probe is not set, there should be other data in the snapshot though
-  let snapshot = Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false).parent;
+  let snapshot = Telemetry.getSnapshotForScalars("main", false).parent;
   Assert.ok(!(OPTIN_PROBE in snapshot), "Data optin scalar should not be set at start");
 
   // Send a first ping to get the current used client id
@@ -166,7 +166,7 @@ add_task(async function test_disableDataUpload() {
   // Wait on ping activity to settle.
   await TelemetrySend.testWaitOnOutgoingPings();
 
-  snapshot = Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false).parent;
+  snapshot = Telemetry.getSnapshotForScalars("main", false).parent;
   Assert.ok(!(OPTIN_PROBE in snapshot), "Data optin scalar should not be set after optout");
 
   // Restore FHR Upload.
@@ -174,13 +174,12 @@ add_task(async function test_disableDataUpload() {
 
   // We need to wait until the scalar is set
   await ContentTaskUtils.waitForCondition(() => {
-    const scalarSnapshot =
-      Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+    const scalarSnapshot = Telemetry.getSnapshotForScalars("main", false);
     return Object.keys(scalarSnapshot).includes("parent") &&
            OPTIN_PROBE in scalarSnapshot.parent;
   });
 
-  snapshot = Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false).parent;
+  snapshot = Telemetry.getSnapshotForScalars("main", false).parent;
   Assert.ok(snapshot[OPTIN_PROBE], "Enabling data upload should set optin probe");
 
   // Simulate a failure in sending the optout ping by disabling the HTTP server.

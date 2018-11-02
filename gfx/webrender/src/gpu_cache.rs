@@ -512,10 +512,6 @@ impl<'a> GpuDataRequest<'a> {
         self.texture.pending_blocks.push(block.into());
     }
 
-    pub fn extend_from_slice(&mut self, blocks: &[GpuBlockData]) {
-        self.texture.pending_blocks.extend_from_slice(blocks);
-    }
-
     pub fn current_used_block_num(&self) -> usize {
         self.texture.pending_blocks.len() - self.start_index
     }

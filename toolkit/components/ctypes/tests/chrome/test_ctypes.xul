@@ -62,7 +62,12 @@
       let unicodeFile = path.clone();
       unicodeFile.append(CTYPES_UNICODE_LIB);
       ok(unicodeFile.exists(), "ctypes unicode test library doesn't exist!?");
-      unicodeFile.remove(false);
+
+      // Tolerate remove() failure because Firefox may have the DLL open
+      // for examination.
+      try {
+        unicodeFile.remove(false);
+      } catch (e) {}
     }
 
     function test()

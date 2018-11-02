@@ -329,9 +329,9 @@ struct BaselineScript final
     // they correspond to, for use by TypeScript::BytecodeTypes.
     uint32_t bytecodeTypeMapOffset_ = 0;
 
-    // For generator scripts, we store the native code address for each yield
-    // instruction.
-    uint32_t yieldEntriesOffset_ = 0;
+    // We store the native code address corresponding to each bytecode offset in
+    // the script's resumeOffsets list.
+    uint32_t resumeEntriesOffset_ = 0;
 
     // By default tracelogger is disabled. Therefore we disable the logging code
     // by default. We store the offsets we must patch to enable the logging.
@@ -386,7 +386,7 @@ struct BaselineScript final
                                size_t retAddrEntries,
                                size_t pcMappingIndexEntries, size_t pcMappingSize,
                                size_t bytecodeTypeMapEntries,
-                               size_t yieldEntries,
+                               size_t resumeEntries,
                                size_t traceLoggerToggleOffsetEntries);
 
     static void Trace(JSTracer* trc, BaselineScript* script);
@@ -468,8 +468,8 @@ struct BaselineScript final
     RetAddrEntry* retAddrEntryList() {
         return (RetAddrEntry*)(reinterpret_cast<uint8_t*>(this) + retAddrEntriesOffset_);
     }
-    uint8_t** yieldEntryList() {
-        return (uint8_t**)(reinterpret_cast<uint8_t*>(this) + yieldEntriesOffset_);
+    uint8_t** resumeEntryList() {
+        return (uint8_t**)(reinterpret_cast<uint8_t*>(this) + resumeEntriesOffset_);
     }
     PCMappingIndexEntry* pcMappingIndexEntryList() {
         return (PCMappingIndexEntry*)(reinterpret_cast<uint8_t*>(this) + pcMappingIndexOffset_);
@@ -530,9 +530,9 @@ struct BaselineScript final
 
     void adoptFallbackStubs(FallbackICStubSpace* stubSpace);
 
-    // Copy yieldAndAwaitOffsets list from |script| and convert the pcOffsets
+    // Copy resumeOffsets list from |script| and convert the pcOffsets
     // to native addresses in the Baseline code.
-    void computeYieldAndAwaitNativeOffsets(JSScript* script);
+    void computeResumeNativeOffsets(JSScript* script);
 
     PCMappingIndexEntry& pcMappingIndexEntry(size_t index);
     CompactBufferReader pcMappingReader(size_t indexEntry);
@@ -596,8 +596,8 @@ struct BaselineScript final
     static size_t offsetOfFlags() {
         return offsetof(BaselineScript, flags_);
     }
-    static size_t offsetOfYieldEntriesOffset() {
-        return offsetof(BaselineScript, yieldEntriesOffset_);
+    static size_t offsetOfResumeEntriesOffset() {
+        return offsetof(BaselineScript, resumeEntriesOffset_);
     }
 
     static void writeBarrierPre(Zone* zone, BaselineScript* script);

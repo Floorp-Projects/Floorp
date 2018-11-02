@@ -1037,7 +1037,14 @@ enum Role {
    */
   CONTENT_INSERTION = 177,
 
-  LAST_ROLE = CONTENT_INSERTION
+  /**
+   * An html:form element with a label provided by WAI-ARIA.
+   * This may also be used if role="form" with a label should be exposed
+   * differently in the future.
+   */
+  FORM_LANDMARK = 178,
+
+  LAST_ROLE = FORM_LANDMARK
 };
 
 } // namespace role

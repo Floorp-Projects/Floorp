@@ -5483,6 +5483,38 @@ AssertCorrectRealm(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+GlobalLexicals(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<LexicalEnvironmentObject*> globalLexical(cx, &cx->global()->lexicalEnvironment());
+
+    AutoIdVector props(cx);
+    if (!GetPropertyKeys(cx, globalLexical, JSITER_HIDDEN, &props)) {
+        return false;
+    }
+
+    RootedObject res(cx, JS_NewPlainObject(cx));
+    if (!res) {
+        return false;
+    }
+
+    RootedValue val(cx);
+    for (size_t i = 0; i < props.length(); i++) {
+        HandleId id = props[i];
+        if (!JS_GetPropertyById(cx, globalLexical, id, &val)) {
+            return false;
+        }
+        if (!JS_SetPropertyById(cx, res, id, val)) {
+            return false;
+        }
+    }
+
+    args.rval().setObject(*res);
+    return true;
+}
+
 JSScript*
 js::TestingFunctionArgumentToScript(JSContext* cx,
                                     HandleValue v,
@@ -6405,6 +6437,11 @@ gc::ZealModeHelpText),
     JS_FN_HELP("assertCorrectRealm", AssertCorrectRealm, 0, 0,
 "assertCorrectRealm()",
 "  Asserts cx->realm matches callee->realm.\n"),
+
+    JS_FN_HELP("globalLexicals", GlobalLexicals, 0, 0,
+"globalLexicals()",
+"  Returns an object containing a copy of all global lexical bindings.\n"
+"  Example use: let x = 1; assertEq(globalLexicals().x, 1);\n"),
 
     JS_FN_HELP("baselineCompile", BaselineCompile, 2, 0,
 "baselineCompile([fun/code], forceDebugInstrumentation=false)",

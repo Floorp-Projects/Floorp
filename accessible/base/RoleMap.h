@@ -1620,3 +1620,12 @@ ROLE(CONTENT_INSERTION,
      IA2_ROLE_CONTENT_INSERTION,
      java::SessionAccessibility::CLASSNAME_VIEW,
      eNoNameRule)
+
+ROLE(FORM_LANDMARK,
+     "form",
+     ATK_ROLE_LANDMARK,
+     NSAccessibilityGroupRole,
+     USE_ROLE_STRING,
+     IA2_ROLE_FORM,
+     java::SessionAccessibility::CLASSNAME_VIEW,
+     eNoNameRule)
