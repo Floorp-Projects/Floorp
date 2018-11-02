@@ -8,7 +8,6 @@
 var EXPORTED_SYMBOLS = ["MulticastDNS"];
 
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const DEBUG = false;
 

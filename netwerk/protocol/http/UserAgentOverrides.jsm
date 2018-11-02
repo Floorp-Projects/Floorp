@@ -146,7 +146,6 @@ function buildOverrides() {
   if (!Services.prefs.getBoolPref(PREF_OVERRIDES_ENABLED))
     return;
 
-  let builtUAs = new Map;
   let domains = gPrefBranch.getChildList("");
 
   for (let domain of domains) {

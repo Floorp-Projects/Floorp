@@ -1,26 +1,26 @@
 <html>
 
 <script language="javascript">
-
+/* eslint-disable no-unsanitized/method */
 <!--
 
 function add_location(url) {
-	// faster to do this in one assignment, but who really cares.
+    // faster to do this in one assignment, but who really cares.
 
-	var string = '<LI> <a href=\"javascript: ftp_open(\'';
-	string += url;
-	string += '\')\"';
-	string += 'onmouseover=\"window.status=\'ftp://';
-	string += url;
-	string += '\'; return true; \">';
-	string += url;
-	string += "</a>";
-	document.writeln(string);
+    var string = '<LI> <a href=\"javascript: ftp_open(\'';
+    string += url;
+    string += '\')\"';
+    string += 'onmouseover=\"window.status=\'ftp://';
+    string += url;
+    string += '\'; return true; \">';
+    string += url;
+    string += "</a>";
+    document.writeln(string);
 }
 
 function ftp_open(url) {
-	url = "ftp://" + url;
-	parent.ftp_content.location = url;
+    url = "ftp://" + url;
+    parent.ftp_content.location = url;
 }
 
 // I like this format.
@@ -28,12 +28,12 @@ document.writeln("<pre>");
 
 document.writeln("<br><OL><b>Company sites</b>");
     add_location("ftp.mozilla.org");
-	add_location("ftp.sun.com");
-	add_location("ftp.iplanet.com");
-	add_location("ftp.netscape.com");
-	add_location("ftp.apple.com");
-	add_location("ftp.microsoft.com");
-	add_location("ftp.netmanage.com");
+    add_location("ftp.sun.com");
+    add_location("ftp.iplanet.com");
+    add_location("ftp.netscape.com");
+    add_location("ftp.apple.com");
+    add_location("ftp.microsoft.com");
+    add_location("ftp.netmanage.com");
 
 document.writeln("</OL><br><OL><b>Misc sites</b>");
     add_location("cal044202.student.utwente.nl");
