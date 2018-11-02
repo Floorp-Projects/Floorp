@@ -62,6 +62,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetrySend: "resource://gre/modules/TelemetrySend.jsm",
   TelemetryReportingPolicy: "resource://gre/modules/TelemetryReportingPolicy.jsm",
   TelemetryModules: "resource://gre/modules/ModulesPing.jsm",
+  TelemetryUntrustedModulesPing: "resource://gre/modules/UntrustedModulesPing.jsm",
   UpdatePing: "resource://gre/modules/UpdatePing.jsm",
   TelemetryHealthPing: "resource://gre/modules/HealthPing.jsm",
   TelemetryEventPing: "resource://gre/modules/EventPing.jsm",
@@ -714,6 +715,12 @@ var Impl = {
 
           // Send coverage ping.
           await CoveragePing.startup();
+
+          // Start the untrusted modules ping, which reports events where
+          // untrusted modules were loaded into the Firefox process.
+          if (AppConstants.NIGHTLY_BUILD && AppConstants.platform == "win") {
+            TelemetryUntrustedModulesPing.start();
+          }
         }
 
         TelemetryEventPing.startup();
