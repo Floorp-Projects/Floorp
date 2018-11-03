@@ -569,6 +569,7 @@ StorageDBThread::ThreadFunc()
       }
     } else if (MOZ_UNLIKELY(!mStopIOThread)) {
       AUTO_PROFILER_LABEL("StorageDBThread::ThreadFunc::Wait", IDLE);
+      AUTO_PROFILER_THREAD_SLEEP;
       lockMonitor.Wait(timeUntilFlush);
     }
   } // thread loop

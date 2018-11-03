@@ -37,30 +37,30 @@ ShapeUtils::ComputeShapeRadius(const StyleShapeRadius aType,
 }
 
 nsPoint
-ShapeUtils::ComputeCircleOrEllipseCenter(const UniquePtr<StyleBasicShape>& aBasicShape,
+ShapeUtils::ComputeCircleOrEllipseCenter(const StyleBasicShape& aBasicShape,
                                          const nsRect& aRefBox)
 {
-  MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Circle ||
-             aBasicShape->GetShapeType() == StyleBasicShapeType::Ellipse,
+  MOZ_ASSERT(aBasicShape.GetShapeType() == StyleBasicShapeType::Circle ||
+             aBasicShape.GetShapeType() == StyleBasicShapeType::Ellipse,
              "The basic shape must be circle() or ellipse!");
 
   nsPoint topLeft, anchor;
   nsSize size(aRefBox.Size());
-  nsImageRenderer::ComputeObjectAnchorPoint(aBasicShape->GetPosition(),
+  nsImageRenderer::ComputeObjectAnchorPoint(aBasicShape.GetPosition(),
                                             size, size,
                                             &topLeft, &anchor);
   return anchor + aRefBox.TopLeft();
 }
 
 nscoord
-ShapeUtils::ComputeCircleRadius(const UniquePtr<StyleBasicShape>& aBasicShape,
+ShapeUtils::ComputeCircleRadius(const StyleBasicShape& aBasicShape,
                                 const nsPoint& aCenter,
                                 const nsRect& aRefBox)
 {
-  MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Circle,
+  MOZ_ASSERT(aBasicShape.GetShapeType() == StyleBasicShapeType::Circle,
              "The basic shape must be circle()!");
 
-  const nsTArray<nsStyleCoord>& coords = aBasicShape->Coordinates();
+  const nsTArray<nsStyleCoord>& coords = aBasicShape.Coordinates();
   MOZ_ASSERT(coords.Length() == 1, "wrong number of arguments");
   nscoord r = 0;
   if (coords[0].GetUnit() == eStyleUnit_Enumerated) {
@@ -84,14 +84,14 @@ ShapeUtils::ComputeCircleRadius(const UniquePtr<StyleBasicShape>& aBasicShape,
 }
 
 nsSize
-ShapeUtils::ComputeEllipseRadii(const UniquePtr<StyleBasicShape>& aBasicShape,
+ShapeUtils::ComputeEllipseRadii(const StyleBasicShape& aBasicShape,
                                 const nsPoint& aCenter,
                                 const nsRect& aRefBox)
 {
-  MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Ellipse,
+  MOZ_ASSERT(aBasicShape.GetShapeType() == StyleBasicShapeType::Ellipse,
              "The basic shape must be ellipse()!");
 
-  const nsTArray<nsStyleCoord>& coords = aBasicShape->Coordinates();
+  const nsTArray<nsStyleCoord>& coords = aBasicShape.Coordinates();
   MOZ_ASSERT(coords.Length() == 2, "wrong number of arguments");
   nsSize radii;
 
@@ -115,13 +115,13 @@ ShapeUtils::ComputeEllipseRadii(const UniquePtr<StyleBasicShape>& aBasicShape,
 }
 
 /* static */ nsRect
-ShapeUtils::ComputeInsetRect(const UniquePtr<StyleBasicShape>& aBasicShape,
+ShapeUtils::ComputeInsetRect(const StyleBasicShape& aBasicShape,
                              const nsRect& aRefBox)
 {
-  MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Inset,
+  MOZ_ASSERT(aBasicShape.GetShapeType() == StyleBasicShapeType::Inset,
              "The basic shape must be inset()!");
 
-  const nsTArray<nsStyleCoord>& coords = aBasicShape->Coordinates();
+  const nsTArray<nsStyleCoord>& coords = aBasicShape.Coordinates();
   MOZ_ASSERT(coords.Length() == 4, "wrong number of arguments");
 
   nsMargin inset(coords[0].ComputeCoordPercentCalc(aRefBox.Height()),
@@ -150,25 +150,25 @@ ShapeUtils::ComputeInsetRect(const UniquePtr<StyleBasicShape>& aBasicShape,
 }
 
 /* static */ bool
-ShapeUtils::ComputeInsetRadii(const UniquePtr<StyleBasicShape>& aBasicShape,
+ShapeUtils::ComputeInsetRadii(const StyleBasicShape& aBasicShape,
                               const nsRect& aInsetRect,
                               const nsRect& aRefBox,
                               nscoord aRadii[8])
 {
-  const nsStyleCorners& radius = aBasicShape->GetRadius();
+  const nsStyleCorners& radius = aBasicShape.GetRadius();
   return nsIFrame::ComputeBorderRadii(radius, aInsetRect.Size(), aRefBox.Size(),
                                       Sides(), aRadii);
 
 }
 
 /* static */ nsTArray<nsPoint>
-ShapeUtils::ComputePolygonVertices(const UniquePtr<StyleBasicShape>& aBasicShape,
+ShapeUtils::ComputePolygonVertices(const StyleBasicShape& aBasicShape,
                                    const nsRect& aRefBox)
 {
-  MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Polygon,
+  MOZ_ASSERT(aBasicShape.GetShapeType() == StyleBasicShapeType::Polygon,
              "The basic shape must be polygon()!");
 
-  const nsTArray<nsStyleCoord>& coords = aBasicShape->Coordinates();
+  const nsTArray<nsStyleCoord>& coords = aBasicShape.Coordinates();
   MOZ_ASSERT(coords.Length() % 2 == 0 &&
              coords.Length() >= 2, "Wrong number of arguments!");
 
