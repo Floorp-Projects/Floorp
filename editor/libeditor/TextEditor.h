@@ -187,10 +187,10 @@ public:
                                nsRange* aReplaceRange = nullptr);
 
   /**
-   * OnInputParagraphSeparator() is called when user tries to separate current
-   * paragraph with Enter key press or something.
+   * InsertLineBreakAsAction() is called when user inputs a line break with
+   * Enter or something.
    */
-  nsresult OnInputParagraphSeparator();
+  virtual nsresult InsertLineBreakAsAction();
 
   /**
    * OnCompositionStart() is called when editor receives eCompositionStart
@@ -376,13 +376,10 @@ protected: // Shouldn't be used by friend classes
   nsresult OnInputText(const nsAString& aStringToInsert);
 
   /**
-   * InsertParagraphSeparatorAsAction() inserts a line break if it's TextEditor
-   * or inserts new paragraph if it's HTMLEditor and it's possible.
-   * Although, this method is implementation of
-   * nsIPlaintextEditor.insertLineBreak(), this treats the input is an edit
-   * action.
+   * InsertLineBreakAsSubAction() inserts a line break, i.e., \n if it's
+   * TextEditor or <br> if it's HTMLEditor.
    */
-  nsresult InsertParagraphSeparatorAsAction();
+  nsresult InsertLineBreakAsSubAction();
 
   nsresult InsertTextAt(const nsAString& aStringToInsert,
                         nsINode* aDestinationNode,
