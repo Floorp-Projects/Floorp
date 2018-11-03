@@ -52,11 +52,15 @@ TextEditRules::CreateBRInternal(const EditorRawDOMPoint& aPointToInsert,
                                 bool aCreateMozBR);
 
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
-  if (IsReadonly() || IsDisabled()) \
-  {                     \
+  if (IsReadonly() || IsDisabled()) {\
     *aCancel = true; \
-    return NS_OK;       \
-  };
+    return NS_OK; \
+  }
+
+#define CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY_OF_DISABLED \
+  if (IsReadonly() || IsDisabled()) { \
+    return EditActionCanceled(NS_OK); \
+  }
 
 /********************************************************
  * mozilla::TextEditRules
@@ -318,9 +322,17 @@ TextEditRules::WillDoAction(EditSubActionInfo& aInfo,
 
   // my kingdom for dynamic cast
   switch (aInfo.mEditSubAction) {
-    case EditSubAction::eInsertParagraphSeparator:
+    case EditSubAction::eInsertParagraphSeparator: {
       UndefineCaretBidiLevel();
-      return WillInsertBreak(aCancel, aHandled, aInfo.maxLength);
+      EditActionResult result = WillInsertLineBreak(aInfo.maxLength);
+      if (NS_WARN_IF(result.Failed())) {
+        return result.Rv();
+      }
+      *aCancel = result.Canceled();
+      *aHandled = result.Handled();
+      MOZ_ASSERT(!result.Ignored());
+      return NS_OK;
+    }
     case EditSubAction::eInsertText:
     case EditSubAction::eInsertTextComingFromIME:
       UndefineCaretBidiLevel();
@@ -424,56 +436,47 @@ TextEditRules::WillInsert(bool* aCancel)
   return NS_OK;
 }
 
-nsresult
-TextEditRules::WillInsertBreak(bool* aCancel,
-                               bool* aHandled,
-                               int32_t aMaxLength)
+EditActionResult
+TextEditRules::WillInsertLineBreak(int32_t aMaxLength)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
+  MOZ_ASSERT(!IsSingleLineEditor());
+
+  CANCEL_OPERATION_AND_RETURN_EDIT_ACTION_RESULT_IF_READONLY_OF_DISABLED
+
+  // handle docs with a max length
+  // NOTE, this function copies inString into outString for us.
+  NS_NAMED_LITERAL_STRING(inString, "\n");
+  nsAutoString outString;
+  bool didTruncate;
+  nsresult rv =
+    TruncateInsertionIfNeeded(&inString.AsString(),
+                              &outString, aMaxLength, &didTruncate);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditActionIgnored(rv);
   }
-  CANCEL_OPERATION_IF_READONLY_OR_DISABLED
-  *aHandled = false;
-  if (IsSingleLineEditor()) {
-    *aCancel = true;
-  } else {
-    // handle docs with a max length
-    // NOTE, this function copies inString into outString for us.
-    NS_NAMED_LITERAL_STRING(inString, "\n");
-    nsAutoString outString;
-    bool didTruncate;
-    nsresult rv =
-      TruncateInsertionIfNeeded(&inString.AsString(),
-                                &outString, aMaxLength, &didTruncate);
+  if (didTruncate) {
+    return EditActionCanceled();
+  }
+
+  // if the selection isn't collapsed, delete it.
+  if (!SelectionRefPtr()->IsCollapsed()) {
+    rv = TextEditorRef().DeleteSelectionAsSubAction(nsIEditor::eNone,
+                                                    nsIEditor::eStrip);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    if (didTruncate) {
-      *aCancel = true;
-      return NS_OK;
-    }
-
-    *aCancel = false;
-
-    // if the selection isn't collapsed, delete it.
-    if (!SelectionRefPtr()->IsCollapsed()) {
-      rv = TextEditorRef().DeleteSelectionAsSubAction(nsIEditor::eNone,
-                                                      nsIEditor::eStrip);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
-
-    rv = WillInsert();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionIgnored(rv);
     }
   }
-  return NS_OK;
+
+  rv = WillInsert();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditActionIgnored(rv);
+  }
+
+  return EditActionIgnored();
 }
 
 nsresult
