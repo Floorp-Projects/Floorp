@@ -1885,7 +1885,7 @@ Gecko_DestroyShapeSource(mozilla::StyleShapeSource* aShape)
 void
 Gecko_StyleShapeSource_SetURLValue(StyleShapeSource* aShape, URLValue* aURL)
 {
-  aShape->SetURL(aURL);
+  aShape->SetURL(*aURL);
 }
 
 void

@@ -293,6 +293,7 @@ SchedulerEventQueue::GetEvent(bool aMayWait,
       CooperativeThreadPool::Yield(mScheduler->GetQueueResource(), lock);
     } else {
       AUTO_PROFILER_LABEL("SchedulerEventQueue::GetEvent::Wait", IDLE);
+      AUTO_PROFILER_THREAD_SLEEP;
       mNonCooperativeCondVar.Wait();
     }
   }

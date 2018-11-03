@@ -12,8 +12,6 @@
   --toolbar-non-lwt-bgcolor: -moz-dialog;
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
   --toolbar-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.15), rgba(255,255,255,.15));
-  --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
-  --toolbar-bgimage: var(--toolbar-non-lwt-bgimage);
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
   --toolbarbutton-border-radius: 2px;
@@ -60,9 +58,6 @@
 }
 
 :root:-moz-lwtheme {
-  --toolbar-bgcolor: rgba(255,255,255,.4);
-  --toolbar-bgimage: none;
-
   --toolbox-border-bottom-color: rgba(0,0,0,.3);
 
   --panel-separator-color: hsla(210,4%,10%,.14);
@@ -138,7 +133,7 @@
   background-color: var(--toolbar-bgcolor);
   background-image: var(--toolbar-bgimage);
   background-clip: padding-box;
-  color: var(--toolbar-color, inherit);
+  color: var(--toolbar-color);
 }
 
 /*
@@ -192,11 +187,11 @@
   /* Please keep the menu text colors in this media block in sync with
    * compacttheme.css, minus the :not(:-moz-lwtheme) condition - see Bug 1165718.
    */
-  :root[tabsintitlebar]:not([inFullscreen]) .titlebar-color:not(:-moz-lwtheme) {
+  :root[tabsintitlebar]:not([inFullscreen]):not(:-moz-lwtheme) {
     color: CaptionText;
   }
 
-  :root[tabsintitlebar]:not([inFullscreen]) .titlebar-color:not(:-moz-lwtheme):-moz-window-inactive {
+  :root[tabsintitlebar]:not([inFullscreen]):not(:-moz-lwtheme):-moz-window-inactive {
     color: InactiveCaptionText;
   }
 }
@@ -666,14 +661,9 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 }
 
 .browserContainer > findbar {
-  background-color: -moz-dialog;
-  color: -moz-DialogText;
-  text-shadow: none;
-}
-
-.browserContainer > findbar:-moz-lwtheme {
   background-color: var(--toolbar-bgcolor);
-  color: var(--toolbar-color, -moz-DialogText);
+  color: var(--toolbar-color);
+  text-shadow: none;
 }
 
 /* Tabstrip */

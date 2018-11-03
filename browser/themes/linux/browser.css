@@ -12,8 +12,6 @@
   --toolbar-non-lwt-bgcolor: -moz-dialog;
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
   --toolbar-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.15), rgba(255,255,255,.15));
-  --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
-  --toolbar-bgimage: var(--toolbar-non-lwt-bgimage);
 
   --toolbarbutton-border-radius: 4px;
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
@@ -38,9 +36,6 @@
 }
 
 :root:-moz-lwtheme {
-  --toolbar-bgcolor: rgba(255,255,255,.4);
-  --toolbar-bgimage: none;
-
   --toolbox-border-bottom-color: rgba(0,0,0,.3);
 
   --panel-separator-color: hsla(210,4%,10%,.14);
@@ -75,7 +70,7 @@
 .browser-toolbar:not(.titlebar-color) {
   background-color: var(--toolbar-bgcolor);
   background-image: var(--toolbar-bgimage);
-  color: var(--toolbar-color, inherit);
+  color: var(--toolbar-color);
   -moz-appearance: none;
   border-style: none;
 }
@@ -458,14 +453,9 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 }
 
 .browserContainer > findbar {
-  background-color: -moz-dialog;
-  color: -moz-DialogText;
-  text-shadow: none;
-}
-
-.browserContainer > findbar:-moz-lwtheme {
   background-color: var(--toolbar-bgcolor);
-  color: var(--toolbar-color, -moz-DialogText);
+  color: var(--toolbar-color);
+  text-shadow: none;
 }
 
 /* Tabstrip */

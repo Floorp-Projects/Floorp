@@ -560,14 +560,14 @@ partial interface Window {
    *
    * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
    */
-  [Func="IsChromeOrXBL"]
+  [Func="IsChromeOrXBLOrUAWidget"]
   sequence<DOMString> getRegionalPrefsLocales();
 
   /**
    * Getter funcion for IntlUtils, which provides helper functions for
    * localization.
    */
-  [Throws, Func="IsChromeOrXBL"]
+  [Throws, Func="IsChromeOrXBLOrUAWidget"]
   readonly attribute IntlUtils intlUtils;
 };
 

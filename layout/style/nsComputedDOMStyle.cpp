@@ -695,10 +695,10 @@ AddImageURL(const StyleShapeSource& aShapeSource, nsTArray<nsString>& aURLs)
 {
   switch (aShapeSource.GetType()) {
     case StyleShapeSourceType::URL:
-      AddImageURL(*aShapeSource.GetURL(), aURLs);
+      AddImageURL(aShapeSource.URL(), aURLs);
       break;
     case StyleShapeSourceType::Image:
-      AddImageURL(*aShapeSource.GetShapeImage(), aURLs);
+      AddImageURL(aShapeSource.ShapeImage(), aURLs);
       break;
     default:
       break;

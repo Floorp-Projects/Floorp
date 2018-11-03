@@ -38,8 +38,6 @@
           }
           :root[tabsintitlebar]:not(:-moz-lwtheme) {
             background-color: hsl(235,33%,19%);
-          }
-          :root[tabsintitlebar] .titlebar-color:not(:-moz-lwtheme) {
             color: hsl(240,9%,98%);
           }
         }
@@ -50,8 +48,6 @@
           }
           :root[tabsintitlebar]:not(:-moz-window-inactive):not(:-moz-lwtheme) {
             background-color: -moz-win-accentcolor;
-          }
-          :root[tabsintitlebar] .titlebar-color:not(:-moz-window-inactive):not(:-moz-lwtheme) {
             color: -moz-win-accentcolortext;
           }
         }
@@ -272,7 +268,7 @@
     }
   }
 
-  :root[darkwindowframe="true"] .titlebar-color:not(:-moz-window-inactive):not(:-moz-lwtheme) {
+  :root[darkwindowframe="true"]:not(:-moz-window-inactive):not(:-moz-lwtheme) {
     color: white;
   }
 
@@ -344,10 +340,10 @@
 /* Aero Basic */
 @media (-moz-windows-compositor: 0) {
   @media (-moz-windows-default-theme) {
-    #main-window {
+    :root {
       background-color: rgb(185,209,234);
     }
-    #main-window:-moz-window-inactive {
+    :root:-moz-window-inactive {
       background-color: rgb(215,228,242);
     }
 

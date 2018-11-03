@@ -749,6 +749,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
                                 IDLE);
             mozilla::BackgroundHangMonitor().NotifyWait();
 
+            AUTO_PROFILER_THREAD_SLEEP;
             curEvent = mEventQueue.Pop(/* mayWait */ true);
         }
     }

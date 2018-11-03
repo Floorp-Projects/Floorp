@@ -10446,7 +10446,7 @@ nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame)
     RefPtr<PathBuilder> builder =
       drawTarget->CreatePathBuilder(FillRule::FILL_WINDING);
     RefPtr<gfx::Path> gfxPath =
-      SVGPathData::BuildPath(motion->OffsetPath().GetPath()->Path(),
+      SVGPathData::BuildPath(motion->OffsetPath().Path().Path(),
                              builder,
                              NS_STYLE_STROKE_LINECAP_BUTT,
                              0.0);
