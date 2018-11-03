@@ -21,6 +21,8 @@ When a UA Widget initializes, it should create its own DOM inside the passed UA 
 
 **Specialization**: for video controls, we do not want to do the work if the control is not needed (i.e. when the ``<video>`` or ``<audio>`` element has no "controls" attribute set), so we forgo dispatching the event from HTMLMediaElement in the BindToTree method. Instead, a ``UAWidgetAttributeChanged`` event will cause the sandbox and the widget instance to construct when the attribute is set to true. The same event is also responsible for triggering the ``onattributechange()`` method on UA Widgets if the widget is already initialized.
 
+Likewise, the datetime box widget is only loaded when the ``type`` attribute of an ``<input>`` is either `date` or `time`.
+
 The specialization does not apply to the lifecycle of the UA Widget Shadow Root. It is always constructed in order to suppress children of the DOM element from the web content from receiving a layout frame.
 
 UA Widget Shadow Root
