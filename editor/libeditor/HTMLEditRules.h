@@ -100,7 +100,6 @@ public:
                               nsIEditor::EDirection aDirection) override;
   virtual nsresult AfterEdit(EditSubAction aEditSubAction,
                              nsIEditor::EDirection aDirection) override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult WillDoAction(EditSubActionInfo& aInfo,
                                 bool* aCancel,
                                 bool* aHandled) override;
@@ -213,12 +212,14 @@ protected:
   MOZ_MUST_USE nsresult WillLoadHTML();
 
   /**
-   * WillInsertParagraphSeparator() is called when insertParagraph command is
-   * executed or something equivalent.  This method actually tries to insert
-   * new paragraph or <br> element, etc.
+   * WillInsertBreak() is called when insertParagraph command is executed
+   * or something equivalent.  This method actually tries to insert new
+   * paragraph or <br> element, etc.
+   *
+   * @param aCancel             Returns true if target node is not editable.
+   * @param aHandled            Returns true if actually insert new break.
    */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE EditActionResult WillInsertParagraphSeparator();
+  nsresult WillInsertBreak(bool* aCancel, bool* aHandled);
 
   /**
    * If aNode is a text node that contains only collapsed whitespace, delete
@@ -243,9 +244,11 @@ protected:
    * Selection starts from inside a mail-cite element.  Of course, if it's
    * necessary, this inserts <br> node to new left nodes or existing right
    * nodes.
+   *
+   * @param aHandled            Returns true if succeeded to split mail-cite
+   *                            elements.
    */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE EditActionResult SplitMailCites();
+  MOZ_MUST_USE nsresult SplitMailCites(bool* aHandled);
 
   /**
    * Called before deleting selected contents.  This method actually removes
