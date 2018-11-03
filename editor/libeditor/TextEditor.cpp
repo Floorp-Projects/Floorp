@@ -414,7 +414,7 @@ TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
         return NS_OK;
       }
       aKeyboardEvent->PreventDefault();
-      return OnInputParagraphSeparator();
+      return InsertParagraphSeparatorAsAction();
   }
 
   if (!aKeyboardEvent->IsInputtingText()) {
@@ -443,7 +443,7 @@ TextEditor::OnInputText(const nsAString& aStringToInsert)
 }
 
 nsresult
-TextEditor::OnInputParagraphSeparator()
+TextEditor::InsertParagraphSeparatorAsAction()
 {
   AutoEditActionDataSetter editActionData(
                              *this,
@@ -452,8 +452,10 @@ TextEditor::OnInputParagraphSeparator()
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  // XXX This may be called by execCommand() with "insertParagraph".
+  //     In such case, naming the transaction "TypingTxnName" is odd.
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
-  nsresult rv = InsertParagraphSeparatorAsAction();
+  nsresult rv = InsertParagraphSeparatorAsSubAction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1077,11 +1079,12 @@ TextEditor::InsertLineBreak()
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return InsertParagraphSeparatorAsAction();
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  return InsertParagraphSeparatorAsSubAction();
 }
 
 nsresult
-TextEditor::InsertParagraphSeparatorAsAction()
+TextEditor::InsertParagraphSeparatorAsSubAction()
 {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
@@ -1092,7 +1095,6 @@ TextEditor::InsertParagraphSeparatorAsAction()
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
                                       EditSubAction::eInsertParagraphSeparator,

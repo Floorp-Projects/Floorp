@@ -171,10 +171,10 @@ public:
   virtual bool CanPasteTransferable(nsITransferable* aTransferable) override;
 
   /**
-   * OnInputLineBreak() is called when user inputs a line break with
+   * InsertLineBreakAsAction() is called when user inputs a line break with
    * Shift + Enter or something.
    */
-  nsresult OnInputLineBreak();
+  nsresult InsertLineBreakAsAction();
 
   /**
    * CreateElementWithDefaults() creates new element whose name is
