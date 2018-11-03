@@ -32,7 +32,7 @@ SRC_DIR=$TOOLCHAIN_DIR/src
 
 make_flags="-j$(nproc)"
 
-mingw_version=c69c7a706d767c5ca3c7d1c70887fcd8e1f940b3
+mingw_version=70860d945e6be713af352ee62820bccb653589c2
 libunwind_version=1f89d78bb488bc71cfdee8281fc0834e9fbe5dce
 
 binutils_version=2.27

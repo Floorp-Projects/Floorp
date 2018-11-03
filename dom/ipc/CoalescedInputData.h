@@ -8,7 +8,7 @@
 #define mozilla_dom_CoalescedInputData_h
 
 #include "mozilla/UniquePtr.h"
-#include "FrameMetrics.h"
+#include "mozilla/layers/ScrollableLayerGuid.h"
 
 namespace mozilla {
 namespace dom {

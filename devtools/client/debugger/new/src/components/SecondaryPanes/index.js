@@ -263,8 +263,10 @@ class SecondaryPanes extends Component<Props, State> {
           onXHRAdded={this.onXHRAdded}
         />
       ),
-      opened: true,
-      onToggle: () => {}
+      opened: prefs.xhrBreakpointsVisible,
+      onToggle: opened => {
+        prefs.xhrBreakpointsVisible = opened;
+      }
     };
   }
 

@@ -89,11 +89,11 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   metrics.SetPresShellResolution(2.0f);
   metrics.SetZoom(CSSToParentLayerScale2D(6, 6));
   metrics.SetDevPixelsPerCSSPixel(CSSToLayoutDeviceScale(3));
-  metrics.SetScrollId(FrameMetrics::START_SCROLL_ID);
+  metrics.SetScrollId(ScrollableLayerGuid::START_SCROLL_ID);
 
   ScrollMetadata childMetadata = metadata;
   FrameMetrics& childMetrics = childMetadata.GetMetrics();
-  childMetrics.SetScrollId(FrameMetrics::START_SCROLL_ID + 1);
+  childMetrics.SetScrollId(ScrollableLayerGuid::START_SCROLL_ID + 1);
 
   layers[0]->SetScrollMetadata(metadata);
   layers[1]->SetScrollMetadata(childMetadata);

@@ -9,7 +9,7 @@ use ctypes::{c_int, c_long, c_short, c_uint};
 use shared::basetsd::{
     DWORD_PTR, INT32, INT_PTR, PDWORD_PTR, UINT16, UINT32, UINT64, UINT_PTR, ULONG_PTR,
 };
-#[cfg(target_arch = "x86_64")]
+#[cfg(target_pointer_width = "64")]
 use shared::basetsd::LONG_PTR;
 use shared::guiddef::{GUID, LPCGUID};
 use shared::minwindef::{
@@ -4962,23 +4962,23 @@ extern "system" {
         nIndex: c_int,
         dwNewLong: LONG,
     ) -> LONG;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn GetWindowLongPtrA(
         hWnd: HWND,
         nIndex: c_int,
     ) -> LONG_PTR;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn GetWindowLongPtrW(
         hWnd: HWND,
         nIndex: c_int,
     ) -> LONG_PTR;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn SetWindowLongPtrA(
         hWnd: HWND,
         nIndex: c_int,
         dwNewLong: LONG_PTR,
     ) -> LONG_PTR;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn SetWindowLongPtrW(
         hWnd: HWND,
         nIndex: c_int,
@@ -5021,23 +5021,23 @@ extern "system" {
         nIndex: c_int,
         dwNewLong: LONG,
     ) -> DWORD;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn GetClassLongPtrA(
         hWnd: HWND,
         nIndex: c_int,
     ) -> ULONG_PTR;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn GetClassLongPtrW(
         hWnd: HWND,
         nIndex: c_int,
     ) -> ULONG_PTR;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn SetClassLongPtrA(
         hWnd: HWND,
         nIndex: c_int,
         dwNewLong: LONG_PTR,
     ) -> ULONG_PTR;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn SetClassLongPtrW(
         hWnd: HWND,
         nIndex: c_int,

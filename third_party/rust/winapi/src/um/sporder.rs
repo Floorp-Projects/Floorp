@@ -18,7 +18,7 @@ FN!{stdcall LPWSCWRITEPROVIDERORDER(
     lpwdCatalogEntryId: LPDWORD,
     dwNumberOfEntries: DWORD,
 ) -> c_int}
-#[cfg(target_arch = "x86_64")]
+#[cfg(target_pointer_width = "64")]
 extern "system" {
     pub fn WSCWriteProviderOrder32(
         lpwdCatalogEntryId: LPDWORD,
@@ -33,7 +33,7 @@ FN!{stdcall LPWSCWRITENAMESPACEORDER(
     lpProviderId: LPGUID,
     dwNumberOfEntries: DWORD,
 ) -> c_int}
-#[cfg(target_arch = "x86_64")]
+#[cfg(target_pointer_width = "64")]
 extern "system" {
     pub fn WSCWriteNameSpaceOrder32(
         lpProviderId: LPGUID,

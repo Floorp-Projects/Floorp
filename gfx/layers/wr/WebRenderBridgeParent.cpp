@@ -1560,7 +1560,7 @@ WebRenderBridgeParent::RecvGetAnimationValue(const uint64_t& aCompositorAnimatio
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScrollId,
+WebRenderBridgeParent::RecvSetAsyncScrollOffset(const ScrollableLayerGuid::ViewID& aScrollId,
                                                 const float& aX,
                                                 const float& aY)
 {
@@ -1572,7 +1572,7 @@ WebRenderBridgeParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScr
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollId,
+WebRenderBridgeParent::RecvSetAsyncZoom(const ScrollableLayerGuid::ViewID& aScrollId,
                                         const float& aZoom)
 {
   if (mDestroyed) {

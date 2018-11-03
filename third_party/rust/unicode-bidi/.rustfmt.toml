@@ -1,6 +1,0 @@
-array_layout = "Block"
-array_width = 80
-fn_args_layout = "Block"
-fn_brace_style = "SameLineWhere"
-fn_call_style = "Block"
-generics_indent = "Block"

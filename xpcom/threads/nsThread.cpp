@@ -918,8 +918,9 @@ nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext)
 #endif
 
   // Delete aContext.
-  MOZ_ALWAYS_TRUE(
-    aContext->mJoiningThread->mRequestedShutdownContexts.RemoveElement(aContext));
+  // aContext might not be in mRequestedShutdownContexts if it belongs to a
+  // thread that was leaked by calling nsIThreadPool::ShutdownWithTimeout.
+  aContext->mJoiningThread->mRequestedShutdownContexts.RemoveElement(aContext);
 }
 
 void

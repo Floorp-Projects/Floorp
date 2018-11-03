@@ -7,7 +7,7 @@
 #ifndef mozilla_layers_DragMetrics_h
 #define mozilla_layers_DragMetrics_h
 
-#include "FrameMetrics.h"
+#include "mozilla/layers/ScrollableLayerGuid.h"
 #include "LayersTypes.h"
 #include "mozilla/Maybe.h"
 
@@ -31,7 +31,7 @@ public:
     , mScrollbarDragOffset(0)
   {}
 
-  AsyncDragMetrics(const FrameMetrics::ViewID& aViewId,
+  AsyncDragMetrics(const ScrollableLayerGuid::ViewID& aViewId,
                    uint32_t aPresShellId,
                    uint64_t aDragStartSequenceNumber,
                    CSSCoord aScrollbarDragOffset,
@@ -43,7 +43,7 @@ public:
     , mDirection(Some(aDirection))
   {}
 
-  FrameMetrics::ViewID mViewId;
+  ScrollableLayerGuid::ViewID mViewId;
   uint32_t mPresShellId;
   uint64_t mDragStartSequenceNumber;
   CSSCoord mScrollbarDragOffset;  // relative to the thumb's start offset

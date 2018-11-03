@@ -108,6 +108,7 @@ class XHRBreakpoints extends Component<Props, State> {
 
   renderXHRInput(onSubmit) {
     const { focused, inputValue } = this.state;
+    const { showInput } = this.props;
     const placeholder = L10N.getStr("xhrBreakpoints.placeholder");
 
     return (
@@ -123,7 +124,7 @@ class XHRBreakpoints extends Component<Props, State> {
             onChange={this.handleChange}
             onBlur={this.hideInput}
             onFocus={this.onFocus}
-            autoFocus={true}
+            autoFocus={showInput}
             value={inputValue}
           />
           <input type="submit" style={{ display: "none" }} />

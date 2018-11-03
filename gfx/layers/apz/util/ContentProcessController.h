@@ -57,14 +57,14 @@ public:
                             APZStateChange aChange,
                             int aArg) override;
 
-  void NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId,
+  void NotifyMozMouseScrollEvent(const ScrollableLayerGuid::ViewID& aScrollId,
                                  const nsString& aEvent) override;
 
   void NotifyFlushComplete() override;
 
-  void NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId) override;
+  void NotifyAsyncScrollbarDragRejected(const ScrollableLayerGuid::ViewID& aScrollId) override;
 
-  void NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aScrollId) override;
+  void NotifyAsyncAutoscrollRejected(const ScrollableLayerGuid::ViewID& aScrollId) override;
 
   void CancelAutoscroll(const ScrollableLayerGuid& aGuid) override;
 

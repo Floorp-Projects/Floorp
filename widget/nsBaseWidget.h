@@ -306,7 +306,7 @@ public:
   virtual TextEventDispatcherListener*
     GetNativeTextEventDispatcherListener() override;
   virtual void ZoomToRect(const uint32_t& aPresShellId,
-                          const FrameMetrics::ViewID& aViewId,
+                          const ScrollableLayerGuid::ViewID& aViewId,
                           const CSSRect& aRect,
                           const uint32_t& aFlags) override;
   // Dispatch an event that must be first be routed through APZ.
@@ -317,7 +317,7 @@ public:
                               const nsTArray<ScrollableLayerGuid>& aTargets) const override;
 
   void UpdateZoomConstraints(const uint32_t& aPresShellId,
-                             const FrameMetrics::ViewID& aViewId,
+                             const ScrollableLayerGuid::ViewID& aViewId,
                              const mozilla::Maybe<ZoomConstraints>& aConstraints) override;
 
   bool AsyncPanZoomEnabled() const override;
@@ -715,14 +715,14 @@ protected:
 
   struct InitialZoomConstraints {
     InitialZoomConstraints(const uint32_t& aPresShellID,
-                           const FrameMetrics::ViewID& aViewID,
+                           const ScrollableLayerGuid::ViewID& aViewID,
                            const ZoomConstraints& aConstraints)
       : mPresShellID(aPresShellID), mViewID(aViewID), mConstraints(aConstraints)
     {
     }
 
     uint32_t mPresShellID;
-    FrameMetrics::ViewID mViewID;
+    ScrollableLayerGuid::ViewID mViewID;
     ZoomConstraints mConstraints;
   };
 

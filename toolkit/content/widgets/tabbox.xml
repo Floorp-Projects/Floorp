@@ -421,19 +421,6 @@
       <field name="arrowKeysShouldWrap" readonly="true">
         /Mac/.test(navigator.platform)
       </field>
-      <property name="TelemetryStopwatch" readonly="true">
-        <getter><![CDATA[
-          let module = {};
-          ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm", module);
-          Object.defineProperty(this, "TelemetryStopwatch", {
-            configurable: true,
-            enumerable: true,
-            writable: true,
-            value: module.TelemetryStopwatch,
-          });
-          return module.TelemetryStopwatch;
-        ]]></getter>
-      </property>
     </implementation>
 
     <handlers>
@@ -447,7 +434,7 @@
         if (this != this.parentNode.selectedItem) { // Not selected yet
           let stopwatchid = this.parentNode.getAttribute("stopwatchid");
           if (stopwatchid) {
-            this.TelemetryStopwatch.start(stopwatchid);
+            TelemetryStopwatch.start(stopwatchid);
           }
 
           // Call this before setting the 'ignorefocus' attribute because this
@@ -469,7 +456,7 @@
           }
 
           if (stopwatchid) {
-            this.TelemetryStopwatch.finish(stopwatchid);
+            TelemetryStopwatch.finish(stopwatchid);
           }
         }
         // Otherwise this tab is already selected and we will fall

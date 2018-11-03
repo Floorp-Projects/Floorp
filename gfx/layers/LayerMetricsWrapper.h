@@ -426,7 +426,7 @@ public:
     return 0;
   }
 
-  FrameMetrics::ViewID GetFixedPositionScrollContainerId() const
+  ScrollableLayerGuid::ViewID GetFixedPositionScrollContainerId() const
   {
     MOZ_ASSERT(IsValid());
 

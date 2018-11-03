@@ -361,7 +361,7 @@ IntervalOverlap(gfxFloat aTranslation, gfxFloat aMin, gfxFloat aMax)
  * LayerMetricsWrapper if no matching metrics could be found.
  */
 static LayerMetricsWrapper
-FindMetricsWithScrollId(Layer* aLayer, FrameMetrics::ViewID aScrollId)
+FindMetricsWithScrollId(Layer* aLayer, ScrollableLayerGuid::ViewID aScrollId)
 {
   for (uint64_t i = 0; i < aLayer->GetScrollMetadataCount(); ++i) {
     if (aLayer->GetFrameMetrics(i).GetScrollId() == aScrollId) {
@@ -378,9 +378,9 @@ FindMetricsWithScrollId(Layer* aLayer, FrameMetrics::ViewID aScrollId)
  */
 static bool
 AsyncTransformShouldBeUnapplied(Layer* aFixedLayer,
-                                FrameMetrics::ViewID aFixedWithRespectTo,
+                                ScrollableLayerGuid::ViewID aFixedWithRespectTo,
                                 Layer* aTransformedLayer,
-                                FrameMetrics::ViewID aTransformedMetrics)
+                                ScrollableLayerGuid::ViewID aTransformedMetrics)
 {
   LayerMetricsWrapper transformed = FindMetricsWithScrollId(aTransformedLayer, aTransformedMetrics);
   if (!transformed.IsValid()) {
@@ -417,7 +417,7 @@ AsyncTransformShouldBeUnapplied(Layer* aFixedLayer,
 
 // If |aLayer| is fixed or sticky, returns the scroll id of the scroll frame
 // that it's fixed or sticky to. Otherwise, returns Nothing().
-static Maybe<FrameMetrics::ViewID>
+static Maybe<ScrollableLayerGuid::ViewID>
 IsFixedOrSticky(Layer* aLayer)
 {
   bool isRootOfFixedSubtree = aLayer->GetIsFixedPosition() &&
@@ -434,7 +434,7 @@ IsFixedOrSticky(Layer* aLayer)
 void
 AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoot,
                                                    Layer* aStartTraversalAt,
-                                                   FrameMetrics::ViewID aTransformScrollId,
+                                                   ScrollableLayerGuid::ViewID aTransformScrollId,
                                                    const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
                                                    const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,
                                                    const ScreenMargin& aFixedLayerMargins,
@@ -448,7 +448,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
 
   Layer* layer = aStartTraversalAt;
   bool needsAsyncTransformUnapplied = false;
-  if (Maybe<FrameMetrics::ViewID> fixedTo = IsFixedOrSticky(layer)) {
+  if (Maybe<ScrollableLayerGuid::ViewID> fixedTo = IsFixedOrSticky(layer)) {
     needsAsyncTransformUnapplied = AsyncTransformShouldBeUnapplied(layer,
         *fixedTo, aTransformedSubtreeRoot, aTransformScrollId);
   }
@@ -855,7 +855,7 @@ ExpandRootClipRect(Layer* aLayer, const ScreenMargin& aFixedLayerMargins)
 
 #ifdef MOZ_WIDGET_ANDROID
 static void
-MoveScrollbarForLayerMargin(Layer* aRoot, FrameMetrics::ViewID aRootScrollId,
+MoveScrollbarForLayerMargin(Layer* aRoot, ScrollableLayerGuid::ViewID aRootScrollId,
                             const ScreenMargin& aFixedLayerMargins)
 {
   // See bug 1223928 comment 9 - once we can detect the RCD with just the

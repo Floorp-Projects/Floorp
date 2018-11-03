@@ -9,7 +9,7 @@
 #include "mozilla/Bootstrap.h"
 #include "mozilla/WindowsDllBlocklist.h"
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
 #include "mozilla/Sandbox.h"
 #endif
 
@@ -18,7 +18,7 @@ using namespace mozilla;
 int
 main(int argc, char *argv[])
 {
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
   std::string err;
   if (!mozilla::EarlyStartMacSandboxIfEnabled(argc, argv, err)) {
     fprintf(stderr, "Sandbox error: %s\n", err.c_str());

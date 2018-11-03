@@ -462,7 +462,7 @@ TabTarget.prototype = {
   },
 
   get canRewind() {
-    return this.activeTab.traits.canRewind;
+    return this.activeTab && this.activeTab.traits.canRewind;
   },
 
   getExtensionPathName(url) {

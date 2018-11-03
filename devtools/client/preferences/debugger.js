@@ -32,6 +32,7 @@ pref("devtools.debugger.component-visible", true);
 pref("devtools.debugger.workers-visible", true);
 pref("devtools.debugger.breakpoints-visible", true);
 pref("devtools.debugger.expressions-visible", true);
+pref("devtools.debugger.xhr-breakpoints-visible", true);
 pref("devtools.debugger.start-panel-collapsed", false);
 pref("devtools.debugger.end-panel-collapsed", false);
 pref("devtools.debugger.tabs", "[]");

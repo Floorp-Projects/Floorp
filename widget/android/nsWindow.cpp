@@ -2360,7 +2360,7 @@ nsWindow::GetMaxTouchPoints() const
 
 void
 nsWindow::UpdateZoomConstraints(const uint32_t& aPresShellId,
-                                const FrameMetrics::ViewID& aViewId,
+                                const ScrollableLayerGuid::ViewID& aViewId,
                                 const mozilla::Maybe<ZoomConstraints>& aConstraints)
 {
     nsBaseWidget::UpdateZoomConstraints(aPresShellId, aViewId, aConstraints);

@@ -335,7 +335,7 @@ struct DIGroup
   LayerIntRect mPaintRect;
   int32_t mAppUnitsPerDevPixel;
   gfx::Size mScale;
-  FrameMetrics::ViewID mScrollId;
+  ScrollableLayerGuid::ViewID mScrollId;
   LayerPoint mResidualOffset;
   LayerIntRect mLayerBounds;
   Maybe<wr::ImageKey> mKey;
@@ -344,7 +344,7 @@ struct DIGroup
 
   DIGroup()
     : mAppUnitsPerDevPixel(0)
-    , mScrollId(FrameMetrics::NULL_SCROLL_ID)
+    , mScrollId(ScrollableLayerGuid::NULL_SCROLL_ID)
   {
   }
 
@@ -1234,7 +1234,7 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
     group.ClearImageKey(mManager);
   }
 
-  FrameMetrics::ViewID scrollId = FrameMetrics::NULL_SCROLL_ID;
+  ScrollableLayerGuid::ViewID scrollId = ScrollableLayerGuid::NULL_SCROLL_ID;
   if (const ActiveScrolledRoot* asr = aWrappingItem->GetActiveScrolledRoot()) {
     scrollId = asr->GetViewId();
   }
@@ -1324,7 +1324,7 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
   // Make a "root" layer data that has everything else as descendants
   mLayerScrollData.emplace_back();
   mLayerScrollData.back().InitializeRoot(mLayerScrollData.size() - 1);
-  auto callback = [&aScrollData](FrameMetrics::ViewID aScrollId) -> bool {
+  auto callback = [&aScrollData](ScrollableLayerGuid::ViewID aScrollId) -> bool {
     return aScrollData.HasMetadataFor(aScrollId).isSome();
   };
   if (Maybe<ScrollMetadata> rootMetadata = nsLayoutUtils::GetRootMetadata(

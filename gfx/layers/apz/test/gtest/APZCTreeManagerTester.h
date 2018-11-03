@@ -62,7 +62,7 @@ protected:
   RefPtr<APZUpdater> updater;
 
 protected:
-  static ScrollMetadata BuildScrollMetadata(FrameMetrics::ViewID aScrollId,
+  static ScrollMetadata BuildScrollMetadata(ScrollableLayerGuid::ViewID aScrollId,
                                             const CSSRect& aScrollableRect,
                                             const ParentLayerRect& aCompositionBounds)
   {
@@ -70,7 +70,7 @@ protected:
     FrameMetrics& metrics = metadata.GetMetrics();
     metrics.SetScrollId(aScrollId);
     // By convention in this test file, START_SCROLL_ID is the root, so mark it as such.
-    if (aScrollId == FrameMetrics::START_SCROLL_ID) {
+    if (aScrollId == ScrollableLayerGuid::START_SCROLL_ID) {
       metadata.SetIsLayersIdRoot(true);
     }
     metrics.SetCompositionBounds(aCompositionBounds);
@@ -99,7 +99,7 @@ protected:
     }
   }
 
-  static void SetScrollableFrameMetrics(Layer* aLayer, FrameMetrics::ViewID aScrollId,
+  static void SetScrollableFrameMetrics(Layer* aLayer, ScrollableLayerGuid::ViewID aScrollId,
                                         CSSRect aScrollableRect = CSSRect(-1, -1, -1, -1)) {
     ParentLayerIntRect compositionBounds =
         RoundedToInt(aLayer->GetLocalTransformTyped().
@@ -133,7 +133,7 @@ protected:
       nsIntRegion(IntRect(0,0,200,200)),
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 500, 500));
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 500, 500));
   }
 
   void CreateSimpleDTCScrollingLayer() {
@@ -142,7 +142,7 @@ protected:
       nsIntRegion(IntRect(0,0,200,200)),
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 500, 500));
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 500, 500));
 
     EventRegions regions;
     regions.mHitRegion = nsIntRegion(IntRect(0, 0, 200, 200));
@@ -165,11 +165,11 @@ protected:
     const char* layerTreeSyntax = "c(c(c(t))c(c(t)))";
     // LayerID                     0 1 2 3  4 5 6
     root = CreateLayerTree(layerTreeSyntax, nullptr, nullptr, lm, layers);
-    SetScrollableFrameMetrics(layers[0], FrameMetrics::START_SCROLL_ID);
-    SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 1);
-    SetScrollableFrameMetrics(layers[5], FrameMetrics::START_SCROLL_ID + 1);
-    SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID + 2);
-    SetScrollableFrameMetrics(layers[6], FrameMetrics::START_SCROLL_ID + 3);
+    SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID);
+    SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID + 1);
+    SetScrollableFrameMetrics(layers[5], ScrollableLayerGuid::START_SCROLL_ID + 1);
+    SetScrollableFrameMetrics(layers[3], ScrollableLayerGuid::START_SCROLL_ID + 2);
+    SetScrollableFrameMetrics(layers[6], ScrollableLayerGuid::START_SCROLL_ID + 3);
   }
 
   void CreateBug1194876Tree() {
@@ -180,8 +180,8 @@ protected:
       nsIntRegion(IntRect(0,0,100,100)),
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-    SetScrollableFrameMetrics(layers[0], FrameMetrics::START_SCROLL_ID);
-    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1);
+    SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID);
+    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1);
     SetScrollHandoff(layers[1], layers[0]);
 
     // Make layers[1] the root content

@@ -20,8 +20,8 @@ protected:
       nsIntRegion(IntRect(0, 50, 100, 50))
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
-    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
+    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
     SetScrollHandoff(layers[1], root);
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
     manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
@@ -37,9 +37,9 @@ protected:
       nsIntRegion(IntRect(0, 50, 100, 50))
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
-    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 2, CSSRect(-100, -100, 200, 200));
-    SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
+    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 2, CSSRect(-100, -100, 200, 200));
+    SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
     SetScrollHandoff(layers[1], root);
     SetScrollHandoff(layers[2], layers[1]);
     // No ScopedLayerTreeRegistration as that just needs to be done once per test
@@ -59,11 +59,11 @@ protected:
       nsIntRegion(IntRect(0, 50, 100, 50))   // scrolling child 2
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-    SetScrollableFrameMetrics(layers[0], FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 100, 100));
-    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
-    SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 2, CSSRect(0, 0, 100, 100));
-    SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID + 3, CSSRect(0, 50, 100, 100));
-    SetScrollableFrameMetrics(layers[4], FrameMetrics::START_SCROLL_ID + 4, CSSRect(0, 50, 100, 100));
+    SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 100, 100));
+    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
+    SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID + 2, CSSRect(0, 0, 100, 100));
+    SetScrollableFrameMetrics(layers[3], ScrollableLayerGuid::START_SCROLL_ID + 3, CSSRect(0, 50, 100, 100));
+    SetScrollableFrameMetrics(layers[4], ScrollableLayerGuid::START_SCROLL_ID + 4, CSSRect(0, 50, 100, 100));
     SetScrollHandoff(layers[1], layers[0]);
     SetScrollHandoff(layers[3], layers[0]);
     SetScrollHandoff(layers[2], layers[1]);
@@ -81,8 +81,8 @@ protected:
       nsIntRegion(IntRect(0, 0, 100, 100))
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 200, 100));
-    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 200));
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 200, 100));
+    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 200));
     SetScrollHandoff(layers[1], root);
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
     manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
@@ -97,8 +97,8 @@ protected:
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
     float parentHeight = makeParentScrollable ? 120 : 100;
-    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 100, parentHeight));
-    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 200));
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 100, parentHeight));
+    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 200));
     SetScrollHandoff(layers[1], root);
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
     manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);

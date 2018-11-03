@@ -307,7 +307,7 @@ public:
    * The different elements in the array of targets correspond to the targets
    * for the different touch points. In the case where the touch point has no
    * target, or the target is not a scrollable frame, the target's |mScrollId|
-   * should be set to FrameMetrics::NULL_SCROLL_ID.
+   * should be set to ScrollableLayerGuid::NULL_SCROLL_ID.
    * Note: For mouse events that start a scrollbar drag, both SetTargetAPZC()
    *       and StartScrollbarDrag() will be called, and the calls may happen
    *       in either order. That's fine - whichever arrives first will confirm
@@ -582,7 +582,7 @@ public:
                                                          gfx::CompositorHitTestInfo* aOutHitResult,
                                                          HitTestingTreeNodeAutoLock* aOutScrollbarNode = nullptr);
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const LayersId& aLayersId,
-                                                         const FrameMetrics::ViewID& aScrollId);
+                                                         const ScrollableLayerGuid::ViewID& aScrollId);
   ScreenToParentLayerMatrix4x4 GetScreenToApzcTransform(const AsyncPanZoomController *aApzc) const;
   ParentLayerToScreenMatrix4x4 GetApzcToGeckoTransform(const AsyncPanZoomController *aApzc) const;
   ScreenPoint GetCurrentMousePosition() const;

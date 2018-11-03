@@ -7,7 +7,7 @@
 #ifndef GFX_LAYERSLOGGING_H
 #define GFX_LAYERSLOGGING_H
 
-#include "FrameMetrics.h"               // for FrameMetrics, etc
+#include "FrameMetrics.h"               // for FrameMetrics
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize, etc
 #include "mozilla/gfx/TiledRegion.h"    // for TiledRegion
@@ -36,7 +36,7 @@ AppendToString(std::stringstream& aStream, const void* p,
                const char* pfx="", const char* sfx="");
 
 void
-AppendToString(std::stringstream& aStream, FrameMetrics::ViewID n,
+AppendToString(std::stringstream& aStream, ScrollableLayerGuid::ViewID n,
                const char* pfx="", const char* sfx="");
 
 void
