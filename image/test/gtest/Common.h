@@ -455,6 +455,7 @@ ImageTestCase GreenICOTestCase();
 ImageTestCase GreenIconTestCase();
 ImageTestCase GreenWebPTestCase();
 
+ImageTestCase LargeWebPTestCase();
 ImageTestCase GreenWebPIccSrgbTestCase();
 
 ImageTestCase GreenFirstFrameAnimatedGIFTestCase();
