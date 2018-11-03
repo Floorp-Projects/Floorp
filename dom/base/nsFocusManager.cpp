@@ -3313,10 +3313,18 @@ nsFocusManager::GetNextTabbableContentInScope(nsIContent* aOwner,
         // This happens for example with <input type="date">.
         // So, try to find NAC and then traverse the frame tree to find elements
         // to focus.
+        // Yet, even if the frame is a nsIAnonymousContentCreator, don't
+        // traverse into the element again when the element is in a UA Widget,
+        // because there isn't any NAC to focus.
         nsIFrame* possibleAnonOwnerFrame = iterContent->GetPrimaryFrame();
         nsIAnonymousContentCreator* anonCreator =
           do_QueryFrame(possibleAnonOwnerFrame);
-        if (anonCreator && !iterContent->IsInNativeAnonymousSubtree()) {
+        bool isIterContentInUAWidgetShadow =
+          iterContent->GetContainingShadow() &&
+          iterContent->GetContainingShadow()->IsUAWidget();
+        if (anonCreator &&
+            !isIterContentInUAWidgetShadow &&
+            !iterContent->IsInNativeAnonymousSubtree()) {
           nsIFrame* frame = nullptr;
           // Find the first or last frame in tree order so that
           // we can scope frame traversing to NAC.
