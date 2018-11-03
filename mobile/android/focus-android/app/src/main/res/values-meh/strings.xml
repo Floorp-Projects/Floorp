@@ -195,6 +195,11 @@
   <string name="notification_browsing_session_channel_description">Daa notificación kuvi xita daa sesión nuu %1$s nejika kuaxinu. Ntu nejika sinenu ka̱a̱ saa kune´yanu a nune nu ka̱a̱ nánuku.</string>
   <string name="tabs_tray_action_erase">Náxitá sɨ´ɨ nnánuku</string>
   <string name="download_firefox">Xinuun Firefox</string>
+  <string name="your_rights_content1">%1$s kuviji iin ka̱a̱ ntu íyo ya´vi jee kuviji iin código nune a sa´a Mozilla jii inka ñivɨ.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s kuviji jiee "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tutu xitu Mozilla</a>" jii inka tutu código nune."]]></string>
+  <string name="your_rights_content3"><![CDATA["Ntu taji tutu xitu a xiin daa inka tutu xitu Mozilla nu inka vetiñu, ya´a kuvi logos a xiin sivɨ Mozilla, Firefox a xiin %1$s. Kuni kue´e jiee ya´a "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" nuu "</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Inka "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" tutu xitu "</a>" código nune jii ntu íyo ya´vi kumidaja código %1$s."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s ni´i lista ntɨ tuvi a taji Disconnect, Inc. kua tiñu ntu ntaka jiee "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" tutu xitu ntaka GNU v3 "</a>" jee kuvi nani´inuma "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">" ya&#180;a "</a>.]]></string>
   <string name="gv_prompt_username_hint">Sivɨ</string>
   <string name="gv_prompt_password_hint">Contraseña</string>
   <string name="gv_prompt_clear">Xinoo</string>
@@ -219,6 +224,7 @@
   <string name="preference_category_advanced">A biji</string>
   <string name="preference_remote_debugging">Depuración remota jii USB/Wi-Fi</string>
   <string name="biometric_auth_title">Sikune %1$s</string>
+  <string name="biometric_auth_description">Ke´í ka̱a̱ huella digital saa kuvi kakanu.</string>
   <string name="biometric_auth_new_session">Sesión jíía</string>
   <string name="biometric_auth_image_description">Tutu huella digital</string>
   <string name="biometric_auth_not_recognized_error">Ntu nnakuni huella digital. Tee ichika.</string>
@@ -237,10 +243,13 @@
   <string name="tip_open_in_new_tab">Sine iin enlace nuu pestaña jíía\n Kuaxin iin enlace nuu página</string>
   <string name="tip_request_desktop">¿Kuvinu kutuvi sitio ka´nu?%1$s Kaji &gt; Taji sitio ka´nu</string>
   <string name="tip_disable_tips2">Xita tu´un chineí nánukunu nuu kajie´e</string>
+  <string name="tip_explain_allowlist">Sitio vatu?\n Dee tee ya´a, kachi a sitio ya´a íyo vatu jee ntu kuvi sa´a xeen a xiin kuntada noo´o.</string>
   <string name="new_tab_opened_snackbar">A jíía pestaña nsine</string>
   <string name="open_new_tab_snackbar">Sama</string>
   <string name="preference_open_new_tab">Sama kuvi chunta´a pestaña jíía ñama</string>
   <string name="preference_category_safe_browsing">Nánuku yu´u</string>
+  <string name="preference_safe_browsing_title">Tee ntuvi daa sitios tixin jiin sitios kantu´un</string>
+  <string name="preference_safe_browsing_summary">Tee ntuvi daa sitios kuvi sa´a xeen, jee daa sitios kumi ka̱a̱ ntu íyo vatu.</string>
   <string name="preference_exceptions">Exceptions</string>
   <string name="preference_exceptions_description">Nxitanu nkutuvi tu´un nuu daa sitios ya´a.</string>
   <string name="preference_exceptions_menu_remove">Xita</string>

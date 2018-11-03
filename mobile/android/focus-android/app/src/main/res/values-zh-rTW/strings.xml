@@ -243,6 +243,7 @@
   <string name="tip_open_in_new_tab">使用新分頁開啟鏈結\n長按頁面上的任何鏈結</string>
   <string name="tip_request_desktop">還是想看到桌機版頁面嗎？%1$s選單 &gt; 開啟桌面版網站</string>
   <string name="tip_disable_tips2">關閉啟動畫面上的使用秘訣</string>
+  <string name="tip_explain_allowlist">是信任的網站嗎？\n可透過允許清單來針對您信任的網站關閉追蹤保護功能。</string>
   <string name="new_tab_opened_snackbar">已開啟新分頁</string>
   <string name="open_new_tab_snackbar">切換</string>
   <string name="preference_open_new_tab">立即切換到新分頁中的鏈結</string>
