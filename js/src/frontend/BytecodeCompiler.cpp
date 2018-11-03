@@ -40,10 +40,10 @@ using JS::CompileOptions;
 using JS::ReadOnlyCompileOptions;
 using JS::SourceBufferHolder;
 
-class SourceAwareCompiler;
-class ScriptCompiler;
-class ModuleCompiler;
-class StandaloneFunctionCompiler;
+template<typename Unit> class SourceAwareCompiler;
+template<typename Unit> class ScriptCompiler;
+template<typename Unit> class ModuleCompiler;
+template<typename Unit> class StandaloneFunctionCompiler;
 
 // The BytecodeCompiler class contains resources common to compiling scripts and
 // function bodies.
@@ -67,10 +67,10 @@ class MOZ_STACK_CLASS BytecodeCompiler
   protected:
     BytecodeCompiler(JSContext* cx, const ReadOnlyCompileOptions& options);
 
-    friend class SourceAwareCompiler;
-    friend class ScriptCompiler;
-    friend class ModuleCompiler;
-    friend class StandaloneFunctionCompiler;
+    template<typename Unit> friend class SourceAwareCompiler;
+    template<typename Unit> friend class ScriptCompiler;
+    template<typename Unit> friend class ModuleCompiler;
+    template<typename Unit> friend class StandaloneFunctionCompiler;
 
   public:
     ScriptSourceObject* sourceObjectPtr() const {
@@ -108,15 +108,16 @@ class MOZ_STACK_CLASS BytecodeCompiler
     deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObject environment);
 };
 
+template<typename Unit>
 class MOZ_STACK_CLASS SourceAwareCompiler
 {
   protected:
     SourceBufferHolder& sourceBuffer_;
 
-    Maybe<Parser<SyntaxParseHandler, char16_t>> syntaxParser;
-    Maybe<Parser<FullParseHandler, char16_t>> parser;
+    Maybe<Parser<SyntaxParseHandler, Unit>> syntaxParser;
+    Maybe<Parser<FullParseHandler, Unit>> parser;
 
-    using TokenStreamPosition = frontend::TokenStreamPosition<char16_t>;
+    using TokenStreamPosition = frontend::TokenStreamPosition<Unit>;
 
   protected:
     explicit SourceAwareCompiler(SourceBufferHolder& sourceBuffer)
@@ -165,10 +166,21 @@ class MOZ_STACK_CLASS SourceAwareCompiler
                        TokenStreamPosition& startPosition);
 };
 
+template<typename Unit>
 class MOZ_STACK_CLASS ScriptCompiler
-  : public SourceAwareCompiler
+  : public SourceAwareCompiler<Unit>
 {
-    using Base = SourceAwareCompiler;
+    using Base = SourceAwareCompiler<Unit>;
+
+  protected:
+    using Base::parser;
+    using Base::sourceBuffer_;
+
+    using Base::assertSourceParserAndScriptCreated;
+    using Base::emplaceEmitter;
+    using Base::handleParseFailure;
+
+    using typename Base::TokenStreamPosition;
 
   protected:
     using Base::Base;
@@ -195,10 +207,14 @@ class MOZ_STACK_CLASS GlobalScriptInfo final
     }
 };
 
+template<typename Unit>
 class MOZ_STACK_CLASS GlobalScriptCompiler final
-  : public ScriptCompiler
+  : public ScriptCompiler<Unit>
 {
-    using Base = ScriptCompiler;
+    using Base = ScriptCompiler<Unit>;
+
+    using Base::compileScript;
+    using Base::prepareScriptParse;
 
   public:
     explicit GlobalScriptCompiler(SourceBufferHolder& srcBuf)
@@ -236,10 +252,14 @@ class MOZ_STACK_CLASS EvalScriptInfo final
     }
 };
 
+template<typename Unit>
 class MOZ_STACK_CLASS EvalScriptCompiler final
-  : public ScriptCompiler
+  : public ScriptCompiler<Unit>
 {
-    using Base = ScriptCompiler;
+    using Base = ScriptCompiler<Unit>;
+
+    using Base::compileScript;
+    using Base::prepareScriptParse;
 
   public:
     explicit EvalScriptCompiler(SourceBufferHolder& srcBuf)
@@ -263,10 +283,17 @@ class MOZ_STACK_CLASS ModuleInfo final
     {}
 };
 
+template<typename Unit>
 class MOZ_STACK_CLASS ModuleCompiler final
-  : public SourceAwareCompiler
+  : public SourceAwareCompiler<Unit>
 {
-    using Base = SourceAwareCompiler;
+    using Base = SourceAwareCompiler<Unit>;
+
+    using Base::assertSourceParserAndScriptCreated;
+    using Base::createCompleteScript;
+    using Base::createSourceAndParser;
+    using Base::emplaceEmitter;
+    using Base::parser;
 
   public:
     explicit ModuleCompiler(SourceBufferHolder& srcBuf)
@@ -285,10 +312,20 @@ class MOZ_STACK_CLASS StandaloneFunctionInfo final
     {}
 };
 
+template<typename Unit>
 class MOZ_STACK_CLASS StandaloneFunctionCompiler final
-  : public SourceAwareCompiler
+  : public SourceAwareCompiler<Unit>
 {
-    using Base = SourceAwareCompiler;
+    using Base = SourceAwareCompiler<Unit>;
+
+    using Base::assertSourceAndParserCreated;
+    using Base::createSourceAndParser;
+    using Base::emplaceEmitter;
+    using Base::handleParseFailure;
+    using Base::parser;
+    using Base::sourceBuffer_;
+
+    using typename Base::TokenStreamPosition;
 
   public:
     explicit StandaloneFunctionCompiler(SourceBufferHolder& srcBuf)
@@ -419,9 +456,10 @@ BytecodeCompiler::canLazilyParse() const
            !mozilla::recordreplay::IsRecordingOrReplaying();
 }
 
+template<typename Unit>
 bool
-SourceAwareCompiler::createSourceAndParser(BytecodeCompiler& info, ParseGoal goal,
-                                           const Maybe<uint32_t>& parameterListEnd /* = Nothing() */)
+SourceAwareCompiler<Unit>::createSourceAndParser(BytecodeCompiler& info, ParseGoal goal,
+                                                 const Maybe<uint32_t>& parameterListEnd /* = Nothing() */)
 {
     if (!info.createScriptSource(parameterListEnd)) {
         return false;
@@ -471,9 +509,11 @@ BytecodeCompiler::emplaceEmitter(Maybe<BytecodeEmitter>& emitter,
     return emitter->init();
 }
 
+template<typename Unit>
 bool
-SourceAwareCompiler::handleParseFailure(BytecodeCompiler& info, const Directives& newDirectives,
-                                        TokenStreamPosition& startPosition)
+SourceAwareCompiler<Unit>::handleParseFailure(BytecodeCompiler& info,
+                                              const Directives& newDirectives,
+                                              TokenStreamPosition& startPosition)
 {
     if (parser->hadAbortedSyntaxParse()) {
         // Hit some unrecoverable ambiguity during an inner syntax parse.
@@ -516,8 +556,10 @@ BytecodeCompiler::deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObj
     return true;
 }
 
+template<typename Unit>
 JSScript*
-ScriptCompiler::compileScript(BytecodeCompiler& info, HandleObject environment, SharedContext* sc)
+ScriptCompiler<Unit>::compileScript(BytecodeCompiler& info, HandleObject environment,
+                                    SharedContext* sc)
 {
     assertSourceParserAndScriptCreated(info);
 
@@ -582,8 +624,9 @@ ScriptCompiler::compileScript(BytecodeCompiler& info, HandleObject environment, 
     return info.script;
 }
 
+template<typename Unit>
 ModuleObject*
-ModuleCompiler::compile(ModuleInfo& info)
+ModuleCompiler<Unit>::compile(ModuleInfo& info)
 {
     if (!createSourceAndParser(info, ParseGoal::Module) || !createCompleteScript(info)) {
         return nullptr;
@@ -638,11 +681,12 @@ ModuleCompiler::compile(ModuleInfo& info)
 // Parse a standalone JS function, which might appear as the value of an
 // event handler attribute in an HTML <INPUT> tag, or in a Function()
 // constructor.
+template<typename Unit>
 CodeNode*
-StandaloneFunctionCompiler::parse(StandaloneFunctionInfo& info, MutableHandleFunction fun,
-                                  HandleScope enclosingScope, GeneratorKind generatorKind,
-                                  FunctionAsyncKind asyncKind,
-                                  const Maybe<uint32_t>& parameterListEnd)
+StandaloneFunctionCompiler<Unit>::parse(StandaloneFunctionInfo& info, MutableHandleFunction fun,
+                                        HandleScope enclosingScope, GeneratorKind generatorKind,
+                                        FunctionAsyncKind asyncKind,
+                                        const Maybe<uint32_t>& parameterListEnd)
 {
     MOZ_ASSERT(fun);
     MOZ_ASSERT(fun->isTenured());
@@ -670,9 +714,10 @@ StandaloneFunctionCompiler::parse(StandaloneFunctionInfo& info, MutableHandleFun
 }
 
 // Compile a standalone JS function.
+template<typename Unit>
 bool
-StandaloneFunctionCompiler::compile(StandaloneFunctionInfo& info, CodeNode* parsedFunction,
-                                    MutableHandleFunction fun)
+StandaloneFunctionCompiler<Unit>::compile(StandaloneFunctionInfo& info, CodeNode* parsedFunction,
+                                          MutableHandleFunction fun)
 {
     FunctionBox* funbox = parsedFunction->funbox();
     if (funbox->function()->isInterpreted()) {
@@ -819,7 +864,7 @@ frontend::CompileGlobalScript(JSContext* cx, ScopeKind scopeKind,
     GlobalScriptInfo info(cx, options, scopeKind);
     AutoInitializeSourceObject autoSSO(info, sourceObjectOut);
 
-    GlobalScriptCompiler compiler(srcBuf);
+    GlobalScriptCompiler<char16_t> compiler(srcBuf);
     JSScript* script = compiler.compile(info);
     if (!script) {
         return nullptr;
@@ -904,7 +949,7 @@ frontend::CompileEvalScript(JSContext* cx, HandleObject environment,
     EvalScriptInfo info(cx, options, environment, enclosingScope);
     AutoInitializeSourceObject autoSSO(info, sourceObjectOut);
 
-    EvalScriptCompiler compiler(srcBuf);
+    EvalScriptCompiler<char16_t> compiler(srcBuf);
     JSScript* script = compiler.compile(info);
     if (!script) {
         return nullptr;
@@ -933,7 +978,7 @@ frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInpu
     ModuleInfo info(cx, options);
     AutoInitializeSourceObject autoSSO(info, sourceObjectOut);
 
-    ModuleCompiler compiler(srcBuf);
+    ModuleCompiler<char16_t> compiler(srcBuf);
     ModuleObject* module = compiler.compile(info);
     if (!module) {
         return nullptr;
@@ -1181,7 +1226,7 @@ frontend::CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
 
     StandaloneFunctionInfo info(cx, options);
 
-    StandaloneFunctionCompiler compiler(srcBuf);
+    StandaloneFunctionCompiler<char16_t> compiler(srcBuf);
     if (!compiler.prepare(info, parameterListEnd)) {
         return false;
     }
@@ -1211,7 +1256,7 @@ frontend::CompileStandaloneGenerator(JSContext* cx, MutableHandleFunction fun,
 
     StandaloneFunctionInfo info(cx, options);
 
-    StandaloneFunctionCompiler compiler(srcBuf);
+    StandaloneFunctionCompiler<char16_t> compiler(srcBuf);
     if (!compiler.prepare(info, parameterListEnd)) {
         return false;
     }
@@ -1238,7 +1283,7 @@ frontend::CompileStandaloneAsyncFunction(JSContext* cx, MutableHandleFunction fu
 
     StandaloneFunctionInfo info(cx, options);
 
-    StandaloneFunctionCompiler compiler(srcBuf);
+    StandaloneFunctionCompiler<char16_t> compiler(srcBuf);
     if (!compiler.prepare(info, parameterListEnd)) {
         return false;
     }
@@ -1265,7 +1310,7 @@ frontend::CompileStandaloneAsyncGenerator(JSContext* cx, MutableHandleFunction f
 
     StandaloneFunctionInfo info(cx, options);
 
-    StandaloneFunctionCompiler compiler(srcBuf);
+    StandaloneFunctionCompiler<char16_t> compiler(srcBuf);
     if (!compiler.prepare(info, parameterListEnd)) {
         return false;
     }
