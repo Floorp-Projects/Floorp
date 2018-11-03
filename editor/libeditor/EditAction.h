@@ -26,11 +26,10 @@ enum class EditAction
   eInsertText,
 
   // eInsertParagraphSeparator indicates to insert a paragraph separator such
-  // as <p>, <div>.
+  // as <p>, <div> or just \n in TextEditor.
   eInsertParagraphSeparator,
 
-  // eInsertLineBreak indicates to insert \n into TextEditor or a <br> element
-  // in HTMLEditor.
+  // eInsertLineBreak indicates to insert a <br> element in HTMLEditor.
   eInsertLineBreak,
 
   // eDeleteSelection indicates to delete selected content or content around
@@ -399,12 +398,8 @@ enum class EditSubAction : int32_t
   // eSetText indicates to set editor value to new value.
   eSetText,
 
-  // eInsertLineBreak indicates to insert a line break, <br> or \n to break
-  // current line.
-  eInsertLineBreak,
-
   // eInsertParagraphSeparator indicates to insert paragraph separator, <br> or
-  // \n at least to break current line in HTMLEditor.
+  // \n at least to break current line.
   eInsertParagraphSeparator,
 
   // eCreateOrChangeList indicates to create new list or change existing list
