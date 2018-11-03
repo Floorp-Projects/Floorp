@@ -199,6 +199,12 @@ MISSING_LOCALES = {
         'local_name': 'Diné Bizaad',
         'plural_rule': 'id',
         'team': 'anp <LL@li.org>\n'
+    },
+    'co': {
+        'name': 'Corsican',
+        'local_name': 'Corsu',
+        'plural_rule': 'pt',
+        'team': 'anp <LL@li.org>\n'
     }
 }
 
