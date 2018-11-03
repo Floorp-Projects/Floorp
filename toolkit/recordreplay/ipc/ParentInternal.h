@@ -274,6 +274,11 @@ class ChildProcessInfo
   // Whether we need this child to pause while the recording is updated.
   bool mPauseNeeded;
 
+  // Flags for whether we have received messages from the child indicating it
+  // is crashing.
+  bool mHasBegunFatalError;
+  bool mHasFatalError;
+
   void OnIncomingMessage(size_t aChannelId, const Message& aMsg);
   void OnIncomingRecoveryMessage(const Message& aMsg);
   void SendNextRecoveryMessage();
