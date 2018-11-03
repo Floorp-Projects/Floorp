@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/rtcp_packet/extended_reports.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/extended_reports.h"
 
-#include "modules/rtp_rtcp/source/byte_io.h"
-#include "modules/rtp_rtcp/source/rtcp_packet/common_header.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -47,8 +47,7 @@ bool ExtendedReports::Parse(const CommonHeader& packet) {
   RTC_DCHECK_EQ(packet.type(), kPacketType);
 
   if (packet.payload_size_bytes() < kXrBaseLength) {
-    RTC_LOG(LS_WARNING)
-        << "Packet is too small to be an ExtendedReports packet.";
+    LOG(LS_WARNING) << "Packet is too small to be an ExtendedReports packet.";
     return false;
   }
 
@@ -56,7 +55,7 @@ bool ExtendedReports::Parse(const CommonHeader& packet) {
   rrtr_block_.reset();
   dlrr_block_.ClearItems();
   voip_metric_block_.reset();
-  target_bitrate_ = rtc::nullopt;
+  target_bitrate_ = rtc::Optional<TargetBitrate>();
 
   const uint8_t* current_block = packet.payload() + kXrBaseLength;
   const uint8_t* const packet_end =
@@ -69,8 +68,7 @@ bool ExtendedReports::Parse(const CommonHeader& packet) {
     const uint8_t* next_block =
         current_block + kBlockHeaderSizeBytes + block_length * 4;
     if (next_block > packet_end) {
-      RTC_LOG(LS_WARNING)
-          << "Report block in extended report packet is too big.";
+      LOG(LS_WARNING) << "Report block in extended report packet is too big.";
       return false;
     }
     switch (block_type) {
@@ -88,8 +86,7 @@ bool ExtendedReports::Parse(const CommonHeader& packet) {
         break;
       default:
         // Unknown block, ignore.
-        RTC_LOG(LS_WARNING)
-            << "Unknown extended report block type " << block_type;
+        LOG(LS_WARNING) << "Unknown extended report block type " << block_type;
         break;
     }
     current_block = next_block;
@@ -100,7 +97,7 @@ bool ExtendedReports::Parse(const CommonHeader& packet) {
 
 void ExtendedReports::SetRrtr(const Rrtr& rrtr) {
   if (rrtr_block_)
-    RTC_LOG(LS_WARNING) << "Rrtr already set, overwriting.";
+    LOG(LS_WARNING) << "Rrtr already set, overwriting.";
   rrtr_block_.emplace(rrtr);
 }
 
@@ -110,20 +107,15 @@ void ExtendedReports::AddDlrrItem(const ReceiveTimeInfo& time_info) {
 
 void ExtendedReports::SetVoipMetric(const VoipMetric& voip_metric) {
   if (voip_metric_block_)
-    RTC_LOG(LS_WARNING) << "Voip metric already set, overwriting.";
+    LOG(LS_WARNING) << "Voip metric already set, overwriting.";
   voip_metric_block_.emplace(voip_metric);
 }
 
 void ExtendedReports::SetTargetBitrate(const TargetBitrate& bitrate) {
   if (target_bitrate_)
-    RTC_LOG(LS_WARNING) << "TargetBitrate already set, overwriting.";
+    LOG(LS_WARNING) << "TargetBitrate already set, overwriting.";
 
-  target_bitrate_ = bitrate;
-}
-
-size_t ExtendedReports::BlockLength() const {
-  return kHeaderLength + kXrBaseLength + RrtrLength() + DlrrLength() +
-         VoipMetricLength() + TargetBitrateLength();
+  target_bitrate_ = rtc::Optional<TargetBitrate>(bitrate);
 }
 
 bool ExtendedReports::Create(uint8_t* packet,
@@ -168,13 +160,12 @@ size_t ExtendedReports::TargetBitrateLength() const {
 void ExtendedReports::ParseRrtrBlock(const uint8_t* block,
                                      uint16_t block_length) {
   if (block_length != Rrtr::kBlockLength) {
-    RTC_LOG(LS_WARNING) << "Incorrect rrtr block size " << block_length
-                        << " Should be " << Rrtr::kBlockLength;
+    LOG(LS_WARNING) << "Incorrect rrtr block size " << block_length
+                    << " Should be " << Rrtr::kBlockLength;
     return;
   }
   if (rrtr_block_) {
-    RTC_LOG(LS_WARNING)
-        << "Two rrtr blocks found in same Extended Report packet";
+    LOG(LS_WARNING) << "Two rrtr blocks found in same Extended Report packet";
     return;
   }
   rrtr_block_.emplace();
@@ -184,8 +175,7 @@ void ExtendedReports::ParseRrtrBlock(const uint8_t* block,
 void ExtendedReports::ParseDlrrBlock(const uint8_t* block,
                                      uint16_t block_length) {
   if (dlrr_block_) {
-    RTC_LOG(LS_WARNING)
-        << "Two Dlrr blocks found in same Extended Report packet";
+    LOG(LS_WARNING) << "Two Dlrr blocks found in same Extended Report packet";
     return;
   }
   dlrr_block_.Parse(block, block_length);
@@ -194,12 +184,12 @@ void ExtendedReports::ParseDlrrBlock(const uint8_t* block,
 void ExtendedReports::ParseVoipMetricBlock(const uint8_t* block,
                                            uint16_t block_length) {
   if (block_length != VoipMetric::kBlockLength) {
-    RTC_LOG(LS_WARNING) << "Incorrect voip metric block size " << block_length
-                        << " Should be " << VoipMetric::kBlockLength;
+    LOG(LS_WARNING) << "Incorrect voip metric block size " << block_length
+                    << " Should be " << VoipMetric::kBlockLength;
     return;
   }
   if (voip_metric_block_) {
-    RTC_LOG(LS_WARNING)
+    LOG(LS_WARNING)
         << "Two Voip Metric blocks found in same Extended Report packet";
     return;
   }
@@ -209,8 +199,9 @@ void ExtendedReports::ParseVoipMetricBlock(const uint8_t* block,
 
 void ExtendedReports::ParseTargetBitrateBlock(const uint8_t* block,
                                               uint16_t block_length) {
-  target_bitrate_.emplace();
-  target_bitrate_->Parse(block, block_length);
+  target_bitrate_ = rtc::Optional<TargetBitrate>(TargetBitrate());
+  if (!target_bitrate_->Parse(block, block_length))
+    target_bitrate_ = rtc::Optional<TargetBitrate>();
 }
 }  // namespace rtcp
 }  // namespace webrtc

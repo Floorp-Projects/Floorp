@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/agc/agc.h"
+#include "webrtc/modules/audio_processing/agc/agc.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -16,10 +16,10 @@
 #include <algorithm>
 #include <vector>
 
-#include "modules/audio_processing/agc/loudness_histogram.h"
-#include "modules/audio_processing/agc/utility.h"
-#include "modules/include/module_common_types.h"
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/modules/audio_processing/agc/loudness_histogram.h"
+#include "webrtc/modules/audio_processing/agc/utility.h"
+#include "webrtc/modules/include/module_common_types.h"
 
 namespace webrtc {
 namespace {

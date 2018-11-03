@@ -11,18 +11,18 @@
 #include <numeric>
 #include <vector>
 
-#include "api/array_view.h"
-#include "modules/audio_processing/audio_buffer.h"
-#include "modules/audio_processing/include/audio_processing.h"
-#include "modules/audio_processing/level_controller/level_controller.h"
-#include "modules/audio_processing/test/audio_buffer_tools.h"
-#include "modules/audio_processing/test/bitexactness_tools.h"
-#include "modules/audio_processing/test/performance_timer.h"
-#include "modules/audio_processing/test/simulator_buffers.h"
-#include "rtc_base/random.h"
-#include "system_wrappers/include/clock.h"
-#include "test/gtest.h"
-#include "test/testsupport/perf_test.h"
+#include "webrtc/base/array_view.h"
+#include "webrtc/base/random.h"
+#include "webrtc/modules/audio_processing/audio_buffer.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/modules/audio_processing/level_controller/level_controller.h"
+#include "webrtc/modules/audio_processing/test/audio_buffer_tools.h"
+#include "webrtc/modules/audio_processing/test/bitexactness_tools.h"
+#include "webrtc/modules/audio_processing/test/performance_timer.h"
+#include "webrtc/modules/audio_processing/test/simulator_buffers.h"
+#include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/test/testsupport/perf_test.h"
 
 namespace webrtc {
 namespace {
@@ -31,6 +31,13 @@ const size_t kNumFramesToProcess = 300;
 const size_t kNumFramesToProcessAtWarmup = 300;
 const size_t kToTalNumFrames =
     kNumFramesToProcess + kNumFramesToProcessAtWarmup;
+
+std::string FormPerformanceMeasureString(const test::PerformanceTimer& timer) {
+  std::string s = std::to_string(timer.GetDurationAverage());
+  s += ", ";
+  s += std::to_string(timer.GetDurationStandardDeviation());
+  return s;
+}
 
 void RunStandaloneSubmodule(int sample_rate_hz, size_t num_channels) {
   test::SimulatorBuffers buffers(sample_rate_hz, sample_rate_hz, sample_rate_hz,
@@ -56,11 +63,11 @@ void RunStandaloneSubmodule(int sample_rate_hz, size_t num_channels) {
       "level_controller_call_durations",
       "_" + std::to_string(sample_rate_hz) + "Hz_" +
           std::to_string(num_channels) + "_channels",
-      "StandaloneLevelControl", timer.GetDurationAverage(),
-      timer.GetDurationStandardDeviation(), "us", false);
+      "StandaloneLevelControl", FormPerformanceMeasureString(timer), "us",
+      false);
 }
 
-void RunTogetherWithApm(const std::string& test_description,
+void RunTogetherWithApm(std::string test_description,
                         int render_input_sample_rate_hz,
                         int render_output_sample_rate_hz,
                         int capture_input_sample_rate_hz,
@@ -157,8 +164,8 @@ void RunTogetherWithApm(const std::string& test_description,
           std::to_string(capture_input_sample_rate_hz) + "_" +
           std::to_string(capture_output_sample_rate_hz) + "Hz_" +
           std::to_string(num_channels) + "_channels" + "_render",
-      test_description, render_timer.GetDurationAverage(),
-      render_timer.GetDurationStandardDeviation(), "us", false);
+      test_description, FormPerformanceMeasureString(render_timer), "us",
+      false);
   webrtc::test::PrintResultMeanAndError(
       "level_controller_call_durations",
       "_" + std::to_string(render_input_sample_rate_hz) + "_" +
@@ -166,8 +173,8 @@ void RunTogetherWithApm(const std::string& test_description,
           std::to_string(capture_input_sample_rate_hz) + "_" +
           std::to_string(capture_output_sample_rate_hz) + "Hz_" +
           std::to_string(num_channels) + "_channels" + "_capture",
-      test_description, capture_timer.GetDurationAverage(),
-      capture_timer.GetDurationStandardDeviation(), "us", false);
+      test_description, FormPerformanceMeasureString(capture_timer), "us",
+      false);
   webrtc::test::PrintResultMeanAndError(
       "level_controller_call_durations",
       "_" + std::to_string(render_input_sample_rate_hz) + "_" +
@@ -175,14 +182,12 @@ void RunTogetherWithApm(const std::string& test_description,
           std::to_string(capture_input_sample_rate_hz) + "_" +
           std::to_string(capture_output_sample_rate_hz) + "Hz_" +
           std::to_string(num_channels) + "_channels" + "_total",
-      test_description, total_timer.GetDurationAverage(),
-      total_timer.GetDurationStandardDeviation(), "us", false);
+      test_description, FormPerformanceMeasureString(total_timer), "us", false);
 }
 
 }  // namespace
 
-// TODO(peah): Reactivate once issue 7712 has been resolved.
-TEST(LevelControllerPerformanceTest, DISABLED_StandaloneProcessing) {
+TEST(LevelControllerPerformanceTest, StandaloneProcessing) {
   int sample_rates_to_test[] = {
       AudioProcessing::kSampleRate8kHz, AudioProcessing::kSampleRate16kHz,
       AudioProcessing::kSampleRate32kHz, AudioProcessing::kSampleRate48kHz};
@@ -214,9 +219,8 @@ void TestSomeSampleRatesWithApm(const std::string& test_name,
                      use_mobile_agc, include_default_apm_processing);
 }
 
-// TODO(peah): Reactivate once issue 7712 has been resolved.
 #if !defined(WEBRTC_ANDROID)
-TEST(LevelControllerPerformanceTest, DISABLED_ProcessingViaApm) {
+TEST(LevelControllerPerformanceTest, ProcessingViaApm) {
 #else
 TEST(LevelControllerPerformanceTest, DISABLED_ProcessingViaApm) {
 #endif
@@ -224,9 +228,8 @@ TEST(LevelControllerPerformanceTest, DISABLED_ProcessingViaApm) {
   TestSomeSampleRatesWithApm("SimpleLevelControlViaApm", false, false);
 }
 
-// TODO(peah): Reactivate once issue 7712 has been resolved.
 #if !defined(WEBRTC_ANDROID)
-TEST(LevelControllerPerformanceTest, DISABLED_InteractionWithDefaultApm) {
+TEST(LevelControllerPerformanceTest, InteractionWithDefaultApm) {
 #else
 TEST(LevelControllerPerformanceTest, DISABLED_InteractionWithDefaultApm) {
 #endif

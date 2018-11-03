@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_audio/real_fourier_openmax.h"
+#include "webrtc/common_audio/real_fourier_openmax.h"
 
 #include <cstdlib>
 
 #include "dl/sp/api/omxSP.h"
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 

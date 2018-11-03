@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef MODULES_AUDIO_CODING_CODECS_ILBC_ILBC_H_
-#define MODULES_AUDIO_CODING_CODECS_ILBC_ILBC_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_ILBC_H_
+#define WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_ILBC_H_
 
 #include <stddef.h>
 
@@ -24,7 +24,7 @@
  * Define the fixpoint numeric formats
  */
 
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 /*
  * Solution to support multiple instances
@@ -255,4 +255,4 @@ extern "C" {
 }
 #endif
 
-#endif  // MODULES_AUDIO_CODING_CODECS_ILBC_ILBC_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_ILBC_H_

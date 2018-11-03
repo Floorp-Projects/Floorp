@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_INCLUDE_AUDIO_CODING_MODULE_TYPEDEFS_H_
-#define MODULES_AUDIO_CODING_INCLUDE_AUDIO_CODING_MODULE_TYPEDEFS_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_INCLUDE_AUDIO_CODING_MODULE_TYPEDEFS_H_
+#define WEBRTC_MODULES_AUDIO_CODING_INCLUDE_AUDIO_CODING_MODULE_TYPEDEFS_H_
 
 #include <map>
 
-#include "modules/include/module_common_types.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -48,4 +48,4 @@ enum OpusApplicationMode {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_CODING_INCLUDE_AUDIO_CODING_MODULE_TYPEDEFS_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_INCLUDE_AUDIO_CODING_MODULE_TYPEDEFS_H_

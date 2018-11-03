@@ -37,41 +37,40 @@ import org.junit.runner.RunWith;
 // EmptyActivity is needed for the surface.
 @RunWith(BaseJUnit4ClassRunner.class)
 public class EglRendererTest {
-  private final static String TAG = "EglRendererTest";
-  private final static int RENDER_WAIT_MS = 1000;
-  private final static int SURFACE_WAIT_MS = 1000;
-  private final static int TEST_FRAME_WIDTH = 4;
-  private final static int TEST_FRAME_HEIGHT = 4;
-  private final static int REMOVE_FRAME_LISTENER_RACY_NUM_TESTS = 10;
+  final static String TAG = "EglRendererTest";
+  final static int RENDER_WAIT_MS = 1000;
+  final static int SURFACE_WAIT_MS = 1000;
+  final static int TEST_FRAME_WIDTH = 4;
+  final static int TEST_FRAME_HEIGHT = 4;
+  final static int REMOVE_FRAME_LISTENER_RACY_NUM_TESTS = 10;
   // Some arbitrary frames.
-  private final static byte[][][] TEST_FRAMES_DATA = {
+  final static ByteBuffer[][] TEST_FRAMES = {
       {
-          new byte[] {
-              11, -12, 13, -14, -15, 16, -17, 18, 19, -110, 111, -112, -113, 114, -115, 116},
-          new byte[] {117, 118, 119, 120}, new byte[] {121, 122, 123, 124},
+          ByteBuffer.wrap(new byte[] {
+              11, -12, 13, -14, -15, 16, -17, 18, 19, -110, 111, -112, -113, 114, -115, 116}),
+          ByteBuffer.wrap(new byte[] {117, 118, 119, 120}),
+          ByteBuffer.wrap(new byte[] {121, 122, 123, 124}),
       },
       {
-          new byte[] {-11, -12, -13, -14, -15, -16, -17, -18, -19, -110, -111, -112, -113, -114,
-              -115, -116},
-          new byte[] {-121, -122, -123, -124}, new byte[] {-117, -118, -119, -120},
+          ByteBuffer.wrap(new byte[] {-11, -12, -13, -14, -15, -16, -17, -18, -19, -110, -111, -112,
+              -113, -114, -115, -116}),
+          ByteBuffer.wrap(new byte[] {-121, -122, -123, -124}),
+          ByteBuffer.wrap(new byte[] {-117, -118, -119, -120}),
       },
       {
-          new byte[] {-11, -12, -13, -14, -15, -16, -17, -18, -19, -110, -111, -112, -113, -114,
-              -115, -116},
-          new byte[] {117, 118, 119, 120}, new byte[] {121, 122, 123, 124},
+          ByteBuffer.wrap(new byte[] {-11, -12, -13, -14, -15, -16, -17, -18, -19, -110, -111, -112,
+              -113, -114, -115, -116}),
+          ByteBuffer.wrap(new byte[] {117, 118, 119, 120}),
+          ByteBuffer.wrap(new byte[] {121, 122, 123, 124}),
       },
   };
-  private final static ByteBuffer[][] TEST_FRAMES =
-      copyTestDataToDirectByteBuffers(TEST_FRAMES_DATA);
 
-  private static class TestFrameListener implements EglRenderer.FrameListener {
+  private class TestFrameListener implements EglRenderer.FrameListener {
     final private ArrayList<Bitmap> bitmaps = new ArrayList<Bitmap>();
     boolean bitmapReceived;
     Bitmap storedBitmap;
 
     @Override
-    // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
-    @SuppressWarnings("NoSynchronizedMethodCheck")
     public synchronized void onFrame(Bitmap bitmap) {
       if (bitmapReceived) {
         fail("Unexpected bitmap was received.");
@@ -82,22 +81,13 @@ public class EglRendererTest {
       notify();
     }
 
-    // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
-    @SuppressWarnings("NoSynchronizedMethodCheck")
     public synchronized boolean waitForBitmap(int timeoutMs) throws InterruptedException {
-      final long endTimeMs = System.currentTimeMillis() + timeoutMs;
-      while (!bitmapReceived) {
-        final long waitTimeMs = endTimeMs - System.currentTimeMillis();
-        if (waitTimeMs < 0) {
-          return false;
-        }
+      if (!bitmapReceived) {
         wait(timeoutMs);
       }
-      return true;
+      return bitmapReceived;
     }
 
-    // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
-    @SuppressWarnings("NoSynchronizedMethodCheck")
     public synchronized Bitmap resetAndGetBitmap() {
       bitmapReceived = false;
       return storedBitmap;
@@ -113,9 +103,8 @@ public class EglRendererTest {
 
   @Before
   public void setUp() throws Exception {
-    PeerConnectionFactory.initialize(PeerConnectionFactory.InitializationOptions
-                                         .builder(InstrumentationRegistry.getTargetContext())
-                                         .createInitializationOptions());
+    PeerConnectionFactory.initializeAndroidGlobals(InstrumentationRegistry.getTargetContext(),
+        true /* initializeAudio */, true /* initializeVideo */, true /* videoHwAcceleration */);
     eglRenderer = new EglRenderer("TestRenderer: ");
     eglRenderer.init(null /* sharedContext */, EglBase.CONFIG_RGBA, new GlRectDrawer());
     oesTextureId = GlUtil.generateTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES);
@@ -317,47 +306,5 @@ public class EglRendererTest {
     }
     // Check the frame listener hasn't triggered.
     assertFalse(testFrameListener.waitForBitmap(RENDER_WAIT_MS));
-  }
-
-  @Test
-  @SmallTest
-  public void testFrameListenersFpsReduction() throws Exception {
-    // Test that normal frame listeners receive frames while the renderer is paused.
-    eglRenderer.pauseVideo();
-    eglRenderer.addFrameListener(testFrameListener, 1f /* scaleFactor */);
-    feedFrame(0);
-    assertTrue(testFrameListener.waitForBitmap(RENDER_WAIT_MS));
-    checkBitmapContent(testFrameListener.resetAndGetBitmap(), 0);
-
-    // Test that frame listeners with FPS reduction applied receive frames while the renderer is not
-    // paused.
-    eglRenderer.disableFpsReduction();
-    eglRenderer.addFrameListener(
-        testFrameListener, 1f /* scaleFactor */, null, true /* applyFpsReduction */);
-    feedFrame(1);
-    assertTrue(testFrameListener.waitForBitmap(RENDER_WAIT_MS));
-    checkBitmapContent(testFrameListener.resetAndGetBitmap(), 1);
-
-    // Test that frame listeners with FPS reduction applied will not receive frames while the
-    // renderer is paused.
-    eglRenderer.pauseVideo();
-    eglRenderer.addFrameListener(
-        testFrameListener, 1f /* scaleFactor */, null, true /* applyFpsReduction */);
-    feedFrame(1);
-    assertFalse(testFrameListener.waitForBitmap(RENDER_WAIT_MS));
-  }
-
-  private static ByteBuffer[][] copyTestDataToDirectByteBuffers(byte[][][] testData) {
-    final ByteBuffer[][] result = new ByteBuffer[testData.length][];
-
-    for (int i = 0; i < testData.length; i++) {
-      result[i] = new ByteBuffer[testData[i].length];
-      for (int j = 0; j < testData[i].length; j++) {
-        result[i][j] = ByteBuffer.allocateDirect(testData[i][j].length);
-        result[i][j].put(testData[i][j]);
-        result[i][j].rewind();
-      }
-    }
-    return result;
   }
 }

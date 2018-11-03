@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/echo_detector/circular_buffer.h"
+#include "webrtc/modules/audio_processing/echo_detector/circular_buffer.h"
 
 #include <algorithm>
 
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 
@@ -30,14 +30,14 @@ void CircularBuffer::Push(float value) {
 
 rtc::Optional<float> CircularBuffer::Pop() {
   if (nr_elements_in_buffer_ == 0) {
-    return rtc::nullopt;
+    return rtc::Optional<float>();
   }
   const size_t index =
       (buffer_.size() + next_insertion_index_ - nr_elements_in_buffer_) %
       buffer_.size();
   RTC_DCHECK_LT(index, buffer_.size());
   --nr_elements_in_buffer_;
-  return buffer_[index];
+  return rtc::Optional<float>(buffer_[index]);
 }
 
 void CircularBuffer::Clear() {

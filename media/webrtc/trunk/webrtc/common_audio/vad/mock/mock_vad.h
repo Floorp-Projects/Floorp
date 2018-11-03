@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef COMMON_AUDIO_VAD_MOCK_MOCK_VAD_H_
-#define COMMON_AUDIO_VAD_MOCK_MOCK_VAD_H_
+#ifndef WEBRTC_COMMON_AUDIO_VAD_MOCK_MOCK_VAD_H_
+#define WEBRTC_COMMON_AUDIO_VAD_MOCK_MOCK_VAD_H_
 
-#include "common_audio/vad/include/vad.h"
-#include "test/gmock.h"
+#include "webrtc/common_audio/vad/include/vad.h"
+#include "webrtc/test/gmock.h"
 
 namespace webrtc {
 
@@ -30,4 +30,4 @@ class MockVad : public Vad {
 
 }  // namespace webrtc
 
-#endif  // COMMON_AUDIO_VAD_MOCK_MOCK_VAD_H_
+#endif  // WEBRTC_COMMON_AUDIO_VAD_MOCK_MOCK_VAD_H_

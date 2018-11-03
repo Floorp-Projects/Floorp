@@ -8,20 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_device/linux/latebindingsymboltable_linux.h"
+#include "webrtc/modules/audio_device/linux/latebindingsymboltable_linux.h"
 
-#include "rtc_base/logging.h"
-
-#ifdef WEBRTC_LINUX
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
 #include <dlfcn.h>
 #endif
 
-namespace webrtc {
-namespace adm_linux {
+// TODO(grunell): Either put inside webrtc namespace or use webrtc:: instead.
+using namespace webrtc;
 
-inline static const char* GetDllError() {
-#ifdef WEBRTC_LINUX
-  char* err = dlerror();
+namespace webrtc_adm_linux {
+
+inline static const char *GetDllError() {
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+  const char *err = dlerror();
   if (err) {
     return err;
   } else {
@@ -33,19 +33,20 @@ inline static const char* GetDllError() {
 }
 
 DllHandle InternalLoadDll(const char dll_name[]) {
-#ifdef WEBRTC_LINUX
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
   DllHandle handle = dlopen(dll_name, RTLD_NOW);
 #else
 #error Not implemented
 #endif
   if (handle == kInvalidDllHandle) {
-    RTC_LOG(LS_WARNING) << "Can't load " << dll_name << " : " << GetDllError();
+    WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, -1,
+               "Can't load %s : %s", dll_name, GetDllError());
   }
   return handle;
 }
 
 void InternalUnloadDll(DllHandle handle) {
-#ifdef WEBRTC_LINUX
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
 // TODO(pbos): Remove this dlclose() exclusion when leaks and suppressions from
 // here are gone (or AddressSanitizer can display them properly).
 //
@@ -55,7 +56,8 @@ void InternalUnloadDll(DllHandle handle) {
 // https://code.google.com/p/address-sanitizer/issues/detail?id=89
 #if !defined(ADDRESS_SANITIZER)
   if (dlclose(handle) != 0) {
-    RTC_LOG(LS_ERROR) << GetDllError();
+    WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
+               "%s", GetDllError());
   }
 #endif  // !defined(ADDRESS_SANITIZER)
 #else
@@ -64,16 +66,18 @@ void InternalUnloadDll(DllHandle handle) {
 }
 
 static bool LoadSymbol(DllHandle handle,
-                       const char* symbol_name,
-                       void** symbol) {
-#ifdef WEBRTC_LINUX
+                       const char *symbol_name,
+                       void **symbol) {
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
   *symbol = dlsym(handle, symbol_name);
-  char* err = dlerror();
+  const char *err = dlerror();
   if (err) {
-    RTC_LOG(LS_ERROR) << "Error loading symbol " << symbol_name << " : " << err;
+    WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
+               "Error loading symbol %s : %d", symbol_name, err);
     return false;
   } else if (!*symbol) {
-    RTC_LOG(LS_ERROR) << "Symbol " << symbol_name << " is NULL";
+    WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
+               "Symbol %s is NULL", symbol_name);
     return false;
   }
   return true;
@@ -87,9 +91,9 @@ static bool LoadSymbol(DllHandle handle,
 // caller may later interpret as a valid address.
 bool InternalLoadSymbols(DllHandle handle,
                          int num_symbols,
-                         const char* const symbol_names[],
-                         void* symbols[]) {
-#ifdef WEBRTC_LINUX
+                         const char *const symbol_names[],
+                         void *symbols[]) {
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
   // Clear any old errors.
   dlerror();
 #endif
@@ -101,5 +105,4 @@ bool InternalLoadSymbols(DllHandle handle,
   return true;
 }
 
-}  // namespace adm_linux
-}  // namespace webrtc
+}  // namespace webrtc_adm_linux

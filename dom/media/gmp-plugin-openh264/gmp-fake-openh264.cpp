@@ -88,33 +88,19 @@ static int g_log_level = GL_CRIT;
 class FakeVideoEncoder;
 class FakeVideoDecoder;
 
-// Turn off padding for this structure. Having extra bytes can result in
-// bitstream parsing problems.
-#pragma pack(push, 1)
 struct EncodedFrame {
-  struct SPSNalu {
-    uint32_t size_;
-    uint8_t payload[14];
-  } sps_nalu;
-  struct PPSNalu {
-    uint32_t size_;
-    uint8_t payload[4];
-  } pps_nalu;
-  struct IDRNalu {
-    uint32_t size_;
-    uint8_t h264_compat_;
-    uint32_t magic_;
-    uint32_t width_;
-    uint32_t height_;
-    uint8_t y_;
-    uint8_t u_;
-    uint8_t v_;
-    uint32_t timestamp_;
-  } idr_nalu;
+  uint32_t length_;
+  uint8_t h264_compat_;
+  uint32_t magic_;
+  uint32_t width_;
+  uint32_t height_;
+  uint8_t y_;
+  uint8_t u_;
+  uint8_t v_;
+  uint32_t timestamp_;
 };
-#pragma pack(pop)
 
-#define ENCODED_FRAME_MAGIC 0x004000b8
+#define ENCODED_FRAME_MAGIC 0x4652414d
 
 template <typename T> class SelfDestruct {
  public:
@@ -125,6 +111,15 @@ template <typename T> class SelfDestruct {
     }
   }
 
+#if 0 // unused
+  T* forget() {
+    T* t = t_;
+    t_ = nullptr;
+
+    return t;
+  }
+#endif
+
  private:
   T* t_;
 };
@@ -132,7 +127,10 @@ template <typename T> class SelfDestruct {
 class FakeVideoEncoder : public GMPVideoEncoder {
  public:
   explicit FakeVideoEncoder (GMPVideoHost* hostAPI) :
-    host_ (hostAPI) {}
+    host_ (hostAPI),
+    callback_ (nullptr),
+    frame_size_(BIG_FRAME),
+    frames_encoded_(0) {}
 
   void InitEncode (const GMPVideoCodec& codecSettings,
                    const uint8_t* aCodecSpecific,
@@ -156,37 +154,26 @@ class FakeVideoEncoder : public GMPVideoEncoder {
   }
 
   void SendFrame(GMPVideoi420Frame* inputImage,
-                 GMPVideoFrameType frame_type, int nal_type)
+                 GMPVideoFrameType frame_type,
+                 uint8_t nal_type)
   {
     // Encode this in a frame that looks a little bit like H.264.
     // Send SPS/PPS/IDR to avoid confusing people
     // Copy the data. This really should convert this to network byte order.
     EncodedFrame eframe;
-
-    // These values were chosen to force a SPS id of 0
-    eframe.sps_nalu = {sizeof(EncodedFrame::SPSNalu) - sizeof(uint32_t),
-                       {0x67, 0x42, 0xc0, 0xd, 0x8c, 0x8d, 0x40,
-                        0xa0, 0xf9, 0x0, 0xf0, 0x88, 0x46, 0xa0}};
-
-    // These values were chosen to force a PPS id of 0
-    eframe.pps_nalu = {sizeof(EncodedFrame::PPSNalu) - sizeof(uint32_t),
-                       {0x68, 0xce, 0x3c, 0x80}};
-
-    eframe.idr_nalu.size_ = sizeof(EncodedFrame::IDRNalu) - sizeof(uint32_t);
-    // We force IFrame here - if we send PFrames, the webrtc.org code gets
-    // tripped up attempting to find non-existent previous IFrames.
-    eframe.idr_nalu.h264_compat_ = nal_type; // 5 = IFrame/IDR slice, 1=PFrame/slice
-    eframe.idr_nalu.magic_ = ENCODED_FRAME_MAGIC;
-    eframe.idr_nalu.width_ = inputImage->Width();
-    eframe.idr_nalu.height_ = inputImage->Height();
-    eframe.idr_nalu.y_ = AveragePlane(inputImage->Buffer(kGMPYPlane),
+    eframe.length_ = sizeof(eframe) - sizeof(uint32_t);
+    eframe.h264_compat_ = nal_type; // 7 = SPS, 8 = PPS, 5 = IFrame/IDR slice, 1=PFrame/slice
+    eframe.magic_ = ENCODED_FRAME_MAGIC;
+    eframe.width_ = inputImage->Width();
+    eframe.height_ = inputImage->Height();
+    eframe.y_ = AveragePlane(inputImage->Buffer(kGMPYPlane),
                              inputImage->AllocatedSize(kGMPYPlane));
-    eframe.idr_nalu.u_ = AveragePlane(inputImage->Buffer(kGMPUPlane),
+    eframe.u_ = AveragePlane(inputImage->Buffer(kGMPUPlane),
                              inputImage->AllocatedSize(kGMPUPlane));
-    eframe.idr_nalu.v_ = AveragePlane(inputImage->Buffer(kGMPVPlane),
+    eframe.v_ = AveragePlane(inputImage->Buffer(kGMPVPlane),
                              inputImage->AllocatedSize(kGMPVPlane));
 
-    eframe.idr_nalu.timestamp_ = inputImage->Timestamp();
+    eframe.timestamp_ = inputImage->Timestamp();
 
     // Now return the encoded data back to the parent.
     GMPVideoFrame* ftmp;
@@ -198,16 +185,22 @@ class FakeVideoEncoder : public GMPVideoEncoder {
 
     GMPVideoEncodedFrame* f = static_cast<GMPVideoEncodedFrame*> (ftmp);
 
-    err = f->CreateEmptyFrame(sizeof(eframe));
+    err = f->CreateEmptyFrame (sizeof(eframe) +
+                               (nal_type == 5 ? sizeof(uint32_t) + frame_size_ : 0));
     if (err != GMPNoErr) {
       GMPLOG (GL_ERROR, "Error allocating frame data");
       f->Destroy();
       return;
     }
     memcpy(f->Buffer(), &eframe, sizeof(eframe));
-    f->SetEncodedWidth(eframe.idr_nalu.width_);
-    f->SetEncodedHeight(eframe.idr_nalu.height_);
-    f->SetTimeStamp(eframe.idr_nalu.timestamp_);
+    if (nal_type == 5) {
+      // set the size for the fake iframe
+      *((uint32_t*) (f->Buffer() + sizeof(eframe))) = frame_size_;
+    }
+
+    f->SetEncodedWidth(eframe.width_);
+    f->SetEncodedHeight(eframe.height_);
+    f->SetTimeStamp(eframe.timestamp_);
     f->SetFrameType(frame_type);
     f->SetCompleteFrame(true);
     f->SetBufferType(GMP_BufferLength32);
@@ -215,14 +208,14 @@ class FakeVideoEncoder : public GMPVideoEncoder {
     GMPLOG (GL_DEBUG, "Encoding complete. type= "
             << f->FrameType()
             << " NAL_type="
-            << (int) eframe.idr_nalu.h264_compat_
+            << (int) eframe.h264_compat_
             << " length="
             << f->Size()
             << " timestamp="
             << f->TimeStamp()
             << " width/height="
-            << eframe.idr_nalu.width_
-            << "x" << eframe.idr_nalu.height_);
+            << eframe.width_
+            << "x" << eframe.height_);
 
     // Return the encoded frame.
     GMPCodecSpecificInfo info;
@@ -259,12 +252,12 @@ class FakeVideoEncoder : public GMPVideoEncoder {
       return;
     }
 
-    if (frame_type == kGMPKeyFrame ||
+    if (frame_type  == kGMPKeyFrame ||
         frames_encoded_++ % 10 == 0) { // periodically send iframes anyways
-      // 5 = IFrame/IDR slice
+      SendFrame(inputImage, kGMPKeyFrame, 7); // 7 = SPS, 8 = PPS, 5 = IFrame/IDR slice, 1=PFrame/slice
+      SendFrame(inputImage, kGMPKeyFrame, 8);
       SendFrame(inputImage, kGMPKeyFrame, 5);
     } else {
-      // 1 = PFrame/slice
       SendFrame(inputImage, frame_type, 1);
     }
   }
@@ -294,9 +287,9 @@ class FakeVideoEncoder : public GMPVideoEncoder {
   }
 
   GMPVideoHost* host_;
-  GMPVideoEncoderCallback* callback_ = nullptr;
-  uint32_t frame_size_ = BIG_FRAME;
-  uint32_t frames_encoded_ = 0;
+  GMPVideoEncoderCallback* callback_;
+  uint32_t frame_size_;
+  uint32_t frames_encoded_;
 };
 
 class FakeVideoDecoder : public GMPVideoDecoder {
@@ -335,29 +328,29 @@ class FakeVideoDecoder : public GMPVideoDecoder {
 
     EncodedFrame *eframe;
     eframe = reinterpret_cast<EncodedFrame*>(inputFrame->Buffer());
-    GMPLOG(GL_DEBUG,"magic="  << eframe->idr_nalu.magic_ << " h264_compat="  << (int) eframe->idr_nalu.h264_compat_
-           << " width=" << eframe->idr_nalu.width_ << " height=" << eframe->idr_nalu.height_
+    GMPLOG(GL_DEBUG,"magic="  << eframe->magic_ << " h264_compat="  << (int) eframe->h264_compat_
+           << " width=" << eframe->width_ << " height=" << eframe->height_
            << " timestamp=" << inputFrame->TimeStamp()
-           << " y/u/v=" << (int) eframe->idr_nalu.y_ << ":" << (int) eframe->idr_nalu.u_ << ":" << (int) eframe->idr_nalu.v_);
+           << " y/u/v=" << (int) eframe->y_ << ":" << (int) eframe->u_ << ":" << (int) eframe->v_);
     if (inputFrame->Size() != (sizeof(*eframe))) {
       GMPLOG (GL_ERROR, "Couldn't decode frame. Size=" << inputFrame->Size());
       return;
     }
 
-    if (eframe->idr_nalu.magic_ != ENCODED_FRAME_MAGIC) {
-      GMPLOG (GL_ERROR, "Couldn't decode frame. Magic=" << eframe->idr_nalu.magic_);
+    if (eframe->magic_ != ENCODED_FRAME_MAGIC) {
+      GMPLOG (GL_ERROR, "Couldn't decode frame. Magic=" << eframe->magic_);
       return;
     }
-    if (eframe->idr_nalu.h264_compat_ != 5 && eframe->idr_nalu.h264_compat_ != 1) {
+    if (eframe->h264_compat_ != 5 && eframe->h264_compat_ != 1) {
       // only return video for iframes or pframes
-      GMPLOG (GL_DEBUG, "Not a video frame: NAL type " << (int) eframe->idr_nalu.h264_compat_);
-      return;
+      GMPLOG (GL_DEBUG, "Not a video frame: NAL type " << (int) eframe->h264_compat_);
+      // Decode it anyways
     }
 
-    int width = eframe->idr_nalu.width_;
-    int height = eframe->idr_nalu.height_;
-    int ystride = eframe->idr_nalu.width_;
-    int uvstride = eframe->idr_nalu.width_/2;
+    int width = eframe->width_;
+    int height = eframe->height_;
+    int ystride = eframe->width_;
+    int uvstride = eframe->width_/2;
 
     GMPLOG (GL_DEBUG, "Video frame ready for display "
             << width
@@ -385,13 +378,13 @@ class FakeVideoDecoder : public GMPVideoDecoder {
     }
 
     memset(frame->Buffer(kGMPYPlane),
-           eframe->idr_nalu.y_,
+           eframe->y_,
            frame->AllocatedSize(kGMPYPlane));
     memset(frame->Buffer(kGMPUPlane),
-           eframe->idr_nalu.u_,
+           eframe->u_,
            frame->AllocatedSize(kGMPUPlane));
     memset(frame->Buffer(kGMPVPlane),
-           eframe->idr_nalu.v_,
+           eframe->v_,
            frame->AllocatedSize(kGMPVPlane));
 
     GMPLOG (GL_DEBUG, "Allocated size = "

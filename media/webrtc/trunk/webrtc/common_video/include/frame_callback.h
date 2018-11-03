@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef COMMON_VIDEO_INCLUDE_FRAME_CALLBACK_H_
-#define COMMON_VIDEO_INCLUDE_FRAME_CALLBACK_H_
+#ifndef WEBRTC_COMMON_VIDEO_INCLUDE_FRAME_CALLBACK_H_
+#define WEBRTC_COMMON_VIDEO_INCLUDE_FRAME_CALLBACK_H_
 
 #include <stddef.h>
 #include <stdint.h>
 
-#include "common_types.h"  // NOLINT(build/include)
+#include "webrtc/common_types.h"
 
 namespace webrtc {
 
@@ -22,28 +22,23 @@ class VideoFrame;
 
 struct EncodedFrame {
  public:
-  EncodedFrame()
-      : data_(nullptr),
-        length_(0),
-        frame_type_(kEmptyFrame),
-        stream_id_(0),
-        timestamp_(0) {}
-  EncodedFrame(const uint8_t* data,
-               size_t length,
-               FrameType frame_type,
-               size_t stream_id,
-               uint32_t timestamp)
-      : data_(data),
-        length_(length),
-        frame_type_(frame_type),
-        stream_id_(stream_id),
-        timestamp_(timestamp) {}
+  EncodedFrame() : data_(NULL), length_(0), frame_type_(kEmptyFrame) {}
+  EncodedFrame(const uint8_t* data, size_t length, FrameType frame_type)
+    : data_(data), length_(length), frame_type_(frame_type) {}
 
   const uint8_t* data_;
   const size_t length_;
   const FrameType frame_type_;
-  const size_t stream_id_;
-  const uint32_t timestamp_;
+};
+
+class I420FrameCallback {
+ public:
+  // This function is called with a I420 frame allowing the user to modify the
+  // frame content.
+  virtual void FrameCallback(VideoFrame* video_frame) = 0;
+
+ protected:
+  virtual ~I420FrameCallback() {}
 };
 
 class EncodedFrameObserver {
@@ -57,4 +52,4 @@ class EncodedFrameObserver {
 
 }  // namespace webrtc
 
-#endif  // COMMON_VIDEO_INCLUDE_FRAME_CALLBACK_H_
+#endif  // WEBRTC_COMMON_VIDEO_INCLUDE_FRAME_CALLBACK_H_

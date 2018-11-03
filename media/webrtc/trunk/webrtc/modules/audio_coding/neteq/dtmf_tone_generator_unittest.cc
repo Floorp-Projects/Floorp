@@ -10,12 +10,12 @@
 
 // Unit tests for DtmfToneGenerator class.
 
-#include "modules/audio_coding/neteq/dtmf_tone_generator.h"
+#include "webrtc/modules/audio_coding/neteq/dtmf_tone_generator.h"
 
 #include <math.h>
 
-#include "modules/audio_coding/neteq/audio_multi_vector.h"
-#include "test/gtest.h"
+#include "webrtc/modules/audio_coding/neteq/audio_multi_vector.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 

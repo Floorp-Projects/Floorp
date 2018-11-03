@@ -14,7 +14,7 @@
  * WebRtcSpl_ScaleAndAddVectorsWithRound_mips()
  */
 
-#include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 int WebRtcSpl_ScaleAndAddVectorsWithRound_mips(const int16_t* in_vector1,
                                                int16_t in_vector1_scale,

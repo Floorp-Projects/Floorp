@@ -8,16 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef SDK_ANDROID_SRC_JNI_ANDROIDMEDIAENCODER_JNI_H_
-#define SDK_ANDROID_SRC_JNI_ANDROIDMEDIAENCODER_JNI_H_
+#ifndef WEBRTC_SDK_ANDROID_SRC_JNI_ANDROIDMEDIAENCODER_JNI_H_
+#define WEBRTC_SDK_ANDROID_SRC_JNI_ANDROIDMEDIAENCODER_JNI_H_
 
 #include <vector>
 
-#include "sdk/android/src/jni/jni_helpers.h"
-#include "media/engine/webrtcvideoencoderfactory.h"
+#include "webrtc/sdk/android/src/jni/jni_helpers.h"
+#include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 
-namespace webrtc {
-namespace jni {
+namespace webrtc_jni {
 
 // Implementation of Android MediaCodec based encoder factory.
 class MediaCodecVideoEncoderFactory
@@ -29,19 +28,22 @@ class MediaCodecVideoEncoderFactory
   void SetEGLContext(JNIEnv* jni, jobject egl_context);
 
   // WebRtcVideoEncoderFactory implementation.
-  VideoEncoder* CreateVideoEncoder(const cricket::VideoCodec& codec) override;
+  webrtc::VideoEncoder* CreateVideoEncoder(
+      const cricket::VideoCodec& codec) override;
   const std::vector<cricket::VideoCodec>& supported_codecs() const override;
-  void DestroyVideoEncoder(VideoEncoder* encoder) override;
+  void DestroyVideoEncoder(webrtc::VideoEncoder* encoder) override;
 
  private:
+  // Disable overloaded virtual function warning. TODO(magjed): Remove once
+  // http://crbug/webrtc/6402 is fixed.
+  using cricket::WebRtcVideoEncoderFactory::CreateVideoEncoder;
+
   jobject egl_context_;
 
   // Empty if platform support is lacking, const after ctor returns.
   std::vector<cricket::VideoCodec> supported_codecs_;
-  std::vector<cricket::VideoCodec> supported_codecs_with_h264_hp_;
 };
 
-}  // namespace jni
-}  // namespace webrtc
+}  // namespace webrtc_jni
 
-#endif  // SDK_ANDROID_SRC_JNI_ANDROIDMEDIAENCODER_JNI_H_
+#endif  // WEBRTC_SDK_ANDROID_SRC_JNI_ANDROIDMEDIAENCODER_JNI_H_

@@ -10,11 +10,11 @@
 
 // Unit tests for BufferLevelFilter class.
 
-#include "modules/audio_coding/neteq/buffer_level_filter.h"
+#include "webrtc/modules/audio_coding/neteq/buffer_level_filter.h"
 
 #include <math.h>  // Access to pow function.
 
-#include "test/gtest.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 

@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_NETEQ_MOCK_MOCK_DTMF_TONE_GENERATOR_H_
-#define MODULES_AUDIO_CODING_NETEQ_MOCK_MOCK_DTMF_TONE_GENERATOR_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_MOCK_MOCK_DTMF_TONE_GENERATOR_H_
+#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_MOCK_MOCK_DTMF_TONE_GENERATOR_H_
 
-#include "modules/audio_coding/neteq/dtmf_tone_generator.h"
+#include "webrtc/modules/audio_coding/neteq/dtmf_tone_generator.h"
 
-#include "test/gmock.h"
+#include "webrtc/test/gmock.h"
 
 namespace webrtc {
 
@@ -32,4 +32,4 @@ class MockDtmfToneGenerator : public DtmfToneGenerator {
 };
 
 }  // namespace webrtc
-#endif  // MODULES_AUDIO_CODING_NETEQ_MOCK_MOCK_DTMF_TONE_GENERATOR_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_MOCK_MOCK_DTMF_TONE_GENERATOR_H_

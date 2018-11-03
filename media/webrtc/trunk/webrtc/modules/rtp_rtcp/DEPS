@@ -1,6 +1,7 @@
 include_rules = [
-  "+call",
-  "+common_video",
-  "+logging/rtc_event_log",
-  "+system_wrappers",
+  "+webrtc/base",
+  "+webrtc/call",
+  "+webrtc/common_video",
+  "+webrtc/logging/rtc_event_log",
+  "+webrtc/system_wrappers",
 ]

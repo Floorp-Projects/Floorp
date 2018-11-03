@@ -10,17 +10,16 @@
 
 #include <stdlib.h>
 
-#include "common_audio/vad/vad_unittest.h"
-#include "test/gtest.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/common_audio/vad/vad_unittest.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/typedefs.h"
 
 extern "C" {
-#include "common_audio/vad/vad_core.h"
-#include "common_audio/vad/vad_sp.h"
+#include "webrtc/common_audio/vad/vad_core.h"
+#include "webrtc/common_audio/vad/vad_sp.h"
 }
 
-namespace webrtc {
-namespace test {
+namespace {
 
 TEST_F(VadTest, vad_sp) {
   VadInstT* self = reinterpret_cast<VadInstT*>(malloc(sizeof(VadInstT)));
@@ -72,5 +71,4 @@ TEST_F(VadTest, vad_sp) {
 
   free(self);
 }
-}  // namespace test
-}  // namespace webrtc
+}  // namespace

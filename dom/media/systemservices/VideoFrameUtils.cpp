@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VideoFrameUtils.h"
-#include "webrtc/api/video/video_frame.h"
+#include "webrtc/video_frame.h"
 #include "mozilla/ShmemPool.h"
 
 namespace mozilla {
@@ -14,10 +14,10 @@ size_t
 VideoFrameUtils::TotalRequiredBufferSize(
                   const webrtc::VideoFrame& aVideoFrame)
 {
-  auto i420 = aVideoFrame.video_frame_buffer()->ToI420();
-  auto height = i420->height();
-  return height * i420->StrideY() + ((height+1)/2) * i420->StrideU() +
-         ((height+1)/2) * i420->StrideV();
+  auto height = aVideoFrame.video_frame_buffer()->height();
+  return height * aVideoFrame.video_frame_buffer()->StrideY() +
+    ((height+1)/2) * aVideoFrame.video_frame_buffer()->StrideU() +
+    ((height+1)/2) * aVideoFrame.video_frame_buffer()->StrideV();
 }
 
 void VideoFrameUtils::InitFrameBufferProperties(
@@ -34,18 +34,17 @@ void VideoFrameUtils::InitFrameBufferProperties(
 
   aDestProps.rotation() = aVideoFrame.rotation();
 
-  auto i420 = aVideoFrame.video_frame_buffer()->ToI420();
-  auto height = i420->height();
-  aDestProps.yAllocatedSize() = height * i420->StrideY();
-  aDestProps.uAllocatedSize() = ((height+1)/2) * i420->StrideU();
-  aDestProps.vAllocatedSize() = ((height+1)/2) * i420->StrideV();
+  auto height = aVideoFrame.video_frame_buffer()->height();
+  aDestProps.yAllocatedSize() = height * aVideoFrame.video_frame_buffer()->StrideY();
+  aDestProps.uAllocatedSize() = ((height+1)/2) * aVideoFrame.video_frame_buffer()->StrideU();
+  aDestProps.vAllocatedSize() = ((height+1)/2) * aVideoFrame.video_frame_buffer()->StrideV();
 
-  aDestProps.width() = i420->width();
+  aDestProps.width() = aVideoFrame.video_frame_buffer()->width();
   aDestProps.height() = height;
 
-  aDestProps.yStride() = i420->StrideY();
-  aDestProps.uStride() = i420->StrideU();
-  aDestProps.vStride() = i420->StrideV();
+  aDestProps.yStride() = aVideoFrame.video_frame_buffer()->StrideY();
+  aDestProps.uStride() = aVideoFrame.video_frame_buffer()->StrideU();
+  aDestProps.vStride() = aVideoFrame.video_frame_buffer()->StrideV();
 }
 
 void VideoFrameUtils::CopyVideoFrameBuffers(uint8_t* aDestBuffer,
@@ -55,32 +54,35 @@ void VideoFrameUtils::CopyVideoFrameBuffers(uint8_t* aDestBuffer,
   size_t aggregateSize = TotalRequiredBufferSize(aFrame);
 
   MOZ_ASSERT(aDestBufferSize >= aggregateSize);
-  auto i420 = aFrame.video_frame_buffer()->ToI420();
 
   // If planes are ordered YUV and contiguous then do a single copy
-  if ((i420->DataY() != nullptr) &&
+  if ((aFrame.video_frame_buffer()->DataY() != nullptr) &&
       // Check that the three planes are ordered
-      (i420->DataY() < i420->DataU()) &&
-      (i420->DataU() < i420->DataV()) &&
+      (aFrame.video_frame_buffer()->DataY()
+       < aFrame.video_frame_buffer()->DataU()) &&
+      (aFrame.video_frame_buffer()->DataU()
+       < aFrame.video_frame_buffer()->DataV()) &&
       //  Check that the last plane ends at firstPlane[totalsize]
-      (&i420->DataY()[aggregateSize] ==
-       &i420->DataV()[((i420->height() + 1) / 2) * i420->StrideV()])) {
-    memcpy(aDestBuffer, i420->DataY(), aggregateSize);
+      (&aFrame.video_frame_buffer()->DataY()[aggregateSize] ==
+       &aFrame.video_frame_buffer()
+          ->DataV()[((aFrame.video_frame_buffer()->height() + 1) / 2)
+                    * aFrame.video_frame_buffer()->StrideV()])) {
+    memcpy(aDestBuffer, aFrame.video_frame_buffer()->DataY(), aggregateSize);
     return;
   }
 
   // Copy each plane
   size_t offset = 0;
   size_t size;
-  auto height = i420->height();
-  size = height * i420->StrideY();
-  memcpy(&aDestBuffer[offset], i420->DataY(), size);
+  auto height = aFrame.video_frame_buffer()->height();
+  size = height * aFrame.video_frame_buffer()->StrideY();
+  memcpy(&aDestBuffer[offset], aFrame.video_frame_buffer()->DataY(), size);
   offset += size;
-  size = ((height+1)/2) * i420->StrideU();
-  memcpy(&aDestBuffer[offset], i420->DataU(), size);
+  size = ((height+1)/2) * aFrame.video_frame_buffer()->StrideU();
+  memcpy(&aDestBuffer[offset], aFrame.video_frame_buffer()->DataU(), size);
   offset += size;
-  size = ((height+1)/2) * i420->StrideV();
-  memcpy(&aDestBuffer[offset], i420->DataV(), size);
+  size = ((height+1)/2) * aFrame.video_frame_buffer()->StrideV();
+  memcpy(&aDestBuffer[offset], aFrame.video_frame_buffer()->DataV(), size);
 }
 
 void VideoFrameUtils::CopyVideoFrameBuffers(ShmemBuffer& aDestShmem,

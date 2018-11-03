@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MEDIA_ENGINE_FAKEWEBRTCVCMFACTORY_H_
-#define MEDIA_ENGINE_FAKEWEBRTCVCMFACTORY_H_
+#ifndef WEBRTC_MEDIA_ENGINE_FAKEWEBRTCVCMFACTORY_H_
+#define WEBRTC_MEDIA_ENGINE_FAKEWEBRTCVCMFACTORY_H_
 
 #include <vector>
 
-#include "media/engine/fakewebrtcdeviceinfo.h"
-#include "media/engine/fakewebrtcvideocapturemodule.h"
-#include "media/engine/webrtcvideocapturer.h"
+#include "webrtc/media/engine/fakewebrtcdeviceinfo.h"
+#include "webrtc/media/engine/fakewebrtcvideocapturemodule.h"
+#include "webrtc/media/engine/webrtcvideocapturer.h"
 
 // Factory class to allow the fakes above to be injected into
 // WebRtcVideoCapturer.
@@ -46,4 +46,4 @@ FakeWebRtcVideoCaptureModule::~FakeWebRtcVideoCaptureModule() {
     factory_->OnDestroyed(this);
 }
 
-#endif  // MEDIA_ENGINE_FAKEWEBRTCVCMFACTORY_H_
+#endif  // WEBRTC_MEDIA_ENGINE_FAKEWEBRTCVCMFACTORY_H_

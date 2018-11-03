@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_RTP_RTCP_SOURCE_FLEXFEC_HEADER_READER_WRITER_H_
-#define MODULES_RTP_RTCP_SOURCE_FLEXFEC_HEADER_READER_WRITER_H_
+#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_FLEXFEC_HEADER_READER_WRITER_H_
+#define WEBRTC_MODULES_RTP_RTCP_SOURCE_FLEXFEC_HEADER_READER_WRITER_H_
 
-#include "modules/rtp_rtcp/source/forward_error_correction.h"
-#include "rtc_base/basictypes.h"
+#include "webrtc/base/basictypes.h"
+#include "webrtc/modules/rtp_rtcp/source/forward_error_correction.h"
 
 namespace webrtc {
 
@@ -83,4 +83,4 @@ class FlexfecHeaderWriter : public FecHeaderWriter {
 
 }  // namespace webrtc
 
-#endif  // MODULES_RTP_RTCP_SOURCE_FLEXFEC_HEADER_READER_WRITER_H_
+#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_FLEXFEC_HEADER_READER_WRITER_H_

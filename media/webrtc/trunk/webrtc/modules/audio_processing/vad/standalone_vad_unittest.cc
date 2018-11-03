@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/vad/standalone_vad.h"
+#include "webrtc/modules/audio_processing/vad/standalone_vad.h"
 
 #include <string.h>
 
 #include <memory>
 
-#include "modules/include/module_common_types.h"
-#include "test/gtest.h"
-#include "test/testsupport/fileutils.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
 

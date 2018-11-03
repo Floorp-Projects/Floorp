@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_VIDEO_H_
-#define MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_VIDEO_H_
+#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_VIDEO_H_
+#define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_VIDEO_H_
 
-#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "modules/rtp_rtcp/source/rtp_receiver_strategy.h"
-#include "modules/rtp_rtcp/source/rtp_utility.h"
-#include "rtc_base/onetimeevent.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/base/onetimeevent.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_receiver_strategy.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -30,7 +30,8 @@ class RTPReceiverVideo : public RTPReceiverStrategy {
                          bool is_red,
                          const uint8_t* packet,
                          size_t packet_length,
-                         int64_t timestamp) override;
+                         int64_t timestamp,
+                         bool is_first_packet) override;
 
   TelephoneEventHandler* GetTelephoneEventHandler() override { return NULL; }
 
@@ -38,8 +39,7 @@ class RTPReceiverVideo : public RTPReceiverStrategy {
 
   bool ShouldReportCsrcChanges(uint8_t payload_type) const override;
 
-  int32_t OnNewPayloadTypeCreated(int payload_type,
-                                  const SdpAudioFormat& audio_format) override;
+  int32_t OnNewPayloadTypeCreated(const CodecInst& audio_codec) override;
 
   int32_t InvokeOnInitializeDecoder(
       RtpFeedback* callback,
@@ -54,4 +54,4 @@ class RTPReceiverVideo : public RTPReceiverStrategy {
 };
 }  // namespace webrtc
 
-#endif  // MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_VIDEO_H_
+#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_VIDEO_H_

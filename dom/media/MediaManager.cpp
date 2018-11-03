@@ -77,7 +77,6 @@
 #if defined(MOZ_WEBRTC)
 #include "MediaEngineWebRTC.h"
 #include "browser_logging/WebRtcLog.h"
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
 #endif
 
 #if defined (XP_WIN)
@@ -2151,16 +2150,15 @@ MediaManager::MediaManager()
   mPrefs.mHeight       = 0; // adaptive default
   mPrefs.mFPS          = MediaEnginePrefs::DEFAULT_VIDEO_FPS;
   mPrefs.mAecOn        = false;
-  mPrefs.mUseAecMobile = false;
   mPrefs.mAgcOn        = false;
   mPrefs.mNoiseOn      = false;
   mPrefs.mExtendedFilter = true;
   mPrefs.mDelayAgnostic = true;
   mPrefs.mFakeDeviceChangeEventOn = false;
 #ifdef MOZ_WEBRTC
-  mPrefs.mAec          = webrtc::EchoCancellation::SuppressionLevel::kModerateSuppression;
-  mPrefs.mAgc          = webrtc::GainControl::Mode::kAdaptiveDigital;
-  mPrefs.mNoise        = webrtc::NoiseSuppression::Level::kModerate;
+  mPrefs.mAec          = webrtc::kEcUnchanged;
+  mPrefs.mAgc          = webrtc::kAgcUnchanged;
+  mPrefs.mNoise        = webrtc::kNsUnchanged;
 #else
   mPrefs.mAec          = 0;
   mPrefs.mAgc          = 0;

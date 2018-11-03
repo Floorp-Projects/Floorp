@@ -8,16 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_DESKTOP_CAPTURE_SCREEN_DRAWER_H_
-#define MODULES_DESKTOP_CAPTURE_SCREEN_DRAWER_H_
+#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_SCREEN_DRAWER_H_
+#define WEBRTC_MODULES_DESKTOP_CAPTURE_SCREEN_DRAWER_H_
 
 #include <stdint.h>
 
 #include <memory>
 
-#include "modules/desktop_capture/rgba_color.h"
-#include "modules/desktop_capture/desktop_capture_types.h"
-#include "modules/desktop_capture/desktop_geometry.h"
+#include "webrtc/modules/desktop_capture/rgba_color.h"
+#include "webrtc/modules/desktop_capture/desktop_geometry.h"
 
 namespace webrtc {
 
@@ -50,8 +49,7 @@ class ScreenDrawer {
   // Returns the region inside which DrawRectangle() function are expected to
   // work, in capturer coordinates (assuming ScreenCapturer::SelectScreen has
   // not been called). This region may exclude regions of the screen reserved by
-  // the OS for things like menu bars or app launchers. The DesktopRect is in
-  // system coordinate, i.e. the primary monitor always starts from (0, 0).
+  // the OS for things like menu bars or app launchers.
   virtual DesktopRect DrawableRegion() = 0;
 
   // Draws a rectangle to cover |rect| with |color|. Note, rect.bottom() and
@@ -72,12 +70,8 @@ class ScreenDrawer {
   // shapes will eventually be drawn on the screen, due to some OS limitations,
   // these shapes may be partially appeared sometimes.
   virtual bool MayDrawIncompleteShapes() = 0;
-
-  // Returns the id of the drawer window. This function returns kNullWindowId if
-  // the implementation does not draw on a window of the system.
-  virtual WindowId window_id() const = 0;
 };
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_SCREEN_DRAWER_H_
+#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_SCREEN_DRAWER_H_

@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_DESKTOP_CAPTURE_SHARED_MEMORY_H_
-#define MODULES_DESKTOP_CAPTURE_SHARED_MEMORY_H_
+#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_SHARED_MEMORY_H_
+#define WEBRTC_MODULES_DESKTOP_CAPTURE_SHARED_MEMORY_H_
 
 #include <stddef.h>
 
@@ -19,9 +19,8 @@
 
 #include <memory>
 
-#include "rtc_base/constructormagic.h"
-#include "rtc_base/thread_checker.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -79,5 +78,5 @@ class SharedMemoryFactory {
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_SHARED_MEMORY_H_
+#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_SHARED_MEMORY_H_
 

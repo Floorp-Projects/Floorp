@@ -10,8 +10,8 @@
 
 #include <algorithm>
 
-#include "modules/audio_coding/audio_network_adaptor/channel_controller.h"
-#include "rtc_base/checks.h"
+#include "webrtc/modules/audio_coding/audio_network_adaptor/channel_controller.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 
@@ -33,29 +33,24 @@ ChannelController::ChannelController(const Config& config)
                 config_.intial_channels_to_encode);
 }
 
-ChannelController::~ChannelController() = default;
-
-void ChannelController::UpdateNetworkMetrics(
-    const NetworkMetrics& network_metrics) {
-  if (network_metrics.uplink_bandwidth_bps)
-    uplink_bandwidth_bps_ = network_metrics.uplink_bandwidth_bps;
-}
-
-void ChannelController::MakeDecision(AudioEncoderRuntimeConfig* config) {
+void ChannelController::MakeDecision(
+    const NetworkMetrics& metrics,
+    AudioNetworkAdaptor::EncoderRuntimeConfig* config) {
   // Decision on |num_channels| should not have been made.
   RTC_DCHECK(!config->num_channels);
 
-  if (uplink_bandwidth_bps_) {
+  if (metrics.uplink_bandwidth_bps) {
     if (channels_to_encode_ == 2 &&
-        *uplink_bandwidth_bps_ <= config_.channel_2_to_1_bandwidth_bps) {
+        *metrics.uplink_bandwidth_bps <= config_.channel_2_to_1_bandwidth_bps) {
       channels_to_encode_ = 1;
     } else if (channels_to_encode_ == 1 &&
-               *uplink_bandwidth_bps_ >= config_.channel_1_to_2_bandwidth_bps) {
+               *metrics.uplink_bandwidth_bps >=
+                   config_.channel_1_to_2_bandwidth_bps) {
       channels_to_encode_ =
           std::min(static_cast<size_t>(2), config_.num_encoder_channels);
     }
   }
-  config->num_channels = channels_to_encode_;
+  config->num_channels = rtc::Optional<size_t>(channels_to_encode_);
 }
 
 }  // namespace webrtc

@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_NETEQ_TOOLS_RESAMPLE_INPUT_AUDIO_FILE_H_
-#define MODULES_AUDIO_CODING_NETEQ_TOOLS_RESAMPLE_INPUT_AUDIO_FILE_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_RESAMPLE_INPUT_AUDIO_FILE_H_
+#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_RESAMPLE_INPUT_AUDIO_FILE_H_
 
 #include <string>
 
-#include "common_audio/resampler/include/resampler.h"
-#include "modules/audio_coding/neteq/tools/input_audio_file.h"
-#include "rtc_base/constructormagic.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/common_audio/resampler/include/resampler.h"
+#include "webrtc/modules/audio_coding/neteq/tools/input_audio_file.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 namespace test {
@@ -48,4 +48,4 @@ class ResampleInputAudioFile : public InputAudioFile {
 
 }  // namespace test
 }  // namespace webrtc
-#endif  // MODULES_AUDIO_CODING_NETEQ_TOOLS_RESAMPLE_INPUT_AUDIO_FILE_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_RESAMPLE_INPUT_AUDIO_FILE_H_

@@ -12,14 +12,14 @@
  * clock skew by resampling the farend signal.
  */
 
-#include "modules/audio_processing/aec/aec_resampler.h"
+#include "webrtc/modules/audio_processing/aec/aec_resampler.h"
 
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "modules/audio_processing/aec/aec_core.h"
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/modules/audio_processing/aec/aec_core.h"
 
 namespace webrtc {
 
@@ -37,7 +37,7 @@ typedef struct {
 
 static int EstimateSkew(const int* rawSkew,
                         int size,
-                        int deviceSampleRateHz,
+                        int absLimit,
                         float* skewEst);
 
 void* WebRtcAec_CreateResampler() {

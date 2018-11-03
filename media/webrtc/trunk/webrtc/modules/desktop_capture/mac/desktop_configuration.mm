@@ -8,11 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/mac/desktop_configuration.h"
+#include "webrtc/modules/desktop_capture/mac/desktop_configuration.h"
 
 #include <math.h>
 #include <algorithm>
 #include <Cocoa/Cocoa.h>
+
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
 
@@ -24,6 +26,15 @@ DesktopRect NSRectToDesktopRect(const NSRect& ns_rect) {
       static_cast<int>(floor(ns_rect.origin.y)),
       static_cast<int>(ceil(ns_rect.origin.x + ns_rect.size.width)),
       static_cast<int>(ceil(ns_rect.origin.y + ns_rect.size.height)));
+}
+
+DesktopRect JoinRects(const DesktopRect& a,
+                              const DesktopRect& b) {
+  return DesktopRect::MakeLTRB(
+      std::min(a.left(), b.left()),
+      std::min(a.top(), b.top()),
+      std::max(a.right(), b.right()),
+      std::max(a.bottom(), b.bottom()));
 }
 
 // Inverts the position of |rect| from bottom-up coordinates to top-down,
@@ -129,8 +140,10 @@ MacDesktopConfiguration MacDesktopConfiguration::GetCurrent(Origin origin) {
     // display uses different DPI settings.
     if (display_config.dip_to_pixel_scale ==
         desktop_config.dip_to_pixel_scale) {
-      desktop_config.bounds.UnionWith(display_config.bounds);
-      desktop_config.pixel_bounds.UnionWith(display_config.pixel_bounds);
+      desktop_config.bounds =
+          JoinRects(desktop_config.bounds, display_config.bounds);
+      desktop_config.pixel_bounds =
+          JoinRects(desktop_config.pixel_bounds, display_config.pixel_bounds);
     }
   }
 

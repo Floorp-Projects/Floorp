@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef COMMON_AUDIO_WAV_FILE_H_
-#define COMMON_AUDIO_WAV_FILE_H_
+#ifndef WEBRTC_COMMON_AUDIO_WAV_FILE_H_
+#define WEBRTC_COMMON_AUDIO_WAV_FILE_H_
 
 #ifdef __cplusplus
 
@@ -17,7 +17,7 @@
 #include <cstddef>
 #include <string>
 
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/constructormagic.h"
 
 namespace webrtc {
 
@@ -115,4 +115,4 @@ size_t rtc_WavNumSamples(const rtc_WavWriter* wf);
 }  // extern "C"
 #endif
 
-#endif  // COMMON_AUDIO_WAV_FILE_H_
+#endif  // WEBRTC_COMMON_AUDIO_WAV_FILE_H_

@@ -25,13 +25,12 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef AUDIO_DEVICE_PULSEAUDIOSYMBOLTABLE_LINUX_H_
-#define AUDIO_DEVICE_PULSEAUDIOSYMBOLTABLE_LINUX_H_
+#ifndef WEBRTC_AUDIO_DEVICE_PULSEAUDIOSYMBOLTABLE_LINUX_H
+#define WEBRTC_AUDIO_DEVICE_PULSEAUDIOSYMBOLTABLE_LINUX_H
 
-#include "modules/audio_device/linux/latebindingsymboltable_linux.h"
+#include "webrtc/modules/audio_device/linux/latebindingsymboltable_linux.h"
 
-namespace webrtc {
-namespace adm_linux_pulse {
+namespace webrtc_adm_linux_pulse {
 
 // The PulseAudio symbols we need, as an X-Macro list.
 // This list must contain precisely every libpulse function that is used in
@@ -100,7 +99,6 @@ PULSE_AUDIO_SYMBOLS_LIST
 #undef X
 LATE_BINDING_SYMBOL_TABLE_DECLARE_END(PulseAudioSymbolTable)
 
-}  // namespace adm_linux_pulse
-}  // namespace webrtc
+}  // namespace webrtc_adm_linux_pulse
 
-#endif  // AUDIO_DEVICE_PULSEAUDIOSYMBOLTABLE_LINUX_H_
+#endif  // WEBRTC_AUDIO_DEVICE_PULSEAUDIOSYMBOLTABLE_LINUX_H

@@ -8,22 +8,25 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MEDIA_ENGINE_FAKEWEBRTCVIDEOCAPTUREMODULE_H_
-#define MEDIA_ENGINE_FAKEWEBRTCVIDEOCAPTUREMODULE_H_
+#ifndef WEBRTC_MEDIA_ENGINE_FAKEWEBRTCVIDEOCAPTUREMODULE_H_
+#define WEBRTC_MEDIA_ENGINE_FAKEWEBRTCVIDEOCAPTUREMODULE_H_
 
 #include <vector>
 
-#include "api/video/i420_buffer.h"
-#include "media/base/testutils.h"
-#include "media/engine/webrtcvideocapturer.h"
+#include "webrtc/api/video/i420_buffer.h"
+#include "webrtc/media/base/testutils.h"
+#include "webrtc/media/engine/webrtcvideocapturer.h"
 
 class FakeWebRtcVcmFactory;
 
 // Fake class for mocking out webrtc::VideoCaptureModule.
 class FakeWebRtcVideoCaptureModule : public webrtc::VideoCaptureModule {
  public:
-  explicit FakeWebRtcVideoCaptureModule(FakeWebRtcVcmFactory* factory)
-      : factory_(factory), callback_(NULL), running_(false) {}
+  FakeWebRtcVideoCaptureModule(FakeWebRtcVcmFactory* factory)
+      : factory_(factory),
+        callback_(NULL),
+        running_(false) {
+  }
   ~FakeWebRtcVideoCaptureModule();
   void RegisterCaptureDataCallback(
       rtc::VideoSinkInterface<webrtc::VideoFrame>* callback) override {
@@ -84,4 +87,4 @@ class FakeWebRtcVideoCaptureModule : public webrtc::VideoCaptureModule {
   webrtc::VideoCaptureCapability cap_;
 };
 
-#endif  // MEDIA_ENGINE_FAKEWEBRTCVIDEOCAPTUREMODULE_H_
+#endif  // WEBRTC_MEDIA_ENGINE_FAKEWEBRTCVIDEOCAPTUREMODULE_H_

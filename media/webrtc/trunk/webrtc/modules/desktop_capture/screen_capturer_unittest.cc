@@ -10,18 +10,18 @@
 
 #include <memory>
 
-#include "modules/desktop_capture/desktop_capture_options.h"
-#include "modules/desktop_capture/desktop_capturer.h"
-#include "modules/desktop_capture/desktop_frame.h"
-#include "modules/desktop_capture/desktop_region.h"
-#include "modules/desktop_capture/mock_desktop_capturer_callback.h"
-#include "rtc_base/constructormagic.h"
-#include "rtc_base/logging.h"
-#include "test/gmock.h"
-#include "test/gtest.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/modules/desktop_capture/desktop_capturer.h"
+#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
+#include "webrtc/modules/desktop_capture/desktop_frame.h"
+#include "webrtc/modules/desktop_capture/desktop_region.h"
+#include "webrtc/modules/desktop_capture/mock_desktop_capturer_callback.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 
 #if defined(WEBRTC_WIN)
-#include "modules/desktop_capture/win/screen_capturer_win_directx.h"
+#include "webrtc/modules/desktop_capture/win/screen_capturer_win_directx.h"
 #endif  // defined(WEBRTC_WIN)
 
 using ::testing::_;
@@ -35,7 +35,6 @@ class ScreenCapturerTest : public testing::Test {
   void SetUp() override {
     capturer_ = DesktopCapturer::CreateScreenCapturer(
         DesktopCaptureOptions::CreateDefault());
-    RTC_DCHECK(capturer_);
   }
 
  protected:
@@ -50,13 +49,18 @@ class ScreenCapturerTest : public testing::Test {
   }
 
   bool CreateDirectxCapturer() {
+    // Mozilla builds do not include the DirectX Capturer
+    #if !defined(WEBRTC_MOZILLA_BUILD)
     if (!ScreenCapturerWinDirectx::IsSupported()) {
-      RTC_LOG(LS_WARNING) << "Directx capturer is not supported";
+      LOG(LS_WARNING) << "Directx capturer is not supported";
       return false;
     }
 
     MaybeCreateDirectxCapturer();
     return true;
+    #else
+    return false;
+    #endif
   }
 
   void CreateMagnifierCapturer() {
@@ -110,22 +114,11 @@ TEST_F(ScreenCapturerTest, GetScreenListAndSelectScreen) {
   }
 }
 
-// Flaky on Linux. See: crbug.com/webrtc/7830
-#if defined(WEBRTC_LINUX)
-#define MAYBE_StartCapturer DISABLED_StartCaptuerer
-#else
-#define MAYBE_StartCapturer StartCapturer
-#endif
-TEST_F(ScreenCapturerTest, MAYBE_StartCapturer) {
+TEST_F(ScreenCapturerTest, StartCapturer) {
   capturer_->Start(&callback_);
 }
 
-#if defined(WEBRTC_LINUX)
-#define MAYBE_Capture DISABLED_Capture
-#else
-#define MAYBE_Capture Capture
-#endif
-TEST_F(ScreenCapturerTest, MAYBE_Capture) {
+TEST_F(ScreenCapturerTest, Capture) {
   // Assume that Start() treats the screen as invalid initially.
   std::unique_ptr<DesktopFrame> frame;
   EXPECT_CALL(callback_,

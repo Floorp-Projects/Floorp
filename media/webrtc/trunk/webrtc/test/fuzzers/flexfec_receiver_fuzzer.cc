@@ -10,17 +10,17 @@
 
 #include <algorithm>
 
-#include "modules/rtp_rtcp/include/flexfec_receiver.h"
-#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "modules/rtp_rtcp/source/byte_io.h"
-#include "modules/rtp_rtcp/source/rtp_packet_received.h"
-#include "rtc_base/basictypes.h"
+#include "webrtc/base/basictypes.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/include/flexfec_receiver.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_packet_received.h"
 
 namespace webrtc {
 
 namespace {
 class DummyCallback : public RecoveredPacketReceiver {
-  void OnRecoveredPacket(const uint8_t* packet, size_t length) override {}
+  bool OnRecoveredPacket(const uint8_t* packet, size_t length) { return true; }
 };
 }  // namespace
 
@@ -64,7 +64,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
     }
     RtpPacketReceived parsed_packet;
     if (parsed_packet.Parse(packet.get(), packet_length)) {
-      receiver.OnRtpPacket(parsed_packet);
+      receiver.AddAndProcessReceivedPacket(parsed_packet);
     }
   }
 }

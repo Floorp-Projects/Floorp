@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_LEVEL_CONTROLLER_GAIN_APPLIER_H_
-#define MODULES_AUDIO_PROCESSING_LEVEL_CONTROLLER_GAIN_APPLIER_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_LEVEL_CONTROLLER_GAIN_APPLIER_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_LEVEL_CONTROLLER_GAIN_APPLIER_H_
 
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/constructormagic.h"
 
 namespace webrtc {
 
@@ -39,4 +39,4 @@ class GainApplier {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_LEVEL_CONTROLLER_GAIN_APPLIER_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_LEVEL_CONTROLLER_GAIN_APPLIER_H_

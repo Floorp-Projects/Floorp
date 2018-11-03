@@ -111,10 +111,9 @@ private:
   /**
    * Sent the AudioProcessingModule parameter for a given processing algorithm.
    */
-  void UpdateAECSettings(bool aEnable, bool aUseAecMobile,
-                         webrtc::EchoCancellation::SuppressionLevel aLevel);
-  void UpdateAGCSettings(bool aEnable, webrtc::GainControl::Mode aMode);
-  void UpdateNSSettings(bool aEnable, webrtc::NoiseSuppression::Level aLevel);
+  void UpdateAECSettingsIfNeeded(bool aEnable, webrtc::EcModes aMode);
+  void UpdateAGCSettingsIfNeeded(bool aEnable, webrtc::AgcModes aMode);
+  void UpdateNSSettingsIfNeeded(bool aEnable, webrtc::NsModes aMode);
   void UpdateAPMExtraOptions(bool aExtendedFilter, bool aDelayAgnostic);
 
   TrackID mTrackID = TRACK_NONE;
@@ -202,10 +201,9 @@ public:
 
   // This allow changing the APM options, enabling or disabling processing
   // steps.
-  void UpdateAECSettings(bool aEnable, bool aUseAecMobile,
-                         webrtc::EchoCancellation::SuppressionLevel aLevel);
-  void UpdateAGCSettings(bool aEnable, webrtc::GainControl::Mode aMode);
-  void UpdateNSSettings(bool aEnable, webrtc::NoiseSuppression::Level aLevel);
+  void UpdateAECSettingsIfNeeded(bool aEnable, webrtc::EcModes aMode);
+  void UpdateAGCSettingsIfNeeded(bool aEnable, webrtc::AgcModes aMode);
+  void UpdateNSSettingsIfNeeded(bool aEnable, webrtc::NsModes aMode);
   void UpdateAPMExtraOptions(bool aExtendedFilter, bool aDelayAgnostic);
 
   void End();

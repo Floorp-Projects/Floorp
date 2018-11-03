@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/rtcp_packet/bye.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/bye.h"
 
 #include <utility>
 
-#include "modules/rtp_rtcp/source/byte_io.h"
-#include "modules/rtp_rtcp/source/rtcp_packet/common_header.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -34,15 +34,13 @@ constexpr uint8_t Bye::kPacketType;
 //       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 Bye::Bye() : sender_ssrc_(0) {}
 
-Bye::~Bye() = default;
-
 bool Bye::Parse(const CommonHeader& packet) {
   RTC_DCHECK_EQ(packet.type(), kPacketType);
 
   const uint8_t src_count = packet.count();
   // Validate packet.
   if (packet.payload_size_bytes() < 4u * src_count) {
-    RTC_LOG(LS_WARNING)
+    LOG(LS_WARNING)
         << "Packet is too small to contain CSRCs it promise to have.";
     return false;
   }
@@ -52,7 +50,7 @@ bool Bye::Parse(const CommonHeader& packet) {
   if (has_reason) {
     reason_length = payload[4u * src_count];
     if (packet.payload_size_bytes() - 4u * src_count < 1u + reason_length) {
-      RTC_LOG(LS_WARNING) << "Invalid reason length: " << reason_length;
+      LOG(LS_WARNING) << "Invalid reason length: " << reason_length;
       return false;
     }
   }
@@ -97,7 +95,7 @@ bool Bye::Create(uint8_t* packet,
   }
   // Store the reason to leave.
   if (!reason_.empty()) {
-    uint8_t reason_length = static_cast<uint8_t>(reason_.size());
+    uint8_t reason_length = reason_.size();
     packet[(*index)++] = reason_length;
     memcpy(&packet[*index], reason_.data(), reason_length);
     *index += reason_length;
@@ -115,7 +113,7 @@ bool Bye::Create(uint8_t* packet,
 
 bool Bye::SetCsrcs(std::vector<uint32_t> csrcs) {
   if (csrcs.size() > kMaxNumberOfCsrcs) {
-    RTC_LOG(LS_WARNING) << "Too many CSRCs for Bye packet.";
+    LOG(LS_WARNING) << "Too many CSRCs for Bye packet.";
     return false;
   }
   csrcs_ = std::move(csrcs);

@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_AUDIO_BUFFER_H_
-#define MODULES_AUDIO_PROCESSING_AUDIO_BUFFER_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AUDIO_BUFFER_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_AUDIO_BUFFER_H_
 
 #include <memory>
 #include <vector>
 
-#include "common_audio/channel_buffer.h"
-#include "modules/audio_processing/include/audio_processing.h"
-#include "modules/audio_processing/splitting_filter.h"
-#include "modules/include/module_common_types.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/common_audio/channel_buffer.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/modules/audio_processing/splitting_filter.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -110,7 +110,7 @@ class AudioBuffer {
   void DeinterleaveFrom(AudioFrame* audioFrame);
   // If |data_changed| is false, only the non-audio data members will be copied
   // to |frame|.
-  void InterleaveTo(AudioFrame* frame, bool data_changed) const;
+  void InterleaveTo(AudioFrame* frame, bool data_changed);
 
   // Use for float deinterleaved data.
   void CopyFrom(const float* const* data, const StreamConfig& stream_config);
@@ -163,4 +163,4 @@ class AudioBuffer {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AUDIO_BUFFER_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_AUDIO_BUFFER_H_

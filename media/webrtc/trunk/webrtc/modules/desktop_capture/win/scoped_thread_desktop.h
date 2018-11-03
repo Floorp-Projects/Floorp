@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_DESKTOP_CAPTURE_WIN_SCOPED_THREAD_DESKTOP_H_
-#define MODULES_DESKTOP_CAPTURE_WIN_SCOPED_THREAD_DESKTOP_H_
+#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_SCOPED_THREAD_DESKTOP_H_
+#define WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_SCOPED_THREAD_DESKTOP_H_
 
 #include <memory>
 
 #include <windows.h>
 
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/constructormagic.h"
 
 namespace webrtc {
 
@@ -51,4 +51,4 @@ class ScopedThreadDesktop {
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_WIN_SCOPED_THREAD_DESKTOP_H_
+#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_SCOPED_THREAD_DESKTOP_H_

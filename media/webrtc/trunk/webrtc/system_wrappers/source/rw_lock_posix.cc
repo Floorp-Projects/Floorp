@@ -8,11 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "system_wrappers/source/rw_lock_posix.h"
+#include "webrtc/system_wrappers/source/rw_lock_posix.h"
 
 namespace webrtc {
 
-RWLockPosix::RWLockPosix() : lock_() {}
+RWLockPosix::RWLockPosix() : lock_() {
+}
 
 RWLockPosix::~RWLockPosix() {
   pthread_rwlock_destroy(&lock_);

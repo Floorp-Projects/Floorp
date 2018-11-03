@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/congestion_controller/trendline_estimator.h"
+#include "webrtc/modules/congestion_controller/trendline_estimator.h"
 
 #include <algorithm>
 
-#include "api/optional.h"
-#include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/optional.h"
+#include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_logging.h"
 
 namespace webrtc {
 
 namespace {
 rtc::Optional<double> LinearFitSlope(
-    const std::deque<std::pair<double, double>>& points) {
+    const std::list<std::pair<double, double>> points) {
   RTC_DCHECK(points.size() >= 2);
   // Compute the "center of mass".
   double sum_x = 0;
@@ -39,8 +39,8 @@ rtc::Optional<double> LinearFitSlope(
     denominator += (point.first - x_avg) * (point.first - x_avg);
   }
   if (denominator == 0)
-    return rtc::nullopt;
-  return numerator / denominator;
+    return rtc::Optional<double>();
+  return rtc::Optional<double>(numerator / denominator);
 }
 }  // namespace
 

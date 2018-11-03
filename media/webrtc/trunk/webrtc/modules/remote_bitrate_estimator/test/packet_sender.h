@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_PACKET_SENDER_H_
-#define MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_PACKET_SENDER_H_
+#ifndef WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_PACKET_SENDER_H_
+#define WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_PACKET_SENDER_H_
 
 #include <list>
 #include <limits>
@@ -17,10 +17,10 @@
 #include <set>
 #include <string>
 
-#include "modules/include/module.h"
-#include "modules/remote_bitrate_estimator/test/bwe.h"
-#include "modules/remote_bitrate_estimator/test/bwe_test_framework.h"
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/include/module.h"
+#include "webrtc/modules/remote_bitrate_estimator/test/bwe.h"
+#include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_framework.h"
 
 namespace webrtc {
 namespace testing {
@@ -81,6 +81,7 @@ class VideoSender : public PacketSender, public BitrateObserver {
   void OnNetworkChanged(uint32_t target_bitrate_bps,
                         uint8_t fraction_lost,
                         int64_t rtt) override;
+
   void Pause() override;
   void Resume(int64_t paused_time_ms) override;
 
@@ -113,32 +114,20 @@ class PacedVideoSender : public VideoSender, public PacedSender::PacketSender {
                         uint16_t sequence_number,
                         int64_t capture_time_ms,
                         bool retransmission,
-                        const PacedPacketInfo& pacing_info) override;
-  size_t TimeToSendPadding(size_t bytes,
-                           const PacedPacketInfo& pacing_info) override;
+                        int probe_cluster_id) override;
+  size_t TimeToSendPadding(size_t bytes, int probe_cluster_id) override;
 
   // Implements BitrateObserver.
   void OnNetworkChanged(uint32_t target_bitrate_bps,
                         uint8_t fraction_lost,
                         int64_t rtt) override;
 
-  void OnNetworkChanged(uint32_t bitrate_for_encoder_bps,
-                        uint32_t bitrate_for_pacer_bps,
-                        bool in_probe_rtt,
-                        int64_t rtt,
-                        uint64_t congestion_window) override;
-  size_t pacer_queue_size_in_bytes() override {
-    return pacer_queue_size_in_bytes_;
-  }
-  void OnBytesAcked(size_t bytes) override;
-
  private:
   int64_t TimeUntilNextProcess(const std::list<Module*>& modules);
   void CallProcess(const std::list<Module*>& modules);
   void QueuePackets(Packets* batch, int64_t end_of_batch_time_us);
 
-  size_t pacer_queue_size_in_bytes_ = 0;
-  std::unique_ptr<Pacer> pacer_;
+  PacedSender pacer_;
   Packets queue_;
   Packets pacer_queue_;
 
@@ -204,4 +193,4 @@ class TcpSender : public PacketSender {
 }  // namespace bwe
 }  // namespace testing
 }  // namespace webrtc
-#endif  // MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_PACKET_SENDER_H_
+#endif  // WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_PACKET_SENDER_H_

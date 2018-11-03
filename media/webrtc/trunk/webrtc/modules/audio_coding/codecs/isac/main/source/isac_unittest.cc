@@ -9,9 +9,9 @@
  */
 #include <string>
 
-#include "modules/audio_coding/codecs/isac/main/include/isac.h"
-#include "test/gtest.h"
-#include "test/testsupport/fileutils.h"
+#include "webrtc/modules/audio_coding/codecs/isac/main/include/isac.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
 struct WebRtcISACStruct;
 

@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_
-#define MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_
+#define WEBRTC_MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_
 
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -70,4 +70,4 @@ enum VCMNaluCompleteness {
 };
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_

@@ -17,14 +17,14 @@
  *
  */
 
-#include "modules/audio_processing/agc/legacy/analog_agc.h"
+#include "webrtc/modules/audio_processing/agc/legacy/analog_agc.h"
 
 #include <stdlib.h>
 #ifdef WEBRTC_AGC_DEBUG_DUMP
 #include <stdio.h>
 #endif
 
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
 
 /* The slope of in Q13*/
 static const int16_t kSlope1[8] = {21793, 12517, 7189, 4129,

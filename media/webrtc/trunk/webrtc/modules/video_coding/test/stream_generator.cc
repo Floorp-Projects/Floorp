@@ -8,15 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/test/stream_generator.h"
+#include "webrtc/modules/video_coding/test/stream_generator.h"
 
 #include <string.h>
 
 #include <list>
 
-#include "modules/video_coding/packet.h"
-#include "system_wrappers/include/clock.h"
-#include "test/gtest.h"
+#include "webrtc/modules/video_coding/packet.h"
+#include "webrtc/modules/video_coding/test/test_util.h"
+#include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 

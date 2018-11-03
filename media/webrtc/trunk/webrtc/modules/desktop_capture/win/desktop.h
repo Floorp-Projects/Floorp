@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_DESKTOP_CAPTURE_WIN_DESKTOP_H_
-#define MODULES_DESKTOP_CAPTURE_WIN_DESKTOP_H_
+#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_DESKTOP_H_
+#define WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_DESKTOP_H_
 
 #include <windows.h>
 #include <string>
 
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/constructormagic.h"
 
 namespace webrtc {
 
@@ -60,4 +60,4 @@ class Desktop {
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_WIN_DESKTOP_H_
+#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_DESKTOP_H_

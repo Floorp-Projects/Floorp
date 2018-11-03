@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_NETEQ_PACKET_H_
-#define MODULES_AUDIO_CODING_NETEQ_PACKET_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_PACKET_H_
+#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_PACKET_H_
 
 #include <list>
 #include <memory>
 
-#include "api/audio_codecs/audio_decoder.h"
-#include "modules/audio_coding/neteq/tick_timer.h"
-#include "rtc_base/buffer.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/base/buffer.h"
+#include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
+#include "webrtc/modules/audio_coding/neteq/tick_timer.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -121,4 +121,4 @@ struct Packet {
 typedef std::list<Packet> PacketList;
 
 }  // namespace webrtc
-#endif  // MODULES_AUDIO_CODING_NETEQ_PACKET_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_PACKET_H_

@@ -13,7 +13,6 @@
 
 #import <WebRTC/RTCMacros.h>
 #import <WebRTC/RTCVideoRenderer.h>
-#import <WebRTC/RTCVideoViewShading.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -27,18 +26,12 @@ RTC_EXPORT
 
 /**
  * RTCEAGLVideoView is an RTCVideoRenderer which renders video frames in its
- * bounds using OpenGLES 2.0 or OpenGLES 3.0.
+ * bounds using OpenGLES 2.0.
  */
 RTC_EXPORT
 @interface RTCEAGLVideoView : UIView <RTCVideoRenderer>
 
 @property(nonatomic, weak) id<RTCEAGLVideoViewDelegate> delegate;
-
-- (instancetype)initWithFrame:(CGRect)frame
-                       shader:(id<RTCVideoViewShading>)shader NS_DESIGNATED_INITIALIZER;
-
-- (instancetype)initWithCoder:(NSCoder *)aDecoder
-                       shader:(id<RTCVideoViewShading>)shader NS_DESIGNATED_INITIALIZER;
 
 @end
 

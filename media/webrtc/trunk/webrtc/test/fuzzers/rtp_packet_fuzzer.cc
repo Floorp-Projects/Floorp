@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
-#include "modules/rtp_rtcp/source/rtp_header_extensions.h"
-#include "modules/rtp_rtcp/source/rtp_packet_received.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_header_extension.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_header_extensions.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_packet_received.h"
 
 namespace webrtc {
 
@@ -86,14 +86,6 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
         PlayoutDelay playout;
         packet.GetExtension<PlayoutDelayLimits>(&playout);
         break;
-      case kRtpExtensionVideoContentType:
-        VideoContentType content_type;
-        packet.GetExtension<VideoContentTypeExtension>(&content_type);
-        break;
-      case kRtpExtensionVideoTiming:
-        VideoSendTiming timing;
-        packet.GetExtension<VideoTimingExtension>(&timing);
-        break;
       case kRtpExtensionRtpStreamId: {
         std::string rsid;
         packet.GetExtension<RtpStreamId>(&rsid);
@@ -104,9 +96,9 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
         packet.GetExtension<RepairedRtpStreamId>(&rsid);
         break;
       }
-      case kRtpExtensionMid: {
+      case kRtpExtensionMId: {
         std::string mid;
-        packet.GetExtension<RtpMid>(&mid);
+        packet.GetExtension<MId>(&mid);
         break;
       }
       case kRtpExtensionCsrcAudioLevel: {

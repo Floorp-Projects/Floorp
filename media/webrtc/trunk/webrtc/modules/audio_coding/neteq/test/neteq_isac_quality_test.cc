@@ -8,10 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_coding/codecs/isac/fix/include/isacfix.h"
-#include "modules/audio_coding/neteq/tools/neteq_quality_test.h"
-#include "rtc_base/flags.h"
+#include "webrtc/modules/audio_coding/codecs/isac/fix/include/isacfix.h"
+#include "webrtc/modules/audio_coding/neteq/tools/neteq_quality_test.h"
 
+using google::RegisterFlagValidator;
+using google::ParseCommandLineFlags;
+using std::string;
 using testing::InitGoogleTest;
 
 namespace webrtc {
@@ -21,7 +23,18 @@ static const int kIsacBlockDurationMs = 30;
 static const int kIsacInputSamplingKhz = 16;
 static const int kIsacOutputSamplingKhz = 16;
 
-DEFINE_int(bit_rate_kbps, 32, "Target bit rate (kbps).");
+// Define switch for bit rate.
+static bool ValidateBitRate(const char* flagname, int32_t value) {
+  if (value >= 10 && value <= 32)
+    return true;
+  printf("Invalid bit rate, should be between 10 and 32 kbps.");
+  return false;
+}
+
+DEFINE_int32(bit_rate_kbps, 32, "Target bit rate (kbps).");
+
+static const bool bit_rate_dummy =
+    RegisterFlagValidator(&FLAGS_bit_rate_kbps, &ValidateBitRate);
 
 }  // namespace
 
@@ -43,11 +56,7 @@ NetEqIsacQualityTest::NetEqIsacQualityTest()
                        kIsacOutputSamplingKhz,
                        NetEqDecoder::kDecoderISAC),
       isac_encoder_(NULL),
-      bit_rate_kbps_(FLAG_bit_rate_kbps) {
-    // Flag validation
-    RTC_CHECK(FLAG_bit_rate_kbps >= 10 && FLAG_bit_rate_kbps <= 32)
-        << "Invalid bit rate, should be between 10 and 32 kbps.";
-  }
+      bit_rate_kbps_(FLAGS_bit_rate_kbps) {}
 
 void NetEqIsacQualityTest::SetUp() {
   ASSERT_EQ(1u, channels_) << "iSAC supports only mono audio.";

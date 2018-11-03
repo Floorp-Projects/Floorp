@@ -36,16 +36,16 @@ bool MediaPipelineFilter::Filter(const webrtc::RTPHeader& header,
     return false;
   }
 
-  if (!header.extension.stream_id.empty() &&
+  if (!header.extension.rtpStreamId.empty() &&
       !remote_rid_set_.empty() &&
-      remote_rid_set_.count(header.extension.stream_id.data())) {
+      remote_rid_set_.count(header.extension.rtpStreamId.data())) {
     return true;
   }
-  if (!header.extension.stream_id.empty()) {
+  if (!header.extension.rtpStreamId.empty()) {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
             ("MediaPipelineFilter ignoring seq# %u ssrc: %u RID: %s",
              header.sequenceNumber, header.ssrc,
-             header.extension.stream_id.data()));
+             header.extension.rtpStreamId.data()));
   }
 
   if (remote_ssrc_set_.count(header.ssrc)) {

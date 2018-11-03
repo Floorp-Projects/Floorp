@@ -7,10 +7,10 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "test/win/d3d_renderer.h"
+#include "webrtc/test/win/d3d_renderer.h"
 
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 
 namespace webrtc {
 namespace test {
@@ -203,8 +203,7 @@ void D3dRenderer::OnFrame(const webrtc::VideoFrame& frame) {
   if (texture_->LockRect(0, &lock_rect, NULL, 0) != D3D_OK)
     return;
 
-  ConvertFromI420(frame, VideoType::kARGB, 0,
-                  static_cast<uint8_t*>(lock_rect.pBits));
+  ConvertFromI420(frame, kARGB, 0, static_cast<uint8_t*>(lock_rect.pBits));
   texture_->UnlockRect(0);
 
   d3d_device_->BeginScene();

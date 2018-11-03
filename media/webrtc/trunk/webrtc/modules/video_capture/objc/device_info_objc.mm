@@ -14,8 +14,8 @@
 
 #import <AVFoundation/AVFoundation.h>
 
-#import "modules/video_capture/objc/device_info_objc.h"
-#include "modules/video_capture/video_capture_config.h"
+#import "webrtc/modules/video_capture/objc/device_info_objc.h"
+#include "webrtc/modules/video_capture/video_capture_config.h"
 
 @implementation DeviceInfoIosObjC
 
@@ -60,19 +60,28 @@
     capability.width = 352;
     capability.height = 288;
     capability.maxFPS = 30;
-    capability.videoType = webrtc::VideoType::kNV12;
+    capability.expectedCaptureDelay =
+        webrtc::videocapturemodule::kDefaultCaptureDelay;
+    capability.rawType = webrtc::kVideoNV12;
+    capability.codecType = webrtc::kVideoCodecUnknown;
     capability.interlaced = false;
   } else if ([preset isEqualToString:AVCaptureSessionPreset640x480]) {
     capability.width = 640;
     capability.height = 480;
     capability.maxFPS = 30;
-    capability.videoType = webrtc::VideoType::kNV12;
+    capability.expectedCaptureDelay =
+        webrtc::videocapturemodule::kDefaultCaptureDelay;
+    capability.rawType = webrtc::kVideoNV12;
+    capability.codecType = webrtc::kVideoCodecUnknown;
     capability.interlaced = false;
   } else if ([preset isEqualToString:AVCaptureSessionPreset1280x720]) {
     capability.width = 1280;
     capability.height = 720;
     capability.maxFPS = 30;
-    capability.videoType = webrtc::VideoType::kNV12;
+    capability.expectedCaptureDelay =
+        webrtc::videocapturemodule::kDefaultCaptureDelay;
+    capability.rawType = webrtc::kVideoNV12;
+    capability.codecType = webrtc::kVideoCodecUnknown;
     capability.interlaced = false;
   }
 

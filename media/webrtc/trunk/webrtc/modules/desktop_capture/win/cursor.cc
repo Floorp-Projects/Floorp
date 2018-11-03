@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/win/cursor.h"
+#include "webrtc/modules/desktop_capture/win/cursor.h"
 
 #include <algorithm>
 #include <memory>
 
-#include "modules/desktop_capture/desktop_frame.h"
-#include "modules/desktop_capture/desktop_geometry.h"
-#include "modules/desktop_capture/mouse_cursor.h"
-#include "modules/desktop_capture/win/scoped_gdi_object.h"
-#include "rtc_base/logging.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/desktop_capture/win/scoped_gdi_object.h"
+#include "webrtc/modules/desktop_capture/desktop_frame.h"
+#include "webrtc/modules/desktop_capture/desktop_geometry.h"
+#include "webrtc/modules/desktop_capture/mouse_cursor.h"
+#include "webrtc/system_wrappers/include/logging.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -41,8 +41,6 @@ namespace {
     ((a) & 0xff))
 
 #endif  // !defined(WEBRTC_ARCH_LITTLE_ENDIAN)
-
-const int kBytesPerPixel = DesktopFrame::kBytesPerPixel;
 
 // Pixel colors used when generating cursor outlines.
 const uint32_t kPixelRgbaBlack = RGBA(0, 0, 0, 0xff);
@@ -76,7 +74,7 @@ void AddCursorOutline(int width, int height, uint32_t* data) {
 // Premultiplies RGB components of the pixel data in the given image by
 // the corresponding alpha components.
 void AlphaMul(uint32_t* data, int width, int height) {
-  static_assert(sizeof(uint32_t) == kBytesPerPixel,
+  static_assert(sizeof(uint32_t) == DesktopFrame::kBytesPerPixel,
                 "size of uint32 should be the number of bytes per pixel");
 
   for (uint32_t* data_end = data + width * height; data != data_end; ++data) {
@@ -112,8 +110,8 @@ bool HasAlphaChannel(const uint32_t* data, int stride, int width, int height) {
 MouseCursor* CreateMouseCursorFromHCursor(HDC dc, HCURSOR cursor) {
   ICONINFO iinfo;
   if (!GetIconInfo(cursor, &iinfo)) {
-    RTC_LOG_F(LS_ERROR) << "Unable to get cursor icon info. Error = "
-                        << GetLastError();
+    LOG_F(LS_ERROR) << "Unable to get cursor icon info. Error = "
+                    << GetLastError();
     return NULL;
   }
 
@@ -128,8 +126,8 @@ MouseCursor* CreateMouseCursorFromHCursor(HDC dc, HCURSOR cursor) {
   // Get |scoped_mask| dimensions.
   BITMAP bitmap_info;
   if (!GetObject(scoped_mask, sizeof(bitmap_info), &bitmap_info)) {
-    RTC_LOG_F(LS_ERROR) << "Unable to get bitmap info. Error = "
-                        << GetLastError();
+    LOG_F(LS_ERROR) << "Unable to get bitmap info. Error = "
+                    << GetLastError();
     return NULL;
   }
 
@@ -144,7 +142,7 @@ MouseCursor* CreateMouseCursorFromHCursor(HDC dc, HCURSOR cursor) {
   bmi.bV5Width = width;
   bmi.bV5Height = -height;  // request a top-down bitmap.
   bmi.bV5Planes = 1;
-  bmi.bV5BitCount = kBytesPerPixel * 8;
+  bmi.bV5BitCount = DesktopFrame::kBytesPerPixel * 8;
   bmi.bV5Compression = BI_RGB;
   bmi.bV5AlphaMask = 0xff000000;
   bmi.bV5CSType = LCS_WINDOWS_COLOR_SPACE;
@@ -156,8 +154,8 @@ MouseCursor* CreateMouseCursorFromHCursor(HDC dc, HCURSOR cursor) {
                  mask_data.get(),
                  reinterpret_cast<BITMAPINFO*>(&bmi),
                  DIB_RGB_COLORS)) {
-    RTC_LOG_F(LS_ERROR) << "Unable to get bitmap bits. Error = "
-                        << GetLastError();
+    LOG_F(LS_ERROR) << "Unable to get bitmap bits. Error = "
+                    << GetLastError();
     return NULL;
   }
 
@@ -176,8 +174,8 @@ MouseCursor* CreateMouseCursorFromHCursor(HDC dc, HCURSOR cursor) {
                    image->data(),
                    reinterpret_cast<BITMAPINFO*>(&bmi),
                    DIB_RGB_COLORS)) {
-      RTC_LOG_F(LS_ERROR) << "Unable to get bitmap bits. Error = "
-                          << GetLastError();
+      LOG_F(LS_ERROR) << "Unable to get bitmap bits. Error = "
+                      << GetLastError();
       return NULL;
     }
 

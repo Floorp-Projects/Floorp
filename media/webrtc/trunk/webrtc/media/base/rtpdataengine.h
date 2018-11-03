@@ -8,17 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MEDIA_BASE_RTPDATAENGINE_H_
-#define MEDIA_BASE_RTPDATAENGINE_H_
+#ifndef WEBRTC_MEDIA_BASE_RTPDATAENGINE_H_
+#define WEBRTC_MEDIA_BASE_RTPDATAENGINE_H_
 
-#include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "media/base/mediachannel.h"
-#include "media/base/mediaconstants.h"
-#include "media/base/mediaengine.h"
+#include "webrtc/media/base/mediachannel.h"
+#include "webrtc/media/base/mediaconstants.h"
+#include "webrtc/media/base/mediaengine.h"
 
 namespace cricket {
 
@@ -62,7 +61,7 @@ class RtpClock {
 
 class RtpDataMediaChannel : public DataMediaChannel {
  public:
-  explicit RtpDataMediaChannel(const MediaConfig& config);
+  RtpDataMediaChannel(const MediaConfig& config);
   virtual ~RtpDataMediaChannel();
 
   virtual bool SetSendParameters(const DataSendParameters& params);
@@ -84,6 +83,7 @@ class RtpDataMediaChannel : public DataMediaChannel {
   virtual void OnRtcpReceived(rtc::CopyOnWriteBuffer* packet,
                               const rtc::PacketTime& packet_time) {}
   virtual void OnReadyToSend(bool ready) {}
+  virtual void OnTransportOverheadChanged(int transport_overhead_per_packet) {}
   virtual bool SendData(
     const SendDataParams& params,
     const rtc::CopyOnWriteBuffer& payload,
@@ -108,4 +108,4 @@ class RtpDataMediaChannel : public DataMediaChannel {
 
 }  // namespace cricket
 
-#endif  // MEDIA_BASE_RTPDATAENGINE_H_
+#endif  // WEBRTC_MEDIA_BASE_RTPDATAENGINE_H_

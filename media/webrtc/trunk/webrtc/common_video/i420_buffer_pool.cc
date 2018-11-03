@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_video/include/i420_buffer_pool.h"
+#include "webrtc/common_video/include/i420_buffer_pool.h"
 
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 

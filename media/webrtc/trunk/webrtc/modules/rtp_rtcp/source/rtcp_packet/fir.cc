@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/rtcp_packet/fir.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/fir.h"
 
-#include "modules/rtp_rtcp/source/byte_io.h"
-#include "modules/rtp_rtcp/source/rtcp_packet/common_header.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -43,23 +43,18 @@ constexpr uint8_t Fir::kFeedbackMessageType;
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //  | Seq nr.       |    Reserved = 0                               |
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-Fir::Fir() = default;
-
-Fir::~Fir() = default;
-
 bool Fir::Parse(const CommonHeader& packet) {
   RTC_DCHECK_EQ(packet.type(), kPacketType);
   RTC_DCHECK_EQ(packet.fmt(), kFeedbackMessageType);
 
   // The FCI field MUST contain one or more FIR entries.
   if (packet.payload_size_bytes() < kCommonFeedbackLength + kFciLength) {
-    RTC_LOG(LS_WARNING) << "Packet is too small to be a valid FIR packet.";
+    LOG(LS_WARNING) << "Packet is too small to be a valid FIR packet.";
     return false;
   }
 
   if ((packet.payload_size_bytes() - kCommonFeedbackLength) % kFciLength != 0) {
-    RTC_LOG(LS_WARNING) << "Invalid size for a valid FIR packet.";
+    LOG(LS_WARNING) << "Invalid size for a valid FIR packet.";
     return false;
   }
 
@@ -75,10 +70,6 @@ bool Fir::Parse(const CommonHeader& packet) {
     next_fci += kFciLength;
   }
   return true;
-}
-
-size_t Fir::BlockLength() const {
-  return kHeaderLength + kCommonFeedbackLength + kFciLength * items_.size();
 }
 
 bool Fir::Create(uint8_t* packet,

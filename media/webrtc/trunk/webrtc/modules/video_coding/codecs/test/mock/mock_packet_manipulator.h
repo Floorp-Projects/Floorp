@@ -8,15 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_CODECS_TEST_MOCK_MOCK_PACKET_MANIPULATOR_H_
-#define MODULES_VIDEO_CODING_CODECS_TEST_MOCK_MOCK_PACKET_MANIPULATOR_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_MOCK_MOCK_PACKET_MANIPULATOR_H_
+#define WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_MOCK_MOCK_PACKET_MANIPULATOR_H_
+
+#include "webrtc/modules/video_coding/codecs/test/packet_manipulator.h"
 
 #include <string>
 
-#include "modules/video_coding/codecs/test/packet_manipulator.h"
-#include "test/gmock.h"
-#include "typedefs.h"  // NOLINT(build/include)
-#include "common_video/include/video_frame.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/video_frame.h"
 
 namespace webrtc {
 namespace test {
@@ -29,4 +30,4 @@ class MockPacketManipulator : public PacketManipulator {
 }  // namespace test
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_CODECS_TEST_MOCK_MOCK_PACKET_MANIPULATOR_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_MOCK_MOCK_PACKET_MANIPULATOR_H_

@@ -8,33 +8,31 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_RTP_RTCP_SOURCE_RTP_UTILITY_H_
-#define MODULES_RTP_RTCP_SOURCE_RTP_UTILITY_H_
+#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_UTILITY_H_
+#define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_UTILITY_H_
 
-#include <cstring>
 #include <map>
 
-#include "modules/rtp_rtcp/include/receive_statistics.h"
-#include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
-#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
-#include "rtc_base/deprecation.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/base/deprecation.h"
+#include "webrtc/modules/rtp_rtcp/include/receive_statistics.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_header_extension.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_rtcp_config.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
 const uint8_t kRtpMarkerBitMask = 0x80;
 
+RtpData* NullObjectRtpData();
 RtpFeedback* NullObjectRtpFeedback();
+ReceiveStatistics* NullObjectReceiveStatistics();
 
 namespace RtpUtility {
 
 struct Payload {
-  Payload(const char* name, const PayloadUnion& pu) : typeSpecific(pu) {
-    std::strncpy(this->name, name, sizeof(this->name) - 1);
-    this->name[sizeof(this->name) - 1] = '\0';
-  }
   char name[RTP_PAYLOAD_NAME_SIZE];
+  bool audio;
   PayloadUnion typeSpecific;
 };
 
@@ -66,4 +64,4 @@ class RtpHeaderParser {
 }  // namespace RtpUtility
 }  // namespace webrtc
 
-#endif  // MODULES_RTP_RTCP_SOURCE_RTP_UTILITY_H_
+#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_UTILITY_H_

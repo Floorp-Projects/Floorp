@@ -10,19 +10,18 @@
 
 // Unit tests for RedPayloadSplitter class.
 
-#include "modules/audio_coding/neteq/red_payload_splitter.h"
+#include "webrtc/modules/audio_coding/neteq/red_payload_splitter.h"
 
 #include <assert.h>
 
 #include <memory>
 #include <utility>  // pair
 
-#include "api/audio_codecs/builtin_audio_decoder_factory.h"
-#include "modules/audio_coding/neteq/mock/mock_decoder_database.h"
-#include "modules/audio_coding/neteq/packet.h"
-#include "rtc_base/numerics/safe_conversions.h"
-#include "test/gtest.h"
-#include "test/mock_audio_decoder_factory.h"
+#include "webrtc/modules/audio_coding/codecs/builtin_audio_decoder_factory.h"
+#include "webrtc/modules/audio_coding/codecs/mock/mock_audio_decoder_factory.h"
+#include "webrtc/modules/audio_coding/neteq/mock/mock_decoder_database.h"
+#include "webrtc/modules/audio_coding/neteq/packet.h"
+#include "webrtc/test/gtest.h"
 
 using ::testing::Return;
 using ::testing::ReturnNull;
@@ -100,8 +99,7 @@ Packet CreateRedPayload(size_t num_payloads,
     // Not the last block; set F = 1.
     *payload_ptr |= 0x80;
     ++payload_ptr;
-    int this_offset = rtc::checked_cast<int>(
-        (num_payloads - i - 1) * timestamp_offset);
+    int this_offset = (num_payloads - i - 1) * timestamp_offset;
     *payload_ptr = this_offset >> 6;
     ++payload_ptr;
     assert(kPayloadLength <= 1023);  // Max length described by 10 bits.

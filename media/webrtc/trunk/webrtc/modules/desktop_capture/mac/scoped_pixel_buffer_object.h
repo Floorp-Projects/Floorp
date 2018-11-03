@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_DESKTOP_CAPTURE_SCOPED_PIXEL_BUFFER_OBJECT_H_
-#define MODULES_DESKTOP_CAPTURE_SCOPED_PIXEL_BUFFER_OBJECT_H_
+#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_SCOPED_PIXEL_BUFFER_OBJECT_H_
+#define WEBRTC_MODULES_DESKTOP_CAPTURE_SCOPED_PIXEL_BUFFER_OBJECT_H_
 
 #include <OpenGL/CGLMacro.h>
 #include <OpenGL/OpenGL.h>
 
-#include "rtc_base/constructormagic.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -38,4 +38,4 @@ class ScopedPixelBufferObject {
 
 }  // namespace webrtc
 
-#endif // MODULES_DESKTOP_CAPTURE_SCOPED_PIXEL_BUFFER_OBJECT_H_
+#endif // WEBRTC_MODULES_DESKTOP_CAPTURE_SCOPED_PIXEL_BUFFER_OBJECT_H_

@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_coding/audio_network_adaptor/dtx_controller.h"
-#include "rtc_base/checks.h"
+#include "webrtc/modules/audio_coding/audio_network_adaptor/dtx_controller.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 
@@ -23,28 +23,23 @@ DtxController::Config::Config(bool initial_dtx_enabled,
 DtxController::DtxController(const Config& config)
     : config_(config), dtx_enabled_(config_.initial_dtx_enabled) {}
 
-DtxController::~DtxController() = default;
-
-void DtxController::UpdateNetworkMetrics(
-    const NetworkMetrics& network_metrics) {
-  if (network_metrics.uplink_bandwidth_bps)
-    uplink_bandwidth_bps_ = network_metrics.uplink_bandwidth_bps;
-}
-
-void DtxController::MakeDecision(AudioEncoderRuntimeConfig* config) {
+void DtxController::MakeDecision(
+    const NetworkMetrics& metrics,
+    AudioNetworkAdaptor::EncoderRuntimeConfig* config) {
   // Decision on |enable_dtx| should not have been made.
   RTC_DCHECK(!config->enable_dtx);
 
-  if (uplink_bandwidth_bps_) {
+  if (metrics.uplink_bandwidth_bps) {
     if (dtx_enabled_ &&
-        *uplink_bandwidth_bps_ >= config_.dtx_disabling_bandwidth_bps) {
+        *metrics.uplink_bandwidth_bps >= config_.dtx_disabling_bandwidth_bps) {
       dtx_enabled_ = false;
     } else if (!dtx_enabled_ &&
-               *uplink_bandwidth_bps_ <= config_.dtx_enabling_bandwidth_bps) {
+               *metrics.uplink_bandwidth_bps <=
+                   config_.dtx_enabling_bandwidth_bps) {
       dtx_enabled_ = true;
     }
   }
-  config->enable_dtx = dtx_enabled_;
+  config->enable_dtx = rtc::Optional<bool>(dtx_enabled_);
 }
 
 }  // namespace webrtc

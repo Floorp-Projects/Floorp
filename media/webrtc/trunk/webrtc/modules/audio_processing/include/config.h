@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_INCLUDE_CONFIG_H_
-#define MODULES_AUDIO_PROCESSING_INCLUDE_CONFIG_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_INCLUDE_CONFIG_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_INCLUDE_CONFIG_H_
 
 #include <map>
 
-#include "rtc_base/basictypes.h"
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/basictypes.h"
+#include "webrtc/base/constructormagic.h"
 
 namespace webrtc {
 
@@ -131,4 +131,4 @@ void Config::Set(T* value) {
 }
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_INCLUDE_CONFIG_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_INCLUDE_CONFIG_H_

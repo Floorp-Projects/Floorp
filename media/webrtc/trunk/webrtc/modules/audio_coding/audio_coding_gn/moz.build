@@ -10,13 +10,11 @@ COMPILE_FLAGS["OS_INCLUDES"] = []
 AllowCompilerWarnings()
 
 DEFINES["CHROMIUM_BUILD"] = True
+DEFINES["EXPAT_RELATIVE_PATH"] = True
 DEFINES["V8_DEPRECATION_WARNINGS"] = True
-DEFINES["WEBRTC_CODEC_ILBC"] = True
+DEFINES["WEBRTC_CODEC_G722"] = True
 DEFINES["WEBRTC_CODEC_OPUS"] = True
-DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
 DEFINES["WEBRTC_MOZILLA_BUILD"] = True
-DEFINES["WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS"] = "0"
-DEFINES["WEBRTC_OPUS_SUPPORT_120MS_PTIME"] = "1"
 DEFINES["WEBRTC_RESTRICT_LOGGING"] = True
 
 FINAL_LIBRARY = "webrtc"
@@ -26,7 +24,12 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/",
+    "/media/webrtc/trunk/",
+    "/media/webrtc/trunk/",
+    "/media/webrtc/trunk/",
+    "/media/webrtc/trunk/",
+    "/media/webrtc/trunk/",
+    "/media/webrtc/trunk/",
     "/media/webrtc/trunk/webrtc/common_audio/resampler/include/",
     "/media/webrtc/trunk/webrtc/common_audio/signal_processing/include/",
     "/media/webrtc/trunk/webrtc/common_audio/vad/include/",
@@ -79,7 +82,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["CR_XCODE_VERSION"] = "0920"
     DEFINES["NO_TCMALLOC"] = True
-    DEFINES["WEBRTC_CODEC_ISAC"] = True
     DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
@@ -88,15 +90,10 @@ if CONFIG["OS_TARGET"] == "Darwin":
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
-    OS_LIBS += [
-        "-framework Foundation"
-    ]
-
 if CONFIG["OS_TARGET"] == "DragonFly":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
-    DEFINES["WEBRTC_CODEC_ISAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
@@ -115,7 +112,6 @@ if CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["USE_NSS_CERTS"] = "1"
     DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_CODEC_ISAC"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
@@ -151,7 +147,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["NTDDI_VERSION"] = "0x0A000000"
     DEFINES["PSAPI_VERSION"] = "1"
     DEFINES["UNICODE"] = True
-    DEFINES["WEBRTC_CODEC_ISAC"] = True
     DEFINES["WEBRTC_WIN"] = True
     DEFINES["WIN32"] = True
     DEFINES["WIN32_LEAN_AND_MEAN"] = True
@@ -180,12 +175,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
 if CONFIG["CPU_ARCH"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
-    DEFINES["WEBRTC_CODEC_ISAC"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
-
-    LOCAL_INCLUDES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
-    ]
 
 if CONFIG["CPU_ARCH"] == "arm":
 
@@ -195,7 +185,6 @@ if CONFIG["CPU_ARCH"] == "arm":
 
     DEFINES["WEBRTC_ARCH_ARM"] = True
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
-    DEFINES["WEBRTC_CODEC_ISACFX"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
     LOCAL_INCLUDES += [
@@ -226,9 +215,11 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
-if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
 
-    DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+    ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
@@ -236,15 +227,17 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
         "-msse2"
     ]
 
-    DEFINES["WEBRTC_CODEC_ISAC"] = True
-
     LOCAL_INCLUDES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
 
-    DEFINES["WEBRTC_CODEC_ISAC"] = True
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+    ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     LOCAL_INCLUDES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
@@ -256,15 +249,22 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
         "-msse2"
     ]
 
-    DEFINES["WEBRTC_CODEC_ISAC"] = True
-
     LOCAL_INCLUDES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "FreeBSD":
 
-    DEFINES["WEBRTC_CODEC_ISAC"] = True
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+    ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["NO_TCMALLOC"] = True
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "NetBSD":
 
     LOCAL_INCLUDES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
@@ -276,15 +276,17 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
         "-msse2"
     ]
 
-    DEFINES["WEBRTC_CODEC_ISAC"] = True
-
     LOCAL_INCLUDES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "NetBSD":
 
-    DEFINES["WEBRTC_CODEC_ISAC"] = True
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+    ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     LOCAL_INCLUDES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
@@ -296,15 +298,11 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
         "-msse2"
     ]
 
-    DEFINES["WEBRTC_CODEC_ISAC"] = True
-
     LOCAL_INCLUDES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
-
-    DEFINES["WEBRTC_CODEC_ISAC"] = True
 
     LOCAL_INCLUDES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"

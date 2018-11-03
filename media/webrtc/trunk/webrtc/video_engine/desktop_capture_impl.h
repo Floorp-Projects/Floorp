@@ -18,23 +18,22 @@
 #include <string>
 #include <memory>
 
-
-#include "api/video/video_frame.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "modules/video_capture/video_capture_config.h"
-#include "modules/desktop_capture/shared_memory.h"
-#include "modules/desktop_capture/desktop_device_info.h"
-#include "modules/desktop_capture/desktop_and_cursor_composer.h"
-#include "rtc_base/criticalsection.h"
-#include "rtc_base/platform_thread.h"
-#include "rtc_base/scoped_ref_ptr.h"
-#include "system_wrappers/include/event_wrapper.h"
+#include "webrtc/video_frame.h"
+#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/modules/video_capture/video_capture_config.h"
+#include "webrtc/modules/desktop_capture/shared_memory.h"
+#include "webrtc/base/platform_thread.h"
+#include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "webrtc/modules/desktop_capture/desktop_device_info.h"
+#include "webrtc/modules/desktop_capture/desktop_and_cursor_composer.h"
 #include <set>
 
 using namespace webrtc::videocapturemodule;
 
 namespace webrtc {
 
+class CriticalSectionWrapper;
 class VideoCaptureEncodeInterface;
 
 
@@ -170,30 +169,33 @@ public:
   static VideoCaptureModule::DeviceInfo* CreateDeviceInfo(const int32_t id, const CaptureDeviceType type);
 
   int32_t Init(const char* uniqueId, const CaptureDeviceType type);
+  //RefCounting for RefCountedModule
+  virtual int32_t AddRef() const override;
+  virtual int32_t Release() const override;
   //Call backs
-  void RegisterCaptureDataCallback(rtc::VideoSinkInterface<VideoFrame> *dataCallback) override;
-  void DeRegisterCaptureDataCallback(rtc::VideoSinkInterface<VideoFrame> *dataCallback) override;
-  int32_t StopCaptureIfAllClientsClose() override;
+  virtual void RegisterCaptureDataCallback(rtc::VideoSinkInterface<VideoFrame> *dataCallback) override;
+  virtual void DeRegisterCaptureDataCallback(rtc::VideoSinkInterface<VideoFrame> *dataCallback) override;
+  virtual int32_t StopCaptureIfAllClientsClose() override;
 
-  int32_t SetCaptureRotation(VideoRotation rotation) override;
-  bool SetApplyRotation(bool enable) override;
-  bool GetApplyRotation() override { return true; }
+  virtual int32_t SetCaptureRotation(VideoRotation rotation) override;
+  virtual bool SetApplyRotation(bool enable) override;
+  virtual bool GetApplyRotation() override { return true; }
 
-  const char* CurrentDeviceName() const override;
+  virtual const char* CurrentDeviceName() const override;
 
   // Implement VideoCaptureExternal
   // |capture_time| must be specified in the NTP time format in milliseconds.
-  int32_t IncomingFrame(uint8_t* videoFrame,
-                        size_t videoFrameLength,
-                        const VideoCaptureCapability& frameInfo,
-                        int64_t captureTime = 0) override;
+  virtual int32_t IncomingFrame(uint8_t* videoFrame,
+                                size_t videoFrameLength,
+                                const VideoCaptureCapability& frameInfo,
+                                int64_t captureTime = 0) override;
 
   // Platform dependent
-  int32_t StartCapture(const VideoCaptureCapability& capability) override;
+  virtual int32_t StartCapture(const VideoCaptureCapability& capability) override;
   virtual bool FocusOnSelectedSource() override;
-  int32_t StopCapture() override;
-  bool CaptureStarted() override;
-  int32_t CaptureSettings(VideoCaptureCapability& settings) override;
+  virtual int32_t StopCapture() override;
+  virtual bool CaptureStarted() override;
+  virtual int32_t CaptureSettings(VideoCaptureCapability& settings) override;
 
 protected:
   DesktopCaptureImpl(const int32_t id);
@@ -205,14 +207,14 @@ protected:
 
   int32_t _id; // Module ID
   std::string _deviceUniqueId; // current Device unique name;
-  rtc::CriticalSection _apiCs;
+  CriticalSectionWrapper& _apiCs;
   VideoCaptureCapability _requestedCapability; // Should be set by platform dependent code in StartCapture.
 
 private:
   void UpdateFrameCount();
   uint32_t CalculateFrameRate(int64_t now_ns);
 
-  rtc::CriticalSection _callBackCs;
+  CriticalSectionWrapper& _callBackCs;
 
   std::set<rtc::VideoSinkInterface<VideoFrame>*> _dataCallBacks;
 
@@ -244,6 +246,7 @@ private:
 #else
   std::unique_ptr<rtc::PlatformThread> capturer_thread_;
 #endif
+  mutable uint32_t mRefCount;
   bool started_;
 };
 

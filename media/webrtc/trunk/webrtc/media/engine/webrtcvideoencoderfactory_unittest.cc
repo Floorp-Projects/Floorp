@@ -8,30 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "media/engine/webrtcvideoencoderfactory.h"
+#include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 
-#include "test/gtest.h"
+#include "webrtc/test/gtest.h"
 
 class WebRtcVideoEncoderFactoryForTest
     : public cricket::WebRtcVideoEncoderFactory {
  public:
   WebRtcVideoEncoderFactoryForTest() {
-    codecs_.push_back(cricket::VideoCodec("H264"));
-    codecs_.push_back(cricket::VideoCodec("VP8"));
+    codecs_.push_back(VideoCodec(webrtc::kVideoCodecH264, "H264"));
+    codecs_.push_back(VideoCodec(webrtc::kVideoCodecVP8, "VP8"));
   }
 
-  webrtc::VideoEncoder* CreateVideoEncoder(
-      const cricket::VideoCodec& codec) override {
-    return nullptr;
-  }
-
-  const std::vector<cricket::VideoCodec>& supported_codecs() const override {
-    return codecs_;
-  }
+  const std::vector<VideoCodec>& codecs() const override { return codecs_; }
 
   void DestroyVideoEncoder(webrtc::VideoEncoder* encoder) override {}
 
-  std::vector<cricket::VideoCodec> codecs_;
+  std::vector<VideoCodec> codecs_;
 };
 
 TEST(WebRtcVideoEncoderFactoryTest, TestMultipleCallsToSupportedCodecs) {

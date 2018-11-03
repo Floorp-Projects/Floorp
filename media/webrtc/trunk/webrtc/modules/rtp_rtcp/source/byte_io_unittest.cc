@@ -10,8 +10,8 @@
 
 #include <limits>
 
-#include "modules/rtp_rtcp/source/byte_io.h"
-#include "test/gtest.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 namespace {

@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/audio_buffer.h"
+#include "webrtc/modules/audio_processing/audio_buffer.h"
 
-#include "common_audio/channel_buffer.h"
-#include "common_audio/include/audio_util.h"
-#include "common_audio/resampler/push_sinc_resampler.h"
-#include "common_audio/signal_processing/include/signal_processing_library.h"
-#include "modules/audio_processing/common.h"
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/common_audio/include/audio_util.h"
+#include "webrtc/common_audio/resampler/push_sinc_resampler.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/common_audio/channel_buffer.h"
+#include "webrtc/modules/audio_processing/common.h"
 
 namespace webrtc {
 namespace {
@@ -61,8 +61,7 @@ AudioBuffer::AudioBuffer(size_t input_num_frames,
     reference_copied_(false),
     activity_(AudioFrame::kVadUnknown),
     keyboard_data_(NULL),
-    data_(new IFChannelBuffer(proc_num_frames_, num_proc_channels_)),
-    output_buffer_(new IFChannelBuffer(output_num_frames_, num_channels_)) {
+    data_(new IFChannelBuffer(proc_num_frames_, num_proc_channels_)) {
   RTC_DCHECK_GT(input_num_frames_, 0);
   RTC_DCHECK_GT(proc_num_frames_, 0);
   RTC_DCHECK_GT(output_num_frames_, 0);
@@ -394,14 +393,13 @@ void AudioBuffer::DeinterleaveFrom(AudioFrame* frame) {
   } else {
     deinterleaved = input_buffer_->ibuf()->channels();
   }
-  // TODO(yujo): handle muted frames more efficiently.
   if (num_proc_channels_ == 1) {
     // Downmix and deinterleave simultaneously.
-    DownmixInterleavedToMono(frame->data(), input_num_frames_,
+    DownmixInterleavedToMono(frame->data_, input_num_frames_,
                              num_input_channels_, deinterleaved[0]);
   } else {
     RTC_DCHECK_EQ(num_proc_channels_, num_input_channels_);
-    Deinterleave(frame->data(),
+    Deinterleave(frame->data_,
                  input_num_frames_,
                  num_proc_channels_,
                  deinterleaved);
@@ -418,7 +416,7 @@ void AudioBuffer::DeinterleaveFrom(AudioFrame* frame) {
   }
 }
 
-void AudioBuffer::InterleaveTo(AudioFrame* frame, bool data_changed) const {
+void AudioBuffer::InterleaveTo(AudioFrame* frame, bool data_changed) {
   frame->vad_activity_ = activity_;
   if (!data_changed) {
     return;
@@ -430,6 +428,10 @@ void AudioBuffer::InterleaveTo(AudioFrame* frame, bool data_changed) const {
   // Resample if necessary.
   IFChannelBuffer* data_ptr = data_.get();
   if (proc_num_frames_ != output_num_frames_) {
+    if (!output_buffer_) {
+      output_buffer_.reset(
+          new IFChannelBuffer(output_num_frames_, num_channels_));
+    }
     for (size_t i = 0; i < num_channels_; ++i) {
       output_resamplers_[i]->Resample(
           data_->fbuf()->channels()[i], proc_num_frames_,
@@ -438,13 +440,12 @@ void AudioBuffer::InterleaveTo(AudioFrame* frame, bool data_changed) const {
     data_ptr = output_buffer_.get();
   }
 
-  // TODO(yujo): handle muted frames more efficiently.
   if (frame->num_channels_ == num_channels_) {
     Interleave(data_ptr->ibuf()->channels(), output_num_frames_, num_channels_,
-               frame->mutable_data());
+               frame->data_);
   } else {
     UpmixMonoToInterleaved(data_ptr->ibuf()->channels()[0], output_num_frames_,
-                           frame->num_channels_, frame->mutable_data());
+                           frame->num_channels_, frame->data_);
   }
 }
 

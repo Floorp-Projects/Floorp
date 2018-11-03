@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_DESKTOP_CAPTURE_X11_SHARED_X_DISPLAY_H_
-#define MODULES_DESKTOP_CAPTURE_X11_SHARED_X_DISPLAY_H_
+#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_X11_SHARED_X_DISPLAY_H_
+#define WEBRTC_MODULES_DESKTOP_CAPTURE_X11_SHARED_X_DISPLAY_H_
 
 #include <map>
 #include <vector>
 
 #include <string>
 
-#include "api/refcountedbase.h"
-#include "rtc_base/constructormagic.h"
-#include "rtc_base/scoped_ref_ptr.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/system_wrappers/include/atomic32.h"
 
 // Including Xlib.h will involve evil defines (Bool, Status, True, False), which
 // easily conflict with other headers.
@@ -28,7 +28,7 @@ typedef union _XEvent XEvent;
 namespace webrtc {
 
 // A ref-counted object to store XDisplay connection.
-class SharedXDisplay : public rtc::RefCountedBase {
+class SharedXDisplay {
  public:
   class XEventHandler {
    public:
@@ -51,6 +51,12 @@ class SharedXDisplay : public rtc::RefCountedBase {
   // DISPLAY). NULL is returned if X11 connection failed.
   static rtc::scoped_refptr<SharedXDisplay> CreateDefault();
 
+  void AddRef() { ++ref_count_; }
+  void Release() {
+    if (--ref_count_ == 0)
+      delete this;
+  }
+
   Display* display() { return display_; }
 
   // Adds a new event |handler| for XEvent's of |type|.
@@ -63,12 +69,12 @@ class SharedXDisplay : public rtc::RefCountedBase {
   // Processes pending XEvents, calling corresponding event handlers.
   void ProcessPendingXEvents();
 
- protected:
-  ~SharedXDisplay() override;
-
  private:
   typedef std::map<int, std::vector<XEventHandler*> > EventHandlersMap;
 
+  ~SharedXDisplay();
+
+  Atomic32 ref_count_;
   Display* display_;
 
   EventHandlersMap event_handlers_;
@@ -78,4 +84,4 @@ class SharedXDisplay : public rtc::RefCountedBase {
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_X11_SHARED_X_DISPLAY_H_
+#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_X11_SHARED_X_DISPLAY_H_

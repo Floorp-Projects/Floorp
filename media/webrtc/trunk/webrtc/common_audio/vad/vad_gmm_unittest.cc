@@ -8,16 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_audio/vad/vad_unittest.h"
-#include "test/gtest.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/common_audio/vad/vad_unittest.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/typedefs.h"
 
 extern "C" {
-#include "common_audio/vad/vad_gmm.h"
+#include "webrtc/common_audio/vad/vad_gmm.h"
 }
 
-namespace webrtc {
-namespace test {
+namespace {
 
 TEST_F(VadTest, vad_gmm) {
   int16_t delta = 0;
@@ -41,5 +40,4 @@ TEST_F(VadTest, vad_gmm) {
   EXPECT_EQ(0, WebRtcVad_GaussianProbability(105, 0, 128, &delta));
   EXPECT_EQ(13440, delta);
 }
-}  // namespace test
-}  // namespace webrtc
+}  // namespace

@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_REMOTE_BITRATE_ESTIMATOR_INTER_ARRIVAL_H_
-#define MODULES_REMOTE_BITRATE_ESTIMATOR_INTER_ARRIVAL_H_
+#ifndef WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_INTER_ARRIVAL_H_
+#define WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_INTER_ARRIVAL_H_
 
 #include <cstddef>
 
-#include "rtc_base/constructormagic.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -92,4 +92,4 @@ class InterArrival {
 };
 }  // namespace webrtc
 
-#endif  // MODULES_REMOTE_BITRATE_ESTIMATOR_INTER_ARRIVAL_H_
+#endif  // WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_INTER_ARRIVAL_H_

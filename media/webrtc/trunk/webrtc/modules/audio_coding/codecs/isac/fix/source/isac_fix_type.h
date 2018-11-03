@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_CODECS_ISAC_FIX_SOURCE_ISAC_FIX_TYPE_H_
-#define MODULES_AUDIO_CODING_CODECS_ISAC_FIX_SOURCE_ISAC_FIX_TYPE_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_FIX_SOURCE_ISAC_FIX_TYPE_H_
+#define WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_FIX_SOURCE_ISAC_FIX_TYPE_H_
 
-#include "modules/audio_coding/codecs/isac/fix/include/isacfix.h"
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/modules/audio_coding/codecs/isac/fix/include/isacfix.h"
 
 namespace webrtc {
 
@@ -120,4 +120,4 @@ class IsacFix {
 };
 
 }  // namespace webrtc
-#endif  // MODULES_AUDIO_CODING_CODECS_ISAC_FIX_SOURCE_ISAC_FIX_TYPE_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_FIX_SOURCE_ISAC_FIX_TYPE_H_

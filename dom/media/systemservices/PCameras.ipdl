@@ -18,7 +18,9 @@ struct VideoCaptureCapability
   int width;
   int height;
   int maxFPS;
-  int videoType;
+  int expectedCaptureDelay;
+  int rawType;
+  int codecType;
   bool interlaced;
 };
 

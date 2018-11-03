@@ -17,10 +17,10 @@
 #import <UIKit/UIKit.h>
 #endif
 
-#import "modules/video_capture/objc/device_info_objc.h"
-#import "modules/video_capture/objc/rtc_video_capture_objc.h"
+#import "webrtc/modules/video_capture/objc/device_info_objc.h"
+#import "webrtc/modules/video_capture/objc/rtc_video_capture_objc.h"
 
-#include "rtc_base/logging.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 using namespace webrtc;
 using namespace webrtc::videocapturemodule;
@@ -56,18 +56,23 @@ using namespace webrtc::videocapturemodule;
     }
 
     // create and configure a new output (using callbacks)
-    AVCaptureVideoDataOutput* captureOutput = [[AVCaptureVideoDataOutput alloc] init];
+    AVCaptureVideoDataOutput* captureOutput =
+        [[AVCaptureVideoDataOutput alloc] init];
     NSString* key = (NSString*)kCVPixelBufferPixelFormatTypeKey;
 
-    NSNumber* val = [NSNumber numberWithUnsignedInt:kCVPixelFormatType_420YpCbCr8BiPlanarFullRange];
-    NSDictionary* videoSettings = [NSDictionary dictionaryWithObject:val forKey:key];
+    NSNumber* val = [NSNumber
+        numberWithUnsignedInt:kCVPixelFormatType_420YpCbCr8BiPlanarFullRange];
+    NSDictionary* videoSettings =
+        [NSDictionary dictionaryWithObject:val forKey:key];
     captureOutput.videoSettings = videoSettings;
 
     // add new output
     if ([_captureSession canAddOutput:captureOutput]) {
       [_captureSession addOutput:captureOutput];
     } else {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << ": Could not add output to AVCaptureSession";
+      WEBRTC_TRACE(kTraceError, kTraceVideoCapture, 0,
+                   "%s:%s:%d Could not add output to AVCaptureSession ",
+                   __FILE__, __FUNCTION__, __LINE__);
     }
 
 #ifdef WEBRTC_IOS
@@ -91,7 +96,8 @@ using namespace webrtc::videocapturemodule;
 - (void)directOutputToSelf {
   [[self currentOutput]
       setSampleBufferDelegate:self
-                        queue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)];
+                        queue:dispatch_get_global_queue(
+                                  DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)];
 }
 
 - (void)directOutputToNil {
@@ -138,11 +144,13 @@ using namespace webrtc::videocapturemodule;
     if (capability.width > 1280 || capability.height > 720) {
       return NO;
     }
-  } else if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset640x480]) {
+  } else if ([_captureSession
+                 canSetSessionPreset:AVCaptureSessionPreset640x480]) {
     if (capability.width > 640 || capability.height > 480) {
       return NO;
     }
-  } else if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset352x288]) {
+  } else if ([_captureSession
+                 canSetSessionPreset:AVCaptureSessionPreset352x288]) {
     if (capability.width > 352 || capability.height > 288) {
       return NO;
     }
@@ -153,24 +161,28 @@ using namespace webrtc::videocapturemodule;
   _capability = capability;
 
   AVCaptureVideoDataOutput* currentOutput = [self currentOutput];
-  if (!currentOutput) return NO;
+  if (!currentOutput)
+    return NO;
 
   [self directOutputToSelf];
 
   _orientationHasChanged = NO;
   _captureChanging = YES;
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    [self startCaptureInBackgroundWithOutput:currentOutput];
-  });
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
+                 ^{
+                   [self startCaptureInBackgroundWithOutput:currentOutput];
+                 });
   return YES;
 }
 
 - (AVCaptureVideoDataOutput*)currentOutput {
-  return [[_captureSession outputs] firstObject];
+  return [[_captureSession outputs] objectAtIndex:0]; // firstObject isn't available in 10.7
 }
 
-- (void)startCaptureInBackgroundWithOutput:(AVCaptureVideoDataOutput*)currentOutput {
-  NSString* captureQuality = [NSString stringWithString:AVCaptureSessionPresetLow];
+- (void)startCaptureInBackgroundWithOutput:
+    (AVCaptureVideoDataOutput*)currentOutput {
+  NSString* captureQuality =
+      [NSString stringWithString:AVCaptureSessionPresetLow];
   if (_capability.width >= 1280 || _capability.height >= 720) {
     captureQuality = [NSString stringWithString:AVCaptureSessionPreset1280x720];
   } else if (_capability.width >= 640 || _capability.height >= 480) {
@@ -208,7 +220,8 @@ using namespace webrtc::videocapturemodule;
       _connection.videoOrientation = AVCaptureVideoOrientationPortrait;
       break;
     case UIDeviceOrientationPortraitUpsideDown:
-      _connection.videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
+      _connection.videoOrientation =
+          AVCaptureVideoOrientationPortraitUpsideDown;
       break;
     case UIDeviceOrientationLandscapeLeft:
       _connection.videoOrientation = AVCaptureVideoOrientationLandscapeRight;
@@ -230,7 +243,9 @@ using namespace webrtc::videocapturemodule;
 - (void)onVideoError:(NSNotification*)notification {
   NSLog(@"onVideoError: %@", notification);
   // TODO(sjlee): make the specific error handling with this notification.
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << ": [AVCaptureSession startRunning] error.";
+  WEBRTC_TRACE(kTraceError, kTraceVideoCapture, 0,
+               "%s:%s:%d [AVCaptureSession startRunning] error.", __FILE__,
+               __FUNCTION__, __LINE__);
 }
 
 - (BOOL)stopCapture {
@@ -246,9 +261,10 @@ using namespace webrtc::videocapturemodule;
   }
 
   _captureChanging = YES;
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void) {
-    [self stopCaptureInBackground];
-  });
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
+                 ^(void) {
+                   [self stopCaptureInBackground];
+                 });
   return YES;
 }
 
@@ -262,7 +278,8 @@ using namespace webrtc::videocapturemodule;
   NSArray* currentInputs = [_captureSession inputs];
   // remove current input
   if ([currentInputs count] > 0) {
-    AVCaptureInput* currentInput = (AVCaptureInput*)[currentInputs objectAtIndex:0];
+    AVCaptureInput* currentInput =
+        (AVCaptureInput*)[currentInputs objectAtIndex:0];
 
     [_captureSession removeInput:currentInput];
   }
@@ -274,7 +291,8 @@ using namespace webrtc::videocapturemodule;
     return NO;
   }
 
-  AVCaptureDevice* captureDevice = [DeviceInfoIosObjC captureDeviceForUniqueId:uniqueId];
+  AVCaptureDevice* captureDevice =
+      [DeviceInfoIosObjC captureDeviceForUniqueId:uniqueId];
 
   if (!captureDevice) {
     return NO;
@@ -283,12 +301,15 @@ using namespace webrtc::videocapturemodule;
   // now create capture session input out of AVCaptureDevice
   NSError* deviceError = nil;
   AVCaptureDeviceInput* newCaptureInput =
-      [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&deviceError];
+      [AVCaptureDeviceInput deviceInputWithDevice:captureDevice
+                                            error:&deviceError];
 
   if (!newCaptureInput) {
     const char* errorMessage = [[deviceError localizedDescription] UTF8String];
 
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": deviceInputWithDevice error:" << errorMessage;
+    WEBRTC_TRACE(kTraceError, kTraceVideoCapture, 0,
+                 "%s:%s:%d deviceInputWithDevice error:%s", __FILE__,
+                 __FUNCTION__, __LINE__, errorMessage);
 
     return NO;
   }
@@ -322,18 +343,23 @@ using namespace webrtc::videocapturemodule;
   const int kYPlaneIndex = 0;
   const int kUVPlaneIndex = 1;
 
-  uint8_t* baseAddress = (uint8_t*)CVPixelBufferGetBaseAddressOfPlane(videoFrame, kYPlaneIndex);
-  size_t yPlaneBytesPerRow = CVPixelBufferGetBytesPerRowOfPlane(videoFrame, kYPlaneIndex);
+  uint8_t* baseAddress =
+      (uint8_t*)CVPixelBufferGetBaseAddressOfPlane(videoFrame, kYPlaneIndex);
+  size_t yPlaneBytesPerRow =
+      CVPixelBufferGetBytesPerRowOfPlane(videoFrame, kYPlaneIndex);
   size_t yPlaneHeight = CVPixelBufferGetHeightOfPlane(videoFrame, kYPlaneIndex);
-  size_t uvPlaneBytesPerRow = CVPixelBufferGetBytesPerRowOfPlane(videoFrame, kUVPlaneIndex);
-  size_t uvPlaneHeight = CVPixelBufferGetHeightOfPlane(videoFrame, kUVPlaneIndex);
-  size_t frameSize = yPlaneBytesPerRow * yPlaneHeight + uvPlaneBytesPerRow * uvPlaneHeight;
+  size_t uvPlaneBytesPerRow =
+      CVPixelBufferGetBytesPerRowOfPlane(videoFrame, kUVPlaneIndex);
+  size_t uvPlaneHeight =
+      CVPixelBufferGetHeightOfPlane(videoFrame, kUVPlaneIndex);
+  size_t frameSize =
+      yPlaneBytesPerRow * yPlaneHeight + uvPlaneBytesPerRow * uvPlaneHeight;
 
   VideoCaptureCapability tempCaptureCapability;
   tempCaptureCapability.width = CVPixelBufferGetWidth(videoFrame);
   tempCaptureCapability.height = CVPixelBufferGetHeight(videoFrame);
   tempCaptureCapability.maxFPS = _capability.maxFPS;
-  tempCaptureCapability.videoType = VideoType::kNV12;
+  tempCaptureCapability.rawType = kVideoNV12;
 
   _owner->IncomingFrame(baseAddress, frameSize, tempCaptureCapability, 0);
 

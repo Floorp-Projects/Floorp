@@ -8,75 +8,67 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_CONGESTION_CONTROLLER_TRANSPORT_FEEDBACK_ADAPTER_H_
-#define MODULES_CONGESTION_CONTROLLER_TRANSPORT_FEEDBACK_ADAPTER_H_
+#ifndef WEBRTC_MODULES_CONGESTION_CONTROLLER_TRANSPORT_FEEDBACK_ADAPTER_H_
+#define WEBRTC_MODULES_CONGESTION_CONTROLLER_TRANSPORT_FEEDBACK_ADAPTER_H_
 
-#include <deque>
+#include <memory>
 #include <vector>
 
-#include "modules/remote_bitrate_estimator/include/send_time_history.h"
-#include "rtc_base/criticalsection.h"
-#include "rtc_base/thread_annotations.h"
-#include "rtc_base/thread_checker.h"
-#include "system_wrappers/include/clock.h"
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/thread_annotations.h"
+#include "webrtc/base/thread_checker.h"
+#include "webrtc/modules/congestion_controller/delay_based_bwe.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/modules/remote_bitrate_estimator/include/send_time_history.h"
 
 namespace webrtc {
 
-class PacketFeedbackObserver;
+class BitrateController;
+class ProcessThread;
 
-namespace rtcp {
-class TransportFeedback;
-}  // namespace rtcp
-
-class TransportFeedbackAdapter {
+class TransportFeedbackAdapter : public TransportFeedbackObserver,
+                                 public CallStatsObserver {
  public:
-  explicit TransportFeedbackAdapter(const Clock* clock);
+  TransportFeedbackAdapter(Clock* clock, BitrateController* bitrate_controller);
   virtual ~TransportFeedbackAdapter();
 
-  void RegisterPacketFeedbackObserver(PacketFeedbackObserver* observer);
-  void DeRegisterPacketFeedbackObserver(PacketFeedbackObserver* observer);
-
-  void AddPacket(uint32_t ssrc,
-                 uint16_t sequence_number,
+  void InitBwe();
+  // Implements TransportFeedbackObserver.
+  void AddPacket(uint16_t sequence_number,
                  size_t length,
-                 const PacedPacketInfo& pacing_info);
+                 int probe_cluster_id) override;
   void OnSentPacket(uint16_t sequence_number, int64_t send_time_ms);
 
   // TODO(holmer): This method should return DelayBasedBwe::Result so that we
   // can get rid of the dependency on BitrateController. Requires changes
   // to the CongestionController interface.
-  void OnTransportFeedback(const rtcp::TransportFeedback& feedback);
-  std::vector<PacketFeedback> GetTransportFeedbackVector() const;
-  rtc::Optional<int64_t> GetMinFeedbackLoopRtt() const;
+  void OnTransportFeedback(const rtcp::TransportFeedback& feedback) override;
+  std::vector<PacketInfo> GetTransportFeedbackVector() const override;
 
+  // Implements CallStatsObserver.
+  void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) override;
+
+  void SetMinBitrate(int min_bitrate_bps);
   void SetTransportOverhead(int transport_overhead_bytes_per_packet);
 
-  void SetNetworkIds(uint16_t local_id, uint16_t remote_id);
-
-  size_t GetOutstandingBytes() const;
+  int64_t GetProbingIntervalMs() const;
 
  private:
-  std::vector<PacketFeedback> GetPacketFeedbackVector(
+  std::vector<PacketInfo> GetPacketFeedbackVector(
       const rtcp::TransportFeedback& feedback);
 
-  const bool send_side_bwe_with_overhead_;
   rtc::CriticalSection lock_;
-  int transport_overhead_bytes_per_packet_ RTC_GUARDED_BY(&lock_);
-  SendTimeHistory send_time_history_ RTC_GUARDED_BY(&lock_);
-  const Clock* const clock_;
+  rtc::CriticalSection bwe_lock_;
+  int transport_overhead_bytes_per_packet_ GUARDED_BY(&lock_);
+  SendTimeHistory send_time_history_ GUARDED_BY(&lock_);
+  std::unique_ptr<DelayBasedBwe> delay_based_bwe_ GUARDED_BY(&bwe_lock_);
+  Clock* const clock_;
   int64_t current_offset_ms_;
   int64_t last_timestamp_us_;
-  std::vector<PacketFeedback> last_packet_feedback_vector_;
-  uint16_t local_net_id_ RTC_GUARDED_BY(&lock_);
-  uint16_t remote_net_id_ RTC_GUARDED_BY(&lock_);
-  std::deque<int64_t> feedback_rtts_ RTC_GUARDED_BY(&lock_);
-  rtc::Optional<int64_t> min_feedback_rtt_ RTC_GUARDED_BY(&lock_);
-
-  rtc::CriticalSection observers_lock_;
-  std::vector<PacketFeedbackObserver*> observers_
-      RTC_GUARDED_BY(&observers_lock_);
+  BitrateController* const bitrate_controller_;
+  std::vector<PacketInfo> last_packet_feedback_vector_;
 };
 
 }  // namespace webrtc
 
-#endif  // MODULES_CONGESTION_CONTROLLER_TRANSPORT_FEEDBACK_ADAPTER_H_
+#endif  // WEBRTC_MODULES_CONGESTION_CONTROLLER_TRANSPORT_FEEDBACK_ADAPTER_H_

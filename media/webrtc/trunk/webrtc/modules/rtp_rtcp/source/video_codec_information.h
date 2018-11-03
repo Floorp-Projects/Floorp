@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_RTP_RTCP_SOURCE_VIDEO_CODEC_INFORMATION_H_
-#define MODULES_RTP_RTCP_SOURCE_VIDEO_CODEC_INFORMATION_H_
+#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_VIDEO_CODEC_INFORMATION_H_
+#define WEBRTC_MODULES_RTP_RTCP_SOURCE_VIDEO_CODEC_INFORMATION_H_
 
-#include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
-#include "modules/rtp_rtcp/source/rtp_utility.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_rtcp_config.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 
 namespace webrtc {
 class VideoCodecInformation {
@@ -24,4 +24,4 @@ class VideoCodecInformation {
 };
 }  // namespace webrtc
 
-#endif  // MODULES_RTP_RTCP_SOURCE_VIDEO_CODEC_INFORMATION_H_
+#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_VIDEO_CODEC_INFORMATION_H_

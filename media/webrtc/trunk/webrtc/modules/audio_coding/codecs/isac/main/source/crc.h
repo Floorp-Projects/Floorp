@@ -15,10 +15,10 @@
  *
  */
 
-#ifndef MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_CRC_H_
-#define MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_CRC_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_CRC_H_
+#define WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_CRC_H_
 
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 /****************************************************************************
  * WebRtcIsac_GetCrc(...)
@@ -43,4 +43,4 @@ int WebRtcIsac_GetCrc(
 
 
 
-#endif /* MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_CRC_H_ */
+#endif /* WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_CRC_H_ */

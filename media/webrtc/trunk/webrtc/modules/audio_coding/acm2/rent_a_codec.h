@@ -8,22 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_ACM2_RENT_A_CODEC_H_
-#define MODULES_AUDIO_CODING_ACM2_RENT_A_CODEC_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_ACM2_RENT_A_CODEC_H_
+#define WEBRTC_MODULES_AUDIO_CODING_ACM2_RENT_A_CODEC_H_
 
 #include <stddef.h>
 #include <map>
 #include <memory>
 
-#include "api/array_view.h"
-#include "api/audio_codecs/audio_decoder.h"
-#include "api/audio_codecs/audio_encoder.h"
-#include "api/optional.h"
-#include "modules/audio_coding/include/audio_coding_module_typedefs.h"
-#include "modules/audio_coding/neteq/neteq_decoder_enum.h"
-#include "rtc_base/constructormagic.h"
-#include "rtc_base/scoped_ref_ptr.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/base/array_view.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/optional.h"
+#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
+#include "webrtc/modules/audio_coding/codecs/audio_format.h"
+#include "webrtc/modules/audio_coding/codecs/audio_encoder.h"
+#include "webrtc/modules/audio_coding/include/audio_coding_module_typedefs.h"
+#include "webrtc/modules/audio_coding/codecs/isac/main/include/audio_encoder_isac.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -58,8 +59,10 @@ class RentACodec {
 #ifdef WEBRTC_CODEC_ILBC
     kILBC,
 #endif
+#ifdef WEBRTC_CODEC_G722
     kG722,      // Mono
     kG722_2ch,  // Stereo
+#endif
 #ifdef WEBRTC_CODEC_OPUS
     kOpus,  // Mono and stereo
 #endif
@@ -90,6 +93,10 @@ class RentACodec {
 #ifndef WEBRTC_CODEC_ILBC
     kILBC = -1,
 #endif
+#ifndef WEBRTC_CODEC_G722
+    kG722 = -1,      // Mono
+    kG722_2ch = -1,  // Stereo
+#endif
 #ifndef WEBRTC_CODEC_OPUS
     kOpus = -1,  // Mono and stereo
 #endif
@@ -103,6 +110,42 @@ class RentACodec {
     kNone = -1
   };
 
+  enum class NetEqDecoder {
+    kDecoderPCMu,
+    kDecoderPCMa,
+    kDecoderPCMu_2ch,
+    kDecoderPCMa_2ch,
+    kDecoderILBC,
+    kDecoderISAC,
+    kDecoderISACswb,
+    kDecoderPCM16B,
+    kDecoderPCM16Bwb,
+    kDecoderPCM16Bswb32kHz,
+    kDecoderPCM16Bswb48kHz,
+    kDecoderPCM16B_2ch,
+    kDecoderPCM16Bwb_2ch,
+    kDecoderPCM16Bswb32kHz_2ch,
+    kDecoderPCM16Bswb48kHz_2ch,
+    kDecoderPCM16B_5ch,
+    kDecoderG722,
+    kDecoderG722_2ch,
+    kDecoderRED,
+    kDecoderAVT,
+    kDecoderAVT16kHz,
+    kDecoderAVT32kHz,
+    kDecoderAVT48kHz,
+    kDecoderCNGnb,
+    kDecoderCNGwb,
+    kDecoderCNGswb32kHz,
+    kDecoderCNGswb48kHz,
+    kDecoderArbitrary,
+    kDecoderOpus,
+    kDecoderOpus_2ch,
+  };
+
+  static rtc::Optional<SdpAudioFormat> NetEqDecoderToSdpAudioFormat(
+      NetEqDecoder nd);
+
   static inline size_t NumberOfCodecs() {
     return static_cast<size_t>(CodecId::kNumCodecs);
   }
@@ -111,14 +154,14 @@ class RentACodec {
     const int i = static_cast<int>(codec_id);
     return i >= 0 && i < static_cast<int>(NumberOfCodecs())
                ? rtc::Optional<int>(i)
-               : rtc::nullopt;
+               : rtc::Optional<int>();
   }
 
   static inline rtc::Optional<CodecId> CodecIdFromIndex(int codec_index) {
     return static_cast<size_t>(codec_index) < NumberOfCodecs()
                ? rtc::Optional<RentACodec::CodecId>(
                      static_cast<RentACodec::CodecId>(codec_index))
-               : rtc::nullopt;
+               : rtc::Optional<RentACodec::CodecId>();
   }
 
   static rtc::Optional<CodecId> CodecIdByParams(const char* payload_name,
@@ -198,4 +241,4 @@ class RentACodec {
 }  // namespace acm2
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_CODING_ACM2_RENT_A_CODEC_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_ACM2_RENT_A_CODEC_H_

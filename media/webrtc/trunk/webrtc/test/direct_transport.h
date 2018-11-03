@@ -7,54 +7,36 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef TEST_DIRECT_TRANSPORT_H_
-#define TEST_DIRECT_TRANSPORT_H_
+#ifndef WEBRTC_TEST_DIRECT_TRANSPORT_H_
+#define WEBRTC_TEST_DIRECT_TRANSPORT_H_
 
 #include <assert.h>
 
-#include <memory>
+#include <deque>
 
-#include "api/call/transport.h"
-#include "call/call.h"
-#include "rtc_base/sequenced_task_checker.h"
-#include "rtc_base/thread_annotations.h"
-#include "test/fake_network_pipe.h"
-#include "test/single_threaded_task_queue.h"
+#include "webrtc/api/call/transport.h"
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/event.h"
+#include "webrtc/base/platform_thread.h"
+#include "webrtc/test/fake_network_pipe.h"
 
 namespace webrtc {
 
+class Call;
 class Clock;
 class PacketReceiver;
 
 namespace test {
 
-// Objects of this class are expected to be allocated and destroyed  on the
-// same task-queue - the one that's passed in via the constructor.
 class DirectTransport : public Transport {
  public:
-  DirectTransport(SingleThreadedTaskQueueForTesting* task_queue,
-                  Call* send_call,
-                  const std::map<uint8_t, MediaType>& payload_type_map);
-
-  DirectTransport(SingleThreadedTaskQueueForTesting* task_queue,
-                  const FakeNetworkPipe::Config& config,
-                  Call* send_call,
-                  const std::map<uint8_t, MediaType>& payload_type_map);
-
-  DirectTransport(SingleThreadedTaskQueueForTesting* task_queue,
-                  const FakeNetworkPipe::Config& config,
-                  Call* send_call,
-                  std::unique_ptr<Demuxer> demuxer);
-
-  DirectTransport(SingleThreadedTaskQueueForTesting* task_queue,
-                  std::unique_ptr<FakeNetworkPipe> pipe, Call* send_call);
-
-  ~DirectTransport() override;
+  explicit DirectTransport(Call* send_call);
+  DirectTransport(const FakeNetworkPipe::Config& config, Call* send_call);
+  ~DirectTransport();
 
   void SetConfig(const FakeNetworkPipe::Config& config);
 
-  RTC_DEPRECATED void StopSending();
-
+  virtual void StopSending();
   // TODO(holmer): Look into moving this to the constructor.
   virtual void SetReceiver(PacketReceiver* receiver);
 
@@ -66,21 +48,20 @@ class DirectTransport : public Transport {
   int GetAverageDelayMs();
 
  private:
-  void SendPackets();
-  void Start();
+  static bool NetworkProcess(void* transport);
+  bool SendPackets();
 
+  rtc::CriticalSection lock_;
   Call* const send_call_;
+  rtc::Event packet_event_;
+  rtc::PlatformThread thread_;
   Clock* const clock_;
 
-  SingleThreadedTaskQueueForTesting* const task_queue_;
-  SingleThreadedTaskQueueForTesting::TaskId next_scheduled_task_
-      RTC_GUARDED_BY(&sequence_checker_);
+  bool shutting_down_;
 
-  std::unique_ptr<FakeNetworkPipe> fake_network_;
-
-  rtc::SequencedTaskChecker sequence_checker_;
+  FakeNetworkPipe fake_network_;
 };
 }  // namespace test
 }  // namespace webrtc
 
-#endif  // TEST_DIRECT_TRANSPORT_H_
+#endif  // WEBRTC_TEST_DIRECT_TRANSPORT_H_

@@ -8,24 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_mixer/audio_frame_manipulator.h"
-#include "audio/utility/audio_frame_operations.h"
-#include "modules/include/module_common_types.h"
-#include "rtc_base/checks.h"
+#include "webrtc/audio/utility/audio_frame_operations.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/modules/audio_mixer/audio_frame_manipulator.h"
+#include "webrtc/modules/include/module_common_types.h"
 
 namespace webrtc {
 
 uint32_t AudioMixerCalculateEnergy(const AudioFrame& audio_frame) {
-  if (audio_frame.muted()) {
-    return 0;
-  }
-
   uint32_t energy = 0;
-  const int16_t* frame_data = audio_frame.data();
   for (size_t position = 0; position < audio_frame.samples_per_channel_;
        position++) {
     // TODO(aleloi): This can overflow. Convert to floats.
-    energy += frame_data[position] * frame_data[position];
+    energy += audio_frame.data_[position] * audio_frame.data_[position];
   }
   return energy;
 }
@@ -34,7 +29,7 @@ void Ramp(float start_gain, float target_gain, AudioFrame* audio_frame) {
   RTC_DCHECK(audio_frame);
   RTC_DCHECK_GE(start_gain, 0.0f);
   RTC_DCHECK_GE(target_gain, 0.0f);
-  if (start_gain == target_gain || audio_frame->muted()) {
+  if (start_gain == target_gain) {
     return;
   }
 
@@ -42,12 +37,11 @@ void Ramp(float start_gain, float target_gain, AudioFrame* audio_frame) {
   RTC_DCHECK_LT(0, samples);
   float increment = (target_gain - start_gain) / samples;
   float gain = start_gain;
-  int16_t* frame_data = audio_frame->mutable_data();
   for (size_t i = 0; i < samples; ++i) {
     // If the audio is interleaved of several channels, we want to
     // apply the same gain change to the ith sample of every channel.
     for (size_t ch = 0; ch < audio_frame->num_channels_; ++ch) {
-      frame_data[audio_frame->num_channels_ * i + ch] *= gain;
+      audio_frame->data_[audio_frame->num_channels_ * i + ch] *= gain;
     }
     gain += increment;
   }

@@ -9,7 +9,6 @@
 #include "MediaInfo.h"
 #include "MediaResult.h"
 #include "PlatformDecoderModule.h"
-#include "WebrtcImageBuffer.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 
@@ -25,6 +24,16 @@ namespace layers {
 class PDMFactory;
 class SharedThreadPool;
 class TaskQueue;
+
+class ImageBuffer : public webrtc::NativeHandleBuffer
+{
+public:
+  explicit ImageBuffer(RefPtr<layers::Image>&& aImage);
+  rtc::scoped_refptr<VideoFrameBuffer> NativeToI420Buffer() override;
+
+private:
+  RefPtr<layers::Image> mImage;
+};
 
 class WebrtcMediaDataDecoder : public WebrtcVideoDecoder
 {

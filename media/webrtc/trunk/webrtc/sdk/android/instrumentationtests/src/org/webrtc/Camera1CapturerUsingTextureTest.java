@@ -15,7 +15,6 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
 import android.support.test.filters.MediumTest;
 import android.support.test.filters.SmallTest;
-import java.io.IOException;
 import org.chromium.base.test.BaseJUnit4ClassRunner;
 import org.junit.After;
 import org.junit.Before;
@@ -26,7 +25,7 @@ import org.junit.runner.RunWith;
 public class Camera1CapturerUsingTextureTest {
   static final String TAG = "Camera1CapturerUsingTextureTest";
 
-  private static class TestObjectFactory extends CameraVideoCapturerTestFixtures.TestObjectFactory {
+  private class TestObjectFactory extends CameraVideoCapturerTestFixtures.TestObjectFactory {
     @Override
     public CameraEnumerator getCameraEnumerator() {
       return new Camera1Enumerator();
@@ -114,12 +113,6 @@ public class Camera1CapturerUsingTextureTest {
   @MediumTest
   public void testCameraEvents() throws InterruptedException {
     fixtures.cameraEventsInvoked();
-  }
-
-  @Test
-  @MediumTest
-  public void testUpdateMediaRecorder() throws InterruptedException, IOException {
-    fixtures.updateMediaRecorder(false /* useSurfaceCapture */);
   }
 
   // Test what happens when attempting to call e.g. switchCamera() after camera has been stopped.

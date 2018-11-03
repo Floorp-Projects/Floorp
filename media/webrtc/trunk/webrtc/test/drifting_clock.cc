@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "test/drifting_clock.h"
-#include "rtc_base/checks.h"
+#include "webrtc/test/drifting_clock.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 namespace test {
@@ -39,14 +39,15 @@ int64_t DriftingClock::TimeInMicroseconds() const {
   return clock_->TimeInMicroseconds() + Drift();
 }
 
-NtpTime DriftingClock::CurrentNtpTime() const {
+void DriftingClock::CurrentNtp(uint32_t& seconds, uint32_t& fractions) const {
   // NTP precision is 1/2^32 seconds, i.e. 2^32 ntp fractions = 1 second.
   const double kNtpFracPerMicroSecond = 4294.967296;  // = 2^32 / 10^6
 
-  NtpTime ntp = clock_->CurrentNtpTime();
-  uint64_t total_fractions = static_cast<uint64_t>(ntp);
+  clock_->CurrentNtp(seconds, fractions);
+  uint64_t total_fractions = (static_cast<uint64_t>(seconds) << 32) | fractions;
   total_fractions += Drift() * kNtpFracPerMicroSecond;
-  return NtpTime(total_fractions);
+  seconds = total_fractions >> 32;
+  fractions = static_cast<uint32_t>(total_fractions);
 }
 
 int64_t DriftingClock::CurrentNtpInMilliseconds() const {

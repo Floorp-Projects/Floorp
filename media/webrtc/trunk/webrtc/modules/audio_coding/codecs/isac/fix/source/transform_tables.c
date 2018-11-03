@@ -13,8 +13,8 @@
  * transform functions WebRtcIsacfix_Time2Spec and WebRtcIsacfix_Spec2Time.
  */
 
-#include "modules/audio_coding/codecs/isac/fix/source/settings.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/audio_coding/codecs/isac/fix/source/settings.h"
+#include "webrtc/typedefs.h"
 
 /* Cosine table 1 in Q14. */
 const int16_t WebRtcIsacfix_kCosTab1[FRAMESAMPLES/2] = {

@@ -10,10 +10,9 @@ COMPILE_FLAGS["OS_INCLUDES"] = []
 AllowCompilerWarnings()
 
 DEFINES["CHROMIUM_BUILD"] = True
+DEFINES["EXPAT_RELATIVE_PATH"] = True
 DEFINES["V8_DEPRECATION_WARNINGS"] = True
-DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
 DEFINES["WEBRTC_MOZILLA_BUILD"] = True
-DEFINES["WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS"] = "0"
 DEFINES["WEBRTC_RESTRICT_LOGGING"] = True
 
 FINAL_LIBRARY = "webrtc"
@@ -23,21 +22,22 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/media/webrtc/trunk/"
 ]
 
 UNIFIED_SOURCES += [
     "/media/webrtc/trunk/webrtc/system_wrappers/source/aligned_malloc.cc",
-    "/media/webrtc/trunk/webrtc/system_wrappers/source/atomic32.cc",
     "/media/webrtc/trunk/webrtc/system_wrappers/source/clock.cc",
     "/media/webrtc/trunk/webrtc/system_wrappers/source/cpu_features.cc",
     "/media/webrtc/trunk/webrtc/system_wrappers/source/cpu_info.cc",
     "/media/webrtc/trunk/webrtc/system_wrappers/source/event.cc",
     "/media/webrtc/trunk/webrtc/system_wrappers/source/file_impl.cc",
+    "/media/webrtc/trunk/webrtc/system_wrappers/source/logging.cc",
     "/media/webrtc/trunk/webrtc/system_wrappers/source/rtp_to_ntp_estimator.cc",
     "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock.cc",
     "/media/webrtc/trunk/webrtc/system_wrappers/source/sleep.cc",
-    "/media/webrtc/trunk/webrtc/system_wrappers/source/timestamp_extrapolator.cc"
+    "/media/webrtc/trunk/webrtc/system_wrappers/source/timestamp_extrapolator.cc",
+    "/media/webrtc/trunk/webrtc/system_wrappers/source/trace_impl.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -78,8 +78,11 @@ if CONFIG["OS_TARGET"] == "Android":
     ]
 
     UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/atomic32_non_darwin_unix.cc",
         "/media/webrtc/trunk/webrtc/system_wrappers/source/event_timer_posix.cc",
-        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_posix.cc"
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/logcat_trace_context.cc",
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_posix.cc",
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/trace_posix.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "Darwin":
@@ -91,13 +94,11 @@ if CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["WEBRTC_THREAD_RR"] = True
     DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
 
-    OS_LIBS += [
-        "-framework Foundation"
-    ]
-
     UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/atomic32_darwin.cc",
         "/media/webrtc/trunk/webrtc/system_wrappers/source/event_timer_posix.cc",
-        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_posix.cc"
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_posix.cc",
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/trace_posix.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "DragonFly":
@@ -109,8 +110,10 @@ if CONFIG["OS_TARGET"] == "DragonFly":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/atomic32_non_darwin_unix.cc",
         "/media/webrtc/trunk/webrtc/system_wrappers/source/event_timer_posix.cc",
-        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_posix.cc"
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_posix.cc",
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/trace_posix.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "FreeBSD":
@@ -122,8 +125,10 @@ if CONFIG["OS_TARGET"] == "FreeBSD":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/atomic32_non_darwin_unix.cc",
         "/media/webrtc/trunk/webrtc/system_wrappers/source/event_timer_posix.cc",
-        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_posix.cc"
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_posix.cc",
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/trace_posix.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "Linux":
@@ -140,8 +145,10 @@ if CONFIG["OS_TARGET"] == "Linux":
     ]
 
     UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/atomic32_non_darwin_unix.cc",
         "/media/webrtc/trunk/webrtc/system_wrappers/source/event_timer_posix.cc",
-        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_posix.cc"
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_posix.cc",
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/trace_posix.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "NetBSD":
@@ -153,8 +160,10 @@ if CONFIG["OS_TARGET"] == "NetBSD":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/atomic32_non_darwin_unix.cc",
         "/media/webrtc/trunk/webrtc/system_wrappers/source/event_timer_posix.cc",
-        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_posix.cc"
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_posix.cc",
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/trace_posix.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
@@ -166,8 +175,10 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/atomic32_non_darwin_unix.cc",
         "/media/webrtc/trunk/webrtc/system_wrappers/source/event_timer_posix.cc",
-        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_posix.cc"
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_posix.cc",
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/trace_posix.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "WINNT":
@@ -200,8 +211,12 @@ if CONFIG["OS_TARGET"] == "WINNT":
     ]
 
     UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/atomic32_win.cc",
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/condition_variable_event_win.cc",
         "/media/webrtc/trunk/webrtc/system_wrappers/source/event_timer_win.cc",
-        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_win.cc"
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_win.cc",
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/rw_lock_winxp_win.cc",
+        "/media/webrtc/trunk/webrtc/system_wrappers/source/trace_win.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64":
@@ -243,10 +258,6 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
-if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
-
-    DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
-
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
     CXXFLAGS += [
@@ -258,6 +269,11 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
     CXXFLAGS += [
         "-msse2"
     ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["NO_TCMALLOC"] = True
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
 

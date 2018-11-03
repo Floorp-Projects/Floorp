@@ -15,10 +15,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 /* include API */
-#include "modules/audio_coding/codecs/g722/g722_interface.h"
+#include "webrtc/modules/audio_coding/codecs/g722/g722_interface.h"
 
 /* Runtime statistics */
 #include <time.h>

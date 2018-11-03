@@ -8,20 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_CODECS_G722_AUDIO_DECODER_G722_H_
-#define MODULES_AUDIO_CODING_CODECS_G722_AUDIO_DECODER_G722_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_G722_AUDIO_DECODER_G722_H_
+#define WEBRTC_MODULES_AUDIO_CODING_CODECS_G722_AUDIO_DECODER_G722_H_
 
-#include "api/audio_codecs/audio_decoder.h"
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
 
 typedef struct WebRtcG722DecInst G722DecInst;
 
 namespace webrtc {
 
-class AudioDecoderG722Impl final : public AudioDecoder {
+class AudioDecoderG722 final : public AudioDecoder {
  public:
-  AudioDecoderG722Impl();
-  ~AudioDecoderG722Impl() override;
+  AudioDecoderG722();
+  ~AudioDecoderG722() override;
   bool HasDecodePlc() const override;
   void Reset() override;
   std::vector<ParseResult> ParsePayload(rtc::Buffer&& payload,
@@ -39,13 +39,13 @@ class AudioDecoderG722Impl final : public AudioDecoder {
 
  private:
   G722DecInst* dec_state_;
-  RTC_DISALLOW_COPY_AND_ASSIGN(AudioDecoderG722Impl);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AudioDecoderG722);
 };
 
-class AudioDecoderG722StereoImpl final : public AudioDecoder {
+class AudioDecoderG722Stereo final : public AudioDecoder {
  public:
-  AudioDecoderG722StereoImpl();
-  ~AudioDecoderG722StereoImpl() override;
+  AudioDecoderG722Stereo();
+  ~AudioDecoderG722Stereo() override;
   void Reset() override;
   std::vector<ParseResult> ParsePayload(rtc::Buffer&& payload,
                                         uint32_t timestamp) override;
@@ -71,9 +71,9 @@ class AudioDecoderG722StereoImpl final : public AudioDecoder {
 
   G722DecInst* dec_state_left_;
   G722DecInst* dec_state_right_;
-  RTC_DISALLOW_COPY_AND_ASSIGN(AudioDecoderG722StereoImpl);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AudioDecoderG722Stereo);
 };
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_CODING_CODECS_G722_AUDIO_DECODER_G722_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_CODECS_G722_AUDIO_DECODER_G722_H_

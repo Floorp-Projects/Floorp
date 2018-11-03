@@ -8,18 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/transient/transient_detector.h"
+#include "webrtc/modules/audio_processing/transient/transient_detector.h"
 
 #include <memory>
 #include <sstream>
 #include <string>
 
-#include "modules/audio_processing/transient/common.h"
-#include "modules/audio_processing/transient/file_utils.h"
-#include "system_wrappers/include/file_wrapper.h"
-#include "test/gtest.h"
-#include "test/testsupport/fileutils.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/audio_processing/transient/common.h"
+#include "webrtc/modules/audio_processing/transient/file_utils.h"
+#include "webrtc/system_wrappers/include/file_wrapper.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 

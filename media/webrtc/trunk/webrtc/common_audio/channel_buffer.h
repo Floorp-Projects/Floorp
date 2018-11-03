@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef COMMON_AUDIO_CHANNEL_BUFFER_H_
-#define COMMON_AUDIO_CHANNEL_BUFFER_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_CHANNEL_BUFFER_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_CHANNEL_BUFFER_H_
 
 #include <string.h>
 
 #include <memory>
 
-#include "common_audio/include/audio_util.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/gtest_prod_util.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/gtest_prod_util.h"
+#include "webrtc/common_audio/include/audio_util.h"
 
 namespace webrtc {
 
@@ -183,4 +183,4 @@ class IFChannelBuffer {
 
 }  // namespace webrtc
 
-#endif  // COMMON_AUDIO_CHANNEL_BUFFER_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_CHANNEL_BUFFER_H_

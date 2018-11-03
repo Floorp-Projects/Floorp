@@ -8,11 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/aec3/frame_blocker.h"
+#include "webrtc/modules/audio_processing/aec3/frame_blocker.h"
 
 #include <algorithm>
 
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/modules/audio_processing/aec3/aec3_constants.h"
 
 namespace webrtc {
 

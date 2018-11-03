@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_NETEQ_TICK_TIMER_H_
-#define MODULES_AUDIO_CODING_NETEQ_TICK_TIMER_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_TICK_TIMER_H_
+#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_TICK_TIMER_H_
 
 #include <memory>
 
-#include "rtc_base/checks.h"
-#include "rtc_base/constructormagic.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/base/checks.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -107,4 +107,4 @@ class TickTimer {
 };
 
 }  // namespace webrtc
-#endif  // MODULES_AUDIO_CODING_NETEQ_TICK_TIMER_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_TICK_TIMER_H_

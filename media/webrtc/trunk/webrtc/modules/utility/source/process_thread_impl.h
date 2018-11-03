@@ -8,20 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_UTILITY_SOURCE_PROCESS_THREAD_IMPL_H_
-#define MODULES_UTILITY_SOURCE_PROCESS_THREAD_IMPL_H_
+#ifndef WEBRTC_MODULES_UTILITY_SOURCE_PROCESS_THREAD_IMPL_H_
+#define WEBRTC_MODULES_UTILITY_SOURCE_PROCESS_THREAD_IMPL_H_
 
 #include <list>
 #include <memory>
 #include <queue>
 
-#include "modules/utility/include/process_thread.h"
-#include "rtc_base/criticalsection.h"
-#include "rtc_base/location.h"
-#include "rtc_base/platform_thread.h"
-#include "rtc_base/thread_checker.h"
-#include "system_wrappers/include/event_wrapper.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/platform_thread.h"
+#include "webrtc/base/thread_checker.h"
+#include "webrtc/modules/utility/include/process_thread.h"
+#include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -36,7 +35,7 @@ class ProcessThreadImpl : public ProcessThread {
   void WakeUp(Module* module) override;
   void PostTask(std::unique_ptr<rtc::QueuedTask> task) override;
 
-  void RegisterModule(Module* module, const rtc::Location& from) override;
+  void RegisterModule(Module* module) override;
   void DeRegisterModule(Module* module) override;
 
  protected:
@@ -45,18 +44,16 @@ class ProcessThreadImpl : public ProcessThread {
 
  private:
   struct ModuleCallback {
-    ModuleCallback() = delete;
-    ModuleCallback(ModuleCallback&& cb) = default;
-    ModuleCallback(const ModuleCallback& cb) = default;
-    ModuleCallback(Module* module, const rtc::Location& location)
-        : module(module), location(location) {}
+    ModuleCallback() : module(nullptr), next_callback(0) {}
+    ModuleCallback(const ModuleCallback& cb)
+        : module(cb.module), next_callback(cb.next_callback) {}
+    ModuleCallback(Module* module) : module(module), next_callback(0) {}
     bool operator==(const ModuleCallback& cb) const {
       return cb.module == module;
     }
 
     Module* const module;
-    int64_t next_callback = 0;  // Absolute timestamp.
-    const rtc::Location location;
+    int64_t next_callback;  // Absolute timestamp.
 
    private:
     ModuleCallback& operator=(ModuleCallback&);
@@ -85,4 +82,4 @@ class ProcessThreadImpl : public ProcessThread {
 
 }  // namespace webrtc
 
-#endif // MODULES_UTILITY_SOURCE_PROCESS_THREAD_IMPL_H_
+#endif // WEBRTC_MODULES_UTILITY_SOURCE_PROCESS_THREAD_IMPL_H_

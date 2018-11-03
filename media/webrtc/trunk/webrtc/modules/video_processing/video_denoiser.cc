@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "modules/video_processing/video_denoiser.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/modules/video_processing/video_denoiser.h"
 #include "libyuv/planar_functions.h"
 
 namespace webrtc {
@@ -72,8 +72,7 @@ VideoDenoiser::VideoDenoiser(bool runtime_cpu_detection)
       filter_(DenoiserFilter::Create(runtime_cpu_detection, &cpu_type_)),
       ne_(new NoiseEstimation()) {}
 
-void VideoDenoiser::DenoiserReset(
-    rtc::scoped_refptr<I420BufferInterface> frame) {
+void VideoDenoiser::DenoiserReset(rtc::scoped_refptr<VideoFrameBuffer> frame) {
   width_ = frame->width();
   height_ = frame->height();
   mb_cols_ = width_ >> 4;
@@ -212,8 +211,8 @@ void VideoDenoiser::CopyLumaOnMargin(const uint8_t* y_src,
   }
 }
 
-rtc::scoped_refptr<I420BufferInterface> VideoDenoiser::DenoiseFrame(
-    rtc::scoped_refptr<I420BufferInterface> frame,
+rtc::scoped_refptr<VideoFrameBuffer> VideoDenoiser::DenoiseFrame(
+    rtc::scoped_refptr<VideoFrameBuffer> frame,
     bool noise_estimation_enabled) {
   // If previous width and height are different from current frame's, need to
   // reallocate the buffers and no denoising for the current frame.

@@ -8,15 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_METRIC_RECORDER_H_
-#define MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_METRIC_RECORDER_H_
+#ifndef WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_METRIC_RECORDER_H_
+#define WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_METRIC_RECORDER_H_
 
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
 
-#include "rtc_base/gtest_prod_util.h"
+#include "webrtc/base/common.h"
+#include "webrtc/base/gtest_prod_util.h"
 
 namespace webrtc {
 namespace testing {
@@ -185,4 +186,4 @@ class MetricRecorder {
 }  // namespace bwe
 }  // namespace testing
 }  // namespace webrtc
-#endif  // MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_METRIC_RECORDER_H_
+#endif  // WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_METRIC_RECORDER_H_

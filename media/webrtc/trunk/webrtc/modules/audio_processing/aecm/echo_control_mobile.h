@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_AECM_ECHO_CONTROL_MOBILE_H_
-#define MODULES_AUDIO_PROCESSING_AECM_ECHO_CONTROL_MOBILE_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AECM_ECHO_CONTROL_MOBILE_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_AECM_ECHO_CONTROL_MOBILE_H_
 
 #include <stdlib.h>
 
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 enum {
     AecmFalse = 0,
@@ -206,4 +206,4 @@ size_t WebRtcAecm_echo_path_size_bytes();
 #ifdef __cplusplus
 }
 #endif
-#endif  // MODULES_AUDIO_PROCESSING_AECM_ECHO_CONTROL_MOBILE_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_AECM_ECHO_CONTROL_MOBILE_H_

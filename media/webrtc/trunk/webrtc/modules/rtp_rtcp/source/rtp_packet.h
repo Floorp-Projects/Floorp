@@ -7,39 +7,29 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef MODULES_RTP_RTCP_SOURCE_RTP_PACKET_H_
-#define MODULES_RTP_RTCP_SOURCE_RTP_PACKET_H_
+#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_PACKET_H_
+#define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_PACKET_H_
 
 #include <vector>
 
-#include "api/array_view.h"
-#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "rtc_base/basictypes.h"
-#include "rtc_base/copyonwritebuffer.h"
+#include "webrtc/base/array_view.h"
+#include "webrtc/base/basictypes.h"
+#include "webrtc/base/copyonwritebuffer.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
 namespace webrtc {
+struct RTPHeader;
 class RtpHeaderExtensionMap;
 class Random;
 
-class RtpPacket {
+namespace rtp {
+class Packet {
  public:
   using ExtensionType = RTPExtensionType;
   using ExtensionManager = RtpHeaderExtensionMap;
-  static constexpr int kMaxExtensionHeaders = 14;
+  static constexpr size_t kMaxExtensionHeaders = 14;
   static constexpr int kMinExtensionId = 1;
   static constexpr int kMaxExtensionId = 14;
-
-  // |extensions| required for SetExtension/ReserveExtension functions during
-  // packet creating and used if available in Parse function.
-  // Adding and getting extensions will fail until |extensions| is
-  // provided via constructor or IdentifyExtensions function.
-  RtpPacket();
-  explicit RtpPacket(const ExtensionManager* extensions);
-  RtpPacket(const RtpPacket&);
-  RtpPacket(const ExtensionManager* extensions, size_t capacity);
-  ~RtpPacket();
-
-  RtpPacket& operator=(const RtpPacket&) = default;
 
   // Parse and copy given buffer into Packet.
   bool Parse(const uint8_t* buffer, size_t size);
@@ -58,6 +48,10 @@ class RtpPacket {
   uint32_t Timestamp() const;
   uint32_t Ssrc() const;
   std::vector<uint32_t> Csrcs() const;
+
+  // TODO(danilchap): Remove this function when all code update to use RtpPacket
+  // directly. Function is there just for easier backward compatibilty.
+  void GetHeader(RTPHeader* header) const;
 
   size_t headers_size() const;
 
@@ -78,7 +72,7 @@ class RtpPacket {
   void Clear();
 
   // Header setters.
-  void CopyHeaderFrom(const RtpPacket& packet);
+  void CopyHeaderFrom(const Packet& packet);
   void SetMarker(bool marker_bit);
   void SetPayloadType(uint8_t payload_type);
   void SetSequenceNumber(uint16_t seq_no);
@@ -124,6 +118,19 @@ class RtpPacket {
   uint8_t* AllocatePayload(size_t size_bytes);
   bool SetPadding(uint8_t size_bytes, Random* random);
 
+ protected:
+  // |extensions| required for SetExtension/ReserveExtension functions during
+  // packet creating and used if available in Parse function.
+  // Adding and getting extensions will fail until |extensions| is
+  // provided via constructor or IdentifyExtensions function.
+  Packet();
+  explicit Packet(const ExtensionManager* extensions);
+  Packet(const Packet&);
+  Packet(const ExtensionManager* extensions, size_t capacity);
+  virtual ~Packet();
+
+  Packet& operator=(const Packet&) = default;
+
  private:
   struct ExtensionInfo {
     ExtensionType type;
@@ -162,12 +169,12 @@ class RtpPacket {
 };
 
 template <typename Extension>
-bool RtpPacket::HasExtension() const {
+bool Packet::HasExtension() const {
   return !FindExtension(Extension::kId).empty();
 }
 
 template <typename Extension, typename... Values>
-bool RtpPacket::GetExtension(Values... values) const {
+bool Packet::GetExtension(Values... values) const {
   auto raw = FindExtension(Extension::kId);
   if (raw.empty())
     return false;
@@ -175,7 +182,7 @@ bool RtpPacket::GetExtension(Values... values) const {
 }
 
 template <typename Extension, typename... Values>
-bool RtpPacket::SetExtension(Values... values) {
+bool Packet::SetExtension(Values... values) {
   const size_t value_size = Extension::ValueSize(values...);
   if (value_size == 0 || value_size > 16)
     return false;
@@ -186,14 +193,14 @@ bool RtpPacket::SetExtension(Values... values) {
 }
 
 template <typename Extension>
-bool RtpPacket::ReserveExtension() {
+bool Packet::ReserveExtension() {
   auto buffer = AllocateExtension(Extension::kId, Extension::kValueSizeBytes);
   if (buffer.empty())
     return false;
   memset(buffer.data(), 0, Extension::kValueSizeBytes);
   return true;
 }
-
+}  // namespace rtp
 }  // namespace webrtc
 
-#endif  // MODULES_RTP_RTCP_SOURCE_RTP_PACKET_H_
+#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_PACKET_H_

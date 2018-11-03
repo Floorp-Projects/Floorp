@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_SESSION_INFO_H_
-#define MODULES_VIDEO_CODING_SESSION_INFO_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_SESSION_INFO_H_
+#define WEBRTC_MODULES_VIDEO_CODING_SESSION_INFO_H_
 
 #include <list>
 #include <vector>
 
-#include "modules/include/module_common_types.h"
-#include "modules/video_coding/include/video_coding.h"
-#include "modules/video_coding/packet.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/modules/video_coding/include/video_coding.h"
+#include "webrtc/modules/video_coding/packet.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 // Used to pass data from jitter buffer to session info.
@@ -163,4 +163,4 @@ class VCMSessionInfo {
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_SESSION_INFO_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_SESSION_INFO_H_

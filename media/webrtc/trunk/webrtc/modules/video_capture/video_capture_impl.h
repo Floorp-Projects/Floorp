@@ -8,22 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CAPTURE_MAIN_SOURCE_VIDEO_CAPTURE_IMPL_H_
-#define MODULES_VIDEO_CAPTURE_MAIN_SOURCE_VIDEO_CAPTURE_IMPL_H_
+#ifndef WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_VIDEO_CAPTURE_IMPL_H_
+#define WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_VIDEO_CAPTURE_IMPL_H_
 
 /*
  * video_capture_impl.h
  */
 
-#include "api/video/video_frame.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "modules/video_capture/video_capture.h"
-#include "modules/video_capture/video_capture_config.h"
-#include "rtc_base/criticalsection.h"
-#include "rtc_base/scoped_ref_ptr.h"
+#include "webrtc/api/video/video_frame.h"
+#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/modules/video_capture/video_capture.h"
+#include "webrtc/modules/video_capture/video_capture_config.h"
+#include <set>
 
 namespace webrtc
 {
+class CriticalSectionWrapper;
 
 namespace videocapturemodule {
 // Class definitions
@@ -95,7 +96,8 @@ protected:
     int32_t DeliverCapturedFrame(VideoFrame& captureFrame);
 
     char* _deviceUniqueId; // current Device unique name;
-    rtc::CriticalSection _apiCs;
+    CriticalSectionWrapper& _apiCs;
+    int32_t _captureDelay; // Current capture delay. May be changed of platform dependent parts.
     VideoCaptureCapability _requestedCapability; // Should be set by platform dependent code in StartCapture.
 private:
     void UpdateFrameCount();
@@ -119,4 +121,4 @@ private:
 };
 }  // namespace videocapturemodule
 }  // namespace webrtc
-#endif  // MODULES_VIDEO_CAPTURE_MAIN_SOURCE_VIDEO_CAPTURE_IMPL_H_
+#endif  // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_VIDEO_CAPTURE_IMPL_H_

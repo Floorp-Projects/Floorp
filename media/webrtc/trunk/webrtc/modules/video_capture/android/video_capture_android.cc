@@ -8,13 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_capture/android/video_capture_android.h"
+#include "webrtc/modules/video_capture/android/video_capture_android.h"
 
-#include "modules/utility/include/helpers_android.h"
-#include "modules/video_capture/android/device_info_android.h"
-#include "rtc_base/criticalsection.h"
-#include "rtc_base/logging.h"
-#include "rtc_base/refcountedobject.h"
+#include "webrtc/base/common.h"
+#include "webrtc/modules/utility/include/helpers_android.h"
+#include "webrtc/modules/video_capture/android/device_info_android.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/logcat_trace_context.h"
+#include "webrtc/system_wrappers/include/logging.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 #include "AndroidBridge.h"
 
@@ -127,7 +129,7 @@ int32_t VideoCaptureAndroid::OnIncomingFrame(uint8_t* videoFrame,
       (degrees > 225 && degrees <= 315) ? kVideoRotation_270 :
       kVideoRotation_0;  // Impossible.
   if (_rotation != current_rotation) {
-    RTC_LOG(LS_INFO) << "New camera rotation: " << degrees;
+    LOG(LS_INFO) << "New camera rotation: " << degrees;
     _rotation = current_rotation;
     int32_t status = VideoCaptureImpl::SetCaptureRotation(_rotation);
     if (status != 0)
@@ -150,7 +152,7 @@ int32_t VideoCaptureAndroid::Init(const char* deviceUniqueIdUTF8) {
     return -1;
 
   // Store the device name
-  RTC_LOG(LS_INFO) << "VideoCaptureAndroid::Init: " << deviceUniqueIdUTF8;
+  LOG(LS_INFO) << "VideoCaptureAndroid::Init: " << deviceUniqueIdUTF8;
   size_t camera_id = 0;
   if (!_deviceInfo.FindCameraIndex(deviceUniqueIdUTF8, &camera_id))
     return -1;
@@ -192,13 +194,15 @@ int32_t VideoCaptureAndroid::StartCapture(
 
   if (_deviceInfo.GetBestMatchedCapability(
           _deviceUniqueId, capability, _captureCapability) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ <<
-                 "s: GetBestMatchedCapability failed: " <<
-                 capability.width << "x" << capability.height;
+    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+                 "%s: GetBestMatchedCapability failed: %dx%d",
+                 __FUNCTION__, capability.width, capability.height);
     // Manual exit of critical section
     _apiCs.Leave();
     return -1;
   }
+
+  _captureDelay = _captureCapability.expectedCaptureDelay;
 
   int width = _captureCapability.width;
   int height = _captureCapability.height;
@@ -218,7 +222,7 @@ int32_t VideoCaptureAndroid::StartCapture(
                                         width, height,
                                         min_mfps, max_mfps);
   if (started) {
-    rtc::CritScope cs(&_apiCs);
+    CriticalSectionScoped cs(&_apiCs);
     _requestedCapability = capability;
     _captureStarted = true;
   }
@@ -244,13 +248,13 @@ int32_t VideoCaptureAndroid::StopCapture() {
 }
 
 bool VideoCaptureAndroid::CaptureStarted() {
-  rtc::CritScope cs(&_apiCs);
+  CriticalSectionScoped cs(&_apiCs);
   return _captureStarted;
 }
 
 int32_t VideoCaptureAndroid::CaptureSettings(
     VideoCaptureCapability& settings) {
-  rtc::CritScope cs(&_apiCs);
+  CriticalSectionScoped cs(&_apiCs);
   settings = _requestedCapability;
   return 0;
 }

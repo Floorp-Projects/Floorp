@@ -7,8 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef MODULES_RTP_RTCP_TEST_TESTFEC_AVERAGE_RESIDUAL_LOSS_XOR_CODES_H_
-#define MODULES_RTP_RTCP_TEST_TESTFEC_AVERAGE_RESIDUAL_LOSS_XOR_CODES_H_
+#ifndef WEBRTC_MODULES_RTP_RTCP_TEST_TESTFEC_AVERAGE_RESIDUAL_LOSS_XOR_CODES_H_
+#define WEBRTC_MODULES_RTP_RTCP_TEST_TESTFEC_AVERAGE_RESIDUAL_LOSS_XOR_CODES_H_
 
 namespace webrtc {
 
@@ -188,4 +188,4 @@ const float kMaxResidualLossBurstyMask[kNumberCodes] = {
 };
 
 }  // namespace webrtc
-#endif  // MODULES_RTP_RTCP_TEST_TESTFEC_AVERAGE_RESIDUAL_LOSS_XOR_CODES_H_
+#endif  // WEBRTC_MODULES_RTP_RTCP_TEST_TESTFEC_AVERAGE_RESIDUAL_LOSS_XOR_CODES_H_

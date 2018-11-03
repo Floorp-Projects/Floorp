@@ -12,14 +12,13 @@
 #include <memory>
 #include <vector>
 
-#include "common_types.h"  // NOLINT(build/include)
-#include "modules/audio_coding/codecs/audio_format_conversion.h"
-#include "modules/rtp_rtcp/include/rtp_rtcp.h"
-#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "modules/rtp_rtcp/source/rtp_receiver_audio.h"
-#include "modules/rtp_rtcp/test/testAPI/test_api.h"
-#include "rtc_base/rate_limiter.h"
-#include "test/gtest.h"
+#include "webrtc/base/rate_limiter.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_receiver_audio.h"
+#include "webrtc/modules/rtp_rtcp/test/testAPI/test_api.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 namespace {
@@ -48,7 +47,7 @@ bool IsComfortNoisePayload(uint8_t payload_type) {
   return false;
 }
 
-class VerifyingAudioReceiver : public RtpData {
+class VerifyingAudioReceiver : public NullRtpData {
  public:
   int32_t OnReceivedPayloadData(
       const uint8_t* payloadData,
@@ -71,9 +70,11 @@ class VerifyingAudioReceiver : public RtpData {
 
 class RTPCallback : public NullRtpFeedback {
  public:
-  int32_t OnInitializeDecoder(int payload_type,
-                              const SdpAudioFormat& audio_format,
-                              uint32_t rate) override {
+  int32_t OnInitializeDecoder(const int8_t payloadType,
+                              const char payloadName[RTP_PAYLOAD_NAME_SIZE],
+                              const int frequency,
+                              const size_t channels,
+                              const uint32_t rate) override {
     EXPECT_EQ(0u, rate) << "The rate should be zero";
     return 0;
   }
@@ -128,11 +129,9 @@ class RtpRtcpAudioTest : public ::testing::Test {
 
   void RegisterPayload(const CodecInst& codec) {
     EXPECT_EQ(0, module1->RegisterSendPayload(codec));
-    EXPECT_EQ(0, rtp_receiver1_->RegisterReceivePayload(codec.pltype,
-                                                        CodecInstToSdp(codec)));
+    EXPECT_EQ(0, rtp_receiver1_->RegisterReceivePayload(codec));
     EXPECT_EQ(0, module2->RegisterSendPayload(codec));
-    EXPECT_EQ(0, rtp_receiver2_->RegisterReceivePayload(codec.pltype,
-                                                        CodecInstToSdp(codec)));
+    EXPECT_EQ(0, rtp_receiver2_->RegisterReceivePayload(codec));
   }
 
   VerifyingAudioReceiver data_receiver1;
@@ -186,11 +185,8 @@ TEST_F(RtpRtcpAudioTest, Basic) {
 
   EXPECT_EQ(test_ssrc, rtp_receiver2_->SSRC());
   uint32_t timestamp;
-  int64_t receive_time_ms;
-  EXPECT_TRUE(
-      rtp_receiver2_->GetLatestTimestamps(&timestamp, &receive_time_ms));
+  EXPECT_TRUE(rtp_receiver2_->Timestamp(&timestamp));
   EXPECT_EQ(test_timestamp, timestamp);
-  EXPECT_EQ(fake_clock.TimeInMilliseconds(), receive_time_ms);
 }
 
 TEST_F(RtpRtcpAudioTest, DTMF) {
@@ -211,8 +207,7 @@ TEST_F(RtpRtcpAudioTest, DTMF) {
   memcpy(voice_codec.plname, "telephone-event", 16);
 
   EXPECT_EQ(0, module1->RegisterSendPayload(voice_codec));
-  EXPECT_EQ(0, rtp_receiver2_->RegisterReceivePayload(
-                   voice_codec.pltype, CodecInstToSdp(voice_codec)));
+  EXPECT_EQ(0, rtp_receiver2_->RegisterReceivePayload(voice_codec));
 
   // Start DTMF test.
   int timeStamp = 160;
@@ -269,30 +264,23 @@ TEST_F(RtpRtcpAudioTest, ComfortNoise) {
   uint32_t in_timestamp = 0;
   for (const auto& c : kCngCodecs) {
     uint32_t timestamp;
-    int64_t receive_time_ms;
     EXPECT_TRUE(module1->SendOutgoingData(
         webrtc::kAudioFrameSpeech, kPcmuPayloadType, in_timestamp, -1,
         kTestPayload, 4, nullptr, nullptr, nullptr));
 
     EXPECT_EQ(test_ssrc, rtp_receiver2_->SSRC());
-    EXPECT_TRUE(
-        rtp_receiver2_->GetLatestTimestamps(&timestamp, &receive_time_ms));
+    EXPECT_TRUE(rtp_receiver2_->Timestamp(&timestamp));
     EXPECT_EQ(test_timestamp + in_timestamp, timestamp);
-    EXPECT_EQ(fake_clock.TimeInMilliseconds(), receive_time_ms);
     in_timestamp += 10;
-    fake_clock.AdvanceTimeMilliseconds(20);
 
     EXPECT_TRUE(module1->SendOutgoingData(webrtc::kAudioFrameCN, c.payload_type,
                                           in_timestamp, -1, kTestPayload, 1,
                                           nullptr, nullptr, nullptr));
 
     EXPECT_EQ(test_ssrc, rtp_receiver2_->SSRC());
-    EXPECT_TRUE(
-        rtp_receiver2_->GetLatestTimestamps(&timestamp, &receive_time_ms));
+    EXPECT_TRUE(rtp_receiver2_->Timestamp(&timestamp));
     EXPECT_EQ(test_timestamp + in_timestamp, timestamp);
-    EXPECT_EQ(fake_clock.TimeInMilliseconds(), receive_time_ms);
     in_timestamp += 10;
-    fake_clock.AdvanceTimeMilliseconds(20);
   }
 }
 

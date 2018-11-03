@@ -11,6 +11,10 @@
 package org.webrtc;
 
 public class CallSessionFileRotatingLogSink {
+  static {
+    System.loadLibrary("jingle_peerconnection_so");
+  }
+
   private long nativeSink;
 
   public static byte[] getLogData(String dirPath) {

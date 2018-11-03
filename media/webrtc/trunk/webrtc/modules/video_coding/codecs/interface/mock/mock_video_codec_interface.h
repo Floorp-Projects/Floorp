@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_CODECS_INTERFACE_MOCK_MOCK_VIDEO_CODEC_INTERFACE_H_
-#define MODULES_VIDEO_CODING_CODECS_INTERFACE_MOCK_MOCK_VIDEO_CODEC_INTERFACE_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_INTERFACE_MOCK_MOCK_VIDEO_CODEC_INTERFACE_H_
+#define WEBRTC_MODULES_VIDEO_CODING_CODECS_INTERFACE_MOCK_MOCK_VIDEO_CODEC_INTERFACE_H_
 
 #pragma message("WARNING: video_coding/codecs/interface is DEPRECATED; "
     "use video_coding/include")
 #include <string>
 #include <vector>
 
-#include "modules/video_coding/include/video_codec_interface.h"
-#include "test/gmock.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/video_coding/include/video_codec_interface.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -78,4 +78,4 @@ class MockVideoDecoder : public VideoDecoder {
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_CODECS_INTERFACE_MOCK_MOCK_VIDEO_CODEC_INTERFACE_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_INTERFACE_MOCK_MOCK_VIDEO_CODEC_INTERFACE_H_

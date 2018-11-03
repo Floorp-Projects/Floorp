@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef AUDIO_DEVICE_AUDIO_MIXER_MANAGER_ALSA_LINUX_H_
-#define AUDIO_DEVICE_AUDIO_MIXER_MANAGER_ALSA_LINUX_H_
+#ifndef WEBRTC_AUDIO_DEVICE_AUDIO_MIXER_MANAGER_ALSA_LINUX_H
+#define WEBRTC_AUDIO_DEVICE_AUDIO_MIXER_MANAGER_ALSA_LINUX_H
 
-#include "modules/audio_device/include/audio_device.h"
-#include "modules/audio_device/linux/alsasymboltable_linux.h"
-#include "rtc_base/criticalsection.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/audio_device/include/audio_device.h"
+#include "webrtc/modules/audio_device/linux/alsasymboltable_linux.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/typedefs.h"
 
 #include <alsa/asoundlib.h>
 
@@ -30,6 +30,7 @@ public:
     int32_t SpeakerVolume(uint32_t& volume) const;
     int32_t MaxSpeakerVolume(uint32_t& maxVolume) const;
     int32_t MinSpeakerVolume(uint32_t& minVolume) const;
+    int32_t SpeakerVolumeStepSize(uint16_t& stepSize) const;
     int32_t SpeakerVolumeIsAvailable(bool& available);
     int32_t SpeakerMuteIsAvailable(bool& available);
     int32_t SetSpeakerMute(bool enable);
@@ -37,11 +38,15 @@ public:
     int32_t MicrophoneMuteIsAvailable(bool& available);
     int32_t SetMicrophoneMute(bool enable);
     int32_t MicrophoneMute(bool& enabled) const;
+    int32_t MicrophoneBoostIsAvailable(bool& available);
+    int32_t SetMicrophoneBoost(bool enable);
+    int32_t MicrophoneBoost(bool& enabled) const;
     int32_t MicrophoneVolumeIsAvailable(bool& available);
     int32_t SetMicrophoneVolume(uint32_t volume);
     int32_t MicrophoneVolume(uint32_t& volume) const;
     int32_t MaxMicrophoneVolume(uint32_t& maxVolume) const;
     int32_t MinMicrophoneVolume(uint32_t& minVolume) const;
+    int32_t MicrophoneVolumeStepSize(uint16_t& stepSize) const;
     int32_t Close();
     int32_t CloseSpeaker();
     int32_t CloseMicrophone();
@@ -49,7 +54,7 @@ public:
     bool MicrophoneIsInitialized() const;
 
 public:
-    AudioMixerManagerLinuxALSA();
+    AudioMixerManagerLinuxALSA(const int32_t id);
     ~AudioMixerManagerLinuxALSA();
 
 private:
@@ -58,7 +63,8 @@ private:
     void GetControlName(char *controlName, char* deviceName) const;
 
 private:
-    rtc::CriticalSection _critSect;
+    CriticalSectionWrapper& _critSect;
+    int32_t _id;
     mutable snd_mixer_t* _outputMixerHandle;
     char _outputMixerStr[kAdmMaxDeviceNameSize];
     mutable snd_mixer_t* _inputMixerHandle;

@@ -8,16 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/remote_bitrate_estimator/remote_estimator_proxy.h"
+#include "webrtc/modules/remote_bitrate_estimator/remote_estimator_proxy.h"
 
 #include <limits>
 #include <algorithm>
 
-#include "modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
-#include "rtc_base/numerics/safe_minmax.h"
-#include "system_wrappers/include/clock.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/modules/pacing/packet_router.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
 
 namespace webrtc {
 
@@ -32,11 +33,10 @@ const int RemoteEstimatorProxy::kDefaultSendIntervalMs = 100;
 static constexpr int64_t kMaxTimeMs =
     std::numeric_limits<int64_t>::max() / 1000;
 
-RemoteEstimatorProxy::RemoteEstimatorProxy(
-    const Clock* clock,
-    TransportFeedbackSenderInterface* feedback_sender)
+RemoteEstimatorProxy::RemoteEstimatorProxy(Clock* clock,
+                                           PacketRouter* packet_router)
     : clock_(clock),
-      feedback_sender_(feedback_sender),
+      packet_router_(packet_router),
       last_process_time_ms_(-1),
       media_ssrc_(0),
       feedback_sequence_(0),
@@ -45,13 +45,19 @@ RemoteEstimatorProxy::RemoteEstimatorProxy(
 
 RemoteEstimatorProxy::~RemoteEstimatorProxy() {}
 
+void RemoteEstimatorProxy::IncomingPacketFeedbackVector(
+    const std::vector<PacketInfo>& packet_feedback_vector) {
+  rtc::CritScope cs(&lock_);
+  for (PacketInfo info : packet_feedback_vector)
+    OnPacketArrival(info.sequence_number, info.arrival_time_ms);
+}
+
 void RemoteEstimatorProxy::IncomingPacket(int64_t arrival_time_ms,
                                           size_t payload_size,
                                           const RTPHeader& header) {
   if (!header.extension.hasTransportSequenceNumber) {
-    RTC_LOG(LS_WARNING)
-        << "RemoteEstimatorProxy: Incoming packet "
-           "is missing the transport sequence number extension!";
+    LOG(LS_WARNING) << "RemoteEstimatorProxy: Incoming packet "
+                       "is missing the transport sequence number extension!";
     return;
   }
   rtc::CritScope cs(&lock_);
@@ -83,8 +89,8 @@ void RemoteEstimatorProxy::Process() {
   while (more_to_build) {
     rtcp::TransportFeedback feedback_packet;
     if (BuildFeedbackPacket(&feedback_packet)) {
-      RTC_DCHECK(feedback_sender_ != nullptr);
-      feedback_sender_->SendTransportFeedback(&feedback_packet);
+      RTC_DCHECK(packet_router_ != nullptr);
+      packet_router_->SendFeedback(&feedback_packet);
     } else {
       more_to_build = false;
     }
@@ -105,15 +111,14 @@ void RemoteEstimatorProxy::OnBitrateChanged(int bitrate_bps) {
 
   // Let TWCC reports occupy 5% of total bandwidth.
   rtc::CritScope cs(&lock_);
-  send_interval_ms_ = static_cast<int>(
-      0.5 + kTwccReportSize * 8.0 * 1000.0 /
-                rtc::SafeClamp(0.05 * bitrate_bps, kMinTwccRate, kMaxTwccRate));
+  send_interval_ms_ = static_cast<int>(0.5 + kTwccReportSize * 8.0 * 1000.0 /
+      (std::max(std::min(0.05 * bitrate_bps, kMaxTwccRate), kMinTwccRate)));
 }
 
 void RemoteEstimatorProxy::OnPacketArrival(uint16_t sequence_number,
                                            int64_t arrival_time) {
   if (arrival_time < 0 || arrival_time > kMaxTimeMs) {
-    RTC_LOG(LS_WARNING) << "Arrival time out of bounds: " << arrival_time;
+    LOG(LS_WARNING) << "Arrival time out of bounds: " << arrival_time;
     return;
   }
 
@@ -123,10 +128,10 @@ void RemoteEstimatorProxy::OnPacketArrival(uint16_t sequence_number,
   // calls to IsNewerSequenceNumber instead.
   int64_t seq = unwrapper_.Unwrap(sequence_number);
   if (seq > window_start_seq_ + 0xFFFF / 2) {
-    RTC_LOG(LS_WARNING) << "Skipping this sequence number (" << sequence_number
-                        << ") since it likely is reordered, but the unwrapper"
-                           "failed to handle it. Feedback window starts at "
-                        << window_start_seq_ << ".";
+    LOG(LS_WARNING) << "Skipping this sequence number (" << sequence_number
+                    << ") since it likely is reordered, but the unwrapper"
+                       "failed to handle it. Feedback window starts at "
+                    << window_start_seq_ << ".";
     return;
   }
 

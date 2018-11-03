@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/test/audio_buffer_tools.h"
+#include "webrtc/modules/audio_processing/test/audio_buffer_tools.h"
 
 #include <string.h>
 

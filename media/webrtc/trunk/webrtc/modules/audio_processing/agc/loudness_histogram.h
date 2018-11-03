@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_AGC_LOUDNESS_HISTOGRAM_H_
-#define MODULES_AUDIO_PROCESSING_AGC_LOUDNESS_HISTOGRAM_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AGC_LOUDNESS_HISTOGRAM_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_AGC_LOUDNESS_HISTOGRAM_H_
 
 #include <string.h>
 
 #include <memory>
 
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -89,4 +89,4 @@ class LoudnessHistogram {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC_LOUDNESS_HISTOGRAM_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_AGC_LOUDNESS_HISTOGRAM_H_

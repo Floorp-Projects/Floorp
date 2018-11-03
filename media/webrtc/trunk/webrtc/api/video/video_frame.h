@@ -8,18 +8,31 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef API_VIDEO_VIDEO_FRAME_H_
-#define API_VIDEO_VIDEO_FRAME_H_
+#ifndef WEBRTC_API_VIDEO_VIDEO_FRAME_H_
+#define WEBRTC_API_VIDEO_VIDEO_FRAME_H_
 
 #include <stdint.h>
 
-#include "api/video/video_rotation.h"
-#include "api/video/video_frame_buffer.h"
+#include "webrtc/api/video/video_rotation.h"
+#include "webrtc/api/video/video_frame_buffer.h"
+
+// TODO(nisse): Transition hack, some downstream applications expect
+// that including this file also defines base/timeutils.h constants.
+// Delete after applications are fixed to include the right headers.
+#include "webrtc/base/timeutils.h"
 
 namespace webrtc {
 
 class VideoFrame {
  public:
+  VideoFrame() {
+    video_frame_buffer_ = nullptr;
+    timestamp_rtp_ = 0;
+    timestamp_us_ = 0;
+    ntp_time_ms_ = 0;
+    rotation_ = kVideoRotation_0;
+  }
+
   // TODO(nisse): This constructor is consistent with the now deleted
   // cricket::WebRtcVideoFrame. We should consider whether or not we
   // want to stick to this style and deprecate the other constructor.
@@ -43,10 +56,9 @@ class VideoFrame {
 
   // Get frame width.
   int width() const;
+
   // Get frame height.
   int height() const;
-  // Get frame size in pixels.
-  uint32_t size() const;
 
   // System monotonic clock, same timebase as rtc::TimeMicros().
   int64_t timestamp_us() const { return timestamp_us_; }
@@ -67,11 +79,9 @@ class VideoFrame {
   uint32_t transport_frame_id() const { return timestamp(); }
 
   // Set capture ntp time in milliseconds.
-  // TODO(nisse): Deprecated. Migrate all users to timestamp_us().
   void set_ntp_time_ms(int64_t ntp_time_ms) { ntp_time_ms_ = ntp_time_ms; }
 
   // Get capture ntp time in milliseconds.
-  // TODO(nisse): Deprecated. Migrate all users to timestamp_us().
   int64_t ntp_time_ms() const { return ntp_time_ms_; }
 
   // Naming convention for Coordination of Video Orientation. Please see
@@ -87,8 +97,10 @@ class VideoFrame {
   VideoRotation rotation() const { return rotation_; }
   void set_rotation(VideoRotation rotation) { rotation_ = rotation; }
 
+  // Set render time in milliseconds.
+  void set_render_time_ms(int64_t render_time_ms);
+
   // Get render time in milliseconds.
-  // TODO(nisse): Deprecated. Migrate all users to timestamp_us().
   int64_t render_time_ms() const;
 
   // Return the underlying buffer. Never nullptr for a properly
@@ -98,7 +110,7 @@ class VideoFrame {
   // TODO(nisse): Deprecated.
   // Return true if the frame is stored in a texture.
   bool is_texture() const {
-    return video_frame_buffer()->type() == VideoFrameBuffer::Type::kNative;
+    return video_frame_buffer()->native_handle() != nullptr;
   }
 
  private:
@@ -112,4 +124,4 @@ class VideoFrame {
 
 }  // namespace webrtc
 
-#endif  // API_VIDEO_VIDEO_FRAME_H_
+#endif  // WEBRTC_API_VIDEO_VIDEO_FRAME_H_

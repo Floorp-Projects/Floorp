@@ -8,21 +8,22 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_device/android/ensure_initialized.h"
+#include "webrtc/modules/audio_device/android/ensure_initialized.h"
 
 #include <pthread.h>
 
-#include "rtc_base/ignore_wundef.h"
+#include "webrtc/base/ignore_wundef.h"
 
 // Note: this dependency is dangerous since it reaches into Chromium's base.
 // There's a risk of e.g. macro clashes. This file may only be used in tests.
 RTC_PUSH_IGNORING_WUNDEF()
+#include "base/android/context_utils.h"
 #include "base/android/jni_android.h"
 RTC_POP_IGNORING_WUNDEF()
-#include "modules/audio_device/android/audio_record_jni.h"
-#include "modules/audio_device/android/audio_track_jni.h"
-#include "modules/utility/include/jvm_android.h"
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/modules/audio_device/android/audio_record_jni.h"
+#include "webrtc/modules/audio_device/android/audio_track_jni.h"
+#include "webrtc/modules/utility/include/jvm_android.h"
 
 namespace webrtc {
 namespace audiodevicemodule {
@@ -34,9 +35,10 @@ void EnsureInitializedOnce() {
   JNIEnv* jni = ::base::android::AttachCurrentThread();
   JavaVM* jvm = NULL;
   RTC_CHECK_EQ(0, jni->GetJavaVM(&jvm));
+  jobject context = ::base::android::GetApplicationContext().obj();
 
   // Initialize the Java environment (currently only used by the audio manager).
-  webrtc::JVM::Initialize(jvm);
+  webrtc::JVM::Initialize(jvm, context);
 }
 
 void EnsureInitialized() {

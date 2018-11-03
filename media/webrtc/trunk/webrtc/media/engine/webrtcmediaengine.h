@@ -8,23 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MEDIA_ENGINE_WEBRTCMEDIAENGINE_H_
-#define MEDIA_ENGINE_WEBRTCMEDIAENGINE_H_
+#ifndef WEBRTC_MEDIA_ENGINE_WEBRTCMEDIAENGINE_H_
+#define WEBRTC_MEDIA_ENGINE_WEBRTCMEDIAENGINE_H_
 
-#include <memory>
 #include <string>
 #include <vector>
 
-#include "call/call.h"
-#include "media/base/mediaengine.h"
+#include "webrtc/call/call.h"
+#include "webrtc/config.h"
+#include "webrtc/media/base/mediaengine.h"
 
 namespace webrtc {
 class AudioDecoderFactory;
 class AudioDeviceModule;
 class AudioMixer;
-class AudioProcessing;
-class VideoDecoderFactory;
-class VideoEncoderFactory;
 }
 namespace cricket {
 class WebRtcVideoDecoderFactory;
@@ -35,42 +32,28 @@ namespace cricket {
 
 class WebRtcMediaEngineFactory {
  public:
-  // These Create methods may be called on any thread, though the engine is
-  // only expected to be used on one thread, internally called the "worker
-  // thread". This is the thread Init must be called on.
-  //
-  // TODO(deadbeef): Change these to return an std::unique_ptr<>, to indicate
-  // that the caller owns the returned object.
+  // TODO(ossu): Backwards-compatible interface. Will be deprecated once the
+  // audio decoder factory is fully plumbed and used throughout WebRTC.
+  // See: crbug.com/webrtc/6000
   static MediaEngineInterface* Create(
       webrtc::AudioDeviceModule* adm,
-      const rtc::scoped_refptr<webrtc::AudioEncoderFactory>&
-          audio_encoder_factory,
+      WebRtcVideoEncoderFactory* video_encoder_factory,
+      WebRtcVideoDecoderFactory* video_decoder_factory);
+
+  static MediaEngineInterface* Create(
+      webrtc::AudioDeviceModule* adm,
       const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
           audio_decoder_factory,
       WebRtcVideoEncoderFactory* video_encoder_factory,
       WebRtcVideoDecoderFactory* video_decoder_factory);
+
   static MediaEngineInterface* Create(
       webrtc::AudioDeviceModule* adm,
-      const rtc::scoped_refptr<webrtc::AudioEncoderFactory>&
-          audio_encoder_factory,
       const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
           audio_decoder_factory,
       WebRtcVideoEncoderFactory* video_encoder_factory,
       WebRtcVideoDecoderFactory* video_decoder_factory,
-      rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
-      rtc::scoped_refptr<webrtc::AudioProcessing> apm);
-
-  // Create a MediaEngineInterface with optional video codec factories. These
-  // video factories represents all video codecs, i.e. no extra internal video
-  // codecs will be added.
-  static std::unique_ptr<MediaEngineInterface> Create(
-      rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-      rtc::scoped_refptr<webrtc::AudioEncoderFactory> audio_encoder_factory,
-      rtc::scoped_refptr<webrtc::AudioDecoderFactory> audio_decoder_factory,
-      std::unique_ptr<webrtc::VideoEncoderFactory> video_encoder_factory,
-      std::unique_ptr<webrtc::VideoDecoderFactory> video_decoder_factory,
-      rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
-      rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing);
+      rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer);
 };
 
 // Verify that extension IDs are within 1-byte extension range and are not
@@ -90,4 +73,4 @@ webrtc::Call::Config::BitrateConfig GetBitrateConfigForCodec(
 
 }  // namespace cricket
 
-#endif  // MEDIA_ENGINE_WEBRTCMEDIAENGINE_H_
+#endif  // WEBRTC_MEDIA_ENGINE_WEBRTCMEDIAENGINE_H_

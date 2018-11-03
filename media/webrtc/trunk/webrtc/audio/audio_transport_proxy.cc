@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "audio/audio_transport_proxy.h"
+#include "webrtc/audio/audio_transport_proxy.h"
 
 namespace webrtc {
 
@@ -25,22 +25,18 @@ int Resample(const AudioFrame& frame,
   resampler->InitializeIfNeeded(frame.sample_rate_hz_, destination_sample_rate,
                                 number_of_channels);
 
-  // TODO(yujo): make resampler take an AudioFrame, and add special case
-  // handling of muted frames.
   return resampler->Resample(
-      frame.data(), frame.samples_per_channel_ * number_of_channels,
-      destination, number_of_channels * target_number_of_samples_per_channel);
+      frame.data_, frame.samples_per_channel_ * number_of_channels, destination,
+      number_of_channels * target_number_of_samples_per_channel);
 }
 }  // namespace
 
 AudioTransportProxy::AudioTransportProxy(AudioTransport* voe_audio_transport,
-                                         AudioProcessing* audio_processing,
+                                         AudioProcessing* apm,
                                          AudioMixer* mixer)
-    : voe_audio_transport_(voe_audio_transport),
-      audio_processing_(audio_processing),
-      mixer_(mixer) {
+    : voe_audio_transport_(voe_audio_transport), apm_(apm), mixer_(mixer) {
   RTC_DCHECK(voe_audio_transport);
-  RTC_DCHECK(audio_processing);
+  RTC_DCHECK(apm);
   RTC_DCHECK(mixer);
 }
 
@@ -56,7 +52,7 @@ int32_t AudioTransportProxy::RecordedDataIsAvailable(
     const int32_t clockDrift,
     const uint32_t currentMicLevel,
     const bool keyPressed,
-    uint32_t& newMicLevel) {  // NOLINT: to avoid changing APIs
+    uint32_t& newMicLevel) {
   // Pass call through to original audio transport instance.
   return voe_audio_transport_->RecordedDataIsAvailable(
       audioSamples, nSamples, nBytesPerSample, nChannels, samplesPerSec,
@@ -81,13 +77,13 @@ int32_t AudioTransportProxy::NeedMorePlayData(const size_t nSamples,
   // 100 = 1 second / data duration (10 ms).
   RTC_DCHECK_EQ(nSamples * 100, samplesPerSec);
   RTC_DCHECK_LE(nBytesPerSample * nSamples * nChannels,
-                AudioFrame::kMaxDataSizeBytes);
+                sizeof(AudioFrame::data_));
 
   mixer_->Mix(nChannels, &mixed_frame_);
   *elapsed_time_ms = mixed_frame_.elapsed_time_ms_;
   *ntp_time_ms = mixed_frame_.ntp_time_ms_;
 
-  const auto error = audio_processing_->ProcessReverseStream(&mixed_frame_);
+  const auto error = apm_->ProcessReverseStream(&mixed_frame_);
   RTC_DCHECK_EQ(error, AudioProcessing::kNoError);
 
   nSamplesOut = Resample(mixed_frame_, samplesPerSec, &resampler_,
@@ -124,7 +120,7 @@ void AudioTransportProxy::PullRenderData(int bits_per_sample,
 
   // 8 = bits per byte.
   RTC_DCHECK_LE(bits_per_sample / 8 * number_of_frames * number_of_channels,
-                AudioFrame::kMaxDataSizeBytes);
+                sizeof(AudioFrame::data_));
   mixer_->Mix(number_of_channels, &mixed_frame_);
   *elapsed_time_ms = mixed_frame_.elapsed_time_ms_;
   *ntp_time_ms = mixed_frame_.ntp_time_ms_;

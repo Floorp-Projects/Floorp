@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/vad/gmm.h"
+#include "webrtc/modules/audio_processing/vad/gmm.h"
 
 #include <math.h>
 #include <stdlib.h>
 
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 

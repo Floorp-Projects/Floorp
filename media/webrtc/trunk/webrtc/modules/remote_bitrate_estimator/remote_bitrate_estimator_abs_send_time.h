@@ -8,24 +8,25 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_H_
-#define MODULES_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_H_
+#ifndef WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_H_
+#define WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_H_
 
 #include <list>
 #include <map>
 #include <memory>
 #include <vector>
 
-#include "modules/remote_bitrate_estimator/aimd_rate_control.h"
-#include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
-#include "modules/remote_bitrate_estimator/inter_arrival.h"
-#include "modules/remote_bitrate_estimator/overuse_detector.h"
-#include "modules/remote_bitrate_estimator/overuse_estimator.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/constructormagic.h"
-#include "rtc_base/criticalsection.h"
-#include "rtc_base/race_checker.h"
-#include "rtc_base/rate_statistics.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/rate_statistics.h"
+#include "webrtc/base/thread_checker.h"
+#include "webrtc/modules/remote_bitrate_estimator/aimd_rate_control.h"
+#include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
+#include "webrtc/modules/remote_bitrate_estimator/inter_arrival.h"
+#include "webrtc/modules/remote_bitrate_estimator/overuse_detector.h"
+#include "webrtc/modules/remote_bitrate_estimator/overuse_estimator.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 namespace webrtc {
 
@@ -68,8 +69,11 @@ struct Cluster {
 class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
  public:
   RemoteBitrateEstimatorAbsSendTime(RemoteBitrateObserver* observer,
-                                    const Clock* clock);
+                                    Clock* clock);
   virtual ~RemoteBitrateEstimatorAbsSendTime() {}
+
+  void IncomingPacketFeedbackVector(
+      const std::vector<PacketInfo>& packet_feedback_vector) override;
 
   void IncomingPacket(int64_t arrival_time_ms,
                       size_t payload_size,
@@ -106,16 +110,15 @@ class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
       const std::list<Cluster>& clusters) const;
 
   // Returns true if a probe which changed the estimate was detected.
-  ProbeResult ProcessClusters(int64_t now_ms)
-      RTC_EXCLUSIVE_LOCKS_REQUIRED(&crit_);
+  ProbeResult ProcessClusters(int64_t now_ms) EXCLUSIVE_LOCKS_REQUIRED(&crit_);
 
   bool IsBitrateImproving(int probe_bitrate_bps) const
-      RTC_EXCLUSIVE_LOCKS_REQUIRED(&crit_);
+      EXCLUSIVE_LOCKS_REQUIRED(&crit_);
 
-  void TimeoutStreams(int64_t now_ms) RTC_EXCLUSIVE_LOCKS_REQUIRED(&crit_);
+  void TimeoutStreams(int64_t now_ms) EXCLUSIVE_LOCKS_REQUIRED(&crit_);
 
-  rtc::RaceChecker network_race_;
-  const Clock* const clock_;
+  rtc::ThreadChecker network_thread_;
+  Clock* const clock_;
   RemoteBitrateObserver* const observer_;
   std::unique_ptr<InterArrival> inter_arrival_;
   std::unique_ptr<OveruseEstimator> estimator_;
@@ -131,12 +134,12 @@ class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
   bool uma_recorded_;
 
   rtc::CriticalSection crit_;
-  Ssrcs ssrcs_ RTC_GUARDED_BY(&crit_);
-  AimdRateControl remote_rate_ RTC_GUARDED_BY(&crit_);
+  Ssrcs ssrcs_ GUARDED_BY(&crit_);
+  AimdRateControl remote_rate_ GUARDED_BY(&crit_);
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(RemoteBitrateEstimatorAbsSendTime);
 };
 
 }  // namespace webrtc
 
-#endif  // MODULES_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_H_
+#endif  // WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_REMOTE_BITRATE_ESTIMATOR_ABS_SEND_TIME_H_

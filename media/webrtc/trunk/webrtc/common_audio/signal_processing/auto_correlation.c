@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
 
 size_t WebRtcSpl_AutoCorrelation(const int16_t* in_vector,
                                  size_t in_vector_length,

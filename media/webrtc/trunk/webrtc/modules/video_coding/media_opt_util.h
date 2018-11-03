@@ -8,17 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_MEDIA_OPT_UTIL_H_
-#define MODULES_VIDEO_CODING_MEDIA_OPT_UTIL_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_MEDIA_OPT_UTIL_H_
+#define WEBRTC_MODULES_VIDEO_CODING_MEDIA_OPT_UTIL_H_
 
 #include <math.h>
 #include <stdlib.h>
 
 #include <memory>
 
-#include "modules/video_coding/internal_defines.h"
-#include "rtc_base/numerics/exp_filter.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/base/numerics/exp_filter.h"
+#include "webrtc/modules/video_coding/internal_defines.h"
+#include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 namespace media_optimization {
@@ -357,4 +358,4 @@ class VCMLossProtectionLogic {
 }  // namespace media_optimization
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_MEDIA_OPT_UTIL_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_MEDIA_OPT_UTIL_H_

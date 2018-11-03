@@ -8,20 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "media/engine/internaldecoderfactory.h"
+#include "webrtc/media/engine/internaldecoderfactory.h"
 
-#include "api/video_codecs/sdp_video_format.h"
-#include "api/video_codecs/video_decoder.h"
-#include "media/base/mediaconstants.h"
-#include "test/gtest.h"
-
-namespace webrtc {
+#include "webrtc/test/gtest.h"
 
 TEST(InternalDecoderFactory, TestVP8) {
-  InternalDecoderFactory factory;
-  std::unique_ptr<VideoDecoder> decoder =
-      factory.CreateVideoDecoder(SdpVideoFormat(cricket::kVp8CodecName));
+  cricket::InternalDecoderFactory factory;
+  webrtc::VideoDecoder* decoder =
+      factory.CreateVideoDecoder(webrtc::kVideoCodecVP8);
   EXPECT_TRUE(decoder);
+  factory.DestroyVideoDecoder(decoder);
 }
-
-}  // namespace webrtc

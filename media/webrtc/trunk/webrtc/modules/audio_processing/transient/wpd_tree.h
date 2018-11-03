@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_TRANSIENT_WPD_TREE_H_
-#define MODULES_AUDIO_PROCESSING_TRANSIENT_WPD_TREE_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_TRANSIENT_WPD_TREE_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_TRANSIENT_WPD_TREE_H_
 
 #include <memory>
 
-#include "modules/audio_processing/transient/wpd_node.h"
+#include "webrtc/modules/audio_processing/transient/wpd_node.h"
 
 namespace webrtc {
 
@@ -89,4 +89,4 @@ class WPDTree {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_TRANSIENT_WPD_TREE_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_TRANSIENT_WPD_TREE_H_

@@ -10,9 +10,9 @@
 
 // Unit tests for test Packet class.
 
-#include "modules/audio_coding/neteq/tools/packet.h"
+#include "webrtc/modules/audio_coding/neteq/tools/packet.h"
 
-#include "test/gtest.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 namespace test {

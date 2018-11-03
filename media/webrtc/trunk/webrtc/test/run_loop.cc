@@ -7,7 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "test/run_loop.h"
+#include "webrtc/test/run_loop.h"
 
 #include <stdio.h>
 

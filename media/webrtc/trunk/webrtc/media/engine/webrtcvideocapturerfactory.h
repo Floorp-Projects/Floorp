@@ -9,21 +9,19 @@
  */
 
 // TODO(pthatcher): Rename file to match class name.
-#ifndef MEDIA_ENGINE_WEBRTCVIDEOCAPTURERFACTORY_H_
-#define MEDIA_ENGINE_WEBRTCVIDEOCAPTURERFACTORY_H_
+#ifndef WEBRTC_MEDIA_ENGINE_WEBRTCVIDEOCAPTURERFACTORY_H_
+#define WEBRTC_MEDIA_ENGINE_WEBRTCVIDEOCAPTURERFACTORY_H_
 
-#include <memory>
-
-#include "media/base/videocapturerfactory.h"
+#include "webrtc/media/base/videocapturerfactory.h"
 
 namespace cricket {
 
 // Creates instances of cricket::WebRtcVideoCapturer.
 class WebRtcVideoDeviceCapturerFactory : public VideoDeviceCapturerFactory {
  public:
-  std::unique_ptr<VideoCapturer> Create(const Device& device) override;
+  virtual VideoCapturer* Create(const Device& device);
 };
 
 }  // namespace cricket
 
-#endif  // MEDIA_ENGINE_WEBRTCVIDEOCAPTURERFACTORY_H_
+#endif  // WEBRTC_MEDIA_ENGINE_WEBRTCVIDEOCAPTURERFACTORY_H_

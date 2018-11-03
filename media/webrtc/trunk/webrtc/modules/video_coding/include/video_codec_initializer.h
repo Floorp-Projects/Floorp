@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_INCLUDE_VIDEO_CODEC_INITIALIZER_H_
-#define MODULES_VIDEO_CODING_INCLUDE_VIDEO_CODEC_INITIALIZER_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_INCLUDE_VIDEO_CODEC_INITIALIZER_H_
+#define WEBRTC_MODULES_VIDEO_CODING_INCLUDE_VIDEO_CODEC_INITIALIZER_H_
 
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "call/video_send_stream.h"
+#include "webrtc/video_send_stream.h"
 
 namespace webrtc {
 
@@ -58,4 +58,4 @@ class VideoCodecInitializer {
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_INCLUDE_VIDEO_CODEC_INITIALIZER_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_INCLUDE_VIDEO_CODEC_INITIALIZER_H_

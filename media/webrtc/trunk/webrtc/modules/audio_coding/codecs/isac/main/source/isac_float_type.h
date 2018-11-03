@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_ISAC_FLOAT_TYPE_H_
-#define MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_ISAC_FLOAT_TYPE_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_ISAC_FLOAT_TYPE_H_
+#define WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_ISAC_FLOAT_TYPE_H_
 
-#include "modules/audio_coding/codecs/isac/main/include/isac.h"
+#include "webrtc/modules/audio_coding/codecs/isac/main/include/isac.h"
 
 namespace webrtc {
 
@@ -114,4 +114,4 @@ struct IsacFloat {
 };
 
 }  // namespace webrtc
-#endif  // MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_ISAC_FLOAT_TYPE_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_ISAC_FLOAT_TYPE_H_

@@ -10,12 +10,9 @@ COMPILE_FLAGS["OS_INCLUDES"] = []
 AllowCompilerWarnings()
 
 DEFINES["CHROMIUM_BUILD"] = True
-DEFINES["HAVE_WEBRTC_VIDEO"] = True
-DEFINES["HAVE_WEBRTC_VOICE"] = True
+DEFINES["EXPAT_RELATIVE_PATH"] = True
 DEFINES["V8_DEPRECATION_WARNINGS"] = True
-DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
 DEFINES["WEBRTC_MOZILLA_BUILD"] = True
-DEFINES["WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS"] = "0"
 DEFINES["WEBRTC_RESTRICT_LOGGING"] = True
 
 FINAL_LIBRARY = "webrtc"
@@ -25,17 +22,23 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/libyuv/libyuv/include/",
-    "/media/webrtc/trunk/webrtc/",
+    "/media/webrtc/trunk/",
     "/media/webrtc/trunk/webrtc/common_audio/resampler/include/",
     "/media/webrtc/trunk/webrtc/common_audio/signal_processing/include/",
     "/media/webrtc/trunk/webrtc/common_audio/vad/include/",
     "/media/webrtc/trunk/webrtc/common_video/include/",
+    "/media/webrtc/trunk/webrtc/common_video/libyuv/include/",
     "/media/webrtc/trunk/webrtc/modules/audio_coding/include/",
+    "/media/webrtc/trunk/webrtc/modules/audio_conference_mixer/include/",
     "/media/webrtc/trunk/webrtc/modules/audio_device/dummy/",
     "/media/webrtc/trunk/webrtc/modules/audio_device/include/",
     "/media/webrtc/trunk/webrtc/modules/include/",
+    "/media/webrtc/trunk/webrtc/modules/include/",
     "/media/webrtc/trunk/webrtc/modules/include/"
+]
+
+UNIFIED_SOURCES += [
+    "/media/webrtc/trunk/webrtc/build/no_op_function.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -59,6 +62,7 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["USE_OPENSSL_CERTS"] = "1"
     DEFINES["WEBRTC_ANDROID"] = True
     DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["WEBRTC_BUILD_LIBEVENT"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
@@ -81,7 +85,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
         "-framework AVFoundation",
         "-framework CoreMedia",
         "-framework CoreVideo",
-        "-framework Foundation",
         "-framework IOKit",
         "-framework OpenGL"
     ]
@@ -90,6 +93,7 @@ if CONFIG["OS_TARGET"] == "DragonFly":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_BUILD_LIBEVENT"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
@@ -110,6 +114,7 @@ if CONFIG["OS_TARGET"] == "FreeBSD":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_BUILD_LIBEVENT"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
@@ -130,6 +135,7 @@ if CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["USE_NSS_CERTS"] = "1"
     DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BUILD_LIBEVENT"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
@@ -153,6 +159,7 @@ if CONFIG["OS_TARGET"] == "NetBSD":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_BUILD_LIBEVENT"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
@@ -173,6 +180,7 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_BUILD_LIBEVENT"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
@@ -228,6 +236,10 @@ if CONFIG["CPU_ARCH"] == "aarch64":
 
 if CONFIG["CPU_ARCH"] == "arm":
 
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
     DEFINES["WEBRTC_ARCH_ARM"] = True
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
@@ -256,8 +268,33 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
-if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
-    DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["NO_TCMALLOC"] = True
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
 
 Library("webrtc_gn")

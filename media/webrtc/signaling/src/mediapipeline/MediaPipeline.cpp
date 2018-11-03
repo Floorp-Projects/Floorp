@@ -47,12 +47,12 @@
 #include "runnable_utils.h"
 #include "signaling/src/peerconnection/MediaTransportHandler.h"
 #include "Tracing.h"
-#include "WebrtcImageBuffer.h"
 
-#include "webrtc/rtc_base/bind.h"
-#include "webrtc/rtc_base/keep_ref_until_done.h"
+#include "webrtc/base/bind.h"
+#include "webrtc/base/keep_ref_until_done.h"
 #include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
+#include "webrtc/video_frame.h"
 
 // Max size given stereo is 480*2*2 = 1920 (10ms of 16-bits stereo audio at
 // 48KHz)
@@ -2040,36 +2040,33 @@ public:
                         uint32_t aTimeStamp,
                         int64_t aRenderTime)
   {
-    if (aBuffer.type() == webrtc::VideoFrameBuffer::Type::kNative) {
+    if (aBuffer.native_handle()) {
       // We assume that only native handles are used with the
       // WebrtcMediaDataDecoderCodec decoder.
-      const ImageBuffer *imageBuffer = static_cast<const ImageBuffer*>(&aBuffer);
+      RefPtr<Image> image = static_cast<Image*>(aBuffer.native_handle());
       MutexAutoLock lock(mMutex);
-      mImage = imageBuffer->GetNativeImage();
+      mImage = image;
       return;
     }
 
-    MOZ_ASSERT(aBuffer.type() == webrtc::VideoFrameBuffer::Type::kI420);
-    rtc::scoped_refptr<const webrtc::I420BufferInterface> i420 = aBuffer.GetI420();
-
-    MOZ_ASSERT(i420->DataY());
+    MOZ_ASSERT(aBuffer.DataY());
     // Create a video frame using |buffer|.
     RefPtr<PlanarYCbCrImage> yuvImage =
       mImageContainer->CreatePlanarYCbCrImage();
 
     PlanarYCbCrData yuvData;
-    yuvData.mYChannel = const_cast<uint8_t*>(i420->DataY());
-    yuvData.mYSize = IntSize(i420->width(), i420->height());
-    yuvData.mYStride = i420->StrideY();
-    MOZ_ASSERT(i420->StrideU() == i420->StrideV());
-    yuvData.mCbCrStride = i420->StrideU();
-    yuvData.mCbChannel = const_cast<uint8_t*>(i420->DataU());
-    yuvData.mCrChannel = const_cast<uint8_t*>(i420->DataV());
+    yuvData.mYChannel = const_cast<uint8_t*>(aBuffer.DataY());
+    yuvData.mYSize = IntSize(aBuffer.width(), aBuffer.height());
+    yuvData.mYStride = aBuffer.StrideY();
+    MOZ_ASSERT(aBuffer.StrideU() == aBuffer.StrideV());
+    yuvData.mCbCrStride = aBuffer.StrideU();
+    yuvData.mCbChannel = const_cast<uint8_t*>(aBuffer.DataU());
+    yuvData.mCrChannel = const_cast<uint8_t*>(aBuffer.DataV());
     yuvData.mCbCrSize =
-      IntSize((i420->width() + 1) >> 1, (i420->height() + 1) >> 1);
+      IntSize((aBuffer.width() + 1) >> 1, (aBuffer.height() + 1) >> 1);
     yuvData.mPicX = 0;
     yuvData.mPicY = 0;
-    yuvData.mPicSize = IntSize(i420->width(), i420->height());
+    yuvData.mPicSize = IntSize(aBuffer.width(), aBuffer.height());
     yuvData.mStereoMode = StereoMode::MONO;
 
     if (!yuvImage->CopyData(yuvData)) {

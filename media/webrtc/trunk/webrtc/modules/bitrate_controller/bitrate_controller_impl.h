@@ -12,19 +12,18 @@
  *  and push the result to the encoder via VideoEncoderCallback.
  */
 
-#ifndef MODULES_BITRATE_CONTROLLER_BITRATE_CONTROLLER_IMPL_H_
-#define MODULES_BITRATE_CONTROLLER_BITRATE_CONTROLLER_IMPL_H_
+#ifndef WEBRTC_MODULES_BITRATE_CONTROLLER_BITRATE_CONTROLLER_IMPL_H_
+#define WEBRTC_MODULES_BITRATE_CONTROLLER_BITRATE_CONTROLLER_IMPL_H_
 
-#include "modules/bitrate_controller/include/bitrate_controller.h"
+#include "webrtc/modules/bitrate_controller/include/bitrate_controller.h"
 
 #include <list>
-#include <map>
 #include <utility>
 #include <vector>
 
-#include "modules/bitrate_controller/send_side_bandwidth_estimation.h"
-#include "rtc_base/constructormagic.h"
-#include "rtc_base/criticalsection.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/modules/bitrate_controller/send_side_bandwidth_estimation.h"
 
 namespace webrtc {
 
@@ -32,14 +31,14 @@ class BitrateControllerImpl : public BitrateController {
  public:
   // TODO(perkj): BitrateObserver has been deprecated and is not used in WebRTC.
   // |observer| is left for project that is not yet updated.
-  BitrateControllerImpl(const Clock* clock,
+  BitrateControllerImpl(Clock* clock,
                         BitrateObserver* observer,
                         RtcEventLog* event_log);
   virtual ~BitrateControllerImpl() {}
 
   bool AvailableBandwidth(uint32_t* bandwidth) const override;
 
-  RTC_DEPRECATED RtcpBandwidthObserver* CreateRtcpBandwidthObserver() override;
+  RtcpBandwidthObserver* CreateRtcpBandwidthObserver() override;
 
   // Deprecated
   void SetStartBitrate(int start_bitrate_bps) override;
@@ -71,38 +70,36 @@ class BitrateControllerImpl : public BitrateController {
   class RtcpBandwidthObserverImpl;
 
   // Called by BitrateObserver's direct from the RTCP module.
-  // Implements RtcpBandwidthObserver.
-  void OnReceivedEstimatedBitrate(uint32_t bitrate) override;
+  void OnReceiverEstimatedBitrate(uint32_t bitrate);
 
-  void OnReceivedRtcpReceiverReport(const ReportBlockList& report_blocks,
+  void OnReceivedRtcpReceiverReport(uint8_t fraction_loss,
                                     int64_t rtt,
-                                    int64_t now_ms) override;
+                                    int number_of_packets,
+                                    int64_t now_ms);
 
   // Deprecated
   void MaybeTriggerOnNetworkChanged();
 
   void OnNetworkChanged(uint32_t bitrate,
                         uint8_t fraction_loss,  // 0 - 255.
-                        int64_t rtt) RTC_EXCLUSIVE_LOCKS_REQUIRED(critsect_);
+                        int64_t rtt) EXCLUSIVE_LOCKS_REQUIRED(critsect_);
 
   // Used by process thread.
-  const Clock* const clock_;
+  Clock* const clock_;
   BitrateObserver* const observer_;
   int64_t last_bitrate_update_ms_;
   RtcEventLog* const event_log_;
 
   rtc::CriticalSection critsect_;
-  std::map<uint32_t, uint32_t> ssrc_to_last_received_extended_high_seq_num_
-      RTC_GUARDED_BY(critsect_);
-  SendSideBandwidthEstimation bandwidth_estimation_ RTC_GUARDED_BY(critsect_);
-  uint32_t reserved_bitrate_bps_ RTC_GUARDED_BY(critsect_);
+  SendSideBandwidthEstimation bandwidth_estimation_ GUARDED_BY(critsect_);
+  uint32_t reserved_bitrate_bps_ GUARDED_BY(critsect_);
 
-  uint32_t last_bitrate_bps_ RTC_GUARDED_BY(critsect_);
-  uint8_t last_fraction_loss_ RTC_GUARDED_BY(critsect_);
-  int64_t last_rtt_ms_ RTC_GUARDED_BY(critsect_);
-  uint32_t last_reserved_bitrate_bps_ RTC_GUARDED_BY(critsect_);
+  uint32_t last_bitrate_bps_ GUARDED_BY(critsect_);
+  uint8_t last_fraction_loss_ GUARDED_BY(critsect_);
+  int64_t last_rtt_ms_ GUARDED_BY(critsect_);
+  uint32_t last_reserved_bitrate_bps_ GUARDED_BY(critsect_);
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(BitrateControllerImpl);
 };
 }  // namespace webrtc
-#endif  // MODULES_BITRATE_CONTROLLER_BITRATE_CONTROLLER_IMPL_H_
+#endif  // WEBRTC_MODULES_BITRATE_CONTROLLER_BITRATE_CONTROLLER_IMPL_H_

@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef TEST_FAKE_VIDEORENDERER_H_
-#define TEST_FAKE_VIDEORENDERER_H_
+#ifndef WEBRTC_TEST_FAKE_VIDEORENDERER_H_
+#define WEBRTC_TEST_FAKE_VIDEORENDERER_H_
 
-#include "api/video/video_frame.h"
-#include "media/base/videosinkinterface.h"
+#include "webrtc/api/video/video_frame.h"
+#include "webrtc/media/base/videosinkinterface.h"
 
 namespace webrtc {
 namespace test {
@@ -25,4 +25,4 @@ class FakeVideoRenderer : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
 }  // namespace test
 }  // namespace webrtc
 
-#endif  // TEST_FAKE_VIDEORENDERER_H_
+#endif  // WEBRTC_TEST_FAKE_VIDEORENDERER_H_

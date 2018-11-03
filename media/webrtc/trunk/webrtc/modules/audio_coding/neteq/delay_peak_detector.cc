@@ -8,13 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_coding/neteq/delay_peak_detector.h"
+#include "webrtc/modules/audio_coding/neteq/delay_peak_detector.h"
 
 #include <algorithm>  // max
 
-#include "rtc_base/checks.h"
-#include "rtc_base/numerics/safe_conversions.h"
-#include "system_wrappers/include/field_trial.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/safe_conversions.h"
 
 namespace webrtc {
 
@@ -30,9 +29,7 @@ DelayPeakDetector::~DelayPeakDetector() = default;
 DelayPeakDetector::DelayPeakDetector(const TickTimer* tick_timer)
     : peak_found_(false),
       peak_detection_threshold_(0),
-      tick_timer_(tick_timer),
-      frame_length_change_experiment_(
-          field_trial::IsEnabled("WebRTC-Audio-NetEqFramelengthExperiment")) {
+      tick_timer_(tick_timer) {
   RTC_DCHECK(!peak_period_stopwatch_);
 }
 
@@ -45,14 +42,7 @@ void DelayPeakDetector::Reset() {
 // Calculates the threshold in number of packets.
 void DelayPeakDetector::SetPacketAudioLength(int length_ms) {
   if (length_ms > 0) {
-    if (frame_length_change_experiment_) {
-      peak_detection_threshold_ = std::max(2, kPeakHeightMs / length_ms);
-    } else {
-      peak_detection_threshold_ = kPeakHeightMs / length_ms;
-    }
-  }
-  if (frame_length_change_experiment_) {
-    peak_history_.clear();
+    peak_detection_threshold_ = kPeakHeightMs / length_ms;
   }
 }
 

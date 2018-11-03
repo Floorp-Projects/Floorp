@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/test/testAPI/test_api.h"
+#include "webrtc/modules/rtp_rtcp/test/testAPI/test_api.h"
 
 #include <algorithm>
 #include <memory>
 #include <vector>
 
-#include "rtc_base/checks.h"
-#include "rtc_base/rate_limiter.h"
-#include "test/null_transport.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/rate_limiter.h"
+#include "webrtc/test/null_transport.h"
 
 namespace webrtc {
 
@@ -48,21 +48,26 @@ bool LoopBackTransport::SendRtp(const uint8_t* data,
   if (!parser->Parse(data, len, &header)) {
     return false;
   }
-  const auto pl =
-      rtp_payload_registry_->PayloadTypeToPayload(header.payloadType);
-  if (!pl) {
+  PayloadUnion payload_specific;
+  if (!rtp_payload_registry_->GetPayloadSpecifics(header.payloadType,
+                                                  &payload_specific)) {
     return false;
   }
   const uint8_t* payload = data + header.headerLength;
   RTC_CHECK_GE(len, header.headerLength);
   const size_t payload_length = len - header.headerLength;
   receive_statistics_->IncomingPacket(header, len, false);
-  return rtp_receiver_->IncomingRtpPacket(header, payload, payload_length,
-                                          pl->typeSpecific);
+  if (!rtp_receiver_->IncomingRtpPacket(header, payload, payload_length,
+                                        payload_specific, true)) {
+    return false;
+  }
+  return true;
 }
 
 bool LoopBackTransport::SendRtcp(const uint8_t* data, size_t len) {
-  rtp_rtcp_module_->IncomingRtcpPacket((const uint8_t*)data, len);
+  if (rtp_rtcp_module_->IncomingRtcpPacket((const uint8_t*)data, len) < 0) {
+    return false;
+  }
   return true;
 }
 
@@ -89,8 +94,6 @@ class RtpRtcpAPITest : public ::testing::Test {
   }
   ~RtpRtcpAPITest() {}
 
-  const uint32_t initial_ssrc = 8888;
-
   void SetUp() override {
     RtpRtcp::Configuration configuration;
     configuration.audio = true;
@@ -98,11 +101,13 @@ class RtpRtcpAPITest : public ::testing::Test {
     configuration.outgoing_transport = &null_transport_;
     configuration.retransmission_rate_limiter = &retransmission_rate_limiter_;
     module_.reset(RtpRtcp::CreateRtpRtcp(configuration));
-    module_->SetSSRC(initial_ssrc);
     rtp_payload_registry_.reset(new RTPPayloadRegistry());
+    rtp_receiver_.reset(RtpReceiver::CreateAudioReceiver(
+        &fake_clock_, NULL, NULL, rtp_payload_registry_.get()));
   }
 
   std::unique_ptr<RTPPayloadRegistry> rtp_payload_registry_;
+  std::unique_ptr<RtpReceiver> rtp_receiver_;
   std::unique_ptr<RtpRtcp> module_;
   uint32_t test_ssrc_;
   uint32_t test_timestamp_;
@@ -128,6 +133,7 @@ TEST_F(RtpRtcpAPITest, Basic) {
 TEST_F(RtpRtcpAPITest, PacketSize) {
   module_->SetMaxRtpPacketSize(1234);
   EXPECT_EQ(1234u, module_->MaxRtpPacketSize());
+  EXPECT_EQ(1234u - 12u /* Minimum RTP header */, module_->MaxPayloadSize());
 }
 
 TEST_F(RtpRtcpAPITest, SSRC) {
@@ -158,6 +164,25 @@ TEST_F(RtpRtcpAPITest, RtxSender) {
 
   module_->SetRtxSendStatus(kRtxRetransmitted);
   EXPECT_EQ(kRtxRetransmitted, module_->RtxSendStatus());
+}
+
+TEST_F(RtpRtcpAPITest, RtxReceiver) {
+  const uint32_t kRtxSsrc = 1;
+  const int kRtxPayloadType = 119;
+  const int kPayloadType = 100;
+  EXPECT_FALSE(rtp_payload_registry_->RtxEnabled());
+  rtp_payload_registry_->SetRtxSsrc(kRtxSsrc);
+  rtp_payload_registry_->SetRtxPayloadType(kRtxPayloadType, kPayloadType);
+  EXPECT_TRUE(rtp_payload_registry_->RtxEnabled());
+  RTPHeader rtx_header;
+  rtx_header.ssrc = kRtxSsrc;
+  rtx_header.payloadType = kRtxPayloadType;
+  EXPECT_TRUE(rtp_payload_registry_->IsRtx(rtx_header));
+  rtx_header.ssrc = 0;
+  EXPECT_FALSE(rtp_payload_registry_->IsRtx(rtx_header));
+  rtx_header.ssrc = kRtxSsrc;
+  rtx_header.payloadType = 0;
+  EXPECT_TRUE(rtp_payload_registry_->IsRtx(rtx_header));
 }
 
 }  // namespace webrtc

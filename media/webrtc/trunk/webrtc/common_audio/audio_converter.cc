@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_audio/audio_converter.h"
+#include "webrtc/common_audio/audio_converter.h"
 
 #include <cstring>
 #include <memory>
 #include <utility>
 #include <vector>
 
-#include "common_audio/channel_buffer.h"
-#include "common_audio/resampler/push_sinc_resampler.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/numerics/safe_conversions.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/safe_conversions.h"
+#include "webrtc/common_audio/channel_buffer.h"
+#include "webrtc/common_audio/resampler/push_sinc_resampler.h"
 
 using rtc::checked_cast;
 
@@ -107,8 +107,7 @@ class ResampleConverter : public AudioConverter {
 // converters must be provided.
 class CompositionConverter : public AudioConverter {
  public:
-  explicit CompositionConverter(
-    std::vector<std::unique_ptr<AudioConverter>> converters)
+  CompositionConverter(std::vector<std::unique_ptr<AudioConverter>> converters)
       : converters_(std::move(converters)) {
     RTC_CHECK_GE(converters_.size(), 2);
     // We need an intermediate buffer after every converter.

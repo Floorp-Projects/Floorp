@@ -10,10 +10,9 @@ COMPILE_FLAGS["OS_INCLUDES"] = []
 AllowCompilerWarnings()
 
 DEFINES["CHROMIUM_BUILD"] = True
+DEFINES["EXPAT_RELATIVE_PATH"] = True
 DEFINES["V8_DEPRECATION_WARNINGS"] = True
-DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
 DEFINES["WEBRTC_MOZILLA_BUILD"] = True
-DEFINES["WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS"] = "0"
 DEFINES["WEBRTC_RESTRICT_LOGGING"] = True
 
 FINAL_LIBRARY = "webrtc"
@@ -23,7 +22,7 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/media/webrtc/trunk/"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -156,8 +155,9 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
-if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
 
-    DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["NO_TCMALLOC"] = True
 
 Library("transport_api_gn")

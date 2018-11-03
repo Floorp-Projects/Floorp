@@ -8,16 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef SYSTEM_WRAPPERS_INCLUDE_RTP_TO_NTP_ESTIMATOR_H_
-#define SYSTEM_WRAPPERS_INCLUDE_RTP_TO_NTP_ESTIMATOR_H_
+#ifndef WEBRTC_SYSTEM_WRAPPERS_INCLUDE_RTP_TO_NTP_ESTIMATOR_H_
+#define WEBRTC_SYSTEM_WRAPPERS_INCLUDE_RTP_TO_NTP_ESTIMATOR_H_
 
 #include <list>
 
-#include "api/optional.h"
-#include "modules/include/module_common_types_public.h"
-#include "rtc_base/numerics/moving_median_filter.h"
-#include "system_wrappers/include/ntp_time.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/system_wrappers/include/ntp_time.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 // Class for converting an RTP timestamp to the NTP domain in milliseconds.
@@ -30,34 +27,18 @@ class RtpToNtpEstimator {
 
   // RTP and NTP timestamp pair from a RTCP SR report.
   struct RtcpMeasurement {
-    RtcpMeasurement(uint32_t ntp_secs,
-                    uint32_t ntp_frac,
-                    int64_t unwrapped_timestamp);
+    RtcpMeasurement(uint32_t ntp_secs, uint32_t ntp_frac, uint32_t timestamp);
     bool IsEqual(const RtcpMeasurement& other) const;
 
     NtpTime ntp_time;
-    int64_t unwrapped_rtp_timestamp;
+    uint32_t rtp_timestamp;
   };
 
   // Estimated parameters from RTP and NTP timestamp pairs in |measurements_|.
   struct Parameters {
-    // Implicit conversion from int because MovingMedianFilter returns 0
-    // internally if no samples are present. However, it should never happen as
-    // we don't ask smoothing_filter_ to return anything if there were no
-    // samples.
-    Parameters(const int& value) {  // NOLINT
-      RTC_NOTREACHED();
-    }
-    Parameters() : frequency_khz(0.0), offset_ms(0.0) {}
-
-    double frequency_khz;
-    double offset_ms;
-
-    // Needed to make it work inside MovingMedianFilter
-    bool operator<(const Parameters& other) const;
-    bool operator==(const Parameters& other) const;
-    bool operator<=(const Parameters& other) const;
-    bool operator!=(const Parameters& other) const;
+    double frequency_khz = 0.0;
+    double offset_ms = 0.0;
+    bool calculated = false;
   };
 
   // Updates measurements with RTP/NTP timestamp pair from a RTCP sender report.
@@ -71,20 +52,21 @@ class RtpToNtpEstimator {
   // Returns true on success, false otherwise.
   bool Estimate(int64_t rtp_timestamp, int64_t* rtp_timestamp_ms) const;
 
-  // Returns estimated rtp to ntp linear transform parameters.
-  const rtc::Optional<Parameters> params() const;
-
-  static const int kMaxInvalidSamples = 3;
+  const Parameters& params() const { return params_; }
 
  private:
   void UpdateParameters();
 
-  int consecutive_invalid_samples_;
   std::list<RtcpMeasurement> measurements_;
-  MovingMedianFilter<Parameters> smoothing_filter_;
-  bool params_calculated_;
-  mutable TimestampUnwrapper unwrapper_;
+  Parameters params_;
 };
+
+// Returns:
+//  1: forward wrap around.
+//  0: no wrap around.
+// -1: backwards wrap around (i.e. reordering).
+int CheckForWrapArounds(uint32_t new_timestamp, uint32_t old_timestamp);
+
 }  // namespace webrtc
 
-#endif  // SYSTEM_WRAPPERS_INCLUDE_RTP_TO_NTP_ESTIMATOR_H_
+#endif  // WEBRTC_SYSTEM_WRAPPERS_INCLUDE_RTP_TO_NTP_ESTIMATOR_H_

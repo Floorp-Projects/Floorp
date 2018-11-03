@@ -24,6 +24,7 @@
 #include "libyuv/row.h"
 
 #include "webrtc/modules/video_coding/include/video_error_codes.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 #include "webrtc/api/video/i420_buffer.h"
 #include <webrtc/common_video/libyuv/include/webrtc_libyuv.h>
@@ -48,6 +49,7 @@ class CallbacksSupport final : public JavaCallbacksSupport
 public:
   explicit CallbacksSupport(webrtc::EncodedImageCallback* aCallback)
     : mCallback(aCallback)
+    , mCritSect(webrtc::CriticalSectionWrapper::CreateCriticalSection())
     , mPictureId(0) {
     CSFLogDebug(LOGTAG,  "%s %p", __FUNCTION__, this);
     memset(&mEncodedImage, 0, sizeof(mEncodedImage));
@@ -98,7 +100,7 @@ public:
     MOZ_RELEASE_ASSERT(ok);
 
     if (size > 0) {
-      rtc::CritScope lock(&mCritSect);
+      webrtc::CriticalSectionScoped lock(mCritSect.get());
       VerifyAndAllocate(size);
 
       int64_t presentationTimeUs;
@@ -154,7 +156,7 @@ private:
   webrtc::EncodedImageCallback* mCallback;
   Atomic<bool> mCanceled;
   webrtc::EncodedImage mEncodedImage;
-  rtc::CriticalSection mCritSect;
+  std::unique_ptr<webrtc::CriticalSectionWrapper> mCritSect;
   uint32_t mPictureId;
 };
 
@@ -669,7 +671,7 @@ class OutputDrain : public MediaCodecOutputDrain
 };
 
 static bool I420toNV12(uint8_t* dstY, uint16_t* dstUV, const webrtc::VideoFrame& inputImage) {
-  rtc::scoped_refptr<webrtc::I420BufferInterface> inputBuffer = inputImage.video_frame_buffer()->GetI420();
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> inputBuffer = inputImage.video_frame_buffer();
 
   uint8_t* buffer = dstY;
   uint8_t* dst_y = buffer;
@@ -805,7 +807,7 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
   uint32_t time = PR_IntervalNow();
 #endif
 
-  rtc::scoped_refptr<webrtc::I420BufferInterface> inputBuffer = inputImage.video_frame_buffer()->GetI420();
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> inputBuffer = inputImage.video_frame_buffer();
   size_t sizeY = inputImage.height() * inputBuffer->StrideY();
   size_t sizeUV = ((inputImage.height() + 1)/2) * inputBuffer->StrideU();
   size_t size = sizeY + 2 * sizeUV;
@@ -1047,7 +1049,7 @@ int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::Encode(
     }
   }
 
-  rtc::scoped_refptr<webrtc::I420BufferInterface> inputBuffer = inputImage.video_frame_buffer()->GetI420();
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> inputBuffer = inputImage.video_frame_buffer();
   size_t sizeY = inputImage.height() * inputBuffer->StrideY();
   size_t sizeUV = ((inputImage.height() + 1)/2) * inputBuffer->StrideU();
   size_t size = sizeY + 2 * sizeUV;

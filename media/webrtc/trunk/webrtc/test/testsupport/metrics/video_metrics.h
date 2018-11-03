@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef TESTSUPPORT_METRICS_VIDEO_METRICS_H_
-#define TESTSUPPORT_METRICS_VIDEO_METRICS_H_
+#ifndef WEBRTC_TESTSUPPORT_METRICS_VIDEO_METRICS_H_
+#define WEBRTC_TESTSUPPORT_METRICS_VIDEO_METRICS_H_
 
 #include <limits>
 #include <vector>
@@ -118,4 +118,4 @@ int I420SSIMFromFiles(const char* ref_filename,
 }  // namespace test
 }  // namespace webrtc
 
-#endif // TESTSUPPORT_METRICS_VIDEO_METRICS_H_
+#endif // WEBRTC_TESTSUPPORT_METRICS_VIDEO_METRICS_H_

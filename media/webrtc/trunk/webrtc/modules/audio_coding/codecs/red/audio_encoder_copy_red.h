@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_CODECS_RED_AUDIO_ENCODER_COPY_RED_H_
-#define MODULES_AUDIO_CODING_CODECS_RED_AUDIO_ENCODER_COPY_RED_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_RED_AUDIO_ENCODER_COPY_RED_H_
+#define WEBRTC_MODULES_AUDIO_CODING_CODECS_RED_AUDIO_ENCODER_COPY_RED_H_
 
 #include <memory>
 #include <vector>
 
-#include "api/audio_codecs/audio_encoder.h"
-#include "rtc_base/buffer.h"
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/buffer.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/audio_coding/codecs/audio_encoder.h"
 
 namespace webrtc {
 
@@ -53,11 +53,9 @@ class AudioEncoderCopyRed final : public AudioEncoder {
       override;
   void OnReceivedUplinkPacketLossFraction(
       float uplink_packet_loss_fraction) override;
-  void OnReceivedUplinkRecoverablePacketLossFraction(
-      float uplink_recoverable_packet_loss_fraction) override;
   void OnReceivedUplinkBandwidth(
       int target_audio_bitrate_bps,
-      rtc::Optional<int64_t> bwe_period_ms) override;
+      rtc::Optional<int64_t> probing_interval_ms) override;
 
  protected:
   EncodedInfo EncodeImpl(uint32_t rtp_timestamp,
@@ -74,4 +72,4 @@ class AudioEncoderCopyRed final : public AudioEncoder {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_CODING_CODECS_RED_AUDIO_ENCODER_COPY_RED_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_CODECS_RED_AUDIO_ENCODER_COPY_RED_H_

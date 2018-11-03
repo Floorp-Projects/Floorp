@@ -12,15 +12,15 @@
 // https://ccrma.stanford.edu/courses/422/projects/WaveFormat/ and
 // http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
 
-#include "common_audio/wav_header.h"
+#include "webrtc/common_audio/wav_header.h"
 
 #include <algorithm>
 #include <cstring>
 #include <limits>
 #include <string>
 
-#include "common_audio/include/audio_util.h"
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/common_audio/include/audio_util.h"
 
 namespace webrtc {
 namespace {

@@ -8,14 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/rtcp_packet/common_header.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 
-#include "modules/rtp_rtcp/source/byte_io.h"
-#include "rtc_base/logging.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 
 namespace webrtc {
 namespace rtcp {
-constexpr size_t CommonHeader::kHeaderSizeBytes;
 //    0                   1           1       2                   3
 //    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -28,21 +27,21 @@ constexpr size_t CommonHeader::kHeaderSizeBytes;
 //
 // Common header for all RTCP packets, 4 octets.
 bool CommonHeader::Parse(const uint8_t* buffer, size_t size_bytes) {
+  const size_t kHeaderSizeBytes = 4;
   const uint8_t kVersion = 2;
 
   if (size_bytes < kHeaderSizeBytes) {
-    RTC_LOG(LS_WARNING)
-        << "Too little data (" << size_bytes << " byte"
-        << (size_bytes != 1 ? "s" : "")
-        << ") remaining in buffer to parse RTCP header (4 bytes).";
+    LOG(LS_WARNING) << "Too little data (" << size_bytes << " byte"
+                    << (size_bytes != 1 ? "s" : "")
+                    << ") remaining in buffer to parse RTCP header (4 bytes).";
     return false;
   }
 
   uint8_t version = buffer[0] >> 6;
   if (version != kVersion) {
-    RTC_LOG(LS_WARNING) << "Invalid RTCP header: Version must be "
-                        << static_cast<int>(kVersion) << " but was "
-                        << static_cast<int>(version);
+    LOG(LS_WARNING) << "Invalid RTCP header: Version must be "
+                    << static_cast<int>(kVersion) << " but was "
+                    << static_cast<int>(version);
     return false;
   }
 
@@ -54,31 +53,29 @@ bool CommonHeader::Parse(const uint8_t* buffer, size_t size_bytes) {
   padding_size_ = 0;
 
   if (size_bytes < kHeaderSizeBytes + payload_size_) {
-    RTC_LOG(LS_WARNING) << "Buffer too small (" << size_bytes
-                        << " bytes) to fit an RtcpPacket with a header and "
-                        << payload_size_ << " bytes.";
+    LOG(LS_WARNING) << "Buffer too small (" << size_bytes
+                    << " bytes) to fit an RtcpPacket with a header and "
+                    << payload_size_ << " bytes.";
     return false;
   }
 
   if (has_padding) {
     if (payload_size_ == 0) {
-      RTC_LOG(LS_WARNING)
-          << "Invalid RTCP header: Padding bit set but 0 payload "
-             "size specified.";
+      LOG(LS_WARNING) << "Invalid RTCP header: Padding bit set but 0 payload "
+                         "size specified.";
       return false;
     }
 
     padding_size_ = payload_[payload_size_ - 1];
     if (padding_size_ == 0) {
-      RTC_LOG(LS_WARNING)
-          << "Invalid RTCP header: Padding bit set but 0 padding "
-             "size specified.";
+      LOG(LS_WARNING) << "Invalid RTCP header: Padding bit set but 0 padding "
+                         "size specified.";
       return false;
     }
     if (padding_size_ > payload_size_) {
-      RTC_LOG(LS_WARNING) << "Invalid RTCP header: Too many padding bytes ("
-                          << padding_size_ << ") for a packet payload size of "
-                          << payload_size_ << " bytes.";
+      LOG(LS_WARNING) << "Invalid RTCP header: Too many padding bytes ("
+                      << padding_size_ << ") for a packet payload size of "
+                      << payload_size_ << " bytes.";
       return false;
     }
     payload_size_ -= padding_size_;

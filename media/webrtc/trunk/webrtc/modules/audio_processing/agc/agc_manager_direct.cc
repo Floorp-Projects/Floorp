@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/agc/agc_manager_direct.h"
+#include "webrtc/modules/audio_processing/agc/agc_manager_direct.h"
 
 #include <cmath>
 
@@ -16,13 +16,12 @@
 #include <cstdio>
 #endif
 
-#include "modules/audio_processing/agc/gain_map_internal.h"
-#include "modules/audio_processing/gain_control_impl.h"
-#include "modules/include/module_common_types.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
-#include "rtc_base/numerics/safe_minmax.h"
-#include "system_wrappers/include/metrics.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/modules/audio_processing/agc/gain_map_internal.h"
+#include "webrtc/modules/audio_processing/gain_control_impl.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/system_wrappers/include/logging.h"
+#include "webrtc/system_wrappers/include/metrics.h"
 
 namespace webrtc {
 
@@ -57,7 +56,7 @@ const int kMaxResidualGainChange = 15;
 const int kSurplusCompressionGain = 6;
 
 int ClampLevel(int mic_level) {
-  return rtc::SafeClamp(mic_level, kMinMicLevel, kMaxMicLevel);
+  return std::min(std::max(kMinMicLevel, mic_level), kMaxMicLevel);
 }
 
 int LevelFromGainError(int gain_error, int level) {
@@ -171,20 +170,19 @@ int AgcManagerDirect::Initialize() {
   // example, what happens when we change devices.
 
   if (gctrl_->set_mode(GainControl::kFixedDigital) != 0) {
-    RTC_LOG(LS_ERROR) << "set_mode(GainControl::kFixedDigital) failed.";
+    LOG(LS_ERROR) << "set_mode(GainControl::kFixedDigital) failed.";
     return -1;
   }
   if (gctrl_->set_target_level_dbfs(2) != 0) {
-    RTC_LOG(LS_ERROR) << "set_target_level_dbfs(2) failed.";
+    LOG(LS_ERROR) << "set_target_level_dbfs(2) failed.";
     return -1;
   }
   if (gctrl_->set_compression_gain_db(kDefaultCompressionGain) != 0) {
-    RTC_LOG(LS_ERROR)
-        << "set_compression_gain_db(kDefaultCompressionGain) failed.";
+    LOG(LS_ERROR) << "set_compression_gain_db(kDefaultCompressionGain) failed.";
     return -1;
   }
   if (gctrl_->enable_limiter(true) != 0) {
-    RTC_LOG(LS_ERROR) << "enable_limiter(true) failed.";
+    LOG(LS_ERROR) << "enable_limiter(true) failed.";
     return -1;
   }
   return 0;
@@ -216,8 +214,8 @@ void AgcManagerDirect::AnalyzePreProcess(int16_t* audio,
   // gain is increased, through SetMaxLevel().
   float clipped_ratio = agc_->AnalyzePreproc(audio, length);
   if (clipped_ratio > kClippedRatioThreshold) {
-    RTC_LOG(LS_INFO) << "[agc] Clipping detected. clipped_ratio="
-                     << clipped_ratio;
+    LOG(LS_INFO) << "[agc] Clipping detected. clipped_ratio="
+                 << clipped_ratio;
     // Always decrease the maximum level, even if the current level is below
     // threshold.
     SetMaxLevel(std::max(clipped_level_min_, max_level_ - kClippedLevelStep));
@@ -250,7 +248,7 @@ void AgcManagerDirect::Process(const int16_t* audio,
   }
 
   if (agc_->Process(audio, length, sample_rate_hz) != 0) {
-    RTC_LOG(LS_ERROR) << "Agc::Process failed";
+    LOG(LS_ERROR) << "Agc::Process failed";
     RTC_NOTREACHED();
   }
 
@@ -266,20 +264,18 @@ void AgcManagerDirect::SetLevel(int new_level) {
     return;
   }
   if (voe_level == 0) {
-    RTC_LOG(LS_INFO)
-        << "[agc] VolumeCallbacks returned level=0, taking no action.";
+    LOG(LS_INFO) << "[agc] VolumeCallbacks returned level=0, taking no action.";
     return;
   }
   if (voe_level > kMaxMicLevel) {
-    RTC_LOG(LS_ERROR) << "VolumeCallbacks returned an invalid level="
-                      << voe_level;
+    LOG(LS_ERROR) << "VolumeCallbacks returned an invalid level=" << voe_level;
     return;
   }
 
   if (voe_level > level_ + kLevelQuantizationSlack ||
       voe_level < level_ - kLevelQuantizationSlack) {
-    RTC_LOG(LS_INFO) << "[agc] Mic volume was manually adjusted. Updating "
-                     << "stored level from " << level_ << " to " << voe_level;
+    LOG(LS_INFO) << "[agc] Mic volume was manually adjusted. Updating "
+                 << "stored level from " << level_ << " to " << voe_level;
     level_ = voe_level;
     // Always allow the user to increase the volume.
     if (level_ > max_level_) {
@@ -298,9 +294,9 @@ void AgcManagerDirect::SetLevel(int new_level) {
   }
 
   volume_callbacks_->SetMicVolume(new_level);
-  RTC_LOG(LS_INFO) << "[agc] voe_level=" << voe_level << ", "
-                   << "level_=" << level_ << ", "
-                   << "new_level=" << new_level;
+  LOG(LS_INFO) << "[agc] voe_level=" << voe_level << ", "
+               << "level_=" << level_ << ", "
+               << "new_level=" << new_level;
   level_ = new_level;
 }
 
@@ -314,8 +310,8 @@ void AgcManagerDirect::SetMaxLevel(int level) {
                                            (kMaxMicLevel - clipped_level_min_) *
                                            kSurplusCompressionGain +
                                        0.5f);
-  RTC_LOG(LS_INFO) << "[agc] max_level_=" << max_level_
-                   << ", max_compression_gain_=" << max_compression_gain_;
+  LOG(LS_INFO) << "[agc] max_level_=" << max_level_
+               << ", max_compression_gain_="  << max_compression_gain_;
 }
 
 void AgcManagerDirect::SetCaptureMuted(bool muted) {
@@ -344,20 +340,19 @@ int AgcManagerDirect::CheckVolumeAndReset() {
   // 2) Independent of interpretation of |level| == 0 we should raise it so the
   // AGC can do its job properly.
   if (level == 0 && !startup_) {
-    RTC_LOG(LS_INFO)
-        << "[agc] VolumeCallbacks returned level=0, taking no action.";
+    LOG(LS_INFO) << "[agc] VolumeCallbacks returned level=0, taking no action.";
     return 0;
   }
   if (level > kMaxMicLevel) {
-    RTC_LOG(LS_ERROR) << "VolumeCallbacks returned an invalid level=" << level;
+    LOG(LS_ERROR) << "VolumeCallbacks returned an invalid level=" << level;
     return -1;
   }
-  RTC_LOG(LS_INFO) << "[agc] Initial GetMicVolume()=" << level;
+  LOG(LS_INFO) << "[agc] Initial GetMicVolume()=" << level;
 
   int minLevel = startup_ ? startup_min_level_ : kMinMicLevel;
   if (level < minLevel) {
     level = minLevel;
-    RTC_LOG(LS_INFO) << "[agc] Initial volume too low, raising to " << level;
+    LOG(LS_INFO) << "[agc] Initial volume too low, raising to " << level;
     volume_callbacks_->SetMicVolume(level);
   }
   agc_->Reset();
@@ -385,9 +380,8 @@ void AgcManagerDirect::UpdateGain() {
   rms_error += kMinCompressionGain;
 
   // Handle as much error as possible with the compressor first.
-  int raw_compression =
-      rtc::SafeClamp(rms_error, kMinCompressionGain, max_compression_gain_);
-
+  int raw_compression = std::max(std::min(rms_error, max_compression_gain_),
+                                 kMinCompressionGain);
   // Deemphasize the compression gain error. Move halfway between the current
   // target and the newly received target. This serves to soften perceptible
   // intra-talkspurt adjustments, at the cost of some adaptation speed.
@@ -406,12 +400,12 @@ void AgcManagerDirect::UpdateGain() {
   // Residual error will be handled by adjusting the volume slider. Use the
   // raw rather than deemphasized compression here as we would otherwise
   // shrink the amount of slack the compressor provides.
-  const int residual_gain =
-      rtc::SafeClamp(rms_error - raw_compression, -kMaxResidualGainChange,
-                     kMaxResidualGainChange);
-  RTC_LOG(LS_INFO) << "[agc] rms_error=" << rms_error << ", "
-                   << "target_compression=" << target_compression_ << ", "
-                   << "residual_gain=" << residual_gain;
+  int residual_gain = rms_error - raw_compression;
+  residual_gain = std::min(std::max(residual_gain, -kMaxResidualGainChange),
+      kMaxResidualGainChange);
+  LOG(LS_INFO) << "[agc] rms_error=" << rms_error << ", "
+               << "target_compression=" << target_compression_ << ", "
+               << "residual_gain=" << residual_gain;
   if (residual_gain == 0)
     return;
 
@@ -452,8 +446,8 @@ void AgcManagerDirect::UpdateCompressor() {
     compression_ = new_compression;
     compression_accumulator_ = new_compression;
     if (gctrl_->set_compression_gain_db(compression_) != 0) {
-      RTC_LOG(LS_ERROR) << "set_compression_gain_db(" << compression_
-                        << ") failed.";
+      LOG(LS_ERROR) << "set_compression_gain_db(" << compression_
+                    << ") failed.";
     }
   }
 }

@@ -10,15 +10,15 @@
 
 // Performs echo control (suppression) with fft routines in fixed-point.
 
-#ifndef MODULES_AUDIO_PROCESSING_AECM_AECM_CORE_H_
-#define MODULES_AUDIO_PROCESSING_AECM_AECM_CORE_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AECM_AECM_CORE_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_AECM_AECM_CORE_H_
 
 extern "C" {
-#include "common_audio/ring_buffer.h"
-#include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/common_audio/ring_buffer.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 }
-#include "modules/audio_processing/aecm/aecm_defines.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/audio_processing/aecm/aecm_defines.h"
+#include "webrtc/typedefs.h"
 
 #ifdef _MSC_VER  // visual c++
 #define ALIGN8_BEG __declspec(align(8))
