@@ -53,7 +53,8 @@ class UAWidgetsChild extends ActorChild {
         widgetName = "VideoControlsPageWidget";
         break;
       case "input":
-        // TODO (datetimebox)
+        uri = "chrome://global/content/elements/datetimebox.js";
+        widgetName = "DateTimeBoxWidget";
         break;
       case "applet":
       case "embed":
