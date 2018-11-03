@@ -42,6 +42,7 @@ static LazyLogModule sFuzzyfoxLog("Fuzzyfox");
 #define FUZZYFOX_CLOCKGRAIN_PREF          "privacy.fuzzyfox.clockgrainus"
 #define FUZZYFOX_CLOCKGRAIN_PREF_DEFAULT  100
 
+static bool sFuzzyfoxInitializing;
 Atomic<uint32_t, Relaxed> Fuzzyfox::sFuzzyfoxClockGrain;
 
 NS_IMPL_ISUPPORTS_INHERITED(Fuzzyfox, Runnable, nsIObserver)
@@ -75,9 +76,9 @@ Fuzzyfox::Fuzzyfox()
     Preferences::GetBool(FUZZYFOX_ENABLED_PREF, FUZZYFOX_ENABLED_PREF_DEFAULT);
 
   LOG(Info, ("PT(%p) Created Fuzzyfox, FuzzyFox is now %s \n",
-         this, (fuzzyfoxEnabled ? "enabled" : "disabled")));
+         this, (fuzzyfoxEnabled ? "initializing" : "disabled")));
 
-  TimeStamp::SetFuzzyfoxEnabled(fuzzyfoxEnabled);
+  sFuzzyfoxInitializing = fuzzyfoxEnabled;
 
   // Should I see if these fail? And do what?
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -106,13 +107,12 @@ Fuzzyfox::Observe(nsISupports* aObject, const char* aTopic,
         Preferences::GetBool(FUZZYFOX_ENABLED_PREF, FUZZYFOX_ENABLED_PREF_DEFAULT);
 
       LOG(Info, ("PT(%p) Observed a pref change, FuzzyFox is now %s \n",
-         this, (fuzzyfoxEnabled ? "enabled" : "disabled")));
+         this, (fuzzyfoxEnabled ? "initializing" : "disabled")));
 
 
-      TimeStamp::SetFuzzyfoxEnabled(fuzzyfoxEnabled);
+      sFuzzyfoxInitializing = fuzzyfoxEnabled;
 
-
-      if (TimeStamp::GetFuzzyfoxEnabled()) {
+      if (sFuzzyfoxInitializing) {
         // Queue a runnable
         nsCOMPtr<nsIRunnable> r = this;
         SystemGroup::Dispatch(TaskCategory::Other, r.forget());
@@ -135,12 +135,12 @@ NS_IMETHODIMP
 Fuzzyfox::Run()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!TimeStamp::GetFuzzyfoxEnabled()) {
+  if (!sFuzzyfoxInitializing && !TimeStamp::GetFuzzyfoxEnabled()) {
     LOG(Info, ("[FuzzyfoxEvent] PT(%p) Fuzzyfox is shut down, doing nothing \n", this));
     return NS_OK;
   }
 
-  if (mStartTime == 0) {
+  if (sFuzzyfoxInitializing) {
     // This is the first time we are running afer enabling FuzzyFox. We need
     // to prevent time from going backwards, so for the first run we round the time up
     // to the next grain.
@@ -152,6 +152,10 @@ Fuzzyfox::Run()
     mSanityCheck = true;
     LOG(Info, ("[FuzzyfoxEvent] PT(%p) Going to start Fuzzyfox, queuing up the job \n",
        this));
+
+    // Now that we've updated the timestamps, we can let everyone know Fuzzyfox is ready to use
+    TimeStamp::SetFuzzyfoxEnabled(true);
+    sFuzzyfoxInitializing = false;
 
     DISPATCH_AND_RETURN();
   }
@@ -168,7 +172,7 @@ Fuzzyfox::Run()
     // If that happens, then repeat the current time.
     // We use mSanityCheck just to be sure (and will eventually remove it.)
     MOZ_ASSERT(mSanityCheck);
-    LOG(Debug, ("[FuzzyfoxEvent] PT(%p) endTime < mStartTime mStartTime %" PRIu64 " endTime %" PRIu64 " \n",
+    LOG(Warning, ("[FuzzyfoxEvent] Unusual!! PT(%p) endTime < mStartTime mStartTime %" PRIu64 " endTime %" PRIu64 " \n",
          this, mStartTime, endTime));
 
     mSanityCheck = true;
@@ -176,10 +180,12 @@ Fuzzyfox::Run()
   }
 
   uint64_t actualRunDuration = endTime - mStartTime;
+  LOG(Verbose, ("[FuzzyfoxEvent] PT(%p) mDuration: %" PRIu32 " endTime: %" PRIu64 " mStartTime: %" PRIu64 " actualRunDuration: %" PRIu64 " \n",
+         this, mDuration, endTime, mStartTime, actualRunDuration));
   if (actualRunDuration > mDuration) {
     // We ran over our budget!
     uint64_t over = actualRunDuration - mDuration;
-    LOG(Verbose, ("[FuzzyfoxEvent] PT(%p) Overran budget of %" PRIu32 " by %" PRIu64 " \n",
+    LOG(Debug, ("[FuzzyfoxEvent] PT(%p) Overran budget of %" PRIu32 " by %" PRIu64 " \n",
          this, mDuration, over));
 
     uint64_t nextDuration = PickDuration();
@@ -193,7 +199,7 @@ Fuzzyfox::Run()
   } else {
     // Didn't go over budget
     remaining = mDuration - actualRunDuration;
-    LOG(Verbose, ("[FuzzyfoxEvent] PT(%p) Finishing budget of %" PRIu32 " with %" PRIu64 " \n",
+    LOG(Debug, ("[FuzzyfoxEvent] PT(%p) Finishing budget of %" PRIu32 " with %" PRIu64 " \n",
         this, mDuration, remaining));
   }
   mSanityCheck = false;
@@ -229,6 +235,9 @@ Fuzzyfox::Run()
   mTickType = mTickType == eUptick ? eDowntick : eUptick;
   mStartTime = ActualTime();
   mDuration = PickDuration();
+
+  LOG(Verbose, ("[FuzzyfoxEvent] PT(%p) For next time mDuration: %" PRIu32 " mStartTime: %" PRIu64 " \n",
+      this, mDuration, mStartTime));
 
   DISPATCH_AND_RETURN();
 }
@@ -270,10 +279,10 @@ Fuzzyfox::UpdateClocks(uint64_t aNewTime, TimeStamp aNewTimeStamp)
 {
   // newTime is the new canonical time for this scope!
   #ifndef XP_WIN
-  LOG(Verbose, ("[Time] New time is %" PRIu64 " (compare to %" PRIu64 ") and timestamp is %" PRIu64 " (compare to %" PRIu64 ")\n",
+  LOG(Debug, ("[Time] New time is %" PRIu64 " (compare to %" PRIu64 ") and timestamp is %" PRIu64 " (compare to %" PRIu64 ")\n",
     aNewTime, ActualTime(), aNewTimeStamp.mValue.mTimeStamp, TimeStamp::NowUnfuzzed().mValue.mTimeStamp));
   #else
-  LOG(Verbose, ("[Time] New time is %" PRIu64 " (compare to %" PRIu64 ") \n", aNewTime, ActualTime()));
+  LOG(Debug, ("[Time] New time is %" PRIu64 " (compare to %" PRIu64 ") \n", aNewTime, ActualTime()));
   #endif
 
   // Fire notifications

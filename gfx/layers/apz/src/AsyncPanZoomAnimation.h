@@ -11,12 +11,13 @@
 #include "base/message_loop.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
-#include "FrameMetrics.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
 namespace mozilla {
 namespace layers {
+
+struct FrameMetrics;
 
 class WheelScrollAnimation;
 class KeyboardScrollAnimation;

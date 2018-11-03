@@ -7,7 +7,7 @@
 #ifndef ZoomConstraintsClient_h_
 #define ZoomConstraintsClient_h_
 
-#include "FrameMetrics.h"
+#include "mozilla/layers/ScrollableLayerGuid.h"
 #include "mozilla/Maybe.h"
 #include "nsIDOMEventListener.h"
 #include "nsIObserver.h"

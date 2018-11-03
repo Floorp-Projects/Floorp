@@ -101,10 +101,10 @@ public:
   bool GetAPZTestData(LayersId aLayersId, APZTestData* aOutData);
 
   void SetTestAsyncScrollOffset(LayersId aLayersId,
-                                const FrameMetrics::ViewID& aScrollId,
+                                const ScrollableLayerGuid::ViewID& aScrollId,
                                 const CSSPoint& aOffset);
   void SetTestAsyncZoom(LayersId aLayersId,
-                        const FrameMetrics::ViewID& aScrollId,
+                        const ScrollableLayerGuid::ViewID& aScrollId,
                         const LayerToParentLayerScale& aZoom);
 
   // This can only be called on the updater thread.

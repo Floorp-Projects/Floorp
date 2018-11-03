@@ -116,7 +116,7 @@ FN!{stdcall PFIBER_CALLOUT_ROUTINE(
 // FAIL_FAST_*
 #[cfg(target_arch = "x86")]
 pub type LPLDT_ENTRY = PLDT_ENTRY;
-#[cfg(target_arch = "x86_64")]
+#[cfg(not(target_arch = "x86"))]
 pub type LPLDT_ENTRY = LPVOID; // TODO - fix this for 32-bit
 //SP_SERIALCOMM
 //PST_*
@@ -543,40 +543,40 @@ BITFIELD!{UMS_SYSTEM_THREAD_INFORMATION ThreadUmsFlags: ULONG [
 ]}
 pub type PUMS_SYSTEM_THREAD_INFORMATION = *mut UMS_SYSTEM_THREAD_INFORMATION;
 extern "system" {
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn CreateUmsCompletionList(
         UmsCompletionList: *mut PUMS_COMPLETION_LIST
     ) -> BOOL;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn DequeueUmsCompletionListItems(
         UmsCompletionList: PUMS_COMPLETION_LIST,
         WaitTimeOut: DWORD,
         UmsThreadList: *mut PUMS_CONTEXT,
     ) -> BOOL;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn GetUmsCompletionListEvent(
         UmsCompletionList: PUMS_COMPLETION_LIST,
         UmsCompletionEvent: PHANDLE,
     ) -> BOOL;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn ExecuteUmsThread(
         UmsThread: PUMS_CONTEXT
     ) -> BOOL;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn UmsThreadYield(
         SchedulerParam: PVOID
     ) -> BOOL;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn DeleteUmsCompletionList(
         UmsCompletionList: PUMS_COMPLETION_LIST
     ) -> BOOL;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn GetCurrentUmsThread() -> PUMS_CONTEXT;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn GetNextUmsListItem(
         UmsContext: PUMS_CONTEXT
     ) -> PUMS_CONTEXT;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn QueryUmsThreadInformation(
         UmsThread: PUMS_CONTEXT,
         UmsThreadInfoClass: UMS_THREAD_INFO_CLASS,
@@ -584,26 +584,26 @@ extern "system" {
         UmsThreadInformationLength: ULONG,
         ReturnLength: PULONG,
     ) -> BOOL;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn SetUmsThreadInformation(
         UmsThread: PUMS_CONTEXT,
         UmsThreadInfoClass: UMS_THREAD_INFO_CLASS,
         UmsThreadInformation: PVOID,
         UmsThreadInformationLength: ULONG,
     ) -> BOOL;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn DeleteUmsThreadContext(
         UmsThread: PUMS_CONTEXT
     ) -> BOOL;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn CreateUmsThreadContext(
         lpUmsThread: *mut PUMS_CONTEXT
     ) -> BOOL;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn EnterUmsSchedulingMode(
         SchedulerStartupInfo: PUMS_SCHEDULER_STARTUP_INFO
     ) -> BOOL;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn GetUmsSystemThreadInformation(
         ThreadHandle: HANDLE,
         SystemThreadInfo: PUMS_SYSTEM_THREAD_INFORMATION,
@@ -1249,7 +1249,6 @@ extern "system" {
         hUpdate: HANDLE,
         fDiscard: BOOL
     ) -> BOOL;
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     pub fn GlobalAddAtomA(
         lpString: LPCSTR
     ) -> ATOM;

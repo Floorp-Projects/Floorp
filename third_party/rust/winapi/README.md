@@ -45,6 +45,10 @@ Yes, absolutely! By default the `std` feature of `winapi` is disabled, allowing 
 
 Because `winapi` does not depend on `std` by default, it has to define `c_void` itself instead of using `std::os::raw::c_void`. However, if you enable the `std` feature of `winapi` then it will re-export `c_void` from `std` and cause `winapi`'s `HANDLE` to be the same type as `std`'s `HANDLE`.
 
+### Should I still use those `-sys` crates such as `kernel32-sys`?
+
+No. Those crates are a legacy of how `winapi` 0.2 was organized. Starting with `winapi` 0.3 all definitions are directly in `winapi` itself, and so there is no longer any need to use those `-sys` crates.
+
 ## Example ##
 
 Cargo.toml:
@@ -80,3 +84,6 @@ fn main() {
     print_message("Hello, world!").unwrap();
 }
 ```
+
+## Financial Support
+Do you use `winapi` in your projects? If so, you may be interested in financially supporting me on [Patreon](https://www.patreon.com/retep998). Companies in particular are especially encouraged to donate (I'm looking at you [Microsoft](https://github.com/Azure/iotedge/tree/master/edgelet)).

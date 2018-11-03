@@ -345,6 +345,30 @@ class ADBAndroid(ADBDevice):
 
     # Application management methods
 
+    def grant_runtime_permissions(self, app_name, timeout=None):
+        """
+        Grant required runtime permissions to the specified app
+        (typically org.mozilla.fennec_$USER).
+
+        :param str: app_name: Name of application (e.g. `org.mozilla.fennec`)
+        """
+        try:
+            if self.version >= version_codes.M:
+                permissions = [
+                    'android.permission.WRITE_EXTERNAL_STORAGE',
+                    'android.permission.READ_EXTERNAL_STORAGE',
+                    'android.permission.ACCESS_COARSE_LOCATION',
+                    'android.permission.ACCESS_FINE_LOCATION',
+                    'android.permission.CAMERA',
+                    'android.permission.RECORD_AUDIO',
+                ]
+                self._logger.info("Granting important runtime permissions to %s" % app_name)
+                for permission in permissions:
+                    self.shell_output('pm grant %s %s' % (app_name, permission))
+        except ADBError as e:
+            self._logger.warning("Unable to grant runtime permissions to %s due to %s" %
+                                 (app_name, e))
+
     def install_app(self, apk_path, replace=False, timeout=None):
         """Installs an app on the device.
 
@@ -361,8 +385,6 @@ class ADBAndroid(ADBDevice):
                  * ADBError
         """
         cmd = ["install"]
-        if self.version >= version_codes.M:
-            cmd.append("-g")
         if replace:
             cmd.append("-r")
         cmd.append(apk_path)
@@ -393,6 +415,7 @@ class ADBAndroid(ADBDevice):
 
     def launch_application(self, app_name, activity_name, intent, url=None,
                            extras=None, wait=True, fail_if_running=True,
+                           grant_runtime_permissions=True,
                            timeout=None):
         """Launches an Android application
 
@@ -407,6 +430,8 @@ class ADBAndroid(ADBDevice):
             returning.
         :param bool fail_if_running: Raise an exception if instance of
             application is already running.
+        :param bool grant_runtime_permissions: Grant special runtime
+            permissions.
         :param timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
@@ -424,6 +449,9 @@ class ADBAndroid(ADBDevice):
         if fail_if_running and self.process_exist(app_name, timeout=timeout):
             raise ADBError("Only one instance of an application may be running "
                            "at once")
+
+        if grant_runtime_permissions:
+            self.grant_runtime_permissions(app_name)
 
         acmd = ["am", "start"] + \
             ["-W" if wait else '', "-n", "%s/%s" % (app_name, activity_name)]

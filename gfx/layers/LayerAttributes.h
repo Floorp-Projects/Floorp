@@ -116,7 +116,7 @@ public:
 
   CSSCoord mScrollTrackStart;
   CSSCoord mScrollTrackLength;
-  uint64_t mTargetViewId = FrameMetrics::NULL_SCROLL_ID;
+  uint64_t mTargetViewId = ScrollableLayerGuid::NULL_SCROLL_ID;
 
   bool operator==(const ScrollbarData& aOther) const {
     return mDirection == aOther.mDirection &&
@@ -245,7 +245,7 @@ public:
     return true;
   }
 
-  bool SetFixedPositionData(FrameMetrics::ViewID aTargetViewId,
+  bool SetFixedPositionData(ScrollableLayerGuid::ViewID aTargetViewId,
                             const LayerPoint& aAnchor,
                             int32_t aSides)
   {
@@ -264,7 +264,7 @@ public:
     return true;
   }
 
-  bool SetStickyPositionData(FrameMetrics::ViewID aScrollId,
+  bool SetStickyPositionData(ScrollableLayerGuid::ViewID aScrollId,
                              LayerRectAbsolute aOuter, LayerRectAbsolute aInner)
   {
     if (mStickyPositionData &&
@@ -346,10 +346,10 @@ public:
     return mScrolledClip;
   }
 
-  FrameMetrics::ViewID GetFixedPositionScrollContainerId() const {
+  ScrollableLayerGuid::ViewID GetFixedPositionScrollContainerId() const {
     return (mIsFixedPosition && mFixedPositionData)
            ? mFixedPositionData->mScrollId
-           : FrameMetrics::NULL_SCROLL_ID;
+           : ScrollableLayerGuid::NULL_SCROLL_ID;
   }
 
   LayerPoint GetFixedPositionAnchor() const {
@@ -364,7 +364,7 @@ public:
     return !!mStickyPositionData;
   }
 
-  FrameMetrics::ViewID GetStickyScrollContainerId() const {
+  ScrollableLayerGuid::ViewID GetStickyScrollContainerId() const {
     return mStickyPositionData->mScrollId;
   }
 
@@ -404,14 +404,14 @@ private:
   bool mForceIsolatedGroup;
 
   struct FixedPositionData {
-    FrameMetrics::ViewID mScrollId;
+    ScrollableLayerGuid::ViewID mScrollId;
     LayerPoint mAnchor;
     int32_t mSides;
   };
   Maybe<FixedPositionData> mFixedPositionData;
 
   struct StickyPositionData {
-    FrameMetrics::ViewID mScrollId;
+    ScrollableLayerGuid::ViewID mScrollId;
     LayerRectAbsolute mOuter;
     LayerRectAbsolute mInner;
   };

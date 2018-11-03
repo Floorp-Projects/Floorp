@@ -129,9 +129,9 @@ protected:
                                                 OMTAValue* aValue) override;
   mozilla::ipc::IPCResult RecvGetTransform(const LayerHandle& aHandle,
                                            MaybeTransform* aTransform) override;
-  mozilla::ipc::IPCResult RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aId,
+  mozilla::ipc::IPCResult RecvSetAsyncScrollOffset(const ScrollableLayerGuid::ViewID& aId,
                                                    const float& aX, const float& aY) override;
-  mozilla::ipc::IPCResult RecvSetAsyncZoom(const FrameMetrics::ViewID& aId,
+  mozilla::ipc::IPCResult RecvSetAsyncZoom(const ScrollableLayerGuid::ViewID& aId,
                                            const float& aValue) override;
   mozilla::ipc::IPCResult RecvFlushApzRepaints() override;
   mozilla::ipc::IPCResult RecvGetAPZTestData(APZTestData* aOutData) override;

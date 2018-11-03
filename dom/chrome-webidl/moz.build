@@ -51,6 +51,7 @@ WEBIDL_FILES = [
     'PrecompiledScript.webidl',
     'PromiseDebugging.webidl',
     'StructuredCloneHolder.webidl',
+    'TelemetryStopwatch.webidl',
     'WebExtensionContentScript.webidl',
     'WebExtensionPolicy.webidl',
     'XULFrameElement.webidl',

@@ -1342,7 +1342,7 @@ private:
    * including handing off scroll to another APZC, and overscrolling.
    */
 public:
-  FrameMetrics::ViewID GetScrollHandoffParentId() const {
+  ScrollableLayerGuid::ViewID GetScrollHandoffParentId() const {
     return mScrollMetadata.GetScrollParentId();
   }
 

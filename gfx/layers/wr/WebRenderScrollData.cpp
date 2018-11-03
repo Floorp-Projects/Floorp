@@ -23,7 +23,7 @@ WebRenderLayerScrollData::WebRenderLayerScrollData()
   , mTransformIsPerspective(false)
   , mEventRegionsOverride(EventRegionsOverride::NoOverride)
   , mScrollbarAnimationId(0)
-  , mFixedPosScrollContainerId(FrameMetrics::NULL_SCROLL_ID)
+  , mFixedPosScrollContainerId(ScrollableLayerGuid::NULL_SCROLL_ID)
 {
 }
 
@@ -61,7 +61,7 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
 
   while (asr && asr != aStopAtAsr) {
     MOZ_ASSERT(aOwner.GetManager());
-    FrameMetrics::ViewID scrollId = asr->GetViewId();
+    ScrollableLayerGuid::ViewID scrollId = asr->GetViewId();
     if (Maybe<size_t> index = aOwner.HasMetadataFor(scrollId)) {
       mScrollIds.AppendElement(index.ref());
     } else {
@@ -181,7 +181,7 @@ WebRenderScrollData::GetManager() const
 size_t
 WebRenderScrollData::AddMetadata(const ScrollMetadata& aMetadata)
 {
-  FrameMetrics::ViewID scrollId = aMetadata.GetMetrics().GetScrollId();
+  ScrollableLayerGuid::ViewID scrollId = aMetadata.GetMetrics().GetScrollId();
   auto insertResult = mScrollIdMap.insert(std::make_pair(scrollId, 0));
   if (insertResult.second) {
     // Insertion took place, therefore it's a scrollId we hadn't seen before
@@ -221,7 +221,7 @@ WebRenderScrollData::GetScrollMetadata(size_t aIndex) const
 }
 
 Maybe<size_t>
-WebRenderScrollData::HasMetadataFor(const FrameMetrics::ViewID& aScrollId) const
+WebRenderScrollData::HasMetadataFor(const ScrollableLayerGuid::ViewID& aScrollId) const
 {
   auto it = mScrollIdMap.find(aScrollId);
   return (it == mScrollIdMap.end() ? Nothing() : Some(it->second));
@@ -284,7 +284,7 @@ WebRenderScrollData::RepopulateMap()
 {
   MOZ_ASSERT(mScrollIdMap.empty());
   for (size_t i = 0; i < mScrollMetadatas.Length(); i++) {
-    FrameMetrics::ViewID scrollId = mScrollMetadatas[i].GetMetrics().GetScrollId();
+    ScrollableLayerGuid::ViewID scrollId = mScrollMetadatas[i].GetMetrics().GetScrollId();
     mScrollIdMap.emplace(scrollId, i);
   }
   return true;

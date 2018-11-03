@@ -297,7 +297,7 @@ macro_rules! UNION {
     }) => (
         #[repr(C)] $(#[$attrs])* #[cfg(target_arch = "x86")]
         pub struct $name([$stype32; $ssize32]);
-        #[repr(C)] $(#[$attrs])* #[cfg(target_arch = "x86_64")]
+        #[repr(C)] $(#[$attrs])* #[cfg(target_pointer_width = "64")]
         pub struct $name([$stype64; $ssize64]);
         impl Copy for $name {}
         impl Clone for $name {

@@ -6,7 +6,7 @@
 // except according to those terms.
 use ctypes::{c_char, c_int, c_long, c_short, c_void};
 use shared::basetsd::{DWORD_PTR, INT_PTR, LONG_PTR, UINT_PTR};
-#[cfg(target_arch = "x86_64")] use shared::basetsd::PINT_PTR;
+#[cfg(target_pointer_width = "64")] use shared::basetsd::PINT_PTR;
 use shared::guiddef::{IID, REFIID};
 use shared::minwindef::{
     BOOL, BYTE, DWORD, HINSTANCE, HKEY, INT, LPARAM, LPINT, LRESULT, PUINT, UINT, ULONG, WORD,
@@ -781,7 +781,7 @@ STRUCT!{struct TBBUTTON {
     dwData: DWORD_PTR,
     iString: INT_PTR,
 }}
-#[cfg(target_arch = "x86_64")]
+#[cfg(target_pointer_width = "64")]
 STRUCT!{struct TBBUTTON {
     iBitmap: c_int,
     idCommand: c_int,
@@ -4033,7 +4033,7 @@ extern "system" {
         propIndex: c_int,
         pValue: LPINT,
     ) -> BOOL;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     pub fn FlatSB_GetScrollPropPtr(
         hWnd: HWND,
         propIndex: c_int,

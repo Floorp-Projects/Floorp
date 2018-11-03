@@ -580,7 +580,7 @@ PuppetWidget::SetConfirmedTargetAPZC(
 
 void
 PuppetWidget::UpdateZoomConstraints(const uint32_t& aPresShellId,
-                                    const FrameMetrics::ViewID& aViewId,
+                                    const ScrollableLayerGuid::ViewID& aViewId,
                                     const Maybe<ZoomConstraints>& aConstraints)
 {
   if (mTabChild) {
@@ -1426,7 +1426,7 @@ PuppetWidget::EnableIMEForPlugin(bool aEnable)
 
 void
 PuppetWidget::ZoomToRect(const uint32_t& aPresShellId,
-                         const FrameMetrics::ViewID& aViewId,
+                         const ScrollableLayerGuid::ViewID& aViewId,
                          const CSSRect& aRect,
                          const uint32_t& aFlags)
 {

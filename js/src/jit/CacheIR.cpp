@@ -818,9 +818,10 @@ GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder, 
 }
 
 static void
-GeneratePrototypeHoleGuards(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId)
+GeneratePrototypeHoleGuards(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId,
+                            bool alwaysGuardFirstProto)
 {
-    if (obj->hasUncacheableProto()) {
+    if (alwaysGuardFirstProto || obj->hasUncacheableProto()) {
         GuardGroupProto(writer, obj, objId);
     }
 
@@ -2208,7 +2209,8 @@ GetPropIRGenerator::tryAttachDenseElementHole(HandleObject obj, ObjOperandId obj
 
     // Guard on the shape, to prevent non-dense elements from appearing.
     TestMatchingNativeReceiver(writer, nobj, objId);
-    GeneratePrototypeHoleGuards(writer, nobj, objId);
+    GeneratePrototypeHoleGuards(writer, nobj, objId,
+                                /* alwaysGuardFirstProto = */ false);
     writer.loadDenseElementHoleResult(objId, indexId);
     writer.typeMonitorResult();
 
@@ -2267,7 +2269,8 @@ GetPropIRGenerator::tryAttachSparseElement(HandleObject obj, ObjOperandId objId,
     // Shape guard the prototype chain to avoid shadowing indexes from appearing.
     // The helper function also ensures that the index does not appear within the
     // dense element set of the prototypes.
-    GeneratePrototypeHoleGuards(writer, nobj, objId);
+    GeneratePrototypeHoleGuards(writer, nobj, objId,
+                                /* alwaysGuardFirstProto = */ true);
 
     // At this point, we are guaranteed that the indexed property will not
     // be found on one of the prototypes. We are assured that we only have
@@ -2385,7 +2388,8 @@ GetPropIRGenerator::tryAttachUnboxedElementHole(HandleObject obj, ObjOperandId o
     TestMatchingReceiver(writer, obj, objId, &tempId);
 
     // Guard that the prototype chain has no elements.
-    GeneratePrototypeHoleGuards(writer, obj, objId);
+    GeneratePrototypeHoleGuards(writer, obj, objId,
+                                /* alwaysGuardFirstProto = */ false);
 
     writer.loadUndefinedResult();
     // No monitor: We know undefined must be in the typeset already.
@@ -2988,7 +2992,8 @@ HasPropIRGenerator::tryAttachDenseHole(HandleObject obj, ObjOperandId objId,
     // Generate prototype guards if needed. This includes monitoring that
     // properties were not added in the chain.
     if (!hasOwn) {
-        GeneratePrototypeHoleGuards(writer, nobj, objId);
+        GeneratePrototypeHoleGuards(writer, nobj, objId,
+                                    /* alwaysGuardFirstProto = */ false);
     }
 
     writer.loadDenseElementHoleExistsResult(objId, indexId);
@@ -3022,13 +3027,8 @@ HasPropIRGenerator::tryAttachSparse(HandleObject obj, ObjOperandId objId,
     // Generate prototype guards if needed. This includes monitoring that
     // properties were not added in the chain.
     if (!hasOwn) {
-        // If GeneratePrototypeHoleGuards below won't add guards for prototype,
-        // we should add our own since we aren't guarding shape.
-        if (!obj->hasUncacheableProto()) {
-            GuardGroupProto(writer, obj, objId);
-        }
-
-        GeneratePrototypeHoleGuards(writer, obj, objId);
+        GeneratePrototypeHoleGuards(writer, obj, objId,
+                                    /* alwaysGuardFirstProto = */ true);
     }
 
     // Because of the prototype guard we know that the prototype chain
@@ -4175,6 +4175,10 @@ SetPropIRGenerator::tryAttachAddOrUpdateSparseElement(HandleObject obj, ObjOpera
     writer.guardIndexIsNonNegative(indexId);
 
     // Shape guard the prototype chain to avoid shadowing indexes from appearing.
+    // Guard the prototype of the receiver explicitly, because the receiver's
+    // shape is not being guarded as a proxy for that.
+    GuardGroupProto(writer, obj, objId);
+
     // Dense elements may appear on the prototype chain (and prototypes may
     // have a different notion of which elements are dense), but they can
     // only be data properties, so our specialized Set handler is ok to bind
@@ -4930,7 +4934,8 @@ GetIteratorIRGenerator::tryAttachNativeIterator(ObjOperandId objId, HandleObject
     }
 
     // Do the same for the objects on the proto chain.
-    GeneratePrototypeHoleGuards(writer, obj, objId);
+    GeneratePrototypeHoleGuards(writer, obj, objId,
+                                /* alwaysGuardFirstProto = */ false);
 
     ObjOperandId iterId =
         writer.guardAndGetIterator(objId, iterobj, &ObjectRealm::get(obj).enumerators);

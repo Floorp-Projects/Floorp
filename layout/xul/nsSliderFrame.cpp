@@ -319,9 +319,9 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
     // that the event region that gets created for the thumb is included in
     // the nsDisplayOwnLayer contents.
 
-    const mozilla::layers::FrameMetrics::ViewID scrollTargetId =
+    const mozilla::layers::ScrollableLayerGuid::ViewID scrollTargetId =
       aBuilder->GetCurrentScrollbarTarget();
-    const bool thumbGetsLayer = (scrollTargetId != layers::FrameMetrics::NULL_SCROLL_ID);
+    const bool thumbGetsLayer = (scrollTargetId != layers::ScrollableLayerGuid::NULL_SCROLL_ID);
 
     if (thumbGetsLayer) {
       const Maybe<ScrollDirection> scrollDirection = aBuilder->GetCurrentScrollbarDirection();
@@ -1041,9 +1041,9 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
 
   bool isHorizontal = IsXULHorizontal();
 
-  mozilla::layers::FrameMetrics::ViewID scrollTargetId;
+  mozilla::layers::ScrollableLayerGuid::ViewID scrollTargetId;
   bool hasID = nsLayoutUtils::FindIDFor(scrollableContent, &scrollTargetId);
-  bool hasAPZView = hasID && (scrollTargetId != layers::FrameMetrics::NULL_SCROLL_ID);
+  bool hasAPZView = hasID && (scrollTargetId != layers::ScrollableLayerGuid::NULL_SCROLL_ID);
 
   if (!hasAPZView) {
     return;

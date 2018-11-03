@@ -1993,7 +1993,23 @@ SI void gradient_lookup(const SkJumper_GradientCtx* c, U32 idx, F t,
         fa = _mm256_permutevar8x32_ps(_mm256_loadu_ps(c->fs[3]), idx);
         ba = _mm256_permutevar8x32_ps(_mm256_loadu_ps(c->bs[3]), idx);
     } else
-#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX2
+#elif defined(JUMPER_IS_AVX)
+    if (c->stopCount <= 4) {
+        auto permute = [](const float* ptr, U32 idx) {
+            __m128 v = _mm_loadu_ps(ptr);
+            __m256 vv = _mm256_insertf128_ps(_mm256_castps128_ps256(v), v, 1);
+            return _mm256_permutevar_ps(vv, idx);
+        };
+        fr = permute(c->fs[0], idx);
+        br = permute(c->bs[0], idx);
+        fg = permute(c->fs[1], idx);
+        bg = permute(c->bs[1], idx);
+        fb = permute(c->fs[2], idx);
+        bb = permute(c->bs[2], idx);
+        fa = permute(c->fs[3], idx);
+        ba = permute(c->bs[3], idx);
+    } else
+#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX
     if (c->stopCount <= 4) {
         fr = _mm_permutevar_ps(_mm_loadu_ps(c->fs[0]), idx);
         br = _mm_permutevar_ps(_mm_loadu_ps(c->bs[0]), idx);
@@ -2034,8 +2050,20 @@ STAGE(gradient, const SkJumper_GradientCtx* c) {
 
     // N.B. The loop starts at 1 because idx 0 is the color to use before the first stop.
     for (size_t i = 1; i < c->stopCount; i++) {
-        idx += if_then_else(t >= c->ts[i], U32(1), U32(0));
+#ifdef JUMPER_IS_SCALAR
+        if (t >= c->ts[i]) {
+            idx++;
+        } else {
+            break;
+        }
+#else
+        idx += bit_cast<U32>(t >= c->ts[i]);
+#endif
     }
+
+#ifndef JUMPER_IS_SCALAR
+    idx = U32(0) - idx;
+#endif
 
     gradient_lookup(c, idx, t, &r, &g, &b, &a);
 }
@@ -2516,7 +2544,7 @@ SI U16 div255(U16 v) {
 
 SI U16 inv(U16 v) { return 255-v; }
 
-#if defined(__clang__) || defined(JUMPER_IS_SCALAR)
+#if defined(__clang__)
 SI U16 if_then_else(I16 c, U16 t, U16 e) { return (t & c) | (e & ~c); }
 SI U32 if_then_else(I32 c, U32 t, U32 e) { return (t & c) | (e & ~c); }
 SI U16 max(U16 x, U16 y) { return if_then_else(x < y, y, x); }
@@ -2554,7 +2582,7 @@ SI D join(S lo, S hi) {
     return v;
 }
 
-#if defined(__clang__) || defined(JUMPER_IS_SCALAR)
+#if defined(__clang__)
 SI F if_then_else(I32 c, F t, F e) {
     return bit_cast<F>( (bit_cast<I32>(t) & c) | (bit_cast<I32>(e) & ~c) );
 }
@@ -2822,7 +2850,7 @@ template <typename V, typename T>
 SI V load(const T* ptr, size_t tail) {
     V v = 0;
     switch (tail & (N-1)) {
-#if defined(__clang__) || defined(JUMPER_IS_SCALAR)
+#if defined(__clang__)
         case  0: memcpy(&v, ptr, sizeof(v)); break;
     #if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
         case 15: v[14] = ptr[14];
@@ -2851,7 +2879,7 @@ SI V load(const T* ptr, size_t tail) {
 template <typename V, typename T>
 SI void store(T* ptr, size_t tail, V v) {
     switch (tail & (N-1)) {
-#if defined(__clang__) || defined(JUMPER_IS_SCALAR)
+#if defined(__clang__)
         case  0: memcpy(ptr, &v, sizeof(v)); break;
     #if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
         case 15: ptr[14] = v[14];
@@ -3241,7 +3269,7 @@ STAGE_GG(mirror_x_1, Ctx::None) {
     x = clamp_01(abs_( (x-1.0f) - two(floor_((x-1.0f)*0.5f)) - 1.0f ));
 }
 
-#if defined(__clang__) || defined(JUMPER_IS_SCALAR)
+#if defined(__clang__)
 SI U16 cond_to_mask_16(I32 cond) { return cast<U16>(cond); }
 #else
 SI U16 cond_to_mask_16(F cond) {
@@ -3308,27 +3336,21 @@ SI void gradient_lookup(const SkJumper_GradientCtx* c, U32 idx, F t,
         ba = join<F>(_mm256_permutevar8x32_ps(_mm256_loadu_ps(c->bs[3]), lo),
                      _mm256_permutevar8x32_ps(_mm256_loadu_ps(c->bs[3]), hi));
     } else
-#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX2
+#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX
     if (c->stopCount <= 4) {
-        __m128i lo, hi;
-        split(idx, &lo, &hi);
-
-        fr = join<F>(_mm_permutevar_ps(_mm_loadu_ps(c->fs[0]), lo),
-                     _mm_permutevar_ps(_mm_loadu_ps(c->fs[0]), hi));
-        br = join<F>(_mm_permutevar_ps(_mm_loadu_ps(c->bs[0]), lo),
-                     _mm_permutevar_ps(_mm_loadu_ps(c->bs[0]), hi));
-        fg = join<F>(_mm_permutevar_ps(_mm_loadu_ps(c->fs[1]), lo),
-                     _mm_permutevar_ps(_mm_loadu_ps(c->fs[1]), hi));
-        bg = join<F>(_mm_permutevar_ps(_mm_loadu_ps(c->bs[1]), lo),
-                     _mm_permutevar_ps(_mm_loadu_ps(c->bs[1]), hi));
-        fb = join<F>(_mm_permutevar_ps(_mm_loadu_ps(c->fs[2]), lo),
-                     _mm_permutevar_ps(_mm_loadu_ps(c->fs[2]), hi));
-        bb = join<F>(_mm_permutevar_ps(_mm_loadu_ps(c->bs[2]), lo),
-                     _mm_permutevar_ps(_mm_loadu_ps(c->bs[2]), hi));
-        fa = join<F>(_mm_permutevar_ps(_mm_loadu_ps(c->fs[3]), lo),
-                     _mm_permutevar_ps(_mm_loadu_ps(c->fs[3]), hi));
-        ba = join<F>(_mm_permutevar_ps(_mm_loadu_ps(c->bs[3]), lo),
-                     _mm_permutevar_ps(_mm_loadu_ps(c->bs[3]), hi));
+        auto permute = [](const float* ptr, U32 idx) {
+            __m128 v = _mm_loadu_ps(ptr);
+            __m256 vv = _mm256_insertf128_ps(_mm256_castps128_ps256(v), v, 1);
+            return bit_cast<F>(_mm256_permutevar_ps(vv, bit_cast<__m256i>(idx)));
+        };
+        fr = permute(c->fs[0], idx);
+        br = permute(c->bs[0], idx);
+        fg = permute(c->fs[1], idx);
+        bg = permute(c->bs[1], idx);
+        fb = permute(c->fs[2], idx);
+        bb = permute(c->bs[2], idx);
+        fa = permute(c->fs[3], idx);
+        ba = permute(c->bs[3], idx);
     } else
 #endif
     {
@@ -3355,8 +3377,10 @@ STAGE_GP(gradient, const SkJumper_GradientCtx* c) {
 
     // N.B. The loop starts at 1 because idx 0 is the color to use before the first stop.
     for (size_t i = 1; i < c->stopCount; i++) {
-        idx += if_then_else(t >= c->ts[i], U32(1), U32(0));
+        idx += bit_cast<U32>(t >= c->ts[i]);
     }
+
+    idx = U32(0) - idx;
 
     gradient_lookup(c, idx, t, &r, &g, &b, &a);
 }
