@@ -473,6 +473,21 @@ private:
   bool* mResolveStyle;
 };
 
+static bool
+IsSystemOrChromeURLPrincipal(nsIPrincipal* aPrincipal)
+{
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    return true;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_TRUE(uri, false);
+
+  bool isChrome = false;
+  return NS_SUCCEEDED(uri->SchemeIs("chrome", &isChrome)) && isChrome;
+}
+
 // This function loads a particular XBL file and installs all of the bindings
 // onto the element.
 nsresult
@@ -490,6 +505,45 @@ nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
   if (MOZ_UNLIKELY(!aURL)) {
     return NS_OK;
   }
+
+#ifdef DEBUG
+  // Ensures that only the whitelisted bindings are used in the following
+  // conditions:
+  //
+  // 1) In the content process
+  // 2) In a document that disallows XUL/XBL which only loads bindings
+  //    referenced in a chrome stylesheet.
+  //
+  // If the conditions are met, assert that:
+  //
+  // a) The binding is XMLPrettyPrint (since it may be bound to any XML)
+  // b) The binding is bound to one of the whitelisted element.
+  //
+  // The assertion might not catch all violations because (2) is needed
+  // for the current test setup. Someone may unknownly using a binding
+  // in AllowXULXBL() documents in content process in production without
+  // knowing.
+  if (XRE_IsContentProcess() &&
+      IsSystemOrChromeURLPrincipal(aOriginPrincipal) &&
+      aElement->OwnerDoc() && !aElement->OwnerDoc()->AllowXULXBL() &&
+      !aURL->GetSpecOrDefault().EqualsLiteral(
+       "chrome://global/content/xml/XMLPrettyPrint.xml#prettyprint")) {
+    nsAtom* tag = aElement->NodeInfo()->NameAtom();
+    MOZ_ASSERT(
+      // datetimebox
+      tag == nsGkAtoms::datetimebox ||
+      // videocontrols
+      tag == nsGkAtoms::videocontrols ||
+      // pluginProblem
+      tag == nsGkAtoms::embed ||
+      tag == nsGkAtoms::applet ||
+      tag == nsGkAtoms::object ||
+      // xbl-marquee
+      tag == nsGkAtoms::marquee,
+      "Unexpected XBL binding used in the content process"
+    );
+  }
+#endif
 
   // Easy case: The binding was already loaded.
   nsXBLBinding* binding = aElement->GetXBLBinding();
@@ -874,21 +928,6 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   }
 
   return NS_OK;
-}
-
-static bool
-IsSystemOrChromeURLPrincipal(nsIPrincipal* aPrincipal)
-{
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    return true;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_TRUE(uri, false);
-
-  bool isChrome = false;
-  return NS_SUCCEEDED(uri->SchemeIs("chrome", &isChrome)) && isChrome;
 }
 
 nsresult
