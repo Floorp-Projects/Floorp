@@ -22,7 +22,7 @@ void NoAddRefReleaseOnReturnChecker::check(
   if (auto *Call = dyn_cast<CallExpr>(Base)) {
     if (auto *Callee = Call->getDirectCallee()) {
       if (hasCustomAttribute<moz_no_addref_release_on_return>(Callee)) {
-        diag(Call->getLocStart(),
+        diag(Call->getBeginLoc(),
              "%1 cannot be called on the return value of %0",
              DiagnosticIDs::Error)
             << Callee << dyn_cast<CXXMethodDecl>(Member->getMemberDecl());

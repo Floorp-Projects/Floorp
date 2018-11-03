@@ -33,6 +33,12 @@ typedef std::unique_ptr<ASTConsumer> ASTConsumerPtr;
 typedef ASTConsumer *ASTConsumerPtr;
 #endif
 
+#if CLANG_VERSION_FULL < 800
+// Starting with Clang 8.0 some basic functions have been renamed
+#define getBeginLoc getLocStart
+#define getEndLoc getLocEnd
+#endif
+
 #ifndef HAVE_NEW_ASTMATCHER_NAMES
 // In clang 3.8, a number of AST matchers were renamed to better match the
 // respective AST node.  We use the new names, and #define them to the old
