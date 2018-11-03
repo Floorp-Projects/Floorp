@@ -85,6 +85,7 @@ static bool
 IsStyleCachePreservingSubAction(EditSubAction aEditSubAction)
 {
   return aEditSubAction == EditSubAction::eDeleteSelectedContent ||
+         aEditSubAction == EditSubAction::eInsertLineBreak ||
          aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
          aEditSubAction == EditSubAction::eCreateOrChangeList ||
          aEditSubAction == EditSubAction::eIndent ||
@@ -561,6 +562,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     if (aEditSubAction == EditSubAction::eInsertText ||
         aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
         aEditSubAction == EditSubAction::eDeleteSelectedContent ||
+        aEditSubAction == EditSubAction::eInsertLineBreak ||
         aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
         aEditSubAction == EditSubAction::ePasteHTMLContent ||
         aEditSubAction == EditSubAction::eInsertHTMLSource) {
@@ -597,6 +599,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     if (aEditSubAction == EditSubAction::eInsertText ||
         aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
         aEditSubAction == EditSubAction::eDeleteSelectedContent ||
+        aEditSubAction == EditSubAction::eInsertLineBreak ||
         aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
         aEditSubAction == EditSubAction::ePasteHTMLContent ||
         aEditSubAction == EditSubAction::eInsertHTMLSource) {
@@ -716,9 +719,17 @@ HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo,
                             aInfo.maxLength);
     case EditSubAction::eInsertHTMLSource:
       return WillLoadHTML();
-    case EditSubAction::eInsertParagraphSeparator:
+    case EditSubAction::eInsertParagraphSeparator: {
       UndefineCaretBidiLevel();
-      return WillInsertBreak(aCancel, aHandled);
+      EditActionResult result = WillInsertParagraphSeparator();
+      if (NS_WARN_IF(result.Failed())) {
+        return result.Rv();
+      }
+      *aCancel = result.Canceled();
+      *aHandled = result.Handled();
+      MOZ_ASSERT(!result.Ignored());
+      return NS_OK;
+    }
     case EditSubAction::eDeleteSelectedContent:
       return WillDeleteSelection(aInfo.collapsedAction, aInfo.stripWrappers,
                                  aCancel, aHandled);
@@ -780,6 +791,7 @@ HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
 
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eInsertText:
+    case EditSubAction::eInsertLineBreak:
     case EditSubAction::eInsertParagraphSeparator:
     case EditSubAction::eInsertTextComingFromIME:
       return NS_OK;
@@ -1696,15 +1708,10 @@ HTMLEditRules::CanContainParagraph(Element& aElement) const
   return false;
 }
 
-nsresult
-HTMLEditRules::WillInsertBreak(bool* aCancel,
-                               bool* aHandled)
+EditActionResult
+HTMLEditRules::WillInsertParagraphSeparator()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-
-  MOZ_ASSERT(aCancel && aHandled);
-  *aCancel = false;
-  *aHandled = false;
 
   // If the selection isn't collapsed, delete it.
   if (!SelectionRefPtr()->IsCollapsed()) {
@@ -1712,48 +1719,47 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
       HTMLEditorRef().DeleteSelectionAsSubAction(nsIEditor::eNone,
                                                  nsIEditor::eStrip);
     if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionIgnored(rv);
     }
   }
 
   // FYI: Ignore cancel result of WillInsert().
   nsresult rv = WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
   // Split any mailcites in the way.  Should we abort this if we encounter
   // table cell boundaries?
   if (IsMailEditor()) {
-    nsresult rv = SplitMailCites(aHandled);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    EditActionResult result = SplitMailCites();
+    if (NS_WARN_IF(result.Failed())) {
+      return result;
     }
-    if (*aHandled) {
-      return NS_OK;
+    if (result.Handled()) {
+      return result;
     }
   }
 
   // Smart splitting rules
   nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
-    return NS_ERROR_FAILURE;
+    return EditActionIgnored(NS_ERROR_FAILURE);
   }
 
   EditorDOMPoint atStartOfSelection(firstRange->StartRef());
   if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
-    return NS_ERROR_FAILURE;
+    return EditActionIgnored(NS_ERROR_FAILURE);
   }
   MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
 
   // Do nothing if the node is read-only
   if (!HTMLEditorRef().IsModifiableNode(*atStartOfSelection.GetContainer())) {
-    *aCancel = true;
-    return NS_OK;
+    return EditActionCanceled();
   }
 
   // If the active editing host is an inline element, or if the active editing
@@ -1761,7 +1767,7 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
   // paragraph separator, just append a <br>.
   RefPtr<Element> host = HTMLEditorRef().GetActiveEditingHost();
   if (NS_WARN_IF(!host)) {
-    return NS_ERROR_FAILURE;
+    return EditActionIgnored(NS_ERROR_FAILURE);
   }
 
   // Look for the nearest parent block.  However, don't return error even if
@@ -1807,10 +1813,9 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
   if (insertBRElement) {
     nsresult rv = InsertBRElement(atStartOfSelection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionIgnored(rv);
     }
-    *aHandled = true;
-    return NS_OK;
+    return EditActionHandled();
   }
 
   if (host == blockParent && separator != ParagraphSeparator::br) {
@@ -1823,7 +1828,7 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
     nsresult rv = MakeBasicBlock(ParagraphSeparatorElement(separator));
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
         NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
     // We warn on failure, but don't handle it, because it might be harmless.
     // Instead we just check that a new block was actually created.
@@ -1832,28 +1837,27 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
 
     firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
-      return NS_ERROR_FAILURE;
+      return EditActionIgnored(NS_ERROR_FAILURE);
     }
 
     atStartOfSelection = firstRange->StartRef();
     if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
-      return NS_ERROR_FAILURE;
+      return EditActionIgnored(NS_ERROR_FAILURE);
     }
     MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
 
     blockParent =
       HTMLEditor::GetBlock(*atStartOfSelection.GetContainer(), host);
     if (NS_WARN_IF(!blockParent)) {
-      return NS_ERROR_UNEXPECTED;
+      return EditActionIgnored(NS_ERROR_UNEXPECTED);
     }
     if (NS_WARN_IF(blockParent == host)) {
       // Didn't create a new block for some reason, fall back to <br>
       rv = InsertBRElement(atStartOfSelection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return EditActionIgnored(rv);
       }
-      *aHandled = true;
-      return NS_OK;
+      return EditActionHandled();
     }
     // Now, mNewBlock is last created block element for wrapping inline
     // elements around the caret position and AfterEditInner() will move
@@ -1876,10 +1880,10 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
     RefPtr<Element> brElement =
       HTMLEditorRef().InsertBrElementWithTransaction(endOfBlockParent);
     if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(!brElement)) {
-      return NS_ERROR_FAILURE;
+      return EditActionIgnored(NS_ERROR_FAILURE);
     }
   }
 
@@ -1889,12 +1893,11 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
       ReturnInListItem(*listItem, *atStartOfSelection.GetContainer(),
                        atStartOfSelection.Offset());
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return NS_ERROR_EDITOR_DESTROYED;
+      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
       "Failed to insert break into list item");
-    *aHandled = true;
-    return NS_OK;
+    return EditActionHandled();
   }
 
   if (HTMLEditUtils::IsHeader(*blockParent)) {
@@ -1903,12 +1906,11 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
       ReturnInHeader(*blockParent, *atStartOfSelection.GetContainer(),
                      atStartOfSelection.Offset());
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return NS_ERROR_EDITOR_DESTROYED;
+      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
       "Failed to handle insertParagraph in the heading element");
-    *aHandled = true;
-    return NS_OK;
+    return EditActionHandled();
   }
 
   // XXX Ideally, we should take same behavior with both <p> container and
@@ -1926,31 +1928,27 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
     // Paragraphs: special rules to look for <br>s
     EditActionResult result = ReturnInParagraph(*blockParent);
     if (NS_WARN_IF(result.Failed())) {
-      return result.Rv();
+      return result;
     }
-    *aHandled = result.Handled();
-    *aCancel = result.Canceled();
     if (result.Handled()) {
       // Now, atStartOfSelection may be invalid because the left paragraph
       // may have less children than its offset.  For avoiding warnings of
       // validation of EditorDOMPoint, we should not touch it anymore.
       lockOffset.Cancel();
-      return NS_OK;
+      return result;
     }
     // Fall through, if ReturnInParagraph() didn't handle it.
-    MOZ_ASSERT(!*aCancel, "ReturnInParagraph canceled this edit action, "
-                          "WillInsertBreak() needs to handle such case");
+    MOZ_ASSERT(!result.Canceled(),
+               "ReturnInParagraph canceled this edit action, "
+               "WillInsertBreak() needs to handle such case");
   }
 
   // If nobody handles this edit action, let's insert new <br> at the selection.
-  MOZ_ASSERT(!*aHandled, "Reached last resort of WillInsertBreak() "
-                         "after the edit action is handled");
   rv = InsertBRElement(atStartOfSelection);
-  *aHandled = true;
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditActionIgnored(rv);
   }
-  return NS_OK;
+  return EditActionHandled();
 }
 
 nsresult
@@ -2101,24 +2099,20 @@ HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak)
   return NS_OK;
 }
 
-nsresult
-HTMLEditRules::SplitMailCites(bool* aHandled)
+EditActionResult
+HTMLEditRules::SplitMailCites()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   EditorRawDOMPoint pointToSplit(EditorBase::GetStartPoint(*SelectionRefPtr()));
   if (NS_WARN_IF(!pointToSplit.IsSet())) {
-    return NS_ERROR_FAILURE;
+    return EditActionIgnored(NS_ERROR_FAILURE);
   }
 
   RefPtr<Element> citeNode =
     GetTopEnclosingMailCite(*pointToSplit.GetContainer());
   if (!citeNode) {
-    return NS_OK;
+    return EditActionIgnored();
   }
 
   // If our selection is just before a break, nudge it to be just after it.
@@ -2145,7 +2139,7 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
   }
 
   if (NS_WARN_IF(!pointToSplit.GetContainerAsContent())) {
-    return NS_ERROR_FAILURE;
+    return EditActionIgnored(NS_ERROR_FAILURE);
   }
 
   SplitNodeResult splitCiteNodeResult =
@@ -2153,10 +2147,10 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
                       *citeNode, pointToSplit,
                       SplitAtEdges::eDoNotCreateEmptyContainer);
   if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_WARN_IF(splitCiteNodeResult.Failed())) {
-    return splitCiteNodeResult.Rv();
+    return EditActionIgnored(splitCiteNodeResult.Rv());
   }
   pointToSplit.Clear();
 
@@ -2186,7 +2180,7 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
         HTMLEditorRef().InsertBrElementWithTransaction(
                           endOfPreviousNodeOfSplitPoint);
       if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
       }
       NS_WARNING_ASSERTION(invisibleBrElement,
         "Failed to create an invisible <br> element");
@@ -2200,10 +2194,10 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
   RefPtr<Element> brElement =
     HTMLEditorRef().InsertBrElementWithTransaction(pointToInsertBrNode);
   if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_WARN_IF(!brElement)) {
-    return NS_ERROR_FAILURE;
+    return EditActionIgnored(NS_ERROR_FAILURE);
   }
   // Now, offset of pointToInsertBrNode is invalid.  Let's clear it.
   pointToInsertBrNode.Clear();
@@ -2219,10 +2213,10 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
   SelectionRefPtr()->Collapse(atBrNode, error);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     error.SuppressException();
-    return NS_ERROR_EDITOR_DESTROYED;
+    return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
+    return EditActionIgnored(error.StealNSResult());
   }
 
   // if citeNode wasn't a block, we might also want another break before it.
@@ -2254,10 +2248,10 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
           HTMLEditorRef().InsertBrElementWithTransaction(
                             pointToCreateNewBrNode);
         if (NS_WARN_IF(!CanHandleEditAction())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+          return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_WARN_IF(!brElement)) {
-          return NS_ERROR_FAILURE;
+          return EditActionIgnored(NS_ERROR_FAILURE);
         }
         // Now, those points may be invalid.
         pointToCreateNewBrNode.Clear();
@@ -2273,15 +2267,15 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
       HTMLEditorRef().IsEmptyNode(previousNodeOfSplitPoint, &bEmptyCite,
                                   true, false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionIgnored(rv);
     }
     if (bEmptyCite) {
       rv = HTMLEditorRef().DeleteNodeWithTransaction(*previousNodeOfSplitPoint);
       if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return EditActionIgnored(rv);
       }
     }
   }
@@ -2290,21 +2284,20 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
     nsresult rv =
       HTMLEditorRef().IsEmptyNode(citeNode, &bEmptyCite, true, false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionIgnored(rv);
     }
     if (bEmptyCite) {
       rv = HTMLEditorRef().DeleteNodeWithTransaction(*citeNode);
       if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return EditActionIgnored(rv);
       }
     }
   }
 
-  *aHandled = true;
-  return NS_OK;
+  return EditActionHandled();
 }
 
 
@@ -7015,6 +7008,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
   // actions
   if (aEditSubAction == EditSubAction::eInsertText ||
       aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
+      aEditSubAction == EditSubAction::eInsertLineBreak ||
       aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
       aEditSubAction == EditSubAction::eDeleteText) {
     bool isSpace, isNBSP;
@@ -7265,6 +7259,7 @@ HTMLEditRules::PromoteRange(nsRange& aRange,
 
   if (aEditSubAction == EditSubAction::eInsertText ||
       aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
+      aEditSubAction == EditSubAction::eInsertLineBreak ||
       aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
       aEditSubAction == EditSubAction::eDeleteText) {
      if (!startNode->IsContent() ||
