@@ -185,13 +185,11 @@ protected:
    * This method removes selected text if selection isn't collapsed.
    * Therefore, this might cause destroying the editor.
    *
-   * @param aCancel             Returns true if the operation is canceled.
-   * @param aHandled            Returns true if the edit action is handled.
    * @param aMaxLength          The maximum string length which the editor
    *                            allows to set.
    */
-  MOZ_MUST_USE nsresult
-  WillInsertBreak(bool* aCancel, bool* aHandled, int32_t aMaxLength);
+  MOZ_CAN_RUN_SCRIPT
+  MOZ_MUST_USE EditActionResult WillInsertLineBreak(int32_t aMaxLength);
 
   /**
    * Called before setting text to the text editor.

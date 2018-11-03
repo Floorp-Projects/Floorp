@@ -9,8 +9,28 @@ Unreleased
 
 ### Added
 
+- Introduces `strictFileInteractability` capability
+
+  The new capabilitiy indicates if strict interactability checks
+  should be applied to `<input type=file>` elements.  As strict
+  interactability checks are off by default, there is a change
+  in behaviour when using [Element Send Keys] with hidden file
+  upload controls.
+
 - Added new endpoint `GET /session/{session id}/moz/screenshot/full`
   for taking full document screenshots, thanks to Greg Fraley.
+
+# Changed
+
+- Allow file uploads to hidden `<input type=file>` elements
+
+  Through a series of changes to the WebDriver specification,
+  geckodriver is now aligned with chromedriver’s behaviour that
+  allows interaction with hidden `<input type=file>` elements.
+
+  This allows WebDriver to be used with various popular web frameworks
+  that—through indirection—hides the file upload control and
+  invokes it through other means.
 
 
 0.23.0 (2018-10-03)

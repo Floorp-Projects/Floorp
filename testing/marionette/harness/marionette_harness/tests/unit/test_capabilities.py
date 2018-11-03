@@ -62,6 +62,7 @@ class TestCapabilities(MarionetteTestCase):
         self.assertIn("acceptInsecureCerts", self.caps)
         self.assertIn("setWindowRect", self.caps)
         self.assertIn("timeouts", self.caps)
+        self.assertIn("strictFileInteractability", self.caps)
 
         self.assertEqual(self.caps["browserName"], self.appinfo["name"].lower())
         self.assertEqual(self.caps["browserVersion"], self.appinfo["version"])
@@ -76,6 +77,7 @@ class TestCapabilities(MarionetteTestCase):
                              {"implicit": 0,
                               "pageLoad": 300000,
                               "script": 30000})
+        self.assertTrue(self.caps["strictFileInteractability"])
 
     def test_supported_features(self):
         self.assertIn("rotatable", self.caps)
@@ -179,6 +181,24 @@ class TestCapabilityMatching(MarionetteTestCase):
         self.assertIn("timeouts", self.marionette.session_capabilities)
         self.assertDictEqual(self.marionette.session_capabilities["timeouts"], timeouts)
         self.assertDictEqual(self.marionette._send_message("WebDriver:GetTimeouts"), timeouts)
+
+    def test_strict_file_interactability(self):
+        for value in ["", 2.5, {}, []]:
+            print("  type {}".format(type(value)))
+            with self.assertRaises(SessionNotCreatedException):
+                self.marionette.start_session({"strictFileInteractability": value})
+
+        self.delete_session()
+
+        self.marionette.start_session({"strictFileInteractability": True})
+        self.assertIn("strictFileInteractability", self.marionette.session_capabilities)
+        self.assertTrue(self.marionette.session_capabilities["strictFileInteractability"])
+
+        self.delete_session()
+
+        self.marionette.start_session({"strictFileInteractability": False})
+        self.assertIn("strictFileInteractability", self.marionette.session_capabilities)
+        self.assertFalse(self.marionette.session_capabilities["strictFileInteractability"])
 
     def test_unhandled_prompt_behavior(self):
         behaviors = [
