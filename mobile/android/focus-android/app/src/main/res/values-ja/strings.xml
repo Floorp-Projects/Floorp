@@ -6,6 +6,7 @@
   <string name="urlbar_hint">検索語またはアドレスを入力</string>
   <string name="teaser">プライベートブラウジングを自動的に。\nブラウズ、消去の繰り返し。</string>
   <string name="feedback_erase">閲覧履歴が消去されました。</string>
+  <string name="feedback_erase_custom_tab">タブのブラウジング履歴が消去されました。</string>
   <string name="search_hint">%1$s を検索</string>
   <string name="menu_share">共有...</string>
   <string name="menu_report_site_issue">サイトの問題を報告</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">ヘルプ</string>
   <string name="menu_rights">あなたの権利</string>
   <string name="menu_trackers_blocked_title">ブロックされた追跡</string>
+  <string name="menu_trackers_blocked_subtitle">これをオフにすることにより、一部のサイトの問題が解決する可能性があります</string>
+  <string name="menu_content_blocking">コンテンツブロッキング</string>
+  <string name="menu_content_blocking_subtitle">サイトの問題を解決するにはオフにしてください</string>
   <string name="menu_custom_tab_branding">Powered by %1$s</string>
   <string name="share_dialog_title">共有方法を選択</string>
   <string name="notification_erase_text">閲覧履歴を消去</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">消去して開く</string>
   <string name="shortcut_erase_short_label">消去</string>
   <string name="shortcut_erase_long_label">閲覧履歴を消去</string>
+  <string name="shortcut_erase_and_open_short_label">消去して開く</string>
+  <string name="shortcut_erase_and_open_long_label">消去して %1$s を開く</string>
   <string name="text_selection_search_action">プライベートに検索</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#12391;&#12399;&#12354;&#12394;&#12383;&#12364;&#12377;&#12409;&#12390;&#12434;&#12467;&#12531;&#12488;&#12525;&#12540;&#12523;&#12391;&#12365;&#12414;&#12377;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#27425;&#12398;&#12424;&#12358;&#12395;&#12503;&#12521;&#12452;&#12505;&#12540;&#12488;&#12502;&#12521;&#12454;&#12470;&#12540;&#12392;&#12375;&#12390;&#20351;&#12360;&#12414;&#12377;&#12290;\n  "<ul>"\n    "<li>&#12450;&#12503;&#12522;&#20869;&#12391;&#30452;&#25509;&#12469;&#12452;&#12488;&#12434;&#26908;&#32034;&#12289;&#38322;&#35239;&#12290;</li>"\n    "<li>&#36861;&#36321;&#32773;&#12434;&#12502;&#12525;&#12483;&#12463; (&#12354;&#12427;&#12356;&#12399;&#35373;&#23450;&#12434;&#26356;&#26032;&#12375;&#12390;&#35377;&#21487;)</li>"\n    "<li>Cookie&#12289;&#26908;&#32034;&#23653;&#27508;&#12289;&#38322;&#35239;&#23653;&#27508;&#12434;&#28040;&#21435;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#12399; Mozilla &#12364;&#38283;&#30330;&#12375;&#12390;&#12356;&#12414;&#12377;&#12290;&#31169;&#12383;&#12385;&#12398;&#12511;&#12483;&#12471;&#12519;&#12531;&#12399;&#20581;&#20840;&#12391;&#38283;&#12363;&#12428;&#12383;&#12452;&#12531;&#12479;&#12540;&#12493;&#12483;&#12488;&#12434;&#30330;&#23637;&#12373;&#12379;&#12427;&#12371;&#12392;&#12391;&#12377;&#12290;<br/>\n<a href="%2$s">&#35443;&#12375;&#12367;&#12399;&#12371;&#12385;&#12425;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">プライバシーとセキュリティ</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">ウェブコンテンツ</string>
   <string name="preference_category_switching_apps">アプリを切り替え</string>
   <string name="preference_category_general">一般</string>
+  <string name="preference_general_summary">既定のブラウザー、タブ、言語</string>
   <string name="preference_category_data_collection_use">データの収集と使用</string>
   <string name="preference_category_search">検索</string>
   <string name="preference_show_search_suggestions">検索候補を取得</string>
   <string name="preference_show_search_suggestions_summary">%1$s はあなたがアドレスバーに入力した語句を検索エンジンへ送信します</string>
   <string name="preference_search_engine_default">既定</string>
+  <string name="preference_search_engine_label">検索エンジン</string>
   <string name="preference_state_on">オン</string>
   <string name="preference_state_off">オフ</string>
   <string name="preference_subitem_autocomplete">URL 自動補完</string>
+  <string name="preference_switch_autocomplete_topsites">よく見るサイト</string>
+  <string name="preference_autocomplete_topsite_summary">アドレスバーで 450 以上の人気サイトの URL の自動補完を有効にします。</string>
+  <string name="preference_switch_autocomplete_user_list">追加したサイト</string>
+  <string name="preference_autocomplete_user_list_summary">アドレスバーで 450 以上の人気サイトの URL の自動補完を有効にします。</string>
+  <string name="preference_category_autocomplete_manage_sites">サイトの管理</string>
+  <string name="preference_autocomplete_subitem_manage_sites">サイトの管理</string>
   <string name="preference_autocomplete_action_add">+ カスタム URL を追加</string>
   <string name="preference_autocomplete_title_add">カスタム URL を追加</string>
   <string name="custom_autocomplete_quick_add">カスタム URL を追加</string>
+  <string name="add_custom_autocomplete_label">リンクを自動補完に追加</string>
   <string name="preference_category_cookies">Cookie とサイトデータ</string>
   <string name="preference_category_data_choices">データの選択</string>
   <string name="preference_autocomplete_title_remove">カスタム URL を削除</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">有効にすると、ページによっては予期せぬ動作をする原因になります</string>
   <string name="preference_privacy_category_cookies">Cookie をブロック</string>
   <string name="preference_privacy_should_block_cookies_no_option">いいえ</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">サードバーティの追跡 Cookie のみブロック</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">サードパーティ Cookie のみブロック</string>
   <string name="preference_privacy_should_block_cookies_yes_option">はい</string>
   <string name="preference_security_biometric">アプリのロック解除に指紋を使用</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">読み込み中</string>
   <string name="accessibility_announcement_loading_finished">ウェブサイト読み込み完了</string>
   <string name="content_description_menu">その他のオプション</string>
+  <string name="indicator_content_description_menu">その他のオプションボタン</string>
   <string name="content_description_forward">次のページへ進む</string>
   <string name="content_description_reload">ウェブサイトを再読み込み</string>
   <string name="content_description_back">前のページへ戻る</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#12469;&#12540;&#12496;&#12540;&#12398;&#35373;&#23450;&#12395;&#21839;&#38988;&#12364;&#12354;&#12427;&#12363;&#12289;&#35504;&#12363;&#12364;&#27491;&#35215;&#12398;&#12469;&#12540;&#12496;&#12540;&#12395;&#12394;&#12426;&#12377;&#12414;&#12375;&#12390;&#12356;&#12427;&#21487;&#33021;&#24615;&#12364;&#12354;&#12426;&#12414;&#12377;&#12290;</li>"\n  "<li>&#20197;&#21069;&#12399;&#27491;&#24120;&#12395;&#25509;&#32154;&#12391;&#12365;&#12390;&#12356;&#12383;&#22580;&#21512;&#12289;&#12371;&#12398;&#21839;&#38988;&#12399;&#24656;&#12425;&#12367;&#19968;&#26178;&#30340;&#12394;&#12418;&#12398;&#12391;&#12377;&#12398;&#12391;&#12289;&#24460;&#12391;&#20877;&#24230;&#35430;&#12375;&#12390;&#12415;&#12390;&#12367;&#12384;&#12373;&#12356;&#12290;</li>\n</ul>]]></string>
   <string name="error_generic_title">申し訳ありません</string>
   <string name="error_generic_message">何らかの理由によりこのページを正常に読み込めませんでした。</string>
+  <string name="contextmenu_open_in_app">アプリで開く</string>
   <string name="contextmenu_link_share">リンクを共有</string>
   <string name="contextmenu_link_copy">リンクアドレスをコピー</string>
   <string name="contextmenu_image_share">画像を共有</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">よく使うサイトで URL を自動補完するには\n アドレスバー内で URL を長押しします</string>
   <string name="tip_open_in_new_tab">リンクを新しいタブで開くには\n ページ上でリンクを長押しします</string>
   <string name="tip_request_desktop">完全なデスクトップ向けサイトを見たいですか？%1$s メニュー &gt; デスクトップ版を見る</string>
+  <string name="tip_disable_tips2">スタート画面上のヒント表示をオフにする</string>
+  <string name="new_tab_opened_snackbar">新しいタブを開きました</string>
+  <string name="open_new_tab_snackbar">切り替え</string>
+  <string name="preference_open_new_tab">新しいタブ内のリンクへすぐに切り替えます</string>
+  <string name="preference_category_safe_browsing">セーフブラウジング</string>
+  <string name="preference_safe_browsing_title">潜在的に危険な詐欺サイトをブロック</string>
+  <string name="preference_safe_browsing_summary">報告された詐欺サイトや攻撃サイト、マルウェアサイト、不要なソフトウェアをインストールさせようとするサイトをブロックします。</string>
+  <string name="preference_exceptions">例外</string>
+  <string name="preference_exceptions_description">これらのサイトではコンテンツブロッキングを無効にします。</string>
+  <string name="preference_exceptions_menu_remove">削除</string>
+  <string name="preference_exceptions_remove_all_button_label">すべてのウェブサイトを削除</string>
+  <string name="tab_crash_report_title">タブがクラッシュしました</string>
+  <string name="tab_crash_report_headline">申し訳ありません。このタブに問題があります。</string>
+  <string name="tab_crash_report_description">プライベートブラウザーとして、このタブは一切保存されず、復元もできません。</string>
+  <string name="tab_crash_report_close_tab_button_label">タブを閉じる</string>
+  <string name="fatal_crash_report_title">申し訳ありません。%1$s に問題がありクラッシュしました。</string>
+  <string name="fatal_crash_report_description">プライベートブラウザーとして、あなたのブラウジングセッションは一切保存されず、復元もできません。</string>
+  <string name="fatal_crash_report_close_button_label">閉じる</string>
+  <string name="fatal_crash_report_restart_firefox_label">%1$s を再起動</string>
+  <string name="crash_report_send_crash_label">クラッシュレポートを Mozilla へ送信する</string>
 </resources>

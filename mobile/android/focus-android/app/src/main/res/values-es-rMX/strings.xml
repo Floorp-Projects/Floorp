@@ -40,6 +40,7 @@
   <string name="preference_show_search_suggestions">Obtener sugerencias de búsqueda</string>
   <string name="preference_show_search_suggestions_summary">%1$s enviará lo que escribas en la barra de direcciones a tu motor de búsqueda</string>
   <string name="preference_search_engine_default">Predeterminado</string>
+  <string name="preference_search_engine_label">Motor de búsqueda</string>
   <string name="preference_state_on">Activar</string>
   <string name="preference_state_off">Desactivar</string>
   <string name="preference_subitem_autocomplete">Autocompletar URL</string>
@@ -224,4 +225,9 @@
   <string name="tip_autocomplete_url">Autocompletar URLs para los sitios que más usas\n Mantén presionada cualquier URL en la barra de direcciones</string>
   <string name="tip_open_in_new_tab">Abrir enlace en una nueva pestaña\n Mantén presionado cualquier enlace en una página</string>
   <string name="tip_request_desktop">¿Prefieres ver el sitio como en escritorio?%1$s Menú &gt; Solicitar sitio de escritorio</string>
+  <string name="new_tab_opened_snackbar">Nueva pestaña abierta</string>
+  <string name="preference_exceptions_menu_remove">Eliminar</string>
+  <string name="preference_exceptions_remove_all_button_label">Eliminar todos los sitios</string>
+  <string name="tab_crash_report_close_tab_button_label">Cerrar pestaña</string>
+  <string name="fatal_crash_report_close_button_label">Cerrar</string>
 </resources>

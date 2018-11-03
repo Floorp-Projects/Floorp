@@ -40,9 +40,12 @@
   <string name="preference_show_search_suggestions">Få søkjeforslag</string>
   <string name="preference_show_search_suggestions_summary">%1$s sender det du skriv i adressefeltet til søkjemotoren din</string>
   <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_search_engine_label">Søkjemotor</string>
   <string name="preference_state_on">På</string>
   <string name="preference_state_off">Av</string>
   <string name="preference_subitem_autocomplete">Autofullfør nettadresse</string>
+  <string name="preference_category_autocomplete_manage_sites">Handter sider</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Handter sider</string>
   <string name="preference_autocomplete_action_add">+ Legg til ei tilpassa nettadresse</string>
   <string name="preference_autocomplete_title_add">Legg til ei tilpassa nettadresse</string>
   <string name="custom_autocomplete_quick_add">Legg til ei tilpassa nettadresse</string>
@@ -224,4 +227,7 @@
   <string name="tip_autocomplete_url">Autofullfør nettadresser for nettstadar du brukar mest\n Trykk og hald på ei nettadresse i adressefeltet</string>
   <string name="tip_open_in_new_tab">Opna ei lenke i ei ny fane\n Trykk og hald på ei lenke på ei side</string>
   <string name="tip_request_desktop">Vil du heller sjå full skrivebordsversjon?%1$s Meny &gt; Vis skrivebordversjon</string>
+  <string name="tab_crash_report_close_tab_button_label">Lat att fane</string>
+  <string name="fatal_crash_report_close_button_label">Lat att</string>
+  <string name="fatal_crash_report_restart_firefox_label">Start %1$s på nytt</string>
 </resources>

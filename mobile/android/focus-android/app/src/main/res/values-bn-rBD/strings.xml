@@ -38,6 +38,7 @@
   <string name="preference_category_data_collection_use">ডাটা সংগ্রহ ও ব্যবহার</string>
   <string name="preference_category_search">অনুসন্ধান</string>
   <string name="preference_search_engine_default">পূর্বনির্ধারিত</string>
+  <string name="preference_search_engine_label">অনুসন্ধান ইঞ্জিন</string>
   <string name="preference_state_on">চালু</string>
   <string name="preference_state_off">বন্ধ</string>
   <string name="preference_subitem_autocomplete">URL অটোকমপ্লিট</string>
@@ -183,4 +184,5 @@
   <string name="security_popup_security_verified">যাচাইকারী: %1$s</string>
   <string name="site_security_icon_content_description">সাইট নিরাপত্তা</string>
   <string name="preference_autocomplete_duplicate_url_error">URL ইতোমধ্যেই আছে</string>
+  <string name="dismiss_no_suggestions_prompt_button">বাতিল</string>
 </resources>

@@ -6,6 +6,7 @@
   <string name="urlbar_hint">جست‌وجو کنید یا آدرسی را وارد کنید</string>
   <string name="teaser">مرور ناشناس خودکار.\nمرور کنید. پاک کنید. تکرار کنید.</string>
   <string name="feedback_erase">تاریخچه مرور شما حذف شد.</string>
+  <string name="feedback_erase_custom_tab">تاریخچه زبانه‌های مرورگر پاک شده است.</string>
   <string name="search_hint">جست‌وجو برای %1$s</string>
   <string name="menu_share">اشتراک‌گذاری…</string>
   <string name="menu_report_site_issue">گزارش مشکل در پایگاه</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">راهنما</string>
   <string name="menu_rights">حقوق شما</string>
   <string name="menu_trackers_blocked_title">دنبال کننده‌های مسدود شده</string>
+  <string name="menu_trackers_blocked_subtitle">خاموش‌ کردن این ممکن است بتواند تعدادی از مشکلات این سایت را حل کند</string>
+  <string name="menu_content_blocking">مسدودکردن محتوا</string>
+  <string name="menu_content_blocking_subtitle">خاموش کردن برای حل مشکل چند سایت</string>
   <string name="menu_custom_tab_branding">نیرو گرفته توسط%1$s</string>
   <string name="share_dialog_title">اشتراک‌گذاری از طریق</string>
   <string name="notification_erase_text">پاک کردن تاریخچهٔ مرورگر</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">حذف و باز کن</string>
   <string name="shortcut_erase_short_label">پاک کردن</string>
   <string name="shortcut_erase_long_label">پاک کردن تاریخچهٔ مرورگر</string>
+  <string name="shortcut_erase_and_open_short_label">پاک کردن و بازکردن</string>
+  <string name="shortcut_erase_and_open_long_label">پاک کردن و باز کردن %1$s</string>
   <string name="text_selection_search_action">جست‌وجو ناشناس</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1588;&#1605;&#1575; &#1585;&#1575; &#1583;&#1585; &#1705;&#1606;&#1578;&#1585;&#1604; &#1602;&#1585;&#1575;&#1585; &#1605;&#1740;&#1583;&#1607;&#1583;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1575;&#1586; &#1575;&#1740;&#1606; &#1576;&#1585;&#1606;&#1575;&#1605;&#1607; &#1576;&#1607; &#1593;&#1606;&#1608;&#1575;&#1606; &#1740;&#1705; &#1605;&#1585;&#1608;&#1585;&#1711;&#1585; &#1606;&#1575;&#1588;&#1606;&#1575;&#1587; &#1575;&#1587;&#1578;&#1601;&#1575;&#1583;&#1607; &#1705;&#1606;&#1740;&#1583;:\n  "<ul>"\n    "<li>&#1576;&#1583;&#1608;&#1606; &#1582;&#1585;&#1608;&#1580; &#1575;&#1586; &#1576;&#1585;&#1606;&#1575;&#1605;&#1607;&#1548; &#1575;&#1740;&#1606;&#1578;&#1585;&#1606;&#1578; &#1585;&#1575; &#1580;&#1587;&#1578;&#8204;&#1608;&#1580;&#1608; &#1608; &#1605;&#1585;&#1608;&#1585; &#1705;&#1606;&#1740;&#1583;</li>"\n    "<li>&#1585;&#1583;&#1740;&#1575;&#1576;&#8204;&#1607;&#1575; &#1585;&#1575; &#1605;&#1587;&#1583;&#1608;&#1583; &#1705;&#1606;&#1740;&#1583; (&#1740;&#1575; &#1575;&#1740;&#1606;&#1705;&#1607; &#1578;&#1606;&#1592;&#1740;&#1605;&#1575;&#1578; &#1582;&#1608;&#1583; &#1585;&#1575; &#1576;&#1585;&#1575;&#1740; &#1575;&#1580;&#1575;&#1586;&#1607; &#1583;&#1575;&#1583;&#1606; &#1576;&#1607; &#1585;&#1583;&#1740;&#1575;&#1576;&#8204;&#1607;&#1575; &#1578;&#1594;&#1740;&#1740;&#1585; &#1583;&#1607;&#1740;&#1583;)</li>"\n    "<li>&#1662;&#1575;&#1705; &#1705;&#1606;&#1740;&#1583; &#1578;&#1575; &#1575;&#1591;&#1604;&#1575;&#1593;&#1575;&#1578;&#1740; &#1605;&#1575;&#1606;&#1606;&#1583; &#1705;&#1608;&#1705;&#1740;&#8204;&#1607;&#1575; &#1608; &#1607;&#1605;&#1670;&#1606;&#1740;&#1606; &#1580;&#1587;&#1578;&#8204;&#1608;&#1580;&#1608;&#1607;&#1575; &#1608; &#1578;&#1575;&#1585;&#1740;&#1582;&#1670;&#1607; &#1605;&#1585;&#1608;&#1585; &#1581;&#1584;&#1601; &#1588;&#1608;&#1606;&#1583;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1578;&#1608;&#1587;&#1617;&#1591; &#1605;&#1608;&#1586;&#1740;&#1604;&#1575; &#1605;&#1606;&#1578;&#1588;&#1585; &#1588;&#1583;&#1607; &#1575;&#1587;&#1578;. &#1605;&#1571;&#1605;&#1608;&#1585;&#1740;&#1578; &#1605;&#1575; &#1578;&#1575; &#1585;&#1608;&#1575;&#1580; &#1740;&#1705; &#1575;&#1740;&#1606;&#1578;&#1585;&#1606;&#1578; &#1587;&#1575;&#1604;&#1605; &#1608; &#1576;&#1575;&#1586; &#1575;&#1587;&#1578;.<br/>\n<a href="%2$s">&#1576;&#1740;&#1588;&#1578;&#1585; &#1576;&#1583;&#1575;&#1606;&#1740;&#1583;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">حریم خصوصی و امنیت</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">محتوای وب</string>
   <string name="preference_category_switching_apps">تعوض برنامه‌ها</string>
   <string name="preference_category_general">عمومی</string>
+  <string name="preference_general_summary">مرور،‌ زبانه‌ها و زبان پیش فرض</string>
   <string name="preference_category_data_collection_use">گردآوری داده و موارد استفاده</string>
   <string name="preference_category_search">جست‌وجو</string>
   <string name="preference_show_search_suggestions">دریافت پیشنهادات جست‌وجو</string>
   <string name="preference_show_search_suggestions_summary">%1$sچیزهایی رو که شما در نوار آدرس وارد می‌کنید برای موتور جست‌وجوی شما ارسال خواهد کرد</string>
   <string name="preference_search_engine_default">پیش‌فرض</string>
+  <string name="preference_search_engine_label">موتور جست‌وجو</string>
   <string name="preference_state_on">روشن</string>
   <string name="preference_state_off">خاموش</string>
   <string name="preference_subitem_autocomplete">تکمیل خودکار URL</string>
+  <string name="preference_switch_autocomplete_topsites">برای سایت‌های برتر</string>
+  <string name="preference_autocomplete_topsite_summary">فعال‌ سازی برای پرکردن خودکار بیشتر از 450 URLs محبوب در نوار آدرس.</string>
+  <string name="preference_switch_autocomplete_user_list">برای وب‌ سایت هایی که شما اضافه می‌کنید</string>
+  <string name="preference_autocomplete_user_list_summary">فعال سازی برای کامل کردن خودکار بیش از 450 URLs محبوب در نوار آدرس.</string>
+  <string name="preference_category_autocomplete_manage_sites">مدیریت سایت‌ها</string>
+  <string name="preference_autocomplete_subitem_manage_sites">مدیریت سایت‌ها</string>
   <string name="preference_autocomplete_action_add">+ اضافه کردن نشانی سفارشی</string>
   <string name="preference_autocomplete_title_add">اضافه کردن نشانی سفارشی</string>
   <string name="custom_autocomplete_quick_add">اضافه کردن نشانی سفارشی</string>
+  <string name="add_custom_autocomplete_label">اضافه کردن پیوند به پرکردن خودکار</string>
   <string name="preference_category_cookies">کوکی‌ها و داده‌های پایگاه</string>
   <string name="preference_category_data_choices">انتخاب‌های داده</string>
   <string name="preference_autocomplete_title_remove">حذف نشانی سفارشی</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">فعّال کردنش ممکن است منجر به آن شود که برخی از صفحات بطور غیر منتظره عمل کنند</string>
   <string name="preference_privacy_category_cookies">مسدود کردن کوکی‌ها</string>
   <string name="preference_privacy_should_block_cookies_no_option">خیر</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">مسدود کردن دنبال کنندگان شخص ثالث کوکی‌ها</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">فقط مسدود کردن کوکی‌های شخص ثالث</string>
   <string name="preference_privacy_should_block_cookies_yes_option">بله</string>
   <string name="preference_security_biometric">استفاده از اثرانگشت برای بازکردن برنامه</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">در حال بارگیری</string>
   <string name="accessibility_announcement_loading_finished">وب‌سایت بارگیری شد</string>
   <string name="content_description_menu">گزینه‌های بیشتر</string>
+  <string name="indicator_content_description_menu">دکمه‌ی گزینه‌های بیشتر</string>
   <string name="content_description_forward">حرکت به جلو</string>
   <string name="content_description_reload">بارگیری مجدد سایت</string>
   <string name="content_description_back">بازگشت به عقب</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n<li>&#1575;&#1605;&#1705;&#1575;&#1606; &#1583;&#1575;&#1585;&#1740;&#1583; &#1575;&#1740;&#1606; &#1575;&#1588;&#1705;&#1575;&#1604;&#1740; &#1583;&#1585; &#1578;&#1606;&#1592;&#1740;&#1605;&#1575;&#1578; &#1705;&#1575;&#1585;&#1711;&#1586;&#1575;&#1585; &#1576;&#1575;&#1588;&#1583;&#1548; &#1740;&#1575; &#1705;&#1587;&#1740; &#1576;&#1607; &#1583;&#1606;&#1576;&#1575;&#1604; &#1576;&#1575;&#1586;&#1740; &#1705;&#1585;&#1583;&#1606; &#1606;&#1602;&#1588; &#1575;&#1740;&#1606; &#1705;&#1575;&#1585;&#1711;&#1586;&#1575;&#1585; &#1576;&#1575;&#1588;&#1583;.</li>\n<li>&#1575;&#1711;&#1585; &#1662;&#1740;&#1588; &#1575;&#1586; &#1575;&#1740;&#1606; &#1576;&#1583;&#1608;&#1606; &#1583;&#1585;&#1740;&#1575;&#1601;&#1578; &#1575;&#1740;&#1606; &#1582;&#1591;&#1575; &#1575;&#1586; &#1575;&#1740;&#1606; &#1608;&#1576;&#8204;&#1711;&#1575;&#1607; &#1576;&#1575;&#1586;&#1583;&#1740;&#1583; &#1705;&#1585;&#1583;&#1607;&#8204;&#1575;&#1740;&#1583;&#1548; &#1575;&#1740;&#1606; &#1582;&#1591;&#1575; &#1575;&#1605;&#1705;&#1575;&#1606; &#1583;&#1575;&#1585;&#1583; &#1605;&#1608;&#1602;&#1578;&#1740; &#1576;&#1575;&#1588;&#1583;&#1548; &#1576;&#1593;&#1583;&#1575;&#1611; &#1583;&#1608;&#1576;&#1575;&#1585;&#1607; &#1578;&#1604;&#1575;&#1588; &#1705;&#1606;&#1740;&#1583;.</li>\n</ul>]]></string>
   <string name="error_generic_title">اوه</string>
   <string name="error_generic_message">بنا به دلایلی بارگیری این صفحه ممکن نبود.</string>
+  <string name="contextmenu_open_in_app">بازکردن با برنامه</string>
   <string name="contextmenu_link_share">اشتراک‌گذاری پیوند</string>
   <string name="contextmenu_link_copy">رونوشت از آدرس پیوند</string>
   <string name="contextmenu_image_share">اشتراک‌گذاری تصویر</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">پرکردن خودکارURLs برای سایت های پربازدید شما\n نگاه داشتن بیشتر انگشت بر روی هر URL در نوار آدرس برای انجام این کار</string>
   <string name="tip_open_in_new_tab">بازکردن یک پیوند در زبانه جدید\n نگاه داشتن بیشتر انگشت برای باز کردن پیوند در صفحه</string>
   <string name="tip_request_desktop">ترجیح به دیدن نسخه رومیزی وب‌سایت؟%1$s فهرست &gt; درخواست نسخه رومیزی وب‌سایت</string>
+  <string name="tip_disable_tips2">خاموش کردن نکات راهنما بر روی صفحه آغازین</string>
+  <string name="new_tab_opened_snackbar">زبانه‌ي جدیدی باز شده است</string>
+  <string name="open_new_tab_snackbar">تعویض</string>
+  <string name="preference_open_new_tab">تعویض بلافاصله پیوند در زبانه‌های جدید</string>
+  <string name="preference_category_safe_browsing">مرورگر امن</string>
+  <string name="preference_safe_browsing_title">مسدود سازی خطرات بالقوه و سایت‌های فریبنده</string>
+  <string name="preference_safe_browsing_summary">مسدود کردن گزارش های فریبنده و حملات سایت‌ها،‌ بدافزارهای سایت‌ها و نرم افزارهای ناخواسته سایت‌ها.</string>
+  <string name="preference_exceptions">استثناعات</string>
+  <string name="preference_exceptions_description">شما مسدود سازی محتوا برای این سایت را غیرفعال کرده‌اید.</string>
+  <string name="preference_exceptions_menu_remove">حذف</string>
+  <string name="preference_exceptions_remove_all_button_label">حذف تمام سایت‌ها</string>
+  <string name="tab_crash_report_title">زبانه خراب شد</string>
+  <string name="tab_crash_report_headline">متاسفیم. با این زبانه مشکل داریم.</string>
+  <string name="tab_crash_report_description">به عنوان یک مرورگر خصوصی نمی توانیم این زبانه را ذخیره و بازیابی کنیم.</string>
+  <string name="tab_crash_report_close_tab_button_label">بستن زبانه</string>
+  <string name="fatal_crash_report_title">متاسفیم. %1$s مشکلی داشته و خراب شده است.</string>
+  <string name="fatal_crash_report_description">به عنوان یک مرورگر خصوصی، اخرین جلسه مرو شما رو نمی‌توانیم بازآوری و ذخیره کنیم.</string>
+  <string name="fatal_crash_report_close_button_label">بستن</string>
+  <string name="fatal_crash_report_restart_firefox_label">راه‌اندازی مجدد %1$s</string>
+  <string name="crash_report_send_crash_label">ارسال گزارش خرابی ها به موزیلا</string>
 </resources>

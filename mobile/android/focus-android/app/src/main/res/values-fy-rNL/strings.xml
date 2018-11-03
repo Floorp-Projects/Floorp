@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Fier sykterm of adres yn</string>
   <string name="teaser">Automatysk privee sneupe.\nSneupe. Wiskje. Werhelje.</string>
   <string name="feedback_erase">Jo sneupskiednis is wiske.</string>
+  <string name="feedback_erase_custom_tab">Jo sneupskiednis fan de ljepblêden is wiske.</string>
   <string name="search_hint">Sykje nei %1$s</string>
   <string name="menu_share">Diele…</string>
   <string name="menu_report_site_issue">Websiteprobleem rapportearje</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Help</string>
   <string name="menu_rights">Jo rjochten</string>
   <string name="menu_trackers_blocked_title">Trackers blokkearre</string>
+  <string name="menu_trackers_blocked_subtitle">Dit útskeakelje kin problemen mei websites ferhelpe</string>
+  <string name="menu_content_blocking">Ynhâldsblokkearring</string>
+  <string name="menu_content_blocking_subtitle">Utskeakelje, om problemen mei guon websites te ferhelpen</string>
   <string name="menu_custom_tab_branding">Mooglik makke troch %1$s</string>
   <string name="share_dialog_title">Diele fia</string>
   <string name="notification_erase_text">Navigaasjeskiednis wiskje</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Wiskje en iepenje</string>
   <string name="shortcut_erase_short_label">Wiskje</string>
   <string name="shortcut_erase_long_label">Navigaasjeskiednis wiskje</string>
+  <string name="shortcut_erase_and_open_short_label">Wiskje &amp; iepenje</string>
+  <string name="shortcut_erase_and_open_long_label">Wiskje en %1$s iepenje</string>
   <string name="text_selection_search_action">Privee sykje</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s jout jo de kontr&#244;le.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Br&#251;k as in priveebrowser:\n  "<ul>"\n    "<li>Streekrjocht fan de app &#250;t sykje en browse</li>"\n    "<li>Trackers blokkearje (of ynstellingen bywurkje om se ta te stean)</li>"\n    "<li>Wiskjen smyt sawol cookies as syk- en navigaasjeskiednis fuort</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wurdt makke troch Mozilla. Us misje is it fersoargjen fan in s&#251;n en iepen ynternet.<br/>\n<a href="%2$s">Mear ynfo</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Privacy en befeiliging</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Webynhâld</string>
   <string name="preference_category_switching_apps">Apps wikselje</string>
   <string name="preference_category_general">Algemien</string>
+  <string name="preference_general_summary">Standert browser, ljepblêden, taal</string>
   <string name="preference_category_data_collection_use">Gegevenssamling en gebrûk</string>
   <string name="preference_category_search">Sykje</string>
   <string name="preference_show_search_suggestions">Syksuggesties krije</string>
   <string name="preference_show_search_suggestions_summary">%1$s sil wat jo yn de adresbalke yntype nei jo sykmasine stjoere</string>
   <string name="preference_search_engine_default">Standert</string>
+  <string name="preference_search_engine_label">Sykmasine</string>
   <string name="preference_state_on">Oan</string>
   <string name="preference_state_off">Ut</string>
   <string name="preference_subitem_autocomplete">URL\'s automatysk oanfolje</string>
+  <string name="preference_switch_autocomplete_topsites">Foar topwebsites</string>
+  <string name="preference_autocomplete_topsite_summary">Skeakel dit yn om automatysk mear as 450 populêre URL’s yn de adresbalke oanfolje te litten.</string>
+  <string name="preference_switch_autocomplete_user_list">Foar websites dy\'t jo tafoegje</string>
+  <string name="preference_autocomplete_user_list_summary">Skeakel dit yn om automatysk mear as 450 populêre URL’s yn de adresbalke oanfolje te litten.</string>
+  <string name="preference_category_autocomplete_manage_sites">Websites beheare</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Websites beheare</string>
   <string name="preference_autocomplete_action_add">+ Oanpaste URL tafoegje</string>
   <string name="preference_autocomplete_title_add">Oanpaste URL tafoegje</string>
   <string name="custom_autocomplete_quick_add">Oanpaste URL tafoegje</string>
+  <string name="add_custom_autocomplete_label">Keppeling foar automatysk oanfolje tafoegje</string>
   <string name="preference_category_cookies">Cookies en websitegegevens</string>
   <string name="preference_category_data_choices">Gegevensopsjes</string>
   <string name="preference_autocomplete_title_remove">Oanpaste URL’s fuortsmite</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Ynskeakeljen kin feroarsaakje dat guon siden ûnferwachts wurkje</string>
   <string name="preference_privacy_category_cookies">Cookies blokkearje</string>
   <string name="preference_privacy_should_block_cookies_no_option">Nee</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Allinnich tracker-cookies fan tredden blokkearje</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Allinnich cookies fan tredden</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
   <string name="preference_security_biometric">Fingerôfdruk foar ûntskoatteljen fan app brûke</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Lade</string>
   <string name="accessibility_announcement_loading_finished">Website laden</string>
   <string name="content_description_menu">Mear opsjes</string>
+  <string name="indicator_content_description_menu">Knop foar mear opsjes</string>
   <string name="content_description_forward">Foarút blêdzje</string>
   <string name="content_description_reload">Website opnij lade</string>
   <string name="content_description_back">Werom blêdzje</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dit kin in probleem mei de serverkonfiguraasje w&#234;ze, of ien probearret\ndizze server nei te meitsjen.</li>"\n  "<li>As jo yn it ferline wol mei sukses ferbining makke hawwe mei dizze server,\ndan is de flater mooglik tydlik en kinne jo it letter nochris probearje.</li>\n</ul>]]></string>
   <string name="error_generic_title">Oeps</string>
   <string name="error_generic_message">De side kin om de ien oft oare reden net laden wurde.</string>
+  <string name="contextmenu_open_in_app">Mei app iepenje</string>
   <string name="contextmenu_link_share">Keppeling diele</string>
   <string name="contextmenu_link_copy">Keppelingsadres kopiearje</string>
   <string name="contextmenu_image_share">Ofbylding diele</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">URL’s foar meastbrûkte websites automatysk oanfolje\n Hâld jo finger op in URL yn de adresbalke</string>
   <string name="tip_open_in_new_tab">In keppeling yn in nij ljepblêd iepenje\n Hâld jo finger op in keppeling op in side</string>
   <string name="tip_request_desktop">Leaver de folsleine Desktop-website besjen?%1$s Menu &gt; Desktopwebsite opfreegje</string>
+  <string name="tip_disable_tips2">Tips op startscherm útskeakelje</string>
+  <string name="new_tab_opened_snackbar">Nij ljepblêd iepene</string>
+  <string name="open_new_tab_snackbar">Wikselje</string>
+  <string name="preference_open_new_tab">Wikselje daliks nei keppeling yn nij ljepblêd</string>
+  <string name="preference_category_safe_browsing">Feilich sneupe</string>
+  <string name="preference_safe_browsing_title">Potinsjeel gefaarlike en misliedende websites blokkearje</string>
+  <string name="preference_safe_browsing_summary">Rapportearre misliedende en oanfals-, malware- en net-winske-software-websites blokkearje.</string>
+  <string name="preference_exceptions">Utsûnderingen</string>
+  <string name="preference_exceptions_description">Jo hawwe ynhâldsblokkearring foar dizze websites útskeakele.</string>
+  <string name="preference_exceptions_menu_remove">Fuortsmite</string>
+  <string name="preference_exceptions_remove_all_button_label">Alle websites fuortsmite</string>
+  <string name="tab_crash_report_title">Ljepblêd ferûngelokke</string>
+  <string name="tab_crash_report_headline">Sorry, wy hawwe in probleem mei dit ljepblêd.</string>
+  <string name="tab_crash_report_description">As priveebrowser bewarje wy dit ljepblêd net en kinne it net werstelle.</string>
+  <string name="tab_crash_report_close_tab_button_label">Ljepblêd slute</string>
+  <string name="fatal_crash_report_title">Sorry, %1$s hie in probleem en is ferûngelokke.</string>
+  <string name="fatal_crash_report_description">As priveebrowser bewarje wy de lêste sneupsesje net en kinne it net werstelle.</string>
+  <string name="fatal_crash_report_close_button_label">Slute</string>
+  <string name="fatal_crash_report_restart_firefox_label">%1$s opnij starte</string>
+  <string name="crash_report_send_crash_label">Ungelokrapport nei Mozilla ferstjoere</string>
 </resources>

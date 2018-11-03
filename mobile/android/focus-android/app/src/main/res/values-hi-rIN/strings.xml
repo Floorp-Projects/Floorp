@@ -6,6 +6,7 @@
   <string name="urlbar_hint">खोजें या पता दर्ज करें</string>
   <string name="teaser">स्वचलित निजी ब्राउज़िंग।\nब्राउज़ करें। मिटाएँ। दोहराएँ।</string>
   <string name="feedback_erase">आपका ब्राउज़िंग इतिहास मिटा दिया गया है।</string>
+  <string name="feedback_erase_custom_tab">टैब का ब्राउज़िंग इतिहास मिटा दिया गया है।</string>
   <string name="search_hint">%1$s लिए खोजें</string>
   <string name="menu_share">साझा करें…</string>
   <string name="menu_report_site_issue">साइट समस्या की रिपोर्ट करें</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">सहायता</string>
   <string name="menu_rights">आपके अधिकार</string>
   <string name="menu_trackers_blocked_title">ट्रैकर्स अवरुद्ध</string>
+  <string name="menu_trackers_blocked_subtitle">इसे बंद करना शायद साइट की कुछ समस्याओं को ठीक कर दे</string>
+  <string name="menu_content_blocking">सामग्री ब्लॉकिंग</string>
+  <string name="menu_content_blocking_subtitle">कुछ साइटों को ठीक करने के लिए बंद करें</string>
   <string name="menu_custom_tab_branding">%1$s द्वारा समर्थित</string>
   <string name="share_dialog_title">इसके माध्यम से साझा करें</string>
   <string name="notification_erase_text">ब्राउज़िंग इतिहास मिटाएँ</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">मिटा दें और खोलें</string>
   <string name="shortcut_erase_short_label">मिटाएँ</string>
   <string name="shortcut_erase_long_label">ब्राउज़िंग इतिहास मिटाएँ</string>
+  <string name="shortcut_erase_and_open_short_label">मिटाएँ एवं खोलें</string>
+  <string name="shortcut_erase_and_open_long_label">मिटाएँ और %1$s खोलें</string>
   <string name="text_selection_search_action">निजी तौर पर खोज</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2310;&#2346;&#2325;&#2379; &#2344;&#2367;&#2351;&#2306;&#2340;&#2381;&#2352;&#2339; &#2350;&#2375;&#2306; &#2352;&#2326;&#2340;&#2366; &#2361;&#2376;&#2404;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#2311;&#2360;&#2375; &#2319;&#2325; &#2344;&#2367;&#2332;&#2368; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332;&#2364;&#2352; &#2325;&#2375; &#2352;&#2370;&#2346; &#2350;&#2375;&#2306; &#2346;&#2381;&#2352;&#2351;&#2379;&#2327; &#2325;&#2352;&#2375;&#2306;:\n  "<ul>"\n    "<li>&#2320;&#2346; &#2350;&#2375;&#2306; &#2342;&#2366;&#2361;&#2367;&#2344;&#2368; &#2323;&#2352; &#2326;&#2379;&#2332;&#2375;&#2306; &#2324;&#2352; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332; &#2325;&#2352;&#2375;&#2306;</li>"\n    "<li>&#2335;&#2381;&#2352;&#2376;&#2325;&#2352;&#2381;&#2360; &#2309;&#2357;&#2352;&#2369;&#2342;&#2381;&#2343; &#2325;&#2352;&#2375;&#2306; (&#2351;&#2366; &#2335;&#2381;&#2352;&#2376;&#2325;&#2352;&#2381;&#2360; &#2325;&#2379; &#2309;&#2344;&#2369;&#2350;&#2340;&#2367; &#2342;&#2375;&#2344;&#2375; &#2325;&#2375; &#2354;&#2367;&#2319; &#2360;&#2375;&#2335;&#2367;&#2306;&#2327; &#2309;&#2346;&#2337;&#2375;&#2335; &#2325;&#2352;&#2375;&#2306;)</li>"\n    "<li>&#2325;&#2369;&#2325;&#2368;&#2332;&#2364; &#2325;&#2375; &#2360;&#2366;&#2341; &#2326;&#2379;&#2332; &#2324;&#2352; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332;&#2364;&#2367;&#2306;&#2327; &#2311;&#2340;&#2367;&#2361;&#2366;&#2360; &#2361;&#2335;&#2366;&#2344;&#2375; &#2325;&#2375; &#2354;&#2367;&#2319; &#2350;&#2367;&#2335;&#2366;&#2319;&#2305;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla &#2342;&#2381;&#2357;&#2366;&#2352;&#2366; &#2344;&#2367;&#2352;&#2381;&#2350;&#2367;&#2340; &#2361;&#2376;&#2404; &#2361;&#2350;&#2366;&#2352;&#2366; &#2350;&#2367;&#2358;&#2344; &#2319;&#2325; &#2360;&#2381;&#2357;&#2360;&#2381;&#2341;, &#2313;&#2344;&#2381;&#2350;&#2369;&#2325;&#2381;&#2340; &#2311;&#2306;&#2335;&#2352;&#2344;&#2375;&#2335; &#2325;&#2379; &#2348;&#2338;&#2364;&#2366;&#2357;&#2366; &#2342;&#2375;&#2344;&#2366; &#2361;&#2376;&#2404;<br/>\n<a href="%2$s">&#2324;&#2352; &#2332;&#2366;&#2344;&#2375;&#2306;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">गोपनीयता और सुरक्षा</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">वेब सामग्री</string>
   <string name="preference_category_switching_apps">ऐप्स बदलना</string>
   <string name="preference_category_general">सामान्य</string>
+  <string name="preference_general_summary">डिफ़ॉल्ट ब्राउज़र, टैब, भाषा</string>
   <string name="preference_category_data_collection_use">आँकड़ा संग्रह व उपयोग</string>
   <string name="preference_category_search">खोजें</string>
   <string name="preference_show_search_suggestions">खोज सुझाव पायें</string>
   <string name="preference_show_search_suggestions_summary">%1$s उन्हें आपके खोज इंजन में भेजेगा जिन्हें आप पता बार में टाइप करेंगे</string>
   <string name="preference_search_engine_default">मूलभूत</string>
+  <string name="preference_search_engine_label">खोज इंजन</string>
   <string name="preference_state_on">चालू</string>
   <string name="preference_state_off">बंद</string>
   <string name="preference_subitem_autocomplete">URL स्वत: पूर्ण</string>
+  <string name="preference_switch_autocomplete_topsites">मुख्य साइटों के लिए</string>
+  <string name="preference_autocomplete_topsite_summary">पता बार में 450 से अधिक लोकप्रिय URLs स्वत: पूर्णता के लिए सक्षम करें।</string>
+  <string name="preference_switch_autocomplete_user_list">आपके द्वारा जोड़े साइटों के लिए</string>
+  <string name="preference_autocomplete_user_list_summary">पता बार में 450 से अधिक लोकप्रिय URLs स्वत: पूर्णता के लिए सक्षम करें।</string>
+  <string name="preference_category_autocomplete_manage_sites">साइटों को प्रबंधित करें</string>
+  <string name="preference_autocomplete_subitem_manage_sites">साइटों को प्रबंधित करें</string>
   <string name="preference_autocomplete_action_add">+ अपनी संशोधित URL जोड़ें</string>
   <string name="preference_autocomplete_title_add">अपनी संशोधित URL जोड़ें</string>
   <string name="custom_autocomplete_quick_add">विशिष्ट URL जोड़ें</string>
+  <string name="add_custom_autocomplete_label">स्वतः पूर्णता के लिए लिंक जोड़ें</string>
   <string name="preference_category_cookies">कुकीज़ और साइट आँकड़ा</string>
   <string name="preference_category_data_choices">आँकड़ा विकल्प</string>
   <string name="preference_autocomplete_title_remove">उपभोक्ता संशोधित URL हटाएँ</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">सक्षम करने पर कुछ पृष्ठ अनपेक्षित व्यवहार कर सकते हैं</string>
   <string name="preference_privacy_category_cookies">कुकीज़ बाधित करें</string>
   <string name="preference_privacy_should_block_cookies_no_option">नहीं</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">केवल तृतीय-पक्ष ट्रैकर कूकीज़ ब्लॉक करें</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">केवल तीसरे पक्ष की कुकीज़ बाधित करें</string>
   <string name="preference_privacy_should_block_cookies_yes_option">हाँ</string>
   <string name="preference_security_biometric">ऐप्प को अनलॉक करने के लिए फिंगरप्रिंट का इस्तेमाल करें</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">लोड हो रहा है</string>
   <string name="accessibility_announcement_loading_finished">वेबसाइट लोड हो गया</string>
   <string name="content_description_menu">अधिक विकल्प</string>
+  <string name="indicator_content_description_menu">अन्य विकल्प का बटन</string>
   <string name="content_description_forward">आगे मार्गनिर्देशित करें</string>
   <string name="content_description_reload">वेबसाइट फिर से लोड करें</string>
   <string name="content_description_back">पीछे मार्गनिर्देशित करें</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#2351;&#2361; &#2360;&#2352;&#2381;&#2357;&#2352; &#2325;&#2375; &#2325;&#2377;&#2344;&#2381;&#2347;&#2364;&#2367;&#2327;&#2352;&#2375;&#2358;&#2344; &#2350;&#2375;&#2306; &#2319;&#2325; &#2360;&#2350;&#2360;&#2381;&#2351;&#2366; &#2361;&#2379; &#2360;&#2325;&#2340;&#2368; &#2361;&#2376;, &#2351;&#2366; &#2351;&#2361; &#2361;&#2379; &#2360;&#2325;&#2340;&#2366; &#2361;&#2376;\n&#2325;&#2379;&#2312; &#2360;&#2352;&#2381;&#2357;&#2352; &#2325;&#2366; &#2346;&#2381;&#2352;&#2340;&#2367;&#2352;&#2370;&#2346;&#2339; &#2325;&#2352;&#2344;&#2375; &#2325;&#2366; &#2346;&#2381;&#2352;&#2351;&#2366;&#2360; &#2325;&#2352; &#2352;&#2361;&#2366; &#2361;&#2376;&#2404;</li>"\n  "<li>&#2309;&#2327;&#2352; &#2310;&#2346; &#2346;&#2370;&#2352;&#2381;&#2357; &#2350;&#2375;&#2306; &#2311;&#2360; &#2360;&#2352;&#2381;&#2357;&#2352; &#2360;&#2375; &#2360;&#2347;&#2354;&#2340;&#2366;&#2346;&#2370;&#2352;&#2381;&#2357;&#2325; &#2332;&#2369;&#2396; &#2330;&#2369;&#2325;&#2375; &#2361;&#2376;, &#2340;&#2379; &#2340;&#2381;&#2352;&#2369;&#2335;&#2367; &#2309;&#2360;&#2381;&#2341;&#2366;&#2351;&#2368; &#2361;&#2379; &#2360;&#2325;&#2340;&#2368; &#2361;&#2376;, &#2324;&#2352; &#2310;&#2346; &#2348;&#2366;&#2342; &#2350;&#2375;&#2306; &#2346;&#2369;&#2344;&#2307; &#2346;&#2381;&#2352;&#2351;&#2366;&#2360; &#2325;&#2352; &#2360;&#2325;&#2340;&#2375; &#2361;&#2376;&#2306;&#2404;</li>\n</ul>]]></string>
   <string name="error_generic_title">ओह</string>
   <string name="error_generic_message">हम किसी कारण से इस पृष्ठ लोड को नहीं कर सकते।</string>
+  <string name="contextmenu_open_in_app">ऐप द्वारा खोलें</string>
   <string name="contextmenu_link_share">लिंक साझा करें</string>
   <string name="contextmenu_link_copy">लिंक के पते की प्रतिलिपि लें</string>
   <string name="contextmenu_image_share">चित्र साझा करें</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">स्वतः पूर्ण URLs उन साइटों के लिए जिन्हें आप अधिक इस्तेमाल करते हैं\n पता बार में किसी URL पर कुछ देर दबा कर रखें</string>
   <string name="tip_open_in_new_tab">कोई लिंक एक नये टैब में खोलें\n पृष्ठ पर किसी लिंक पर कुछ देर दबा कर रखें</string>
   <string name="tip_request_desktop">इसके बदले पूर्ण डेस्कटॉप साइट देखें?%1$s मेन्यु &gt; डेस्कटॉप साइट कि अनुरोध करें</string>
+  <string name="tip_disable_tips2">प्रारंभ स्क्रीन पर सलाह बंद करें</string>
+  <string name="new_tab_opened_snackbar">नया टैब खोल दिया गया</string>
+  <string name="open_new_tab_snackbar">बदलें</string>
+  <string name="preference_open_new_tab">तुरंत नए टैब में लिंक पर जाएँ</string>
+  <string name="preference_category_safe_browsing">सुरक्षित ब्राउजिंग</string>
+  <string name="preference_safe_browsing_title">ख़तरनाक और संदेहास्पद साइटों को ब्लॉक करें</string>
+  <string name="preference_safe_browsing_summary">रिपोर्ट किये हुए भ्रामक तथा अटैक करने वाली साइटें, मैलवेयर वाली साइटें, तथा अवांछित सॉफ्टवेयर वाली साइटों को ब्लॉक करें।</string>
+  <string name="preference_exceptions">अपवाद</string>
+  <string name="preference_exceptions_description">आपने इन वेबसाइटों के लिए सामग्री ब्लॉकिंग अक्षम कर दिया है।</string>
+  <string name="preference_exceptions_menu_remove">हटाएँ</string>
+  <string name="preference_exceptions_remove_all_button_label">सभी वेबसाइटों को हटाएँ</string>
+  <string name="tab_crash_report_title">टैब क्रैश हो गया</string>
+  <string name="tab_crash_report_headline">क्षमा करें। हमें इस टैब के साथ कोई समस्या आ रही है।</string>
+  <string name="tab_crash_report_description">एक निजी ब्राउज़र के तौर पर, हम इस टैब को कभी भी सहेज तथा दुबारा प्राप्त नहीं कर सकते हैं।</string>
+  <string name="tab_crash_report_close_tab_button_label">टैब बंद करें</string>
+  <string name="fatal_crash_report_title">क्षमा करें। %1$s में कोई समस्या थी तथा क्रैश हो गया।</string>
+  <string name="fatal_crash_report_description">एक निजी ब्राउज़र के तौर पर, हम पिछले सत्र को कभी भी सहेज तथा दुबारा प्राप्त नहीं कर सकते हैं।</string>
+  <string name="fatal_crash_report_close_button_label">बंद करें</string>
+  <string name="fatal_crash_report_restart_firefox_label">%1$s पुनः प्रारंभ करें</string>
+  <string name="crash_report_send_crash_label">Mozilla को क्रैश रिपोर्ट भेजें</string>
 </resources>

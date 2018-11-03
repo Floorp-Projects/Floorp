@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Suchen oder Adresse eingeben</string>
   <string name="teaser">Automatischer Privater Modus.\nSurfen. Löschen. Wiederholen.</string>
   <string name="feedback_erase">Die Surf-Chronik wurde gelöscht.</string>
+  <string name="feedback_erase_custom_tab">Die Surf-Chronik des Tabs wurde gelöscht.</string>
   <string name="search_hint">Suchen nach %1$s</string>
   <string name="menu_share">Teilen …</string>
   <string name="menu_report_site_issue">Seitenproblem melden</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Hilfe</string>
   <string name="menu_rights">Ihre Rechte</string>
   <string name="menu_trackers_blocked_title">Verfolger blockiert</string>
+  <string name="menu_trackers_blocked_subtitle">Wenn Sie diese Option deaktivieren, werden möglicherweise einige Probleme mit der Website behoben</string>
+  <string name="menu_content_blocking">Inhaltsblockierung</string>
+  <string name="menu_content_blocking_subtitle">Deaktivieren, um Probleme mit manchen Websites zu lösen</string>
   <string name="menu_custom_tab_branding">Bereitgestellt von %1$s</string>
   <string name="share_dialog_title">Teilen über</string>
   <string name="notification_erase_text">Browser-Chronik löschen</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Löschen und öffnen</string>
   <string name="shortcut_erase_short_label">Löschen</string>
   <string name="shortcut_erase_long_label">Browser-Chronik löschen</string>
+  <string name="shortcut_erase_and_open_short_label">Löschen &amp; Öffnen</string>
+  <string name="shortcut_erase_and_open_long_label">Löschen und %1$s öffnen</string>
   <string name="text_selection_search_action">Privat Suchen</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gibt Ihnen die Kontrolle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Verwenden Sie ihn als privaten Browser:\n  "<ul>"\n    "<li>Suchen und bl&#228;ttern Sie in der App</li>"\n    "<li>Blockieren Sie Tracker (oder aktualisieren Sie die Einstellungen, um Tracker zu erlauben)</li>"\n    "<li>Entfernen Sie Cookies, um Such- und Browserverlauf zu l&#246;schen</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wird von Mozilla entwickelt. Unsere Mission ist es, ein gesundes, offenes Internet zu f&#246;rdern.<br/>\n<a href="%2$s">Erfahren Sie mehr</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Datenschutz &amp; Sicherheit</string>
@@ -45,9 +51,16 @@
   <string name="preference_state_on">An</string>
   <string name="preference_state_off">Aus</string>
   <string name="preference_subitem_autocomplete">Adressen-Autovervollständigung</string>
+  <string name="preference_switch_autocomplete_topsites">Für meistbesuchte Seiten</string>
+  <string name="preference_autocomplete_topsite_summary">Aktivieren, damit über 450 beliebte Adressen in der Adressleiste automatisch vervollständigt werden.</string>
+  <string name="preference_switch_autocomplete_user_list">Für Websites, die Sie hinzufügen</string>
+  <string name="preference_autocomplete_user_list_summary">Aktivieren, damit über 450 beliebte Adressen in der Adressleiste automatisch vervollständigt werden.</string>
+  <string name="preference_category_autocomplete_manage_sites">Websites verwalten</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Websites verwalten</string>
   <string name="preference_autocomplete_action_add">+ Benutzerdefinierte Adresse hinzufügen</string>
   <string name="preference_autocomplete_title_add">Benutzerdefinierte Adresse hinzufügen</string>
   <string name="custom_autocomplete_quick_add">Benutzerdefinierte Adresse hinzufügen</string>
+  <string name="add_custom_autocomplete_label">Link zum Autovervollständigen hinzufügen</string>
   <string name="preference_category_cookies">Cookies und Websitedaten</string>
   <string name="preference_category_data_choices">Datenübermittlung</string>
   <string name="preference_autocomplete_title_remove">Benutzerdefinierte Adressen entfernen</string>
@@ -74,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Dies kann dazu führen, dass manche Seiten sich ungewöhnlich verhalten</string>
   <string name="preference_privacy_category_cookies">Cookies blockieren</string>
   <string name="preference_privacy_should_block_cookies_no_option">Nein</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Nur Tracker-Cookies von Drittanbietern blockieren</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Nur Cookies von Drittanbietern blockieren</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
   <string name="preference_security_biometric">Fingerabdruck zum Entsperren der App verwenden</string>
@@ -117,6 +131,7 @@
   <string name="accessibility_announcement_loading">Wird geladen …</string>
   <string name="accessibility_announcement_loading_finished">Website geladen</string>
   <string name="content_description_menu">Weitere Optionen</string>
+  <string name="indicator_content_description_menu">Schaltfläche für weitere Optionen</string>
   <string name="content_description_forward">Vorwärts navigieren</string>
   <string name="content_description_reload">Website neu laden</string>
   <string name="content_description_back">Rückwärts navigieren</string>
@@ -153,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Das k&#246;nnte ein Problem mit der Konfiguration des Servers sein, oder jemand will sich als dieser Server ausgeben.</li>"\n  "<li>Wenn Sie mit diesem Server in der Vergangenheit erfolgreich Verbindungen herstellen konnten, ist der Fehler eventuell nur vor&#252;bergehend, und Sie k&#246;nnen es sp&#228;ter erneut versuchen.</li>\n</ul>]]></string>
   <string name="error_generic_title">Hoppla</string>
   <string name="error_generic_message">Aus unbekannten Gründen konnte diese Seite nicht geladen werden.</string>
+  <string name="contextmenu_open_in_app">Mit App öffnen</string>
   <string name="contextmenu_link_share">Link teilen</string>
   <string name="contextmenu_link_copy">Link-Adresse kopieren</string>
   <string name="contextmenu_image_share">Grafik teilen</string>
@@ -226,8 +242,24 @@
   <string name="tip_autocomplete_url">Autovervollständigung für meistbesuchte Websites\n Drücken Sie lange auf eine URL in der Adressleiste</string>
   <string name="tip_open_in_new_tab">Einen Link in einem neuen Tab öffnen\n Drücken Sie lange auf einen Link in einer Seite</string>
   <string name="tip_request_desktop">Lieber die gesamte Desktop-Website ansehen?%1$s Menü → Desktop-Seite anfordern</string>
+  <string name="tip_disable_tips2">Tipps im Startbildschirm abschalten</string>
+  <string name="new_tab_opened_snackbar">Neuer Tab geöffnet</string>
+  <string name="open_new_tab_snackbar">Umschalten</string>
+  <string name="preference_open_new_tab">Sofort zum Link im neuen Tab wechseln</string>
+  <string name="preference_category_safe_browsing">SafeBrowsing</string>
+  <string name="preference_safe_browsing_title">Potenziell gefährliche und betrügerische Websites blockieren</string>
+  <string name="preference_safe_browsing_summary">Blockieren Sie gemeldete betrügerische Websites und solche, die Sie angreifen, Schadsoftware oder unerwünschte Software verteilen.</string>
   <string name="preference_exceptions">Ausnahmen</string>
+  <string name="preference_exceptions_description">Das Blockieren von Seitenelementen ist für diese Websites deaktiviert.</string>
   <string name="preference_exceptions_menu_remove">Entfernen</string>
   <string name="preference_exceptions_remove_all_button_label">Alle Websites entfernen</string>
+  <string name="tab_crash_report_title">Tab ist abgestürzt</string>
+  <string name="tab_crash_report_headline">Es tut uns leid. Wir haben ein Problem mit diesem Tab.</string>
+  <string name="tab_crash_report_description">Als privater Browser speichern wir diesen Tab nicht und können ihn nicht wiederherstellen.</string>
+  <string name="tab_crash_report_close_tab_button_label">Tab schließen</string>
+  <string name="fatal_crash_report_title">Es tut uns leid. %1$s hatte ein Problem und ist abgestürzt.</string>
+  <string name="fatal_crash_report_description">Als privater Browser speichern wir Ihre letzte Surf-Sitzung nicht und können sie nicht wiederherstellen.</string>
+  <string name="fatal_crash_report_close_button_label">Schließen</string>
+  <string name="fatal_crash_report_restart_firefox_label">%1$s neu starten</string>
   <string name="crash_report_send_crash_label">Absturzbericht an Mozilla senden</string>
 </resources>

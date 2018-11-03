@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Zadajte hľadanie alebo adresu</string>
   <string name="teaser">Automatické súkromné prehliadanie.\nPrehliadajte. Vymažte históriu. Opakujte.</string>
   <string name="feedback_erase">Vaša história prehliadania bola vymazaná.</string>
+  <string name="feedback_erase_custom_tab">História bola vymazaná.</string>
   <string name="search_hint">Vyhľadať %1$s</string>
   <string name="menu_share">Zdieľať…</string>
   <string name="menu_report_site_issue">Nahlásiť problém so stránkou</string>
@@ -18,6 +19,8 @@
   <string name="menu_help">Pomocník</string>
   <string name="menu_rights">Vaše práva</string>
   <string name="menu_trackers_blocked_title">Počet zablokovaných sledovacích prvkov</string>
+  <string name="menu_trackers_blocked_subtitle">Vypnutie tejto funkcie môže odstrániť niektoré problémy</string>
+  <string name="menu_content_blocking">Blokovanie obsahu</string>
   <string name="menu_custom_tab_branding">Powered by %1$s</string>
   <string name="share_dialog_title">Zdieľať cez</string>
   <string name="notification_erase_text">Vymazať históriu prehliadania</string>
@@ -25,6 +28,8 @@
   <string name="notification_action_erase_and_open">Vymazať a otvoriť</string>
   <string name="shortcut_erase_short_label">Vymazať</string>
   <string name="shortcut_erase_long_label">Vymazať históriu</string>
+  <string name="shortcut_erase_and_open_short_label">Vymazať a otvoriť</string>
+  <string name="shortcut_erase_and_open_long_label">Vymazať a otvoriť %1$s</string>
   <string name="text_selection_search_action">Súkromné vyhľadávanie</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s v&#225;m d&#225;va kontrolu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Pou&#382;&#237;vajte ho ako s&#250;kromn&#253; prehliada&#269;:\n  "<ul>"\n    "<li>Vyh&#318;ad&#225;vajte a prehliadajte priamo prostredn&#237;ctvom aplik&#225;cie</li>"\n    "<li>Blokujte sledovacie prvky (v nastaveniach m&#244;&#382;ete sledovacie prvky povoli&#357;)</li>"\n    "<li>Vyma&#382;te cookies, hist&#243;riu vyh&#318;ad&#225;vania a prehliadania</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vyv&#237;ja Mozilla. Na&#353;a misia je podporova&#357; zdrav&#253; a otvoren&#253; internet.<br/>\n<a href="%2$s">&#270;al&#353;ie inform&#225;cie</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Súkromie a bezpečnosť</string>
@@ -35,11 +40,13 @@
   <string name="preference_category_web_content">Webový obsah</string>
   <string name="preference_category_switching_apps">Prepínanie medzi aplikáciami</string>
   <string name="preference_category_general">Všeobecné</string>
+  <string name="preference_general_summary">Predvolený prehliadač, karty, jazyk</string>
   <string name="preference_category_data_collection_use">Zbieranie údajov a ich použitie</string>
   <string name="preference_category_search">Vyhľadávanie</string>
   <string name="preference_show_search_suggestions">Zobrazovať návrhy vyhľadávania</string>
   <string name="preference_show_search_suggestions_summary">%1$s bude odosielať vami napísaný text v paneli s adresou vyhľadávaciemu modulu</string>
   <string name="preference_search_engine_default">Predvolený</string>
+  <string name="preference_search_engine_label">Vyhľadávací modul</string>
   <string name="preference_state_on">Zapnuté</string>
   <string name="preference_state_off">Vypnuté</string>
   <string name="preference_subitem_autocomplete">Automatické dokončovanie URL adries</string>
@@ -72,6 +79,7 @@
   <string name="preference_privacy_block_content_summary2">Niektoré stránky sa môžu chovať neočakávane</string>
   <string name="preference_privacy_category_cookies">Blokovať cookies</string>
   <string name="preference_privacy_should_block_cookies_no_option">Nie</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Len sledovacie cookies tretích strán</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Len cookies tretích strán</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Áno</string>
   <string name="preference_security_biometric">Na odomknutie aplikácie používať odtlačok prsta</string>
@@ -115,6 +123,7 @@
   <string name="accessibility_announcement_loading">Načítava sa</string>
   <string name="accessibility_announcement_loading_finished">Stránka bola načítaná</string>
   <string name="content_description_menu">Ďalšie možnosti</string>
+  <string name="indicator_content_description_menu">Tlačidlo ďalších možností</string>
   <string name="content_description_forward">Prejsť dopredu</string>
   <string name="content_description_reload">Obnoviť stránku</string>
   <string name="content_description_back">Prejsť dozadu</string>
@@ -224,4 +233,11 @@
   <string name="tip_autocomplete_url">Automatické dopĺňanie URL adries je tu\n Podržte prst na akejkoľvek adrese v paneli s adresou</string>
   <string name="tip_open_in_new_tab">Otvorte odkaz na novej karte\n Podržte prst na akomkoľvek odkaze na stránke</string>
   <string name="tip_request_desktop">Chceli by ste radšej vidieť verziu stránky pre počítače?%1$s Ponuka &gt; Verzia stránky pre počítače</string>
+  <string name="preference_exceptions">Výnimky</string>
+  <string name="preference_exceptions_menu_remove">Odstrániť</string>
+  <string name="preference_exceptions_remove_all_button_label">Odstrániť všetky stránky</string>
+  <string name="tab_crash_report_title">Karta zlyhala</string>
+  <string name="tab_crash_report_close_tab_button_label">Zavrieť kartu</string>
+  <string name="fatal_crash_report_close_button_label">Zavrieť</string>
+  <string name="fatal_crash_report_restart_firefox_label">Reštartovať %1$s</string>
 </resources>

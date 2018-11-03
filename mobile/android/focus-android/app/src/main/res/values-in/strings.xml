@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Cari atau masukkan alamat</string>
   <string name="teaser">Penjelajahan pribadi otomatis.\nJelajahi. Hapus. Ulangi.</string>
   <string name="feedback_erase">Riwayat penjelajahan Anda sudah dihapus.</string>
+  <string name="feedback_erase_custom_tab">Riwayat penjelajahan tab telah dihapus.</string>
   <string name="search_hint">Cari %1$s</string>
   <string name="menu_share">Bagikan…</string>
   <string name="menu_report_site_issue">Laporkan Masalah Situs</string>
@@ -48,6 +49,7 @@
   <string name="preference_state_on">Aktif</string>
   <string name="preference_state_off">Nonaktif</string>
   <string name="preference_subitem_autocomplete">Lengkapi-otomatis URL</string>
+  <string name="preference_autocomplete_topsite_summary">Aktifkan untuk melengkapi secara otomatis lebih dari 450 URL populer di bilah alamat.</string>
   <string name="preference_category_autocomplete_manage_sites">Kelola situs</string>
   <string name="preference_autocomplete_subitem_manage_sites">Kelola situs</string>
   <string name="preference_autocomplete_action_add">+ Tambah URL ubahsuai</string>
@@ -79,6 +81,7 @@
   <string name="preference_privacy_block_content_summary2">Mengaktifkan fitur ini mungkin menyebabkan beberapa laman bertindak tidak terduga</string>
   <string name="preference_privacy_category_cookies">Blokir kuki</string>
   <string name="preference_privacy_should_block_cookies_no_option">Tidak</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Hanya blokir kuki pelacak pihak ke-3</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Hanya blokir kuki pihak ke-3</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ya</string>
   <string name="preference_security_biometric">Gunakan sidik jari untuk membuka aplikasi</string>
@@ -122,6 +125,7 @@
   <string name="accessibility_announcement_loading">Memuat</string>
   <string name="accessibility_announcement_loading_finished">Situs web dimuat</string>
   <string name="content_description_menu">Opsi lainnya</string>
+  <string name="indicator_content_description_menu">Tombol opsi lainnya</string>
   <string name="content_description_forward">Navigasi ke selanjutnya</string>
   <string name="content_description_reload">Muat ulang situs web</string>
   <string name="content_description_back">Arahkan kembali</string>
@@ -232,8 +236,15 @@
   <string name="tip_autocomplete_url">Lengkapi otomatis URL untuk situs yang sering dikunjungi\n Ketuk lama URL di bilah alamat</string>
   <string name="tip_open_in_new_tab">Buka tautan di tab baru\n Tekan lama tautan di laman</string>
   <string name="tip_request_desktop">Lebih suka melihat situs desktop?%1$s Menu &gt; Minta situs desktop</string>
+  <string name="open_new_tab_snackbar">Tukar</string>
   <string name="preference_category_safe_browsing">Penjelajahan Aman</string>
   <string name="preference_exceptions">Kekecualian</string>
+  <string name="preference_exceptions_description">Anda telah menonaktifkan Pemblokiran Konten untuk situs ini.</string>
   <string name="preference_exceptions_menu_remove">Hapus</string>
   <string name="preference_exceptions_remove_all_button_label">Hapus semua situs web</string>
+  <string name="tab_crash_report_headline">Maaf. Kami mengalami masalah dengan tab ini.</string>
+  <string name="tab_crash_report_close_tab_button_label">Tutup Tab</string>
+  <string name="fatal_crash_report_close_button_label">Tutup</string>
+  <string name="fatal_crash_report_restart_firefox_label">Mulai Ulang %1$s</string>
+  <string name="crash_report_send_crash_label">Kirim laporan kerusakan ke Mozilla</string>
 </resources>

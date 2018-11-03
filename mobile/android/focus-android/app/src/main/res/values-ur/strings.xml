@@ -18,6 +18,7 @@
   <string name="menu_help">مدد</string>
   <string name="menu_rights">آپ کے حقوق</string>
   <string name="menu_trackers_blocked_title">ٹریکر بلاک کردہ</string>
+  <string name="menu_content_blocking">مواد کو روکیں</string>
   <string name="share_dialog_title">کے زریعے شیئر کریں</string>
   <string name="notification_erase_text">برائوزنگ سابقات مٹائیں</string>
   <string name="notification_action_open">کھولیں</string>
@@ -190,4 +191,11 @@
   <string name="enable_search_suggestions_yes">ہاں</string>
   <string name="no_suggestions_message">کچھ تلاش انجن تجاویز نہیں دکھا سکتے۔</string>
   <string name="dismiss_no_suggestions_prompt_button">برخاست کریں</string>
+  <string name="open_new_tab_snackbar">سوئچ کریں</string>
+  <string name="preference_exceptions">استثنیات</string>
+  <string name="preference_exceptions_menu_remove">ہٹائیں</string>
+  <string name="preference_exceptions_remove_all_button_label">تمام ویب سائٹیں ہٹائیں</string>
+  <string name="tab_crash_report_close_tab_button_label">ٹیب بند کر دیں</string>
+  <string name="fatal_crash_report_close_button_label">بند کریں</string>
+  <string name="fatal_crash_report_restart_firefox_label">%1$s دوبارہ شروع کریں</string>
 </resources>

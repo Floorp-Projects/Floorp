@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Search or enter address</string>
   <string name="teaser">Automatic private browsing.\nBrowse. Erase. Repeat.</string>
   <string name="feedback_erase">Your browsing history has been erased.</string>
+  <string name="feedback_erase_custom_tab">Tab’s browsing history has been erased.</string>
   <string name="search_hint">Search for %1$s</string>
   <string name="menu_share">Share…</string>
   <string name="menu_report_site_issue">Report Site Issue</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Help</string>
   <string name="menu_rights">Your Rights</string>
   <string name="menu_trackers_blocked_title">Trackers blocked</string>
+  <string name="menu_trackers_blocked_subtitle">Turning this off may fix some site problems</string>
+  <string name="menu_content_blocking">Content Blocking</string>
+  <string name="menu_content_blocking_subtitle">Turn off to fix some sites</string>
   <string name="menu_custom_tab_branding">Powered by %1$s</string>
   <string name="share_dialog_title">Share via</string>
   <string name="notification_erase_text">Erase browsing history</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Erase and Open</string>
   <string name="shortcut_erase_short_label">Erase</string>
   <string name="shortcut_erase_long_label">Erase browsing history</string>
+  <string name="shortcut_erase_and_open_short_label">Erase &amp; open</string>
+  <string name="shortcut_erase_and_open_long_label">Erase and open %1$s</string>
   <string name="text_selection_search_action">Search Privately</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s puts you in control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Use it as a private browser:\n  "<ul>"\n    "<li>Search and browse right in the app</li>"\n    "<li>Block trackers (or update settings to allow trackers)</li>"\n    "<li>Erase to delete cookies as well as search and browsing history</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>\n<a href="%2$s">Learn more</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Privacy &amp; Security</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Web Content</string>
   <string name="preference_category_switching_apps">Switching Apps</string>
   <string name="preference_category_general">General</string>
+  <string name="preference_general_summary">Default browser, tabs, language</string>
   <string name="preference_category_data_collection_use">Data Collection &amp; Use</string>
   <string name="preference_category_search">Search</string>
   <string name="preference_show_search_suggestions">Get search suggestions</string>
   <string name="preference_show_search_suggestions_summary">%1$s will send what you type in the address bar to your search engine</string>
   <string name="preference_search_engine_default">Default</string>
+  <string name="preference_search_engine_label">Search engine</string>
   <string name="preference_state_on">On</string>
   <string name="preference_state_off">Off</string>
   <string name="preference_subitem_autocomplete">URL Autocomplete</string>
+  <string name="preference_switch_autocomplete_topsites">For Top sites</string>
+  <string name="preference_autocomplete_topsite_summary">Enable to autocomplete more than 450 popular URLs in the address bar.</string>
+  <string name="preference_switch_autocomplete_user_list">For Sites You Add</string>
+  <string name="preference_autocomplete_user_list_summary">Enable to autocomplete more than 450 popular URLs in the address bar.</string>
+  <string name="preference_category_autocomplete_manage_sites">Manage sites</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Manage sites</string>
   <string name="preference_autocomplete_action_add">+ Add custom URL</string>
   <string name="preference_autocomplete_title_add">Add custom URL</string>
   <string name="custom_autocomplete_quick_add">Add custom URL</string>
+  <string name="add_custom_autocomplete_label">Add link to autocomplete</string>
   <string name="preference_category_cookies">Cookies and Site Data</string>
   <string name="preference_category_data_choices">Data Choices</string>
   <string name="preference_autocomplete_title_remove">Remove custom URLs</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Enabling may cause some pages to behave unexpectedly</string>
   <string name="preference_privacy_category_cookies">Block cookies</string>
   <string name="preference_privacy_should_block_cookies_no_option">No</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Block 3rd-party tracker cookies only</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Block 3rd-party cookies only</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Yes</string>
   <string name="preference_security_biometric">Use fingerprint to unlock app</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Loading</string>
   <string name="accessibility_announcement_loading_finished">Website loaded</string>
   <string name="content_description_menu">More options</string>
+  <string name="indicator_content_description_menu">More options button</string>
   <string name="content_description_forward">Navigate forward</string>
   <string name="content_description_reload">Reload website</string>
   <string name="content_description_back">Navigate back</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>This could be a problem with the server&#8217;s configuration, or it could be\nsomeone trying to impersonate the server.</li>"\n  "<li>If you have connected to this server successfully in the past, the error may\nbe temporary, and you can try again later.</li>\n</ul>]]></string>
   <string name="error_generic_title">Oops</string>
   <string name="error_generic_message">We can’t load this page for some reason.</string>
+  <string name="contextmenu_open_in_app">Open with app</string>
   <string name="contextmenu_link_share">Share link</string>
   <string name="contextmenu_link_copy">Copy link address</string>
   <string name="contextmenu_image_share">Share image</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">Autocomplete URLs for sites you use most\n Long-press any URL in the address bar</string>
   <string name="tip_open_in_new_tab">Open a link in a new tab\n Long-press any link on a page</string>
   <string name="tip_request_desktop">Rather see the full desktop site?%1$s Menu &gt; Request desktop site</string>
+  <string name="tip_disable_tips2">Turn off tips on the start screen</string>
+  <string name="new_tab_opened_snackbar">New tab opened</string>
+  <string name="open_new_tab_snackbar">Switch</string>
+  <string name="preference_open_new_tab">Switch to link in new tab immediately</string>
+  <string name="preference_category_safe_browsing">Safe Browsing</string>
+  <string name="preference_safe_browsing_title">Block potentially dangerous and deceptive sites</string>
+  <string name="preference_safe_browsing_summary">Block reported deceptive and attack sites, malware sites, and unwanted software sites.</string>
+  <string name="preference_exceptions">Exceptions</string>
+  <string name="preference_exceptions_description">You have disabled Content Blocking for these websites.</string>
+  <string name="preference_exceptions_menu_remove">Remove</string>
+  <string name="preference_exceptions_remove_all_button_label">Remove all websites</string>
+  <string name="tab_crash_report_title">Tab Crashed</string>
+  <string name="tab_crash_report_headline">Sorry. We’re having a problem with this tab.</string>
+  <string name="tab_crash_report_description">As a private browser, we never save and cannot restore this tab.</string>
+  <string name="tab_crash_report_close_tab_button_label">Close Tab</string>
+  <string name="fatal_crash_report_title">Sorry. %1$s had a problem and crashed.</string>
+  <string name="fatal_crash_report_description">As a private browser, we never save and cannot restore your last browsing session.</string>
+  <string name="fatal_crash_report_close_button_label">Close</string>
+  <string name="fatal_crash_report_restart_firefox_label">Restart %1$s</string>
+  <string name="crash_report_send_crash_label">Send crash report to Mozilla</string>
 </resources>

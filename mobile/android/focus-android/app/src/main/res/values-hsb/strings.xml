@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Adresu pytać abo zapodać</string>
   <string name="teaser">Awtomatiski priwatny modus.\nPřehladować. Zhašeć. Wospjetować.</string>
   <string name="feedback_erase">Waša přehladowanska historija je so zhašała.</string>
+  <string name="feedback_erase_custom_tab">Přehladowanska historija rajtark je so zhašała.</string>
   <string name="search_hint">Pytanje za %1$s</string>
   <string name="menu_share">Dźělić…</string>
   <string name="menu_report_site_issue">Sydłowy problem zdźělić</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Pomoc</string>
   <string name="menu_rights">Waše prawa</string>
   <string name="menu_trackers_blocked_title">Přesćěhowaki zablokowane</string>
+  <string name="menu_trackers_blocked_subtitle">Hdyž to znjemóžnjeće, so někotre sydłowe problemy rozrisaja</string>
+  <string name="menu_content_blocking">Blokowanje wobsaha</string>
+  <string name="menu_content_blocking_subtitle">Znjemóžnić, zo byšće někotre sydła porjedźił</string>
   <string name="menu_custom_tab_branding">Spěchowany wot %1$s</string>
   <string name="share_dialog_title">Dźělić přez</string>
   <string name="notification_erase_text">Přehladowansku historiju zhašeć</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Zhašeć a wočinić</string>
   <string name="shortcut_erase_short_label">Zhašeć</string>
   <string name="shortcut_erase_long_label">Přehladowansku historiju zhašeć</string>
+  <string name="shortcut_erase_and_open_short_label">Zhašeć a wočinić</string>
+  <string name="shortcut_erase_and_open_long_label">%1$s zhašeć a wočinić</string>
   <string name="text_selection_search_action">Priwatnje pytać</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s da was kontrolu wobchowa&#263;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Wu&#382;iwaj&#263;e j&#243;n jako priwatny wobhladowak:\n  "<ul>"\n    "<li>Pytaj&#263;e a p&#345;ehladuj&#263;e direktnje w na&#322;o&#382;enju</li>"\n    "<li>Blokuj&#263;e p&#345;es&#263;&#283;howaki (abo aktualizuj&#263;e nastajenja, zo by&#353;&#263;e p&#345;es&#263;&#283;howaki dowoli&#322;)</li>"\n    "<li>Zha&#353;ej&#263;e placki a pytansku a p&#345;ehladowansku historiju</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s so wot Mozilla wuwiwa. Na&#353;a misija je sp&#283;chowanje stroweho, wotewrjeneho interneta.<br/>\n<a href="%2$s">Dal&#353;e informacije</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Priwatnosć a wěstota</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Webwobsah</string>
   <string name="preference_category_switching_apps">Přešaltowanje nałoženjow</string>
   <string name="preference_category_general">Powšitkowne</string>
+  <string name="preference_general_summary">Standardny wobhladowak, rajtarki, rěč</string>
   <string name="preference_category_data_collection_use">Zběranje a wužiwanje datow</string>
   <string name="preference_category_search">Pytać</string>
   <string name="preference_show_search_suggestions">Pytanske namjety wobstarać</string>
   <string name="preference_show_search_suggestions_summary">%1$s so na wašu pytawu pósćele, štož w adresowym polu zapodaće</string>
   <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_search_engine_label">Pytawa</string>
   <string name="preference_state_on">Zapinjeny</string>
   <string name="preference_state_off">Wupinjeny</string>
   <string name="preference_subitem_autocomplete">Awtomatiske wudospołnjenje URL</string>
+  <string name="preference_switch_autocomplete_topsites">Za najlubše sydła</string>
+  <string name="preference_autocomplete_topsite_summary">Zmóžnić, zo by so wjace hač 450 woblubowanych adresow w adresowym polu wudospołniło.</string>
+  <string name="preference_switch_autocomplete_user_list">Za sydła, kotrež přidawaće</string>
+  <string name="preference_autocomplete_user_list_summary">Zmóžnić, zo by so wjace hač 450 woblubowanych adresow w adresowym polu wudospołniło.</string>
+  <string name="preference_category_autocomplete_manage_sites">Sydła rjadować</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Sydła rjadować</string>
   <string name="preference_autocomplete_action_add">+ Swójsku adresu přidać</string>
   <string name="preference_autocomplete_title_add">Swójsku adresu přidać</string>
   <string name="custom_autocomplete_quick_add">Swójski URL přidać</string>
+  <string name="add_custom_autocomplete_label">Wotkaz za awtowudospołnjenje přidać</string>
   <string name="preference_category_cookies">Placki a sydłowe daty</string>
   <string name="preference_category_data_choices">Datowy wuběr</string>
   <string name="preference_autocomplete_title_remove">Swójske adresy wotstronić</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">To móže wjesć k tomu, zo so někotre strony njewšědnje zadźerža</string>
   <string name="preference_privacy_category_cookies">Placki blokować</string>
   <string name="preference_privacy_should_block_cookies_no_option">Ně</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Jenož slědowace placki třećich poskićowarjow blokować</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Jenož placki třećich poskićowarjow</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Haj</string>
   <string name="preference_security_biometric">Wužiwajće porstowy wotćišć, zo byšće nałoženje wotewrěł</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Začitanje</string>
   <string name="accessibility_announcement_loading_finished">Websydło je so začitało</string>
   <string name="content_description_menu">Dalše nastajenja</string>
+  <string name="indicator_content_description_menu">Tłóčatko dalšich nastajenjow</string>
   <string name="content_description_forward">Doprědka</string>
   <string name="content_description_reload">Websydło znowa začitać</string>
   <string name="content_description_back">Wróćo</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>To m&#243;h&#322;o problem z konfiguraciju serwera by&#263;, abo m&#243;h&#322;o by&#263;,\nzo n&#283;cht&#243; pospytuje serwer imitowa&#263;.</li>"\n  "<li>Jeli s&#263;e ze serwerom w za&#324;d&#378;enos&#263;i wusp&#283;&#353;nje zwjazany by&#322;, m&#243;h&#322; zmylk snano\nnachwilny by&#263; a m&#243;&#382;e&#263;e pozd&#378;i&#353;o hi&#353;&#263;e raz spyta&#263;.</li>\n</ul>]]></string>
   <string name="error_generic_title">Hopla</string>
   <string name="error_generic_message">Z někajkeje přičiny njemóžemy tutu stronu začitać.</string>
+  <string name="contextmenu_open_in_app">Wočinić z</string>
   <string name="contextmenu_link_share">Wotkaz dźělić</string>
   <string name="contextmenu_link_copy">Wotkazowu adresu kopěrować</string>
   <string name="contextmenu_image_share">Wobraz dźělić</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">URL za sydła, kotrež najhusćišo wopytujeće, awtomatisce wudospołnić\nTłóčće dołho na URL w adresowym polu</string>
   <string name="tip_open_in_new_tab">Wotkaz w nowym rajtarku wočinić\nTłóčće dołho na wotkaz na stronje</string>
   <string name="tip_request_desktop">Chceće radšo dospołne desktopowe sydło widźeć?%1$s Meni &gt; Desktopowe sydło požadać</string>
+  <string name="tip_disable_tips2">Pokiwy na starrtowej wobrazowce znjemóžnić</string>
+  <string name="new_tab_opened_snackbar">Nowy rajtark je so wočinił</string>
+  <string name="open_new_tab_snackbar">Přepinać</string>
+  <string name="preference_open_new_tab">Hnydom k wotkazej w nowym rajtarku přeńć</string>
+  <string name="preference_category_safe_browsing">Wěste přehladowanje</string>
+  <string name="preference_safe_browsing_title">Potencielnje strašne a wobšudne sydła blokować</string>
+  <string name="preference_safe_browsing_summary">Blokujće zdźělene wobšudne a nadpadowe sydła, škódne sydła a sydła z njewitanej softwaru.</string>
+  <string name="preference_exceptions">Wuwzaća</string>
+  <string name="preference_exceptions_description">Sće blokowanje wobsaha za tute sydła znjemóžnił.</string>
+  <string name="preference_exceptions_menu_remove">Wotstronić</string>
+  <string name="preference_exceptions_remove_all_button_label">Wšě sydła wotstronić</string>
+  <string name="tab_crash_report_title">Rajtark je spadnył</string>
+  <string name="tab_crash_report_headline">Bohužel mamy problem z tutym rajtarkom.</string>
+  <string name="tab_crash_report_description">Jako priwatny wobhladowak njeskładujemy ženje a njemóžemy tutón rajtark wobnowić.</string>
+  <string name="tab_crash_report_close_tab_button_label">Rajtark začinić</string>
+  <string name="fatal_crash_report_title">Bohužel je %1$s problem měł a spadnył.</string>
+  <string name="fatal_crash_report_description">Jako priwatny wobhladowak njeskładujemy ženje a njemóžemy waše poslednje přehladowanske posedźenje wobnowić.</string>
+  <string name="fatal_crash_report_close_button_label">Začinić</string>
+  <string name="fatal_crash_report_restart_firefox_label">%1$s znowa startować</string>
+  <string name="crash_report_send_crash_label">Mozilla spadowu rozprawu pósłać</string>
 </resources>

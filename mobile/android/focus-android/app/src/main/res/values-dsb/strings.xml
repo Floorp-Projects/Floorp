@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Adresu pytaś abo zapódaś</string>
   <string name="teaser">Awtomatiski priwatny modus.\nPśeglědowaś. Lašowaś. Wóspjetowaś.</string>
   <string name="feedback_erase">Waša pśeglědowańska historija jo se wulašowała.</string>
+  <string name="feedback_erase_custom_tab">Pśeglědowańska historija rejtarka jo se wulašowała.</string>
   <string name="search_hint">Pytanje za %1$s</string>
   <string name="menu_share">Źěliś…</string>
   <string name="menu_report_site_issue">Sedłowy problem k wěsći daś</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Pomoc</string>
   <string name="menu_rights">Waše pšawa</string>
   <string name="menu_trackers_blocked_title">Pśeslědowaki blokěrowane</string>
+  <string name="menu_trackers_blocked_subtitle">Gaž to znjemóžnjaśo, se někotare sedłowe problemy rozwězuju</string>
+  <string name="menu_content_blocking">Blokěrowanje wopśimjeśa</string>
+  <string name="menu_content_blocking_subtitle">Znjemóžniś, aby se někotare sedła pórěźili</string>
   <string name="menu_custom_tab_branding">Spěchowany wót %1$s</string>
   <string name="share_dialog_title">Źěliś pśez</string>
   <string name="notification_erase_text">Pśeglědowańsku historiju lašowaś</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Lašowaś a wócyniś</string>
   <string name="shortcut_erase_short_label">Lašowaś</string>
   <string name="shortcut_erase_long_label">Pśeglědowańsku historiju lašowaś</string>
+  <string name="shortcut_erase_and_open_short_label">Wulašowaś a wócyniś</string>
+  <string name="shortcut_erase_and_open_long_label">%1$s lašowaś a wócyniś</string>
   <string name="text_selection_search_action">Priwatnje pytaś</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s dajo was kontrolu wobchowa&#347;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Wu&#382;ywaj&#347;o jen ako priwatny wobgl&#283;dowak:\n  "<ul>"\n    "<li>Pytaj&#347;o a p&#347;egl&#283;duj&#347;o direktnje w na&#322;o&#382;enju</li>"\n    "<li>Blok&#283;ruj&#347;o p&#347;esl&#283;dowaki (abo aktualiz&#283;ruj&#347;o nastajenja, aby p&#347;esl&#283;dowaki dow&#243;li&#322;)</li>"\n    "<li>La&#353;uj&#347;o cookieje a pyta&#324;sku a p&#347;egl&#283;dowa&#324;sku historiju</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s se w&#243;t Mozilla wuwija. Na&#353;a misija jo sp&#283;chowanje strowego, w&#243;tw&#243;rjonego interneta.<br/>\n<a href="%2$s">Dal&#353;ne informacije</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Priwatnosć a wěstota</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Webwopśimjeśe</string>
   <string name="preference_category_switching_apps">Pśešaltowanje nałoženjow</string>
   <string name="preference_category_general">Powšykne</string>
+  <string name="preference_general_summary">Standardny wobglědowak, rejtarki, rěc</string>
   <string name="preference_category_data_collection_use">Zběranje a wužywanje datow</string>
   <string name="preference_category_search">Pytaś</string>
   <string name="preference_show_search_suggestions">Pytańske naraźenja wobstaraś</string>
   <string name="preference_show_search_suggestions_summary">%1$s se na wašu pytnicu pósćelo, což w adresowem pólu zapódajośo</string>
   <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_search_engine_label">Pytnica</string>
   <string name="preference_state_on">Zašaltowany</string>
   <string name="preference_state_off">Wušaltowany</string>
   <string name="preference_subitem_autocomplete">Awtomatiske wudopołnjenje URL</string>
+  <string name="preference_switch_autocomplete_topsites">Za nejlubše sedła</string>
+  <string name="preference_autocomplete_topsite_summary">Zmóžniś, aby se wěcej ako 450 woblubowanych adresow w adresowem pólu wudopołniło.</string>
+  <string name="preference_switch_autocomplete_user_list">Za sedła, kótarež pśidawaśo</string>
+  <string name="preference_autocomplete_user_list_summary">Zmóžniś, aby se wěcej ako 450 woblubowanych adresow w adresowem pólu wudopołniło.</string>
+  <string name="preference_category_autocomplete_manage_sites">Sedła zastojaś</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Sedła zastojaś</string>
   <string name="preference_autocomplete_action_add">+ Swójsku adresu pśidaś</string>
   <string name="preference_autocomplete_title_add">Swójsku adresu pśidaś</string>
   <string name="custom_autocomplete_quick_add">Swójski URL pśidaś</string>
+  <string name="add_custom_autocomplete_label">Wótkaz za awtowudopołnjenje pśidaś</string>
   <string name="preference_category_cookies">Cookieje a sedłowe daty</string>
   <string name="preference_category_data_choices">Datowe wuběrki</string>
   <string name="preference_autocomplete_title_remove">Swójske adrese wótwónoźeś</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">To móžo wjasć k tomu, až se někotare boki njewšednje zaźarže</string>
   <string name="preference_privacy_category_cookies">Cookieje blokěrowaś</string>
   <string name="preference_privacy_should_block_cookies_no_option">Ně</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Jano slědujuce cookieje tśeśich póbitowarjow blokěrowaś</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Jano cookieje tśeśich póbitowarjow blokěrowaś</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Jo</string>
   <string name="preference_security_biometric">Wužywajśo palcowy wótśišć, aby nałoženje wótwórił</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Zacytanje</string>
   <string name="accessibility_announcement_loading_finished">Websedło jo se zacytało</string>
   <string name="content_description_menu">Dalšne nastajenja</string>
+  <string name="indicator_content_description_menu">Tocašk dalšnych nastajenjow</string>
   <string name="content_description_forward">Doprědka</string>
   <string name="content_description_reload">Websedło znowego zacytaś</string>
   <string name="content_description_back">Slědk</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>To by m&#243;g&#322;o problem z konfiguraciju serwera by&#347;, abo by m&#243;g&#322;o by&#347;,\na&#382; n&#283;chten wopytujo serwer imit&#283;rowa&#347;.</li>"\n  "<li>Jolic s&#263;o by&#322; ze serwerom w zachadnos&#263;i wusp&#283;&#353;nje zw&#283;zany, by m&#243;g&#322;a zm&#243;lka sna&#378;\nnachylna by&#347; a m&#243;&#382;o&#347;o p&#243;zd&#378;ej hy&#353;&#263;i raz wopyta&#347;.</li>\n</ul>]]></string>
   <string name="error_generic_title">Hopla</string>
   <string name="error_generic_message">Z někakeje pśicyny njamóžomy toś ten bok zacytaś.</string>
+  <string name="contextmenu_open_in_app">Z nałoženim wócyniś</string>
   <string name="contextmenu_link_share">Wótkaz źěliś</string>
   <string name="contextmenu_link_copy">Wótkazowu adresu kopěrowaś</string>
   <string name="contextmenu_image_share">Wobraz śěliś</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">URL za sedła, ku kótarymž se nejcesćej woglědujośo, awtomatiski wudopołniś\nTłocćo dłujko na URL w adresowem pólu</string>
   <string name="tip_open_in_new_tab">Wótkaz w nowem rejtarku wócyniś\nTłocćo dłujko na wótkaz na boku</string>
   <string name="tip_request_desktop">Cośo lubjej dopołne desktopowe sedło wiźeś?%1$s Meni &gt; Desktopowe sedło pominaś</string>
+  <string name="tip_disable_tips2">Tipy na startowej wobrazowce znjemóžniś</string>
+  <string name="new_tab_opened_snackbar">Nowy rejtark jo se wócynił</string>
+  <string name="open_new_tab_snackbar">Pśešaltowaś</string>
+  <string name="preference_open_new_tab">Ned k wótkazoju w nowem rejtarku pśejś</string>
+  <string name="preference_category_safe_browsing">Wěste pśeglědowanje</string>
+  <string name="preference_safe_browsing_title">Ptencielnje tšašne a wobšudnikojske sedła blokěrowaś</string>
+  <string name="preference_safe_browsing_summary">Blokěrujśo wuzjawjone wobšudnikojske a napadowe sedła, škódne sedła a sedła z njewitaneju softwaru.</string>
+  <string name="preference_exceptions">Wuwześa</string>
+  <string name="preference_exceptions_description">Sćo znjemóžnił blokěrowanje wopśimjeśa za toś te sedła.</string>
+  <string name="preference_exceptions_menu_remove">Wótwónoźeś</string>
+  <string name="preference_exceptions_remove_all_button_label">Wšykne sedła wótwónoźeś</string>
+  <string name="tab_crash_report_title">Rejtark jo wowalił</string>
+  <string name="tab_crash_report_headline">Bóžko mamy problem z toś tym rejtarkom.</string>
+  <string name="tab_crash_report_description">Ako priwatny wobglědowak njeskładujomy nigda a njamóžomy toś ten rejtark wótnowiś.</string>
+  <string name="tab_crash_report_close_tab_button_label">Rejtark zacyniś</string>
+  <string name="fatal_crash_report_title">Bóžko %1$s jo měł problem a jo wowalił.</string>
+  <string name="fatal_crash_report_description">Ako priwatny wobglědowak njeskładujomy nigda a njamóžomy wašo slědne pśeglědowańske pósejźenje wótnowiś.</string>
+  <string name="fatal_crash_report_close_button_label">Zacyniś</string>
+  <string name="fatal_crash_report_restart_firefox_label">%1$s znowego startowaś</string>
+  <string name="crash_report_send_crash_label">Mozilla rozpšawu wowalenja pósłaś</string>
 </resources>

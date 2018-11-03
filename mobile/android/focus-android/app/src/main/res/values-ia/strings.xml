@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Insere un adresse o face un recerca</string>
   <string name="teaser">Navigation private automatic.\nNaviga. Elimina. Repete.</string>
   <string name="feedback_erase">Tu chronologia de navigation ha essite eliminate.</string>
+  <string name="feedback_erase_custom_tab">Le chronologia de navigation del scheda ha essite eliminate.</string>
   <string name="search_hint">Cercar %1$s</string>
   <string name="menu_share">Compartir…</string>
   <string name="menu_report_site_issue">Reportar problema del sito</string>
@@ -18,6 +19,7 @@
   <string name="menu_help">Adjuta</string>
   <string name="menu_rights">Tu derectos</string>
   <string name="menu_trackers_blocked_title">Traciatores blocate</string>
+  <string name="menu_trackers_blocked_subtitle">Disactivar isto pote remediar alicun problemas del sito</string>
   <string name="menu_custom_tab_branding">Potentiate per %1$s</string>
   <string name="share_dialog_title">Compartir con</string>
   <string name="notification_erase_text">Eliminar le chronologia de navigation</string>
@@ -224,4 +226,7 @@
   <string name="tip_autocomplete_url">Auto-completar URLs pro le sitos que tu usa plus\n Retene pulsate longemente ulle URL in le barra de adresse</string>
   <string name="tip_open_in_new_tab">Aperi le ligamine in un nove scheda\n Retene pulsate longemente ulle ligamine sur un pagina</string>
   <string name="tip_request_desktop">Vider plus tosto le sito in modo plen scriptorio?%1$s Menu &gt; Requirer sito de scriptorio</string>
+  <string name="fatal_crash_report_close_button_label">Clauder</string>
+  <string name="fatal_crash_report_restart_firefox_label">Reinitiar %1$s</string>
+  <string name="crash_report_send_crash_label">Inviar reporto de crash a Mozilla</string>
 </resources>

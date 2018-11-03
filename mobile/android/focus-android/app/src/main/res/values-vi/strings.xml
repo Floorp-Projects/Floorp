@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Tìm kiếm hoặc nhập địa chỉ</string>
   <string name="teaser">Duyệt web riêng tư.\nDuyệt. Xóa. Lặp lại.</string>
   <string name="feedback_erase">Lịch sử duyệt web của bạn đã bị xóa.</string>
+  <string name="feedback_erase_custom_tab">Lịch sử duyệt web của thẻ đã bị xóa.</string>
   <string name="search_hint">Tìm kiếm %1$s</string>
   <string name="menu_share">Chia sẻ…</string>
   <string name="menu_report_site_issue">Báo cáo vấn đề về trang</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Trợ giúp</string>
   <string name="menu_rights">Quyền lợi của bạn</string>
   <string name="menu_trackers_blocked_title">Số lượng theo dõi bị chặn</string>
+  <string name="menu_trackers_blocked_subtitle">Tắt tính năng này có thể khắc phục một số vấn đề về trang web</string>
+  <string name="menu_content_blocking">Chặn nội dung</string>
+  <string name="menu_content_blocking_subtitle">Tắt để khắc phục lỗi một số trang web</string>
   <string name="menu_custom_tab_branding">Được hỗ trợ bởi %1$s</string>
   <string name="share_dialog_title">Chia sẻ qua</string>
   <string name="notification_erase_text">Xóa lịch sử duyệt web</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Xóa và mở</string>
   <string name="shortcut_erase_short_label">Xóa</string>
   <string name="shortcut_erase_long_label">Xóa lịch sử duyệt web</string>
+  <string name="shortcut_erase_and_open_short_label">Xóa &amp; mở</string>
+  <string name="shortcut_erase_and_open_long_label">Xóa và mở %1$s</string>
   <string name="text_selection_search_action">Tìm kiếm riêng tư hơn</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gi&#250;p b&#7841;n ki&#7875;m so&#225;t.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"S&#7917; d&#7909;ng n&#243; nh&#432; m&#7897;t tr&#236;nh duy&#7879;t ri&#234;ng t&#432;:\n  "<ul>"\n    "<li>T&#236;m ki&#7871;m v&#224; duy&#7879;t ngay trong &#7913;ng d&#7909;ng</li>"\n    "<li>Ch&#7863;n c&#225;c tr&#236;nh theo d&#245;i (ho&#7863;c c&#7853;p nh&#7853;t c&#224;i &#273;&#7863;t &#273;&#7875; cho ph&#233;p c&#225;c tr&#236;nh theo d&#245;i)</li>"\n    "<li>X&#243;a cookie c&#361;ng nh&#432; l&#7883;ch s&#7917; t&#236;m ki&#7871;m v&#224; duy&#7879;t web khi xong phi&#234;n l&#224;m vi&#7879;c</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#273;&#432;&#7907;c s&#7843;n xu&#7845;t b&#7903;i Mozilla. Nhi&#7879;m v&#7909; c&#7911;a ch&#250;ng t&#244;i l&#224; th&#250;c &#273;&#7849;y m&#7897;t Internet l&#224;nh m&#7841;nh, c&#7903;i m&#7903;.<br/>\n<a href="%2$s">T&#236;m hi&#7875;u th&#234;m</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Riêng tư &amp; Bảo mật</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Nội dung web</string>
   <string name="preference_category_switching_apps">Chuyển đổi ứng dụng</string>
   <string name="preference_category_general">Chung</string>
+  <string name="preference_general_summary">Trình duyệt mặc định, thẻ, ngôn ngữ</string>
   <string name="preference_category_data_collection_use">Thu thập &amp; sử dụng dữ liệu</string>
   <string name="preference_category_search">Tìm kiếm</string>
   <string name="preference_show_search_suggestions">Nhận gợi ý tìm kiếm</string>
   <string name="preference_show_search_suggestions_summary">%1$s sẽ gửi nội dung bạn nhập vào thanh địa chỉ đến công cụ tìm kiếm của bạn</string>
   <string name="preference_search_engine_default">Mặc định</string>
+  <string name="preference_search_engine_label">Máy tìm kiếm</string>
   <string name="preference_state_on">Bật</string>
   <string name="preference_state_off">Tắt</string>
   <string name="preference_subitem_autocomplete">URL tự động điền</string>
+  <string name="preference_switch_autocomplete_topsites">Với các trang web hàng đầu</string>
+  <string name="preference_autocomplete_topsite_summary">Bật để tự động hoàn thành hơn 450 URL phổ biến trong thanh địa chỉ.</string>
+  <string name="preference_switch_autocomplete_user_list">Với trang web bạn thêm</string>
+  <string name="preference_autocomplete_user_list_summary">Bật để tự động hoàn thành hơn 450 URL phổ biến trong thanh địa chỉ.</string>
+  <string name="preference_category_autocomplete_manage_sites">Quản lý trang web</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Quản lý trang web</string>
   <string name="preference_autocomplete_action_add">+ Thêm URL tùy chỉnh</string>
   <string name="preference_autocomplete_title_add">Thêm URL tùy chỉnh</string>
   <string name="custom_autocomplete_quick_add">Thêm URL tùy chỉnh</string>
+  <string name="add_custom_autocomplete_label">Thêm liên kết vào tự động điền</string>
   <string name="preference_category_cookies">Cookie và dữ liệu trang</string>
   <string name="preference_category_data_choices">Lựa chọn dữ liệu</string>
   <string name="preference_autocomplete_title_remove">Loại bỏ các URL tùy chỉnh</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Việc kích hoạt có thể khiến một số trang hoạt động không như mong đợi</string>
   <string name="preference_privacy_category_cookies">Chặn cookie</string>
   <string name="preference_privacy_should_block_cookies_no_option">Không</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Chỉ chặn cookie theo dõi của bên thứ ba</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Chỉ chặn cookie bên thứ ba</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Có</string>
   <string name="preference_security_biometric">Sử dụng vân tay để mở khóa ứng dụng</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Đang tải</string>
   <string name="accessibility_announcement_loading_finished">Đã tải xong trang web</string>
   <string name="content_description_menu">Tùy chọn thêm</string>
+  <string name="indicator_content_description_menu">Nút tùy chọn khác</string>
   <string name="content_description_forward">Điều hướng tiến</string>
   <string name="content_description_reload">Tải lại trang web</string>
   <string name="content_description_back">Điều hướng lùi</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#272;&#226;y c&#243; th&#7875; l&#224; s&#7921; c&#7889; v&#7899;i c&#7845;u h&#236;nh c&#7911;a m&#225;y ch&#7911; ho&#7863;c c&#243; th&#7875; l&#224; m&#7897;t ng&#432;&#7901;i c&#7889; m&#7841;o danh m&#225;y ch&#7911;.</li>"\n  "<li>N&#7871;u tr&#432;&#7899;c &#273;&#226;y b&#7841;n &#273;&#227; k&#7871;t n&#7889;i v&#7899;i m&#225;y ch&#7911; n&#224;y, l&#7895;i n&#224;y c&#243; th&#7875; l&#224; t&#7841;m th&#7901;i v&#224; b&#7841;n c&#243; th&#7875; th&#7917; l&#7841;i sau.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ôi</string>
   <string name="error_generic_message">Chúng tôi không thể tải trang này vì một số lý do.</string>
+  <string name="contextmenu_open_in_app">Mở với ứng dụng</string>
   <string name="contextmenu_link_share">Chia sẻ liên kết</string>
   <string name="contextmenu_link_copy">Sao chép địa chỉ liên kết</string>
   <string name="contextmenu_image_share">Chia sẻ hình ảnh</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">Tự động điền URLs cho các trang web bạn sử dụng\n Nhấp và giữ bất kỳ URL trong thanh địa chỉ</string>
   <string name="tip_open_in_new_tab">Mở liên kết trên thẻ mới\n Nhấp và giữ bất kì liên kết nào trên trang</string>
   <string name="tip_request_desktop">Muốn xem phiên bản máy tính?%1$s Menu &gt; Yêu cầu trang web trên máy tính</string>
+  <string name="tip_disable_tips2">Tắt mẹo trên màn hình bắt đầu</string>
+  <string name="new_tab_opened_snackbar">Đã mở thẻ mới</string>
+  <string name="open_new_tab_snackbar">Chuyển</string>
+  <string name="preference_open_new_tab">Chuyển sang liên kết trong thẻ mới ngay lập tức</string>
+  <string name="preference_category_safe_browsing">Duyệt web an toàn</string>
+  <string name="preference_safe_browsing_title">Chặn các trang web nguy hiểm và lừa đảo</string>
+  <string name="preference_safe_browsing_summary">Chặn các trang web được báo cáo là lừa đảo và tấn công, trang web phần mềm độc hại và các trang web phần mềm không mong muốn.</string>
+  <string name="preference_exceptions">Ngoại lệ</string>
+  <string name="preference_exceptions_description">Bạn đã tắt chế độ Chặn nội dung cho các trang web này.</string>
+  <string name="preference_exceptions_menu_remove">Xóa</string>
+  <string name="preference_exceptions_remove_all_button_label">Xóa tất cả các trang web</string>
+  <string name="tab_crash_report_title">Thẻ bị hỏng</string>
+  <string name="tab_crash_report_headline">Rất tiếc. Chúng tôi đã gặp sự cố với thẻ này.</string>
+  <string name="tab_crash_report_description">Trong trình duyệt riêng tư, chúng tôi không bao giờ lưu và không thể khôi phục thẻ này.</string>
+  <string name="tab_crash_report_close_tab_button_label">Đóng thẻ</string>
+  <string name="fatal_crash_report_title">Rất tiếc. %1$s đã gặp sự cố và đã hỏng.</string>
+  <string name="fatal_crash_report_description">Trong trình duyệt riêng tư, chúng tôi không bao giờ lưu và không thể khôi phục phiên duyệt web cuối cùng của bạn.</string>
+  <string name="fatal_crash_report_close_button_label">Đóng</string>
+  <string name="fatal_crash_report_restart_firefox_label">Khởi động lại %1$s</string>
+  <string name="crash_report_send_crash_label">Gửi báo cáo lỗi đến Mozilla</string>
 </resources>

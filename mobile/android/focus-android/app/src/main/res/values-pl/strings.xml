@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Wpisz adres lub szukaj</string>
   <string name="teaser">Automatyczne przeglądanie prywatne.\nPrzeglądaj. Usuwaj. Powtórz.</string>
   <string name="feedback_erase">Usunięto historię przeglądania.</string>
+  <string name="feedback_erase_custom_tab">Usunięto historię przeglądania tej karty.</string>
   <string name="search_hint">Wyszukaj „%1$s”</string>
   <string name="menu_share">Udostępnij…</string>
   <string name="menu_report_site_issue">Zgłoś problem ze stroną</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Pomoc</string>
   <string name="menu_rights">O prawach użytkownika</string>
   <string name="menu_trackers_blocked_title">Blokowanie</string>
+  <string name="menu_trackers_blocked_subtitle">Wyłączenie może rozwiązać niektóre problemy ze stroną</string>
+  <string name="menu_content_blocking">Blokowanie treści</string>
+  <string name="menu_content_blocking_subtitle">Wyłączenie może naprawić działanie niektórych stron</string>
   <string name="menu_custom_tab_branding">Funkcja %1$s</string>
   <string name="share_dialog_title">Udostępnij przez</string>
   <string name="notification_erase_text">Usuń historię przeglądania</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Usuń i otwórz</string>
   <string name="shortcut_erase_short_label">Usuń historię</string>
   <string name="shortcut_erase_long_label">Usuń historię przeglądania</string>
+  <string name="shortcut_erase_and_open_short_label">Usuń i otwórz</string>
+  <string name="shortcut_erase_and_open_long_label">Usuń i otwórz %1$s</string>
   <string name="text_selection_search_action">Wyszukaj prywatnie</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s daje wi&#281;ksz&#261; kontrol&#281;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Jako prywatna przegl&#261;darka umo&#380;liwia:\n  "<ul>"\n    "<li>wyszukiwanie i&#160;przegl&#261;danie prosto z&#160;aplikacji</li>"\n    "<li>blokowanie &#347;ledzenia (mo&#380;na to zmieni&#263; w&#160;ustawieniach)</li>"\n    "<li>usuwanie ciasteczek oraz ca&#322;ej historii wyszukiwania i&#160;przegl&#261;dania</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s jest tworzony przez Mozill&#281;. Naszym celem jest wspieranie zdrowego i&#160;otwartego Internetu.<br/>\n<a href="%2$s">Wi&#281;cej informacji</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Prywatność i bezpieczeństwo</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Strony</string>
   <string name="preference_category_switching_apps">Przełączanie aplikacji</string>
   <string name="preference_category_general">Ogólne</string>
+  <string name="preference_general_summary">Domyślna przeglądarka, karty, język</string>
   <string name="preference_category_data_collection_use">Zbieranie i wykorzystywanie danych</string>
   <string name="preference_category_search">Wyszukiwanie</string>
   <string name="preference_show_search_suggestions">Podpowiedzi wyszukiwania</string>
   <string name="preference_show_search_suggestions_summary">%1$s będzie wysyłał słowa wpisywane na pasku adresu do wyszukiwarki</string>
   <string name="preference_search_engine_default">Domyślna</string>
+  <string name="preference_search_engine_label">Wyszukiwarka</string>
   <string name="preference_state_on">Włączone</string>
   <string name="preference_state_off">Wyłączone</string>
   <string name="preference_subitem_autocomplete">Automatyczne uzupełnianie adresów</string>
+  <string name="preference_switch_autocomplete_topsites">Dla popularnych stron</string>
+  <string name="preference_autocomplete_topsite_summary">Włącz, aby automatycznie uzupełniać ponad 450 popularnych adresów na pasku adresu.</string>
+  <string name="preference_switch_autocomplete_user_list">Dla dodanych stron</string>
+  <string name="preference_autocomplete_user_list_summary">Włącz, aby automatycznie uzupełniać ponad 450 popularnych adresów na pasku adresu.</string>
+  <string name="preference_category_autocomplete_manage_sites">Zarządzaj stronami</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Zarządzaj stronami</string>
   <string name="preference_autocomplete_action_add">+ Dodaj inny adres</string>
   <string name="preference_autocomplete_title_add">Dodaj inny adres</string>
   <string name="custom_autocomplete_quick_add">Dodaj inny adres</string>
+  <string name="add_custom_autocomplete_label">Dodaj odnośnik do automatycznego uzupełniania</string>
   <string name="preference_category_cookies">Ciasteczka i dane stron</string>
   <string name="preference_category_data_choices">Udostępniane dane</string>
   <string name="preference_autocomplete_title_remove">Usuń inny adres</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Włączenie może spowodować nieoczekiwane zachowanie niektórych stron</string>
   <string name="preference_privacy_category_cookies">Blokowanie ciasteczek</string>
   <string name="preference_privacy_should_block_cookies_no_option">Nie</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blokowanie tylko śledzących ciasteczek zewnętrznych witryn</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokowanie tylko ciasteczek zewnętrznych witryn</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Tak</string>
   <string name="preference_security_biometric">Odblokowywanie aplikacji odciskiem palca</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Wczytywanie</string>
   <string name="accessibility_announcement_loading_finished">Wczytano stronę</string>
   <string name="content_description_menu">Więcej opcji</string>
+  <string name="indicator_content_description_menu">Więcej opcji</string>
   <string name="content_description_forward">Przejdź do przodu</string>
   <string name="content_description_reload">Ponownie wczytaj stronę</string>
   <string name="content_description_back">Przejdź wstecz</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Mo&#380;e to by&#263; problem konfiguracji serwera lub pr&#243;ba podania si&#281;\nza ten serwer przez podmiot nieuprawniony.</li>"\n  "<li>Je&#347;li &#322;&#261;czono si&#281; wcze&#347;niej z&#160;tym serwerem, b&#322;&#261;d mo&#380;e by&#263; tymczasowy\ni&#160;nale&#380;y spr&#243;bowa&#263; ponownie p&#243;&#378;niej.</li>\n</ul>]]></string>
   <string name="error_generic_title">Wystąpił błąd</string>
   <string name="error_generic_message">Nie można otworzyć tej strony.</string>
+  <string name="contextmenu_open_in_app">Otwórz za pomocą aplikacji</string>
   <string name="contextmenu_link_share">Udostępnij odnośnik</string>
   <string name="contextmenu_link_copy">Kopiuj adres odnośnika</string>
   <string name="contextmenu_image_share">Udostępnij obraz</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">Automatycznie uzupełniaj adresy najczęściej odwiedzanych stron\n Przytrzymaj dowolny adres na pasku adresu</string>
   <string name="tip_open_in_new_tab">Otwórz odnośnik w nowej karcie\n Przytrzymaj dowolny odnośnik na stronie</string>
   <string name="tip_request_desktop">Wolisz pełną wersję strony jak na komputerze?%1$s Menu → Wersja na komputery</string>
+  <string name="tip_disable_tips2">Wyłącz wskazówki na ekranie głównym</string>
+  <string name="new_tab_opened_snackbar">Otwarto nową kartę</string>
+  <string name="open_new_tab_snackbar">Przejdź</string>
+  <string name="preference_open_new_tab">Przechodzenie do odnośnika w nowej karcie bez pytania</string>
+  <string name="preference_category_safe_browsing">Bezpieczne przeglądanie</string>
+  <string name="preference_safe_browsing_title">Blokowanie potencjalnie niebezpiecznych i podejrzanych stron</string>
+  <string name="preference_safe_browsing_summary">Blokowanie zgłoszonych podejrzanych i stanowiących zagrożenie stron oraz stron ze złośliwym i niechcianym oprogramowaniem.</string>
+  <string name="preference_exceptions">Wyjątki</string>
+  <string name="preference_exceptions_description">Blokowanie treści jest wyłączone dla tych stron.</string>
+  <string name="preference_exceptions_menu_remove">Usuń</string>
+  <string name="preference_exceptions_remove_all_button_label">Usuń wszystkie strony</string>
+  <string name="tab_crash_report_title">Karta uległa awarii</string>
+  <string name="tab_crash_report_headline">Wystąpił problem z tą kartą.</string>
+  <string name="tab_crash_report_description">Prywatna przeglądarka nigdy nic nie zapisuje, więc nie można przywrócić tej karty.</string>
+  <string name="tab_crash_report_close_tab_button_label">Zamknij kartę</string>
+  <string name="fatal_crash_report_title">%1$s uległ awarii.</string>
+  <string name="fatal_crash_report_description">Prywatna przeglądarka nigdy nic nie zapisuje, więc nie można przywrócić ostatniej sesji przeglądania.</string>
+  <string name="fatal_crash_report_close_button_label">Zamknij</string>
+  <string name="fatal_crash_report_restart_firefox_label">Uruchom %1$s ponownie</string>
+  <string name="crash_report_send_crash_label">Zgłoś awarię Mozilli</string>
 </resources>

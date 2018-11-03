@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Voer zoekterm of adres in</string>
   <string name="teaser">Automatische privénavigatie.\nSurfen. Wissen. Herhalen.</string>
   <string name="feedback_erase">Uw navigatiegeschiedenis is gewist.</string>
+  <string name="feedback_erase_custom_tab">Navigatiegeschiedenis van tabblad is gewist.</string>
   <string name="search_hint">Zoeken naar %1$s</string>
   <string name="menu_share">Delen…</string>
   <string name="menu_report_site_issue">Websiteprobleem rapporteren</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Help</string>
   <string name="menu_rights">Uw rechten</string>
   <string name="menu_trackers_blocked_title">Trackers geblokkeerd</string>
+  <string name="menu_trackers_blocked_subtitle">Uitschakelen hiervan kan bepaalde websiteproblemen verhelpen</string>
+  <string name="menu_content_blocking">Inhoudsblokkering</string>
+  <string name="menu_content_blocking_subtitle">Schakel dit uit om bepaalde websites te repareren</string>
   <string name="menu_custom_tab_branding">Mogelijk gemaakt door %1$s</string>
   <string name="share_dialog_title">Delen via</string>
   <string name="notification_erase_text">Navigatiegeschiedenis wissen</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Wissen en openen</string>
   <string name="shortcut_erase_short_label">Wissen</string>
   <string name="shortcut_erase_long_label">Navigatiegeschiedenis wissen</string>
+  <string name="shortcut_erase_and_open_short_label">Wissen en openen</string>
+  <string name="shortcut_erase_and_open_long_label">Wissen en %1$s openen</string>
   <string name="text_selection_search_action">Privé zoeken</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s geeft u de controle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gebruik als een priv&#233;browser:\n  "<ul>"\n    "<li>Rechtstreeks vanuit de app zoeken en browsen</li>"\n    "<li>Trackers blokkeren (of instellingen bijwerken om ze toe te staan)</li>"\n    "<li>Wissen verwijdert zowel cookies als zoek- en navigatiegeschiedenis</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wordt gemaakt door Mozilla. Onze missie is het verzorgen van een gezond en open internet.<br/>\n<a href="%2$s">Meer info</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Privacy en beveiliging</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Webinhoud</string>
   <string name="preference_category_switching_apps">Wisselen tussen apps</string>
   <string name="preference_category_general">Algemeen</string>
+  <string name="preference_general_summary">Standaardbrowser, tabbladen, taal</string>
   <string name="preference_category_data_collection_use">Gegevensverzameling en -gebruik</string>
   <string name="preference_category_search">Zoeken</string>
   <string name="preference_show_search_suggestions">Zoeksuggesties verkrijgen</string>
   <string name="preference_show_search_suggestions_summary">%1$s zal wat u in de adresbalk intypt naar uw zoekmachine sturen</string>
   <string name="preference_search_engine_default">Standaard</string>
+  <string name="preference_search_engine_label">Zoekmachine</string>
   <string name="preference_state_on">Aan</string>
   <string name="preference_state_off">Uit</string>
   <string name="preference_subitem_autocomplete">URL’s automatisch aanvullen</string>
+  <string name="preference_switch_autocomplete_topsites">Voor topwebsites</string>
+  <string name="preference_autocomplete_topsite_summary">Schakel dit in om automatisch meer dan 450 populaire URL’s in de adresbalk aan te vullen.</string>
+  <string name="preference_switch_autocomplete_user_list">Voor websites die u toevoegt</string>
+  <string name="preference_autocomplete_user_list_summary">Schakel dit in om automatisch meer dan 450 populaire URL’s in de adresbalk aan te vullen.</string>
+  <string name="preference_category_autocomplete_manage_sites">Websites beheren</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Websites beheren</string>
   <string name="preference_autocomplete_action_add">+ Aangepaste URL toevoegen</string>
   <string name="preference_autocomplete_title_add">Aangepaste URL toevoegen</string>
   <string name="custom_autocomplete_quick_add">Aangepaste URL toevoegen</string>
+  <string name="add_custom_autocomplete_label">Koppeling naar automatisch aanvullen toevoegen</string>
   <string name="preference_category_cookies">Cookies en websitegegevens</string>
   <string name="preference_category_data_choices">Gegevenskeuzes</string>
   <string name="preference_autocomplete_title_remove">Aangepaste URL’s verwijderen</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Inschakelen kan onverwacht gedrag van bepaalde pagina’s veroorzaken</string>
   <string name="preference_privacy_category_cookies">Cookies blokkeren</string>
   <string name="preference_privacy_should_block_cookies_no_option">Nee</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Alleen tracking-cookies van derden blokkeren</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Alleen cookies van derden blokkeren</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
   <string name="preference_security_biometric">Vingerafdruk voor ontgrendelen van app gebruiken</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Laden</string>
   <string name="accessibility_announcement_loading_finished">Website geladen</string>
   <string name="content_description_menu">Meer opties</string>
+  <string name="indicator_content_description_menu">Knop voor meer opties</string>
   <string name="content_description_forward">Vooruit bladeren</string>
   <string name="content_description_reload">Website opnieuw laden</string>
   <string name="content_description_back">Terug bladeren</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dit kan een probleem met de serverconfiguratie zijn, of iemand probeert\nde server na te bootsen.</li>"\n  "<li>Als u in het verleden met succes verbinding met deze server hebt gemaakt,\nkan de fout van tijdelijke aard zijn en kunt u het later nogmaals proberen.</li>\n</ul>]]></string>
   <string name="error_generic_title">Oeps</string>
   <string name="error_generic_message">Deze pagina kan om de een of andere reden niet worden geladen.</string>
+  <string name="contextmenu_open_in_app">Openen met app</string>
   <string name="contextmenu_link_share">Koppeling delen</string>
   <string name="contextmenu_link_copy">Koppelingsadres kopiëren</string>
   <string name="contextmenu_image_share">Afbeelding delen</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">URL’s voor meestgebruikte websites automatisch aanvullen\n Houd uw vinger op een URL in de adresbalk</string>
   <string name="tip_open_in_new_tab">Een koppeling in een nieuw tabblad openen\n Houd uw vinger op een koppeling op een pagina</string>
   <string name="tip_request_desktop">Ziet u liever de volledige desktopwebsite?%1$s Menu &gt; Desktopwebsite opvragen</string>
+  <string name="tip_disable_tips2">Tips op het startscherm uitschakelen</string>
+  <string name="new_tab_opened_snackbar">Nieuw tabblad geopend</string>
+  <string name="open_new_tab_snackbar">Wisselen</string>
+  <string name="preference_open_new_tab">Onmiddellijk naar koppeling in nieuw tabblad wisselen</string>
+  <string name="preference_category_safe_browsing">Safe Browsing</string>
+  <string name="preference_safe_browsing_title">Mogelijk gevaarlijke en misleidende websites blokkeren</string>
+  <string name="preference_safe_browsing_summary">Gerapporteerde misleidende en aanvalsites, malwaresites en ongewenste-software-websites blokkeren.</string>
+  <string name="preference_exceptions">Uitzonderingen</string>
+  <string name="preference_exceptions_description">U hebt inhoudsblokkering voor deze websites uitgeschakeld.</string>
+  <string name="preference_exceptions_menu_remove">Verwijderen</string>
+  <string name="preference_exceptions_remove_all_button_label">Alle websites verwijderen</string>
+  <string name="tab_crash_report_title">Tabblad gecrasht</string>
+  <string name="tab_crash_report_headline">Sorry. Er is een probleem met dit tabblad.</string>
+  <string name="tab_crash_report_description">Als privébrowser slaan we nooit iets op en kunnen we dit tabblad niet herstellen.</string>
+  <string name="tab_crash_report_close_tab_button_label">Tabblad sluiten</string>
+  <string name="fatal_crash_report_title">Sorry. %1$s had een probleem en is gecrasht.</string>
+  <string name="fatal_crash_report_description">Als privébrowser slaan we nooit iets op en kunnen we uw laatste browsersessie niet herstellen.</string>
+  <string name="fatal_crash_report_close_button_label">Sluiten</string>
+  <string name="fatal_crash_report_restart_firefox_label">%1$s herstarten</string>
+  <string name="crash_report_send_crash_label">Crashrapport naar Mozilla verzenden</string>
 </resources>

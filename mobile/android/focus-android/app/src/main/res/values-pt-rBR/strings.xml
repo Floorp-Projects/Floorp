@@ -224,4 +224,6 @@
   <string name="tip_autocomplete_url">Autocompletar as URLs para os sites que você mais usa\n Pressione continuamente qualquer URL na barra de endereços</string>
   <string name="tip_open_in_new_tab">Abrir um link numa nova aba\n Pressione continuamente qualquer link numa página</string>
   <string name="tip_request_desktop">Prefere ver a versão desktop completa do site?%1$s Menu &gt; Solicitar site desktop</string>
+  <string name="tab_crash_report_description">Por razões de confidencialidade, suas abas não são salvas e, consequentemente, não podem ser restauradas.</string>
+  <string name="fatal_crash_report_description">Por razões de confidencialidade, sua última sessão de navegação não foi salva e, consequentemente, não pode ser restaurada.</string>
 </resources>

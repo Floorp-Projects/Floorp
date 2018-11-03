@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Nadi neγ sekcem tansa</string>
   <string name="teaser">Tunigin tusligt tawurmant.\nSnirem. Kkes. Sniles.</string>
   <string name="feedback_erase">Amazray-inek n unadi yettwasfeḍ.</string>
+  <string name="feedback_erase_custom_tab">Amazray n tunigin n yiccer yettwasfed.</string>
   <string name="search_hint">Nadi %1$s</string>
   <string name="menu_share">Bḍu…</string>
   <string name="menu_report_site_issue">Azen-d ugur-agi</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Tallalt</string>
   <string name="menu_rights">Izerfan-inek</string>
   <string name="menu_trackers_blocked_title">Ineḍfaṛen ttwaḥebsen</string>
+  <string name="menu_trackers_blocked_subtitle">Ma tsenseḍ aya, izmer ad ttwasegmen kra n uguren</string>
+  <string name="menu_content_blocking">Asewḥel n ugbur</string>
+  <string name="menu_content_blocking_subtitle">Sens akken ad tqaεḍeḍ kra n ismal</string>
   <string name="menu_custom_tab_branding">Ddaw leɛnaya n %1$s</string>
   <string name="share_dialog_title">Bdu s</string>
   <string name="notification_erase_text">Sfeḍ amazray n tunigin</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Sfeḍ sakin Ldi</string>
   <string name="shortcut_erase_short_label">Sfeḍ</string>
   <string name="shortcut_erase_long_label">Sfeḍ amazray n tunigin</string>
+  <string name="shortcut_erase_and_open_short_label">Sfeḍ &amp; Ldi</string>
+  <string name="shortcut_erase_and_open_long_label">Sfeḍ sakin ldi %1$s</string>
   <string name="text_selection_search_action">Anadi uslig</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ad k-d-yefk afus ad teqqime&#7693; d aqe&#7771;&#7771;u.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Seqdec-it d iminig uslig:\n  "<ul>"\n    "<li>Nadi sakin snirem akken iwata deg usnas</li>"\n    "<li>Sew&#7717;el imesfu&#611;al (ne&#947; snifel i&#947;ewwa&#7771;en akken ad tsirge&#7693; imesfu&#947;al)</li>"\n    "<li>Sfe&#7693; inagan n tuqna akked amazray n tunigin d unadi</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s yesnulfa-t-id Mozilla. Tu&#947;da&#7789;-nne&#947; ad n&#7717;areb &#947;ef internet yeldin d tezmert-is.<br/>\n<a href="%2$s">Issin ugar</a></p>]]></string>
   <string name="preference_privacy_and_security_header">"Tabaḍnit  &amp; Taɣellist"</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Agbur Web</string>
   <string name="preference_category_switching_apps">Tunigin gar yisnasen</string>
   <string name="preference_category_general">Amatu</string>
+  <string name="preference_general_summary">Iminig amezwar, iccaren, tutlayt</string>
   <string name="preference_category_data_collection_use">Alqaḍ &amp; Aseqdec n yisefka</string>
   <string name="preference_category_search">Nadi</string>
   <string name="preference_show_search_suggestions">Sken isumar n unadi</string>
   <string name="preference_show_search_suggestions_summary">%1$s ad ak-n-yazen tawsit-inek deg ufeggag n tansiwin ɣer umsedday-inek n unadi</string>
   <string name="preference_search_engine_default">Amezwer</string>
+  <string name="preference_search_engine_label">Amsedday n unadi</string>
   <string name="preference_state_on">Yermed</string>
   <string name="preference_state_off">Yensa</string>
   <string name="preference_subitem_autocomplete">Taččart tawurmant URL</string>
+  <string name="preference_switch_autocomplete_topsites">I yismal ifazen</string>
+  <string name="preference_autocomplete_topsite_summary">Rmed t teččart tawurmant ugar n 450 URLs ittwasnen deg ufeggag n tansiwin.</string>
+  <string name="preference_switch_autocomplete_user_list">I yismal ad ternuḍ</string>
+  <string name="preference_autocomplete_user_list_summary">Ur yizmir ara ad yesεu taččart tawurmant i ugar n 450 n URLs deg ufeggag n tansiwin.</string>
+  <string name="preference_category_autocomplete_manage_sites">Sefrerk ismal</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Sefrerk ismal</string>
   <string name="preference_autocomplete_action_add">+ Rnu URL aganan</string>
   <string name="preference_autocomplete_title_add">Rnu URL aganan</string>
   <string name="custom_autocomplete_quick_add">Rnu URL aganan</string>
+  <string name="add_custom_autocomplete_label">Rnu aseɣwen i taččart tawurmant</string>
   <string name="preference_category_cookies">Inagan n tuqqna d yisefka n yismal</string>
   <string name="preference_category_data_choices">Alqaḍ n yisefka</string>
   <string name="preference_autocomplete_title_remove">Kkes URLs iganen</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Armad n uγwwaṛèagi izmer ad yeglu s kra n wuguren di kra n isebtar</string>
   <string name="preference_privacy_category_cookies">Sewḥel inagan n tuqna</string>
   <string name="preference_privacy_should_block_cookies_no_option">Ala</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Sewḥel kan inagan n tuqqna n ufecku wis 3</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Sewḥel kan inagan n tuqqna n ufecku wis 3</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ih</string>
   <string name="preference_security_biometric">Seqdec adsil umḍin akken ad tserḥeḍ i usnas</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Asali</string>
   <string name="accessibility_announcement_loading_finished">Asmel web yuli-d</string>
   <string name="content_description_menu">Ugar n iγewwaṛen</string>
+  <string name="indicator_content_description_menu">Tageffalt n vewwaṛen-nniḍen</string>
   <string name="content_description_forward">Inig ar zdat</string>
   <string name="content_description_reload">Ales asali n usmel web</string>
   <string name="content_description_back">Inig ar deffir</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[" "<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" "<li>Ayagi yekka-d ahat seg ugur n twila n uqeddac ne&#947; amdan yetta&#603;ra&#7693;en ad yakker timagit n uqeddac.</li>"\n  "<li>Ma yella teqqne&#7693; yakan ar uqeddac-agi, ahat tucc&#7693;a d umatu kan, tzemre&#7693; ad t&#603;er&#7693;e&#7693; tikelt-nni&#7693;en ticki.</li></ul>]]></string>
   <string name="error_generic_title">Ihuh</string>
   <string name="error_generic_message">Ur nezmir ara ad d-nsali asebter-agi, ur neẓri ara acuγer.</string>
+  <string name="contextmenu_open_in_app">Ldi s usnas</string>
   <string name="contextmenu_link_share">Bḍu aseγwen</string>
   <string name="contextmenu_link_copy">Nγel tansa n useγwen</string>
   <string name="contextmenu_image_share">Bḍu tugna</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">Taččarant tawurmant URLs i yismal i tseqdaceḍ aṭas \n Asenned ɣezzifen ɣef URL ibɣu yilli deg ufeggag n tansiwin</string>
   <string name="tip_open_in_new_tab">Ldi aseɣwen deg iccer amaynut\n Asenned ɣezzifen ɣef useɣwen deg usebter</string>
   <string name="tip_request_desktop">Iff-itt ma twalaḍ asmel aččuran?%1$s Umuɣ &gt; Suter asmel n tnarit</string>
+  <string name="tip_disable_tips2">Sens timahaltin deg ugdil n tnekra</string>
+  <string name="new_tab_opened_snackbar">Iccer amaynut yeldi</string>
+  <string name="open_new_tab_snackbar">Nṭew</string>
+  <string name="preference_open_new_tab">Nṭew ɣer useɣwen deg iccer amaynut</string>
+  <string name="preference_category_safe_browsing">Tunigin taɣelsant</string>
+  <string name="preference_safe_browsing_title">Sewḥel yir agbur neɣ ismal iweɛṛen</string>
+  <string name="preference_safe_browsing_summary">Inni-aɣ-d ɣef tigawin n usaxser n ismal, ismal n uḍfar, akked isaɣzan n ddiri deg ismal.</string>
+  <string name="preference_exceptions">Tisuraf</string>
+  <string name="preference_exceptions_description">Tsenseḍ asewḥel n ugbur i yismal-agi.</string>
+  <string name="preference_exceptions_menu_remove">Kkes</string>
+  <string name="preference_exceptions_remove_all_button_label">Kkes akk ismal web</string>
+  <string name="tab_crash_report_title">Yaɣli iccer</string>
+  <string name="tab_crash_report_headline">Nesḥasef. nesεa ugur akked iccer-agi.</string>
+  <string name="tab_crash_report_description">Immi d iminig uslig, werǧin ad nsekles neɣ ad d-nner iccaren.</string>
+  <string name="tab_crash_report_close_tab_button_label">Mdel Iccer</string>
+  <string name="fatal_crash_report_title">Nesḥasef. %1$s isεa ugur sakin yeɣli.</string>
+  <string name="fatal_crash_report_description">Immi d iminig uslig, werǧin ad nsekles neɣ ad d-nner tiɣimit-inek taneggarut.</string>
+  <string name="fatal_crash_report_close_button_label">Mdel</string>
+  <string name="fatal_crash_report_restart_firefox_label">Ales asenker n %1$s</string>
+  <string name="crash_report_send_crash_label">Azen aneqqis n uɣelluy i Mozilla</string>
 </resources>

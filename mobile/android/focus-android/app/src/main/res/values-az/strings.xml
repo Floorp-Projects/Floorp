@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Ünvanı daxil et və ya axtar</string>
   <string name="teaser">Avtomatik məxfi səyahət.\nGəz. Poz. Təkrarla.</string>
   <string name="feedback_erase">Səyahət tarixçəniz silindi.</string>
+  <string name="feedback_erase_custom_tab">Vərəqin tarixçəsi pozuldu.</string>
   <string name="search_hint">%1$s üçün axtar</string>
   <string name="menu_share">Paylaş…</string>
   <string name="menu_report_site_issue">Sayt Problemini Bildir</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Kömək</string>
   <string name="menu_rights">Hüquqlarınız</string>
   <string name="menu_trackers_blocked_title">İzləyicilər bloklandı</string>
+  <string name="menu_trackers_blocked_subtitle">Bunu söndürmə bəzi sayt uyğunsuzluqlarını həll edə bilər</string>
+  <string name="menu_content_blocking">Məzmun Əngəlləmə</string>
+  <string name="menu_content_blocking_subtitle">Bəzi saytlardakı problemləri həll etmək üçün söndürün</string>
   <string name="menu_custom_tab_branding">%1$s Tərəfindən</string>
   <string name="share_dialog_title">Bununla paylaş:</string>
   <string name="notification_erase_text">Səyahət keçmişini poz</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Poz və Aç</string>
   <string name="shortcut_erase_short_label">Poz</string>
   <string name="shortcut_erase_long_label">Səyahət keçmişini poz</string>
+  <string name="shortcut_erase_and_open_short_label">Poz və Aç</string>
+  <string name="shortcut_erase_and_open_long_label">Poz və %1$s tətbiqini aç</string>
   <string name="text_selection_search_action">Məxfi Axtar</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s sizi idar&#601;nin ba&#351;&#305;na qoyur</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Bunu m&#601;xfi s&#601;yyah olaraq i&#351;l&#601;din:\n  "<ul>"\n    "<li>Birba&#351;a t&#601;tbiqd&#601; axtar&#305;n v&#601; g&#601;zin</li>"\n    "<li>&#304;zl&#601;yicil&#601;ri &#601;ng&#601;ll&#601;yin (v&#601; ya t&#601;nziml&#601;m&#601;d&#601;n icaz&#601; verin)</li>"\n    "<li>&#199;&#601;r&#601;zl&#601;ri, axtar&#305;&#351; v&#601; g&#601;zm&#601; tarix&#231;&#601;sini silm&#601;k &#252;&#231;&#252;n pozun</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s q&#252;rurla Mozilla t&#601;r&#601;find&#601;n. Missiyam&#305;z sa&#287;lam v&#601; a&#231;&#305;q interneti t&#601;min etm&#601;kdir.<br/>\n<a href="%2$s">&#399;trafl&#305; &#246;yr&#601;n</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Məxfilik və Təhlükəsizlik</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Web Məzmun</string>
   <string name="preference_category_switching_apps">Tətbiq Keçidi</string>
   <string name="preference_category_general">Ümumi</string>
+  <string name="preference_general_summary">Əsas səyyah, vərəqlər və dil</string>
   <string name="preference_category_data_collection_use">Məlumat yığılması və istifadəsi</string>
   <string name="preference_category_search">Axtar</string>
   <string name="preference_show_search_suggestions">Axtarış təkliflərini al</string>
   <string name="preference_show_search_suggestions_summary">%1$s ünvan sətrində yazdıqlarınızı axtarış mühərriyinizə göndərəcək</string>
   <string name="preference_search_engine_default">İlkin hal</string>
+  <string name="preference_search_engine_label">Axtarış mühərriyi</string>
   <string name="preference_state_on">Açıq</string>
   <string name="preference_state_off">Bağlı</string>
   <string name="preference_subitem_autocomplete">Ünvan Avtomatik Tamamlama</string>
+  <string name="preference_switch_autocomplete_topsites">Çox istifadə edilən saytlar üçün</string>
+  <string name="preference_autocomplete_topsite_summary">Ünvan sətrində məşhur 450 saytı avtomatik tamamlamaq üçün aktivləşdirin.</string>
+  <string name="preference_switch_autocomplete_user_list">Əlavə etdiyiniz saytlar üçün</string>
+  <string name="preference_autocomplete_user_list_summary">Ünvan sətrində məşhur 450 saytı avtomatik tamamlamaq üçün aktivləşdirin.</string>
+  <string name="preference_category_autocomplete_manage_sites">Saytları idarə et</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Saytları idarə et</string>
   <string name="preference_autocomplete_action_add">+ Fərdi ünvan əlavə et</string>
   <string name="preference_autocomplete_title_add">Fərdi ünvan əlavə et</string>
   <string name="custom_autocomplete_quick_add">Fərdi ünvan əlavə et</string>
+  <string name="add_custom_autocomplete_label">Avtomatik tamamlama üçün keçid əlavə edin</string>
   <string name="preference_category_cookies">Çərəzlər və Sayt Məlumatları</string>
   <string name="preference_category_data_choices">Məlumat Seçimləri</string>
   <string name="preference_autocomplete_title_remove">Fərdi ünvanı sil</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Aktivləşdirmə bəzi səhifələrdə gözlənilməz səhvlərə səbəb ola bilər</string>
   <string name="preference_privacy_category_cookies">Çərəzləri əngəllə</string>
   <string name="preference_privacy_should_block_cookies_no_option">Xeyr</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Ancaq 3cü tərəf izləmə çərəzlərini əngəllə</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Ancaq 3cü tərəf çərəzləri əngəllə</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Bəli</string>
   <string name="preference_security_biometric">Tətbiqi açmaq üçün barmaq izi işlət</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Yüklənir</string>
   <string name="accessibility_announcement_loading_finished">Sayt yükləndi</string>
   <string name="content_description_menu">Digər seçimlər</string>
+  <string name="indicator_content_description_menu">Daha çox seçim düyməsi</string>
   <string name="content_description_forward">İrəli keç</string>
   <string name="content_description_reload">Saytı yenilə</string>
   <string name="content_description_back">Geri get</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Bu serverin konfiqurasiyas&#305; il&#601; v&#601; ya biril&#601;rinin server&#601; h&#252;c&#252;m etm&#601;si il&#601; ba&#287;l&#305; ola bil&#601;r.</li>"\n  "<li>&#399;g&#601;r daha sonra bu server&#601; u&#287;urlu ba&#287;lana bilmi&#351;dinizs&#601;, bu x&#601;ta m&#252;v&#601;qq&#601;ti ola bil&#601;r v&#601; daha sonra t&#601;krar yoxlaya bil&#601;rsiz.</li>\n</ul>]]></string>
   <string name="error_generic_title">Uups</string>
   <string name="error_generic_message">Bəzi səbəblərdən bu səhifəni yükləyə bilmirik.</string>
+  <string name="contextmenu_open_in_app">Tətbiq ilə aç</string>
   <string name="contextmenu_link_share">Keçidi paylaş</string>
   <string name="contextmenu_link_copy">Keçid ünvanını köçür</string>
   <string name="contextmenu_image_share">Şəkli paylaş</string>
@@ -224,4 +242,24 @@
   <string name="tip_autocomplete_url">Çox işlətdiyiniz saytlar üçün avto doldurma\n Ünvan sətrindəki hər hansı bir ünvana uzun basın</string>
   <string name="tip_open_in_new_tab">Keçidi yeni vərəqdə açın\n Səhifədə hər hansı bir keçidə uzun basın</string>
   <string name="tip_request_desktop">Bütöv masaüstü saytını görmək istəyirsiniz?%1$s Menyu &gt; Masaüstü saytını istə</string>
+  <string name="tip_disable_tips2">Ana ekranındakı məsləhətləri söndür</string>
+  <string name="new_tab_opened_snackbar">Yeni vərəq açıldı</string>
+  <string name="open_new_tab_snackbar">Keç</string>
+  <string name="preference_open_new_tab">Yeni vərəqdəki keçidə dərhal keç</string>
+  <string name="preference_category_safe_browsing">Təhlükəsiz Səyahət</string>
+  <string name="preference_safe_browsing_title">Potensial təhlükəli və aldadıcı saytları əngəllə</string>
+  <string name="preference_safe_browsing_summary">Zərərverici, aldadıcı, istənməyən saytları əngəllə.</string>
+  <string name="preference_exceptions">İstisnalar</string>
+  <string name="preference_exceptions_description">Bu saytlar üçün Məzmun Əngəlləməni söndürmüsünüz.</string>
+  <string name="preference_exceptions_menu_remove">Sil</string>
+  <string name="preference_exceptions_remove_all_button_label">Bütün saytları sil</string>
+  <string name="tab_crash_report_title">Vərəq Çökdü</string>
+  <string name="tab_crash_report_headline">Üzr istəyirik. Bu vərəqlə əlaqədar problemimiz var.</string>
+  <string name="tab_crash_report_description">Məxfi səyyah olaraq biz heç vaxt vərəqləri saxlamırıq və bu səbəbdən də bu vərəqi bərpa edə bilməyəcik.</string>
+  <string name="tab_crash_report_close_tab_button_label">Vərəqi Qapat</string>
+  <string name="fatal_crash_report_title">Üzr istəyirik. %1$s səyyahında xəta oldu və çökdü.</string>
+  <string name="fatal_crash_report_description">Məxfi səyyah olaraq sessiyalarınızı saxlamırıq və bu səbəbdən də son səyahət sessiyanızı bərpa edə bilmirik.</string>
+  <string name="fatal_crash_report_close_button_label">Qapat</string>
+  <string name="fatal_crash_report_restart_firefox_label">%1$s səyyahını yenidən başlat</string>
+  <string name="crash_report_send_crash_label">Çökmə hesabatını Mozillaya göndər</string>
 </resources>

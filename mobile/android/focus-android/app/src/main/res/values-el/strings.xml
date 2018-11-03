@@ -18,6 +18,7 @@
   <string name="menu_help">Βοήθεια</string>
   <string name="menu_rights">Τα δικαιώματά σας</string>
   <string name="menu_trackers_blocked_title">Αποκλεισμένοι ιχνηλάτες</string>
+  <string name="menu_content_blocking">Φραγή περιεχομένου</string>
   <string name="menu_custom_tab_branding">Με την υποστήριξη του %1$s</string>
   <string name="share_dialog_title">Κοινοποίηση μέσω</string>
   <string name="notification_erase_text">Διαγραφή ιστορικού περιήγησης</string>
@@ -25,6 +26,8 @@
   <string name="notification_action_erase_and_open">Διαγραφή και Άνοιγμα</string>
   <string name="shortcut_erase_short_label">Διαγραφή</string>
   <string name="shortcut_erase_long_label">Διαγραφή ιστορικού περιήγησης</string>
+  <string name="shortcut_erase_and_open_short_label">Διαγραφή &amp; άνοιγμα</string>
+  <string name="shortcut_erase_and_open_long_label">Διαγραφή και άνοιγμα του %1$s</string>
   <string name="text_selection_search_action">Ιδιωτική αναζήτηση</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#932;&#959; %1$s &#963;&#940;&#962; &#948;&#943;&#957;&#949;&#953; &#964;&#959;&#957; &#941;&#955;&#949;&#947;&#967;&#959;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#935;&#961;&#951;&#963;&#953;&#956;&#959;&#960;&#959;&#953;&#942;&#963;&#964;&#949; &#964;&#959; &#969;&#962; &#960;&#961;&#972;&#947;&#961;&#945;&#956;&#956;&#945; &#953;&#948;&#953;&#969;&#964;&#953;&#954;&#942;&#962; &#960;&#949;&#961;&#953;&#942;&#947;&#951;&#963;&#951;&#962;:\n  "<ul>"\n    "<li>&#913;&#957;&#945;&#950;&#951;&#964;&#942;&#963;&#964;&#949; &#954;&#945;&#953; &#960;&#949;&#961;&#953;&#951;&#947;&#951;&#952;&#949;&#943;&#964;&#949; &#949;&#957;&#964;&#972;&#962; &#964;&#951;&#962; &#949;&#966;&#945;&#961;&#956;&#959;&#947;&#942;&#962;</li>"\n    "<li>&#913;&#960;&#959;&#954;&#955;&#949;&#943;&#963;&#964;&#949; trackers (&#942; &#949;&#957;&#951;&#956;&#949;&#961;&#974;&#963;&#964;&#949; &#964;&#953;&#962; &#961;&#965;&#952;&#956;&#943;&#963;&#949;&#953;&#962; &#963;&#945;&#962; &#974;&#963;&#964;&#949; &#957;&#945; &#949;&#960;&#953;&#964;&#961;&#941;&#960;&#959;&#957;&#964;&#945;&#953;)</li>"\n    "<li>&#916;&#953;&#945;&#947;&#961;&#940;&#968;&#964;&#949; &#964;&#945; cookies, &#954;&#945;&#952;&#974;&#962; &#954;&#945;&#953; &#964;&#959; &#953;&#963;&#964;&#959;&#961;&#953;&#954;&#972; &#945;&#957;&#945;&#950;&#951;&#964;&#942;&#963;&#949;&#969;&#957; &#954;&#945;&#953; &#960;&#949;&#961;&#953;&#942;&#947;&#951;&#963;&#951;&#962;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#932;&#959; %1$s &#948;&#951;&#956;&#953;&#959;&#965;&#961;&#947;&#942;&#952;&#951;&#954;&#949; &#945;&#960;&#972; &#964;&#951; Mozilla. &#919; &#945;&#960;&#959;&#963;&#964;&#959;&#955;&#942; &#956;&#945;&#962; &#949;&#943;&#957;&#945;&#953; &#957;&#945; &#960;&#961;&#959;&#945;&#947;&#940;&#947;&#959;&#965;&#956;&#949; &#941;&#957;&#945; &#965;&#947;&#953;&#941;&#962;, &#945;&#957;&#959;&#953;&#967;&#964;&#972; &#948;&#953;&#945;&#948;&#943;&#954;&#964;&#965;&#959;.<br/>\n<a href="%2$s">&#924;&#940;&#952;&#949;&#964;&#949; &#960;&#949;&#961;&#953;&#963;&#963;&#972;&#964;&#949;&#961;&#945;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Απόρρητο &amp; Ασφάλεια</string>
@@ -40,9 +43,11 @@
   <string name="preference_show_search_suggestions">Λήψη προτάσεων αναζήτησης</string>
   <string name="preference_show_search_suggestions_summary">Το %1$s θα στείλει ό,τι πληκτρολογήσετε στη γραμμή διευθύνσεων στη μηχανή αναζήτησής σας</string>
   <string name="preference_search_engine_default">Προεπιλογή</string>
+  <string name="preference_search_engine_label">Μηχανή αναζήτησης</string>
   <string name="preference_state_on">Ενεργό</string>
   <string name="preference_state_off">Ανενεργό</string>
   <string name="preference_subitem_autocomplete">Αυτόματη συμπλήρωση URL</string>
+  <string name="preference_switch_autocomplete_topsites">Για κορυφαίες ιστοσελίδες</string>
   <string name="preference_autocomplete_action_add">+ Προσθήκη προσαρμοσμένου URL</string>
   <string name="preference_autocomplete_title_add">Προσθήκη προσαρμοσμένου URL</string>
   <string name="custom_autocomplete_quick_add">Προσθήκη προσαρμοσμένου URL</string>
@@ -224,4 +229,11 @@
   <string name="tip_autocomplete_url">Αυτόματη συμπλήρωση URLs για τις ιστοσελίδες συχνής χρήσης\n Πατήστε παρατεταμένα οποιοδήποτε URL στη γραμμή διευθύνσεων</string>
   <string name="tip_open_in_new_tab">Άνοιγμα συνδέσμου σε νέα καρτέλα\n Πατήστε παρατεταμένα οποιοδήποτε σύνδεσμο σε μια σελίδα</string>
   <string name="tip_request_desktop">Προτιμάτε την πλήρη έκδοση για υπολογιστές;%1$s Μενού &gt; Απαίτηση ιστοσελίδας για υπολογιστές</string>
+  <string name="open_new_tab_snackbar">Εναλλαγή</string>
+  <string name="preference_category_safe_browsing">Ασφαλής περιήγηση</string>
+  <string name="preference_exceptions">Εξαιρέσεις</string>
+  <string name="preference_exceptions_menu_remove">Αφαίρεση</string>
+  <string name="preference_exceptions_remove_all_button_label">Αφαίρεση όλων των ιστοσελίδων</string>
+  <string name="tab_crash_report_close_tab_button_label">Κλείσιμο καρτέλας</string>
+  <string name="fatal_crash_report_close_button_label">Κλείσιμο</string>
 </resources>
