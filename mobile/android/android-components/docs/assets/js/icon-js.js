@@ -1,7 +1,3 @@
-let icons = {};
-let needed = 0;
-let got = 0;
-
 /**
  * @param html {String} HTML representing a single element
  * @return {Element}
@@ -49,27 +45,22 @@ function addSingleItemToTable(str) {
 }
 
 function getFile(iconName, downloadUrl) {
-    let request = new XMLHttpRequest();
-    request.open('GET', downloadUrl, true);
-    request.onreadystatechange = function () {
-        if (request.readyState === 4 && request.status === 200) {
-            got++;
-            let androidXmlText = request.responseText;
-            androidXmlText = androidSVGtoNormalSVG(androidXmlText);
-            icons[iconName] = androidXmlText;
-        } else if (request.readyState === 4) {
-            //Request completed with an error
-            got++;
-            icons[iconName] = "<span>Error during download</span>";
-        }
-        if (got == needed) {
-            document.querySelector("#preview_table > tbody").innerHTML = "";
-            for (let el in icons) {
-                addToTable(el, htmlToElement(icons[el]));
+    return new Promise((resolve, reject) => {
+        let request = new XMLHttpRequest();
+        request.open('GET', downloadUrl, true);
+        request.onreadystatechange = function () {
+            if (request.readyState === 4 && request.status === 200) {
+                let androidXmlText = request.responseText;
+                androidXmlText = androidSVGtoNormalSVG(androidXmlText);
+                resolve([iconName, androidXmlText]);
+            } else if (request.readyState === 4) {
+                //Request completed with an error
+                resolve([iconName, "<span>Error during download</span>"]);
             }
-        }
-    };
-    request.send(null);
+        };
+        request.send(null);
+    });
+
 }
 
 // This function recovers all icons inside the drawable folder via github API
@@ -83,18 +74,24 @@ function getFile(iconName, downloadUrl) {
             let response = JSON.parse(request.response);
             if (response.message) {
                 //Something went wrong
-                console.error(response.message);
                 addSingleItemToTable("Error: " + response.message);
                 return;
             }
-            needed = response.length;
             addSingleItemToTable("Loading");
+            let promises = [];
             for (let i = 0; i < response.length; i++) {
                 let iconName = response[i]['name'].substr(0, response[i]['name'].length - 4);
-                icons[iconName] = null;
-                getFile(iconName, response[i]['download_url']);
+                promises.push(getFile(iconName, response[i]['download_url']));
             }
+            Promise.all(promises).then((values) => {
+                document.querySelector("#preview_table > tbody").innerHTML = "";
+                for (let i = 0; i < values.length; i++) {
+                    let name = values[i][0], svg = values[i][1];
+                    addToTable(name, htmlToElement(svg));
+                }
+            });
         }
     };
     request.send(null);
 })();
+
