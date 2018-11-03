@@ -109,6 +109,9 @@ add_task(async function setup() {
   let originalEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
 
+  // Give it some mock internal aliases.
+  engine.wrappedJSObject.__internalAliases = ["@mozaliasfoo", "@mozaliasbar"];
+
   // And the first one-off engine.
   Services.search.moveEngine(engine, 0);
 
@@ -175,6 +178,9 @@ add_task(async function test_simpleQuery() {
 
   // Make sure SEARCH_COUNTS contains identical values.
   checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 1);
+  checkKeyedHistogram(search_hist, "other-MozSearch.mozalias.urlbar", undefined);
+  checkKeyedHistogram(search_hist, "other-MozSearch.@mozaliasfoo.urlbar", undefined);
+  checkKeyedHistogram(search_hist, "other-MozSearch.@mozaliasbar.urlbar", undefined);
 
   // Also check events.
   let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
@@ -229,6 +235,9 @@ add_task(async function test_searchAlias() {
 
   // Make sure SEARCH_COUNTS contains identical values.
   checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 1);
+  checkKeyedHistogram(search_hist, "other-MozSearch.mozalias.urlbar", undefined);
+  checkKeyedHistogram(search_hist, "other-MozSearch.@mozaliasfoo.urlbar", undefined);
+  checkKeyedHistogram(search_hist, "other-MozSearch.@mozaliasbar.urlbar", undefined);
 
   // Also check events.
   let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
@@ -253,6 +262,36 @@ add_task(async function test_searchAlias() {
   checkHistogramResults(resultMethods,
     URLBAR_SELECTED_RESULT_METHODS.enter,
     "FX_URLBAR_SELECTED_RESULT_METHOD");
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_internalSearchAlias() {
+  let search_hist = getAndClearKeyedHistogram("SEARCH_COUNTS");
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+
+  info("Search using an internal search alias.");
+  let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await searchInAwesomebar("@mozaliasfoo query");
+  EventUtils.synthesizeKey("KEY_Enter");
+  await p;
+
+  checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 1);
+  checkKeyedHistogram(search_hist, "other-MozSearch.mozalias.urlbar", undefined);
+  checkKeyedHistogram(search_hist, "other-MozSearch.@mozaliasfoo.urlbar", 1);
+  checkKeyedHistogram(search_hist, "other-MozSearch.@mozaliasbar.urlbar", undefined);
+
+  info("Search using the other internal search alias.");
+  p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await searchInAwesomebar("@mozaliasbar query");
+  EventUtils.synthesizeKey("KEY_Enter");
+  await p;
+
+  checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 2);
+  checkKeyedHistogram(search_hist, "other-MozSearch.mozalias.urlbar", undefined);
+  checkKeyedHistogram(search_hist, "other-MozSearch.@mozaliasfoo.urlbar", 1);
+  checkKeyedHistogram(search_hist, "other-MozSearch.@mozaliasbar.urlbar", 1);
 
   BrowserTestUtils.removeTab(tab);
 });
@@ -288,6 +327,9 @@ add_task(async function test_oneOff_enter() {
 
   // Make sure SEARCH_COUNTS contains identical values.
   checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 1);
+  checkKeyedHistogram(search_hist, "other-MozSearch.mozalias.urlbar", undefined);
+  checkKeyedHistogram(search_hist, "other-MozSearch.@mozaliasfoo.urlbar", undefined);
+  checkKeyedHistogram(search_hist, "other-MozSearch.@mozaliasbar.urlbar", undefined);
 
   // Also check events.
   let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
