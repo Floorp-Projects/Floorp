@@ -187,8 +187,14 @@ public:
                                nsRange* aReplaceRange = nullptr);
 
   /**
+   * InsertLineBreakAsAction() is called when user inputs a line break with
+   * Enter or something.
+   */
+  virtual nsresult InsertLineBreakAsAction();
+
+  /**
    * InsertParagraphSeparatorAsAction() is called when user tries to separate
-   * current paragraph with Enter key press or something.
+   * current paragraph with Enter key press in HTMLEditor or something.
    */
   nsresult InsertParagraphSeparatorAsAction();
 
@@ -376,11 +382,14 @@ protected: // Shouldn't be used by friend classes
   nsresult OnInputText(const nsAString& aStringToInsert);
 
   /**
+   * InsertLineBreakAsSubAction() inserts a line break, i.e., \n if it's
+   * TextEditor or <br> if it's HTMLEditor.
+   */
+  nsresult InsertLineBreakAsSubAction();
+
+  /**
    * InsertParagraphSeparatorAsSubAction() inserts a line break if it's
-   * TextEditor or inserts new paragraph if it's HTMLEditor and it's possible.
-   * Although, this method is implementation of
-   * nsIPlaintextEditor.insertLineBreak(), this treats the input is an edit
-   * action.
+   * HTMLEditor and it's possible.
    */
   nsresult InsertParagraphSeparatorAsSubAction();
 
