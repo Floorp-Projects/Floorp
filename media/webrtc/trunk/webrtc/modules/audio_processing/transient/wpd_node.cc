@@ -8,15 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/transient/wpd_node.h"
+#include "webrtc/modules/audio_processing/transient/wpd_node.h"
 
 #include <math.h>
 #include <string.h>
 
-#include "common_audio/fir_filter.h"
-#include "common_audio/fir_filter_factory.h"
-#include "modules/audio_processing/transient/dyadic_decimator.h"
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/common_audio/fir_filter.h"
+#include "webrtc/modules/audio_processing/transient/dyadic_decimator.h"
 
 namespace webrtc {
 
@@ -27,9 +26,9 @@ WPDNode::WPDNode(size_t length,
       // it.
       data_(new float[2 * length + 1]),
       length_(length),
-      filter_(CreateFirFilter(coefficients,
-                              coefficients_length,
-                              2 * length + 1)) {
+      filter_(FIRFilter::Create(coefficients,
+                                coefficients_length,
+                                2 * length + 1)) {
   RTC_DCHECK_GT(length, 0);
   RTC_DCHECK(coefficients);
   RTC_DCHECK_GT(coefficients_length, 0);

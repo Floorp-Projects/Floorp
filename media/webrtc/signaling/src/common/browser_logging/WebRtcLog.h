@@ -5,12 +5,12 @@
 #ifndef WEBRTCLOG_H_
 #define WEBRTCLOG_H_
 
-#include "mozilla/Logging.h"
+#include "webrtc/common_types.h"
 
 nsCString StartAecLog();
 void StopAecLog();
+void StartWebRtcLog(uint32_t log_level = webrtc::kTraceDefault);
 void EnableWebRtcLog();
-void StartWebRtcLog(mozilla::LogLevel level);
 void StopWebRtcLog();
 
 #endif

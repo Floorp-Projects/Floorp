@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_audio/ring_buffer.h"
+#include "webrtc/common_audio/ring_buffer.h"
 
 #include <stdlib.h>
 #include <time.h>
@@ -16,7 +16,7 @@
 #include <algorithm>
 #include <memory>
 
-#include "test/gtest.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
@@ -54,23 +54,22 @@ static void RandomStressTest(int** data_ptr) {
   const int kNumOps = 1000;
   const int kMaxBufferSize = 1000;
 
-  unsigned int seed = time(nullptr);
+  unsigned int seed = time(NULL);
   printf("seed=%u\n", seed);
   srand(seed);
   for (int i = 0; i < kNumTests; i++) {
-    // rand_r is not supported on many platforms, so rand is used.
-    const int buffer_size = std::max(rand() % kMaxBufferSize, 1);  // NOLINT
+    const int buffer_size = std::max(rand() % kMaxBufferSize, 1);
     std::unique_ptr<int[]> write_data(new int[buffer_size]);
     std::unique_ptr<int[]> read_data(new int[buffer_size]);
     scoped_ring_buffer buffer(WebRtc_CreateBuffer(buffer_size, sizeof(int)));
-    ASSERT_TRUE(buffer.get() != nullptr);
+    ASSERT_TRUE(buffer.get() != NULL);
     WebRtc_InitBuffer(buffer.get());
     int buffer_consumed = 0;
     int write_element = 0;
     int read_element = 0;
     for (int j = 0; j < kNumOps; j++) {
-      const bool write = rand() % 2 == 0 ? true : false;  // NOLINT
-      const int num_elements = rand() % buffer_size;  // NOLINT
+      const bool write = rand() % 2 == 0 ? true : false;
+      const int num_elements = rand() % buffer_size;
       if (write) {
         const int buffer_available = buffer_size - buffer_consumed;
         ASSERT_EQ(static_cast<size_t>(buffer_available),
@@ -106,12 +105,12 @@ static void RandomStressTest(int** data_ptr) {
 }
 
 TEST(RingBufferTest, RandomStressTest) {
-  int* data_ptr = nullptr;
+  int* data_ptr = NULL;
   RandomStressTest(&data_ptr);
 }
 
 TEST(RingBufferTest, RandomStressTestWithNullPtr) {
-  RandomStressTest(nullptr);
+  RandomStressTest(NULL);
 }
 
 TEST(RingBufferTest, PassingNulltoReadBufferForcesMemcpy) {
@@ -121,7 +120,7 @@ TEST(RingBufferTest, PassingNulltoReadBufferForcesMemcpy) {
   int* data_ptr;
 
   scoped_ring_buffer buffer(WebRtc_CreateBuffer(kDataSize, sizeof(int)));
-  ASSERT_TRUE(buffer.get() != nullptr);
+  ASSERT_TRUE(buffer.get() != NULL);
   WebRtc_InitBuffer(buffer.get());
 
   SetIncrementingData(write_data, kDataSize, 0);
@@ -134,17 +133,17 @@ TEST(RingBufferTest, PassingNulltoReadBufferForcesMemcpy) {
   CheckIncrementingData(read_data, kDataSize, kDataSize);
 
   EXPECT_EQ(kDataSize, WebRtc_WriteBuffer(buffer.get(), write_data, kDataSize));
-  EXPECT_EQ(kDataSize,
-            WebRtc_ReadBuffer(buffer.get(), nullptr, read_data, kDataSize));
-  // Passing null forces a memcpy, so |read_data| is now updated.
+  EXPECT_EQ(kDataSize, WebRtc_ReadBuffer(buffer.get(), NULL, read_data,
+                                         kDataSize));
+  // Passing NULL forces a memcpy, so |read_data| is now updated.
   CheckIncrementingData(read_data, kDataSize, 0);
 }
 
 TEST(RingBufferTest, CreateHandlesErrors) {
-  EXPECT_TRUE(WebRtc_CreateBuffer(0, 1) == nullptr);
-  EXPECT_TRUE(WebRtc_CreateBuffer(1, 0) == nullptr);
+  EXPECT_TRUE(WebRtc_CreateBuffer(0, 1) == NULL);
+  EXPECT_TRUE(WebRtc_CreateBuffer(1, 0) == NULL);
   RingBuffer* buffer = WebRtc_CreateBuffer(1, 1);
-  EXPECT_TRUE(buffer != nullptr);
+  EXPECT_TRUE(buffer != NULL);
   WebRtc_FreeBuffer(buffer);
 }
 

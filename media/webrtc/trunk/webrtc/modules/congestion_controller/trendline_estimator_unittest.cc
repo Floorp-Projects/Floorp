@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/congestion_controller/trendline_estimator.h"
-#include "rtc_base/random.h"
-#include "test/gtest.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/base/random.h"
+#include "webrtc/modules/congestion_controller/trendline_estimator.h"
 
 namespace webrtc {
 

@@ -11,47 +11,34 @@
 #include <map>
 #include <memory>
 
-#include "sdk/android/src/jni/classreferenceholder.h"
-#include "sdk/android/src/jni/jni_helpers.h"
-#include "system_wrappers/include/metrics.h"
+#include "webrtc/sdk/android/src/jni/classreferenceholder.h"
+#include "webrtc/sdk/android/src/jni/jni_helpers.h"
+#include "webrtc/sdk/android/src/jni/native_handle_impl.h"
+#include "webrtc/system_wrappers/include/metrics.h"
 
 // Enables collection of native histograms and creating them.
-namespace webrtc {
-namespace jni {
+namespace webrtc_jni {
 
-JNI_FUNCTION_DECLARATION(jlong,
-                         Histogram_nativeCreateCounts,
-                         JNIEnv* jni,
-                         jclass,
-                         jstring j_name,
-                         jint min,
-                         jint max,
-                         jint buckets) {
+JOW(jlong, Histogram_nativeCreateCounts)
+(JNIEnv* jni, jclass, jstring j_name, jint min, jint max, jint buckets) {
   std::string name = JavaToStdString(jni, j_name);
   return jlongFromPointer(
-      metrics::HistogramFactoryGetCounts(name, min, max, buckets));
+      webrtc::metrics::HistogramFactoryGetCounts(name, min, max, buckets));
 }
 
-JNI_FUNCTION_DECLARATION(jlong,
-                         Histogram_nativeCreateEnumeration,
-                         JNIEnv* jni,
-                         jclass,
-                         jstring j_name,
-                         jint max) {
+JOW(jlong, Histogram_nativeCreateEnumeration)
+(JNIEnv* jni, jclass, jstring j_name, jint max) {
   std::string name = JavaToStdString(jni, j_name);
-  return jlongFromPointer(metrics::HistogramFactoryGetEnumeration(name, max));
+  return jlongFromPointer(
+      webrtc::metrics::HistogramFactoryGetEnumeration(name, max));
 }
 
-JNI_FUNCTION_DECLARATION(void,
-                         Histogram_nativeAddSample,
-                         JNIEnv* jni,
-                         jclass,
-                         jlong histogram,
-                         jint sample) {
+JOW(void, Histogram_nativeAddSample)
+(JNIEnv* jni, jclass, jlong histogram, jint sample) {
   if (histogram) {
-    HistogramAdd(reinterpret_cast<metrics::Histogram*>(histogram), sample);
+    HistogramAdd(reinterpret_cast<webrtc::metrics::Histogram*>(histogram),
+                 sample);
   }
 }
 
-}  // namespace jni
-}  // namespace webrtc
+}  // namespace webrtc_jni

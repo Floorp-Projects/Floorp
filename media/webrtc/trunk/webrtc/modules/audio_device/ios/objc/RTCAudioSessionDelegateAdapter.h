@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#import "sdk/objc/Framework/Headers/WebRTC/RTCAudioSession.h"
+#import "webrtc/modules/audio_device/ios/objc/RTCAudioSession.h"
 
 namespace webrtc {
 class AudioSessionObserver;

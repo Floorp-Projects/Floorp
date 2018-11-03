@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_TRANSIENT_DYADIC_DECIMATOR_H_
-#define MODULES_AUDIO_PROCESSING_TRANSIENT_DYADIC_DECIMATOR_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_TRANSIENT_DYADIC_DECIMATOR_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_TRANSIENT_DYADIC_DECIMATOR_H_
 
 #include <cstdlib>
 
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 // Provides a set of static methods to perform dyadic decimations.
 
@@ -67,4 +67,4 @@ static size_t DyadicDecimate(const T* in,
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_TRANSIENT_DYADIC_DECIMATOR_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_TRANSIENT_DYADIC_DECIMATOR_H_

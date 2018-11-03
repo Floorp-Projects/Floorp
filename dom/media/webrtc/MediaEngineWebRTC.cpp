@@ -139,8 +139,7 @@ MediaEngineWebRTC::EnumerateVideoDevices(uint64_t aWindowId,
        break;
       }
       LOG(("type=%d width=%d height=%d maxFPS=%d",
-           static_cast<int>(cap.videoType), cap.width, cap.height,
-           cap.maxFPS ));
+           cap.rawType, cap.width, cap.height, cap.maxFPS ));
     }
 #endif
 

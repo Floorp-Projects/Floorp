@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_coding/neteq/preemptive_expand.h"
+#include "webrtc/modules/audio_coding/neteq/preemptive_expand.h"
 
 #include <algorithm>  // min, max
 
-#include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 namespace webrtc {
 

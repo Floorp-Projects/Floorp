@@ -8,18 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_RECEIVER_H_
-#define MODULES_VIDEO_CODING_RECEIVER_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_RECEIVER_H_
+#define WEBRTC_MODULES_VIDEO_CODING_RECEIVER_H_
 
 #include <memory>
 #include <vector>
 
-#include "modules/video_coding/include/video_coding.h"
-#include "modules/video_coding/include/video_coding_defines.h"
-#include "modules/video_coding/jitter_buffer.h"
-#include "modules/video_coding/packet.h"
-#include "modules/video_coding/timing.h"
-#include "rtc_base/criticalsection.h"
+#include "webrtc/modules/video_coding/jitter_buffer.h"
+#include "webrtc/modules/video_coding/packet.h"
+#include "webrtc/modules/video_coding/timing.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/modules/video_coding/include/video_coding.h"
+#include "webrtc/modules/video_coding/include/video_coding_defines.h"
 
 namespace webrtc {
 
@@ -68,6 +68,7 @@ class VCMReceiver {
                                     bool prefer_late_decoding);
   void ReleaseFrame(VCMEncodedFrame* frame);
   void ReceiveStatistics(uint32_t* bitrate, uint32_t* framerate);
+  uint32_t DiscardedPackets() const;
 
   // NACK.
   void SetNackMode(VCMNackMode nackMode,
@@ -78,6 +79,8 @@ class VCMReceiver {
                        int max_incomplete_time_ms);
   VCMNackMode NackMode() const;
   std::vector<uint16_t> NackList(bool* request_key_frame);
+
+  VideoReceiveState ReceiveState() const;
 
   // Receiver video delay.
   int SetMinReceiverDelay(int desired_delay_ms);
@@ -91,14 +94,17 @@ class VCMReceiver {
   void TriggerDecoderShutdown();
 
  private:
-  rtc::CriticalSection crit_sect_;
+  void UpdateReceiveState(const VCMEncodedFrame& frame);
+
+  CriticalSectionWrapper* crit_sect_;
   Clock* const clock_;
   VCMJitterBuffer jitter_buffer_;
   VCMTiming* timing_;
   std::unique_ptr<EventWrapper> render_wait_event_;
+  VideoReceiveState receiveState_;
   int max_video_delay_ms_;
 };
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_RECEIVER_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_RECEIVER_H_

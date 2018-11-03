@@ -14,14 +14,29 @@
 #include "MediaConduitInterface.h"
 #include "MediaEngineWrapper.h"
 #include "RtpSourceObserver.h"
-#include "RtpPacketQueue.h"
 
 // Audio Engine Includes
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_device/include/fake_audio_device.h"
 #include "webrtc/voice_engine/include/voe_base.h"
+#include "webrtc/voice_engine/include/voe_volume_control.h"
+#include "webrtc/voice_engine/include/voe_codec.h"
+#include "webrtc/voice_engine/include/voe_file.h"
+#include "webrtc/voice_engine/include/voe_network.h"
+#include "webrtc/voice_engine/include/voe_external_media.h"
+#include "webrtc/voice_engine/include/voe_audio_processing.h"
+#include "webrtc/voice_engine/include/voe_video_sync.h"
+#include "webrtc/voice_engine/include/voe_rtp_rtcp.h"
 #include "webrtc/voice_engine/channel_proxy.h"
 
+//Some WebRTC types for short notations
+ using webrtc::VoEBase;
+ using webrtc::VoENetwork;
+ using webrtc::VoECodec;
+ using webrtc::VoEExternalMedia;
+ using webrtc::VoEAudioProcessing;
+ using webrtc::VoEVideoSync;
+ using webrtc::VoERTP_RTCP;
 /** This file hosts several structures identifying different aspects
  * of a RTP Session.
  */
@@ -47,23 +62,18 @@ public:
    * APIs used by the registered external transport to this Conduit to
    * feed in received RTP Frames to the VoiceEngine for decoding
    */
-  MediaConduitErrorCode ReceivedRTPPacket(const void *data, int len, uint32_t ssrc) override;
+  virtual MediaConduitErrorCode ReceivedRTPPacket(const void *data, int len, uint32_t ssrc) override;
 
   /**
    * APIs used by the registered external transport to this Conduit to
    * feed in received RTCP Frames to the VoiceEngine for decoding
    */
-  MediaConduitErrorCode ReceivedRTCPPacket(const void *data, int len) override;
+  virtual MediaConduitErrorCode ReceivedRTCPPacket(const void *data, int len) override;
 
-  MediaConduitErrorCode StopTransmitting() override;
-  MediaConduitErrorCode StartTransmitting() override;
-  MediaConduitErrorCode StopReceiving() override;
-  MediaConduitErrorCode StartReceiving() override;
-
-  MediaConduitErrorCode StopTransmittingLocked();
-  MediaConduitErrorCode StartTransmittingLocked();
-  MediaConduitErrorCode StopReceivingLocked();
-  MediaConduitErrorCode StartReceivingLocked();
+  virtual MediaConduitErrorCode StopTransmitting() override;
+  virtual MediaConduitErrorCode StartTransmitting() override;
+  virtual MediaConduitErrorCode StopReceiving() override;
+  virtual MediaConduitErrorCode StartReceiving() override;
 
   /**
    * Function to configure send codec for the audio session
@@ -73,7 +83,7 @@ public:
    * NOTE: This API can be invoked multiple time. Invoking this API may involve restarting
    *        transmission sub-system on the engine.
    */
-  MediaConduitErrorCode ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig) override;
+  virtual MediaConduitErrorCode ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig) override;
   /**
    * Function to configure list of receive codecs for the audio session
    * @param sendSessionConfig: CodecConfiguration
@@ -83,7 +93,7 @@ public:
    * NOTE: This API can be invoked multiple time. Invoking this API may involve restarting
    *        transmission sub-system on the engine.
    */
-  MediaConduitErrorCode ConfigureRecvMediaCodecs(
+  virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
     const std::vector<AudioCodecConfig* >& codecConfigList) override;
 
   MediaConduitErrorCode
@@ -94,9 +104,9 @@ public:
    * Register External Transport to this Conduit. RTP and RTCP frames from the VoiceEngine
    * shall be passed to the registered transport for transporting externally.
    */
-  MediaConduitErrorCode SetTransmitterTransport(RefPtr<TransportInterface> aTransport) override;
+  virtual MediaConduitErrorCode SetTransmitterTransport(RefPtr<TransportInterface> aTransport) override;
 
-  MediaConduitErrorCode SetReceiverTransport(RefPtr<TransportInterface> aTransport) override;
+  virtual MediaConduitErrorCode SetReceiverTransport(RefPtr<TransportInterface> aTransport) override;
 
   /**
    * Function to deliver externally captured audio sample for encoding and transport
@@ -114,11 +124,11 @@ public:
    *       This ensures the inserted audio-samples can be transmitted by the conduit
    *
    */
-  MediaConduitErrorCode SendAudioFrame(const int16_t speechData[],
-                                       int32_t lengthSamples,
-                                       int32_t samplingFreqHz,
-                                       uint32_t channels,
-                                       int32_t capture_time) override;
+  virtual MediaConduitErrorCode SendAudioFrame(const int16_t speechData[],
+                                               int32_t lengthSamples,
+                                               int32_t samplingFreqHz,
+                                               uint32_t channels,
+                                               int32_t capture_time) override;
 
   /**
    * Function to grab a decoded audio-sample from the media engine for rendering
@@ -137,57 +147,46 @@ public:
    *       This ensures the decoded samples are ready for reading and playout is enabled.
    *
    */
-   MediaConduitErrorCode GetAudioFrame(int16_t speechData[],
-                                       int32_t samplingFreqHz,
-                                       int32_t capture_delay,
-                                       int& lengthSamples) override;
+   virtual MediaConduitErrorCode GetAudioFrame(int16_t speechData[],
+                                              int32_t samplingFreqHz,
+                                              int32_t capture_delay,
+                                              int& lengthSamples) override;
 
 
   /**
    * Webrtc transport implementation to send and receive RTP packet.
    * AudioConduit registers itself as ExternalTransport to the VoiceEngine
    */
-   bool SendRtp(const uint8_t* data,
-                size_t len,
-                const webrtc::PacketOptions& options) override;
+   virtual bool SendRtp(const uint8_t* data,
+                        size_t len,
+                        const webrtc::PacketOptions& options) override;
 
   /**
    * Webrtc transport implementation to send and receive RTCP packet.
    * AudioConduit registers itself as ExternalTransport to the VoiceEngine
    */
-  bool SendRtcp(const uint8_t *data,
-                size_t len) override;
+  virtual bool SendRtcp(const uint8_t *data,
+                        size_t len) override;
 
-  uint64_t CodecPluginID() override { return 0; }
-  void SetPCHandle(const std::string& aPCHandle) override {}
-  MediaConduitErrorCode DeliverPacket(const void *data, int len) override;
+  virtual uint64_t CodecPluginID() override { return 0; }
+  virtual void SetPCHandle(const std::string& aPCHandle) override {}
 
-  void DeleteStreams() override {}
+  virtual void DeleteStreams() override {}
 
-  explicit WebrtcAudioConduit(RefPtr<WebRtcCallWrapper> aCall,
-                              nsCOMPtr<nsIEventTarget> aStsThread)
-    : mFakeAudioDevice(new webrtc::FakeAudioDeviceModule())
-    , mTransportMonitor("WebrtcAudioConduit")
-    , mTransmitterTransport(nullptr)
-    , mReceiverTransport(nullptr)
-    , mCall(aCall)
-    , mRecvStreamConfig()
-    , mRecvStream(nullptr)
-    , mSendStreamConfig(this) // 'this' is stored but not  dereferenced in the constructor.
-    , mSendStream(nullptr)
-    , mRecvSSRC(0)
-    , mEngineTransmitting(false)
-    , mEngineReceiving(false)
-    , mRecvChannel(-1)
-    , mRecvChannelProxy(nullptr)
-    , mSendChannel(-1)
-    , mSendChannelProxy(nullptr)
-    , mDtmfEnabled(false)
-    , mMutex("WebrtcAudioConduit::mMutex")
-    , mCaptureDelay(150)
-    , mSamples(0)
-    , mLastSyncLog(0)
-    , mStsThread(aStsThread)
+  explicit WebrtcAudioConduit():
+                      mVoiceEngine(nullptr),
+                      mFakeAudioDevice(new webrtc::FakeAudioDeviceModule()),
+                      mTransportMonitor("WebrtcAudioConduit"),
+                      mTransmitterTransport(nullptr),
+                      mReceiverTransport(nullptr),
+                      mEngineTransmitting(false),
+                      mEngineReceiving(false),
+                      mChannel(-1),
+                      mDtmfEnabled(false),
+                      mCodecMutex("AudioConduit codec db"),
+                      mCaptureDelay(150),
+                      mSamples(0),
+                      mLastSyncLog(0)
   {
   }
 
@@ -195,10 +194,8 @@ public:
 
   MediaConduitErrorCode Init();
 
-  int GetRecvChannel() { return mRecvChannel; }
-  webrtc::VoiceEngine* GetVoiceEngine() {
-    return mCall->Call()->voice_engine();
-  }
+  int GetChannel() { return mChannel; }
+  webrtc::VoiceEngine* GetVoiceEngine() { return mVoiceEngine; }
 
   /* Set Local SSRC list.
    * Note: Until the refactor of the VoE into the call API is complete
@@ -206,7 +203,10 @@ public:
    */
   bool SetLocalSSRCs(const std::vector<unsigned int>& aSSRCs) override;
   std::vector<unsigned int> GetLocalSSRCs() override;
-  bool SetRemoteSSRC(unsigned int ssrc) override;
+  bool SetRemoteSSRC(unsigned int ssrc) override
+  {
+    return false;
+  }
   bool UnsetRemoteSSRC(uint32_t ssrc) override
   {
     return true;
@@ -214,8 +214,6 @@ public:
   bool GetRemoteSSRC(unsigned int* ssrc) override;
   bool SetLocalCNAME(const char* cname) override;
   bool SetLocalMID(const std::string& mid) override;
-
-  void SetSyncGroup(const std::string& group) override;
 
   bool GetSendPacketTypeStats(
       webrtc::RtcpPacketTypeCounter* aPacketCounts) override;
@@ -279,40 +277,43 @@ private:
   WebrtcAudioConduit(const WebrtcAudioConduit& other) = delete;
   void operator=(const WebrtcAudioConduit& other) = delete;
 
+  //Local database of currently applied receive codecs
+  typedef std::vector<AudioCodecConfig* > RecvCodecList;
+
   //Function to convert between WebRTC and Conduit codec structures
   bool CodecConfigToWebRTCCodec(const AudioCodecConfig* codecInfo,
-                                webrtc::AudioSendStream::Config& config);
+                                webrtc::CodecInst& cinst);
 
   //Generate block size in sample lenght for a given sampling frequency
   unsigned int GetNum10msSamplesForFrequency(int samplingFreqHz) const;
 
+  // Function to copy a codec structure to Conduit's database
+  bool CopyCodecToDB(const AudioCodecConfig* codecInfo);
+
+  // Functions to verify if the codec passed is already in
+  // conduits database
+  bool CheckCodecForMatch(const AudioCodecConfig* codecInfo) const;
+  bool CheckCodecsForMatch(const AudioCodecConfig* curCodecConfig,
+                           const AudioCodecConfig* codecInfo) const;
   //Checks the codec to be applied
   MediaConduitErrorCode ValidateCodecConfig(const AudioCodecConfig* codecInfo, bool send);
 
-  MediaConduitErrorCode CreateSendStream();
-  void DeleteSendStream();
-  MediaConduitErrorCode CreateRecvStream();
-  void DeleteRecvStream();
+  //Utility function to dump recv codec database
+  void DumpCodecDB() const;
 
-  MediaConduitErrorCode CreateChannels();
-  void DeleteChannels();
-
+  webrtc::VoiceEngine* mVoiceEngine;
   UniquePtr<webrtc::FakeAudioDeviceModule> mFakeAudioDevice;
   mozilla::ReentrantMonitor mTransportMonitor;
   RefPtr<TransportInterface> mTransmitterTransport;
   RefPtr<TransportInterface> mReceiverTransport;
-  ScopedCustomReleasePtr<webrtc::VoEBase> mPtrVoEBase;
-
-  const RefPtr<WebRtcCallWrapper> mCall;
-  webrtc::AudioReceiveStream::Config mRecvStreamConfig;
-  webrtc::AudioReceiveStream* mRecvStream;
-  webrtc::AudioSendStream::Config mSendStreamConfig;
-  webrtc::AudioSendStream* mSendStream;
-
-  // accessed on creation, and when receiving packets
-  Atomic<uint32_t> mRecvSSRC; // this can change during a stream!
-  RtpPacketQueue mRtpPacketQueue;
-
+  ScopedCustomReleasePtr<webrtc::VoENetwork>   mPtrVoENetwork;
+  ScopedCustomReleasePtr<webrtc::VoEBase>      mPtrVoEBase;
+  ScopedCustomReleasePtr<webrtc::VoECodec>     mPtrVoECodec;
+  ScopedCustomReleasePtr<webrtc::VoEExternalMedia> mPtrVoEXmedia;
+  ScopedCustomReleasePtr<webrtc::VoEAudioProcessing> mPtrVoEProcessing;
+  ScopedCustomReleasePtr<webrtc::VoEVideoSync> mPtrVoEVideoSync;
+  ScopedCustomReleasePtr<webrtc::VoERTP_RTCP>  mPtrVoERTP_RTCP;
+  ScopedCustomReleasePtr<webrtc::VoERTP_RTCP>  mPtrRTP;
   //engine states of our interets
   mozilla::Atomic<bool> mEngineTransmitting; // If true => VoiceEngine Send-subsystem is up
   mozilla::Atomic<bool> mEngineReceiving;    // If true => VoiceEngine Receive-subsystem is up
@@ -326,13 +327,12 @@ private:
   };
   AutoTArray<Processing,8> mProcessing;
 
-  int mRecvChannel;
-  std::unique_ptr<webrtc::voe::ChannelProxy> mRecvChannelProxy;
-  int mSendChannel;
-  std::unique_ptr<webrtc::voe::ChannelProxy> mSendChannelProxy;
+  int mChannel;
+  std::unique_ptr<webrtc::voe::ChannelProxy> mChannelProxy;
   bool mDtmfEnabled;
+  RecvCodecList    mRecvCodecList;
 
-  Mutex mMutex;
+  Mutex mCodecMutex; // protects mCurSendCodecConfig
   nsAutoPtr<AudioCodecConfig> mCurSendCodecConfig;
 
   // Current "capture" delay (really output plus input delay)
@@ -344,9 +344,6 @@ private:
   uint32_t mLastSyncLog;
 
   RtpSourceObserver mRtpSourceObserver;
-
-  // Socket transport service thread. Any thread.
-  const nsCOMPtr<nsIEventTarget> mStsThread;
 };
 
 } // end namespace

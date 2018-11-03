@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_VAD_PITCH_BASED_VAD_H_
-#define MODULES_AUDIO_PROCESSING_VAD_PITCH_BASED_VAD_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_VAD_PITCH_BASED_VAD_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_VAD_PITCH_BASED_VAD_H_
 
 #include <memory>
 
-#include "modules/audio_processing/vad/common.h"
-#include "modules/audio_processing/vad/gmm.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/audio_processing/vad/common.h"
+#include "webrtc/modules/audio_processing/vad/gmm.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -55,4 +55,4 @@ class PitchBasedVad {
 };
 
 }  // namespace webrtc
-#endif  // MODULES_AUDIO_PROCESSING_VAD_PITCH_BASED_VAD_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_VAD_PITCH_BASED_VAD_H_

@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_TEST_AEC_DUMP_BASED_SIMULATOR_H_
-#define MODULES_AUDIO_PROCESSING_TEST_AEC_DUMP_BASED_SIMULATOR_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_TEST_AEC_DUMP_BASED_SIMULATOR_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_TEST_AEC_DUMP_BASED_SIMULATOR_H_
 
-#include "modules/audio_processing/test/audio_processing_simulator.h"
+#include "webrtc/modules/audio_processing/test/audio_processing_simulator.h"
 
-#include "rtc_base/constructormagic.h"
-#include "rtc_base/ignore_wundef.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/ignore_wundef.h"
 
 RTC_PUSH_IGNORING_WUNDEF()
 #ifdef WEBRTC_ANDROID_PLATFORM_BUILD
 #include "external/webrtc/webrtc/modules/audio_processing/debug.pb.h"
 #else
-#include "modules/audio_processing/debug.pb.h"
+#include "webrtc/modules/audio_processing/debug.pb.h"
 #endif
 RTC_POP_IGNORING_WUNDEF()
 
@@ -41,7 +41,8 @@ class AecDumpBasedSimulator final : public AudioProcessingSimulator {
   void HandleMessage(const webrtc::audioproc::Stream& msg);
   void HandleMessage(const webrtc::audioproc::ReverseStream& msg);
   void HandleMessage(const webrtc::audioproc::Config& msg);
-  void PrepareProcessStreamCall(const webrtc::audioproc::Stream& msg);
+  void PrepareProcessStreamCall(const webrtc::audioproc::Stream& msg,
+                                bool* set_stream_analog_level_called);
   void PrepareReverseProcessStreamCall(
       const webrtc::audioproc::ReverseStream& msg);
   void VerifyProcessStreamBitExactness(const webrtc::audioproc::Stream& msg);
@@ -64,4 +65,4 @@ class AecDumpBasedSimulator final : public AudioProcessingSimulator {
 }  // namespace test
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_TEST_AEC_DUMP_BASED_SIMULATOR_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_TEST_AEC_DUMP_BASED_SIMULATOR_H_

@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_INTERNAL_DEFINES_H_
-#define MODULES_VIDEO_CODING_INTERNAL_DEFINES_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_INTERNAL_DEFINES_H_
+#define WEBRTC_MODULES_VIDEO_CODING_INTERNAL_DEFINES_H_
 
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -38,4 +38,4 @@ inline int32_t VCMId(const int32_t vcmId, const int32_t receiverId = 0) {
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_INTERNAL_DEFINES_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_INTERNAL_DEFINES_H_

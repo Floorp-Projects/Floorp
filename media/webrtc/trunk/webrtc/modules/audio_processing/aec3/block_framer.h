@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_AEC3_BLOCK_FRAMER_H_
-#define MODULES_AUDIO_PROCESSING_AEC3_BLOCK_FRAMER_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AEC3_BLOCK_FRAMER_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_AEC3_BLOCK_FRAMER_H_
 
 #include <vector>
 
-#include "api/array_view.h"
-#include "modules/audio_processing/aec3/aec3_common.h"
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/array_view.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/audio_processing/aec3/aec3_constants.h"
 
 namespace webrtc {
 
@@ -44,4 +44,4 @@ class BlockFramer {
 };
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC3_BLOCK_FRAMER_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_AEC3_BLOCK_FRAMER_H_

@@ -8,15 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_coding/neteq/tools/input_audio_file.h"
+#include "webrtc/modules/audio_coding/neteq/tools/input_audio_file.h"
 
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 namespace test {
 
-InputAudioFile::InputAudioFile(const std::string file_name, bool loop_at_end)
-    : loop_at_end_(loop_at_end) {
+InputAudioFile::InputAudioFile(const std::string file_name) {
   fp_ = fopen(file_name.c_str(), "rb");
 }
 
@@ -28,9 +27,6 @@ bool InputAudioFile::Read(size_t samples, int16_t* destination) {
   }
   size_t samples_read = fread(destination, sizeof(int16_t), samples, fp_);
   if (samples_read < samples) {
-    if (!loop_at_end_) {
-      return false;
-    }
     // Rewind and read the missing samples.
     rewind(fp_);
     size_t missing_samples = samples - samples_read;
@@ -58,11 +54,7 @@ bool InputAudioFile::Seek(int samples) {
   long new_pos = current_pos + sizeof(int16_t) * samples;  // Samples to bytes.
   RTC_CHECK_GE(new_pos, 0)
       << "Trying to move to before the beginning of the file";
-  if (loop_at_end_) {
-    new_pos = new_pos % file_size;  // Wrap around the end of the file.
-  } else {
-    new_pos = new_pos > file_size ? file_size : new_pos;  // Don't loop.
-  }
+  new_pos = new_pos % file_size;  // Wrap around the end of the file.
   // Move to new position relative to the beginning of the file.
   RTC_CHECK_EQ(0, fseek(fp_, new_pos, SEEK_SET));
   return true;

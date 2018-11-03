@@ -8,28 +8,28 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MEDIA_BASE_TEST_MOCK_MEDIACHANNEL_H_
-#define MEDIA_BASE_TEST_MOCK_MEDIACHANNEL_H_
+#ifndef WEBRTC_MEDIA_BASE_TEST_MOCK_MEDIACHANNEL_H_
+#define WEBRTC_MEDIA_BASE_TEST_MOCK_MEDIACHANNEL_H_
 
-#include "media/base/fakemediaengine.h"
-#include "test/gmock.h"
+#include "webrtc/media/base/fakemediaengine.h"
+#include "webrtc/test/gmock.h"
 
 namespace webrtc {
 
 class MockVideoMediaChannel : public cricket::FakeVideoMediaChannel {
  public:
-  MockVideoMediaChannel()
-      : cricket::FakeVideoMediaChannel(nullptr, cricket::VideoOptions()) {}
+  MockVideoMediaChannel() :
+      cricket::FakeVideoMediaChannel(NULL, cricket::VideoOptions()) {}
   MOCK_METHOD1(GetStats, bool(cricket::VideoMediaInfo*));
 };
 
 class MockVoiceMediaChannel : public cricket::FakeVoiceMediaChannel {
  public:
-  MockVoiceMediaChannel()
-      : cricket::FakeVoiceMediaChannel(nullptr, cricket::AudioOptions()) {}
+  MockVoiceMediaChannel() :
+      cricket::FakeVoiceMediaChannel(NULL, cricket::AudioOptions()) {}
   MOCK_METHOD1(GetStats, bool(cricket::VoiceMediaInfo*));
 };
 
 }  // namespace webrtc
 
-#endif  // MEDIA_BASE_TEST_MOCK_MEDIACHANNEL_H_
+#endif  // WEBRTC_MEDIA_BASE_TEST_MOCK_MEDIACHANNEL_H_

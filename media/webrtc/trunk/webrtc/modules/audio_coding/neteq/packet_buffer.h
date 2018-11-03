@@ -8,19 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_NETEQ_PACKET_BUFFER_H_
-#define MODULES_AUDIO_CODING_NETEQ_PACKET_BUFFER_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_PACKET_BUFFER_H_
+#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_PACKET_BUFFER_H_
 
-#include "api/optional.h"
-#include "modules/audio_coding/neteq/packet.h"
-#include "modules/include/module_common_types.h"
-#include "rtc_base/constructormagic.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/optional.h"
+#include "webrtc/modules/audio_coding/neteq/packet.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
 class DecoderDatabase;
-class StatisticsCalculator;
 class TickTimer;
 
 // This is the actual buffer holding the packets before decoding.
@@ -52,7 +51,7 @@ class PacketBuffer {
   // the packet object.
   // Returns PacketBuffer::kOK on success, PacketBuffer::kFlushed if the buffer
   // was flushed due to overfilling.
-  virtual int InsertPacket(Packet&& packet, StatisticsCalculator* stats);
+  virtual int InsertPacket(Packet&& packet);
 
   // Inserts a list of packets into the buffer. The buffer will take over
   // ownership of the packet objects.
@@ -66,8 +65,7 @@ class PacketBuffer {
       PacketList* packet_list,
       const DecoderDatabase& decoder_database,
       rtc::Optional<uint8_t>* current_rtp_payload_type,
-      rtc::Optional<uint8_t>* current_cng_rtp_payload_type,
-      StatisticsCalculator* stats);
+      rtc::Optional<uint8_t>* current_cng_rtp_payload_type);
 
   // Gets the timestamp for the first packet in the buffer and writes it to the
   // output variable |next_timestamp|.
@@ -94,24 +92,22 @@ class PacketBuffer {
   // Discards the first packet in the buffer. The packet is deleted.
   // Returns PacketBuffer::kBufferEmpty if the buffer is empty,
   // PacketBuffer::kOK otherwise.
-  virtual int DiscardNextPacket(StatisticsCalculator* stats);
+  virtual int DiscardNextPacket();
 
   // Discards all packets that are (strictly) older than timestamp_limit,
   // but newer than timestamp_limit - horizon_samples. Setting horizon_samples
   // to zero implies that the horizon is set to half the timestamp range. That
   // is, if a packet is more than 2^31 timestamps into the future compared with
   // timestamp_limit (including wrap-around), it is considered old.
-  virtual void DiscardOldPackets(uint32_t timestamp_limit,
-                                 uint32_t horizon_samples,
-                                 StatisticsCalculator* stats);
+  // Returns number of packets discarded.
+  virtual int DiscardOldPackets(uint32_t timestamp_limit,
+                                uint32_t horizon_samples);
 
   // Discards all packets that are (strictly) older than timestamp_limit.
-  virtual void DiscardAllOldPackets(uint32_t timestamp_limit,
-                                    StatisticsCalculator* stats);
+  virtual int DiscardAllOldPackets(uint32_t timestamp_limit);
 
   // Removes all packets with a specific payload type from the buffer.
-  virtual void DiscardPacketsWithPayloadType(uint8_t payload_type,
-                                             StatisticsCalculator* stats);
+  virtual void DiscardPacketsWithPayloadType(uint8_t payload_type);
 
   // Returns the number of packets in the buffer, including duplicates and
   // redundant packets.
@@ -145,4 +141,4 @@ class PacketBuffer {
 };
 
 }  // namespace webrtc
-#endif  // MODULES_AUDIO_CODING_NETEQ_PACKET_BUFFER_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_PACKET_BUFFER_H_

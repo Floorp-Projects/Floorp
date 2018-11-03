@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef SYSTEM_WRAPPERS_SOURCE_RW_LOCK_WIN_H_
-#define SYSTEM_WRAPPERS_SOURCE_RW_LOCK_WIN_H_
+#ifndef WEBRTC_SYSTEM_WRAPPERS_SOURCE_RW_LOCK_WIN_H_
+#define WEBRTC_SYSTEM_WRAPPERS_SOURCE_RW_LOCK_WIN_H_
 
-#include "system_wrappers/include/rw_lock_wrapper.h"
+#include "webrtc/system_wrappers/include/rw_lock_wrapper.h"
 
 #include <Windows.h>
 
@@ -37,4 +37,4 @@ class RWLockWin : public RWLockWrapper {
 
 }  // namespace webrtc
 
-#endif  // SYSTEM_WRAPPERS_SOURCE_RW_LOCK_WIN_H_
+#endif  // WEBRTC_SYSTEM_WRAPPERS_SOURCE_RW_LOCK_WIN_H_

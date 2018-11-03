@@ -11,11 +11,10 @@
 #include <memory>
 #include <vector>
 
-#include "modules/audio_coding/codecs/red/audio_encoder_copy_red.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/numerics/safe_conversions.h"
-#include "test/gtest.h"
-#include "test/mock_audio_encoder.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/modules/audio_coding/codecs/mock/mock_audio_encoder.h"
+#include "webrtc/modules/audio_coding/codecs/red/audio_encoder_copy_red.h"
+#include "webrtc/test/gtest.h"
 
 using ::testing::Return;
 using ::testing::_;
@@ -60,7 +59,7 @@ class AudioEncoderCopyRedTest : public ::testing::Test {
         timestamp_,
         rtc::ArrayView<const int16_t>(audio_, num_audio_samples_10ms),
         &encoded_);
-    timestamp_ += rtc::checked_cast<uint32_t>(num_audio_samples_10ms);
+    timestamp_ += num_audio_samples_10ms;
   }
 
   MockAudioEncoder* mock_encoder_;
@@ -101,7 +100,7 @@ TEST_F(AudioEncoderCopyRedTest, CheckMaxFrameSizePropagation) {
 TEST_F(AudioEncoderCopyRedTest, CheckTargetAudioBitratePropagation) {
   EXPECT_CALL(*mock_encoder_,
               OnReceivedUplinkBandwidth(4711, rtc::Optional<int64_t>()));
-  red_->OnReceivedUplinkBandwidth(4711, rtc::nullopt);
+  red_->OnReceivedUplinkBandwidth(4711, rtc::Optional<int64_t>());
 }
 
 TEST_F(AudioEncoderCopyRedTest, CheckPacketLossFractionPropagation) {

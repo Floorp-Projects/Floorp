@@ -9,9 +9,9 @@
  *
  */
 
-#include "modules/video_coding/codecs/h264/h264_encoder_impl.h"
+#include "webrtc/modules/video_coding/codecs/h264/h264_encoder_impl.h"
 
-#include "test/gtest.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 

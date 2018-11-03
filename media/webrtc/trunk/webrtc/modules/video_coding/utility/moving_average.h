@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_UTILITY_MOVING_AVERAGE_H_
-#define MODULES_VIDEO_CODING_UTILITY_MOVING_AVERAGE_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_UTILITY_MOVING_AVERAGE_H_
+#define WEBRTC_MODULES_VIDEO_CODING_UTILITY_MOVING_AVERAGE_H_
 
 #include <vector>
 
-#include "api/optional.h"
+#include "webrtc/base/optional.h"
 
 namespace webrtc {
 class MovingAverage {
@@ -32,4 +32,4 @@ class MovingAverage {
 };
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_UTILITY_MOVING_AVERAGE_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_UTILITY_MOVING_AVERAGE_H_

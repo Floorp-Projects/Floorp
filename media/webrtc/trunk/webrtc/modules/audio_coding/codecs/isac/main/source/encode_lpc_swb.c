@@ -26,7 +26,7 @@
 #include "lpc_shape_swb12_tables.h"
 #include "lpc_shape_swb16_tables.h"
 #include "settings.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 /******************************************************************************
  * WebRtcIsac_RemoveLarMean()

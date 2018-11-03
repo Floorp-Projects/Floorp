@@ -8,15 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/echo_cancellation_impl.h"
+#include "webrtc/modules/audio_processing/echo_cancellation_impl.h"
 
 #include <string.h>
 
-#include "modules/audio_processing/aec/aec_core.h"
-#include "modules/audio_processing/aec/echo_cancellation.h"
-#include "modules/audio_processing/audio_buffer.h"
-#include "rtc_base/checks.h"
-#include "system_wrappers/include/field_trial.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/modules/audio_processing/aec/aec_core.h"
+#include "webrtc/modules/audio_processing/aec/echo_cancellation.h"
+#include "webrtc/modules/audio_processing/audio_buffer.h"
 
 namespace webrtc {
 
@@ -48,14 +47,6 @@ AudioProcessing::Error MapError(int err) {
       // AEC_NULL_POINTER_ERROR
       return AudioProcessing::kUnspecifiedError;
   }
-}
-
-bool EnforceZeroStreamDelay() {
-#if defined(CHROMEOS)
-  return !field_trial::IsEnabled("WebRTC-Aec2ZeroStreamDelayKillSwitch");
-#else
-  return false;
-#endif
 }
 
 }  // namespace
@@ -115,8 +106,7 @@ EchoCancellationImpl::EchoCancellationImpl(rtc::CriticalSection* crit_render,
       stream_has_echo_(false),
       delay_logging_enabled_(false),
       extended_filter_enabled_(false),
-      delay_agnostic_enabled_(false),
-      enforce_zero_stream_delay_(EnforceZeroStreamDelay()) {
+      delay_agnostic_enabled_(false) {
   RTC_DCHECK(crit_render);
   RTC_DCHECK(crit_capture);
 }
@@ -155,9 +145,6 @@ int EchoCancellationImpl::ProcessCaptureAudio(AudioBuffer* audio,
     return AudioProcessing::kNoError;
   }
 
-  const int stream_delay_ms_use =
-      enforce_zero_stream_delay_ ? 0 : stream_delay_ms;
-
   if (drift_compensation_enabled_ && !was_stream_drift_set_) {
     return AudioProcessing::kStreamParameterNotSetError;
   }
@@ -173,11 +160,10 @@ int EchoCancellationImpl::ProcessCaptureAudio(AudioBuffer* audio,
   stream_has_echo_ = false;
   for (size_t i = 0; i < audio->num_channels(); i++) {
     for (size_t j = 0; j < stream_properties_->num_reverse_channels; j++) {
-      err = WebRtcAec_Process(cancellers_[handle_index]->state(),
-                              audio->split_bands_const_f(i), audio->num_bands(),
-                              audio->split_bands_f(i),
-                              audio->num_frames_per_band(), stream_delay_ms_use,
-                              stream_drift_samples_);
+      err = WebRtcAec_Process(
+          cancellers_[handle_index]->state(), audio->split_bands_const_f(i),
+          audio->num_bands(), audio->split_bands_f(i),
+          audio->num_frames_per_band(), stream_delay_ms, stream_drift_samples_);
 
       if (err != AudioProcessing::kNoError) {
         err = MapError(err);

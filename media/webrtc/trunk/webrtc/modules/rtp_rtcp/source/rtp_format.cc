@@ -8,41 +8,37 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/rtp_format.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format.h"
 
 #include <utility>
 
-#include "modules/rtp_rtcp/source/rtp_format_h264.h"
-#include "modules/rtp_rtcp/source/rtp_format_video_generic.h"
-#include "modules/rtp_rtcp/source/rtp_format_vp8.h"
-#include "modules/rtp_rtcp/source/rtp_format_vp9.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format_video_generic.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format_vp8.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format_vp9.h"
 
 namespace webrtc {
 RtpPacketizer* RtpPacketizer::Create(RtpVideoCodecTypes type,
                                      size_t max_payload_len,
-                                     size_t last_packet_reduction_len,
                                      const RTPVideoTypeHeader* rtp_type_header,
                                      FrameType frame_type) {
   switch (type) {
     case kRtpVideoH264:
       RTC_CHECK(rtp_type_header);
-      return new RtpPacketizerH264(max_payload_len, last_packet_reduction_len,
+      return new RtpPacketizerH264(max_payload_len,
                                    rtp_type_header->H264.packetization_mode);
     case kRtpVideoVp8:
       RTC_CHECK(rtp_type_header);
-      return new RtpPacketizerVp8(rtp_type_header->VP8, max_payload_len,
-                                  last_packet_reduction_len);
+      return new RtpPacketizerVp8(rtp_type_header->VP8, max_payload_len);
     case kRtpVideoVp9:
       RTC_CHECK(rtp_type_header);
-      return new RtpPacketizerVp9(rtp_type_header->VP9, max_payload_len,
-                                  last_packet_reduction_len);
+      return new RtpPacketizerVp9(rtp_type_header->VP9, max_payload_len);
     case kRtpVideoGeneric:
-      return new RtpPacketizerGeneric(frame_type, max_payload_len,
-                                      last_packet_reduction_len);
+      return new RtpPacketizerGeneric(frame_type, max_payload_len);
     case kRtpVideoNone:
       RTC_NOTREACHED();
   }
-  return nullptr;
+  return NULL;
 }
 
 RtpDepacketizer* RtpDepacketizer::Create(RtpVideoCodecTypes type) {
@@ -58,6 +54,6 @@ RtpDepacketizer* RtpDepacketizer::Create(RtpVideoCodecTypes type) {
     case kRtpVideoNone:
       assert(false);
   }
-  return nullptr;
+  return NULL;
 }
 }  // namespace webrtc

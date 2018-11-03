@@ -10,6 +10,8 @@
 
 package org.webrtc.voiceengine;
 
+import android.util.Log;
+
 import android.annotation.TargetApi;
 import android.media.audiofx.AcousticEchoCanceler;
 import android.media.audiofx.AudioEffect;
@@ -17,15 +19,15 @@ import android.media.audiofx.AudioEffect.Descriptor;
 import android.media.audiofx.AutomaticGainControl;
 import android.media.audiofx.NoiseSuppressor;
 import android.os.Build;
+
 import java.util.List;
 import java.util.UUID;
-import org.webrtc.Logging;
 
 // This class wraps control of three different platform effects. Supported
 // effects are: AcousticEchoCanceler (AEC) and NoiseSuppressor (NS).
 // Calling enable() will active all effects that are
 // supported by the device if the corresponding |shouldEnableXXX| member is set.
-public class WebRtcAudioEffects {
+class WebRtcAudioEffects {
   private static final boolean DEBUG = false;
 
   private static final String TAG = "WebRtcAudioEffects";
@@ -61,7 +63,7 @@ public class WebRtcAudioEffects {
     // Note: we're using isAcousticEchoCancelerEffectAvailable() instead of
     // AcousticEchoCanceler.isAvailable() to avoid the expensive getEffects()
     // OS API call.
-    return isAcousticEchoCancelerEffectAvailable();
+    return WebRtcAudioUtils.runningOnJellyBeanOrHigher() && isAcousticEchoCancelerEffectAvailable();
   }
 
   // Checks if the device implements Noise Suppression (NS).
@@ -70,7 +72,7 @@ public class WebRtcAudioEffects {
     // Note: we're using isNoiseSuppressorEffectAvailable() instead of
     // NoiseSuppressor.isAvailable() to avoid the expensive getEffects()
     // OS API call.
-    return isNoiseSuppressorEffectAvailable();
+    return WebRtcAudioUtils.runningOnJellyBeanOrHigher() && isNoiseSuppressorEffectAvailable();
   }
 
   // Returns true if the device is blacklisted for HW AEC usage.
@@ -78,7 +80,7 @@ public class WebRtcAudioEffects {
     List<String> blackListedModels = WebRtcAudioUtils.getBlackListedModelsForAecUsage();
     boolean isBlacklisted = blackListedModels.contains(Build.MODEL);
     if (isBlacklisted) {
-      Logging.w(TAG, Build.MODEL + " is blacklisted for HW AEC usage!");
+      Log.w(TAG, Build.MODEL + " is blacklisted for HW AEC usage!");
     }
     return isBlacklisted;
   }
@@ -88,7 +90,7 @@ public class WebRtcAudioEffects {
     List<String> blackListedModels = WebRtcAudioUtils.getBlackListedModelsForNsUsage();
     boolean isBlacklisted = blackListedModels.contains(Build.MODEL);
     if (isBlacklisted) {
-      Logging.w(TAG, Build.MODEL + " is blacklisted for HW NS usage!");
+      Log.w(TAG, Build.MODEL + " is blacklisted for HW NS usage!");
     }
     return isBlacklisted;
   }
@@ -136,7 +138,7 @@ public class WebRtcAudioEffects {
     boolean canUseAcousticEchoCanceler = isAcousticEchoCancelerSupported()
         && !WebRtcAudioUtils.useWebRtcBasedAcousticEchoCanceler()
         && !isAcousticEchoCancelerBlacklisted() && !isAcousticEchoCancelerExcludedByUUID();
-    Logging.d(TAG, "canUseAcousticEchoCanceler: " + canUseAcousticEchoCanceler);
+    Log.d(TAG, "canUseAcousticEchoCanceler: " + canUseAcousticEchoCanceler);
     return canUseAcousticEchoCanceler;
   }
 
@@ -146,16 +148,21 @@ public class WebRtcAudioEffects {
     boolean canUseNoiseSuppressor = isNoiseSuppressorSupported()
         && !WebRtcAudioUtils.useWebRtcBasedNoiseSuppressor() && !isNoiseSuppressorBlacklisted()
         && !isNoiseSuppressorExcludedByUUID();
-    Logging.d(TAG, "canUseNoiseSuppressor: " + canUseNoiseSuppressor);
+    Log.d(TAG, "canUseNoiseSuppressor: " + canUseNoiseSuppressor);
     return canUseNoiseSuppressor;
   }
 
-  public static WebRtcAudioEffects create() {
+  static WebRtcAudioEffects create() {
+    // Return null if VoIP effects (AEC, AGC and NS) are not supported.
+    if (!WebRtcAudioUtils.runningOnJellyBeanOrHigher()) {
+      Log.w(TAG, "API level 16 or higher is required!");
+      return null;
+    }
     return new WebRtcAudioEffects();
   }
 
   private WebRtcAudioEffects() {
-    Logging.d(TAG, "ctor" + WebRtcAudioUtils.getThreadInfo());
+    Log.d(TAG, "ctor" + WebRtcAudioUtils.getThreadInfo());
   }
 
   // Call this method to enable or disable the platform AEC. It modifies
@@ -163,14 +170,14 @@ public class WebRtcAudioEffects {
   // of the AEC effect is modified. Returns true if HW AEC is supported and
   // false otherwise.
   public boolean setAEC(boolean enable) {
-    Logging.d(TAG, "setAEC(" + enable + ")");
+    Log.d(TAG, "setAEC(" + enable + ")");
     if (!canUseAcousticEchoCanceler()) {
-      Logging.w(TAG, "Platform AEC is not supported");
+      Log.w(TAG, "Platform AEC is not supported");
       shouldEnableAec = false;
       return false;
     }
     if (aec != null && (enable != shouldEnableAec)) {
-      Logging.e(TAG, "Platform AEC state can't be modified while recording");
+      Log.e(TAG, "Platform AEC state can't be modified while recording");
       return false;
     }
     shouldEnableAec = enable;
@@ -182,14 +189,14 @@ public class WebRtcAudioEffects {
   // of the NS effect is modified. Returns true if HW NS is supported and
   // false otherwise.
   public boolean setNS(boolean enable) {
-    Logging.d(TAG, "setNS(" + enable + ")");
+    Log.d(TAG, "setNS(" + enable + ")");
     if (!canUseNoiseSuppressor()) {
-      Logging.w(TAG, "Platform NS is not supported");
+      Log.w(TAG, "Platform NS is not supported");
       shouldEnableNs = false;
       return false;
     }
     if (ns != null && (enable != shouldEnableNs)) {
-      Logging.e(TAG, "Platform NS state can't be modified while recording");
+      Log.e(TAG, "Platform NS state can't be modified while recording");
       return false;
     }
     shouldEnableNs = enable;
@@ -197,21 +204,18 @@ public class WebRtcAudioEffects {
   }
 
   public void enable(int audioSession) {
-    Logging.d(TAG, "enable(audioSession=" + audioSession + ")");
+    Log.d(TAG, "enable(audioSession=" + audioSession + ")");
     assertTrue(aec == null);
     assertTrue(ns == null);
 
-    if (DEBUG) {
-      // Add logging of supported effects but filter out "VoIP effects", i.e.,
-      // AEC, AEC and NS. Avoid calling AudioEffect.queryEffects() unless the
-      // DEBUG flag is set since we have seen crashes in this API.
-      for (Descriptor d : AudioEffect.queryEffects()) {
-        if (effectTypeIsVoIP(d.type)) {
-          Logging.d(TAG, "name: " + d.name + ", "
-                  + "mode: " + d.connectMode + ", "
-                  + "implementor: " + d.implementor + ", "
-                  + "UUID: " + d.uuid);
-        }
+    // Add logging of supported effects but filter out "VoIP effects", i.e.,
+    // AEC, AEC and NS.
+    for (Descriptor d : AudioEffect.queryEffects()) {
+      if (effectTypeIsVoIP(d.type) || DEBUG) {
+        Log.d(TAG, "name: " + d.name + ", "
+                + "mode: " + d.connectMode + ", "
+                + "implementor: " + d.implementor + ", "
+                + "UUID: " + d.uuid);
       }
     }
 
@@ -223,13 +227,13 @@ public class WebRtcAudioEffects {
         boolean enabled = aec.getEnabled();
         boolean enable = shouldEnableAec && canUseAcousticEchoCanceler();
         if (aec.setEnabled(enable) != AudioEffect.SUCCESS) {
-          Logging.e(TAG, "Failed to set the AcousticEchoCanceler state");
+          Log.e(TAG, "Failed to set the AcousticEchoCanceler state");
         }
-        Logging.d(TAG, "AcousticEchoCanceler: was " + (enabled ? "enabled" : "disabled")
+        Log.d(TAG, "AcousticEchoCanceler: was " + (enabled ? "enabled" : "disabled")
                 + ", enable: " + enable + ", is now: "
                 + (aec.getEnabled() ? "enabled" : "disabled"));
       } else {
-        Logging.e(TAG, "Failed to create the AcousticEchoCanceler instance");
+        Log.e(TAG, "Failed to create the AcousticEchoCanceler instance");
       }
     }
 
@@ -241,12 +245,12 @@ public class WebRtcAudioEffects {
         boolean enabled = ns.getEnabled();
         boolean enable = shouldEnableNs && canUseNoiseSuppressor();
         if (ns.setEnabled(enable) != AudioEffect.SUCCESS) {
-          Logging.e(TAG, "Failed to set the NoiseSuppressor state");
+          Log.e(TAG, "Failed to set the NoiseSuppressor state");
         }
-        Logging.d(TAG, "NoiseSuppressor: was " + (enabled ? "enabled" : "disabled") + ", enable: "
+        Log.d(TAG, "NoiseSuppressor: was " + (enabled ? "enabled" : "disabled") + ", enable: "
                 + enable + ", is now: " + (ns.getEnabled() ? "enabled" : "disabled"));
       } else {
-        Logging.e(TAG, "Failed to create the NoiseSuppressor instance");
+        Log.e(TAG, "Failed to create the NoiseSuppressor instance");
       }
     }
   }
@@ -255,7 +259,7 @@ public class WebRtcAudioEffects {
   // release the effect engine when not in use as control can be returned
   // to other applications or the native resources released.
   public void release() {
-    Logging.d(TAG, "release");
+    Log.d(TAG, "release");
     if (aec != null) {
       aec.release();
       aec = null;

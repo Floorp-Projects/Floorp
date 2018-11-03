@@ -9,11 +9,11 @@
  *
  */
 
-#ifndef MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_RTPFB_H_
-#define MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_RTPFB_H_
+#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_RTPFB_H_
+#define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_RTPFB_H_
 
-#include "modules/rtp_rtcp/source/rtcp_packet.h"
-#include "rtc_base/basictypes.h"
+#include "webrtc/base/basictypes.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -45,4 +45,4 @@ class Rtpfb : public RtcpPacket {
 
 }  // namespace rtcp
 }  // namespace webrtc
-#endif  // MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_RTPFB_H_
+#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_RTPFB_H_

@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_BEAMFORMER_ARRAY_UTIL_H_
-#define MODULES_AUDIO_PROCESSING_BEAMFORMER_ARRAY_UTIL_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_BEAMFORMER_ARRAY_UTIL_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_BEAMFORMER_ARRAY_UTIL_H_
 
 #include <cmath>
 #include <vector>
 
-#include "api/optional.h"
+#include "webrtc/base/optional.h"
 
 namespace webrtc {
 
@@ -114,4 +114,4 @@ T RadiansToDegrees(T angle_radians) {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_BEAMFORMER_ARRAY_UTIL_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_BEAMFORMER_ARRAY_UTIL_H_

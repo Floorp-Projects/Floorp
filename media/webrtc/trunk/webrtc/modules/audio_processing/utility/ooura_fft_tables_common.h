@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_UTILITY_OOURA_FFT_TABLES_COMMON_H_
-#define MODULES_AUDIO_PROCESSING_UTILITY_OOURA_FFT_TABLES_COMMON_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_UTILITY_OOURA_FFT_TABLES_COMMON_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_UTILITY_OOURA_FFT_TABLES_COMMON_H_
 
-#include "modules/audio_processing/utility/ooura_fft.h"
+#include "webrtc/modules/audio_processing/utility/ooura_fft.h"
 
 namespace webrtc {
 
@@ -51,4 +51,4 @@ const float rdft_wk3ri_second[16] = {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_UTILITY_OOURA_FFT_TABLES_COMMON_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_UTILITY_OOURA_FFT_TABLES_COMMON_H_

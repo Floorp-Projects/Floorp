@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef COMMON_AUDIO_REAL_FOURIER_OPENMAX_H_
-#define COMMON_AUDIO_REAL_FOURIER_OPENMAX_H_
+#ifndef WEBRTC_COMMON_AUDIO_REAL_FOURIER_OPENMAX_H_
+#define WEBRTC_COMMON_AUDIO_REAL_FOURIER_OPENMAX_H_
 
 #include <complex>
 
-#include "common_audio/real_fourier.h"
+#include "webrtc/common_audio/real_fourier.h"
 
 namespace webrtc {
 
@@ -40,5 +40,5 @@ class RealFourierOpenmax : public RealFourier {
 
 }  // namespace webrtc
 
-#endif  // COMMON_AUDIO_REAL_FOURIER_OPENMAX_H_
+#endif  // WEBRTC_COMMON_AUDIO_REAL_FOURIER_OPENMAX_H_
 

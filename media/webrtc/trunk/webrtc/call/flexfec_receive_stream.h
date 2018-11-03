@@ -8,25 +8,21 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef CALL_FLEXFEC_RECEIVE_STREAM_H_
-#define CALL_FLEXFEC_RECEIVE_STREAM_H_
+#ifndef WEBRTC_CALL_FLEXFEC_RECEIVE_STREAM_H_
+#define WEBRTC_CALL_FLEXFEC_RECEIVE_STREAM_H_
 
 #include <stdint.h>
 
 #include <string>
 #include <vector>
 
-#include "api/call/transport.h"
-#include "api/rtpparameters.h"
-#include "call/rtp_packet_sink_interface.h"
-#include "common_types.h"  // NOLINT(build/include)
+#include "webrtc/api/call/transport.h"
+#include "webrtc/config.h"
 
 namespace webrtc {
 
-class FlexfecReceiveStream : public RtpPacketSinkInterface {
+class FlexfecReceiveStream {
  public:
-  ~FlexfecReceiveStream() override = default;
-
   struct Stats {
     std::string ToString(int64_t time_ms) const;
 
@@ -77,11 +73,19 @@ class FlexfecReceiveStream : public RtpPacketSinkInterface {
     std::vector<RtpExtension> rtp_header_extensions;
   };
 
+  // Starts stream activity.
+  // When a stream is active, it can receive and process packets.
+  virtual void Start() = 0;
+  // Stops stream activity.
+  // When a stream is stopped, it can't receive nor process packets.
+  virtual void Stop() = 0;
+
   virtual Stats GetStats() const = 0;
 
-  virtual const Config& GetConfig() const = 0;
+ protected:
+  virtual ~FlexfecReceiveStream() = default;
 };
 
 }  // namespace webrtc
 
-#endif  // CALL_FLEXFEC_RECEIVE_STREAM_H_
+#endif  // WEBRTC_CALL_FLEXFEC_RECEIVE_STREAM_H_

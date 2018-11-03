@@ -8,19 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MEDIA_BASE_TESTUTILS_H_
-#define MEDIA_BASE_TESTUTILS_H_
+#ifndef WEBRTC_MEDIA_BASE_TESTUTILS_H_
+#define WEBRTC_MEDIA_BASE_TESTUTILS_H_
 
 #include <string>
 #include <vector>
 
-#include "media/base/mediachannel.h"
-#include "media/base/videocapturer.h"
-#include "media/base/videocommon.h"
-#include "rtc_base/arraysize.h"
-#include "rtc_base/basictypes.h"
-#include "rtc_base/sigslot.h"
-#include "rtc_base/window.h"
+#include "libyuv/compare.h"
+#include "webrtc/base/arraysize.h"
+#include "webrtc/base/basictypes.h"
+#include "webrtc/base/sigslot.h"
+#include "webrtc/base/window.h"
+#include "webrtc/media/base/mediachannel.h"
+#include "webrtc/media/base/videocapturer.h"
+#include "webrtc/media/base/videocommon.h"
 
 namespace rtc {
 class ByteBufferReader;
@@ -104,6 +105,20 @@ class VideoCapturerListener
   bool resolution_changed_;
 };
 
+class ScreencastEventCatcher : public sigslot::has_slots<> {
+ public:
+  ScreencastEventCatcher() : ssrc_(0), ev_(rtc::WE_RESIZE) { }
+  uint32_t ssrc() const { return ssrc_; }
+  rtc::WindowEvent event() const { return ev_; }
+  void OnEvent(uint32_t ssrc, rtc::WindowEvent ev) {
+    ssrc_ = ssrc;
+    ev_ = ev;
+  }
+ private:
+  uint32_t ssrc_;
+  rtc::WindowEvent ev_;
+};
+
 class VideoMediaErrorCatcher : public sigslot::has_slots<> {
  public:
   VideoMediaErrorCatcher() : ssrc_(0), error_(VideoMediaChannel::ERROR_NONE) { }
@@ -148,4 +163,4 @@ cricket::StreamParams CreatePrimaryWithFecFrStreamParams(
 
 }  // namespace cricket
 
-#endif  // MEDIA_BASE_TESTUTILS_H_
+#endif  // WEBRTC_MEDIA_BASE_TESTUTILS_H_

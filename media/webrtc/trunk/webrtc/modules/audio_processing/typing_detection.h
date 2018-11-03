@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_TYPING_DETECTION_H_
-#define MODULES_AUDIO_PROCESSING_TYPING_DETECTION_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_TYPING_DETECTION_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_TYPING_DETECTION_H_
 
-#include "modules/include/module_common_types.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -90,4 +90,4 @@ class TypingDetection {
 
 }  // namespace webrtc
 
-#endif  // #ifndef MODULES_AUDIO_PROCESSING_TYPING_DETECTION_H_
+#endif  // #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_TYPING_DETECTION_H_

@@ -12,6 +12,9 @@ package org.webrtc.voiceengine;
 
 import android.os.Build;
 
+import org.mozilla.gecko.annotation.WebRTCJNITarget;
+
+@WebRTCJNITarget
 public final class BuildInfo {
   public static String getDevice() {
     return Build.DEVICE;

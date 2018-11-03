@@ -7,10 +7,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/jitter_estimator.h"
+#include "webrtc/modules/video_coding/jitter_estimator.h"
 
-#include "system_wrappers/include/clock.h"
-#include "test/gtest.h"
+#include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
@@ -46,8 +46,7 @@ class TestVCMJitterEstimator : public ::testing::Test {
 // Generates some simple test data in the form of a sawtooth wave.
 class ValueGenerator {
  public:
-  explicit ValueGenerator(int32_t amplitude)
-      : amplitude_(amplitude), counter_(0) {}
+  ValueGenerator(int32_t amplitude) : amplitude_(amplitude), counter_(0) {}
   virtual ~ValueGenerator() {}
 
   int64_t Delay() { return ((counter_ % 11) - 5) * amplitude_; }
@@ -158,4 +157,4 @@ TEST_F(TestVCMJitterEstimator, TestConvergence) {
   EXPECT_NE(low_rate_iterations, 0);
   EXPECT_LE(low_rate_iterations, regular_iterations);
 }
-}  // namespace webrtc
+}

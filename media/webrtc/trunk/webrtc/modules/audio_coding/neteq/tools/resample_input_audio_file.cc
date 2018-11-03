@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_coding/neteq/tools/resample_input_audio_file.h"
+#include "webrtc/modules/audio_coding/neteq/tools/resample_input_audio_file.h"
 
 #include <memory>
 
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 namespace test {

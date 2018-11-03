@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/desktop_region.h"
+#include "webrtc/modules/desktop_capture/desktop_region.h"
 
 #include <algorithm>
 
-#include "test/gtest.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 

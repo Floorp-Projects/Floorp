@@ -26,8 +26,10 @@ public class MediaSource {
   }
 
   public void dispose() {
-    JniCommon.nativeReleaseRef(nativeSource);
+    free(nativeSource);
   }
 
   private static native State nativeState(long pointer);
+
+  private static native void free(long nativeSource);
 }

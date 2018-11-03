@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_BEAMFORMER_MATRIX_H_
-#define MODULES_AUDIO_PROCESSING_BEAMFORMER_MATRIX_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_BEAMFORMER_MATRIX_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_BEAMFORMER_MATRIX_H_
 
 #include <algorithm>
 #include <cstring>
 #include <string>
 #include <vector>
 
-#include "rtc_base/checks.h"
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/constructormagic.h"
 
 namespace {
 
@@ -366,4 +366,4 @@ class Matrix {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_BEAMFORMER_MATRIX_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_BEAMFORMER_MATRIX_H_

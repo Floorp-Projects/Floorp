@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/mouse_cursor_monitor.h"
+#include "webrtc/modules/desktop_capture/mouse_cursor_monitor.h"
 
 #include <assert.h>
 
@@ -18,40 +18,34 @@
 #include <Cocoa/Cocoa.h>
 #include <CoreFoundation/CoreFoundation.h>
 
-#include "modules/desktop_capture/desktop_capture_options.h"
-#include "modules/desktop_capture/desktop_capture_types.h"
-#include "modules/desktop_capture/desktop_frame.h"
-#include "modules/desktop_capture/mac/desktop_configuration.h"
-#include "modules/desktop_capture/mac/desktop_configuration_monitor.h"
-#include "modules/desktop_capture/mac/full_screen_chrome_window_detector.h"
-#include "modules/desktop_capture/mac/window_list_utils.h"
-#include "modules/desktop_capture/mouse_cursor.h"
-#include "rtc_base/macutils.h"
-#include "rtc_base/scoped_ref_ptr.h"
+#include "webrtc/base/macutils.h"
+#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
+#include "webrtc/modules/desktop_capture/desktop_frame.h"
+#include "webrtc/modules/desktop_capture/mac/desktop_configuration.h"
+#include "webrtc/modules/desktop_capture/mac/desktop_configuration_monitor.h"
+#include "webrtc/modules/desktop_capture/mac/full_screen_chrome_window_detector.h"
+#include "webrtc/modules/desktop_capture/mouse_cursor.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
 
 namespace {
-CGImageRef CreateScaledCGImage(CGImageRef image, int width, int height) {
-  // Create context, keeping original image properties.
-  CGColorSpaceRef colorspace = CGImageGetColorSpace(image);
-  CGContextRef context = CGBitmapContextCreate(nullptr,
-                                               width,
-                                               height,
-                                               CGImageGetBitsPerComponent(image),
-                                               width * DesktopFrame::kBytesPerPixel,
-                                               colorspace,
-                                               CGImageGetBitmapInfo(image));
-
-  if (!context) return nil;
-
-  // Draw image to context, resizing it.
-  CGContextDrawImage(context, CGRectMake(0, 0, width, height), image);
-  // Extract resulting image from context.
-  CGImageRef imgRef = CGBitmapContextCreateImage(context);
-  CGContextRelease(context);
-
-  return imgRef;
+// Paint the image, so that we can get a bitmap representation compatible with
+// current context. For example, in the retina display, we are going to get an
+// image with same visual size but underlying pixel size conforms to the retina
+// setting.
+NSImage* PaintInCurrentContext(NSImage* source) {
+  NSSize size = [source size];
+  NSImage* new_image = [[[NSImage alloc] initWithSize:size] autorelease];
+  [new_image lockFocus];
+  NSRect frame = NSMakeRect(0, 0, size.width, size.height);
+  [source drawInRect:frame
+            fromRect:frame
+           operation:NSCompositeCopy
+            fraction:1.0];
+  [new_image unlockFocus];
+  return new_image;
 }
 }  // namespace
 
@@ -62,7 +56,7 @@ class MouseCursorMonitorMac : public MouseCursorMonitor {
                         ScreenId screen_id);
   ~MouseCursorMonitorMac() override;
 
-  void Init(Callback* callback, Mode mode) override;
+  void Start(Callback* callback, Mode mode) override;
   void Stop() override;
   void Capture() override;
 
@@ -80,7 +74,7 @@ class MouseCursorMonitorMac : public MouseCursorMonitor {
   ScreenId screen_id_;
   Callback* callback_;
   Mode mode_;
-  __strong NSImage* last_cursor_;
+  std::unique_ptr<MouseCursor> last_cursor_;
   rtc::scoped_refptr<FullScreenChromeWindowDetector>
       full_screen_chrome_window_detector_;
 };
@@ -94,15 +88,19 @@ MouseCursorMonitorMac::MouseCursorMonitorMac(
       screen_id_(screen_id),
       callback_(NULL),
       mode_(SHAPE_AND_POSITION),
-      last_cursor_(NULL),
       full_screen_chrome_window_detector_(
           options.full_screen_chrome_window_detector()) {
   assert(window_id == kCGNullWindowID || screen_id == kInvalidScreenId);
+  if (screen_id != kInvalidScreenId &&
+      rtc::GetOSVersionName() < rtc::kMacOSLion) {
+    // Single screen capture is not supported on pre OS X 10.7.
+    screen_id_ = kFullDesktopScreenId;
+  }
 }
 
 MouseCursorMonitorMac::~MouseCursorMonitorMac() {}
 
-void MouseCursorMonitorMac::Init(Callback* callback, Mode mode) {
+void MouseCursorMonitorMac::Start(Callback* callback, Mode mode) {
   assert(!callback_);
   assert(callback);
 
@@ -112,7 +110,6 @@ void MouseCursorMonitorMac::Init(Callback* callback, Mode mode) {
 
 void MouseCursorMonitorMac::Stop() {
   callback_ = NULL;
-  last_cursor_ = NULL;
 }
 
 void MouseCursorMonitorMac::Capture() {
@@ -130,7 +127,17 @@ void MouseCursorMonitorMac::Capture() {
   MacDesktopConfiguration configuration =
       configuration_monitor_->desktop_configuration();
   configuration_monitor_->Unlock();
-  float scale = GetScaleFactorAtPosition(configuration, position);
+  float scale = 1.0f;
+
+  // Find the dpi to physical pixel scale for the screen where the mouse cursor
+  // is.
+  for (MacDisplayConfigurations::iterator it = configuration.displays.begin();
+       it != configuration.displays.end(); ++it) {
+    if (it->bounds.Contains(position)) {
+      scale = it->dip_to_pixel_scale;
+      break;
+    }
+  }
 
   CaptureImage(scale);
 
@@ -234,29 +241,28 @@ void MouseCursorMonitorMac::Capture() {
         state = OUTSIDE;
         position.set(-1, -1);
       }
+    } else {
+      position.subtract(configuration.bounds.top_left());
     }
   }
-  // Convert Density Independent Pixel to physical pixel.
-  position = DesktopVector(round(position.x() * scale),
-                           round(position.y() * scale));
-  // TODO(zijiehe): Remove this overload.
+  if (state == INSIDE) {
+    // Convert Density Independent Pixel to physical pixel.
+    position = DesktopVector(round(position.x() * scale),
+                             round(position.y() * scale));
+  }
   callback_->OnMouseCursorPosition(state, position);
-  callback_->OnMouseCursorPosition(
-      position.subtract(configuration.bounds.top_left()));
 }
 
 void MouseCursorMonitorMac::CaptureImage(float scale) {
   NSCursor* nscursor = [NSCursor currentSystemCursor];
 
   NSImage* nsimage = [nscursor image];
-  if (nsimage == nil || !nsimage.isValid) {
-    return;
-  }
   NSSize nssize = [nsimage size];  // DIP size
 
-  // No need to caputre cursor image if it's unchanged since last capture.
-  if (last_cursor_ && [[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
-  last_cursor_ = nsimage;
+  // For retina screen, we need to paint the cursor in current graphic context
+  // to get retina representation.
+  if (scale != 1.0)
+    nsimage = PaintInCurrentContext(nsimage);
 
   DesktopSize size(round(nssize.width * scale),
                    round(nssize.height * scale));  // Pixel size
@@ -271,32 +277,29 @@ void MouseCursorMonitorMac::CaptureImage(float scale) {
   if (!cg_image)
     return;
 
-  // Before 10.12, OSX may report 1X cursor on Retina screen. (See
-  // crbug.com/632995.) After 10.12, OSX may report 2X cursor on non-Retina
-  // screen. (See crbug.com/671436.) So scaling the cursor if needed.
-  CGImageRef scaled_cg_image = nil;
-  if (CGImageGetWidth(cg_image) != static_cast<size_t>(size.width())) {
-    scaled_cg_image = CreateScaledCGImage(cg_image, size.width(), size.height());
-    if (scaled_cg_image != nil) {
-      cg_image = scaled_cg_image;
-    }
-  }
   if (CGImageGetBitsPerPixel(cg_image) != DesktopFrame::kBytesPerPixel * 8 ||
       CGImageGetWidth(cg_image) != static_cast<size_t>(size.width()) ||
       CGImageGetBitsPerComponent(cg_image) != 8) {
-    if (scaled_cg_image != nil) CGImageRelease(scaled_cg_image);
     return;
   }
 
   CGDataProviderRef provider = CGImageGetDataProvider(cg_image);
   CFDataRef image_data_ref = CGDataProviderCopyData(provider);
-  if (image_data_ref == NULL) {
-    if (scaled_cg_image != nil) CGImageRelease(scaled_cg_image);
+  if (image_data_ref == NULL)
     return;
-  }
 
   const uint8_t* src_data =
       reinterpret_cast<const uint8_t*>(CFDataGetBytePtr(image_data_ref));
+
+  // Compare the cursor with the previous one.
+  if (last_cursor_.get() &&
+      last_cursor_->image()->size().equals(size) &&
+      last_cursor_->hotspot().equals(hotspot) &&
+      memcmp(last_cursor_->image()->data(), src_data,
+             last_cursor_->image()->stride() * size.height()) == 0) {
+    CFRelease(image_data_ref);
+    return;
+  }
 
   // Create a MouseCursor that describes the cursor and pass it to
   // the client.
@@ -307,10 +310,10 @@ void MouseCursorMonitorMac::CaptureImage(float scale) {
   image->CopyPixelsFrom(src_data, src_stride, DesktopRect::MakeSize(size));
 
   CFRelease(image_data_ref);
-  if (scaled_cg_image != nil) CGImageRelease(scaled_cg_image);
 
   std::unique_ptr<MouseCursor> cursor(
       new MouseCursor(image.release(), hotspot));
+  last_cursor_.reset(MouseCursor::CopyOf(*cursor));
 
   callback_->OnMouseCursor(cursor.release());
 }
@@ -324,12 +327,6 @@ MouseCursorMonitor* MouseCursorMonitor::CreateForScreen(
     const DesktopCaptureOptions& options,
     ScreenId screen) {
   return new MouseCursorMonitorMac(options, kCGNullWindowID, screen);
-}
-
-std::unique_ptr<MouseCursorMonitor> MouseCursorMonitor::Create(
-    const DesktopCaptureOptions& options) {
-  return std::unique_ptr<MouseCursorMonitor>(
-      CreateForScreen(options, kFullDesktopScreenId));
 }
 
 }  // namespace webrtc

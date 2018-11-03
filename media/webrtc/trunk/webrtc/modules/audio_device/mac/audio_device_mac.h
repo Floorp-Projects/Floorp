@@ -8,17 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef AUDIO_DEVICE_AUDIO_DEVICE_MAC_H_
-#define AUDIO_DEVICE_AUDIO_DEVICE_MAC_H_
+#ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_MAC_H
+#define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_MAC_H
 
 #include <memory>
 
-#include "modules/audio_device/audio_device_generic.h"
-#include "modules/audio_device/mac/audio_mixer_manager_mac.h"
-#include "rtc_base/criticalsection.h"
-#include "rtc_base/logging.h"
-#include "rtc_base/thread_annotations.h"
-#include "system_wrappers/include/event_wrapper.h"
+#include "webrtc/base/thread_annotations.h"
+#include "webrtc/modules/audio_device/audio_device_generic.h"
+#include "webrtc/modules/audio_device/mac/audio_mixer_manager_mac.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 #include <AudioToolbox/AudioConverter.h>
 #include <CoreAudio/CoreAudio.h>
@@ -62,7 +60,7 @@ const int kGetMicVolumeIntervalMs = 1000;
 
 class AudioDeviceMac : public AudioDeviceGeneric {
  public:
-  AudioDeviceMac();
+  AudioDeviceMac(const int32_t id);
   ~AudioDeviceMac();
 
   // Retrieve the currently utilized audio layer
@@ -111,6 +109,11 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   virtual int32_t SetAGC(bool enable);
   virtual bool AGC() const;
 
+  // Volume control based on the Windows Wave API (Windows only)
+  virtual int32_t SetWaveOutVolume(uint16_t volumeLeft, uint16_t volumeRight);
+  virtual int32_t WaveOutVolume(uint16_t& volumeLeft,
+                                uint16_t& volumeRight) const;
+
   // Audio mixer initialization
   virtual int32_t InitSpeaker();
   virtual bool SpeakerIsInitialized() const;
@@ -123,6 +126,7 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   virtual int32_t SpeakerVolume(uint32_t& volume) const;
   virtual int32_t MaxSpeakerVolume(uint32_t& maxVolume) const;
   virtual int32_t MinSpeakerVolume(uint32_t& minVolume) const;
+  virtual int32_t SpeakerVolumeStepSize(uint16_t& stepSize) const;
 
   // Microphone volume controls
   virtual int32_t MicrophoneVolumeIsAvailable(bool& available);
@@ -130,6 +134,7 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   virtual int32_t MicrophoneVolume(uint32_t& volume) const;
   virtual int32_t MaxMicrophoneVolume(uint32_t& maxVolume) const;
   virtual int32_t MinMicrophoneVolume(uint32_t& minVolume) const;
+  virtual int32_t MicrophoneVolumeStepSize(uint16_t& stepSize) const;
 
   // Microphone mute control
   virtual int32_t MicrophoneMuteIsAvailable(bool& available);
@@ -141,6 +146,11 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   virtual int32_t SetSpeakerMute(bool enable);
   virtual int32_t SpeakerMute(bool& enabled) const;
 
+  // Microphone boost control
+  virtual int32_t MicrophoneBoostIsAvailable(bool& available);
+  virtual int32_t SetMicrophoneBoost(bool enable);
+  virtual int32_t MicrophoneBoost(bool& enabled) const;
+
   // Stereo support
   virtual int32_t StereoPlayoutIsAvailable(bool& available);
   virtual int32_t SetStereoPlayout(bool enable);
@@ -150,7 +160,24 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   virtual int32_t StereoRecording(bool& enabled) const;
 
   // Delay information and control
+  virtual int32_t SetPlayoutBuffer(const AudioDeviceModule::BufferType type,
+                                   uint16_t sizeMS);
+  virtual int32_t PlayoutBuffer(AudioDeviceModule::BufferType& type,
+                                uint16_t& sizeMS) const;
   virtual int32_t PlayoutDelay(uint16_t& delayMS) const;
+  virtual int32_t RecordingDelay(uint16_t& delayMS) const;
+
+  // CPU load
+  virtual int32_t CPULoad(uint16_t& load) const;
+
+  virtual bool PlayoutWarning() const;
+  virtual bool PlayoutError() const;
+  virtual bool RecordingWarning() const;
+  virtual bool RecordingError() const;
+  virtual void ClearPlayoutWarning();
+  virtual void ClearPlayoutError();
+  virtual void ClearRecordingWarning();
+  virtual void ClearRecordingError();
 
   virtual void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer);
 
@@ -161,7 +188,9 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   static void AtomicSet32(int32_t* theValue, int32_t newValue);
   static int32_t AtomicGet32(int32_t* theValue);
 
-  static void logCAMsg(const rtc::LoggingSeverity sev,
+  static void logCAMsg(const TraceLevel level,
+                       const TraceModule module,
+                       const int32_t id,
                        const char* msg,
                        const char* err);
 
@@ -254,7 +283,7 @@ class AudioDeviceMac : public AudioDeviceGeneric {
 
   AudioDeviceBuffer* _ptrAudioBuffer;
 
-  rtc::CriticalSection _critSect;
+  CriticalSectionWrapper& _critSect;
 
   EventWrapper& _stopEventRec;
   EventWrapper& _stopEvent;
@@ -266,6 +295,8 @@ class AudioDeviceMac : public AudioDeviceGeneric {
 
   // Only valid/running between calls to StartPlayout and StopPlayout.
   std::unique_ptr<rtc::PlatformThread> render_worker_thread_;
+
+  int32_t _id;
 
   AudioMixerManagerMac _mixerManager;
 
@@ -287,6 +318,8 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   SInt16* _renderBufData;
 
   SInt16 _renderConvertData[PLAY_BUF_SIZE_IN_SAMPLES];
+
+  AudioDeviceModule::BufferType _playBufType;
 
   bool _initialized;
   bool _isShutDown;
@@ -322,6 +355,13 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   mutable int32_t _renderDelayUs;
 
   int32_t _renderDelayOffsetSamples;
+
+  uint16_t _playBufDelayFixed;  // fixed playback delay
+
+  uint16_t _playWarning;
+  uint16_t _playError;
+  uint16_t _recWarning;
+  uint16_t _recError;
 
   PaUtilRingBuffer* _paCaptureBuffer;
   PaUtilRingBuffer* _paRenderBuffer;

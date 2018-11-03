@@ -22,7 +22,7 @@ import re
 import sys
 
 # Change this to True to save the figure to a file. Look below for details.
-SAVE_FIGURE = False
+save_figure = False
 
 class ParsePlotLineException(Exception):
   def __init__(self, reason, line):
@@ -31,7 +31,7 @@ class ParsePlotLineException(Exception):
     self.line = line
 
 
-def ParsePlotLine(line):
+def parse_plot_line(line):
   split_line = line.split()
   if len(split_line) != 5:
     raise ParsePlotLineException("Expected 5 arguments on line", line)
@@ -51,7 +51,7 @@ def ParsePlotLine(line):
   return (var_name, ssrc, alg_name, time, value)
 
 
-def GenerateLabel(var_name, ssrc, ssrc_count, alg_name):
+def generate_label(var_name, ssrc, ssrc_count, alg_name):
   label = var_name
   if ssrc_count > 1 or ssrc != "0":
     label = label + " flow " + ssrc
@@ -65,18 +65,19 @@ class Figure(object):
     self.name = name
     self.subplots = []
 
-  def AddSubplot(self, var_names, xlabel, ylabel):
+  def addSubplot(self, var_names, xlabel, ylabel):
     self.subplots.append(Subplot(var_names, xlabel, ylabel))
 
-  def AddSample(self, var_name, ssrc, alg_name, time, value):
+  def addSample(self, var_name, ssrc, alg_name, time, value):
     for s in self.subplots:
-      s.AddSample(var_name, ssrc, alg_name, time, value)
+      s.addSample(var_name, ssrc, alg_name, time, value)
 
-  def PlotFigure(self, fig):
+  def plotFigure(self, fig):
     n = len(self.subplots)
     for i in range(n):
-      axis = fig.add_subplot(n, 1, i+1)
-      self.subplots[i].PlotSubplot(axis)
+      ax = fig.add_subplot(n, 1, i+1)
+      self.subplots[i].plotSubplot(ax)
+
 
 class Subplot(object):
   def __init__(self, var_names, xlabel, ylabel):
@@ -85,7 +86,7 @@ class Subplot(object):
     self.var_names = var_names
     self.samples = dict()
 
-  def AddSample(self, var_name, ssrc, alg_name, time, value):
+  def addSample(self, var_name, ssrc, alg_name, time, value):
     if var_name not in self.var_names:
       return
 
@@ -98,9 +99,9 @@ class Subplot(object):
 
     self.samples[alg_name][ssrc][var_name].append((time, value))
 
-  def PlotSubplot(self, axis):
-    axis.set_xlabel(self.xlabel)
-    axis.set_ylabel(self.ylabel)
+  def plotSubplot(self, ax):
+    ax.set_xlabel(self.xlabel)
+    ax.set_ylabel(self.ylabel)
 
     count = 0
     for alg_name in self.samples.keys():
@@ -110,12 +111,10 @@ class Subplot(object):
           y = [sample[1] for sample in self.samples[alg_name][ssrc][var_name]]
           x = numpy.array(x)
           y = numpy.array(y)
+
           ssrc_count = len(self.samples[alg_name].keys())
-          l = GenerateLabel(var_name, ssrc, ssrc_count, alg_name)
-          if l == 'MaxThroughput_':
-            plt.plot(x, y, label=l, linewidth=4.0)
-          else:
-            plt.plot(x, y, label=l, linewidth=2.0)
+          l = generate_label(var_name, ssrc, ssrc_count, alg_name)
+          plt.plot(x, y, label=l, linewidth=2.0)
           count += 1
 
     plt.grid(True)
@@ -125,36 +124,32 @@ class Subplot(object):
 
 def main():
   receiver = Figure("PacketReceiver")
-  receiver.AddSubplot(['Throughput_kbps', 'MaxThroughput_', 'Capacity_kbps',
+  receiver.addSubplot(['Throughput_kbps', 'MaxThroughput_', 'Capacity_kbps',
                        'PerFlowCapacity_kbps', 'MetricRecorderThroughput_kbps'],
                       "Time (s)", "Throughput (kbps)")
-  receiver.AddSubplot(['Delay_ms_', 'Delay_ms'], "Time (s)",
+  receiver.addSubplot(['Delay_ms_', 'Delay_ms'], "Time (s)",
                       "One-way delay (ms)")
-  receiver.AddSubplot(['Packet_Loss_'], "Time (s)", "Packet Loss Ratio")
+  receiver.addSubplot(['Packet_Loss_'], "Time (s)", "Packet Loss Ratio")
 
   kalman_state = Figure("KalmanState")
-  kalman_state.AddSubplot(['kc', 'km'], "Time (s)", "Kalman gain")
-  kalman_state.AddSubplot(['slope_1/bps'], "Time (s)", "Slope")
-  kalman_state.AddSubplot(['var_noise'], "Time (s)", "Var noise")
+  kalman_state.addSubplot(['kc', 'km'], "Time (s)", "Kalman gain")
+  kalman_state.addSubplot(['slope_1/bps'], "Time (s)", "Slope")
+  kalman_state.addSubplot(['var_noise'], "Time (s)", "Var noise")
 
   detector_state = Figure("DetectorState")
-  detector_state.AddSubplot(['T', 'threshold'], "Time (s)", "Offset")
+  detector_state.addSubplot(['offset_ms'], "Time (s)", "Offset")
+  detector_state.addSubplot(['gamma_ms'], "Time (s)", "Gamma")
 
   trendline_state = Figure("TrendlineState")
-  trendline_state.AddSubplot(["accumulated_delay_ms", "smoothed_delay_ms"],
+  trendline_state.addSubplot(["accumulated_delay_ms", "smoothed_delay_ms"],
                              "Time (s)", "Delay (ms)")
-  trendline_state.AddSubplot(["trendline_slope"], "Time (s)", "Slope")
+  trendline_state.addSubplot(["trendline_slope"], "Time (s)", "Slope")
 
   target_bitrate = Figure("TargetBitrate")
-  target_bitrate.AddSubplot(['target_bitrate_bps', 'acknowledged_bitrate'],
-                            "Time (s)", "Bitrate (bps)")
-
-  min_rtt_state = Figure("MinRttState")
-  min_rtt_state.AddSubplot(['MinRtt'], "Time (s)", "Time (ms)")
+  target_bitrate.addSubplot(['target_bitrate_bps'], "Time (s)", "Bitrate (bps)")
 
   # Select which figures to plot here.
-  figures = [receiver, detector_state, trendline_state, target_bitrate,
-    min_rtt_state]
+  figures = [receiver, detector_state, trendline_state, target_bitrate]
 
   # Add samples to the figures.
   for line in sys.stdin:
@@ -162,10 +157,10 @@ def main():
       test_name = re.search(r'\.(\w+)', line).group(1)
     if line.startswith("PLOT"):
       try:
-        (var_name, ssrc, alg_name, time, value) = ParsePlotLine(line)
+        (var_name, ssrc, alg_name, time, value) = parse_plot_line(line)
         for f in figures:
           # The sample will be ignored bv the figures that don't need it.
-          f.AddSample(var_name, ssrc, alg_name, time, value)
+          f.addSample(var_name, ssrc, alg_name, time, value)
       except ParsePlotLineException as e:
         print e.reason
         print e.line
@@ -173,8 +168,8 @@ def main():
   # Plot figures.
   for f in figures:
     fig = plt.figure(f.name)
-    f.PlotFigure(fig)
-    if SAVE_FIGURE:
+    f.plotFigure(fig)
+    if save_figure:
       fig.savefig(test_name + f.name + ".png")
   plt.show()
 

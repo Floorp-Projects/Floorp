@@ -8,17 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "test/fake_texture_frame.h"
+#include "webrtc/test/fake_texture_frame.h"
 
 namespace webrtc {
 namespace test {
 
-VideoFrame FakeNativeBuffer::CreateFrame(int width,
+VideoFrame FakeNativeHandle::CreateFrame(FakeNativeHandle* native_handle,
+                                         int width,
                                          int height,
                                          uint32_t timestamp,
                                          int64_t render_time_ms,
                                          VideoRotation rotation) {
-  return VideoFrame(new rtc::RefCountedObject<FakeNativeBuffer>(width, height),
+  return VideoFrame(new rtc::RefCountedObject<FakeNativeHandleBuffer>(
+                        native_handle, width, height),
                     timestamp, render_time_ms, rotation);
 }
 }  // namespace test

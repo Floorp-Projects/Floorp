@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef TEST_TESTSUPPORT_PACKET_READER_H_
-#define TEST_TESTSUPPORT_PACKET_READER_H_
+#ifndef WEBRTC_TEST_TESTSUPPORT_PACKET_READER_H_
+#define WEBRTC_TEST_TESTSUPPORT_PACKET_READER_H_
 
 #include <cstddef>
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 namespace test {
@@ -51,4 +51,4 @@ class PacketReader {
 }  // namespace test
 }  // namespace webrtc
 
-#endif  // TEST_TESTSUPPORT_PACKET_READER_H_
+#endif  // WEBRTC_TEST_TESTSUPPORT_PACKET_READER_H_

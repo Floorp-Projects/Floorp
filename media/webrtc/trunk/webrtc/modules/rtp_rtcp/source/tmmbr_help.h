@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_RTP_RTCP_SOURCE_TMMBR_HELP_H_
-#define MODULES_RTP_RTCP_SOURCE_TMMBR_HELP_H_
+#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_TMMBR_HELP_H_
+#define WEBRTC_MODULES_RTP_RTCP_SOURCE_TMMBR_HELP_H_
 
 #include <vector>
-#include "modules/rtp_rtcp/source/rtcp_packet/tmmb_item.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmb_item.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -30,4 +30,4 @@ class TMMBRHelp {
 };
 }  // namespace webrtc
 
-#endif  // MODULES_RTP_RTCP_SOURCE_TMMBR_HELP_H_
+#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_TMMBR_HELP_H_

@@ -12,15 +12,15 @@
  * The core AEC algorithm, which is presented with time-aligned signals.
  */
 
-#include "modules/audio_processing/aec/aec_core.h"
+#include "webrtc/modules/audio_processing/aec/aec_core.h"
 
 #include <math.h>
 
 extern "C" {
-#include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 }
-#include "modules/audio_processing/aec/aec_core_optimized_methods.h"
-#include "modules/audio_processing/utility/ooura_fft.h"
+#include "webrtc/modules/audio_processing/aec/aec_core_optimized_methods.h"
+#include "webrtc/modules/audio_processing/utility/ooura_fft.h"
 
 namespace webrtc {
 

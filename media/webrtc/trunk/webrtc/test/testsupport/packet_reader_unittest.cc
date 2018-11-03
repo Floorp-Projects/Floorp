@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "test/testsupport/packet_reader.h"
+#include "webrtc/test/testsupport/packet_reader.h"
 
-#include "test/gtest.h"
-#include "test/testsupport/unittest_utils.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/test/testsupport/unittest_utils.h"
 
 namespace webrtc {
 namespace test {

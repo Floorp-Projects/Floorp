@@ -12,10 +12,10 @@
 
 #include <memory>
 
-#include "test/gtest.h"
-#include "test/rtp_file_reader.h"
-#include "test/rtp_file_writer.h"
-#include "test/testsupport/fileutils.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/test/rtp_file_reader.h"
+#include "webrtc/test/rtp_file_writer.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
 

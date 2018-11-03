@@ -8,27 +8,36 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MEDIA_ENGINE_FAKEWEBRTCVIDEOENGINE_H_
-#define MEDIA_ENGINE_FAKEWEBRTCVIDEOENGINE_H_
+#ifndef WEBRTC_MEDIA_ENGINE_FAKEWEBRTCVIDEOENGINE_H_
+#define WEBRTC_MEDIA_ENGINE_FAKEWEBRTCVIDEOENGINE_H_
 
 #include <map>
 #include <set>
 #include <vector>
-#include <string>
 
-#include "api/video_codecs/video_decoder.h"
-#include "api/video_codecs/video_encoder.h"
-#include "media/base/codec.h"
-#include "media/engine/webrtcvideodecoderfactory.h"
-#include "media/engine/webrtcvideoencoderfactory.h"
-#include "modules/video_coding/include/video_error_codes.h"
-#include "rtc_base/basictypes.h"
-#include "rtc_base/criticalsection.h"
-#include "rtc_base/gunit.h"
-#include "rtc_base/stringutils.h"
-#include "rtc_base/thread_annotations.h"
+#include "webrtc/base/basictypes.h"
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/gunit.h"
+#include "webrtc/base/stringutils.h"
+#include "webrtc/base/thread_annotations.h"
+#include "webrtc/media/base/codec.h"
+#include "webrtc/media/engine/webrtcvideodecoderfactory.h"
+#include "webrtc/media/engine/webrtcvideoencoderfactory.h"
+#include "webrtc/modules/video_coding/include/video_error_codes.h"
+#include "webrtc/video_decoder.h"
+#include "webrtc/video_encoder.h"
 
 namespace cricket {
+
+static const int kMinVideoBitrate = 100;
+static const int kStartVideoBitrate = 300;
+static const int kMaxVideoBitrate = 1000;
+
+// WebRtc channel id and capture id share the same number space.
+// This is how AddRenderer(renderId, ...) is able to tell if it is adding a
+// renderer for a channel or it is adding a renderer for a capturer.
+static const int kViEChannelIdBase = 0;
+static const int kViEChannelIdMax = 1000;
 static const int kEventTimeoutMs = 10000;
 
 // Fake class for mocking out webrtc::VideoDecoder
@@ -172,8 +181,8 @@ class FakeWebRtcVideoEncoder : public webrtc::VideoEncoder {
  private:
   rtc::CriticalSection crit_;
   rtc::Event init_encode_event_;
-  int num_frames_encoded_ RTC_GUARDED_BY(crit_);
-  webrtc::VideoCodec codec_settings_ RTC_GUARDED_BY(crit_);
+  int num_frames_encoded_ GUARDED_BY(crit_);
+  webrtc::VideoCodec codec_settings_ GUARDED_BY(crit_);
 };
 
 // Fake class for mocking out WebRtcVideoEncoderFactory.
@@ -197,13 +206,10 @@ class FakeWebRtcVideoEncoderFactory : public WebRtcVideoEncoderFactory {
   }
 
   bool WaitForCreatedVideoEncoders(int num_encoders) {
-    int64_t start_offset_ms = rtc::TimeMillis();
-    int64_t wait_time = kEventTimeoutMs;
-    do {
+    while (created_video_encoder_event_.Wait(kEventTimeoutMs)) {
       if (GetNumCreatedEncoders() >= num_encoders)
         return true;
-      wait_time = kEventTimeoutMs - (rtc::TimeMillis() - start_offset_ms);
-    } while (wait_time > 0 && created_video_encoder_event_.Wait(wait_time));
+    }
     return false;
   }
 
@@ -247,14 +253,18 @@ class FakeWebRtcVideoEncoderFactory : public WebRtcVideoEncoderFactory {
   }
 
  private:
+  // Disable overloaded virtual function warning. TODO(magjed): Remove once
+  // http://crbug/webrtc/6402 is fixed.
+  using cricket::WebRtcVideoEncoderFactory::CreateVideoEncoder;
+
   rtc::CriticalSection crit_;
   rtc::Event created_video_encoder_event_;
   std::vector<cricket::VideoCodec> codecs_;
-  std::vector<FakeWebRtcVideoEncoder*> encoders_ RTC_GUARDED_BY(crit_);
-  int num_created_encoders_ RTC_GUARDED_BY(crit_);
+  std::vector<FakeWebRtcVideoEncoder*> encoders_ GUARDED_BY(crit_);
+  int num_created_encoders_ GUARDED_BY(crit_);
   bool encoders_have_internal_sources_;
 };
 
 }  // namespace cricket
 
-#endif  // MEDIA_ENGINE_FAKEWEBRTCVIDEOENGINE_H_
+#endif  // WEBRTC_MEDIA_ENGINE_FAKEWEBRTCVIDEOENGINE_H_

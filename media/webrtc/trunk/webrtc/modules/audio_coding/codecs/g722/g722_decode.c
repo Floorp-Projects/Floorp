@@ -35,7 +35,7 @@
 #include <stdlib.h>
 
 #include "g722_enc_dec.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 #if !defined(FALSE)
 #define FALSE 0

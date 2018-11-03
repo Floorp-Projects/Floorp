@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_AEC_AEC_COMMON_H_
-#define MODULES_AUDIO_PROCESSING_AEC_AEC_COMMON_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AEC_AEC_COMMON_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_AEC_AEC_COMMON_H_
 
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 #ifdef _MSC_VER /* visual c++ */
 #define ALIGN16_BEG __declspec(align(16))
@@ -36,4 +36,4 @@ extern const float WebRtcAec_kMinFarendPSD;
 }  // namespace webrtc
 #endif
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC_AEC_COMMON_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_AEC_AEC_COMMON_H_

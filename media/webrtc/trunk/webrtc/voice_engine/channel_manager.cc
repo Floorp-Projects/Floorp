@@ -8,10 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "voice_engine/channel_manager.h"
+#include "webrtc/voice_engine/channel_manager.h"
 
-#include "rtc_base/timeutils.h"
-#include "voice_engine/channel.h"
+#include "webrtc/voice_engine/channel.h"
 
 namespace webrtc {
 namespace voe {
@@ -19,22 +18,39 @@ namespace voe {
 ChannelOwner::ChannelOwner(class Channel* channel)
     : channel_ref_(new ChannelRef(channel)) {}
 
+ChannelOwner::ChannelOwner(const ChannelOwner& channel_owner)
+    : channel_ref_(channel_owner.channel_ref_) {
+  ++channel_ref_->ref_count;
+}
+
+ChannelOwner::~ChannelOwner() {
+  if (--channel_ref_->ref_count == 0)
+    delete channel_ref_;
+}
+
+ChannelOwner& ChannelOwner::operator=(const ChannelOwner& other) {
+  if (other.channel_ref_ == channel_ref_)
+    return *this;
+
+  if (--channel_ref_->ref_count == 0)
+    delete channel_ref_;
+
+  channel_ref_ = other.channel_ref_;
+  ++channel_ref_->ref_count;
+
+  return *this;
+}
+
 ChannelOwner::ChannelRef::ChannelRef(class Channel* channel)
-    : channel(channel) {}
+    : channel(channel), ref_count(1) {}
 
 ChannelManager::ChannelManager(uint32_t instance_id)
-    : instance_id_(instance_id),
-      last_channel_id_(-1),
-      random_(rtc::TimeNanos()) {}
+    : instance_id_(instance_id), last_channel_id_(-1) {}
 
 ChannelOwner ChannelManager::CreateChannel(
     const VoEBase::ChannelConfig& config) {
   Channel* channel;
   Channel::CreateChannel(channel, ++last_channel_id_, instance_id_, config);
-  // TODO(solenberg): Delete this, users should configure ssrc
-  // explicitly.
-  channel->SetLocalSSRC(random_.Rand<uint32_t>());
-
   ChannelOwner channel_owner(channel);
 
   rtc::CritScope crit(&lock_);
@@ -83,12 +99,6 @@ void ChannelManager::DestroyChannel(int32_t channel_id) {
       channels_.erase(to_delete);
     }
   }
-  if (reference.channel()) {
-    // Ensure the channel is torn down now, on this thread, since a reference
-    // may still be held on a different thread (e.g. in the audio capture
-    // thread).
-    reference.channel()->Terminate();
-  }
 }
 
 void ChannelManager::DestroyAllChannels() {
@@ -99,10 +109,6 @@ void ChannelManager::DestroyAllChannels() {
     rtc::CritScope crit(&lock_);
     references = channels_;
     channels_.clear();
-  }
-  for (auto& owner : references) {
-    if (owner.channel())
-      owner.channel()->Terminate();
   }
 }
 

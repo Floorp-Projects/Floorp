@@ -10,11 +10,11 @@
 
 // Don't include this file in any .h files because it pulls in some X headers.
 
-#ifndef MODULES_DESKTOP_CAPTURE_X11_X_SERVER_PIXEL_BUFFER_H_
-#define MODULES_DESKTOP_CAPTURE_X11_X_SERVER_PIXEL_BUFFER_H_
+#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_X11_X_SERVER_PIXEL_BUFFER_H_
+#define WEBRTC_MODULES_DESKTOP_CAPTURE_X11_X_SERVER_PIXEL_BUFFER_H_
 
-#include "modules/desktop_capture/desktop_geometry.h"
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/desktop_capture/desktop_geometry.h"
 
 #include <X11/Xutil.h>
 #include <X11/extensions/XShm.h>
@@ -39,10 +39,7 @@ class XServerPixelBuffer {
   bool is_initialized() { return window_ != 0; }
 
   // Returns the size of the window the buffer was initialized for.
-  DesktopSize window_size() { return window_rect_.size(); }
-
-  // Returns the rectangle of the window the buffer was initialized for.
-  const DesktopRect& window_rect() { return window_rect_; }
+  const DesktopSize& window_size() { return window_size_; }
 
   // Returns true if the window can be found.
   bool IsWindowValid() const;
@@ -61,17 +58,23 @@ class XServerPixelBuffer {
   bool CaptureRect(const DesktopRect& rect, DesktopFrame* frame);
 
  private:
-  void ReleaseSharedMemorySegment();
-
   void InitShm(const XWindowAttributes& attributes);
   bool InitPixmaps(int depth);
 
+  // We expose two forms of blitting to handle variations in the pixel format.
+  // In FastBlit(), the operation is effectively a memcpy.
+  void FastBlit(uint8_t* image,
+                const DesktopRect& rect,
+                DesktopFrame* frame);
+  void SlowBlit(uint8_t* image,
+                const DesktopRect& rect,
+                DesktopFrame* frame);
+
   Display* display_ = nullptr;
   Window window_ = 0;
-  DesktopRect window_rect_;
+  DesktopSize window_size_;
   XImage* x_image_ = nullptr;
   XShmSegmentInfo* shm_segment_info_ = nullptr;
-  XImage* x_shm_image_ = nullptr;
   Pixmap shm_pixmap_ = 0;
   GC shm_gc_ = nullptr;
   bool xshm_get_image_succeeded_ = false;
@@ -81,4 +84,4 @@ class XServerPixelBuffer {
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_X11_X_SERVER_PIXEL_BUFFER_H_
+#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_X11_X_SERVER_PIXEL_BUFFER_H_

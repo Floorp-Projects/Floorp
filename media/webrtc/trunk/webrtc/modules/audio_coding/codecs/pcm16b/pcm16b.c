@@ -10,7 +10,7 @@
 
 #include "pcm16b.h"
 
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 size_t WebRtcPcm16b_Encode(const int16_t* speech,
                            size_t len,

@@ -12,12 +12,11 @@
 // Several functions have been removed; the prototypes of the remainder have
 // not been changed.
 
-#ifndef TEST_TESTSUPPORT_PERF_TEST_H_
-#define TEST_TESTSUPPORT_PERF_TEST_H_
+#ifndef WEBRTC_TEST_TESTSUPPORT_PERF_TEST_H_
+#define WEBRTC_TEST_TESTSUPPORT_PERF_TEST_H_
 
 #include <sstream>
 #include <string>
-#include <vector>
 
 namespace webrtc {
 namespace test {
@@ -38,9 +37,34 @@ namespace test {
 void PrintResult(const std::string& measurement,
                  const std::string& modifier,
                  const std::string& trace,
-                 const double value,
+                 size_t value,
                  const std::string& units,
                  bool important);
+
+void AppendResult(std::string& output,
+                  const std::string& measurement,
+                  const std::string& modifier,
+                  const std::string& trace,
+                  size_t value,
+                  const std::string& units,
+                  bool important);
+
+// Like the above version of PrintResult(), but takes a std::string value
+// instead of a size_t.
+void PrintResult(const std::string& measurement,
+                 const std::string& modifier,
+                 const std::string& trace,
+                 const std::string& value,
+                 const std::string& units,
+                 bool important);
+
+void AppendResult(std::string& output,
+                  const std::string& measurement,
+                  const std::string& modifier,
+                  const std::string& trace,
+                  const std::string& value,
+                  const std::string& units,
+                  bool important);
 
 // Like PrintResult(), but prints a (mean, standard deviation) result pair.
 // The |<values>| should be two comma-separated numbers, the mean and
@@ -48,11 +72,17 @@ void PrintResult(const std::string& measurement,
 void PrintResultMeanAndError(const std::string& measurement,
                              const std::string& modifier,
                              const std::string& trace,
-                             const double mean,
-                             const double error,
+                             const std::string& mean_and_error,
                              const std::string& units,
                              bool important);
 
+void AppendResultMeanAndError(std::string& output,
+                              const std::string& measurement,
+                              const std::string& modifier,
+                              const std::string& trace,
+                              const std::string& mean_and_error,
+                              const std::string& units,
+                              bool important);
 
 // Like PrintResult(), but prints an entire list of results. The |values|
 // will generally be a list of comma-separated numbers. A typical
@@ -61,11 +91,50 @@ void PrintResultMeanAndError(const std::string& measurement,
 void PrintResultList(const std::string& measurement,
                      const std::string& modifier,
                      const std::string& trace,
-                     const std::vector<double>& values,
+                     const std::string& values,
                      const std::string& units,
                      bool important);
+
+void AppendResultList(std::string& output,
+                      const std::string& measurement,
+                      const std::string& modifier,
+                      const std::string& trace,
+                      const std::string& values,
+                      const std::string& units,
+                      bool important);
+
+// Prints memory commit charge stats for use by perf graphs.
+void PrintSystemCommitCharge(const std::string& test_name,
+                             size_t charge,
+                             bool important);
+
+void PrintSystemCommitCharge(FILE* target,
+                             const std::string& test_name,
+                             size_t charge,
+                             bool important);
+
+std::string SystemCommitChargeToString(const std::string& test_name,
+                                       size_t charge,
+                                       bool important);
+
+// Converts list of values into comma-separated string for PrintResultList.
+template <typename Container>
+std::string ValuesToString(const Container& container) {
+  if (container.empty())
+    return "";
+
+  std::stringstream ss;
+  auto it = container.begin();
+  while (true) {
+    ss << *it;
+    if (++it == container.end())
+      break;
+    ss << ',';
+  }
+  return ss.str();
+}
 
 }  // namespace test
 }  // namespace webrtc
 
-#endif  // TEST_TESTSUPPORT_PERF_TEST_H_
+#endif  // WEBRTC_TEST_TESTSUPPORT_PERF_TEST_H_

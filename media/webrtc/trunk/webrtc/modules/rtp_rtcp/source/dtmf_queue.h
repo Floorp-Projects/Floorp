@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_RTP_RTCP_SOURCE_DTMF_QUEUE_H_
-#define MODULES_RTP_RTCP_SOURCE_DTMF_QUEUE_H_
+#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_DTMF_QUEUE_H_
+#define WEBRTC_MODULES_RTP_RTCP_SOURCE_DTMF_QUEUE_H_
 
 #include <list>
 
-#include "rtc_base/criticalsection.h"
+#include "webrtc/base/criticalsection.h"
 
 namespace webrtc {
 class DtmfQueue {
@@ -38,4 +38,4 @@ class DtmfQueue {
 };
 }  // namespace webrtc
 
-#endif  // MODULES_RTP_RTCP_SOURCE_DTMF_QUEUE_H_
+#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_DTMF_QUEUE_H_

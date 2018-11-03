@@ -31,13 +31,15 @@
 // A similar logic can be applied to the synthesis stage.
 
 // MSVC++ requires this to be set before any other includes to get M_PI.
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
+#endif
 
-#include "modules/audio_processing/three_band_filter_bank.h"
+#include "webrtc/modules/audio_processing/three_band_filter_bank.h"
 
 #include <cmath>
 
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 namespace {

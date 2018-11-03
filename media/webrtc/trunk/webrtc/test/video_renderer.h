@@ -7,12 +7,12 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef TEST_VIDEO_RENDERER_H_
-#define TEST_VIDEO_RENDERER_H_
+#ifndef WEBRTC_TEST_VIDEO_RENDERER_H_
+#define WEBRTC_TEST_VIDEO_RENDERER_H_
 
 #include <stddef.h>
 
-#include "media/base/videosinkinterface.h"
+#include "webrtc/media/base/videosinkinterface.h"
 
 namespace webrtc {
 class VideoFrame;
@@ -38,4 +38,4 @@ class VideoRenderer : public rtc::VideoSinkInterface<VideoFrame> {
 }  // namespace test
 }  // namespace webrtc
 
-#endif  // TEST_VIDEO_RENDERER_H_
+#endif  // WEBRTC_TEST_VIDEO_RENDERER_H_

@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/packet_loss_stats.h"
+#include "webrtc/modules/rtp_rtcp/source/packet_loss_stats.h"
 
 #include <vector>
 
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
 
 // After this many packets are added, adding additional packets will cause the
 // oldest packets to be pruned from the buffer.

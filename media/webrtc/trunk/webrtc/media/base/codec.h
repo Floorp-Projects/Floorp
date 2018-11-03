@@ -8,18 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MEDIA_BASE_CODEC_H_
-#define MEDIA_BASE_CODEC_H_
+#ifndef WEBRTC_MEDIA_BASE_CODEC_H_
+#define WEBRTC_MEDIA_BASE_CODEC_H_
 
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
 
-#include "api/rtpparameters.h"
-#include "api/video_codecs/sdp_video_format.h"
-#include "common_types.h"  // NOLINT(build/include)
-#include "media/base/mediaconstants.h"
+#include "webrtc/api/rtpparameters.h"
+#include "webrtc/common_types.h"
+#include "webrtc/media/base/mediaconstants.h"
 
 namespace cricket {
 
@@ -27,7 +26,6 @@ typedef std::map<std::string, std::string> CodecParameterMap;
 
 class FeedbackParam {
  public:
-  FeedbackParam() = default;
   FeedbackParam(const std::string& id, const std::string& param)
       : id_(id),
         param_(param) {
@@ -48,7 +46,6 @@ class FeedbackParam {
 
 class FeedbackParams {
  public:
-  FeedbackParams();
   bool operator==(const FeedbackParams& other) const;
 
   bool Has(const FeedbackParam& param) const;
@@ -128,7 +125,7 @@ struct AudioCodec : public Codec {
   AudioCodec();
   AudioCodec(const AudioCodec& c);
   AudioCodec(AudioCodec&& c);
-  ~AudioCodec() override = default;
+  virtual ~AudioCodec() = default;
 
   // Indicates if this codec is compatible with the specified codec.
   bool Matches(const AudioCodec& codec) const;
@@ -147,28 +144,6 @@ struct AudioCodec : public Codec {
   }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const AudioCodec& ac) {
-  os << "{id: " << ac.id;
-  os << ", name: " << ac.name;
-  os << ", clockrate: " << ac.clockrate;
-  os << ", bitrate: " << ac.bitrate;
-  os << ", channels: " << ac.channels;
-  os << ", params: {";
-  const char* sep = "";
-  for (const auto& kv : ac.params) {
-    os << sep << kv.first << ": " << kv.second;
-    sep = ", ";
-  }
-  os << "}, feedback_params: {";
-  sep = "";
-  for (const FeedbackParam& fp : ac.feedback_params.params()) {
-    os << sep << fp.id() << ": " << fp.param();
-    sep = ", ";
-  }
-  os << "}}";
-  return os;
-}
-
 struct VideoCodec : public Codec {
   // Creates a codec with the given parameters.
   VideoCodec(int id, const std::string& name);
@@ -177,9 +152,8 @@ struct VideoCodec : public Codec {
   // Creates an empty codec.
   VideoCodec();
   VideoCodec(const VideoCodec& c);
-  explicit VideoCodec(const webrtc::SdpVideoFormat& c);
   VideoCodec(VideoCodec&& c);
-  ~VideoCodec() override = default;
+  virtual ~VideoCodec() = default;
 
   // Indicates if this video codec is the same as the other video codec, e.g. if
   // they are both VP8 or VP9, or if they are both H264 with the same H264
@@ -187,8 +161,6 @@ struct VideoCodec : public Codec {
   bool Matches(const VideoCodec& codec) const;
 
   std::string ToString() const;
-
-  webrtc::RtpCodecParameters ToCodecParameters() const override;
 
   VideoCodec& operator=(const VideoCodec& c);
   VideoCodec& operator=(VideoCodec&& c);
@@ -225,7 +197,7 @@ struct DataCodec : public Codec {
   DataCodec();
   DataCodec(const DataCodec& c);
   DataCodec(DataCodec&& c);
-  ~DataCodec() override = default;
+  virtual ~DataCodec() = default;
 
   DataCodec& operator=(const DataCodec& c);
   DataCodec& operator=(DataCodec&& c);
@@ -254,11 +226,7 @@ bool HasTransportCc(const Codec& codec);
 const VideoCodec* FindMatchingCodec(
     const std::vector<VideoCodec>& supported_codecs,
     const VideoCodec& codec);
-bool IsSameCodec(const std::string& name1,
-                 const CodecParameterMap& params1,
-                 const std::string& name2,
-                 const CodecParameterMap& params2);
 
 }  // namespace cricket
 
-#endif  // MEDIA_BASE_CODEC_H_
+#endif  // WEBRTC_MEDIA_BASE_CODEC_H_

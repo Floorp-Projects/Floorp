@@ -10,7 +10,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-#include "test/run_test.h"
+#include "webrtc/test/run_test.h"
 
 // Converting a C++ function pointer to an Objective-C block.
 typedef void(^TestBlock)();
@@ -36,10 +36,10 @@ TestBlock functionToBlock(void(*function)()) {
 }
 
 - (void)runAllTests:(TestBlock)testBlock {
-  @autoreleasepool {
-    testBlock();
-    running_ = NO;
-  }
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  testBlock();
+  running_ = NO;
+  [pool release];
 }
 
 - (BOOL)running {
@@ -51,22 +51,24 @@ namespace webrtc {
 namespace test {
 
 void RunTest(void(*test)()) {
-  @autoreleasepool {
-    [NSApplication sharedApplication];
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  [NSApplication sharedApplication];
 
-    // Convert the function pointer to an Objective-C block and call on a
-    // separate thread, to avoid blocking the main thread.
-    TestRunner *testRunner = [[TestRunner alloc] init];
-    TestBlock testBlock = functionToBlock(test);
-    [NSThread detachNewThreadSelector:@selector(runAllTests:)
-                             toTarget:testRunner
-                           withObject:testBlock];
+  // Convert the function pointer to an Objective-C block and call on a
+  // separate thread, to avoid blocking the main thread.
+  TestRunner *testRunner = [[TestRunner alloc] init];
+  TestBlock testBlock = functionToBlock(test);
+  [NSThread detachNewThreadSelector:@selector(runAllTests:)
+                           toTarget:testRunner
+                         withObject:testBlock];
 
-    NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
-    while ([testRunner running] && [runLoop runMode:NSDefaultRunLoopMode
-                                         beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]])
-      ;
-  }
+  NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+  while ([testRunner running] &&
+         [runLoop runMode:NSDefaultRunLoopMode
+               beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]]);
+
+  [testRunner release];
+  [pool release];
 }
 
 }  // namespace test

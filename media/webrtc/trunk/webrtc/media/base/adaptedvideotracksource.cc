@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "media/base/adaptedvideotracksource.h"
+#include "webrtc/media/base/adaptedvideotracksource.h"
 
-#include "api/video/i420_buffer.h"
+#include "webrtc/api/video/i420_buffer.h"
 
 namespace rtc {
 
@@ -45,11 +45,12 @@ void AdaptedVideoTrackSource::OnFrame(const webrtc::VideoFrame& frame) {
      true was just added. The VideoBroadcaster enforces
      synchronization for us in this case, by not passing the frame on
      to sinks which don't want it. */
-  if (apply_rotation() && frame.rotation() != webrtc::kVideoRotation_0 &&
-      buffer->type() == webrtc::VideoFrameBuffer::Type::kI420) {
+  if (apply_rotation() &&
+      frame.rotation() != webrtc::kVideoRotation_0 &&
+      !buffer->native_handle()) {
     /* Apply pending rotation. */
     broadcaster_.OnFrame(webrtc::VideoFrame(
-        webrtc::I420Buffer::Rotate(*buffer->GetI420(), frame.rotation()),
+        webrtc::I420Buffer::Rotate(*buffer, frame.rotation()),
         webrtc::kVideoRotation_0, frame.timestamp_us()));
   } else {
     broadcaster_.OnFrame(frame);
@@ -80,8 +81,8 @@ bool AdaptedVideoTrackSource::apply_rotation() {
 void AdaptedVideoTrackSource::OnSinkWantsChanged(
     const rtc::VideoSinkWants& wants) {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  video_adapter_.OnResolutionFramerateRequest(
-      wants.target_pixel_count, wants.max_pixel_count, wants.max_framerate_fps);
+  video_adapter_.OnResolutionRequest(wants.max_pixel_count,
+                                     wants.max_pixel_count_step_up);
 }
 
 bool AdaptedVideoTrackSource::AdaptFrame(int width,
@@ -95,7 +96,7 @@ bool AdaptedVideoTrackSource::AdaptFrame(int width,
                                          int* crop_y) {
   {
     rtc::CritScope lock(&stats_crit_);
-    stats_ = Stats{width, height};
+    stats_ = rtc::Optional<Stats>({width, height});
   }
 
   if (!broadcaster_.frame_wanted()) {
@@ -105,7 +106,6 @@ bool AdaptedVideoTrackSource::AdaptFrame(int width,
   if (!video_adapter_.AdaptFrameResolution(
           width, height, time_us * rtc::kNumNanosecsPerMicrosec,
           crop_width, crop_height, out_width, out_height)) {
-    broadcaster_.OnDiscardedFrame();
     // VideoAdapter dropped the frame.
     return false;
   }

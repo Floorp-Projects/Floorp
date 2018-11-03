@@ -8,14 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_audio/resampler/include/push_resampler.h"
+#include "webrtc/common_audio/resampler/include/push_resampler.h"
 
 #include <string.h>
 
-#include "common_audio/include/audio_util.h"
-#include "common_audio/resampler/include/resampler.h"
-#include "common_audio/resampler/push_sinc_resampler.h"
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/common_audio/include/audio_util.h"
+#include "webrtc/common_audio/resampler/push_sinc_resampler.h"
 
 namespace webrtc {
 namespace {
@@ -53,7 +52,7 @@ void CheckExpectedBufferSizes(size_t src_length,
   RTC_DCHECK_GE(dst_capacity, dst_size_10ms);
 #endif
 }
-}  // namespace
+}
 
 template <typename T>
 PushResampler<T>::PushResampler()

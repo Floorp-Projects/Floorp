@@ -8,22 +8,22 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef AUDIO_AUDIO_TRANSPORT_PROXY_H_
-#define AUDIO_AUDIO_TRANSPORT_PROXY_H_
+#ifndef WEBRTC_AUDIO_AUDIO_TRANSPORT_PROXY_H_
+#define WEBRTC_AUDIO_AUDIO_TRANSPORT_PROXY_H_
 
-#include "api/audio/audio_mixer.h"
-#include "common_audio/resampler/include/push_resampler.h"
-#include "modules/audio_device/include/audio_device_defines.h"
-#include "modules/audio_processing/include/audio_processing.h"
-#include "rtc_base/constructormagic.h"
-#include "rtc_base/scoped_ref_ptr.h"
+#include "webrtc/api/audio/audio_mixer.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/common_audio/resampler/include/push_resampler.h"
+#include "webrtc/modules/audio_device/include/audio_device_defines.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
 
 namespace webrtc {
 
 class AudioTransportProxy : public AudioTransport {
  public:
   AudioTransportProxy(AudioTransport* voe_audio_transport,
-                      AudioProcessing* audio_processing,
+                      AudioProcessing* apm,
                       AudioMixer* mixer);
 
   ~AudioTransportProxy() override;
@@ -65,7 +65,7 @@ class AudioTransportProxy : public AudioTransport {
 
  private:
   AudioTransport* voe_audio_transport_;
-  AudioProcessing* audio_processing_;
+  AudioProcessing* apm_;
   rtc::scoped_refptr<AudioMixer> mixer_;
   AudioFrame mixed_frame_;
   // Converts mixed audio to the audio device output rate.
@@ -75,4 +75,4 @@ class AudioTransportProxy : public AudioTransport {
 };
 }  // namespace webrtc
 
-#endif  // AUDIO_AUDIO_TRANSPORT_PROXY_H_
+#endif  // WEBRTC_AUDIO_AUDIO_TRANSPORT_PROXY_H_

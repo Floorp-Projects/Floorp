@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_NETEQ_TIMESTAMP_SCALER_H_
-#define MODULES_AUDIO_CODING_NETEQ_TIMESTAMP_SCALER_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_TIMESTAMP_SCALER_H_
+#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_TIMESTAMP_SCALER_H_
 
-#include "modules/audio_coding/neteq/packet.h"
-#include "rtc_base/constructormagic.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/audio_coding/neteq/packet.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -65,4 +65,4 @@ class TimestampScaler {
 };
 
 }  // namespace webrtc
-#endif  // MODULES_AUDIO_CODING_NETEQ_TIMESTAMP_SCALER_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_TIMESTAMP_SCALER_H_
