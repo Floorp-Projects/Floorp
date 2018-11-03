@@ -4,6 +4,10 @@
 
 @namespace url("http://www.w3.org/1999/xhtml");
 
+.datetimebox {
+  display: flex;
+}
+
 .datetime-input-box-wrapper {
   display: inline-flex;
   flex: 1;

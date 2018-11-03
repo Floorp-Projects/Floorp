@@ -195,7 +195,7 @@ interface MozEditableElement {
   // This is similar to set .value on nsIDOMInput/TextAreaElements, but handling
   // of the value change is closer to the normal user input, so 'change' event
   // for example will be dispatched when focusing out the element.
-  [Func="IsChromeOrXBL", NeedsSubjectPrincipal]
+  [Func="IsChromeOrXBLOrUAWidget", NeedsSubjectPrincipal]
   void setUserInput(DOMString input);
 };
 
@@ -252,26 +252,26 @@ partial interface HTMLInputElement {
    BinaryName="getMaximumAsDouble"]
   double getMaximum();
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrXBL"]
+  [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget"]
   void openDateTimePicker(optional DateTimeValue initialValue);
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrXBL"]
+  [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget"]
   void updateDateTimePicker(optional DateTimeValue value);
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrXBL"]
+  [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget"]
   void closeDateTimePicker();
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrXBL"]
+  [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget"]
   void setFocusState(boolean aIsFocused);
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrXBL"]
+  [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget"]
   void updateValidityState();
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrXBL",
+  [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget",
    BinaryName="getStepAsDouble"]
   double getStep();
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrXBL",
+  [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget",
    BinaryName="getStepBaseAsDouble"]
   double getStepBase();
 };

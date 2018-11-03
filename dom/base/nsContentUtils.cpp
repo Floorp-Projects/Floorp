@@ -2345,6 +2345,22 @@ nsContentUtils::IsCallerContentXBL()
 }
 
 bool
+nsContentUtils::IsCallerUAWidget()
+{
+  JSContext *cx = GetCurrentJSContext();
+  if (!cx) {
+    return false;
+  }
+
+  JS::Realm* realm = JS::GetCurrentRealmOrNull(cx);
+  if (!realm) {
+    return false;
+  }
+
+  return xpc::IsUAWidgetScope(realm);
+}
+
+bool
 nsContentUtils::IsSystemCaller(JSContext* aCx)
 {
   // Note that SubjectPrincipal() assumes we are in a compartment here.
