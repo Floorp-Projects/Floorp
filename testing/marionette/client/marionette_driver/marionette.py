@@ -1254,7 +1254,7 @@ class Marionette(object):
         :returns: A dictionary of the capabilities offered.
         """
         if capabilities is None:
-            capabilities = {}
+            capabilities = {"strictFileInteractability": True}
 
         if timeout is None:
             timeout = self.startup_timeout
