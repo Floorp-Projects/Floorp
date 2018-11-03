@@ -460,26 +460,6 @@ TextEditor::InsertLineBreakAsAction()
   return NS_OK;
 }
 
-nsresult
-TextEditor::InsertParagraphSeparatorAsAction()
-{
-  AutoEditActionDataSetter editActionData(
-                             *this,
-                             EditAction::eInsertParagraphSeparator);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  // XXX This may be called by execCommand() with "insertParagraph".
-  //     In such case, naming the transaction "TypingTxnName" is odd.
-  AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
-  nsresult rv = InsertParagraphSeparatorAsSubAction();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
-}
-
 template<typename PT, typename CT>
 already_AddRefed<Element>
 TextEditor::InsertBrElementWithTransaction(
@@ -1090,23 +1070,17 @@ TextEditor::InsertTextAsSubAction(const nsAString& aStringToInsert)
 NS_IMETHODIMP
 TextEditor::InsertLineBreak()
 {
-  EditAction editAction =
-    AsHTMLEditor() ? EditAction::eInsertParagraphSeparator :
-                     EditAction::eInsertLineBreak;
-  AutoEditActionDataSetter editActionData(*this, editAction);
+  if (NS_WARN_IF(IsSingleLineEditor())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  if (editAction == EditAction::eInsertLineBreak) {
-    nsresult rv = InsertLineBreakAsSubAction();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
-  }
-  nsresult rv = InsertParagraphSeparatorAsSubAction();
+  nsresult rv = InsertLineBreakAsSubAction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1131,41 +1105,6 @@ TextEditor::InsertLineBreakAsSubAction()
                                       nsIEditor::eNext);
 
   EditSubActionInfo subActionInfo(EditSubAction::eInsertLineBreak);
-  subActionInfo.maxLength = mMaxTextLength;
-  bool cancel, handled;
-  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  if (cancel) {
-    return rv; // We don't need to call DidDoAction() if canceled.
-  }
-  // XXX DidDoAction() does nothing for eInsertParagraphSeparator.  However,
-  //     we should call it until we keep using this style.  Perhaps, each
-  //     editor method should call necessary method of
-  //     TextEditRules/HTMLEditRules directly.
-  rv = rules->DidDoAction(subActionInfo, rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
-}
-
-nsresult
-TextEditor::InsertParagraphSeparatorAsSubAction()
-{
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (!mRules) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this,
-                                      EditSubAction::eInsertParagraphSeparator,
-                                      nsIEditor::eNext);
-
-  EditSubActionInfo subActionInfo(EditSubAction::eInsertParagraphSeparator);
   subActionInfo.maxLength = mMaxTextLength;
   bool cancel, handled;
   nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);

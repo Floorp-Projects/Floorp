@@ -1122,6 +1122,30 @@ HTMLEditor::UpdateBaseURL()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HTMLEditor::InsertLineBreak()
+{
+  MOZ_ASSERT(!IsSingleLineEditor());
+
+  // XPCOM method's InsertLineBreak() should insert paragraph separator in
+  // HTMLEditor.
+  AutoEditActionDataSetter editActionData(
+                             *this,
+                             EditAction::eInsertParagraphSeparator);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  // XXX This method is called by chrome of comm-central.  So, using
+  //     TypingTxnName here is odd in such case.
+  AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
+  nsresult rv = InsertParagraphSeparatorAsSubAction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
 nsresult
 HTMLEditor::InsertLineBreakAsAction()
 {
@@ -1130,8 +1154,65 @@ HTMLEditor::InsertLineBreakAsAction()
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  // XXX This method may be called by "insertLineBreak" command.  So, using
+  //     TypingTxnName here is odd in such case.
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
   nsresult rv = InsertBrElementAtSelectionWithTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::InsertParagraphSeparatorAsAction()
+{
+  AutoEditActionDataSetter editActionData(
+                             *this,
+                             EditAction::eInsertParagraphSeparator);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  // XXX This may be called by execCommand() with "insertParagraph".
+  //     In such case, naming the transaction "TypingTxnName" is odd.
+  AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
+  nsresult rv = InsertParagraphSeparatorAsSubAction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::InsertParagraphSeparatorAsSubAction()
+{
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (!mRules) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  // Protect the edit rules object from dying
+  RefPtr<TextEditRules> rules(mRules);
+
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this,
+                                      EditSubAction::eInsertParagraphSeparator,
+                                      nsIEditor::eNext);
+
+  EditSubActionInfo subActionInfo(EditSubAction::eInsertParagraphSeparator);
+  subActionInfo.maxLength = mMaxTextLength;
+  bool cancel, handled;
+  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
+  if (cancel) {
+    return rv; // We don't need to call DidDoAction() if canceled.
+  }
+  // XXX DidDoAction() does nothing for eInsertParagraphSeparator.  However,
+  //     we should call it until we keep using this style.  Perhaps, each
+  //     editor method should call necessary method of
+  //     TextEditRules/HTMLEditRules directly.
+  rv = rules->DidDoAction(subActionInfo, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
