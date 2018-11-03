@@ -260,6 +260,7 @@ class JUnitTestRunner(MochitestDesktop):
         # names are not known in advance.
         self.log.suite_start(["geckoview-junit"])
         try:
+            self.device.grant_runtime_permissions(self.options.app)
             cmd = self.build_command_line(test_filters)
             self.log.info("launching %s" % cmd)
             p = self.device.shell(cmd, timeout=self.options.max_time, stdout_callback=callback)
