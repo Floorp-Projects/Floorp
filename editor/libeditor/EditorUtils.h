@@ -48,6 +48,7 @@ public:
   nsresult Rv() const { return mRv; }
   bool Canceled() const { return mCanceled; }
   bool Handled() const { return mHandled; }
+  bool Ignored() const { return !mCanceled && !mHandled; }
   bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
 
   EditActionResult SetResult(nsresult aRv)
