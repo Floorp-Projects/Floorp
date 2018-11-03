@@ -274,13 +274,13 @@ RemoteContentController::UpdateOverscrollOffset(float aX, float aY, bool aIsRoot
 }
 
 void
-RemoteContentController::NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId,
+RemoteContentController::NotifyMozMouseScrollEvent(const ScrollableLayerGuid::ViewID& aScrollId,
                                                    const nsString& aEvent)
 {
   if (MessageLoop::current() != mCompositorThread) {
     // We have to send messages from the compositor thread
     mCompositorThread->PostTask(
-      NewRunnableMethod<FrameMetrics::ViewID, nsString>(
+      NewRunnableMethod<ScrollableLayerGuid::ViewID, nsString>(
         "layers::RemoteContentController::NotifyMozMouseScrollEvent",
         this,
         &RemoteContentController::NotifyMozMouseScrollEvent,
@@ -305,11 +305,11 @@ RemoteContentController::NotifyFlushComplete()
 }
 
 void
-RemoteContentController::NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId)
+RemoteContentController::NotifyAsyncScrollbarDragRejected(const ScrollableLayerGuid::ViewID& aScrollId)
 {
   if (MessageLoop::current() != mCompositorThread) {
     // We have to send messages from the compositor thread
-    mCompositorThread->PostTask(NewRunnableMethod<FrameMetrics::ViewID>(
+    mCompositorThread->PostTask(NewRunnableMethod<ScrollableLayerGuid::ViewID>(
       "layers::RemoteContentController::NotifyAsyncScrollbarDragRejected",
       this,
       &RemoteContentController::NotifyAsyncScrollbarDragRejected,
@@ -323,11 +323,11 @@ RemoteContentController::NotifyAsyncScrollbarDragRejected(const FrameMetrics::Vi
 }
 
 void
-RemoteContentController::NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aScrollId)
+RemoteContentController::NotifyAsyncAutoscrollRejected(const ScrollableLayerGuid::ViewID& aScrollId)
 {
   if (MessageLoop::current() != mCompositorThread) {
     // We have to send messages from the compositor thread
-    mCompositorThread->PostTask(NewRunnableMethod<FrameMetrics::ViewID>(
+    mCompositorThread->PostTask(NewRunnableMethod<ScrollableLayerGuid::ViewID>(
       "layers::RemoteContentController::NotifyAsyncAutoscrollRejected",
       this,
       &RemoteContentController::NotifyAsyncAutoscrollRejected,

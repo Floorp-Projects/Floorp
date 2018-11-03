@@ -247,6 +247,7 @@ class Expressions extends Component<Props, State> {
           <div className="expression-container__close-btn">
             <CloseButton
               handleClick={e => this.deleteExpression(e, expression)}
+              tooltip={L10N.getStr("expressions.remove.tooltip")}
             />
           </div>
         </div>

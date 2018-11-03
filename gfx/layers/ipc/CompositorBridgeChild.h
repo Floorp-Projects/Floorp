@@ -72,10 +72,10 @@ public:
 
   /**
    * Lookup the FrameMetrics shared by the compositor process with the
-   * associated FrameMetrics::ViewID. The returned FrameMetrics is used
+   * associated ScrollableLayerGuid::ViewID. The returned FrameMetrics is used
    * in progressive paint calculations.
    */
-  bool LookupCompositorFrameMetrics(const FrameMetrics::ViewID aId, FrameMetrics&);
+  bool LookupCompositorFrameMetrics(const ScrollableLayerGuid::ViewID aId, FrameMetrics&);
 
   static CompositorBridgeChild* Get();
 
@@ -301,7 +301,7 @@ private:
     ~SharedFrameMetricsData();
 
     void CopyFrameMetrics(FrameMetrics* aFrame);
-    FrameMetrics::ViewID GetViewID();
+    ScrollableLayerGuid::ViewID GetViewID();
     LayersId GetLayersId() const;
     uint32_t GetAPZCId();
 

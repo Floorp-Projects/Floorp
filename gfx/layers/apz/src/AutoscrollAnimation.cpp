@@ -9,6 +9,7 @@
 #include <cmath>  // for sqrtf()
 
 #include "AsyncPanZoomController.h"
+#include "FrameMetrics.h"
 #include "mozilla/Telemetry.h"                  // for Telemetry
 
 namespace mozilla {

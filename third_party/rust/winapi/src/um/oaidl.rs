@@ -80,7 +80,7 @@ UNION!{union __MIDL_IOleAutomationTypes_0001 {
     LongStr LongStr_mut: DWORD_SIZEDARR,
     HyperStr HyperStr_mut: HYPER_SIZEDARR,
 }}
-#[cfg(target_arch = "x86_64")]
+#[cfg(target_pointer_width = "64")]
 UNION!{union __MIDL_IOleAutomationTypes_0001 {
     [u64; 4],
     BstrStr BstrStr_mut: SAFEARR_BSTR,

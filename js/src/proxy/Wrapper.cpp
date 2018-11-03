@@ -339,19 +339,21 @@ Wrapper::wrappedObject(JSObject* wrapper)
     MOZ_ASSERT(wrapper->is<WrapperObject>());
     JSObject* target = wrapper->as<ProxyObject>().target();
 
-    // Eagerly unmark gray wrapper targets so we can assert that we don't create
-    // black to gray edges. An incremental GC will eventually mark the targets
-    // of black wrappers black but while it is in progress we can observe gray
-    // targets. Expose rather than returning a gray object in this case.
     if (target) {
         // A cross-compartment wrapper should never wrap a CCW. We rely on this
         // in the wrapper handlers (we use AutoRealm on our return value, and
         // AutoRealm cannot be used with CCWs).
         MOZ_ASSERT_IF(IsCrossCompartmentWrapper(wrapper),
                       !IsCrossCompartmentWrapper(target));
-        if (wrapper->isMarkedBlack()) {
-            MOZ_ASSERT(JS::ObjectIsNotGray(target));
-        }
+
+        // An incremental GC will eventually mark the targets of black wrappers
+        // black but while it is in progress we can observe gray targets.
+        MOZ_ASSERT_IF(!wrapper->runtimeFromMainThread()->gc.isIncrementalGCInProgress() &&
+                      wrapper->isMarkedBlack(),
+                      JS::ObjectIsNotGray(target));
+
+        // Unmark wrapper targets that should be black in case an incremental GC
+        // hasn't marked them the correct color yet.
         if (!wrapper->isMarkedGray()) {
             JS::ExposeObjectToActiveJS(target);
         }

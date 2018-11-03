@@ -414,7 +414,7 @@ public:
    * other layers in the tree which share the same ViewID.
    * Can be called any time.
    */
-  FrameMetrics::ViewID GetRootScrollableLayerId();
+  ScrollableLayerGuid::ViewID GetRootScrollableLayerId();
 
   /**
    * Returns a LayerMetricsWrapper containing the Root
@@ -763,9 +763,9 @@ public:
    * per-scrollid basis. This is used for empty transactions that push over
    * scroll position updates to the APZ code.
    */
-  virtual bool SetPendingScrollUpdateForNextTransaction(FrameMetrics::ViewID aScrollId,
+  virtual bool SetPendingScrollUpdateForNextTransaction(ScrollableLayerGuid::ViewID aScrollId,
                                                         const ScrollUpdateInfo& aUpdateInfo);
-  Maybe<ScrollUpdateInfo> GetPendingScrollInfoUpdate(FrameMetrics::ViewID aScrollId);
+  Maybe<ScrollUpdateInfo> GetPendingScrollInfoUpdate(ScrollableLayerGuid::ViewID aScrollId);
   void ClearPendingScrollInfoUpdate();
 protected:
   ScrollUpdatesMap mPendingScrollUpdates;
@@ -1225,7 +1225,7 @@ public:
    *     fixed position items need to shift accordingly. This value is made up
    *     combining appropriate values from mozilla::SideBits.
    */
-  void SetFixedPositionData(FrameMetrics::ViewID aScrollId,
+  void SetFixedPositionData(ScrollableLayerGuid::ViewID aScrollId,
                             const LayerPoint& aAnchor,
                             int32_t aSides)
   {
@@ -1244,7 +1244,7 @@ public:
    * dimension, while that component of the scroll position lies within either
    * interval, the layer should not move relative to its scrolling container.
    */
-  void SetStickyPositionData(FrameMetrics::ViewID aScrollId,
+  void SetStickyPositionData(ScrollableLayerGuid::ViewID aScrollId,
                              LayerRectAbsolute aOuter, LayerRectAbsolute aInner)
   {
     if (mSimpleAttrs.SetStickyPositionData(aScrollId, aOuter, aInner)) {
@@ -1319,10 +1319,10 @@ public:
   bool GetIsFixedPosition() { return mSimpleAttrs.IsFixedPosition(); }
   bool GetTransformIsPerspective() const { return mSimpleAttrs.GetTransformIsPerspective(); }
   bool GetIsStickyPosition() { return mSimpleAttrs.IsStickyPosition(); }
-  FrameMetrics::ViewID GetFixedPositionScrollContainerId() { return mSimpleAttrs.GetFixedPositionScrollContainerId(); }
+  ScrollableLayerGuid::ViewID GetFixedPositionScrollContainerId() { return mSimpleAttrs.GetFixedPositionScrollContainerId(); }
   LayerPoint GetFixedPositionAnchor() { return mSimpleAttrs.GetFixedPositionAnchor(); }
   int32_t GetFixedPositionSides() { return mSimpleAttrs.GetFixedPositionSides(); }
-  FrameMetrics::ViewID GetStickyScrollContainerId() { return mSimpleAttrs.GetStickyScrollContainerId(); }
+  ScrollableLayerGuid::ViewID GetStickyScrollContainerId() { return mSimpleAttrs.GetStickyScrollContainerId(); }
   const LayerRectAbsolute& GetStickyScrollRangeOuter() { return mSimpleAttrs.GetStickyScrollRangeOuter(); }
   const LayerRectAbsolute& GetStickyScrollRangeInner() { return mSimpleAttrs.GetStickyScrollRangeInner(); }
   const ScrollbarData& GetScrollbarData() const { return mSimpleAttrs.GetScrollbarData(); }

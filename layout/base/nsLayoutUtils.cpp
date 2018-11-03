@@ -176,7 +176,7 @@ using mozilla::dom::HTMLMediaElement_Binding::HAVE_METADATA;
 bool nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
 #endif // DEBUG
 
-typedef FrameMetrics::ViewID ViewID;
+typedef ScrollableLayerGuid::ViewID ViewID;
 typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 
 /* static */ uint32_t nsLayoutUtils::sFontSizeInflationEmPerLine;
@@ -195,7 +195,7 @@ typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 /* static */ uint32_t nsLayoutUtils::sIdlePeriodDeadlineLimit;
 /* static */ uint32_t nsLayoutUtils::sQuiescentFramesBeforeIdlePeriod;
 
-static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
+static ViewID sScrollIdCounter = ScrollableLayerGuid::START_SCROLL_ID;
 
 typedef nsDataHashtable<nsUint64HashKey, nsIContent*> ContentMap;
 static ContentMap* sContentMap = nullptr;
@@ -616,7 +616,7 @@ nsLayoutUtils::FindOrCreateIDFor(nsIContent* aContent)
 nsIContent*
 nsLayoutUtils::FindContentFor(ViewID aId)
 {
-  MOZ_ASSERT(aId != FrameMetrics::NULL_SCROLL_ID,
+  MOZ_ASSERT(aId != ScrollableLayerGuid::NULL_SCROLL_ID,
              "Cannot find a content element in map for null IDs.");
   nsIContent* content;
   bool exists = GetContentMap().Get(aId, &content);
@@ -663,19 +663,19 @@ ViewID
 nsLayoutUtils::FindIDForScrollableFrame(nsIScrollableFrame* aScrollable)
 {
   if (!aScrollable) {
-    return FrameMetrics::NULL_SCROLL_ID;
+    return ScrollableLayerGuid::NULL_SCROLL_ID;
   }
 
   nsIFrame* scrollFrame = do_QueryFrame(aScrollable);
   nsIContent* scrollContent = scrollFrame->GetContent();
 
-  FrameMetrics::ViewID scrollId;
+  ScrollableLayerGuid::ViewID scrollId;
   if (scrollContent &&
       nsLayoutUtils::FindIDFor(scrollContent, &scrollId)) {
     return scrollId;
   }
 
-  return FrameMetrics::NULL_SCROLL_ID;
+  return ScrollableLayerGuid::NULL_SCROLL_ID;
 }
 
 static nsRect
@@ -1909,10 +1909,10 @@ nsLayoutUtils::SetFixedPositionLayerData(Layer* aLayer,
   aLayer->SetFixedPositionData(id, anchor, sides);
 }
 
-FrameMetrics::ViewID
+ScrollableLayerGuid::ViewID
 nsLayoutUtils::ScrollIdForRootScrollFrame(nsPresContext* aPresContext)
 {
-  ViewID id = FrameMetrics::NULL_SCROLL_ID;
+  ViewID id = ScrollableLayerGuid::NULL_SCROLL_ID;
   if (nsIFrame* rootScrollFrame = aPresContext->PresShell()->GetRootScrollFrame()) {
     if (nsIContent* content = rootScrollFrame->GetContent()) {
       id = FindOrCreateIDFor(content);
@@ -3756,7 +3756,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       // BuildDisplayListForStackingContext call below. We need to set the scroll
       // parent on the display list builder while we build those items, so that they
       // can pick up their scroll parent's id.
-      ViewID id = FrameMetrics::NULL_SCROLL_ID;
+      ViewID id = ScrollableLayerGuid::NULL_SCROLL_ID;
       if (ignoreViewportScrolling && presContext->IsRootContentDocument()) {
         if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
           if (nsIContent* content = rootScrollFrame->GetContent()) {
@@ -9264,7 +9264,7 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
   FrameMetrics& metrics = metadata.GetMetrics();
   metrics.SetViewport(CSSRect::FromAppUnits(aViewport));
 
-  ViewID scrollId = FrameMetrics::NULL_SCROLL_ID;
+  ViewID scrollId = ScrollableLayerGuid::NULL_SCROLL_ID;
   if (aContent) {
     if (void* paintRequestTime = aContent->GetProperty(nsGkAtoms::paintRequestTime)) {
       metrics.SetPaintRequestTime(*static_cast<TimeStamp*>(paintRequestTime));
@@ -9366,7 +9366,7 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
   // If we have the scrollparent being the same as the scroll id, the
   // compositor-side code could get into an infinite loop while building the
   // overscroll handoff chain.
-  MOZ_ASSERT(aScrollParentId == FrameMetrics::NULL_SCROLL_ID || scrollId != aScrollParentId);
+  MOZ_ASSERT(aScrollParentId == ScrollableLayerGuid::NULL_SCROLL_ID || scrollId != aScrollParentId);
   metrics.SetScrollId(scrollId);
   metrics.SetIsRootContent(aIsRootContent);
   metadata.SetScrollParentId(aScrollParentId);
@@ -9375,7 +9375,7 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
   bool isRootScrollFrame = aScrollFrame == rootScrollFrame;
   nsIDocument* document = presShell->GetDocument();
 
-  if (scrollId != FrameMetrics::NULL_SCROLL_ID && !presContext->GetParentPresContext()) {
+  if (scrollId != ScrollableLayerGuid::NULL_SCROLL_ID && !presContext->GetParentPresContext()) {
     if ((aScrollFrame && isRootScrollFrame)) {
       metadata.SetIsLayersIdRoot(true);
     } else {
@@ -9596,7 +9596,7 @@ nsLayoutUtils::GetRootMetadata(nsDisplayListBuilder* aBuilder,
     return Some(nsLayoutUtils::ComputeScrollMetadata(frame,
                            rootScrollFrame, content,
                            aBuilder->FindReferenceFrameFor(frame),
-                           aLayerManager, FrameMetrics::NULL_SCROLL_ID, viewport, Nothing(),
+                           aLayerManager, ScrollableLayerGuid::NULL_SCROLL_ID, viewport, Nothing(),
                            isRootContent, Some(aContainerParameters)));
   }
 

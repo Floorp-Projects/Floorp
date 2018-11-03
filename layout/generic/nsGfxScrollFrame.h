@@ -48,6 +48,7 @@ public:
   typedef mozilla::CSSIntPoint CSSIntPoint;
   typedef mozilla::layout::ScrollbarActivity ScrollbarActivity;
   typedef mozilla::layers::FrameMetrics FrameMetrics;
+  typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
   typedef mozilla::layers::ScrollSnapInfo ScrollSnapInfo;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
@@ -573,7 +574,7 @@ public:
 
   nsRect mPrevScrolledRect;
 
-  FrameMetrics::ViewID mScrollParentID;
+  ScrollableLayerGuid::ViewID mScrollParentID;
 
   // Timer to remove the displayport some time after scrolling has stopped
   nsCOMPtr<nsITimer> mDisplayPortExpiryTimer;
