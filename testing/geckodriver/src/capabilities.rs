@@ -156,6 +156,10 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
             .or_else(|x| Err(convert_version_error(x)))
     }
 
+    fn strict_file_interactability(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
+        Ok(true)
+    }
+
     fn accept_proxy(&mut self, _: &Capabilities, _: &Capabilities) -> WebDriverResult<bool> {
         Ok(true)
     }
