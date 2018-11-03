@@ -174,7 +174,7 @@ public:
    * InsertLineBreakAsAction() is called when user inputs a line break with
    * Shift + Enter or something.
    */
-  nsresult InsertLineBreakAsAction();
+  virtual nsresult InsertLineBreakAsAction() override;
 
   /**
    * CreateElementWithDefaults() creates new element whose name is

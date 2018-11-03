@@ -322,7 +322,7 @@ TextEditRules::WillDoAction(EditSubActionInfo& aInfo,
 
   // my kingdom for dynamic cast
   switch (aInfo.mEditSubAction) {
-    case EditSubAction::eInsertParagraphSeparator: {
+    case EditSubAction::eInsertLineBreak: {
       UndefineCaretBidiLevel();
       EditActionResult result = WillInsertLineBreak(aInfo.maxLength);
       if (NS_WARN_IF(result.Failed())) {
