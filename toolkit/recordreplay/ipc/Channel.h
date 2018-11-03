@@ -109,7 +109,12 @@ namespace recordreplay {
                                                                \
   /* A critical error occurred and execution cannot continue. The child will */ \
   /* stop executing after sending this message and will wait to be terminated. */ \
+  /* A minidump for the child has been generated. */           \
   _Macro(FatalError)                                           \
+                                                               \
+  /* Sent when a fatal error has occurred, but before the minidump has been */ \
+  /* generated. */                                             \
+  _Macro(BeginFatalError)                                      \
                                                                \
   /* The child's graphics were repainted. */                   \
   _Macro(Paint)                                                \
@@ -370,6 +375,8 @@ struct FatalErrorMessage : public Message
 
   const char* Error() const { return Data<FatalErrorMessage, const char>(); }
 };
+
+typedef EmptyMessage<MessageType::BeginFatalError> BeginFatalErrorMessage;
 
 // The format for graphics data which will be sent to the middleman process.
 // This needs to match the format expected for canvas image data, to avoid
