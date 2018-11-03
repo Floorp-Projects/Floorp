@@ -1907,6 +1907,13 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
     if (cachedResult->IsValidFor(aChildReflowInput)) {
       return *cachedResult;
     }
+    MOZ_LOG(gFlexContainerLog, LogLevel::Debug,
+            ("[perf] MeasureAscentAndBSizeForFlexItem rejected "
+             "cached value\n"));
+  } else {
+    MOZ_LOG(gFlexContainerLog, LogLevel::Debug,
+            ("[perf] MeasureAscentAndBSizeForFlexItem didn't have a "
+             "cached value\n"));
   }
 
   ReflowOutput childDesiredSize(aChildReflowInput);
@@ -5163,6 +5170,11 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
             MoveFlexItemToFinalPosition(aReflowInput, *item, framePos,
                                         containerSize);
           }
+        }
+        if (itemNeedsReflow) {
+          MOZ_LOG(gFlexContainerLog, LogLevel::Debug,
+                  ("[perf] Flex item needed both a measuring reflow and "
+                   "a final reflow\n"));
         }
       }
       if (itemNeedsReflow) {
