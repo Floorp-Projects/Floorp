@@ -302,9 +302,9 @@ public:
   // Allow a single thread to resume execution.
   static void ResumeSingleIdleThread(size_t aId);
 
-  // Return whether this thread is in the idle state entered after
+  // Return whether this thread will remain in the idle state entered after
   // WaitForIdleThreads.
-  bool IsIdle() { return mIdle; }
+  bool ShouldIdle() { return mShouldIdle; }
 };
 
 // This uses a stack pointer instead of TLS to make sure events are passed
