@@ -26,34 +26,17 @@ public class DataChannel {
     // Optional unsigned short in WebIDL, -1 means unspecified.
     public int id = -1;
 
-    @CalledByNative("Init")
-    boolean getOrdered() {
-      return ordered;
-    }
+    public Init() {}
 
-    @CalledByNative("Init")
-    int getMaxRetransmitTimeMs() {
-      return maxRetransmitTimeMs;
-    }
-
-    @CalledByNative("Init")
-    int getMaxRetransmits() {
-      return maxRetransmits;
-    }
-
-    @CalledByNative("Init")
-    String getProtocol() {
-      return protocol;
-    }
-
-    @CalledByNative("Init")
-    boolean getNegotiated() {
-      return negotiated;
-    }
-
-    @CalledByNative("Init")
-    int getId() {
-      return id;
+    // Called only by native code.
+    private Init(boolean ordered, int maxRetransmitTimeMs, int maxRetransmits, String protocol,
+        boolean negotiated, int id) {
+      this.ordered = ordered;
+      this.maxRetransmitTimeMs = maxRetransmitTimeMs;
+      this.maxRetransmits = maxRetransmits;
+      this.protocol = protocol;
+      this.negotiated = negotiated;
+      this.id = id;
     }
   }
 
@@ -68,7 +51,6 @@ public class DataChannel {
      */
     public final boolean binary;
 
-    @CalledByNative("Buffer")
     public Buffer(ByteBuffer data, boolean binary) {
       this.data = data;
       this.binary = binary;
@@ -78,34 +60,23 @@ public class DataChannel {
   /** Java version of C++ DataChannelObserver. */
   public interface Observer {
     /** The data channel's bufferedAmount has changed. */
-    @CalledByNative("Observer") public void onBufferedAmountChange(long previousAmount);
+    public void onBufferedAmountChange(long previousAmount);
     /** The data channel state has changed. */
-    @CalledByNative("Observer") public void onStateChange();
+    public void onStateChange();
     /**
      * A data buffer was successfully received.  NOTE: |buffer.data| will be
      * freed once this function returns so callers who want to use the data
      * asynchronously must make sure to copy it first.
      */
-    @CalledByNative("Observer") public void onMessage(Buffer buffer);
+    public void onMessage(Buffer buffer);
   }
 
   /** Keep in sync with DataChannelInterface::DataState. */
-  public enum State {
-    CONNECTING,
-    OPEN,
-    CLOSING,
-    CLOSED;
-
-    @CalledByNative("State")
-    static State fromNativeIndex(int nativeIndex) {
-      return values()[nativeIndex];
-    }
-  }
+  public enum State { CONNECTING, OPEN, CLOSING, CLOSED }
 
   private final long nativeDataChannel;
   private long nativeObserver;
 
-  @CalledByNative
   public DataChannel(long nativeDataChannel) {
     this.nativeDataChannel = nativeDataChannel;
   }
@@ -152,12 +123,5 @@ public class DataChannel {
   private native boolean sendNative(byte[] data, boolean binary);
 
   /** Dispose of native resources attached to this channel. */
-  public void dispose() {
-    JniCommon.nativeReleaseRef(nativeDataChannel);
-  }
-
-  @CalledByNative
-  long getNativeDataChannel() {
-    return nativeDataChannel;
-  }
+  public native void dispose();
 };

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_coding/neteq/random_vector.h"
+#include "webrtc/modules/audio_coding/neteq/random_vector.h"
 
 namespace webrtc {
 

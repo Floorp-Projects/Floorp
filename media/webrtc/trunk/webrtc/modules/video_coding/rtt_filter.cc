@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/rtt_filter.h"
+#include "webrtc/modules/video_coding/rtt_filter.h"
 
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "modules/video_coding/internal_defines.h"
+#include "webrtc/modules/video_coding/internal_defines.h"
 
 namespace webrtc {
 

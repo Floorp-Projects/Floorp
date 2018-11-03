@@ -17,23 +17,23 @@
 #include <utility>
 
 // TODO(zijiehe): Remove once flaky has been resolved.
-#include "modules/desktop_capture/desktop_capture_options.h"
-#include "modules/desktop_capture/desktop_capturer.h"
-#include "modules/desktop_capture/desktop_frame.h"
-#include "modules/desktop_capture/desktop_region.h"
-#include "modules/desktop_capture/mock_desktop_capturer_callback.h"
-#include "modules/desktop_capture/rgba_color.h"
-#include "modules/desktop_capture/screen_drawer.h"
-#include "rtc_base/base64.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/constructormagic.h"
-#include "rtc_base/logging.h"
-#include "test/gmock.h"
-#include "test/gtest.h"
+#include "webrtc/base/base64.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/modules/desktop_capture/desktop_capturer.h"
+#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
+#include "webrtc/modules/desktop_capture/desktop_frame.h"
+#include "webrtc/modules/desktop_capture/desktop_region.h"
+#include "webrtc/modules/desktop_capture/mock_desktop_capturer_callback.h"
+#include "webrtc/modules/desktop_capture/rgba_color.h"
+#include "webrtc/modules/desktop_capture/screen_drawer.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 
 #if defined(WEBRTC_WIN)
-#include "modules/desktop_capture/win/screen_capturer_win_directx.h"
-#include "rtc_base/win32.h"
+#include "webrtc/base/win32.h"
+#include "webrtc/modules/desktop_capture/win/screen_capturer_win_directx.h"
 #endif  // defined(WEBRTC_WIN)
 
 using ::testing::_;
@@ -102,15 +102,13 @@ class ScreenCapturerIntegrationTest : public testing::Test {
     const int kRectSize = 32;
     std::unique_ptr<ScreenDrawer> drawer = ScreenDrawer::Create();
     if (!drawer || drawer->DrawableRegion().is_empty()) {
-      RTC_LOG(LS_WARNING)
-          << "No ScreenDrawer implementation for current platform.";
+      LOG(LS_WARNING) << "No ScreenDrawer implementation for current platform.";
       return;
     }
     if (drawer->DrawableRegion().width() < kTestArea ||
         drawer->DrawableRegion().height() < kTestArea) {
-      RTC_LOG(LS_WARNING)
-          << "ScreenDrawer::DrawableRegion() is too small for the "
-             "CaptureUpdatedRegion tests.";
+      LOG(LS_WARNING) << "ScreenDrawer::DrawableRegion() is too small for the "
+                         "CaptureUpdatedRegion tests.";
       return;
     }
 
@@ -165,7 +163,7 @@ class ScreenCapturerIntegrationTest : public testing::Test {
 
   bool CreateDirectxCapturer() {
     if (!ScreenCapturerWinDirectx::IsSupported()) {
-      RTC_LOG(LS_WARNING) << "Directx capturer is not supported";
+      LOG(LS_WARNING) << "Directx capturer is not supported";
       return false;
     }
 
@@ -312,10 +310,7 @@ TEST_F(ScreenCapturerIntegrationTest, MAYBE_TwoCapturers) {
 
 #if defined(WEBRTC_WIN)
 
-// Windows cannot capture contents on VMs hosted in GCE. See bug
-// https://bugs.chromium.org/p/webrtc/issues/detail?id=8153.
-TEST_F(ScreenCapturerIntegrationTest,
-       DISABLED_CaptureUpdatedRegionWithDirectxCapturer) {
+TEST_F(ScreenCapturerIntegrationTest, CaptureUpdatedRegionWithDirectxCapturer) {
   if (!CreateDirectxCapturer()) {
     return;
   }
@@ -323,7 +318,7 @@ TEST_F(ScreenCapturerIntegrationTest,
   TestCaptureUpdatedRegion();
 }
 
-TEST_F(ScreenCapturerIntegrationTest, DISABLED_TwoDirectxCapturers) {
+TEST_F(ScreenCapturerIntegrationTest, TwoDirectxCapturers) {
   if (!CreateDirectxCapturer()) {
     return;
   }
@@ -334,7 +329,7 @@ TEST_F(ScreenCapturerIntegrationTest, DISABLED_TwoDirectxCapturers) {
 }
 
 TEST_F(ScreenCapturerIntegrationTest,
-       DISABLED_CaptureUpdatedRegionWithMagnifierCapturer) {
+       CaptureUpdatedRegionWithMagnifierCapturer) {
   // On Windows 8 or later, magnifier APIs return a frame with a border on test
   // environment, so disable these tests.
   // Bug https://bugs.chromium.org/p/webrtc/issues/detail?id=6844
@@ -347,7 +342,7 @@ TEST_F(ScreenCapturerIntegrationTest,
   TestCaptureUpdatedRegion();
 }
 
-TEST_F(ScreenCapturerIntegrationTest, DISABLED_TwoMagnifierCapturers) {
+TEST_F(ScreenCapturerIntegrationTest, TwoMagnifierCapturers) {
   // On Windows 8 or later, magnifier APIs return a frame with a border on test
   // environment, so disable these tests.
   // Bug https://bugs.chromium.org/p/webrtc/issues/detail?id=6844
@@ -363,7 +358,7 @@ TEST_F(ScreenCapturerIntegrationTest, DISABLED_TwoMagnifierCapturers) {
 }
 
 TEST_F(ScreenCapturerIntegrationTest,
-       DISABLED_MaybeCaptureUpdatedRegionWithDirectxCapturer) {
+       MaybeCaptureUpdatedRegionWithDirectxCapturer) {
   if (!rtc::IsWindows8OrLater()) {
     // ScreenCapturerWinGdi randomly returns blank screen, the root cause is
     // still unknown. Bug,

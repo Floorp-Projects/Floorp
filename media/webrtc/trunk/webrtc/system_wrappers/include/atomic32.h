@@ -12,21 +12,16 @@
 // doing, use locks instead! :-)
 //
 // Note: assumes 32-bit (or higher) system
-#ifndef SYSTEM_WRAPPERS_INCLUDE_ATOMIC32_H_
-#define SYSTEM_WRAPPERS_INCLUDE_ATOMIC32_H_
-
-#include <atomic>
+#ifndef WEBRTC_SYSTEM_WRAPPERS_INCLUDE_ATOMIC32_H_
+#define WEBRTC_SYSTEM_WRAPPERS_INCLUDE_ATOMIC32_H_
 
 #include <stddef.h>
 
-#include "common_types.h"  // NOLINT(build/include)
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/common_types.h"
 
 namespace webrtc {
 
-// DEPRECATED: Please use std::atomic<int32_t> instead.
-// TODO(yuweih): Replace Atomic32 uses with std::atomic<int32_t> and remove this
-// class. (bugs.webrtc.org/8428)
 // 32 bit atomic variable.  Note that this class relies on the compiler to
 // align the 32 bit value correctly (on a 32 bit boundary), so as long as you're
 // not doing things like reinterpret_cast over some custom allocated memory
@@ -46,14 +41,26 @@ class Atomic32 {
   // Sets the value atomically to new_value if the value equals compare value.
   // The function returns true if the exchange happened.
   bool CompareExchange(int32_t new_value, int32_t compare_value);
-  int32_t Value() const;
+  int32_t Value() {
+    return *this += 0;
+  }
 
  private:
+  // Disable the + and - operator since it's unclear what these operations
+  // should do.
+  Atomic32 operator+(const Atomic32& other);
+  Atomic32 operator-(const Atomic32& other);
+
+  // Checks if |_value| is 32bit aligned.
+  inline bool Is32bitAligned() const {
+    return (reinterpret_cast<ptrdiff_t>(&value_) & 3) == 0;
+  }
+
   RTC_DISALLOW_COPY_AND_ASSIGN(Atomic32);
 
-  std::atomic<int32_t> value_;
+  int32_t value_;
 };
 
 }  // namespace webrtc
 
-#endif  // SYSTEM_WRAPPERS_INCLUDE_ATOMIC32_H_
+#endif  // WEBRTC_SYSTEM_WRAPPERS_INCLUDE_ATOMIC32_H_

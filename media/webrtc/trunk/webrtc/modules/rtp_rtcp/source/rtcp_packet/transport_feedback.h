@@ -8,13 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TRANSPORT_FEEDBACK_H_
-#define MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TRANSPORT_FEEDBACK_H_
+#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TRANSPORT_FEEDBACK_H_
+#define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TRANSPORT_FEEDBACK_H_
 
 #include <memory>
 #include <vector>
 
-#include "modules/rtp_rtcp/source/rtcp_packet/rtpfb.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/rtpfb.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -22,21 +23,6 @@ class CommonHeader;
 
 class TransportFeedback : public Rtpfb {
  public:
-  class ReceivedPacket {
-   public:
-    ReceivedPacket(uint16_t sequence_number, int16_t delta_ticks)
-        : sequence_number_(sequence_number), delta_ticks_(delta_ticks) {}
-    ReceivedPacket(const ReceivedPacket&) = default;
-    ReceivedPacket& operator=(const ReceivedPacket&) = default;
-
-    uint16_t sequence_number() const { return sequence_number_; }
-    int16_t delta_ticks() const { return delta_ticks_; }
-    int32_t delta_us() const { return delta_ticks_ * kDeltaScaleFactor; }
-
-   private:
-    uint16_t sequence_number_;
-    int16_t delta_ticks_;
-  };
   // TODO(sprang): IANA reg?
   static constexpr uint8_t kFeedbackMessageType = 15;
   // Convert to multiples of 0.25ms.
@@ -52,15 +38,22 @@ class TransportFeedback : public Rtpfb {
   void SetFeedbackSequenceNumber(uint8_t feedback_sequence);
   // NOTE: This method requires increasing sequence numbers (excepting wraps).
   bool AddReceivedPacket(uint16_t sequence_number, int64_t timestamp_us);
-  const std::vector<ReceivedPacket>& GetReceivedPackets() const;
+
+  enum class StatusSymbol {
+    kNotReceived,
+    kReceivedSmallDelta,
+    kReceivedLargeDelta,
+  };
 
   uint16_t GetBaseSequence() const;
-
-  // Returns number of packets (including missing) this feedback describes.
-  size_t GetPacketStatusCount() const { return num_seq_no_; }
+  std::vector<TransportFeedback::StatusSymbol> GetStatusVector() const;
+  std::vector<int16_t> GetReceiveDeltas() const;
 
   // Get the reference time in microseconds, including any precision loss.
   int64_t GetBaseTimeUs() const;
+  // Convenience method for getting all deltas as microseconds. The first delta
+  // is relative the base time.
+  std::vector<int64_t> GetReceiveDeltasUs() const;
 
   bool Parse(const CommonHeader& packet);
   static std::unique_ptr<TransportFeedback> ParseFrom(const uint8_t* buffer,
@@ -69,12 +62,13 @@ class TransportFeedback : public Rtpfb {
   // This function is for tests.
   bool IsConsistent() const;
 
-  size_t BlockLength() const override;
-
+ protected:
   bool Create(uint8_t* packet,
               size_t* position,
               size_t max_length,
               PacketReadyCallback* callback) const override;
+
+  size_t BlockLength() const override;
 
  private:
   // Size in bytes of a delta time in rtcp packet.
@@ -82,6 +76,12 @@ class TransportFeedback : public Rtpfb {
   using DeltaSize = uint8_t;
   // Keeps DeltaSizes that can be encoded into single chunk if it is last chunk.
   class LastChunk;
+  struct ReceivedPacket {
+    ReceivedPacket(uint16_t sequence_number, int16_t delta_ticks)
+        : sequence_number(sequence_number), delta_ticks(delta_ticks) {}
+    uint16_t sequence_number;
+    int16_t delta_ticks;
+  };
 
   // Reset packet to consistent empty state.
   void Clear();
@@ -99,8 +99,10 @@ class TransportFeedback : public Rtpfb {
   std::vector<uint16_t> encoded_chunks_;
   const std::unique_ptr<LastChunk> last_chunk_;
   size_t size_bytes_;
+
+  RTC_DISALLOW_COPY_AND_ASSIGN(TransportFeedback);
 };
 
 }  // namespace rtcp
 }  // namespace webrtc
-#endif  // MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TRANSPORT_FEEDBACK_H_
+#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TRANSPORT_FEEDBACK_H_

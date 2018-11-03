@@ -8,14 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TMMBN_H_
-#define MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TMMBN_H_
+#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TMMBN_H_
+#define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TMMBN_H_
 
 #include <vector>
 
-#include "modules/rtp_rtcp/source/rtcp_packet/rtpfb.h"
-#include "modules/rtp_rtcp/source/rtcp_packet/tmmb_item.h"
-#include "rtc_base/basictypes.h"
+#include "webrtc/base/basictypes.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/rtpfb.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmb_item.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -27,8 +28,8 @@ class Tmmbn : public Rtpfb {
  public:
   static constexpr uint8_t kFeedbackMessageType = 4;
 
-  Tmmbn();
-  ~Tmmbn() override;
+  Tmmbn() {}
+  ~Tmmbn() override {}
 
   // Parse assumes header is already parsed and validated.
   bool Parse(const CommonHeader& packet);
@@ -37,20 +38,26 @@ class Tmmbn : public Rtpfb {
 
   const std::vector<TmmbItem>& items() const { return items_; }
 
-  size_t BlockLength() const override;
-
+ protected:
   bool Create(uint8_t* packet,
               size_t* index,
               size_t max_length,
               RtcpPacket::PacketReadyCallback* callback) const override;
 
  private:
+  size_t BlockLength() const override {
+    return kHeaderLength + kCommonFeedbackLength +
+           TmmbItem::kLength * items_.size();
+  }
+
   // Media ssrc is unused, shadow base class setter and getter.
   void SetMediaSsrc(uint32_t ssrc);
   uint32_t media_ssrc() const;
 
   std::vector<TmmbItem> items_;
+
+  RTC_DISALLOW_COPY_AND_ASSIGN(Tmmbn);
 };
 }  // namespace rtcp
 }  // namespace webrtc
-#endif  // MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TMMBN_H_
+#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_TMMBN_H_

@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_coding/neteq/decision_logic_fax.h"
+#include "webrtc/modules/audio_coding/neteq/decision_logic_fax.h"
 
 #include <assert.h>
 
 #include <algorithm>
 
-#include "modules/audio_coding/neteq/decoder_database.h"
-#include "modules/audio_coding/neteq/sync_buffer.h"
+#include "webrtc/modules/audio_coding/neteq/decoder_database.h"
+#include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
 
 namespace webrtc {
 

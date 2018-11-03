@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/codecs/vp8/simulcast_test_utility.h"
+#include "webrtc/modules/video_coding/codecs/vp8/simulcast_unittest.h"
 
 namespace webrtc {
 namespace testing {
 
 class TestVp8Impl : public TestVp8Simulcast {
+ public:
+  TestVp8Impl()
+      : TestVp8Simulcast(VP8Encoder::Create(), VP8Decoder::Create()) {}
+
  protected:
-  std::unique_ptr<VP8Encoder> CreateEncoder() override {
-    return VP8Encoder::Create();
-  }
-  std::unique_ptr<VP8Decoder> CreateDecoder() override {
-    return VP8Decoder::Create();
-  }
+  virtual void SetUp() { TestVp8Simulcast::SetUp(); }
+  virtual void TearDown() { TestVp8Simulcast::TearDown(); }
 };
 
 TEST_F(TestVp8Impl, TestKeyFrameRequestsOnAllStreams) {
@@ -67,8 +67,20 @@ TEST_F(TestVp8Impl, TestSwitchingToOneSmallStream) {
   TestVp8Simulcast::TestSwitchingToOneSmallStream();
 }
 
+TEST_F(TestVp8Impl, TestRPSIEncoder) {
+  TestVp8Simulcast::TestRPSIEncoder();
+}
+
+TEST_F(TestVp8Impl, TestRPSIEncodeDecode) {
+  TestVp8Simulcast::TestRPSIEncodeDecode();
+}
+
 TEST_F(TestVp8Impl, TestSaptioTemporalLayers333PatternEncoder) {
   TestVp8Simulcast::TestSaptioTemporalLayers333PatternEncoder();
+}
+
+TEST_F(TestVp8Impl, TestSpatioTemporalLayers321PatternEncoder) {
+  TestVp8Simulcast::TestSpatioTemporalLayers321PatternEncoder();
 }
 
 TEST_F(TestVp8Impl, TestStrideEncodeDecode) {

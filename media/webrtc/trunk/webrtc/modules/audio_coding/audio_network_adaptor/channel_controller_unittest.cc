@@ -10,8 +10,8 @@
 
 #include <memory>
 
-#include "modules/audio_coding/audio_network_adaptor/channel_controller.h"
-#include "test/gtest.h"
+#include "webrtc/modules/audio_coding/audio_network_adaptor/channel_controller.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
@@ -32,16 +32,11 @@ std::unique_ptr<ChannelController> CreateChannelController(int init_channels) {
 }
 
 void CheckDecision(ChannelController* controller,
-                   const rtc::Optional<int>& uplink_bandwidth_bps,
+                   const Controller::NetworkMetrics& metrics,
                    size_t expected_num_channels) {
-  if (uplink_bandwidth_bps) {
-    Controller::NetworkMetrics network_metrics;
-    network_metrics.uplink_bandwidth_bps = uplink_bandwidth_bps;
-    controller->UpdateNetworkMetrics(network_metrics);
-  }
-  AudioEncoderRuntimeConfig config;
-  controller->MakeDecision(&config);
-  EXPECT_EQ(expected_num_channels, config.num_channels);
+  AudioNetworkAdaptor::EncoderRuntimeConfig config;
+  controller->MakeDecision(metrics, &config);
+  EXPECT_EQ(rtc::Optional<size_t>(expected_num_channels), config.num_channels);
 }
 
 }  // namespace
@@ -49,52 +44,70 @@ void CheckDecision(ChannelController* controller,
 TEST(ChannelControllerTest, OutputInitValueWhenUplinkBandwidthUnknown) {
   constexpr int kInitChannels = 2;
   auto controller = CreateChannelController(kInitChannels);
-  CheckDecision(controller.get(), rtc::nullopt, kInitChannels);
+  Controller::NetworkMetrics metrics;
+  CheckDecision(controller.get(), metrics, kInitChannels);
 }
 
 TEST(ChannelControllerTest, SwitchTo2ChannelsOnHighUplinkBandwidth) {
   constexpr int kInitChannels = 1;
   auto controller = CreateChannelController(kInitChannels);
+  Controller::NetworkMetrics metrics;
+
   // Use high bandwidth to check output switch to 2.
-  CheckDecision(controller.get(), kChannel1To2BandwidthBps, 2);
+  metrics.uplink_bandwidth_bps = rtc::Optional<int>(kChannel1To2BandwidthBps);
+  CheckDecision(controller.get(), metrics, 2);
 }
 
 TEST(ChannelControllerTest, SwitchTo1ChannelOnLowUplinkBandwidth) {
   constexpr int kInitChannels = 2;
   auto controller = CreateChannelController(kInitChannels);
+  Controller::NetworkMetrics metrics;
+
   // Use low bandwidth to check output switch to 1.
-  CheckDecision(controller.get(), kChannel2To1BandwidthBps, 1);
+  metrics.uplink_bandwidth_bps = rtc::Optional<int>(kChannel2To1BandwidthBps);
+  CheckDecision(controller.get(), metrics, 1);
 }
 
 TEST(ChannelControllerTest, Maintain1ChannelOnMediumUplinkBandwidth) {
   constexpr int kInitChannels = 1;
   auto controller = CreateChannelController(kInitChannels);
+  Controller::NetworkMetrics metrics;
+
   // Use between-thresholds bandwidth to check output remains at 1.
-  CheckDecision(controller.get(), kMediumBandwidthBps, 1);
+  metrics.uplink_bandwidth_bps = rtc::Optional<int>(kMediumBandwidthBps);
+  CheckDecision(controller.get(), metrics, 1);
 }
 
 TEST(ChannelControllerTest, Maintain2ChannelsOnMediumUplinkBandwidth) {
   constexpr int kInitChannels = 2;
   auto controller = CreateChannelController(kInitChannels);
+  Controller::NetworkMetrics metrics;
+
   // Use between-thresholds bandwidth to check output remains at 2.
-  CheckDecision(controller.get(), kMediumBandwidthBps, 2);
+  metrics.uplink_bandwidth_bps = rtc::Optional<int>(kMediumBandwidthBps);
+  CheckDecision(controller.get(), metrics, 2);
 }
 
 TEST(ChannelControllerTest, CheckBehaviorOnChangingUplinkBandwidth) {
   constexpr int kInitChannels = 1;
   auto controller = CreateChannelController(kInitChannels);
+  Controller::NetworkMetrics metrics;
 
   // Use between-thresholds bandwidth to check output remains at 1.
-  CheckDecision(controller.get(), kMediumBandwidthBps, 1);
+  metrics.uplink_bandwidth_bps = rtc::Optional<int>(kMediumBandwidthBps);
+  CheckDecision(controller.get(), metrics, 1);
 
   // Use high bandwidth to check output switch to 2.
-  CheckDecision(controller.get(), kChannel1To2BandwidthBps, 2);
+  metrics.uplink_bandwidth_bps = rtc::Optional<int>(kChannel1To2BandwidthBps);
+  CheckDecision(controller.get(), metrics, 2);
 
   // Use between-thresholds bandwidth to check output remains at 2.
-  CheckDecision(controller.get(), kMediumBandwidthBps, 2);
+  metrics.uplink_bandwidth_bps = rtc::Optional<int>(kMediumBandwidthBps);
+  CheckDecision(controller.get(), metrics, 2);
 
   // Use low bandwidth to check output switch to 1.
-  CheckDecision(controller.get(), kChannel2To1BandwidthBps, 1);
+  metrics.uplink_bandwidth_bps = rtc::Optional<int>(kChannel2To1BandwidthBps);
+  CheckDecision(controller.get(), metrics, 1);
 }
 
 }  // namespace webrtc

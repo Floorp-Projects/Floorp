@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_H_
-#define MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_H_
+#ifndef WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_H_
+#define WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_H_
 
 #include <list>
 #include <map>
 #include <sstream>
 #include <string>
 
-#include "modules/bitrate_controller/include/bitrate_controller.h"
-#include "modules/remote_bitrate_estimator/test/bwe_test_framework.h"
-#include "modules/remote_bitrate_estimator/test/packet.h"
-#include "rtc_base/constructormagic.h"
-#include "rtc_base/gtest_prod_util.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/gtest_prod_util.h"
+#include "webrtc/modules/remote_bitrate_estimator/test/packet.h"
+#include "webrtc/modules/bitrate_controller/include/bitrate_controller.h"
+#include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_framework.h"
 
 namespace webrtc {
 namespace testing {
@@ -177,11 +177,10 @@ enum BandwidthEstimatorType {
   kNadaEstimator,
   kRembEstimator,
   kSendSideEstimator,
-  kTcpEstimator,
-  kBbrEstimator
+  kTcpEstimator
 };
 
-const char* const bwe_names[] = {"Null", "NADA", "REMB", "GCC", "TCP", "BBR"};
+const std::string bwe_names[] = {"Null", "NADA", "REMB", "GCC", "TCP"};
 
 int64_t GetAbsSendTimeInMs(uint32_t abs_send_time);
 
@@ -196,4 +195,4 @@ BweReceiver* CreateBweReceiver(BandwidthEstimatorType type,
 }  // namespace bwe
 }  // namespace testing
 }  // namespace webrtc
-#endif  // MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_H_
+#endif  // WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_H_

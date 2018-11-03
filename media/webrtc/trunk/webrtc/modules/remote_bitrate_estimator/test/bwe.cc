@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/remote_bitrate_estimator/test/bwe.h"
+#include "webrtc/modules/remote_bitrate_estimator/test/bwe.h"
 
 #include <limits>
 
-#include "modules/remote_bitrate_estimator/test/estimators/bbr.h"
-#include "modules/remote_bitrate_estimator/test/estimators/nada.h"
-#include "modules/remote_bitrate_estimator/test/estimators/remb.h"
-#include "modules/remote_bitrate_estimator/test/estimators/send_side.h"
-#include "modules/remote_bitrate_estimator/test/estimators/tcp.h"
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/common.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/remote_bitrate_estimator/test/estimators/nada.h"
+#include "webrtc/modules/remote_bitrate_estimator/test/estimators/remb.h"
+#include "webrtc/modules/remote_bitrate_estimator/test/estimators/send_side.h"
+#include "webrtc/modules/remote_bitrate_estimator/test/estimators/tcp.h"
 
 namespace webrtc {
 namespace testing {
@@ -94,8 +94,6 @@ BweSender* CreateBweSender(BandwidthEstimatorType estimator,
       return new SendSideBweSender(kbps, observer, clock);
     case kNadaEstimator:
       return new NadaBweSender(kbps, observer, clock);
-    case kBbrEstimator:
-      return new BbrBweSender(observer, clock);
     case kTcpEstimator:
       FALLTHROUGH();
     case kNullEstimator:
@@ -115,8 +113,6 @@ BweReceiver* CreateBweReceiver(BandwidthEstimatorType type,
       return new SendSideBweReceiver(flow_id);
     case kNadaEstimator:
       return new NadaBweReceiver(flow_id);
-    case kBbrEstimator:
-      return new BbrBweReceiver(flow_id);
     case kTcpEstimator:
       return new TcpBweReceiver(flow_id);
     case kNullEstimator:

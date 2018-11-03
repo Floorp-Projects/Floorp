@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef API_VIDEO_I420_BUFFER_H_
-#define API_VIDEO_I420_BUFFER_H_
+#ifndef WEBRTC_API_VIDEO_I420_BUFFER_H_
+#define WEBRTC_API_VIDEO_I420_BUFFER_H_
 
 #include <memory>
 
-#include "api/video/video_rotation.h"
-#include "api/video/video_frame_buffer.h"
-#include "system_wrappers/include/aligned_malloc.h"
+#include "webrtc/api/video/video_rotation.h"
+#include "webrtc/api/video/video_frame_buffer.h"
+#include "webrtc/system_wrappers/include/aligned_malloc.h"
 
 namespace webrtc {
 
 // Plain I420 buffer in standard memory.
-class I420Buffer : public I420BufferInterface {
+class I420Buffer : public VideoFrameBuffer {
  public:
   static rtc::scoped_refptr<I420Buffer> Create(int width, int height);
   static rtc::scoped_refptr<I420Buffer> Create(int width,
@@ -30,11 +30,7 @@ class I420Buffer : public I420BufferInterface {
                                                int stride_v);
 
   // Create a new buffer and copy the pixel data.
-  static rtc::scoped_refptr<I420Buffer> Copy(const I420BufferInterface& buffer);
-  // Deprecated.
-  static rtc::scoped_refptr<I420Buffer> Copy(const VideoFrameBuffer& buffer) {
-    return Copy(*buffer.GetI420());
-  }
+  static rtc::scoped_refptr<I420Buffer> Copy(const VideoFrameBuffer& buffer);
 
   static rtc::scoped_refptr<I420Buffer> Copy(
       int width, int height,
@@ -43,13 +39,8 @@ class I420Buffer : public I420BufferInterface {
       const uint8_t* data_v, int stride_v);
 
   // Returns a rotated copy of |src|.
-  static rtc::scoped_refptr<I420Buffer> Rotate(const I420BufferInterface& src,
-                                               VideoRotation rotation);
-  // Deprecated.
   static rtc::scoped_refptr<I420Buffer> Rotate(const VideoFrameBuffer& src,
-                                               VideoRotation rotation) {
-    return Rotate(*src.GetI420(), rotation);
-  }
+                                               VideoRotation rotation);
 
   // Sets the buffer to all black.
   static void SetBlack(I420Buffer* buffer);
@@ -62,6 +53,9 @@ class I420Buffer : public I420BufferInterface {
   // are resolved in a better way. Or in the mean time, use SetBlack.
   void InitializeData();
 
+  // TODO(nisse): Deprecated, use static method instead.
+  void SetToBlack() { SetBlack(this); }
+
   int width() const override;
   int height() const override;
   const uint8_t* DataY() const override;
@@ -72,13 +66,16 @@ class I420Buffer : public I420BufferInterface {
   int StrideU() const override;
   int StrideV() const override;
 
+  void* native_handle() const override;
+  rtc::scoped_refptr<VideoFrameBuffer> NativeToI420Buffer() override;
+
   uint8_t* MutableDataY();
   uint8_t* MutableDataU();
   uint8_t* MutableDataV();
 
   // Scale the cropped area of |src| to the size of |this| buffer, and
   // write the result into |this|.
-  void CropAndScaleFrom(const I420BufferInterface& src,
+  void CropAndScaleFrom(const VideoFrameBuffer& src,
                         int offset_x,
                         int offset_y,
                         int crop_width,
@@ -86,10 +83,18 @@ class I420Buffer : public I420BufferInterface {
 
   // The common case of a center crop, when needed to adjust the
   // aspect ratio without distorting the image.
-  void CropAndScaleFrom(const I420BufferInterface& src);
+  void CropAndScaleFrom(const VideoFrameBuffer& src);
 
   // Scale all of |src| to the size of |this| buffer, with no cropping.
-  void ScaleFrom(const I420BufferInterface& src);
+  void ScaleFrom(const VideoFrameBuffer& src);
+
+  // TODO(nisse): Deprecated, delete once downstream applications are updated.
+  // Returns a rotated versions of |src|. Native buffers are not
+  // supported. The reason this function doesn't return an I420Buffer,
+  // is that it returns |src| unchanged in case |rotation| is zero.
+  static rtc::scoped_refptr<VideoFrameBuffer> Rotate(
+      rtc::scoped_refptr<VideoFrameBuffer> src,
+      VideoRotation rotation);
 
  protected:
   I420Buffer(int width, int height);
@@ -108,4 +113,4 @@ class I420Buffer : public I420BufferInterface {
 
 }  // namespace webrtc
 
-#endif  // API_VIDEO_I420_BUFFER_H_
+#endif  // WEBRTC_API_VIDEO_I420_BUFFER_H_

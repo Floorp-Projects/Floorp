@@ -10,25 +10,24 @@
 
 #include <stdlib.h>
 
-#include "common_audio/vad/vad_unittest.h"
-#include "test/gtest.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/common_audio/vad/vad_unittest.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/typedefs.h"
 
 extern "C" {
-#include "common_audio/vad/vad_core.h"
+#include "webrtc/common_audio/vad/vad_core.h"
 }
 
-namespace webrtc {
-namespace test {
+namespace {
 
 TEST_F(VadTest, InitCore) {
   // Test WebRtcVad_InitCore().
   VadInstT* self = reinterpret_cast<VadInstT*>(malloc(sizeof(VadInstT)));
 
-  // null pointer test.
-  EXPECT_EQ(-1, WebRtcVad_InitCore(nullptr));
+  // NULL pointer test.
+  EXPECT_EQ(-1, WebRtcVad_InitCore(NULL));
 
-  // Verify return = 0 for non-null pointer.
+  // Verify return = 0 for non-NULL pointer.
   EXPECT_EQ(0, WebRtcVad_InitCore(self));
   // Verify init_flag is set.
   EXPECT_EQ(42, self->init_flag);
@@ -39,7 +38,7 @@ TEST_F(VadTest, InitCore) {
 TEST_F(VadTest, set_mode_core) {
   VadInstT* self = reinterpret_cast<VadInstT*>(malloc(sizeof(VadInstT)));
 
-  // TODO(bjornv): Add null pointer check if we take care of it in
+  // TODO(bjornv): Add NULL pointer check if we take care of it in
   // vad_core.c
 
   ASSERT_EQ(0, WebRtcVad_InitCore(self));
@@ -59,7 +58,7 @@ TEST_F(VadTest, CalcVad) {
   VadInstT* self = reinterpret_cast<VadInstT*>(malloc(sizeof(VadInstT)));
   int16_t speech[kMaxFrameLength];
 
-  // TODO(bjornv): Add null pointer check if we take care of it in
+  // TODO(bjornv): Add NULL pointer check if we take care of it in
   // vad_core.c
 
   // Test WebRtcVad_CalcVadXXkhz()
@@ -103,5 +102,4 @@ TEST_F(VadTest, CalcVad) {
 
   free(self);
 }
-}  // namespace test
-}  // namespace webrtc
+}  // namespace

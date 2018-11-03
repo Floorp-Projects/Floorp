@@ -10,11 +10,11 @@
 
 #include <memory>
 
-#include "modules/rtp_rtcp/include/flexfec_sender.h"
-#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
-#include "modules/rtp_rtcp/source/byte_io.h"
-#include "system_wrappers/include/clock.h"
+#include "webrtc/modules/rtp_rtcp/include/flexfec_sender.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_packet_to_send.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
 namespace webrtc {
 
@@ -24,7 +24,6 @@ constexpr int kFlexfecPayloadType = 123;
 constexpr uint32_t kMediaSsrc = 1234;
 constexpr uint32_t kFlexfecSsrc = 5678;
 const std::vector<RtpExtension> kNoRtpHeaderExtensions;
-const std::vector<RtpExtensionSize> kNoRtpHeaderExtensionSizes;
 
 }  // namespace
 
@@ -36,8 +35,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
 
   SimulatedClock clock(1 + data[i++]);
   FlexfecSender sender(kFlexfecPayloadType, kFlexfecSsrc, kMediaSsrc,
-                       kNoRtpHeaderExtensions, kNoRtpHeaderExtensionSizes,
-                       nullptr /* rtp_state */, &clock);
+                       kNoRtpHeaderExtensions, &clock);
   FecProtectionParams params = {
       data[i++], static_cast<int>(data[i++] % 100),
       data[i++] <= 127 ? kFecMaskRandom : kFecMaskBursty};

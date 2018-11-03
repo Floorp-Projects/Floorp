@@ -8,11 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/packet.h"
+#include "webrtc/modules/video_coding/packet.h"
 
 #include <assert.h>
 
-#include "modules/include/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
 
 namespace webrtc {
 
@@ -32,8 +33,7 @@ VCMPacket::VCMPacket()
       insertStartCode(false),
       width(0),
       height(0),
-      video_header(),
-      receive_time_ms(0) {
+      video_header() {
   video_header.playout_delay = {-1, -1};
 }
 
@@ -134,9 +134,15 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
       codec = kVideoCodecH264;
       return;
     case kRtpVideoGeneric:
-      codec = kVideoCodecGeneric;
-      return;
     case kRtpVideoNone:
+      if (isFirstPacket && markerBit)
+        completeNALU = kNaluComplete;
+      else if (isFirstPacket)
+        completeNALU = kNaluStart;
+      else if (markerBit)
+        completeNALU = kNaluEnd;
+      else
+        completeNALU = kNaluIncomplete;
       codec = kVideoCodecUnknown;
       return;
   }

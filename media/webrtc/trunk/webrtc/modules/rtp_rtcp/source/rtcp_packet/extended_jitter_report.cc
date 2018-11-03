@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/rtcp_packet/extended_jitter_report.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/extended_jitter_report.h"
 
 #include <utility>
 
-#include "modules/rtp_rtcp/source/byte_io.h"
-#include "modules/rtp_rtcp/source/rtcp_packet/common_header.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -39,17 +39,13 @@ constexpr uint8_t ExtendedJitterReport::kPacketType;
 //  (inside a compound RTCP packet), and MUST have the same value for RC
 //  (reception report count) as the receiver report.
 
-ExtendedJitterReport::ExtendedJitterReport() = default;
-
-ExtendedJitterReport::~ExtendedJitterReport() = default;
-
 bool ExtendedJitterReport::Parse(const CommonHeader& packet) {
   RTC_DCHECK_EQ(packet.type(), kPacketType);
 
   const uint8_t number_of_jitters = packet.count();
 
   if (packet.payload_size_bytes() < number_of_jitters * kJitterSizeBytes) {
-    RTC_LOG(LS_WARNING) << "Packet is too small to contain all the jitter.";
+    LOG(LS_WARNING) << "Packet is too small to contain all the jitter.";
     return false;
   }
 
@@ -64,15 +60,11 @@ bool ExtendedJitterReport::Parse(const CommonHeader& packet) {
 
 bool ExtendedJitterReport::SetJitterValues(std::vector<uint32_t> values) {
   if (values.size() > kMaxNumberOfJitterValues) {
-    RTC_LOG(LS_WARNING) << "Too many inter-arrival jitter items.";
+    LOG(LS_WARNING) << "Too many inter-arrival jitter items.";
     return false;
   }
   inter_arrival_jitters_ = std::move(values);
   return true;
-}
-
-size_t ExtendedJitterReport::BlockLength() const {
-  return kHeaderLength + kJitterSizeBytes * inter_arrival_jitters_.size();
 }
 
 bool ExtendedJitterReport::Create(

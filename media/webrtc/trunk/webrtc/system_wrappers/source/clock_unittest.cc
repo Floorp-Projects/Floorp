@@ -8,14 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "system_wrappers/include/clock.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
-#include "test/gtest.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
 TEST(ClockTest, NtpTime) {
   Clock* clock = Clock::GetRealTimeClock();
+  uint32_t seconds;
+  uint32_t fractions;
 
   // To ensure the test runs correctly even on a heavily loaded system, do not
   // compare the seconds/fractions and millisecond values directly. Instead,
@@ -24,11 +26,11 @@ TEST(ClockTest, NtpTime) {
   // The comparison includes 1 ms of margin to account for the rounding error in
   // the conversion.
   int64_t milliseconds_lower_bound = clock->CurrentNtpInMilliseconds();
-  NtpTime ntp_time = clock->CurrentNtpTime();
+  clock->CurrentNtp(seconds, fractions);
   int64_t milliseconds_upper_bound = clock->CurrentNtpInMilliseconds();
   EXPECT_GT(milliseconds_lower_bound / 1000, kNtpJan1970);
-  EXPECT_LE(milliseconds_lower_bound - 1, ntp_time.ToMs());
-  EXPECT_GE(milliseconds_upper_bound + 1, ntp_time.ToMs());
+  EXPECT_LE(milliseconds_lower_bound - 1, Clock::NtpToMs(seconds, fractions));
+  EXPECT_GE(milliseconds_upper_bound + 1, Clock::NtpToMs(seconds, fractions));
 }
 
 }  // namespace webrtc

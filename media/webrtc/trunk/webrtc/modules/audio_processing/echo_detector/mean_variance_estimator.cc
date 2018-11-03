@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/echo_detector/mean_variance_estimator.h"
+#include "webrtc/modules/audio_processing/echo_detector/mean_variance_estimator.h"
 
 #include <math.h>
 
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 namespace {
@@ -26,8 +26,6 @@ void MeanVarianceEstimator::Update(float value) {
   mean_ = (1.f - kAlpha) * mean_ + kAlpha * value;
   variance_ =
       (1.f - kAlpha) * variance_ + kAlpha * (value - mean_) * (value - mean_);
-  RTC_DCHECK(std::isfinite(mean_));
-  RTC_DCHECK(std::isfinite(variance_));
 }
 
 float MeanVarianceEstimator::std_deviation() const {

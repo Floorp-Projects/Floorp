@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_DESKTOP_CAPTURE_MAC_DESKTOP_CONFIGURATION_H_
-#define MODULES_DESKTOP_CAPTURE_MAC_DESKTOP_CONFIGURATION_H_
+#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_MAC_DESKTOP_CONFIGURATION_H_
+#define WEBRTC_MODULES_DESKTOP_CAPTURE_MAC_DESKTOP_CONFIGURATION_H_
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <vector>
 
-#include "typedefs.h"  // NOLINT(build/include)
-#include "modules/desktop_capture/desktop_geometry.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/modules/desktop_capture/desktop_geometry.h"
 
 namespace webrtc {
 
@@ -57,11 +57,9 @@ struct MacDesktopConfiguration {
   MacDesktopConfiguration& operator=(const MacDesktopConfiguration& other);
   MacDesktopConfiguration& operator=(MacDesktopConfiguration&& other);
 
-  // Returns the desktop & display configurations.
-  // If BottomLeftOrigin is used, the output is in Cocoa-style "bottom-up"
+  // Returns the desktop & display configurations in Cocoa-style "bottom-up"
   // (the origin is the bottom-left of the primary monitor, and coordinates
-  // increase as you move up the screen). Otherwise, the configuration will be
-  // converted to follow top-left coordinate system as Windows and X11.
+  // increase as you move up the screen).
   static MacDesktopConfiguration GetCurrent(Origin origin);
 
   // Returns true if the given desktop configuration equals this one.
@@ -87,4 +85,4 @@ struct MacDesktopConfiguration {
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_MAC_DESKTOP_CONFIGURATION_H_
+#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_MAC_DESKTOP_CONFIGURATION_H_

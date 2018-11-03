@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_DECODING_STATE_H_
-#define MODULES_VIDEO_CODING_DECODING_STATE_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_DECODING_STATE_H_
+#define WEBRTC_MODULES_VIDEO_CODING_DECODING_STATE_H_
 
 #include <map>
 #include <set>
 #include <vector>
 
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -87,4 +87,4 @@ class VCMDecodingState {
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_DECODING_STATE_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_DECODING_STATE_H_

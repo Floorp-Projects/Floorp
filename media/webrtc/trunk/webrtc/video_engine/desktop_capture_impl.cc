@@ -8,27 +8,24 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_capture/video_capture_impl.h"
+#include "webrtc/modules/video_capture/video_capture_impl.h"
 
 #include <stdlib.h>
 #include <string>
 
-#include "common_types.h"
-#include "api/video/i420_buffer.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "libyuv.h"  // NOLINT
-#include "modules/include/module_common_types.h"
-#include "modules/video_capture/video_capture_config.h"
-#include "system_wrappers/include/clock.h"
-#include "rtc_base/logging.h"
-#include "rtc_base/refcountedobject.h"
-#include "rtc_base/trace_event.h"
-#include "video_engine/desktop_capture_impl.h"
-#include "modules/desktop_capture/desktop_frame.h"
-#include "modules/desktop_capture/desktop_device_info.h"
-#include "modules/desktop_capture/app_capturer.h"
-#include "modules/desktop_capture/desktop_capture_options.h"
-#include "modules/video_capture/video_capture.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/modules/video_capture/video_capture_config.h"
+#include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/base/trace_event.h"
+#include "webrtc/video_engine/desktop_capture_impl.h"
+#include "webrtc/modules/desktop_capture/desktop_frame.h"
+#include "webrtc/modules/desktop_capture/desktop_device_info.h"
+#include "webrtc/modules/desktop_capture/app_capturer.h"
+#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
+#include "webrtc/modules/video_capture/video_capture.h"
 
 namespace webrtc {
 
@@ -245,6 +242,28 @@ int32_t WindowDeviceInfoImpl::Init() {
   return 0;
 }
 
+int32_t DesktopCaptureImpl::AddRef() const {
+  return ++mRefCount;
+}
+int32_t DesktopCaptureImpl::Release() const {
+  assert(mRefCount > 0);
+  auto count = --mRefCount;
+  if (!count) {
+    WEBRTC_TRACE(webrtc::kTraceStream, webrtc::kTraceVideoCapture, -1,
+                 "DesktopCapture self deleting (desktopCapture=0x%p)", this);
+
+    // Clear any pointers before starting destruction. Otherwise worker-
+    // threads will still have pointers to a partially destructed object.
+    // Example: AudioDeviceBuffer::RequestPlayoutData() can access a
+    // partially deconstructed |_ptrCbAudioTransport| during destruction
+    // if we don't call Terminate here.
+    //-> NG TODO Terminate();
+    delete this;
+    return count;
+  }
+  return mRefCount;
+}
+
 int32_t WindowDeviceInfoImpl::Refresh() {
   desktop_device_info_->Refresh();
   return 0;
@@ -416,13 +435,16 @@ int32_t DesktopCaptureImpl::Init(const char* uniqueId,
 DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id)
   : _id(id),
     _deviceUniqueId(""),
+    _apiCs(*CriticalSectionWrapper::CreateCriticalSection()),
     _requestedCapability(),
+    _callBackCs(*CriticalSectionWrapper::CreateCriticalSection()),
     _rotateFrame(kVideoRotation_0),
     last_capture_time_(rtc::TimeNanos()/rtc::kNumNanosecsPerMillisec),
     // XXX Note that this won't capture drift!
     delta_ntp_internal_ms_(Clock::GetRealTimeClock()->CurrentNtpInMilliseconds() -
                            last_capture_time_),
     time_event_(EventWrapper::Create()),
+    mRefCount(0),
 #if defined(_WIN32)
     capturer_thread_(new rtc::PlatformUIThread(Run, this, "ScreenCaptureThread")),
 #else
@@ -438,7 +460,8 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id)
   _requestedCapability.width = kDefaultWidth;
   _requestedCapability.height = kDefaultHeight;
   _requestedCapability.maxFPS = 30;
-  _requestedCapability.videoType = kI420;
+  _requestedCapability.rawType = kVideoI420;
+  _requestedCapability.codecType = kVideoCodecUnknown;
   memset(_incomingFrameTimesNanos, 0, sizeof(_incomingFrameTimesNanos));
 }
 
@@ -447,20 +470,22 @@ DesktopCaptureImpl::~DesktopCaptureImpl() {
   if (capturer_thread_) {
     capturer_thread_->Stop();
   }
+  delete &_callBackCs;
+  delete &_apiCs;
 }
 
 void DesktopCaptureImpl::RegisterCaptureDataCallback(rtc::VideoSinkInterface<VideoFrame> *dataCallback)
 {
-  rtc::CritScope lock(&_apiCs);
-  rtc::CritScope lock2(&_callBackCs);
+  CriticalSectionScoped cs(&_apiCs);
+  CriticalSectionScoped cs2(&_callBackCs);
   _dataCallBacks.insert(dataCallback);
 }
 
 void DesktopCaptureImpl::DeRegisterCaptureDataCallback(
   rtc::VideoSinkInterface<VideoFrame> *dataCallback)
 {
-  rtc::CritScope lock(&_apiCs);
-  rtc::CritScope lock2(&_callBackCs);
+  CriticalSectionScoped cs(&_apiCs);
+  CriticalSectionScoped cs2(&_callBackCs);
   auto it = _dataCallBacks.find(dataCallback);
   if (it != _dataCallBacks.end()) {
     _dataCallBacks.erase(it);
@@ -477,13 +502,13 @@ int32_t DesktopCaptureImpl::StopCaptureIfAllClientsClose() {
 
 int32_t DesktopCaptureImpl::DeliverCapturedFrame(webrtc::VideoFrame& captureFrame,
                                                  int64_t capture_time) {
-  UpdateFrameCount();  // frame count used for local frame rate callBack.
+  UpdateFrameCount();  // frame count used for local frame rate callback.
 
   // Set the capture time
   if (capture_time != 0) {
-    captureFrame.set_timestamp_us(1000 * (capture_time - delta_ntp_internal_ms_));
+    captureFrame.set_render_time_ms(capture_time - delta_ntp_internal_ms_);
   } else {
-    captureFrame.set_timestamp_us(rtc::TimeMicros());
+    captureFrame.set_render_time_ms(rtc::TimeNanos()/rtc::kNumNanosecsPerMillisec);
   }
 
   if (captureFrame.render_time_ms() == last_capture_time_) {
@@ -505,63 +530,84 @@ int32_t DesktopCaptureImpl::IncomingFrame(uint8_t* videoFrame,
                                           const VideoCaptureCapability& frameInfo,
                                           int64_t captureTime/*=0*/)
 {
+  WEBRTC_TRACE(webrtc::kTraceStream, webrtc::kTraceVideoCapture, _id,
+               "IncomingFrame width %d, height %d", (int) frameInfo.width,
+               (int) frameInfo.height);
+
   int64_t startProcessTime = rtc::TimeNanos();
-  rtc::CritScope cs(&_callBackCs);
+
+  CriticalSectionScoped cs(&_callBackCs);
 
   const int32_t width = frameInfo.width;
   const int32_t height = frameInfo.height;
 
-  // Not encoded, convert to I420.
-  if (frameInfo.videoType != VideoType::kMJPEG &&
-      CalcBufferSize(frameInfo.videoType, width, abs(height)) !=
-          videoFrameLength) {
-    RTC_LOG(LS_ERROR) << "Wrong incoming frame length.";
+  TRACE_EVENT1("webrtc", "VC::IncomingFrame", "capture_time", captureTime);
+
+  if (frameInfo.codecType == kVideoCodecUnknown) {
+    // Not encoded, convert to I420.
+    const VideoType commonVideoType =
+      RawVideoTypeToCommonVideoVideoType(frameInfo.rawType);
+
+    if (frameInfo.rawType != kVideoMJPEG &&
+        CalcBufferSize(commonVideoType, width,
+                       abs(height)) != videoFrameLength) {
+      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
+                   "Wrong incoming frame length.");
+      return -1;
+    }
+
+    int stride_y = width;
+    int stride_uv = (width + 1) / 2;
+    int target_width = width;
+    int target_height = abs(height);
+    // Rotating resolution when for 90/270 degree rotations.
+    if (_rotateFrame == kVideoRotation_90 || _rotateFrame == kVideoRotation_270)  {
+      target_height = width;
+      target_width = abs(height);
+    }
+
+    // Setting absolute height (in case it was negative).
+    // In Windows, the image starts bottom left, instead of top left.
+    // Setting a negative source height, inverts the image (within LibYuv).
+    rtc::scoped_refptr<webrtc::I420Buffer> buffer;
+    buffer = I420Buffer::Create(target_width, target_height, stride_y,
+                                stride_uv, stride_uv);
+    const int conversionResult = ConvertToI420(commonVideoType,
+                                               videoFrame,
+                                               0, 0,  // No cropping
+                                               width, height,
+                                               videoFrameLength,
+                                               _rotateFrame,
+                                               buffer.get());
+    webrtc::VideoFrame captureFrame(buffer, 0, 0, kVideoRotation_0);
+    if (conversionResult < 0) {
+      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
+                   "Failed to convert capture frame from type %d to I420",
+                   frameInfo.rawType);
+      return -1;
+    }
+
+    DeliverCapturedFrame(captureFrame, captureTime);
+  } else {
+    assert(false);
     return -1;
   }
-
-  int stride_y = width;
-  int stride_uv = (width + 1) / 2;
-
-  // Setting absolute height (in case it was negative).
-  // In Windows, the image starts bottom left, instead of top left.
-  // Setting a negative source height, inverts the image (within LibYuv).
-
-  // TODO(nisse): Use a pool?
-  rtc::scoped_refptr<I420Buffer> buffer = I420Buffer::Create(
-      width, abs(height), stride_y, stride_uv, stride_uv);
-
-  const int conversionResult = libyuv::ConvertToI420(
-      videoFrame, videoFrameLength, buffer.get()->MutableDataY(),
-      buffer.get()->StrideY(), buffer.get()->MutableDataU(),
-      buffer.get()->StrideU(), buffer.get()->MutableDataV(),
-      buffer.get()->StrideV(), 0, 0,  // No Cropping
-      width, height, width, height, libyuv::kRotate0,
-      ConvertVideoType(frameInfo.videoType));
-  if (conversionResult != 0) {
-    RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
-                      << static_cast<int>(frameInfo.videoType) << "to I420.";
-    return -1;
-  }
-
-  VideoFrame captureFrame(buffer, 0, rtc::TimeMillis(), kVideoRotation_0);
-  captureFrame.set_ntp_time_ms(captureTime);
-
-  DeliverCapturedFrame(captureFrame, captureTime);
 
   const int64_t processTime =
     (rtc::TimeNanos() - startProcessTime)/rtc::kNumNanosecsPerMillisec;
 
   if (processTime > 10) {
-    RTC_LOG(LS_WARNING) << "Too long processing time of incoming frame: "
-                        << processTime << " ms";
+    WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, _id,
+                 "Too long processing time of Incoming frame: %ums",
+                 (unsigned int) processTime);
   }
 
   return 0;
 }
 
 int32_t DesktopCaptureImpl::SetCaptureRotation(VideoRotation rotation) {
-  rtc::CritScope lock(&_apiCs);
-  rtc::CritScope lock2(&_callBackCs);
+  CriticalSectionScoped cs(&_apiCs);
+  CriticalSectionScoped cs2(&_callBackCs);
   _rotateFrame = rotation;
   return 0;
 }
@@ -667,7 +713,10 @@ void DesktopCaptureImpl::OnCaptureResult(DesktopCapturer::Result result,
   VideoCaptureCapability frameInfo;
   frameInfo.width = frame->size().width();
   frameInfo.height = frame->size().height();
-  frameInfo.videoType = VideoType::kARGB;
+  frameInfo.rawType = kVideoARGB;
+
+  // combine cursor in frame
+  // Latest WebRTC already support it by DesktopFrameWithCursor/DesktopAndCursorComposer.
 
   size_t videoFrameLength = frameInfo.width * frameInfo.height * DesktopFrame::kBytesPerPixel;
   IncomingFrame(videoFrame, videoFrameLength, frameInfo);

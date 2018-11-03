@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_NETEQ_TOOLS_ENCODE_NETEQ_INPUT_H_
-#define MODULES_AUDIO_CODING_NETEQ_TOOLS_ENCODE_NETEQ_INPUT_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_ENCODE_NETEQ_INPUT_H_
+#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_ENCODE_NETEQ_INPUT_H_
 
 #include <memory>
 
-#include "api/audio_codecs/audio_encoder.h"
-#include "modules/audio_coding/neteq/tools/neteq_input.h"
-#include "modules/include/module_common_types.h"
+#include "webrtc/modules/audio_coding/codecs/audio_encoder.h"
+#include "webrtc/modules/audio_coding/neteq/tools/neteq_input.h"
+#include "webrtc/modules/include/module_common_types.h"
 
 namespace webrtc {
 namespace test {
@@ -68,4 +68,4 @@ class EncodeNetEqInput : public NetEqInput {
 
 }  // namespace test
 }  // namespace webrtc
-#endif  // MODULES_AUDIO_CODING_NETEQ_TOOLS_ENCODE_NETEQ_INPUT_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_ENCODE_NETEQ_INPUT_H_

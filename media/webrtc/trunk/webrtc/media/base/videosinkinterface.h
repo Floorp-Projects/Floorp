@@ -8,10 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MEDIA_BASE_VIDEOSINKINTERFACE_H_
-#define MEDIA_BASE_VIDEOSINKINTERFACE_H_
+#ifndef WEBRTC_MEDIA_BASE_VIDEOSINKINTERFACE_H_
+#define WEBRTC_MEDIA_BASE_VIDEOSINKINTERFACE_H_
 
-#include <rtc_base/checks.h>
 // TODO(nisse): Consider moving this interface (and possibly
 // VideoSourceInterface too) from media/base to common_video, to
 // reduce dependency cycles.
@@ -23,12 +22,8 @@ class VideoSinkInterface {
   virtual ~VideoSinkInterface() {}
 
   virtual void OnFrame(const VideoFrameT& frame) = 0;
-
-  // Should be called by the source when it discards the frame due to rate
-  // limiting.
-  virtual void OnDiscardedFrame() {}
 };
 
 }  // namespace rtc
 
-#endif  // MEDIA_BASE_VIDEOSINKINTERFACE_H_
+#endif  // WEBRTC_MEDIA_BASE_VIDEOSINKINTERFACE_H_

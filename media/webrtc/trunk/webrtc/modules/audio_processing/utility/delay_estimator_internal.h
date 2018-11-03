@@ -10,11 +10,11 @@
 
 // Header file including the delay estimator handle used for testing.
 
-#ifndef MODULES_AUDIO_PROCESSING_UTILITY_DELAY_ESTIMATOR_INTERNAL_H_
-#define MODULES_AUDIO_PROCESSING_UTILITY_DELAY_ESTIMATOR_INTERNAL_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_UTILITY_DELAY_ESTIMATOR_INTERNAL_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_UTILITY_DELAY_ESTIMATOR_INTERNAL_H_
 
-#include "modules/audio_processing/utility/delay_estimator.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/audio_processing/utility/delay_estimator.h"
+#include "webrtc/typedefs.h"
 
 typedef union {
   float float_;
@@ -45,4 +45,4 @@ typedef struct {
   BinaryDelayEstimator* binary_handle;
 } DelayEstimator;
 
-#endif  // MODULES_AUDIO_PROCESSING_UTILITY_DELAY_ESTIMATOR_INTERNAL_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_UTILITY_DELAY_ESTIMATOR_INTERNAL_H_

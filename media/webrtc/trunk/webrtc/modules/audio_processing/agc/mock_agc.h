@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_AGC_MOCK_AGC_H_
-#define MODULES_AUDIO_PROCESSING_AGC_MOCK_AGC_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AGC_MOCK_AGC_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_AGC_MOCK_AGC_H_
 
-#include "modules/audio_processing/agc/agc.h"
+#include "webrtc/modules/audio_processing/agc/agc.h"
 
-#include "modules/include/module_common_types.h"
-#include "test/gmock.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/test/gmock.h"
 
 namespace webrtc {
 
@@ -33,4 +33,4 @@ class MockAgc : public Agc {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC_MOCK_AGC_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_AGC_MOCK_AGC_H_

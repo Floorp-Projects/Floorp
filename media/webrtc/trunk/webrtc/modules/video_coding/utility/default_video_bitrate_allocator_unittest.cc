@@ -11,8 +11,8 @@
 #include <limits>
 #include <memory>
 
-#include "modules/video_coding/utility/default_video_bitrate_allocator.h"
-#include "test/gtest.h"
+#include "webrtc/modules/video_coding/utility/default_video_bitrate_allocator.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 namespace {

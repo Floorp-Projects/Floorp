@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_CODECS_ISAC_AUDIO_DECODER_ISAC_T_IMPL_H_
-#define MODULES_AUDIO_CODING_CODECS_ISAC_AUDIO_DECODER_ISAC_T_IMPL_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_AUDIO_DECODER_ISAC_T_IMPL_H_
+#define WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_AUDIO_DECODER_ISAC_T_IMPL_H_
 
-#include "modules/audio_coding/codecs/isac/main/include/audio_decoder_isac.h"
+#include "webrtc/modules/audio_coding/codecs/isac/main/include/audio_decoder_isac.h"
 
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 
@@ -106,4 +106,4 @@ size_t AudioDecoderIsacT<T>::Channels() const {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_CODING_CODECS_ISAC_AUDIO_DECODER_ISAC_T_IMPL_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_AUDIO_DECODER_ISAC_T_IMPL_H_

@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_RTP_RTCP_INCLUDE_ULPFEC_RECEIVER_H_
-#define MODULES_RTP_RTCP_INCLUDE_ULPFEC_RECEIVER_H_
+#ifndef WEBRTC_MODULES_RTP_RTCP_INCLUDE_ULPFEC_RECEIVER_H_
+#define WEBRTC_MODULES_RTP_RTCP_INCLUDE_ULPFEC_RECEIVER_H_
 
-#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -31,8 +31,7 @@ struct FecPacketCounter {
 
 class UlpfecReceiver {
  public:
-  static UlpfecReceiver* Create(uint32_t ssrc,
-                                RecoveredPacketReceiver* callback);
+  static UlpfecReceiver* Create(RtpData* callback);
 
   virtual ~UlpfecReceiver() {}
 
@@ -54,4 +53,4 @@ class UlpfecReceiver {
   virtual FecPacketCounter GetPacketCounter() const = 0;
 };
 }  // namespace webrtc
-#endif  // MODULES_RTP_RTCP_INCLUDE_ULPFEC_RECEIVER_H_
+#endif  // WEBRTC_MODULES_RTP_RTCP_INCLUDE_ULPFEC_RECEIVER_H_

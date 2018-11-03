@@ -14,13 +14,12 @@
 #include <string>
 #include <vector>
 
-#include "modules/audio_coding/neteq/tools/resample_input_audio_file.h"
-#include "modules/audio_processing/aec_dump/aec_dump_factory.h"
-#include "modules/audio_processing/test/debug_dump_replayer.h"
-#include "modules/audio_processing/test/test_utils.h"
-#include "rtc_base/task_queue.h"
-#include "test/gtest.h"
-#include "test/testsupport/fileutils.h"
+#include "webrtc/modules/audio_coding/neteq/tools/resample_input_audio_file.h"
+#include "webrtc/modules/audio_processing/test/debug_dump_replayer.h"
+#include "webrtc/modules/audio_processing/test/test_utils.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/test/testsupport/fileutils.h"
+
 
 namespace webrtc {
 namespace test {
@@ -40,20 +39,15 @@ void MaybeResetBuffer(std::unique_ptr<ChannelBuffer<float>>* buffer,
 class DebugDumpGenerator {
  public:
   DebugDumpGenerator(const std::string& input_file_name,
-                     int input_rate_hz,
+                     int input_file_rate_hz,
                      int input_channels,
                      const std::string& reverse_file_name,
-                     int reverse_rate_hz,
+                     int reverse_file_rate_hz,
                      int reverse_channels,
                      const Config& config,
-                     const std::string& dump_file_name,
-                     bool enable_aec3);
+                     const std::string& dump_file_name);
 
   // Constructor that uses default input files.
-  explicit DebugDumpGenerator(const Config& config,
-                              const AudioProcessing::Config& apm_config,
-                              bool enable_aec3);
-
   explicit DebugDumpGenerator(const Config& config,
                               const AudioProcessing::Config& apm_config);
 
@@ -110,7 +104,6 @@ class DebugDumpGenerator {
   std::unique_ptr<ChannelBuffer<float>> reverse_;
   std::unique_ptr<ChannelBuffer<float>> output_;
 
-  rtc::TaskQueue worker_queue_;
   std::unique_ptr<AudioProcessing> apm_;
 
   const std::string dump_file_name_;
@@ -123,8 +116,7 @@ DebugDumpGenerator::DebugDumpGenerator(const std::string& input_file_name,
                                        int reverse_rate_hz,
                                        int reverse_channels,
                                        const Config& config,
-                                       const std::string& dump_file_name,
-                                       bool enable_aec3)
+                                       const std::string& dump_file_name)
     : input_config_(input_rate_hz, input_channels),
       reverse_config_(reverse_rate_hz, reverse_channels),
       output_config_(input_rate_hz, input_channels),
@@ -138,20 +130,13 @@ DebugDumpGenerator::DebugDumpGenerator(const std::string& input_file_name,
                                         reverse_config_.num_channels())),
       output_(new ChannelBuffer<float>(output_config_.num_frames(),
                                        output_config_.num_channels())),
-      worker_queue_("debug_dump_generator_worker_queue"),
-      apm_(AudioProcessing::Create(
-          config,
-          nullptr,
-          (enable_aec3 ? std::unique_ptr<EchoControlFactory>(
-                             new EchoCanceller3Factory())
-                       : nullptr),
-          nullptr)),
-      dump_file_name_(dump_file_name) {}
+      apm_(AudioProcessing::Create(config)),
+      dump_file_name_(dump_file_name) {
+}
 
 DebugDumpGenerator::DebugDumpGenerator(
     const Config& config,
-    const AudioProcessing::Config& apm_config,
-    bool enable_aec3)
+    const AudioProcessing::Config& apm_config)
     : DebugDumpGenerator(ResourcePath("near32_stereo", "pcm"),
                          32000,
                          2,
@@ -159,15 +144,7 @@ DebugDumpGenerator::DebugDumpGenerator(
                          32000,
                          2,
                          config,
-                         TempFilename(OutputPath(), "debug_aec"),
-                         enable_aec3) {
-  apm_->ApplyConfig(apm_config);
-}
-
-DebugDumpGenerator::DebugDumpGenerator(
-    const Config& config,
-    const AudioProcessing::Config& apm_config)
-    : DebugDumpGenerator(config, apm_config, false) {
+                         TempFilename(OutputPath(), "debug_aec")) {
   apm_->ApplyConfig(apm_config);
 }
 
@@ -210,8 +187,7 @@ void DebugDumpGenerator::SetOutputChannels(int channels) {
 }
 
 void DebugDumpGenerator::StartRecording() {
-  apm_->AttachAecDump(
-      AecDumpFactory::Create(dump_file_name_.c_str(), -1, &worker_queue_));
+  apm_->StartDebugRecording(dump_file_name_.c_str(), -1);
 }
 
 void DebugDumpGenerator::Process(size_t num_blocks) {
@@ -235,7 +211,7 @@ void DebugDumpGenerator::Process(size_t num_blocks) {
 }
 
 void DebugDumpGenerator::StopRecording() {
-  apm_->DetachAecDump();
+  apm_->StopDebugRecording();
 }
 
 void DebugDumpGenerator::ReadAndDeinterleave(ResampleInputAudioFile* audio,
@@ -265,7 +241,7 @@ class DebugDumpTest : public ::testing::Test {
   // VerifyDebugDump replays a debug dump using APM and verifies that the result
   // is bit-exact-identical to the output channel in the dump. This is only
   // guaranteed if the debug dump is started on the first frame.
-  void VerifyDebugDump(const std::string& in_filename);
+  void VerifyDebugDump(const std::string& dump_file_name);
 
  private:
   DebugDumpReplayer debug_dump_replayer_;
@@ -405,8 +381,8 @@ TEST_F(DebugDumpTest, VerifyCombinedExperimentalStringInclusive) {
   config.Set<RefinedAdaptiveFilter>(new RefinedAdaptiveFilter(true));
   // Arbitrarily set clipping gain to 17, which will never be the default.
   config.Set<ExperimentalAgc>(new ExperimentalAgc(true, 0, 17));
-  bool enable_aec3 = true;
-  DebugDumpGenerator generator(config, apm_config, enable_aec3);
+  apm_config.echo_canceller3.enabled = true;
+  DebugDumpGenerator generator(config, apm_config);
   generator.StartRecording();
   generator.Process(100);
   generator.StopRecording();
@@ -423,7 +399,7 @@ TEST_F(DebugDumpTest, VerifyCombinedExperimentalStringInclusive) {
       ASSERT_TRUE(msg->has_experiments_description());
       EXPECT_PRED_FORMAT2(testing::IsSubstring, "RefinedAdaptiveFilter",
                           msg->experiments_description().c_str());
-      EXPECT_PRED_FORMAT2(testing::IsSubstring, "EchoController",
+      EXPECT_PRED_FORMAT2(testing::IsSubstring, "EchoCanceller3",
                           msg->experiments_description().c_str());
       EXPECT_PRED_FORMAT2(testing::IsSubstring, "AgcClippingLevelExperiment",
                           msg->experiments_description().c_str());
@@ -462,7 +438,8 @@ TEST_F(DebugDumpTest, VerifyCombinedExperimentalStringExclusive) {
 TEST_F(DebugDumpTest, VerifyAec3ExperimentalString) {
   Config config;
   AudioProcessing::Config apm_config;
-  DebugDumpGenerator generator(config, apm_config, true);
+  apm_config.echo_canceller3.enabled = true;
+  DebugDumpGenerator generator(config, apm_config);
   generator.StartRecording();
   generator.Process(100);
   generator.StopRecording();
@@ -477,7 +454,7 @@ TEST_F(DebugDumpTest, VerifyAec3ExperimentalString) {
     if (event->type() == audioproc::Event::CONFIG) {
       const audioproc::Config* msg = &event->config();
       ASSERT_TRUE(msg->has_experiments_description());
-      EXPECT_PRED_FORMAT2(testing::IsSubstring, "EchoController",
+      EXPECT_PRED_FORMAT2(testing::IsSubstring, "EchoCanceller3",
                           msg->experiments_description().c_str());
     }
   }

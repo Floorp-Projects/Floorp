@@ -7,17 +7,15 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef TEST_VCM_CAPTURER_H_
-#define TEST_VCM_CAPTURER_H_
+#ifndef WEBRTC_TEST_VCM_CAPTURER_H_
+#define WEBRTC_TEST_VCM_CAPTURER_H_
 
-#include <memory>
-
-#include "common_types.h"  // NOLINT(build/include)
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "modules/video_capture/video_capture.h"
-#include "rtc_base/criticalsection.h"
-#include "rtc_base/scoped_ref_ptr.h"
-#include "test/video_capturer.h"
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/common_types.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/modules/video_capture/video_capture.h"
+#include "webrtc/test/video_capturer.h"
 
 namespace webrtc {
 namespace test {
@@ -26,10 +24,7 @@ class VcmCapturer
     : public VideoCapturer,
       public rtc::VideoSinkInterface<VideoFrame> {
  public:
-  static VcmCapturer* Create(size_t width,
-                             size_t height,
-                             size_t target_fps,
-                             size_t capture_device_index);
+  static VcmCapturer* Create(size_t width, size_t height, size_t target_fps);
   virtual ~VcmCapturer();
 
   void Start() override;
@@ -42,15 +37,12 @@ class VcmCapturer
 
  private:
   VcmCapturer();
-  bool Init(size_t width,
-            size_t height,
-            size_t target_fps,
-            size_t capture_device_index);
+  bool Init(size_t width, size_t height, size_t target_fps);
   void Destroy();
 
   rtc::CriticalSection crit_;
-  bool started_ RTC_GUARDED_BY(crit_);
-  rtc::VideoSinkInterface<VideoFrame>* sink_ RTC_GUARDED_BY(crit_);
+  bool started_ GUARDED_BY(crit_);
+  rtc::VideoSinkInterface<VideoFrame>* sink_ GUARDED_BY(crit_);
   rtc::scoped_refptr<VideoCaptureModule> vcm_;
   VideoCaptureCapability capability_;
 };
@@ -58,4 +50,4 @@ class VcmCapturer
 }  // test
 }  // webrtc
 
-#endif  // TEST_VCM_CAPTURER_H_
+#endif  // WEBRTC_TEST_VCM_CAPTURER_H_

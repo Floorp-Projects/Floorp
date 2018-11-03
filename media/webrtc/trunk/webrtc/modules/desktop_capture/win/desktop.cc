@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/win/desktop.h"
+#include "webrtc/modules/desktop_capture/win/desktop.h"
 
 #include <vector>
 
-#include "rtc_base/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
 
@@ -22,8 +22,8 @@ Desktop::Desktop(HDESK desktop, bool own) : desktop_(desktop), own_(own) {
 Desktop::~Desktop() {
   if (own_ && desktop_ != NULL) {
     if (!::CloseDesktop(desktop_)) {
-      RTC_LOG(LS_ERROR) << "Failed to close the owned desktop handle: "
-                        << GetLastError();
+      LOG(LS_ERROR) << "Failed to close the owned desktop handle: "
+                    << GetLastError();
     }
   }
 }
@@ -41,7 +41,7 @@ bool Desktop::GetName(std::wstring* desktop_name_out) const {
   std::vector<WCHAR> buffer(length);
   if (!GetUserObjectInformationW(desktop_, UOI_NAME, &buffer[0],
                                  length * sizeof(WCHAR), &length)) {
-    RTC_LOG(LS_ERROR) << "Failed to query the desktop name: " << GetLastError();
+    LOG(LS_ERROR) << "Failed to query the desktop name: " << GetLastError();
     return false;
   }
 
@@ -63,8 +63,8 @@ bool Desktop::IsSame(const Desktop& other) const {
 
 bool Desktop::SetThreadDesktop() const {
   if (!::SetThreadDesktop(desktop_)) {
-    RTC_LOG(LS_ERROR) << "Failed to assign the desktop to the current thread: "
-                      << GetLastError();
+    LOG(LS_ERROR) << "Failed to assign the desktop to the current thread: "
+                  << GetLastError();
     return false;
   }
 
@@ -78,8 +78,8 @@ Desktop* Desktop::GetDesktop(const WCHAR* desktop_name) {
       DESKTOP_SWITCHDESKTOP | GENERIC_WRITE;
   HDESK desktop = OpenDesktop(desktop_name, 0, FALSE, desired_access);
   if (desktop == NULL) {
-    RTC_LOG(LS_ERROR) << "Failed to open the desktop '" << desktop_name
-                      << "': " << GetLastError();
+    LOG(LS_ERROR) << "Failed to open the desktop '" << desktop_name << "': "
+                  << GetLastError();
     return NULL;
   }
 
@@ -98,10 +98,9 @@ Desktop* Desktop::GetInputDesktop() {
 Desktop* Desktop::GetThreadDesktop() {
   HDESK desktop = ::GetThreadDesktop(GetCurrentThreadId());
   if (desktop == NULL) {
-    RTC_LOG(LS_ERROR)
-        << "Failed to retrieve the handle of the desktop assigned to "
-           "the current thread: "
-        << GetLastError();
+    LOG(LS_ERROR) << "Failed to retrieve the handle of the desktop assigned to "
+                     "the current thread: "
+                  << GetLastError();
     return NULL;
   }
 

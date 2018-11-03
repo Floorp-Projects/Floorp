@@ -7,7 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "test/null_transport.h"
+#include "webrtc/test/null_transport.h"
 
 namespace webrtc {
 namespace test {

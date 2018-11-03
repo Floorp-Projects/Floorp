@@ -10,10 +10,10 @@
 
 #include <memory>
 
-#include "modules/audio_coding/neteq/tick_timer.h"
+#include "webrtc/modules/audio_coding/neteq/tick_timer.h"
 
-#include "test/gmock.h"
-#include "test/gtest.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 

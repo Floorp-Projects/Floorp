@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef TEST_MOCK_TRANSPORT_H_
-#define TEST_MOCK_TRANSPORT_H_
+#ifndef WEBRTC_TEST_MOCK_TRANSPORT_H_
+#define WEBRTC_TEST_MOCK_TRANSPORT_H_
 
-#include "api/call/transport.h"
-#include "test/gmock.h"
+#include "webrtc/api/call/transport.h"
+#include "webrtc/test/gmock.h"
 
 namespace webrtc {
 
@@ -25,4 +25,4 @@ class MockTransport : public Transport {
   MOCK_METHOD2(SendRtcp, bool(const uint8_t* data, size_t len));
 };
 }  // namespace webrtc
-#endif  // TEST_MOCK_TRANSPORT_H_
+#endif  // WEBRTC_TEST_MOCK_TRANSPORT_H_

@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "media/base/videobroadcaster.h"
+#include "webrtc/media/base/videobroadcaster.h"
 
 #include <limits>
 
-#include "api/video/i420_buffer.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
+#include "webrtc/api/video/i420_buffer.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
 
 namespace rtc {
 
@@ -60,7 +60,7 @@ void VideoBroadcaster::OnFrame(const webrtc::VideoFrame& frame) {
       // When rotation_applied is set to true, one or a few frames may get here
       // with rotation still pending. Protect sinks that don't expect any
       // pending rotation.
-      RTC_LOG(LS_VERBOSE) << "Discarding frame with unexpected rotation.";
+      LOG(LS_VERBOSE) << "Discarding frame with unexpected rotation.";
       continue;
     }
     if (sink_pair.wants.black_frames) {
@@ -70,12 +70,6 @@ void VideoBroadcaster::OnFrame(const webrtc::VideoFrame& frame) {
     } else {
       sink_pair.sink->OnFrame(frame);
     }
-  }
-}
-
-void VideoBroadcaster::OnDiscardedFrame() {
-  for (auto& sink_pair : sink_pairs()) {
-    sink_pair.sink->OnDiscardedFrame();
   }
 }
 
@@ -90,27 +84,23 @@ void VideoBroadcaster::UpdateWants() {
       wants.rotation_applied = true;
     }
     // wants.max_pixel_count == MIN(sink.wants.max_pixel_count)
-    if (sink.wants.max_pixel_count < wants.max_pixel_count) {
+    if (sink.wants.max_pixel_count &&
+        (!wants.max_pixel_count ||
+         (*sink.wants.max_pixel_count < *wants.max_pixel_count))) {
       wants.max_pixel_count = sink.wants.max_pixel_count;
     }
-    // Select the minimum requested target_pixel_count, if any, of all sinks so
-    // that we don't over utilize the resources for any one.
-    // TODO(sprang): Consider using the median instead, since the limit can be
-    // expressed by max_pixel_count.
-    if (sink.wants.target_pixel_count &&
-        (!wants.target_pixel_count ||
-         (*sink.wants.target_pixel_count < *wants.target_pixel_count))) {
-      wants.target_pixel_count = sink.wants.target_pixel_count;
-    }
-    // Select the minimum for the requested max framerates.
-    if (sink.wants.max_framerate_fps < wants.max_framerate_fps) {
-      wants.max_framerate_fps = sink.wants.max_framerate_fps;
+    // wants.max_pixel_count_step_up == MIN(sink.wants.max_pixel_count_step_up)
+    if (sink.wants.max_pixel_count_step_up &&
+        (!wants.max_pixel_count_step_up ||
+         (*sink.wants.max_pixel_count_step_up <
+          *wants.max_pixel_count_step_up))) {
+      wants.max_pixel_count_step_up = sink.wants.max_pixel_count_step_up;
     }
   }
 
-  if (wants.target_pixel_count &&
-      *wants.target_pixel_count >= wants.max_pixel_count) {
-    wants.target_pixel_count.emplace(wants.max_pixel_count);
+  if (wants.max_pixel_count && wants.max_pixel_count_step_up &&
+      *wants.max_pixel_count_step_up >= *wants.max_pixel_count) {
+    wants.max_pixel_count_step_up = Optional<int>();
   }
   current_wants_ = wants;
 }

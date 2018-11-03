@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_TEST_AUDIO_BUFFER_TOOLS_H_
-#define MODULES_AUDIO_PROCESSING_TEST_AUDIO_BUFFER_TOOLS_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_TEST_AUDIO_BUFFER_TOOLS_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_TEST_AUDIO_BUFFER_TOOLS_H_
 
 #include <vector>
-#include "api/array_view.h"
-#include "modules/audio_processing/audio_buffer.h"
-#include "modules/audio_processing/include/audio_processing.h"
+#include "webrtc/base/array_view.h"
+#include "webrtc/modules/audio_processing/audio_buffer.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
 
 namespace webrtc {
 namespace test {
@@ -32,4 +32,4 @@ void ExtractVectorFromAudioBuffer(const StreamConfig& stream_config,
 }  // namespace test
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_TEST_AUDIO_BUFFER_TOOLS_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_TEST_AUDIO_BUFFER_TOOLS_H_

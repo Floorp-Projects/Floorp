@@ -8,14 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef SYSTEM_WRAPPERS_INCLUDE_CLOCK_H_
-#define SYSTEM_WRAPPERS_INCLUDE_CLOCK_H_
+#ifndef WEBRTC_SYSTEM_WRAPPERS_INCLUDE_CLOCK_H_
+#define WEBRTC_SYSTEM_WRAPPERS_INCLUDE_CLOCK_H_
 
 #include <memory>
 
-#include "system_wrappers/include/ntp_time.h"
-#include "system_wrappers/include/rw_lock_wrapper.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/system_wrappers/include/rw_lock_wrapper.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -38,16 +37,14 @@ class Clock {
   // source is fixed for this clock.
   virtual int64_t TimeInMicroseconds() const = 0;
 
-  // Retrieve an NTP absolute timestamp.
-  virtual NtpTime CurrentNtpTime() const = 0;
+  // Retrieve an NTP absolute timestamp in seconds and fractions of a second.
+  virtual void CurrentNtp(uint32_t& seconds, uint32_t& fractions) const = 0;
 
   // Retrieve an NTP absolute timestamp in milliseconds.
   virtual int64_t CurrentNtpInMilliseconds() const = 0;
 
   // Converts an NTP timestamp to a millisecond timestamp.
-  static int64_t NtpToMs(uint32_t seconds, uint32_t fractions) {
-    return NtpTime(seconds, fractions).ToMs();
-  }
+  static int64_t NtpToMs(uint32_t seconds, uint32_t fractions);
 
   // Returns an instance of the real-time system clock implementation.
   static Clock* GetRealTimeClock();
@@ -67,8 +64,8 @@ class SimulatedClock : public Clock {
   // source is fixed for this clock.
   int64_t TimeInMicroseconds() const override;
 
-  // Retrieve an NTP absolute timestamp.
-  NtpTime CurrentNtpTime() const override;
+  // Retrieve an NTP absolute timestamp in milliseconds.
+  void CurrentNtp(uint32_t& seconds, uint32_t& fractions) const override;
 
   // Converts an NTP timestamp to a millisecond timestamp.
   int64_t CurrentNtpInMilliseconds() const override;
@@ -85,4 +82,4 @@ class SimulatedClock : public Clock {
 
 };  // namespace webrtc
 
-#endif  // SYSTEM_WRAPPERS_INCLUDE_CLOCK_H_
+#endif  // WEBRTC_SYSTEM_WRAPPERS_INCLUDE_CLOCK_H_

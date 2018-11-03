@@ -8,14 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef SDK_ANDROID_SRC_JNI_ANDROIDMEDIADECODER_JNI_H_
-#define SDK_ANDROID_SRC_JNI_ANDROIDMEDIADECODER_JNI_H_
+#ifndef WEBRTC_SDK_ANDROID_SRC_JNI_ANDROIDMEDIADECODER_JNI_H_
+#define WEBRTC_SDK_ANDROID_SRC_JNI_ANDROIDMEDIADECODER_JNI_H_
 
-#include "sdk/android/src/jni/jni_helpers.h"
-#include "media/engine/webrtcvideodecoderfactory.h"
+#include "webrtc/sdk/android/src/jni/jni_helpers.h"
+#include "webrtc/media/engine/webrtcvideodecoderfactory.h"
 
-namespace webrtc {
-namespace jni {
+namespace webrtc_jni {
 
 // Implementation of Android MediaCodec based decoder factory.
 class MediaCodecVideoDecoderFactory
@@ -27,16 +26,16 @@ class MediaCodecVideoDecoderFactory
   void SetEGLContext(JNIEnv* jni, jobject render_egl_context);
 
   // WebRtcVideoDecoderFactory implementation.
-  VideoDecoder* CreateVideoDecoder(VideoCodecType type) override;
+  webrtc::VideoDecoder* CreateVideoDecoder(webrtc::VideoCodecType type)
+      override;
 
-  void DestroyVideoDecoder(VideoDecoder* decoder) override;
+  void DestroyVideoDecoder(webrtc::VideoDecoder* decoder) override;
 
  private:
   jobject egl_context_;
-  std::vector<VideoCodecType> supported_codec_types_;
+  std::vector<webrtc::VideoCodecType> supported_codec_types_;
 };
 
-}  // namespace jni
-}  // namespace webrtc
+}  // namespace webrtc_jni
 
-#endif  // SDK_ANDROID_SRC_JNI_ANDROIDMEDIADECODER_JNI_H_
+#endif  // WEBRTC_SDK_ANDROID_SRC_JNI_ANDROIDMEDIADECODER_JNI_H_

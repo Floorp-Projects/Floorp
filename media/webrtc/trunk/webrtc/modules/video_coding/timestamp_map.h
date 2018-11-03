@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_TIMESTAMP_MAP_H_
-#define MODULES_VIDEO_CODING_TIMESTAMP_MAP_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_TIMESTAMP_MAP_H_
+#define WEBRTC_MODULES_VIDEO_CODING_TIMESTAMP_MAP_H_
 
 #include <memory>
 
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -45,4 +45,4 @@ class VCMTimestampMap {
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_TIMESTAMP_MAP_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_TIMESTAMP_MAP_H_

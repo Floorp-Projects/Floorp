@@ -8,41 +8,41 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video/transport_adapter.h"
+#include "webrtc/video/transport_adapter.h"
 
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 namespace internal {
 
 TransportAdapter::TransportAdapter(Transport* transport)
-    : transport_(transport), enabled_(false) {
+    : transport_(transport), enabled_(0) {
   RTC_DCHECK(nullptr != transport);
 }
 
 bool TransportAdapter::SendRtp(const uint8_t* packet,
                                size_t length,
                                const PacketOptions& options) {
-  if (!enabled_.load())
+  if (enabled_.Value() == 0)
     return false;
 
   return transport_->SendRtp(packet, length, options);
 }
 
 bool TransportAdapter::SendRtcp(const uint8_t* packet, size_t length) {
-  if (!enabled_.load())
+  if (enabled_.Value() == 0)
     return false;
 
   return transport_->SendRtcp(packet, length);
 }
 
 void TransportAdapter::Enable() {
-  enabled_.store(true);
+  // If this exchange fails it means enabled_ was already true, no need to
+  // check result and iterate.
+  enabled_.CompareExchange(1, 0);
 }
 
-void TransportAdapter::Disable() {
-  enabled_.store(false);
-}
+void TransportAdapter::Disable() { enabled_.CompareExchange(0, 1); }
 
 }  // namespace internal
 }  // namespace webrtc

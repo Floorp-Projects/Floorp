@@ -10,10 +10,9 @@
 
 #include <memory>
 
-#include "modules/desktop_capture/cropped_desktop_frame.h"
+#include "webrtc/modules/desktop_capture/cropped_desktop_frame.h"
 
-#include "rtc_base/checks.h"
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/constructormagic.h"
 
 namespace webrtc {
 
@@ -24,7 +23,7 @@ class CroppedDesktopFrame : public DesktopFrame {
                       const DesktopRect& rect);
 
  private:
-  const std::unique_ptr<DesktopFrame> frame_;
+  std::unique_ptr<DesktopFrame> frame_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(CroppedDesktopFrame);
 };
@@ -32,15 +31,8 @@ class CroppedDesktopFrame : public DesktopFrame {
 std::unique_ptr<DesktopFrame> CreateCroppedDesktopFrame(
     std::unique_ptr<DesktopFrame> frame,
     const DesktopRect& rect) {
-  RTC_DCHECK(frame);
-
-  if (!DesktopRect::MakeSize(frame->size()).ContainsRect(rect)) {
+  if (!DesktopRect::MakeSize(frame->size()).ContainsRect(rect))
     return nullptr;
-  }
-
-  if (frame->size().equals(rect.size())) {
-    return frame;
-  }
 
   return std::unique_ptr<DesktopFrame>(
       new CroppedDesktopFrame(std::move(frame), rect));
@@ -51,12 +43,8 @@ CroppedDesktopFrame::CroppedDesktopFrame(std::unique_ptr<DesktopFrame> frame,
     : DesktopFrame(rect.size(),
                    frame->stride(),
                    frame->GetFrameDataAtPos(rect.top_left()),
-                   frame->shared_memory()),
-      frame_(std::move(frame)) {
-  MoveFrameInfoFrom(frame_.get());
-  set_top_left(frame_->top_left().add(rect.top_left()));
-  mutable_updated_region()->IntersectWith(rect);
-  mutable_updated_region()->Translate(-rect.left(), -rect.top());
+                   frame->shared_memory()) {
+  frame_ = std::move(frame);
 }
 
 }  // namespace webrtc

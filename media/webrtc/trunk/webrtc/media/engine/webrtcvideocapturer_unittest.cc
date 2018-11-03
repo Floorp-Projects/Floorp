@@ -15,19 +15,19 @@
 #include <memory>
 #include <vector>
 
-#include "media/base/testutils.h"
-#include "media/base/videocommon.h"
-#include "media/engine/fakewebrtcvcmfactory.h"
-#include "media/engine/webrtcvideocapturer.h"
-#include "rtc_base/gunit.h"
-#include "rtc_base/logging.h"
-#include "rtc_base/stringutils.h"
-#include "rtc_base/thread.h"
+#include "webrtc/base/gunit.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/base/stringutils.h"
+#include "webrtc/base/thread.h"
+#include "webrtc/media/base/testutils.h"
+#include "webrtc/media/base/videocommon.h"
+#include "webrtc/media/engine/fakewebrtcvcmfactory.h"
+#include "webrtc/media/engine/webrtcvideocapturer.h"
 
 using cricket::VideoFormat;
 
-static const char kTestDeviceName[] = "JuberTech FakeCam Q123";
-static const char kTestDeviceId[] = "foo://bar/baz";
+static const std::string kTestDeviceName = "JuberTech FakeCam Q123";
+static const std::string kTestDeviceId = "foo://bar/baz";
 const VideoFormat kDefaultVideoFormat =
     VideoFormat(640, 400, VideoFormat::FpsToInterval(30), cricket::FOURCC_ANY);
 
@@ -42,7 +42,7 @@ class WebRtcVideoCapturerTest : public testing::Test {
     vga.width = 640;
     vga.height = 480;
     vga.maxFPS = 30;
-    vga.videoType = webrtc::VideoType::kI420;
+    vga.rawType = webrtc::kVideoI420;
     factory_->device_info.AddCapability(kTestDeviceId, vga);
   }
 
@@ -75,7 +75,8 @@ TEST_F(WebRtcVideoCapturerTest, TestInit) {
 }
 
 TEST_F(WebRtcVideoCapturerTest, TestInitVcm) {
-  EXPECT_TRUE(capturer_->Init(factory_->Create(kTestDeviceId)));
+  EXPECT_TRUE(capturer_->Init(factory_->Create(
+      reinterpret_cast<const char*>(kTestDeviceId.c_str()))));
 }
 
 TEST_F(WebRtcVideoCapturerTest, TestCapture) {
@@ -100,7 +101,8 @@ TEST_F(WebRtcVideoCapturerTest, TestCapture) {
 }
 
 TEST_F(WebRtcVideoCapturerTest, TestCaptureVcm) {
-  EXPECT_TRUE(capturer_->Init(factory_->Create(kTestDeviceId)));
+  EXPECT_TRUE(capturer_->Init(factory_->Create(
+      reinterpret_cast<const char*>(kTestDeviceId.c_str()))));
   cricket::VideoCapturerListener listener(capturer_.get());
   EXPECT_TRUE(capturer_->GetSupportedFormats()->empty());
   VideoFormat format;

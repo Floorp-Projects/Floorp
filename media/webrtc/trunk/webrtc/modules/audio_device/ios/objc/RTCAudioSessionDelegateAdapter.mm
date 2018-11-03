@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#import "modules/audio_device/ios/objc/RTCAudioSessionDelegateAdapter.h"
+#import "webrtc/modules/audio_device/ios/objc/RTCAudioSessionDelegateAdapter.h"
 
-#include "modules/audio_device/ios/audio_session_observer.h"
+#include "webrtc/modules/audio_device/ios/audio_session_observer.h"
 
 #import "WebRTC/RTCLogging.h"
 
@@ -64,10 +64,10 @@
   }
 }
 
-- (void)audioSessionMediaServerTerminated:(RTCAudioSession *)session {
+- (void)audioSessionMediaServicesWereLost:(RTCAudioSession *)session {
 }
 
-- (void)audioSessionMediaServerReset:(RTCAudioSession *)session {
+- (void)audioSessionMediaServicesWereReset:(RTCAudioSession *)session {
 }
 
 - (void)audioSession:(RTCAudioSession *)session
@@ -79,11 +79,6 @@
 }
 
 - (void)audioSessionDidStopPlayOrRecord:(RTCAudioSession *)session {
-}
-
-- (void)audioSession:(RTCAudioSession *)audioSession
-    didChangeOutputVolume:(float)outputVolume {
-  _observer->OnChangedOutputVolume();
 }
 
 @end

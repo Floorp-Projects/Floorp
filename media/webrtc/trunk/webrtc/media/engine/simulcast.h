@@ -8,14 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MEDIA_ENGINE_SIMULCAST_H_
-#define MEDIA_ENGINE_SIMULCAST_H_
+#ifndef WEBRTC_MEDIA_ENGINE_SIMULCAST_H_
+#define WEBRTC_MEDIA_ENGINE_SIMULCAST_H_
 
-#include <string>
 #include <vector>
 
-#include "call/video_config.h"
-#include "rtc_base/basictypes.h"
+#include "webrtc/base/basictypes.h"
+#include "webrtc/config.h"
 
 namespace cricket {
 struct StreamParams;
@@ -60,4 +59,4 @@ bool UseSimulcastScreenshare();
 
 }  // namespace cricket
 
-#endif  // MEDIA_ENGINE_SIMULCAST_H_
+#endif  // WEBRTC_MEDIA_ENGINE_SIMULCAST_H_

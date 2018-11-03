@@ -8,18 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/level_controller/noise_spectrum_estimator.h"
+#include "webrtc/modules/audio_processing/level_controller/noise_spectrum_estimator.h"
 
 #include <string.h>
 #include <algorithm>
 
-#include "api/array_view.h"
-#include "modules/audio_processing/logging/apm_data_dumper.h"
-#include "rtc_base/arraysize.h"
+#include "webrtc/base/array_view.h"
+#include "webrtc/base/arraysize.h"
+#include "webrtc/modules/audio_processing/logging/apm_data_dumper.h"
 
 namespace webrtc {
 namespace {
-constexpr float kMinNoisePower = 100.f;
+float kMinNoisePower = 100.f;
 }  // namespace
 
 NoiseSpectrumEstimator::NoiseSpectrumEstimator(ApmDataDumper* data_dumper)

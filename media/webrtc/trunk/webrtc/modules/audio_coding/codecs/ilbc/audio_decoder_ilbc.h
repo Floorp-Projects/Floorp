@@ -8,20 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_CODECS_ILBC_AUDIO_DECODER_ILBC_H_
-#define MODULES_AUDIO_CODING_CODECS_ILBC_AUDIO_DECODER_ILBC_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_AUDIO_DECODER_ILBC_H_
+#define WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_AUDIO_DECODER_ILBC_H_
 
-#include "api/audio_codecs/audio_decoder.h"
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
 
 typedef struct iLBC_decinst_t_ IlbcDecoderInstance;
 
 namespace webrtc {
 
-class AudioDecoderIlbcImpl final : public AudioDecoder {
+class AudioDecoderIlbc final : public AudioDecoder {
  public:
-  AudioDecoderIlbcImpl();
-  ~AudioDecoderIlbcImpl() override;
+  AudioDecoderIlbc();
+  ~AudioDecoderIlbc() override;
   bool HasDecodePlc() const override;
   size_t DecodePlc(size_t num_frames, int16_t* decoded) override;
   void Reset() override;
@@ -39,8 +39,8 @@ class AudioDecoderIlbcImpl final : public AudioDecoder {
 
  private:
   IlbcDecoderInstance* dec_state_;
-  RTC_DISALLOW_COPY_AND_ASSIGN(AudioDecoderIlbcImpl);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AudioDecoderIlbc);
 };
 
 }  // namespace webrtc
-#endif  // MODULES_AUDIO_CODING_CODECS_ILBC_AUDIO_DECODER_ILBC_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_AUDIO_DECODER_ILBC_H_

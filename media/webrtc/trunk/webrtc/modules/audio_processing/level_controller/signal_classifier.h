@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_LEVEL_CONTROLLER_SIGNAL_CLASSIFIER_H_
-#define MODULES_AUDIO_PROCESSING_LEVEL_CONTROLLER_SIGNAL_CLASSIFIER_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_LEVEL_CONTROLLER_SIGNAL_CLASSIFIER_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_LEVEL_CONTROLLER_SIGNAL_CLASSIFIER_H_
 
 #include <memory>
 #include <vector>
 
-#include "api/array_view.h"
-#include "modules/audio_processing/level_controller/down_sampler.h"
-#include "modules/audio_processing/level_controller/noise_spectrum_estimator.h"
-#include "modules/audio_processing/utility/ooura_fft.h"
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/array_view.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/audio_processing/level_controller/down_sampler.h"
+#include "webrtc/modules/audio_processing/level_controller/noise_spectrum_estimator.h"
+#include "webrtc/modules/audio_processing/utility/ooura_fft.h"
 
 namespace webrtc {
 
@@ -64,4 +64,4 @@ class SignalClassifier {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_LEVEL_CONTROLLER_SIGNAL_CLASSIFIER_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_LEVEL_CONTROLLER_SIGNAL_CLASSIFIER_H_

@@ -7,10 +7,10 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef TEST_STATISTICS_H_
-#define TEST_STATISTICS_H_
+#ifndef WEBRTC_TEST_STATISTICS_H_
+#define WEBRTC_TEST_STATISTICS_H_
 
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 namespace test {
@@ -33,4 +33,4 @@ class Statistics {
 }  // namespace test
 }  // namespace webrtc
 
-#endif  // TEST_STATISTICS_H_
+#endif  // WEBRTC_TEST_STATISTICS_H_

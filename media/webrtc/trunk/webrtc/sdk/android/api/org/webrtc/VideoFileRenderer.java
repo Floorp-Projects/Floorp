@@ -15,8 +15,6 @@ import android.os.HandlerThread;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -29,14 +27,12 @@ public class VideoFileRenderer implements VideoRenderer.Callbacks {
   private final Object handlerLock = new Object();
   private final Handler renderThreadHandler;
   private final FileOutputStream videoOutFile;
-  private final String outputFileName;
   private final int outputFileWidth;
   private final int outputFileHeight;
   private final int outputFrameSize;
   private final ByteBuffer outputFrameBuffer;
   private EglBase eglBase;
   private YuvConverter yuvConverter;
-  private ArrayList<ByteBuffer> rawFrames = new ArrayList<>();
 
   public VideoFileRenderer(String outputFile, int outputFileWidth, int outputFileHeight,
       final EglBase.Context sharedContext) throws IOException {
@@ -44,7 +40,6 @@ public class VideoFileRenderer implements VideoRenderer.Callbacks {
       throw new IllegalArgumentException("Does not support uneven width or height");
     }
 
-    this.outputFileName = outputFile;
     this.outputFileWidth = outputFileWidth;
     this.outputFileHeight = outputFileHeight;
 
@@ -54,7 +49,7 @@ public class VideoFileRenderer implements VideoRenderer.Callbacks {
     videoOutFile = new FileOutputStream(outputFile);
     videoOutFile.write(
         ("YUV4MPEG2 C420 W" + outputFileWidth + " H" + outputFileHeight + " Ip F30:1 A1:1\n")
-            .getBytes(Charset.forName("US-ASCII")));
+            .getBytes());
 
     renderThread = new HandlerThread(TAG);
     renderThread.start();
@@ -81,9 +76,6 @@ public class VideoFileRenderer implements VideoRenderer.Callbacks {
     });
   }
 
-  // TODO(sakal): yuvConverter.convert is deprecated. This will be removed once this file is updated
-  // to implement VideoSink instead of VideoRenderer.Callbacks.
-  @SuppressWarnings("deprecation")
   private void renderFrameOnRenderThread(VideoRenderer.I420Frame frame) {
     final float frameAspectRatio = (float) frame.rotatedWidth() / (float) frame.rotatedHeight();
 
@@ -94,7 +86,7 @@ public class VideoFileRenderer implements VideoRenderer.Callbacks {
     final float[] texMatrix = RendererCommon.multiplyMatrices(rotatedSamplingMatrix, layoutMatrix);
 
     try {
-      ByteBuffer buffer = JniCommon.allocateNativeByteBuffer(outputFrameSize);
+      videoOutFile.write("FRAME\n".getBytes());
       if (!frame.yuvFrame) {
         yuvConverter.convert(outputFrameBuffer, outputFileWidth, outputFileHeight, outputFileWidth,
             frame.textureId, texMatrix);
@@ -104,26 +96,27 @@ public class VideoFileRenderer implements VideoRenderer.Callbacks {
         int offset = outputFrameBuffer.arrayOffset();
 
         // Write Y
-        buffer.put(data, offset, outputFileWidth * outputFileHeight);
+        videoOutFile.write(data, offset, outputFileWidth * outputFileHeight);
 
         // Write U
         for (int r = outputFileHeight; r < outputFileHeight * 3 / 2; ++r) {
-          buffer.put(data, offset + r * stride, stride / 2);
+          videoOutFile.write(data, offset + r * stride, stride / 2);
         }
 
         // Write V
         for (int r = outputFileHeight; r < outputFileHeight * 3 / 2; ++r) {
-          buffer.put(data, offset + r * stride + stride / 2, stride / 2);
+          videoOutFile.write(data, offset + r * stride + stride / 2, stride / 2);
         }
       } else {
         nativeI420Scale(frame.yuvPlanes[0], frame.yuvStrides[0], frame.yuvPlanes[1],
             frame.yuvStrides[1], frame.yuvPlanes[2], frame.yuvStrides[2], frame.width, frame.height,
             outputFrameBuffer, outputFileWidth, outputFileHeight);
-
-        buffer.put(outputFrameBuffer.array(), outputFrameBuffer.arrayOffset(), outputFrameSize);
+        videoOutFile.write(
+            outputFrameBuffer.array(), outputFrameBuffer.arrayOffset(), outputFrameSize);
       }
-      buffer.rewind();
-      rawFrames.add(buffer);
+    } catch (IOException e) {
+      Logging.e(TAG, "Failed to write to file for video out");
+      throw new RuntimeException(e);
     } finally {
       VideoRenderer.renderFrameDone(frame);
     }
@@ -137,6 +130,11 @@ public class VideoFileRenderer implements VideoRenderer.Callbacks {
     renderThreadHandler.post(new Runnable() {
       @Override
       public void run() {
+        try {
+          videoOutFile.close();
+        } catch (IOException e) {
+          Logging.d(TAG, "Error closing output video file");
+        }
         yuvConverter.release();
         eglBase.release();
         renderThread.quit();
@@ -144,24 +142,6 @@ public class VideoFileRenderer implements VideoRenderer.Callbacks {
       }
     });
     ThreadUtils.awaitUninterruptibly(cleanupBarrier);
-    try {
-      for (ByteBuffer buffer : rawFrames) {
-        videoOutFile.write("FRAME\n".getBytes(Charset.forName("US-ASCII")));
-
-        byte[] data = new byte[outputFrameSize];
-        buffer.get(data);
-
-        videoOutFile.write(data);
-
-        JniCommon.freeNativeByteBuffer(buffer);
-      }
-      videoOutFile.close();
-      Logging.d(TAG, "Video written to disk as " + outputFileName + ". Number frames are "
-              + rawFrames.size() + " and the dimension of the frames are " + outputFileWidth + "x"
-              + outputFileHeight + ".");
-    } catch (IOException e) {
-      Logging.e(TAG, "Error writing video to disk", e);
-    }
   }
 
   public static native void nativeI420Scale(ByteBuffer srcY, int strideY, ByteBuffer srcU,

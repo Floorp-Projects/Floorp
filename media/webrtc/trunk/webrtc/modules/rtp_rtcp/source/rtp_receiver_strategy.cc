@@ -8,27 +8,27 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/rtp_receiver_strategy.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_receiver_strategy.h"
 
 #include <stdlib.h>
 
 namespace webrtc {
 
 RTPReceiverStrategy::RTPReceiverStrategy(RtpData* data_callback)
-    : data_callback_(data_callback) {}
+    : data_callback_(data_callback) {
+  memset(&last_payload_, 0, sizeof(last_payload_));
+}
 
 void RTPReceiverStrategy::GetLastMediaSpecificPayload(
     PayloadUnion* payload) const {
   rtc::CritScope cs(&crit_sect_);
-  if (last_payload_) {
-    *payload = *last_payload_;
-  }
+  memcpy(payload, &last_payload_, sizeof(*payload));
 }
 
 void RTPReceiverStrategy::SetLastMediaSpecificPayload(
     const PayloadUnion& payload) {
   rtc::CritScope cs(&crit_sect_);
-  last_payload_.emplace(payload);
+  memcpy(&last_payload_, &payload, sizeof(last_payload_));
 }
 
 void RTPReceiverStrategy::CheckPayloadChanged(int8_t payload_type,

@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_NS_NS_CORE_H_
-#define MODULES_AUDIO_PROCESSING_NS_NS_CORE_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_NS_NS_CORE_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_NS_NS_CORE_H_
 
-#include "modules/audio_processing/ns/defines.h"
+#include "webrtc/modules/audio_processing/ns/defines.h"
 
 typedef struct NSParaExtract_ {
   // Bin size of histogram.
@@ -187,4 +187,4 @@ void WebRtcNs_ProcessCore(NoiseSuppressionC* self,
 #ifdef __cplusplus
 }
 #endif
-#endif  // MODULES_AUDIO_PROCESSING_NS_NS_CORE_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_NS_NS_CORE_H_

@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_audio/vad/vad_unittest.h"
+#include "webrtc/common_audio/vad/vad_unittest.h"
 
 #include <stdlib.h>
 
-#include "common_audio/signal_processing/include/signal_processing_library.h"
-#include "common_audio/vad/include/webrtc_vad.h"
-#include "rtc_base/arraysize.h"
-#include "rtc_base/checks.h"
-#include "test/gtest.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/base/arraysize.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/common_audio/vad/include/webrtc_vad.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/typedefs.h"
 
 VadTest::VadTest() {}
 
@@ -52,8 +52,7 @@ bool VadTest::ValidRatesAndFrameLengths(int rate, size_t frame_length) {
   return false;
 }
 
-namespace webrtc {
-namespace test {
+namespace {
 
 TEST_F(VadTest, ApiTest) {
   // This API test runs through the APIs for all possible valid and invalid
@@ -153,5 +152,4 @@ TEST_F(VadTest, ValidRatesFrameLengths) {
 
 // TODO(bjornv): Add a process test, run on file.
 
-}  // namespace test
-}  // namespace webrtc
+}  // namespace

@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_DTX_CONTROLLER_H_
-#define MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_DTX_CONTROLLER_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_DTX_CONTROLLER_H_
+#define WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_DTX_CONTROLLER_H_
 
-#include "modules/audio_coding/audio_network_adaptor/controller.h"
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/audio_coding/audio_network_adaptor/controller.h"
 
 namespace webrtc {
 
@@ -31,19 +31,15 @@ class DtxController final : public Controller {
 
   explicit DtxController(const Config& config);
 
-  ~DtxController() override;
-
-  void UpdateNetworkMetrics(const NetworkMetrics& network_metrics) override;
-
-  void MakeDecision(AudioEncoderRuntimeConfig* config) override;
+  void MakeDecision(const NetworkMetrics& metrics,
+                    AudioNetworkAdaptor::EncoderRuntimeConfig* config) override;
 
  private:
   const Config config_;
   bool dtx_enabled_;
-  rtc::Optional<int> uplink_bandwidth_bps_;
   RTC_DISALLOW_COPY_AND_ASSIGN(DtxController);
 };
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_DTX_CONTROLLER_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_DTX_CONTROLLER_H_

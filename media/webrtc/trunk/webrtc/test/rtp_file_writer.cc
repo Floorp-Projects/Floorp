@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "test/rtp_file_writer.h"
+#include "webrtc/test/rtp_file_writer.h"
 
 #include <stdio.h>
 
 #include <string>
 
-#include "rtc_base/checks.h"
-#include "rtc_base/constructormagic.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/constructormagic.h"
 
 namespace webrtc {
 namespace test {

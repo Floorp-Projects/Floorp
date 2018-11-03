@@ -8,9 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/include/audio_processing.h"
-
-#include "rtc_base/checks.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
 
 namespace webrtc {
 
@@ -32,4 +30,6 @@ Beamforming::Beamforming(bool enabled,
       target_direction(target_direction) {}
 
 Beamforming::~Beamforming() {}
+
+
 }  // namespace webrtc

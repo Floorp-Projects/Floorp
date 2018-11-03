@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/beamformer/array_util.h"
+#include "webrtc/modules/audio_processing/beamformer/array_util.h"
 
 #include <algorithm>
 #include <limits>
 
-#include "rtc_base/checks.h"
+#include "webrtc/base/checks.h"
 
 namespace webrtc {
 namespace {
@@ -65,10 +65,10 @@ rtc::Optional<Point> GetDirectionIfLinear(
     const Point pair_direction =
         PairDirection(array_geometry[i - 1], array_geometry[i]);
     if (!AreParallel(first_pair_direction, pair_direction)) {
-      return rtc::nullopt;
+      return rtc::Optional<Point>();
     }
   }
-  return first_pair_direction;
+  return rtc::Optional<Point>(first_pair_direction);
 }
 
 rtc::Optional<Point> GetNormalIfPlanar(
@@ -86,30 +86,30 @@ rtc::Optional<Point> GetNormalIfPlanar(
     }
   }
   if (is_linear) {
-    return rtc::nullopt;
+    return rtc::Optional<Point>();
   }
   const Point normal_direction =
       CrossProduct(first_pair_direction, pair_direction);
   for (; i < array_geometry.size(); ++i) {
     pair_direction = PairDirection(array_geometry[i - 1], array_geometry[i]);
     if (!ArePerpendicular(normal_direction, pair_direction)) {
-      return rtc::nullopt;
+      return rtc::Optional<Point>();
     }
   }
-  return normal_direction;
+  return rtc::Optional<Point>(normal_direction);
 }
 
 rtc::Optional<Point> GetArrayNormalIfExists(
     const std::vector<Point>& array_geometry) {
   const rtc::Optional<Point> direction = GetDirectionIfLinear(array_geometry);
   if (direction) {
-    return Point(direction->y(), -direction->x(), 0.f);
+    return rtc::Optional<Point>(Point(direction->y(), -direction->x(), 0.f));
   }
   const rtc::Optional<Point> normal = GetNormalIfPlanar(array_geometry);
   if (normal && normal->z() < kMaxDotProduct) {
     return normal;
   }
-  return rtc::nullopt;
+  return rtc::Optional<Point>();
 }
 
 Point AzimuthToPoint(float azimuth) {

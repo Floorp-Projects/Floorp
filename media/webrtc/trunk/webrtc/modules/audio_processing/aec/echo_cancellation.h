@@ -8,18 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_H_
-#define MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_H_
+#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_H_
+#define WEBRTC_MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_H_
 
 #include <memory>
 
 #include <stddef.h>
 
 extern "C" {
-#include "common_audio/ring_buffer.h"
+#include "webrtc/common_audio/ring_buffer.h"
 }
-#include "modules/audio_processing/aec/aec_core.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/audio_processing/aec/aec_core.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -296,4 +296,4 @@ struct AecCore* WebRtcAec_aec_core(void* handle);
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_H_
+#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_H_

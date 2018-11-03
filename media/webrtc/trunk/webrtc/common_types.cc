@@ -8,15 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_types.h"  // NOLINT(build/include)
+#include "webrtc/common_types.h"
 
-#include <string.h>
-#include <algorithm>
 #include <limits>
-#include <type_traits>
+#include <string.h>
 
-#include "rtc_base/checks.h"
-#include "rtc_base/stringutils.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/stringutils.h"
 
 namespace webrtc {
 
@@ -33,8 +31,8 @@ void StreamId::Set(const char* data, size_t size) {
   // If |data| contains \0, the stream id size might become less than |size|.
   RTC_CHECK_LE(size, kMaxSize);
   memcpy(value_, data, size);
-  if (size < kMaxSize)
-    value_[size] = 0;
+  // mozilla: value_ is kMaxSize+1 so we always have room to null terminate
+  value_[size] = 0;
 }
 
 // StreamId is used as member of RTPHeader that is sometimes copied with memcpy
@@ -53,16 +51,36 @@ RTPHeaderExtension::RTPHeaderExtension()
       audioLevel(0),
       hasVideoRotation(false),
       videoRotation(kVideoRotation_0),
-      hasVideoContentType(false),
-      videoContentType(VideoContentType::UNSPECIFIED),
-      has_video_timing(false),
-      csrcAudioLevels() {}
+      csrcAudioLevels() {
+}
 
-RTPHeaderExtension::RTPHeaderExtension(const RTPHeaderExtension& other) =
-    default;
+RTPHeaderExtension::RTPHeaderExtension(const RTPHeaderExtension& rhs) {
+  *this = rhs;
+}
 
-RTPHeaderExtension& RTPHeaderExtension::operator=(
-    const RTPHeaderExtension& other) = default;
+RTPHeaderExtension&
+RTPHeaderExtension::operator=(const RTPHeaderExtension& rhs) {
+  hasTransmissionTimeOffset = rhs.hasTransmissionTimeOffset;
+  transmissionTimeOffset = rhs.transmissionTimeOffset;
+  hasAbsoluteSendTime = rhs.hasAbsoluteSendTime;
+  absoluteSendTime = rhs.absoluteSendTime;
+  hasTransportSequenceNumber = rhs.hasTransportSequenceNumber;
+  transportSequenceNumber = rhs.transportSequenceNumber;
+
+  hasAudioLevel = rhs.hasAudioLevel;
+  voiceActivity = rhs.voiceActivity;
+  audioLevel = rhs.audioLevel;
+
+  hasVideoRotation = rhs.hasVideoRotation;
+  videoRotation = rhs.videoRotation;
+
+  rtpStreamId = rhs.rtpStreamId;
+  repairedRtpStreamId = rhs.repairedRtpStreamId;
+
+  mId = rhs.mId;
+
+  return *this;
+}
 
 RTPHeader::RTPHeader()
     : markerBit(false),
@@ -76,10 +94,6 @@ RTPHeader::RTPHeader()
       headerLength(0),
       payload_type_frequency(0),
       extension() {}
-
-RTPHeader::RTPHeader(const RTPHeader& other) = default;
-
-RTPHeader& RTPHeader::operator=(const RTPHeader& other) = default;
 
 VideoCodec::VideoCodec()
     : codecType(kVideoCodecUnknown),
@@ -98,7 +112,6 @@ VideoCodec::VideoCodec()
       spatialLayers(),
       mode(kRealtimeVideo),
       expect_encode_from_texture(false),
-      timing_frame_thresholds({0, 0}),
       codec_specific_() {}
 
 VideoCodecVP8* VideoCodec::VP8() {
@@ -143,46 +156,49 @@ static bool CodecNamesEq(const char* name1, const char* name2) {
   return _stricmp(name1, name2) == 0;
 }
 
-const char* CodecTypeToPayloadString(VideoCodecType type) {
+rtc::Optional<const char*> CodecTypeToPayloadName(VideoCodecType type) {
   switch (type) {
     case kVideoCodecVP8:
-      return kPayloadNameVp8;
+      return rtc::Optional<const char*>(kPayloadNameVp8);
     case kVideoCodecVP9:
-      return kPayloadNameVp9;
+      return rtc::Optional<const char*>(kPayloadNameVp9);
     case kVideoCodecH264:
-      return kPayloadNameH264;
+      return rtc::Optional<const char*>(kPayloadNameH264);
     case kVideoCodecI420:
-      return kPayloadNameI420;
+      return rtc::Optional<const char*>(kPayloadNameI420);
     case kVideoCodecRED:
-      return kPayloadNameRED;
+      return rtc::Optional<const char*>(kPayloadNameRED);
     case kVideoCodecULPFEC:
-      return kPayloadNameULPFEC;
+      return rtc::Optional<const char*>(kPayloadNameULPFEC);
+    case kVideoCodecGeneric:
+      return rtc::Optional<const char*>(kPayloadNameGeneric);
     default:
-      // Unrecognized codecs default to generic.
-      return kPayloadNameGeneric;
+      return rtc::Optional<const char*>();
   }
 }
 
-VideoCodecType PayloadStringToCodecType(const std::string& name) {
+rtc::Optional<VideoCodecType> PayloadNameToCodecType(const std::string& name) {
   if (CodecNamesEq(name.c_str(), kPayloadNameVp8))
-    return kVideoCodecVP8;
+    return rtc::Optional<VideoCodecType>(kVideoCodecVP8);
   if (CodecNamesEq(name.c_str(), kPayloadNameVp9))
-    return kVideoCodecVP9;
+    return rtc::Optional<VideoCodecType>(kVideoCodecVP9);
   if (CodecNamesEq(name.c_str(), kPayloadNameH264))
-    return kVideoCodecH264;
+    return rtc::Optional<VideoCodecType>(kVideoCodecH264);
   if (CodecNamesEq(name.c_str(), kPayloadNameI420))
-    return kVideoCodecI420;
+    return rtc::Optional<VideoCodecType>(kVideoCodecI420);
   if (CodecNamesEq(name.c_str(), kPayloadNameRED))
-    return kVideoCodecRED;
+    return rtc::Optional<VideoCodecType>(kVideoCodecRED);
   if (CodecNamesEq(name.c_str(), kPayloadNameULPFEC))
-    return kVideoCodecULPFEC;
-  return kVideoCodecGeneric;
+    return rtc::Optional<VideoCodecType>(kVideoCodecULPFEC);
+  if (CodecNamesEq(name.c_str(), kPayloadNameGeneric))
+    return rtc::Optional<VideoCodecType>(kVideoCodecGeneric);
+  return rtc::Optional<VideoCodecType>();
 }
 
 const uint32_t BitrateAllocation::kMaxBitrateBps =
     std::numeric_limits<uint32_t>::max();
 
-BitrateAllocation::BitrateAllocation() : sum_(0), bitrates_{}, has_bitrate_{} {}
+BitrateAllocation::BitrateAllocation() : sum_(0), bitrates_{} {}
 
 bool BitrateAllocation::SetBitrate(size_t spatial_index,
                                    size_t temporal_index,
@@ -197,16 +213,8 @@ bool BitrateAllocation::SetBitrate(size_t spatial_index,
     return false;
 
   bitrates_[spatial_index][temporal_index] = bitrate_bps;
-  has_bitrate_[spatial_index][temporal_index] = true;
   sum_ = static_cast<uint32_t>(new_bitrate_sum_bps);
   return true;
-}
-
-bool BitrateAllocation::HasBitrate(size_t spatial_index,
-                                   size_t temporal_index) const {
-  RTC_CHECK_LT(spatial_index, kMaxSpatialLayers);
-  RTC_CHECK_LT(temporal_index, kMaxTemporalStreams);
-  return has_bitrate_[spatial_index][temporal_index];
 }
 
 uint32_t BitrateAllocation::GetBitrate(size_t spatial_index,
@@ -216,17 +224,6 @@ uint32_t BitrateAllocation::GetBitrate(size_t spatial_index,
   return bitrates_[spatial_index][temporal_index];
 }
 
-// Whether the specific spatial layers has the bitrate set in any of its
-// temporal layers.
-bool BitrateAllocation::IsSpatialLayerUsed(size_t spatial_index) const {
-  RTC_CHECK_LT(spatial_index, kMaxSpatialLayers);
-  for (int i = 0; i < kMaxTemporalStreams; ++i) {
-    if (has_bitrate_[spatial_index][i])
-      return true;
-  }
-  return false;
-}
-
 // Get the sum of all the temporal layer for a specific spatial layer.
 uint32_t BitrateAllocation::GetSpatialLayerSum(size_t spatial_index) const {
   RTC_CHECK_LT(spatial_index, kMaxSpatialLayers);
@@ -234,55 +231,6 @@ uint32_t BitrateAllocation::GetSpatialLayerSum(size_t spatial_index) const {
   for (int i = 0; i < kMaxTemporalStreams; ++i)
     sum += bitrates_[spatial_index][i];
   return sum;
-}
-
-std::string BitrateAllocation::ToString() const {
-  if (sum_ == 0)
-    return "BitrateAllocation [ [] ]";
-
-  // TODO(sprang): Replace this stringstream with something cheaper.
-  std::ostringstream oss;
-  oss << "BitrateAllocation [";
-  uint32_t spatial_cumulator = 0;
-  for (int si = 0; si < kMaxSpatialLayers; ++si) {
-    RTC_DCHECK_LE(spatial_cumulator, sum_);
-    if (spatial_cumulator == sum_)
-      break;
-
-    const uint32_t layer_sum = GetSpatialLayerSum(si);
-    if (layer_sum == sum_) {
-      oss << " [";
-    } else {
-      if (si > 0)
-        oss << ",";
-      oss << std::endl << "  [";
-    }
-    spatial_cumulator += layer_sum;
-
-    uint32_t temporal_cumulator = 0;
-    for (int ti = 0; ti < kMaxTemporalStreams; ++ti) {
-      RTC_DCHECK_LE(temporal_cumulator, layer_sum);
-      if (temporal_cumulator == layer_sum)
-        break;
-
-      if (ti > 0)
-        oss << ", ";
-
-      uint32_t bitrate = bitrates_[si][ti];
-      oss << bitrate;
-      temporal_cumulator += bitrate;
-    }
-    oss << "]";
-  }
-
-  RTC_DCHECK_EQ(spatial_cumulator, sum_);
-  oss << " ]";
-  return oss.str();
-}
-
-std::ostream& BitrateAllocation::operator<<(std::ostream& os) const {
-  os << ToString();
-  return os;
 }
 
 }  // namespace webrtc

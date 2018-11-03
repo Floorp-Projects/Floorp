@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_CODING_CODECS_ISAC_BANDWIDTH_INFO_H_
-#define MODULES_AUDIO_CODING_CODECS_ISAC_BANDWIDTH_INFO_H_
+#ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_BANDWIDTH_INFO_H_
+#define WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_BANDWIDTH_INFO_H_
 
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/typedefs.h"
 
 typedef struct {
   int in_use;
@@ -21,4 +21,4 @@ typedef struct {
   int16_t jitter_info;
 } IsacBandwidthInfo;
 
-#endif  // MODULES_AUDIO_CODING_CODECS_ISAC_BANDWIDTH_INFO_H_
+#endif  // WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_BANDWIDTH_INFO_H_

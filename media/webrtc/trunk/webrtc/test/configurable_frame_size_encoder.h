@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef TEST_CONFIGURABLE_FRAME_SIZE_ENCODER_H_
-#define TEST_CONFIGURABLE_FRAME_SIZE_ENCODER_H_
+#ifndef WEBRTC_TEST_CONFIGURABLE_FRAME_SIZE_ENCODER_H_
+#define WEBRTC_TEST_CONFIGURABLE_FRAME_SIZE_ENCODER_H_
 
 #include <memory>
 #include <vector>
 
-#include "api/video_codecs/video_encoder.h"
+#include "webrtc/video_encoder.h"
 
 namespace webrtc {
 namespace test {
@@ -56,4 +56,4 @@ class ConfigurableFrameSizeEncoder : public VideoEncoder {
 }  // namespace test
 }  // namespace webrtc
 
-#endif  // TEST_CONFIGURABLE_FRAME_SIZE_ENCODER_H_
+#endif  // WEBRTC_TEST_CONFIGURABLE_FRAME_SIZE_ENCODER_H_

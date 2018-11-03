@@ -8,12 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/rtcp_packet/dlrr.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/dlrr.h"
 
-#include "modules/rtp_rtcp/source/byte_io.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
-#include "rtc_base/numerics/safe_conversions.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -34,19 +33,13 @@ namespace rtcp {
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ block
 //  :                               ...                             :   2
 
-Dlrr::Dlrr() = default;
-
-Dlrr::Dlrr(const Dlrr& other) = default;
-
-Dlrr::~Dlrr() = default;
-
 bool Dlrr::Parse(const uint8_t* buffer, uint16_t block_length_32bits) {
   RTC_DCHECK(buffer[0] == kBlockType);
   // kReserved = buffer[1];
   RTC_DCHECK_EQ(block_length_32bits,
                 ByteReader<uint16_t>::ReadBigEndian(&buffer[2]));
   if (block_length_32bits % 3 != 0) {
-    RTC_LOG(LS_WARNING) << "Invalid size for dlrr block.";
+    LOG(LS_WARNING) << "Invalid size for dlrr block.";
     return false;
   }
 
@@ -76,8 +69,7 @@ void Dlrr::Create(uint8_t* buffer) const {
   const uint8_t kReserved = 0;
   buffer[0] = kBlockType;
   buffer[1] = kReserved;
-  ByteWriter<uint16_t>::WriteBigEndian(
-      &buffer[2], rtc::dchecked_cast<uint16_t>(3 * sub_blocks_.size()));
+  ByteWriter<uint16_t>::WriteBigEndian(&buffer[2], 3 * sub_blocks_.size());
   // Create sub blocks.
   uint8_t* write_at = buffer + kBlockHeaderLength;
   for (const ReceiveTimeInfo& sub_block : sub_blocks_) {

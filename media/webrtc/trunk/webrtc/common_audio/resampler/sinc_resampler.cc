@@ -83,20 +83,19 @@
 // |virtual_source_idx_|, etc.
 
 // MSVC++ requires this to be set before any other includes to get M_PI.
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
-
-#include "common_audio/resampler/sinc_resampler.h"
+#endif
 
 #include <math.h>
 #include <string.h>
 
 #include <limits>
 
-#include "rtc_base/checks.h"
-#include "system_wrappers/include/cpu_features_wrapper.h"
-#include "typedefs.h"  // NOLINT(build/include)
-
-namespace webrtc {
+#include "webrtc/base/checks.h"
+#include "webrtc/common_audio/resampler/sinc_resampler.h"
+#include "webrtc/system_wrappers/include/cpu_features_wrapper.h"
+#include "webrtc/typedefs.h"
 
 namespace {
 
@@ -117,6 +116,8 @@ double SincScaleFactor(double io_ratio) {
 }
 
 }  // namespace
+
+namespace webrtc {
 
 const size_t SincResampler::kKernelSize;
 
@@ -161,7 +162,7 @@ SincResampler::SincResampler(double io_sample_rate_ratio,
       input_buffer_(static_cast<float*>(
           AlignedMalloc(sizeof(float) * input_buffer_size_, 16))),
 #if defined(WEBRTC_CPU_DETECTION)
-      convolve_proc_(nullptr),
+      convolve_proc_(NULL),
 #endif
       r1_(input_buffer_.get()),
       r2_(input_buffer_.get() + kKernelSize / 2) {

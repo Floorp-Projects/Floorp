@@ -8,15 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/rtcp_packet/nack.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/nack.h"
 
 #include <algorithm>
-#include <utility>
 
-#include "modules/rtp_rtcp/source/byte_io.h"
-#include "modules/rtp_rtcp/source/rtcp_packet/common_header.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -54,8 +53,8 @@ bool Nack::Parse(const CommonHeader& packet) {
   RTC_DCHECK_EQ(packet.fmt(), kFeedbackMessageType);
 
   if (packet.payload_size_bytes() < kCommonFeedbackLength + kNackItemLength) {
-    RTC_LOG(LS_WARNING) << "Payload length " << packet.payload_size_bytes()
-                        << " is too small for a Nack.";
+    LOG(LS_WARNING) << "Payload length " << packet.payload_size_bytes()
+                    << " is too small for a Nack.";
     return false;
   }
   size_t nack_items =
@@ -74,11 +73,6 @@ bool Nack::Parse(const CommonHeader& packet) {
   Unpack();
 
   return true;
-}
-
-size_t Nack::BlockLength() const {
-  return kHeaderLength + kCommonFeedbackLength +
-         packed_.size() * kNackItemLength;
 }
 
 bool Nack::Create(uint8_t* packet,
@@ -122,15 +116,16 @@ bool Nack::Create(uint8_t* packet,
   return true;
 }
 
-void Nack::SetPacketIds(const uint16_t* nack_list, size_t length) {
-  RTC_DCHECK(nack_list);
-  SetPacketIds(std::vector<uint16_t>(nack_list, nack_list + length));
+size_t Nack::BlockLength() const {
+  return kHeaderLength + kCommonFeedbackLength +
+         packed_.size() * kNackItemLength;
 }
 
-void Nack::SetPacketIds(std::vector<uint16_t> nack_list) {
+void Nack::SetPacketIds(const uint16_t* nack_list, size_t length) {
+  RTC_DCHECK(nack_list);
   RTC_DCHECK(packet_ids_.empty());
   RTC_DCHECK(packed_.empty());
-  packet_ids_ = std::move(nack_list);
+  packet_ids_.assign(nack_list, nack_list + length);
   Pack();
 }
 
