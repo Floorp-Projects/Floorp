@@ -50,11 +50,11 @@ void ArithmeticArgChecker::check(const MatchFinder::MatchResult &Result) {
       "cannot pass an arithmetic expression of built-in types to %0";
   const Expr *Expression = Result.Nodes.getNodeAs<Expr>("node");
   if (const CallExpr *Call = Result.Nodes.getNodeAs<CallExpr>("call")) {
-    diag(Expression->getLocStart(), Error, DiagnosticIDs::Error)
+    diag(Expression->getBeginLoc(), Error, DiagnosticIDs::Error)
         << Call->getDirectCallee();
   } else if (const CXXConstructExpr *Ctr =
                  Result.Nodes.getNodeAs<CXXConstructExpr>("call")) {
-    diag(Expression->getLocStart(), Error, DiagnosticIDs::Error)
+    diag(Expression->getBeginLoc(), Error, DiagnosticIDs::Error)
         << Ctr->getConstructor();
   }
 }

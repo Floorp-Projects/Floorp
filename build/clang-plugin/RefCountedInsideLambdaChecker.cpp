@@ -144,7 +144,7 @@ bool RefCountedInsideLambdaChecker::ThisVisitor::VisitCXXThisExpr(
     CXXThisExpr *This) {
   QualType Pointee = This->getType()->getPointeeType();
   if (!Pointee.isNull() && isClassRefCounted(Pointee)) {
-    Checker.emitDiagnostics(This->getLocStart(), "this", Pointee);
+    Checker.emitDiagnostics(This->getBeginLoc(), "this", Pointee);
     return false;
   }
 
