@@ -33,9 +33,8 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(path: ':support-utils')
 
-    // We only compile against the ARM artifact. We let the app decide which artifact to actually
-    // use at runtime. As the Kotlin/Java API is the same for all ABIs it is not important which one
-    // we import here.
+    // We only compile against the ARM artifact. External module will decide which module to provide by build configuration.
+    // As the Kotlin/Java API is the same for all ABIs it is not important which one we import here.
     compileOnly Gecko.geckoview_nightly_arm
     testImplementation Gecko.geckoview_nightly_arm
 

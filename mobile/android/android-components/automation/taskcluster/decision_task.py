@@ -87,7 +87,7 @@ def create_module_tasks(module):
     module_overrides = {
         ":samples-browser": {
             "assembleOnly/Test": (
-                ["ServoArm", "SystemUniversal"],
+                ["ServoArm", "ServoX86", "SystemUniversal"],
                 [
                     "GeckoBetaAarch64", "GeckoBetaArm", "GeckoBetaX86",
                     "GeckoNightlyAarch64", "GeckoNightlyArm", "GeckoNightlyX86",

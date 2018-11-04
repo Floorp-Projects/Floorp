@@ -12,7 +12,7 @@ The browser app has two product flavor dimensions:
 
 * **channel**: Using different release channels of GeckoView: _nightly_, _beta_, _production_. In most cases you want to use the _nightly_ flavor as this will support all of the latest functionality.
 
-* **abi**: Using different GeckoView builds based on the processor architecture: _arm_, _x86_, _aarch64_. Lookup the processor architecture that matches your device. For most Android devices that's _arm_ or _aarch64_. For running on an emulator pick _x86_ and a matching hardware-accelerated emulator image.
+* **abi**: Using different GeckoView or ServoView builds based on the processor architecture: _arm_, _x86_, _aarch64_. Lookup the processor architecture that matches your device. For most Android devices that's _arm_ or _aarch64_. For running on an emulator pick _x86_ and a matching hardware-accelerated emulator image.
 
 ## License
 
