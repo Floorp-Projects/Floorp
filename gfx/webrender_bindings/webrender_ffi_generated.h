@@ -50,6 +50,7 @@ enum class BoxShadowClipMode : uint32_t {
 enum class Checkpoint : uint32_t {
   SceneBuilt,
   FrameBuilt,
+  FrameTexturesUpdated,
   FrameRendered,
   // NotificationRequests get notified with this if they get dropped without having been
   // notified. This provides the guarantee that if a request is created it will get notified.
