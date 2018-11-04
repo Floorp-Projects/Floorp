@@ -136,7 +136,6 @@ use style::properties::{PropertyDeclarationId, ShorthandId};
 use style::properties::{SourcePropertyDeclaration, StyleBuilder};
 use style::properties::{parse_one_declaration_into, parse_style_attribute};
 use style::properties::animated_properties::AnimationValue;
-use style::properties::animated_properties::compare_property_priority;
 use style::rule_cache::RuleCacheConditions;
 use style::rule_tree::{CascadeLevel, StrongRuleNode};
 use style::selector_parser::{PseudoElementCascadeType, SelectorImpl};
@@ -4737,6 +4736,8 @@ struct PrioritizedPropertyIter<'a> {
 
 impl<'a> PrioritizedPropertyIter<'a> {
     fn new(properties: &'a [PropertyValuePair]) -> PrioritizedPropertyIter {
+        use style::values::animated::compare_property_priority;
+
         // If we fail to convert a nsCSSPropertyID into a PropertyId we
         // shouldn't fail outright but instead by treating that property as the
         // 'all' property we make it sort last.
