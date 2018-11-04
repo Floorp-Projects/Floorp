@@ -1256,6 +1256,29 @@ public:
     }
   }
 
+  template<typename ResolveOrRejectValueType_>
+  void ResolveOrReject(ResolveOrRejectValueType_&& aValue,
+                       const char* aMethodName)
+  {
+    if (mMonitor) {
+      mMonitor->AssertCurrentThreadOwns();
+    }
+    MOZ_ASSERT(mPromise);
+    mPromise->ResolveOrReject(std::forward<ResolveOrRejectValueType_>(aValue),
+                              aMethodName);
+    mPromise = nullptr;
+  }
+
+  template<typename ResolveOrRejectValueType_>
+  void ResolveOrRejectIfExists(ResolveOrRejectValueType_&& aValue,
+                               const char* aMethodName)
+  {
+    if (!IsEmpty()) {
+      ResolveOrReject(std::forward<ResolveOrRejectValueType_>(aValue),
+                      aMethodName);
+    }
+  }
+
 private:
   Monitor* mMonitor;
   RefPtr<typename PromiseType::Private> mPromise;
