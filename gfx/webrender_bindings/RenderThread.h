@@ -152,7 +152,12 @@ public:
   void RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aCallBack);
 
   /// Can only be called from the render thread.
-  void UpdateAndRender(wr::WindowId aWindowId, const TimeStamp& aStartTime, bool aRender, const Maybe<gfx::IntSize>& aReadbackSize, const Maybe<Range<uint8_t>>& aReadbackBuffer);
+  void UpdateAndRender(wr::WindowId aWindowId,
+                       const TimeStamp& aStartTime,
+                       bool aRender,
+                       const Maybe<gfx::IntSize>& aReadbackSize,
+                       const Maybe<Range<uint8_t>>& aReadbackBuffer,
+                       bool aHadSlowFrame);
 
   void Pause(wr::WindowId aWindowId);
   bool Resume(wr::WindowId aWindowId);
@@ -186,6 +191,8 @@ public:
   void IncRenderingFrameCount(wr::WindowId aWindowId);
   /// Can be called from any thread.
   void FrameRenderingComplete(wr::WindowId aWindowId);
+
+  void NotifySlowFrame(wr::WindowId aWindowId);
 
   /// Can be called from any thread.
   WebRenderThreadPool& ThreadPool() { return mThreadPool; }
@@ -241,6 +248,7 @@ private:
     // One entry in this queue for each pending frame, so the length
     // should always equal mPendingCount
     std::queue<TimeStamp> mStartTimes;
+    bool mHadSlowFrame = false;
   };
 
   Mutex mFrameCountMapLock;

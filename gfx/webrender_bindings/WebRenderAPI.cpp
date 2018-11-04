@@ -425,7 +425,7 @@ WebRenderAPI::Readback(const TimeStamp& aStartTime,
 
             virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override
             {
-                aRenderThread.UpdateAndRender(aWindowId, mStartTime, /* aRender */ true, Some(mSize), Some(mBuffer));
+                aRenderThread.UpdateAndRender(aWindowId, mStartTime, /* aRender */ true, Some(mSize), Some(mBuffer), false);
                 layers::AutoCompleteTask complete(mTask);
             }
 
