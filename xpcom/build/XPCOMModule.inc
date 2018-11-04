@@ -1,6 +1,5 @@
     COMPONENT_M(MEMORY, nsMemoryImpl::Create, Module::ALLOW_IN_GPU_PROCESS)
     COMPONENT_M(DEBUG,  nsDebugImpl::Create, Module::ALLOW_IN_GPU_PROCESS)
-    COMPONENT(ERRORSERVICE, nsErrorService::Create)
 
     COMPONENT_M(CATEGORYMANAGER, nsCategoryManager::Create, Module::ALLOW_IN_GPU_PROCESS)
 
