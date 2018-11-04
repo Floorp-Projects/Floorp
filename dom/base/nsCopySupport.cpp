@@ -97,8 +97,7 @@ SelectionCopyHelper(Selection *aSel, nsIDocument *aDoc,
   nsresult rv;
 
   nsCOMPtr<nsIDocumentEncoder> docEncoder;
-  docEncoder = do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID);
-  NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
+  docEncoder = do_createHTMLCopyEncoder();
 
   // note that we assign text/unicode as mime type, but in fact nsHTMLCopyEncoder
   // ignore it and use text/html or text/plain depending where the selection
@@ -470,10 +469,8 @@ static nsresult AppendDOMNode(nsITransferable *aTransferable,
 {
   nsresult rv;
 
-  // selializer
-  nsCOMPtr<nsIDocumentEncoder>
-    docEncoder(do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // serializer
+  nsCOMPtr<nsIDocumentEncoder> docEncoder = do_createHTMLCopyEncoder();
 
   // get document for the encoder
   nsCOMPtr<nsIDocument> document = aDOMNode->OwnerDoc();
