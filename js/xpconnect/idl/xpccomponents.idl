@@ -14,6 +14,7 @@ interface nsIClassInfo;
 interface nsICommandParams;
 interface nsIComponentManager;
 interface nsICycleCollectorListener;
+interface nsIDocumentEncoder;
 interface nsIEditorSpellCheck;
 interface nsIFile;
 interface nsILoadContext;
@@ -738,6 +739,9 @@ interface nsIXPCComponents_Utils : nsISupports
 
     /* Create a persistent property object. */
     nsIPersistentProperties createPersistentProperties();
+
+    /* Create an HTML copy encoder object. */
+    nsIDocumentEncoder createHTMLCopyEncoder();
 
     // These attributes are for startup testing purposes. They are not expected
     // to be used for production code.
