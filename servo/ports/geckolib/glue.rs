@@ -130,7 +130,7 @@ use style::gecko_properties;
 use style::invalidation::element::restyle_hints;
 use style::media_queries::MediaList;
 use style::parser::{Parse, ParserContext, self};
-use style::properties::{ComputedValues, Importance};
+use style::properties::{ComputedValues, Importance, NonCustomPropertyId};
 use style::properties::{LonghandId, LonghandIdSet, PropertyDeclarationBlock, PropertyId};
 use style::properties::{PropertyDeclarationId, ShorthandId};
 use style::properties::{SourcePropertyDeclaration, StyleBuilder};
@@ -943,8 +943,6 @@ pub unsafe extern "C" fn Servo_Property_GetName(
     prop: nsCSSPropertyID,
     out_length: *mut u32,
 ) -> *const u8 {
-    use style::properties::NonCustomPropertyId;
-
     let (ptr, len) = match NonCustomPropertyId::from_nscsspropertyid(prop) {
         Ok(p) => {
             let name = p.name();
@@ -1049,15 +1047,13 @@ pub unsafe extern "C" fn Servo_Property_GetCSSValuesForProperty(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_Property_IsAnimatable(property: nsCSSPropertyID) -> bool {
-    use style::properties::animated_properties;
-    animated_properties::nscsspropertyid_is_animatable(property)
+pub extern "C" fn Servo_Property_IsAnimatable(prop: nsCSSPropertyID) -> bool {
+    NonCustomPropertyId::from_nscsspropertyid(prop).ok().map_or(false, |p| p.is_animatable())
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_Property_IsTransitionable(property: nsCSSPropertyID) -> bool {
-    use style::properties::animated_properties;
-    animated_properties::nscsspropertyid_is_transitionable(property)
+pub extern "C" fn Servo_Property_IsTransitionable(prop: nsCSSPropertyID) -> bool {
+    NonCustomPropertyId::from_nscsspropertyid(prop).ok().map_or(false, |p| p.is_transitionable())
 }
 
 #[no_mangle]
