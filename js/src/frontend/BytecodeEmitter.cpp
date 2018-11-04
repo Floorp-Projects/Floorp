@@ -2229,7 +2229,7 @@ BytecodeEmitter::emitYieldOp(JSOp op)
         return false;
     }
 
-    SET_UINT24(code(off), resumeIndex);
+    SET_RESUMEINDEX(code(off), resumeIndex);
 
     return emit1(JSOP_DEBUGAFTERYIELD);
 }
@@ -4462,7 +4462,7 @@ BytecodeEmitter::emitGoSub(JumpList* jump)
         return false;
     }
 
-    SET_UINT24(code(off), resumeIndex);
+    SET_RESUMEINDEX(code(off), resumeIndex);
     return true;
 }
 

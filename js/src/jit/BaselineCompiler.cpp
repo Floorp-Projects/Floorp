@@ -4843,7 +4843,7 @@ BaselineCompiler::emit_JSOP_INITIALYIELD()
     Register genObj = R2.scratchReg();
     masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), genObj);
 
-    MOZ_ASSERT(GET_UINT24(pc) == 0);
+    MOZ_ASSERT(GET_RESUMEINDEX(pc) == 0);
     masm.storeValue(Int32Value(0),
                     Address(genObj, GeneratorObject::offsetOfResumeIndexSlot()));
 
@@ -4885,7 +4885,7 @@ BaselineCompiler::emit_JSOP_YIELD()
     if (frame.stackDepth() == 1) {
         // If the expression stack is empty, we can inline the YIELD.
 
-        masm.storeValue(Int32Value(GET_UINT24(pc)),
+        masm.storeValue(Int32Value(GET_RESUMEINDEX(pc)),
                         Address(genObj, GeneratorObject::offsetOfResumeIndexSlot()));
 
         Register envObj = R0.scratchReg();
