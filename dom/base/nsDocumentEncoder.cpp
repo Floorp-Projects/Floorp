@@ -1816,14 +1816,10 @@ nsHTMLCopyEncoder::IsLastNode(nsINode *aNode)
   return true;
 }
 
-nsresult NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult); // make mac compiler happy
-
-nsresult
-NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult)
+already_AddRefed<nsIDocumentEncoder>
+do_createHTMLCopyEncoder()
 {
-  *aResult = new nsHTMLCopyEncoder;
- NS_ADDREF(*aResult);
- return NS_OK;
+  return do_AddRef(new nsHTMLCopyEncoder);
 }
 
 int32_t

@@ -10,9 +10,6 @@
 #define NS_DOC_ENCODER_CONTRACTID_BASE \
 "@mozilla.org/layout/documentEncoder;1?type="
 
-#define NS_HTMLCOPY_ENCODER_CONTRACTID \
-"@mozilla.org/layout/htmlCopyEncoder;1"
-
 // {972D8D8F-F0DA-11d4-9885-00C04FA0CF4B}
 #define NS_CONTENT_VIEWER_CID \
 { 0x972d8d8f, 0xf0da, 0x11d4, { 0x98, 0x85, 0x0, 0xc0, 0x4f, 0xa0, 0xcf, 0x4b } }
@@ -24,10 +21,6 @@
 // {e7ba1480-1dea-11d3-830f-00104bed045e}
 #define NS_TEXT_ENCODER_CID \
 { 0xe7ba1480, 0x1dea, 0x11d3, {0x83, 0x0f, 0x00, 0x10, 0x4b, 0xed, 0x04, 0x5e} }
-
- // {7f915b01-98fc-11d4-8eb0-a803f80ff1bc}
-#define NS_HTMLCOPY_TEXT_ENCODER_CID \
-{ 0x7f915b01, 0x98fc, 0x11d4, { 0x8e, 0xb0, 0xa8, 0x03, 0xf8, 0x0f, 0xf1, 0xbc } }
 
 #define NS_NAMESPACEMANAGER_CID                   \
 { /* d9783472-8fe9-11d2-9d3c-0060088f9ff7 */      \

@@ -46,6 +46,7 @@
 #include "nsCommandLine.h"
 #include "nsCommandParams.h"
 #include "nsPersistentProperties.h"
+#include "nsIDocumentEncoder.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -3272,6 +3273,15 @@ nsXPCComponents_Utils::CreatePersistentProperties(nsIPersistentProperties** aPer
     NS_ENSURE_ARG_POINTER(aPersistentProperties);
     nsCOMPtr<nsIPersistentProperties> props = new nsPersistentProperties();
     props.forget(aPersistentProperties);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::CreateHTMLCopyEncoder(nsIDocumentEncoder** aDocumentEncoder)
+{
+    NS_ENSURE_ARG_POINTER(aDocumentEncoder);
+    nsCOMPtr<nsIDocumentEncoder> encoder = do_createHTMLCopyEncoder();
+    encoder.forget(aDocumentEncoder);
     return NS_OK;
 }
 
