@@ -2096,16 +2096,33 @@ PresShell::FireResizeEvent()
   }
 }
 
+static nsIContent* GetNativeAnonymousSubtreeRoot(nsIContent* aContent)
+{
+  if (!aContent || !aContent->IsInNativeAnonymousSubtree()) {
+    return nullptr;
+  }
+  auto* current = aContent;
+  while (!current->IsRootOfNativeAnonymousSubtree()) {
+    current = current->GetFlattenedTreeParent();
+  }
+  return current;
+}
+
 void
 nsIPresShell::NativeAnonymousContentRemoved(nsIContent* aAnonContent)
 {
-  if (aAnonContent == mCurrentEventContent) {
-    mCurrentEventContent = aAnonContent->GetFlattenedTreeParent();
-    mCurrentEventFrame = nullptr;
+  MOZ_ASSERT(aAnonContent->IsRootOfNativeAnonymousSubtree());
+  if (nsIContent* root = GetNativeAnonymousSubtreeRoot(mCurrentEventContent)) {
+    if (aAnonContent == root) {
+      mCurrentEventContent = aAnonContent->GetFlattenedTreeParent();
+      mCurrentEventFrame = nullptr;
+    }
   }
 
   for (unsigned int i = 0; i < mCurrentEventContentStack.Length(); i++) {
-    if (aAnonContent == mCurrentEventContentStack.ElementAt(i)) {
+    nsIContent* anon =
+      GetNativeAnonymousSubtreeRoot(mCurrentEventContentStack.ElementAt(i));
+    if (aAnonContent == anon) {
       mCurrentEventContentStack.ReplaceObjectAt(aAnonContent->GetFlattenedTreeParent(), i);
       mCurrentEventFrameStack[i] = nullptr;
     }
