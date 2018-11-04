@@ -83,7 +83,7 @@ this.browserAction = class extends ExtensionAPI {
     this.defaults.icon = await StartupCache.get(
       extension, ["browserAction", "default_icon"],
       () => IconDetails.normalize({
-        path: options.default_icon,
+        path: options.default_icon || extension.manifest.icons,
         iconType: "browserAction",
         themeIcons: options.theme_icons,
       }, extension));
