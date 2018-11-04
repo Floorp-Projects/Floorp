@@ -12,6 +12,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
+#include "nsString.h"
 
 #define INITAL_REPEAT_DELAY 250
 
