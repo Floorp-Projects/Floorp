@@ -15,30 +15,28 @@
 /*
  * [SMDOC] Bytecode Definitions
  *
- * JavaScript operation bytecodes.  Add a new bytecode by claiming one of the
+ * JavaScript operation bytecodes. Add a new bytecode by claiming one of the
  * JSOP_UNUSED* here or by extracting the first unused opcode from
- * FOR_EACH_TRAILING_UNUSED_OPCODE and updating js::detail::LastDefinedOpcode
- * below.
+ * FOR_EACH_TRAILING_UNUSED_OPCODE.
  *
  * Includers must define a macro with the following form:
  *
- * #define MACRO(op, val, name, image, length, nuses, ndefs, format) ...
+ * #define MACRO(op, val, name, token, length, nuses, ndefs, format) ...
  *
  * Then simply use FOR_EACH_OPCODE(MACRO) to invoke MACRO for every opcode.
  * Selected arguments can be expanded in initializers.
  *
  * Field        Description
+ * -----        -----------
  * op           Bytecode name, which is the JSOp enumerator name
  * value        Bytecode value, which is the JSOp enumerator value
  * name         C string containing name for disassembler
- * image        C string containing "image" for pretty-printer, null if ugly
+ * token        Pretty-printer string, or null if ugly
  * length       Number of bytes including any immediate operands
  * nuses        Number of stack slots consumed by bytecode, -1 if variadic
  * ndefs        Number of stack slots produced by bytecode, -1 if variadic
  * format       Bytecode plus immediate operand encoding format
  *
- * This file is best viewed with 128 columns:
-12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678
  */
 
 /*
@@ -85,7 +83,6 @@
  */
 
 #define FOR_EACH_OPCODE(macro) \
-    /* legend:  op      val   name          image       len use def  format */ \
     /*
      * No operation is performed.
      *
@@ -94,7 +91,6 @@
      *   Stack: =>
      */ \
     macro(JSOP_NOP, 0, "nop", NULL, 1, 0, 0, JOF_BYTE) \
-    /* Long-standing JavaScript bytecodes. */ \
     /*
      * Pushes 'undefined' onto the stack.
      *
@@ -214,7 +210,6 @@
      *   nuses: n
      */ \
     macro(JSOP_POPN, 11, "popn", NULL, 3, -1, 0, JOF_UINT16) \
-    /* More long-standing bytecodes. */ \
     /*
      * Pushes a copy of the top value on the stack.
      *
@@ -723,7 +718,6 @@
      *   Stack: =>
      */ \
     macro(JSOP_RUNONCE, 71, "runonce", NULL, 1, 0, 0, JOF_BYTE) \
-    /* New, infallible/transitive identity ops. */ \
     /*
      * Pops the top two values from the stack, then pushes the result of
      * applying the operator to the two values.
@@ -886,7 +880,6 @@
      *   Stack: => val
      */ \
     macro(JSOP_UINT16, 88, "uint16", NULL, 3, 0, 1, JOF_UINT16) \
-    /* Object and array literal support. */ \
     /*
      * Pushes newly created object onto the stack.
      *
@@ -1139,7 +1132,6 @@
      *   Stack: =>
      */ \
     macro(JSOP_LOOPHEAD, 109, "loophead", NULL, 1, 0, 0, JOF_BYTE) \
-    /* ECMA-compliant assignment ops. */ \
     /*
      * Looks up name on the environment chain and pushes the environment which
      * contains the name onto the stack. If not found, pushes global lexical
@@ -1161,7 +1153,6 @@
      *   Stack: env, val => val
      */ \
     macro(JSOP_SETNAME, 111, "setname", NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
-    /* Exception handling ops. */ \
     /*
      * Pops the top of stack value as 'v', sets pending exception as 'v', then
      * raises error.
@@ -1235,7 +1226,6 @@
      *   Stack: lval, rval =>
      */ \
     macro(JSOP_RETSUB, 117, "retsub", NULL, 1, 2, 0, JOF_BYTE) \
-    /* More exception handling ops. */ \
     /*
      * Pushes the current pending exception onto the stack and clears the
      * pending exception. This is only emitted at the beginning of code for a
@@ -1314,7 +1304,6 @@
      *   Stack: lval =>
      */ \
     macro(JSOP_DEFAULT, 122, "default", NULL, 5, 1, 0, JOF_JUMP) \
-    /* ECMA-compliant call to eval op. */ \
     /*
      * Invokes 'eval' with 'args' and pushes return value onto the stack.
      *
@@ -1328,7 +1317,6 @@
      *   nuses: (argc+2)
      */ \
     macro(JSOP_EVAL, 123, "eval", NULL, 3, -1, 1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
-    /* ECMA-compliant call to eval op. */ \
     /*
      * Invokes 'eval' with 'args' and pushes return value onto the stack.
      *
@@ -2149,7 +2137,6 @@
      *   Stack: val => (typeof val)
      */ \
     macro(JSOP_TYPEOFEXPR, 196, "typeofexpr", NULL, 1, 1, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
-    /* Lexical environment support. */ \
     /*
      * Replaces the current block on the env chain with a fresh block that
      * copies all the bindings in the block. This operation implements the
