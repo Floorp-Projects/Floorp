@@ -597,7 +597,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
-    macro(JSOP_CALL, 58, "call", NULL, 3, -1, 1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
+    macro(JSOP_CALL, 58, "call", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
      * Looks up name on the environment chain and pushes its value onto the
      * stack.
@@ -792,7 +792,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
-    macro(JSOP_FUNAPPLY, 79, "funapply", NULL, 3, -1, 1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
+    macro(JSOP_FUNAPPLY, 79, "funapply", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
      * Pushes deep-cloned object literal or singleton onto the stack.
      *
@@ -821,7 +821,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1], newTarget => rval
      *   nuses: (argc+3)
      */ \
-    macro(JSOP_NEW, 82, "new", NULL, 3, -1, 1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_IC|JOF_IC) \
+    macro(JSOP_NEW, 82, "new", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC|JOF_IC) \
     /*
      * Pushes newly created object onto the stack with provided [[Prototype]].
      *
@@ -891,7 +891,7 @@
      *   Operands: (uint32_t extra)
      *   Stack: => obj
      */ \
-    macro(JSOP_NEWINIT, 89, "newinit", NULL, 5, 0, 1, JOF_UINT8|JOF_IC) \
+    macro(JSOP_NEWINIT, 89, "newinit", NULL, 5, 0, 1, JOF_UINT32|JOF_IC) \
     /*
      * Pushes newly created array onto the stack.
      *
@@ -1120,7 +1120,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
-    macro(JSOP_FUNCALL, 108, "funcall", NULL, 3, -1, 1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
+    macro(JSOP_FUNCALL, 108, "funcall", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
      * Another no-op.
      *
@@ -1316,7 +1316,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
-    macro(JSOP_EVAL, 123, "eval", NULL, 3, -1, 1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
+    macro(JSOP_EVAL, 123, "eval", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Invokes 'eval' with 'args' and pushes return value onto the stack.
      *
@@ -1329,7 +1329,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
-    macro(JSOP_STRICTEVAL, 124, "strict-eval", NULL, 3, -1, 1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC) \
+    macro(JSOP_STRICTEVAL, 124, "strict-eval", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * LIKE JSOP_GETELEM but takes receiver on stack, and the propval is
      * evaluated before the obj.
@@ -1351,7 +1351,7 @@
      *   Operands: uint24_t resumeIndex
      *   Stack: => resumeIndex
      */ \
-    macro(JSOP_RESUMEINDEX, 126, "resume-index", NULL, 4, 0, 1, JOF_UINT24) \
+    macro(JSOP_RESUMEINDEX, 126, "resume-index", NULL, 4, 0, 1, JOF_RESUMEINDEX) \
     /*
      * Defines the given function on the current scope.
      *
@@ -1573,7 +1573,7 @@
      *   Stack: callee, this => rval
      *   nuses: 2
      */ \
-    macro(JSOP_CALLITER, 145, "calliter", NULL, 3, -1, 1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
+    macro(JSOP_CALLITER, 145, "calliter", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
      * Initialize a non-configurable, non-writable, non-enumerable
      * data-property on an object.
@@ -1803,7 +1803,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1], newTarget => rval
      *   nuses: (argc+3)
      */ \
-    macro(JSOP_SUPERCALL, 165, "supercall", NULL, 3, -1, 1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
+    macro(JSOP_SUPERCALL, 165, "supercall", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
      * spreadcall variant of JSOP_SUPERCALL.
      *
@@ -2198,7 +2198,7 @@
      *   Operands: uint24_t resumeIndex
      *   Stack: generator => generator
      */ \
-    macro(JSOP_INITIALYIELD, 202, "initialyield", NULL, 4, 1, 1, JOF_UINT24) \
+    macro(JSOP_INITIALYIELD, 202, "initialyield", NULL, 4, 1, 1, JOF_RESUMEINDEX) \
     /*
      * Pops the generator and the return value 'rval1', stops interpretation
      * and returns 'rval1'. Pushes sent value from 'send()' onto the stack.
@@ -2208,7 +2208,7 @@
      *   Operands: uint24_t resumeIndex
      *   Stack: rval1, gen => rval2
      */ \
-    macro(JSOP_YIELD, 203, "yield", NULL, 4, 2, 1, JOF_UINT24) \
+    macro(JSOP_YIELD, 203, "yield", NULL, 4, 2, 1, JOF_RESUMEINDEX) \
     /*
      * Pops the generator and suspends and closes it. Yields the value in the
      * frame's return value slot.
@@ -2229,7 +2229,7 @@
      *   Operands: resume kind (GeneratorObject::ResumeKind)
      *   Stack: gen, val => rval
      */ \
-    macro(JSOP_RESUME, 205, "resume", NULL, 3, 2, 1, JOF_UINT8|JOF_INVOKE) \
+    macro(JSOP_RESUME, 205, "resume", NULL, 3, 2, 1, JOF_UINT16|JOF_INVOKE) \
     /*
      */ \
     macro(JSOP_UNUSED206, 206, "unused206", NULL, 1, 0, 0, JOF_BYTE) \
@@ -2261,7 +2261,7 @@
      *   Operands: uint24_t resumeIndex
      *   Stack: promise, gen => resolved
      */ \
-    macro(JSOP_AWAIT, 209, "await", NULL, 4, 2, 1, JOF_UINT24) \
+    macro(JSOP_AWAIT, 209, "await", NULL, 4, 2, 1, JOF_RESUMEINDEX) \
     /*
      * Pops the iterator and its next method from the top of the stack, and
      * create async iterator from it and push the async iterator back onto the
@@ -2490,7 +2490,7 @@
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
-    macro(JSOP_CALL_IGNORES_RV, 231, "call-ignores-rv", NULL, 3, -1, 1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
+    macro(JSOP_CALL_IGNORES_RV, 231, "call-ignores-rv", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
      * Push "import.meta"
      *
