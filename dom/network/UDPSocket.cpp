@@ -8,6 +8,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ErrorEvent.h"
+#include "mozilla/dom/network/UDPSocketChild.h"
 #include "mozilla/dom/UDPMessageEvent.h"
 #include "mozilla/dom/UDPSocketBinding.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -479,11 +480,7 @@ UDPSocket::InitRemote(const nsAString& aLocalAddress,
 {
   nsresult rv;
 
-  nsCOMPtr<nsIUDPSocketChild> sock =
-    do_CreateInstance("@mozilla.org/udp-socket-child;1", &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsCOMPtr<nsIUDPSocketChild> sock = new dom::UDPSocketChild();
 
   mListenerProxy = new ListenerProxy(this);
 
