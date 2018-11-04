@@ -138,6 +138,7 @@ nrappkit copyright:
 #undef strlcpy
 
 #include "mozilla/dom/network/TCPSocketChild.h"
+#include "mozilla/dom/network/UDPSocketChild.h"
 
 #ifdef LOG_TEMP_INFO
 #define LOG_INFO LOG_TEMP_INFO
@@ -1521,14 +1522,7 @@ void NrUdpSocketIpc::create_i(const nsACString &host, const uint16_t port) {
   ASSERT_ON_THREAD(io_thread_);
 
   uint32_t minBuffSize = 0;
-  nsresult rv;
-  nsCOMPtr<nsIUDPSocketChild> socketChild = do_CreateInstance("@mozilla.org/udp-socket-child;1", &rv);
-  if (NS_FAILED(rv)) {
-    ReentrantMonitorAutoEnter mon(monitor_);
-    err_ = true;
-    MOZ_ASSERT(false, "Failed to create UDPSocketChild");
-    return;
-  }
+  nsCOMPtr<nsIUDPSocketChild> socketChild = new dom::UDPSocketChild();
 
   // This can spin the event loop; don't do that with the monitor held
   socketChild->SetBackgroundSpinsEvents();
@@ -1542,7 +1536,7 @@ void NrUdpSocketIpc::create_i(const nsACString &host, const uint16_t port) {
   }
 
   RefPtr<NrUdpSocketIpcProxy> proxy(new NrUdpSocketIpcProxy);
-  rv = proxy->Init(this);
+  nsresult rv = proxy->Init(this);
   if (NS_FAILED(rv)) {
     err_ = true;
     mon.NotifyAll();
