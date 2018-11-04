@@ -9,6 +9,7 @@ add_task(async function() {
         "default_popup": "popup.html",
         "unrecognized_property": "with-a-random-value",
       },
+      icons: {32: "icon.png"},
     },
 
     files: {
@@ -24,6 +25,7 @@ add_task(async function() {
           browser.runtime.sendMessage("from-popup");
         };
       },
+      "icon.png": imageBuffer,
     },
 
     background: function() {
@@ -47,6 +49,10 @@ add_task(async function() {
   for (let i = 0; i < 3; i++) {
     clickBrowserAction(extension);
 
+    let widget = getBrowserActionWidget(extension).forWindow(window);
+    let image = getComputedStyle(widget.node).listStyleImage;
+
+    ok(image.includes("/icon.png"), "The extension's icon is used");
     await extension.awaitMessage("popup");
 
     closeBrowserAction(extension);
