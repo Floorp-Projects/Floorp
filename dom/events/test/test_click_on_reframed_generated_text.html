@@ -1,0 +1,32 @@
+<!doctype html>
+<title>Test for bug 1497524: Unbound generated content in the active chain</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+#target::before {
+  content: "X";
+  color: green;
+}
+</style>
+Should get a click event when clicking on the X below.
+<div id="target"></div>
+<script>
+SimpleTest.waitForExplicitFinish();
+let target = document.getElementById("target");
+
+target.addEventListener("mousedown", () => target.style.display = "inline");
+target.addEventListener("mouseup", () => target.style.display = "block");
+target.addEventListener("click", () => {
+  ok(true, "Got click event");
+  SimpleTest.finish();
+});
+
+onload = function() {
+  requestAnimationFrame(() => {
+    synthesizeMouseAtCenter(target, { type: "mousedown" })
+    requestAnimationFrame(() => {
+      synthesizeMouseAtCenter(target, { type: "mouseup" })
+    });
+  });
+}
+</script>
