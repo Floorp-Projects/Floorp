@@ -2155,6 +2155,13 @@ impl Renderer {
                     }
                 }
                 ResultMsg::AppendNotificationRequests(mut notifications) => {
+                    if self.pending_texture_updates.is_empty() {
+                        drain_filter(
+                            &mut notifications,
+                            |n| { n.when() == Checkpoint::FrameTexturesUpdated },
+                            |n| { n.notify(); },
+                        );
+                    }
                     self.notifications.append(&mut notifications);
                 }
                 ResultMsg::RefreshShader(path) => {
@@ -2879,6 +2886,12 @@ impl Renderer {
                 }
             }
         }
+
+        drain_filter(
+            &mut self.notifications,
+            |n| { n.when() == Checkpoint::FrameTexturesUpdated },
+            |n| { n.notify(); },
+        );
     }
 
     pub(crate) fn draw_instanced_batch<T>(
