@@ -102,7 +102,7 @@ class HTMLElement(object):
             the centre of the element.
         """
         body = {"id": self.id, "x": x, "y": y}
-        self.marionette._send_message("singleTap", body)
+        self.marionette._send_message("Marionette:SingleTap", body)
 
     @property
     def text(self):
@@ -1196,7 +1196,7 @@ class Marionette(object):
                     # The process is still running, which means the shutdown
                     # request was not correct or the application ignored it.
                     # Allow Marionette to accept connections again.
-                    self._send_message("acceptConnections", {"value": True})
+                    self._send_message("Marionette:AcceptConnections", {"value": True})
 
                     message = "Process still running {}s after restart request"
                     reraise(exc, message.format(self.shutdown_timeout), tb)
