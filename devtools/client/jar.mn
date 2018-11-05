@@ -56,7 +56,7 @@ devtools.jar:
     content/memory/index.xhtml (memory/index.xhtml)
     content/framework/toolbox-window.xul (framework/toolbox-window.xul)
     content/framework/toolbox-options.xhtml (framework/toolbox-options.xhtml)
-*   content/framework/toolbox.xul (framework/toolbox.xul)
+    content/framework/toolbox.xul (framework/toolbox.xul)
     content/framework/toolbox-init.js (framework/toolbox-init.js)
     content/framework/options-panel.css (framework/options-panel.css)
     content/framework/toolbox-process-window.html (framework/toolbox-process-window.html)
