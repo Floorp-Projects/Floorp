@@ -1071,6 +1071,72 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     return ancestors;
   },
 
+  /**
+   * Return an object with information about this rule used for tracking changes.
+   * It will be decorated with information about a CSS change before being tracked.
+   *
+   * It contains:
+   * - the rule selector (or generated selectror for inline styles)
+   * - the rule's host stylesheet (or element for inline styles)
+   * - the rule's ancestor rules (@media, @supports, @keyframes), if any
+   * - the rule's position within its ancestor tree, if any
+   *
+   * @return {Object}
+   */
+  get metadata() {
+    const data = {};
+    // Collect information about the rule's ancestors (@media, @supports, @keyframes).
+    // Used to show context for this change in the UI and to match the rule for undo/redo.
+    data.ancestors = this.ancestorRules.map(rule => {
+      return {
+        // Rule type as number defined by CSSRule.type (ex: 4, 7, 12)
+        // @see https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
+        type: rule.rawRule.type,
+        // Rule type as human-readable string (ex: "@media", "@supports", "@keyframes")
+        typeName: CSSRuleTypeName[rule.rawRule.type],
+        // Conditions of @media and @supports rules (ex: "min-width: 1em")
+        conditionText: rule.rawRule.conditionText,
+        // Name of @keyframes rule; refrenced by the animation-name CSS property.
+        name: rule.rawRule.name,
+        // Selector of individual @keyframe rule within a @keyframes rule (ex: 0%, 100%).
+        keyText: rule.rawRule.keyText,
+        // Array with the indexes of this rule and its ancestors within the CSS rule tree.
+        ruleIndex: rule._ruleIndex,
+      };
+    });
+
+    // For changes in element style attributes, generate a unique selector.
+    if (this.type === ELEMENT_STYLE) {
+      // findCssSelector() fails on XUL documents. Catch and silently ignore that error.
+      try {
+        data.selector = findCssSelector(this.rawNode);
+      } catch (err) {}
+
+      data.source = {
+        type: "element",
+        // Used to differentiate between elements which match the same generated selector
+        // but live in different documents (ex: host document and iframe).
+        href: this.rawNode.baseURI,
+        // Element style attributes don't have a rule index; use the generated selector.
+        index: data.selector,
+      };
+      data.ruleIndex = 0;
+    } else {
+      data.selector = (this.type === CSSRule.KEYFRAME_RULE)
+        ? this.rawRule.keyText
+        : this.rawRule.selectorText;
+      data.source = {
+        type: "stylesheet",
+        href: this.sheetActor.href,
+        index: this.sheetActor.styleSheetIndex,
+      };
+      // Used to differentiate between changes to rules with identical selectors.
+      data.ruleIndex = this._ruleIndex;
+    }
+
+    return data;
+  },
+
   getDocument: function(sheet) {
     if (sheet.ownerNode) {
       return sheet.ownerNode.nodeType == sheet.ownerNode.DOCUMENT_NODE ?
@@ -1503,56 +1569,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     // Append the "!important" string if defined in the previous priority flag.
     prevValue = (prevValue && prevPriority) ? `${prevValue} !important` : prevValue;
 
-    // Metadata about a change.
-    const data = {};
-    // Collect information about the rule's ancestors (@media, @supports, @keyframes).
-    // Used to show context for this change in the UI and to match the rule for undo/redo.
-    data.ancestors = this.ancestorRules.map(rule => {
-      return {
-        // Rule type as number defined by CSSRule.type (ex: 4, 7, 12)
-        // @see https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
-        type: rule.rawRule.type,
-        // Rule type as human-readable string (ex: "@media", "@supports", "@keyframes")
-        typeName: CSSRuleTypeName[rule.rawRule.type],
-        // Conditions of @media and @supports rules (ex: "min-width: 1em")
-        conditionText: rule.rawRule.conditionText,
-        // Name of @keyframes rule; refrenced by the animation-name CSS property.
-        name: rule.rawRule.name,
-        // Selector of individual @keyframe rule within a @keyframes rule (ex: 0%, 100%).
-        keyText: rule.rawRule.keyText,
-        // Array with the indexes of this rule and its ancestors within the CSS rule tree.
-        ruleIndex: rule._ruleIndex,
-      };
-    });
-
-    // For changes in element style attributes, generate a unique selector.
-    if (this.type === ELEMENT_STYLE) {
-      // findCssSelector() fails on XUL documents. Catch and silently ignore that error.
-      try {
-        data.selector = findCssSelector(this.rawNode);
-      } catch (err) {}
-
-      data.source = {
-        type: "element",
-        // Used to differentiate between elements which match the same generated selector
-        // but live in different documents (ex: host document and iframe).
-        href: this.rawNode.baseURI,
-        // Element style attributes don't have a rule index; use the generated selector.
-        index: data.selector,
-      };
-      data.ruleIndex = 0;
-    } else {
-      data.selector = (this.type === CSSRule.KEYFRAME_RULE)
-        ? this.rawRule.keyText
-        : this.rawRule.selectorText;
-      data.source = {
-        type: "stylesheet",
-        href: this.sheetActor.href,
-        index: this.sheetActor.styleSheetIndex,
-      };
-      // Used to differentiate between changes to rules with identical selectors.
-      data.ruleIndex = this._ruleIndex;
-    }
+    const data = this.metadata;
 
     switch (change.type) {
       case "set":
