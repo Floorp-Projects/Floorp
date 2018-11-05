@@ -2362,7 +2362,7 @@ StateObject::SetSeekingState(SeekJob&& aSeekJob, EventVisibility aVisibility)
 void
 MediaDecoderStateMachine::StateObject::SetDecodingState()
 {
-  if (mMaster->mLooping) {
+  if (mMaster->mLooping && mMaster->mSeamlessLoopingAllowed) {
     SetState<LoopingDecodingState>();
     return;
   }
@@ -3839,7 +3839,9 @@ void
 MediaDecoderStateMachine::LoopingChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
-  mStateObj->HandleLoopingChanged();
+  if (mSeamlessLoopingAllowed) {
+    mStateObj->HandleLoopingChanged();
+  }
 }
 
 RefPtr<GenericPromise>
