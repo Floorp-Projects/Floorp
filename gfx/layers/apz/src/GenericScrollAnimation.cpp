@@ -111,10 +111,13 @@ GenericScrollAnimation::DoSample(FrameMetrics& aFrameMetrics, const TimeDuration
 }
 
 bool
-GenericScrollAnimation::ApplyContentShift(const CSSPoint& aShiftDelta)
+GenericScrollAnimation::HandleScrollOffsetUpdate(const Maybe<CSSPoint>& aRelativeDelta)
 {
-  mAnimationPhysics->ApplyContentShift(aShiftDelta);
-  return true;
+  if (aRelativeDelta) {
+    mAnimationPhysics->ApplyContentShift(*aRelativeDelta);
+    return true;
+  }
+  return false;
 }
 
 } // namespace layers
