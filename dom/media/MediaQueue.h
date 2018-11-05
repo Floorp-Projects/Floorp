@@ -61,9 +61,20 @@ public:
     return rv.forget();
   }
 
+  inline already_AddRefed<T> PopBack() {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    RefPtr<T> rv = dont_AddRef(static_cast<T*>(nsDeque::Pop()));
+    return rv.forget();
+  }
+
   inline RefPtr<T> PeekFront() const {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     return static_cast<T*>(nsDeque::PeekFront());
+  }
+
+  inline RefPtr<T> PeekBack() const {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    return static_cast<T*>(nsDeque::Peek());
   }
 
   void Reset() {
