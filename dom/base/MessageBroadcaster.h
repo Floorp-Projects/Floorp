@@ -8,6 +8,7 @@
 #define mozilla_dom_MessageBroadcaster_h
 
 #include "mozilla/dom/MessageListenerManager.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
