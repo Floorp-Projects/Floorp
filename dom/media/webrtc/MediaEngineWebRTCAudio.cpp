@@ -654,8 +654,10 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>&)
 
 
 
-  mInputProcessing = new AudioInputProcessing(
-    mDeviceMaxChannelCount, mStream, mTrackID, mPrincipal);
+  if (!mInputProcessing) {
+    mInputProcessing = new AudioInputProcessing(
+      mDeviceMaxChannelCount, mStream, mTrackID, mPrincipal);
+  }
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
