@@ -8,7 +8,7 @@
 // leaking to window scope.
 {
 
-class MozRadiogroup extends MozBaseControl {
+class MozRadiogroup extends MozElements.BaseControl {
   constructor() {
     super();
 
