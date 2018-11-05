@@ -28,7 +28,7 @@ public:
 
   bool DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) override;
 
-  bool ApplyContentShift(const CSSPoint& aShiftDelta) override;
+  bool HandleScrollOffsetUpdate(const Maybe<CSSPoint>& aRelativeDelta) override;
 
   void UpdateDelta(TimeStamp aTime,
                    const nsPoint& aDelta,
