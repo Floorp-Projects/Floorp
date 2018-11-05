@@ -152,7 +152,7 @@ class ProfilingStackFrame
     mozilla::Atomic<int32_t, mozilla::ReleaseAcquire,
                     mozilla::recordreplay::Behavior::DontPreserve> pcOffsetIfJS_;
 
-    // Bits 0...3 hold the Flags. Bits 4...31 hold the category.
+    // Bits 0...6 hold the Flags. Bits 7...31 hold the category.
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
                     mozilla::recordreplay::Behavior::DontPreserve> flagsAndCategory_;
 
@@ -173,8 +173,8 @@ class ProfilingStackFrame
         return *this;
     }
 
-    // 4 bits for the flags.
-    // That leaves 32 - 4 = 28 bits for the category.
+    // 7 bits for the flags.
+    // That leaves 32 - 7 = 25 bits for the category.
     enum class Flags : uint32_t {
         // The first three flags describe the kind of the frame and are
         // mutually exclusive. (We still give them individual bits for
@@ -198,7 +198,16 @@ class ProfilingStackFrame
         // JS_OSR frames are ignored.
         JS_OSR = 1 << 3,
 
-        FLAGS_BITCOUNT = 4,
+        // The next three are mutually exclusive.
+        // By default, for profiling stack frames that have both a label and a
+        // dynamic string, the two strings are combined into one string of the
+        // form "<label> <dynamicString>" during JSON serialization. The
+        // following flags can be used to change this preset.
+        STRING_TEMPLATE_METHOD = 1 << 4, // "<label>.<dynamicString>"
+        STRING_TEMPLATE_GETTER = 1 << 5, // "get <label>.<dynamicString>"
+        STRING_TEMPLATE_SETTER = 1 << 6, // "set <label>.<dynamicString>"
+
+        FLAGS_BITCOUNT = 7,
         FLAGS_MASK = (1 << FLAGS_BITCOUNT) - 1
     };
 
@@ -290,6 +299,10 @@ class ProfilingStackFrame
             uint32_t(Flags::IS_JS_FRAME) |
             (uint32_t(Category::JS) << uint32_t(Flags::FLAGS_BITCOUNT));
         MOZ_ASSERT(isJsFrame());
+    }
+
+    uint32_t flags() const {
+        return uint32_t(flagsAndCategory_) & uint32_t(Flags::FLAGS_MASK);
     }
 
     Category category() const {

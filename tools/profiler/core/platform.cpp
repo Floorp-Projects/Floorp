@@ -1840,8 +1840,9 @@ CollectJavaThreadProfileData()
         parentFrameWasIdleFrame = false;
       }
 
-      buffer->CollectCodeLocation("", frameNameString.get(), Nothing(),
-          Nothing(), category);
+      buffer->CollectCodeLocation("", frameNameString.get(),
+          js::ProfilingStackFrame::StringTemplate::DEFAULT,
+          Nothing(), Nothing(), category);
     }
     sampleId++;
   }
