@@ -309,7 +309,6 @@ public:
   // Keyword/Enum value tables
   // Not const because we modify its entries when the pref
   // "layout.css.background-clip.text" changes:
-  static const KTableEntry kBorderImageRepeatKTable[];
   static const KTableEntry kBorderStyleKTable[];
   static const KTableEntry kShapeRadiusKTable[];
   static const KTableEntry kFilterFunctionKTable[];

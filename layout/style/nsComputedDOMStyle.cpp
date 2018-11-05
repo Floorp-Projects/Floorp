@@ -3016,29 +3016,6 @@ nsComputedDOMStyle::DoGetBorderImageOutset()
 }
 
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetBorderImageRepeat()
-{
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-
-  const nsStyleBorder* border = StyleBorder();
-
-  // horizontal repeat
-  RefPtr<nsROCSSPrimitiveValue> valX = new nsROCSSPrimitiveValue;
-  valX->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(border->mBorderImageRepeatH,
-                                   nsCSSProps::kBorderImageRepeatKTable));
-  valueList->AppendCSSValue(valX.forget());
-
-  // vertical repeat
-  RefPtr<nsROCSSPrimitiveValue> valY = new nsROCSSPrimitiveValue;
-  valY->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(border->mBorderImageRepeatV,
-                                   nsCSSProps::kBorderImageRepeatKTable));
-  valueList->AppendCSSValue(valY.forget());
-  return valueList.forget();
-}
-
-already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetFlexBasis()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
