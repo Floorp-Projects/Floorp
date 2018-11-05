@@ -125,7 +125,7 @@ nsJSUtils::ExecutionContext::ExecutionContext(JSContext* aCx,
   :
 #ifdef MOZ_GECKO_PROFILER
     mAutoProfilerLabel("nsJSUtils::ExecutionContext", /* dynamicStr */ nullptr,
-                       js::ProfilingStackFrame::Category::JS),
+                       __LINE__, js::ProfilingStackFrame::Category::JS),
 #endif
     mCx(aCx)
   , mRealm(aCx, aGlobal)
