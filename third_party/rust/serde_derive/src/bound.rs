@@ -32,8 +32,7 @@ pub fn without_defaults(generics: &syn::Generics) -> syn::Generics {
                     ..param.clone()
                 }),
                 _ => param.clone(),
-            })
-            .collect(),
+            }).collect(),
         ..generics.clone()
     }
 }
@@ -91,7 +90,8 @@ pub fn with_where_predicates_from_variants(
 // Puts the given bound on any generic type parameters that are used in fields
 // for which filter returns true.
 //
-// For example, the following struct needs the bound `A: Serialize, B: Serialize`.
+// For example, the following struct needs the bound `A: Serialize, B:
+// Serialize`.
 //
 //     struct S<'b, A, B: 'b, C> {
 //         a: A,
@@ -193,14 +193,13 @@ pub fn with_bound(
         .map(|id| syn::TypePath {
             qself: None,
             path: id.into(),
-        })
-        .chain(associated_type_usage.into_iter().cloned())
+        }).chain(associated_type_usage.into_iter().cloned())
         .map(|bounded_ty| {
             syn::WherePredicate::Type(syn::PredicateType {
                 lifetimes: None,
                 // the type parameter that is being bounded e.g. T
                 bounded_ty: syn::Type::Path(bounded_ty),
-                colon_token: Default::default(),
+                colon_token: <Token![:]>::default(),
                 // the bound e.g. Serialize
                 bounds: vec![syn::TypeParamBound::Trait(syn::TraitBound {
                     paren_token: None,
@@ -208,7 +207,7 @@ pub fn with_bound(
                     lifetimes: None,
                     path: bound.clone(),
                 })].into_iter()
-                    .collect(),
+                .collect(),
             })
         });
 
@@ -233,7 +232,7 @@ pub fn with_self_bound(
             lifetimes: None,
             // the type that is being bounded e.g. MyStruct<'a, T>
             bounded_ty: type_of_item(cont),
-            colon_token: Default::default(),
+            colon_token: <Token![:]>::default(),
             // the bound e.g. Default
             bounds: vec![syn::TypeParamBound::Trait(syn::TraitBound {
                 paren_token: None,
@@ -241,7 +240,7 @@ pub fn with_self_bound(
                 lifetimes: None,
                 path: bound.clone(),
             })].into_iter()
-                .collect(),
+            .collect(),
         }));
     generics
 }
@@ -270,8 +269,7 @@ pub fn with_lifetime_bound(generics: &syn::Generics, lifetime: &str) -> syn::Gen
                 syn::GenericParam::Const(_) => {}
             }
             param
-        }))
-        .collect();
+        })).collect();
 
     syn::Generics {
         params: params,
@@ -289,7 +287,7 @@ fn type_of_item(cont: &Container) -> syn::Type {
                 arguments: syn::PathArguments::AngleBracketed(
                     syn::AngleBracketedGenericArguments {
                         colon2_token: None,
-                        lt_token: Default::default(),
+                        lt_token: <Token![<]>::default(),
                         args: cont
                             .generics
                             .params
@@ -307,13 +305,12 @@ fn type_of_item(cont: &Container) -> syn::Type {
                                 syn::GenericParam::Const(_) => {
                                     panic!("Serde does not support const generics yet");
                                 }
-                            })
-                            .collect(),
-                        gt_token: Default::default(),
+                            }).collect(),
+                        gt_token: <Token![>]>::default(),
                     },
                 ),
             }].into_iter()
-                .collect(),
+            .collect(),
         },
     })
 }
