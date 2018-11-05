@@ -4,9 +4,7 @@
 "use strict";
 
 add_task(async function test_providers() {
-  let match = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
-                              UrlbarUtils.MATCH_SOURCE.TABS,
-                              { url: "http://mozilla.org/foo/" });
+  let match = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH, { url: "http://mozilla.org/foo/" });
   registerBasicTestProvider([match]);
 
   let context = createContext();
