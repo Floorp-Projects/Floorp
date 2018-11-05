@@ -3157,6 +3157,10 @@ js::DefineDataElement(JSContext* cx, HandleObject obj, uint32_t index, HandleVal
 
 /*** SpiderMonkey nonstandard internal methods ***************************************************/
 
+// Mark an object as having an immutable prototype
+//
+// NOTE: This does not correspond to the SetImmutablePrototype ECMAScript
+//       method.
 bool
 js::SetImmutablePrototype(JSContext* cx, HandleObject obj, bool* succeeded)
 {
