@@ -698,8 +698,8 @@ struct TextRenderedRun
    * in the <text> element's user space.
    *
    * @param aContext The context to use for unit conversions.
-   * @param aFlags A combination of the flags above indicating what parts of the
-   *   text to include in the rectangle.
+   * @param aFlags A combination of the flags above indicating what parts of
+   *   the text to include in the rectangle.
    * @param aAdditionalTransform An additional transform to apply to the
    *   frame user space rectangle before its bounds are transformed into
    *   user space.
