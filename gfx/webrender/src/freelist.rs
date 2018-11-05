@@ -2,24 +2,62 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::marker::PhantomData;
+//! A generic backing store for caches.
+//!
+//! `FreeList` is a simple vector-backed data structure where each entry in the
+//! vector contains an Option<T>. It maintains an index-based (rather than
+//! pointer-based) free list to efficiently locate the next unused entry. If all
+//! entries are occupied, insertion appends a new element to the vector.
+//!
+//! It also supports both strong and weak handle semantics. There is exactly one
+//! (non-Clonable) strong handle per occupied entry, which must be passed by
+//! value into `free()` to release an entry. Strong handles can produce an
+//! unlimited number of (Clonable) weak handles, which are used to perform
+//! lookups which may fail of the entry has been freed. A per-entry epoch ensures
+//! that weak handle lookups properly fail even if the entry has been freed and
+//! reused.
+//!
+//! TODO(gw): Add an occupied list head, for fast iteration of the occupied list
+//! to implement retain() style functionality.
 
-// TODO(gw): Add an occupied list head, for fast
-//           iteration of the occupied list to implement
-//           retain() style functionality.
+use std::fmt;
+use std::marker::PhantomData;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct Epoch(u32);
 
-#[derive(Debug)]
+impl Epoch {
+    /// Mints a new epoch.
+    ///
+    /// We start at 1 so that 0 is always an invalid epoch.
+    fn new() -> Self {
+        Epoch(1)
+    }
+
+    /// Returns an always-invalid epoch.
+    fn invalid() -> Self {
+        Epoch(0)
+    }
+}
+
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FreeListHandle<M> {
     index: u32,
     epoch: Epoch,
     _marker: PhantomData<M>,
+}
+
+/// More-compact textual representation for debug logging.
+impl<M> fmt::Debug for FreeListHandle<M> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("StrongHandle")
+            .field("index", &self.index)
+            .field("epoch", &self.epoch.0)
+            .finish()
+    }
 }
 
 impl<M> FreeListHandle<M> {
@@ -42,13 +80,39 @@ impl<M> Clone for WeakFreeListHandle<M> {
     }
 }
 
-#[derive(Debug)]
+impl<M> PartialEq for WeakFreeListHandle<M> {
+    fn eq(&self, other: &Self) -> bool {
+        self.index == other.index && self.epoch == other.epoch
+    }
+}
+
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct WeakFreeListHandle<M> {
     index: u32,
     epoch: Epoch,
     _marker: PhantomData<M>,
+}
+
+/// More-compact textual representation for debug logging.
+impl<M> fmt::Debug for WeakFreeListHandle<M> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("WeakHandle")
+            .field("index", &self.index)
+            .field("epoch", &self.epoch.0)
+            .finish()
+    }
+}
+
+impl<M> WeakFreeListHandle<M> {
+    /// Returns an always-invalid handle.
+    pub fn invalid() -> Self {
+        Self {
+            index: 0,
+            epoch: Epoch::invalid(),
+            _marker: PhantomData,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -76,10 +140,21 @@ pub enum UpsertResult<T, M> {
 }
 
 impl<T, M> FreeList<T, M> {
+    /// Mints a new `FreeList` with no entries.
+    ///
+    /// Triggers a 1-entry allocation.
     pub fn new() -> Self {
+        // We guarantee that we never have zero entries by starting with one
+        // free entry. This allows WeakFreeListHandle::invalid() to work
+        // without adding any additional branches.
+        let first_slot = Slot {
+            next: None,
+            epoch: Epoch::new(),
+            value: None,
+        };
         FreeList {
-            slots: Vec::new(),
-            free_list_head: None,
+            slots: vec![first_slot],
+            free_list_head: Some(0),
             active_count: 0,
             _marker: PhantomData,
         }
@@ -154,7 +229,7 @@ impl<T, M> FreeList<T, M> {
             }
             None => {
                 let index = self.slots.len() as u32;
-                let epoch = Epoch(0);
+                let epoch = Epoch::new();
 
                 self.slots.push(Slot {
                     next: None,
