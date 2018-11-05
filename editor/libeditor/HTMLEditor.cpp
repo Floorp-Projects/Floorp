@@ -3010,14 +3010,35 @@ HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
   iter->Init(firstRange);
 
   RefPtr<Element> lastElementInRange;
-  for (; !iter->IsDone(); iter->Next()) {
+  for (nsINode* lastNodeInRange = nullptr; !iter->IsDone(); iter->Next()) {
     if (lastElementInRange) {
       // When any node follows an element node, not only one element is
       // selected so that return nullptr.
       return nullptr;
     }
 
-    lastElementInRange = Element::FromNodeOrNull(iter->GetCurrentNode());
+    // This loop ignored any non-element nodes before first element node.
+    // Its purpose must be that this method allow to this case as selecting
+    // an element:
+    // - <p>abc <b>d[ef</b>}</p>
+    // because children of an element node is listed up before the element.
+    // However, this case must not be expected by the initial developer:
+    // - <p>a[bc <b>def</b>}</p>
+    // When we meet non-parent and non-next-sibling node of previous node,
+    // it means that the range across element boundary (open tag in HTML
+    // source).  So, in this case, we should not say only the following
+    // element is selected.
+    nsINode* currentNode = iter->GetCurrentNode();
+    MOZ_ASSERT(currentNode);
+    if (lastNodeInRange &&
+        lastNodeInRange->GetParentNode() != currentNode &&
+        lastNodeInRange->GetNextSibling() != currentNode) {
+      return nullptr;
+    }
+
+    lastNodeInRange = currentNode;
+
+    lastElementInRange = Element::FromNodeOrNull(lastNodeInRange);
     if (!lastElementInRange) {
       continue;
     }

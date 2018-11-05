@@ -210,12 +210,12 @@ SimpleTest.waitForFocus(async function() {
   selection.removeAllRanges();
   selection.addRange(range);
 
-  todo_is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
-          null,
-          "#1-7 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection ends the <b> element but starts from the previous text node");
-  todo_is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
-          null,
-          "#1-7 nsIHTMLEditor::getSelectedElement(\"b\") should return null when Selection ends the <b> element but starts from the previous text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#1-7 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection ends the <b> element but starts from the previous text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     null,
+     "#1-7 nsIHTMLEditor::getSelectedElement(\"b\") should return null when Selection ends the <b> element but starts from the previous text node");
   is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
      null,
      "#1-7 nsIHTMLEditor::getSelectedElement(\"i\") should return null when Selection ends the <b> element but starts from the previous text node");
@@ -670,9 +670,9 @@ SimpleTest.waitForFocus(async function() {
   selection.removeAllRanges();
   selection.addRange(range);
 
-  todo_is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
-          null,
-          "#6-1 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection starts from previous text node of <b> element and end at end of <b> element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#6-1 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection starts from previous text node of <b> element and end at end of <b> element");
   is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
      null,
      "#6-1 nsIHTMLEditor::getSelectedElement(\"href\") should return null when Selection starts from previous text node of <b> element and end at end of <b> element");
