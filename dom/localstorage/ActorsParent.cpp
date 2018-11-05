@@ -119,9 +119,25 @@ static_assert(kSQLiteGrowthIncrement >= 0 &&
               kSQLiteGrowthIncrement < uint32_t(INT32_MAX),
               "Must be 0 (disabled) or a positive multiple of the page size!");
 
+/**
+ * The database name for LocalStorage data in a per-origin directory.
+ */
 #define DATA_FILE_NAME "data.sqlite"
+/**
+ * The journal corresponding to DATA_FILE_NAME.  (We don't use WAL mode.)
+ */
 #define JOURNAL_FILE_NAME "data.sqlite-journal"
 
+/**
+ * How long between the first moment we know we have data to be written on a
+ * `Connection` and when we should actually perform the write.  This helps
+ * limit disk churn under silly usage patterns and is historically consistent
+ * with the previous, legacy implementation.
+ *
+ * Note that flushing happens downstream of Snapshot checkpointing and its
+ * batch mechanism which helps avoid wasteful IPC in the case of silly content
+ * code.
+ */
 const uint32_t kFlushTimeoutMs = 5000;
 
 const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
@@ -129,13 +145,55 @@ const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
 const uint32_t kDefaultOriginLimitKB = 5 * 1024;
 const uint32_t kDefaultShadowWrites = true;
 const uint32_t kDefaultSnapshotPrefill = 4096;
+/**
+ * LocalStorage data limit as determined by summing up the lengths of all string
+ * keys and values.  This is consistent with the legacy implementation and other
+ * browser engines.  This value should really only ever change in unit testing
+ * where being able to lower it makes it easier for us to test certain edge
+ * cases.
+ */
 const char kDefaultQuotaPref[] = "dom.storage.default_quota";
+/**
+ * Should all mutations also be reflected in the "shadow" database, which is
+ * the legacy webappsstore.sqlite database.  When this is enabled, users can
+ * downgrade their version of Firefox and/or otherwise fall back to the legacy
+ * implementation without loss of data.  (Older versions of Firefox will
+ * recognize the presence of ls-archive.sqlite and purge it and the other
+ * LocalStorage directories so privacy is maintained.)
+ */
 const char kShadowWritesPref[] = "dom.storage.shadow_writes";
+/**
+ * Byte budget for sending data down to the LSSnapshot instance when it is first
+ * created.  If there is less data than this (measured by tallying the string
+ * length of the keys and values), all data is sent, otherwise partial data is
+ * sent.  See `Snapshot`.
+ */
 const char kSnapshotPrefillPref[] = "dom.storage.snapshot_prefill";
 
+/**
+ * The amount of time a PreparedDatastore instance should stick around after a
+ * preload is triggered in order to give time for the page to use LocalStorage
+ * without triggering worst-case synchronous jank.
+ */
 const uint32_t kPreparedDatastoreTimeoutMs = 20000;
 
+/**
+ * Cold storage for LocalStorage data extracted from webappsstore.sqlite at
+ * LSNG first-run that has not yet been migrated to its own per-origin directory
+ * by use.
+ *
+ * In other words, at first run, LSNG copies the contents of webappsstore.sqlite
+ * into this database.  As requests are made for that LocalStorage data, the
+ * contents are removed from this database and placed into per-origin QM
+ * storage.  So the contents of this database are always old, unused
+ * LocalStorage data that we can potentially get rid of at some point in the
+ * future.
+ */
 #define LS_ARCHIVE_FILE_NAME "ls-archive.sqlite"
+/**
+ * The legacy LocalStorage database.  Its contents are maintained as our
+ * "shadow" database so that LSNG can be disabled without loss of user data.
+ */
 #define WEB_APPS_STORE_FILE_NAME "webappsstore.sqlite"
 
 // Shadow database Write Ahead Log's maximum size is 512KB
@@ -948,6 +1006,16 @@ DetachShadowDatabase(mozIStorageConnection* aConnection)
  * Non-actor class declarations
  ******************************************************************************/
 
+/**
+ * Coalescing manipulation queue used by `Connection` and `DataStore`.  Used by
+ * `Connection` to buffer and coalesce manipulations applied to the Datastore
+ * in batches by Snapshot Checkpointing until flushed to disk.  Used by
+ * `Datastore` to update `DataStore::mOrderedItems` efficiently/for code
+ * simplification.  (DataStore does not actually depend on the coalescing, as
+ * mutations are applied atomically when a Snapshot Checkpoints, and with
+ * `Datastore::mValues` being updated at the same time the mutations are applied
+ * to Datastore's mWriteOptimizer.)
+ */
 class WriteOptimizer final
 {
   class WriteInfo;
@@ -1001,6 +1069,12 @@ public:
   PerformWrites(Connection* aConnection, bool aShadowWrites);
 };
 
+/**
+ * Base class for specific mutations.  Each subclass knows how to `Perform` the
+ * manipulation against a `Connection` and the "shadow" database (legacy
+ * webappsstore.sqlite database that exists so LSNG can be disabled/safely
+ * downgraded from.)
+ */
 class WriteOptimizer::WriteInfo
 {
 public:
@@ -1020,6 +1094,9 @@ public:
   virtual ~WriteInfo() = default;
 };
 
+/**
+ * SetItem mutation where the key did not previously exist.
+ */
 class WriteOptimizer::AddItemInfo
   : public WriteInfo
 {
@@ -1056,6 +1133,9 @@ private:
   Perform(Connection* aConnection, bool aShadowWrites) override;
 };
 
+/**
+ * SetItem mutation where the key already existed.
+ */
 class WriteOptimizer::UpdateItemInfo final
   : public AddItemInfo
 {
@@ -1100,6 +1180,9 @@ private:
   Perform(Connection* aConnection, bool aShadowWrites) override;
 };
 
+/**
+ * Clear mutation.
+ */
 class WriteOptimizer::ClearInfo final
   : public WriteInfo
 {
@@ -1300,6 +1383,7 @@ public:
     return mArchivedOriginScope;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
   // Methods which can only be called on the owning thread.
 
   // This method is used to asynchronously execute a connection datastore
@@ -1332,6 +1416,7 @@ public:
   void
   EndUpdateBatch();
 
+  //////////////////////////////////////////////////////////////////////////////
   // Methods which can only be called on the connection thread.
 
   nsresult
@@ -1471,17 +1556,54 @@ private:
   ~ConnectionThread();
 };
 
+/**
+ * Canonical state of Storage for an origin, containing all keys and their
+ * values in the parent process.  Specifically, this is the state that will
+ * be handed out to freshly created Snapshots and that will be persisted to disk
+ * when the Connection's flush completes.  State is mutated in batches as
+ * Snapshot instances Checkpoint their mutations locally accumulated in the
+ * child LSSnapshots.
+ */
 class Datastore final
 {
   RefPtr<DirectoryLock> mDirectoryLock;
   RefPtr<Connection> mConnection;
   RefPtr<QuotaObject> mQuotaObject;
   nsCOMPtr<nsIRunnable> mCompleteCallback;
+  /**
+   * PrepareDatastoreOps register themselves with the Datastore at
+   * and unregister in PrepareDatastoreOp::Cleanup.
+   */
   nsTHashtable<nsPtrHashKey<PrepareDatastoreOp>> mPrepareDatastoreOps;
+  /**
+   * PreparedDatastore instances register themselves with their associated
+   * Datastore at construction time and unregister at destruction time.  They
+   * hang around for kPreparedDatastoreTimeoutMs in order to keep the Datastore
+   * from closing itself via MaybeClose(), thereby giving the document enough
+   * time to load and access LocalStorage.
+   */
   nsTHashtable<nsPtrHashKey<PreparedDatastore>> mPreparedDatastores;
+  /**
+   * A database is live (and in this hashtable) if it has a live LSDatabase
+   * actor.  There is at most one Database per origin per content process.  Each
+   * Database corresponds to an LSDatabase in its associated content process.
+   */
   nsTHashtable<nsPtrHashKey<Database>> mDatabases;
+  /**
+   * A database is active if it has a non-null `mSnapshot`.  As long as there
+   * are any active databases final deltas can't be calculated and
+   * `UpdateUsage()` can't be invoked.
+   */
   nsTHashtable<nsPtrHashKey<Database>> mActiveDatabases;
+  /**
+   * Non-authoritative hashtable representation of mOrderedItems for efficient
+   * lookup.
+   */
   nsDataHashtable<nsStringHashKey, nsString> mValues;
+  /**
+   * The authoritative ordered state of the Datastore; mValue also exists as an
+   * unordered hashtable for efficient lookup.
+   */
   nsTArray<LSItemInfo> mOrderedItems;
   nsTArray<int64_t> mPendingUsageDeltas;
   WriteOptimizer mWriteOptimizer;
@@ -1524,6 +1646,9 @@ public:
   bool
   IsPersistent() const
   {
+    // Private-browsing is forbidden from touching disk, but
+    // StorageAccess::eSessionScoped is allowed to touch disk because
+    // QuotaManager's storage for such origins is wiped at shutdown.
     return mPrivateBrowsingId == 0;
   }
 
@@ -1589,6 +1714,15 @@ public:
   void
   GetKeys(nsTArray<nsString>& aKeys) const;
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Mutation Methods
+  //
+  // These are only called during Snapshot::RecvCheckpoint
+
+  /**
+   * Used by Snapshot::RecvCheckpoint to set a key/value pair as part of a an
+   * explicit batch.
+   */
   void
   SetItem(Database* aDatabase,
           const nsString& aDocumentURI,
@@ -1878,24 +2012,103 @@ private:
                                      override;
 };
 
+/**
+ * Attempts to capture the state of the underlying Datastore at the time of its
+ * creation so run-to-completion semantics can be honored.
+ *
+ * Rather than simply duplicate the contents of `DataStore::mValues` and
+ * `Datastore::mOrderedItems` at the time of their creation, the Snapshot tracks
+ * mutations to the Datastore as they happen, saving off the state of values as
+ * they existed when the Snapshot was created.  In other words, given an initial
+ * Datastore state of { foo: 'bar', bar: 'baz' }, the Snapshot won't store those
+ * values until it hears via `SaveItem` that "foo" is being over-written.  At
+ * that time, it will save off foo='bar' in mValues.
+ *
+ * ## Quota Allocation ##
+ *
+ * ## States ##
+ *
+ */
 class Snapshot final
   : public PBackgroundLSSnapshotParent
 {
+  /**
+   * The Database that owns this snapshot.  There is a 1:1 relationship between
+   * snapshots and databases.
+   */
   RefPtr<Database> mDatabase;
   RefPtr<Datastore> mDatastore;
+  /**
+   * The set of keys for which values have been sent to the child LSSnapshot.
+   * Cleared once all values have been sent as indicated by
+   * mLoadedItems.Count()==mTotalLength and therefore mLoadedAllItems should be
+   * true.  No requests should be received for keys already in this set, and
+   * this is enforced by fatal IPC error (unless fuzzing).
+   */
   nsTHashtable<nsStringHashKey> mLoadedItems;
+  /**
+   * The set of keys for which a RecvLoadItem request was received but there
+   * was no such key, and so null was returned.  The child LSSnapshot will also
+   * cache these values, so redundant requests are also handled with fatal
+   * process termination just like for mLoadedItems.  Also cleared when
+   * mLoadedAllItems becomes true because then the child can infer that all
+   * other values must be null.  (Note: this could also be done when
+   * mLoadKeysReceived is true as a further optimization, but is not.)
+   */
   nsTHashtable<nsStringHashKey> mUnknownItems;
+  /**
+   * Values that have changed in mDatastore as reported by SaveItem
+   * notifications that are not yet known to the child LSSnapshot.
+   *
+   * The naive way to snapshot the state of mDatastore would be to duplicate its
+   * internal mValues at the time of our creation, but that is wasteful if few
+   * changes are made to the Datastore's state.  So we only track values that
+   * are changed/evicted from the Datastore as they happen, as reported to us by
+   * SaveItem notifications.
+   */
   nsDataHashtable<nsStringHashKey, nsString> mValues;
+  /**
+   * Latched state of mDatastore's keys during a SaveItem notification with
+   * aAffectsOrder=true.  The ordered keys needed to be saved off so that a
+   * consistent ordering could be presented to the child LSSnapshot when it asks
+   * for them via RecvLoadKeys.
+   */
   nsTArray<nsString> mKeys;
   nsString mDocumentURI;
+  /**
+   * The number of key/value pairs that were present in the Datastore at the
+   * time the snapshot was created.  Once we have sent this many values to the
+   * child LSSnapshot, we can infer that it has received all of the keys/values
+   * and set mLoadedAllItems to true and clear mLoadedItems and mUnknownItems.
+   * Note that knowing the keys/values is not the same as knowing their ordering
+   * and so mKeys may be retained.
+   */
   uint32_t mTotalLength;
   int64_t mUsage;
   int64_t mPeakUsage;
+  /**
+   * True if SaveItem has saved mDatastore's keys into mKeys because a SaveItem
+   * notification with aAffectsOrder=true was received.
+   */
   bool mSavedKeys;
   bool mActorDestroyed;
   bool mFinishReceived;
   bool mLoadedReceived;
+  /**
+   * True if LSSnapshot's mLoadState should be LoadState::AllOrderedItems or
+   * LoadState::AllUnorderedItems.  It will be AllOrderedItems if the initial
+   * snapshot contained all the data or if the state was AllOrderedKeys and
+   * successive RecvLoadItem requests have resulted in the LSSnapshot being told
+   * all of the key/value pairs.  It will be AllUnorderedItems if the state was
+   * LoadState::Partial and successive RecvLoadItem requests got all the
+   * keys/values but the key ordering was not retrieved.
+   */
   bool mLoadedAllItems;
+  /**
+   * True if LSSnapshot's mLoadState should be LoadState::AllOrderedItems or
+   * AllOrderedKeys.  This can occur because of the initial snapshot, or because
+   * a RecvLoadKeys request was received.
+   */
   bool mLoadKeysReceived;
   bool mSentMarkDirty;
 
@@ -1933,6 +2146,11 @@ public:
     }
   }
 
+  /**
+   * Called via NotifySnapshots by Datastore whenever it is updating its
+   * internal state so that snapshots can save off the state of a value at the
+   * time of their creation.
+   */
   void
   SaveItem(const nsAString& aKey,
            const nsAString& aOldValue,
@@ -4984,6 +5202,8 @@ Datastore::NotifyObservers(Database* aDatabase,
 
   MOZ_ASSERT(array);
 
+  // We do not want to send information about events back to the content process
+  // that caused the change.
   PBackgroundParent* databaseBackgroundActor = aDatabase->Manager();
 
   for (Observer* observer : *array) {

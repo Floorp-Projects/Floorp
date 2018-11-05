@@ -186,6 +186,13 @@ namespace dom {
 
 extern const char16_t* kLocalStorageType;
 
+/**
+ * Convenience data-structure to make it easier to track whether a value has
+ * changed and what its previous value was for notification purposes.  Instances
+ * are created on the stack by LSObject and passed to LSDatabase which in turn
+ * passes them onto LSSnapshot for final updating/population.  LSObject then
+ * generates an event, if appropriate.
+ */
 class MOZ_STACK_CLASS LSNotifyInfo
 {
   bool mChanged;
@@ -221,9 +228,16 @@ public:
   }
 };
 
+/**
+ * Main-thread-only check of LSNG being enabled, the value is latched once
+ * initialized so changing the preference during runtime has no effect.
+ */
 bool
 NextGenLocalStorageEnabled();
 
+/**
+ * Cached any-thread version of NextGenLocalStorageEnabled().
+ */
 bool
 CachedNextGenLocalStorageEnabled();
 
