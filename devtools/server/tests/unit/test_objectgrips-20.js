@@ -8,6 +8,12 @@
 // when passing `ignoreNonIndexedProperties` and `ignoreIndexedProperties` options
 // with various objects. (See Bug 1403065)
 
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 async function run_test() {
   do_test_pending();
   await run_test_with_server(DebuggerServer);

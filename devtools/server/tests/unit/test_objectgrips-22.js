@@ -7,6 +7,12 @@
 var gDebuggee;
 var gThreadClient;
 
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 add_task(async function run_test() {
   await run_test_with_server(DebuggerServer);
   await run_test_with_server(WorkerDebuggerServer);
