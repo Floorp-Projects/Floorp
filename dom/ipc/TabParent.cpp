@@ -2651,6 +2651,13 @@ TabParent::SetRenderFrame()
   layers::LayersId layersId = mRenderFrame->GetLayersId();
   AddTabParentToTable(layersId, this);
 
+  TextureFactoryIdentifier textureFactoryIdentifier;
+  mRenderFrame->GetTextureFactoryIdentifier(&textureFactoryIdentifier);
+  Unused << SendInitRendering(textureFactoryIdentifier, layersId,
+    mRenderFrame->GetCompositorOptions(),
+    mRenderFrame->IsLayersConnected(),
+    true);
+
   return true;
 }
 
@@ -2773,15 +2780,11 @@ TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
 {
   CreatedWindowInfo cwi;
   cwi.rv() = NS_OK;
-  cwi.layersId() = LayersId{0};
   cwi.maxTouchPoints() = 0;
 
   BrowserElementParent::OpenWindowResult opened =
     BrowserElementParent::OpenWindowOOP(TabParent::GetFrom(aOpener),
-                                        this, aURL, aName, aFeatures,
-                                        &cwi.textureFactoryIdentifier(),
-                                        &cwi.layersId(),
-                                        &cwi.compositorOptions());
+                                        this, aURL, aName, aFeatures);
   cwi.windowOpened() = (opened == BrowserElementParent::OPEN_WINDOW_ADDED);
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {

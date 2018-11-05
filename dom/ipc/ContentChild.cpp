@@ -972,7 +972,6 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     GetID(), IsForBrowser());
 
   newChild->SendCreatePRenderFrame();
-  bool hasRenderFrame = true;
 
   nsCOMPtr<nsPIDOMWindowInner> parentTopInnerWindow;
   if (aParent) {
@@ -994,9 +993,6 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     *aWindowIsNew = info.windowOpened();
     nsTArray<FrameScriptInfo> frameScripts(info.frameScripts());
     nsCString urlToLoad = info.urlToLoad();
-    TextureFactoryIdentifier textureFactoryIdentifier = info.textureFactoryIdentifier();
-    layers::LayersId layersId = info.layersId();
-    CompositorOptions compositorOptions = info.compositorOptions();
     uint32_t maxTouchPoints = info.maxTouchPoints();
     DimensionInfo dimensionInfo = info.dimensions();
     bool hasSiblings = info.hasSiblings();
@@ -1023,10 +1019,6 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     if (NS_WARN_IF(!newChild->IPCOpen() || newChild->IsDestroyed())) {
       rv = NS_ERROR_ABORT;
       return;
-    }
-
-    if (!layersId.IsValid()) {
-      hasRenderFrame = false;
     }
 
     ShowInfo showInfo(EmptyString(), false, false, true, false, 0, 0, 0);
@@ -1057,8 +1049,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
 
     // Unfortunately we don't get a window unless we've shown the frame.  That's
     // pretty bogus; see bug 763602.
-    newChild->DoFakeShow(textureFactoryIdentifier, layersId, compositorOptions,
-                        hasRenderFrame, showInfo);
+    newChild->DoFakeShow(showInfo);
 
     newChild->RecvUpdateDimensions(dimensionInfo);
 
@@ -1087,7 +1078,6 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   };
 
   // Send down the request to open the window.
-  MOZ_ASSERT(hasRenderFrame);
   if (aIframeMoz) {
     MOZ_ASSERT(aTabOpener);
     nsAutoCString url;

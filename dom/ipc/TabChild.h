@@ -602,11 +602,7 @@ public:
   virtual ScreenIntSize GetInnerSize() override;
 
   // Call RecvShow(nsIntSize(0, 0)) and block future calls to RecvShow().
-  void DoFakeShow(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
-                  const layers::LayersId& aLayersId,
-                  const mozilla::layers::CompositorOptions& aCompositorOptions,
-                  const bool aHasRenderFrame,
-                  const ShowInfo& aShowInfo);
+  void DoFakeShow(const ShowInfo& aShowInfo);
 
   void ContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
                                  uint64_t aInputBlockId,
