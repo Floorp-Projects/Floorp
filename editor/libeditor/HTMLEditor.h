@@ -1082,9 +1082,9 @@ protected: // Shouldn't be used by friend classes
    *      to <body> element.  Then, both result are same one, returns the node.
    *      (i.e., this allows collapsed selection.)
    *   3. If the Selection is collapsed, returns null.
-   *   4. Otherwise, listing up all nodes with content iterator (post-order).
-   *     4-1. When first element node matches with the argument, returns
-   *          *next* element node.
+   *   4. Otherwise, listing up all nodes with content iterator (post-order)
+   *      and only when the last node is first element node, returns the
+   *      element node.
    *
    * @param aTagName            The atom of tag name in lower case.
    *                            If nullptr, look for any element node.

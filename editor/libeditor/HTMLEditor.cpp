@@ -3014,12 +3014,9 @@ HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
 
   bool found = !!selectedElement;
-  const nsAtom* tagNameLookingFor = aTagName;
   iter->Init(firstRange);
   // loop through the content iterator for each content node
   while (!iter->IsDone()) {
-    // Update selectedElement with new node.  If it's not an element node,
-    // clear it.
     // XXX This is really odd since this means that the result depends on
     //     what is the last node.  If the last node is an element node,
     //     it may be returned even if it does not match with aTagName.
@@ -3028,33 +3025,24 @@ HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
     //     name explains.
     selectedElement = Element::FromNodeOrNull(iter->GetCurrentNode());
     if (selectedElement) {
-      // If we already found a node, then we have another element,
-      // thus there's not just one element selected.
-      // XXX Really odd.  The new element node may be different name element.
-      //     So, this means that we return any next element node if we find
-      //     proper element as first element in the range.
       if (found) {
-        break;
+        // At least 2 elements are in the range so that return nullptr.
+        return nullptr;
       }
 
-      if (!tagNameLookingFor) {
-        // Get name of first selected element
-        // XXX Looks like that this is necessary only for making the following
-        //     handler work as expected...  Why don't you check this below??
-        tagNameLookingFor = selectedElement->NodeInfo()->NameAtom();
+      if (!aTagName) {
+        found = true;
       }
-
       // The "A" tag is a pain,
       //  used for both link(href is set) and "Named Anchor"
-      if ((isLinkTag &&
-           HTMLEditUtils::IsLink(selectedElement)) ||
-          (isNamedAnchorTag &&
-           HTMLEditUtils::IsNamedAnchor(selectedElement))) {
+      else if ((isLinkTag &&
+                HTMLEditUtils::IsLink(selectedElement)) ||
+               (isNamedAnchorTag &&
+                HTMLEditUtils::IsNamedAnchor(selectedElement))) {
         found = true;
       }
       // All other tag names are handled here.
-      else if (tagNameLookingFor ==
-                 selectedElement->NodeInfo()->NameAtom()) {
+      else if (aTagName == selectedElement->NodeInfo()->NameAtom()) {
         found = true;
       }
 
