@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, BoxShadowClipMode, ClipMode, ColorF, DeviceIntSize, LayoutPrimitiveInfo};
-use api::{LayoutRect, LayoutSize, LayoutVector2D, MAX_BLUR_RADIUS};
+use api::{LayoutRect, LayoutSize, LayoutToDeviceScale, LayoutVector2D, MAX_BLUR_RADIUS};
 use clip::ClipItemKey;
 use display_list_flattener::DisplayListFlattener;
 use gpu_cache::GpuCacheHandle;
@@ -12,6 +12,12 @@ use prim_store::{BrushKind, BrushPrimitive, PrimitiveContainer};
 use prim_store::ScrollNodeAndClipChain;
 use render_task::RenderTaskCacheEntryHandle;
 use util::RectHelpers;
+
+/// In the majority of cases box-shadow radius in device pixels should be quite
+/// small (< 256), so the choice of max is trade off between panic! in
+/// pathological case of being presented with huge radius and using too much
+/// texture memory for better rendering of such cases.
+const MAX_BOX_SHADOW_RESOLUTION: u32 = 2048;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -79,26 +85,20 @@ impl<'a> DisplayListFlattener<'a> {
 
         // Inset shadows get smaller as spread radius increases.
         let (spread_amount, prim_clip_mode) = match clip_mode {
-            BoxShadowClipMode::Outset => {
-                (spread_radius, ClipMode::ClipOut)
-            }
-            BoxShadowClipMode::Inset => {
-                (-spread_radius, ClipMode::Clip)
-            }
+            BoxShadowClipMode::Outset => (spread_radius, ClipMode::ClipOut),
+            BoxShadowClipMode::Inset => (-spread_radius, ClipMode::Clip),
         };
 
         // Ensure the blur radius is somewhat sensible.
         blur_radius = f32::min(blur_radius, MAX_BLUR_RADIUS);
 
         // Adjust the border radius of the box shadow per CSS-spec.
-        let shadow_radius = adjust_border_radius_for_box_shadow(
-            border_radius,
-            spread_amount,
-        );
+        let shadow_radius = adjust_border_radius_for_box_shadow(border_radius, spread_amount);
 
         // Apply parameters that affect where the shadow rect
         // exists in the local space of the primitive.
-        let shadow_rect = prim_info.rect
+        let shadow_rect = prim_info
+            .rect
             .translate(box_offset)
             .inflate(spread_amount, spread_amount);
 
@@ -106,9 +106,7 @@ impl<'a> DisplayListFlattener<'a> {
         // no blur applied.
         if blur_radius == 0.0 {
             // Trivial reject of box-shadows that are not visible.
-            if box_offset.x == 0.0 &&
-               box_offset.y == 0.0 &&
-               spread_amount == 0.0 {
+            if box_offset.x == 0.0 && box_offset.y == 0.0 && spread_amount == 0.0 {
                 return;
             }
 
@@ -123,7 +121,7 @@ impl<'a> DisplayListFlattener<'a> {
                     clips.push(ClipItemKey::rounded_rect(
                         prim_info.rect,
                         border_radius,
-                        ClipMode::ClipOut
+                        ClipMode::ClipOut,
                     ));
 
                     (shadow_rect, shadow_radius)
@@ -133,7 +131,7 @@ impl<'a> DisplayListFlattener<'a> {
                         clips.push(ClipItemKey::rounded_rect(
                             shadow_rect,
                             shadow_radius,
-                            ClipMode::ClipOut
+                            ClipMode::ClipOut,
                         ));
                     }
 
@@ -151,12 +149,7 @@ impl<'a> DisplayListFlattener<'a> {
                 clip_and_scroll,
                 &LayoutPrimitiveInfo::with_clip_rect(final_prim_rect, prim_info.clip_rect),
                 clips,
-                PrimitiveContainer::Brush(
-                    BrushPrimitive::new(
-                        BrushKind::new_solid(*color),
-                        None,
-                    )
-                ),
+                PrimitiveContainer::Brush(BrushPrimitive::new(BrushKind::new_solid(*color), None)),
             );
         } else {
             // Normal path for box-shadows with a valid blur radius.
@@ -177,10 +170,7 @@ impl<'a> DisplayListFlattener<'a> {
 
             // Draw the box-shadow as a solid rect, using a box-shadow
             // clip mask item.
-            let prim = BrushPrimitive::new(
-                BrushKind::new_solid(*color),
-                None,
-            );
+            let prim = BrushPrimitive::new(BrushKind::new_solid(*color), None);
 
             // Create the box-shadow clip item.
             let shadow_clip_source = ClipItemKey::box_shadow(
@@ -208,8 +198,10 @@ impl<'a> DisplayListFlattener<'a> {
                 BoxShadowClipMode::Inset => {
                     // If the inner shadow rect contains the prim
                     // rect, no pixels will be shadowed.
-                    if border_radius.is_zero() &&
-                       shadow_rect.inflate(-blur_radius, -blur_radius).contains_rect(&prim_info.rect) {
+                    if border_radius.is_zero() && shadow_rect
+                        .inflate(-blur_radius, -blur_radius)
+                        .contains_rect(&prim_info.rect)
+                    {
                         return;
                     }
 
@@ -235,53 +227,31 @@ impl<'a> DisplayListFlattener<'a> {
     }
 }
 
-fn adjust_border_radius_for_box_shadow(
-    radius: BorderRadius,
-    spread_amount: f32,
-) -> BorderRadius {
+fn adjust_border_radius_for_box_shadow(radius: BorderRadius, spread_amount: f32) -> BorderRadius {
     BorderRadius {
-        top_left: adjust_corner_for_box_shadow(
-            radius.top_left,
-            spread_amount,
-        ),
-        top_right: adjust_corner_for_box_shadow(
-            radius.top_right,
-            spread_amount,
-        ),
-        bottom_right: adjust_corner_for_box_shadow(
-            radius.bottom_right,
-            spread_amount,
-        ),
-        bottom_left: adjust_corner_for_box_shadow(
-            radius.bottom_left,
-            spread_amount,
-        ),
+        top_left: adjust_corner_for_box_shadow(radius.top_left, spread_amount),
+        top_right: adjust_corner_for_box_shadow(radius.top_right, spread_amount),
+        bottom_right: adjust_corner_for_box_shadow(radius.bottom_right, spread_amount),
+        bottom_left: adjust_corner_for_box_shadow(radius.bottom_left, spread_amount),
     }
 }
 
-fn adjust_corner_for_box_shadow(
-    corner: LayoutSize,
-    spread_amount: f32,
-) -> LayoutSize {
+fn adjust_corner_for_box_shadow(corner: LayoutSize, spread_amount: f32) -> LayoutSize {
     LayoutSize::new(
-        adjust_radius_for_box_shadow(
-            corner.width,
-            spread_amount
-        ),
-        adjust_radius_for_box_shadow(
-            corner.height,
-            spread_amount
-        ),
+        adjust_radius_for_box_shadow(corner.width, spread_amount),
+        adjust_radius_for_box_shadow(corner.height, spread_amount),
     )
 }
 
-fn adjust_radius_for_box_shadow(
-    border_radius: f32,
-    spread_amount: f32,
-) -> f32 {
+fn adjust_radius_for_box_shadow(border_radius: f32, spread_amount: f32) -> f32 {
     if border_radius > 0.0 {
         (border_radius + spread_amount).max(0.0)
     } else {
         0.0
     }
+}
+
+pub fn get_max_scale_for_box_shadow(rect_size: &LayoutSize) -> LayoutToDeviceScale {
+    let r = rect_size.width.max(rect_size.height);
+    LayoutToDeviceScale::new(MAX_BOX_SHADOW_RESOLUTION as f32 / r)
 }
