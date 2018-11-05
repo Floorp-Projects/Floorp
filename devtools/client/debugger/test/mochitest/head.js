@@ -13,6 +13,7 @@ Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtool
 // be affected by this pref.
 var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.log", false);
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 
 var { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
 var { DebuggerServer } = require("devtools/server/main");
@@ -37,6 +38,7 @@ const CHROME_URI = Services.io.newURI(CHROME_URL);
 registerCleanupFunction(async function() {
   info("finish() was called, cleaning up...");
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
 
   while (gBrowser && gBrowser.tabs && gBrowser.tabs.length > 1) {
     info("Destroying toolbox.");

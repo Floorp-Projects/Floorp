@@ -18,6 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=732665
   <script type="application/javascript">
   <![CDATA[
 
+  SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                       true]]});
   //
   // Important! If this test starts failing after a tricky platform-y change,
   // the stack quota numbers in XPCJSContext probably need twiddling. We want

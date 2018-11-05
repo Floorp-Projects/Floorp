@@ -7,6 +7,12 @@
 // numeric keys, and if they have a length property, that it matches the number
 // of numeric keys. (See Bug 1371936)
 
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 async function run_test() {
   do_test_pending();
   await run_test_with_server(DebuggerServer);
