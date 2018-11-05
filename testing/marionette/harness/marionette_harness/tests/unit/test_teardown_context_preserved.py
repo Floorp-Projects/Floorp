@@ -17,7 +17,7 @@ class TestTearDownContext(MarionetteTestCase):
         MarionetteTestCase.tearDown(self)
 
     def get_context(self):
-        return self.marionette._send_message("getContext", key="value")
+        return self.marionette._send_message("Marionette:GetContext", key="value")
 
     def test_skipped_teardown_ok(self):
         raise SkipTest("This should leave our teardown method in chrome context")
