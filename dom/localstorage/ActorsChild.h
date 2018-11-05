@@ -31,6 +31,24 @@ class LSRequestChildCallback;
 class LSSimpleRequestChildCallback;
 class LSSnapshot;
 
+/**
+ * Minimal glue actor with standard IPC-managed new/delete existence that exists
+ * primarily to track the continued existence of the LSDatabase in the child.
+ * Most of the interesting bits happen via PBackgroundLSSnapshot.
+ *
+ * Mutual raw pointers are maintained between LSDatabase and this class that are
+ * cleared at either (expected) when the child starts the deletion process
+ * (SendDeleteMeInternal) or unexpected actor death (ActorDestroy).
+ *
+ * See `PBackgroundLSDatabase.ipdl` for more information.
+ *
+ *
+ * ## Low-Level Lifecycle ##
+ * - Created by LSObject::EnsureDatabase if it had to create a database.
+ * - Deletion begun by LSDatabase's destructor invoking SendDeleteMeInternal
+ *   which will result in the parent sending __delete__ which destroys the
+ *   actor.
+ */
 class LSDatabaseChild final
   : public PBackgroundLSDatabaseChild
 {
@@ -78,6 +96,14 @@ private:
                                     override;
 };
 
+/**
+ * Minimal IPC-managed (new/delete) actor that exists to receive and relay
+ * "storage" events from changes to LocalStorage that take place in other
+ * processes as their Snapshots are checkpointed to the canonical Datastore in
+ * the parent process.
+ *
+ * See `PBackgroundLSObserver.ipdl` for more info.
+ */
 class LSObserverChild final
   : public PBackgroundLSObserverChild
 {
@@ -119,6 +145,17 @@ private:
               const nsString& aNewValue) override;
 };
 
+/**
+ * Minimal glue IPC-managed (new/delete) actor that is used by LSObject and its
+ * RequestHelper to perform synchronous requests on top of an asynchronous
+ * protocol.
+ *
+ * Takes an `LSReuestChildCallback` to be invoked when a response is received
+ * via __delete__.
+ *
+ * See `PBackgroundLSRequest.ipdl`, `LSObject`, and `RequestHelper` for more
+ * info.
+ */
 class LSRequestChild final
   : public PBackgroundLSRequestChild
 {
@@ -172,6 +209,15 @@ protected:
   { }
 };
 
+/**
+ * Minimal glue IPC-managed (new/delete) actor used by `LocalStorageManager2` to
+ * issue asynchronous requests in an asynchronous fashion.
+ *
+ * Takes an `LSSimpleRequestChildCallback` to be invoked when a response is
+ * received via __delete__.
+ *
+ * See `PBackgroundLSSimpleRequest.ipdl` for more info.
+ */
 class LSSimpleRequestChild final
   : public PBackgroundLSSimpleRequestChild
 {
@@ -216,6 +262,16 @@ protected:
   { }
 };
 
+/**
+ * Minimal IPC-managed (new/delete) actor that lasts as long as its owning
+ * LSSnapshot.
+ *
+ * Mutual raw pointers are maintained between LSSnapshot and this class that are
+ * cleared at either (expected) when the child starts the deletion process
+ * (SendDeleteMeInternal) or unexpected actor death (ActorDestroy).
+ *
+ * See `PBackgroundLSSnapshot.ipdl` and `LSSnapshot` for more info.
+ */
 class LSSnapshotChild final
   : public PBackgroundLSSnapshotChild
 {

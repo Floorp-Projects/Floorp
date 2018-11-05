@@ -28,26 +28,85 @@ class RequestHelper;
 StaticMutex gRequestHelperMutex;
 RequestHelper* gRequestHelper = nullptr;
 
+/**
+ * Main-thread helper that implements the blocking logic required by
+ * LocalStorage's synchronous semantics.  StartAndReturnResponse pushes an
+ * event queue which is a new event target and spins its nested event loop until
+ * a result is received or an abort is necessary due to a PContent-managed sync
+ * IPC message being received.  Note that because the event queue is its own
+ * event target, there is no re-entrancy.  Normal main-thread runnables will not
+ * get a chance to run.  See StartAndReturnResponse() for info on this choice.
+ *
+ * The normal life-cycle of this method looks like:
+ * - Main Thread: LSObject::DoRequestSynchronously creates a RequestHelper and
+ *   invokes StartAndReturnResponse().  It pushes the event queue and Dispatches
+ *   the RequestHelper to the DOM File Thread.
+ * - DOM File Thread: RequestHelper::Run is called, invoking Start() which
+ *   invokes LSObject::StartRequest, which gets-or-creates the PBackground actor
+ *   if necessary (which may dispatch a runnable to the nested event queue on
+ *   the main thread), sends LSRequest constructor which is provided with a
+ *   callback reference to the RequestHelper. State advances to ResponsePending.
+ * - DOM File Thread:: LSRequestChild::Recv__delete__ is received, which invokes
+ *   RequestHelepr::OnResponse, advancing the state to Finishing and dispatching
+ *   RequestHelper to its own nested event target.
+ * - Main Thread: RequestHelper::Run is called, invoking Finish() which advances
+ *   the state to Complete and sets mWaiting to false, allowing the nested event
+ *   loop being spun by StartAndReturnResponse to cease spinning and return the
+ *   received response.
+ *
+ * See LocalStorageCommon.h for high-level context and method comments for
+ * low-level details.
+ */
 class RequestHelper final
   : public Runnable
   , public LSRequestChildCallback
 {
   enum class State
   {
+    /**
+     * The RequestHelper has been created and dispatched to the DOM File Thread.
+     */
     Initial,
+    /**
+     * Start() has been invoked on the DOM File Thread and
+     * LSObject::StartRequest has been invoked from there, sending an IPC
+     * message to PBackground to service the request.  We stay in this state
+     * until a response is received.
+     */
     ResponsePending,
+    /**
+     * A response has been received and RequestHelper has been dispatched back
+     * to the nested event loop to call Finish().
+     */
     Finishing,
+    /**
+     * Finish() has been called on the main thread.  The nested event loop will
+     * terminate imminently and the received response returned to the caller of
+     * StartAndReturnResponse.
+     */
     Complete
   };
 
+  // The object we are issuing a request on behalf of.  Present because of the
+  // need to invoke LSObject::StartRequest off the main thread.  Dropped on
+  // return to the main-thread in Finish().
   RefPtr<LSObject> mObject;
+  // The thread the RequestHelper was created on.  This should be the main
+  // thread.
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
+  // The pushed event queue that we use to spin the event loop without
+  // processing any of the events dispatched at the mOwningEventTarget (which
+  // would result in re-entrancy and violate LocalStorage semantics).
   nsCOMPtr<nsIEventTarget> mNestedEventTarget;
+  // The IPC actor handling the request with standard IPC allocation rules.
+  // Our reference is nulled in OnResponse which corresponds to the actor's
+  // __destroy__ method.
   LSRequestChild* mActor;
   const LSRequestParams mParams;
   LSRequestResponse mResponse;
   nsresult mResultCode;
   State mState;
+  // Control flag for the nested event loop; once set to false, the loop ends.
   bool mWaiting;
 
 public:
@@ -350,6 +409,14 @@ LSObject::GetOriginQuotaUsage() const
 {
   AssertIsOnOwningThread();
 
+  // It's not necessary to return an actual value here.  This method is
+  // implemented only because the SessionStore currently needs it to cap the
+  // amount of data it persists to disk (via nsIDOMWindowUtils.getStorageUsage).
+  // Any callers that want to know about storage usage should be asking
+  // QuotaManager directly.
+  //
+  // Note: This may change as LocalStorage is repurposed to be the new
+  // SessionStorage backend.
   return 0;
 }
 

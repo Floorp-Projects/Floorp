@@ -17,6 +17,19 @@ class LSRequestParams;
 class LSSimpleRequestParams;
 class Promise;
 
+/**
+ * Under LSNG this exposes nsILocalStorageManager::Preload to ContentParent to
+ * trigger preloading.  Otherwise, this is basically just a place for test logic
+ * that doesn't make sense to put directly on the Storage WebIDL interface.
+ *
+ * Previously, the nsIDOMStorageManager XPCOM interface was also used by
+ * nsGlobalWindowInner to interact with LocalStorage, but in these de-XPCOM
+ * days, we've moved to just directly reference the relevant concrete classes
+ * (ex: LSObject) directly.
+ *
+ * Note that testing methods are now also directly exposed on the Storage WebIDL
+ * interface for simplicity/sanity.
+ */
 class LocalStorageManager2 final
   : public nsIDOMStorageManager
   , public nsILocalStorageManager
@@ -31,10 +44,20 @@ public:
 private:
   ~LocalStorageManager2();
 
+  /**
+   * Helper to trigger an LSRequest and resolve/reject the provided promise when
+   * the result comes in.  This routine is notable because the LSRequest
+   * mechanism is normally used synchronously from content, but here it's
+   * exposed asynchronously.
+   */
   nsresult
   StartRequest(Promise* aPromise,
                const LSRequestParams& aParams);
 
+  /**
+   * Helper to trigger an LSSimpleRequst and resolve/reject the provided promise
+   * when the result comes in.
+   */
   nsresult
   StartSimpleRequest(Promise* aPromise,
                      const LSSimpleRequestParams& aParams);

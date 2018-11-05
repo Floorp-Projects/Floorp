@@ -12,6 +12,24 @@ namespace dom {
 
 class LSObserverChild;
 
+/**
+ * Effectively just a refcounted life-cycle management wrapper around
+ * LSObserverChild which exists to receive "storage" event information from
+ * other processes.  (Same-process events are handled within the process, see
+ * `LSObject::OnChange`.)
+ *
+ * ## Lifecycle ##
+ * - Created by LSObject::EnsureObserver via synchronous LSRequest idiom
+ *   whenever the first window's origin adds a "storage" event.  Placed in the
+ *   gLSObservers LSObserverHashtable for subsequent LSObject's via
+ *   LSObserver::Get lookup.
+ * - The LSObserverChild directly handles "Observe" messages, shunting them
+ *   directly to Storage::NotifyChange which does all the legwork of notifying
+ *   windows about "storage" events.
+ * - Destroyed when refcount goes to zero due to all owning LSObjects being
+ *   destroyed or having their `LSObject::DropObserver` methods invoked due to
+ *   the last "storage" event listener being removed from the owning window.
+ */
 class LSObserver final
 {
   friend class LSObject;
