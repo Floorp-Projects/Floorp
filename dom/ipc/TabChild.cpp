@@ -1221,13 +1221,10 @@ mozilla::ipc::IPCResult
 TabChild::RecvInitRendering(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                             const layers::LayersId& aLayersId,
                             const CompositorOptions& aCompositorOptions,
-                            const bool& aLayersConnected,
-                            const bool& aHasRenderFrame)
+                            const bool& aLayersConnected)
 {
-  MOZ_ASSERT((!mDidFakeShow && aHasRenderFrame) || (mDidFakeShow && !aHasRenderFrame));
-
   mLayersConnected = Some(aLayersConnected);
-  InitRenderingState(aTextureFactoryIdentifier, aLayersId, aCompositorOptions, aHasRenderFrame);
+  InitRenderingState(aTextureFactoryIdentifier, aLayersId, aCompositorOptions);
   return IPC_OK();
 }
 
@@ -2752,16 +2749,9 @@ TabChild::InitTabChildMessageManager()
 void
 TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                              const layers::LayersId& aLayersId,
-                             const CompositorOptions& aCompositorOptions,
-                             const bool aHasRenderFrame)
+                             const CompositorOptions& aCompositorOptions)
 {
     mPuppetWidget->InitIMEState();
-
-    if (!aHasRenderFrame) {
-      mLayersConnected = Some(false);
-      NS_WARNING("failed to construct RenderFrame");
-      return;
-    }
 
     MOZ_ASSERT(aLayersId.IsValid());
     mTextureFactoryIdentifier = aTextureFactoryIdentifier;
