@@ -64,8 +64,6 @@ public:
 
   int32_t GetRGBStride();
 
-  virtual bool HasIntermediateBuffer() const override;
-
   virtual uint32_t NumSubTextures() const override;
 
   virtual void PushResourceUpdates(wr::TransactionBuilder& aResources,
