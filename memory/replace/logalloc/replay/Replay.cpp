@@ -300,12 +300,6 @@ MOZ_BEGIN_EXTERN_C
 #include "malloc_decls.h"
 
 #ifdef ANDROID
-/* mozjemalloc uses MozTagAnonymousMemory, which doesn't have an inline
- * implementation on Android */
-void
-MozTagAnonymousMemory(const void* aPtr, size_t aLength, const char* aTag)
-{
-}
 
 /* mozjemalloc and jemalloc use pthread_atfork, which Android doesn't have.
  * While gecko has one in libmozglue, the replay program can't use that.
