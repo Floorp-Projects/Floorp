@@ -68,6 +68,7 @@ It is augmented as it progresses through the system, with various information:
     // Properties added by the Model.
     tokens; // {array} tokens extracted from the searchString, each token is an
             // object in the form {type, value}.
+    results; // {array} list of UrlbarMatch objects.
   }
 
 
@@ -143,6 +144,8 @@ implementation details may vary deeply among different providers.
   UrlbarProvider {
     name; // {string} A simple name to track the provider.
     type; // {integer} One of UrlbarUtils.PROVIDER_TYPE.
+    sources; // {array} List of UrlbarUtils.MATCH_SOURCE, representing the
+             // data sources used by this provider.
     // The returned promise should be resolved when the provider is done
     // searching AND returning matches.
     // Each new UrlbarMatch should be passed to the AddCallback function.
@@ -272,6 +275,10 @@ Represents the base *View* implementation, communicates with the *Controller*.
     onQueryStarted(queryContext);
     // Invoked when new matches are available.
     onQueryResults(queryContext);
+    // Invoked when the query has been canceled.
+    onQueryCancelled(queryContext);
+    // Invoked when the query is done.
+    onQueryFinished(queryContext);
   }
 
 UrlbarMatch
@@ -294,6 +301,8 @@ properties, supported by all of the matches.
     constructor(matchType, payload);
 
     // Common properties:
+    type: {integer} One of UrlbarUtils.MATCH_TYPE.
+    source: {integer} One of UrlbarUtils.MATCH_SOURCE.
     url: {string} The url pointed by this match.
     title: {string} A title that may be used as a label for this match.
   }

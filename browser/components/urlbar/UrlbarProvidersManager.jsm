@@ -156,6 +156,11 @@ class Query {
     this.started = false;
     this.canceled = false;
     this.complete = false;
+    // Array of acceptable MATCH_SOURCE values for this query. Providers not
+    // returning any of these will be skipped, as well as matches not part of
+    // this subset (Note we still expect the provider to do its own internal
+    // filtering, our additional filtering will be for sanity).
+    this.acceptableSources = [];
   }
 
   /**
@@ -167,13 +172,17 @@ class Query {
     }
     this.started = true;
     UrlbarTokenizer.tokenize(this.context);
+    this.acceptableSources = getAcceptableMatchSources(this.context);
+    logger.debug(`Acceptable sources ${this.acceptableSources}`);
 
     let promises = [];
     for (let provider of this.providers.get(UrlbarUtils.PROVIDER_TYPE.IMMEDIATE).values()) {
       if (this.canceled) {
         break;
       }
-      promises.push(provider.startQuery(this.context, this.add));
+      if (this._providerHasAcceptableSources(provider)) {
+        promises.push(provider.startQuery(this.context, this.add));
+      }
     }
 
     // Tracks the delay timer. We will fire (in this specific case, cancel would
@@ -189,15 +198,20 @@ class Query {
         if (this.canceled) {
           break;
         }
-        promises.push(provider.startQuery(this.context, this.add.bind(this)));
+        if (this._providerHasAcceptableSources(provider)) {
+          promises.push(provider.startQuery(this.context, this.add.bind(this)));
+        }
       }
     }
 
-    await Promise.all(promises.map(p => p.catch(Cu.reportError)));
+    logger.info(`Queried ${promises.length} providers`);
+    if (promises.length) {
+      await Promise.all(promises.map(p => p.catch(Cu.reportError)));
 
-    if (this._chunkTimer) {
-      // All the providers are done returning results, so we can stop chunking.
-      await this._chunkTimer.fire();
+      if (this._chunkTimer) {
+        // All the providers are done returning results, so we can stop chunking.
+        await this._chunkTimer.fire();
+      }
     }
 
     // Nothing should be failing above, since we catch all the promises, thus
@@ -234,11 +248,11 @@ class Query {
    */
   add(provider, match) {
     // Stop returning results as soon as we've been canceled.
-    if (this.canceled) {
+    if (this.canceled || !this.acceptableSources.includes(match.source)) {
       return;
     }
-    this.context.results.push(match);
 
+    this.context.results.push(match);
 
     let notifyResults = () => {
       if (this._chunkTimer) {
@@ -257,6 +271,15 @@ class Query {
     } else if (!this._chunkTimer) {
       this._chunkTimer = new SkippableTimer(notifyResults, CHUNK_MATCHES_DELAY_MS);
     }
+  }
+
+  /**
+   * Returns whether a provider's sources are acceptable for this query.
+   * @param {object} provider A provider object.
+   * @returns {boolean}whether the provider sources are acceptable.
+   */
+  _providerHasAcceptableSources(provider) {
+    return provider.sources.some(s => this.acceptableSources.includes(s));
   }
 }
 
@@ -316,4 +339,64 @@ class SkippableTimer {
     delete this._timer;
     return this.fire();
   }
+}
+
+/**
+ * Gets an array of the provider sources accepted for a given QueryContext.
+ * @param {object} context The QueryContext to examine
+ * @returns {array} Array of accepted sources
+ */
+function getAcceptableMatchSources(context) {
+  let acceptedSources = [];
+  // There can be only one restrict token about sources.
+  let restrictToken = context.tokens.find(t => [ UrlbarTokenizer.TYPE.RESTRICT_HISTORY,
+                                                 UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK,
+                                                 UrlbarTokenizer.TYPE.RESTRICT_TAG,
+                                                 UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE,
+                                                 UrlbarTokenizer.TYPE.RESTRICT_SEARCH,
+                                               ].includes(t.type));
+  let restrictTokenType = restrictToken ? restrictToken.type : undefined;
+  for (let source of Object.values(UrlbarUtils.MATCH_SOURCE)) {
+    switch (source) {
+      case UrlbarUtils.MATCH_SOURCE.BOOKMARKS:
+        if (UrlbarPrefs.get("suggest.bookmark") &&
+            (!restrictTokenType ||
+             restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK ||
+             restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_TAG)) {
+          acceptedSources.push(source);
+        }
+        break;
+      case UrlbarUtils.MATCH_SOURCE.HISTORY:
+        if (UrlbarPrefs.get("suggest.history") &&
+            (!restrictTokenType ||
+             restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_HISTORY)) {
+          acceptedSources.push(source);
+        }
+        break;
+      case UrlbarUtils.MATCH_SOURCE.SEARCHENGINE:
+        if (UrlbarPrefs.get("suggest.searches") &&
+            (!restrictTokenType ||
+             restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_SEARCH)) {
+          acceptedSources.push(source);
+        }
+        break;
+      case UrlbarUtils.MATCH_SOURCE.TABS:
+        if (UrlbarPrefs.get("suggest.openpage") &&
+            (!restrictTokenType ||
+             restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE)) {
+          acceptedSources.push(source);
+        }
+        break;
+      case UrlbarUtils.MATCH_SOURCE.OTHER_NETWORK:
+        if (!context.isPrivate) {
+          acceptedSources.push(source);
+        }
+        break;
+      case UrlbarUtils.MATCH_SOURCE.OTHER_LOCAL:
+      default:
+        acceptedSources.push(source);
+        break;
+    }
+  }
+  return acceptedSources;
 }
