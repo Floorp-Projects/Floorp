@@ -120,6 +120,7 @@ Fuzzyfox::Observe(nsISupports* aObject, const char* aTopic,
         mStartTime = 0;
         mTickType = eUptick;
         mSanityCheck = false;
+        TimeStamp::SetFuzzyfoxEnabled(false);
       }
     }
   }
