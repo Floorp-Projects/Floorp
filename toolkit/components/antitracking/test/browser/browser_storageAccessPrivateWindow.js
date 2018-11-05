@@ -19,7 +19,7 @@ AntiTracking.runTest("Storage Access API called in a private window",
   [["dom.storage_access.enabled", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
-  false, // no blocking notifications
+  0, // no blocking notifications
   true, // run in private window
   null // iframe sandbox
 );

@@ -3,7 +3,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 let cookieBehavior = BEHAVIOR_REJECT_TRACKER;
 let blockingByContentBlockingRTUI = false;
 let blockingByAllowList = true;
-let expectedBlockingNotifications = true;
+let expectedBlockingNotifications = Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER;
 
 let rootDir = getRootDirectory(gTestPath);
 let jar = getJar(rootDir);
