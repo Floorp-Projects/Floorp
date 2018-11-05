@@ -56,7 +56,7 @@ public:
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     RefPtr<T> rv = dont_AddRef(static_cast<T*>(nsDeque::PopFront()));
     if (rv) {
-      mPopEvent.Notify(rv);
+      mPopFrontEvent.Notify(rv);
     }
     return rv.forget();
   }
@@ -165,8 +165,8 @@ public:
     return frames;
   }
 
-  MediaEventSource<RefPtr<T>>& PopEvent() {
-    return mPopEvent;
+  MediaEventSource<RefPtr<T>>& PopFrontEvent() {
+    return mPopFrontEvent;
   }
 
   MediaEventSource<RefPtr<T>>& PushEvent() {
@@ -179,7 +179,7 @@ public:
 
 private:
   mutable RecursiveMutex mRecursiveMutex;
-  MediaEventProducer<RefPtr<T>> mPopEvent;
+  MediaEventProducer<RefPtr<T>> mPopFrontEvent;
   MediaEventProducer<RefPtr<T>> mPushEvent;
   MediaEventProducer<void> mFinishEvent;
   // True when we've decoded the last frame of data in the
