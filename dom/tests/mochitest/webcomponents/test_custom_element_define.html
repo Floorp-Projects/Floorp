@@ -100,24 +100,21 @@ function startTest() {
   is(div.innerHTML, '<button is="x-extended-button"></button>', "'is value' should be serialized.");
 
   const de = SpecialPowers.Ci.nsIDocumentEncoder;
-  var htmlencoder = SpecialPowers.Cc["@mozilla.org/layout/documentEncoder;1?type=text/html"]
-                                 .createInstance(de);
+  var htmlencoder = SpecialPowers.Cu.createDocumentEncoder("text/html");
   htmlencoder.init(document, "text/html", de.OutputLFLineBreak);
   htmlencoder.setCharset("UTF-8");
   htmlencoder.setContainerNode(div);
   is(htmlencoder.encodeToString(), '<button is="x-extended-button"></button>',
      "'is value' should be serialized (html).");
 
-  var xhtmlencoder = SpecialPowers.Cc["@mozilla.org/layout/documentEncoder;1?type=application/xhtml+xml"]
-                                  .createInstance(de);
+  var xhtmlencoder = SpecialPowers.Cu.createDocumentEncoder("application/xhtml+xml");
   xhtmlencoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak);
   xhtmlencoder.setCharset("UTF-8");
   xhtmlencoder.setContainerNode(div);
   is(xhtmlencoder.encodeToString(), '<button is="x-extended-button" xmlns="http://www.w3.org/1999/xhtml"></button>',
      "'is value' should be serialized (xhtml).");
 
-  var xmlencoder = SpecialPowers.Cc["@mozilla.org/layout/documentEncoder;1?type=text/xml"]
-                                  .createInstance(de);
+  var xmlencoder = SpecialPowers.Cu.createDocumentEncoder("text/xml");
   xmlencoder.init(document, "text/xml", de.OutputLFLineBreak);
   xmlencoder.setCharset("UTF-8");
   xmlencoder.setContainerNode(div);

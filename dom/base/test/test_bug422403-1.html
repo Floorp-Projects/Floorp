@@ -55,8 +55,7 @@ function loadFileContent(aFile, aCharset) {
 
 function testHtmlSerializer_1 () {
   const de = SpecialPowers.Ci.nsIDocumentEncoder
-  var encoder = SpecialPowers.Cc["@mozilla.org/layout/documentEncoder;1?type=application/xhtml+xml"]
-                   .createInstance(SpecialPowers.Ci.nsIDocumentEncoder);
+  var encoder = SpecialPowers.Cu.createDocumentEncoder("application/xhtml+xml");
 
   var doc = SpecialPowers.wrap($("testframe")).contentDocument;
   var out, expected;

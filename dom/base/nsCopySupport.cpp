@@ -339,14 +339,8 @@ nsCopySupport::GetTransferableForNode(nsINode* aNode,
 nsresult
 nsCopySupport::GetContents(const nsACString& aMimeType, uint32_t aFlags, Selection *aSel, nsIDocument *aDoc, nsAString& outdata)
 {
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIDocumentEncoder> docEncoder;
-
-  nsAutoCString encoderContractID(NS_DOC_ENCODER_CONTRACTID_BASE);
-  encoderContractID.Append(aMimeType);
-
-  docEncoder = do_CreateInstance(encoderContractID.get());
+  nsCOMPtr<nsIDocumentEncoder> docEncoder =
+    do_createDocumentEncoder(PromiseFlatCString(aMimeType).get());
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
   uint32_t flags = aFlags | nsIDocumentEncoder::SkipInvisibleContent;
@@ -356,7 +350,7 @@ nsCopySupport::GetContents(const nsACString& aMimeType, uint32_t aFlags, Selecti
 
   NS_ConvertASCIItoUTF16 unicodeMimeType(aMimeType);
 
-  rv = docEncoder->Init(aDoc, unicodeMimeType, flags);
+  nsresult rv = docEncoder->Init(aDoc, unicodeMimeType, flags);
   if (NS_FAILED(rv)) return rv;
 
   if (aSel)

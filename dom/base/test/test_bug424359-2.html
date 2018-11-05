@@ -59,8 +59,7 @@ function isRoughly(actual, expected, message) {
 
 function testHtmlSerializer_1 () {
   const de = SpecialPowers.Ci.nsIDocumentEncoder;
-  var encoder = SpecialPowers.Cc["@mozilla.org/layout/documentEncoder;1?type=text/html"]
-                   .createInstance(SpecialPowers.Ci.nsIDocumentEncoder);
+  var encoder = SpecialPowers.Cu.createDocumentEncoder("text/html");
 
   var doc = $("testframe").contentDocument;
   var out, expected;
