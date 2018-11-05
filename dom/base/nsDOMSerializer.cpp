@@ -24,11 +24,9 @@ nsDOMSerializer::nsDOMSerializer()
 static already_AddRefed<nsIDocumentEncoder>
 SetUpEncoder(nsINode& aRoot, const nsAString& aCharset, ErrorResult& aRv)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDocumentEncoder> encoder =
-    do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "application/xhtml+xml", &rv);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  nsCOMPtr<nsIDocumentEncoder> encoder = do_createDocumentEncoder("application/xhtml+xml");
+  if (!encoder) {
+    aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
@@ -36,7 +34,7 @@ SetUpEncoder(nsINode& aRoot, const nsAString& aCharset, ErrorResult& aRv)
   bool entireDocument = (doc == &aRoot);
 
   // This method will fail if no document
-  rv = encoder->
+  nsresult rv = encoder->
     NativeInit(doc, NS_LITERAL_STRING("application/xhtml+xml"),
                nsIDocumentEncoder::OutputRaw |
                nsIDocumentEncoder::OutputDontRewriteEncodingDeclaration);

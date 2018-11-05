@@ -31,9 +31,7 @@ function testSerializer() {
   span.appendChild(doc.createElement("head"));
   span.appendChild(doc.createTextNode("\nafter inner head"));
 
-  var encoder =
-    SpecialPowers.Cc["@mozilla.org/layout/documentEncoder;1?type=text/html"]
-      .createInstance(SpecialPowers.Ci.nsIDocumentEncoder);
+  var encoder = SpecialPowers.Cu.createDocumentEncoder("text/html");
   encoder.init(doc, "text/plain", 0);
   encoder.setCharset("UTF-8");
   var out = encoder.encodeToString();

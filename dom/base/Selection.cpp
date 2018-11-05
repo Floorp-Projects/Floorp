@@ -433,13 +433,10 @@ Selection::ToStringWithFormat(const nsAString& aFormatType, uint32_t aFlags,
                               int32_t aWrapCol, nsAString& aReturn,
                               ErrorResult& aRv)
 {
-  nsresult rv = NS_OK;
-  NS_ConvertUTF8toUTF16 formatType( NS_DOC_ENCODER_CONTRACTID_BASE );
-  formatType.Append(aFormatType);
   nsCOMPtr<nsIDocumentEncoder> encoder =
-           do_CreateInstance(NS_ConvertUTF16toUTF8(formatType).get(), &rv);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+           do_createDocumentEncoder(NS_ConvertUTF16toUTF8(aFormatType).get());
+  if (!encoder) {
+    aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
@@ -455,7 +452,7 @@ Selection::ToStringWithFormat(const nsAString& aFormatType, uint32_t aFlags,
   aFlags |= nsIDocumentEncoder::OutputSelectionOnly;
   nsAutoString readstring;
   readstring.Assign(aFormatType);
-  rv = encoder->Init(doc, readstring, aFlags);
+  nsresult rv = encoder->Init(doc, readstring, aFlags);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
