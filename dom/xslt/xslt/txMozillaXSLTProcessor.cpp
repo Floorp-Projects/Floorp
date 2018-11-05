@@ -26,7 +26,7 @@
 #include "nsThreadUtils.h"
 #include "jsapi.h"
 #include "txExprParser.h"
-#include "nsIErrorService.h"
+#include "nsErrorService.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsJSUtils.h"
 #include "nsIXPConnect.h"
@@ -1286,12 +1286,9 @@ txMozillaXSLTProcessor::Startup()
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsCOMPtr<nsIErrorService> errorService =
-        do_GetService(NS_ERRORSERVICE_CONTRACTID);
-    if (errorService) {
-        errorService->RegisterErrorStringBundle(NS_ERROR_MODULE_XSLT,
-                                                XSLT_MSGS_URL);
-    }
+    nsCOMPtr<nsIErrorService> errorService = nsErrorService::GetOrCreate();
+    errorService->RegisterErrorStringBundle(NS_ERROR_MODULE_XSLT,
+                                            XSLT_MSGS_URL);
 
     return NS_OK;
 }
@@ -1302,11 +1299,8 @@ txMozillaXSLTProcessor::Shutdown()
 {
     txXSLTProcessor::shutdown();
 
-    nsCOMPtr<nsIErrorService> errorService =
-        do_GetService(NS_ERRORSERVICE_CONTRACTID);
-    if (errorService) {
-        errorService->UnregisterErrorStringBundle(NS_ERROR_MODULE_XSLT);
-    }
+    nsCOMPtr<nsIErrorService> errorService = nsErrorService::GetOrCreate();
+    errorService->UnregisterErrorStringBundle(NS_ERROR_MODULE_XSLT);
 }
 
 /* static*/
