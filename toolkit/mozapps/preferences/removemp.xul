@@ -21,7 +21,9 @@
 
   <script type="application/javascript" src="chrome://mozapps/content/preferences/removemp.js"/>
 
-  <stringbundle id="bundlePreferences" src="chrome://mozapps/locale/preferences/preferences.properties"/>
+  <linkset>
+    <link rel="localization" href="toolkit/preferences/preferences.ftl"/>
+  </linkset>
 
   <vbox id="warnings">
     <description>&removeWarning1.label;</description>
