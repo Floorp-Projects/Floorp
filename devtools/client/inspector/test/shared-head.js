@@ -133,7 +133,7 @@ function openChangesView() {
       toolbox: data.toolbox,
       inspector: data.inspector,
       testActor: data.testActor,
-      view: data.inspector.changesView,
+      view: data.inspector.getPanel("changesview"),
     };
   });
 }
@@ -163,9 +163,9 @@ function openLayoutView() {
       toolbox: data.toolbox,
       inspector: data.inspector,
       boxmodel: data.inspector.getPanel("boxmodel"),
-      gridInspector: data.inspector.layoutview.gridInspector,
-      flexboxInspector: data.inspector.layoutview.flexboxInspector,
-      layoutView: data.inspector.layoutview,
+      gridInspector: data.inspector.getPanel("layoutview").gridInspector,
+      flexboxInspector: data.inspector.getPanel("layoutview").flexboxInspector,
+      layoutView: data.inspector.getPanel("layoutview"),
       testActor: data.testActor,
     };
   });
@@ -203,7 +203,7 @@ function selectComputedView(inspector) {
  */
 function selectChangesView(inspector) {
   inspector.sidebar.select("changesview");
-  return inspector.changesView;
+  return inspector.getPanel("changesview");
 }
 
 /**

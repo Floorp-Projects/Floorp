@@ -835,16 +835,13 @@ Inspector.prototype = {
     if (this._panels.has(id)) {
       return this._panels.get(id);
     }
+
     let panel;
     switch (id) {
-      case "computedview":
-        const {ComputedViewTool} =
-          this.browserRequire("devtools/client/inspector/computed/computed");
-        panel = new ComputedViewTool(this, this.panelWin);
-        break;
-      case "ruleview":
-        const {RuleViewTool} = require("devtools/client/inspector/rules/rules");
-        panel = new RuleViewTool(this, this.panelWin);
+      case "animationinspector":
+        const AnimationInspector =
+          this.browserRequire("devtools/client/inspector/animation/animation");
+        panel = new AnimationInspector(this, this.panelWin);
         break;
       case "boxmodel":
         // box-model isn't a panel on its own, it used to, now it is being used by
@@ -852,11 +849,39 @@ Inspector.prototype = {
         const BoxModel = require("devtools/client/inspector/boxmodel/box-model");
         panel = new BoxModel(this, this.panelWin);
         break;
+      case "changesview":
+        const ChangesView =
+          this.browserRequire("devtools/client/inspector/changes/ChangesView");
+        panel = new ChangesView(this, this.panelWin);
+        break;
+      case "computedview":
+        const {ComputedViewTool} =
+          this.browserRequire("devtools/client/inspector/computed/computed");
+        panel = new ComputedViewTool(this, this.panelWin);
+        break;
+      case "fontinspector":
+        const FontInspector =
+          this.browserRequire("devtools/client/inspector/fonts/fonts");
+        panel = new FontInspector(this, this.panelWin);
+        break;
+      case "layoutview":
+        const LayoutView =
+          this.browserRequire("devtools/client/inspector/layout/layout");
+        panel = new LayoutView(this, this.panelWin);
+        break;
+      case "ruleview":
+        const {RuleViewTool} = require("devtools/client/inspector/rules/rules");
+        panel = new RuleViewTool(this, this.panelWin);
+        break;
       default:
         // This is a custom panel or a non lazy-loaded one.
         return null;
     }
-    this._panels.set(id, panel);
+
+    if (panel) {
+      this._panels.set(id, panel);
+    }
+
     return panel;
   },
 
@@ -895,103 +920,50 @@ Inspector.prototype = {
 
     await this.addRuleView({ defaultTab });
 
-    // Inject a lazy loaded react tab by exposing a fake React object
-    // with a lazy defined Tab thanks to `panel` being a function
-    const layoutId = "layoutview";
-    const layoutTitle = INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle2");
-    this.sidebar.queueTab(
-      layoutId,
-      layoutTitle,
+    // Inspector sidebar panels in order of appearance.
+    const sidebarPanels = [
       {
-        props: {
-          id: layoutId,
-          title: layoutTitle,
-        },
-        panel: () => {
-          if (!this.layoutview) {
-            const LayoutView =
-              this.browserRequire("devtools/client/inspector/layout/layout");
-            this.layoutview = new LayoutView(this, this.panelWin);
-          }
-
-          return this.layoutview.provider;
-        },
+        id: "layoutview",
+        title: INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle2"),
       },
-      defaultTab == layoutId);
-
-    this.sidebar.queueExistingTab(
-      "computedview",
-      INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
-      defaultTab == "computedview");
-
-    const animationId = "animationinspector";
-    const animationTitle =
-      INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle");
-    this.sidebar.queueTab(
-      animationId,
-      animationTitle,
       {
-        props: {
-          id: animationId,
-          title: animationTitle,
-        },
-        panel: () => {
-          const AnimationInspector =
-            this.browserRequire("devtools/client/inspector/animation/animation");
-          this.animationinspector = new AnimationInspector(this, this.panelWin);
-          return this.animationinspector.provider;
-        },
+        id: "computedview",
+        title: INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
       },
-      defaultTab == animationId);
-
-    // Inject a lazy loaded react tab by exposing a fake React object
-    // with a lazy defined Tab thanks to `panel` being a function
-    const fontId = "fontinspector";
-    const fontTitle = INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle");
-    this.sidebar.queueTab(
-      fontId,
-      fontTitle,
       {
-        props: {
-          id: fontId,
-          title: fontTitle,
-        },
-        panel: () => {
-          if (!this.fontinspector) {
-            const FontInspector =
-              this.browserRequire("devtools/client/inspector/fonts/fonts");
-            this.fontinspector = new FontInspector(this, this.panelWin);
-          }
-
-          return this.fontinspector.provider;
-        },
+        id: "animationinspector",
+        title: INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle"),
       },
-      defaultTab == fontId);
+      {
+        id: "fontinspector",
+        title: INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle"),
+      },
+      {
+        id: "changesview",
+        title: INSPECTOR_L10N.getStr("inspector.sidebar.changesViewTitle"),
+      },
+    ];
 
-    if (Services.prefs.getBoolPref(TRACK_CHANGES_PREF)) {
-      // Inject a lazy loaded react tab by exposing a fake React object
-      // with a lazy defined Tab thanks to `panel` being a function
-      const changesId = "changesview";
-      const changesTitle = INSPECTOR_L10N.getStr("inspector.sidebar.changesViewTitle");
-      this.sidebar.queueTab(
-        changesId,
-        changesTitle,
-        {
+    for (const { id, title } of sidebarPanels) {
+      // The Computed panel is not a React-based panel. We pick its element container from
+      // the DOM and wrap it in a React component (InspectorTabPanel) so it behaves like
+      // other panels when using the Inspector's tool sidebar.
+      if (id === "computedview") {
+        this.sidebar.queueExistingTab(id, title, defaultTab === id);
+      } else {
+        // When `panel` is a function, it is called when the tab should render. It is
+        // expected to return a React component to populate the tab's content area.
+        // Calling this method on-demand allows us to lazy-load the requested panel.
+        this.sidebar.queueTab(id, title, {
           props: {
-            id: changesId,
-            title: changesTitle,
+            id,
+            title,
           },
           panel: () => {
-            if (!this.changesView) {
-              const ChangesView =
-                this.browserRequire("devtools/client/inspector/changes/ChangesView");
-              this.changesView = new ChangesView(this, this.panelWin);
-            }
-
-            return this.changesView.provider;
+            return this.getPanel(id).provider;
           },
-        },
-        defaultTab == changesId);
+        }, defaultTab === id);
+      }
     }
 
     this.sidebar.addAllQueuedTabs();
@@ -1439,22 +1411,6 @@ Inspector.prototype = {
       panel.destroy();
     }
     this._panels.clear();
-
-    if (this.layoutview) {
-      this.layoutview.destroy();
-    }
-
-    if (this.changesView) {
-      this.changesView.destroy();
-    }
-
-    if (this.fontinspector) {
-      this.fontinspector.destroy();
-    }
-
-    if (this.animationinspector) {
-      this.animationinspector.destroy();
-    }
 
     if (this._highlighters) {
       this._highlighters.destroy();
