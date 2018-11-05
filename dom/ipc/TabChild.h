@@ -303,8 +303,7 @@ public:
   RecvInitRendering(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                     const layers::LayersId& aLayersId,
                     const mozilla::layers::CompositorOptions& aCompositorOptions,
-                    const bool& aLayersConnected,
-                    const bool& aHasRenderFrame) override;
+                    const bool& aLayersConnected) override;
 
   virtual mozilla::ipc::IPCResult
   RecvUpdateDimensions(const mozilla::dom::DimensionInfo& aDimensionInfo) override;
@@ -763,8 +762,7 @@ private:
 
   void InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                           const layers::LayersId& aLayersId,
-                          const mozilla::layers::CompositorOptions& aCompositorOptions,
-                          const bool aHasRenderFrame);
+                          const mozilla::layers::CompositorOptions& aCompositorOptions);
   void InitAPZState();
 
   void DestroyWindow();
