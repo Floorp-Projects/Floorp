@@ -54,22 +54,17 @@ function createContext(searchString = "foo") {
  *
  * @param {UrlbarController} controller The controller to wait for a response from.
  * @param {string} notification The name of the notification to wait for.
- * @param {boolean} expected Wether the notification is expected.
  * @returns {Promise} A promise that is resolved with the arguments supplied to
  *   the notification.
  */
-function promiseControllerNotification(controller, notification, expected = true) {
-  return new Promise((resolve, reject) => {
+function promiseControllerNotification(controller, notification) {
+  return new Promise(resolve => {
     let proxifiedObserver = new Proxy({}, {
       get: (target, name) => {
         if (name == notification) {
           return (...args) => {
             controller.removeQueryListener(proxifiedObserver);
-            if (expected) {
-              resolve(args);
-            } else {
-              reject();
-            }
+            resolve(args);
           };
         }
         return () => false;
@@ -78,6 +73,7 @@ function promiseControllerNotification(controller, notification, expected = true
     controller.addQueryListener(proxifiedObserver);
   });
 }
+
 
 /**
  * Helper function to clear the existing providers and register a basic provider
@@ -104,9 +100,6 @@ function registerBasicTestProvider(results, cancelCallback) {
     },
     get type() {
       return UrlbarUtils.PROVIDER_TYPE.PROFILE;
-    },
-    get sources() {
-      return results.map(r => r.source);
     },
     async startQuery(context, add) {
       Assert.ok(context, "context is passed-in");
