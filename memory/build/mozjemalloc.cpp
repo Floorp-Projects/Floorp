@@ -132,7 +132,6 @@
 #include "mozilla/DoublyLinkedList.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/RandomNum.h"
 #include "mozilla/Sprintf.h"
 // Note: MozTaggedAnonymousMmap() could call an LD_PRELOADed mmap
 // instead of the one defined here; use only MozTagAnonymousMemory().
@@ -516,8 +515,7 @@ static const size_t gRecycleLimit = 128_MiB;
 // The current amount of recycled bytes, updated atomically. Malloc may be
 // called non-deterministically when recording/replaying, so this atomic's
 // accesses are not recorded.
-static Atomic<size_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
-  gRecycledSize;
+static Atomic<size_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve> gRecycledSize;
 
 // Maximum number of dirty pages per arena.
 #define DIRTY_MAX_DEFAULT (1U << 8)
@@ -559,10 +557,8 @@ static bool malloc_initialized;
 #else
 // Malloc may be called non-deterministically when recording/replaying, so this
 // atomic's accesses are not recorded.
-static Atomic<bool,
-              SequentiallyConsistent,
-              recordreplay::Behavior::DontPreserve>
-  malloc_initialized;
+static Atomic<bool, SequentiallyConsistent,
+	      recordreplay::Behavior::DontPreserve> malloc_initialized;
 #endif
 
 static StaticMutex gInitLock = { STATIC_MUTEX_INIT };
@@ -1162,9 +1158,8 @@ public:
   Mutex mLock;
 
 private:
-  inline arena_t* GetByIdInternal(arena_id_t aArenaId, bool aIsPrivate);
-
   arena_t* mDefaultArena;
+  arena_id_t mLastArenaId;
   Tree mArenas;
   Tree mPrivateArenas;
 };
@@ -2280,14 +2275,14 @@ arena_run_reg_alloc(arena_run_t* run, arena_bin_t* bin)
 static inline void
 arena_run_reg_dalloc(arena_run_t* run, arena_bin_t* bin, void* ptr, size_t size)
 {
-  // To divide by a number D that is not a power of two we multiply
-  // by (2^21 / D) and then right shift by 21 positions.
-  //
-  //   X / D
-  //
-  // becomes
-  //
-  //   (X * size_invs[(D / kQuantum) - 3]) >> SIZE_INV_SHIFT
+// To divide by a number D that is not a power of two we multiply
+// by (2^21 / D) and then right shift by 21 positions.
+//
+//   X / D
+//
+// becomes
+//
+//   (X * size_invs[(D / kQuantum) - 3]) >> SIZE_INV_SHIFT
 
 #define SIZE_INV_SHIFT 21
 #define SIZE_INV(s) (((1U << SIZE_INV_SHIFT) / (s * kQuantum)) + 1)
@@ -3737,27 +3732,8 @@ ArenaCollection::CreateArena(bool aIsPrivate, arena_params_t* aParams)
 
   MutexAutoLock lock(mLock);
 
-  ret->mId = [&] {
-    // Generate a cryptographically-secure random id for the new arena
-    // If an attacker manages to get control of the process, this should make
-    // it more difficult for them to "guess" the ID of another memory arena,
-    // stopping them from getting data they may want
-
-    while (true) {
-      mozilla::Maybe<uint64_t> maybeRandomId = mozilla::RandomUint64();
-      MOZ_RELEASE_ASSERT(maybeRandomId.isSome());
-
-      // Keep looping until we ensure that the random number we just generated
-      // isn't already in use by another active arena
-      arena_t* existingArena =
-        GetByIdInternal(maybeRandomId.value(), aIsPrivate);
-
-      if (!existingArena) {
-        return maybeRandomId.value();
-      }
-    }
-  }();
-
+  // TODO: Use random Ids.
+  ret->mId = mLastArenaId++;
   (aIsPrivate ? mPrivateArenas : mArenas).Insert(ret);
   return ret;
 }
@@ -4583,25 +4559,18 @@ MozJemalloc::jemalloc_free_dirty_pages(void)
   }
 }
 
-// ArenaCollection::mLock must be locked before calling this
-inline arena_t*
-ArenaCollection::GetByIdInternal(arena_id_t aArenaId, bool aIsPrivate)
-{
-  // Use AlignedStorage2 to avoid running the arena_t constructor, while
-  // we only need it as a placeholder for mId.
-  mozilla::AlignedStorage2<arena_t> key;
-  key.addr()->mId = aArenaId;
-  return (aIsPrivate ? mPrivateArenas : mArenas).Search(key.addr());
-}
-
 inline arena_t*
 ArenaCollection::GetById(arena_id_t aArenaId, bool aIsPrivate)
 {
   if (!malloc_initialized) {
     return nullptr;
   }
+  // Use AlignedStorage2 to avoid running the arena_t constructor, while
+  // we only need it as a placeholder for mId.
+  mozilla::AlignedStorage2<arena_t> key;
+  key.addr()->mId = aArenaId;
   MutexAutoLock lock(mLock);
-  arena_t* result = GetByIdInternal(aArenaId, aIsPrivate);
+  arena_t* result = (aIsPrivate ? mPrivateArenas : mArenas).Search(key.addr());
   MOZ_RELEASE_ASSERT(result);
   return result;
 }
@@ -4740,10 +4709,7 @@ static malloc_table_t gReplaceMallocTables[2] = {
 unsigned gReplaceMallocIndex = 0;
 
 // Avoid races when swapping malloc impls dynamically
-static Atomic<malloc_table_t const*,
-              mozilla::MemoryOrdering::Relaxed,
-              recordreplay::Behavior::DontPreserve>
-  gReplaceMallocTable;
+static Atomic<malloc_table_t const*, mozilla::MemoryOrdering::Relaxed, recordreplay::Behavior::DontPreserve> gReplaceMallocTable;
 
 #ifdef MOZ_DYNAMIC_REPLACE_INIT
 #undef replace_init
@@ -4882,15 +4848,15 @@ jemalloc_replace_dynamic(jemalloc_init_func replace_init_func)
   gReplaceMallocTable = &gReplaceMallocTableDefault;
 }
 
-#define MALLOC_DECL(name, return_type, ...)                                    \
+#define MALLOC_DECL(name, return_type, ...)                             \
   template<>                                                                   \
   inline return_type ReplaceMalloc::name(                                      \
     ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__))                                    \
   {                                                                            \
-    if (MOZ_UNLIKELY(!gReplaceMallocTable)) {                                  \
+    if (MOZ_UNLIKELY(!gReplaceMallocTable)) {                            \
       init();                                                                  \
     }                                                                          \
-    return (*gReplaceMallocTable).name(ARGS_HELPER(ARGS, ##__VA_ARGS__));      \
+    return (*gReplaceMallocTable).name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
   }
 #include "malloc_decls.h"
 
@@ -4909,7 +4875,7 @@ get_bridge(void)
 // replace_valloc, and default implementations will be automatically derived
 // from replace_memalign.
 static void
-replace_malloc_init_funcs(malloc_table_t* table)
+replace_malloc_init_funcs(malloc_table_t *table)
 {
   if (table->posix_memalign == MozJemalloc::posix_memalign &&
       table->memalign != MozJemalloc::memalign) {
@@ -4923,7 +4889,8 @@ replace_malloc_init_funcs(malloc_table_t* table)
   }
   if (table->valloc == MozJemalloc::valloc &&
       table->memalign != MozJemalloc::memalign) {
-    table->valloc = AlignedAllocator<ReplaceMalloc::memalign>::valloc;
+    table->valloc =
+      AlignedAllocator<ReplaceMalloc::memalign>::valloc;
   }
   if (table->moz_create_arena_with_params ==
         MozJemalloc::moz_create_arena_with_params &&
@@ -4933,7 +4900,8 @@ replace_malloc_init_funcs(malloc_table_t* table)
 #define MALLOC_FUNCS MALLOC_FUNCS_ARENA_BASE
 #include "malloc_decls.h"
   }
-  if (table->moz_arena_malloc == MozJemalloc::moz_arena_malloc &&
+  if (table->moz_arena_malloc ==
+        MozJemalloc::moz_arena_malloc &&
       table->malloc != MozJemalloc::malloc) {
 #define MALLOC_DECL(name, ...)                                                 \
   table->name = DummyArenaAllocator<ReplaceMalloc>::name;
@@ -4943,8 +4911,8 @@ replace_malloc_init_funcs(malloc_table_t* table)
 }
 
 #endif // MOZ_REPLACE_MALLOC
-// ***************************************************************************
-// Definition of all the _impl functions
+  // ***************************************************************************
+  // Definition of all the _impl functions
 
 #define GENERIC_MALLOC_DECL2(name, name_impl, return_type, ...)                \
   return_type name_impl(ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__))                \
@@ -4968,7 +4936,7 @@ replace_malloc_init_funcs(malloc_table_t* table)
   MOZ_JEMALLOC_API MACRO_CALL(GENERIC_MALLOC_DECL, (__VA_ARGS__))
 #define MALLOC_FUNCS (MALLOC_FUNCS_JEMALLOC | MALLOC_FUNCS_ARENA)
 #include "malloc_decls.h"
-// ***************************************************************************
+  // ***************************************************************************
 
 #ifdef HAVE_DLOPEN
 #include <dlfcn.h>
