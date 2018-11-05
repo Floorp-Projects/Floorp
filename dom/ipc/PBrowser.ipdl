@@ -597,8 +597,7 @@ child:
     async InitRendering(TextureFactoryIdentifier textureFactoryIdentifier,
                         LayersId layersId,
                         CompositorOptions compositorOptions,
-                        bool layersConnected,
-                        bool hasRenderFrame);
+                        bool layersConnected);
 
     async LoadURL(nsCString uri, ShowInfo info);
 
