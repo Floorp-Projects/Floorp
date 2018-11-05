@@ -2490,21 +2490,21 @@ nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo &info,
         }
     }
 
-    // Now, scan to see if all remaining proxies are disabled.  If so, then
+    // Scan to see if all remaining non-direct proxies are disabled. If so, then
     // we'll just bail and return them all.  Otherwise, we'll go and prune the
     // disabled ones.
 
-    bool allDisabled = true;
+    bool allNonDirectProxiesDisabled = true;
 
     nsProxyInfo *iter;
     for (iter = head; iter; iter = iter->mNext) {
-        if (!IsProxyDisabled(iter)) {
-            allDisabled = false;
+        if (!IsProxyDisabled(iter) && iter->mType != kProxyType_DIRECT) {
+            allNonDirectProxiesDisabled = false;
             break;
         }
     }
 
-    if (allDisabled) {
+    if (allNonDirectProxiesDisabled) {
         LOG(("All proxies are disabled, so trying all again"));
     } else {
         // remove any disabled proxies.
