@@ -61,6 +61,14 @@ function checkCCForm(customEl, expectedCard) {
   }
 }
 
+function createAddressRecord(source, props = {}) {
+  let address = Object.assign({}, source, props);
+  if (!address.name) {
+    address.name = `${address["given-name"]} ${address["family-name"]}`;
+  }
+  return address;
+}
+
 add_task(async function setup_once() {
   let templateFrame = document.getElementById("templateFrame");
   await SimpleTest.promiseFocus(templateFrame.contentWindow);
@@ -70,6 +78,13 @@ add_task(async function setup_once() {
 
 add_task(async function test_initialState() {
   let form = new BasicCardForm();
+
+  await form.requestStore.setState({
+    savedAddresses: {
+      "TimBLGUID": createAddressRecord(PTU.Addresses.TimBL),
+    },
+  });
+
   let {page} = form.requestStore.getState();
   is(page.id, "payment-summary", "Check initial page");
   await form.promiseReady;
@@ -79,6 +94,9 @@ add_task(async function test_initialState() {
 
   // :-moz-ui-invalid, unlike :invalid, only applies to fields showing the error outline.
   let fieldsVisiblyInvalid = form.querySelectorAll(":-moz-ui-invalid");
+  for (let field of fieldsVisiblyInvalid) {
+    info("invalid field: " + field.localName + "#" + field.id + "." + field.className);
+  }
   is(fieldsVisiblyInvalid.length, 0, "Check no fields are visibly invalid on an empty 'add' form");
 
   form.remove();
@@ -116,18 +134,18 @@ add_task(async function test_saveButton() {
   let form = new BasicCardForm();
   form.dataset.nextButtonLabel = "Next";
   form.dataset.errorGenericSave = "Generic error";
+  form.dataset.invalidAddressLabel = "Invalid";
+
   await form.promiseReady;
   display.appendChild(form);
 
-  let address1 = deepClone(PTU.Addresses.TimBL);
-  address1.guid = "TimBLGUID";
-  let address2 = deepClone(PTU.Addresses.TimBL2);
-  address2.guid = "TimBL2GUID";
-
+  let address1 = createAddressRecord(PTU.Addresses.TimBL, {guid: "TimBLGUID"});
+  let address2 = createAddressRecord(PTU.Addresses.TimBL2, {guid: "TimBL2GUID"});
 
   await form.requestStore.setState({
     request: {
       paymentMethods,
+      paymentDetails: {},
     },
     savedAddresses: {
       [address1.guid]: deepClone(address1),
@@ -274,10 +292,8 @@ add_task(async function test_add_selectedShippingAddress() {
   card1.guid = "9864798564";
   card1["cc-exp-year"] = 2011;
 
-  let address1 = deepClone(PTU.Addresses.TimBL);
-  address1.guid = "TimBLGUID";
-  let address2 = deepClone(PTU.Addresses.TimBL2);
-  address2.guid = "TimBL2GUID";
+  let address1 = createAddressRecord(PTU.Addresses.TimBL, { guid: "TimBLGUID" });
+  let address2 = createAddressRecord(PTU.Addresses.TimBL2, { guid: "TimBL2GUID" });
 
   await form.requestStore.setState({
     page: {
@@ -312,8 +328,7 @@ add_task(async function test_add_noSelectedShippingAddress() {
   card1.guid = "9864798564";
   card1["cc-exp-year"] = 2011;
 
-  let address1 = deepClone(PTU.Addresses.TimBL);
-  address1.guid = "TimBLGUID";
+  let address1 = createAddressRecord(PTU.Addresses.TimBL, { guid: "TimBLGUID" });
 
   await form.requestStore.setState({
     page: {
@@ -352,8 +367,7 @@ add_task(async function test_edit() {
   display.appendChild(form);
   await asyncElementRendered();
 
-  let address1 = deepClone(PTU.Addresses.TimBL);
-  address1.guid = "TimBLGUID";
+  let address1 = createAddressRecord(PTU.Addresses.TimBL, { guid: "TimBLGUID" });
 
   info("test year before current");
   let card1 = deepClone(PTU.BasicCards.JohnDoe);
@@ -364,6 +378,7 @@ add_task(async function test_edit() {
   await form.requestStore.setState({
     request: {
       paymentMethods,
+      paymentDetails: {},
     },
     page: {
       id: "basic-card-page",
@@ -383,6 +398,7 @@ add_task(async function test_edit() {
   is(form.saveButton.textContent, "Update", "Check label");
   is(form.querySelectorAll(":-moz-ui-invalid").length, 0,
      "Check no fields are visibly invalid on an 'edit' form with a complete card");
+
   checkCCForm(form, card1);
   ok(!form.saveButton.disabled, "Save button should be enabled upon edit for a valid card");
   ok(!form.acceptedCardsList.hidden, "Accepted card list should be visible when editing a card");
@@ -460,6 +476,17 @@ add_task(async function test_field_validity_updates() {
   form.dataset.updateButtonLabel = "Update";
   await form.promiseReady;
   display.appendChild(form);
+
+  let address1 = createAddressRecord(PTU.Addresses.TimBL, {guid: "TimBLGUID"});
+  await form.requestStore.setState({
+    request: {
+      paymentMethods,
+      paymentDetails: {},
+    },
+    savedAddresses: {
+      [address1.guid]: deepClone(address1),
+    },
+  });
   await asyncElementRendered();
 
   let ccNumber = form.form.querySelector("#cc-number");
@@ -468,6 +495,7 @@ add_task(async function test_field_validity_updates() {
   let cscInput = form.form.querySelector("csc-input input");
   let monthInput = form.form.querySelector("#cc-exp-month");
   let yearInput = form.form.querySelector("#cc-exp-year");
+  let addressPicker = form.querySelector("#billingAddressGUID");
 
   info("test with valid cc-number but missing cc-name");
   fillField(ccNumber, "4111111111111111");
@@ -487,6 +515,16 @@ add_task(async function test_field_validity_updates() {
   ok(monthInput.checkValidity(), "cc-exp-month field is valid with a value");
   ok(yearInput.checkValidity(), "cc-exp-year field is valid with a value");
   ok(typeInput.checkValidity(), "cc-type field is valid with a value");
+
+  // should auto-select the first billing address
+  ok(addressPicker.value, "An address is selected: " + addressPicker.value);
+
+  let fieldsVisiblyInvalid = form.querySelectorAll(":-moz-ui-invalid");
+  for (let field of fieldsVisiblyInvalid) {
+    info("invalid field: " + field.localName + "#" + field.id + "." + field.className);
+  }
+  is(fieldsVisiblyInvalid.length, 0, "No fields are visibly invalid");
+
   ok(!form.saveButton.disabled, "Save button should not be disabled with good input");
 
   info("edit to make the cc-number invalid");
@@ -518,6 +556,17 @@ add_task(async function test_numberCustomValidityReset() {
   form.dataset.updateButtonLabel = "Update";
   await form.promiseReady;
   display.appendChild(form);
+
+  let address1 = createAddressRecord(PTU.Addresses.TimBL, {guid: "TimBLGUID"});
+  await form.requestStore.setState({
+    request: {
+      paymentMethods,
+      paymentDetails: {},
+    },
+    savedAddresses: {
+      [address1.guid]: deepClone(address1),
+    },
+  });
   await asyncElementRendered();
 
   fillField(form.querySelector("#cc-number"), "junk");
