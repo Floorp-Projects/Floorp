@@ -30,6 +30,7 @@ using mozilla::DebugOnly;
 
 GeckoProfilerThread::GeckoProfilerThread()
   : profilingStack_(nullptr)
+  , profilingStackIfEnabled_(nullptr)
 {
 }
 
@@ -44,9 +45,10 @@ GeckoProfilerRuntime::GeckoProfilerRuntime(JSRuntime* rt)
 }
 
 void
-GeckoProfilerThread::setProfilingStack(ProfilingStack* profilingStack)
+GeckoProfilerThread::setProfilingStack(ProfilingStack* profilingStack, bool enabled)
 {
     profilingStack_ = profilingStack;
+    profilingStackIfEnabled_ = enabled ? profilingStack : nullptr;
 }
 
 void
@@ -472,12 +474,14 @@ ProfilingStackFrame::setPC(jsbytecode* pc)
 JS_FRIEND_API(void)
 js::SetContextProfilingStack(JSContext* cx, ProfilingStack* profilingStack)
 {
-    cx->geckoProfiler().setProfilingStack(profilingStack);
+    cx->geckoProfiler().setProfilingStack(profilingStack,
+        cx->runtime()->geckoProfiler().enabled());
 }
 
 JS_FRIEND_API(void)
 js::EnableContextProfilingStack(JSContext* cx, bool enabled)
 {
+    cx->geckoProfiler().enable(enabled);
     cx->runtime()->geckoProfiler().enable(enabled);
 }
 
