@@ -83,13 +83,10 @@ function attachThread(toolbox) {
     };
 
     if (target.activeTab) {
-      // Attaching a tab, a parent or child process, or a WebExtensions add-on.
       target.activeTab.attachThread(threadOptions).then(handleResponse);
-    } else if (target.isAddon) {
-      // Attaching a legacy addon.
-      target.client.attachAddon(target.form.actor).then(([res]) => {
-        target.client.attachThread(res.threadActor).then(handleResponse);
-      });
+    } else {
+      // Now, all targets should have a front set on activeTab attribute.
+      throw new Error("Target is missing an activeTab attribute");
     }
   });
 }
