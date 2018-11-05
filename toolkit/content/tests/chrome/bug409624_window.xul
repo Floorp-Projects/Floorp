@@ -16,6 +16,7 @@
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
   <script type="application/javascript"><![CDATA[
+    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
     var gFindBar = null;
     var gBrowser;
 
@@ -33,7 +34,7 @@
       gFindBar = document.getElementById("FindToolbar");
       gBrowser = document.getElementById("content");
       gBrowser.addEventListener("pageshow", onPageShow, false);
-      gBrowser.loadURI('data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
+      BrowserTestUtils.loadURI(gBrowser, 'data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
     }
 
     function onPageShow() {

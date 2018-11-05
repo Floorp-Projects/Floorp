@@ -46,8 +46,10 @@ pref("devtools.inspector.show_pseudo_elements", false);
 pref("devtools.inspector.imagePreviewTooltipSize", 300);
 // Enable user agent style inspection in rule-view
 pref("devtools.inspector.showUserAgentStyles", false);
-// Show all native anonymous content (like controls in <video> tags)
+// Show all native anonymous content
 pref("devtools.inspector.showAllAnonymousContent", false);
+// Show user agent shadow roots
+pref("devtools.inspector.showUserAgentShadowRoots", false);
 // Enable the CSS shapes highlighter
 pref("devtools.inspector.shapesHighlighter.enabled", true);
 // Enable the Font Editor

@@ -3965,6 +3965,35 @@ MacroAssembler::performPendingReadBarriers()
     }
 }
 
+// Can't push large frames blindly on windows, so we must touch frame memory
+// incrementally, with no more than 4096 - 1 bytes between touches.
+//
+// This is used across all platforms for simplicity.
+void
+MacroAssembler::touchFrameValues(Register numStackValues, Register scratch1, Register scratch2)
+{
+    const size_t FRAME_TOUCH_INCREMENT = 2048;
+    static_assert(FRAME_TOUCH_INCREMENT < 4096 -1, "Frame increment is too large");
+
+    moveStackPtrTo(scratch2);
+    mov(numStackValues, scratch1);
+    lshiftPtr(Imm32(3), scratch1);
+    subPtr(scratch1, scratch2);
+    {
+        moveStackPtrTo(scratch1);
+        subPtr(Imm32(FRAME_TOUCH_INCREMENT), scratch1);
+
+        Label touchFrameLoop;
+        Label touchFrameLoopEnd;
+        bind(&touchFrameLoop);
+        branchPtr(Assembler::Below, scratch1, scratch2, &touchFrameLoopEnd);
+        store32(Imm32(0), Address(scratch1, 0));
+        subPtr(Imm32(FRAME_TOUCH_INCREMENT), scratch1);
+        jump(&touchFrameLoop);
+        bind(&touchFrameLoopEnd);
+    }
+}
+
 namespace js {
 namespace jit {
 

@@ -250,6 +250,11 @@ const Types = exports.__TypesForTests = [
     front: null,
   },
   {
+    types: ["contentProcessTarget"],
+    spec: "devtools/shared/specs/targets/content-process",
+    front: null,
+  },
+  {
     types: ["frameTarget"],
     spec: "devtools/shared/specs/targets/frame",
     front: null,

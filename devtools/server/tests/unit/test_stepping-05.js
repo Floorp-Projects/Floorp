@@ -14,6 +14,12 @@ var gDebuggee;
 var gClient;
 var gCallback;
 
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 function run_test() {
   run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);

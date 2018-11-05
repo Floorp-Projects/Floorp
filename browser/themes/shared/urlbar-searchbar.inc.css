@@ -401,12 +401,12 @@
 
 #contextual-feature-recommendation {
   width: 28px;
-  margin-left: 0;
-  transition: margin-left step-end var(--cfr-animation-duration);
+  margin-inline-start: 0;
+  transition: margin-inline-start step-end var(--cfr-animation-duration);
 }
 #urlbar[cfr-recommendation-state="expanded"] #contextual-feature-recommendation {
-  margin-left: calc(var(--cfr-label-width) * -1);
-  transition: margin-left step-start var(--cfr-animation-duration);
+  margin-inline-start: calc(var(--cfr-label-width) * -1);
+  transition: margin-inline-start step-start var(--cfr-animation-duration);
 }
 
 #cfr-button {
@@ -421,6 +421,9 @@
   fill-opacity: 1;
   background-color: transparent; /* Override hover background-color */
   transform: translateX(calc(var(--cfr-label-width) * -1));
+}
+#urlbar[cfr-recommendation-state="expanded"] #cfr-button:-moz-locale-dir(rtl) {
+  transform: translateX(calc(var(--cfr-label-width)));
 }
 @keyframes cfr-button-fade-through-active-color {
   33% {
@@ -440,30 +443,38 @@
   width: 0;
   overflow: hidden;
   border-radius: 5px;
-  padding-left: 28px;
+  padding-inline-start: 28px;
   mask-image: linear-gradient(to right, transparent 0, black 0);
   mask-position-x: var(--cfr-label-width);
   mask-repeat: no-repeat;
-  transition-property: background-color, mask-position-x, width, margin-right;
+  transition-property: background-color, mask-position-x, width, margin-inline-end;
   transition-timing-function: ease-in-out, ease-in-out, step-end, step-end;
   transition-duration: var(--cfr-animation-duration);
 }
+#cfr-label-container:-moz-locale-dir(rtl) {
+  mask-position-x: calc(var(--cfr-label-width) * -1);
+}
+
 #urlbar[cfr-recommendation-state="expanded"] #cfr-label-container {
   width: calc(var(--cfr-label-width) + 28px);
   background-color: var(--cfr-active-color);
-  margin-right: -28px;
+  margin-inline-end: -28px;
   mask-position-x: 0;
   transition-timing-function: ease-in-out, ease-in-out, step-start, step-start;
 }
 
 #cfr-label {
   margin: 0;
-  padding: 3px 5px 3px 0;
+  padding: 3px 5px;
+  padding-inline-start: 0;
   color: white;
   mask-image: linear-gradient(to right, transparent 0, black 0);
   mask-position-x: var(--cfr-label-width);
   mask-repeat: no-repeat;
   transition: mask-position-x ease-in-out var(--cfr-animation-duration);
+}
+#cfr-label:-moz-locale-dir(rtl) {
+  mask-position-x: calc(var(--cfr-label-width) * -1);
 }
 #urlbar[cfr-recommendation-state="expanded"] #cfr-label {
   mask-position-x: 0;
@@ -476,6 +487,9 @@
 #urlbar[cfr-recommendation-state="expanded"] .urlbar-history-dropmarker {
   transform: translateX(calc(var(--cfr-label-width) * -1));
 }
+#urlbar[cfr-recommendation-state="expanded"] .urlbar-history-dropmarker:-moz-locale-dir(rtl) {
+  transform: translateX(calc(var(--cfr-label-width)));
+}
 
 /* Shift the url-bar text fading to stop the recommendation overlapping */
 #urlbar[cfr-recommendation-state] html|input.urlbar-input {
@@ -486,8 +500,14 @@
   mask-image: linear-gradient(to left, transparent, black 3ch);
   transition: mask-position-x ease-in-out var(--cfr-animation-duration);
 }
+#urlbar[cfr-recommendation-state] html|input.urlbar-input:-moz-locale-dir(rtl) {
+  mask-image: linear-gradient(to right, transparent, black 3ch);
+}
 #urlbar[cfr-recommendation-state="expanded"] html|input.urlbar-input {
   mask-position-x: calc(var(--cfr-label-width) * -1);
+}
+#urlbar[cfr-recommendation-state="expanded"] html|input.urlbar-input:-moz-locale-dir(rtl) {
+  mask-position-x: calc(var(--cfr-label-width));
 }
 
 /* Reader mode icon */

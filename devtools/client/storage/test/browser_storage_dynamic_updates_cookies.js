@@ -4,6 +4,12 @@
 
 "use strict";
 
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 // Test dynamic updates in the storage inspector for cookies.
 
 add_task(async function() {

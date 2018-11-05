@@ -2,6 +2,11 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let ppmm = Services.ppmm.getChildAt(0);
 
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 add_task(async function test_bindings() {
     let {strict, bound} = await new Promise(function(resolve) {
         // Use a listener to get results from child

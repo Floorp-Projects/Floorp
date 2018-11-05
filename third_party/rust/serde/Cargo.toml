@@ -12,7 +12,7 @@
 
 [package]
 name = "serde"
-version = "1.0.66"
+version = "1.0.80"
 authors = ["Erick Tryzelaar <erick.tryzelaar@gmail.com>", "David Tolnay <dtolnay@gmail.com>"]
 build = "build.rs"
 include = ["Cargo.toml", "build.rs", "src/**/*.rs", "crates-io.md", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]

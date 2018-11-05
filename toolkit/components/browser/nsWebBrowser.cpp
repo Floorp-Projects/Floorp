@@ -37,6 +37,7 @@
 #include "nsDocShell.h"
 
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/BrowsingContext.h"
 
 // for painting the background window
 #include "mozilla/LookAndFeel.h"
@@ -512,6 +513,9 @@ nsWebBrowser::LoadURIWithOptions(const nsAString& aURI, uint32_t aLoadFlags,
                                  nsIURI* aBaseURI,
                                  nsIPrincipal* aTriggeringPrincipal)
 {
+#ifndef ANDROID
+  MOZ_ASSERT(aTriggeringPrincipal, "nsWebBrowser::LoadURIWithOptions - Need a valid triggeringPrincipal");
+#endif
   NS_ENSURE_STATE(mDocShell);
 
   return mDocShellAsNav->LoadURIWithOptions(
@@ -533,6 +537,9 @@ nsWebBrowser::LoadURI(const nsAString& aURI, uint32_t aLoadFlags,
                       nsIInputStream* aExtraHeaderStream,
                       nsIPrincipal* aTriggeringPrincipal)
 {
+#ifndef ANDROID
+  MOZ_ASSERT(aTriggeringPrincipal, "nsWebBrowser::LoadURI - Need a valid triggeringPrincipal");
+#endif
   NS_ENSURE_STATE(mDocShell);
 
   return mDocShellAsNav->LoadURI(aURI, aLoadFlags, aReferringURI,
@@ -973,10 +980,22 @@ nsWebBrowser::Create()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsIDocShell> docShell(
-    do_CreateInstance("@mozilla.org/docshell;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsDocShell::Cast(docShell)->SetOriginAttributes(mOriginAttributes);
+  // XXX(nika): Consider supporting creating nsWebBrowser for an existing
+  // BrowsingContext (e.g. during a X-process load).
+  // XXX(nika): Get window opener information into nsWebBrowser::Create.
+  using BrowsingContext = mozilla::dom::BrowsingContext;
+  RefPtr<mozilla::dom::BrowsingContext> browsingContext =
+    BrowsingContext::Create(nullptr,
+                            mInitInfo->name,
+                            mContentType != typeChromeWrapper
+                              ? BrowsingContext::Type::Content
+                              : BrowsingContext::Type::Chrome);
+
+  RefPtr<nsDocShell> docShell = nsDocShell::Create(browsingContext);
+  if (NS_WARN_IF(!docShell)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  docShell->SetOriginAttributes(mOriginAttributes);
   rv = SetDocShell(docShell);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1000,14 +1019,7 @@ nsWebBrowser::Create()
                                                mInitInfo->cx, mInitInfo->cy),
                     NS_ERROR_FAILURE);
 
-  mDocShell->SetName(mInitInfo->name);
-  if (mContentType == typeChromeWrapper) {
-    mDocShell->SetItemType(nsIDocShellTreeItem::typeChrome);
-  } else {
-    mDocShell->SetItemType(nsIDocShellTreeItem::typeContent);
-  }
   mDocShell->SetTreeOwner(mDocShellTreeOwner);
-  mDocShell->AttachBrowsingContext(nullptr);
 
   // If the webbrowser is a content docshell item then we won't hear any
   // events from subframes. To solve that we install our own chrome event

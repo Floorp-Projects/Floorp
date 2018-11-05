@@ -14,3 +14,6 @@
 
 -brand-short-name = Firefox Developer Edition
 -vendor-short-name = Mozilla
+-brand-full-name = Firefox Developer Edition
+-brand-shorter-name = Firefox
+trademarkInfo = { " " }

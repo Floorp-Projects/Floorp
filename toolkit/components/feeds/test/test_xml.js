@@ -26,6 +26,12 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
 
 // Listens to feeds being loaded. Runs the tests built into the feed afterwards to veryify they
 // were parsed correctly.

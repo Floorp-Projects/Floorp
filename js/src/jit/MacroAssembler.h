@@ -2771,6 +2771,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void performPendingReadBarriers();
 
+    void touchFrameValues(Register numStackValues, Register scratch1, Register scratch2);
+
   private:
     // Methods to get a singleton object or object group from a type set without
     // a read barrier, and record the result so that we can perform the barrier

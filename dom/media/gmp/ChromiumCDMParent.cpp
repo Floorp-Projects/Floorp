@@ -820,7 +820,8 @@ void
 ChromiumCDMParent::ReorderAndReturnOutput(RefPtr<VideoData>&& aFrame)
 {
   if (mMaxRefFrames == 0) {
-    mDecodePromise.ResolveIfExists({ std::move(aFrame) }, __func__);
+    mDecodePromise.ResolveIfExists(
+      MediaDataDecoder::DecodedData({ std::move(aFrame) }), __func__);
     return;
   }
   mReorderQueue.Push(std::move(aFrame));

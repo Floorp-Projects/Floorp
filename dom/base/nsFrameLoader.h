@@ -423,10 +423,8 @@ private:
   bool ShowRemoteFrame(const mozilla::ScreenIntSize& size,
                        nsSubDocumentFrame *aFrame = nullptr);
 
-  bool AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
-                              nsIDocShellTreeOwner* aOwner,
-                              int32_t aParentType,
-                              nsIDocShell* aParentNode);
+  void AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
+                              nsIDocShellTreeOwner* aOwner);
 
   nsAtom* TypeAttrName() const {
     return mOwnerContent->IsXULElement()

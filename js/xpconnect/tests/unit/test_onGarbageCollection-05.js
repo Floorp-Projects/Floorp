@@ -5,6 +5,13 @@ const root = newGlobal();
 const dbg = new Debugger();
 const wrappedRoot = dbg.addDebuggee(root)
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 function run_test() {
   do_test_pending();
 

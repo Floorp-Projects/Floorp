@@ -22,6 +22,8 @@
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
 SimpleTest.expectChildProcessCrash();
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                    true]]});
 setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
