@@ -19,11 +19,17 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIERRORSERVICE
 
-  static already_AddRefed<nsIErrorService> GetOrCreate();
+  nsErrorService()
+  {
+  }
+
+  static nsresult
+  Create(nsISupports* aOuter, const nsIID& aIID, void** aInstancePtr);
 
 private:
-  nsErrorService() = default;
-  ~nsErrorService() = default;
+  ~nsErrorService()
+  {
+  }
 
   nsClassHashtable<nsUint32HashKey, nsCString> mErrorStringBundleURLMap;
 };
