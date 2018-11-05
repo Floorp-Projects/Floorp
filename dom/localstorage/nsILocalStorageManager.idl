@@ -8,11 +8,25 @@
 
 interface nsIPrincipal;
 
+/**
+ * Methods specific to LocalStorage, see nsIDOMStorageManager for methods shared
+ * with SessionStorage.  Methods may migrate there as SessionStorage is
+ * overhauled.
+ */
 [scriptable, builtinclass, uuid(d4f534da-2744-4db3-8774-8b187c64ade9)]
 interface nsILocalStorageManager : nsISupports
 {
   readonly attribute boolean nextGenLocalStorageEnabled;
 
+  /**
+   * Trigger preload of LocalStorage for the given principal.  For use by
+   * ContentParent::AboutToLoadHttpFtpWyciwygDocumentForChild to maximize the
+   * amount of time we have to load the data off disk before the page might
+   * attempt to touch LocalStorage.
+   *
+   * This method will not create a QuotaManager-managed directory on disk if
+   * one does not already exist for the principal.
+   */
   [implicit_jscontext] nsISupports
   preload(in nsIPrincipal aPrincipal);
 

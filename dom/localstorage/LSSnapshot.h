@@ -20,12 +20,50 @@ class LSSnapshot final
   : public nsIRunnable
 {
 public:
+  /**
+   * The LoadState expresses what subset of information a snapshot has from the
+   * authoritative Datastore in the parent process.  The initial snapshot is
+   * populated heuristically based on the size of the keys and size of the items
+   * (inclusive of the key value; item is key+value, not just value) of the
+   * entire datastore relative to the configured prefill limit (via pref
+   * "dom.storage.snapshot_prefill" exposed as gSnapshotPrefill in bytes).
+   *
+   * If there's less data than the limit, we send both keys and values and end
+   * up as AllOrderedItems.  If there's enough room for all the keys but not
+   * all the values, we end up as AllOrderedKeys with as many values present as
+   * would fit.  If there's not enough room for all the keys, then we end up as
+   * Partial with as many key-value pairs as will fit.
+   *
+   * The state AllUnorderedItems can only be reached by code getting items one
+   * by one.
+   */
   enum class LoadState
   {
+    /**
+     * Class constructed, Init(LSSnapshotInitInfo) has not been invoked yet.
+     */
     Initial,
+    /**
+     * Some keys and their values are known.
+     */
     Partial,
+    /**
+     * All the keys are known in order, but some values are unknown.
+     */
     AllOrderedKeys,
+    /**
+     * All keys and their values are known, but in an arbitrary order.
+     */
     AllUnorderedItems,
+    /**
+     * All keys and their values are known and are present in their canonical
+     * order.  This is everything, and is the preferred case.  The initial
+     * population will send this info when the size of all items is less than
+     * the prefill threshold.
+     *
+     * mValues will contain all keys and values, mLoadedItems and mUnknownItems
+     * are unused.
+     */
     AllOrderedItems,
     EndGuard
   };

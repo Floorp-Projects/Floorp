@@ -133,6 +133,11 @@ LocalStorageManager2::PrecacheStorage(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(_retval);
 
+  // This method was created as part of the e10s-ification of the old LS
+  // implementation to perform a preload in the content/current process.  That's
+  // not how things work in LSNG.  Instead everything happens in the parent
+  // process, triggered by the official preloading spot,
+  // ContentParent::AboutToLoadHttpFtpWyciwygDocumentForChild.
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -182,6 +187,8 @@ LocalStorageManager2::CloneStorage(Storage* aStorageToCloneFrom)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aStorageToCloneFrom);
 
+  // Cloning is specific to sessionStorage; state is forked when a new tab is
+  // opened from an existing tab.
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -195,6 +202,7 @@ LocalStorageManager2::CheckStorage(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(aStorage);
   MOZ_ASSERT(_retval);
 
+  // Only used by sessionStorage.
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

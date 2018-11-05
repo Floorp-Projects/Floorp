@@ -33,6 +33,28 @@ class LSRequestChildCallback;
 class LSRequestParams;
 class LSRequestResponse;
 
+/**
+ * Backs the WebIDL `Storage` binding; all content LocalStorage calls are
+ * handled by this class.
+ *
+ * ## Semantics under e10s / multi-process ##
+ *
+ * A snapshot mechanism used in conjuction with stable points ensures that JS
+ * run-to-completion semantics are experienced even if the same origin is
+ * concurrently accessing LocalStorage across multiple content processes.
+ *
+ * ### Snapshot Consistency ###
+ *
+ * An LSSnapshot is created locally whenever the contents of LocalStorage are
+ * about to be read or written (including length).  This synchronously
+ * establishes a corresponding Snapshot in PBackground in the parent process.
+ * An effort is made to send as much data from the parent process as possible,
+ * so sites using a small/reasonable amount of LocalStorage data will have it
+ * sent to the content process for immediate access.  Sites with greater
+ * LocalStorage usage may only have some of the information relayed.  In that
+ * case, the parent Snapshot will ensure that it retains the exact state of the
+ * parent Datastore at the moment the Snapshot was created.
+ */
 class LSObject final
   : public Storage
 {
@@ -52,10 +74,21 @@ class LSObject final
   bool mInExplicitSnapshot;
 
 public:
+  /**
+   * The normal creation path invoked by nsGlobalWindowInner.
+   */
   static nsresult
   CreateForWindow(nsPIDOMWindowInner* aWindow,
                   Storage** aStorage);
 
+  /**
+   * nsIDOMStorageManager creation path for use in testing logic.  Supports the
+   * system principal where CreateForWindow does not.  This is also why aPrivate
+   * exists separate from the principal; because the system principal can never
+   * be mutated to have a private browsing id even though it can be used in a
+   * window/document marked as private browsing.  That's a legacy issue that is
+   * being dealt with, but it's why it exists here.
+   */
   static nsresult
   CreateForPrincipal(nsPIDOMWindowInner* aWindow,
                      nsIPrincipal* aPrincipal,
@@ -71,6 +104,16 @@ public:
   static already_AddRefed<nsIEventTarget>
   GetSyncLoopEventTarget();
 
+  /**
+   * Helper invoked by ContentChild::OnChannelReceivedMessage when a sync IPC
+   * message is received.  This will be invoked on the IPC I/O thread and it's
+   * necessary to unblock the main thread when this happens to avoid the
+   * potential for browser deadlock.  This should only occur in (ugly) testing
+   * scenarios where CPOWs are in use.
+   *
+   * Cancellation will result in the underlying LSRequest being explicitly
+   * canceled, resulting in the parent sending an NS_ERROR_FAILURE result.
+   */
   static void
   CancelSyncLoop();
 
@@ -135,6 +178,8 @@ public:
   Clear(nsIPrincipal& aSubjectPrincipal,
         ErrorResult& aError) override;
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Testing Methods: See Storage.h
   void
   Open(nsIPrincipal& aSubjectPrincipal,
        ErrorResult& aError) override;
@@ -150,6 +195,8 @@ public:
   void
   EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
                       ErrorResult& aError) override;
+
+  //////////////////////////////////////////////////////////////////////////////
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(LSObject, Storage)
@@ -170,12 +217,32 @@ private:
   void
   DropDatabase();
 
+  /**
+   * Invoked by nsGlobalWindowInner whenever a new "storage" event listener is
+   * added to the window in order to ensure that "storage" events are received
+   * from other processes.  (`LSObject::OnChange` directly invokes
+   * `Storage::NotifyChange` to notify in-process listeners.)
+   *
+   * If this is the first request in the process for an observer for this
+   * origin, this will trigger a RequestHelper-mediated synchronous LSRequest
+   * to prepare a new observer in the parent process and also construction of
+   * corresponding actors, which will result in the observer being fully
+   * registered in the parent process.
+   */
   nsresult
   EnsureObserver();
 
+  /**
+   * Invoked by nsGlobalWindowInner whenever its last "storage" event listener
+   * is removed.
+   */
   void
   DropObserver();
 
+  /**
+   * Internal helper method used by mutation methods that wraps the call to
+   * Storage::NotifyChange to generate same-process "storage" events.
+   */
   void
   OnChange(const nsAString& aKey,
            const nsAString& aOldValue,
