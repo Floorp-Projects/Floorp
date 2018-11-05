@@ -36,7 +36,7 @@ class RenderFrameParent final
   typedef mozilla::layers::TextureFactoryIdentifier TextureFactoryIdentifier;
 public:
 
-  explicit RenderFrameParent(nsFrameLoader* aFrameLoader);
+  RenderFrameParent();
   virtual ~RenderFrameParent();
 
   bool Initialize(nsFrameLoader* aFrameLoader);

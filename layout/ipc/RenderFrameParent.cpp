@@ -45,14 +45,13 @@ GetLayerManager(nsFrameLoader* aFrameLoader)
   return nsContentUtils::LayerManagerForDocument(doc);
 }
 
-RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader)
+RenderFrameParent::RenderFrameParent()
   : mLayersId{0}
-  , mFrameLoader(aFrameLoader)
+  , mFrameLoader(nullptr)
   , mLayerManager(nullptr)
   , mInitialized(false)
   , mLayersConnected(false)
 {
-  mInitialized = Initialize(mFrameLoader);
 }
 
 RenderFrameParent::~RenderFrameParent()
