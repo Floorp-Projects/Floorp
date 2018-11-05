@@ -24,7 +24,7 @@ class ContextTestCase(MarionetteTestCase):
         self.marionette.navigate(test_url)
 
     def get_context(self):
-        return self.marionette._send_message("getContext", key="value")
+        return self.marionette._send_message("Marionette:GetContext", key="value")
 
 
 class TestSetContext(ContextTestCase):
