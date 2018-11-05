@@ -912,7 +912,6 @@ pref("gfx.webrender.force-disabled", false);
 #ifdef XP_WIN
 pref("gfx.webrender.force-angle", true);
 pref("gfx.webrender.dcomp-win.enabled", true);
-pref("gfx.webrender.dcomp-win-triple-buffering.enabled", true);
 pref("gfx.webrender.program-binary", true);
 pref("gfx.webrender.program-binary-disk", true);
 #endif
