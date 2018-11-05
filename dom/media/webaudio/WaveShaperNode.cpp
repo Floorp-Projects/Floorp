@@ -168,7 +168,7 @@ public:
   {
   }
 
-  enum Parameteres {
+  enum Parameters {
     TYPE
   };
 
