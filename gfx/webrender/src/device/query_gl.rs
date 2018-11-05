@@ -7,7 +7,7 @@ use gleam::gl;
 use std::mem;
 use std::rc::Rc;
 
-use device::FrameId;
+use device::GpuFrameId;
 
 
 pub trait NamedTag {
@@ -69,7 +69,7 @@ pub struct GpuFrameProfile<T> {
     gl: Rc<gl::Gl>,
     timers: QuerySet<GpuTimer<T>>,
     samplers: QuerySet<GpuSampler<T>>,
-    frame_id: FrameId,
+    frame_id: GpuFrameId,
     inside_frame: bool,
     ext_debug_marker: bool
 }
@@ -80,7 +80,7 @@ impl<T> GpuFrameProfile<T> {
             gl,
             timers: QuerySet::new(),
             samplers: QuerySet::new(),
-            frame_id: FrameId::new(0),
+            frame_id: GpuFrameId::new(0),
             inside_frame: false,
             ext_debug_marker
         }
@@ -108,7 +108,7 @@ impl<T> GpuFrameProfile<T> {
         self.samplers.set = Vec::new();
     }
 
-    fn begin_frame(&mut self, frame_id: FrameId) {
+    fn begin_frame(&mut self, frame_id: GpuFrameId) {
         self.frame_id = frame_id;
         self.timers.reset();
         self.samplers.reset();
@@ -162,7 +162,7 @@ impl<T: NamedTag> GpuFrameProfile<T> {
     }
 
     #[cfg(feature = "debug_renderer")]
-    fn build_samples(&mut self) -> (FrameId, Vec<GpuTimer<T>>, Vec<GpuSampler<T>>) {
+    fn build_samples(&mut self) -> (GpuFrameId, Vec<GpuTimer<T>>, Vec<GpuSampler<T>>) {
         debug_assert!(!self.inside_frame);
         let gl = &self.gl;
 
@@ -241,11 +241,11 @@ impl<T> GpuProfiler<T> {
 
 impl<T: NamedTag> GpuProfiler<T> {
     #[cfg(feature = "debug_renderer")]
-    pub fn build_samples(&mut self) -> (FrameId, Vec<GpuTimer<T>>, Vec<GpuSampler<T>>) {
+    pub fn build_samples(&mut self) -> (GpuFrameId, Vec<GpuTimer<T>>, Vec<GpuSampler<T>>) {
         self.frames[self.next_frame].build_samples()
     }
 
-    pub fn begin_frame(&mut self, frame_id: FrameId) {
+    pub fn begin_frame(&mut self, frame_id: GpuFrameId) {
         self.frames[self.next_frame].begin_frame(frame_id);
     }
 

@@ -26,24 +26,50 @@ use std::ptr;
 use std::rc::Rc;
 use std::slice;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 use std::thread;
 
+/// Sequence number for frames, as tracked by the device layer.
 #[derive(Debug, Copy, Clone, PartialEq, Ord, Eq, PartialOrd)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct FrameId(usize);
+pub struct GpuFrameId(usize);
 
-impl FrameId {
+/// Tracks the total number of GPU bytes allocated across all WebRender instances.
+///
+/// Assuming all WebRender instances run on the same thread, this doesn't need
+/// to be atomic per se, but we make it atomic to satisfy the thread safety
+/// invariants in the type system. We could also put the value in TLS, but that
+/// would be more expensive to access.
+static GPU_BYTES_ALLOCATED: AtomicUsize = ATOMIC_USIZE_INIT;
+
+/// Returns the number of GPU bytes currently allocated.
+pub fn total_gpu_bytes_allocated() -> usize {
+    GPU_BYTES_ALLOCATED.load(Ordering::Relaxed)
+}
+
+/// Records an allocation in VRAM.
+fn record_gpu_alloc(num_bytes: usize) {
+    GPU_BYTES_ALLOCATED.fetch_add(num_bytes, Ordering::Relaxed);
+}
+
+/// Records an deallocation in VRAM.
+fn record_gpu_free(num_bytes: usize) {
+    let old = GPU_BYTES_ALLOCATED.fetch_sub(num_bytes, Ordering::Relaxed);
+    assert!(old >= num_bytes, "Freeing {} bytes but only {} allocated", num_bytes, old);
+}
+
+impl GpuFrameId {
     pub fn new(value: usize) -> Self {
-        FrameId(value)
+        GpuFrameId(value)
     }
 }
 
-impl Add<usize> for FrameId {
-    type Output = FrameId;
+impl Add<usize> for GpuFrameId {
+    type Output = GpuFrameId;
 
-    fn add(self, other: usize) -> FrameId {
-        FrameId(self.0 + other)
+    fn add(self, other: usize) -> GpuFrameId {
+        GpuFrameId(self.0 + other)
     }
 }
 
@@ -116,6 +142,14 @@ pub enum UploadMethod {
 pub unsafe trait Texel: Copy {}
 unsafe impl Texel for u8 {}
 unsafe impl Texel for f32 {}
+
+/// Returns the size in bytes of a depth target with the given dimensions.
+fn depth_target_size_in_bytes(dimensions: &DeviceUintSize) -> usize {
+    // DEPTH24 textures generally reserve 3 bytes for depth and 1 byte
+    // for stencil, so we measure them as 32 bits.
+    let pixels = dimensions.width * dimensions.height;
+    (pixels as usize) * 4
+}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ReadPixelsFormat {
@@ -465,7 +499,7 @@ pub struct Texture {
     /// configurations). But that would complicate a lot of logic in this module,
     /// and FBOs are cheap enough to create.
     fbos_with_depth: Vec<FBOId>,
-    last_frame_used: FrameId,
+    last_frame_used: GpuFrameId,
 }
 
 impl Texture {
@@ -490,13 +524,13 @@ impl Texture {
         !self.fbos_with_depth.is_empty()
     }
 
-    pub fn used_in_frame(&self, frame_id: FrameId) -> bool {
+    pub fn used_in_frame(&self, frame_id: GpuFrameId) -> bool {
         self.last_frame_used == frame_id
     }
 
     /// Returns true if this texture was used within `threshold` frames of
     /// the current frame.
-    pub fn used_recently(&self, current_frame_id: FrameId, threshold: usize) -> bool {
+    pub fn used_recently(&self, current_frame_id: GpuFrameId, threshold: usize) -> bool {
         self.last_frame_used + threshold >= current_frame_id
     }
 
@@ -780,7 +814,7 @@ pub struct Device {
 
     // Frame counter. This is used to map between CPU
     // frames and GPU frames.
-    frame_id: FrameId,
+    frame_id: GpuFrameId,
 
     /// Whether glTexStorage* is supported. We prefer this over glTexImage*
     /// because it guarantees that mipmaps won't be generated (which they
@@ -937,7 +971,7 @@ impl Device {
             max_texture_size,
             renderer_name,
             cached_programs,
-            frame_id: FrameId(0),
+            frame_id: GpuFrameId(0),
             extensions,
             supports_texture_storage,
         }
@@ -1022,7 +1056,7 @@ impl Device {
         }
     }
 
-    pub fn begin_frame(&mut self) -> FrameId {
+    pub fn begin_frame(&mut self) -> GpuFrameId {
         debug_assert!(!self.inside_frame);
         self.inside_frame = true;
 
@@ -1428,6 +1462,8 @@ impl Device {
             }
         }
 
+        record_gpu_alloc(texture.size_in_bytes());
+
         texture
     }
 
@@ -1591,6 +1627,9 @@ impl Device {
                 refcount: 0,
             }
         });
+        if target.refcount == 0 {
+            record_gpu_alloc(depth_target_size_in_bytes(&dimensions));
+        }
         target.refcount += 1;
         target.rbo_id
     }
@@ -1603,8 +1642,9 @@ impl Device {
         debug_assert!(entry.get().refcount != 0);
         entry.get_mut().refcount -= 1;
         if entry.get().refcount == 0 {
-            let t = entry.remove();
-            self.gl.delete_renderbuffers(&[t.rbo_id.0]);
+            let (dimensions, target) = entry.remove_entry();
+            self.gl.delete_renderbuffers(&[target.rbo_id.0]);
+            record_gpu_free(depth_target_size_in_bytes(&dimensions));
         }
     }
 
@@ -1627,6 +1667,7 @@ impl Device {
 
     pub fn delete_texture(&mut self, mut texture: Texture) {
         debug_assert!(self.inside_frame);
+        record_gpu_free(texture.size_in_bytes());
         let had_depth = texture.supports_depth();
         self.deinit_fbos(&mut texture.fbos);
         self.deinit_fbos(&mut texture.fbos_with_depth);
@@ -2465,10 +2506,7 @@ impl Device {
     pub fn report_memory(&self) -> MemoryReport {
         let mut report = MemoryReport::default();
         for dim in self.depth_targets.keys() {
-            // DEPTH24 textures generally reserve 3 bytes for depth and 1 byte
-            // for stencil, so we measure them as 32 bytes.
-            let pixels: u32 = dim.width * dim.height;
-            report.depth_target_textures += (pixels as usize) * 4;
+            report.depth_target_textures += depth_target_size_in_bytes(dim);
         }
         report
     }
