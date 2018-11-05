@@ -153,6 +153,19 @@ static void InitVideoQueuePrefs()
   }
 }
 
+template <typename Type, typename Function>
+static void
+DiscardFramesFromTail(MediaQueue<Type>& aQueue, const Function&& aTest)
+{
+  while(aQueue.GetSize()) {
+    if (aTest(aQueue.PeekBack()->mTime.ToMicroseconds())) {
+      RefPtr<Type> releaseMe = aQueue.PopBack();
+      continue;
+    }
+    break;
+  }
+}
+
 // Delay, in milliseconds, that tabs needs to be in background before video
 // decoding is suspended.
 static TimeDuration
@@ -845,6 +858,9 @@ public:
   {
     mAudioDataRequest.DisconnectIfExists();
     mAudioSeekRequest.DisconnectIfExists();
+    if (ShouldDiscardLoopedAudioData()) {
+      DiscardLoopedAudioData();
+    }
     DecodingState::Exit();
   }
 
@@ -935,6 +951,37 @@ private:
               MediaResult(NS_OK) :
               MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
                           "Audio sample overflow during looping time adjustment");
+  }
+
+  bool ShouldDiscardLoopedAudioData() const
+  {
+    /**
+     * If media cancels looping, we should check whether there are audio data
+     * whose time is later than EOS. If so, we should discard them because we
+     * won't have a chance to play them.
+     *
+     *    playback                     last decoded
+     *    position          EOS        data time
+     *   ----|---------------|------------|---------> (Increasing timeline)
+     *    mCurrent        mLooping      mMaster's
+     * PlaybackPosition    Offset      mDecodedAudioEndTime
+     *
+     */
+    return (mAudioLoopingOffset != media::TimeUnit::Zero() &&
+            mMaster->mCurrentPosition.Ref() < mAudioLoopingOffset &&
+            mAudioLoopingOffset < mMaster->mDecodedAudioEndTime);
+  }
+
+  void DiscardLoopedAudioData()
+  {
+    if (mAudioLoopingOffset == media::TimeUnit::Zero()) {
+        return;
+    }
+
+    SLOG("Discard frames after the time=%" PRId64, mAudioLoopingOffset.ToMicroseconds());
+    DiscardFramesFromTail(AudioQueue(), [&] (int64_t aSampleTime) {
+        return aSampleTime > mAudioLoopingOffset.ToMicroseconds();
+    });
   }
 
   media::TimeUnit mAudioLoopingOffset = media::TimeUnit::Zero();
@@ -2506,25 +2553,6 @@ DecodingState::Step()
   if (before > mMaster->GetMediaTime()) {
     MOZ_ASSERT(mMaster->mLooping);
     mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::Loop);
-  // After looping is cancelled, the time won't be corrected, and therefore we
-  // can check it to see if the end of the media track is reached. Make sure
-  // the media is started before comparing the time, or it's meaningless.
-  // Without checking IsStarted(), the media will be terminated immediately
-  // after seeking forward. When the state is just transited from seeking state,
-  // GetClock() is smaller than GetMediaTime(), since GetMediaTime() is updated
-  // upon seek is completed while GetClock() will be updated after the media is
-  // started again.
-  } else if (mMaster->mMediaSink->IsStarted() && !mMaster->mLooping) {
-    TimeUnit adjusted = mMaster->GetClock();
-    Reader()->AdjustByLooping(adjusted);
-    if (adjusted < before) {
-      mMaster->StopPlayback();
-      mMaster->mAudioDataRequest.DisconnectIfExists();
-      AudioQueue().Finish();
-      mMaster->mAudioCompleted = true;
-      SetState<CompletedState>();
-      return;
-    }
   }
 
   MOZ_ASSERT(!mMaster->IsPlaying() || mMaster->IsStateMachineScheduled(),
