@@ -208,7 +208,9 @@ const BackgroundPageThumbs = {
       }
     };
     webProgress.addProgressListener(this._listener, Ci.nsIWebProgress.NOTIFY_STATE_ALL);
-    wlBrowser.loadURI("chrome://global/content/backgroundPageThumbs.xhtml", 0, null, null, null);
+    let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+    wlBrowser.loadURI("chrome://global/content/backgroundPageThumbs.xhtml",
+                      0, null, null, null, triggeringPrincipal);
     this._windowlessContainer = wlBrowser;
 
     return false;
