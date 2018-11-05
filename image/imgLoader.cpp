@@ -2318,6 +2318,11 @@ imgLoader::LoadImage(nsIURI* aURI,
     return NS_ERROR_NULL_POINTER;
   }
 
+#ifdef MOZ_GECKO_PROFILER
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
+    "imgLoader::LoadImage", NETWORK, aURI->GetSpecOrDefault());
+#endif
+
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgLoader::LoadImage", "aURI", aURI);
 
   *_retval = nullptr;
