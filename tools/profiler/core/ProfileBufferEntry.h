@@ -37,6 +37,7 @@ class ProfilerMarker;
   macro(CollectionStart,       double) \
   macro(CollectionEnd,         double) \
   macro(Label,                 const char*) \
+  macro(FrameFlags,            uint64_t) \
   macro(DynamicStringFragment, char*) /* char[kNumChars], really */ \
   macro(JitReturnAddr,         void*) \
   macro(LineNumber,            int) \
