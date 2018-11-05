@@ -25,6 +25,8 @@ class LogModule;
 
 namespace dom {
 
+class ContentParent;
+
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
 // particular the tree structure of nested browsing contexts is
@@ -37,23 +39,51 @@ namespace dom {
 // to the parent process, making it possible to traverse the
 // BrowsingContext tree for a tab, in both the parent and the child
 // process.
+//
+// Trees of BrowsingContexts should only ever contain nodes of the
+// same BrowsingContext::Type. This is enforced by asserts in the
+// BrowsingContext::Create* methods.
 class BrowsingContext
   : public nsWrapperCache
   , public SupportsWeakPtr<BrowsingContext>
   , public LinkedListElement<RefPtr<BrowsingContext>>
 {
 public:
+  enum class Type
+  {
+    Chrome,
+    Content
+  };
+
   static void Init();
   static LogModule* GetLog();
   static void CleanupContexts(uint64_t aProcessId);
 
+  // Look up a BrowsingContext in the current process by ID.
   static already_AddRefed<BrowsingContext> Get(uint64_t aId);
-  static already_AddRefed<BrowsingContext> Create(nsIDocShell* aDocShell);
 
-  // Attach the current BrowsingContext to its parent, in both the
-  // child and the parent process. If 'aParent' is null, 'this' is
-  // taken to be a root BrowsingContext.
-  void Attach(BrowsingContext* aParent);
+  // Create a brand-new BrowsingContext object.
+  static already_AddRefed<BrowsingContext> Create(BrowsingContext* aParent,
+                                                  const nsAString& aName,
+                                                  Type aType);
+
+  // Create a BrowsingContext object from over IPC.
+  static already_AddRefed<BrowsingContext> CreateFromIPC(
+    BrowsingContext* aParent,
+    const nsAString& aName,
+    uint64_t aId,
+    ContentParent* aOriginProcess);
+
+  // Get the DocShell for this BrowsingContext if it is in-process, or
+  // null if it's not.
+  nsIDocShell* GetDocShell() { return mDocShell; }
+  void SetDocShell(nsIDocShell* aDocShell);
+
+  // Attach the current BrowsingContext to its parent, in both the child and the
+  // parent process. BrowsingContext objects are created attached by default, so
+  // this method need only be called when restoring cached BrowsingContext
+  // objects.
+  void Attach();
 
   // Detach the current BrowsingContext from its parent, in both the
   // child and the parent process.
@@ -63,26 +93,23 @@ public:
   // them to allow them to be attached again.
   void CacheChildren();
 
+  // Determine if the current BrowsingContext was 'cached' by the logic in
+  // CacheChildren.
   bool IsCached();
 
+  // TODO(farre): We should sync changes from SetName to the parent
+  // process. [Bug 1490303]
   void SetName(const nsAString& aName) { mName = aName; }
   void GetName(nsAString& aName) { aName = mName; }
   bool NameEquals(const nsAString& aName) { return mName.Equals(aName); }
 
-  uint64_t Id() const { return mBrowsingContextId; }
-  uint64_t OwnerProcessId() const;
+  bool IsContent() const { return mType == Type::Content; }
 
-  already_AddRefed<BrowsingContext> GetParent()
-  {
-    return do_AddRef(mParent.get());
-  }
+  uint64_t Id() const { return mBrowsingContextId; }
+
+  BrowsingContext* GetParent() { return mParent; }
 
   void GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren);
-
-  already_AddRefed<nsIDocShell> GetDocShell()
-  {
-    return do_AddRef(mDocShell.get());
-  }
 
   static void GetRootBrowsingContexts(
     nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
@@ -99,15 +126,18 @@ public:
 
 protected:
   virtual ~BrowsingContext();
-  // Create a new BrowsingContext for 'aDocShell'. The id will be
-  // generated so that it is unique across all content child processes
-  // and the content parent process.
-  explicit BrowsingContext(nsIDocShell* aDocShell);
-  BrowsingContext(uint64_t aBrowsingContextId,
-                  const nsAString& aName);
+  BrowsingContext(BrowsingContext* aParent,
+                  const nsAString& aName,
+                  uint64_t aBrowsingContextId,
+                  Type aType);
 
 private:
+  // Type of BrowsingContent
+  const Type mType;
+
+  // Unique id identifying BrowsingContext
   const uint64_t mBrowsingContextId;
+
 
   WeakPtr<BrowsingContext> mParent;
   Children mChildren;

@@ -14,6 +14,9 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocument.h"
+#include "nsDocShell.h"
+
+#include "mozilla/dom/BrowsingContext.h"
 
 //---------------------------------------------------
 //-- nsPrintObject Class Impl
@@ -56,11 +59,21 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDocument* aDoc,
     mDocShell = aDocShell;
   } else {
     mTreeOwner = do_GetInterface(aDocShell);
+
+    // Create a new BrowsingContext to create our DocShell in.
+    RefPtr<BrowsingContext> bc = BrowsingContext::Create(
+      nullptr,
+      EmptyString(),
+      aDocShell->ItemType() == nsIDocShellTreeItem::typeContent
+        ? BrowsingContext::Type::Content
+        : BrowsingContext::Type::Chrome);
+
     // Create a container docshell for printing.
-    mDocShell = do_CreateInstance("@mozilla.org/docshell;1");
+    mDocShell = nsDocShell::Create(bc);
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_OUT_OF_MEMORY);
+
     mDidCreateDocShell = true;
-    mDocShell->SetItemType(aDocShell->ItemType());
+    MOZ_ASSERT(mDocShell->ItemType() == aDocShell->ItemType());
     mDocShell->SetTreeOwner(mTreeOwner);
   }
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
@@ -104,4 +117,3 @@ nsPrintObject::DestroyPresentation()
   mPresContext = nullptr;
   mViewManager = nullptr;
 }
-
