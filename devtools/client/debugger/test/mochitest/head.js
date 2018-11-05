@@ -781,7 +781,7 @@ function attachAddonActorForId(aClient, aAddonId) {
   let deferred = promise.defer();
 
   getAddonActorForId(aClient, aAddonId).then(aGrip => {
-    aClient.attachAddon(aGrip.actor).then(([aResponse]) => {
+    aClient.attachAddon(aGrip).then(([aResponse]) => {
       deferred.resolve([aGrip, aResponse]);
     });
   });

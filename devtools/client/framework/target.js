@@ -570,6 +570,12 @@ TabTarget.prototype = {
       } else if (this.isContentProcess) {
         // But ContentProcessTargetActor now has a front that is instantiated here
         this.activeTab = await this._client.attachContentProcessTarget(this._form);
+      } else if (this.isLegacyAddon) {
+        const [, addonTargetFront] = await this._client.attachAddon(this._form);
+        this.activeTab = addonTargetFront;
+      } else {
+        throw new Error(`Unsupported type of target. Expected target of one of the` +
+          ` following types: BrowsingContext, ContentProcess, or Addon (legacy).`);
       }
 
       // _setupRemoteListeners has to be called after the potential call to `attachTarget`
