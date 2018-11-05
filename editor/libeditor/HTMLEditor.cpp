@@ -2935,89 +2935,81 @@ HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
 
   MOZ_ASSERT(!aRv.Failed());
 
+  // If there is no Selection or two or more selection ranges, that means that
+  // not only one element is selected so that return nullptr.
+  if (SelectionRefPtr()->RangeCount() != 1) {
+    return nullptr;
+  }
+
   bool isLinkTag = aTagName && IsLinkTag(*aTagName);
   bool isNamedAnchorTag = aTagName && IsNamedAnchorTag(*aTagName);
 
   RefPtr<nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
-  if (NS_WARN_IF(!firstRange)) {
+  MOZ_ASSERT(firstRange);
+
+  const RangeBoundary& startRef = firstRange->StartRef();
+  if (NS_WARN_IF(!startRef.IsSet())) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  const RangeBoundary& endRef = firstRange->EndRef();
+  if (NS_WARN_IF(!endRef.IsSet())) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  nsCOMPtr<nsINode> startContainer = firstRange->GetStartContainer();
-  nsIContent* startNode = firstRange->GetChildAtStartOffset();
-
-  nsCOMPtr<nsINode> endContainer = firstRange->GetEndContainer();
-  nsIContent* endNode = firstRange->GetChildAtEndOffset();
-
   // Optimization for a single selected element
-  if (startContainer && startContainer == endContainer &&
-      startNode && endNode && startNode->GetNextSibling() == endNode) {
-    if (!aTagName) {
-      if (NS_WARN_IF(!startNode->IsElement())) {
-        // XXX Keep not returning error in this case, but perhaps, we should
-        //     look for element node.
-        return nullptr;
+  if (startRef.Container() == endRef.Container()) {
+    nsIContent* startContent = startRef.GetChildAtOffset();
+    nsIContent* endContent = endRef.GetChildAtOffset();
+    if (startContent && endContent &&
+        startContent->GetNextSibling() == endContent) {
+      if (!aTagName) {
+        if (!startContent->IsElement()) {
+          // This means only a text node or something is selected.  We should
+          // return nullptr in this case since no other elements are selected.
+          return nullptr;
+        }
+        return do_AddRef(startContent->AsElement());
       }
-      RefPtr<Element> selectedElement = startNode->AsElement();
-      return selectedElement.forget();
-    }
-    // Test for appropriate node type requested
-    if (aTagName == startNode->NodeInfo()->NameAtom() ||
-        (isLinkTag && HTMLEditUtils::IsLink(startNode)) ||
-        (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(startNode))) {
-      MOZ_ASSERT(startNode->IsElement());
-      RefPtr<Element> selectedElement = startNode->AsElement();
-      return selectedElement.forget();
+      // Test for appropriate node type requested
+      if (aTagName == startContent->NodeInfo()->NameAtom() ||
+          (isLinkTag && HTMLEditUtils::IsLink(startContent)) ||
+          (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(startContent))) {
+        MOZ_ASSERT(startContent->IsElement());
+        return do_AddRef(startContent->AsElement());
+      }
     }
   }
 
-  RefPtr<Element> selectedElement;
   if (isLinkTag) {
-    // Link tag is a special case - we return the anchor node
-    //  found for any selection that is totally within a link,
-    //  included a collapsed selection (just a caret in a link)
-    const RangeBoundary& anchor = SelectionRefPtr()->AnchorRef();
-    const RangeBoundary& focus = SelectionRefPtr()->FocusRef();
-    // Link node must be the same for both ends of selection
-    if (anchor.IsSet()) {
-      Element* parentLinkOfAnchor =
+    // Link node must be the same for both ends of selection.
+    Element* parentLinkOfStart =
+      GetElementOrParentByTagNameInternal(*nsGkAtoms::href,
+                                          *startRef.Container());
+    if (parentLinkOfStart) {
+      if (SelectionRefPtr()->IsCollapsed()) {
+        // We have just a caret in the link.
+        return do_AddRef(parentLinkOfStart);
+      }
+      // Link node must be the same for both ends of selection.
+      Element* parentLinkOfEnd =
         GetElementOrParentByTagNameInternal(*nsGkAtoms::href,
-                                            *anchor.Container());
-      // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
-      if (parentLinkOfAnchor) {
-        if (SelectionRefPtr()->IsCollapsed()) {
-          // We have just a caret in the link.
-          return do_AddRef(parentLinkOfAnchor);
-        }
-        if (focus.IsSet()) {
-          // Link node must be the same for both ends of selection.
-          Element* parentLinkOfFocus =
-            GetElementOrParentByTagNameInternal(*nsGkAtoms::href,
-                                                *focus.Container());
-          if (parentLinkOfFocus == parentLinkOfAnchor) {
-            return do_AddRef(parentLinkOfAnchor);
-          }
-        }
-      } else if (anchor.GetChildAtOffset() && focus.GetChildAtOffset()) {
-        // Check if link node is the only thing selected
-        if (HTMLEditUtils::IsLink(anchor.GetChildAtOffset()) &&
-            anchor.Container() == focus.Container() &&
-            focus.GetChildAtOffset() ==
-              anchor.GetChildAtOffset()->GetNextSibling()) {
-          selectedElement = Element::FromNodeOrNull(anchor.GetChildAtOffset());
-        }
+                                            *endRef.Container());
+      if (parentLinkOfStart == parentLinkOfEnd) {
+        return do_AddRef(parentLinkOfStart);
       }
     }
   }
 
   if (SelectionRefPtr()->IsCollapsed()) {
-    return selectedElement.forget();
+    return nullptr;
   }
 
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
 
-  bool found = !!selectedElement;
+  RefPtr<Element> selectedElement;
+  bool found = false;
   iter->Init(firstRange);
   // loop through the content iterator for each content node
   while (!iter->IsDone()) {
