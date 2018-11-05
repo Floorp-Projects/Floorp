@@ -91,6 +91,11 @@ RenderFrameParent::Initialize(nsFrameLoader* aFrameLoader)
 void
 RenderFrameParent::Destroy()
 {
+  if (mLayersId.IsValid()) {
+    GPUProcessManager::Get()->UnmapLayerTreeId(mLayersId, mTabProcessId);
+  }
+
+  mFrameLoader = nullptr;
   mLayerManager = nullptr;
 }
 
@@ -135,17 +140,6 @@ RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
              "Don't build new map if owner is same!");
 
   Unused << AttachLayerManager();
-}
-
-void
-RenderFrameParent::ActorDestroy()
-{
-  if (mLayersId.IsValid()) {
-    GPUProcessManager::Get()->UnmapLayerTreeId(mLayersId, mTabProcessId);
-  }
-
-  mFrameLoader = nullptr;
-  mLayerManager = nullptr;
 }
 
 void

@@ -55,8 +55,6 @@ public:
   bool IsInitialized() const { return mInitialized; }
   bool IsLayersConnected() const { return mLayersConnected; }
 
-  void ActorDestroy();
-
 private:
   base::ProcessId mTabProcessId;
   // When our child frame is pushing transactions directly to the

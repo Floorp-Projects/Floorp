@@ -1023,17 +1023,11 @@ TabChild::DestroyWindow()
     if (baseWindow)
         baseWindow->Destroy();
 
-    // NB: the order of mPuppetWidget->Destroy() and mRemoteFrame->Destroy()
-    // is important: we want to kill off remote layers before their
-    // frames
     if (mPuppetWidget) {
         mPuppetWidget->Destroy();
     }
 
-    if (IPCOpen()) {
-      SendDestroyPRenderFrame();
-      mLayersConnected = Nothing();
-    }
+    mLayersConnected = Nothing();
 
     if (mLayersId.IsValid()) {
       StaticMutexAutoLock lock(sTabChildrenMutex);

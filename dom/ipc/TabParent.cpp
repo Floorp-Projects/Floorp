@@ -358,11 +358,6 @@ TabParent::DestroyInternal()
   // destroy itself and send back __delete__().
   Unused << SendDestroy();
 
-  if (mRenderFrame) {
-    RemoveTabParentFromTable(mRenderFrame->GetLayersId());
-    mRenderFrame->Destroy();
-  }
-
 #ifdef XP_WIN
   // Let all PluginWidgets know we are tearing down. Prevents
   // these objects from sending async events after the child side
@@ -433,7 +428,11 @@ void
 TabParent::ActorDestroy(ActorDestroyReason why)
 {
   if (mRenderFrame) {
-    mRenderFrame->ActorDestroy();
+    // It's important to unmap layers after the remote browser has been destroyed,
+    // otherwise it may still send messages to the compositor which will reject them,
+    // causing assertions.
+    RemoveTabParentFromTable(mRenderFrame->GetLayersId());
+    mRenderFrame->Destroy();
     mRenderFrame.reset(nullptr);
   }
 
@@ -2606,13 +2605,6 @@ TabParent::DeallocPColorPickerParent(PColorPickerParent* actor)
 {
   delete actor;
   return true;
-}
-
-mozilla::ipc::IPCResult
-TabParent::RecvDestroyPRenderFrame()
-{
-  mRenderFrame.reset(nullptr);
-  return IPC_OK();
 }
 
 already_AddRefed<nsFrameLoader>

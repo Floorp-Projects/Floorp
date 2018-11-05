@@ -610,8 +610,6 @@ protected:
   Element* mFrameElement;
   nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
 
-  virtual mozilla::ipc::IPCResult RecvDestroyPRenderFrame() override;
-
   virtual mozilla::ipc::IPCResult RecvRemotePaintIsReady() override;
 
   virtual mozilla::ipc::IPCResult RecvNotifyCompositorTransaction() override;
