@@ -1,7 +1,8 @@
 from tests.support.asserts import assert_error, assert_png, assert_success
-from tests.support.helpers import document_dimensions
 from tests.support.image import png_dimensions
 from tests.support.inline import inline
+
+from . import document_dimensions
 
 
 def take_full_screenshot(session):
