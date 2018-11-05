@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<style>
+  #animate_0[onrepeat=''] {}
+</style>
+<animate id="animate_0" />
+<animate id="animate_1" />
+<script>
+  window.CustomElement0 = class extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({
+        mode: 'open'
+      })
+    }
+    connectedCallback() {
+      this.shadowRoot.prepend(o2)
+      this.setAttribute('contenteditable', 'true')
+    }
+  }
+
+  customElements.define('custom-element-0', CustomElement0)
+  o1 = document.createElement('custom-element-0')
+  o2 = document.getElementById('animate_0')
+  o3 = document.getElementById('animate_1')
+  document.documentElement.appendChild(o1)
+  document.replaceChild(document.documentElement, document.documentElement)
+  o1.shadowRoot.prepend(o3)
+  o3.offsetTop;
+</script>

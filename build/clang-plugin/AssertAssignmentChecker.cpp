@@ -14,7 +14,7 @@ void AssertAssignmentChecker::check(const MatchFinder::MatchResult &Result) {
   const CallExpr *FuncCall = Result.Nodes.getNodeAs<CallExpr>("funcCall");
 
   if (FuncCall && hasSideEffectAssignment(FuncCall)) {
-    diag(FuncCall->getLocStart(), "Forbidden assignment in assert expression",
+    diag(FuncCall->getBeginLoc(), "Forbidden assignment in assert expression",
          DiagnosticIDs::Error);
   }
 }

@@ -52,7 +52,7 @@ static void Report(const Decl* D, const char* message)
   DiagnosticsEngine& Diag = Context.getDiagnostics();
   unsigned ID = Diag.getDiagnosticIDs()->getCustomDiagID(
     DiagnosticIDs::Warning, message);
-  Diag.Report(D->getLocStart(), ID);
+  Diag.Report(D->getBeginLoc(), ID);
 }
 
 CustomAttributesSet GetAttributes(const Decl* D)

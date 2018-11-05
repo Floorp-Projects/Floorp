@@ -46,11 +46,11 @@ void NaNExprChecker::check(const MatchFinder::MatchResult &Result) {
       std::distance(LHSExpr->child_begin(), LHSExpr->child_end()) == 1 &&
       std::distance(RHSExpr->child_begin(), RHSExpr->child_end()) == 1 &&
       *LHSExpr->child_begin() == LHS && *RHSExpr->child_begin() == RHS) {
-    diag(Expression->getLocStart(),
+    diag(Expression->getBeginLoc(),
          "comparing a floating point value to itself for "
          "NaN checking can lead to incorrect results",
          DiagnosticIDs::Error);
-    diag(Expression->getLocStart(), "consider using mozilla::IsNaN instead",
+    diag(Expression->getBeginLoc(), "consider using mozilla::IsNaN instead",
          DiagnosticIDs::Note);
   }
 }

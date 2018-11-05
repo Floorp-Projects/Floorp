@@ -65,7 +65,7 @@ void ScopeChecker::check(const MatchFinder::MatchResult &Result) {
       Variety = AV_Automatic;
     }
     T = D->getType();
-    Loc = D->getLocStart();
+    Loc = D->getBeginLoc();
   } else if (const CXXNewExpr *E = Result.Nodes.getNodeAs<CXXNewExpr>("node")) {
     // New allocates things on the heap.
     // We don't consider placement new to do anything, as it doesn't actually
@@ -73,7 +73,7 @@ void ScopeChecker::check(const MatchFinder::MatchResult &Result) {
     if (!isPlacementNew(E)) {
       Variety = AV_Heap;
       T = E->getAllocatedType();
-      Loc = E->getLocStart();
+      Loc = E->getBeginLoc();
     }
   } else if (const MaterializeTemporaryExpr *E =
                  Result.Nodes.getNodeAs<MaterializeTemporaryExpr>("node")) {
@@ -108,14 +108,14 @@ void ScopeChecker::check(const MatchFinder::MatchResult &Result) {
       break;
     }
     T = E->getType().getUnqualifiedType();
-    Loc = E->getLocStart();
+    Loc = E->getBeginLoc();
   } else if (const CallExpr *E = Result.Nodes.getNodeAs<CallExpr>("node")) {
     T = E->getType()->getPointeeType();
     if (!T.isNull()) {
       // This will always allocate on the heap, as the heapAllocator() check
       // was made in the matcher
       Variety = AV_Heap;
-      Loc = E->getLocStart();
+      Loc = E->getBeginLoc();
     }
   }
 

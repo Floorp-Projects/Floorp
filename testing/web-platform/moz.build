@@ -222,7 +222,7 @@ with Files("tests/css/css-fonts/**"):
     BUG_COMPONENT = ("Core", "Layout: Text and Fonts")
 
 with Files("tests/css/css-paint-api/**"):
-    BUG_COMPONENT = ("Core", "Layout: Web Painting")
+    BUG_COMPONENT = ("Core", "Web Painting")
 
 with Files("tests/css/css-scoping/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")

@@ -790,13 +790,11 @@ var Impl = {
   },
 
   getHistograms: function getHistograms(clearSubsession) {
-    let hls = Telemetry.getSnapshotForHistograms("main", clearSubsession);
-    return TelemetryUtils.packHistograms(hls, this._testing);
+    return Telemetry.getSnapshotForHistograms("main", clearSubsession, !this._testing);
   },
 
   getKeyedHistograms(clearSubsession) {
-    let khs = Telemetry.getSnapshotForKeyedHistograms("main", clearSubsession);
-    return TelemetryUtils.packKeyedHistograms(khs, this._testing);
+    return Telemetry.getSnapshotForKeyedHistograms("main", clearSubsession, !this._testing);
   },
 
   /**
@@ -816,25 +814,10 @@ var Impl = {
     }
 
     let scalarsSnapshot = keyed ?
-      Telemetry.getSnapshotForKeyedScalars("main", clearSubsession) :
-      Telemetry.getSnapshotForScalars("main", clearSubsession);
+      Telemetry.getSnapshotForKeyedScalars("main", clearSubsession, !this._testing) :
+      Telemetry.getSnapshotForScalars("main", clearSubsession, !this._testing);
 
-    // Don't return the test scalars.
-    let ret = {};
-    for (let processName in scalarsSnapshot) {
-      for (let name in scalarsSnapshot[processName]) {
-        if (name.startsWith("telemetry.test") && !this._testing) {
-          continue;
-        }
-        // Finally arrange the data in the returned object.
-        if (!(processName in ret)) {
-          ret[processName] = {};
-        }
-        ret[processName][name] = scalarsSnapshot[processName][name];
-      }
-    }
-
-    return ret;
+    return scalarsSnapshot;
   },
 
   /**

@@ -8,10 +8,6 @@ extern crate quote;
 extern crate syn;
 extern crate proc_macro2;
 
-use std::env;
-use std::path::Path;
-
-
 #[cfg(feature = "dummy_match_byte")]
 mod codegen {
     use std::path::Path;
