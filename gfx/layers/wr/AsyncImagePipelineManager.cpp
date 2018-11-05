@@ -31,7 +31,6 @@ AsyncImagePipelineManager::AsyncImagePipeline::AsyncImagePipeline()
 AsyncImagePipelineManager::AsyncImagePipelineManager(already_AddRefed<wr::WebRenderAPI>&& aApi)
  : mApi(aApi)
  , mIdNamespace(mApi->GetNamespace())
- , mUseTripleBuffering(mApi->GetUseTripleBuffering())
  , mResourceId(0)
  , mAsyncImageEpoch{0}
  , mWillGenerateFrame(false)
@@ -551,6 +550,8 @@ AsyncImagePipelineManager::NotifyPipelinesUpdated(wr::WrPipelineInfo aInfo, bool
   MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
 
   // Increment the count when render happens.
+  // XXX The count is going to be used to delay releasing TextureHosts for multiple rendering.
+  // See Bug 1500017.
   uint64_t currCount = aRender ? ++mUpdatesCount : mUpdatesCount;
   auto updates = MakeUnique<PipelineUpdates>(currCount, aRender);
 
@@ -629,16 +630,15 @@ AsyncImagePipelineManager::ProcessPipelineUpdates()
     updates->mQueue.pop();
 
     if (epoch.isSome()) {
-      ProcessPipelineRendered(pipelineId, *epoch, updates->mUpdatesCount);
+      ProcessPipelineRendered(pipelineId, *epoch);
     } else {
-      ProcessPipelineRemoved(pipelineId, updates->mUpdatesCount);
+      ProcessPipelineRemoved(pipelineId);
     }
   }
-  CheckForTextureHostsNotUsedByGPU();
 }
 
 void
-AsyncImagePipelineManager::ProcessPipelineRendered(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, const uint64_t aUpdatesCount)
+AsyncImagePipelineManager::ProcessPipelineRendered(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch)
 {
   if (auto entry = mPipelineTexturesHolders.Lookup(wr::AsUint64(aPipelineId))) {
     PipelineTexturesHolder* holder = entry.Data();
@@ -647,8 +647,6 @@ AsyncImagePipelineManager::ProcessPipelineRendered(const wr::PipelineId& aPipeli
       if (aEpoch <= holder->mTextureHosts.front().mEpoch) {
         break;
       }
-      // Need to extend holding TextureHost if it is direct bounded texture.
-      HoldUntilNotUsedByGPU(holder->mTextureHosts.front().mTexture, aUpdatesCount);
       holder->mTextureHosts.pop();
     }
     while (!holder->mTextureHostWrappers.empty()) {
@@ -670,7 +668,7 @@ AsyncImagePipelineManager::ProcessPipelineRendered(const wr::PipelineId& aPipeli
 }
 
 void
-AsyncImagePipelineManager::ProcessPipelineRemoved(const wr::PipelineId& aPipelineId, const uint64_t aUpdatesCount)
+AsyncImagePipelineManager::ProcessPipelineRemoved(const wr::PipelineId& aPipelineId)
 {
   if (mDestroyed) {
     return;
@@ -678,11 +676,6 @@ AsyncImagePipelineManager::ProcessPipelineRemoved(const wr::PipelineId& aPipelin
   if (auto entry = mPipelineTexturesHolders.Lookup(wr::AsUint64(aPipelineId))) {
     PipelineTexturesHolder* holder = entry.Data();
     if (holder->mDestroyedEpoch.isSome()) {
-      while (!holder->mTextureHosts.empty()) {
-        // Need to extend holding TextureHost if it is direct bounded texture.
-        HoldUntilNotUsedByGPU(holder->mTextureHosts.front().mTexture, aUpdatesCount);
-        holder->mTextureHosts.pop();
-      }
       // Explicitly release all of the shared surfaces.
       while (!holder->mExternalImages.empty()) {
         DebugOnly<bool> released =
@@ -696,39 +689,6 @@ AsyncImagePipelineManager::ProcessPipelineRemoved(const wr::PipelineId& aPipelin
     }
     // If mDestroyedEpoch contains nothing it means we reused the same pipeline id (probably because
     // we moved the tab to another window). In this case we need to keep the holder.
-  }
-}
-
-void
-AsyncImagePipelineManager::HoldUntilNotUsedByGPU(const CompositableTextureHostRef& aTextureHost, uint64_t aUpdatesCount)
-{
-  MOZ_ASSERT(aTextureHost);
-
-  if (aTextureHost->HasIntermediateBuffer()) {
-    // If texutre is not direct binding texture, gpu has already finished using it.
-    // We could release it now.
-    return;
-  }
-
-  // When Triple buffer is used, we need wait one more WebRender rendering,
-  if (mUseTripleBuffering) {
-    ++aUpdatesCount;
-  }
-
-  mTexturesInUseByGPU.emplace(
-    std::make_pair(aUpdatesCount, aTextureHost));
-}
-
-void
-AsyncImagePipelineManager::CheckForTextureHostsNotUsedByGPU()
-{
-  uint64_t currCount = mUpdatesCount;
-
-  while (!mTexturesInUseByGPU.empty()) {
-    if (currCount <= mTexturesInUseByGPU.front().first) {
-      break;
-    }
-    mTexturesInUseByGPU.pop();
   }
 }
 
