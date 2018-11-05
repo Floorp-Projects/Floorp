@@ -9,6 +9,10 @@ var gThreadClient;
 var gCallback;
 
 function run_test() {
+  Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+  });
   run_test_with_server(DebuggerServer, function() {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });

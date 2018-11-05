@@ -562,61 +562,49 @@ SetTreeOwnerAndChromeEventHandlerOnDocshellTree(nsIDocShellTreeItem* aItem,
   }
 }
 
+static bool
+CheckDocShellType(mozilla::dom::Element* aOwnerContent,
+                  nsIDocShellTreeItem* aDocShell,
+                  nsAtom* aAtom)
+{
+  bool isContent = aOwnerContent->AttrValueIs(
+    kNameSpaceID_None, aAtom, nsGkAtoms::content, eIgnoreCase);
+
+  if (!isContent) {
+    nsCOMPtr<nsIMozBrowserFrame> mozbrowser = aOwnerContent->GetAsMozBrowserFrame();
+    if (mozbrowser) {
+      mozbrowser->GetMozbrowser(&isContent);
+    }
+  }
+
+  if (isContent) {
+    return aDocShell->ItemType() == nsIDocShellTreeItem::typeContent;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> parent;
+  aDocShell->GetParent(getter_AddRefs(parent));
+
+  return parent && parent->ItemType() == aDocShell->ItemType();
+}
+
 /**
- * Set the type of the treeitem and hook it up to the treeowner.
+ * Hook up a given TreeItem to its tree owner. aItem's type must have already
+ * been set, and it should already be part of the DocShellTree.
  * @param aItem the treeitem we're working with
  * @param aTreeOwner the relevant treeowner; might be null
- * @param aParentType the nsIDocShellTreeItem::GetType of our parent docshell
- * @param aParentNode if non-null, the docshell we should be added as a child to
- *
- * @return whether aItem is top-level content
  */
-bool
+void
 nsFrameLoader::AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
-                                      nsIDocShellTreeOwner* aOwner,
-                                      int32_t aParentType,
-                                      nsIDocShell* aParentNode)
+                                      nsIDocShellTreeOwner* aOwner)
 {
   MOZ_ASSERT(aItem, "Must have docshell treeitem");
   MOZ_ASSERT(mOwnerContent, "Must have owning content");
 
-  nsAutoString value;
-  bool isContent = mOwnerContent->AttrValueIs(
-    kNameSpaceID_None, TypeAttrName(), nsGkAtoms::content, eIgnoreCase);
+  MOZ_DIAGNOSTIC_ASSERT(
+    CheckDocShellType(mOwnerContent, aItem, TypeAttrName()),
+    "Correct ItemType should be set when creating BrowsingContext");
 
-  // Force mozbrowser frames to always be typeContent, even if the
-  // mozbrowser interfaces are disabled.
-  nsCOMPtr<nsIDOMMozBrowserFrame> mozbrowser =
-    do_QueryInterface(mOwnerContent);
-  if (mozbrowser) {
-    bool isMozbrowser = false;
-    mozbrowser->GetMozbrowser(&isMozbrowser);
-    isContent |= isMozbrowser;
-  }
-
-  if (isContent) {
-    // The web shell's type is content.
-
-    aItem->SetItemType(nsIDocShellTreeItem::typeContent);
-  } else {
-    // Inherit our type from our parent docshell.  If it is
-    // chrome, we'll be chrome.  If it is content, we'll be
-    // content.
-
-    aItem->SetItemType(aParentType);
-  }
-
-  // Now that we have our type set, add ourselves to the parent, as needed.
-  if (aParentNode) {
-    aParentNode->AddChild(aItem);
-  } else if (nsCOMPtr<nsIDocShell> childAsDocShell = do_QueryInterface(aItem)) {
-    childAsDocShell->AttachBrowsingContext(aParentNode);
-  }
-
-  bool retval = false;
-  if (aParentType == nsIDocShellTreeItem::typeChrome && isContent) {
-    retval = true;
-
+  if (mIsTopLevelContent) {
     bool is_primary =
       mOwnerContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::primary,
                                  nsGkAtoms::_true, eIgnoreCase);
@@ -626,8 +614,6 @@ nsFrameLoader::AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
       aOwner->ContentShellAdded(aItem, is_primary);
     }
   }
-
-  return retval;
 }
 
 static bool
@@ -1499,9 +1485,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   SetOwnerContent(otherContent);
   aOther->SetOwnerContent(ourContent);
 
-  AddTreeItemToTreeOwner(ourDocshell, otherOwner, otherParentType, nullptr);
-  aOther->AddTreeItemToTreeOwner(otherDocshell, ourOwner, ourParentType,
-                                 nullptr);
+  AddTreeItemToTreeOwner(ourDocshell, otherOwner);
+  aOther->AddTreeItemToTreeOwner(otherDocshell, ourOwner);
 
   // SetSubDocumentFor nulls out parent documents on the old child doc if a
   // new non-null document is passed in, so just go ahead and remove both
@@ -1904,6 +1889,23 @@ nsFrameLoader::IsRemoteFrame()
   return false;
 }
 
+static already_AddRefed<BrowsingContext>
+CreateBrowsingContext(BrowsingContext* aParentContext,
+                      const nsAString& aName,
+                      bool aIsContent)
+{
+  // If we're content but our parent isn't, we're going to want to start a new
+  // browsing context tree.
+  if (aIsContent && !aParentContext->IsContent()) {
+    aParentContext = nullptr;
+  }
+
+  BrowsingContext::Type type =
+    aIsContent ? BrowsingContext::Type::Content : BrowsingContext::Type::Chrome;
+
+  return BrowsingContext::Create(aParentContext, aName, type);
+}
+
 nsresult
 nsFrameLoader::MaybeCreateDocShell()
 {
@@ -1936,22 +1938,16 @@ nsFrameLoader::MaybeCreateDocShell()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCOMPtr<nsIDocShell> parentDocShell = doc->GetDocShell();
-  nsCOMPtr<nsIWebNavigation> parentAsWebNav = do_QueryInterface(parentDocShell);
-  NS_ENSURE_STATE(parentAsWebNav);
-
-  // Create the docshell...
-  mDocShell = do_CreateInstance("@mozilla.org/docshell;1");
-  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
-
-  if (!mNetworkCreated) {
-    if (mDocShell) {
-      mDocShell->SetCreatedDynamically(true);
-    }
+  // Determine our parent nsDocShell
+  RefPtr<nsDocShell> parentDocShell = nsDocShell::Cast(doc->GetDocShell());
+  if (NS_WARN_IF(!parentDocShell)) {
+    return NS_ERROR_UNEXPECTED;
   }
 
-  // Get the frame name and tell the docshell about it.
-  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+  RefPtr<BrowsingContext> parentBC = parentDocShell->GetBrowsingContext();
+  MOZ_ASSERT(parentBC, "docShell must have BrowsingContext");
+
+  // Determine the frame name for the new browsing context.
   nsAutoString frameName;
 
   int32_t namespaceID = mOwnerContent->GetNameSpaceID();
@@ -1966,45 +1962,55 @@ nsFrameLoader::MaybeCreateDocShell()
     }
   }
 
-  if (!frameName.IsEmpty()) {
-    mDocShell->SetName(frameName);
+  // Check if our new context is chrome or content
+  bool isContent = parentBC->IsContent() ||
+    mOwnerContent->AttrValueIs(kNameSpaceID_None, TypeAttrName(),
+                               nsGkAtoms::content, eIgnoreCase);
+
+  // Force mozbrowser frames to always be content, even if the mozbrowser
+  // interfaces are disabled.
+  nsCOMPtr<nsIMozBrowserFrame> mozbrowser =
+    mOwnerContent->GetAsMozBrowserFrame();
+  if (!isContent && mozbrowser) {
+    mozbrowser->GetMozbrowser(&isContent);
   }
 
-  // Inform our docShell that it has a new child.
-  // Note: This logic duplicates a lot of logic in
-  // nsSubDocumentFrame::AttributeChanged.  We should fix that.
+  RefPtr<BrowsingContext> browsingContext = CreateBrowsingContext(parentBC, frameName, isContent);
 
-  const int32_t parentType = parentDocShell->ItemType();
+  mDocShell = nsDocShell::Create(browsingContext);
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
-  // XXXbz why is this in content code, exactly?  We should handle
-  // this some other way.....  Not sure how yet.
-  nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
-  parentDocShell->GetTreeOwner(getter_AddRefs(parentTreeOwner));
-  NS_ENSURE_STATE(parentTreeOwner);
-  mIsTopLevelContent =
-    AddTreeItemToTreeOwner(mDocShell, parentTreeOwner, parentType,
-                           parentDocShell);
+  mIsTopLevelContent = isContent && !parentBC->IsContent();
+  if (!mNetworkCreated && !mIsTopLevelContent) {
+    mDocShell->SetCreatedDynamically(true);
+  }
 
   if (mIsTopLevelContent) {
-    mDocShell->SetCreatedDynamically(false);
+    // Manually add ourselves to our parent's docshell, as BrowsingContext won't
+    // have done this for us.
+    //
+    // XXX(nika): Consider removing the DocShellTree in the future, for
+    // consistency between local and remote frames..
+    parentDocShell->AddChild(mDocShell);
   }
 
-  // Make sure all shells have links back to the content element
-  // in the nearest enclosing chrome shell.
+  // Now that we are part of the DocShellTree, attach our DocShell to our
+  // parent's TreeOwner.
+  nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
+  parentDocShell->GetTreeOwner(getter_AddRefs(parentTreeOwner));
+  AddTreeItemToTreeOwner(mDocShell, parentTreeOwner);
+
+  // Make sure all nsDocShells have links back to the content element in the
+  // nearest enclosing chrome shell.
   RefPtr<EventTarget> chromeEventHandler;
-
-  if (parentType == nsIDocShellTreeItem::typeChrome) {
-    // Our parent shell is a chrome shell. It is therefore our nearest
-    // enclosing chrome shell.
-
-    chromeEventHandler = mOwnerContent;
-    NS_ASSERTION(chromeEventHandler,
-                 "This mContent should implement this.");
-  } else {
-    // Our parent shell is a content shell. Get the chrome event
-    // handler from it and use that for our shell as well.
-
+  if (parentBC->IsContent()) {
+    // Our parent shell is a content shell. Get the chrome event handler from it
+    // and use that for our shell as well.
     parentDocShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+  } else {
+    // Our parent shell is a chrome shell. It is therefore our nearest enclosing
+    // chrome shell.
+    chromeEventHandler = mOwnerContent;
   }
 
   mDocShell->SetChromeEventHandler(chromeEventHandler);
@@ -2015,32 +2021,34 @@ nsFrameLoader::MaybeCreateDocShell()
   // the right chrome event handler.
 
   // Tell the window about the frame that hosts it.
-  nsCOMPtr<Element> frame_element = mOwnerContent;
-  NS_ASSERTION(frame_element, "frame loader owner element not a DOM element!");
+  nsCOMPtr<nsPIDOMWindowOuter> newWindow = mDocShell->GetWindow();
+  if (NS_WARN_IF(!newWindow)) {
+    // Do not call Destroy() here. See bug 472312.
+    NS_WARNING("Something wrong when creating the docshell for a frameloader!");
+    return NS_ERROR_FAILURE;
+  }
 
-  nsCOMPtr<nsPIDOMWindowOuter> win_private(mDocShell->GetWindow());
-  nsCOMPtr<nsIBaseWindow> base_win(do_QueryInterface(mDocShell));
-  if (win_private) {
-    win_private->SetFrameElementInternal(frame_element);
+  newWindow->SetFrameElementInternal(mOwnerContent);
 
-    // Set the opener window if we have one provided here
-    if (mOpener) {
-      win_private->SetOpenerWindow(mOpener, true);
-      mOpener = nullptr;
-    }
+  // Set the opener window if we have one provided here
+  // XXX(nika): We should tell our BrowsingContext this as we create it.
+  if (mOpener) {
+    newWindow->SetOpenerWindow(mOpener, true);
+    mOpener = nullptr;
   }
 
   // Allow scripts to close the docshell if specified.
-  if (win_private && mOwnerContent->IsXULElement(nsGkAtoms::browser) &&
+  if (mOwnerContent->IsXULElement(nsGkAtoms::browser) &&
       mOwnerContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::allowscriptstoclose,
                                  nsGkAtoms::_true, eCaseMatters)) {
-    nsGlobalWindowOuter::Cast(win_private)->AllowScriptsToClose();
+    nsGlobalWindowOuter::Cast(newWindow)->AllowScriptsToClose();
   }
 
   // This is kinda whacky, this call doesn't really create anything,
   // but it must be called to make sure things are properly
   // initialized.
-  if (NS_FAILED(base_win->Create()) || !win_private) {
+  nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mDocShell);
+  if (NS_FAILED(baseWin->Create())) {
     // Do not call Destroy() here. See bug 472312.
     NS_WARNING("Something wrong when creating the docshell for a frameloader!");
     return NS_ERROR_FAILURE;
@@ -2060,7 +2068,7 @@ nsFrameLoader::MaybeCreateDocShell()
 
   OriginAttributes attrs;
   if (parentDocShell->ItemType() == mDocShell->ItemType()) {
-    attrs = nsDocShell::Cast(parentDocShell)->GetOriginAttributes();
+    attrs = parentDocShell->GetOriginAttributes();
   }
 
   // Inherit origin attributes from parent document if
@@ -2070,7 +2078,7 @@ nsFrameLoader::MaybeCreateDocShell()
   //
   // For example, firstPartyDomain is computed from top-level document, it
   // doesn't exist in the top-level docshell.
-  if (parentType == nsIDocShellTreeItem::typeContent &&
+  if (parentBC->IsContent() &&
       !nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()) &&
       !OwnerIsMozBrowserFrame()) {
     OriginAttributes oa = doc->NodePrincipal()->OriginAttributesRef();
@@ -2116,10 +2124,7 @@ nsFrameLoader::MaybeCreateDocShell()
   }
 
   bool isPrivate = false;
-  nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(parentDocShell);
-  NS_ENSURE_STATE(parentContext);
-
-  rv = parentContext->GetUsePrivateBrowsing(&isPrivate);
+  rv = parentDocShell->GetUsePrivateBrowsing(&isPrivate);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2158,7 +2163,7 @@ nsFrameLoader::MaybeCreateDocShell()
   // those cases.
   nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
   if (!mDocShell->GetIsMozBrowser() &&
-      parentType == mDocShell->ItemType() &&
+      parentDocShell->ItemType() == mDocShell->ItemType() &&
       !doc->IsStaticDocument() && win) {
     // Propagate through the ancestor principals.
     nsTArray<nsCOMPtr<nsIPrincipal>> ancestorPrincipals;

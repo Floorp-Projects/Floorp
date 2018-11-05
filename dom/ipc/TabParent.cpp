@@ -3017,11 +3017,11 @@ TabParent::GetContentBlockingLog(Promise** aPromise)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 TabParent::SuppressDisplayport(bool aEnabled)
 {
   if (IsDestroyed()) {
-    return NS_OK;
+    return;
   }
 
 #ifdef DEBUG
@@ -3034,7 +3034,6 @@ TabParent::SuppressDisplayport(bool aEnabled)
 #endif
 
   Unused << SendSuppressDisplayport(aEnabled);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3071,11 +3070,10 @@ TabParent::GetHasPresented(bool* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 TabParent::NavigateByKey(bool aForward, bool aForDocumentNavigation)
 {
   Unused << SendNavigateByKey(aForward, aForDocumentNavigation);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

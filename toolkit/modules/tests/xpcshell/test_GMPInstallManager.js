@@ -19,6 +19,11 @@ Cu.importGlobalProperties(["DOMParser"]);
 
 var ProductAddonCheckerScope = ChromeUtils.import("resource://gre/modules/addons/ProductAddonChecker.jsm", {});
 
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 do_get_profile();
 
 function run_test() {

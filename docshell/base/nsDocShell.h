@@ -182,8 +182,9 @@ public:
   // nsIWebProgressListener has methods with identical names...
   NS_FORWARD_NSISECURITYEVENTSINK(nsDocLoader::)
 
-  nsDocShell();
-  virtual nsresult Init() override;
+  // Create a new nsDocShell object, initializing it.
+  static already_AddRefed<nsDocShell>
+  Create(mozilla::dom::BrowsingContext* aBrowsingContext);
 
   NS_IMETHOD Stop() override
   {
@@ -380,13 +381,16 @@ public:
   // shift while triggering reload)
   bool IsForceReloading();
 
-  already_AddRefed<mozilla::dom::BrowsingContext>
-  GetBrowsingContext() const;
+  /**
+   * Native getter for a DocShell's BrowsingContext.
+   */
+  mozilla::dom::BrowsingContext* GetBrowsingContext() const;
 
 private: // member functions
   friend class nsDSURIContentListener;
   friend class FramingChecker;
   friend class OnLinkClickEvent;
+  friend class nsIDocShell;
 
   // It is necessary to allow adding a timeline marker wherever a docshell
   // instance is available. This operation happens frequently and needs to
@@ -404,6 +408,8 @@ private: // member functions
     nsDocShell*, UniquePtr<AbstractTimelineMarker>&&);
   friend void mozilla::TimelineConsumers::PopMarkers(nsDocShell*,
     JSContext*, nsTArray<dom::ProfileTimelineMarker>&);
+
+  nsDocShell();
 
   // Security checks to prevent frameset spoofing. See comments at
   // implementation sites.

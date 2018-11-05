@@ -55,29 +55,12 @@ interface nsITabParent : nsISupports
    */
   void preserveLayers(in boolean aPreserveLayers);
 
-  /**
-   * During interactions where painting performance
-   * is more important than scrolling, we may temporarily
-   * suppress the displayport. Each enable called must be matched
-   * with a disable call.
-   */
-  void suppressDisplayport(in bool aEnabled);
-
   readonly attribute uint64_t tabId;
 
   /**
    * The OS level process Id of the related child process.
    */
   readonly attribute int32_t osPid;
-
-  /**
-   * Navigate by key. If aForDocumentNavigation is true, navigate by document.
-   * If aForDocumentNavigation is false, navigate by element.
-   *
-   * If aForward is true, navigate to the first focusable element or document.
-   * If aForward is false, navigate to the last focusable element or document.
-   */
-  void navigateByKey(in bool aForward, in bool aForDocumentNavigation);
 
   readonly attribute boolean hasContentOpener;
   /**

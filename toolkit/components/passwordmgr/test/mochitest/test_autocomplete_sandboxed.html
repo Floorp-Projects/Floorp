@@ -13,6 +13,10 @@
 <body>
 
 <script>
+
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                    true]]});
+
 var chromeScript = runChecksAfterCommonInit();
 
 var setupScript = runInParent(function setup() {

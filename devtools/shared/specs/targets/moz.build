@@ -5,8 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'addon.js',
     'browsing-context.js',
     'chrome-window.js',
+    'content-process.js',
     'frame.js',
     'parent-process.js',
     'webextension.js',

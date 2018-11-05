@@ -1232,9 +1232,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   mozilla::HTMLEditor* GetHTMLEditor();
   nsresult SetHTMLEditor(mozilla::HTMLEditor* aHTMLEditor);
-
-  void AttachBrowsingContext(nsIDocShell* aParentDocShell);
-  void DetachBrowsingContext();
 %}
 
   /**

@@ -9,10 +9,6 @@
 <?xml-stylesheet href="chrome://branding/content/aboutDialog.css" type="text/css"?>
 
 <!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-%brandDTD;
-<!ENTITY % aboutDialogDTD SYSTEM "chrome://browser/locale/aboutDialog.dtd" >
-%aboutDialogDTD;
 #ifdef XP_MACOSX
 #include browser-doctype.inc
 #endif
@@ -29,7 +25,7 @@
 #ifdef XP_MACOSX
         inwindowmenu="false"
 #else
-        title="&aboutDialog.title;"
+        data-l10n-id="aboutDialog-title"
 #endif
         role="dialog"
         aria-describedby="version distribution distributionId communityDesc contributeDesc trademark"
@@ -37,10 +33,17 @@
 #ifdef XP_MACOSX
 #include macWindow.inc.xul
 #endif
+
+  <linkset>
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="browser/aboutDialog.ftl"/>
+  </linkset>
+
   <script type="application/javascript" src="chrome://browser/content/aboutDialog.js"/>
 #ifdef MOZ_UPDATER
   <script type="application/javascript" src="chrome://browser/content/aboutDialog-appUpdater.js"/>
 #endif
+
   <vbox id="aboutDialogContainer">
     <hbox id="clientBox">
       <vbox id="leftBox" flex="1"/>
@@ -51,7 +54,7 @@
         </label>
         <hbox align="baseline">
 #expand   <label id="version">__MOZ_APP_VERSION_DISPLAY__</label>
-          <label id="releasenotes" class="text-link" hidden="true">&releaseNotes.link;</label>
+          <label id="releasenotes" class="text-link" hidden="true" data-l10n-id="releaseNotes-link"></label>
         </hbox>
 
         <label id="distribution" class="text-blurb"/>
@@ -63,8 +66,7 @@
             <deck id="updateDeck" orient="vertical">
               <hbox id="checkForUpdates" align="center">
                 <button id="checkForUpdatesButton" align="start"
-                        label="&update.checkForUpdatesButton.label;"
-                        accesskey="&update.checkForUpdatesButton.accesskey;"
+                        data-l10n-id="update-checkForUpdatesButton"
                         oncommand="gAppUpdater.checkForUpdates();"/>
                 <spacer flex="1"/>
               </hbox>
@@ -76,74 +78,78 @@
               </hbox>
               <hbox id="apply" align="center">
                 <button id="updateButton" align="start"
-                        label="&update.updateButton.label3;"
-                        accesskey="&update.updateButton.accesskey;"
+                        data-l10n-id="update-updateButton"
                         oncommand="gAppUpdater.buttonRestartAfterDownload();"/>
                 <spacer flex="1"/>
               </hbox>
               <hbox id="checkingForUpdates" align="center">
-                <image class="update-throbber"/><label>&update.checkingForUpdates;</label>
+                <image class="update-throbber"/>
+                <label data-l10n-id="update-checkingForUpdates"></label>
               </hbox>
-              <hbox id="downloading" align="center">
-                <image class="update-throbber"/><label>&update.downloading.start;</label><label id="downloadStatus"/><label>&update.downloading.end;</label>
+              <hbox id="downloading" align="center" data-l10n-id="update-downloading">
+                <html:img class="update-throbber" src="chrome://global/skin/icons/loading.png" data-l10n-name="icon"/>
+                <label id="downloadStatus" data-l10n-name="download-status"/>
               </hbox>
               <hbox id="applying" align="center">
-                <image class="update-throbber"/><label>&update.applying;</label>
+                <image class="update-throbber"/>
+                <label data-l10n-id="update-applying"></label>
               </hbox>
-              <hbox id="downloadFailed" align="center">
-                <label>&update.failed.start;</label><label id="failedLink" class="text-link">&update.failed.linkText;</label><label>&update.failed.end;</label>
+              <hbox id="downloadFailed" align="center" data-l10n-id="update-failed">
+                <label id="failedLink" class="text-link" data-l10n-name="failed-link"></label>
               </hbox>
               <hbox id="policyDisabled" align="center">
-                <label>&update.adminDisabled;</label>
+                <label data-l10n-id="update-adminDisabled"></label>
               </hbox>
               <hbox id="noUpdatesFound" align="center">
-                <label>&update.noUpdatesFound;</label>
+                <label data-l10n-id="update-noUpdatesFound"></label>
               </hbox>
               <hbox id="otherInstanceHandlingUpdates" align="center">
-                <label>&update.otherInstanceHandlingUpdates;</label>
+                <label data-l10n-id="update-otherInstanceHandlingUpdates"></label>
               </hbox>
-              <hbox id="manualUpdate" align="center">
-                <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
+              <hbox id="manualUpdate" align="center" data-l10n-id="update-manual">
+                <label id="manualLink" class="text-link" data-l10n-name="manual-link"/>
               </hbox>
-              <hbox id="unsupportedSystem" align="center">
-                <label>&update.unsupported.start;</label><label id="unsupportedLink" class="text-link">&update.unsupported.linkText;</label><label>&update.unsupported.end;</label>
+              <hbox id="unsupportedSystem" align="center" data-l10n-id="update-unsupported">
+                <label id="unsupportedLink" class="text-link" data-l10n-name="unsupported-link"></label>
               </hbox>
               <hbox id="restarting" align="center">
-                <image class="update-throbber"/><label>&update.restarting;</label>
+                <image class="update-throbber"/>
+                <label data-l10n-id="update-restarting"></label>
               </hbox>
             </deck>
 #endif
           </vbox>
 
 #ifdef MOZ_UPDATER
-          <description class="text-blurb" id="currentChannelText">
-            &channel.description.start;<label id="currentChannel"/>&channel.description.end;
+          <description class="text-blurb" id="currentChannelText" data-l10n-id="channel-description">
+            <label id="currentChannel" data-l10n-name="current-channel"></label>
           </description>
 #endif
           <vbox id="experimental" hidden="true">
-            <description class="text-blurb" id="warningDesc">
-              &warningDesc.version;
-            </description>
-            <description class="text-blurb" id="communityExperimentalDesc">
-              &community.exp.start;<label class="text-link" href="http://www.mozilla.org/">&community.exp.mozillaLink;</label>&community.exp.middle;<label class="text-link" useoriginprincipal="true" href="about:credits">&community.exp.creditsLink;</label>&community.exp.end;
+            <description class="text-blurb" id="warningDesc" data-l10n-id="warningDesc-version"></description>
+            <description class="text-blurb" id="communityExperimentalDesc" data-l10n-id="community-exp">
+              <label class="text-link" href="http://www.mozilla.org/" data-l10n-name="community-exp-mozillaLink"></label>
+              <label class="text-link" useoriginprincipal="true" href="about:credits" data-l10n-name="community-exp-creditsLink"></label>
             </description>
           </vbox>
-          <description class="text-blurb" id="communityDesc">
-            &community.start2;<label class="text-link" href="http://www.mozilla.org/">&community.mozillaLink;</label>&community.middle2;<label class="text-link" useoriginprincipal="true" href="about:credits">&community.creditsLink;</label>&community.end3;
+          <description class="text-blurb" id="communityDesc" data-l10n-id="community-2">
+            <label class="text-link" href="http://www.mozilla.org/" data-l10n-name="community-mozillaLink"></label>
+            <label class="text-link" useoriginprincipal="true" href="about:credits" data-l10n-name="community-creditsLink"></label>
           </description>
-          <description class="text-blurb" id="contributeDesc">
-              &helpus.start;<label class="text-link" href="https://donate.mozilla.org/?utm_source=firefox&#38;utm_medium=referral&#38;utm_campaign=firefox_about&#38;utm_content=firefox_about">&helpus.donateLink;</label>&helpus.middle;<label class="text-link" href="http://www.mozilla.org/contribute/">&helpus.getInvolvedLink;</label>&helpus.end;
+          <description class="text-blurb" id="contributeDesc" data-l10n-id="helpus">
+            <label class="text-link" href="https://donate.mozilla.org/?utm_source=firefox&#38;utm_medium=referral&#38;utm_campaign=firefox_about&#38;utm_content=firefox_about" data-l10n-name="helpus-donateLink"></label>
+            <label class="text-link" href="http://www.mozilla.org/contribute/" data-l10n-name="helpus-getInvolvedLink"></label>
           </description>
         </vbox>
       </vbox>
     </hbox>
     <vbox id="bottomBox">
       <hbox pack="center">
-        <label class="text-link bottom-link" useoriginprincipal="true" href="about:license">&bottomLinks.license;</label>
-        <label class="text-link bottom-link" useoriginprincipal="true" href="about:rights">&bottomLinks.rights;</label>
-        <label class="text-link bottom-link" href="https://www.mozilla.org/privacy/">&bottomLinks.privacy;</label>
+        <label class="text-link bottom-link" useoriginprincipal="true" href="about:license" data-l10n-id="bottomLinks-license"></label>
+        <label class="text-link bottom-link" useoriginprincipal="true" href="about:rights" data-l10n-id="bottomLinks-rights"></label>
+        <label class="text-link bottom-link" href="https://www.mozilla.org/privacy/" data-l10n-id="bottomLinks-privacy"></label>
       </hbox>
-      <description id="trademark">&trademarkInfo.part1;</description>
+      <description id="trademark" data-l10n-id="trademarkInfo"></description>
     </vbox>
   </vbox>
 

@@ -978,6 +978,9 @@ nsDocShellTreeOwner::HandleEvent(Event* aEvent)
           nsAutoString url;
           if (NS_SUCCEEDED(links[0]->GetUrl(url))) {
             if (!url.IsEmpty()) {
+#ifndef ANDROID
+              MOZ_ASSERT(triggeringPrincipal, "nsDocShellTreeOwner::HandleEvent: Need a valid triggeringPrincipal");
+#endif
               webnav->LoadURI(url, 0, nullptr, nullptr, nullptr,
                               triggeringPrincipal);
             }

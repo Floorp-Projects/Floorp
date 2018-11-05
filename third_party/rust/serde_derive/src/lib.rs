@@ -22,22 +22,37 @@
 //!
 //! [https://serde.rs/derive.html]: https://serde.rs/derive.html
 
-#![doc(html_root_url = "https://docs.rs/serde_derive/1.0.66")]
+#![doc(html_root_url = "https://docs.rs/serde_derive/1.0.80")]
+#![cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
 #![cfg_attr(feature = "cargo-clippy", deny(clippy, clippy_pedantic))]
 // Whitelisted clippy lints
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
-        enum_variant_names, redundant_field_names, too_many_arguments, used_underscore_binding,
-        cyclomatic_complexity, needless_pass_by_value
+        cyclomatic_complexity,
+        enum_variant_names,
+        needless_pass_by_value,
+        redundant_field_names,
+        too_many_arguments,
+        used_underscore_binding,
     )
 )]
 // Whitelisted clippy_pedantic lints
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
-        items_after_statements, doc_markdown, stutter, similar_names, use_self, single_match_else,
-        enum_glob_use, match_same_arms, filter_map, cast_possible_truncation
+        cast_possible_truncation,
+        doc_markdown,
+        enum_glob_use,
+        filter_map,
+        indexing_slicing,
+        items_after_statements,
+        match_same_arms,
+        similar_names,
+        single_match_else,
+        stutter,
+        unseparated_literal_suffix,
+        use_self,
     )
 )]
 // The `quote!` macro requires deep recursion.
@@ -68,7 +83,7 @@ mod try;
 
 #[proc_macro_derive(Serialize, attributes(serde))]
 pub fn derive_serialize(input: TokenStream) -> TokenStream {
-    let input: DeriveInput = syn::parse(input).unwrap();
+    let input = parse_macro_input!(input as DeriveInput);
     ser::expand_derive_serialize(&input)
         .unwrap_or_else(compile_error)
         .into()
@@ -76,7 +91,7 @@ pub fn derive_serialize(input: TokenStream) -> TokenStream {
 
 #[proc_macro_derive(Deserialize, attributes(serde))]
 pub fn derive_deserialize(input: TokenStream) -> TokenStream {
-    let input: DeriveInput = syn::parse(input).unwrap();
+    let input = parse_macro_input!(input as DeriveInput);
     de::expand_derive_deserialize(&input)
         .unwrap_or_else(compile_error)
         .into()

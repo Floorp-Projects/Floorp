@@ -495,6 +495,8 @@ NetworkObserver.prototype = {
     event.fromCache = fromCache;
     event.fromServiceWorker = fromServiceWorker;
     event.isThirdPartyTrackingResource = channel.isThirdPartyTrackingResource;
+    event.referrerPolicy =
+      Services.netUtils.getReferrerPolicyString(channel.referrerPolicy);
     httpActivity.fromServiceWorker = fromServiceWorker;
 
     if (extraStringData) {

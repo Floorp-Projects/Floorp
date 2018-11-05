@@ -255,29 +255,9 @@ JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm)
         // Reserve frame.
         Register framePtr = r11;
         masm.subPtr(Imm32(BaselineFrame::Size()), sp);
-        masm.mov(sp, framePtr);
 
-#ifdef XP_WIN
-        // Can't push large frames blindly on windows. Touch frame memory
-        // incrementally.
-        masm.ma_lsl(Imm32(3), numStackValues, scratch);
-        masm.subPtr(scratch, framePtr);
-        {
-            ScratchRegisterScope asmScratch(masm);
-            masm.ma_sub(sp, Imm32(WINDOWS_BIG_FRAME_TOUCH_INCREMENT), scratch, asmScratch);
-        }
-        {
-            Label touchFrameLoop;
-            Label touchFrameLoopEnd;
-            masm.bind(&touchFrameLoop);
-            masm.branchPtr(Assembler::Below, scratch, framePtr, &touchFrameLoopEnd);
-            masm.store32(Imm32(0), Address(scratch, 0));
-            masm.subPtr(Imm32(WINDOWS_BIG_FRAME_TOUCH_INCREMENT), scratch);
-            masm.jump(&touchFrameLoop);
-            masm.bind(&touchFrameLoopEnd);
-        }
+        masm.touchFrameValues(numStackValues, scratch, framePtr);
         masm.mov(sp, framePtr);
-#endif
 
         // Reserve space for locals and stack values.
         masm.ma_lsl(Imm32(3), numStackValues, scratch);

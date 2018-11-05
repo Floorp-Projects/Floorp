@@ -137,3 +137,39 @@ add_task(async function() {
   is(slotted._form.nodeValue, originalSlot._form.nodeValue,
     "Slotted content is the same as original's");
 });
+
+add_task(async function() {
+  info("Test UA widgets when showUserAgentShadowRoots is true");
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["devtools.inspector.showUserAgentShadowRoots", true],
+  ]});
+
+  const { walker } = await initInspectorFront(URL);
+
+  let el = await walker.querySelector(walker.rootNode, "#video-controls");
+  let hostChildren = await walker.children(el);
+  is(hostChildren.nodes.length, 1, "#video-controls tag has one child");
+  const shadowRoot = hostChildren.nodes[0];
+  ok(shadowRoot.isShadowRoot, "#video-controls has a shadow-root child");
+
+  el = await walker.querySelector(walker.rootNode, "#video-controls-with-children");
+  hostChildren = await walker.children(el);
+  is(hostChildren.nodes.length, 2, "#video-controls-with-children has two children");
+});
+
+add_task(async function() {
+  info("Test UA widgets when showUserAgentShadowRoots is false");
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["devtools.inspector.showUserAgentShadowRoots", false],
+  ]});
+
+  const { walker } = await initInspectorFront(URL);
+
+  let el = await walker.querySelector(walker.rootNode, "#video-controls");
+  let hostChildren = await walker.children(el);
+  is(hostChildren.nodes.length, 0, "#video-controls tag has no children");
+
+  el = await walker.querySelector(walker.rootNode, "#video-controls-with-children");
+  hostChildren = await walker.children(el);
+  is(hostChildren.nodes.length, 1, "#video-controls-with-children has one child");
+});

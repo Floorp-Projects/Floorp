@@ -653,6 +653,13 @@ button > hbox > label {
   margin-inline-end: 8px;
   margin-top: 7px;
   margin-bottom: 7px;
+}
+
+html|img.update-throbber {
+  vertical-align: middle;
+}
+
+image.update-throbber {
   list-style-image: url("chrome://global/skin/icons/loading.png");
 }
 
