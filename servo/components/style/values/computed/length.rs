@@ -11,7 +11,7 @@ use std::ops::{Add, Neg};
 use style_traits::{CssWriter, ToCss};
 use style_traits::values::specified::AllowedNumericType;
 use super::{Context, Number, Percentage, ToComputedValue};
-use values::{specified, Auto, CSSFloat, Either, Normal};
+use values::{specified, Auto, CSSFloat, Either, Normal, IsAuto};
 use values::animated::{Animate, Procedure, ToAnimatedValue, ToAnimatedZero};
 use values::distance::{ComputeSquaredDistance, SquaredDistance};
 use values::generics::NonNegative;
@@ -527,6 +527,13 @@ impl LengthOrPercentageOrAuto {
 
 /// A wrapper of LengthOrPercentageOrAuto, whose value must be >= 0.
 pub type NonNegativeLengthOrPercentageOrAuto = NonNegative<LengthOrPercentageOrAuto>;
+
+impl IsAuto for NonNegativeLengthOrPercentageOrAuto {
+    #[inline]
+    fn is_auto(&self) -> bool {
+        *self == Self::auto()
+    }
+}
 
 impl NonNegativeLengthOrPercentageOrAuto {
     /// `auto`
