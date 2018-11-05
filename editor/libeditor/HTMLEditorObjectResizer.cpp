@@ -57,7 +57,7 @@ DocumentResizeEventListener::HandleEvent(Event* aMouseEvent)
   if (!htmlEditor) {
     return NS_OK;
   }
-  nsresult rv = htmlEditor->RefreshResizersInternal();
+  nsresult rv = htmlEditor->RefreshResizers();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

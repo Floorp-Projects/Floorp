@@ -43,7 +43,6 @@ class nsRange;
 namespace mozilla {
 class AutoSelectionSetterAfterTableEdit;
 class AutoSetTemporaryAncestorLimiter;
-class DocumentResizeEventListener;
 class EmptyEditableFunctor;
 class ResizerSelectionListener;
 enum class EditSubAction : int32_t;
@@ -2631,7 +2630,6 @@ protected:
   friend class AutoSelectionSetterAfterTableEdit;
   friend class AutoSetTemporaryAncestorLimiter;
   friend class CSSEditUtils;
-  friend class DocumentResizeEventListener;
   friend class EditorBase;
   friend class EmptyEditableFunctor;
   friend class HTMLEditRules;
