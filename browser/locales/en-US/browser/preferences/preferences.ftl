@@ -1038,6 +1038,11 @@ space-alert-under-5gb-ok-button =
 
 space-alert-under-5gb-message = { -brand-short-name } is running out of disk space. Website contents may not display properly. Visit “Learn More” to optimize your disk usage for better browsing experience.
 
+## The following strings are used in the Download section of settings
+desktop-folder-name = Desktop
+downloads-folder-name = Downloads
+choose-download-folder-title = Choose Download Folder:
+
 # Variables:
 #   $service-name (String) - Name of a cloud storage provider like Dropbox, Google Drive, etc...
 save-files-to-cloud-storage =
