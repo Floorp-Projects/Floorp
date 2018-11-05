@@ -669,7 +669,8 @@ continue_loading:
   // A few DLLs such as xul.dll and nss3.dll get loaded before mozglue's
   // AutoProfilerLabel is initialized, and this is a no-op in those cases. But
   // the vast majority of DLLs do get labelled here.
-  AutoProfilerLabel label("WindowsDllBlocklist::patched_LdrLoadDll", dllName);
+  AutoProfilerLabel label("WindowsDllBlocklist::patched_LdrLoadDll", dllName,
+                          __LINE__);
 
 #ifdef _M_AMD64
   // Prevent the stack walker from suspending this thread when LdrLoadDll

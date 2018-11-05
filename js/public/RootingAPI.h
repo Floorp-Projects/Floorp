@@ -866,8 +866,8 @@ class RootingContext
 
     // Gecko profiling metadata.
     // This isn't really rooting related. It's only here because we want
-    // GetContextProfilingStackIfEnabled to be inlineable into non-JS code, and
-    // we didn't want to add another superclass of JSContext just for this.
+    // GetContextProfilingStack to be inlineable into non-JS code, and we
+    // didn't want to add another superclass of JSContext just for this.
     js::GeckoProfilerThread geckoProfiler_;
 
   public:
@@ -1093,9 +1093,9 @@ GetContextZone(const JSContext* cx)
 }
 
 inline ProfilingStack*
-GetContextProfilingStackIfEnabled(JSContext* cx)
+GetContextProfilingStack(JSContext* cx)
 {
-    return JS::RootingContext::get(cx)->geckoProfiler().getProfilingStackIfEnabled();
+    return JS::RootingContext::get(cx)->geckoProfiler().getProfilingStack();
 }
 
 /**
