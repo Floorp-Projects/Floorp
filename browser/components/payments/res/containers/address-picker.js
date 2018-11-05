@@ -33,8 +33,7 @@ export default class AddressPicker extends RichPicker {
 
   attributeChangedCallback(name, oldValue, newValue) {
     super.attributeChangedCallback(name, oldValue, newValue);
-    if (this.isConnected &&
-        AddressPicker.pickerAttributes.includes(name) && oldValue !== newValue) {
+    if (AddressPicker.pickerAttributes.includes(name) && oldValue !== newValue) {
       this.render(this.requestStore.getState());
     }
   }
@@ -90,21 +89,7 @@ export default class AddressPicker extends RichPicker {
     return result;
   }
 
-  get options() {
-    return this.dropdown.popupBox.options;
-  }
-
-  getCurrentValue(state) {
-    let [selectedKey, selectedLeaf] = this.selectedStateKey.split("|");
-    let guid = state[selectedKey];
-    if (selectedLeaf) {
-      guid = guid[selectedLeaf];
-    }
-    return guid;
-  }
-
   render(state) {
-    let selectedAddressGUID = this.getCurrentValue(state) || "";
     let addresses = paymentRequest.getAddresses(state);
     let desiredOptions = [];
     let filteredAddresses = this.filterAddresses(addresses, this.fieldNames);
@@ -146,18 +131,12 @@ export default class AddressPicker extends RichPicker {
     }
 
     this.dropdown.popupBox.textContent = "";
-
-    if (this._allowEmptyOption) {
-      let optionEl = document.createElement("option");
-      optionEl.value = "";
-      desiredOptions.unshift(optionEl);
-    }
-
     for (let option of desiredOptions) {
       this.dropdown.popupBox.appendChild(option);
     }
 
     // Update selectedness after the options are updated
+    let selectedAddressGUID = state[this.selectedStateKey];
     this.dropdown.value = selectedAddressGUID;
 
     if (selectedAddressGUID && selectedAddressGUID !== this.dropdown.value) {
@@ -182,8 +161,8 @@ export default class AddressPicker extends RichPicker {
       return "";
     }
 
-    let merchantFieldErrors = AddressForm.merchantFieldErrorsForForm(
-          state, this.selectedStateKey.split("|"));
+    let merchantFieldErrors = AddressForm.merchantFieldErrorsForForm(state,
+                                                                     [this.selectedStateKey]);
     // TODO: errors in priority order.
     return Object.values(merchantFieldErrors).find(msg => {
       return typeof(msg) == "string" && msg.length;
@@ -203,33 +182,22 @@ export default class AddressPicker extends RichPicker {
   }
 
   onChange(event) {
-    let [selectedKey, selectedLeaf] = this.selectedStateKey.split("|");
-    if (!selectedKey) {
-      return;
+    let selectedKey = this.selectedStateKey;
+    if (selectedKey) {
+      this.requestStore.setState({
+        [selectedKey]: this.dropdown.value,
+      });
     }
-    let newState = {};
-
-    if (selectedLeaf) {
-      let currentState = this.requestStore.getState();
-      newState[selectedKey] = Object.assign({},
-                                            currentState[selectedKey],
-                                            { [selectedLeaf]: this.dropdown.value });
-    } else {
-      newState[selectedKey] = this.dropdown.value;
-    }
-    this.requestStore.setState(newState);
   }
 
   onClick({target}) {
-    let currentState = this.requestStore.getState();
     let nextState = {
       page: {
         id: "address-page",
-        previousId: currentState.page.id,
       },
       "address-page": {
         addressFields: this.getAttribute("address-fields"),
-        selectedStateKey: this.selectedStateKey.split("|"),
+        selectedStateKey: [this.selectedStateKey],
       },
     };
 
@@ -240,7 +208,9 @@ export default class AddressPicker extends RichPicker {
         break;
       }
       case this.editLink: {
-        nextState["address-page"].guid = this.getCurrentValue(currentState);
+        let state = this.requestStore.getState();
+        let selectedAddressGUID = state[this.selectedStateKey];
+        nextState["address-page"].guid = selectedAddressGUID;
         nextState["address-page"].title = this.dataset.editAddressTitle;
         break;
       }

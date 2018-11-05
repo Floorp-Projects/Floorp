@@ -16,30 +16,29 @@ export default class RichPicker extends PaymentStateSubscriberMixin(HTMLElement)
 
     this.dropdown = new RichSelect();
     this.dropdown.addEventListener("change", this);
+    this.dropdown.popupBox.id = "select-" + Math.floor(Math.random() * 1000000);
 
     this.labelElement = document.createElement("label");
+    this.labelElement.setAttribute("for", this.dropdown.popupBox.id);
 
     this.addLink = document.createElement("a");
     this.addLink.className = "add-link";
     this.addLink.href = "javascript:void(0)";
+    this.addLink.textContent = this.dataset.addLinkLabel;
     this.addLink.addEventListener("click", this);
 
     this.editLink = document.createElement("a");
     this.editLink.className = "edit-link";
     this.editLink.href = "javascript:void(0)";
+    this.editLink.textContent = this.dataset.editLinkLabel;
     this.editLink.addEventListener("click", this);
 
     this.invalidLabel = document.createElement("label");
     this.invalidLabel.className = "invalid-label";
+    this.invalidLabel.setAttribute("for", this.dropdown.popupBox.id);
   }
 
   connectedCallback() {
-    if (!this.dropdown.popupBox.id) {
-      this.dropdown.popupBox.id = "select-" + Math.floor(Math.random() * 1000000);
-    }
-    this.labelElement.setAttribute("for", this.dropdown.popupBox.id);
-    this.invalidLabel.setAttribute("for", this.dropdown.popupBox.id);
-
     // The document order, by default, controls tab order so keep that in mind if changing this.
     this.appendChild(this.labelElement);
     this.appendChild(this.dropdown);
@@ -62,8 +61,6 @@ export default class RichPicker extends PaymentStateSubscriberMixin(HTMLElement)
     this.classList.toggle("invalid-selected-option",
                           !!errorText);
     this.invalidLabel.textContent = errorText;
-    this.addLink.textContent = this.dataset.addLinkLabel;
-    this.editLink.textContent = this.dataset.editLinkLabel;
   }
 
   get selectedOption() {
@@ -102,8 +99,7 @@ export default class RichPicker extends PaymentStateSubscriberMixin(HTMLElement)
       return [];
     }
 
-    let fieldNames = this.selectedRichOption.requiredFields || [];
-
+    let fieldNames = this.selectedRichOption.requiredFields;
     // Return all field names that are empty or missing from the option.
     return fieldNames.filter(name => !selectedOption.getAttribute(name));
   }
