@@ -597,7 +597,11 @@ pub extern "C" fn wr_renderer_update(renderer: &mut Renderer) {
 #[no_mangle]
 pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
                                      width: u32,
-                                     height: u32) -> bool {
+                                     height: u32,
+                                     had_slow_frame: bool) -> bool {
+    if had_slow_frame {
+      renderer.notify_slow_frame();
+    }
     match renderer.render(DeviceUintSize::new(width, height)) {
         Ok(_) => true,
         Err(errors) => {

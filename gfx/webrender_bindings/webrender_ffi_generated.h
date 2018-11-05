@@ -1631,7 +1631,8 @@ WR_FUNC;
 WR_INLINE
 bool wr_renderer_render(Renderer *aRenderer,
                         uint32_t aWidth,
-                        uint32_t aHeight)
+                        uint32_t aHeight,
+                        bool aHadSlowFrame)
 WR_FUNC;
 
 WR_INLINE
