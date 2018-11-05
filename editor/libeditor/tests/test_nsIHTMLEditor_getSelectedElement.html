@@ -543,9 +543,9 @@ SimpleTest.waitForFocus(async function() {
   is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
      null,
      "#4-6 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection is collapsed in a text node even in named anchor element");
-  todo_is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
-          null,
-          "#4-6 nsIHTMLEditor::getSelectedElement(\"href\") should return null when Selection is collapsed in a text node even in named anchor element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     null,
+     "#4-6 nsIHTMLEditor::getSelectedElement(\"href\") should return null when Selection is collapsed in a text node even in named anchor element");
   is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
      null,
      "#4-6 nsIHTMLEditor::getSelectedElement(\"anchor\") should return null when Selection is collapsed in a text node even in named anchor element");
