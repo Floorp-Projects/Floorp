@@ -92,10 +92,12 @@ MediaStreamPlayback.prototype = {
    * Verifies that media is playing.
    */
   verifyPlaying : function() {
+    var lastStreamTime = this.mediaStream.currentTime;
     var lastElementTime = this.mediaElement.currentTime;
 
     var mediaTimeProgressed = listenUntil(this.mediaElement, 'timeupdate',
-        () => this.mediaElement.currentTime > lastElementTime);
+        () => this.mediaStream.currentTime > lastStreamTime &&
+              this.mediaElement.currentTime > lastElementTime);
 
     return timeout(Promise.all([this.canPlayThroughFired, mediaTimeProgressed]),
                    VERIFYPLAYING_TIMEOUT_LENGTH, "verifyPlaying timed out")

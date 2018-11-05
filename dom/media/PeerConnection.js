@@ -1221,6 +1221,9 @@ class RTCPeerConnection {
   }
 
   addTrack(track, stream) {
+    if (stream.currentTime === undefined) {
+      throw new this._win.DOMException("invalid stream.", "InvalidParameterError");
+    }
     this._checkClosed();
 
     if (this._transceivers.some(
