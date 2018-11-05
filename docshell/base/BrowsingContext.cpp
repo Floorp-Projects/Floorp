@@ -9,14 +9,15 @@
 #include "mozilla/dom/ChromeBrowsingContext.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPtr.h"
 
 #include "nsDataHashtable.h"
+#include "nsDocShell.h"
 #include "nsRefPtrHashtable.h"
-#include "nsIDocShell.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 
@@ -34,6 +35,31 @@ static StaticAutoPtr<nsDataHashtable<nsUint64HashKey, BrowsingContext*>>
 // bfcache. This should be unified. [Bug 1471601]
 static StaticAutoPtr<nsRefPtrHashtable<nsUint64HashKey, BrowsingContext>>
   sCachedBrowsingContexts;
+
+static void
+Register(BrowsingContext* aBrowsingContext)
+{
+  auto entry = sBrowsingContexts->LookupForAdd(aBrowsingContext->Id());
+  MOZ_RELEASE_ASSERT(!entry, "Duplicate BrowsingContext ID");
+  entry.OrInsert([&] { return aBrowsingContext; });
+}
+
+static void
+Sync(BrowsingContext* aBrowsingContext)
+{
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+
+  auto cc = ContentChild::GetSingleton();
+  MOZ_DIAGNOSTIC_ASSERT(cc);
+  nsAutoString name;
+  aBrowsingContext->GetName(name);
+  RefPtr<BrowsingContext> parent = aBrowsingContext->GetParent();
+  cc->SendAttachBrowsingContext(BrowsingContextId(parent ? parent->Id() : 0),
+                                BrowsingContextId(aBrowsingContext->Id()),
+                                name);
+}
 
 /* static */ void
 BrowsingContext::Init()
@@ -70,38 +96,86 @@ BrowsingContext::Get(uint64_t aId)
 }
 
 /* static */ already_AddRefed<BrowsingContext>
-BrowsingContext::Create(nsIDocShell* aDocShell)
+BrowsingContext::Create(BrowsingContext* aParent,
+                        const nsAString& aName,
+                        Type aType)
 {
+  MOZ_DIAGNOSTIC_ASSERT(!aParent || aParent->mType == aType);
+
+  uint64_t id = nsContentUtils::GenerateBrowsingContextId();
+
+  MOZ_LOG(GetLog(),
+          LogLevel::Debug,
+          ("Creating 0x%08" PRIx64 " in %s",
+           id,
+           XRE_IsParentProcess() ? "Parent" : "Child"));
+
   RefPtr<BrowsingContext> context;
   if (XRE_IsParentProcess()) {
-    context = new ChromeBrowsingContext(aDocShell);
+    context = new ChromeBrowsingContext(aParent, aName, id, /* aProcessId */ 0, aType);
   } else {
-    // TODO(farre): will we ever create BrowsingContexts on processes
-    // other than content and parent?
-    MOZ_ASSERT(XRE_IsContentProcess());
-    context = new BrowsingContext(aDocShell);
+    context = new BrowsingContext(aParent, aName, id, aType);
   }
+
+  Register(context);
+
+  // Attach the browsing context to the tree.
+  context->Attach();
 
   return context.forget();
 }
 
-BrowsingContext::BrowsingContext(nsIDocShell* aDocShell)
-  : mBrowsingContextId(nsContentUtils::GenerateBrowsingContextId())
-  , mDocShell(aDocShell)
+/* static */ already_AddRefed<BrowsingContext>
+BrowsingContext::CreateFromIPC(BrowsingContext* aParent, const nsAString& aName,
+                               uint64_t aId, ContentParent* aOriginProcess)
 {
-  sBrowsingContexts->Put(mBrowsingContextId, this);
+  MOZ_DIAGNOSTIC_ASSERT(aOriginProcess || XRE_IsContentProcess(),
+                        "Parent Process IPC contexts need a Content Process.");
+  MOZ_DIAGNOSTIC_ASSERT(!aParent || aParent->IsContent());
+
+  MOZ_LOG(GetLog(),
+          LogLevel::Debug,
+          ("Creating 0x%08" PRIx64 " from IPC (origin=0x%08" PRIx64 ")",
+           aId, aOriginProcess ? uint64_t(aOriginProcess->ChildID()) : 0));
+
+  RefPtr<BrowsingContext> context;
+  if (XRE_IsParentProcess()) {
+    context = new ChromeBrowsingContext(
+      aParent, aName, aId, aOriginProcess->ChildID(), Type::Content);
+
+  } else {
+    context = new BrowsingContext(aParent, aName, aId, Type::Content);
+  }
+
+  Register(context);
+
+  context->Attach();
+
+  return context.forget();
 }
 
-BrowsingContext::BrowsingContext(uint64_t aBrowsingContextId,
-                const nsAString& aName)
-  : mBrowsingContextId(aBrowsingContextId)
+BrowsingContext::BrowsingContext(BrowsingContext* aParent,
+                                 const nsAString& aName,
+                                 uint64_t aBrowsingContextId,
+                                 Type aType)
+  : mType(aType)
+  , mBrowsingContextId(aBrowsingContextId)
+  , mParent(aParent)
   , mName(aName)
 {
-  sBrowsingContexts->Put(mBrowsingContextId, this);
 }
 
 void
-BrowsingContext::Attach(BrowsingContext* aParent)
+BrowsingContext::SetDocShell(nsIDocShell* aDocShell)
+{
+  // XXX(nika): We should communicate that we are now an active BrowsingContext
+  // process to the parent & do other validation here.
+  MOZ_RELEASE_ASSERT(nsDocShell::Cast(aDocShell)->GetBrowsingContext() == this);
+  mDocShell = aDocShell;
+}
+
+void
+BrowsingContext::Attach()
 {
   if (isInList()) {
     MOZ_LOG(GetLog(),
@@ -109,7 +183,7 @@ BrowsingContext::Attach(BrowsingContext* aParent)
             ("%s: Connecting already existing 0x%08" PRIx64 " to 0x%08" PRIx64,
              XRE_IsParentProcess() ? "Parent" : "Child",
              Id(),
-             aParent ? aParent->Id() : 0));
+             mParent ? mParent->Id() : 0));
     MOZ_DIAGNOSTIC_ASSERT(sBrowsingContexts->Contains(Id()));
     MOZ_DIAGNOSTIC_ASSERT(!IsCached());
     return;
@@ -123,22 +197,12 @@ BrowsingContext::Attach(BrowsingContext* aParent)
            XRE_IsParentProcess() ? "Parent" : "Child",
            wasCached ? "Re-connecting" : "Connecting",
            Id(),
-           aParent ? aParent->Id() : 0));
+           mParent ? mParent->Id() : 0));
 
-  auto* children = aParent ? &aParent->mChildren : sRootBrowsingContexts.get();
+  auto* children = mParent ? &mParent->mChildren : sRootBrowsingContexts.get();
   children->insertBack(this);
-  mParent = aParent;
 
-  if (!XRE_IsContentProcess()) {
-    return;
-  }
-
-  auto cc = ContentChild::GetSingleton();
-  MOZ_DIAGNOSTIC_ASSERT(cc);
-  cc->SendAttachBrowsingContext(
-    BrowsingContextId(mParent ? mParent->Id() : 0),
-    BrowsingContextId(Id()),
-    mName);
+  Sync(this);
 }
 
 void
