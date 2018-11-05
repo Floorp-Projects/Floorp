@@ -117,12 +117,12 @@ class InMemoryHistoryStorageTest {
     }
 
     @Test
-    fun `store can provide suggestions`() {
+    fun `store can provide suggestions`() = runBlocking {
         val history = InMemoryHistoryStorage()
-        assertEquals(0, history.getSuggestions("Mozilla").size)
+        assertEquals(0, history.getSuggestions("Mozilla", 100).size)
 
         history.recordVisit("http://www.firefox.com", VisitType.LINK)
-        val search = history.getSuggestions("Mozilla")
+        val search = history.getSuggestions("Mozilla", 100)
         assertEquals(1, search.size)
         assertEquals("http://www.firefox.com", search[0].url)
 
@@ -134,9 +134,9 @@ class InMemoryHistoryStorageTest {
         history.recordObservation("http://www.moscow.ru", PageObservation("Moscow City"))
 
         // Empty search.
-        assertEquals(4, history.getSuggestions("").size)
+        assertEquals(4, history.getSuggestions("", 100).size)
 
-        val search2 = history.getSuggestions("Mozilla")
+        val search2 = history.getSuggestions("Mozilla", 100)
         assertEquals(4, search2.size)
         assertEquals("http://www.mozilla.org", search2[0].id)
         assertEquals("http://www.mozilla.org", search2[0].url)
@@ -153,5 +153,28 @@ class InMemoryHistoryStorageTest {
         assertEquals("http://www.wikipedia.org", search2[3].id)
         assertEquals("http://www.wikipedia.org", search2[3].url)
         assertEquals(null, search2[3].title)
+    }
+
+    @Test
+    fun `store can provide suggestions respecting the limit`() = runBlocking {
+        val history = InMemoryHistoryStorage()
+        history.recordVisit("http://www.wikipedia.org", VisitType.LINK)
+        history.recordVisit("http://www.mozilla.org", VisitType.LINK)
+        history.recordVisit("http://www.moscow.ru", VisitType.LINK)
+        history.recordObservation("http://www.mozilla.org", PageObservation("Mozilla"))
+        history.recordObservation("http://www.firefox.com", PageObservation("Mozilla Firefox"))
+        history.recordObservation("http://www.moscow.ru", PageObservation("Moscow"))
+
+        assertEquals(3, history.getSuggestions("Mozilla", 3).size)
+        assertEquals(2, history.getSuggestions("Mozilla", 2).size)
+        assertEquals(1, history.getSuggestions("Mozilla", 1).size)
+
+        val results = history.getSuggestions("Mozilla", 3)
+        assertEquals("http://www.mozilla.org", results[0].url)
+        assertEquals("http://www.moscow.ru", results[1].url)
+        assertEquals("http://www.firefox.com", results[2].url)
+
+        val results2 = history.getSuggestions("Mozilla", 1)
+        assertEquals("http://www.mozilla.org", results2[0].url)
     }
 }

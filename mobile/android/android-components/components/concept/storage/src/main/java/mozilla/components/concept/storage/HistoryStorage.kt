@@ -43,7 +43,7 @@ interface HistoryStorage {
      * @param query A query by which to query the underlying store.
      * @return A List of [SearchResult] matching the query, in no particular order.
      */
-    fun getSuggestions(query: String): List<SearchResult>
+    fun getSuggestions(query: String, limit: Int): List<SearchResult>
 
     /**
      * Cleanup any allocated resources.

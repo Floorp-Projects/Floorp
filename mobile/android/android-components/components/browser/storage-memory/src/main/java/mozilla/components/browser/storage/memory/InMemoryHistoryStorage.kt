@@ -61,7 +61,7 @@ class InMemoryHistoryStorage : HistoryStorage {
         })
     }
 
-    override fun getSuggestions(query: String): List<SearchResult> = synchronized(pages + pageMeta) {
+    override fun getSuggestions(query: String, limit: Int): List<SearchResult> = synchronized(pages + pageMeta) {
         data class Hit(val url: String, val score: Int)
 
         val urlMatches = pages.asSequence().map {
@@ -86,7 +86,7 @@ class InMemoryHistoryStorage : HistoryStorage {
         // TODO exclude non-matching results entirely? Score that implies complete mismatch.
         matchedUrls.asSequence().sortedBy { it.value }.map {
             SearchResult(id = it.key, score = maxScore - it.value, url = it.key, title = pageMeta[it.key]?.title)
-        }.toList()
+        }.take(limit).toList()
     }
 
     // Borrowed from https://gist.github.com/ademar111190/34d3de41308389a0d0d8
