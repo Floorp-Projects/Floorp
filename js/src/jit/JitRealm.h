@@ -621,12 +621,6 @@ class JitRealm
 void InvalidateAll(FreeOp* fop, JS::Zone* zone);
 void FinishInvalidation(FreeOp* fop, JSScript* script);
 
-// On windows systems, really large frames need to be incrementally touched.
-// The following constant defines the minimum increment of the touch.
-#ifdef XP_WIN
-const unsigned WINDOWS_BIG_FRAME_TOUCH_INCREMENT = 4096 - 1;
-#endif
-
 // This class ensures JIT code is executable on its destruction. Creators
 // must call makeWritable(), and not attempt to write to the buffer if it fails.
 //
