@@ -1083,9 +1083,7 @@ protected: // Shouldn't be used by friend classes
    *      (i.e., this allows collapsed selection.)
    *   3. If the Selection is collapsed, returns null.
    *   4. Otherwise, listing up all nodes with content iterator (post-order).
-   *     4-1. When first element node does *not* match with the argument,
-   *          *returns* the element.
-   *     4-2. When first element node matches with the argument, returns
+   *     4-1. When first element node matches with the argument, returns
    *          *next* element node.
    *
    * @param aTagName            The atom of tag name in lower case.

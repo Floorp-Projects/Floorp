@@ -3059,11 +3059,7 @@ HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
       }
 
       if (!found) {
-        // Check if node we have is really part of the selection???
-        // XXX This is odd.  This means that we return element node whose
-        //     tag name does not match with aTagName if we find such element
-        //     node first.
-        break;
+        return nullptr;
       }
     }
     iter->Next();
