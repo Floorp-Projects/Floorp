@@ -233,14 +233,3 @@ splitter.devtools-horizontal-splitter,
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-#network-throttling-menu {
-  background-position: right 4px center;
-  padding-left: 0;
-  width: 92px;
-}
-
-/* Make sure spacing between text and icon is uniform */
-#network-throttling-menu .title {
-  width: 85%;
-}
