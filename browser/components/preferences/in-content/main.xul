@@ -300,7 +300,7 @@
     <image class="message-bar-icon"/>
     <hbox class="message-bar-content" align="center" flex="1">
       <description class="message-bar-description" flex="1"/>
-      <button class="message-bar-button" oncommand="gMainPane.confirmBrowserLanguageChange()"/>
+      <button class="message-bar-button" oncommand="gMainPane.confirmBrowserLanguageChange(event)"/>
     </hbox>
   </hbox>
 

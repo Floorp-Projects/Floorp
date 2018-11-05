@@ -799,7 +799,7 @@ var gMainPane = {
   },
 
   /* Confirm the locale change and restart the browser in the new locale. */
-  confirmBrowserLanguageChange() {
+  confirmBrowserLanguageChange(event) {
     let localesString = (event.target.getAttribute("locales") || "").trim();
     if (!localesString || localesString.length == 0) {
       return;
