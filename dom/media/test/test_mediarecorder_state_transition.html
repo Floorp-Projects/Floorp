@@ -54,6 +54,22 @@ var operationTests = [
   },
   {
     operations: ['start', 'resume'],
+    isValid: true
+  },
+  {
+    operations: ['pause', 'start'],
+    isValid: false
+  },
+  {
+    operations: ['resume', 'start'],
+    isValid: false
+  },
+  {
+    operations: ['requestData', 'start'],
+    isValid: false
+  },
+  {
+    operations: ['stop', 'start'],
     isValid: false
   },
   {
@@ -84,11 +100,11 @@ var operationTests = [
   },
   {
     operations: ['start', 'pause', 'pause'],
-    isValid: false
+    isValid: true
   },
   {
     operations: ['start', 'pause', 'requestData'],
-    isValid: false
+    isValid: true
   },
   {
     operations: ['start', 'pause', 'resume'],
@@ -98,7 +114,104 @@ var operationTests = [
     operations: ['start', 'pause', 'resume'],
     isValid: true,
     timeSlice: 200
-  }
+  },
+  {
+    operations: ['start', 'resume', 'resume'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'resume', 'resume'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'resume', 'stop'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'resume', 'stop'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'stop', 'start'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'stop', 'start'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'stop', 'pause'],
+    isValid: false
+  },
+  {
+    operations: ['start', 'stop', 'resume'],
+    isValid: false
+  },
+  {
+    operations: ['start', 'stop', 'requestData'],
+    isValid: false
+  },
+  {
+    operations: ['start', 'stop', 'stop'],
+    isValid: false
+  },
+  {
+    operations: ['start', 'pause', 'resume', 'resume'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'pause', 'resume', 'resume'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'pause', 'pause', 'resume'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'pause', 'pause', 'resume'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'stop', 'start', 'stop'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'stop', 'start', 'stop'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'stop', 'start', 'pause'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'stop', 'start', 'pause'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'stop', 'start', 'resume'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'stop', 'start', 'resume'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'stop', 'start', 'requestData'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'stop', 'start', 'requestData'],
+    isValid: true,
+    timeSlice: 200
+  },
 ];
 
 /**
