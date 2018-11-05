@@ -82,12 +82,12 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             }
 
             val deepLinkDefaultBrowser = {
-                if (!browsers.hasDefaultBrowser(context)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    SupportUtils.openDefaultAppsSettings(context)
+                } else if (!browsers.hasDefaultBrowser(context)) {
                     // Open in method:
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.OPEN_WITH_DEFAULT_BROWSER_URL))
                     context.startActivity(intent)
-                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    SupportUtils.openDefaultAppsSettings(context)
                 } else {
                     SupportUtils.openDefaultBrowserSumoPage(context)
                 }

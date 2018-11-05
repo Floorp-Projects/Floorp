@@ -63,14 +63,14 @@ public class DefaultBrowserPreference extends Preference {
         final Context context = getContext();
         final Browsers browsers = new Browsers(getContext(), Browsers.TRADITIONAL_BROWSER_URL);
 
-        if (!browsers.hasDefaultBrowser(context)) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            SupportUtils.INSTANCE.openDefaultAppsSettings(context);
+            TelemetryWrapper.makeDefaultBrowserSettings();
+        } else if (!browsers.hasDefaultBrowser(context)) {
             Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.OPEN_WITH_DEFAULT_BROWSER_URL));
             i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             getContext().startActivity(i);
             TelemetryWrapper.makeDefaultBrowserOpenWith();
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            SupportUtils.INSTANCE.openDefaultAppsSettings(context);
-            TelemetryWrapper.makeDefaultBrowserSettings();
         } else {
             SupportUtils.INSTANCE.openDefaultBrowserSumoPage(context);
         }
