@@ -26,6 +26,7 @@ loader.lazyRequireGetter(this, "AddonClient", "devtools/shared/client/addon-clie
 loader.lazyRequireGetter(this, "RootFront", "devtools/shared/fronts/root", true);
 loader.lazyRequireGetter(this, "BrowsingContextTargetFront", "devtools/shared/fronts/targets/browsing-context", true);
 loader.lazyRequireGetter(this, "WorkerTargetFront", "devtools/shared/fronts/targets/worker", true);
+loader.lazyRequireGetter(this, "ContentProcessTargetFront", "devtools/shared/fronts/targets/content-process", true);
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 loader.lazyRequireGetter(this, "Pool", "devtools/shared/protocol", true);
@@ -379,6 +380,15 @@ DebuggerClient.prototype = {
 
     const response = await front.attach();
     return [response, front];
+  },
+
+  attachContentProcessTarget: async function(form) {
+    let front = this._frontPool.actor(form.actor);
+    if (!front) {
+      front = new ContentProcessTargetFront(this, form);
+      this._frontPool.manage(front);
+    }
+    return front;
   },
 
   attachWorker: async function(workerTargetActor) {
