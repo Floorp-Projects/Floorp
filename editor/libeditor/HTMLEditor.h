@@ -43,7 +43,6 @@ class nsRange;
 namespace mozilla {
 class AutoSelectionSetterAfterTableEdit;
 class AutoSetTemporaryAncestorLimiter;
-class DocumentResizeEventListener;
 class EmptyEditableFunctor;
 class ResizerSelectionListener;
 enum class EditSubAction : int32_t;
@@ -1738,6 +1737,7 @@ protected: // Shouldn't be used by friend classes
 
   class BlobReader final
   {
+  typedef EditorBase::AutoEditActionDataSetter AutoEditActionDataSetter;
   public:
     BlobReader(dom::BlobImpl* aBlob, HTMLEditor* aHTMLEditor,
                bool aIsSafe, nsIDocument* aSourceDoc,
@@ -1757,10 +1757,11 @@ protected: // Shouldn't be used by friend classes
 
     RefPtr<dom::BlobImpl> mBlob;
     RefPtr<HTMLEditor> mHTMLEditor;
-    bool mIsSafe;
     nsCOMPtr<nsIDocument> mSourceDoc;
     nsCOMPtr<nsINode> mDestinationNode;
     int32_t mDestOffset;
+    EditAction mEditAction;
+    bool mIsSafe;
     bool mDoDeleteSelection;
   };
 
@@ -2629,7 +2630,6 @@ protected:
   friend class AutoSelectionSetterAfterTableEdit;
   friend class AutoSetTemporaryAncestorLimiter;
   friend class CSSEditUtils;
-  friend class DocumentResizeEventListener;
   friend class EditorBase;
   friend class EmptyEditableFunctor;
   friend class HTMLEditRules;

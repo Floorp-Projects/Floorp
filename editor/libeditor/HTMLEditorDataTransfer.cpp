@@ -1007,20 +1007,27 @@ HTMLEditor::BlobReader::BlobReader(BlobImpl* aBlob,
                                    bool aDoDeleteSelection)
   : mBlob(aBlob)
   , mHTMLEditor(aHTMLEditor)
-  , mIsSafe(aIsSafe)
   , mSourceDoc(aSourceDoc)
   , mDestinationNode(aDestinationNode)
   , mDestOffset(aDestOffset)
+  , mEditAction(aHTMLEditor->GetEditAction())
+  , mIsSafe(aIsSafe)
   , mDoDeleteSelection(aDoDeleteSelection)
 {
   MOZ_ASSERT(mBlob);
   MOZ_ASSERT(mHTMLEditor);
+  MOZ_ASSERT(mHTMLEditor->IsEditActionDataAvailable());
   MOZ_ASSERT(mDestinationNode);
 }
 
 nsresult
 HTMLEditor::BlobReader::OnResult(const nsACString& aResult)
 {
+  AutoEditActionDataSetter editActionData(*mHTMLEditor, mEditAction);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   nsString blobType;
   mBlob->GetType(blobType);
 
@@ -1158,6 +1165,8 @@ HTMLEditor::InsertObject(const nsACString& aType,
                          int32_t aDestOffset,
                          bool aDoDeleteSelection)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   nsresult rv;
 
   if (nsCOMPtr<BlobImpl> blob = do_QueryInterface(aObject)) {
@@ -1490,6 +1499,8 @@ nsresult
 HTMLEditor::PasteInternal(int32_t aClipboardType,
                           bool aDispatchPasteEvent)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   if (aDispatchPasteEvent && !FireClipboardEvent(ePaste, aClipboardType)) {
     return NS_OK;
   }
