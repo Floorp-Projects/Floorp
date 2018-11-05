@@ -92,10 +92,6 @@ namespace layers {
 struct TextureFactoryIdentifier;
 } // namespace layers
 
-namespace layout {
-class PRenderFrameParent;
-} // namespace layout
-
 namespace dom {
 
 class Element;
@@ -543,7 +539,6 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvCreateWindow(PBrowserParent* aThisTabParent,
                    PBrowserParent* aNewTab,
-                   layout::PRenderFrameParent* aRenderFrame,
                    const uint32_t& aChromeFlags,
                    const bool& aCalledFromJS,
                    const bool& aPositionSpecified,

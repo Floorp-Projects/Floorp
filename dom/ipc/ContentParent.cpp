@@ -5086,7 +5086,6 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
 mozilla::ipc::IPCResult
 ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 PBrowserParent* aNewTab,
-                                PRenderFrameParent* aRenderFrame,
                                 const uint32_t& aChromeFlags,
                                 const bool& aCalledFromJS,
                                 const bool& aPositionSpecified,
@@ -5163,12 +5162,10 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
 
   newTab->SwapFrameScriptsFrom(cwi.frameScripts());
 
-  RenderFrameParent* rfp = static_cast<RenderFrameParent*>(aRenderFrame);
-  if (!newTab->SetRenderFrame(rfp) ||
-      !newTab->GetRenderFrameInfo(&cwi.textureFactoryIdentifier(), &cwi.layersId())) {
+  if (!newTab->SetRenderFrame() ||
+      !newTab->GetRenderFrameInfo(&cwi.textureFactoryIdentifier(), &cwi.layersId(), &cwi.compositorOptions())) {
     rv = NS_ERROR_FAILURE;
   }
-  cwi.compositorOptions() = rfp->GetCompositorOptions();
 
   nsCOMPtr<nsIWidget> widget = newTab->GetWidget();
   if (widget) {
