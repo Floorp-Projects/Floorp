@@ -231,14 +231,16 @@ void PlatformThread::Start() {
   // See bug 2902 for background on STACK_SIZE_PARAM_IS_A_RESERVATION.
   // Set the reserved stack stack size to 1M, which is the default on Windows
   // and Linux.
-  thread_ = ::CreateThread(nullptr, 1024 * 1024, &StartThread, this,
+  // Mozilla: Set to 256kb for consistency with nsIThreadManager.idl
+  thread_ = ::CreateThread(nullptr, 256 * 1024, &StartThread, this,
                            STACK_SIZE_PARAM_IS_A_RESERVATION, &thread_id_);
   RTC_CHECK(thread_) << "CreateThread failed";
   RTC_DCHECK(thread_id_);
 #else
   ThreadAttributes attr;
   // Set the stack stack size to 1M.
-  pthread_attr_setstacksize(&attr, 1024 * 1024);
+  // Mozilla: Set to 256kb for consistency with nsIThreadManager.idl
+  pthread_attr_setstacksize(&attr, 256 * 1024);
   RTC_CHECK_EQ(0, pthread_create(&thread_, &attr, &StartThread, this));
 #endif  // defined(WEBRTC_WIN)
 }
