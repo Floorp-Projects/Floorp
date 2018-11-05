@@ -97,7 +97,7 @@ public final class NotificationHelper implements BundleEventListener {
          */
         MLS,
         /**
-         * Mozilla Location Services notification channel.
+         * File downloads.
          */
         DOWNLOAD,
         /**
