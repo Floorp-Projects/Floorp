@@ -2499,13 +2499,13 @@ DecodingState::Enter()
     return;
   }
 
-  mOnAudioPopped = AudioQueue().PopEvent().Connect(
+  mOnAudioPopped = AudioQueue().PopFrontEvent().Connect(
     OwnerThread(), [this] () {
     if (mMaster->IsAudioDecoding() && !mMaster->HaveEnoughDecodedAudio()) {
       EnsureAudioDecodeTaskQueued();
     }
   });
-  mOnVideoPopped = VideoQueue().PopEvent().Connect(
+  mOnVideoPopped = VideoQueue().PopFrontEvent().Connect(
     OwnerThread(), [this] () {
     if (mMaster->IsVideoDecoding() && !mMaster->HaveEnoughDecodedVideo()) {
       EnsureVideoDecodeTaskQueued();
@@ -3077,9 +3077,9 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
     aDecoder);
   mTaskQueue->DispatchStateChange(r.forget());
 
-  mAudioQueueListener = AudioQueue().PopEvent().Connect(
+  mAudioQueueListener = AudioQueue().PopFrontEvent().Connect(
     mTaskQueue, this, &MediaDecoderStateMachine::OnAudioPopped);
-  mVideoQueueListener = VideoQueue().PopEvent().Connect(
+  mVideoQueueListener = VideoQueue().PopFrontEvent().Connect(
     mTaskQueue, this, &MediaDecoderStateMachine::OnVideoPopped);
 
   mMetadataManager.Connect(mReader->TimedMetadataEvent(), OwnerThread());

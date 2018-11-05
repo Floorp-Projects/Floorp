@@ -80,7 +80,7 @@ AudioSink::Init(const PlaybackParams& aParams, RefPtr<GenericPromise>& aEndPromi
     mOwnerThread, this, &AudioSink::OnAudioPushed);
   mAudioQueueFinishListener = mAudioQueue.FinishEvent().Connect(
     mOwnerThread, this, &AudioSink::NotifyAudioNeeded);
-  mProcessedQueueListener = mProcessedQueue.PopEvent().Connect(
+  mProcessedQueueListener = mProcessedQueue.PopFrontEvent().Connect(
     mOwnerThread, this, &AudioSink::OnAudioPopped);
 
   // To ensure at least one audio packet will be popped from AudioQueue and
