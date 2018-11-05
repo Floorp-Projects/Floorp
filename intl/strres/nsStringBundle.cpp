@@ -21,7 +21,7 @@
 #include "nsIObserverService.h"
 #include "nsCOMArray.h"
 #include "nsTextFormatter.h"
-#include "nsErrorService.h"
+#include "nsIErrorService.h"
 #include "nsICategoryManager.h"
 #include "nsContentUtils.h"
 #include "nsPersistentProperties.h"
@@ -48,6 +48,8 @@ using mozilla::dom::StringBundleDescriptor;
 using mozilla::dom::ipc::SharedStringMap;
 using mozilla::dom::ipc::SharedStringMapBuilder;
 using mozilla::ipc::FileDescriptor;
+
+static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 
 /**
  * A set of string bundle URLs which are loaded by content processes, and
@@ -761,8 +763,8 @@ struct bundleCacheEntry_t final : public LinkedListElement<bundleCacheEntry_t> {
 nsStringBundleService::nsStringBundleService() :
   mBundleMap(MAX_CACHED_BUNDLES)
 {
-  mErrorService = nsErrorService::GetOrCreate();
-  MOZ_ALWAYS_TRUE(mErrorService);
+  mErrorService = do_GetService(kErrorServiceCID);
+  NS_ASSERTION(mErrorService, "Couldn't get error service");
 }
 
 NS_IMPL_ISUPPORTS(nsStringBundleService,

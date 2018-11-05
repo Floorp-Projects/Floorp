@@ -7,31 +7,18 @@
 #include "nsErrorService.h"
 #include "nsCRTGlue.h"
 #include "nsAutoPtr.h"
-#include "mozilla/StaticPtr.h"
-#include "mozilla/ClearOnShutdown.h"
-
-namespace {
-
-mozilla::StaticRefPtr<nsErrorService> gSingleton;
-
-}
 
 NS_IMPL_ISUPPORTS(nsErrorService, nsIErrorService)
 
-// static
-already_AddRefed<nsIErrorService>
-nsErrorService::GetOrCreate()
+nsresult
+nsErrorService::Create(nsISupports* aOuter, const nsIID& aIID,
+                       void** aInstancePtr)
 {
-  RefPtr<nsErrorService> svc;
-  if (gSingleton) {
-    svc = gSingleton;
-  } else {
-    gSingleton = new nsErrorService();
-    mozilla::ClearOnShutdown(&gSingleton);
-    svc = gSingleton;
+  if (NS_WARN_IF(aOuter)) {
+    return NS_ERROR_NO_AGGREGATION;
   }
-
-  return svc.forget();
+  RefPtr<nsErrorService> serv = new nsErrorService();
+  return serv->QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
