@@ -1612,7 +1612,10 @@ nsObjectLoadingContent::UpdateObjectParameters()
   thisElement->GetAttr(kNameSpaceID_None, nsGkAtoms::type, rawTypeAttr);
   if (!rawTypeAttr.IsEmpty()) {
     typeAttr = rawTypeAttr;
-    CopyUTF16toUTF8(rawTypeAttr, newMime);
+    nsAutoString params;
+    nsAutoString mime;
+    nsContentUtils::SplitMimeType(rawTypeAttr, mime, params);
+    CopyUTF16toUTF8(mime, newMime);
   }
 
   // If we failed to build a valid URI, use the document's base URI
@@ -1796,7 +1799,6 @@ nsObjectLoadingContent::UpdateObjectParameters()
   //     to proceed.
   //  6) Otherwise, type null to indicate unloadable content (fallback)
   //
-
   ObjectType newMime_Type = GetTypeOfContent(newMime, mSkipFakePlugins);
 
   if (stateInvalid) {
