@@ -25,8 +25,7 @@ Cu.evalInSandbox(
 );
 
 // Windows in the middleman process are initially set up as about:blank pages.
-// This method fills them in with a canvas filling the tab, and an overlay that
-// can be displayed over that canvas.
+// This method fills them in with a canvas filling the tab.
 function setupContents(window) {
   // The middlemanCanvas element fills the tab's contents.
   const canvas = window.middlemanCanvas = window.document.createElement("canvas");
@@ -91,13 +90,7 @@ function UpdateCanvas(buffer, width, height, hadFailure) {
   }
 }
 
-// Entry point for when we need to update the overlay's contents or visibility.
-// eslint-disable-next-line no-unused-vars
-function UpdateOverlay() {
-}
-
 // eslint-disable-next-line no-unused-vars
 var EXPORTED_SYMBOLS = [
   "UpdateCanvas",
-  "UpdateOverlay",
 ];
