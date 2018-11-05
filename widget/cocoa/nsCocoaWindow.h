@@ -157,17 +157,6 @@ typedef struct _nsCocoaWindowList {
 
 @class ToolbarWindow;
 
-// NSColor subclass that allows us to draw separate colors both in the titlebar
-// and for background of the window.
-@interface TitlebarAndBackgroundColor : NSColor
-{
-  ToolbarWindow *mWindow; // [WEAK] (we are owned by the window)
-}
-
-- (id)initWithWindow:(ToolbarWindow*)aWindow;
-
-@end
-
 // NSWindow subclass for handling windows with toolbars.
 @interface ToolbarWindow : BaseWindow
 {
