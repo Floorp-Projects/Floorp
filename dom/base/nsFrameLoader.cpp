@@ -2939,6 +2939,7 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
   MaybeUpdatePrimaryTabParent(eTabParentChanged);
   ReallyLoadFrameScripts();
   InitializeBrowserAPI();
+  mRemoteBrowser->InitRenderFrame();
   ShowRemoteFrame(ScreenIntSize(0, 0));
 }
 
