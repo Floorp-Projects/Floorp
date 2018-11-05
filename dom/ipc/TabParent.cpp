@@ -400,8 +400,8 @@ TabParent::Destroy()
 mozilla::ipc::IPCResult
 TabParent::RecvEnsureLayersConnected(CompositorOptions* aCompositorOptions)
 {
-  if (mRenderFrame) {
-    mRenderFrame->EnsureLayersConnected(aCompositorOptions);
+  if (mRenderFrame.IsInitialized()) {
+    mRenderFrame.EnsureLayersConnected(aCompositorOptions);
   }
   return IPC_OK();
 }
@@ -427,13 +427,12 @@ TabParent::Recv__delete__()
 void
 TabParent::ActorDestroy(ActorDestroyReason why)
 {
-  if (mRenderFrame) {
+  if (mRenderFrame.IsInitialized()) {
     // It's important to unmap layers after the remote browser has been destroyed,
     // otherwise it may still send messages to the compositor which will reject them,
     // causing assertions.
-    RemoveTabParentFromTable(mRenderFrame->GetLayersId());
-    mRenderFrame->Destroy();
-    mRenderFrame.reset(nullptr);
+    RemoveTabParentFromTable(mRenderFrame.GetLayersId());
+    mRenderFrame.Destroy();
   }
 
   // Even though TabParent::Destroy calls this, we need to do it here too in
@@ -635,22 +634,26 @@ TabParent::LoadURL(nsIURI* aURI)
 void
 TabParent::InitRenderFrame()
 {
-  MOZ_ASSERT(!mRenderFrame);
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+
+  MOZ_ASSERT(!mRenderFrame.IsInitialized());
   MOZ_ASSERT(frameLoader);
+
   if (!frameLoader) {
     return;
   }
-  mRenderFrame = MakeUnique<RenderFrameParent>(frameLoader);
-  MOZ_ASSERT(mRenderFrame->IsInitialized());
-  layers::LayersId layersId = mRenderFrame->GetLayersId();
+
+  mRenderFrame.Initialize(frameLoader);
+  MOZ_ASSERT(mRenderFrame.IsInitialized());
+
+  layers::LayersId layersId = mRenderFrame.GetLayersId();
   AddTabParentToTable(layersId, this);
 
   TextureFactoryIdentifier textureFactoryIdentifier;
-  mRenderFrame->GetTextureFactoryIdentifier(&textureFactoryIdentifier);
+  mRenderFrame.GetTextureFactoryIdentifier(&textureFactoryIdentifier);
   Unused << SendInitRendering(textureFactoryIdentifier, layersId,
-    mRenderFrame->GetCompositorOptions(),
-    mRenderFrame->IsLayersConnected());
+    mRenderFrame.GetCompositorOptions(),
+    mRenderFrame.IsLayersConnected());
 }
 
 void
@@ -671,7 +674,7 @@ TabParent::Show(const ScreenIntSize& size, bool aParentIsActive)
         return;
     }
 
-    MOZ_ASSERT(mRenderFrame);
+    MOZ_ASSERT(mRenderFrame.IsInitialized());
 
     nsCOMPtr<nsISupports> container = mFrameElement->OwnerDoc()->GetContainer();
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
@@ -2383,7 +2386,10 @@ TabParent::GetTabIdFrom(nsIDocShell *docShell)
 RenderFrameParent*
 TabParent::GetRenderFrame()
 {
-  return mRenderFrame.get();
+  if (!mRenderFrame.IsInitialized()) {
+    return nullptr;
+  }
+  return &mRenderFrame;
 }
 
 mozilla::ipc::IPCResult
@@ -2679,9 +2685,9 @@ TabParent::ApzAwareEventRoutingToChild(ScrollableLayerGuid* aOutTargetGuid,
       // is destined. In such cases the layersId of the APZ result may not match
       // the layersId of this renderframe. In such cases the main-thread hit-
       // testing code "wins" so we need to update the guid to reflect this.
-      if (mRenderFrame) {
-        if (aOutTargetGuid->mLayersId != mRenderFrame->GetLayersId()) {
-          *aOutTargetGuid = ScrollableLayerGuid(mRenderFrame->GetLayersId(), 0, ScrollableLayerGuid::NULL_SCROLL_ID);
+      if (mRenderFrame.IsInitialized()) {
+        if (aOutTargetGuid->mLayersId != mRenderFrame.GetLayersId()) {
+          *aOutTargetGuid = ScrollableLayerGuid(mRenderFrame.GetLayersId(), 0, ScrollableLayerGuid::NULL_SCROLL_ID);
         }
       }
     }
@@ -3520,8 +3526,8 @@ TabParent::StartApzAutoscroll(float aAnchorX, float aAnchorY,
   }
 
   bool success = false;
-  if (mRenderFrame) {
-    layers::LayersId layersId = mRenderFrame->GetLayersId();
+  if (mRenderFrame.IsInitialized()) {
+    layers::LayersId layersId = mRenderFrame.GetLayersId();
     if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
       ScrollableLayerGuid guid{layersId, aPresShellId, aScrollId};
 
@@ -3548,8 +3554,8 @@ TabParent::StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId)
     return NS_OK;
   }
 
-  if (mRenderFrame) {
-    layers::LayersId layersId = mRenderFrame->GetLayersId();
+  if (mRenderFrame.IsInitialized()) {
+    layers::LayersId layersId = mRenderFrame.GetLayersId();
     if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
       ScrollableLayerGuid guid{layersId, aPresShellId, aScrollId};
       widget->StopAsyncAutoscroll(guid);

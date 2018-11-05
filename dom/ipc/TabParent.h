@@ -22,7 +22,6 @@
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Move.h"
-#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIBrowserDOMWindow.h"
@@ -756,7 +755,7 @@ private:
 
   static void RemoveTabParentFromTable(layers::LayersId aLayersId);
 
-  UniquePtr<layout::RenderFrameParent> mRenderFrame;
+  layout::RenderFrameParent mRenderFrame;
   LayersObserverEpoch mLayerTreeEpoch;
 
   // If this flag is set, then the tab's layers will be preserved even when
