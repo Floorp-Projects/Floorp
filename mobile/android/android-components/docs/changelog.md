@@ -61,6 +61,8 @@ permalink: /changelog/
   * 🆕 New component: A customizable [Awesome Bar](https://support.mozilla.org/en-US/kb/awesome-bar-search-firefox-bookmarks-history-tabs) implementation for browsers.A
 * **feature-awesomebar**
   * 🆕 New component: A component that connects a [concept-awesomebar](https://github.com/mozilla-mobile/android-components/components/concept/awesomebar/README.md) implementation to a [concept-toolbar](https://github.com/mozilla-mobile/android-components/components/concept/toolbar/README.md) implementation and provides implementations of various suggestion providers.
+* **browser-session**
+  * Fixed an issue where a custom tab `Session? could get selected after removing the currently selected `Session`.
 
 # 0.29.0
 
