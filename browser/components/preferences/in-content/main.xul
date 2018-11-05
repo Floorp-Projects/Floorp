@@ -472,8 +472,7 @@
       <hbox id="checkForUpdates" align="start">
         <spacer flex="1"/>
         <button id="checkForUpdatesButton"
-                label="&update.checkForUpdatesButton.label;"
-                accesskey="&update.checkForUpdatesButton.accesskey;"
+                data-l10n-id="update-checkForUpdatesButton"
                 oncommand="gAppUpdater.checkForUpdates();"/>
       </hbox>
       <hbox id="downloadAndInstall" align="start">
@@ -485,76 +484,72 @@
       <hbox id="apply" align="start">
         <spacer flex="1"/>
         <button id="updateButton"
-                label="&update.updateButton.label3;"
-                accesskey="&update.updateButton.accesskey;"
+                data-l10n-id="update-updateButton"
                 oncommand="gAppUpdater.buttonRestartAfterDownload();"/>
       </hbox>
       <hbox id="checkingForUpdates" align="start">
-        <image class="update-throbber"/><label>&update.checkingForUpdates;</label>
+        <image class="update-throbber"/>
+        <label data-l10n-id="update-checkingForUpdates"></label>
         <spacer flex="1"/>
-        <button label="&update.checkForUpdatesButton.label;"
-                accesskey="&update.checkForUpdatesButton.accesskey;"
+        <button data-l10n-id="update-checkForUpdatesButton"
                 disabled="true"/>
       </hbox>
-      <hbox id="downloading" align="start">
-        <image class="update-throbber"/><label>&update.downloading.start;</label><label id="downloadStatus"/><label>&update.downloading.end;</label>
+      <hbox id="downloading" align="start" data-l10n-id="update-downloading">
+        <html:img class="update-throbber" src="chrome://global/skin/icons/loading.png" data-l10n-name="icon"/>
+        <label id="downloadStatus" data-l10n-name="download-status"/>
       </hbox>
       <hbox id="applying" align="start">
-        <image class="update-throbber"/><label>&update.applying;</label>
+        <image class="update-throbber"/>
+        <label data-l10n-id="update-applying"></label>
       </hbox>
       <hbox id="downloadFailed" align="start">
-        <label>&update.failed.start;</label><label id="failedLink" class="text-link">&update.failed.linkText;</label><label>&update.failed.end;</label>
+        <label data-l10n-id="update-failed-main">
+          <html:a id="failedLink" target="_blank" class="learnMore text-link" data-l10n-name="failed-link-main"></html:a>
+        </label>
         <spacer flex="1"/>
-        <button label="&update.checkForUpdatesButton.label;"
-                accesskey="&update.checkForUpdatesButton.accesskey;"
+        <button data-l10n-id="update-checkForUpdatesButton"
                 oncommand="gAppUpdater.checkForUpdates();"/>
       </hbox>
       <hbox id="policyDisabled" align="start">
-        <label>&update.adminDisabled;</label>
+        <label data-l10n-id="update-adminDisabled"></label>
         <spacer flex="1"/>
-        <button label="&update.checkForUpdatesButton.label;"
-                accesskey="&update.checkForUpdatesButton.accesskey;"
+        <button data-l10n-id="update-checkForUpdatesButton"
                 disabled="true"/>
       </hbox>
       <hbox id="noUpdatesFound" align="start">
         <image class="face-smile"/>
-        <label>&update.noUpdatesFound;</label>
+        <label data-l10n-id="update-noUpdatesFound"></label>
         <spacer flex="1"/>
-        <button label="&update.checkForUpdatesButton.label;"
-                accesskey="&update.checkForUpdatesButton.accesskey;"
+        <button data-l10n-id="update-checkForUpdatesButton"
                 oncommand="gAppUpdater.checkForUpdates();"/>
       </hbox>
       <hbox id="otherInstanceHandlingUpdates" align="start">
-        <label>&update.otherInstanceHandlingUpdates;</label>
+        <label data-l10n-id="update-otherInstanceHandlingUpdates"></label>
         <spacer flex="1"/>
-        <button label="&update.checkForUpdatesButton.label;"
-                accesskey="&update.checkForUpdatesButton.accesskey;"
+        <button data-l10n-id="update-checkForUpdatesButton"
                 disabled="true"/>
       </hbox>
       <hbox id="manualUpdate" align="start">
         <image class="face-sad"/>
-        <description flex="1">
-          <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
+        <description flex="1" data-l10n-id="update-manual">
+          <label id="manualLink" class="text-link" data-l10n-name="manual-link"/>
         </description>
         <spacer flex="1"/>
-        <button label="&update.checkForUpdatesButton.label;"
-                accesskey="&update.checkForUpdatesButton.accesskey;"
+        <button data-l10n-id="update-checkForUpdatesButton"
                 disabled="true"/>
       </hbox>
       <hbox id="unsupportedSystem" align="start">
-        <description flex="1">
-          <label>&update.unsupported.start;</label><label id="unsupportedLink" class="learnMore text-link">&update.unsupported.linkText;</label><label>&update.unsupported.end;</label>
+        <description flex="1" data-l10n-id="update-unsupported">
+          <label id="unsupportedLink" class="learnMore text-link" data-l10n-name="unsupported-link"></label>
         </description>
         <spacer flex="1"/>
-        <button label="&update.checkForUpdatesButton.label;"
-                accesskey="&update.checkForUpdatesButton.accesskey;"
+        <button data-l10n-id="update-checkForUpdatesButton"
                 disabled="true"/>
       </hbox>
       <hbox id="restarting" align="start">
-        <image class="update-throbber"/><label>&update.restarting;</label>
+        <image class="update-throbber"/><label data-l10n-id="update-restarting"></label>
         <spacer flex="1"/>
-        <button label="&update.updateButton.label3;"
-                accesskey="&update.updateButton.accesskey;"
+        <button data-l10n-id="update-updateButton"
                 disabled="true"/>
       </hbox>
     </deck>
