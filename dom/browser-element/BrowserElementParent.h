@@ -23,12 +23,9 @@ class TabParent;
 } // namespace dom
 
 namespace layers {
+class CompositorOptions;
 struct TextureFactoryIdentifier;
 } // namespace layers
-
-namespace layout {
-class PRenderFrameParent;
-} // namespace layout
 
 /**
  * BrowserElementParent implements a portion of the parent-process side of
@@ -95,12 +92,12 @@ public:
   static OpenWindowResult
   OpenWindowOOP(dom::TabParent* aOpenerTabParent,
                 dom::TabParent* aPopupTabParent,
-                layout::PRenderFrameParent* aRenderFrame,
                 const nsAString& aURL,
                 const nsAString& aName,
                 const nsAString& aFeatures,
                 layers::TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                layers::LayersId* aLayersId);
+                layers::LayersId* aLayersId,
+                layers::CompositorOptions* aCompositorOptions);
 
   /**
    * Handle a window.open call from an in-process <iframe mozbrowser>.

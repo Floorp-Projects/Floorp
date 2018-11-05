@@ -8,7 +8,6 @@
 include LayersSurfaces;
 include LayersMessages;
 include protocol PCompositorBridge;
-include protocol PRenderFrame;
 include protocol PTexture;
 
 include "mozilla/GfxMessageUtils.h";

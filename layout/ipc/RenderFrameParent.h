@@ -7,12 +7,13 @@
 #ifndef mozilla_layout_RenderFrameParent_h
 #define mozilla_layout_RenderFrameParent_h
 
+#include "base/process.h"
+
 #include "mozilla/Attributes.h"
 
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/LayersTypes.h"
-#include "mozilla/layout/PRenderFrameParent.h"
 #include "nsDisplayList.h"
 
 class nsFrameLoader;
@@ -27,7 +28,7 @@ struct TextureFactoryIdentifier;
 
 namespace layout {
 
-class RenderFrameParent final : public PRenderFrameParent
+class RenderFrameParent final
 {
   typedef mozilla::layers::CompositorOptions CompositorOptions;
   typedef mozilla::layers::LayerManager LayerManager;
@@ -54,10 +55,10 @@ public:
   bool IsInitialized() const { return mInitialized; }
   bool IsLayersConnected() const { return mLayersConnected; }
 
-protected:
-  void ActorDestroy(ActorDestroyReason why) override;
+  void ActorDestroy();
 
 private:
+  base::ProcessId mTabProcessId;
   // When our child frame is pushing transactions directly to the
   // compositor, this is the ID of its layer tree in the compositor's
   // context.

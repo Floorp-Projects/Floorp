@@ -32,7 +32,6 @@ include protocol PPrinting;
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
 include protocol POfflineCacheUpdate;
-include protocol PRenderFrame;
 include protocol PSpeechSynthesis;
 include protocol PTestShell;
 include protocol PJavaScript;
@@ -1049,7 +1048,6 @@ parent:
 
     async CreateWindow(nullable PBrowser aThisTab,
                        PBrowser aNewTab,
-                       PRenderFrame aRenderFrame,
                        uint32_t aChromeFlags,
                        bool aCalledFromJS,
                        bool aPositionSpecified,

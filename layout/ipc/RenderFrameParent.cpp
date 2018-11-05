@@ -73,14 +73,14 @@ RenderFrameParent::Initialize(nsFrameLoader* aFrameLoader)
     : nullptr;
 
   TabParent* browser = TabParent::GetFrom(aFrameLoader);
-  base::ProcessId pid = browser->Manager()->AsContentParent()->OtherPid();
+  mTabProcessId = browser->Manager()->AsContentParent()->OtherPid();
 
   // Our remote frame will push layers updates to the compositor,
   // and we'll keep an indirect reference to that tree.
   GPUProcessManager* gpm = GPUProcessManager::Get();
   mLayersConnected = gpm->AllocateAndConnectLayerTreeId(
     compositor,
-    pid,
+    mTabProcessId,
     &mLayersId,
     &mCompositorOptions);
 
@@ -138,10 +138,10 @@ RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
 }
 
 void
-RenderFrameParent::ActorDestroy(ActorDestroyReason why)
+RenderFrameParent::ActorDestroy()
 {
   if (mLayersId.IsValid()) {
-    GPUProcessManager::Get()->UnmapLayerTreeId(mLayersId, OtherPid());
+    GPUProcessManager::Get()->UnmapLayerTreeId(mLayersId, mTabProcessId);
   }
 
   mFrameLoader = nullptr;
