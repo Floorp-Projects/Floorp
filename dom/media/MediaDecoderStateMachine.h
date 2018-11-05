@@ -714,6 +714,11 @@ private:
 
   bool mSeamlessLoopingAllowed;
 
+  // If media was in looping and had reached to the end before, then we need
+  // to adjust sample time from clock time to media time.
+  void AdjustByLooping(media::TimeUnit& aTime) const;
+  Maybe<media::TimeUnit> mAudioDecodedDuration;
+
   // Current playback position in the stream in bytes.
   int64_t mPlaybackOffset = 0;
 

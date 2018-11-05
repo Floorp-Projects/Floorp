@@ -401,7 +401,7 @@ public:
     // Calculate the position to seek to when exiting dormant.
     auto t = mMaster->mMediaSink->IsStarted()
       ? mMaster->GetClock() : mMaster->GetMediaTime();
-    Reader()->AdjustByLooping(t);
+    mMaster->AdjustByLooping(t);
     mPendingSeek.mTarget.emplace(t, SeekTarget::Accurate);
     // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
     // need to create the promise even it is not used at all.
@@ -874,6 +874,10 @@ public:
     // so we need to add the last ending time as the offset to correct the
     // audio data time in the next round when seamless looping is enabled.
     mAudioLoopingOffset = mMaster->mDecodedAudioEndTime;
+
+    if (mMaster->mAudioDecodedDuration.isNothing()) {
+      mMaster->mAudioDecodedDuration.emplace(mMaster->mDecodedAudioEndTime);
+    }
 
     SLOG("received EOS when seamless looping, starts seeking");
     Reader()->ResetDecode(TrackInfo::kAudioTrack);
@@ -2079,7 +2083,7 @@ public:
       auto clockTime =
         std::max(mMaster->AudioEndTime(), mMaster->VideoEndTime());
       // Correct the time over the end once looping was turned on.
-      Reader()->AdjustByLooping(clockTime);
+      mMaster->AdjustByLooping(clockTime);
       if (mMaster->mDuration.Ref()->IsInfinite()) {
         // We have a finite duration when playback reaches the end.
         mMaster->mDuration = Some(clockTime);
@@ -3696,7 +3700,7 @@ MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically()
 
     // Once looping was turned on, the time is probably larger than the duration
     // of the media track, so the time over the end should be corrected.
-    mReader->AdjustByLooping(clockTime);
+    AdjustByLooping(clockTime);
     bool loopback = clockTime < GetMediaTime() && mLooping;
 
     // Skip frames up to the frame at the playback position, and figure out
@@ -4199,6 +4203,15 @@ MediaDecoderStateMachine::CancelSuspendTimer()
     mOnPlaybackEvent.Notify(MediaPlaybackEvent::CancelVideoSuspendTimer);
   }
   mVideoDecodeSuspendTimer.Reset();
+}
+
+void
+MediaDecoderStateMachine::AdjustByLooping(media::TimeUnit& aTime) const
+{
+  MOZ_ASSERT(OnTaskQueue());
+  if (mAudioDecodedDuration.isSome() && mAudioDecodedDuration.ref().IsPositive()) {
+    aTime = aTime % mAudioDecodedDuration.ref().ToMicroseconds();
+  }
 }
 
 } // namespace mozilla
