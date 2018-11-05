@@ -1481,7 +1481,7 @@ FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel) const
     nsAutoString origin;
     if (NS_SUCCEEDED(nsContentUtils::GetUTFOrigin(mPrincipal, origin))) {
       DebugOnly<nsresult> rv =
-        aChannel->SetRequestHeader(NS_LITERAL_CSTRING("origin"),
+        aChannel->SetRequestHeader(nsDependentCString(net::nsHttp::Origin),
                                    NS_ConvertUTF16toUTF8(origin),
                                    false /* merge */);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
