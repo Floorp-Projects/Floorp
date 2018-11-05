@@ -83,7 +83,51 @@ impl DocumentView {
 #[derive(Copy, Clone, Hash, PartialEq, PartialOrd, Debug, Eq, Ord)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct FrameId(pub u32);
+pub struct FrameId(usize);
+
+impl FrameId {
+    /// Returns an invalid sentinel FrameId, which will always compare less than
+    /// any valid FrameId.
+    pub fn invalid() -> Self {
+        FrameId(0)
+    }
+
+    /// Returns a FrameId corresponding to the first frame.
+    ///
+    /// Note that we use 0 as the internal id here because the current code
+    /// increments the frame id at the beginning of the frame, rather than
+    /// at the end, and we want the first frame to be 1. It would probably
+    /// be sensible to move the advance() call to after frame-building, and
+    /// then make this method return FrameId(1).
+    pub fn first() -> Self {
+        FrameId(0)
+    }
+
+    /// Returns the backing usize for this FrameId.
+    pub fn as_usize(&self) -> usize {
+        self.0
+    }
+
+    /// Advances this FrameId to the next frame.
+    fn advance(&mut self) {
+        self.0 += 1;
+    }
+}
+
+impl ::std::ops::Add<usize> for FrameId {
+    type Output = Self;
+    fn add(self, other: usize) -> FrameId {
+        FrameId(self.0 + other)
+    }
+}
+
+impl ::std::ops::Sub<usize> for FrameId {
+    type Output = Self;
+    fn sub(self, other: usize) -> FrameId {
+        assert!(self.0 >= other, "Underflow subtracting FrameIds");
+        FrameId(self.0 - other)
+    }
+}
 
 // A collection of resources that are shared by clips, primitives
 // between display lists.
@@ -172,7 +216,7 @@ impl Document {
                 device_pixel_ratio: default_device_pixel_ratio,
             },
             clip_scroll_tree: ClipScrollTree::new(),
-            frame_id: FrameId(0),
+            frame_id: FrameId::first(),
             frame_builder: None,
             output_pipelines: FastHashSet::default(),
             hit_tester: None,
@@ -301,6 +345,9 @@ impl Document {
         let accumulated_scale_factor = self.view.accumulated_scale_factor();
         let pan = self.view.pan.to_f32() / accumulated_scale_factor;
 
+        assert!(self.frame_id != FrameId::invalid(),
+                "First frame increment must happen before build_frame()");
+
         let frame = {
             let frame_builder = self.frame_builder.as_mut().unwrap();
             let frame = frame_builder.build(
@@ -402,7 +449,7 @@ impl Document {
         self.clip_scroll_tree.finalize_and_apply_pending_scroll_offsets(old_scrolling_states);
 
         // Advance to the next frame.
-        self.frame_id.0 += 1;
+        self.frame_id.advance();
     }
 }
 
@@ -1482,7 +1529,7 @@ impl RenderBackend {
                 removed_pipelines: Vec::new(),
                 view: view.clone(),
                 clip_scroll_tree: ClipScrollTree::new(),
-                frame_id: FrameId(0),
+                frame_id: FrameId::first(),
                 frame_builder: Some(FrameBuilder::empty()),
                 output_pipelines: FastHashSet::default(),
                 dynamic_properties: SceneProperties::new(),

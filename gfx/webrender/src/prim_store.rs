@@ -1814,7 +1814,7 @@ impl PrimitiveInstance {
             combined_local_clip_rect: LayoutRect::zero(),
             clipped_world_rect: None,
             #[cfg(debug_assertions)]
-            prepared_frame_id: FrameId(0),
+            prepared_frame_id: FrameId::invalid(),
             #[cfg(debug_assertions)]
             id: PrimitiveDebugId(NEXT_PRIM_ID.fetch_add(1, Ordering::Relaxed)),
             clip_task_id: None,
