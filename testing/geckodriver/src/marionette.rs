@@ -39,7 +39,7 @@ use webdriver::command::WebDriverCommand::{AcceptAlert, AddCookie, CloseWindow, 
 use webdriver::command::{ActionsParameters, AddCookieParameters, GetNamedCookieParameters,
                          GetParameters, JavascriptCommandParameters, LocatorParameters,
                          NewSessionParameters, SwitchToFrameParameters, SwitchToWindowParameters,
-                         TakeScreenshotParameters, TimeoutsParameters, WindowRectParameters};
+                         TimeoutsParameters, WindowRectParameters};
 use webdriver::command::{WebDriverCommand, WebDriverMessage};
 use webdriver::common::{Cookie, FrameId, WebElement, ELEMENT_KEY, FRAME_KEY, WINDOW_KEY};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
@@ -919,8 +919,7 @@ impl MarionetteCommand {
             SwitchToWindow(ref x) => (Some("WebDriver:SwitchToWindow"), Some(x.to_marionette())),
             TakeElementScreenshot(ref e) => {
                 let mut data = Map::new();
-                data.insert("element".to_string(), serde_json::to_value(e)?);
-                // data.insert("id".to_string(), e.id.to_json());
+                data.insert("id".to_string(), Value::String(e.id.clone()));
                 data.insert("highlights".to_string(), Value::Array(vec![]));
                 data.insert("full".to_string(), Value::Bool(false));
                 (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
@@ -1446,18 +1445,6 @@ impl ToMarionette for SwitchToWindowParameters {
             "name".to_string(),
             serde_json::to_value(self.handle.clone())?,
         );
-        Ok(data)
-    }
-}
-
-impl ToMarionette for TakeScreenshotParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        let mut data = Map::new();
-        let element = match self.element {
-            None => Value::Null,
-            Some(ref x) => Value::Object(try!(x.to_marionette())),
-        };
-        data.insert("element".to_string(), element);
         Ok(data)
     }
 }
