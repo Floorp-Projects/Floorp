@@ -61,7 +61,7 @@ add_task(taskWithNewTab(async function test_disabled_ac() {
   let suggestBookmarks = Preferences.get("browser.urlbar.suggest.bookmark");
   Preferences.set("browser.urlbar.suggest.bookmark", false);
   let suggestOpenPages = Preferences.get("browser.urlbar.suggest.openpage");
-  Preferences.set("browser.urlbar.suggest.openpages", false);
+  Preferences.set("browser.urlbar.suggest.openpage", false);
 
   Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
                                        "http://example.com/?q={searchTerms}");
