@@ -162,8 +162,8 @@ ProfileBufferCollector::CollectProfilingStackFrame(const js::ProfilingStackFrame
 {
   // WARNING: this function runs within the profiler's "critical section".
 
-  MOZ_ASSERT(aFrame.kind() == js::ProfilingStackFrame::Kind::LABEL ||
-             aFrame.kind() == js::ProfilingStackFrame::Kind::JS_NORMAL);
+  MOZ_ASSERT(aFrame.isLabelFrame() ||
+             (aFrame.isJSFrame() && !aFrame.isOSRFrame()));
 
   const char* label = aFrame.label();
   const char* dynamicString = aFrame.dynamicString();
