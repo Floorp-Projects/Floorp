@@ -173,6 +173,8 @@ JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm)
 
         // Reserve frame.
         masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
+
+        masm.touchFrameValues(reg_osrNStack, ScratchReg2, BaselineFrameReg);
         masm.moveStackPtrTo(BaselineFrameReg);
 
         // Reserve space for locals and stack values.

@@ -1216,75 +1216,66 @@ public:
     return mPromise.forget();
   }
 
-  void Resolve(const typename PromiseType::ResolveValueType& aResolveValue,
-               const char* aMethodName)
+  template<typename ResolveValueType_>
+  void Resolve(ResolveValueType_&& aResolveValue, const char* aMethodName)
   {
     if (mMonitor) {
       mMonitor->AssertCurrentThreadOwns();
     }
     MOZ_ASSERT(mPromise);
-    mPromise->Resolve(aResolveValue, aMethodName);
-    mPromise = nullptr;
-  }
-  void Resolve(typename PromiseType::ResolveValueType&& aResolveValue,
-               const char* aMethodName)
-  {
-    if (mMonitor) {
-      mMonitor->AssertCurrentThreadOwns();
-    }
-    MOZ_ASSERT(mPromise);
-    mPromise->Resolve(std::move(aResolveValue), aMethodName);
+    mPromise->Resolve(std::forward<ResolveValueType_>(aResolveValue),
+                      aMethodName);
     mPromise = nullptr;
   }
 
-  void ResolveIfExists(const typename PromiseType::ResolveValueType& aResolveValue,
+  template<typename ResolveValueType_>
+  void ResolveIfExists(ResolveValueType_&& aResolveValue,
                        const char* aMethodName)
   {
     if (!IsEmpty()) {
-      Resolve(aResolveValue, aMethodName);
+      Resolve(std::forward<ResolveValueType_>(aResolveValue), aMethodName);
     }
   }
-  void ResolveIfExists(typename PromiseType::ResolveValueType&& aResolveValue,
+
+  template<typename RejectValueType_>
+  void Reject(RejectValueType_&& aRejectValue, const char* aMethodName)
+  {
+    if (mMonitor) {
+      mMonitor->AssertCurrentThreadOwns();
+    }
+    MOZ_ASSERT(mPromise);
+    mPromise->Reject(std::forward<RejectValueType_>(aRejectValue), aMethodName);
+    mPromise = nullptr;
+  }
+
+  template<typename RejectValueType_>
+  void RejectIfExists(RejectValueType_&& aRejectValue, const char* aMethodName)
+  {
+    if (!IsEmpty()) {
+      Reject(std::forward<RejectValueType_>(aRejectValue), aMethodName);
+    }
+  }
+
+  template<typename ResolveOrRejectValueType_>
+  void ResolveOrReject(ResolveOrRejectValueType_&& aValue,
                        const char* aMethodName)
   {
-    if (!IsEmpty()) {
-      Resolve(std::move(aResolveValue), aMethodName);
-    }
-  }
-
-  void Reject(const typename PromiseType::RejectValueType& aRejectValue,
-              const char* aMethodName)
-  {
     if (mMonitor) {
       mMonitor->AssertCurrentThreadOwns();
     }
     MOZ_ASSERT(mPromise);
-    mPromise->Reject(aRejectValue, aMethodName);
-    mPromise = nullptr;
-  }
-  void Reject(typename PromiseType::RejectValueType&& aRejectValue,
-              const char* aMethodName)
-  {
-    if (mMonitor) {
-      mMonitor->AssertCurrentThreadOwns();
-    }
-    MOZ_ASSERT(mPromise);
-    mPromise->Reject(std::move(aRejectValue), aMethodName);
+    mPromise->ResolveOrReject(std::forward<ResolveOrRejectValueType_>(aValue),
+                              aMethodName);
     mPromise = nullptr;
   }
 
-  void RejectIfExists(const typename PromiseType::RejectValueType& aRejectValue,
-                      const char* aMethodName)
+  template<typename ResolveOrRejectValueType_>
+  void ResolveOrRejectIfExists(ResolveOrRejectValueType_&& aValue,
+                               const char* aMethodName)
   {
     if (!IsEmpty()) {
-      Reject(aRejectValue, aMethodName);
-    }
-  }
-  void RejectIfExists(typename PromiseType::RejectValueType&& aRejectValue,
-                      const char* aMethodName)
-  {
-    if (!IsEmpty()) {
-      Reject(std::move(aRejectValue), aMethodName);
+      ResolveOrReject(std::forward<ResolveOrRejectValueType_>(aValue),
+                      aMethodName);
     }
   }
 

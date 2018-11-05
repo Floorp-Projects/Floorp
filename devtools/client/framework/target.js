@@ -115,6 +115,9 @@ const TargetFactory = exports.TargetFactory = {
     if (targetPromise == null) {
       const target = new TabTarget(options);
       targetPromise = target.attach().then(() => target);
+      targetPromise.catch(e => {
+        console.error("Exception while attaching target", e);
+      });
       promiseTargets.set(options, targetPromise);
     }
     return targetPromise;
@@ -228,13 +231,7 @@ function TabTarget({ form, client, chrome, tab = null }) {
   if (this._form.traits && ("isBrowsingContext" in this._form.traits)) {
     this._isBrowsingContext = this._form.traits.isBrowsingContext;
   } else {
-    // browser content toolbox's form will be of the form:
-    //   server0.conn0.content-process0/contentProcessTarget7
-    // while xpcshell debugging will be:
-    //   server1.conn0.contentProcessTarget7
-    const isContentProcessTarget =
-      this._form.actor.match(/conn\d+\.(content-process\d+\/)?contentProcessTarget\d+/);
-    this._isBrowsingContext = !this.isLegacyAddon && !isContentProcessTarget;
+    this._isBrowsingContext = !this.isLegacyAddon && !this.isContentProcess;
   }
 
   // Cache of already created targed-scoped fronts
@@ -453,6 +450,15 @@ TabTarget.prototype = {
     ));
   },
 
+  get isContentProcess() {
+    // browser content toolbox's form will be of the form:
+    //   server0.conn0.content-process0/contentProcessTarget7
+    // while xpcshell debugging will be:
+    //   server1.conn0.contentProcessTarget7
+    return !!(this._form && this._form.actor &&
+      this._form.actor.match(/conn\d+\.(content-process\d+\/)?contentProcessTarget\d+/));
+  },
+
   get isLocalTab() {
     return !!this._tab;
   },
@@ -515,7 +521,7 @@ TabTarget.prototype = {
     }
 
     // Attach the target actor
-    const attachTarget = async () => {
+    const attachBrowsingContextTarget = async () => {
       const [response, targetFront] = await this._client.attachTarget(this._form.actor);
       this.activeTab = targetFront;
       this.threadActor = response.threadActor;
@@ -556,11 +562,20 @@ TabTarget.prototype = {
         this._title = form.title;
       }
 
-      // AddonActor and chrome debugging on RootActor don't inherit from
+      // AddonTargetActor and ContentProcessTargetActor don't inherit from
       // BrowsingContextTargetActor (i.e. this.isBrowsingContext=false) and don't need
-      // to be attached.
+      // to be attached via DebuggerClient.attachTarget.
       if (this.isBrowsingContext) {
-        await attachTarget();
+        await attachBrowsingContextTarget();
+      } else if (this.isContentProcess) {
+        // But ContentProcessTargetActor now has a front that is instantiated here
+        this.activeTab = await this._client.attachContentProcessTarget(this._form);
+      } else if (this.isLegacyAddon) {
+        const [, addonTargetFront] = await this._client.attachAddon(this._form);
+        this.activeTab = addonTargetFront;
+      } else {
+        throw new Error(`Unsupported type of target. Expected target of one of the` +
+          ` following types: BrowsingContext, ContentProcess, or Addon (legacy).`);
       }
 
       // _setupRemoteListeners has to be called after the potential call to `attachTarget`

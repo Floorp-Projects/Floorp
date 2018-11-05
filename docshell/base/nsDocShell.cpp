@@ -449,44 +449,70 @@ nsDocShell::~nsDocShell()
 #endif
 }
 
-nsresult
-nsDocShell::Init()
+/* static */ already_AddRefed<nsDocShell>
+nsDocShell::Create(BrowsingContext* aBrowsingContext)
 {
-  MOZ_ASSERT(!mIsBeingDestroyed);
+  MOZ_ASSERT(aBrowsingContext, "DocShell without a BrowsingContext!");
 
-  nsresult rv = nsDocLoader::Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
+  RefPtr<nsDocShell> ds = new nsDocShell();
+  ds->mBrowsingContext = aBrowsingContext;
 
-  NS_ASSERTION(mLoadGroup, "Something went wrong!");
+  // Initialize the underlying nsDocLoader.
+  rv = ds->nsDocLoader::Init();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
 
-  mContentListener = new nsDSURIContentListener(this);
-  rv = mContentListener->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Create our ContentListener
+  ds->mContentListener = new nsDSURIContentListener(ds);
+  rv = ds->mContentListener->Init();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
 
   // If parent intercept is not enabled then we must forward to
   // the network controller from docshell.  We also enable if we're
   // in the parent process in order to support non-e10s configurations.
   if (!ServiceWorkerParentInterceptEnabled() || XRE_IsParentProcess()) {
-    mInterceptController = new ServiceWorkerInterceptController();
+    ds->mInterceptController = new ServiceWorkerInterceptController();
   }
 
   // We want to hold a strong ref to the loadgroup, so it better hold a weak
   // ref to us...  use an InterfaceRequestorProxy to do this.
-  nsCOMPtr<nsIInterfaceRequestor> proxy =
-    new InterfaceRequestorProxy(static_cast<nsIInterfaceRequestor*>(this));
-  mLoadGroup->SetNotificationCallbacks(proxy);
+  nsCOMPtr<nsIInterfaceRequestor> proxy = new InterfaceRequestorProxy(ds);
+  ds->mLoadGroup->SetNotificationCallbacks(proxy);
 
-  rv = nsDocLoader::AddDocLoaderAsChildOfRoot(this);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // XXX(nika): We have our BrowsingContext, so we might be able to skip this.
+  // It could be nice to directly set up our DocLoader tree?
+  rv = nsDocLoader::AddDocLoaderAsChildOfRoot(ds);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
 
-  mBrowsingContext = BrowsingContext::Create(this);
+  // Add |ds| as a progress listener to itself.  A little weird, but simpler
+  // than reproducing all the listener-notification logic in overrides of the
+  // various methods via which nsDocLoader can be notified.   Note that this
+  // holds an nsWeakPtr to |ds|, so it's ok.
+  rv = ds->AddProgressListener(ds,
+                               nsIWebProgress::NOTIFY_STATE_DOCUMENT |
+                                 nsIWebProgress::NOTIFY_STATE_NETWORK);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
 
-  // Add as |this| a progress listener to itself.  A little weird, but
-  // simpler than reproducing all the listener-notification logic in
-  // overrides of the various methods via which nsDocLoader can be
-  // notified.   Note that this holds an nsWeakPtr to ourselves, so it's ok.
-  return AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT |
-                                     nsIWebProgress::NOTIFY_STATE_NETWORK);
+  // Set our DocShellTreeItem type based on our BrowsingContext
+  ds->SetItemType(aBrowsingContext->IsContent() ? typeContent : typeChrome);
+
+  // If our parent is present in this process, set up our parent now.
+  RefPtr<BrowsingContext> parent = aBrowsingContext->GetParent();
+  if (parent && parent->GetDocShell()) {
+    parent->GetDocShell()->AddChild(ds);
+  }
+
+  // Make |ds| the primary DocShell for the given context.
+  aBrowsingContext->SetDocShell(ds);
+  return ds.forget();
 }
 
 void
@@ -3501,8 +3527,6 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild)
     return NS_OK;
   }
 
-  childAsDocShell->AttachBrowsingContext(this);
-
   // charset, style-disabling, and zoom will be inherited in SetupNewViewer()
 
   // Now take this document's charset and set the child's parentCharset field
@@ -3564,11 +3588,6 @@ nsDocShell::RemoveChild(nsIDocShellTreeItem* aChild)
 
   nsresult rv = RemoveChildLoader(childAsDocLoader);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDocShell> childAsDocShell(do_QueryInterface(aChild));
-  if (childAsDocShell) {
-    childAsDocShell->DetachBrowsingContext();
-  }
 
   aChild->SetTreeOwner(nullptr);
 
@@ -4101,6 +4120,9 @@ nsDocShell::LoadURI(const nsAString& aURI,
                     nsIInputStream* aHeaderStream,
                     nsIPrincipal* aTriggeringPrincipal)
 {
+#ifndef ANDROID
+  MOZ_ASSERT(aTriggeringPrincipal, "LoadURI: Need a valid triggeringPrincipal");
+#endif
   return LoadURIWithOptions(aURI, aLoadFlags, aReferringURI,
                             RP_Unset, aPostStream,
                             aHeaderStream, nullptr, aTriggeringPrincipal);
@@ -4135,6 +4157,11 @@ nsDocShell::LoadURIWithOptions(const nsAString& aURI,
   // Eliminate embedded newlines, which single-line text fields now allow:
   uriString.StripCRLF();
   NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
+
+#ifndef ANDROID
+  MOZ_ASSERT(aTriggeringPrincipal, "LoadURIWithOptions: Need a valid triggeringPrincipal");
+#endif
+
 
   rv = NS_NewURI(getter_AddRefs(uri), uriString);
   if (uri) {
@@ -7776,6 +7803,14 @@ nsDocShell::BeginRestore(nsIContentViewer* aContentViewer, bool aTop)
     }
   }
 
+  // When re-attaching browsing context, a mozbrowser docshell will be
+  // considered as top level, but its browsing context will have a
+  // parent.
+  MOZ_DIAGNOSTIC_ASSERT(
+    (aTop && !mBrowsingContext->GetParent()) ||
+    ((!aTop || GetIsMozBrowser()) && mBrowsingContext->GetParent()));
+  mBrowsingContext->Attach();
+
   if (!aTop) {
     // This point corresponds to us having gotten OnStartRequest or
     // STATE_START, so do the same thing that CreateContentViewer does at
@@ -9031,6 +9066,9 @@ public:
   NS_IMETHOD
   Run() override
   {
+#ifndef ANDROID
+    MOZ_ASSERT(mTriggeringPrincipal, "InternalLoadEvent: Should always have a principal here");
+#endif
     return mDocShell->InternalLoad(mURI, mOriginalURI, mResultPrincipalURI,
                                    mKeepResultPrincipalURIIfSet,
                                    mLoadReplace,
@@ -13107,6 +13145,9 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
                         bool aIsTrusted,
                         nsIPrincipal* aTriggeringPrincipal)
 {
+#ifndef ANDROID
+  MOZ_ASSERT(aTriggeringPrincipal, "Need a valid triggeringPrincipal");
+#endif
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
   if (!IsNavigationAllowed() || !IsOKToLoadURI(aURI)) {
@@ -14079,11 +14120,10 @@ nsDocShell::IsForceReloading()
   return IsForceReloadType(mLoadType);
 }
 
-already_AddRefed<BrowsingContext>
+BrowsingContext*
 nsDocShell::GetBrowsingContext() const
 {
-  RefPtr<BrowsingContext> browsingContext = mBrowsingContext;
-  return browsingContext.forget();
+  return mBrowsingContext;
 }
 
 NS_IMETHODIMP
@@ -14091,25 +14131,4 @@ nsDocShell::GetBrowsingContext(BrowsingContext** aBrowsingContext)
 {
   *aBrowsingContext = do_AddRef(mBrowsingContext).take();
   return NS_OK;
-}
-
-void
-nsIDocShell::AttachBrowsingContext(nsIDocShell* aParentDocShell)
-{
-  RefPtr<BrowsingContext> childContext =
-    nsDocShell::Cast(this)->GetBrowsingContext();
-  RefPtr<BrowsingContext> parentContext;
-  if (aParentDocShell) {
-    parentContext =
-      nsDocShell::Cast(aParentDocShell)->GetBrowsingContext();
-  }
-  childContext->Attach(parentContext);
-}
-
-void
-nsIDocShell::DetachBrowsingContext()
-{
-  RefPtr<BrowsingContext> browsingContext =
-    nsDocShell::Cast(this)->GetBrowsingContext();
-  browsingContext->Detach();
 }

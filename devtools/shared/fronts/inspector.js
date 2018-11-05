@@ -8,6 +8,7 @@ const telemetry = new Telemetry();
 const TELEMETRY_EYEDROPPER_OPENED = "DEVTOOLS_EYEDROPPER_OPENED_COUNT";
 const TELEMETRY_EYEDROPPER_OPENED_MENU = "DEVTOOLS_MENU_EYEDROPPER_OPENED_COUNT";
 const SHOW_ALL_ANONYMOUS_CONTENT_PREF = "devtools.inspector.showAllAnonymousContent";
+const SHOW_UA_SHADOW_ROOTS_PREF = "devtools.inspector.showUserAgentShadowRoots";
 
 const {
   Front,
@@ -478,7 +479,12 @@ var InspectorFront = FrontClassWithSpec(inspectorSpec, {
   _getWalker: async function() {
     const showAllAnonymousContent = Services.prefs.getBoolPref(
       SHOW_ALL_ANONYMOUS_CONTENT_PREF);
-    this.walker = await this.getWalker({ showAllAnonymousContent });
+    const showUserAgentShadowRoots = Services.prefs.getBoolPref(
+      SHOW_UA_SHADOW_ROOTS_PREF);
+    this.walker = await this.getWalker({
+      showAllAnonymousContent,
+      showUserAgentShadowRoots,
+    });
   },
 
   _getHighlighter: async function() {

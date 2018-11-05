@@ -6122,9 +6122,8 @@ ContentParent::RecvAttachBrowsingContext(
   }
 
   if (!child) {
-    child = ChromeBrowsingContext::Create(aChildId, aName, ChildID());
+    child = BrowsingContext::CreateFromIPC(parent, aName, (uint64_t)aChildId, this);
   }
-  child->Attach(parent);
 
   return IPC_OK();
 }

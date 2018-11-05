@@ -72,6 +72,7 @@ class FirefoxDataProvider {
       fromCache,
       fromServiceWorker,
       isThirdPartyTrackingResource,
+      referrerPolicy,
     } = data;
 
     if (this.actionsEnabled && this.actions.addRequest) {
@@ -91,6 +92,7 @@ class FirefoxDataProvider {
         fromCache,
         fromServiceWorker,
         isThirdPartyTrackingResource,
+        referrerPolicy,
       }, true);
     }
 
@@ -326,6 +328,7 @@ class FirefoxDataProvider {
       },
       startedDateTime,
       isThirdPartyTrackingResource,
+      referrerPolicy,
     } = networkInfo;
 
     await this.addRequest(actor, {
@@ -337,6 +340,7 @@ class FirefoxDataProvider {
       startedDateTime,
       url,
       isThirdPartyTrackingResource,
+      referrerPolicy,
     });
 
     this.emit(EVENTS.NETWORK_EVENT, actor);

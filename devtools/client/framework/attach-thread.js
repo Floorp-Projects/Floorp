@@ -37,7 +37,6 @@ function handleThreadState(toolbox, event, packet) {
 
 function attachThread(toolbox) {
   const target = toolbox.target;
-  const { form: { chromeDebugger, actor } } = target;
 
   const useSourceMaps = false;
   const autoBlackBox = false;
@@ -83,17 +82,11 @@ function attachThread(toolbox) {
       });
     };
 
-    if (target.isBrowsingContext) {
-      // Attaching a tab, a browser process, or a WebExtensions add-on.
+    if (target.activeTab) {
       target.activeTab.attachThread(threadOptions).then(handleResponse);
-    } else if (target.isAddon) {
-      // Attaching a legacy addon.
-      target.client.attachAddon(actor).then(([res]) => {
-        target.client.attachThread(res.threadActor).then(handleResponse);
-      });
     } else {
-      // Attaching an old browser debugger or a content process.
-      target.client.attachThread(chromeDebugger).then(handleResponse);
+      // Now, all targets should have a front set on activeTab attribute.
+      throw new Error("Target is missing an activeTab attribute");
     }
   });
 }

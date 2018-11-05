@@ -6,23 +6,18 @@
 
 #include "ChromeBrowsingContext.h"
 
+#include "mozilla/dom/ContentParent.h"
+
 namespace mozilla {
 namespace dom {
 
-ChromeBrowsingContext::ChromeBrowsingContext(uint64_t aBrowsingContextId,
+ChromeBrowsingContext::ChromeBrowsingContext(BrowsingContext* aParent,
                                              const nsAString& aName,
-                                             uint64_t aProcessId)
-  : BrowsingContext(aBrowsingContextId, aName)
+                                             uint64_t aBrowsingContextId,
+                                             uint64_t aProcessId,
+                                             BrowsingContext::Type aType)
+  : BrowsingContext(aParent, aName, aBrowsingContextId, aType)
   , mProcessId(aProcessId)
-{
-  // You are only ever allowed to create ChromeBrowsingContexts in the
-  // parent process.
-  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
-}
-
-ChromeBrowsingContext::ChromeBrowsingContext(nsIDocShell* aDocShell)
-  : BrowsingContext(aDocShell)
-  , mProcessId(0)
 {
   // You are only ever allowed to create ChromeBrowsingContexts in the
   // parent process.
@@ -61,13 +56,11 @@ ChromeBrowsingContext::Cast(BrowsingContext* aContext)
   return static_cast<ChromeBrowsingContext*>(aContext);
 }
 
-/* static */ already_AddRefed<ChromeBrowsingContext>
-ChromeBrowsingContext::Create(
-  uint64_t aBrowsingContextId,
-  const nsAString& aName,
-  uint64_t aProcessId)
+/* static */ const ChromeBrowsingContext*
+ChromeBrowsingContext::Cast(const BrowsingContext* aContext)
 {
-  return do_AddRef(new ChromeBrowsingContext(aBrowsingContextId, aName, aProcessId));
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+  return static_cast<const ChromeBrowsingContext*>(aContext);
 }
 
 } // namespace dom

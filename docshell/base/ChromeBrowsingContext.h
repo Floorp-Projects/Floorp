@@ -27,10 +27,7 @@ public:
   static void CleanupContexts(uint64_t aProcessId);
   static already_AddRefed<ChromeBrowsingContext> Get(uint64_t aId);
   static ChromeBrowsingContext* Cast(BrowsingContext* aContext);
-  static already_AddRefed<ChromeBrowsingContext> Create(
-    uint64_t aBrowsingContextId,
-    const nsAString& aName,
-    uint64_t aProcessId);
+  static const ChromeBrowsingContext* Cast(const BrowsingContext* aContext);
 
   bool IsOwnedByProcess(uint64_t aProcessId) const
   {
@@ -40,15 +37,18 @@ public:
 protected:
   void Traverse(nsCycleCollectionTraversalCallback& cb) {}
   void Unlink() {}
-  ChromeBrowsingContext(uint64_t aBrowsingContextId,
+
+  using Type = BrowsingContext::Type;
+  ChromeBrowsingContext(BrowsingContext* aParent,
                         const nsAString& aName,
-                        uint64_t aProcessId);
+                        uint64_t aBrowsingContextId,
+                        uint64_t aProcessId,
+                        Type aType = Type::Chrome);
 
 private:
   friend class BrowsingContext;
 
-  explicit ChromeBrowsingContext(nsIDocShell* aDocShell);
-
+  // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
   // Indicates which process owns the docshell.
   uint64_t mProcessId;
 };

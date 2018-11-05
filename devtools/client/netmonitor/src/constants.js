@@ -147,6 +147,7 @@ const UPDATE_PROPS = [
   "formDataSections",
   "stacktrace",
   "isThirdPartyTrackingResource",
+  "referrerPolicy",
 ];
 
 const PANELS = {
