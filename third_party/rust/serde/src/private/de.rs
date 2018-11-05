@@ -231,8 +231,8 @@ mod content {
 
     use super::size_hint;
     use de::{
-        self, Deserialize, DeserializeSeed, Deserializer, EnumAccess, Expected, MapAccess,
-        SeqAccess, Unexpected, Visitor,
+        self, Deserialize, DeserializeSeed, Deserializer, EnumAccess, Expected, IgnoredAny,
+        MapAccess, SeqAccess, Unexpected, Visitor,
     };
 
     /// Used from generated code to buffer the contents of the Deserializer when
@@ -832,8 +832,8 @@ mod content {
     }
 
     impl<'de, T> TaggedContentVisitor<'de, T> {
-        /// Visitor for the content of an internally tagged enum with the given tag
-        /// name.
+        /// Visitor for the content of an internally tagged enum with the given
+        /// tag name.
         pub fn new(name: &'static str) -> Self {
             TaggedContentVisitor {
                 tag_name: name,
@@ -1075,8 +1075,8 @@ mod content {
         Ok(value)
     }
 
-    /// Used when deserializing an internally tagged enum because the content will
-    /// be used exactly once.
+    /// Used when deserializing an internally tagged enum because the content
+    /// will be used exactly once.
     impl<'de, E> Deserializer<'de> for ContentDeserializer<'de, E>
     where
         E: de::Error,
@@ -1790,8 +1790,8 @@ mod content {
         Ok(value)
     }
 
-    /// Used when deserializing an untagged enum because the content may need to be
-    /// used more than once.
+    /// Used when deserializing an untagged enum because the content may need
+    /// to be used more than once.
     impl<'de, 'a, E> Deserializer<'de> for ContentRefDeserializer<'a, 'de, E>
     where
         E: de::Error,
@@ -2470,10 +2470,11 @@ mod content {
             Ok(())
         }
 
-        fn visit_map<M>(self, _: M) -> Result<(), M::Error>
+        fn visit_map<M>(self, mut access: M) -> Result<(), M::Error>
         where
             M: MapAccess<'de>,
         {
+            while let Some(_) = try!(access.next_entry::<IgnoredAny, IgnoredAny>()) {}
             Ok(())
         }
     }
@@ -2915,18 +2916,17 @@ where
     where
         T: DeserializeSeed<'de>,
     {
-        match self.iter.next() {
-            Some(item) => {
+        while let Some(item) = self.iter.next() {
+            if let Some((ref key, ref content)) = *item {
                 // Do not take(), instead borrow this entry. The internally tagged
                 // enum does its own buffering so we can't tell whether this entry
                 // is going to be consumed. Borrowing here leaves the entry
                 // available for later flattened fields.
-                let (ref key, ref content) = *item.as_ref().unwrap();
                 self.pending = Some(content);
-                seed.deserialize(ContentRefDeserializer::new(key)).map(Some)
+                return seed.deserialize(ContentRefDeserializer::new(key)).map(Some);
             }
-            None => Ok(None),
         }
+        Ok(None)
     }
 
     fn next_value_seed<T>(&mut self, seed: T) -> Result<T::Value, Self::Error>
