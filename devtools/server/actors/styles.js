@@ -1566,11 +1566,11 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // Otherwise, use the incoming value string.
         const value = change.newName ? prevValue : newValue;
 
-        data.add = { property: name, value };
+        data.add = { [name]: value };
         // If there is a previous value, log its removal together with the previous
         // property name. Using the previous name handles the case for renaming a property
         // and is harmless when updating an existing value (the name stays the same).
-        data.remove = prevValue ? { property: prevName, value: prevValue } : null;
+        data.remove = prevValue ? { [prevName]: prevValue } : null;
 
         // When toggling a declaration from OFF to ON, if not renaming the property,
         // do not mark the previous declaration for removal, otherwise the add and
@@ -1584,7 +1584,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
 
       case "remove":
         data.add = null;
-        data.remove = { property: change.name, value: prevValue };
+        data.remove = { [change.name]: prevValue };
         break;
     }
 
