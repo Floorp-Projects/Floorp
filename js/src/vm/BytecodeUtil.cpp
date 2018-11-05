@@ -1610,10 +1610,12 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
         }
         break;
 
+      case JOF_ARGC:
       case JOF_UINT16:
         i = (int)GET_UINT16(pc);
         goto print_int;
 
+      case JOF_RESUMEINDEX:
       case JOF_UINT24:
         MOZ_ASSERT(len == 4);
         i = (int)GET_UINT24(pc);

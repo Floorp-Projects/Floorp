@@ -44,7 +44,7 @@ const defaultDetails = {
 const defaultOptions = {
   requestPayerName: true,
   requestPayerEmail: false,
-  reqeustPayerPhone: false,
+  requestPayerPhone: false,
   requestShipping: true,
   shippingType: "shipping"
 };

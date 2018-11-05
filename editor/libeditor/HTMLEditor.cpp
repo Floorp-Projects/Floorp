@@ -3240,8 +3240,8 @@ HTMLEditor::SetHTMLBackgroundColorWithTransaction(const nsAString& aColor)
     // web apps can select <tr> and <td> at same time. With <table>, looks
     // odd, though.
     if (isCellSelected ||
-        cellOrRowOrTableElement->IsAnyOfHTMLElements(nsGkAtoms::table,
-                                                    nsGkAtoms::tr)) {
+        rootElementOfBackgroundColor->IsAnyOfHTMLElements(nsGkAtoms::table,
+                                                          nsGkAtoms::tr)) {
       IgnoredErrorResult ignoredError;
       RefPtr<Element> cellElement =
         GetFirstSelectedTableCellElement(ignoredError);

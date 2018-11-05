@@ -269,6 +269,7 @@ RenderThread::HandleFrame(wr::WindowId aWindowId, bool aRender)
 
   TimeStamp startTime;
 
+  bool hadSlowFrame;
   { // scope lock
     MutexAutoLock lock(mFrameCountMapLock);
     auto it = mWindowInfos.find(AsUint64(aWindowId));
@@ -276,9 +277,11 @@ RenderThread::HandleFrame(wr::WindowId aWindowId, bool aRender)
     WindowInfo* info = it->second;
     MOZ_ASSERT(info->mPendingCount > 0);
     startTime = info->mStartTimes.front();
+    hadSlowFrame = info->mHadSlowFrame;
+    info->mHadSlowFrame = false;
   }
 
-  UpdateAndRender(aWindowId, startTime, aRender, /* aReadbackSize */ Nothing(), /* aReadbackBuffer */ Nothing());
+  UpdateAndRender(aWindowId, startTime, aRender, /* aReadbackSize */ Nothing(), /* aReadbackBuffer */ Nothing(), hadSlowFrame);
   FrameRenderingComplete(aWindowId);
 }
 
@@ -361,7 +364,8 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId,
                               const TimeStamp& aStartTime,
                               bool aRender,
                               const Maybe<gfx::IntSize>& aReadbackSize,
-                              const Maybe<Range<uint8_t>>& aReadbackBuffer)
+                              const Maybe<Range<uint8_t>>& aReadbackBuffer,
+                              bool aHadSlowFrame)
 {
   AUTO_PROFILER_TRACING("Paint", "Composite");
   MOZ_ASSERT(IsInRenderThread());
@@ -376,7 +380,7 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId,
   auto& renderer = it->second;
 
   if (aRender) {
-    renderer->UpdateAndRender(aReadbackSize, aReadbackBuffer);
+    renderer->UpdateAndRender(aReadbackSize, aReadbackBuffer, aHadSlowFrame);
   } else {
     renderer->Update();
   }
@@ -554,6 +558,19 @@ RenderThread::FrameRenderingComplete(wr::WindowId aWindowId)
   mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
                                           info->mStartTimes.front());
   info->mStartTimes.pop();
+}
+
+void
+RenderThread::NotifySlowFrame(wr::WindowId aWindowId)
+{
+  MutexAutoLock lock(mFrameCountMapLock);
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
+    MOZ_ASSERT(false);
+    return;
+  }
+  WindowInfo* info = it->second;
+  info->mHadSlowFrame = true;
 }
 
 void

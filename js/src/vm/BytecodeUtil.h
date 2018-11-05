@@ -39,25 +39,24 @@ FOR_EACH_OPCODE(ENUMERATE_OPCODE)
  */
 enum {
     JOF_BYTE            = 0,        /* single bytecode, no immediates */
-    JOF_JUMP            = 1,        /* signed 16-bit jump offset immediate */
-    JOF_ATOM            = 2,        /* unsigned 16-bit constant index */
-    JOF_UINT16          = 3,        /* unsigned 16-bit immediate operand */
-    JOF_TABLESWITCH     = 4,        /* table switch */
-    /* 5 is unused */
-    JOF_QARG            = 6,        /* quickened get/set function argument ops */
-    JOF_LOCAL           = 7,        /* var or block-local variable */
-    JOF_DOUBLE          = 8,        /* uint32_t index for double value */
-    JOF_UINT24          = 12,       /* extended unsigned 24-bit literal (index) */
-    JOF_UINT8           = 13,       /* uint8_t immediate, e.g. top 8 bits of 24-bit
-                                       atom index */
-    JOF_INT32           = 14,       /* int32_t immediate operand */
-    JOF_UINT32          = 15,       /* uint32_t immediate operand */
-    JOF_OBJECT          = 16,       /* unsigned 32-bit object index */
-    JOF_REGEXP          = 17,       /* unsigned 32-bit regexp index */
-    JOF_INT8            = 18,       /* int8_t immediate operand */
-    JOF_ATOMOBJECT      = 19,       /* uint16_t constant index + object index */
-    JOF_SCOPE           = 20,       /* unsigned 32-bit scope index */
-    JOF_ENVCOORD        = 21,       /* embedded ScopeCoordinate immediate */
+    JOF_UINT8           = 1,        /* unspecified uint8_t argument */
+    JOF_UINT16          = 2,        /* unspecified uint16_t argument */
+    JOF_UINT24          = 3,        /* unspecified uint24_t argument */
+    JOF_UINT32          = 4,        /* unspecified uint32_t argument */
+    JOF_INT8            = 5,        /* int8_t literal */
+    JOF_INT32           = 6,        /* int32_t literal */
+    JOF_JUMP            = 7,        /* int32_t jump offset */
+    JOF_TABLESWITCH     = 8,        /* table switch */
+    JOF_ENVCOORD        = 9,        /* embedded ScopeCoordinate immediate */
+    JOF_ARGC            = 10,       /* uint16_t argument count */
+    JOF_QARG            = 11,       /* function argument index */
+    JOF_LOCAL           = 12,       /* var or block-local variable */
+    JOF_RESUMEINDEX     = 13,       /* yield, await, or gosub resume index */
+    JOF_ATOM            = 14,       /* uint32_t constant index */
+    JOF_OBJECT          = 15,       /* uint32_t object index */
+    JOF_REGEXP          = 16,       /* uint32_t regexp index */
+    JOF_DOUBLE          = 17,       /* uint32_t index for double value */
+    JOF_SCOPE           = 18,       /* uint32_t scope index */
     JOF_TYPEMASK        = 0x001f,   /* mask for above immediate types */
 
     JOF_NAME            = 1 << 5,   /* name operation */
@@ -307,6 +306,19 @@ SET_LOCALNO(jsbytecode* pc, uint32_t varno)
 static const unsigned LOCALNO_LEN       = 3;
 static const unsigned LOCALNO_BITS      = 24;
 static const uint32_t LOCALNO_LIMIT     = 1 << LOCALNO_BITS;
+
+static inline uint32_t
+GET_RESUMEINDEX(const jsbytecode* pc)
+{
+    return GET_UINT24(pc);
+}
+
+static inline void
+SET_RESUMEINDEX(jsbytecode* pc, uint32_t resumeIndex)
+{
+    SET_UINT24(pc, resumeIndex);
+}
+
 
 static inline unsigned
 LoopEntryDepthHint(jsbytecode* pc)
