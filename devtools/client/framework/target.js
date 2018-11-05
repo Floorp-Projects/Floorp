@@ -115,6 +115,9 @@ const TargetFactory = exports.TargetFactory = {
     if (targetPromise == null) {
       const target = new TabTarget(options);
       targetPromise = target.attach().then(() => target);
+      targetPromise.catch(e => {
+        console.error("Exception while attaching target", e);
+      });
       promiseTargets.set(options, targetPromise);
     }
     return targetPromise;
