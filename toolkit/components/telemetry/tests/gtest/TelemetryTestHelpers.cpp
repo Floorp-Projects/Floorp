@@ -109,9 +109,9 @@ GetScalarsSnapshot(bool aKeyed, JSContext* aCx, JS::MutableHandle<JS::Value> aRe
   nsresult rv;
 
   if (aKeyed) {
-    rv = telemetry->GetSnapshotForKeyedScalars(NS_LITERAL_CSTRING("main"), false, aCx, &scalarsSnapshot);
+    rv = telemetry->GetSnapshotForKeyedScalars(NS_LITERAL_CSTRING("main"), false, false /* filter */, aCx, &scalarsSnapshot);
   } else {
-    rv = telemetry->GetSnapshotForScalars(NS_LITERAL_CSTRING("main"), false, aCx, &scalarsSnapshot);
+    rv = telemetry->GetSnapshotForScalars(NS_LITERAL_CSTRING("main"), false, false /* filter */, aCx, &scalarsSnapshot);
   }
 
   // Validate the snapshot.
@@ -174,8 +174,8 @@ GetSnapshots(JSContext* cx, nsCOMPtr<nsITelemetry> mTelemetry,
              const char* name, JS::MutableHandleValue valueOut, bool is_keyed)
 {
   JS::RootedValue snapshots(cx);
-  nsresult rv = is_keyed ? mTelemetry->GetSnapshotForKeyedHistograms(NS_LITERAL_CSTRING("main"), false, cx, &snapshots)
-                         : mTelemetry->GetSnapshotForHistograms(NS_LITERAL_CSTRING("main"), false, cx, &snapshots);
+  nsresult rv = is_keyed ? mTelemetry->GetSnapshotForKeyedHistograms(NS_LITERAL_CSTRING("main"), false, false /* filter */, cx, &snapshots)
+                         : mTelemetry->GetSnapshotForHistograms(NS_LITERAL_CSTRING("main"), false, false /* filter */, cx, &snapshots);
 
   JS::RootedValue snapshot(cx);
   GetProperty(cx, "parent", snapshots, &snapshot);
