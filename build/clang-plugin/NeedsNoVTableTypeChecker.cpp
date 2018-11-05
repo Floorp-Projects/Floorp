@@ -29,7 +29,7 @@ void NeedsNoVTableTypeChecker::check(const MatchFinder::MatchResult &Result) {
     }
   }
 
-  diag(Specialization->getLocStart(),
+  diag(Specialization->getBeginLoc(),
        "%0 cannot be instantiated because %1 has a VTable",
        DiagnosticIDs::Error)
       << Specialization << Offender;

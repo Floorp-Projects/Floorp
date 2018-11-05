@@ -53,8 +53,8 @@ void SprintfLiteralChecker::check(const MatchFinder::MatchResult &Result) {
       return;
     }
 
-    diag(D->getLocStart(), Error, DiagnosticIDs::Error) << Name << Replacement;
-    diag(D->getLocStart(), Note, DiagnosticIDs::Note) << Name;
+    diag(D->getBeginLoc(), Error, DiagnosticIDs::Error) << Name << Replacement;
+    diag(D->getBeginLoc(), Note, DiagnosticIDs::Note) << Name;
     return;
   }
 
@@ -76,9 +76,9 @@ void SprintfLiteralChecker::check(const MatchFinder::MatchResult &Result) {
     uint64_t Size = Type->getSize().getZExtValue();
     uint64_t Lit = Literal->getValue().getZExtValue();
     if (Size <= Lit) {
-      diag(D->getLocStart(), Error, DiagnosticIDs::Error)
+      diag(D->getBeginLoc(), Error, DiagnosticIDs::Error)
           << Name << Replacement;
-      diag(D->getLocStart(), Note, DiagnosticIDs::Note) << Name;
+      diag(D->getBeginLoc(), Note, DiagnosticIDs::Note) << Name;
     }
   }
 }

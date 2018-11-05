@@ -1068,35 +1068,32 @@ protected: // Shouldn't be used by friend classes
                                       nsINode& aNode) const;
 
   /**
-   * GetSelectedElement() returns an element node which is in first range of
-   * Selection.  The rule is a little bit complicated and the rules do not
-   * make sense except in a few cases.  If you want to use this newly,
-   * you should create new method instead.  This needs to be here for
-   * comm-central.
-   * The rules are:
-   *   1. If Selection selects an element node, i.e., both containers are
-   *      same node and start offset and end offset is start offset + 1.
-   *      (XXX However, if last child is selected, this path is not used.)
-   *   2. If the argument is "href", look for anchor elements whose href
-   *      attribute is not empty from container of anchor/focus of Selection
-   *      to <body> element.  Then, both result are same one, returns the node.
-   *      (i.e., this allows collapsed selection.)
-   *   3. If the Selection is collapsed, returns null.
-   *   4. Otherwise, listing up all nodes with content iterator (post-order).
-   *     4-1. When first element node does *not* match with the argument,
-   *          *returns* the element.
-   *     4-2. When first element node matches with the argument, returns
-   *          *next* element node.
+   * GetSelectedElement() returns a "selected" element node.  "selected" means:
+   * - there is only one selection range
+   * - the range starts from an element node or in an element
+   * - the range ends at immediately after same element
+   * - and the range does not include any other element nodes.
+   * Additionally, only when aTagName is nsGkAtoms::href, this thinks that an
+   * <a> element which has non-empty "href" attribute includes the range, the
+   * <a> element is selected.
    *
-   * @param aTagName            The atom of tag name in lower case.
-   *                            If nullptr, look for any element node.
-   *                            If nsGkAtoms::href, look for an <a> element
-   *                            which has non-empty href attribute.
-   *                            If nsGkAtoms::anchor or atomized "namedanchor",
-   *                            look for an <a> element which has non-empty
-   *                            name attribute.
-   * @param aRv                 Returns error code.
-   * @return                    An element in first range of Selection.
+   * NOTE: This method is implementation of nsIHTMLEditor.getSelectedElement()
+   * and comm-central depends on this behavior.  Therefore, if you need to use
+   * this method internally but you need to change, perhaps, you should create
+   * another method for avoiding breakage of comm-central apps.
+   *
+   * @param aTagName    The atom of tag name in lower case.  Set this to
+   *                    result  of GetLowerCaseNameAtom() if you have a tag
+   *                    name with nsString.
+   *                    If nullptr, this returns any element node or nullptr.
+   *                    If nsGkAtoms::href, this returns an <a> element which
+   *                    has non-empty "href" attribute or nullptr.
+   *                    If nsGkAtoms::anchor, this returns an <a> element which
+   *                    has non-empty "name" attribute or nullptr.
+   *                    Otherwise, returns an element node whose name is
+   *                    same as aTagName or nullptr.
+   * @param aRv         Returns error code.
+   * @return            A "selected" element.
    */
   already_AddRefed<Element>
   GetSelectedElement(const nsAtom* aTagName,

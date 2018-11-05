@@ -66,9 +66,12 @@ interface nsITelemetry : nsISupports
    *
    * @param aStoreName The name of the store to snapshot. Ignored at the moment.
    * @param aClearStore Whether to clear out the histograms in the named store after snapshotting.
+   * @param aFilterTest If true, `TELEMETRY_TEST_` histograms will be filtered out.
+                        Filtered histograms are still cleared if `aClearStore` is true.
+   *                    Defaults to false.
    */
   [implicit_jscontext]
-  jsval getSnapshotForHistograms(in ACString aStoreName, in boolean aClearStore);
+  jsval getSnapshotForHistograms(in ACString aStoreName, in boolean aClearStore, [optional] in boolean aFilterTest);
 
   /**
    * Serializes the keyed histograms from the given store to a JSON-style object.
@@ -77,9 +80,12 @@ interface nsITelemetry : nsISupports
    *
    * @param aStoreName The name of the store to snapshot. Ignored at the moment.
    * @param aClearStore Whether to clear out the keyed histograms in the named store after snapshotting.
+   * @param aFilterTest If true, `TELEMETRY_TEST_` histograms will be filtered out.
+                        Filtered histograms are still cleared if `aClearStore` is true.
+   *                    Defaults to false.
    */
   [implicit_jscontext]
-  jsval getSnapshotForKeyedHistograms(in ACString aStoreName, in boolean aClearStore);
+  jsval getSnapshotForKeyedHistograms(in ACString aStoreName, in boolean aClearStore, [optional] in boolean aFilterTest);
 
   /**
    * Serializes the scalars from the given store to a JSON-style object.
@@ -88,9 +94,12 @@ interface nsITelemetry : nsISupports
    *
    * @param aStoreName The name of the store to snapshot. Ignored at the moment.
    * @param aClearStore Whether to clear out the scalars in the named store after snapshotting.
+   * @param aFilterTest If true, `telemetry.test` scalars will be filtered out.
+                        Filtered scalars are still cleared if `aClearStore` is true.
+   *                    Defaults to false.
    */
   [implicit_jscontext]
-  jsval getSnapshotForScalars(in ACString aStoreName, in boolean aClearStore);
+  jsval getSnapshotForScalars(in ACString aStoreName, in boolean aClearStore, [optional] in boolean aFilterTest);
 
   /**
    * Serializes the keyed scalars from the given store to a JSON-style object.
@@ -99,9 +108,12 @@ interface nsITelemetry : nsISupports
    *
    * @param aStoreName The name of the store to snapshot. Ignored at the moment.
    * @param aClearStore Whether to clear out the keyed scalars in the named store after snapshotting.
+   * @param aFilterTest If true, `telemetry.test` scalars will be filtered out.
+                        Filtered scalars are still cleared if `aClearStore` is true.
+   *                    Defaults to false.
    */
   [implicit_jscontext]
-  jsval getSnapshotForKeyedScalars(in ACString aStoreName, in boolean aClearStore);
+  jsval getSnapshotForKeyedScalars(in ACString aStoreName, in boolean aClearStore, [optional] in boolean aFilterTest);
 
   /**
    * Serializes the histograms from the given dataset to a JSON-style object.
