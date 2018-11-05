@@ -256,7 +256,7 @@ GeckoProfilerThread::exit(JSScript* script, JSFunction* maybeFun)
                 if (frame.isJsFrame()) {
                     fprintf(stderr, "  [%d] JS %s\n", i, frame.dynamicString());
                 } else {
-                    fprintf(stderr, "  [%d] C line %d %s\n", i, frame.line(), frame.dynamicString());
+                    fprintf(stderr, "  [%d] Label %s\n", i, frame.dynamicString());
                 }
             }
         }
@@ -449,12 +449,12 @@ JS_FRIEND_API(jsbytecode*)
 ProfilingStackFrame::pc() const
 {
     MOZ_ASSERT(isJsFrame());
-    if (lineOrPcOffset == NullPCOffset) {
+    if (pcOffsetIfJS_ == NullPCOffset) {
         return nullptr;
     }
 
     JSScript* script = this->script();
-    return script ? script->offsetToPC(lineOrPcOffset) : nullptr;
+    return script ? script->offsetToPC(pcOffsetIfJS_) : nullptr;
 }
 
 /* static */ int32_t
@@ -468,7 +468,7 @@ ProfilingStackFrame::setPC(jsbytecode* pc)
     MOZ_ASSERT(isJsFrame());
     JSScript* script = this->script();
     MOZ_ASSERT(script); // This should not be called while profiling is suppressed.
-    lineOrPcOffset = pcToOffset(script, pc);
+    pcOffsetIfJS_ = pcToOffset(script, pc);
 }
 
 JS_FRIEND_API(void)
