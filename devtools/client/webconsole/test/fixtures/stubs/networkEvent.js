@@ -267,6 +267,7 @@ stubPackets.set(`GET request`, {
   "updates": [],
   "private": false,
   "isThirdPartyTrackingResource": false,
+  "referrerPolicy": "no-referrer-when-downgrade",
   "from": "server1.conn0.child1/consoleActor2"
 });
 
@@ -319,6 +320,7 @@ stubPackets.set(`XHR GET request`, {
   "updates": [],
   "private": false,
   "isThirdPartyTrackingResource": false,
+  "referrerPolicy": "no-referrer-when-downgrade",
   "from": "server1.conn1.child1/consoleActor2"
 });
 
@@ -371,6 +373,7 @@ stubPackets.set(`XHR POST request`, {
   "updates": [],
   "private": false,
   "isThirdPartyTrackingResource": false,
+  "referrerPolicy": "no-referrer-when-downgrade",
   "from": "server1.conn2.child1/consoleActor2"
 });
 
