@@ -1,7 +1,4 @@
-import base64
-import imghdr
-
-from tests.support.asserts import assert_error, assert_success
+from tests.support.asserts import assert_error, assert_png, assert_success
 from tests.support.inline import inline
 
 
@@ -21,5 +18,4 @@ def test_screenshot(session):
     response = take_screenshot(session)
     value = assert_success(response)
 
-    image = base64.decodestring(value)
-    assert imghdr.what("", image) == "png"
+    assert_png(value)
