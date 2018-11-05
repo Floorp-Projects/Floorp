@@ -242,7 +242,7 @@ public final class NotificationHelper implements BundleEventListener {
 
                 case MEDIA: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
-                            mContext.getString(R.string.media_notification_channel),
+                            mContext.getString(R.string.media_notification_channel2),
                             NotificationManager.IMPORTANCE_LOW);
                 }
                 break;
@@ -263,7 +263,7 @@ public final class NotificationHelper implements BundleEventListener {
 
                 case LP_DEFAULT: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
-                            mContext.getString(R.string.leanplum_default_notifications_channel),
+                            mContext.getString(R.string.leanplum_default_notifications_channel2),
                             NotificationManager.IMPORTANCE_LOW);
                 }
                 break;
@@ -278,7 +278,7 @@ public final class NotificationHelper implements BundleEventListener {
                 case DEFAULT:
                 default: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
-                            mContext.getString(R.string.default_notification_channel),
+                            mContext.getString(R.string.default_notification_channel2),
                             NotificationManager.IMPORTANCE_LOW);
                 }
                 break;
