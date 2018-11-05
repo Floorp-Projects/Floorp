@@ -19,7 +19,6 @@ registerCleanupFunction(() => {
 add_task(async function checkMenuEntryStates() {
   info("Checking the state of edit menuitems with an empty clipboard");
   const toolbox = await openNewTabAndToolbox(URL, "inspector");
-  const textboxContextMenu = toolbox.textBoxContextMenuPopup;
 
   emptyClipboard();
 
@@ -29,20 +28,20 @@ add_task(async function checkMenuEntryStates() {
   inspector.searchBox.focus();
   await onFocus;
 
+  info("Opening context menu");
+  const onContextMenuPopup = toolbox.once("menu-open");
+  synthesizeContextMenuEvent(inspector.searchBox);
+  await onContextMenuPopup;
+
+  const textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
   ok(textboxContextMenu, "The textbox context menu is loaded in the toolbox");
 
-  const cmdUndo = textboxContextMenu.querySelector("[command=cmd_undo]");
-  const cmdDelete = textboxContextMenu.querySelector("[command=cmd_delete]");
-  const cmdSelectAll = textboxContextMenu.querySelector("[command=cmd_selectAll]");
-  const cmdCut = textboxContextMenu.querySelector("[command=cmd_cut]");
-  const cmdCopy = textboxContextMenu.querySelector("[command=cmd_copy]");
-  const cmdPaste = textboxContextMenu.querySelector("[command=cmd_paste]");
-
-  info("Opening context menu");
-
-  const onContextMenuPopup = once(textboxContextMenu, "popupshowing");
-  textboxContextMenu.openPopupAtScreen(0, 0, true);
-  await onContextMenuPopup;
+  const cmdUndo = textboxContextMenu.querySelector("#editmenu-undo");
+  const cmdDelete = textboxContextMenu.querySelector("#editmenu-delete");
+  const cmdSelectAll = textboxContextMenu.querySelector("#editmenu-selectAll");
+  const cmdCut = textboxContextMenu.querySelector("#editmenu-cut");
+  const cmdCopy = textboxContextMenu.querySelector("#editmenu-copy");
+  const cmdPaste = textboxContextMenu.querySelector("#editmenu-paste");
 
   is(cmdUndo.getAttribute("disabled"), "true", "cmdUndo is disabled");
   is(cmdDelete.getAttribute("disabled"), "true", "cmdDelete is disabled");
@@ -53,6 +52,10 @@ add_task(async function checkMenuEntryStates() {
   is(cmdCut.getAttribute("disabled"), "", "cmdCut is enabled");
   is(cmdCopy.getAttribute("disabled"), "", "cmdCopy is enabled");
   is(cmdPaste.getAttribute("disabled"), "", "cmdPaste is enabled");
+
+  const onContextMenuHidden = toolbox.once("menu-close");
+  EventUtils.sendKey("ESCAPE", toolbox.win);
+  await onContextMenuHidden;
 });
 
 add_task(async function automaticallyBindTexbox() {
@@ -80,35 +83,39 @@ add_task(async function automaticallyBindTexbox() {
   await checkNonTextInput(doc.querySelector("input[type=radio]"), toolbox);
 });
 
-async function checkNonTextInput(input, {textBoxContextMenuPopup}) {
-  is(textBoxContextMenuPopup.state, "closed", "The menu is closed");
+async function checkNonTextInput(input, toolbox) {
+  let textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  ok(!textboxContextMenu, "The menu is closed");
 
   info("Simulating context click on the non text input and expecting no menu to open");
   const eventBubbledUp = new Promise(resolve => {
     input.ownerDocument.addEventListener("contextmenu", resolve, { once: true });
   });
-  EventUtils.synthesizeMouse(input, 2, 2, {type: "contextmenu", button: 2},
-                             input.ownerDocument.defaultView);
+  synthesizeContextMenuEvent(input);
   info("Waiting for event");
   await eventBubbledUp;
-  is(textBoxContextMenuPopup.state, "closed", "The menu is still closed");
+
+  textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  ok(!textboxContextMenu, "The menu is still closed");
 }
 
-async function checkTextBox(textBox, {textBoxContextMenuPopup}) {
-  is(textBoxContextMenuPopup.state, "closed", "The menu is closed");
+async function checkTextBox(textBox, toolbox) {
+  let textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  ok(!textboxContextMenu, "The menu is closed");
 
   info("Simulating context click on the textbox and expecting the menu to open");
-  const onContextMenu = once(textBoxContextMenuPopup, "popupshown");
-  EventUtils.synthesizeMouse(textBox, 2, 2, {type: "contextmenu", button: 2},
-                             textBox.ownerDocument.defaultView);
+  const onContextMenu = toolbox.once("menu-open");
+  synthesizeContextMenuEvent(textBox);
   await onContextMenu;
 
-  is(textBoxContextMenuPopup.state, "open", "The menu is now visible");
+  textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  ok(textboxContextMenu, "The menu is now visible");
 
   info("Closing the menu");
-  const onContextMenuHidden = once(textBoxContextMenuPopup, "popuphidden");
-  textBoxContextMenuPopup.hidePopup();
+  const onContextMenuHidden = toolbox.once("menu-close");
+  EventUtils.sendKey("ESCAPE", toolbox.win);
   await onContextMenuHidden;
 
-  is(textBoxContextMenuPopup.state, "closed", "The menu is closed again");
+  textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  ok(!textboxContextMenu, "The menu is closed again");
 }

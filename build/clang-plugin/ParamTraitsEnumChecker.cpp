@@ -25,10 +25,10 @@ void ParamTraitsEnumChecker::check(const MatchFinder::MatchResult &Result) {
       }
 
       if (TypePtr->isEnumeralType()) {
-        diag(Decl->getLocStart(),
+        diag(Decl->getBeginLoc(),
              "Custom ParamTraits implementation for an enum type",
              DiagnosticIDs::Error);
-        diag(Decl->getLocStart(),
+        diag(Decl->getBeginLoc(),
              "Please use a helper class for example ContiguousEnumSerializer",
              DiagnosticIDs::Note);
       }

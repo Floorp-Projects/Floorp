@@ -470,17 +470,19 @@ impl<'i: 't, 't> Parser<'i, 't> {
         self.at_start_of = state.at_start_of;
     }
 
-    /// Start looking for `var()` functions. (See the `.seen_var_functions()` method.)
+    /// Start looking for `var()` / `env()` functions. (See the
+    /// `.seen_var_or_env_functions()` method.)
     #[inline]
-    pub fn look_for_var_functions(&mut self) {
-        self.input.tokenizer.look_for_var_functions()
+    pub fn look_for_var_or_env_functions(&mut self) {
+        self.input.tokenizer.look_for_var_or_env_functions()
     }
 
-    /// Return whether a `var()` function has been seen by the tokenizer since
-    /// either `look_for_var_functions` was called, and stop looking.
+    /// Return whether a `var()` or `env()` function has been seen by the
+    /// tokenizer since either `look_for_var_or_env_functions` was called, and
+    /// stop looking.
     #[inline]
-    pub fn seen_var_functions(&mut self) -> bool {
-        self.input.tokenizer.seen_var_functions()
+    pub fn seen_var_or_env_functions(&mut self) -> bool {
+        self.input.tokenizer.seen_var_or_env_functions()
     }
 
     /// Execute the given closure, passing it the parser.

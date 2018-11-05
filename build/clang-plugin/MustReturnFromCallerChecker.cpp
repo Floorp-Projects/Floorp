@@ -48,7 +48,7 @@ void MustReturnFromCallerChecker::check(
   assert(Block && "This statement should be within the CFG!");
 
   if (!immediatelyReturns(Block, Result.Context, CallIndex + 1)) {
-    diag(Call->getLocStart(),
+    diag(Call->getBeginLoc(),
          "You must immediately return after calling this function",
          DiagnosticIDs::Error);
   }

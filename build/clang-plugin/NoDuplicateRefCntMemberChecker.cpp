@@ -39,10 +39,10 @@ void NoDuplicateRefCntMemberChecker::check(
         const char *Note2 =
             "Consider using the _INHERITED macros for AddRef and Release here";
 
-        diag(D->getLocStart(), Error, DiagnosticIDs::Error) << D;
-        diag(BaseRefCntMember->getLocStart(), Note1, DiagnosticIDs::Note)
+        diag(D->getBeginLoc(), Error, DiagnosticIDs::Error) << D;
+        diag(BaseRefCntMember->getBeginLoc(), Note1, DiagnosticIDs::Note)
             << BaseRefCntMember->getParent();
-        diag(RefCntMember->getLocStart(), Note2, DiagnosticIDs::Note);
+        diag(RefCntMember->getBeginLoc(), Note2, DiagnosticIDs::Note);
       }
 
       if (FoundRefCntBase) {
@@ -51,10 +51,10 @@ void NoDuplicateRefCntMemberChecker::check(
         const char *Note = "Superclass %0 has an mRefCnt member";
 
         // superclass has mRefCnt, and another superclass also has an mRefCnt
-        diag(D->getLocStart(), Error, DiagnosticIDs::Error) << D;
-        diag(BaseRefCntMember->getLocStart(), Note, DiagnosticIDs::Note)
+        diag(D->getBeginLoc(), Error, DiagnosticIDs::Error) << D;
+        diag(BaseRefCntMember->getBeginLoc(), Note, DiagnosticIDs::Note)
             << BaseRefCntMember->getParent();
-        diag(FoundRefCntBase->getLocStart(), Note, DiagnosticIDs::Note)
+        diag(FoundRefCntBase->getBeginLoc(), Note, DiagnosticIDs::Note)
             << FoundRefCntBase->getParent();
       }
 

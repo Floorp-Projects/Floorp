@@ -685,14 +685,14 @@ fn unquoted_url(b: &mut Bencher) {
     b.iter(|| {
         let mut input = ParserInput::new(BACKGROUND_IMAGE);
         let mut input = Parser::new(&mut input);
-        input.look_for_var_functions();
+        input.look_for_var_or_env_functions();
 
         let result = input.try(|input| input.expect_url());
 
         assert!(result.is_ok());
 
-        input.seen_var_functions();
-        (result.is_ok(), input.seen_var_functions())
+        input.seen_var_or_env_functions();
+        (result.is_ok(), input.seen_var_or_env_functions())
     })
 }
 

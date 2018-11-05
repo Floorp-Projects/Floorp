@@ -62,6 +62,8 @@ loader.lazyRequireGetter(this, "NetMonitorAPI",
   "devtools/client/netmonitor/src/api", true);
 loader.lazyRequireGetter(this, "sortPanelDefinitions",
   "devtools/client/framework/toolbox-tabs-order-manager", true);
+loader.lazyRequireGetter(this, "createEditContextMenu",
+  "devtools/client/framework/toolbox-context-menu", true);
 
 loader.lazyGetter(this, "domNodeConstants", () => {
   return require("devtools/shared/dom-node-constants");
@@ -468,10 +470,6 @@ Toolbox.prototype = {
       Services.prefs.addObserver("devtools.serviceWorkers.testing.enabled",
                                  this._applyServiceWorkersTestingSettings);
 
-      this.textBoxContextMenuPopup =
-        this.doc.getElementById("toolbox-textbox-context-popup");
-      this.textBoxContextMenuPopup.addEventListener("popupshowing",
-        this._updateTextBoxMenuItems, true);
       this.doc.addEventListener("contextmenu", (e) => {
         if (e.originalTarget.closest("input[type=text]") ||
             e.originalTarget.closest("input[type=search]") ||
@@ -2855,11 +2853,6 @@ Toolbox.prototype = {
         this._saveSplitConsoleHeight);
       this.webconsolePanel = null;
     }
-    if (this.textBoxContextMenuPopup) {
-      this.textBoxContextMenuPopup.removeEventListener("popupshowing",
-        this._updateTextBoxMenuItems, true);
-      this.textBoxContextMenuPopup = null;
-    }
     if (this._componentMount) {
       this._componentMount.removeEventListener("keypress", this._onToolbarArrowKeypress);
       this.ReactDOM.unmountComponentAtNode(this._componentMount);
@@ -3023,7 +3016,13 @@ Toolbox.prototype = {
    * @param {Number} y
    */
   openTextBoxContextMenu: function(x, y) {
-    this.textBoxContextMenuPopup.openPopupAtScreen(x, y, true);
+    const menu = createEditContextMenu(this.win, "toolbox-menu");
+
+    // Fire event for tests
+    menu.once("open", () => this.emit("menu-open"));
+    menu.once("close", () => this.emit("menu-close"));
+
+    menu.popup(x, y, { doc: this.doc });
   },
 
   /**

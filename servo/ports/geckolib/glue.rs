@@ -130,13 +130,12 @@ use style::gecko_properties;
 use style::invalidation::element::restyle_hints;
 use style::media_queries::MediaList;
 use style::parser::{Parse, ParserContext, self};
-use style::properties::{ComputedValues, Importance};
+use style::properties::{ComputedValues, Importance, NonCustomPropertyId};
 use style::properties::{LonghandId, LonghandIdSet, PropertyDeclarationBlock, PropertyId};
 use style::properties::{PropertyDeclarationId, ShorthandId};
 use style::properties::{SourcePropertyDeclaration, StyleBuilder};
 use style::properties::{parse_one_declaration_into, parse_style_attribute};
 use style::properties::animated_properties::AnimationValue;
-use style::properties::animated_properties::compare_property_priority;
 use style::rule_cache::RuleCacheConditions;
 use style::rule_tree::{CascadeLevel, StrongRuleNode};
 use style::selector_parser::{PseudoElementCascadeType, SelectorImpl};
@@ -944,8 +943,6 @@ pub unsafe extern "C" fn Servo_Property_GetName(
     prop: nsCSSPropertyID,
     out_length: *mut u32,
 ) -> *const u8 {
-    use style::properties::NonCustomPropertyId;
-
     let (ptr, len) = match NonCustomPropertyId::from_nscsspropertyid(prop) {
         Ok(p) => {
             let name = p.name();
@@ -1050,15 +1047,13 @@ pub unsafe extern "C" fn Servo_Property_GetCSSValuesForProperty(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_Property_IsAnimatable(property: nsCSSPropertyID) -> bool {
-    use style::properties::animated_properties;
-    animated_properties::nscsspropertyid_is_animatable(property)
+pub extern "C" fn Servo_Property_IsAnimatable(prop: nsCSSPropertyID) -> bool {
+    NonCustomPropertyId::from_nscsspropertyid(prop).ok().map_or(false, |p| p.is_animatable())
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_Property_IsTransitionable(property: nsCSSPropertyID) -> bool {
-    use style::properties::animated_properties;
-    animated_properties::nscsspropertyid_is_transitionable(property)
+pub extern "C" fn Servo_Property_IsTransitionable(prop: nsCSSPropertyID) -> bool {
+    NonCustomPropertyId::from_nscsspropertyid(prop).ok().map_or(false, |p| p.is_transitionable())
 }
 
 #[no_mangle]
@@ -4737,6 +4732,8 @@ struct PrioritizedPropertyIter<'a> {
 
 impl<'a> PrioritizedPropertyIter<'a> {
     fn new(properties: &'a [PropertyValuePair]) -> PrioritizedPropertyIter {
+        use style::values::animated::compare_property_priority;
+
         // If we fail to convert a nsCSSPropertyID into a PropertyId we
         // shouldn't fail outright but instead by treating that property as the
         // 'all' property we make it sort last.

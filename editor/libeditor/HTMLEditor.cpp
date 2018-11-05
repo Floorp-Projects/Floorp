@@ -2843,24 +2843,28 @@ HTMLEditor::GetElementOrParentByTagNameInternal(const nsAtom& aTagName,
 
   bool getLink = IsLinkTag(aTagName);
   bool getNamedAnchor = IsNamedAnchorTag(aTagName);
-  const nsAtom& tagName = getLink || getNamedAnchor ? *nsGkAtoms::a : aTagName;
   for (; currentElement; currentElement = currentElement->GetParentElement()) {
-    // Test if we have a link (an anchor with href set)
-    if ((getLink && HTMLEditUtils::IsLink(currentElement)) ||
-        (getNamedAnchor && HTMLEditUtils::IsNamedAnchor(currentElement))) {
-      return currentElement;
-    }
-    if (&tagName == nsGkAtoms::list_) {
+    if (getLink) {
+      // Test if we have a link (an anchor with href set)
+      if (HTMLEditUtils::IsLink(currentElement)) {
+        return currentElement;
+      }
+    } else if (getNamedAnchor) {
+      // Test if we have a named anchor (an anchor with name set)
+      if (HTMLEditUtils::IsNamedAnchor(currentElement)) {
+        return currentElement;
+      }
+    } else if (&aTagName == nsGkAtoms::list_) {
       // Match "ol", "ul", or "dl" for lists
       if (HTMLEditUtils::IsList(currentElement)) {
         return currentElement;
       }
-    } else if (&tagName == nsGkAtoms::td) {
+    } else if (&aTagName == nsGkAtoms::td) {
       // Table cells are another special case: match either "td" or "th"
       if (HTMLEditUtils::IsTableCell(currentElement)) {
         return currentElement;
       }
-    } else if (&tagName == currentElement->NodeInfo()->NameAtom()) {
+    } else if (&aTagName == currentElement->NodeInfo()->NameAtom()) {
       return currentElement;
     }
 
@@ -2931,144 +2935,135 @@ HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
 
   MOZ_ASSERT(!aRv.Failed());
 
+  // If there is no Selection or two or more selection ranges, that means that
+  // not only one element is selected so that return nullptr.
+  if (SelectionRefPtr()->RangeCount() != 1) {
+    return nullptr;
+  }
+
   bool isLinkTag = aTagName && IsLinkTag(*aTagName);
   bool isNamedAnchorTag = aTagName && IsNamedAnchorTag(*aTagName);
 
   RefPtr<nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
-  if (NS_WARN_IF(!firstRange)) {
+  MOZ_ASSERT(firstRange);
+
+  const RangeBoundary& startRef = firstRange->StartRef();
+  if (NS_WARN_IF(!startRef.IsSet())) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  const RangeBoundary& endRef = firstRange->EndRef();
+  if (NS_WARN_IF(!endRef.IsSet())) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  nsCOMPtr<nsINode> startContainer = firstRange->GetStartContainer();
-  nsIContent* startNode = firstRange->GetChildAtStartOffset();
-
-  nsCOMPtr<nsINode> endContainer = firstRange->GetEndContainer();
-  nsIContent* endNode = firstRange->GetChildAtEndOffset();
-
   // Optimization for a single selected element
-  if (startContainer && startContainer == endContainer &&
-      startNode && endNode && startNode->GetNextSibling() == endNode) {
-    if (!aTagName) {
-      if (NS_WARN_IF(!startNode->IsElement())) {
-        // XXX Keep not returning error in this case, but perhaps, we should
-        //     look for element node.
-        return nullptr;
+  if (startRef.Container() == endRef.Container()) {
+    nsIContent* startContent = startRef.GetChildAtOffset();
+    nsIContent* endContent = endRef.GetChildAtOffset();
+    if (startContent && endContent &&
+        startContent->GetNextSibling() == endContent) {
+      if (!aTagName) {
+        if (!startContent->IsElement()) {
+          // This means only a text node or something is selected.  We should
+          // return nullptr in this case since no other elements are selected.
+          return nullptr;
+        }
+        return do_AddRef(startContent->AsElement());
       }
-      RefPtr<Element> selectedElement = startNode->AsElement();
-      return selectedElement.forget();
-    }
-    // Test for appropriate node type requested
-    if (aTagName == startNode->NodeInfo()->NameAtom() ||
-        (isLinkTag && HTMLEditUtils::IsLink(startNode)) ||
-        (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(startNode))) {
-      MOZ_ASSERT(startNode->IsElement());
-      RefPtr<Element> selectedElement = startNode->AsElement();
-      return selectedElement.forget();
+      // Test for appropriate node type requested
+      if (aTagName == startContent->NodeInfo()->NameAtom() ||
+          (isLinkTag && HTMLEditUtils::IsLink(startContent)) ||
+          (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(startContent))) {
+        MOZ_ASSERT(startContent->IsElement());
+        return do_AddRef(startContent->AsElement());
+      }
     }
   }
 
-  RefPtr<Element> selectedElement;
   if (isLinkTag) {
-    // Link tag is a special case - we return the anchor node
-    //  found for any selection that is totally within a link,
-    //  included a collapsed selection (just a caret in a link)
-    const RangeBoundary& anchor = SelectionRefPtr()->AnchorRef();
-    const RangeBoundary& focus = SelectionRefPtr()->FocusRef();
-    // Link node must be the same for both ends of selection
-    if (anchor.IsSet()) {
-      Element* parentLinkOfAnchor =
+    // Link node must be the same for both ends of selection.
+    Element* parentLinkOfStart =
+      GetElementOrParentByTagNameInternal(*nsGkAtoms::href,
+                                          *startRef.Container());
+    if (parentLinkOfStart) {
+      if (SelectionRefPtr()->IsCollapsed()) {
+        // We have just a caret in the link.
+        return do_AddRef(parentLinkOfStart);
+      }
+      // Link node must be the same for both ends of selection.
+      Element* parentLinkOfEnd =
         GetElementOrParentByTagNameInternal(*nsGkAtoms::href,
-                                            *anchor.Container());
-      // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
-      if (parentLinkOfAnchor) {
-        if (SelectionRefPtr()->IsCollapsed()) {
-          // We have just a caret in the link.
-          return do_AddRef(parentLinkOfAnchor);
-        }
-        if (focus.IsSet()) {
-          // Link node must be the same for both ends of selection.
-          Element* parentLinkOfFocus =
-            GetElementOrParentByTagNameInternal(*nsGkAtoms::href,
-                                                *focus.Container());
-          if (parentLinkOfFocus == parentLinkOfAnchor) {
-            return do_AddRef(parentLinkOfAnchor);
-          }
-        }
-      } else if (anchor.GetChildAtOffset() && focus.GetChildAtOffset()) {
-        // Check if link node is the only thing selected
-        if (HTMLEditUtils::IsLink(anchor.GetChildAtOffset()) &&
-            anchor.Container() == focus.Container() &&
-            focus.GetChildAtOffset() ==
-              anchor.GetChildAtOffset()->GetNextSibling()) {
-          selectedElement = Element::FromNodeOrNull(anchor.GetChildAtOffset());
-        }
+                                            *endRef.Container());
+      if (parentLinkOfStart == parentLinkOfEnd) {
+        return do_AddRef(parentLinkOfStart);
       }
     }
   }
 
   if (SelectionRefPtr()->IsCollapsed()) {
-    return selectedElement.forget();
+    return nullptr;
   }
 
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-
-  bool found = !!selectedElement;
-  const nsAtom* tagNameLookingFor = aTagName;
   iter->Init(firstRange);
-  // loop through the content iterator for each content node
-  while (!iter->IsDone()) {
-    // Update selectedElement with new node.  If it's not an element node,
-    // clear it.
-    // XXX This is really odd since this means that the result depends on
-    //     what is the last node.  If the last node is an element node,
-    //     it may be returned even if it does not match with aTagName.
-    //     On the other hand, if last node is not an element, i.e., we have
-    //     not found proper element node, we return nullptr as this method
-    //     name explains.
-    selectedElement = Element::FromNodeOrNull(iter->GetCurrentNode());
-    if (selectedElement) {
-      // If we already found a node, then we have another element,
-      // thus there's not just one element selected.
-      // XXX Really odd.  The new element node may be different name element.
-      //     So, this means that we return any next element node if we find
-      //     proper element as first element in the range.
-      if (found) {
-        break;
-      }
 
-      if (!tagNameLookingFor) {
-        // Get name of first selected element
-        // XXX Looks like that this is necessary only for making the following
-        //     handler work as expected...  Why don't you check this below??
-        tagNameLookingFor = selectedElement->NodeInfo()->NameAtom();
-      }
-
-      // The "A" tag is a pain,
-      //  used for both link(href is set) and "Named Anchor"
-      if ((isLinkTag &&
-           HTMLEditUtils::IsLink(selectedElement)) ||
-          (isNamedAnchorTag &&
-           HTMLEditUtils::IsNamedAnchor(selectedElement))) {
-        found = true;
-      }
-      // All other tag names are handled here.
-      else if (tagNameLookingFor ==
-                 selectedElement->NodeInfo()->NameAtom()) {
-        found = true;
-      }
-
-      if (!found) {
-        // Check if node we have is really part of the selection???
-        // XXX This is odd.  This means that we return element node whose
-        //     tag name does not match with aTagName if we find such element
-        //     node first.
-        break;
-      }
+  RefPtr<Element> lastElementInRange;
+  for (nsINode* lastNodeInRange = nullptr; !iter->IsDone(); iter->Next()) {
+    if (lastElementInRange) {
+      // When any node follows an element node, not only one element is
+      // selected so that return nullptr.
+      return nullptr;
     }
-    iter->Next();
+
+    // This loop ignored any non-element nodes before first element node.
+    // Its purpose must be that this method allow to this case as selecting
+    // an element:
+    // - <p>abc <b>d[ef</b>}</p>
+    // because children of an element node is listed up before the element.
+    // However, this case must not be expected by the initial developer:
+    // - <p>a[bc <b>def</b>}</p>
+    // When we meet non-parent and non-next-sibling node of previous node,
+    // it means that the range across element boundary (open tag in HTML
+    // source).  So, in this case, we should not say only the following
+    // element is selected.
+    nsINode* currentNode = iter->GetCurrentNode();
+    MOZ_ASSERT(currentNode);
+    if (lastNodeInRange &&
+        lastNodeInRange->GetParentNode() != currentNode &&
+        lastNodeInRange->GetNextSibling() != currentNode) {
+      return nullptr;
+    }
+
+    lastNodeInRange = currentNode;
+
+    lastElementInRange = Element::FromNodeOrNull(lastNodeInRange);
+    if (!lastElementInRange) {
+      continue;
+    }
+
+    if (!aTagName) {
+      continue;
+    }
+
+    if (isLinkTag && HTMLEditUtils::IsLink(lastElementInRange)) {
+      continue;
+    }
+
+    if (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(lastElementInRange)) {
+      continue;
+    }
+
+    if (aTagName == lastElementInRange->NodeInfo()->NameAtom()) {
+      continue;
+    }
+
+    // First element in the range does not match what the caller is looking
+    // for.
+    return nullptr;
   }
-  return selectedElement.forget();
+  return lastElementInRange.forget();
 }
 
 already_AddRefed<Element>

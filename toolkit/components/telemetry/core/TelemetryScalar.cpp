@@ -115,6 +115,8 @@ const uint32_t kScalarCount =
 // a certain high water mark of elements.
 const size_t kScalarActionsArrayHighWaterMark = 10000;
 
+const char* TEST_SCALAR_PREFIX = "telemetry.test.";
+
 enum class ScalarResult : uint8_t {
   // Nothing went wrong.
   Ok,
@@ -2978,7 +2980,7 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& a
  */
 nsresult
 TelemetryScalar::CreateSnapshots(unsigned int aDataset, bool aClearScalars, JSContext* aCx,
-                                 uint8_t optional_argc, JS::MutableHandle<JS::Value> aResult)
+                                 uint8_t optional_argc, JS::MutableHandle<JS::Value> aResult, bool aFilterTest)
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Snapshotting scalars should only happen in the parent processes.");
@@ -3026,6 +3028,11 @@ TelemetryScalar::CreateSnapshots(unsigned int aDataset, bool aClearScalars, JSCo
     for (ScalarTupleArray::size_type i = 0; i < processScalars.Length(); i++) {
       const ScalarDataTuple& scalar = processScalars[i];
 
+      const char* scalarName = mozilla::Get<0>(scalar);
+      if (aFilterTest && strncmp(TEST_SCALAR_PREFIX, scalarName, strlen(TEST_SCALAR_PREFIX)) == 0) {
+          continue;
+      }
+
       // Convert it to a JS Val.
       JS::Rooted<JS::Value> scalarJsValue(aCx);
       nsresult rv =
@@ -3035,7 +3042,7 @@ TelemetryScalar::CreateSnapshots(unsigned int aDataset, bool aClearScalars, JSCo
       }
 
       // Add it to the scalar object.
-      if (!JS_DefineProperty(aCx, processObj, mozilla::Get<0>(scalar), scalarJsValue, JSPROP_ENUMERATE)) {
+      if (!JS_DefineProperty(aCx, processObj, scalarName, scalarJsValue, JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -3054,7 +3061,8 @@ TelemetryScalar::CreateSnapshots(unsigned int aDataset, bool aClearScalars, JSCo
  */
 nsresult
 TelemetryScalar::CreateKeyedSnapshots(unsigned int aDataset, bool aClearScalars, JSContext* aCx,
-                                      uint8_t optional_argc, JS::MutableHandle<JS::Value> aResult)
+                                      uint8_t optional_argc, JS::MutableHandle<JS::Value> aResult,
+                                      bool aFilterTest)
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Snapshotting scalars should only happen in the parent processes.");
@@ -3102,6 +3110,11 @@ TelemetryScalar::CreateKeyedSnapshots(unsigned int aDataset, bool aClearScalars,
     for (KeyedScalarTupleArray::size_type i = 0; i < processScalars.Length(); i++) {
       const KeyedScalarDataTuple& keyedScalarData = processScalars[i];
 
+      const char* scalarName = mozilla::Get<0>(keyedScalarData);
+      if (aFilterTest && strncmp(TEST_SCALAR_PREFIX, scalarName, strlen(TEST_SCALAR_PREFIX)) == 0) {
+          continue;
+      }
+
       // Go through each keyed scalar and create a keyed scalar object.
       // This object will hold the values for all the keyed scalar keys.
       JS::RootedObject keyedScalarObj(aCx, JS_NewPlainObject(aCx));
@@ -3128,7 +3141,7 @@ TelemetryScalar::CreateKeyedSnapshots(unsigned int aDataset, bool aClearScalars,
       }
 
       // Add the scalar to the root object.
-      if (!JS_DefineProperty(aCx, processObj, mozilla::Get<0>(keyedScalarData), keyedScalarObj, JSPROP_ENUMERATE)) {
+      if (!JS_DefineProperty(aCx, processObj, scalarName, keyedScalarObj, JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
     }

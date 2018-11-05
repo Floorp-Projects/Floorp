@@ -220,7 +220,7 @@ void DanglingOnTemporaryChecker::check(const MatchFinder::MatchResult &Result) {
         << MemberCall->getSourceRange();
 
     // We indicate the escape statement.
-    diag(EscapeStmt->getLocStart(), EscapeStmtNote, DiagnosticIDs::Note)
+    diag(EscapeStmt->getBeginLoc(), EscapeStmtNote, DiagnosticIDs::Note)
         << EscapeStmt->getSourceRange();
 
     // We build the escape note along with its source range.

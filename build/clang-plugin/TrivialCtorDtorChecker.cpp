@@ -25,5 +25,5 @@ void TrivialCtorDtorChecker::check(const MatchFinder::MatchResult &Result) {
                    Node->hasTrivialDefaultConstructor());
   bool BadDtor = !Node->hasTrivialDestructor();
   if (BadCtor || BadDtor)
-    diag(Node->getLocStart(), Error, DiagnosticIDs::Error) << Node;
+    diag(Node->getBeginLoc(), Error, DiagnosticIDs::Error) << Node;
 }

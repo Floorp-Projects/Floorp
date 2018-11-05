@@ -319,25 +319,24 @@ interface nsIHTMLEditor : nsISupports
                                       in Node aNode);
 
   /**
-   * Return an Element only if it is the only node selected,
-   *    such as an image, horizontal rule, etc.  The return type is
-   *    nsISupports for implementation convenience; the returned object,
-   *    if not null, is always a DOM Element.
+   * getSelectedElement() returns a "selected" element node.  "selected" means:
+   * - there is only one selection range
+   * - the range starts from an element node or in an element
+   * - the range ends at immediately after same element
+   * - and the range does not include any other element nodes.
+   * Additionally, only when aTagName is "href", this thinks that an <a>
+   * element which has non-empty "href" attribute includes the range, the
+   * <a> element is selected.
    *
-   * The exception is a link, which is more like a text attribute:
-   *    The Anchor tag is returned if the selection is within the textnode(s)
-   *    that are children of the "A" node.
-   *    This could be a collapsed selection, i.e., a caret
-   *    within the link text.
-   *
-   * @param aTagName  The HTML tagname or and empty string
-   *       to get any element (but only if it is the only element selected)
-   *    Special input values for Links and Named anchors:
-   *    Use "href" to get a link node
-   *      (an "A" tag with the "href" attribute set)
-   *    Use "anchor" or "namedanchor" to get a named anchor node
-   *      (an "A" tag with the "name" attribute set)
-   * @return the element as described above
+   * @param aTagName    Case-insensitive element name.
+   *                    If empty string, this returns any element node or null.
+   *                    If "href", this returns an <a> element which has
+   *                    non-empty "href" attribute or null.
+   *                    If "anchor", this returns an <a> element which has
+   *                    non-empty "name" attribute or null.
+   *                    Otherwise, returns an element node whose name is
+   *                    same as aTagName or null.
+   * @return            A "selected" element.
    */
   nsISupports getSelectedElement(in AString aTagName);
 

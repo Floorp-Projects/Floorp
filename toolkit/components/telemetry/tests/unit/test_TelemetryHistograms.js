@@ -753,6 +753,18 @@ add_task(async function test_datasets() {
 
   const currentRecordExtended = Telemetry.canRecordExtended;
 
+  // Clear everything out
+  Telemetry.getSnapshotForHistograms("main", true /* clear */);
+  Telemetry.getSnapshotForKeyedHistograms("main", true /* clear */);
+
+  // Empty histograms are filtered. Let's record what we check below.
+  Telemetry.getHistogramById("TELEMETRY_TEST_RELEASE_OPTIN").add(1);
+  Telemetry.getHistogramById("TELEMETRY_TEST_RELEASE_OPTOUT").add(1);
+  // Keyed flag histograms are skipped if empty, let's add data
+  Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_FLAG").add("a", 1);
+  Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTIN").add("a", 1);
+  Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT").add("a", 1);
+
   // Check that registeredHistogram works properly
   Telemetry.canRecordExtended = true;
   let registered = Telemetry.getSnapshotForHistograms("main", false /* clear */);
