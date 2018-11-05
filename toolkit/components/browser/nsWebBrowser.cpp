@@ -512,6 +512,9 @@ nsWebBrowser::LoadURIWithOptions(const nsAString& aURI, uint32_t aLoadFlags,
                                  nsIURI* aBaseURI,
                                  nsIPrincipal* aTriggeringPrincipal)
 {
+#ifndef ANDROID
+  MOZ_ASSERT(aTriggeringPrincipal, "nsWebBrowser::LoadURIWithOptions - Need a valid triggeringPrincipal");
+#endif
   NS_ENSURE_STATE(mDocShell);
 
   return mDocShellAsNav->LoadURIWithOptions(
@@ -533,6 +536,9 @@ nsWebBrowser::LoadURI(const nsAString& aURI, uint32_t aLoadFlags,
                       nsIInputStream* aExtraHeaderStream,
                       nsIPrincipal* aTriggeringPrincipal)
 {
+#ifndef ANDROID
+  MOZ_ASSERT(aTriggeringPrincipal, "nsWebBrowser::LoadURI - Need a valid triggeringPrincipal");
+#endif
   NS_ENSURE_STATE(mDocShell);
 
   return mDocShellAsNav->LoadURI(aURI, aLoadFlags, aReferringURI,

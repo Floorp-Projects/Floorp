@@ -1127,6 +1127,9 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     if (subjectPrincipal) {
       loadState->SetTriggeringPrincipal(subjectPrincipal);
     }
+#ifndef ANDROID
+    MOZ_ASSERT(subjectPrincipal, "nsWindowWatcher: triggeringPrincipal required");
+#endif
 
     /* use the URL from the *extant* document, if any. The usual accessor
        GetDocument will synchronously create an about:blank document if
