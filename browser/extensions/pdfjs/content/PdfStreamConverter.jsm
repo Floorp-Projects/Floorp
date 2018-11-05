@@ -785,11 +785,9 @@ class FindEventManager {
   }
 
   bind() {
-    var unload = (evt) => {
+    this.contentWindow.addEventListener("unload", (evt) => {
       this.unbind();
-      this.contentWindow.removeEventListener(evt.type, unload);
-    };
-    this.contentWindow.addEventListener("unload", unload);
+    }, {once: true});
 
     // We cannot directly attach listeners to for the find events
     // since the FindBar is in the parent process. Instead we're
@@ -812,6 +810,7 @@ class FindEventManager {
 
   unbind() {
     this.winmm.sendAsyncMessage("PDFJS:Parent:removeEventListener");
+    this.winmm.removeMessageListener("PDFJS:Child:handleEvent", this);
   }
 }
 
