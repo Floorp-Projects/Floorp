@@ -198,7 +198,6 @@ ProfileBufferCollector::CollectProfilingStackFrame(const js::ProfilingStackFrame
     }
   } else {
     MOZ_ASSERT(aFrame.isLabelFrame());
-    line = Some(aFrame.line());
   }
 
   if (dynamicString) {
