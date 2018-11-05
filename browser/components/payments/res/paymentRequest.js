@@ -299,16 +299,6 @@ var paymentRequest = {
     let cards = Object.assign({}, state.savedBasicCards, state.tempBasicCards);
     return this._sortObjectsByTimeLastUsed(cards);
   },
-
-  maybeCreateFieldErrorElement(container) {
-    let span = container.querySelector(".error-text");
-    if (!span) {
-      span = document.createElement("span");
-      span.className = "error-text";
-      container.appendChild(span);
-    }
-    return span;
-  },
 };
 
 paymentRequest.init();
