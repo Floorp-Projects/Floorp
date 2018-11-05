@@ -31,7 +31,7 @@ class TestServerQuitApplication(MarionetteTestCase):
             body = {"flags": list(flags)}
 
         try:
-            resp = self.marionette._send_message("quit", body)
+            resp = self.marionette._send_message("Marionette:Quit", body)
         finally:
             self.marionette.session_id = None
             self.marionette.session = None
@@ -50,7 +50,7 @@ class TestServerQuitApplication(MarionetteTestCase):
         for typ in [42, True, "foo", []]:
             print("testing type {}".format(type(typ)))
             with self.assertRaises(errors.InvalidArgumentException):
-                self.marionette._send_message("quit", typ)
+                self.marionette._send_message("Marionette:Quit", typ)
 
         with self.assertRaises(errors.InvalidArgumentException):
             self.quit("foo")
