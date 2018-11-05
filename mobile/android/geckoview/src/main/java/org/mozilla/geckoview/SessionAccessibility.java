@@ -19,8 +19,8 @@ import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.InputType;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.View;
@@ -107,10 +107,15 @@ public class SessionAccessibility {
     /* package */ final class NodeProvider extends AccessibilityNodeProvider {
         @Override
         public AccessibilityNodeInfo createAccessibilityNodeInfo(int virtualDescendantId) {
-            AccessibilityNodeInfo node = AccessibilityNodeInfo.obtain(mView, virtualDescendantId);
+            AccessibilityNodeInfo node;
             if (mAttached) {
-                populateNodeFromBundle(node, nativeProvider.getNodeInfo(virtualDescendantId));
+                node = mSession.getSettings().getBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE) ?
+                        getNodeFromGecko(virtualDescendantId) : getNodeFromCache(virtualDescendantId);
+                if (node != null) {
+                    node.setAccessibilityFocused(mAccessibilityFocusedNode == virtualDescendantId);
+                }
             } else {
+                node = AccessibilityNodeInfo.obtain(mView, virtualDescendantId);
                 if (Build.VERSION.SDK_INT < 17 || mView.getDisplay() != null) {
                     // When running junit tests we don't have a display
                     mView.onInitializeAccessibilityNodeInfo(node);
@@ -118,7 +123,6 @@ public class SessionAccessibility {
                 node.setClassName("android.webkit.WebView");
             }
 
-            node.setAccessibilityFocused(mAccessibilityFocusedNode == virtualDescendantId);
             return node;
         }
 
@@ -236,7 +240,30 @@ public class SessionAccessibility {
           return super.findFocus(focus);
         }
 
-        private void populateNodeFromBundle(final AccessibilityNodeInfo node, final GeckoBundle nodeInfo) {
+        private AccessibilityNodeInfo getNodeFromGecko(final int virtualViewId) {
+            AccessibilityNodeInfo node = AccessibilityNodeInfo.obtain(mView, virtualViewId);
+            populateNodeFromBundle(node, nativeProvider.getNodeInfo(virtualViewId), false);
+            return node;
+        }
+
+        private boolean isNodeCached(final int virtualViewId) {
+            return mViewportCache.get(virtualViewId) != null;
+        }
+
+        private AccessibilityNodeInfo getNodeFromCache(final int virtualViewId) {
+            GeckoBundle bundle = mViewportCache.get(virtualViewId);
+            if (bundle == null) {
+                Log.e(LOGTAG, "No node for " + virtualViewId + " cache size: " + mViewportCache.size());
+                return null;
+            }
+
+            AccessibilityNodeInfo node = AccessibilityNodeInfo.obtain(mView, virtualViewId);
+            populateNodeFromBundle(node, bundle, true);
+            return node;
+
+        }
+
+        private void populateNodeFromBundle(final AccessibilityNodeInfo node, final GeckoBundle nodeInfo, final boolean fromCache) {
             if (mView == null || nodeInfo == null) {
                 return;
             }
@@ -310,7 +337,10 @@ public class SessionAccessibility {
             int[] children = nodeInfo.getIntArray("children");
             if (children != null) {
                 for (int childId : children) {
-                    node.addChild(mView, childId);
+                    if (!fromCache || isNodeCached(childId)) {
+                        // If this node is from cache, only populate with children that are cached as well.
+                        node.addChild(mView, childId);
+                    }
                 }
             }
 
@@ -416,6 +446,8 @@ public class SessionAccessibility {
     private boolean mAttached = false;
     // The current node with accessibility focus
     private int mAccessibilityFocusedNode = 0;
+    // Viewport cache
+    final SparseArray<GeckoBundle> mViewportCache = new SparseArray<>();
 
     /* package */ SessionAccessibility(final GeckoSession session) {
         mSession = session;
@@ -643,6 +675,11 @@ public class SessionAccessibility {
 
         @WrapForJNI(calledFrom = "gecko")
         private void replaceViewportCache(final GeckoBundle[] bundles) {
+            mViewportCache.clear();
+            for (GeckoBundle bundle : bundles) {
+                if (bundle == null) { continue; }
+                mViewportCache.append(bundle.getInt("id"), bundle);
+            }
         }
     }
 }
