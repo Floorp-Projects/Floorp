@@ -15,7 +15,7 @@ AntiTracking.runTest("sessionStorage",
   [],
   true,
   true,
-  false);
+  0);
 
 AntiTracking.runTest("sessionStorage and Storage Access API",
   async _ => {
