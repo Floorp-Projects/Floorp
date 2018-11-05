@@ -194,6 +194,7 @@ private:
       }
 
       // Nothing to do; block until some work is available.
+      AUTO_PROFILER_LABEL("DecodePoolImpl::PopWorkLocked::Wait", IDLE);
       if (!aShutdownIdle) {
         // This thread was created before we hit the idle thread maximum. It
         // will never shutdown until the process itself is torn down.
