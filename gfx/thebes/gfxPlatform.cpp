@@ -2864,6 +2864,11 @@ gfxPlatform::InitWebRenderConfig()
       gfxVars::SetUseWebRenderDCompWin(true);
     }
   }
+  if (Preferences::GetBool("gfx.webrender.dcomp-win-triple-buffering.enabled", false)) {
+    if (gfxVars::UseWebRenderDCompWin()) {
+      gfxVars::SetUseWebRenderDCompWinTripleBuffering(true);
+    }
+  }
 #endif
 }
 
