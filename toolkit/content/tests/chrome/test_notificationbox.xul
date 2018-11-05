@@ -39,7 +39,6 @@ function testtag_notificationbox(nb)
 {
   testtag_notificationbox_State(nb, "initial", null, 0);
 
-  SimpleTest.is(nb.notificationsHidden, false, "initial notificationsHidden");
   SimpleTest.is(nb.removeAllNotifications(false), undefined, "initial removeAllNotifications");
   testtag_notificationbox_State(nb, "initial removeAllNotifications", null, 0);
   SimpleTest.is(nb.removeAllNotifications(true), undefined, "initial removeAllNotifications immediate");
@@ -382,7 +381,7 @@ var appendPriorityTests = [
       return priority;
     },
     result: function(nb, priority) {
-      if (priority == nb.PRIORITY_CRITICAL_BLOCK) {
+      if (priority == nb.PRIORITY_CRITICAL_HIGH) {
         let ntf = nb.appendNotification("Notification", "note", "happy.png",
                                         nb.PRIORITY_INFO_LOW, testtag_notificationbox_buttons);
         setTimeout(checkPopupTest, 50, nb, ntf);
@@ -424,7 +423,6 @@ function testtag_notification_State(nb, ntf, testid, label, value, image, priori
     case nb.PRIORITY_CRITICAL_LOW:
     case nb.PRIORITY_CRITICAL_MEDIUM:
     case nb.PRIORITY_CRITICAL_HIGH:
-    case nb.PRIORITY_CRITICAL_BLOCK:
       type = "critical";
       break;
   }
