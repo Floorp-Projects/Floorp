@@ -525,6 +525,8 @@ loopStart:
         break;
       }
 
+      AUTO_PROFILER_LABEL("CacheIOThread::ThreadFunc::Wait", IDLE);
+      AUTO_PROFILER_THREAD_SLEEP;
       lock.Wait();
 
     } while (true);
