@@ -8,6 +8,7 @@
 #define GFX_WEBRENDERLAYERMANAGER_H
 
 #include <unordered_set>
+#include <unordered_map>
 #include <vector>
 
 #include "gfxPrefs.h"
@@ -17,6 +18,7 @@
 #include "mozilla/layers/APZTestData.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
+#include "mozilla/layers/SharedSurfacesChild.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
 #include "mozilla/layers/WebRenderCommandBuilder.h"
@@ -138,6 +140,11 @@ public:
   wr::IpcResourceUpdateQueue& AsyncResourceUpdates();
   void FlushAsyncResourceUpdates();
 
+  void RegisterAsyncAnimation(const wr::ImageKey& aKey, SharedSurfacesAnimation* aAnimation);
+  void DeregisterAsyncAnimation(const wr::ImageKey& aKey);
+  void ClearAsyncAnimations();
+  void WrReleasedImages(const nsTArray<wr::ExternalImageKeyPair>& aPairs);
+
   // Methods to manage the compositor animation ids. Active animations are still
   // going, and when they end we discard them and remove them from the active
   // list.
@@ -227,6 +234,7 @@ private:
   size_t mLastDisplayListSize;
 
   Maybe<wr::IpcResourceUpdateQueue> mAsyncResourceUpdates;
+  std::unordered_map<uint64_t, RefPtr<SharedSurfacesAnimation>> mAsyncAnimations;
 };
 
 } // namespace layers

@@ -120,6 +120,8 @@ WebRenderLayerManager::DoDestroy(bool aIsSync)
   // mActiveCompositorAnimationIds is empty that won't happen.
   mActiveCompositorAnimationIds.clear();
 
+  ClearAsyncAnimations();
+
   mWebRenderCommandBuilder.Destroy();
 
   if (mTransactionIdAllocator) {
@@ -593,6 +595,7 @@ WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
 void
 WebRenderLayerManager::WrUpdated()
 {
+  ClearAsyncAnimations();
   mWebRenderCommandBuilder.ClearCachedResources();
   DiscardLocalImages();
 
@@ -763,6 +766,49 @@ WebRenderLayerManager::FlushAsyncResourceUpdates()
   }
 
   mAsyncResourceUpdates.reset();
+}
+
+void
+WebRenderLayerManager::RegisterAsyncAnimation(const wr::ImageKey& aKey,
+                                              SharedSurfacesAnimation* aAnimation)
+{
+  mAsyncAnimations.insert(std::make_pair(wr::AsUint64(aKey), aAnimation));
+}
+
+void
+WebRenderLayerManager::DeregisterAsyncAnimation(const wr::ImageKey& aKey)
+{
+  mAsyncAnimations.erase(wr::AsUint64(aKey));
+}
+
+void
+WebRenderLayerManager::ClearAsyncAnimations()
+{
+  for (const auto& i : mAsyncAnimations) {
+    i.second->Invalidate(this);
+  }
+  mAsyncAnimations.clear();
+}
+
+void
+WebRenderLayerManager::WrReleasedImages(const nsTArray<wr::ExternalImageKeyPair>& aPairs)
+{
+  // A SharedSurfaceAnimation object's lifetime is tied to its owning
+  // ImageContainer. When the ImageContainer is released,
+  // SharedSurfaceAnimation::Destroy is called which should ensure it is removed
+  // from the layer manager. Whenever the namespace for the
+  // WebRenderLayerManager itself is invalidated (e.g. we changed windows, or
+  // were destroyed ourselves), we callback into the SharedSurfaceAnimation
+  // object to remove its image key for us and any bound surfaces. If, for any
+  // reason, we somehow missed an WrReleasedImages call before the animation
+  // was bound to the layer manager, it will free those associated surfaces on
+  // the next ReleasePreviousFrame call.
+  for (const auto& pair : aPairs) {
+    auto i = mAsyncAnimations.find(wr::AsUint64(pair.key));
+    if (i != mAsyncAnimations.end()) {
+      i->second->ReleasePreviousFrame(this, pair.id);
+    }
+  }
 }
 
 } // namespace layers

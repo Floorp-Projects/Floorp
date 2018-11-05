@@ -207,6 +207,19 @@ public:
                      WebRenderLayerManager* aManager,
                      wr::IpcResourceUpdateQueue& aResources,
                      wr::ImageKey& aKey);
+
+  /**
+   * Release our reference to all frames up to and including the frame which
+   * has an external image ID which matches aId.
+   */
+  void ReleasePreviousFrame(WebRenderLayerManager* aManager,
+                            const wr::ExternalImageId& aId);
+
+  /**
+   * Destroy any state information bound for the given layer manager. Any
+   * image keys are already invalid.
+   */
+  void Invalidate(WebRenderLayerManager* aManager);
 };
 
 } // namespace layers

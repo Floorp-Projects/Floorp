@@ -517,5 +517,24 @@ SharedSurfacesAnimation::UpdateKey(SourceSurfaceSharedData* aSurface,
   return NS_OK;
 }
 
+void
+SharedSurfacesAnimation::ReleasePreviousFrame(WebRenderLayerManager* aManager,
+                                              const wr::ExternalImageId& aId)
+{
+}
+
+void
+SharedSurfacesAnimation::Invalidate(WebRenderLayerManager* aManager)
+{
+  auto i = mKeys.Length();
+  while (i > 0) {
+    --i;
+    AnimationImageKeyData& entry = mKeys[i];
+    if (entry.mManager == aManager) {
+      mKeys.RemoveElementAt(i);
+    }
+  }
+}
+
 } // namespace layers
 } // namespace mozilla
