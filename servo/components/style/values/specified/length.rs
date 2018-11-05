@@ -16,7 +16,7 @@ use std::ops::{Add, Mul};
 use style_traits::{ParseError, SpecifiedValueInfo, StyleParseErrorKind};
 use style_traits::values::specified::AllowedNumericType;
 use super::{AllowQuirks, Number, Percentage, ToComputedValue};
-use values::{Auto, CSSFloat, Either, Normal};
+use values::{Auto, CSSFloat, Either, Normal, IsAuto};
 use values::computed::{self, CSSPixelLength, Context, ExtremumLength};
 use values::generics::NonNegative;
 use values::generics::length::{MaxLength as GenericMaxLength, MozLength as GenericMozLength};
@@ -979,6 +979,13 @@ impl Parse for LengthOrPercentageOrAuto {
 
 /// A wrapper of LengthOrPercentageOrAuto, whose value must be >= 0.
 pub type NonNegativeLengthOrPercentageOrAuto = NonNegative<LengthOrPercentageOrAuto>;
+
+impl IsAuto for NonNegativeLengthOrPercentageOrAuto {
+    #[inline]
+    fn is_auto(&self) -> bool {
+        *self == Self::auto()
+    }
+}
 
 impl NonNegativeLengthOrPercentageOrAuto {
     /// 0
