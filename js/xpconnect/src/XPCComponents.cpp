@@ -3277,6 +3277,16 @@ nsXPCComponents_Utils::CreatePersistentProperties(nsIPersistentProperties** aPer
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::CreateDocumentEncoder(const char* aContentType,
+                                             nsIDocumentEncoder** aDocumentEncoder)
+{
+    NS_ENSURE_ARG_POINTER(aDocumentEncoder);
+    nsCOMPtr<nsIDocumentEncoder> encoder = do_createDocumentEncoder(aContentType);
+    encoder.forget(aDocumentEncoder);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::CreateHTMLCopyEncoder(nsIDocumentEncoder** aDocumentEncoder)
 {
     NS_ENSURE_ARG_POINTER(aDocumentEncoder);

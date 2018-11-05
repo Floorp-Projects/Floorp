@@ -740,6 +740,9 @@ interface nsIXPCComponents_Utils : nsISupports
     /* Create a persistent property object. */
     nsIPersistentProperties createPersistentProperties();
 
+    /* Create a document encoder object. */
+    nsIDocumentEncoder createDocumentEncoder(in string contentType);
+
     /* Create an HTML copy encoder object. */
     nsIDocumentEncoder createHTMLCopyEncoder();
 

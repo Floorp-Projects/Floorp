@@ -24,11 +24,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=401662
 SimpleTest.waitForExplicitFinish();
 
 window.onload = function() {
-  const Cc = SpecialPowers.Cc;
-  const Ci = SpecialPowers.Ci;
+  const Cu = SpecialPowers.Cu;
 
-  var encoder = Cc["@mozilla.org/layout/documentEncoder;1?type=text/html"]
-                   .createInstance(Ci.nsIDocumentEncoder);
+  var encoder = Cu.createDocumentEncoder("text/html");
 
   var doc = $("testframe").contentDocument;
 
