@@ -66,6 +66,7 @@ bool
 GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner* a3rdPartyTrackingWindow,
                                     nsIPrincipal** aTopLevelStoragePrincipal,
                                     nsACString& aTrackingOrigin,
+                                    nsIURI** aTrackingURI,
                                     nsIPrincipal** aTrackingPrincipal)
 {
   if (!nsContentUtils::IsTrackingResourceWindow(a3rdPartyTrackingWindow)) {
@@ -92,12 +93,21 @@ GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner* a3rdPartyTrackingWindow
     return false;
   }
 
-  nsresult rv = trackingPrincipal->GetOriginNoSuffix(aTrackingOrigin);
+  nsCOMPtr<nsIURI> trackingURI;
+  nsresult rv = trackingPrincipal->GetURI(getter_AddRefs(trackingURI));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  rv = trackingPrincipal->GetOriginNoSuffix(aTrackingOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
 
   topLevelStoragePrincipal.forget(aTopLevelStoragePrincipal);
+  if (aTrackingURI) {
+    trackingURI.forget(aTrackingURI);
+  }
   if (aTrackingPrincipal) {
     trackingPrincipal.forget(aTrackingPrincipal);
   }
@@ -408,6 +418,7 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipa
   }
 
   nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal;
+  nsCOMPtr<nsIURI> trackingURI;
   nsAutoCString trackingOrigin;
   nsCOMPtr<nsIPrincipal> trackingPrincipal;
 
@@ -426,6 +437,11 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipa
   if (outerParentWindow->IsTopLevelWindow()) {
     CopyUTF16toUTF8(origin, trackingOrigin);
     trackingPrincipal = aPrincipal;
+    rv = trackingPrincipal->GetURI(getter_AddRefs(trackingURI));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      LOG(("Couldn't get the tracking principal URI"));
+      return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+    }
     topLevelStoragePrincipal = parentWindow->GetPrincipal();
     if (NS_WARN_IF(!topLevelStoragePrincipal)) {
       LOG(("Top-level storage area principal not found, bailing out early"));
@@ -436,15 +452,9 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipa
   } else if (!GetParentPrincipalAndTrackingOrigin(parentWindow,
                                                   getter_AddRefs(topLevelStoragePrincipal),
                                                   trackingOrigin,
+                                                  getter_AddRefs(trackingURI),
                                                   getter_AddRefs(trackingPrincipal))) {
     LOG(("Error while computing the parent principal and tracking origin, bailing out early"));
-    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
-  }
-
-  nsCOMPtr<nsIURI> trackingURI;
-  rv = NS_NewURI(getter_AddRefs(trackingURI), trackingOrigin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG(("Couldn't make a new URI out of the tracking origin"));
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
@@ -702,10 +712,12 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
   }
 
   nsCOMPtr<nsIPrincipal> parentPrincipal;
+  nsCOMPtr<nsIURI> trackingURI;
   nsAutoCString trackingOrigin;
   if (!GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner::Cast(aWindow),
                                            getter_AddRefs(parentPrincipal),
                                            trackingOrigin,
+                                           getter_AddRefs(trackingURI),
                                            nullptr)) {
     LOG(("Failed to obtain the parent principal and the tracking origin"));
     return false;
