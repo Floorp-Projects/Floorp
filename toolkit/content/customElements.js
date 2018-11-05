@@ -4,7 +4,7 @@
 
  // This file defines these globals on the window object.
  // Define them here so that ESLint can find them:
-/* globals MozElementMixin, MozXULElement, MozBaseControl */
+/* globals MozElementMixin, MozXULElement, MozElements */
 
 "use strict";
 
@@ -44,6 +44,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
 const gXULDOMParser = new DOMParser();
 gXULDOMParser.forceEnableXULXBL();
+
+const MozElements = {};
 
 const MozElementMixin = Base => class MozElement extends Base {
 
@@ -253,7 +255,7 @@ function getInterfaceProxy(obj) {
   return obj._customInterfaceProxy;
 }
 
-class MozBaseControl extends MozXULElement {
+MozElements.BaseControl = class BaseControl extends MozXULElement {
   get disabled() {
     return this.getAttribute("disabled") == "true";
   }
@@ -277,14 +279,15 @@ class MozBaseControl extends MozXULElement {
       this.removeAttribute("tabindex");
     }
   }
-}
+};
 
-MozXULElement.implementCustomInterface(MozBaseControl, [Ci.nsIDOMXULControlElement]);
+MozXULElement.implementCustomInterface(MozElements.BaseControl,
+                                       [Ci.nsIDOMXULControlElement]);
 
 // Attach the base class to the window so other scripts can use it:
 window.MozElementMixin = MozElementMixin;
 window.MozXULElement = MozXULElement;
-window.MozBaseControl = MozBaseControl;
+window.MozElements = MozElements;
 
 // For now, don't load any elements in the extension dummy document.
 // We will want to load <browser> when that's migrated (bug 1441935).
