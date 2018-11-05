@@ -236,12 +236,12 @@ SimpleTest.waitForFocus(async function() {
   selection.removeAllRanges();
   selection.addRange(range);
 
-  todo_is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
-          null,
-          "#1-8 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection includes 2 elements and starts from previous text node");
-  todo_is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
-          null,
-          "#1-8 nsIHTMLEditor::getSelectedElement(\"b\") should return null when Selection includes 2 elements and starts from previous text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#1-8 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection includes 2 elements and starts from previous text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     null,
+     "#1-8 nsIHTMLEditor::getSelectedElement(\"b\") should return null when Selection includes 2 elements and starts from previous text node");
   is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
      null,
      "#1-8 nsIHTMLEditor::getSelectedElement(\"i\") should return null when Selection includes 2 elements and starts from previous text node");
@@ -345,12 +345,12 @@ SimpleTest.waitForFocus(async function() {
   selection.removeAllRanges();
   selection.addRange(range);
 
-  todo_is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
-          null,
-          "#2-1 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection is across 3 <b> elements");
-  todo_is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
-          null,
-          "#2-1 nsIHTMLEditor::getSelectedElement(\"b\") should return null when Selection is across 3 <b> elements");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#2-1 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection is across 3 <b> elements");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     null,
+     "#2-1 nsIHTMLEditor::getSelectedElement(\"b\") should return null when Selection is across 3 <b> elements");
   is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
      null,
      "#2-1 nsIHTMLEditor::getSelectedElement(\"i\") should return null when Selection is across 3 <b> elements");
@@ -362,12 +362,12 @@ SimpleTest.waitForFocus(async function() {
   selection.removeAllRanges();
   selection.addRange(range);
 
-  todo_is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
-          null,
-          "#2-2 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection is across 3 <b> elements and previous text node");
-  todo_is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
-          null,
-          "#2-2 nsIHTMLEditor::getSelectedElement(\"b\") should return null when Selection is across 3 <b> elements and previous text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#2-2 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection is across 3 <b> elements and previous text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     null,
+     "#2-2 nsIHTMLEditor::getSelectedElement(\"b\") should return null when Selection is across 3 <b> elements and previous text node");
   is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
      null,
      "#2-2 nsIHTMLEditor::getSelectedElement(\"i\") should return null when Selection is across 3 <b> elements and previous text node");
@@ -416,12 +416,12 @@ SimpleTest.waitForFocus(async function() {
   selection.removeAllRanges();
   selection.addRange(range);
 
-  todo_is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
-          null,
-          "#3-3 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection is across 3 <b> elements which are nested and following text node");
-  todo_is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
-          null,
-          "#3-3 nsIHTMLEditor::getSelectedElement(\"b\") should return null when Selection is across 3 <b> elements which are nested and following text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#3-3 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection is across 3 <b> elements which are nested and following text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     null,
+     "#3-3 nsIHTMLEditor::getSelectedElement(\"b\") should return null when Selection is across 3 <b> elements which are nested and following text node");
   is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
      null,
      "#3-3 nsIHTMLEditor::getSelectedElement(\"i\") should return null when Selection is across 3 <b> elements which are nested and following text node");
