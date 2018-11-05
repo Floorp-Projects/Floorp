@@ -52,7 +52,9 @@ struct Module
      * ANY_PROCESS is specified. This flag enables a module in the
      * GPU process.
      */
-    ALLOW_IN_GPU_PROCESS = 0x4
+    ALLOW_IN_GPU_PROCESS = 0x4,
+    ALLOW_IN_VR_PROCESS = 0x8,
+    ALLOW_IN_GPU_AND_VR_PROCESS = ALLOW_IN_GPU_PROCESS | ALLOW_IN_VR_PROCESS
   };
 
   /**

@@ -222,6 +222,11 @@ nsLayoutModuleInitialize()
 
   gInitialized = true;
 
+  if (XRE_GetProcessType() == GeckoProcessType_VR) {
+    // VR process doesn't need the layout module.
+    return;
+  }
+
   if (XRE_GetProcessType() == GeckoProcessType_GPU) {
     // We mark the layout module as being available in the GPU process so that
     // XPCOM's component manager initializes the power manager service, which
@@ -686,7 +691,8 @@ Initialize()
 static void
 LayoutModuleDtor()
 {
-  if (XRE_GetProcessType() == GeckoProcessType_GPU) {
+  if (XRE_GetProcessType() == GeckoProcessType_GPU ||
+      XRE_GetProcessType() == GeckoProcessType_VR) {
     return;
   }
 
