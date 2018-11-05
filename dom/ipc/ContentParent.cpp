@@ -1261,7 +1261,6 @@ ContentParent::CreateBrowser(const TabContext& aContext,
     }
     RefPtr<TabParent> tp(new TabParent(constructorSender, tabId,
                                        aContext, chromeFlags));
-    tp->SetInitedByParent();
 
     PBrowserParent* browser =
     constructorSender->SendPBrowserConstructor(
@@ -5160,10 +5159,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
   MOZ_ASSERT(TabParent::GetFrom(newRemoteTab) == newTab);
 
   newTab->SwapFrameScriptsFrom(cwi.frameScripts());
-
-  if (!newTab->SetRenderFrame()) {
-    rv = NS_ERROR_FAILURE;
-  }
+  newTab->MaybeShowFrame();
 
   nsCOMPtr<nsIWidget> widget = newTab->GetWidget();
   if (widget) {

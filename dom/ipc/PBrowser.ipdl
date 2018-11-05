@@ -124,7 +124,6 @@ both:
                        Principal aPrincipal, ClonedMessageData aData);
 
 parent:
-    async CreatePRenderFrame();
     async DestroyPRenderFrame();
 
 parent:

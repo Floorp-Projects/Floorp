@@ -214,10 +214,6 @@ BrowserElementParent::OpenWindowOOP(TabParent* aOpenerTabParent,
   popupFrameElement->AllowCreateFrameLoader();
   popupFrameElement->CreateRemoteFrameLoader(aPopupTabParent);
 
-  if (!aPopupTabParent->SetRenderFrame()) {
-    return BrowserElementParent::OPEN_WINDOW_IGNORED;
-  }
-
   return opened;
 }
 

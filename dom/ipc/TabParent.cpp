@@ -156,7 +156,6 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mIsDestroyed(false)
   , mChromeFlags(aChromeFlags)
   , mDragValid(false)
-  , mInitedByParent(false)
   , mTabId(aTabId)
   , mCreatingWindow(false)
   , mCursor(eCursorInvalid)
@@ -637,31 +636,33 @@ TabParent::LoadURL(nsIURI* aURI)
 void
 TabParent::InitRenderFrame()
 {
-  if (IsInitedByParent()) {
-    // If TabParent is initialized by parent side then the RenderFrame must also
-    // be created here. If TabParent is initialized by child side,
-    // child side will create RenderFrame.
-    MOZ_ASSERT(!mRenderFrame);
-    RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-    MOZ_ASSERT(frameLoader);
-    if (frameLoader) {
-      mRenderFrame = MakeUnique<RenderFrameParent>(frameLoader);
-      MOZ_ASSERT(mRenderFrame->IsInitialized());
-      layers::LayersId layersId = mRenderFrame->GetLayersId();
-      AddTabParentToTable(layersId, this);
-
-      TextureFactoryIdentifier textureFactoryIdentifier;
-      mRenderFrame->GetTextureFactoryIdentifier(&textureFactoryIdentifier);
-      Unused << SendInitRendering(textureFactoryIdentifier, layersId,
-        mRenderFrame->GetCompositorOptions(),
-        mRenderFrame->IsLayersConnected(),
-        true);
-    }
-  } else {
-    // Otherwise, the child should have constructed the RenderFrame,
-    // and we should already know about it.
-    MOZ_ASSERT(mRenderFrame);
+  MOZ_ASSERT(!mRenderFrame);
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  MOZ_ASSERT(frameLoader);
+  if (!frameLoader) {
+    return;
   }
+  mRenderFrame = MakeUnique<RenderFrameParent>(frameLoader);
+  MOZ_ASSERT(mRenderFrame->IsInitialized());
+  layers::LayersId layersId = mRenderFrame->GetLayersId();
+  AddTabParentToTable(layersId, this);
+
+  TextureFactoryIdentifier textureFactoryIdentifier;
+  mRenderFrame->GetTextureFactoryIdentifier(&textureFactoryIdentifier);
+  Unused << SendInitRendering(textureFactoryIdentifier, layersId,
+    mRenderFrame->GetCompositorOptions(),
+    mRenderFrame->IsLayersConnected(),
+    true);
+}
+
+void
+TabParent::MaybeShowFrame()
+{
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  if (!frameLoader) {
+    return;
+  }
+  frameLoader->MaybeShowFrame();
 }
 
 void
@@ -2608,72 +2609,10 @@ TabParent::DeallocPColorPickerParent(PColorPickerParent* actor)
 }
 
 mozilla::ipc::IPCResult
-TabParent::RecvCreatePRenderFrame()
-{
-  MOZ_ASSERT(!mRenderFrame);
-  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-
-  mRenderFrame = MakeUnique<RenderFrameParent>(frameLoader);
-  if (mRenderFrame->IsInitialized()) {
-    layers::LayersId layersId = mRenderFrame->GetLayersId();
-    AddTabParentToTable(layersId, this);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 TabParent::RecvDestroyPRenderFrame()
 {
   mRenderFrame.reset(nullptr);
   return IPC_OK();
-}
-
-bool
-TabParent::SetRenderFrame()
-{
-  if (IsInitedByParent()) {
-    return false;
-  }
-
-  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-
-  if (!frameLoader) {
-    return false;
-  }
-
-  bool success = mRenderFrame->Initialize(frameLoader);
-  if (!success) {
-    return false;
-  }
-
-  frameLoader->MaybeShowFrame();
-
-  layers::LayersId layersId = mRenderFrame->GetLayersId();
-  AddTabParentToTable(layersId, this);
-
-  TextureFactoryIdentifier textureFactoryIdentifier;
-  mRenderFrame->GetTextureFactoryIdentifier(&textureFactoryIdentifier);
-  Unused << SendInitRendering(textureFactoryIdentifier, layersId,
-    mRenderFrame->GetCompositorOptions(),
-    mRenderFrame->IsLayersConnected(),
-    true);
-
-  return true;
-}
-
-bool
-TabParent::GetRenderFrameInfo(TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                              layers::LayersId* aLayersId,
-                              layers::CompositorOptions* aCompositorOptions)
-{
-  if (!mRenderFrame) {
-    return false;
-  }
-
-  *aLayersId = mRenderFrame->GetLayersId();
-  mRenderFrame->GetTextureFactoryIdentifier(aTextureFactoryIdentifier);
-  *aCompositorOptions = mRenderFrame->GetCompositorOptions();
-  return true;
 }
 
 already_AddRefed<nsFrameLoader>
