@@ -177,12 +177,12 @@ BrowserElementParent::DispatchOpenWindowEvent(Element* aOpenerFrameElement,
 BrowserElementParent::OpenWindowResult
 BrowserElementParent::OpenWindowOOP(TabParent* aOpenerTabParent,
                                     TabParent* aPopupTabParent,
-                                    PRenderFrameParent* aRenderFrame,
                                     const nsAString& aURL,
                                     const nsAString& aName,
                                     const nsAString& aFeatures,
                                     TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                    layers::LayersId* aLayersId)
+                                    layers::LayersId* aLayersId,
+                                    layers::CompositorOptions* aCompositorOptions)
 {
   // Create an iframe owned by the same document which owns openerFrameElement.
   nsCOMPtr<Element> openerFrameElement = aOpenerTabParent->GetOwnerElement();
@@ -217,9 +217,8 @@ BrowserElementParent::OpenWindowOOP(TabParent* aOpenerTabParent,
   popupFrameElement->AllowCreateFrameLoader();
   popupFrameElement->CreateRemoteFrameLoader(aPopupTabParent);
 
-  RenderFrameParent* rfp = static_cast<RenderFrameParent*>(aRenderFrame);
-  if (!aPopupTabParent->SetRenderFrame(rfp) ||
-      !aPopupTabParent->GetRenderFrameInfo(aTextureFactoryIdentifier, aLayersId)) {
+  if (!aPopupTabParent->SetRenderFrame() ||
+      !aPopupTabParent->GetRenderFrameInfo(aTextureFactoryIdentifier, aLayersId, aCompositorOptions)) {
     return BrowserElementParent::OPEN_WINDOW_IGNORED;
   }
 

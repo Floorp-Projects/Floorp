@@ -54,9 +54,6 @@ template<typename T> class nsPtrHashKey;
 
 namespace mozilla {
 class AbstractThread;
-namespace layout {
-class RenderFrameChild;
-} // namespace layout
 
 namespace layers {
 class APZChild;
@@ -211,7 +208,6 @@ class TabChild final : public TabChildBase,
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
   typedef mozilla::dom::CoalescedMouseData CoalescedMouseData;
   typedef mozilla::dom::CoalescedWheelData CoalescedWheelData;
-  typedef mozilla::layout::RenderFrameChild RenderFrameChild;
   typedef mozilla::layers::APZEventState APZEventState;
   typedef mozilla::layers::SetAllowedTouchBehaviorCallback SetAllowedTouchBehaviorCallback;
   typedef mozilla::layers::TouchBehaviorFlags TouchBehaviorFlags;
@@ -308,7 +304,7 @@ public:
                     const layers::LayersId& aLayersId,
                     const mozilla::layers::CompositorOptions& aCompositorOptions,
                     const bool& aLayersConnected,
-                    PRenderFrameChild* aRenderFrame) override;
+                    const bool& aHasRenderFrame) override;
 
   virtual mozilla::ipc::IPCResult
   RecvUpdateDimensions(const mozilla::dom::DimensionInfo& aDimensionInfo) override;
@@ -609,7 +605,7 @@ public:
   void DoFakeShow(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                   const layers::LayersId& aLayersId,
                   const mozilla::layers::CompositorOptions& aCompositorOptions,
-                  PRenderFrameChild* aRenderFrame,
+                  const bool aHasRenderFrame,
                   const ShowInfo& aShowInfo);
 
   void ContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
@@ -714,10 +710,6 @@ public:
 protected:
   virtual ~TabChild();
 
-  virtual PRenderFrameChild* AllocPRenderFrameChild() override;
-
-  virtual bool DeallocPRenderFrameChild(PRenderFrameChild* aFrame) override;
-
   virtual mozilla::ipc::IPCResult RecvDestroy() override;
 
   virtual mozilla::ipc::IPCResult RecvSetDocShellIsActive(const bool& aIsActive) override;
@@ -776,7 +768,7 @@ private:
   void InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                           const layers::LayersId& aLayersId,
                           const mozilla::layers::CompositorOptions& aCompositorOptions,
-                          PRenderFrameChild* aRenderFrame);
+                          const bool aHasRenderFrame);
   void InitAPZState();
 
   void DestroyWindow();
@@ -826,7 +818,6 @@ private:
   RefPtr<mozilla::dom::TabGroup> mTabGroup;
   RefPtr<PuppetWidget> mPuppetWidget;
   nsCOMPtr<nsIURI> mLastURI;
-  RenderFrameChild* mRemoteFrame;
   RefPtr<nsIContentChild> mManager;
   uint32_t mChromeFlags;
   uint32_t mMaxTouchPoints;
