@@ -3007,48 +3007,49 @@ HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
   }
 
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-
-  RefPtr<Element> selectedElement;
-  bool found = false;
   iter->Init(firstRange);
-  // loop through the content iterator for each content node
-  while (!iter->IsDone()) {
+
+  RefPtr<Element> lastElementInRange;
+  for (bool foundElementInRange = false; !iter->IsDone(); iter->Next()) {
     // XXX This is really odd since this means that the result depends on
     //     what is the last node.  If the last node is an element node,
     //     it may be returned even if it does not match with aTagName.
     //     On the other hand, if last node is not an element, i.e., we have
     //     not found proper element node, we return nullptr as this method
     //     name explains.
-    selectedElement = Element::FromNodeOrNull(iter->GetCurrentNode());
-    if (selectedElement) {
-      if (found) {
-        // At least 2 elements are in the range so that return nullptr.
-        return nullptr;
-      }
-
-      if (!aTagName) {
-        found = true;
-      }
-      // The "A" tag is a pain,
-      //  used for both link(href is set) and "Named Anchor"
-      else if ((isLinkTag &&
-                HTMLEditUtils::IsLink(selectedElement)) ||
-               (isNamedAnchorTag &&
-                HTMLEditUtils::IsNamedAnchor(selectedElement))) {
-        found = true;
-      }
-      // All other tag names are handled here.
-      else if (aTagName == selectedElement->NodeInfo()->NameAtom()) {
-        found = true;
-      }
-
-      if (!found) {
-        return nullptr;
-      }
+    lastElementInRange = Element::FromNodeOrNull(iter->GetCurrentNode());
+    if (!lastElementInRange) {
+      continue;
     }
-    iter->Next();
+
+    if (foundElementInRange) {
+      // At least 2 elements are in the range so that return nullptr.
+      return nullptr;
+    }
+
+    foundElementInRange = true;
+
+    if (!aTagName) {
+      continue;
+    }
+
+    if (isLinkTag && HTMLEditUtils::IsLink(lastElementInRange)) {
+      continue;
+    }
+
+    if (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(lastElementInRange)) {
+      continue;
+    }
+
+    if (aTagName == lastElementInRange->NodeInfo()->NameAtom()) {
+      continue;
+    }
+
+    // First element in the range does not match what the caller is looking
+    // for.
+    return nullptr;
   }
-  return selectedElement.forget();
+  return lastElementInRange.forget();
 }
 
 already_AddRefed<Element>
