@@ -25,8 +25,6 @@ public:
             nsContainerFrame* aParent,
             nsIFrame*         aPrevInFlow) override;
 
-  nsSplittableType GetSplittableType() const override;
-
   void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
   /*
