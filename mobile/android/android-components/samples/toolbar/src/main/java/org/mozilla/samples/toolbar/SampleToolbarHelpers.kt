@@ -5,18 +5,15 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.drawable.ClipDrawable
-import android.graphics.drawable.Drawable
 import android.support.v7.widget.RecyclerView
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
 import android.widget.TextView
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
-import mozilla.components.browser.toolbar.BrowserToolbar
 
 // Code needed for assembling the sample application - but not needed to actually explain the toolbar
 
@@ -127,41 +124,5 @@ class UrlBoxProgressView(
     override fun onDraw(canvas: Canvas?) {
         backgroundDrawable.draw(canvas)
         progressDrawable.draw(canvas)
-    }
-}
-
-/**
- * A custom page action that either shows a reload button or a stop button based on the provided
- * <code>isLoading</code> lambda.
- */
-class ReloadPageAction(
-    private val reloadImage: Drawable,
-    private val reloadContentDescription: String,
-    private val stopImage: Drawable,
-    private val stopContentDescription: String,
-    private val isLoading: () -> Boolean,
-    background: Int = 0,
-    listener: () -> Unit
-) : BrowserToolbar.Button(
-    reloadImage,
-    reloadContentDescription,
-    listener = listener,
-    background = background
-) {
-    var loading: Boolean = false
-        private set
-
-    override fun bind(view: View) {
-        loading = isLoading.invoke()
-
-        val button = view as ImageButton
-
-        if (loading) {
-            button.setImageDrawable(stopImage)
-            button.contentDescription = stopContentDescription
-        } else {
-            button.setImageDrawable(reloadImage)
-            button.contentDescription = reloadContentDescription
-        }
     }
 }

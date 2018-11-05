@@ -290,12 +290,12 @@ class ToolbarActivity : AppCompatActivity() {
         // Add a custom page action for reload and two browser actions
         // //////////////////////////////////////////////////////////////////////////////////////////
 
-        val reload = ReloadPageAction(
-            reloadImage = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_refresh),
-            reloadContentDescription = "Reload",
-            stopImage = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_stop),
-            stopContentDescription = "Stop",
-            isLoading = { loading },
+        val reload = BrowserToolbar.TwoStateButton(
+            enabledImage = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_refresh),
+            enabledContentDescription = "Reload",
+            disabledImage = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_stop),
+            disabledContentDescription = "Stop",
+            isEnabled = { loading },
             background = R.drawable.pageaction_background
         ) {
             if (loading) {

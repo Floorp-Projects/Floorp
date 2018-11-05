@@ -13,6 +13,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.View.OnFocusChangeListener
 import android.view.ViewGroup
+import android.widget.ImageButton
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
@@ -429,6 +430,50 @@ class BrowserToolbar @JvmOverloads constructor(
         override fun createView(parent: ViewGroup): View {
             return super.createView(parent).apply {
                 setPadding(padding)
+            }
+        }
+    }
+
+    /**
+     * An action that either shows an active button or an inactive button based on the provided
+     * <code>isEnabled</code> lambda.
+     *
+     * @param enabledImage The drawable to be show if the button is in the enabled stated.
+     * @param enabledContentDescription The content description to use if the button is in the enabled state.
+     * @param disabledImage The drawable to be show if the button is in the disabled stated.
+     * @param disabledContentDescription The content description to use if the button is in the enabled state.
+     * @param isEnabled Lambda that returns true of false to indicate whether this button should be enabled/disabled.
+     * @param background A custom (stateful) background drawable resource to be used.
+     * @param listener Callback that will be invoked whenever the checked state changes.
+     */
+    open class TwoStateButton(
+        private val enabledImage: Drawable,
+        private val enabledContentDescription: String,
+        private val disabledImage: Drawable,
+        private val disabledContentDescription: String,
+        private val isEnabled: () -> Boolean = { true },
+        background: Int = 0,
+        listener: () -> Unit
+    ) : BrowserToolbar.Button(
+        enabledImage,
+        enabledContentDescription,
+        listener = listener,
+        background = background
+    ) {
+        var enabled: Boolean = false
+            private set
+
+        override fun bind(view: View) {
+            enabled = isEnabled.invoke()
+
+            val button = view as ImageButton
+
+            if (enabled) {
+                button.setImageDrawable(disabledImage)
+                button.contentDescription = disabledContentDescription
+            } else {
+                button.setImageDrawable(enabledImage)
+                button.contentDescription = enabledContentDescription
             }
         }
     }

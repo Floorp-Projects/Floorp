@@ -30,25 +30,25 @@ permalink: /changelog/
 
   ```kotlin
   // Before
-  Config.custom(CONFIG_URL).then { config: Config ->    
+  Config.custom(CONFIG_URL).then { config: Config ->
     account = FirefoxAccount(config, CLIENT_ID, REDIRECT_URL)
   }
 
-  // Now  
+  // Now
   val account = async {
     Config.custom(CONFIG_URL).await().use { config ->
       FirefoxAccount(config, CLIENT_ID, REDIRECT_URL)
-    }                  
-  }    
+    }
+  }
   ```
   In case error handling is needed, the new API will also become easier to work with:
-   ```kotlin
+  ```kotlin
   // Before
   account.beginOAuthFlow(scopes, wantsKeys).then({ url ->
     showLoginScreen(url)
   }, { exception ->
     handleException(exception)
-  }
+  })
 
   // Now
   async {
@@ -63,14 +63,60 @@ permalink: /changelog/
 * **browser-engine-system, browser-engine-gecko, browser-engine-gecko-beta and browser-engine-gecko-nightly**:
   Adding support for using `SystemEngineView` and `GeckoEngineView` in a `CoordinatorLayout`.
   This allows to create nice transitions like hiding the toolbar when scrolls.
+* **browser-session**
+  * Fixed an issue where a custom tab `Session?` could get selected after removing the currently selected `Session`.
+* **browser-toolbar**:
+  * Added TwoStateButton that will change drawables based on the `isEnabled` listener. This is particularly useful for
+  having a reload/cancel button.
+  ```kotlin
+  var isLoading: Boolean // updated by some state change.
+  BrowserToolbar.TwoStateButton(
+      reloadDrawable,
+      "reload button",
+      cancelDrawable,
+      "cancel button",
+      { isLoading }
+  ) { /* On-click listener */ }
+  ```
+  * BrowserToolbar APIs for Button and ToggleButton have also been updated to accept `Drawable` instead of resource IDs:
+  ```kotlin
+  // Before
+  BrowserToolbar.Button(R.drawable.image, "image description") {
+    // perform an action on click.
+  }
+
+  // Now
+  val imageDrawable: Drawable = Drawable()
+  BrowserToolbar.Button(imageDrawable, "image description") {
+    // perform an action on click.
+  }
+
+  // Before
+  BrowserToolbar.ToggleButton(
+    R.drawable.image,
+    R.drawable.image_selected,
+    "image description",
+    "image selected description") {
+    // perform an action on click.
+  }
+
+  // Now
+  val imageDrawable: Drawable = Drawable()
+  val imageSelectedDrawable: Drawable = Drawable()
+  BrowserToolbar.ToggleButton(
+    imageDrawable,
+    imageSelectedDrawable,
+    "image description",
+    "image selected description") {
+    // perform an action on click.
+  }
+  ```
 * **concept-awesomebar**
   * 🆕 New component: An abstract definition of an awesome bar component.
 * **browser-awesomebar**
   * 🆕 New component: A customizable [Awesome Bar](https://support.mozilla.org/en-US/kb/awesome-bar-search-firefox-bookmarks-history-tabs) implementation for browsers.A
 * **feature-awesomebar**
   * 🆕 New component: A component that connects a [concept-awesomebar](https://github.com/mozilla-mobile/android-components/components/concept/awesomebar/README.md) implementation to a [concept-toolbar](https://github.com/mozilla-mobile/android-components/components/concept/toolbar/README.md) implementation and provides implementations of various suggestion providers.
-* **browser-session**
-  * Fixed an issue where a custom tab `Session? could get selected after removing the currently selected `Session`.
 
 # 0.29.0
 

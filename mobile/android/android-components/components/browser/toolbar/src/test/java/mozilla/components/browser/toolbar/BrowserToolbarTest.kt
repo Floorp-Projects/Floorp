@@ -6,8 +6,10 @@ package mozilla.components.browser.toolbar
 
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.View
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar.Companion.ACTION_PADDING_DP
@@ -717,5 +719,22 @@ class BrowserToolbarTest {
             visible = { false }) {}
 
         assertEquals(false, button.visible())
+    }
+
+    @Test
+    fun `ReloadPageAction visibility changes update image`() {
+        val reloadImage: Drawable = mock()
+        val stopImage: Drawable = mock()
+        val view: ImageButton = mock()
+        var reloadPageAction = BrowserToolbar.TwoStateButton(reloadImage, "reload", stopImage, "stop") {}
+        assertFalse(reloadPageAction.enabled)
+        reloadPageAction.bind(view)
+        verify(view).setImageDrawable(stopImage)
+        verify(view).contentDescription = "stop"
+
+        reloadPageAction = BrowserToolbar.TwoStateButton(reloadImage, "reload", stopImage, "stop", { false }) {}
+        reloadPageAction.bind(view)
+        verify(view).setImageDrawable(stopImage)
+        verify(view).contentDescription = "reload"
     }
 }
