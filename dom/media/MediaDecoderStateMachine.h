@@ -190,6 +190,7 @@ public:
     DECODER_STATE_DORMANT,
     DECODER_STATE_DECODING_FIRSTFRAME,
     DECODER_STATE_DECODING,
+    DECODER_STATE_LOOPING_DECODING,
     DECODER_STATE_SEEKING,
     DECODER_STATE_BUFFERING,
     DECODER_STATE_COMPLETED,
@@ -304,6 +305,7 @@ private:
   class DormantState;
   class DecodingFirstFrameState;
   class DecodingState;
+  class LoopingDecodingState;
   class SeekingState;
   class AccurateSeekingState;
   class NextFrameSeekingState;
