@@ -644,6 +644,44 @@ add_task(async function test_newCanRecordsMatchTheOld() {
                "Prerelease Data is the new way to say Extended Collection");
 });
 
+add_task(function test_histogram_filtering() {
+  const COUNT_ID = "TELEMETRY_TEST_COUNT";
+  const KEYED_ID = "TELEMETRY_TEST_KEYED_COUNT";
+  const count = Telemetry.getHistogramById(COUNT_ID);
+  const keyed = Telemetry.getKeyedHistogramById(KEYED_ID);
+
+  count.add(1);
+  keyed.add("a", 1);
+
+  let snapshot = Telemetry.getSnapshotForHistograms("main", false, /* filter */ false).parent;
+  let keyedSnapshot = Telemetry.getSnapshotForKeyedHistograms("main", false, /* filter */ false).parent;
+  Assert.ok(COUNT_ID in snapshot, "test histogram should be snapshotted");
+  Assert.ok(KEYED_ID in keyedSnapshot, "test keyed histogram should be snapshotted");
+
+  snapshot = Telemetry.getSnapshotForHistograms("main", false, /* filter */ true).parent;
+  keyedSnapshot = Telemetry.getSnapshotForKeyedHistograms("main", false, /* filter */ true).parent;
+  Assert.ok(!(COUNT_ID in snapshot), "test histogram should not be snapshotted");
+  Assert.ok(!(KEYED_ID in keyedSnapshot), "test keyed histogram should not be snapshotted");
+});
+
+add_task(function test_scalar_filtering() {
+  const COUNT_ID = "telemetry.test.unsigned_int_kind";
+  const KEYED_ID = "telemetry.test.keyed_unsigned_int";
+
+  Telemetry.scalarSet(COUNT_ID, 2);
+  Telemetry.keyedScalarSet(KEYED_ID, "a", 2);
+
+  let snapshot = Telemetry.getSnapshotForScalars("main", false, /* filter */ false).parent;
+  let keyedSnapshot = Telemetry.getSnapshotForKeyedScalars("main", false, /* filter */ false).parent;
+  Assert.ok(COUNT_ID in snapshot, "test scalars should be snapshotted");
+  Assert.ok(KEYED_ID in keyedSnapshot, "test keyed scalars should be snapshotted");
+
+  snapshot = Telemetry.getSnapshotForScalars("main", false, /* filter */ true).parent;
+  keyedSnapshot = Telemetry.getSnapshotForKeyedScalars("main", false, /* filter */ true).parent;
+  Assert.ok(!(COUNT_ID in snapshot), "test scalars should not be snapshotted");
+  Assert.ok(!(KEYED_ID in keyedSnapshot), "test keyed scalars should not be snapshotted");
+});
+
 add_task(async function stopServer() {
   await PingServer.stop();
 });
