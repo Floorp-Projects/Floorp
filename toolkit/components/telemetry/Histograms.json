@@ -7098,28 +7098,6 @@
     "n_buckets": 20,
     "description": "Time (ms) it takes for checking if the pending pings are over-quota"
   },
-  "TELEMETRY_SUCCESSFUL_SEND_PINGS_SIZE_KB": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
-    "expires_in_version": "66",
-    "kind": "exponential",
-    "low": 10,
-    "high": 1024,
-    "n_buckets": 20,
-    "bug_numbers": [1367094],
-    "description": "The size (KB) of the Telemetry successfully sent pings"
-  },
-  "TELEMETRY_FAILED_SEND_PINGS_SIZE_KB": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
-    "expires_in_version": "66",
-    "kind": "exponential",
-    "low": 10,
-    "high": 1024,
-    "n_buckets": 20,
-    "bug_numbers": [1367094],
-    "description": "The size (KB) of the Telemetry unsuccessfully sent pings"
-  },
   "TELEMETRY_PING_SIZE_EXCEEDED_SEND": {
     "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
@@ -7209,8 +7187,8 @@
   "TELEMETRY_SEND_FAILURE_TYPE" : {
     "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
-    "bug_numbers": [1367110],
-    "expires_in_version": "66",
+    "bug_numbers": [1367110, 1501303],
+    "expires_in_version": "never",
     "kind": "categorical",
     "labels": [
       "eOK",
