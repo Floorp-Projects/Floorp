@@ -83,6 +83,14 @@ class UrlbarView {
     this._rows.textContent = "";
   }
 
+  onQueryCancelled(queryContext) {
+    // Nothing.
+  }
+
+  onQueryFinished(queryContext) {
+    // Nothing.
+  }
+
   onQueryResults(queryContext) {
     // XXX For now, clear the results for each set received. We should really
     // be updating the existing list.
