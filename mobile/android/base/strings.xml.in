@@ -647,11 +647,11 @@
   <string name="pip_pause_button_title">&pip_pause_button_title;</string>
   <string name="pip_pause_button_description">&pip_pause_button_description;</string>
 
-  <string name="default_notification_channel">&default_notification_channel;</string>
+  <string name="default_notification_channel2">&default_notification_channel2;</string>
   <string name="mls_notification_channel">&mls_notification_channel;</string>
-  <string name="media_notification_channel">&media_notification_channel;</string>
+  <string name="media_notification_channel2">&media_notification_channel2;</string>
   <string name="download_notification_channel">&download_notification_channel;</string>
-  <string name="leanplum_default_notifications_channel">&leanplum_default_notifications_channel;</string>
+  <string name="leanplum_default_notifications_channel2">&leanplum_default_notifications_channel2;</string>
   <string name="updater_notification_channel">&updater_notification_channel;</string>
   <string name="synced_tabs_notification_channel">&synced_tabs_notification_channel;</string>
   <string name="site_notifications_channel">&site_notifications_channel;</string>
