@@ -120,8 +120,13 @@ exports.setValueSummaryLength = function(val) {
 var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   /**
    * Create the WalkerActor
-   * @param DebuggerServerConnection conn
-   *    The server connection.
+   * @param {DebuggerServerConnection} conn
+   *        The server connection.
+   * @param {TargetActor} targetActor
+   *        The top-level Actor for this tab.
+   * @param {Object} options
+   *        - {Boolean} showAllAnonymousContent: Show all native anonymous content
+   *        - {Boolean} showUserAgentShadowRoots: Show shadow roots for user-agent widgets
    */
   initialize: function(conn, targetActor, options) {
     protocol.Actor.prototype.initialize.call(this, conn);
@@ -134,6 +139,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this.customElementWatcher = new CustomElementWatcher(targetActor.chromeEventHandler);
 
     this.showAllAnonymousContent = options.showAllAnonymousContent;
+    this.showUserAgentShadowRoots = options.showUserAgentShadowRoots;
 
     this.walkerSearch = new WalkerSearch(this);
 
@@ -706,8 +712,14 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     const directShadowHostChild = isDirectShadowHostChild(node.rawNode);
     const shadowHost = isShadowHost(node.rawNode);
     const shadowRoot = isShadowRoot(node.rawNode);
-    const templateElement = isTemplateElement(node.rawNode);
 
+    // UA Widgets are internal Firefox widgets such as videocontrols implemented
+    // using shadow DOM. By default, their shadow root should be hidden for web
+    // developers.
+    const isUAWidget = shadowHost && node.rawNode.openOrClosedShadowRoot.isUAWidget();
+    const hideShadowRoot = isUAWidget && !this.showUserAgentShadowRoots;
+
+    const templateElement = isTemplateElement(node.rawNode);
     if (templateElement) {
       // <template> tags should have a single child pointing to the element's template
       // content.
@@ -831,7 +843,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
       nodes = [
         // #shadow-root
-        node.rawNode.openOrClosedShadowRoot,
+        ...(hideShadowRoot ? [] : [node.rawNode.openOrClosedShadowRoot]),
         // ::before
         ...(hasBefore ? [first] : []),
         // shadow host direct children
