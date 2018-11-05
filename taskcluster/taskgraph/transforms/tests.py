@@ -778,7 +778,7 @@ def enable_code_coverage(config, tests):
             if 'linux' in test['build-platform']:
                 test['fetches']['toolchain'].append('linux64-grcov')
             elif 'osx' in test['build-platform']:
-                test['fetches']['toolchain'].append('macosx64-grcov')
+                test['fetches']['fetch'].append('grcov-osx-x86_64')
             elif 'win' in test['build-platform']:
                 test['fetches']['toolchain'].append('win64-grcov')
 

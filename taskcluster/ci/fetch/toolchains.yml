@@ -172,3 +172,11 @@ mpfr-3.1.5:
     gpg-signature:
       sig-url: "{url}.asc"
       key-path: build/unix/build-gcc/07F3DBBECC1A39605078094D980C197698C3739D.key
+
+grcov-osx-x86_64:
+  description: grcov binary release
+  fetch:
+    type: static-url
+    url: https://github.com/mozilla/grcov/releases/download/v0.3.2/grcov-osx-x86_64.tar.bz2
+    sha256: 6a810f782efb207234ef418ab136edd1c0ffa61aa84d8c4545042a6fa3b9dd13
+    size: 915948
