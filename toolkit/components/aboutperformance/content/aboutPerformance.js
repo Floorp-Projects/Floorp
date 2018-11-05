@@ -1082,6 +1082,8 @@ var Control = {
     this._initDisplayMode();
     let tbody = document.getElementById("dispatch-tbody");
     tbody.addEventListener("click", () => {
+      this._updateLastMouseEvent();
+
       // Handle showing or hiding subitems of a row.
       let target = event.target;
       if (target.classList.contains("twisty")) {
@@ -1149,10 +1151,13 @@ var Control = {
     });
 
     tbody.addEventListener("mousemove", () => {
-      this._lastMouseEvent = Date.now();
+      this._updateLastMouseEvent();
     });
   },
   _lastMouseEvent: 0,
+  _updateLastMouseEvent() {
+    this._lastMouseEvent = Date.now();
+  },
   async update() {
     let mode = this._displayMode;
     if (this._autoRefreshInterval || !State._buffer[0]) {
