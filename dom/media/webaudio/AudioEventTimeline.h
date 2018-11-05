@@ -214,7 +214,7 @@ public:
         // order of insertion.
         do {
           ++i;
-        } while (i < mEvents.Length() && aEvent.mType != mEvents[i].mType &&
+        } while (i < mEvents.Length() &&
                  aEvent.Time<TimeType>() == mEvents[i].Time<TimeType>());
         mEvents.InsertElementAt(i, aEvent);
         return;
