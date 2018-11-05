@@ -124,9 +124,6 @@ both:
                        Principal aPrincipal, ClonedMessageData aData);
 
 parent:
-    async DestroyPRenderFrame();
-
-parent:
     /**
      * Tell the parent process a new accessible document has been created.
      * aParentDoc is the accessible document it was created in if any, and
