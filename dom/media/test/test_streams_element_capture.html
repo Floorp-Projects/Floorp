@@ -38,6 +38,7 @@ function startTest(test) {
   var stream;
 
   var checkEnded = function() {
+    is(stream.currentTime, vout.currentTime, test.name + " stream final currentTime");
     if (test.duration) {
       isGreaterThanOrEqualEps(vout.currentTime, test.duration,
          test.name + " current time at end");
@@ -57,6 +58,7 @@ function startTest(test) {
 
   var onloadedmetadata = function (ev) {
     stream = v.mozCaptureStreamUntilEnded();
+    is(stream.currentTime, 0, test.name + " stream initial currentTime");
     vout.srcObject = stream;
     is(vout.srcObject, stream, test.name + " set output element .srcObject correctly");
     v.play();

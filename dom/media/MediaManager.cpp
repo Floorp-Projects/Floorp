@@ -1312,6 +1312,10 @@ public:
         return;
       }
 
+      // Start currentTime from the point where this stream was successfully
+      // returned.
+      aStream->SetLogicalStreamStartTime(aStream->GetPlaybackStream()->GetCurrentTime());
+
       // This is safe since we're on main-thread, and the windowlist can only
       // be invalidated from the main-thread (see OnNavigation)
       LOG(("Returning success for getUserMedia()"));

@@ -32,8 +32,21 @@
 #include "nsRFPService.h"
 #include "nsServiceManagerUtils.h"
 
+// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
+// GetTickCount() and conflicts with NS_DECL_NSIDOMMEDIASTREAM, containing
+// currentTime getter.
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
+
 #ifdef LOG
 #undef LOG
+#endif
+
+// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
+// GetTickCount() and conflicts with MediaStream::GetCurrentTime.
+#ifdef GetCurrentTime
+#undef GetCurrentTime
 #endif
 
 using namespace mozilla;
@@ -401,9 +414,9 @@ NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 
 DOMMediaStream::DOMMediaStream(nsPIDOMWindowInner* aWindow,
                                MediaStreamTrackSourceGetter* aTrackSourceGetter)
-  : mWindow(aWindow), mInputStream(nullptr), mOwnedStream(nullptr),
-    mPlaybackStream(nullptr), mTracksPendingRemoval(0),
-    mTrackSourceGetter(aTrackSourceGetter),
+  : mLogicalStreamStartTime(0), mWindow(aWindow),
+    mInputStream(nullptr), mOwnedStream(nullptr), mPlaybackStream(nullptr),
+    mTracksPendingRemoval(0), mTrackSourceGetter(aTrackSourceGetter),
     mPlaybackTrackListener(MakeAndAddRef<PlaybackTrackListener>(this)),
     mTracksCreated(false), mNotifiedOfMediaStreamGraphShutdown(false),
     mActive(false), mSetInactiveOnFinish(false), mCORSMode(CORS_NONE)
@@ -550,6 +563,20 @@ DOMMediaStream::Constructor(const GlobalObject& aGlobal,
   }
 
   return newStream.forget();
+}
+
+double
+DOMMediaStream::CurrentTime()
+{
+  if (!mPlaybackStream) {
+    return 0.0;
+  }
+  // The value of a MediaStream's CurrentTime will always advance forward; it will never
+  // reset (even if one rewinds a video.) Therefore we can use a single Random Seed
+  // initialized at the same time as the object.
+  return nsRFPService::ReduceTimePrecisionAsSecs(mPlaybackStream->
+    StreamTimeToSeconds(mPlaybackStream->GetCurrentTime() - mLogicalStreamStartTime),
+    GetRandomTimelineSeed());
 }
 
 already_AddRefed<Promise>

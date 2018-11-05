@@ -39,6 +39,7 @@ interface MediaStream : EventTarget {
     readonly    attribute boolean      active;
                 attribute EventHandler onaddtrack;
                 attribute EventHandler onremovetrack;
+    readonly attribute double currentTime;
 
     [ChromeOnly, Throws]
     static Promise<long> countUnderlyingStreams();
