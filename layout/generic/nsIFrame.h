@@ -166,16 +166,6 @@ enum nsSelectionAmount {
   eSelectParagraph = 8  // select a "paragraph"
 };
 
-enum nsSpread {
-  eSpreadNone   = 0,
-  eSpreadAcross = 1,
-  eSpreadDown   = 2
-};
-
-// Carried out margin flags
-#define NS_CARRIED_TOP_MARGIN_IS_AUTO    0x1
-#define NS_CARRIED_BOTTOM_MARGIN_IS_AUTO 0x2
-
 //----------------------------------------------------------------------
 // Reflow status returned by the Reflow() methods.
 class nsReflowStatus final {
