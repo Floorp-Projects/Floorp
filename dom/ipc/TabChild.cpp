@@ -1125,14 +1125,8 @@ TabChild::RecvLoadURL(const nsCString& aURI,
 }
 
 void
-TabChild::DoFakeShow(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
-                     const layers::LayersId& aLayersId,
-                     const CompositorOptions& aCompositorOptions,
-                     const bool aHasRenderFrame,
-                     const ShowInfo& aShowInfo)
+TabChild::DoFakeShow(const ShowInfo& aShowInfo)
 {
-  mLayersConnected = aHasRenderFrame ? Some(true) : Some(false);
-  InitRenderingState(aTextureFactoryIdentifier, aLayersId, aCompositorOptions, aHasRenderFrame);
   RecvShow(ScreenIntSize(0, 0), aShowInfo, mParentIsActive, nsSizeMode_Normal);
   mDidFakeShow = true;
 }

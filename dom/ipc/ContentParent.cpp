@@ -5103,7 +5103,6 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
 
   // We always expect to open a new window here. If we don't, it's an error.
   cwi.windowOpened() = true;
-  cwi.layersId() = LayersId{0};
   cwi.maxTouchPoints() = 0;
   cwi.hasSiblings() = false;
 
@@ -5162,8 +5161,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
 
   newTab->SwapFrameScriptsFrom(cwi.frameScripts());
 
-  if (!newTab->SetRenderFrame() ||
-      !newTab->GetRenderFrameInfo(&cwi.textureFactoryIdentifier(), &cwi.layersId(), &cwi.compositorOptions())) {
+  if (!newTab->SetRenderFrame()) {
     rv = NS_ERROR_FAILURE;
   }
 

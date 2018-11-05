@@ -22,11 +22,6 @@ namespace dom {
 class TabParent;
 } // namespace dom
 
-namespace layers {
-class CompositorOptions;
-struct TextureFactoryIdentifier;
-} // namespace layers
-
 /**
  * BrowserElementParent implements a portion of the parent-process side of
  * <iframe mozbrowser>.
@@ -94,10 +89,7 @@ public:
                 dom::TabParent* aPopupTabParent,
                 const nsAString& aURL,
                 const nsAString& aName,
-                const nsAString& aFeatures,
-                layers::TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                layers::LayersId* aLayersId,
-                layers::CompositorOptions* aCompositorOptions);
+                const nsAString& aFeatures);
 
   /**
    * Handle a window.open call from an in-process <iframe mozbrowser>.
