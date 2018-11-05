@@ -60,6 +60,7 @@
 #include "nsSandboxFlags.h"
 #include "nsSimpleEnumerator.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Storage.h"
@@ -1033,9 +1034,10 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   // Note: The check for the current JSContext isn't necessarily sensical.
   // It's just designed to preserve old semantics during a mass-conversion
   // patch.
+  // Bug 1498605 verify usages of systemPrincipal here
   nsCOMPtr<nsIPrincipal> subjectPrincipal =
     nsContentUtils::GetCurrentJSContext() ? nsContentUtils::SubjectPrincipal() :
-                                            nullptr;
+                                            nsContentUtils::GetSystemPrincipal();
 
   bool isPrivateBrowsingWindow = false;
 
