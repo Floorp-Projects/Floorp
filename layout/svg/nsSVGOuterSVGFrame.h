@@ -80,8 +80,6 @@ public:
       aFlags & ~eSupportsContainLayoutAndPaint);
   }
 
-  virtual nsSplittableType GetSplittableType() const override;
-
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override
   {
