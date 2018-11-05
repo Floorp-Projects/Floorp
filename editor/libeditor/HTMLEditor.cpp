@@ -2843,24 +2843,28 @@ HTMLEditor::GetElementOrParentByTagNameInternal(const nsAtom& aTagName,
 
   bool getLink = IsLinkTag(aTagName);
   bool getNamedAnchor = IsNamedAnchorTag(aTagName);
-  const nsAtom& tagName = getLink || getNamedAnchor ? *nsGkAtoms::a : aTagName;
   for (; currentElement; currentElement = currentElement->GetParentElement()) {
-    // Test if we have a link (an anchor with href set)
-    if ((getLink && HTMLEditUtils::IsLink(currentElement)) ||
-        (getNamedAnchor && HTMLEditUtils::IsNamedAnchor(currentElement))) {
-      return currentElement;
-    }
-    if (&tagName == nsGkAtoms::list_) {
+    if (getLink) {
+      // Test if we have a link (an anchor with href set)
+      if (HTMLEditUtils::IsLink(currentElement)) {
+        return currentElement;
+      }
+    } else if (getNamedAnchor) {
+      // Test if we have a named anchor (an anchor with name set)
+      if (HTMLEditUtils::IsNamedAnchor(currentElement)) {
+        return currentElement;
+      }
+    } else if (&aTagName == nsGkAtoms::list_) {
       // Match "ol", "ul", or "dl" for lists
       if (HTMLEditUtils::IsList(currentElement)) {
         return currentElement;
       }
-    } else if (&tagName == nsGkAtoms::td) {
+    } else if (&aTagName == nsGkAtoms::td) {
       // Table cells are another special case: match either "td" or "th"
       if (HTMLEditUtils::IsTableCell(currentElement)) {
         return currentElement;
       }
-    } else if (&tagName == currentElement->NodeInfo()->NameAtom()) {
+    } else if (&aTagName == currentElement->NodeInfo()->NameAtom()) {
       return currentElement;
     }
 
