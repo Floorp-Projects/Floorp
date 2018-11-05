@@ -599,6 +599,8 @@ public:
     return gNumActiveRecordReplayTabs != 0;
   }
 
+  void NavigateByKey(bool aForward, bool aForDocumentNavigation);
+
 protected:
   bool ReceiveMessage(const nsString& aMessage,
                       bool aSync,
@@ -653,6 +655,8 @@ protected:
   LayoutDeviceIntPoint mChromeOffset;
 
 private:
+  void SuppressDisplayport(bool aEnabled);
+
   void DestroyInternal();
 
   void SetRenderLayersInternal(bool aEnabled, bool aForceRepaint);
