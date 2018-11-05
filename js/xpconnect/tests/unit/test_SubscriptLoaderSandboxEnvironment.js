@@ -1,6 +1,11 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let tgt = Cu.Sandbox(Services.scriptSecurityManager.getSystemPrincipal());
+
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
 Services.scriptloader.loadSubScript("resource://test/environment_script.js", tgt);
 
 var bound = "";

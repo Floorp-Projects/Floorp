@@ -1,5 +1,12 @@
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 let tgt_load = {};
 let tgt_check = {};
+
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
 const a = ChromeUtils.import("resource://test/environment_loadscript.jsm", tgt_load);
 const b = ChromeUtils.import("resource://test/environment_checkscript.jsm", tgt_check);
 

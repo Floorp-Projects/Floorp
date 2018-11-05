@@ -12,6 +12,12 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-grips");
