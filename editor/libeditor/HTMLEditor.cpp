@@ -3010,24 +3010,17 @@ HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
   iter->Init(firstRange);
 
   RefPtr<Element> lastElementInRange;
-  for (bool foundElementInRange = false; !iter->IsDone(); iter->Next()) {
-    // XXX This is really odd since this means that the result depends on
-    //     what is the last node.  If the last node is an element node,
-    //     it may be returned even if it does not match with aTagName.
-    //     On the other hand, if last node is not an element, i.e., we have
-    //     not found proper element node, we return nullptr as this method
-    //     name explains.
+  for (; !iter->IsDone(); iter->Next()) {
+    if (lastElementInRange) {
+      // When any node follows an element node, not only one element is
+      // selected so that return nullptr.
+      return nullptr;
+    }
+
     lastElementInRange = Element::FromNodeOrNull(iter->GetCurrentNode());
     if (!lastElementInRange) {
       continue;
     }
-
-    if (foundElementInRange) {
-      // At least 2 elements are in the range so that return nullptr.
-      return nullptr;
-    }
-
-    foundElementInRange = true;
 
     if (!aTagName) {
       continue;
