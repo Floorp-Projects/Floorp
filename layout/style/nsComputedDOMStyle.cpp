@@ -1518,37 +1518,6 @@ nsComputedDOMStyle::MatrixToCSSValue(const mozilla::gfx::Matrix4x4& matrix)
 }
 
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetQuotes()
-{
-  const auto& quotePairs = StyleList()->GetQuotePairs();
-
-  if (quotePairs.IsEmpty()) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetIdent(eCSSKeyword_none);
-    return val.forget();
-  }
-
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-
-  for (const auto& quotePair : quotePairs) {
-    RefPtr<nsROCSSPrimitiveValue> openVal = new nsROCSSPrimitiveValue;
-    RefPtr<nsROCSSPrimitiveValue> closeVal = new nsROCSSPrimitiveValue;
-
-    nsAutoString s;
-    nsStyleUtil::AppendEscapedCSSString(quotePair.first, s);
-    openVal->SetString(s);
-    s.Truncate();
-    nsStyleUtil::AppendEscapedCSSString(quotePair.second, s);
-    closeVal->SetString(s);
-
-    valueList->AppendCSSValue(openVal.forget());
-    valueList->AppendCSSValue(closeVal.forget());
-  }
-
-  return valueList.forget();
-}
-
-already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetOsxFontSmoothing()
 {
   if (nsContentUtils::ShouldResistFingerprinting(
