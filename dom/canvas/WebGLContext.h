@@ -245,8 +245,11 @@ struct TexImageSourceAdapter final : public TexImageSource
         mPboOffset = pboOffset;
     }
 
-    TexImageSourceAdapter(const dom::ImageBitmap* imageBitmap, ErrorResult*) {
+    TexImageSourceAdapter(const dom::ImageBitmap* imageBitmap,
+                          ErrorResult* out_error)
+    {
         mImageBitmap = imageBitmap;
+        mOut_error = out_error;
     }
 
     TexImageSourceAdapter(const dom::ImageData* imageData, ErrorResult*) {
