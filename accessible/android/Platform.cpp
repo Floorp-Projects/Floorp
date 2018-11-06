@@ -198,3 +198,11 @@ a11y::ProxyScrollingEvent(ProxyAccessible* aTarget,
     }
   }
 }
+
+void
+a11y::ProxyBatch(ProxyAccessible* aDocument,
+                 const uint64_t aBatchType,
+                 const nsTArray<ProxyAccessible*>& aAccessibles,
+                 const nsTArray<BatchData>& aData)
+{
+}
