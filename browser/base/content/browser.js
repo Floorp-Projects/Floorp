@@ -143,6 +143,7 @@ if (AppConstants.NIGHTLY_BUILD) {
 // lazy service getters
 
 XPCOMUtils.defineLazyServiceGetters(this, {
+  classifierService: ["@mozilla.org/url-classifier/dbservice;1", "nsIURIClassifier"],
   Favicons: ["@mozilla.org/browser/favicon-service;1", "nsIFaviconService"],
   gAboutNewTabService: ["@mozilla.org/browser/aboutnewtab-service;1", "nsIAboutNewTabService"],
   gDNSService: ["@mozilla.org/network/dns-service;1", "nsIDNSService"],

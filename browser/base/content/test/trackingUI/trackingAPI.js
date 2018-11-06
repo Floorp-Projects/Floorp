@@ -6,6 +6,12 @@ onmessage = event => {
       document.body.appendChild(ifr);
     }
     break;
+  case "more-tracking": {
+      let ifr = document.createElement("iframe");
+      ifr.src = "https://itisatracker.org/";
+      document.body.appendChild(ifr);
+    }
+    break;
   case "cookie": {
       let ifr = document.createElement("iframe");
       ifr.src = "https://trackertest.org/browser/browser/base/content/test/trackingUI/cookieServer.sjs";
