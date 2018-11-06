@@ -8,11 +8,11 @@ set -e
 # Usage: update-tzdata.sh <tzdata version>
 # E.g., for tzdata2016f: update-tzdata.sh 2016f
 
-# Ensure that $Date$ in the checked-out svn files expands timezone-agnostically,
+# Ensure that $Date$ in the checked-out git files expands timezone-agnostically,
 # so that this script's behavior is consistent when run from any time zone.
 export TZ=UTC
 
-# Also ensure SVN-INFO is consistently English.
+# Also ensure GIT-INFO is consistently English.
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US
 export LC_ALL=en_US.UTF-8
@@ -21,7 +21,7 @@ export LC_ALL=en_US.UTF-8
 icu_pkg=
 # Force updates even when current tzdata is newer than the requested version.
 force=false
-# Dry run, doesn't run 'svn export' and 'icupkg'.
+# Dry run, doesn't run 'git clone' and 'icupkg'.
 dry=false
 # Compare ICU and local tzdata versions (used by update-icu.sh).
 check_version=false
@@ -51,11 +51,11 @@ icudata_dir=`dirname "$0"`/../config/external/icu/data
 icu_dir=`dirname "$0"`/icu
 tzdata_dir=`dirname "$0"`/tzdata
 tzdata_files="${tzdata_dir}"/files.txt
-tzdata_url=https://ssl.icu-project.org/repos/icu/data/trunk/tzdata/icunew/${tzdata_version}/44/
+tzdata_url=https://github.com/unicode-org/icu-data.git
 icu_tzdata_version=`grep --only-matching --perl-regexp --regexp="tz version:\s+\K.*$" "${icu_dir}"/source/data/misc/zoneinfo64.txt`
 local_tzdata_version=
-if [ -f "${tzdata_dir}"/SVN-INFO ]; then
-  local_tzdata_version=`grep --only-matching --perl-regexp --regexp="^URL: .*tzdata/icunew/\K[0-9a-z]+" "${tzdata_dir}"/SVN-INFO`
+if [ -f "${tzdata_dir}"/VERSION ]; then
+  local_tzdata_version=`grep --only-matching --perl-regexp --regexp="^\K[0-9a-z]+" "${tzdata_dir}"/VERSION`
 fi
 
 # Check ICU and current local tzdata versions.
@@ -120,20 +120,21 @@ else
   echo "INFO: ICU data file (big endian) not found, skipping..."
 fi
 
-# Retrieve tzdata from svn.
+# Retrieve tzdata from git.
 if [ $dry = false ]; then
   echo "INFO: Downloading tzdata${tzdata_version}"
 
   # Remove intl/tzdata/source, then replace it with a clean export.
   rm -r "${tzdata_dir}"/source
-  svn export "${tzdata_url}" "${tzdata_dir}"/source
-fi
+  git clone --depth 1 "${tzdata_url}" "${tzdata_dir}"/source
+  git -C "${tzdata_dir}"/source filter-branch --prune-empty --subdirectory-filter tzdata/icunew/${tzdata_version}/44 HEAD
 
-# Record `svn info`, eliding the line that changes every time the entire ICU
-# tzdata repository (not just the path within it we care about) receives a
-# commit.
-if [ $dry = false ]; then
-  svn info "${tzdata_url}" | grep --invert-match '^Revision: [[:digit:]]\+$' > "${tzdata_dir}"/SVN-INFO
+  # Record `git log` and the tzdata version.
+  git -C "${tzdata_dir}"/source log -1 > "${tzdata_dir}"/GIT-INFO
+  echo "${tzdata_version}" > "${tzdata_dir}"/VERSION
+
+  # Remove the .git directory.
+  rm -rf "${tzdata_dir}"/source/.git
 fi
 
 # Update ICU data.
@@ -163,11 +164,11 @@ if [ $dry = false ]; then
     update_icu_data "be" "${icudata_file_be}"
   fi
 
-  hg addremove "${tzdata_dir}/source" "${tzdata_dir}/SVN-INFO" "${icudata_file_le}"
+  hg addremove "${tzdata_dir}/source" "${tzdata_dir}/GIT-INFO" "${tzdata_dir}/VERSION" "${icudata_file_le}"
   if [ -n "${icudata_file_be}" ]; then
     hg addremove "${icudata_file_be}"
   fi
 
   echo "INFO: Successfully updated tzdata!"
-  echo "INFO: Please run js/src/builtin/make_intl_data.py to update additional time zone files for SpiderMonkey."
+  echo "INFO: Please run js/src/builtin/intl/make_intl_data.py to update additional time zone files for SpiderMonkey."
 fi
