@@ -2560,7 +2560,6 @@ protected:
   RefPtr<Element> mResizedObject;
 
   nsCOMPtr<nsIDOMEventListener>  mMouseMotionListenerP;
-  nsCOMPtr<nsIDOMEventListener>  mResizeEventListenerP;
 
   int32_t mOriginalX;
   int32_t mOriginalY;
