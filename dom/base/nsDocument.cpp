@@ -1579,6 +1579,8 @@ nsIDocument::ConstructUbiNode(void* storage)
 nsDocument::~nsDocument()
 {
   MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug, ("DOCUMENT %p destroyed", this));
+  MOZ_ASSERT(!IsTopLevelContentDocument() || !IsResourceDoc(),
+             "Can't be top-level and a resource doc at the same time");
 
   NS_ASSERTION(!mIsShowing, "Destroying a currently-showing document");
 
@@ -1645,6 +1647,23 @@ nsDocument::~nsDocument()
       }
       if (mDocTreeHadPlayRevoked) {
         ScalarAdd(Telemetry::ScalarID::MEDIA_PAGE_HAD_PLAY_REVOKED_COUNT, 1);
+      }
+
+      if (IsHTMLDocument()) {
+        switch (GetCompatibilityMode()) {
+          case eCompatibility_FullStandards:
+            Telemetry::AccumulateCategorical(Telemetry::LABELS_QUIRKS_MODE::FullStandards);
+            break;
+          case eCompatibility_AlmostStandards:
+            Telemetry::AccumulateCategorical(Telemetry::LABELS_QUIRKS_MODE::AlmostStandards);
+            break;
+          case eCompatibility_NavQuirks:
+            Telemetry::AccumulateCategorical(Telemetry::LABELS_QUIRKS_MODE::NavQuirks);
+            break;
+          default:
+            MOZ_ASSERT_UNREACHABLE("Unknown quirks mode");
+            break;
+        }
       }
     }
 
@@ -12531,8 +12550,8 @@ nsIDocument::ReportUseCounters(UseCounterReportKind aKind)
     }
   }
 
-  if (IsTopLevelContentDocument() && !IsResourceDoc()) {
-    using mozilla::Telemetry::LABELS_HIDDEN_VIEWPORT_OVERFLOW_TYPE;
+  if (IsTopLevelContentDocument()) {
+    using Telemetry::LABELS_HIDDEN_VIEWPORT_OVERFLOW_TYPE;
     LABELS_HIDDEN_VIEWPORT_OVERFLOW_TYPE label;
     switch (mViewportOverflowType) {
 #define CASE_OVERFLOW_TYPE(t_)                            \
