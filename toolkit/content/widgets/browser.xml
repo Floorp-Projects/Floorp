@@ -460,7 +460,7 @@
           if (this.isRemoteBrowser) {
             return this._outerWindowID;
           }
-          return this.contentWindow.windowUtils.outerWindowID;
+          return this.docShell.outerWindowID;
         ]]></getter>
       </property>
 
