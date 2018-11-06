@@ -794,7 +794,9 @@ TokenStreamChars<Utf8Unit, AnyCharsAccess>::notEnoughUnits(Utf8Unit lead,
     const char actualStr[] = { toHexChar(remaining - 1), '\0' };
 
     internalEncodingError(remaining, JSMSG_NOT_ENOUGH_CODE_UNITS,
-                          leadByteStr, expectedStr, actualStr, remaining == 2 ? " was" : "s were");
+                          leadByteStr,
+                          expectedStr, required == 2 ? "" : "s",
+                          actualStr, remaining == 2 ? " was" : "s were");
 }
 
 template<class AnyCharsAccess>
