@@ -33,7 +33,10 @@ export default class AddressPicker extends RichPicker {
 
   attributeChangedCallback(name, oldValue, newValue) {
     super.attributeChangedCallback(name, oldValue, newValue);
-    if (AddressPicker.pickerAttributes.includes(name) && oldValue !== newValue) {
+    // connectedCallback may add and adjust elements & values
+    // so avoid calling render before the element is connected
+    if (this.isConnected &&
+        AddressPicker.pickerAttributes.includes(name) && oldValue !== newValue) {
       this.render(this.requestStore.getState());
     }
   }
@@ -89,7 +92,26 @@ export default class AddressPicker extends RichPicker {
     return result;
   }
 
+  get options() {
+    return this.dropdown.popupBox.options;
+  }
+
+  /**
+   * @param {object} state - See `PaymentsStore.setState`
+   * The value of the picker is retrieved from state store rather than the DOM
+   * @returns {string} guid
+   */
+  getCurrentValue(state) {
+    let [selectedKey, selectedLeaf] = this.selectedStateKey.split("|");
+    let guid = state[selectedKey];
+    if (selectedLeaf) {
+      guid = guid[selectedLeaf];
+    }
+    return guid;
+  }
+
   render(state) {
+    let selectedAddressGUID = this.getCurrentValue(state) || "";
     let addresses = paymentRequest.getAddresses(state);
     let desiredOptions = [];
     let filteredAddresses = this.filterAddresses(addresses, this.fieldNames);
@@ -131,12 +153,18 @@ export default class AddressPicker extends RichPicker {
     }
 
     this.dropdown.popupBox.textContent = "";
+
+    if (this._allowEmptyOption) {
+      let optionEl = document.createElement("option");
+      optionEl.value = "";
+      desiredOptions.unshift(optionEl);
+    }
+
     for (let option of desiredOptions) {
       this.dropdown.popupBox.appendChild(option);
     }
 
     // Update selectedness after the options are updated
-    let selectedAddressGUID = state[this.selectedStateKey];
     this.dropdown.value = selectedAddressGUID;
 
     if (selectedAddressGUID && selectedAddressGUID !== this.dropdown.value) {
@@ -161,8 +189,8 @@ export default class AddressPicker extends RichPicker {
       return "";
     }
 
-    let merchantFieldErrors = AddressForm.merchantFieldErrorsForForm(state,
-                                                                     [this.selectedStateKey]);
+    let merchantFieldErrors = AddressForm.merchantFieldErrorsForForm(
+          state, this.selectedStateKey.split("|"));
     // TODO: errors in priority order.
     return Object.values(merchantFieldErrors).find(msg => {
       return typeof(msg) == "string" && msg.length;
@@ -182,12 +210,23 @@ export default class AddressPicker extends RichPicker {
   }
 
   onChange(event) {
-    let selectedKey = this.selectedStateKey;
-    if (selectedKey) {
-      this.requestStore.setState({
-        [selectedKey]: this.dropdown.value,
-      });
+    let [selectedKey, selectedLeaf] = this.selectedStateKey.split("|");
+    if (!selectedKey) {
+      return;
     }
+    // selectedStateKey can be a '|' delimited string indicating a path into the state object
+    // to update with the new value
+    let newState = {};
+
+    if (selectedLeaf) {
+      let currentState = this.requestStore.getState();
+      newState[selectedKey] = Object.assign({},
+                                            currentState[selectedKey],
+                                            { [selectedLeaf]: this.dropdown.value });
+    } else {
+      newState[selectedKey] = this.dropdown.value;
+    }
+    this.requestStore.setState(newState);
   }
 
   onClick({target}) {
@@ -197,7 +236,7 @@ export default class AddressPicker extends RichPicker {
       },
       "address-page": {
         addressFields: this.getAttribute("address-fields"),
-        selectedStateKey: [this.selectedStateKey],
+        selectedStateKey: this.selectedStateKey.split("|"),
       },
     };
 
@@ -208,9 +247,8 @@ export default class AddressPicker extends RichPicker {
         break;
       }
       case this.editLink: {
-        let state = this.requestStore.getState();
-        let selectedAddressGUID = state[this.selectedStateKey];
-        nextState["address-page"].guid = selectedAddressGUID;
+        let currentState = this.requestStore.getState();
+        nextState["address-page"].guid = this.getCurrentValue(currentState);
         nextState["address-page"].title = this.dataset.editAddressTitle;
         break;
       }
