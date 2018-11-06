@@ -2538,7 +2538,9 @@ UpdateService.prototype = {
           let prefValue = Services.prefs.getBoolPref(PREF_APP_UPDATE_AUTO,
                                                      DEFAULT_APP_UPDATE_AUTO);
           try {
-            return await this._writeUpdateAutoConfig(prefValue);
+            let writtenValue = await this._writeUpdateAutoConfig(prefValue);
+            Services.prefs.clearUserPref(PREF_APP_UPDATE_AUTO);
+            return writtenValue;
           } catch (e) {
             LOG("UpdateService.getAutoUpdateIsEnabled - Migration failed. " +
                 "Exception: " + e);

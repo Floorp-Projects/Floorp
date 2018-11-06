@@ -42,7 +42,6 @@ async function changeAndVerifyPref(tab, newConfigValue) {
 }
 
 add_task(async function testUpdateAutoPrefUI() {
-  let originalPrefValue = await gAUS.getAutoUpdateIsEnabled();
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
 
   await changeAndVerifyPref(tab, true);
@@ -51,5 +50,4 @@ add_task(async function testUpdateAutoPrefUI() {
   await changeAndVerifyPref(tab, true);
 
   await BrowserTestUtils.removeTab(tab);
-  await gAUS.setAutoUpdateIsEnabled(originalPrefValue);
 });
