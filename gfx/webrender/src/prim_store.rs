@@ -276,6 +276,11 @@ pub struct PrimitiveIndex(pub usize);
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct TextRunIndex(pub usize);
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PictureIndex(pub usize);
 
 impl GpuCacheHandle {
@@ -361,7 +366,10 @@ impl PrimitiveKey {
 
     /// Construct a primitive instance that matches the type
     /// of primitive key.
-    pub fn to_instance_kind(&self) -> PrimitiveInstanceKind {
+    pub fn to_instance_kind(
+        &self,
+        prim_store: &mut PrimitiveStore,
+    ) -> PrimitiveInstanceKind {
         match self.kind {
             PrimitiveKeyKind::LineDecoration { .. } => {
                 PrimitiveInstanceKind::LineDecoration {
@@ -369,12 +377,17 @@ impl PrimitiveKey {
                 }
             }
             PrimitiveKeyKind::TextRun { ref font, shadow, .. } => {
+                let run = TextRunPrimitive {
+                    used_font: font.clone(),
+                    glyph_keys: Vec::new(),
+                    shadow,
+                };
+
+                let run_index = TextRunIndex(prim_store.text_runs.len());
+                prim_store.text_runs.push(run);
+
                 PrimitiveInstanceKind::TextRun {
-                    run: TextRunPrimitive {
-                        used_font: font.clone(),
-                        glyph_keys: Vec::new(),
-                        shadow,
-                    }
+                    run_index
                 }
             }
             PrimitiveKeyKind::Clear => {
@@ -1753,7 +1766,7 @@ pub enum PrimitiveInstanceKind {
     },
     /// A run of glyphs, with associated font parameters.
     TextRun {
-        run: TextRunPrimitive,
+        run_index: TextRunIndex,
     },
     /// A line decoration. cache_handle refers to a cached render
     /// task handle, if this line decoration is not a simple solid.
@@ -1863,6 +1876,7 @@ impl PrimitiveInstance {
 pub struct PrimitiveStore {
     pub primitives: Vec<Primitive>,
     pub pictures: Vec<PicturePrimitive>,
+    pub text_runs: Vec<TextRunPrimitive>,
 }
 
 impl PrimitiveStore {
@@ -1870,6 +1884,7 @@ impl PrimitiveStore {
         PrimitiveStore {
             primitives: Vec::new(),
             pictures: Vec::new(),
+            text_runs: Vec::new(),
         }
     }
 
@@ -2330,6 +2345,7 @@ impl PrimitiveStore {
                     pic_state,
                     frame_context,
                     frame_state,
+                    &mut self.text_runs,
                 );
             }
             PrimitiveInstanceKind::LegacyPrimitive { prim_index } => {
@@ -2844,6 +2860,7 @@ impl PrimitiveInstance {
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
+        text_runs: &mut [TextRunPrimitive],
     ) {
         let prim_data = &mut frame_state
             .resources
@@ -2912,7 +2929,7 @@ impl PrimitiveInstance {
                 }
             }
             (
-                PrimitiveInstanceKind::TextRun { ref mut run, .. },
+                PrimitiveInstanceKind::TextRun { run_index, .. },
                 PrimitiveTemplateKind::TextRun { ref font, ref glyphs, .. }
             ) => {
                 // The transform only makes sense for screen space rasterization
@@ -2922,6 +2939,7 @@ impl PrimitiveInstance {
                 //           once the prepare_prims and batching are unified. When that
                 //           happens, we can use the cache handle immediately, and not need
                 //           to temporarily store it in the primitive instance.
+                let run = &mut text_runs[run_index.0];
                 run.prepare_for_render(
                     font,
                     glyphs,
