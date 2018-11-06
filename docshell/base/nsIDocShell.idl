@@ -1136,7 +1136,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * This allows chrome to override the default choice of whether touch events
    * are available on a specific docshell. Possible values are listed below.
    */
-  attribute unsigned long touchEventsOverride;
+  [infallible] attribute unsigned long touchEventsOverride;
   /**
    * Override platform/pref default behaviour and force-disable touch events.
    */
@@ -1252,7 +1252,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Display mode for this docshell. Defaults to DISPLAY_MODE_BROWSER.
    * Media queries only look at the value in the top-most docshell.
    */
-  attribute unsigned long displayMode;
+  [infallible] attribute unsigned long displayMode;
 
   /**
    * The message manager for this docshell.  This does not throw, but
