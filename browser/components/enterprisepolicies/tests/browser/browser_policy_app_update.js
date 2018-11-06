@@ -11,6 +11,14 @@ var updateService = Cc["@mozilla.org/updates/update-service;1"].
 // policy is applied needs to occur in a different test since the policy does
 // not properly take effect unless it is applied during application startup.
 add_task(async function test_updates_pre_policy() {
+  // Turn off automatic update before we set app.update.disabledForTesting to
+  // false so that we don't cause an actual update.
+  let originalUpdateAutoValue = await updateService.getAutoUpdateIsEnabled();
+  await updateService.setAutoUpdateIsEnabled(false);
+  registerCleanupFunction(async () => {
+    await updateService.setAutoUpdateIsEnabled(originalUpdateAutoValue);
+  });
+
   await SpecialPowers.pushPrefEnv({"set": [["app.update.disabledForTesting", false]]});
 
   is(Services.policies.isAllowed("appUpdate"), true,

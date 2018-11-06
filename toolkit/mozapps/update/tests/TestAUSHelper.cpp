@@ -362,7 +362,7 @@ int NS_main(int argc, NS_tchar **argv)
 #ifdef XP_WIN
     mozilla::UniquePtr<wchar_t[]> updateDir;
     HRESULT result = GetCommonUpdateDirectory(argv[2],
-                                              SetPermissionsOf::AllFilesAndDirs,
+                                              SetPermissionsOf::BaseDirIfNotExists,
                                               updateDir);
     return SUCCEEDED(result) ? 0 : 1;
 #else
