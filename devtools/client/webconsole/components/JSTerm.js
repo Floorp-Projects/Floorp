@@ -200,6 +200,7 @@ class JSTerm extends Component {
           styleActiveLine: false,
           tabIndex: "0",
           viewportMargin: Infinity,
+          disableSearchAddon: true,
           extraKeys: {
             "Enter": () => {
               // No need to handle shift + Enter as it's natively handled by CodeMirror.
