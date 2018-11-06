@@ -421,7 +421,6 @@ struct HelperThread
     struct AutoProfilerLabel
     {
         AutoProfilerLabel(HelperThread* helperThread, const char* label,
-                          uint32_t line,
                           ProfilingStackFrame::Category category);
         ~AutoProfilerLabel();
 
