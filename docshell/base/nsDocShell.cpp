@@ -2526,8 +2526,6 @@ nsDocShell::SetCustomUserAgent(const nsAString& aCustomUserAgent)
 NS_IMETHODIMP
 nsDocShell::GetTouchEventsOverride(uint32_t* aTouchEventsOverride)
 {
-  NS_ENSURE_ARG_POINTER(aTouchEventsOverride);
-
   *aTouchEventsOverride = mTouchEventsOverride;
   return NS_OK;
 }
@@ -14039,7 +14037,6 @@ nsIDocShell::SetHTMLEditor(HTMLEditor* aHTMLEditor)
 NS_IMETHODIMP
 nsDocShell::GetDisplayMode(uint32_t* aDisplayMode)
 {
-  NS_ENSURE_ARG_POINTER(aDisplayMode);
   *aDisplayMode = mDisplayMode;
   return NS_OK;
 }
