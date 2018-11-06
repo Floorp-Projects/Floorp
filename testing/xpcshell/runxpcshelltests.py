@@ -225,7 +225,9 @@ class XPCShellTestThread(Thread):
           Simple wrapper to get the return code for a given process.
           On a remote system we overload this to work with the remote process management.
         """
-        return proc.returncode
+        if proc is not None and hasattr(proc, "returncode"):
+            return proc.returncode
+        return -1
 
     def communicate(self, proc):
         """
@@ -282,7 +284,10 @@ class XPCShellTestThread(Thread):
         self.log.info("%s | environment: %s" % (name, list(changedEnv)))
 
     def killTimeout(self, proc):
-        mozcrash.kill_and_get_minidump(proc.pid, self.tempDir, utility_path=self.utility_path)
+        if proc is not None and hasattr(proc, "pid"):
+            mozcrash.kill_and_get_minidump(proc.pid, self.tempDir, utility_path=self.utility_path)
+        else:
+            self.log.info("not killing -- proc or pid unknown")
 
     def postCheck(self, proc):
         """Checks for a still-running test process, kills it and fails the test if found.
