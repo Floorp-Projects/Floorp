@@ -5,10 +5,10 @@
 package mozilla.components.browser.domains
 
 import android.content.Context
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.CoroutineScope
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.async
 import java.util.Locale
 
 /**
@@ -62,8 +62,11 @@ class DomainAutoCompleteProvider {
         }
     }
 
-    private var customDomains = emptyList<Domain>()
-    private var shippedDomains = emptyList<Domain>()
+    // We compute these on worker threads; make sure results are immediately visible on the UI thread.
+    @Volatile
+    internal var customDomains = emptyList<Domain>()
+    @Volatile
+    internal var shippedDomains = emptyList<Domain>()
     private var useCustomDomains = false
     private var useShippedDomains = true
 
@@ -115,19 +118,22 @@ class DomainAutoCompleteProvider {
         this.useCustomDomains = useCustomDomains
         this.useShippedDomains = useShippedDomains
 
-        if (loadDomainsFromDisk) {
-            launch(UI) {
-                val domains = async(CommonPool) { Domains.load(context) }
-                val customDomains = async(CommonPool) { CustomDomains.load(context) }
+        if (!loadDomainsFromDisk) {
+            return
+        }
 
-                onDomainsLoaded(domains.await(), customDomains.await())
+        if (!useCustomDomains && !useShippedDomains) {
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            if (useCustomDomains) {
+                customDomains = async { CustomDomains.load(context).into() }.await()
+            }
+            if (useShippedDomains) {
+                shippedDomains = async { Domains.load(context).into() }.await()
             }
         }
-    }
-
-    internal fun onDomainsLoaded(domains: List<String>, customDomains: List<String>) {
-        this.shippedDomains = domains.map { Domain.create(it) }
-        this.customDomains = customDomains.map { Domain.create(it) }
     }
 
     @Suppress("ReturnCount")
@@ -158,4 +164,8 @@ class DomainAutoCompleteProvider {
      */
     private fun getResultText(rawSearchText: String, autocomplete: String) =
             rawSearchText + autocomplete.substring(rawSearchText.length)
+}
+
+internal fun Iterable<String>.into(): List<DomainAutoCompleteProvider.Domain> {
+    return this.map { DomainAutoCompleteProvider.Domain.create(it) }
 }

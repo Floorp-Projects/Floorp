@@ -416,16 +416,14 @@ class SystemEngineView @JvmOverloads constructor(
         internal fun getOrCreateUrlMatcher(context: Context, policy: TrackingProtectionPolicy): UrlMatcher {
             val categories = urlMatcherCategoryMap.filterValues { policy.contains(it) }.keys
 
-            URL_MATCHER?.let {
-                it.setCategoriesEnabled(categories)
-            } ?: run {
+            URL_MATCHER?.setCategoriesEnabled(categories) ?: run {
                 URL_MATCHER = UrlMatcher.createMatcher(
                         context,
                         R.raw.domain_blacklist,
                         intArrayOf(R.raw.domain_overrides),
                         R.raw.domain_whitelist,
                         categories)
-            }
+                }
 
             return URL_MATCHER as UrlMatcher
         }

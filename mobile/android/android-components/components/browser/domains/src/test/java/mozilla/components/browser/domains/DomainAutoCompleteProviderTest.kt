@@ -64,10 +64,10 @@ class DomainAutoCompleteProviderTest {
         val provider = DomainAutoCompleteProvider()
         provider.initialize(RuntimeEnvironment.application, true, false, false)
 
-        val domains = listOf("mozilla.org", "google.com", "facebook.com")
-        provider.onDomainsLoaded(domains, emptyList())
+        provider.shippedDomains = listOf("mozilla.org", "google.com", "facebook.com").into()
+        provider.customDomains = emptyList()
 
-        val size = domains.size
+        val size = provider.shippedDomains.size
 
         assertCompletion(provider, "m", DEFAULT_LIST, size, "mozilla.org", "http://mozilla.org")
         assertCompletion(provider, "www", DEFAULT_LIST, size, "www.mozilla.org", "http://mozilla.org")
@@ -89,7 +89,8 @@ class DomainAutoCompleteProviderTest {
 
         val provider = DomainAutoCompleteProvider()
         provider.initialize(RuntimeEnvironment.application, true, true, false)
-        provider.onDomainsLoaded(domains, customDomains)
+        provider.shippedDomains = domains.into()
+        provider.customDomains = customDomains.into()
 
         assertCompletion(provider, "f", CUSTOM_LIST, customDomains.size, "fanfiction.com", "http://www.fanfiction.com")
         assertCompletion(provider, "fa", CUSTOM_LIST, customDomains.size, "fanfiction.com", "http://www.fanfiction.com")

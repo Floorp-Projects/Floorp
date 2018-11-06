@@ -16,6 +16,8 @@ import kotlinx.coroutines.experimental.launch
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.DefaultSettings
 import android.webkit.WebViewDatabase
+import kotlinx.coroutines.experimental.CoroutineScope
+import kotlinx.coroutines.experimental.Dispatchers
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
@@ -129,7 +131,9 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
     override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
         currentView()?.let {
             // Make sure Url matcher is preloaded now that tracking protection is enabled
-            launch { SystemEngineView.getOrCreateUrlMatcher(it.context, policy) }
+            CoroutineScope(Dispatchers.IO).launch {
+                SystemEngineView.getOrCreateUrlMatcher(it.context, policy)
+            }
         }
 
         trackingProtectionPolicy = policy

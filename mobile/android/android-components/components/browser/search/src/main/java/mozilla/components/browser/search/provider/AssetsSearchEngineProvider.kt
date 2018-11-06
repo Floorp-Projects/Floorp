@@ -6,7 +6,9 @@ package mozilla.components.browser.search.provider
 
 import android.content.Context
 import android.content.res.AssetManager
+import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.async
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineParser
@@ -33,6 +35,7 @@ class AssetsSearchEngineProvider(
     private val filters: List<SearchEngineFilter> = emptyList(),
     private val additionalIdentifiers: List<String> = emptyList()
 ) : SearchEngineProvider {
+    private val scope = CoroutineScope(Dispatchers.IO)
 
     /**
      * Load search engines from this provider.
@@ -58,7 +61,7 @@ class AssetsSearchEngineProvider(
         val deferredSearchEngines = mutableListOf<Deferred<SearchEngine>>()
 
         searchEngineIdentifiers.forEach {
-            deferredSearchEngines.add(async {
+            deferredSearchEngines.add(scope.async {
                 loadSearchEngine(assets, parser, it)
             })
         }

@@ -4,11 +4,11 @@
 
 package mozilla.components.service.fxa
 
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.CoroutineScope
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.plus
 import org.mozilla.fxaclient.internal.FirefoxAccount as InternalFxAcct
 
@@ -57,7 +57,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
      * @return Deferred<[Profile]> representing the user's basic profile info
      */
     fun getProfile(ignoreCache: Boolean): Deferred<Profile> {
-        return async {
+        return scope.async {
             val internalProfile = inner.getProfile(ignoreCache)
             Profile(
                     uid = internalProfile.uid,

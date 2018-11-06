@@ -12,11 +12,12 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import kotlinx.android.synthetic.main.activity_toolbar.*
-import kotlinx.coroutines.experimental.Job
-import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.isActive
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.Job
+import kotlinx.coroutines.experimental.isActive
 import mozilla.components.browser.domains.DomainAutoCompleteProvider
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
@@ -396,7 +397,7 @@ class ToolbarActivity : AppCompatActivity() {
 
         loading = true
 
-        job = launch(UI) {
+        job = CoroutineScope(Dispatchers.Main).launch {
             try {
                 loop@ for (progress in 0..100 step 5) {
                     if (!isActive) {

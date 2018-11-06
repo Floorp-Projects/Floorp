@@ -6,7 +6,9 @@ package org.mozilla.samples.browser
 
 import android.content.Context
 import android.widget.Toast
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.CoroutineScope
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.launch
 import mozilla.components.browser.engine.system.SystemEngine
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
@@ -60,7 +62,9 @@ open class DefaultComponents(private val applicationContext: Context) {
     // Search
     private val searchEngineManager by lazy {
         SearchEngineManager().apply {
-            async { load(applicationContext) }
+            CoroutineScope(Dispatchers.Default).launch {
+                load(applicationContext).await()
+            }
         }
     }
     private val searchUseCases by lazy { SearchUseCases(applicationContext, searchEngineManager, sessionManager) }

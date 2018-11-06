@@ -11,7 +11,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.CoroutineScope
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 
@@ -95,7 +96,7 @@ class UrlBoxProgressView(
             // again. However we want to show the full progress bar briefly so we wait 250ms before
             // going back to 0.
             if (value == 100) {
-                launch(UI) {
+                CoroutineScope(Dispatchers.Main).launch {
                     delay(250)
                     progress = 0
                 }
