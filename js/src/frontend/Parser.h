@@ -204,6 +204,29 @@ public:
     { }
 };
 
+template <typename T>
+inline T&
+ParseContext::Statement::as()
+{
+    MOZ_ASSERT(is<T>());
+    return static_cast<T&>(*this);
+}
+
+inline ParseContext::Scope::BindingIter
+ParseContext::Scope::bindings(ParseContext* pc)
+{
+    // In function scopes with parameter expressions, function special names
+    // (like '.this') are declared as vars in the function scope, despite its
+    // not being the var scope.
+    return BindingIter(*this, pc->varScope_ == this || pc->functionScope_.ptrOr(nullptr) == this);
+}
+
+inline
+Directives::Directives(ParseContext* parent)
+  : strict_(parent->sc()->strict()),
+    asmJS_(parent->useAsmOrInsideUseAsm())
+{}
+
 enum VarContext { HoistVars, DontHoistVars };
 enum PropListType { ObjectLiteral, ClassBody, DerivedClassBody };
 enum class PropertyType {
@@ -394,6 +417,36 @@ class MOZ_STACK_CLASS ParserBase
 
     MOZ_MUST_USE bool setSourceMapInfo();
 };
+
+inline
+ParseContext::Scope::Scope(ParserBase* parser)
+  : Nestable<Scope>(&parser->pc->innermostScope_),
+    declared_(parser->context->frontendCollectionPool()),
+    possibleAnnexBFunctionBoxes_(parser->context->frontendCollectionPool()),
+    id_(parser->usedNames.nextScopeId())
+{ }
+
+inline
+ParseContext::Scope::Scope(JSContext* cx, ParseContext* pc, UsedNameTracker& usedNames)
+  : Nestable<Scope>(&pc->innermostScope_),
+    declared_(cx->frontendCollectionPool()),
+    possibleAnnexBFunctionBoxes_(cx->frontendCollectionPool()),
+    id_(usedNames.nextScopeId())
+{ }
+
+inline
+ParseContext::VarScope::VarScope(ParserBase* parser)
+  : Scope(parser)
+{
+    useAsVarScope(parser->pc);
+}
+
+inline
+ParseContext::VarScope::VarScope(JSContext* cx, ParseContext* pc, UsedNameTracker& usedNames)
+  : Scope(cx, pc, usedNames)
+{
+    useAsVarScope(pc);
+}
 
 enum FunctionCallBehavior {
     PermitAssignmentToFunctionCalls,
@@ -1649,6 +1702,10 @@ NewLexicalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& a
 JSFunction*
 AllocNewFunction(JSContext* cx, HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                  HandleObject proto, bool isSelfHosting = false, bool inFunctionBox = false);
+
+// Returns true if the declaration is `var` or equivalent.
+bool
+DeclarationKindIsVar(DeclarationKind kind);
 
 } /* namespace frontend */
 } /* namespace js */
