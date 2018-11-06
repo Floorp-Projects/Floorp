@@ -28,18 +28,15 @@ class GeckoViewContentChild extends GeckoViewChildModule {
       Utils: "resource://gre/modules/sessionstore/Utils.jsm",
     });
 
-    this.messageManager.addMessageListener("GeckoView:SaveState",
-                                           this);
-    this.messageManager.addMessageListener("GeckoView:RestoreState",
-                                           this);
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenEntered",
                                            this);
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenExited",
                                            this);
-    this.messageManager.addMessageListener("GeckoView:ZoomToInput",
-                                           this);
-    this.messageManager.addMessageListener("GeckoView:SetActive",
-                                           this);
+    this.messageManager.addMessageListener("GeckoView:RestoreState", this);
+    this.messageManager.addMessageListener("GeckoView:SaveState", this);
+    this.messageManager.addMessageListener("GeckoView:SetActive", this);
+    this.messageManager.addMessageListener("GeckoView:UpdateInitData", this);
+    this.messageManager.addMessageListener("GeckoView:ZoomToInput", this);
 
     const options = {
         mozSystemGroup: true,
@@ -244,6 +241,12 @@ class GeckoViewContentChild extends GeckoViewChildModule {
           if (content && aMsg.data.suspendMedia) {
               content.windowUtils.mediaSuspend = aMsg.data.active ? Ci.nsISuspendedTypes.NONE_SUSPENDED : Ci.nsISuspendedTypes.SUSPENDED_PAUSE;
           }
+        break;
+
+      case "GeckoView:UpdateInitData":
+        // Provide a hook for native code to detect a transfer.
+        Services.obs.notifyObservers(
+            docShell, "geckoview-content-global-transferred");
         break;
     }
   }
