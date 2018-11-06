@@ -1046,9 +1046,8 @@ var TPS = {
    */
   Phase: function Test__Phase(phasename, fnlist) {
     if (Object.keys(this._phaselist).length === 0) {
-      // This is the first phase we should wipe the server - this has the
-      // side-effect of forcing a login, which we also need.
-      fnlist.unshift([this.WipeServer]);
+      // This is the first phase we should force a log in
+      fnlist.unshift([this.Login]);
     }
     this._phaselist[phasename] = fnlist;
   },
