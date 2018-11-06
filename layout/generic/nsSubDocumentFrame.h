@@ -15,7 +15,7 @@
 
 namespace mozilla {
 namespace layout {
-class RenderFrameParent;
+class RenderFrame;
 }
 }
 
@@ -140,7 +140,7 @@ public:
     }
   }
 
-  mozilla::layout::RenderFrameParent* GetRenderFrameParent() const;
+  mozilla::layout::RenderFrame* GetRenderFrame() const;
 
 protected:
   friend class AsyncFrameInit;
