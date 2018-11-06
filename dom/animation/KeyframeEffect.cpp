@@ -1264,7 +1264,7 @@ KeyframeEffect::CanThrottle() const
     // Note that AnimationInfo::GetGenarationFromFrame() is supposed to work
     // with the primary frame instead of the style frame.
     Maybe<uint64_t> generation = layers::AnimationInfo::GetGenerationFromFrame(
-        GetPrimaryFrame(), record.mLayerType);
+        GetPrimaryFrame(), record.mDisplayItemType);
     // Unthrottle if the animation needs to be brought up to date
     if (!generation || effectSet->GetAnimationGeneration() != *generation) {
       return false;
