@@ -24,10 +24,6 @@ UNIFIED_SOURCES += [
     'mar_read.c',
 ]
 
-LOCAL_INCLUDES += [
-    '../../../other-licenses/nsis/Contrib/CityHash/cityhash',
-]
-
 FORCE_STATIC_LIB = True
 
 if CONFIG['OS_ARCH'] == 'WINNT':
