@@ -23,6 +23,7 @@ SourceSurfaceSkia::SourceSurfaceSkia()
   , mStride(0)
   , mDrawTarget(nullptr)
   , mChangeMutex("SourceSurfaceSkia::mChangeMutex")
+  , mIsMapped(false)
 {
 }
 
