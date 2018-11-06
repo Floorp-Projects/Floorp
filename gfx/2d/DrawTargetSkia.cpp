@@ -2125,10 +2125,6 @@ DrawTargetSkia::PushLayerWithBlend(bool aOpaque, Float aOpacity, SourceSurface* 
   sk_sp<SkImage> clipImage = aMask ? GetSkImageForSurface(aMask) : nullptr;
   SkMatrix clipMatrix;
   GfxMatrixToSkiaMatrix(aMaskTransform, clipMatrix);
-  if (aMask) {
-    clipMatrix.postTranslate(aMask->GetRect().X(), aMask->GetRect().Y());
-  }
-
   SkCanvas::SaveLayerRec saveRec(aBounds.IsEmpty() ? nullptr : &bounds,
                                  &paint,
                                  nullptr,

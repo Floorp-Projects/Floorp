@@ -90,8 +90,7 @@ private:
   mutable RefPtr<ID2D1Bitmap1> mBitmap;
   SurfaceFormat mFormat;
   D2D1_MAPPED_RECT mMap;
-  bool mIsMapped;
-  bool mImplicitMapped;
+  bool mMapped;
 };
 
 }
