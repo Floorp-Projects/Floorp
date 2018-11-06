@@ -430,6 +430,7 @@ var ctrlTab = {
   onKeyDown(event) {
     if (event.keyCode != event.DOM_VK_TAB ||
         !event.ctrlKey ||
+        !this.isOpen && event.shiftKey ||
         event.altKey ||
         event.metaKey) {
       return;
@@ -440,7 +441,7 @@ var ctrlTab = {
 
     if (this.isOpen) {
       this.advanceFocus(!event.shiftKey);
-    } else if (!event.shiftKey) {
+    } else {
       let tabs = gBrowser.visibleTabs;
       if (tabs.length > 2) {
         this.open();
