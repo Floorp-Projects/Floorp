@@ -41,6 +41,7 @@ class SourceSurface;
 namespace dom {
 class HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmap;
 typedef HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmap CanvasImageSource;
+class ImageBitmap;
 class ImageData;
 class StringOrCanvasGradientOrCanvasPattern;
 class OwningStringOrCanvasGradientOrCanvasPattern;
@@ -1192,6 +1193,19 @@ protected:
 
   friend struct CanvasBidiProcessor;
   friend class CanvasDrawObserver;
+  friend class ImageBitmap;
+
+  void SetWriteOnly()
+  {
+    mWriteOnly = true;
+  }
+
+  bool IsWriteOnly() const
+  {
+    return mWriteOnly;
+  }
+
+  bool mWriteOnly;
 };
 
 size_t BindingJSObjectMallocBytes(CanvasRenderingContext2D* aContext);
