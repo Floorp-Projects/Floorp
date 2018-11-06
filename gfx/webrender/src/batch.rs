@@ -542,6 +542,54 @@ impl AlphaBatchBuilder {
             .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
 
         match prim_instance.kind {
+            PrimitiveInstanceKind::Clear => {
+                let prim_data = &ctx
+                    .resources
+                    .prim_data_store[prim_instance.prim_data_handle];
+
+                let prim_cache_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
+
+                // TODO(gw): We can abstract some of the common code below into
+                //           helper methods, as we port more primitives to make
+                //           use of interning.
+
+                let prim_header = PrimitiveHeader {
+                    local_rect: prim_data.prim_rect,
+                    local_clip_rect: prim_instance.combined_local_clip_rect,
+                    task_address,
+                    specific_prim_address: prim_cache_address,
+                    clip_task_address,
+                    transform_id,
+                };
+
+                let prim_header_index = prim_headers.push(
+                    &prim_header,
+                    z_id,
+                    [get_shader_opacity(1.0), 0, 0],
+                );
+
+                let batch_key = BatchKey {
+                    blend_mode: BlendMode::PremultipliedDestOut,
+                    kind: BatchKind::Brush(BrushBatchKind::Solid),
+                    textures: BatchTextures::no_texture(),
+                };
+
+                let instance = PrimitiveInstanceData::from(BrushInstance {
+                    segment_index: 0,
+                    edge_flags: EdgeAaSegmentMask::all(),
+                    clip_task_address,
+                    brush_flags: BrushFlags::PERSPECTIVE_INTERPOLATION,
+                    prim_header_index,
+                    user_data: 0,
+                });
+
+                self.batch_list.push_single_instance(
+                    batch_key,
+                    bounding_rect,
+                    z_id,
+                    PrimitiveInstanceData::from(instance),
+                );
+            }
             PrimitiveInstanceKind::TextRun { ref run, .. } => {
                 let subpx_dir = run.used_font.get_subpx_dir();
 
@@ -765,7 +813,8 @@ impl AlphaBatchBuilder {
                                 PrimitiveInstanceKind::Picture { pic_index } => pic_index,
                                 PrimitiveInstanceKind::LineDecoration { .. } |
                                 PrimitiveInstanceKind::TextRun { .. } |
-                                PrimitiveInstanceKind::LegacyPrimitive { .. } => {
+                                PrimitiveInstanceKind::LegacyPrimitive { .. } |
+                                PrimitiveInstanceKind::Clear => {
                                     unreachable!();
                                 }
                             };
@@ -1724,14 +1773,6 @@ impl BrushPrimitive {
                     0,
                 ))
             }
-            BrushKind::Clear => {
-                Some(BrushBatchParameters::shared(
-                    BrushBatchKind::Solid,
-                    BatchTextures::no_texture(),
-                    [get_shader_opacity(1.0), 0, 0],
-                    0,
-                ))
-            }
             BrushKind::RadialGradient { ref stops_handle, .. } => {
                 Some(BrushBatchParameters::shared(
                     BrushBatchKind::RadialGradient,
@@ -1824,9 +1865,6 @@ impl PrimitiveInstance {
         match *details {
             PrimitiveDetails::Brush(ref brush) => {
                 match brush.kind {
-                    BrushKind::Clear => {
-                        BlendMode::PremultipliedDestOut
-                    }
                     BrushKind::Image { alpha_type, .. } => {
                         match alpha_type {
                             AlphaType::PremultipliedAlpha => BlendMode::PremultipliedAlpha,

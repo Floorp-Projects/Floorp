@@ -8,7 +8,7 @@ use api::{MixBlendMode, PipelineId, DeviceRect, LayoutSize};
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::ClipStore;
 use clip_scroll_tree::{ClipScrollTree};
-use device::{FrameId, Texture};
+use device::{Texture};
 #[cfg(feature = "pathfinder")]
 use euclid::{TypedPoint2D, TypedVector2D};
 use gpu_cache::{GpuCache};
@@ -20,7 +20,7 @@ use pathfinder_partitioner::mesh::Mesh;
 use picture::SurfaceInfo;
 use prim_store::{PrimitiveStore, DeferredResolve};
 use profiler::FrameProfileCounters;
-use render_backend::FrameResources;
+use render_backend::{FrameId, FrameResources};
 use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
 use render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTaskTree, ScalingTask};
 use resource_cache::ResourceCache;

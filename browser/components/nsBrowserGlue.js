@@ -1728,11 +1728,9 @@ BrowserGlue.prototype = {
 
     // There are several cases where we won't show a dialog here:
     // 1. There is only 1 tab open in 1 window
-    // 2. The session will be restored at startup, indicated by
-    //    browser.startup.page == 3 or browser.sessionstore.resume_session_once == true
-    // 3. browser.warnOnQuit == false
-    // 4. The browser is currently in Private Browsing mode
-    // 5. The browser will be restarted.
+    // 2. browser.warnOnQuit or browser.warnOnClose == false
+    // 3. The browser is currently in Private Browsing mode
+    // 4. The browser will be restarted.
     //
     // Otherwise, we will show the "closing multiple tabs" dialog.
     //
@@ -1764,12 +1762,8 @@ BrowserGlue.prototype = {
       aQuitType = "quit";
 
     // browser.warnOnQuit is a hidden global boolean to override all quit prompts
-    // browser.showQuitWarning specifically covers quitting
     // browser.tabs.warnOnClose is the global "warn when closing multiple tabs" pref
-
-    var sessionWillBeRestored = Services.prefs.getIntPref("browser.startup.page") == 3 ||
-                                Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
-    if (sessionWillBeRestored || !Services.prefs.getBoolPref("browser.warnOnQuit") ||
+    if (!Services.prefs.getBoolPref("browser.warnOnQuit") ||
         !Services.prefs.getBoolPref("browser.tabs.warnOnClose"))
       return;
 

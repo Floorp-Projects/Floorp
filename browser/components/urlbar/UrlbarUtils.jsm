@@ -67,6 +67,19 @@ var UrlbarUtils = {
     TAB_SWITCH: 1,
   },
 
+  // This defines the source of matches returned by a provider. Each provider
+  // can return matches from more than one source. This is used by the
+  // ProvidersManager to decide which providers must be queried and which
+  // matches can be returned.
+  MATCH_SOURCE: {
+    BOOKMARKS: 1,
+    HISTORY: 2,
+    SEARCHENGINE: 3,
+    TABS: 4,
+    OTHER_LOCAL: 5,
+    OTHER_NETWORK: 6,
+  },
+
   /**
    * Adds a url to history as long as it isn't in a private browsing window,
    * and it is valid.

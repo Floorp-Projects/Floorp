@@ -132,8 +132,7 @@ public:
   // events which are fired a lot of times like eMouseMove.
   bool    mOnlySystemGroupDispatchInContent : 1;
   // The event's action will be handled by APZ. The main thread should not
-  // perform its associated action. This is currently only relevant for
-  // wheel and touch events.
+  // perform its associated action.
   bool mHandledByAPZ : 1;
   // True if the event is currently being handled by an event listener that
   // was registered as a passive listener.
