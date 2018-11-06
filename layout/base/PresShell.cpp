@@ -1153,6 +1153,8 @@ PresShell::Destroy()
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
     "destroy called on presshell while scripts not blocked");
 
+  AUTO_PROFILER_LABEL("PresShell::Destroy", LAYOUT);
+
   // dump out cumulative text perf metrics
   gfxTextPerfMetrics* tp;
   if (mPresContext && (tp = mPresContext->GetTextPerfMetrics())) {

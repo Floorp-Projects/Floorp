@@ -9363,10 +9363,6 @@ exports.PREFERENCES = [
     "layout.css.scroll-snap.enabled"
   ],
   [
-    "shape-image-threshold",
-    "layout.css.shape-outside.enabled"
-  ],
-  [
     "background-blend-mode",
     "layout.css.background-blend-mode.enabled"
   ],
@@ -9395,10 +9391,6 @@ exports.PREFERENCES = [
     "layout.css.scrollbar-color.enabled"
   ],
   [
-    "shape-outside",
-    "layout.css.shape-outside.enabled"
-  ],
-  [
     "translate",
     "layout.css.individual-transform.enabled"
   ],
@@ -9413,10 +9405,6 @@ exports.PREFERENCES = [
   [
     "scroll-snap-destination",
     "layout.css.scroll-snap.enabled"
-  ],
-  [
-    "shape-margin",
-    "layout.css.shape-outside.enabled"
   ],
   [
     "-webkit-text-stroke-width",

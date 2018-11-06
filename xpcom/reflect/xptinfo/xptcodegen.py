@@ -361,7 +361,7 @@ def link_to_cpp(interfaces, fd):
 
     def lower_const(const, ifacename):
         assert const['type']['tag'] in \
-            ['TD_INT16', 'TD_INT32', 'TD_UINT16', 'TD_UINT32']
+            ['TD_INT16', 'TD_INT32', 'TD_UINT8', 'TD_UINT16', 'TD_UINT32']
         is_signed = const['type']['tag'] in ['TD_INT16', 'TD_INT32']
 
         # Constants are always either signed or unsigned 16 or 32 bit integers,

@@ -70,9 +70,14 @@ add_task(async function test1b() {
   await promiseShown;
   is(gPrivateWindow.PopupNotifications.panel.firstElementChild.checkbox.hidden, true, "'Remember' checkbox should be hidden in private windows");
 
+  let promises = [
+    BrowserTestUtils.browserLoaded(gTestBrowser, false, gHttpTestRoot + "plugin_test.html"),
+    BrowserTestUtils.waitForEvent(window, "activate"),
+  ];
   gPrivateWindow.close();
   BrowserTestUtils.loadURI(gTestBrowser, gHttpTestRoot + "plugin_test.html");
-  await BrowserTestUtils.browserLoaded(gTestBrowser);
+  await Promise.all(promises);
+  await SimpleTest.promiseFocus(window);
 });
 
 add_task(async function test2a() {
@@ -127,10 +132,15 @@ add_task(async function test2c() {
      "Test 2c, Activated plugin in a private window should not have visible 'Remember' checkbox.");
 
   clearAllPluginPermissions();
-  gPrivateWindow.close();
 
+  let promises = [
+    BrowserTestUtils.browserLoaded(gTestBrowser, false, gHttpTestRoot + "plugin_test.html"),
+    BrowserTestUtils.waitForEvent(window, "activate"),
+  ];
+  gPrivateWindow.close();
   BrowserTestUtils.loadURI(gTestBrowser, gHttpTestRoot + "plugin_test.html");
-  await BrowserTestUtils.browserLoaded(gTestBrowser);
+  await Promise.all(promises);
+  await SimpleTest.promiseFocus(window);
 });
 
 add_task(async function test3a() {

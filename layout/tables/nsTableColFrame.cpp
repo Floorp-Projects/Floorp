@@ -202,12 +202,6 @@ nsTableColFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-nsSplittableType
-nsTableColFrame::GetSplittableType() const
-{
-  return NS_FRAME_NOT_SPLITTABLE;
-}
-
 void
 nsTableColFrame::InvalidateFrame(uint32_t aDisplayItemKey, bool aRebuildDisplayItems)
 {

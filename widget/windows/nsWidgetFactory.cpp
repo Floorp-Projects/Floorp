@@ -169,7 +169,7 @@ NS_DEFINE_NAMED_CID(NS_DEVICE_CONTEXT_SPEC_CID);
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_FILEPICKER_CID, false, nullptr, FilePickerConstructor, Module::MAIN_PROCESS_ONLY },
   { &kNS_COLORPICKER_CID, false, nullptr, ColorPickerConstructor, Module::MAIN_PROCESS_ONLY },
-  { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor, Module::ALLOW_IN_GPU_PROCESS },
+  { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor, Module::ALLOW_IN_GPU_AND_VR_PROCESS },
   { &kNS_SCREENMANAGER_CID, false, nullptr, ScreenManagerConstructor,
     Module::MAIN_PROCESS_ONLY },
   { &kNS_GFXINFO_CID, false, nullptr, GfxInfoConstructor, Module::ALLOW_IN_GPU_PROCESS },
@@ -204,7 +204,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
 static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID, Module::MAIN_PROCESS_ONLY },
   { "@mozilla.org/colorpicker;1", &kNS_COLORPICKER_CID, Module::MAIN_PROCESS_ONLY },
-  { "@mozilla.org/widget/appshell/win;1", &kNS_APPSHELL_CID, Module::ALLOW_IN_GPU_PROCESS },
+  { "@mozilla.org/widget/appshell/win;1", &kNS_APPSHELL_CID, Module::ALLOW_IN_GPU_AND_VR_PROCESS },
   { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID, Module::MAIN_PROCESS_ONLY },
   { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID, Module::ALLOW_IN_GPU_PROCESS },
   { "@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID },
@@ -256,7 +256,7 @@ static const mozilla::Module kWidgetModule = {
   nullptr,
   nsAppShellInit,
   nsWidgetWindowsModuleDtor,
-  Module::ALLOW_IN_GPU_PROCESS
+  Module::ALLOW_IN_GPU_AND_VR_PROCESS
 };
 
 NSMODULE_DEFN(nsWidgetModule) = &kWidgetModule;

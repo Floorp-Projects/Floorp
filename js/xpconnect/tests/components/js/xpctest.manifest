@@ -24,3 +24,6 @@ contract @mozilla.org/js/xpc/test/js/ReturnCodeChild;1 {38dd78aa-467f-4fad-8dcf-
 
 component {e86573c4-a384-441a-8c92-7b99e8575b28} xpctest_utils.js
 contract @mozilla.org/js/xpc/test/js/TestUtils;1 {e86573c4-a384-441a-8c92-7b99e8575b28}
+
+component {43929c74-dc70-11e8-b6f9-8fce71a2796a} xpctest_cenums.js
+contract @mozilla.org/js/xpc/test/js/CEnums;1 {43929c74-dc70-11e8-b6f9-8fce71a2796a}

@@ -40,6 +40,16 @@ they're nestable.
 [notifier]: renderer/struct.Renderer.html#method.set_render_notifier
 */
 
+// Cribbed from the |matches| crate, for simplicity.
+macro_rules! matches {
+    ($expression:expr, $($pattern:tt)+) => {
+        match $expression {
+            $($pattern)+ => true,
+            _ => false
+        }
+    }
+}
+
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
@@ -182,7 +192,7 @@ pub extern crate webrender_api;
 #[doc(hidden)]
 pub use device::{build_shader_strings, ReadPixelsFormat, UploadMethod, VertexUsageHint};
 pub use device::{ProgramBinary, ProgramCache, ProgramCacheObserver, ProgramSources};
-pub use device::{Device};
+pub use device::{Device, total_gpu_bytes_allocated};
 pub use frame_builder::ChasePrimitive;
 pub use renderer::{AsyncPropertySampler, CpuProfile, DebugFlags, OutputImageHandler, RendererKind};
 pub use renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource, GpuProfile};
