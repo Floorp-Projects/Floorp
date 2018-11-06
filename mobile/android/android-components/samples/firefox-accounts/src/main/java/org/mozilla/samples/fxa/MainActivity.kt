@@ -53,25 +53,21 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         job = Job()
 
         whenAccount = async {
-            val acct = getAuthenticatedAccount()
-            if (acct != null) {
-                val profile = acct.getProfile(true).await()
+            getAuthenticatedAccount()?.let {
+                val profile = it.getProfile(true).await()
                 displayProfile(profile)
-                acct
-            } else {
-                val pairingUrl = intent.extras?.getString("pairingUrl")
-                if (pairingUrl != null) {
-                    Config.custom(CONFIG_URL_PAIRING).await().use { config ->
-                        val acct = FirefoxAccount(config, CLIENT_ID, REDIRECT_URL)
-                        val url = acct.beginPairingFlow(pairingUrl, scopes).await()
-                        openWebView(url)
-                        acct
-                    }
-                } else {
-                    Config.custom(CONFIG_URL).await().use { config ->
-                        FirefoxAccount(config, CLIENT_ID, REDIRECT_URL)
-                    }
+                return@async it
+            }
+            intent.extras?.getString("pairingUrl")?.let { pairingUrl ->
+                Config.custom(CONFIG_URL_PAIRING).await().use { config ->
+                    val acct = FirefoxAccount(config, CLIENT_ID, REDIRECT_URL)
+                    val url = acct.beginPairingFlow(pairingUrl, scopes).await()
+                    openWebView(url)
+                    return@async acct
                 }
+            }
+            return@async Config.custom(CONFIG_URL).await().use { config ->
+                FirefoxAccount(config, CLIENT_ID, REDIRECT_URL)
             }
         }
 
@@ -138,7 +134,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             } catch (e: FxaException) {
                 null
             }
-        } ?: null
+        }
     }
 
     private fun openTab(url: String) {
