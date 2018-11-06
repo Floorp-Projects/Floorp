@@ -10848,10 +10848,12 @@
   },
   "SSL_CERT_VERIFICATION_ERRORS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["seceng@mozilla.org"],
-    "expires_in_version": "default",
+    "alert_emails": ["jhofmann@mozilla.com", "rtestard@mozilla.com", "seceng@mozilla.org"],
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "bug_numbers": [1503572],
+    "releaseChannelCollection": "opt-out",
     "description": "If certificate verification failed in a TLS handshake, what was the error? (see MapCertErrorToProbeValue in security/manager/ssl/SSLServerCertVerification.cpp and the values in security/pkix/include/pkix/Result.h)"
   },
   "SSL_CT_POLICY_COMPLIANCE_OF_EV_CERTS": {
