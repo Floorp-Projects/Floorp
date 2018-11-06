@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://www.w3.org/TR/navigation-timing-2/#sec-PerformanceNavigationTiming
+ * https://w3c.github.io/navigation-timing/#sec-PerformanceNavigationTiming
  *
  * Copyright © 2016 W3C® (MIT, ERCIM, Keio, Beihang).
  * W3C liability, trademark and document use rules apply.
