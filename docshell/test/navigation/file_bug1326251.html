@@ -12,7 +12,7 @@
         // and navigate back. Both iframes should still exist with history
         // entries preserved.
         window.onunload = null; // enable bfcache
-        let dynamicFrame = await createDynamicFrame(document);
+        await createDynamicFrame(document);
         await loadUriInFrame(document.getElementById("staticFrame"), "frame1.html");
         await loadUriInFrame(document.getElementById("dynamicFrame"), "frame1.html");
         await loadUriInFrame(document.getElementById("staticFrame"), "frame2.html");
