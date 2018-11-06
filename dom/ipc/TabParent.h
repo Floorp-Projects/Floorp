@@ -329,7 +329,7 @@ public:
 
   void LoadURL(nsIURI* aURI);
 
-  void InitRenderFrame();
+  void InitRendering();
   void MaybeShowFrame();
 
   // XXX/cjones: it's not clear what we gain by hiding these
