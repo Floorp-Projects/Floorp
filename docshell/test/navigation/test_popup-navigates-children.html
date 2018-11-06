@@ -9,6 +9,12 @@
       iframe { width: 90%; height: 50px; }
     </style>
 <script>
+
+let window0 = null;
+let window1 = null;
+let window2 = null;
+let window3 = null;
+
 function testChild0() {
   if (!window.window0)
     window0 = window.open("navigate.html#opener.frames[0],location", "window0", "width=10,height=10");

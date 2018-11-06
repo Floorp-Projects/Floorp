@@ -1,5 +1,3 @@
-var urifixup = Cc["@mozilla.org/docshell/urifixup;1"].
-               getService(Ci.nsIURIFixup);
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
@@ -111,8 +109,8 @@ add_task(function test_fix_unknown_schemes() {
   for (let i = 0; i < len; ++i) {
     let item = data[i];
     let result =
-      urifixup.createFixupURI(item.wrong,
-                              urifixup.FIXUP_FLAG_FIX_SCHEME_TYPOS).spec;
+      Services.uriFixup.createFixupURI(item.wrong,
+                              Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS).spec;
     Assert.equal(result, item.fixed);
   }
 });
