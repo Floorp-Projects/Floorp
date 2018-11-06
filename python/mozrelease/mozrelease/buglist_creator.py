@@ -14,9 +14,9 @@ from operator import itemgetter
 
 from mozilla_version.gecko import GeckoVersion
 
-BUGLIST_PREFIX = 'Bugs since previous changeset: '
+BUGLIST_TEMPLATE = '* [Bugs since previous changeset]({url})\n'
 BACKOUT_REGEX = re.compile(r'back(\s?)out|backed out|backing out', re.IGNORECASE)
-BACKOUT_PREFIX = 'Backouts since previous changeset: '
+BACKOUT_TEMPLATE = '* [Backouts since previous changeset]({url})\n'
 BUGZILLA_BUGLIST_TEMPLATE = 'https://bugzilla.mozilla.org/buglist.cgi?bug_id={bugs}'
 BUG_NUMBER_REGEX = re.compile(r'bug \d+', re.IGNORECASE)
 CHANGELOG_TO_FROM_STRING = '{product}_{version}_RELEASE'
@@ -24,8 +24,8 @@ CHANGESET_URL_TEMPLATE = (
     '{repo}/{logtype}'
     '?fromchange={from_version}&tochange={to_version}&full=1'
 )
-FULL_CHANGESET_PREFIX = 'Full Mercurial changelog: '
-LIST_DESCRIPTION_TEMPLATE = 'Comparing Mercurial tag {from_version} to {to_version}:'
+FULL_CHANGESET_TEMPLATE = '* [Full Mercurial changelog]({url})\n'
+LIST_DESCRIPTION_TEMPLATE = 'Comparing Mercurial tag {from_version} to {to_version}:\n'
 MAX_BUGS_IN_BUGLIST = 250
 MERCURIAL_TAGS_URL_TEMPLATE = '{repo}/json-tags'
 NO_BUGS = ''  # Return this when bug list can't be created
@@ -69,17 +69,22 @@ def create_bugs_url(product, current_version, current_revision, repo=None):
 
         # Return a descriptive string with links if any relevant bugs are found
         if unique_bugs or unique_backout_bugs:
-            description_string = LIST_DESCRIPTION_TEMPLATE.format(
+            description = LIST_DESCRIPTION_TEMPLATE.format(
                 from_version=previous_version_tag,
                 to_version=current_version_tag)
+
+            if unique_bugs:
+                description += BUGLIST_TEMPLATE.format(url=create_buglist_url(unique_bugs))
+            if unique_backout_bugs:
+                description += BACKOUT_TEMPLATE.format(url=create_buglist_url(unique_backout_bugs))
 
             changeset_html = CHANGESET_URL_TEMPLATE.format(repo=repo,
                                                            from_version=previous_version_tag,
                                                            to_version=current_revision,
                                                            logtype='pushloghtml')
+            description += FULL_CHANGESET_TEMPLATE.format(url=changeset_html)
 
-            return format_return_value(
-                description_string, unique_bugs, unique_backout_bugs, changeset_html)
+            return description
         else:
             return NO_BUGS
 
@@ -121,27 +126,8 @@ def is_backout_bug(changeset_description):
     return bool(BACKOUT_REGEX.search(changeset_description))
 
 
-def create_short_url_with_prefix(buglist, backout_buglist):
-    # Create link if there are bugs, else empty string
-    urls = []
-    for set_of_bugs, prefix in [(buglist, BUGLIST_PREFIX), (backout_buglist, BACKOUT_PREFIX)]:
-        if set_of_bugs and len(set_of_bugs) < MAX_BUGS_IN_BUGLIST:
-            try:
-                long_bugzilla_link = BUGZILLA_BUGLIST_TEMPLATE.format(bugs='%2C'.join(set_of_bugs))
-                response = requests.get(URL_SHORTENER_TEMPLATE.format(url=long_bugzilla_link))
-                url = response.json()['url']
-                url = prefix + url + '\n'
-
-            except (KeyError, ValueError):
-                # If the Bugzilla link fails despite limiting the number of
-                # bugs, don't make the url and continue
-                url = ''
-        else:
-            url = ''
-
-        urls.append(url)
-
-    return urls[0], urls[1]
+def create_buglist_url(buglist):
+    return BUGZILLA_BUGLIST_TEMPLATE.format(bugs='%2C'.join(buglist))
 
 
 def tag_version(product, version):
@@ -187,17 +173,6 @@ def get_previous_tag_version(
     return tags[next_version_index][1]
 
 
-def format_return_value(description, unique_bugs, unique_backout_bugs, changeset_html):
-    reg_bugs_link, backout_bugs_link = create_short_url_with_prefix(
-        unique_bugs, unique_backout_bugs)
-    changeset_full = FULL_CHANGESET_PREFIX + changeset_html
-    return_str = '{description}\n{regular_bz_url}{backout_bz_url}{changeset_full}'\
-        .format(description=description, regular_bz_url=reg_bugs_link,
-                backout_bz_url=backout_bugs_link, changeset_full=changeset_full)
-
-    return return_str
-
-
 def get_repo_by_version(version):
     """
     Get the repo a given version is found on.
@@ -224,8 +199,8 @@ def email_release_drivers(
     content = """\
 A new build has been started:
 
-Commit: {repo}/rev/{revision}
-Task group: https://tools.taskcluster.net/push-inspector/#/{task_group_id}
+Commit: [{revision}]({repo}/rev/{revision})
+Task group: [{task_group_id}](https://tools.taskcluster.net/groups/{task_group_id})
 
 {email_buglist_string}
 """.format(repo=repo, revision=revision,
