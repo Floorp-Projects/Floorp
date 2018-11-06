@@ -21,6 +21,12 @@ function testCached(code, imports, test) {
      .then(m => {
          test(new Instance(m, imports));
          assertEq(cache.cached, wasmCachingIsSupported());
+
+         if (wasmCachingIsSupported()) {
+             let m2 = wasmCompileInSeparateProcess(code);
+             test(new Instance(m2, imports));
+         }
+
          success = true;
      })
      .catch(err => { print(String(err) + " at:\n" + err.stack) });
@@ -28,6 +34,22 @@ function testCached(code, imports, test) {
      drainJobQueue();
      assertEq(success, true);
 }
+
+testCached(`(module
+    (func $test (param i64) (result f64)
+        get_local 0
+        f64.convert_u/i64
+    )
+    (func (export "run") (result i32)
+        i64.const 1
+        call $test
+        f64.const 1
+        f64.eq
+    )
+)`,
+    undefined,
+    i => { assertEq(i.exports.run(), 1); }
+);
 
 testCached(
     `(module
