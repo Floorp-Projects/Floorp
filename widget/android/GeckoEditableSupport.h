@@ -21,6 +21,10 @@ namespace mozilla {
 
 class TextComposition;
 
+namespace dom {
+class TabChild;
+}
+
 namespace widget {
 
 class GeckoEditableSupport final
@@ -92,7 +96,8 @@ class GeckoEditableSupport final
     RefPtr<TextRangeArray> mIMERanges;
     int32_t mIMEMaskEventsCount; // Mask events when > 0.
     int32_t mIMEFocusCount; // We are focused when > 0.
-    int32_t mIMEActiveReplaceTextCount; // We still need to reply when > 0.
+    bool mIMEDelaySynchronizeReply; // We reply asynchronously when true.
+    int32_t mIMEActiveSynchronizeCount; // The number of replies being delayed.
     bool mIMESelectionChanged;
     bool mIMETextChangedDuringFlush;
     bool mIMEMonitorCursor;
@@ -118,7 +123,7 @@ class GeckoEditableSupport final
     virtual ~GeckoEditableSupport() {}
 
     RefPtr<TextComposition> GetComposition() const;
-    void RemoveComposition(
+    bool RemoveComposition(
             RemoveCompositionFlag aFlag = COMMIT_IME_COMPOSITION);
     void SendIMEDummyKeyEvent(nsIWidget* aWidget, EventMessage msg);
     void AddIMETextChange(const IMETextChange& aChange);
@@ -128,6 +133,9 @@ class GeckoEditableSupport final
     void AsyncNotifyIME(int32_t aNotification);
     void UpdateCompositionRects();
     bool DoReplaceText(int32_t aStart, int32_t aEnd, jni::String::Param aText);
+    bool DoUpdateComposition(int32_t aStart, int32_t aEnd, int32_t aFlags);
+    void NotifyIMEContext(const InputContext& aContext,
+                          const InputContextAction& aAction);
 
 public:
     template<typename Functor>
@@ -162,6 +170,8 @@ public:
                 std::move(aCall)));
     }
 
+    static void SetOnTabChild(dom::TabChild* aTabChild);
+
     // Constructor for main process GeckoEditableChild.
     GeckoEditableSupport(nsWindow::NativePtr<GeckoEditableSupport>* aPtr,
                          nsWindow* aWindow,
@@ -173,7 +183,8 @@ public:
         , mIMERanges(new TextRangeArray())
         , mIMEMaskEventsCount(1) // Mask IME events since there's no focus yet
         , mIMEFocusCount(0)
-        , mIMEActiveReplaceTextCount(0)
+        , mIMEDelaySynchronizeReply(false)
+        , mIMEActiveSynchronizeCount(0)
         , mIMESelectionChanged(false)
         , mIMETextChangedDuringFlush(false)
         , mIMEMonitorCursor(false)
@@ -224,6 +235,9 @@ public:
             disposer->Run();
         });
     }
+
+    // Transfer to a new parent.
+    void TransferParent(jni::Object::Param aEditableParent);
 
     // Handle an Android KeyEvent.
     void OnKeyEvent(int32_t aAction, int32_t aKeyCode, int32_t aScanCode,

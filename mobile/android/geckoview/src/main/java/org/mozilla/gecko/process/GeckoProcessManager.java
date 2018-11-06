@@ -6,6 +6,7 @@ package org.mozilla.gecko.process;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.IGeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -31,13 +32,24 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         return INSTANCE;
     }
 
-    @WrapForJNI(stubName = "GetEditableParent")
-    private static native IGeckoEditableParent nativeGetEditableParent(long contentId,
-                                                                       long tabId);
+    @WrapForJNI(calledFrom = "gecko")
+    private static void setEditableChildParent(final IGeckoEditableChild child,
+                                               final IGeckoEditableParent parent) {
+        try {
+            child.transferParent(parent);
+        } catch (final RemoteException e) {
+            Log.e(LOGTAG, "Cannot set parent", e);
+        }
+    }
+
+    @WrapForJNI(stubName = "GetEditableParent", dispatchTo = "gecko")
+    private static native void nativeGetEditableParent(IGeckoEditableChild child,
+                                                       long contentId, long tabId);
 
     @Override // IProcessManager
-    public IGeckoEditableParent getEditableParent(final long contentId, final long tabId) {
-        return nativeGetEditableParent(contentId, tabId);
+    public void getEditableParent(final IGeckoEditableChild child,
+                                  final long contentId, final long tabId) {
+        nativeGetEditableParent(child, contentId, tabId);
     }
 
     private static final class ChildConnection implements ServiceConnection,
