@@ -537,7 +537,7 @@ WebrtcAudioConduit::ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig)
 
 MediaConduitErrorCode
 WebrtcAudioConduit::ConfigureRecvMediaCodecs(
-                    const std::vector<AudioCodecConfig*>& codecConfigList)
+    const std::vector<UniquePtr<AudioCodecConfig>>& codecConfigList)
 {
   CSFLogDebug(LOGTAG,  "%s ", __FUNCTION__);
   MediaConduitErrorCode condError = kMediaConduitNoError;
@@ -560,16 +560,16 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
   // Try Applying the codecs in the list.
   // We succeed if at least one codec was applied and reception was
   // started successfully.
-  for(auto codec : codecConfigList)
+  for(const auto& codec : codecConfigList)
   {
     //if the codec param is invalid or diplicate, return error
-    if((condError = ValidateCodecConfig(codec,false)) != kMediaConduitNoError)
+    if((condError = ValidateCodecConfig(codec.get(),false)) != kMediaConduitNoError)
     {
       return condError;
     }
 
     webrtc::CodecInst cinst;
-    if(!CodecConfigToWebRTCCodec(codec,cinst))
+    if(!CodecConfigToWebRTCCodec(codec.get(), cinst))
     {
       CSFLogError(LOGTAG,"%s CodecConfig to WebRTC Codec Failed ",__FUNCTION__);
       continue;
@@ -585,7 +585,7 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
                                         codec->mName.c_str());
 
     //copy this to local database
-    if(!CopyCodecToDB(codec)) {
+    if(!CopyCodecToDB(codec.get())) {
         CSFLogError(LOGTAG,"%s Unable to updated Codec Database", __FUNCTION__);
         return kMediaConduitUnknownError;
     }

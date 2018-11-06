@@ -119,7 +119,7 @@ public:
   // alternative is writing a raft of accessor functions that allow arbitrary
   // manipulation (which will be unwieldy), or allowing functors to be injected
   // that manipulate the data structure (still pretty unwieldy).
-  virtual std::vector<JsepCodecDescription*>& Codecs() = 0;
+  virtual std::vector<UniquePtr<JsepCodecDescription>>& Codecs() = 0;
 
   template <class UnaryFunction>
   void ForEachCodec(UnaryFunction& function)

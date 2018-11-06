@@ -10,8 +10,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Attributes.h"
 
-#include "signaling/src/common/PtrVector.h"
-
 #include "signaling/src/sdp/Sdp.h"
 
 #include "signaling/src/sdp/RsdparsaSdpMediaSection.h"
@@ -74,7 +72,7 @@ private:
   RsdparsaSessionHandle mSession;
   SdpOrigin mOrigin;
   UniquePtr<RsdparsaSdpAttributeList> mAttributeList;
-  PtrVector<RsdparsaSdpMediaSection> mMediaSections;
+  std::vector<UniquePtr<RsdparsaSdpMediaSection>> mMediaSections;
 };
 
 } // namespace mozilla
