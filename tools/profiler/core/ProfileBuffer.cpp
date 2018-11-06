@@ -68,11 +68,12 @@ ProfileBuffer::AddStoredMarker(ProfilerMarker *aStoredMarker)
 
 void
 ProfileBuffer::CollectCodeLocation(
-  const char* aLabel, const char* aStr,
+  const char* aLabel, const char* aStr, uint32_t aFrameFlags,
   const Maybe<uint32_t>& aLineNumber, const Maybe<uint32_t>& aColumnNumber,
   const Maybe<js::ProfilingStackFrame::Category>& aCategory)
 {
   AddEntry(ProfileBufferEntry::Label(aLabel));
+  AddEntry(ProfileBufferEntry::FrameFlags(uint64_t(aFrameFlags)));
 
   if (aStr) {
     // Store the string using one or more DynamicStringFragment entries.
@@ -154,7 +155,8 @@ ProfileBufferCollector::CollectJitReturnAddr(void* aAddr)
 void
 ProfileBufferCollector::CollectWasmFrame(const char* aLabel)
 {
-  mBuf.CollectCodeLocation("", aLabel, Nothing(), Nothing(), Nothing());
+  mBuf.CollectCodeLocation("", aLabel, 0,
+                           Nothing(), Nothing(), Nothing());
 }
 
 void
@@ -209,6 +211,6 @@ ProfileBufferCollector::CollectProfilingStackFrame(const js::ProfilingStackFrame
     }
   }
 
-  mBuf.CollectCodeLocation(label, dynamicString, line, column,
-                           Some(aFrame.category()));
+  mBuf.CollectCodeLocation(label, dynamicString, aFrame.flags(),
+                           line, column, Some(aFrame.category()));
 }
