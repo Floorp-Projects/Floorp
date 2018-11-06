@@ -35,6 +35,7 @@
 #include "vm/TraceLogging.h"
 #include "vm/TypeInference.h"
 #include "wasm/WasmBuiltins.h"
+#include "wasm/WasmInstance.h"
 
 #include "gc/Nursery-inl.h"
 #include "jit/JSJitFrameIter-inl.h"

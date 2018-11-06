@@ -1037,7 +1037,7 @@ ModuleGenerator::finishMetadata(const Bytes& bytecode)
 SharedModule
 ModuleGenerator::finishModule(const ShareableBytes& bytecode,
                               JS::OptimizedEncodingListener* maybeTier2Listener,
-                              UniqueLinkData* maybeLinkDataOut)
+                              UniqueLinkData* maybeLinkData)
 {
     MOZ_ASSERT(mode() == CompileMode::Once || mode() == CompileMode::Tier1);
 
@@ -1154,10 +1154,9 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode,
         module->serialize(*linkData_, *maybeTier2Listener);
     }
 
-    if (maybeLinkDataOut) {
-        MOZ_ASSERT(isAsmJS());
+    if (maybeLinkData) {
         MOZ_ASSERT(!env_->debugEnabled());
-        *maybeLinkDataOut = std::move(linkData_);
+        *maybeLinkData = std::move(linkData_);
     }
 
     return module;

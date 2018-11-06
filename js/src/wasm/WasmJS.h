@@ -64,6 +64,18 @@ MOZ_MUST_USE bool
 Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
      MutableHandleWasmInstanceObject instanceObj);
 
+// For testing cross-process (de)serialization, this pair of functions are
+// responsible for, in the child process, compiling the given wasm bytecode
+// to a wasm::Module that is serialized into the given byte array, and, in
+// the parent process, deserializing the given byte array into a
+// WebAssembly.Module object.
+
+MOZ_MUST_USE bool
+CompileAndSerialize(const ShareableBytes& bytecode, Bytes* serialized);
+
+MOZ_MUST_USE bool
+DeserializeModule(JSContext* cx, const Bytes& serialized, MutableHandleObject module);
+
 // These accessors can be used to probe JS values for being an exported wasm
 // function.
 

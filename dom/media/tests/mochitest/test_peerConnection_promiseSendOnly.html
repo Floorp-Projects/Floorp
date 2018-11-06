@@ -51,7 +51,7 @@
     .then(() => pc1.setRemoteDescription(pc2.localDescription))
     .then(() => delivered)
 //    .then(() => canPlayThrough)    // why doesn't this fire?
-    .then(() => waitUntil(() => v2.currentTime > 0 && v2.srcObject.currentTime > 0))
+    .then(() => waitUntil(() => v2.currentTime > 0))
     .then(() => ok(v2.currentTime > 0, "v2.currentTime is moving (" + v2.currentTime + ")"))
     .then(() => ok(true, "Connected."))
     .catch(reason => ok(false, "unexpected failure: " + reason))

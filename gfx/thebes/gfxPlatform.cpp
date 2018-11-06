@@ -678,6 +678,13 @@ struct WebRenderMemoryReporterHelper {
     ReportInternal(aBytes, path, desc, nsIMemoryReporter::KIND_OTHER);
   }
 
+  void ReportTotalGPUBytes(size_t aBytes) const
+  {
+    nsCString path(NS_LITERAL_CSTRING("gfx/webrender/total-gpu-bytes"));
+    nsCString desc(NS_LITERAL_CSTRING("Total GPU bytes used by WebRender (should match textures/ sum)"));
+    ReportInternal(aBytes, path, desc, nsIMemoryReporter::KIND_OTHER);
+  }
+
   void ReportInternal(size_t aBytes, nsACString& aPath, nsACString& aDesc, int32_t aKind) const
   {
     // Generally, memory reporters pass the empty string as the process name to
@@ -740,6 +747,9 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
       helper.ReportTexture(aReport.render_target_textures, "render-targets");
       helper.ReportTexture(aReport.texture_cache_textures, "texture-cache");
       helper.ReportTexture(aReport.depth_target_textures, "depth-targets");
+
+      // Total GPU bytes, for sanity-checking the above.
+      helper.ReportTotalGPUBytes(aReport.total_gpu_bytes_allocated);
 
       FinishAsyncMemoryReport();
     },
