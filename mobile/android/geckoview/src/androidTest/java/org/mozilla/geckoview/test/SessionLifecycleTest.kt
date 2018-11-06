@@ -7,9 +7,11 @@ package org.mozilla.geckoview.test
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.GeckoView
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.test.util.UiThreadUtils
 
@@ -256,6 +258,46 @@ class SessionLifecycleTest : BaseSessionTest() {
 
         assertThat("New session should receive navigation notifications",
                    onLocationCount, equalTo(1))
+    }
+
+    @WithDevToolsAPI
+    @Test fun readFromParcel_focusedInput() {
+        // When an input is focused, make sure SessionTextInput is still active after transferring.
+        mainSession.loadTestPath(INPUTS_PATH)
+        mainSession.waitForPageStop()
+
+        mainSession.evaluateJS("$('#input').focus()")
+        mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
+            @AssertCalled(count = 1)
+            override fun restartInput(session: GeckoSession, reason: Int) {
+                assertThat("Reason should be correct",
+                           reason, equalTo(GeckoSession.TextInputDelegate.RESTART_REASON_FOCUS))
+            }
+        })
+
+        val newSession = sessionRule.createClosedSession()
+        mainSession.toParcel { parcel ->
+            newSession.readFromParcel(parcel)
+        }
+
+        // We generate an extra focus event during transfer.
+        newSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
+            @AssertCalled(count = 1)
+            override fun restartInput(session: GeckoSession, reason: Int) {
+                assertThat("Reason should be correct",
+                           reason, equalTo(GeckoSession.TextInputDelegate.RESTART_REASON_FOCUS))
+            }
+        })
+
+        newSession.evaluateJS("$('#input').blur()")
+        newSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
+            @AssertCalled(count = 1)
+            override fun restartInput(session: GeckoSession, reason: Int) {
+                // We generate an extra focus event during transfer.
+                assertThat("Reason should be correct",
+                           reason, equalTo(GeckoSession.TextInputDelegate.RESTART_REASON_BLUR))
+            }
+        })
     }
 
     private fun testRestoreInstanceState(fromSession: GeckoSession?,
