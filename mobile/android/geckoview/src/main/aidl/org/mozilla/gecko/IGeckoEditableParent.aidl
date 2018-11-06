@@ -11,12 +11,15 @@ import org.mozilla.gecko.IGeckoEditableChild;
 
 // Interface for GeckoEditable calls from child to parent
 interface IGeckoEditableParent {
+    // Set the default child to forward events to, when there is no focused child.
+    void setDefaultChild(IGeckoEditableChild child);
+
     // Notify an IME event of a type defined in GeckoEditableListener.
     void notifyIME(IGeckoEditableChild child, int type);
 
     // Notify a change in editor state or type.
-    void notifyIMEContext(int state, String typeHint, String modeHint, String actionHint,
-                          int flags);
+    void notifyIMEContext(IBinder token, int state, String typeHint, String modeHint,
+                          String actionHint, int flags);
 
     // Notify a change in editor selection.
     void onSelectionChange(IBinder token, int start, int end);

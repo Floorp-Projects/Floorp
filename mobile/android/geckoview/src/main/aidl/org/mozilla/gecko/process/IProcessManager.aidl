@@ -4,8 +4,8 @@
 
 package org.mozilla.gecko.process;
 
-import org.mozilla.gecko.IGeckoEditableParent;
+import org.mozilla.gecko.IGeckoEditableChild;
 
 interface IProcessManager {
-    IGeckoEditableParent getEditableParent(long contentId, long tabId);
+    void getEditableParent(in IGeckoEditableChild child, long contentId, long tabId);
 }

@@ -654,6 +654,14 @@ a.learn-more-link.webconsole-learn-more-link {
   color: currentColor;
 }
 
+/* Special casing warning and error string colors so they are legible */
+.theme-dark .message.error .objectBox-string,
+.theme-light .message.error .objectBox-string,
+.theme-dark .message.warn .objectBox-string,
+.theme-light .message.warn .objectBox-string {
+  color: var(--error-color);
+}
+
 /* Special casing dark-theme error and warning ObjectInspector colors */
 .theme-dark .webconsole-output-wrapper .message.error .tree.object-inspector .object-label,
 .theme-dark .webconsole-output-wrapper .message.error .tree.object-inspector .object-label *,
