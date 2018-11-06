@@ -22,7 +22,7 @@ use gpu_types::BrushFlags;
 use image::{self, Repetition};
 use intern;
 use picture::{ClusterRange, PictureCompositeMode, PicturePrimitive, PictureUpdateContext};
-use picture::{PrimitiveList, SurfaceInfo};
+use picture::{PrimitiveList, SurfaceInfo, SurfaceIndex};
 #[cfg(debug_assertions)]
 use render_backend::FrameId;
 use render_task::{BlitSource, RenderTask, RenderTaskCacheKey, RenderTaskTree, to_cache_size};
@@ -841,6 +841,7 @@ impl BrushSegment {
         clip_chain: Option<&ClipChainInstance>,
         prim_bounding_rect: WorldRect,
         root_spatial_node_index: SpatialNodeIndex,
+        surface_index: SurfaceIndex,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
@@ -879,7 +880,7 @@ impl BrushSegment {
                 );
 
                 let clip_task_id = frame_state.render_tasks.add(clip_task);
-                pic_state.tasks.push(clip_task_id);
+                frame_state.surfaces[surface_index.0].tasks.push(clip_task_id);
                 self.clip_task_id = BrushSegmentTaskId::RenderTaskId(clip_task_id);
             }
             None => {
@@ -2095,6 +2096,7 @@ impl PrimitiveStore {
                         pic_index,
                         pic_context.surface_spatial_node_index,
                         pic_context.raster_spatial_node_index,
+                        pic_context.surface_index,
                         pic_context.allow_subpixel_aa,
                         frame_state,
                         frame_context,
@@ -2280,6 +2282,7 @@ impl PrimitiveStore {
                 clipped_world_rect,
                 pic_context.raster_spatial_node_index,
                 &clip_chain,
+                pic_context.surface_index,
                 pic_state,
                 frame_context,
                 frame_state,
@@ -2304,6 +2307,7 @@ impl PrimitiveStore {
                     pic_index,
                     prim_instance,
                     &prim_local_rect,
+                    pic_context.surface_index,
                     pic_state,
                     frame_context,
                     frame_state,
@@ -2342,7 +2346,6 @@ impl PrimitiveStore {
                 prim_instance.prepare_interned_prim_for_render(
                     prim_context,
                     pic_context,
-                    pic_state,
                     frame_context,
                     frame_state,
                     &mut self.text_runs,
@@ -2355,6 +2358,7 @@ impl PrimitiveStore {
                     prim_local_rect,
                     prim_details,
                     prim_context,
+                    pic_context.surface_index,
                     pic_state,
                     frame_context,
                     frame_state,
@@ -2760,6 +2764,7 @@ impl PrimitiveInstance {
         prim_bounding_rect: WorldRect,
         prim_context: &PrimitiveContext,
         prim_clip_chain: &ClipChainInstance,
+        surface_index: SurfaceIndex,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
@@ -2809,6 +2814,7 @@ impl PrimitiveInstance {
                 Some(prim_clip_chain),
                 prim_bounding_rect,
                 root_spatial_node_index,
+                surface_index,
                 pic_state,
                 frame_context,
                 frame_state,
@@ -2840,6 +2846,7 @@ impl PrimitiveInstance {
                     segment_clip_chain.as_ref(),
                     prim_bounding_rect,
                     root_spatial_node_index,
+                    surface_index,
                     pic_state,
                     frame_context,
                     frame_state,
@@ -2857,7 +2864,6 @@ impl PrimitiveInstance {
         &mut self,
         prim_context: &PrimitiveContext,
         pic_context: &PictureContext,
-        pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
         text_runs: &mut [TextRunPrimitive],
@@ -2892,6 +2898,7 @@ impl PrimitiveInstance {
                         //           based on the current transform?
                         let scale_factor = TypedScale::new(1.0) * frame_context.device_pixel_scale;
                         let task_size = (LayoutSize::from_au(cache_key.size) * scale_factor).ceil().to_i32();
+                        let surfaces = &mut frame_state.surfaces;
 
                         // Request a pre-rendered image task.
                         // TODO(gw): This match is a bit untidy, but it should disappear completely
@@ -2916,7 +2923,7 @@ impl PrimitiveInstance {
                                     LayoutSize::from_au(cache_key.size),
                                 );
                                 let task_id = render_tasks.add(task);
-                                pic_state.tasks.push(task_id);
+                                surfaces[pic_context.surface_index.0].tasks.push(task_id);
                                 task_id
                             }
                         ));
@@ -2975,6 +2982,7 @@ impl PrimitiveInstance {
         prim_local_rect: LayoutRect,
         prim_details: &mut PrimitiveDetails,
         prim_context: &PrimitiveContext,
+        surface_index: SurfaceIndex,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
@@ -3057,6 +3065,7 @@ impl PrimitiveInstance {
                                         request,
                                         texel_rect: sub_rect,
                                     };
+                                    let surfaces = &mut frame_state.surfaces;
 
                                     // Request a pre-rendered image task.
                                     *handle = Some(frame_state.resource_cache.request_render_task(
@@ -3095,7 +3104,7 @@ impl PrimitiveInstance {
                                             let target_to_cache_task_id = render_tasks.add(target_to_cache_task);
 
                                             // Hook this into the render task tree at the right spot.
-                                            pic_state.tasks.push(target_to_cache_task_id);
+                                            surfaces[surface_index.0].tasks.push(target_to_cache_task_id);
 
                                             // Pass the image opacity, so that the cached render task
                                             // item inherits the same opacity properties.
@@ -3251,6 +3260,8 @@ impl PrimitiveInstance {
                                     // Update the cache key device size based on requested scale.
                                     segment.cache_key.size = to_cache_size(segment.local_task_size * scale);
 
+                                    let surfaces = &mut frame_state.surfaces;
+
                                     segment.handle = Some(frame_state.resource_cache.request_render_task(
                                         segment.cache_key.clone(),
                                         frame_state.gpu_cache,
@@ -3269,7 +3280,7 @@ impl PrimitiveInstance {
 
                                             let task_id = render_tasks.add(task);
 
-                                            pic_state.tasks.push(task_id);
+                                            surfaces[surface_index.0].tasks.push(task_id);
 
                                             task_id
                                         }
@@ -3450,6 +3461,7 @@ impl PrimitiveInstance {
         prim_bounding_rect: WorldRect,
         root_spatial_node_index: SpatialNodeIndex,
         clip_chain: &ClipChainInstance,
+        surface_index: SurfaceIndex,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
@@ -3471,6 +3483,7 @@ impl PrimitiveInstance {
             prim_bounding_rect,
             prim_context,
             &clip_chain,
+            surface_index,
             pic_state,
             frame_context,
             frame_state,
@@ -3508,7 +3521,7 @@ impl PrimitiveInstance {
                         clip_task_id, device_rect);
                 }
                 self.clip_task_id = Some(clip_task_id);
-                pic_state.tasks.push(clip_task_id);
+                frame_state.surfaces[surface_index.0].tasks.push(clip_task_id);
             }
         }
     }
