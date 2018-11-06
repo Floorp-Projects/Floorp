@@ -79,6 +79,7 @@ permalink: /changelog/
 * **browser-toolbar**:
   * Added TwoStateButton that will change drawables based on the `isEnabled` listener. This is particularly useful for
   having a reload/cancel button.
+
   ```kotlin
   var isLoading: Boolean // updated by some state change.
   BrowserToolbar.TwoStateButton(
@@ -89,7 +90,8 @@ permalink: /changelog/
       { isLoading }
   ) { /* On-click listener */ }
   ```
-  * BrowserToolbar APIs for Button and ToggleButton have also been updated to accept `Drawable` instead of resource IDs:
+  * ⚠️ **These are a breaking API changes:** BrowserToolbar APIs for Button and ToggleButton have also been updated to accept `Drawable` instead of resource IDs.
+
   ```kotlin
   // Before
   BrowserToolbar.Button(R.drawable.image, "image description") {
