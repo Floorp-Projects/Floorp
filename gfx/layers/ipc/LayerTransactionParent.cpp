@@ -39,8 +39,6 @@
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
 
-using mozilla::layout::RenderFrameParent;
-
 namespace mozilla {
 namespace layers {
 
