@@ -118,7 +118,9 @@ interface GlobalEventHandlers {
 
            // Mozilla-specific handlers. Unprefixed handlers live in
            // Document rather than here.
+           [Deprecated="MozfullscreenchangeDeprecatedPrefix"]
            attribute EventHandler onmozfullscreenchange;
+           [Deprecated="MozfullscreenerrorDeprecatedPrefix"]
            attribute EventHandler onmozfullscreenerror;
 
            // CSS-Animation and CSS-Transition handlers.
