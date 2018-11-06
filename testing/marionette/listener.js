@@ -91,8 +91,8 @@ const eventObservers = new ContentEventObserverService(
 /**
  * The load listener singleton helps to keep track of active page load
  * activities, and can be used by any command which might cause a navigation
- * to happen. In the specific case of a reload of the frame script it allows
- * to continue observing the current page load.
+ * to happen. In the specific case of a process change of the frame script it
+ * allows to continue observing the current page load.
  */
 const loadListener = {
   commandID: null,
@@ -128,7 +128,8 @@ const loadListener = {
         .createInstance(Ci.nsITimer);
     this.timerPageUnload = null;
 
-    // In case the frame script has been reloaded, wait the remaining time
+    // In case the frame script has been moved to a differnt process,
+    // wait the remaining time
     timeout = startTime + timeout - new Date().getTime();
 
     if (timeout <= 0) {
@@ -146,7 +147,7 @@ const loadListener = {
       Services.obs.addObserver(this, "outer-window-destroyed");
 
     } else {
-      // The frame script got reloaded due to a new content process.
+      // The frame script has been moved to a differnt content process.
       // Due to the time it takes to re-register the browser in Marionette,
       // it can happen that page load events are missed before the listeners
       // are getting attached again. By checking the document readyState the
@@ -188,8 +189,9 @@ const loadListener = {
     removeEventListener("pageshow", this, true);
     removeEventListener("unload", this, true);
 
-    // In case the observer was added before the frame script has been
-    // reloaded, it will no longer be available. Exceptions can be ignored.
+    // In case the observer was added before the frame script has been moved
+    // to a different process, it will no longer be available. Exceptions can
+    // be ignored.
     try {
       Services.obs.removeObserver(this, "outer-window-destroyed");
     } catch (e) {}
@@ -360,7 +362,7 @@ const loadListener = {
 
   /**
    * Continue to listen for page load events after the frame script has been
-   * reloaded.
+   * moved to a different content process.
    *
    * @param {number} commandID
    *     ID of the currently handled message between the driver and
@@ -992,9 +994,9 @@ function cancelRequest() {
 
 /**
  * This implements the latter part of a get request (for the case we need
- * to resume one when the frame script has been reloaded in the middle of a
- * navigate request). This is most of of the work of a navigate request,
- * but doesn't assume DOMContentLoaded is yet to fire.
+ * to resume one when the frame script has been moved to a different content
+ * process in the middle of a navigate request). This is most of of the work
+ * of a navigate request, but doesn't assume DOMContentLoaded is yet to fire.
  *
  * @param {number} commandID
  *     ID of the currently handled message between the driver and
@@ -1003,7 +1005,7 @@ function cancelRequest() {
  *     Timeout in seconds the method has to wait for the page being
  *     finished loading.
  * @param {number} startTime
- *     Unix timestap when the navitation request got triggred.
+ *     Unix timestap when the navitation request got triggered.
  */
 function waitForPageLoaded(msg) {
   let {commandID, pageTimeout, startTime} = msg.json;
