@@ -19,6 +19,7 @@
 #include "nsCookiePermission.h"
 #include "nsICookieService.h"
 #include "nsIDocShell.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIIOService.h"
 #include "nsIParentChannel.h"
@@ -380,6 +381,34 @@ GetTopWindow(nsPIDOMWindowInner* aWindow)
   return pwin.forget();
 }
 
+bool
+CompareBaseDomains(nsIURI* aTrackingURI,
+                   nsIURI* aParentPrincipalBaseURI)
+{
+  nsCOMPtr<nsIEffectiveTLDService> eTLDService =
+    services::GetEffectiveTLDService();
+  if (NS_WARN_IF(!eTLDService)) {
+    LOG(("Failed to get the TLD service"));
+    return false;
+  }
+
+  nsAutoCString trackingBaseDomain;
+  nsAutoCString parentPrincipalBaseDomain;
+  nsresult rv = eTLDService->GetBaseDomain(aTrackingURI, 0, trackingBaseDomain);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Can't get the base domain from tracking URI"));
+    return false;
+  }
+  rv = eTLDService->GetBaseDomain(aParentPrincipalBaseURI, 0, parentPrincipalBaseDomain);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Can't get the base domain from parent principal"));
+    return false;
+  }
+
+  return trackingBaseDomain.Equals(parentPrincipalBaseDomain,
+                                   nsCaseInsensitiveCStringComparator());
+}
+
 } // anonymous
 
 /* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
@@ -712,6 +741,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
   }
 
   nsCOMPtr<nsIPrincipal> parentPrincipal;
+  nsCOMPtr<nsIURI> parentPrincipalURI;
   nsCOMPtr<nsIURI> trackingURI;
   nsAutoCString trackingOrigin;
   if (!GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner::Cast(aWindow),
@@ -721,6 +751,14 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
                                            nullptr)) {
     LOG(("Failed to obtain the parent principal and the tracking origin"));
     return false;
+  }
+  Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
+
+  if (CompareBaseDomains(trackingURI, parentPrincipalURI)) {
+    LOG(("Grant access across the same eTLD+1 because same domain trackers "
+         "are considered part of the same organization"));
+
+    return true;
   }
 
   nsAutoString origin;
@@ -746,8 +784,6 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
     return false;
   }
 
-  nsCOMPtr<nsIURI> parentPrincipalURI;
-  Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
   LOG_SPEC(("Testing permission type %s for %s resulted in %d (%s)",
             type.get(), _spec, int(result),
             result == nsIPermissionManager::ALLOW_ACTION ?
@@ -933,12 +969,22 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
     }
   }
 
+  nsCOMPtr<nsIURI> parentPrincipalURI;
+  Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
+
   // Let's see if we have to grant the access for this particular channel.
 
   nsCOMPtr<nsIURI> trackingURI;
   rv = aChannel->GetURI(getter_AddRefs(trackingURI));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to get the channel URI"));
+    return true;
+  }
+
+  if (CompareBaseDomains(trackingURI, parentPrincipalURI)) {
+    LOG(("Grant access across the same eTLD+1 because same domain trackers "
+         "are considered part of the same organization"));
+
     return true;
   }
 
@@ -973,8 +1019,6 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
     return false;
   }
 
-  nsCOMPtr<nsIURI> parentPrincipalURI;
-  Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
   LOG_SPEC(("Testing permission type %s for %s resulted in %d (%s)",
             type.get(), _spec, int(result),
             result == nsIPermissionManager::ALLOW_ACTION ?
