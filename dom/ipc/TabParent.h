@@ -19,7 +19,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
-#include "mozilla/layout/RenderFrameParent.h"
+#include "mozilla/layout/RenderFrame.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Move.h"
 #include "nsCOMPtr.h"
@@ -573,7 +573,7 @@ public:
   bool TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,
                              LayoutDeviceIntRect* aDragRect);
 
-  layout::RenderFrameParent* GetRenderFrame();
+  layout::RenderFrame* GetRenderFrame();
 
   mozilla::ipc::IPCResult RecvEnsureLayersConnected(CompositorOptions* aCompositorOptions) override;
 
@@ -755,7 +755,7 @@ private:
 
   static void RemoveTabParentFromTable(layers::LayersId aLayersId);
 
-  layout::RenderFrameParent mRenderFrame;
+  layout::RenderFrame mRenderFrame;
   LayersObserverEpoch mLayerTreeEpoch;
 
   // If this flag is set, then the tab's layers will be preserved even when

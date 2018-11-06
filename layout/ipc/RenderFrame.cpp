@@ -14,7 +14,7 @@
 #include "nsFrameLoader.h"
 #include "nsStyleStructInlines.h"
 #include "nsSubDocumentFrame.h"
-#include "RenderFrameParent.h"
+#include "RenderFrame.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
@@ -45,7 +45,7 @@ GetLayerManager(nsFrameLoader* aFrameLoader)
   return nsContentUtils::LayerManagerForDocument(doc);
 }
 
-RenderFrameParent::RenderFrameParent()
+RenderFrame::RenderFrame()
   : mLayersId{0}
   , mFrameLoader(nullptr)
   , mLayerManager(nullptr)
@@ -54,12 +54,12 @@ RenderFrameParent::RenderFrameParent()
 {
 }
 
-RenderFrameParent::~RenderFrameParent()
+RenderFrame::~RenderFrame()
 {
 }
 
 bool
-RenderFrameParent::Initialize(nsFrameLoader* aFrameLoader)
+RenderFrame::Initialize(nsFrameLoader* aFrameLoader)
 {
   if (mInitialized || !aFrameLoader) {
     return false;
@@ -88,7 +88,7 @@ RenderFrameParent::Initialize(nsFrameLoader* aFrameLoader)
 }
 
 void
-RenderFrameParent::Destroy()
+RenderFrame::Destroy()
 {
   if (mLayersId.IsValid()) {
     GPUProcessManager::Get()->UnmapLayerTreeId(mLayersId, mTabProcessId);
@@ -99,7 +99,7 @@ RenderFrameParent::Destroy()
 }
 
 void
-RenderFrameParent::EnsureLayersConnected(CompositorOptions* aCompositorOptions)
+RenderFrame::EnsureLayersConnected(CompositorOptions* aCompositorOptions)
 {
   RefPtr<LayerManager> lm = GetLayerManager(mFrameLoader);
   if (!lm) {
@@ -115,7 +115,7 @@ RenderFrameParent::EnsureLayersConnected(CompositorOptions* aCompositorOptions)
 }
 
 LayerManager*
-RenderFrameParent::AttachLayerManager()
+RenderFrame::AttachLayerManager()
 {
   RefPtr<LayerManager> lm;
   if (mFrameLoader) {
@@ -133,7 +133,7 @@ RenderFrameParent::AttachLayerManager()
 }
 
 void
-RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
+RenderFrame::OwnerContentChanged(nsIContent* aContent)
 {
   MOZ_ASSERT(!mFrameLoader || mFrameLoader->GetOwnerContent() == aContent,
              "Don't build new map if owner is same!");
@@ -142,7 +142,7 @@ RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
 }
 
 void
-RenderFrameParent::GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier) const
+RenderFrame::GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier) const
 {
   RefPtr<LayerManager> lm = mFrameLoader ? GetLayerManager(mFrameLoader) : nullptr;
   // Perhaps the document containing this frame currently has no presentation?
@@ -203,7 +203,7 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
     mEventRegionsOverride |= EventRegionsOverride::ForceDispatchToContent;
   }
 
-  nsFrameLoader* frameLoader = GetRenderFrameParent()->GetFrameLoader();
+  nsFrameLoader* frameLoader = GetRenderFrame()->GetFrameLoader();
   if (frameLoader) {
     TabParent* browser = TabParent::GetFrom(frameLoader);
     if (browser) {
@@ -226,8 +226,8 @@ nsDisplayRemote::GetLayerState(nsDisplayListBuilder* aBuilder,
 bool
 nsDisplayRemote::HasDeletedFrame() const
 {
-  // RenderFrameParent might change without invalidating nsSubDocumentFrame.
-  return !GetRenderFrameParent() || nsDisplayItem::HasDeletedFrame();
+  // RenderFrame might change without invalidating nsSubDocumentFrame.
+  return !GetRenderFrame() || nsDisplayItem::HasDeletedFrame();
 }
 
 already_AddRefed<Layer>
@@ -235,7 +235,7 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
                             LayerManager* aManager,
                             const ContainerLayerParameters& aContainerParameters)
 {
-  MOZ_ASSERT(GetRenderFrameParent());
+  MOZ_ASSERT(GetRenderFrame());
   MOZ_ASSERT(mFrame, "Makes no sense to have a shadow tree without a frame");
 
   if (IsTempLayerManager(aManager)) {
@@ -251,7 +251,7 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
-  LayersId remoteId = GetRenderFrameParent()->GetLayersId();
+  LayersId remoteId = GetRenderFrame()->GetLayersId();
 
   if (!remoteId.IsValid()) {
     return nullptr;
@@ -340,14 +340,14 @@ nsDisplayRemote::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
 LayersId
 nsDisplayRemote::GetRemoteLayersId() const
 {
-  MOZ_ASSERT(GetRenderFrameParent());
-  return GetRenderFrameParent()->GetLayersId();
+  MOZ_ASSERT(GetRenderFrame());
+  return GetRenderFrame()->GetLayersId();
 }
 
-mozilla::layout::RenderFrameParent*
-nsDisplayRemote::GetRenderFrameParent() const
+mozilla::layout::RenderFrame*
+nsDisplayRemote::GetRenderFrame() const
 {
   return mFrame
-    ? static_cast<nsSubDocumentFrame*>(mFrame)->GetRenderFrameParent()
+    ? static_cast<nsSubDocumentFrame*>(mFrame)->GetRenderFrame()
     : nullptr;
 }

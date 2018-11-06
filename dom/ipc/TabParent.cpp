@@ -31,7 +31,7 @@
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/InputAPZContext.h"
-#include "mozilla/layout/RenderFrameParent.h"
+#include "mozilla/layout/RenderFrame.h"
 #include "mozilla/plugins/PPluginWidgetParent.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
@@ -2383,7 +2383,7 @@ TabParent::GetTabIdFrom(nsIDocShell *docShell)
   return TabId(0);
 }
 
-RenderFrameParent*
+RenderFrame*
 TabParent::GetRenderFrame()
 {
   if (!mRenderFrame.IsInitialized()) {

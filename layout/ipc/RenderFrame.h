@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_layout_RenderFrameParent_h
-#define mozilla_layout_RenderFrameParent_h
+#ifndef mozilla_layout_RenderFrame_h
+#define mozilla_layout_RenderFrame_h
 
 #include "base/process.h"
 
@@ -28,7 +28,7 @@ struct TextureFactoryIdentifier;
 
 namespace layout {
 
-class RenderFrameParent final
+class RenderFrame final
 {
   typedef mozilla::layers::CompositorOptions CompositorOptions;
   typedef mozilla::layers::LayerManager LayerManager;
@@ -36,8 +36,8 @@ class RenderFrameParent final
   typedef mozilla::layers::TextureFactoryIdentifier TextureFactoryIdentifier;
 public:
 
-  RenderFrameParent();
-  virtual ~RenderFrameParent();
+  RenderFrame();
+  virtual ~RenderFrame();
 
   bool Initialize(nsFrameLoader* aFrameLoader);
   void Destroy();
@@ -71,7 +71,7 @@ private:
 
   bool mInitialized;
   // A flag that indicates whether or not the compositor knows about the
-  // layers id. In some cases this RenderFrameParent is not connected to the
+  // layers id. In some cases this RenderFrame is not connected to the
   // compositor and so this flag is false.
   bool mLayersConnected;
 };
@@ -81,7 +81,7 @@ private:
 
 /**
  * A DisplayRemote exists solely to graft a child process's shadow
- * layer tree (for a given RenderFrameParent) into its parent
+ * layer tree (for a given RenderFrame) into its parent
  * process's layer tree.
  */
 class nsDisplayRemote final : public nsDisplayItem
@@ -92,7 +92,7 @@ class nsDisplayRemote final : public nsDisplayItem
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayersId LayersId;
   typedef mozilla::layers::RefLayer RefLayer;
-  typedef mozilla::layout::RenderFrameParent RenderFrameParent;
+  typedef mozilla::layout::RenderFrame RenderFrame;
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
   typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
 
@@ -124,11 +124,11 @@ public:
 
 private:
   LayersId GetRemoteLayersId() const;
-  RenderFrameParent* GetRenderFrameParent() const;
+  RenderFrame* GetRenderFrame() const;
 
   TabId mTabId;
   LayoutDeviceIntPoint mOffset;
   EventRegionsOverride mEventRegionsOverride;
 };
 
-#endif  // mozilla_layout_RenderFrameParent_h
+#endif  // mozilla_layout_RenderFrame_h
