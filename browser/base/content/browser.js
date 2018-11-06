@@ -4139,7 +4139,7 @@ const BrowserSearch = {
    */
   recordSearchInTelemetry(engine, source, details = {}) {
     try {
-      BrowserUsageTelemetry.recordSearch(engine, source, details);
+      BrowserUsageTelemetry.recordSearch(gBrowser, engine, source, details);
     } catch (ex) {
       Cu.reportError(ex);
     }
@@ -4163,7 +4163,7 @@ const BrowserSearch = {
   recordOneoffSearchInTelemetry(engine, source, type, where) {
     try {
       const details = {type, isOneOff: true};
-      BrowserUsageTelemetry.recordSearch(engine, source, details);
+      BrowserUsageTelemetry.recordSearch(gBrowser, engine, source, details);
     } catch (ex) {
       Cu.reportError(ex);
     }
