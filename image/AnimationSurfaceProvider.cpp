@@ -76,7 +76,7 @@ AnimationSurfaceProvider::Reset()
 {
   // We want to go back to the beginning.
   bool mayDiscard;
-  bool restartDecoder;
+  bool restartDecoder = false;
 
   {
     MutexAutoLock lock(mFramesMutex);
@@ -100,12 +100,23 @@ AnimationSurfaceProvider::Reset()
     // this should not take too long to acquire.
     MutexAutoLock lock(mDecodingMutex);
 
-    // Recreate the decoder so we can regenerate the frames again.
-    mDecoder = DecoderFactory::CloneAnimationDecoder(mDecoder);
-    MOZ_ASSERT(mDecoder);
+    // We may have hit an error while redecoding. Because FrameAnimator is
+    // tightly coupled to our own state, that means we would need to go through
+    // some heroics to resume animating in those cases. The typical reason for
+    // a redecode to fail is out of memory, and recycling should prevent most of
+    // those errors. When image.animated.generate-full-frames has shipped
+    // enabled on a release or two, we can simply remove the old FrameAnimator
+    // blending code and simplify this quite a bit -- just always pop the next
+    // full frame and timeout off the stack.
+    if (mDecoder) {
+      mDecoder = DecoderFactory::CloneAnimationDecoder(mDecoder);
+      MOZ_ASSERT(mDecoder);
 
-    MutexAutoLock lock2(mFramesMutex);
-    restartDecoder = mFrames->Reset();
+      MutexAutoLock lock2(mFramesMutex);
+      restartDecoder = mFrames->Reset();
+    } else {
+      MOZ_ASSERT(mFrames->HasRedecodeError());
+    }
   }
 
   if (restartDecoder) {
