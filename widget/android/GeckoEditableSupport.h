@@ -223,18 +223,6 @@ public:
 
     const java::GeckoEditableChild::Ref& GetJavaEditable() { return mEditable; }
 
-    void TransferParent(jni::Object::Param aEditableParent) {
-        mEditable->SetParent(aEditableParent);
-
-        // If we are already focused, make sure the new parent has our token
-        // and focus information, so it can accept additional calls from us.
-        if (mIMEFocusCount > 0) {
-            mEditable->NotifyIME(EditableListener::NOTIFY_IME_OF_TOKEN);
-            NotifyIMEContext(mInputContext, InputContextAction());
-            mEditable->NotifyIME(EditableListener::NOTIFY_IME_OF_FOCUS);
-        }
-    }
-
     void OnDetach(already_AddRefed<Runnable> aDisposer)
     {
         RefPtr<GeckoEditableSupport> self(this);
@@ -244,6 +232,9 @@ public:
             disposer->Run();
         });
     }
+
+    // Transfer to a new parent.
+    void TransferParent(jni::Object::Param aEditableParent);
 
     // Handle an Android KeyEvent.
     void OnKeyEvent(int32_t aAction, int32_t aKeyCode, int32_t aScanCode,
