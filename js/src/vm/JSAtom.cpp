@@ -41,59 +41,37 @@ using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::RangedPtr;
 
-template <typename CharT>
-extern void InflateUTF8CharsToBufferAndTerminate(const UTF8Chars src, CharT* dst, size_t dstLen,
-                                                 JS::SmallestEncoding encoding);
-
-template <typename CharT>
-extern bool UTF8EqualsChars(const JS::UTF8Chars utf8, const CharT* chars);
-
-extern bool
-GetUTF8AtomizationData(JSContext* cx, const JS::UTF8Chars utf8, size_t* outlen, JS::SmallestEncoding* encoding,
-                       HashNumber* hashNum);
-
 struct js::AtomHasher::Lookup
 {
     union {
         const JS::Latin1Char* latin1Chars;
         const char16_t* twoByteChars;
-        const char* utf8Bytes;
     };
-    enum {
-        TwoByteChar,
-        Latin1,
-        UTF8
-    } type;
+    bool isLatin1;
     size_t length;
-    size_t byteLength;
     const JSAtom* atom; /* Optional. */
     JS::AutoCheckCannotGC nogc;
 
     HashNumber hash;
 
-    MOZ_ALWAYS_INLINE Lookup(const char* utf8Bytes, size_t byteLen, size_t length, HashNumber hash)
-      : utf8Bytes(utf8Bytes), type(UTF8), length(length), byteLength(byteLen), atom(nullptr), hash(hash)
-    {}
-
     MOZ_ALWAYS_INLINE Lookup(const char16_t* chars, size_t length)
-      : twoByteChars(chars), type(TwoByteChar), length(length), atom(nullptr),
+      : twoByteChars(chars), isLatin1(false), length(length), atom(nullptr),
         hash(mozilla::HashString(chars, length))
     {}
 
     MOZ_ALWAYS_INLINE Lookup(const JS::Latin1Char* chars, size_t length)
-      : latin1Chars(chars), type(Latin1), length(length), atom(nullptr),
+      : latin1Chars(chars), isLatin1(true), length(length), atom(nullptr),
         hash(mozilla::HashString(chars, length))
     {}
 
     inline explicit Lookup(const JSAtom* atom)
-      : type(atom->hasLatin1Chars() ? Latin1 : TwoByteChar), length(atom->length()), atom(atom),
+      : isLatin1(atom->hasLatin1Chars()), length(atom->length()), atom(atom),
         hash(atom->hash())
     {
-        if (type == Latin1) {
+        if (isLatin1) {
             latin1Chars = atom->latin1Chars(nogc);
             MOZ_ASSERT(mozilla::HashString(latin1Chars, length) == hash);
         } else {
-            MOZ_ASSERT(type == TwoByteChar);
             twoByteChars = atom->twoByteChars(nogc);
             MOZ_ASSERT(mozilla::HashString(twoByteChars, length) == hash);
         }
@@ -119,29 +97,17 @@ js::AtomHasher::match(const AtomStateEntry& entry, const Lookup& lookup)
 
     if (key->hasLatin1Chars()) {
         const Latin1Char* keyChars = key->latin1Chars(lookup.nogc);
-        switch (lookup.type) {
-          case Lookup::Latin1:
+        if (lookup.isLatin1) {
             return mozilla::ArrayEqual(keyChars, lookup.latin1Chars, lookup.length);
-          case Lookup::TwoByteChar:
-            return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
-          case Lookup::UTF8: {
-            JS::UTF8Chars utf8(lookup.utf8Bytes, lookup.byteLength);
-            return UTF8EqualsChars(utf8, keyChars);
-          }
         }
+        return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
     }
 
     const char16_t* keyChars = key->twoByteChars(lookup.nogc);
-    switch (lookup.type) {
-      case Lookup::Latin1:
+    if (lookup.isLatin1) {
         return EqualChars(lookup.latin1Chars, keyChars, lookup.length);
-      case Lookup::TwoByteChar:
-        return mozilla::ArrayEqual(keyChars, lookup.twoByteChars, lookup.length);
-      case Lookup::UTF8: {
-        JS::UTF8Chars utf8(lookup.utf8Bytes, lookup.byteLength);
-        return UTF8EqualsChars(utf8, keyChars);
-      }
     }
+    return mozilla::ArrayEqual(keyChars, lookup.twoByteChars, lookup.length);
 }
 
 inline JSAtom*
@@ -654,12 +620,6 @@ MOZ_ALWAYS_INLINE static JSAtom*
 AllocateNewAtom(JSContext* cx, const CharT* tbchars, size_t length, PinningBehavior pin,
                 const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup);
 
-template <typename CharT>
-MOZ_ALWAYS_INLINE
-static JSAtom*
-AtomizeAndCopyCharsFromLookup(JSContext* cx, const CharT* tbchars, size_t length, const AtomHasher::Lookup& lookup,
-                              PinningBehavior pin, const Maybe<uint32_t>& indexValue);
-
 /* |tbchars| must not point into an inline or short string. */
 template <typename CharT>
 MOZ_ALWAYS_INLINE
@@ -672,16 +632,7 @@ AtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length, PinningB
     }
 
     AtomHasher::Lookup lookup(tbchars, length);
-    return AtomizeAndCopyCharsFromLookup(cx, tbchars, length, lookup, pin, indexValue);
-}
 
-
-template <typename CharT>
-MOZ_ALWAYS_INLINE
-static JSAtom*
-AtomizeAndCopyCharsFromLookup(JSContext* cx, const CharT* tbchars, size_t length, const AtomHasher::Lookup& lookup,
-                              PinningBehavior pin, const Maybe<uint32_t>& indexValue)
-{
     // Try the per-Zone cache first. If we find the atom there we can avoid the
     // atoms lock, the markAtom call, and the multiple HashSet lookups below.
     // We don't use the per-Zone cache if we want a pinned atom: handling that
@@ -859,75 +810,6 @@ PermanentlyAtomizeAndCopyChars(JSContext* cx,
     return atom;
 }
 
-struct AtomizeUTF8CharsWrapper
-{
-    JS::UTF8Chars utf8;
-    JS::SmallestEncoding encoding;
-
-    AtomizeUTF8CharsWrapper(const JS::UTF8Chars& chars, JS::SmallestEncoding minEncode)
-      : utf8(chars), encoding(minEncode)
-    { }
-};
-
-template <typename CharT>
-MOZ_ALWAYS_INLINE
-static JSFlatString*
-MakeFlatStringForAtomization(JSContext* cx, const CharT* tbchars, size_t length)
-{
-    return NewStringCopyN<NoGC>(cx, tbchars, length);
-}
-
-template<typename CharT>
-MOZ_ALWAYS_INLINE
-static JSFlatString*
-MakeUTF8AtomHelper(JSContext* cx, const AtomizeUTF8CharsWrapper* chars, size_t length)
-{
-    if (JSInlineString::lengthFits<CharT>(length)) {
-        CharT* storage;
-        JSInlineString* str = AllocateInlineString<NoGC>(cx, length, &storage);
-        if (!str) {
-            return nullptr;
-        }
-
-        InflateUTF8CharsToBufferAndTerminate(chars->utf8, storage, length, chars->encoding);
-        return str;
-    }
-
-    // MakeAtomUTF8Helper is called from deep in the Atomization path, which expects
-    // functions to fail gracefully with nullptr on OOM, without throwing.
-    //
-    // Flat strings are null-terminated. Leave room with length + 1
-    UniquePtr<CharT[], JS::FreePolicy> newStr(js_pod_malloc<CharT>(length + 1));
-    if (!newStr) {
-        return nullptr;
-    }
-
-    InflateUTF8CharsToBufferAndTerminate(chars->utf8, newStr.get(), length, chars->encoding);
-
-    JSFlatString* str = JSFlatString::new_<NoGC>(cx, newStr.get(), length);
-    if (!str) {
-        return nullptr;
-    }
-
-    mozilla::Unused << newStr.release();
-    return str;
-}
-
-template<>
-MOZ_ALWAYS_INLINE
-/* static */ JSFlatString*
-MakeFlatStringForAtomization(JSContext* cx, const AtomizeUTF8CharsWrapper* chars, size_t length)
-{
-    if (length == 0) {
-        return cx->emptyString();
-    }
-
-    if (chars->encoding == JS::SmallestEncoding::UTF16) {
-        return MakeUTF8AtomHelper<char16_t>(cx, chars, length);
-    }
-    return MakeUTF8AtomHelper<JS::Latin1Char>(cx, chars, length);
-}
-
 template <typename CharT>
 MOZ_ALWAYS_INLINE static JSAtom*
 AllocateNewAtom(JSContext* cx, const CharT* tbchars, size_t length, PinningBehavior pin,
@@ -935,7 +817,7 @@ AllocateNewAtom(JSContext* cx, const CharT* tbchars, size_t length, PinningBehav
 {
     AutoAllocInAtomsZone ac(cx);
 
-    JSFlatString* flat = MakeFlatStringForAtomization(cx, tbchars, length);
+    JSFlatString* flat = NewStringCopyN<NoGC>(cx, tbchars, length);
     if (!flat) {
         // Grudgingly forgo last-ditch GC. The alternative would be to release
         // the lock, manually GC here, and retry from the top. If you fix this,
@@ -1037,22 +919,19 @@ js::AtomizeChars(JSContext* cx, const char16_t* chars, size_t length, PinningBeh
 JSAtom*
 js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars, size_t utf8ByteLength)
 {
-    // Since the static strings are all ascii, we can check them before trying anything else.
-    if (JSAtom* s = cx->staticStrings().lookup(utf8Chars, utf8ByteLength)) {
-        return s;
-    }
+    // This could be optimized to hand the char16_t's directly to the JSAtom
+    // instead of making a copy. UTF8CharsToNewTwoByteCharsZ should be
+    // refactored to take an JSContext so that this function could also.
+
+    UTF8Chars utf8(utf8Chars, utf8ByteLength);
 
     size_t length;
-    HashNumber hash;
-    JS::SmallestEncoding forCopy;
-    UTF8Chars utf8(utf8Chars, utf8ByteLength);
-    if (!GetUTF8AtomizationData(cx, utf8, &length, &forCopy, &hash)) {
+    UniqueTwoByteChars chars(JS::UTF8CharsToNewTwoByteCharsZ(cx, utf8, &length).get());
+    if (!chars) {
         return nullptr;
     }
 
-    AtomizeUTF8CharsWrapper chars(utf8, forCopy);
-    AtomHasher::Lookup lookup(utf8Chars, utf8ByteLength, length, hash);
-    return AtomizeAndCopyCharsFromLookup(cx, &chars, length, lookup, DoNotPinAtom, Nothing());
+    return AtomizeChars(cx, chars.get(), length);
 }
 
 bool
