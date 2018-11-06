@@ -27,20 +27,20 @@ interface HistoryStorage {
     /**
      * Maps a list of page URIs to a list of booleans indicating if each URI was visited.
      * @param uris a list of page URIs about which "visited" information is being requested.
-     * @param callback will be invoked with a list of booleans indicating visited status of each
+     * @return A [Deferred] list of booleans indicating visited status of each
      * corresponding page URI from [uris].
      */
     fun getVisited(uris: List<String>): Deferred<List<Boolean>>
 
     /**
      * Retrieves a list of all visited pages.
-     * @param callback will be invoked with a list of all visited page URIs.
+     * @return A [Deferred] list of all visited page URIs.
      */
     fun getVisited(): Deferred<List<String>>
 
     /**
      * Retrieves suggestions matching the [query].
-     * @param query A query by which to query the underlying store.
+     * @param query A query by which to search the underlying store.
      * @return A List of [SearchResult] matching the query, in no particular order.
      */
     fun getSuggestions(query: String, limit: Int): List<SearchResult>
