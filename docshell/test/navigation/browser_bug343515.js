@@ -95,8 +95,7 @@ function step3() {
     Assert.equal(content.frames.length, 2, "Tab 2 should have 2 iframes");
     for (var i = 0; i < content.frames.length; i++) {
       info("step 3, frame " + i + " info: " + content.frames[i].location);
-      let docshell = content.frames[i].docShell;
-
+      let docShell = content.frames[i].docShell;
       Assert.ok(!docShell.isActive, `Tab2 iframe ${i} should be inactive`);
     }
   }).then(() => {
@@ -110,6 +109,7 @@ function step3() {
 }
 
 function step4() {
+  /* eslint-disable no-shadow */
   function checkTab2Active(expected) {
     return ContentTask.spawn(ctx.tab2Browser, expected, async function(expected) {
       function isActive(aWindow) {
@@ -128,7 +128,7 @@ function step4() {
       Assert.equal(isActive(content.frames[1]), expected, `Tab2 iframe 1 should be ${active}`);
     });
   }
-
+  /* eslint-enable no-shadow */
   is(testPath + "bug343515_pg3.html", ctx.tab2Browser.currentURI.spec,
      "Got expected tab 2 url in step 4");
 
@@ -161,8 +161,7 @@ function step5() {
   ok(ctx.tab2Browser.docShellIsActive, "Tab 2 should be active");
   ContentTask.spawn(ctx.tab2Browser, null, async function() {
     for (var i = 0; i < content.frames.length; i++) {
-      let docshell = content.frames[i].docShell;
-
+      let docShell = content.frames[i].docShell;
       Assert.ok(docShell.isActive, `Tab2 iframe ${i} should be active`);
     }
   }).then(() => {
@@ -196,8 +195,7 @@ function step6() {
     ok(!ctx.tab2Browser.docShellIsActive, "Tab 2 should be inactive");
     return ContentTask.spawn(ctx.tab2Browser, null, async function() {
       for (var i = 0; i < content.frames.length; i++) {
-        let docshell = content.frames[i].docShell;
-
+        let docShell = content.frames[i].docShell;
         Assert.ok(!docShell.isActive, `Tab2 iframe ${i} should be inactive`);
       }
     });
@@ -209,6 +207,7 @@ function step6() {
 }
 
 function step7() {
+  /* eslint-disable no-shadow */
   function checkBrowser(browser, tabNum, active) {
     return ContentTask.spawn(browser, { tabNum, active },
                              async function({ tabNum, active }) {
@@ -226,7 +225,7 @@ function step7() {
                 `Tab${tabNum} iframe 1 should be ${activestr}`);
            });
   }
-
+  /* eslint-enable no-shadow */
   // Check everything
   ok(!ctx.tab0Browser.docShellIsActive, "Tab 0 should be inactive");
   ok(ctx.tab1Browser.docShellIsActive, "Tab 1 should be active");
@@ -238,6 +237,7 @@ function step7() {
     allDone();
   });
 }
+
 
 function allDone() {
 
