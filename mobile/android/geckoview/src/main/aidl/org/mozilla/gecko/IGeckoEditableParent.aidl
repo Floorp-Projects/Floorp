@@ -18,8 +18,8 @@ interface IGeckoEditableParent {
     void notifyIME(IGeckoEditableChild child, int type);
 
     // Notify a change in editor state or type.
-    void notifyIMEContext(int state, String typeHint, String modeHint, String actionHint,
-                          int flags);
+    void notifyIMEContext(IBinder token, int state, String typeHint, String modeHint,
+                          String actionHint, int flags);
 
     // Notify a change in editor selection.
     void onSelectionChange(IBinder token, int start, int end);

@@ -21,6 +21,10 @@ namespace mozilla {
 
 class TextComposition;
 
+namespace dom {
+class TabChild;
+}
+
 namespace widget {
 
 class GeckoEditableSupport final
@@ -128,6 +132,8 @@ class GeckoEditableSupport final
     void AsyncNotifyIME(int32_t aNotification);
     void UpdateCompositionRects();
     bool DoReplaceText(int32_t aStart, int32_t aEnd, jni::String::Param aText);
+    void NotifyIMEContext(const InputContext& aContext,
+                          const InputContextAction& aAction);
 
 public:
     template<typename Functor>
@@ -161,6 +167,8 @@ public:
         nsAppShell::PostEvent(mozilla::MakeUnique<IMEEvent>(
                 std::move(aCall)));
     }
+
+    static void SetOnTabChild(dom::TabChild* aTabChild);
 
     // Constructor for main process GeckoEditableChild.
     GeckoEditableSupport(nsWindow::NativePtr<GeckoEditableSupport>* aPtr,
@@ -214,6 +222,18 @@ public:
     using EditableBase::DisposeNative;
 
     const java::GeckoEditableChild::Ref& GetJavaEditable() { return mEditable; }
+
+    void TransferParent(jni::Object::Param aEditableParent) {
+        mEditable->SetParent(aEditableParent);
+
+        // If we are already focused, make sure the new parent has our token
+        // and focus information, so it can accept additional calls from us.
+        if (mIMEFocusCount > 0) {
+            mEditable->NotifyIME(EditableListener::NOTIFY_IME_OF_TOKEN);
+            NotifyIMEContext(mInputContext, InputContextAction());
+            mEditable->NotifyIME(EditableListener::NOTIFY_IME_OF_FOCUS);
+        }
+    }
 
     void OnDetach(already_AddRefed<Runnable> aDisposer)
     {

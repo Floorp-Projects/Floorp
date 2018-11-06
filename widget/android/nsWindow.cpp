@@ -1363,15 +1363,14 @@ void
 nsWindow::GeckoViewSupport::AttachEditable(const GeckoSession::Window::LocalRef& inst,
                                            jni::Object::Param aEditableParent)
 {
-    auto editableChild = java::GeckoEditableChild::New(aEditableParent,
-                                                       /* default */ true);
-
-    if (window.mEditableSupport) {
-        window.mEditableSupport.Detach(
-                window.mEditableSupport->GetJavaEditable());
+    if (!window.mEditableSupport) {
+        auto editableChild = java::GeckoEditableChild::New(aEditableParent,
+                                                           /* default */ true);
+        window.mEditableSupport.Attach(editableChild, &window, editableChild);
+    } else {
+        window.mEditableSupport->TransferParent(aEditableParent);
     }
 
-    window.mEditableSupport.Attach(editableChild, &window, editableChild);
     window.mEditableParent = aEditableParent;
 }
 

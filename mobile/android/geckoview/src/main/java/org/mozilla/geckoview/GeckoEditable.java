@@ -1292,7 +1292,7 @@ import android.view.inputmethod.EditorInfo;
     }
 
     @Override // IGeckoEditableParent
-    public void notifyIMEContext(final int state, final String typeHint,
+    public void notifyIMEContext(final IBinder token, final int state, final String typeHint,
                                  final String modeHint, final String actionHint,
                                  final int flags) {
         // On Gecko or binder thread.
@@ -1304,9 +1304,14 @@ import android.view.inputmethod.EditorInfo;
                           "\", 0x" + Integer.toHexString(flags) + ")");
         }
 
-        // Don't check token for notifyIMEContext, because the calls all come
-        // from the parent process.
-        ThreadUtils.assertOnGeckoThread();
+        // Regular notifyIMEContext calls all come from the parent process (with the default child),
+        // so always allow calls from there. We can get additional notifyIMEContext calls during
+        // a session transfer; calls in those cases can come from child processes, and we must
+        // perform a token check in that situation.
+        if (token != mDefaultChild.asBinder() &&
+            !binderCheckToken(token, /* allowNull */ false)) {
+            return;
+        }
 
         mIcPostHandler.post(new Runnable() {
             @Override
