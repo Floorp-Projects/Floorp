@@ -56,7 +56,7 @@ var openFontInspectorForURL = async function(url) {
     testActor,
     toolbox,
     inspector,
-    view: inspector.fontinspector,
+    view: inspector.getPanel("fontinspector"),
   };
 };
 
