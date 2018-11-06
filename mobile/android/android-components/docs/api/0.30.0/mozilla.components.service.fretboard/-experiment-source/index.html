@@ -1,0 +1,45 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>ExperimentSource - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.fretboard</a>&nbsp;/&nbsp;<a href="./index.html">ExperimentSource</a><br/>
+<br/>
+<h1>ExperimentSource</h1>
+<code><span class="keyword">interface </span><span class="identifier">ExperimentSource</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/ExperimentSource.kt#L11">(source)</a>
+<p>Represents a location where experiments are stored
+(Kinto, a JSON file on a server, etc)</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-experiments.html">getExperiments</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getExperiments</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.ExperimentSource$getExperiments(mozilla.components.service.fretboard.ExperimentsSnapshot)/snapshot">snapshot</span><span class="symbol">:</span>&nbsp;<a href="../-experiments-snapshot/index.html"><span class="identifier">ExperimentsSnapshot</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-experiments-snapshot/index.html"><span class="identifier">ExperimentsSnapshot</span></a></code>
+<p>Requests new experiments from the source,
+parsing the response into experiments</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.service.fretboard.source.kinto/-kinto-experiment-source/index.html">KintoExperimentSource</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">KintoExperimentSource</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">ExperimentSource</span></a></code>
+<p>Class responsible for fetching and
+parsing experiments from a Kinto server</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

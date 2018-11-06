@@ -1,0 +1,139 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>TabsAdapter - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.tabstray</a>&nbsp;/&nbsp;<a href="./index.html">TabsAdapter</a><br/>
+<br/>
+<h1>TabsAdapter</h1>
+<code><span class="keyword">class </span><span class="identifier">TabsAdapter</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">Adapter</span><span class="symbol">&lt;</span><a href="../-tab-view-holder/index.html"><span class="identifier">TabViewHolder</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><a href="../../mozilla.components.concept.tabstray/-tabs-tray/index.html"><span class="identifier">TabsTray</span></a><span class="symbol">, </span><a href="../../mozilla.components.support.base.observer/-observable/index.html"><span class="identifier">Observable</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.html"><span class="identifier">Observer</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabsAdapter.kt#L19">(source)</a>
+<p>RecyclerView adapter implementation to display a list/grid of tabs.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">TabsAdapter</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$<init>(mozilla.components.support.base.observer.Observable((mozilla.components.concept.tabstray.TabsTray.Observer)))/delegate">delegate</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.support.base.observer/-observable/index.html"><span class="identifier">Observable</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.html"><span class="identifier">Observer</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;ObserverRegistry()<span class="symbol">)</span></code>
+<p>RecyclerView adapter implementation to display a list/grid of tabs.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="display-sessions.html">displaySessions</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">displaySessions</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$displaySessions(kotlin.collections.List((mozilla.components.browser.session.Session)), kotlin.Int)/sessions">sessions</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.browser.session/-session/index.html"><span class="identifier">Session</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$displaySessions(kotlin.collections.List((mozilla.components.browser.session.Session)), kotlin.Int)/selectedIndex">selectedIndex</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Displays the given list of sessions.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-item-count.html">getItemCount</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getItemCount</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="on-bind-view-holder.html">onBindViewHolder</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onBindViewHolder</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$onBindViewHolder(mozilla.components.browser.tabstray.TabViewHolder, kotlin.Int)/holder">holder</span><span class="symbol">:</span>&nbsp;<a href="../-tab-view-holder/index.html"><span class="identifier">TabViewHolder</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$onBindViewHolder(mozilla.components.browser.tabstray.TabViewHolder, kotlin.Int)/position">position</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="on-create-view-holder.html">onCreateViewHolder</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onCreateViewHolder</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$onCreateViewHolder(android.view.ViewGroup, kotlin.Int)/parent">parent</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/ViewGroup.html"><span class="identifier">ViewGroup</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$onCreateViewHolder(android.view.ViewGroup, kotlin.Int)/viewType">viewType</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-tab-view-holder/index.html"><span class="identifier">TabViewHolder</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="on-session-moved.html">onSessionMoved</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onSessionMoved</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$onSessionMoved(kotlin.Int, kotlin.Int)/fromPosition">fromPosition</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$onSessionMoved(kotlin.Int, kotlin.Int)/toPosition">toPosition</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Called after updateSessions() when a session changes it position.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-sessions-changed.html">onSessionsChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onSessionsChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$onSessionsChanged(kotlin.Int, kotlin.Int)/position">position</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$onSessionsChanged(kotlin.Int, kotlin.Int)/count">count</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Called after updateSessions() when count number of sessions are updated at the
+given position.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-sessions-inserted.html">onSessionsInserted</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onSessionsInserted</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$onSessionsInserted(kotlin.Int, kotlin.Int)/position">position</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$onSessionsInserted(kotlin.Int, kotlin.Int)/count">count</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Called after updateSessions() when count number of sessions are inserted at the
+given position.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-sessions-removed.html">onSessionsRemoved</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onSessionsRemoved</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$onSessionsRemoved(kotlin.Int, kotlin.Int)/position">position</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$onSessionsRemoved(kotlin.Int, kotlin.Int)/count">count</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Called after updateSessions() when count number of sessions are removed from
+the given position.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-view-recycled.html">onViewRecycled</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onViewRecycled</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$onViewRecycled(mozilla.components.browser.tabstray.TabViewHolder)/holder">holder</span><span class="symbol">:</span>&nbsp;<a href="../-tab-view-holder/index.html"><span class="identifier">TabViewHolder</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="unsubscribe-holders.html">unsubscribeHolders</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">unsubscribeHolders</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="update-sessions.html">updateSessions</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">updateSessions</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$updateSessions(kotlin.collections.List((mozilla.components.browser.session.Session)), kotlin.Int)/sessions">sessions</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.browser.session/-session/index.html"><span class="identifier">Session</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.tabstray.TabsAdapter$updateSessions(kotlin.collections.List((mozilla.components.browser.session.Session)), kotlin.Int)/selectedIndex">selectedIndex</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Updates the list of sessions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.tabstray/-tabs-tray/as-view.html">asView</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">asView</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a></code>
+<p>Convenience method to cast the implementation of this interface to an Android View object.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

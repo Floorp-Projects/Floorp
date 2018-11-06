@@ -1,0 +1,80 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>KeyStoreWrapper - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.dataprotect</a>&nbsp;/&nbsp;<a href="./index.html">KeyStoreWrapper</a><br/>
+<br/>
+<h1>KeyStoreWrapper</h1>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">KeyStoreWrapper</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L38">(source)</a>
+<p>Wraps the critical functions around a Java KeyStore to better facilitate testing
+and instrumenting.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">KeyStoreWrapper</span><span class="symbol">(</span><span class="symbol">)</span></code>
+<p>Wraps the critical functions around a Java KeyStore to better facilitate testing
+and instrumenting.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-key-for.html">getKeyFor</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getKeyFor</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.dataprotect.KeyStoreWrapper$getKeyFor(kotlin.String)/label">label</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/java/security/Key.html"><span class="identifier">Key</span></a><span class="symbol">?</span></code>
+<p>Retrieves the SecretKey for the given label.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-key-store.html">getKeyStore</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getKeyStore</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/java/security/KeyStore.html"><span class="identifier">KeyStore</span></a></code>
+<p>Retrieves the underlying KeyStore, loading it if necessary.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="load-key-store.html">loadKeyStore</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">loadKeyStore</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/java/security/KeyStore.html"><span class="identifier">KeyStore</span></a></code>
+<p>Creates and initializes the KeyStore in use.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="make-key-for.html">makeKeyFor</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">makeKeyFor</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.dataprotect.KeyStoreWrapper$makeKeyFor(kotlin.String)/label">label</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/javax/crypto/SecretKey.html"><span class="identifier">SecretKey</span></a></code>
+<p>Creates a SecretKey for the given label.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="remove-key-for.html">removeKeyFor</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">removeKeyFor</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.dataprotect.KeyStoreWrapper$removeKeyFor(kotlin.String)/label">label</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Deletes a key with the given label.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

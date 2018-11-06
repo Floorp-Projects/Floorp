@@ -1,0 +1,117 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>AwesomeBar - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.awesomebar</a>&nbsp;/&nbsp;<a href="./index.html">AwesomeBar</a><br/>
+<br/>
+<h1>AwesomeBar</h1>
+<code><span class="keyword">interface </span><span class="identifier">AwesomeBar</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L19">(source)</a>
+<p>Interface to be implemented by awesome bar implementations.</p>
+<p>An awesome bar has multiple duties:</p>
+<ul><li>Display <a href="-suggestion/index.html">Suggestion</a> instances and invoking its callbacks once selected</li>
+<li>React to outside events: <a href="on-input-started.html">onInputStarted</a>, <a href="on-input-changed.html">onInputChanged</a>, <a href="on-input-cancelled.html">onInputCancelled</a>.</li>
+<li>Query <a href="-suggestion-provider/index.html">SuggestionProvider</a> instances for new suggestions when the text changes.</li>
+</ul>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-suggestion/index.html">Suggestion</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Suggestion</span></code>
+<p>A <a href="-suggestion/index.html">Suggestion</a> to be displayed by an <a href="./index.html">AwesomeBar</a> implementation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-suggestion-provider/index.html">SuggestionProvider</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">SuggestionProvider</span></code>
+<p>A <a href="-suggestion-provider/index.html">SuggestionProvider</a> is queried by an <a href="./index.html">AwesomeBar</a> whenever the text in the address bar is changed by the user.
+It returns a list of <a href="-suggestion/index.html">Suggestion</a>s to be displayed by the <a href="./index.html">AwesomeBar</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="add-providers.html">addProviders</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">addProviders</span><span class="symbol">(</span><span class="keyword">vararg</span> <span class="identifier" id="mozilla.components.concept.awesomebar.AwesomeBar$addProviders(kotlin.Array((mozilla.components.concept.awesomebar.AwesomeBar.SuggestionProvider)))/providers">providers</span><span class="symbol">:</span>&nbsp;<a href="-suggestion-provider/index.html"><span class="identifier">SuggestionProvider</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Adds the following <a href="-suggestion-provider/index.html">SuggestionProvider</a> instances to be queried for <a href="-suggestion/index.html">Suggestion</a>s whenever the text changes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="as-view.html">asView</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">asView</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a></code>
+<p>Casts this awesome bar to an Android View object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-input-cancelled.html">onInputCancelled</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onInputCancelled</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Fired when the user has cancelled their interaction with the awesome bar.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-input-changed.html">onInputChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onInputChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.awesomebar.AwesomeBar$onInputChanged(kotlin.String)/text">text</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Fired whenever the user changes their input, after they have started interacting with the awesome bar.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-input-started.html">onInputStarted</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onInputStarted</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Fired when the user starts interacting with the awesome bar by entering text in the toolbar.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-on-stop-listener.html">setOnStopListener</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setOnStopListener</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.awesomebar.AwesomeBar$setOnStopListener(kotlin.Function0((kotlin.Unit)))/listener">listener</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Adds a lambda to be invoked when the user has finished interacting with the awesome bar (e.g. selected a
+suggestion).</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.browser.awesomebar/-browser-awesome-bar/index.html">BrowserAwesomeBar</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">BrowserAwesomeBar</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">RecyclerView</span><span class="symbol">, </span><a href="./index.html"><span class="identifier">AwesomeBar</span></a></code>
+<p>A customizable <a href="./index.html">AwesomeBar</a> implementation.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
