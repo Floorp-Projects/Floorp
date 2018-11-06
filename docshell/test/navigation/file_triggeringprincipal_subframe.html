@@ -6,9 +6,9 @@
 <script type='application/javascript'>
   // make sure to set document.domain to same domain as frame 1
   window.onload = function() {
-    document.domain = 'mochi.test';
+    document.domain = "mochi.test";
     //   let Frame 1 know that we are ready to run the test
-    window.parent.parent.frames[0].postMessage({start: 'startTest'}, '*');
+    window.parent.parent.frames[0].postMessage({start: "startTest"}, "*");
   };
 </script>
 </body>

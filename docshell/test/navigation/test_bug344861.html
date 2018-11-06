@@ -21,12 +21,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=344861
 SimpleTest.waitForExplicitFinish();
 
 var newwindow = window.open("/", "testwindow", "width=200,height=200");
-newwindow.onload = function() { 
+newwindow.onload = function() {
   is(newwindow.innerHeight, 200, "window.open has correct height dimensions");
   is(newwindow.innerWidth, 200, "window.open has correct width dimensions");
   SimpleTest.finish();
   newwindow.close();
-}
+};
 </script>
 </pre>
 </body>
