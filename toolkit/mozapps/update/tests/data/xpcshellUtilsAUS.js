@@ -3091,9 +3091,9 @@ function replaceLogPaths(aLogContents) {
  */
 function checkUpdateLogContents(aCompareLogFile, aStaged = false,
                                 aReplace = false, aExcludeDistDir = false) {
-  if (IS_UNIX && !IS_MACOSX) {
+  if (IS_UNIX) {
     // The order that files are returned when enumerating the file system on
-    // Linux is not deterministic so skip checking the logs.
+    // Linux and Mac is not deterministic so skip checking the logs.
     return;
   }
 
