@@ -69,6 +69,8 @@ High-level components for building browser(-like) apps.
 
 * 🔴 [**Storage-Memory**](components/browser/storage-memory/README.md) - An in-memory implementation of browser storage.
 
+* 🔴 [**Storage-Sync**](components/browser/storage-sync/README.md) - A syncable implementation of browser storage backed by [application-services' Places lib](https://github.com/mozilla/application-services).
+
 * 🔴 [**Tabstray**](components/browser/tabstray/README.md) - A customizable tabs tray for browsers.
 
 * ⚪ [**Toolbar**](components/browser/toolbar/README.md) - A customizable toolbar for browsers.
