@@ -232,17 +232,19 @@ public:
   uint32_t GetMaxTextureSize() const { return mMaxTextureSize; }
   bool GetUseANGLE() const { return mUseANGLE; }
   bool GetUseDComp() const { return mUseDComp; }
+  bool GetUseTripleBuffering() const { return mUseTripleBuffering; }
   layers::SyncHandle GetSyncHandle() const { return mSyncHandle; }
 
   void Capture();
 
 protected:
-  WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId, uint32_t aMaxTextureSize, bool aUseANGLE, bool aUseDComp, layers::SyncHandle aSyncHandle)
+  WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId, uint32_t aMaxTextureSize, bool aUseANGLE, bool aUseDComp, bool aUseTripleBuffering, layers::SyncHandle aSyncHandle)
     : mDocHandle(aHandle)
     , mId(aId)
     , mMaxTextureSize(aMaxTextureSize)
     , mUseANGLE(aUseANGLE)
     , mUseDComp(aUseDComp)
+    , mUseTripleBuffering(aUseTripleBuffering)
     , mSyncHandle(aSyncHandle)
   {}
 
@@ -255,6 +257,7 @@ protected:
   uint32_t mMaxTextureSize;
   bool mUseANGLE;
   bool mUseDComp;
+  bool mUseTripleBuffering;
   layers::SyncHandle mSyncHandle;
 
   // We maintain alive the root api to know when to shut the render backend down,

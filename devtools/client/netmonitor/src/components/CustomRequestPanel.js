@@ -22,12 +22,17 @@ const {
   button,
   div,
   input,
+  label,
   textarea,
 } = dom;
 
 const CUSTOM_CANCEL = L10N.getStr("netmonitor.custom.cancel");
 const CUSTOM_HEADERS = L10N.getStr("netmonitor.custom.headers");
 const CUSTOM_NEW_REQUEST = L10N.getStr("netmonitor.custom.newRequest");
+const CUSTOM_NEW_REQUEST_METHOD_LABEL =
+    L10N.getStr("netmonitor.custom.newRequestMethodLabel");
+const CUSTOM_NEW_REQUEST_URL_LABEL =
+    L10N.getStr("netmonitor.custom.newRequestUrlLabel");
 const CUSTOM_POSTDATA = L10N.getStr("netmonitor.custom.postData");
 const CUSTOM_QUERY = L10N.getStr("netmonitor.custom.query");
 const CUSTOM_SEND = L10N.getStr("netmonitor.custom.send");
@@ -212,6 +217,12 @@ class CustomRequestPanel extends Component {
           className: "tabpanel-summary-container custom-method-and-url",
           id: "custom-method-and-url",
         },
+          label({
+            className: "custom-method-value-label custom-request-label",
+            htmlFor: "custom-method-value",
+          },
+            CUSTOM_NEW_REQUEST_METHOD_LABEL,
+          ),
           input({
             className: "custom-method-value",
             id: "custom-method-value",
@@ -221,6 +232,12 @@ class CustomRequestPanel extends Component {
               this.updateCustomRequestFields(evt, request, updateRequest),
             value: method,
           }),
+          label({
+            className: "custom-url-value-label custom-request-label",
+            htmlFor: "custom-url-value",
+          },
+            CUSTOM_NEW_REQUEST_URL_LABEL,
+          ),
           input({
             className: "custom-url-value",
             id: "custom-url-value",
@@ -234,7 +251,10 @@ class CustomRequestPanel extends Component {
           className: "tabpanel-summary-container custom-section",
           id: "custom-query",
         },
-          div({ className: "custom-request-label" }, CUSTOM_QUERY),
+          label({
+            className: "custom-request-label",
+            htmlFor: "custom-query-value",
+          }, CUSTOM_QUERY),
           textarea({
             className: "tabpanel-summary-input",
             id: "custom-query-value",
@@ -249,7 +269,10 @@ class CustomRequestPanel extends Component {
           id: "custom-headers",
           className: "tabpanel-summary-container custom-section",
         },
-          div({ className: "custom-request-label" }, CUSTOM_HEADERS),
+          label({
+            className: "custom-request-label",
+            htmlFor: "custom-headers-value",
+          }, CUSTOM_HEADERS),
           textarea({
             className: "tabpanel-summary-input",
             id: "custom-headers-value",
@@ -264,7 +287,10 @@ class CustomRequestPanel extends Component {
           id: "custom-postdata",
           className: "tabpanel-summary-container custom-section",
         },
-          div({ className: "custom-request-label" }, CUSTOM_POSTDATA),
+          label({
+            className: "custom-request-label",
+            htmlFor: "custom-postdata-value",
+          }, CUSTOM_POSTDATA),
           textarea({
             className: "tabpanel-summary-input",
             id: "custom-postdata-value",

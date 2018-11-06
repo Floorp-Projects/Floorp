@@ -42,6 +42,6 @@ AntiTracking.runTest("Test that we don't honour a private allow list exception i
   null, // no extra prefs
   false, // run the window.open() test
   false, // run the user interaction test
-  true, // expect blocking notifications
+  Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expect blocking notifications
   false); // run in a normal window
 

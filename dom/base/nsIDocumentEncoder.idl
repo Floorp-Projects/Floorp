@@ -351,3 +351,14 @@ interface nsIDocumentEncoder : nsISupports
    */
   void setNodeFixup(in nsIDocumentEncoderNodeFixup aFixup);
 };
+
+%{ C++
+template<class T> struct already_AddRefed;
+
+bool
+do_getDocumentTypeSupportedForEncoding(const char* aContentType);
+already_AddRefed<nsIDocumentEncoder>
+do_createDocumentEncoder(const char* aContentType);
+already_AddRefed<nsIDocumentEncoder>
+do_createHTMLCopyEncoder();
+%}

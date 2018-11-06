@@ -58,6 +58,8 @@ class Instance
     const UniqueDebugState          maybeDebug_;
     StructTypeDescrVector           structTypeDescrs_;
 
+    friend void Zone::sweepBreakpoints(js::FreeOp*);
+
     // Internal helpers:
     const void** addressOfFuncTypeId(const FuncTypeIdDesc& funcTypeId) const;
     FuncImportTls& funcImportTls(const FuncImport& fi);

@@ -1398,7 +1398,6 @@ nsIDocument::nsIDocument()
     mHasCSP(false),
     mHasUnsafeEvalCSP(false),
     mHasUnsafeInlineCSP(false),
-    mHasTrackingContentLoaded(false),
     mBFCacheDisallowed(false),
     mHasHadDefaultView(false),
     mStyleSheetChangeEventsEnabled(false),

@@ -135,6 +135,13 @@ WebRenderTextureHost::GetRGBStride()
   return ImageDataSerializer::ComputeRGBStride(format, GetSize().width);
 }
 
+bool
+WebRenderTextureHost::HasIntermediateBuffer() const
+{
+  MOZ_ASSERT(mWrappedTextureHost);
+  return mWrappedTextureHost->HasIntermediateBuffer();
+}
+
 uint32_t
 WebRenderTextureHost::NumSubTextures() const
 {

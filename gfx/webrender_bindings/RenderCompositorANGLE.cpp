@@ -10,6 +10,7 @@
 #include "GLContextEGL.h"
 #include "GLContextProvider.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/HelpersD3D11.h"
 #include "mozilla/layers/SyncObject.h"
@@ -42,6 +43,7 @@ RenderCompositorANGLE::RenderCompositorANGLE(RefPtr<widget::CompositorWidget>&& 
   : RenderCompositor(std::move(aWidget))
   , mEGLConfig(nullptr)
   , mEGLSurface(nullptr)
+  , mUseTripleBuffering(false)
 {
 }
 
@@ -267,6 +269,7 @@ RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(IDXGIFactory2* aDXGIFac
   }
 
   RefPtr<IDXGISwapChain1> swapChain1;
+  bool useTripleBuffering = gfx::gfxVars::UseWebRenderDCompWinTripleBuffering();
 
   DXGI_SWAP_CHAIN_DESC1 desc{};
   // DXGI does not like 0x0 swapchains. Swap chain creation failed when 0x0 was set.
@@ -276,7 +279,11 @@ RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(IDXGIFactory2* aDXGIFac
   desc.SampleDesc.Count = 1;
   desc.SampleDesc.Quality = 0;
   desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-  desc.BufferCount = 2;
+  if (useTripleBuffering) {
+    desc.BufferCount = 3;
+  } else {
+    desc.BufferCount = 2;
+  }
   // DXGI_SCALING_NONE caused swap chain creation failure.
   desc.Scaling     = DXGI_SCALING_STRETCH;
   desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
@@ -291,6 +298,7 @@ RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(IDXGIFactory2* aDXGIFac
     mVisual->SetContent(swapChain1);
     mCompositionTarget->SetRoot(mVisual);
     mCompositionDevice = dCompDevice;
+    mUseTripleBuffering = useTripleBuffering;
   }
 }
 
@@ -468,24 +476,30 @@ RenderCompositorANGLE::GetBufferSize()
 void
 RenderCompositorANGLE::InsertPresentWaitQuery()
 {
+  RefPtr<ID3D11Query> query;
   CD3D11_QUERY_DESC desc(D3D11_QUERY_EVENT);
-  HRESULT hr = mDevice->CreateQuery(&desc, getter_AddRefs(mNextWaitForPresentQuery));
-  if (FAILED(hr) || !mNextWaitForPresentQuery) {
+  HRESULT hr = mDevice->CreateQuery(&desc, getter_AddRefs(query));
+  if (FAILED(hr) || !query) {
     gfxWarning() << "Could not create D3D11_QUERY_EVENT: " << gfx::hexa(hr);
     return;
   }
 
-  mCtx->End(mNextWaitForPresentQuery);
+  mCtx->End(query);
+  mWaitForPresentQueries.emplace(query);
 }
 
 void
 RenderCompositorANGLE::WaitForPreviousPresentQuery()
 {
-  if (mWaitForPresentQuery) {
+  size_t waitLatency = mUseTripleBuffering ? 3 : 2;
+
+  while (mWaitForPresentQueries.size() >= waitLatency) {
+    RefPtr<ID3D11Query>& query = mWaitForPresentQueries.front();
     BOOL result;
-    layers::WaitForGPUQuery(mDevice, mCtx, mWaitForPresentQuery, &result);
+    layers::WaitForGPUQuery(mDevice, mCtx, query, &result);
+
+    mWaitForPresentQueries.pop();
   }
-  mWaitForPresentQuery = mNextWaitForPresentQuery.forget();
 }
 
 

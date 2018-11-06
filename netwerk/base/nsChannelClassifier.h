@@ -95,6 +95,8 @@ private:
                                         const nsACString& aProvider,
                                         const nsACString& aList,
                                         const nsACString& aFullHash);
+
+    static void NotifyChannelBlocked(nsIChannel* aChannel, unsigned aBlockedReason);
 public:
     // If we are blocking content, update the corresponding flag in the respective
     // docshell and call nsISecurityEventSink::onSecurityChange.
