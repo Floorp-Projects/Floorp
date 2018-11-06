@@ -102,6 +102,11 @@ public final class GeckoSessionSettings implements Parcelable {
     public static final Key<Boolean> SUSPEND_MEDIA_WHEN_INACTIVE =
         new Key<Boolean>("suspendMediaWhenInactive", /* initOnly */ false, /* values */ null);
 
+    /*
+     * Key to specify if entire accessible tree should be exposed with no caching.
+     */
+    public static final Key<Boolean> FULL_ACCESSIBILITY_TREE =
+            new Key<Boolean>("fullAccessibilityTree", /* initOnly */ false, /* values */ null);
 
     private final GeckoSession mSession;
     private final GeckoBundle mBundle;
@@ -130,6 +135,7 @@ public final class GeckoSessionSettings implements Parcelable {
         mBundle.putBoolean(USE_PRIVATE_MODE.name, false);
         mBundle.putBoolean(USE_MULTIPROCESS.name, true);
         mBundle.putBoolean(SUSPEND_MEDIA_WHEN_INACTIVE.name, false);
+        mBundle.putBoolean(FULL_ACCESSIBILITY_TREE.name, true);
         mBundle.putInt(USER_AGENT_MODE.name, USER_AGENT_MODE_MOBILE);
         mBundle.putInt(DISPLAY_MODE.name, DISPLAY_MODE_BROWSER);
     }
