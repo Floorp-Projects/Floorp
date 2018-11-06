@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 HOST_SOURCES += [
+    '/other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp',
     'mar.c',
 ]
 
@@ -57,5 +58,7 @@ if CONFIG['HOST_OS_ARCH'] == 'WINNT':
     HOST_OS_LIBS += [
         'ws2_32',
     ]
+
+DisableStlWrapping()
 
 HOST_DEFINES['NO_SIGN_VERIFY'] = True
