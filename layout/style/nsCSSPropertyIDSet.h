@@ -11,6 +11,10 @@
 
 #include "nsCSSPropertyID.h"
 #include <limits.h> // for CHAR_BIT
+#include <initializer_list>
+
+// For COMPOSITOR_ANIMATABLE_PROPERTY_LIST
+#include "mozilla/CompositorAnimatableProperties.h"
 
 /**
  * nsCSSPropertyIDSet maintains a set of non-shorthand CSS properties.  In
@@ -21,6 +25,17 @@ class nsCSSPropertyIDSet {
 public:
     nsCSSPropertyIDSet() { Empty(); }
     // auto-generated copy-constructor OK
+
+    explicit constexpr nsCSSPropertyIDSet(
+        std::initializer_list<nsCSSPropertyID> aProperties)
+      : mProperties{0}
+    {
+      for (auto property : aProperties) {
+        size_t p = property;
+        mProperties[p / kBitsInChunk] |=
+          property_set_type(1) << (p % kBitsInChunk);
+      }
+    }
 
     void AssertInSetRange(nsCSSPropertyID aProperty) const {
         NS_ASSERTION(0 <= aProperty &&
@@ -50,6 +65,19 @@ public:
         size_t p = aProperty;
         return (mProperties[p / kBitsInChunk] &
                 (property_set_type(1) << (p % kBitsInChunk))) != 0;
+    }
+
+    // Returns an nsCSSPropertyIDSet including all properties that can be run
+    // on the compositor.
+    static constexpr nsCSSPropertyIDSet CompositorAnimatables()
+    {
+      return nsCSSPropertyIDSet(COMPOSITOR_ANIMATABLE_PROPERTY_LIST);
+    }
+
+    static constexpr size_t CompositorAnimatableCount()
+    {
+      auto list = COMPOSITOR_ANIMATABLE_PROPERTY_LIST;
+      return list.size();
     }
 
     void Empty() {
