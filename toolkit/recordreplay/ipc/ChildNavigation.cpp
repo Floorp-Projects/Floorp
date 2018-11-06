@@ -114,9 +114,9 @@ public:
     Unsupported("MaybeDivergeFromRecording");
   }
 
-  // Get the current execution point when recording.
-  virtual ExecutionPoint GetRecordingEndpoint() {
-    Unsupported("GetRecordingEndpoint");
+  // Get the current execution point.
+  virtual ExecutionPoint CurrentExecutionPoint() {
+    Unsupported("CurrentExecutionPoint");
   }
 
   // Called when execution reaches the endpoint of the recording.
@@ -191,7 +191,7 @@ public:
   void RunToPoint(const ExecutionPoint& aTarget) override;
   void HandleDebuggerRequest(js::CharBuffer* aRequestBuffer) override;
   bool MaybeDivergeFromRecording() override;
-  ExecutionPoint GetRecordingEndpoint() override;
+  ExecutionPoint CurrentExecutionPoint() override;
 
   bool EnsureTemporaryCheckpoint();
 };
@@ -422,8 +422,8 @@ public:
     return mPhase->MaybeDivergeFromRecording();
   }
 
-  ExecutionPoint GetRecordingEndpoint() {
-    return mPhase->GetRecordingEndpoint();
+  ExecutionPoint CurrentExecutionPoint() {
+    return mPhase->CurrentExecutionPoint();
   }
 
   void SetRecordingEndpoint(size_t aIndex, const ExecutionPoint& aEndpoint) {
@@ -449,6 +449,12 @@ public:
         mPhase->HitRecordingEndpoint(mRecordingEndpoint);
       }
     }
+  }
+
+  ExecutionPoint LastRecordingEndpoint() {
+    // Get the last recording endpoint in the recording file.
+    while (recordreplay::HitRecordingEndpoint()) {}
+    return mRecordingEndpoint;
   }
 
   size_t NumTemporaryCheckpoints() {
@@ -768,9 +774,8 @@ PausedPhase::EnsureTemporaryCheckpoint()
 }
 
 ExecutionPoint
-PausedPhase::GetRecordingEndpoint()
+PausedPhase::CurrentExecutionPoint()
 {
-  MOZ_RELEASE_ASSERT(IsRecording());
   return mPoint;
 }
 
@@ -1156,8 +1161,11 @@ RunToPoint(const ExecutionPoint& aTarget)
 ExecutionPoint
 GetRecordingEndpoint()
 {
-  MOZ_RELEASE_ASSERT(IsRecording());
-  return gNavigation->GetRecordingEndpoint();
+  if (IsRecording()) {
+    return gNavigation->CurrentExecutionPoint();
+  } else {
+    return gNavigation->LastRecordingEndpoint();
+  }
 }
 
 void
@@ -1180,17 +1188,20 @@ RecordReplayInterface_ExecutionProgressCounter()
 } // extern "C"
 
 ExecutionPoint
-CurrentExecutionPoint(const BreakpointPosition& aPosition)
+CurrentExecutionPoint(const Maybe<BreakpointPosition>& aPosition)
 {
-  return ExecutionPoint(gNavigation->LastCheckpoint().mNormal,
-                        gProgressCounter, aPosition);
+  if (aPosition.isSome()) {
+    return ExecutionPoint(gNavigation->LastCheckpoint().mNormal,
+                          gProgressCounter, aPosition.ref());
+  }
+  return gNavigation->CurrentExecutionPoint();
 }
 
 void
 PositionHit(const BreakpointPosition& position)
 {
   AutoDisallowThreadEvents disallow;
-  gNavigation->PositionHit(CurrentExecutionPoint(position));
+  gNavigation->PositionHit(CurrentExecutionPoint(Some(position)));
 }
 
 extern "C" {
