@@ -7,6 +7,7 @@ package org.mozilla.gecko.process;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.IGeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.GeckoThread;
@@ -28,13 +29,13 @@ public class GeckoServiceChildProcess extends Service {
     private static IProcessManager sProcessManager;
 
     @WrapForJNI(calledFrom = "gecko")
-    private static IGeckoEditableParent getEditableParent(final long contentId,
-                                                          final long tabId) {
+    private static void getEditableParent(final IGeckoEditableChild child,
+                                          final long contentId,
+                                          final long tabId) {
         try {
-            return sProcessManager.getEditableParent(contentId, tabId);
+            sProcessManager.getEditableParent(child, contentId, tabId);
         } catch (final RemoteException e) {
             Log.e(LOGTAG, "Cannot get editable", e);
-            return null;
         }
     }
 

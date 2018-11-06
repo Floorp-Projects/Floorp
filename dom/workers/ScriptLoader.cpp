@@ -222,7 +222,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                        nullptr, // aCallbacks
                        aLoadFlags,
                        ios);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
   } else {
     // We must have a loadGroup with a load context for the principal to
     // traverse the channel correctly.
@@ -262,7 +262,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                          ios);
     }
 
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
 
     if (cspEventListener) {
       nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
