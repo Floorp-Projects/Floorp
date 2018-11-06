@@ -194,6 +194,9 @@ var ModuleManager = {
             module.enabled = initData.modules[name];
           }
         }
+
+        // Notify child of the transfer.
+        this._browser.messageManager.sendAsyncMessage(aEvent);
         break;
       }
 
