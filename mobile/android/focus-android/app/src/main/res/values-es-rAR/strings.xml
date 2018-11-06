@@ -243,6 +243,7 @@
   <string name="tip_open_in_new_tab">Abra un enlace en una nueva pestaña\n Mantenga presionado cualquier enlace en una página</string>
   <string name="tip_request_desktop">¿Prefiere ver el sitio de escritorio?%1$s Menú &gt; Solicitar sitio de escritorio</string>
   <string name="tip_disable_tips2">Desactivar los consejos en la pantalla de inicio</string>
+  <string name="tip_explain_allowlist">¿Es un sitio de confianza?\n Allowlist deshabilita la Protección de Rastreo para sitios que conoce y en los que confía.</string>
   <string name="new_tab_opened_snackbar">Nueva pestaña abierta</string>
   <string name="open_new_tab_snackbar">Cambiar</string>
   <string name="preference_open_new_tab">Cambiar a enlazar en nueva pestaña inmediatamente</string>

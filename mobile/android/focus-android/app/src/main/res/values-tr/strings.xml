@@ -20,6 +20,8 @@
   <string name="menu_rights">Haklarınız</string>
   <string name="menu_trackers_blocked_title">Engellenen takipçi</string>
   <string name="menu_trackers_blocked_subtitle">Bunu kapatmak bazı site sorunlarını düzeltebilir</string>
+  <string name="menu_content_blocking">İçerik engelleme</string>
+  <string name="menu_content_blocking_subtitle">Bazı siteleri düzeltmek için kapatın</string>
   <string name="menu_custom_tab_branding">%1$s</string>
   <string name="share_dialog_title">Paylaş</string>
   <string name="notification_erase_text">Gezinti geçmişini sil</string>
@@ -49,11 +51,16 @@
   <string name="preference_state_on">Açık</string>
   <string name="preference_state_off">Kapalı</string>
   <string name="preference_subitem_autocomplete">Otomatik adres tamamlama</string>
+  <string name="preference_switch_autocomplete_topsites">Popüler sitelerde</string>
+  <string name="preference_autocomplete_topsite_summary">450’den fazla popüler adresi adres çubuğunda otomatik tamamlamak için bunu etkinleştirin.</string>
+  <string name="preference_switch_autocomplete_user_list">Eklediğim sitelerde</string>
+  <string name="preference_autocomplete_user_list_summary">450’den fazla popüler adresi adres çubuğunda otomatik tamamlamak için bunu etkinleştirin.</string>
   <string name="preference_category_autocomplete_manage_sites">Siteleri yönet</string>
   <string name="preference_autocomplete_subitem_manage_sites">Siteleri yönet</string>
   <string name="preference_autocomplete_action_add">+ Özel adres ekle</string>
   <string name="preference_autocomplete_title_add">Özel adres ekle</string>
   <string name="custom_autocomplete_quick_add">Özel adres ekle</string>
+  <string name="add_custom_autocomplete_label">Bağlantıyı otomatik tamamlamaya ekle</string>
   <string name="preference_category_cookies">Çerezler ve site verileri</string>
   <string name="preference_category_data_choices">Veri tercihleri</string>
   <string name="preference_autocomplete_title_remove">Özel adresleri sil</string>
@@ -80,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Bunu açarsanız bazı sayfalar olması gerektiği gibi çalışmayabilir</string>
   <string name="preference_privacy_category_cookies">Çerezleri engelle</string>
   <string name="preference_privacy_should_block_cookies_no_option">Hayır</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Yalnızca üçüncü taraf takipçi çerezlerini engelle</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Yalnızca 3. taraf çerezlerini engelle</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Evet</string>
   <string name="preference_security_biometric">Uygulama kilidini açmak için parmak izimi kullan</string>
@@ -123,6 +131,7 @@
   <string name="accessibility_announcement_loading">Yükleniyor</string>
   <string name="accessibility_announcement_loading_finished">Web sitesi yüklendi</string>
   <string name="content_description_menu">Diğer seçenekler</string>
+  <string name="indicator_content_description_menu">Diğer seçenekler düğmesi</string>
   <string name="content_description_forward">İleri git</string>
   <string name="content_description_reload">Siteyi tazele</string>
   <string name="content_description_back">Geri git</string>
@@ -159,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Sunucunun yap&#305;land&#305;rmas&#305;yla ilgili bir sorun olabilir veya birisi sunucuyu taklit etmeye &#231;al&#305;&#351;&#305;yor olabilir.</li>"\n  "<li>Daha &#246;nce bu sunucuya sorunsuz ba&#287;land&#305;ysan&#305;z sorun ge&#231;ici olabilir ve daha sonra yeniden ba&#287;lanmay&#305; deneyebilirsiniz.</li>\n</ul>]]></string>
   <string name="error_generic_title">Hata</string>
   <string name="error_generic_message">Bilinmeyen bir nedenden dolayı bu sayfa yüklenemedi.</string>
+  <string name="contextmenu_open_in_app">Uygulama ile aç</string>
   <string name="contextmenu_link_share">Bağlantıyı paylaş</string>
   <string name="contextmenu_link_copy">Bağlantı adresini kopyala</string>
   <string name="contextmenu_image_share">Resmi paylaş</string>
@@ -232,7 +242,25 @@
   <string name="tip_autocomplete_url">En çok kullandığınız sitelerin adreslerini otomatik tamamlayabilirsiniz\n Adres çubuğundaki herhangi bir adrese basılı tutun</string>
   <string name="tip_open_in_new_tab">Bağlantıları yeni sekmede açabilirsiniz\n Bir sayfadaki herhangi bir bağlantıya uzun basın</string>
   <string name="tip_request_desktop">Sitenin bilgisayar sürümünü görmek mü istiyorsunuz?%1$s Menü &gt; Masaüstü sitesini iste</string>
+  <string name="tip_disable_tips2">Başlangıç ​​ekranında ipuçlarını kapat</string>
+  <string name="tip_explain_allowlist">Bu siteye güveniyor musunuz?\n İzin listesi, bildiğiniz ve güvendiğiniz sitelerde izlenme korumasını kapatır.</string>
   <string name="new_tab_opened_snackbar">Yeni sekme açıldı</string>
   <string name="open_new_tab_snackbar">Geç</string>
   <string name="preference_open_new_tab">Hemen yeni sekmedeki bağlantıya geç</string>
+  <string name="preference_category_safe_browsing">Güvenli gezinti</string>
+  <string name="preference_safe_browsing_title">Olası tehlikeli ve aldatıcı siteleri engelle</string>
+  <string name="preference_safe_browsing_summary">Bildirilen aldatıcı ve saldırı amaçlı siteleri, kötü amaçlı yazılım sitelerini ve istenmeyen yazılım sitelerini engelle.</string>
+  <string name="preference_exceptions">İstisnalar</string>
+  <string name="preference_exceptions_description">Bu web sitelerinde içerik engellemeyi kapattınız.</string>
+  <string name="preference_exceptions_menu_remove">Kaldır</string>
+  <string name="preference_exceptions_remove_all_button_label">Tüm web sitelerini kaldır</string>
+  <string name="tab_crash_report_title">Sekme çöktü</string>
+  <string name="tab_crash_report_headline">Kusura bakmayın, bu sekmeyle ilgili bir sorun yaşıyoruz.</string>
+  <string name="tab_crash_report_description">Gizlilik odaklı bir tarayıcı olarak sekmelerinizi asla kaydetmediğimiz için geri getirmemiz de mümkün değil.</string>
+  <string name="tab_crash_report_close_tab_button_label">Sekmeyi kapat</string>
+  <string name="fatal_crash_report_title">Kusura bakmayın, %1$s bir sorunla karşılaştı ve çöktü.</string>
+  <string name="fatal_crash_report_description">Gizlilik odaklı bir tarayıcı olarak gezinti oturumunuzu asla kaydetmediğimiz için geri getirmemiz de mümkün değil.</string>
+  <string name="fatal_crash_report_close_button_label">Kapat</string>
+  <string name="fatal_crash_report_restart_firefox_label">%1$s’u yeniden başlat</string>
+  <string name="crash_report_send_crash_label">Çökme raporunu Mozilla’ya gönder</string>
 </resources>

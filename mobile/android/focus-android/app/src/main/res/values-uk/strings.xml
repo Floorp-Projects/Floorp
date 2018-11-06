@@ -243,6 +243,7 @@
   <string name="tip_open_in_new_tab">Відкривайте посилання в новій вкладці\n Тривалий дотик до посилання на сторінці</string>
   <string name="tip_request_desktop">Бажаєте бачити повну версію сайту?%1$s Меню &gt; Повна версія сайту</string>
   <string name="tip_disable_tips2">Вимкнути поради у домівці</string>
+  <string name="tip_explain_allowlist">Довірений сайт?\n Список дозволів вимикає захист від стеження для сайтів, яким ви довіряєте.</string>
   <string name="new_tab_opened_snackbar">Відкрито нову вкладку</string>
   <string name="open_new_tab_snackbar">Перемкнути</string>
   <string name="preference_open_new_tab">Негайно перемикати на посилання в новій вкладці</string>

@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Zadejte hledání nebo adresu</string>
   <string name="teaser">Automatické anonymní prohlížení.\nProhlížejte. Vymažte. Opakujte.</string>
   <string name="feedback_erase">Vaše historie prohlížení byla vymazána.</string>
+  <string name="feedback_erase_custom_tab">Historie prohlížení panelu byla vymazána.</string>
   <string name="search_hint">Hledat %1$s</string>
   <string name="menu_share">Sdílet…</string>
   <string name="menu_report_site_issue">Nahlášení chyby stránky</string>

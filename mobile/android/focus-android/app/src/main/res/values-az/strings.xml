@@ -243,6 +243,7 @@
   <string name="tip_open_in_new_tab">Keçidi yeni vərəqdə açın\n Səhifədə hər hansı bir keçidə uzun basın</string>
   <string name="tip_request_desktop">Bütöv masaüstü saytını görmək istəyirsiniz?%1$s Menyu &gt; Masaüstü saytını istə</string>
   <string name="tip_disable_tips2">Ana ekranındakı məsləhətləri söndür</string>
+  <string name="tip_explain_allowlist">Güvəndiyiniz saytdır?\n İcazə siyahısı tanıdığınız və güvəndiyiniz saytlarda İzlənmə Qorumasını söndürür.</string>
   <string name="new_tab_opened_snackbar">Yeni vərəq açıldı</string>
   <string name="open_new_tab_snackbar">Keç</string>
   <string name="preference_open_new_tab">Yeni vərəqdəki keçidə dərhal keç</string>

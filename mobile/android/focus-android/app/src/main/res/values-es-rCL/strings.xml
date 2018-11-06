@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Buscar o ingresar dirección</string>
   <string name="teaser">Navegación privada automática.\nBuscar. Borrar. Repetir.</string>
   <string name="feedback_erase">Tu historial de navegación ha sido limpiado.</string>
+  <string name="feedback_erase_custom_tab">El historial de navegación de la pestaña ha sido limpiado.</string>
   <string name="search_hint">Buscar por %1$s</string>
   <string name="menu_share">Compartir…</string>
   <string name="menu_report_site_issue">Reportar problema con el sitio</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Ayuda</string>
   <string name="menu_rights">Tus derechos</string>
   <string name="menu_trackers_blocked_title">Rastreadores bloqueados</string>
+  <string name="menu_trackers_blocked_subtitle">Desactivar esto puede solucionar algunos problemas del sitio</string>
+  <string name="menu_content_blocking">Bloqueo de contenido</string>
+  <string name="menu_content_blocking_subtitle">Desactivar para arreglar algunos sitios</string>
   <string name="menu_custom_tab_branding">Impulsado por %1$s</string>
   <string name="share_dialog_title">Compartir vía</string>
   <string name="notification_erase_text">Eliminar historial de navegación</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Borrar y abrir</string>
   <string name="shortcut_erase_short_label">Eliminar</string>
   <string name="shortcut_erase_long_label">Eliminar historial de navegación</string>
+  <string name="shortcut_erase_and_open_short_label">Eliminar y abrir</string>
+  <string name="shortcut_erase_and_open_long_label">Eliminar y abrir %1$s</string>
   <string name="text_selection_search_action">Búsqueda privada</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s te pone al control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#218;salo como un navegador privado:\n  "<ul>"\n    "<li>Busca y navega directo desde la app</li>"\n    "<li>Bloquea rastreadores (o cambia los ajustes para permitirlos)</li>"\n    "<li>Mantente libre de cookies y del historial de b&#250;squeda y navegaci&#243;n</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s es producido por Mozilla. Nuestra misi&#243;n es fomentar un Internet sano y abierto.<br/>\n<a href="%2$s">Aprender m&#225;s</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Privacidad y seguridad</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Contenido Web</string>
   <string name="preference_category_switching_apps">Cambio de aplicación</string>
   <string name="preference_category_general">General</string>
+  <string name="preference_general_summary">Navegador predeterminado, pestañas, idioma</string>
   <string name="preference_category_data_collection_use">Recolección de datos y uso</string>
   <string name="preference_category_search">Buscar</string>
   <string name="preference_show_search_suggestions">Recibir sugerencias de búsqueda</string>
   <string name="preference_show_search_suggestions_summary">%1$s enviará lo que escribas en la barra de direcciones a tu motor de búsqueda</string>
   <string name="preference_search_engine_default">Predeterminado</string>
+  <string name="preference_search_engine_label">Motor de búsqueda</string>
   <string name="preference_state_on">Activado</string>
   <string name="preference_state_off">Desactivado</string>
   <string name="preference_subitem_autocomplete">Autocompletar URL</string>
+  <string name="preference_switch_autocomplete_topsites">Para los sitios frecuentes</string>
+  <string name="preference_autocomplete_topsite_summary">Activar para autocompletar más de 450 URLs populares en la barra de direcciones.</string>
+  <string name="preference_switch_autocomplete_user_list">Para los sitios que añadas</string>
+  <string name="preference_autocomplete_user_list_summary">Activar para autocompletar más de 450 URLs populares en la barra de direcciones.</string>
+  <string name="preference_category_autocomplete_manage_sites">Gestionar sitios</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Gestionar sitios</string>
   <string name="preference_autocomplete_action_add">+ Añadir URL personalizada</string>
   <string name="preference_autocomplete_title_add">Añadir URL personalizada</string>
   <string name="custom_autocomplete_quick_add">Añadir URL personalizada</string>
+  <string name="add_custom_autocomplete_label">Agregar el enlace para autocompletar</string>
   <string name="preference_category_cookies">Cookies y datos de sitio</string>
   <string name="preference_category_data_choices">Selección de datos</string>
   <string name="preference_autocomplete_title_remove">Eliminar URLs personalizadas</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Activar esto puede hacer que algunas páginas se comporten de manera inesperada</string>
   <string name="preference_privacy_category_cookies">Bloquear cookies</string>
   <string name="preference_privacy_should_block_cookies_no_option">No</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Bloquear solo cookies de rastreo de terceros</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloquear solo cookies de terceros</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Sí</string>
   <string name="preference_security_biometric">Usar la huella digital para desbloquear la aplicación</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Cargando</string>
   <string name="accessibility_announcement_loading_finished">Sitio cargado</string>
   <string name="content_description_menu">Más opciones</string>
+  <string name="indicator_content_description_menu">Botón de más opciones</string>
   <string name="content_description_forward">Navegar hacia adelante</string>
   <string name="content_description_reload">Recargar sitio</string>
   <string name="content_description_back">Navegar hacia atrás</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Este puede ser un problema con la configuraci&#243;n del servidor, o puede ser alguien tratando de suplantar al servidor.</li>"\n  "<li>"Si te has conectado exitosamente a este servidor en el pasado, el error quiz&#225; sea temporal y debieras poder volver a intentarlo m&#225;s tarde. "</li>\n</ul>]]></string>
   <string name="error_generic_title">Chuta</string>
   <string name="error_generic_message">No pudimos cargar esta página por alguna razón.</string>
+  <string name="contextmenu_open_in_app">Abrir con una aplicación</string>
   <string name="contextmenu_link_share">Compartir enlace</string>
   <string name="contextmenu_link_copy">Copiar dirección del enlace</string>
   <string name="contextmenu_image_share">Compartir imagen</string>
@@ -224,4 +242,25 @@
   <string name="tip_autocomplete_url">Autocompleta las URLs para los sitios que más usas\n Manten presionada cualquier URL en la barra de direcciones</string>
   <string name="tip_open_in_new_tab">Abre un enlace en una nueva pestaña\n Mantén presionado cualquier enlace en una página</string>
   <string name="tip_request_desktop">¿Prefieres ver el sitio de escritorio?%1$s Menú &gt; Solicitar sitio de escritorio</string>
+  <string name="tip_disable_tips2">Desactivar los consejos en la pantalla de inicio</string>
+  <string name="tip_explain_allowlist">¿Sitio confiable?\n La lista de permitidos desactiva la protección de seguimiento para los sitios que conoces y en los que confías.</string>
+  <string name="new_tab_opened_snackbar">Nueva pestaña abierta</string>
+  <string name="open_new_tab_snackbar">Cambiar</string>
+  <string name="preference_open_new_tab">Cambiar al enlace en la nueva pestaña inmediatamente</string>
+  <string name="preference_category_safe_browsing">Navegación segura</string>
+  <string name="preference_safe_browsing_title">Bloquear sitios potencialmente peligrosos y engañosos</string>
+  <string name="preference_safe_browsing_summary">Bloquear sitios reportados por fraudes y ataques, sitios de malware y sitios de software no deseado.</string>
+  <string name="preference_exceptions">Excepciones</string>
+  <string name="preference_exceptions_description">Has desactivado el bloqueo de contenido para estos sitios.</string>
+  <string name="preference_exceptions_menu_remove">Eliminar</string>
+  <string name="preference_exceptions_remove_all_button_label">Eliminar todos los sitios</string>
+  <string name="tab_crash_report_title">Pestaña caida</string>
+  <string name="tab_crash_report_headline">Lo sentimos. Estamos teniendo un problema con esta pestaña.</string>
+  <string name="tab_crash_report_description">Como un navegador privado nunca guardaremos esta pestaña, por lo que tampoco podremos restaurarla.</string>
+  <string name="tab_crash_report_close_tab_button_label">Cerrar pestaña</string>
+  <string name="fatal_crash_report_title">Lo sentimos. %1$s tuvo un problema y se calló.</string>
+  <string name="fatal_crash_report_description">Como un navegador privado nunca guardaremos tu última sesión de navegación, por lo que tampoco podremos restaurarla.</string>
+  <string name="fatal_crash_report_close_button_label">Cerrar</string>
+  <string name="fatal_crash_report_restart_firefox_label">Reiniciar %1$s</string>
+  <string name="crash_report_send_crash_label">Enviar reporte de fallos a Mozilla</string>
 </resources>

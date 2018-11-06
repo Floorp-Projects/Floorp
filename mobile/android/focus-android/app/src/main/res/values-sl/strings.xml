@@ -19,7 +19,9 @@
   <string name="menu_help">Pomoč</string>
   <string name="menu_rights">Vaše pravice</string>
   <string name="menu_trackers_blocked_title">Zavrnjeni sledilci</string>
+  <string name="menu_trackers_blocked_subtitle">Z izklopom zavračanja lahko odpravite nekatere težave s stranjo</string>
   <string name="menu_content_blocking">Zavračanje vsebine</string>
+  <string name="menu_content_blocking_subtitle">Izklopite za pravilno delovanje nekaterih strani</string>
   <string name="menu_custom_tab_branding">Omogoča: %1$s</string>
   <string name="share_dialog_title">Deli preko</string>
   <string name="notification_erase_text">Počisti zgodovino brskanja</string>
@@ -50,6 +52,8 @@
   <string name="preference_state_off">Izklopljeno</string>
   <string name="preference_subitem_autocomplete">Samodejno dopolnjevanje URL</string>
   <string name="preference_switch_autocomplete_topsites">Za glavne strani</string>
+  <string name="preference_autocomplete_topsite_summary">Omogočite samodejno dopolnjevanje preko 450 priljubljenih URL-jev v naslovni vrstici.</string>
+  <string name="preference_autocomplete_user_list_summary">Omogočite samodejno dopolnjevanje preko 450 priljubljenih URL-jev v naslovni vrstici.</string>
   <string name="preference_category_autocomplete_manage_sites">Upravljanje strani</string>
   <string name="preference_autocomplete_subitem_manage_sites">Upravljanje strani</string>
   <string name="preference_autocomplete_action_add">+ Dodaj URL po meri</string>
@@ -81,6 +85,7 @@
   <string name="preference_privacy_block_content_summary2">Nastavitev lahko povzroči nepravilno delovanje nekaterih strani</string>
   <string name="preference_privacy_category_cookies">Zavračaj piškotke</string>
   <string name="preference_privacy_should_block_cookies_no_option">Ne</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Zavračaj samo sledilne piškotke tretjih strani</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Zavračaj samo piškotke tretjih strani</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Da</string>
   <string name="preference_security_biometric">Uporabljaj prstni odtis za odklepanje aplikacije</string>
@@ -124,6 +129,7 @@
   <string name="accessibility_announcement_loading">Nalaganje</string>
   <string name="accessibility_announcement_loading_finished">Spletna stran naložena</string>
   <string name="content_description_menu">Več možnosti</string>
+  <string name="indicator_content_description_menu">Gumb za več možnosti</string>
   <string name="content_description_forward">Krmari naprej</string>
   <string name="content_description_reload">Ponovno naloži stran</string>
   <string name="content_description_back">Krmari nazaj</string>
@@ -246,8 +252,10 @@
   <string name="preference_exceptions_remove_all_button_label">Odstrani vse spletne strani</string>
   <string name="tab_crash_report_title">Zavihek se je sesul</string>
   <string name="tab_crash_report_headline">Oprostite. S tem zavihkom imamo težavo.</string>
+  <string name="tab_crash_report_description">Kot zaseben brskalnik nikoli ne shranimo vaših zavihkov in ga ne moremo obnoviti.</string>
   <string name="tab_crash_report_close_tab_button_label">Zapri zavihek</string>
   <string name="fatal_crash_report_title">Oprostite. %1$s je naletel na težavo in se sesul.</string>
+  <string name="fatal_crash_report_description">Kot zaseben brskalnik nikoli ne shranimo vaše seje in je ne moremo obnoviti.</string>
   <string name="fatal_crash_report_close_button_label">Zapri</string>
   <string name="fatal_crash_report_restart_firefox_label">Ponovno zaženi %1$s</string>
   <string name="crash_report_send_crash_label">Pošlji poročilo o sesutju Mozilli</string>

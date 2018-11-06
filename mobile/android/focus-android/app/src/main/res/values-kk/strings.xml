@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Іздеу немесе адрес</string>
   <string name="teaser">Автоматты түрдегі жекелік шолу.\nШолу. Өшіру. Қайталау.</string>
   <string name="feedback_erase">Сіздің шолу тарихыңыз өшірілді.</string>
+  <string name="feedback_erase_custom_tab">Беттің шолу тарихы өшірілді.</string>
   <string name="search_hint">%1$s іздеу</string>
   <string name="menu_share">Бөлісу…</string>
   <string name="menu_report_site_issue">Сайт мәселесі жөнінде хабарлау</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Көмек</string>
   <string name="menu_rights">Құқықтарыңыз</string>
   <string name="menu_trackers_blocked_title">Блокталған трекерлер</string>
+  <string name="menu_trackers_blocked_subtitle">Бұл мүмкіндікті өшіру кейбір сайт мәселелерін шешуі мүмкін</string>
+  <string name="menu_content_blocking">Құраманы бұғаттау</string>
+  <string name="menu_content_blocking_subtitle">Кейбір сайттарды жөндеу үшін өшіру</string>
   <string name="menu_custom_tab_branding">%1$s негізінде</string>
   <string name="share_dialog_title">Арқылы бөлісу</string>
   <string name="notification_erase_text">Шолу тарихын өшіру</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Өшіру және ашу</string>
   <string name="shortcut_erase_short_label">Өшіру</string>
   <string name="shortcut_erase_long_label">Шолу тарихын өшіру</string>
+  <string name="shortcut_erase_and_open_short_label">Өшіру және ашу</string>
+  <string name="shortcut_erase_and_open_long_label">Өшіру және %1$s ашу</string>
   <string name="text_selection_search_action">Жеке шолыңыз</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1073;&#1072;&#1089;&#1179;&#1072;&#1088;&#1091;&#1076;&#1099; &#1179;&#1086;&#1083;&#1099;&#1187;&#1099;&#1079;&#1171;&#1072; &#1073;&#1077;&#1088;&#1077;&#1076;&#1110;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1054;&#1085;&#1099; &#1078;&#1077;&#1082;&#1077;&#1083;&#1110;&#1082; &#1073;&#1088;&#1072;&#1091;&#1079;&#1077;&#1088;&#1110; &#1088;&#1077;&#1090;&#1110;&#1085;&#1076;&#1077; &#1179;&#1086;&#1083;&#1076;&#1072;&#1085;&#1099;&#1187;&#1099;&#1079;:\n  "<ul>"\n    "<li>&#1178;&#1086;&#1083;&#1076;&#1072;&#1085;&#1073;&#1072; &#1110;&#1096;&#1110;&#1085;&#1077;&#1085; &#1090;&#1110;&#1082;&#1077;&#1083;&#1077;&#1081; &#1110;&#1079;&#1076;&#1077;&#1091; &#1078;&#1241;&#1085;&#1077; &#1096;&#1086;&#1083;&#1091;</li>"\n    "<li>&#1058;&#1088;&#1077;&#1082;&#1077;&#1088;&#1083;&#1077;&#1088;&#1076;&#1110; &#1073;&#1083;&#1086;&#1082;&#1090;&#1072;&#1187;&#1099;&#1079; (&#1085;&#1077;&#1084;&#1077;&#1089;&#1077;, &#1086;&#1083;&#1072;&#1088;&#1076;&#1099; &#1088;&#1201;&#1179;&#1089;&#1072;&#1090; &#1077;&#1090;&#1091; &#1199;&#1096;&#1110;&#1085;, &#1073;&#1072;&#1087;&#1090;&#1072;&#1091;&#1083;&#1072;&#1088;&#1076;&#1099; &#1078;&#1072;&#1187;&#1072;&#1088;&#1090;&#1099;&#1187;&#1099;&#1079;)</li>"\n    "<li>Cookies &#1078;&#1241;&#1085;&#1077; &#1110;&#1079;&#1076;&#1077;&#1091; &#1084;&#1077;&#1085; &#1096;&#1086;&#1083;&#1091; &#1090;&#1072;&#1088;&#1080;&#1093;&#1099;&#1085; &#1082;&#1077;&#1090;&#1110;&#1088;&#1091; &#1199;&#1096;&#1110;&#1085; &#1257;&#1096;&#1110;&#1088;&#1110;&#1187;&#1110;&#1079;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1078;&#1072;&#1089;&#1072;&#1171;&#1072;&#1085; Mozilla. &#1052;&#1072;&#1179;&#1089;&#1072;&#1090;&#1099;&#1084;&#1099;&#1079; - &#1080;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090; &#1076;&#1077;&#1085;&#1089;&#1072;&#1091;&#1083;&#1099;&#1171;&#1099;&#1085; &#1078;&#1241;&#1085;&#1077; &#1072;&#1096;&#1099;&#1179;&#1090;&#1099;&#1171;&#1099;&#1085; &#1089;&#1072;&#1179;&#1090;&#1072;&#1091;.<br/>\n<a href="%2$s">&#1050;&#1257;&#1073;&#1110;&#1088;&#1077;&#1082; &#1073;&#1110;&#1083;&#1091;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Жекелік және қауіпсіздік</string>
@@ -35,14 +41,17 @@
   <string name="preference_category_web_content">Веб құрамасы</string>
   <string name="preference_category_switching_apps">Қолданбаларды ауыстыру</string>
   <string name="preference_category_general">Жалпы</string>
+  <string name="preference_general_summary">Негізгі браузер, беттер, тіл</string>
   <string name="preference_category_data_collection_use">Деректерді жинау және қолдану</string>
   <string name="preference_category_search">Іздеу</string>
   <string name="preference_show_search_suggestions">Іздеу ұсыныстарын алу</string>
   <string name="preference_show_search_suggestions_summary">%1$s сіз адрестік жолақта терген нәрсені сіздің іздеу жүйеңізге жіберетін болады</string>
   <string name="preference_search_engine_default">Негізгі</string>
+  <string name="preference_search_engine_label">Іздеу жүйесі</string>
   <string name="preference_state_on">Іске қосулған</string>
   <string name="preference_state_off">Сөндірілген</string>
   <string name="preference_subitem_autocomplete">URL автотолықтыру</string>
+  <string name="preference_switch_autocomplete_topsites">Үздік сайттар үшін</string>
   <string name="preference_autocomplete_action_add">+ Таңдауыңызша URL қосу</string>
   <string name="preference_autocomplete_title_add">Таңдауыңызша URL қосу</string>
   <string name="custom_autocomplete_quick_add">Таңдауыңызша URL қосу</string>

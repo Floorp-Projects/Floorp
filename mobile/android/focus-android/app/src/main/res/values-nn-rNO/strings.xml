@@ -18,6 +18,7 @@
   <string name="menu_help">Hjelp</string>
   <string name="menu_rights">Dine rettar</string>
   <string name="menu_trackers_blocked_title">Sporfølgjarar blokkerte</string>
+  <string name="menu_content_blocking">Innhaldsblokkering</string>
   <string name="menu_custom_tab_branding">Driven av %1$s</string>
   <string name="share_dialog_title">Del via</string>
   <string name="notification_erase_text">Slett nettlesarhistorikk</string>
@@ -25,6 +26,7 @@
   <string name="notification_action_erase_and_open">Slett og opna</string>
   <string name="shortcut_erase_short_label">Slett</string>
   <string name="shortcut_erase_long_label">Slett nettlesarhistorikken</string>
+  <string name="shortcut_erase_and_open_short_label">Slett og opne</string>
   <string name="text_selection_search_action">Søk privat</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gjev deg kontroll.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Bruk han som ein privat nettlesar:\n  "<ul>"\n    "<li>S&#248;k og surf rett i appen</li>"\n    "<li>Blokker sporf&#248;lgjarar (eller oppdater innstillingane for &#229; tillate sporf&#248;lgjarar)</li>"\n    "<li>Slett for &#229; fjerne infokapslar samt s&#248;k- og nettlesarhistorikk</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s er produsert av Mozilla. V&#229;r misjon er &#229; fremme eit sunt, ope Internett.<br/>\n<a href="%2$s">Les meir</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Personvern og sikkerheit</string>
@@ -227,6 +229,8 @@
   <string name="tip_autocomplete_url">Autofullfør nettadresser for nettstadar du brukar mest\n Trykk og hald på ei nettadresse i adressefeltet</string>
   <string name="tip_open_in_new_tab">Opna ei lenke i ei ny fane\n Trykk og hald på ei lenke på ei side</string>
   <string name="tip_request_desktop">Vil du heller sjå full skrivebordsversjon?%1$s Meny &gt; Vis skrivebordversjon</string>
+  <string name="preference_exceptions_menu_remove">Fjern</string>
+  <string name="tab_crash_report_title">Fana krasja</string>
   <string name="tab_crash_report_close_tab_button_label">Lat att fane</string>
   <string name="fatal_crash_report_close_button_label">Lat att</string>
   <string name="fatal_crash_report_restart_firefox_label">Start %1$s på nytt</string>

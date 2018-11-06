@@ -243,6 +243,7 @@
   <string name="tip_open_in_new_tab">Apri un link in una nuova scheda\n Tieni premuto a lungo un link in una pagina</string>
   <string name="tip_request_desktop">Preferisci visualizzare il sito in modalità desktop?%1$s Menu &gt; Modalità desktop</string>
   <string name="tip_disable_tips2">Disattiva suggerimenti nella schermata iniziale</string>
+  <string name="tip_explain_allowlist">Il sito è affidabile?\nQuesta funzione disattiva la protezione antitracciamento per i siti che conosci e di cui ti fidi.</string>
   <string name="new_tab_opened_snackbar">Aperta nuova scheda</string>
   <string name="open_new_tab_snackbar">Passa a</string>
   <string name="preference_open_new_tab">Passa direttamente al link nella nuova scheda</string>

@@ -242,11 +242,13 @@
   <string name="new_tab_opened_snackbar">เปิดแท็บใหม่แล้ว</string>
   <string name="open_new_tab_snackbar">สลับ</string>
   <string name="preference_open_new_tab">สลับไปยังลิงก์ในแท็บใหม่ทันที</string>
+  <string name="preference_safe_browsing_title">ปิดกั้นไซต์ที่อาจเป็นอันตรายและหลอกลวง</string>
   <string name="preference_exceptions">ข้อยกเว้น</string>
   <string name="preference_exceptions_description">คุณได้ปิดใช้งานการปิดกั้นเนื้อหาสำหรับเว็บไซต์เหล่านี้</string>
   <string name="preference_exceptions_menu_remove">เอาออก</string>
   <string name="preference_exceptions_remove_all_button_label">เอาเว็บไซต์ทั้งหมดออก</string>
   <string name="tab_crash_report_title">แท็บขัดข้อง</string>
+  <string name="tab_crash_report_headline">ขออภัย เรากำลังมีปัญหากับแท็บนี้</string>
   <string name="tab_crash_report_close_tab_button_label">ปิดแท็บ</string>
   <string name="fatal_crash_report_title">ขออภัย %1$s มีปัญหาและขัดข้อง</string>
   <string name="fatal_crash_report_close_button_label">ปิด</string>

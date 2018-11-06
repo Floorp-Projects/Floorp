@@ -243,6 +243,7 @@
   <string name="tip_open_in_new_tab">リンクを新しいタブで開くには\n ページ上でリンクを長押しします</string>
   <string name="tip_request_desktop">完全なデスクトップ向けサイトを見たいですか？%1$s メニュー &gt; デスクトップ版を見る</string>
   <string name="tip_disable_tips2">スタート画面上のヒント表示をオフにする</string>
+  <string name="tip_explain_allowlist">信頼できるサイト？\n許可リストは、よく知っている信頼できるサイトのトラッキング防止を無効にします。</string>
   <string name="new_tab_opened_snackbar">新しいタブを開きました</string>
   <string name="open_new_tab_snackbar">切り替え</string>
   <string name="preference_open_new_tab">新しいタブ内のリンクへすぐに切り替えます</string>

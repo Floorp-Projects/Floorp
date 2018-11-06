@@ -243,6 +243,7 @@
   <string name="tip_open_in_new_tab">新建标签页打开链接\n 长按页面上的任一链接</string>
   <string name="tip_request_desktop">想查看更完整的桌面版网站？%1$s菜单 &gt; 要求桌面版网站</string>
   <string name="tip_disable_tips2">关闭启动页上的小提示</string>
+  <string name="tip_explain_allowlist">是受信任的网站吗？\n可通过允许列表来对您信任的网站禁用跟踪保护功能。</string>
   <string name="new_tab_opened_snackbar">已打开新标签页</string>
   <string name="open_new_tab_snackbar">切换</string>
   <string name="preference_open_new_tab">立即切换到新标签页中的链接</string>

@@ -243,6 +243,7 @@
   <string name="tip_open_in_new_tab">Tijaq jun ximonel pa jun k\'ak\'a\' ruwi\'\n Tapitz\'itz\'ej xab\'achike ximonel pa jun ruxaq</string>
   <string name="tip_request_desktop">"¿La nawajo\' natzu\' ri ruxaq ruk\'amaya\'l ruwa kematz\'ib\'?%1$s\n    K\'utsamajib\'äl &gt; Tik\'utüx jun ruxaq ruk\'amaya\'l ruwa kematz\'ib\'"</string>
   <string name="tip_disable_tips2">Tichup ri taq chilab\'enïk pa ri tikirib\'äl ruwäch</string>
+  <string name="tip_explain_allowlist">¿La qitzij chi ruxaq?\n Allowlist nuchüp ri Chajinïk chuwäch Ojqanem pa ri taq ruxaq retaman ruwäch chuqa\' ri e qitzij.</string>
   <string name="new_tab_opened_snackbar">K\'ak\'a\' ruwi\' jaqon</string>
   <string name="open_new_tab_snackbar">Tiq\'ax pa</string>
   <string name="preference_open_new_tab">Chanin tijal rik\'in tixim pa k\'ak\'a\' ruwi\'</string>

@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Търсене или въвеждане на адрес</string>
   <string name="teaser">Винаги поверително.\nЧетене. Изчистване. Повтаряне.</string>
   <string name="feedback_erase">Историята на разглеждане е изчистена</string>
+  <string name="feedback_erase_custom_tab">Историята на сърфирането в раздела е изчистена.</string>
   <string name="search_hint">Търсене на %1$s</string>
   <string name="menu_share">Споделяне…</string>
   <string name="menu_report_site_issue">Докладване на проблем със сайта</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Помощ</string>
   <string name="menu_rights">Вашите права</string>
   <string name="menu_trackers_blocked_title">Спрени проследявания</string>
+  <string name="menu_trackers_blocked_subtitle">Изключването на тази функция би могла да реши някои проблеми със сайта</string>
+  <string name="menu_content_blocking">Блокиране на съдържанието</string>
+  <string name="menu_content_blocking_subtitle">Изключете, за да поправите някои сайтове</string>
   <string name="menu_custom_tab_branding">С подкрепата на %1$s</string>
   <string name="share_dialog_title">Споделяне чрез</string>
   <string name="notification_erase_text">Изчистване историята на разглеждането</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Изчистване и отваряне</string>
   <string name="shortcut_erase_short_label">Изчистване</string>
   <string name="shortcut_erase_long_label">Изчистване историята на разглеждането</string>
+  <string name="shortcut_erase_and_open_short_label">Изчистване и отваряне</string>
+  <string name="shortcut_erase_and_open_long_label">Изчистване и отваряне на %1$s</string>
   <string name="text_selection_search_action">Поверително търсене</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1074;&#1080; &#1076;&#1072;&#1074;&#1072; &#1082;&#1086;&#1085;&#1090;&#1088;&#1086;&#1083;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1048;&#1079;&#1087;&#1086;&#1083;&#1079;&#1074;&#1072;&#1081;&#1090;&#1077; &#1075;&#1086;, &#1079;&#1072; &#1076;&#1072; &#1088;&#1072;&#1079;&#1075;&#1083;&#1077;&#1078;&#1076;&#1072;&#1090;&#1077; &#1087;&#1086;&#1074;&#1077;&#1088;&#1080;&#1090;&#1077;&#1083;&#1085;&#1086;:\n  "<ul>"\n    "<li>&#1058;&#1098;&#1088;&#1089;&#1077;&#1085;&#1077; &#1080; &#1088;&#1072;&#1079;&#1075;&#1083;&#1077;&#1078;&#1076;&#1072;&#1085;&#1077; &#1080;&#1079;&#1094;&#1103;&#1083;&#1086; &#1074; &#1087;&#1088;&#1080;&#1083;&#1086;&#1078;&#1077;&#1085;&#1080;&#1077;&#1090;&#1086;</li>"\n    "<li>&#1057;&#1087;&#1080;&#1088;&#1072;&#1085;&#1077; &#1085;&#1072; &#1087;&#1088;&#1086;&#1089;&#1083;&#1077;&#1076;&#1103;&#1074;&#1072;&#1085;&#1077;&#1090;&#1086; (&#1080;&#1083;&#1080; &#1087;&#1086;&#1079;&#1074;&#1086;&#1083;&#1103;&#1074;&#1072;&#1085;&#1077; &#1089; &#1087;&#1088;&#1086;&#1084;&#1103;&#1085;&#1072; &#1074; &#1085;&#1072;&#1089;&#1090;&#1088;&#1086;&#1081;&#1082;&#1080;&#1090;&#1077;)</li>"\n    "<li>&#1048;&#1079;&#1095;&#1080;&#1089;&#1090;&#1074;&#1072;&#1085;&#1077; &#1085;&#1072; &#1073;&#1080;&#1089;&#1082;&#1074;&#1080;&#1090;&#1082;&#1080;&#1090;&#1077;, &#1090;&#1098;&#1088;&#1089;&#1077;&#1085;&#1080;&#1103;&#1090;&#1072; &#1080; &#1080;&#1089;&#1090;&#1086;&#1088;&#1080;&#1103;&#1090;&#1072; &#1085;&#1072; &#1088;&#1072;&#1079;&#1075;&#1083;&#1077;&#1078;&#1076;&#1072;&#1085;&#1077;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1089;&#1077; &#1088;&#1072;&#1079;&#1088;&#1072;&#1073;&#1086;&#1090;&#1074;&#1072; &#1086;&#1090; Mozilla. &#1053;&#1072;&#1096;&#1072;&#1090;&#1072; &#1084;&#1080;&#1089;&#1080;&#1103; &#1077; &#1076;&#1072; &#1088;&#1072;&#1079;&#1074;&#1080;&#1074;&#1072;&#1084;&#1077; &#1079;&#1076;&#1088;&#1072;&#1074; &#1080; &#1086;&#1090;&#1074;&#1086;&#1088;&#1077;&#1085; &#1048;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090;.<br/>\n<a href="%2$s">&#1053;&#1072;&#1091;&#1095;&#1077;&#1090;&#1077; &#1087;&#1086;&#1074;&#1077;&#1095;&#1077;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Поверителност и защита</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Съдържание от Мрежата</string>
   <string name="preference_category_switching_apps">Превключване на приложения</string>
   <string name="preference_category_general">Основни</string>
+  <string name="preference_general_summary">Четец по подразбиране, раздели, език</string>
   <string name="preference_category_data_collection_use">Събиране на данни и начини на употреба</string>
   <string name="preference_category_search">Търсене</string>
   <string name="preference_show_search_suggestions">Получаване на предложения за търсене</string>
   <string name="preference_show_search_suggestions_summary">%1$s ще изпраща въвежданото от вас в адресната лента към търсачката</string>
   <string name="preference_search_engine_default">Използвана търсеща машина</string>
+  <string name="preference_search_engine_label">Търсачка</string>
   <string name="preference_state_on">Включено</string>
   <string name="preference_state_off">Изключено</string>
   <string name="preference_subitem_autocomplete">Автоматично довършване на адреси</string>
+  <string name="preference_switch_autocomplete_topsites">За често посещаваните страници</string>
+  <string name="preference_autocomplete_topsite_summary">Включете за автоматично довършване на повече от 450 популярни адреса в адресната лента.</string>
+  <string name="preference_switch_autocomplete_user_list">За сайтовете, които сте добавили</string>
+  <string name="preference_autocomplete_user_list_summary">Включете за автоматично довършване на повече от 450 популярни адреса в адресната лента.</string>
+  <string name="preference_category_autocomplete_manage_sites">Управление на сайтове</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Управление на сайтове</string>
   <string name="preference_autocomplete_action_add">+ Добавяне на потребителски адрес</string>
   <string name="preference_autocomplete_title_add">Добавяне на адрес</string>
   <string name="custom_autocomplete_quick_add">Добавяне на адрес</string>
+  <string name="add_custom_autocomplete_label">Включване на адреса за автоматичното довършване</string>
   <string name="preference_category_cookies">Бисквитки и данни на страници</string>
   <string name="preference_category_data_choices">Избор на данни</string>
   <string name="preference_autocomplete_title_remove">Премахване на адреси</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Активирането може да предизвика неочаквано поведение на някои страници</string>
   <string name="preference_privacy_category_cookies">Забраняване на бисквитки</string>
   <string name="preference_privacy_should_block_cookies_no_option">не</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Блокиране на бисквитките само от трети страни</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">забраняване от трети страни</string>
   <string name="preference_privacy_should_block_cookies_yes_option">да</string>
   <string name="preference_security_biometric">Използване на пръстов отпечатък за отключване на приложението</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Зареждане</string>
   <string name="accessibility_announcement_loading_finished">Страницата е заредена</string>
   <string name="content_description_menu">Повече настройки</string>
+  <string name="indicator_content_description_menu">Бутон за още опции</string>
   <string name="content_description_forward">Придвижване напред</string>
   <string name="content_description_reload">Презареждане на страницата</string>
   <string name="content_description_back">Връщане назад</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1058;&#1086;&#1074;&#1072; &#1080;&#1083;&#1080; &#1077; &#1087;&#1088;&#1086;&#1073;&#1083;&#1077;&#1084; &#1089; &#1085;&#1072;&#1089;&#1090;&#1088;&#1086;&#1081;&#1082;&#1080;&#1090;&#1077; &#1085;&#1072; &#1089;&#1098;&#1088;&#1074;&#1098;&#1088;&#1072;, &#1080;&#1083;&#1080; &#1085;&#1103;&#1082;&#1086;&#1081; &#1089;&#1077; &#1086;&#1087;&#1080;&#1090;&#1074;&#1072; &#1076;&#1072; &#1089;&#1077; &#1087;&#1088;&#1077;&#1076;&#1089;&#1090;&#1072;&#1074;&#1080; &#1079;&#1072; &#1085;&#1077;&#1075;&#1086;.</li>"\n  "<li>&#1040;&#1082;&#1086; &#1087;&#1088;&#1077;&#1076;&#1080; &#1090;&#1086;&#1074;&#1072; &#1091;&#1089;&#1087;&#1077;&#1096;&#1085;&#1086; &#1089;&#1090;&#1077; &#1089;&#1077; &#1089;&#1074;&#1098;&#1088;&#1079;&#1074;&#1072;&#1083;&#1080; &#1089; &#1085;&#1077;&#1075;&#1086;, &#1080;&#1084;&#1072; &#1074;&#1077;&#1088;&#1086;&#1103;&#1090;&#1085;&#1086;&#1089;&#1090; &#1075;&#1088;&#1077;&#1096;&#1082;&#1072;&#1090;&#1072; &#1076;&#1072; &#1077; &#1074;&#1088;&#1077;&#1084;&#1077;&#1085;&#1085;&#1072; &#1080; &#1084;&#1086;&#1078;&#1077; &#1076;&#1072; &#1086;&#1087;&#1080;&#1090;&#1072;&#1090;&#1077; &#1087;&#1086;-&#1082;&#1098;&#1089;&#1085;&#1086;.</li>\n</ul>]]></string>
   <string name="error_generic_title">Олеле</string>
   <string name="error_generic_message">По някаква причина страницата не може да бъде заредена.</string>
+  <string name="contextmenu_open_in_app">Отваряне с друго приложението</string>
   <string name="contextmenu_link_share">Споделяне на препратката</string>
   <string name="contextmenu_link_copy">Копиране на адреса</string>
   <string name="contextmenu_image_share">Споделяне на изображението</string>
@@ -224,4 +242,25 @@
   <string name="tip_autocomplete_url">Автоматизирано завършвайте адреси на често посещавани сайтове\n Натиснете продължително върху адрес в адресната лента</string>
   <string name="tip_open_in_new_tab">Отваряйте препратки в нов раздел\n Натиснете продължително върху препратка в страница</string>
   <string name="tip_request_desktop">Искате да видите пълния настолен изглед на сайт?%1$s Меню &gt; Настолна версия на сайта</string>
+  <string name="tip_disable_tips2">Изключване на съветите на началния екран</string>
+  <string name="tip_explain_allowlist">Доверен сайт?\n Позволяващият списък изключва защитата от проследяване за сайтове, които знаете и на които вярвате.</string>
+  <string name="new_tab_opened_snackbar">Отворен е нов раздел</string>
+  <string name="open_new_tab_snackbar">Превключване</string>
+  <string name="preference_open_new_tab">Превключване веднага към новия раздел на препратка</string>
+  <string name="preference_category_safe_browsing">Безопасно разглеждане</string>
+  <string name="preference_safe_browsing_title">Блокиране на потенциално опасни и измамни сайтове</string>
+  <string name="preference_safe_browsing_summary">Блокиране на докладвани сайтове, които са подвеждащи и атакуващи, или със зловреден или нежелан софтуер.</string>
+  <string name="preference_exceptions">Изключения</string>
+  <string name="preference_exceptions_description">Изключили сте блокиране на съдържанието за следните сайтове.</string>
+  <string name="preference_exceptions_menu_remove">Премахване</string>
+  <string name="preference_exceptions_remove_all_button_label">Премахване на всички сайтове</string>
+  <string name="tab_crash_report_title">Разделът се срина</string>
+  <string name="tab_crash_report_headline">Извинявайте. Случи се проблем с този раздел.</string>
+  <string name="tab_crash_report_description">Като поверителен четец, ние никога не записваме и не можем да възстановим този раздел.</string>
+  <string name="tab_crash_report_close_tab_button_label">Затваряне на раздела</string>
+  <string name="fatal_crash_report_title">Извинявайте. %1$s имаше проблем и се срина.</string>
+  <string name="fatal_crash_report_description">Като поверителен четец, ние никога не записваме и не можем да възстановим последната ви сесия на четене.</string>
+  <string name="fatal_crash_report_close_button_label">Затваряне</string>
+  <string name="fatal_crash_report_restart_firefox_label">Рестартиране на %1$s</string>
+  <string name="crash_report_send_crash_label">Изпращане на доклад за срива на Mozilla</string>
 </resources>

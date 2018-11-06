@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Ntukú a chaa ña kunu kuncheu</string>
   <string name="teaser">Ndukù Sèè. Kunchee. Sto\'o. Ntakua.</string>
   <string name="feedback_erase">Sto\'i ña ntsinu.</string>
+  <string name="feedback_erase_custom_tab">Stoi ña ntsinu ña ntsika nu xikua.</string>
   <string name="search_hint">Ndukù %1$s</string>
   <string name="menu_share">Stucha…</string>
   <string name="menu_report_site_issue">Ka tu\'un ña kue va\'a yee sitio\'yo</string>
@@ -18,6 +19,7 @@
   <string name="menu_help">Chinchee</string>
   <string name="menu_rights">Yee yu\'u</string>
   <string name="menu_trackers_blocked_title">Ntasi nu kuu snuu kue ña\'a</string>
+  <string name="menu_content_blocking">Kasi kontenido</string>
   <string name="menu_custom_tab_branding">Nikuvai tsi %1$s</string>
   <string name="share_dialog_title">Kua’a nu\'u</string>
   <string name="notification_erase_text">Stòo ña ntukuku sata</string>
@@ -25,6 +27,8 @@
   <string name="notification_action_erase_and_open">Stoo cha Kuna</string>
   <string name="shortcut_erase_short_label">Stoo</string>
   <string name="shortcut_erase_long_label">Stòo ña ndukuku sata</string>
+  <string name="shortcut_erase_and_open_short_label">Stoo ra kuna</string>
+  <string name="shortcut_erase_and_open_long_label">Stoo tsi kuna %1$s</string>
   <string name="text_selection_search_action">Nduku Sèè</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Kuu kuachu\'un&#241;a.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Kuu nduku seu &#241;a\'a:\n  "<ul>"\n    "<li>Nduku &#241;a kunu nu kaa ndusu\'ku</li>"\n    "<li>Kasi &#241;a kuni kunche\'e &#241;a sau)</li>"\n    "<li>Stoo cookies tsi &#241;a ndukuku sata</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla sai. Kunikue iin Internet nuna &#241;a kuu kuchu\'un ntina yivi.<br/>\n<a href="%2$s">kavi cha kutua</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Ña i\'í tsi Ña kunka vai</string>
@@ -40,9 +44,14 @@
   <string name="preference_show_search_suggestions">A Kuncheu nixi ndukuku</string>
   <string name="preference_show_search_suggestions_summary">%1$s ku chachuin nchi ña ku nchau nu barra de direcciones tsi ña ku ndukuku</string>
   <string name="preference_search_engine_default">Tsa sa\'an yee</string>
+  <string name="preference_search_engine_label">Ña nduku</string>
   <string name="preference_state_on">Kuna</string>
   <string name="preference_state_off">Kasi</string>
   <string name="preference_subitem_autocomplete">Chaa URL</string>
+  <string name="preference_switch_autocomplete_topsites">Sitio kua ncheu</string>
+  <string name="preference_switch_autocomplete_user_list">Sitio chikau</string>
+  <string name="preference_category_autocomplete_manage_sites">Kunche sitio</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Kunche sitio</string>
   <string name="preference_autocomplete_action_add">+ Chaa URL</string>
   <string name="preference_autocomplete_title_add">Chaa URL</string>
   <string name="custom_autocomplete_quick_add">Chaa URL</string>
@@ -151,6 +160,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Yee &#241;a V&#225;&#8217;&#224; nu inka pagina a inkana kuni sakue\'ena .</li>"\n  "<li>"Tatu va\'a nikitsau ta sata , chaa ntu\'u &#241;a V&#225;&#8217;&#224; yo kunchatu xoo cha kitsa tuku. "</li>\n</ul>]]></string>
   <string name="error_generic_title">Kukanu inu</string>
   <string name="error_generic_message">Ma ku kuncheu pagina yoo</string>
+  <string name="contextmenu_open_in_app">Kuna tsi app</string>
   <string name="contextmenu_link_share">Kua’á direcciòn</string>
   <string name="contextmenu_link_copy">Ntatava direcciòn</string>
   <string name="contextmenu_image_share">Stucha tutu ntatavana</string>
@@ -222,4 +232,11 @@
   <string name="tip_autocomplete_url">Ntasa URLs ña sitio ña kuaka chichu\'un\n Katavi URL niku nu barra ña direcciones</string>
   <string name="tip_open_in_new_tab">Kuna enlace nu xikua tsaá\n Katavi nchi enlace niku nu página</string>
   <string name="tip_request_desktop">¿A kunu kuncheu sitio nu escritorio?%1$s Menú &gt; Kaka sitio de escritorio</string>
+  <string name="open_new_tab_snackbar">Sama</string>
+  <string name="preference_exceptions_menu_remove">Xitaá</string>
+  <string name="preference_exceptions_remove_all_button_label">Atoo ntii pagina web</string>
+  <string name="tab_crash_report_close_tab_button_label">Kasi xikua</string>
+  <string name="fatal_crash_report_close_button_label">Kasi</string>
+  <string name="fatal_crash_report_restart_firefox_label">Ndakitsa%1$s</string>
+  <string name="crash_report_send_crash_label">Tachu\'un tu\'un ña vai nu Mozilla</string>
 </resources>

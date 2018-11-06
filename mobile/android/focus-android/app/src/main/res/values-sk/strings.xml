@@ -21,6 +21,7 @@
   <string name="menu_trackers_blocked_title">Počet zablokovaných sledovacích prvkov</string>
   <string name="menu_trackers_blocked_subtitle">Vypnutie tejto funkcie môže odstrániť niektoré problémy</string>
   <string name="menu_content_blocking">Blokovanie obsahu</string>
+  <string name="menu_content_blocking_subtitle">Vypnutie tejto funkcie odstráni niektoré problémy so stránkami</string>
   <string name="menu_custom_tab_branding">Powered by %1$s</string>
   <string name="share_dialog_title">Zdieľať cez</string>
   <string name="notification_erase_text">Vymazať históriu prehliadania</string>
@@ -50,9 +51,16 @@
   <string name="preference_state_on">Zapnuté</string>
   <string name="preference_state_off">Vypnuté</string>
   <string name="preference_subitem_autocomplete">Automatické dokončovanie URL adries</string>
+  <string name="preference_switch_autocomplete_topsites">Pre top stránky</string>
+  <string name="preference_autocomplete_topsite_summary">Povolením tejto možnosti umožníte aplikácii automaticky dokončovať viac než 450 populárnych URL adries.</string>
+  <string name="preference_switch_autocomplete_user_list">Pre vami pridané stránky</string>
+  <string name="preference_autocomplete_user_list_summary">Povolením tejto možnosti umožníte aplikácii automaticky dokončovať viac než 450 populárnych URL adries.</string>
+  <string name="preference_category_autocomplete_manage_sites">Spravovať stránky</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Spravovať stránky</string>
   <string name="preference_autocomplete_action_add">+ Pridať vlastnú URL</string>
   <string name="preference_autocomplete_title_add">Pridať vlastnú URL</string>
   <string name="custom_autocomplete_quick_add">Pridať vlastnú URL</string>
+  <string name="add_custom_autocomplete_label">Pridať odkaz na automatické dokončovanie</string>
   <string name="preference_category_cookies">Cookies a údaje stránok</string>
   <string name="preference_category_data_choices">Odosielanie údajov</string>
   <string name="preference_autocomplete_title_remove">Odstrániť vlastné URL</string>
@@ -160,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Toto m&#244;&#382;e by&#357; probl&#233;m s konfigur&#225;ciou servera alebo\n sa ho niekto sna&#382;&#237; napodobni&#357;.</li>"\n  "<li>Ak ste sa k tomuto serveru &#250;spe&#353;ne pripojili v minulosti,\n chyba m&#244;&#382;e by&#357; do&#269;asn&#225; a pokus by ste mali opakova&#357; nesk&#244;r.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Z nejakého dôvodu nebolo možné načítať stránku.</string>
+  <string name="contextmenu_open_in_app">Otvoriť v aplikácii</string>
   <string name="contextmenu_link_share">Zdieľať odkaz</string>
   <string name="contextmenu_link_copy">Kopírovať adresu odkazu</string>
   <string name="contextmenu_image_share">Zdieľať obrázok</string>
@@ -233,11 +242,25 @@
   <string name="tip_autocomplete_url">Automatické dopĺňanie URL adries je tu\n Podržte prst na akejkoľvek adrese v paneli s adresou</string>
   <string name="tip_open_in_new_tab">Otvorte odkaz na novej karte\n Podržte prst na akomkoľvek odkaze na stránke</string>
   <string name="tip_request_desktop">Chceli by ste radšej vidieť verziu stránky pre počítače?%1$s Ponuka &gt; Verzia stránky pre počítače</string>
+  <string name="tip_disable_tips2">Vypnúť tipy na úvodnej obrazovke aplikácie</string>
+  <string name="tip_explain_allowlist">Dôveryhodná stránka?\n Na stránkach, ktorým dôverujete, môžete vypnúť ochranu pred sledovaním.</string>
+  <string name="new_tab_opened_snackbar">Bola otvorená nová karta</string>
+  <string name="open_new_tab_snackbar">Prepnúť</string>
+  <string name="preference_open_new_tab">Prepnúť na odkaz na novej karte okamžite</string>
+  <string name="preference_category_safe_browsing">Služba Safe Browsing</string>
+  <string name="preference_safe_browsing_title">Blokovať potenciálne nebezpečné a podvodné stránky</string>
+  <string name="preference_safe_browsing_summary">Blokovať nahlásené podvodné a útočné stránky, stránky s malvérom a nevyžiadaným softvérom.</string>
   <string name="preference_exceptions">Výnimky</string>
+  <string name="preference_exceptions_description">Na týchto stránkach ste vypli blokovanie obsahu.</string>
   <string name="preference_exceptions_menu_remove">Odstrániť</string>
   <string name="preference_exceptions_remove_all_button_label">Odstrániť všetky stránky</string>
   <string name="tab_crash_report_title">Karta zlyhala</string>
+  <string name="tab_crash_report_headline">Ospravedlňujeme sa, no vyskytol sa problém s touto kartou.</string>
+  <string name="tab_crash_report_description">Keďže sme súkromný prehliadač, nikdy neukladáme karty a nemôžeme ich tým pádom ani obnoviť.</string>
   <string name="tab_crash_report_close_tab_button_label">Zavrieť kartu</string>
+  <string name="fatal_crash_report_title">Ospravedlňujeme sa. %1$s narazil na problém a zlyhal.</string>
+  <string name="fatal_crash_report_description">Keďže sme súkromný prehliadač, nikdy neukladáme vaše relácie a nemôžeme ich tým pádom ani obnoviť.</string>
   <string name="fatal_crash_report_close_button_label">Zavrieť</string>
   <string name="fatal_crash_report_restart_firefox_label">Reštartovať %1$s</string>
+  <string name="crash_report_send_crash_label">Odoslať správu o zlyhaní Mozille</string>
 </resources>

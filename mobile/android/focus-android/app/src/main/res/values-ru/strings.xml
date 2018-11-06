@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Введите запрос или адрес</string>
   <string name="teaser">Автоматический режим приватного просмотра.\nПросмотреть. Стереть. Повторить.</string>
   <string name="feedback_erase">Ваша история посещения сайтов была стёрта.</string>
+  <string name="feedback_erase_custom_tab">История просмотров вкладки была стёрта.</string>
   <string name="search_hint">Поиск %1$s</string>
   <string name="menu_share">Поделиться…</string>
   <string name="menu_report_site_issue">Сообщить о проблеме с сайтом</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Справка</string>
   <string name="menu_rights">Ваши права</string>
   <string name="menu_trackers_blocked_title">Трекеров заблокировано</string>
+  <string name="menu_trackers_blocked_subtitle">Отключение этой функции может решить некоторые проблемы с сайтом</string>
+  <string name="menu_content_blocking">Блокировка содержимого</string>
+  <string name="menu_content_blocking_subtitle">Отключить для решения проблем с некоторыми сайтами</string>
   <string name="menu_custom_tab_branding">На движке %1$s</string>
   <string name="share_dialog_title">Поделиться через</string>
   <string name="notification_erase_text">Удалить историю веб-сёрфинга</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Удалить и открыть</string>
   <string name="shortcut_erase_short_label">Удалить</string>
   <string name="shortcut_erase_long_label">Удалить историю веб-сёрфинга</string>
+  <string name="shortcut_erase_and_open_short_label">Стереть и открыть</string>
+  <string name="shortcut_erase_and_open_long_label">Стереть и открыть %1$s</string>
   <string name="text_selection_search_action">Искать приватно</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1076;&#1072;&#1105;&#1090; &#1074;&#1072;&#1084; &#1082;&#1086;&#1085;&#1090;&#1088;&#1086;&#1083;&#1100;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1048;&#1089;&#1087;&#1086;&#1083;&#1100;&#1079;&#1091;&#1081;&#1090;&#1077; &#1077;&#1075;&#1086; &#1082;&#1072;&#1082; &#1087;&#1088;&#1080;&#1074;&#1072;&#1090;&#1085;&#1099;&#1081; &#1073;&#1088;&#1072;&#1091;&#1079;&#1077;&#1088;:\n  "<ul>"\n    "<li>&#1048;&#1097;&#1080;&#1090;&#1077; &#1080; &#1079;&#1072;&#1085;&#1080;&#1084;&#1072;&#1081;&#1090;&#1077;&#1089;&#1100; &#1074;&#1077;&#1073;-&#1089;&#1105;&#1088;&#1092;&#1080;&#1085;&#1075;&#1086;&#1084;</li>"\n    "<li>&#1041;&#1083;&#1086;&#1082;&#1080;&#1088;&#1091;&#1081;&#1090;&#1077; &#1090;&#1088;&#1077;&#1082;&#1077;&#1088;&#1099; (&#1080;&#1083;&#1080; &#1080;&#1079;&#1084;&#1077;&#1085;&#1080;&#1090;&#1077; &#1085;&#1072;&#1089;&#1090;&#1088;&#1086;&#1081;&#1082;&#1080;, &#1095;&#1090;&#1086;&#1073;&#1099; &#1088;&#1072;&#1079;&#1088;&#1077;&#1096;&#1080;&#1090;&#1100; &#1080;&#1093;)</li>"\n    "<li>&#1057;&#1090;&#1080;&#1088;&#1072;&#1081;&#1090;&#1077; &#1080; &#1091;&#1076;&#1072;&#1083;&#1103;&#1081;&#1090;&#1077; &#1082;&#1091;&#1082;&#1080;, &#1072; &#1090;&#1072;&#1082;&#1078;&#1077; &#1080;&#1089;&#1090;&#1086;&#1088;&#1080;&#1102; &#1087;&#1086;&#1080;&#1089;&#1082;&#1072; &#1080; &#1087;&#1088;&#1086;&#1089;&#1084;&#1086;&#1090;&#1088;&#1072;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1089;&#1086;&#1079;&#1076;&#1072;&#1085; Mozilla. &#1053;&#1072;&#1096;&#1072; &#1084;&#1080;&#1089;&#1089;&#1080;&#1103; &#8212; &#1089;&#1087;&#1086;&#1089;&#1086;&#1073;&#1089;&#1090;&#1074;&#1086;&#1074;&#1072;&#1090;&#1100; &#1079;&#1076;&#1086;&#1088;&#1086;&#1074;&#1086;&#1084;&#1091;, &#1086;&#1090;&#1082;&#1088;&#1099;&#1090;&#1086;&#1084;&#1091; &#1048;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090;&#1091;.<br/>\n<a href="%2$s">&#1059;&#1079;&#1085;&#1072;&#1090;&#1100; &#1073;&#1086;&#1083;&#1100;&#1096;&#1077;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Приватность и защита</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Веб-содержимое</string>
   <string name="preference_category_switching_apps">Смена приложений</string>
   <string name="preference_category_general">Основные</string>
+  <string name="preference_general_summary">Браузер по умолчанию, вкладки, язык</string>
   <string name="preference_category_data_collection_use">Сбор и использование данных</string>
   <string name="preference_category_search">Поиск</string>
   <string name="preference_show_search_suggestions">Получать поисковые предложения</string>
   <string name="preference_show_search_suggestions_summary">%1$s будет отправлять поисковой системе текст, который вы вводите в адресной строке</string>
   <string name="preference_search_engine_default">По умолчанию</string>
+  <string name="preference_search_engine_label">Поисковая система</string>
   <string name="preference_state_on">Включено</string>
   <string name="preference_state_off">Отключено</string>
   <string name="preference_subitem_autocomplete">URL-адрес автодополнения</string>
+  <string name="preference_switch_autocomplete_topsites">Для топа сайтов</string>
+  <string name="preference_autocomplete_topsite_summary">Включить автодополнение для более чем 450 популярных сайтов в адресной строке.</string>
+  <string name="preference_switch_autocomplete_user_list">Для добавленных вами сайтов</string>
+  <string name="preference_autocomplete_user_list_summary">Включить автодополнение для более чем 450 популярных сайтов в адресной строке.</string>
+  <string name="preference_category_autocomplete_manage_sites">Управление сайтами</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Управление сайтами</string>
   <string name="preference_autocomplete_action_add">+ Добавить пользовательский URL</string>
   <string name="preference_autocomplete_title_add">Добавить пользовательский URL</string>
   <string name="custom_autocomplete_quick_add">Добавить пользовательский URL</string>
+  <string name="add_custom_autocomplete_label">Добавить ссылку для автодополнения</string>
   <string name="preference_category_cookies">Куки и данные сайтов</string>
   <string name="preference_category_data_choices">Выбор данных</string>
   <string name="preference_autocomplete_title_remove">Удалить пользовательские URL</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Включение этой функции может вызвать непредсказуемое поведение некоторых страниц</string>
   <string name="preference_privacy_category_cookies">Не принимать куки</string>
   <string name="preference_privacy_should_block_cookies_no_option">Нет</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Не принимать только куки от сторонних трекеров</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Не принимать только куки со сторонних веб-сайтов</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Да</string>
   <string name="preference_security_biometric">Использовать отпечатки пальцев для разблокировки приложения</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Загрузка</string>
   <string name="accessibility_announcement_loading_finished">Веб-сайт загружен</string>
   <string name="content_description_menu">Дополнительно</string>
+  <string name="indicator_content_description_menu">Кнопка дополнительных настроек</string>
   <string name="content_description_forward">Вперёд</string>
   <string name="content_description_reload">Перезагрузить веб-сайт</string>
   <string name="content_description_back">Перейти назад</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1069;&#1090;&#1086; &#1084;&#1086;&#1078;&#1077;&#1090; &#1073;&#1099;&#1090;&#1100; &#1087;&#1088;&#1086;&#1073;&#1083;&#1077;&#1084;&#1086;&#1081; &#1089; &#1082;&#1086;&#1085;&#1092;&#1080;&#1075;&#1091;&#1088;&#1072;&#1094;&#1080;&#1077;&#1081; &#1089;&#1077;&#1088;&#1074;&#1077;&#1088;&#1072; &#1080;&#1083;&#1080; &#1078;&#1077; &#1082;&#1090;&#1086;-&#1090;&#1086; &#1087;&#1099;&#1090;&#1072;&#1077;&#1090;&#1089;&#1103; &#1087;&#1086;&#1076;&#1084;&#1077;&#1085;&#1080;&#1090;&#1100; &#1085;&#1091;&#1078;&#1085;&#1099;&#1081; &#1074;&#1072;&#1084; &#1089;&#1077;&#1088;&#1074;&#1077;&#1088; &#1076;&#1088;&#1091;&#1075;&#1080;&#1084;.</li>"\n  "<li>&#1045;&#1089;&#1083;&#1080; &#1074; &#1087;&#1088;&#1086;&#1096;&#1083;&#1086;&#1084; &#1074;&#1099; &#1091;&#1089;&#1087;&#1077;&#1096;&#1085;&#1086; &#1089;&#1086;&#1077;&#1076;&#1080;&#1085;&#1103;&#1083;&#1080;&#1089;&#1100; &#1089; &#1101;&#1090;&#1080;&#1084; &#1089;&#1077;&#1088;&#1074;&#1077;&#1088;&#1086;&#1084;, &#1090;&#1086;, &#1074;&#1086;&#1079;&#1084;&#1086;&#1078;&#1085;&#1086;, &#1101;&#1090;&#1072; &#1086;&#1096;&#1080;&#1073;&#1082;&#1072; &#1103;&#1074;&#1083;&#1103;&#1077;&#1090;&#1089;&#1103; &#1074;&#1088;&#1077;&#1084;&#1077;&#1085;&#1085;&#1086;&#1081;. &#1055;&#1086;&#1087;&#1088;&#1086;&#1073;&#1091;&#1081;&#1090;&#1077; &#1079;&#1072;&#1081;&#1090;&#1080; &#1087;&#1086;&#1079;&#1078;&#1077;.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ой</string>
   <string name="error_generic_message">Мы почему-то не можем загрузить эту страницу.</string>
+  <string name="contextmenu_open_in_app">Открыть в приложении</string>
   <string name="contextmenu_link_share">Поделиться ссылкой</string>
   <string name="contextmenu_link_copy">Копировать адрес ссылки</string>
   <string name="contextmenu_image_share">Поделиться изображением</string>
@@ -224,4 +242,25 @@
   <string name="tip_autocomplete_url">Автодополнение URL для часто посещаемых сайтов\n Произведите долгое нажатие на любой URL в адресной строке</string>
   <string name="tip_open_in_new_tab">Открывайте ссылки в новых вкладках\n Произведите долгое нажатие на любую ссылку на странице</string>
   <string name="tip_request_desktop">Хотите увидеть полную версию сайта?%1$s Меню &gt; Полная версия сайта</string>
+  <string name="tip_disable_tips2">Отключить советы на домашнем экране</string>
+  <string name="tip_explain_allowlist">Надежный сайт?\n Список разрешений отключает Защиту от отслеживания для сайтов, которые вы знаете и которым доверяете.</string>
+  <string name="new_tab_opened_snackbar">Открыта новая вкладка</string>
+  <string name="open_new_tab_snackbar">Перейти</string>
+  <string name="preference_open_new_tab">Сразу переходить на новую вкладку</string>
+  <string name="preference_category_safe_browsing">Безопасный веб-сёрфинг</string>
+  <string name="preference_safe_browsing_title">Блокировать потенциально опасные и обманывающие сайты</string>
+  <string name="preference_safe_browsing_summary">Блокировать известные обманывающие и вредоносные сайты, заражённые сайты и сайты с нежелательным ПО.</string>
+  <string name="preference_exceptions">Исключения</string>
+  <string name="preference_exceptions_description">Вы отключили блокировку содержимого для этих веб-сайтов.</string>
+  <string name="preference_exceptions_menu_remove">Удалить</string>
+  <string name="preference_exceptions_remove_all_button_label">Удалить все веб-сайты</string>
+  <string name="tab_crash_report_title">Вкладка упала</string>
+  <string name="tab_crash_report_headline">Извините. С этой вкладкой возникли проблемы.</string>
+  <string name="tab_crash_report_description">Как приватный браузер, мы никогда не сохраняем и не можем восстановить эту вкладку.</string>
+  <string name="tab_crash_report_close_tab_button_label">Закрыть вкладку</string>
+  <string name="fatal_crash_report_title">Извините. %1$s столкнулся с проблемой и аварийно завершил работу.</string>
+  <string name="fatal_crash_report_description">Как приватный браузер, мы никогда не сохраняем и не можем восстановить вашу последнюю сессию.</string>
+  <string name="fatal_crash_report_close_button_label">Закрыть</string>
+  <string name="fatal_crash_report_restart_firefox_label">Перезапустить %1$s</string>
+  <string name="crash_report_send_crash_label">Отправить сообщение о падении в Mozilla</string>
 </resources>

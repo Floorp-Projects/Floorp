@@ -141,15 +141,25 @@
   <string name="content_description_blocking_switch">Vharira tunotsvaka kwauri</string>
   <string name="your_rights">Kodzero dzako</string>
   <string name="external_app_prompt_title">Vhura link mune imwe app</string>
+  <string name="external_app_prompt">Unogona kusiya %1$s kuti ugovhura zvinoenda kuna %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Tsvaga app inokwanisa kuvhura link</string>
+  <string name="external_app_prompt_no_app">Tashaiwa app mufoni yako inokwanisa kuvhura link. Unokwanisa kusiya %1$s kuti ugotsaga %2$s kune app inozvikwanisa.</string>
+  <string name="external_multiple_apps_matched_exit">Wafunga kusiya kutsvaga pachako?</string>
   <string name="download_snackbar_finished">%1$s zvapera</string>
   <string name="download_snackbar_open">Vhura</string>
+  <string name="download_dialog_warning"><![CDATA["Zvawatora painternet "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">zvichange zvichiripo</b>" pauchatsvaira %1$s nhorondo."]]></string>
   <string name="download_dialog_title">Burutsa faira</string>
   <string name="download_dialog_action_cancel">Kanzura</string>
   <string name="download_dialog_action_download">Burutsa</string>
+  <string name="errorpage_title">Page raramba kubuda</string>
   <string name="errorpage_refresh">Zama zvekare</string>
   <string name="error_connectionfailure_title">Tatadza kubatirana</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;<li>" Nzvimbo iyi inogona kunge isipo kwekanguva kana yakabatikana. Edza zvakare munguva shomanana. "</li>\n&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;<li>" Kana usingakwanisi kutakura mapeji chero ipi zvayo, chengetedza dhepfenyuro yemagetsi yako kana kuti Wi-Fi connection. "</li>li&gt;\n&#160;&#160;&#160;&#160;&#160;&#160;</ul>ul>]]></string>
   <string name="error_timeout_title">Kubatana kwakapedzwa nguva</string>
   <string name="error_hostLookup_title">Sevha harina kuoneka</string>
+  <string name="error_malformedURI_title">Kero haisi yakakodzera</string>
+  <string name="error_redirectLoop_title">Peji haisi kutungamira zvakanaka</string>
+  <string name="error_unsupportedprotocol_title">Kero yacho yakanga isinganzwisisiki</string>
   <string name="error_sslhandshake_title">Tatadza kuvhura zvakachengetedzeka</string>
   <string name="error_generic_title">Mhaihwee</string>
   <string name="error_generic_message">Hatikwanise kuvhura peji iri nekuda kwezvimwe zvikonzero.</string>
@@ -160,7 +170,10 @@
   <string name="contextmenu_image_copy">Kopa adhiresi yemupikicha</string>
   <string name="contextmenu_image_save">Chengeta mufananidzo</string>
   <string name="contextmenu_open_in_new_tab">Vhura link mu tebhu nyowani</string>
+  <string name="firstrun_defaultbrowser_title">Shandisa simba rako rechivande</string>
   <string name="firstrun_search_title">Kutsvaga kwako, inzira yako</string>
+  <string name="firstrun_shortcut_title">Wedzera zvidzitiro pamba peimba yako</string>
+  <string name="firstrun_privacy_title">Ita kuchengeteka kwako chive chijairire</string>
   <string name="firstrun_close_button">Horait, Ndazvibata!</string>
   <string name="firstrun_skip_button">Svetuka</string>
   <string name="firstrun_next_button">Enda mberi</string>

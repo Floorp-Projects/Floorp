@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Gachrun nuguan\' ruhuât nanà\'uìt</string>
   <string name="teaser">Gache nu huì\' nanûn man\'an. Ni\'iaj. Nadure\'. yakaj da\'nga\' ñû.</string>
   <string name="feedback_erase">Gisij ganare\' nej nuguan\' garajsunt nga gaché nunt.</string>
+  <string name="feedback_erase_custom_tab">Gisij ganare\' nej nuguan\' garajsunt nga gaché nunt riña rakïj ñanj.</string>
   <string name="search_hint">Nana\'uì\' %1$s</string>
   <string name="menu_share">Ga\'ninj gan\'an riña duguî\'t...</string>
   <string name="menu_report_site_issue">Natà’ sa ‘iaj sun a’nan’ riña sitiô na</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Sa ruguñu\'unj un</string>
   <string name="menu_rights">Nej sa tna\'uej rayi\'ît</string>
   <string name="menu_trackers_blocked_title">Narun\' sa naga\'naj ñun\'</string>
+  <string name="menu_trackers_blocked_subtitle">Sisi gi\'iaj desaktibandôt nan ni ga\'ue nahuin da\'aj sa hua a\'nan\' hiuj nan</string>
+  <string name="menu_content_blocking">Garrun\' kontenido</string>
+  <string name="menu_content_blocking_subtitle">Duna\'aj da\' ga\'ue nahuin da\'aj sîtio</string>
   <string name="menu_custom_tab_branding">Rugujñu\'unj %1$s</string>
   <string name="share_dialog_title">Ga\'nïnj gan\'an ngà</string>
   <string name="notification_erase_text">Narè\' nej nuguan\' garajsunt nga ganana\'uî\'t</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Nadure\' ni na\'nïnt</string>
   <string name="shortcut_erase_short_label">Nadure\'</string>
   <string name="shortcut_erase_long_label">Narè\' nej nuguan\' garajsunt nga ganana\'uî\'t</string>
+  <string name="shortcut_erase_and_open_short_label">Dure\' ni na\'nint</string>
+  <string name="shortcut_erase_and_open_long_label">Nadure\' ni na\'nïnt %1$s</string>
   <string name="text_selection_search_action">Nana\'uì\' riña hua huìi</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s narikij kontrol ri&#241;at.</p>" \n"<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">garasun da\' gache nu hu&#236;t: \n<ul>" \n"<li>Nana\'u&#236;\' ni gache nunt ne\' hu&#224;\'t ng&#224; app</li>" \n"<li>Narr&#224;n ri&#241;a blokeador (si nitaj ni guij nagi\'iaj da\' ga\'ue ga\'n&#239;nt gi\'iaj sun man)</li>" "<li>nadure\' da\' nar&#232;\' cookies danj nanj nej nuguan\' gachr&#251;nt nga gach&#233; nunt</li>" \n"</ul>"\n "</p>" \n"<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"%1$s Sa giri Mozilla huin.  Chrej nik&#242;\' &#241;&#251;nj huin sisi ga ni\'n&#239;nj ni dugumin internet s&#242;\'."<br/>" \n"<a href="%2$s">Gini\'in doj rayi\'&#238; nuguan\' na</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Sa huìi nī sa dugumin</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Sa nu riña web</string>
   <string name="preference_category_switching_apps">Naduno\' aplikasion</string>
   <string name="preference_category_general">Da\'ua nguéj</string>
+  <string name="preference_general_summary">Nabegado hua niñaa, rakïj ñanj, nuguan\'an</string>
   <string name="preference_category_data_collection_use">Nagi\'iaj chre\' ma datos</string>
   <string name="preference_category_search">Nana\'uì\'</string>
   <string name="preference_show_search_suggestions">Nahuin\' ro\'ô\' sa ruguñu\'unj nana\'ui\'</string>
   <string name="preference_show_search_suggestions_summary">%1$s gani\' ga\'anj sa achrun\' riña dukuán direksion riña sa nana\'ui\'</string>
   <string name="preference_search_engine_default">Ngà hua niñanj</string>
+  <string name="preference_search_engine_label">Sa nana\'ui\'i</string>
   <string name="preference_state_on">On</string>
   <string name="preference_state_off">Off</string>
   <string name="preference_subitem_autocomplete">Nuta\' ma\'ān ma URL</string>
+  <string name="preference_switch_autocomplete_topsites">Guendâ nej sitiô hua hue\'ê doj</string>
+  <string name="preference_autocomplete_topsite_summary">Nachrun da\' nuta\' ma\'ān ma 450 URLs sa nià\' doj ruhua guìi ni\'iaj ni.</string>
+  <string name="preference_switch_autocomplete_user_list">Guendâ nej sitiô nuta\'t huajt</string>
+  <string name="preference_autocomplete_user_list_summary">Nachrun da\' nuta\' ma\'ān ma 450 URLs sa nià\' doj ruhua guìi ni\'iaj ni.</string>
+  <string name="preference_category_autocomplete_manage_sites">Dugumî nej sîtio</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Dugumî nej sîtio</string>
   <string name="preference_autocomplete_action_add">+ Nùto\' sa nagi\'iaj ma\'ān URL</string>
   <string name="preference_autocomplete_title_add">Nùto\' sa nagi\'iaj ma\'ān URL</string>
   <string name="custom_autocomplete_quick_add">Nùto\' sa nagi\'iaj ma\'ān URL</string>
+  <string name="add_custom_autocomplete_label">Nachrun enlasê ruhuât natu ma\'an</string>
   <string name="preference_category_cookies">Kookies ni si dato sitio</string>
   <string name="preference_category_data_choices">Ganahui nej datos</string>
   <string name="preference_autocomplete_title_remove">Nadure\' sa nagi\'iaj ma\'ān URL</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Si ganachunt man, ni gahuin ni si gi\'iaj sun hue\'e da\'aj pagina</string>
   <string name="preference_privacy_category_cookies">Garun\' kookies</string>
   <string name="preference_privacy_should_block_cookies_no_option">Si ga\'ue</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Garuun\' 3rd-party ma kookies nikò\' a\'ngô nej si</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Garuun\' 3rd-party ma kookies</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ga\'ue</string>
   <string name="preference_security_biometric">Garasun\' dej ro\'ô\' daj gatu\' riña aplikasion</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Hìaj ayì\'ij</string>
   <string name="accessibility_announcement_loading_finished">Gayi\'ìj \'iaj sunj</string>
   <string name="content_description_menu">Doj sa ga\'ue nagi\'át</string>
+  <string name="indicator_content_description_menu">Butûn \'na\' doj nej sa ga\'ue gi\'iát</string>
   <string name="content_description_forward">Gache nu gan\'anjt ne\' ñaa</string>
   <string name="content_description_reload">Nayi\'ì nakà ñû riña sîtio</string>
   <string name="content_description_back">Gache nu gan\'anj rukùt</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Yi\'&#238; configurasi&#244;n \'iaj re\' nan si guruhuaj, asi hua \'ngo sa huin ruhu&#226; gatsin ri&#241;a man.</li>"\n  "<li>Sisi a\'n&#239;n atuj hue\'&#234;t ri&#241;a serbidor nej di&#251; gachin ni, man si \'iaj akuan\' man si guruhuaj, gin&#249;n huin &#241;&#251;n nana doj.</li>\n</ul>]]></string>
   <string name="error_generic_title">\'uâ\'</string>
   <string name="error_generic_message">Hua sa \'iaj na\'ue gayi\'ì pajinâ nan</string>
+  <string name="contextmenu_open_in_app">Na\'nïn ngà aplikasiûn</string>
   <string name="contextmenu_link_share">Duguachîn enlâse</string>
   <string name="contextmenu_link_copy">Ga\'ne lînk da\' nachrunt a\'ngô hiuj u</string>
   <string name="contextmenu_image_share">duguachîn asi dusîjt ñadu\'ua</string>
@@ -224,4 +242,25 @@
   <string name="tip_autocomplete_url">"Nagi\'iaj chre\' nej URL guenda nej sitio rajsun yitïnjt\nRu\'ma ra\'à riña URL \'na\' riña dukuán direksiôn "</string>
   <string name="tip_open_in_new_tab">Na\'nïn a\'ngo enlase riña a\'ngo rakïj ñanj nakàa\nRu\'ma ra\'à riña ahuin nanj ma\'an enlase \'na riña pajinâ</string>
   <string name="tip_request_desktop">Ruat ni\'iaj sitio \'na\' riña eskritorio aj%1$s Menú &gt; gachinj ni\'iaj</string>
+  <string name="tip_disable_tips2">Duna\'àj sa rikî sujerênsia riña pantayâ gayi\'ij</string>
+  <string name="tip_explain_allowlist">¿Sitiô ni\'înt huin anj?\n Allowlist ni uxunj sa dugumî sò\' riña nej sitiô ngà ni\'înt ni nitaj si yi\'ì man.</string>
+  <string name="new_tab_opened_snackbar">Ngà\' nayi\'nïnj a\'ngô rakij ñaj nakàa</string>
+  <string name="open_new_tab_snackbar">Naduno\'</string>
+  <string name="preference_open_new_tab">Naduna riña dunikò\' duguî\'t rakïj ñanj ra\'ñanj chre</string>
+  <string name="preference_category_safe_browsing">NItaj si ahi huaj Gache nunt</string>
+  <string name="preference_safe_browsing_title">Narán riña nej sitiô diga\'ñu\'unj ni sa yi\'ìi</string>
+  <string name="preference_safe_browsing_summary">Narán riña nej sitiô yi\'ìi ni nej sa diga\'ñu\'unj, nej si sitiô malware ni nej sitiô software nitaj si ni\'ñanj an.</string>
+  <string name="preference_exceptions">Ga\'ue na\'nïnt</string>
+  <string name="preference_exceptions_description">Guxun ngèt sa narán riña sa yi\'ìi guendâ nej sitiô nan.</string>
+  <string name="preference_exceptions_menu_remove">Guxūn</string>
+  <string name="preference_exceptions_remove_all_button_label">Guxun daran\' nej sîtio</string>
+  <string name="tab_crash_report_title">Gire\' ngè rakïj ñanj</string>
+  <string name="tab_crash_report_headline">Si ga\'man ruhuât. Hua a\'nan\' \'ngo rakïj ñanj nan.</string>
+  <string name="tab_crash_report_description">\'Ngo navegadô huìi huin ñûnj, ni si ga\'ue ni\'iajt sa nana\'ui\'t akuan\' riña rakïj ñanj nan.</string>
+  <string name="tab_crash_report_close_tab_button_label">Narán Rakïj ñanj</string>
+  <string name="fatal_crash_report_title">Si ga\'man ruhuât. %1$s ga \'ngo sañuun riñanj.</string>
+  <string name="fatal_crash_report_description">\'Ngo navegadô huìi huin ñûnj, ni si ga\'ue na\'nïnt ñûnt sesiûn ni\'iajt akuan hiuj nan.</string>
+  <string name="fatal_crash_report_close_button_label">Narán</string>
+  <string name="fatal_crash_report_restart_firefox_label">Nayi\'ì ñûn %1$s</string>
+  <string name="crash_report_send_crash_label">Gana\'nínj nuguan\'an nuhuin saj \'iaj sun a\'nan\' Mozilla</string>
 </resources>

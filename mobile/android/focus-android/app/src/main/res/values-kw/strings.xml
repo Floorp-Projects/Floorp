@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Hwilowgh po entrowgh trigva</string>
   <string name="teaser">Peuri privedh awtomatek.\nPeurowgh. Dileowgh. Daswrewgh.</string>
   <string name="feedback_erase">Diles re beu agas istori peuri.</string>
+  <string name="feedback_erase_custom_tab">Diles re beu istori peuri an tabb.</string>
   <string name="search_hint">Hwilas %1$s</string>
   <string name="menu_share">Ranna…</string>
   <string name="menu_report_site_issue">Derivas kudyn war an wiasva</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Gweres</string>
   <string name="menu_rights">Agas gwiryow</string>
   <string name="menu_trackers_blocked_title">Helerghellow lettys</string>
+  <string name="menu_trackers_blocked_subtitle">Diallosegi hemma a allsa ewna nebes kudynnow y\'n wiasva</string>
+  <string name="menu_content_blocking">Lettya dalgh</string>
+  <string name="menu_content_blocking_subtitle">Diallosegi rag ewna neb gwiasvaow</string>
   <string name="menu_custom_tab_branding">Nerthys gans %1$s</string>
   <string name="share_dialog_title">Ranna dre</string>
   <string name="notification_erase_text">Dilea an istori peuri</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Dilea hag Ygeri</string>
   <string name="shortcut_erase_short_label">Dilea</string>
   <string name="shortcut_erase_long_label">Dilea an istori peuri</string>
+  <string name="shortcut_erase_and_open_short_label">Dilea &amp; ygeri</string>
+  <string name="shortcut_erase_and_open_long_label">Dilea hag ygeri %1$s</string>
   <string name="text_selection_search_action">Hwilas yn privedh</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Gans %1$s yth esowgh hwi ow kul maystri.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gwrewgh hy usya avel peurell brivedh:\n  "<ul>"\n    "<li>Hwilas ha peuri a-berth y\'n dowlen</li>"\n    "<li>Lettya helerghellow (po ri kummyas dhedha y\'n settyansow)</li>"\n    "<li>Dilea cookies, keffrys ha istori hwilas ha peuri</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Askorrys gans Mozilla yw %1$s. Agan amkan yw maga kesrosweyth yagh hag ygor.<br/>\n<a href="%2$s">Dyski moy</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Privetter ha sekerder</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Dalgh gwias</string>
   <string name="preference_category_switching_apps">Skwychya towlennow</string>
   <string name="preference_category_general">Ollgemmyn</string>
+  <string name="preference_general_summary">Peurell dhefowt, tabbys, yeth</string>
   <string name="preference_category_data_collection_use">Kuntel data ha devnydh</string>
   <string name="preference_category_search">Hwilas</string>
   <string name="preference_show_search_suggestions">Kavos profyansow hwilas</string>
   <string name="preference_show_search_suggestions_summary">%1$s a dhanvon an pyth a skrifowgh y\'n barr trigva dh\'agas jynn hwilas</string>
   <string name="preference_search_engine_default">Defowt</string>
+  <string name="preference_search_engine_label">Jynn hwilas</string>
   <string name="preference_state_on">Byw</string>
   <string name="preference_state_off">Marow</string>
   <string name="preference_subitem_autocomplete">Kollenwel awtomatek a URLs</string>
+  <string name="preference_switch_autocomplete_topsites">Rag an gwiasvaow an moyha visityes</string>
+  <string name="preference_autocomplete_topsite_summary">Gallosegi rag awto-kollenwel moy es 450 URL meurgerys y\'n barr trigva.</string>
+  <string name="preference_switch_autocomplete_user_list">Rag gwiasvaow a geworrowgh</string>
+  <string name="preference_autocomplete_user_list_summary">Gallosegi rag awto-kollenwel moy es 450 URL meurgerys y\'n barr trigva.</string>
+  <string name="preference_category_autocomplete_manage_sites">Dyghtya gwiasvaow</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Dyghtya gwiasvaow</string>
   <string name="preference_autocomplete_action_add">+ Keworra URL personelhes</string>
   <string name="preference_autocomplete_title_add">Keworra URL personelhes</string>
   <string name="custom_autocomplete_quick_add">Keworra URL personelhes</string>
+  <string name="add_custom_autocomplete_label">Keworra kevren dhe awto-kollenwel</string>
   <string name="preference_category_cookies">Cookies ha data gwiasvaow</string>
   <string name="preference_category_data_choices">Dewisyow data</string>
   <string name="preference_autocomplete_title_remove">Dilea URLs personelhes</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Gallosegi a allsa kawsya kudynnow war neb folennow</string>
   <string name="preference_privacy_category_cookies">Lettya cookies</string>
   <string name="preference_privacy_should_block_cookies_no_option">Sevel orth lettya</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Lettya cookies helerghi 3a-parti yn unnik</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Cookies 3a parti yn unnik</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Pub cookie oll</string>
   <string name="preference_security_biometric">Usya bysprynt rag dialhwedha an app</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Ow karga</string>
   <string name="accessibility_announcement_loading_finished">Gwiasva kergys</string>
   <string name="content_description_menu">Moy dewisyow</string>
+  <string name="indicator_content_description_menu">Boton moy dewisyow</string>
   <string name="content_description_forward">Mos yn-rag</string>
   <string name="content_description_reload">Daskarga an wiasva</string>
   <string name="content_description_back">Mos war-dhelergh</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Hemm a allsa bos kudyn gans restrans an servyer, po y hallsa bos\nnebonan owth assaya omwul an servyer.</li>"\n  "<li>Mar kwrussowgh junya yn sowen dhe\'n servyer ma y\'n termyn eus\npassyes, an error a allsa bos rag pols, ha hwi a yll assaya arta termyn aral.</li>\n</ul>]]></string>
   <string name="error_generic_title">Oups</string>
   <string name="error_generic_message">Ny yllyn karga an folen ma rag neb acheson.</string>
+  <string name="contextmenu_open_in_app">Ygeri gans towlen</string>
   <string name="contextmenu_link_share">Ranna an gevren</string>
   <string name="contextmenu_link_copy">Kopia trigva an gevren</string>
   <string name="contextmenu_image_share">Ranna an imach</string>
@@ -224,4 +242,25 @@
   <string name="tip_autocomplete_url">Awtolenwel URLs rag agas gwiasvaow gwella\nHirwaskowgh neb URL y\'n barr trigva</string>
   <string name="tip_open_in_new_tab">Ygeri kevren yn tabb nowydh\nHirwaskowgh neb kevren folen</string>
   <string name="tip_request_desktop">Gwell gweles an wiasva desktop leun?%1$sRol &gt; Gwiasva desktop</string>
+  <string name="tip_disable_tips2">Diallosegi profyansow war an skrin dre</string>
+  <string name="tip_explain_allowlist">Gwiasva trestys?\nAn alowrol a dhiallosek difresans helerghi war wiasvaow a wrewgh hwi aswon ha trestya.</string>
+  <string name="new_tab_opened_snackbar">Tabb nowydh ygerys</string>
+  <string name="open_new_tab_snackbar">Skwychya</string>
+  <string name="preference_open_new_tab">Skwychya dhe gevren yn tabb nowydh a-dhesempis</string>
+  <string name="preference_category_safe_browsing">Peuri salow</string>
+  <string name="preference_safe_browsing_title">Lettya gwiasvaow a allsa bos peryllus po tollus</string>
+  <string name="preference_safe_browsing_summary">Lettya gwiasvaow derivys avel tollus hag omsettya, gwiasvaow malware, ha gwiasvaow medhelweyth anwovynys.</string>
+  <string name="preference_exceptions">Nammow</string>
+  <string name="preference_exceptions_description">Hwi re dhiallosegis lettya dalgh rag an wiasvaow ma.</string>
+  <string name="preference_exceptions_menu_remove">Dilea</string>
+  <string name="preference_exceptions_remove_all_button_label">Dilea pub gwiasva</string>
+  <string name="tab_crash_report_title">An tabb a vommas</string>
+  <string name="tab_crash_report_headline">Diharesow. Yma kudyn gans an tabb ma.</string>
+  <string name="tab_crash_report_description">Avel peurell brivedh, ny wren nevra gwitha an tabb ma ha ny yllyn y dhaskavos.</string>
+  <string name="tab_crash_report_close_tab_button_label">Degea an tabb</string>
+  <string name="fatal_crash_report_title">Diharesow. Y feu kudyn gans %1$s hag ev a vommas.</string>
+  <string name="fatal_crash_report_description">Avel peurell brivedh, ny wren nevra gwitha agas esedhek peuri diwettha ha ny yllyn y dhaskavos.</string>
+  <string name="fatal_crash_report_close_button_label">Degea</string>
+  <string name="fatal_crash_report_restart_firefox_label">Dastalleth %1$s</string>
+  <string name="crash_report_send_crash_label">Danvon derivas bomm dhe Mozilla</string>
 </resources>
