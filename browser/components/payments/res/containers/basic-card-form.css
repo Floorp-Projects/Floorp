@@ -31,11 +31,6 @@ basic-card-form .editCreditCardForm .persist-checkbox {
   display: grid;
 }
 
-#billingAddressGUID {
-  /* XXX: temporary until converted to a rich-picker in bug 1482689 */
-  margin: 14px 0;
-}
-
 basic-card-form > footer > .cancel-button {
   /* When cancel is shown (during onboarding), it should always be on the left with a space after it */
   margin-right: auto;

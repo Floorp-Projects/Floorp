@@ -36,6 +36,7 @@ async function add_link(aOptions = {}) {
       checkboxSelector: "basic-card-form .persist-checkbox",
       expectPersist: aOptions.expectDefaultCardPersist,
     });
+
     await spawnPaymentDialogTask(frame, async function checkState(testArgs = {}) {
       let {
         PaymentTestUtils: PTU,
@@ -163,12 +164,12 @@ async function add_link(aOptions = {}) {
       ok(state["basic-card-page"].billingAddressGUID,
          "billingAddressGUID should be set when coming back from address-page");
 
-      let billingAddressSelect = content.document.querySelector("#billingAddressGUID");
+      let billingAddressPicker = Cu.waiveXrays(
+        content.document.querySelector("basic-card-form billing-address-picker"));
 
-      is(billingAddressSelect.childElementCount, 3,
-         "Three options should exist in the billingAddressSelect");
-      let selectedOption =
-        billingAddressSelect.children[billingAddressSelect.selectedIndex];
+      is(billingAddressPicker.options.length, 3,
+         "Three options should exist in the billingAddressPicker");
+      let selectedOption = billingAddressPicker.dropdown.selectedOption;
       let selectedAddressGuid = selectedOption.value;
       let lastAddress = Object.values(addressColn)[Object.keys(addressColn).length - 1];
       is(selectedAddressGuid, lastAddress.guid, "The select should have the new address selected");
@@ -411,152 +412,163 @@ add_task(async function test_edit_link() {
   const args = {
     methodData: [PTU.MethodData.basicCard],
     details: PTU.Details.total60USD,
+    prefilledGuids,
   };
-  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, async function check() {
-    let {
-      PaymentTestUtils: PTU,
-    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+  await spawnInDialogForMerchantTask(
+    PTU.ContentTasks.createAndShowRequest,
+    async function check({prefilledGuids}) {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-    let editLink = content.document.querySelector("payment-method-picker .edit-link");
-    is(editLink.textContent, "Edit", "Edit link text");
+      let editLink = content.document.querySelector("payment-method-picker .edit-link");
+      is(editLink.textContent, "Edit", "Edit link text");
 
-    editLink.click();
+      editLink.click();
 
-    let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-      return state.page.id == "basic-card-page" && state["basic-card-page"].guid;
-    }, "Check edit page state");
+      let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "basic-card-page" && state["basic-card-page"].guid;
+      }, "Check edit page state");
 
-    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-      return Object.keys(state.savedBasicCards).length == 1 &&
-             Object.keys(state.savedAddresses).length == 1;
-    }, "Check card and address present at beginning of test");
+      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return Object.keys(state.savedBasicCards).length == 1 &&
+               Object.keys(state.savedAddresses).length == 1;
+      }, "Check card and address present at beginning of test");
 
-    let title = content.document.querySelector("basic-card-form h2");
-    is(title.textContent, "Edit Credit Card", "Edit title should be set");
+      let title = content.document.querySelector("basic-card-form h2");
+      is(title.textContent, "Edit Credit Card", "Edit title should be set");
 
-    let saveButton = content.document.querySelector("basic-card-form .save-button");
-    is(saveButton.textContent, "Update", "Save button has the correct label");
+      let saveButton = content.document.querySelector("basic-card-form .save-button");
+      is(saveButton.textContent, "Update", "Save button has the correct label");
 
-    let card = Object.assign({}, PTU.BasicCards.JohnDoe);
-    // cc-number cannot be modified
-    delete card["cc-number"];
-    card["cc-exp-year"]++;
-    card["cc-exp-month"]++;
+      let card = Object.assign({}, PTU.BasicCards.JohnDoe);
+      // cc-number cannot be modified
+      delete card["cc-number"];
+      card["cc-exp-year"]++;
+      card["cc-exp-month"]++;
 
-    info("overwriting field values");
-    for (let [key, val] of Object.entries(card)) {
-      let field = content.document.getElementById(key);
-      field.value = val;
-      ok(!field.disabled, `Field #${key} shouldn't be disabled`);
-    }
-    ok(content.document.getElementById("cc-number").disabled, "cc-number field should be disabled");
-
-    let billingAddressSelect = content.document.querySelector("#billingAddressGUID");
-    is(billingAddressSelect.childElementCount, 2,
-       "Two options should exist in the billingAddressSelect");
-    is(billingAddressSelect.selectedIndex, 1,
-       "The prefilled billing address should be selected by default");
-
-    info("Test clicking 'edit' on the empty option first");
-    billingAddressSelect.selectedIndex = 0;
-
-    let addressEditLink = content.document.querySelector(".billingAddressRow .edit-link");
-    addressEditLink.click();
-    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-      return state.page.id == "address-page" && !state["address-page"].guid;
-    }, "Clicking edit button when the empty option is selected will go to 'add' page (no guid)");
-
-    let addressTitle = content.document.querySelector("address-form h2");
-    is(addressTitle.textContent, "Add Billing Address",
-       "Address on add address page should be correct");
-
-    let addressBackButton = content.document.querySelector("address-form .back-button");
-    addressBackButton.click();
-    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-      return state.page.id == "basic-card-page" && state["basic-card-page"].guid &&
-             Object.keys(state.savedAddresses).length == 1;
-    }, "Check we're back at basic-card page with no state changed after adding");
-
-    info("Go back to previously selected option before clicking 'edit' now");
-    billingAddressSelect.selectedIndex = 1;
-
-    let selectedOption = billingAddressSelect.selectedOptions.length &&
-                         billingAddressSelect.selectedOptions[0];
-    ok(selectedOption && selectedOption.value, "select should have a selected option value");
-
-    addressEditLink.click();
-    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-      return state.page.id == "address-page" && state["address-page"].guid;
-    }, "Check address page state (editing)");
-
-    is(addressTitle.textContent, "Edit Billing Address",
-       "Address on edit address page should be correct");
-
-    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-      return Object.keys(state.savedBasicCards).length == 1;
-    }, "Check card was not added again when clicking the 'edit' address button");
-
-    addressBackButton.click();
-    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-      return state.page.id == "basic-card-page" && state["basic-card-page"].guid &&
-             Object.keys(state.savedAddresses).length == 1;
-    }, "Check we're back at basic-card page with no state changed after editing");
-
-    for (let [key, val] of Object.entries(card)) {
-      let field = content.document.getElementById(key);
-      is(field.value, val, "Field should still have previous value entered");
-    }
-
-    selectedOption = billingAddressSelect.selectedOptions.length &&
-                     billingAddressSelect.selectedOptions[0];
-    ok(selectedOption && selectedOption.value, "select should have a selected option value");
-
-    addressEditLink.click();
-    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-      return state.page.id == "address-page" && state["address-page"].guid;
-    }, "Check address page state (editing)");
-
-    info("modify some address fields");
-    for (let key of ["given-name", "tel", "organization", "street-address"]) {
-      let field = content.document.getElementById(key);
-      if (!field) {
-        ok(false, `${key} field not found`);
+      info("overwriting field values");
+      for (let [key, val] of Object.entries(card)) {
+        let field = content.document.getElementById(key);
+        field.value = val;
+        ok(!field.disabled, `Field #${key} shouldn't be disabled`);
       }
-      field.focus();
-      EventUtils.sendKey("BACK_SPACE", content.window);
-      EventUtils.sendString("7", content.window);
-      ok(!field.disabled, `Field #${key} shouldn't be disabled`);
-    }
+      ok(content.document.getElementById("cc-number").disabled,
+         "cc-number field should be disabled");
 
-    content.document.querySelector("address-form button.save-button").click();
-    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-      return state.page.id == "basic-card-page" && state["basic-card-page"].guid &&
-             Object.keys(state.savedAddresses).length == 1;
-    }, "Check still only one address and we're back on basic-card page");
+      let billingAddressPicker = Cu.waiveXrays(
+        content.document.querySelector("basic-card-form billing-address-picker"));
 
-    is(Object.values(state.savedAddresses)[0].tel, PTU.Addresses.TimBL.tel.slice(0, -1) + "7",
-       "Check that address was edited and saved");
+      let initialSelectedAddressGuid = billingAddressPicker.dropdown.value;
+      is(billingAddressPicker.options.length, 2,
+         "Two options should exist in the billingAddressPicker");
+      is(initialSelectedAddressGuid, prefilledGuids.address1GUID,
+         "The prefilled billing address should be selected by default");
 
-    content.document.querySelector("basic-card-form button.save-button").click();
+      info("Test clicking 'add' on the empty option first");
+      billingAddressPicker.dropdown.popupBox.focus();
+      content.fillField(billingAddressPicker.dropdown.popupBox, "");
 
-    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-      let cards = Object.entries(state.savedBasicCards);
-      return cards.length == 1 &&
-             cards[0][1]["cc-name"] == card["cc-name"];
-    }, "Check card was edited");
+      let addressEditLink = content.document.querySelector(".billingAddressRow .edit-link");
+      ok(addressEditLink && !content.isVisible(addressEditLink),
+         "The edit link is hidden when empty option is selected");
 
-    let cardGUIDs = Object.keys(state.savedBasicCards);
-    is(cardGUIDs.length, 1, "Check there is still one card");
-    let savedCard = state.savedBasicCards[cardGUIDs[0]];
-    is(savedCard["cc-number"], "************1111", "Card number should be masked and unmodified.");
-    for (let [key, val] of Object.entries(card)) {
-      is(savedCard[key], val, "Check updated " + key);
-    }
+      let addressAddLink = content.document.querySelector(".billingAddressRow .add-link");
+      addressAddLink.click();
+      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "address-page" && !state["address-page"].guid;
+      }, "Clicking add button when the empty option is selected will go to 'add' page (no guid)");
 
-    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-      return state.page.id == "payment-summary";
-    }, "Switched back to payment-summary");
-  }, args);
+      let addressTitle = content.document.querySelector("address-form h2");
+      is(addressTitle.textContent, "Add Billing Address",
+         "Address on add address page should be correct");
+
+      let addressBackButton = content.document.querySelector("address-form .back-button");
+      addressBackButton.click();
+      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "basic-card-page" && state["basic-card-page"].guid &&
+               Object.keys(state.savedAddresses).length == 1;
+      }, "Check we're back at basic-card page with no state changed after adding");
+
+      info("Go back to previously selected option before clicking 'edit' now");
+      billingAddressPicker.dropdown.value = initialSelectedAddressGuid;
+
+      let selectedOption = billingAddressPicker.dropdown.selectedOption;
+      ok(selectedOption && selectedOption.value, "select should have a selected option value");
+
+      addressEditLink.click();
+      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "address-page" && state["address-page"].guid;
+      }, "Check address page state (editing)");
+
+      is(addressTitle.textContent, "Edit Billing Address",
+         "Address on edit address page should be correct");
+
+      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return Object.keys(state.savedBasicCards).length == 1;
+      }, "Check card was not added again when clicking the 'edit' address button");
+
+      addressBackButton.click();
+      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "basic-card-page" && state["basic-card-page"].guid &&
+               Object.keys(state.savedAddresses).length == 1;
+      }, "Check we're back at basic-card page with no state changed after editing");
+
+      for (let [key, val] of Object.entries(card)) {
+        let field = content.document.getElementById(key);
+        is(field.value, val, "Field should still have previous value entered");
+      }
+
+      selectedOption = billingAddressPicker.dropdown.selectedOption;
+      ok(selectedOption && selectedOption.value, "select should have a selected option value");
+
+      addressEditLink.click();
+      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "address-page" && state["address-page"].guid;
+      }, "Check address page state (editing)");
+
+      info("modify some address fields");
+      for (let key of ["given-name", "tel", "organization", "street-address"]) {
+        let field = content.document.getElementById(key);
+        if (!field) {
+          ok(false, `${key} field not found`);
+        }
+        field.focus();
+        EventUtils.sendKey("BACK_SPACE", content.window);
+        EventUtils.sendString("7", content.window);
+        ok(!field.disabled, `Field #${key} shouldn't be disabled`);
+      }
+
+      content.document.querySelector("address-form button.save-button").click();
+      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "basic-card-page" && state["basic-card-page"].guid &&
+               Object.keys(state.savedAddresses).length == 1;
+      }, "Check still only one address and we're back on basic-card page");
+
+      is(Object.values(state.savedAddresses)[0].tel, PTU.Addresses.TimBL.tel.slice(0, -1) + "7",
+         "Check that address was edited and saved");
+
+      content.document.querySelector("basic-card-form button.save-button").click();
+
+      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        let cards = Object.entries(state.savedBasicCards);
+        return cards.length == 1 &&
+               cards[0][1]["cc-name"] == card["cc-name"];
+      }, "Check card was edited");
+
+      let cardGUIDs = Object.keys(state.savedBasicCards);
+      is(cardGUIDs.length, 1, "Check there is still one card");
+      let savedCard = state.savedBasicCards[cardGUIDs[0]];
+      is(savedCard["cc-number"], "************1111",
+         "Card number should be masked and unmodified.");
+      for (let [key, val] of Object.entries(card)) {
+        is(savedCard[key], val, "Check updated " + key);
+      }
+
+      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "payment-summary";
+      }, "Switched back to payment-summary");
+    }, args);
 });
 
 add_task(async function test_invalid_network_card_edit() {
