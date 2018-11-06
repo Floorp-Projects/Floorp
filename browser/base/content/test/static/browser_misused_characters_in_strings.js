@@ -157,6 +157,10 @@ let gWhitelist = [{
     key: "aboutNetworking.logTutorial",
     type: "single-quote",
   }, {
+    file: "aboutdevtools.dtd",
+    key: "aboutDevtools.newsletter.privacy.label",
+    type: "single-quote",
+  }, {
     file: "browser.dtd",
     key: "addonPostInstallMessage.label",
     type: "single-quote",
