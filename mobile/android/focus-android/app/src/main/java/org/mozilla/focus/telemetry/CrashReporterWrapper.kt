@@ -7,6 +7,7 @@ import android.content.Context
 import android.os.Build
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.lib.crash.service.MozillaSocorroService
 import mozilla.components.lib.crash.service.SentryService
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.locale.LocaleManager
@@ -38,7 +39,9 @@ object CrashReporterWrapper {
                 SentryService(
                         context,
                         sentryDsn,
-                        tags = createTags(context))
+                        tags = createTags(context),
+                        sendEventForNativeCrashes = true),
+                MozillaSocorroService(context, "Firefox Focus")
         )).install(context)
 
         onIsEnabledChanged(context)
@@ -60,10 +63,5 @@ object CrashReporterWrapper {
         } else {
             Locale.getDefault().toLanguageTag()
         }
-    }
-
-    fun captureGeckoCrash() {
-//        crashReporter?.submitReport(Crash())
-//        .capture("GeckoSession crashes, opening new session")
     }
 }

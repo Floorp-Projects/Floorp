@@ -375,7 +375,6 @@ class GeckoWebViewProvider : IWebViewProvider {
 
                 override fun onCrash(session: GeckoSession) {
                     Log.i(TAG, "Crashed, opening new session")
-                    CrashReporterWrapper.captureGeckoCrash()
                     geckoSession.close()
                     geckoSession = createGeckoSession()
                     applySettingsAndSetDelegates()
