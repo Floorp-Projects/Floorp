@@ -3544,7 +3544,6 @@ GeckoDriver.prototype.teardownReftest = function() {
 GeckoDriver.prototype.commands = {
   // Marionette service
   "Marionette:AcceptConnections": GeckoDriver.prototype.acceptConnections,
-  "acceptConnections": GeckoDriver.prototype.acceptConnections,  // deprecated, remove in Firefox 64
   "Marionette:GetContext": GeckoDriver.prototype.getContext,
   "Marionette:GetScreenOrientation": GeckoDriver.prototype.getScreenOrientation,
   "Marionette:GetWindowType": GeckoDriver.prototype.getWindowType,
@@ -3554,7 +3553,6 @@ GeckoDriver.prototype.commands = {
   "Marionette:ActionChain": GeckoDriver.prototype.actionChain,  // bug 1354578, legacy actions
   "Marionette:MultiAction": GeckoDriver.prototype.multiAction,  // bug 1354578, legacy actions
   "Marionette:SingleTap": GeckoDriver.prototype.singleTap,
-  "singleTap": GeckoDriver.prototype.singleTap,  // deprecated, remove in Firefox 66
 
   // Addon service
   "Addon:Install": GeckoDriver.prototype.installAddon,
