@@ -609,7 +609,9 @@ EffectCompositor::GetOverriddenProperties(EffectSet& aEffectSet,
     return result;
   }
 
-  AutoTArray<nsCSSPropertyID, LayerAnimationInfo::kRecords> propertiesToTrack;
+  static constexpr size_t compositorAnimatableCount =
+    nsCSSPropertyIDSet::CompositorAnimatableCount();
+  AutoTArray<nsCSSPropertyID, compositorAnimatableCount> propertiesToTrack;
   {
     nsCSSPropertyIDSet propertiesToTrackAsSet;
     for (KeyframeEffect* effect : aEffectSet) {
@@ -623,7 +625,7 @@ EffectCompositor::GetOverriddenProperties(EffectSet& aEffectSet,
       }
       // Skip iterating over the rest of the effects if we've already
       // found all the compositor-animatable properties.
-      if (propertiesToTrack.Length() == LayerAnimationInfo::kRecords) {
+      if (propertiesToTrack.Length() == compositorAnimatableCount) {
         break;
       }
     }
