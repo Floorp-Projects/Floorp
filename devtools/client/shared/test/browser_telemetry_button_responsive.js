@@ -43,7 +43,7 @@ add_task(async function() {
   info("testing the responsivedesign button");
   await testButton(toolbox);
 
-  await gDevTools.closeToolbox(target);
+  await toolbox.destroy();
   gBrowser.removeCurrentTab();
 });
 

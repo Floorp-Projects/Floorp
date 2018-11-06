@@ -121,7 +121,7 @@ add_task(async function() {
   checkResults();
   checkEventTelemetry();
 
-  await gDevTools.closeToolbox(target);
+  await toolbox.destroy();
   gBrowser.removeCurrentTab();
 });
 
