@@ -275,7 +275,6 @@ public final class SessionTextInput {
     private final GeckoSession mSession;
     private final NativeQueue mQueue;
     private final GeckoEditable mEditable;
-    private final GeckoEditableChild mEditableChild;
     private InputConnectionClient mInputConnection;
     private GeckoSession.TextInputDelegate mDelegate;
     // Auto-fill nodes.
@@ -289,8 +288,6 @@ public final class SessionTextInput {
         mSession = session;
         mQueue = queue;
         mEditable = new GeckoEditable(session);
-        mEditableChild = new GeckoEditableChild(mEditable);
-        mEditable.setDefaultEditableChild(mEditableChild);
 
         session.getEventDispatcher().registerUiThreadListener(
                 new BundleEventListener() {
@@ -314,11 +311,10 @@ public final class SessionTextInput {
 
     /* package */ void onWindowChanged(final GeckoSession.Window window) {
         if (mQueue.isReady()) {
-            window.attachEditable(mEditable, mEditableChild);
+            window.attachEditable(mEditable);
         } else {
             mQueue.queueUntilReady(window, "attachEditable",
-                                   IGeckoEditableParent.class, mEditable,
-                                   GeckoEditableChild.class, mEditableChild);
+                                   IGeckoEditableParent.class, mEditable);
         }
     }
 

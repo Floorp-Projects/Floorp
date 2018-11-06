@@ -42,18 +42,16 @@ class GeckoProcessManager final
     }
 
 public:
-    static jni::Object::LocalRef
-    GetEditableParent(int64_t aContentId, int64_t aTabId)
+    static void
+    GetEditableParent(jni::Object::Param aEditableChild,
+                      int64_t aContentId, int64_t aTabId)
     {
-        // On binder thread.
-        jni::Object::GlobalRef ret;
-        nsAppShell::SyncRunEvent([aContentId, aTabId, &ret] {
-            nsCOMPtr<nsIWidget> widget = GetWidget(aContentId, aTabId);
-            if (widget) {
-                ret = static_cast<nsWindow*>(widget.get())->GetEditableParent();
-            }
-        });
-        return ret;
+        nsCOMPtr<nsIWidget> widget = GetWidget(aContentId, aTabId);
+        if (widget && widget->GetNativeData(NS_NATIVE_WIDGET) == widget) {
+            java::GeckoProcessManager::SetEditableChildParent(
+                    aEditableChild,
+                    static_cast<nsWindow*>(widget.get())->GetEditableParent());
+        }
     }
 };
 

@@ -372,6 +372,17 @@ public class testInputConnection extends JavascriptBridgeTest {
             ic.deleteSurroundingText(1, 0);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
 
+            // Bug 1490391 - Committing then setting composition can result in duplicates.
+            ic.commitText("far", 1);
+            ic.setComposingText("bar", 1);
+            assertTextAndSelectionAt("Can commit then set composition", ic, "farbar", 6);
+            ic.setComposingText("baz", 1);
+            assertTextAndSelectionAt("Composition still exists after setting", ic, "farbaz", 6);
+
+            ic.finishComposingText();
+            ic.deleteSurroundingText(6, 0);
+            assertTextAndSelectionAt("Can clear text", ic, "", 0);
+
             // Make sure we don't leave behind stale events for the following test.
             processGeckoEvents();
             processInputConnectionEvents();
