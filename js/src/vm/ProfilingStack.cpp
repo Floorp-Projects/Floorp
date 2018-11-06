@@ -24,7 +24,7 @@ ProfilingStack::~ProfilingStack()
     delete[] frames;
 }
 
-bool
+void
 ProfilingStack::ensureCapacitySlow()
 {
     MOZ_ASSERT(stackPointer >= capacity);
@@ -33,11 +33,7 @@ ProfilingStack::ensureCapacitySlow()
     uint32_t sp = stackPointer;
     auto newCapacity = std::max(sp + 1,  capacity ? capacity * 2 : kInitialCapacity);
 
-    auto* newFrames =
-        new (mozilla::fallible) js::ProfilingStackFrame[newCapacity];
-    if (MOZ_UNLIKELY(!newFrames)) {
-        return false;
-    }
+    auto* newFrames = new js::ProfilingStackFrame[newCapacity];
 
     // It's important that `frames` / `capacity` / `stackPointer` remain consistent here at
     // all times.
@@ -49,6 +45,4 @@ ProfilingStack::ensureCapacitySlow()
     frames = newFrames;
     capacity = newCapacity;
     delete[] oldFrames;
-
-    return true;
 }

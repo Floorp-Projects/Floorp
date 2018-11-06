@@ -188,14 +188,6 @@ nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc)
 
 /***************************************************************************/
 
-const KTableEntry nsCSSProps::kBorderImageRepeatKTable[] = {
-  { eCSSKeyword_stretch, StyleBorderImageRepeat::Stretch },
-  { eCSSKeyword_repeat, StyleBorderImageRepeat::Repeat },
-  { eCSSKeyword_round, StyleBorderImageRepeat::Round },
-  { eCSSKeyword_space, StyleBorderImageRepeat::Space },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kBorderStyleKTable[] = {
   { eCSSKeyword_none,   NS_STYLE_BORDER_STYLE_NONE },
   { eCSSKeyword_hidden, NS_STYLE_BORDER_STYLE_HIDDEN },

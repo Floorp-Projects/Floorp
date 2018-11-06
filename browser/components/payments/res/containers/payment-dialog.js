@@ -20,6 +20,10 @@ import "./shipping-option-picker.js";
 
 /**
  * <payment-dialog></payment-dialog>
+ *
+ * Warning: Do not import this module from any other module as it will import
+ * everything else (see above) and ruin element independence. This can stop
+ * being exported once tests stop depending on it.
  */
 
 export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
@@ -414,16 +418,6 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     }
     this.setAttribute("complete-status", request.completeStatus);
     this._disabledOverlay.hidden = !state.changesPrevented;
-  }
-
-  static maybeCreateFieldErrorElement(container) {
-    let span = container.querySelector(".error-text");
-    if (!span) {
-      span = document.createElement("span");
-      span.className = "error-text";
-      container.appendChild(span);
-    }
-    return span;
   }
 }
 

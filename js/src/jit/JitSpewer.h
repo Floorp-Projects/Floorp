@@ -146,7 +146,7 @@ class GraphSpewer
     void spewPass(const char* pass, BacktrackingAllocator* ra);
     void endFunction();
 
-    void dump(Fprinter& c1, Fprinter& json);
+    void dump(Fprinter& json);
 };
 
 void SpewBeginFunction(MIRGenerator* mir, JSScript* function);

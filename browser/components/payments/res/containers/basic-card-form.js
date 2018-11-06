@@ -4,9 +4,9 @@
 
 /* import-globals-from ../../../../../browser/extensions/formautofill/content/autofillEditForms.js*/
 import AcceptedCards from "../components/accepted-cards.js";
+import BillingAddressPicker from "./billing-address-picker.js";
 import CscInput from "../components/csc-input.js";
 import LabelledCheckbox from "../components/labelled-checkbox.js";
-import PaymentDialog from "./payment-dialog.js";
 import PaymentRequestPage from "../components/payment-request-page.js";
 import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
 import paymentRequest from "../paymentRequest.js";
@@ -27,15 +27,6 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     this.genericErrorText = document.createElement("div");
     this.genericErrorText.setAttribute("aria-live", "polite");
     this.genericErrorText.classList.add("page-error");
-
-    this.addressAddLink = document.createElement("a");
-    this.addressAddLink.className = "add-link";
-    this.addressAddLink.href = "javascript:void(0)";
-    this.addressAddLink.addEventListener("click", this);
-    this.addressEditLink = document.createElement("a");
-    this.addressEditLink.className = "edit-link";
-    this.addressEditLink.href = "javascript:void(0)";
-    this.addressEditLink.addEventListener("click", this);
 
     this.cscInput = new CscInput({
       useAlwaysVisiblePlaceholder: true,
@@ -86,6 +77,38 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     });
   }
 
+  _upgradeBillingAddressPicker() {
+    let addressRow = this.form.querySelector(".billingAddressRow");
+    let addressPicker = this.billingAddressPicker = new BillingAddressPicker();
+
+    // Wrap the existing <select> that the formHandler manages
+    if (addressPicker.dropdown.popupBox) {
+      addressPicker.dropdown.popupBox.remove();
+    }
+    addressPicker.dropdown.popupBox = this.form.querySelector("#billingAddressGUID");
+
+    // Hide the original label as the address picker provide its own,
+    // but we'll copy the localized textContent from it when rendering
+    addressRow.querySelector(".label-text").hidden = true;
+
+    addressPicker.dataset.addLinkLabel = this.dataset.addressAddLinkLabel;
+    addressPicker.dataset.editLinkLabel = this.dataset.addressEditLinkLabel;
+    addressPicker.dataset.fieldSeparator = this.dataset.addressFieldSeparator;
+    addressPicker.dataset.addAddressTitle = this.dataset.billingAddressTitleAdd;
+    addressPicker.dataset.editAddressTitle = this.dataset.billingAddressTitleEdit;
+    addressPicker.dataset.invalidLabel = this.dataset.invalidAddressLabel;
+    // break-after-nth-field, address-fields not needed here
+
+    // this state is only used to carry the selected guid between pages;
+    // the select#billingAddressGUID is the source of truth for the current value
+    addressPicker.setAttribute("selected-state-key", "basic-card-page|billingAddressGUID");
+
+    addressPicker.addLink.addEventListener("click", this);
+    addressPicker.editLink.addEventListener("click", this);
+
+    addressRow.appendChild(addressPicker);
+  }
+
   connectedCallback() {
     this.promiseReady.then(form => {
       this.body.appendChild(form);
@@ -107,6 +130,8 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
       form.addEventListener("input", this);
       form.addEventListener("invalid", this);
 
+      this._upgradeBillingAddressPicker();
+
       // The "invalid" event does not bubble and needs to be listened for on each
       // form element.
       for (let field of this.form.elements) {
@@ -118,18 +143,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
       cscContainer.textContent = "";
       cscContainer.appendChild(this.cscInput);
 
-      let fragment = document.createDocumentFragment();
-      fragment.append(" ");
-      fragment.append(this.addressEditLink);
-      fragment.append(this.addressAddLink);
       let billingAddressRow = this.form.querySelector(".billingAddressRow");
-
-      // XXX: Bug 1482689 - Remove the label-text class from the billing field
-      // which will be removed when switching to <rich-select>.
-      billingAddressRow.querySelector(".label-text").classList.remove("label-text");
-
-      billingAddressRow.appendChild(fragment);
-
       form.insertBefore(this.persistCheckbox, billingAddressRow);
       form.insertBefore(this.acceptedCardsList, billingAddressRow);
       this.body.appendChild(this.genericErrorText);
@@ -168,10 +182,13 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     this.cscInput.frontTooltip = this.dataset.cscFrontInfoTooltip;
     this.cscInput.backTooltip = this.dataset.cscBackInfoTooltip;
 
+    // The label text from the form isn't available until render() time.
+    let labelText = this.form.querySelector(".billingAddressRow .label-text").textContent;
+    this.billingAddressPicker.setAttribute("label", labelText);
+
     this.persistCheckbox.label = this.dataset.persistCheckboxLabel;
     this.persistCheckbox.infoTooltip = this.dataset.persistCheckboxInfoTooltip;
-    this.addressAddLink.textContent = this.dataset.addressAddLinkLabel;
-    this.addressEditLink.textContent = this.dataset.addressEditLinkLabel;
+
     this.acceptedCardsList.label = this.dataset.acceptedCardsLabel;
 
     // The next line needs an onboarding check since we don't set previousId
@@ -228,7 +245,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
 
     this.form.querySelector(".billingAddressRow").hidden = false;
 
-    let billingAddressSelect = this.form.querySelector("#billingAddressGUID");
+    let billingAddressSelect = this.billingAddressPicker.dropdown;
     if (basicCardPage.billingAddressGUID) {
       billingAddressSelect.value = basicCardPage.billingAddressGUID;
     } else if (!editing) {
@@ -245,7 +262,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     }
     // Need to recalculate the populated state since
     // billingAddressSelect is updated after loadRecord.
-    this.formHandler.updatePopulatedState(billingAddressSelect);
+    this.formHandler.updatePopulatedState(billingAddressSelect.popupBox);
 
     this.updateRequiredState();
     this.updateSaveButtonState();
@@ -290,21 +307,18 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
         paymentRequest.cancel();
         break;
       }
-      case this.addressAddLink:
-      case this.addressEditLink: {
+      case this.billingAddressPicker.addLink:
+      case this.billingAddressPicker.editLink: {
+        // The address-picker has set state for the page to advance to, now set up the
+        // necessary state for returning to and re-rendering this page
         let {
           "basic-card-page": basicCardPage,
+          page,
         } = this.requestStore.getState();
         let nextState = {
-          page: {
-            id: "address-page",
+          page: Object.assign({}, page, {
             previousId: "basic-card-page",
-          },
-          "address-page": {
-            guid: null,
-            selectedStateKey: ["basic-card-page", "billingAddressGUID"],
-            title: this.dataset.billingAddressTitleAdd,
-          },
+          }),
           "basic-card-page": {
             preserveFieldValues: true,
             guid: basicCardPage.guid,
@@ -312,24 +326,18 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
             selectedStateKey: basicCardPage.selectedStateKey,
           },
         };
-        let billingAddressGUID = this.form.querySelector("#billingAddressGUID");
-        let selectedOption = billingAddressGUID.selectedOptions.length &&
-                             billingAddressGUID.selectedOptions[0];
-        if (evt.target == this.addressEditLink && selectedOption && selectedOption.value) {
-          nextState["address-page"].title = this.dataset.billingAddressTitleEdit;
-          nextState["address-page"].guid = selectedOption.value;
-        }
         this.requestStore.setState(nextState);
         break;
       }
       case this.backButton: {
+        let currentState = this.requestStore.getState();
         let {
           page,
           request,
           "address-page": addressPage,
           "basic-card-page": basicCardPage,
           selectedShippingAddress,
-        } = this.requestStore.getState();
+        } = currentState;
 
         let nextState = {
           page: {
@@ -383,7 +391,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
   onInvalidField(event) {
     let field = event.target;
     let container = field.closest(`#${field.id}-container`);
-    let errorTextSpan = PaymentDialog.maybeCreateFieldErrorElement(container);
+    let errorTextSpan = paymentRequest.maybeCreateFieldErrorElement(container);
     errorTextSpan.textContent = field.validationMessage;
   }
 
@@ -392,7 +400,10 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
   }
 
   updateSaveButtonState() {
-    this.saveButton.disabled = !this.form.checkValidity();
+    const INVALID_CLASS_NAME = "invalid-selected-option";
+    let isValid = this.form.checkValidity() &&
+                  !this.billingAddressPicker.classList.contains(INVALID_CLASS_NAME);
+    this.saveButton.disabled = !isValid;
   }
 
   updateRequiredState() {

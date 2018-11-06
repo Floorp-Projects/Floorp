@@ -61,6 +61,42 @@ function executeStatementsInTransaction(conn, stmts) {
   });
 }
 
+function HostnameGrouper_group(aURI) {
+  var group;
+
+  try {
+    // Accessing the host property of the URI will throw an exception
+    // if the URI is of a type that doesn't have a host property.
+    // Otherwise, we manually throw an exception if the host is empty,
+    // since the effect is the same (we can't derive a group from it).
+
+    group = aURI.host;
+    if (!group)
+      throw new Error("can't derive group from host; no host in URI");
+  } catch (ex) {
+    // If we don't have a host, then use the entire URI (minus the query,
+    // reference, and hash, if possible) as the group.  This means that URIs
+    // like about:mozilla and about:blank will be considered separate groups,
+    // but at least they'll be grouped somehow.
+
+    // This also means that each individual file: URL will be considered
+    // its own group.  This seems suboptimal, but so does treating the entire
+    // file: URL space as a single group (especially if folks start setting
+    // group-specific capabilities prefs).
+
+    // XXX Is there something better we can do here?
+
+    try {
+      var url = aURI.QueryInterface(Ci.nsIURL);
+      group = aURI.prePath + url.filePath;
+    } catch (ex) {
+      group = aURI.spec;
+    }
+  }
+
+  return group;
+}
+
 ContentPrefService2.prototype = {
   // XPCOM Plumbing
 
@@ -78,7 +114,6 @@ ContentPrefService2.prototype = {
     // refer to us and don't remove themselves from those observer pools.
     delete this._observers;
     delete this._genericObservers;
-    delete this.__grouper;
   },
 
 
@@ -818,14 +853,6 @@ ContentPrefService2.prototype = {
     }
   },
 
-  __grouper: null,
-  get _grouper() {
-    if (!this.__grouper)
-      this.__grouper = Cc["@mozilla.org/content-pref/hostname-grouper;1"].
-                       getService(Ci.nsIContentURIGrouper);
-    return this.__grouper;
-  },
-
   /**
    * Parses the domain (the "group", to use the database's term) from the given
    * string.
@@ -843,7 +870,7 @@ ContentPrefService2.prototype = {
     } catch (err) {
       return groupStr;
     }
-    return this._grouper.group(groupURI);
+    return HostnameGrouper_group(groupURI);
   },
 
   _schedule: function CPS2__schedule(fn) {
@@ -1214,55 +1241,7 @@ function invalidArg(msg) {
   return Components.Exception(msg, Cr.NS_ERROR_INVALID_ARG);
 }
 
-
-function HostnameGrouper() {}
-
-HostnameGrouper.prototype = {
-  // XPCOM Plumbing
-
-  classID:          Components.ID("{8df290ae-dcaa-4c11-98a5-2429a4dc97bb}"),
-  QueryInterface:   ChromeUtils.generateQI([Ci.nsIContentURIGrouper]),
-
-  // nsIContentURIGrouper
-
-  group: function HostnameGrouper_group(aURI) {
-    var group;
-
-    try {
-      // Accessing the host property of the URI will throw an exception
-      // if the URI is of a type that doesn't have a host property.
-      // Otherwise, we manually throw an exception if the host is empty,
-      // since the effect is the same (we can't derive a group from it).
-
-      group = aURI.host;
-      if (!group)
-        throw new Error("can't derive group from host; no host in URI");
-    } catch (ex) {
-      // If we don't have a host, then use the entire URI (minus the query,
-      // reference, and hash, if possible) as the group.  This means that URIs
-      // like about:mozilla and about:blank will be considered separate groups,
-      // but at least they'll be grouped somehow.
-
-      // This also means that each individual file: URL will be considered
-      // its own group.  This seems suboptimal, but so does treating the entire
-      // file: URL space as a single group (especially if folks start setting
-      // group-specific capabilities prefs).
-
-      // XXX Is there something better we can do here?
-
-      try {
-        var url = aURI.QueryInterface(Ci.nsIURL);
-        group = aURI.prePath + url.filePath;
-      } catch (ex) {
-        group = aURI.spec;
-      }
-    }
-
-    return group;
-  },
-};
-
 // XPCOM Plumbing
 
-var components = [ContentPrefService2, HostnameGrouper];
+var components = [ContentPrefService2];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

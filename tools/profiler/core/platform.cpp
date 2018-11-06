@@ -985,7 +985,7 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
       // To avoid both the profiling stack frame and jit frame being recorded
       // (and showing up twice), the interpreter marks the interpreter
       // profiling stack frame as JS_OSR to ensure that it doesn't get counted.
-      if (profilingStackFrame.kind() == js::ProfilingStackFrame::Kind::JS_OSR) {
+      if (profilingStackFrame.isOSRFrame()) {
           profilingStackIndex++;
           continue;
       }
@@ -1840,8 +1840,8 @@ CollectJavaThreadProfileData()
         parentFrameWasIdleFrame = false;
       }
 
-      buffer->CollectCodeLocation("", frameNameString.get(), Nothing(),
-          Nothing(), category);
+      buffer->CollectCodeLocation("", frameNameString.get(), 0,
+          Nothing(), Nothing(), category);
     }
     sampleId++;
   }
@@ -2493,12 +2493,11 @@ locked_profiler_start(PSLockRef aLock, uint32_t aCapacity, double aInterval,
 
 // This basically duplicates AutoProfilerLabel's constructor.
 ProfilingStack*
-MozGlueLabelEnter(const char* aLabel, const char* aDynamicString, void* aSp,
-                  uint32_t aLine)
+MozGlueLabelEnter(const char* aLabel, const char* aDynamicString, void* aSp)
 {
   ProfilingStack* profilingStack = AutoProfilerLabel::sProfilingStack.get();
   if (profilingStack) {
-    profilingStack->pushLabelFrame(aLabel, aDynamicString, aSp, aLine,
+    profilingStack->pushLabelFrame(aLabel, aDynamicString, aSp,
                                 js::ProfilingStackFrame::Category::OTHER);
   }
   return profilingStack;

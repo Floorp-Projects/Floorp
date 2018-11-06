@@ -1,4 +1,4 @@
-    COMPONENT_M(MEMORY, nsMemoryImpl::Create, Module::ALLOW_IN_GPU_PROCESS)
+    COMPONENT_M(MEMORY, nsMemoryImpl::Create, Module::ALLOW_IN_GPU_AND_VR_PROCESS)
     COMPONENT_M(DEBUG,  nsDebugImpl::Create, Module::ALLOW_IN_GPU_PROCESS)
 
     COMPONENT_M(CATEGORYMANAGER, nsCategoryManager::Create, Module::ALLOW_IN_GPU_PROCESS)
@@ -13,7 +13,7 @@
 
     COMPONENT(ARRAY, nsArrayBase::XPCOMConstructor)
     COMPONENT(CONSOLESERVICE, nsConsoleServiceConstructor)
-    COMPONENT_M(OBSERVERSERVICE, nsObserverService::Create, Module::ALLOW_IN_GPU_PROCESS)
+    COMPONENT_M(OBSERVERSERVICE, nsObserverService::Create, Module::ALLOW_IN_GPU_AND_VR_PROCESS)
 
     COMPONENT_M(TIMER, nsTimer::XPCOMConstructor, Module::ALLOW_IN_GPU_PROCESS)
 

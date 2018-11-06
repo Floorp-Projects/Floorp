@@ -35,7 +35,7 @@ use batch::{BatchKind, BatchTextures, BrushBatchKind};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use debug_colors;
-use device::{DepthFunction, Device, FrameId, Program, UploadMethod, Texture, PBO};
+use device::{DepthFunction, Device, GpuFrameId, Program, UploadMethod, Texture, PBO};
 use device::{DrawTarget, ExternalTexture, FBOId, ReadTarget, TextureSlot};
 use device::{ShaderError, TextureFilter,
              VertexUsageHint, VAO, VBO, CustomVAO};
@@ -62,7 +62,7 @@ use profiler::{BackendProfileCounters, FrameProfileCounters,
 use device::query::GpuProfiler;
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use record::ApiRecordingReceiver;
-use render_backend::RenderBackend;
+use render_backend::{FrameId, RenderBackend};
 use scene_builder::{SceneBuilder, LowPrioritySceneBuilder};
 use shade::{Shaders, WrShaders};
 use smallvec::SmallVec;
@@ -705,13 +705,13 @@ pub enum RendererKind {
 
 #[derive(Debug)]
 pub struct GpuProfile {
-    pub frame_id: FrameId,
+    pub frame_id: GpuFrameId,
     pub paint_time_ns: u64,
 }
 
 impl GpuProfile {
     #[cfg(feature = "debug_renderer")]
-    fn new<T>(frame_id: FrameId, timers: &[GpuTimer<T>]) -> GpuProfile {
+    fn new<T>(frame_id: GpuFrameId, timers: &[GpuTimer<T>]) -> GpuProfile {
         let mut paint_time_ns = 0;
         for timer in timers {
             paint_time_ns += timer.time_ns;
@@ -725,7 +725,7 @@ impl GpuProfile {
 
 #[derive(Debug)]
 pub struct CpuProfile {
-    pub frame_id: FrameId,
+    pub frame_id: GpuFrameId,
     pub backend_time_ns: u64,
     pub composite_time_ns: u64,
     pub draw_calls: usize,
@@ -733,7 +733,7 @@ pub struct CpuProfile {
 
 impl CpuProfile {
     fn new(
-        frame_id: FrameId,
+        frame_id: GpuFrameId,
         backend_time_ns: u64,
         composite_time_ns: u64,
         draw_calls: usize,
@@ -853,7 +853,7 @@ impl TextureResolver {
         assert!(self.saved_targets.is_empty());
     }
 
-    fn end_frame(&mut self, device: &mut Device, frame_id: FrameId) {
+    fn end_frame(&mut self, device: &mut Device, frame_id: GpuFrameId) {
         // return the cached targets to the pool
         self.end_pass(device, None, None);
         // return the saved targets as well
@@ -1441,7 +1441,7 @@ impl VertexDataTexture {
 }
 
 struct FrameOutput {
-    last_access: FrameId,
+    last_access: GpuFrameId,
     fbo_id: FBOId,
 }
 
@@ -2022,7 +2022,7 @@ impl Renderer {
             gpu_cache_texture,
             #[cfg(feature = "debug_renderer")]
             gpu_cache_debug_chunks: Vec::new(),
-            gpu_cache_frame_id: FrameId::new(0),
+            gpu_cache_frame_id: FrameId::invalid(),
             gpu_cache_overflow: false,
             texture_cache_upload_pbo,
             texture_resolver,
@@ -2736,7 +2736,7 @@ impl Renderer {
         let gpu_cache_height = self.gpu_cache_texture.get_height();
         if gpu_cache_height != 0 && GPU_CACHE_RESIZE_TEST {
             self.pending_gpu_cache_updates.push(GpuCacheUpdateList {
-                frame_id: FrameId::new(0),
+                frame_id: FrameId::invalid(),
                 height: gpu_cache_height,
                 blocks: vec![[1f32; 4].into()],
                 updates: Vec::new(),
@@ -3109,7 +3109,7 @@ impl Renderer {
         clear_color: Option<[f32; 4]>,
         render_tasks: &RenderTaskTree,
         projection: &Transform3D<f32>,
-        frame_id: FrameId,
+        frame_id: GpuFrameId,
         stats: &mut RendererStats,
     ) {
         self.profile_counters.color_targets.inc();
@@ -3745,7 +3745,7 @@ impl Renderer {
             .expect("Found external image, but no handler set!");
 
         let mut list = GpuCacheUpdateList {
-            frame_id: FrameId::new(0),
+            frame_id: FrameId::invalid(),
             height: self.gpu_cache_texture.get_height(),
             blocks: Vec::new(),
             updates: Vec::new(),
@@ -3945,7 +3945,7 @@ impl Renderer {
         frame: &mut Frame,
         framebuffer_size: Option<DeviceUintSize>,
         framebuffer_depth_is_ready: bool,
-        frame_id: FrameId,
+        frame_id: GpuFrameId,
         stats: &mut RendererStats,
     ) {
         let _gm = self.gpu_profile.start_marker("tile frame draw");
