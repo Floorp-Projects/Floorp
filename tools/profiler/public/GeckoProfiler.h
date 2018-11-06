@@ -728,20 +728,16 @@ public:
     Push(sProfilingStack.get(), aLabel, aDynamicString, aLine, aCategory);
   }
 
-  // This is the AUTO_PROFILER_LABEL_FAST variant. It's guarded on
-  // profiler_is_active() and retrieves the ProfilingStack from the JSContext.
+  // This is the AUTO_PROFILER_LABEL_FAST variant. It retrieves the ProfilingStack
+  // from the JSContext and does nothing if the profiler is inactive.
   AutoProfilerLabel(JSContext* aJSContext,
                     const char* aLabel, const char* aDynamicString,
                     uint32_t aLine, js::ProfilingStackFrame::Category aCategory
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (profiler_is_active()) {
-      Push(js::GetContextProfilingStack(aJSContext),
-           aLabel, aDynamicString, aLine, aCategory);
-    } else {
-      mProfilingStack = nullptr;
-    }
+    Push(js::GetContextProfilingStackIfEnabled(aJSContext),
+         aLabel, aDynamicString, aLine, aCategory);
   }
 
   void Push(ProfilingStack* aProfilingStack,
