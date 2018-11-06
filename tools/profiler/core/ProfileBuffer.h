@@ -44,7 +44,7 @@ public:
   uint64_t AddThreadIdEntry(int aThreadId);
 
   void CollectCodeLocation(
-    const char* aLabel, const char* aStr,
+    const char* aLabel, const char* aStr, uint32_t aFrameFlags,
     const mozilla::Maybe<uint32_t>& aLineNumber,
     const mozilla::Maybe<uint32_t>& aColumnNumber,
     const mozilla::Maybe<js::ProfilingStackFrame::Category>& aCategory);

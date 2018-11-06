@@ -444,7 +444,7 @@ impl ResourceCache {
             cached_glyph_dimensions: FastHashMap::default(),
             texture_cache,
             state: State::Idle,
-            current_frame_id: FrameId(0),
+            current_frame_id: FrameId::invalid(),
             pending_image_requests: FastHashSet::default(),
             glyph_rasterizer,
             blob_image_handler,
@@ -924,7 +924,7 @@ impl ResourceCache {
                     let untiled_entry = match entry {
                         &mut ImageResult::UntiledAuto(ref mut entry) => {
                             Some(mem::replace(entry, CachedImageInfo {
-                                texture_cache_handle: TextureCacheHandle::new(),
+                                texture_cache_handle: TextureCacheHandle::invalid(),
                                 dirty_rect: None,
                                 manual_eviction: false,
                             }))
@@ -947,7 +947,7 @@ impl ResourceCache {
             Vacant(entry) => {
                 entry.insert(if request.is_untiled_auto() {
                     ImageResult::UntiledAuto(CachedImageInfo {
-                        texture_cache_handle: TextureCacheHandle::new(),
+                        texture_cache_handle: TextureCacheHandle::invalid(),
                         dirty_rect: Some(template.descriptor.full_rect()),
                         manual_eviction: false,
                     })
@@ -964,7 +964,7 @@ impl ResourceCache {
             ImageResult::Multi(ref mut entries) => {
                 entries.entry(request.into())
                     .or_insert(CachedImageInfo {
-                        texture_cache_handle: TextureCacheHandle::new(),
+                        texture_cache_handle: TextureCacheHandle::invalid(),
                         dirty_rect: Some(template.descriptor.full_rect()),
                         manual_eviction: false,
                     })
@@ -2032,7 +2032,7 @@ impl ResourceCache {
                 self.texture_cache = cached.textures;
             }
             None => {
-                self.current_frame_id = FrameId(0);
+                self.current_frame_id = FrameId::invalid();
                 self.cached_glyphs.clear();
                 self.cached_glyph_dimensions.clear();
                 self.cached_images.clear();

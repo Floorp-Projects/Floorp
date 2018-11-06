@@ -823,7 +823,7 @@ private:
 //     ThreadId
 //     Time
 //     ( NativeLeafAddr
-//     | Label DynamicStringFragment* LineNumber? Category?
+//     | Label FrameFlags? DynamicStringFragment* LineNumber? Category?
 //     | JitReturnAddr
 //     )+
 //     Marker*
@@ -866,12 +866,14 @@ private:
 // - ProfilingStack frames with a dynamic string:
 //
 //     Label("nsObserverService::NotifyObservers")
+//     FrameFlags(uint64_t(ProfilingStackFrame::Flags::IS_LABEL_FRAME))
 //     DynamicStringFragment("domwindo")
 //     DynamicStringFragment("wopened")
 //     LineNumber(291)
 //     Category(ProfilingStackFrame::Category::OTHER)
 //
 //     Label("")
+//     FrameFlags(uint64_t(ProfilingStackFrame::Flags::IS_JS_FRAME))
 //     DynamicStringFragment("closeWin")
 //     DynamicStringFragment("dow (chr")
 //     DynamicStringFragment("ome://gl")
@@ -884,6 +886,7 @@ private:
 //     Category(ProfilingStackFrame::Category::JS)
 //
 //     Label("")
+//     FrameFlags(uint64_t(ProfilingStackFrame::Flags::IS_JS_FRAME))
 //     DynamicStringFragment("bound (s")
 //     DynamicStringFragment("elf-host")
 //     DynamicStringFragment("ed:914)")
@@ -893,6 +896,7 @@ private:
 // - A profiling stack frame with a dynamic string, but with privacy enabled:
 //
 //     Label("nsObserverService::NotifyObservers")
+//     FrameFlags(uint64_t(ProfilingStackFrame::Flags::IS_LABEL_FRAME))
 //     DynamicStringFragment("(private")
 //     DynamicStringFragment(")")
 //     LineNumber(291)
@@ -901,6 +905,7 @@ private:
 // - A profiling stack frame with an overly long dynamic string:
 //
 //     Label("")
+//     FrameFlags(uint64_t(ProfilingStackFrame::Flags::IS_LABEL_FRAME))
 //     DynamicStringFragment("(too lon")
 //     DynamicStringFragment("g)")
 //     LineNumber(100)
@@ -909,6 +914,7 @@ private:
 // - A wasm JIT frame:
 //
 //     Label("")
+//     FrameFlags(uint64_t(0))
 //     DynamicStringFragment("wasm-fun")
 //     DynamicStringFragment("ction[87")
 //     DynamicStringFragment("36] (blo")
@@ -925,6 +931,7 @@ private:
 // - A JS frame in a synchronous sample:
 //
 //     Label("")
+//     FrameFlags(uint64_t(ProfilingStackFrame::Flags::IS_LABEL_FRAME))
 //     DynamicStringFragment("u (https")
 //     DynamicStringFragment("://perf-")
 //     DynamicStringFragment("html.io/")
@@ -949,7 +956,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                                    double aSinceTime,
                                    UniqueStacks& aUniqueStacks) const
 {
-  UniquePtr<char[]> strbuf = MakeUnique<char[]>(kMaxFrameKeyLength);
+  UniquePtr<char[]> dynStrBuf = MakeUnique<char[]>(kMaxFrameKeyLength);
 
   EntryGetter e(*this);
 
@@ -1024,30 +1031,26 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
       } else if (e.Get().IsLabel()) {
         numFrames++;
 
-        // Copy the label into strbuf.
         const char* label = e.Get().u.mString;
-        strncpy(strbuf.get(), label, kMaxFrameKeyLength);
-        size_t i = strlen(label);
         e.Next();
 
-        bool seenFirstDynamicStringFragment = false;
+        using FrameFlags = js::ProfilingStackFrame::Flags;
+        uint32_t frameFlags = 0;
+        if (e.Has() && e.Get().IsFrameFlags()) {
+          frameFlags = uint32_t(e.Get().u.mUint64);
+          e.Next();
+        }
+
+        // Copy potential dynamic string fragments into dynStrBuf, so that
+        // dynStrBuf will then contain the entire dynamic string.
+        size_t i = 0;
+        dynStrBuf[0] = '\0';
         while (e.Has()) {
           if (e.Get().IsDynamicStringFragment()) {
-            // If this is the first dynamic string fragment and we have a
-            // non-empty label, insert a ' ' after the label and before the
-            // dynamic string.
-            if (!seenFirstDynamicStringFragment) {
-              if (i > 0 && i < kMaxFrameKeyLength) {
-                strbuf[i] = ' ';
-                i++;
-              }
-              seenFirstDynamicStringFragment = true;
-            }
-
             for (size_t j = 0; j < ProfileBufferEntry::kNumChars; j++) {
               const char* chars = e.Get().u.mChars;
               if (i < kMaxFrameKeyLength) {
-                strbuf[i] = chars[j];
+                dynStrBuf[i] = chars[j];
                 i++;
               }
             }
@@ -1056,7 +1059,25 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
             break;
           }
         }
-        strbuf[kMaxFrameKeyLength - 1] = '\0';
+        dynStrBuf[kMaxFrameKeyLength - 1] = '\0';
+        bool hasDynamicString = (i != 0);
+
+        nsCString frameLabel;
+        if (label[0] != '\0' && hasDynamicString) {
+          if (frameFlags & uint32_t(FrameFlags::STRING_TEMPLATE_METHOD)) {
+            frameLabel.AppendPrintf("%s.%s", label, dynStrBuf.get());
+          } else if (frameFlags & uint32_t(FrameFlags::STRING_TEMPLATE_GETTER)) {
+            frameLabel.AppendPrintf("get %s.%s", label, dynStrBuf.get());
+          } else if (frameFlags & uint32_t(FrameFlags::STRING_TEMPLATE_SETTER)) {
+            frameLabel.AppendPrintf("set %s.%s", label, dynStrBuf.get());
+          } else {
+            frameLabel.AppendPrintf("%s %s", label, dynStrBuf.get());
+          }
+        } else if (hasDynamicString) {
+          frameLabel.Append(dynStrBuf.get());
+        } else {
+          frameLabel.Append(label);
+        }
 
         Maybe<unsigned> line;
         if (e.Has() && e.Get().IsLineNumber()) {
@@ -1077,7 +1098,8 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
         }
 
         stack = aUniqueStacks.AppendFrame(
-          stack, UniqueStacks::FrameKey(strbuf.get(), line, column, category));
+          stack, UniqueStacks::FrameKey(std::move(frameLabel), line, column,
+                                        category));
 
       } else if (e.Get().IsJitReturnAddr()) {
         numFrames++;

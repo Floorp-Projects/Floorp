@@ -75,6 +75,9 @@ TablesToResponse(const nsACString& tables)
   if (FindInReadable(NS_LITERAL_CSTRING("-malware-"), tables)) {
     return NS_ERROR_MALWARE_URI;
   }
+  if (FindInReadable(NS_LITERAL_CSTRING("-harmful-"), tables)) {
+    return NS_ERROR_HARMFUL_URI;
+  }
   if (FindInReadable(NS_LITERAL_CSTRING("-phish-"), tables)) {
     return NS_ERROR_PHISHING_URI;
   }
@@ -86,9 +89,6 @@ TablesToResponse(const nsACString& tables)
   }
   if (FindInReadable(NS_LITERAL_CSTRING("-block-"), tables)) {
     return NS_ERROR_BLOCKED_URI;
-  }
-  if (FindInReadable(NS_LITERAL_CSTRING("-harmful-"), tables)) {
-    return NS_ERROR_HARMFUL_URI;
   }
   return NS_OK;
 }

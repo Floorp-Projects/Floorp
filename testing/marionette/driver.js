@@ -3548,45 +3548,25 @@ GeckoDriver.prototype.teardownReftest = function() {
 GeckoDriver.prototype.commands = {
   // Marionette service
   "Marionette:AcceptConnections": GeckoDriver.prototype.acceptConnections,
+  "acceptConnections": GeckoDriver.prototype.acceptConnections,  // deprecated, remove in Firefox 64
   "Marionette:GetContext": GeckoDriver.prototype.getContext,
   "Marionette:GetScreenOrientation": GeckoDriver.prototype.getScreenOrientation,
   "Marionette:GetWindowType": GeckoDriver.prototype.getWindowType,
   "Marionette:Quit": GeckoDriver.prototype.quit,
   "Marionette:SetContext": GeckoDriver.prototype.setContext,
   "Marionette:SetScreenOrientation": GeckoDriver.prototype.setScreenOrientation,
-  // Bug 1354578 - Remove legacy action commands
-  "Marionette:ActionChain": GeckoDriver.prototype.actionChain,
-  "Marionette:MultiAction": GeckoDriver.prototype.multiAction,
+  "Marionette:ActionChain": GeckoDriver.prototype.actionChain,  // bug 1354578, legacy actions
+  "Marionette:MultiAction": GeckoDriver.prototype.multiAction,  // bug 1354578, legacy actions
   "Marionette:SingleTap": GeckoDriver.prototype.singleTap,
-  // deprecated Marionette commands, remove in Firefox 63
-  "actionChain": GeckoDriver.prototype.actionChain,
-  "acceptConnections": GeckoDriver.prototype.acceptConnections,
-  "closeChromeWindow": GeckoDriver.prototype.closeChromeWindow,
-  "getChromeWindowHandles": GeckoDriver.prototype.getChromeWindowHandles,
-  "getContext": GeckoDriver.prototype.getContext,
-  "getCurrentChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
-  "getScreenOrientation": GeckoDriver.prototype.getScreenOrientation,
-  "getWindowType": GeckoDriver.prototype.getWindowType,
-  "multiAction": GeckoDriver.prototype.multiAction,
-  "quit": GeckoDriver.prototype.quit,
-  "quitApplication": GeckoDriver.prototype.quit,
-  "setContext": GeckoDriver.prototype.setContext,
-  "setScreenOrientation": GeckoDriver.prototype.setScreenOrientation,
-  "singleTap": GeckoDriver.prototype.singleTap,
+  "singleTap": GeckoDriver.prototype.singleTap,  // deprecated, remove in Firefox 66
 
   // Addon service
   "Addon:Install": GeckoDriver.prototype.installAddon,
   "Addon:Uninstall": GeckoDriver.prototype.uninstallAddon,
-  // deprecated Addon commands, remove in Firefox 63
-  "addon:install": GeckoDriver.prototype.installAddon,
-  "addon:uninstall": GeckoDriver.prototype.uninstallAddon,
 
   // L10n service
   "L10n:LocalizeEntity": GeckoDriver.prototype.localizeEntity,
   "L10n:LocalizeProperty": GeckoDriver.prototype.localizeProperty,
-  // deprecated L10n commands, remove in Firefox 63
-  "localization:l10n:localizeEntity": GeckoDriver.prototype.localizeEntity,
-  "localization:l10n:localizeProperty": GeckoDriver.prototype.localizeProperty,
 
   // Reftest service
   "reftest:setup": GeckoDriver.prototype.setupReftest,
@@ -3595,7 +3575,7 @@ GeckoDriver.prototype.commands = {
 
   // WebDriver service
   "WebDriver:AcceptAlert": GeckoDriver.prototype.acceptDialog,
-  "WebDriver:AcceptDialog": GeckoDriver.prototype.acceptDialog,  // deprecated, remove in Firefox 63
+  "WebDriver:AcceptDialog": GeckoDriver.prototype.acceptDialog,  // deprecated, but used in geckodriver (see also bug 1495063)
   "WebDriver:AddCookie": GeckoDriver.prototype.addCookie,
   "WebDriver:Back": GeckoDriver.prototype.goBack,
   "WebDriver:CloseChromeWindow": GeckoDriver.prototype.closeChromeWindow,

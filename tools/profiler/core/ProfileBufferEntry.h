@@ -37,6 +37,7 @@ class ProfilerMarker;
   macro(CollectionStart,       double) \
   macro(CollectionEnd,         double) \
   macro(Label,                 const char*) \
+  macro(FrameFlags,            uint64_t) \
   macro(DynamicStringFragment, char*) /* char[kNumChars], really */ \
   macro(JitReturnAddr,         void*) \
   macro(LineNumber,            int) \
@@ -235,10 +236,10 @@ public:
     {
     }
 
-    FrameKey(const char* aLocation, const mozilla::Maybe<unsigned>& aLine,
+    FrameKey(nsCString&& aLocation, const mozilla::Maybe<unsigned>& aLine,
              const mozilla::Maybe<unsigned>& aColumn,
              const mozilla::Maybe<unsigned>& aCategory)
-      : mData(NormalFrameData{ nsCString(aLocation), aLine, aColumn, aCategory })
+      : mData(NormalFrameData{ aLocation, aLine, aColumn, aCategory })
     {
     }
 

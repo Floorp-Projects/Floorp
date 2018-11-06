@@ -46,6 +46,7 @@
 #define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(label, category, nsCStr)
 #define AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(label, category, nsStr)
 #define AUTO_PROFILER_LABEL_FAST(label, category, ctx)
+#define AUTO_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, category, ctx, flags)
 
 #define PROFILER_ADD_MARKER(markerName)
 #define PROFILER_ADD_NETWORK_MARKER(uri, pri, channel, type, start, end, count, timings, redirect)
@@ -473,7 +474,7 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 // Use AUTO_PROFILER_LABEL_DYNAMIC_* if you want to add additional / dynamic
 // information to the label stack frame.
 #define AUTO_PROFILER_LABEL(label, category) \
-  mozilla::AutoProfilerLabel PROFILER_RAII(label, nullptr, __LINE__, \
+  mozilla::AutoProfilerLabel PROFILER_RAII(label, nullptr, \
                                            js::ProfilingStackFrame::Category::category)
 
 // Similar to AUTO_PROFILER_LABEL, but with an additional string. The inserted
@@ -497,7 +498,7 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 // the profile buffer than AUTO_PROFILER_LABEL_DYNAMIC_* frames.
 #define AUTO_PROFILER_LABEL_DYNAMIC_CSTR(label, category, cStr) \
   mozilla::AutoProfilerLabel \
-    PROFILER_RAII(label, cStr, __LINE__, js::ProfilingStackFrame::Category::category)
+    PROFILER_RAII(label, cStr, js::ProfilingStackFrame::Category::category)
 
 // Similar to AUTO_PROFILER_LABEL_DYNAMIC_CSTR, but takes an nsACString.
 //
@@ -511,7 +512,7 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
   mozilla::Maybe<AutoProfilerLabel> raiiObjectNsCString; \
   if (profiler_is_active()) { \
     autoCStr.emplace(nsCStr); \
-    raiiObjectNsCString.emplace(label, autoCStr->get(), __LINE__, \
+    raiiObjectNsCString.emplace(label, autoCStr->get(), \
                                 js::ProfilingStackFrame::Category::category); \
   }
 
@@ -528,7 +529,7 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
   mozilla::Maybe<AutoProfilerLabel> raiiObjectLossyNsString; \
   if (profiler_is_active()) { \
     asciiStr.emplace(nsStr); \
-    raiiObjectLossyNsString.emplace(label, asciiStr->get(), __LINE__, \
+    raiiObjectLossyNsString.emplace(label, asciiStr->get(), \
                                     js::ProfilingStackFrame::Category::category); \
   }
 
@@ -539,8 +540,16 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 // ProfilingStack from the JS context, and avoids almost all overhead in the case
 // where the profiler is disabled.
 #define AUTO_PROFILER_LABEL_FAST(label, category, ctx) \
-  mozilla::AutoProfilerLabel PROFILER_RAII(ctx, label, nullptr, __LINE__, \
+  mozilla::AutoProfilerLabel PROFILER_RAII(ctx, label, nullptr, \
                                            js::ProfilingStackFrame::Category::category)
+
+// Similar to AUTO_PROFILER_LABEL_FAST, but also takes an extra string and an
+// additional set of flags. The flags parameter should carry values from the
+// js::ProfilingStackFrame::Flags enum.
+#define AUTO_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, category, ctx, flags) \
+  mozilla::AutoProfilerLabel PROFILER_RAII(ctx, label, dynamicString, \
+                                           js::ProfilingStackFrame::Category::category, \
+                                           flags)
 
 // Insert a marker in the profile timeline. This is useful to delimit something
 // important happening such as the first paint. Unlike labels, which are only
@@ -719,41 +728,39 @@ class MOZ_RAII AutoProfilerLabel
 public:
   // This is the AUTO_PROFILER_LABEL and AUTO_PROFILER_LABEL_DYNAMIC variant.
   AutoProfilerLabel(const char* aLabel, const char* aDynamicString,
-                    uint32_t aLine, js::ProfilingStackFrame::Category aCategory
+                    js::ProfilingStackFrame::Category aCategory
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
     // Get the ProfilingStack from TLS.
-    Push(sProfilingStack.get(), aLabel, aDynamicString, aLine, aCategory);
+    Push(sProfilingStack.get(), aLabel, aDynamicString, aCategory);
   }
 
-  // This is the AUTO_PROFILER_LABEL_FAST variant. It's guarded on
-  // profiler_is_active() and retrieves the ProfilingStack from the JSContext.
+  // This is the AUTO_PROFILER_LABEL_FAST variant. It retrieves the ProfilingStack
+  // from the JSContext and does nothing if the profiler is inactive.
   AutoProfilerLabel(JSContext* aJSContext,
                     const char* aLabel, const char* aDynamicString,
-                    uint32_t aLine, js::ProfilingStackFrame::Category aCategory
+                    js::ProfilingStackFrame::Category aCategory,
+                    uint32_t aFlags
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (profiler_is_active()) {
-      Push(js::GetContextProfilingStack(aJSContext),
-           aLabel, aDynamicString, aLine, aCategory);
-    } else {
-      mProfilingStack = nullptr;
-    }
+    Push(js::GetContextProfilingStackIfEnabled(aJSContext),
+         aLabel, aDynamicString, aCategory, aFlags);
   }
 
   void Push(ProfilingStack* aProfilingStack,
             const char* aLabel, const char* aDynamicString,
-            uint32_t aLine, js::ProfilingStackFrame::Category aCategory)
+            js::ProfilingStackFrame::Category aCategory,
+            uint32_t aFlags = 0)
   {
     // This function runs both on and off the main thread.
 
     mProfilingStack = aProfilingStack;
     if (mProfilingStack) {
-      mProfilingStack->pushLabelFrame(aLabel, aDynamicString, this, aLine,
-                                   aCategory);
+      mProfilingStack->pushLabelFrame(aLabel, aDynamicString, this, aCategory,
+                                      aFlags);
     }
   }
 
