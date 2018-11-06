@@ -12,7 +12,7 @@ use gpu_cache::GpuCache;
 use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
 use hit_test::{HitTester, HitTestingRun};
 use internal_types::{FastHashMap, PlaneSplitter};
-use picture::{PictureSurface, PictureUpdateContext, SurfaceInfo, ROOT_SURFACE_INDEX};
+use picture::{PictureSurface, PictureUpdateContext, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex};
 use prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_backend::{FrameResources, FrameId};
@@ -100,12 +100,13 @@ pub struct PictureContext {
     pub raster_space: RasterSpace,
     pub surface_spatial_node_index: SpatialNodeIndex,
     pub raster_spatial_node_index: SpatialNodeIndex,
+    /// The surface that this picture will render on.
+    pub surface_index: SurfaceIndex,
 }
 
 /// Mutable state of a picture that gets modified when
 /// the children are processed.
 pub struct PictureState {
-    pub tasks: Vec<RenderTaskId>,
     pub has_non_root_coord_system: bool,
     pub is_cacheable: bool,
     pub local_rect_changed: bool,
@@ -267,6 +268,7 @@ impl FrameBuilder {
                 self.root_pic_index,
                 root_spatial_node_index,
                 root_spatial_node_index,
+                ROOT_SURFACE_INDEX,
                 true,
                 &mut frame_state,
                 &frame_context,
@@ -289,14 +291,16 @@ impl FrameBuilder {
             &mut frame_state,
         );
 
-        let (pic_state, _) = pic.take_state_and_context();
+        let child_tasks = frame_state
+            .surfaces[ROOT_SURFACE_INDEX.0]
+            .take_render_tasks();
 
         let root_render_task = RenderTask::new_picture(
             RenderTaskLocation::Fixed(self.screen_rect.to_i32()),
             self.screen_rect.size.to_f32(),
             self.root_pic_index,
             DeviceIntPoint::zero(),
-            pic_state.tasks,
+            child_tasks,
             UvRectKind::Rect,
             root_spatial_node_index,
         );
