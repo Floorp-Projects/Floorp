@@ -177,7 +177,8 @@ pub struct SegmentBuilder {
     items: Vec<Item>,
     inner_rect: Option<LayoutRect>,
     bounding_rect: Option<LayoutRect>,
-    
+    has_interesting_clips: bool,
+
     #[cfg(debug_assertions)]
     initialized: bool,
 }
@@ -190,6 +191,7 @@ impl SegmentBuilder {
             items: Vec::with_capacity(4),
             bounding_rect: None,
             inner_rect: None,
+            has_interesting_clips: false,
             #[cfg(debug_assertions)]
             initialized: false,
         }
@@ -207,7 +209,11 @@ impl SegmentBuilder {
 
         self.push_clip_rect(local_rect, None, ClipMode::Clip);
         self.push_clip_rect(local_clip_rect, None, ClipMode::Clip);
-                    
+
+        // This must be set after the push_clip_rect calls above, since we
+        // want to skip segment building if those are the only clips.
+        self.has_interesting_clips = false;
+
         #[cfg(debug_assertions)]
         {
             self.initialized = true;
@@ -226,6 +232,8 @@ impl SegmentBuilder {
         inner_rect: LayoutRect,
         inner_clip_mode: Option<ClipMode>,
     ) {
+        self.has_interesting_clips = true;
+
         if inner_rect.is_well_formed_and_nonempty() {
             debug_assert!(outer_rect.contains_rect(&inner_rect));
 
@@ -301,6 +309,8 @@ impl SegmentBuilder {
         radius: Option<BorderRadius>,
         mode: ClipMode,
     ) {
+        self.has_interesting_clips = true;
+
         // Keep track of a minimal bounding rect for the set of
         // segments that will be generated.
         if mode == ClipMode::Clip {
@@ -408,10 +418,29 @@ impl SegmentBuilder {
     pub fn build<F>(&mut self, mut f: F) where F: FnMut(&Segment) {
         #[cfg(debug_assertions)]
         debug_assert!(self.initialized);
+
+        #[cfg(debug_assertions)]
+        {
+            self.initialized = false;
+        }
+
         let bounding_rect = match self.bounding_rect {
             Some(bounding_rect) => bounding_rect,
             None => return,
         };
+
+        if !self.has_interesting_clips {
+            // There were no additional clips added, so don't bother building segments.
+            // Just emit a single segment for the bounding rect of the primitive.
+            f(&Segment {
+                edge_flags: EdgeAaSegmentMask::all(),
+                region_x: 0,
+                region_y: 0,
+                has_mask: false,
+                rect: bounding_rect,
+            });
+            return
+        }
 
         // First, filter out any items that don't intersect
         // with the visible bounding rect.
@@ -546,11 +575,6 @@ impl SegmentBuilder {
                 }
             }
         }
-      
-        #[cfg(debug_assertions)]
-        {
-            self.initialized = false;
-        }
     }
 }
 
@@ -677,6 +701,8 @@ mod test {
             inner_rect,
             local_clip_rect,
         );
+        sb.push_clip_rect(local_rect, None, ClipMode::Clip);
+        sb.push_clip_rect(local_clip_rect, None, ClipMode::Clip);
         let mut segments = Vec::new();
         for &(rect, radius, mode) in clips {
             sb.push_clip_rect(rect, radius, mode);

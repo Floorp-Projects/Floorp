@@ -8,7 +8,6 @@
 const { Cu } = require("chrome");
 const ObjectClient = require("devtools/shared/client/object-client");
 
-const defer = require("devtools/shared/defer");
 const EventEmitter = require("devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 
@@ -65,20 +64,19 @@ DomPanel.prototype = {
     this.shouldRefresh = true;
   },
 
-  async destroy() {
+  destroy() {
     if (this._destroying) {
       return this._destroying;
     }
 
-    const deferred = defer();
-    this._destroying = deferred.promise;
+    this._destroying = new Promise(resolve => {
+      this.target.off("navigate", this.onTabNavigated);
+      this._toolbox.off("select", this.onPanelVisibilityChange);
 
-    this.target.off("navigate", this.onTabNavigated);
-    this._toolbox.off("select", this.onPanelVisibilityChange);
+      this.emit("destroyed");
+      resolve();
+    });
 
-    this.emit("destroyed");
-
-    deferred.resolve();
     return this._destroying;
   },
 
@@ -129,57 +127,47 @@ DomPanel.prototype = {
     return this._toolbox.currentToolId === "dom";
   },
 
-  getPrototypeAndProperties: function(grip) {
-    const deferred = defer();
-
+  getPrototypeAndProperties: async function(grip) {
     if (!grip.actor) {
       console.error("No actor!", grip);
-      deferred.reject(new Error("Failed to get actor from grip."));
-      return deferred.promise;
+      throw new Error("Failed to get actor from grip.");
     }
 
     // Bail out if target doesn't exist (toolbox maybe closed already).
     if (!this.target) {
-      return deferred.promise;
+      return null;
     }
 
-    // If a request for the grips is already in progress
-    // use the same promise.
-    const request = this.pendingRequests.get(grip.actor);
-    if (request) {
-      return request;
+    // Check for a previously stored request for grip.
+    let request = this.pendingRequests.get(grip.actor);
+
+    // If no request is in progress create a new one.
+    if (!request) {
+      const client = new ObjectClient(this.target.client, grip);
+      request = client.getPrototypeAndProperties();
+      this.pendingRequests.set(grip.actor, request);
     }
 
-    const client = new ObjectClient(this.target.client, grip);
-    client.getPrototypeAndProperties(response => {
-      this.pendingRequests.delete(grip.actor, deferred.promise);
-      deferred.resolve(response);
+    const response = await request;
+    this.pendingRequests.delete(grip.actor);
 
-      // Fire an event about not having any pending requests.
-      if (!this.pendingRequests.size) {
-        this.emit("no-pending-requests");
-      }
-    });
+    // Fire an event about not having any pending requests.
+    if (!this.pendingRequests.size) {
+      this.emit("no-pending-requests");
+    }
 
-    this.pendingRequests.set(grip.actor, deferred.promise);
-
-    return deferred.promise;
+    return response;
   },
 
   openLink: function(url) {
     openContentLink(url);
   },
 
-  getRootGrip: function() {
-    const deferred = defer();
-
+  getRootGrip: async function() {
     // Attach Console. It might involve RDP communication, so wait
     // asynchronously for the result
-    this.target.activeConsole.evaluateJSAsync("window", res => {
-      deferred.resolve(res.result);
-    });
-
-    return deferred.promise;
+    const { result } = await this.target.activeConsole.evaluateJSAsync("window");
+    return result;
   },
 
   postContentMessage: function(type, args) {
