@@ -29,7 +29,6 @@
 #include "vm/Realm.h"
 #include "vm/SavedStacks.h"
 #include "vm/Stack.h"
-#include "wasm/WasmJS.h"
 
 namespace js {
 
