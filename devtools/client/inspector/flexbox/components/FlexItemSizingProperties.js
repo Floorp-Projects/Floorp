@@ -20,41 +20,33 @@ class FlexItemSizingProperties extends PureComponent {
   }
 
   /**
-   * Rounds some dimension in pixels and returns a string to be displayed to the user.
-   * The string will end with 'px'. If the number is 0, the string "0" is returned.
+   * Rounds some size in pixels and render it.
+   * The rendered value will end with 'px' (unless the dimension is 0 in which case the
+   * unit will be omitted)
    *
    * @param  {Number} value
    *         The number to be rounded
-   * @return {String}
-   *         Representation of the rounded number
+   * @param  {Boolean} prependPlusSign
+   *         If set to true, the + sign will be printed before a positive value
+   * @return {Object}
+   *         The React component representing this rounded size
    */
-  getRoundedDimension(value) {
+  renderSize(value, prependPlusSign) {
     if (value == 0) {
-      return "0";
-    }
-    return (Math.round(value * 100) / 100) + "px";
-  }
-
-  /**
-   * Format the flexibility value into a meaningful value for the UI.
-   * If the item grew, then prepend a + sign, if it shrank, prepend a - sign.
-   * If it didn't flex, return "0".
-   *
-   * @param  {Boolean} grew
-   *         Whether the item grew or not
-   * @param  {Number} value
-   *         The amount of pixels the item flexed
-   * @return {String}
-   *         Representation of the flexibility value
-   */
-  getFlexibilityValueString(grew, mainDeltaSize) {
-    const value = this.getRoundedDimension(mainDeltaSize);
-
-    if (grew) {
-      return "+" + value;
+      return dom.span({ className: "value" }, "0");
     }
 
-    return value;
+    value = (Math.round(value * 100) / 100);
+    if (prependPlusSign && value > 0) {
+      value = "+" + value;
+    }
+
+    return (
+      dom.span({ className: "value" },
+        value,
+        dom.span({ className: "unit" }, "px")
+      )
+    );
   }
 
   /**
@@ -70,14 +62,7 @@ class FlexItemSizingProperties extends PureComponent {
    *         The React component representing this CSS property
    */
   renderCssProperty(name, value, isDefaultValue) {
-    return (
-      dom.span({ className: "css-property-link" },
-        dom.span({ className: "theme-fg-color5" }, name),
-        ": ",
-        dom.span({ className: "theme-fg-color1" }, value),
-        ";"
-      )
-    );
+    return dom.span({ className: "css-property-link" }, `(${name}: ${value})`);
   }
 
   /**
@@ -120,12 +105,10 @@ class FlexItemSizingProperties extends PureComponent {
     return (
       dom.li({ className: className + (property ? "" : " no-property") },
         dom.span({ className: "name" },
-          getStr("flexbox.itemSizing.baseSizeSectionHeader")
+          getStr("flexbox.itemSizing.baseSizeSectionHeader"),
+          property
         ),
-        dom.span({ className: "value theme-fg-color1" },
-          this.getRoundedDimension(mainBaseSize)
-        ),
-        property,
+        this.renderSize(mainBaseSize),
         reason
       )
     );
@@ -216,12 +199,10 @@ class FlexItemSizingProperties extends PureComponent {
     return (
       dom.li({ className: className + (property ? "" : " no-property") },
         dom.span({ className: "name" },
-          getStr("flexbox.itemSizing.flexibilitySectionHeader")
+          getStr("flexbox.itemSizing.flexibilitySectionHeader"),
+          property
         ),
-        dom.span({ className: "value theme-fg-color1" },
-          this.getFlexibilityValueString(grew, mainDeltaSize)
-        ),
-        property,
+        this.renderSize(mainDeltaSize, true),
         this.renderReasons(reasons)
       )
     );
@@ -239,12 +220,10 @@ class FlexItemSizingProperties extends PureComponent {
     return (
       dom.li({ className: "section min" },
         dom.span({ className: "name" },
-          getStr("flexbox.itemSizing.minSizeSectionHeader")
+          getStr("flexbox.itemSizing.minSizeSectionHeader"),
+          this.renderCssProperty(`min-${dimension}`, minDimensionValue)
         ),
-        dom.span({ className: "value theme-fg-color1" },
-          this.getRoundedDimension(mainMinSize)
-        ),
-        this.renderCssProperty(`min-${dimension}`, minDimensionValue)
+        this.renderSize(mainMinSize)
       )
     );
   }
@@ -259,12 +238,10 @@ class FlexItemSizingProperties extends PureComponent {
     return (
       dom.li({ className: "section max" },
         dom.span({ className: "name" },
-          getStr("flexbox.itemSizing.maxSizeSectionHeader")
+          getStr("flexbox.itemSizing.maxSizeSectionHeader"),
+          this.renderCssProperty(`max-${dimension}`, maxDimensionValue)
         ),
-        dom.span({ className: "value theme-fg-color1" },
-          this.getRoundedDimension(mainMaxSize)
-        ),
-        this.renderCssProperty(`max-${dimension}`, maxDimensionValue)
+        this.renderSize(mainMaxSize)
       )
     );
   }
@@ -275,9 +252,7 @@ class FlexItemSizingProperties extends PureComponent {
         dom.span({ className: "name" },
           getStr("flexbox.itemSizing.finalSizeSectionHeader")
         ),
-        dom.span({ className: "value theme-fg-color1" },
-          this.getRoundedDimension(mainFinalSize)
-        )
+        this.renderSize(mainFinalSize)
       )
     );
   }
