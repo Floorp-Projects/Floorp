@@ -5,6 +5,7 @@
 
 #include "SessionAccessibility.h"
 #include "AndroidUiThread.h"
+#include "DocAccessibleParent.h"
 #include "nsThreadUtils.h"
 #include "AccessibilityEvent.h"
 #include "HyperTextAccessible.h"
@@ -321,4 +322,22 @@ SessionAccessibility::SendSelectedEvent(AccessibleWrap* aAccessible)
   mSessionAccessibility->SendEvent(
     java::sdk::AccessibilityEvent::TYPE_VIEW_SELECTED,
     aAccessible->VirtualViewID(), aAccessible->AndroidClass(), nullptr);
+}
+
+void
+SessionAccessibility::ReplaceViewportCache(const nsTArray<AccessibleWrap*>& aAccessibles,
+                                          const nsTArray<BatchData>& aData)
+{
+  auto infos = jni::ObjectArray::New<java::GeckoBundle>(aAccessibles.Length());
+  for (size_t i = 0; i < aAccessibles.Length(); i++) {
+    AccessibleWrap* acc = aAccessibles.ElementAt(i);
+    if (aData.Length() == aAccessibles.Length()) {
+      const BatchData& data = aData.ElementAt(i);
+      infos->SetElement(i, acc->ToSmallBundle(data.State(), data.Bounds()));
+    } else {
+      infos->SetElement(i, acc->ToSmallBundle());
+    }
+  }
+
+  mSessionAccessibility->ReplaceViewportCache(infos);
 }

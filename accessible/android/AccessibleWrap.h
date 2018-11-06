@@ -33,6 +33,10 @@ public:
 
   mozilla::java::GeckoBundle::LocalRef ToBundle();
 
+  mozilla::java::GeckoBundle::LocalRef ToSmallBundle(const uint64_t aState, const nsIntRect& aBounds);
+
+  mozilla::java::GeckoBundle::LocalRef ToSmallBundle();
+
   int32_t AndroidClass()
   {
     return mID == kNoID ? java::SessionAccessibility::CLASSNAME_WEBVIEW
@@ -65,8 +69,7 @@ private:
   static void GetRoleDescription(role aRole,
                                  nsAString& aGeckoRole,
                                  nsAString& aRoleDescription);
-
-  static uint64_t GetFlags(role aRole, uint64_t aState);
+  static uint32_t GetFlags(role aRole, uint64_t aState);
 };
 
 static inline AccessibleWrap*
