@@ -83,9 +83,7 @@ DrawTargetOffset::DrawFilter(FilterNode* aNode, const Rect& aSourceRect, const P
 {
   auto clone = mTransform;
   bool invertible = clone.Invert();
-  // aSourceRect is in filter space. The filter outputs from aSourceRect need
-  // to be drawn at aDestPoint in user space.
-  Rect userSpaceSource = Rect(aDestPoint, aSourceRect.Size());
+  auto src = aSourceRect;
   if (invertible) {
     // Try to reduce the source rect so that it's not much bigger
     // than the draw target. The result is not minimal. Examples
@@ -94,16 +92,11 @@ DrawTargetOffset::DrawFilter(FilterNode* aNode, const Rect& aSourceRect, const P
                          mOrigin.y,
                          mDrawTarget->GetSize().width,
                          mDrawTarget->GetSize().height);
-    Rect userSpaceBounds = clone.TransformBounds(destRect);
-    userSpaceSource = userSpaceSource.Intersect(userSpaceBounds);
+    auto dtBounds = clone.TransformBounds(destRect);
+    src = aSourceRect.Intersect(dtBounds);
   }
-
-  // Compute how much we moved the top-left of the source rect by, and use that
-  // to compute the new dest point, and move our intersected source rect back
-  // into the (new) filter space.
-  Point shift = userSpaceSource.TopLeft() - aDestPoint;
-  Rect filterSpaceSource = Rect(aSourceRect.TopLeft() + shift, userSpaceSource.Size());
-  mDrawTarget->DrawFilter(aNode, filterSpaceSource, aDestPoint + shift, aOptions);
+  auto shift = src.TopLeft() - aSourceRect.TopLeft();
+  mDrawTarget->DrawFilter(aNode, src, aDestPoint + shift, aOptions);
 }
 
 void
@@ -191,10 +184,9 @@ DrawTargetOffset::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
                            const Matrix& aMaskTransform, const IntRect& aBounds,
                            bool aCopyBackground)
 {
-  IntRect bounds = aBounds - mOrigin;
-
+  IntRect bounds = aBounds;
+  bounds.MoveBy(mOrigin);
   mDrawTarget->PushLayer(aOpaque, aOpacity, aMask, aMaskTransform, bounds, aCopyBackground);
-  SetPermitSubpixelAA(mDrawTarget->GetPermitSubpixelAA());
 }
 
 void
@@ -205,17 +197,15 @@ DrawTargetOffset::PushLayerWithBlend(bool aOpaque, Float aOpacity,
                                     bool aCopyBackground,
                                     CompositionOp aOp)
 {
-  IntRect bounds = aBounds - mOrigin;
-
+  IntRect bounds = aBounds;
+  bounds.MoveBy(mOrigin);
   mDrawTarget->PushLayerWithBlend(aOpaque, aOpacity, aMask, aMaskTransform, bounds, aCopyBackground, aOp);
-  SetPermitSubpixelAA(mDrawTarget->GetPermitSubpixelAA());
 }
 
 void
 DrawTargetOffset::PopLayer()
 {
   mDrawTarget->PopLayer();
-  SetPermitSubpixelAA(mDrawTarget->GetPermitSubpixelAA());
 }
 
 } // namespace gfx

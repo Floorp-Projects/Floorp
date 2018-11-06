@@ -1398,7 +1398,7 @@ pub extern "C" fn wr_resource_updates_add_blob_image(
         image_key,
         descriptor.into(),
         ImageData::new_blob_image(bytes.flush_into_vec()),
-        if descriptor.format == ImageFormat::BGRA8 { Some(256) } else { None }
+        None
     );
 }
 

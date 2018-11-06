@@ -73,7 +73,6 @@ private:
   int32_t mStride;
   DrawTargetSkia* mDrawTarget;
   Mutex mChangeMutex;
-  bool mIsMapped;
 };
 
 } // namespace gfx
