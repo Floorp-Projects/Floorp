@@ -167,6 +167,20 @@ CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
             const char* bytes, size_t length, MutableHandle<JSScript*> script);
 
 /**
+ * Compile the provided UTF-8 data into a script.  If the data contains invalid
+ * UTF-8, an error is reported.
+ *
+ * |script| is always set to the compiled script or to null in case of error.
+ *
+ * NOTE: This function DOES NOT INFLATE the UTF-8 bytes to UTF-16 before
+ *       compiling them.  UTF-8 compilation is currently experimental and has
+ *       known bugs.  Use only if you're willing to tolerate unspecified bugs!
+ */
+extern JS_PUBLIC_API(bool)
+CompileUtf8DontInflate(JSContext* cx, const ReadOnlyCompileOptions& options,
+                       const char* bytes, size_t length, MutableHandle<JSScript*> script);
+
+/**
  * Compile the provided Latin-1 data (i.e. each byte directly corresponds to
  * the same Unicode code point) into a script.
  *

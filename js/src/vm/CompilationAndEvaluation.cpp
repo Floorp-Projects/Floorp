@@ -140,6 +140,13 @@ JS::CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 bool
+JS::CompileUtf8DontInflate(JSContext* cx, const ReadOnlyCompileOptions& options,
+                           const char* bytes, size_t length, JS::MutableHandleScript script)
+{
+    return ::CompileUtf8DontInflate(cx, options, bytes, length, script);
+}
+
+bool
 JS::CompileUtf8File(JSContext* cx, const ReadOnlyCompileOptions& options,
                     FILE* file, JS::MutableHandleScript script)
 {
