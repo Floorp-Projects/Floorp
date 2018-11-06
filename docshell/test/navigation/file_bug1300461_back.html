@@ -15,13 +15,13 @@
       function test() {
         if (opener) {
           opener.info("file_bug1300461_back.html");
-          opener.is(shistory.count, 2, 'check history length');
-          opener.is(shistory.index, 1, 'check history index');
-          opener.is(shistory.legacySHistory.requestedIndex, -1, 'check requestedIndex');
-          opener.ok(webNav.canGoBack, 'check canGoBack');
+          opener.is(shistory.count, 2, "check history length");
+          opener.is(shistory.index, 1, "check history index");
+          opener.is(shistory.legacySHistory.requestedIndex, -1, "check requestedIndex");
+          opener.ok(webNav.canGoBack, "check canGoBack");
           if (opener.testCount == 1) {
-            opener.info('replaceState to redirect.html');
-            window.history.replaceState({}, '', 'file_bug1300461_redirect.html');
+            opener.info("replaceState to redirect.html");
+            window.history.replaceState({}, "", "file_bug1300461_redirect.html");
           }
           window.history.back();
         }
