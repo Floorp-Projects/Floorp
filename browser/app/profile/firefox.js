@@ -1759,8 +1759,8 @@ pref("app.shield.optoutstudies.enabled", false);
 
 // Multi-lingual preferences
 pref("intl.multilingual.enabled", false);
-// AMO only serves language packs for release versions, so this feature only works on release.
-#ifdef RELEASE
+// AMO only serves language packs for release and beta versions.
+#ifdef RELEASE_OR_BETA
 pref("intl.multilingual.downloadEnabled", true);
 #else
 pref("intl.multilingual.downloadEnabled", false);
