@@ -47,23 +47,18 @@ class ChangesView {
 
     this.inspector.target.on("will-navigate", this.onClearChanges);
 
-    // Sync the store to the changes stored on the server. The
-    // syncChangesToServer() method is async, but we don't await it since
-    // this method itself is NOT async. The call will be made in its own
-    // time, which is fine since it definitionally brings us up-to-date
-    // with the server at that moment.
-    this.syncChangesToServer();
-  }
-
-  async syncChangesToServer() {
-    // Empty the store.
-    this.onClearChanges();
-
-    // Add back in all the changes from the changesFront.
-    const changes = await this.changesFront.allChanges();
-    changes.forEach((change) => {
-      this.onAddChange(change);
-    });
+    // Get all changes collected up to this point by the ChangesActor on the server,
+    // then push them to the Redux store here on the client.
+    this.changesFront.allChanges()
+      .then(changes => {
+        changes.forEach(change => {
+          this.onAddChange(change);
+        });
+      })
+      .catch(err => {
+        // The connection to the server may have been cut, for example during test
+        // teardown. Here we just catch the error and silently ignore it.
+      });
   }
 
   onAddChange(change) {

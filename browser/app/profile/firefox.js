@@ -944,8 +944,8 @@ pref("app.productInfo.baseURL", "https://www.mozilla.org/firefox/features/");
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
 
-// Enable the new certificate error page only for Nightly
-#if defined(NIGHTLY_BUILD)
+// Enable the new certificate error pages.
+#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.security.newcerterrorpage.enabled", true);
 #else
 pref("browser.security.newcerterrorpage.enabled", false);

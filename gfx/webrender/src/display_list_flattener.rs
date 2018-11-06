@@ -879,7 +879,7 @@ impl<'a> DisplayListFlattener<'a> {
                 PrimitiveInstanceKind::LegacyPrimitive { prim_index }
             }
             None => {
-                prim_key.to_instance_kind()
+                prim_key.to_instance_kind(&mut self.prim_store)
             }
         };
 

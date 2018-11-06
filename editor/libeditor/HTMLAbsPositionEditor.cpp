@@ -6,7 +6,7 @@
 
 #include <math.h>
 
-#include "HTMLEditorObjectResizerUtils.h"
+#include "HTMLEditorEventListener.h"
 #include "HTMLEditRules.h"
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
@@ -436,20 +436,14 @@ HTMLEditor::SnapToGrid(int32_t& newX, int32_t& newY)
 nsresult
 HTMLEditor::GrabberClicked()
 {
-  // add a mouse move listener to the editor
-  nsresult rv = NS_OK;
-  if (!mMouseMotionListenerP) {
-    EventTarget* eventTarget = GetDOMEventTarget();
-    if (NS_WARN_IF(!eventTarget)) {
-      return NS_ERROR_FAILURE;
-    }
-    mMouseMotionListenerP = new ResizerMouseMotionListener(*this);
-    EventListenerManager* eventListenerManager =
-      eventTarget->GetOrCreateListenerManager();
-    eventListenerManager->AddEventListenerByType(
-                            mMouseMotionListenerP,
-                            NS_LITERAL_STRING("mousemove"),
-                            TrustedEventsAtSystemGroupBubble());
+  if (NS_WARN_IF(!mEventListener)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  nsresult rv =
+    static_cast<HTMLEditorEventListener*>(mEventListener.get())->
+      ListenToMouseMoveEventForGrabber(true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_OK;
   }
   mGrabberClicked = true;
   return rv;
@@ -467,16 +461,13 @@ HTMLEditor::EndMoving()
     mPositioningShadow = nullptr;
   }
 
-  EventTarget* eventTarget = GetDOMEventTarget();
-  if (eventTarget && mMouseMotionListenerP) {
-    EventListenerManager* eventListenerManager =
-      eventTarget->GetOrCreateListenerManager();
-    eventListenerManager->RemoveEventListenerByType(
-                            mMouseMotionListenerP,
-                            NS_LITERAL_STRING("mousemove"),
-                            TrustedEventsAtSystemGroupBubble());
+  if (mEventListener) {
+    DebugOnly<nsresult> rvIgnored =
+      static_cast<HTMLEditorEventListener*>(mEventListener.get())->
+        ListenToMouseMoveEventForGrabber(false);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "Failed to remove mousemove event listener");
   }
-  mMouseMotionListenerP = nullptr;
 
   mGrabberClicked = false;
   mIsMoving = false;

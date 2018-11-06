@@ -227,7 +227,7 @@ public:
    * event callback when the mouse pointer is moved
    * @param aMouseEvent [IN] the event
    */
-  nsresult OnMouseMove(dom::MouseEvent* aMouseEvent);
+  MOZ_CAN_RUN_SCRIPT nsresult OnMouseMove(dom::MouseEvent* aMouseEvent);
 
   /**
    * IsCSSEnabled() returns true if this editor treats styles with style
@@ -2558,9 +2558,6 @@ protected:
   ManualNACPtr mResizingInfo;
 
   RefPtr<Element> mResizedObject;
-
-  nsCOMPtr<nsIDOMEventListener>  mMouseMotionListenerP;
-  nsCOMPtr<nsIDOMEventListener>  mResizeEventListenerP;
 
   int32_t mOriginalX;
   int32_t mOriginalY;
