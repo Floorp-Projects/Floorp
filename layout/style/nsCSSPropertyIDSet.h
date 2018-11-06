@@ -80,6 +80,16 @@ public:
       return COMPOSITOR_ANIMATABLE_PROPERTY_LIST_LENGTH;
     }
 
+    bool Intersects(const nsCSSPropertyIDSet& aOther) const
+    {
+      for (size_t i = 0; i < mozilla::ArrayLength(mProperties); ++i) {
+        if (mProperties[i] & aOther.mProperties[i]) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     void Empty() {
         memset(mProperties, 0, sizeof(mProperties));
     }
