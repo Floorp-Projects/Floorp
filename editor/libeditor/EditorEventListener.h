@@ -45,7 +45,7 @@ public:
 
   virtual nsresult Connect(EditorBase* aEditorBase);
 
-  void Disconnect();
+  virtual void Disconnect();
 
   NS_DECL_ISUPPORTS
 
