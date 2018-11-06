@@ -18,8 +18,6 @@ extern "C" {
 #include "signaling/src/sdp/sipcc/sdp.h"
 }
 
-#include "signaling/src/common/PtrVector.h"
-
 namespace mozilla
 {
 
@@ -44,7 +42,7 @@ public:
   virtual size_t
   GetMediaSectionCount() const override
   {
-    return mMediaSections.values.size();
+    return mMediaSections.size();
   }
 
   virtual const SdpAttributeList&
@@ -80,7 +78,7 @@ private:
   SdpOrigin mOrigin;
   SipccSdpBandwidths mBandwidths;
   SipccSdpAttributeList mAttributeList;
-  PtrVector<SipccSdpMediaSection> mMediaSections;
+  std::vector<UniquePtr<SipccSdpMediaSection>> mMediaSections;
 };
 
 } // namespace mozilla

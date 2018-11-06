@@ -745,7 +745,7 @@ protected:
                        const std::string& codecName,
                        const std::string& payloadType)
   {
-    for (auto* codec : session.Codecs()) {
+    for (auto& codec : session.Codecs()) {
       if (codec->mName == codecName) {
         codec->mDefaultPt = payloadType;
       }
@@ -757,7 +757,7 @@ protected:
                   const std::string& codecName,
                   bool enabled)
   {
-    for (auto* codec : session.Codecs()) {
+    for (auto& codec : session.Codecs()) {
       if (codec->mName == codecName) {
         codec->mEnabled = enabled;
       }
@@ -768,13 +768,13 @@ protected:
   EnsureNegotiationFailure(SdpMediaSection::MediaType type,
                            const std::string& codecName)
   {
-    for (auto* codec : mSessionOff->Codecs()) {
+    for (auto& codec : mSessionOff->Codecs()) {
       if (codec->mType == type && codec->mName != codecName) {
         codec->mEnabled = false;
       }
     }
 
-    for (auto* codec : mSessionAns->Codecs()) {
+    for (auto& codec : mSessionAns->Codecs()) {
       if (codec->mType == type && codec->mName == codecName) {
         codec->mEnabled = false;
       }
@@ -1397,12 +1397,12 @@ protected:
     for (size_t i = 0; i < details->GetEncodingCount(); ++i) {
       const JsepTrackEncoding& encoding = details->GetEncoding(i);
       std::cerr << "    id=" << encoding.mRid << std::endl;
-      for (const JsepCodecDescription* codec : encoding.GetCodecs()) {
+      for (const auto& codec : encoding.GetCodecs()) {
         std::cerr << "      " << codec->mName
                   << " enabled(" << (codec->mEnabled?"yes":"no") << ")";
         if (track.GetMediaType() == SdpMediaSection::kAudio) {
           const JsepAudioCodecDescription* audioCodec =
-              static_cast<const JsepAudioCodecDescription*>(codec);
+              static_cast<const JsepAudioCodecDescription*>(codec.get());
           std::cerr << " dtmf(" << (audioCodec->mDtmfEnabled?"yes":"no") << ")";
         }
         std::cerr << std::endl;
@@ -2356,11 +2356,11 @@ TEST_P(JsepSessionTest, RenegotiationOffererDisablesTelephoneEvent)
     ASSERT_EQ(2U, encoding.GetCodecs().size());
     ASSERT_TRUE(encoding.HasFormat("109"));
     ASSERT_TRUE(encoding.HasFormat("101"));
-    for (JsepCodecDescription* codec: encoding.GetCodecs()) {
+    for (const auto& codec: encoding.GetCodecs()) {
       ASSERT_TRUE(codec);
       // we can cast here because we've already checked for audio track
-      JsepAudioCodecDescription *audioCodec =
-          static_cast<JsepAudioCodecDescription*>(codec);
+      const JsepAudioCodecDescription *audioCodec =
+          static_cast<const JsepAudioCodecDescription*>(codec.get());
       ASSERT_TRUE(audioCodec->mDtmfEnabled);
     }
   }
@@ -2395,8 +2395,9 @@ TEST_P(JsepSessionTest, RenegotiationOffererDisablesTelephoneEvent)
     ASSERT_EQ(1U, encoding.GetCodecs().size());
     ASSERT_TRUE(encoding.HasFormat("109"));
     // we can cast here because we've already checked for audio track
-    JsepAudioCodecDescription *audioCodec =
-        static_cast<JsepAudioCodecDescription*>(encoding.GetCodecs()[0]);
+    const JsepAudioCodecDescription *audioCodec =
+        static_cast<const JsepAudioCodecDescription*>(
+            encoding.GetCodecs()[0].get());
     ASSERT_TRUE(audioCodec);
     ASSERT_FALSE(audioCodec->mDtmfEnabled);
   }
@@ -3337,8 +3338,8 @@ TEST_F(JsepSessionTest, ValidateOfferedVideoCodecParams)
   ASSERT_EQ("121", video_section.GetFormats()[1]);
   ASSERT_EQ("126", video_section.GetFormats()[2]);
   ASSERT_EQ("97", video_section.GetFormats()[3]);
-  ASSERT_EQ("122", video_section.GetFormats()[4]);
-  ASSERT_EQ("123", video_section.GetFormats()[5]);
+  ASSERT_EQ("123", video_section.GetFormats()[4]);
+  ASSERT_EQ("122", video_section.GetFormats()[5]);
 
   // Validate rtpmap
   ASSERT_TRUE(video_attrs.HasAttribute(SdpAttribute::kRtpmapAttribute));
@@ -3557,8 +3558,8 @@ TEST_F(JsepSessionTest, ValidateNoFmtpLineForRedInOfferAndAnswer)
   ASSERT_EQ("121", video_section.GetFormats()[1]);
   ASSERT_EQ("126", video_section.GetFormats()[2]);
   ASSERT_EQ("97", video_section.GetFormats()[3]);
-  ASSERT_EQ("122", video_section.GetFormats()[4]);
-  ASSERT_EQ("123", video_section.GetFormats()[5]);
+  ASSERT_EQ("123", video_section.GetFormats()[4]);
+  ASSERT_EQ("122", video_section.GetFormats()[5]);
 
   // Validate rtpmap
   ASSERT_TRUE(video_attrs.HasAttribute(SdpAttribute::kRtpmapAttribute));
@@ -3617,12 +3618,10 @@ TEST_F(JsepSessionTest, ValidateAnsweredCodecParams)
   // red/ulpfec for video are behind a pref to mitigate potential for
   // errors.
   SetCodecEnabled(*mSessionOff, "red", false);
-  for (auto i = mSessionAns->Codecs().begin(); i != mSessionAns->Codecs().end();
-       ++i) {
-    auto* codec = *i;
+  for (auto& codec : mSessionAns->Codecs()) {
     if (codec->mName == "H264") {
       JsepVideoCodecDescription* h264 =
-          static_cast<JsepVideoCodecDescription*>(codec);
+          static_cast<JsepVideoCodecDescription*>(codec.get());
       h264->mProfileLevelId = 0x42a00d;
       // Switch up the pts
       if (h264->mDefaultPt == "126") {
@@ -3798,9 +3797,9 @@ GetCodec(JsepSession& session,
          sdp::Direction direction,
          size_t encodingIndex,
          size_t codecIndex,
-         const JsepCodecDescription** codecOut)
+         UniquePtr<JsepCodecDescription>* codecOut)
 {
-  *codecOut = nullptr;
+  codecOut->reset();
   ASSERT_LT(transceiverIndex, session.GetTransceivers().size());
   RefPtr<JsepTransceiver> transceiver(session.GetTransceivers()[transceiverIndex]);
   JsepTrack& track =
@@ -3810,18 +3809,18 @@ GetCodec(JsepSession& session,
   ASSERT_LT(codecIndex,
       track.GetNegotiatedDetails()->GetEncoding(encodingIndex)
       .GetCodecs().size());
-  *codecOut =
+  codecOut->reset(
       track.GetNegotiatedDetails()->GetEncoding(encodingIndex)
-      .GetCodecs()[codecIndex];
+      .GetCodecs()[codecIndex]->Clone());
 }
 
 static void
 ForceH264(JsepSession& session, uint32_t profileLevelId)
 {
-  for (JsepCodecDescription* codec : session.Codecs()) {
+  for (auto& codec : session.Codecs()) {
     if (codec->mName == "H264") {
       JsepVideoCodecDescription* h264 =
-          static_cast<JsepVideoCodecDescription*>(codec);
+          static_cast<JsepVideoCodecDescription*>(codec.get());
       h264->mProfileLevelId = profileLevelId;
     } else {
       codec->mEnabled = false;
@@ -3846,34 +3845,34 @@ TEST_F(JsepSessionTest, TestH264Negotiation)
   SetRemoteAnswer(answer, CHECK_SUCCESS);
   SetLocalAnswer(answer, CHECK_SUCCESS);
 
-  const JsepCodecDescription* offererSendCodec;
+  UniquePtr<JsepCodecDescription> offererSendCodec;
   GetCodec(*mSessionOff, 0, sdp::kSend, 0, 0, &offererSendCodec);
   ASSERT_TRUE(offererSendCodec);
   ASSERT_EQ("H264", offererSendCodec->mName);
   const JsepVideoCodecDescription* offererVideoSendCodec(
-      static_cast<const JsepVideoCodecDescription*>(offererSendCodec));
+      static_cast<const JsepVideoCodecDescription*>(offererSendCodec.get()));
   ASSERT_EQ((uint32_t)0x42e00d, offererVideoSendCodec->mProfileLevelId);
 
-  const JsepCodecDescription* offererRecvCodec;
+  UniquePtr<JsepCodecDescription> offererRecvCodec;
   GetCodec(*mSessionOff, 0, sdp::kRecv, 0, 0, &offererRecvCodec);
   ASSERT_EQ("H264", offererRecvCodec->mName);
   const JsepVideoCodecDescription* offererVideoRecvCodec(
-      static_cast<const JsepVideoCodecDescription*>(offererRecvCodec));
+      static_cast<const JsepVideoCodecDescription*>(offererRecvCodec.get()));
   ASSERT_EQ((uint32_t)0x42e00b, offererVideoRecvCodec->mProfileLevelId);
 
-  const JsepCodecDescription* answererSendCodec;
+  UniquePtr<JsepCodecDescription> answererSendCodec;
   GetCodec(*mSessionAns, 0, sdp::kSend, 0, 0, &answererSendCodec);
   ASSERT_TRUE(answererSendCodec);
   ASSERT_EQ("H264", answererSendCodec->mName);
   const JsepVideoCodecDescription* answererVideoSendCodec(
-      static_cast<const JsepVideoCodecDescription*>(answererSendCodec));
+      static_cast<const JsepVideoCodecDescription*>(answererSendCodec.get()));
   ASSERT_EQ((uint32_t)0x42e00b, answererVideoSendCodec->mProfileLevelId);
 
-  const JsepCodecDescription* answererRecvCodec;
+  UniquePtr<JsepCodecDescription> answererRecvCodec;
   GetCodec(*mSessionAns, 0, sdp::kRecv, 0, 0, &answererRecvCodec);
   ASSERT_EQ("H264", answererRecvCodec->mName);
   const JsepVideoCodecDescription* answererVideoRecvCodec(
-      static_cast<const JsepVideoCodecDescription*>(answererRecvCodec));
+      static_cast<const JsepVideoCodecDescription*>(answererRecvCodec.get()));
   ASSERT_EQ((uint32_t)0x42e00d, answererVideoRecvCodec->mProfileLevelId);
 }
 
@@ -3919,12 +3918,12 @@ TEST_F(JsepSessionTest, TestH264NegotiationOffererDefault)
   SetRemoteAnswer(answer, CHECK_SUCCESS);
   SetLocalAnswer(answer, CHECK_SUCCESS);
 
-  const JsepCodecDescription* answererSendCodec;
+  UniquePtr<JsepCodecDescription> answererSendCodec;
   GetCodec(*mSessionAns, 0, sdp::kSend, 0, 0, &answererSendCodec);
   ASSERT_TRUE(answererSendCodec);
   ASSERT_EQ("H264", answererSendCodec->mName);
   const JsepVideoCodecDescription* answererVideoSendCodec(
-      static_cast<const JsepVideoCodecDescription*>(answererSendCodec));
+      static_cast<const JsepVideoCodecDescription*>(answererSendCodec.get()));
   ASSERT_EQ((uint32_t)0x420010, answererVideoSendCodec->mProfileLevelId);
 }
 
@@ -3947,19 +3946,19 @@ TEST_F(JsepSessionTest, TestH264NegotiationOffererNoFmtp)
   SetRemoteAnswer(answer, CHECK_SUCCESS);
   SetLocalAnswer(answer, CHECK_SUCCESS);
 
-  const JsepCodecDescription* answererSendCodec;
+  UniquePtr<JsepCodecDescription> answererSendCodec;
   GetCodec(*mSessionAns, 0, sdp::kSend, 0, 0, &answererSendCodec);
   ASSERT_TRUE(answererSendCodec);
   ASSERT_EQ("H264", answererSendCodec->mName);
   const JsepVideoCodecDescription* answererVideoSendCodec(
-      static_cast<const JsepVideoCodecDescription*>(answererSendCodec));
+      static_cast<const JsepVideoCodecDescription*>(answererSendCodec.get()));
   ASSERT_EQ((uint32_t)0x420010, answererVideoSendCodec->mProfileLevelId);
 
-  const JsepCodecDescription* answererRecvCodec;
+  UniquePtr<JsepCodecDescription> answererRecvCodec;
   GetCodec(*mSessionAns, 0, sdp::kRecv, 0, 0, &answererRecvCodec);
   ASSERT_EQ("H264", answererRecvCodec->mName);
   const JsepVideoCodecDescription* answererVideoRecvCodec(
-      static_cast<const JsepVideoCodecDescription*>(answererRecvCodec));
+      static_cast<const JsepVideoCodecDescription*>(answererRecvCodec.get()));
   ASSERT_EQ((uint32_t)0x420010, answererVideoRecvCodec->mProfileLevelId);
 }
 
@@ -3987,19 +3986,19 @@ TEST_F(JsepSessionTest, TestH264LevelAsymmetryDisallowedByOffererWithLowLevel)
   // Offerer doesn't know about the shenanigans we've pulled here, so will
   // behave normally, and we test the normal behavior elsewhere.
 
-  const JsepCodecDescription* answererSendCodec;
+  UniquePtr<JsepCodecDescription> answererSendCodec;
   GetCodec(*mSessionAns, 0, sdp::kSend, 0, 0, &answererSendCodec);
   ASSERT_TRUE(answererSendCodec);
   ASSERT_EQ("H264", answererSendCodec->mName);
   const JsepVideoCodecDescription* answererVideoSendCodec(
-      static_cast<const JsepVideoCodecDescription*>(answererSendCodec));
+      static_cast<const JsepVideoCodecDescription*>(answererSendCodec.get()));
   ASSERT_EQ((uint32_t)0x42e00b, answererVideoSendCodec->mProfileLevelId);
 
-  const JsepCodecDescription* answererRecvCodec;
+  UniquePtr<JsepCodecDescription> answererRecvCodec;
   GetCodec(*mSessionAns, 0, sdp::kRecv, 0, 0, &answererRecvCodec);
   ASSERT_EQ("H264", answererRecvCodec->mName);
   const JsepVideoCodecDescription* answererVideoRecvCodec(
-      static_cast<const JsepVideoCodecDescription*>(answererRecvCodec));
+      static_cast<const JsepVideoCodecDescription*>(answererRecvCodec.get()));
   ASSERT_EQ((uint32_t)0x42e00b, answererVideoRecvCodec->mProfileLevelId);
 }
 
@@ -4027,19 +4026,19 @@ TEST_F(JsepSessionTest, TestH264LevelAsymmetryDisallowedByOffererWithHighLevel)
   // Offerer doesn't know about the shenanigans we've pulled here, so will
   // behave normally, and we test the normal behavior elsewhere.
 
-  const JsepCodecDescription* answererSendCodec;
+  UniquePtr<JsepCodecDescription> answererSendCodec;
   GetCodec(*mSessionAns, 0, sdp::kSend, 0, 0, &answererSendCodec);
   ASSERT_TRUE(answererSendCodec);
   ASSERT_EQ("H264", answererSendCodec->mName);
   const JsepVideoCodecDescription* answererVideoSendCodec(
-      static_cast<const JsepVideoCodecDescription*>(answererSendCodec));
+      static_cast<const JsepVideoCodecDescription*>(answererSendCodec.get()));
   ASSERT_EQ((uint32_t)0x42e00b, answererVideoSendCodec->mProfileLevelId);
 
-  const JsepCodecDescription* answererRecvCodec;
+  UniquePtr<JsepCodecDescription> answererRecvCodec;
   GetCodec(*mSessionAns, 0, sdp::kRecv, 0, 0, &answererRecvCodec);
   ASSERT_EQ("H264", answererRecvCodec->mName);
   const JsepVideoCodecDescription* answererVideoRecvCodec(
-      static_cast<const JsepVideoCodecDescription*>(answererRecvCodec));
+      static_cast<const JsepVideoCodecDescription*>(answererRecvCodec.get()));
   ASSERT_EQ((uint32_t)0x42e00b, answererVideoRecvCodec->mProfileLevelId);
 }
 
@@ -4063,19 +4062,19 @@ TEST_F(JsepSessionTest, TestH264LevelAsymmetryDisallowedByAnswererWithLowLevel)
   SetRemoteAnswer(answer, CHECK_SUCCESS);
   SetLocalAnswer(answer, CHECK_SUCCESS);
 
-  const JsepCodecDescription* offererSendCodec;
+  UniquePtr<JsepCodecDescription> offererSendCodec;
   GetCodec(*mSessionOff, 0, sdp::kSend, 0, 0, &offererSendCodec);
   ASSERT_TRUE(offererSendCodec);
   ASSERT_EQ("H264", offererSendCodec->mName);
   const JsepVideoCodecDescription* offererVideoSendCodec(
-      static_cast<const JsepVideoCodecDescription*>(offererSendCodec));
+      static_cast<const JsepVideoCodecDescription*>(offererSendCodec.get()));
   ASSERT_EQ((uint32_t)0x42e00b, offererVideoSendCodec->mProfileLevelId);
 
-  const JsepCodecDescription* offererRecvCodec;
+  UniquePtr<JsepCodecDescription> offererRecvCodec;
   GetCodec(*mSessionOff, 0, sdp::kRecv, 0, 0, &offererRecvCodec);
   ASSERT_EQ("H264", offererRecvCodec->mName);
   const JsepVideoCodecDescription* offererVideoRecvCodec(
-      static_cast<const JsepVideoCodecDescription*>(offererRecvCodec));
+      static_cast<const JsepVideoCodecDescription*>(offererRecvCodec.get()));
   ASSERT_EQ((uint32_t)0x42e00b, offererVideoRecvCodec->mProfileLevelId);
 
   // Answerer doesn't know we've pulled these shenanigans, it should act as if
@@ -4103,19 +4102,19 @@ TEST_F(JsepSessionTest, TestH264LevelAsymmetryDisallowedByAnswererWithHighLevel)
   SetRemoteAnswer(answer, CHECK_SUCCESS);
   SetLocalAnswer(answer, CHECK_SUCCESS);
 
-  const JsepCodecDescription* offererSendCodec;
+  UniquePtr<JsepCodecDescription> offererSendCodec;
   GetCodec(*mSessionOff, 0, sdp::kSend, 0, 0, &offererSendCodec);
   ASSERT_TRUE(offererSendCodec);
   ASSERT_EQ("H264", offererSendCodec->mName);
   const JsepVideoCodecDescription* offererVideoSendCodec(
-      static_cast<const JsepVideoCodecDescription*>(offererSendCodec));
+      static_cast<const JsepVideoCodecDescription*>(offererSendCodec.get()));
   ASSERT_EQ((uint32_t)0x42e00b, offererVideoSendCodec->mProfileLevelId);
 
-  const JsepCodecDescription* offererRecvCodec;
+  UniquePtr<JsepCodecDescription> offererRecvCodec;
   GetCodec(*mSessionOff, 0, sdp::kRecv, 0, 0, &offererRecvCodec);
   ASSERT_EQ("H264", offererRecvCodec->mName);
   const JsepVideoCodecDescription* offererVideoRecvCodec(
-      static_cast<const JsepVideoCodecDescription*>(offererRecvCodec));
+      static_cast<const JsepVideoCodecDescription*>(offererRecvCodec.get()));
   ASSERT_EQ((uint32_t)0x42e00b, offererVideoRecvCodec->mProfileLevelId);
 
   // Answerer doesn't know we've pulled these shenanigans, it should act as if
@@ -4469,10 +4468,9 @@ TEST_F(JsepSessionTest, TestRtcpFbStar)
   JsepTrack track = GetRemoteTracks(*mSessionAns)[0];
   ASSERT_TRUE(track.GetNegotiatedDetails());
   auto* details = track.GetNegotiatedDetails();
-  for (const JsepCodecDescription* codec :
-       details->GetEncoding(0).GetCodecs()) {
+  for (const auto& codec : details->GetEncoding(0).GetCodecs()) {
     const JsepVideoCodecDescription* videoCodec =
-      static_cast<const JsepVideoCodecDescription*>(codec);
+      static_cast<const JsepVideoCodecDescription*>(codec.get());
     ASSERT_EQ(1U, videoCodec->mNackFbTypes.size());
     ASSERT_EQ("", videoCodec->mNackFbTypes[0]);
   }
@@ -4592,7 +4590,7 @@ TEST(H264ProfileLevelIdTest, TestLevelSetting)
 
 TEST_F(JsepSessionTest, StronglyPreferredCodec)
 {
-  for (JsepCodecDescription* codec : mSessionAns->Codecs()) {
+  for (auto& codec : mSessionAns->Codecs()) {
     if (codec->mName == "H264") {
       codec->mStronglyPreferred = true;
     }
@@ -4604,7 +4602,7 @@ TEST_F(JsepSessionTest, StronglyPreferredCodec)
 
   OfferAnswer();
 
-  const JsepCodecDescription* codec;
+  UniquePtr<JsepCodecDescription> codec;
   GetCodec(*mSessionAns, 0, sdp::kSend, 0, 0, &codec);
   ASSERT_TRUE(codec);
   ASSERT_EQ("H264", codec->mName);
@@ -4621,7 +4619,7 @@ TEST_F(JsepSessionTest, LowDynamicPayloadType)
   AddTracks(*mSessionAns, "audio");
 
   OfferAnswer();
-  const JsepCodecDescription* codec;
+  UniquePtr<JsepCodecDescription> codec;
   GetCodec(*mSessionAns, 0, sdp::kSend, 0, 0, &codec);
   ASSERT_TRUE(codec);
   ASSERT_EQ("opus", codec->mName);
@@ -4643,7 +4641,7 @@ TEST_F(JsepSessionTest, PayloadTypeClash)
   AddTracks(*mSessionAns, "audio");
 
   OfferAnswer();
-  const JsepCodecDescription* codec;
+  UniquePtr<JsepCodecDescription> codec;
   GetCodec(*mSessionAns, 0, sdp::kSend, 0, 0, &codec);
   ASSERT_TRUE(codec);
   ASSERT_EQ("opus", codec->mName);
@@ -5819,7 +5817,7 @@ TEST_F(JsepSessionTest, DISABLED_AudioCallAnswererAttemptsSetupRoleSwitch)
 // Remove H.264 P1 and VP8 from offer, check answer negotiates H.264 P0
 TEST_F(JsepSessionTest, OfferWithOnlyH264P0)
 {
-  for (JsepCodecDescription* codec : mSessionOff->Codecs()) {
+  for (auto& codec : mSessionOff->Codecs()) {
     if (codec->mName != "H264" || codec->mDefaultPt == "126") {
       codec->mEnabled = false;
     }
@@ -5864,7 +5862,7 @@ TEST_F(JsepSessionTest, AnswerWithoutVP8)
   SetLocalOffer(offer);
   SetRemoteOffer(offer);
 
-  for (JsepCodecDescription* codec : mSessionOff->Codecs()) {
+  for (auto& codec : mSessionOff->Codecs()) {
     if (codec->mName != "H264" || codec->mDefaultPt == "126") {
       codec->mEnabled = false;
     }

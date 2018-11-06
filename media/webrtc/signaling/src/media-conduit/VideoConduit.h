@@ -144,7 +144,7 @@ public:
    *        transmission sub-system on the engine.
    */
    MediaConduitErrorCode ConfigureRecvMediaCodecs(
-       const std::vector<VideoCodecConfig* >& codecConfigList) override;
+       const std::vector<UniquePtr<VideoCodecConfig>>& codecConfigList) override;
 
   /**
    * Register Transport for this Conduit. RTP and RTCP frames from the VideoEngine
