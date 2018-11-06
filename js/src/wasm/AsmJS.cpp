@@ -6393,6 +6393,7 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue imp
             return true;
           }
           case ValType::Ref:
+          case ValType::NullRef:
           case ValType::AnyRef: {
             MOZ_CRASH("not available in asm.js");
           }

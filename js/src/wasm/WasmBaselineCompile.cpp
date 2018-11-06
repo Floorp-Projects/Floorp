@@ -1087,6 +1087,7 @@ BaseLocalIter::settle()
             mirType_ = ToMIRType(locals_[index_]);
             frameOffset_ = pushLocal(MIRTypeToSize(mirType_));
             break;
+          case ValType::NullRef:
           default:
             MOZ_CRASH("Compiler bug: Unexpected local type");
         }
@@ -2205,6 +2206,7 @@ class BaseCompiler final : public BaseCompilerInterface
             needI64(joinRegI64_);
             break;
           case ExprType::AnyRef:
+          case ExprType::NullRef:
           case ExprType::Ref:
             needRef(joinRegPtr_);
             break;
@@ -2221,6 +2223,7 @@ class BaseCompiler final : public BaseCompilerInterface
             freeI64(joinRegI64_);
             break;
           case ExprType::AnyRef:
+          case ExprType::NullRef:
           case ExprType::Ref:
             freeRef(joinRegPtr_);
             break;
@@ -2243,6 +2246,7 @@ class BaseCompiler final : public BaseCompilerInterface
             needF64(joinRegF64_);
             break;
           case ExprType::Ref:
+          case ExprType::NullRef:
           case ExprType::AnyRef:
             needRef(joinRegPtr_);
             break;
@@ -2266,6 +2270,7 @@ class BaseCompiler final : public BaseCompilerInterface
             freeF64(joinRegF64_);
             break;
           case ExprType::Ref:
+          case ExprType::NullRef:
           case ExprType::AnyRef:
             freeRef(joinRegPtr_);
             break;
@@ -3233,6 +3238,7 @@ class BaseCompiler final : public BaseCompilerInterface
             return Some(AnyReg(popF32(joinRegF32_)));
           }
           case ExprType::Ref:
+          case ExprType::NullRef:
           case ExprType::AnyRef: {
             DebugOnly<Stk::Kind> k(stk_.back().kind());
             MOZ_ASSERT(k == Stk::RegisterRef || k == Stk::ConstRef || k == Stk::MemRef ||
@@ -3270,6 +3276,7 @@ class BaseCompiler final : public BaseCompilerInterface
             needF64(joinRegF64_);
             return Some(AnyReg(joinRegF64_));
           case ExprType::Ref:
+          case ExprType::NullRef:
           case ExprType::AnyRef:
             MOZ_ASSERT(isAvailableRef(joinRegPtr_));
             needRef(joinRegPtr_);
@@ -3566,6 +3573,7 @@ class BaseCompiler final : public BaseCompilerInterface
           case ExprType::AnyRef:
             masm.storePtr(RegPtr(ReturnReg), resultsAddress);
             break;
+          case ExprType::NullRef:
           default:
             MOZ_CRASH("Function return type");
         }
@@ -3594,6 +3602,7 @@ class BaseCompiler final : public BaseCompilerInterface
           case ExprType::AnyRef:
             masm.loadPtr(resultsAddress, RegPtr(ReturnReg));
             break;
+          case ExprType::NullRef:
           default:
             MOZ_CRASH("Function return type");
         }
@@ -3884,6 +3893,8 @@ class BaseCompiler final : public BaseCompilerInterface
             }
             break;
           }
+          case ValType::NullRef:
+            MOZ_CRASH("NullRef not expressible");
           default:
             MOZ_CRASH("Function argument type");
         }
@@ -7446,7 +7457,7 @@ BaseCompiler::sniffConditionalControlCmp(Cond compareOp, ValType operandType)
 #endif
 
     // No optimization for pointer compares yet.
-    if (operandType.isRefOrAnyRef()) {
+    if (operandType.isReference()) {
         return false;
     }
 
@@ -8066,6 +8077,7 @@ BaseCompiler::doReturn(ExprType type, bool popStack)
         break;
       }
       case ExprType::Ref:
+      case ExprType::NullRef:
       case ExprType::AnyRef: {
         RegPtr rv = popRef(RegPtr(ReturnReg));
         returnCleanup(popStack);
@@ -8145,6 +8157,8 @@ BaseCompiler::pushReturnedIfNonVoid(const FunctionCall& call, ExprType type)
         pushRef(rv);
         break;
       }
+      case ExprType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       default:
         MOZ_CRASH("Function return type");
     }
@@ -8491,6 +8505,7 @@ BaseCompiler::emitGetLocal()
       case ValType::AnyRef:
         pushLocalRef(slot);
         break;
+      case ValType::NullRef:
       default:
         MOZ_CRASH("Local variable type");
     }
@@ -8564,6 +8579,7 @@ BaseCompiler::emitSetOrTeeLocal(uint32_t slot)
         }
         break;
       }
+      case ValType::NullRef:
       default:
         MOZ_CRASH("Local variable type");
     }
@@ -8623,6 +8639,7 @@ BaseCompiler::emitGetGlobal()
             pushF64(value.f64());
             break;
           case ValType::Ref:
+          case ValType::NullRef:
           case ValType::AnyRef:
             pushRef(intptr_t(value.ptr()));
             break;
@@ -8669,6 +8686,8 @@ BaseCompiler::emitGetGlobal()
         pushRef(rv);
         break;
       }
+      case ValType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       default:
         MOZ_CRASH("Global variable type");
         break;
@@ -8733,6 +8752,8 @@ BaseCompiler::emitSetGlobal()
         freeRef(rv);
         break;
       }
+      case ValType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       default:
         MOZ_CRASH("Global variable type");
         break;
@@ -9131,6 +9152,7 @@ BaseCompiler::emitSelect()
         break;
       }
       case ValType::Ref:
+      case ValType::NullRef:
       case ValType::AnyRef: {
         RegPtr r, rs;
         pop2xRef(&r, &rs);
@@ -9333,8 +9355,7 @@ BaseCompiler::emitCurrentMemory()
 bool
 BaseCompiler::emitRefNull()
 {
-    ValType type;
-    if (!iter_.readRefNull(&type)) {
+    if (!iter_.readRefNull()) {
         return false;
     }
 
@@ -10042,6 +10063,8 @@ BaseCompiler::emitStructNew()
             masm.bind(&skipBarrier);
             break;
           }
+          case ValType::NullRef:
+            MOZ_CRASH("NullRef not expressible");
           default: {
             MOZ_CRASH("Unexpected field type");
           }
@@ -10117,8 +10140,11 @@ BaseCompiler::emitStructGet()
           pushRef(r);
           break;
       }
+      case ValType::NullRef: {
+        MOZ_CRASH("NullRef not expressible");
+      }
       default: {
-          MOZ_CRASH("Unexpected field type");
+        MOZ_CRASH("Unexpected field type");
       }
     }
 
@@ -10152,7 +10178,7 @@ BaseCompiler::emitStructSet()
     // Reserve this register early if we will need it so that it is not taken by
     // rr or rp.
     RegPtr valueAddr;
-    if (structType.fields_[fieldIndex].type.isRefOrAnyRef()) {
+    if (structType.fields_[fieldIndex].type.isReference()) {
         valueAddr = RegPtr(PreBarrierReg);
         needRef(valueAddr);
     }
@@ -10174,6 +10200,8 @@ BaseCompiler::emitStructSet()
       case ValType::AnyRef:
         rr = popRef();
         break;
+      case ValType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       default:
         MOZ_CRASH("Unexpected field type");
     }
@@ -10212,11 +10240,15 @@ BaseCompiler::emitStructSet()
         break;
       }
       case ValType::Ref:
-      case ValType::AnyRef:
+      case ValType::AnyRef: {
         masm.computeEffectiveAddress(Address(rp, offs), valueAddr);
         emitBarrieredStore(Some(rp), valueAddr, rr);// Consumes valueAddr
         freeRef(rr);
         break;
+      }
+      case ValType::NullRef: {
+        MOZ_CRASH("NullRef not expressible");
+      }
       default: {
         MOZ_CRASH("Unexpected field type");
       }

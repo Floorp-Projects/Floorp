@@ -4113,6 +4113,8 @@ IonBuilder::inlineWasmCall(CallInfo& callInfo, JSFunction* target)
           case wasm::ValType::AnyRef:
           case wasm::ValType::Ref:
             MOZ_CRASH("impossible per above check");
+          case wasm::ValType::NullRef:
+            MOZ_CRASH("NullRef not expressible");
         }
 
         current->add(conversion);

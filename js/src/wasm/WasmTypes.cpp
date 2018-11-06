@@ -69,6 +69,7 @@ Val::Val(const LitVal& val)
       case ValType::I64: u.i64_ = val.i64(); return;
       case ValType::F64: u.f64_ = val.f64(); return;
       case ValType::Ref:
+      case ValType::NullRef:
       case ValType::AnyRef: u.ptr_ = val.ptr(); return;
     }
     MOZ_CRASH();
@@ -87,6 +88,7 @@ Val::writePayload(uint8_t* dst) const
         memcpy(dst, &u.i64_, sizeof(u.i64_));
         return;
       case ValType::Ref:
+      case ValType::NullRef:
       case ValType::AnyRef:
         MOZ_ASSERT(*(JSObject**)dst == nullptr, "should be null so no need for a pre-barrier");
         memcpy(dst, &u.ptr_, sizeof(JSObject*));
@@ -108,7 +110,7 @@ Val::writePayload(uint8_t* dst) const
 void
 Val::trace(JSTracer* trc)
 {
-    if (type_.isValid() && type_.isRefOrAnyRef() && u.ptr_) {
+    if (type_.isValid() && type_.isReference() && u.ptr_) {
         TraceManuallyBarrieredEdge(trc, &u.ptr_, "wasm ref/anyref global");
     }
 }
@@ -200,6 +202,7 @@ IsImmediateType(ValType vt)
       case ValType::F64:
       case ValType::AnyRef:
         return true;
+      case ValType::NullRef:
       case ValType::Ref:
         return false;
     }
@@ -221,6 +224,7 @@ EncodeImmediateType(ValType vt)
         return 3;
       case ValType::AnyRef:
         return 4;
+      case ValType::NullRef:
       case ValType::Ref:
         break;
     }
