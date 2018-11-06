@@ -1246,9 +1246,9 @@ impl RenderTaskCache {
         render_tasks: &mut RenderTaskTree,
         user_data: Option<[f32; 3]>,
         is_opaque: bool,
-        mut f: F,
+        f: F,
     ) -> Result<RenderTaskCacheEntryHandle, ()>
-         where F: FnMut(&mut RenderTaskTree) -> Result<RenderTaskId, ()> {
+         where F: FnOnce(&mut RenderTaskTree) -> Result<RenderTaskId, ()> {
         // Get the texture cache handle for this cache key,
         // or create one.
         let cache_entries = &mut self.cache_entries;
