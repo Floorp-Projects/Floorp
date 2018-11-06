@@ -1,7 +1,6 @@
 . "$topsrcdir/mobile/android/config/mozconfigs/android-x86/debug"
 
 # Remove unwanted environment variables from the 'debug' mozconfig.
-unset MOZILLA_OFFICIAL
 unset MOZ_TELEMETRY_REPORTING
 unset MOZ_ANDROID_POCKET
 
