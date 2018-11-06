@@ -259,6 +259,7 @@
 #include "mozilla/dom/TabGroup.h"
 #ifdef MOZ_XUL
 #include "mozilla/dom/XULBroadcastManager.h"
+#include "mozilla/dom/XULPersist.h"
 #include "mozilla/dom/TreeBoxObject.h"
 #include "nsIXULWindow.h"
 #include "nsXULCommandDispatcher.h"
@@ -1735,6 +1736,10 @@ nsDocument::~nsDocument()
 
   if (mXULBroadcastManager) {
     mXULBroadcastManager->DropDocumentReference();
+  }
+
+  if (mXULPersist) {
+    mXULPersist->DropDocumentReference();
   }
 
   delete mHeaderData;
@@ -8972,6 +8977,13 @@ nsIDocument::SetReadyStateInternal(ReadyState rs)
   }
 
   if (READYSTATE_INTERACTIVE == rs) {
+    if (nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
+      Element* root = GetRootElement();
+      if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozpersist)) {
+        mXULPersist = new XULPersist(this);
+        mXULPersist->Init();
+      }
+    }
     TriggerInitialDocumentTranslation();
   }
 
