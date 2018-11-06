@@ -6,6 +6,7 @@
 
 #include "Platform.h"
 #include "ProxyAccessibleWrap.h"
+#include "DocAccessibleWrap.h"
 #include "SessionAccessibility.h"
 #include "mozilla/a11y/ProxyAccessible.h"
 #include "nsIAccessibleEvent.h"
@@ -205,4 +206,23 @@ a11y::ProxyBatch(ProxyAccessible* aDocument,
                  const nsTArray<ProxyAccessible*>& aAccessibles,
                  const nsTArray<BatchData>& aData)
 {
+  SessionAccessibility* sessionAcc =
+    SessionAccessibility::GetInstanceFor(aDocument);
+  if (!sessionAcc) {
+    return;
+  }
+
+  nsTArray<AccessibleWrap*> accWraps(aAccessibles.Length());
+  for (size_t i = 0; i < aAccessibles.Length(); i++) {
+    accWraps.AppendElement(WrapperFor(aAccessibles.ElementAt(i)));
+  }
+
+  switch (aBatchType) {
+    case DocAccessibleWrap::eBatch_Viewport:
+      sessionAcc->ReplaceViewportCache(accWraps, aData);
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown batch type.");
+      break;
+  }
 }
