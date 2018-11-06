@@ -50,7 +50,6 @@
 
 // Misc
 #include "mozilla/EditorUtils.h"
-#include "HTMLEditorObjectResizerUtils.h"
 #include "WSRunObject.h"
 #include "nsGkAtoms.h"
 #include "nsIWidget.h"
@@ -286,8 +285,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLEditor, TextEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResizingShadow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResizingInfo)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResizedObject)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMouseMotionListenerP)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResizeEventListenerP)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAbsolutelyPositionedObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGrabber)
@@ -543,34 +540,6 @@ HTMLEditor::RemoveEventListeners()
   if (!IsInitialized()) {
     return;
   }
-
-  RefPtr<EventTarget> target = GetDOMEventTarget();
-
-  if (target) {
-    // Both mMouseMotionListenerP and mResizeEventListenerP can be
-    // registerd with other targets than the DOM event receiver that
-    // we can reach from here. But nonetheless, unregister the event
-    // listeners with the DOM event reveiver (if it's registerd with
-    // other targets, it'll get unregisterd once the target goes
-    // away).
-
-    if (mMouseMotionListenerP) {
-      // mMouseMotionListenerP might be registerd either as bubbling or
-      // capturing, unregister by both.
-      target->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
-                                  mMouseMotionListenerP, false);
-      target->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
-                                  mMouseMotionListenerP, true);
-    }
-
-    if (mResizeEventListenerP) {
-      target->RemoveEventListener(NS_LITERAL_STRING("resize"),
-                                  mResizeEventListenerP, false);
-    }
-  }
-
-  mMouseMotionListenerP = nullptr;
-  mResizeEventListenerP = nullptr;
 
   TextEditor::RemoveEventListeners();
 }

@@ -483,8 +483,8 @@ impl ResourceCache {
         render_tasks: &mut RenderTaskTree,
         user_data: Option<[f32; 3]>,
         is_opaque: bool,
-        mut f: F,
-    ) -> RenderTaskCacheEntryHandle where F: FnMut(&mut RenderTaskTree) -> RenderTaskId {
+        f: F,
+    ) -> RenderTaskCacheEntryHandle where F: FnOnce(&mut RenderTaskTree) -> RenderTaskId {
         self.cached_render_tasks.request_render_task(
             key,
             &mut self.texture_cache,

@@ -525,15 +525,6 @@ nsRetrievalContextWayland::GetDragContext(void)
 }
 
 void
-nsRetrievalContextWayland::ClearClipboardDataOffers(void)
-{
-    if (mClipboardOffer)
-        mClipboardOffer = nullptr;
-    if (mPrimaryOffer)
-        mPrimaryOffer = nullptr;
-}
-
-void
 nsRetrievalContextWayland::ClearDragAndDropDataOffer(void)
 {
     mDragContext = nullptr;
@@ -716,81 +707,6 @@ nsRetrievalContextWayland::HasSelectionSupport(void)
     return mPrimarySelectionDataDeviceManager != nullptr;
 }
 
-static void
-keyboard_handle_keymap(void *data, struct wl_keyboard *keyboard,
-                       uint32_t format, int fd, uint32_t size)
-{
-}
-
-static void
-keyboard_handle_enter(void *data, struct wl_keyboard *keyboard,
-                      uint32_t serial, struct wl_surface *surface,
-                      struct wl_array *keys)
-{
-}
-
-static void
-keyboard_handle_leave(void *data, struct wl_keyboard *keyboard,
-                      uint32_t serial, struct wl_surface *surface)
-{
-    // We lost focus so our clipboard data are outdated
-    nsRetrievalContextWayland *context =
-        static_cast<nsRetrievalContextWayland*>(data);
-
-    context->ClearClipboardDataOffers();
-}
-
-static void
-keyboard_handle_key(void *data, struct wl_keyboard *keyboard,
-                    uint32_t serial, uint32_t time, uint32_t key,
-                    uint32_t state)
-{
-}
-
-static void
-keyboard_handle_modifiers(void *data, struct wl_keyboard *keyboard,
-                          uint32_t serial, uint32_t mods_depressed,
-                          uint32_t mods_latched, uint32_t mods_locked,
-                          uint32_t group)
-{
-}
-
-static const struct wl_keyboard_listener keyboard_listener = {
-    keyboard_handle_keymap,
-    keyboard_handle_enter,
-    keyboard_handle_leave,
-    keyboard_handle_key,
-    keyboard_handle_modifiers,
-};
-
-void
-nsRetrievalContextWayland::ConfigureKeyboard(wl_seat_capability caps)
-{
-  // ConfigureKeyboard() is called when wl_seat configuration is changed.
-  // We look for the keyboard only, get it when is't available and release it
-  // when it's lost (we don't have focus for instance).
-  if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
-      mKeyboard = wl_seat_get_keyboard(mSeat);
-      wl_keyboard_add_listener(mKeyboard, &keyboard_listener, this);
-  } else if (mKeyboard && !(caps & WL_SEAT_CAPABILITY_KEYBOARD)) {
-      wl_keyboard_destroy(mKeyboard);
-      mKeyboard = nullptr;
-  }
-}
-
-static void
-seat_handle_capabilities(void *data, struct wl_seat *seat,
-                         unsigned int caps)
-{
-    nsRetrievalContextWayland *context =
-        static_cast<nsRetrievalContextWayland*>(data);
-    context->ConfigureKeyboard((wl_seat_capability)caps);
-}
-
-static const struct wl_seat_listener seat_listener = {
-      seat_handle_capabilities,
-};
-
 void
 nsRetrievalContextWayland::InitDataDeviceManager(wl_registry *registry,
                                                  uint32_t id,
@@ -816,7 +732,6 @@ nsRetrievalContextWayland::InitSeat(wl_registry *registry,
                                     void *data)
 {
     mSeat = (wl_seat*)wl_registry_bind(registry, id, &wl_seat_interface, 1);
-    wl_seat_add_listener(mSeat, &seat_listener, data);
 }
 
 static void

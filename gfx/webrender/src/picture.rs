@@ -84,6 +84,8 @@ pub struct SurfaceInfo {
     pub surface_spatial_node_index: SpatialNodeIndex,
     /// This is set when the render task is created.
     pub surface: Option<PictureSurface>,
+    /// A list of render tasks that are dependencies of this surface.
+    pub tasks: Vec<RenderTaskId>,
 }
 
 impl SurfaceInfo {
@@ -116,7 +118,14 @@ impl SurfaceInfo {
             surface: None,
             raster_spatial_node_index,
             surface_spatial_node_index,
+            tasks: Vec::new(),
         }
+    }
+
+    /// Take the set of child render tasks for this surface. This is
+    /// used when constructing the render task tree.
+    pub fn take_render_tasks(&mut self) -> Vec<RenderTaskId> {
+        mem::replace(&mut self.tasks, Vec::new())
     }
 }
 
@@ -546,6 +555,7 @@ impl PicturePrimitive {
         pic_index: PictureIndex,
         surface_spatial_node_index: SpatialNodeIndex,
         raster_spatial_node_index: SpatialNodeIndex,
+        surface_index: SurfaceIndex,
         parent_allows_subpixel_aa: bool,
         frame_state: &mut FrameBuildingState,
         frame_context: &FrameBuildingContext,
@@ -557,14 +567,14 @@ impl PicturePrimitive {
         // Extract the raster and surface spatial nodes from the raster
         // config, if this picture establishes a surface. Otherwise just
         // pass in the spatial node indices from the parent context.
-        let (raster_spatial_node_index, surface_spatial_node_index) = match self.raster_config {
+        let (raster_spatial_node_index, surface_spatial_node_index, surface_index) = match self.raster_config {
             Some(ref raster_config) => {
                 let surface = &frame_state.surfaces[raster_config.surface_index.0];
 
-                (surface.raster_spatial_node_index, self.spatial_node_index)
+                (surface.raster_spatial_node_index, self.spatial_node_index, raster_config.surface_index)
             }
             None => {
-                (raster_spatial_node_index, surface_spatial_node_index)
+                (raster_spatial_node_index, surface_spatial_node_index, surface_index)
             }
         };
 
@@ -607,7 +617,6 @@ impl PicturePrimitive {
         };
 
         let state = PictureState {
-            tasks: Vec::new(),
             has_non_root_coord_system: false,
             is_cacheable: true,
             local_rect_changed: false,
@@ -644,6 +653,7 @@ impl PicturePrimitive {
             raster_space: self.requested_raster_space,
             raster_spatial_node_index,
             surface_spatial_node_index,
+            surface_index,
         };
 
         let prim_list = mem::replace(&mut self.prim_list, PrimitiveList::empty());
@@ -985,6 +995,7 @@ impl PicturePrimitive {
         pic_index: PictureIndex,
         prim_instance: &PrimitiveInstance,
         prim_local_rect: &LayoutRect,
+        surface_index: SurfaceIndex,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
@@ -1002,16 +1013,19 @@ impl PicturePrimitive {
         let raster_config = match self.raster_config {
             Some(ref mut raster_config) => raster_config,
             None => {
-                pic_state.tasks.extend(pic_state_for_children.tasks);
                 return true
             }
         };
 
-        let surface_info = &mut frame_state.surfaces[raster_config.surface_index.0];
+        let (raster_spatial_node_index, child_tasks) = {
+            let surface_info = &mut frame_state.surfaces[raster_config.surface_index.0];
+            (surface_info.raster_spatial_node_index, surface_info.take_render_tasks())
+        };
+        let surfaces = &mut frame_state.surfaces;
 
         let (map_raster_to_world, map_pic_to_raster) = create_raster_mappers(
             prim_instance.spatial_node_index,
-            surface_info.raster_spatial_node_index,
+            raster_spatial_node_index,
             frame_context,
         );
 
@@ -1035,7 +1049,7 @@ impl PicturePrimitive {
         //           Perhaps store the color matrix after the common data, even though
         //           it's not used by that shader.
 
-        match raster_config.composite_mode {
+        let surface = match raster_config.composite_mode {
             PictureCompositeMode::Filter(FilterOp::Blur(blur_radius)) => {
                 let blur_std_deviation = blur_radius * frame_context.device_pixel_scale.0;
                 let blur_range = (blur_std_deviation * BLUR_SAMPLE_SCALE).ceil() as i32;
@@ -1066,14 +1080,14 @@ impl PicturePrimitive {
                 // anyway. In the future we should relax this a bit, so that we can
                 // cache tasks with complex coordinate systems if we detect the
                 // relevant transforms haven't changed from frame to frame.
-                let surface = if pic_state_for_children.has_non_root_coord_system ||
-                                 !pic_state_for_children.is_cacheable {
+                if pic_state_for_children.has_non_root_coord_system ||
+                   !pic_state_for_children.is_cacheable {
                     let picture_task = RenderTask::new_picture(
                         RenderTaskLocation::Dynamic(None, device_rect.size),
                         unclipped.size,
                         pic_index,
                         device_rect.origin,
-                        pic_state_for_children.tasks,
+                        child_tasks,
                         uv_rect_kind,
                         pic_context.raster_spatial_node_index,
                     );
@@ -1090,7 +1104,7 @@ impl PicturePrimitive {
 
                     let render_task_id = frame_state.render_tasks.add(blur_render_task);
 
-                    pic_state.tasks.push(render_task_id);
+                    surfaces[surface_index.0].tasks.push(render_task_id);
 
                     PictureSurface::RenderTask(render_task_id)
                 } else {
@@ -1124,8 +1138,6 @@ impl PicturePrimitive {
                         None,
                         false,
                         |render_tasks| {
-                            let child_tasks = mem::replace(&mut pic_state_for_children.tasks, Vec::new());
-
                             let picture_task = RenderTask::new_picture(
                                 RenderTaskLocation::Dynamic(None, device_rect.size),
                                 unclipped.size,
@@ -1148,16 +1160,14 @@ impl PicturePrimitive {
 
                             let render_task_id = render_tasks.add(blur_render_task);
 
-                            pic_state.tasks.push(render_task_id);
+                            surfaces[surface_index.0].tasks.push(render_task_id);
 
                             render_task_id
                         }
                     );
 
                     PictureSurface::TextureCache(cache_item)
-                };
-
-                surface_info.surface = Some(surface);
+                }
             }
             PictureCompositeMode::Filter(FilterOp::DropShadow(offset, blur_radius, color)) => {
                 let blur_std_deviation = blur_radius * frame_context.device_pixel_scale.0;
@@ -1188,7 +1198,7 @@ impl PicturePrimitive {
                     unclipped.size,
                     pic_index,
                     device_rect.origin,
-                    pic_state_for_children.tasks,
+                    child_tasks,
                     uv_rect_kind,
                     pic_context.raster_spatial_node_index,
                 );
@@ -1207,8 +1217,7 @@ impl PicturePrimitive {
                 self.secondary_render_task_id = Some(picture_task_id);
 
                 let render_task_id = frame_state.render_tasks.add(blur_render_task);
-                pic_state.tasks.push(render_task_id);
-                surface_info.surface = Some(PictureSurface::RenderTask(render_task_id));
+                surfaces[surface_index.0].tasks.push(render_task_id);
 
                 // If the local rect of the contents changed, force the cache handle
                 // to be invalidated so that the primitive data below will get
@@ -1245,6 +1254,8 @@ impl PicturePrimitive {
                     request.push(shadow_rect);
                     request.push([0.0, 0.0, 0.0, 0.0]);
                 }
+
+                PictureSurface::RenderTask(render_task_id)
             }
             PictureCompositeMode::MixBlend(..) => {
                 let uv_rect_kind = calculate_uv_rect_kind(
@@ -1259,7 +1270,7 @@ impl PicturePrimitive {
                     unclipped.size,
                     pic_index,
                     clipped.origin,
-                    pic_state_for_children.tasks,
+                    child_tasks,
                     uv_rect_kind,
                     pic_context.raster_spatial_node_index,
                 );
@@ -1269,11 +1280,11 @@ impl PicturePrimitive {
                 );
 
                 self.secondary_render_task_id = Some(readback_task_id);
-                pic_state.tasks.push(readback_task_id);
+                surfaces[surface_index.0].tasks.push(readback_task_id);
 
                 let render_task_id = frame_state.render_tasks.add(picture_task);
-                pic_state.tasks.push(render_task_id);
-                surface_info.surface = Some(PictureSurface::RenderTask(render_task_id));
+                surfaces[surface_index.0].tasks.push(render_task_id);
+                PictureSurface::RenderTask(render_task_id)
             }
             PictureCompositeMode::Filter(filter) => {
                 if let FilterOp::ColorMatrix(m) = filter {
@@ -1296,14 +1307,14 @@ impl PicturePrimitive {
                     unclipped.size,
                     pic_index,
                     clipped.origin,
-                    pic_state_for_children.tasks,
+                    child_tasks,
                     uv_rect_kind,
                     pic_context.raster_spatial_node_index,
                 );
 
                 let render_task_id = frame_state.render_tasks.add(picture_task);
-                pic_state.tasks.push(render_task_id);
-                surface_info.surface = Some(PictureSurface::RenderTask(render_task_id));
+                surfaces[surface_index.0].tasks.push(render_task_id);
+                PictureSurface::RenderTask(render_task_id)
             }
             PictureCompositeMode::Blit => {
                 let uv_rect_kind = calculate_uv_rect_kind(
@@ -1318,16 +1329,18 @@ impl PicturePrimitive {
                     unclipped.size,
                     pic_index,
                     clipped.origin,
-                    pic_state_for_children.tasks,
+                    child_tasks,
                     uv_rect_kind,
                     pic_context.raster_spatial_node_index,
                 );
 
                 let render_task_id = frame_state.render_tasks.add(picture_task);
-                pic_state.tasks.push(render_task_id);
-                surface_info.surface = Some(PictureSurface::RenderTask(render_task_id));
+                surfaces[surface_index.0].tasks.push(render_task_id);
+                PictureSurface::RenderTask(render_task_id)
             }
-        }
+        };
+
+        surfaces[raster_config.surface_index.0].surface = Some(surface);
 
         true
     }

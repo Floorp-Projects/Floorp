@@ -28,5 +28,5 @@ addEventListener("ImageContentLoaded", function(aEvent) {
 
 // We may not get any responses to Browser:Init if the browser element
 // is torn down too quickly.
-var outerWindowID = content.windowUtils.outerWindowID;
+var outerWindowID = docShell.outerWindowID;
 sendAsyncMessage("Browser:Init", {outerWindowID});

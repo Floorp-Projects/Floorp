@@ -590,7 +590,8 @@ impl AlphaBatchBuilder {
                     PrimitiveInstanceData::from(instance),
                 );
             }
-            PrimitiveInstanceKind::TextRun { ref run, .. } => {
+            PrimitiveInstanceKind::TextRun { run_index, .. } => {
+                let run = &ctx.prim_store.text_runs[run_index.0];
                 let subpx_dir = run.used_font.get_subpx_dir();
 
                 // The GPU cache data is stored in the template and reused across

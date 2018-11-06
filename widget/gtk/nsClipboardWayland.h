@@ -125,10 +125,8 @@ public:
     void AddDragAndDropDataOffer(wl_data_offer *aWaylandDataOffer);
     nsWaylandDragContext* GetDragContext();
 
-    void ClearClipboardDataOffers();
     void ClearDragAndDropDataOffer();
 
-    void ConfigureKeyboard(wl_seat_capability caps);
     void TransferFastTrackClipboard(int aClipboardRequestNumber,
                                     GtkSelectionData *aSelectionData);
 
