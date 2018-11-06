@@ -140,9 +140,7 @@ struct ExecutionPoint
   // ID of the last normal checkpoint prior to this point.
   size_t mCheckpoint;
 
-  // How much progress execution has made prior to reaching the point,
-  // or zero if the execution point refers to the checkpoint itself.
-  //
+  // How much progress execution has made prior to reaching the point.
   // A given BreakpointPosition may not be reached twice without an intervening
   // increment of the global progress counter.
   ProgressCounter mProgress;
@@ -156,9 +154,9 @@ struct ExecutionPoint
     , mProgress(0)
   {}
 
-  explicit ExecutionPoint(size_t aCheckpoint)
+  ExecutionPoint(size_t aCheckpoint, ProgressCounter aProgress)
     : mCheckpoint(aCheckpoint)
-    , mProgress(0)
+    , mProgress(aProgress)
   {}
 
   ExecutionPoint(size_t aCheckpoint, ProgressCounter aProgress,
