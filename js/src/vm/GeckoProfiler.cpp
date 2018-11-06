@@ -403,8 +403,8 @@ GeckoProfilerBaselineOSRMarker::GeckoProfilerBaselineOSRMarker(JSContext* cx, bo
     }
 
     ProfilingStackFrame& frame = profiler->profilingStack_->frames[sp - 1];
-    MOZ_ASSERT(frame.kind() == ProfilingStackFrame::Kind::JS_NORMAL);
-    frame.setKind(ProfilingStackFrame::Kind::JS_OSR);
+    MOZ_ASSERT(!frame.isOSRFrame());
+    frame.setIsOSRFrame(true);
 }
 
 GeckoProfilerBaselineOSRMarker::~GeckoProfilerBaselineOSRMarker()
@@ -420,8 +420,8 @@ GeckoProfilerBaselineOSRMarker::~GeckoProfilerBaselineOSRMarker()
     }
 
     ProfilingStackFrame& frame = profiler->stack()[sp - 1];
-    MOZ_ASSERT(frame.kind() == ProfilingStackFrame::Kind::JS_OSR);
-    frame.setKind(ProfilingStackFrame::Kind::JS_NORMAL);
+    MOZ_ASSERT(frame.isOSRFrame());
+    frame.setIsOSRFrame(false);
 }
 
 JS_PUBLIC_API(JSScript*)

@@ -985,7 +985,7 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
       // To avoid both the profiling stack frame and jit frame being recorded
       // (and showing up twice), the interpreter marks the interpreter
       // profiling stack frame as JS_OSR to ensure that it doesn't get counted.
-      if (profilingStackFrame.kind() == js::ProfilingStackFrame::Kind::JS_OSR) {
+      if (profilingStackFrame.isOSRFrame()) {
           profilingStackIndex++;
           continue;
       }
