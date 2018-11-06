@@ -10,6 +10,7 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'xpctest_attributes.cpp',
+    'xpctest_cenums.cpp',
     'xpctest_module.cpp',
     'xpctest_params.cpp',
     'xpctest_returncode.cpp',

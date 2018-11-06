@@ -7,6 +7,7 @@
 XPIDL_SOURCES += [
     'xpctest_attributes.idl',
     'xpctest_bug809674.idl',
+    'xpctest_cenums.idl',
     'xpctest_interfaces.idl',
     'xpctest_params.idl',
     'xpctest_returncode.idl',
