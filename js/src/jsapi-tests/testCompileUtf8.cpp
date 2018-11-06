@@ -16,6 +16,7 @@
 #include "jsapi-tests/tests.h"
 #include "vm/ErrorReporting.h"
 
+using mozilla::ArrayEqual;
 using mozilla::ArrayLength;
 using mozilla::IsAsciiHexDigit;
 using mozilla::Utf8Unit;
@@ -205,27 +206,16 @@ isNotShortestFormMessage(const char* str)
            contains(str, "it wasn't encoded in shortest possible form");
 }
 
-bool
-compileUtf8(const char* chars, size_t len, JS::MutableHandleScript script)
-{
-    JS::RealmOptions globalOptions;
-    JS::RootedObject global(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
-						   JS::FireOnNewGlobalHook, globalOptions));
-    CHECK(global);
-
-    JSAutoRealm ar(cx, global);
-
-    JS::CompileOptions options(cx);
-    return JS::CompileUtf8DontInflate(cx, options, chars, len, script);
-}
-
 template<size_t N, typename TestMessage>
 bool
 testBadUtf8(const char (&chars)[N], unsigned errorNumber,
             TestMessage testMessage, const char* badBytes)
 {
     JS::Rooted<JSScript*> script(cx);
-    CHECK(!compileUtf8(chars, N - 1, &script));
+    {
+        JS::CompileOptions options(cx);
+        CHECK(!JS::CompileUtf8DontInflate(cx, options, chars, N - 1, &script));
+    }
 
     JS::RootedValue exn(cx);
     CHECK(JS_GetPendingException(cx, &exn));
@@ -277,3 +267,61 @@ testBadUtf8(const char (&chars)[N], unsigned errorNumber,
     return true;
 }
 END_TEST(testUtf8BadBytes)
+
+BEGIN_TEST(testMultiUnitUtf8InWindow)
+{
+    static const char firstInWindowIsMultiUnit[] =
+      "\xCF\x80\xCF\x80 = 6.283185307; @ bad starts HERE:\x80\xFF\xFF";
+    CHECK(testContext(firstInWindowIsMultiUnit,
+                      u"ππ = 6.283185307; @ bad starts HERE:"));
+
+    static const char atTokenOffsetIsMulti[] =
+      "var z = 💯";
+    CHECK(testContext(atTokenOffsetIsMulti,
+                      u"var z = 💯"));
+
+    static const char afterTokenOffsetIsMulti[] =
+      "var z = @💯💯💯X";
+    CHECK(testContext(afterTokenOffsetIsMulti,
+                      u"var z = @💯💯💯X"));
+
+    static const char atEndIsMulti[] =
+      "var z = @@💯💯💯";
+    CHECK(testContext(atEndIsMulti,
+                      u"var z = @@💯💯💯"));
+
+    return true;
+}
+
+template<size_t N, size_t ContextLenWithNull>
+bool
+testContext(const char (&chars)[N], const char16_t (&expectedContext)[ContextLenWithNull])
+{
+    JS::Rooted<JSScript*> script(cx);
+    {
+        JS::CompileOptions options(cx);
+        CHECK(!JS::CompileUtf8DontInflate(cx, options, chars, N - 1, &script));
+    }
+
+    JS::RootedValue exn(cx);
+    CHECK(JS_GetPendingException(cx, &exn));
+    JS_ClearPendingException(cx);
+
+    js::ErrorReport report(cx);
+    CHECK(report.init(cx, exn, js::ErrorReport::WithSideEffects));
+
+    const auto* errorReport = report.report();
+
+    CHECK(errorReport->errorNumber == JSMSG_ILLEGAL_CHARACTER);
+
+    const char16_t* lineOfContext = errorReport->linebuf();
+    size_t lineOfContextLength = errorReport->linebufLength();
+
+    CHECK(lineOfContext[lineOfContextLength] == '\0');
+    CHECK(lineOfContextLength == ContextLenWithNull - 1);
+
+    CHECK(ArrayEqual(lineOfContext, expectedContext, ContextLenWithNull));
+
+    return true;
+}
+END_TEST(testMultiUnitUtf8InWindow)
