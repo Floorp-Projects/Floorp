@@ -215,19 +215,34 @@ JS_GetArrayBufferViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoReq
 }
 
 JS_FRIEND_API(JSObject*)
-JS_GetArrayBufferViewBuffer(JSContext* cx, HandleObject objArg, bool* isSharedMemory)
+JS_GetArrayBufferViewBuffer(JSContext* cx, HandleObject obj, bool* isSharedMemory)
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-    cx->check(objArg);
+    cx->check(obj);
 
-    JSObject* obj = CheckedUnwrap(objArg);
-    if (!obj) {
+    JSObject* unwrappedObj = CheckedUnwrap(obj);
+    if (!unwrappedObj) {
+        ReportAccessDenied(cx);
         return nullptr;
     }
-    Rooted<ArrayBufferViewObject*> viewObject(cx, &obj->as<ArrayBufferViewObject>());
-    ArrayBufferObjectMaybeShared* buffer = ArrayBufferViewObject::bufferObject(cx, viewObject);
-    *isSharedMemory = buffer->is<SharedArrayBufferObject>();
+
+    Rooted<ArrayBufferViewObject*> unwrappedView(cx, &unwrappedObj->as<ArrayBufferViewObject>());
+    ArrayBufferObjectMaybeShared* unwrappedBuffer;
+    {
+        AutoRealm ar(cx, unwrappedObj);
+        unwrappedBuffer = ArrayBufferViewObject::bufferObject(cx, unwrappedView);
+        if (!unwrappedBuffer) {
+            return nullptr;
+        }
+    }
+    *isSharedMemory = unwrappedBuffer->is<SharedArrayBufferObject>();
+
+    RootedObject buffer(cx, unwrappedBuffer);
+    if (!cx->compartment()->wrap(cx, &buffer)) {
+        return nullptr;
+    }
+
     return buffer;
 }
 

@@ -1847,6 +1847,7 @@ JS_StealArrayBufferContents(JSContext* cx, HandleObject objArg)
 
     JSObject* obj = CheckedUnwrap(objArg);
     if (!obj) {
+        ReportAccessDenied(cx);
         return nullptr;
     }
 
