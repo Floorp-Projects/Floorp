@@ -17,6 +17,8 @@ class HTMLEditorEventListener final : public EditorEventListener
 {
 public:
   HTMLEditorEventListener()
+    : EditorEventListener()
+    , mListeningToResizeEvent(false)
   {
   }
 
@@ -24,10 +26,22 @@ public:
   {
   }
 
+  // nsIDOMEventListener
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  NS_IMETHOD HandleEvent(dom::Event *aEvent) override;
+
   /**
    * Connect() fails if aEditorBase isn't an HTMLEditor instance.
    */
   virtual nsresult Connect(EditorBase* aEditorBase) override;
+
+  virtual void Disconnect() override;
+
+  /**
+   * ListenToWindowResizeEvent() starts to listen to or stop listening to
+   * "resize" events of the document.
+   */
+  nsresult ListenToWindowResizeEvent(bool aListen);
 
 protected:
   MOZ_CAN_RUN_SCRIPT
@@ -35,6 +49,8 @@ protected:
   virtual nsresult MouseUp(dom::MouseEvent* aMouseEvent) override;
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult MouseClick(WidgetMouseEvent* aMouseClickEvent) override;
+
+  bool mListeningToResizeEvent;
 };
 
 } // namespace mozilla

@@ -193,6 +193,13 @@ EditorBase::~EditorBase()
 NS_IMPL_CYCLE_COLLECTION_CLASS(EditorBase)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EditorBase)
+ // Remove event listeners first since EditorEventListener may need
+ // mDocument, mEventTarget, etc.
+ if (tmp->mEventListener) {
+   tmp->mEventListener->Disconnect();
+   tmp->mEventListener = nullptr;
+ }
+
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootElement)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionController)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
@@ -205,12 +212,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EditorBase)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditorObservers)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocStateListeners)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEventTarget)
-
- if (tmp->mEventListener) {
-   tmp->mEventListener->Disconnect();
-   tmp->mEventListener = nullptr;
- }
-
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlaceholderTransaction)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSavedSel);
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRangeUpdater);

@@ -43,23 +43,6 @@ protected:
   CachedWeakPtr<HTMLEditor, nsIHTMLEditor> mHTMLEditorWeak;
 };
 
-/******************************************************************************
- * mozilla::DocumentResizeEventListener
- ******************************************************************************/
-
-class DocumentResizeEventListener final : public nsIDOMEventListener
-{
-public:
-  explicit DocumentResizeEventListener(HTMLEditor& aHTMLEditor);
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMEVENTLISTENER
-
-protected:
-  virtual ~DocumentResizeEventListener() {}
-  CachedWeakPtr<HTMLEditor, nsIHTMLEditor> mHTMLEditorWeak;
-};
-
 } // namespace mozilla
 
 #endif // #ifndef HTMLEditorObjectResizerUtils_h

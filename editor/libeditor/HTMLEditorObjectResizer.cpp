@@ -6,6 +6,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "HTMLEditorObjectResizerUtils.h"
 
+#include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LookAndFeel.h"
@@ -37,32 +38,6 @@
 namespace mozilla {
 
 using namespace dom;
-
-/******************************************************************************
- * mozilla::DocumentResizeEventListener
- ******************************************************************************/
-
-NS_IMPL_ISUPPORTS(DocumentResizeEventListener, nsIDOMEventListener)
-
-DocumentResizeEventListener::DocumentResizeEventListener(
-                               HTMLEditor& aHTMLEditor)
-  : mHTMLEditorWeak(&aHTMLEditor)
-{
-}
-
-NS_IMETHODIMP
-DocumentResizeEventListener::HandleEvent(Event* aMouseEvent)
-{
-  RefPtr<HTMLEditor> htmlEditor = mHTMLEditorWeak.get();
-  if (!htmlEditor) {
-    return NS_OK;
-  }
-  nsresult rv = htmlEditor->RefreshResizers();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
-}
 
 /******************************************************************************
  * mozilla::ResizerMouseMotionListener
@@ -478,19 +453,12 @@ HTMLEditor::ShowResizersInternal(Element& aResizedElement)
 
     // and listen to the "resize" event on the window first, get the
     // window from the document...
-    nsIDocument* document = GetDocument();
-    if (NS_WARN_IF(!document)) {
+    if (NS_WARN_IF(!mEventListener)) {
       break;
     }
 
-    nsCOMPtr<EventTarget> target = do_QueryInterface(document->GetWindow());
-    if (!target) {
-      break;
-    }
-
-    mResizeEventListenerP = new DocumentResizeEventListener(*this);
-    rv = target->AddEventListener(NS_LITERAL_STRING("resize"),
-                                  mResizeEventListenerP, false);
+    rv = static_cast<HTMLEditorEventListener*>(mEventListener.get())->
+      ListenToWindowResizeEvent(true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       break;
     }
@@ -563,8 +531,6 @@ HTMLEditor::HideResizersInternal()
   RefPtr<Element> activatedHandle(std::move(mActivatedHandle));
   nsCOMPtr<nsIDOMEventListener> mouseMotionListener(
                                   std::move(mMouseMotionListenerP));
-  nsCOMPtr<nsIDOMEventListener> resizeEventListener(
-                                  std::move(mResizeEventListenerP));
   RefPtr<Element> resizedObject(std::move(mResizedObject));
 
   // Remvoe all handles.
@@ -617,30 +583,16 @@ HTMLEditor::HideResizersInternal()
   }
 
   // Remove resize event listener from the window.
-  if (!resizeEventListener) {
+  if (!mEventListener) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc = GetDocument();
-  if (NS_WARN_IF(!doc)) {
-    return NS_ERROR_FAILURE;
+  nsresult rv =
+    static_cast<HTMLEditorEventListener*>(mEventListener.get())->
+      ListenToWindowResizeEvent(false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
-
-  // nsIDocument::GetWindow() may return nullptr when HTMLEditor is destroyed
-  // while the document is being unloaded.  If we cannot retrieve window as
-  // expected, let's ignore it.
-  nsPIDOMWindowOuter* window = doc->GetWindow();
-  if (NS_WARN_IF(!window)) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<EventTarget> targetOfWindow = do_QueryInterface(window);
-  if (NS_WARN_IF(!targetOfWindow)) {
-    return NS_ERROR_FAILURE;
-  }
-  targetOfWindow->RemoveEventListener(NS_LITERAL_STRING("resize"),
-                                      resizeEventListener, false);
-
   return NS_OK;
 }
 
