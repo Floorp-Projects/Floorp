@@ -126,6 +126,13 @@ JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 bool
+JS::CompileDontInflate(JSContext* cx, const ReadOnlyCompileOptions& options,
+                       SourceText<Utf8Unit>& srcBuf, JS::MutableHandleScript script)
+{
+    return CompileSourceBuffer(cx, options, srcBuf, script);
+}
+
+bool
 JS::CompileLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
                   const char* bytes, size_t length, JS::MutableHandleScript script)
 {
