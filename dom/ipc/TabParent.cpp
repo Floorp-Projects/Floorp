@@ -632,7 +632,7 @@ TabParent::LoadURL(nsIURI* aURI)
 }
 
 void
-TabParent::InitRenderFrame()
+TabParent::InitRendering()
 {
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
 
