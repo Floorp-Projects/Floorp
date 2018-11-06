@@ -105,6 +105,11 @@ class HistoryTrackingFeatureTest {
                 return listOf()
             }
 
+            override fun getDomainSuggestion(query: String): String? {
+                fail()
+                return null
+            }
+
             override fun cleanup() {
                 fail()
             }

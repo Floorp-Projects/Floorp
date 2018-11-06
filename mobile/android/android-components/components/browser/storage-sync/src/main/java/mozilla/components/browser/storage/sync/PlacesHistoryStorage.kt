@@ -16,6 +16,7 @@ import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.VisitType
+import mozilla.components.support.utils.segmentAwareDomainMatch
 import org.mozilla.places.PlacesConnection
 import org.mozilla.places.VisitObservation
 
@@ -74,6 +75,11 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage {
         return places.api().queryAutocomplete(query, limit = limit).map {
             SearchResult(it.url, it.url, it.frecency.toInt(), it.title)
         }
+    }
+
+    override fun getDomainSuggestion(query: String): String? {
+        val urls = places.api().queryAutocomplete(query, limit = 100)
+        return segmentAwareDomainMatch(query, urls.map { it.url })
     }
 
     /**

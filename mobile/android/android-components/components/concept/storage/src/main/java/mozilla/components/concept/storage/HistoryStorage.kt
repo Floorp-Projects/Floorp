@@ -46,6 +46,13 @@ interface HistoryStorage {
     fun getSuggestions(query: String, limit: Int): List<SearchResult>
 
     /**
+     * Retrieves domain suggestions which best match the [query].
+     * @param query A query by which to search the underlying store.
+     * @return An optional domain URL which best matches the query.
+     */
+    fun getDomainSuggestion(query: String): String?
+
+    /**
      * Cleanup any allocated resources.
      */
     fun cleanup()

@@ -8,6 +8,7 @@ import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.VisitType
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class InMemoryHistoryStorageTest {
@@ -176,5 +177,21 @@ class InMemoryHistoryStorageTest {
 
         val results2 = history.getSuggestions("Mozilla", 1)
         assertEquals("http://www.mozilla.org", results2[0].url)
+    }
+
+    @Test
+    fun `store can provide domain suggestions`() = runBlocking {
+        val history = InMemoryHistoryStorage()
+
+        assertNull(history.getDomainSuggestion("moz"))
+
+        history.recordVisit("http://www.mozilla.org", VisitType.LINK)
+        assertEquals("mozilla.org", history.getDomainSuggestion("moz"))
+
+        history.recordVisit("http://firefox.com", VisitType.LINK)
+        assertEquals("firefox.com", history.getDomainSuggestion("firefox"))
+
+        history.recordVisit("https://en.wikipedia.org/wiki/Mozilla", VisitType.LINK)
+        assertEquals("en.wikipedia.org/wiki/Mozilla", history.getDomainSuggestion("en"))
     }
 }

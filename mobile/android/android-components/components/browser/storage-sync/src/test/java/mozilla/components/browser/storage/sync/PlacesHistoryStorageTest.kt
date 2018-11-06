@@ -151,6 +151,18 @@ class PlacesHistoryStorageTest {
         storage!!.getSuggestions("Hello!", -1)
     }
 
+    @Test
+    fun `storage passes through getDomainSuggestion calls`() {
+        val storage = storage!!
+        val places = places!!
+        `when`(places.queryAutocomplete("mozilla", 100)).thenReturn(listOf(
+            SearchResult("mozilla", "http://www.mozilla.org", "Mozilla", 10),
+            SearchResult("mozilla", "http://www.firefox.com", "Mozilla Firefox", 5),
+            SearchResult("mozilla", "https://en.wikipedia.org/wiki/Mozilla", "", 8))
+        )
+        assertEquals("mozilla.org", storage.getDomainSuggestion("mozilla"))
+    }
+
     @Test()
     fun `storage passes through calls to cleanup`() {
         val storage = storage!!

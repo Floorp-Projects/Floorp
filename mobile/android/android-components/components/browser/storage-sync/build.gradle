@@ -33,6 +33,7 @@ dependencies {
     api Deps.mozilla_places
 
     implementation project(':concept-storage')
+    implementation project(':support-utils')
 
     implementation Deps.kotlin_stdlib
     implementation Deps.kotlin_coroutines

@@ -11,6 +11,7 @@ import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.VisitType
+import mozilla.components.support.utils.segmentAwareDomainMatch
 
 data class Visit(val timestamp: Long, val type: VisitType)
 
@@ -87,6 +88,10 @@ class InMemoryHistoryStorage : HistoryStorage {
         matchedUrls.asSequence().sortedBy { it.value }.map {
             SearchResult(id = it.key, score = maxScore - it.value, url = it.key, title = pageMeta[it.key]?.title)
         }.take(limit).toList()
+    }
+
+    override fun getDomainSuggestion(query: String): String? {
+        return segmentAwareDomainMatch(query, pages.keys)
     }
 
     // Borrowed from https://gist.github.com/ademar111190/34d3de41308389a0d0d8
