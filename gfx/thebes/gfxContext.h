@@ -315,8 +315,6 @@ public:
     // context is in an error state.  |offset| can be nullptr to mean
     // "don't care".
     bool CurrentDash(FallibleTArray<Float>& dashes, Float* offset) const;
-    // Returns 0.0 if dashing isn't enabled.
-    Float CurrentDashOffset() const;
 
     /**
      * Sets the line width that's used for line drawing.
