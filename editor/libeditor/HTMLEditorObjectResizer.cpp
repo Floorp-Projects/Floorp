@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/HTMLEditor.h"
-#include "HTMLEditorObjectResizerUtils.h"
 
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
@@ -34,6 +33,15 @@
 #include "nsStringFwd.h"
 #include "nscore.h"
 #include <algorithm>
+
+#define kTopLeft       NS_LITERAL_STRING("nw")
+#define kTop           NS_LITERAL_STRING("n")
+#define kTopRight      NS_LITERAL_STRING("ne")
+#define kLeft          NS_LITERAL_STRING("w")
+#define kRight         NS_LITERAL_STRING("e")
+#define kBottomLeft    NS_LITERAL_STRING("sw")
+#define kBottom        NS_LITERAL_STRING("s")
+#define kBottomRight   NS_LITERAL_STRING("se")
 
 namespace mozilla {
 
@@ -1116,5 +1124,14 @@ HTMLEditor::SetObjectResizingEnabled(bool aObjectResizingEnabled)
   EnableObjectResizer(aObjectResizingEnabled);
   return NS_OK;
 }
+
+#undef kTopLeft
+#undef kTop
+#undef kTopRight
+#undef kLeft
+#undef kRight
+#undef kBottomLeft
+#undef kBottom
+#undef kBottomRight
 
 } // namespace mozilla

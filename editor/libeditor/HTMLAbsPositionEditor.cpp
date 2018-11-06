@@ -7,7 +7,6 @@
 #include <math.h>
 
 #include "HTMLEditorEventListener.h"
-#include "HTMLEditorObjectResizerUtils.h"
 #include "HTMLEditRules.h"
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
