@@ -25,6 +25,7 @@
 #include "vm/RegExpObject.h"
 
 #include "frontend/ParseContext-inl.h"
+#include "frontend/SharedContext-inl.h"
 #include "vm/JSContext-inl.h"
 
 // # About compliance with EcmaScript
