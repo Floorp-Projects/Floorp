@@ -19,7 +19,6 @@
 #include "vm/GeneratorObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
-#include "wasm/WasmInstance.h"
 
 #include "jit/BaselineFrame-inl.h"
 #include "vm/JSObject-inl.h"
@@ -742,7 +741,7 @@ inline GlobalObject*
 AbstractFramePtr::global() const
 {
     if (isWasmDebugFrame()) {
-        return &wasmInstance()->object()->global();
+        return asWasmDebugFrame()->global();
     }
     return &script()->global();
 }
