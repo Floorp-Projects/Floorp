@@ -30,8 +30,7 @@ class ContentBlockingLog final
   // Each element is a tuple of (type, blocked, repeatCount). The type values
   // come from the blocking types defined in nsIWebProgressListener.
   typedef nsTArray<LogEntry> OriginLog;
-  typedef Pair<bool, OriginLog> OriginData;
-  typedef nsClassHashtable<nsStringHashKey, OriginData> OriginDataHashTable;
+  typedef nsClassHashtable<nsStringHashKey, OriginLog> OriginLogHashTable;
 
   struct StringWriteFunc : public JSONWriteFunc
   {
@@ -57,14 +56,9 @@ public:
     }
     auto entry = mLog.LookupForAdd(aOrigin);
     if (entry) {
-      auto& data = entry.Data();
-      if (aType == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
-        data->first() = aBlocked;
-        return;
-      }
-      auto& log = data->second();
-      if (!log.IsEmpty()) {
-        auto& last = log.LastElement();
+      auto& log = entry.Data();
+      if (!log->IsEmpty()) {
+        auto& last = log->LastElement();
         if (last.mType == aType &&
             last.mBlocked == aBlocked) {
           ++last.mRepeatCount;
@@ -72,21 +66,17 @@ public:
           return;
         }
       }
-      if (log.Length() ==
+      if (log->Length() ==
             std::max(1u, StaticPrefs::browser_contentblocking_originlog_length())) {
         // Cap the size at the maximum length adjustable by the pref
-        log.RemoveElementAt(0);
+        log->RemoveElementAt(0);
       }
-      log.AppendElement(LogEntry{aType, 1u, aBlocked});
+      log->AppendElement(LogEntry{aType, 1u, aBlocked});
     } else {
       entry.OrInsert([=] {
-        nsAutoPtr<OriginData> data(new OriginData(false, OriginLog()));
-        if (aType == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
-          data->first() = true;
-        } else {
-          data->second().AppendElement(LogEntry{aType, 1u, aBlocked});
-        }
-        return data.forget();
+        auto log(MakeUnique<OriginLog>());
+        log->AppendElement(LogEntry{aType, 1u, aBlocked});
+        return log.release();
       });
     }
   }
@@ -106,17 +96,7 @@ public:
       }
 
       w.StartArrayProperty(NS_ConvertUTF16toUTF8(iter.Key()).get(), w.SingleLineStyle);
-      auto& data = *iter.UserData();
-      if (data.first()) {
-        w.StartArrayElement(w.SingleLineStyle);
-        {
-          w.IntElement(nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT);
-          w.BoolElement(true); // blocked
-          w.IntElement(1);     // repeat count
-        }
-        w.EndArray();
-      }
-      for (auto& item: data.second()) {
+      for (auto& item: *iter.UserData()) {
         w.StartArrayElement(w.SingleLineStyle);
         {
           w.IntElement(item.mType);
@@ -140,15 +120,9 @@ public:
         continue;
       }
 
-      if (aType == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
-        if (iter.UserData()->first()) {
+      for (auto& item: *iter.UserData()) {
+        if ((item.mType & aType) != 0) {
           return true;
-        }
-      } else {
-        for (auto& item: iter.UserData()->second()) {
-          if ((item.mType & aType) != 0) {
-            return true;
-          }
         }
       }
     }
@@ -162,17 +136,17 @@ public:
     // Now add the sizes of each origin log queue.
     // The const_cast is needed because the nsTHashtable::Iterator interface is
     // not const-safe.  :-(
-    for (auto iter = const_cast<OriginDataHashTable&>(mLog).Iter();
+    for (auto iter = const_cast<OriginLogHashTable&>(mLog).Iter();
          !iter.Done(); iter.Next()) {
       if (iter.UserData()) {
         aSizes.mDOMOtherSize +=
-          iter.UserData()->second().ShallowSizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
+          iter.UserData()->ShallowSizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
       }
     }
   }
 
 private:
-  OriginDataHashTable mLog;
+  OriginLogHashTable mLog;
 };
 
 } // namespace dom
