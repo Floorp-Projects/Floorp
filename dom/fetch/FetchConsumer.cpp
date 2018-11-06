@@ -323,21 +323,14 @@ template <class Derived>
 FetchBodyConsumer<Derived>::Create(nsIGlobalObject* aGlobal,
                                    nsIEventTarget* aMainThreadEventTarget,
                                    FetchBody<Derived>* aBody,
+                                   nsIInputStream* aBodyStream,
                                    AbortSignalImpl* aSignalImpl,
                                    FetchConsumeType aType,
                                    ErrorResult& aRv)
 {
   MOZ_ASSERT(aBody);
+  MOZ_ASSERT(aBodyStream);
   MOZ_ASSERT(aMainThreadEventTarget);
-
-  nsCOMPtr<nsIInputStream> bodyStream;
-  aBody->DerivedClass()->GetBody(getter_AddRefs(bodyStream));
-  if (!bodyStream) {
-    aRv = NS_NewCStringInputStream(getter_AddRefs(bodyStream), EmptyCString());
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-  }
 
   RefPtr<Promise> promise = Promise::Create(aGlobal, aRv);
   if (aRv.Failed()) {
@@ -346,7 +339,7 @@ FetchBodyConsumer<Derived>::Create(nsIGlobalObject* aGlobal,
 
   RefPtr<FetchBodyConsumer<Derived>> consumer =
     new FetchBodyConsumer<Derived>(aMainThreadEventTarget, aGlobal,
-                                   aBody, bodyStream, promise,
+                                   aBody, aBodyStream, promise,
                                    aType);
 
   RefPtr<ThreadSafeWorkerRef> workerRef;

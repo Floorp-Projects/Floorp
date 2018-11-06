@@ -40,6 +40,7 @@
 #include "mozilla/Telemetry.h"
 
 #include "BodyExtractor.h"
+#include "EmptyBody.h"
 #include "FetchObserver.h"
 #include "InternalRequest.h"
 #include "InternalResponse.h"
@@ -1242,6 +1243,29 @@ FetchBody<Derived>::ConsumeBody(JSContext* aCx, FetchConsumeType aType,
     return nullptr;
   }
 
+  // Null bodies are a special-case in the fetch spec.  The Body mix-in can only
+  // be "disturbed" or "locked" if its associated "body" is non-null.
+  // Additionally, the Body min-in's "consume body" algorithm explicitly creates
+  // a fresh empty ReadableStream object in step 2.  This means that `bodyUsed`
+  // will never return true for a null body.
+  //
+  // To this end, we create a fresh (empty) body every time a request is made
+  // and consume its body here, without marking this FetchBody consumed via
+  // SetBodyUsed.
+  nsCOMPtr<nsIInputStream> bodyStream;
+  DerivedClass()->GetBody(getter_AddRefs(bodyStream));
+  if (!bodyStream) {
+    RefPtr<EmptyBody> emptyBody =
+      EmptyBody::Create(DerivedClass()->GetParentObject(),
+                        DerivedClass()->GetPrincipalInfo().get(),
+                        signalImpl, mMimeType, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+
+    return emptyBody->ConsumeBody(aCx, aType, aRv);
+  }
+
   SetBodyUsed(aCx, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -1251,7 +1275,7 @@ FetchBody<Derived>::ConsumeBody(JSContext* aCx, FetchConsumeType aType,
 
   RefPtr<Promise> promise =
     FetchBodyConsumer<Derived>::Create(global, mMainThreadEventTarget, this,
-                                       signalImpl, aType, aRv);
+                                       bodyStream, signalImpl, aType, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -1268,6 +1292,11 @@ template
 already_AddRefed<Promise>
 FetchBody<Response>::ConsumeBody(JSContext* aCx, FetchConsumeType aType,
                                  ErrorResult& aRv);
+
+template
+already_AddRefed<Promise>
+FetchBody<EmptyBody>::ConsumeBody(JSContext* aCx, FetchConsumeType aType,
+                                  ErrorResult& aRv);
 
 template <class Derived>
 void
@@ -1298,6 +1327,13 @@ void
 FetchBody<Response>::SetMimeType();
 
 template <class Derived>
+void
+FetchBody<Derived>::OverrideMimeType(const nsACString& aMimeType)
+{
+  mMimeType = aMimeType;
+}
+
+template <class Derived>
 const nsACString&
 FetchBody<Derived>::BodyBlobURISpec() const
 {
@@ -1311,6 +1347,10 @@ FetchBody<Request>::BodyBlobURISpec() const;
 template
 const nsACString&
 FetchBody<Response>::BodyBlobURISpec() const;
+
+template
+const nsACString&
+FetchBody<EmptyBody>::BodyBlobURISpec() const;
 
 template <class Derived>
 const nsAString&
@@ -1326,6 +1366,10 @@ FetchBody<Request>::BodyLocalPath() const;
 template
 const nsAString&
 FetchBody<Response>::BodyLocalPath() const;
+
+template
+const nsAString&
+FetchBody<EmptyBody>::BodyLocalPath() const;
 
 template <class Derived>
 void
