@@ -2194,7 +2194,7 @@ class TokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>
      * trailing unit was the last of |unitsObserved| units examined from the
      * current offset.
      */
-    MOZ_COLD void badTrailingUnit(mozilla::Utf8Unit badUnit, uint8_t unitsObserved);
+    MOZ_COLD void badTrailingUnit(uint8_t unitsObserved);
 
     // Helper used for both |badCodePoint| and |notShortestForm| for code units
     // that have all the requisite high bits set/unset in a manner that *could*
