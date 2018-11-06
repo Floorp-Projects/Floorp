@@ -586,18 +586,19 @@ GeckoEditableSupport::GetComposition() const
     return widget ? IMEStateManager::GetTextCompositionFor(widget) : nullptr;
 }
 
-void
+bool
 GeckoEditableSupport::RemoveComposition(RemoveCompositionFlag aFlag)
 {
     if (!mDispatcher || !mDispatcher->IsComposing()) {
-        return;
+        return false;
     }
 
     nsEventStatus status = nsEventStatus_eIgnore;
 
-    NS_ENSURE_SUCCESS_VOID(BeginInputTransaction(mDispatcher));
+    NS_ENSURE_SUCCESS(BeginInputTransaction(mDispatcher), false);
     mDispatcher->CommitComposition(
             status, aFlag == CANCEL_IME_COMPOSITION ? &EmptyString() : nullptr);
+    return true;
 }
 
 void
@@ -904,15 +905,17 @@ GeckoEditableSupport::FlushIMEChanges(FlushChangesFlag aFlags)
         }
     }
 
+    while (mIMEDelaySynchronizeReply && mIMEActiveSynchronizeCount) {
+        mIMEActiveSynchronizeCount--;
+        mEditable->NotifyIME(EditableListener::NOTIFY_IME_REPLY_EVENT);
+    }
+    mIMEDelaySynchronizeReply = false;
+    mIMEActiveSynchronizeCount = 0;
+
     if (mIMESelectionChanged) {
         mIMESelectionChanged = false;
         mEditable->OnSelectionChange(selStart, selEnd);
         flushOnException();
-    }
-
-    while (mIMEActiveReplaceTextCount) {
-        mIMEActiveReplaceTextCount--;
-        OnImeSynchronize();
     }
 }
 
@@ -962,6 +965,12 @@ GeckoEditableSupport::UpdateCompositionRects()
 void
 GeckoEditableSupport::OnImeSynchronize()
 {
+    if (mIMEDelaySynchronizeReply) {
+        // If we are waiting for other events to reply,
+        // queue this reply as well.
+        mIMEActiveSynchronizeCount++;
+        return;
+    }
     if (!mIMEMaskEventsCount) {
         FlushIMEChanges();
     }
@@ -972,13 +981,11 @@ void
 GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
                                        jni::String::Param aText)
 {
-    mIMEActiveReplaceTextCount++;
-
-    if (!DoReplaceText(aStart, aEnd, aText)) {
-        // We did not process the event, so reply to it now.
-        mIMEActiveReplaceTextCount--;
-        OnImeSynchronize();
+    if (DoReplaceText(aStart, aEnd, aText)) {
+        mIMEDelaySynchronizeReply = true;
     }
+
+    OnImeSynchronize();
 }
 
 bool
@@ -1011,6 +1018,7 @@ GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
     nsString string(aText->ToString());
     const bool composing = !mIMERanges->IsEmpty();
     nsEventStatus status = nsEventStatus_eIgnore;
+    bool textChanged = composing;
 
     if (!mIMEKeyEvents.IsEmpty() ||
         !composition || !mDispatcher->IsComposing() ||
@@ -1020,7 +1028,7 @@ GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
         // Only start a new composition if we have key events,
         // if we don't have an existing composition, or
         // the replaced text does not match our composition.
-        RemoveComposition();
+        textChanged |= RemoveComposition();
 
         {
             // Use text selection to set target position(s) for
@@ -1062,6 +1070,7 @@ GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
             if (!mDispatcher || widget->Destroyed()) {
                 return false;
             }
+            textChanged = true;
         }
     } else if (composition->String().Equals(string)) {
         /* If the new text is the same as the existing composition text,
@@ -1071,7 +1080,10 @@ GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
         IMETextChange dummyChange;
         dummyChange.mStart = aStart;
         dummyChange.mOldEnd = dummyChange.mNewEnd = aEnd;
+        PostFlushIMEChanges();
+        mIMESelectionChanged = true;
         AddIMETextChange(dummyChange);
+        textChanged = true;
     }
 
     if (sDispatchKeyEventsInCompositionForAnyApps ||
@@ -1089,6 +1101,7 @@ GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
         mIMERanges->Clear();
     } else if (!string.IsEmpty() || mDispatcher->IsComposing()) {
         mDispatcher->CommitComposition(status, &string);
+        textChanged = true;
     }
     if (!mDispatcher || widget->Destroyed()) {
         return false;
@@ -1099,7 +1112,7 @@ GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
         SendIMEDummyKeyEvent(widget, eKeyUp);
         // Widget may be destroyed after dispatching the above event.
     }
-    return true;
+    return textChanged;
 }
 
 void
@@ -1133,27 +1146,37 @@ void
 GeckoEditableSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd,
                                              int32_t aFlags)
 {
+    if (DoUpdateComposition(aStart, aEnd, aFlags)) {
+        mIMEDelaySynchronizeReply = true;
+    }
+}
+
+bool
+GeckoEditableSupport::DoUpdateComposition(int32_t aStart, int32_t aEnd,
+                                          int32_t aFlags)
+{
     if (mIMEMaskEventsCount > 0) {
         // Not focused.
-        return;
+        return false;
     }
 
     nsCOMPtr<nsIWidget> widget = GetWidget();
     nsEventStatus status = nsEventStatus_eIgnore;
-    NS_ENSURE_TRUE_VOID(mDispatcher && widget);
+    NS_ENSURE_TRUE(mDispatcher && widget, false);
 
     const bool keepCurrent = !!(aFlags &
             java::GeckoEditableChild::FLAG_KEEP_CURRENT_COMPOSITION);
+    bool compositionChanged = false;
 
     // A composition with no ranges means we want to set the selection.
     if (mIMERanges->IsEmpty()) {
         if (keepCurrent && mDispatcher->IsComposing()) {
             // Don't set selection if we want to keep current composition.
-            return;
+            return false;
         }
 
         MOZ_ASSERT(aStart >= 0 && aEnd >= 0);
-        RemoveComposition();
+        compositionChanged = RemoveComposition();
 
         WidgetSelectionEvent selEvent(true, eSetSelection, widget);
         selEvent.mOffset = std::min(aStart, aEnd);
@@ -1161,7 +1184,7 @@ GeckoEditableSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd,
         selEvent.mReversed = aStart > aEnd;
         selEvent.mExpandToClusterBoundary = false;
         widget->DispatchEvent(&selEvent, status);
-        return;
+        return compositionChanged;
     }
 
     /**
@@ -1182,12 +1205,13 @@ GeckoEditableSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd,
         if (keepCurrent) {
             // Don't start a new composition if we want to keep the current one.
             mIMERanges->Clear();
-            return;
+            return false;
         }
 
         // Only start new composition if we don't have an existing one,
         // or if the existing composition doesn't match the new one.
         RemoveComposition();
+        compositionChanged = true;
 
         {
             WidgetSelectionEvent event(true, eSetSelection, widget);
@@ -1219,11 +1243,12 @@ GeckoEditableSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd,
 
     if (NS_WARN_IF(NS_FAILED(BeginInputTransaction(mDispatcher)))) {
         mIMERanges->Clear();
-        return;
+        return false;
     }
     mDispatcher->SetPendingComposition(string, mIMERanges);
     mDispatcher->FlushPendingComposition(status);
     mIMERanges->Clear();
+    return compositionChanged;
 }
 
 void
@@ -1331,7 +1356,8 @@ GeckoEditableSupport::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
             RefPtr<GeckoEditableSupport> self(this);
             nsAppShell::PostEvent([this, self] {
                 if (!mIMEFocusCount) {
-                    mIMEActiveReplaceTextCount = 0;
+                    mIMEDelaySynchronizeReply = false;
+                    mIMEActiveSynchronizeCount = 0;
                     mEditable->NotifyIME(EditableListener::NOTIFY_IME_OF_BLUR);
                     OnRemovedFrom(mDispatcher);
                 }
