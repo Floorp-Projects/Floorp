@@ -25,6 +25,19 @@ struct AccessibleData
   uint32_t Interfaces;
 };
 
+union OriginDocument
+{
+  PDocAccessible;
+};
+
+struct BatchData
+{
+  OriginDocument Document;
+  uint64_t ID;
+  uint64_t State;
+  nsIntRect Bounds;
+};
+
 struct ShowEventData
 {
   uint64_t ID;
@@ -81,6 +94,9 @@ parent:
    * document.
    */
   async BindChildDoc(PDocAccessible aChildDoc, uint64_t aID);
+
+  // Android
+  async Batch(uint64_t aBatchType, BatchData[] aData);
 
 child:
   async __delete__();
