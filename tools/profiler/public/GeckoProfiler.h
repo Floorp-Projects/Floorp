@@ -46,6 +46,7 @@
 #define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(label, category, nsCStr)
 #define AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(label, category, nsStr)
 #define AUTO_PROFILER_LABEL_FAST(label, category, ctx)
+#define AUTO_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, category, ctx, flags)
 
 #define PROFILER_ADD_MARKER(markerName)
 #define PROFILER_ADD_NETWORK_MARKER(uri, pri, channel, type, start, end, count, timings, redirect)
@@ -542,6 +543,14 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
   mozilla::AutoProfilerLabel PROFILER_RAII(ctx, label, nullptr, \
                                            js::ProfilingStackFrame::Category::category)
 
+// Similar to AUTO_PROFILER_LABEL_FAST, but also takes an extra string and an
+// additional set of flags. The flags parameter should carry values from the
+// js::ProfilingStackFrame::Flags enum.
+#define AUTO_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, category, ctx, flags) \
+  mozilla::AutoProfilerLabel PROFILER_RAII(ctx, label, dynamicString, \
+                                           js::ProfilingStackFrame::Category::category, \
+                                           flags)
+
 // Insert a marker in the profile timeline. This is useful to delimit something
 // important happening such as the first paint. Unlike labels, which are only
 // recorded in the profile buffer if a sample is collected while the label is
@@ -732,23 +741,26 @@ public:
   // from the JSContext and does nothing if the profiler is inactive.
   AutoProfilerLabel(JSContext* aJSContext,
                     const char* aLabel, const char* aDynamicString,
-                    js::ProfilingStackFrame::Category aCategory
+                    js::ProfilingStackFrame::Category aCategory,
+                    uint32_t aFlags
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     Push(js::GetContextProfilingStackIfEnabled(aJSContext),
-         aLabel, aDynamicString, aCategory);
+         aLabel, aDynamicString, aCategory, aFlags);
   }
 
   void Push(ProfilingStack* aProfilingStack,
             const char* aLabel, const char* aDynamicString,
-            js::ProfilingStackFrame::Category aCategory)
+            js::ProfilingStackFrame::Category aCategory,
+            uint32_t aFlags = 0)
   {
     // This function runs both on and off the main thread.
 
     mProfilingStack = aProfilingStack;
     if (mProfilingStack) {
-      mProfilingStack->pushLabelFrame(aLabel, aDynamicString, this, aCategory);
+      mProfilingStack->pushLabelFrame(aLabel, aDynamicString, this, aCategory,
+                                      aFlags);
     }
   }
 

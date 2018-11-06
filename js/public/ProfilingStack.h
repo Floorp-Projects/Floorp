@@ -264,7 +264,7 @@ class ProfilingStackFrame
     const char* dynamicString() const { return dynamicString_; }
 
     void initLabelFrame(const char* aLabel, const char* aDynamicString, void* sp,
-                        Category aCategory)
+                        Category aCategory, uint32_t aFlags)
     {
         label_ = aLabel;
         dynamicString_ = aDynamicString;
@@ -272,7 +272,8 @@ class ProfilingStackFrame
         // pcOffsetIfJS_ is not set and must not be used on label frames.
         flagsAndCategory_ =
             uint32_t(Flags::IS_LABEL_FRAME) |
-            (uint32_t(aCategory) << uint32_t(Flags::FLAGS_BITCOUNT));
+            (uint32_t(aCategory) << uint32_t(Flags::FLAGS_BITCOUNT)) |
+            aFlags;
         MOZ_ASSERT(isLabelFrame());
     }
 
@@ -391,13 +392,15 @@ class ProfilingStack final
     ~ProfilingStack();
 
     void pushLabelFrame(const char* label, const char* dynamicString, void* sp,
-                        js::ProfilingStackFrame::Category category) {
+                        js::ProfilingStackFrame::Category category,
+                        uint32_t flags = 0) {
         uint32_t oldStackPointer = stackPointer;
 
         if (MOZ_UNLIKELY(oldStackPointer >= capacity)) {
             ensureCapacitySlow();
         }
-        frames[oldStackPointer].initLabelFrame(label, dynamicString, sp, category);
+        frames[oldStackPointer].initLabelFrame(label, dynamicString, sp,
+                                               category, flags);
 
         // This must happen at the end! The compiler will not reorder this
         // update because stackPointer is Atomic<..., ReleaseAcquire>, so any
