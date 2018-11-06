@@ -26,23 +26,6 @@ namespace mozilla {
 #define kBottom        NS_LITERAL_STRING("s")
 #define kBottomRight   NS_LITERAL_STRING("se")
 
-/******************************************************************************
- * mozilla::ResizerMouseMotionListener
- ******************************************************************************/
-
-class ResizerMouseMotionListener final : public nsIDOMEventListener
-{
-public:
-  explicit ResizerMouseMotionListener(HTMLEditor& aHTMLEditor);
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMEVENTLISTENER
-
-protected:
-  virtual ~ResizerMouseMotionListener() {}
-  CachedWeakPtr<HTMLEditor, nsIHTMLEditor> mHTMLEditorWeak;
-};
-
 } // namespace mozilla
 
 #endif // #ifndef HTMLEditorObjectResizerUtils_h

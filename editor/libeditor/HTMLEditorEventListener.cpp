@@ -45,6 +45,16 @@ HTMLEditorEventListener::Disconnect()
     EditorEventListener::Disconnect();
   }
 
+  if (mListeningToMouseMoveEventForResizers) {
+    DebugOnly<nsresult> rvIgnored = ListenToMouseMoveEventForResizers(false);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "Failed to remove resize event listener of resizers");
+  }
+  if (mListeningToMouseMoveEventForGrabber) {
+    DebugOnly<nsresult> rvIgnored = ListenToMouseMoveEventForGrabber(false);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "Failed to remove resize event listener of grabber");
+  }
   if (mListeningToResizeEvent) {
     DebugOnly<nsresult> rvIgnored = ListenToWindowResizeEvent(false);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
@@ -59,6 +69,23 @@ HTMLEditorEventListener::HandleEvent(Event* aEvent)
 {
   WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
   switch (internalEvent->mMessage) {
+    case eMouseMove: {
+      if (DetachedFromEditor()) {
+        return NS_OK;
+      }
+
+      RefPtr<MouseEvent> mouseEvent = aEvent->AsMouseEvent();
+      if (NS_WARN_IF(!mouseEvent)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
+      MOZ_ASSERT(htmlEditor);
+      DebugOnly<nsresult> rvIgnored = htmlEditor->OnMouseMove(mouseEvent);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                           "Resizers failed to handle mousemove events");
+      return NS_OK;
+    }
     case eResize: {
       if (DetachedFromEditor()) {
         return NS_OK;
@@ -80,6 +107,82 @@ HTMLEditorEventListener::HandleEvent(Event* aEvent)
       return NS_OK;
   }
 }
+
+nsresult
+HTMLEditorEventListener::ListenToMouseMoveEventForResizersOrGrabber(
+                           bool aListen,
+                           bool aForGrabber)
+{
+  MOZ_ASSERT(aForGrabber ?
+    mListeningToMouseMoveEventForGrabber != aListen :
+    mListeningToMouseMoveEventForResizers != aListen);
+
+  if (NS_WARN_IF(DetachedFromEditor())) {
+    return aListen ? NS_ERROR_FAILURE : NS_OK;
+  }
+
+  if (aListen) {
+    if (aForGrabber && mListeningToMouseMoveEventForResizers) {
+      // We've already added mousemove event listener for resizers.
+      mListeningToMouseMoveEventForGrabber = true;
+      return NS_OK;
+    }
+    if (!aForGrabber && mListeningToMouseMoveEventForGrabber) {
+      // We've already added mousemove event listener for grabber.
+      mListeningToMouseMoveEventForResizers = true;
+      return NS_OK;
+    }
+  } else {
+    if (aForGrabber && mListeningToMouseMoveEventForResizers) {
+      // We need to keep listening to mousemove event listener for resizers.
+      mListeningToMouseMoveEventForGrabber = false;
+      return NS_OK;
+    }
+    if (!aForGrabber && mListeningToMouseMoveEventForGrabber) {
+      // We need to keep listening to mousemove event listener for grabber.
+      mListeningToMouseMoveEventForResizers = false;
+      return NS_OK;
+    }
+  }
+
+  EventTarget* target = mEditorBase->AsHTMLEditor()->GetDOMEventTarget();
+  if (NS_WARN_IF(!target)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Listen to mousemove events in the system group since web apps may stop
+  // propagation before we receive the events.
+  EventListenerManager* eventListenerManager =
+    target->GetOrCreateListenerManager();
+  if (NS_WARN_IF(!eventListenerManager)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aListen) {
+    eventListenerManager->AddEventListenerByType(
+                            this,
+                            NS_LITERAL_STRING("mousemove"),
+                            TrustedEventsAtSystemGroupBubble());
+    if (aForGrabber) {
+      mListeningToMouseMoveEventForGrabber = true;
+    } else {
+      mListeningToMouseMoveEventForResizers = true;
+    }
+    return NS_OK;
+  }
+
+  eventListenerManager->RemoveEventListenerByType(
+                          this,
+                          NS_LITERAL_STRING("mousemove"),
+                          TrustedEventsAtSystemGroupBubble());
+  if (aForGrabber) {
+    mListeningToMouseMoveEventForGrabber = false;
+  } else {
+    mListeningToMouseMoveEventForResizers = false;
+  }
+  return NS_OK;
+}
+
 nsresult
 HTMLEditorEventListener::ListenToWindowResizeEvent(bool aListen)
 {
