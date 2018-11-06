@@ -183,7 +183,7 @@ fuzzy-if(skiaContent&&winWidget,0-105,0-56) random-if(/^Windows\x20NT\x206\.1/.t
 fuzzy-if(skiaContent&&winWidget,0-53,0-112) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == clipPath-content-2.svg clipPath-content-2-ref.svg # Bug 1392106
 
 # text and patterns
-fuzzy-if(cocoaWidget,0-1,0-6) fuzzy-if(skiaContent,0-65,0-313) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == pattern-content.svg pattern-content-ref.svg # Bug 1392106
+fuzzy-if(cocoaWidget,0-1,0-6) fuzzy-if(skiaContent,0-74,0-385) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == pattern-content.svg pattern-content-ref.svg # Bug 1392106
 
 # text and filters
 fuzzy-if(skiaContent&&winWidget,0-126,0-336) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == filter-applied.svg filter-applied-ref.svg # Bug 1392106
