@@ -24,12 +24,10 @@ export default class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
   constructor() {
     super();
     this.popupBox = document.createElement("select");
+    this.popupBox.addEventListener("change", this);
   }
 
   connectedCallback() {
-    // the popupBox element may change in between constructor and being connected
-    // so wait until connected before listening to events on it
-    this.popupBox.addEventListener("change", this);
     this.appendChild(this.popupBox);
     this.render();
   }
@@ -76,7 +74,7 @@ export default class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
 
     if (this.value) {
       let optionType = this.getAttribute("option-type");
-      if (!selectedRichOption || selectedRichOption.localName != optionType) {
+      if (selectedRichOption.localName != optionType) {
         selectedRichOption = document.createElement(optionType);
       }
 
