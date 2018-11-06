@@ -674,14 +674,14 @@ PaymentOptions::GetShippingType(nsAString& aShippingType)
 NS_IMPL_ISUPPORTS(PaymentRequest,
                   nsIPaymentRequest)
 
-PaymentRequest::PaymentRequest(const uint64_t aTabId,
+PaymentRequest::PaymentRequest(const uint64_t aTopOuterWindowId,
                                const nsAString& aRequestId,
                                nsIPrincipal* aTopLevelPrincipal,
                                nsIArray* aPaymentMethods,
                                nsIPaymentDetails* aPaymentDetails,
                                nsIPaymentOptions* aPaymentOptions,
                                const nsAString& aShippingOption)
-  : mTabId(aTabId)
+  : mTopOuterWindowId(aTopOuterWindowId)
   , mRequestId(aRequestId)
   , mTopLevelPrincipal(aTopLevelPrincipal)
   , mPaymentMethods(aPaymentMethods)
@@ -693,10 +693,10 @@ PaymentRequest::PaymentRequest(const uint64_t aTabId,
 }
 
 NS_IMETHODIMP
-PaymentRequest::GetTabId(uint64_t* aTabId)
+PaymentRequest::GetTopOuterWindowId(uint64_t* aTopOuterWindowId)
 {
-  NS_ENSURE_ARG_POINTER(aTabId);
-  *aTabId = mTabId;
+  NS_ENSURE_ARG_POINTER(aTopOuterWindowId);
+  *aTopOuterWindowId = mTopOuterWindowId;
   return NS_OK;
 }
 

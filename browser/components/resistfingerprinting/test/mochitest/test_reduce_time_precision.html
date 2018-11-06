@@ -15,20 +15,12 @@ https://trac.torproject.org/projects/tor/ticket/1517
 <a target="_blank" href="https://trac.torproject.org/projects/tor/ticket/1517">Tor Bug 1517</a>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1424341">Mozilla Bug 1424341</a>
 
-<!-- Canvas for testing 'currentTime' -->
-<canvas id="test-canvas" width="100" height="100"></canvas>
-
 <!-- The main testing script -->
 <script type="application/javascript">
   SimpleTest.requestFlakyTimeout("testing JS time-based fingerprinting");
 
   // Prepare for test of AudioContext.currentTime
   let audioContext = new AudioContext();
-  // Prepare for test of CanvasStream.currentTime
-  let canvas = document.getElementById("test-canvas");
-  let context = canvas.getContext("2d");
-  context.fillText("test", 20, 20);
-  let canvasStream = canvas.captureStream(25);
 
   // Known ways to generate time stamps, in milliseconds
   const timeStampCodes = [
@@ -40,7 +32,6 @@ https://trac.torproject.org/projects/tor/ticket/1517
   // These are measured in seconds, so we need to scale them up
   var timeStampCodesDOM = timeStampCodes.concat([
     "audioContext.currentTime * 1000",
-    "canvasStream.currentTime * 1000",
   ]);
 
   let isRounded = (x, expectedPrecision) => {

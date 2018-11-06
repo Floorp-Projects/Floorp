@@ -463,7 +463,15 @@ PaymentRequestManager::CreatePayment(JSContext* aCx,
   IPCPaymentOptions options;
   ConvertOptions(aOptions, options);
 
-  IPCPaymentCreateActionRequest action(internalId,
+  nsCOMPtr<nsPIDOMWindowOuter> outerWindow = aWindow->GetOuterWindow();
+  MOZ_ASSERT(outerWindow);
+  if (nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow = outerWindow->GetTop()) {
+    outerWindow = topOuterWindow;
+  }
+  uint64_t topOuterWindowId = outerWindow->WindowID();
+
+  IPCPaymentCreateActionRequest action(topOuterWindowId,
+                                       internalId,
                                        IPC::Principal(aTopLevelPrincipal),
                                        methodData,
                                        details,

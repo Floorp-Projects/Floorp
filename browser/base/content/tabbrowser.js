@@ -5359,6 +5359,8 @@ var TabBarVisibility = {
     this._initialUpdateDone = true;
 
     toolbar.collapsed = collapse;
+    let navbar = document.getElementById("nav-bar");
+    navbar.setAttribute("tabs-hidden", collapse);
 
     document.getElementById("menu_closeWindow").hidden = collapse;
     document.getElementById("menu_close").setAttribute("label",

@@ -50,7 +50,7 @@ PaymentUIService.prototype = {
   showPayment(requestId) {
     this.log.debug("showPayment:", requestId);
     let request = paymentSrv.getPaymentRequestById(requestId);
-    let merchantBrowser = this.findBrowserByTabId(request.tabId);
+    let merchantBrowser = this.findBrowserByOuterWindowId(request.topOuterWindowId);
     let chromeWindow = merchantBrowser.ownerGlobal;
     let {gBrowser} = chromeWindow;
     let browserContainer = gBrowser.getBrowserContainer(merchantBrowser);
@@ -200,19 +200,17 @@ PaymentUIService.prototype = {
     return {};
   },
 
-  findBrowserByTabId(tabId) {
+  findBrowserByOuterWindowId(outerWindowId) {
     for (let win of BrowserWindowTracker.orderedWindows) {
-      for (let browser of win.gBrowser.browsers) {
-        if (!browser.frameLoader || !browser.frameLoader.tabParent) {
-          continue;
-        }
-        if (browser.frameLoader.tabParent.tabId == tabId) {
-          return browser;
-        }
+      let browser = win.gBrowser.getBrowserForOuterWindowID(outerWindowId);
+      if (!browser) {
+        continue;
       }
+      return browser;
     }
 
-    this.log.error("findBrowserByTabId: No browser found for tabId:", tabId);
+    this.log.error("findBrowserByOuterWindowId: No browser found for outerWindowId:",
+                   outerWindowId);
     return null;
   },
 };

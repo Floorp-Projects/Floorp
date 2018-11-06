@@ -16,6 +16,7 @@
 #include "vm/Debugger.h"
 #include "vm/JSContext.h"
 #include "vm/Opcodes.h"
+#include "wasm/WasmInstance.h"
 
 #include "jit/JSJitFrameIter-inl.h"
 #include "vm/Compartment-inl.h"

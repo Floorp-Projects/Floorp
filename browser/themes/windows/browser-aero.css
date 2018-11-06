@@ -8,8 +8,32 @@
 
 @media (-moz-os-version: windows-win7) {
   @media (-moz-windows-classic: 0) {
-    #main-window[sizemode="normal"] > #navigator-toolbox > #toolbar-menubar {
+    #main-window[sizemode="normal"] > #navigator-toolbox > #titlebar > #toolbar-menubar:not([autohide="true"]) > #menubar-items,
+    #main-window[sizemode="normal"] > #navigator-toolbox > #titlebar > #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
       margin-top: 1px;
+    }
+    /**
+     * For all Windows configurations except for Windows Aero and
+     * Windows Aero Basic, the -moz-window-button-box appearance on
+     * the .titlebar-buttonbox adds an unwanted margin at the top of
+     * the button box.
+     *
+     * For Windows Aero:
+     *   We want the -moz-window-button-box applied in the restored case,
+     *   and -moz-window-button-box-maximized in the maximized case.
+     *
+     * For Windows Aero Basic:
+     *   The margin is also unwanted in the maximized case, but we want
+     *   it in the restored window case.
+     */
+    #main-window[sizemode="normal"] .titlebar-buttonbox {
+      -moz-appearance: -moz-window-button-box;
+    }
+
+    @media (-moz-windows-compositor) {
+      #main-window[sizemode="maximized"] .titlebar-buttonbox {
+        -moz-appearance: -moz-window-button-box-maximized;
+      }
     }
   }
 }
@@ -77,7 +101,7 @@
         }
       }
 
-      #titlebar-buttonbox,
+      .titlebar-buttonbox,
       .titlebar-button {
         -moz-appearance: none !important;
       }
@@ -95,35 +119,35 @@
         height: 12px;
       }
 
-      #titlebar-min {
+      .titlebar-min {
         list-style-image: url(chrome://browser/skin/window-controls/minimize.svg);
       }
 
-      #titlebar-max {
+      .titlebar-max {
         list-style-image: url(chrome://browser/skin/window-controls/maximize.svg);
       }
 
-      :root[sizemode="maximized"] #titlebar-max {
+      :root[sizemode="maximized"] .titlebar-max {
         list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
       }
 
-      #titlebar-close {
+      .titlebar-close {
         list-style-image: url(chrome://browser/skin/window-controls/close.svg);
       }
 
       :root[lwtheme-image] .titlebar-button {
         -moz-context-properties: unset;
       }
-      :root[lwtheme-image] #titlebar-min {
+      :root[lwtheme-image] .titlebar-min {
         list-style-image: url(chrome://browser/skin/window-controls/minimize-themes.svg);
       }
-      :root[lwtheme-image] #titlebar-max {
+      :root[lwtheme-image] .titlebar-max {
         list-style-image: url(chrome://browser/skin/window-controls/maximize-themes.svg);
       }
-      :root[lwtheme-image][sizemode="maximized"] #titlebar-max {
+      :root[lwtheme-image][sizemode="maximized"] .titlebar-max {
         list-style-image: url(chrome://browser/skin/window-controls/restore-themes.svg);
       }
-      :root[lwtheme-image] #titlebar-close {
+      :root[lwtheme-image] .titlebar-close {
         list-style-image: url(chrome://browser/skin/window-controls/close-themes.svg);
       }
 
@@ -197,12 +221,12 @@
           opacity: 0.5;
         }
 
-        #titlebar-close:hover {
+        .titlebar-close:hover {
           stroke: white;
           background-color: hsl(355,86%,49%);
         }
 
-        #titlebar-close:hover:active {
+        .titlebar-close:hover:active {
           background-color: hsl(355,82%,69%);
         }
       }
@@ -217,19 +241,19 @@
           stroke: HighlightText;
         }
 
-        #titlebar-min {
+        .titlebar-min {
           list-style-image: url(chrome://browser/skin/window-controls/minimize-highcontrast.svg);
         }
 
-        #titlebar-max {
+        .titlebar-max {
           list-style-image: url(chrome://browser/skin/window-controls/maximize-highcontrast.svg);
         }
 
-        :root[sizemode="maximized"] #titlebar-max {
+        :root[sizemode="maximized"] .titlebar-max {
           list-style-image: url(chrome://browser/skin/window-controls/restore-highcontrast.svg);
         }
 
-        #titlebar-close {
+        .titlebar-close {
           list-style-image: url(chrome://browser/skin/window-controls/close-highcontrast.svg);
         }
       }
@@ -243,7 +267,7 @@
       -moz-appearance: -moz-win-borderless-glass;
     }
 
-    :root[sizemode="maximized"] #titlebar-buttonbox {
+    :root[sizemode="maximized"] .titlebar-buttonbox {
       margin-inline-end: 3px;
     }
 

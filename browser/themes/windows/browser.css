@@ -79,10 +79,6 @@
   -moz-box-orient: vertical; /* for flex hack */
 }
 
-#main-menubar {
-  -moz-box-flex: 1; /* make menu items expand to fill toolbar height */
-}
-
 #main-menubar > menu {
   -moz-appearance: none;
   color: inherit;
@@ -103,12 +99,6 @@
       color: ThreeDShadow;
     }
   }
-}
-
-/* Hides the titlebar-placeholder underneath the window caption buttons when we
-   are not autohiding the menubar. */
-#toolbar-menubar:not([autohide="true"]) + #TabsToolbar > .titlebar-placeholder[type="caption-buttons"] {
-  display: none;
 }
 
 :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar,
@@ -196,17 +186,6 @@
   }
 }
 
-@media (-moz-windows-compositor: 0) {
-  #main-window[tabsintitlebar] #titlebar:-moz-lwtheme {
-    visibility: hidden;
-  }
-
-  #main-window[tabsintitlebar] #titlebar-content:-moz-lwtheme {
-    visibility: visible;
-    -moz-window-dragging: drag;
-  }
-}
-
 /**
  * In the classic themes, the titlebar has a horizontal gradient, which is
  * problematic for reading the text of background tabs when they're in the
@@ -275,7 +254,7 @@
   }
 }
 
-#TabsToolbar:not([collapsed="true"]) + #nav-bar {
+#nav-bar:not([tabs-hidden="true"]) {
   /* This is needed for some toolbar button animations. Gross :( */
   position: relative;
 }
@@ -284,7 +263,7 @@
   box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border-color);
 }
 @media (-moz-windows-compositor: 0) {
-  #TabsToolbar[collapsed="true"] + #nav-bar {
+  #nav-bar[tabs-hidden="true"] {
     box-shadow: none;
   }
 }
@@ -299,61 +278,84 @@
 
 /* ::::: titlebar ::::: */
 
-#main-window[sizemode="normal"] > #titlebar {
+#main-window[tabsintitlebar][sizemode="normal"] > #navigator-toolbox > #titlebar {
   -moz-appearance: -moz-window-titlebar;
 }
 
-#main-window[sizemode="maximized"] > #titlebar {
+#main-window[tabsintitlebar][sizemode="maximized"] > #navigator-toolbox > #titlebar {
   -moz-appearance: -moz-window-titlebar-maximized;
 }
 
+@media (-moz-windows-compositor: 0) {
+  /**
+   * Anytime we're not using the compositor on Windows, the -moz-window-titlebar
+   * and -moz-window-titlebar-maximized values for -moz-appearance override
+   * backgrounds supplied by lwthemes. We make the #titlebar itself hidden, but
+   * it's children visible in order to hide the background but keep the margin and
+   * padding that comes from those -moz-window-titlebar rules.
+   */
+  #titlebar:-moz-lwtheme {
+    visibility: hidden;
+  }
+  #toolbar-menubar:-moz-lwtheme,
+  #TabsToolbar:-moz-lwtheme {
+    visibility: visible;
+  }
+}
+
 @media (-moz-windows-classic) {
-  #main-window[tabsintitlebar][sizemode="normal"] > #navigator-toolbox > #toolbar-menubar {
+  #main-window[tabsintitlebar][sizemode="normal"] > #navigator-toolbox > #titlebar > #toolbar-menubar {
     margin-top: 4px;
   }
 }
 
-/* The button box must appear on top of the navigator-toolbox in order for
- * click and hover mouse events to work properly for the button in the restored
- * window state. Otherwise, elements in the navigator-toolbox, like the menubar,
- * can swallow those events. It will also place the buttons above the fog on
- * Windows 7 with Aero Glass.
- */
-#titlebar-buttonbox {
+.titlebar-buttonbox {
+  /* For all Windows configurations except for Windows Aero and Windows Aero Basic,
+   * the default -moz-appearance of -moz-window-button-box and
+   * -moz-window-button-box-maximized adds unwanted margins to the button box. We
+   * special case Windows Aero and Windows Aero Basic in browser-aero.css.
+   */
+  -moz-appearance: none;
+  /* The button box must appear on top of the navigator-toolbox in order for
+   * click and hover mouse events to work properly for the button in the restored
+   * window state. Otherwise, elements in the navigator-toolbox, like the menubar,
+   * can swallow those events. It will also place the buttons above the fog on
+   * Windows 7 with Aero Glass.
+   */
   z-index: 1;
 }
 
-#titlebar-buttonbox-container {
-  -moz-box-align: center;
+.titlebar-buttonbox-container {
+  -moz-box-align: stretch;
 }
 
 @media (-moz-os-version: windows-win7) {
   /* Preserve window control buttons position at the top of the button box. */
-  #titlebar-buttonbox-container {
+  .titlebar-buttonbox-container {
     -moz-box-align: start;
   }
 }
 
 /* titlebar command buttons */
 
-#titlebar-min {
+.titlebar-min {
   -moz-appearance: -moz-window-button-minimize;
 }
 
-#titlebar-max {
+.titlebar-max {
   -moz-appearance: -moz-window-button-maximize;
 }
 
-#main-window[sizemode="maximized"] #titlebar-max {
+#main-window[sizemode="maximized"] .titlebar-max {
   -moz-appearance: -moz-window-button-restore;
 }
 
-#titlebar-close {
+.titlebar-close {
   -moz-appearance: -moz-window-button-close;
 }
 
 @media (-moz-windows-classic: 0) {
-  #titlebar-min {
+  .titlebar-min {
     margin-inline-end: 2px;
   }
 }
@@ -946,21 +948,21 @@ notification[value="translation"] {
 
 /* End customization mode */
 
-/* Private browsing and accessibility indicators */
-
-:root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .private-browsing-indicator,
-:root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .accessibility-indicator,
-:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .private-browsing-indicator,
-:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .accessibility-indicator {
+/**
+ * Titlebar items (window caption buttons, private browsing indicator,
+ * accessibility indicator, etc)
+ */
+:root[sizemode="normal"][chromehidden~="menubar"] .titlebar-item,
+:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .titlebar-item,
+:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] > .titlebar-item {
   margin-top: calc(-1 * var(--space-above-tabbar));
 }
 
 /* Compensate for 4px extra margin on top of the tabs toolbar on Windows 7. */
 @media (-moz-os-version: windows-win7) {
-  :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .private-browsing-indicator,
-  :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .accessibility-indicator,
-  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .private-browsing-indicator,
-  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .accessibility-indicator {
+  :root[sizemode="normal"][chromehidden~="menubar"] .titlebar-item,
+  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .titlebar-item,
+  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] > .titlebar-item {
     margin-top: calc(-1 * (var(--space-above-tabbar) + 4px));
   }
 }

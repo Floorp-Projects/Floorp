@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://www.w3c-test.org/webperf/specs/PerformanceTimeline/#sec-PerformanceEntry-interface
+ * https://w3c.github.io/performance-timeline/#dom-performanceentry
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.

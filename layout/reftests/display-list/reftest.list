@@ -35,3 +35,4 @@ skip-if(!asyncPan) == 1437374-1.html 1437374-1-ref.html
 == 1452805-1.html 1452805-ref.html
 == 1461231-1.html about:blank
 fuzzy(0-2,0-40000) skip-if(!asyncPan) == 1464288-1.html 1464288-ref.html
+== 1482403-1.html 1482403-1-ref.html
