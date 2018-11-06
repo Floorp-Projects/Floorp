@@ -145,7 +145,6 @@
 #include "nsLayoutStylesheetCache.h"
 #include "nsThreadManager.h"
 #include "nsAnonymousTemporaryFile.h"
-#include "nsISpellChecker.h"
 #include "nsClipboardProxy.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceUtils.h"
