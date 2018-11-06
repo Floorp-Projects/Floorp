@@ -358,6 +358,7 @@ nsDocShell::nsDocShell()
   , mAllowContentRetargeting(true)
   , mAllowContentRetargetingOnChildren(true)
   , mUseErrorPages(false)
+  , mUseStrictSecurityChecks(false)
   , mObserveErrorPages(true)
   , mCSSErrorReportingEnabled(false)
   , mAllowAuth(true)
@@ -4162,6 +4163,9 @@ nsDocShell::LoadURIWithOptions(const nsAString& aURI,
   MOZ_ASSERT(aTriggeringPrincipal, "LoadURIWithOptions: Need a valid triggeringPrincipal");
 #endif
 
+  if (mUseStrictSecurityChecks && !aTriggeringPrincipal) {
+    return NS_ERROR_FAILURE;
+  }
 
   rv = NS_NewURI(getter_AddRefs(uri), uriString);
   if (uri) {
@@ -4919,6 +4923,9 @@ nsDocShell::Reload(uint32_t aReloadFlags)
     }
 
     MOZ_ASSERT(triggeringPrincipal, "Need a valid triggeringPrincipal");
+    if (mUseStrictSecurityChecks && !triggeringPrincipal) {
+      return NS_ERROR_FAILURE;
+    }
 
     // Stack variables to ensure changes to the member variables don't affect to
     // the call.
@@ -5188,6 +5195,9 @@ nsDocShell::Create()
     gValidateOrigin =
       Preferences::GetBool("browser.frame.validate_origin", true);
   }
+
+  mUseStrictSecurityChecks = Preferences::GetBool("security.strict_security_checks.enabled",
+                                                  mUseStrictSecurityChecks);
 
   // Should we use XUL error pages instead of alerts if possible?
   mUseErrorPages =
@@ -10382,6 +10392,10 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   // the triggeringPrincipal for TYPE_DOCUMENT loads.
   MOZ_ASSERT(aTriggeringPrincipal, "Need a valid triggeringPrincipal");
 
+  if (mUseStrictSecurityChecks && !aTriggeringPrincipal) {
+    return NS_ERROR_FAILURE;
+  }
+
   bool isSandBoxed = mSandboxFlags & SANDBOXED_ORIGIN;
 
   // We want to inherit aPrincipalToInherit when:
@@ -13214,6 +13228,9 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                             bool aIsUserTriggered,
                             nsIPrincipal* aTriggeringPrincipal)
 {
+  if (mUseStrictSecurityChecks && !aTriggeringPrincipal) {
+    return NS_ERROR_FAILURE;
+  }
   // Initialize the DocShell / Request
   if (aDocShell) {
     *aDocShell = nullptr;
