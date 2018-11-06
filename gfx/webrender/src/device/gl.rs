@@ -770,6 +770,15 @@ impl Drop for SharedDepthTarget {
     }
 }
 
+/// Describes for which texture formats to use the glTexStorage*
+/// family of functions.
+#[derive(PartialEq, Debug)]
+enum TexStorageUsage {
+    Never,
+    NonBGRA8,
+    Always,
+}
+
 pub struct Device {
     gl: Rc<gl::Gl>,
     // device state
@@ -816,11 +825,12 @@ pub struct Device {
     // frames and GPU frames.
     frame_id: GpuFrameId,
 
-    /// Whether glTexStorage* is supported. We prefer this over glTexImage*
-    /// because it guarantees that mipmaps won't be generated (which they
-    /// otherwise are on some drivers, particularly ANGLE), If it's not
-    /// supported, we fall back to glTexImage*.
-    supports_texture_storage: bool,
+    /// When to use glTexStorage*. We prefer this over glTexImage* because it
+    /// guarantees that mipmaps won't be generated (which they otherwise are on
+    /// some drivers, particularly ANGLE). However, it is not always supported
+    /// at all, or for BGRA8 format. If it's not supported for the required
+    /// format, we fall back to glTexImage*.
+    texture_storage_usage: TexStorageUsage,
 
     // GL extensions
     extensions: Vec<String>,
@@ -922,20 +932,63 @@ impl Device {
         // We also need our internal format types to be sized, since glTexStorage*
         // will reject non-sized internal format types.
         //
+        // Unfortunately, with GL_EXT_texture_format_BGRA8888, BGRA8 is not a
+        // valid internal format (for glTexImage* or glTexStorage*) unless
+        // GL_EXT_texture_storage is also available [2][3], which is usually
+        // not the case on GLES 3 as the latter's functionality has been
+        // included by default but the former has not been updated.
+        // The extension is available on ANGLE, but on Android this usually
+        // means we must fall back to using unsized BGRA and glTexImage*.
+        //
         // [1] https://developer.apple.com/library/archive/documentation/
         //     GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_texturedata/
         //     opengl_texturedata.html#//apple_ref/doc/uid/TP40001987-CH407-SW22
+        // [2] https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_format_BGRA8888.txt
+        // [3] https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_storage.txt
         let supports_bgra = supports_extension(&extensions, "GL_EXT_texture_format_BGRA8888");
-        let (bgra_format_internal, bgra_format_external) = if supports_bgra {
-            assert_eq!(gl.get_type(), gl::GlType::Gles, "gleam only detects bgra on gles");
-            (gl::BGRA8_EXT, gl::BGRA_EXT)
-        } else {
-            (gl::RGBA8, gl::BGRA)
-        };
-
         let supports_texture_storage = match gl.get_type() {
             gl::GlType::Gl => supports_extension(&extensions, "GL_ARB_texture_storage"),
             gl::GlType::Gles => true,
+        };
+
+
+        let (bgra_format_internal, bgra_format_external, texture_storage_usage) = if supports_bgra {
+            assert_eq!(gl.get_type(), gl::GlType::Gles, "gleam only detects bgra on gles");
+            // To support BGRA8 with glTexStorage* we specifically need
+            // GL_EXT_texture_storage and GL_EXT_texture_format_BGRA8888.
+            if supports_extension(&extensions, "GL_EXT_texture_format_BGRA8888") && supports_extension(&extensions, "GL_EXT_texture_storage") {
+                // We can use glTexStorage with BGRA8 as the internal format.
+                (gl::BGRA8_EXT, gl::BGRA_EXT, TexStorageUsage::Always)
+            } else {
+                // For BGRA8 textures we must must use the unsized BGRA internal
+                // format and glTexImage. If texture storage is supported we can
+                // use it for other formats.
+                (
+                    gl::BGRA_EXT,
+                    gl::BGRA_EXT,
+                    if supports_texture_storage {
+                        TexStorageUsage::NonBGRA8
+                    } else {
+                        TexStorageUsage::Never
+                    },
+                )
+            }
+        } else {
+            // BGRA is not supported as an internal format, therefore we will
+            // use RGBA and swizzle during upload. Note that this is not
+            // supported on GLES.
+            // Since the internal format will actually be RGBA, if texture
+            // storage is supported we can use it for such textures.
+            assert_ne!(gl.get_type(), gl::GlType::Gles, "gles must have compatible internal and external formats");
+            (
+                gl::RGBA8,
+                gl::BGRA,
+                if supports_texture_storage {
+                    TexStorageUsage::Always
+                } else {
+                    TexStorageUsage::Never
+                },
+            )
         };
 
         Device {
@@ -973,7 +1026,7 @@ impl Device {
             cached_programs,
             frame_id: GpuFrameId(0),
             extensions,
-            supports_texture_storage,
+            texture_storage_usage,
         }
     }
 
@@ -1409,7 +1462,12 @@ impl Device {
         // Use glTexStorage where available, since it avoids allocating
         // unnecessary mipmap storage and generally improves performance with
         // stronger invariants.
-        match (self.supports_texture_storage, is_array) {
+        let use_texture_storage = match self.texture_storage_usage {
+            TexStorageUsage::Always => true,
+            TexStorageUsage::NonBGRA8 => texture.format != ImageFormat::BGRA8,
+            TexStorageUsage::Never => false,
+        };
+        match (use_texture_storage, is_array) {
             (true, true) =>
                 self.gl.tex_storage_3d(
                     gl::TEXTURE_2D_ARRAY,
