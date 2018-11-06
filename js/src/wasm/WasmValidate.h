@@ -252,6 +252,19 @@ struct ModuleEnvironment
     bool funcIsImport(uint32_t funcIndex) const {
         return funcIndex < funcImportGlobalDataOffsets.length();
     }
+    bool isRefSubtypeOf(ValType one, ValType two) const {
+        MOZ_ASSERT(one.isReference());
+        MOZ_ASSERT(two.isReference());
+        MOZ_ASSERT(gcTypesEnabled() == HasGcTypes::True);
+        return one == two || two == ValType::AnyRef || one == ValType::NullRef ||
+               (one.isRef() && two.isRef() && isStructPrefixOf(two, one));
+    }
+
+  private:
+    bool isStructPrefixOf(ValType a, ValType b) const {
+        const StructType& other = types[a.refTypeIndex()].structType();
+        return types[b.refTypeIndex()].structType().hasPrefix(other);
+    }
 };
 
 // The Encoder class appends bytes to the Bytes object it is given during

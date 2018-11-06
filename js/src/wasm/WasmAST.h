@@ -1787,15 +1787,11 @@ class AstExtraConversionOperator final : public AstExpr
 
 class AstRefNull final : public AstExpr
 {
-    AstValType refType_;
   public:
     static const AstExprKind Kind = AstExprKind::RefNull;
-    explicit AstRefNull(AstValType refType)
-      : AstExpr(Kind, ExprType::Limit), refType_(refType)
+    AstRefNull()
+      : AstExpr(Kind, ExprType::Limit)
     {}
-    AstValType& baseType() {
-        return refType_;
-    }
 };
 
 // This is an artificial AST node which can fill operand slots in an AST

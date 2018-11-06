@@ -13937,6 +13937,8 @@ CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir)
             // Don't forget to trace GC type arguments in TraceJitExitFrames
             // when they're enabled.
             MOZ_CRASH("unexpected argument type when calling from ion to wasm");
+          case wasm::ValType::NullRef:
+            MOZ_CRASH("NullRef not expressible");
         }
 
         ABIArg arg = abi.next(argMir);
@@ -13993,6 +13995,8 @@ CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir)
         // Don't forget to trace GC type return value in TraceJitExitFrames
         // when they're enabled.
         MOZ_CRASH("unexpected return type when calling from ion to wasm");
+      case wasm::ExprType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       case wasm::ExprType::Limit:
         MOZ_CRASH("Limit");
     }
