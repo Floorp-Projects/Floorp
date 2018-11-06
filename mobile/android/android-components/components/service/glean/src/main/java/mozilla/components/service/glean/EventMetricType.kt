@@ -31,9 +31,7 @@ data class EventMetricType(
     val allowedExtraKeys: List<String>? = null
 ) : CommonMetricData {
 
-    override fun defaultStorageDestinations(): List<String> {
-        return listOf("events")
-    }
+    override val defaultStorageDestinations: List<String> = listOf("events")
 
     private val logger = Logger("glean/EventMetricType")
 

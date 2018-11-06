@@ -22,9 +22,7 @@ data class TestOnlyMetricType(
     override val sendInPings: List<String>
 ) : CommonMetricData {
 
-    override fun defaultStorageDestinations(): List<String> {
-        return listOf("translated_default")
-    }
+    override val defaultStorageDestinations: List<String> = listOf("translated_default")
 }
 
 @RunWith(RobolectricTestRunner::class)

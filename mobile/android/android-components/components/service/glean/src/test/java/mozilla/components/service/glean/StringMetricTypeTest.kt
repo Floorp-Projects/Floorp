@@ -31,7 +31,7 @@ class StringMetricTypeTest {
             name = "string_metric",
             sendInPings = listOf("store1")
         )
-        assertEquals(listOf("metrics"), stringMetric.defaultStorageDestinations())
+        assertEquals(listOf("metrics"), stringMetric.defaultStorageDestinations)
     }
 
     @Test

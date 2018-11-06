@@ -59,9 +59,9 @@ interface CommonMetricData {
     /**
      * Defines the names of the storages the metric defaults to when
      * "default" is used as the destination storage.
-     * Note that every metric type will need to implement this.
+     * Note that every metric type will need to override this.
      */
-    fun defaultStorageDestinations(): List<String>
+    val defaultStorageDestinations: List<String>
 
     /**
      * Get the list of storage names the metric will record to. This
@@ -74,6 +74,6 @@ interface CommonMetricData {
         }
 
         val filteredNames = sendInPings.filter { it != DEFAULT_STORAGE_NAME }
-        return filteredNames + defaultStorageDestinations()
+        return filteredNames + defaultStorageDestinations
     }
 }

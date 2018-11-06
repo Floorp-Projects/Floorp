@@ -23,7 +23,7 @@ internal object StringsStorageEngine : StorageEngine {
      * @param name the name of the string
      * @param value the string value to record
      */
-    public fun record(
+    fun record(
         stores: List<String>,
         category: String,
         name: String,
@@ -48,7 +48,7 @@ internal object StringsStorageEngine : StorageEngine {
      * @return the strings recorded in the requested store
      */
     @Synchronized
-    public fun getSnapshot(storeName: String, clearStore: Boolean): MutableMap<String, String>? {
+    fun getSnapshot(storeName: String, clearStore: Boolean): MutableMap<String, String>? {
         if (clearStore) {
             return stringStores.remove(storeName)
         }

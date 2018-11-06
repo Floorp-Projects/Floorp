@@ -34,7 +34,7 @@ class EventMetricTypeTest {
             sendInPings = listOf("store1"),
             objects = listOf("buttonA", "buttonB")
         )
-        assertEquals(listOf("events"), click.defaultStorageDestinations())
+        assertEquals(listOf("events"), click.defaultStorageDestinations)
     }
 
     @Test

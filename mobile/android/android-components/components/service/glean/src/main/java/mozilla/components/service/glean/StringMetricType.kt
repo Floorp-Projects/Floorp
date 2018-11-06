@@ -24,9 +24,7 @@ data class StringMetricType(
     override val sendInPings: List<String>
 ) : CommonMetricData {
 
-    override fun defaultStorageDestinations(): List<String> {
-        return listOf("metrics")
-    }
+    override val defaultStorageDestinations: List<String> = listOf("metrics")
 
     private val logger = Logger("glean/StringMetricType")
 
