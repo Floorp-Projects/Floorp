@@ -799,9 +799,10 @@ TokenStreamChars<Utf8Unit, AnyCharsAccess>::notEnoughUnits(Utf8Unit lead,
 
 template<class AnyCharsAccess>
 MOZ_COLD void
-TokenStreamChars<Utf8Unit, AnyCharsAccess>::badTrailingUnit(Utf8Unit badUnit,
-                                                            uint8_t unitsObserved)
+TokenStreamChars<Utf8Unit, AnyCharsAccess>::badTrailingUnit(uint8_t unitsObserved)
 {
+    Utf8Unit badUnit = this->sourceUnits.addressOfNextCodeUnit()[unitsObserved - 1];
+
     char badByteStr[5];
     byteToTerminatedString(badUnit.toUint8(), badByteStr);
 
@@ -856,8 +857,8 @@ TokenStreamChars<Utf8Unit, AnyCharsAccess>::getNonAsciiCodePointDontNormalize(Ut
         this->notEnoughUnits(lead, remaining, required);
     };
 
-    auto onBadTrailingUnit = [this, &lead](uint8_t unitsObserved) {
-        this->badTrailingUnit(lead, unitsObserved);
+    auto onBadTrailingUnit = [this](uint8_t unitsObserved) {
+        this->badTrailingUnit(unitsObserved);
     };
 
     auto onBadCodePoint = [this](char32_t badCodePoint, uint8_t unitsObserved) {
@@ -977,8 +978,8 @@ TokenStreamChars<Utf8Unit, AnyCharsAccess>::getNonAsciiCodePoint(int32_t unit, i
         this->notEnoughUnits(lead, remaining, required);
     };
 
-    auto onBadTrailingUnit = [this, &lead](uint_fast8_t unitsObserved) {
-        this->badTrailingUnit(lead, unitsObserved);
+    auto onBadTrailingUnit = [this](uint_fast8_t unitsObserved) {
+        this->badTrailingUnit(unitsObserved);
     };
 
     auto onBadCodePoint = [this](char32_t badCodePoint, uint_fast8_t unitsObserved) {
