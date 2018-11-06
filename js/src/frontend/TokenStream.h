@@ -1423,6 +1423,35 @@ class SourceUnits
      */
     size_t findWindowEnd(size_t offset) const;
 
+    /**
+     * Given a |window| of |encodingSpecificWindowLength| units encoding valid
+     * Unicode text, with index |encodingSpecificTokenOffset| indicating a
+     * particular code point boundary in |window|, compute the corresponding
+     * token offset and length if |window| were encoded in UTF-16.  For
+     * example:
+     *
+     *   // U+03C0 GREEK SMALL LETTER PI is encoded as 0xCF 0x80.
+     *   const Utf8Unit* encodedWindow =
+     *     reinterpret_cast<const Utf8Unit*>(u8"ππππ = @ FAIL");
+     *   size_t encodedTokenOffset = 11; // 2 * 4 + ' = '.length
+     *   size_t encodedWindowLength = 17; // 2 * 4 + ' = @ FAIL'.length
+     *   size_t utf16Offset, utf16Length;
+     *   computeWindowOffsetAndLength(encodedWindow,
+     *                                encodedTokenOffset, &utf16Offset,
+     *                                encodedWindowLength, &utf16Length);
+     *   MOZ_ASSERT(utf16Offset == 7);
+     *   MOZ_ASSERT(utf16Length = 13);
+     *
+     * This function asserts if called for UTF-16: the sole caller can avoid
+     * computing UTF-16 offsets when they're definitely the same as the encoded
+     * offsets.
+     */
+    inline void computeWindowOffsetAndLength(const Unit* encodeWindow,
+                                             size_t encodingSpecificTokenOffset,
+                                             size_t* utf16TokenOffset,
+                                             size_t encodingSpecificWindowLength,
+                                             size_t* utf16WindowLength);
+
   private:
     /** Base of buffer. */
     const Unit* base_;
