@@ -730,8 +730,7 @@ public class GeckoSession extends LayerSession
                                            GeckoBundle initData);
 
         @WrapForJNI(dispatchTo = "proxy")
-        public native void attachEditable(IGeckoEditableParent parent,
-                                          GeckoEditableChild child);
+        public native void attachEditable(IGeckoEditableParent parent);
 
         @WrapForJNI(dispatchTo = "proxy")
         public native void attachAccessibility(SessionAccessibility.NativeProvider sessionAccessibility);

@@ -361,8 +361,7 @@ public:
                   jni::Object::Param aInitData);
 
     void AttachEditable(const GeckoSession::Window::LocalRef& inst,
-                        jni::Object::Param aEditableParent,
-                        jni::Object::Param aEditableChild);
+                        jni::Object::Param aEditableParent);
 
     void AttachAccessibility(const GeckoSession::Window::LocalRef& inst,
                              jni::Object::Param aSessionAccessibility);
@@ -1362,11 +1361,10 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
 
 void
 nsWindow::GeckoViewSupport::AttachEditable(const GeckoSession::Window::LocalRef& inst,
-                                           jni::Object::Param aEditableParent,
-                                           jni::Object::Param aEditableChild)
+                                           jni::Object::Param aEditableParent)
 {
-    java::GeckoEditableChild::LocalRef editableChild(inst.Env());
-    editableChild = java::GeckoEditableChild::Ref::From(aEditableChild);
+    auto editableChild = java::GeckoEditableChild::New(aEditableParent,
+                                                       /* default */ true);
 
     if (window.mEditableSupport) {
         window.mEditableSupport.Detach(

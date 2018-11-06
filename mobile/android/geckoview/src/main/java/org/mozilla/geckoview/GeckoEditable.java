@@ -658,10 +658,10 @@ import android.view.inputmethod.EditorInfo;
         mIcRunHandler = mIcPostHandler = ThreadUtils.getUiHandler();
     }
 
-    public void setDefaultEditableChild(final IGeckoEditableChild child) {
+    @Override // IGeckoEditableParent
+    public void setDefaultChild(final IGeckoEditableChild child) {
         if (DEBUG) {
-            // Called by SessionTextInput.
-            ThreadUtils.assertOnUiThread();
+            // On Gecko or binder thread.
             Log.d(LOGTAG, "setDefaultEditableChild " + child);
         }
         mDefaultChild = child;
