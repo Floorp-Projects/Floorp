@@ -3251,10 +3251,6 @@ pref("dom.ipc.plugins.hangUITimeoutSecs", 11);
 // Minimum time that the plugin hang UI will be displayed
 pref("dom.ipc.plugins.hangUIMinDisplaySecs", 10);
 #endif
-// How long a content process can take before closing its IPC channel
-// after shutdown is initiated.  If the process exceeds the timeout,
-// we fear the worst and kill it.
-pref("dom.ipc.tabs.shutdownTimeoutSecs", 5);
 #else
 // No timeout in leak-checking builds
 pref("dom.ipc.plugins.timeoutSecs", 0);
@@ -3265,7 +3261,6 @@ pref("dom.ipc.plugins.parentTimeoutSecs", 0);
 pref("dom.ipc.plugins.hangUITimeoutSecs", 0);
 pref("dom.ipc.plugins.hangUIMinDisplaySecs", 0);
 #endif
-pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
 #endif
 
 pref("dom.ipc.plugins.flash.disable-protected-mode", false);
