@@ -29,7 +29,7 @@ add_task(async function() {
 
   checkResults();
 
-  await gDevTools.closeToolbox(target);
+  await toolbox.destroy();
   gBrowser.removeCurrentTab();
 });
 

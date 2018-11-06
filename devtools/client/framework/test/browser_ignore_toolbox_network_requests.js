@@ -26,7 +26,7 @@ add_task(async function() {
 
   is(store.getState().requests.requests.size, 0, "No network requests appear in the network panel");
 
-  await gDevTools.closeToolbox(target);
+  await toolbox.destroy();
   tab = target = toolbox = panel = null;
   gBrowser.removeCurrentTab();
 });

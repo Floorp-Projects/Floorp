@@ -32,7 +32,7 @@ add_task(async function() {
 
   let toolbox = await gDevTools.showToolbox(target, testToolDefinition.id);
   is(toolbox.currentToolId, "testTool", "test-tool was selected");
-  await gDevTools.closeToolbox(target);
+  await toolbox.destroy();
 
   // Make the previously selected tool unavailable.
   testToolDefinition.isTargetSupported = () => false;
@@ -41,7 +41,7 @@ add_task(async function() {
   toolbox = await gDevTools.showToolbox(target);
   is(toolbox.currentToolId, "webconsole", "web console was selected");
 
-  await gDevTools.closeToolbox(target);
+  await toolbox.destroy();
   gDevTools.unregisterTool(testToolDefinition.id);
   tab = toolbox = target = null;
   gBrowser.removeCurrentTab();

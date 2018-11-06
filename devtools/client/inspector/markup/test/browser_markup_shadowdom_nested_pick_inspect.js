@@ -58,7 +58,7 @@ add_task(async function() {
   await assertMarkupView(inspector);
 
   info("Close DevTools before testing Inspect Element");
-  await gDevTools.closeToolbox(inspector.target);
+  await toolbox.destroy();
 
   info("Waiting for element picker to become active.");
   const newTestActor = await getTestActorWithoutToolbox(tab);
