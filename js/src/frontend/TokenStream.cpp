@@ -832,12 +832,13 @@ TokenStreamChars<Utf8Unit, AnyCharsAccess>::badStructurallyValidCodePoint(uint32
     char* codePointStr = codePointCharsArray + ArrayLength(codePointCharsArray);
     *--codePointStr = '\0';
 
-    uint32_t copy = codePoint;
-    while (copy) {
+    // Note that by do-while looping here rather than while-looping, this
+    // writes a '0' when |codePoint == 0|.
+    do {
         MOZ_ASSERT(codePointCharsArray < codePointStr);
-        *--codePointStr = toHexChar(copy & 0xF);
-        copy >>= 4;
-    }
+        *--codePointStr = toHexChar(codePoint & 0xF);
+        codePoint >>= 4;
+    } while (codePoint);
 
     MOZ_ASSERT(codePointCharsArray + 2 <= codePointStr);
     *--codePointStr = 'x';
