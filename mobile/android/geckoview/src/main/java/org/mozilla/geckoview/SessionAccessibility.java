@@ -644,5 +644,9 @@ public class SessionAccessibility {
                 }
             });
         }
+
+        @WrapForJNI(calledFrom = "gecko")
+        private void replaceViewportCache(final GeckoBundle[] bundles) {
+        }
     }
 }
