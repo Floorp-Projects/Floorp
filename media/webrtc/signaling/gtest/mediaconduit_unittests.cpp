@@ -404,9 +404,9 @@ class TransportConduitTest : public ::testing::Test
     mozilla::AudioCodecConfig cinst1(124, "opus", 48000, 960, 1, 64000, false);
     mozilla::AudioCodecConfig cinst2(125, "L16", 16000, 320, 1, 256000, false);
 
-    std::vector<mozilla::AudioCodecConfig*> rcvCodecList;
-    rcvCodecList.push_back(&cinst1);
-    rcvCodecList.push_back(&cinst2);
+    std::vector<UniquePtr<mozilla::AudioCodecConfig>> rcvCodecList;
+    rcvCodecList.emplace_back(new mozilla::AudioCodecConfig(cinst1));
+    rcvCodecList.emplace_back(new mozilla::AudioCodecConfig(cinst2));
 
     err = mAudioSession->ConfigureSendMediaCodec(&cinst1);
     ASSERT_EQ(mozilla::kMediaConduitNoError, err);
@@ -453,7 +453,7 @@ class TransportConduitTest : public ::testing::Test
     cerr << "    Test Receive Codec Configuration API Now " << endl;
     cerr << "   *************************************************" << endl;
 
-    std::vector<mozilla::VideoCodecConfig* > rcvCodecList;
+    std::vector<UniquePtr<mozilla::VideoCodecConfig>> rcvCodecList;
 
     //Same APIs
     mozilla::EncodingConstraints constraints;
@@ -490,8 +490,8 @@ class TransportConduitTest : public ::testing::Test
     mozilla::VideoCodecConfig cinst4(124, "", constraints);
     cinst4.mSimulcastEncodings.push_back(encoding);
 
-    rcvCodecList.push_back(&cinst3);
-    rcvCodecList.push_back(&cinst4);
+    rcvCodecList.emplace_back(new mozilla::VideoCodecConfig(cinst3));
+    rcvCodecList.emplace_back(new mozilla::VideoCodecConfig(cinst4));
 
     err = videoSession->ConfigureRecvMediaCodecs(rcvCodecList);
     EXPECT_TRUE(err != mozilla::kMediaConduitNoError);

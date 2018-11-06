@@ -719,9 +719,10 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
   }
 
   virtual void
-  UpdateRedundantEncodings(std::vector<JsepCodecDescription*> codecs)
+  UpdateRedundantEncodings(
+      const std::vector<UniquePtr<JsepCodecDescription>>& codecs)
   {
-    for (const auto codec : codecs) {
+    for (const auto& codec : codecs) {
       if (codec->mType == SdpMediaSection::kVideo &&
           codec->mEnabled &&
           codec->mName != "red") {

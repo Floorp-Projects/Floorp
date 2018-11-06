@@ -17,7 +17,6 @@
 #include "signaling/src/sdp/RsdparsaSdpParser.h"
 #include "signaling/src/sdp/SipccSdpParser.h"
 #include "signaling/src/sdp/SdpHelper.h"
-#include "signaling/src/common/PtrVector.h"
 
 namespace mozilla {
 
@@ -87,10 +86,10 @@ public:
       SdpDirectionAttribute::Direction direction =
       SdpDirectionAttribute::Direction::kSendrecv) override;
 
-  virtual std::vector<JsepCodecDescription*>&
+  virtual std::vector<UniquePtr<JsepCodecDescription>>&
   Codecs() override
   {
-    return mSupportedCodecs.values;
+    return mSupportedCodecs;
   }
 
   virtual nsresult CreateOffer(const JsepOfferOptions& options,
@@ -292,7 +291,7 @@ private:
   UniquePtr<Sdp> mCurrentRemoteDescription;
   UniquePtr<Sdp> mPendingLocalDescription;
   UniquePtr<Sdp> mPendingRemoteDescription;
-  PtrVector<JsepCodecDescription> mSupportedCodecs;
+  std::vector<UniquePtr<JsepCodecDescription>> mSupportedCodecs;
   std::string mLastError;
   SipccSdpParser mSipccParser;
   SdpHelper mSdpHelper;

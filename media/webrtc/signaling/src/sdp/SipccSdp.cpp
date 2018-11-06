@@ -36,19 +36,19 @@ SipccSdp::GetBandwidth(const std::string& type) const
 const SdpMediaSection&
 SipccSdp::GetMediaSection(size_t level) const
 {
-  if (level > mMediaSections.values.size()) {
+  if (level > mMediaSections.size()) {
     MOZ_CRASH();
   }
-  return *mMediaSections.values[level];
+  return *mMediaSections[level];
 }
 
 SdpMediaSection&
 SipccSdp::GetMediaSection(size_t level)
 {
-  if (level > mMediaSections.values.size()) {
+  if (level > mMediaSections.size()) {
     MOZ_CRASH();
   }
-  return *mMediaSections.values[level];
+  return *mMediaSections[level];
 }
 
 SdpMediaSection&
@@ -57,7 +57,7 @@ SipccSdp::AddMediaSection(SdpMediaSection::MediaType mediaType,
                           SdpMediaSection::Protocol protocol,
                           sdp::AddrType addrType, const std::string& addr)
 {
-  size_t level = mMediaSections.values.size();
+  size_t level = mMediaSections.size();
   SipccSdpMediaSection* media =
       new SipccSdpMediaSection(level, &mAttributeList);
   media->mMediaType = mediaType;
@@ -66,7 +66,7 @@ SipccSdp::AddMediaSection(SdpMediaSection::MediaType mediaType,
   media->mProtocol = protocol;
   media->mConnection = MakeUnique<SdpConnection>(addrType, addr);
   media->GetAttributeList().SetAttribute(new SdpDirectionAttribute(dir));
-  mMediaSections.values.push_back(media);
+  mMediaSections.emplace_back(media);
   return *media;
 }
 
@@ -125,7 +125,7 @@ SipccSdp::Load(sdp_t* sdp, SdpErrorHolder& errorHolder)
     if (!section->Load(sdp, i + 1, errorHolder)) {
       return false;
     }
-    mMediaSections.values.push_back(section.release());
+    mMediaSections.push_back(std::move(section));
   }
   return true;
 }
@@ -147,7 +147,7 @@ SipccSdp::Serialize(std::ostream& os) const
   os << mAttributeList;
 
   // media sections
-  for (const SdpMediaSection* msection : mMediaSections.values) {
+  for (const auto& msection : mMediaSections) {
     os << *msection;
   }
 }
