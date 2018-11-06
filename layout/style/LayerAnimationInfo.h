@@ -26,6 +26,13 @@ struct LayerAnimationInfo {
     nsChangeHint mChangeHint;
   };
 
+  // Returns the corresponding display item type for |aProperty| when it is
+  // animated on the compositor.
+  // Returns DisplayItemType::TYPE_ZERO if |aProperty| cannot be animated on the
+  // compositor.
+  static DisplayItemType
+  GetDisplayItemTypeForProperty(nsCSSPropertyID aProperty);
+
   static const size_t kRecords =
     nsCSSPropertyIDSet::CompositorAnimatableCount();
   static const Record sRecords[kRecords];
