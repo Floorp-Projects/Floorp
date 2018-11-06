@@ -101,6 +101,11 @@
                     "optional": true,
                     "deprecated": "Unsupported on Firefox."
                   },
+                  "encoding": {
+                    "type": "string",
+                    "optional": true,
+                    "description": "Encoding of the search term."
+                  },
                   "is_default": {
                     "type": "boolean",
                     "optional": true,

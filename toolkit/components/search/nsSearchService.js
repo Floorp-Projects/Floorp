@@ -4004,7 +4004,7 @@ SearchService.prototype = {
       isBuiltIn: extension.isPrivileged,
       suggestURL: searchProvider.suggest_url,
       suggestPostParams: searchProvider.suggest_url_post_params,
-      queryCharset: "UTF-8",
+      queryCharset: searchProvider.encoding || "UTF-8",
       mozParams: searchProvider.params,
     };
     this.addEngineWithDetails(searchProvider.name.trim(), params);
