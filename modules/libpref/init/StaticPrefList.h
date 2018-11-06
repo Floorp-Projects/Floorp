@@ -423,6 +423,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Block multiple window.open() per single event.
+VARCACHE_PREF(
+  "dom.block_multiple_popups",
+   dom_block_multiple_popups,
+  bool, true
+)
+
 //---------------------------------------------------------------------------
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------
