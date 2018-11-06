@@ -267,6 +267,9 @@ public:
   void
   Abort() override;
 
+  already_AddRefed<Promise>
+  ConsumeBody(JSContext* aCx, FetchConsumeType aType, ErrorResult& aRv);
+
 protected:
   nsCOMPtr<nsIGlobalObject> mOwner;
 
@@ -289,6 +292,9 @@ protected:
   SetMimeType();
 
   void
+  OverrideMimeType(const nsACString& aMimeType);
+
+  void
   SetReadableStreamBody(JSContext* aCx, JSObject* aBody);
 
 private:
@@ -297,9 +303,6 @@ private:
   {
     return static_cast<Derived*>(const_cast<FetchBody*>(this));
   }
-
-  already_AddRefed<Promise>
-  ConsumeBody(JSContext* aCx, FetchConsumeType aType, ErrorResult& aRv);
 
   void
   LockStream(JSContext* aCx, JS::HandleObject aStream, ErrorResult& aRv);

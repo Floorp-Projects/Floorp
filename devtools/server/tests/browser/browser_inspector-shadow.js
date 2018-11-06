@@ -141,6 +141,7 @@ add_task(async function() {
 add_task(async function() {
   info("Test UA widgets when showUserAgentShadowRoots is true");
   await SpecialPowers.pushPrefEnv({"set": [
+    ["dom.ua_widget.enabled", true],
     ["devtools.inspector.showUserAgentShadowRoots", true],
   ]});
 
@@ -160,6 +161,7 @@ add_task(async function() {
 add_task(async function() {
   info("Test UA widgets when showUserAgentShadowRoots is false");
   await SpecialPowers.pushPrefEnv({"set": [
+    ["dom.ua_widget.enabled", true],
     ["devtools.inspector.showUserAgentShadowRoots", false],
   ]});
 
