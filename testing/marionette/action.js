@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint no-dupe-keys:off */
+/* eslint-disable no-restricted-globals */
 
 "use strict";
 

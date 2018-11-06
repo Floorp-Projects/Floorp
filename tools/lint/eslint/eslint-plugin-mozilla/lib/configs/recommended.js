@@ -293,6 +293,9 @@ module.exports = {
     // Dissallow use of new wrappers
     "no-new-wrappers": "error",
 
+    // Disallow use of event global.
+    "no-restricted-globals": ["error", "event"],
+
     // Disallows unnecessary `return await ...`.
     "no-return-await": "error",
 

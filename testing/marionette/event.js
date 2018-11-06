@@ -7,6 +7,7 @@ this.event = {};
 
 "use strict";
 /* global content, is */
+/* eslint-disable no-restricted-globals */
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -320,6 +321,7 @@ function computeKeyCodeFromChar_(char, win) {
   }
 }
 /* eslint-enable */
+/* eslint-disable no-restricted-globals */
 
 /**
  * Returns true if the given key should cause keypress event when widget
@@ -769,6 +771,7 @@ function expectEvent_(expectedTarget, expectedEvent, testName) {
   return handler;
 }
 /* eslint-enable */
+/* eslint-disable no-restricted-globals */
 
 /**
  * Check if the event was fired or not. The provided event handler will
