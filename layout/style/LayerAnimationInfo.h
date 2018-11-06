@@ -9,6 +9,7 @@
 
 #include "nsChangeHint.h"
 #include "nsCSSPropertyID.h"
+#include "nsCSSPropertyIDSet.h"
 #include "nsDisplayList.h" // For nsDisplayItem::Type
 
 namespace mozilla {
@@ -25,7 +26,8 @@ struct LayerAnimationInfo {
     nsChangeHint mChangeHint;
   };
 
-  static const size_t kRecords = 2;
+  static const size_t kRecords =
+    nsCSSPropertyIDSet::CompositorAnimatableCount();
   static const Record sRecords[kRecords];
 };
 
