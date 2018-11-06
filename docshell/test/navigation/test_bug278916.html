@@ -6,21 +6,21 @@
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
     <script type="text/javascript" src="NavigationUtils.js"></script>
 <script>
-window.onload = function () {
+window.onload = function() {
   document.getElementById("link0").href = target_url;
-  sendMouseEvent({type:"click"}, "link0");
-  
+  sendMouseEvent({type: "click"}, "link0");
+
   xpcWaitForFinishedFrames(function() {
     var array_of_frames = xpcGetFramesByName("window0");
     is(array_of_frames.length, 1, "Should only open one window using a fancy hyperlink.");
 
-    for (var i=0; i < array_of_frames.length; ++i)
+    for (var i = 0; i < array_of_frames.length; ++i)
       array_of_frames[i].close();
 
     xpcCleanupWindows();
     SimpleTest.finish();
   }, 1);
-}
+};
 </script>
 </head>
 <body>

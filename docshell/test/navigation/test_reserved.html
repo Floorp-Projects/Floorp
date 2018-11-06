@@ -22,7 +22,7 @@ function testTop() {
     xpcCleanupWindows();
 
     window1 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_top,open", "_blank", "width=10,height=10");
-    
+
     xpcWaitForFinishedFrames(function() {
       isInaccessible(window1, "Should be able to navigate off-domain top by calling window.open.");
       window1.close();
@@ -84,7 +84,7 @@ function testParent() {
 
 window.onload = function() {
   testTop();
-}
+};
 </script>
 </head>
 <body>

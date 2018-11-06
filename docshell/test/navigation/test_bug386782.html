@@ -21,20 +21,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
       {
         // <html><body><p>designModeDocument</p></body></html>
         url: "file_bug386782_designmode.html",
-        name: 'designModeNavigate',
+        name: "designModeNavigate",
         onload(doc) { doc.designMode = "on"; },
-        expectedBodyBeforeEdit: '<p>designModeDocument</p>',
-        expectedBodyAfterEdit:  '<p>EDITED designModeDocument</p>',
-        expectedBodyAfterSecondEdit: '<p>EDITED TWICE designModeDocument</p>',
+        expectedBodyBeforeEdit: "<p>designModeDocument</p>",
+        expectedBodyAfterEdit:  "<p>EDITED designModeDocument</p>",
+        expectedBodyAfterSecondEdit: "<p>EDITED TWICE designModeDocument</p>",
       },
       {
         // <html><body contentEditable="true"><p>contentEditable</p></body></html>
         url: "file_bug386782_contenteditable.html",
-        name: 'contentEditableNavigate',
-        expectedBodyBeforeEdit: '<p>contentEditable</p>',
-        expectedBodyAfterEdit:  'EDITED <br><p>contentEditable</p>',
-        expectedBodyAfterSecondEdit: 'EDITED TWICE <br><p>contentEditable</p>',
-      }
+        name: "contentEditableNavigate",
+        expectedBodyBeforeEdit: "<p>contentEditable</p>",
+        expectedBodyAfterEdit:  "EDITED <br><p>contentEditable</p>",
+        expectedBodyAfterSecondEdit: "EDITED TWICE <br><p>contentEditable</p>",
+      },
     ];
 
     var gTestNum = -1;
@@ -66,10 +66,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
       // WARNING: If the following test fails, give the setTimeout() in the onload()
       // a bit longer; the doc hasn't had enough time to setup its editor.
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyBeforeEdit, "Is doc setup yet");
-      sendString('EDITED ', gTest.window);
+      sendString("EDITED ", gTest.window);
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Editing failed.");
 
-      gTest.window.location = 'about:blank';
+      gTest.window.location = "about:blank";
       SimpleTest.waitForFocus(goBack, gTest.window);
     }
 
@@ -101,7 +101,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
 
       // Check that we can still edit the page.
       gTest.window.document.body.focus();
-      sendString('TWICE ', gTest.window);
+      sendString("TWICE ", gTest.window);
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterSecondEdit, "Can we still edit?");
 
       gTest.window.close();

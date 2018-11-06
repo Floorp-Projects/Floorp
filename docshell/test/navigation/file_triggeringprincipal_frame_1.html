@@ -8,18 +8,18 @@
 <script type="application/javascript">
   // make sure to set document.domain to the same domain as the subframe
   window.onload = function() {
-    document.domain = 'mochi.test';
+    document.domain = "mochi.test";
   };
-  window.addEventListener('message', receiveMessage);
+  window.addEventListener("message", receiveMessage);
   function receiveMessage(event) {
     // make sure to get the right start command, otherwise
     // let the parent know and fail the test
-    if (event.data.start !== 'startTest') {
+    if (event.data.start !== "startTest") {
       window.removeEventListener("message", receiveMessage);
-      window.parent.postMessage({triggeringPrincipalURI: 'false'}, '*');
+      window.parent.postMessage({triggeringPrincipalURI: "false"}, "*");
     }
     // click the link to navigate the subframe
-    document.getElementById('testlink').click();
+    document.getElementById("testlink").click();
   }
 </script>
 

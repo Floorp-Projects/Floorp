@@ -30,31 +30,31 @@
       let shistory = webNav.sessionHistory;
       let testSteps = [
         function() {
-          opener.is(shistory.count, 1, 'check history length');
-          opener.is(shistory.index, 0, 'check history index');
-          opener.ok(!webNav.canGoForward, 'check canGoForward');
-          setTimeout(() => window.location = 'file_bug1300461_back.html', 0);
+          opener.is(shistory.count, 1, "check history length");
+          opener.is(shistory.index, 0, "check history index");
+          opener.ok(!webNav.canGoForward, "check canGoForward");
+          setTimeout(() => window.location = "file_bug1300461_back.html", 0);
         },
         function() {
-          opener.is(shistory.count, 2, 'check history length');
-          opener.is(shistory.index, 0, 'check history index');
-          opener.ok(webNav.canGoForward, 'check canGoForward');
+          opener.is(shistory.count, 2, "check history length");
+          opener.is(shistory.index, 0, "check history index");
+          opener.ok(webNav.canGoForward, "check canGoForward");
           window.history.forward();
-          opener.is(shistory.legacySHistory.requestedIndex, 1, 'check requestedIndex');
+          opener.is(shistory.legacySHistory.requestedIndex, 1, "check requestedIndex");
         },
         function() {
-          opener.is(shistory.count, 2, 'check history length');
-          opener.is(shistory.index, 0, 'check history index');
-          opener.ok(webNav.canGoForward, 'check canGoForward');
-          opener.info('file_bug1300461.html tests finished');
+          opener.is(shistory.count, 2, "check history length");
+          opener.is(shistory.index, 0, "check history index");
+          opener.ok(webNav.canGoForward, "check canGoForward");
+          opener.info("file_bug1300461.html tests finished");
           opener.nextTest();
           window.close();
-        }
+        },
       ];
 
       function test() {
         if (opener) {
-          opener.info('file_bug1300461.html test ' + opener.testCount);
+          opener.info("file_bug1300461.html test " + opener.testCount);
           testSteps[opener.testCount++]();
         }
       }

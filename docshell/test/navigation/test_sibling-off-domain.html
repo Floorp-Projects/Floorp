@@ -9,8 +9,8 @@
       iframe { width: 90%; height: 50px; }
     </style>
 <script>
-window.onload = function () {
-  document.getElementById('active').innerHTML =
+window.onload = function() {
+  document.getElementById("active").innerHTML =
       '<iframe src="http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#parent.frames[0],location"></iframe>' +
       '<iframe src="http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#child1,open"></iframe>' +
       '<iframe src="http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#child2,form"></iframe>' +
@@ -25,7 +25,7 @@ window.onload = function () {
     xpcCleanupWindows();
     SimpleTest.finish();
   }, 4);
-}
+};
 </script>
 </head>
 <body>
