@@ -1248,6 +1248,7 @@ KeyframeEffect::CanThrottle() const
     }
   }
 
+  EffectSet* effectSet = nullptr;
   for (const LayerAnimationInfo::Record& record :
         LayerAnimationInfo::sRecords) {
     // Skip properties that are overridden by !important rules.
@@ -1259,10 +1260,12 @@ KeyframeEffect::CanThrottle() const
       continue;
     }
 
-    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
-                                                   mTarget->mPseudoType);
-    MOZ_ASSERT(effectSet, "CanThrottle should be called on an effect "
-                          "associated with a target element");
+    if (!effectSet) {
+      effectSet = EffectSet::GetEffectSet(mTarget->mElement,
+                                          mTarget->mPseudoType);
+      MOZ_ASSERT(effectSet, "CanThrottle should be called on an effect "
+                            "associated with a target element");
+    }
     // Note that AnimationInfo::GetGenarationFromFrame() is supposed to work
     // with the primary frame instead of the style frame.
     Maybe<uint64_t> generation = layers::AnimationInfo::GetGenerationFromFrame(
