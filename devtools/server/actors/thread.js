@@ -1484,11 +1484,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     if (this.dbg.replaying) {
-      const message = this.dbg.getNewConsoleMessage();
-      packet.recordingProgress = this.dbg.replayRecordingPosition();
-      if (message) {
-        packet.executionPoint = message.executionPoint;
-      }
+      packet.executionPoint = this.dbg.replayCurrentExecutionPoint();
+      packet.recordingEndpoint = this.dbg.replayRecordingEndpoint();
     }
 
     if (poppedFrames) {
