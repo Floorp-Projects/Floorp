@@ -209,12 +209,11 @@ Gecko_MediaFeatures_GetDisplayMode(nsIDocument* aDocument)
                 nsIDocShell::DISPLAY_MODE_FULLSCREEN == static_cast<int32_t>(StyleDisplayMode::Fullscreen),
                 "nsIDocShell display modes must mach nsStyleConsts.h");
 
-  uint32_t displayMode = nsIDocShell::DISPLAY_MODE_BROWSER;
-  if (nsIDocShell* docShell = rootDocument->GetDocShell()) {
-    docShell->GetDisplayMode(&displayMode);
+  nsIDocShell* docShell = rootDocument->GetDocShell();
+  if (!docShell) {
+    return StyleDisplayMode::Browser;
   }
-
-  return static_cast<StyleDisplayMode>(displayMode);
+  return static_cast<StyleDisplayMode>(docShell->GetDisplayMode());
 }
 
 bool
@@ -273,9 +272,7 @@ GetPointerCapabilities(nsIDocument* aDocument, LookAndFeel::IntID aID)
   if (nsIDocShell* docShell = aDocument->GetDocShell()) {
     // The touch-events-override happens only for the Responsive Design Mode so
     // that we don't need to care about ResistFingerprinting.
-    uint32_t touchEventsOverride = nsIDocShell::TOUCHEVENTS_OVERRIDE_NONE;
-    docShell->GetTouchEventsOverride(&touchEventsOverride);
-    if (touchEventsOverride == nsIDocShell::TOUCHEVENTS_OVERRIDE_ENABLED) {
+    if (docShell->GetTouchEventsOverride() == nsIDocShell::TOUCHEVENTS_OVERRIDE_ENABLED) {
       return PointerCapabilities::Coarse;
     }
   }
