@@ -530,7 +530,7 @@ DecodeCodeSection(const ModuleEnvironment& env, DecoderT& d, ModuleGenerator& mg
 
 SharedModule
 wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, UniqueChars* error,
-                    UniqueCharsVector* warnings)
+                    UniqueCharsVector* warnings, UniqueLinkData* maybeLinkData)
 {
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
@@ -569,7 +569,7 @@ wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, Uni
         return nullptr;
     }
 
-    return mg.finishModule(bytecode);
+    return mg.finishModule(bytecode, nullptr, maybeLinkData);
 }
 
 void

@@ -9,8 +9,8 @@ if (build['debug'] && isSimulator)
   quit();
 
 // All the glue code is wrapped in a function so it can be executed uncached and
-// cached (via the shared cacheEntry argument).
-function runBox2d(cacheEntry) {
+// cached or compiled separately.
+function runBox2d(cacheEntryOrModule) {
 
 // The Module object: Our interface to the outside world. We import
 // and export values on it, and do the work to get that through
@@ -1499,12 +1499,15 @@ function integrateWasmJS(Module) {
     Module['printErr']('asynchronously preparing wasm');
     addRunDependency('wasm-instantiate'); // we can't run yet
 
-    (wasmStreamingIsSupported()
-     ? WebAssembly.instantiateStreaming(cacheEntry, info)
-     : WebAssembly.instantiate(cacheEntry.getBuffer(), info))
+    (cacheEntryOrModule instanceof WebAssembly.Module
+     ? WebAssembly.instantiate(cacheEntryOrModule, info)
+       .then(instance => ({instance, module:cacheEntryOrModule}))
+     : wasmStreamingIsSupported()
+       ? WebAssembly.instantiateStreaming(cacheEntryOrModule, info)
+       : WebAssembly.instantiate(cacheEntryOrModule.getBuffer(), info))
     .then(function(output) {
-      if (!cacheEntry.module)
-        cacheEntry.module = output.module;
+      if (!cacheEntryOrModule.module)
+        cacheEntryOrModule.module = output.module;
 
       // receiveInstance() will swap in the exports (to Module.asm) so they can be called
       receiveInstance(output.instance);
@@ -3044,8 +3047,10 @@ drainJobQueue();
 
 };  // End of function wrapping the whole top-level Emscripten glue code
 
+const bytecode = os.file.readFile(scriptdir + 'wasm_box2d.wasm', 'binary');
+
 setBufferStreamParams(/* delayMillis = */ 1, /* chunkSize = */ 1000);
-const cacheEntry = streamCacheEntry(os.file.readFile(scriptdir + 'wasm_box2d.wasm', 'binary'));
+const cacheEntry = streamCacheEntry(bytecode);
 
 runBox2d(cacheEntry);
 
@@ -3053,3 +3058,7 @@ while (!wasmHasTier2CompilationCompleted(cacheEntry.module)) sleep(1);
 assertEq(cacheEntry.cached, wasmCachingIsSupported());
 
 runBox2d(cacheEntry);
+
+if (wasmCachingIsSupported()) {
+    runBox2d(wasmCompileInSeparateProcess(bytecode));
+}
