@@ -164,13 +164,14 @@ SourceSurfaceD2D1::MarkIndependent()
 DataSourceSurfaceD2D1::DataSourceSurfaceD2D1(ID2D1Bitmap1 *aMappableBitmap, SurfaceFormat aFormat)
   : mBitmap(aMappableBitmap)
   , mFormat(aFormat)
-  , mMapped(false)
+  , mIsMapped(false)
+  , mImplicitMapped(false)
 {
 }
 
 DataSourceSurfaceD2D1::~DataSourceSurfaceD2D1()
 {
-  if (mMapped) {
+  if (mImplicitMapped) {
     mBitmap->Unmap();
   }
 }
@@ -195,7 +196,7 @@ bool
 DataSourceSurfaceD2D1::Map(MapType aMapType, MappedSurface *aMappedSurface)
 {
   // DataSourceSurfaces used with the new Map API should not be used with GetData!!
-  MOZ_ASSERT(!mMapped);
+  MOZ_ASSERT(!mImplicitMapped);
   MOZ_ASSERT(!mIsMapped);
 
   D2D1_MAP_OPTIONS options;
@@ -240,14 +241,14 @@ DataSourceSurfaceD2D1::EnsureMapped()
 {
   // Do not use GetData() after having used Map!
   MOZ_ASSERT(!mIsMapped);
-  if (mMapped) {
+  if (mImplicitMapped) {
     return;
   }
   if (FAILED(mBitmap->Map(D2D1_MAP_OPTIONS_READ, &mMap))) {
     gfxCriticalError() << "Failed to map bitmap (EM).";
     return;
   }
-  mMapped = true;
+  mImplicitMapped = true;
 }
 
 }

@@ -23,7 +23,6 @@ public:
     : mRawData(0)
     , mStride(0)
     , mFormat(SurfaceFormat::UNKNOWN)
-    , mMapCount(0)
     , mOwnData(false)
     , mDeallocator(nullptr)
     , mClosure(nullptr)
@@ -38,8 +37,6 @@ public:
       // The buffer is created from GuaranteePersistance().
       delete [] mRawData;
     }
-
-    MOZ_ASSERT(mMapCount == 0);
   }
 
   virtual uint8_t *GetData() override { return mRawData; }
@@ -50,32 +47,6 @@ public:
   virtual SurfaceFormat GetFormat() const override { return mFormat; }
 
   virtual void GuaranteePersistance() override;
-
-  // Althought Map (and Moz2D in general) isn't normally threadsafe,
-  // we want to allow it for SourceSurfaceRawData since it should
-  // always be fine (for reading at least).
-  //
-  // This is the same as the base class implementation except using
-  // mMapCount instead of mIsMapped since that breaks for multithread.
-  //
-  // Once mfbt supports Monitors we should implement proper read/write
-  // locking to prevent write races.
-  virtual bool Map(MapType, MappedSurface *aMappedSurface) override
-  {
-    aMappedSurface->mData = GetData();
-    aMappedSurface->mStride = Stride();
-    bool success = !!aMappedSurface->mData;
-    if (success) {
-      mMapCount++;
-    }
-    return success;
-  }
-
-  virtual void Unmap() override
-  {
-    mMapCount--;
-    MOZ_ASSERT(mMapCount >= 0);
-  }
 
 private:
   friend class Factory;
@@ -94,7 +65,6 @@ private:
   int32_t mStride;
   SurfaceFormat mFormat;
   IntSize mSize;
-  Atomic<int32_t> mMapCount;
 
   bool mOwnData;
   Factory::SourceSurfaceDeallocator mDeallocator;
@@ -108,11 +78,9 @@ public:
   SourceSurfaceAlignedRawData()
     : mStride(0)
     , mFormat(SurfaceFormat::UNKNOWN)
-    , mMapCount(0)
   {}
   ~SourceSurfaceAlignedRawData()
   {
-    MOZ_ASSERT(mMapCount == 0);
   }
 
   bool Init(const IntSize &aSize,
@@ -134,23 +102,6 @@ public:
                               size_t& aExtHandlesOut,
                               uint64_t& aExtIdOut) const override;
 
-  virtual bool Map(MapType, MappedSurface *aMappedSurface) override
-  {
-    aMappedSurface->mData = GetData();
-    aMappedSurface->mStride = Stride();
-    bool success = !!aMappedSurface->mData;
-    if (success) {
-      mMapCount++;
-    }
-    return success;
-  }
-
-  virtual void Unmap() override
-  {
-    mMapCount--;
-    MOZ_ASSERT(mMapCount >= 0);
-  }
-
 private:
   friend class Factory;
 
@@ -158,7 +109,6 @@ private:
   int32_t mStride;
   SurfaceFormat mFormat;
   IntSize mSize;
-  Atomic<int32_t> mMapCount;
 };
 
 } // namespace gfx
