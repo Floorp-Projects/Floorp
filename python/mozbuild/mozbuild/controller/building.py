@@ -992,8 +992,10 @@ class BuildDriver(MozbuildObject):
 
             def build_out_of_date(output, dep_file):
                 if not os.path.isfile(output):
+                    print(" Output reference file not found: %s" % output)
                     return True
                 if not os.path.isfile(dep_file):
+                    print(" Configure dependency file not found: %s" % dep_file)
                     return True
 
                 deps = []
@@ -1006,9 +1008,11 @@ class BuildDriver(MozbuildObject):
                         dep_mtime = os.path.getmtime(f)
                     except OSError as e:
                         if e.errno == errno.ENOENT:
+                            print(" Configure input not found: %s" % f)
                             return True
                         raise
                     if dep_mtime > mtime:
+                        print(" %s is out of date with respect to %s" % (output, f))
                         return True
                 return False
 
@@ -1058,6 +1062,9 @@ class BuildDriver(MozbuildObject):
                                                                 'config_status_deps.in')):
                 if previous_backend and 'Make' not in previous_backend:
                     clobber_requested = self._clobber_configure()
+
+                if config is None:
+                    print(" Config object not found by mach.")
 
                 config_rc = self.configure(buildstatus_messages=True,
                                            line_handler=output.on_line)
