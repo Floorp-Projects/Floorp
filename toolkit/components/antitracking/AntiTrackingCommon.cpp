@@ -142,11 +142,17 @@ CheckCookiePermissionForPrincipal(nsIPrincipal* aPrincipal)
 }
 
 int32_t
-CookiesBehavior(nsIPrincipal* aPrincipal)
+CookiesBehavior(nsIPrincipal* aTopLevelPrincipal,
+                nsIPrincipal* a3rdPartyPrincipal)
 {
   // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
   // (See Bug 1406675 for rationale).
-  if (BasePrincipal::Cast(aPrincipal)->AddonPolicy()) {
+  if (BasePrincipal::Cast(aTopLevelPrincipal)->AddonPolicy()) {
+    return nsICookieService::BEHAVIOR_ACCEPT;
+  }
+
+  if (a3rdPartyPrincipal &&
+      BasePrincipal::Cast(a3rdPartyPrincipal)->AddonPolicy()) {
     return nsICookieService::BEHAVIOR_ACCEPT;
   }
 
@@ -614,22 +620,24 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
   LOG_SPEC(("Computing whether window %p has access to URI %s", aWindow, _spec), aURI);
 
   nsGlobalWindowInner* innerWindow = nsGlobalWindowInner::Cast(aWindow);
+  nsIPrincipal* windowPrincipal = innerWindow->GetPrincipal();
+  if (!windowPrincipal) {
+    LOG(("Our window has no principal"));
+    return false;
+  }
+
   nsIPrincipal* toplevelPrincipal = innerWindow->GetTopLevelPrincipal();
   if (!toplevelPrincipal) {
     // We are already the top-level principal. Let's use the window's principal.
     LOG(("Our inner window lacks a top-level principal, use the window's principal instead"));
-    toplevelPrincipal = innerWindow->GetPrincipal();
+    toplevelPrincipal = windowPrincipal;
   }
 
-  if (!toplevelPrincipal) {
-    // This should not be possible, right?
-    LOG(("No top-level principal, this shouldn't be happening! Bail out early"));
-    return false;
-  }
+  MOZ_ASSERT(toplevelPrincipal);
 
   nsCookieAccess access = CheckCookiePermissionForPrincipal(toplevelPrincipal);
   if (access != nsICookiePermission::ACCESS_DEFAULT) {
-    LOG(("CheckCookiePermissionForPrincipal() returned a non-default access code (%d), returning %s",
+    LOG(("CheckCookiePermissionForPrincipal() returned a non-default access code (%d) for top-level window's principal, returning %s",
          int(access), access != nsICookiePermission::ACCESS_DENY ?
                         "success" : "failure"));
     if (access != nsICookiePermission::ACCESS_DENY) {
@@ -640,7 +648,20 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
     return false;
   }
 
-  int32_t behavior = CookiesBehavior(toplevelPrincipal);
+  access = CheckCookiePermissionForPrincipal(windowPrincipal);
+  if (access != nsICookiePermission::ACCESS_DEFAULT) {
+    LOG(("CheckCookiePermissionForPrincipal() returned a non-default access code (%d) for window's principal, returning %s",
+         int(access), access != nsICookiePermission::ACCESS_DENY ?
+                        "success" : "failure"));
+    if (access != nsICookiePermission::ACCESS_DENY) {
+      return true;
+    }
+
+    *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION;
+    return false;
+  }
+
+  int32_t behavior = CookiesBehavior(toplevelPrincipal, windowPrincipal);
   if (behavior == nsICookieService::BEHAVIOR_ACCEPT) {
     LOG(("The cookie behavior pref mandates accepting all cookies!"));
     return true;
@@ -798,7 +819,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
 
   nsCookieAccess access = CheckCookiePermissionForPrincipal(toplevelPrincipal);
   if (access != nsICookiePermission::ACCESS_DEFAULT) {
-    LOG(("CheckCookiePermissionForPrincipal() returned a non-default access code (%d), returning %s",
+    LOG(("CheckCookiePermissionForPrincipal() returned a non-default access code (%d) for top-level window's principal, returning %s",
          int(access), access != nsICookiePermission::ACCESS_DENY ?
                         "success" : "failure"));
     if (access != nsICookiePermission::ACCESS_DENY) {
@@ -814,7 +835,20 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
     return false;
   }
 
-  int32_t behavior = CookiesBehavior(toplevelPrincipal);
+  access = CheckCookiePermissionForPrincipal(channelPrincipal);
+  if (access != nsICookiePermission::ACCESS_DEFAULT) {
+    LOG(("CheckCookiePermissionForPrincipal() returned a non-default access code (%d) for channel's principal, returning %s",
+         int(access), access != nsICookiePermission::ACCESS_DENY ?
+                        "success" : "failure"));
+    if (access != nsICookiePermission::ACCESS_DENY) {
+      return true;
+    }
+
+    *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION;
+    return false;
+  }
+
+  int32_t behavior = CookiesBehavior(toplevelPrincipal, channelPrincipal);
   if (behavior == nsICookieService::BEHAVIOR_ACCEPT) {
     LOG(("The cookie behavior pref mandates accepting all cookies!"));
     return true;
@@ -952,7 +986,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipal
     return access != nsICookiePermission::ACCESS_DENY;
   }
 
-  int32_t behavior = CookiesBehavior(aPrincipal);
+  int32_t behavior = CookiesBehavior(aPrincipal, nullptr);
   return behavior != nsICookieService::BEHAVIOR_REJECT;
 }
 

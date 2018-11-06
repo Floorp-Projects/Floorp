@@ -96,7 +96,9 @@ class DebugState
     WasmBreakpointSite* getOrCreateBreakpointSite(JSContext* cx, uint32_t offset);
     bool hasBreakpointSite(uint32_t offset);
     void destroyBreakpointSite(FreeOp* fop, uint32_t offset);
-    bool clearBreakpointsIn(JSContext* cx, WasmInstanceObject* instance, js::Debugger* dbg, JSObject* handler);
+    void clearBreakpointsIn(FreeOp* fp, WasmInstanceObject* instance, js::Debugger* dbg,
+                            JSObject* handler);
+    void clearAllBreakpoints(FreeOp* fp, WasmInstanceObject* instance);
 
     // When the Code is debug-enabled, single-stepping mode can be toggled on
     // the granularity of individual functions.

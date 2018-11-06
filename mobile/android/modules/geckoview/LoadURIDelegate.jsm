@@ -71,7 +71,7 @@ const LoadURIDelegate = {
     let errorPageURI = undefined;
     aEventDispatcher.sendRequestForResult(msg).then(response => {
       try {
-        errorPageURI = Services.io.newURI(response);
+        errorPageURI = response ? Services.io.newURI(response) : null;
       } catch (e) {
         warn `Failed to parse URI '${response}`;
         errorPageURI = null;
