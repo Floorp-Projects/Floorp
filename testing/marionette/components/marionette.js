@@ -56,12 +56,6 @@ const RECOMMENDED_PREFS = new Map([
   // Make sure Shield doesn't hit the network.
   ["app.normandy.api_url", ""],
 
-  // Disable automatic downloading of new releases.
-  //
-  // This should also be set in the profile prior to starting Firefox,
-  // as it is picked up at runtime.
-  ["app.update.auto", false],
-
   // Disable automatically upgrading Firefox.
   //
   // This should also be set in the profile prior to starting Firefox,
