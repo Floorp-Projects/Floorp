@@ -29,10 +29,10 @@ const TESTS = [ {
   buttonClick: "extra1"
 } ];
 
-function runTest() {
+async function runTest() {
   debugDump("entering");
 
-  Services.prefs.setBoolPref(PREF_APP_UPDATE_AUTO, false);
+  await gAUS.setAutoUpdateIsEnabled(false);
   let url = URL_HTTP_UPDATE_XML + "?showDetails=1" + getVersionParams();
   setUpdateURL(url);
 

@@ -126,6 +126,7 @@ var gCloseWindowTimeoutCounter = 0;
 
 // The following vars are for restoring previous preference values (if present)
 // when the test finishes.
+var gAppUpdateAuto;
 var gAppUpdateDisabled; // app.update.disabledForTesting
 var gAppUpdateServiceEnabled; // app.update.service.enabled
 var gAppUpdateStagingEnabled; // app.update.staging.enabled
@@ -167,7 +168,7 @@ this.__defineGetter__("gCallback", function() {
  * nsIObserver for receiving window open and close notifications.
  */
 const gWindowObserver = {
-  observe: function WO_observe(aSubject, aTopic, aData) {
+  observe: async function WO_observe(aSubject, aTopic, aData) {
     let win = aSubject;
 
     if (aTopic == "domwindowclosed") {
@@ -181,7 +182,7 @@ const gWindowObserver = {
       try {
         finishTest();
       } catch (e) {
-        finishTestDefault();
+        await finishTestDefault();
       }
       return;
     }
@@ -217,12 +218,12 @@ const gWindowObserver = {
  * |runTestDefaultWaitForWindowClosed| helper functions to prevent failure due
  * to a previous test failure.
  */
-function runTestDefault() {
+async function runTestDefault() {
   debugDump("entering");
 
   SimpleTest.waitForExplicitFinish();
 
-  runTestDefaultWaitForWindowClosed();
+  await runTestDefaultWaitForWindowClosed();
 }
 
 /**
@@ -232,13 +233,13 @@ function runTestDefault() {
  * up to the amount declared in CLOSE_WINDOW_TIMEOUT_MAXCOUNT until the update
  * window has closed before continuing the test.
  */
-function runTestDefaultWaitForWindowClosed() {
+async function runTestDefaultWaitForWindowClosed() {
   gCloseWindowTimeoutCounter++;
   if (gCloseWindowTimeoutCounter > CLOSE_WINDOW_TIMEOUT_MAXCOUNT) {
     try {
       finishTest();
     } catch (e) {
-      finishTestDefault();
+      await finishTestDefault();
     }
     return;
   }
@@ -253,7 +254,7 @@ function runTestDefaultWaitForWindowClosed() {
     gCloseWindowTimeoutCounter = 0;
 
     setupFiles();
-    setupPrefs();
+    await setupPrefs();
     gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     removeUpdateDirsAndFiles();
     setupTimer(gTestTimeout);
@@ -267,7 +268,7 @@ function runTestDefaultWaitForWindowClosed() {
  * |finishTestDefaultWaitForWindowClosed| helper functions to prevent failure
  * due to an update window being left open.
  */
-function finishTestDefault() {
+async function finishTestDefault() {
   debugDump("entering");
   if (gTimeoutTimer) {
     gTimeoutTimer.cancel();
@@ -282,7 +283,7 @@ function finishTestDefault() {
 
   verifyTestsRan();
 
-  resetPrefs();
+  await resetPrefs();
   gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "");
   resetFiles();
   removeUpdateDirsAndFiles();
@@ -304,14 +305,14 @@ function finishTestDefault() {
  * @param  aTimer
  *         The nsITimer that fired.
  */
-function finishTestTimeout(aTimer) {
+async function finishTestTimeout(aTimer) {
   ok(false, "Test timed out. Maximum time allowed is " + (gTestTimeout / 1000) +
      " seconds");
 
   try {
     finishTest();
   } catch (e) {
-    finishTestDefault();
+    await finishTestDefault();
   }
 }
 
@@ -770,7 +771,7 @@ function restoreUpdaterBackup() {
  * present so they can be set back to the original values when the test has
  * finished.
  */
-function setupPrefs() {
+async function setupPrefs() {
   if (DEBUG_AUS_TEST) {
     Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, true);
   }
@@ -788,9 +789,8 @@ function setupPrefs() {
   }
   Services.prefs.setBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false);
 
-  if (!Services.prefs.getBoolPref(PREF_APP_UPDATE_AUTO, false)) {
-    Services.prefs.setBoolPref(PREF_APP_UPDATE_AUTO, true);
-  }
+  gAppUpdateAuto = await gAUS.getAutoUpdateIsEnabled();
+  await gAUS.setAutoUpdateIsEnabled(true);
 
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_SERVICE_ENABLED)) {
     gAppUpdateServiceEnabled = Services.prefs.getBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED);
@@ -845,7 +845,7 @@ function resetFiles() {
 /**
  * Resets the most common preferences used by tests to their original values.
  */
-function resetPrefs() {
+async function resetPrefs() {
   if (gAppUpdateURLDefault) {
     gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_URL, gAppUpdateURLDefault);
   }
@@ -856,9 +856,7 @@ function resetPrefs() {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_DISABLEDFORTESTING);
   }
 
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_AUTO)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_AUTO);
-  }
+  await gAUS.setAutoUpdateIsEnabled(gAppUpdateAuto);
 
   if (gAppUpdateServiceEnabled !== undefined) {
     Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, gAppUpdateServiceEnabled);

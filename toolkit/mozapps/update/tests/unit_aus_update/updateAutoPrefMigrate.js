@@ -11,11 +11,12 @@ async function verifyPref(configFile, expectedValue) {
   let decoder = new TextDecoder();
   let configValue = await gAUS.getAutoUpdateIsEnabled();
   Assert.equal(configValue, expectedValue,
-               "Value returned should have matched the expected value");
+               "Value returned by getAutoUpdateIsEnabled should have matched " +
+               "the expected value");
   let fileContents = await OS.File.read(configFile.path);
   let saveObject = JSON.parse(decoder.decode(fileContents));
   Assert.equal(saveObject["app.update.auto"], expectedValue,
-               "Value in file should match expected");
+               "Value in update config file should match expected");
 }
 
 async function run_test() {
@@ -24,17 +25,10 @@ async function run_test() {
 
   let configFile = getUpdateConfigFile();
 
-  let originalFileValue = await gAUS.getAutoUpdateIsEnabled();
-  let originalConfigValue = Services.prefs.getBoolPref("app.update.auto", null);
-  let originalMigrationValue =
-    Services.prefs.getBoolPref("app.update.auto.migrated", null);
-
   // Test migration of a |false| value
   Services.prefs.setBoolPref("app.update.auto.migrated", false);
   Services.prefs.setBoolPref("app.update.auto", false);
-  debugDump(`about to remove config file`);
-  configFile.remove(false);
-  Assert.ok(!configFile.exists(), "Pref file should have been removed");
+  Assert.ok(!configFile.exists(), "Config file should not exist yet");
   await verifyPref(configFile, false);
 
   // Test that migration doesn't happen twice
@@ -66,18 +60,5 @@ async function run_test() {
   await gAUS.setAutoUpdateIsEnabled(false);
   await verifyPref(configFile, false);
 
-  // Restore original state
-  await gAUS.setAutoUpdateIsEnabled(originalFileValue);
-  if (originalConfigValue == null) {
-    Services.prefs.clearUserPref("app.update.auto");
-  } else {
-    Services.prefs.setBoolPref("app.update.auto", originalConfigValue);
-  }
-  if (originalMigrationValue == null) {
-    Services.prefs.clearUserPref("app.update.auto.migrated");
-  } else {
-    Services.prefs.setBoolPref("app.update.auto.migrated",
-                               originalMigrationValue);
-  }
   doTestFinish();
 }
