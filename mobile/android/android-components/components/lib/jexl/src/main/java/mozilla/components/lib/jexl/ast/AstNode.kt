@@ -51,10 +51,11 @@ data class AstNode(
         }
 
         if (this.value is Map<*, *>) {
+            @Suppress("UNCHECKED_CAST")
             val obj = this.value as Map<String, AstNode>
 
-            for ((key, value) in obj) {
-                val objectValue = value.toString(level + 1)
+            for ((key, objValue) in obj) {
+                val objectValue = objValue.toString(level + 1)
 
                 string += "\n" + (" ".repeat(level * 2))
                 string += "$key : $objectValue"
@@ -92,6 +93,7 @@ data class AstNode(
         }
 
         if (this.value is List<*>) {
+            @Suppress("UNCHECKED_CAST")
             val array = this.value as List<AstNode>
 
             for (node in array) {

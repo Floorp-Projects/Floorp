@@ -112,11 +112,13 @@ internal object EvaluatorHandlers {
         },
 
         AstType.OBJECT_LITERAL to { evaluator, node ->
+            @Suppress("UNCHECKED_CAST")
             val properties = evaluator.evaluateObject(node.value as Map<String, AstNode>)
             JexlObject(properties)
         },
 
         AstType.ARRAY_LITERAL to { evaluator, node ->
+            @Suppress("UNCHECKED_CAST")
             val values = evaluator.evaluateArray(node.value as List<AstNode>)
             JexlArray(values)
         },

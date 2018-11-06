@@ -150,6 +150,7 @@ internal val stateMachine: Map<State, StateMap> = mapOf(
     ),
     State.OBJECT_VALUE to StateMap(
         subHandler = { parser, node ->
+            @Suppress("UNCHECKED_CAST")
             (parser.cursor!!.value as MutableMap<String, AstNode>)[parser.currentObjectKey!!] =
                 node!!
         },
@@ -161,6 +162,7 @@ internal val stateMachine: Map<State, StateMap> = mapOf(
     State.ARRAY_VALUE to StateMap(
         subHandler = { parser, node ->
             if (node != null) {
+                @Suppress("UNCHECKED_CAST")
                 (parser.cursor!!.value as MutableList<AstNode>).add(node)
             }
         },
@@ -185,7 +187,7 @@ internal val stateMachine: Map<State, StateMap> = mapOf(
     )
 )
 
-private fun objectStart(parser: Parser, token: Token) {
+private fun objectStart(parser: Parser, @Suppress("UNUSED_PARAMETER") token: Token) {
     val node = AstNode(
         AstType.OBJECT_LITERAL,
         mutableMapOf<String, AstNode>()
@@ -197,7 +199,7 @@ private fun objectKey(parser: Parser, token: Token) {
     parser.currentObjectKey = token.value.toString()
 }
 
-private fun arrayStart(parser: Parser, token: Token) {
+private fun arrayStart(parser: Parser, @Suppress("UNUSED_PARAMETER") token: Token) {
     val node = AstNode(
         AstType.ARRAY_LITERAL,
         mutableListOf<AstNode>()
@@ -214,7 +216,7 @@ private fun transform(parser: Parser, token: Token) {
     parser.placeBeforeCursor(node)
 }
 
-private fun ternaryStart(parser: Parser, token: Token) {
+private fun ternaryStart(parser: Parser, @Suppress("UNUSED_PARAMETER") token: Token) {
     val node = AstNode(
         AstType.CONDITIONAL_EXPRESSION,
         test = parser.tree
