@@ -748,9 +748,9 @@ TEST(GeckoProfiler, ProfilingStack)
     ASSERT_TRUE(profiler_get_backtrace());
   }
 
-  AutoProfilerLabel label1("A", nullptr, 888,
+  AutoProfilerLabel label1("A", nullptr,
                            js::ProfilingStackFrame::Category::DOM);
-  AutoProfilerLabel label2("A", dynamic.get(), 888,
+  AutoProfilerLabel label2("A", dynamic.get(),
                            js::ProfilingStackFrame::Category::NETWORK);
   ASSERT_TRUE(profiler_get_backtrace());
 
