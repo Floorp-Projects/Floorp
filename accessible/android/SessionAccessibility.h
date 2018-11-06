@@ -41,6 +41,7 @@ namespace a11y {
 class AccessibleWrap;
 class ProxyAccessible;
 class RootAccessibleWrap;
+class BatchData;
 
 class SessionAccessibility final
   : public java::SessionAccessibility::NativeProvider::Natives<SessionAccessibility>
@@ -103,6 +104,10 @@ public:
   void SendClickedEvent(AccessibleWrap* aAccessible, bool aChecked);
   void SendWindowContentChangedEvent(AccessibleWrap* aAccessible);
   void SendWindowStateChangedEvent(AccessibleWrap* aAccessible);
+
+  // Cache methods
+  void ReplaceViewportCache(const nsTArray<AccessibleWrap*>& aAccessibles,
+                           const nsTArray<BatchData>& aData = nsTArray<BatchData>());
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SessionAccessibility)
 
