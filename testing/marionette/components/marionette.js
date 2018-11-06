@@ -78,6 +78,10 @@ const RECOMMENDED_PREFS = new Map([
   // (bug 1176798, bug 1177018, bug 1210465)
   ["apz.content_response_timeout", 60000],
 
+  // Don't show the content blocking introduction panel.
+  // We use a larger number than the default 22 to have some buffer
+  ["browser.contentblocking.introCount", 99],
+
   // Indicate that the download panel has been shown once so that
   // whichever download test runs first doesn't show the popup
   // inconsistently.
