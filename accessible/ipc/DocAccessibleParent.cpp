@@ -838,5 +838,27 @@ DocAccessibleParent::RecvFocusEvent(const uint64_t& aID,
 
 #endif // defined(XP_WIN)
 
+#if !defined(XP_WIN)
+mozilla::ipc::IPCResult
+DocAccessibleParent::RecvBatch(const uint64_t& aBatchType, nsTArray<BatchData>&& aData)
+{
+  // Only do something in Android. We can't ifdef the entire protocol out in
+  // the ipdl because it doesn't allow preprocessing.
+#if defined(ANDROID)
+  nsTArray<ProxyAccessible*> proxies(aData.Length());
+  for (size_t i = 0; i < aData.Length(); i++) {
+    DocAccessibleParent* doc = static_cast<DocAccessibleParent*>(
+      aData.ElementAt(i).Document().get_PDocAccessibleParent());
+    MOZ_ASSERT(doc);
+    ProxyAccessible* proxy = doc->GetAccessible(aData.ElementAt(i).ID());
+    MOZ_ASSERT(proxy);
+    proxies.AppendElement(proxy);
+  }
+  ProxyBatch(this, aBatchType, proxies, aData);
+#endif // defined(XP_WIN)
+  return IPC_OK();
+}
+#endif // !defined(XP_WIN)
+
 } // a11y
 } // mozilla
