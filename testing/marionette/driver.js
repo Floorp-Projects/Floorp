@@ -1064,8 +1064,8 @@ GeckoDriver.prototype.get = async function(cmd) {
 
   let get = this.listener.get({url, pageTimeout: this.timeouts.pageLoad});
 
-  // If a reload of the frame script interrupts our page load, this will
-  // never return. We need to re-issue this request to correctly poll for
+  // If a process change of the frame script interrupts our page load, this
+  // will never return. We need to re-issue this request to correctly poll for
   // readyState and send errors.
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
@@ -1183,8 +1183,8 @@ GeckoDriver.prototype.goBack = async function() {
   let lastURL = this.currentURL;
   let goBack = this.listener.goBack({pageTimeout: this.timeouts.pageLoad});
 
-  // If a reload of the frame script interrupts our page load, this will
-  // never return. We need to re-issue this request to correctly poll for
+  // If a process change of the frame script interrupts our page load, this
+  // will never return. We need to re-issue this request to correctly poll for
   // readyState and send errors.
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
@@ -1226,8 +1226,8 @@ GeckoDriver.prototype.goForward = async function() {
   let goForward = this.listener.goForward(
       {pageTimeout: this.timeouts.pageLoad});
 
-  // If a reload of the frame script interrupts our page load, this will
-  // never return. We need to re-issue this request to correctly poll for
+  // If a process change of the frame script interrupts our page load, this
+  // will never return. We need to re-issue this request to correctly poll for
   // readyState and send errors.
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
@@ -1263,8 +1263,8 @@ GeckoDriver.prototype.refresh = async function() {
   let refresh = this.listener.refresh(
       {pageTimeout: this.timeouts.pageLoad});
 
-  // If a reload of the frame script interrupts our page load, this will
-  // never return. We need to re-issue this request to correctly poll for
+  // If a process change of the frame script interrupts our page load, this
+  // will never return. We need to re-issue this request to correctly poll for
   // readyState and send errors.
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
@@ -2145,9 +2145,9 @@ GeckoDriver.prototype.clickElement = async function(cmd) {
       let click = this.listener.clickElement(
           {webElRef: webEl.toJSON(), pageTimeout: this.timeouts.pageLoad});
 
-      // If a reload of the frame script interrupts our page load, this will
-      // never return. We need to re-issue this request to correctly poll for
-      // readyState and send errors.
+      // If a process change of the frame script interrupts our page load,
+      // this will never return. We need to re-issue this request to correctly
+      // poll for readyState and send errors.
       this.curBrowser.pendingCommands.push(() => {
         let parameters = {
           // TODO(ato): Bug 1242595
