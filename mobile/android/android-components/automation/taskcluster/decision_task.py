@@ -34,7 +34,7 @@ def fetch_module_names():
     if exit_code is not 0:
         print "Gradle command returned error:", exit_code
 
-    return re.findall('module: (.*)', output, re.M)
+    return re.findall('module: name=(.*) buildPath=.*', output, re.M)
 
 
 def create_task(name, description, command, scopes = []):

@@ -209,7 +209,7 @@ task ktlint(type: JavaExec, group: "verification") {
 task printModules {
     doLast {
         subprojects.each { p ->
-            println "module: " + p.path
+            println "module: name=" + p.path + " buildPath=" + p.buildDir
         }
     }
 }
