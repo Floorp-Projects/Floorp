@@ -96,10 +96,11 @@ function isInaccessible(wnd, message) {
 // /////////////////////////////////////////////////////////////////////////
 // Functions that require UniversalXPConnect privilege
 // /////////////////////////////////////////////////////////////////////////
-
+/* eslint-disable mozilla/use-services */
 function xpcEnumerateContentWindows(callback) {
 
   var Ci = SpecialPowers.Ci;
+  // Replacing this with Services.ww format causes test errors, so ignore for now
   var ww = SpecialPowers.Cc["@mozilla.org/embedcomp/window-watcher;1"]
                         .getService(Ci.nsIWindowWatcher);
 
@@ -127,6 +128,7 @@ function xpcEnumerateContentWindows(callback) {
   while (contentWindows.length > 0)
     callback(contentWindows.pop());
 }
+/* eslint-enable mozilla/use-services */
 
 // Note: This only searches for top-level frames with this name.
 function xpcGetFramesByName(name) {

@@ -9,11 +9,17 @@
       iframe { width: 90%; height: 50px; }
     </style>
 <script>
+/* eslint-disable no-useless-concat */
 var headerHTML = "<html><head>" +
                  "<script src='/tests/SimpleTest/EventUtils.js'></scr" + "ipt>" +
                  "<script src='NavigationUtils.js'></scr" + "ipt>" +
                  "</head><body>";
 var footerHTML = "</body></html>";
+
+let window0 = null;
+let window1 = null;
+let window2 = null;
+let window3 = null;
 
 function testChild0() {
   if (!window.window0) {
