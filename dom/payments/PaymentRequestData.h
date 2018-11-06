@@ -192,7 +192,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPAYMENTREQUEST
 
-  PaymentRequest(const uint64_t aTabId,
+  PaymentRequest(const uint64_t aTopOuterWindowId,
                  const nsAString& aRequestId,
                  nsIPrincipal* aPrincipal,
                  nsIArray* aPaymentMethods,
@@ -256,7 +256,7 @@ public:
 private:
   ~PaymentRequest() = default;
 
-  uint64_t mTabId;
+  uint64_t mTopOuterWindowId;
   nsString mRequestId;
   nsString mCompleteStatus;
   nsCOMPtr<nsIPrincipal> mTopLevelPrincipal;

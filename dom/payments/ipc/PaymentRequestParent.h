@@ -18,9 +18,8 @@ class PaymentRequestParent final : public PPaymentRequestParent
 {
   NS_INLINE_DECL_REFCOUNTING(PaymentRequestParent)
 public:
-  explicit PaymentRequestParent(uint64_t aTabId);
+  PaymentRequestParent();
 
-  uint64_t GetTabId();
   nsresult RespondPayment(nsIPaymentActionResponse* aResponse);
   nsresult ChangeShippingAddress(const nsAString& aRequestId,
                                  nsIPaymentAddress* aAddress);
@@ -47,7 +46,6 @@ private:
                                  nsIPaymentResponseData* aData);
 
   bool mActorAlive;
-  uint64_t mTabId;
   nsString mRequestId;
 };
 
