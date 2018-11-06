@@ -27,9 +27,9 @@ add_task(async function() {
   ok(outlineContainer.style.gridTemplateColumns.includes("[final-end max]"),
      "The final and max points are at the same position");
 
-  info("Check that the flexibility sizing section displays the right info");
+  info("Check that the maximum sizing section displays the right info");
   const reasons = [...sizingContainer.querySelectorAll(".reasons li")];
-  const expectedReason = getStr("flexbox.itemSizing.growthAttemptButMaxClamped");
+  const expectedReason = getStr("flexbox.itemSizing.clampedToMax");
   ok(reasons.some(r => r.textContent === expectedReason),
-     "The 'wanted to grow but was clamped' reason was found");
+     "The clampedToMax reason was found");
 });
