@@ -2359,7 +2359,9 @@ WebSocketChannel::CleanupConnection()
   }
 
   if (mSocketIn) {
-    mSocketIn->AsyncWait(nullptr, 0, 0, nullptr);
+    if (mDataStarted) {
+      mSocketIn->AsyncWait(nullptr, 0, 0, nullptr);
+    }
     mSocketIn = nullptr;
   }
 
@@ -2413,6 +2415,7 @@ WebSocketChannel::DoStopSession(nsresult reason)
   // from OnStartRequest before the socket thread machine has gotten underway
 
   MOZ_ASSERT(mStopped);
+  MOZ_ASSERT(OnSocketThread() || mTCPClosed || !mDataStarted);
 
   if (!mOpenedHttpChannel) {
     // The HTTP channel information will never be used in this case
@@ -2446,7 +2449,7 @@ WebSocketChannel::DoStopSession(nsresult reason)
     mPingTimer = nullptr;
   }
 
-  if (mSocketIn && !mTCPClosed) {
+  if (mSocketIn && !mTCPClosed && mDataStarted) {
     // Drain, within reason, this socket. if we leave any data
     // unconsumed (including the tcp fin) a RST will be generated
     // The right thing to do here is shutdown(SHUT_WR) and then wait
@@ -3893,72 +3896,81 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest,
   }
 
   LOG(("WebSocketChannel::OnStartRequest: HTTP status %d\n", status));
-  if (status != 101) {
+  nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(mHttpChannel);
+  uint32_t versionMajor, versionMinor;
+  rv = internalChannel->GetResponseVersion(&versionMajor, &versionMinor);
+  if (NS_FAILED(rv) ||
+      (versionMajor != 1 && versionMajor != 2) ||
+      (versionMajor == 1 && status != 101) ||
+      (versionMajor == 2 && status != 200)) {
     AbortSession(NS_ERROR_CONNECTION_REFUSED);
     return NS_ERROR_CONNECTION_REFUSED;
   }
 
-  nsAutoCString respUpgrade;
-  rv = mHttpChannel->GetResponseHeader(
-    NS_LITERAL_CSTRING("Upgrade"), respUpgrade);
+  if (versionMajor == 1) {
+    // These are only present on http/1.x websocket upgrades
+    nsAutoCString respUpgrade;
+    rv = mHttpChannel->GetResponseHeader(
+      NS_LITERAL_CSTRING("Upgrade"), respUpgrade);
 
-  if (NS_SUCCEEDED(rv)) {
-    rv = NS_ERROR_ILLEGAL_VALUE;
-    if (!respUpgrade.IsEmpty()) {
-      val = respUpgrade.BeginWriting();
-      while ((token = nsCRT::strtok(val, ", \t", &val))) {
-        if (PL_strcasecmp(token, "Websocket") == 0) {
-          rv = NS_OK;
-          break;
+    if (NS_SUCCEEDED(rv)) {
+      rv = NS_ERROR_ILLEGAL_VALUE;
+      if (!respUpgrade.IsEmpty()) {
+        val = respUpgrade.BeginWriting();
+        while ((token = nsCRT::strtok(val, ", \t", &val))) {
+          if (PL_strcasecmp(token, "Websocket") == 0) {
+            rv = NS_OK;
+            break;
+          }
         }
       }
     }
-  }
 
-  if (NS_FAILED(rv)) {
-    LOG(("WebSocketChannel::OnStartRequest: "
-         "HTTP response header Upgrade: websocket not found\n"));
-    AbortSession(NS_ERROR_ILLEGAL_VALUE);
-    return rv;
-  }
+    if (NS_FAILED(rv)) {
+      LOG(("WebSocketChannel::OnStartRequest: "
+          "HTTP response header Upgrade: websocket not found\n"));
+      AbortSession(NS_ERROR_ILLEGAL_VALUE);
+      return rv;
+    }
 
-  nsAutoCString respConnection;
-  rv = mHttpChannel->GetResponseHeader(
-    NS_LITERAL_CSTRING("Connection"), respConnection);
+    nsAutoCString respConnection;
+    rv = mHttpChannel->GetResponseHeader(
+      NS_LITERAL_CSTRING("Connection"), respConnection);
 
-  if (NS_SUCCEEDED(rv)) {
-    rv = NS_ERROR_ILLEGAL_VALUE;
-    if (!respConnection.IsEmpty()) {
-      val = respConnection.BeginWriting();
-      while ((token = nsCRT::strtok(val, ", \t", &val))) {
-        if (PL_strcasecmp(token, "Upgrade") == 0) {
-          rv = NS_OK;
-          break;
+    if (NS_SUCCEEDED(rv)) {
+      rv = NS_ERROR_ILLEGAL_VALUE;
+      if (!respConnection.IsEmpty()) {
+        val = respConnection.BeginWriting();
+        while ((token = nsCRT::strtok(val, ", \t", &val))) {
+          if (PL_strcasecmp(token, "Upgrade") == 0) {
+            rv = NS_OK;
+            break;
+          }
         }
       }
     }
-  }
 
-  if (NS_FAILED(rv)) {
-    LOG(("WebSocketChannel::OnStartRequest: "
-         "HTTP response header 'Connection: Upgrade' not found\n"));
-    AbortSession(NS_ERROR_ILLEGAL_VALUE);
-    return rv;
-  }
+    if (NS_FAILED(rv)) {
+      LOG(("WebSocketChannel::OnStartRequest: "
+          "HTTP response header 'Connection: Upgrade' not found\n"));
+      AbortSession(NS_ERROR_ILLEGAL_VALUE);
+      return rv;
+    }
 
-  nsAutoCString respAccept;
-  rv = mHttpChannel->GetResponseHeader(
-                       NS_LITERAL_CSTRING("Sec-WebSocket-Accept"),
-                       respAccept);
+    nsAutoCString respAccept;
+    rv = mHttpChannel->GetResponseHeader(
+                        NS_LITERAL_CSTRING("Sec-WebSocket-Accept"),
+                        respAccept);
 
-  if (NS_FAILED(rv) ||
-    respAccept.IsEmpty() || !respAccept.Equals(mHashedSecret)) {
-    LOG(("WebSocketChannel::OnStartRequest: "
-         "HTTP response header Sec-WebSocket-Accept check failed\n"));
-    LOG(("WebSocketChannel::OnStartRequest: Expected %s received %s\n",
-         mHashedSecret.get(), respAccept.get()));
-    AbortSession(NS_ERROR_ILLEGAL_VALUE);
-    return NS_ERROR_ILLEGAL_VALUE;
+    if (NS_FAILED(rv) ||
+      respAccept.IsEmpty() || !respAccept.Equals(mHashedSecret)) {
+      LOG(("WebSocketChannel::OnStartRequest: "
+          "HTTP response header Sec-WebSocket-Accept check failed\n"));
+      LOG(("WebSocketChannel::OnStartRequest: Expected %s received %s\n",
+          mHashedSecret.get(), respAccept.get()));
+      AbortSession(NS_ERROR_ILLEGAL_VALUE);
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
   }
 
   // If we sent a sub protocol header, verify the response matches.
