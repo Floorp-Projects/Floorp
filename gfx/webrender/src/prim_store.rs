@@ -889,7 +889,7 @@ impl BrushSegment {
     }
 }
 
-pub type BrushSegmentVec = SmallVec<[BrushSegment; 8]>;
+pub type BrushSegmentVec = SmallVec<[BrushSegment; 1]>;
 
 #[derive(Debug)]
 pub struct BrushSegmentDescriptor {
