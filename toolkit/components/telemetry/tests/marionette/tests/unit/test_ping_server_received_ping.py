@@ -12,7 +12,7 @@ class TestPingServer(TelemetryTestCase):
         ping_type = "server-test-ping"
         ping_reason = "unit-test"
 
-        def action_func():
+        def send_ping_request():
             """Perform a POST request to the ping server."""
             data = {"type": ping_type, "reason": ping_reason}
             headers = {"Content-type": "application/json", "Accept": "text/plain"}
@@ -31,7 +31,7 @@ class TestPingServer(TelemetryTestCase):
         def ping_filter_func(ping):
             return ping["type"] == ping_type
 
-        ping = self.wait_for_ping(action_func, ping_filter_func)
+        [ping] = self.wait_for_pings(send_ping_request, ping_filter_func, 1)
 
         self.assertIsNotNone(ping)
         self.assertEqual(ping["type"], ping_type)
