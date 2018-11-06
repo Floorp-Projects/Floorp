@@ -8,7 +8,7 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 
-class nsISpellChecker;
+class mozSpellChecker;
 
 namespace mozilla {
 
@@ -36,7 +36,7 @@ public:
       override;
 
 private:
-  nsCOMPtr<nsISpellChecker> mSpellChecker;
+  RefPtr<mozSpellChecker> mSpellChecker;
 };
 
 } // namespace mozilla
