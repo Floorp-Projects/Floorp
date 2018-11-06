@@ -115,8 +115,8 @@ public:
   wr::ExternalImageId GetNextExternalImageId();
 
 private:
-  void ProcessPipelineRendered(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
-  void ProcessPipelineRemoved(const wr::PipelineId& aPipelineId);
+  void ProcessPipelineRendered(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, const uint64_t aUpdatesCount);
+  void ProcessPipelineRemoved(const wr::PipelineId& aPipelineId, const uint64_t aUpdatesCount);
 
   wr::Epoch GetNextImageEpoch();
   uint32_t GetNextResourceId() { return ++mResourceId; }
@@ -216,8 +216,13 @@ private:
                              TextureHost::ResourceUpdateOp,
                              wr::TransactionBuilder& aTxn);
 
+  // If texture is direct binding texture, keep it until it is not used by GPU.
+  void HoldUntilNotUsedByGPU(const CompositableTextureHostRef& aTextureHost, uint64_t aUpdatesCount);
+  void CheckForTextureHostsNotUsedByGPU();
+
   RefPtr<wr::WebRenderAPI> mApi;
-  wr::IdNamespace mIdNamespace;
+  const wr::IdNamespace mIdNamespace;
+  const bool mUseTripleBuffering;
   uint32_t mResourceId;
 
   nsClassHashtable<nsUint64HashKey, PipelineTexturesHolder> mPipelineTexturesHolders;
@@ -247,8 +252,6 @@ private:
     {}
     bool NeedsToWait(const uint64_t aUpdatesCount) {
       MOZ_ASSERT(mUpdatesCount <= aUpdatesCount);
-      // XXX Add support of delaying releasing TextureHosts for multiple rendering.
-      // See Bug 1500017.
       if (mUpdatesCount == aUpdatesCount && !mRendered) {
         // RenderTextureHosts related to this might be still used by GPU.
         return true;
@@ -265,6 +268,9 @@ private:
     std::queue<std::pair<wr::PipelineId, Maybe<wr::Epoch>>> mQueue;
   };
   std::queue<UniquePtr<PipelineUpdates>> mUpdatesQueues;
+
+  // Queue to store TextureHosts that might still be used by GPU.
+  std::queue<std::pair<uint64_t, CompositableTextureHostRef>> mTexturesInUseByGPU;
 };
 
 } // namespace layers

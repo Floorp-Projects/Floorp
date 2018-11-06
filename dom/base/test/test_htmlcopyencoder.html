@@ -17,8 +17,7 @@
 
 function testHtmlCopyEncoder () {
   const de = SpecialPowers.Ci.nsIDocumentEncoder;
-  var encoder = SpecialPowers.Cc["@mozilla.org/layout/htmlCopyEncoder;1"]
-                   .createInstance(SpecialPowers.Ci.nsIDocumentEncoder);
+  var encoder = SpecialPowers.Cu.createHTMLCopyEncoder();
   var out, expected;
 
   var node = document.getElementById('draggable');

@@ -38,11 +38,6 @@ interface nsIChromeRegistry : nsISupports
    * refresh the chrome list at runtime, looking for new packages/etc
    */
   void checkForNewChrome();
-
-  /**
-   * returns whether XPCNativeWrappers are enabled for aURI.
-   */
-  [notxpcom] boolean wrappersEnabled(in nsIURI aURI);
 };
 
 [scriptable, uuid(93251ddf-5e85-4172-ac2a-31780562974f)]

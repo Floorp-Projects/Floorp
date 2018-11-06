@@ -37,7 +37,6 @@
 #include "nsMemoryImpl.h"
 #include "nsDebugImpl.h"
 #include "nsTraceRefcnt.h"
-#include "nsErrorService.h"
 
 #include "nsArray.h"
 #include "nsINIParserImpl.h"

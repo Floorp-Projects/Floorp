@@ -2586,23 +2586,7 @@ nsWebBrowserPersist::URIData::GetLocalURI(nsIURI *targetBaseURI, nsCString& aSpe
 bool
 nsWebBrowserPersist::DocumentEncoderExists(const char *aContentType)
 {
-    // Check if there is an encoder for the desired content type.
-    nsAutoCString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
-    contractID.Append(aContentType);
-
-    nsCOMPtr<nsIComponentRegistrar> registrar;
-    NS_GetComponentRegistrar(getter_AddRefs(registrar));
-    if (registrar)
-    {
-        bool result;
-        nsresult rv = registrar->IsContractIDRegistered(contractID.get(),
-                                                        &result);
-        if (NS_SUCCEEDED(rv) && result)
-        {
-            return true;
-        }
-    }
-    return false;
+    return do_getDocumentTypeSupportedForEncoding(aContentType);
 }
 
 nsresult

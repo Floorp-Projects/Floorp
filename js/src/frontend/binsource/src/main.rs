@@ -522,7 +522,7 @@ const TOPLEVEL_INTERFACE: &str =
 /// Get Rc<String> from NodeName.
 ///
 /// FIXME: Do not clone the String itself, but just clone the Rc<String> inside
-///        NodeName (Bug NNNNNN).
+///        NodeName (Bug 1504597).
 fn string_from_nodename(name: &NodeName) -> Rc<String> {
     Rc::new(name.to_string().clone())
 }
@@ -638,7 +638,7 @@ impl CPPExporter {
         let mut refgraph = ReferenceGraph::new();
 
         // FIXME: Reflect `replace` rule in yaml file for each interface to
-        //        the reference (bug NNNNNN).
+        //        the reference (bug 1504595).
 
         // 1. Typesums
         let sums_of_interfaces = self.syntax.resolved_sums_of_interfaces_by_name();

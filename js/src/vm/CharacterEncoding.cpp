@@ -377,6 +377,28 @@ InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars src, OutputFn dst)
     return true;
 }
 
+template <OnUTF8Error ErrorAction, typename CharT>
+static void
+CopyAndInflateUTF8IntoBuffer(JSContext* cx, const UTF8Chars src, CharT *dst, size_t outlen, bool allASCII)
+{
+    if (allASCII) {
+        size_t srclen = src.length();
+        MOZ_ASSERT(outlen == srclen);
+        for (uint32_t i = 0; i < srclen; i++) {
+            dst[i] = CharT(src[i]);
+        }
+    } else {
+        size_t j = 0;
+        auto push = [dst, &j](char16_t c) -> LoopDisposition {
+            dst[j++] = CharT(c);
+            return LoopDisposition::Continue;
+        };
+        MOZ_ALWAYS_TRUE((InflateUTF8ToUTF16<ErrorAction>(cx, src, push)));
+        MOZ_ASSERT(j == outlen);
+    }
+    dst[outlen] = CharT('\0');    // NUL char
+}
+
 template <OnUTF8Error ErrorAction, typename CharsT>
 static CharsT
 InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
@@ -406,25 +428,10 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
         return CharsT();
     }
 
-    if (allASCII) {
-        size_t srclen = src.length();
-        MOZ_ASSERT(*outlen == srclen);
-        for (uint32_t i = 0; i < srclen; i++) {
-            dst[i] = CharT(src[i]);
-        }
-    } else {
-        constexpr OnUTF8Error errorMode = std::is_same<CharT, Latin1Char>::value
-            ? OnUTF8Error::InsertQuestionMark
-            : OnUTF8Error::InsertReplacementCharacter;
-        size_t j = 0;
-        auto push = [dst, &j](char16_t c) -> LoopDisposition {
-            dst[j++] = CharT(c);
-            return LoopDisposition::Continue;
-        };
-        MOZ_ALWAYS_TRUE((InflateUTF8ToUTF16<errorMode>(cx, src, push)));
-        MOZ_ASSERT(j == len);
-    }
-    dst[*outlen] = 0;    // NUL char
+    constexpr OnUTF8Error errorMode = std::is_same<CharT, Latin1Char>::value
+        ? OnUTF8Error::InsertQuestionMark
+        : OnUTF8Error::InsertReplacementCharacter;
+    CopyAndInflateUTF8IntoBuffer<errorMode>(cx, src, dst, *outlen, allASCII);
 
     return CharsT(dst, *outlen);
 }
@@ -455,20 +462,31 @@ JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const JS::ConstUTF8CharsZ& u
     return InflateUTF8StringHelper<OnUTF8Error::InsertReplacementCharacter, TwoByteCharsZ>(cx, chars, outlen);
 }
 
+static void
+UpdateSmallestEncodingForChar(char16_t c, JS::SmallestEncoding* encoding)
+{
+    JS::SmallestEncoding newEncoding = JS::SmallestEncoding::ASCII;
+    if (c >= 0x80) {
+        if (c < 0x100) {
+            newEncoding = JS::SmallestEncoding::Latin1;
+        } else {
+            newEncoding = JS::SmallestEncoding::UTF16;
+        }
+    }
+    if (newEncoding > *encoding) {
+        *encoding = newEncoding;
+    }
+}
+
 JS::SmallestEncoding
 JS::FindSmallestEncoding(UTF8Chars utf8)
 {
     JS::SmallestEncoding encoding = JS::SmallestEncoding::ASCII;
     auto onChar = [&encoding](char16_t c) -> LoopDisposition {
-        if (c >= 0x80) {
-            if (c < 0x100) {
-                encoding = JS::SmallestEncoding::Latin1;
-            } else {
-                encoding = JS::SmallestEncoding::UTF16;
-                return LoopDisposition::Break;
-            }
-        }
-        return LoopDisposition::Continue;
+        UpdateSmallestEncodingForChar(c, &encoding);
+        return encoding == JS::SmallestEncoding::UTF16
+               ? LoopDisposition::Break
+               : LoopDisposition::Continue;
     };
     MOZ_ALWAYS_TRUE((InflateUTF8ToUTF16<OnUTF8Error::InsertReplacementCharacter>(
                          /* cx = */ nullptr, utf8, onChar)));
@@ -486,6 +504,86 @@ JS::LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t*
 {
     return InflateUTF8StringHelper<OnUTF8Error::InsertQuestionMark, Latin1CharsZ>(cx, utf8, outlen);
 }
+
+/**
+ * Atomization Helpers.
+ *
+ * These functions are extremely single-use, and are not intended for general
+ * consumption.
+ */
+
+bool
+GetUTF8AtomizationData(JSContext* cx, const JS::UTF8Chars utf8, size_t* outlen,
+                       JS::SmallestEncoding* encoding, HashNumber* hashNum)
+{
+    *outlen = 0;
+    *encoding = JS::SmallestEncoding::ASCII;
+    *hashNum = 0;
+
+    auto getMetadata = [outlen, encoding, hashNum](char16_t c) -> LoopDisposition {
+        (*outlen)++;
+        UpdateSmallestEncodingForChar(c, encoding);
+        *hashNum = mozilla::AddToHash(*hashNum, c);
+        return LoopDisposition::Continue;
+    };
+    if (!InflateUTF8ToUTF16<OnUTF8Error::Throw>(cx, utf8, getMetadata)) {
+        return false;
+    }
+
+    return true;
+}
+
+template <typename CharT>
+bool
+UTF8EqualsChars(const JS::UTF8Chars utfChars, const CharT* chars)
+{
+    size_t ind = 0;
+    bool isEqual = true;
+
+    auto checkEqual = [&isEqual, &ind, chars](char16_t c) -> LoopDisposition {
+    #ifdef DEBUG
+        JS::SmallestEncoding encoding = JS::SmallestEncoding::ASCII;
+        UpdateSmallestEncodingForChar(c, &encoding);
+        if (std::is_same<CharT, JS::Latin1Char>::value) {
+            MOZ_ASSERT(encoding <= JS::SmallestEncoding::Latin1);
+        } else if (!std::is_same<CharT, char16_t>::value) {
+            MOZ_CRASH("Invalid character type in UTF8EqualsChars");
+        }
+    #endif
+
+        if (CharT(c) != chars[ind]) {
+            isEqual = false;
+            return LoopDisposition::Break;
+        }
+
+        ind++;
+        return LoopDisposition::Continue;
+    };
+
+    // To get here, you must have checked your work.
+    InflateUTF8ToUTF16<OnUTF8Error::Crash>(/* cx = */ nullptr, utfChars, checkEqual);
+
+    return isEqual;
+}
+
+template bool UTF8EqualsChars<char16_t>(const JS::UTF8Chars, const char16_t*);
+template bool UTF8EqualsChars<JS::Latin1Char>(const JS::UTF8Chars, const JS::Latin1Char*);
+
+template <typename CharT>
+void
+InflateUTF8CharsToBufferAndTerminate(const UTF8Chars src, CharT* dst, size_t dstLen,
+                                     JS::SmallestEncoding encoding)
+{
+    CopyAndInflateUTF8IntoBuffer<OnUTF8Error::Crash>(/* cx = */ nullptr, src, dst, dstLen,
+                                                     encoding == JS::SmallestEncoding::ASCII);
+}
+
+template void
+InflateUTF8CharsToBufferAndTerminate<char16_t>(const UTF8Chars src, char16_t* dst, size_t dstLen,
+                                               JS::SmallestEncoding encoding);
+template void
+InflateUTF8CharsToBufferAndTerminate<JS::Latin1Char>(const UTF8Chars src, JS::Latin1Char* dst,
+                                                     size_t dstLen, JS::SmallestEncoding encoding);
 
 #ifdef DEBUG
 void
