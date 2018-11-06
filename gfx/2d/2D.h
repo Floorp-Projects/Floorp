@@ -62,6 +62,7 @@ struct ID2D1Device;
 struct IDWriteFactory;
 struct IDWriteRenderingParams;
 struct IDWriteFontFace;
+struct IDWriteFontCollection;
 
 class GrContext;
 class SkCanvas;
@@ -1847,9 +1848,9 @@ public:
   static RefPtr<ID2D1Device> GetD2D1Device(uint32_t* aOutSeqNo = nullptr);
   static bool HasD2D1Device();
   static RefPtr<IDWriteFactory> GetDWriteFactory();
-  static bool SetDWriteFactory(IDWriteFactory *aFactory);
   static RefPtr<IDWriteFactory> EnsureDWriteFactory();
   static bool SupportsD2D1();
+  static RefPtr<IDWriteFontCollection> GetDWriteSystemFonts(bool aUpdate = false);
 
   static uint64_t GetD2DVRAMUsageDrawTarget();
   static uint64_t GetD2DVRAMUsageSourceSurface();
@@ -1873,6 +1874,7 @@ private:
   static StaticRefPtr<ID3D11Device> mD3D11Device;
   static StaticRefPtr<IDWriteFactory> mDWriteFactory;
   static bool mDWriteFactoryInitialized;
+  static StaticRefPtr<IDWriteFontCollection> mDWriteSystemFonts;
 
 protected:
   // This guards access to the singleton devices above, as well as the
