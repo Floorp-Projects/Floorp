@@ -291,8 +291,14 @@ function setSearchLabel(type) {
 }
 
 function setThemeScreenshot(addon, node) {
-  let screenshot = node.querySelector(".theme-screenshot")
+  let findElement = () => node.querySelector(".theme-screenshot")
     || document.getAnonymousElementByAttribute(node, "anonid", "theme-screenshot");
+  let screenshot = findElement();
+  if (!screenshot) {
+    // Force a layout since screenshot might not exist yet on Windows.
+    node.clientTop;
+    screenshot = findElement();
+  }
   // There's a test that doesn't have this for some reason, but it's doing weird things.
   if (!screenshot)
     return;
