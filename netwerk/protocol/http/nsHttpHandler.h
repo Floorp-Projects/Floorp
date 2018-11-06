@@ -131,6 +131,7 @@ public:
     uint32_t       ParallelSpeculativeConnectLimit() { return mParallelSpeculativeConnectLimit; }
     bool           CriticalRequestPrioritization() { return mCriticalRequestPrioritization; }
     bool           UseH2Deps() { return mUseH2Deps; }
+    bool           IsH2WebsocketsEnabled() { return mEnableH2Websockets; }
 
     uint32_t       MaxConnectionsPerOrigin() { return mMaxPersistentConnectionsPerServer; }
     bool           UseRequestTokenBucket() { return mRequestTokenBucketEnabled; }
@@ -591,6 +592,7 @@ private:
     uint32_t           mEnableAltSvc : 1;
     uint32_t           mEnableAltSvcOE : 1;
     uint32_t           mEnableOriginExtension : 1;
+    uint32_t           mEnableH2Websockets : 1;
 
     // Try to use SPDY features instead of HTTP/1.1 over SSL
     SpdyInformation    mSpdyInfo;
