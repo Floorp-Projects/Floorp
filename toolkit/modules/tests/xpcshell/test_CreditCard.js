@@ -190,7 +190,9 @@ add_task(function test_isValid() {
     "Valid number and future expiry date (two months) should pass");
   testValid("0000000000000000", month, year, true,
     "Valid number and expiry date equal to this month should pass");
-  testValid("0000000000000000", month - 1, year, false,
+  testValid("0000000000000000",
+    (month > 1 ? month - 1 : 12), (month > 1 ? year : year - 1),
+    false,
     "Valid number but overdue expiry date should fail");
   testValid("0000000000000000", month, year - 1, false,
     "Valid number but overdue expiry date (by a year) should fail");
