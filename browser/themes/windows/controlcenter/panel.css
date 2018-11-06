@@ -4,3 +4,6 @@
 
 %include ../../shared/controlcenter/panel.inc.css
 
+.tracking-protection-button > .button-box > .button-icon {
+  margin-inline-end: 5px;
+}
