@@ -79,12 +79,11 @@ var step2 = function() {
   is(testWindow.document.body.scrollTop, 0,
      "Page2: Ensure the scrollpane is at the top before we start scrolling.");
 
-  var count = 0;
-  testWindow.addEventListener("scroll", function() {
+  var scrollTest = function() {
     if (++count < 2) {
       SimpleTest.executeSoon(function() { sendKey("DOWN", testWindow); });
     } else {
-      testWindow.removeEventListener("scroll", arguments.callee, true);
+      testWindow.removeEventListener("scroll", scrollTest, true);
 
       isnot(testWindow.document.body.scrollTop, 0,
             "Page2: Ensure we could scroll.");
@@ -92,7 +91,10 @@ var step2 = function() {
       // Navigate backwards. This should fire step3.
       testWindow.history.back();
     }
-  }, true);
+  };
+
+  var count = 0;
+  testWindow.addEventListener("scroll", scrollTest, true);
   sendKey("DOWN", testWindow);
 };
 

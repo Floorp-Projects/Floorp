@@ -1,7 +1,4 @@
-var urifixup = Cc["@mozilla.org/docshell/urifixup;1"].
-               getService(Ci.nsIURIFixup);
-var prefs = Cc["@mozilla.org/preferences-service;1"].
-            getService(Ci.nsIPrefBranch);
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var pref = "browser.fixup.typo.scheme";
 
@@ -62,12 +59,12 @@ var len = data.length;
 
 // Make sure we fix what needs fixing when there is no pref set.
 add_task(function test_unset_pref_fixes_typos() {
-  prefs.clearUserPref(pref);
+  Services.prefs.clearUserPref(pref);
   for (let i = 0; i < len; ++i) {
     let item = data[i];
     let result =
-      urifixup.createFixupURI(item.wrong,
-                              urifixup.FIXUP_FLAG_FIX_SCHEME_TYPOS).spec;
+      Services.uriFixup.createFixupURI(item.wrong,
+                              Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS).spec;
     Assert.equal(result, item.fixed);
   }
 });
@@ -75,12 +72,12 @@ add_task(function test_unset_pref_fixes_typos() {
 // Make sure we don't do anything when the pref is explicitly
 // set to false.
 add_task(function test_false_pref_keeps_typos() {
-  prefs.setBoolPref(pref, false);
+  Services.prefs.setBoolPref(pref, false);
   for (let i = 0; i < len; ++i) {
     let item = data[i];
     let result =
-      urifixup.createFixupURI(item.wrong,
-                              urifixup.FIXUP_FLAG_FIX_SCHEME_TYPOS).spec;
+      Services.uriFixup.createFixupURI(item.wrong,
+                              Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS).spec;
     Assert.equal(result, item.wrong);
   }
 });
@@ -88,12 +85,12 @@ add_task(function test_false_pref_keeps_typos() {
 // Finally, make sure we still fix what needs fixing if the pref is
 // explicitly set to true.
 add_task(function test_true_pref_fixes_typos() {
-  prefs.setBoolPref(pref, true);
+  Services.prefs.setBoolPref(pref, true);
   for (let i = 0; i < len; ++i) {
     let item = data[i];
     let result =
-        urifixup.createFixupURI(item.wrong,
-                                urifixup.FIXUP_FLAG_FIX_SCHEME_TYPOS).spec;
+        Services.uriFixup.createFixupURI(item.wrong,
+                                Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS).spec;
     Assert.equal(result, item.fixed);
   }
 });

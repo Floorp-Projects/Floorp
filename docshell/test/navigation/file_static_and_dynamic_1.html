@@ -15,7 +15,7 @@
         test();
       } else {
         var staticFrame = document.getElementById("staticframe");
-        opener.ok(new String(staticFrame.contentWindow.location).includes(staticFrame.src),
+        opener.ok(String(staticFrame.contentWindow.location).includes(staticFrame.src),
                   "Wrong document loaded!");
         opener.nextTest();
         window.close();
