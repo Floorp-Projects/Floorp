@@ -38,7 +38,6 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 const FLEXBOX_HIGHLIGHTER_ENABLED_PREF = "devtools.inspector.flexboxHighlighter.enabled";
 const CSS_SHAPES_ENABLED_PREF = "devtools.inspector.shapesHighlighter.enabled";
-const CSS_SHAPE_OUTSIDE_ENABLED_PREF = "layout.css.shape-outside.enabled";
 
 /**
  * This module is used to process text for output by developer tools. This means
@@ -98,9 +97,7 @@ OutputParser.prototype = {
     options.expectCubicBezier = this.supportsType(name, CSS_TYPES.TIMING_FUNCTION);
     options.expectDisplay = name === "display";
     options.expectFilter = name === "filter";
-    options.expectShape = name === "clip-path" ||
-                          (name === "shape-outside"
-                           && Services.prefs.getBoolPref(CSS_SHAPE_OUTSIDE_ENABLED_PREF));
+    options.expectShape = name === "clip-path" || name === "shape-outside";
     options.expectFont = name === "font-family";
     options.supportsColor = this.supportsType(name, CSS_TYPES.COLOR) ||
                             this.supportsType(name, CSS_TYPES.GRADIENT);

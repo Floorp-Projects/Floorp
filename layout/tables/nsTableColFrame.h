@@ -60,8 +60,6 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  virtual nsSplittableType GetSplittableType() const override;
-
   nsTableColGroupFrame* GetTableColGroupFrame() const
   {
     nsIFrame* parent = GetParent();

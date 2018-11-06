@@ -337,7 +337,7 @@ impl FrameBuilder {
             .set(self.prim_store.prim_count());
 
         resource_cache.begin_frame(frame_id);
-        gpu_cache.begin_frame();
+        gpu_cache.begin_frame(frame_id);
 
         let mut transform_palette = TransformPalette::new();
         clip_scroll_tree.update_tree(

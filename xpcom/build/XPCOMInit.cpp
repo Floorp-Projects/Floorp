@@ -276,7 +276,7 @@ CreateINIParserFactory(const mozilla::Module& aModule,
 #define COMPONENT(NAME, Ctor) { &kNS_##NAME##_CID, false, nullptr, Ctor },
 #define COMPONENT_M(NAME, Ctor, Selector) { &kNS_##NAME##_CID, false, nullptr, Ctor, Selector },
 const mozilla::Module::CIDEntry kXPCOMCIDEntries[] = {
-  { &kComponentManagerCID, true, nullptr, nsComponentManagerImpl::Create, Module::ALLOW_IN_GPU_PROCESS },
+  { &kComponentManagerCID, true, nullptr, nsComponentManagerImpl::Create, Module::ALLOW_IN_GPU_AND_VR_PROCESS },
   { &kINIParserFactoryCID, false, CreateINIParserFactory },
 #include "XPCOMModule.inc"
   { &kNS_CHROMEREGISTRY_CID, false, nullptr, nsChromeRegistryConstructor },
@@ -312,7 +312,7 @@ const mozilla::Module kXPCOMModule = {
   nullptr,
   nullptr,
   nullptr,
-  Module::ALLOW_IN_GPU_PROCESS
+  Module::ALLOW_IN_GPU_AND_VR_PROCESS
 };
 
 // gDebug will be freed during shutdown.

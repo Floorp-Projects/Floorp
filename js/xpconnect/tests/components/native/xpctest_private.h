@@ -15,6 +15,7 @@
 #include "xpctest_attributes.h"
 #include "xpctest_params.h"
 #include "xpctest_returncode.h"
+#include "xpctest_cenums.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ModuleUtils.h"
 
@@ -80,4 +81,13 @@ private:
     ~nsXPCTestReturnCodeParent();
 };
 
+class xpcTestCEnums final : public nsIXPCTestCEnums {
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIXPCTESTCENUMS
+
+  xpcTestCEnums();
+private:
+  ~xpcTestCEnums() = default;
+};
 #endif /* xpctest_private_h___ */

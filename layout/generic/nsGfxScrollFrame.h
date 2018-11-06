@@ -818,7 +818,6 @@ public:
   }
 
   virtual bool DoesClipChildren() override { return true; }
-  virtual nsSplittableType GetSplittableType() const override;
 
   nsPoint GetPositionOfChildIgnoringScrolling(const nsIFrame* aChild) override
   { nsPoint pt = aChild->GetPosition();
@@ -1246,7 +1245,6 @@ public:
   }
 
   virtual bool DoesClipChildren() override { return true; }
-  virtual nsSplittableType GetSplittableType() const override;
 
   nsPoint GetPositionOfChildIgnoringScrolling(const nsIFrame* aChild) override
   { nsPoint pt = aChild->GetPosition();

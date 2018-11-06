@@ -311,7 +311,6 @@ private:
   already_AddRefed<CSSValue> DoGetBorderImageSlice();
   already_AddRefed<CSSValue> DoGetBorderImageWidth();
   already_AddRefed<CSSValue> DoGetBorderImageOutset();
-  already_AddRefed<CSSValue> DoGetBorderImageRepeat();
 
   /* Box Shadow */
   already_AddRefed<CSSValue> DoGetBoxShadow();

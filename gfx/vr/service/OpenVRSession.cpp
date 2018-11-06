@@ -157,8 +157,10 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
     return false;
   }
 
-  StartHapticThread();
-  StartHapticTimer();
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+    "OpenVRSession::StartHapticThread", [this]() {
+      StartHapticThread();
+  }));
   
   // Succeeded
   return true;
@@ -927,17 +929,23 @@ OpenVRSession::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
 void
 OpenVRSession::StartHapticThread()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mHapticThread) {
     mHapticThread = new VRThread(NS_LITERAL_CSTRING("VR_OpenVR_Haptics"));
   }
   mHapticThread->Start();
+  StartHapticTimer();
 }
 
 void
 OpenVRSession::StopHapticThread()
 {
   if (mHapticThread) {
-    mHapticThread->Shutdown();
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "mHapticThread::Shutdown",
+      [thread = mHapticThread]() {
+        thread->Shutdown();
+    }));
     mHapticThread = nullptr;
   }
 }

@@ -25,13 +25,32 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 class UrlbarMatch {
   /**
    * Creates a match.
-   * @param {integer} matchType one of UrlbarUtils.MATCHTYPE.* values
+   * @param {integer} matchType one of UrlbarUtils.MATCH_TYPE.* values
+   * @param {integer} matchSource one of UrlbarUtils.MATCH_SOURCE.* values
    * @param {object} payload data for this match. A payload should always
    *        contain a way to extract a final url to visit. The url getter
    *        should have a case for each of the types.
    */
-  constructor(matchType, payload) {
+  constructor(matchType, matchSource, payload) {
+    // Type describes the payload and visualization that should be used for
+    // this match.
+    if (!Object.values(UrlbarUtils.MATCH_TYPE).includes(matchType)) {
+      throw new Error("Invalid match type");
+    }
     this.type = matchType;
+
+    // Source describes which data has been used to derive this match. In case
+    // multiple sources are involved, use the more privacy restricted.
+    if (!Object.values(UrlbarUtils.MATCH_SOURCE).includes(matchSource)) {
+      throw new Error("Invalid match source");
+    }
+    this.source = matchSource;
+
+    // The payload contains match data. Some of the data is common across
+    // multiple types, but most of it will vary.
+    if (!payload || (typeof payload != "object") || !payload.url) {
+      throw new Error("Invalid match payload");
+    }
     this.payload = payload;
   }
 

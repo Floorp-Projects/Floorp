@@ -69,6 +69,7 @@ SERIALIZED_PREDEFINED_TYPES = [
     "Appearance",
     "BackgroundRepeat",
     "BackgroundSize",
+    "BorderImageRepeat",
     "Clear",
     "ClipRectOrAuto",
     "Color",

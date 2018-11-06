@@ -183,8 +183,6 @@ user_pref("layout.css.prefixes.device-pixel-ratio-webkit", true);
 user_pref("layout.css.prefixes.webkit", true);
 // Make sure CSS error reporting is enabled for tests
 user_pref("layout.css.report_errors", true);
-// Enable CSS shape-outside for testing
-user_pref("layout.css.shape-outside.enabled", true);
 // Disable spammy layout warnings because they pollute test logs
 user_pref("layout.spammy_warnings.enabled", false);
 // Make tests run consistently on DevEdition (which has a lightweight theme

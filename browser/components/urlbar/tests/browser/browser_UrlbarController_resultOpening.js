@@ -57,7 +57,9 @@ add_task(function test_resultSelected_switchtab() {
 
   const event = new MouseEvent("click", {button: 0});
   const url = "https://example.com/1";
-  const result = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH, {url});
+  const result = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
+                                 UrlbarUtils.MATCH_SOURCE.TABS,
+                                 { url });
 
   Assert.equal(gURLBar.value, "", "urlbar input is empty before selecting a result");
   if (Services.prefs.getBoolPref("browser.urlbar.quantumbar", true)) {

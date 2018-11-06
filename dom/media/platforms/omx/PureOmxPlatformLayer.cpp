@@ -116,9 +116,6 @@ PureOmxPlatformLayer::PureOmxPlatformLayer(OmxDataDecoder* aDataDecoder,
 PureOmxPlatformLayer::~PureOmxPlatformLayer()
 {
   LOG("");
-  if (mComponent) {
-    OMX_FreeHandle(mComponent);
-  }
 }
 
 OMX_ERRORTYPE
@@ -277,6 +274,12 @@ nsresult
 PureOmxPlatformLayer::Shutdown()
 {
   LOG("");
+  if (mComponent) {
+    OMX_FreeHandle(mComponent);
+    mComponent = nullptr;
+  }
+  mPromiseLayer = nullptr;
+  mDataDecoder = nullptr;
   return NS_OK;
 }
 
