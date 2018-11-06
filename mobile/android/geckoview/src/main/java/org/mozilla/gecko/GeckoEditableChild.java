@@ -177,7 +177,7 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
             ThreadUtils.assertOnGeckoThread();
             Log.d(LOGTAG, "notifyIME(" + type + ")");
         }
-        if (!hasEditableParent()){
+        if (!hasEditableParent()) {
             return;
         }
         if (type == NOTIFY_IME_TO_CANCEL_COMPOSITION) {
@@ -206,7 +206,7 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
                           typeHint + "\", \"" + modeHint + "\", \"" + actionHint +
                           "\", 0x" + Integer.toHexString(flags) + ")");
         }
-        if (!hasEditableParent()){
+        if (!hasEditableParent()) {
             return;
         }
 
@@ -224,7 +224,7 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
             ThreadUtils.assertOnGeckoThread();
             Log.d(LOGTAG, "onSelectionChange(" + start + ", " + end + ")");
         }
-        if (!hasEditableParent()){
+        if (!hasEditableParent()) {
             return;
         }
 
@@ -247,7 +247,7 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
             Log.d(LOGTAG, "onTextChange(" + text + ", " + start + ", " +
                           unboundedOldEnd + ", " + unboundedNewEnd + ")");
         }
-        if (!hasEditableParent()){
+        if (!hasEditableParent()) {
             return;
         }
 
@@ -286,7 +286,7 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
                 .append("repeatCount=").append(event.getRepeatCount()).append(")");
             Log.d(LOGTAG, sb.toString());
         }
-        if (!hasEditableParent()){
+        if (!hasEditableParent()) {
             return;
         }
 
@@ -304,7 +304,7 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
             ThreadUtils.assertOnGeckoThread();
             Log.d(LOGTAG, "updateCompositionRects(rects.length = " + rects.length + ")");
         }
-        if (!hasEditableParent()){
+        if (!hasEditableParent()) {
             return;
         }
 
