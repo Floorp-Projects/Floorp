@@ -390,6 +390,12 @@ def write_interface(iface, fd):
         fd.write(",\n".join(enums))
         fd.write("\n  };\n\n")
 
+    def write_cenum_decl(b):
+        fd.write("  enum %s : uint%d_t {\n" % (b.basename, b.width))
+        for var in b.variants:
+            fd.write("    %s = %s,\n" % (var.name, var.value))
+        fd.write("  };\n\n")
+
     def write_method_decl(m):
         printComments(fd, m.doccomments, '  ')
 
@@ -471,6 +477,8 @@ def write_interface(iface, fd):
                     write_method_decl(member)
                 elif key == xpidl.CDATA:
                     fd.write(" %s" % member.data)
+                elif key == xpidl.CEnum:
+                    write_cenum_decl(member)
                 else:
                     raise Exception("Unexpected interface member: %s" % member)
 
