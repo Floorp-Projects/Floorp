@@ -66,7 +66,7 @@ struct nsQuoteNode : public nsGenConNode {
   }
 
   // The text that should be displayed for this quote.
-  const nsString* Text();
+  nsString Text();
 };
 
 class nsQuoteList : public nsGenConList {
