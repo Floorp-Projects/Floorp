@@ -149,6 +149,7 @@ class AnonymousContent;
 class Attr;
 class BoxObject;
 class XULBroadcastManager;
+class XULPersist;
 class ClientInfo;
 class ClientState;
 class CDATASection;
@@ -4756,6 +4757,7 @@ protected:
   nsCOMPtr<nsIDOMXULCommandDispatcher> mCommandDispatcher; // [OWNER] of the focus tracker
 
   RefPtr<mozilla::dom::XULBroadcastManager> mXULBroadcastManager;
+  RefPtr<mozilla::dom::XULPersist> mXULPersist;
 
   // At the moment, trackers might be blocked by Tracking Protection or FastBlock.
   // In order to know the numbers of trackers detected and blocked, we add
