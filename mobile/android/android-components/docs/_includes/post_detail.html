@@ -6,8 +6,11 @@
     <li>
         {{ post.date | date: '%B %d, %Y' }}
         <br/>
-
-        <a href="{{ post.url | relative_url }}">{{ post.title }}</a>  
+        {% if post.external_url %}
+          <a href="{{ post.external_url }}">{{ post.title | escape }}</a>
+        {% else %}
+          <a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a>
+        {% endif %}
     </li>
     {% endif %}
 </ul>
