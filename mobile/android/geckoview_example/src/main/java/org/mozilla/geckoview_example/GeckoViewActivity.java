@@ -49,6 +49,7 @@ public class GeckoViewActivity extends AppCompatActivity {
     private static final String LOGTAG = "GeckoViewActivity";
     private static final String DEFAULT_URL = "https://mozilla.org";
     private static final String USE_MULTIPROCESS_EXTRA = "use_multiprocess";
+    private static final String FULL_ACCESSIBILITY_TREE_EXTRA = "full_accessibility_tree";
     private static final String SEARCH_URI_BASE = "https://www.google.com/search?q=";
     private static final String ACTION_SHUTDOWN = "org.mozilla.geckoview_example.SHUTDOWN";
     private static final int REQUEST_FILE_PICKER = 1;
@@ -59,6 +60,7 @@ public class GeckoViewActivity extends AppCompatActivity {
     private GeckoSession mGeckoSession;
     private GeckoView mGeckoView;
     private boolean mUseMultiprocess;
+    private boolean mFullAccessibilityTree;
     private boolean mUseTrackingProtection;
     private boolean mUsePrivateBrowsing;
     private boolean mKillProcessOnDestroy;
@@ -103,6 +105,7 @@ public class GeckoViewActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
 
         mUseMultiprocess = getIntent().getBooleanExtra(USE_MULTIPROCESS_EXTRA, true);
+        mFullAccessibilityTree = getIntent().getBooleanExtra(FULL_ACCESSIBILITY_TREE_EXTRA, true);
         mProgressView = (ProgressBar) findViewById(R.id.page_progress);
 
         if (sGeckoRuntime == null) {
@@ -138,6 +141,7 @@ public class GeckoViewActivity extends AppCompatActivity {
             }
 
             mUseMultiprocess = mGeckoSession.getSettings().getBoolean(GeckoSessionSettings.USE_MULTIPROCESS);
+            mFullAccessibilityTree = mGeckoSession.getSettings().getBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE);
 
             mGeckoView.setSession(mGeckoSession);
         } else {
@@ -155,6 +159,8 @@ public class GeckoViewActivity extends AppCompatActivity {
         session.getSettings().setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, mUsePrivateBrowsing);
         session.getSettings().setBoolean(
             GeckoSessionSettings.USE_TRACKING_PROTECTION, mUseTrackingProtection);
+        session.getSettings().setBoolean(
+                GeckoSessionSettings.FULL_ACCESSIBILITY_TREE, mFullAccessibilityTree);
 
         connectSession(session);
 
