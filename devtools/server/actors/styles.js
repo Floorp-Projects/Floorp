@@ -1412,7 +1412,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     }
 
     // Log the changes before applying them so we have access to the previous values.
-    modifications.map(mod => this.logChange(mod));
+    modifications.map(mod => this.logDeclarationChange(mod));
 
     if (this.type === ELEMENT_STYLE) {
       // For element style rules, set the node's style attribute.
@@ -1472,7 +1472,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     const tempElement = document.createElementNS(XHTML_NS, "div");
 
     for (const mod of modifications) {
-      this.logChange(mod);
+      this.logDeclarationChange(mod);
       if (mod.type === "set") {
         tempElement.style.setProperty(mod.name, mod.value, mod.priority || "");
         this.rawStyle.setProperty(mod.name,
@@ -1548,13 +1548,13 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
   },
 
   /**
-   * Take an object with instructions to modify a CSS declaration and emit a
-   * "track-change" event with normalized metadata which describes the change.
+   * Take an object with instructions to modify a CSS declaration and log an object with
+   * normalized metadata which describes the change in the context of this rule.
    *
    * @param {Object} change
    *        Data about a modification to a rule. @see |modifyProperties()|
    */
-  logChange(change) {
+  logDeclarationChange(change) {
     // Destructure properties from the previous CSS declaration at this index, if any,
     // to new variable names to indicate the previous state.
     let {
@@ -1609,6 +1609,41 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
   },
 
   /**
+   * Helper method for tracking CSS changes. Logs the change of this rule's selector as
+   * two operations: a rule removal, including its CSS declarations, using the old
+   * selector and a rule addition using the new selector.
+   *
+   * @param {String} oldSelector
+   *        This rule's previous selector.
+   * @param {String} newSelector
+   *        This rule's new selector.
+   */
+  logSelectorChange(oldSelector, newSelector) {
+    // Build a collection of CSS declarations existing on this rule.
+    const declarations = this._declarations.reduce((acc, decl) => {
+      acc[decl.name] = decl.priority ? decl.value + " !important" : decl.value;
+      return acc;
+    }, {});
+
+    // Logging two distinct operations to remove the old rule and add a new one.
+    // TODO: Make TrackChangeEmitter support transactions so these two operations are
+    // grouped together when implementing undo/redo.
+    TrackChangeEmitter.trackChange({
+      ...this.metadata,
+      add: null,
+      remove: declarations,
+      selector: oldSelector,
+    });
+
+    TrackChangeEmitter.trackChange({
+      ...this.metadata,
+      add: declarations,
+      remove: null,
+      selector: newSelector,
+    });
+  },
+
+  /**
    * Calls modifySelector2() which needs to be kept around for backwards compatibility.
    * TODO: Once Firefox 64 is no longer supported, inline that mehtod's content,
    * then remove its definition from this file and from specs/styles.js
@@ -1645,11 +1680,14 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       return { ruleProps: null, isMatching: true };
     }
 
+    // The rule's previous selector is lost after calling _addNewSelector(). Save it now.
+    const oldValue = this.rawRule.selectorText;
     let selectorPromise = this._addNewSelector(value, editAuthored);
 
     if (editAuthored) {
       selectorPromise = selectorPromise.then((newCssRule) => {
         if (newCssRule) {
+          this.logSelectorChange(oldValue, value);
           const style = this.pageStyle._styleRef(newCssRule);
           // See the comment in |form| to understand this.
           return style.getAuthoredCssText().then(() => newCssRule);
