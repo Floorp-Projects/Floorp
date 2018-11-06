@@ -38,7 +38,7 @@ public:
     return mDrawTarget->GetSize();
   }
   virtual IntRect GetRect() const override {
-    return IntRect(mOrigin, GetSize());
+    return mDrawTarget->GetRect();
   }
 
   virtual void Flush() override;

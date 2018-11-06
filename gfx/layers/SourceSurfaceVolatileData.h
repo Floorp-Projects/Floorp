@@ -31,6 +31,7 @@ public:
   SourceSurfaceVolatileData()
     : mMutex("SourceSurfaceVolatileData")
     , mStride(0)
+    , mMapCount(0)
     , mFormat(SurfaceFormat::UNKNOWN)
     , mWasPurged(false)
   {
@@ -98,10 +99,12 @@ public:
 private:
   ~SourceSurfaceVolatileData() override
   {
+    MOZ_ASSERT(mMapCount == 0);
   }
 
   Mutex mMutex;
   int32_t mStride;
+  int32_t mMapCount;
   IntSize mSize;
   RefPtr<VolatileBuffer> mVBuf;
   VolatileBufferPtr<uint8_t> mVBufPtr;
