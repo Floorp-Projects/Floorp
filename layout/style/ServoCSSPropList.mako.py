@@ -104,6 +104,7 @@ SERIALIZED_PREDEFINED_TYPES = [
     "Opacity",
     "Quotes",
     "Resize",
+    "Scale",
     "TextAlign",
     "TimingFunction",
     "TransformStyle",
