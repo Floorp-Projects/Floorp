@@ -49,7 +49,7 @@ flagInputs.concat([
   flagInputs[0] | flagInputs[1],
   flagInputs[1] | flagInputs[2],
   flagInputs[0] | flagInputs[2],
-  flagInputs[0] | flagInputs[1] | flagInputs[2]
+  flagInputs[0] | flagInputs[1] | flagInputs[2],
 ]);
 
 /*
@@ -205,25 +205,25 @@ var testcases = [ {
     input: "[64:ff9b::8.8.8.8]",
     fixedURI: "http://[64:ff9b::808:808]/",
     alternateURI: "http://[64:ff9b::808:808]/",
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "[64:ff9b::8.8.8.8]/~moz",
     fixedURI: "http://[64:ff9b::808:808]/~moz",
     alternateURI: "http://[64:ff9b::808:808]/~moz",
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "[::1][::1]",
     keywordLookup: true,
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "[::1][100",
     fixedURI: null,
     keywordLookup: true,
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "[::1]]",
     keywordLookup: true,
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "1234",
     fixedURI: "http://0.0.4.210/",
@@ -344,7 +344,7 @@ var testcases = [ {
     input: "café.local",
     fixedURI: "http://xn--caf-dma.local/",
     alternateURI: "http://www.xn--caf-dma.local/",
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "47.6182,-122.830",
     fixedURI: "http://47.6182,-122.830/",
@@ -385,38 +385,38 @@ var testcases = [ {
   }, {
     input: "moz ?.::%27",
     keywordLookup: true,
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "mozilla.com/?q=search",
     fixedURI: "http://mozilla.com/?q=search",
     alternateURI: "http://www.mozilla.com/?q=search",
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "mozilla.com?q=search",
     fixedURI: "http://mozilla.com/?q=search",
     alternateURI: "http://www.mozilla.com/?q=search",
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "mozilla.com ?q=search",
     keywordLookup: true,
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "mozilla.com.?q=search",
     fixedURI: "http://mozilla.com./?q=search",
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "mozilla.com'?q=search",
     fixedURI: "http://mozilla.com'/?q=search",
     alternateURI: "http://www.mozilla.com'/?q=search",
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "mozilla.com':search",
     keywordLookup: true,
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "[mozilla]",
     keywordLookup: true,
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "':?",
     fixedURI: "http://'/?",
@@ -435,7 +435,7 @@ var testcases = [ {
   }, {
     input: "' ?.com",
     keywordLookup: true,
-    protocolChange: true
+    protocolChange: true,
   }, {
     input: "?mozilla",
     keywordLookup: true,

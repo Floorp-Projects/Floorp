@@ -18,16 +18,16 @@
  * TriggeringPrincipal and LoadingPrincipal of the navigated iframe (Frame A).
  *
  * +---------------------------------------+
- * |   Parent                              | 
- * |                                       |   
+ * |   Parent                              |
+ * |                                       |
  * |  +----------------------------+       |
- * |  | Frame A                    |       | 
+ * |  | Frame A                    |       |
  * |  |                            |       |
  * |  |                            |       |
  * |  +----------------------------+       |
- * |                                       |   
+ * |                                       |
  * |  +----------------------------+       |
- * |  | Frame B                    |       | 
+ * |  | Frame B                    |       |
  * |  |                            |       |
  * |  | win.open("http://", "A")   |       |
  * |  +----------------------------+       |
@@ -49,7 +49,7 @@ const LOADING_PRINCIPAL_URI =
 var frameA = document.getElementById("framea");
 
 function checkResults() {
-  frameA.removeEventListener('load', checkResults);
+  frameA.removeEventListener("load", checkResults);
 
   var channel = SpecialPowers.wrap(frameA.contentWindow).docShell.currentDocumentChannel;
   var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
@@ -63,13 +63,13 @@ function checkResults() {
 
   is(loadingPrincipal, LOADING_PRINCIPAL_URI,
     "LoadingPrincipal for targeted window.open() should be the containing document");
- 
+
   SimpleTest.finish();
 }
 
 function performNavigation() {
-  frameA.removeEventListener('load', performNavigation);
-  frameA.addEventListener('load', checkResults);
+  frameA.removeEventListener("load", performNavigation);
+  frameA.addEventListener("load", checkResults);
 
   // load Frame B which then navigates Frame A
   var frameB = document.getElementById("frameb");
@@ -79,7 +79,7 @@ function performNavigation() {
 // start the test
 SimpleTest.waitForExplicitFinish();
 
-frameA.addEventListener('load', performNavigation);
+frameA.addEventListener("load", performNavigation);
 
 </script>
 </pre>
