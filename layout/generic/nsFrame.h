@@ -201,7 +201,6 @@ public:
   nsresult AttributeChanged(int32_t  aNameSpaceID,
                             nsAtom* aAttribute,
                             int32_t aModType) override;
-  nsSplittableType GetSplittableType() const override;
   nsIFrame* GetPrevContinuation() const override;
   void SetPrevContinuation(nsIFrame*) override;
   nsIFrame* GetNextContinuation() const override;

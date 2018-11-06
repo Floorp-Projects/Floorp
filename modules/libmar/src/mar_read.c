@@ -17,6 +17,12 @@
 #include <netinet/in.h>
 #endif
 
+/* This block must be at most 104 bytes.
+   MAR channel name < 64 bytes, and product version < 32 bytes + 3 NULL
+   terminator bytes. We only check for 96 though because we remove 8
+   bytes above from the additionalBlockSize: We subtract
+   sizeof(additionalBlockSize) and sizeof(additionalBlockID) */
+#define MAXADDITIONALBLOCKSIZE 96
 
 /* this is the same hash algorithm used by nsZipArchive.cpp */
 static uint32_t mar_hash_name(const char *name) {
@@ -397,20 +403,23 @@ int
 mar_read_product_info_block(MarFile *mar,
                             struct ProductInformationBlock *infoBlock)
 {
-  uint32_t i, offsetAdditionalBlocks, numAdditionalBlocks,
+  uint32_t offsetAdditionalBlocks, numAdditionalBlocks,
     additionalBlockSize, additionalBlockID;
   int hasAdditionalBlocks;
 
   /* The buffer size is 97 bytes because the MAR channel name < 64 bytes, and
      product version < 32 bytes + 3 NULL terminator bytes. */
-  char buf[97] = { '\0' };
+  char buf[MAXADDITIONALBLOCKSIZE + 1] = { '\0' };
   if (get_mar_file_info_fp(mar->fp, NULL, NULL,
                            &hasAdditionalBlocks,
                            &offsetAdditionalBlocks,
                            &numAdditionalBlocks) != 0) {
     return -1;
   }
-  for (i = 0; i < numAdditionalBlocks; ++i) {
+
+  /* We only have the one additional block type and only one is expected to be
+     in a MAR file so check if any exist and process the first found */
+  if (numAdditionalBlocks > 0) {
     /* Read the additional block size */
     if (fread(&additionalBlockSize,
               sizeof(additionalBlockSize),
@@ -420,6 +429,11 @@ mar_read_product_info_block(MarFile *mar,
     additionalBlockSize = ntohl(additionalBlockSize) -
                           sizeof(additionalBlockSize) -
                           sizeof(additionalBlockID);
+
+    /* Additional Block sizes should only be 96 bytes long */
+    if (additionalBlockSize > MAXADDITIONALBLOCKSIZE) {
+      return -1;
+    }
 
     /* Read the additional block ID */
     if (fread(&additionalBlockID,
@@ -433,16 +447,7 @@ mar_read_product_info_block(MarFile *mar,
       const char *location;
       int len;
 
-      /* This block must be at most 104 bytes.
-         MAR channel name < 64 bytes, and product version < 32 bytes + 3 NULL
-         terminator bytes. We only check for 96 though because we remove 8
-         bytes above from the additionalBlockSize: We subtract
-         sizeof(additionalBlockSize) and sizeof(additionalBlockID) */
-      if (additionalBlockSize > 96) {
-        return -1;
-      }
-
-    if (fread(buf, additionalBlockSize, 1, mar->fp) != 1) {
+      if (fread(buf, additionalBlockSize, 1, mar->fp) != 1) {
         return -1;
       }
 

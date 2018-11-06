@@ -199,12 +199,6 @@ nsHTMLScrollFrame::RemoveFrame(ChildListID aListID,
   mHelper.ReloadChildFrames();
 }
 
-nsSplittableType
-nsHTMLScrollFrame::GetSplittableType() const
-{
-  return NS_FRAME_NOT_SPLITTABLE;
-}
-
 /**
  HTML scrolling implementation
 
@@ -1614,12 +1608,6 @@ nsXULScrollFrame::RemoveFrame(ChildListID     aListID,
 {
   nsBoxFrame::RemoveFrame(aListID, aOldFrame);
   mHelper.ReloadChildFrames();
-}
-
-nsSplittableType
-nsXULScrollFrame::GetSplittableType() const
-{
-  return NS_FRAME_NOT_SPLITTABLE;
 }
 
 nsresult

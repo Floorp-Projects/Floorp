@@ -802,7 +802,7 @@ var gMainPane = {
   },
 
   /* Confirm the locale change and restart the browser in the new locale. */
-  confirmBrowserLanguageChange() {
+  confirmBrowserLanguageChange(event) {
     let localesString = (event.target.getAttribute("locales") || "").trim();
     if (!localesString || localesString.length == 0) {
       return;
@@ -822,9 +822,7 @@ var gMainPane = {
   onBrowserLanguageChange(event) {
     let locale = event.target.value;
 
-    // If there is no value, then this is the search option, leave the
-    // message bar in its current state.
-    if (!locale) {
+    if (locale == "search") {
       return;
     } else if (locale == Services.locale.requestedLocale) {
       this.hideConfirmLanguageChangeMessageBar();

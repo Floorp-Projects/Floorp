@@ -1695,16 +1695,11 @@ impl<'a> DisplayListFlattener<'a> {
         clip_and_scroll: ScrollNodeAndClipChain,
         info: &LayoutPrimitiveInfo,
     ) {
-        let prim = BrushPrimitive::new(
-            BrushKind::Clear,
-            None,
-        );
-
         self.add_primitive(
             clip_and_scroll,
             info,
             Vec::new(),
-            PrimitiveContainer::Brush(prim),
+            PrimitiveContainer::Clear,
         );
     }
 

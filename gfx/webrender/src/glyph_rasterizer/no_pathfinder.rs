@@ -169,7 +169,7 @@ impl GlyphRasterizer {
                     }
                     GlyphRasterResult::Bitmap(glyph) => {
                         assert_eq!((glyph.left.fract(), glyph.top.fract()), (0.0, 0.0));
-                        let mut texture_cache_handle = TextureCacheHandle::new();
+                        let mut texture_cache_handle = TextureCacheHandle::invalid();
                         texture_cache.request(&texture_cache_handle, gpu_cache);
                         texture_cache.update(
                             &mut texture_cache_handle,

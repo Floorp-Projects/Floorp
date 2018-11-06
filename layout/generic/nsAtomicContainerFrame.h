@@ -35,10 +35,6 @@ public:
   {
     return nsFrame::PeekOffsetCharacter(aForward, aOffset, aOptions);
   }
-  nsSplittableType GetSplittableType() const override
-  {
-    return nsFrame::GetSplittableType();
-  }
 
 protected:
   nsAtomicContainerFrame(ComputedStyle* aStyle, ClassID aID)

@@ -90,6 +90,9 @@ add_task(async function test_initialState() {
 add_task(async function test_backButton() {
   let form = new AddressForm();
   form.dataset.backButtonLabel = "Back";
+  await form.promiseReady;
+  display.appendChild(form);
+
   await form.requestStore.setState({
     page: {
       id: "address-page",
@@ -99,9 +102,6 @@ add_task(async function test_backButton() {
       title: "Sample page title",
     },
   });
-
-  await form.promiseReady;
-  display.appendChild(form);
   await asyncElementRendered();
 
   let stateChangePromise = promiseStateChange(form.requestStore);

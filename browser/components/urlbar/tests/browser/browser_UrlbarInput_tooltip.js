@@ -49,11 +49,15 @@ async function expectNoTooltip() {
 }
 
 add_task(async function() {
+  // Ensure the URL bar isn't focused.
+  gBrowser.selectedBrowser.focus();
+
   gURLBar.value = "short string";
   await expectNoTooltip();
 
   let longURL = "http://longurl.com/" + "foobar/".repeat(30);
   let overflowPromise = BrowserTestUtils.waitForEvent(gURLBar.inputField, "overflow");
+  await window.promiseDocumentFlushed(() => {});
   gURLBar.value = longURL;
   await overflowPromise;
   is(gURLBar.inputField.value, longURL.replace(/^http:\/\//, ""), "Urlbar value has http:// stripped");

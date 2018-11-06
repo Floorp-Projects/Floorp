@@ -92,6 +92,12 @@ class ProviderOpenTabs {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;
   }
 
+  get sources() {
+    return [
+      UrlbarUtils.MATCH_SOURCE.TABS,
+    ];
+  }
+
   /**
    * Registers a tab as open.
    * @param {string} url Address of the tab
@@ -149,7 +155,8 @@ class ProviderOpenTabs {
         cancel();
         return;
       }
-      addCallback(this, new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH, {
+      addCallback(this, new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
+                                        UrlbarUtils.MATCH_SOURCE.TABS, {
         url: row.getResultByName("url"),
         userContextId: row.getResultByName("userContextId"),
       }));

@@ -30,6 +30,7 @@ using mozilla::DebugOnly;
 
 GeckoProfilerThread::GeckoProfilerThread()
   : profilingStack_(nullptr)
+  , profilingStackIfEnabled_(nullptr)
 {
 }
 
@@ -44,9 +45,10 @@ GeckoProfilerRuntime::GeckoProfilerRuntime(JSRuntime* rt)
 }
 
 void
-GeckoProfilerThread::setProfilingStack(ProfilingStack* profilingStack)
+GeckoProfilerThread::setProfilingStack(ProfilingStack* profilingStack, bool enabled)
 {
     profilingStack_ = profilingStack;
+    profilingStackIfEnabled_ = enabled ? profilingStack : nullptr;
 }
 
 void
@@ -254,7 +256,7 @@ GeckoProfilerThread::exit(JSScript* script, JSFunction* maybeFun)
                 if (frame.isJsFrame()) {
                     fprintf(stderr, "  [%d] JS %s\n", i, frame.dynamicString());
                 } else {
-                    fprintf(stderr, "  [%d] C line %d %s\n", i, frame.line(), frame.dynamicString());
+                    fprintf(stderr, "  [%d] Label %s\n", i, frame.dynamicString());
                 }
             }
         }
@@ -401,8 +403,8 @@ GeckoProfilerBaselineOSRMarker::GeckoProfilerBaselineOSRMarker(JSContext* cx, bo
     }
 
     ProfilingStackFrame& frame = profiler->profilingStack_->frames[sp - 1];
-    MOZ_ASSERT(frame.kind() == ProfilingStackFrame::Kind::JS_NORMAL);
-    frame.setKind(ProfilingStackFrame::Kind::JS_OSR);
+    MOZ_ASSERT(!frame.isOSRFrame());
+    frame.setIsOSRFrame(true);
 }
 
 GeckoProfilerBaselineOSRMarker::~GeckoProfilerBaselineOSRMarker()
@@ -418,8 +420,8 @@ GeckoProfilerBaselineOSRMarker::~GeckoProfilerBaselineOSRMarker()
     }
 
     ProfilingStackFrame& frame = profiler->stack()[sp - 1];
-    MOZ_ASSERT(frame.kind() == ProfilingStackFrame::Kind::JS_OSR);
-    frame.setKind(ProfilingStackFrame::Kind::JS_NORMAL);
+    MOZ_ASSERT(frame.isOSRFrame());
+    frame.setIsOSRFrame(false);
 }
 
 JS_PUBLIC_API(JSScript*)
@@ -447,12 +449,12 @@ JS_FRIEND_API(jsbytecode*)
 ProfilingStackFrame::pc() const
 {
     MOZ_ASSERT(isJsFrame());
-    if (lineOrPcOffset == NullPCOffset) {
+    if (pcOffsetIfJS_ == NullPCOffset) {
         return nullptr;
     }
 
     JSScript* script = this->script();
-    return script ? script->offsetToPC(lineOrPcOffset) : nullptr;
+    return script ? script->offsetToPC(pcOffsetIfJS_) : nullptr;
 }
 
 /* static */ int32_t
@@ -466,18 +468,20 @@ ProfilingStackFrame::setPC(jsbytecode* pc)
     MOZ_ASSERT(isJsFrame());
     JSScript* script = this->script();
     MOZ_ASSERT(script); // This should not be called while profiling is suppressed.
-    lineOrPcOffset = pcToOffset(script, pc);
+    pcOffsetIfJS_ = pcToOffset(script, pc);
 }
 
 JS_FRIEND_API(void)
 js::SetContextProfilingStack(JSContext* cx, ProfilingStack* profilingStack)
 {
-    cx->geckoProfiler().setProfilingStack(profilingStack);
+    cx->geckoProfiler().setProfilingStack(profilingStack,
+        cx->runtime()->geckoProfiler().enabled());
 }
 
 JS_FRIEND_API(void)
 js::EnableContextProfilingStack(JSContext* cx, bool enabled)
 {
+    cx->geckoProfiler().enable(enabled);
     cx->runtime()->geckoProfiler().enable(enabled);
 }
 

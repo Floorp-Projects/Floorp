@@ -44,7 +44,6 @@ class IonSpewer
 {
   private:
     Mutex outputLock_;
-    Fprinter c1Output_;
     Fprinter jsonOutput_;
     bool firstFunction_;
     bool asyncLogging_;
@@ -157,9 +156,6 @@ jit::EnableIonDebugAsyncLogging()
 void
 IonSpewer::release()
 {
-    if (c1Output_.isInitialized()) {
-        c1Output_.finish();
-    }
     if (jsonOutput_.isInitialized()) {
         jsonOutput_.finish();
     }
@@ -177,9 +173,7 @@ IonSpewer::init()
     gSpewFilter = getenv("IONFILTER");
 
     const size_t bufferLength = 256;
-    char c1Buffer[bufferLength];
     char jsonBuffer[bufferLength];
-    const char *c1Filename = JIT_SPEW_DIR "/ion.cfg";
     const char *jsonFilename = JIT_SPEW_DIR "/ion.json";
 
     const char* usePid = getenv("ION_SPEW_BY_PID");
@@ -192,17 +186,9 @@ IonSpewer::init()
             return false;
         }
         jsonFilename = jsonBuffer;
-
-        len = snprintf(c1Buffer, bufferLength, JIT_SPEW_DIR "/ion%" PRIu32 ".cfg", pid);
-        if (bufferLength <= len) {
-            fprintf(stderr, "Warning: IonSpewer::init: Cannot serialize file name.");
-            return false;
-        }
-        c1Filename = c1Buffer;
     }
 
-    if (!c1Output_.init(c1Filename) ||
-        !jsonOutput_.init(jsonFilename))
+    if (!jsonOutput_.init(jsonFilename))
     {
         release();
         return false;
@@ -232,7 +218,7 @@ IonSpewer::spewPass(GraphSpewer* gs)
 {
     if (!getAsyncLogging()) {
         LockGuard<Mutex> guard(outputLock_);
-        gs->dump(c1Output_, jsonOutput_);
+        gs->dump(jsonOutput_);
     }
 }
 
@@ -244,7 +230,7 @@ IonSpewer::endFunction(GraphSpewer* gs)
         jsonOutput_.put(","); // separate functions
     }
 
-    gs->dump(c1Output_, jsonOutput_);
+    gs->dump(jsonOutput_);
     firstFunction_ = false;
 }
 
@@ -355,7 +341,7 @@ GraphSpewer::endFunction()
 }
 
 void
-GraphSpewer::dump(Fprinter& c1Out, Fprinter& jsonOut)
+GraphSpewer::dump(Fprinter& jsonOut)
 {
     if (!jsonPrinter_.hadOutOfMemory()) {
         jsonPrinter_.exportInto(jsonOut);
@@ -443,7 +429,7 @@ jit::CheckLogging()
             "  cacheflush    Instruction Cache flushes (ARM only for now)\n"
             "  range         Range Analysis\n"
             "  unroll        Loop unrolling\n"
-            "  logs          C1 and JSON visualization logging\n"
+            "  logs          JSON visualization logging\n"
             "  logs-sync     Same as logs, but flushes between each pass (sync. compiled functions only).\n"
             "  profiling     Profiling-related information\n"
             "  trackopts     Optimization tracking information gathered by the Gecko profiler. "

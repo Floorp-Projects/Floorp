@@ -26,9 +26,9 @@
 
 use api::{PremultipliedColorF, TexelRect};
 use api::{VoidPtrToSizeFn};
-use device::FrameId;
 use euclid::TypedRect;
 use profiler::GpuCacheProfileCounters;
+use render_backend::FrameId;
 use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use std::{mem, u16, u32};
 use std::ops::Add;
@@ -549,7 +549,7 @@ pub struct GpuCache {
 impl GpuCache {
     pub fn new() -> Self {
         GpuCache {
-            frame_id: FrameId::new(0),
+            frame_id: FrameId::invalid(),
             texture: Texture::new(),
             saved_block_count: 0,
             in_debug: false,
@@ -557,9 +557,9 @@ impl GpuCache {
     }
 
     /// Begin a new frame.
-    pub fn begin_frame(&mut self) {
+    pub fn begin_frame(&mut self, frame_id: FrameId) {
         debug_assert!(self.texture.pending_blocks.is_empty());
-        self.frame_id = self.frame_id + 1;
+        self.frame_id = frame_id;
         self.texture.evict_old_blocks(self.frame_id);
         self.saved_block_count = 0;
     }

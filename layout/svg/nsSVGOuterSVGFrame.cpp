@@ -798,12 +798,6 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 }
 
-nsSplittableType
-nsSVGOuterSVGFrame::GetSplittableType() const
-{
-  return NS_FRAME_NOT_SPLITTABLE;
-}
-
 //----------------------------------------------------------------------
 // nsISVGSVGFrame methods:
 

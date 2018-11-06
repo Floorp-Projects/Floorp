@@ -404,12 +404,6 @@ NS_QUERYFRAME_HEAD(nsBlockFrame)
   NS_QUERYFRAME_ENTRY(nsBlockFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
-nsSplittableType
-nsBlockFrame::GetSplittableType() const
-{
-  return NS_FRAME_SPLITTABLE_NON_RECTANGULAR;
-}
-
 #ifdef DEBUG_FRAME_DUMP
 void
 nsBlockFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
