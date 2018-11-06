@@ -164,7 +164,7 @@ class Builtin(object):
 builtinNames = [
     Builtin('boolean', 'bool', 'bool'),
     Builtin('void', 'void', 'libc::c_void'),
-    Builtin('octet', 'uint8_t', 'libc::uint8_t'),
+    Builtin('octet', 'uint8_t', 'libc::uint8_t', False, True),
     Builtin('short', 'int16_t', 'libc::int16_t', True, True),
     Builtin('long', 'int32_t', 'libc::int32_t', True, True),
     Builtin('long long', 'int64_t', 'libc::int64_t', True, False),
