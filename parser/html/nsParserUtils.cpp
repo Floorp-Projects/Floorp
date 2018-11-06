@@ -87,8 +87,7 @@ nsParserUtils::Sanitize(const nsAString& aFromStr,
   nsTreeSanitizer sanitizer(aFlags);
   sanitizer.Sanitize(document);
 
-  nsCOMPtr<nsIDocumentEncoder> encoder =
-    do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/html");
+  nsCOMPtr<nsIDocumentEncoder> encoder = do_createDocumentEncoder("text/html");
 
   encoder->NativeInit(document,
                       NS_LITERAL_STRING("text/html"),

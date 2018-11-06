@@ -10,12 +10,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1352882
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
   function getEncoder() {
-    const de = SpecialPowers.Ci.nsIDocumentEncoder;
-    const Cc = SpecialPowers.Cc;
-
     // Create a plaintext encoder without flags.
-    var encoder = Cc["@mozilla.org/layout/documentEncoder;1?type=text/plain"]
-                  .createInstance(de);
+    var encoder = SpecialPowers.Cu.createDocumentEncoder("text/plain");
     encoder.init(document, "text/plain", encoder.RequiresReinitAfterOutput);
     return encoder;
   }

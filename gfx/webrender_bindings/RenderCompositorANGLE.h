@@ -7,6 +7,8 @@
 #ifndef MOZILLA_GFX_RENDERCOMPOSITOR_ANGLE_H
 #define MOZILLA_GFX_RENDERCOMPOSITOR_ANGLE_H
 
+#include <queue>
+
 #include "GLTypes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/webrender/RenderCompositor.h"
@@ -47,6 +49,8 @@ public:
 
   bool UseDComp() const override { return !!mCompositionDevice; }
 
+  bool UseTripleBuffering() const { return mUseTripleBuffering; }
+
   LayoutDeviceIntSize GetBufferSize() override;
 
 protected:
@@ -61,6 +65,8 @@ protected:
   EGLConfig mEGLConfig;
   EGLSurface mEGLSurface;
 
+  int mUseTripleBuffering;
+
   RefPtr<ID3D11Device> mDevice;
   RefPtr<ID3D11DeviceContext> mCtx;
   RefPtr<IDXGISwapChain> mSwapChain;
@@ -69,8 +75,7 @@ protected:
   RefPtr<IDCompositionTarget> mCompositionTarget;
   RefPtr<IDCompositionVisual> mVisual;
 
-  RefPtr<ID3D11Query> mWaitForPresentQuery;
-  RefPtr<ID3D11Query> mNextWaitForPresentQuery;
+  std::queue<RefPtr<ID3D11Query>> mWaitForPresentQueries;
 
   Maybe<LayoutDeviceIntSize> mBufferSize;
 };

@@ -77,6 +77,9 @@ void CodeCoverageHandler::FlushCounters()
     length -= n;
   }
 
+  rv = outputStream->Close();
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
   free(result);
 
   printf_stderr("[CodeCoverage] JS flush completed.\n");

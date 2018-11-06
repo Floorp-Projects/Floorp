@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ChromeUtils.import("resource://gre/modules/GeckoViewChildModule.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -17,6 +18,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 class GeckoViewNavigationChild extends GeckoViewChildModule {
   onInit() {
     docShell.loadURIDelegate = this;
+
+    if (Services.androidBridge.isFennec) {
+      addEventListener("DOMContentLoaded", this);
+    }
 
     if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT) {
       let tabchild = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -34,11 +39,6 @@ class GeckoViewNavigationChild extends GeckoViewChildModule {
 
     if (!this.enabled) {
       return false;
-    }
-
-    // TODO: Remove this when we have a sensible error API.
-    if (aUri && aUri.displaySpec.startsWith("about:certerror")) {
-      addEventListener("click", ErrorPageEventHandler, true);
     }
 
     return LoadURIDelegate.load(content, this.eventDispatcher,
@@ -97,6 +97,33 @@ class GeckoViewNavigationChild extends GeckoViewChildModule {
     debug `reloadInFreshProcess ${aURI.displaySpec}`;
     E10SUtils.redirectLoad(aDocShell, aURI, aReferrer, aTriggeringPrincipal, true, aLoadFlags);
     return true;
+  }
+
+  handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "DOMContentLoaded": {
+        // TODO: Remove this when we have a better story re: interactive error pages.
+        let target = aEvent.originalTarget;
+
+        // ignore on frames and other documents
+        if (target != content.document)
+          return;
+
+        let docURI = target.documentURI;
+
+        if (docURI.startsWith("about:certerror") || docURI.startsWith("about:blocked")) {
+          addEventListener("click", ErrorPageEventHandler, true);
+          let listener = () => {
+            removeEventListener("click", ErrorPageEventHandler, true);
+            removeEventListener("pagehide", listener, true);
+          };
+
+          addEventListener("pagehide", listener, true);
+        }
+
+        break;
+      }
+    }
   }
 }
 
