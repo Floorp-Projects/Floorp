@@ -532,3 +532,96 @@ add_task(async function test_suggestion_rightclick() {
     BrowserTestUtils.removeTab(tab);
   });
 });
+
+add_task(async function test_privateWindow() {
+  let search_hist = getAndClearKeyedHistogram("SEARCH_COUNTS");
+
+  // First, do a bunch of searches in a private window.
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+
+  info("Search in a private window and the pref does not exist");
+  let p = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  await searchInAwesomebar("query", win);
+  EventUtils.synthesizeKey("KEY_Enter", undefined, win);
+  await p;
+
+  // SEARCH_COUNTS should be incremented.
+  checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 1);
+
+  info("Search again in a private window after setting the pref to true");
+  Services.prefs.setBoolPref("browser.engagement.search_counts.pbm", true);
+  p = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  await searchInAwesomebar("another query", win);
+  EventUtils.synthesizeKey("KEY_Enter", undefined, win);
+  await p;
+
+  // SEARCH_COUNTS should *not* be incremented.
+  checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 1);
+
+  info("Search again in a private window after setting the pref to false");
+  Services.prefs.setBoolPref("browser.engagement.search_counts.pbm", false);
+  p = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  await searchInAwesomebar("another query", win);
+  EventUtils.synthesizeKey("KEY_Enter", undefined, win);
+  await p;
+
+  // SEARCH_COUNTS should be incremented.
+  checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 2);
+
+  info("Search again in a private window after clearing the pref");
+  Services.prefs.clearUserPref("browser.engagement.search_counts.pbm");
+  p = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  await searchInAwesomebar("another query", win);
+  EventUtils.synthesizeKey("KEY_Enter", undefined, win);
+  await p;
+
+  // SEARCH_COUNTS should be incremented.
+  checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 3);
+
+  await BrowserTestUtils.closeWindow(win);
+
+  // Now, do a bunch of searches in a non-private window.  Telemetry should
+  // always be recorded regardless of the pref's value.
+  win = await BrowserTestUtils.openNewBrowserWindow();
+
+  info("Search in a non-private window and the pref does not exist");
+  p = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  await searchInAwesomebar("query", win);
+  EventUtils.synthesizeKey("KEY_Enter", undefined, win);
+  await p;
+
+  // SEARCH_COUNTS should be incremented.
+  checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 4);
+
+  info("Search again in a non-private window after setting the pref to true");
+  Services.prefs.setBoolPref("browser.engagement.search_counts.pbm", true);
+  p = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  await searchInAwesomebar("another query", win);
+  EventUtils.synthesizeKey("KEY_Enter", undefined, win);
+  await p;
+
+  // SEARCH_COUNTS should be incremented.
+  checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 5);
+
+  info("Search again in a non-private window after setting the pref to false");
+  Services.prefs.setBoolPref("browser.engagement.search_counts.pbm", false);
+  p = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  await searchInAwesomebar("another query", win);
+  EventUtils.synthesizeKey("KEY_Enter", undefined, win);
+  await p;
+
+  // SEARCH_COUNTS should be incremented.
+  checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 6);
+
+  info("Search again in a non-private window after clearing the pref");
+  Services.prefs.clearUserPref("browser.engagement.search_counts.pbm");
+  p = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  await searchInAwesomebar("another query", win);
+  EventUtils.synthesizeKey("KEY_Enter", undefined, win);
+  await p;
+
+  // SEARCH_COUNTS should be incremented.
+  checkKeyedHistogram(search_hist, "other-MozSearch.urlbar", 7);
+
+  await BrowserTestUtils.closeWindow(win);
+});
