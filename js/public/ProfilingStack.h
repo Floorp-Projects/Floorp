@@ -394,12 +394,17 @@ class ProfilingStack final
     void pushLabelFrame(const char* label, const char* dynamicString, void* sp,
                         js::ProfilingStackFrame::Category category,
                         uint32_t flags = 0) {
-        uint32_t oldStackPointer = stackPointer;
+        // This thread is the only one that ever changes the value of
+        // stackPointer.
+        // Store the value of the atomic in a non-atomic local variable so that
+        // the compiler won't generate two separate loads from the atomic for
+        // the size check and the frames[] array indexing operation.
+        uint32_t stackPointerVal = stackPointer;
 
-        if (MOZ_UNLIKELY(oldStackPointer >= capacity)) {
+        if (MOZ_UNLIKELY(stackPointerVal >= capacity)) {
             ensureCapacitySlow();
         }
-        frames[oldStackPointer].initLabelFrame(label, dynamicString, sp,
+        frames[stackPointerVal].initLabelFrame(label, dynamicString, sp,
                                                category, flags);
 
         // This must happen at the end! The compiler will not reorder this
@@ -408,9 +413,10 @@ class ProfilingStack final
         // Do the read and the write as two separate statements, in order to
         // make it clear that we don't need an atomic increment, which would be
         // more expensive on x86 than the separate operations done here.
-        // This thread is the only one that ever changes the value of
-        // stackPointer.
-        stackPointer = oldStackPointer + 1;
+        // However, don't use stackPointerVal here; instead, allow the compiler
+        // to turn this store into a non-atomic increment instruction which
+        // takes up less code size.
+        stackPointer = stackPointer + 1;
     }
 
     void pushSpMarkerFrame(void* sp) {
@@ -427,6 +433,8 @@ class ProfilingStack final
 
     void pushJsFrame(const char* label, const char* dynamicString, JSScript* script,
                      jsbytecode* pc) {
+        // This thread is the only one that ever changes the value of
+        // stackPointer. Only load the atomic once.
         uint32_t oldStackPointer = stackPointer;
 
         if (MOZ_UNLIKELY(oldStackPointer >= capacity)) {
@@ -435,7 +443,7 @@ class ProfilingStack final
         frames[oldStackPointer].initJsFrame(label, dynamicString, script, pc);
 
         // This must happen at the end, see the comment in pushLabelFrame.
-        stackPointer = oldStackPointer + 1;
+        stackPointer = stackPointer + 1;
     }
 
     void pop() {
