@@ -20,13 +20,12 @@ RegisterProfilerLabelEnterExit(ProfilerLabelEnter aEnter,
 }
 
 AutoProfilerLabel::AutoProfilerLabel(const char* aLabel,
-                                     const char* aDynamicString,
-                                     uint32_t aLine
+                                     const char* aDynamicString
                                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
-  mProfilingStack = sEnter ? sEnter(aLabel, aDynamicString, this, aLine) : nullptr;
+  mProfilingStack = sEnter ? sEnter(aLabel, aDynamicString, this) : nullptr;
 }
 
 AutoProfilerLabel::~AutoProfilerLabel()
