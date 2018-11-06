@@ -1081,7 +1081,7 @@ var Control = {
     this._initAutorefresh();
     this._initDisplayMode();
     let tbody = document.getElementById("dispatch-tbody");
-    tbody.addEventListener("click", () => {
+    tbody.addEventListener("click", event => {
       this._updateLastMouseEvent();
 
       // Handle showing or hiding subitems of a row.
@@ -1138,7 +1138,7 @@ var Control = {
     });
 
     // Select the tab of double clicked items.
-    tbody.addEventListener("dblclick", () => {
+    tbody.addEventListener("dblclick", event => {
       let id = parseInt(event.target.parentNode.windowId);
       if (isNaN(id))
         return;
