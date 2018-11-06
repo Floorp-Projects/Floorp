@@ -366,9 +366,10 @@ class ProfilingStack final
                         uint32_t line, js::ProfilingStackFrame::Category category) {
         uint32_t oldStackPointer = stackPointer;
 
-        if (MOZ_LIKELY(capacity > oldStackPointer) || MOZ_LIKELY(ensureCapacitySlow())) {
-            frames[oldStackPointer].initLabelFrame(label, dynamicString, sp, line, category);
+        if (MOZ_UNLIKELY(oldStackPointer >= capacity)) {
+            ensureCapacitySlow();
         }
+        frames[oldStackPointer].initLabelFrame(label, dynamicString, sp, line, category);
 
         // This must happen at the end! The compiler will not reorder this
         // update because stackPointer is Atomic<..., ReleaseAcquire>, so any
@@ -384,9 +385,10 @@ class ProfilingStack final
     void pushSpMarkerFrame(void* sp) {
         uint32_t oldStackPointer = stackPointer;
 
-        if (MOZ_LIKELY(capacity > oldStackPointer) || MOZ_LIKELY(ensureCapacitySlow())) {
-            frames[oldStackPointer].initSpMarkerFrame(sp);
+        if (MOZ_UNLIKELY(oldStackPointer >= capacity)) {
+            ensureCapacitySlow();
         }
+        frames[oldStackPointer].initSpMarkerFrame(sp);
 
         // This must happen at the end, see the comment in pushLabelFrame.
         stackPointer = oldStackPointer + 1;
@@ -396,9 +398,10 @@ class ProfilingStack final
                      jsbytecode* pc) {
         uint32_t oldStackPointer = stackPointer;
 
-        if (MOZ_LIKELY(capacity > oldStackPointer) || MOZ_LIKELY(ensureCapacitySlow())) {
-            frames[oldStackPointer].initJsFrame(label, dynamicString, script, pc);
+        if (MOZ_UNLIKELY(oldStackPointer >= capacity)) {
+            ensureCapacitySlow();
         }
+        frames[oldStackPointer].initJsFrame(label, dynamicString, script, pc);
 
         // This must happen at the end, see the comment in pushLabelFrame.
         stackPointer = oldStackPointer + 1;
@@ -415,13 +418,13 @@ class ProfilingStack final
         stackPointer = oldStackPointer - 1;
     }
 
-    uint32_t stackSize() const { return std::min(uint32_t(stackPointer), stackCapacity()); }
+    uint32_t stackSize() const { return stackPointer; }
     uint32_t stackCapacity() const { return capacity; }
 
   private:
     // Out of line path for expanding the buffer, since otherwise this would get inlined in every
     // DOM WebIDL call.
-    MOZ_COLD MOZ_MUST_USE bool ensureCapacitySlow();
+    MOZ_COLD void ensureCapacitySlow();
 
     // No copying.
     ProfilingStack(const ProfilingStack&) = delete;
