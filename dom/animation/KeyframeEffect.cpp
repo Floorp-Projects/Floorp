@@ -1242,10 +1242,12 @@ KeyframeEffect::CanThrottle() const
     return true;
   }
 
-  // First we need to check layer generation and transform overflow
-  // prior to the property.mIsRunningOnCompositor check because we should
-  // occasionally unthrottle these animations even if the animations are
-  // already running on compositor.
+  for (const AnimationProperty& property : mProperties) {
+    if (!property.mIsRunningOnCompositor) {
+      return false;
+    }
+  }
+
   for (const LayerAnimationInfo::Record& record :
         LayerAnimationInfo::sRecords) {
     // Skip properties that are overridden by !important rules.
@@ -1274,12 +1276,6 @@ KeyframeEffect::CanThrottle() const
     // we should unthrottle the animation periodically.
     if (HasPropertiesThatMightAffectOverflow() &&
         !CanThrottleOverflowChangesInScrollable(*frame)) {
-      return false;
-    }
-  }
-
-  for (const AnimationProperty& property : mProperties) {
-    if (!property.mIsRunningOnCompositor) {
       return false;
     }
   }
