@@ -3404,10 +3404,6 @@ GeckoDriver.prototype.receiveMessage = function(message) {
 
     case "Marionette:ListenersAttached":
       if (message.json.outerWindowID === this.curBrowser.curFrameId) {
-        // If the frame script gets reloaded we need to call newSession.
-        // In the case of desktop this just sets up a small amount of state
-        // that doesn't change over the course of a session.
-        this.sendAsync("newSession");
         this.curBrowser.flushPendingCommands();
       }
       break;
