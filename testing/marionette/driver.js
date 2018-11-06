@@ -3547,9 +3547,9 @@ GeckoDriver.prototype.commands = {
   "Marionette:ActionChain": GeckoDriver.prototype.actionChain,
   "Marionette:MultiAction": GeckoDriver.prototype.multiAction,
   "Marionette:SingleTap": GeckoDriver.prototype.singleTap,
+
   // deprecated Marionette commands, remove in Firefox 63
   "actionChain": GeckoDriver.prototype.actionChain,
-  "acceptConnections": GeckoDriver.prototype.acceptConnections,
   "closeChromeWindow": GeckoDriver.prototype.closeChromeWindow,
   "getChromeWindowHandles": GeckoDriver.prototype.getChromeWindowHandles,
   "getContext": GeckoDriver.prototype.getContext,
@@ -3561,7 +3561,6 @@ GeckoDriver.prototype.commands = {
   "quitApplication": GeckoDriver.prototype.quit,
   "setContext": GeckoDriver.prototype.setContext,
   "setScreenOrientation": GeckoDriver.prototype.setScreenOrientation,
-  "singleTap": GeckoDriver.prototype.singleTap,
 
   // Addon service
   "Addon:Install": GeckoDriver.prototype.installAddon,
