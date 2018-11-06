@@ -6,8 +6,14 @@
 
 #include "DocAccessibleWrap.h"
 #include "nsIDocShell.h"
+#include "nsLayoutUtils.h"
+#include "DocAccessibleChild.h"
+#include "nsAccessibilityService.h"
+#include "SessionAccessibility.h"
 
 using namespace mozilla::a11y;
+
+const uint32_t kCacheRefreshInterval = 500;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DocAccessibleWrap
@@ -50,4 +56,118 @@ DocAccessibleWrap::GetAccessibleByID(int32_t aID) const
   }
 
   return nullptr;
+}
+
+void
+DocAccessibleWrap::DoInitialUpdate()
+{
+  DocAccessible::DoInitialUpdate();
+  CacheViewport();
+}
+
+nsresult
+DocAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
+{
+  switch(aEvent->GetEventType()) {
+    case nsIAccessibleEvent::EVENT_SHOW:
+    case nsIAccessibleEvent::EVENT_HIDE:
+    case nsIAccessibleEvent::EVENT_SCROLLING_END:
+      CacheViewport();
+      break;
+    default:
+      break;
+  }
+
+  return DocAccessible::HandleAccEvent(aEvent);
+}
+
+void
+DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer, void* aDocAccParam)
+{
+  RefPtr<DocAccessibleWrap> docAcc(dont_AddRef(
+    reinterpret_cast<DocAccessibleWrap*>(aDocAccParam)));
+  if (!docAcc) {
+    return;
+  }
+
+  nsIPresShell *presShell = docAcc->PresShell();
+  if (!presShell) {
+    return;
+  }
+  nsIFrame* rootFrame = presShell->GetRootFrame();
+  if (!rootFrame) {
+    return;
+  }
+
+  nsTArray<nsIFrame*> frames;
+  nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
+  nsRect scrollPort = sf ? sf->GetScrollPortRect() : rootFrame->GetRect();
+
+  nsLayoutUtils::GetFramesForArea(
+    presShell->GetRootFrame(),
+    scrollPort,
+    frames,
+    nsLayoutUtils::FrameForPointFlags::ONLY_VISIBLE);
+  AccessibleHashtable inViewAccs;
+  for (size_t i = 0; i < frames.Length(); i++) {
+    nsIContent* content = frames.ElementAt(i)->GetContent();
+    if (!content) {
+      continue;
+    }
+
+    Accessible* visibleAcc = docAcc->GetAccessibleOrContainer(content);
+    if (!visibleAcc) {
+      continue;
+    }
+
+    for (Accessible* acc = visibleAcc; acc && acc != docAcc->Parent(); acc = acc->Parent()) {
+      if (inViewAccs.Contains(acc->UniqueID())) {
+        break;
+      }
+      inViewAccs.Put(acc->UniqueID(), acc);
+    }
+  }
+
+  if (IPCAccessibilityActive()) {
+    DocAccessibleChild* ipcDoc = docAcc->IPCDoc();
+    nsTArray<BatchData> cacheData(inViewAccs.Count());
+    for (auto iter = inViewAccs.Iter(); !iter.Done(); iter.Next()) {
+      Accessible* accessible = iter.Data();
+      auto uid = accessible->IsDoc() && accessible->AsDoc()->IPCDoc() ? 0
+        : reinterpret_cast<uint64_t>(accessible->UniqueID());
+      cacheData.AppendElement(BatchData(accessible->Document()->IPCDoc(),
+                                        uid,
+                                        accessible->State(),
+                                        accessible->Bounds()));
+    }
+
+    ipcDoc->SendBatch(eBatch_Viewport, cacheData);
+  } else if (SessionAccessibility* sessionAcc = SessionAccessibility::GetInstanceFor(docAcc)) {
+    nsTArray<AccessibleWrap*> accessibles(inViewAccs.Count());
+    for (auto iter = inViewAccs.Iter(); !iter.Done(); iter.Next()) {
+      accessibles.AppendElement(static_cast<AccessibleWrap*>(iter.Data().get()));
+    }
+
+    sessionAcc->ReplaceViewportCache(accessibles);
+  }
+
+  if (docAcc->mCacheRefreshTimer) {
+    docAcc->mCacheRefreshTimer = nullptr;
+  }
+}
+
+void
+DocAccessibleWrap::CacheViewport()
+{
+  if (VirtualViewID() == kNoID && !mCacheRefreshTimer) {
+    NS_NewTimerWithFuncCallback(getter_AddRefs(mCacheRefreshTimer),
+                                CacheViewportCallback,
+                                this,
+                                kCacheRefreshInterval,
+                                nsITimer::TYPE_ONE_SHOT,
+                                "a11y::DocAccessibleWrap::CacheViewport");
+    if (mCacheRefreshTimer) {
+      NS_ADDREF_THIS(); // Kung fu death grip
+    }
+  }
 }

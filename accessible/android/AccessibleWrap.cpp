@@ -206,10 +206,10 @@ AccessibleWrap::GetSelectionBounds(int32_t* aStartOffset, int32_t* aEndOffset) {
   return false;
 }
 
-uint64_t
+uint32_t
 AccessibleWrap::GetFlags(role aRole, uint64_t aState)
 {
-  uint64_t flags = 0;
+  uint32_t flags = 0;
   if (aState & states::CHECKABLE) {
     flags |= java::SessionAccessibility::FLAG_CHECKABLE;
   }
@@ -388,7 +388,7 @@ AccessibleWrap::ToBundle()
 
   role role = WrapperRole();
   uint64_t state = State();
-  uint64_t flags = GetFlags(role, state);
+  uint32_t flags = GetFlags(role, state);
   GECKOBUNDLE_PUT(nodeInfo, "flags", java::sdk::Integer::ValueOf(flags));
   GECKOBUNDLE_PUT(nodeInfo, "className", java::sdk::Integer::ValueOf(AndroidClass()));
 
@@ -535,6 +535,47 @@ AccessibleWrap::ToBundle()
   GECKOBUNDLE_PUT(nodeInfo,
                   "children",
                   jni::IntArray::New(children.Elements(), children.Length()));
+  GECKOBUNDLE_FINISH(nodeInfo);
+
+  return nodeInfo;
+}
+
+mozilla::java::GeckoBundle::LocalRef
+AccessibleWrap::ToSmallBundle()
+{
+  return ToSmallBundle(State(), Bounds());
+}
+
+mozilla::java::GeckoBundle::LocalRef
+AccessibleWrap::ToSmallBundle(const uint64_t aState, const nsIntRect& aBounds)
+{
+  GECKOBUNDLE_START(nodeInfo);
+  GECKOBUNDLE_PUT(nodeInfo, "id", java::sdk::Integer::ValueOf(VirtualViewID()));
+
+  AccessibleWrap* parent = WrapperParent();
+  GECKOBUNDLE_PUT(nodeInfo, "parentId",
+    java::sdk::Integer::ValueOf(parent ? parent->VirtualViewID() : 0));
+
+  uint32_t flags = GetFlags(WrapperRole(), aState);
+  GECKOBUNDLE_PUT(nodeInfo, "flags", java::sdk::Integer::ValueOf(flags));
+  GECKOBUNDLE_PUT(nodeInfo, "className", java::sdk::Integer::ValueOf(AndroidClass()));
+
+  const int32_t data[4] = {
+    aBounds.x, aBounds.y, aBounds.x + aBounds.width, aBounds.y + aBounds.height
+  };
+  GECKOBUNDLE_PUT(nodeInfo, "bounds", jni::IntArray::New(data, 4));
+
+  auto childCount = ChildCount();
+  nsTArray<int32_t> children(childCount);
+  for (uint32_t i = 0; i < childCount; ++i) {
+    auto child = static_cast<AccessibleWrap*>(GetChildAt(i));
+    children.AppendElement(child->VirtualViewID());
+  }
+
+  GECKOBUNDLE_PUT(nodeInfo,
+                  "children",
+                  jni::IntArray::New(children.Elements(), children.Length()));
+
   GECKOBUNDLE_FINISH(nodeInfo);
 
   return nodeInfo;
