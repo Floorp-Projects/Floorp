@@ -134,7 +134,7 @@ class GeckoEngineSession(
                 stateMap.complete(mapOf(GECKO_STATE_KEY to state.toString()))
                 GeckoResult<Void>()
             }, { throwable ->
-                stateMap.completeExceptionally(throwable)
+                stateMap.cancel(throwable)
                 GeckoResult<Void>()
             })
         }
