@@ -55,14 +55,8 @@ class DeviceRunner(BaseRunner):
 
     @property
     def command(self):
-        cmd = [self.app_ctx.adb]
-        if self.app_ctx.device_serial:
-            cmd.extend(['-s', self.app_ctx.device_serial])
-        cmd.append('shell')
-        for k, v in self._device_env.iteritems():
-            cmd.append('%s=%s' % (k, v))
-        cmd.append(self.app_ctx.remote_binary)
-        return cmd
+        # command built by mozdevice -- see start() below
+        return None
 
     def start(self, *args, **kwargs):
         if isinstance(self.device, BaseEmulator) and not self.device.connected:
@@ -70,15 +64,18 @@ class DeviceRunner(BaseRunner):
         self.device.connect()
         self.device.setup_profile(self.profile)
 
-        # TODO: this doesn't work well when the device is running but dropped
-        # wifi for some reason. It would be good to probe the state of the device
-        # to see if we have the homescreen running, or something, before waiting here
-        self.device.wait_for_net()
-
-        if not self.device.wait_for_net():
-            raise Exception("Network did not come up when starting device")
-
-        pid = BaseRunner.start(self, *args, **kwargs)
+        app = self.app_ctx.remote_process
+        args = ["-no-remote", "-profile", self.app_ctx.remote_profile]
+        args.extend(self.cmdargs)
+        env = self._device_env
+        url = None
+        if 'geckoview' in app:
+            activity = "TestRunnerActivity"
+            self.app_ctx.device.launch_activity(app, activity, e10s=True, moz_env=env,
+                                                extra_args=args, url=url)
+        else:
+            self.app_ctx.device.launch_fennec(
+                app, moz_env=env, extra_args=args, url=url)
 
         timeout = 10  # seconds
         end_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
@@ -86,10 +83,6 @@ class DeviceRunner(BaseRunner):
             time.sleep(.1)
         if not self.is_running():
             print("timed out waiting for '%s' process to start" % self.app_ctx.remote_process)
-
-        if not self.device.wait_for_net():
-            raise Exception("Failed to get a network connection")
-        return pid
 
     def stop(self, sig=None):
         if not sig and self.is_running():
@@ -184,20 +177,3 @@ class FennecRunner(DeviceRunner):
     def __init__(self, cmdargs=None, **kwargs):
         super(FennecRunner, self).__init__(**kwargs)
         self.cmdargs = cmdargs or []
-
-    @property
-    def command(self):
-        cmd = [self.app_ctx.adb]
-        if self.app_ctx.device_serial:
-            cmd.extend(["-s", self.app_ctx.device_serial])
-        cmd.append("shell")
-        app = "%s/org.mozilla.gecko.BrowserApp" % self.app_ctx.remote_process
-        am_subcommand = ["am", "start", "-a", "android.activity.MAIN", "-n", app]
-        app_params = ["-no-remote", "-profile", self.app_ctx.remote_profile]
-        app_params.extend(self.cmdargs)
-        am_subcommand.extend(["--es", "args", "'%s'" % " ".join(app_params)])
-        # Append env variables in the form |--es env0 MOZ_CRASHREPORTER=1|
-        for (count, (k, v)) in enumerate(self._device_env.iteritems()):
-            am_subcommand.extend(["--es", "env%d" % count, "%s=%s" % (k, v)])
-        cmd.append("%s" % " ".join(am_subcommand))
-        return cmd
