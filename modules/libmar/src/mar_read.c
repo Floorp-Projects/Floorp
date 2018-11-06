@@ -8,14 +8,9 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include "city.h"
 #include "mar_private.h"
 #include "mar.h"
-
-#ifdef XP_WIN
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
 
 /* This block must be at most 104 bytes.
    MAR channel name < 64 bytes, and product version < 32 bytes + 3 NULL
@@ -24,15 +19,8 @@
    sizeof(additionalBlockSize) and sizeof(additionalBlockID) */
 #define MAXADDITIONALBLOCKSIZE 96
 
-/* this is the same hash algorithm used by nsZipArchive.cpp */
 static uint32_t mar_hash_name(const char *name) {
-  uint32_t val = 0;
-  unsigned char* c;
-
-  for (c = (unsigned char *) name; *c; ++c)
-    val = val*37 + *c;
-
-  return val % TABLESIZE;
+  return CityHash64(name, strlen(name)) % TABLESIZE;
 }
 
 static int mar_insert_item(MarFile *mar, const char *name, int namelen,
