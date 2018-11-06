@@ -500,6 +500,10 @@ class DesktopInstance(GeckoInstance):
         # the line below can be removed as well.
         "app.update.enabled": False,
 
+        # Don't show the content blocking introduction panel
+        # We use a larger number than the default 22 to have some buffer
+        "browser.contentblocking.introCount": 99,
+
         # Enable output of dump()
         "browser.dom.window.dump.enabled": True,
 
