@@ -4,10 +4,15 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.IGeckoEditableParent;
+
 import android.view.KeyEvent;
 
 // Interface for GeckoEditable calls from parent to child
 interface IGeckoEditableChild {
+    // Transfer this child to a new parent.
+    void transferParent(in IGeckoEditableParent parent);
+
     // Process a key event.
     void onKeyEvent(int action, int keyCode, int scanCode, int metaState,
                     int keyPressMetaState, long time, int domPrintableKeyValue,

@@ -1384,7 +1384,7 @@ GeckoEditableSupport::OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher)
 {
     mDispatcher = nullptr;
 
-    if (mIsRemote) {
+    if (mIsRemote && mEditable->HasEditableParent()) {
         // When we're remote, detach every time.
         OnDetach(NS_NewRunnableFunction("GeckoEditableSupport::OnRemovedFrom",
                  [editable = java::GeckoEditableChild::GlobalRef(mEditable)] {
@@ -1465,6 +1465,25 @@ GeckoEditableSupport::GetInputContext()
 }
 
 void
+GeckoEditableSupport::TransferParent(jni::Object::Param aEditableParent)
+{
+    mEditable->SetParent(aEditableParent);
+
+    // If we are already focused, make sure the new parent has our token
+    // and focus information, so it can accept additional calls from us.
+    if (mIMEFocusCount > 0) {
+        mEditable->NotifyIME(EditableListener::NOTIFY_IME_OF_TOKEN);
+        NotifyIMEContext(mInputContext, InputContextAction());
+        mEditable->NotifyIME(EditableListener::NOTIFY_IME_OF_FOCUS);
+    }
+
+    if (mIsRemote && !mDispatcher) {
+        // Detach now if we were only attached temporarily.
+        OnRemovedFrom(/* dispatcher */ nullptr);
+    }
+}
+
+void
 GeckoEditableSupport::SetOnTabChild(dom::TabChild* aTabChild)
 {
     MOZ_ASSERT(!XRE_IsParentProcess());
@@ -1482,23 +1501,27 @@ GeckoEditableSupport::SetOnTabChild(dom::TabChild* aTabChild)
     const uint64_t tabId = aTabChild->GetTabId();
     NS_ENSURE_TRUE_VOID(contentId && tabId);
 
-    auto editableParent = java::GeckoServiceChildProcess::GetEditableParent(
-            contentId, tabId);
-    NS_ENSURE_TRUE_VOID(editableParent);
-
     RefPtr<widget::TextEventDispatcherListener> listener =
             widget->GetNativeTextEventDispatcherListener();
 
     if (!listener || listener.get() ==
             static_cast<widget::TextEventDispatcherListener*>(widget)) {
         // We need to set a new listener.
-        auto editableChild = java::GeckoEditableChild::New(editableParent,
-                                                           /* default */ false);
+        const auto editableChild = java::GeckoEditableChild::New(
+                /* parent */ nullptr, /* default */ false);
         RefPtr<widget::GeckoEditableSupport> editableSupport =
                 new widget::GeckoEditableSupport(editableChild);
 
         // Tell PuppetWidget to use our listener for IME operations.
         widget->SetNativeTextEventDispatcherListener(editableSupport);
+
+        // Temporarily attach so we can receive the initial editable parent.
+        AttachNative(editableChild, editableSupport);
+        editableSupport->mEditableAttached = true;
+
+        // Connect the new child to a parent that corresponds to the TabChild.
+        java::GeckoServiceChildProcess::GetEditableParent(
+                editableChild, contentId, tabId);
         return;
     }
 
@@ -1507,13 +1530,22 @@ GeckoEditableSupport::SetOnTabChild(dom::TabChild* aTabChild)
     // We expect the existing TextEventDispatcherListener to be a
     // GeckoEditableSupport object, so we perform a sanity check to make
     // sure, by comparing their respective vtable pointers.
-    RefPtr<widget::GeckoEditableSupport> dummy =
+    const RefPtr<widget::GeckoEditableSupport> dummy =
             new widget::GeckoEditableSupport(/* child */ nullptr);
     NS_ENSURE_TRUE_VOID(*reinterpret_cast<const uintptr_t*>(listener.get()) ==
             *reinterpret_cast<const uintptr_t*>(dummy.get()));
 
-    static_cast<widget::GeckoEditableSupport*>(
-            listener.get())->TransferParent(editableParent);
+    const auto support =
+            static_cast<widget::GeckoEditableSupport*>(listener.get());
+    if (!support->mEditableAttached) {
+        // Temporarily attach so we can receive the initial editable parent.
+        AttachNative(support->GetJavaEditable(), support);
+        support->mEditableAttached = true;
+    }
+
+    // Transfer to a new parent that corresponds to the TabChild.
+    java::GeckoServiceChildProcess::GetEditableParent(
+            support->GetJavaEditable(), contentId, tabId);
 }
 
 } // namespace widget
