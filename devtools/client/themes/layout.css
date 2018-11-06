@@ -389,30 +389,22 @@
  */
 
 .flex-item-sizing {
-  margin: 20px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .flex-item-sizing .section {
   --padding: 10px;
-  margin-block-start: var(--padding);
-  padding: var(--padding) 0 0 0;
+  padding: var(--padding);
   border-block-start: 1px solid var(--theme-splitter-color);
   display: grid;
   grid-template-columns: 1fr max-content;
   grid-column-gap: var(--padding);
 }
 
-/* If the outline isn't displayed before the sizing information, then no need for a first
-   top border or padding */
-:not(.flex-outline-container) + .flex-item-sizing > .section:first-child {
-  border: 0;
-  padding-block-start: 0;
-}
-
 .flex-item-sizing .section:first-child {
-  margin: 0;
+  border: 0;
 }
 
 .flex-item-sizing .name {
@@ -425,9 +417,14 @@
   font-weight: 600;
 }
 
+.flex-item-sizing .value .unit {
+  color: var(--theme-comment);
+  font-weight: normal;
+}
+
 .flex-item-sizing .css-property-link {
-  grid-column: 2;
-  text-align: end;
+  font-weight: normal;
+  margin-inline-start: .5em;
 }
 
 .flex-item-sizing .reasons,

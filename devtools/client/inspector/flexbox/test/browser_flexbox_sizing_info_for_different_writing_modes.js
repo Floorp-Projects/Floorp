@@ -20,10 +20,10 @@ async function checkFlexItemDimension(inspector, doc, selector, expectedDimensio
   info("Check that the minimum size section shows the correct dimension.");
   const [sectionMinRowItem] = [...flexItemSizingContainer.querySelectorAll(
     ".section.min")];
-  const minDimension = sectionMinRowItem.querySelector(".theme-fg-color5");
+  const minDimension = sectionMinRowItem.querySelector(".css-property-link");
 
-  is(minDimension.textContent, expectedDimension,
-    "The flex item sizing has the correct dimension value.");
+  ok(minDimension.textContent.includes(expectedDimension),
+     "The flex item sizing has the correct dimension value.");
 }
 
 add_task(async function() {
