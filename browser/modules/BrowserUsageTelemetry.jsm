@@ -117,6 +117,11 @@ function getSearchEngineId(engine) {
   return "other";
 }
 
+function shouldRecordSearchCount(tabbrowser) {
+  return !PrivateBrowsingUtils.isWindowPrivate(tabbrowser.ownerGlobal) ||
+         !Services.prefs.getBoolPref("browser.engagement.search_counts.pbm", false);
+}
+
 let URICountListener = {
   // A set containing the visited domains, see bug 1271310.
   _domainSet: new Set(),
@@ -200,7 +205,9 @@ let URICountListener = {
       return;
     }
 
-    Services.search.recordSearchURLTelemetry(uriSpec);
+    if (shouldRecordSearchCount(browser.getTabBrowser())) {
+      Services.search.recordSearchURLTelemetry(uriSpec);
+    }
 
     if (!shouldCountURI) {
       return;
@@ -400,6 +407,8 @@ let BrowserUsageTelemetry = {
    * Telemetry records only search counts per engine and action origin, but
    * nothing pertaining to the search contents themselves.
    *
+   * @param {tabbrowser} tabbrowser
+   *        The tabbrowser where the search was loaded.
    * @param {nsISearchEngine} engine
    *        The engine handling the search.
    * @param {String} source
@@ -416,7 +425,11 @@ let BrowserUsageTelemetry = {
    *        The object describing the event that triggered the search.
    * @throws if source is not in the known sources list.
    */
-  recordSearch(engine, source, details = {}) {
+  recordSearch(tabbrowser, engine, source, details = {}) {
+    if (!shouldRecordSearchCount(tabbrowser)) {
+      return;
+    }
+
     const isOneOff = !!details.isOneOff;
     const countId = getSearchEngineId(engine) + "." + source;
 
