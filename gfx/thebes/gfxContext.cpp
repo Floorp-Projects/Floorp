@@ -505,12 +505,6 @@ gfxContext::CurrentDash(FallibleTArray<Float>& dashes, Float* offset) const
   return true;
 }
 
-Float
-gfxContext::CurrentDashOffset() const
-{
-  return CurrentState().strokeOptions.mDashOffset;
-}
-
 void
 gfxContext::SetLineWidth(Float width)
 {
