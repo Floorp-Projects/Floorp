@@ -14,8 +14,16 @@ permalink: /changelog/
   * Android (SDK: 27, Support Libraries: 27.1.1)
   * Kotlin (Stdlib: 1.2.71, Coroutines: 0.30.2)
   * GeckoView (Nightly: 65.0.20181023100123, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
-* **browser-storage-memory**:
+* **concept-storage**
+  * :warning: **These are a breaking API changes** :warning:
+  * Added a `getSuggestions` method to `HistoryStorage`, which is intended to power search, autocompletion, etc.
+  * Added a `cleanup` method to `HistoryStorage`, which is intended to allow signaling to implementations to cleanup any allocated resources.
+  * `HistoryStorage` methods `recordVisit` and `recordObservation` are now `suspend`.
+  * `HistoryStorage` methods `getVisited()` and `getVisited(uris)` now return `Deferred`.
+* :new: Added **browser-storage-memory** :sparkles: :
   * Added an in-memory implementation of `concept-storage`.
+* :new: Added **browser-storage-sync** :sparkles: :
+  * Added an implementation of `concept-storage` which is backed by the Rust Places library provided by [application-services](https://github.com/mozilla/application-services).
 * **service-firefox-accounts**:
   * :warning: **This is a breaking API change** :warning:
   * The `FxaResult` type served as a custom promise-like type to support older versions of Java. We have now removed this type and switched to Kotlin's `Deferred` instead. We've also made sure all required types are `Closeable`:
