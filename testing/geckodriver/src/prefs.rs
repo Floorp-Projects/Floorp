@@ -12,14 +12,8 @@ lazy_static! {
         // Make sure Shield doesn't hit the network.
         ("app.normandy.api_url", Pref::new("")),
 
-        // Disable automatic downloading of new releases
-        ("app.update.auto", Pref::new(false)),
-
         // Disable automatically upgrading Firefox
         ("app.update.disabledForTesting", Pref::new(true)),
-        // app.update.enabled is being removed. Once Firefox 62 becomes stable,
-        // the line below can be removed as well.
-        ("app.update.enabled", Pref::new(false)),
 
         // Enable the dump function, which sends messages to the system
         // console
