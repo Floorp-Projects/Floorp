@@ -218,6 +218,10 @@ public:
   HWND GetEmulatedWindowHandle() const { return mEmulatedWindowHandle; }
 #endif
 
+#if !defined(XP_WIN)
+  virtual mozilla::ipc::IPCResult RecvBatch(const uint64_t& aBatchType, nsTArray<BatchData>&& aData) override;
+#endif
+
 private:
 
   class ProxyEntry : public PLDHashEntryHdr
