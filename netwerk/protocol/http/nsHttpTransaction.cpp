@@ -45,6 +45,7 @@
 #include "nsIRequestContext.h"
 #include "nsIHttpAuthenticator.h"
 #include "NSSErrorsService.h"
+#include "TunnelUtils.h"
 #include "sslerr.h"
 #include <algorithm>
 
@@ -214,6 +215,30 @@ void nsHttpTransaction::SetClassOfService(uint32_t cos)
     }
 }
 
+class ReleaseH2WSTrans final : public Runnable
+{
+public:
+    explicit ReleaseH2WSTrans(SpdyConnectTransaction *trans)
+      : Runnable("ReleaseH2WSTrans")
+      , mTrans(trans)
+    { }
+
+    NS_IMETHOD Run() override
+    {
+        mTrans = nullptr;
+        return NS_OK;
+    }
+
+    void Dispatch()
+    {
+        nsCOMPtr<nsIEventTarget> sts = do_GetService("@mozilla.org/network/socket-transport-service;1");
+        Unused << sts->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
+    }
+
+private:
+    RefPtr<SpdyConnectTransaction> mTrans;
+};
+
 nsHttpTransaction::~nsHttpTransaction()
 {
     LOG(("Destroying nsHttpTransaction @%p\n", this));
@@ -237,6 +262,11 @@ nsHttpTransaction::~nsHttpTransaction()
     delete mResponseHead;
     delete mChunkedDecoder;
     ReleaseBlockingTransaction();
+
+    if (mH2WSTransaction) {
+        RefPtr<ReleaseH2WSTrans> r = new ReleaseH2WSTrans(mH2WSTransaction);
+        r->Dispatch();
+    }
 }
 
 nsresult
@@ -456,6 +486,13 @@ nsHttpTransaction::Connection()
 already_AddRefed<nsAHttpConnection>
 nsHttpTransaction::GetConnectionReference()
 {
+    if (mH2WSTransaction) {
+        // Need to let the websocket transaction/connection know we've reached
+        // this point so it can stop forwarding information through us and
+        // instead communicate directly with the websocket channel.
+        mH2WSTransaction->SetConnRefTaken();
+        mH2WSTransaction = nullptr;
+    }
     MutexAutoLock lock(mLock);
     RefPtr<nsAHttpConnection> connection(mConnection);
     return connection.forget();
@@ -1682,6 +1719,12 @@ nsHttpTransaction::HandleContentStart()
         }
 
         if (mResponseHead->Status() == 200 &&
+            mH2WSTransaction) {
+            // http/2 websockets do not have response bodies
+            mNoContent = true;
+        }
+
+        if (mResponseHead->Status() == 200 &&
             mConnection->IsProxyConnectInProgress()) {
             // successful CONNECTs do not have response bodies
             mNoContent = true;
@@ -2486,6 +2529,25 @@ nsHttpTransaction::SetHttpTrailers(nsCString &aTrailers)
         // Didn't find a Server-Timing header, so get rid of this.
         mForTakeResponseTrailers = nullptr;
     }
+}
+
+bool
+nsHttpTransaction::IsWebsocketUpgrade()
+{
+    if (mRequestHead) {
+        nsAutoCString upgradeHeader;
+        if (NS_SUCCEEDED(mRequestHead->GetHeader(nsHttp::Upgrade, upgradeHeader)) &&
+            upgradeHeader.LowerCaseEqualsLiteral("websocket")) {
+                return true;
+        }
+    }
+    return false;
+}
+
+void
+nsHttpTransaction::SetH2WSTransaction(SpdyConnectTransaction *aH2WSTransaction)
+{
+    mH2WSTransaction = aH2WSTransaction;
 }
 
 } // namespace net

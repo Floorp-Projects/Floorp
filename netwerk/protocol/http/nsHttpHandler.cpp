@@ -260,6 +260,7 @@ nsHttpHandler::nsHttpHandler()
     , mEnableAltSvc(false)
     , mEnableAltSvcOE(false)
     , mEnableOriginExtension(false)
+    , mEnableH2Websockets(true)
     , mSpdySendingChunkSize(ASpdySession::kSendingChunkSize)
     , mSpdySendBufferSize(ASpdySession::kTCPSendBufferSize)
     , mSpdyPushAllowance(131072) // match default pref
@@ -1580,6 +1581,14 @@ nsHttpHandler::PrefsChanged(const char *pref)
                                 &cVar);
         if (NS_SUCCEEDED(rv))
             mEnableOriginExtension = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.websockets"))) {
+        rv = Preferences::GetBool(HTTP_PREF("spdy.websockets"),
+                                  &cVar);
+        if (NS_SUCCEEDED(rv)) {
+            mEnableH2Websockets = cVar;
+        }
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.push-allowance"))) {
