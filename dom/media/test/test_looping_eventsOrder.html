@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Looping events order</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<script type="text/javascript">
+/**
+ * This test is used to ensure the events order when media is looping back to
+ * the start position. We should see events in following order.
+ * 'seeking' -> 'timeupdate' -> 'seeked'.
+ */
+const manager = new MediaTestManager;
+
+async function testTimeupdateChanged({name, type, duration}) {
+  info(`- start testPlay for name=${name} -`);
+  const element = document.createElement(getMajorMimeType(type));
+  element.src = name;
+  element.loop = true;
+
+  await once(element, "canplay");
+  ok(await element.play().then(() => true, () => false), `start playing ${name}`);
+
+  let gotTimeUpdated = false;
+  await once(element, "seeking");
+  element.addEventListener("timeupdate", function() {
+    gotTimeUpdated = true;
+  }, {once: true});
+  await once(element, "seeked");
+  ok(gotTimeUpdated, "Got timeupdate between seeking and seeked.");
+
+  removeNodeAndSource(element);
+}
+
+async function runTest(test, token) {
+  manager.started(token);
+  await testTimeupdateChanged(test);
+  manager.finished(token);
+}
+
+manager.runTests(gSmallTests, runTest);
+</script>
+</pre>
+</body>
+</html>
