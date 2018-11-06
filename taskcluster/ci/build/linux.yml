@@ -415,7 +415,7 @@ linux-rusttests/opt:
     treeherder:
         platform: linux32/opt
         symbol: BR
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: debian7-i386-build}
@@ -452,7 +452,7 @@ linux-rusttests/debug:
     treeherder:
         platform: linux32/debug
         symbol: BR
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: debian7-i386-build}
@@ -850,7 +850,7 @@ linux64-rusttests/opt:
     treeherder:
         platform: linux64/opt
         symbol: BR
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 5400
@@ -886,7 +886,7 @@ linux64-rusttests/debug:
     treeherder:
         platform: linux64/debug
         symbol: BR
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 5400
