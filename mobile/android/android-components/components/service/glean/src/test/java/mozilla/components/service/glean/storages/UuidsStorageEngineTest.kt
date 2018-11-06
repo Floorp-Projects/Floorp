@@ -74,4 +74,26 @@ class UuidsStorageEngineTest {
             assertEquals(1, s!!.size)
         }
     }
+
+    @Test
+    fun `Uuids are serialized in the correct JSON format`() {
+        val testUUID = "ce2adeb8-843a-4232-87a5-a099ed1e7bb3"
+
+        // Record the string in the store, without providing optional arguments.
+        UuidsStorageEngine.record(
+            stores = listOf("store1"),
+            category = "telemetry",
+            name = "uuid_metric",
+            value = UUID.fromString(testUUID)
+        )
+
+        // Get the snapshot from "store1" and clear it.
+        val snapshot = UuidsStorageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = true)
+        // Check that getting a new snapshot for "store1" returns an empty store.
+        assertNull("The engine must report 'null' on empty stores",
+            UuidsStorageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = false))
+        // Check that this serializes to the expected JSON format.
+        assertEquals("{\"telemetry.uuid_metric\":\"$testUUID\"}",
+            snapshot.toString())
+    }
 }

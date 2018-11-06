@@ -7,13 +7,15 @@ package mozilla.components.service.glean.storages
 import java.util.UUID
 
 import android.support.annotation.VisibleForTesting
+import org.json.JSONObject
 
 /**
  * This singleton handles the in-memory storage logic for uuids. It is meant to be used by
  * the Specific UUID API and the ping assembling objects. No validation on the stored data
  * is performed at this point: validation must be performed by the Specific Uuids API.
  */
-internal object UuidsStorageEngine {
+internal object UuidsStorageEngine : StorageEngine  {
+
     private val uuidStores: MutableMap<String, MutableMap<String, UUID>> = mutableMapOf()
 
     /**
@@ -24,7 +26,7 @@ internal object UuidsStorageEngine {
      * @param name the name of the uuid
      * @param value the uuid value to record
      */
-    public fun record(
+    fun record(
         stores: List<String>,
         category: String,
         name: String,
@@ -40,7 +42,7 @@ internal object UuidsStorageEngine {
     }
 
     /**
-     * Retrieves the [recorded uuid data][Uuid] for the provided
+     * Retrieves the [recorded uuid data][UUID] for the provided
      * store name.
      *
      * @param storeName the name of the desired uuid store
@@ -49,12 +51,26 @@ internal object UuidsStorageEngine {
      * @return the uuids recorded in the requested store
      */
     @Synchronized
-    public fun getSnapshot(storeName: String, clearStore: Boolean): MutableMap<String, UUID>? {
+    fun getSnapshot(storeName: String, clearStore: Boolean): MutableMap<String, UUID>? {
         if (clearStore) {
             return uuidStores.remove(storeName)
         }
 
         return uuidStores.get(storeName)
+    }
+
+    /**
+     * Get a snapshot of the stored data as a JSON object.
+     *
+     * @param storeName the name of the desired store
+     * @param clearStore whether or not to clearStore the requested store
+     *
+     * @return the [JSONObject] containing the recorded data.
+     */
+    override fun getSnapshotAsJSON(storeName: String, clearStore: Boolean): Any? {
+        return getSnapshot(storeName, clearStore)?.let { uuidMap ->
+            return JSONObject(uuidMap)
+        }
     }
 
     @VisibleForTesting
