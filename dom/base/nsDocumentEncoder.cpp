@@ -1103,15 +1103,27 @@ nsDocumentEncoder::SetNodeFixup(nsIDocumentEncoderNodeFixup *aFixup)
   return NS_OK;
 }
 
-
-nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult); // make mac compiler happy
-
-nsresult
-NS_NewTextEncoder(nsIDocumentEncoder** aResult)
+bool
+do_getDocumentTypeSupportedForEncoding(const char* aContentType)
 {
-  *aResult = new nsDocumentEncoder;
- NS_ADDREF(*aResult);
- return NS_OK;
+  if (!nsCRT::strcmp(aContentType, "text/xml") ||
+      !nsCRT::strcmp(aContentType, "application/xml") ||
+      !nsCRT::strcmp(aContentType, "application/xhtml+xml") ||
+      !nsCRT::strcmp(aContentType, "image/svg+xml") ||
+      !nsCRT::strcmp(aContentType, "text/html") ||
+      !nsCRT::strcmp(aContentType, "text/plain")) {
+    return true;
+  }
+  return false;
+}
+
+already_AddRefed<nsIDocumentEncoder>
+do_createDocumentEncoder(const char* aContentType)
+{
+  if (do_getDocumentTypeSupportedForEncoding(aContentType)) {
+    return do_AddRef(new nsDocumentEncoder);
+  }
+  return nullptr;
 }
 
 class nsHTMLCopyEncoder : public nsDocumentEncoder
@@ -1816,14 +1828,10 @@ nsHTMLCopyEncoder::IsLastNode(nsINode *aNode)
   return true;
 }
 
-nsresult NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult); // make mac compiler happy
-
-nsresult
-NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult)
+already_AddRefed<nsIDocumentEncoder>
+do_createHTMLCopyEncoder()
 {
-  *aResult = new nsHTMLCopyEncoder;
- NS_ADDREF(*aResult);
- return NS_OK;
+  return do_AddRef(new nsHTMLCopyEncoder);
 }
 
 int32_t

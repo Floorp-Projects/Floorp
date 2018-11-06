@@ -97,8 +97,7 @@ SelectionCopyHelper(Selection *aSel, nsIDocument *aDoc,
   nsresult rv;
 
   nsCOMPtr<nsIDocumentEncoder> docEncoder;
-  docEncoder = do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID);
-  NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
+  docEncoder = do_createHTMLCopyEncoder();
 
   // note that we assign text/unicode as mime type, but in fact nsHTMLCopyEncoder
   // ignore it and use text/html or text/plain depending where the selection
@@ -340,14 +339,8 @@ nsCopySupport::GetTransferableForNode(nsINode* aNode,
 nsresult
 nsCopySupport::GetContents(const nsACString& aMimeType, uint32_t aFlags, Selection *aSel, nsIDocument *aDoc, nsAString& outdata)
 {
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIDocumentEncoder> docEncoder;
-
-  nsAutoCString encoderContractID(NS_DOC_ENCODER_CONTRACTID_BASE);
-  encoderContractID.Append(aMimeType);
-
-  docEncoder = do_CreateInstance(encoderContractID.get());
+  nsCOMPtr<nsIDocumentEncoder> docEncoder =
+    do_createDocumentEncoder(PromiseFlatCString(aMimeType).get());
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
   uint32_t flags = aFlags | nsIDocumentEncoder::SkipInvisibleContent;
@@ -357,7 +350,7 @@ nsCopySupport::GetContents(const nsACString& aMimeType, uint32_t aFlags, Selecti
 
   NS_ConvertASCIItoUTF16 unicodeMimeType(aMimeType);
 
-  rv = docEncoder->Init(aDoc, unicodeMimeType, flags);
+  nsresult rv = docEncoder->Init(aDoc, unicodeMimeType, flags);
   if (NS_FAILED(rv)) return rv;
 
   if (aSel)
@@ -470,10 +463,8 @@ static nsresult AppendDOMNode(nsITransferable *aTransferable,
 {
   nsresult rv;
 
-  // selializer
-  nsCOMPtr<nsIDocumentEncoder>
-    docEncoder(do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // serializer
+  nsCOMPtr<nsIDocumentEncoder> docEncoder = do_createHTMLCopyEncoder();
 
   // get document for the encoder
   nsCOMPtr<nsIDocument> document = aDOMNode->OwnerDoc();

@@ -35,6 +35,6 @@ AntiTracking.runTest("Test whether we receive any persistent permissions in priv
   null, // no extra prefs
   true, // run the window.open() test
   true, // run the user interaction test
-  false, // don't expect blocking notifications
+  0, // don't expect blocking notifications
   true); // run in private windows
 

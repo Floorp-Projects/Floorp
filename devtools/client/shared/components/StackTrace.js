@@ -57,7 +57,7 @@ class StackTrace extends Component {
         }), "\n");
       }
 
-      const source = s.filename.split(" -> ").pop();
+      const source = s.filename;
       frames.push("\t", Frame({
         key: `${i}-frame`,
         frame: {

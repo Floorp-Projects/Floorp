@@ -78,8 +78,7 @@ TranslationContentHandler.prototype = {
       return;
 
     // Grab a 60k sample of text from the page.
-    let encoder = Cc["@mozilla.org/layout/documentEncoder;1?type=text/plain"]
-                    .createInstance(Ci.nsIDocumentEncoder);
+    let encoder = Cu.createDocumentEncoder("text/plain");
     encoder.init(content.document, "text/plain", encoder.SkipInvisibleContent);
     let string = encoder.encodeToStringWithMaxLength(60 * 1024);
 

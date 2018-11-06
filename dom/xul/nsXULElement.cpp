@@ -2290,9 +2290,8 @@ nsXULPrototypeScript::Compile(JS::SourceBufferHolder& aSrcBuf,
     }
     JSContext* cx = jsapi.cx();
 
-    nsresult rv;
     nsAutoCString urlspec;
-    nsContentUtils::GetWrapperSafeScriptFilename(aDocument, aURI, urlspec, &rv);
+    nsresult rv = aURI->GetSpec(urlspec);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

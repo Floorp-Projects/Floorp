@@ -26,7 +26,7 @@ AntiTracking.runTest("Storage Access is removed when subframe navigates",
   null, // extra prefs
   false, // no window open test
   false, // no user-interaction test
-  false, // no blocking notifications
+  0, // no blocking notifications
   false, // run in normal window
   null, // no iframe sandbox
   "navigate-subframe", // access removal type
