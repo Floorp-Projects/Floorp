@@ -7,7 +7,6 @@
 #include "LayerAnimationInfo.h"
 
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
-#include "nsCSSPropertyIDSet.h" // For nsCSSPropertyIDSet::CompositorAnimatable
 
 namespace mozilla {
 
@@ -18,20 +17,6 @@ namespace mozilla {
     { eCSSProperty_opacity,
       DisplayItemType::TYPE_OPACITY,
       nsChangeHint_UpdateOpacityLayer } };
-
-/* static */ DisplayItemType
-LayerAnimationInfo::GetDisplayItemTypeForProperty(nsCSSPropertyID aProperty)
-{
-  switch (aProperty) {
-    case eCSSProperty_opacity:
-      return DisplayItemType::TYPE_OPACITY;
-    case eCSSProperty_transform:
-      return DisplayItemType::TYPE_TRANSFORM;
-    default:
-      break;
-  }
-  return DisplayItemType::TYPE_ZERO;
-}
 
 #ifdef DEBUG
 /* static */ void
@@ -44,7 +29,6 @@ LayerAnimationInfo::Initialize()
                "have the CSSPropFlags::CanAnimateOnCompositor flag");
   }
 
-  nsCSSPropertyIDSet properties;
   // Check that every property with the flag for animating on the
   // compositor has an entry in LayerAnimationInfo::sRecords.
   for (nsCSSPropertyID prop = nsCSSPropertyID(0);
@@ -56,20 +40,14 @@ LayerAnimationInfo::Initialize()
       for (const Record& record : sRecords) {
         if (record.mProperty == prop) {
           found = true;
-          properties.AddProperty(record.mProperty);
           break;
         }
       }
       MOZ_ASSERT(found,
                  "CSS property with the CSSPropFlags::CanAnimateOnCompositor "
                  "flag does not have an entry in LayerAnimationInfo::sRecords");
-      MOZ_ASSERT(GetDisplayItemTypeForProperty(prop) !=
-                   DisplayItemType::TYPE_ZERO,
-                 "GetDisplayItemTypeForProperty should return a valid display "
-                 "item type");
     }
   }
-  MOZ_ASSERT(properties.Equals(nsCSSPropertyIDSet::CompositorAnimatables()));
 }
 #endif
 

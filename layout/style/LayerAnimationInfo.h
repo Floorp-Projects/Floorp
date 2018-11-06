@@ -9,7 +9,6 @@
 
 #include "nsChangeHint.h"
 #include "nsCSSPropertyID.h"
-#include "nsCSSPropertyIDSet.h"
 #include "nsDisplayList.h" // For nsDisplayItem::Type
 
 namespace mozilla {
@@ -22,19 +21,11 @@ struct LayerAnimationInfo {
   // a record of the corresponding layer type and change hint.
   struct Record {
     nsCSSPropertyID mProperty;
-    DisplayItemType mDisplayItemType;
+    DisplayItemType mLayerType;
     nsChangeHint mChangeHint;
   };
 
-  // Returns the corresponding display item type for |aProperty| when it is
-  // animated on the compositor.
-  // Returns DisplayItemType::TYPE_ZERO if |aProperty| cannot be animated on the
-  // compositor.
-  static DisplayItemType
-  GetDisplayItemTypeForProperty(nsCSSPropertyID aProperty);
-
-  static const size_t kRecords =
-    nsCSSPropertyIDSet::CompositorAnimatableCount();
+  static const size_t kRecords = 2;
   static const Record sRecords[kRecords];
 };
 
