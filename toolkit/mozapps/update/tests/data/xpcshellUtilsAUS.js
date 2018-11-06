@@ -2004,6 +2004,9 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
   Assert.equal(status, aExpectedStatus,
                "the update status" + MSG_SHOULD_EQUAL);
 
+  Assert.ok(!updateHasBinaryTransparencyErrorResult(),
+            "binary transparency is not being processed for now");
+
   if (IS_SERVICE_TEST && aCheckSvcLog) {
     let contents = readServiceLogFile();
     Assert.notEqual(contents, svcOriginalLog,
