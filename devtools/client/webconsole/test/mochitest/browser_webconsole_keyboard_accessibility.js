@@ -19,14 +19,14 @@ const TEST_URI =
 add_task(async function() {
   // Run in legacy JsTerm.
   await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await testHistory();
+  await performTests();
 
   // And then in codeMirror JsTerm.
   await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await testHistory();
+  await performTests();
 });
 
-async function testHistory() {
+async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   info("Web Console opened");
   const outputScroller = hud.ui.outputScroller;
@@ -68,6 +68,11 @@ async function testHistory() {
 
   // Focus filter
   info("try ctrl-f to focus filter");
+  synthesizeKeyShortcut(WCUL10n.getStr("webconsole.find.key"));
+  ok(!isJstermFocused(hud.jsterm), "jsterm input is not focused");
+  ok(hasFocus(hud.ui.filterBox), "filter input is focused");
+
+  info("try ctrl-f when filter is already focused");
   synthesizeKeyShortcut(WCUL10n.getStr("webconsole.find.key"));
   ok(!isJstermFocused(hud.jsterm), "jsterm input is not focused");
   is(hud.ui.filterBox, outputScroller.ownerDocument.activeElement,
