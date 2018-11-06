@@ -293,6 +293,7 @@ class ExprType
           case TypeCode::F32:
           case TypeCode::F64:
           case TypeCode::AnyRef:
+          case TypeCode::NullRef:
           case TypeCode::Ref:
           case TypeCode::BlockVoid:
           case TypeCode::Limit:
@@ -305,16 +306,17 @@ class ExprType
 
   public:
     enum Code {
-        Void   = uint8_t(TypeCode::BlockVoid),
+        Void    = uint8_t(TypeCode::BlockVoid),
 
-        I32    = uint8_t(TypeCode::I32),
-        I64    = uint8_t(TypeCode::I64),
-        F32    = uint8_t(TypeCode::F32),
-        F64    = uint8_t(TypeCode::F64),
-        AnyRef = uint8_t(TypeCode::AnyRef),
-        Ref    = uint8_t(TypeCode::Ref),
+        I32     = uint8_t(TypeCode::I32),
+        I64     = uint8_t(TypeCode::I64),
+        F32     = uint8_t(TypeCode::F32),
+        F64     = uint8_t(TypeCode::F64),
+        AnyRef  = uint8_t(TypeCode::AnyRef),
+        NullRef = uint8_t(TypeCode::NullRef),
+        Ref     = uint8_t(TypeCode::Ref),
 
-        Limit  = uint8_t(TypeCode::Limit)
+        Limit   = uint8_t(TypeCode::Limit)
     };
 
     ExprType() : tc_() {}
@@ -365,9 +367,9 @@ class ExprType
         return UnpackTypeCodeType(tc_) == TypeCode::Ref;
     }
 
-    bool isRefOrAnyRef() const {
+    bool isReference() const {
         TypeCode tc = UnpackTypeCodeType(tc_);
-        return tc == TypeCode::Ref || tc == TypeCode::AnyRef;
+        return tc == TypeCode::Ref || tc == TypeCode::AnyRef || tc == TypeCode::NullRef;
     }
 
     bool operator ==(const ExprType& that) const {
@@ -403,6 +405,7 @@ class ValType
           case TypeCode::F32:
           case TypeCode::F64:
           case TypeCode::AnyRef:
+          case TypeCode::NullRef:
           case TypeCode::Ref:
             return true;
           default:
@@ -413,13 +416,14 @@ class ValType
 
   public:
     enum Code {
-        I32    = uint8_t(TypeCode::I32),
-        I64    = uint8_t(TypeCode::I64),
-        F32    = uint8_t(TypeCode::F32),
-        F64    = uint8_t(TypeCode::F64),
+        I32     = uint8_t(TypeCode::I32),
+        I64     = uint8_t(TypeCode::I64),
+        F32     = uint8_t(TypeCode::F32),
+        F64     = uint8_t(TypeCode::F64),
 
-        AnyRef = uint8_t(TypeCode::AnyRef),
-        Ref    = uint8_t(TypeCode::Ref),
+        AnyRef  = uint8_t(TypeCode::AnyRef),
+        NullRef = uint8_t(TypeCode::NullRef),
+        Ref     = uint8_t(TypeCode::Ref),
     };
 
     ValType() : tc_(InvalidPackedTypeCode()) {}
@@ -476,9 +480,9 @@ class ValType
         return UnpackTypeCodeType(tc_) == TypeCode::Ref;
     }
 
-    bool isRefOrAnyRef() const {
+    bool isReference() const {
         TypeCode tc = UnpackTypeCodeType(tc_);
-        return tc == TypeCode::Ref || tc == TypeCode::AnyRef;
+        return tc == TypeCode::Ref || tc == TypeCode::AnyRef || tc == TypeCode::NullRef;
     }
 
     bool operator ==(const ValType& that) const {
@@ -514,6 +518,7 @@ SizeOf(ValType vt)
       case ValType::F64:
         return 8;
       case ValType::AnyRef:
+      case ValType::NullRef:
       case ValType::Ref:
         return sizeof(intptr_t);
     }
@@ -524,12 +529,13 @@ static inline jit::MIRType
 ToMIRType(ValType vt)
 {
     switch (vt.code()) {
-      case ValType::I32:    return jit::MIRType::Int32;
-      case ValType::I64:    return jit::MIRType::Int64;
-      case ValType::F32:    return jit::MIRType::Float32;
-      case ValType::F64:    return jit::MIRType::Double;
-      case ValType::Ref:    return jit::MIRType::Pointer;
-      case ValType::AnyRef: return jit::MIRType::Pointer;
+      case ValType::I32:     return jit::MIRType::Int32;
+      case ValType::I64:     return jit::MIRType::Int64;
+      case ValType::F32:     return jit::MIRType::Float32;
+      case ValType::F64:     return jit::MIRType::Double;
+      case ValType::Ref:     return jit::MIRType::Pointer;
+      case ValType::AnyRef:  return jit::MIRType::Pointer;
+      case ValType::NullRef: return jit::MIRType::Pointer;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
 }
@@ -537,7 +543,7 @@ ToMIRType(ValType vt)
 static inline bool
 IsNumberType(ValType vt)
 {
-    return !vt.isRefOrAnyRef();
+    return !vt.isReference();
 }
 
 // ExprType utilities
@@ -576,6 +582,7 @@ ToCString(ExprType type)
       case ExprType::F32:     return "f32";
       case ExprType::F64:     return "f64";
       case ExprType::AnyRef:  return "anyref";
+      case ExprType::NullRef: return "nullref";
       case ExprType::Ref:     return "ref";
       case ExprType::Limit:;
     }
@@ -708,7 +715,8 @@ class LitVal
     explicit LitVal(double f64) : type_(ValType::F64) { u.f64_ = f64; }
 
     explicit LitVal(ValType refType, JSObject* ptr) : type_(refType) {
-        MOZ_ASSERT(refType.isRefOrAnyRef());
+        MOZ_ASSERT(refType.isReference());
+        MOZ_ASSERT(refType != ValType::NullRef);
         MOZ_ASSERT(ptr == nullptr, "use Val for non-nullptr ref types to get tracing");
         u.ptr_ = ptr;
     }
@@ -720,7 +728,7 @@ class LitVal
     uint64_t i64() const { MOZ_ASSERT(type_ == ValType::I64); return u.i64_; }
     const float& f32() const { MOZ_ASSERT(type_ == ValType::F32); return u.f32_; }
     const double& f64() const { MOZ_ASSERT(type_ == ValType::F64); return u.f64_; }
-    JSObject* ptr() const { MOZ_ASSERT(type_.isRefOrAnyRef()); return u.ptr_; }
+    JSObject* ptr() const { MOZ_ASSERT(type_.isReference()); return u.ptr_; }
 };
 
 typedef Vector<LitVal, 0, SystemAllocPolicy> LitValVector;
@@ -740,7 +748,7 @@ class MOZ_NON_PARAM Val : public LitVal
     explicit Val(uint64_t i64)  : LitVal(i64) {}
     explicit Val(float f32)     : LitVal(f32) {}
     explicit Val(double f64)    : LitVal(f64) {}
-    explicit Val(JSObject* obj) : LitVal(ValType::AnyRef, nullptr) { u.ptr_ = obj; }
+    explicit Val(ValType type, JSObject* obj) : LitVal(type, nullptr) { u.ptr_ = obj; }
     void writePayload(uint8_t* dst) const;
     void trace(JSTracer* trc);
 };
@@ -809,11 +817,11 @@ class FuncType
         return false;
     }
     bool temporarilyUnsupportedAnyRef() const {
-        if (ret().isRefOrAnyRef()) {
+        if (ret().isReference()) {
             return true;
         }
         for (ValType arg : args()) {
-            if (arg.isRefOrAnyRef()) {
+            if (arg.isReference()) {
                 return true;
             }
         }
@@ -1058,6 +1066,7 @@ class GlobalDesc
     explicit GlobalDesc(InitExpr initial, bool isMutable, ModuleKind kind = ModuleKind::Wasm)
       : kind_((isMutable || !initial.isVal()) ? GlobalKind::Variable : GlobalKind::Constant)
     {
+        MOZ_ASSERT(initial.type() != ValType::NullRef);
         if (isVariable()) {
             u.var.val.initial_ = initial;
             u.var.isMutable_ = isMutable;
@@ -1073,6 +1082,7 @@ class GlobalDesc
                         ModuleKind kind = ModuleKind::Wasm)
       : kind_(GlobalKind::Import)
     {
+        MOZ_ASSERT(type != ValType::NullRef);
         u.var.val.import.type_ = type;
         u.var.val.import.index_ = importIndex;
         u.var.isMutable_ = isMutable;

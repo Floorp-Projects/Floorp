@@ -228,6 +228,8 @@ class FunctionCompiler
               case ValType::AnyRef:
                 MOZ_CRASH("ion support for ref/anyref value NYI");
                 break;
+              case ValType::NullRef:
+                MOZ_CRASH("NullRef not expressible");
             }
 
             curBlock_->add(ins);
