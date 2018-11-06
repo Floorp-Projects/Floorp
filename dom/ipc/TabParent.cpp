@@ -3217,7 +3217,7 @@ TabParent::DeallocPPluginWidgetParent(mozilla::plugins::PPluginWidgetParent* aAc
 PPaymentRequestParent*
 TabParent::AllocPPaymentRequestParent()
 {
-  RefPtr<PaymentRequestParent> actor = new PaymentRequestParent(GetTabId());
+  RefPtr<PaymentRequestParent> actor = new PaymentRequestParent();
   return actor.forget().take();
 }
 

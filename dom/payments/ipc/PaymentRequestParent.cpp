@@ -17,9 +17,8 @@
 namespace mozilla {
 namespace dom {
 
-PaymentRequestParent::PaymentRequestParent(uint64_t aTabId)
+PaymentRequestParent::PaymentRequestParent()
   : mActorAlive(true)
-  , mTabId(aTabId)
   , mRequestId(EmptyString())
 {
 }
@@ -86,12 +85,6 @@ PaymentRequestParent::RecvRequestPayment(const IPCPaymentActionRequest& aRequest
     return IPC_FAIL(this, "nsIPaymentRequestService::RequestPayment failed");
   }
   return IPC_OK();
-}
-
-uint64_t
-PaymentRequestParent::GetTabId()
-{
-  return mTabId;
 }
 
 nsresult

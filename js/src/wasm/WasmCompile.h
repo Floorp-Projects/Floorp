@@ -89,7 +89,8 @@ SharedModule
 CompileBuffer(const CompileArgs& args,
               const ShareableBytes& bytecode,
               UniqueChars* error,
-              UniqueCharsVector* warnings);
+              UniqueCharsVector* warnings,
+              UniqueLinkData* maybeLinkData = nullptr);
 
 // Attempt to compile the second tier of the given wasm::Module.
 

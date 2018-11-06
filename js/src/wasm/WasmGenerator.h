@@ -233,7 +233,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     SharedModule finishModule(const ShareableBytes& bytecode,
                               JS::OptimizedEncodingListener* maybeTier2Listener = nullptr,
-                              UniqueLinkData* maybeLinkDataOut = nullptr);
+                              UniqueLinkData* maybeLinkData = nullptr);
     MOZ_MUST_USE bool finishTier2(const Module& module);
 
     ExclusiveDeferredValidationState& deferredValidationState() {
