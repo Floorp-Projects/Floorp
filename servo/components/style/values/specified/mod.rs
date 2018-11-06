@@ -57,7 +57,7 @@ pub use self::length::{LengthOrPercentage, LengthOrPercentageOrAuto};
 pub use self::length::{LengthOrPercentageOrNone, MaxLength, MozLength};
 pub use self::length::{NoCalcLength, ViewportPercentageLength};
 pub use self::length::{NonNegativeLengthOrPercentage, NonNegativeLengthOrPercentageOrAuto};
-pub use self::list::Quotes;
+pub use self::list::{Quotes, QuotePair};
 #[cfg(feature = "gecko")]
 pub use self::list::ListStyleType;
 pub use self::motion::OffsetPath;
