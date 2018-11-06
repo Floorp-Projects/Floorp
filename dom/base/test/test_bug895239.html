@@ -15,8 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=895239
     const Cc = SpecialPowers.Cc;
 
     // Create a plaintext encoder with the flag OutputNonTextContentAsPlaceholder.
-    var encoder = Cc["@mozilla.org/layout/documentEncoder;1?type=text/plain"]
-                  .createInstance(de);
+    var encoder = SpecialPowers.Cu.createDocumentEncoder("text/plain");
     var flags = de.OutputRaw |
                 de.OutputNonTextContentAsPlaceholder;
     encoder.init(document, "text/plain", flags);

@@ -40,6 +40,7 @@ class gfxVarReceiver;
   _(UseWebRender,               bool,             false)                \
   _(UseWebRenderANGLE,          bool,             false)                \
   _(UseWebRenderDCompWin,       bool,             false)                \
+  _(UseWebRenderDCompWinTripleBuffering, bool,    false)                \
   _(UseWebRenderProgramBinary,  bool,             false)                \
   _(UseWebRenderProgramBinaryDisk, bool,          false)                \
   _(WebRenderDebugFlags,        int32_t,          0)                    \

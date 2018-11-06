@@ -1895,9 +1895,9 @@ TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   nsCOMPtr<nsIDocumentEncoder> docEncoder;
   if (!mCachedDocumentEncoder ||
       !mCachedDocumentEncoderType.Equals(aFormatType)) {
-    nsAutoCString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
+    nsAutoCString formatType;
     LossyAppendUTF16toASCII(aFormatType, formatType);
-    docEncoder = do_CreateInstance(formatType.get());
+    docEncoder = do_createDocumentEncoder(PromiseFlatCString(formatType).get());
     if (NS_WARN_IF(!docEncoder)) {
       return nullptr;
     }

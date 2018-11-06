@@ -181,8 +181,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
 {
     JS_COUNT_CTOR(JSRuntime);
     liveRuntimesCount++;
-
-    lcovOutput().init();
 }
 
 JSRuntime::~JSRuntime()

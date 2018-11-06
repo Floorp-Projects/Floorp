@@ -5335,6 +5335,11 @@ nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
     if (!aBlocked) {
       unblocked = !doc->GetHasTrackingContentBlocked();
     }
+  } else if (aState == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
+    doc->SetHasTrackingContentLoaded(aBlocked, origin);
+    if (!aBlocked) {
+      unblocked = !doc->GetHasTrackingContentLoaded();
+    }
   } else if (aState == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT) {
     doc->SetHasSlowTrackingContentBlocked(aBlocked, origin);
     if (!aBlocked) {

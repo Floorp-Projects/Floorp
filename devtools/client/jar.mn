@@ -277,6 +277,7 @@ devtools.jar:
     content/netmonitor/src/assets/styles/httpi.css (netmonitor/src/assets/styles/httpi.css)
     content/netmonitor/src/assets/styles/netmonitor.css (netmonitor/src/assets/styles/netmonitor.css)
     content/netmonitor/src/assets/styles/NetworkDetailsPanel.css (netmonitor/src/assets/styles/NetworkDetailsPanel.css)
+    content/netmonitor/src/assets/styles/CustomRequestPanel.css (netmonitor/src/assets/styles/CustomRequestPanel.css)
     content/netmonitor/src/assets/styles/RequestList.css (netmonitor/src/assets/styles/RequestList.css)
     content/netmonitor/src/assets/styles/StatisticsPanel.css (netmonitor/src/assets/styles/StatisticsPanel.css)
     content/netmonitor/src/assets/styles/StatusBar.css (netmonitor/src/assets/styles/StatusBar.css)

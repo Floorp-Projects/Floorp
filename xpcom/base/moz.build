@@ -67,6 +67,7 @@ EXPORTS += [
     'nsDebugImpl.h',
     'nsDumpUtils.h',
     'nsError.h',
+    'nsErrorService.h',
     'nsGZFileWriter.h',
     'nsIClassInfoImpl.h',
     'nsID.h',

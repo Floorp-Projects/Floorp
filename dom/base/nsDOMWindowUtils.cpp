@@ -2796,23 +2796,6 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
   return NS_OK;
 }
 
-nsresult
-nsDOMWindowUtils::RenderDocument(const nsRect& aRect,
-                                 uint32_t aFlags,
-                                 nscolor aBackgroundColor,
-                                 gfxContext* aThebesContext)
-{
-    nsCOMPtr<nsIDocument> doc = GetDocument();
-    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-    // Get Primary Shell
-    nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
-    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
-    // Render Document
-    return presShell->RenderDocument(aRect, aFlags, aBackgroundColor, aThebesContext);
-}
-
 NS_IMETHODIMP
 nsDOMWindowUtils::GetDisplayDPI(float *aDPI)
 {

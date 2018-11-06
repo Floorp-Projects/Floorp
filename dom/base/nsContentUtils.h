@@ -1263,20 +1263,6 @@ public:
    */
   static bool IsUtf8OnlyPlainTextType(const nsACString& aContentType);
 
-  /**
-   * Get the script file name to use when compiling the script
-   * referenced by aURI. In cases where there's no need for any extra
-   * security wrapper automation the script file name that's returned
-   * will be the spec in aURI, else it will be the spec in aDocument's
-   * URI followed by aURI's spec, separated by " -> ". Returns true
-   * if the script file name was modified, false if it's aURI's
-   * spec.
-   */
-  static bool GetWrapperSafeScriptFilename(nsIDocument *aDocument,
-                                             nsIURI *aURI,
-                                             nsACString& aScriptURI,
-                                             nsresult* aRv);
-
 
   /**
    * Returns true if aDocument belongs to a chrome docshell for

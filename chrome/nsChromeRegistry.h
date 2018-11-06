@@ -49,8 +49,6 @@ public:
   NS_IMETHOD MustLoadURLRemotely(nsIURI* url,
                                  bool* _retval) override;
 
-  // nsIChromeRegistry methods:
-  NS_IMETHOD_(bool) WrappersEnabled(nsIURI *aURI) override;
   NS_IMETHOD ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult) override;
 
   // nsChromeRegistry methods:

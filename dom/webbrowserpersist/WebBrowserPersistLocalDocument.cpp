@@ -1217,19 +1217,8 @@ ConvertEncoderFlags(uint32_t aEncoderFlags)
 static bool
 ContentTypeEncoderExists(const nsACString& aType)
 {
-    nsAutoCString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
-    contractID.Append(aType);
-
-    nsCOMPtr<nsIComponentRegistrar> registrar;
-    nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    if (NS_SUCCEEDED(rv) && registrar) {
-        bool result;
-        rv = registrar->IsContractIDRegistered(contractID.get(), &result);
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-        return NS_SUCCEEDED(rv) && result;
-    }
-    return false;
+    return do_getDocumentTypeSupportedForEncoding(
+        PromiseFlatCString(aType).get());
 }
 
 void
@@ -1254,16 +1243,13 @@ WebBrowserPersistLocalDocument::GetDocEncoder(const nsACString& aContentType,
                                               uint32_t aEncoderFlags,
                                               nsIDocumentEncoder** aEncoder)
 {
-    nsresult rv;
-    nsAutoCString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
-    contractID.Append(aContentType);
     nsCOMPtr<nsIDocumentEncoder> encoder =
-        do_CreateInstance(contractID.get(), &rv);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+        do_createDocumentEncoder(PromiseFlatCString(aContentType).get());
+    NS_ENSURE_TRUE(encoder, NS_ERROR_FAILURE);
 
-    rv = encoder->NativeInit(mDocument,
-                             NS_ConvertASCIItoUTF16(aContentType),
-                             ConvertEncoderFlags(aEncoderFlags));
+    nsresult rv = encoder->NativeInit(mDocument,
+                                      NS_ConvertASCIItoUTF16(aContentType),
+                                      ConvertEncoderFlags(aEncoderFlags));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     nsAutoCString charSet;
