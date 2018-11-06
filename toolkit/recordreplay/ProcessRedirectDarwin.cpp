@@ -169,7 +169,7 @@ namespace recordreplay {
   MACRO(fseek, RR_SaveRvalHadErrorNegative)                      \
   MACRO(ftell, RR_SaveRvalHadErrorNegative)                      \
   MACRO(fwrite, RR_ScalarRval)                                   \
-  MACRO(getenv, RR_CStringRval, nullptr, nullptr, Preamble_Veto<0>) \
+  MACRO(getenv, RR_CStringRval, Preamble_getenv, nullptr, Preamble_Veto<0>) \
   MACRO(localtime_r, RR_SaveRvalHadErrorZero<RR_Compose<         \
                        RR_WriteBufferFixedSize<1, sizeof(struct tm)>, \
                        RR_RvalIsArgument<1>>>)                   \
@@ -1357,6 +1357,23 @@ RR_fread(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
   aEvents.CheckInput(capacity);
   MOZ_RELEASE_ASSERT(rval <= capacity);
   aEvents.RecordOrReplayBytes(buf, rval * elemSize);
+}
+
+static PreambleResult
+Preamble_getenv(CallArguments* aArguments)
+{
+  // Ignore attempts to get environment variables that might be fetched in a
+  // racy way.
+  auto env = aArguments->Arg<0, const char*>();
+
+  // The JPEG library can fetch configuration information from the environment
+  // in a way that can run non-deterministically on different threads.
+  if (strncmp(env, "JSIMD_", 6) == 0) {
+    aArguments->Rval<char*>() = nullptr;
+    return PreambleResult::Veto;
+  }
+
+  return PreambleResult::Redirect;
 }
 
 static struct tm gGlobalTM;
