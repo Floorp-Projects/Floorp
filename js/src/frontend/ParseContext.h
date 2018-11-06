@@ -19,16 +19,6 @@ namespace frontend {
 
 class ParserBase;
 
-const char*
-DeclarationKindString(DeclarationKind kind);
-
-// Returns true if the declaration is `var` or equivalent.
-bool
-DeclarationKindIsVar(DeclarationKind kind);
-
-bool
-DeclarationKindIsParameter(DeclarationKind kind);
-
 // A data structure for tracking used names per parsing session in order to
 // compute which bindings are closed over. Scripts and scopes are numbered
 // monotonically in textual order and name uses are tracked by lists of
@@ -688,14 +678,6 @@ class ParseContext : public Nestable<ParseContext>
                              mozilla::Maybe<DeclarationKind>* redeclaredKind, uint32_t* prevPos);
 
 };
-
-// This is required to be in ParseContext.h, not SharedContext.h, because it
-// uses the implementation of ParseContext.
-inline
-Directives::Directives(ParseContext* parent)
-  : strict_(parent->sc()->strict()),
-    asmJS_(parent->useAsmOrInsideUseAsm())
-{}
 
 } // namespace frontend
 
