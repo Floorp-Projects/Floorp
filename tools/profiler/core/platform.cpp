@@ -1890,6 +1890,16 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
   }
 }
 
+static void
+StreamPages(PSLockRef aLock, SpliceableJSONWriter& aWriter)
+{
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+  ActivePS::DiscardExpiredPages(aLock);
+  for (const auto& page : ActivePS::ProfiledPages(aLock)) {
+    page->StreamJSON(aWriter);
+  }
+}
+
 #if defined(GP_OS_android)
 static UniquePtr<ProfileBuffer>
 CollectJavaThreadProfileData()
@@ -1965,6 +1975,13 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
     StreamMetaJSCustomObject(aLock, aWriter, aIsShuttingDown);
   }
   aWriter.EndObject();
+
+  // Put page data
+  aWriter.StartArrayProperty("pages");
+  {
+    StreamPages(aLock, aWriter);
+  }
+  aWriter.EndArray();
 
   buffer.StreamCountersToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
   buffer.StreamMemoryToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
