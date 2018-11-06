@@ -5995,7 +5995,7 @@ pub extern "C" fn Servo_Quotes_Equal(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_Quotes_GetQuote(
+pub unsafe extern "C" fn Servo_Quotes_GetQuote(
     quotes: RawServoQuotesBorrowed,
     mut depth: i32,
     quote_type: StyleContentType,
@@ -6024,5 +6024,5 @@ pub extern "C" fn Servo_Quotes_GetQuote(
         debug_assert!(quote_type == StyleContentType::CloseQuote);
         &quote_pair.closing
     };
-    write!(unsafe { &mut *result }, "{}", quote).unwrap();
+    (*result).write_str(quote).unwrap();
 }
