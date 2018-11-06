@@ -8,24 +8,23 @@
 .notificationbox .notificationInner {
   display: flex;
   flex-direction: row;
-}
-
-.notificationbox .details {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: row;
   align-items: center;
 }
 
-.notificationbox .notification-button {
-  text-align: right;
+.notificationInner .messageText {
+  flex: 1;
+  width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.notificationbox .messageText {
-  flex-grow: 1;
+.notificationInner .messageImage,
+.notificationbox .notificationButton,
+.notificationbox .messageCloseButton {
+  flex: none;
 }
 
-.notificationbox .details:dir(rtl)
 .notificationbox .notificationInner:dir(rtl) {
   flex-direction: row-reverse;
 }
@@ -50,7 +49,6 @@
 }
 
 .notificationbox .messageImage {
-  display: inline-block;
   background-size: 16px;
   width: 16px;
   height: 16px;

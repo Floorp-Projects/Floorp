@@ -263,7 +263,7 @@ Element implements GeometryUtils;
 partial interface Element {
   [Throws, Func="nsDocument::IsUnprefixedFullscreenEnabled", NeedsCallerType]
   Promise<void> requestFullscreen();
-  [Throws, BinaryName="requestFullscreen", NeedsCallerType]
+  [Throws, BinaryName="requestFullscreen", NeedsCallerType, Deprecated="MozRequestFullScreenDeprecatedPrefix"]
   Promise<void> mozRequestFullScreen();
 
   // Events handlers
