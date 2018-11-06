@@ -1195,22 +1195,6 @@ protected:
 };
 
 
-/**
- * An object that allows sharing of arrays that store 'quotes' property
- * values.  This is particularly important for inheritance, where we want
- * to share the same 'quotes' value with a parent ComputedStyle.
- */
-class nsStyleQuoteValues
-{
-public:
-  typedef nsTArray<std::pair<nsString, nsString>> QuotePairArray;
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsStyleQuoteValues);
-  QuotePairArray mQuotePairs;
-
-private:
-  ~nsStyleQuoteValues() {}
-};
-
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
 {
   explicit nsStyleList(const nsPresContext* aContext);
@@ -1223,11 +1207,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
   nsChangeHint CalcDifference(const nsStyleList& aNewData,
                               const nsStyleDisplay* aOldDisplay) const;
 
-  static void Shutdown()
-  {
-    sInitialQuotes = nullptr;
-  }
-
   imgRequestProxy* GetListStyleImage() const
   {
     return mListStyleImage ? mListStyleImage->get() : nullptr;
@@ -1235,25 +1214,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
 
   already_AddRefed<nsIURI> GetListStyleImageURI() const;
 
-  const nsStyleQuoteValues::QuotePairArray& GetQuotePairs() const
-  {
-    return mQuotes->mQuotePairs;
-  }
-
   uint8_t mListStylePosition;
   RefPtr<nsStyleImageRequest> mListStyleImage;
 
   mozilla::CounterStylePtr mCounterStyle;
 
 private:
-  RefPtr<nsStyleQuoteValues> mQuotes;
   nsStyleList& operator=(const nsStyleList& aOther) = delete;
 public:
+  RefPtr<RawServoQuotes> mQuotes;
   nsRect        mImageRegion;           // the rect to use within an image
-
-private:
-  // nsStyleQuoteValues objects representing two common values, for sharing.
-  static mozilla::StaticRefPtr<nsStyleQuoteValues> sInitialQuotes;
 };
 
 struct nsStyleGridLine

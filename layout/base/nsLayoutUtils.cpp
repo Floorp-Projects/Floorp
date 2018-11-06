@@ -8302,9 +8302,6 @@ nsLayoutUtils::Shutdown()
   }
 
   nsComputedDOMStyle::UnregisterPrefChangeCallbacks();
-
-  // so the cached initial quotes array doesn't appear to be a leak
-  nsStyleList::Shutdown();
 }
 
 /* static */
