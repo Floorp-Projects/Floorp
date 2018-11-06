@@ -4,9 +4,20 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.30.0-SNAPSHOT (In Development)
+# 0.31.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.20.0...master),
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.30.0...v0.31.0),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/33?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.30.1/index)
+
+* Compiled against:
+  * Android (SDK: 27, Support Libraries: 27.1.1)
+  * Kotlin (Stdlib: 1.2.71, Coroutines: 0.30.2)
+  * GeckoView (Nightly: 65.0.20181023100123, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
+
+# 0.30.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.29.0...v0.30.0),
 [Milestone](https://github.com/mozilla-mobile/android-components/milestone/32?closed=1),
 [API reference](https://mozilla-mobile.github.io/android-components/api/0.30.0/index)
 
@@ -15,17 +26,17 @@ permalink: /changelog/
   * Kotlin (Stdlib: 1.2.71, Coroutines: 0.30.2)
   * GeckoView (Nightly: 65.0.20181023100123, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
 * **concept-storage**
-  * :warning: **These are a breaking API changes** :warning:
+  * ⚠️ **These are a breaking API changes**
   * Added a `getSuggestions` method to `HistoryStorage`, which is intended to power search, autocompletion, etc.
   * Added a `cleanup` method to `HistoryStorage`, which is intended to allow signaling to implementations to cleanup any allocated resources.
   * `HistoryStorage` methods `recordVisit` and `recordObservation` are now `suspend`.
   * `HistoryStorage` methods `getVisited()` and `getVisited(uris)` now return `Deferred`.
-* :new: Added **browser-storage-memory** :sparkles: :
+* 🆕 Added **browser-storage-memory** ✨
   * Added an in-memory implementation of `concept-storage`.
-* :new: Added **browser-storage-sync** :sparkles: :
+* 🆕 Added **browser-storage-sync** ✨
   * Added an implementation of `concept-storage` which is backed by the Rust Places library provided by [application-services](https://github.com/mozilla/application-services).
 * **service-firefox-accounts**:
-  * :warning: **This is a breaking API change** :warning:
+  * ⚠️ **This is a breaking API change**
   * The `FxaResult` type served as a custom promise-like type to support older versions of Java. We have now removed this type and switched to Kotlin's `Deferred` instead. We've also made sure all required types are `Closeable`:
 
   ```kotlin
