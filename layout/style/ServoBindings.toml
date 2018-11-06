@@ -350,6 +350,7 @@ opaque-types = [
     "nsAutoPtr_Proxy",
     "nsAutoPtr_Proxy_member_function",
     "mozilla::detail::PointerType",
+    "mozilla::Pair",
     "mozilla::Pair_Base",
     "mozilla::SeenPtrs",
     "mozilla::SupportsWeakPtr",
