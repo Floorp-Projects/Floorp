@@ -8,6 +8,8 @@
 #ifndef js_CompilationAndEvaluation_h
 #define js_CompilationAndEvaluation_h
 
+#include "mozilla/Utf8.h" // mozilla::Utf8Unit
+
 #include <stddef.h> // size_t
 #include <stdio.h> // FILE
 
@@ -155,6 +157,22 @@ EvaluateUtf8Path(JSContext* cx, const ReadOnlyCompileOptions& options,
 extern JS_PUBLIC_API bool
 Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
         SourceText<char16_t>& srcBuf, MutableHandle<JSScript*> script);
+
+/**
+ * Identical to |JS::Compile|, but compiles UTF-8.
+ *
+ * The "DontInflate" suffix is temporary while bugs in UTF-8 compilation are
+ * ironed out.  In the long term this function and |JS::Compile| will follow
+ * the same naming scheme.
+ *
+ * NOTE: This function DOES NOT INFLATE the UTF-8 bytes to UTF-16 before
+ *       compiling them.  UTF-8 compilation is currently experimental and has
+ *       known bugs.  Use only if you're willing to tolerate unspecified bugs!
+ */
+extern JS_PUBLIC_API bool
+CompileDontInflate(JSContext* cx, const ReadOnlyCompileOptions& options,
+                   SourceText<mozilla::Utf8Unit>& srcBuf,
+                   MutableHandle<JSScript*> script);
 
 /**
  * Compile the provided UTF-8 data into a script.  If the data contains invalid
