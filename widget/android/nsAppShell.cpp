@@ -702,7 +702,8 @@ nsAppShell::Observe(nsISupports* aSubject,
                 contentId, tabId);
         NS_ENSURE_TRUE(editableParent, NS_OK);
 
-        auto editableChild = java::GeckoEditableChild::New(editableParent);
+        auto editableChild = java::GeckoEditableChild::New(editableParent,
+                                                           /* default */ false);
         NS_ENSURE_TRUE(editableChild, NS_OK);
 
         RefPtr<widget::GeckoEditableSupport> editableSupport =
