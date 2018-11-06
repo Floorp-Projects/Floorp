@@ -27,6 +27,12 @@ scripts:
     stringsExport: cp $npm_package_config_locales_dir/$npm_package_config_default_locale/strings.properties $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/chrome/browser/activity-stream/newtab.properties
     copyPingCentre: cpx "ping-centre/PingCentre.jsm" $npm_package_config_mc_dir/browser/modules
 
+# builduplift: Build and export to mozilla central for uplifts without exporting strings to browser/locales
+  builduplift:
+    pre: =>prebuildmc
+    bundle: => bundle
+    copy: =>buildmc:copy
+
 # buildlibrary: Export about:library code to mozilla-central - intentionally not included in buildmc for now
   buildlibrary:
     webpack: webpack --config webpack.aboutlibrary.config.js

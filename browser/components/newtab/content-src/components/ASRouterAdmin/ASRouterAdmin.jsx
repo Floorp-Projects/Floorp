@@ -239,13 +239,14 @@ export class ASRouterAdmin extends React.PureComponent {
   renderTargetingParameters() {
     // There was no error and the result is truthy
     const success = this.state.evaluationStatus.success && !!this.state.evaluationStatus.result;
+    const result = JSON.stringify(this.state.evaluationStatus.result, null, 2) || "(Empty result)";
 
     return (<table><tbody>
       <tr><td><h2>Evaluate JEXL expression</h2></td></tr>
       <tr>
         <td>
           <p><textarea ref="expressionInput" rows="10" cols="60" placeholder="Evaluate JEXL expressions and mock parameters by changing their values below" /></p>
-          <p>Status: <span ref="evaluationStatus">{success ? "✅" : "❌"}, Result: {JSON.stringify(this.state.evaluationStatus.result, null, 2)}</span></p>
+          <p>Status: <span ref="evaluationStatus">{success ? "✅" : "❌"}, Result: {result}</span></p>
         </td>
         <td>
            <button className="ASRouterButton secondary" onClick={this.handleExpressionEval}>Evaluate</button>
