@@ -3056,11 +3056,13 @@ nsChildView::SetPrefersReducedMotionOverrideForTest(bool aValue)
   // it's set in the parent process.
   LookAndFeel::SetIntCache(lookAndFeelCache);
 
-  if (nsCocoaFeatures::OnMojaveOrLater()) {
+  if (nsCocoaFeatures::OnMojaveOrLater() &&
+      NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification) {
     [[[NSWorkspace sharedWorkspace] notificationCenter]
          postNotificationName: NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
          object:nil];
-  } else if (nsCocoaFeatures::OnYosemiteOrLater()) {
+  } else if (nsCocoaFeatures::OnYosemiteOrLater() &&
+      NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification) {
     [[NSNotificationCenter defaultCenter]
        postNotificationName: NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
        object:nil];
@@ -3315,13 +3317,15 @@ NSEvent* gLastDragMouseDownEvent = nil;
                                                name:NSSystemColorsDidChangeNotification
                                              object:nil];
 
-  if (nsCocoaFeatures::OnMojaveOrLater()) {
+  if (nsCocoaFeatures::OnMojaveOrLater() &&
+      NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification) {
     [[[NSWorkspace sharedWorkspace] notificationCenter]
            addObserver:self
               selector:@selector(systemMetricsChanged)
                   name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
                 object:nil];
-  } else if (nsCocoaFeatures::OnYosemiteOrLater()) {
+  } else if (nsCocoaFeatures::OnYosemiteOrLater() &&
+             NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification) {
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(systemMetricsChanged)
                                                  name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
