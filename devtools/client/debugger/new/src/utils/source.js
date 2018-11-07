@@ -15,11 +15,13 @@ import { getUnicodeUrl } from "devtools-modules";
 import { endTruncateStr } from "./utils";
 import { truncateMiddleText } from "../utils/text";
 import { parse as parseURL } from "../utils/url";
+import { renderWasmText } from "./wasm";
+import { toEditorPosition } from "./editor";
 export { isMinified } from "./isMinified";
 import { getURL, getFileExtension } from "./sources-tree";
 import { prefs } from "./prefs";
 
-import type { Source, Location } from "../types";
+import type { Source, Location, JsSource } from "../types";
 import type { SourceMetaDataType } from "../reducers/ast";
 import type { SymbolDeclarations } from "../workers/parser";
 
@@ -382,14 +384,21 @@ export function isLoading(source: Source) {
 }
 
 export function getTextAtPosition(source: ?Source, location: Location) {
-  if (!source || source.isWasm || !source.text) {
+  if (!source || !source.text) {
     return "";
   }
 
   const line = location.line;
   const column = location.column || 0;
 
-  const lineText = source.text.split("\n")[line - 1];
+  if (source.isWasm) {
+    const { line: editorLine } = toEditorPosition(location);
+    const lines = renderWasmText(source);
+    return lines[editorLine];
+  }
+
+  const text = ((source: any): JsSource).text || "";
+  const lineText = text.split("\n")[line - 1];
   if (!lineText) {
     return "";
   }

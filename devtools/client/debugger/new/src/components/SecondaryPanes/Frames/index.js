@@ -6,6 +6,7 @@
 
 import React, { Component } from "react";
 import { connect } from "react-redux";
+import PropTypes from "prop-types";
 
 import type { Frame, Why } from "../../../types";
 
@@ -41,6 +42,7 @@ type Props = {
   toggleBlackBox: Function,
   toggleFrameworkGrouping: Function,
   disableFrameTruncate: boolean,
+  disableContextMenu: boolean,
   displayFullUrl: boolean,
   getFrameTitle?: string => string
 };
@@ -101,7 +103,8 @@ class Frames extends Component<Props, State> {
 
   copyStackTrace = () => {
     const { frames } = this.props;
-    const framesToCopy = frames.map(f => formatCopyName(f)).join("\n");
+    const { l10n } = this.context;
+    const framesToCopy = frames.map(f => formatCopyName(f, l10n)).join("\n");
     copyToTheClipboard(framesToCopy);
   };
 
@@ -117,7 +120,8 @@ class Frames extends Component<Props, State> {
       toggleBlackBox,
       frameworkGroupingOn,
       displayFullUrl,
-      getFrameTitle
+      getFrameTitle,
+      disableContextMenu
     } = this.props;
 
     const framesOrGroups = this.truncateFrames(this.collapseFrames(frames));
@@ -139,6 +143,7 @@ class Frames extends Component<Props, State> {
                 key={String(frameOrGroup.id)}
                 displayFullUrl={displayFullUrl}
                 getFrameTitle={getFrameTitle}
+                disableContextMenu={disableContextMenu}
               />
             ) : (
               <Group
@@ -152,6 +157,7 @@ class Frames extends Component<Props, State> {
                 key={frameOrGroup[0].id}
                 displayFullUrl={displayFullUrl}
                 getFrameTitle={getFrameTitle}
+                disableContextMenu={disableContextMenu}
               />
             )
         )}
@@ -160,9 +166,10 @@ class Frames extends Component<Props, State> {
   }
 
   renderToggleButton(frames: LocalFrame[]) {
+    const { l10n } = this.context;
     const buttonMessage = this.state.showAllFrames
-      ? L10N.getStr("callStack.collapse")
-      : L10N.getStr("callStack.expand");
+      ? l10n.getStr("callStack.collapse")
+      : l10n.getStr("callStack.expand");
 
     frames = this.collapseFrames(frames);
     if (frames.length <= NUM_FRAMES_SHOWN) {
@@ -201,6 +208,8 @@ class Frames extends Component<Props, State> {
   }
 }
 
+Frames.contextTypes = { l10n: PropTypes.object };
+
 const mapStateToProps = state => ({
   frames: getCallStackFrames(state),
   why: getPauseReason(state),
@@ -216,6 +225,7 @@ export default connect(
     toggleBlackBox: actions.toggleBlackBox,
     toggleFrameworkGrouping: actions.toggleFrameworkGrouping,
     disableFrameTruncate: false,
+    disableContextMenu: false,
     displayFullUrl: false
   }
 )(Frames);
