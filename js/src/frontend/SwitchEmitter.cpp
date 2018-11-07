@@ -455,7 +455,7 @@ SwitchEmitter::emitEnd()
         // Fill in the jump table, if there is one.
         for (uint32_t i = 0, length = caseOffsets_.length(); i < length; i++) {
             ptrdiff_t off = caseOffsets_[i];
-            SET_JUMP_OFFSET(pc, off == 0 ? 0 : off - top_);
+            SET_JUMP_OFFSET(pc, (off != 0 ? off : defaultJumpTargetOffset_.offset) - top_);
             pc += JUMP_OFFSET_LEN;
         }
     }

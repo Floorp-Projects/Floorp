@@ -107,7 +107,7 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
 
             for (int32_t i = low; i <= high; i++) {
                 unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
-                if (targetOffset != offset) {
+                if (targetOffset != defaultOffset) {
                     infos_[targetOffset].init(stackDepth);
                     infos_[targetOffset].jumpTarget = true;
                 }

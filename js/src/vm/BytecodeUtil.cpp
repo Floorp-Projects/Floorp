@@ -928,7 +928,7 @@ BytecodeParser::parse()
 
             for (int32_t i = low; i <= high; i++) {
                 uint32_t targetOffset = offset + GET_JUMP_OFFSET(pc2);
-                if (targetOffset != offset) {
+                if (targetOffset != defaultOffset) {
                     if (!addJump(targetOffset, &nextOffset, stackDepth, offsetStack,
                                  pc, JumpKind::SwitchCase))
                     {
