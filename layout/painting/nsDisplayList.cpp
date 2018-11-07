@@ -9860,6 +9860,10 @@ nsDisplayMasksAndClipPaths::GetLayerState(nsDisplayListBuilder* aBuilder,
 bool
 nsDisplayMasksAndClipPaths::CanPaintOnMaskLayer(LayerManager* aManager)
 {
+  if (!aManager->IsWidgetLayerManager()) {
+    return false;
+  }
+
   if (!nsSVGIntegrationUtils::IsMaskResourceReady(mFrame)) {
     return false;
   }
