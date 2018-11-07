@@ -5,6 +5,7 @@
 // @flow
 
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 
 import { times, zip, flatten } from "lodash";
 
@@ -23,7 +24,8 @@ type Props = { func: FunctionType };
 
 export default class PreviewFunction extends Component<Props> {
   renderFunctionName(func: FunctionType) {
-    const name = formatDisplayName(func);
+    const { l10n } = this.context;
+    const name = formatDisplayName(func, undefined, l10n);
     return <span className="function-name">{name}</span>;
   }
 
@@ -56,3 +58,5 @@ export default class PreviewFunction extends Component<Props> {
     );
   }
 }
+
+PreviewFunction.contextTypes = { l10n: PropTypes.object };

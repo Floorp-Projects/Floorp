@@ -7,6 +7,7 @@
 import { BinaryReader } from "wasmparser/dist/WasmParser";
 import { WasmDisassembler, NameSectionReader } from "wasmparser/dist/WasmDis";
 
+import type { WasmSource } from "../types";
 type WasmState = {
   lines: Array<number>,
   offsets: Array<number>
@@ -137,17 +138,29 @@ export function clearWasmStates() {
   wasmStates = (Object.create(null): any);
 }
 
-export function renderWasmText(sourceId: string, { binary }: any) {
+const wasmLines: WeakMap<WasmSource, string[]> = new WeakMap();
+export function renderWasmText(source: WasmSource): string[] {
+  if (wasmLines.has(source)) {
+    return wasmLines.get(source) || [];
+  }
+
+  if (!source.text) {
+    return [];
+  }
+
   // binary does not survive as Uint8Array, converting from string
+  const { binary } = source.text;
   const data = new Uint8Array(binary.length);
   for (let i = 0; i < data.length; i++) {
     data[i] = binary.charCodeAt(i);
   }
-  const { lines } = getWasmText(sourceId, data);
+  const { lines } = getWasmText(source.id, data);
   const MAX_LINES = 1000000;
   if (lines.length > MAX_LINES) {
     lines.splice(MAX_LINES, lines.length - MAX_LINES);
     lines.push(";; .... text is truncated due to the size");
   }
+
+  wasmLines.set(source, lines);
   return lines;
 }

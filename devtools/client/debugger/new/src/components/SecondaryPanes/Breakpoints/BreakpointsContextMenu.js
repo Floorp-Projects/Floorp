@@ -89,7 +89,7 @@ export default function showContextMenu(props) {
     label: deleteSelfLabel,
     accesskey: deleteSelfKey,
     disabled: false,
-    click: () => removeBreakpoint(breakpoint.location)
+    click: () => removeBreakpoint(breakpoint.selectedLocation)
   };
 
   const deleteAllItem = {
@@ -113,7 +113,7 @@ export default function showContextMenu(props) {
     label: enableSelfLabel,
     accesskey: enableSelfKey,
     disabled: false,
-    click: () => toggleDisabledBreakpoint(breakpoint.location.line)
+    click: () => toggleDisabledBreakpoint(breakpoint.selectedLocation.line)
   };
 
   const enableAllItem = {
@@ -137,7 +137,7 @@ export default function showContextMenu(props) {
     label: disableSelfLabel,
     accesskey: disableSelfKey,
     disabled: false,
-    click: () => toggleDisabledBreakpoint(breakpoint.location.line)
+    click: () => toggleDisabledBreakpoint(breakpoint.selectedLocation.line)
   };
 
   const disableAllItem = {
@@ -160,7 +160,7 @@ export default function showContextMenu(props) {
     label: removeConditionLabel,
     accesskey: removeConditionKey,
     disabled: false,
-    click: () => setBreakpointCondition(breakpoint.location)
+    click: () => setBreakpointCondition(breakpoint.selectedLocation)
   };
 
   const addConditionItem = {
@@ -168,8 +168,8 @@ export default function showContextMenu(props) {
     label: addConditionLabel,
     accesskey: addConditionKey,
     click: () => {
-      selectSpecificLocation(breakpoint.location);
-      openConditionalPanel(breakpoint.location.line);
+      selectSpecificLocation(breakpoint.selectedLocation);
+      openConditionalPanel(breakpoint.selectedLocation.line);
     }
   };
 
@@ -178,8 +178,8 @@ export default function showContextMenu(props) {
     label: editConditionLabel,
     accesskey: editConditionKey,
     click: () => {
-      selectSpecificLocation(breakpoint.location);
-      openConditionalPanel(breakpoint.location.line);
+      selectSpecificLocation(breakpoint.selectedLocation);
+      openConditionalPanel(breakpoint.selectedLocation.line);
     }
   };
 
