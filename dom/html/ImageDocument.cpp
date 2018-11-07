@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageDocument.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
@@ -161,6 +162,8 @@ ImageDocument::ImageDocument()
   , mShouldResize(false)
   , mFirstResize(false)
   , mObservingImageLoader(false)
+  , mTitleUpdateInProgress(false)
+  , mHasCustomTitle(false)
   , mOriginalZoomLevel(1.0)
 #if defined(MOZ_WIDGET_ANDROID)
   , mOriginalResolution(1.0)
@@ -519,6 +522,17 @@ ImageDocument::DOMToggleImageSize()
   return NS_OK;
 }
 
+void
+ImageDocument::NotifyPossibleTitleChange(bool aBoundTitleElement)
+{
+  if (!mHasCustomTitle && !mTitleUpdateInProgress) {
+    mHasCustomTitle = true;
+  }
+
+  nsIDocument::NotifyPossibleTitleChange(aBoundTitleElement);
+}
+
+
 NS_IMETHODIMP
 ImageDocument::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData)
 {
@@ -793,6 +807,13 @@ ImageDocument::CheckOverflowing(bool changeState)
 void
 ImageDocument::UpdateTitleAndCharset()
 {
+  if (mHasCustomTitle) {
+    return;
+  }
+
+  AutoRestore<bool> restore(mTitleUpdateInProgress);
+  mTitleUpdateInProgress = true;
+
   nsAutoCString typeStr;
   nsCOMPtr<imgIRequest> imageRequest;
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
