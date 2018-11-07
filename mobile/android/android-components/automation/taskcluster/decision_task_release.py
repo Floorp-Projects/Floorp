@@ -14,7 +14,7 @@ import re
 import subprocess
 import taskcluster
 
-import lib.artifacts
+import lib.module_definitions
 import lib.tasks
 
 TASK_ID = os.environ.get('TASK_ID')
@@ -108,7 +108,7 @@ def release(version):
     queue = taskcluster.Queue({'baseUrl': 'http://taskcluster/queue/v1'})
 
     task_graph = {}
-    artifacts_info = lib.artifacts.from_gradle()
+    artifacts_info = lib.module_definitions.from_gradle()
 
     build_task_id, build_task = generate_build_task(version, artifacts_info)
     lib.tasks.schedule_task(queue, build_task_id, build_task)

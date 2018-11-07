@@ -15,8 +15,8 @@ def from_gradle():
         print "Gradle command returned error:", exit_code
 
     gradle_modules = json.loads(output)
-    return map(lambda module: {
-        'name': module['name'][1:],
-        'artifact': 'public/build/' + module['name'][1:].replace('-', '.', 1) + '.maven.zip',
-        'path': module['buildPath'] + '/target.maven.zip'
-    }, gradle_modules)
+    return [{
+        'name': module['name'][1:],  # Gradle prefixes all module names with ":", e.g.: ":browser-awesomebar"
+        'artifact': "public/build/{}.maven.zip".format(module['name'][1:]),
+        'path': "{}/target.maven.zip".format(module['buildPath'])
+    } for module in gradle_modules]
