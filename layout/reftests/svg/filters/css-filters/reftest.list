@@ -5,7 +5,7 @@ fuzzy-if(webrender,9-9,4780-5120) == blur.html blur-ref.html
 == blur.svg blur-ref.svg
 == blur-calc.html blur-calc-ref.html
 == blur-calc-negative.html blur-calc-negative-ref.html
-fuzzy-if(cocoaWidget&&webrender,1-1,1-1) skip-if(d2d) == blur-cap-large-radius-on-software.html blur-cap-large-radius-on-software-ref.html
+fuzzy-if(cocoaWidget&&webrender,0-1,0-1) skip-if(d2d) == blur-cap-large-radius-on-software.html blur-cap-large-radius-on-software-ref.html
 fuzzy-if(webrender,9-9,4780-5120) == blur-em-radius.html blur-em-radius-ref.html
 == blur-invalid-radius.html blur-invalid-radius-ref.html
 fuzzy-if(webrender,9-9,4780-5120) == blur-rem-radius.html blur-rem-radius-ref.html
