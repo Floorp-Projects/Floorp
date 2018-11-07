@@ -14,7 +14,6 @@ namespace layers {
 
 AnimationInfo::AnimationInfo() :
   mCompositorAnimationsId(0),
-  mAnimationGeneration(0),
   mMutated(false)
 {
 }
@@ -172,7 +171,7 @@ AnimationInfo::GetGenerationFromFrame(nsIFrame* aFrame,
   layers::Layer* layer =
     FrameLayerBuilder::GetDedicatedLayer(aFrame, aDisplayItemKey);
   if (layer) {
-    return Some(layer->GetAnimationInfo().GetAnimationGeneration());
+    return layer->GetAnimationInfo().GetAnimationGeneration();
   }
 
   // In case of continuation, KeyframeEffectReadOnly uses its first frame,
@@ -184,7 +183,7 @@ AnimationInfo::GetGenerationFromFrame(nsIFrame* aFrame,
   RefPtr<WebRenderAnimationData> animationData =
       GetWebRenderUserData<WebRenderAnimationData>(aFrame, (uint32_t)aDisplayItemKey);
   if (animationData) {
-    return Some(animationData->GetAnimationInfo().GetAnimationGeneration());
+    return animationData->GetAnimationInfo().GetAnimationGeneration();
   }
 
   return Nothing();

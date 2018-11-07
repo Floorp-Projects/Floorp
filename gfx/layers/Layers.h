@@ -1379,7 +1379,10 @@ public:
   uint64_t GetCompositorAnimationsId() { return mAnimationInfo.GetCompositorAnimationsId(); }
   InfallibleTArray<AnimData>& GetAnimationData();
 
-  uint64_t GetAnimationGeneration() { return mAnimationInfo.GetAnimationGeneration(); }
+  Maybe<uint64_t> GetAnimationGeneration()
+  {
+    return mAnimationInfo.GetAnimationGeneration();
+  }
 
   bool HasTransformAnimation() const;
 
