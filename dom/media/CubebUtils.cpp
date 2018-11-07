@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "CubebDeviceEnumerator.h"
 #include "CubebUtils.h"
 
 #include "MediaInfo.h"
@@ -606,6 +607,9 @@ void ShutdownLibrary()
 {
   Preferences::UnregisterCallbacks(PrefChanged, gInitCallbackPrefs);
   Preferences::UnregisterCallbacks(PrefChanged, gCallbackPrefs);
+
+  // This must be done before cubeb destroy.
+  CubebDeviceEnumerator::Shutdown();
 
   StaticMutexAutoLock lock(sMutex);
   if (sCubebContext) {
