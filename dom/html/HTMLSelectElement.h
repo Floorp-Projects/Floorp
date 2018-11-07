@@ -391,7 +391,7 @@ public:
   void SetPreviewValue(const nsAString& aValue);
 
 protected:
-  virtual ~HTMLSelectElement();
+  virtual ~HTMLSelectElement() = default;
 
   friend class SafeOptionListMutation;
 
