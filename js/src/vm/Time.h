@@ -180,7 +180,7 @@ static inline mozilla::TimeStamp
 ReallyNow()
 {
     mozilla::recordreplay::AutoPassThroughThreadEvents pt;
-    return mozilla::TimeStamp::Now();
+    return mozilla::TimeStamp::NowUnfuzzed();
 }
 
 } // namespace js
