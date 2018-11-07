@@ -354,6 +354,7 @@ opaque-types = [
     "mozilla::Pair_Base",
     "mozilla::SeenPtrs",
     "mozilla::SupportsWeakPtr",
+    "mozilla::Tuple",
     "SupportsWeakPtr",
     "mozilla::detail::WeakReference",
     "mozilla::WeakPtr",
