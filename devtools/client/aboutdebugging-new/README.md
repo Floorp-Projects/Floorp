@@ -1,61 +1,25 @@
-# about:debugging-new architecture document
+# about:debugging-new
 
-## document purpose
-The purpose of this document is to explain how the new about:debugging UI is built using React and Redux. It should serve both as a documentation resource and as a technical specification. Changes impacting the architecture should preferably be discussed and reflected here before implementation.
+## What is about:debugging-new
+The purpose of about:debugging is to be a debugging hub to start inspecting your addons, processes, tabs and workers. This new version of about:debugging will also allow you to debug remote devices (Firefox for Android on a smartphone). The user should be able to connect either via USB or WiFi. This solution is supposed to replace the various existing remote debugging solutions available in Firefox DevTools, WebIDE and the Connect page.
 
-## high level architecture
-about:debugging-new is an "about" page registered via a component manifest that is located in `/devtools/startup/aboutdebugging.manifest`. The component registration code is at `/devtools/startup/aboutdebugging-registration.js` and mostly contains the logic to switch between the old and the new about:debugging UI, based on the value of the preference `devtools.aboutdebugging.new-enabled`.
+To try about:debugging-new, the preference `devtools.aboutdebugging.new-enabled` needs to be set to true in `about:config`. After that, the UI is available by typing `about:debugging` in the Firefox URL bar.
+
+## Technical overview
 
 The about:debugging-new UI is built using React and Redux. The various React/Redux files should be organized as follows:
 - devtools/client/aboutdebugging-new/src/actions
-- devtools/client/aboutdebugging-new/src/components (js and css)
+- devtools/client/aboutdebugging-new/src/components
 - devtools/client/aboutdebugging-new/src/middleware
 - devtools/client/aboutdebugging-new/src/reducers
 
-### actions
+The folder `devtools/client/aboutdebugging-new/src/modules` contains various helpers and classes that are not related to React/Redux. For instance modules/usb-runtimes.js provides an abstraction layer to enable USB runtimes scanning, to list USB runtimes etc...
+
+### Firefox Component Registration
+about:debugging-new is an "about" page registered via a component manifest that is located in `/devtools/startup/aboutdebugging.manifest`. The component registration code is at `/devtools/startup/aboutdebugging-registration.js` and mostly contains the logic to switch between the old and the new about:debugging UI, based on the value of the preference `devtools.aboutdebugging.new-enabled`.
+
+### Actions
 Actions should cover all user or external events that change the UI.
-
-#### external actions
-
-##### to be implemented
-  - Runtime information updated
-  - List of devices updated
-  - List of addons/tabs/workers(...) updated
-  - Connection status of device changes
-  - ADBExtension is enabled/disabled/in-progress
-  - WiFi debugging is enabled/disabled/in-progress
-  - Network location list is updated
-
-#### user actions
-
-##### already implemented
-  - sidebar
-   - actions/ui:selectPage returns PAGE_SELECTED action
-
-##### to be implemented
-  - sidebar
-    - Select device (extended version of selectPage)
-    - Connect to device
-    - Cancel connection to device
-  - device page
-    - Disconnect from device
-    - Take screenshot
-    - Toggle collapsible section
-    - Add tab on device
-    - Inspect a debugging target
-  - device page - addon controls
-    - enable addon debugging
-    - Load temporary addon
-    - Reload temporary addon
-    - Remove temporary addon
-  - device page - worker controls
-    - Start worker
-    - Debug worker
-    - Push worker
-    - Unregister worker
-  - connect page
-    - Add network location
-    - Remove network location
 
 #### asynchronous actions
 For asynchronous actions, we will use the thunk middleware, similar to what it done in the webconsole and netmonitor. An asynchronous action should be split in three actions:
@@ -67,57 +31,57 @@ As we will implement asynchronous, we should aim to keep a consistent naming for
 
 A typical usecase for an asynchronous action here would be selecting a runtime. The selection will be immediate but should trigger actions to retrieve tabs, addons, workers etc… which will all be asynchronous.
 
-### components
+### Components
 Components should avoid dealing with specialized objects as much as possible.
 
-They should never use any of the lifecycle methods that will be deprecated in React 17 (componentWillMount, componentWillReceiveProps, and componentWillUpdate).
+They should never use any of the lifecycle methods that will be deprecated in React 17 (`componentWillMount`, `componentWillReceiveProps`, and `componentWillUpdate`).
 
 When it comes to updating the state, components should do it via an action if the result of this action is something that should be preserved when reloading the UI.
 
-### state and reducers
+### Middlewares
+We use several middlewares in the application. The middlewares are required in the create-store module `devtools/client/aboutdebugging-new/src/create-store.js`.
+
+#### thunk
+This is a shared middleware used by other DevTools modules that allows to dispatch actions and allows to create multiple asynchronous actions.
+
+#### debug-target-listener
+This middleware is responsible for monitoring a client. It will add various listeners on the client when receiving the `WATCH_RUNTIME_SUCCESS` action and will remove the listeners when receiving `UNWATCH_RUNTIME_SUCCESS`. Could probably be ported to an action, no real added value as a middleware.
+
+#### error-logging
+This middleware will forward any error object dispatched by an action to the console. Typically, all the `FAILURE` actions of our asynchronous actions should dispatch an error object.
+
+#### extension/tab/worker-component-data
+This middleware takes the raw data of a debugging target returned by the devtools client and transforms it to presentation data that can be used by the debugtarget components. Could probably be ported to an action, no real added value as a middleware.
+
+#### waitUntilService
+This is a shared middleware used by other DevTools modules that allows to wait until a given action is dispatched. We use it in mochitests.
+
+### state
 The state represents the model for the UI of the application.
 
-#### state
-This is a representation of our current state.
+##### ui
+Holds the global state of the application. This can contain generic preferences such as "is feature X enabled" or purely UI related "is category X collapsed".
 
-  ui:
-    - selectedPage: String
+##### runtimes
+Holds the current list of runtimes known by the application as well as the currently selected runtime.
 
-##### to be implemented
-Some ideas of how we could extend the state. Names, properties, values are all up for discussion.
+##### debug-targets
+Holds all the debug targets (ie tabs, addons, workers etc...) for the currently monitored runtime. There is at most one monitored runtime at a given time.
 
-  runtimes: Array of runtimes (only currently detected runtimes)
-  targets: (currently visible targets, only relevant on a device page)
-    - addons: Array of target
-    - processes: Array of target
-    - tabs: Array of target
-    - workers: Array of target
-  config:
-    - adbextension: boolean
-    - wifi: boolean
-    - network-locations: Array of network-location
+### Constants
+Constants can be found at `devtools/client/aboutdebugging-new/src/constants.js`. It contains all the actions available in about:debugging as well as several other "packages" of constants used in the application.
 
-#### types
-Other panels are sometimes relying on a types.js file committed under src, providing types that can be shared and reused in various places of the application.
+If a constant (string, number, etc...) is only used in a single module it can be defined as a `const` in this module. However as soon as the constant is shared by several modules, it should move to `devtools/client/aboutdebugging-new/src/constants.js`.
 
-Example of types.js file:
-  https://searchfox.org/mozilla-central/source/devtools/client/inspector/fonts/types.js
+### Types
+Types can be found at `devtools/client/aboutdebugging-new/src/types.js`. They serve both as documentation as well as validation. We do not aim at having types for every single element of the state, but only for complex objects.
 
-We might follow that kind of approach when we need to reuse similar objects in several components.
+## Contact
+If you have any questions about the code, features, planning, the active team is:
+- engineering: Belén Albeza (:ladybenko)
+- engineering: Daisuke Akatsuka (:daisuke)
+- engineering: Julian Descottes (:jdescottes)
+- engineering management: Soledad Penadés (:sole)
+- product management: Harald Kischner (:digitarald)
 
-Examples of types that we could introduce here:
-  runtime:
-    - type
-    - name
-    - icon
-    - version
-
-  target:
-    - type
-    - name
-    - icon
-    - details
-
-  network-location:
-    - host: String
-    - port: String
+You can find us on [Slack](https://devtools-html-slack.herokuapp.com/) or IRC on #devtools at irc.mozilla.org.
