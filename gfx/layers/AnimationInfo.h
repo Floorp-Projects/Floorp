@@ -44,8 +44,11 @@ public:
   // SetBaseTransformForNextTransaction.)
   Animation* AddAnimationForNextTransaction();
 
-  void SetAnimationGeneration(uint64_t aCount) { mAnimationGeneration = aCount; }
-  uint64_t GetAnimationGeneration() { return mAnimationGeneration; }
+  void SetAnimationGeneration(uint64_t aCount)
+  {
+    mAnimationGeneration = Some(aCount);
+  }
+  Maybe<uint64_t> GetAnimationGeneration() { return mAnimationGeneration; }
 
   // ClearAnimations clears animations on this layer.
   void ClearAnimations();
@@ -76,7 +79,7 @@ protected:
   InfallibleTArray<AnimData> mAnimationData;
   // If this layer is used for OMTA, then this counter is used to ensure we
   // stay in sync with the animation manager
-  uint64_t mAnimationGeneration;
+  Maybe<uint64_t> mAnimationGeneration;
   RefPtr<RawServoAnimationValue> mBaseAnimationStyle;
   bool mMutated;
 };
