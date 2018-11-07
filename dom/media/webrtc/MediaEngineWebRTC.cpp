@@ -185,9 +185,7 @@ MediaEngineWebRTC::EnumerateMicrophoneDevices(uint64_t aWindowId,
 {
   mMutex.AssertCurrentThreadOwns();
 
-  if (!mEnumerator) {
-    mEnumerator.reset(new CubebDeviceEnumerator());
-  }
+  mEnumerator = CubebDeviceEnumerator::GetInstance();
 
   nsTArray<RefPtr<AudioDeviceInfo>> devices;
   mEnumerator->EnumerateAudioInputDevices(devices);
