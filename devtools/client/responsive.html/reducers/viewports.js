@@ -123,10 +123,16 @@ const reducers = {
         return viewport;
       }
 
+      const height = viewport.width;
+      const width = viewport.height;
+
+      Services.prefs.setIntPref(VIEWPORT_WIDTH_PREF, width);
+      Services.prefs.setIntPref(VIEWPORT_HEIGHT_PREF, height);
+
       return {
         ...viewport,
-        height: viewport.width,
-        width: viewport.height,
+        height,
+        width,
       };
     });
   },
