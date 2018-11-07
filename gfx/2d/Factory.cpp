@@ -229,6 +229,7 @@ StaticRefPtr<ID3D11Device> Factory::mD3D11Device;
 StaticRefPtr<ID2D1Device> Factory::mD2D1Device;
 StaticRefPtr<IDWriteFactory> Factory::mDWriteFactory;
 bool Factory::mDWriteFactoryInitialized = false;
+StaticRefPtr<IDWriteFontCollection> Factory::mDWriteSystemFonts;
 StaticMutex Factory::mDeviceLock;
 StaticMutex Factory::mDTDependencyLock;
 #endif
@@ -949,6 +950,30 @@ Factory::EnsureDWriteFactory()
   }
 
   return mDWriteFactory;
+}
+
+RefPtr<IDWriteFontCollection>
+Factory::GetDWriteSystemFonts(bool aUpdate)
+{
+  StaticMutexAutoLock lock(mDeviceLock);
+
+  if (mDWriteSystemFonts && !aUpdate) {
+    return mDWriteSystemFonts;
+  }
+
+  if (!mDWriteFactory) {
+    return nullptr;
+  }
+
+  RefPtr<IDWriteFontCollection> systemFonts;
+  HRESULT hr = mDWriteFactory->GetSystemFontCollection(getter_AddRefs(systemFonts));
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to create DWrite system font collection";
+    return nullptr;
+  }
+  mDWriteSystemFonts = systemFonts;
+
+  return mDWriteSystemFonts;
 }
 
 bool

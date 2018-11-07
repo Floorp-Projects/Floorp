@@ -7,7 +7,6 @@
 
 include LayersSurfaces;
 include protocol PCompositorBridge;
-include protocol PRenderFrame;
 include protocol PTexture;
 
 include "gfxipc/ShadowLayerUtils.h";
