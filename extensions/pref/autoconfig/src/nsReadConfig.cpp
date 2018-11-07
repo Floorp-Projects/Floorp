@@ -65,7 +65,7 @@ static nsresult DisplayError(void)
 
 // nsISupports Implementation
 
-NS_IMPL_ISUPPORTS(nsReadConfig, nsIReadConfig, nsIObserver)
+NS_IMPL_ISUPPORTS(nsReadConfig, nsIObserver)
 
 nsReadConfig::nsReadConfig() :
     mRead(false)
