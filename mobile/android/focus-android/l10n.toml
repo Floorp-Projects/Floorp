@@ -18,6 +18,7 @@ locales = [
   "bs",
   "ca",
   "cak",
+  "co",
   "cs",
   "cy",
   "da",
@@ -67,6 +68,7 @@ locales = [
   "ne-NP",
   "nl",
   "nn-NO",
+  "nv",
   "oc",
   "pa-IN",
   "pai",
@@ -79,6 +81,7 @@ locales = [
   "ru",
   "sk",
   "sl",
+  "sn",
   "sq",
   "sr",
   "su",
@@ -97,6 +100,7 @@ locales = [
   "yua",
   "zam",
   "zh-CN",
+  "zh-HK",
   "zh-TW",
   ]
 [env]
