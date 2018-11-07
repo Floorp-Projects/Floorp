@@ -402,7 +402,7 @@ add_task(async function test_opt_out_persist_prefd_on_add_link() {
 
 add_task(async function test_edit_link() {
   // add an address and card linked to this address
-  let prefilledGuids = await setup([PTU.Addresses.TimBL]);
+  let prefilledGuids = await setup([PTU.Addresses.TimBL, PTU.Addresses.TimBL2]);
   {
     let card = Object.assign({}, PTU.BasicCards.JohnDoe,
                              { billingAddressGUID: prefilledGuids.address1GUID });
@@ -432,7 +432,7 @@ add_task(async function test_edit_link() {
 
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
         return Object.keys(state.savedBasicCards).length == 1 &&
-               Object.keys(state.savedAddresses).length == 1;
+               Object.keys(state.savedAddresses).length == 2;
       }, "Check card and address present at beginning of test");
 
       let title = content.document.querySelector("basic-card-form h2");
@@ -460,12 +460,12 @@ add_task(async function test_edit_link() {
         content.document.querySelector("basic-card-form billing-address-picker"));
 
       let initialSelectedAddressGuid = billingAddressPicker.dropdown.value;
-      is(billingAddressPicker.options.length, 2,
-         "Two options should exist in the billingAddressPicker");
+      is(billingAddressPicker.options.length, 3,
+         "Three options should exist in the billingAddressPicker");
       is(initialSelectedAddressGuid, prefilledGuids.address1GUID,
          "The prefilled billing address should be selected by default");
 
-      info("Test clicking 'add' on the empty option first");
+      info("Test clicking 'add' with the empty option first");
       billingAddressPicker.dropdown.popupBox.focus();
       content.fillField(billingAddressPicker.dropdown.popupBox, "");
 
@@ -487,11 +487,31 @@ add_task(async function test_edit_link() {
       addressBackButton.click();
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "basic-card-page" && state["basic-card-page"].guid &&
-               Object.keys(state.savedAddresses).length == 1;
+               Object.keys(state.savedAddresses).length == 2;
       }, "Check we're back at basic-card page with no state changed after adding");
 
+      info("Inspect a different address and ensure it remains selected when we go back");
+      content.fillField(billingAddressPicker.dropdown.popupBox, prefilledGuids.address2GUID);
+
+      addressEditLink.click();
+      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "address-page" && state["address-page"].guid;
+      }, "Clicking edit button with selected option will go to 'edit' page");
+
+      let countryPicker = content.document.querySelector("address-form #country");
+      is(countryPicker.value, PTU.Addresses.TimBL2.country, "The country value matches");
+
+      addressBackButton.click();
+      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "basic-card-page" && state["basic-card-page"].guid &&
+               Object.keys(state.savedAddresses).length == 2;
+      }, "Check we're back at basic-card page with no state changed after editing");
+
+      is(billingAddressPicker.dropdown.value, prefilledGuids.address2GUID,
+         "The selected billing address is correct");
+
       info("Go back to previously selected option before clicking 'edit' now");
-      billingAddressPicker.dropdown.value = initialSelectedAddressGuid;
+      content.fillField(billingAddressPicker.dropdown.popupBox, initialSelectedAddressGuid);
 
       let selectedOption = billingAddressPicker.dropdown.selectedOption;
       ok(selectedOption && selectedOption.value, "select should have a selected option value");
@@ -511,7 +531,7 @@ add_task(async function test_edit_link() {
       addressBackButton.click();
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "basic-card-page" && state["basic-card-page"].guid &&
-               Object.keys(state.savedAddresses).length == 1;
+               Object.keys(state.savedAddresses).length == 2;
       }, "Check we're back at basic-card page with no state changed after editing");
 
       for (let [key, val] of Object.entries(card)) {
@@ -542,8 +562,8 @@ add_task(async function test_edit_link() {
       content.document.querySelector("address-form button.save-button").click();
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "basic-card-page" && state["basic-card-page"].guid &&
-               Object.keys(state.savedAddresses).length == 1;
-      }, "Check still only one address and we're back on basic-card page");
+               Object.keys(state.savedAddresses).length == 2;
+      }, "Check still only 2 addresses and we're back on basic-card page");
 
       is(Object.values(state.savedAddresses)[0].tel, PTU.Addresses.TimBL.tel.slice(0, -1) + "7",
          "Check that address was edited and saved");
