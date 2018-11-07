@@ -11,7 +11,7 @@ ext.configureVariantDebugLevel = { variant ->
     // The default is 'lines,source,vars', which includes debugging information
     // that is quite large: roughly 500kb for Fennec.  Therefore we remove
     // 'vars' unless we're producing a debug build, where it is useful.
-    if (!'debug'.equals(buildType) || (variant.productFlavors*.name).contains('official')) {
+    if (!'debug'.equals(buildType) || mozconfig.substs.MOZILLA_OFFICIAL) {
         variant.javaCompile.options.debugOptions.debugLevel = 'lines,source'
     }
 }

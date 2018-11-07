@@ -111,6 +111,11 @@ namespace net {
 // for use with TRR implementations themselves
 #define NS_HTTP_DISABLE_TRR (1<<14)
 
+// Allow re-using a spdy/http2 connection with NS_HTTP_ALLOW_KEEPALIVE not set.
+// This is primarily used to allow connection sharing for websockets over http/2
+// without accidentally allowing it for websockets not over http/2
+#define NS_HTTP_ALLOW_SPDY_WITHOUT_KEEPALIVE (1<<15)
+
 //-----------------------------------------------------------------------------
 // some default values
 //-----------------------------------------------------------------------------

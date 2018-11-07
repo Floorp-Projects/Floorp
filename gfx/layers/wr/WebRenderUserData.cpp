@@ -321,7 +321,6 @@ WebRenderFallbackData::SetGeometry(nsAutoPtr<nsDisplayItemGeometry> aGeometry)
 
 WebRenderAnimationData::WebRenderAnimationData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem)
   : WebRenderUserData(aWRManager, aItem)
-  , mAnimationInfo(aWRManager)
 {
 }
 

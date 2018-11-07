@@ -1800,7 +1800,7 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
          LayerAnimationInfo::sRecords) {
     Maybe<uint64_t> generation =
       layers::AnimationInfo::GetGenerationFromFrame(aFrame,
-                                                    layerInfo.mLayerType);
+                                                    layerInfo.mDisplayItemType);
     if (generation && frameGeneration != *generation) {
       // If we have a transform layer bug don't have any transform style, we
       // probably just removed the transform but haven't destroyed the layer
@@ -1821,7 +1821,7 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
       // Note that we *don't* add nsChangeHint_UpdateTransformLayer since if we
       // did, ApplyRenderingChangeToTree would complain that we're updating a
       // transform layer without a transform.
-      if (layerInfo.mLayerType == DisplayItemType::TYPE_TRANSFORM &&
+      if (layerInfo.mDisplayItemType == DisplayItemType::TYPE_TRANSFORM &&
           !aFrame->StyleDisplay()->HasTransformStyle()) {
         // Add all the hints for a removing a transform if they are not already
         // set for this frame.

@@ -562,6 +562,7 @@ SetTreeOwnerAndChromeEventHandlerOnDocshellTree(nsIDocShellTreeItem* aItem,
   }
 }
 
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
 static bool
 CheckDocShellType(mozilla::dom::Element* aOwnerContent,
                   nsIDocShellTreeItem* aDocShell,
@@ -586,6 +587,7 @@ CheckDocShellType(mozilla::dom::Element* aOwnerContent,
 
   return parent && parent->ItemType() == aDocShell->ItemType();
 }
+#endif // defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
 
 /**
  * Hook up a given TreeItem to its tree owner. aItem's type must have already

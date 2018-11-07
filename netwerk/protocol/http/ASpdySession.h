@@ -22,7 +22,7 @@ public:
   virtual ~ASpdySession() = default;
 
   virtual MOZ_MUST_USE bool
-  AddStream(nsAHttpTransaction *, int32_t, bool, nsIInterfaceRequestor *) = 0;
+  AddStream(nsAHttpTransaction *, int32_t, bool, bool, nsIInterfaceRequestor *) = 0;
   virtual bool CanReuse() = 0;
   virtual bool RoomForMoreStreams() = 0;
   virtual PRIntervalTime IdleTime() = 0;
@@ -88,6 +88,7 @@ public:
   }
 
   virtual void SetCleanShutdown(bool) = 0;
+  virtual bool CanAcceptWebsocket() = 0;
 };
 
 typedef bool (*ALPNCallback) (nsISupports *); // nsISSLSocketControl is typical

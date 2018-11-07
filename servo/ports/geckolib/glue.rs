@@ -53,6 +53,7 @@ use style::gecko_bindings::bindings::{RawServoMediaRule, RawServoMediaRuleBorrow
 use style::gecko_bindings::bindings::{RawServoMozDocumentRule, RawServoMozDocumentRuleBorrowed};
 use style::gecko_bindings::bindings::{RawServoNamespaceRule, RawServoNamespaceRuleBorrowed};
 use style::gecko_bindings::bindings::{RawServoPageRule, RawServoPageRuleBorrowed};
+use style::gecko_bindings::bindings::{RawServoQuotesBorrowed, RawServoQuotesStrong};
 use style::gecko_bindings::bindings::{RawServoSelectorListBorrowed, RawServoSelectorListOwned};
 use style::gecko_bindings::bindings::{RawServoSourceSizeListBorrowedOrNull, RawServoSourceSizeListOwned};
 use style::gecko_bindings::bindings::{RawServoStyleSetBorrowed, RawServoStyleSetBorrowedOrNull, RawServoStyleSetOwned};
@@ -113,6 +114,7 @@ use style::gecko_bindings::structs::SeenPtrs;
 use style::gecko_bindings::structs::ServoElementSnapshotTable;
 use style::gecko_bindings::structs::ServoStyleSetSizes;
 use style::gecko_bindings::structs::ServoTraversalFlags;
+use style::gecko_bindings::structs::StyleContentType;
 use style::gecko_bindings::structs::StyleRuleInclusion;
 use style::gecko_bindings::structs::URLExtraData;
 use style::gecko_bindings::structs::gfxFontFeatureValueSet;
@@ -159,7 +161,7 @@ use style::traversal_flags::{self, TraversalFlags};
 use style::use_counters::UseCounters;
 use style::values::{CustomIdent, KeyframesName};
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
-use style::values::computed::{Context, ToComputedValue};
+use style::values::computed::{self, Context, QuotePair, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
 use style::values::generics::rect::Rect;
 use style::values::specified;
@@ -5974,4 +5976,53 @@ pub unsafe extern "C" fn Servo_IsCssPropertyRecordedInUseCounter(
     };
 
     UseCounters::from_ffi(use_counters).non_custom_properties.recorded(non_custom_id)
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_Quotes_GetInitialValue() -> RawServoQuotesStrong {
+    computed::Quotes::get_initial_value().0.clone().into_strong()
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_Quotes_Equal(
+    a: RawServoQuotesBorrowed,
+    b: RawServoQuotesBorrowed,
+) -> bool {
+    let a = Box::<[QuotePair]>::as_arc(&a);
+    let b = Box::<[QuotePair]>::as_arc(&b);
+
+    a == b
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_Quotes_GetQuote(
+    quotes: RawServoQuotesBorrowed,
+    mut depth: i32,
+    quote_type: StyleContentType,
+    result: *mut nsAString,
+) {
+    debug_assert!(depth >= -1);
+
+    let quotes = Box::<[QuotePair]>::as_arc(&quotes);
+
+    // Reuse the last pair when the depth is greater than the number of
+    // pairs of quotes.  (Also make 'quotes: none' and close-quote from
+    // a depth of 0 equivalent for the next test.)
+    if depth >= quotes.len() as i32 {
+        depth = quotes.len() as i32 - 1;
+    }
+
+    if depth == -1 {
+        // close-quote from a depth of 0 or 'quotes: none'
+        return;
+    }
+
+    let quote_pair = &quotes[depth as usize];
+    let quote = if quote_type == StyleContentType::OpenQuote {
+        &quote_pair.opening
+    } else {
+        debug_assert!(quote_type == StyleContentType::CloseQuote);
+        &quote_pair.closing
+    };
+    (*result).write_str(quote).unwrap();
 }

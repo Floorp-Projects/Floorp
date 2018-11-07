@@ -13,21 +13,21 @@ const WindowWatcher = {
 const WindowMediator = {
   getMostRecentWindow(aWindowType) {
     executeSoon(check_status);
-    return { getInterface: ChromeUtils.generateQI([Ci.nsIDOMWindow]) };
+    return null;
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowMediator]),
 };
 
-function run_test() {
+async function run_test() {
   setupTestCommon();
   // Calling do_get_profile prevents an error from being logged
   do_get_profile();
 
-  debugDump("testing that an update download doesn't start when the " +
-            PREF_APP_UPDATE_AUTO + " preference is false");
+  debugDump("testing that an update download doesn't start when the \"update " +
+            "auto\" value is false");
 
-  Services.prefs.setBoolPref(PREF_APP_UPDATE_AUTO, false);
+  await gAUS.setAutoUpdateIsEnabled(false);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, false);
 
   start_httpserver();

@@ -8,6 +8,8 @@
 #define frontend_ParseContext_inl_h
 
 #include "frontend/ParseContext.h"
+#include "frontend/Parser.h"
+#include "vm/JSContext.h"
 
 namespace js {
 namespace frontend {
@@ -24,6 +26,53 @@ inline bool
 ParseContext::Statement::is<ParseContext::ClassStatement>() const
 {
     return kind_ == StatementKind::Class;
+}
+
+template <typename T>
+inline T&
+ParseContext::Statement::as()
+{
+    MOZ_ASSERT(is<T>());
+    return static_cast<T&>(*this);
+}
+
+inline ParseContext::Scope::BindingIter
+ParseContext::Scope::bindings(ParseContext* pc)
+{
+    // In function scopes with parameter expressions, function special names
+    // (like '.this') are declared as vars in the function scope, despite its
+    // not being the var scope.
+    return BindingIter(*this, pc->varScope_ == this || pc->functionScope_.ptrOr(nullptr) == this);
+}
+
+inline
+ParseContext::Scope::Scope(ParserBase* parser)
+  : Nestable<Scope>(&parser->pc->innermostScope_),
+    declared_(parser->context->frontendCollectionPool()),
+    possibleAnnexBFunctionBoxes_(parser->context->frontendCollectionPool()),
+    id_(parser->usedNames.nextScopeId())
+{ }
+
+inline
+ParseContext::Scope::Scope(JSContext* cx, ParseContext* pc, UsedNameTracker& usedNames)
+  : Nestable<Scope>(&pc->innermostScope_),
+    declared_(cx->frontendCollectionPool()),
+    possibleAnnexBFunctionBoxes_(cx->frontendCollectionPool()),
+    id_(usedNames.nextScopeId())
+{ }
+
+inline
+ParseContext::VarScope::VarScope(ParserBase* parser)
+  : Scope(parser)
+{
+    useAsVarScope(parser->pc);
+}
+
+inline
+ParseContext::VarScope::VarScope(JSContext* cx, ParseContext* pc, UsedNameTracker& usedNames)
+  : Scope(cx, pc, usedNames)
+{
+    useAsVarScope(pc);
 }
 
 inline JS::Result<Ok, ParseContext::BreakStatementError>

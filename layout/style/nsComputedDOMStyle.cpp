@@ -1374,53 +1374,6 @@ nsComputedDOMStyle::DoGetTranslate()
 }
 
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetScale()
-{
-  return ReadIndividualTransformValue(StyleDisplay()->mSpecifiedScale,
-    [](const nsCSSValue::Array* aData, nsString& aResult) {
-      switch (nsStyleTransformMatrix::TransformFunctionOf(aData)) {
-        /* scale : <number> */
-        case eCSSKeyword_scalex:
-          MOZ_ASSERT(aData->Count() == 2, "Invalid array!");
-          aResult.AppendFloat(aData->Item(1).GetFloatValue());
-          break;
-        /* scale : <number> <number>*/
-        case eCSSKeyword_scale: {
-          MOZ_ASSERT(aData->Count() == 3, "Invalid array!");
-          aResult.AppendFloat(aData->Item(1).GetFloatValue());
-
-          float sy = aData->Item(2).GetFloatValue();
-          if (sy != 1.) {
-            aResult.AppendLiteral(" ");
-            aResult.AppendFloat(sy);
-          }
-          break;
-        }
-        /* scale : <number> <number> <number> */
-        case eCSSKeyword_scale3d: {
-          MOZ_ASSERT(aData->Count() == 4, "Invalid array!");
-          aResult.AppendFloat(aData->Item(1).GetFloatValue());
-
-          float sy = aData->Item(2).GetFloatValue();
-          float sz = aData->Item(3).GetFloatValue();
-
-          if (sy != 1. || sz != 1.) {
-            aResult.AppendLiteral(" ");
-            aResult.AppendFloat(sy);
-          }
-          if (sz != 1.) {
-            aResult.AppendLiteral(" ");
-            aResult.AppendFloat(sz);
-          }
-          break;
-        }
-        default:
-          MOZ_ASSERT_UNREACHABLE("Unexpected CSS keyword.");
-      }
-    });
-}
-
-already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetRotate()
 {
   return ReadIndividualTransformValue(StyleDisplay()->mSpecifiedRotate,
@@ -1515,37 +1468,6 @@ nsComputedDOMStyle::MatrixToCSSValue(const mozilla::gfx::Matrix4x4& matrix)
 
   val->SetString(resultString);
   return val.forget();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetQuotes()
-{
-  const auto& quotePairs = StyleList()->GetQuotePairs();
-
-  if (quotePairs.IsEmpty()) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetIdent(eCSSKeyword_none);
-    return val.forget();
-  }
-
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-
-  for (const auto& quotePair : quotePairs) {
-    RefPtr<nsROCSSPrimitiveValue> openVal = new nsROCSSPrimitiveValue;
-    RefPtr<nsROCSSPrimitiveValue> closeVal = new nsROCSSPrimitiveValue;
-
-    nsAutoString s;
-    nsStyleUtil::AppendEscapedCSSString(quotePair.first, s);
-    openVal->SetString(s);
-    s.Truncate();
-    nsStyleUtil::AppendEscapedCSSString(quotePair.second, s);
-    closeVal->SetString(s);
-
-    valueList->AppendCSSValue(openVal.forget());
-    valueList->AppendCSSValue(closeVal.forget());
-  }
-
-  return valueList.forget();
 }
 
 already_AddRefed<CSSValue>

@@ -2111,7 +2111,7 @@ LaunchCallbackApp(const NS_tchar *workingDir,
 }
 
 static bool
-WriteStatusFile(const char* aStatus)
+WriteToFile(const NS_tchar* aFilename, const char* aStatus)
 {
   NS_tchar filename[MAXPATHLEN] = {NS_T('\0')};
 #if defined(XP_WIN)
@@ -2122,7 +2122,7 @@ WriteStatusFile(const char* aStatus)
   }
 #else
   NS_tsnprintf(filename, sizeof(filename)/sizeof(filename[0]),
-               NS_T("%s/update.status"), gPatchDirPath);
+               NS_T("%s/%s"), gPatchDirPath, aFilename);
 #endif
 
   // Make sure that the directory for the update status file exists
@@ -2146,13 +2146,19 @@ WriteStatusFile(const char* aStatus)
 #if defined(XP_WIN)
   NS_tchar dstfilename[MAXPATHLEN] = {NS_T('\0')};
   NS_tsnprintf(dstfilename, sizeof(dstfilename)/sizeof(dstfilename[0]),
-               NS_T("%s\\update.status"), gPatchDirPath);
+               NS_T("%s\\%s"), gPatchDirPath, aFilename);
   if (MoveFileExW(filename, dstfilename, MOVEFILE_REPLACE_EXISTING) == 0) {
     return false;
   }
 #endif
 
   return true;
+}
+
+static bool
+WriteStatusFile(const char* aStatus)
+{
+  return WriteToFile(NS_T("update.status"), aStatus);
 }
 
 static void
@@ -2562,7 +2568,6 @@ UpdateThreadFunc(void *param)
         LOG(("Couldn't set access/modification time on application bundle."));
       }
 #endif
-
       LOG(("succeeded"));
     }
     WriteStatusFile(rv);

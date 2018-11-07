@@ -1817,6 +1817,7 @@ pref("network.http.spdy.push-allowance", 131072);   // 128KB
 pref("network.http.spdy.pull-allowance", 12582912); // 12MB
 pref("network.http.spdy.default-concurrent", 100);
 pref("network.http.spdy.default-hpack-buffer", 65536); // 64k
+pref("network.http.spdy.websockets", true);
 
 // alt-svc allows separation of transport routing from
 // the origin host without using a proxy.
@@ -3260,10 +3261,6 @@ pref("dom.ipc.plugins.hangUITimeoutSecs", 11);
 // Minimum time that the plugin hang UI will be displayed
 pref("dom.ipc.plugins.hangUIMinDisplaySecs", 10);
 #endif
-// How long a content process can take before closing its IPC channel
-// after shutdown is initiated.  If the process exceeds the timeout,
-// we fear the worst and kill it.
-pref("dom.ipc.tabs.shutdownTimeoutSecs", 5);
 #else
 // No timeout in leak-checking builds
 pref("dom.ipc.plugins.timeoutSecs", 0);
@@ -3274,7 +3271,6 @@ pref("dom.ipc.plugins.parentTimeoutSecs", 0);
 pref("dom.ipc.plugins.hangUITimeoutSecs", 0);
 pref("dom.ipc.plugins.hangUIMinDisplaySecs", 0);
 #endif
-pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
 #endif
 
 pref("dom.ipc.plugins.flash.disable-protected-mode", false);

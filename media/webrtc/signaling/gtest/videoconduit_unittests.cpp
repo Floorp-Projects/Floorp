@@ -84,9 +84,8 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecs)
   EncodingConstraints constraints;
 
   // Defaults
-  std::vector<VideoCodecConfig *> codecs;
-  VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecs.push_back(&codecConfig);
+  std::vector<UniquePtr<mozilla::VideoCodecConfig>> codecs;
+  codecs.emplace_back(new VideoCodecConfig(120, "VP8", constraints));
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(mCall->mVideoReceiveConfig.decoders.size(), 1U);
@@ -117,8 +116,7 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecs)
 
   // empty codec name
   codecs.clear();
-  VideoCodecConfig codecConfigBadName(120, "", constraints);
-  codecs.push_back(&codecConfigBadName);
+  codecs.emplace_back(new VideoCodecConfig(120, "", constraints));
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitMalformedArgument);
 
@@ -128,8 +126,7 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecs)
   char* longName = new char[longNameLength];
   memset(longName, 'A', longNameLength - 2);
   longName[longNameLength - 1] = 0;
-  VideoCodecConfig codecConfigLongName(120, longName, constraints);
-  codecs.push_back(&codecConfigLongName);
+  codecs.emplace_back(new VideoCodecConfig(120, longName, constraints));
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitMalformedArgument);
   delete[] longName;
@@ -139,15 +136,14 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecsFEC)
 {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  std::vector<VideoCodecConfig *> codecs;
+  std::vector<UniquePtr<mozilla::VideoCodecConfig>> codecs;
 
-  VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecConfig.mFECFbSet = true;
-  codecs.push_back(&codecConfig);
-  VideoCodecConfig codecConfigFEC(1, "ulpfec", constraints);
-  codecs.push_back(&codecConfigFEC);
-  VideoCodecConfig codecConfigRED(2, "red", constraints);
-  codecs.push_back(&codecConfigRED);
+  UniquePtr<VideoCodecConfig> codecConfig(
+      new VideoCodecConfig(120, "VP8", constraints));
+  codecConfig->mFECFbSet = true;
+  codecs.push_back(std::move(codecConfig));
+  codecs.emplace_back(new VideoCodecConfig(1, "ulpfec", constraints));
+  codecs.emplace_back(new VideoCodecConfig(2, "red", constraints));
 
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -174,12 +170,10 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecsH264)
 
   WebrtcGmpPCHandleSetter setter("hi there");
 
-  std::vector<VideoCodecConfig *> codecs;
-  VideoCodecConfig codecConfig(120, "H264", constraints);
-  codecs.push_back(&codecConfig);
-
+  std::vector<UniquePtr<mozilla::VideoCodecConfig>> codecs;
+  codecs.emplace_back(new VideoCodecConfig(120, "H264", constraints));
   // Insert twice to test that only one H264 codec is used at a time
-  codecs.push_back(&codecConfig);
+  codecs.emplace_back(new VideoCodecConfig(120, "H264", constraints));
 
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -203,13 +197,13 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecsKeyframeRequestType)
 {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  std::vector<VideoCodecConfig *> codecs;
+  std::vector<UniquePtr<mozilla::VideoCodecConfig>> codecs;
 
   // PLI should be preferred to FIR
   VideoCodecConfig codecConfig(120, "VP8", constraints);
   codecConfig.mNackFbTypes.push_back("pli");
   codecConfig.mCcmFbTypes.push_back("fir");
-  codecs.push_back(&codecConfig);
+  codecs.emplace_back(new VideoCodecConfig(codecConfig));
 
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -219,7 +213,7 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecsKeyframeRequestType)
   // Just FIR
   codecs.clear();
   codecConfig.mNackFbTypes.clear();
-  codecs.push_back(&codecConfig);
+  codecs.emplace_back(new VideoCodecConfig(codecConfig));
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(mCall->mVideoReceiveConfig.decoders.size(), 1U);
@@ -230,11 +224,11 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecsNack)
 {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  std::vector<VideoCodecConfig *> codecs;
+  std::vector<UniquePtr<mozilla::VideoCodecConfig>> codecs;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
   codecConfig.mNackFbTypes.push_back("");
-  codecs.push_back(&codecConfig);
+  codecs.emplace_back(new VideoCodecConfig(codecConfig));
 
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -258,11 +252,11 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecsRemb)
 {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  std::vector<VideoCodecConfig *> codecs;
+  std::vector<UniquePtr<mozilla::VideoCodecConfig>> codecs;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
   codecConfig.mRembFbSet = true;
-  codecs.push_back(&codecConfig);
+  codecs.emplace_back(new VideoCodecConfig(codecConfig));
 
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -286,11 +280,11 @@ TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecsTmmbr)
 {
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
-  std::vector<VideoCodecConfig *> codecs;
+  std::vector<UniquePtr<mozilla::VideoCodecConfig>> codecs;
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
   codecConfig.mCcmFbTypes.push_back("tmmbr");
-  codecs.push_back(&codecConfig);
+  codecs.emplace_back(new VideoCodecConfig(codecConfig));
 
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -896,13 +890,12 @@ TEST_F(VideoConduitTest, TestReconfigureReceiveMediaCodecs)
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
   VideoCodecConfig::SimulcastEncoding encoding;
-  std::vector<VideoCodecConfig*> codecs;
+  std::vector<UniquePtr<mozilla::VideoCodecConfig>> codecs;
 
   WebrtcGmpPCHandleSetter setter("hi there");
 
   // Defaults
-  VideoCodecConfig codecConfig(120, "VP8", constraints);
-  codecs.push_back(&codecConfig);
+  codecs.emplace_back(new VideoCodecConfig(120, "VP8", constraints));
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(mCall->mVideoReceiveConfig.decoders.size(), 1U);
@@ -924,11 +917,11 @@ TEST_F(VideoConduitTest, TestReconfigureReceiveMediaCodecs)
   codecs.clear();
   VideoCodecConfig codecConfigFecFb(120, "VP8", constraints);
   codecConfigFecFb.mFECFbSet = true;
-  codecs.push_back(&codecConfigFecFb);
+  codecs.emplace_back(new VideoCodecConfig(codecConfigFecFb));
   VideoCodecConfig codecConfigFEC(1, "ulpfec", constraints);
-  codecs.push_back(&codecConfigFEC);
+  codecs.emplace_back(new VideoCodecConfig(codecConfigFEC));
   VideoCodecConfig codecConfigRED(2, "red", constraints);
-  codecs.push_back(&codecConfigRED);
+  codecs.emplace_back(new VideoCodecConfig(codecConfigRED));
 
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -949,8 +942,7 @@ TEST_F(VideoConduitTest, TestReconfigureReceiveMediaCodecs)
 
   // H264
   codecs.clear();
-  VideoCodecConfig codecConfigH264(120, "H264", constraints);
-  codecs.push_back(&codecConfigH264);
+  codecs.emplace_back(new VideoCodecConfig(120, "H264", constraints));
 
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -973,7 +965,7 @@ TEST_F(VideoConduitTest, TestReconfigureReceiveMediaCodecs)
   codecs.clear();
   VideoCodecConfig codecConfigNack(120, "VP8", constraints);
   codecConfigNack.mNackFbTypes.push_back("");
-  codecs.push_back(&codecConfigNack);
+  codecs.emplace_back(new VideoCodecConfig(codecConfigNack));
 
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -996,7 +988,7 @@ TEST_F(VideoConduitTest, TestReconfigureReceiveMediaCodecs)
   codecs.clear();
   VideoCodecConfig codecConfigRemb(120, "VP8", constraints);
   codecConfigRemb.mRembFbSet = true;
-  codecs.push_back(&codecConfigRemb);
+  codecs.emplace_back(new VideoCodecConfig(codecConfigRemb));
 
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -1019,7 +1011,7 @@ TEST_F(VideoConduitTest, TestReconfigureReceiveMediaCodecs)
   codecs.clear();
   VideoCodecConfig codecConfigTmmbr(120, "VP8", constraints);
   codecConfigTmmbr.mCcmFbTypes.push_back("tmmbr");
-  codecs.push_back(&codecConfigTmmbr);
+  codecs.emplace_back(new VideoCodecConfig(codecConfigTmmbr));
 
   ec = mVideoConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);

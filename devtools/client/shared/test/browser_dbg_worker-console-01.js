@@ -28,7 +28,7 @@ add_task(async function testNormalExecution() {
 
   terminateWorkerInTab(tab, WORKER_URL);
   await waitForWorkerClose(workerTargetFront);
-  await gDevTools.closeToolbox(TargetFactory.forWorker(workerTargetFront));
+  await toolbox.destroy();
   await close(client);
   await removeTab(tab);
 });

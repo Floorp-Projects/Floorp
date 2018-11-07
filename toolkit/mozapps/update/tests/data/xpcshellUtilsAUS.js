@@ -2004,6 +2004,9 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
   Assert.equal(status, aExpectedStatus,
                "the update status" + MSG_SHOULD_EQUAL);
 
+  Assert.ok(!updateHasBinaryTransparencyErrorResult(),
+            "binary transparency is not being processed for now");
+
   if (IS_SERVICE_TEST && aCheckSvcLog) {
     let contents = readServiceLogFile();
     Assert.notEqual(contents, svcOriginalLog,
@@ -3091,9 +3094,9 @@ function replaceLogPaths(aLogContents) {
  */
 function checkUpdateLogContents(aCompareLogFile, aStaged = false,
                                 aReplace = false, aExcludeDistDir = false) {
-  if (IS_UNIX && !IS_MACOSX) {
+  if (IS_UNIX) {
     // The order that files are returned when enumerating the file system on
-    // Linux is not deterministic so skip checking the logs.
+    // Linux and Mac is not deterministic so skip checking the logs.
     return;
   }
 

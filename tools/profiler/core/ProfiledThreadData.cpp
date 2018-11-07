@@ -6,6 +6,8 @@
 
 #include "ProfiledThreadData.h"
 
+#include "mozilla/dom/ContentChild.h"
+
 #if defined(GP_OS_darwin)
 #include <pthread.h>
 #endif
@@ -124,6 +126,18 @@ StreamSamplesAndMarkers(const char* aName,
                          XRE_ChildProcessTypeToString(XRE_GetProcessType()));
 
   aWriter.StringProperty("name", aName);
+
+  if (XRE_IsParentProcess()) {
+    aWriter.StringProperty("processName", "Parent Process");
+  } else if (dom::ContentChild* cc = dom::ContentChild::GetSingleton()) {
+    // Try to get the process name from ContentChild.
+    nsAutoCString processName;
+    cc->GetProcessName(processName);
+    if (!processName.IsEmpty()) {
+      aWriter.StringProperty("processName", processName.Data());
+    }
+  }
+
   aWriter.IntProperty("tid", static_cast<int64_t>(aThreadId));
   aWriter.IntProperty("pid", static_cast<int64_t>(getpid()));
 

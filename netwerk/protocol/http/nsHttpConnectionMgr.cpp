@@ -1546,7 +1546,11 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
     if (!(caps & NS_HTTP_DISALLOW_SPDY) && gHttpHandler->IsSpdyEnabled()) {
         RefPtr<nsHttpConnection> conn = GetSpdyActiveConn(ent);
         if (conn) {
-            if ((caps & NS_HTTP_ALLOW_KEEPALIVE) || !conn->IsExperienced()) {
+            bool websocketCheckOK = trans->IsWebsocketUpgrade() ? conn->CanAcceptWebsocket() : true;
+            if (websocketCheckOK &&
+                ((caps & NS_HTTP_ALLOW_KEEPALIVE) ||
+                 (caps & NS_HTTP_ALLOW_SPDY_WITHOUT_KEEPALIVE) ||
+                 !conn->IsExperienced())) {
                 LOG(("   dispatch to spdy: [conn=%p]\n", conn.get()));
                 trans->RemoveDispatchedAsBlocking();  /* just in case */
                 nsresult rv = DispatchTransaction(ent, trans, conn);
@@ -1910,7 +1914,7 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
         LOG(("  ProcessNewTransaction %p tied to h2 session push %p\n",
              trans, pushedStream->Session()));
         return pushedStream->Session()->
-            AddStream(trans, trans->Priority(), false, nullptr) ?
+            AddStream(trans, trans->Priority(), false, false, nullptr) ?
             NS_OK : NS_ERROR_UNEXPECTED;
     }
 

@@ -14,3 +14,7 @@
   outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
 }
+
+.tracking-protection-button > .button-box > .button-icon {
+  margin-inline-end: 5px;
+}

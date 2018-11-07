@@ -9,7 +9,8 @@
 
 #include "signaling/src/jsep/JsepCodecDescription.h"
 #include "signaling/src/common/EncodingConstraints.h"
-#include "signaling/src/common/PtrVector.h"
+
+#include <vector>
 
 namespace mozilla {
 // Represents a single encoding of a media track. When simulcast is used, there
@@ -24,24 +25,24 @@ public:
     mConstraints(orig.mConstraints),
     mRid(orig.mRid)
   {
-    for (const JsepCodecDescription* codec : orig.mCodecs.values) {
-      mCodecs.values.push_back(codec->Clone());
+    for (const auto& codec : orig.mCodecs) {
+      mCodecs.emplace_back(codec->Clone());
     }
   }
 
-  const std::vector<JsepCodecDescription*>& GetCodecs() const
+  const std::vector<UniquePtr<JsepCodecDescription>>& GetCodecs() const
   {
-    return mCodecs.values;
+    return mCodecs;
   }
 
   void AddCodec(const JsepCodecDescription& codec)
   {
-    mCodecs.values.push_back(codec.Clone());
+    mCodecs.emplace_back(codec.Clone());
   }
 
   bool HasFormat(const std::string& format) const
   {
-    for (const JsepCodecDescription* codec : mCodecs.values) {
+    for (const auto& codec : mCodecs) {
       if (codec->mDefaultPt == format) {
         return true;
       }
@@ -53,7 +54,7 @@ public:
   std::string mRid;
 
 private:
-  PtrVector<JsepCodecDescription> mCodecs;
+  std::vector<UniquePtr<JsepCodecDescription>> mCodecs;
 };
 }
 

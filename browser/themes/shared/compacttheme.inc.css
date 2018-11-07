@@ -7,7 +7,6 @@
    there are overrides for each platform in their compacttheme.css files. */
 
 :root:-moz-lwtheme {
-  --toolbar-color: var(--lwt-text-color);
   --toolbar-non-lwt-bgcolor: var(--toolbar-bgcolor);
   --toolbar-non-lwt-textcolor: var(--lwt-text-color);
   --toolbar-non-lwt-bgimage: none;

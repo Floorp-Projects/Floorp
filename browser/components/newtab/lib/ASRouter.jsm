@@ -561,7 +561,7 @@ class _ASRouter {
     try {
       evaluationStatus = {result: await ASRouterTargeting.isMatch(expression, context), success: true};
     } catch (e) {
-      evaluationStatus = {result: e, success: false};
+      evaluationStatus = {result: e.message, success: false};
     }
 
     channel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "ADMIN_SET_STATE", data: {...this.state, evaluationStatus}});

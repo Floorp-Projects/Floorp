@@ -667,10 +667,6 @@ nsCSSShadowArray* Gecko_NewCSSShadowArray(uint32_t len);
 
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSShadowArray, CSSShadowArray);
 
-nsStyleQuoteValues* Gecko_NewStyleQuoteValues(uint32_t len);
-
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleQuoteValues, QuoteValues);
-
 nsCSSValueSharedList* Gecko_NewCSSValueSharedList(uint32_t len);
 nsCSSValueSharedList* Gecko_NewNoneTransform();
 

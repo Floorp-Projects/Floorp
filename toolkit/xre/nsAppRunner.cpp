@@ -1700,11 +1700,16 @@ StartRemoteClient(const char* aDesktopStartupID,
 {
   nsAutoPtr<nsRemoteClient> client;
 
-#if defined(MOZ_ENABLE_DBUS) && defined(MOZ_WAYLAND)
-  client = new DBusRemoteClient();
-#else
-  client = new XRemoteClient();
+  bool useX11Remote = GDK_IS_X11_DISPLAY(gdk_display_get_default());
+
+#if defined(MOZ_ENABLE_DBUS)
+  if (!useX11Remote) {
+    client = new DBusRemoteClient();
+  } else
 #endif
+  {
+    client = new XRemoteClient();
+  }
 
   nsresult rv = client->Init();
   if (NS_FAILED(rv))

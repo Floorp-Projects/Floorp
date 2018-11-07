@@ -1177,6 +1177,15 @@ bool Servo_IsCssPropertyRecordedInUseCounter(
   const nsACString* property,
   bool* out_known_prop);
 
+RawServoQuotesStrong Servo_Quotes_GetInitialValue();
+bool Servo_Quotes_Equal(RawServoQuotesBorrowed a, RawServoQuotesBorrowed b);
+
+void Servo_Quotes_GetQuote(
+    RawServoQuotesBorrowed quotes,
+    int32_t depth,
+    mozilla::StyleContentType quote_type,
+    nsAString* result);
+
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)              \
   void Servo_##name_##_AddRef(type_##Borrowed);   \

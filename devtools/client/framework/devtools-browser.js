@@ -214,7 +214,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
           toolbox.hostType == Toolbox.HostType.WINDOW) {
         toolbox.raise();
       } else {
-        gDevTools.closeToolbox(target);
+        toolbox.destroy();
       }
       gDevTools.emit("select-tool-command", toolId);
     } else {

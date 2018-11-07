@@ -12,60 +12,65 @@ async function callRequestStorageAccess(callback) {
   let dwu = SpecialPowers.getDOMWindowUtils(window);
   let helper = dwu.setHandlingUserInput(true);
 
+  let origin = new URL(location.href).origin;
+
   let success = true;
   // We only grant storage exceptions when the reject tracker behavior is enabled.
   let rejectTrackers = SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior") ==
                          SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER &&
                        !isOnContentBlockingAllowList();
-  if (rejectTrackers) {
-    let p;
-    let threw = false;
-    try {
-      p = document.requestStorageAccess();
-    } catch (e) {
-      threw = true;
-    } finally {
-      helper.destruct();
-    }
-    ok(!threw, "requestStorageAccess should not throw");
-    try {
-      if (callback) {
-        await p.then(_ => callback(dwu));
-      } else {
-        await p;
+  // With another-tracking.example.net, we're same-eTLD+1, so the first try succeeds.
+  if (origin != "https://another-tracking.example.net") {
+    if (rejectTrackers) {
+      let p;
+      let threw = false;
+      try {
+        p = document.requestStorageAccess();
+      } catch (e) {
+        threw = true;
+      } finally {
+        helper.destruct();
       }
-    } catch (e) {
-      success = false;
-    }
-    ok(!success, "Should not have worked without user interaction");
-
-    await noStorageAccessInitially();
-
-    await interactWithTracker();
-
-    helper = dwu.setHandlingUserInput(true);
-  }
-  if (SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior") ==
-        SpecialPowers.Ci.nsICookieService.BEHAVIOR_ACCEPT &&
-      !isOnContentBlockingAllowList()) {
-    try {
-      if (callback) {
-        await document.requestStorageAccess().then(_ => callback(dwu));
-      } else {
-        await document.requestStorageAccess();
+      ok(!threw, "requestStorageAccess should not throw");
+      try {
+        if (callback) {
+          await p.then(_ => callback(dwu));
+        } else {
+          await p;
+        }
+      } catch (e) {
+        success = false;
       }
-    } catch (e) {
-      success = false;
-    } finally {
-      helper.destruct();
+      ok(!success, "Should not have worked without user interaction");
+
+      await noStorageAccessInitially();
+
+      await interactWithTracker();
+
+      helper = dwu.setHandlingUserInput(true);
     }
-    ok(success, "Should not have thrown");
+    if (SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior") ==
+          SpecialPowers.Ci.nsICookieService.BEHAVIOR_ACCEPT &&
+        !isOnContentBlockingAllowList()) {
+      try {
+        if (callback) {
+          await document.requestStorageAccess().then(_ => callback(dwu));
+        } else {
+          await document.requestStorageAccess();
+        }
+      } catch (e) {
+        success = false;
+      } finally {
+        helper.destruct();
+      }
+      ok(success, "Should not have thrown");
 
-    await hasStorageAccessInitially();
+      await hasStorageAccessInitially();
 
-    await interactWithTracker();
+      await interactWithTracker();
 
-    helper = dwu.setHandlingUserInput(true);
+      helper = dwu.setHandlingUserInput(true);
+    }
   }
 
   let p;
@@ -92,7 +97,8 @@ async function callRequestStorageAccess(callback) {
   let hasAccess = await document.hasStorageAccess();
   is(hasAccess, success,
      "Should " + (success ? "" : "not ") + "have storage access now");
-  if (success && rejectTrackers) {
+  if (success && rejectTrackers &&
+      origin != "https://another-tracking.example.net") {
     // Wait until the permission is visible in our process to avoid race
     // conditions.
     await waitUntilPermission("http://example.net/browser/toolkit/components/antitracking/test/browser/page.html",

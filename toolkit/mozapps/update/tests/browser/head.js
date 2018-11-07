@@ -44,6 +44,8 @@ const NOTIFICATIONS = [
   "update-restart",
 ];
 
+let gOriginalUpdateAutoValue = null;
+
 /**
  * Delay for a very short period. Useful for moving the code after this
  * to the back of the event loop.
@@ -90,6 +92,27 @@ function setUpdateTimerPrefs() {
   Services.prefs.setIntPref(PREF_APP_UPDATE_LASTUPDATETIME, now);
   Services.prefs.setIntPref(PREF_APP_UPDATE_INTERVAL, 43200);
 }
+
+/*
+ * In addition to changing the value of the Auto Update setting, this function
+ * also takes care of cleaning up after itself.
+ */
+async function setAutoUpdateIsEnabled(enabled) {
+  if (gOriginalUpdateAutoValue == null) {
+    gOriginalUpdateAutoValue = await gAUS.getAutoUpdateIsEnabled();
+    registerCleanupFunction(async () => {
+      await gAUS.setAutoUpdateIsEnabled(gOriginalUpdateAutoValue);
+    });
+  }
+  await gAUS.setAutoUpdateIsEnabled(enabled);
+}
+
+
+add_task(async function setDefaults() {
+  // Most tests in this directory expect auto update to be enabled. Those that
+  // don't will explicitly change this.
+  await setAutoUpdateIsEnabled(true);
+});
 
 /**
  * Runs a typical update test. Will set various common prefs for using the

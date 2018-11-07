@@ -2560,7 +2560,10 @@ nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
 
   RefPtr<ContainerLayer> root;
   {
-    AUTO_PROFILER_TRACING("Paint", "LayerBuilding");
+#ifdef MOZ_GECKO_PROFILER
+    nsCOMPtr<nsIDocShell> docShell = presContext->GetDocShell();
+    AUTO_PROFILER_TRACING_DOCSHELL("Paint", "LayerBuilding", docShell);
+#endif
 
     if (XRE_IsContentProcess() && gfxPrefs::AlwaysPaint()) {
       FrameLayerBuilder::InvalidateAllLayers(aLayerManager);
