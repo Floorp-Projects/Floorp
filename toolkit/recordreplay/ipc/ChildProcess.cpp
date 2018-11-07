@@ -40,6 +40,8 @@ ChildProcessInfo::ChildProcessInfo(UniquePtr<ChildRole> aRole,
   , mNumRecoveredMessages(0)
   , mRole(std::move(aRole))
   , mPauseNeeded(false)
+  , mHasBegunFatalError(false)
+  , mHasFatalError(false)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -199,7 +201,11 @@ ChildProcessInfo::OnIncomingMessage(size_t aChannelId, const Message& aMsg)
   }
 
   // Always handle fatal errors in the same way.
-  if (aMsg.mType == MessageType::FatalError) {
+  if (aMsg.mType == MessageType::BeginFatalError) {
+    mHasBegunFatalError = true;
+    return;
+  } else if (aMsg.mType == MessageType::FatalError) {
+    mHasFatalError = true;
     const FatalErrorMessage& nmsg = static_cast<const FatalErrorMessage&>(aMsg);
     OnCrash(nmsg.Error());
     return;
@@ -527,12 +533,23 @@ ChildProcessInfo::OnCrash(const char* aWhy)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  // If a child process crashes or hangs then annotate the crash report and
-  // shut down cleanly so that we don't mask the report with our own crash.
-  // We want the crash to happen quickly so the user doesn't get a hanged tab.
+  // If a child process crashes or hangs then annotate the crash report.
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RecordReplayError,
                                      nsAutoCString(aWhy));
-  Shutdown();
+
+  // If we received a FatalError message then the child generated a minidump.
+  // Shut down cleanly so that we don't mask the report with our own crash.
+  if (mHasFatalError) {
+    Shutdown();
+  }
+
+  // Indicate when we crash if the child tried to send us a fatal error message
+  // but had a problem either unprotecting system memory or generating the
+  // minidump.
+  MOZ_RELEASE_ASSERT(!mHasBegunFatalError);
+
+  // The child crashed without producing a minidump, produce one ourselves.
+  MOZ_CRASH("Unexpected child crash");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -613,7 +630,7 @@ ChildProcessInfo::WaitUntil(const std::function<bool()>& aCallback)
             sentTerminateMessage = true;
           } else {
             // The child is still non-responsive after sending the terminate
-            // message, fail without producing a minidump.
+            // message.
             OnCrash("Child process non-responsive");
           }
         }

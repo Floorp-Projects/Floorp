@@ -1079,6 +1079,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(layers::LayersBackend aCompos
   , mIsCapturedFrameInvalid(false)
   , mPathTransformWillUpdate(false)
   , mInvalidateCount(0)
+  , mWriteOnly(false)
 {
   if (!sMaxContextsInitialized) {
     sMaxContexts = gfxPrefs::CanvasAzureAcceleratedLimit();
@@ -2565,7 +2566,8 @@ CanvasRenderingContext2D::CreatePattern(const CanvasImageSource& aSource,
     // nullptr and set CORSUsed to true for passing the security check in
     // CanvasUtils::DoDrawImageSecurityCheck().
     RefPtr<CanvasPattern> pat =
-      new CanvasPattern(this, srcSurf, repeatMode, nullptr, false, true);
+      new CanvasPattern(this, srcSurf, repeatMode, nullptr,
+                        imgBitmap.IsWriteOnly(), true);
 
     return pat.forget();
   }
@@ -4920,12 +4922,20 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return;
     }
+
+    if (canvas->IsWriteOnly()) {
+      SetWriteOnly();
+    }
   } else if (aImage.IsImageBitmap()) {
     ImageBitmap& imageBitmap = aImage.GetAsImageBitmap();
     srcSurf = imageBitmap.PrepareForDrawTarget(mTarget);
 
     if (!srcSurf) {
       return;
+    }
+
+    if (imageBitmap.IsWriteOnly()) {
+      SetWriteOnly();
     }
 
     imgSize = gfx::IntSize(imageBitmap.Width(), imageBitmap.Height());
@@ -5448,7 +5458,8 @@ CanvasRenderingContext2D::GetImageData(JSContext* aCx, double aSx,
 
   // Check only if we have a canvas element; if we were created with a docshell,
   // then it's special internal use.
-  if (mCanvasElement && !mCanvasElement->CallerCanRead(aCx)) {
+  if (IsWriteOnly() ||
+      (mCanvasElement && !mCanvasElement->CallerCanRead(aCx))) {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;

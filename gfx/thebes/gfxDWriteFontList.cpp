@@ -1057,8 +1057,10 @@ gfxDWriteFontList::InitFontListForPlatform()
     mFontSubstitutes.Clear();
     mNonExistingFonts.Clear();
 
-    hr = Factory::GetDWriteFactory()->
-        GetGdiInterop(getter_AddRefs(mGDIInterop));
+    RefPtr<IDWriteFactory> factory =
+        Factory::GetDWriteFactory();
+
+    hr = factory->GetGdiInterop(getter_AddRefs(mGDIInterop));
     if (FAILED(hr)) {
         Telemetry::Accumulate(Telemetry::DWRITEFONT_INIT_PROBLEM,
                               uint32_t(errGDIInterop));
@@ -1067,11 +1069,8 @@ gfxDWriteFontList::InitFontListForPlatform()
 
     QueryPerformanceCounter(&t2); // base-class/interop initialization
 
-    RefPtr<IDWriteFactory> factory =
-        Factory::GetDWriteFactory();
-
-    hr = factory->GetSystemFontCollection(getter_AddRefs(mSystemFonts));
-    NS_ASSERTION(SUCCEEDED(hr), "GetSystemFontCollection failed!");
+    mSystemFonts = Factory::GetDWriteSystemFonts(true);
+    NS_ASSERTION(mSystemFonts != nullptr, "GetSystemFontCollection failed!");
 
     if (FAILED(hr)) {
         Telemetry::Accumulate(Telemetry::DWRITEFONT_INIT_PROBLEM,

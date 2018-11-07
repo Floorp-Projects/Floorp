@@ -8,15 +8,13 @@ with Files('**'):
     BUG_COMPONENT = ('Core', 'Web Painting')
 
 EXPORTS.mozilla.layout += [
-    'RenderFrameChild.h',
-    'RenderFrameParent.h',
+    'RenderFrame.h',
     'VsyncChild.h',
     'VsyncParent.h',
 ]
 
 UNIFIED_SOURCES += [
-    'RenderFrameChild.cpp',
-    'RenderFrameParent.cpp',
+    'RenderFrame.cpp',
 ]
 
 SOURCES += [
@@ -25,7 +23,6 @@ SOURCES += [
 ]
 
 IPDL_SOURCES = [
-    'PRenderFrame.ipdl',
     'PVsync.ipdl',
 ]
 

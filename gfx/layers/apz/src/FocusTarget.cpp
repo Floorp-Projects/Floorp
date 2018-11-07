@@ -9,7 +9,7 @@
 #include "mozilla/dom/EventTarget.h" // for EventTarget
 #include "mozilla/dom/TabParent.h"   // for TabParent
 #include "mozilla/EventDispatcher.h" // for EventDispatcher
-#include "mozilla/layout/RenderFrameParent.h" // For RenderFrameParent
+#include "mozilla/layout/RenderFrame.h" // For RenderFrame
 #include "nsIContentInlines.h" // for nsINode::IsEditable()
 #include "nsIPresShell.h"  // for nsIPresShell
 #include "nsLayoutUtils.h" // for nsLayoutUtils
@@ -166,16 +166,16 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
 
   // Check if the key event target is a remote browser
   if (TabParent* browserParent = TabParent::GetFrom(keyEventTarget)) {
-    RenderFrameParent* rfp = browserParent->GetRenderFrame();
+    RenderFrame* rf = browserParent->GetRenderFrame();
 
     // The globally focused element for scrolling is in a remote layer tree
-    if (rfp) {
+    if (rf) {
       FT_LOG("Creating reflayer target with seq=%" PRIu64 ", kl=%d, lt=%" PRIu64 "\n",
              aFocusSequenceNumber,
              mFocusHasKeyEventListeners,
-             rfp->GetLayersId());
+             rf->GetLayersId());
 
-      mData = AsVariant<LayersId>(rfp->GetLayersId());
+      mData = AsVariant<LayersId>(rf->GetLayersId());
       return;
     }
 

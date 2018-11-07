@@ -5478,6 +5478,14 @@ nsGlobalWindowOuter::RevisePopupAbuseLevel(PopupControlState aControl)
       abuse = openOverridden;
   }
 
+  // If this popup is allowed, let's block any other for this event, forcing
+  // openBlocked state.
+  if ((abuse == openAllowed || abuse == openControlled) &&
+      StaticPrefs::dom_block_multiple_popups() &&
+      !PopupWhitelisted()) {
+    nsContentUtils::PushPopupControlState(openBlocked, true);
+  }
+
   return abuse;
 }
 
@@ -5514,7 +5522,7 @@ nsGlobalWindowOuter::FireAbuseEvents(const nsAString &aPopupURL,
     ios->NewURI(NS_ConvertUTF16toUTF8(aPopupURL), nullptr, baseURL,
                 getter_AddRefs(popupURI));
 
-  // fire an event chock full of informative URIs
+  // fire an event block full of informative URIs
   FirePopupBlockedEvent(topDoc, popupURI, aPopupWindowName,
                         aPopupWindowFeatures);
 }

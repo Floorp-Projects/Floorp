@@ -147,7 +147,7 @@ Lock::Find(void* aNativeLock)
         // When diverged from the recording, don't allow uses of locks that are
         // held by idling threads that have not diverged from the recording.
         // This will cause the process to deadlock, so rewind instead.
-        if (lock->mOwner && Thread::GetById(lock->mOwner)->IsIdle()) {
+        if (lock->mOwner && Thread::GetById(lock->mOwner)->ShouldIdle()) {
           ex.reset();
           EnsureNotDivergedFromRecording();
           Unreachable();
