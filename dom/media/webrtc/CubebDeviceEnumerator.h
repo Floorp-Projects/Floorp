@@ -21,10 +21,12 @@ public:
 
   static already_AddRefed<CubebDeviceEnumerator> GetInstance();
   static void Shutdown();
-  // This method returns a list of all the input and output audio devices
-  // available on this machine.
+  // This method returns a list of all the input audio devices
+  // (sources) available on this machine.
   // This method is safe to call from all threads.
   void EnumerateAudioInputDevices(nsTArray<RefPtr<AudioDeviceInfo>>& aOutDevices);
+  // Similar for the audio audio devices (sinks). Also thread safe.
+  void EnumerateAudioOutputDevices(nsTArray<RefPtr<AudioDeviceInfo>>& aOutDevices);
   // From a cubeb device id, return the info for this device, if it's still a
   // valid id, or nullptr otherwise.
   // This method is safe to call from any thread.
@@ -34,22 +36,29 @@ public:
 private:
   CubebDeviceEnumerator();
   ~CubebDeviceEnumerator();
-  // Static function called by cubeb when the audio input device list changes
+  // Static functions called by cubeb when the audio device list changes
   // (i.e. when a new device is made available, or non-available). This
-  // re-binds to the MediaEngineWebRTC that instantiated this
-  // CubebDeviceEnumerator, and simply calls `AudioDeviceListChanged` below.
-  static void AudioDeviceListChanged_s(cubeb* aContext, void* aUser);
+  // simply calls `AudioDeviceListChanged` below.
+  static void InputAudioDeviceListChanged_s(cubeb* aContext, void* aUser);
+  static void OutputAudioDeviceListChanged_s(cubeb* aContext, void* aUser);
+  enum class Side {
+    INPUT,
+    OUTPUT,
+  };
   // Invalidates the cached audio input device list, can be called on any
   // thread.
-  void AudioDeviceListChanged();
-  // Synchronize access to mDevices
+  void AudioDeviceListChanged(Side aSide);
+  void EnumerateAudioDevices(Side aSide);
+  // Synchronize access to mInputDevices and mOutputDevices;
   Mutex mMutex;
-  nsTArray<RefPtr<AudioDeviceInfo>> mDevices;
-  // If mManualInvalidation is true, then it is necessary to query the device
+  nsTArray<RefPtr<AudioDeviceInfo>> mInputDevices;
+  nsTArray<RefPtr<AudioDeviceInfo>> mOutputDevices;
+  // If mManual*Invalidation is true, then it is necessary to query the device
   // list each time instead of relying on automatic invalidation of the cache by
   // cubeb itself. Set in the constructor and then can be access on any thread.
-  bool mManualInvalidation;
-
+  bool mManualInputInvalidation;
+  bool mManualOutputInvalidation;
+  // The singleton instance.
   static StaticRefPtr<CubebDeviceEnumerator> sInstance;
 };
 
