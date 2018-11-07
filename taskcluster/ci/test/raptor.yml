@@ -32,20 +32,20 @@ job-defaults:
                 default:
                     - raptor/linux_config.py
 
-raptor-tp6-firefox:
-    description: "Raptor tp6 on Firefox"
-    try-name: raptor-tp6-firefox
-    treeherder-symbol: Rap(tp6)
+raptor-tp6-1-firefox:
+    description: "Raptor tp6-1 on Firefox"
+    try-name: raptor-tp6-1-firefox
+    treeherder-symbol: Rap(tp6-1)
     run-on-projects: built-projects
     max-run-time: 1800
     mozharness:
         extra-options:
-            - --test=raptor-tp6
+            - --test=raptor-tp6-1
 
-raptor-tp6-chrome:
-    description: "Raptor tp6 on Chrome"
-    try-name: raptor-tp6-chrome
-    treeherder-symbol: Rap-C(tp6)
+raptor-tp6-1-chrome:
+    description: "Raptor tp6-1 on Chrome"
+    try-name: raptor-tp6-1-chrome
+    treeherder-symbol: Rap-C(tp6-1)
     run-on-projects: ['try', 'mozilla-central']
     tier:
         by-test-platform:
@@ -54,7 +54,32 @@ raptor-tp6-chrome:
     max-run-time: 1200
     mozharness:
         extra-options:
-            - --test=raptor-tp6
+            - --test=raptor-tp6-1
+            - --app=chrome
+
+raptor-tp6-2-firefox:
+    description: "Raptor tp6-2 on Firefox"
+    try-name: raptor-tp6-2-firefox
+    treeherder-symbol: Rap(tp6-2)
+    run-on-projects: built-projects
+    max-run-time: 1200
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-2
+
+raptor-tp6-2-chrome:
+    description: "Raptor tp6-2 on Chrome"
+    try-name: raptor-tp6-2-chrome
+    treeherder-symbol: Rap-C(tp6-2)
+    run-on-projects: ['try', 'mozilla-central']
+    tier:
+        by-test-platform:
+            linux64.*: 3
+            default: 2
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-2
             - --app=chrome
 
 raptor-speedometer-firefox:
@@ -180,28 +205,6 @@ raptor-webaudio-chrome:
     mozharness:
         extra-options:
             - --test=raptor-webaudio
-            - --app=chrome
-
-raptor-gdocs-firefox:
-    description: "Raptor gdocs on Firefox"
-    try-name: raptor-gdocs-firefox
-    treeherder-symbol: Rap(gdocs)
-    run-on-projects: built-projects
-    max-run-time: 1200
-    mozharness:
-        extra-options:
-            - --test=raptor-gdocs
-
-raptor-gdocs-chrome:
-    description: "Raptor gdocs on Chrome"
-    try-name: raptor-gdocs-chrome
-    treeherder-symbol: Rap-C(gdocs)
-    run-on-projects: ['try', 'mozilla-central']
-    tier: 2
-    max-run-time: 1800
-    mozharness:
-        extra-options:
-            - --test=raptor-gdocs
             - --app=chrome
 
 raptor-sunspider-firefox:

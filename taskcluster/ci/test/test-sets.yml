@@ -77,24 +77,24 @@ talos:
     # - talos-h2 Bug 1487031 - Disabled for not finding actionable regressions
 
 raptor-firefox:
-    - raptor-tp6-firefox
+    - raptor-tp6-1-firefox
+    - raptor-tp6-2-firefox
     - raptor-speedometer-firefox
     - raptor-stylebench-firefox
     - raptor-motionmark-htmlsuite-firefox
     - raptor-motionmark-animometer-firefox
     - raptor-webaudio-firefox
-    - raptor-gdocs-firefox
     - raptor-sunspider-firefox
     - raptor-wasm-godot-firefox
 
 raptor-chrome:
-    - raptor-tp6-chrome
+    - raptor-tp6-1-chrome
+    - raptor-tp6-2-chrome
     - raptor-speedometer-chrome
     - raptor-stylebench-chrome
     - raptor-motionmark-htmlsuite-chrome
     - raptor-motionmark-animometer-chrome
     - raptor-webaudio-chrome
-    - raptor-gdocs-chrome
     - raptor-sunspider-chrome
     - raptor-wasm-godot-chrome
 
