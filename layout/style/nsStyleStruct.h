@@ -965,10 +965,10 @@ private:
   ((l) == 0) ? 0 : std::max((tpp), (l) / (tpp) * (tpp))
 
 // Returns if the given border style type is visible or not
-static bool IsVisibleBorderStyle(uint8_t aStyle)
+static bool IsVisibleBorderStyle(mozilla::StyleBorderStyle aStyle)
 {
-  return (aStyle != NS_STYLE_BORDER_STYLE_NONE &&
-          aStyle != NS_STYLE_BORDER_STYLE_HIDDEN);
+  return (aStyle != mozilla::StyleBorderStyle::None &&
+          aStyle != mozilla::StyleBorderStyle::Hidden);
 }
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
@@ -1028,13 +1028,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
     return GetComputedBorder().Side(aSide);
   }
 
-  uint8_t GetBorderStyle(mozilla::Side aSide) const
+  mozilla::StyleBorderStyle GetBorderStyle(mozilla::Side aSide) const
   {
     NS_ASSERTION(aSide <= mozilla::eSideLeft, "bad side");
     return mBorderStyle[aSide];
   }
 
-  void SetBorderStyle(mozilla::Side aSide, uint8_t aStyle)
+  void SetBorderStyle(mozilla::Side aSide, mozilla::StyleBorderStyle aStyle)
   {
     NS_ASSERTION(aSide <= mozilla::eSideLeft, "bad side");
     mBorderStyle[aSide] = aStyle;
@@ -1071,7 +1071,7 @@ public:
   mozilla::StyleBoxDecorationBreak mBoxDecorationBreak;
 
 protected:
-  uint8_t       mBorderStyle[4];  // NS_STYLE_BORDER_STYLE_*
+  mozilla::StyleBorderStyle mBorderStyle[4];  // StyleBorderStyle::*
 
 public:
   // the colors to use for a simple border.
@@ -1172,7 +1172,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
   nscoord       mOutlineWidth;
   nscoord       mOutlineOffset;
   mozilla::StyleComplexColor mOutlineColor;
-  uint8_t       mOutlineStyle;  // NS_STYLE_BORDER_STYLE_*
+  mozilla::StyleBorderStyle  mOutlineStyle;  // StyleBorderStyle::*
 
   nscoord GetOutlineWidth() const
   {
@@ -1181,9 +1181,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
 
   bool ShouldPaintOutline() const
   {
-    return mOutlineStyle == NS_STYLE_BORDER_STYLE_AUTO ||
+    return mOutlineStyle == mozilla::StyleBorderStyle::Auto ||
            (GetOutlineWidth() > 0 &&
-            mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE);
+            mOutlineStyle != mozilla::StyleBorderStyle::None);
   }
 
 protected:
@@ -2781,7 +2781,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn
   nsStyleCoord mColumnWidth; // coord, auto
 
   mozilla::StyleComplexColor mColumnRuleColor;
-  uint8_t      mColumnRuleStyle;  // NS_STYLE_BORDER_STYLE_*
+  mozilla::StyleBorderStyle  mColumnRuleStyle;  // StyleborderStyle::*
   mozilla::StyleColumnFill mColumnFill = mozilla::StyleColumnFill::Balance;
   mozilla::StyleColumnSpan mColumnSpan = mozilla::StyleColumnSpan::None;
 

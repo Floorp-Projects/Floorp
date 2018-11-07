@@ -4425,8 +4425,8 @@ struct BCCellBorder
   void Reset(uint32_t aRowIndex, uint32_t aRowSpan);
   nscolor       color;    // border segment color
   BCPixelSize   width;    // border segment width in pixel coordinates !!
-  uint8_t       style;    // border segment style, possible values are defined
-                          // in nsStyleConsts.h as NS_STYLE_BORDER_STYLE_*
+  StyleBorderStyle style; // border segment style, possible values are defined
+                          // in nsStyleConsts.h as StyleBorderStyle::*
   BCBorderOwner owner;    // border segment owner, possible values are defined
                           // in celldata.h. In the cellmap for each border
                           // segment we store the owner and later when
@@ -4442,7 +4442,7 @@ void
 BCCellBorder::Reset(uint32_t aRowIndex,
                     uint32_t aRowSpan)
 {
-  style = NS_STYLE_BORDER_STYLE_NONE;
+  style = StyleBorderStyle::None;
   color = 0;
   width = 0;
   owner = eTableOwner;
@@ -5002,18 +5002,18 @@ BCMapCellIterator::PeekBEnd(BCMapCellInfo& aRefInfo,
   aAjaInfo.SetInfo(nextRow, aColIndex, cellData, this, cellMap);
 }
 
-// Assign priorities to border styles. For example, styleToPriority(NS_STYLE_BORDER_STYLE_SOLID)
-// will return the priority of NS_STYLE_BORDER_STYLE_SOLID.
-static uint8_t styleToPriority[13] = { 0,  // NS_STYLE_BORDER_STYLE_NONE
-                                       2,  // NS_STYLE_BORDER_STYLE_GROOVE
-                                       4,  // NS_STYLE_BORDER_STYLE_RIDGE
-                                       5,  // NS_STYLE_BORDER_STYLE_DOTTED
-                                       6,  // NS_STYLE_BORDER_STYLE_DASHED
-                                       7,  // NS_STYLE_BORDER_STYLE_SOLID
-                                       8,  // NS_STYLE_BORDER_STYLE_DOUBLE
-                                       1,  // NS_STYLE_BORDER_STYLE_INSET
-                                       3,  // NS_STYLE_BORDER_STYLE_OUTSET
-                                       9 };// NS_STYLE_BORDER_STYLE_HIDDEN
+// Assign priorities to border styles. For example, styleToPriority(StyleBorderStyle::Solid)
+// will return the priority of StyleBorderStyle::Solid.
+static uint8_t styleToPriority[13] = { 0,  // StyleBorderStyle::None
+                                       2,  // StyleBorderStyle::Groove
+                                       4,  // StyleBorderStyle::Ridge
+                                       5,  // StyleBorderStyle::Dotted
+                                       6,  // StyleBorderStyle::Dashed
+                                       7,  // StyleBorderStyle::Solid
+                                       8,  // StyleBorderStyle::Double
+                                       1,  // StyleBorderStyle::Inset
+                                       3,  // StyleBorderStyle::Outset
+                                       9 };// StyleBorderStyle::Hidden
 // priority rules follow CSS 2.1 spec
 // 'hidden', 'double', 'solid', 'dashed', 'dotted', 'ridge', 'outset', 'groove',
 // and the lowest: 'inset'. none is even weaker
@@ -5032,7 +5032,7 @@ static void
 GetColorAndStyle(const nsIFrame* aFrame,
                  WritingMode aTableWM,
                  LogicalSide aSide,
-                 uint8_t* aStyle,
+                 StyleBorderStyle* aStyle,
                  nscolor* aColor,
                  BCPixelSize* aWidth = nullptr)
 {
@@ -5049,8 +5049,8 @@ GetColorAndStyle(const nsIFrame* aFrame,
   mozilla::Side physicalSide = aTableWM.PhysicalSide(aSide);
   *aStyle = styleData->GetBorderStyle(physicalSide);
 
-  if ((NS_STYLE_BORDER_STYLE_NONE == *aStyle) ||
-      (NS_STYLE_BORDER_STYLE_HIDDEN == *aStyle)) {
+  if ((StyleBorderStyle::None == *aStyle) ||
+      (StyleBorderStyle::Hidden == *aStyle)) {
     return;
   }
   *aColor = aFrame->Style()->
@@ -5073,14 +5073,14 @@ static void
 GetPaintStyleInfo(const nsIFrame* aFrame,
                   WritingMode aTableWM,
                   LogicalSide aSide,
-                  uint8_t* aStyle,
+                  StyleBorderStyle* aStyle,
                   nscolor* aColor)
 {
   GetColorAndStyle(aFrame, aTableWM, aSide, aStyle, aColor);
-  if (NS_STYLE_BORDER_STYLE_INSET == *aStyle) {
-    *aStyle = NS_STYLE_BORDER_STYLE_RIDGE;
-  } else if (NS_STYLE_BORDER_STYLE_OUTSET == *aStyle) {
-    *aStyle = NS_STYLE_BORDER_STYLE_GROOVE;
+  if (StyleBorderStyle::Inset == *aStyle) {
+    *aStyle = StyleBorderStyle::Ridge;
+  } else if (StyleBorderStyle::Outset == *aStyle) {
+    *aStyle = StyleBorderStyle::Groove;
   }
 }
 
@@ -5151,20 +5151,22 @@ CompareBorders(bool                aIsCorner, // Pass true for corner calculatio
 {
   bool firstDominates = true;
 
-  if (NS_STYLE_BORDER_STYLE_HIDDEN == aBorder1.style) {
+  if (StyleBorderStyle::Hidden == aBorder1.style) {
     firstDominates = (aIsCorner) ? false : true;
   }
-  else if (NS_STYLE_BORDER_STYLE_HIDDEN == aBorder2.style) {
+  else if (StyleBorderStyle::Hidden == aBorder2.style) {
     firstDominates = (aIsCorner) ? true : false;
   }
   else if (aBorder1.width < aBorder2.width) {
     firstDominates = false;
   }
   else if (aBorder1.width == aBorder2.width) {
-    if (styleToPriority[aBorder1.style] < styleToPriority[aBorder2.style]) {
+    if (styleToPriority[static_cast<uint8_t>(aBorder1.style)] <
+        styleToPriority[static_cast<uint8_t>(aBorder2.style)]) {
       firstDominates = false;
     }
-    else if (styleToPriority[aBorder1.style] == styleToPriority[aBorder2.style]) {
+    else if (styleToPriority[static_cast<uint8_t>(aBorder1.style)] ==
+             styleToPriority[static_cast<uint8_t>(aBorder2.style)]) {
       if (aBorder1.owner == aBorder2.owner) {
         firstDominates = !aSecondIsInlineDir;
       }
@@ -5220,7 +5222,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
     GetColorAndStyle(aTableFrame, aTableWM, aSide,
                      &border.style, &border.color, &border.width);
     border.owner = eTableOwner;
-    if (NS_STYLE_BORDER_STYLE_HIDDEN == border.style) {
+    if (StyleBorderStyle::Hidden == border.style) {
       return border;
     }
   }
@@ -5231,7 +5233,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
     tempBorder.owner = aAja && !inlineAxis ? eAjaColGroupOwner : eColGroupOwner;
     // pass here and below false for aSecondIsInlineDir as it is only used for corner calculations.
     border = CompareBorders(!CELL_CORNER, border, tempBorder, false);
-    if (NS_STYLE_BORDER_STYLE_HIDDEN == border.style) {
+    if (StyleBorderStyle::Hidden == border.style) {
       return border;
     }
   }
@@ -5241,7 +5243,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
                      &tempBorder.style, &tempBorder.color, &tempBorder.width);
     tempBorder.owner = aAja && !inlineAxis ? eAjaColOwner : eColOwner;
     border = CompareBorders(!CELL_CORNER, border, tempBorder, false);
-    if (NS_STYLE_BORDER_STYLE_HIDDEN == border.style) {
+    if (StyleBorderStyle::Hidden == border.style) {
       return border;
     }
   }
@@ -5251,7 +5253,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
                      &tempBorder.style, &tempBorder.color, &tempBorder.width);
     tempBorder.owner = aAja && inlineAxis ? eAjaRowGroupOwner : eRowGroupOwner;
     border = CompareBorders(!CELL_CORNER, border, tempBorder, false);
-    if (NS_STYLE_BORDER_STYLE_HIDDEN == border.style) {
+    if (StyleBorderStyle::Hidden == border.style) {
       return border;
     }
   }
@@ -5261,7 +5263,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
                      &tempBorder.style, &tempBorder.color, &tempBorder.width);
     tempBorder.owner = aAja && inlineAxis ? eAjaRowOwner : eRowOwner;
     border = CompareBorders(!CELL_CORNER, border, tempBorder, false);
-    if (NS_STYLE_BORDER_STYLE_HIDDEN == border.style) {
+    if (StyleBorderStyle::Hidden == border.style) {
       return border;
     }
   }
@@ -5283,7 +5285,7 @@ Perpendicular(mozilla::LogicalSide aSide1,
 }
 
 // Initial value indicating that BCCornerInfo's ownerStyle hasn't been set yet.
-#define BORDER_STYLE_UNSET 0xF
+#define BORDER_STYLE_UNSET static_cast<StyleBorderStyle>(255)
 
 // XXX allocate this as number-of-cols+1 instead of number-of-cols+1 * number-of-rows+1
 struct BCCornerInfo
@@ -5291,7 +5293,7 @@ struct BCCornerInfo
   BCCornerInfo() { ownerColor = 0; ownerWidth = subWidth = ownerElem = subSide =
                    subElem = hasDashDot = numSegs = bevel = 0; ownerSide = eLogicalSideBStart;
                    ownerStyle = BORDER_STYLE_UNSET;
-                   subStyle = NS_STYLE_BORDER_STYLE_SOLID; }
+                   subStyle = StyleBorderStyle::Solid; }
 
   void Set(mozilla::LogicalSide aSide,
            BCCellBorder  border);
@@ -5299,20 +5301,20 @@ struct BCCornerInfo
   void Update(mozilla::LogicalSide aSide,
               BCCellBorder  border);
 
-  nscolor   ownerColor;     // color of borderOwner
-  uint16_t  ownerWidth;     // pixel width of borderOwner
-  uint16_t  subWidth;       // pixel width of the largest border intersecting the border perpendicular
-                            // to ownerSide
-  uint32_t  ownerSide:2;    // LogicalSide (e.g eLogicalSideBStart, etc) of the border
-                            // owning the corner relative to the corner
-  uint32_t  ownerElem:4;    // elem type (e.g. eTable, eGroup, etc) owning the corner
-  uint32_t  ownerStyle:4;   // border style of ownerElem
-  uint32_t  subSide:2;      // side of border with subWidth relative to the corner
-  uint32_t  subElem:4;      // elem type (e.g. eTable, eGroup, etc) of sub owner
-  uint32_t  subStyle:4;     // border style of subElem
-  uint32_t  hasDashDot:1;   // does a dashed, dotted segment enter the corner, they cannot be beveled
-  uint32_t  numSegs:3;      // number of segments entering corner
-  uint32_t  bevel:1;        // is the corner beveled (uses the above two fields together with subWidth)
+  nscolor   ownerColor;       // color of borderOwner
+  uint16_t  ownerWidth;       // pixel width of borderOwner
+  uint16_t  subWidth;         // pixel width of the largest border intersecting the border perpendicular
+                              // to ownerSide
+  StyleBorderStyle subStyle;  // border style of subElem
+  StyleBorderStyle ownerStyle;// border style of ownerElem
+  uint16_t  ownerSide:2;      // LogicalSide (e.g eLogicalSideBStart, etc) of the border
+                              // owning the corner relative to the corner
+  uint16_t  ownerElem:4;      // elem type (e.g. eTable, eGroup, etc) owning the corner
+  uint16_t  subSide:2;        // side of border with subWidth relative to the corner
+  uint16_t  subElem:4;        // elem type (e.g. eTable, eGroup, etc) of sub owner
+  uint16_t  hasDashDot:1;     // does a dashed, dotted segment enter the corner, they cannot be beveled
+  uint16_t  numSegs:3;        // number of segments entering corner
+  uint16_t  bevel:1;          // is the corner beveled (uses the above two fields together with subWidth)
   // 7 bits are unused
 };
 
@@ -5332,15 +5334,15 @@ BCCornerInfo::Set(mozilla::LogicalSide aSide,
   numSegs    = 0;
   if (aBorder.width > 0) {
     numSegs++;
-    hasDashDot = (NS_STYLE_BORDER_STYLE_DASHED == aBorder.style) ||
-                 (NS_STYLE_BORDER_STYLE_DOTTED == aBorder.style);
+    hasDashDot = (StyleBorderStyle::Dashed == aBorder.style) ||
+                 (StyleBorderStyle::Dotted == aBorder.style);
   }
   bevel      = 0;
   subWidth   = 0;
   // the following will get set later
   subSide    = IsInline(aSide) ? eLogicalSideBStart : eLogicalSideIStart;
   subElem    = eTableOwner;
-  subStyle   = NS_STYLE_BORDER_STYLE_SOLID;
+  subStyle   = StyleBorderStyle::Solid;
 }
 
 void
@@ -5398,8 +5400,8 @@ BCCornerInfo::Update(mozilla::LogicalSide aSide,
     }
     if (aBorder.width > 0) {
       numSegs++;
-      if (!hasDashDot && ((NS_STYLE_BORDER_STYLE_DASHED == aBorder.style) ||
-                          (NS_STYLE_BORDER_STYLE_DOTTED == aBorder.style))) {
+      if (!hasDashDot && ((StyleBorderStyle::Dashed == aBorder.style) ||
+                          (StyleBorderStyle::Dotted == aBorder.style))) {
         hasDashDot = 1;
       }
     }
@@ -6503,7 +6505,7 @@ class BCPaintBorderIterator;
 
 struct BCBorderParameters
 {
-  uint8_t mBorderStyle;
+  StyleBorderStyle mBorderStyle;
   nscolor mBorderColor;
   nsRect mBorderRect;
   int32_t mAppUnitsPerDevPixel;
@@ -6519,8 +6521,8 @@ struct BCBorderParameters
       return false;
     }
 
-    if (mBorderStyle == NS_STYLE_BORDER_STYLE_DASHED ||
-        mBorderStyle == NS_STYLE_BORDER_STYLE_DOTTED) {
+    if (mBorderStyle == StyleBorderStyle::Dashed ||
+        mBorderStyle == StyleBorderStyle::Dotted) {
       return false;
     }
 
@@ -7384,7 +7386,7 @@ BCBlockDirSeg::BuildBorderParameters(BCPaintBorderIterator& aIter,
   nsTableColFrame* col           = mCol; if (!col) ABORT1(Nothing());
   nsTableCellFrame* cell         = mFirstCell; // ???
   nsIFrame* owner = nullptr;
-  result.mBorderStyle = NS_STYLE_BORDER_STYLE_SOLID;
+  result.mBorderStyle = StyleBorderStyle::Solid;
   result.mBorderColor = 0xFFFFFFFF;
   result.mBackfaceIsVisible = true;
 
@@ -7534,7 +7536,7 @@ AdjustAndPushBevel(wr::DisplayListBuilder& aBuilder,
   wr::LayoutRect bevelRect = aRect;
   wr::BorderSide bevelBorder[4];
   NS_FOR_CSS_SIDES(i) {
-    bevelBorder[i] = wr::ToBorderSide(ToDeviceColor(aColor), NS_STYLE_BORDER_STYLE_SOLID);
+    bevelBorder[i] = wr::ToBorderSide(ToDeviceColor(aColor), StyleBorderStyle::Solid);
   }
 
   // We're creating a half-transparent triangle using the border primitive.
@@ -7669,7 +7671,7 @@ CreateWRCommandsForBorderSegment(const BCBorderParameters& aBorderParams,
   wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(borderRect);
   wr::BorderSide wrSide[4];
   NS_FOR_CSS_SIDES(i) {
-    wrSide[i] = wr::ToBorderSide(ToDeviceColor(aBorderParams.mBorderColor), NS_STYLE_BORDER_STYLE_NONE);
+    wrSide[i] = wr::ToBorderSide(ToDeviceColor(aBorderParams.mBorderColor), StyleBorderStyle::None);
   }
   const bool horizontal = aBorderParams.mStartBevelSide == eSideTop ||
                           aBorderParams.mStartBevelSide == eSideBottom;
@@ -7833,7 +7835,7 @@ BCInlineDirSeg::BuildBorderParameters(BCPaintBorderIterator& aIter)
   nsPresContext* presContext = aIter.mTable->PresContext();
   result.mAppUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
 
-  result.mBorderStyle = NS_STYLE_BORDER_STYLE_SOLID;
+  result.mBorderStyle = StyleBorderStyle::Solid;
   result.mBorderColor = 0xFFFFFFFF;
 
   switch (mOwner) {

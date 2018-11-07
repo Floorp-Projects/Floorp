@@ -189,16 +189,16 @@ nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc)
 /***************************************************************************/
 
 const KTableEntry nsCSSProps::kBorderStyleKTable[] = {
-  { eCSSKeyword_none,   NS_STYLE_BORDER_STYLE_NONE },
-  { eCSSKeyword_hidden, NS_STYLE_BORDER_STYLE_HIDDEN },
-  { eCSSKeyword_dotted, NS_STYLE_BORDER_STYLE_DOTTED },
-  { eCSSKeyword_dashed, NS_STYLE_BORDER_STYLE_DASHED },
-  { eCSSKeyword_solid,  NS_STYLE_BORDER_STYLE_SOLID },
-  { eCSSKeyword_double, NS_STYLE_BORDER_STYLE_DOUBLE },
-  { eCSSKeyword_groove, NS_STYLE_BORDER_STYLE_GROOVE },
-  { eCSSKeyword_ridge,  NS_STYLE_BORDER_STYLE_RIDGE },
-  { eCSSKeyword_inset,  NS_STYLE_BORDER_STYLE_INSET },
-  { eCSSKeyword_outset, NS_STYLE_BORDER_STYLE_OUTSET },
+  { eCSSKeyword_none,   StyleBorderStyle::None },
+  { eCSSKeyword_hidden, StyleBorderStyle::Hidden },
+  { eCSSKeyword_dotted, StyleBorderStyle::Dotted },
+  { eCSSKeyword_dashed, StyleBorderStyle::Dashed },
+  { eCSSKeyword_solid,  StyleBorderStyle::Solid },
+  { eCSSKeyword_double, StyleBorderStyle::Double },
+  { eCSSKeyword_groove, StyleBorderStyle::Groove },
+  { eCSSKeyword_ridge,  StyleBorderStyle::Ridge },
+  { eCSSKeyword_inset,  StyleBorderStyle::Inset },
+  { eCSSKeyword_outset, StyleBorderStyle::Outset },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -498,16 +498,16 @@ const KTableEntry nsCSSProps::kContainKTable[] = {
 
 // Same as kBorderStyleKTable except 'hidden'.
 const KTableEntry nsCSSProps::kOutlineStyleKTable[] = {
-  { eCSSKeyword_none,   NS_STYLE_BORDER_STYLE_NONE },
-  { eCSSKeyword_auto,   NS_STYLE_BORDER_STYLE_AUTO },
-  { eCSSKeyword_dotted, NS_STYLE_BORDER_STYLE_DOTTED },
-  { eCSSKeyword_dashed, NS_STYLE_BORDER_STYLE_DASHED },
-  { eCSSKeyword_solid,  NS_STYLE_BORDER_STYLE_SOLID },
-  { eCSSKeyword_double, NS_STYLE_BORDER_STYLE_DOUBLE },
-  { eCSSKeyword_groove, NS_STYLE_BORDER_STYLE_GROOVE },
-  { eCSSKeyword_ridge,  NS_STYLE_BORDER_STYLE_RIDGE },
-  { eCSSKeyword_inset,  NS_STYLE_BORDER_STYLE_INSET },
-  { eCSSKeyword_outset, NS_STYLE_BORDER_STYLE_OUTSET },
+  { eCSSKeyword_none,   StyleBorderStyle::None },
+  { eCSSKeyword_auto,   StyleBorderStyle::Auto },
+  { eCSSKeyword_dotted, StyleBorderStyle::Dotted },
+  { eCSSKeyword_dashed, StyleBorderStyle::Dashed },
+  { eCSSKeyword_solid,  StyleBorderStyle::Solid },
+  { eCSSKeyword_double, StyleBorderStyle::Double },
+  { eCSSKeyword_groove, StyleBorderStyle::Groove },
+  { eCSSKeyword_ridge,  StyleBorderStyle::Ridge },
+  { eCSSKeyword_inset,  StyleBorderStyle::Inset },
+  { eCSSKeyword_outset, StyleBorderStyle::Outset },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
