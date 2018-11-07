@@ -24,8 +24,10 @@ def lint(files, config, **kwargs):
             data = json.loads(line)
         except ValueError:
             return
+
         data["level"] = "error"
         data["path"] = os.path.relpath(os.path.join(tests_dir, data["path"]), kwargs['root'])
+        data.setdefault("lineno", 0)
         results.append(result.from_config(config, **data))
 
     if files == [tests_dir]:
