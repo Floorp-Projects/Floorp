@@ -241,8 +241,12 @@ void
 MediaEngineWebRTC::EnumerateSpeakerDevices(uint64_t aWindowId,
                                            nsTArray<RefPtr<MediaDevice> >* aDevices)
 {
+  if (!mEnumerator) {
+    mEnumerator = CubebDeviceEnumerator::GetInstance();
+  }
   nsTArray<RefPtr<AudioDeviceInfo>> devices;
-  CubebUtils::GetDeviceCollection(devices, CubebUtils::Output);
+  mEnumerator->EnumerateAudioOutputDevices(devices);
+
   for (auto& device : devices) {
     if (device->State() == CUBEB_DEVICE_STATE_ENABLED) {
       MOZ_ASSERT(device->Type() == CUBEB_DEVICE_TYPE_OUTPUT);
