@@ -83,7 +83,6 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
-#include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/loader/ScriptCacheActors.h"
 #include "mozilla/LoginReputationIPC.h"
 #include "mozilla/LookAndFeel.h"
@@ -1261,7 +1260,6 @@ ContentParent::CreateBrowser(const TabContext& aContext,
     }
     RefPtr<TabParent> tp(new TabParent(constructorSender, tabId,
                                        aContext, chromeFlags));
-    tp->SetInitedByParent();
 
     PBrowserParent* browser =
     constructorSender->SendPBrowserConstructor(
@@ -1655,81 +1653,6 @@ ContentParent::ProcessingError(Result aCode, const char* aReason)
   // Other errors are big deals.
   KillHard(aReason);
 #endif
-}
-
-/* static */
-bool
-ContentParent::AllocateLayerTreeId(TabParent* aTabParent, layers::LayersId* aId)
-{
-  return AllocateLayerTreeId(aTabParent->Manager()->AsContentParent(),
-                             aTabParent, aTabParent->GetTabId(), aId);
-}
-
-/* static */
-bool
-ContentParent::AllocateLayerTreeId(ContentParent* aContent,
-                                   TabParent* aTopLevel, const TabId& aTabId,
-                                   layers::LayersId* aId)
-{
-  GPUProcessManager* gpu = GPUProcessManager::Get();
-
-  *aId = gpu->AllocateLayerTreeId();
-
-  if (!aContent || !aTopLevel) {
-    return false;
-  }
-
-  gpu->MapLayerTreeId(*aId, aContent->OtherPid());
-
-  return true;
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvAllocateLayerTreeId(const ContentParentId& aCpId,
-                                       const TabId& aTabId, layers::LayersId* aId)
-{
-  // Protect against spoofing by a compromised child. aCpId must either
-  // correspond to the process that this ContentParent represents or be a
-  // child of it.
-  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  RefPtr<ContentParent> contentParent = cpm->GetContentProcessById(aCpId);
-  if (!contentParent ||
-      (ChildID() != aCpId && !contentParent->CanCommunicateWith(ChildID()))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  // GetTopLevelTabParentByProcessAndTabId will make sure that aTabId
-  // lives in the process for aCpId.
-  RefPtr<TabParent> browserParent =
-    cpm->GetTopLevelTabParentByProcessAndTabId(aCpId, aTabId);
-  MOZ_ASSERT(contentParent && browserParent);
-
-  if (!AllocateLayerTreeId(contentParent, browserParent, aTabId, aId)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvDeallocateLayerTreeId(const ContentParentId& aCpId,
-                                         const layers::LayersId& aId)
-{
-  GPUProcessManager* gpu = GPUProcessManager::Get();
-
-  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  RefPtr<ContentParent> contentParent = cpm->GetContentProcessById(aCpId);
-  if (!contentParent || !contentParent->CanCommunicateWith(ChildID())) {
-    return IPC_FAIL(this, "Spoofed DeallocateLayerTreeId call");
-  }
-
-  if (!gpu->IsLayerTreeIdMapped(aId, contentParent->OtherPid())) {
-    // You can't deallocate layer tree ids that you didn't allocate
-    KillHard("DeallocateLayerTreeId");
-  }
-
-  gpu->UnmapLayerTreeId(aId, contentParent->OtherPid());
-
-  return IPC_OK();
 }
 
 namespace {
@@ -5161,7 +5084,6 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
 mozilla::ipc::IPCResult
 ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 PBrowserParent* aNewTab,
-                                PRenderFrameParent* aRenderFrame,
                                 const uint32_t& aChromeFlags,
                                 const bool& aCalledFromJS,
                                 const bool& aPositionSpecified,
@@ -5179,7 +5101,6 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
 
   // We always expect to open a new window here. If we don't, it's an error.
   cwi.windowOpened() = true;
-  cwi.layersId() = LayersId{0};
   cwi.maxTouchPoints() = 0;
   cwi.hasSiblings() = false;
 
@@ -5237,13 +5158,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
   MOZ_ASSERT(TabParent::GetFrom(newRemoteTab) == newTab);
 
   newTab->SwapFrameScriptsFrom(cwi.frameScripts());
-
-  RenderFrameParent* rfp = static_cast<RenderFrameParent*>(aRenderFrame);
-  if (!newTab->SetRenderFrame(rfp) ||
-      !newTab->GetRenderFrameInfo(&cwi.textureFactoryIdentifier(), &cwi.layersId())) {
-    rv = NS_ERROR_FAILURE;
-  }
-  cwi.compositorOptions() = rfp->GetCompositorOptions();
+  newTab->MaybeShowFrame();
 
   nsCOMPtr<nsIWidget> widget = newTab->GetWidget();
   if (widget) {

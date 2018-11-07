@@ -42,8 +42,6 @@
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
-#include "mozilla/layout/RenderFrameChild.h"
-#include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/plugins/PPluginWidgetChild.h"
 #include "mozilla/recordreplay/ParentIPC.h"
 #include "mozilla/LookAndFeel.h"
@@ -397,7 +395,6 @@ TabChild::TabChild(nsIContentChild* aManager,
                    uint32_t aChromeFlags)
   : TabContext(aContext)
   , mTabGroup(aTabGroup)
-  , mRemoteFrame(nullptr)
   , mManager(aManager)
   , mChromeFlags(aChromeFlags)
   , mMaxTouchPoints(0)
@@ -808,10 +805,10 @@ TabChild::SetStatusWithContext(uint32_t aStatusType,
                                const nsAString& aStatusText,
                                nsISupports* aStatusContext)
 {
-  // We can only send the status after the ipc machinery is set up,
-  // mRemoteFrame is a good indicator.
-  if (mRemoteFrame)
+  // We can only send the status after the ipc machinery is set up
+  if (IPCOpen()) {
     SendSetStatus(aStatusType, nsString(aStatusText));
+  }
   return NS_OK;
 }
 
@@ -1026,18 +1023,11 @@ TabChild::DestroyWindow()
     if (baseWindow)
         baseWindow->Destroy();
 
-    // NB: the order of mPuppetWidget->Destroy() and mRemoteFrame->Destroy()
-    // is important: we want to kill off remote layers before their
-    // frames
     if (mPuppetWidget) {
         mPuppetWidget->Destroy();
     }
 
-    if (mRemoteFrame) {
-        mRemoteFrame->Destroy();
-        mRemoteFrame = nullptr;
-    }
-
+    mLayersConnected = Nothing();
 
     if (mLayersId.IsValid()) {
       StaticMutexAutoLock lock(sTabChildrenMutex);
@@ -1129,13 +1119,8 @@ TabChild::RecvLoadURL(const nsCString& aURI,
 }
 
 void
-TabChild::DoFakeShow(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
-                     const layers::LayersId& aLayersId,
-                     const CompositorOptions& aCompositorOptions,
-                     PRenderFrameChild* aRenderFrame, const ShowInfo& aShowInfo)
+TabChild::DoFakeShow(const ShowInfo& aShowInfo)
 {
-  mLayersConnected = aRenderFrame ? Some(true) : Some(false);
-  InitRenderingState(aTextureFactoryIdentifier, aLayersId, aCompositorOptions, aRenderFrame);
   RecvShow(ScreenIntSize(0, 0), aShowInfo, mParentIsActive, nsSizeMode_Normal);
   mDidFakeShow = true;
 }
@@ -1236,13 +1221,10 @@ mozilla::ipc::IPCResult
 TabChild::RecvInitRendering(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                             const layers::LayersId& aLayersId,
                             const CompositorOptions& aCompositorOptions,
-                            const bool& aLayersConnected,
-                            PRenderFrameChild* aRenderFrame)
+                            const bool& aLayersConnected)
 {
-  MOZ_ASSERT((!mDidFakeShow && aRenderFrame) || (mDidFakeShow && !aRenderFrame));
-
   mLayersConnected = Some(aLayersConnected);
-  InitRenderingState(aTextureFactoryIdentifier, aLayersId, aCompositorOptions, aRenderFrame);
+  InitRenderingState(aTextureFactoryIdentifier, aLayersId, aCompositorOptions);
   return IPC_OK();
 }
 
@@ -1251,7 +1233,7 @@ TabChild::RecvUpdateDimensions(const DimensionInfo& aDimensionInfo)
 {
     // When recording/replaying we need to make sure the dimensions are up to
     // date on the compositor used in this process.
-    if (!mRemoteFrame && !recordreplay::IsRecordingOrReplaying()) {
+    if (mLayersConnected.isNothing() && !recordreplay::IsRecordingOrReplaying()) {
         return IPC_OK();
     }
 
@@ -2731,19 +2713,6 @@ TabChild::RecvHandledWindowedPluginKeyEvent(
   return IPC_OK();
 }
 
-PRenderFrameChild*
-TabChild::AllocPRenderFrameChild()
-{
-    return new RenderFrameChild();
-}
-
-bool
-TabChild::DeallocPRenderFrameChild(PRenderFrameChild* aFrame)
-{
-    delete aFrame;
-    return true;
-}
-
 bool
 TabChild::InitTabChildMessageManager()
 {
@@ -2780,16 +2749,9 @@ TabChild::InitTabChildMessageManager()
 void
 TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                              const layers::LayersId& aLayersId,
-                             const CompositorOptions& aCompositorOptions,
-                             PRenderFrameChild* aRenderFrame)
+                             const CompositorOptions& aCompositorOptions)
 {
     mPuppetWidget->InitIMEState();
-
-    if (!aRenderFrame) {
-      mLayersConnected = Some(false);
-      NS_WARNING("failed to construct RenderFrame");
-      return;
-    }
 
     MOZ_ASSERT(aLayersId.IsValid());
     mTextureFactoryIdentifier = aTextureFactoryIdentifier;
@@ -2805,7 +2767,6 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
 
     mCompositorOptions = Some(aCompositorOptions);
 
-    mRemoteFrame = static_cast<RenderFrameChild*>(aRenderFrame);
     if (aLayersId.IsValid()) {
       StaticMutexAutoLock lock(sTabChildrenMutex);
 
@@ -2923,7 +2884,7 @@ TabChild::NotifyPainted()
     if (!mNotified) {
         // Recording/replaying processes have a compositor but not a remote frame.
         if (!recordreplay::IsRecordingOrReplaying()) {
-            mRemoteFrame->SendNotifyCompositorTransaction();
+            SendNotifyCompositorTransaction();
         }
         mNotified = true;
     }
@@ -3302,7 +3263,7 @@ TabChild::RecvRequestNotifyAfterRemotePaint()
 
   // Tell the CompositorBridgeChild that, when it gets a RemotePaintIsReady
   // message that it should forward it us so that we can bounce it to our
-  // RenderFrameParent.
+  // TabParent.
   compositor->RequestNotifyAfterRemotePaint(this);
   return IPC_OK();
 }

@@ -32,7 +32,6 @@ include protocol PPrinting;
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
 include protocol POfflineCacheUpdate;
-include protocol PRenderFrame;
 include protocol PSpeechSynthesis;
 include protocol PTestShell;
 include protocol PJavaScript;
@@ -913,11 +912,6 @@ parent:
 
     async CopyFavicon(URIParams oldURI, URIParams newURI, Principal aLoadingPrincipal, bool isPrivate);
 
-    // Tell the compositor to allocate a layer tree id for nested remote mozbrowsers.
-    sync AllocateLayerTreeId(ContentParentId cpId, TabId tabId)
-        returns (LayersId id);
-    async DeallocateLayerTreeId(ContentParentId cpId, LayersId id);
-
     /**
      * Notifies the parent about a recording device is starting or shutdown.
      * @param recordingStatus starting or shutdown
@@ -1054,7 +1048,6 @@ parent:
 
     async CreateWindow(nullable PBrowser aThisTab,
                        PBrowser aNewTab,
-                       PRenderFrame aRenderFrame,
                        uint32_t aChromeFlags,
                        bool aCalledFromJS,
                        bool aPositionSpecified,

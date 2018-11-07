@@ -19,6 +19,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layout/RenderFrame.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Move.h"
 #include "nsCOMPtr.h"
@@ -54,10 +55,6 @@ class CpowHolder;
 namespace layers {
 struct TextureFactoryIdentifier;
 } // namespace layers
-
-namespace layout {
-class RenderFrameParent;
-} // namespace layout
 
 namespace widget {
 struct IMENotification;
@@ -162,7 +159,6 @@ public:
 
   virtual mozilla::ipc::IPCResult
   RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
-                             PRenderFrameParent* aRenderFrame,
                              const nsString& aURL,
                              const nsString& aName,
                              const nsString& aFeatures,
@@ -333,7 +329,8 @@ public:
 
   void LoadURL(nsIURI* aURI);
 
-  void InitRenderFrame();
+  void InitRendering();
+  void MaybeShowFrame();
 
   // XXX/cjones: it's not clear what we gain by hiding these
   // message-sending functions under a layer of indirection and
@@ -554,10 +551,6 @@ public:
   virtual bool
   DeallocPPaymentRequestParent(PPaymentRequestParent* aActor) override;
 
-  void SetInitedByParent() { mInitedByParent = true; }
-
-  bool IsInitedByParent() const { return mInitedByParent; }
-
   bool SendLoadRemoteScript(const nsString& aURL,
                             const bool& aRunInGlobalScope);
 
@@ -580,11 +573,7 @@ public:
   bool TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,
                              LayoutDeviceIntRect* aDragRect);
 
-  layout::RenderFrameParent* GetRenderFrame();
-
-  bool SetRenderFrame(PRenderFrameParent* aRFParent);
-  bool GetRenderFrameInfo(TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                          layers::LayersId* aLayersId);
+  layout::RenderFrame* GetRenderFrame();
 
   mozilla::ipc::IPCResult RecvEnsureLayersConnected(CompositorOptions* aCompositorOptions) override;
 
@@ -620,11 +609,9 @@ protected:
   Element* mFrameElement;
   nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
 
-  virtual PRenderFrameParent* AllocPRenderFrameParent() override;
-
-  virtual bool DeallocPRenderFrameParent(PRenderFrameParent* aFrame) override;
-
   virtual mozilla::ipc::IPCResult RecvRemotePaintIsReady() override;
+
+  virtual mozilla::ipc::IPCResult RecvNotifyCompositorTransaction() override;
 
   virtual mozilla::ipc::IPCResult RecvRemoteIsReadyToHandleInputEvents() override;
 
@@ -697,10 +684,6 @@ private:
   LayoutDeviceIntRect mDragRect;
   nsCString mDragPrincipalURISpec;
 
-  // When true, the TabParent is initialized without child side's request.
-  // When false, the TabParent is initialized by window.open() from child side.
-  bool mInitedByParent;
-
   nsCOMPtr<nsILoadContext> mLoadContext;
 
   // We keep a strong reference to the frameloader after we've sent the
@@ -772,6 +755,7 @@ private:
 
   static void RemoveTabParentFromTable(layers::LayersId aLayersId);
 
+  layout::RenderFrame mRenderFrame;
   LayersObserverEpoch mLayerTreeEpoch;
 
   // If this flag is set, then the tab's layers will be preserved even when

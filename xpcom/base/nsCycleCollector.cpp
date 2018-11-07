@@ -2758,9 +2758,12 @@ public:
   bool
   Visit(nsPurpleBuffer& aBuffer, nsPurpleBufferEntry* aEntry)
   {
-    // Ignore any slice budget we have when recording/replaying, as it behaves
-    // non-deterministically.
-    if (mBudget && !recordreplay::IsRecordingOrReplaying()) {
+    // The cycle collector does not collect anything when recording/replaying.
+    if (recordreplay::IsRecordingOrReplaying()) {
+      return true;
+    }
+
+    if (mBudget) {
       if (mBudget->isOverBudget()) {
         return false;
       }

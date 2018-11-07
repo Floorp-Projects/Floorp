@@ -611,12 +611,6 @@ SwitchActiveChild(ChildProcessInfo* aChild, bool aRecoverPosition = true)
     oldActiveChild->RecoverToCheckpoint(oldActiveChild->MostRecentSavedCheckpoint());
     oldActiveChild->SetRole(MakeUnique<ChildRoleStandby>());
   }
-
-  // The graphics overlay is affected when we switch between recording and
-  // replaying children.
-  if (aChild->IsRecording() != oldActiveChild->IsRecording()) {
-    UpdateGraphicsOverlay();
-  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1186,10 +1180,6 @@ RecvHitCheckpoint(const HitCheckpointMessage& aMsg)
 {
   UpdateCheckpointTimes(aMsg);
   MaybeUpdateGraphicsAtCheckpoint(aMsg.mCheckpointId);
-
-  if (!gActiveChild->IsRecording()) {
-    UpdateGraphicsOverlay();
-  }
 
   // Resume either forwards or backwards. Break the resume off into a separate
   // runnable, to avoid starving any code already on the stack and waiting for

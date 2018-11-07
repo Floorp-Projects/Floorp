@@ -223,7 +223,7 @@ public:
   /**
    * Determine whether the canvas is write-only.
    */
-  bool IsWriteOnly();
+  bool IsWriteOnly() const;
 
   /**
    * Force the canvas to be write-only.
