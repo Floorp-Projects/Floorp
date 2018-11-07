@@ -208,9 +208,11 @@ task ktlint(type: JavaExec, group: "verification") {
 
 task printModules {
     doLast {
-        subprojects.each { p ->
-            println "module: name=" + p.path + " buildPath=" + p.buildDir
-        }
+        def modules = subprojects.collect { p -> [
+            name: p.path.toString(),
+            buildPath: p.buildDir.toString()
+        ] }
+        println groovy.json.JsonOutput.toJson(modules)
     }
 }
 
