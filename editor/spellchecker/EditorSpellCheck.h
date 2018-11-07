@@ -17,6 +17,7 @@
 
 class mozSpellChecker;
 class nsIEditor;
+class nsISpellChecker;
 
 namespace mozilla {
 
