@@ -370,16 +370,16 @@ ReplayingChildResponsibleForSavingCheckpoint(size_t aId)
 // checkpoint up to the returned checkpoint.
 static Maybe<size_t> ActiveChildTargetCheckpoint();
 
-// Notify a child it does not need to save aCheckpoint, unless it is a major
-// checkpoint for the child.
+// Ensure that a child will save aCheckpoint iff it is a major checkpoint.
 static void
-ClearIfSavedNonMajorCheckpoint(ChildProcessInfo* aChild, size_t aCheckpoint)
+EnsureMajorCheckpointSaved(ChildProcessInfo* aChild, size_t aCheckpoint)
 {
-  if (aChild->ShouldSaveCheckpoint(aCheckpoint) &&
-      !aChild->IsMajorCheckpoint(aCheckpoint) &&
-      aCheckpoint != CheckpointId::First)
-  {
-    aChild->SendMessage(SetSaveCheckpointMessage(aCheckpoint, false));
+  // The first checkpoint is always saved, even if not marked as major.
+  bool childShouldSave = aChild->IsMajorCheckpoint(aCheckpoint) || aCheckpoint == CheckpointId::First;
+  bool childToldToSave = aChild->ShouldSaveCheckpoint(aCheckpoint);
+
+  if (childShouldSave != childToldToSave) {
+    aChild->SendMessage(SetSaveCheckpointMessage(aCheckpoint, childShouldSave));
   }
 }
 
@@ -414,7 +414,7 @@ ChildRoleStandby::Poke()
     // If we haven't reached the last major checkpoint, we need to run forward
     // without saving intermediate checkpoints.
     if (mProcess->LastCheckpoint() < lastMajorCheckpoint) {
-      ClearIfSavedNonMajorCheckpoint(mProcess, mProcess->LastCheckpoint() + 1);
+      EnsureMajorCheckpointSaved(mProcess, mProcess->LastCheckpoint() + 1);
       mProcess->SendMessage(ResumeMessage(/* aForward = */ true));
       return;
     }
@@ -470,7 +470,7 @@ ChildRoleStandby::Poke()
   // checkpoint included in the on-disk recording. Only save major checkpoints.
   if ((mProcess->LastCheckpoint() < gActiveChild->LastCheckpoint()) &&
       (!gRecordingChild || mProcess->LastCheckpoint() < gLastRecordingCheckpoint)) {
-    ClearIfSavedNonMajorCheckpoint(mProcess, mProcess->LastCheckpoint() + 1);
+    EnsureMajorCheckpointSaved(mProcess, mProcess->LastCheckpoint() + 1);
     mProcess->SendMessage(ResumeMessage(/* aForward = */ true));
   }
 }
@@ -506,14 +506,10 @@ AssignMajorCheckpoint(ChildProcessInfo* aChild, size_t aId)
   PrintSpew("AssignMajorCheckpoint: Process %d Checkpoint %d\n",
             (int) aChild->GetId(), (int) aId);
   aChild->AddMajorCheckpoint(aId);
-  if (aId != CheckpointId::First) {
-    aChild->WaitUntilPaused();
-    aChild->SendMessage(SetSaveCheckpointMessage(aId, true));
-  }
   gLastAssignedMajorCheckpoint = aChild;
 }
 
-static void FlushRecording();
+static bool MaybeFlushRecording();
 
 static void
 UpdateCheckpointTimes(const HitCheckpointMessage& aMsg)
@@ -531,8 +527,9 @@ UpdateCheckpointTimes(const HitCheckpointMessage& aMsg)
     if (aMsg.mCheckpointId == CheckpointId::First ||
         gTimeSinceLastFlush >= TimeDuration::FromSeconds(FlushSeconds))
     {
-      FlushRecording();
-      gTimeSinceLastFlush = 0;
+      if (MaybeFlushRecording()) {
+        gTimeSinceLastFlush = 0;
+      }
     }
   }
 
@@ -679,12 +676,14 @@ DebuggerRunsInMiddleman()
 // Saving Recordings
 ///////////////////////////////////////////////////////////////////////////////
 
+// Synchronously flush the recording to disk.
 static void
 FlushRecording()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gActiveChild->IsRecording() && gActiveChild->IsPaused());
 
+  // All replaying children must be paused while the recording is flushed.
   ForEachReplayingChild([=](ChildProcessInfo* aChild) {
       aChild->SetPauseNeeded();
       aChild->WaitUntilPaused();
@@ -701,6 +700,28 @@ FlushRecording()
     SpawnReplayingChildren();
   }
   gHasFlushed = true;
+}
+
+// Get the replaying children to pause, and flush the recording if they already are.
+static bool
+MaybeFlushRecording()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(gActiveChild->IsRecording() && gActiveChild->IsPaused());
+
+  bool allPaused = true;
+  ForEachReplayingChild([&](ChildProcessInfo* aChild) {
+      if (!aChild->IsPaused()) {
+        aChild->SetPauseNeeded();
+        allPaused = false;
+      }
+    });
+
+  if (allPaused) {
+    FlushRecording();
+    return true;
+  }
+  return false;
 }
 
 static void
@@ -1077,7 +1098,7 @@ Resume(bool aForward)
       SwitchActiveChild(gRecordingChild);
     }
 
-    ClearIfSavedNonMajorCheckpoint(gActiveChild, gActiveChild->LastCheckpoint() + 1);
+    EnsureMajorCheckpointSaved(gActiveChild, gActiveChild->LastCheckpoint() + 1);
 
     // Idle children might change their behavior as we run forward.
     PokeChildren();
