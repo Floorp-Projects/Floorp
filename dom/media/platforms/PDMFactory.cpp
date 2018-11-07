@@ -44,6 +44,7 @@
 #include "DecoderDoctorDiagnostics.h"
 
 #include "MP4Decoder.h"
+#include "VPXDecoder.h"
 #include "mozilla/dom/RemoteVideoDecoder.h"
 
 #include "H264.h"
@@ -294,14 +295,16 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
     return nullptr;
   }
 
-  if (MP4Decoder::IsH264(config.mMimeType) && !aParams.mUseNullDecoder.mUse &&
-      !aParams.mNoWrapper.mDontUseWrapper) {
+  if ((MP4Decoder::IsH264(config.mMimeType) ||
+       VPXDecoder::IsVPX(config.mMimeType)) &&
+      !aParams.mUseNullDecoder.mUse && !aParams.mNoWrapper.mDontUseWrapper) {
     RefPtr<MediaChangeMonitor> h = new MediaChangeMonitor(aPDM, aParams);
     const MediaResult result = h->GetLastError();
     if (NS_SUCCEEDED(result) || result == NS_ERROR_NOT_INITIALIZED) {
       // The MediaChangeMonitor either successfully created the wrapped decoder,
-      // or there wasn't enough AVCC data to do so. Otherwise, there was some
-      // problem, for example WMF DLLs were missing.
+      // or there wasn't enough initialization data to do so (such as what can
+      // happen with AVC3). Otherwise, there was some problem, for example WMF
+      // DLLs were missing.
       m = h.forget();
     } else if (aParams.mError) {
       *aParams.mError = result;
