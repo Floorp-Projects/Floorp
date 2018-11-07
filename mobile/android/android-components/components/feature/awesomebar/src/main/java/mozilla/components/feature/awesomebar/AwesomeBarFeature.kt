@@ -9,10 +9,13 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 
 /**
@@ -55,6 +58,17 @@ class AwesomeBarFeature(
         searchUseCase: SearchUseCases.DefaultSearchUrlUseCase
     ): AwesomeBarFeature {
         awesomeBar.addProviders(SearchSuggestionProvider(searchEngine, searchUseCase))
+        return this
+    }
+
+    /**
+     * Add a [AwesomeBar.SuggestionProvider] for browsing history to the [AwesomeBar].
+     */
+    fun addHistoryProvider(
+        historyStorage: HistoryStorage,
+        loadUrlUseCase: SessionUseCases.LoadUrlUseCase
+    ): AwesomeBarFeature {
+        awesomeBar.addProviders(HistoryStorageSuggestionProvider(historyStorage, loadUrlUseCase))
         return this
     }
 

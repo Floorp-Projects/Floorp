@@ -25,6 +25,7 @@ dependencies {
     implementation project(':concept-awesomebar')
     implementation project(':concept-engine')
     implementation project(':concept-toolbar')
+    implementation project(':concept-storage')
 
     implementation project(':browser-session')
     implementation project(':browser-search')
@@ -39,6 +40,7 @@ dependencies {
     implementation Deps.kotlin_coroutines
 
     testImplementation project(':support-test')
+    testImplementation project(':browser-storage-memory')
     testImplementation Deps.testing_junit
     testImplementation Deps.testing_robolectric
     testImplementation Deps.testing_mockito

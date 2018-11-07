@@ -97,4 +97,17 @@ class AwesomeBarFeatureTest {
 
         verify(awesomeBar).addProviders(any())
     }
+
+    @Test
+    fun `addHistoryProvider adds provider`() {
+        val awesomeBar: AwesomeBar = mock()
+
+        val feature = AwesomeBarFeature(awesomeBar, mock())
+
+        verify(awesomeBar, never()).addProviders(any())
+
+        feature.addHistoryProvider(mock(), mock())
+
+        verify(awesomeBar).addProviders(any())
+    }
 }
