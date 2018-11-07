@@ -1,3 +1,5 @@
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 function run_test() {
   var notifications = 0;
   var obs = {
@@ -6,8 +8,7 @@ function run_test() {
       notifications++;
     },
   };
-  var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-  os.addObserver(obs, "last-pb-context-exited");
+  Services.os.addObserver(obs, "last-pb-context-exited");
 
   run_test_in_child("../unit/test_pb_notification.js",
                     function() {
