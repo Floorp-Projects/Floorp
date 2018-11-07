@@ -165,6 +165,23 @@ static const double THRESHOLD_HIGH_PLAYBACKRATE_AUDIO = 4.0;
 // Threshold under which audio is muted
 static const double THRESHOLD_LOW_PLAYBACKRATE_AUDIO = 0.5;
 
+static double
+ClampPlaybackRate(double aPlaybackRate)
+{
+  MOZ_ASSERT(aPlaybackRate >= 0.0);
+
+  if (aPlaybackRate == 0.0) {
+    return aPlaybackRate;
+  }
+  if (aPlaybackRate < MIN_PLAYBACKRATE) {
+    return MIN_PLAYBACKRATE;
+  }
+  if (aPlaybackRate > MAX_PLAYBACKRATE) {
+    return MAX_PLAYBACKRATE;
+  }
+  return aPlaybackRate;
+}
+
 // Media error values.  These need to match the ones in MediaError.webidl.
 static const unsigned short MEDIA_ERR_ABORTED = 1;
 static const unsigned short MEDIA_ERR_NETWORK = 2;
@@ -2603,7 +2620,7 @@ HTMLMediaElement::LoadResource()
       this,
       mMuted ? 0.0 : mVolume,
       mPreservesPitch,
-      mPlaybackRate,
+      ClampPlaybackRate(mPlaybackRate),
       mPreloadAction == HTMLMediaElement::PRELOAD_METADATA,
       mHasSuspendTaint,
       HasAttr(kNameSpaceID_None, nsGkAtoms::loop),
@@ -4942,7 +4959,7 @@ HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
   MediaDecoderInit decoderInit(this,
                                mMuted ? 0.0 : mVolume,
                                mPreservesPitch,
-                               mPlaybackRate,
+                               ClampPlaybackRate(mPlaybackRate),
                                mPreloadAction ==
                                  HTMLMediaElement::PRELOAD_METADATA,
                                mHasSuspendTaint,
@@ -5031,7 +5048,7 @@ HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   MediaDecoderInit decoderInit(this,
                                mMuted ? 0.0 : mVolume,
                                mPreservesPitch,
-                               mPlaybackRate,
+                               ClampPlaybackRate(mPlaybackRate),
                                mPreloadAction ==
                                  HTMLMediaElement::PRELOAD_METADATA,
                                mHasSuspendTaint,
@@ -7029,23 +7046,6 @@ HTMLMediaElement::MozFragmentEnd()
   // duration, return the duration.
   return (mFragmentEnd < 0.0 || mFragmentEnd > duration) ? duration
                                                          : mFragmentEnd;
-}
-
-static double
-ClampPlaybackRate(double aPlaybackRate)
-{
-  MOZ_ASSERT(aPlaybackRate >= 0.0);
-
-  if (aPlaybackRate == 0.0) {
-    return aPlaybackRate;
-  }
-  if (aPlaybackRate < MIN_PLAYBACKRATE) {
-    return MIN_PLAYBACKRATE;
-  }
-  if (aPlaybackRate > MAX_PLAYBACKRATE) {
-    return MAX_PLAYBACKRATE;
-  }
-  return aPlaybackRate;
 }
 
 void
