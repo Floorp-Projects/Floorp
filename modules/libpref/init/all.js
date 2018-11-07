@@ -1370,6 +1370,14 @@ pref("content.sink.pending_event_mode", 0);
 //   3 = openAbused
 pref("privacy.popups.disable_from_plugins", 3);
 
+// Excessive reporting of blocked popups can be a DOS vector,
+// by overloading the main process as popups get blocked and when
+// users try to restore all popups, which is the most visible
+// option in our UI at the time of writing.
+// We will invisibly drop any popups from a page that has already
+// opened more than this number of popups.
+pref("privacy.popups.maxReported", 100);
+
 // send "do not track" HTTP header, disabled by default
 pref("privacy.donottrackheader.enabled",    false);
 // If true, close button will be shown on permission prompts

@@ -636,7 +636,13 @@ var gPopupBlockerObserver = {
         var popupButtonText = gNavigatorBundle.getString(stringKey);
         var popupButtonAccesskey = gNavigatorBundle.getString(stringKey + ".accesskey");
 
-        var messageBase = gNavigatorBundle.getString("popupWarning.message");
+        let messageBase;
+        if (popupCount < this.maxReportedPopups) {
+          messageBase = gNavigatorBundle.getString("popupWarning.message");
+        } else {
+          messageBase = gNavigatorBundle.getString("popupWarning.exceeded.message");
+        }
+
         var message = PluralForm.get(popupCount, messageBase)
                                 .replace("#1", brandShortName)
                                 .replace("#2", popupCount);
@@ -839,6 +845,9 @@ var gPopupBlockerObserver = {
     gBrowser.getNotificationBox().removeCurrentNotification();
   },
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(gPopupBlockerObserver, "maxReportedPopups",
+  "privacy.popups.maxReported");
 
 function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
   let deserializeURI = (spec) => spec ? makeURI(spec) : null;
