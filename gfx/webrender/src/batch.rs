@@ -17,7 +17,7 @@ use internal_types::{FastHashMap, SavedTargetIndex, TextureSource};
 use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureSurface};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentTaskId, DeferredResolve};
 use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveInstanceKind};
-use prim_store::{VisibleGradientTile, PrimitiveInstance};
+use prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity};
 use prim_store::{BrushSegment, BorderSource, PrimitiveDetails};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskTree};
 use renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
@@ -744,8 +744,7 @@ impl AlphaBatchBuilder {
                 // TODO(gw): We can abstract some of the common code below into
                 //           helper methods, as we port more primitives to make
                 //           use of interning.
-
-                let blend_mode = if !prim_instance.opacity.is_opaque ||
+                let blend_mode = if !prim_data.opacity.is_opaque ||
                     prim_instance.clip_task_id.is_some() ||
                     transform_kind == TransformedRectKind::Complex
                 {
@@ -1226,15 +1225,6 @@ impl AlphaBatchBuilder {
 
                 let specified_blend_mode = prim_instance.get_blend_mode(&prim.details);
 
-                let non_segmented_blend_mode = if !prim_instance.opacity.is_opaque ||
-                    prim_instance.clip_task_id.is_some() ||
-                    transform_kind == TransformedRectKind::Complex
-                {
-                    specified_blend_mode
-                } else {
-                    BlendMode::None
-                };
-
                 let prim_header = PrimitiveHeader {
                     local_rect: prim.local_rect,
                     local_clip_rect: prim_instance.combined_local_clip_rect,
@@ -1251,6 +1241,15 @@ impl AlphaBatchBuilder {
 
                 match prim.details {
                     PrimitiveDetails::Brush(ref brush) => {
+                        let non_segmented_blend_mode = if !brush.opacity.is_opaque ||
+                            prim_instance.clip_task_id.is_some() ||
+                            transform_kind == TransformedRectKind::Complex
+                        {
+                            specified_blend_mode
+                        } else {
+                            BlendMode::None
+                        };
+
                         match brush.kind {
                             BrushKind::Image { alpha_type, request, ref opacity_binding, ref visible_tiles, .. } if !visible_tiles.is_empty() => {
                                 for tile in visible_tiles {
@@ -1331,7 +1330,6 @@ impl AlphaBatchBuilder {
                                     self.add_brush_to_batch(
                                         brush,
                                         &params,
-                                        prim_instance,
                                         specified_blend_mode,
                                         non_segmented_blend_mode,
                                         prim_header_index,
@@ -1391,13 +1389,13 @@ impl AlphaBatchBuilder {
         segment_data: &SegmentInstanceData,
         segment_index: i32,
         batch_kind: BrushBatchKind,
-        prim_instance: &PrimitiveInstance,
         prim_header_index: PrimitiveHeaderIndex,
         alpha_blend_mode: BlendMode,
         bounding_rect: &WorldRect,
         transform_kind: TransformedRectKind,
         render_tasks: &RenderTaskTree,
         z_id: ZBufferId,
+        prim_opacity: PrimitiveOpacity,
     ) {
         let clip_task_address = match segment.clip_task_id {
             BrushSegmentTaskId::RenderTaskId(id) =>
@@ -1407,7 +1405,7 @@ impl AlphaBatchBuilder {
         };
 
         let is_inner = segment.edge_flags.is_empty();
-        let needs_blending = !prim_instance.opacity.is_opaque ||
+        let needs_blending = !prim_opacity.is_opaque ||
                              segment.clip_task_id.needs_blending() ||
                              (!is_inner && transform_kind == TransformedRectKind::Complex);
 
@@ -1439,7 +1437,6 @@ impl AlphaBatchBuilder {
         &mut self,
         brush: &BrushPrimitive,
         params: &BrushBatchParameters,
-        prim_instance: &PrimitiveInstance,
         alpha_blend_mode: BlendMode,
         non_segmented_blend_mode: BlendMode,
         prim_header_index: PrimitiveHeaderIndex,
@@ -1464,13 +1461,13 @@ impl AlphaBatchBuilder {
                         segment_data,
                         segment_index as i32,
                         params.batch_kind,
-                        prim_instance,
                         prim_header_index,
                         alpha_blend_mode,
                         bounding_rect,
                         transform_kind,
                         render_tasks,
                         z_id,
+                        brush.opacity,
                     );
                 }
             }
@@ -1486,13 +1483,13 @@ impl AlphaBatchBuilder {
                         segment_data,
                         segment_index as i32,
                         params.batch_kind,
-                        prim_instance,
                         prim_header_index,
                         alpha_blend_mode,
                         bounding_rect,
                         transform_kind,
                         render_tasks,
                         z_id,
+                        brush.opacity,
                     );
                 }
             }
