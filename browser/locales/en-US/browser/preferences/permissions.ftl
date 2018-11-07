@@ -56,6 +56,11 @@ permissions-capabilities-block =
 permissions-capabilities-prompt =
     .label = Always Ask
 
+permissions-capabilities-listitem-allow = Allow
+permissions-capabilities-listitem-block = Block
+permissions-capabilities-listitem-allow-first-party = Allow first party only
+permissions-capabilities-listitem-allow-session = Allow for Session
+
 ## Invalid Hostname Dialog
 
 permissions-invalid-uri-title = Invalid Hostname Entered
