@@ -296,6 +296,14 @@ SVGDrawingCallback::operator()(gfxContext* aContext,
   }
   MOZ_ASSERT(presShell, "GetPresShell succeeded but returned null");
 
+#ifdef MOZ_GECKO_PROFILER
+  nsIDocument* doc = presShell->GetDocument();
+  nsIURI* uri = doc ? doc->GetDocumentURI() : nullptr;
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("SVG Image drawing", GRAPHICS,
+    nsPrintfCString("%dx%d %s", mSize.width, mSize.height,
+                    uri ? uri->GetSpecOrDefault().get() : "N/A"));
+#endif
+
   gfxContextAutoSaveRestore contextRestorer(aContext);
 
   // Clip to aFillRect so that we don't paint outside.
