@@ -580,6 +580,12 @@ ImageTestCase GreenWebPTestCase()
   return ImageTestCase("green.webp", "image/webp", IntSize(100, 100));
 }
 
+ImageTestCase LargeWebPTestCase()
+{
+  return ImageTestCase("large.webp", "image/webp", IntSize(1200, 660),
+                       TEST_CASE_IGNORE_OUTPUT);
+}
+
 ImageTestCase GreenWebPIccSrgbTestCase()
 {
   return ImageTestCase("green.icc_srgb.webp", "image/webp", IntSize(100, 100));

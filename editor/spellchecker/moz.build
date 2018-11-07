@@ -12,10 +12,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'txtsvc'
 
-EXPORTS += [
-    'nsISpellChecker.h',
-]
-
 EXPORTS.mozilla += [
     'EditorSpellCheck.h',
     'TextServicesDocument.h',
