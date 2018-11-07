@@ -13,6 +13,7 @@
 #include "MP4Decoder.h"
 #include "MediaInfo.h"
 #include "PDMFactory.h"
+#include "VPXDecoder.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/TaskQueue.h"
 
@@ -138,6 +139,66 @@ public:
     RefPtr<MediaByteBuffer> mPreviousExtraData;
 };
 
+class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor
+{
+public:
+  explicit VPXChangeMonitor(const VideoInfo& aInfo)
+    : mCurrentConfig(aInfo)
+    , mCodec(VPXDecoder::IsVP8(aInfo.mMimeType) ? VPXDecoder::Codec::VP8
+                                                : VPXDecoder::Codec::VP9)
+  {
+  }
+
+  bool CanBeInstantiated() const override
+  {
+    return true;
+  }
+
+  MediaResult CheckForChange(MediaRawData* aSample) override
+  {
+    // Don't look at encrypted content.
+    if (aSample->mCrypto.mValid) {
+      return NS_OK;
+    }
+    // For both VP8 and VP9, we only look for resolution changes
+    // on keyframes. Other resolution changes are invalid.
+    if (!aSample->mKeyframe) {
+      return NS_OK;
+    }
+
+    auto dimensions = VPXDecoder::GetFrameSize(
+      MakeSpan<const uint8_t>(aSample->Data(), aSample->Size()), mCodec);
+
+    if (!mSize) {
+      mSize = Some(dimensions);
+      return NS_OK;
+    }
+    if (mSize.ref() == dimensions) {
+      return NS_OK;
+    }
+    mSize = Some(dimensions);
+    mCurrentConfig.mDisplay = dimensions;
+
+    return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
+  }
+
+  const TrackInfo& Config() const override
+  {
+    return mCurrentConfig;
+  }
+
+  MediaResult PrepareSample(MediaDataDecoder::ConversionRequired aConversion,
+                            MediaRawData* aSample) override
+  {
+    return NS_OK;
+  }
+
+  private:
+    VideoInfo mCurrentConfig;
+    const VPXDecoder::Codec mCodec;
+    Maybe<gfx::IntSize> mSize;
+};
+
 MediaChangeMonitor::MediaChangeMonitor(PlatformDecoderModule* aPDM,
                                        const CreateDecoderParams& aParams)
   : mPDM(aPDM)
@@ -154,8 +215,12 @@ MediaChangeMonitor::MediaChangeMonitor(PlatformDecoderModule* aPDM,
   , mRate(aParams.mRate)
 {
   mInConstructor = true;
-  MOZ_ASSERT(MP4Decoder::IsH264(mCurrentConfig.mMimeType));
-  mChangeMonitor = MakeUnique<H264ChangeMonitor>(mCurrentConfig);
+  if (VPXDecoder::IsVPX(mCurrentConfig.mMimeType)) {
+    mChangeMonitor = MakeUnique<VPXChangeMonitor>(mCurrentConfig);
+  } else {
+    MOZ_ASSERT(MP4Decoder::IsH264(mCurrentConfig.mMimeType));
+    mChangeMonitor = MakeUnique<H264ChangeMonitor>(mCurrentConfig);
+  }
   mLastError = CreateDecoder(aParams.mDiagnostics);
   mInConstructor = false;
 }
