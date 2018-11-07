@@ -2545,7 +2545,16 @@ DecodingState::Step()
     mMaster->MaybeStartPlayback();
   }
 
+  TimeUnit before = mMaster->GetMediaTime();
   mMaster->UpdatePlaybackPositionPeriodically();
+
+  // Fire the `seeking` and `seeked` events to meet the HTML spec
+  // when the media is looped back from the end to the beginning.
+  if (before > mMaster->GetMediaTime()) {
+    MOZ_ASSERT(mMaster->mLooping);
+    mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::Loop);
+  }
+
   MOZ_ASSERT(!mMaster->IsPlaying() || mMaster->IsStateMachineScheduled(),
              "Must have timer scheduled");
 
