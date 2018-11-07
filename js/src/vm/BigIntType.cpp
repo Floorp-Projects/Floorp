@@ -6,11 +6,8 @@
 
 #include "vm/BigIntType.h"
 
-#include "mozilla/Casting.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/HashFunctions.h"
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Range.h"
 #include "mozilla/RangedPtr.h"
@@ -30,9 +27,6 @@
 
 using namespace js;
 
-using mozilla::Abs;
-using mozilla::BitwiseCast;
-using mozilla::CheckedInt;
 using mozilla::Maybe;
 using mozilla::Some;
 using mozilla::Nothing;
@@ -137,35 +131,6 @@ BigInt::createFromBytes(JSContext* cx, int sign, void* bytes, size_t nbytes)
         mpz_neg(x->num_, x->num_);
     }
     return x;
-}
-
-
-BigInt*
-BigInt::createFromInt64(JSContext* cx, int64_t n)
-{
-    BigInt* res = createFromUint64(cx, Abs(n));
-    if (!res) {
-        return nullptr;
-    }
-
-    if (n < 0) {
-        mpz_neg(res->num_, res->num_);
-    }
-
-    return res;
-}
-
-BigInt*
-BigInt::createFromUint64(JSContext* cx, uint64_t n)
-{
-    BigInt* res = create(cx);
-    if (!res) {
-        return nullptr;
-    }
-
-    // cf. mpz_import parameters in createFromBytes, above.
-    mpz_import(res->num_, 1, 1, sizeof(uint64_t), 0, 0, &n);
-    return res;
 }
 
 // BigInt proposal section 5.1.1
@@ -421,104 +386,6 @@ BigInt::bitNot(JSContext* cx, HandleBigInt x)
     mpz_neg(z->num_, x->num_);
     mpz_sub_ui(z->num_, z->num_, 1);
     return z;
-}
-
-int64_t
-BigInt::toInt64(BigInt* x)
-{
-    return BitwiseCast<int64_t>(toUint64(x));
-}
-
-uint64_t
-BigInt::toUint64(BigInt* x)
-{
-    static_assert(GMP_LIMB_BITS == 32 || GMP_LIMB_BITS == 64,
-                  "limbs must be either 32 or 64 bits");
-
-    uint64_t digit;
-
-    if (GMP_LIMB_BITS == 32) {
-        uint64_t lo = mpz_getlimbn(x->num_, 0);
-        uint64_t hi = mpz_getlimbn(x->num_, 1);
-        digit = hi << 32 | lo;
-    } else {
-        digit = mpz_getlimbn(x->num_, 0);
-    }
-
-    // Return the two's complement if x is negative.
-    if (mpz_sgn(x->num_) < 0) {
-        return ~(digit - 1);
-    }
-
-    return digit;
-}
-
-BigInt*
-BigInt::asUintN(JSContext* cx, HandleBigInt x, uint64_t bits)
-{
-    if (bits == 64) {
-        return createFromUint64(cx, toUint64(x));
-    }
-
-    if (bits == 0) {
-        return create(cx);
-    }
-
-    // Throw a RangeError if the bits argument is too large to represent using a
-    // GMP bit count.
-    CheckedInt<mp_bitcnt_t> bitCount = bits;
-    if (!bitCount.isValid()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_BIGINT_TOO_LARGE);
-        return nullptr;
-    }
-
-    BigInt* res = create(cx);
-    if (!res) {
-        return nullptr;
-    }
-
-    mpz_fdiv_r_2exp(res->num_, x->num_, bitCount.value());
-    return res;
-}
-
-BigInt*
-BigInt::asIntN(JSContext* cx, HandleBigInt x, uint64_t bits)
-{
-    if (bits == 64) {
-        return createFromInt64(cx, toInt64(x));
-    }
-
-    if (bits == 0) {
-        return create(cx);
-    }
-
-    // Throw a RangeError if the bits argument is too large to represent using a
-    // GMP bit count.
-    CheckedInt<mp_bitcnt_t> bitCount = bits;
-    if (!bitCount.isValid()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_BIGINT_TOO_LARGE);
-        return nullptr;
-    }
-
-    CheckedInt<mp_bitcnt_t> bitIndex = bitCount - 1;
-    MOZ_ASSERT(bitIndex.isValid());
-
-    BigInt* res = create(cx);
-    if (!res) {
-        return nullptr;
-    }
-
-    // Choose the rounding mode based on x's sign bit. mpz_tstbit will simulate
-    // sign extension if the requested index is larger than the bit length of x.
-    if (mpz_tstbit(x->num_, bitIndex.value())) {
-        mpz_cdiv_r_2exp(res->num_, x->num_, bitCount.value());
-    } else {
-        mpz_fdiv_r_2exp(res->num_, x->num_, bitCount.value());
-    }
-
-    return res;
 }
 
 static bool
