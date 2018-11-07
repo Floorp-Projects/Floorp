@@ -22,9 +22,7 @@
 
   <script type="application/javascript" src="chrome://mozapps/content/preferences/changemp.js"/>
 
-  <linkset>
-    <link rel="localization" href="toolkit/preferences/preferences.ftl"/>
-  </linkset>
+  <stringbundle id="bundlePreferences" src="chrome://mozapps/locale/preferences/preferences.properties"/>
 
   <description control="pw1">&masterPasswordDescription.label;</description>
 
