@@ -638,15 +638,17 @@ ServerSocketConnection.prototype = {
    * the connection is denied.  If the entire process resolves successfully,
    * the connection is finally handed off to the |DebuggerServer|.
    */
-  _handle() {
+  async _handle() {
     dumpn("Debugging connection starting authentication on " + this.address);
-    const self = this;
-    (async function() {
-      self._listenForTLSHandshake();
-      await self._createTransport();
-      await self._awaitTLSHandshake();
-      await self._authenticate();
-    })().then(() => this.allow()).catch(e => this.deny(e));
+    try {
+      this._listenForTLSHandshake();
+      await this._createTransport();
+      await this._awaitTLSHandshake();
+      await this._authenticate();
+      this.allow();
+    } catch (e) {
+      this.deny(e);
+    }
   },
 
   /**
