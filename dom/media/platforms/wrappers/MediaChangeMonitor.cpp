@@ -166,17 +166,22 @@ public:
       return NS_OK;
     }
 
-    auto dimensions = VPXDecoder::GetFrameSize(
-      MakeSpan<const uint8_t>(aSample->Data(), aSample->Size()), mCodec);
+    auto dataSpan = MakeSpan<const uint8_t>(aSample->Data(), aSample->Size());
+    auto dimensions = VPXDecoder::GetFrameSize(dataSpan, mCodec);
+    int profile = mCodec == VPXDecoder::Codec::VP9
+                    ? VPXDecoder::GetVP9Profile(dataSpan)
+                    : 0;
 
     if (!mSize) {
       mSize = Some(dimensions);
+      mProfile = Some(profile);
       return NS_OK;
     }
-    if (mSize.ref() == dimensions) {
+    if (mSize.ref() == dimensions && mProfile.ref() == profile) {
       return NS_OK;
     }
     mSize = Some(dimensions);
+    mProfile = Some(profile);
     mCurrentConfig.mDisplay = dimensions;
 
     return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
@@ -197,6 +202,7 @@ public:
     VideoInfo mCurrentConfig;
     const VPXDecoder::Codec mCodec;
     Maybe<gfx::IntSize> mSize;
+    Maybe<int> mProfile;
 };
 
 MediaChangeMonitor::MediaChangeMonitor(PlatformDecoderModule* aPDM,
