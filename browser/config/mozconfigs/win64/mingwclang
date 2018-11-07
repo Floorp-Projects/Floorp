@@ -35,9 +35,6 @@ MOZ_COPY_PDBS=1
 # Temporary config settings until we get these working on mingw
 ac_add_options --disable-accessibility # https://sourceforge.net/p/mingw-w64/bugs/648/
 
-# For now, we'll disable the sandbox, until we get get Bug 1461421 figured out
-ac_add_options --disable-sandbox
-
 # These aren't supported on mingw at this time
 ac_add_options --disable-maintenance-service
 ac_add_options --disable-webrtc # Bug 1393901
