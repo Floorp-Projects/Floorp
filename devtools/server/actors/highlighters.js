@@ -158,6 +158,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     protocol.Actor.prototype.destroy.call(this);
 
     this.hideBoxModel();
+    this.cancelPick();
     this._destroyHighlighter();
     this._targetActor.off("navigate", this._onNavigate);
 

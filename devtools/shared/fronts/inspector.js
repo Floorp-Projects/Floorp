@@ -497,8 +497,13 @@ var InspectorFront = FrontClassWithSpec(inspectorSpec, {
   },
 
   destroy: function() {
+    // Selection isn't a Front and so isn't managed by InspectorFront
+    // and has to be destroyed manually
+    this.selection.destroy();
+    // Highlighter fronts are managed by InspectorFront and so will be
+    // automatically destroyed. But we have to clear the `_highlighters`
+    // Map as well as explicitly call `finalize` request on all of them.
     this.destroyHighlighters();
-    delete this.walker;
     Front.prototype.destroy.call(this);
   },
 
