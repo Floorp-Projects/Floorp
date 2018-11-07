@@ -669,22 +669,35 @@ impl CPPExporter {
         // 2. Single interfaces
         let interfaces_by_name = self.syntax.interfaces_by_name();
         for (name, interface) in interfaces_by_name {
-            let mut edges: HashSet<Rc<String>> = HashSet::new();
-            edges.insert(Rc::new(format!("Interface{}", name)));
-            refgraph.insert(string_from_nodename(name), edges);
+            let rules_for_this_interface = self.rules.get(name);
+            let is_implemented = rules_for_this_interface.build_result.is_some();
+            // If this interafce is not implemented, parse* method should
+            // not be called nor referenced in the graph.
+            if is_implemented {
+                let mut edges: HashSet<Rc<String>> = HashSet::new();
+                edges.insert(Rc::new(format!("Interface{}", name)));
+                refgraph.insert(string_from_nodename(name), edges);
+            }
 
             let mut interface_edges: HashSet<Rc<String>> = HashSet::new();
-            for field in interface.contents().fields() {
-                match field.type_().get_primitive(&self.syntax) {
-                    Some(IsNullable { is_nullable: _, content: Primitive::Interface(_) })
-                    | None => {
-                        let typename = TypeName::type_(field.type_());
-                        interface_edges.insert(Rc::new(typename.to_string()));
-                    },
+            // If this interface is not implemented, we emit raiseError in
+            // parseInterface* method, instead of parse* for each fields.
+            // There can be reference to parseInterface* of this interface
+            // from sum interface, and this node needs to be represented in
+            // the reference graph.
+            if is_implemented {
+                for field in interface.contents().fields() {
+                    match field.type_().get_primitive(&self.syntax) {
+                        Some(IsNullable { is_nullable: _, content: Primitive::Interface(_) })
+                            | None => {
+                                let typename = TypeName::type_(field.type_());
+                                interface_edges.insert(Rc::new(typename.to_string()));
+                            },
 
-                    // Don't have to handle other type of fields (string,
-                    // number, bool, etc).
-                    _ => {}
+                        // Don't have to handle other type of fields (string,
+                        // number, bool, etc).
+                        _ => {}
+                    }
                 }
             }
             refgraph.insert(Rc::new(format!("Interface{}", name)), interface_edges);
