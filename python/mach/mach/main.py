@@ -474,17 +474,22 @@ To see more help for a specific command, run:
                 sys.exit(1)
 
         # For the codepath where ./mach <test_type> --debugger=<program>,
-        # checks if the debugger specified is installed on system.
+        # assert that debugger value exists first, then check if installed on system.
         if (hasattr(args.command_args, "debugger") and
                 getattr(args.command_args, "debugger") is not None):
             _check_debugger(getattr(args.command_args, "debugger"))
         # For the codepath where ./mach test --debugger=<program> <test_type>,
-        # checks if the debugger specified is installed on system.
+        # debugger must be specified from command line with the = operator.
+        # Otherwise, an IndexError is raised, which is converted to an exit code of 1.
         elif (hasattr(args.command_args, "extra_args") and
                 getattr(args.command_args, "extra_args")):
             extra_args = getattr(args.command_args, "extra_args")
-            # This supports common use case where one debugger is specified.
-            debugger = [ea.split("=")[1] for ea in extra_args if "debugger" in ea]
+            try:
+                debugger = [ea.split("=")[1] for ea in extra_args if "debugger" in ea]
+            except IndexError:
+                print("Debugger must be specified with '=' when invoking ./mach test.\n" +
+                      "Please correct the command and try again.")
+                sys.exit(1)
             if debugger:
                 _check_debugger(''.join(debugger))
 
