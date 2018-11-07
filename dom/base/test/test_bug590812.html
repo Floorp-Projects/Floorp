@@ -9,31 +9,15 @@
 <body onload="runTest()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=590812">Mozilla Bug 590812</a>
 <p id="display"></p>
-
+<iframe src="http://noxul.example.com/tests/dom/base/test/file_bug590812.xml"></iframe>
+<iframe src="file_bug590812.xml"></iframe>
+<iframe src="file_bug590812-ref.xhtml"></iframe>
 <pre id="test">
 <script class="testbody" type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
 
-async function runTest() {
-  const iframeUrls = [
-    "http://noxul.example.com/tests/dom/base/test/file_bug590812.xml",
-    "file_bug590812.xml",
-    "file_bug590812-ref.xhtml",
-  ];
-  const promisesToLoad = [];
-  for (const src of iframeUrls) {
-    const iframe = document.createElement("iframe");
-    iframe.src = src;
-    document.body.appendChild(iframe);
-    promisesToLoad.push(
-      new Promise(resolve => {
-        iframe.onload = resolve;
-      })
-    );
-  }
-  await Promise.all(promisesToLoad);
-
+function runTest() {
   sNoXUL = snapshotWindow(window.frames[0], false);
   sWithXUL = snapshotWindow(window.frames[1], false);
   sRef = snapshotWindow(window.frames[2], false);
