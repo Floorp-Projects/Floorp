@@ -4,7 +4,8 @@
 <title>Delayed image reftest wrapper</title>
 </head>
 <body>
-<img id="image1">
+<!-- non-empty alt to avoid the broken image icon -->
+<img id="image1" alt=" ">
 <script>
 // This loads a externally specified image, forces a draw (in case of
 // decode-on-draw), waits 100ms, and then triggers the reftest snapshot.
