@@ -55,13 +55,13 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed
 
   // Returns the content state (hover, focus, etc), see EventStateManager.h
   mozilla::EventStates GetContentState(nsIFrame* aFrame,
-                                       mozilla::StyleAppearance aWidgetType);
+                                       mozilla::StyleAppearance aAppearance);
 
   // Returns whether the widget is already styled by content
   // Normally called from ThemeSupportsWidget to turn off native theming
   // for elements that are already styled.
   bool IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
-                      mozilla::StyleAppearance aWidgetType);
+                      mozilla::StyleAppearance aAppearance);
 
   // Accessors to widget-specific state information
 
@@ -187,7 +187,7 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed
   bool IsDarkBackground(nsIFrame* aFrame);
   // custom scrollbar
   typedef nscolor (*AutoColorGetter)(mozilla::ComputedStyle*);
-  bool IsWidgetScrollbarPart(mozilla::StyleAppearance aWidgetType);
+  bool IsWidgetScrollbarPart(mozilla::StyleAppearance aAppearance);
   nscolor GetScrollbarFaceColor(mozilla::ComputedStyle* aStyle,
                                 AutoColorGetter aAutoGetter);
   nscolor GetScrollbarTrackColor(mozilla::ComputedStyle* aStyle,

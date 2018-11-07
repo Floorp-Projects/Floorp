@@ -365,7 +365,7 @@ moz_gtk_splitter_get_metrics(gint orientation, gint* size)
 }
 
 static void
-CalculateToolbarButtonMetrics(WidgetNodeType aWidgetType,
+CalculateToolbarButtonMetrics(WidgetNodeType aAppearance,
                               ToolbarButtonGTKMetrics* aMetrics)
 {
     gint iconWidth, iconHeight;
@@ -377,7 +377,7 @@ CalculateToolbarButtonMetrics(WidgetNodeType aWidgetType,
         iconHeight = 16;
     }
 
-    GtkStyleContext* style = GetStyleContext(aWidgetType);
+    GtkStyleContext* style = GetStyleContext(aAppearance);
     gint width = 0, height = 0;
     if (gtk_check_version(3, 20, 0) == nullptr) {
         gtk_style_context_get(style,  gtk_style_context_get_state(style),
@@ -409,10 +409,10 @@ CalculateToolbarButtonMetrics(WidgetNodeType aWidgetType,
 
 // We support LTR layout only here for now.
 static void
-CalculateToolbarButtonSpacing(WidgetNodeType aWidgetType,
+CalculateToolbarButtonSpacing(WidgetNodeType aAppearance,
                               ToolbarButtonGTKMetrics* aMetrics)
 {
-    GtkStyleContext* style = GetStyleContext(aWidgetType);
+    GtkStyleContext* style = GetStyleContext(aAppearance);
     gtk_style_context_get_margin(style, gtk_style_context_get_state(style),
                                  &aMetrics->buttonMargin);
 
@@ -513,11 +513,11 @@ EnsureToolbarMetrics(void)
 }
 
 const ToolbarButtonGTKMetrics*
-GetToolbarButtonMetrics(WidgetNodeType aWidgetType)
+GetToolbarButtonMetrics(WidgetNodeType aAppearance)
 {
     EnsureToolbarMetrics();
 
-    int buttonIndex = (aWidgetType - MOZ_GTK_HEADER_BAR_BUTTON_CLOSE);
+    int buttonIndex = (aAppearance - MOZ_GTK_HEADER_BAR_BUTTON_CLOSE);
     NS_ASSERTION(buttonIndex >= 0 &&
                  buttonIndex <= TOOLBAR_BUTTONS,
                  "GetToolbarButtonMetrics(): Wrong titlebar button!");
