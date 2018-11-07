@@ -168,15 +168,30 @@ RefPtr<MediaDataDecoder::InitPromise>
 MediaChangeMonitor::Init()
 {
   RefPtr<MediaChangeMonitor> self = this;
-  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
-    if (mDecoder) {
-      return mDecoder->Init();
-    }
+  return InvokeAsync(
+    mTaskQueue, __func__, [self, this]() -> RefPtr<InitPromise> {
+      if (mDecoder) {
+        RefPtr<InitPromise> p = mInitPromise.Ensure(__func__);
+        mDecoder->Init()
+          ->Then(mTaskQueue,
+                 __func__,
+                 [self, this](InitPromise::ResolveOrRejectValue&& aValue) {
+                   mInitPromiseRequest.Complete();
+                   if (aValue.IsResolve()) {
+                     mConversionRequired = Some(mDecoder->NeedsConversion());
+                     mCanRecycleDecoder = Some(CanRecycleDecoder());
+                   }
+                   return mInitPromise.ResolveOrRejectIfExists(
+                     std::move(aValue), __func__);
+                 })
+          ->Track(mInitPromiseRequest);
+        return p;
+      }
 
-    // We haven't been able to initialize a decoder due to a missing extradata.
-    return MediaDataDecoder::InitPromise::CreateAndResolve(
-      TrackType::kVideoTrack, __func__);
-  });
+      // We haven't been able to initialize a decoder due to missing extradata.
+      return MediaDataDecoder::InitPromise::CreateAndResolve(
+        TrackType::kVideoTrack, __func__);
+    });
 }
 
 RefPtr<MediaDataDecoder::DecodePromise>
@@ -192,28 +207,13 @@ MediaChangeMonitor::Decode(MediaRawData* aSample)
       !mDecodePromiseRequest.Exists() && !mInitPromiseRequest.Exists(),
       "Can't request a new decode until previous one completed");
 
-    MediaResult rv(NS_OK);
-    if (!mDecoder) {
-      // Attempt to create a decoder, we'll check if all initialisation data
-      // are present.
-      rv = CreateDecoderAndInit(sample);
-      if (rv == NS_ERROR_NOT_INITIALIZED) {
-        // We are missing the required init data to create the decoder.
-        // Ignore for the time being, the MediaRawData will be dropped.
-        return DecodePromise::CreateAndResolve(DecodedData(), __func__);
-      }
-    } else {
-      // Initialize the members that we couldn't if the extradata was given
-      // during MediaChangeMonitor's construction.
-      if (!mConversionRequired) {
-        mConversionRequired = Some(mDecoder->NeedsConversion());
-      }
-      if (!mCanRecycleDecoder) {
-        mCanRecycleDecoder = Some(CanRecycleDecoder());
-      }
-      rv = CheckForChange(sample);
-    }
+    MediaResult rv = CheckForChange(sample);
 
+    if (rv == NS_ERROR_NOT_INITIALIZED) {
+      // We are missing the required init data to create the decoder.
+      // Ignore for the time being, the MediaRawData will be dropped.
+      return DecodePromise::CreateAndResolve(DecodedData(), __func__);
+    }
     if (rv == NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER) {
       // The decoder is pending initialization.
       RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
@@ -310,6 +310,7 @@ MediaChangeMonitor::Shutdown()
   RefPtr<MediaChangeMonitor> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self, this]() {
     mInitPromiseRequest.DisconnectIfExists();
+    mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
     mDecodePromiseRequest.DisconnectIfExists();
     mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
     mDrainRequest.DisconnectIfExists();
@@ -467,6 +468,8 @@ MediaChangeMonitor::CreateDecoderAndInit(MediaRawData* aSample)
 bool
 MediaChangeMonitor::CanRecycleDecoder() const
 {
+  AssertOnTaskQueue();
+
   MOZ_ASSERT(mDecoder);
   return StaticPrefs::MediaDecoderRecycleEnabled() &&
          mDecoder->SupportDecoderRecycling();
@@ -512,6 +515,10 @@ MediaResult
 MediaChangeMonitor::CheckForChange(MediaRawData* aSample)
 {
   AssertOnTaskQueue();
+
+  if (!mDecoder) {
+    return CreateDecoderAndInit(aSample);
+  }
 
   MediaResult rv = mChangeMonitor->CheckForChange(aSample);
 
