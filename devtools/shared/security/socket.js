@@ -771,7 +771,7 @@ ServerSocketConnection.prototype = {
     });
     switch (result) {
       case AuthenticationResult.DISABLE_ALL:
-        this._listener._debuggerServer.closeAllListeners();
+        this._listener._debuggerServer.closeAllSocketListeners();
         Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
         return promise.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
       case AuthenticationResult.DENY:

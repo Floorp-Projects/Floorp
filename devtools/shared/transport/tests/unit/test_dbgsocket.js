@@ -77,10 +77,10 @@ async function test_socket_shutdown() {
   Assert.equal(DebuggerServer.listeningSockets, 2);
   gExtraListener.close();
   Assert.equal(DebuggerServer.listeningSockets, 1);
-  Assert.ok(DebuggerServer.closeAllListeners());
+  Assert.ok(DebuggerServer.closeAllSocketListeners());
   Assert.equal(DebuggerServer.listeningSockets, 0);
   // Make sure closing the listener twice does nothing.
-  Assert.ok(!DebuggerServer.closeAllListeners());
+  Assert.ok(!DebuggerServer.closeAllSocketListeners());
   Assert.equal(DebuggerServer.listeningSockets, 0);
 
   info("Connecting to a server socket at " + new Date().toTimeString());

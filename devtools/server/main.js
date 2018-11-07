@@ -113,7 +113,7 @@ var DebuggerServer = {
 
     ActorRegistry.destroy();
 
-    this.closeAllListeners();
+    this.closeAllSocketListeners();
     this._initialized = false;
 
     dumpn("Debugger server is shut down.");
@@ -234,7 +234,7 @@ var DebuggerServer = {
    * @return boolean
    *         Whether any listeners were actually closed.
    */
-  closeAllListeners() {
+  closeAllSocketListeners() {
     if (!this.listeningSockets) {
       return false;
     }

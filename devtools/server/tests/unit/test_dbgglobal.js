@@ -12,9 +12,9 @@ function run_test() {
   Assert.throws(() => DebuggerServer.addSocketListener(socketListener),
     /DebuggerServer has not been initialized/,
     "addSocketListener should throw before it has been initialized");
-  Assert.throws(DebuggerServer.closeAllListeners,
+  Assert.throws(DebuggerServer.closeAllSocketListeners,
     /this is undefined/,
-    "closeAllListeners should throw before it has been initialized");
+    "closeAllSocketListeners should throw before it has been initialized");
   Assert.throws(DebuggerServer.connectPipe,
     /this is undefined/,
     "connectPipe should throw before it has been initialized");
@@ -24,19 +24,19 @@ function run_test() {
 
   // These should still fail because we haven't added a createRootActor
   // implementation yet.
-  Assert.throws(DebuggerServer.closeAllListeners,
+  Assert.throws(DebuggerServer.closeAllSocketListeners,
     /this is undefined/,
-    "closeAllListeners should throw if createRootActor hasn't been added");
+    "closeAllSocketListeners should throw if createRootActor hasn't been added");
   Assert.throws(DebuggerServer.connectPipe,
     /this is undefined/,
-    "closeAllListeners should throw if createRootActor hasn't been added");
+    "closeAllSocketListeners should throw if createRootActor hasn't been added");
 
   const { createRootActor } = require("xpcshell-test/testactors");
   DebuggerServer.setRootActor(createRootActor);
 
   // Now they should work.
   DebuggerServer.addSocketListener(socketListener);
-  DebuggerServer.closeAllListeners();
+  DebuggerServer.closeAllSocketListeners();
 
   // Make sure we got the test's root actor all set up.
   const client1 = DebuggerServer.connectPipe();
