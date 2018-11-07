@@ -141,7 +141,6 @@ private:
     wl_seat                    *mSeat;
     wl_data_device_manager     *mDataDeviceManager;
     gtk_primary_selection_device_manager *mPrimarySelectionDataDeviceManager;
-    wl_keyboard                *mKeyboard;
 
     // Data offers provided by Wayland data device
     GHashTable*                 mActiveOffers;
