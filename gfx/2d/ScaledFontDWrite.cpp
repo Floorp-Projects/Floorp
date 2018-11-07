@@ -385,6 +385,18 @@ UnscaledFontDWrite::GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton
     return false;
   }
 
+  RefPtr<IDWriteFontCollection> systemFonts = Factory::GetDWriteSystemFonts();
+  if (!systemFonts) {
+    return false;
+  }
+
+  UINT32 idx;
+  BOOL exists;
+  hr = systemFonts->FindFamilyName(familyName.data(), &idx, &exists);
+  if (FAILED(hr) || !exists) {
+    return false;
+  }
+
   // The style information that identifies the font can be encoded easily in
   // less than 32 bits. Since the index is needed for font descriptors, only
   // the family name and style information, pass along the style in the index

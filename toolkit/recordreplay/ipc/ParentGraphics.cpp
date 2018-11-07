@@ -201,23 +201,6 @@ UpdateGraphicsInUIProcess(const PaintMessage* aMsg)
   }
 }
 
-void
-UpdateGraphicsOverlay()
-{
-  if (!gLastPaintWidth || !gLastPaintHeight) {
-    return;
-  }
-
-  AutoSafeJSContext cx;
-  JSAutoRealm ar(cx, *gGraphicsSandbox);
-
-  RootedValue rval(cx);
-  if (!JS_CallFunctionName(cx, *gGraphicsSandbox, "UpdateOverlay",
-                           JS::HandleValueArray::empty(), &rval)) {
-    MOZ_CRASH("UpdateGraphicsOverlay");
-  }
-}
-
 static void
 MaybeTriggerExplicitPaint()
 {

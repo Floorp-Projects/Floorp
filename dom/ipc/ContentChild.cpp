@@ -68,7 +68,6 @@
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/ContentProcessController.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/loader/ScriptCacheActors.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/CookieServiceChild.h"
@@ -972,9 +971,6 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     tabId, TabId(0), *ipcContext, aChromeFlags,
     GetID(), IsForBrowser());
 
-
-  PRenderFrameChild* renderFrame = newChild->SendPRenderFrameConstructor();
-
   nsCOMPtr<nsPIDOMWindowInner> parentTopInnerWindow;
   if (aParent) {
     nsCOMPtr<nsPIDOMWindowOuter> parentTopWindow =
@@ -995,9 +991,6 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     *aWindowIsNew = info.windowOpened();
     nsTArray<FrameScriptInfo> frameScripts(info.frameScripts());
     nsCString urlToLoad = info.urlToLoad();
-    TextureFactoryIdentifier textureFactoryIdentifier = info.textureFactoryIdentifier();
-    layers::LayersId layersId = info.layersId();
-    CompositorOptions compositorOptions = info.compositorOptions();
     uint32_t maxTouchPoints = info.maxTouchPoints();
     DimensionInfo dimensionInfo = info.dimensions();
     bool hasSiblings = info.hasSiblings();
@@ -1024,10 +1017,6 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     if (NS_WARN_IF(!newChild->IPCOpen() || newChild->IsDestroyed())) {
       rv = NS_ERROR_ABORT;
       return;
-    }
-
-    if (!layersId.IsValid()) { // if renderFrame is invalid.
-      renderFrame = nullptr;
     }
 
     ShowInfo showInfo(EmptyString(), false, false, true, false, 0, 0, 0);
@@ -1058,8 +1047,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
 
     // Unfortunately we don't get a window unless we've shown the frame.  That's
     // pretty bogus; see bug 763602.
-    newChild->DoFakeShow(textureFactoryIdentifier, layersId, compositorOptions,
-                        renderFrame, showInfo);
+    newChild->DoFakeShow(showInfo);
 
     newChild->RecvUpdateDimensions(dimensionInfo);
 
@@ -1102,7 +1090,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
 
     // NOTE: BrowserFrameOpenWindowPromise is the same type as
     // CreateWindowPromise, and this code depends on that fact.
-    newChild->SendBrowserFrameOpenWindow(aTabOpener, renderFrame,
+    newChild->SendBrowserFrameOpenWindow(aTabOpener,
                                          NS_ConvertUTF8toUTF16(url),
                                          name, NS_ConvertUTF8toUTF16(features),
                                          std::move(resolve), std::move(reject));
@@ -1125,7 +1113,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
       uriToLoad = mozilla::void_t();
     }
 
-    SendCreateWindow(aTabOpener, newChild, renderFrame,
+    SendCreateWindow(aTabOpener, newChild,
                      aChromeFlags, aCalledFromJS, aPositionSpecified,
                      aSizeSpecified, uriToLoad, features, baseURIString,
                      fullZoom, Principal(triggeringPrincipal), referrerPolicy,

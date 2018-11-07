@@ -92,10 +92,6 @@ namespace layers {
 struct TextureFactoryIdentifier;
 } // namespace layers
 
-namespace layout {
-class PRenderFrameParent;
-} // namespace layout
-
 namespace dom {
 
 class Element;
@@ -543,7 +539,6 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvCreateWindow(PBrowserParent* aThisTabParent,
                    PBrowserParent* aNewTab,
-                   layout::PRenderFrameParent* aRenderFrame,
                    const uint32_t& aChromeFlags,
                    const bool& aCalledFromJS,
                    const bool& aPositionSpecified,
@@ -569,8 +564,6 @@ public:
     const nsString& aName,
     const IPC::Principal& aTriggeringPrincipal,
     const uint32_t& aReferrerPolicy) override;
-
-  static bool AllocateLayerTreeId(TabParent* aTabParent, layers::LayersId* aId);
 
   static void
   BroadcastBlobURLRegistration(const nsACString& aURI,
@@ -870,10 +863,6 @@ private:
 
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
 
-  static bool AllocateLayerTreeId(ContentParent* aContent,
-                                  TabParent* aTopLevel, const TabId& aTabId,
-                                  layers::LayersId* aId);
-
   /**
    * Get or create the corresponding content parent array to |aContentProcessType|.
    */
@@ -1139,13 +1128,6 @@ public:
                                                   const bool& aInPrivateBrowsing) override;
 
   virtual void ProcessingError(Result aCode, const char* aMsgName) override;
-
-  virtual mozilla::ipc::IPCResult RecvAllocateLayerTreeId(const ContentParentId& aCpId,
-                                                          const TabId& aTabId,
-                                                          layers::LayersId* aId) override;
-
-  virtual mozilla::ipc::IPCResult RecvDeallocateLayerTreeId(const ContentParentId& aCpId,
-                                                            const layers::LayersId& aId) override;
 
   virtual mozilla::ipc::IPCResult RecvGraphicsError(const nsCString& aError) override;
 

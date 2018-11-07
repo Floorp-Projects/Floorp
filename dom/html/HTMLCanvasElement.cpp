@@ -1083,7 +1083,7 @@ HTMLCanvasElement::GetSize()
 }
 
 bool
-HTMLCanvasElement::IsWriteOnly()
+HTMLCanvasElement::IsWriteOnly() const
 {
   return mWriteOnly;
 }
