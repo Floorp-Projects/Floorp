@@ -10,6 +10,11 @@
  * liability, trademark and document use rules apply.
  */
 
+enum AutomationRate {
+    "a-rate",
+    "k-rate"
+};
+
 [Pref="dom.webaudio.enabled"]
 interface AudioParam {
 
