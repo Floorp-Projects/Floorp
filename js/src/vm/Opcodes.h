@@ -694,8 +694,7 @@
     macro(JSOP_AND, 69, "and", NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING|JOF_IC) \
     /*
      * Pops the top of stack value as 'i', if 'low <= i <= high',
-     * jumps to a 32-bit offset: 'offset[i - low]' from the current bytecode,
-     *                           unless the offset is zero (missing case)
+     * jumps to a 32-bit offset: 'offset[i - low]' from the current bytecode
      * jumps to a 32-bit offset: 'len' from the current bytecode otherwise
      *
      * This opcode has variable length.

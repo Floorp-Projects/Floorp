@@ -353,7 +353,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,1 //BRDA:$,0,2,0
     case 3:
       l.push('1');        //DA:$,0
     case 5:
@@ -501,7 +501,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,0 //BRDA:$,0,3,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,0 //BRDA:$,0,1,0 //BRDA:$,0,2,1 //BRDA:$,0,3,0
     case 0:
       l.push('0');        //DA:$,0
     case 1:

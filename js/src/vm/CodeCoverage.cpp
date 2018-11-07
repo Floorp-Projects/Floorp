@@ -324,12 +324,12 @@ LCovSource::writeScript(JSScript* script)
 
             // Record branches for each cases.
             size_t caseId = 0;
+            bool tableJumpsToDefault = false;
             for (size_t i = 0; i < numCases; i++) {
                 jsbytecode* casepc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * i);
                 MOZ_ASSERT(script->code() <= casepc && casepc < end);
-                // The case is not present, and jumps to the default pc if used.
-                if (casepc == pc) {
-                    continue;
+                if (casepc == defaultpc) {
+                    tableJumpsToDefault = true;
                 }
 
                 // PCs might not be in increasing order of case indexes.
@@ -393,7 +393,11 @@ LCovSource::writeScript(JSScript* script)
             // Compute the number of hits of the default branch, if it has its
             // own case clause.
             bool defaultHasOwnClause = true;
-            if (defaultpc != exitpc) {
+            if (tableJumpsToDefault) {
+                // The previous loop already encoded the coverage information
+                // for the 'default' block.
+                defaultHasOwnClause = false;
+            } else if (defaultpc != exitpc) {
                 defaultHits = 0;
 
                 // Look for the last case entry before the default pc.
@@ -402,18 +406,10 @@ LCovSource::writeScript(JSScript* script)
                 for (size_t j = 0; j < numCases; j++) {
                     jsbytecode* testpc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * j);
                     MOZ_ASSERT(script->code() <= testpc && testpc < end);
-                    if (lastcasepc < testpc && testpc <= defaultpc) {
+                    if (lastcasepc < testpc && testpc < defaultpc) {
                         lastcasepc = testpc;
                         foundLastCase = true;
                     }
-                }
-
-                // Set defaultHasOwnClause to false, if one of the case
-                // statement has the same pc as the default block. Which implies
-                // that the previous loop already encoded the coverage
-                // information for the current block.
-                if (foundLastCase && lastcasepc == defaultpc) {
-                    defaultHasOwnClause = false;
                 }
 
                 // Look if the last case entry fallthrough to the default case,

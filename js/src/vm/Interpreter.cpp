@@ -3780,10 +3780,7 @@ CASE(JSOP_TABLESWITCH)
     i = uint32_t(i) - uint32_t(low);
     if ((uint32_t)i < (uint32_t)(high - low + 1)) {
         pc2 += JUMP_OFFSET_LEN + JUMP_OFFSET_LEN * i;
-        int32_t off = (int32_t) GET_JUMP_OFFSET(pc2);
-        if (off) {
-            len = off;
-        }
+        len = GET_JUMP_OFFSET(pc2);
     }
     ADVANCE_AND_DISPATCH(len);
 }
