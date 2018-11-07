@@ -871,8 +871,14 @@ private:
   // Whether we should dispatch keypress events even for non-printable keys
   // for keeping backward compatibility.
   bool mForceDispatchKeyPressEventsForNonPrintableKeys : 1;
-  // Whether mForceDispatchKeyPressEventsForNonPrintableKeys is initialized.
-  bool mInitializedForceDispatchKeyPressEventsForNonPrintableKeys : 1;
+  // Whether we should set keyCode or charCode value of keypress events whose
+  // value is zero to the other value or not.  When this is set to true, we
+  // should keep using legacy keyCode and charCode values (i.e., one of them
+  // is always 0).
+  bool mForceUseLegacyKeyCodeAndCharCodeValues : 1;
+  // Whether mForceDispatchKeyPressEventsForNonPrintableKeys and
+  // mForceUseLegacyKeyCodeAndCharCodeValues are initialized.
+  bool mInitializedWithKeyPressEventDispatchingBlacklist : 1;
 #endif // #ifdef NIGHTLY_BUILD
 
   static bool sDisableNonTestMouseEvents;

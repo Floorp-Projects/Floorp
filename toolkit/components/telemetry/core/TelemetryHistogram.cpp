@@ -140,8 +140,10 @@ struct HistogramInfo {
   uint32_t expiration_offset;
   uint32_t label_count;
   uint32_t key_count;
+  uint32_t store_count;
   uint16_t label_index;
   uint16_t key_index;
+  uint16_t store_index;
   bool keyed;
   uint8_t histogramType;
   uint8_t dataset;

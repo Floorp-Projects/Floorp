@@ -40,6 +40,7 @@ class TestParser(unittest.TestCase):
         self.assertTrue(hist.expiration(), "never")
         self.assertTrue(hist.kind(), "boolean")
         self.assertTrue(hist.record_in_processes, ["main", "content"])
+        self.assertTrue(hist.record_into_store, ["main"])
 
     def test_missing_bug_numbers(self):
         SAMPLE_HISTOGRAM = {
@@ -324,6 +325,50 @@ class TestParser(unittest.TestCase):
         self.assertEqual(hist.keyed(), False)
 
         parse_histograms.whitelists = None
+
+    def test_multistore(self):
+        SAMPLE_HISTOGRAM = {
+            "TEST_VALID_HISTOGRAM": {
+                "record_in_processes": ["main", "content"],
+                "alert_emails": ["team@mozilla.xyz"],
+                "bug_numbers": [1383793],
+                "expires_in_version": "never",
+                "kind": "boolean",
+                "description": "Test histogram",
+                "record_into_store": ["main", "sync"],
+            }
+        }
+        histograms = load_histogram(SAMPLE_HISTOGRAM)
+        parse_histograms.load_whitelist()
+
+        hist = parse_histograms.Histogram('TEST_VALID_HISTOGRAM',
+                                          histograms['TEST_VALID_HISTOGRAM'],
+                                          strict_type_checks=True)
+
+        ParserError.exit_func()
+        self.assertTrue(hist.expiration(), "never")
+        self.assertTrue(hist.kind(), "boolean")
+        self.assertTrue(hist.record_into_store, ["main", "sync"])
+
+    def test_multistore_empty(self):
+        SAMPLE_HISTOGRAM = {
+            "TEST_HISTOGRAM_EMPTY_MULTISTORE": {
+                "record_in_processes": ["main", "content"],
+                "alert_emails": ["team@mozilla.xyz"],
+                "bug_numbers": [1383793],
+                "expires_in_version": "never",
+                "kind": "boolean",
+                "description": "Test histogram",
+                "record_into_store": [],
+            }
+        }
+        histograms = load_histogram(SAMPLE_HISTOGRAM)
+        parse_histograms.load_whitelist()
+
+        parse_histograms.Histogram('TEST_HISTOGRAM_EMPTY_MULTISTORE',
+                                   histograms['TEST_HISTOGRAM_EMPTY_MULTISTORE'],
+                                   strict_type_checks=True)
+        self.assertRaises(SystemExit, ParserError.exit_func)
 
 
 if __name__ == '__main__':

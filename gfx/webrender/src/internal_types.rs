@@ -110,47 +110,137 @@ pub enum TextureUpdateSource {
     Bytes { data: Arc<Vec<u8>> },
 }
 
+/// Command to allocate, reallocate, or free a texture for the texture cache.
 #[derive(Debug)]
-pub enum TextureUpdateOp {
-    Create {
-        width: u32,
-        height: u32,
-        format: ImageFormat,
-        filter: TextureFilter,
-        render_target: Option<RenderTargetInfo>,
-        layer_count: i32,
-    },
-    Update {
-        rect: DeviceUintRect,
-        stride: Option<u32>,
-        offset: u32,
-        layer_index: i32,
-        source: TextureUpdateSource,
-    },
+pub struct TextureCacheAllocation {
+    /// The virtual ID (i.e. distinct from device ID) of the texture.
+    pub id: CacheTextureId,
+    /// Details corresponding to the operation in question.
+    pub kind: TextureCacheAllocationKind,
+}
+
+/// Information used when allocating / reallocating.
+#[derive(Debug)]
+pub struct TextureCacheAllocInfo {
+    pub width: u32,
+    pub height: u32,
+    pub layer_count: i32,
+    pub format: ImageFormat,
+    pub filter: TextureFilter,
+}
+
+/// Sub-operation-specific information for allocation operations.
+#[derive(Debug)]
+pub enum TextureCacheAllocationKind {
+    /// Performs an initial texture allocation.
+    Alloc(TextureCacheAllocInfo),
+    /// Reallocates the texture. The existing live texture with the same id
+    /// will be deallocated and its contents blitted over. The new size must
+    /// be greater than the old size.
+    Realloc(TextureCacheAllocInfo),
+    /// Frees the texture and the corresponding cache ID.
     Free,
 }
 
+/// Command to update the contents of the texture cache.
 #[derive(Debug)]
-pub struct TextureUpdate {
+pub struct TextureCacheUpdate {
     pub id: CacheTextureId,
-    pub op: TextureUpdateOp,
+    pub rect: DeviceUintRect,
+    pub stride: Option<u32>,
+    pub offset: u32,
+    pub layer_index: i32,
+    pub source: TextureUpdateSource,
 }
 
+/// Atomic set of commands to manipulate the texture cache, generated on the
+/// RenderBackend thread and executed on the Renderer thread.
+///
+/// The list of allocation operations is processed before the updates. This is
+/// important to allow coalescing of certain allocation operations.
 #[derive(Default)]
 pub struct TextureUpdateList {
-    pub updates: Vec<TextureUpdate>,
+    /// Commands to alloc/realloc/free the textures. Processed first.
+    pub allocations: Vec<TextureCacheAllocation>,
+    /// Commands to update the contents of the textures. Processed second.
+    pub updates: Vec<TextureCacheUpdate>,
 }
 
 impl TextureUpdateList {
+    /// Mints a new `TextureUpdateList`.
     pub fn new() -> Self {
         TextureUpdateList {
+            allocations: Vec::new(),
             updates: Vec::new(),
         }
     }
 
+    /// Pushes an update operation onto the list.
     #[inline]
-    pub fn push(&mut self, update: TextureUpdate) {
+    pub fn push_update(&mut self, update: TextureCacheUpdate) {
         self.updates.push(update);
+    }
+
+    /// Pushes an allocation operation onto the list.
+    pub fn push_alloc(&mut self, id: CacheTextureId, info: TextureCacheAllocInfo) {
+        debug_assert!(!self.allocations.iter().any(|x| x.id == id));
+        self.allocations.push(TextureCacheAllocation {
+            id,
+            kind: TextureCacheAllocationKind::Alloc(info),
+        });
+    }
+
+    /// Pushes a reallocation operation onto the list, potentially coalescing
+    /// with previous operations.
+    pub fn push_realloc(&mut self, id: CacheTextureId, info: TextureCacheAllocInfo) {
+        self.debug_assert_coalesced(id);
+
+        // Coallesce this realloc into a previous alloc or realloc, if available.
+        if let Some(cur) = self.allocations.iter_mut().find(|x| x.id == id) {
+            match cur.kind {
+                TextureCacheAllocationKind::Alloc(ref mut i) => *i = info,
+                TextureCacheAllocationKind::Realloc(ref mut i) => *i = info,
+                TextureCacheAllocationKind::Free => panic!("Reallocating freed texture"),
+            }
+
+            return;
+        }
+
+        self.allocations.push(TextureCacheAllocation {
+            id,
+            kind: TextureCacheAllocationKind::Realloc(info),
+        });
+    }
+
+    /// Pushes a free operation onto the list, potentially coalescing with
+    /// previous operations.
+    pub fn push_free(&mut self, id: CacheTextureId) {
+        self.debug_assert_coalesced(id);
+
+        // Drop any unapplied updates to the to-be-freed texture.
+        self.updates.retain(|x| x.id != id);
+
+        // Drop any allocations for it as well. If we happen to be allocating and
+        // freeing in the same batch, we can collapse them to a no-op.
+        let idx = self.allocations.iter().position(|x| x.id == id);
+        let removed_kind = idx.map(|i| self.allocations.remove(i).kind);
+        match removed_kind {
+            Some(TextureCacheAllocationKind::Alloc(..)) => { /* no-op! */ },
+            Some(TextureCacheAllocationKind::Free) => panic!("Double free"),
+            Some(TextureCacheAllocationKind::Realloc(..)) | None => {
+                self.allocations.push(TextureCacheAllocation {
+                    id,
+                    kind: TextureCacheAllocationKind::Free,
+                });
+            }
+        };
+    }
+
+    fn debug_assert_coalesced(&self, id: CacheTextureId) {
+        debug_assert!(
+            self.allocations.iter().filter(|x| x.id == id).count() <= 1,
+            "Allocations should have been coalesced",
+        );
     }
 }
 

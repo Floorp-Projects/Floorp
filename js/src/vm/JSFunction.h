@@ -402,14 +402,6 @@ class JSFunction : public js::NativeObject
         flags_ |= NEW_SCRIPT_CLEARED;
     }
 
-    void setAsyncKind(js::FunctionAsyncKind asyncKind) {
-        if (isInterpretedLazy()) {
-            lazyScript()->setAsyncKind(asyncKind);
-        } else {
-            nonLazyScript()->setAsyncKind(asyncKind);
-        }
-    }
-
     static bool getUnresolvedLength(JSContext* cx, js::HandleFunction fun,
                                     js::MutableHandleValue v);
 

@@ -35,7 +35,7 @@ file_footer = """\
 """
 
 
-def write_scalar_info(scalar, output, name_index, expiration_index):
+def write_scalar_info(scalar, output, name_index, expiration_index, store_index, store_count):
     """Writes a scalar entry to the output file.
 
     :param scalar: a ScalarType instance describing the scalar.
@@ -47,14 +47,16 @@ def write_scalar_info(scalar, output, name_index, expiration_index):
     if cpp_guard:
         print("#if defined(%s)" % cpp_guard, file=output)
 
-    print("  {{ {}, {}, {}, {}, {}, {}, {} }},"
+    print("  {{ {}, {}, {}, {}, {}, {}, {}, {}, {} }},"
           .format(scalar.nsITelemetry_kind,
                   name_index,
                   expiration_index,
                   scalar.dataset,
                   " | ".join(scalar.record_in_processes_enum),
                   "true" if scalar.keyed else "false",
-                  " | ".join(scalar.products_enum)),
+                  " | ".join(scalar.products_enum),
+                  store_count,
+                  store_index),
           file=output)
 
     if cpp_guard:
@@ -69,19 +71,45 @@ def write_scalar_tables(scalars, output):
     """
     string_table = StringTable()
 
+    store_table = []
+    total_store_count = 0
+
     print("const ScalarInfo gScalars[] = {", file=output)
     for s in scalars:
         # We add both the scalar label and the expiration string to the strings
         # table.
         name_index = string_table.stringIndex(s.label)
         exp_index = string_table.stringIndex(s.expires)
+
+        stores = s.record_into_store
+        store_index = 0
+        if stores == ["main"]:
+            # if count == 1 && offset == UINT16_MAX -> only main store
+            store_index = 'UINT16_MAX'
+        else:
+            store_index = total_store_count
+            store_table.append((s.label, string_table.stringIndexes(stores)))
+            total_store_count += len(stores)
+
         # Write the scalar info entry.
-        write_scalar_info(s, output, name_index, exp_index)
+        write_scalar_info(s, output, name_index, exp_index, store_index, len(stores))
     print("};", file=output)
 
     string_table_name = "gScalarsStringTable"
     string_table.writeDefinition(output, string_table_name)
     static_assert(output, "sizeof(%s) <= UINT32_MAX" % string_table_name,
+                  "index overflow")
+
+    store_table_name = "gScalarStoresTable"
+    print("\n#if defined(_MSC_VER) && !defined(__clang__)", file=output)
+    print("const uint32_t {}[] = {{".format(store_table_name), file=output)
+    print("#else", file=output)
+    print("constexpr uint32_t {}[] = {{".format(store_table_name), file=output)
+    print("#endif", file=output)
+    for name, indexes in store_table:
+        print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
+    print("};", file=output)
+    static_assert(output, "sizeof(%s) <= UINT16_MAX" % store_table_name,
                   "index overflow")
 
 
