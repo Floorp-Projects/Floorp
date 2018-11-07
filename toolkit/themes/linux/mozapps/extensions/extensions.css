@@ -8,6 +8,11 @@
   font-size: 1.11em;
 }
 
+#header-utils-btn:-moz-focusring {
+  outline: 1px dotted;
+  outline-offset: -2px;
+}
+
 #header-utils-btn .toolbarbutton-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg");
   -moz-context-properties: fill;
