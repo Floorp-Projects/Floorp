@@ -33,6 +33,7 @@ public:
   {
     if (CanBeInstantiated()) {
       UpdateConfigFromExtraData(aInfo.mExtraData);
+      mPreviousExtraData = aInfo.mExtraData;
     }
   }
 
@@ -68,20 +69,20 @@ public:
     if (!H264::HasSPS(extra_data)) {
       // This sample doesn't contain inband SPS/PPS
       // We now check if the out of band one has changed.
-      // This scenario can only occur on Android with devices that can recycle a
-      // decoder.
+      // This scenario can currently only occur on Android with devices that can
+      // recycle a decoder.
       if (!H264::HasSPS(aSample->mExtraData) ||
-          H264::CompareExtraData(aSample->mExtraData,
-                                 mCurrentConfig.mExtraData)) {
+          H264::CompareExtraData(aSample->mExtraData, mPreviousExtraData)) {
         return NS_OK;
       }
       extra_data = aSample->mExtraData;
-    }
-
-    if (H264::CompareExtraData(extra_data, mCurrentConfig.mExtraData)) {
+    } else if (H264::CompareExtraData(extra_data, mCurrentConfig.mExtraData)) {
       return NS_OK;
     }
 
+    // Store the sample's extradata so we don't trigger a false positive
+    // with the out of band test on the next sample.
+    mPreviousExtraData = aSample->mExtraData;
     UpdateConfigFromExtraData(extra_data);
 
     mNeedKeyframe = true;
@@ -134,6 +135,7 @@ public:
     bool mNeedKeyframe = true;
     uint32_t mStreamID = 0;
     RefPtr<TrackInfoSharedPtr> mTrackInfo;
+    RefPtr<MediaByteBuffer> mPreviousExtraData;
 };
 
 MediaChangeMonitor::MediaChangeMonitor(PlatformDecoderModule* aPDM,
