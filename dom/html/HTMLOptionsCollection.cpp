@@ -32,23 +32,8 @@ namespace mozilla {
 namespace dom {
 
 HTMLOptionsCollection::HTMLOptionsCollection(HTMLSelectElement* aSelect)
-{
-  // Do not maintain a reference counted reference. When
-  // the select goes away, it will let us know.
-  mSelect = aSelect;
-}
-
-HTMLOptionsCollection::~HTMLOptionsCollection()
-{
-  DropReference();
-}
-
-void
-HTMLOptionsCollection::DropReference()
-{
-  // Drop our (non ref-counted) reference
-  mSelect = nullptr;
-}
+  : mSelect(aSelect)
+{}
 
 nsresult
 HTMLOptionsCollection::GetOptionIndex(Element* aOption,
@@ -85,7 +70,9 @@ HTMLOptionsCollection::GetOptionIndex(Element* aOption,
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(HTMLOptionsCollection, mElements)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(HTMLOptionsCollection,
+                                      mElements,
+                                      mSelect)
 
 // nsISupports
 
@@ -115,11 +102,6 @@ HTMLOptionsCollection::Length()
 void
 HTMLOptionsCollection::SetLength(uint32_t aLength, ErrorResult& aError)
 {
-  if (!mSelect) {
-    aError.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
   mSelect->SetLength(aLength, aError);
 }
 
@@ -128,10 +110,6 @@ HTMLOptionsCollection::IndexedSetter(uint32_t aIndex,
                                      HTMLOptionElement* aOption,
                                      ErrorResult& aError)
 {
-  if (!mSelect) {
-    return;
-  }
-
   // if the new option is null, just remove this option.  Note that it's safe
   // to pass a too-large aIndex in here.
   if (!aOption) {
@@ -175,11 +153,6 @@ HTMLOptionsCollection::IndexedSetter(uint32_t aIndex,
 int32_t
 HTMLOptionsCollection::GetSelectedIndex(ErrorResult& aError)
 {
-  if (!mSelect) {
-    aError.Throw(NS_ERROR_UNEXPECTED);
-    return 0;
-  }
-
   return mSelect->SelectedIndex();
 }
 
@@ -187,11 +160,6 @@ void
 HTMLOptionsCollection::SetSelectedIndex(int32_t aSelectedIndex,
                                         ErrorResult& aError)
 {
-  if (!mSelect) {
-    aError.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
   mSelect->SetSelectedIndex(aSelectedIndex, aError);
 }
 
@@ -270,21 +238,12 @@ HTMLOptionsCollection::Add(const HTMLOptionOrOptGroupElement& aElement,
                            const Nullable<HTMLElementOrLong>& aBefore,
                            ErrorResult& aError)
 {
-  if (!mSelect) {
-    aError.Throw(NS_ERROR_NOT_INITIALIZED);
-    return;
-  }
-
   mSelect->Add(aElement, aBefore, aError);
 }
 
 void
 HTMLOptionsCollection::Remove(int32_t aIndex, ErrorResult& aError)
 {
-  if (!mSelect) {
-    aError.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
   mSelect->Remove(aIndex);
 }
 
