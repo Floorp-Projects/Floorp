@@ -826,7 +826,8 @@ PresShell::PresShell()
   , mHasHandledUserInput(false)
 #ifdef NIGHTLY_BUILD
   , mForceDispatchKeyPressEventsForNonPrintableKeys(false)
-  , mInitializedForceDispatchKeyPressEventsForNonPrintableKeys(false)
+  , mForceUseLegacyKeyCodeAndCharCodeValues(false)
+  , mInitializedWithKeyPressEventDispatchingBlacklist(false)
 #endif // #ifdef NIGHTLY_BUILD
 {
   MOZ_LOG(gLog, LogLevel::Debug, ("PresShell::PresShell this=%p", this));
@@ -7919,7 +7920,8 @@ GetDocumentURIToCompareWithBlacklist(PresShell& aPresShell)
 }
 
 static bool
-DispatchKeyPressEventsEvenForNonPrintableKeys(nsIURI* aURI)
+IsURIInBlacklistPref(nsIURI* aURI,
+                     const char* aBlacklistPrefName)
 {
   if (!aURI) {
     return false;
@@ -7940,11 +7942,8 @@ DispatchKeyPressEventsEvenForNonPrintableKeys(nsIURI* aURI)
 
   // The black list is comma separated domain list.  Each item may start with
   // "*.".  If starts with "*.", it matches any sub-domains.
-  static const char* kPrefNameOfBlackList =
-    "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys";
-
   nsAutoCString blackList;
-  Preferences::GetCString(kPrefNameOfBlackList, blackList);
+  Preferences::GetCString(aBlacklistPrefName, blackList);
   if (blackList.IsEmpty()) {
     return false;
   }
@@ -8016,8 +8015,7 @@ PresShell::DispatchEventToDOM(WidgetEvent* aEvent,
     if (aEvent->IsBlockedForFingerprintingResistance()) {
       aEvent->mFlags.mOnlySystemGroupDispatchInContent = true;
 #ifdef NIGHTLY_BUILD
-    } else if (aEvent->mMessage == eKeyPress &&
-               aEvent->mFlags.mOnlySystemGroupDispatchInContent) {
+    } else if (aEvent->mMessage == eKeyPress) {
       // If eKeyPress event is marked as not dispatched in the default event
       // group in web content, it's caused by non-printable key or key
       // combination.  In this case, UI Events declares that browsers
@@ -8025,14 +8023,25 @@ PresShell::DispatchEventToDOM(WidgetEvent* aEvent,
       // broken with this strict behavior due to historical issue.
       // Therefore, we need to keep dispatching keypress event for such keys
       // even with breaking the standard.
-      if (!mInitializedForceDispatchKeyPressEventsForNonPrintableKeys) {
-        mInitializedForceDispatchKeyPressEventsForNonPrintableKeys = true;
+      // Similarly, the other browsers sets non-zero value of keyCode or
+      // charCode of keypress event to the other.  Therefore, we should
+      // behave so, however, some web apps may be broken.  On such web apps,
+      // we should keep using legacy our behavior.
+      if (!mInitializedWithKeyPressEventDispatchingBlacklist) {
+        mInitializedWithKeyPressEventDispatchingBlacklist = true;
         nsCOMPtr<nsIURI> uri = GetDocumentURIToCompareWithBlacklist(*this);
         mForceDispatchKeyPressEventsForNonPrintableKeys =
-          DispatchKeyPressEventsEvenForNonPrintableKeys(uri);
+          IsURIInBlacklistPref(uri,
+            "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys");
+        mForceUseLegacyKeyCodeAndCharCodeValues =
+          IsURIInBlacklistPref(uri,
+            "dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode");
       }
       if (mForceDispatchKeyPressEventsForNonPrintableKeys) {
         aEvent->mFlags.mOnlySystemGroupDispatchInContent = false;
+      }
+      if (mForceUseLegacyKeyCodeAndCharCodeValues) {
+        aEvent->AsKeyboardEvent()->mUseLegacyKeyCodeAndCharCodeValues = true;
       }
 #endif // #ifdef NIGHTLY_BUILD
     }
