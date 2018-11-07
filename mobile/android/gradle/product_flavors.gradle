@@ -4,20 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ext.configureProductFlavors = {
-    flavorDimensions "audience", "geckoBinaries"
+    flavorDimensions "geckoBinaries"
     productFlavors {
-        local {
-            dimension "audience"
-        }
-
-        // Automation builds.  We use "official" rather than "automation" to drive these builds down
-        // the list of configurations that Android Studio offers, thereby making it _not_ the
-        // default.  This avoids a common issue with "omni.ja" not being packed into the default APK
-        // built and deployed by Android Studio.
-        official {
-             dimension "audience"
-        }
-
         withGeckoBinaries {
             dimension "geckoBinaries"
         }

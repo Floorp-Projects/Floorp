@@ -2,6 +2,7 @@ const TEST_DOMAIN = "http://example.net";
 const TEST_3RD_PARTY_DOMAIN = "https://tracking.example.org";
 const TEST_3RD_PARTY_DOMAIN_TP = "https://tracking.example.com";
 const TEST_4TH_PARTY_DOMAIN = "http://not-tracking.example.com";
+const TEST_ANOTHER_3RD_PARTY_DOMAIN = "https://another-tracking.example.net";
 
 const TEST_PATH = "/browser/toolkit/components/antitracking/test/browser/";
 
@@ -13,6 +14,7 @@ const TEST_3RD_PARTY_PAGE_WO = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyWO.h
 const TEST_3RD_PARTY_PAGE_UI = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyUI.html";
 const TEST_3RD_PARTY_PAGE_WITH_SVG = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartySVG.html";
 const TEST_4TH_PARTY_PAGE = TEST_4TH_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
+const TEST_ANOTHER_3RD_PARTY_PAGE = TEST_ANOTHER_3RD_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
 
 const BEHAVIOR_ACCEPT         = Ci.nsICookieService.BEHAVIOR_ACCEPT;
 const BEHAVIOR_LIMIT_FOREIGN  = Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN;
@@ -188,6 +190,22 @@ this.AntiTracking = {
           callbackAfterRemoval,
         });
         this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
+          blockingByContentBlockingRTUI: false,
+          allowList: false,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+          accessRemoval: null, // only passed with non-blocking callback
+          callbackAfterRemoval: null,
+          thirdPartyPage: TEST_ANOTHER_3RD_PARTY_PAGE,
+        });
+        this._createCleanupTask(cleanupFunction);
       }
 
       // Phase 2: Here we want to test that a third-party context doesn't
@@ -253,7 +271,9 @@ this.AntiTracking = {
                          (options.allowList ? "" : "out") + " allow list test " + options.name +
                          " running in a " + (options.runInPrivateWindow ? "private" : "normal") + " window " +
                          " with iframe sandbox set to " + options.iframeSandbox +
-                         " and access removal set to " + options.accessRemoval);
+                         " and access removal set to " + options.accessRemoval +
+                         (typeof options.thirdPartyPage == "string" ? (
+                            " and third party page set to " + options.thirdPartyPage) : ""));
 
       is(!!options.callbackAfterRemoval, !!options.accessRemoval,
          "callbackAfterRemoval must be passed when accessRemoval is non-null");
@@ -376,8 +396,14 @@ this.AntiTracking = {
                                   options.cookieBehavior == BEHAVIOR_REJECT_TRACKER &&
                                   options.blockingByContentBlockingRTUI &&
                                   !options.allowList;
+      let thirdPartyPage;
+      if (typeof options.thirdPartyPage == "string") {
+        thirdPartyPage = options.thirdPartyPage;
+      } else {
+        thirdPartyPage = TEST_3RD_PARTY_PAGE;
+      }
       await ContentTask.spawn(browser,
-                              { page: TEST_3RD_PARTY_PAGE,
+                              { page: thirdPartyPage,
                                 nextPage: TEST_4TH_PARTY_PAGE,
                                 callback: options.callback.toString(),
                                 callbackAfterRemoval: options.callbackAfterRemoval ?

@@ -761,8 +761,31 @@ SetUpdateDirectoryPermissions(const SimpleAutoString& basePath,
       // empty, so there is no reason to check the permissions of its contents.
       return returnValue;
     } else {
-      returnValue = FAILED(returnValue) ? returnValue
-                                        : HRESULT_FROM_WIN32(GetLastError());
+      DWORD error = GetLastError();
+      if (error != ERROR_ALREADY_EXISTS) {
+        returnValue = FAILED(returnValue) ? returnValue
+                                          : HRESULT_FROM_WIN32(error);
+      } else {
+        // There is a bit of a race condition here that needs to be resolved.
+        // Make sure no one else created the directory just before this process
+        // tried to.
+        attributes = GetFileAttributesW(basePath.String());
+        if (attributes == INVALID_FILE_ATTRIBUTES ||
+            !(attributes & FILE_ATTRIBUTE_DIRECTORY)) {
+          returnValue = FAILED(returnValue) ? returnValue
+                                            : HRESULT_FROM_WIN32(error);
+        } else if (permsToSet != SetPermissionsOf::BaseDirIfNotExists) {
+          // Great! The update directory seems to exist and is a directory. Now,
+          // if the caller requested it, set the permissions of the directory.
+          mutableBasePath.CopyFrom(basePath);
+          if (mutableBasePath.Length() == 0) {
+            returnValue = FAILED(returnValue) ? returnValue : E_OUTOFMEMORY;
+          } else {
+            hrv = SetPathPerms(mutableBasePath, perms);
+            returnValue = FAILED(returnValue) ? returnValue : hrv;
+          }
+        }
+      }
     }
   }
 

@@ -201,7 +201,7 @@
 
 #cfr-notification-header-link {
   margin: 7px;
-  color: var(--lwt-text-color);
+  color: inherit;
   cursor: default;
 }
 
@@ -258,7 +258,7 @@
   -moz-context-properties: fill, fill-opacity;
   background-image: var(--cfr-notification-footer-star);
   background-size: 17px;
-  fill: var(--lwt-text-color);
+  fill: currentColor;
   fill-opacity: 0.7;
   height: 16px;
 }

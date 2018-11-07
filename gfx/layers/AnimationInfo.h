@@ -22,12 +22,12 @@ class Layer;
 class LayerManager;
 struct AnimData;
 
-class AnimationInfo
+class AnimationInfo final
 {
   typedef InfallibleTArray<Animation> AnimationArray;
 public:
-  explicit AnimationInfo(LayerManager* aManager);
-  virtual ~AnimationInfo();
+  AnimationInfo();
+  ~AnimationInfo();
 
   // Ensure that this AnimationInfo has a valid (non-zero) animations id. This value is
   // unique across layers.
@@ -44,8 +44,11 @@ public:
   // SetBaseTransformForNextTransaction.)
   Animation* AddAnimationForNextTransaction();
 
-  void SetAnimationGeneration(uint64_t aCount) { mAnimationGeneration = aCount; }
-  uint64_t GetAnimationGeneration() { return mAnimationGeneration; }
+  void SetAnimationGeneration(uint64_t aCount)
+  {
+    mAnimationGeneration = Some(aCount);
+  }
+  Maybe<uint64_t> GetAnimationGeneration() { return mAnimationGeneration; }
 
   // ClearAnimations clears animations on this layer.
   void ClearAnimations();
@@ -70,14 +73,13 @@ public:
                                                 DisplayItemType aDisplayItemKey);
 
 protected:
-  LayerManager* mManager;
   AnimationArray mAnimations;
   uint64_t mCompositorAnimationsId;
   nsAutoPtr<AnimationArray> mPendingAnimations;
   InfallibleTArray<AnimData> mAnimationData;
   // If this layer is used for OMTA, then this counter is used to ensure we
   // stay in sync with the animation manager
-  uint64_t mAnimationGeneration;
+  Maybe<uint64_t> mAnimationGeneration;
   RefPtr<RawServoAnimationValue> mBaseAnimationStyle;
   bool mMutated;
 };

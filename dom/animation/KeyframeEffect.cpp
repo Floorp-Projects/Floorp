@@ -1242,29 +1242,33 @@ KeyframeEffect::CanThrottle() const
     return true;
   }
 
-  // First we need to check layer generation and transform overflow
-  // prior to the property.mIsRunningOnCompositor check because we should
-  // occasionally unthrottle these animations even if the animations are
-  // already running on compositor.
-  for (const LayerAnimationInfo::Record& record :
-        LayerAnimationInfo::sRecords) {
-    // Skip properties that are overridden by !important rules.
-    // (GetEffectiveAnimationOfProperty, as called by
-    // HasEffectiveAnimationOfProperty, only returns a property which is
-    // neither overridden by !important rules nor overridden by other
-    // animation.)
-    if (!HasEffectiveAnimationOfProperty(record.mProperty)) {
-      continue;
+  EffectSet* effectSet = nullptr;
+  for (const AnimationProperty& property : mProperties) {
+    if (!property.mIsRunningOnCompositor) {
+      return false;
     }
 
-    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
-                                                   mTarget->mPseudoType);
-    MOZ_ASSERT(effectSet, "CanThrottle should be called on an effect "
-                          "associated with a target element");
+    MOZ_ASSERT(nsCSSPropertyIDSet::CompositorAnimatables()
+                 .HasProperty(property.mProperty),
+               "The property should be able to run on the compositor");
+    MOZ_ASSERT(HasEffectiveAnimationOfProperty(property.mProperty),
+               "There should be an effective animation of the property while "
+               "it is marked as being run on the compositor");
+
+    if (!effectSet) {
+      effectSet = EffectSet::GetEffectSet(mTarget->mElement,
+                                          mTarget->mPseudoType);
+      MOZ_ASSERT(effectSet, "CanThrottle should be called on an effect "
+                            "associated with a target element");
+    }
+
+    DisplayItemType displayItemType =
+      LayerAnimationInfo::GetDisplayItemTypeForProperty(property.mProperty);
+
     // Note that AnimationInfo::GetGenarationFromFrame() is supposed to work
     // with the primary frame instead of the style frame.
     Maybe<uint64_t> generation = layers::AnimationInfo::GetGenerationFromFrame(
-        GetPrimaryFrame(), record.mLayerType);
+        GetPrimaryFrame(), displayItemType);
     // Unthrottle if the animation needs to be brought up to date
     if (!generation || effectSet->GetAnimationGeneration() != *generation) {
       return false;
@@ -1274,12 +1278,6 @@ KeyframeEffect::CanThrottle() const
     // we should unthrottle the animation periodically.
     if (HasPropertiesThatMightAffectOverflow() &&
         !CanThrottleOverflowChangesInScrollable(*frame)) {
-      return false;
-    }
-  }
-
-  for (const AnimationProperty& property : mProperties) {
-    if (!property.mIsRunningOnCompositor) {
       return false;
     }
   }

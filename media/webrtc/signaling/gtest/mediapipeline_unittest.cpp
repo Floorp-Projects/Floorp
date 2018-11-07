@@ -367,8 +367,8 @@ class TestAgentReceive : public TestAgent {
  public:
 
   TestAgentReceive() {
-    std::vector<mozilla::AudioCodecConfig *> codecs;
-    codecs.push_back(&audio_config_);
+    std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
+    codecs.emplace_back(new AudioCodecConfig(audio_config_));
 
     mozilla::MediaConduitErrorCode err =
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get())->

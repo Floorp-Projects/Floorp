@@ -77,6 +77,7 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
   , mAttempting0RTT(false)
   , mIsTunnel(false)
   , mPlainTextTunnel(false)
+  , mIsWebsocket(false)
 {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -566,32 +567,46 @@ Http2Stream::GenerateOpen()
 
   nsDependentCString scheme(head->IsHTTPS() ? "https" : "http");
   if (head->IsConnect()) {
-    MOZ_ASSERT(mTransaction->QuerySpdyConnectTransaction());
-    mIsTunnel = true;
+    SpdyConnectTransaction *scTrans = mTransaction->QuerySpdyConnectTransaction();
+    MOZ_ASSERT(scTrans);
+    if (scTrans->IsWebsocket()) {
+      mIsWebsocket = true;
+    } else {
+      mIsTunnel = true;
+    }
     mRequestBodyLenRemaining = 0x0fffffffffffffffULL;
 
-    // Our normal authority has an implicit port, best to use an
-    // explicit one with a tunnel
-    nsHttpConnectionInfo *ci = mTransaction->ConnectionInfo();
-    if (!ci) {
-      return NS_ERROR_UNEXPECTED;
-    }
+    if (mIsTunnel) {
+      // Our normal authority has an implicit port, best to use an
+      // explicit one with a tunnel
+      nsHttpConnectionInfo *ci = mTransaction->ConnectionInfo();
+      if (!ci) {
+        return NS_ERROR_UNEXPECTED;
+      }
 
-    authorityHeader = ci->GetOrigin();
-    authorityHeader.Append(':');
-    authorityHeader.AppendInt(ci->OriginPort());
+      authorityHeader = ci->GetOrigin();
+      authorityHeader.Append(':');
+      authorityHeader.AppendInt(ci->OriginPort());
+    }
   }
 
   nsAutoCString method;
   nsAutoCString path;
   head->Method(method);
   head->Path(path);
+  bool useSimpleConnect = head->IsConnect();
+  nsAutoCString protocol;
+  if (mIsWebsocket) {
+    useSimpleConnect = false;
+    protocol.AppendLiteral("websocket");
+  }
   rv = mSession->Compressor()->EncodeHeaderBlock(mFlatHttpRequestHeaders,
                                                  method,
                                                  path,
                                                  authorityHeader,
                                                  scheme,
-                                                 head->IsConnect(),
+                                                 protocol,
+                                                 useSimpleConnect,
                                                  compressedData);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1072,6 +1087,11 @@ Http2Stream::ConvertResponseHeaders(Http2Decompressor *decompressor,
     }
     MapStreamToHttpConnection();
     ClearTransactionsBlockedOnTunnel();
+  } else if (mIsWebsocket) {
+    LOG3(("Http2Stream %p websocket response code %d", this, httpResponseCode));
+    if (httpResponseCode == 200) {
+      MapStreamToHttpConnection();
+    }
   }
 
   if (httpResponseCode == 101) {

@@ -30,38 +30,22 @@ nsQuoteNode::InitTextFrame(nsGenConList* aList, nsIFrame* aPseudoFrame,
 
   // Don't set up text for 'no-open-quote' and 'no-close-quote'.
   if (IsRealQuote()) {
-    aTextFrame->GetContent()->AsText()->SetText(*Text(), false);
+    aTextFrame->GetContent()->AsText()->SetText(Text(), false);
   }
   return dirty;
 }
 
-const nsString*
+nsString
 nsQuoteNode::Text()
 {
   NS_ASSERTION(mType == StyleContentType::OpenQuote ||
                mType == StyleContentType::CloseQuote,
                "should only be called when mText should be non-null");
-  const nsStyleQuoteValues::QuotePairArray& quotePairs =
-    mPseudoFrame->StyleList()->GetQuotePairs();
-  int32_t quotesCount = quotePairs.Length(); // 0 if 'quotes:none'
-  int32_t quoteDepth = Depth();
 
-  // Reuse the last pair when the depth is greater than the number of
-  // pairs of quotes.  (Also make 'quotes: none' and close-quote from
-  // a depth of 0 equivalent for the next test.)
-  if (quoteDepth >= quotesCount)
-    quoteDepth = quotesCount - 1;
-
-  const nsString* result;
-  if (quoteDepth == -1) {
-    // close-quote from a depth of 0 or 'quotes: none' (we want a node
-    // with the empty string so dynamic changes are easier to handle)
-    result = &EmptyString();
-  } else {
-    result = StyleContentType::OpenQuote == mType
-               ? &quotePairs[quoteDepth].first
-               : &quotePairs[quoteDepth].second;
-  }
+  nsString result;
+  Servo_Quotes_GetQuote(
+    mPseudoFrame->StyleList()->mQuotes.get(),
+    Depth(), mType, &result);
   return result;
 }
 
@@ -83,7 +67,7 @@ nsQuoteList::RecalcAll()
     Calc(node);
 
     if (node->mDepthBefore != oldDepth && node->mText && node->IsRealQuote())
-      node->mText->SetData(*node->Text(), IgnoreErrors());
+      node->mText->SetData(node->Text(), IgnoreErrors());
   }
 }
 

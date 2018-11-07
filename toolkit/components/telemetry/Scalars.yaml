@@ -2166,6 +2166,25 @@ resistfingerprinting:
     record_in_processes:
       - 'main'
 
+update:
+  binarytransparencyresult:
+    bug_numbers:
+      - 1501889
+    description: >
+      If the binary transparency information for an update does not verify
+      successfully, this probe will contain an error code from
+      toolkit/mozapps/update/common/errors.h indicating why.
+    expires: "73"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+      - seceng-telemetry@mozilla.com
+      - dkeeler@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:

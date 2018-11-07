@@ -523,25 +523,7 @@ nsStyleList::nsStyleList(const nsPresContext* aContext)
   MOZ_ASSERT(NS_IsMainThread());
 
   mCounterStyle = CounterStyleManager::GetDiscStyle();
-
-  if (!sInitialQuotes) {
-    // The initial value for quotes is the en-US typographic convention:
-    // outermost are LEFT and RIGHT DOUBLE QUOTATION MARK, alternating
-    // with LEFT and RIGHT SINGLE QUOTATION MARK.
-    static const char16_t initialQuotes[8] = {
-      0x201C, 0, 0x201D, 0, 0x2018, 0, 0x2019, 0
-    };
-
-    sInitialQuotes = new nsStyleQuoteValues;
-    sInitialQuotes->mQuotePairs.AppendElement(
-        std::make_pair(nsDependentString(&initialQuotes[0], 1),
-                       nsDependentString(&initialQuotes[2], 1)));
-    sInitialQuotes->mQuotePairs.AppendElement(
-        std::make_pair(nsDependentString(&initialQuotes[4], 1),
-                       nsDependentString(&initialQuotes[6], 1)));
-  }
-
-  mQuotes = sInitialQuotes;
+  mQuotes = Servo_Quotes_GetInitialValue().Consume();
 }
 
 nsStyleList::~nsStyleList()
@@ -578,8 +560,7 @@ nsStyleList::CalcDifference(const nsStyleList& aNewData,
   // If the quotes implementation is ever going to change we might not need
   // a framechange here and a reflow should be sufficient.  See bug 35768.
   if (mQuotes != aNewData.mQuotes &&
-      (mQuotes || aNewData.mQuotes) &&
-      GetQuotePairs() != aNewData.GetQuotePairs()) {
+      !Servo_Quotes_Equal(mQuotes.get(), aNewData.mQuotes.get())) {
     return nsChangeHint_ReconstructFrame;
   }
   nsChangeHint hint = nsChangeHint(0);
@@ -625,9 +606,6 @@ nsStyleList::GetListStyleImageURI() const
   nsCOMPtr<nsIURI> uri = mListStyleImage->GetImageURI();
   return uri.forget();
 }
-
-StaticRefPtr<nsStyleQuoteValues>
-nsStyleList::sInitialQuotes;
 
 
 // --------------------

@@ -49,7 +49,7 @@ public:
   Http2Session(nsISocketTransport *, enum SpdyVersion version, bool attemptingEarlyData);
 
   MOZ_MUST_USE bool AddStream(nsAHttpTransaction *, int32_t,
-                              bool, nsIInterfaceRequestor *) override;
+                              bool, bool, nsIInterfaceRequestor *) override;
   bool CanReuse() override { return !mShouldGoAway && !mClosed; }
   bool RoomForMoreStreams() override;
   enum SpdyVersion SpdyVersion() override;
@@ -133,7 +133,10 @@ public:
     SETTINGS_TYPE_ENABLE_PUSH = 2,     // can be used to disable push
     SETTINGS_TYPE_MAX_CONCURRENT = 3,  // streams recvr allowed to initiate
     SETTINGS_TYPE_INITIAL_WINDOW = 4,  // bytes for flow control default
-    SETTINGS_TYPE_MAX_FRAME_SIZE = 5   // max frame size settings sender allows receipt of
+    SETTINGS_TYPE_MAX_FRAME_SIZE = 5,   // max frame size settings sender allows receipt of
+    // 6 is SETTINGS_TYPE_MAX_HEADER_LIST - advisory, we ignore it
+    // 7 is unassigned
+    SETTINGS_TYPE_ENABLE_CONNECT_PROTOCOL = 8   // if sender implements extended CONNECT for websockets
   };
 
   // This should be big enough to hold all of your control packets,
@@ -262,6 +265,8 @@ public:
 
   void SendPriorityFrame(uint32_t streamID, uint32_t dependsOn, uint8_t weight);
   void IncrementTrrCounter() { mTrrStreams++; }
+
+  bool CanAcceptWebsocket() override;
 
 private:
 
@@ -581,6 +586,15 @@ private:
   uint32_t FindTunnelCount(nsHttpConnectionInfo *);
   nsDataHashtable<nsCStringHashKey, uint32_t> mTunnelHash;
   uint32_t mTrrStreams;
+
+  // websockets
+  void CreateWebsocketStream(nsAHttpTransaction *, nsIInterfaceRequestor *);
+  void ProcessWaitingWebsockets();
+  bool mEnableWebsockets; // Whether we allow websockets, based on a pref
+  bool mPeerAllowsWebsockets; // Whether our peer allows websockets, based on SETTINGS
+  bool mProcessedWaitingWebsockets; // True once we've received at least one SETTINGS
+  nsTArray<RefPtr<nsAHttpTransaction>> mWaitingWebsockets; // Websocket transactions that may be waiting for the opening SETTINGS
+  nsCOMArray<nsIInterfaceRequestor> mWaitingWebsocketCallbacks;
 };
 
 } // namespace net

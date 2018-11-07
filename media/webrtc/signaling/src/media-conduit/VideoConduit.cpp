@@ -1514,7 +1514,7 @@ WebrtcVideoConduit::SetReceiverTransport(RefPtr<TransportInterface> aTransport)
 
 MediaConduitErrorCode
 WebrtcVideoConduit::ConfigureRecvMediaCodecs(
-  const std::vector<VideoCodecConfig* >& codecConfigList)
+  const std::vector<UniquePtr<VideoCodecConfig>>& codecConfigList)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1543,7 +1543,7 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
   // started successfully.
   std::set<unsigned int> codec_types_seen;
   for (const auto& codec_config : codecConfigList) {
-    if ((condError = ValidateCodecConfig(codec_config))
+    if ((condError = ValidateCodecConfig(codec_config.get()))
         != kMediaConduitNoError) {
       CSFLogError(LOGTAG, "%s Invalid config for %s decoder: %i", __FUNCTION__,
                   codec_config ? codec_config->mName.c_str() : "<null>",

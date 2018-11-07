@@ -73,6 +73,7 @@
         persist="screenX screenY width height sizemode"
 #ifdef BROWSER_XHTML
         hidden="true"
+        mozpersist=""
 #endif
         >
 

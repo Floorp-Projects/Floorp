@@ -902,11 +902,18 @@ nsHttpConnection::AddTransaction(nsAHttpTransaction *httpTransaction,
     needTunnel = needTunnel && transCI->UsingConnect();
     needTunnel = needTunnel && httpTransaction->QueryHttpTransaction();
 
+    bool isWebsocket = false;
+    nsHttpTransaction *trans = httpTransaction->QueryHttpTransaction();
+    if (trans) {
+        isWebsocket = trans->IsWebsocketUpgrade();
+        MOZ_ASSERT(!isWebsocket || !needTunnel, "Websocket and tunnel?!");
+    }
+
     LOG(("nsHttpConnection::AddTransaction for SPDY%s",
-         needTunnel ? " over tunnel" : ""));
+         needTunnel ? " over tunnel" : (isWebsocket ? " websocket" : "")));
 
     if (!mSpdySession->AddStream(httpTransaction, priority,
-                                 needTunnel, mCallbacks)) {
+                                 needTunnel, isWebsocket, mCallbacks)) {
         MOZ_ASSERT(false); // this cannot happen!
         httpTransaction->Close(NS_ERROR_ABORT);
         return NS_ERROR_FAILURE;
@@ -1310,8 +1317,11 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
                                                              upgradeReq));
     // Don't use persistent connection for Upgrade unless there's an auth failure:
     // some proxies expect to see auth response on persistent connection.
-    if (hasUpgradeReq && responseStatus != 401 && responseStatus != 407) {
-        LOG(("HTTP Upgrade in play - disable keepalive\n"));
+    // Also allow persistent conn for h2, as we don't want to waste connections
+    // for multiplexed upgrades.
+    if (hasUpgradeReq && responseStatus != 401 && responseStatus != 407 &&
+        !mSpdySession) {
+        LOG(("HTTP Upgrade in play - disable keepalive for http/1.x\n"));
         DontReuse();
     }
 
@@ -2138,7 +2148,8 @@ nsHttpConnection::SetInSpdyTunnel(bool arg)
 nsresult
 nsHttpConnection::MakeConnectString(nsAHttpTransaction *trans,
                                     nsHttpRequestHead *request,
-                                    nsACString &result)
+                                    nsACString &result,
+                                    bool h2ws)
 {
     result.Truncate();
     if (!trans->ConnectionInfo()) {
@@ -2155,7 +2166,16 @@ nsHttpConnection::MakeConnectString(nsAHttpTransaction *trans,
     // CONNECT host:port HTTP/1.1
     request->SetMethod(NS_LITERAL_CSTRING("CONNECT"));
     request->SetVersion(gHttpHandler->HttpVersion());
-    request->SetRequestURI(result);
+    if (h2ws) {
+        // HTTP/2 websocket CONNECT forms need the full request URI
+        nsAutoCString requestURI;
+        trans->RequestHead()->RequestURI(requestURI);
+        request->SetRequestURI(requestURI);
+
+        request->SetHTTPS(trans->RequestHead()->IsHTTPS());
+    } else {
+        request->SetRequestURI(result);
+    }
     rv = request->SetHeader(nsHttp::User_Agent, gHttpHandler->UserAgent());
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
@@ -2196,7 +2216,7 @@ nsHttpConnection::SetupProxyConnect()
 
     nsAutoCString buf;
     nsHttpRequestHead request;
-    nsresult rv = MakeConnectString(mTransaction, &request, buf);
+    nsresult rv = MakeConnectString(mTransaction, &request, buf, false);
     if (NS_FAILED(rv)) {
         return rv;
     }
@@ -2650,6 +2670,16 @@ nsHttpConnection::NoClientCertAuth() const
   }
 
   return !ssc->GetClientCertSent();
+}
+
+bool
+nsHttpConnection::CanAcceptWebsocket()
+{
+  if (!UsingSpdy()) {
+      return true;
+  }
+
+  return mSpdySession->CanAcceptWebsocket();
 }
 
 } // namespace net

@@ -179,7 +179,8 @@ public:
                                           const nsACString &path,
                                           const nsACString &host,
                                           const nsACString &scheme,
-                                          bool connectForm,
+                                          const nsACString &protocol,
+                                          bool simpleConnectForm,
                                           nsACString &output);
 
   int64_t GetParsedContentLength() { return mParsedContentLength; } // -1 on not found

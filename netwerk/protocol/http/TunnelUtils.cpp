@@ -26,6 +26,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsSocketTransport2.h"
 #include "nsSocketTransportService2.h"
+#include "mozilla/Mutex.h"
 
 namespace mozilla {
 namespace net {
@@ -919,14 +920,72 @@ public:
   NS_DECL_NSITRANSPORT
   NS_DECL_NSISOCKETTRANSPORT
 
-  explicit SocketTransportShim(nsISocketTransport *aWrapped)
+  explicit SocketTransportShim(nsISocketTransport *aWrapped, bool aIsWebsocket)
     : mWrapped(aWrapped)
+    , mIsWebsocket(aIsWebsocket)
   {};
 
 private:
-  virtual ~SocketTransportShim() = default;;
+  virtual ~SocketTransportShim() = default;
 
   nsCOMPtr<nsISocketTransport> mWrapped;
+  bool mIsWebsocket;
+  nsCOMPtr<nsIInterfaceRequestor> mSecurityCallbacks;
+};
+
+class WeakTransProxy final : public nsISupports
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  explicit WeakTransProxy(SpdyConnectTransaction *aTrans)
+  {
+    MOZ_ASSERT(OnSocketThread());
+    mWeakTrans = do_GetWeakReference(aTrans);
+  }
+
+  already_AddRefed<NullHttpTransaction> QueryTransaction()
+  {
+    MOZ_ASSERT(OnSocketThread());
+    RefPtr<NullHttpTransaction> trans = do_QueryReferent(mWeakTrans);
+    return trans.forget();
+  }
+
+private:
+  ~WeakTransProxy()
+  {
+    MOZ_ASSERT(OnSocketThread());
+  }
+
+  nsWeakPtr mWeakTrans;
+};
+
+NS_IMPL_ISUPPORTS(WeakTransProxy, nsISupports)
+
+class WeakTransFreeProxy final : public Runnable
+{
+public:
+  explicit WeakTransFreeProxy(WeakTransProxy *proxy)
+    : Runnable("WeakTransFreeProxy")
+    , mProxy(proxy)
+  { }
+
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(OnSocketThread());
+    mProxy = nullptr;
+    return NS_OK;
+  }
+
+  void Dispatch()
+  {
+    MOZ_ASSERT(!OnSocketThread());
+    nsCOMPtr<nsIEventTarget> sts = do_GetService("@mozilla.org/network/socket-transport-service;1");
+    Unused << sts->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
+  }
+
+private:
+  RefPtr<WeakTransProxy> mProxy;
 };
 
 class OutputStreamShim : public nsIAsyncOutputStream
@@ -937,20 +996,39 @@ public:
   NS_DECL_NSIASYNCOUTPUTSTREAM
 
   friend class SpdyConnectTransaction;
+  friend class WebsocketHasDataToWrite;
+  friend class OutputCloseTransaction;
 
-  explicit OutputStreamShim(SpdyConnectTransaction *aTrans)
+  OutputStreamShim(SpdyConnectTransaction *aTrans, bool aIsWebsocket)
     : mCallback(nullptr)
     , mStatus(NS_OK)
+    , mMutex("OutputStreamShim")
+    , mIsWebsocket(aIsWebsocket)
   {
-    mWeakTrans = do_GetWeakReference(aTrans);
+    mWeakTrans = new WeakTransProxy(aTrans);
   }
 
-private:
-  virtual ~OutputStreamShim() = default;;
+  nsIOutputStreamCallback *GetCallback();
 
-  nsWeakPtr mWeakTrans; // SpdyConnectTransaction *
+private:
+  virtual ~OutputStreamShim()
+  {
+    if (!OnSocketThread()) {
+      RefPtr<WeakTransFreeProxy> p = new WeakTransFreeProxy(mWeakTrans);
+      mWeakTrans = nullptr;
+      p->Dispatch();
+    }
+  }
+
+  RefPtr<WeakTransProxy> mWeakTrans; // SpdyConnectTransaction *
   nsIOutputStreamCallback *mCallback;
   nsresult mStatus;
+  mozilla::Mutex mMutex;
+
+  // Websockets
+  bool mIsWebsocket;
+  nsresult CallTransactionHasDataToWrite();
+  nsresult CloseTransaction(nsresult reason);
 };
 
 class InputStreamShim : public nsIAsyncInputStream
@@ -961,27 +1039,45 @@ public:
   NS_DECL_NSIASYNCINPUTSTREAM
 
   friend class SpdyConnectTransaction;
+  friend class InputCloseTransaction;
 
-  explicit InputStreamShim(SpdyConnectTransaction *aTrans)
+  InputStreamShim(SpdyConnectTransaction *aTrans, bool aIsWebsocket)
     : mCallback(nullptr)
     , mStatus(NS_OK)
+    , mMutex("InputStreamShim")
+    , mIsWebsocket(aIsWebsocket)
   {
-    mWeakTrans = do_GetWeakReference(aTrans);
+    mWeakTrans = new WeakTransProxy(aTrans);
   }
 
-private:
-  virtual ~InputStreamShim() = default;;
+  nsIInputStreamCallback *GetCallback();
 
-  nsWeakPtr mWeakTrans; // SpdyConnectTransaction *
+private:
+  virtual ~InputStreamShim()
+  {
+    if (!OnSocketThread()) {
+      RefPtr<WeakTransFreeProxy> p = new WeakTransFreeProxy(mWeakTrans);
+      mWeakTrans = nullptr;
+      p->Dispatch();
+    }
+  }
+
+  RefPtr<WeakTransProxy> mWeakTrans; // SpdyConnectTransaction *
   nsIInputStreamCallback *mCallback;
   nsresult mStatus;
+  mozilla::Mutex mMutex;
+
+  // Websockets
+  bool mIsWebsocket;
+  nsresult CloseTransaction(nsresult reason);
 };
 
 SpdyConnectTransaction::SpdyConnectTransaction(nsHttpConnectionInfo *ci,
                                                nsIInterfaceRequestor *callbacks,
                                                uint32_t caps,
                                                nsHttpTransaction *trans,
-                                               nsAHttpConnection *session)
+                                               nsAHttpConnection *session,
+                                               bool isWebsocket)
   : NullHttpTransaction(ci, callbacks, caps | NS_HTTP_ALLOW_KEEPALIVE)
   , mConnectStringOffset(0)
   , mSession(session)
@@ -993,13 +1089,23 @@ SpdyConnectTransaction::SpdyConnectTransaction(nsHttpConnectionInfo *ci,
   , mOutputDataUsed(0)
   , mOutputDataOffset(0)
   , mForcePlainText(false)
+  , mIsWebsocket(isWebsocket)
+  , mConnRefTaken(false)
 {
   LOG(("SpdyConnectTransaction ctor %p\n", this));
 
   mTimestampSyn = TimeStamp::Now();
   mRequestHead = new nsHttpRequestHead();
+  if (mIsWebsocket) {
+    // Ensure our request head has all the websocket headers duplicated from the
+    // original transaction before calling the boilerplate stuff to create the
+    // rest of the CONNECT headers.
+    trans->RequestHead()->Enter();
+    mRequestHead->SetHeaders(trans->RequestHead()->Headers());
+    trans->RequestHead()->Exit();
+  }
   DebugOnly<nsresult> rv =
-    nsHttpConnection::MakeConnectString(trans, mRequestHead, mConnectString);
+    nsHttpConnection::MakeConnectString(trans, mRequestHead, mConnectString, mIsWebsocket);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   mDrivingTransaction = trans;
 }
@@ -1010,6 +1116,7 @@ SpdyConnectTransaction::~SpdyConnectTransaction()
 
   if (mDrivingTransaction) {
     // requeue it I guess. This should be gone.
+    mDrivingTransaction->SetH2WSTransaction(nullptr);
     Unused << gHttpHandler->InitiateTransaction(mDrivingTransaction,
                                                 mDrivingTransaction->Priority());
   }
@@ -1022,6 +1129,7 @@ SpdyConnectTransaction::ForcePlainText()
   MOZ_ASSERT(!mInputDataUsed && !mInputDataSize && !mInputDataOffset);
   MOZ_ASSERT(!mForcePlainText);
   MOZ_ASSERT(!mTunnelTransport, "call before mapstreamtohttpconnection");
+  MOZ_ASSERT(!mIsWebsocket);
 
   mForcePlainText = true;
 }
@@ -1032,9 +1140,9 @@ SpdyConnectTransaction::MapStreamToHttpConnection(nsISocketTransport *aTransport
 {
   mConnInfo = aConnInfo;
 
-  mTunnelTransport = new SocketTransportShim(aTransport);
-  mTunnelStreamIn = new InputStreamShim(this);
-  mTunnelStreamOut = new OutputStreamShim(this);
+  mTunnelTransport = new SocketTransportShim(aTransport, mIsWebsocket);
+  mTunnelStreamIn = new InputStreamShim(this, mIsWebsocket);
+  mTunnelStreamOut = new OutputStreamShim(this, mIsWebsocket);
   mTunneledConn = new nsHttpConnection();
 
   // this new http connection has a specific hashkey (i.e. to a particular
@@ -1045,7 +1153,7 @@ SpdyConnectTransaction::MapStreamToHttpConnection(nsISocketTransport *aTransport
   nsCOMPtr<nsIInterfaceRequestor> callbacks;
   GetSecurityCallbacks(getter_AddRefs(callbacks));
   mTunneledConn->SetTransactionCaps(Caps());
-  MOZ_ASSERT(aConnInfo->UsingHttpsProxy());
+  MOZ_ASSERT(aConnInfo->UsingHttpsProxy() || mIsWebsocket);
   TimeDuration rtt = TimeStamp::Now() - mTimestampSyn;
   DebugOnly<nsresult> rv =
     mTunneledConn->Init(aConnInfo,
@@ -1057,6 +1165,11 @@ SpdyConnectTransaction::MapStreamToHttpConnection(nsISocketTransport *aTransport
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (mForcePlainText) {
       mTunneledConn->ForcePlainText();
+  } else if (mIsWebsocket) {
+    LOG(("SpdyConnectTransaction::MapStreamToHttpConnection %p websocket", this));
+    // Let the root transaction know about us, so it can pass our own conn
+    // to the websocket.
+    mDrivingTransaction->SetH2WSTransaction(this);
   } else {
     mTunneledConn->SetupSecondaryTLS(this);
     mTunneledConn->SetInSpdyTunnel(true);
@@ -1068,10 +1181,12 @@ SpdyConnectTransaction::MapStreamToHttpConnection(nsISocketTransport *aTransport
   mDrivingTransaction->SetConnection(wrappedConn);
   mDrivingTransaction->MakeSticky();
 
-  // jump the priority and start the dispatcher
-  Unused << gHttpHandler->InitiateTransaction(
-    mDrivingTransaction, nsISupportsPriority::PRIORITY_HIGHEST - 60);
-  mDrivingTransaction = nullptr;
+  if (!mIsWebsocket) {
+    // jump the priority and start the dispatcher
+    Unused << gHttpHandler->InitiateTransaction(
+      mDrivingTransaction, nsISupportsPriority::PRIORITY_HIGHEST - 60);
+    mDrivingTransaction = nullptr;
+  }
 }
 
 nsresult
@@ -1164,21 +1279,26 @@ SpdyConnectTransaction::ReadSegments(nsAHttpSegmentReader *reader,
   }
 
   *countRead = 0;
-  Unused << Flush(count, countRead);
-  if (!mTunnelStreamOut->mCallback) {
+  nsresult rv = Flush(count, countRead);
+  nsIOutputStreamCallback *cb = mTunnelStreamOut->GetCallback();
+  if (!cb && !(*countRead)) {
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
 
-  nsresult rv =
-    mTunnelStreamOut->mCallback->OnOutputStreamReady(mTunnelStreamOut);
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (cb) {
+    // See if there is any more data available
+    rv = cb->OnOutputStreamReady(mTunnelStreamOut);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // Write out anything that may have come out of the stream just above
+    uint32_t subtotal;
+    count -= *countRead;
+    rv = Flush(count, &subtotal);
+    *countRead += subtotal;
   }
 
-  uint32_t subtotal;
-  count -= *countRead;
-  rv = Flush(count, &subtotal);
-  *countRead += subtotal;
   return rv;
 }
 
@@ -1196,26 +1316,26 @@ SpdyConnectTransaction::CreateShimError(nsresult code)
     mTunnelStreamIn->mStatus = code;
   }
 
-  if (mTunnelStreamIn && mTunnelStreamIn->mCallback) {
-    mTunnelStreamIn->mCallback->OnInputStreamReady(mTunnelStreamIn);
+  if (mTunnelStreamIn) {
+    nsIInputStreamCallback *cb = mTunnelStreamIn->GetCallback();
+    if (cb) {
+      cb->OnInputStreamReady(mTunnelStreamIn);
+    }
   }
 
-  if (mTunnelStreamOut && mTunnelStreamOut->mCallback) {
-    mTunnelStreamOut->mCallback->OnOutputStreamReady(mTunnelStreamOut);
+  if (mTunnelStreamOut) {
+    nsIOutputStreamCallback *cb = mTunnelStreamOut->GetCallback();
+    if (cb) {
+      cb->OnOutputStreamReady(mTunnelStreamOut);
+    }
   }
 }
 
 nsresult
-SpdyConnectTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
-                                      uint32_t count,
-                                      uint32_t *countWritten)
+SpdyConnectTransaction::WriteDataToBuffer(nsAHttpSegmentWriter *writer,
+                                          uint32_t count,
+                                          uint32_t *countWritten)
 {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  LOG(("SpdyConnectTransaction::WriteSegments %p max=%d cb=%p\n",
-       this, count, mTunneledConn ? mTunnelStreamIn->mCallback : nullptr));
-
-  // first call into the tunnel stream to get the demux'd data out of the
-  // spdy session.
   EnsureBuffer(mInputData, mInputDataUsed + count, mInputDataUsed, mInputDataSize);
   nsresult rv = writer->OnWriteSegment(&mInputData[mInputDataUsed],
                                        count, countWritten);
@@ -1231,11 +1351,38 @@ SpdyConnectTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
   LOG(("SpdyConnectTransaction %p %d new bytes [%d total] of ciphered data buffered\n",
        this, *countWritten, mInputDataUsed - mInputDataOffset));
 
-  if (!mTunneledConn || !mTunnelStreamIn->mCallback) {
+  return rv;
+}
+
+nsresult
+SpdyConnectTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
+                                      uint32_t count,
+                                      uint32_t *countWritten)
+{
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  nsIInputStreamCallback *cb = mTunneledConn ? mTunnelStreamIn->GetCallback() : nullptr;
+  LOG(("SpdyConnectTransaction::WriteSegments %p max=%d cb=%p\n",
+       this, count, cb));
+
+  // For websockets, we need to forward the initial response through to the base
+  // transaction so the normal websocket plumbing can do all the things it needs
+  // to do.
+  if (mIsWebsocket) {
+    return WebsocketWriteSegments(writer, count, countWritten);
+  }
+
+  // first call into the tunnel stream to get the demux'd data out of the
+  // spdy session.
+  nsresult rv = WriteDataToBuffer(writer, count, countWritten);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!mTunneledConn || cb) {
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
 
-  rv = mTunnelStreamIn->mCallback->OnInputStreamReady(mTunnelStreamIn);
+  rv = cb->OnInputStreamReady(mTunnelStreamIn);
   LOG(("SpdyConnectTransaction::WriteSegments %p "
        "after InputStreamReady callback %d total of ciphered data buffered rv=%"
        PRIx32 "\n",
@@ -1244,15 +1391,51 @@ SpdyConnectTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
        "goodput %p out %" PRId64 "\n", this, mTunneledConn.get(),
        mTunneledConn->ContentBytesWritten()));
   if (NS_SUCCEEDED(rv) && !mTunneledConn->ContentBytesWritten()) {
-    mTunnelStreamOut->AsyncWait(mTunnelStreamOut->mCallback, 0, 0, nullptr);
+    nsIOutputStreamCallback *ocb = mTunnelStreamOut->GetCallback();
+    mTunnelStreamOut->AsyncWait(ocb, 0, 0, nullptr);
   }
+  return rv;
+}
+
+nsresult
+SpdyConnectTransaction::WebsocketWriteSegments(nsAHttpSegmentWriter *writer,
+                                               uint32_t count,
+                                               uint32_t *countWritten)
+{
+  MOZ_ASSERT(mIsWebsocket);
+  if (mDrivingTransaction && !mDrivingTransaction->IsDone()) {
+    // Transaction hasn't received end of headers yet, so keep passing data to
+    // it until it has. Then we can take over.
+    nsresult rv = mDrivingTransaction->WriteSegments(writer, count, countWritten);
+    if (NS_SUCCEEDED(rv) && mDrivingTransaction->IsDone() && !mConnRefTaken) {
+      mDrivingTransaction->Close(NS_OK);
+    }
+  }
+
+  if (!mConnRefTaken) {
+    // Force driving transaction to finish so the websocket channel can get its
+    // notifications correctly and start driving.
+    MOZ_ASSERT(mDrivingTransaction);
+    mDrivingTransaction->Close(NS_OK);
+  }
+
+  nsresult rv = WriteDataToBuffer(writer, count, countWritten);
+  if (NS_SUCCEEDED(rv)) {
+    nsIInputStreamCallback *cb = mTunnelStreamIn->GetCallback();
+    if (!cb) {
+      rv = NS_BASE_STREAM_WOULD_BLOCK;
+    } else {
+      rv = cb->OnInputStreamReady(mTunnelStreamIn);
+    }
+  }
+
   return rv;
 }
 
 bool
 SpdyConnectTransaction::ConnectedReadyForInput()
 {
-  return mTunneledConn && mTunnelStreamIn->mCallback;
+  return mTunneledConn && mTunnelStreamIn->GetCallback();
 }
 
 nsHttpRequestHead *
@@ -1266,6 +1449,15 @@ SpdyConnectTransaction::Close(nsresult code)
 {
   LOG(("SpdyConnectTransaction close %p %" PRIx32 "\n", this, static_cast<uint32_t>(code)));
 
+  if (mIsWebsocket && mDrivingTransaction) {
+    mDrivingTransaction->SetH2WSTransaction(nullptr);
+    if (!mConnRefTaken) {
+      // This indicates that the websocket failed to set up, so just close down
+      // the transaction as usual.
+      mDrivingTransaction->Close(code);
+      mDrivingTransaction = nullptr;
+    }
+  }
   NullHttpTransaction::Close(code);
   if (NS_FAILED(code) && (code != NS_BASE_STREAM_WOULD_BLOCK)) {
     CreateShimError(code);
@@ -1274,40 +1466,123 @@ SpdyConnectTransaction::Close(nsresult code)
   }
 }
 
+void
+SpdyConnectTransaction::SetConnRefTaken()
+{
+  mConnRefTaken = true;
+  mDrivingTransaction = nullptr; // Just in case
+}
+
+nsIOutputStreamCallback *
+OutputStreamShim::GetCallback()
+{
+  mozilla::MutexAutoLock lock(mMutex);
+  return mCallback;
+}
+
+class WebsocketHasDataToWrite final : public Runnable
+{
+public:
+  explicit WebsocketHasDataToWrite(OutputStreamShim *shim)
+    : Runnable("WebsocketHasDataToWrite")
+    , mShim(shim)
+  { }
+
+  ~WebsocketHasDataToWrite() = default;
+
+  NS_IMETHOD Run() override
+  {
+    return mShim->CallTransactionHasDataToWrite();
+  }
+
+  MOZ_MUST_USE nsresult Dispatch()
+  {
+    if (OnSocketThread()) {
+      return Run();
+    }
+
+    nsCOMPtr<nsIEventTarget> sts = do_GetService("@mozilla.org/network/socket-transport-service;1");
+    return sts->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
+  }
+
+private:
+  RefPtr<OutputStreamShim> mShim;
+};
+
 NS_IMETHODIMP
 OutputStreamShim::AsyncWait(nsIOutputStreamCallback *callback,
-                            unsigned int, unsigned int, nsIEventTarget *target)
+                            unsigned int flags, unsigned int requestedCount,
+                            nsIEventTarget *target)
 {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  bool currentThread;
+  if (mIsWebsocket) {
+    // With websockets, AsyncWait may be called from the main thread, but the
+    // target is on the socket thread. That's all we really care about.
+    nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
+    MOZ_ASSERT((!target && !callback) || (target == sts));
+    if (target && (target != sts)) {
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+    bool currentThread;
 
-  if (target &&
-      (NS_FAILED(target->IsOnCurrentThread(&currentThread)) || !currentThread)) {
-    return NS_ERROR_FAILURE;
+    if (target &&
+        (NS_FAILED(target->IsOnCurrentThread(&currentThread)) || !currentThread)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   LOG(("OutputStreamShim::AsyncWait %p callback %p\n", this, callback));
-  mCallback = callback;
 
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
-  if (!baseTrans) {
-    return NS_ERROR_FAILURE;
-  }
-  SpdyConnectTransaction *trans = baseTrans->QuerySpdyConnectTransaction();
-  MOZ_ASSERT(trans);
-  if (!trans) {
-    return NS_ERROR_UNEXPECTED;
+  {
+    mozilla::MutexAutoLock lock(mMutex);
+    mCallback = callback;
   }
 
-  trans->mSession->TransactionHasDataToWrite(trans);
+  RefPtr<WebsocketHasDataToWrite> wsdw = new WebsocketHasDataToWrite(this);
+  Unused << wsdw->Dispatch();
 
   return NS_OK;
 }
 
+class OutputCloseTransaction final : public Runnable
+{
+public:
+  OutputCloseTransaction(OutputStreamShim *shim, nsresult reason)
+    : Runnable("OutputCloseTransaction")
+    , mShim(shim)
+    , mReason(reason)
+  { }
+
+  ~OutputCloseTransaction() = default;
+
+  NS_IMETHOD Run() override
+  {
+    return mShim->CloseTransaction(mReason);
+  }
+
+private:
+  RefPtr<OutputStreamShim> mShim;
+  nsresult mReason;
+};
+
 NS_IMETHODIMP
 OutputStreamShim::CloseWithStatus(nsresult reason)
 {
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  if (!OnSocketThread()) {
+    RefPtr<OutputCloseTransaction> oct = new OutputCloseTransaction(this, reason);
+    nsCOMPtr<nsIEventTarget> sts = do_GetService("@mozilla.org/network/socket-transport-service;1");
+    return sts->Dispatch(oct, nsIEventTarget::DISPATCH_NORMAL);
+  }
+
+  return CloseTransaction(reason);
+}
+
+nsresult
+OutputStreamShim::CloseTransaction(nsresult reason)
+{
+  MOZ_ASSERT(OnSocketThread());
+  RefPtr<NullHttpTransaction> baseTrans = mWeakTrans->QueryTransaction();
   if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
@@ -1330,7 +1605,8 @@ OutputStreamShim::Close()
 NS_IMETHODIMP
 OutputStreamShim::Flush()
 {
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  MOZ_ASSERT(OnSocketThread());
+  RefPtr<NullHttpTransaction> baseTrans = mWeakTrans->QueryTransaction();
   if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
@@ -1352,6 +1628,23 @@ OutputStreamShim::Flush()
   return rv;
 }
 
+nsresult
+OutputStreamShim::CallTransactionHasDataToWrite()
+{
+  MOZ_ASSERT(OnSocketThread());
+  RefPtr<NullHttpTransaction> baseTrans = mWeakTrans->QueryTransaction();
+  if (!baseTrans) {
+    return NS_ERROR_FAILURE;
+  }
+  SpdyConnectTransaction *trans = baseTrans->QuerySpdyConnectTransaction();
+  MOZ_ASSERT(trans);
+  if (!trans) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  trans->mSession->TransactionHasDataToWrite(trans);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 OutputStreamShim::Write(const char * aBuf, uint32_t aCount, uint32_t *_retval)
 {
@@ -1361,7 +1654,7 @@ OutputStreamShim::Write(const char * aBuf, uint32_t aCount, uint32_t *_retval)
     return mStatus;
   }
 
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  RefPtr<NullHttpTransaction> baseTrans = mWeakTrans->QueryTransaction();
   if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
@@ -1392,12 +1685,18 @@ OutputStreamShim::Write(const char * aBuf, uint32_t aCount, uint32_t *_retval)
 NS_IMETHODIMP
 OutputStreamShim::WriteFrom(nsIInputStream *aFromStream, uint32_t aCount, uint32_t *_retval)
 {
+  if (mIsWebsocket) {
+    LOG3(("WARNING: OutputStreamShim::WriteFrom %p", this));
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 OutputStreamShim::WriteSegments(nsReadSegmentFun aReader, void *aClosure, uint32_t aCount, uint32_t *_retval)
 {
+  if (mIsWebsocket) {
+    LOG3(("WARNING: OutputStreamShim::WriteSegments %p", this));
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1408,27 +1707,84 @@ OutputStreamShim::IsNonBlocking(bool *_retval)
   return NS_OK;
 }
 
+nsIInputStreamCallback *
+InputStreamShim::GetCallback()
+{
+  mozilla::MutexAutoLock lock(mMutex);
+  return mCallback;
+}
+
 NS_IMETHODIMP
 InputStreamShim::AsyncWait(nsIInputStreamCallback *callback,
-                           unsigned int, unsigned int, nsIEventTarget *target)
+                           unsigned int flags, unsigned int requestedCount,
+                           nsIEventTarget *target)
 {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  bool currentThread;
+  if (mIsWebsocket) {
+    // With websockets, AsyncWait may be called from the main thread, but the
+    // target is on the socket thread. That's all we really care about.
+    nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
+    MOZ_ASSERT((!target && !callback) || (target == sts));
+    if (target && (target != sts)) {
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+    bool currentThread;
 
-  if (target &&
-      (NS_FAILED(target->IsOnCurrentThread(&currentThread)) || !currentThread)) {
-    return NS_ERROR_FAILURE;
+    if (target &&
+        (NS_FAILED(target->IsOnCurrentThread(&currentThread)) || !currentThread)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   LOG(("InputStreamShim::AsyncWait %p callback %p\n", this, callback));
-  mCallback = callback;
+
+  {
+    mozilla::MutexAutoLock lock(mMutex);
+    mCallback = callback;
+  }
+
   return NS_OK;
 }
+
+class InputCloseTransaction final : public Runnable
+{
+public:
+  InputCloseTransaction(InputStreamShim *shim, nsresult reason)
+    : Runnable("InputCloseTransaction")
+    , mShim(shim)
+    , mReason(reason)
+  { }
+
+  ~InputCloseTransaction() = default;
+
+  NS_IMETHOD Run() override
+  {
+    return mShim->CloseTransaction(mReason);
+  }
+
+private:
+  RefPtr<InputStreamShim> mShim;
+  nsresult mReason;
+};
 
 NS_IMETHODIMP
 InputStreamShim::CloseWithStatus(nsresult reason)
 {
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  if (!OnSocketThread()) {
+    RefPtr<InputCloseTransaction> ict = new InputCloseTransaction(this, reason);
+    nsCOMPtr<nsIEventTarget> sts = do_GetService("@mozilla.org/network/socket-transport-service;1");
+    return sts->Dispatch(ict, nsIEventTarget::DISPATCH_NORMAL);
+  }
+
+  return CloseTransaction(reason);
+}
+
+nsresult
+InputStreamShim::CloseTransaction(nsresult reason)
+{
+  MOZ_ASSERT(OnSocketThread());
+  RefPtr<NullHttpTransaction> baseTrans = mWeakTrans->QueryTransaction();
   if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
@@ -1451,7 +1807,7 @@ InputStreamShim::Close()
 NS_IMETHODIMP
 InputStreamShim::Available(uint64_t *_retval)
 {
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  RefPtr<NullHttpTransaction> baseTrans = mWeakTrans->QueryTransaction();
   if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
@@ -1474,7 +1830,7 @@ InputStreamShim::Read(char *aBuf, uint32_t aCount, uint32_t *_retval)
     return mStatus;
   }
 
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  RefPtr<NullHttpTransaction> baseTrans = mWeakTrans->QueryTransaction();
   if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
@@ -1500,6 +1856,9 @@ NS_IMETHODIMP
 InputStreamShim::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
                               uint32_t aCount, uint32_t *_retval)
 {
+  if (mIsWebsocket) {
+    LOG3(("WARNING: InputStreamShim::ReadSegments %p", this));
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1513,18 +1872,40 @@ InputStreamShim::IsNonBlocking(bool *_retval)
 NS_IMETHODIMP
 SocketTransportShim::SetKeepaliveEnabled(bool aKeepaliveEnabled)
 {
+  if (mIsWebsocket) {
+    LOG3(("WARNING: SocketTransportShim::SetKeepaliveEnabled %p called", this));
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 SocketTransportShim::SetKeepaliveVals(int32_t keepaliveIdleTime, int32_t keepaliveRetryInterval)
 {
+  if (mIsWebsocket) {
+    LOG3(("WARNING: SocketTransportShim::SetKeepaliveVals %p called", this));
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+SocketTransportShim::GetSecurityCallbacks(nsIInterfaceRequestor **aSecurityCallbacks)
+{
+  if (mIsWebsocket) {
+    nsCOMPtr<nsIInterfaceRequestor> out(mSecurityCallbacks);
+    *aSecurityCallbacks = out.forget().take();
+    return NS_OK;
+  }
+
+  return mWrapped->GetSecurityCallbacks(aSecurityCallbacks);
 }
 
 NS_IMETHODIMP
 SocketTransportShim::SetSecurityCallbacks(nsIInterfaceRequestor *aSecurityCallbacks)
 {
+  if (mIsWebsocket) {
+    mSecurityCallbacks = aSecurityCallbacks;
+    return NS_OK;
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1532,6 +1913,9 @@ NS_IMETHODIMP
 SocketTransportShim::OpenInputStream(uint32_t aFlags, uint32_t aSegmentSize,
                                      uint32_t aSegmentCount, nsIInputStream * *_retval)
 {
+  if (mIsWebsocket) {
+    LOG3(("WARNING: SocketTransportShim::OpenInputStream %p", this));
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1539,36 +1923,55 @@ NS_IMETHODIMP
 SocketTransportShim::OpenOutputStream(uint32_t aFlags, uint32_t aSegmentSize,
                                       uint32_t aSegmentCount, nsIOutputStream * *_retval)
 {
+  if (mIsWebsocket) {
+    LOG3(("WARNING: SocketTransportShim::OpenOutputStream %p", this));
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 SocketTransportShim::Close(nsresult aReason)
 {
+  if (mIsWebsocket) {
+    LOG3(("WARNING: SocketTransportShim::Close %p", this));
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 SocketTransportShim::SetEventSink(nsITransportEventSink *aSink, nsIEventTarget *aEventTarget)
 {
+  if (mIsWebsocket) {
+    // Need to pretend, since websockets expect this to work
+    return NS_OK;
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 SocketTransportShim::Bind(NetAddr *aLocalAddr)
 {
+  if (mIsWebsocket) {
+    LOG3(("WARNING: SocketTransportShim::Bind %p", this));
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 SocketTransportShim::GetFirstRetryError(nsresult *aFirstRetryError)
 {
+  if (mIsWebsocket) {
+    LOG3(("WARNING: SocketTransportShim::GetFirstRetryError %p", this));
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 SocketTransportShim::GetEsniUsed(bool *aEsniUsed)
 {
+  if (mIsWebsocket) {
+    LOG3(("WARNING: SocketTransportShim::GetEsniUsed %p", this));
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1591,7 +1994,6 @@ FWD_TS_PTR(GetSelfAddr, mozilla::net::NetAddr);
 FWD_TS_ADDREF(GetScriptablePeerAddr, nsINetAddr);
 FWD_TS_ADDREF(GetScriptableSelfAddr, nsINetAddr);
 FWD_TS_ADDREF(GetSecurityInfo, nsISupports);
-FWD_TS_ADDREF(GetSecurityCallbacks, nsIInterfaceRequestor);
 FWD_TS_PTR(IsAlive, bool);
 FWD_TS_PTR(GetConnectionFlags, uint32_t);
 FWD_TS(SetConnectionFlags, uint32_t);

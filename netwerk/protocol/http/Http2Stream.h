@@ -373,6 +373,12 @@ private:
 
   bool mIsTunnel;
   bool mPlainTextTunnel;
+
+/// websockets
+public:
+  bool IsWebsocket() { return mIsWebsocket; }
+private:
+  bool mIsWebsocket;
 };
 
 } // namespace net

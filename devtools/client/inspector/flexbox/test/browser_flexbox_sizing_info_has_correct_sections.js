@@ -35,7 +35,8 @@ add_task(async function() {
 
     is(sections.length, expectedSections.length, "Correct number of sections found");
     expectedSections.forEach((expectedSection, i) => {
-      is(sections[i], expectedSection, `The ${expectedSection} section was found`);
+      ok(sections[i].includes(expectedSection),
+         `The ${expectedSection} section was found`);
     });
   }
 });

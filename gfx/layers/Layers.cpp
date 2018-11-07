@@ -189,7 +189,6 @@ Layer::Layer(LayerManager* aManager, void* aImplData)
   , mNextSibling(nullptr)
   , mPrevSibling(nullptr)
   , mImplData(aImplData)
-  , mAnimationInfo(aManager)
   , mUseTileSourceRect(false)
 #ifdef DEBUG
   , mDebugColorIndex(0)

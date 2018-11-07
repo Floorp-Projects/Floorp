@@ -360,6 +360,12 @@ update-enable-search-update =
     .label = Automatically update search engines
     .accesskey = e
 
+update-pref-write-failure-title = Write Failure
+
+# Variables:
+#   $path (String) - Path to the configuration file
+update-pref-write-failure-message = Unable to save preference. Could not write to file: { $path }
+
 ## General Section - Performance
 
 performance-title = Performance
