@@ -1951,11 +1951,8 @@ ControlFlowGenerator::processTableSwitch(JSOp op, jssrcnote* sn)
         MOZ_ASSERT(casepc >= pc && casepc <= exitpc);
         CFGBlock* caseBlock;
 
-        if (casepc == pc) {
-            // If the casepc equals the current pc, it is not a written case,
-            // but a filled gap. That way we can use a tableswitch instead of
-            // condswitch, even if not all numbers are consecutive.
-            // In that case this block goes to the default case
+        if (casepc == defaultpc) {
+            // This is a missing case. Jump to the 'default' target.
             caseBlock = CFGBlock::New(alloc(), defaultpc);
             caseBlock->setStopIns(CFGGoto::New(alloc(), defaultcase));
         } else {
