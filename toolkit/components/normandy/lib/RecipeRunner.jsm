@@ -18,7 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
-  AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
   Uptake: "resource://normandy/lib/Uptake.jsm",
   ActionsManager: "resource://normandy/lib/ActionsManager.jsm",
 });
@@ -247,9 +246,6 @@ var RecipeRunner = {
     }
 
     await actions.finalize();
-
-    // Close storage connections
-    await AddonStudies.close();
 
     Uptake.reportRunner(Uptake.RUNNER_SUCCESS);
   },
