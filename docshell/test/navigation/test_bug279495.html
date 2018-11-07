@@ -6,12 +6,12 @@
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
     <script type="text/javascript" src="NavigationUtils.js"></script>
 <script>
-window.onload = function () {
+window.onload = function() {
   document.getElementById("link0").href = target_url;
   document.getElementById("link1").href = target_url;
 
-  sendMouseEvent({type:"click"}, "link0");
-  sendMouseEvent({type:"click"}, "link1");
+  sendMouseEvent({type: "click"}, "link0");
+  sendMouseEvent({type: "click"}, "link1");
 
   xpcWaitForFinishedFrames(function() {
     countAndClose("window0", 1);
@@ -20,7 +20,7 @@ window.onload = function () {
     xpcCleanupWindows();
     SimpleTest.finish();
   }, 2);
-}
+};
 
 function countAndClose(name, expected_count) {
   var array_of_frames = xpcGetFramesByName(name);
@@ -28,7 +28,7 @@ function countAndClose(name, expected_count) {
      "Should only open " + expected_count +
      " window(s) with name " + name + " using a fancy hyperlink.");
 
-  for (var i=0; i < array_of_frames.length; ++i)
+  for (var i = 0; i < array_of_frames.length; ++i)
     array_of_frames[i].close();
 }
 </script>
