@@ -712,6 +712,56 @@ TextEditor::DeleteSelectionAsAction(EDirection aDirection,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  // If there is an existing selection when an extended delete is requested,
+  // platforms that use "caret-style" caret positioning collapse the
+  // selection to the  start and then create a new selection.
+  // Platforms that use "selection-style" caret positioning just delete the
+  // existing selection without extending it.
+  if (!SelectionRefPtr()->IsCollapsed()) {
+    switch (aDirection) {
+      case eNextWord:
+      case ePreviousWord:
+      case eToBeginningOfLine:
+      case eToEndOfLine: {
+        if (mCaretStyle != 1) {
+          aDirection = eNone;
+          break;
+        }
+        ErrorResult error;
+        SelectionRefPtr()->CollapseToStart(error);
+        if (NS_WARN_IF(error.Failed())) {
+          return error.StealNSResult();
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  // If Selection is still NOT collapsed, it does not important removing
+  // range of the operation since we'll remove the selected content.  However,
+  // information of direction (backward or forward) may be important for
+  // web apps.  E.g., web apps may want to mark selected range as "deleted"
+  // and move caret before or after the range.  Therefore, we should forget
+  // only the range information but keep range information.  See discussion
+  // of the spec issue for the detail:
+  // https://github.com/w3c/input-events/issues/82
+  if (!SelectionRefPtr()->IsCollapsed()) {
+    switch (editAction) {
+      case EditAction::eDeleteWordBackward:
+      case EditAction::eDeleteToBeginningOfSoftLine:
+        editActionData.UpdateEditAction(EditAction::eDeleteBackward);
+        break;
+      case EditAction::eDeleteWordForward:
+      case EditAction::eDeleteToEndOfSoftLine:
+        editActionData.UpdateEditAction(EditAction::eDeleteForward);
+        break;
+      default:
+        break;
+    }
+  }
+
   // delete placeholder txns merge.
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::DeleteTxnName);
   nsresult rv = DeleteSelectionAsSubAction(aDirection, aStripWrappers);
@@ -736,33 +786,6 @@ TextEditor::DeleteSelectionAsSubAction(EDirection aDirection,
 
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
-
-  // If there is an existing selection when an extended delete is requested,
-  //  platforms that use "caret-style" caret positioning collapse the
-  //  selection to the  start and then create a new selection.
-  //  Platforms that use "selection-style" caret positioning just delete the
-  //  existing selection without extending it.
-  if (!SelectionRefPtr()->IsCollapsed()) {
-    switch (aDirection) {
-      case eNextWord:
-      case ePreviousWord:
-      case eToBeginningOfLine:
-      case eToEndOfLine: {
-        if (mCaretStyle != 1) {
-          aDirection = eNone;
-          break;
-        }
-        ErrorResult error;
-        SelectionRefPtr()->CollapseToStart(error);
-        if (NS_WARN_IF(error.Failed())) {
-          return error.StealNSResult();
-        }
-        break;
-      }
-      default:
-        break;
-    }
-  }
 
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
