@@ -53,6 +53,7 @@ bug_numbers:
         SAMPLE_SCALAR_INVALID_ADDRESSES = """
 description: A nice one-line description.
 expires: never
+record_in_processes:
   - 'main'
 kind: uint
 notification_emails:
