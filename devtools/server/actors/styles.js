@@ -297,7 +297,13 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     const contentDocument = actualNode.ownerDocument;
     // We don't get fonts for a node, but for a range
     const rng = contentDocument.createRange();
-    rng.selectNodeContents(actualNode);
+    const isPseudoElement =
+      Boolean(CssLogic.getBindingElementAndPseudo(actualNode).pseudo);
+    if (isPseudoElement) {
+      rng.selectNodeContents(actualNode);
+    } else {
+      rng.selectNode(actualNode);
+    }
     const fonts = InspectorUtils.getUsedFontFaces(rng);
     const fontsArray = [];
 
