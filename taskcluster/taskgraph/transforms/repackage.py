@@ -201,6 +201,11 @@ def make_job_description(config, jobs):
         dependencies.update(signing_dependencies)
 
         attributes = copy_attributes_from_dependent_job(dep_job)
+        attributes['repackage_type'] = 'repackage'
+
+        locale = attributes.get('locale', job.get('locale'))
+        if locale:
+            attributes['locale'] = locale
 
         treeherder = job.get('treeherder', {})
         if attributes.get('nightly'):
@@ -219,7 +224,8 @@ def make_job_description(config, jobs):
                 signing_task = dependency
             else:
                 build_task = dependency
-        if job.get('locale'):
+
+        if locale:
             # XXXCallek: todo: rewrite dependency finding
             # Use string splice to strip out 'nightly-l10n-' .. '-<chunk>/opt'
             # We need this additional dependency to support finding the mar binary
@@ -227,14 +233,6 @@ def make_job_description(config, jobs):
             dependencies['build'] = "build-{}/opt".format(
                 dependencies[build_task][13:dependencies[build_task].rfind('-')])
             build_task = 'build'
-
-        attributes = copy_attributes_from_dependent_job(dep_job)
-        attributes['repackage_type'] = 'repackage'
-
-        locale = None
-        if job.get('locale'):
-            locale = job['locale']
-            attributes['locale'] = locale
 
         level = config.params['level']
         build_platform = attributes['build_platform']
