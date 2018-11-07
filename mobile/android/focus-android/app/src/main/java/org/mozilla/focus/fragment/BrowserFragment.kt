@@ -52,6 +52,7 @@ import android.widget.Toast
 import kotlinx.android.synthetic.main.browser_display_toolbar.*
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.lib.crash.Crash
 import mozilla.components.support.utils.ColorUtils
 import mozilla.components.support.utils.DownloadUtils
 import mozilla.components.support.utils.DrawableUtils
@@ -1364,6 +1365,10 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         override fun onSecurityChanged(session: Session, securityInfo: Session.SecurityInfo) {
             updateSecurityIcon(session, securityInfo)
         }
+    }
+
+    fun handleTabCrash(crash: Crash) {
+        Log.e("crashed!", crash.toString())
     }
 
     companion object {

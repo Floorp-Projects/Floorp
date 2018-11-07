@@ -32,7 +32,6 @@ import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.savedWebViewState
 import org.mozilla.focus.gecko.GeckoViewPrompt
 import org.mozilla.focus.gecko.NestedGeckoView
-import org.mozilla.focus.telemetry.CrashReporterWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.FileUtils

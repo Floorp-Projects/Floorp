@@ -3,13 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.telemetry
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
-import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.MozillaSocorroService
 import mozilla.components.lib.crash.service.SentryService
 import org.mozilla.focus.BuildConfig
+import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.locale.LocaleManager
 import java.util.Locale
 
@@ -35,20 +37,35 @@ object CrashReporterWrapper {
         if (!supportedBuild || BuildConfig.SENTRY_TOKEN.isEmpty()) return
 
         val sentryDsn= BuildConfig.SENTRY_TOKEN
-        crashReporter = CrashReporter(services = listOf(
-                SentryService(
+
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                intent,
+                0)
+
+
+        crashReporter = CrashReporter(
+                services = listOf(
+                    SentryService(
                         context,
                         sentryDsn,
                         tags = createTags(context),
                         sendEventForNativeCrashes = true),
-                MozillaSocorroService(context, "Firefox Focus")
-        )).install(context)
+                    MozillaSocorroService(context, "Firefox Focus")
+                ),
+                shouldPrompt = CrashReporter.Prompt.ALWAYS,
+                nonFatalCrashIntent = pendingIntent).install(context)
 
         onIsEnabledChanged(context)
     }
 
     fun onIsEnabledChanged(context: Context, isEnabled: Boolean = TelemetryWrapper.isTelemetryEnabled(context)) {
-        crashReporter?.enabled = isEnabled
+        crashReporter?.enabled = isEnabled || true
     }
 
     private fun createTags(context: Context) = mapOf(

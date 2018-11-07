@@ -15,6 +15,8 @@ import kotlinx.coroutines.experimental.withTimeoutOrNull
 import mozilla.components.service.fretboard.Fretboard
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
 import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
+import mozilla.components.support.base.log.Log
+import mozilla.components.support.base.log.sink.AndroidLogSink
 import org.mozilla.focus.locale.LocaleAwareApplication
 import org.mozilla.focus.session.NotificationSessionObserver
 import org.mozilla.focus.session.VisibilityLifeCycleCallback
@@ -52,7 +54,9 @@ class FocusApplication : LocaleAwareApplication() {
     override fun onCreate() {
         super.onCreate()
 
+        Log.addSink(AndroidLogSink("Focus"))
         CrashReporterWrapper.init(this)
+
         StethoWrapper.init(this)
 
         PreferenceManager.setDefaultValues(this, R.xml.settings, false)

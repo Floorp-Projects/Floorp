@@ -8,7 +8,6 @@ import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.AttributeSet
@@ -16,6 +15,7 @@ import android.view.View
 import android.view.WindowManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.lib.crash.Crash
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.R
 import org.mozilla.focus.biometrics.Biometrics
@@ -185,6 +185,13 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     }
 
     override fun onNewIntent(unsafeIntent: Intent) {
+        if (Crash.isCrashIntent(unsafeIntent)) {
+            val browserFragment = supportFragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
+            val crash = Crash.fromIntent(unsafeIntent)
+
+            browserFragment?.handleTabCrash(crash)
+        }
+
         val intent = SafeIntent(unsafeIntent)
 
         if (intent.dataString.equals(SupportUtils.OPEN_WITH_DEFAULT_BROWSER_URL)) {
