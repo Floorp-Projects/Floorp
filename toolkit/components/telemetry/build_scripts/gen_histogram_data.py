@@ -20,10 +20,12 @@ banner = """/* This file is auto-generated, see gen_histogram_data.py.  */
 """
 
 
-def print_array_entry(output, histogram, name_index, exp_index, label_index,
-                      label_count, key_index, key_count):
+def print_array_entry(output, histogram, name_index, exp_index,
+                      label_index, label_count,
+                      key_index, key_count,
+                      store_index, store_count):
     if histogram.record_on_os(buildconfig.substs["OS_TARGET"]):
-        print("  { %d, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s, %s, %s, %s },"
+        print("  { %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s, %s, %s, %s, %s },"
               % (histogram.low(),
                  histogram.high(),
                  histogram.n_buckets(),
@@ -31,8 +33,10 @@ def print_array_entry(output, histogram, name_index, exp_index, label_index,
                  exp_index,
                  label_count,
                  key_count,
+                 store_count,
                  label_index,
                  key_index,
+                 store_index,
                  "true" if histogram.keyed() else "false",
                  histogram.nsITelemetry_kind(),
                  histogram.dataset(),
@@ -42,10 +46,13 @@ def print_array_entry(output, histogram, name_index, exp_index, label_index,
 
 def write_histogram_table(output, histograms):
     string_table = StringTable()
+
     label_table = []
     label_count = 0
     keys_table = []
     keys_count = 0
+    store_table = []
+    total_store_count = 0
 
     print("constexpr HistogramInfo gHistogramInfos[] = {", file=output)
     for histogram in histograms:
@@ -66,8 +73,19 @@ def write_histogram_table(output, histograms):
             keys_table.append((histogram.name(), string_table.stringIndexes(keys)))
             keys_count += len(keys)
 
+        stores = histogram.record_into_store()
+        store_index = 0
+        if stores == ["main"]:
+            # if count == 1 && offset == UINT16_MAX -> only main store
+            store_index = 'UINT16_MAX'
+        else:
+            store_index = total_store_count
+            store_table.append((histogram.name(), string_table.stringIndexes(stores)))
+            total_store_count += len(stores)
+
         print_array_entry(output, histogram, name_index, exp_index,
-                          label_index, len(labels), key_index, len(keys))
+                          label_index, len(labels), key_index, len(keys),
+                          store_index, len(stores))
     print("};\n", file=output)
 
     strtab_name = "gHistogramStringTable"
@@ -94,6 +112,18 @@ def write_histogram_table(output, histograms):
         print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
     print("};", file=output)
     static_assert(output, "sizeof(gHistogramKeyTable) <= UINT16_MAX", "index overflow")
+
+    store_table_name = "gHistogramStoresTable"
+    print("\n#if defined(_MSC_VER) && !defined(__clang__)", file=output)
+    print("const uint32_t {}[] = {{".format(store_table_name), file=output)
+    print("#else", file=output)
+    print("constexpr uint32_t {}[] = {{".format(store_table_name), file=output)
+    print("#endif", file=output)
+    for name, indexes in store_table:
+        print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
+    print("};", file=output)
+    static_assert(output, "sizeof(%s) <= UINT16_MAX" % store_table_name,
+                  "index overflow")
 
 
 # Write out static asserts for histogram data.  We'd prefer to perform
