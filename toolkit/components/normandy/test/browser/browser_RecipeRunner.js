@@ -128,6 +128,7 @@ async function withMockActionSandboxManagers(actions, testFunction) {
 }
 
 decorate_task(
+  withSpy(AddonStudies, "close"),
   withStub(Uptake, "reportRunner"),
   withStub(NormandyApi, "fetchRecipes"),
   withStub(ActionsManager.prototype, "fetchRemoteActions"),
@@ -135,6 +136,7 @@ decorate_task(
   withStub(ActionsManager.prototype, "runRecipe"),
   withStub(ActionsManager.prototype, "finalize"),
   async function testRun(
+    closeSpy,
     reportRunnerStub,
     fetchRecipesStub,
     fetchRemoteActionsStub,
@@ -168,12 +170,16 @@ decorate_task(
       [[Uptake.RUNNER_SUCCESS]],
       "RecipeRunner should report uptake telemetry",
     );
+
+    // Ensure storage is closed after the run.
+    ok(closeSpy.calledOnce, "Storage should be closed after the run");
   }
 );
 
 decorate_task(
   withMockNormandyApi,
   async function testRunFetchFail(mockApi) {
+    const closeSpy = sinon.spy(AddonStudies, "close");
     const reportRunner = sinon.stub(Uptake, "reportRunner");
 
     const action = {name: "action"};
@@ -201,6 +207,11 @@ decorate_task(
       sinon.assert.calledWith(reportRunner, Uptake.RUNNER_INVALID_SIGNATURE);
     });
 
+    // If the recipe fetch failed, we don't need to call close since nothing
+    // opened a connection in the first place.
+    sinon.assert.notCalled(closeSpy);
+
+    closeSpy.restore();
     reportRunner.restore();
   }
 );

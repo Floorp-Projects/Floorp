@@ -73,20 +73,14 @@ function getDatabase() {
 /**
  * Get a transaction for interacting with the rollout store.
  *
- * @param {IDBDatabase} db
- * @param {String} mode Either "readonly" or "readwrite"
- *
  * NOTE: Methods on the store returned by this function MUST be called
  * synchronously, otherwise the transaction with the store will expire.
  * This is why the helper takes a database as an argument; if we fetched the
  * database in the helper directly, the helper would be async and the
  * transaction would expire before methods on the store were called.
  */
-function getStore(db, mode) {
-  if (!mode) {
-    throw new Error("mode is required");
-  }
-  return db.objectStore(STORE_NAME, mode);
+function getStore(db) {
+  return db.objectStore(STORE_NAME, "readwrite");
 }
 
 var PreferenceRollouts = {
@@ -130,7 +124,7 @@ var PreferenceRollouts = {
 
       if (changed) {
         const db = await getDatabase();
-        await getStore(db, "readwrite").put(rollout);
+        await getStore(db).put(rollout);
       }
     }
   },
@@ -152,15 +146,18 @@ var PreferenceRollouts = {
   withTestMock(testFunction) {
     return async function inner(...args) {
       let db = await getDatabase();
-      const oldData = await getStore(db, "readonly").getAll();
-      await getStore(db, "readwrite").clear();
+      const oldData = await getStore(db).getAll();
+      await getStore(db).clear();
       try {
         await testFunction(...args);
       } finally {
         db = await getDatabase();
-        await getStore(db, "readwrite").clear();
-        const store = getStore(db, "readwrite");
-        await Promise.all(oldData.map(d => store.add(d)));
+        const store = getStore(db);
+        let promises = [store.clear()];
+        for (const d of oldData) {
+          promises.push(store.add(d));
+        }
+        await Promise.all(promises);
       }
     };
   },
@@ -171,7 +168,7 @@ var PreferenceRollouts = {
    */
   async add(rollout) {
     const db = await getDatabase();
-    return getStore(db, "readwrite").add(rollout);
+    return getStore(db).add(rollout);
   },
 
   /**
@@ -184,7 +181,7 @@ var PreferenceRollouts = {
       throw new Error(`Tried to update ${rollout.slug}, but it doesn't already exist.`);
     }
     const db = await getDatabase();
-    return getStore(db, "readwrite").put(rollout);
+    return getStore(db).put(rollout);
   },
 
   /**
@@ -194,7 +191,7 @@ var PreferenceRollouts = {
    */
   async has(slug) {
     const db = await getDatabase();
-    const rollout = await getStore(db, "readonly").get(slug);
+    const rollout = await getStore(db).get(slug);
     return !!rollout;
   },
 
@@ -204,13 +201,13 @@ var PreferenceRollouts = {
    */
   async get(slug) {
     const db = await getDatabase();
-    return getStore(db, "readonly").get(slug);
+    return getStore(db).get(slug);
   },
 
   /** Get all rollouts in the database. */
   async getAll() {
     const db = await getDatabase();
-    return getStore(db, "readonly").getAll();
+    return getStore(db).getAll();
   },
 
   /** Get all rollouts in the "active" state. */
@@ -231,6 +228,19 @@ var PreferenceRollouts = {
       for (const prefSpec of rollout.preferences) {
         PrefUtils.setPref("user", STARTUP_PREFS_BRANCH + prefSpec.preferenceName, prefSpec.value);
       }
+    }
+  },
+
+  /**
+   * Close the current database connection if it is open. If it is not open,
+   * this is a no-op.
+   */
+  async closeDB() {
+    if (databasePromise) {
+      const promise = databasePromise;
+      databasePromise = null;
+      const db = await promise;
+      await db.close();
     }
   },
 };
