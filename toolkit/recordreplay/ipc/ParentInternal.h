@@ -94,9 +94,6 @@ void SendGraphicsMemoryToChild();
 // an unhandled recording divergence.
 void UpdateGraphicsInUIProcess(const PaintMessage* aMsg);
 
-// Update the overlay shown over the tab's graphics.
-void UpdateGraphicsOverlay();
-
 // If necessary, update graphics after the active child sends a paint message
 // or reaches a checkpoint.
 void MaybeUpdateGraphicsAtPaint(const PaintMessage& aMsg);
@@ -273,6 +270,11 @@ class ChildProcessInfo
 
   // Whether we need this child to pause while the recording is updated.
   bool mPauseNeeded;
+
+  // Flags for whether we have received messages from the child indicating it
+  // is crashing.
+  bool mHasBegunFatalError;
+  bool mHasFatalError;
 
   void OnIncomingMessage(size_t aChannelId, const Message& aMsg);
   void OnIncomingRecoveryMessage(const Message& aMsg);

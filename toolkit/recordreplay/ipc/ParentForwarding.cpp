@@ -38,7 +38,6 @@ HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
       // Graphics messages that affect both processes.
       type == dom::PBrowser::Msg_InitRendering__ID ||
       type == dom::PBrowser::Msg_SetDocShellIsActive__ID ||
-      type == dom::PBrowser::Msg_PRenderFrameConstructor__ID ||
       type == dom::PBrowser::Msg_RenderLayers__ID ||
       type == dom::PBrowser::Msg_UpdateDimensions__ID ||
       // These messages perform some graphics related initialization.

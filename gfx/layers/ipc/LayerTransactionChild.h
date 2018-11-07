@@ -15,10 +15,6 @@
 
 namespace mozilla {
 
-namespace layout {
-class RenderFrameChild;
-} // namespace layout
-
 namespace layers {
 
 class ShadowLayerForwarder;
@@ -73,7 +69,6 @@ protected:
     Release();
   }
   friend class CompositorBridgeChild;
-  friend class layout::RenderFrameChild;
 
   ShadowLayerForwarder* mForwarder;
   bool mIPCOpen;

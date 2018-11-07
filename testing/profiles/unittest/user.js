@@ -107,6 +107,7 @@ user_pref("dom.ipc.reportProcessHangs", false); // process hang monitor
 user_pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
 user_pref("dom.min_background_timeout_value", 1000);
 user_pref("dom.popup_maximum", -1);
+user_pref("dom.block_multiple_popups", false);
 user_pref("dom.presentation.testing.simulate-receiver", false);
 // Prevent connection to the push server for tests.
 user_pref("dom.push.connection.enabled", false);

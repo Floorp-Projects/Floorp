@@ -31,7 +31,7 @@
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/InputAPZContext.h"
-#include "mozilla/layout/RenderFrameParent.h"
+#include "mozilla/layout/RenderFrame.h"
 #include "mozilla/plugins/PPluginWidgetParent.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
@@ -156,7 +156,6 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mIsDestroyed(false)
   , mChromeFlags(aChromeFlags)
   , mDragValid(false)
-  , mInitedByParent(false)
   , mTabId(aTabId)
   , mCreatingWindow(false)
   , mCursor(eCursorInvalid)
@@ -359,11 +358,6 @@ TabParent::DestroyInternal()
   // destroy itself and send back __delete__().
   Unused << SendDestroy();
 
-  if (RenderFrameParent* frame = GetRenderFrame()) {
-    RemoveTabParentFromTable(frame->GetLayersId());
-    frame->Destroy();
-  }
-
 #ifdef XP_WIN
   // Let all PluginWidgets know we are tearing down. Prevents
   // these objects from sending async events after the child side
@@ -406,8 +400,8 @@ TabParent::Destroy()
 mozilla::ipc::IPCResult
 TabParent::RecvEnsureLayersConnected(CompositorOptions* aCompositorOptions)
 {
-  if (RenderFrameParent* frame = GetRenderFrame()) {
-    frame->EnsureLayersConnected(aCompositorOptions);
+  if (mRenderFrame.IsInitialized()) {
+    mRenderFrame.EnsureLayersConnected(aCompositorOptions);
   }
   return IPC_OK();
 }
@@ -433,6 +427,14 @@ TabParent::Recv__delete__()
 void
 TabParent::ActorDestroy(ActorDestroyReason why)
 {
+  if (mRenderFrame.IsInitialized()) {
+    // It's important to unmap layers after the remote browser has been destroyed,
+    // otherwise it may still send messages to the compositor which will reject them,
+    // causing assertions.
+    RemoveTabParentFromTable(mRenderFrame.GetLayersId());
+    mRenderFrame.Destroy();
+  }
+
   // Even though TabParent::Destroy calls this, we need to do it here too in
   // case of a crash.
   IMEStateManager::OnTabParentDestroying(this);
@@ -630,35 +632,38 @@ TabParent::LoadURL(nsIURI* aURI)
 }
 
 void
-TabParent::InitRenderFrame()
+TabParent::InitRendering()
 {
-  if (IsInitedByParent()) {
-    // If TabParent is initialized by parent side then the RenderFrame must also
-    // be created here. If TabParent is initialized by child side,
-    // child side will create RenderFrame.
-    MOZ_ASSERT(!GetRenderFrame());
-    RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-    MOZ_ASSERT(frameLoader);
-    if (frameLoader) {
-      RenderFrameParent* renderFrame = new RenderFrameParent(frameLoader);
-      MOZ_ASSERT(renderFrame->IsInitted());
-      layers::LayersId layersId = renderFrame->GetLayersId();
-      AddTabParentToTable(layersId, this);
-      if (!SendPRenderFrameConstructor(renderFrame)) {
-        return;
-      }
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
 
-      TextureFactoryIdentifier textureFactoryIdentifier;
-      renderFrame->GetTextureFactoryIdentifier(&textureFactoryIdentifier);
-      Unused << SendInitRendering(textureFactoryIdentifier, layersId,
-        renderFrame->GetCompositorOptions(),
-        renderFrame->IsLayersConnected(), renderFrame);
-    }
-  } else {
-    // Otherwise, the child should have constructed the RenderFrame,
-    // and we should already know about it.
-    MOZ_ASSERT(GetRenderFrame());
+  MOZ_ASSERT(!mRenderFrame.IsInitialized());
+  MOZ_ASSERT(frameLoader);
+
+  if (!frameLoader) {
+    return;
   }
+
+  mRenderFrame.Initialize(frameLoader);
+  MOZ_ASSERT(mRenderFrame.IsInitialized());
+
+  layers::LayersId layersId = mRenderFrame.GetLayersId();
+  AddTabParentToTable(layersId, this);
+
+  TextureFactoryIdentifier textureFactoryIdentifier;
+  mRenderFrame.GetTextureFactoryIdentifier(&textureFactoryIdentifier);
+  Unused << SendInitRendering(textureFactoryIdentifier, layersId,
+    mRenderFrame.GetCompositorOptions(),
+    mRenderFrame.IsLayersConnected());
+}
+
+void
+TabParent::MaybeShowFrame()
+{
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  if (!frameLoader) {
+    return;
+  }
+  frameLoader->MaybeShowFrame();
 }
 
 void
@@ -669,7 +674,7 @@ TabParent::Show(const ScreenIntSize& size, bool aParentIsActive)
         return;
     }
 
-    MOZ_ASSERT(GetRenderFrame());
+    MOZ_ASSERT(mRenderFrame.IsInitialized());
 
     nsCOMPtr<nsISupports> container = mFrameElement->OwnerDoc()->GetContainer();
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
@@ -1654,9 +1659,19 @@ TabParent::SendHandleTap(TapType aType,
   if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
     return false;
   }
-  if ((aType == TapType::eSingleTap || aType == TapType::eSecondTap) &&
-      GetRenderFrame()) {
-    GetRenderFrame()->TakeFocusForClickFromTap();
+  if ((aType == TapType::eSingleTap || aType == TapType::eSecondTap)) {
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (fm) {
+      RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+      if (frameLoader) {
+        RefPtr<Element> element = frameLoader->GetOwnerContent();
+        if (element) {
+          fm->SetFocus(element, nsIFocusManager::FLAG_BYMOUSE |
+                                nsIFocusManager::FLAG_BYTOUCH |
+                                nsIFocusManager::FLAG_NOSCROLL);
+        }
+      }
+    }
   }
   LayoutDeviceIntPoint offset = GetChildProcessOffset();
   return Manager()->AsContentParent()->IsInputPriorityEventEnabled()
@@ -2368,13 +2383,13 @@ TabParent::GetTabIdFrom(nsIDocShell *docShell)
   return TabId(0);
 }
 
-RenderFrameParent*
+RenderFrame*
 TabParent::GetRenderFrame()
 {
-  PRenderFrameParent* p = LoneManagedOrNullAsserts(ManagedPRenderFrameParent());
-  RenderFrameParent* frame = static_cast<RenderFrameParent*>(p);
-
-  return frame;
+  if (!mRenderFrame.IsInitialized()) {
+    return nullptr;
+  }
+  return &mRenderFrame;
 }
 
 mozilla::ipc::IPCResult
@@ -2597,68 +2612,6 @@ TabParent::DeallocPColorPickerParent(PColorPickerParent* actor)
   return true;
 }
 
-PRenderFrameParent*
-TabParent::AllocPRenderFrameParent()
-{
-  MOZ_ASSERT(ManagedPRenderFrameParent().IsEmpty());
-  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-
-  RenderFrameParent* rfp = new RenderFrameParent(frameLoader);
-  if (rfp->IsInitted()) {
-    layers::LayersId layersId = rfp->GetLayersId();
-    AddTabParentToTable(layersId, this);
-  }
-  return rfp;
-}
-
-bool
-TabParent::DeallocPRenderFrameParent(PRenderFrameParent* aFrame)
-{
-  delete aFrame;
-  return true;
-}
-
-bool
-TabParent::SetRenderFrame(PRenderFrameParent* aRFParent)
-{
-  if (IsInitedByParent()) {
-    return false;
-  }
-
-  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-
-  if (!frameLoader) {
-    return false;
-  }
-
-  RenderFrameParent* renderFrame = static_cast<RenderFrameParent*>(aRFParent);
-  bool success = renderFrame->Init(frameLoader);
-  if (!success) {
-    return false;
-  }
-
-  frameLoader->MaybeShowFrame();
-
-  layers::LayersId layersId = renderFrame->GetLayersId();
-  AddTabParentToTable(layersId, this);
-
-  return true;
-}
-
-bool
-TabParent::GetRenderFrameInfo(TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                              layers::LayersId* aLayersId)
-{
-  RenderFrameParent* rfp = GetRenderFrame();
-  if (!rfp) {
-    return false;
-  }
-
-  *aLayersId = rfp->GetLayersId();
-  rfp->GetTextureFactoryIdentifier(aTextureFactoryIdentifier);
-  return true;
-}
-
 already_AddRefed<nsFrameLoader>
 TabParent::GetFrameLoader(bool aUseCachedFrameLoaderAfterDestroy) const
 {
@@ -2732,9 +2685,9 @@ TabParent::ApzAwareEventRoutingToChild(ScrollableLayerGuid* aOutTargetGuid,
       // is destined. In such cases the layersId of the APZ result may not match
       // the layersId of this renderframe. In such cases the main-thread hit-
       // testing code "wins" so we need to update the guid to reflect this.
-      if (RenderFrameParent* rfp = GetRenderFrame()) {
-        if (aOutTargetGuid->mLayersId != rfp->GetLayersId()) {
-          *aOutTargetGuid = ScrollableLayerGuid(rfp->GetLayersId(), 0, ScrollableLayerGuid::NULL_SCROLL_ID);
+      if (mRenderFrame.IsInitialized()) {
+        if (aOutTargetGuid->mLayersId != mRenderFrame.GetLayersId()) {
+          *aOutTargetGuid = ScrollableLayerGuid(mRenderFrame.GetLayersId(), 0, ScrollableLayerGuid::NULL_SCROLL_ID);
         }
       }
     }
@@ -2756,7 +2709,6 @@ TabParent::ApzAwareEventRoutingToChild(ScrollableLayerGuid* aOutTargetGuid,
 
 mozilla::ipc::IPCResult
 TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
-                                      PRenderFrameParent* aRenderFrame,
                                       const nsString& aURL,
                                       const nsString& aName,
                                       const nsString& aFeatures,
@@ -2764,16 +2716,11 @@ TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
 {
   CreatedWindowInfo cwi;
   cwi.rv() = NS_OK;
-  cwi.layersId() = LayersId{0};
   cwi.maxTouchPoints() = 0;
 
   BrowserElementParent::OpenWindowResult opened =
     BrowserElementParent::OpenWindowOOP(TabParent::GetFrom(aOpener),
-                                        this, aRenderFrame, aURL, aName, aFeatures,
-                                        &cwi.textureFactoryIdentifier(),
-                                        &cwi.layersId());
-  cwi.compositorOptions() =
-    static_cast<RenderFrameParent*>(aRenderFrame)->GetCompositorOptions();
+                                        this, aURL, aName, aFeatures);
   cwi.windowOpened() = (opened == BrowserElementParent::OPEN_WINDOW_ADDED);
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
@@ -3185,6 +3132,30 @@ TabParent::RecvRemotePaintIsReady()
 }
 
 mozilla::ipc::IPCResult
+TabParent::RecvNotifyCompositorTransaction()
+{
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+
+  if (!frameLoader) {
+    return IPC_OK();
+  }
+
+  nsIFrame* docFrame = frameLoader->GetPrimaryFrameOfOwningContent();
+
+  if (!docFrame) {
+    // Bad, but nothing we can do about it (XXX/cjones: or is there?
+    // maybe bug 589337?).  When the new frame is created, we'll
+    // probably still be the current render frame and will get to draw
+    // our content then.  Or, we're shutting down and this update goes
+    // to /dev/null.
+    return IPC_OK();
+  }
+
+  docFrame->InvalidateLayer(DisplayItemType::TYPE_REMOTE);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 TabParent::RecvRemoteIsReadyToHandleInputEvents()
 {
   // When enabling input event prioritization, input events may preempt other
@@ -3555,8 +3526,8 @@ TabParent::StartApzAutoscroll(float aAnchorX, float aAnchorY,
   }
 
   bool success = false;
-  if (RenderFrameParent* renderFrame = GetRenderFrame()) {
-    layers::LayersId layersId = renderFrame->GetLayersId();
+  if (mRenderFrame.IsInitialized()) {
+    layers::LayersId layersId = mRenderFrame.GetLayersId();
     if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
       ScrollableLayerGuid guid{layersId, aPresShellId, aScrollId};
 
@@ -3583,8 +3554,8 @@ TabParent::StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId)
     return NS_OK;
   }
 
-  if (RenderFrameParent* renderFrame = GetRenderFrame()) {
-    layers::LayersId layersId = renderFrame->GetLayersId();
+  if (mRenderFrame.IsInitialized()) {
+    layers::LayersId layersId = mRenderFrame.GetLayersId();
     if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
       ScrollableLayerGuid guid{layersId, aPresShellId, aScrollId};
       widget->StopAsyncAutoscroll(guid);
