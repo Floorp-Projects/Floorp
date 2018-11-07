@@ -456,6 +456,15 @@ repackage-signing-l10n
 Repackage-signing take the repackaged installers (windows) and update packaging (with
 the signed internal bits) and signs them for localized versions.
 
+repackage-msi
+-------------
+Repackage-msi takes the signed full installer and produces an msi installer (that wraps the full installer)
+Using the ```./mach repackage``` command
+
+repackage-signing-msi
+---------------------
+Repackage-signing-msi takes the repackaged msi installers and signs them.
+
 repo-update
 -----------
 Repo-Update tasks are tasks that perform some action on the project repo itself,

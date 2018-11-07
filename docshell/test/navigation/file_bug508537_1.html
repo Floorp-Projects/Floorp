@@ -3,9 +3,9 @@
     <script>
       function dynFrameLoad() {
         var ifrs = document.getElementsByTagName("iframe");
-        opener.ok(new String(ifrs[0].contentWindow.location).includes(ifrs[0].src),
+        opener.ok(String(ifrs[0].contentWindow.location).includes(ifrs[0].src),
                   "Wrong document loaded (1)\n");
-        opener.ok(new String(ifrs[1].contentWindow.location).includes(ifrs[1].src),
+        opener.ok(String(ifrs[1].contentWindow.location).includes(ifrs[1].src),
                   "Wrong document loaded (2)\n");
         if (opener && ++opener.testCount == 1) {
           window.location = "goback.html";
@@ -16,7 +16,7 @@
       }
 
       window.addEventListener("load",
-        function () {
+        function() {
           var container = document.getElementById("t1");
           container.addEventListener("load", dynFrameLoad, true);
           container.appendChild(container.appendChild(document.getElementById("i1")));

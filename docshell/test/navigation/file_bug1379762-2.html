@@ -37,6 +37,7 @@
     var data = document.querySelector("script[type='text/just-data']").textContent;
     // Store the string that does all out work in a global variable, so we can
     // get at it later.
+    // eslint-disable-next-line no-useless-concat
     var testScript = "<script>" + data + "</" + "script>";
     document.write(testScript);
   </script>

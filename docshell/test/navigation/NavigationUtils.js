@@ -2,26 +2,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-///////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////////
 //
 // Utilities for navigation tests
-// 
-///////////////////////////////////////////////////////////////////////////
+//
+// /////////////////////////////////////////////////////////////////////////
 
 var body = "This frame was navigated.";
-var target_url = "navigation_target_url.html"
+var target_url = "navigation_target_url.html";
 
 var popup_body = "This is a popup";
 var target_popup_url = "navigation_target_popup_url.html";
 
-///////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////////
 // Functions that navigate frames
-///////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////////
 
 function navigateByLocation(wnd) {
   try {
     wnd.location = target_url;
-  } catch(ex) {
+  } catch (ex) {
     // We need to keep our finished frames count consistent.
     // Oddly, this ends up simulating the behavior of IE7.
     window.open(target_url, "_blank", "width=10,height=10");
@@ -48,18 +48,18 @@ function navigateByHyperlink(name) {
   link.target = name;
   link.id = "navigation_hyperlink_" + hyperlink_count++;
   document.body.appendChild(link);
-  sendMouseEvent({type:"click"}, link.id);
+  sendMouseEvent({type: "click"}, link.id);
 }
 
-///////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////////
 // Functions that call into Mochitest framework
-///////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////////
 
 function isNavigated(wnd, message) {
   var result = null;
   try {
     result = SpecialPowers.wrap(wnd).document.body.innerHTML.trim();
-  } catch(ex) {
+  } catch (ex) {
     result = ex;
   }
   is(result, body, message);
@@ -69,7 +69,7 @@ function isBlank(wnd, message) {
   var result = null;
   try {
     result = wnd.document.body.innerHTML.trim();
-  } catch(ex) {
+  } catch (ex) {
     result = ex;
   }
   is(result, "This is a blank document.", message);
@@ -79,7 +79,7 @@ function isAccessible(wnd, message) {
   try {
     wnd.document.body.innerHTML;
     ok(true, message);
-  } catch(ex) {
+  } catch (ex) {
     ok(false, message);
   }
 }
@@ -88,15 +88,16 @@ function isInaccessible(wnd, message) {
   try {
     wnd.document.body.innerHTML;
     ok(false, message);
-  } catch(ex) {
+  } catch (ex) {
     ok(true, message);
   }
 }
 
-///////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////////
 // Functions that require UniversalXPConnect privilege
-///////////////////////////////////////////////////////////////////////////
-
+// /////////////////////////////////////////////////////////////////////////
+// Replacing the getService with Services.ww format causes test errors, so ignore for now
+/* eslint-disable mozilla/use-services */
 function xpcEnumerateContentWindows(callback) {
 
   var Ci = SpecialPowers.Ci;
@@ -127,6 +128,7 @@ function xpcEnumerateContentWindows(callback) {
   while (contentWindows.length > 0)
     callback(contentWindows.pop());
 }
+/* eslint-enable mozilla/use-services */
 
 // Note: This only searches for top-level frames with this name.
 function xpcGetFramesByName(name) {
@@ -178,10 +180,10 @@ function xpcWaitForFinishedFrames(callback, numFrames) {
   function searchForFinishedFrames(win) {
     if ((win.location.href.endsWith(target_url) ||
          win.location.href.endsWith(target_popup_url)) &&
-        win.document && 
-        win.document.body && 
+        win.document &&
+        win.document.body &&
         (win.document.body.textContent.trim() == body ||
-         win.document.body.textContent.trim() == popup_body) && 
+         win.document.body.textContent.trim() == popup_body) &&
         win.document.readyState == "complete") {
 
       var windowId = win.windowUtils.outerWindowID;
@@ -199,7 +201,7 @@ function xpcWaitForFinishedFrames(callback, numFrames) {
       // This only gives us UniversalXPConnect for the current stack frame
       // We're using setInterval, so the main page's privileges are still normal
       xpcEnumerateContentWindows(searchForFinishedFrames);
-    } catch(ex) {
+    } catch (ex) {
       // We might be accessing windows before they are fully constructed,
       // which can throw.  We'll find those frames on our next poll().
     }
@@ -207,4 +209,3 @@ function xpcWaitForFinishedFrames(callback, numFrames) {
 
   var frameWaitInterval = setInterval(poll, 500);
 }
-

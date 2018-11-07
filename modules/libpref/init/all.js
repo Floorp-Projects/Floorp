@@ -1562,7 +1562,11 @@ pref("javascript.options.spectre.jit_to_C++_calls", true);
 #endif
 
 // Streams API
+#ifdef NIGHTLY_BUILD
+pref("javascript.options.streams", true);
+#else
 pref("javascript.options.streams", false);
+#endif
 
 // advanced prefs
 pref("advanced.mailftp",                    false);
@@ -2673,6 +2677,14 @@ pref("security.cert_pinning.process_headers_from_non_builtin_roots", false);
 // If set to true, allow view-source URIs to be opened from URIs that share
 // their protocol with the inner URI of the view-source URI
 pref("security.view-source.reachable-from-inner-protocol", false);
+
+// If set to true strict checks will happen on the triggering principal for loads.
+// Android is disabled at the moment pending Bug 1504968
+#if !defined(RELEASE_OR_BETA) && !defined(ANDROID)
+pref("security.strict_security_checks.enabled", true);
+#else
+pref("security.strict_security_checks.enabled", false);
+#endif
 
 // Remote settings preferences
 pref("services.settings.poll_interval", 86400); // 24H

@@ -21,15 +21,15 @@
         for (var i = randomNumber; i < 4; ++i) {
           makeFrame(i);
         }
-        for (var i = 0; i < randomNumber; ++i) {
-          makeFrame(i);
+        for (var k = 0; k < randomNumber; ++k) {
+          makeFrame(k);
         }
       }
 
       function checkFrame(evt) {
         var ifr = evt.target;
-        opener.ok(new String(ifr.contentWindow.location).includes(ifr.src),
-           "Wrong document loaded (" + ifr.src + ", " + 
+        opener.ok(String(ifr.contentWindow.location).includes(ifr.src),
+           "Wrong document loaded (" + ifr.src + ", " +
            ifr.contentWindow.location + ")!");
 
         if (++checkCount == 4) {

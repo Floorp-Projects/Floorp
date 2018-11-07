@@ -14,6 +14,7 @@
       ++opener.testCount;
       if (opener.testCount == 1) {
         // Navigate forward and then back.
+        // eslint-disable-next-line no-global-assign
         setTimeout(function() { location = "goback.html"; }, 0);
       } else if (opener.testCount == 2) {
         // Do this async so our load event gets a chance to fire if it plans to
@@ -27,6 +28,6 @@
     onload = function() {
       ++loadCount;
       opener.is(loadCount, 1, "Should only get one onload");
-    }
+    };
   </script>
 </html>

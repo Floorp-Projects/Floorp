@@ -82,7 +82,7 @@ class Issue(object):
                  source=None, level=None, rule=None, lineoffset=None):
         self.path = path
         self.message = message
-        self.lineno = int(lineno)
+        self.lineno = int(lineno) if lineno else 0
         self.column = int(column) if column else column
         self.hint = hint
         self.source = source
