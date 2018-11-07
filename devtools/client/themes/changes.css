@@ -54,8 +54,8 @@
   padding-left: calc(var(--diff-level-offset) * 4);
 }
 
-#sidebar-panel-changes .rule .selector,
-#sidebar-panel-changes .rule .bracket-close {
+#sidebar-panel-changes .rule .selector:not(.diff-remove):not(.diff-add),
+#sidebar-panel-changes .rule .bracket-close:not(.diff-remove):not(.diff-add) {
   margin-left: calc(-1 * var(--diff-level-offset) + 5px);
 }
 

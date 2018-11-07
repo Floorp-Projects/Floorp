@@ -1573,6 +1573,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
 
     switch (change.type) {
       case "set":
+        data.type = prevValue ? "declaration-add" : "declaration-update";
         // If `change.newName` is defined, use it because the property is being renamed.
         // Otherwise, a new declaration is being created or the value of an existing
         // declaration is being updated. In that case, use the provided `change.name`.
@@ -1600,6 +1601,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         break;
 
       case "remove":
+        data.type = "declaration-remove";
         data.add = null;
         data.remove = { [change.name]: prevValue };
         break;
@@ -1630,6 +1632,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     // grouped together when implementing undo/redo.
     TrackChangeEmitter.trackChange({
       ...this.metadata,
+      type: "rule-remove",
       add: null,
       remove: declarations,
       selector: oldSelector,
@@ -1637,6 +1640,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
 
     TrackChangeEmitter.trackChange({
       ...this.metadata,
+      type: "rule-add",
       add: declarations,
       remove: null,
       selector: newSelector,

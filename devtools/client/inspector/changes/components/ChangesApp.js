@@ -65,6 +65,13 @@ class ChangesApp extends PureComponent {
     // Mark this rule as rendered so we don't render it again.
     this.renderedRules.push(ruleId);
 
+    let diffClass = "";
+    if (rule.changeType === "rule-add") {
+      diffClass = "diff-add";
+    } else if (rule.changeType === "rule-remove") {
+      diffClass = "diff-remove";
+    }
+
     return dom.div(
       {
         key: ruleId,
@@ -72,7 +79,7 @@ class ChangesApp extends PureComponent {
       },
       dom.div(
         {
-          className: "level selector",
+          className: `level selector ${diffClass}`,
           title: selector,
         },
         selector,
@@ -84,7 +91,7 @@ class ChangesApp extends PureComponent {
       }),
       // Render any changed CSS declarations.
       this.renderDeclarations(rule.remove, rule.add),
-      dom.span({ className: "level bracket-close" }, "}")
+      dom.div({ className: `level bracket-close ${diffClass}` }, "}")
     );
   }
 

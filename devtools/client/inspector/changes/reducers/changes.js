@@ -133,6 +133,7 @@ function removeRule(ruleId, rules) {
  *      rules: {
  *        <ruleId>: {
  *          selector: "" // String CSS selector or CSS at-rule text
+ *          changeType:  // Optional string: "rule-add" or "rule-remove"
  *          children: [] // Array of <ruleId> for child rules of this rule.
  *          parent:      // <ruleId> of the parent rule
  *          add: {
@@ -166,7 +167,7 @@ const reducers = {
     state = cloneState(state);
 
     const { type, href, index } = change.source;
-    const { selector, ancestors, ruleIndex } = change;
+    const { selector, ancestors, ruleIndex, type: changeType } = change;
     const sourceId = getSourceHash(change.source);
     const ruleId = getRuleHash({ selector, ancestors, ruleIndex });
     // Type coerce to boolean: `false` if value is undefined or `null`, `true` otherwise.
@@ -181,6 +182,9 @@ const reducers = {
     let rule = rules[ruleId];
     if (!rule) {
       rule = createRule({ selector, ancestors, ruleIndex }, rules);
+      if (changeType.startsWith("rule-")) {
+        rule.changeType = changeType;
+      }
     }
     // Copy or create collection of all CSS declarations ever added to this rule.
     const add = Object.assign({}, rule.add);
