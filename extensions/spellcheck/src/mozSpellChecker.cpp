@@ -24,12 +24,18 @@ using mozilla::TextServicesDocument;
 
 #define DEFAULT_SPELL_CHECKER "@mozilla.org/spellchecker/engine;1"
 
+NS_IMPL_CYCLE_COLLECTING_ADDREF(mozSpellChecker)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(mozSpellChecker)
+
+NS_INTERFACE_MAP_BEGIN(mozSpellChecker)
+  NS_INTERFACE_MAP_ENTRY(nsISpellChecker)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISpellChecker)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(mozSpellChecker)
+NS_INTERFACE_MAP_END
+
 NS_IMPL_CYCLE_COLLECTION(mozSpellChecker,
                          mTextServicesDocument,
                          mPersonalDictionary)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(mozSpellChecker, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(mozSpellChecker, Release)
 
 mozSpellChecker::mozSpellChecker()
   : mEngine(nullptr)
