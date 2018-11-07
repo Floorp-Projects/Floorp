@@ -75,6 +75,8 @@ impl ScrollNodeAndClipChain {
     }
 }
 
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Copy, Clone)]
 pub struct PrimitiveOpacity {
     pub is_opaque: bool,
@@ -454,6 +456,7 @@ pub struct PrimitiveTemplate {
     pub prim_rect: LayoutRect,
     pub clip_rect: LayoutRect,
     pub kind: PrimitiveTemplateKind,
+    pub opacity: PrimitiveOpacity,
     /// The GPU cache handle for a primitive template. Since this structure
     /// is retained across display lists by interning, this GPU cache handle
     /// also remains valid, which reduces the number of updates to the GPU
@@ -469,6 +472,7 @@ impl From<PrimitiveKey> for PrimitiveTemplate {
             clip_rect: LayoutRect::from_au(item.clip_rect),
             kind: item.kind.into(),
             gpu_cache_handle: GpuCacheHandle::new(),
+            opacity: PrimitiveOpacity::translucent(),
         }
     }
 }
@@ -482,7 +486,7 @@ impl PrimitiveTemplate {
         &mut self,
         gpu_cache: &mut GpuCache,
     ) {
-        match self.kind {
+        self.opacity = match self.kind {
             PrimitiveTemplateKind::Clear => {
                 if let Some(mut request) = gpu_cache.request(&mut self.gpu_cache_handle) {
                     // Opaque black with operator dest out
@@ -493,6 +497,8 @@ impl PrimitiveTemplate {
                         [0.0; 4],
                     );
                 }
+
+                PrimitiveOpacity::translucent()
             }
             PrimitiveTemplateKind::LineDecoration { ref cache_key, ref color } => {
                 if let Some(mut request) = gpu_cache.request(&mut self.gpu_cache_handle) {
@@ -519,6 +525,11 @@ impl PrimitiveTemplate {
                         self.prim_rect,
                         [0.0; 4],
                     );
+                }
+
+                match cache_key {
+                    Some(..) => PrimitiveOpacity::translucent(),
+                    None => PrimitiveOpacity::from_alpha(color.a),
                 }
             }
             PrimitiveTemplateKind::TextRun { ref glyphs, ref font, ref offset, .. } => {
@@ -556,9 +567,13 @@ impl PrimitiveTemplate {
 
                     assert!(request.current_used_block_num() <= MAX_VERTEX_TEXTURE_WIDTH);
                 }
+
+                PrimitiveOpacity::translucent()
             }
-            PrimitiveTemplateKind::Unused => {}
-        }
+            PrimitiveTemplateKind::Unused => {
+                PrimitiveOpacity::translucent()
+            }
+        };
     }
 }
 
@@ -899,6 +914,7 @@ pub struct BrushSegmentDescriptor {
 
 pub struct BrushPrimitive {
     pub kind: BrushKind,
+    pub opacity: PrimitiveOpacity,
     pub segment_desc: Option<BrushSegmentDescriptor>,
 }
 
@@ -909,6 +925,7 @@ impl BrushPrimitive {
     ) -> Self {
         BrushPrimitive {
             kind,
+            opacity: PrimitiveOpacity::translucent(),
             segment_desc,
         }
     }
@@ -1825,9 +1842,6 @@ pub struct PrimitiveInstance {
     /// and per-instance data.
     pub gpu_location: GpuCacheHandle,
 
-    /// The current opacity of the primitive contents.
-    pub opacity: PrimitiveOpacity,
-
     /// ID of the clip chain that this primitive is clipped by.
     pub clip_chain_id: ClipChainId,
 
@@ -1856,7 +1870,6 @@ impl PrimitiveInstance {
             id: PrimitiveDebugId(NEXT_PRIM_ID.fetch_add(1, Ordering::Relaxed)),
             clip_task_id: None,
             gpu_location: GpuCacheHandle::new(),
-            opacity: PrimitiveOpacity::translucent(),
             clip_chain_id,
             spatial_node_index,
             cluster_range: ClusterRange { start: 0, end: 0 },
@@ -2880,59 +2893,52 @@ impl PrimitiveInstance {
 
         let is_chased = self.is_chased();
 
-        self.opacity = match (&mut self.kind, &mut prim_data.kind) {
+        match (&mut self.kind, &mut prim_data.kind) {
             (
                 PrimitiveInstanceKind::LineDecoration { ref mut cache_handle, .. },
-                PrimitiveTemplateKind::LineDecoration { ref cache_key, ref color }
+                PrimitiveTemplateKind::LineDecoration { ref cache_key, .. }
             ) => {
                 // Work out the device pixel size to be used to cache this line decoration.
                 if is_chased {
-                    println!("\tline decoration opaque={}, key={:?}", self.opacity.is_opaque, cache_key);
+                    println!("\tline decoration key={:?}", cache_key);
                 }
 
                 // If we have a cache key, it's a wavy / dashed / dotted line. Otherwise, it's
                 // a simple solid line.
-                match cache_key {
-                    Some(cache_key) => {
-                        // TODO(gw): Do we ever need / want to support scales for text decorations
-                        //           based on the current transform?
-                        let scale_factor = TypedScale::new(1.0) * frame_context.device_pixel_scale;
-                        let task_size = (LayoutSize::from_au(cache_key.size) * scale_factor).ceil().to_i32();
-                        let surfaces = &mut frame_state.surfaces;
+                if let Some(cache_key) = cache_key {
+                    // TODO(gw): Do we ever need / want to support scales for text decorations
+                    //           based on the current transform?
+                    let scale_factor = TypedScale::new(1.0) * frame_context.device_pixel_scale;
+                    let task_size = (LayoutSize::from_au(cache_key.size) * scale_factor).ceil().to_i32();
+                    let surfaces = &mut frame_state.surfaces;
 
-                        // Request a pre-rendered image task.
-                        // TODO(gw): This match is a bit untidy, but it should disappear completely
-                        //           once the prepare_prims and batching are unified. When that
-                        //           happens, we can use the cache handle immediately, and not need
-                        //           to temporarily store it in the primitive instance.
-                        *cache_handle = Some(frame_state.resource_cache.request_render_task(
-                            RenderTaskCacheKey {
-                                size: task_size,
-                                kind: RenderTaskCacheKeyKind::LineDecoration(cache_key.clone()),
-                            },
-                            frame_state.gpu_cache,
-                            frame_state.render_tasks,
-                            None,
-                            false,
-                            |render_tasks| {
-                                let task = RenderTask::new_line_decoration(
-                                    task_size,
-                                    cache_key.style,
-                                    cache_key.orientation,
-                                    cache_key.wavy_line_thickness.to_f32_px(),
-                                    LayoutSize::from_au(cache_key.size),
-                                );
-                                let task_id = render_tasks.add(task);
-                                surfaces[pic_context.surface_index.0].tasks.push(task_id);
-                                task_id
-                            }
-                        ));
-
-                        PrimitiveOpacity::translucent()
-                    }
-                    None => {
-                        PrimitiveOpacity::from_alpha(color.a)
-                    }
+                    // Request a pre-rendered image task.
+                    // TODO(gw): This match is a bit untidy, but it should disappear completely
+                    //           once the prepare_prims and batching are unified. When that
+                    //           happens, we can use the cache handle immediately, and not need
+                    //           to temporarily store it in the primitive instance.
+                    *cache_handle = Some(frame_state.resource_cache.request_render_task(
+                        RenderTaskCacheKey {
+                            size: task_size,
+                            kind: RenderTaskCacheKeyKind::LineDecoration(cache_key.clone()),
+                        },
+                        frame_state.gpu_cache,
+                        frame_state.render_tasks,
+                        None,
+                        false,
+                        |render_tasks| {
+                            let task = RenderTask::new_line_decoration(
+                                task_size,
+                                cache_key.style,
+                                cache_key.orientation,
+                                cache_key.wavy_line_thickness.to_f32_px(),
+                                LayoutSize::from_au(cache_key.size),
+                            );
+                            let task_id = render_tasks.add(task);
+                            surfaces[pic_context.surface_index.0].tasks.push(task_id);
+                            task_id
+                        }
+                    ));
                 }
             }
             (
@@ -2959,8 +2965,6 @@ impl PrimitiveInstance {
                     frame_state.render_tasks,
                     frame_state.special_render_passes,
                 );
-
-                PrimitiveOpacity::translucent()
             }
             (
                 PrimitiveInstanceKind::Clear,
@@ -2968,13 +2972,11 @@ impl PrimitiveInstance {
             ) => {
                 // Nothing specific to prepare for clear rects, since the
                 // GPU cache is updated by the template earlier.
-
-                PrimitiveOpacity::translucent()
             }
             _ => {
                 unreachable!();
             }
-        };
+        }
     }
 
     fn prepare_prim_for_render_inner(
@@ -2995,9 +2997,9 @@ impl PrimitiveInstance {
             frame_state.resource_cache,
         );
 
-        self.opacity = match *prim_details {
+        match *prim_details {
             PrimitiveDetails::Brush(ref mut brush) => {
-                match brush.kind {
+                brush.opacity = match brush.kind {
                     BrushKind::Image {
                         request,
                         sub_rect,
@@ -3412,9 +3414,9 @@ impl PrimitiveInstance {
                         opacity_binding.update(frame_context.scene_properties);
                         PrimitiveOpacity::from_alpha(opacity_binding.current * color.a)
                     }
-                }
+                };
             }
-        };
+        }
 
         if is_tiled {
             // we already requested each tile's gpu data.
