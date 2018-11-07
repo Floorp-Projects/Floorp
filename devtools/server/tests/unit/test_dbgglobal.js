@@ -9,9 +9,9 @@ function run_test() {
   // Should get an exception if we try to interact with DebuggerServer
   // before we initialize it...
   const socketListener = new SocketListener(DebuggerServer, {});
-  Assert.throws(() => DebuggerServer._addListener(socketListener),
+  Assert.throws(() => DebuggerServer.addSocketListener(socketListener),
     /DebuggerServer has not been initialized/,
-    "_addListener should throw before it has been initialized");
+    "addSocketListener should throw before it has been initialized");
   Assert.throws(DebuggerServer.closeAllListeners,
     /this is undefined/,
     "closeAllListeners should throw before it has been initialized");
@@ -35,7 +35,7 @@ function run_test() {
   DebuggerServer.setRootActor(createRootActor);
 
   // Now they should work.
-  DebuggerServer._addListener(socketListener);
+  DebuggerServer.addSocketListener(socketListener);
   DebuggerServer.closeAllListeners();
 
   // Make sure we got the test's root actor all set up.

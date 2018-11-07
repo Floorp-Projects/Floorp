@@ -448,7 +448,7 @@ SocketListener.prototype = {
    */
   open: function() {
     this._validateOptions();
-    this._debuggerServer._addListener(this);
+    this._debuggerServer.addSocketListener(this);
 
     let flags = Ci.nsIServerSocket.KeepWhenOffline;
     // A preference setting can force binding on the loopback interface.
@@ -531,7 +531,7 @@ SocketListener.prototype = {
       this._socket.close();
       this._socket = null;
     }
-    this._debuggerServer._removeListener(this);
+    this._debuggerServer.removeSocketListener(this);
   },
 
   get host() {
