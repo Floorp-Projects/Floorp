@@ -49,6 +49,8 @@ struct BaseScalarInfo {
 struct ScalarInfo : BaseScalarInfo {
   uint32_t name_offset;
   uint32_t expiration_offset;
+  uint32_t store_count;
+  uint16_t store_offset;
 
   // In order to cleanly support dynamic scalars in TelemetryScalar.cpp, we need
   // to use virtual functions for |name| and |expiration|, as they won't be looked
@@ -59,7 +61,8 @@ struct ScalarInfo : BaseScalarInfo {
   ScalarInfo(uint32_t aKind, uint32_t aNameOffset, uint32_t aExpirationOffset,
              uint32_t aDataset,
              mozilla::Telemetry::Common::RecordedProcessType aRecordInProcess,
-             bool aKeyed, mozilla::Telemetry::Common::SupportedProduct aProducts)
+             bool aKeyed, mozilla::Telemetry::Common::SupportedProduct aProducts,
+             uint32_t aStoreCount,  uint16_t aStoreOffset)
     : BaseScalarInfo(aKind, aDataset, aRecordInProcess, aKeyed, aProducts)
     , name_offset(aNameOffset)
     , expiration_offset(aExpirationOffset)
