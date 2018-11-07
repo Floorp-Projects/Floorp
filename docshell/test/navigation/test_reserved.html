@@ -14,28 +14,28 @@ if (navigator.platform.startsWith("Mac")) {
 }
 
 function testTop() {
-  window0 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#top,location", "_blank", "width=10,height=10");
+  let window0 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#top,location", "_blank", "width=10,height=10");
 
   xpcWaitForFinishedFrames(function() {
     isInaccessible(window0, "Should be able to navigate off-domain top by setting location.");
     window0.close();
     xpcCleanupWindows();
 
-    window1 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_top,open", "_blank", "width=10,height=10");
-    
+    let window1 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_top,open", "_blank", "width=10,height=10");
+
     xpcWaitForFinishedFrames(function() {
       isInaccessible(window1, "Should be able to navigate off-domain top by calling window.open.");
       window1.close();
       xpcCleanupWindows();
 
-      window2 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_top,form", "_blank", "width=10,height=10");
+      let window2 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_top,form", "_blank", "width=10,height=10");
 
       xpcWaitForFinishedFrames(function() {
         isInaccessible(window2, "Should be able to navigate off-domain top by submitting form.");
         window2.close();
         xpcCleanupWindows();
 
-        window3 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_top,hyperlink", "_blank", "width=10,height=10");
+        let window3 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_top,hyperlink", "_blank", "width=10,height=10");
 
         xpcWaitForFinishedFrames(function() {
           isInaccessible(window3, "Should be able to navigate off-domain top by targeted hyperlink.");
@@ -84,7 +84,7 @@ function testParent() {
 
 window.onload = function() {
   testTop();
-}
+};
 </script>
 </head>
 <body>

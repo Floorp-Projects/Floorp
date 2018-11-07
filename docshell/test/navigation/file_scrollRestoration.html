@@ -29,7 +29,7 @@
             opener.isnot(Math.round(window.scrollY), 0, "Should have restored scrolling.");
             opener.is(history.scrollRestoration, "auto", "Should have the same scrollRestoration as before reload.");
             history.scrollRestoration = "manual";
-            window.onunload = function() {} // Disable bfcache.
+            window.onunload = function() {}; // Disable bfcache.
             window.location.reload(false);
             break;
           }
@@ -40,7 +40,7 @@
             document.getElementById("bottom").scrollIntoView();
             window.onunload = null; // Should get bfcache behavior.
             opener.setTimeout("SpecialPowers.wrap(testWindow).history.back();", 250);
-            window.location.href = 'about:blank';
+            window.location.href = "about:blank";
             break;
           }
           case 4: {
@@ -55,9 +55,9 @@
           case 5: {
             opener.isnot(Math.round(window.scrollY), 0, "Should have scrolled to #hash.");
             opener.is(history.scrollRestoration, "manual", "Should have the same scrollRestoration mode as before fragment navigation.");
-            window.onunload = function() {} // Disable bfcache.
+            window.onunload = function() {}; // Disable bfcache.
             opener.setTimeout("is(SpecialPowers.wrap(testWindow).history.scrollRestoration, 'auto'); SpecialPowers.wrap(testWindow).history.back();", 250);
-            window.location.href = 'about:blank';
+            window.location.href = "about:blank";
             break;
           }
           case 6: {
@@ -104,15 +104,15 @@
           }
           case 8: {
             try {
-              var sr = oldHistoryObject.scrollRestoration;
+              oldHistoryObject.scrollRestoration;
               opener.ok(false, "Should have thrown an exception.");
-            } catch(ex) {
+            } catch (ex) {
               opener.isnot(ex, null, "Did get an exception");
             }
             try {
               oldHistoryObject.scrollRestoration = "auto";
               opener.ok(false, "Should have thrown an exception.");
-            } catch(ex) {
+            } catch (ex) {
               opener.isnot(ex, null, "Did get an exception");
             }
             opener.nextTest();

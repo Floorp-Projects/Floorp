@@ -10,28 +10,30 @@
 #include "PlatformDecoderModule.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
+
 namespace mozilla {
 
 class DecoderDoctorDiagnostics;
 
-DDLoggedTypeDeclNameAndBase(H264Converter, MediaDataDecoder);
+DDLoggedTypeDeclNameAndBase(MediaChangeMonitor, MediaDataDecoder);
 
-// H264Converter is a MediaDataDecoder wrapper used to ensure that
-// only AVCC or AnnexB is fed to the underlying MediaDataDecoder.
-// The H264Converter allows playback of content where the SPS NAL may not be
-// provided in the init segment (e.g. AVC3 or Annex B)
-// H264Converter will monitor the input data, and will delay creation of the
-// MediaDataDecoder until a SPS and PPS NALs have been extracted.
+// MediaChangeMonitor is a MediaDataDecoder wrapper used to ensure that
+// only one type of content is fed to the underlying MediaDataDecoder.
+// The MediaChangeMonitor allows playback of content where some out of band
+// extra data (such as SPS NAL for H264 content) may not be provided in the
+// init segment (e.g. AVC3 or Annex B) MediaChangeMonitor will monitor the
+// input data, and will delay creation of the MediaDataDecoder until such out
+// of band have been extracted should the underlying decoder required it.
 
-class H264Converter
+class MediaChangeMonitor
   : public MediaDataDecoder
-  , public DecoderDoctorLifeLogger<H264Converter>
+  , public DecoderDoctorLifeLogger<MediaChangeMonitor>
 {
 public:
-
-  H264Converter(PlatformDecoderModule* aPDM,
+  MediaChangeMonitor(PlatformDecoderModule* aPDM,
                 const CreateDecoderParams& aParams);
-  virtual ~H264Converter();
+  virtual ~MediaChangeMonitor();
 
   RefPtr<InitPromise> Init() override;
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
@@ -44,7 +46,7 @@ public:
     if (mDecoder) {
       return mDecoder->GetDescriptionName();
     }
-    return NS_LITERAL_CSTRING("H264Converter decoder (pending)");
+    return NS_LITERAL_CSTRING("MediaChangeMonitor decoder (pending)");
   }
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
   bool SupportDecoderRecycling() const override
@@ -61,26 +63,38 @@ public:
       return mDecoder->NeedsConversion();
     }
     // Default so no conversion is performed.
-    return ConversionRequired::kNeedAVCC;
+    return ConversionRequired::kNeedNone;
   }
   MediaResult GetLastError() const { return mLastError; }
 
+  class CodecChangeMonitor
+  {
+  public:
+    virtual bool CanBeInstantiated() const = 0;
+    virtual MediaResult CheckForChange(MediaRawData* aSample) = 0;
+    virtual const TrackInfo& Config() const = 0;
+    virtual MediaResult PrepareSample(
+      MediaDataDecoder::ConversionRequired aConversion,
+      MediaRawData* aSample) = 0;
+    virtual ~CodecChangeMonitor() = default;
+  };
+
 private:
-  void AssertOnTaskQueue()
+  UniquePtr<CodecChangeMonitor> mChangeMonitor;
+
+  void AssertOnTaskQueue() const
   {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   }
 
+  bool CanRecycleDecoder() const;
+
   // Will create the required MediaDataDecoder if need AVCC and we have a SPS NAL.
   // Returns NS_ERROR_FAILURE if error is permanent and can't be recovered and
   // will set mError accordingly.
-  MediaResult CreateDecoder(const VideoInfo& aConfig,
-                         DecoderDoctorDiagnostics* aDiagnostics);
+  MediaResult CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics);
   MediaResult CreateDecoderAndInit(MediaRawData* aSample);
-  MediaResult CheckForSPSChange(MediaRawData* aSample);
-  void UpdateConfigFromExtraData(MediaByteBuffer* aExtraData);
-
-  bool CanRecycleDecoder() const;
+  MediaResult CheckForChange(MediaRawData* aSample);
 
   void DecodeFirstSample(MediaRawData* aSample);
   void DrainThenFlushDecoder(MediaRawData* aPendingSample);
@@ -88,15 +102,13 @@ private:
   RefPtr<ShutdownPromise> ShutdownDecoder();
 
   RefPtr<PlatformDecoderModule> mPDM;
-  const VideoInfo mOriginalConfig;
   VideoInfo mCurrentConfig;
-  // Current out of band extra data (as found in metadata's VideoInfo).
-  RefPtr<MediaByteBuffer> mOriginalExtraData;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   RefPtr<layers::ImageContainer> mImageContainer;
   const RefPtr<TaskQueue> mTaskQueue;
   RefPtr<MediaDataDecoder> mDecoder;
   MozPromiseRequestHolder<InitPromise> mInitPromiseRequest;
+  MozPromiseHolder<InitPromise> mInitPromise;
   MozPromiseRequestHolder<DecodePromise> mDecodePromiseRequest;
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseRequestHolder<FlushPromise> mFlushRequest;
@@ -107,7 +119,6 @@ private:
   MozPromiseHolder<FlushPromise> mFlushPromise;
 
   RefPtr<GMPCrashHelper> mGMPCrashHelper;
-  Maybe<bool> mNeedAVCC;
   MediaResult mLastError;
   bool mNeedKeyframe = true;
   const TrackInfo::TrackType mType;
@@ -115,6 +126,7 @@ private:
   const CreateDecoderParams::OptionSet mDecoderOptions;
   const CreateDecoderParams::VideoFrameRate mRate;
   Maybe<bool> mCanRecycleDecoder;
+  Maybe<MediaDataDecoder::ConversionRequired> mConversionRequired;
   // Used for debugging purposes only
   Atomic<bool> mInConstructor;
 };

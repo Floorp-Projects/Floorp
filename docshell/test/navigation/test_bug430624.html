@@ -25,6 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=430624
 
 function onLoad() {
   window.frames[0].frameElement.onload = onReload;
+  // eslint-disable-next-line no-self-assign
   window.frames[0].frameElement.srcdoc = window.frames[0].frameElement.srcdoc;
 }
 
@@ -37,7 +38,7 @@ function onReload() {
 function doTest() {
   var bodyElement = window.frames[0].frameElement.contentDocument.body;
   bodyElement.focus();
-  sendString('Still ', window.frames[0].frameElement.contentWindow);
+  sendString("Still ", window.frames[0].frameElement.contentWindow);
 
   is(bodyElement.innerHTML, "Still contentEditable", "Check we're contentEditable after reload");
 

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Bug 1326251</title>
     <script>
-    const BASE_URL = 'http://mochi.test:8888/tests/docshell/test/navigation/';
+    const BASE_URL = "http://mochi.test:8888/tests/docshell/test/navigation/";
     let testSteps = [
       async function() {
         // Test 1: Create dynamic iframe with bfcache enabled.
@@ -12,36 +12,36 @@
         // and navigate back. Both iframes should still exist with history
         // entries preserved.
         window.onunload = null; // enable bfcache
-        let dynamicFrame = await createDynamicFrame(document);
-        await loadUriInFrame(document.getElementById('staticFrame'), 'frame1.html');
-        await loadUriInFrame(document.getElementById('dynamicFrame'), 'frame1.html');
-        await loadUriInFrame(document.getElementById('staticFrame'), 'frame2.html');
-        await loadUriInFrame(document.getElementById('dynamicFrame'), 'frame2.html');
-        opener.is(history.length, 5, 'history.length');
-        window.location = 'goback.html';
+        await createDynamicFrame(document);
+        await loadUriInFrame(document.getElementById("staticFrame"), "frame1.html");
+        await loadUriInFrame(document.getElementById("dynamicFrame"), "frame1.html");
+        await loadUriInFrame(document.getElementById("staticFrame"), "frame2.html");
+        await loadUriInFrame(document.getElementById("dynamicFrame"), "frame2.html");
+        opener.is(history.length, 5, "history.length");
+        window.location = "goback.html";
       },
       async function() {
         let webNav = SpecialPowers.wrap(window)
                        .docShell
                        .QueryInterface(SpecialPowers.Ci.nsIWebNavigation);
         let shistory = webNav.sessionHistory;
-        opener.is(webNav.canGoForward, true, 'canGoForward');
-        opener.is(shistory.index, 4, 'shistory.index');
-        opener.is(history.length, 6, 'history.length');
-        opener.is(document.getElementById('staticFrame').contentWindow.location.href, BASE_URL + 'frame2.html', 'staticFrame location');
-        opener.is(document.getElementById('dynamicFrame').contentWindow.location.href, BASE_URL + 'frame2.html', 'dynamicFrame location');
+        opener.is(webNav.canGoForward, true, "canGoForward");
+        opener.is(shistory.index, 4, "shistory.index");
+        opener.is(history.length, 6, "history.length");
+        opener.is(document.getElementById("staticFrame").contentWindow.location.href, BASE_URL + "frame2.html", "staticFrame location");
+        opener.is(document.getElementById("dynamicFrame").contentWindow.location.href, BASE_URL + "frame2.html", "dynamicFrame location");
 
         // Test 2: Load another page in dynamic iframe, canGoForward should be
         // false.
-        await loadUriInFrame(document.getElementById('dynamicFrame'), 'frame3.html');
-        opener.is(webNav.canGoForward, false, 'canGoForward');
-        opener.is(shistory.index, 5, 'shistory.index');
-        opener.is(history.length, 6, 'history.length');
+        await loadUriInFrame(document.getElementById("dynamicFrame"), "frame3.html");
+        opener.is(webNav.canGoForward, false, "canGoForward");
+        opener.is(shistory.index, 5, "shistory.index");
+        opener.is(history.length, 6, "history.length");
 
         // Test 3: Navigate to antoher page with bfcache disabled, all dynamic
         // iframe entries should be removed.
-        window.onunload = function(){}; // disable bfcache
-        window.location = 'goback.html';
+        window.onunload = function() {}; // disable bfcache
+        window.location = "goback.html";
       },
       async function() {
         let windowWrap = SpecialPowers.wrap(window);
@@ -49,58 +49,58 @@
         let shistory = docShell.QueryInterface(SpecialPowers.Ci.nsIWebNavigation)
                                .sessionHistory;
         // Now staticFrame has frame0 -> frame1 -> frame2.
-        opener.is(docShell.previousEntryIndex, 3, 'docShell.previousEntryIndex');
-        opener.is(docShell.loadedEntryIndex, 2, 'docShell.loadedEntryIndex');
-        opener.is(shistory.index, 2, 'shistory.index');
-        opener.is(history.length, 4, 'history.length');
-        opener.is(document.getElementById('staticFrame').contentWindow.location.href, BASE_URL + 'frame2.html', 'staticFrame location');
-        opener.ok(!document.getElementById('dynamicFrame'), 'dynamicFrame should not exist');
+        opener.is(docShell.previousEntryIndex, 3, "docShell.previousEntryIndex");
+        opener.is(docShell.loadedEntryIndex, 2, "docShell.loadedEntryIndex");
+        opener.is(shistory.index, 2, "shistory.index");
+        opener.is(history.length, 4, "history.length");
+        opener.is(document.getElementById("staticFrame").contentWindow.location.href, BASE_URL + "frame2.html", "staticFrame location");
+        opener.ok(!document.getElementById("dynamicFrame"), "dynamicFrame should not exist");
 
         // Test 4: Load a nested frame in the static frame, navigate the inner
         // static frame, add a inner dynamic frame and navigate the dynamic
         // frame. Then navigate the outer static frame and go back. The inner
         // iframe should show the last entry of inner static frame.
-        let staticFrame = document.getElementById('staticFrame');
-        staticFrame.width = '320px';
-        staticFrame.height = '360px';
-        await loadUriInFrame(staticFrame, 'iframe_static.html');
-        let innerStaticFrame = staticFrame.contentDocument.getElementById('staticFrame');
-        await loadUriInFrame(innerStaticFrame, 'frame1.html');
-        let innerDynamicFrame = await createDynamicFrame(staticFrame.contentDocument, 'frame2.html');
-        await loadUriInFrame(innerDynamicFrame, 'frame3.html');
+        let staticFrame = document.getElementById("staticFrame");
+        staticFrame.width = "320px";
+        staticFrame.height = "360px";
+        await loadUriInFrame(staticFrame, "iframe_static.html");
+        let innerStaticFrame = staticFrame.contentDocument.getElementById("staticFrame");
+        await loadUriInFrame(innerStaticFrame, "frame1.html");
+        let innerDynamicFrame = await createDynamicFrame(staticFrame.contentDocument, "frame2.html");
+        await loadUriInFrame(innerDynamicFrame, "frame3.html");
         // staticFrame:       frame0 -> frame1 -> frame2 -> iframe_static
         // innerStaticFrame:                                frame0        -> frame1
         // innerDynamicFrame:                                                frame2 -> frame3
-        opener.is(shistory.index, 5, 'shistory.index');
-        opener.is(history.length, 6, 'history.length');
+        opener.is(shistory.index, 5, "shistory.index");
+        opener.is(history.length, 6, "history.length");
 
         // Wait for 2 load events - navigation and goback.
         let onloadPromise = awaitOnload(staticFrame, 2);
-        await loadUriInFrame(staticFrame, 'goback.html');
+        await loadUriInFrame(staticFrame, "goback.html");
         await onloadPromise;
         // staticFrame:       frame0 -> frame1 -> frame2 -> iframe_static           -> goback
         // innerStaticFrame:                                frame0        -> frame1
-        opener.is(shistory.index, 4, 'shistory.index');
-        opener.is(history.length, 6, 'history.length');
-        innerStaticFrame = staticFrame.contentDocument.getElementById('staticFrame');
-        opener.is(innerStaticFrame.contentDocument.location.href, BASE_URL + 'frame1.html', 'innerStaticFrame location');
-        opener.ok(!staticFrame.contentDocument.getElementById('dynamicFrame'), 'innerDynamicFrame should not exist');
+        opener.is(shistory.index, 4, "shistory.index");
+        opener.is(history.length, 6, "history.length");
+        innerStaticFrame = staticFrame.contentDocument.getElementById("staticFrame");
+        opener.is(innerStaticFrame.contentDocument.location.href, BASE_URL + "frame1.html", "innerStaticFrame location");
+        opener.ok(!staticFrame.contentDocument.getElementById("dynamicFrame"), "innerDynamicFrame should not exist");
 
         // Test 5: Insert and navigate inner dynamic frame again with bfcache
         // enabled, and navigate top level window to a special page which will
         // evict bfcache then goback. Verify that dynamic entries are correctly
         // removed in this case.
         window.onunload = null; // enable bfcache
-        staticFrame.width = '320px';
-        staticFrame.height = '360px';
-        innerDynamicFrame = await createDynamicFrame(staticFrame.contentDocument, 'frame2.html');
-        await loadUriInFrame(innerDynamicFrame, 'frame3.html');
+        staticFrame.width = "320px";
+        staticFrame.height = "360px";
+        innerDynamicFrame = await createDynamicFrame(staticFrame.contentDocument, "frame2.html");
+        await loadUriInFrame(innerDynamicFrame, "frame3.html");
         // staticFrame:       frame0 -> frame1 -> frame2 -> iframe_static
         // innerStaticFrame:                                frame0        -> frame1
         // innerDynamicFrame:                                                frame2 -> frame3
-        opener.is(shistory.index, 5, 'shistory.index');
-        opener.is(history.length, 6, 'history.length');
-        window.location = 'file_bug1326251_evict_cache.html';
+        opener.is(shistory.index, 5, "shistory.index");
+        opener.is(history.length, 6, "history.length");
+        window.location = "file_bug1326251_evict_cache.html";
       },
       async function() {
         let windowWrap = SpecialPowers.wrap(window);
@@ -109,26 +109,26 @@
                                .sessionHistory;
         // staticFrame:       frame0 -> frame1 -> frame2 -> iframe_static
         // innerStaticFrame:                                frame0        -> frame1
-        opener.is(docShell.previousEntryIndex, 5, 'docShell.previousEntryIndex');
-        opener.is(docShell.loadedEntryIndex, 4, 'docShell.loadedEntryIndex');
-        opener.is(shistory.index, 4, 'shistory.index');
-        opener.is(history.length, 6, 'history.length');
-        let staticFrame = document.getElementById('staticFrame');
-        let innerStaticFrame = staticFrame.contentDocument.getElementById('staticFrame');
-        opener.is(innerStaticFrame.contentDocument.location.href, BASE_URL + 'frame1.html', 'innerStaticFrame location');
-        opener.ok(!staticFrame.contentDocument.getElementById('dynamicFrame'), 'innerDynamicFrame should not exist');
+        opener.is(docShell.previousEntryIndex, 5, "docShell.previousEntryIndex");
+        opener.is(docShell.loadedEntryIndex, 4, "docShell.loadedEntryIndex");
+        opener.is(shistory.index, 4, "shistory.index");
+        opener.is(history.length, 6, "history.length");
+        let staticFrame = document.getElementById("staticFrame");
+        let innerStaticFrame = staticFrame.contentDocument.getElementById("staticFrame");
+        opener.is(innerStaticFrame.contentDocument.location.href, BASE_URL + "frame1.html", "innerStaticFrame location");
+        opener.ok(!staticFrame.contentDocument.getElementById("dynamicFrame"), "innerDynamicFrame should not exist");
 
         // Test 6: Insert and navigate inner dynamic frame and then reload outer
         // frame. Verify that inner dynamic frame entries are all removed.
-        staticFrame.width = '320px';
-        staticFrame.height = '360px';
-        let innerDynamicFrame = await createDynamicFrame(staticFrame.contentDocument, 'frame2.html');
-        await loadUriInFrame(innerDynamicFrame, 'frame3.html');
+        staticFrame.width = "320px";
+        staticFrame.height = "360px";
+        let innerDynamicFrame = await createDynamicFrame(staticFrame.contentDocument, "frame2.html");
+        await loadUriInFrame(innerDynamicFrame, "frame3.html");
         // staticFrame:       frame0 -> frame1 -> frame2 -> iframe_static
         // innerStaticFrame:                                frame0        -> frame1
         // innerDynamicFrame:                                                frame2 -> frame3
-        opener.is(shistory.index, 5, 'shistory.index');
-        opener.is(history.length, 6, 'history.length');
+        opener.is(shistory.index, 5, "shistory.index");
+        opener.is(history.length, 6, "history.length");
         let staticFrameLoadPromise = new Promise(resolve => {
           staticFrame.onload = resolve;
         });
@@ -136,34 +136,34 @@
         await staticFrameLoadPromise;
         // staticFrame:       frame0 -> frame1 -> frame2 -> iframe_static
         // innerStaticFrame:                                frame0        -> frame1
-        opener.is(shistory.index, 4, 'shistory.index');
-        opener.is(history.length, 5, 'history.length');
-        innerStaticFrame = staticFrame.contentDocument.getElementById('staticFrame');
-        opener.is(innerStaticFrame.contentDocument.location.href, BASE_URL + 'frame1.html', 'innerStaticFrame location');
-        opener.ok(!staticFrame.contentDocument.getElementById('dynamicFrame'), 'innerDynamicFrame should not exist');
+        opener.is(shistory.index, 4, "shistory.index");
+        opener.is(history.length, 5, "history.length");
+        innerStaticFrame = staticFrame.contentDocument.getElementById("staticFrame");
+        opener.is(innerStaticFrame.contentDocument.location.href, BASE_URL + "frame1.html", "innerStaticFrame location");
+        opener.ok(!staticFrame.contentDocument.getElementById("dynamicFrame"), "innerDynamicFrame should not exist");
         opener.nextTest();
         window.close();
-      }
+      },
     ];
 
-    function awaitOnload(frame, occurances=1) {
+    function awaitOnload(frame, occurances = 1) {
       return new Promise(function(resolve, reject) {
         let count = 0;
-        frame.addEventListener('load', function listener(e) {
+        frame.addEventListener("load", function listener(e) {
           if (++count == occurances) {
-            frame.removeEventListener('load', listener);
+            frame.removeEventListener("load", listener);
             setTimeout(resolve, 0);
           }
         });
       });
     }
 
-    async function createDynamicFrame(targetDocument, frameSrc='frame0.html') {
-      let dynamicFrame = targetDocument.createElement('iframe');
+    async function createDynamicFrame(targetDocument, frameSrc = "frame0.html") {
+      let dynamicFrame = targetDocument.createElement("iframe");
       let onloadPromise = awaitOnload(dynamicFrame);
-      dynamicFrame.id = 'dynamicFrame';
+      dynamicFrame.id = "dynamicFrame";
       dynamicFrame.src = frameSrc;
-      let container = targetDocument.getElementById('frameContainer');
+      let container = targetDocument.getElementById("frameContainer");
       container.appendChild(dynamicFrame);
       await onloadPromise;
       return dynamicFrame;

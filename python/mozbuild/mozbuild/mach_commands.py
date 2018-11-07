@@ -2981,6 +2981,38 @@ class Repackage(MachCommandBase):
             sfx_stub=sfx_stub,
         )
 
+    @SubCommand('repackage', 'msi',
+                description='Repackage into a MSI')
+    @CommandArgument('--wsx', type=str, required=True,
+        help='The wsx file used to build the installer')
+    @CommandArgument('--version', type=str, required=True,
+        help='The Firefox version used to create the installer')
+    @CommandArgument('--locale', type=str, required=True,
+        help='The locale of the installer')
+    @CommandArgument('--arch', type=str, required=True,
+        help='The archtecture you are building x64 or x32')
+    @CommandArgument('--setupexe', type=str, required=True,
+        help='setup.exe installer')
+    @CommandArgument('--candle', type=str, required=False,
+        help='location of candle binary')
+    @CommandArgument('--light', type=str, required=False,
+        help='location of light binary')
+    @CommandArgument('--output', '-o', type=str, required=True,
+        help='Output filename')
+    def repackage_msi(self, wsx, version, locale, arch, setupexe, candle, light, output):
+        from mozbuild.repackaging.msi import repackage_msi
+        repackage_msi(
+            topsrcdir=self.topsrcdir,
+            wsx=wsx,
+            version=version,
+            locale=locale,
+            arch=arch,
+            setupexe=setupexe,
+            candle=candle,
+            light=light,
+            output=output,
+        )
+
     @SubCommand('repackage', 'mar',
                 description='Repackage into complete MAR file')
     @CommandArgument('--input', '-i', type=str, required=True,

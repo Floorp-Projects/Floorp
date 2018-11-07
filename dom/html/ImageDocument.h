@@ -81,6 +81,8 @@ public:
   }
   void ToggleImageSize();
 
+  virtual void NotifyPossibleTitleChange(bool aBoundTitleElement) override;
+
 protected:
   virtual ~ImageDocument();
 
@@ -137,6 +139,8 @@ protected:
   bool                          mFirstResize;
   // mObservingImageLoader is true while the observer is set.
   bool                          mObservingImageLoader;
+  bool                          mTitleUpdateInProgress;
+  bool                          mHasCustomTitle;
 
   float                         mOriginalZoomLevel;
 #if defined(MOZ_WIDGET_ANDROID)

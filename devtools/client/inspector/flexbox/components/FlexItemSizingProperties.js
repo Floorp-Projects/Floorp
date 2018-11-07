@@ -208,7 +208,9 @@ class FlexItemSizingProperties extends PureComponent {
       dom.li({ className: "section min" },
         dom.span({ className: "name" },
           getStr("flexbox.itemSizing.minSizeSectionHeader"),
-          this.renderCssProperty(`min-${dimension}`, minDimensionValue)
+          minDimensionValue.length ?
+           this.renderCssProperty(`min-${dimension}`, minDimensionValue) :
+           null
         ),
         this.renderSize(mainMinSize),
         this.renderReasons(reasons)
@@ -235,7 +237,9 @@ class FlexItemSizingProperties extends PureComponent {
       dom.li({ className: "section max" },
         dom.span({ className: "name" },
           getStr("flexbox.itemSizing.maxSizeSectionHeader"),
-          this.renderCssProperty(`max-${dimension}`, maxDimensionValue)
+          maxDimensionValue.length ?
+            this.renderCssProperty(`max-${dimension}`, maxDimensionValue) :
+            null
         ),
         this.renderSize(mainMaxSize),
         this.renderReasons(reasons)

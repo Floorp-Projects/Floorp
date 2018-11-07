@@ -212,7 +212,7 @@ protected:
   PlatformDecoderModule() { }
   virtual ~PlatformDecoderModule() { }
 
-  friend class H264Converter;
+  friend class MediaChangeMonitor;
   friend class PDMFactory;
   friend class dom::RemoteDecoderModule;
   friend class EMEDecoderModule;

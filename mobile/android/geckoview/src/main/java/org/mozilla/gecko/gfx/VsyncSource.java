@@ -7,9 +7,8 @@ package org.mozilla.gecko.gfx;
 
 import android.content.Context;
 import android.hardware.display.DisplayManager;
-import android.os.HandlerThread;
-import android.os.Process;
-import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Choreographer;
 import android.view.Display;
 import org.mozilla.gecko.annotation.WrapForJNI;
@@ -28,20 +27,26 @@ import org.mozilla.gecko.GeckoAppShell;
     private volatile boolean mObservingVsync;
 
     private VsyncSource() {
-        final Thread thread = new HandlerThread(LOGTAG, Process.THREAD_PRIORITY_DISPLAY) {
+        // Use a dedicated lock object because |mainHandler| might synchronize
+        // on itself internally and we don't want to risk getting stuck for such
+        // a silly reason.
+        final Object lock = new Object();
+
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        mainHandler.post(new Runnable() {
             @Override
-            protected synchronized void onLooperPrepared() {
-                mChoreographer = Choreographer.getInstance();
-                notifyAll();
+            public void run() {
+                synchronized (lock) {
+                    mChoreographer = Choreographer.getInstance();
+                    lock.notifyAll();
+                }
             }
-        };
+        });
 
-        synchronized (thread) {
-            thread.start();
-
+        synchronized (lock) {
             while (mChoreographer == null) {
                 try {
-                    thread.wait();
+                    lock.wait();
                 } catch (final InterruptedException e) {
                     // Ignore
                 }

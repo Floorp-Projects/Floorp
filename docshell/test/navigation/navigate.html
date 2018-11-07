@@ -4,12 +4,13 @@
     <script src="NavigationUtils.js"></script>
     <script>
     function navigate() {
-        var arguments = window.location.hash.substring(1).split(",");
-        var target = arguments[0];
-        var mechanism = arguments[1];
+        var args = window.location.hash.substring(1).split(",");
+        var target = args[0];
+        var mechanism = args[1];
 
-        switch(mechanism) {
+        switch (mechanism) {
         case "location":
+          // eslint-disable-next-line no-eval
           navigateByLocation(eval(target));
           break;
         case "open":
@@ -27,9 +28,9 @@
 </head>
 <body onload="navigate();">
 <script>
-var arguments = window.location.hash.substring(1).split(",");
-var target = arguments[0];
-var mechanism = arguments[1];
+var args = window.location.hash.substring(1).split(",");
+var target = args[0];
+var mechanism = args[1];
 document.write("target=" + target + " mechanism=" + mechanism);
 </script>
 </body>

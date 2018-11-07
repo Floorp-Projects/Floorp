@@ -17,9 +17,8 @@ EXPORTS += [
     'PlatformDecoderModule.h',
     'ReorderQueue.h',
     'SimpleMap.h',
-    'wrappers/H264Converter.h',
+    'wrappers/MediaChangeMonitor.h',
     'wrappers/MediaDataDecoderProxy.h'
-
 ]
 
 UNIFIED_SOURCES += [
@@ -34,7 +33,7 @@ UNIFIED_SOURCES += [
     'agnostic/WAVDecoder.cpp',
     'AllocationPolicy.cpp',
     'PDMFactory.cpp',
-    'wrappers/H264Converter.cpp',
+    'wrappers/MediaChangeMonitor.cpp',
     'wrappers/MediaDataDecoderProxy.cpp'
 ]
 

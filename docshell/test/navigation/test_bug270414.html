@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
     <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-    <script type="text/javascript" src="NavigationUtils.js"></script>        
+    <script type="text/javascript" src="NavigationUtils.js"></script>
     <style type="text/css">
       iframe { width: 90%; height: 50px; }
     </style>
 <script>
+/* eslint-disable no-useless-concat */
+/* global window0:true, window1:true, window2:true, window3:true */
 var headerHTML = "<html><head>" +
-                 "<script src='/tests/SimpleTest/EventUtils.js'></scr" + "ipt>" + 
+                 "<script src='/tests/SimpleTest/EventUtils.js'></scr" + "ipt>" +
                  "<script src='NavigationUtils.js'></scr" + "ipt>" +
                  "</head><body>";
 var footerHTML = "</body></html>";
