@@ -35,15 +35,12 @@ class BigIntObject : public NativeObject
     static bool toString(JSContext* cx, unsigned argc, JS::Value* vp);
     static bool toLocaleString_impl(JSContext* cx, const CallArgs& args);
     static bool toLocaleString(JSContext* cx, unsigned argc, JS::Value* vp);
-    static bool asUintN(JSContext* cx, unsigned argc, JS::Value* vp);
-    static bool asIntN(JSContext* cx, unsigned argc, JS::Value* vp);
 
     JS::BigInt* unbox() const;
 
   private:
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
-    static const JSFunctionSpec staticMethods[];
 };
 
 extern JSObject*
