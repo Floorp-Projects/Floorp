@@ -221,7 +221,7 @@ def use_fetches(config, jobs):
         env['MOZ_FETCHES'] = {'task-reference': json.dumps(job_fetches, sort_keys=True)}
 
         impl, os = worker_type_implementation(job['worker-type'])
-        if os == 'windows':
+        if os in ('windows', 'macosx'):
             env.setdefault('MOZ_FETCHES_DIR', 'fetches')
         else:
             workdir = job['run'].get('workdir', '/builds/worker')

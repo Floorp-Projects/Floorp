@@ -34,7 +34,7 @@ interface nsIEditorSpellCheck : nsISupports
    * value of the next word that is misspelled. This also computes the
    * suggestions which you can get by calling GetSuggestedWord.
    *
-   * @see nsISpellChecker::GetNextMisspelledWord
+   * @see mozSpellChecker::GetNextMisspelledWord
    */
   AString       GetNextMisspelledWord();
 
@@ -45,7 +45,7 @@ interface nsIEditorSpellCheck : nsISupports
    * to build a list. When there are no more suggestions, an empty string
    * (not a null pointer) will be returned.
    *
-   * @see nsISpellChecker::GetSuggestedWord
+   * @see mozSpellChecker::GetSuggestedWord
    */
   AString       GetSuggestedWord();
 
@@ -55,19 +55,19 @@ interface nsIEditorSpellCheck : nsISupports
    * misspelled, it will compute the suggestions which you can get from
    * GetSuggestedWord().
    *
-   * @see nsISpellChecker::CheckCurrentWord
+   * @see mozSpellChecker::CheckCurrentWord
    */
   boolean       CheckCurrentWord(in AString suggestedWord);
 
   /**
    * Use when modally checking the document to replace a word.
    *
-   * @see nsISpellChecker::CheckCurrentWord
+   * @see mozSpellChecker::CheckCurrentWord
    */
   void          ReplaceWord(in AString misspelledWord, in AString replaceWord, in boolean allOccurrences);
 
   /**
-   * @see nsISpellChecker::IgnoreAll
+   * @see mozSpellChecker::IgnoreAll
    */
   void          IgnoreWordAllOccurrences(in AString word);
 
@@ -75,7 +75,7 @@ interface nsIEditorSpellCheck : nsISupports
    * Fills an internal list of words added to the personal dictionary. These
    * words can be retrieved using GetPersonalDictionaryWord()
    *
-   * @see nsISpellChecker::GetPersonalDictionary
+   * @see mozSpellChecker::GetPersonalDictionary
    * @see GetPersonalDictionaryWord
    */
   void          GetPersonalDictionary();
@@ -90,14 +90,14 @@ interface nsIEditorSpellCheck : nsISupports
   /**
    * Adds a word to the current personal dictionary.
    *
-   * @see nsISpellChecker::AddWordToDictionary
+   * @see mozSpellChecker::AddWordToDictionary
    */
   void          AddWordToDictionary(in AString word);
 
   /**
    * Removes a word from the current personal dictionary.
    *
-   * @see nsISpellChecker::RemoveWordFromPersonalDictionary
+   * @see mozSpellChecker::RemoveWordFromPersonalDictionary
    */
   void          RemoveWordFromDictionary(in AString word);
 
@@ -110,12 +110,12 @@ interface nsIEditorSpellCheck : nsISupports
   void          GetDictionaryList([array, size_is(count)] out wstring dictionaryList, out uint32_t count);
 
   /**
-   * @see nsISpellChecker::GetCurrentDictionary
+   * @see mozSpellChecker::GetCurrentDictionary
    */
   AString       GetCurrentDictionary();
 
   /**
-   * @see nsISpellChecker::SetCurrentDictionary
+   * @see mozSpellChecker::SetCurrentDictionary
    */
   void          SetCurrentDictionary(in AString dictionary);
 
