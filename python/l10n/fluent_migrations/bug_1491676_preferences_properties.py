@@ -44,6 +44,9 @@ space-alert-learn-more-button =
 space-alert-under-5gb-ok-button =
         .label = { COPY(from_path, "spaceAlert.under5GB.okButton.label")}
         .accesskey = { COPY(from_path, "spaceAlert.under5GB.okButton.accesskey")}
+desktop-folder-name = { COPY(from_path, "desktopFolderName")}
+downloads-folder-name = { COPY(from_path, "downloadsFolderName")}
+choose-download-folder-title = { COPY(from_path, "chooseDownloadFolderTitle")}
 """, from_path="browser/chrome/browser/preferences/preferences.properties"))
 
     ctx.add_transforms(
