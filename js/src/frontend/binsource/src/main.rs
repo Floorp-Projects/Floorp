@@ -643,12 +643,24 @@ impl CPPExporter {
         // 1. Typesums
         let sums_of_interfaces = self.syntax.resolved_sums_of_interfaces_by_name();
         for (name, nodes) in sums_of_interfaces {
+            let rules_for_this_sum = self.rules.get(name);
+
             let mut edges: HashSet<Rc<String>> = HashSet::new();
             edges.insert(Rc::new(format!("Sum{}", name)));
             refgraph.insert(string_from_nodename(name), edges);
 
             let mut sum_edges: HashSet<Rc<String>> = HashSet::new();
             for node in nodes {
+                let rule_for_this_arm = rules_for_this_sum.by_sum.get(&node)
+                    .cloned()
+                    .unwrap_or_default();
+
+                // If this arm is disabled, we emit raiseError instead of
+                // call to parseInterface*.  Do not add edge in that case.
+                if rule_for_this_arm.disabled {
+                    continue;
+                }
+
                 sum_edges.insert(Rc::new(format!("Interface{}", node.to_string())));
             }
             refgraph.insert(Rc::new(format!("Sum{}", name.to_string())), sum_edges);
