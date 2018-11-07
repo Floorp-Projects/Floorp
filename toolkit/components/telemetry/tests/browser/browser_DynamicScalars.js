@@ -42,7 +42,7 @@ add_task(async function test_recording() {
     "pre_content_spawn_expiration": {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
       keyed: false,
-      release_channel_collection: true,
+      record_on_release: true,
     },
   });
 
@@ -65,17 +65,17 @@ add_task(async function test_recording() {
         "post_content_spawn": {
           kind: Ci.nsITelemetry.SCALAR_TYPE_BOOLEAN,
           keyed: false,
-          release_channel_collection: false,
+          record_on_release: false,
         },
         "post_content_spawn_keyed": {
           kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
           keyed: true,
-          release_channel_collection: true,
+          record_on_release: true,
         },
         "pre_content_spawn_expiration": {
           kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
           keyed: false,
-          release_channel_collection: true,
+          record_on_release: true,
           expired: true,
         },
       });

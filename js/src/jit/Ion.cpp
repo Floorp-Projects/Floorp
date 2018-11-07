@@ -1503,8 +1503,7 @@ OptimizeMIR(MIRGenerator* mir)
         // LICM can hoist instructions from conditional branches and trigger
         // repeated bailouts. Disable it if this script is known to bailout
         // frequently.
-        JSScript* script = mir->info().script();
-        if (!script || !script->hadFrequentBailouts()) {
+        if (!mir->info().hadFrequentBailouts()) {
             if (!LICM(mir, graph)) {
                 return false;
             }

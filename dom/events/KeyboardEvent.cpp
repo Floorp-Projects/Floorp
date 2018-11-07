@@ -148,19 +148,23 @@ void KeyboardEvent::GetInitDict(KeyboardEventInit& aParam)
 
 bool
 KeyboardEvent::ShouldUseSameValueForCharCodeAndKeyCode(
+                 const WidgetKeyboardEvent& aWidgetKeyboardEvent,
                  CallerType aCallerType) const
 {
   // - If this event is initialized by JS, we don't need to return same value
   //   for keyCode and charCode since they can be initialized separately.
   // - If this is not a keypress event, we shouldn't return same value for
   //   keyCode and charCode.
+  // - If we need to return legacy keyCode and charCode values for the web
+  //   app due to in the blacklist.
   // - If this event is referred by default handler, i.e., the caller is
   //   system or this event is now in the system group, we don't need to use
   //   hack for web-compat.
   if (mInitializedByJS ||
-      mEvent->mMessage != eKeyPress ||
+      aWidgetKeyboardEvent.mMessage != eKeyPress ||
+      aWidgetKeyboardEvent.mUseLegacyKeyCodeAndCharCodeValues ||
       aCallerType == CallerType::System ||
-      mEvent->mFlags.mInSystemGroup) {
+      aWidgetKeyboardEvent.mFlags.mInSystemGroup) {
     return false;
   }
 
@@ -193,7 +197,8 @@ KeyboardEvent::CharCode(CallerType aCallerType)
   // value.
 
   if (widgetKeyboardEvent->mKeyNameIndex != KEY_NAME_INDEX_USE_STRING &&
-      ShouldUseSameValueForCharCodeAndKeyCode(aCallerType)) {
+      ShouldUseSameValueForCharCodeAndKeyCode(*widgetKeyboardEvent,
+                                              aCallerType)) {
     return ComputeTraditionalKeyCode(*widgetKeyboardEvent, aCallerType);
   }
 
@@ -226,7 +231,8 @@ KeyboardEvent::KeyCode(CallerType aCallerType)
   // for keyCode value if this is a "keypress" event.
 
   if (widgetKeyboardEvent->mKeyNameIndex == KEY_NAME_INDEX_USE_STRING &&
-      ShouldUseSameValueForCharCodeAndKeyCode(aCallerType)) {
+      ShouldUseSameValueForCharCodeAndKeyCode(*widgetKeyboardEvent,
+                                              aCallerType)) {
     return widgetKeyboardEvent->mCharCode;
   }
 

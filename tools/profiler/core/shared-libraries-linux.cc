@@ -86,7 +86,7 @@ getId(const char *bin_name)
   using namespace google_breakpad;
 
   PageAllocator allocator;
-  auto_wasteful_vector<uint8_t, sizeof(MDGUID)> identifier(&allocator);
+  auto_wasteful_vector<uint8_t, kDefaultBuildIdSize> identifier(&allocator);
 
 #if defined(GP_OS_android)
   if (nsDependentCString(bin_name).Find("!/") != kNotFound) {

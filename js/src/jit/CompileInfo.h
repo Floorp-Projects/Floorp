@@ -204,6 +204,7 @@ class CompileInfo
       : script_(script), fun_(fun), osrPc_(osrPc),
         analysisMode_(analysisMode), scriptNeedsArgsObj_(scriptNeedsArgsObj),
         hadOverflowBailout_(script->hadOverflowBailout()),
+        hadFrequentBailouts_(script->hadFrequentBailouts()),
         mayReadFrameArgsDirectly_(script->mayReadFrameArgsDirectly()),
         inlineScriptTree_(inlineScriptTree)
     {
@@ -256,7 +257,7 @@ class CompileInfo
     explicit CompileInfo(unsigned nlocals)
       : script_(nullptr), fun_(nullptr), osrPc_(nullptr),
         analysisMode_(Analysis_None), scriptNeedsArgsObj_(false), hadOverflowBailout_(false),
-        mayReadFrameArgsDirectly_(false), inlineScriptTree_(nullptr),
+        hadFrequentBailouts_(false), mayReadFrameArgsDirectly_(false), inlineScriptTree_(nullptr),
         needsBodyEnvironmentObject_(false), funNeedsSomeEnvironmentObject_(false)
     {
         nimplicit_ = 0;
@@ -561,6 +562,9 @@ class CompileInfo
     bool hadOverflowBailout() const {
         return hadOverflowBailout_;
     }
+    bool hadFrequentBailouts() const {
+        return hadFrequentBailouts_;
+    }
     bool mayReadFrameArgsDirectly() const {
         return mayReadFrameArgsDirectly_;
     }
@@ -585,6 +589,7 @@ class CompileInfo
     // Record the state of previous bailouts in order to prevent compiling the
     // same function identically the next time.
     bool hadOverflowBailout_;
+    bool hadFrequentBailouts_;
 
     bool mayReadFrameArgsDirectly_;
 

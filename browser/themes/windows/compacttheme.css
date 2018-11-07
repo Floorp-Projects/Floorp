@@ -59,9 +59,9 @@
 }
 
 @media (-moz-windows-glass) {
-  /* Set to full fill-opacity to improve visibility of toolbar buttons on aero glass. */
+  /* Use opaque white icons on Aero Glass. */
   #TabsToolbar {
-    --toolbarbutton-icon-fill-opacity: 1;
+    --lwt-toolbarbutton-icon-fill: white;
   }
 
   /* Make the menubar text readable on aero glass (copied from browser-aero.css). */

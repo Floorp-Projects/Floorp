@@ -5506,7 +5506,10 @@ GlobalLexicals(JSContext* cx, unsigned argc, Value* vp)
         if (!JS_GetPropertyById(cx, globalLexical, id, &val)) {
             return false;
         }
-        if (!JS_SetPropertyById(cx, res, id, val)) {
+        if (val.isMagic(JS_UNINITIALIZED_LEXICAL)) {
+            continue;
+        }
+        if (!JS_DefinePropertyById(cx, res, id, val, JSPROP_ENUMERATE)) {
             return false;
         }
     }

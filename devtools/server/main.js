@@ -85,6 +85,7 @@ var DebuggerServer = {
     this._nextConnID = 0;
 
     this._initialized = true;
+    this._onSocketListenerAccepted = this._onSocketListenerAccepted.bind(this);
   },
 
   get protocol() {
@@ -225,6 +226,7 @@ var DebuggerServer = {
    * SocketListeners.  This is called by a SocketListener after it is opened.
    */
   _addListener(listener) {
+    listener.on("accepted", this._onSocketListenerAccepted);
     this._listeners.push(listener);
   },
 
@@ -233,7 +235,16 @@ var DebuggerServer = {
    * SocketListeners.  This is called by a SocketListener after it is closed.
    */
   _removeListener(listener) {
+    // Remove connections that were accepted in the listener.
+    for (const connID of Object.getOwnPropertyNames(this._connections)) {
+      const connection = this._connections[connID];
+      if (connection.isAcceptedBy(listener)) {
+        connection.close();
+      }
+    }
+
     this._listeners = this._listeners.filter(l => l !== listener);
+    listener.off("accepted", this._onSocketListenerAccepted);
   },
 
   /**
@@ -252,6 +263,10 @@ var DebuggerServer = {
     }
 
     return true;
+  },
+
+  _onSocketListenerAccepted(transport, listener) {
+    this._onConnection(transport, null, false, listener);
   },
 
   /**
@@ -863,7 +878,7 @@ var DebuggerServer = {
    * that all our actors have names beginning with |forwardingPrefix + '/'|.
    * In particular, the root actor's name will be |forwardingPrefix + '/root'|.
    */
-  _onConnection(transport, forwardingPrefix, noRootActor = false) {
+  _onConnection(transport, forwardingPrefix, noRootActor = false, socketListener = null) {
     let connID;
     if (forwardingPrefix) {
       connID = forwardingPrefix + "/";
@@ -875,7 +890,7 @@ var DebuggerServer = {
       connID = "server" + loader.id + ".conn" + this._nextConnID++ + ".";
     }
 
-    const conn = new DebuggerServerConnection(connID, transport);
+    const conn = new DebuggerServerConnection(connID, transport, socketListener);
     this._connections[connID] = conn;
 
     // Create a root actor for the connection and send the hello packet.
@@ -974,12 +989,16 @@ exports.DebuggerServer = DebuggerServer;
  *        with prefix.
  * @param transport transport
  *        Packet transport for the debugging protocol.
+ * @param socketListener SocketListener
+ *        SocketListener which accepted the transport.
+ *        If this is null, the transport is not that was accepted by SocketListener.
  */
-function DebuggerServerConnection(prefix, transport) {
+function DebuggerServerConnection(prefix, transport, socketListener) {
   this._prefix = prefix;
   this._transport = transport;
   this._transport.hooks = this;
   this._nextID = 1;
+  this._socketListener = socketListener;
 
   this._actorPool = new Pool(this);
   this._extraPools = [this._actorPool];
@@ -1223,6 +1242,17 @@ DebuggerServerConnection.prototype = {
         return;
       }
     });
+  },
+
+  /**
+   * This function returns whether the connection was accepted by passed SocketListener.
+   *
+   * @param {SocketListener} socketListener
+   * @return {Boolean} return true if this connection was accepted by socketListener,
+   *         else returns false.
+   */
+  isAcceptedBy(socketListener) {
+    return this._socketListener === socketListener;
   },
 
   /* Forwarding packets to other transports based on actor name prefixes. */
