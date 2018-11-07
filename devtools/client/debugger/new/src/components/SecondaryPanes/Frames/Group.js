@@ -45,7 +45,8 @@ type Props = {
   toggleBlackBox: Function,
   frameworkGroupingOn: boolean,
   displayFullUrl: boolean,
-  getFrameTitle?: string => string
+  getFrameTitle?: string => string,
+  disableContextMenu: boolean
 };
 
 type State = {
@@ -60,7 +61,7 @@ export default class Group extends Component<Props, State> {
     this.state = { expanded: false };
   }
 
-  onContextMenu(event: SyntheticKeyboardEvent<HTMLElement>) {
+  onContextMenu(event: SyntheticMouseEvent<HTMLElement>) {
     const {
       group,
       copyStackTrace,
@@ -91,7 +92,8 @@ export default class Group extends Component<Props, State> {
       toggleBlackBox,
       copyStackTrace,
       displayFullUrl,
-      getFrameTitle
+      getFrameTitle,
+      disableContextMenu
     } = this.props;
 
     const { expanded } = this.state;
@@ -115,6 +117,7 @@ export default class Group extends Component<Props, State> {
             toggleFrameworkGrouping={toggleFrameworkGrouping}
             displayFullUrl={displayFullUrl}
             getFrameTitle={getFrameTitle}
+            disableContextMenu={disableContextMenu}
           />
         ))}
       </div>
@@ -142,10 +145,11 @@ export default class Group extends Component<Props, State> {
 
   render() {
     const { expanded } = this.state;
+    const { disableContextMenu } = this.props;
     return (
       <div
         className={classNames("frames-group", { expanded })}
-        onContextMenu={e => this.onContextMenu(e)}
+        onContextMenu={disableContextMenu ? null : e => this.onContextMenu(e)}
       >
         {this.renderDescription()}
         {this.renderFrames()}

@@ -4,7 +4,6 @@
 
 // @flow
 
-import PropTypes from "prop-types";
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import { List } from "immutable";
@@ -434,10 +433,6 @@ class SecondaryPanes extends Component<Props, State> {
     );
   }
 }
-
-SecondaryPanes.contextTypes = {
-  shortcuts: PropTypes.object
-};
 
 const mapStateToProps = state => ({
   expressions: getExpressions(state),

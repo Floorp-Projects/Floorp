@@ -6,42 +6,70 @@
 
 import { sortBy, uniq } from "lodash";
 import { createSelector } from "reselect";
-import { getSources, getBreakpoints } from "../selectors";
-import { getFilename } from "../utils/source";
+import { getSources, getBreakpoints, getSelectedSource } from "../selectors";
+import { isGenerated, getFilename } from "../utils/source";
+import { getSelectedLocation } from "../utils/source-maps";
 
-import type { Source, Breakpoint } from "../types";
+import type { Source, Breakpoint, Location } from "../types";
 import type { SourcesMap, BreakpointsMap } from "../reducers/types";
 
 export type BreakpointSources = Array<{
   source: Source,
-  breakpoints: Breakpoint[]
+  breakpoints: FormattedBreakpoint[]
 }>;
+
+export type FormattedBreakpoint = {|
+  condition: ?string,
+  disabled: boolean,
+  text: string,
+  selectedLocation: Location
+|};
+
+function formatBreakpoint(
+  breakpoint: Breakpoint,
+  selectedSource: Source
+): FormattedBreakpoint {
+  const { condition, disabled } = breakpoint;
+
+  return {
+    condition,
+    disabled,
+    text:
+      selectedSource && isGenerated(selectedSource)
+        ? breakpoint.text
+        : breakpoint.originalText,
+    selectedLocation: getSelectedLocation(breakpoint, selectedSource)
+  };
+}
 
 function getBreakpointsForSource(
   source: Source,
+  selectedSource: Source,
   breakpoints: BreakpointsMap
 ): Breakpoint[] {
   const bpList = breakpoints.valueSeq();
-
   return bpList
+    .map(bp => formatBreakpoint(bp, selectedSource))
     .filter(
       bp =>
-        bp.location.sourceId == source.id &&
+        bp.selectedLocation.sourceId == source.id &&
         !bp.hidden &&
+        !bp.loading &&
         (bp.text || bp.originalText || bp.condition || bp.disabled)
     )
-    .sortBy(bp => bp.location.line)
+    .sortBy(bp => bp.selectedLocation.line)
     .toJS();
 }
 
 function findBreakpointSources(
   sources: SourcesMap,
+  selectedSource: Source,
   breakpoints: BreakpointsMap
 ): Source[] {
   const sourceIds: string[] = uniq(
     breakpoints
       .valueSeq()
-      .map(bp => bp.location.sourceId)
+      .map(bp => getSelectedLocation(bp, selectedSource).sourceId)
       .toJS()
   );
 
@@ -55,11 +83,16 @@ function findBreakpointSources(
 export const getBreakpointSources = createSelector(
   getBreakpoints,
   getSources,
-  (breakpoints: BreakpointsMap, sources: SourcesMap) =>
-    findBreakpointSources(sources, breakpoints)
+  getSelectedSource,
+  (breakpoints: BreakpointsMap, sources: SourcesMap, selectedSource: Source) =>
+    findBreakpointSources(sources, selectedSource, breakpoints)
       .map(source => ({
         source,
-        breakpoints: getBreakpointsForSource(source, breakpoints)
+        breakpoints: getBreakpointsForSource(
+          source,
+          selectedSource,
+          breakpoints
+        )
       }))
       .filter(({ breakpoints: bpSources }) => bpSources.length > 0)
 );
