@@ -213,7 +213,7 @@ JSScript::ensureHasAnalyzedArgsUsage(JSContext* cx)
 inline bool
 JSScript::isDebuggee() const
 {
-    return realm_->debuggerObservesAllExecution() || bitFields_.hasDebugScript_;
+    return realm_->debuggerObservesAllExecution() || hasDebugScript();
 }
 
 inline bool
