@@ -24,6 +24,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1329288
  * gets called with the right (a non null) 'context' for the TYPE_DOCUMENT load.
  */
 
+// Services.jsm is disabled as ChromeUtils appears to be out of scope
+/* eslint-disable mozilla/use-services */
+
 const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 
@@ -36,8 +39,8 @@ var policyID = SpecialPowers.wrap(SpecialPowers.Components).ID("{b80e19d0-878f-d
 var policyName = "@mozilla.org/testpolicy;1";
 var policy = {
   // nsISupports implementation
-  // eslint-disable-next-line mozilla/use-chromeutils-generatedqi.js
-  QueryInterface: function(iid) {
+  // eslint-disable-next-line mozilla/use-chromeutils-generateqi
+  QueryInterface(iid) {
     iid = SpecialPowers.wrap(iid);
     if (iid.equals(Ci.nsISupports) ||
         iid.equals(Ci.nsIFactory) ||
