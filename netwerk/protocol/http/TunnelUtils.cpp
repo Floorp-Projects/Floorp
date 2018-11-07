@@ -1378,7 +1378,7 @@ SpdyConnectTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
     return rv;
   }
 
-  if (!mTunneledConn || cb) {
+  if (!mTunneledConn || !cb) {
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
 
