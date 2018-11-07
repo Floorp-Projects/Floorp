@@ -750,9 +750,11 @@ class ICFallbackStub : public ICStub
     inline void incrementEnteredCount() { enteredCount_++; }
 };
 
-// Base class for Trait::Regular CacheIR stubs
-class ICCacheIR_Regular : public ICStub
+// Shared trait for all CacheIR stubs.
+template <typename T>
+class ICCacheIR_Trait
 {
+  protected:
     const CacheIRStubInfo* stubInfo_;
 
     // Counts the number of times the stub was entered
@@ -762,10 +764,28 @@ class ICCacheIR_Regular : public ICStub
     uint32_t enteredCount_;
 
   public:
+    explicit ICCacheIR_Trait(const CacheIRStubInfo* stubInfo)
+      : stubInfo_(stubInfo),
+        enteredCount_(0)
+    {}
+
+    const CacheIRStubInfo* stubInfo() const {
+        return stubInfo_;
+    }
+
+    // Return the number of times this stub has successfully provided a value to the
+    // caller.
+    uint32_t enteredCount() const { return enteredCount_; }
+    static size_t offsetOfEnteredCount() { return offsetof(T, enteredCount_); }
+};
+
+// Base class for Trait::Regular CacheIR stubs
+class ICCacheIR_Regular : public ICStub, public ICCacheIR_Trait<ICCacheIR_Regular>
+{
+  public:
     ICCacheIR_Regular(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
       : ICStub(ICStub::CacheIR_Regular, stubCode),
-        stubInfo_(stubInfo),
-        enteredCount_(0)
+        ICCacheIR_Trait(stubInfo)
     {}
 
     static ICCacheIR_Regular* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
@@ -778,16 +798,7 @@ class ICCacheIR_Regular : public ICStub
         return extra_;
     }
 
-    const CacheIRStubInfo* stubInfo() const {
-        return stubInfo_;
-    }
-
     uint8_t* stubDataStart();
-
-    // Return the number of times this stub has successfully provided a value to the
-    // caller.
-    uint32_t enteredCount() const { return enteredCount_; }
-    static size_t offsetOfEnteredCount() { return offsetof(ICCacheIR_Regular, enteredCount_); }
 };
 
 // Monitored stubs are IC stubs that feed a single resulting value out to a
@@ -820,15 +831,14 @@ class ICMonitoredStub : public ICStub
     }
 };
 
-class ICCacheIR_Monitored : public ICMonitoredStub
+class ICCacheIR_Monitored : public ICMonitoredStub, public ICCacheIR_Trait<ICCacheIR_Monitored>
 {
-    const CacheIRStubInfo* stubInfo_;
 
   public:
     ICCacheIR_Monitored(JitCode* stubCode, ICStub* firstMonitorStub,
                         const CacheIRStubInfo* stubInfo)
       : ICMonitoredStub(ICStub::CacheIR_Monitored, stubCode, firstMonitorStub),
-        stubInfo_(stubInfo)
+        ICCacheIR_Trait(stubInfo)
     {}
 
     static ICCacheIR_Monitored* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
@@ -839,10 +849,6 @@ class ICCacheIR_Monitored : public ICMonitoredStub
     }
     bool hasPreliminaryObject() const {
         return extra_;
-    }
-
-    const CacheIRStubInfo* stubInfo() const {
-        return stubInfo_;
     }
 
     uint8_t* stubDataStart();
@@ -917,16 +923,15 @@ class ICUpdatedStub : public ICStub
     }
 };
 
-class ICCacheIR_Updated : public ICUpdatedStub
+class ICCacheIR_Updated : public ICUpdatedStub, public ICCacheIR_Trait<ICCacheIR_Updated>
 {
-    const CacheIRStubInfo* stubInfo_;
     GCPtrObjectGroup updateStubGroup_;
     GCPtrId updateStubId_;
 
   public:
     ICCacheIR_Updated(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
       : ICUpdatedStub(ICStub::CacheIR_Updated, stubCode),
-        stubInfo_(stubInfo),
+        ICCacheIR_Trait(stubInfo),
         updateStubGroup_(nullptr),
         updateStubId_(JSID_EMPTY)
     {}
@@ -946,10 +951,6 @@ class ICCacheIR_Updated : public ICUpdatedStub
     }
     bool hasPreliminaryObject() const {
         return extra_;
-    }
-
-    const CacheIRStubInfo* stubInfo() const {
-        return stubInfo_;
     }
 
     uint8_t* stubDataStart();

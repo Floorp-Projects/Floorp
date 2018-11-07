@@ -164,6 +164,20 @@ BaselineCacheIRCompiler::tailCallVM(MacroAssembler& masm, const VMFunction& fun)
     return true;
 }
 
+static size_t
+GetEnteredOffset(BaselineCacheIRStubKind kind)
+{
+    switch (kind) {
+      case BaselineCacheIRStubKind::Regular:
+        return ICCacheIR_Regular::offsetOfEnteredCount();
+      case BaselineCacheIRStubKind::Updated:
+        return ICCacheIR_Updated::offsetOfEnteredCount();
+      case BaselineCacheIRStubKind::Monitored:
+        return ICCacheIR_Monitored::offsetOfEnteredCount();
+    }
+    MOZ_CRASH("unhandled BaselineCacheIRStubKind");
+}
+
 JitCode*
 BaselineCacheIRCompiler::compile()
 {
@@ -177,10 +191,8 @@ BaselineCacheIRCompiler::compile()
 #endif
     // Count stub entries: We count entries rather than successes as it much easier to
     // ensure ICStubReg is valid at entry than at exit.
-    if (kind_ == BaselineCacheIRStubKind::Regular) {
-        Address enteredCount(ICStubReg, ICCacheIR_Regular::offsetOfEnteredCount());
-        masm.add32(Imm32(1), enteredCount);
-    }
+    Address enteredCount(ICStubReg, GetEnteredOffset(kind_));
+    masm.add32(Imm32(1), enteredCount);
 
     do {
         switch (reader.readOp()) {
