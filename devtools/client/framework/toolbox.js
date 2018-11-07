@@ -158,6 +158,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
   this.toggleSplitConsole = this.toggleSplitConsole.bind(this);
   this.toggleOptions = this.toggleOptions.bind(this);
   this.togglePaintFlashing = this.togglePaintFlashing.bind(this);
+  this.toggleDragging = this.toggleDragging.bind(this);
   this.isPaintFlashing = false;
 
   this._target.on("close", this.destroy);
@@ -324,6 +325,10 @@ Toolbox.prototype = {
    */
   getCurrentPanel: function() {
     return this._toolPanels.get(this.currentToolId);
+  },
+
+  toggleDragging: function() {
+    this.doc.querySelector("window").classList.toggle("dragging");
   },
 
   /**
