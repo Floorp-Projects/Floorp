@@ -612,10 +612,10 @@ GPUProcessManager::HandleProcessLost()
   //        (b) [CONTENT] TabChild::ReinitRendering
   //        (c) [CONTENT] TabChild::SendEnsureLayersConnected
   //        (d)      [UI] TabParent::RecvEnsureLayersConnected
-  //        (e)      [UI] RenderFrameParent::EnsureLayersConnected
+  //        (e)      [UI] RenderFrame::EnsureLayersConnected
   //        (f)      [UI] CompositorBridgeChild::SendNotifyChildRecreated
   //
-  //      Note that at step (e), RenderFrameParent will call GetLayerManager
+  //      Note that at step (e), RenderFrame will call GetLayerManager
   //      on the nsIWidget owning the tab. This step ensures that a compositor
   //      exists for the window. If we decided to launch a new GPU Process,
   //      at this point we block until the process has launched and we're

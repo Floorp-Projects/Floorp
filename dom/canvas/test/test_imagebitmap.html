@@ -270,13 +270,22 @@ function testSecurityErrors() {
   }
 
   function checkPromiseFailedWithSecurityError(p) {
-    return p.then( function(reason) { ok(false, "Did not get SecurityError with unclean source. ImageBitmap was created successfully."); },
-                   function(reason) { if (reason == "SecurityError: The operation is insecure.") {
-                                        ok(true, reason);
-                                      }
-                                      else {
-                                        ok(false, "Did not get SecurityError with unclean source. Error Message: " + reason);
-                                      }});
+    return p.then(imageBitmap => {
+      ok(!!imageBitmap, "ImageBitmaps are always created");
+      const context = document.createElement("canvas").getContext("2d");
+      context.drawImage(imageBitmap, 0, 0);
+      try {
+        context.getImageData(0, 0, 1, 1);
+        ok(false, "Did not get SecurityError with unclean source. ImageBitmap was created successfully.");
+      } catch (ex) {
+        if (ex == "SecurityError: The operation is insecure.") {
+          ok(true, ex);
+        }
+        else {
+          ok(false, "Did not get SecurityError with unclean source. Error Message: " + ex);
+        }
+      }
+    });
   }
 
   return Promise.all([

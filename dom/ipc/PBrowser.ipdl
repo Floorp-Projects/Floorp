@@ -11,7 +11,6 @@ include protocol PContentBridge;
 include protocol PDocAccessible;
 include protocol PFilePicker;
 include protocol PIndexedDBPermissionRequest;
-include protocol PRenderFrame;
 include protocol PPluginWidget;
 include protocol PRemotePrintJob;
 include protocol PChildToParentStream;
@@ -117,19 +116,12 @@ nested(upto inside_cpow) sync protocol PBrowser
     manages PDocAccessible;
     manages PFilePicker;
     manages PIndexedDBPermissionRequest;
-    manages PRenderFrame;
     manages PPluginWidget;
     manages PPaymentRequest;
 
 both:
     async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                        Principal aPrincipal, ClonedMessageData aData);
-
-    /**
-     * Create a layout frame (encapsulating a remote layer tree) for
-     * the page that is currently loaded in the <browser>.
-     */
-    async PRenderFrame();
 
 parent:
     /**
@@ -439,7 +431,7 @@ parent:
      *
      * @param opener the PBrowser whose content called window.open.
      */
-    async BrowserFrameOpenWindow(PBrowser opener, PRenderFrame renderFrame,
+    async BrowserFrameOpenWindow(PBrowser opener,
                                  nsString aURL, nsString aName, nsString aFeatures)
         returns (CreatedWindowInfo window);
 
@@ -535,6 +527,11 @@ parent:
     async RemotePaintIsReady();
 
     /**
+     * Child informs the parent that a compositor transaction has ocurred.
+     */
+    async NotifyCompositorTransaction();
+
+    /**
      * Child informs the parent that the content is ready to handle input
      * events. This is sent when the TabChild is created.
      */
@@ -600,8 +597,7 @@ child:
     async InitRendering(TextureFactoryIdentifier textureFactoryIdentifier,
                         LayersId layersId,
                         CompositorOptions compositorOptions,
-                        bool layersConnected,
-                        nullable PRenderFrame renderFrame);
+                        bool layersConnected);
 
     async LoadURL(nsCString uri, ShowInfo info);
 

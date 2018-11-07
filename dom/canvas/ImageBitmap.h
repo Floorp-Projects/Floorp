@@ -60,6 +60,7 @@ struct ImageBitmapCloneData final
   RefPtr<gfx::DataSourceSurface> mSurface;
   gfx::IntRect mPictureRect;
   gfxAlphaType mAlphaType;
+  bool mWriteOnly;
 };
 
 /*
@@ -152,6 +153,11 @@ public:
 
   void OnShutdown();
 
+  bool IsWriteOnly() const
+  {
+    return mWriteOnly;
+  }
+
 protected:
 
   /*
@@ -174,6 +180,7 @@ protected:
    * CreateInternal(from ImageData) method.
    */
   ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
+              bool aWriteOnly,
               gfxAlphaType aAlphaType = gfxAlphaType::Premult);
 
   virtual ~ImageBitmap();
@@ -255,6 +262,13 @@ protected:
    * Whether this object allocated allocated and owns the image data.
    */
   bool mAllocatedImageData;
+
+  /*
+   * Write-Only flag is set to true if this image has been generated from a
+   * cross-origin source. This is the opposite of what is called 'origin-clean'
+   * in the spec.
+   */
+  bool mWriteOnly;
 };
 
 } // namespace dom

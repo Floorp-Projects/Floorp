@@ -471,7 +471,8 @@ CheckSecurityForElements(const nsLayoutUtils::SurfaceFromElementResult& aRes)
  */
 template<class ElementType>
 static already_AddRefed<SourceSurface>
-GetSurfaceFromElement(nsIGlobalObject* aGlobal, ElementType& aElement, ErrorResult& aRv)
+GetSurfaceFromElement(nsIGlobalObject* aGlobal, ElementType& aElement,
+                      bool* aWriteOnly, ErrorResult& aRv)
 {
   nsLayoutUtils::SurfaceFromElementResult res =
     nsLayoutUtils::SurfaceFromElement(&aElement, nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE);
@@ -483,17 +484,14 @@ GetSurfaceFromElement(nsIGlobalObject* aGlobal, ElementType& aElement, ErrorResu
   }
 
 
-  // check origin-clean
-  if (!CheckSecurityForElements(res)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
+  // check write-only mode
+  *aWriteOnly = !CheckSecurityForElements(res);
 
   return surface.forget();
 }
 
 ImageBitmap::ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
-                         gfxAlphaType aAlphaType)
+                         bool aWriteOnly, gfxAlphaType aAlphaType)
   : mParent(aGlobal)
   , mData(aData)
   , mSurface(nullptr)
@@ -501,6 +499,7 @@ ImageBitmap::ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
   , mPictureRect(0, 0, aData->GetSize().width, aData->GetSize().height)
   , mAlphaType(aAlphaType)
   , mAllocatedImageData(false)
+  , mWriteOnly(aWriteOnly)
 {
   MOZ_ASSERT(aData, "aData is null in ImageBitmap constructor.");
 
@@ -763,6 +762,7 @@ ImageBitmap::ToCloneData() const
   RefPtr<SourceSurface> surface = mData->GetAsSourceSurface();
   result->mSurface = surface->GetDataSurface();
   MOZ_ASSERT(result->mSurface);
+  result->mWriteOnly = mWriteOnly;
 
   return result;
 }
@@ -773,7 +773,8 @@ ImageBitmap::CreateFromSourceSurface(nsIGlobalObject* aGlobal,
                                      ErrorResult& aRv)
 {
   RefPtr<layers::Image> data = CreateImageFromSurface(aSource);
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data,
+                                            false /* writeOnly */);
   ret->mAllocatedImageData = true;
   return ret.forget();
 }
@@ -784,7 +785,8 @@ ImageBitmap::CreateFromCloneData(nsIGlobalObject* aGlobal,
 {
   RefPtr<layers::Image> data = CreateImageFromSurface(aData->mSurface);
 
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, aData->mAlphaType);
+  RefPtr<ImageBitmap> ret =
+    new ImageBitmap(aGlobal, data, aData->mWriteOnly, aData->mAlphaType);
 
   ret->mAllocatedImageData = true;
 
@@ -798,11 +800,8 @@ ImageBitmap::CreateFromOffscreenCanvas(nsIGlobalObject* aGlobal,
                                        OffscreenCanvas& aOffscreenCanvas,
                                        ErrorResult& aRv)
 {
-  // Check origin-clean.
-  if (aOffscreenCanvas.IsWriteOnly()) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
+  // Check write-only mode.
+  bool writeOnly = aOffscreenCanvas.IsWriteOnly();
 
   nsLayoutUtils::SurfaceFromElementResult res =
     nsLayoutUtils::SurfaceFromOffscreenCanvas(&aOffscreenCanvas,
@@ -818,7 +817,7 @@ ImageBitmap::CreateFromOffscreenCanvas(nsIGlobalObject* aGlobal,
   RefPtr<layers::Image> data =
     CreateImageFromSurface(surface);
 
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, writeOnly);
 
   ret->mAllocatedImageData = true;
 
@@ -835,9 +834,12 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl
     return nullptr;
   }
 
+  bool writeOnly = true;
+
   // Get the SourceSurface out from the image element and then do security
   // checking.
-  RefPtr<SourceSurface> surface = GetSurfaceFromElement(aGlobal, aImageEl, aRv);
+  RefPtr<SourceSurface> surface = GetSurfaceFromElement(aGlobal, aImageEl,
+                                                        &writeOnly, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -851,7 +853,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl
     return nullptr;
   }
 
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, writeOnly);
 
   // Set the picture rectangle.
   if (ret && aCropRect.isSome()) {
@@ -865,9 +867,12 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl
 ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, SVGImageElement& aImageEl,
                             const Maybe<IntRect>& aCropRect, ErrorResult& aRv)
 {
+  bool writeOnly = true;
+
   // Get the SourceSurface out from the image element and then do security
   // checking.
-  RefPtr<SourceSurface> surface = GetSurfaceFromElement(aGlobal, aImageEl, aRv);
+  RefPtr<SourceSurface> surface = GetSurfaceFromElement(aGlobal, aImageEl,
+                                                        &writeOnly, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -881,7 +886,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, SVGImageElement& aImageEl,
     return nullptr;
   }
 
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, writeOnly);
 
   // Set the picture rectangle.
   if (ret && aCropRect.isSome()) {
@@ -913,10 +918,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl
   // Check security.
   nsCOMPtr<nsIPrincipal> principal = aVideoEl.GetCurrentVideoPrincipal();
   bool CORSUsed = aVideoEl.GetCORSMode() != CORS_NONE;
-  if (!CheckSecurityForElements(false, CORSUsed, principal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
+  bool writeOnly = !CheckSecurityForElements(false, CORSUsed, principal);
 
   // Create ImageBitmap.
   RefPtr<layers::Image> data = aVideoEl.GetCurrentImage();
@@ -924,7 +926,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, writeOnly);
 
   // Set the picture rectangle.
   if (ret && aCropRect.isSome()) {
@@ -943,10 +945,16 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLCanvasElement& aCanvas
     return nullptr;
   }
 
-  RefPtr<SourceSurface> surface = GetSurfaceFromElement(aGlobal, aCanvasEl, aRv);
+  bool writeOnly = true;
+  RefPtr<SourceSurface> surface = GetSurfaceFromElement(aGlobal, aCanvasEl,
+                                                        &writeOnly, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
+  }
+
+  if (!writeOnly) {
+    writeOnly = aCanvasEl.IsWriteOnly();
   }
 
   // Crop the source surface if needed.
@@ -982,7 +990,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLCanvasElement& aCanvas
     return nullptr;
   }
 
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, writeOnly);
 
   if (needToReportMemoryAllocation) {
     ret->mAllocatedImageData = true;
@@ -1047,7 +1055,8 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
   }
 
   // Create an ImageBimtap.
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, alphaType);
+  RefPtr<ImageBitmap> ret =
+    new ImageBitmap(aGlobal, data, false /* write-only */, alphaType);
 
   ret->mAllocatedImageData = true;
 
@@ -1070,11 +1079,8 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, CanvasRenderingContext2D& 
 
   window->GetExtantDoc()->WarnOnceAbout(nsIDocument::eCreateImageBitmapCanvasRenderingContext2D);
 
-  // Check origin-clean.
-  if (aCanvasCtx.GetCanvas()->IsWriteOnly()) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
+  // Check write-only mode.
+  bool writeOnly = aCanvasCtx.GetCanvas()->IsWriteOnly() || aCanvasCtx.IsWriteOnly();
 
   RefPtr<SourceSurface> surface = aCanvasCtx.GetSurfaceSnapshot();
 
@@ -1096,7 +1102,8 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, CanvasRenderingContext2D& 
     return nullptr;
   }
 
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret =
+    new ImageBitmap(aGlobal, data, writeOnly);
 
   ret->mAllocatedImageData = true;
 
@@ -1118,7 +1125,9 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageBitmap& aImageBitmap,
   }
 
   RefPtr<layers::Image> data = aImageBitmap.mData;
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, aImageBitmap.mAlphaType);
+  RefPtr<ImageBitmap> ret =
+    new ImageBitmap(aGlobal, data, aImageBitmap.mWriteOnly,
+                    aImageBitmap.mAlphaType);
 
   // Set the picture rectangle.
   if (ret && aCropRect.isSome()) {
@@ -1432,15 +1441,13 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
   uint32_t picRectWidth_;
   uint32_t picRectHeight_;
   uint32_t alphaType_;
-  uint32_t dummy;
+  uint32_t writeOnly;
 
   if (!JS_ReadUint32Pair(aReader, &picRectX_, &picRectY_) ||
       !JS_ReadUint32Pair(aReader, &picRectWidth_, &picRectHeight_) ||
-      !JS_ReadUint32Pair(aReader, &alphaType_, &dummy)) {
+      !JS_ReadUint32Pair(aReader, &alphaType_, &writeOnly)) {
     return nullptr;
   }
-
-  MOZ_ASSERT(dummy == 0);
 
   int32_t picRectX = BitwiseCast<int32_t>(picRectX_);
   int32_t picRectY = BitwiseCast<int32_t>(picRectY_);
@@ -1465,7 +1472,8 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
     }
 #endif
     RefPtr<layers::Image> img = CreateImageFromSurface(aClonedSurfaces[aIndex]);
-    RefPtr<ImageBitmap> imageBitmap = new ImageBitmap(aParent, img, alphaType);
+    RefPtr<ImageBitmap> imageBitmap =
+      new ImageBitmap(aParent, img, !!writeOnly, alphaType);
 
     ErrorResult error;
     imageBitmap->SetPictureRect(IntRect(picRectX, picRectY,
@@ -1505,7 +1513,7 @@ ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   if (NS_WARN_IF(!JS_WriteUint32Pair(aWriter, SCTAG_DOM_IMAGEBITMAP, index)) ||
       NS_WARN_IF(!JS_WriteUint32Pair(aWriter, picRectX, picRectY)) ||
       NS_WARN_IF(!JS_WriteUint32Pair(aWriter, picRectWidth, picRectHeight)) ||
-      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, alphaType, 0))) {
+      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, alphaType, aImageBitmap->mWriteOnly))) {
     return false;
   }
 
@@ -1839,7 +1847,8 @@ CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlobCompletedOwningThread(lay
   }
 
   // Create ImageBitmap object.
-  RefPtr<ImageBitmap> imageBitmap = new ImageBitmap(mGlobalObject, aImage);
+  RefPtr<ImageBitmap> imageBitmap =
+    new ImageBitmap(mGlobalObject, aImage, false /* write-only */);
 
   if (mCropRect.isSome()) {
     ErrorResult rv;

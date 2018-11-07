@@ -82,7 +82,7 @@
 #include "mozilla/dom/FrameLoaderBinding.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
-#include "mozilla/layout/RenderFrameParent.h"
+#include "mozilla/layout/RenderFrame.h"
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsGenericHTMLFrameElement.h"
@@ -853,12 +853,12 @@ nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
       return false;
     }
 
-    RenderFrameParent* rfp = GetCurrentRenderFrame();
-    if (!rfp) {
+    RenderFrame* rf = GetCurrentRenderFrame();
+    if (!rf) {
       return false;
     }
 
-    if (!rfp->AttachLayerManager()) {
+    if (!rf->AttachLayerManager()) {
       // This is just not going to work.
       return false;
     }
@@ -1806,7 +1806,7 @@ nsFrameLoader::SetOwnerContent(Element* aContent)
     Unused << NS_WARN_IF(rv.Failed());
   }
 
-  if (RenderFrameParent* rfp = GetCurrentRenderFrame()) {
+  if (RenderFrame* rfp = GetCurrentRenderFrame()) {
     rfp->OwnerContentChanged(aContent);
   }
 }
@@ -2616,8 +2616,8 @@ nsFrameLoader::TryRemoteBrowser()
   if (!mRemoteBrowser) {
     return false;
   }
-  // Now that mRemoteBrowser is set, we can initialize the RenderFrameParent
-  mRemoteBrowser->InitRenderFrame();
+  // Now that mRemoteBrowser is set, we can initialize the RenderFrame
+  mRemoteBrowser->InitRendering();
 
   MaybeUpdatePrimaryTabParent(eTabParentChanged);
 
@@ -2670,7 +2670,7 @@ nsFrameLoader::GetRemoteBrowser() const
   return mRemoteBrowser;
 }
 
-RenderFrameParent*
+RenderFrame*
 nsFrameLoader::GetCurrentRenderFrame() const
 {
   if (mRemoteBrowser) {
@@ -2941,6 +2941,7 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
   MaybeUpdatePrimaryTabParent(eTabParentChanged);
   ReallyLoadFrameScripts();
   InitializeBrowserAPI();
+  mRemoteBrowser->InitRendering();
   ShowRemoteFrame(ScreenIntSize(0, 0));
 }
 
