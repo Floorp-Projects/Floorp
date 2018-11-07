@@ -201,7 +201,7 @@ var DebuggerServer = {
    * Add a SocketListener instance to the server's set of active
    * SocketListeners.  This is called by a SocketListener after it is opened.
    */
-  _addListener(listener) {
+  addSocketListener(listener) {
     if (!Services.prefs.getBoolPref("devtools.debugger.remote-enabled")) {
       throw new Error("Can't add a SocketListener, remote debugging disabled");
     }
@@ -215,7 +215,7 @@ var DebuggerServer = {
    * Remove a SocketListener instance from the server's set of active
    * SocketListeners.  This is called by a SocketListener after it is closed.
    */
-  _removeListener(listener) {
+  removeSocketListener(listener) {
     // Remove connections that were accepted in the listener.
     for (const connID of Object.getOwnPropertyNames(this._connections)) {
       const connection = this._connections[connID];
