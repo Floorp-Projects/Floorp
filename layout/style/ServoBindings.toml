@@ -133,6 +133,7 @@ rusty-enums = [
     "mozilla::StyleImageLayerRepeat",
     "mozilla::StyleImageLayerAttachment",
     "mozilla::StyleBoxDecorationBreak",
+    "mozilla::StyleBorderStyle",
     "mozilla::StyleRuleInclusion",
     "mozilla::StyleGridTrackBreadth",
     "mozilla::StyleOverscrollBehavior",

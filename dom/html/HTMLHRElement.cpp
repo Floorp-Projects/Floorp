@@ -139,14 +139,14 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 
     if (!aDecls.PropertyIsSet(eCSSProperty_border_top_style))
       aDecls.SetKeywordValue(eCSSProperty_border_top_style,
-                             NS_STYLE_BORDER_STYLE_SOLID);
+                             StyleBorderStyle::Solid);
     if (allSides) {
       aDecls.SetKeywordValueIfUnset(eCSSProperty_border_right_style,
-                                    NS_STYLE_BORDER_STYLE_SOLID);
+                                    StyleBorderStyle::Solid);
       aDecls.SetKeywordValueIfUnset(eCSSProperty_border_bottom_style,
-                                    NS_STYLE_BORDER_STYLE_SOLID);
+                                    StyleBorderStyle::Solid);
       aDecls.SetKeywordValueIfUnset(eCSSProperty_border_left_style,
-                                    NS_STYLE_BORDER_STYLE_SOLID);
+                                    StyleBorderStyle::Solid);
 
       // If it would be noticeable, set the border radius to
       // 10000px on all corners; this triggers the clamping to make

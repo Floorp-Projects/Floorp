@@ -456,7 +456,7 @@ nsCSSRendering::Shutdown()
  */
 static nscolor
 MakeBevelColor(mozilla::Side whichSide,
-               uint8_t style,
+               StyleBorderStyle style,
                nscolor aBorderColor)
 {
 
@@ -467,8 +467,8 @@ MakeBevelColor(mozilla::Side whichSide,
   // calculate the color used for the shading
   NS_GetSpecial3DColors(colors, aBorderColor);
 
-  if ((style == NS_STYLE_BORDER_STYLE_OUTSET) ||
-      (style == NS_STYLE_BORDER_STYLE_RIDGE)) {
+  if ((style == StyleBorderStyle::Outset) ||
+      (style == StyleBorderStyle::Ridge)) {
     // Flip colors for these two border styles
     switch (whichSide) {
       case eSideBottom:
@@ -894,7 +894,7 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
                             Float(border.left) / oneDevPixel };
   Rect dirtyRect = NSRectToRect(aDirtyRect, oneDevPixel);
 
-  uint8_t borderStyles[4];
+  StyleBorderStyle borderStyles[4];
   nscolor borderColors[4];
 
   // pull out styles, colors
@@ -905,10 +905,10 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
   }
 
   PrintAsFormatString(" borderStyles: %d %d %d %d\n",
-                      borderStyles[0],
-                      borderStyles[1],
-                      borderStyles[2],
-                      borderStyles[3]);
+                      static_cast<int>(borderStyles[0]),
+                      static_cast<int>(borderStyles[1]),
+                      static_cast<int>(borderStyles[2]),
+                      static_cast<int>(borderStyles[3]));
 
   nsIDocument* document = nullptr;
   nsIContent* content = aForFrame->GetContent();
@@ -1153,8 +1153,8 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
   RectCornerRadii outlineRadii;
   ComputePixelRadii(twipsRadii, oneDevPixel, &outlineRadii);
 
-  uint8_t outlineStyle = ourOutline->mOutlineStyle;
-  if (outlineStyle == NS_STYLE_BORDER_STYLE_AUTO) {
+  StyleBorderStyle outlineStyle = ourOutline->mOutlineStyle;
+  if (outlineStyle == StyleBorderStyle::Auto) {
     if (nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
       nsITheme* theme = aPresContext->GetTheme();
       if (theme && theme->ThemeSupportsWidget(
@@ -1172,10 +1172,10 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
     }
     // http://dev.w3.org/csswg/css-ui/#outline
     // "User agents may treat 'auto' as 'solid'."
-    outlineStyle = NS_STYLE_BORDER_STYLE_SOLID;
+    outlineStyle = StyleBorderStyle::Solid;
   }
 
-  uint8_t outlineStyles[4] = {
+  StyleBorderStyle outlineStyles[4] = {
     outlineStyle, outlineStyle, outlineStyle, outlineStyle
   };
 
@@ -1263,10 +1263,10 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
                            Float(oneCSSPixel) / oneDevPixel,
                            Float(oneCSSPixel) / oneDevPixel };
 
-  uint8_t focusStyles[4] = { NS_STYLE_BORDER_STYLE_DOTTED,
-                             NS_STYLE_BORDER_STYLE_DOTTED,
-                             NS_STYLE_BORDER_STYLE_DOTTED,
-                             NS_STYLE_BORDER_STYLE_DOTTED };
+  StyleBorderStyle focusStyles[4] = { StyleBorderStyle::Dotted,
+                                      StyleBorderStyle::Dotted,
+                                      StyleBorderStyle::Dotted,
+                                      StyleBorderStyle::Dotted };
   nscolor focusColors[4] = { aColor, aColor, aColor, aColor };
 
   // Because this renders a dotted border, the background color
@@ -2230,11 +2230,11 @@ IsOpaqueBorderEdge(const nsStyleBorder& aBorder, mozilla::Side aSide)
   if (aBorder.GetComputedBorder().Side(aSide) == 0)
     return true;
   switch (aBorder.GetBorderStyle(aSide)) {
-    case NS_STYLE_BORDER_STYLE_SOLID:
-    case NS_STYLE_BORDER_STYLE_GROOVE:
-    case NS_STYLE_BORDER_STYLE_RIDGE:
-    case NS_STYLE_BORDER_STYLE_INSET:
-    case NS_STYLE_BORDER_STYLE_OUTSET:
+    case StyleBorderStyle::Solid:
+    case StyleBorderStyle::Groove:
+    case StyleBorderStyle::Ridge:
+    case StyleBorderStyle::Inset:
+    case StyleBorderStyle::Outset:
       break;
     default:
       return false;
@@ -3751,7 +3751,7 @@ GetDashInfo(nscoord aBorderLength,
 
 void
 nsCSSRendering::DrawTableBorderSegment(DrawTarget& aDrawTarget,
-                                       uint8_t aBorderStyle,
+                                       StyleBorderStyle aBorderStyle,
                                        nscolor aBorderColor,
                                        const nsRect& aBorder,
                                        int32_t aAppUnitsPerDevPixel,
@@ -3765,28 +3765,28 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget& aDrawTarget,
   nscoord oneDevPixel = NSIntPixelsToAppUnits(1, aAppUnitsPerDevPixel);
 
   if ((oneDevPixel >= aBorder.width) || (oneDevPixel >= aBorder.height) ||
-      (NS_STYLE_BORDER_STYLE_DASHED == aBorderStyle) ||
-      (NS_STYLE_BORDER_STYLE_DOTTED == aBorderStyle)) {
+      (StyleBorderStyle::Dashed == aBorderStyle) ||
+      (StyleBorderStyle::Dotted == aBorderStyle)) {
     // no beveling for 1 pixel border, dash or dot
     aStartBevelOffset = 0;
     aEndBevelOffset = 0;
   }
 
   switch (aBorderStyle) {
-    case NS_STYLE_BORDER_STYLE_NONE:
-    case NS_STYLE_BORDER_STYLE_HIDDEN:
+    case StyleBorderStyle::None:
+    case StyleBorderStyle::Hidden:
       // NS_ASSERTION(false, "style of none or hidden");
       break;
-    case NS_STYLE_BORDER_STYLE_DOTTED:
-    case NS_STYLE_BORDER_STYLE_DASHED: {
-      nscoord dashLength = (NS_STYLE_BORDER_STYLE_DASHED == aBorderStyle)
+    case StyleBorderStyle::Dotted:
+    case StyleBorderStyle::Dashed: {
+      nscoord dashLength = (StyleBorderStyle::Dashed == aBorderStyle)
                              ? DASH_LENGTH
                              : DOT_LENGTH;
       // make the dash length proportional to the border thickness
       dashLength *= (horizontal) ? aBorder.height : aBorder.width;
       // make the min dash length for the ends 1/2 the dash length
       nscoord minDashLength =
-        (NS_STYLE_BORDER_STYLE_DASHED == aBorderStyle)
+        (StyleBorderStyle::Dashed == aBorderStyle)
           ? RoundFloatToPixel(((float)dashLength) / 2.0f, aAppUnitsPerDevPixel)
           : dashLength;
       minDashLength = std::max(minDashLength, oneDevPixel);
@@ -3874,28 +3874,28 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget& aDrawTarget,
 void
 nsCSSRendering::GetTableBorderSolidSegments(
     nsTArray<SolidBeveledBorderSegment>& aSegments,
-    uint8_t       aBorderStyle,
-    nscolor       aBorderColor,
-    const nsRect& aBorder,
-    int32_t       aAppUnitsPerDevPixel,
-    mozilla::Side aStartBevelSide,
-    nscoord       aStartBevelOffset,
-    mozilla::Side aEndBevelSide,
-    nscoord       aEndBevelOffset)
+    StyleBorderStyle aBorderStyle,
+    nscolor          aBorderColor,
+    const nsRect&    aBorder,
+    int32_t          aAppUnitsPerDevPixel,
+    mozilla::Side    aStartBevelSide,
+    nscoord          aStartBevelOffset,
+    mozilla::Side    aEndBevelSide,
+    nscoord          aEndBevelOffset)
 {
   const bool horizontal = eSideTop == aStartBevelSide || eSideBottom == aStartBevelSide;
   const nscoord oneDevPixel = NSIntPixelsToAppUnits(1, aAppUnitsPerDevPixel);
 
   switch (aBorderStyle) {
-  case NS_STYLE_BORDER_STYLE_NONE:
-  case NS_STYLE_BORDER_STYLE_HIDDEN:
+  case StyleBorderStyle::None:
+  case StyleBorderStyle::Hidden:
     return;
-  case NS_STYLE_BORDER_STYLE_DOTTED:
-  case NS_STYLE_BORDER_STYLE_DASHED:
+  case StyleBorderStyle::Dotted:
+  case StyleBorderStyle::Dashed:
     MOZ_ASSERT_UNREACHABLE("Caller should have checked");
     return;
-  case NS_STYLE_BORDER_STYLE_GROOVE:
-  case NS_STYLE_BORDER_STYLE_RIDGE:
+  case StyleBorderStyle::Groove:
+  case StyleBorderStyle::Ridge:
     if ((horizontal && (oneDevPixel >= aBorder.height)) ||
         (!horizontal && (oneDevPixel >= aBorder.width))) {
       aSegments.AppendElement(SolidBeveledBorderSegment {
@@ -3995,7 +3995,7 @@ nsCSSRendering::GetTableBorderSolidSegments(
       }
     }
     break;
-  case NS_STYLE_BORDER_STYLE_DOUBLE:
+  case StyleBorderStyle::Double:
     // We can only do "double" borders if the thickness of the border
     // is more than 2px.  Otherwise, we fall through to painting a
     // solid border.
@@ -4086,7 +4086,7 @@ nsCSSRendering::GetTableBorderSolidSegments(
     }
     // else fall through to solid
     MOZ_FALLTHROUGH;
-  case NS_STYLE_BORDER_STYLE_SOLID:
+  case StyleBorderStyle::Solid:
     aSegments.AppendElement(SolidBeveledBorderSegment {
       aBorder,
       aBorderColor,
@@ -4094,11 +4094,11 @@ nsCSSRendering::GetTableBorderSolidSegments(
       { aEndBevelSide, aEndBevelOffset }
     });
     break;
-  case NS_STYLE_BORDER_STYLE_OUTSET:
-  case NS_STYLE_BORDER_STYLE_INSET:
+  case StyleBorderStyle::Outset:
+  case StyleBorderStyle::Inset:
     MOZ_ASSERT_UNREACHABLE("inset, outset should have been converted to groove, ridge");
     break;
-  case NS_STYLE_BORDER_STYLE_AUTO:
+  case StyleBorderStyle::Auto:
     MOZ_ASSERT_UNREACHABLE("Unexpected 'auto' table border");
     break;
   }
