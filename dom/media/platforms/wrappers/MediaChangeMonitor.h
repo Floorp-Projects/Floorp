@@ -82,7 +82,7 @@ public:
 private:
   UniquePtr<CodecChangeMonitor> mChangeMonitor;
 
-  void AssertOnTaskQueue()
+  void AssertOnTaskQueue() const
   {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   }
@@ -108,6 +108,7 @@ private:
   const RefPtr<TaskQueue> mTaskQueue;
   RefPtr<MediaDataDecoder> mDecoder;
   MozPromiseRequestHolder<InitPromise> mInitPromiseRequest;
+  MozPromiseHolder<InitPromise> mInitPromise;
   MozPromiseRequestHolder<DecodePromise> mDecodePromiseRequest;
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseRequestHolder<FlushPromise> mFlushRequest;
