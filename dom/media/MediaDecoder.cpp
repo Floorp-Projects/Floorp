@@ -119,37 +119,6 @@ public:
   }
 };
 
-// When media is looping back to the head position, the spec [1] mentions that
-// MediaElement should dispatch `seeking` first, `timeupdate`, and `seeked` in
-// the end. This guard should be created before we fire `timeupdate` so that it
-// can ensure the event order.
-// [1]
-// https://html.spec.whatwg.org/multipage/media.html#playing-the-media-resource:attr-media-loop-2
-// https://html.spec.whatwg.org/multipage/media.html#seeking:dom-media-seek
-class MOZ_RAII SeekEventsGuard
-{
-public:
-  explicit SeekEventsGuard(MediaDecoderOwner* aOwner, bool aIsLoopingBack)
-    : mOwner(aOwner)
-    , mIsLoopingBack(aIsLoopingBack)
-  {
-    MOZ_ASSERT(mOwner);
-    if (mIsLoopingBack) {
-      mOwner->SeekStarted();
-    }
-  }
-
-  ~SeekEventsGuard() {
-    MOZ_ASSERT(mOwner);
-    if (mIsLoopingBack) {
-      mOwner->SeekCompleted();
-    }
-  }
-private:
-  MediaDecoderOwner* mOwner;
-  bool mIsLoopingBack;
-};
-
 StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
 
 LazyLogModule gMediaTimerLog("MediaTimer");
@@ -275,7 +244,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , mForcedHidden(false)
   , mHasSuspendTaint(aInit.mHasSuspendTaint)
   , mPlaybackRate(aInit.mPlaybackRate)
-  , mLogicallySeeking(false, "MediaDecoder::mLogicallySeeking")
   , INIT_MIRROR(mBuffered, TimeIntervals())
   , INIT_MIRROR(mCurrentPosition, TimeUnit::Zero())
   , INIT_MIRROR(mStateMachineDuration, NullableTimeUnit())
@@ -284,6 +252,7 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , INIT_CANONICAL(mPreservesPitch, aInit.mPreservesPitch)
   , INIT_CANONICAL(mLooping, aInit.mLooping)
   , INIT_CANONICAL(mPlayState, PLAY_STATE_LOADING)
+  , INIT_CANONICAL(mLogicallySeeking, false)
   , INIT_CANONICAL(mSameOriginMedia, false)
   , INIT_CANONICAL(mMediaPrincipalHandle, PRINCIPAL_HANDLE_NONE)
   , mVideoDecodingOberver(new BackgroundVideoDecodingPermissionObserver(this))
@@ -408,6 +377,10 @@ MediaDecoder::OnPlaybackEvent(MediaPlaybackEvent&& aEvent)
       break;
     case MediaPlaybackEvent::SeekStarted:
       SeekingStarted();
+      break;
+    case MediaPlaybackEvent::Loop:
+      GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("seeking"));
+      GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("seeked"));
       break;
     case MediaPlaybackEvent::Invalidate:
       Invalidate();
@@ -831,11 +804,12 @@ MediaDecoder::OnSeekResolved()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   AbstractThread::AutoEnter context(AbstractMainThread());
+  mSeekRequest.Complete();
+
   mLogicallySeeking = false;
 
   // Ensure logical position is updated after seek.
   UpdateLogicalPositionInternal();
-  mSeekRequest.Complete();
 
   GetOwner()->SeekCompleted();
   GetOwner()->AsyncResolveSeekDOMPromiseIfExists();
@@ -881,16 +855,6 @@ MediaDecoder::ChangeState(PlayState aState)
   }
 }
 
-bool
-MediaDecoder::IsLoopingBack(double aPrevPosition, double aCurPosition) const
-{
-  // If current position is early than previous position and we didn't do seek,
-  // that means we looped back to the start position.
-  return mLooping &&
-         !mSeekRequest.Exists() &&
-         aCurPosition < aPrevPosition;
-}
-
 void
 MediaDecoder::UpdateLogicalPositionInternal()
 {
@@ -902,8 +866,6 @@ MediaDecoder::UpdateLogicalPositionInternal()
     currentPosition = std::max(currentPosition, mDuration);
   }
   bool logicalPositionChanged = mLogicalPosition != currentPosition;
-  SeekEventsGuard guard(GetOwner(),
-                        IsLoopingBack(mLogicalPosition, currentPosition));
   mLogicalPosition = currentPosition;
   DDLOG(DDLogCategory::Property, "currentTime", mLogicalPosition);
 
