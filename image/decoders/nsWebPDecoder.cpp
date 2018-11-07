@@ -106,17 +106,43 @@ nsWebPDecoder::ReadData()
 LexerResult
 nsWebPDecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
 {
+  while (true) {
+    SourceBufferIterator::State state = SourceBufferIterator::COMPLETE;
+    if (!mIteratorComplete) {
+      state = aIterator.AdvanceOrScheduleResume(SIZE_MAX, aOnResume);
+
+      // We need to remember since we can't advance a complete iterator.
+      mIteratorComplete = state == SourceBufferIterator::COMPLETE;
+    }
+
+    if (state == SourceBufferIterator::WAITING) {
+      return LexerResult(Yield::NEED_MORE_DATA);
+    }
+
+    LexerResult rv = UpdateBuffer(aIterator, state);
+    if (rv.is<Yield>() && rv.as<Yield>() == Yield::NEED_MORE_DATA) {
+      // We need to check the iterator to see if more is available before
+      // giving up unless we are already complete.
+      if (mIteratorComplete) {
+        MOZ_LOG(sWebPLog, LogLevel::Error,
+            ("[this=%p] nsWebPDecoder::DoDecode -- read all data, "
+             "but needs more\n", this));
+        return LexerResult(TerminalState::FAILURE);
+      }
+      continue;
+    }
+
+    return rv;
+  }
+}
+
+LexerResult
+nsWebPDecoder::UpdateBuffer(SourceBufferIterator& aIterator,
+                            SourceBufferIterator::State aState)
+{
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
 
-  SourceBufferIterator::State state = SourceBufferIterator::COMPLETE;
-  if (!mIteratorComplete) {
-    state = aIterator.AdvanceOrScheduleResume(SIZE_MAX, aOnResume);
-
-    // We need to remember since we can't advance a complete iterator.
-    mIteratorComplete = state == SourceBufferIterator::COMPLETE;
-  }
-
-  switch (state) {
+  switch (aState) {
     case SourceBufferIterator::READY:
       if (!aIterator.IsContiguous()) {
         // We need to buffer. This should be rare, but expensive.
@@ -133,8 +159,6 @@ nsWebPDecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
       return ReadData();
     case SourceBufferIterator::COMPLETE:
       return ReadData();
-    case SourceBufferIterator::WAITING:
-      return LexerResult(Yield::NEED_MORE_DATA);
     default:
       MOZ_LOG(sWebPLog, LogLevel::Error,
           ("[this=%p] nsWebPDecoder::DoDecode -- bad state\n", this));
@@ -406,86 +430,94 @@ nsWebPDecoder::ReadSingle(const uint8_t* aData, size_t aLength, const IntRect& a
   }
 
   bool complete;
-  VP8StatusCode status = WebPIUpdate(mDecoder, aData, aLength);
-  switch (status) {
-    case VP8_STATUS_OK:
-      complete = true;
-      break;
-    case VP8_STATUS_SUSPENDED:
-      complete = false;
-      break;
-    default:
-      MOZ_LOG(sWebPLog, LogLevel::Error,
-          ("[this=%p] nsWebPDecoder::ReadSingle -- append error %d\n",
-           this, status));
-      return LexerResult(TerminalState::FAILURE);
-  }
-
-  int lastRow = -1;
-  int width = 0;
-  int height = 0;
-  int stride = 0;
-  uint8_t* rowStart = WebPIDecGetRGB(mDecoder, &lastRow, &width, &height, &stride);
-  if (!rowStart || lastRow == -1) {
-    return LexerResult(Yield::NEED_MORE_DATA);
-  }
-
-  if (width != mFrameRect.width || height != mFrameRect.height ||
-      stride < mFrameRect.width * 4 ||
-      lastRow > mFrameRect.height) {
-    MOZ_LOG(sWebPLog, LogLevel::Error,
-        ("[this=%p] nsWebPDecoder::ReadSingle -- bad (w,h,s) = (%d, %d, %d)\n",
-         this, width, height, stride));
-    return LexerResult(TerminalState::FAILURE);
-  }
-
-  const bool noPremultiply =
-    bool(GetSurfaceFlags() & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
-
-  for (int row = mLastRow; row < lastRow; row++) {
-    uint8_t* src = rowStart + row * stride;
-    if (mTransform) {
-      qcms_transform_data(mTransform, src, src, width);
+  do {
+    VP8StatusCode status = WebPIUpdate(mDecoder, aData, aLength);
+    switch (status) {
+      case VP8_STATUS_OK:
+        complete = true;
+        break;
+      case VP8_STATUS_SUSPENDED:
+        complete = false;
+        break;
+      default:
+        MOZ_LOG(sWebPLog, LogLevel::Error,
+            ("[this=%p] nsWebPDecoder::ReadSingle -- append error %d\n",
+             this, status));
+        return LexerResult(TerminalState::FAILURE);
     }
 
-    WriteState result;
-    if (noPremultiply) {
-      result = mPipe.WritePixelsToRow<uint32_t>([&]() -> NextPixel<uint32_t> {
-        MOZ_ASSERT(mFormat == SurfaceFormat::B8G8R8A8 || src[3] == 0xFF);
-        const uint32_t pixel =
-          gfxPackedPixelNoPreMultiply(src[3], src[0], src[1], src[2]);
-        src += 4;
-        return AsVariant(pixel);
-      });
-    } else {
-      result = mPipe.WritePixelsToRow<uint32_t>([&]() -> NextPixel<uint32_t> {
-        MOZ_ASSERT(mFormat == SurfaceFormat::B8G8R8A8 || src[3] == 0xFF);
-        const uint32_t pixel = gfxPackedPixel(src[3], src[0], src[1], src[2]);
-        src += 4;
-        return AsVariant(pixel);
-      });
+    int lastRow = -1;
+    int width = 0;
+    int height = 0;
+    int stride = 0;
+    uint8_t* rowStart = WebPIDecGetRGB(mDecoder, &lastRow, &width, &height, &stride);
+
+    MOZ_LOG(sWebPLog, LogLevel::Debug,
+        ("[this=%p] nsWebPDecoder::ReadSingle -- complete %d, read %d rows, "
+         "has %d rows available\n", this, complete, mLastRow, lastRow));
+
+    if (!rowStart || lastRow == -1 || lastRow == mLastRow) {
+      return LexerResult(Yield::NEED_MORE_DATA);
     }
 
-    MOZ_ASSERT(result != WriteState::FAILURE);
-    MOZ_ASSERT_IF(result == WriteState::FINISHED, complete && row == lastRow - 1);
-
-    if (result == WriteState::FAILURE) {
+    if (width != mFrameRect.width || height != mFrameRect.height ||
+        stride < mFrameRect.width * 4 ||
+        lastRow > mFrameRect.height) {
       MOZ_LOG(sWebPLog, LogLevel::Error,
-          ("[this=%p] nsWebPDecoder::ReadSingle -- write pixels error\n",
-           this));
+          ("[this=%p] nsWebPDecoder::ReadSingle -- bad (w,h,s) = (%d, %d, %d)\n",
+           this, width, height, stride));
       return LexerResult(TerminalState::FAILURE);
     }
-  }
 
-  if (mLastRow != lastRow) {
+    const bool noPremultiply =
+      bool(GetSurfaceFlags() & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
+
+    for (int row = mLastRow; row < lastRow; row++) {
+      uint8_t* src = rowStart + row * stride;
+      if (mTransform) {
+        qcms_transform_data(mTransform, src, src, width);
+      }
+
+      WriteState result;
+      if (noPremultiply) {
+        result = mPipe.WritePixelsToRow<uint32_t>([&]() -> NextPixel<uint32_t> {
+          MOZ_ASSERT(mFormat == SurfaceFormat::B8G8R8A8 || src[3] == 0xFF);
+          const uint32_t pixel =
+            gfxPackedPixelNoPreMultiply(src[3], src[0], src[1], src[2]);
+          src += 4;
+          return AsVariant(pixel);
+        });
+      } else {
+        result = mPipe.WritePixelsToRow<uint32_t>([&]() -> NextPixel<uint32_t> {
+          MOZ_ASSERT(mFormat == SurfaceFormat::B8G8R8A8 || src[3] == 0xFF);
+          const uint32_t pixel = gfxPackedPixel(src[3], src[0], src[1], src[2]);
+          src += 4;
+          return AsVariant(pixel);
+        });
+      }
+
+      Maybe<SurfaceInvalidRect> invalidRect = mPipe.TakeInvalidRect();
+      if (invalidRect) {
+        PostInvalidation(invalidRect->mInputSpaceRect,
+            Some(invalidRect->mOutputSpaceRect));
+      }
+
+      if (result == WriteState::FAILURE) {
+        MOZ_LOG(sWebPLog, LogLevel::Error,
+            ("[this=%p] nsWebPDecoder::ReadSingle -- write pixels error\n",
+             this));
+        return LexerResult(TerminalState::FAILURE);
+      }
+
+      if (result == WriteState::FINISHED) {
+        MOZ_ASSERT(row == lastRow - 1, "There was more data to read?");
+        complete = true;
+        break;
+      }
+    }
+
     mLastRow = lastRow;
-
-    Maybe<SurfaceInvalidRect> invalidRect = mPipe.TakeInvalidRect();
-    if (invalidRect) {
-      PostInvalidation(invalidRect->mInputSpaceRect,
-          Some(invalidRect->mOutputSpaceRect));
-    }
-  }
+  } while (!complete);
 
   if (!complete) {
     return LexerResult(Yield::NEED_MORE_DATA);

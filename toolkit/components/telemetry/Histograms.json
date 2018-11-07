@@ -14153,6 +14153,16 @@
     "n_buckets": 20,
     "description": "Total number of http:// and https:// doc groups per tab group, including docgroups fully in bfcache. Collected at the point when the top level document of the tab group is unloaded."
   },
+  "QUIRKS_MODE": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["emilio@mozilla.com"],
+    "bug_numbers": [1505117],
+    "expires_in_version": "70",
+    "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
+    "labels": ["FullStandards", "AlmostStandards", "NavQuirks"],
+    "description": "HTML document compat mode (quirks mode)"
+  },
   "HIDDEN_VIEWPORT_OVERFLOW_TYPE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["mozilla-telemetry@upsuper.org", "botond@mozilla.com"],

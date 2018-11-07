@@ -70,6 +70,7 @@ TEST_HARNESS_FILES.gtest += [
     'green.png',
     'green.webp',
     'invalid-truncated-metadata.bmp',
+    'large.webp',
     'no-frame-delay.gif',
     'rle4.bmp',
     'rle8.bmp',
