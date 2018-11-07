@@ -100,6 +100,7 @@ public class GeckoViewActivity extends AppCompatActivity {
         setSupportActionBar((Toolbar)findViewById(R.id.toolbar));
 
         mLocationView = new LocationView(this);
+        mLocationView.setId(R.id.url_bar);
         getSupportActionBar().setCustomView(mLocationView,
                 new ActionBar.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT,
                         ActionBar.LayoutParams.WRAP_CONTENT));
