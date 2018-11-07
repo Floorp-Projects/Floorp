@@ -10,9 +10,13 @@
  */
 
 window.addEventListener("load", function() {
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
   // Timeout for the subscribe XHR.
   const REQUEST_TIMEOUT = 5000;
+
+  const ABOUTDEVTOOLS_STRINGS = "chrome://devtools-startup/locale/aboutdevtools.properties";
+  const aboutDevtoolsBundle = Services.strings.createBundle(ABOUTDEVTOOLS_STRINGS);
 
   const emailInput = document.getElementById("email");
   const newsletterErrors = document.getElementById("newsletter-errors");
@@ -27,11 +31,11 @@ window.addEventListener("load", function() {
    * @param {Array} errors
    *        Array of strings, each item being an error message to display.
    */
-  async function updateErrorPanel(errors) {
+  function updateErrorPanel(errors) {
     clearErrorPanel();
 
     if (!errors || errors.length == 0) {
-      errors = [await document.l10n.formatValues([{id: "newsletter-error-unknown"}])];
+      errors = [aboutDevtoolsBundle.GetStringFromName("newsletter.error.unknown")];
     }
 
     // Create errors markup.
@@ -88,7 +92,7 @@ window.addEventListener("load", function() {
 
     const xhr = new XMLHttpRequest();
 
-    xhr.onload = async function(r) {
+    xhr.onload = function(r) {
       if (r.target.status >= 200 && r.target.status < 300) {
         const {response} = r.target;
 
@@ -103,9 +107,8 @@ window.addEventListener("load", function() {
       } else {
         const {status, statusText} = r.target;
         const statusInfo = `${status} - ${statusText}`;
-        const error = await document.l10n.formatValues([
-          { id: "newsletter-error-common", args: { errorDescription: statusInfo } }
-        ]);
+        const error = aboutDevtoolsBundle
+          .formatStringFromName("newsletter.error.common", [statusInfo], 1);
         updateErrorPanel([error]);
       }
     };
@@ -114,10 +117,8 @@ window.addEventListener("load", function() {
       updateErrorPanel();
     };
 
-    xhr.ontimeout = async () => {
-      const error = await document.l10n.formatValues([
-        { id: "newsletter-error-timeout" }
-      ]);
+    xhr.ontimeout = () => {
+      const error = aboutDevtoolsBundle.GetStringFromName("newsletter.error.timeout");
       updateErrorPanel([error]);
     };
 
