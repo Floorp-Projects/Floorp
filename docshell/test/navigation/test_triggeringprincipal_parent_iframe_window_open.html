@@ -56,7 +56,7 @@ function checkResults() {
 function performNavigation() {
   testframe.removeEventListener("load", performNavigation);
   testframe.addEventListener("load", checkResults);
-  win = window.open("file_triggeringprincipal_parent_iframe_window_open_nav.html", "testframe");
+  window.open("file_triggeringprincipal_parent_iframe_window_open_nav.html", "testframe");
 }
 
 // start the test

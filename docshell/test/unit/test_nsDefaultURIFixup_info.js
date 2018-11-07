@@ -1,6 +1,3 @@
-var urifixup = Cc["@mozilla.org/docshell/urifixup;1"].
-               getService(Ci.nsIURIFixup);
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var prefList = ["browser.fixup.typo.scheme", "keyword.enabled",
@@ -40,9 +37,9 @@ registerCleanupFunction(function() {
 });
 
 var flagInputs = [
-  urifixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP,
-  urifixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI,
-  urifixup.FIXUP_FLAG_FIX_SCHEME_TYPOS,
+  Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP,
+  Services.uriFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI,
+  Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS,
 ];
 
 flagInputs.concat([
@@ -578,14 +575,14 @@ function do_single_test_run() {
       let URIInfo;
       let fixupURIOnly = null;
       try {
-        fixupURIOnly = urifixup.createFixupURI(testInput, flags);
+        fixupURIOnly = Services.uriFixup.createFixupURI(testInput, flags);
       } catch (ex) {
         info("Caught exception: " + ex);
         Assert.equal(expectedFixedURI, null);
       }
 
       try {
-        URIInfo = urifixup.getFixupURIInfo(testInput, flags);
+        URIInfo = Services.uriFixup.getFixupURIInfo(testInput, flags);
       } catch (ex) {
         // Both APIs should return an error in the same cases.
         info("Caught exception: " + ex);
@@ -603,10 +600,8 @@ function do_single_test_run() {
         Assert.equal(fixupURIOnly.spec, URIInfo.preferredURI.spec, "Fixed and preferred URI should match");
       }
 
-      let isFileURL = expectedFixedURI && expectedFixedURI.startsWith("file");
-
       // Check the fixedURI:
-      let makeAlternativeURI = flags & urifixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI;
+      let makeAlternativeURI = flags & Services.uriFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI;
       if (makeAlternativeURI && alternativeURI != null) {
         Assert.equal(URIInfo.fixedURI.spec, alternativeURI, "should have gotten alternate URI");
       } else {
@@ -614,7 +609,7 @@ function do_single_test_run() {
       }
 
       // Check booleans on input:
-      let couldDoKeywordLookup = flags & urifixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+      let couldDoKeywordLookup = flags & Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
       Assert.equal(!!URIInfo.keywordProviderName, couldDoKeywordLookup && expectKeywordLookup, "keyword lookup as expected");
       Assert.equal(URIInfo.fixupChangedProtocol, expectProtocolChange, "protocol change as expected");
       Assert.equal(URIInfo.fixupCreatedAlternateURI, makeAlternativeURI && alternativeURI != null, "alternative URI as expected");

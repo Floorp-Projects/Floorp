@@ -104,7 +104,7 @@
           }
           case 8: {
             try {
-              var sr = oldHistoryObject.scrollRestoration;
+              oldHistoryObject.scrollRestoration;
               opener.ok(false, "Should have thrown an exception.");
             } catch (ex) {
               opener.isnot(ex, null, "Did get an exception");
