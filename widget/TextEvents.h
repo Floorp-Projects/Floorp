@@ -166,6 +166,7 @@ protected:
     , mIsComposing(false)
     , mIsSynthesizedByTIP(false)
     , mMaybeSkippableInRemoteProcess(true)
+    , mUseLegacyKeyCodeAndCharCodeValues(false)
     , mEditCommandsForSingleLineEditorInitialized(false)
     , mEditCommandsForMultiLineEditorInitialized(false)
     , mEditCommandsForRichTextEditorInitialized(false)
@@ -195,6 +196,7 @@ public:
     , mIsComposing(false)
     , mIsSynthesizedByTIP(false)
     , mMaybeSkippableInRemoteProcess(true)
+    , mUseLegacyKeyCodeAndCharCodeValues(false)
     , mEditCommandsForSingleLineEditorInitialized(false)
     , mEditCommandsForMultiLineEditorInitialized(false)
     , mEditCommandsForRichTextEditorInitialized(false)
@@ -400,6 +402,10 @@ public:
   // Don't refer this member directly when you need to check this.
   // Use CanSkipInRemoteProcess() instead.
   bool mMaybeSkippableInRemoteProcess;
+  // Indicates whether the event should return legacy keyCode value and
+  // charCode value to web apps (one of them is always 0) or not, when it's
+  // an eKeyPress event.
+  bool mUseLegacyKeyCodeAndCharCodeValues;
 
   bool CanSkipInRemoteProcess() const
   {
@@ -681,6 +687,8 @@ public:
 #endif
     mIsSynthesizedByTIP = aEvent.mIsSynthesizedByTIP;
     mMaybeSkippableInRemoteProcess = aEvent.mMaybeSkippableInRemoteProcess;
+    mUseLegacyKeyCodeAndCharCodeValues =
+      aEvent.mUseLegacyKeyCodeAndCharCodeValues;
 
     // Don't copy mEditCommandsFor*Editor because it may require a lot of
     // memory space.  For example, if the event is dispatched but grabbed by

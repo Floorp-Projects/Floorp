@@ -128,20 +128,23 @@
       <richlistbox id="categories" flex="1">
         <richlistitem id="category-discover" value="addons://discover/"
                       class="category"
-                      name="&view.discover.label;" priority="1000"
-                      tooltiptext="&view.discover.label;"/>
+                      data-l10n-id="extensions-view-discover"
+                      data-l10n-attrs="name"
+                      priority="1000"/>
         <richlistitem id="category-legacy" value="addons://legacy/"
                       class="category" priority="20000"
                       disabled="true"/>
         <richlistitem id="category-availableUpdates" value="addons://updates/available"
                       class="category"
-                      name="&view.availableUpdates.label;" priority="100000"
-                      tooltiptext="&view.availableUpdates.label;"
+                      data-l10n-id="extensions-view-available-updates"
+                      data-l10n-attrs="name"
                       disabled="true"/>
         <richlistitem id="category-recentUpdates" value="addons://updates/recent"
                       class="category"
-                      name="&view.recentUpdates.label;" priority="101000"
-                      tooltiptext="&view.recentUpdates.label;" disabled="true"/>
+                      data-l10n-id="extensions-view-recent-updates"
+                      data-l10n-attrs="name"
+                      priority="101000"
+                      disabled="true"/>
       </richlistbox>
 
       <spacer flex="1"/>
@@ -225,18 +228,19 @@
               <hbox id="updates-container" align="center">
                 <image class="spinner"/>
                 <label id="updates-noneFound" hidden="true"
-                        value="&updates.noneFound.label;"/>
+                        data-l10n-id="extensions-updates-none-found"/>
                 <button id="updates-manualUpdatesFound-btn" class="button-link"
-                        hidden="true" label="&updates.manualUpdatesFound.label;"
+                        hidden="true"
+                        data-l10n-id="extensions-updates-manual-updates-found"
                         command="cmd_goToAvailableUpdates"/>
                 <label id="updates-progress" hidden="true"
-                        value="&updates.updating.label;"/>
+                       data-l10n-id="extensions-updates-updating"/>
                 <label id="updates-installed" hidden="true"
-                        value="&updates.installed.label;"/>
+                       data-l10n-id="extensions-updates-installed"/>
                 <label id="updates-downloaded" hidden="true"
-                        value="&updates.downloaded.label;"/>
+                       data-l10n-id="extensions-updates-downloaded"/>
                 <button id="updates-restart-btn" class="button-link" hidden="true"
-                        label="&updates.restart.label;"
+                        data-l10n-id="extensions-updates-restart"
                         command="cmd_restartApp"/>
               </hbox>
 
@@ -244,12 +248,10 @@
                         data-l10n-id="tools-menu">
                 <menupopup id="utils-menu">
                   <menuitem id="utils-updateNow"
-                            label="&updates.checkForUpdates.label;"
-                            accesskey="&updates.checkForUpdates.accesskey;"
+                            data-l10n-id="extensions-updates-check-for-updates"
                             command="cmd_findAllUpdates"/>
                   <menuitem id="utils-viewUpdates"
-                            label="&updates.viewUpdates.label;"
-                            accesskey="&updates.viewUpdates.accesskey;"
+                            data-l10n-id="extensions-updates-view-updates"
                             command="cmd_goToRecentUpdates"/>
                   <menuseparator id="utils-installFromFile-separator"/>
                   <menuitem id="utils-installFromFile"
@@ -260,17 +262,14 @@
                             command="cmd_debugAddons"/>
                   <menuseparator/>
                   <menuitem id="utils-autoUpdateDefault"
-                            label="&updates.updateAddonsAutomatically.label;"
-                            accesskey="&updates.updateAddonsAutomatically.accesskey;"
+                            data-l10n-id="extensions-updates-update-addons-automatically"
                             type="checkbox" autocheck="false"
                             command="cmd_toggleAutoUpdateDefault"/>
                   <menuitem id="utils-resetAddonUpdatesToAutomatic"
-                            label="&updates.resetUpdatesToAutomatic.label;"
-                            accesskey="&updates.resetUpdatesToAutomatic.accesskey;"
+                            data-l10n-id="extensions-updates-reset-updates-to-automatic"
                             command="cmd_resetAddonAutoUpdate"/>
                   <menuitem id="utils-resetAddonUpdatesToManual"
-                            label="&updates.resetUpdatesToManual.label;"
-                            accesskey="&updates.resetUpdatesToManual.accesskey;"
+                            data-l10n-id="extensions-updates-reset-updates-to-manual"
                             command="cmd_resetAddonAutoUpdate"/>
                 </menupopup>
               </toolbarbutton>
@@ -310,30 +309,28 @@
                 <!-- global warnings -->
                 <hbox class="global-warning" flex="1">
                   <hbox class="global-warning-safemode" flex="1" align="center"
-                        tooltiptext="&warning.safemode.label;">
+                        data-l10n-id="extensions-warning-safe-mode-container">
                     <image class="warning-icon"/>
                     <label class="global-warning-text" flex="1" crop="end"
-                           value="&warning.safemode.label;"/>
+                           data-l10n-id="extensions-warning-safe-mode-label"/>
                   </hbox>
                   <hbox class="global-warning-checkcompatibility" flex="1" align="center"
-                        tooltiptext="&warning.checkcompatibility.label;">
+                        data-l10n-id="extensions-warning-check-compatibility-container">
                     <image class="warning-icon"/>
                     <label class="global-warning-text" flex="1" crop="end"
-                           value="&warning.checkcompatibility.label;"/>
+                           data-l10n-id="extensions-warning-check-compatibility-label"/>
                   </hbox>
                   <button class="button-link global-warning-checkcompatibility"
-                          label="&warning.checkcompatibility.enable.label;"
-                          tooltiptext="&warning.checkcompatibility.enable.tooltip;"
+                          data-l10n-id="extensions-warning-check-compatibility-enable"
                           command="cmd_enableCheckCompatibility"/>
                   <hbox class="global-warning-updatesecurity" flex="1" align="center"
-                        tooltiptext="&warning.updatesecurity.label;">
+                        data-l10n-id="extensions-warning-update-security-container">
                     <image class="warning-icon"/>
                     <label class="global-warning-text" flex="1" crop="end"
-                           value="&warning.updatesecurity.label;"/>
+                          data-l10n-id="extensions-warning-update-security-label"/>
                   </hbox>
                   <button class="button-link global-warning-updatesecurity"
-                          label="&warning.updatesecurity.enable.label;"
-                          tooltiptext="&warning.updatesecurity.enable.tooltip;"
+                          data-l10n-id="extensions-warning-update-security-enable"
                           command="cmd_enableUpdateSecurity"/>
                   <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
                 </hbox>
@@ -370,30 +367,28 @@
                 <!-- global warnings -->
                 <hbox class="global-warning" flex="1">
                   <hbox class="global-warning-safemode" flex="1" align="center"
-                        tooltiptext="&warning.safemode.label;">
+                        data-l10n-id="extensions-warning-safe-mode-container">
                     <image class="warning-icon"/>
                     <label class="global-warning-text" flex="1" crop="end"
-                           value="&warning.safemode.label;"/>
+                           data-l10n-id="extensions-warning-safe-mode-label"/>
                   </hbox>
                   <hbox class="global-warning-checkcompatibility" flex="1" align="center"
-                        tooltiptext="&warning.checkcompatibility.label;">
+                        data-l10n-id="extensions-warning-check-compatibility-label">
                     <image class="warning-icon"/>
                     <label class="global-warning-text" flex="1" crop="end"
-                           value="&warning.checkcompatibility.label;"/>
+                           data-l10n-id="extensions-warning-check-compatibility-label"/>
                   </hbox>
                   <button class="button-link global-warning-checkcompatibility"
-                          label="&warning.checkcompatibility.enable.label;"
-                          tooltiptext="&warning.checkcompatibility.enable.tooltip;"
+                          data-l10n-id="extensions-warning-check-compatibility-enable"
                           command="cmd_enableCheckCompatibility"/>
                   <hbox class="global-warning-updatesecurity" flex="1" align="center"
-                        tooltiptext="&warning.updatesecurity.label;">
+                        data-l10n-id="extensions-warning-update-security-label">
                     <image class="warning-icon"/>
                     <label class="global-warning-text" flex="1" crop="end"
-                           value="&warning.updatesecurity.label;"/>
+                           data-l10n-id="extensions-warning-update-security-label"/>
                   </hbox>
                   <button class="button-link global-warning-updatesecurity"
-                          label="&warning.updatesecurity.enable.label;"
-                          tooltiptext="&warning.updatesecurity.enable.tooltip;"
+                          data-l10n-id="extensions-warning-update-security-enable"
                           command="cmd_enableUpdateSecurity"/>
                   <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
                 </hbox>
@@ -411,8 +406,7 @@
               </vbox>
               <hbox id="update-actions" pack="center">
                 <button id="update-selected-btn" hidden="true"
-                        label="&updates.updateSelected.label;"
-                        tooltiptext="&updates.updateSelected.tooltip;"/>
+                        data-l10n-id="extensions-updates-update-selected"/>
               </hbox>
               <richlistbox id="updates-list" class="list" flex="1"/>
             </vbox>
@@ -423,30 +417,28 @@
               <!-- global warnings -->
               <hbox class="global-warning-container global-warning">
                 <hbox class="global-warning-safemode" flex="1" align="center"
-                      tooltiptext="&warning.safemode.label;">
+                        data-l10n-id="extensions-warning-safe-mode-container">
                   <image class="warning-icon"/>
                   <label class="global-warning-text" flex="1" crop="end"
-                         value="&warning.safemode.label;"/>
+                        data-l10n-id="extensions-warning-safe-mode-label"/>
                 </hbox>
                 <hbox class="global-warning-checkcompatibility" flex="1" align="center"
-                      tooltiptext="&warning.checkcompatibility.label;">
+                      data-l10n-id="extensions-warning-check-compatibility-container">
                   <image class="warning-icon"/>
                   <label class="global-warning-text" flex="1" crop="end"
-                         value="&warning.checkcompatibility.label;"/>
+                         data-l10n-id="extensions-warning-check-compatibility-label"/>
                 </hbox>
                 <button class="button-link global-warning-checkcompatibility"
-                        label="&warning.checkcompatibility.enable.label;"
-                        tooltiptext="&warning.checkcompatibility.enable.tooltip;"
+                        data-l10n-id="extensions-warning-check-compatibility-enable"
                         command="cmd_enableCheckCompatibility"/>
                 <hbox class="global-warning-updatesecurity" flex="1" align="center"
-                      tooltiptext="&warning.updatesecurity.label;">
+                      data-l10n-id="extensions-warning-update-security-container">
                   <image class="warning-icon"/>
                   <label class="global-warning-text" flex="1" crop="end"
-                         value="&warning.updatesecurity.label;"/>
+                         data-l10n-id="extensions-warning-update-security-label"/>
                 </hbox>
                 <button class="button-link global-warning-updatesecurity"
-                        label="&warning.updatesecurity.enable.label;"
-                        tooltiptext="&warning.updatesecurity.enable.tooltip;"
+                        data-l10n-id="extensions-warning-update-security-label"
                         command="cmd_enableUpdateSecurity"/>
                 <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
               </hbox>

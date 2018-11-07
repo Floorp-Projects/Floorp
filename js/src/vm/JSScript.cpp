@@ -335,6 +335,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
               HandleScriptSourceObject sourceObjectArg, HandleFunction fun,
               MutableHandleScript scriptp)
 {
+    using ImmutableFlags = JSScript::ImmutableFlags;
+
     /* NB: Keep this in sync with CopyScript. */
 
     enum ScriptBits {
@@ -610,19 +612,19 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         scriptp.set(script);
 
         if (scriptBits & (1 << Strict)) {
-            script->bitFields_.strict_ = true;
+            script->setFlag(ImmutableFlags::Strict);
         }
         if (scriptBits & (1 << ExplicitUseStrict)) {
-            script->bitFields_.explicitUseStrict_ = true;
+            script->setFlag(ImmutableFlags::ExplicitUseStrict);
         }
         if (scriptBits & (1 << ContainsDynamicNameAccess)) {
-            script->bitFields_.bindingsAccessedDynamically_ = true;
+            script->setFlag(ImmutableFlags::BindingsAccessedDynamically);
         }
         if (scriptBits & (1 << FunHasExtensibleScope)) {
-            script->bitFields_.funHasExtensibleScope_ = true;
+            script->setFlag(ImmutableFlags::FunHasExtensibleScope);
         }
         if (scriptBits & (1 << FunHasAnyAliasedFormal)) {
-            script->bitFields_.funHasAnyAliasedFormal_ = true;
+            script->setFlag(ImmutableFlags::FunHasAnyAliasedFormal);
         }
         if (scriptBits & (1 << ArgumentsHasVarBinding)) {
             script->setArgumentsHasVarBinding();
@@ -631,43 +633,43 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
             script->setNeedsArgsObj(true);
         }
         if (scriptBits & (1 << HasMappedArgsObj)) {
-            script->bitFields_.hasMappedArgsObj_ = true;
+            script->setFlag(ImmutableFlags::HasMappedArgsObj);
         }
         if (scriptBits & (1 << FunctionHasThisBinding)) {
-            script->bitFields_.functionHasThisBinding_ = true;
+            script->setFlag(ImmutableFlags::FunctionHasThisBinding);
         }
         if (scriptBits & (1 << FunctionHasExtraBodyVarScope)) {
-            script->bitFields_.functionHasExtraBodyVarScope_ = true;
+            script->setFlag(ImmutableFlags::FunctionHasExtraBodyVarScope);
         }
         if (scriptBits & (1 << HasSingleton)) {
-            script->bitFields_.hasSingletons_ = true;
+            script->setFlag(ImmutableFlags::HasSingletons);
         }
         if (scriptBits & (1 << TreatAsRunOnce)) {
-            script->bitFields_.treatAsRunOnce_ = true;
+            script->setFlag(ImmutableFlags::TreatAsRunOnce);
         }
         if (scriptBits & (1 << HasNonSyntacticScope)) {
-            script->bitFields_.hasNonSyntacticScope_ = true;
+            script->setFlag(ImmutableFlags::HasNonSyntacticScope);
         }
         if (scriptBits & (1 << HasInnerFunctions)) {
-            script->bitFields_.hasInnerFunctions_ = true;
+            script->setFlag(ImmutableFlags::HasInnerFunctions);
         }
         if (scriptBits & (1 << NeedsHomeObject)) {
-            script->bitFields_.needsHomeObject_ = true;
+            script->setFlag(ImmutableFlags::NeedsHomeObject);
         }
         if (scriptBits & (1 << IsDerivedClassConstructor)) {
-            script->bitFields_.isDerivedClassConstructor_ = true;
+            script->setFlag(ImmutableFlags::IsDerivedClassConstructor);
         }
         if (scriptBits & (1 << IsDefaultClassConstructor)) {
-            script->bitFields_.isDefaultClassConstructor_ = true;
+            script->setFlag(ImmutableFlags::IsDefaultClassConstructor);
         }
         if (scriptBits & (1 << IsGenerator)) {
-            script->setGeneratorKind(GeneratorKind::Generator);
+            script->setFlag(ImmutableFlags::IsGenerator);
         }
         if (scriptBits & (1 << IsAsync)) {
-            script->setAsyncKind(FunctionAsyncKind::AsyncFunction);
+            script->setFlag(ImmutableFlags::IsAsync);
         }
         if (scriptBits & (1 << HasRest)) {
-            script->setHasRest();
+            script->setFlag(ImmutableFlags::HasRest);
         }
     }
 
@@ -1109,7 +1111,7 @@ JSScript::setDefaultClassConstructorSpan(JSObject* sourceObject, uint32_t start,
     column_ = column;
     // Since this script has been changed to point into the user's source, we
     // can clear its self-hosted flag, allowing Debugger to see it.
-    bitFields_.selfHosted_ = false;
+    clearFlag(ImmutableFlags::SelfHosted);
 }
 
 js::ScriptSourceObject&
@@ -1186,7 +1188,7 @@ JSScript::initScriptCounts(JSContext* cx)
     }
 
     // safe to set this;  we can't fail after this point.
-    bitFields_.hasScriptCounts_ = true;
+    setFlag(MutableFlags::HasScriptCounts);
 
     // Enable interrupts in any interpreter frames running on this script. This
     // is used to let the interpreter increment the PCCounts, if present.
@@ -1412,7 +1414,7 @@ JSScript::getIonCounts()
 void
 JSScript::clearHasScriptCounts()
 {
-    bitFields_.hasScriptCounts_ = false;
+    clearFlag(MutableFlags::HasScriptCounts);
 }
 
 void
@@ -1421,7 +1423,7 @@ JSScript::releaseScriptCounts(ScriptCounts* counts)
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
     *counts = std::move(*p->value().get());
     realm()->scriptCountsMap->remove(p);
-    bitFields_.hasScriptCounts_ = false;
+    clearHasScriptCounts();
 }
 
 void
@@ -3300,10 +3302,10 @@ JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
     }
 
     // Record compile options that get checked at runtime.
-    script->bitFields_.noScriptRval_ = options.noScriptRval;
-    script->bitFields_.selfHosted_ = options.selfHostingMode;
-    script->bitFields_.treatAsRunOnce_ = options.isRunOnce;
-    script->bitFields_.hideScriptFromDebugger_ = options.hideScriptFromDebugger;
+    script->setFlag(ImmutableFlags::NoScriptRval, options.noScriptRval);
+    script->setFlag(ImmutableFlags::SelfHosted, options.selfHostingMode);
+    script->setFlag(ImmutableFlags::TreatAsRunOnce, options.isRunOnce);
+    script->setFlag(ImmutableFlags::HideScriptFromDebugger, options.hideScriptFromDebugger);
 
     if (cx->runtime()->lcovOutput().isEnabled()) {
         if (!script->initScriptName(cx)) {
@@ -3449,9 +3451,9 @@ JSScript::initFromFunctionBox(HandleScript script, frontend::FunctionBox* funbox
         fun->setScript(script);
     }
 
-    script->bitFields_.funHasExtensibleScope_ = funbox->hasExtensibleScope();
-    script->bitFields_.needsHomeObject_ = funbox->needsHomeObject();
-    script->bitFields_.isDerivedClassConstructor_ = funbox->isDerivedClassConstructor();
+    script->setFlag(ImmutableFlags::FunHasExtensibleScope, funbox->hasExtensibleScope());
+    script->setFlag(ImmutableFlags::NeedsHomeObject, funbox->needsHomeObject());
+    script->setFlag(ImmutableFlags::IsDerivedClassConstructor, funbox->isDerivedClassConstructor());
 
     if (funbox->argumentsHasLocalBinding()) {
         script->setArgumentsHasVarBinding();
@@ -3461,37 +3463,35 @@ JSScript::initFromFunctionBox(HandleScript script, frontend::FunctionBox* funbox
     } else {
         MOZ_ASSERT(!funbox->definitelyNeedsArgsObj());
     }
-    script->bitFields_.hasMappedArgsObj_ = funbox->hasMappedArgsObj();
+    script->setFlag(ImmutableFlags::HasMappedArgsObj, funbox->hasMappedArgsObj());
 
-    script->bitFields_.functionHasThisBinding_ = funbox->hasThisBinding();
-    script->bitFields_.functionHasExtraBodyVarScope_ = funbox->hasExtraBodyVarScope();
+    script->setFlag(ImmutableFlags::FunctionHasThisBinding, funbox->hasThisBinding());
+    script->setFlag(ImmutableFlags::FunctionHasExtraBodyVarScope, funbox->hasExtraBodyVarScope());
 
     script->funLength_ = funbox->length;
 
-    script->setGeneratorKind(funbox->generatorKind());
-    script->setAsyncKind(funbox->asyncKind());
-    if (funbox->hasRest()) {
-        script->setHasRest();
-    }
+    script->setFlag(ImmutableFlags::IsGenerator, funbox->isGenerator());
+    script->setFlag(ImmutableFlags::IsAsync, funbox->isAsync());
+    script->setFlag(ImmutableFlags::HasRest, funbox->hasRest());
 
     PositionalFormalParameterIter fi(script);
     while (fi && !fi.closedOver()) {
         fi++;
     }
-    script->bitFields_.funHasAnyAliasedFormal_ = !!fi;
+    script->setFlag(ImmutableFlags::FunHasAnyAliasedFormal, !!fi);
 
-    script->setHasInnerFunctions(funbox->hasInnerFunctions());
+    script->setFlag(ImmutableFlags::HasInnerFunctions, funbox->hasInnerFunctions());
 }
 
 /* static */ void
 JSScript::initFromModuleContext(HandleScript script)
 {
-    script->bitFields_.funHasExtensibleScope_ = false;
-    script->bitFields_.needsHomeObject_ = false;
-    script->bitFields_.isDerivedClassConstructor_ = false;
+    script->clearFlag(ImmutableFlags::FunHasExtensibleScope);
+    script->clearFlag(ImmutableFlags::NeedsHomeObject);
+    script->clearFlag(ImmutableFlags::IsDerivedClassConstructor);
     script->funLength_ = 0;
 
-    script->setGeneratorKind(GeneratorKind::NotGenerator);
+    script->clearFlag(ImmutableFlags::IsGenerator);
 
     // Since modules are only run once, mark the script so that initializers
     // created within it may be given more precise types.
@@ -3571,16 +3571,17 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, frontend::Byt
         bce->resumeOffsetList.finish(data->resumeOffsets(), prologueLength);
     }
 
-    script->bitFields_.strict_ = bce->sc->strict();
-    script->bitFields_.explicitUseStrict_ = bce->sc->hasExplicitUseStrict();
-    script->bitFields_.bindingsAccessedDynamically_ = bce->sc->bindingsAccessedDynamically();
-    script->bitFields_.hasSingletons_ = bce->hasSingletons;
+    script->setFlag(ImmutableFlags::Strict, bce->sc->strict());
+    script->setFlag(ImmutableFlags::ExplicitUseStrict, bce->sc->hasExplicitUseStrict());
+    script->setFlag(ImmutableFlags::BindingsAccessedDynamically,
+                    bce->sc->bindingsAccessedDynamically());
+    script->setFlag(ImmutableFlags::HasSingletons, bce->hasSingletons);
 
     script->nfixed_ = bce->maxFixedSlots;
     script->nslots_ = nslots;
     script->bodyScopeIndex_ = bce->bodyScopeIndex;
-    script->bitFields_.hasNonSyntacticScope_ =
-        bce->outermostScope()->hasOnChain(ScopeKind::NonSyntactic);
+    script->setFlag(ImmutableFlags::HasNonSyntacticScope,
+                    bce->outermostScope()->hasOnChain(ScopeKind::NonSyntactic));
 
     // There shouldn't be any fallible operation after initFromFunctionBox,
     // JSFunction::hasUncompletedScript relies on the fact that the existence
@@ -4017,6 +4018,8 @@ bool
 js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
                        MutableHandle<GCVector<Scope*>> scopes)
 {
+    using ImmutableFlags = JSScript::ImmutableFlags;
+
     if (src->treatAsRunOnce() && !src->functionNonDelazifying()) {
         JS_ReportErrorASCII(cx, "No cloning toplevel run-once scripts");
         return false;
@@ -4129,25 +4132,25 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
             dst->setNeedsArgsObj(src->needsArgsObj());
         }
     }
-    dst->bitFields_.hasMappedArgsObj_ = src->hasMappedArgsObj();
-    dst->bitFields_.functionHasThisBinding_ = src->functionHasThisBinding();
-    dst->bitFields_.functionHasExtraBodyVarScope_ = src->functionHasExtraBodyVarScope();
-    dst->bitFields_.strict_ = src->strict();
-    dst->bitFields_.explicitUseStrict_ = src->explicitUseStrict();
-    dst->bitFields_.hasNonSyntacticScope_ = scopes[0]->hasOnChain(ScopeKind::NonSyntactic);
-    dst->bitFields_.bindingsAccessedDynamically_ = src->bindingsAccessedDynamically();
-    dst->bitFields_.funHasExtensibleScope_ = src->funHasExtensibleScope();
-    dst->bitFields_.funHasAnyAliasedFormal_ = src->funHasAnyAliasedFormal();
-    dst->bitFields_.hasSingletons_ = src->hasSingletons();
-    dst->bitFields_.treatAsRunOnce_ = src->treatAsRunOnce();
-    dst->bitFields_.hasInnerFunctions_ = src->hasInnerFunctions();
-    dst->setGeneratorKind(src->generatorKind());
-    dst->bitFields_.isDerivedClassConstructor_ = src->isDerivedClassConstructor();
-    dst->bitFields_.needsHomeObject_ = src->needsHomeObject();
-    dst->bitFields_.isDefaultClassConstructor_ = src->isDefaultClassConstructor();
-    dst->bitFields_.isAsync_ = src->bitFields_.isAsync_;
-    dst->bitFields_.hasRest_ = src->bitFields_.hasRest_;
-    dst->bitFields_.hideScriptFromDebugger_ = src->bitFields_.hideScriptFromDebugger_;
+    dst->setFlag(ImmutableFlags::HasMappedArgsObj, src->hasMappedArgsObj());
+    dst->setFlag(ImmutableFlags::FunctionHasThisBinding, src->functionHasThisBinding());
+    dst->setFlag(ImmutableFlags::FunctionHasExtraBodyVarScope, src->functionHasExtraBodyVarScope());
+    dst->setFlag(ImmutableFlags::Strict, src->strict());
+    dst->setFlag(ImmutableFlags::ExplicitUseStrict, src->explicitUseStrict());
+    dst->setFlag(ImmutableFlags::HasNonSyntacticScope, scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
+    dst->setFlag(ImmutableFlags::BindingsAccessedDynamically, src->bindingsAccessedDynamically());
+    dst->setFlag(ImmutableFlags::FunHasExtensibleScope, src->funHasExtensibleScope());
+    dst->setFlag(ImmutableFlags::FunHasAnyAliasedFormal, src->funHasAnyAliasedFormal());
+    dst->setFlag(ImmutableFlags::HasSingletons, src->hasSingletons());
+    dst->setFlag(ImmutableFlags::TreatAsRunOnce, src->treatAsRunOnce());
+    dst->setFlag(ImmutableFlags::HasInnerFunctions, src->hasInnerFunctions());
+    dst->setFlag(ImmutableFlags::IsGenerator, src->isGenerator());
+    dst->setFlag(ImmutableFlags::IsDerivedClassConstructor, src->isDerivedClassConstructor());
+    dst->setFlag(ImmutableFlags::NeedsHomeObject, src->needsHomeObject());
+    dst->setFlag(ImmutableFlags::IsDefaultClassConstructor, src->isDefaultClassConstructor());
+    dst->setFlag(ImmutableFlags::IsAsync, src->isAsync());
+    dst->setFlag(ImmutableFlags::HasRest, src->hasRest());
+    dst->setFlag(ImmutableFlags::HideScriptFromDebugger, src->hideScriptFromDebugger());
 
     {
         auto array = dst->data_->scopes();
@@ -4294,7 +4297,7 @@ js::CloneScriptIntoFunction(JSContext* cx, HandleScope enclosingScope, HandleFun
 DebugScript*
 JSScript::debugScript()
 {
-    MOZ_ASSERT(bitFields_.hasDebugScript_);
+    MOZ_ASSERT(hasDebugScript());
     DebugScriptMap* map = realm()->debugScriptMap.get();
     MOZ_ASSERT(map);
     DebugScriptMap::Ptr p = map->lookup(this);
@@ -4305,21 +4308,21 @@ JSScript::debugScript()
 DebugScript*
 JSScript::releaseDebugScript()
 {
-    MOZ_ASSERT(bitFields_.hasDebugScript_);
+    MOZ_ASSERT(hasDebugScript());
     DebugScriptMap* map = realm()->debugScriptMap.get();
     MOZ_ASSERT(map);
     DebugScriptMap::Ptr p = map->lookup(this);
     MOZ_ASSERT(p);
     DebugScript* debug = p->value().release();
     map->remove(p);
-    bitFields_.hasDebugScript_ = false;
+    clearFlag(MutableFlags::HasDebugScript);
     return debug;
 }
 
 void
 JSScript::destroyDebugScript(FreeOp* fop)
 {
-    if (bitFields_.hasDebugScript_) {
+    if (hasDebugScript()) {
 #ifdef DEBUG
         for (jsbytecode* pc = code(); pc < codeEnd(); pc++) {
             if (BreakpointSite* site = getBreakpointSite(pc)) {
@@ -4336,7 +4339,7 @@ JSScript::destroyDebugScript(FreeOp* fop)
 bool
 JSScript::ensureHasDebugScript(JSContext* cx)
 {
-    if (bitFields_.hasDebugScript_) {
+    if (hasDebugScript()) {
         return true;
     }
 
@@ -4361,7 +4364,7 @@ JSScript::ensureHasDebugScript(JSContext* cx)
         return false;
     }
 
-    bitFields_.hasDebugScript_ = true; // safe to set this;  we can't fail after this point
+    setFlag(MutableFlags::HasDebugScript); // safe to set this;  we can't fail after this point
 
     /*
      * Ensure that any Interpret() instances running on this script have
@@ -4642,16 +4645,16 @@ JSScript::innermostScope(jsbytecode* pc)
 void
 JSScript::setArgumentsHasVarBinding()
 {
-    bitFields_.argsHasVarBinding_ = true;
-    bitFields_.needsArgsAnalysis_ = true;
+    setFlag(ImmutableFlags::ArgsHasVarBinding);
+    setFlag(MutableFlags::NeedsArgsAnalysis);
 }
 
 void
 JSScript::setNeedsArgsObj(bool needsArgsObj)
 {
     MOZ_ASSERT_IF(needsArgsObj, argumentsHasVarBinding());
-    bitFields_.needsArgsAnalysis_ = false;
-    bitFields_.needsArgsObj_ = needsArgsObj;
+    clearFlag(MutableFlags::NeedsArgsAnalysis);
+    setFlag(MutableFlags::NeedsArgsObj, needsArgsObj);
 }
 
 void
@@ -4720,7 +4723,7 @@ JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script)
     MOZ_ASSERT(!script->isGenerator());
     MOZ_ASSERT(!script->isAsync());
 
-    script->bitFields_.needsArgsObj_ = true;
+    script->setFlag(MutableFlags::NeedsArgsObj);
 
     /*
      * Since we can't invalidate baseline scripts, set a flag that's checked from
@@ -5098,7 +5101,7 @@ JSScript::AutoDelazify::holdScript(JS::HandleFunction fun)
             JSAutoRealm ar(cx_, fun);
             script_ = JSFunction::getOrCreateScript(cx_, fun);
             if (script_) {
-                oldDoNotRelazify_ = script_->bitFields_.doNotRelazify_;
+                oldDoNotRelazify_ = script_->hasFlag(MutableFlags::DoNotRelazify);
                 script_->setDoNotRelazify(true);
             }
         }

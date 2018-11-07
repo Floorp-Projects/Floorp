@@ -173,6 +173,8 @@ Optional Fields
   - ``geckoview``
   - ``all`` (record on all products)
 
+- ``record_into_store``: A list of stores this scalar should be recorded into. It defaults to ``[main]`` (*Note: This field is not yet ready to use*).
+
 String type restrictions
 ------------------------
 To prevent abuses, the content of a string scalar is limited to 50 characters in length. Trying

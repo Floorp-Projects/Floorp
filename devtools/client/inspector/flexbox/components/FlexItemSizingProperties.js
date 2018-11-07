@@ -86,8 +86,8 @@ class FlexItemSizingProperties extends PureComponent {
     const flexBasisValue = properties["flex-basis"];
     const dimensionValue = properties[dimension];
 
+    let title = getStr("flexbox.itemSizing.baseSizeSectionHeader");
     let property = null;
-    let reason = null;
 
     if (flexBasisValue) {
       // If flex-basis is defined, then that's what is used for the base size.
@@ -97,19 +97,18 @@ class FlexItemSizingProperties extends PureComponent {
       property = this.renderCssProperty(dimension, dimensionValue);
     } else {
       // Finally, if nothing is set, then the base size is the max-content size.
-      reason = this.renderReasons(
-        [getStr("flexbox.itemSizing.itemBaseSizeFromContent")]);
+      // In this case replace the section's title.
+      title = getStr("flexbox.itemSizing.itemContentSize");
     }
 
     const className = "section base";
     return (
       dom.li({ className: className + (property ? "" : " no-property") },
         dom.span({ className: "name" },
-          getStr("flexbox.itemSizing.baseSizeSectionHeader"),
+          title,
           property
         ),
-        this.renderSize(mainBaseSize),
-        reason
+        this.renderSize(mainBaseSize)
       )
     );
   }
@@ -120,7 +119,6 @@ class FlexItemSizingProperties extends PureComponent {
       mainBaseSize,
       mainFinalSize,
       lineGrowthState,
-      clampState,
     } = flexItemSizing;
 
     // Don't display anything if all interesting sizes are 0.
@@ -139,7 +137,6 @@ class FlexItemSizingProperties extends PureComponent {
     const computedFlexGrow = computedStyle.flexGrow;
     const definedFlexShrink = properties["flex-shrink"];
     const computedFlexShrink = computedStyle.flexShrink;
-    const wasClamped = clampState !== "unclamped";
 
     const reasons = [];
 
@@ -159,35 +156,15 @@ class FlexItemSizingProperties extends PureComponent {
 
     let property = null;
 
-    if (grew) {
-      // If the item grew.
-      if (definedFlexGrow) {
-        // It's normally because it was set to grow (flex-grow is non 0).
-        property = this.renderCssProperty("flex-grow", definedFlexGrow);
-      }
-
-      if (wasClamped && clampState === "clamped_to_max") {
-        // It may have wanted to grow more than it did, because it was later max-clamped.
-        reasons.push(getStr("flexbox.itemSizing.growthAttemptButMaxClamped"));
-      } else if (wasClamped && clampState === "clamped_to_min") {
-        // Or it may have wanted to grow less, but was later min-clamped to a larger size.
-        reasons.push(getStr("flexbox.itemSizing.growthAttemptButMinClamped"));
-      }
-    } else if (shrank) {
-      // If the item shrank.
-      if (definedFlexShrink && computedFlexShrink) {
-        // It's either because flex-shrink is non 0.
-        property = this.renderCssProperty("flex-shrink", definedFlexShrink);
-      } else if (computedFlexShrink) {
-        // Or also because it's default value is 1 anyway.
-        property = this.renderCssProperty("flex-shrink", computedFlexShrink, true);
-      }
-
-      if (wasClamped) {
-        // It might have wanted to shrink more (to accomodate all items) but couldn't
-        // because it was later min-clamped.
-        reasons.push(getStr("flexbox.itemSizing.shrinkAttemptWhenClamped"));
-      }
+    if (grew && definedFlexGrow && computedFlexGrow) {
+      // If the item grew it's normally because it was set to grow (flex-grow is non 0).
+      property = this.renderCssProperty("flex-grow", definedFlexGrow);
+    } else if (shrank && definedFlexShrink && computedFlexShrink) {
+      // If the item shrank it's either because flex-shrink is non 0.
+      property = this.renderCssProperty("flex-shrink", definedFlexShrink);
+    } else if (shrank && computedFlexShrink) {
+      // Or also because it's default value is 1 anyway.
+      property = this.renderCssProperty("flex-shrink", computedFlexShrink, true);
     }
 
     // Don't display the section at all if there's nothing useful to show users.
@@ -208,14 +185,24 @@ class FlexItemSizingProperties extends PureComponent {
     );
   }
 
-  renderMinimumSizeSection({ clampState, mainMinSize }, properties, dimension) {
+  renderMinimumSizeSection(flexItemSizing, properties, dimension) {
+    const { clampState, mainMinSize, mainDeltaSize } = flexItemSizing;
+    const grew = mainDeltaSize > 0;
+    const shrank = mainDeltaSize < 0;
+    const minDimensionValue = properties[`min-${dimension}`];
+
     // We only display the minimum size when the item actually violates that size during
     // layout & is clamped.
     if (clampState !== "clamped_to_min") {
       return null;
     }
 
-    const minDimensionValue = properties[`min-${dimension}`];
+    const reasons = [];
+    if (grew || shrank) {
+      // The item may have wanted to grow less, but was min-clamped to a larger size.
+      // Or the item may have wanted to shrink more but was min-clamped to a larger size.
+      reasons.push(getStr("flexbox.itemSizing.clampedToMin"));
+    }
 
     return (
       dom.li({ className: "section min" },
@@ -223,17 +210,26 @@ class FlexItemSizingProperties extends PureComponent {
           getStr("flexbox.itemSizing.minSizeSectionHeader"),
           this.renderCssProperty(`min-${dimension}`, minDimensionValue)
         ),
-        this.renderSize(mainMinSize)
+        this.renderSize(mainMinSize),
+        this.renderReasons(reasons)
       )
     );
   }
 
-  renderMaximumSizeSection({ clampState, mainMaxSize }, properties, dimension) {
+  renderMaximumSizeSection(flexItemSizing, properties, dimension) {
+    const { clampState, mainMaxSize, mainDeltaSize } = flexItemSizing;
+    const grew = mainDeltaSize > 0;
+    const maxDimensionValue = properties[`max-${dimension}`];
+
     if (clampState !== "clamped_to_max") {
       return null;
     }
 
-    const maxDimensionValue = properties[`max-${dimension}`];
+    const reasons = [];
+    if (grew) {
+      // The item may have wanted to grow more than it did, because it was max-clamped.
+      reasons.push(getStr("flexbox.itemSizing.clampedToMax"));
+    }
 
     return (
       dom.li({ className: "section max" },
@@ -241,7 +237,8 @@ class FlexItemSizingProperties extends PureComponent {
           getStr("flexbox.itemSizing.maxSizeSectionHeader"),
           this.renderCssProperty(`max-${dimension}`, maxDimensionValue)
         ),
-        this.renderSize(mainMaxSize)
+        this.renderSize(mainMaxSize),
+        this.renderReasons(reasons)
       )
     );
   }

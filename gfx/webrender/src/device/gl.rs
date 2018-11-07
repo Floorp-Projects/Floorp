@@ -1557,7 +1557,9 @@ impl Device {
         debug_assert!(self.inside_frame);
         debug_assert!(dst.width >= src.width);
         debug_assert!(dst.height >= src.height);
+        debug_assert!(dst.layer_count >= src.layer_count);
 
+        // Note that zip() truncates to the shorter of the two iterators.
         let rect = DeviceIntRect::new(DeviceIntPoint::zero(), src.get_dimensions().to_i32());
         for (read_fbo, draw_fbo) in src.fbos.iter().zip(&dst.fbos) {
             self.bind_read_target_impl(*read_fbo);

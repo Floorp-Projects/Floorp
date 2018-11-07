@@ -231,6 +231,16 @@ pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys",
 pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", false);
 #endif
 
+#ifdef NIGHTLY_BUILD
+// Blacklist of domains of web apps which handle keyCode and charCode of
+// keypress events with a path only for Firefox (i.e., broken if we set
+// non-zero keyCode or charCode value to the other).  The format is exactly
+// same as "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys". So,
+// check its explanation for the detail.
+pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode",
+     "docs.google.com,www.rememberthemilk.com");
+#endif
+
 // Whether the WebMIDI API is enabled
 pref("dom.webmidi.enabled", false);
 

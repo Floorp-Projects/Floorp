@@ -130,7 +130,9 @@ private:
    * ShouldUseSameValueForCharCodeAndKeyCode() returns true if KeyCode() and
    * CharCode() should return same value.
    */
-  bool ShouldUseSameValueForCharCodeAndKeyCode(CallerType aCallerType) const;
+  bool ShouldUseSameValueForCharCodeAndKeyCode(
+          const WidgetKeyboardEvent& aKeyboardEvent,
+          CallerType aCallerType) const;
 };
 
 } // namespace dom

@@ -1634,6 +1634,143 @@ class JSScript : public js::gc::TenuredCell
     mozilla::Atomic<uint32_t, mozilla::Relaxed,
                     mozilla::recordreplay::Behavior::DontPreserve> warmUpCount = {};
 
+    // Immutable flags should not be modified after this script has been
+    // initialized. These flags should likely be preserved when serializing
+    // (XDR) or copying (CopyScript) this script.
+    enum class ImmutableFlags : uint32_t {
+        // No need for result value of last expression statement.
+        NoScriptRval = 1 << 0,
+
+        // Code is in strict mode.
+        Strict = 1 << 1,
+
+        // Code has "use strict"; explicitly.
+        ExplicitUseStrict = 1 << 2,
+
+        // True if the script has a non-syntactic scope on its dynamic scope chain.
+        // That is, there are objects about which we know nothing between the
+        // outermost syntactic scope and the global.
+        HasNonSyntacticScope = 1 << 3,
+
+        // See Parser::selfHostingMode.
+        SelfHosted = 1 << 4,
+
+        // See FunctionBox.
+        BindingsAccessedDynamically = 1 << 5,
+        FunHasExtensibleScope = 1 << 6,
+
+        // True if any formalIsAliased(i).
+        FunHasAnyAliasedFormal = 1 << 7,
+
+        // Script has singleton objects.
+        HasSingletons = 1 << 8,
+
+        FunctionHasThisBinding = 1 << 9,
+        FunctionHasExtraBodyVarScope = 1 << 10,
+
+        // Whether the arguments object for this script, if it needs one, should be
+        // mapped (alias formal parameters).
+        HasMappedArgsObj = 1 << 11,
+
+        // Script contains inner functions. Used to check if we can relazify the
+        // script.
+        HasInnerFunctions = 1 << 12,
+
+        NeedsHomeObject = 1 << 13,
+
+        IsDerivedClassConstructor = 1 << 14,
+        IsDefaultClassConstructor = 1 << 15,
+
+        // Script is a lambda to treat as running once or a global or eval script
+        // that will only run once.  Which one it is can be disambiguated by
+        // checking whether function() is null.
+        TreatAsRunOnce = 1 << 16,
+
+        // 'this', 'arguments' and f.apply() are used. This is likely to be a wrapper.
+        IsLikelyConstructorWrapper = 1 << 17,
+
+        // Set if the debugger's onNewScript hook has not yet been called.
+        HideScriptFromDebugger = 1 << 18,
+
+        // Set if this function is a generator function or async generator.
+        IsGenerator = 1 << 19,
+
+        // Set if this function is an async function or async generator.
+        IsAsync = 1 << 20,
+
+        // Set if this function has a rest parameter.
+        HasRest = 1 << 21,
+
+        // See comments below.
+        ArgsHasVarBinding = 1 << 22,
+    };
+    uint32_t immutableFlags_ = 0;
+
+    // Mutable flags typically store information about runtime or deoptimization
+    // behavior of this script.
+    enum class MutableFlags : uint32_t {
+        // Have warned about uses of undefined properties in this script.
+        WarnedAboutUndefinedProp = 1 << 0,
+
+        // If treatAsRunOnce, whether script has executed.
+        HasRunOnce = 1 << 1,
+
+        // Script has been reused for a clone.
+        HasBeenCloned = 1 << 2,
+
+        // Script came from eval(), and is still active.
+        IsActiveEval = 1 << 3,
+
+        // Script came from eval(), and is in eval cache.
+        IsCachedEval = 1 << 4,
+
+        // Script has an entry in Realm::scriptCountsMap.
+        HasScriptCounts = 1 << 5,
+
+        // Script has an entry in Realm::debugScriptMap.
+        HasDebugScript = 1 << 6,
+
+        // Freeze constraints for stack type sets have been generated.
+        HasFreezeConstraints = 1 << 7,
+
+        // Generation for this script's TypeScript. If out of sync with the
+        // TypeZone's generation, the TypeScript needs to be swept.
+        TypesGeneration = 1 << 8,
+
+        // Do not relazify this script. This is used by the relazify() testing
+        // function for scripts that are on the stack and also by the AutoDelazify
+        // RAII class. Usually we don't relazify functions in compartments with
+        // scripts on the stack, but the relazify() testing function overrides that,
+        // and sometimes we're working with a cross-compartment function and need to
+        // keep it from relazifying.
+        DoNotRelazify = 1 << 9,
+
+        // IonMonkey compilation hints.
+
+        // Script has had hoisted bounds checks fail.
+        FailedBoundsCheck = 1 << 10,
+
+        // Script has had hoisted shape guard fail.
+        FailedShapeGuard = 1 << 11,
+
+        HadFrequentBailouts = 1 << 12,
+        HadOverflowBailout = 1 << 13,
+
+        // Explicitly marked as uninlineable.
+        Uninlineable = 1 << 14,
+
+        // Idempotent cache has triggered invalidation.
+        InvalidatedIdempotentCache = 1 << 15,
+
+        // Lexical check did fail and bail out.
+        FailedLexicalCheck = 1 << 16,
+
+        // See comments below.
+        NeedsArgsAnalysis = 1 << 17,
+        NeedsArgsObj = 1 << 18,
+    };
+    uint32_t mutableFlags_ = 0;
+
     // 16-bit fields.
 
     /**
@@ -1647,144 +1784,6 @@ class JSScript : public js::gc::TenuredCell
 
     /* Number of type sets used in this script for dynamic type monitoring. */
     uint16_t nTypeSets_ = 0;
-
-  private:
-    struct BitFields
-    {
-        /*
-         * Bit-fields can't have member initializers til C++2a, i.e. probably
-         * C++20, so we can't initialize these to zero in place.  Instead we
-         * braced-init this to all zeroes in the JSScript constructor, then
-         * custom-assign particular bit-fields in the constructor body.
-         */
-
-        // No need for result value of last expression statement.
-        bool noScriptRval_ : 1;
-
-        // Code is in strict mode.
-        bool strict_ : 1;
-
-        // Code has "use strict"; explicitly.
-        bool explicitUseStrict_ : 1;
-
-        // True if the script has a non-syntactic scope on its dynamic scope chain.
-        // That is, there are objects about which we know nothing between the
-        // outermost syntactic scope and the global.
-        bool hasNonSyntacticScope_ : 1;
-
-        // see Parser::selfHostingMode.
-        bool selfHosted_ : 1;
-
-        // See FunctionBox.
-        bool bindingsAccessedDynamically_ : 1;
-        bool funHasExtensibleScope_ : 1;
-
-        // True if any formalIsAliased(i).
-        bool funHasAnyAliasedFormal_ : 1;
-
-        // Have warned about uses of undefined properties in this script.
-        bool warnedAboutUndefinedProp_ : 1;
-
-        // Script has singleton objects.
-        bool hasSingletons_ : 1;
-
-        // Script is a lambda to treat as running once or a global or eval script
-        // that will only run once.  Which one it is can be disambiguated by
-        // checking whether function() is null.
-        bool treatAsRunOnce_ : 1;
-
-        // If treatAsRunOnce, whether script has executed.
-        bool hasRunOnce_ : 1;
-
-        // Script has been reused for a clone.
-        bool hasBeenCloned_ : 1;
-
-        // Script came from eval(), and is still active.
-        bool isActiveEval_ : 1;
-
-        // Script came from eval(), and is in eval cache.
-        bool isCachedEval_ : 1;
-
-        // 'this', 'arguments' and f.apply() are used. This is likely to be a wrapper.
-        bool isLikelyConstructorWrapper_ : 1;
-
-        // IonMonkey compilation hints.
-
-        /* Script has had hoisted bounds checks fail. */
-        bool failedBoundsCheck_ : 1;
-
-        /* Script has had hoisted shape guard fail. */
-        bool failedShapeGuard_ : 1;
-
-        bool hadFrequentBailouts_ : 1;
-        bool hadOverflowBailout_ : 1;
-
-        /* Explicitly marked as uninlineable. */
-        bool uninlineable_ : 1;
-
-        // Idempotent cache has triggered invalidation.
-        bool invalidatedIdempotentCache_ : 1;
-
-        // Lexical check did fail and bail out.
-        bool failedLexicalCheck_ : 1;
-
-        // Script has an entry in Realm::scriptCountsMap.
-        bool hasScriptCounts_ : 1;
-
-        // Script has an entry in Realm::debugScriptMap.
-        bool hasDebugScript_ : 1;
-
-        // Freeze constraints for stack type sets have been generated.
-        bool hasFreezeConstraints_ : 1;
-
-        /* See comments below. */
-        bool argsHasVarBinding_ : 1;
-        bool needsArgsAnalysis_ : 1;
-        bool needsArgsObj_ : 1;
-        bool functionHasThisBinding_ : 1;
-        bool functionHasExtraBodyVarScope_ : 1;
-
-        // Whether the arguments object for this script, if it needs one, should be
-        // mapped (alias formal parameters).
-        bool hasMappedArgsObj_ : 1;
-
-        // Generation for this script's TypeScript. If out of sync with the
-        // TypeZone's generation, the TypeScript needs to be swept.
-        //
-        // This should be a uint32 but is instead a bool so that MSVC packs it
-        // correctly.
-        bool typesGeneration_ : 1;
-
-        // Do not relazify this script. This is used by the relazify() testing
-        // function for scripts that are on the stack and also by the AutoDelazify
-        // RAII class. Usually we don't relazify functions in compartments with
-        // scripts on the stack, but the relazify() testing function overrides that,
-        // and sometimes we're working with a cross-compartment function and need to
-        // keep it from relazifying.
-        bool doNotRelazify_ : 1;
-
-        // Script contains inner functions. Used to check if we can relazify the
-        // script.
-        bool hasInnerFunctions_ : 1;
-
-        bool needsHomeObject_ : 1;
-
-        bool isDerivedClassConstructor_ : 1;
-        bool isDefaultClassConstructor_ : 1;
-
-        // True if this function is a generator function or async generator.
-        bool isGenerator_ : 1;
-
-        // True if this function is an async function or async generator.
-        bool isAsync_ : 1;
-
-        bool hasRest_ : 1;
-
-        // True if the debugger's onNewScript hook has not yet been called.
-        bool hideScriptFromDebugger_ : 1;
-    };
-
-    BitFields bitFields_ = {}; // Zero-initialize bitfield flags.
 
     //
     // End of fields.  Start methods.
@@ -1843,6 +1842,44 @@ class JSScript : public js::gc::TenuredCell
     // Assert that jump targets are within the code array of the script.
     void assertValidJumpTargets() const;
 #endif
+
+    // MutableFlags accessors.
+
+    MOZ_MUST_USE bool hasFlag(MutableFlags flag) const {
+        return mutableFlags_ & uint32_t(flag);
+    }
+    void setFlag(MutableFlags flag) {
+        mutableFlags_ |= uint32_t(flag);
+    }
+    void setFlag(MutableFlags flag, bool b) {
+        if (b) {
+            setFlag(flag);
+        } else {
+            clearFlag(flag);
+        }
+    }
+    void clearFlag(MutableFlags flag) {
+        mutableFlags_ &= ~uint32_t(flag);
+    }
+
+    // ImmutableFlags accessors.
+
+    MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
+        return immutableFlags_ & uint32_t(flag);
+    }
+    void setFlag(ImmutableFlags flag) {
+        immutableFlags_ |= uint32_t(flag);
+    }
+    void setFlag(ImmutableFlags flag, bool b) {
+        if (b) {
+            setFlag(flag);
+        } else {
+            clearFlag(flag);
+        }
+    }
+    void clearFlag(ImmutableFlags flag) {
+        immutableFlags_ &= ~uint32_t(flag);
+    }
 
   public:
     inline JSPrincipals* principals();
@@ -1998,113 +2035,117 @@ class JSScript : public js::gc::TenuredCell
     }
 
     bool noScriptRval() const {
-        return bitFields_.noScriptRval_;
+        return hasFlag(ImmutableFlags::NoScriptRval);
     }
 
     bool strict() const {
-        return bitFields_.strict_;
+        return hasFlag(ImmutableFlags::Strict);
     }
 
-    bool explicitUseStrict() const { return bitFields_.explicitUseStrict_; }
+    bool explicitUseStrict() const { return hasFlag(ImmutableFlags::ExplicitUseStrict); }
 
     bool hasNonSyntacticScope() const {
-        return bitFields_.hasNonSyntacticScope_;
+        return hasFlag(ImmutableFlags::HasNonSyntacticScope);
     }
 
-    bool selfHosted() const { return bitFields_.selfHosted_; }
-    bool bindingsAccessedDynamically() const { return bitFields_.bindingsAccessedDynamically_; }
+    bool selfHosted() const { return hasFlag(ImmutableFlags::SelfHosted); }
+    bool bindingsAccessedDynamically() const {
+        return hasFlag(ImmutableFlags::BindingsAccessedDynamically);
+    }
     bool funHasExtensibleScope() const {
-        return bitFields_.funHasExtensibleScope_;
+        return hasFlag(ImmutableFlags::FunHasExtensibleScope);
     }
     bool funHasAnyAliasedFormal() const {
-        return bitFields_.funHasAnyAliasedFormal_;
+        return hasFlag(ImmutableFlags::FunHasAnyAliasedFormal);
     }
 
-    bool hasSingletons() const { return bitFields_.hasSingletons_; }
+    bool hasSingletons() const { return hasFlag(ImmutableFlags::HasSingletons); }
     bool treatAsRunOnce() const {
-        return bitFields_.treatAsRunOnce_;
+        return hasFlag(ImmutableFlags::TreatAsRunOnce);
     }
-    bool hasRunOnce() const { return bitFields_.hasRunOnce_; }
-    bool hasBeenCloned() const { return bitFields_.hasBeenCloned_; }
+    bool hasRunOnce() const { return hasFlag(MutableFlags::HasRunOnce); }
+    bool hasBeenCloned() const { return hasFlag(MutableFlags::HasBeenCloned); }
 
-    void setTreatAsRunOnce() { bitFields_.treatAsRunOnce_ = true; }
-    void setHasRunOnce() { bitFields_.hasRunOnce_ = true; }
-    void setHasBeenCloned() { bitFields_.hasBeenCloned_ = true; }
+    void setTreatAsRunOnce() { setFlag(ImmutableFlags::TreatAsRunOnce); }
+    void setHasRunOnce() { setFlag(MutableFlags::HasRunOnce); }
+    void setHasBeenCloned() { setFlag(MutableFlags::HasBeenCloned); }
 
-    bool isActiveEval() const { return bitFields_.isActiveEval_; }
-    bool isCachedEval() const { return bitFields_.isCachedEval_; }
+    bool isActiveEval() const { return hasFlag(MutableFlags::IsActiveEval); }
+    bool isCachedEval() const { return hasFlag(MutableFlags::IsCachedEval); }
 
     void cacheForEval() {
         MOZ_ASSERT(isActiveEval());
         MOZ_ASSERT(!isCachedEval());
-        bitFields_.isActiveEval_ = false;
-        bitFields_.isCachedEval_ = true;
+        clearFlag(MutableFlags::IsActiveEval);
+        setFlag(MutableFlags::IsCachedEval);
         // IsEvalCacheCandidate will make sure that there's nothing in this
         // script that would prevent reexecution even if isRunOnce is
         // true.  So just pretend like we never ran this script.
-        bitFields_.hasRunOnce_ = false;
+        clearFlag(MutableFlags::HasRunOnce);
     }
 
     void uncacheForEval() {
         MOZ_ASSERT(isCachedEval());
         MOZ_ASSERT(!isActiveEval());
-        bitFields_.isCachedEval_ = false;
-        bitFields_.isActiveEval_ = true;
+        clearFlag(MutableFlags::IsCachedEval);
+        setFlag(MutableFlags::IsActiveEval);
     }
 
-    void setActiveEval() { bitFields_.isActiveEval_ = true; }
+    void setActiveEval() { setFlag(MutableFlags::IsActiveEval); }
 
     bool isLikelyConstructorWrapper() const {
-        return bitFields_.isLikelyConstructorWrapper_;
+        return hasFlag(ImmutableFlags::IsLikelyConstructorWrapper);
     }
-    void setLikelyConstructorWrapper() { bitFields_.isLikelyConstructorWrapper_ = true; }
+    void setLikelyConstructorWrapper() {
+        setFlag(ImmutableFlags::IsLikelyConstructorWrapper);
+    }
 
     bool failedBoundsCheck() const {
-        return bitFields_.failedBoundsCheck_;
+        return hasFlag(MutableFlags::FailedBoundsCheck);
     }
     bool failedShapeGuard() const {
-        return bitFields_.failedShapeGuard_;
+        return hasFlag(MutableFlags::FailedShapeGuard);
     }
     bool hadFrequentBailouts() const {
-        return bitFields_.hadFrequentBailouts_;
+        return hasFlag(MutableFlags::HadFrequentBailouts);
     }
     bool hadOverflowBailout() const {
-        return bitFields_.hadOverflowBailout_;
+        return hasFlag(MutableFlags::HadOverflowBailout);
     }
     bool uninlineable() const {
-        return bitFields_.uninlineable_;
+        return hasFlag(MutableFlags::Uninlineable);
     }
     bool invalidatedIdempotentCache() const {
-        return bitFields_.invalidatedIdempotentCache_;
+        return hasFlag(MutableFlags::InvalidatedIdempotentCache);
     }
     bool failedLexicalCheck() const {
-        return bitFields_.failedLexicalCheck_;
+        return hasFlag(MutableFlags::FailedLexicalCheck);
     }
     bool isDefaultClassConstructor() const {
-        return bitFields_.isDefaultClassConstructor_;
+        return hasFlag(ImmutableFlags::IsDefaultClassConstructor);
     }
 
-    void setFailedBoundsCheck() { bitFields_.failedBoundsCheck_ = true; }
-    void setFailedShapeGuard() { bitFields_.failedShapeGuard_ = true; }
-    void setHadFrequentBailouts() { bitFields_.hadFrequentBailouts_ = true; }
-    void setHadOverflowBailout() { bitFields_.hadOverflowBailout_ = true; }
-    void setUninlineable() { bitFields_.uninlineable_ = true; }
-    void setInvalidatedIdempotentCache() { bitFields_.invalidatedIdempotentCache_ = true; }
-    void setFailedLexicalCheck() { bitFields_.failedLexicalCheck_ = true; }
-    void setIsDefaultClassConstructor() { bitFields_.isDefaultClassConstructor_ = true; }
+    void setFailedBoundsCheck() { setFlag(MutableFlags::FailedBoundsCheck); }
+    void setFailedShapeGuard() { setFlag(MutableFlags::FailedShapeGuard); }
+    void setHadFrequentBailouts() { setFlag(MutableFlags::HadFrequentBailouts); }
+    void setHadOverflowBailout() { setFlag(MutableFlags::HadOverflowBailout); }
+    void setUninlineable() { setFlag(MutableFlags::Uninlineable); }
+    void setInvalidatedIdempotentCache() { setFlag(MutableFlags::InvalidatedIdempotentCache); }
+    void setFailedLexicalCheck() { setFlag(MutableFlags::FailedLexicalCheck); }
+    void setIsDefaultClassConstructor() { setFlag(ImmutableFlags::IsDefaultClassConstructor); }
 
-    bool hasScriptCounts() const { return bitFields_.hasScriptCounts_; }
+    bool hasScriptCounts() const { return hasFlag(MutableFlags::HasScriptCounts); }
     bool hasScriptName();
 
-    bool hasFreezeConstraints() const { return bitFields_.hasFreezeConstraints_; }
-    void setHasFreezeConstraints() { bitFields_.hasFreezeConstraints_ = true; }
+    bool hasFreezeConstraints() const { return hasFlag(MutableFlags::HasFreezeConstraints); }
+    void setHasFreezeConstraints() { setFlag(MutableFlags::HasFreezeConstraints); }
 
-    bool warnedAboutUndefinedProp() const { return bitFields_.warnedAboutUndefinedProp_; }
-    void setWarnedAboutUndefinedProp() { bitFields_.warnedAboutUndefinedProp_ = true; }
+    bool warnedAboutUndefinedProp() const { return hasFlag(MutableFlags::WarnedAboutUndefinedProp); }
+    void setWarnedAboutUndefinedProp() { setFlag(MutableFlags::WarnedAboutUndefinedProp); }
 
     /* See ContextFlags::funArgumentsHasLocalBinding comment. */
     bool argumentsHasVarBinding() const {
-        return bitFields_.argsHasVarBinding_;
+        return hasFlag(ImmutableFlags::ArgsHasVarBinding);
     }
     void setArgumentsHasVarBinding();
     bool argumentsAliasesFormals() const {
@@ -2112,52 +2153,36 @@ class JSScript : public js::gc::TenuredCell
     }
 
     js::GeneratorKind generatorKind() const {
-        return bitFields_.isGenerator_ ? js::GeneratorKind::Generator : js::GeneratorKind::NotGenerator;
+        return isGenerator() ? js::GeneratorKind::Generator : js::GeneratorKind::NotGenerator;
     }
-    bool isGenerator() const { return bitFields_.isGenerator_; }
-    void setGeneratorKind(js::GeneratorKind kind) {
-        // A script only gets its generator kind set as part of initialization,
-        // so it can only transition from not being a generator.
-        MOZ_ASSERT(!isGenerator());
-        bitFields_.isGenerator_ = kind == js::GeneratorKind::Generator;
-    }
+    bool isGenerator() const { return hasFlag(ImmutableFlags::IsGenerator); }
 
     js::FunctionAsyncKind asyncKind() const {
-        return bitFields_.isAsync_
+        return isAsync()
                ? js::FunctionAsyncKind::AsyncFunction
                : js::FunctionAsyncKind::SyncFunction;
     }
     bool isAsync() const {
-        return bitFields_.isAsync_;
-    }
-
-    void setAsyncKind(js::FunctionAsyncKind kind) {
-        bitFields_.isAsync_ = kind == js::FunctionAsyncKind::AsyncFunction;
+        return hasFlag(ImmutableFlags::IsAsync);
     }
 
     bool hasRest() const {
-        return bitFields_.hasRest_;
-    }
-    void setHasRest() {
-        bitFields_.hasRest_ = true;
+        return hasFlag(ImmutableFlags::HasRest);
     }
 
     bool hideScriptFromDebugger() const {
-        return bitFields_.hideScriptFromDebugger_;
+        return hasFlag(ImmutableFlags::HideScriptFromDebugger);
     }
     void clearHideScriptFromDebugger() {
-        bitFields_.hideScriptFromDebugger_ = false;
+        clearFlag(ImmutableFlags::HideScriptFromDebugger);
     }
 
-    void setNeedsHomeObject() {
-        bitFields_.needsHomeObject_ = true;
-    }
     bool needsHomeObject() const {
-        return bitFields_.needsHomeObject_;
+        return hasFlag(ImmutableFlags::NeedsHomeObject);
     }
 
     bool isDerivedClassConstructor() const {
-        return bitFields_.isDerivedClassConstructor_;
+        return hasFlag(ImmutableFlags::IsDerivedClassConstructor);
     }
 
     /*
@@ -2170,21 +2195,21 @@ class JSScript : public js::gc::TenuredCell
      * maintain the invariant that needsArgsObj is only called after the script
      * has been analyzed.
      */
-    bool analyzedArgsUsage() const { return !bitFields_.needsArgsAnalysis_; }
+    bool analyzedArgsUsage() const { return !hasFlag(MutableFlags::NeedsArgsAnalysis); }
     inline bool ensureHasAnalyzedArgsUsage(JSContext* cx);
     bool needsArgsObj() const {
         MOZ_ASSERT(analyzedArgsUsage());
-        return bitFields_.needsArgsObj_;
+        return hasFlag(MutableFlags::NeedsArgsObj);
     }
     void setNeedsArgsObj(bool needsArgsObj);
     static bool argumentsOptimizationFailed(JSContext* cx, js::HandleScript script);
 
     bool hasMappedArgsObj() const {
-        return bitFields_.hasMappedArgsObj_;
+        return hasFlag(ImmutableFlags::HasMappedArgsObj);
     }
 
     bool functionHasThisBinding() const {
-        return bitFields_.functionHasThisBinding_;
+        return hasFlag(ImmutableFlags::FunctionHasThisBinding);
     }
 
     /*
@@ -2200,24 +2225,20 @@ class JSScript : public js::gc::TenuredCell
     }
 
     uint32_t typesGeneration() const {
-        return (uint32_t) bitFields_.typesGeneration_;
+        return uint32_t(hasFlag(MutableFlags::TypesGeneration));
     }
 
     void setTypesGeneration(uint32_t generation) {
         MOZ_ASSERT(generation <= 1);
-        bitFields_.typesGeneration_ = (bool) generation;
+        setFlag(MutableFlags::TypesGeneration, bool(generation));
     }
 
     void setDoNotRelazify(bool b) {
-        bitFields_.doNotRelazify_ = b;
-    }
-
-    void setHasInnerFunctions(bool b) {
-        bitFields_.hasInnerFunctions_ = b;
+        setFlag(MutableFlags::DoNotRelazify, b);
     }
 
     bool hasInnerFunctions() const {
-        return bitFields_.hasInnerFunctions_;
+        return hasFlag(ImmutableFlags::HasInnerFunctions);
     }
 
     bool hasAnyIonScript() const {
@@ -2282,11 +2303,11 @@ class JSScript : public js::gc::TenuredCell
     }
 
     bool isRelazifiable() const {
-        return (selfHosted() || lazyScript) && !bitFields_.hasInnerFunctions_ && !types_ &&
+        return (selfHosted() || lazyScript) && !hasInnerFunctions() && !types_ &&
                !isGenerator() && !isAsync() &&
                !isDefaultClassConstructor() &&
                !hasBaselineScript() && !hasAnyIonScript() &&
-               !bitFields_.doNotRelazify_;
+               !hasFlag(MutableFlags::DoNotRelazify);
     }
     void setLazyScript(js::LazyScript* lazy) {
         lazyScript = lazy;
@@ -2416,8 +2437,9 @@ class JSScript : public js::gc::TenuredCell
     }
 
     bool functionHasExtraBodyVarScope() const {
-        MOZ_ASSERT_IF(bitFields_.functionHasExtraBodyVarScope_, functionHasParameterExprs());
-        return bitFields_.functionHasExtraBodyVarScope_;
+        bool res = hasFlag(ImmutableFlags::FunctionHasExtraBodyVarScope);
+        MOZ_ASSERT_IF(res, functionHasParameterExprs());
+        return res;
     }
 
     js::VarScope* functionExtraBodyVarScope() const {
@@ -2658,9 +2680,13 @@ class JSScript : public js::gc::TenuredCell
     js::DebugScript* releaseDebugScript();
     void destroyDebugScript(js::FreeOp* fop);
 
+    bool hasDebugScript() const {
+        return hasFlag(MutableFlags::HasDebugScript);
+    }
+
   public:
     bool hasBreakpointsAt(jsbytecode* pc);
-    bool hasAnyBreakpointsOrStepMode() { return bitFields_.hasDebugScript_; }
+    bool hasAnyBreakpointsOrStepMode() { return hasDebugScript(); }
 
     // See comment above 'debugMode' in Realm.h for explanation of
     // invariants of debuggee compartments, scripts, and frames.
@@ -2668,7 +2694,7 @@ class JSScript : public js::gc::TenuredCell
 
     js::BreakpointSite* getBreakpointSite(jsbytecode* pc)
     {
-        return bitFields_.hasDebugScript_ ? debugScript()->breakpoints[pcToOffset(pc)] : nullptr;
+        return hasDebugScript() ? debugScript()->breakpoints[pcToOffset(pc)] : nullptr;
     }
 
     js::BreakpointSite* getOrCreateBreakpointSite(JSContext* cx, jsbytecode* pc);
@@ -2686,10 +2712,10 @@ class JSScript : public js::gc::TenuredCell
     bool incrementStepModeCount(JSContext* cx);
     void decrementStepModeCount(js::FreeOp* fop);
 
-    bool stepModeEnabled() { return bitFields_.hasDebugScript_ && !!debugScript()->stepMode; }
+    bool stepModeEnabled() { return hasDebugScript() && !!debugScript()->stepMode; }
 
 #ifdef DEBUG
-    uint32_t stepModeCount() { return bitFields_.hasDebugScript_ ? debugScript()->stepMode : 0; }
+    uint32_t stepModeCount() { return hasDebugScript() ? debugScript()->stepMode : 0; }
 #endif
 
     void finalize(js::FreeOp* fop);

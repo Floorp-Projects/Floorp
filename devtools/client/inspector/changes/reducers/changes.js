@@ -133,6 +133,7 @@ function removeRule(ruleId, rules) {
  *      rules: {
  *        <ruleId>: {
  *          selector: "" // String CSS selector or CSS at-rule text
+ *          changeType:  // Optional string: "rule-add" or "rule-remove"
  *          children: [] // Array of <ruleId> for child rules of this rule.
  *          parent:      // <ruleId> of the parent rule
  *          add: {
@@ -166,9 +167,12 @@ const reducers = {
     state = cloneState(state);
 
     const { type, href, index } = change.source;
-    const { selector, ancestors, ruleIndex } = change;
+    const { selector, ancestors, ruleIndex, type: changeType } = change;
     const sourceId = getSourceHash(change.source);
     const ruleId = getRuleHash({ selector, ancestors, ruleIndex });
+    // Type coerce to boolean: `false` if value is undefined or `null`, `true` otherwise.
+    const hasAdd = !!change.add;
+    const hasRemove = !!change.remove;
 
     // Copy or create object identifying the source (styelsheet/element) for this change.
     const source = Object.assign({}, state[sourceId], { type, href, index });
@@ -178,37 +182,41 @@ const reducers = {
     let rule = rules[ruleId];
     if (!rule) {
       rule = createRule({ selector, ancestors, ruleIndex }, rules);
+      if (changeType.startsWith("rule-")) {
+        rule.changeType = changeType;
+      }
     }
     // Copy or create collection of all CSS declarations ever added to this rule.
     const add = Object.assign({}, rule.add);
     // Copy or create collection of all CSS declarations ever removed from this rule.
     const remove = Object.assign({}, rule.remove);
 
-    if (change.remove && change.remove.property) {
-      // Track the remove operation only if the property was not previously introduced
-      // by an add operation. This ensures repeated changes of the same property
-      // register as a single remove operation of its original value.
-      if (!add[change.remove.property]) {
-        remove[change.remove.property] = change.remove.value;
-      }
+    if (hasRemove) {
+      Object.entries(change.remove).forEach(([property, value]) => {
+        // Track the remove operation only if the property was not previously introduced
+        // by an add operation. This ensures repeated changes of the same property
+        // register as a single remove operation of its original value.
+        if (!add[property]) {
+          remove[property] = value;
+        }
 
-      // Delete any previous add operation which would be canceled out by this remove.
-      if (add[change.remove.property] === change.remove.value) {
-        delete add[change.remove.property];
-      }
+        // Delete any previous add operation which would be canceled out by this remove.
+        if (add[property] === value) {
+          delete add[property];
+        }
+      });
     }
 
-    if (change.add && change.add.property) {
-      add[change.add.property] = change.add.value;
-    }
+    if (hasAdd) {
+      Object.entries(change.add).forEach(([property, value]) => {
+        add[property] = value;
 
-    const property = change.add && change.add.property ||
-                     change.remove && change.remove.property;
-
-    // Remove tracked operations if they cancel each other out.
-    if (add[property] === remove[property]) {
-      delete add[property];
-      delete remove[property];
+        // Remove previously tracked declarations if they cancel each other out.
+        if (add[property] === remove[property]) {
+          delete add[property];
+          delete remove[property];
+        }
+      });
     }
 
     // Remove information about the rule if none its declarations changed.

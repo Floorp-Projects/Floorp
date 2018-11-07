@@ -843,7 +843,7 @@ var CustomizableUIInternal = {
           // node is not removable, we leave it where it is. However, we can only
           // safely touch elements that have an ID - both because we depend on
           // IDs (or are specials), and because such elements are not intended to
-          // be widgets (eg, titlebar-placeholder elements).
+          // be widgets (eg, titlebar-spacer elements).
           if ((node.id || this.isSpecialWidget(node)) &&
               node.getAttribute("skipintoolbarset") != "true") {
             if (this.isWidgetRemovable(node)) {

@@ -4,14 +4,3 @@
 
 %include ../shared/compacttheme.inc.css
 
-/* The menubar and tabs toolbar should match the devedition theme */
-#TabsToolbar,
-#toolbar-menubar {
-  -moz-appearance: none !important;
-}
-
-#main-menubar > menu:not([open]) {
-  color: inherit;
-}
-
-

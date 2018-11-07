@@ -7733,6 +7733,42 @@
     "description": "a testing histogram; not meant to be touched",
     "operating_systems": ["mac"]
   },
+  "TELEMETRY_TEST_MAIN_ONLY": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 2147483646,
+    "n_buckets": 10,
+    "bug_numbers": [1498164],
+    "description": "a testing histogram; not meant to be touched",
+    "record_into_store": ["main"]
+  },
+  "TELEMETRY_TEST_SYNC_ONLY": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 2147483646,
+    "n_buckets": 10,
+    "bug_numbers": [1498164],
+    "description": "a testing histogram; not meant to be touched",
+    "record_into_store": ["sync"]
+  },
+  "TELEMETRY_TEST_MULTIPLE_STORES": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 2147483646,
+    "n_buckets": 10,
+    "bug_numbers": [1498164],
+    "description": "a testing histogram; not meant to be touched",
+    "record_into_store": ["main", "sync"]
+  },
   "STARTUP_CRASH_DETECTED": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -10847,10 +10883,12 @@
   },
   "SSL_CERT_VERIFICATION_ERRORS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["seceng@mozilla.org"],
-    "expires_in_version": "default",
+    "alert_emails": ["jhofmann@mozilla.com", "rtestard@mozilla.com", "seceng@mozilla.org"],
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "bug_numbers": [1503572],
+    "releaseChannelCollection": "opt-out",
     "description": "If certificate verification failed in a TLS handshake, what was the error? (see MapCertErrorToProbeValue in security/manager/ssl/SSLServerCertVerification.cpp and the values in security/pkix/include/pkix/Result.h)"
   },
   "SSL_CT_POLICY_COMPLIANCE_OF_EV_CERTS": {

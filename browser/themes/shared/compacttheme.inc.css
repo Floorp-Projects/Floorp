@@ -10,8 +10,6 @@
   --toolbar-non-lwt-bgcolor: var(--toolbar-bgcolor);
   --toolbar-non-lwt-textcolor: var(--lwt-text-color);
   --toolbar-non-lwt-bgimage: none;
-
-  --toolbarbutton-icon-fill-opacity: .7;
 }
 
 :root:-moz-lwtheme-brighttext {

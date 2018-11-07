@@ -1071,6 +1071,72 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     return ancestors;
   },
 
+  /**
+   * Return an object with information about this rule used for tracking changes.
+   * It will be decorated with information about a CSS change before being tracked.
+   *
+   * It contains:
+   * - the rule selector (or generated selectror for inline styles)
+   * - the rule's host stylesheet (or element for inline styles)
+   * - the rule's ancestor rules (@media, @supports, @keyframes), if any
+   * - the rule's position within its ancestor tree, if any
+   *
+   * @return {Object}
+   */
+  get metadata() {
+    const data = {};
+    // Collect information about the rule's ancestors (@media, @supports, @keyframes).
+    // Used to show context for this change in the UI and to match the rule for undo/redo.
+    data.ancestors = this.ancestorRules.map(rule => {
+      return {
+        // Rule type as number defined by CSSRule.type (ex: 4, 7, 12)
+        // @see https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
+        type: rule.rawRule.type,
+        // Rule type as human-readable string (ex: "@media", "@supports", "@keyframes")
+        typeName: CSSRuleTypeName[rule.rawRule.type],
+        // Conditions of @media and @supports rules (ex: "min-width: 1em")
+        conditionText: rule.rawRule.conditionText,
+        // Name of @keyframes rule; refrenced by the animation-name CSS property.
+        name: rule.rawRule.name,
+        // Selector of individual @keyframe rule within a @keyframes rule (ex: 0%, 100%).
+        keyText: rule.rawRule.keyText,
+        // Array with the indexes of this rule and its ancestors within the CSS rule tree.
+        ruleIndex: rule._ruleIndex,
+      };
+    });
+
+    // For changes in element style attributes, generate a unique selector.
+    if (this.type === ELEMENT_STYLE) {
+      // findCssSelector() fails on XUL documents. Catch and silently ignore that error.
+      try {
+        data.selector = findCssSelector(this.rawNode);
+      } catch (err) {}
+
+      data.source = {
+        type: "element",
+        // Used to differentiate between elements which match the same generated selector
+        // but live in different documents (ex: host document and iframe).
+        href: this.rawNode.baseURI,
+        // Element style attributes don't have a rule index; use the generated selector.
+        index: data.selector,
+      };
+      data.ruleIndex = 0;
+    } else {
+      data.selector = (this.type === CSSRule.KEYFRAME_RULE)
+        ? this.rawRule.keyText
+        : this.rawRule.selectorText;
+      data.source = {
+        type: "stylesheet",
+        href: this.sheetActor.href,
+        index: this.sheetActor.styleSheetIndex,
+      };
+      // Used to differentiate between changes to rules with identical selectors.
+      data.ruleIndex = this._ruleIndex;
+    }
+
+    return data;
+  },
+
   getDocument: function(sheet) {
     if (sheet.ownerNode) {
       return sheet.ownerNode.nodeType == sheet.ownerNode.DOCUMENT_NODE ?
@@ -1346,7 +1412,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     }
 
     // Log the changes before applying them so we have access to the previous values.
-    modifications.map(mod => this.logChange(mod));
+    modifications.map(mod => this.logDeclarationChange(mod));
 
     if (this.type === ELEMENT_STYLE) {
       // For element style rules, set the node's style attribute.
@@ -1406,7 +1472,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     const tempElement = document.createElementNS(XHTML_NS, "div");
 
     for (const mod of modifications) {
-      this.logChange(mod);
+      this.logDeclarationChange(mod);
       if (mod.type === "set") {
         tempElement.style.setProperty(mod.name, mod.value, mod.priority || "");
         this.rawStyle.setProperty(mod.name,
@@ -1482,13 +1548,13 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
   },
 
   /**
-   * Take an object with instructions to modify a CSS declaration and emit a
-   * "track-change" event with normalized metadata which describes the change.
+   * Take an object with instructions to modify a CSS declaration and log an object with
+   * normalized metadata which describes the change in the context of this rule.
    *
    * @param {Object} change
    *        Data about a modification to a rule. @see |modifyProperties()|
    */
-  logChange(change) {
+  logDeclarationChange(change) {
     // Destructure properties from the previous CSS declaration at this index, if any,
     // to new variable names to indicate the previous state.
     let {
@@ -1503,59 +1569,11 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     // Append the "!important" string if defined in the previous priority flag.
     prevValue = (prevValue && prevPriority) ? `${prevValue} !important` : prevValue;
 
-    // Metadata about a change.
-    const data = {};
-    // Collect information about the rule's ancestors (@media, @supports, @keyframes).
-    // Used to show context for this change in the UI and to match the rule for undo/redo.
-    data.ancestors = this.ancestorRules.map(rule => {
-      return {
-        // Rule type as number defined by CSSRule.type (ex: 4, 7, 12)
-        // @see https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
-        type: rule.rawRule.type,
-        // Rule type as human-readable string (ex: "@media", "@supports", "@keyframes")
-        typeName: CSSRuleTypeName[rule.rawRule.type],
-        // Conditions of @media and @supports rules (ex: "min-width: 1em")
-        conditionText: rule.rawRule.conditionText,
-        // Name of @keyframes rule; refrenced by the animation-name CSS property.
-        name: rule.rawRule.name,
-        // Selector of individual @keyframe rule within a @keyframes rule (ex: 0%, 100%).
-        keyText: rule.rawRule.keyText,
-        // Array with the indexes of this rule and its ancestors within the CSS rule tree.
-        ruleIndex: rule._ruleIndex,
-      };
-    });
-
-    // For changes in element style attributes, generate a unique selector.
-    if (this.type === ELEMENT_STYLE) {
-      // findCssSelector() fails on XUL documents. Catch and silently ignore that error.
-      try {
-        data.selector = findCssSelector(this.rawNode);
-      } catch (err) {}
-
-      data.source = {
-        type: "element",
-        // Used to differentiate between elements which match the same generated selector
-        // but live in different documents (ex: host document and iframe).
-        href: this.rawNode.baseURI,
-        // Element style attributes don't have a rule index; use the generated selector.
-        index: data.selector,
-      };
-      data.ruleIndex = 0;
-    } else {
-      data.selector = (this.type === CSSRule.KEYFRAME_RULE)
-        ? this.rawRule.keyText
-        : this.rawRule.selectorText;
-      data.source = {
-        type: "stylesheet",
-        href: this.sheetActor.href,
-        index: this.sheetActor.styleSheetIndex,
-      };
-      // Used to differentiate between changes to rules with identical selectors.
-      data.ruleIndex = this._ruleIndex;
-    }
+    const data = this.metadata;
 
     switch (change.type) {
       case "set":
+        data.type = prevValue ? "declaration-add" : "declaration-update";
         // If `change.newName` is defined, use it because the property is being renamed.
         // Otherwise, a new declaration is being created or the value of an existing
         // declaration is being updated. In that case, use the provided `change.name`.
@@ -1566,11 +1584,11 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // Otherwise, use the incoming value string.
         const value = change.newName ? prevValue : newValue;
 
-        data.add = { property: name, value };
+        data.add = { [name]: value };
         // If there is a previous value, log its removal together with the previous
         // property name. Using the previous name handles the case for renaming a property
         // and is harmless when updating an existing value (the name stays the same).
-        data.remove = prevValue ? { property: prevName, value: prevValue } : null;
+        data.remove = prevValue ? { [prevName]: prevValue } : null;
 
         // When toggling a declaration from OFF to ON, if not renaming the property,
         // do not mark the previous declaration for removal, otherwise the add and
@@ -1583,12 +1601,50 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         break;
 
       case "remove":
+        data.type = "declaration-remove";
         data.add = null;
-        data.remove = { property: change.name, value: prevValue };
+        data.remove = { [change.name]: prevValue };
         break;
     }
 
     TrackChangeEmitter.trackChange(data);
+  },
+
+  /**
+   * Helper method for tracking CSS changes. Logs the change of this rule's selector as
+   * two operations: a rule removal, including its CSS declarations, using the old
+   * selector and a rule addition using the new selector.
+   *
+   * @param {String} oldSelector
+   *        This rule's previous selector.
+   * @param {String} newSelector
+   *        This rule's new selector.
+   */
+  logSelectorChange(oldSelector, newSelector) {
+    // Build a collection of CSS declarations existing on this rule.
+    const declarations = this._declarations.reduce((acc, decl) => {
+      acc[decl.name] = decl.priority ? decl.value + " !important" : decl.value;
+      return acc;
+    }, {});
+
+    // Logging two distinct operations to remove the old rule and add a new one.
+    // TODO: Make TrackChangeEmitter support transactions so these two operations are
+    // grouped together when implementing undo/redo.
+    TrackChangeEmitter.trackChange({
+      ...this.metadata,
+      type: "rule-remove",
+      add: null,
+      remove: declarations,
+      selector: oldSelector,
+    });
+
+    TrackChangeEmitter.trackChange({
+      ...this.metadata,
+      type: "rule-add",
+      add: declarations,
+      remove: null,
+      selector: newSelector,
+    });
   },
 
   /**
@@ -1628,11 +1684,14 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       return { ruleProps: null, isMatching: true };
     }
 
+    // The rule's previous selector is lost after calling _addNewSelector(). Save it now.
+    const oldValue = this.rawRule.selectorText;
     let selectorPromise = this._addNewSelector(value, editAuthored);
 
     if (editAuthored) {
       selectorPromise = selectorPromise.then((newCssRule) => {
         if (newCssRule) {
+          this.logSelectorChange(oldValue, value);
           const style = this.pageStyle._styleRef(newCssRule);
           // See the comment in |form| to understand this.
           return style.getAuthoredCssText().then(() => newCssRule);

@@ -2645,6 +2645,7 @@ CheckForApzAwareEventHandlers(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
 static bool
 FrameParticipatesIn3DContext(nsIFrame* aAncestor, nsIFrame* aDescendant) {
   MOZ_ASSERT(aAncestor != aDescendant);
+  MOZ_ASSERT(aAncestor->GetContent() != aDescendant->GetContent());
   MOZ_ASSERT(aAncestor->Extend3DContext());
 
   nsIFrame* ancestor = aAncestor->FirstContinuation();
@@ -2666,14 +2667,13 @@ FrameParticipatesIn3DContext(nsIFrame* aAncestor, nsIFrame* aDescendant) {
 static bool
 ItemParticipatesIn3DContext(nsIFrame* aAncestor, nsDisplayItem* aItem)
 {
-  nsIFrame* transformFrame;
-  if (aItem->GetType() == DisplayItemType::TYPE_TRANSFORM ||
-      aItem->GetType() == DisplayItemType::TYPE_PERSPECTIVE) {
-    transformFrame = aItem->Frame();
-  } else {
+  auto type = aItem->GetType();
+  if (type != DisplayItemType::TYPE_TRANSFORM &&
+      type != DisplayItemType::TYPE_PERSPECTIVE) {
     return false;
   }
-  if (aAncestor == transformFrame) {
+  nsIFrame* transformFrame = aItem->Frame();
+  if (aAncestor->GetContent() == transformFrame->GetContent()) {
     return true;
   }
   return FrameParticipatesIn3DContext(aAncestor, transformFrame);

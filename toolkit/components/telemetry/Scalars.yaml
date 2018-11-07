@@ -2472,6 +2472,49 @@ telemetry.test:
       - fennec
       - geckoview
 
+  main_only:
+    bug_numbers:
+      - 1498164
+    description: >
+      This is a test uint type with only the main store.
+    expires: never
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - 'main'
+
+  sync_only:
+    bug_numbers:
+      - 1498164
+    description: >
+      This is a test uint type with only the sync store.
+    expires: never
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - 'sync'
+
+  multiple_stores:
+    bug_numbers:
+      - 1498164
+    description: >
+      This is a test uint type with multiple stores.
+    expires: never
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - 'main'
+      - 'sync'
+
 # NOTE: Please don't add new definitions below this point. Consider adding
 # them earlier in the file and leave the telemetry.test category as the last
 # one for readability.

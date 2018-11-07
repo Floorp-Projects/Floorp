@@ -35,11 +35,21 @@ class ChangesApp extends PureComponent {
 
   renderDeclarations(remove = {}, add = {}) {
     const removals = Object.entries(remove).map(([property, value]) => {
-      return CSSDeclaration({ className: "level diff-remove", property, value });
+      return CSSDeclaration({
+        key: "remove-" + property,
+        className: "level diff-remove",
+        property,
+        value,
+      });
     });
 
     const additions = Object.entries(add).map(([property, value]) => {
-      return CSSDeclaration({ className: "level diff-add", property, value });
+      return CSSDeclaration({
+        key: "add-" + property,
+        className: "level diff-add",
+        property,
+        value,
+      });
     });
 
     return [removals, additions];
@@ -55,13 +65,21 @@ class ChangesApp extends PureComponent {
     // Mark this rule as rendered so we don't render it again.
     this.renderedRules.push(ruleId);
 
+    let diffClass = "";
+    if (rule.changeType === "rule-add") {
+      diffClass = "diff-add";
+    } else if (rule.changeType === "rule-remove") {
+      diffClass = "diff-remove";
+    }
+
     return dom.div(
       {
+        key: ruleId,
         className: "rule",
       },
       dom.div(
         {
-          className: "level selector",
+          className: `level selector ${diffClass}`,
           title: selector,
         },
         selector,
@@ -73,7 +91,7 @@ class ChangesApp extends PureComponent {
       }),
       // Render any changed CSS declarations.
       this.renderDeclarations(rule.remove, rule.add),
-      dom.span({ className: "level bracket-close" }, "}")
+      dom.div({ className: `level bracket-close ${diffClass}` }, "}")
     );
   }
 
@@ -85,6 +103,7 @@ class ChangesApp extends PureComponent {
 
       return dom.details(
         {
+          key: sourceId,
           className: "source devtools-monospace",
           open: true,
         },

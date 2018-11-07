@@ -4886,7 +4886,7 @@ JSScript::sweepTypes(const js::AutoSweepTypeScript& sweep)
 
         // Freeze constraints on stack type sets need to be regenerated the
         // next time the script is analyzed.
-        bitFields_.hasFreezeConstraints_ = false;
+        clearFlag(MutableFlags::HasFreezeConstraints);
 
         return;
     }
@@ -4902,7 +4902,7 @@ JSScript::sweepTypes(const js::AutoSweepTypeScript& sweep)
     if (zone()->types.hadOOMSweepingTypes()) {
         // It's possible we OOM'd while copying freeze constraints, so they
         // need to be regenerated.
-        bitFields_.hasFreezeConstraints_ = false;
+        clearFlag(MutableFlags::HasFreezeConstraints);
     }
 }
 

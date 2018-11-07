@@ -30,6 +30,6 @@ add_task(async function() {
   const allSections = [...flexSizingContainer.querySelectorAll(".section .name")];
 
   is(allSections.length, 2, "There are 2 parts in the sizing section");
-  is(allSections[0].textContent, "Base Size", "The first part is the base size");
+  is(allSections[0].textContent, "Content Size", "The first part is the content size");
   is(allSections[1].textContent, "Final Size", "The second part is the final size");
 });
