@@ -36,6 +36,8 @@
 
     <color name="colorDotHighlight">@color/photonBlue40</color>
 
+    <color name="colorCrashAccent">@color/photonBlue40</color>
+
     <color name="colorMenuBackground">#414141</color>
     <color name="colorMenuBackgroundDark">#272727</color>
 

@@ -673,6 +673,24 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         }
     }
 
+    internal fun showCrashReporter(crash: Crash) {
+        val fragmentManager = requireActivity().supportFragmentManager
+
+        Log.e("crash:", crash.toString())
+        if (fragmentManager.findFragmentByTag(CrashReporterFragment.FRAGMENT_TAG) != null) {
+            // We are already displaying the crash reporter
+            // No need to show another one.
+            return
+        }
+
+        val crashReporterFragment = CrashReporterFragment.create()
+
+        fragmentManager
+                .beginTransaction()
+                .add(R.id.container, crashReporterFragment, CrashReporterFragment.FRAGMENT_TAG)
+                .commit()
+    }
+
     internal fun showAddToHomescreenDialog(url: String, title: String) {
         val fragmentManager = fragmentManager
 
@@ -1369,6 +1387,8 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
     fun handleTabCrash(crash: Crash) {
         Log.e("crashed!", crash.toString())
+        showCrashReporter(crash)
+
     }
 
     companion object {
