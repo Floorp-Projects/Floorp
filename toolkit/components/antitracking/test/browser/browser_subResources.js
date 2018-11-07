@@ -156,55 +156,29 @@ add_task(async function() {
       is(text, 1, "One cookie received received for scripts.");
     });
 
-  let expectTrackerFound = item => {
-    is(item[0], Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT,
-       "Correct blocking type reported");
-    is(item[1], true,
-       "Correct blocking status reported");
-    ok(item[2] >= 1,
-       "Correct repeat count reported");
-  };
-
   let log = JSON.parse(await browser.getContentBlockingLog());
   for (let trackerOrigin in log) {
     is(trackerOrigin, TEST_3RD_PARTY_DOMAIN, "Correct tracker origin must be reported");
     let originLog = log[trackerOrigin];
-    is(originLog.length, 10, "We should have 10 entries in the compressed log");
-    expectTrackerFound(originLog[0]);
+    is(originLog.length, 3, "We should have 3 entries in the compressed log");
+    is(originLog[0][0], Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT,
+       "Correct blocking type reported");
+    is(originLog[0][1], true,
+       "Correct blocking status reported");
+    ok(originLog[0][2] >= 1,
+       "Correct repeat count reported");
     is(originLog[1][0], Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER,
        "Correct blocking type reported");
     is(originLog[1][1], true,
        "Correct blocking status reported");
-    is(originLog[1][2], 1,
+    is(originLog[1][2], 6,
        "Correct repeat count reported");
-    expectTrackerFound(originLog[2]);
-    is(originLog[3][0], Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER,
+    is(originLog[2][0], Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER,
        "Correct blocking type reported");
-    is(originLog[3][1], true,
+    is(originLog[2][1], false,
        "Correct blocking status reported");
-    is(originLog[3][2], 1,
+    ok(originLog[2][2] >= 1,
        "Correct repeat count reported");
-    expectTrackerFound(originLog[4]);
-    is(originLog[5][0], Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER,
-       "Correct blocking type reported");
-    is(originLog[5][1], true,
-       "Correct blocking status reported");
-    is(originLog[5][2], 1,
-       "Correct repeat count reported");
-    expectTrackerFound(originLog[6]);
-    is(originLog[7][0], Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER,
-       "Correct blocking type reported");
-    is(originLog[7][1], true,
-       "Correct blocking status reported");
-    is(originLog[7][2], 3,
-       "Correct repeat count reported");
-    is(originLog[8][0], Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER,
-       "Correct blocking type reported");
-    is(originLog[8][1], false,
-       "Correct blocking status reported");
-    is(originLog[8][2], 1,
-       "Correct repeat count reported");
-    expectTrackerFound(originLog[9]);
   }
 
   info("Removing the tab");

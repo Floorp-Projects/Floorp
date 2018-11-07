@@ -45,7 +45,7 @@ RsdparsaSdp::RsdparsaSdp(RsdparsaSessionHandle session, const SdpOrigin& origin)
                                                   std::move(newSession),
                                                   mediaSection,
                                                   mAttributeList.get());
-    mMediaSections.values.push_back(sdpMediaSection);
+    mMediaSections.emplace_back(sdpMediaSection);
   }
 }
 
@@ -64,19 +64,19 @@ RsdparsaSdp::GetBandwidth(const std::string& type) const
 const SdpMediaSection&
 RsdparsaSdp::GetMediaSection(size_t level) const
 {
-  if (level > mMediaSections.values.size()) {
+  if (level > mMediaSections.size()) {
     MOZ_CRASH();
   }
-  return *mMediaSections.values[level];
+  return *mMediaSections[level];
 }
 
 SdpMediaSection&
 RsdparsaSdp::GetMediaSection(size_t level)
 {
-  if (level > mMediaSections.values.size()) {
+  if (level > mMediaSections.size()) {
     MOZ_CRASH();
   }
-  return *mMediaSections.values[level];
+  return *mMediaSections[level];
 }
 
 SdpMediaSection&
@@ -91,7 +91,7 @@ RsdparsaSdp::AddMediaSection(SdpMediaSection::MediaType mediaType,
                                                  protocol,addrType,rustAddr);
 
   if (NS_SUCCEEDED(nr)) {
-    size_t level = mMediaSections.values.size();
+    size_t level = mMediaSections.size();
     RsdparsaSessionHandle newSessHandle(sdp_new_reference(mSession.get()));
 
     auto rustMediaSection = sdp_get_media_section(mSession.get(), level);
@@ -99,12 +99,12 @@ RsdparsaSdp::AddMediaSection(SdpMediaSection::MediaType mediaType,
                                                     std::move(newSessHandle),
                                                     rustMediaSection,
                                                     mAttributeList.get());
-    mMediaSections.values.push_back(mediaSection);
+    mMediaSections.emplace_back(mediaSection);
 
     return *mediaSection;
   } else {
     // Return the last media section if the construction of this one fails
-    return GetMediaSection(mMediaSections.values.size()-1);
+    return GetMediaSection(mMediaSections.size()-1);
   }
 
 }
@@ -132,7 +132,7 @@ RsdparsaSdp::Serialize(std::ostream& os) const
   os << *mAttributeList;
 
   // media sections
-  for (const SdpMediaSection* msection : mMediaSections.values) {
+  for (const auto& msection : mMediaSections) {
     os << *msection;
   }
 }

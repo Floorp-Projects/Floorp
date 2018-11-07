@@ -773,8 +773,8 @@ CFR impression ping has two forms, in which the message_id could be of different
   "addon_version": "20180710100040",
   "locale": "en-US",
   "source": "CFR",
-  // message_id could be the ID of the recommendation, such as "amazon_addon"
-  "message_id": "amazon_addon",
+  // message_id could be the ID of the recommendation, such as "wikipedia_addon"
+  "message_id": "wikipedia_addon",
   "event": "IMPRESSION"
 }
 ```
@@ -836,8 +836,8 @@ This reports the user's interaction with Activity Stream Router.
   "impression_id": "n/a",
   "locale": "en-US",
   "source": "CFR",
-  // message_id could be the ID of the recommendation, such as "amazon_addon"
-  "message_id": "amazon_addon",
+  // message_id could be the ID of the recommendation, such as "wikipedia_addon"
+  "message_id": "wikipedia_addon",
   "event": "[INSTALL | BLOCK | DISMISS | RATIONALE | LEARN_MORE | CLICK_DOORHANGER]"
 }
 ```

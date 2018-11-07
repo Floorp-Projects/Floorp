@@ -138,7 +138,6 @@ public:
   SourceSurfaceSharedData()
     : mMutex("SourceSurfaceSharedData")
     , mStride(0)
-    , mMapCount(0)
     , mHandleCount(0)
     , mFormat(SurfaceFormat::UNKNOWN)
     , mClosed(false)
@@ -326,7 +325,6 @@ private:
 
   ~SourceSurfaceSharedData() override
   {
-    MOZ_ASSERT(mMapCount == 0);
   }
 
   void LockHandle()
@@ -364,7 +362,6 @@ private:
 
   mutable Mutex mMutex;
   int32_t mStride;
-  int32_t mMapCount;
   int32_t mHandleCount;
   Maybe<IntRect> mDirtyRect;
   IntSize mSize;

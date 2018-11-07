@@ -179,6 +179,22 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// How long a content process can take before closing its IPC channel
+// after shutdown is initiated.  If the process exceeds the timeout,
+// we fear the worst and kill it.
+#if !defined(DEBUG) && !defined(MOZ_ASAN) && !defined(MOZ_VALGRIND) && \
+    !defined(MOZ_TSAN)
+# define PREF_VALUE 10
+#else
+# define PREF_VALUE 0
+#endif
+VARCACHE_PREF(
+  "dom.ipc.tabs.shutdownTimeoutSecs",
+   dom_ipc_tabs_shutdownTimeoutSecs,
+  RelaxedAtomicUint32, PREF_VALUE
+)
+#undef PREF_VALUE
+
 // If this is true, "keypress" event's keyCode value and charCode value always
 // become same if the event is not created/initialized by JS.
 VARCACHE_PREF(

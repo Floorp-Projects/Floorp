@@ -192,15 +192,8 @@ DBusRemoteClient::DoSendDBusCommandLine(const char *aProgram, const char *aProfi
   }
 
   // send message and get a handle for a reply
-  DBusError err;
-  dbus_error_init(&err);
   RefPtr<DBusMessage> reply = already_AddRefed<DBusMessage>(
-      dbus_connection_send_with_reply_and_block(mConnection, msg, -1, &err));
+      dbus_connection_send_with_reply_and_block(mConnection, msg, -1, nullptr));
 
-  if (dbus_error_is_set(&err)) {
-      dbus_error_free(&err);
-      return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return reply ? NS_OK : NS_ERROR_FAILURE;
 }

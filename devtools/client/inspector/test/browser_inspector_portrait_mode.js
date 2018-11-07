@@ -35,7 +35,7 @@ add_task(async function() {
   ok(splitter.classList.contains("horz"), "Splitter is in horizontal mode");
 
   info("Close the inspector");
-  await gDevTools.closeToolbox(toolbox.target);
+  await toolbox.destroy();
 
   info("Reopen inspector");
   ({ inspector, toolbox } = await openInspector("window"));

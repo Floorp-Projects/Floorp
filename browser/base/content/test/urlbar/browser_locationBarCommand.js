@@ -46,7 +46,12 @@ add_task(async function shift_left_click_test() {
   is(win.gURLBar.textValue, TEST_VALUE, "New URL is loaded in new window");
 
   // Cleanup.
+  let ourWindowRefocusedPromise = Promise.all([
+    BrowserTestUtils.waitForEvent(window, "activate"),
+    BrowserTestUtils.waitForEvent(window, "focus", true),
+  ]);
   await BrowserTestUtils.closeWindow(win);
+  await ourWindowRefocusedPromise;
 });
 
 add_task(async function right_click_test() {

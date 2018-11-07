@@ -8,7 +8,6 @@
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const PREF_APP_UPDATE_AUTO                       = "app.update.auto";
 const PREF_APP_UPDATE_BACKGROUNDERRORS           = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_BACKGROUNDMAXERRORS        = "app.update.backgroundMaxErrors";
 const PREF_APP_UPDATE_CANCELATIONS               = "app.update.cancelations";
@@ -53,11 +52,13 @@ const DIR_UPDATED      = IS_MACOSX ? "Updated.app" : "updated";
 const FILE_ACTIVE_UPDATE_XML         = "active-update.xml";
 const FILE_APPLICATION_INI           = "application.ini";
 const FILE_BACKUP_UPDATE_LOG         = "backup-update.log";
+const FILE_BT_RESULT                 = "update.bt";
 const FILE_LAST_UPDATE_LOG           = "last-update.log";
 const FILE_UPDATE_SETTINGS_INI       = "update-settings.ini";
 const FILE_UPDATE_SETTINGS_INI_BAK   = "update-settings.ini.bak";
 const FILE_UPDATER_INI               = "updater.ini";
 const FILE_UPDATES_XML               = "updates.xml";
+const FILE_UPDATE_CONFIG             = "update-config.json";
 const FILE_UPDATE_LOG                = "update.log";
 const FILE_UPDATE_MAR                = "update.mar";
 const FILE_UPDATE_STATUS             = "update.status";
@@ -322,6 +323,19 @@ function readStatusFailedCode() {
 }
 
 /**
+ * Returns whether or not applying the current update resulted in an error
+ * verifying binary transparency information.
+ *
+ * @return true if there was an error result and false otherwise
+ */
+function updateHasBinaryTransparencyErrorResult() {
+  let file = getUpdatesPatchDir();
+  file.append(FILE_BT_RESULT);
+
+  return file.exists();
+}
+
+/**
  * Reads text from a file and returns the string.
  *
  * @param  aFile
@@ -580,6 +594,15 @@ function getGREDir() {
  */
 function getGREBinDir() {
   return Services.dirsvc.get(NS_GRE_BIN_DIR, Ci.nsIFile);
+}
+
+/**
+ * Returns the file containing update configuration
+ */
+function getUpdateConfigFile() {
+  let configFile = getUpdatesRootDir();
+  configFile.append(FILE_UPDATE_CONFIG);
+  return configFile;
 }
 
 /**

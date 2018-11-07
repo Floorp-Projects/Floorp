@@ -2102,6 +2102,7 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
   renderTargetingParameters() {
     // There was no error and the result is truthy
     const success = this.state.evaluationStatus.success && !!this.state.evaluationStatus.result;
+    const result = JSON.stringify(this.state.evaluationStatus.result, null, 2) || "(Empty result)";
 
     return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
       "table",
@@ -2142,7 +2143,7 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
                 { ref: "evaluationStatus" },
                 success ? "✅" : "❌",
                 ", Result: ",
-                JSON.stringify(this.state.evaluationStatus.result, null, 2)
+                result
               )
             )
           ),
@@ -9385,7 +9386,10 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
             const rows = Array.from(action.data.rows);
             section.rows.forEach((card, index) => {
               if (card.pinned) {
-                rows.splice(index, 0, card);
+                // Only add it if it's not already there.
+                if (rows[index].guid !== card.guid) {
+                  rows.splice(index, 0, card);
+                }
               }
             });
             return Object.assign({}, section, initialized, Object.assign({}, action.data, { rows }));

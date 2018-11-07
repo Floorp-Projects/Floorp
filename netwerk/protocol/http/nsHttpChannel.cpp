@@ -593,7 +593,17 @@ nsHttpChannel::OnBeforeConnect()
         return NS_ERROR_UNKNOWN_HOST;
 
     if (mUpgradeProtocolCallback) {
-        mCaps |=  NS_HTTP_DISALLOW_SPDY;
+        // Websockets can run over HTTP/2, but other upgrades can't.
+        if (mUpgradeProtocol.EqualsLiteral("websocket") &&
+            gHttpHandler->IsH2WebsocketsEnabled()) {
+            // Need to tell the conn manager that we're ok with http/2 even with
+            // the allow keepalive bit not set. That bit needs to stay off,
+            // though, in case we end up having to fallback to http/1.1 (where
+            // we absolutely do want to disable keepalive).
+            mCaps |= NS_HTTP_ALLOW_SPDY_WITHOUT_KEEPALIVE;
+        } else {
+            mCaps |=  NS_HTTP_DISALLOW_SPDY;
+        }
     }
 
     if (mTRR) {
@@ -7767,7 +7777,9 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         }
 
         if (mUpgradeProtocolCallback && stickyConn &&
-            mResponseHead && mResponseHead->Status() == 101) {
+            mResponseHead &&
+            ((mResponseHead->Status() == 101 && mResponseHead->Version() == HttpVersion::v1_1) ||
+             (mResponseHead->Status() == 200 && mResponseHead->Version() == HttpVersion::v2_0))) {
             nsresult rv =
                 gHttpHandler->ConnMgr()->CompleteUpgrade(stickyConn,
                                                          mUpgradeProtocolCallback);

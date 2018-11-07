@@ -33,6 +33,8 @@ class nsHttpChunkedDecoder;
 class nsHttpHeaderArray;
 class nsHttpRequestHead;
 class nsHttpResponseHead;
+class NullHttpTransaction;
+class SpdyConnectTransaction;
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction represents a single HTTP transaction.  It is thread-safe,
@@ -195,6 +197,9 @@ public:
     void SetFastOpenStatus(uint8_t aStatus) override;
 
     void SetHttpTrailers(nsCString &aTrailers);
+
+    bool IsWebsocketUpgrade();
+    void SetH2WSTransaction(SpdyConnectTransaction *);
 private:
     friend class DeleteHttpTransaction;
     virtual ~nsHttpTransaction();
@@ -467,6 +472,9 @@ private:
     } mEarlyDataDisposition;
 
     uint8_t mFastOpenStatus;
+
+    // H2 websocket support
+    RefPtr<SpdyConnectTransaction> mH2WSTransaction;
 };
 
 } // namespace net

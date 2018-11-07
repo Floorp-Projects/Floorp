@@ -33,17 +33,22 @@ NS_IMPL_ISUPPORTS(nsRemoteService,
 NS_IMETHODIMP
 nsRemoteService::Startup(const char* aAppName, const char* aProfileName)
 {
-#if defined(MOZ_ENABLE_DBUS) && defined(MOZ_WAYLAND)
-    nsresult rv;
-    mDBusRemoteService = new nsDBusRemoteService();
-    rv = mDBusRemoteService->Startup(aAppName, aProfileName);
-    if (NS_FAILED(rv)) {
-        mDBusRemoteService = nullptr;
+    bool useX11Remote = GDK_IS_X11_DISPLAY(gdk_display_get_default());
+
+#if defined(MOZ_ENABLE_DBUS)
+    if (!useX11Remote) {
+        nsresult rv;
+        mDBusRemoteService = new nsDBusRemoteService();
+        rv = mDBusRemoteService->Startup(aAppName, aProfileName);
+        if (NS_FAILED(rv)) {
+            mDBusRemoteService = nullptr;
+        }
     }
-#elif !defined(MOZ_WAYLAND)
-    mGtkRemoteService = new nsGTKRemoteService();
-    mGtkRemoteService->Startup(aAppName, aProfileName);
 #endif
+    if (useX11Remote) {
+        mGtkRemoteService = new nsGTKRemoteService();
+        mGtkRemoteService->Startup(aAppName, aProfileName);
+    }
 
     if (!mDBusRemoteService && !mGtkRemoteService)
         return NS_ERROR_FAILURE;
@@ -70,7 +75,7 @@ nsRemoteService::RegisterWindow(mozIDOMWindow* aWindow)
 NS_IMETHODIMP
 nsRemoteService::Shutdown()
 {
-#if defined(MOZ_ENABLE_DBUS) && defined(MOZ_WAYLAND)
+#if defined(MOZ_ENABLE_DBUS)
     if (mDBusRemoteService) {
         mDBusRemoteService->Shutdown();
         mDBusRemoteService = nullptr;

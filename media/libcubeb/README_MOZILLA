@@ -1,8 +1,0 @@
-The source from this directory was copied from the cubeb
-git repository using the update.sh script.  The only changes
-made were those applied by update.sh and the addition of
-Makefile.in build files for the Mozilla build system.
-
-The cubeb git repository is: git://github.com/kinetiknz/cubeb.git
-
-The git commit ID used was 9a7a55153e7f9b9e0036ab023909c7bc4a41688b (2018-10-30 09:05:26 +1300)

@@ -468,6 +468,7 @@ description#identity-popup-content-verifier,
   display: none;
   height: 32px;
   background-color: var(--arrowpanel-dimmed);
+  color: inherit;
 }
 
 .tracking-protection-button:hover {

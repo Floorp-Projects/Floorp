@@ -19,7 +19,7 @@
 :root:-moz-lwtheme {
   --toolbar-bgcolor: rgba(255,255,255,.4);
   --toolbar-bgimage: none;
-  --toolbar-color: inherit;
+  --toolbar-color: var(--lwt-text-color, inherit);
 
   background-color: var(--lwt-accent-color);
   color: var(--lwt-text-color);
