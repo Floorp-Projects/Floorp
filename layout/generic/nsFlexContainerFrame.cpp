@@ -1142,8 +1142,6 @@ public:
   void PositionItemsInCrossAxis(nscoord aLineStartPosition,
                                 const FlexboxAxisTracker& aAxisTracker);
 
-  friend class AutoFlexLineListClearer; // (needs access to mItems)
-
 private:
   // Helpers for ResolveFlexibleLengths():
   void FreezeItemsEarly(bool aIsUsingFlexGrow,
@@ -1152,7 +1150,7 @@ private:
   void FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
                                        bool aIsFinalIteration);
 
-  LinkedList<FlexItem> mItems; // Linked list of this line's flex items.
+  AutoCleanLinkedList<FlexItem> mItems; // Linked list of this line's items.
 
   uint32_t mNumItems; // Number of FlexItems in this line (in |mItems|).
                       // (Shouldn't change after GenerateFlexLines finishes
@@ -4539,34 +4537,6 @@ nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   }
 }
 
-// RAII class to clean up a list of FlexLines.
-// Specifically, this removes each line from the list, deletes all the
-// FlexItems in its list, and deletes the FlexLine.
-class MOZ_RAII AutoFlexLineListClearer
-{
-public:
-  explicit AutoFlexLineListClearer(LinkedList<FlexLine>& aLines
-                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-  : mLines(aLines)
-  {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  }
-
-  ~AutoFlexLineListClearer()
-  {
-    while (FlexLine* line = mLines.popFirst()) {
-      while (FlexItem* item = line->mItems.popFirst()) {
-        delete item;
-      }
-      delete line;
-    }
-  }
-
-private:
-  LinkedList<FlexLine>& mLines;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 // Class to let us temporarily provide an override value for the the main-size
 // CSS property ('width' or 'height') on a flex item, for use in
 // nsFrame::ComputeSizeWithIntrinsicDimensions.
@@ -4790,9 +4760,8 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
-  LinkedList<FlexLine> lines;
+  AutoCleanLinkedList<FlexLine> lines;
   nsTArray<nsIFrame*> placeholderKids;
-  AutoFlexLineListClearer cleanupLines(lines);
 
   GenerateFlexLines(aPresContext, aReflowInput,
                     aContentBoxMainSize,
