@@ -1365,7 +1365,7 @@ struct nsRecessedBorder : public nsStyleBorder {
       mBorder.Side(side) = aBorderWidth;
       // Note: use SetBorderStyle here because we want to affect
       // mComputedBorder
-      SetBorderStyle(side, NS_STYLE_BORDER_STYLE_INSET);
+      SetBorderStyle(side, StyleBorderStyle::Inset);
     }
   }
 };
@@ -1912,7 +1912,7 @@ nsImageFrame::PaintImage(gfxContext& aRenderingContext, nsPoint aPt,
     // then dashed black stroke over the top:
     ColorPattern black(ToDeviceColor(Color(0.f, 0.f, 0.f, 1.f)));
     StrokeOptions strokeOptions;
-    nsLayoutUtils::InitDashPattern(strokeOptions, NS_STYLE_BORDER_STYLE_DOTTED);
+    nsLayoutUtils::InitDashPattern(strokeOptions, StyleBorderStyle::Dotted);
     map->Draw(this, *drawTarget, black, strokeOptions);
   }
 

@@ -291,7 +291,7 @@ nsStyleBorder::nsStyleBorder(const nsPresContext* aContext)
     mBorderImageOutset.Set(side, nsStyleCoord(0.0f, eStyleUnit_Factor));
 
     mBorder.Side(side) = medium;
-    mBorderStyle[side] = NS_STYLE_BORDER_STYLE_NONE;
+    mBorderStyle[side] = StyleBorderStyle::None;
   }
 
   mTwipsPerPixel = aContext->DevPixelsToAppUnits(1);
@@ -449,7 +449,7 @@ nsStyleOutline::nsStyleOutline(const nsPresContext* aContext)
                      ->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM])
   , mOutlineOffset(0)
   , mOutlineColor(StyleComplexColor::CurrentColor())
-  , mOutlineStyle(NS_STYLE_BORDER_STYLE_NONE)
+  , mOutlineStyle(StyleBorderStyle::None)
   , mActualOutlineWidth(0)
   , mTwipsPerPixel(aContext->DevPixelsToAppUnits(1))
 {
@@ -476,7 +476,7 @@ nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc)
 void
 nsStyleOutline::RecalcData()
 {
-  if (NS_STYLE_BORDER_STYLE_NONE == mOutlineStyle) {
+  if (StyleBorderStyle::None == mOutlineStyle) {
     mActualOutlineWidth = 0;
   } else {
     mActualOutlineWidth =
@@ -667,7 +667,7 @@ nsStyleXUL::CalcDifference(const nsStyleXUL& aNewData) const
 nsStyleColumn::nsStyleColumn(const nsPresContext* aContext)
   : mColumnWidth(eStyleUnit_Auto)
   , mColumnRuleColor(StyleComplexColor::CurrentColor())
-  , mColumnRuleStyle(NS_STYLE_BORDER_STYLE_NONE)
+  , mColumnRuleStyle(StyleBorderStyle::None)
   , mColumnRuleWidth((StaticPresData::Get()
                         ->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM])
   , mTwipsPerPixel(aContext->AppUnitsPerDevPixel())

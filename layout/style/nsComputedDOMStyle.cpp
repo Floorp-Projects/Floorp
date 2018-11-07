@@ -2205,7 +2205,7 @@ nsComputedDOMStyle::DoGetOutlineWidth()
   const nsStyleOutline* outline = StyleOutline();
 
   nscoord width;
-  if (outline->mOutlineStyle == NS_STYLE_BORDER_STYLE_NONE) {
+  if (outline->mOutlineStyle == StyleBorderStyle::None) {
     NS_ASSERTION(outline->GetOutlineWidth() == 0, "unexpected width");
     width = 0;
   } else {

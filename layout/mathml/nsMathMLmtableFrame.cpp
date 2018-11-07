@@ -51,11 +51,11 @@ ParseStyleValue(nsAtom* aAttribute, const nsAString& aAttributeValue)
   } else if (aAttribute == nsGkAtoms::rowlines_ ||
              aAttribute == nsGkAtoms::columnlines_) {
     if (aAttributeValue.EqualsLiteral("solid"))
-      return NS_STYLE_BORDER_STYLE_SOLID;
+      return static_cast<int8_t>(StyleBorderStyle::Solid);
     else if (aAttributeValue.EqualsLiteral("dashed"))
-      return NS_STYLE_BORDER_STYLE_DASHED;
+      return static_cast<int8_t>(StyleBorderStyle::Dashed);
     else
-      return NS_STYLE_BORDER_STYLE_NONE;
+      return static_cast<int8_t>(StyleBorderStyle::None);
   } else {
     MOZ_CRASH("Unrecognized attribute.");
   }
@@ -200,11 +200,11 @@ ApplyBorderToStyle(const nsMathMLmtdFrame* aFrame,
     // values, we simply repeat the last value.
     uint32_t listLength = rowLinesList->Length();
     if (rowIndex < listLength) {
-      aStyleBorder.SetBorderStyle(eSideTop,
-                    rowLinesList->ElementAt(rowIndex - 1));
+      aStyleBorder.SetBorderStyle(eSideTop, static_cast<StyleBorderStyle>(
+                    rowLinesList->ElementAt(rowIndex - 1)));
     } else {
-      aStyleBorder.SetBorderStyle(eSideTop,
-                    rowLinesList->ElementAt(listLength - 1));
+      aStyleBorder.SetBorderStyle(eSideTop, static_cast<StyleBorderStyle>(
+                    rowLinesList->ElementAt(listLength - 1)));
     }
     aStyleBorder.SetBorderWidth(eSideTop, borderWidth);
   }
@@ -215,11 +215,11 @@ ApplyBorderToStyle(const nsMathMLmtdFrame* aFrame,
     // values, we simply repeat the last value.
     uint32_t listLength = columnLinesList->Length();
     if (columnIndex < listLength) {
-      aStyleBorder.SetBorderStyle(eSideLeft,
-                    columnLinesList->ElementAt(columnIndex - 1));
+      aStyleBorder.SetBorderStyle(eSideLeft, static_cast<StyleBorderStyle>(
+                    columnLinesList->ElementAt(columnIndex - 1)));
     } else {
-      aStyleBorder.SetBorderStyle(eSideLeft,
-                    columnLinesList->ElementAt(listLength - 1));
+      aStyleBorder.SetBorderStyle(eSideLeft, static_cast<StyleBorderStyle>(
+                    columnLinesList->ElementAt(listLength - 1)));
     }
     aStyleBorder.SetBorderWidth(eSideLeft, borderWidth);
   }
