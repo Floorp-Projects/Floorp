@@ -1,7 +1,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.PrefsHelper.PrefHandlerBase;
-import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
+import org.mozilla.geckoview.DynamicToolbarAnimator.PinReason;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.GeckoView;
 
