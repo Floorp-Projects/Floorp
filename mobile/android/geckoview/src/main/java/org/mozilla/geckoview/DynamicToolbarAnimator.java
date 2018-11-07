@@ -3,12 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.gfx;
+package org.mozilla.geckoview;
 
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.graphics.Bitmap;
-import android.graphics.PointF;
 import android.util.Log;
 
 import java.util.EnumSet;
