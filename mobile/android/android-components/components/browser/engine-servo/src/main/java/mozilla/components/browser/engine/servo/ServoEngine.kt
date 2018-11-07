@@ -11,12 +11,13 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 
 /**
  * Servo-based implementation of the Engine interface.
  */
 class ServoEngine(
-    private val defaultSettings: DefaultSettings? = DefaultSettings()
+    private val defaultSettings: DefaultSettings = DefaultSettings()
 ) : Engine {
     override fun createView(context: Context, attrs: AttributeSet?): EngineView {
         return ServoEngineView(context, attrs)
@@ -31,7 +32,13 @@ class ServoEngine(
     /**
      * See [Engine.settings]
      */
-    override val settings: Settings
-        get() = throw UnsupportedOperationException("""Not supported by this implementation:
-            Use EngineSession.settings instead""".trimIndent())
+    override val settings: Settings = object : Settings() {
+        // History tracking is not supported/implemented currently, but we want
+        // to be able to start up with the history tracking feature enabled.
+        override var historyTrackingDelegate: HistoryTrackingDelegate?
+            get() = defaultSettings.historyTrackingDelegate
+            set(value) {
+                defaultSettings.historyTrackingDelegate = value
+            }
+    }
 }
