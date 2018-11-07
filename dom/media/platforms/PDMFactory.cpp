@@ -35,8 +35,8 @@
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TaskQueue.h"
 
+#include "MediaChangeMonitor.h"
 #include "MediaInfo.h"
-#include "H264Converter.h"
 
 #include "AgnosticDecoderModule.h"
 #include "EMEDecoderModule.h"
@@ -296,10 +296,10 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
 
   if (MP4Decoder::IsH264(config.mMimeType) && !aParams.mUseNullDecoder.mUse &&
       !aParams.mNoWrapper.mDontUseWrapper) {
-    RefPtr<H264Converter> h = new H264Converter(aPDM, aParams);
+    RefPtr<MediaChangeMonitor> h = new MediaChangeMonitor(aPDM, aParams);
     const MediaResult result = h->GetLastError();
     if (NS_SUCCEEDED(result) || result == NS_ERROR_NOT_INITIALIZED) {
-      // The H264Converter either successfully created the wrapped decoder,
+      // The MediaChangeMonitor either successfully created the wrapped decoder,
       // or there wasn't enough AVCC data to do so. Otherwise, there was some
       // problem, for example WMF DLLs were missing.
       m = h.forget();
