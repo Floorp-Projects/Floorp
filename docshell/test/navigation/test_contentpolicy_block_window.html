@@ -24,6 +24,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1329288
  * gets called with the right (a non null) 'context' for the TYPE_DOCUMENT load.
  */
 
+// Services.jsm is disabled as ChromeUtils appears to be out of scope
+/* eslint-disable mozilla/use-services */
+
 const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 
@@ -36,7 +39,8 @@ var policyID = SpecialPowers.wrap(SpecialPowers.Components).ID("{b80e19d0-878f-d
 var policyName = "@mozilla.org/testpolicy;1";
 var policy = {
   // nsISupports implementation
-  QueryInterface: function(iid) {
+  // eslint-disable-next-line mozilla/use-chromeutils-generateqi
+  QueryInterface(iid) {
     iid = SpecialPowers.wrap(iid);
     if (iid.equals(Ci.nsISupports) ||
         iid.equals(Ci.nsIFactory) ||
@@ -46,12 +50,12 @@ var policy = {
   },
 
   // nsIFactory implementation
-  createInstance: function(outer, iid) {
+  createInstance(outer, iid) {
     return this.QueryInterface(iid);
   },
 
   // nsIContentPolicy implementation
-  shouldLoad: function(contentLocation, loadInfo, mimeTypeGuess) {
+  shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
     let contentType = loadInfo.externalContentPolicyType;
     let context = loadInfo.loadingContext;
 
@@ -79,10 +83,10 @@ var policy = {
     return Ci.nsIContentPolicy.REJECT_REQUEST;
   },
 
-  shouldProcess: function(contentLocation, loadInfo, mimeTypeGuess) {
+  shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
     return Ci.nsIContentPolicy.ACCEPT;
-  }
-}
+  },
+};
 
 policy = SpecialPowers.wrapCallbackObject(policy);
 componentManager.registerFactory(policyID, "Test content policy", policyName, policy);
@@ -91,7 +95,7 @@ categoryManager.addCategoryEntry("content-policy", policyName, policyName, false
 SimpleTest.waitForExplicitFinish();
 
 // now everything is set up, let's start the test
-document.getElementById("testlink").click()
+document.getElementById("testlink").click();
 
 </script>
 </body>

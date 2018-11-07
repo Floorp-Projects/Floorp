@@ -358,6 +358,7 @@ nsDocShell::nsDocShell()
   , mAllowContentRetargeting(true)
   , mAllowContentRetargetingOnChildren(true)
   , mUseErrorPages(false)
+  , mUseStrictSecurityChecks(false)
   , mObserveErrorPages(true)
   , mCSSErrorReportingEnabled(false)
   , mAllowAuth(true)
@@ -4125,6 +4126,9 @@ nsDocShell::LoadURI(const nsAString& aURI,
 #ifndef ANDROID
   MOZ_ASSERT(aTriggeringPrincipal, "LoadURI: Need a valid triggeringPrincipal");
 #endif
+  if (mUseStrictSecurityChecks && !aTriggeringPrincipal) {
+    return NS_ERROR_FAILURE;
+  }
   return LoadURIWithOptions(aURI, aLoadFlags, aReferringURI,
                             RP_Unset, aPostStream,
                             aHeaderStream, nullptr, aTriggeringPrincipal);
@@ -4164,6 +4168,9 @@ nsDocShell::LoadURIWithOptions(const nsAString& aURI,
   MOZ_ASSERT(aTriggeringPrincipal, "LoadURIWithOptions: Need a valid triggeringPrincipal");
 #endif
 
+  if (mUseStrictSecurityChecks && !aTriggeringPrincipal) {
+    return NS_ERROR_FAILURE;
+  }
 
   rv = NS_NewURI(getter_AddRefs(uri), uriString);
   if (uri) {
@@ -4921,6 +4928,9 @@ nsDocShell::Reload(uint32_t aReloadFlags)
     }
 
     MOZ_ASSERT(triggeringPrincipal, "Need a valid triggeringPrincipal");
+    if (mUseStrictSecurityChecks && !triggeringPrincipal) {
+      return NS_ERROR_FAILURE;
+    }
 
     // Stack variables to ensure changes to the member variables don't affect to
     // the call.
@@ -5190,6 +5200,9 @@ nsDocShell::Create()
     gValidateOrigin =
       Preferences::GetBool("browser.frame.validate_origin", true);
   }
+
+  mUseStrictSecurityChecks = Preferences::GetBool("security.strict_security_checks.enabled",
+                                                  mUseStrictSecurityChecks);
 
   // Should we use XUL error pages instead of alerts if possible?
   mUseErrorPages =
@@ -9163,6 +9176,9 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                          nsIRequest** aRequest)
 {
   MOZ_ASSERT(aTriggeringPrincipal, "need a valid TriggeringPrincipal");
+  if (mUseStrictSecurityChecks && !aTriggeringPrincipal) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsresult rv = NS_OK;
   mOriginalUriString.Truncate();
@@ -10383,6 +10399,10 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   // ready for use once bug 1182569 landed. Until then, we cannot rely on
   // the triggeringPrincipal for TYPE_DOCUMENT loads.
   MOZ_ASSERT(aTriggeringPrincipal, "Need a valid triggeringPrincipal");
+
+  if (mUseStrictSecurityChecks && !aTriggeringPrincipal) {
+    return NS_ERROR_FAILURE;
+  }
 
   bool isSandBoxed = mSandboxFlags & SANDBOXED_ORIGIN;
 

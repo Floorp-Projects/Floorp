@@ -96,7 +96,7 @@ raptor-chrome:
     - raptor-webaudio-chrome
     - raptor-gdocs-chrome
     - raptor-sunspider-chrome
-    - raptor-wasm-godot-firefox
+    - raptor-wasm-godot-chrome
 
 # Fetch tasks are only supported on Linux for now,
 # so these need to be separate sets.

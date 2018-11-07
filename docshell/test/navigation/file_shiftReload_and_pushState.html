@@ -4,7 +4,7 @@
       function test() {
         try {
           frames[0].history.pushState({}, "state", "?pushed");
-        } catch(ex) {
+        } catch (ex) {
           opener.ok(false, "history.pushState shouldn't throw");
         }
 

@@ -13,7 +13,7 @@ if (!navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(0, 1);
 }
 
-window.onload = function () {
+window.onload = function() {
   navigateByLocation(frames[0].frames[0]);
   navigateByOpen("child1_child0");
   navigateByForm("child2_child0");
@@ -28,7 +28,7 @@ window.onload = function () {
     xpcCleanupWindows();
     SimpleTest.finish();
   }, 4);
-}
+};
 </script>
 </head>
 <body>

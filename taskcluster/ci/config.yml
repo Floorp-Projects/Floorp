@@ -20,6 +20,8 @@ treeherder:
         'M-e10s': 'Mochitests with e10s'
         'M-sw-e10s': 'Mochitests with serviceworker redesign and e10s'
         'M-V': 'Mochitests on Valgrind'
+        'MSI': 'Repack installers into MSIs'
+        'MSIs': 'Signing of Repacked installers of MSIs'
         'R': 'Reftests'
         'R-sw': 'Reftests with serviceworker redesign enabled'
         'R-e10s': 'Reftests with e10s'

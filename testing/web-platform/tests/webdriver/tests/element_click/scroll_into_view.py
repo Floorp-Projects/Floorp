@@ -37,7 +37,7 @@ def test_scroll_into_view(session):
             """, args=(element,)) is True
 
 
-@pytest.mark.parametrize("offset", reversed(range(1, 10)))
+@pytest.mark.parametrize("offset", range(9, 0, -1))
 def test_partially_visible_does_not_scroll(session, offset):
     session.url = inline("""
         <style>
