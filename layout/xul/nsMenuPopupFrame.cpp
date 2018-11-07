@@ -18,7 +18,6 @@
 #include "nsMenuBarFrame.h"
 #include "nsPopupSetFrame.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMXULMenuListElement.h"
 #include "nsIPresShell.h"
 #include "nsFrameManager.h"
 #include "nsIDocument.h"
@@ -619,12 +618,8 @@ bool
 nsMenuPopupFrame::IsMenuList()
 {
   nsIFrame* parentMenu = GetParent();
-  if (!parentMenu) {
-    return false;
-  }
-
-  nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(parentMenu->GetContent());
-  return menulist != nullptr;
+  return (parentMenu && parentMenu->GetContent() &&
+          parentMenu->GetContent()->IsXULElement(nsGkAtoms::menulist));
 }
 
 nsIContent*

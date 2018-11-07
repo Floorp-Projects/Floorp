@@ -487,7 +487,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
         }
         else if (this == menuParent->GetCurrentMenuItem()
 #ifdef XP_WIN
-                 && GetParentMenuListType() == eNotMenuList
+                 && !IsParentMenuList()
 #endif
         ) {
           menuParent->ChangeMenuItem(nullptr, false, false);
@@ -502,7 +502,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
       return NS_OK;
     }
 
-    if (IsDisabled() && GetParentMenuListType() != eNotMenuList) {
+    if (IsDisabled() && IsParentMenuList()) {
       return NS_OK;
     }
 
@@ -821,21 +821,15 @@ nsMenuFrame::IsMenu()
   return mIsMenu;
 }
 
-nsMenuListType
-nsMenuFrame::GetParentMenuListType()
+bool
+nsMenuFrame::IsParentMenuList()
 {
   nsMenuParent* menuParent = GetMenuParent();
   if (menuParent && menuParent->IsMenu()) {
     nsMenuPopupFrame* popupFrame = static_cast<nsMenuPopupFrame*>(menuParent);
-    nsIFrame* parentMenu = popupFrame->GetParent();
-    if (parentMenu) {
-      nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(parentMenu->GetContent());
-      if (menulist) {
-        return eReadonlyMenuList;
-      }
-    }
+    return popupFrame->IsMenuList();
   }
-  return eNotMenuList;
+  return false;
 }
 
 nsresult
