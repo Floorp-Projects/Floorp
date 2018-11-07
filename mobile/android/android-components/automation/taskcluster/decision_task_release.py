@@ -13,8 +13,8 @@ import os
 import re
 import subprocess
 import taskcluster
-import yaml
 
+import lib.artifacts
 import lib.tasks
 
 TASK_ID = os.environ.get('TASK_ID')
@@ -29,22 +29,6 @@ BUILDER = lib.tasks.TaskBuilder(
     source='https://github.com/mozilla-mobile/android-components/raw/{}/.taskcluster.yml'.format(HEAD_REV),
     scheduler_id=os.environ.get('SCHEDULER_ID'),
 )
-
-
-def fetch_artifact_metadata():
-    process = subprocess.Popen(["./gradlew", "--no-daemon", "printModules"], stdout=subprocess.PIPE)
-    (output, err) = process.communicate()
-    exit_code = process.wait()
-
-    if exit_code is not 0:
-        print("Gradle command returned error:", exit_code)
-
-    tuples = re.findall('module: name=(.*) buildPath=(.*)', output, re.M)
-    return map(lambda (name, build_path): {
-        'name': name[1:],
-        'artifact': 'public/build/' + name[1:].replace('-', '.', 1) + '.maven.zip',
-        'path': build_path + '/target.maven.zip'
-    }, tuples)
 
 
 def fetch_build_task_artifacts(artifacts_info):
@@ -124,7 +108,7 @@ def release(version):
     queue = taskcluster.Queue({'baseUrl': 'http://taskcluster/queue/v1'})
 
     task_graph = {}
-    artifacts_info = fetch_artifact_metadata()
+    artifacts_info = lib.artifacts.from_gradle()
 
     build_task_id, build_task = generate_build_task(version, artifacts_info)
     lib.tasks.schedule_task(queue, build_task_id, build_task)

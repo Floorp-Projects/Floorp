@@ -9,10 +9,9 @@ Decision task for pull requests and pushes
 import datetime
 import os
 import taskcluster
-import re
-import subprocess
 import sys
 
+import lib.artifacts
 import lib.tasks
 
 
@@ -26,19 +25,9 @@ PR_TITLE = os.environ.get('GITHUB_PULL_TITLE', '')
 SKIP_TASKS_TRIGGER = '[ci skip]'
 
 
-def fetch_module_names():
-    process = subprocess.Popen(["./gradlew", "--no-daemon", "printModules"], stdout=subprocess.PIPE)
-    (output, err) = process.communicate()
-    exit_code = process.wait()
-
-    if exit_code is not 0:
-        print "Gradle command returned error:", exit_code
-
-    return re.findall('module: name=(.*) buildPath=.*', output, re.M)
-
-
 def create_task(name, description, command, scopes = []):
     return create_raw_task(name, description, "./gradlew --no-daemon clean %s" % command, scopes)
+
 
 def create_raw_task(name, description, full_command, scopes = []):
     created = datetime.datetime.now()
@@ -126,7 +115,7 @@ if __name__ == "__main__":
 
     queue = taskcluster.Queue({ 'baseUrl': 'http://taskcluster/queue/v1' })
 
-    modules = fetch_module_names()
+    modules = map(lambda artifact: ':' + artifact['name'], lib.artifacts.from_gradle())
 
     if len(modules) == 0:
         print "Could not get module names from gradle"
