@@ -32,6 +32,7 @@ loader.lazyRequireGetter(this, "Authenticators",
   "devtools/shared/security/auth", true);
 loader.lazyRequireGetter(this, "AuthenticationResult",
   "devtools/shared/security/auth", true);
+loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 DevToolsUtils.defineLazyGetter(this, "nsFile", () => {
   return CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
@@ -366,7 +367,9 @@ function _storeCertOverride(s, host, port) {
  * This helps contain and organize the parts of the server that may differ or
  * are particular to one given listener mechanism vs. another.
  */
-function SocketListener() {}
+function SocketListener() {
+  EventEmitter.decorate(this);
+}
 
 SocketListener.prototype = {
 
@@ -544,11 +547,17 @@ SocketListener.prototype = {
     };
   },
 
+  onAllowedConnection(transport) {
+    dumpn("onAllowedConnection, transport: " + transport);
+    this.emit("accepted", transport, this);
+  },
+
   // nsIServerSocketListener implementation
 
   onSocketAccepted:
   DevToolsUtils.makeInfallible(function(socket, socketTransport) {
-    new ServerSocketConnection(this, socketTransport);
+    const connection = new ServerSocketConnection(this, socketTransport);
+    connection.once("allowed", this.onAllowedConnection.bind(this));
   }, "SocketListener.onSocketAccepted"),
 
   onStopListening: function(socket, status) {
@@ -572,6 +581,7 @@ function ServerSocketConnection(listener, socketTransport) {
   this._listener = listener;
   this._socketTransport = socketTransport;
   this._handle();
+  EventEmitter.decorate(this);
 }
 
 ServerSocketConnection.prototype = {
@@ -774,7 +784,7 @@ ServerSocketConnection.prototype = {
       return;
     }
     dumpn("Debugging connection allowed on " + this.address);
-    DebuggerServer._onConnection(this._transport);
+    this.emit("allowed", this._transport);
     this.destroy();
   },
 
