@@ -26,8 +26,6 @@ function init() {
 
 
 function process() {
-  let bundle = document.getElementById("bundlePreferences");
-
   // If the token is unitialized, don't use the old password box.
   // Otherwise, do.
 
@@ -39,7 +37,7 @@ function process() {
     let msgBox = document.getElementById("message");
     if ((token.needsLogin() && token.needsUserInit) || !token.needsLogin()) {
       oldpwbox.setAttribute("hidden", "true");
-      msgBox.setAttribute("value", bundle.getString("password_not_set"));
+      document.l10n.setAttributes(msgBox, "password-not-set");
       msgBox.setAttribute("hidden", "false");
 
       if (!token.needsLogin()) {
@@ -67,13 +65,20 @@ function process() {
   checkPasswords();
 }
 
+async function createAlert(titleL10nId, messageL10nId) {
+  const [title, message] = await document.l10n.formatValues([
+    {id: titleL10nId},
+    {id: messageL10nId},
+  ]);
+  Services.prompt.alert(window, title, message);
+}
+
 function setPassword() {
   var pk11db = Cc[nsPK11TokenDB].getService(nsIPK11TokenDB);
   var token = pk11db.getInternalKeyToken();
 
   var oldpwbox = document.getElementById("oldpw");
   var initpw = oldpwbox.getAttribute("inited");
-  var bundle = document.getElementById("bundlePreferences");
 
   var success = false;
 
@@ -98,23 +103,16 @@ function setPassword() {
             var secmoddb = Cc[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
             if (secmoddb.isFIPSEnabled) {
               // empty passwords are not allowed in FIPS mode
-              Services.prompt.alert(window,
-                                    bundle.getString("pw_change_failed_title"),
-                                    bundle.getString("pw_change2empty_in_fips_mode"));
+              createAlert("pw-change-failed-title", "pw-change2empty-in-fips-mode");
               passok = 0;
             }
           }
           if (passok) {
             token.changePassword(oldpw, pw1.value);
             if (pw1.value == "") {
-              Services.prompt.alert(window,
-                                    bundle.getString("pw_change_success_title"),
-                                    bundle.getString("pw_erased_ok")
-                                    + " " + bundle.getString("pw_empty_warning"));
+              createAlert("pw-change-success-title", "pw-erased-ok");
             } else {
-              Services.prompt.alert(window,
-                                    bundle.getString("pw_change_success_title"),
-                                    bundle.getString("pw_change_ok"));
+              createAlert("pw-change-success-title", "pw-change-ok");
             }
             success = true;
           }
@@ -122,22 +120,15 @@ function setPassword() {
       } else {
         oldpwbox.focus();
         oldpwbox.setAttribute("value", "");
-        Services.prompt.alert(window,
-                              bundle.getString("pw_change_failed_title"),
-                              bundle.getString("incorrect_pw"));
+        createAlert("pw-change-failed-title", "incorrect-pw");
       }
     } catch (e) {
-      Services.prompt.alert(window,
-                            bundle.getString("pw_change_failed_title"),
-                            bundle.getString("failed_pw_change"));
+      createAlert("pw-change-failed-title", "failed-pw-change");
     }
   } else {
     token.initPassword(pw1.value);
     if (pw1.value == "") {
-      Services.prompt.alert(window,
-                            bundle.getString("pw_change_success_title"),
-                            bundle.getString("pw_not_wanted")
-                            + " " + bundle.getString("pw_empty_warning"));
+      createAlert("pw-change-success-title", "pw-not-wanted");
     }
     success = true;
   }
@@ -145,6 +136,8 @@ function setPassword() {
   // Terminate dialog
   if (success)
     window.close();
+
+  return success;
 }
 
 function setPasswordStrength() {
