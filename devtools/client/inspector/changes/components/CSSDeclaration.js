@@ -26,7 +26,7 @@ class CSSDeclaration extends PureComponent {
   render() {
     const { property, value, className } = this.props;
 
-    return dom.div({ className },
+    return dom.div({ className: `declaration ${className}` },
       dom.span({ className: "declaration-name theme-fg-color5"}, property),
       ":",
       dom.span({ className: "declaration-value theme-fg-color1"}, value),
