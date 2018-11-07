@@ -210,7 +210,8 @@ task printModules {
     doLast {
         def modules = subprojects.collect { p -> [
             name: p.path.toString(),
-            buildPath: p.buildDir.toString()
+            buildPath: p.buildDir.toString(),
+            enableTaskcluster: p.ext.enableTaskcluster
         ] }
         println groovy.json.JsonOutput.toJson(modules)
     }

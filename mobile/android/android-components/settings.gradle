@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-def setupProject(name, path, description) {
+def setupProject(name, path, description, enableTaskcluster = true) {
     settings.include(name)
 
     project(name).projectDir = new File(rootDir, path)
@@ -11,7 +11,17 @@ def setupProject(name, path, description) {
         gradle.ext.set('componentDescriptions', [:])
     }
 
+    // TODO instead of using global "componentDescriptions" map, attach description to "project.ext"
     gradle.ext.componentDescriptions[name.substring(1)] = description
+
+    // project(name) gives us a skeleton project that we can't set ext.* on
+    gradle.afterProject { project ->
+        // However, the "afterProject" listener iterates over every project and gives us the actual project
+        // So, once we filter for the project we care about, we can set whatever we want
+        if (project.name == name.substring(1)) {
+            project.ext.enableTaskcluster = enableTaskcluster
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -99,16 +109,16 @@ setupProject(':lib-jexl', 'components/lib/jexl', 'Javascript Expression Language
 // Tooling
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-setupProject(':tooling-lint', 'components/tooling/lint', 'Custom Lint checks for using and writing components.')
+setupProject(':tooling-lint', 'components/tooling/lint', 'Custom Lint checks for using and writing components.', false)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Samples
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-setupProject(':samples-browser', 'samples/browser', 'A simple browser composed from browser components.')
-setupProject(':samples-crash', 'samples/crash', 'An app showing the integration of the lib-crash component.')
-setupProject(':samples-firefox-accounts', 'samples/firefox-accounts', 'A simple app demoing Firefox Accounts integration.')
-setupProject(':samples-glean', 'samples/glean', 'An app demoing how to use the Glean library to collect and send telemetry data.')
-setupProject(':samples-sync-logins', 'samples/sync-logins', 'A simple app demoing Firefox Sync (Logins) integration.')
-setupProject(':samples-toolbar', 'samples/toolbar', 'An app demoing multiple customized toolbars using the browser-toolbar component.')
-setupProject(':samples-dataprotect', 'samples/dataprotect', 'An app demoing how to use the Dataprotect component to load and store encrypted data in SharedPreferences.')
+setupProject(':samples-browser', 'samples/browser', 'A simple browser composed from browser components.', false)
+setupProject(':samples-crash', 'samples/crash', 'An app showing the integration of the lib-crash component.', false)
+setupProject(':samples-firefox-accounts', 'samples/firefox-accounts', 'A simple app demoing Firefox Accounts integration.', false)
+setupProject(':samples-glean', 'samples/glean', 'An app demoing how to use the Glean library to collect and send telemetry data.', false)
+setupProject(':samples-sync-logins', 'samples/sync-logins', 'A simple app demoing Firefox Sync (Logins) integration.', false)
+setupProject(':samples-toolbar', 'samples/toolbar', 'An app demoing multiple customized toolbars using the browser-toolbar component.', false)
+setupProject(':samples-dataprotect', 'samples/dataprotect', 'An app demoing how to use the Dataprotect component to load and store encrypted data in SharedPreferences.', false)

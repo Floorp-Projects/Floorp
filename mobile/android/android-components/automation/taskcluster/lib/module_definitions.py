@@ -19,4 +19,4 @@ def from_gradle():
         'name': module['name'][1:],  # Gradle prefixes all module names with ":", e.g.: ":browser-awesomebar"
         'artifact': "public/build/{}.maven.zip".format(module['name'][1:]),
         'path': "{}/target.maven.zip".format(module['buildPath'])
-    } for module in gradle_modules]
+    } for module in gradle_modules if module['enableTaskcluster']]
