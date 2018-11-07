@@ -2241,12 +2241,6 @@ BinASTParser<Tok>::parseInterfaceAssertedDeclaredName(const size_t start, const 
     return result;
 }
 
-template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parseInterfaceAssertedParameterName(const size_t start, const BinKind kind, const BinFields& fields)
-{
-    return raiseError("FIXME: Not implemented yet in this preview release (AssertedParameterName)");
-}
-
 
 /*
  interface AssertedParameterScope : Node {
@@ -2352,12 +2346,6 @@ BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(const size_t st
     MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured, allowDuplicateName));
     auto result = Ok();
     return result;
-}
-
-template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parseInterfaceAssertedRestParameterName(const size_t start, const BinKind kind, const BinFields& fields)
-{
-    return raiseError("FIXME: Not implemented yet in this preview release (AssertedRestParameterName)");
 }
 
 
