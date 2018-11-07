@@ -48,5 +48,10 @@ features-performance-desc = Unblock bottlenecks, streamline processes, optimize 
 features-memory-title = Memory
 features-memory-desc = Find memory leaks and make your application zippy. <a data-l10n-name="learn-more">{ features-learn-more }</a>
 # Variables:
+#   $errorDescription (String) - The error that occured e.g. 404 - Not Found
+newsletter-error-common = Subscription request failed ({ $errorDescription }).
+newsletter-error-unknown = An unexpected error occurred.
+newsletter-error-timeout = Subscription request timed out.
+# Variables:
 #   $shortcut (String) - The keyboard shortcut used for the tool
 welcome-message = You’ve successfully enabled Developer Tools! To get started, explore the Web Developer menu or open the tools with { $shortcut }.
