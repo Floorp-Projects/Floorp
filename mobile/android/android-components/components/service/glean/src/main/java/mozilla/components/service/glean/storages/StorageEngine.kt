@@ -4,11 +4,15 @@
 
 package mozilla.components.service.glean.storages
 
+import android.content.Context
+
 /**
  * Base interface intended to be implemented by the different
  * storage engines
  */
 internal interface StorageEngine {
+    var applicationContext: Context
+
     /**
      * Get a snapshot of the stored data as a JSON object.
      *

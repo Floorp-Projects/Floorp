@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.storages
 
+import android.content.Context
 import org.junit.Assert
 
 /**
@@ -16,6 +17,8 @@ internal class MockStorageEngine(
     private val sampleJSON: Any,
     private val sampleStore: String = "test"
 ) : StorageEngine {
+    override lateinit var applicationContext: Context
+
     override fun getSnapshotAsJSON(storeName: String, clearStore: Boolean): Any? {
         Assert.assertTrue(clearStore)
         return if (storeName == sampleStore) sampleJSON else null

@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.ping
 
+import android.content.Context
 import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.storages.MockStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
@@ -16,17 +17,20 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @RunWith(RobolectricTestRunner::class)
 class PingMakerTest {
+    private val mockApplicationContext = mock(Context::class.java)
+
     @Test
     fun `"ping_info" must contain a non-empty start_time and end_time`() {
         val maker = PingMaker(StorageEngineManager(storageEngines = mapOf(
                 "engine2" to MockStorageEngine(JSONObject())
-            )))
+            ), applicationContext = mockApplicationContext))
 
         // Gather the data. We expect an empty ping with the "ping_info" information
         val data = maker.collect("test")
@@ -50,7 +54,7 @@ class PingMakerTest {
     fun `getPingInfo() must report all the required fields`() {
         val maker = PingMaker(StorageEngineManager(storageEngines = mapOf(
             "engine2" to MockStorageEngine(JSONArray(listOf("a", "b", "c")))
-        )))
+        ), applicationContext = mockApplicationContext))
 
         // Gather the data. We expect an empty ping with the "ping_info" information
         val data = maker.collect("test")
@@ -74,7 +78,7 @@ class PingMakerTest {
             "engine1" to MockStorageEngine(engine1Data),
             "engine2" to MockStorageEngine(engine2Data),
             "wontCollect" to MockStorageEngine(JSONObject(), "notThisPing")
-        )))
+        ), applicationContext = mockApplicationContext))
 
         // Gather the data. We expect an empty ping with the "ping_info" information
         val data = maker.collect("test")

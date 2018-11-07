@@ -45,14 +45,6 @@ interface CommonMetricData {
             return false
         }
 
-        // TODO implement "user" metric lifetime. See bug 1499756.
-        // Metrics can be recorded with application or user lifetime. For now,
-        // we only support "application": metrics live as long as the application lives.
-        if (lifetime != Lifetime.Application) {
-            logger.error("The metric lifetime must be explicitly set.")
-            return false
-        }
-
         return true
     }
 

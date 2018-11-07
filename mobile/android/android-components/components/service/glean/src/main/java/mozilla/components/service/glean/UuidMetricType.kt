@@ -53,6 +53,7 @@ data class UuidMetricType(
                 stores = sendInPings,
                 category = category,
                 name = name,
+                lifetime = lifetime,
                 value = value
         )
     }

@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.storages
 
+import android.content.Context
 import org.json.JSONObject
 
 /**
@@ -16,8 +17,15 @@ internal class StorageEngineManager(
         "events" to EventsStorageEngine,
         "strings" to StringsStorageEngine,
         "uuids" to UuidsStorageEngine
-    )
+    ),
+    applicationContext: Context
 ) {
+    init {
+        for ((_, engine) in storageEngines) {
+            engine.applicationContext = applicationContext
+        }
+    }
+
     /**
      * Collect the recorded data for the requested storage.
      *

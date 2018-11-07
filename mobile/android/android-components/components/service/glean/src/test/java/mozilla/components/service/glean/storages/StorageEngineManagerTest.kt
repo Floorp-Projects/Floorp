@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.storages
 
+import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Test
@@ -11,13 +12,16 @@ import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class StorageEngineManagerTest {
+    private val mockApplicationContext = Mockito.mock(Context::class.java)
+
     @Test
     fun `collect() must return an empty object for empty or unknown stores`() {
-        val manager = StorageEngineManager()
+        val manager = StorageEngineManager(applicationContext = mockApplicationContext)
         val data = manager.collect("thisStoreNameDoesNotExist")
         assertNotNull(data)
         assertEquals("{}", data.toString())
@@ -28,7 +32,7 @@ class StorageEngineManagerTest {
         val manager = StorageEngineManager(storageEngines = mapOf(
             "engine1" to MockStorageEngine(JSONObject(mapOf("test" to "val"))),
             "engine2" to MockStorageEngine(JSONArray(listOf("a", "b", "c")))
-        ))
+        ), applicationContext = mockApplicationContext)
 
         val data = manager.collect("test")
         assertEquals("{\"engine1\":{\"test\":\"val\"},\"engine2\":[\"a\",\"b\",\"c\"]}",
