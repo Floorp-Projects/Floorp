@@ -109,6 +109,7 @@ public:
     }
 
     aSample->mExtraData = mCurrentConfig.mExtraData;
+    aSample->mTrackInfo = mTrackInfo;
 
     return NS_OK;
   }
@@ -126,16 +127,18 @@ public:
         mCurrentConfig.mDisplay.height = spsdata.display_height;
       }
       mCurrentConfig.mExtraData = aExtraData;
+      mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
     }
 
     VideoInfo mCurrentConfig;
     bool mNeedKeyframe = true;
+    uint32_t mStreamID = 0;
+    RefPtr<TrackInfoSharedPtr> mTrackInfo;
 };
 
 MediaChangeMonitor::MediaChangeMonitor(PlatformDecoderModule* aPDM,
                                        const CreateDecoderParams& aParams)
   : mPDM(aPDM)
-  , mOriginalConfig(aParams.VideoConfig())
   , mCurrentConfig(aParams.VideoConfig())
   , mKnowsCompositor(aParams.mKnowsCompositor)
   , mImageContainer(aParams.mImageContainer)
@@ -149,9 +152,9 @@ MediaChangeMonitor::MediaChangeMonitor(PlatformDecoderModule* aPDM,
   , mRate(aParams.mRate)
 {
   mInConstructor = true;
-  MOZ_ASSERT(MP4Decoder::IsH264(mOriginalConfig.mMimeType));
-  mChangeMonitor = MakeUnique<H264ChangeMonitor>(mOriginalConfig);
-  mLastError = CreateDecoder(mOriginalConfig, aParams.mDiagnostics);
+  MOZ_ASSERT(MP4Decoder::IsH264(mCurrentConfig.mMimeType));
+  mChangeMonitor = MakeUnique<H264ChangeMonitor>(mCurrentConfig);
+  mLastError = CreateDecoder(aParams.mDiagnostics);
   mInConstructor = false;
 }
 
@@ -363,8 +366,7 @@ MediaChangeMonitor::SetSeekThreshold(const media::TimeUnit& aTime)
 }
 
 MediaResult
-MediaChangeMonitor::CreateDecoder(const VideoInfo& aConfig,
-                                  DecoderDoctorDiagnostics* aDiagnostics)
+MediaChangeMonitor::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
 {
   // This is the only one of two methods to run outside the TaskQueue when
   // called from the constructor.
@@ -378,7 +380,7 @@ MediaChangeMonitor::CreateDecoder(const VideoInfo& aConfig,
 
   MediaResult error = NS_OK;
   mDecoder = mPDM->CreateVideoDecoder({
-    aConfig,
+    mCurrentConfig,
     mTaskQueue,
     aDiagnostics,
     mImageContainer,
@@ -418,7 +420,7 @@ MediaChangeMonitor::CreateDecoderAndInit(MediaRawData* aSample)
     return rv;
   }
 
-  rv = CreateDecoder(mCurrentConfig, /* DecoderDoctorDiagnostics* */ nullptr);
+  rv = CreateDecoder(/* DecoderDoctorDiagnostics* */ nullptr);
 
   if (NS_SUCCEEDED(rv)) {
     RefPtr<MediaChangeMonitor> self = this;
@@ -515,16 +517,8 @@ MediaChangeMonitor::CheckForChange(MediaRawData* aSample)
     return rv;
   }
 
-  // Content has changed, retrieve the new TrackInfo.
-  mCurrentConfig = *mChangeMonitor->Config().GetAsVideoInfo();
-
-  MOZ_ASSERT(mCanRecycleDecoder.isSome());
-
   if (*mCanRecycleDecoder) {
     // Do not recreate the decoder, reuse it.
-    if (!aSample->mTrackInfo) {
-      aSample->mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, 0);
-    }
     mNeedKeyframe = true;
     return NS_OK;
   }
