@@ -561,7 +561,7 @@ public:
    * @param aBoundTitleElement true if an HTML or SVG <title> element
    * has just been bound to the document.
    */
-  void NotifyPossibleTitleChange(bool aBoundTitleElement);
+  virtual void NotifyPossibleTitleChange(bool aBoundTitleElement);
 
   /**
    * Return the URI for the document. May return null.
