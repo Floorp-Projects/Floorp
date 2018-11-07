@@ -1,0 +1,38 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.single_dep:loader
+
+transforms:
+    - taskgraph.transforms.name_sanity:transforms
+    - taskgraph.transforms.repackage:transforms
+    - taskgraph.transforms.use_toolchains:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - repackage-signing
+    - repackage-signing-l10n
+    - fetch
+
+only-for-build-platforms:
+    - win32-nightly/opt
+    - win64-nightly/opt
+    - win32-devedition-nightly/opt
+    - win64-devedition-nightly/opt
+
+job-template:
+    mozharness:
+        config:
+            by-build-platform:
+                win32\b.*:
+                    - repackage/base.py
+                    - repackage/win32_signed.py
+                win64\b.*:
+                    - repackage/base.py
+                    - repackage/win64_signed.py
+    package-formats: [msi]
+    fetches:
+        fetch:
+            - wix-3.1.1
