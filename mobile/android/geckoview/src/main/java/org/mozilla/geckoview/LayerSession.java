@@ -13,6 +13,7 @@ import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.support.annotation.NonNull;
+import android.support.annotation.UiThread;
 import android.util.Log;
 import android.view.Surface;
 
@@ -174,6 +175,7 @@ public class LayerSession {
      *
      * @return PanZoomController instance.
      */
+    @UiThread
     public PanZoomController getPanZoomController() {
         ThreadUtils.assertOnUiThread();
 
@@ -191,6 +193,7 @@ public class LayerSession {
      *
      * @return OverscrollEdgeEffect instance.
      */
+    @UiThread
     public OverscrollEdgeEffect getOverscrollEdgeEffect() {
         ThreadUtils.assertOnUiThread();
 
@@ -205,6 +208,7 @@ public class LayerSession {
      *
      * @return DynamicToolbarAnimator instance.
      */
+    @UiThread
     public @NonNull DynamicToolbarAnimator getDynamicToolbarAnimator() {
         ThreadUtils.assertOnUiThread();
 
@@ -219,6 +223,7 @@ public class LayerSession {
      *
      * @return CompositorController instance.
      */
+    @UiThread
     public @NonNull CompositorController getCompositorController() {
         ThreadUtils.assertOnUiThread();
 
@@ -240,6 +245,7 @@ public class LayerSession {
      * @see #getClientToSurfaceMatrix(Matrix)
      * @see #getPageToScreenMatrix(Matrix)
      */
+    @UiThread
     public void getClientToScreenMatrix(@NonNull final Matrix matrix) {
         ThreadUtils.assertOnUiThread();
 
@@ -254,6 +260,7 @@ public class LayerSession {
      * @see #getClientToScreenMatrix(Matrix)
      * @see #getPageToSurfaceMatrix(Matrix)
      */
+    @UiThread
     public void getClientToSurfaceMatrix(@NonNull final Matrix matrix) {
         ThreadUtils.assertOnUiThread();
 
@@ -273,6 +280,7 @@ public class LayerSession {
      * @see #getPageToSurfaceMatrix(Matrix)
      * @see #getClientToScreenMatrix(Matrix)
      */
+    @UiThread
     public void getPageToScreenMatrix(@NonNull final Matrix matrix) {
         ThreadUtils.assertOnUiThread();
 
@@ -287,6 +295,7 @@ public class LayerSession {
      * @see #getPageToScreenMatrix(Matrix)
      * @see #getClientToSurfaceMatrix(Matrix)
      */
+    @UiThread
     public void getPageToSurfaceMatrix(@NonNull final Matrix matrix) {
         ThreadUtils.assertOnUiThread();
 
@@ -303,6 +312,7 @@ public class LayerSession {
      * @param rect RectF to be replaced by the client bounds in client coordinates.
      * @see #getSurfaceBounds(Rect)
      */
+    @UiThread
     public void getClientBounds(@NonNull final RectF rect) {
         ThreadUtils.assertOnUiThread();
 
@@ -317,6 +327,7 @@ public class LayerSession {
      *
      * @param rect Rect to be replaced by the client bounds in surface coordinates.
      */
+    @UiThread
     public void getSurfaceBounds(@NonNull final Rect rect) {
         ThreadUtils.assertOnUiThread();
 
@@ -524,6 +535,7 @@ public class LayerSession {
         }
     }
 
+    @UiThread
     public void onSurfaceChanged(final Surface surface, final int width,
                                         final int height) {
         ThreadUtils.assertOnUiThread();
@@ -545,6 +557,7 @@ public class LayerSession {
         onWindowBoundsChanged();
     }
 
+    @UiThread
     public void onSurfaceDestroyed() {
         ThreadUtils.assertOnUiThread();
 
@@ -558,6 +571,7 @@ public class LayerSession {
         mSurface = null;
     }
 
+    @UiThread
     public void onScreenOriginChanged(final int left, final int top) {
         ThreadUtils.assertOnUiThread();
 
