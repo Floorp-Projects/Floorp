@@ -78,10 +78,10 @@
 #define SK_EXPECT(exp, p) (exp)
 #endif
 
-#ifdef __clang__
-#define SK_CONVERTVECTOR(vec, type) __builtin_convertvector(vec, type)
-#elif defined(JUMPER_IS_SCALAR)
+#if defined(JUMPER_IS_SCALAR)
 #define SK_CONVERTVECTOR(vec, type) ((type)(vec))
+#elif defined(__clang__)
+#define SK_CONVERTVECTOR(vec, type) __builtin_convertvector(vec, type)
 #else
 template <typename T> struct SkNx_element {};
 template <typename T, int N> struct SkNx_element<SkNx<N,T>> { typedef T type; };
