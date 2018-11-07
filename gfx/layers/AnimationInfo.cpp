@@ -12,8 +12,7 @@
 namespace mozilla {
 namespace layers {
 
-AnimationInfo::AnimationInfo(LayerManager* aManager) :
-  mManager(aManager),
+AnimationInfo::AnimationInfo() :
   mCompositorAnimationsId(0),
   mAnimationGeneration(0),
   mMutated(false)
