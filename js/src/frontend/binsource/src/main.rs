@@ -710,9 +710,18 @@ impl CPPExporter {
 
         // 4. Lists
         for parser in &self.list_parsers_to_generate {
+            let name = &parser.name;
+            let rules_for_this_list = self.rules.get(name);
+            let is_implemented = rules_for_this_list.init.is_some();
+            // If this list is not implemented, this method should not be
+            // called nor referenced in the graph.
+            if !is_implemented {
+                continue;
+            }
+
             let mut edges: HashSet<Rc<String>> = HashSet::new();
             edges.insert(string_from_nodename(&parser.elements));
-            refgraph.insert(string_from_nodename(&parser.name), edges);
+            refgraph.insert(string_from_nodename(name), edges);
         }
 
         // 5. Optional values
