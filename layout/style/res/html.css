@@ -267,7 +267,6 @@ table {
   /* XXXldb do we want this if we're border-collapse:collapse ? */
   box-sizing: border-box;
   text-indent: 0;
-  overflow-wrap: normal;
 }
 
 table[align="left"] {
