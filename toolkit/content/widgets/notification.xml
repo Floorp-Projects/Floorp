@@ -133,15 +133,9 @@
               for (var b = 0; b < aButtons.length; b++) {
                 var button = aButtons[b];
                 var buttonElem = document.createXULElement("button");
-
-                if (button["l10n-id"]) {
-                  buttonElem.setAttribute("data-l10n-id", button["l10n-id"]);
-                } else {
-                  buttonElem.setAttribute("label", button.label);
-                  if (typeof button.accessKey == "string")
-                    buttonElem.setAttribute("accesskey", button.accessKey);
-                }
-
+                buttonElem.setAttribute("label", button.label);
+                if (typeof button.accessKey == "string")
+                  buttonElem.setAttribute("accesskey", button.accessKey);
                 buttonElem.classList.add("notification-button");
 
                 if (button.isDefault ||

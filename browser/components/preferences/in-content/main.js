@@ -2255,7 +2255,7 @@ var gMainPane = {
     return this.chooseFolderTask().catch(Cu.reportError);
   },
   async chooseFolderTask() {
-    let [title] = await document.l10n.formatValues([{id: "choose-download-folder-title"}]);
+    let title = gMainPane._prefsBundle.getString("chooseDownloadFolderTitle");
     let folderListPref = Preferences.get("browser.download.folderList");
     let currentDirPref = await this._indexToFolder(folderListPref.value);
     let defDownloads = await this._indexToFolder(1);
@@ -2320,7 +2320,6 @@ var gMainPane = {
     }
 
     // Display a 'pretty' label or the path in the UI.
-    // note: downloadFolder.value is not read elsewhere in the code, its only purpose is to display to the user
     if (folderIndex == 2) {
       // Force the left-to-right direction when displaying a custom path.
       downloadFolder.value = currentDirPref.value ?
@@ -2328,11 +2327,11 @@ var gMainPane = {
       iconUrlSpec = fph.getURLSpecFromFile(currentDirPref.value);
     } else if (folderIndex == 1) {
       // 'Downloads'
-      [downloadFolder.value] = await document.l10n.formatValues([{id: "downloads-folder-name"}]);
+      downloadFolder.value = gMainPane._prefsBundle.getString("downloadsFolderName");
       iconUrlSpec = fph.getURLSpecFromFile(await this._indexToFolder(1));
     } else {
       // 'Desktop'
-      [downloadFolder.value] = await document.l10n.formatValues([{id: "desktop-folder-name"}]);
+      downloadFolder.value = gMainPane._prefsBundle.getString("desktopFolderName");
       iconUrlSpec = fph.getURLSpecFromFile(await this._getDownloadsFolder("Desktop"));
     }
     downloadFolder.style.backgroundImage = "url(moz-icon://" + iconUrlSpec + "?size=16)";
