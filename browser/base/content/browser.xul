@@ -760,7 +760,7 @@ xmlns="http://www.w3.org/1999/xhtml"
           <spacer flex="1000"/>
 
           <hbox id="TabsToolbar-customization-target" flex="1">
-            <hbox class="titlebar-placeholder" type="pre-tabs"
+            <hbox class="titlebar-spacer" type="pre-tabs"
                   skipintoolbarset="true"/>
 
             <tabs id="tabbrowser-tabs"
@@ -791,7 +791,7 @@ xmlns="http://www.w3.org/1999/xhtml"
                            tooltiptext="&listAllTabs.label;"
                            removable="false"/>
 
-            <hbox class="titlebar-placeholder" type="post-tabs"
+            <hbox class="titlebar-spacer" type="post-tabs"
                   ordinal="1000"
                   skipintoolbarset="true"/>
           </hbox>

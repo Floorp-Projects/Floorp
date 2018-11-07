@@ -288,15 +288,15 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
 
 %ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar:not([autohide=true]) + #TabsToolbar > .titlebar-item,
-#toolbar-menubar:not([autohide=true]) + #TabsToolbar .titlebar-placeholder,
+#toolbar-menubar:not([autohide=true]) + #TabsToolbar .titlebar-spacer,
 %endif
 %ifndef MOZ_WIDGET_COCOA
-#main-window:not([sizemode=normal]) .titlebar-placeholder[type="pre-tabs"],
+#main-window:not([sizemode=normal]) .titlebar-spacer[type="pre-tabs"],
 %endif
 #main-window:not([chromemargin]) .titlebar-buttonbox-container,
 #main-window[inFullscreen] .titlebar-buttonbox-container,
-#main-window[inFullscreen] .titlebar-placeholder,
-#main-window:not([tabsintitlebar]) .titlebar-placeholder {
+#main-window[inFullscreen] .titlebar-spacer,
+#main-window:not([tabsintitlebar]) .titlebar-spacer {
   display: none;
 }
 
