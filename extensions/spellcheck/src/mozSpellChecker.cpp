@@ -24,18 +24,12 @@ using mozilla::TextServicesDocument;
 
 #define DEFAULT_SPELL_CHECKER "@mozilla.org/spellchecker/engine;1"
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(mozSpellChecker)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(mozSpellChecker)
-
-NS_INTERFACE_MAP_BEGIN(mozSpellChecker)
-  NS_INTERFACE_MAP_ENTRY(nsISpellChecker)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISpellChecker)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(mozSpellChecker)
-NS_INTERFACE_MAP_END
-
 NS_IMPL_CYCLE_COLLECTION(mozSpellChecker,
                          mTextServicesDocument,
                          mPersonalDictionary)
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(mozSpellChecker, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(mozSpellChecker, Release)
 
 mozSpellChecker::mozSpellChecker()
   : mEngine(nullptr)
@@ -80,7 +74,7 @@ mozSpellChecker::GetTextServicesDocument()
   return mTextServicesDocument;
 }
 
-NS_IMETHODIMP
+nsresult
 mozSpellChecker::SetDocument(TextServicesDocument* aTextServicesDocument,
                              bool aFromStartofDoc)
 {
@@ -90,7 +84,7 @@ mozSpellChecker::SetDocument(TextServicesDocument* aTextServicesDocument,
 }
 
 
-NS_IMETHODIMP
+nsresult
 mozSpellChecker::NextMisspelledWord(nsAString &aWord, nsTArray<nsString> *aSuggestions)
 {
   if(!aSuggestions||!mConverter)
@@ -135,7 +129,7 @@ mozSpellChecker::NextMisspelledWord(nsAString &aWord, nsTArray<nsString> *aSugge
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled, nsTArray<nsString> *aSuggestions)
 {
   nsresult result;
@@ -178,7 +172,7 @@ mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled, nsTArray
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 mozSpellChecker::Replace(const nsAString &aOldWord, const nsAString &aNewWord, bool aAllOccurrences)
 {
   if(!mConverter)
@@ -269,7 +263,7 @@ mozSpellChecker::Replace(const nsAString &aOldWord, const nsAString &aNewWord, b
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 mozSpellChecker::IgnoreAll(const nsAString &aWord)
 {
   if (mPersonalDictionary) {
@@ -278,7 +272,7 @@ mozSpellChecker::IgnoreAll(const nsAString &aWord)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 mozSpellChecker::AddWordToPersonalDictionary(const nsAString &aWord)
 {
   nsresult res;
@@ -289,7 +283,7 @@ mozSpellChecker::AddWordToPersonalDictionary(const nsAString &aWord)
   return res;
 }
 
-NS_IMETHODIMP
+nsresult
 mozSpellChecker::RemoveWordFromPersonalDictionary(const nsAString &aWord)
 {
   nsresult res;
@@ -300,7 +294,7 @@ mozSpellChecker::RemoveWordFromPersonalDictionary(const nsAString &aWord)
   return res;
 }
 
-NS_IMETHODIMP
+nsresult
 mozSpellChecker::GetPersonalDictionary(nsTArray<nsString> *aWordList)
 {
   if(!aWordList || !mPersonalDictionary)
@@ -318,7 +312,7 @@ mozSpellChecker::GetPersonalDictionary(nsTArray<nsString> *aWordList)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 mozSpellChecker::GetDictionaryList(nsTArray<nsString> *aDictionaryList)
 {
   if (XRE_IsContentProcess()) {
@@ -366,7 +360,7 @@ mozSpellChecker::GetDictionaryList(nsTArray<nsString> *aDictionaryList)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 mozSpellChecker::GetCurrentDictionary(nsAString &aDictionary)
 {
   if (XRE_IsContentProcess()) {
@@ -382,7 +376,7 @@ mozSpellChecker::GetCurrentDictionary(nsAString &aDictionary)
   return mSpellCheckingEngine->GetDictionary(aDictionary);
 }
 
-NS_IMETHODIMP
+nsresult
 mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary)
 {
   if (XRE_IsContentProcess()) {
@@ -435,7 +429,7 @@ mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary)
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP_(RefPtr<GenericPromise>)
+RefPtr<GenericPromise>
 mozSpellChecker::SetCurrentDictionaryFromList(const nsTArray<nsString>& aList)
 {
   if (aList.IsEmpty()) {

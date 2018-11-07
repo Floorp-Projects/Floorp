@@ -34,14 +34,10 @@ private:
   // Decoders should only be instantiated via DecoderFactory.
   explicit nsWebPDecoder(RasterImage* aImage);
 
-  enum class State
-  {
-    WEBP_DATA,
-    FINISHED_WEBP_DATA
-  };
-
   void ApplyColorProfile(const char* aProfile, size_t aLength);
 
+  LexerResult UpdateBuffer(SourceBufferIterator& aIterator,
+                           SourceBufferIterator::State aState);
   LexerResult ReadData();
   LexerResult ReadHeader(WebPDemuxer* aDemuxer, bool aIsComplete);
   LexerResult ReadPayload(WebPDemuxer* aDemuxer, bool aIsComplete);
