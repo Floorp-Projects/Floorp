@@ -19,10 +19,6 @@
   --space-above-tabbar: 8px;
 }
 
-:root[sessionrestored]:-moz-lwtheme {
-  transition: @themeTransition@;
-}
-
 /* Increase contrast of UI links on dark themes */
 
 :root[lwt-popup-brighttext] panel .text-link {
