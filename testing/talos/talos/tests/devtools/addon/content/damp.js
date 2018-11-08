@@ -1,9 +1,8 @@
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
+const { TalosParentProfiler } = ChromeUtils.import("resource://talos-powers/TalosParentProfiler.jsm", {});
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-let scope = {};
-const { TalosParentProfiler } = scope;
 
 XPCOMUtils.defineLazyGetter(this, "require", function() {
   let { require } =
