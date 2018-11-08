@@ -642,7 +642,7 @@ nsNativeTheme::IsRegularMenuItem(nsIFrame *aFrame)
 {
   nsMenuFrame *menuFrame = do_QueryFrame(aFrame);
   return !(menuFrame && (menuFrame->IsOnMenuBar() ||
-                         menuFrame->GetParentMenuListType() != eNotMenuList));
+                         menuFrame->IsParentMenuList()));
 }
 
 bool

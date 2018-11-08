@@ -114,9 +114,9 @@ public:
     Unsupported("MaybeDivergeFromRecording");
   }
 
-  // Get the current execution point when recording.
-  virtual ExecutionPoint GetRecordingEndpoint() {
-    Unsupported("GetRecordingEndpoint");
+  // Get the current execution point.
+  virtual ExecutionPoint CurrentExecutionPoint() {
+    Unsupported("CurrentExecutionPoint");
   }
 
   // Called when execution reaches the endpoint of the recording.
@@ -191,7 +191,7 @@ public:
   void RunToPoint(const ExecutionPoint& aTarget) override;
   void HandleDebuggerRequest(js::CharBuffer* aRequestBuffer) override;
   bool MaybeDivergeFromRecording() override;
-  ExecutionPoint GetRecordingEndpoint() override;
+  ExecutionPoint CurrentExecutionPoint() override;
 
   bool EnsureTemporaryCheckpoint();
 };
@@ -357,8 +357,8 @@ public:
   // of how much time has elapsed.
   bool mAlwaysSaveTemporaryCheckpoints;
 
-  // Checkpoints for all time warp targets that have been generated.
-  InfallibleVector<std::pair<ProgressCounter, size_t>, 0, UntrackedAllocPolicy> mTimeWarpTargetCheckpoints;
+  // Progress counts for all checkpoints that have been encountered.
+  InfallibleVector<ProgressCounter, 0, UntrackedAllocPolicy> mCheckpointProgress;
 
   // Note: NavigationState is initially zeroed.
   NavigationState()
@@ -368,8 +368,9 @@ public:
       // The recording must include everything up to the first
       // checkpoint. After that point we will ask the record/replay
       // system to notify us about any further endpoints.
-      mRecordingEndpoint = ExecutionPoint(CheckpointId::First);
+      mRecordingEndpoint = ExecutionPoint(CheckpointId::First, 0);
     }
+    mCheckpointProgress.append(0);
   }
 
   void AfterCheckpoint(const CheckpointId& aCheckpoint) {
@@ -381,12 +382,22 @@ public:
       mTemporaryCheckpoints.popBack();
     }
 
+    // Update the progress counter for each normal checkpoint.
+    if (!aCheckpoint.mTemporary) {
+      ProgressCounter progress = *ExecutionProgressCounter();
+      if (aCheckpoint.mNormal < mCheckpointProgress.length()) {
+        MOZ_RELEASE_ASSERT(progress == mCheckpointProgress[aCheckpoint.mNormal]);
+      } else {
+        MOZ_RELEASE_ASSERT(aCheckpoint.mNormal == mCheckpointProgress.length());
+        mCheckpointProgress.append(progress);
+      }
+    }
+
     mPhase->AfterCheckpoint(aCheckpoint);
 
     // Make sure we don't run past the end of the recording.
     if (!aCheckpoint.mTemporary) {
-      ExecutionPoint point(aCheckpoint.mNormal);
-      CheckForRecordingEndpoint(point);
+      CheckForRecordingEndpoint(CheckpointExecutionPoint(aCheckpoint.mNormal));
     }
 
     MOZ_RELEASE_ASSERT(IsRecording() ||
@@ -422,8 +433,8 @@ public:
     return mPhase->MaybeDivergeFromRecording();
   }
 
-  ExecutionPoint GetRecordingEndpoint() {
-    return mPhase->GetRecordingEndpoint();
+  ExecutionPoint CurrentExecutionPoint() {
+    return mPhase->CurrentExecutionPoint();
   }
 
   void SetRecordingEndpoint(size_t aIndex, const ExecutionPoint& aEndpoint) {
@@ -451,6 +462,12 @@ public:
     }
   }
 
+  ExecutionPoint LastRecordingEndpoint() {
+    // Get the last recording endpoint in the recording file.
+    while (recordreplay::HitRecordingEndpoint()) {}
+    return mRecordingEndpoint;
+  }
+
   size_t NumTemporaryCheckpoints() {
     return mTemporaryCheckpoints.length();
   }
@@ -464,6 +481,11 @@ public:
   ExecutionPoint LastTemporaryCheckpointLocation() {
     MOZ_RELEASE_ASSERT(!mTemporaryCheckpoints.empty());
     return mTemporaryCheckpoints.back();
+  }
+
+  ExecutionPoint CheckpointExecutionPoint(size_t aCheckpoint) {
+    MOZ_RELEASE_ASSERT(aCheckpoint < mCheckpointProgress.length());
+    return ExecutionPoint(aCheckpoint, mCheckpointProgress[aCheckpoint]);
   }
 };
 
@@ -527,7 +549,7 @@ PausedPhase::AfterCheckpoint(const CheckpointId& aCheckpoint)
   MOZ_RELEASE_ASSERT(!mRecoveringFromDivergence);
   if (!aCheckpoint.mTemporary) {
     // We just rewound here, and are now where we should pause.
-    MOZ_RELEASE_ASSERT(mPoint == ExecutionPoint(aCheckpoint.mNormal));
+    MOZ_RELEASE_ASSERT(mPoint == gNavigation->CheckpointExecutionPoint(aCheckpoint.mNormal));
     child::HitCheckpoint(mPoint.mCheckpoint, mRecordingEndpoint);
   } else {
     // We just saved or restored the temporary checkpoint taken while
@@ -589,7 +611,7 @@ PausedPhase::Resume(bool aForward)
 void
 PausedPhase::RestoreCheckpoint(size_t aCheckpoint)
 {
-  ExecutionPoint target(aCheckpoint);
+  ExecutionPoint target = gNavigation->CheckpointExecutionPoint(aCheckpoint);
   bool rewind = target != mPoint;
   Enter(target, BreakpointVector(), rewind, /* aRecordingEndpoint = */ false);
 }
@@ -768,9 +790,8 @@ PausedPhase::EnsureTemporaryCheckpoint()
 }
 
 ExecutionPoint
-PausedPhase::GetRecordingEndpoint()
+PausedPhase::CurrentExecutionPoint()
 {
-  MOZ_RELEASE_ASSERT(IsRecording());
   return mPoint;
 }
 
@@ -800,7 +821,7 @@ ForwardPhase::AfterCheckpoint(const CheckpointId& aCheckpoint)
 {
   MOZ_RELEASE_ASSERT(!aCheckpoint.mTemporary &&
                      aCheckpoint.mNormal == mPoint.mCheckpoint + 1);
-  gNavigation->mPausedPhase.Enter(ExecutionPoint(aCheckpoint.mNormal));
+  gNavigation->mPausedPhase.Enter(gNavigation->CheckpointExecutionPoint(aCheckpoint.mNormal));
 }
 
 void
@@ -1042,8 +1063,8 @@ FindLastHitPhase::OnRegionEnd()
     }
 
     // Rewind to the last normal checkpoint and pause.
-    gNavigation->mPausedPhase.Enter(ExecutionPoint(mStart.mNormal), BreakpointVector(),
-                                    /* aRewind = */ true);
+    gNavigation->mPausedPhase.Enter(gNavigation->CheckpointExecutionPoint(mStart.mNormal),
+                                    BreakpointVector(), /* aRewind = */ true);
     Unreachable();
   }
 
@@ -1094,6 +1115,10 @@ BeforeCheckpoint()
     gNavigation = new (navigationMem) NavigationState();
 
     js::SetupDevtoolsSandbox();
+
+    // Set the progress counter to zero before the first checkpoint. Execution
+    // that occurred before this checkpoint cannot be rewound to.
+    *ExecutionProgressCounter() = 0;
   }
 
   AutoDisallowThreadEvents disallow;
@@ -1156,8 +1181,11 @@ RunToPoint(const ExecutionPoint& aTarget)
 ExecutionPoint
 GetRecordingEndpoint()
 {
-  MOZ_RELEASE_ASSERT(IsRecording());
-  return gNavigation->GetRecordingEndpoint();
+  if (IsRecording()) {
+    return gNavigation->CurrentExecutionPoint();
+  } else {
+    return gNavigation->LastRecordingEndpoint();
+  }
 }
 
 void
@@ -1180,17 +1208,20 @@ RecordReplayInterface_ExecutionProgressCounter()
 } // extern "C"
 
 ExecutionPoint
-CurrentExecutionPoint(const BreakpointPosition& aPosition)
+CurrentExecutionPoint(const Maybe<BreakpointPosition>& aPosition)
 {
-  return ExecutionPoint(gNavigation->LastCheckpoint().mNormal,
-                        gProgressCounter, aPosition);
+  if (aPosition.isSome()) {
+    return ExecutionPoint(gNavigation->LastCheckpoint().mNormal,
+                          gProgressCounter, aPosition.ref());
+  }
+  return gNavigation->CurrentExecutionPoint();
 }
 
 void
 PositionHit(const BreakpointPosition& position)
 {
   AutoDisallowThreadEvents disallow;
-  gNavigation->PositionHit(CurrentExecutionPoint(position));
+  gNavigation->PositionHit(CurrentExecutionPoint(Some(position)));
 }
 
 extern "C" {
@@ -1215,17 +1246,6 @@ RecordReplayInterface_NewTimeWarpTarget()
   ProgressCounter progress = ++gProgressCounter;
 
   PositionHit(BreakpointPosition(BreakpointPosition::WarpTarget));
-
-  // Remember the checkpoint associated with each time warp target we have
-  // generated, so we can convert them to ExecutionPoints later. Ignore warp
-  // targets we have already encountered.
-  if (gNavigation->mTimeWarpTargetCheckpoints.empty() ||
-      progress > gNavigation->mTimeWarpTargetCheckpoints.back().first)
-  {
-    size_t checkpoint = gNavigation->LastCheckpoint().mNormal;
-    gNavigation->mTimeWarpTargetCheckpoints.emplaceBack(progress, checkpoint);
-  }
-
   return progress;
 }
 
@@ -1234,16 +1254,21 @@ RecordReplayInterface_NewTimeWarpTarget()
 ExecutionPoint
 TimeWarpTargetExecutionPoint(ProgressCounter aTarget)
 {
-  Maybe<size_t> checkpoint;
-  for (auto entry : gNavigation->mTimeWarpTargetCheckpoints) {
-    if (entry.first == aTarget) {
-      checkpoint.emplace(entry.second);
+  // To construct an ExecutionPoint, we need the most recent checkpoint prior
+  // to aTarget. We could do a binary search here, but this code is cold and a
+  // linear search is more straightforwardly correct.
+  size_t checkpoint;
+  for (checkpoint = gNavigation->mCheckpointProgress.length() - 1;
+       checkpoint >= CheckpointId::First;
+       checkpoint--)
+  {
+    if (gNavigation->mCheckpointProgress[checkpoint] < aTarget) {
       break;
     }
   }
-  MOZ_RELEASE_ASSERT(checkpoint.isSome());
+  MOZ_RELEASE_ASSERT(checkpoint >= CheckpointId::First);
 
-  return ExecutionPoint(checkpoint.ref(), aTarget,
+  return ExecutionPoint(checkpoint, aTarget,
                         BreakpointPosition(BreakpointPosition::WarpTarget));
 }
 

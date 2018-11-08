@@ -48,6 +48,9 @@ run_schema = Schema({
     # Command to run before dpkg-buildpackage.
     Optional('pre-build-command'): basestring,
 
+    # Architecture to build the package for.
+    Optional('arch'): basestring,
+
     # List of package tasks to get build dependencies from.
     Optional('packages'): [basestring],
 
@@ -68,9 +71,15 @@ def docker_worker_debian_package(config, job, taskdesc):
 
     name = taskdesc['label'].replace('{}-'.format(config.kind), '', 1)
 
+    docker_repo = 'debian'
+    arch = run.get('arch', 'amd64')
+    if arch != 'amd64':
+        docker_repo = '{}/{}'.format(arch, docker_repo)
+
     worker = taskdesc['worker']
     worker['artifacts'] = []
-    worker['docker-image'] = 'debian:{dist}-{date}'.format(
+    worker['docker-image'] = '{repo}:{dist}-{date}'.format(
+        repo=docker_repo,
         dist=run['dist'],
         date=run['snapshot'][:8])
 
@@ -206,6 +215,9 @@ def docker_worker_debian_package(config, job, taskdesc):
     data = list(worker['command'])
     if 'patch' in run:
         data.append(hash_path(os.path.join(GECKO, 'build', 'debian-packages', run['patch'])))
+
+    if docker_repo != 'debian':
+        data.append(docker_repo)
 
     if run.get('packages'):
         env = worker.setdefault('env', {})

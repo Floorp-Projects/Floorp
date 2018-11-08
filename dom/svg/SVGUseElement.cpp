@@ -474,9 +474,9 @@ SVGUseElement::LookupHref()
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
                                             GetComposedDoc(), baseURI);
   // Bug 1415044 to investigate which referrer we should use
-  mReferencedElementTracker.Reset(this, targetURI,
-                                  OwnerDoc()->GetDocumentURI(),
-                                  OwnerDoc()->GetReferrerPolicy());
+  mReferencedElementTracker.ResetToURIFragmentID(this, targetURI,
+                                                 OwnerDoc()->GetDocumentURI(),
+                                                 OwnerDoc()->GetReferrerPolicy());
 }
 
 void

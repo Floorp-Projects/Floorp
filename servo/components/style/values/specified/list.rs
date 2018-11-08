@@ -9,9 +9,9 @@ use parser::{Parse, ParserContext};
 use servo_arc::Arc;
 use style_traits::{ParseError, StyleParseErrorKind};
 #[cfg(feature = "gecko")]
-use values::CustomIdent;
-#[cfg(feature = "gecko")]
 use values::generics::CounterStyleOrNone;
+#[cfg(feature = "gecko")]
+use values::CustomIdent;
 
 /// Specified and computed `list-style-type` property.
 #[cfg(feature = "gecko")]
@@ -88,7 +88,7 @@ pub struct QuotePair {
 pub struct Quotes(
     #[css(iterable, if_empty = "none")]
     #[ignore_malloc_size_of = "Arc"]
-    pub Arc<Box<[QuotePair]>>
+    pub Arc<Box<[QuotePair]>>,
 );
 
 impl Parse for Quotes {
