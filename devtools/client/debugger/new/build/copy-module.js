@@ -212,8 +212,8 @@ function transform(filePath) {
 			"syntax-trailing-function-commas",
 			"transform-class-properties",
 			"transform-es2015-modules-commonjs",
-			"transform-object-rest-spread",
 			"transform-react-jsx",
+      			"syntax-object-rest-spread",
       ["transform-mc", { mappings, vendors: VENDORS, filePath }]
     ]
   });
