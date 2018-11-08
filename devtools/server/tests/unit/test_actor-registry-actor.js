@@ -10,11 +10,8 @@
 var gClient;
 var gRegistryFront;
 var gActorFront;
-var gOldPref;
 
 function run_test() {
-  gOldPref = Services.prefs.getBoolPref("devtools.debugger.forbid-certified-apps");
-  Services.prefs.setBoolPref("devtools.debugger.forbid-certified-apps", false);
   initTestDebuggerServer();
   DebuggerServer.registerAllActors();
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
@@ -71,7 +68,6 @@ function testActorIsUnregistered() {
   gClient.listTabs().then(({ helloActor }) => {
     Assert.ok(!helloActor);
 
-    Services.prefs.setBoolPref("devtools.debugger.forbid-certified-apps", gOldPref);
     finishClient(gClient);
   });
 }
