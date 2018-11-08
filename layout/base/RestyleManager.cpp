@@ -2009,11 +2009,11 @@ ServoRestyleState::AssertOwner(const ServoRestyleState& aParent) const
 {
   MOZ_ASSERT(mOwner);
   MOZ_ASSERT(!mOwner->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW));
+  MOZ_ASSERT(!mOwner->IsColumnSpanInMulticolSubtree());
   // We allow aParent.mOwner to be null, for cases when we're not starting at
   // the root of the tree.  We also allow aParent.mOwner to be somewhere up our
   // expected owner chain not our immediate owner, which allows us creating long
   // chains of ServoRestyleStates in some cases where it's just not worth it.
-#ifdef DEBUG
   if (aParent.mOwner) {
     const nsIFrame* owner = ExpectedOwnerForChild(mOwner);
     if (owner != aParent.mOwner) {
@@ -2029,7 +2029,6 @@ ServoRestyleState::AssertOwner(const ServoRestyleState& aParent) const
       MOZ_ASSERT(found, "Must have aParent.mOwner on our expected owner chain");
     }
   }
-#endif
 }
 
 nsChangeHint
@@ -2656,6 +2655,13 @@ RestyleManager::ProcessPostTraversal(
     primaryFrame &&
     primaryFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW);
 
+  // We need this because any column-spanner's parent frame is not its DOM
+  // parent's primary frame. We need some special check similar to out-of-flow
+  // frames.
+  const bool isColumnSpan =
+    primaryFrame &&
+    primaryFrame->IsColumnSpanInMulticolSubtree();
+
   // Grab the change hint from Servo.
   bool wasRestyled;
   nsChangeHint changeHint =
@@ -2683,8 +2689,11 @@ RestyleManager::ProcessPostTraversal(
       maybeAnonBoxChild = primaryFrame->GetPlaceholderFrame();
     } else {
       maybeAnonBoxChild = primaryFrame;
-      changeHint = NS_RemoveSubsumedHints(
-        changeHint, aRestyleState.ChangesHandledFor(styleFrame));
+      // Do not subsume change hints for the column-spanner.
+      if (!isColumnSpan) {
+        changeHint = NS_RemoveSubsumedHints(
+          changeHint, aRestyleState.ChangesHandledFor(styleFrame));
+      }
     }
 
     // If the parent wasn't restyled, the styles of our anon box parents won't
@@ -2739,7 +2748,7 @@ RestyleManager::ProcessPostTraversal(
 
   Maybe<ServoRestyleState> thisFrameRestyleState;
   if (styleFrame) {
-    auto type = isOutOfFlow
+    auto type = isOutOfFlow || isColumnSpan
       ? ServoRestyleState::Type::OutOfFlow
       : ServoRestyleState::Type::InFlow;
 

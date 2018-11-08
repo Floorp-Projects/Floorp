@@ -8735,14 +8735,29 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
   MOZ_ASSERT(aFrame == aFrame->FirstContinuation(),
              "aFrame not the result of GetPrimaryFrame()?");
 
+  nsIFrame* inFlowFrame =
+    (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) ?
+      aFrame->GetPlaceholderFrame() : aFrame;
+  MOZ_ASSERT(inFlowFrame, "How did that happen?");
+  MOZ_ASSERT(inFlowFrame == inFlowFrame->FirstContinuation(),
+             "placeholder for primary frame has previous continuations?");
+  nsIFrame* parent = inFlowFrame->GetParent();
+
   if (aFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
-    nsIFrame* parent = aFrame->GetParent();
+    nsIFrame* grandparent = parent->GetParent();
+    MOZ_ASSERT(grandparent);
+
     bool needsReframe =
       // 1. Removing a column-span may lead to an empty
       // ::-moz-column-span-wrapper.
       aFrame->IsColumnSpan() ||
-      // 2. Removing the only child of a ::-moz-column-content whose
-      // ColumnSet parent has a previous column-span sibling requires
+      // 2. Removing a frame which has any column-span siblings may also
+      // lead to an empty ::-moz-column-span-wrapper subtree. The
+      // column-span siblings were the frame's children, but later become
+      // the frame's siblings after CreateColumnSpanSiblings().
+      aFrame->GetProperty(nsIFrame::HasColumnSpanSiblings()) ||
+      // 3. Removing the only child of a ::-moz-column-content, whose
+      // ColumnSet grandparent has a previous column-span sibling, requires
       // reframing since we might connect the ColumnSet's next column-span
       // sibling (if there's one). Note that this isn't actually needed if
       // the ColumnSet is at the end of ColumnSetWrapper since we create
@@ -8754,9 +8769,9 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
        !aFrame->GetPrevSibling() && !aFrame->GetNextSibling() &&
        // That ::-moz-column-content is the first column.
        !parent->GetPrevInFlow() &&
-       // The ColumnSet containing ::-moz-column-set has a previous sibling
-       // that is a column-span.
-       parent->GetPrevContinuation());
+       // The ColumnSet grandparent has a previous sibling that is a
+       // column-span.
+       grandparent->GetPrevSibling());
 
     if (needsReframe) {
       nsIFrame* containingBlock = GetMultiColumnContainingBlockFor(aFrame);
@@ -8795,14 +8810,6 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
                              InsertionKind::Async);
     return true;
   }
-
-  nsIFrame* inFlowFrame =
-    (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) ?
-      aFrame->GetPlaceholderFrame() : aFrame;
-  MOZ_ASSERT(inFlowFrame, "How did that happen?");
-  MOZ_ASSERT(inFlowFrame == inFlowFrame->FirstContinuation(),
-             "placeholder for primary frame has previous continuations?");
-  nsIFrame* parent = inFlowFrame->GetParent();
 
   if (parent && parent->IsDetailsFrame()) {
     HTMLSummaryElement* summary =
@@ -11072,14 +11079,10 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   //
   // 3) ColumnSetFrames are linked together as continuations.
   //
-  // 4) Those column-span wrappers are linked together alternately with the
-  //    original block frame and the original block's continuations. That
-  //    is, original block frame -> column-span wrapper -> original block
-  //    frame's continuation -> column-span wrapper -> ...
-  //
-  //    This is very similar to what we do with block-inside-inline
-  //    splitting, except here we can use continuations rather than the
-  //    IBSibling linkage since the frames are the same type.
+  // 4) Those column-span wrappers are *not* linked together with themselves nor
+  //    with the original block frame. The continuation chain consists of the
+  //    original block frame and the original block's continuations wrapping
+  //    non-column-spans.
   //
   // For example, this HTML
   //  <div id="x" style="column-count: 2;">
@@ -11120,7 +11123,7 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   //
   // ColumnSet linkage described in 3): B -> G -> Q
   //
-  // Column-span linkage described in 4): C -> D -> H -> K -> R  and  I -> L -> S
+  // Block linkage described in 4): C -> H -> R  and  I -> S
   //
 
   nsBlockFrame* blockFrame = do_QueryFrame(*aNewFrame);
@@ -11424,8 +11427,10 @@ nsCSSFrameConstructor::CreateColumnSpanSiblings(nsFrameConstructorState& aState,
   ComputedStyle* const initialBlockStyle = aInitialBlock->Style();
   nsContainerFrame* const parentFrame = aInitialBlock->GetParent();
 
+  aInitialBlock->SetProperty(nsIFrame::HasColumnSpanSiblings(), true);
+
   nsFrameItems siblings;
-  nsContainerFrame* lastNewBlock = aInitialBlock;
+  nsContainerFrame* lastNonColumnSpanWrapper = aInitialBlock;
   do {
     MOZ_ASSERT(aChildList.NotEmpty(), "Why call this if child list is empty?");
     MOZ_ASSERT(aChildList.FirstChild()->IsColumnSpan(),
@@ -11448,8 +11453,6 @@ nsCSSFrameConstructor::CreateColumnSpanSiblings(nsFrameConstructorState& aState,
       aState.ReparentAbsoluteItems(columnSpanWrapper);
     }
 
-    lastNewBlock->SetNextContinuation(columnSpanWrapper);
-    columnSpanWrapper->SetPrevContinuation(lastNewBlock);
     siblings.AddChild(columnSpanWrapper);
 
     // Grab the consecutive non-column-span kids, and reparent them into a
@@ -11470,11 +11473,11 @@ nsCSSFrameConstructor::CreateColumnSpanSiblings(nsFrameConstructorState& aState,
       }
     }
 
-    columnSpanWrapper->SetNextContinuation(nonColumnSpanWrapper);
-    nonColumnSpanWrapper->SetPrevContinuation(columnSpanWrapper);
+    lastNonColumnSpanWrapper->SetNextContinuation(nonColumnSpanWrapper);
+    nonColumnSpanWrapper->SetPrevContinuation(lastNonColumnSpanWrapper);
     siblings.AddChild(nonColumnSpanWrapper);
 
-    lastNewBlock = nonColumnSpanWrapper;
+    lastNonColumnSpanWrapper = nonColumnSpanWrapper;
   } while (aChildList.NotEmpty());
 
   return siblings;
@@ -11492,10 +11495,9 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // contain the runs of blocks, inline frames with our style for the runs of
   // inlines, and put all these frames, in order, into aFrameItems.
   //
-  // When there are column-span blocks in a run of blocks, instead of
-  // creating an anonymous block to wrap them, we create multiple anonymous
-  // blocks that are continuations of each other, wrapping runs of
-  // non-column-spans and runs of column-spans.
+  // When there are column-span blocks in a run of blocks, instead of creating
+  // an anonymous block to wrap them, we create multiple anonymous blocks,
+  // wrapping runs of non-column-spans and runs of column-spans.
   //
   // We return the the first one.  The whole setup is called an {ib}
   // split; in what follows "frames in the split" refers to the anonymous blocks
@@ -11515,8 +11517,9 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   //
   // 4) The first and last frame in the split are always inlines.
   //
-  // 5) The frames wrapping runs of non-column-spans and runs of
-  //    column-spans are linked together by continuations.
+  // 5) The frames wrapping runs of non-column-spans are linked together as
+  //    continuations. The frames wrapping runs of column-spans are *not*
+  //    linked with each other nor with other non-column-span wrappers.
   //
   // 6) The first and last frame in the chains of blocks are always wrapping
   //    non-column-spans. Both of them are created even if they're empty.
