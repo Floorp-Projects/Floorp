@@ -1041,9 +1041,10 @@ class Attribute(object):
         if self.infallible and self.realtype.kind not in ['builtin',
                                                           'interface',
                                                           'forward',
-                                                          'webidl']:
+                                                          'webidl',
+                                                          'cenum']:
             raise IDLError('[infallible] only works on interfaces, domobjects, and builtin types '
-                           '(numbers, booleans, and raw char types)',
+                           '(numbers, booleans, cenum, and raw char types)',
                            self.location)
         if self.infallible and not iface.attributes.builtinclass:
             raise IDLError('[infallible] attributes are only allowed on '
