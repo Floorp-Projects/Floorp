@@ -304,8 +304,7 @@
   grid-row: 1;
 }
 
-.flex-outline-point.basis,
-.flex-outline-point.basisfinal {
+.flex-outline-point.basis {
   grid-column-end: basis-end;
   justify-self: end;
 }
@@ -358,8 +357,7 @@
 }
 
 .flex-outline-point.basis::before,
-.flex-outline-point.final::before,
-.flex-outline-point.basisfinal::before {
+.flex-outline-point.final::before {
   top: -12px;
 }
 
@@ -368,7 +366,7 @@
   bottom: -12px;
 }
 
-.flex-outline.column .flex-outline-point.max::before,
+.flex-outline.column .flex-outline-point.min::before,
 .flex-outline.column .flex-outline-point.min::before {
   text-indent: -12px;
 }
@@ -376,15 +374,13 @@
 .flex-outline-point.final::before,
 .flex-outline.shrinking .flex-outline-point.min::before,
 .flex-outline-point.max::before,
-.flex-outline.shrinking .flex-outline-point.basis::before,
-.flex-outline.column .flex-outline-point.basisfinal::before {
+.flex-outline.shrinking .flex-outline-point.basis::before {
   border-width: 0 0 0 1px;
 }
 
 .flex-outline-point.basis::before,
 .flex-outline-point.min::before,
-.flex-outline.shrinking .flex-outline-point.final::before,
-.flex-outline.row .flex-outline-point.basisfinal::before {
+.flex-outline.shrinking .flex-outline-point.final::before {
   border-width: 0 1px 0 0;
 }
 
