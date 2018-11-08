@@ -113,7 +113,7 @@ class BrowserAwesomeBarTest {
             awesomeBar.onInputChanged("Hello!")
 
             // Give the jobs some time to start
-            runBlocking { delay(50) }
+            delay(50)
 
             awesomeBar.onInputCancelled()
 
@@ -153,7 +153,7 @@ class BrowserAwesomeBarTest {
             awesomeBar.onInputChanged("Hello!")
 
             // Give the jobs some time to start
-            runBlocking { delay(50) }
+            delay(50)
 
             shadowOf(awesomeBar).callOnDetachedFromWindow()
 
@@ -206,7 +206,7 @@ class BrowserAwesomeBarTest {
             awesomeBar.onInputChanged("Hello!")
 
             // Give the jobs some time to start
-            runBlocking { delay(50) }
+            delay(50)
 
             awesomeBar.onInputChanged("World!")
 
