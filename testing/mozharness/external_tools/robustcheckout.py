@@ -49,8 +49,8 @@ except ImportError:
 # Causes worker to purge caches on process exit and for task to retry.
 EXIT_PURGE_CACHE = 72
 
-testedwith = '3.7 3.8 3.9 4.0 4.1 4.2 4.3 4.4 4.5 4.6 4.7'
-minimumhgversion = '3.7'
+testedwith = '4.3 4.4 4.5 4.6 4.7 4.8'
+minimumhgversion = '4.3'
 
 cmdtable = {}
 
@@ -88,13 +88,9 @@ def getsparse():
 
 def supported_hg():
     '''Returns True if the Mercurial version is supported for robustcheckout'''
-    return util.versiontuple(n=2) in (
-        (4, 3),
-        (4, 4),
-        (4, 5),
-        (4, 6),
-        (4, 7),
-    )
+    return '.'.join(
+        str(v) for v in util.versiontuple(n=2)
+    ) in testedwith.split()
 
 
 if os.name == 'nt':
@@ -680,7 +676,12 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
             raise error.Abort('sparse profile %s does not exist at revision '
                               '%s' % (sparse_profile, checkoutrevision))
 
-        old_config = sparsemod.parseconfig(repo.ui, repo.vfs.tryread('sparse'))
+        # TRACKING hg48 - parseconfig takes `action` param
+        if util.versiontuple(n=2) >= (4, 8):
+            old_config = sparsemod.parseconfig(repo.ui, repo.vfs.tryread('sparse'), 'sparse')
+        else:
+            old_config = sparsemod.parseconfig(repo.ui, repo.vfs.tryread('sparse'))
+
         old_includes, old_excludes, old_profiles = old_config
 
         if old_profiles == {sparse_profile} and not old_includes and not \
