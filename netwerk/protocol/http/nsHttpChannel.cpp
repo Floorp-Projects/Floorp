@@ -1483,7 +1483,7 @@ ProcessXCTO(nsIURI* aURI, nsHttpResponseHead* aResponseHead, nsILoadInfo* aLoadI
     }
     // b) let's trim all surrounding whitespace
     //    e.g. "   NoSniFF   " -> "NoSniFF"
-    contentTypeOptionsHeader.StripWhitespace();
+    nsHttp::TrimHTTPWhitespace(contentTypeOptionsHeader, contentTypeOptionsHeader);
     // c) let's compare the header (ignoring case)
     //    e.g. "NoSniFF" -> "nosniff"
     //    if it's not 'nosniff' then there is nothing to do here
