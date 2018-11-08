@@ -70,9 +70,7 @@ async function attachURL(url) {
   await target.attach();
 
   const cleanup = async function() {
-    if (target.client) {
-      await target.client.close();
-    }
+    await target.destroy();
     if (win) {
       win.close();
     }
