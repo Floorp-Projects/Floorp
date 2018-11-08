@@ -545,7 +545,6 @@ public:
     , mForceTransparentSurface(false)
     , mHideAllLayersBelow(false)
     , mOpaqueForAnimatedGeometryRootParent(false)
-    , mDisableFlattening(false)
     , mBackfaceHidden(false)
     , mShouldPaintOnContentSide(false)
     , mDTCRequiresTargetConfirmation(false)
@@ -748,10 +747,6 @@ public:
    * and the PaintedLayer completely fills the displayport of the scrollframe.
    */
   bool mOpaqueForAnimatedGeometryRootParent;
-  /**
-   * Set if there is content in the layer that must avoid being flattened.
-   */
-  bool mDisableFlattening;
   /**
    * Set if the backface of this region is hidden to the user.
    * Content that backface is hidden should not be draw on the layer
@@ -3858,9 +3853,6 @@ ContainerState::FinishPaintedLayerData(
   } else if (data->mNeedComponentAlpha && !hidpi) {
     flags |= Layer::CONTENT_COMPONENT_ALPHA;
   }
-  if (data->mDisableFlattening) {
-    flags |= Layer::CONTENT_DISABLE_FLATTENING;
-  }
   layer->SetContentFlags(flags);
 
   userData->mItems = std::move(data->mAssignedDisplayItems);
@@ -4231,15 +4223,6 @@ PaintedLayerData::Accumulate(ContainerState* aState,
         aItem->DisableComponentAlpha();
       }
     }
-  }
-
-  // Ensure animated text does not get flattened, even if it forces other
-  // content in the container to be layerized. The content backend might
-  // not support subpixel positioning of text that animated transforms can
-  // generate. bug 633097
-  if (aState->mParameters.mInActiveTransformedSubtree &&
-      (mNeedComponentAlpha || !componentAlphaBounds.IsEmpty())) {
-    mDisableFlattening = true;
   }
 }
 
