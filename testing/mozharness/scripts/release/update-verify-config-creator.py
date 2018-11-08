@@ -246,6 +246,8 @@ class UpdateVerifyConfigCreator(BaseScript):
             # string is included in the name. later we rely on this.
             product, version = release_name.split('-', 1)
             category = release_info['category']
+            if category == 'esr':
+                version += 'esr'
             tag = "{}_{}_RELEASE".format(product.upper(), version.replace(".", "_"))
             # Product details has a "category" for releases that we can use to
             # determine the repo path. This will fail if any previous releases
