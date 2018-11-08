@@ -227,6 +227,9 @@ class CPUInfo
     static bool avxPresent;
     static bool avxEnabled;
     static bool popcntPresent;
+    static bool bmi1Present;
+    static bool bmi2Present;
+    static bool lzcntPresent;
     static bool needAmdBugWorkaround;
 
     static void SetSSEVersion();
@@ -244,6 +247,9 @@ class CPUInfo
     static bool IsSSE41Present() { return GetSSEVersion() >= SSE4_1; }
     static bool IsSSE42Present() { return GetSSEVersion() >= SSE4_2; }
     static bool IsPOPCNTPresent() { return popcntPresent; }
+    static bool IsBMI1Present() { return bmi1Present; }
+    static bool IsBMI2Present() { return bmi2Present; }
+    static bool IsLZCNTPresent() { return lzcntPresent; }
     static bool NeedAmdBugWorkaround() { return needAmdBugWorkaround; }
 
     static void SetSSE3Disabled() { maxEnabledSSEVersion = SSE2; avxEnabled = false; }
@@ -1109,6 +1115,9 @@ class AssemblerX86Shared : public AssemblerShared
     static bool HasSSE41() { return CPUInfo::IsSSE41Present(); }
     static bool HasSSE42() { return CPUInfo::IsSSE42Present(); }
     static bool HasPOPCNT() { return CPUInfo::IsPOPCNTPresent(); }
+    static bool HasBMI1() { return CPUInfo::IsBMI1Present(); }
+    static bool HasBMI2() { return CPUInfo::IsBMI2Present(); }
+    static bool HasLZCNT() { return CPUInfo::IsLZCNTPresent(); }
     static bool SupportsFloatingPoint() { return CPUInfo::IsSSE2Present(); }
     static bool SupportsUnalignedAccesses() { return true; }
     static bool SupportsSimd() { return CPUInfo::IsSSE2Present(); }
