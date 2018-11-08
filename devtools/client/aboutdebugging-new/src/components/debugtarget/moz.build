@@ -11,6 +11,7 @@ DevToolsModules(
     'DebugTargetPane.js',
     'ExtensionDetail.css',
     'ExtensionDetail.js',
+    'FieldPair.js',
     'InspectAction.js',
     'ServiceWorkerAction.js',
     'TabDetail.js',

@@ -11,6 +11,8 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
+const FieldPair = createFactory(require("./FieldPair"));
+
 /**
  * This component displays detail information for extension.
  */
@@ -21,20 +23,6 @@ class ExtensionDetail extends PureComponent {
       getString: PropTypes.func.isRequired,
       target: PropTypes.object.isRequired,
     };
-  }
-
-  renderField(key, name, value, title) {
-    return [
-      dom.dt({ key: `${ key }-dt` }, name),
-      dom.dd(
-        {
-          className: "ellipsis-text",
-          key: `${ key }-dd`,
-          title: title || value,
-        },
-        value,
-      ),
-    ];
   }
 
   renderUUID() {
@@ -59,8 +47,37 @@ class ExtensionDetail extends PureComponent {
       ),
     ];
 
-    const uuidName = this.props.getString("about-debugging-extension-uuid");
-    return this.renderField("uuid", uuidName, value, uuid);
+    return Localized(
+      {
+        id: "about-debugging-extension-uuid",
+        attrs: { label: true },
+      },
+      FieldPair(
+        {
+          slug: "uuid",
+          label: "Internal UUID",
+          value,
+        }
+      )
+    );
+  }
+
+  renderLocation() {
+    const { location } = this.props.target.details;
+
+    return Localized(
+      {
+        id: "about-debugging-extension-location",
+        attrs: { label: true },
+      },
+      FieldPair(
+        {
+          slug: "location",
+          label: "Location",
+          value: location,
+        }
+      )
+    );
   }
 
   render() {
@@ -68,15 +85,24 @@ class ExtensionDetail extends PureComponent {
     const { id, details } = target;
     const { location, uuid } = details;
 
-    const locationName = this.props.getString("about-debugging-extension-location");
-    const idName = this.props.getString("about-debugging-extension-id");
-
     return dom.dl(
       {
         className: "extension-detail",
       },
-      location ? this.renderField("location", locationName, location) : null,
-      this.renderField("extension", idName, id),
+      location ? this.renderLocation() : null,
+      Localized(
+        {
+          id: "about-debugging-extension-id",
+          attrs: { label: true },
+        },
+        FieldPair(
+          {
+            slug: "extension",
+            label: "Extension ID",
+            value: id,
+          }
+        )
+      ),
       uuid ? this.renderUUID() : null,
     );
   }
