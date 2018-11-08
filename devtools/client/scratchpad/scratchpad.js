@@ -2040,7 +2040,7 @@ ScratchpadTab.prototype = {
    * @param object subject
    *        The tab or window to obtain the connection for.
    * @return Promise
-   *         The promise for the TabTarget for this tab.
+   *         The promise for the Target for this tab.
    */
   async _attach(subject) {
     const target = await TargetFactory.forTab(this._tab);

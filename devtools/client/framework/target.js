@@ -51,7 +51,7 @@ const TargetFactory = exports.TargetFactory = {
    * - spawn a DebuggerServer in the parent process,
    * - create a DebuggerClient and connect it to this local DebuggerServer,
    * - call RootActor's `getTab` request to retrieve the FrameTargetActor's form,
-   * - instantiate a TabTarget instance.
+   * - instantiate a Target instance.
    *
    * @param {XULTab} tab
    *        The tab to use in creating a new target.
@@ -88,10 +88,10 @@ const TargetFactory = exports.TargetFactory = {
     // Fetch the FrameTargetActor form
     const response = await client.getTab({ tab });
 
-    return new TabTarget({
+    return new Target({
       client,
       form: response.tab,
-      // A local TabTarget will never perform chrome debugging.
+      // A local Target will never perform chrome debugging.
       chrome: false,
       tab,
     });
@@ -113,7 +113,7 @@ const TargetFactory = exports.TargetFactory = {
   forRemoteTab: function(options) {
     let targetPromise = promiseTargets.get(options);
     if (targetPromise == null) {
-      const target = new TabTarget(options);
+      const target = new Target(options);
       targetPromise = target.attach().then(() => target);
       targetPromise.catch(e => {
         console.error("Exception while attaching target", e);
@@ -126,9 +126,9 @@ const TargetFactory = exports.TargetFactory = {
   forWorker: function(workerTargetFront) {
     let target = targets.get(workerTargetFront);
     if (target == null) {
-      target = new TabTarget({
+      target = new Target({
         client: workerTargetFront.client,
-        // Fake a form attribute until all TabTarget is merged with the Front itself
+        // Fake a form attribute until all Target is merged with the Front itself
         // and will receive form attribute natively.
         get form() {
           return {
@@ -191,10 +191,10 @@ const TargetFactory = exports.TargetFactory = {
  */
 
 /**
- * A TabTarget represents a debuggable context. It can be a browser tab, a tab on
+ * A Target represents a debuggable context. It can be a browser tab, a tab on
  * a remote device, like a tab on Firefox for Android. But it can also be an add-on,
  * as well as firefox parent process, or just one of its content process.
- * A TabTarget is related to a given TargetActor, for which we pass the form as
+ * A Target is related to a given TargetActor, for which we pass the form as
  * argument.
  *
  * For now, only workers are having a distinct Target class called WorkerTarget.
@@ -212,7 +212,7 @@ const TargetFactory = exports.TargetFactory = {
  *                  If the target is a local Firefox tab, a reference to the firefox
  *                  frontend tab object.
  */
-function TabTarget({ form, client, chrome, activeTab = null, tab = null }) {
+function Target({ form, client, chrome, activeTab = null, tab = null }) {
   EventEmitter.decorate(this);
   this.destroy = this.destroy.bind(this);
   this._onTabNavigated = this._onTabNavigated.bind(this);
@@ -262,9 +262,9 @@ function TabTarget({ form, client, chrome, activeTab = null, tab = null }) {
   this._inspector = null;
 }
 
-exports.TabTarget = TabTarget;
+exports.Target = Target;
 
-TabTarget.prototype = {
+Target.prototype = {
   /**
    * Returns a promise for the protocol description from the root actor. Used
    * internally with `target.actorHasMethod`. Takes advantage of caching if
@@ -817,7 +817,7 @@ TabTarget.prototype = {
 
   toString: function() {
     const id = this._tab ? this._tab : (this._form && this._form.actor);
-    return `TabTarget:${id}`;
+    return `Target:${id}`;
   },
 
   /**
