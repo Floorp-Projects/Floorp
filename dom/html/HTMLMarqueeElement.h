@@ -31,6 +31,8 @@ public:
   static const int kDefaultScrollAmount = 6;
   static const int kDefaultScrollDelayMS = 85;
 
+  bool IsEventAttributeNameInternal(nsAtom *aName) override;
+
   void SetStartStopCallback(FunctionStringCallback* aCallback);
 
   void GetBehavior(nsAString& aValue);

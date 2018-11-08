@@ -177,6 +177,7 @@ enum EventNameType {
   EventNameType_SVGSVG = 0x0008, // the svg element
   EventNameType_SMIL = 0x0010, // smil elements
   EventNameType_HTMLBodyOrFramesetOnly = 0x0020,
+  EventNameType_HTMLMarqueeOnly = 0x0040,
 
   EventNameType_HTMLXUL = 0x0003,
   EventNameType_All = 0xFFFF

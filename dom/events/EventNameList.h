@@ -152,6 +152,10 @@ EVENT(abort,
       eImageAbort,
       EventNameType_All,
       eBasicEventClass)
+EVENT(bounce,
+      eMarqueeBounce,
+      EventNameType_HTMLMarqueeOnly,
+      eBasicEventClass)
 EVENT(canplay,
       eCanPlay,
       EventNameType_HTML,
@@ -241,6 +245,10 @@ EVENT(emptied,
 EVENT(ended,
       eEnded,
       EventNameType_HTML,
+      eBasicEventClass)
+EVENT(finish,
+      eMarqueeFinish,
+      EventNameType_HTMLMarqueeOnly,
       eBasicEventClass)
 EVENT(fullscreenchange,
       eFullscreenChange,
@@ -440,6 +448,10 @@ EVENT(show,
 EVENT(stalled,
       eStalled,
       EventNameType_HTML,
+      eBasicEventClass)
+EVENT(start,
+      eMarqueeStart,
+      EventNameType_HTMLMarqueeOnly,
       eBasicEventClass)
 EVENT(submit,
       eFormSubmit,
