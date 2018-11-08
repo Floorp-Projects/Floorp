@@ -6,6 +6,7 @@
 
 
 IPDL_SOURCES += [
+    'PMediaDecoderParams.ipdlh',
     'PVideoDecoder.ipdl',
     'PVideoDecoderManager.ipdl',
 ]
