@@ -23,5 +23,8 @@ module.exports = async function() {
 
   await closeToolboxAndLog("complicated.netmonitor", toolbox);
 
+  // Bug 1503822, wait one second on test end to prevent a crash during firefox shutdown.
+  await new Promise(r => setTimeout(r, 1000));
+
   await testTeardown();
 };
