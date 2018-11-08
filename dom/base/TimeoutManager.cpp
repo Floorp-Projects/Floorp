@@ -793,6 +793,7 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
     for (RefPtr<Timeout> timeout = mTimeouts.GetFirst();
          timeout != nullptr;
          timeout = next) {
+      next = timeout->getNext();
       // We should only execute callbacks for the set of expired Timeout
       // objects we computed above.
       if (timeout->mFiringId != firingId) {
