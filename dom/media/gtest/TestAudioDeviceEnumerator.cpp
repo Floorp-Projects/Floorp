@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #define ENABLE_SET_CUBEB_BACKEND 1
-#include "AudioDeviceInfo.h"
 #include "CubebDeviceEnumerator.h"
 #include "gtest/gtest.h"
 #include "mozilla/UniquePtr.h"
@@ -478,11 +477,11 @@ TestEnumeration(MockCubeb* aMock,
                 uint32_t aExpectedDeviceCount,
                 DeviceOperation aOperation)
 {
-  CubebDeviceEnumerator enumerator;
+  RefPtr<CubebDeviceEnumerator> enumerator = CubebDeviceEnumerator::GetInstance();
 
   nsTArray<RefPtr<AudioDeviceInfo>> inputDevices;
 
-  enumerator.EnumerateAudioInputDevices(inputDevices);
+  enumerator->EnumerateAudioInputDevices(inputDevices);
 
   EXPECT_EQ(inputDevices.Length(), aExpectedDeviceCount)
     << "Device count is correct when enumerating";
@@ -500,7 +499,7 @@ TestEnumeration(MockCubeb* aMock,
     aMock->AddDevice(InputDeviceTemplate(reinterpret_cast<cubeb_devid>(123)));
   }
 
-  enumerator.EnumerateAudioInputDevices(inputDevices);
+  enumerator->EnumerateAudioInputDevices(inputDevices);
 
   uint32_t newExpectedDeviceCount = aOperation == DeviceOperation::REMOVE
                                       ? aExpectedDeviceCount - 1
@@ -555,6 +554,7 @@ TEST(CubebDeviceEnumerator, EnumerateSimple)
       TestEnumeration(mock, device_count, op);
     }
   }
+  CubebDeviceEnumerator::Shutdown();
 }
 #else // building for Android, which has no device enumeration support
 TEST(CubebDeviceEnumerator, EnumerateAndroid)
@@ -562,23 +562,27 @@ TEST(CubebDeviceEnumerator, EnumerateAndroid)
   MockCubeb* mock = new MockCubeb();
   mozilla::CubebUtils::ForceSetCubebContext(mock->AsCubebContext());
 
-  CubebDeviceEnumerator enumerator;
+  RefPtr<CubebDeviceEnumerator> enumerator = CubebDeviceEnumerator::GetInstance();
 
   nsTArray<RefPtr<AudioDeviceInfo>> inputDevices;
-  enumerator.EnumerateAudioInputDevices(inputDevices);
+  enumerator->EnumerateAudioInputDevices(inputDevices);
   EXPECT_EQ(inputDevices.Length(), 1u) <<  "Android always exposes a single input device.";
   EXPECT_EQ(inputDevices[0]->MaxChannels(), 1u) << "With a single channel.";
   EXPECT_EQ(inputDevices[0]->DeviceID(), nullptr) << "It's always the default device.";
   EXPECT_TRUE(inputDevices[0]->Preferred()) << "it's always the prefered device.";
+  CubebDeviceEnumerator::Shutdown();
 }
 #endif
 
 TEST(CubebDeviceEnumerator, ForceNullCubebContext)
 {
   mozilla::CubebUtils::ForceSetCubebContext(nullptr);
-  CubebDeviceEnumerator enumerator;
+  RefPtr<CubebDeviceEnumerator> enumerator = CubebDeviceEnumerator::GetInstance();
   nsTArray<RefPtr<AudioDeviceInfo>> inputDevices;
-  enumerator.EnumerateAudioInputDevices(inputDevices);
+  enumerator->EnumerateAudioInputDevices(inputDevices);
   EXPECT_EQ(inputDevices.Length(), 0u) << "Enumeration must fail device list must be empty.";
+
+  enumerator->Shutdown();
+  CubebDeviceEnumerator::Shutdown();
 }
 
