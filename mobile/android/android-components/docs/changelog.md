@@ -19,6 +19,28 @@ permalink: /changelog/
   * Added a `getDomainSuggestion` method to `HistoryStorage` which is intended to power awesomebar-like functionality.
   * Added basic implementations of `getDomainSuggestion` to existing storage components.
 
+* **browser-session**, **concept-engine**, **browser-engine-system**, **browser-engine-gecko(-beta/nightly)**:
+  * ⚠️ **This is a breaking change**
+  * Added functionality to observe permission requests from the browser engine. We have now removed the workaround that automatically granted permission to play protected (DRM) media. Permission requests can be observed via the browser session:
+
+  ```Kotlin
+  // Grant permission to all DRM content
+  permissionObserver = object : SelectionAwareSessionObserver(sessionManager) {
+      override fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean =
+          permissionRequest.grantIf { it is Permission.ContentProtectedMediaId }
+  }
+
+  override fun onStart() {
+    // Observe permission requests on selected sessions
+    permissionObserver.observeSelected()
+  }
+
+  override fun onStop() {
+    permissionObserver.stop()
+  }
+
+  ```
+
 # 0.30.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.29.0...v0.30.0),
