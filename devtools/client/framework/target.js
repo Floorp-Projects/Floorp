@@ -285,11 +285,6 @@ TabTarget.prototype = {
    * }
    */
   getActorDescription: async function(actorName) {
-    if (!this.client) {
-      throw new Error("TabTarget#getActorDescription() can only be called on " +
-                      "remote tabs.");
-    }
-
     if (this._protocolDescription &&
         this._protocolDescription.types[actorName]) {
       return this._protocolDescription.types[actorName];
@@ -307,10 +302,6 @@ TabTarget.prototype = {
    * @return {Boolean}
    */
   hasActor: function(actorName) {
-    if (!this.client) {
-      throw new Error("TabTarget#hasActor() can only be called on remote " +
-                      "tabs.");
-    }
     if (this.form) {
       return !!this.form[actorName + "Actor"];
     }
@@ -329,10 +320,6 @@ TabTarget.prototype = {
    * @return {Promise}
    */
   actorHasMethod: function(actorName, methodName) {
-    if (!this.client) {
-      throw new Error("TabTarget#actorHasMethod() can only be called on " +
-                      "remote tabs.");
-    }
     return this.getActorDescription(actorName).then(desc => {
       if (desc && desc.methods) {
         return !!desc.methods.find(method => method.name === methodName);
@@ -348,11 +335,6 @@ TabTarget.prototype = {
    * @return {Mixed}
    */
   getTrait: function(traitName) {
-    if (!this.client) {
-      throw new Error("TabTarget#getTrait() can only be called on remote " +
-                      "tabs.");
-    }
-
     // If the targeted actor exposes traits and has a defined value for this
     // traits, override the root actor traits
     if (this.form.traits && traitName in this.form.traits) {
@@ -751,7 +733,7 @@ TabTarget.prototype = {
       return this._destroyer;
     }
 
-    this._destroyer = new Promise(async (resolve) => {
+    this._destroyer = (async () => {
       // Before taking any action, notify listeners that destruction is imminent.
       this.emit("close");
 
@@ -763,39 +745,26 @@ TabTarget.prototype = {
         this._teardownListeners();
       }
 
-      const cleanupAndResolve = () => {
-        this._cleanup();
-        resolve(null);
-      };
-      // If this target was not remoted, the promise will be resolved before the
-      // function returns.
-      if (this._tab && !this._client) {
-        cleanupAndResolve();
-      } else if (this._client) {
-        // If, on the other hand, this target was remoted, the promise will be
-        // resolved after the remote connection is closed.
-        this._teardownRemoteListeners();
+      this._teardownRemoteListeners();
 
-        if (this.isLocalTab) {
-          // We started with a local tab and created the client ourselves, so we
-          // should close it.
-          this._client.close().then(cleanupAndResolve);
-        } else if (this.activeTab) {
-          // The client was handed to us, so we are not responsible for closing
-          // it. We just need to detach from the tab, if already attached.
-          // |detach| may fail if the connection is already dead, so proceed with
-          // cleanup directly after this.
-          try {
-            await this.activeTab.detach();
-          } catch (e) {
-            console.warn(`Error while detaching target: ${e.message}`);
-          }
-          cleanupAndResolve();
-        } else {
-          cleanupAndResolve();
+      if (this.isLocalTab) {
+        // We started with a local tab and created the client ourselves, so we
+        // should close it.
+        await this._client.close();
+      } else if (this.activeTab) {
+        // The client was handed to us, so we are not responsible for closing
+        // it. We just need to detach from the tab, if already attached.
+        // |detach| may fail if the connection is already dead, so proceed with
+        // cleanup directly after this.
+        try {
+          await this.activeTab.detach();
+        } catch (e) {
+          console.warn(`Error while detaching target: ${e.message}`);
         }
       }
-    });
+
+      this._cleanup();
+    })();
 
     return this._destroyer;
   },
@@ -816,7 +785,6 @@ TabTarget.prototype = {
     this._tab = null;
     this._form = null;
     this._attach = null;
-    this._root = null;
     this._title = null;
     this._url = null;
   },
