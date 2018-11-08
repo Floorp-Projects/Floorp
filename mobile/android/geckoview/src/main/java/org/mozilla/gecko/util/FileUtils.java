@@ -4,8 +4,6 @@
 
 package org.mozilla.gecko.util;
 
-import android.content.Context;
-import android.net.Uri;
 import android.util.Log;
 
 import java.io.File;
@@ -29,13 +27,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.annotation.RobocopTarget;
 
-import static org.mozilla.gecko.util.ContentUriUtils.getPath;
-
 public class FileUtils {
     private static final String LOGTAG = "GeckoFileUtils";
-    private static final String FILE_SCHEME = "file";
-    private static final String CONTENT_SCHEME = "content";
-    private static final String FILE_ABSOLUTE_URI = FILE_SCHEME + "://%s";
 
     /*
     * A basic Filter for checking a filename and age.
@@ -285,17 +278,5 @@ public class FileUtils {
             result = new File(directory, prefix + random.nextInt());
         } while (!result.mkdirs());
         return result;
-    }
-
-    public static String getFilePathFromUri(final Context context, final Uri uri) {
-        return String.format(FILE_ABSOLUTE_URI, getPath(context, uri));
-    }
-
-    public static boolean isContentUri(Uri uri) {
-        return uri != null && uri.getScheme() != null && CONTENT_SCHEME.equals(uri.getScheme());
-    }
-
-    public static boolean isContentUri(String sUri) {
-        return sUri != null && sUri.startsWith(CONTENT_SCHEME);
     }
 }

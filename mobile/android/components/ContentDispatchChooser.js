@@ -45,56 +45,53 @@ ContentDispatchChooser.prototype =
         window = aWindowContext.getInterface(Ci.nsIDOMWindow);
     } catch (e) { /* it's OK to not have a window */ }
 
-    if (!aURI.schemeIs("content")) {
+    // The current list is based purely on the scheme. Redo the query using the url to get more
+    // specific results.
+    aHandler = this.protoSvc.getProtocolHandlerInfoFromOS(aURI.spec, {});
 
-      // The current list is based purely on the scheme. Redo the query using the url to get more
-      // specific results.
-      aHandler = this.protoSvc.getProtocolHandlerInfoFromOS(aURI.spec, {});
-
-      if (aHandler.possibleApplicationHandlers.length > 1) {
-
-        // The first handler in the set is the Android Application Chooser (which will fall back to a default if one is set)
-        // If we have more than one option, let the OS handle showing a list (if needed).
-        aHandler.launchWithURI(aURI, aWindowContext);
-        this._closeBlankWindow(window);
-        return;
-      }
-    }
-    // xpcshell tests do not have an Android Bridge but we require Android
-    // Bridge when using Messaging so we guard against this case. xpcshell
-    // tests also do not have a window, so we use this state to guard.
-    let win = this._getChromeWin();
-    if (!win) {
-      return;
-    }
-
-    let msg = {
-      type: "Intent:OpenNoHandler",
-      uri: aURI.spec,
-    };
-
-    EventDispatcher.instance.sendRequestForResult(msg).then(() => {
-      // Java opens an app on success: take no action.
+    // The first handler in the set is the Android Application Chooser (which will fall back to a default if one is set)
+    // If we have more than one option, let the OS handle showing a list (if needed).
+    if (aHandler.possibleApplicationHandlers.length > 1) {
+      aHandler.launchWithURI(aURI, aWindowContext);
       this._closeBlankWindow(window);
 
-    }, (data) => {
-      if (data.isFallback) {
-        // We always want to open a fallback url
-        window.location.href = data.uri;
+    } else {
+      // xpcshell tests do not have an Android Bridge but we require Android
+      // Bridge when using Messaging so we guard against this case. xpcshell
+      // tests also do not have a window, so we use this state to guard.
+      let win = this._getChromeWin();
+      if (!win) {
         return;
       }
 
-      // We couldn't open this. If this was from a click, it's likely that we just
-      // want this to fail silently. If the user entered this on the address bar, though,
-      // we want to show the neterror page.
-      let dwu = window.windowUtils;
-      let millis = dwu.millisSinceLastUserInput;
-      if (millis < 0 || millis >= 1000) {
-        window.docShell.displayLoadError(Cr.NS_ERROR_UNKNOWN_PROTOCOL, aURI, null);
-      } else {
+      let msg = {
+        type: "Intent:OpenNoHandler",
+        uri: aURI.spec,
+      };
+
+      EventDispatcher.instance.sendRequestForResult(msg).then(() => {
+        // Java opens an app on success: take no action.
         this._closeBlankWindow(window);
-      }
-    });
+
+      }, (data) => {
+        if (data.isFallback) {
+          // We always want to open a fallback url
+          window.location.href = data.uri;
+          return;
+        }
+
+        // We couldn't open this. If this was from a click, it's likely that we just
+        // want this to fail silently. If the user entered this on the address bar, though,
+        // we want to show the neterror page.
+        let dwu = window.windowUtils;
+        let millis = dwu.millisSinceLastUserInput;
+        if (millis < 0 || millis >= 1000) {
+          window.docShell.displayLoadError(Cr.NS_ERROR_UNKNOWN_PROTOCOL, aURI, null);
+        } else {
+          this._closeBlankWindow(window);
+        }
+      });
+    }
   },
 };
 
