@@ -16,7 +16,11 @@ add_task(async function test_sanitization_invalid() {
     },
   });
 
+  let docEl = document.documentElement;
+
+  let transitionPromise = waitForTransition(docEl, "background-color");
   await extension.startup();
+  await transitionPromise;
 
   let navbar = document.querySelector("#nav-bar");
   Assert.equal(
@@ -42,7 +46,11 @@ add_task(async function test_sanitization_css_variables() {
     },
   });
 
+  let docEl = document.documentElement;
+
+  let transitionPromise = waitForTransition(docEl, "background-color");
   await extension.startup();
+  await transitionPromise;
 
   let navbar = document.querySelector("#nav-bar");
   Assert.equal(
@@ -68,7 +76,11 @@ add_task(async function test_sanitization_transparent() {
     },
   });
 
+  let docEl = document.documentElement;
+
+  let transitionPromise = waitForTransition(docEl, "background-color");
   await extension.startup();
+  await transitionPromise;
 
   let navbar = document.querySelector("#nav-bar");
   Assert.ok(
@@ -92,9 +104,12 @@ add_task(async function test_sanitization_transparent_accentcolor() {
     },
   });
 
-  await extension.startup();
-
   let docEl = document.documentElement;
+
+  let transitionPromise = waitForTransition(docEl, "background-color");
+  await extension.startup();
+  await transitionPromise;
+
   Assert.equal(
     window.getComputedStyle(docEl).backgroundColor,
     "rgb(255, 255, 255)",
@@ -117,9 +132,12 @@ add_task(async function test_sanitization_transparent_textcolor() {
     },
   });
 
-  await extension.startup();
-
   let docEl = document.documentElement;
+
+  let transitionPromise = waitForTransition(docEl, "background-color");
+  await extension.startup();
+  await transitionPromise;
+
   Assert.equal(
     window.getComputedStyle(docEl).color,
     "rgb(0, 0, 0)",

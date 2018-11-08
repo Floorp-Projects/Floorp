@@ -20,9 +20,11 @@ add_task(async function test_support_theme_frame() {
     },
   });
 
-  await extension.startup();
-
   let docEl = window.document.documentElement;
+  let transitionPromise = waitForTransition(docEl, "background-color");
+  await extension.startup();
+  await transitionPromise;
+
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
                "LWT text color attribute should be set");
@@ -62,16 +64,21 @@ add_task(async function test_support_theme_frame_inactive() {
     },
   });
 
-  await extension.startup();
-
   let docEl = window.document.documentElement;
+  let transitionPromise = waitForTransition(docEl, "background-color");
+  await extension.startup();
+  await transitionPromise;
+
   let style = window.getComputedStyle(docEl);
 
   Assert.equal(style.backgroundColor, "rgb(" + FRAME_COLOR.join(", ") + ")",
                "Window background is set to the colors.frame property");
 
   // Now we'll open a new window to see if the inactive browser accent color changed
+  transitionPromise = waitForTransition(docEl, "background-color");
   let window2 = await BrowserTestUtils.openNewBrowserWindow();
+  await transitionPromise;
+
   Assert.equal(style.backgroundColor, "rgb(" + FRAME_COLOR_INACTIVE.join(", ") + ")",
                `Inactive window background color should be ${FRAME_COLOR_INACTIVE}`);
 
@@ -101,9 +108,11 @@ add_task(async function test_lack_of_theme_frame_inactive() {
     },
   });
 
-  await extension.startup();
-
   let docEl = window.document.documentElement;
+  let transitionPromise = waitForTransition(docEl, "background-color");
+  await extension.startup();
+  await transitionPromise;
+
   let style = window.getComputedStyle(docEl);
 
   Assert.equal(style.backgroundColor, "rgb(" + FRAME_COLOR.join(", ") + ")",
