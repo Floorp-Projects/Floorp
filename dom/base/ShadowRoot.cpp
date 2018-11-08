@@ -179,6 +179,17 @@ ShadowRoot::Unbind()
 }
 
 void
+ShadowRoot::Unattach()
+{
+  MOZ_ASSERT(!HasSlots(), "Won't work!");
+  MOZ_ASSERT(IsUAWidget());
+  MOZ_ASSERT(GetHost());
+  Unbind();
+  GetHost()->RemoveMutationObserver(this);
+  SetHost(nullptr);
+}
+
+void
 ShadowRoot::InvalidateStyleAndLayoutOnSubtree(Element* aElement)
 {
   MOZ_ASSERT(aElement);
