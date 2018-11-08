@@ -349,13 +349,14 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         os.remove(localWrapper)
 
     def buildPrefsFile(self, extraPrefs):
-        super(XPCShellRemote, self).buildPrefsFile(extraPrefs)
+        prefs = super(XPCShellRemote, self).buildPrefsFile(extraPrefs)
 
         remotePrefsFile = posixpath.join(self.remoteTestRoot, 'user.js')
         self.device.push(self.prefsFile, remotePrefsFile)
         self.device.chmod(remotePrefsFile, root=True)
         os.remove(self.prefsFile)
         self.prefsFile = remotePrefsFile
+        return prefs
 
     def buildEnvironment(self):
         self.buildCoreEnvironment()
