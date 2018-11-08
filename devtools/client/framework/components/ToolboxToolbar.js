@@ -444,7 +444,7 @@ class ToolboxToolbar extends Component {
       return div(
         {},
         WebReplayPlayer({
-          threadClient: toolbox.threadClient,
+          toolbox: toolbox,
         }),
         toolbar,
       );
