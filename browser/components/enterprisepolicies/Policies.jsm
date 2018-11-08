@@ -491,28 +491,8 @@ var Policies = {
 
   "Extensions": {
     onBeforeUIStartup(manager, param) {
-      let uninstallingPromise = Promise.resolve();
-      if ("Uninstall" in param) {
-        uninstallingPromise = runOncePerModification("extensionsUninstall", JSON.stringify(param.Uninstall), async () => {
-          // If we're uninstalling add-ons, re-run the extensionsInstall runOnce even if it hasn't
-          // changed, which will allow add-ons to be updated.
-          Services.prefs.clearUserPref("browser.policies.runOncePerModification.extensionsInstall");
-          let addons = await AddonManager.getAddonsByIDs(param.Uninstall);
-          for (let addon of addons) {
-            if (addon) {
-              try {
-                await addon.uninstall();
-              } catch (e) {
-                // This can fail for add-ons that can't be uninstalled.
-                // Just ignore.
-              }
-            }
-          }
-        });
-      }
       if ("Install" in param) {
-        runOncePerModification("extensionsInstall", JSON.stringify(param.Install), async () => {
-          await uninstallingPromise;
+        runOncePerModification("extensionsInstall", JSON.stringify(param.Install), () => {
           for (let location of param.Install) {
             let url;
             if (location.includes("://")) {
@@ -561,6 +541,21 @@ var Policies = {
               install.addListener(listener);
               install.install();
             });
+          }
+        });
+      }
+      if ("Uninstall" in param) {
+        runOncePerModification("extensionsUninstall", JSON.stringify(param.Uninstall), async () => {
+          let addons = await AddonManager.getAddonsByIDs(param.Uninstall);
+          for (let addon of addons) {
+            if (addon) {
+              try {
+                addon.uninstall();
+              } catch (e) {
+                // This can fail for add-ons that can't be uninstalled.
+                // Just ignore.
+              }
+            }
           }
         });
       }
@@ -1051,8 +1046,6 @@ function runOnce(actionName, callback) {
  * callback once when the policy is set, then never again.
  * runOncePerModification runs the callback once each time the policy value
  * changes from its previous value.
- * If the callback that was passed is an async function, you can await on this
- * function to await for the callback.
  *
  * @param {string} actionName
  *        A given name which will be used to track if this callback has run.
@@ -1064,19 +1057,16 @@ function runOnce(actionName, callback) {
  *        string.
  * @param {Function} callback
  *        The callback to be run when the pref value changes
- * @returns Promise
- *        A promise that will resolve once the callback finishes running.
- *
  */
-async function runOncePerModification(actionName, policyValue, callback) {
+function runOncePerModification(actionName, policyValue, callback) {
   let prefName = `browser.policies.runOncePerModification.${actionName}`;
   let oldPolicyValue = Services.prefs.getStringPref(prefName, undefined);
   if (policyValue === oldPolicyValue) {
     log.debug(`Not running action ${actionName} again because the policy's value is unchanged`);
-    return Promise.resolve();
+    return;
   }
   Services.prefs.setStringPref(prefName, policyValue);
-  return callback();
+  callback();
 }
 
 let gChromeURLSBlocked = false;

@@ -3,7 +3,6 @@
 "use strict";
 
 const addonID = "policytest@mozilla.com";
-const BASE_URL = "http://mochi.test:8888/browser/browser/components/enterprisepolicies/tests/browser";
 
 add_task(async function test_addon_install() {
   let installPromise = wait_for_addon_install();
@@ -11,7 +10,7 @@ add_task(async function test_addon_install() {
     "policies": {
       "Extensions": {
         "Install": [
-          `${BASE_URL}/policytest_v0.1.xpi`,
+          "http://mochi.test:8888/browser/browser/components/enterprisepolicies/tests/browser/policytest.xpi",
         ],
         "Locked": [
           addonID,
@@ -22,7 +21,6 @@ add_task(async function test_addon_install() {
   await installPromise;
   let addon = await AddonManager.getAddonByID(addonID);
   isnot(addon, null, "Addon not installed.");
-  is(addon.version, "0.1", "Addon version is correct");
 
   Assert.deepEqual(addon.installTelemetryInfo, {source: "enterprise-policy"},
                    "Got the expected addon.installTelemetryInfo");
@@ -43,40 +41,7 @@ add_task(async function test_addon_locked() {
   BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function test_addon_reinstall() {
-  // Test that uninstalling and reinstalling the same addon ID works as expected.
-  // This can be used to update an addon.
-
-  let uninstallPromise = wait_for_addon_uninstall();
-  let installPromise = wait_for_addon_install();
-  await setupPolicyEngineWithJson({
-    "policies": {
-      "Extensions": {
-        "Uninstall": [
-          addonID,
-        ],
-        "Install": [
-          `${BASE_URL}/policytest_v0.2.xpi`,
-        ],
-      },
-    },
-  });
-
-  // Older version was uninstalled
-  await uninstallPromise;
-
-  // New version was installed
-  await installPromise;
-
-  let addon = await AddonManager.getAddonByID(addonID);
-  isnot(addon, null, "Addon still exists because the policy was used to update it.");
-  is(addon.version, "0.2", "New version is correct");
-});
-
-
 add_task(async function test_addon_uninstall() {
-  EnterprisePolicyTesting.resetRunOnceState();
-
   let uninstallPromise = wait_for_addon_uninstall();
   await setupPolicyEngineWithJson({
     "policies": {
