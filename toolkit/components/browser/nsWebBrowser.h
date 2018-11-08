@@ -87,7 +87,7 @@ public:
     nsWebBrowser* mWebBrowser;
   };
 
-  nsWebBrowser();
+  explicit nsWebBrowser(int aItemType = typeContentWrapper);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsWebBrowser, nsIWebBrowser)
@@ -134,7 +134,7 @@ protected:
   nsCOMPtr<nsIWidget> mInternalWidget;
   nsCOMPtr<nsIWindowWatcher> mWWatch;
   nsAutoPtr<nsWebBrowserInitInfo> mInitInfo;
-  uint32_t mContentType;
+  const uint32_t mContentType;
   bool mActivating;
   bool mShouldEnableHistory;
   bool mIsActive;
