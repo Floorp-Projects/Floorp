@@ -25,6 +25,11 @@ use isa::TargetIsa;
 use std::boxed::Box;
 use std::fmt;
 use std::str;
+use std::string::{String, ToString};
+
+// TODO: Remove this workaround once https://github.com/rust-lang/rust/issues/27747 is done.
+#[cfg(not(feature = "std"))]
+use std::slice::SliceConcatExt;
 
 /// A string-based configurator for settings groups.
 ///
@@ -85,7 +90,7 @@ impl Builder {
     /// Look up a descriptor by name.
     fn lookup(&self, name: &str) -> SetResult<(usize, detail::Detail)> {
         match probe(self.template, name, simple_hash(name)) {
-            Err(_) => Err(SetError::BadName),
+            Err(_) => Err(SetError::BadName(name.to_string())),
             Ok(entry) => {
                 let d = &self.template.descriptors[self.template.hash_table[entry] as usize];
                 Ok((d.offset as usize, d.detail))
@@ -98,14 +103,17 @@ fn parse_bool_value(value: &str) -> SetResult<bool> {
     match value {
         "true" | "on" | "yes" | "1" => Ok(true),
         "false" | "off" | "no" | "0" => Ok(false),
-        _ => Err(SetError::BadValue),
+        _ => Err(SetError::BadValue("bool".to_string())),
     }
 }
 
 fn parse_enum_value(value: &str, choices: &[&str]) -> SetResult<u8> {
     match choices.iter().position(|&tag| tag == value) {
         Some(idx) => Ok(idx as u8),
-        None => Err(SetError::BadValue),
+        None => Err(SetError::BadValue(format!(
+            "any among {}",
+            choices.join(", ")
+        ))),
     }
 }
 
@@ -134,29 +142,34 @@ impl Configurable for Builder {
                 self.set_bit(offset, bit, parse_bool_value(value)?);
             }
             Detail::Num => {
-                self.bytes[offset] = value.parse().map_err(|_| SetError::BadValue)?;
+                self.bytes[offset] = value
+                    .parse()
+                    .map_err(|_| SetError::BadValue("number".to_string()))?;
             }
             Detail::Enum { last, enumerators } => {
                 self.bytes[offset] =
                     parse_enum_value(value, self.template.enums(last, enumerators))?;
             }
-            Detail::Preset => return Err(SetError::BadName),
+            Detail::Preset => return Err(SetError::BadName(name.to_string())),
         }
         Ok(())
     }
 }
 
 /// An error produced when changing a setting.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Fail, Debug, PartialEq, Eq)]
 pub enum SetError {
     /// No setting by this name exists.
-    BadName,
+    #[fail(display = "No existing setting named '{}'", _0)]
+    BadName(String),
 
     /// Type mismatch for setting (e.g., setting an enum setting as a bool).
+    #[fail(display = "Trying to set a setting with the wrong type")]
     BadType,
 
     /// This is not a valid value for this setting.
-    BadValue,
+    #[fail(display = "Unexpected value for a setting, expected {}", _0)]
+    BadValue(String),
 }
 
 /// A result returned when changing a setting.
@@ -174,7 +187,7 @@ impl<'a> PredicateView<'a> {
     /// Create a new view of a precomputed predicate vector.
     ///
     /// See the `predicate_view()` method on the various `Flags` types defined for each ISA.
-    pub fn new(bits: &'a [u8]) -> PredicateView {
+    pub fn new(bits: &'a [u8]) -> Self {
         PredicateView(bits)
     }
 
@@ -359,10 +372,8 @@ mod tests {
             "[shared]\n\
              opt_level = \"default\"\n\
              enable_verifier = true\n\
-             call_conv = \"fast\"\n\
              is_pic = false\n\
              colocated_libcalls = false\n\
-             return_at_end = false\n\
              avoid_div_traps = false\n\
              enable_float = true\n\
              enable_nan_canonicalization = false\n\
@@ -372,7 +383,8 @@ mod tests {
              allones_funcaddrs = false\n\
              probestack_enabled = true\n\
              probestack_func_adjusts_sp = false\n\
-             probestack_size_log2 = 12\n"
+             probestack_size_log2 = 12\n\
+             jump_tables_enabled = true\n"
         );
         assert_eq!(f.opt_level(), super::OptLevel::Default);
         assert_eq!(f.enable_simd(), true);
@@ -382,7 +394,7 @@ mod tests {
     #[test]
     fn modify_bool() {
         let mut b = builder();
-        assert_eq!(b.enable("not_there"), Err(BadName));
+        assert_eq!(b.enable("not_there"), Err(BadName("not_there".to_string())));
         assert_eq!(b.enable("enable_simd"), Ok(()));
         assert_eq!(b.set("enable_simd", "false"), Ok(()));
 
@@ -393,10 +405,19 @@ mod tests {
     #[test]
     fn modify_string() {
         let mut b = builder();
-        assert_eq!(b.set("not_there", "true"), Err(BadName));
-        assert_eq!(b.set("enable_simd", ""), Err(BadValue));
-        assert_eq!(b.set("enable_simd", "best"), Err(BadValue));
-        assert_eq!(b.set("opt_level", "true"), Err(BadValue));
+        assert_eq!(
+            b.set("not_there", "true"),
+            Err(BadName("not_there".to_string()))
+        );
+        assert_eq!(b.set("enable_simd", ""), Err(BadValue("bool".to_string())));
+        assert_eq!(
+            b.set("enable_simd", "best"),
+            Err(BadValue("bool".to_string()))
+        );
+        assert_eq!(
+            b.set("opt_level", "true"),
+            Err(BadValue("any among default, best, fastest".to_string()))
+        );
         assert_eq!(b.set("opt_level", "best"), Ok(()));
         assert_eq!(b.set("enable_simd", "0"), Ok(()));
 
