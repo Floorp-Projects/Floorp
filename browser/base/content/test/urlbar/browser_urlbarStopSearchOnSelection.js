@@ -34,9 +34,8 @@ add_task(async function init() {
 });
 
 add_task(async function mainTest() {
-  // Trigger an initial search.  Use the "$" token to restrict matches to search
-  // suggestions.
-  await promiseAutocompleteResultPopup("$ test", window);
+  // Trigger an initial search.  Restrict matches to search suggestions.
+  await promiseAutocompleteResultPopup("? test", window);
   await promiseSuggestionsPresent("Waiting for initial suggestions");
 
   // Now synthesize typing a character.  promiseAutocompleteResultPopup doesn't

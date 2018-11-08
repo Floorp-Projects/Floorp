@@ -87,9 +87,9 @@ const TOKEN_TO_BEHAVIOR_MAP = new Map([
   ["+", "tag"],
   ["%", "openpage"],
   ["~", "typed"],
-  ["$", "searches"],
+  ["?", "searches"],
   ["#", "title"],
-  ["@", "url"],
+  ["$", "url"],
 ]);
 
 // If a URL starts with one of these prefixes, then we don't provide search

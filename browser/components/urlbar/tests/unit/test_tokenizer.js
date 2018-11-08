@@ -53,10 +53,10 @@ add_task(async function test_tokenizer() {
       ],
     },
     { desc: "double non-combinable restriction char, single char string",
-      searchString: "t*$",
+      searchString: "t*?",
       expectedTokens: [
         { value: "t*", type: UrlbarTokenizer.TYPE.TEXT },
-        { value: "$", type: UrlbarTokenizer.TYPE.RESTRICT_SEARCH },
+        { value: "?", type: UrlbarTokenizer.TYPE.RESTRICT_SEARCH },
       ],
     },
     { desc: "only boundary restriction chars",

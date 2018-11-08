@@ -2,16 +2,13 @@
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-  "resource://testing-common/PlacesTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Preferences",
-  "resource://gre/modules/Preferences.jsm");
-ChromeUtils.defineModuleGetter(this, "HttpServer",
-  "resource://testing-common/httpd.js");
-ChromeUtils.defineModuleGetter(this, "SearchTestUtils",
-  "resource://testing-common/SearchTestUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  HttpServer: "resource://testing-common/httpd.js",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
+  Preferences: "resource://gre/modules/Preferences.jsm",
+  SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
+});
 
 SearchTestUtils.init(Assert, registerCleanupFunction);
 
