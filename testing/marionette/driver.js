@@ -3000,15 +3000,15 @@ GeckoDriver.prototype.minimizeWindow = async function() {
   const win = assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  if (WindowState.from(win.windowState) == WindowState.Fullscreen) {
-    await exitFullscreen(win);
-  }
-
   if (WindowState.from(win.windowState) != WindowState.Minimized) {
-    await new Promise(resolve => {
-      this.curBrowser.eventObserver.addEventListener("visibilitychange", resolve, {once: true});
+    if (WindowState.from(win.windowState) == WindowState.Fullscreen) {
+      await exitFullscreen(win);
+    }
+
+    await new TimedPromise(resolve => {
+      win.addEventListener("visibilitychange", resolve, {once: true});
       win.minimize();
-    });
+    }, {throws: null});
   }
 
   return this.curBrowser.rect;
