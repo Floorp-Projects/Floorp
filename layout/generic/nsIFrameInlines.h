@@ -97,6 +97,12 @@ nsIFrame::IsColumnSpan() const
   return IsBlockOutside() && StyleColumn()->IsColumnSpanStyle();
 }
 
+bool
+nsIFrame::IsColumnSpanInMulticolSubtree() const
+{
+  return IsColumnSpan() && HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR);
+}
+
 mozilla::StyleDisplay
 nsIFrame::GetDisplay() const
 {
