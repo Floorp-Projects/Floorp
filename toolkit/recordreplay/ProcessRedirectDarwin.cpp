@@ -351,6 +351,7 @@ namespace recordreplay {
   MACRO(CGBitmapContextGetWidth, RR_ScalarRval)                  \
   MACRO(CGColorRelease, RR_ScalarRval)                           \
   MACRO(CGColorSpaceCopyICCProfile, RR_ScalarRval)               \
+  MACRO(CGColorSpaceCreateDeviceGray, RR_ScalarRval, nullptr, Middleman_CreateCFTypeRval) \
   MACRO(CGColorSpaceCreateDeviceRGB, RR_ScalarRval, nullptr, Middleman_CreateCFTypeRval) \
   MACRO(CGColorSpaceCreatePattern, RR_ScalarRval)                \
   MACRO(CGColorSpaceRelease, RR_ScalarRval)                      \
