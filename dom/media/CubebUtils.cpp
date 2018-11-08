@@ -6,6 +6,9 @@
 
 #include "CubebUtils.h"
 
+#ifdef MOZ_WEBRTC
+#include "CubebDeviceEnumerator.h"
+#endif
 #include "MediaInfo.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/dom/ContentChild.h"
@@ -606,6 +609,11 @@ void ShutdownLibrary()
 {
   Preferences::UnregisterCallbacks(PrefChanged, gInitCallbackPrefs);
   Preferences::UnregisterCallbacks(PrefChanged, gCallbackPrefs);
+
+#ifdef MOZ_WEBRTC
+  // This must be done before cubeb destroy.
+  CubebDeviceEnumerator::Shutdown();
+#endif
 
   StaticMutexAutoLock lock(sMutex);
   if (sCubebContext) {
