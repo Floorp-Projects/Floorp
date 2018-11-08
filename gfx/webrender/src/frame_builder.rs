@@ -57,7 +57,6 @@ pub struct FrameBuilder {
     screen_rect: DeviceUintRect,
     background_color: Option<ColorF>,
     window_size: DeviceUintSize,
-    scene_id: u64,
     root_pic_index: PictureIndex,
     pub prim_store: PrimitiveStore,
     pub clip_store: ClipStore,
@@ -66,7 +65,6 @@ pub struct FrameBuilder {
 }
 
 pub struct FrameBuildingContext<'a> {
-    pub scene_id: u64,
     pub device_pixel_scale: DevicePixelScale,
     pub scene_properties: &'a SceneProperties,
     pub pipelines: &'a FastHashMap<PipelineId, Arc<ScenePipeline>>,
@@ -107,7 +105,6 @@ pub struct PictureContext {
 /// Mutable state of a picture that gets modified when
 /// the children are processed.
 pub struct PictureState {
-    pub has_non_root_coord_system: bool,
     pub is_cacheable: bool,
     pub local_rect_changed: bool,
     pub map_local_to_pic: SpaceMapper<LayoutPixel, PicturePixel>,
@@ -146,7 +143,6 @@ impl FrameBuilder {
             screen_rect: DeviceUintRect::zero(),
             window_size: DeviceUintSize::zero(),
             background_color: None,
-            scene_id: 0,
             root_pic_index: PictureIndex(0),
             config: FrameBuilderConfig {
                 default_font_render_mode: FontRenderMode::Mono,
@@ -161,7 +157,6 @@ impl FrameBuilder {
         screen_rect: DeviceUintRect,
         background_color: Option<ColorF>,
         window_size: DeviceUintSize,
-        scene_id: u64,
         flattener: DisplayListFlattener,
     ) -> Self {
         FrameBuilder {
@@ -172,7 +167,6 @@ impl FrameBuilder {
             screen_rect,
             background_color,
             window_size,
-            scene_id,
             config: flattener.config,
         }
     }
@@ -207,7 +201,6 @@ impl FrameBuilder {
         let world_rect = (self.screen_rect.to_f32() / device_pixel_scale).round_out();
 
         let frame_context = FrameBuildingContext {
-            scene_id: self.scene_id,
             device_pixel_scale,
             scene_properties,
             pipelines,

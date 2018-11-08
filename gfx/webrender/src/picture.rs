@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{DeviceRect, FilterOp, MixBlendMode, PipelineId, PremultipliedColorF, PictureRect, PicturePoint};
-use api::{DeviceIntRect, DeviceIntSize, DevicePoint, LayoutRect, PictureToRasterTransform, LayoutPixel};
-use api::{DevicePixelScale, PictureIntPoint, PictureIntRect, PictureIntSize, RasterRect, RasterSpace};
+use api::{DeviceIntRect, DevicePoint, LayoutRect, PictureToRasterTransform, LayoutPixel};
+use api::{DevicePixelScale, RasterRect, RasterSpace};
 use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect};
 use box_shadow::{BLUR_SAMPLE_SCALE};
-use clip::ClipNodeCollector;
+use clip::{ClipNodeCollector, ClipStore};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex};
 use euclid::{TypedScale, vec3, TypedRect};
 use internal_types::{FastHashMap, PlaneSplitter};
@@ -21,6 +21,7 @@ use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle};
 use render_task::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
 use scene::{FilterOpHelpers, SceneProperties};
 use smallvec::SmallVec;
+use surface::SurfaceDescriptor;
 use std::{mem, ops};
 use tiling::RenderTargetKind;
 use util::{TransformedRectKind, MatrixHelpers, MaxRect};
@@ -192,59 +193,6 @@ impl PictureIdGenerator {
         self.next += 1;
         id
     }
-}
-
-// Cache key that determines whether a pre-existing
-// picture in the texture cache matches the content
-// of the current picture.
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct PictureCacheKey {
-    // NOTE: We specifically want to ensure that we
-    //       don't include the device space origin
-    //       of this picture in the cache key, because
-    //       we want the cache to remain valid as it
-    //       is scrolled and/or translated by animation.
-    //       This is valid while we have the restriction
-    //       in place that only pictures that use the
-    //       root coordinate system are cached - once
-    //       we relax that, we'll need to consider some
-    //       extra parameters, depending on transform.
-
-    // This is a globally unique id of the scene this picture
-    // is associated with, to avoid picture id collisions.
-    scene_id: u64,
-
-    // The unique (for the scene_id) identifier for this picture.
-    // TODO(gw): Currently, these will not be
-    //           shared across new display lists,
-    //           so will only remain valid during
-    //           scrolling. Next step will be to
-    //           allow deep comparisons on pictures
-    //           between display lists, allowing
-    //           pictures that are the same to be
-    //           cached across display lists!
-    picture_id: PictureId,
-
-    // Store the rect within the unclipped device
-    // rect that we are actually rendering. This ensures
-    // that if the 'clipped' rect changes, we will see
-    // that the cache is invalid and re-draw the picture.
-    // TODO(gw): To reduce the number of invalidations that
-    //           happen as a cached picture scrolls off-screen,
-    //           we could round up the size of the off-screen
-    //           targets we draw (e.g. 512 pixels). This may
-    //           also simplify other parts of the code that
-    //           deal with clipped/unclipped rects, such as
-    //           the code to inflate the device rect for blurs.
-    pic_relative_render_rect: PictureIntRect,
-
-    // Ensure that if the overall size of the picture
-    // changes, the cache key will not match. This can
-    // happen, for example, during zooming or changes
-    // in device-pixel-ratio.
-    unclipped_size: DeviceIntSize,
 }
 
 /// Enum value describing the place of a picture in a 3D context.
@@ -491,6 +439,9 @@ pub struct PicturePrimitive {
 
     /// Local clip rect for this picture.
     pub local_clip_rect: LayoutRect,
+
+    /// A descriptor for this surface that can be used as a cache key.
+    surface_desc: Option<SurfaceDescriptor>,
 }
 
 impl PicturePrimitive {
@@ -530,8 +481,32 @@ impl PicturePrimitive {
         prim_list: PrimitiveList,
         spatial_node_index: SpatialNodeIndex,
         local_clip_rect: LayoutRect,
+        clip_store: &ClipStore,
     ) -> Self {
+        // For now, only create a cache descriptor for blur filters (which
+        // includes text shadows). We can incrementally expand this to
+        // handle more composite modes.
+        let create_cache_descriptor = match requested_composite_mode {
+            Some(PictureCompositeMode::Filter(FilterOp::Blur(blur_radius))) => {
+                blur_radius > 0.0
+            }
+            Some(_) | None => {
+                false
+            }
+        };
+
+        let surface_desc = if create_cache_descriptor {
+            SurfaceDescriptor::new(
+                &prim_list.prim_instances,
+                spatial_node_index,
+                clip_store,
+            )
+        } else {
+            None
+        };
+
         PicturePrimitive {
+            surface_desc,
             prim_list,
             state: None,
             secondary_render_task_id: None,
@@ -617,7 +592,6 @@ impl PicturePrimitive {
         };
 
         let state = PictureState {
-            has_non_root_coord_system: false,
             is_cacheable: true,
             local_rect_changed: false,
             map_local_to_pic,
@@ -845,6 +819,12 @@ impl PicturePrimitive {
                 //                         local_scale.is_some();
                 let establishes_raster_root = xf.has_perspective_component();
 
+                // TODO(gw): For now, we always raster in screen space. Soon,
+                //           we will be able to respect the requested raster
+                //           space, and/or override the requested raster root
+                //           if it makes sense to.
+                let raster_space = RasterSpace::Screen;
+
                 let raster_spatial_node_index = if establishes_raster_root {
                     surface_spatial_node_index
                 } else {
@@ -864,6 +844,17 @@ impl PicturePrimitive {
                     composite_mode,
                     surface_index,
                 });
+
+                // If we have a cache key / descriptor for this surface,
+                // update any transforms it cares about.
+                if let Some(ref mut surface_desc) = self.surface_desc {
+                    surface_desc.update(
+                        surface_spatial_node_index,
+                        raster_spatial_node_index,
+                        frame_context.clip_scroll_tree,
+                        raster_space,
+                    );
+                }
 
                 surface_index
             }
@@ -1054,34 +1045,53 @@ impl PicturePrimitive {
                 let blur_std_deviation = blur_radius * frame_context.device_pixel_scale.0;
                 let blur_range = (blur_std_deviation * BLUR_SAMPLE_SCALE).ceil() as i32;
 
-                // The clipped field is the part of the picture that is visible
-                // on screen. The unclipped field is the screen-space rect of
-                // the complete picture, if no screen / clip-chain was applied
-                // (this includes the extra space for blur region). To ensure
-                // that we draw a large enough part of the picture to get correct
-                // blur results, inflate that clipped area by the blur range, and
-                // then intersect with the total screen rect, to minimize the
-                // allocation size.
-                let device_rect = clipped
-                    .inflate(blur_range, blur_range)
-                    .intersection(&unclipped.to_i32())
-                    .unwrap();
+                // We need to choose whether to cache this picture, or draw
+                // it into a temporary render target each frame. If we draw
+                // it into a persistently cached texture, then we want to
+                // draw the whole picture, without clipping it to the screen
+                // dimensions, so that it can be reused as it scrolls into
+                // view etc. However, if the unclipped size of the surface is
+                // too big, then it will be very expensive to draw, and may
+                // even be bigger than the maximum hardware render target
+                // size. In these cases, it's probably best to not cache the
+                // picture, and just draw a minimal portion of the picture
+                // (clipped to screen bounds) to a temporary target each frame.
 
-                let uv_rect_kind = calculate_uv_rect_kind(
-                    &pic_rect,
-                    &transform,
-                    &device_rect,
-                    frame_context.device_pixel_scale,
-                );
+                // TODO(gw): This size is quite arbitrary - we should do some
+                //           profiling / telemetry to see when it makes sense
+                //           to cache a picture.
+                const MAX_CACHE_SIZE: f32 = 2048.0;
+                let too_big_to_cache = unclipped.size.width > MAX_CACHE_SIZE ||
+                                       unclipped.size.height > MAX_CACHE_SIZE;
 
-                // If we are drawing a blur that has primitives or clips that contain
-                // a complex coordinate system, don't bother caching them (for now).
-                // It's likely that they are animating and caching may not help here
-                // anyway. In the future we should relax this a bit, so that we can
-                // cache tasks with complex coordinate systems if we detect the
-                // relevant transforms haven't changed from frame to frame.
-                if pic_state_for_children.has_non_root_coord_system ||
+                // If we can't create a valid cache key for this descriptor (e.g.
+                // due to it referencing old non-interned style primitives), then
+                // don't try to cache it.
+                let has_valid_cache_key = self.surface_desc.is_some();
+
+                if !has_valid_cache_key ||
+                   too_big_to_cache ||
                    !pic_state_for_children.is_cacheable {
+                    // The clipped field is the part of the picture that is visible
+                    // on screen. The unclipped field is the screen-space rect of
+                    // the complete picture, if no screen / clip-chain was applied
+                    // (this includes the extra space for blur region). To ensure
+                    // that we draw a large enough part of the picture to get correct
+                    // blur results, inflate that clipped area by the blur range, and
+                    // then intersect with the total screen rect, to minimize the
+                    // allocation size.
+                    let device_rect = clipped
+                        .inflate(blur_range, blur_range)
+                        .intersection(&unclipped.to_i32())
+                        .unwrap();
+
+                    let uv_rect_kind = calculate_uv_rect_kind(
+                        &pic_rect,
+                        &transform,
+                        &device_rect,
+                        frame_context.device_pixel_scale,
+                    );
+
                     let picture_task = RenderTask::new_picture(
                         RenderTaskLocation::Dynamic(None, device_rect.size),
                         unclipped.size,
@@ -1108,30 +1118,29 @@ impl PicturePrimitive {
 
                     PictureSurface::RenderTask(render_task_id)
                 } else {
-                    // Get the relative clipped rect within the overall prim rect, that
-                    // forms part of the cache key.
-                    let pic_relative_render_rect = PictureIntRect::new(
-                        PictureIntPoint::new(
-                            device_rect.origin.x - unclipped.origin.x as i32,
-                            device_rect.origin.y - unclipped.origin.y as i32,
-                        ),
-                        PictureIntSize::new(
-                            device_rect.size.width,
-                            device_rect.size.height,
-                        ),
-                    );
-
                     // Request a render task that will cache the output in the
                     // texture cache.
+                    let device_rect = unclipped.to_i32();
+
+                    let uv_rect_kind = calculate_uv_rect_kind(
+                        &pic_rect,
+                        &transform,
+                        &device_rect,
+                        frame_context.device_pixel_scale,
+                    );
+
+                    // TODO(gw): Probably worth changing the render task caching API
+                    //           so that we don't need to always clone the key.
+                    let cache_key = self.surface_desc
+                        .as_ref()
+                        .expect("bug: no cache key for surface")
+                        .cache_key
+                        .clone();
+
                     let cache_item = frame_state.resource_cache.request_render_task(
                         RenderTaskCacheKey {
                             size: device_rect.size,
-                            kind: RenderTaskCacheKeyKind::Picture(PictureCacheKey {
-                                scene_id: frame_context.scene_id,
-                                picture_id: self.id,
-                                unclipped_size: unclipped.size.to_i32(),
-                                pic_relative_render_rect,
-                            }),
+                            kind: RenderTaskCacheKeyKind::Picture(cache_key),
                         },
                         frame_state.gpu_cache,
                         frame_state.render_tasks,

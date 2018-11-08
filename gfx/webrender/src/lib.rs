@@ -109,6 +109,7 @@ mod scene_builder;
 mod segment;
 mod shade;
 mod spatial_node;
+mod surface;
 mod texture_allocator;
 mod texture_cache;
 mod tiling;
