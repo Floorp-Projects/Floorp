@@ -1414,9 +1414,9 @@ taa.it
 tos.it
 toscana.it
 trentin-sud-tirol.it
-trentin-süd-tirol.it
+trentin-süd-tirol.it
 trentin-sudtirol.it
-trentin-südtirol.it
+trentin-südtirol.it
 trentin-sued-tirol.it
 trentin-suedtirol.it
 trentino-a-adige.it
@@ -1426,9 +1426,9 @@ trentino-altoadige.it
 trentino-s-tirol.it
 trentino-stirol.it
 trentino-sud-tirol.it
-trentino-süd-tirol.it
+trentino-süd-tirol.it
 trentino-sudtirol.it
-trentino-südtirol.it
+trentino-südtirol.it
 trentino-sued-tirol.it
 trentino-suedtirol.it
 trentino.it
@@ -1439,15 +1439,15 @@ trentinoaltoadige.it
 trentinos-tirol.it
 trentinostirol.it
 trentinosud-tirol.it
-trentinosüd-tirol.it
+trentinosüd-tirol.it
 trentinosudtirol.it
-trentinosüdtirol.it
+trentinosüdtirol.it
 trentinosued-tirol.it
 trentinosuedtirol.it
 trentinsud-tirol.it
-trentinsüd-tirol.it
+trentinsüd-tirol.it
 trentinsudtirol.it
-trentinsüdtirol.it
+trentinsüdtirol.it
 trentinsued-tirol.it
 trentinsuedtirol.it
 tuscany.it
@@ -1464,13 +1464,13 @@ valleaosta.it
 valled-aosta.it
 valledaosta.it
 vallee-aoste.it
-vallée-aoste.it
+vallée-aoste.it
 vallee-d-aoste.it
-vallée-d-aoste.it
+vallée-d-aoste.it
 valleeaoste.it
-valléeaoste.it
+valléeaoste.it
 valleedaoste.it
-valléedaoste.it
+valléedaoste.it
 vao.it
 vda.it
 ven.it
@@ -1504,7 +1504,7 @@ av.it
 avellino.it
 ba.it
 balsan-sudtirol.it
-balsan-südtirol.it
+balsan-südtirol.it
 balsan-suedtirol.it
 balsan.it
 bari.it
@@ -1523,7 +1523,7 @@ bologna.it
 bolzano-altoadige.it
 bolzano.it
 bozen-sudtirol.it
-bozen-südtirol.it
+bozen-südtirol.it
 bozen-suedtirol.it
 bozen.it
 br.it
@@ -1532,7 +1532,7 @@ brindisi.it
 bs.it
 bt.it
 bulsan-sudtirol.it
-bulsan-südtirol.it
+bulsan-südtirol.it
 bulsan-suedtirol.it
 bulsan.it
 bz.it
@@ -1552,9 +1552,9 @@ catanzaro.it
 cb.it
 ce.it
 cesena-forli.it
-cesena-forlì.it
+cesena-forlì.it
 cesenaforli.it
-cesenaforlì.it
+cesenaforlì.it
 ch.it
 chieti.it
 ci.it
@@ -1585,9 +1585,9 @@ florence.it
 fm.it
 foggia.it
 forli-cesena.it
-forlì-cesena.it
+forlì-cesena.it
 forlicesena.it
-forlìcesena.it
+forlìcesena.it
 fr.it
 frosinone.it
 ge.it
@@ -1718,7 +1718,7 @@ sp.it
 sr.it
 ss.it
 suedtirol.it
-südtirol.it
+südtirol.it
 sv.it
 ta.it
 taranto.it
@@ -9881,9 +9881,6 @@ statebank
 
 // statefarm : 2015-07-30 State Farm Mutual Automobile Insurance Company
 statefarm
-
-// statoil : 2014-12-04 Statoil ASA
-statoil
 
 // stc : 2014-10-09 Saudi Telecom Company
 stc
