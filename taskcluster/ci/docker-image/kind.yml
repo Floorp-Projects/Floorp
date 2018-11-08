@@ -44,29 +44,12 @@ jobs:
     packages:
       - deb7-cmake
       - deb7-ninja
-  debian7-amd64-build-base:
-    symbol: I(deb7-bb)
-    parent: debian7-base
-    definition: debian7-build
-    packages:
-      - deb7-valgrind
-    args:
-      ARCH: amd64
   debian7-amd64-build:
     symbol: I(deb7)
     parent: debian7-base
     definition: debian7-build
     packages:
-      - deb7-atk
-      - deb7-glib
-      - deb7-gdk-pixbuf
-      - deb7-gtk3
-      - deb7-harfbuzz
-      - deb7-libxkbcommon
-      - deb7-pango
-      - deb7-pcre3
       - deb7-valgrind
-      - deb7-wayland
     args:
       ARCH: amd64
   debian7-i386-build:
@@ -74,22 +57,6 @@ jobs:
     parent: debian7-base
     definition: debian7-build
     packages:
-      - deb7-32-atk
-      - deb7-32-glib
-      - deb7-32-gdk-pixbuf
-      - deb7-32-gtk3
-      - deb7-32-harfbuzz
-      - deb7-32-libxkbcommon
-      - deb7-32-pango
-      - deb7-32-pcre3
-      - deb7-32-xkeyboard-config
-      - deb7-32-wayland
-      - deb7-atk
-      - deb7-glib
-      - deb7-gtk3
-      - deb7-harfbuzz
-      - deb7-python-defaults
-      - deb7-pcre3
       - deb7-valgrind
     args:
       ARCH: i386
