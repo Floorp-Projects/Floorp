@@ -4,7 +4,8 @@ use ir::{
     types, AbiParam, ArgumentPurpose, ExtFuncData, ExternalName, FuncRef, Function, Inst, Opcode,
     Signature, Type,
 };
-use isa::{CallConv, RegUnit, TargetIsa};
+use isa::{RegUnit, TargetIsa};
+use settings::CallConv;
 use std::fmt;
 use std::str::FromStr;
 
@@ -37,17 +38,23 @@ pub enum LibCall {
     NearestF32,
     /// nearest.f64
     NearestF64,
-    /// libc.memcpy
-    Memcpy,
-    /// libc.memset
-    Memset,
-    /// libc.memmove
-    Memmove,
 }
+
+const NAME: [&str; 9] = [
+    "Probestack",
+    "CeilF32",
+    "CeilF64",
+    "FloorF32",
+    "FloorF64",
+    "TruncF32",
+    "TruncF64",
+    "NearestF32",
+    "NearestF64",
+];
 
 impl fmt::Display for LibCall {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Debug::fmt(self, f)
+        f.write_str(NAME[*self as usize])
     }
 }
 
@@ -65,9 +72,6 @@ impl FromStr for LibCall {
             "TruncF64" => Ok(LibCall::TruncF64),
             "NearestF32" => Ok(LibCall::NearestF32),
             "NearestF64" => Ok(LibCall::NearestF64),
-            "Memcpy" => Ok(LibCall::Memcpy),
-            "Memset" => Ok(LibCall::Memset),
-            "Memmove" => Ok(LibCall::Memmove),
             _ => Err(()),
         }
     }
@@ -165,7 +169,8 @@ fn make_funcref_for_inst(
     inst: Inst,
     isa: &TargetIsa,
 ) -> FuncRef {
-    let mut sig = Signature::new(isa.default_call_conv());
+    // Start with a fast calling convention. We'll give the ISA a chance to change it.
+    let mut sig = Signature::new(isa.flags().call_conv());
     for &v in func.dfg.inst_args(inst) {
         sig.params.push(AbiParam::new(func.dfg.value_type(v)));
     }
@@ -188,7 +193,7 @@ fn make_funcref(libcall: LibCall, func: &mut Function, sig: Signature, isa: &Tar
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use super::*;
     use std::string::ToString;
 

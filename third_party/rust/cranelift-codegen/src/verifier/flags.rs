@@ -1,6 +1,6 @@
 //! Verify CPU flags values.
 
-use entity::{SecondaryMap, SparseSet};
+use entity::{EntityMap, SparseSet};
 use flowgraph::{BasicBlock, ControlFlowGraph};
 use ir;
 use ir::instructions::BranchInfo;
@@ -32,7 +32,7 @@ pub fn verify_flags(
         func,
         cfg,
         encinfo: isa.map(|isa| isa.encoding_info()),
-        livein: SecondaryMap::new(),
+        livein: EntityMap::new(),
     };
     verifier.check(errors)
 }
@@ -43,7 +43,7 @@ struct FlagsVerifier<'a> {
     encinfo: Option<isa::EncInfo>,
 
     /// The single live-in flags value (if any) for each EBB.
-    livein: SecondaryMap<ir::Ebb, PackedOption<ir::Value>>,
+    livein: EntityMap<ir::Ebb, PackedOption<ir::Value>>,
 }
 
 impl<'a> FlagsVerifier<'a> {
@@ -113,8 +113,7 @@ impl<'a> FlagsVerifier<'a> {
                     .encinfo
                     .as_ref()
                     .and_then(|ei| ei.operand_constraints(self.func.encodings[inst]))
-                    .map_or(false, |c| c.clobbers_flags)
-                    && live_val.is_some()
+                    .map_or(false, |c| c.clobbers_flags) && live_val.is_some()
                 {
                     return fatal!(errors, inst, "encoding clobbers live CPU flags in {}", live);
                 }
@@ -135,14 +134,9 @@ impl<'a> FlagsVerifier<'a> {
                         merge(&mut live_val, val, inst, errors)?;
                     }
                 }
-                BranchInfo::Table(jt, dest) => {
-                    if let Some(dest) = dest {
+                BranchInfo::Table(jt) => {
+                    for (_, dest) in self.func.jump_tables[jt].entries() {
                         if let Some(val) = self.livein[dest].expand() {
-                            merge(&mut live_val, val, inst, errors)?;
-                        }
-                    }
-                    for dest in self.func.jump_tables[jt].iter() {
-                        if let Some(val) = self.livein[*dest].expand() {
                             merge(&mut live_val, val, inst, errors)?;
                         }
                     }

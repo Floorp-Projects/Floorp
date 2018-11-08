@@ -175,7 +175,6 @@ impl TranslationState {
         self.reachable = true;
         self.globals.clear();
         self.heaps.clear();
-        self.tables.clear();
         self.signatures.clear();
         self.functions.clear();
     }
@@ -287,7 +286,7 @@ impl TranslationState {
         index: u32,
         environ: &mut FE,
     ) -> GlobalVariable {
-        let index = GlobalIndex::new(index as usize);
+        let index = index as GlobalIndex;
         *self
             .globals
             .entry(index)
@@ -302,7 +301,7 @@ impl TranslationState {
         index: u32,
         environ: &mut FE,
     ) -> ir::Heap {
-        let index = MemoryIndex::new(index as usize);
+        let index = index as MemoryIndex;
         *self
             .heaps
             .entry(index)
@@ -317,7 +316,7 @@ impl TranslationState {
         index: u32,
         environ: &mut FE,
     ) -> ir::Table {
-        let index = TableIndex::new(index as usize);
+        let index = index as TableIndex;
         *self
             .tables
             .entry(index)
@@ -334,7 +333,7 @@ impl TranslationState {
         index: u32,
         environ: &mut FE,
     ) -> (ir::SigRef, usize) {
-        let index = SignatureIndex::new(index as usize);
+        let index = index as SignatureIndex;
         *self.signatures.entry(index).or_insert_with(|| {
             let sig = environ.make_indirect_sig(func, index);
             (sig, normal_args(&func.dfg.signatures[sig]))

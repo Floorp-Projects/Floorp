@@ -12,7 +12,7 @@
 
 [package]
 name = "cranelift-wasm"
-version = "0.23.0"
+version = "0.20.1"
 authors = ["The Cranelift Project Developers"]
 description = "Translator from WebAssembly to Cranelift IR"
 readme = "README.md"
@@ -21,15 +21,15 @@ categories = ["no-std", "wasm"]
 license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/CraneStation/cranelift"
 [dependencies.cranelift-codegen]
-version = "0.23.0"
+version = "0.20.0"
 default-features = false
 
 [dependencies.cranelift-entity]
-version = "0.23.0"
+version = "0.20.0"
 default-features = false
 
 [dependencies.cranelift-frontend]
-version = "0.23.0"
+version = "0.20.0"
 default-features = false
 
 [dependencies.failure]
@@ -47,21 +47,23 @@ optional = true
 
 [dependencies.log]
 version = "0.4.4"
+features = ["release_max_level_warn"]
+default-features = false
+
+[dependencies.target-lexicon]
+version = "0.0.3"
 default-features = false
 
 [dependencies.wasmparser]
-version = "0.21.4"
+version = "0.17.2"
 default-features = false
-[dev-dependencies.target-lexicon]
-version = "0.2.0"
-
 [dev-dependencies.wabt]
-version = "0.7.0"
+version = "0.5.0"
 
 [features]
 core = ["hashmap_core", "cranelift-codegen/core", "cranelift-frontend/core", "wasmparser/core"]
 default = ["std"]
-std = ["cranelift-codegen/std", "cranelift-frontend/std", "wasmparser/std"]
+std = ["cranelift-codegen/std", "cranelift-frontend/std", "wasmparser/std", "target-lexicon/std"]
 [badges.maintenance]
 status = "experimental"
 

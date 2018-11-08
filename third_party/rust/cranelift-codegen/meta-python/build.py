@@ -5,11 +5,13 @@
 from __future__ import absolute_import
 import argparse
 import isa
+import gen_types
 import gen_instr
 import gen_settings
 import gen_build_deps
 import gen_encoding
 import gen_legalizer
+import gen_registers
 import gen_binemit
 
 
@@ -24,10 +26,12 @@ def main():
 
     isas = isa.all_isas()
 
+    gen_types.generate(out_dir)
     gen_instr.generate(isas, out_dir)
     gen_settings.generate(isas, out_dir)
     gen_encoding.generate(isas, out_dir)
     gen_legalizer.generate(isas, out_dir)
+    gen_registers.generate(isas, out_dir)
     gen_binemit.generate(isas, out_dir)
     gen_build_deps.generate()
 

@@ -165,11 +165,8 @@ impl<'a> Context<'a> {
         self.cur.goto_top(ebb);
         while let Some(inst) = self.cur.next_inst() {
             self.cur.use_srcloc(inst);
-            if !self.cur.func.dfg[inst].opcode().is_ghost() {
-                // This is an instruction which either has an encoding or carries ABI-related
-                // register allocation constraints.
-                let enc = self.cur.func.encodings[inst];
-                let constraints = self.encinfo.operand_constraints(enc);
+            let enc = self.cur.func.encodings[inst];
+            if let Some(constraints) = self.encinfo.operand_constraints(enc) {
                 if self.visit_inst(inst, constraints, tracker, &mut regs) {
                     self.replace_global_defines(inst, tracker);
                     // Restore cursor location after `replace_global_defines` moves it.
@@ -177,7 +174,7 @@ impl<'a> Context<'a> {
                     self.cur.goto_inst(inst);
                 }
             } else {
-                // This is a ghost instruction with no encoding and no extra constraints.
+                // This is a ghost instruction with no encoding.
                 let (_throughs, kills) = tracker.process_ghost(inst);
                 self.process_ghost_kills(kills, &mut regs);
             }
@@ -293,7 +290,7 @@ impl<'a> Context<'a> {
     fn visit_inst(
         &mut self,
         inst: Inst,
-        constraints: Option<&RecipeConstraints>,
+        constraints: &RecipeConstraints,
         tracker: &mut LiveValueTracker,
         regs: &mut AvailableRegs,
     ) -> bool {
@@ -309,9 +306,7 @@ impl<'a> Context<'a> {
 
         // Program the solver with register constraints for the input side.
         self.solver.reset(&regs.input);
-        if let Some(constraints) = constraints {
-            self.program_input_constraints(inst, constraints.ins);
-        }
+        self.program_input_constraints(inst, constraints.ins);
         let call_sig = self.cur.func.dfg.call_signature(inst);
         if let Some(sig) = call_sig {
             program_input_abi(
@@ -395,16 +390,14 @@ impl<'a> Context<'a> {
         // Program the fixed output constraints before the general defines. This allows us to
         // detect conflicts between fixed outputs and tied operands where the input value hasn't
         // been converted to a solver variable.
-        if let Some(constraints) = constraints {
-            if constraints.fixed_outs {
-                self.program_fixed_outputs(
-                    constraints.outs,
-                    defs,
-                    throughs,
-                    &mut replace_global_defines,
-                    &regs.global,
-                );
-            }
+        if constraints.fixed_outs {
+            self.program_fixed_outputs(
+                constraints.outs,
+                defs,
+                throughs,
+                &mut replace_global_defines,
+                &regs.global,
+            );
         }
         if let Some(sig) = call_sig {
             self.program_output_abi(
@@ -415,15 +408,13 @@ impl<'a> Context<'a> {
                 &regs.global,
             );
         }
-        if let Some(constraints) = constraints {
-            self.program_output_constraints(
-                inst,
-                constraints.outs,
-                defs,
-                &mut replace_global_defines,
-                &regs.global,
-            );
-        }
+        self.program_output_constraints(
+            inst,
+            constraints.outs,
+            defs,
+            &mut replace_global_defines,
+            &regs.global,
+        );
 
         // Finally, we've fully programmed the constraint solver.
         // We expect a quick solution in most cases.
@@ -449,14 +440,12 @@ impl<'a> Context<'a> {
 
         // Tied defs are not part of the solution above.
         // Copy register assignments from tied inputs to tied outputs.
-        if let Some(constraints) = constraints {
-            if constraints.tied_ops {
-                for (op, lv) in constraints.outs.iter().zip(defs) {
-                    if let ConstraintKind::Tied(num) = op.kind {
-                        let arg = self.cur.func.dfg.inst_args(inst)[num as usize];
-                        let reg = self.divert.reg(arg, &self.cur.func.locations);
-                        self.cur.func.locations[lv.value] = ValueLoc::Reg(reg);
-                    }
+        if constraints.tied_ops {
+            for (op, lv) in constraints.outs.iter().zip(defs) {
+                if let ConstraintKind::Tied(num) = op.kind {
+                    let arg = self.cur.func.dfg.inst_args(inst)[num as usize];
+                    let reg = self.divert.reg(arg, &self.cur.func.locations);
+                    self.cur.func.locations[lv.value] = ValueLoc::Reg(reg);
                 }
             }
         }
@@ -911,15 +900,12 @@ impl<'a> Context<'a> {
                 let lr = &self.liveness[value];
                 lr.is_livein(ebb, ctx)
             }
-            Table(jt, ebb) => {
+            Table(jt) => {
                 let lr = &self.liveness[value];
                 !lr.is_local()
-                    && (ebb.map_or(false, |ebb| lr.is_livein(ebb, ctx)) || self
-                        .cur
-                        .func
-                        .jump_tables[jt]
-                        .iter()
-                        .any(|ebb| lr.is_livein(*ebb, ctx)))
+                    && self.cur.func.jump_tables[jt]
+                        .entries()
+                        .any(|(_, ebb)| lr.is_livein(ebb, ctx))
             }
         }
     }
