@@ -61,6 +61,7 @@ treeherder:
         'BMcss': 'Beetmover checksums for source'
         'Aries': 'Aries Device Image'
         'Deb7': 'Packages for Debian 7'
+        'Deb7-32': 'Packages for Debian 7 32-bits'
         'Deb9': 'Packages for Debian 9'
         'Nexus 5-L': 'Nexus 5-L Device Image'
         'I': 'Docker Image Builds'

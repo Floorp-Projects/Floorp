@@ -435,6 +435,8 @@ pub enum WrFilterOpType {
   Sepia = 8,
   DropShadow = 9,
   ColorMatrix = 10,
+  SrgbToLinear = 11,
+  LinearToSrgb = 12,
 }
 
 #[repr(C)]
@@ -1832,6 +1834,8 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                                                c_filter.argument,
                                                                c_filter.color),
             WrFilterOpType::ColorMatrix => FilterOp::ColorMatrix(c_filter.matrix),
+            WrFilterOpType::SrgbToLinear => FilterOp::SrgbToLinear,
+            WrFilterOpType::LinearToSrgb => FilterOp::LinearToSrgb,
         }
     }).collect();
 

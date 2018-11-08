@@ -397,8 +397,8 @@ InterpolateFromIdentityMatrix(const float aToMatrix[20], float aAmount,
 
 // Create a 4x5 color matrix for the different ways to specify color matrices
 // in SVG.
-static nsresult
-ComputeColorMatrix(uint32_t aColorMatrixType, const nsTArray<float>& aValues,
+bool
+ComputeColorMatrix(const ColorMatrixAttributes& aMatrixAttributes,
                    float aOutMatrix[20])
 {
   // Luminance coefficients.
@@ -433,40 +433,40 @@ ComputeColorMatrix(uint32_t aColorMatrixType, const nsTArray<float>& aValues,
   static const float hueRotateG = 0.140f;
   static const float hueRotateB = 0.283f;
 
-  switch (aColorMatrixType) {
+  switch (aMatrixAttributes.mType) {
 
-    case SVG_FECOLORMATRIX_TYPE_MATRIX:
-    {
-      if (aValues.Length() != 20) {
-        return NS_ERROR_FAILURE;
+    case SVG_FECOLORMATRIX_TYPE_MATRIX: {
+      if (aMatrixAttributes.mValues.Length() != 20) {
+        return false;
       }
 
-      PodCopy(aOutMatrix, aValues.Elements(), 20);
+      PodCopy(aOutMatrix, aMatrixAttributes.mValues.Elements(), 20);
       break;
     }
 
-    case SVG_FECOLORMATRIX_TYPE_SATURATE:
-    {
-      if (aValues.Length() != 1)
-        return NS_ERROR_FAILURE;
+    case SVG_FECOLORMATRIX_TYPE_SATURATE: {
+      if (aMatrixAttributes.mValues.Length() != 1) {
+        return false;
+      }
 
-      float s = aValues[0];
+      float s = aMatrixAttributes.mValues[0];
 
-      if (s < 0)
-        return NS_ERROR_FAILURE;
+      if (s < 0) {
+        return false;
+      }
 
       InterpolateFromIdentityMatrix(saturateMatrix, 1 - s, aOutMatrix);
       break;
     }
 
-    case SVG_FECOLORMATRIX_TYPE_HUE_ROTATE:
-    {
-      if (aValues.Length() != 1)
-        return NS_ERROR_FAILURE;
+    case SVG_FECOLORMATRIX_TYPE_HUE_ROTATE: {
+      if (aMatrixAttributes.mValues.Length() != 1) {
+        return false;
+      }
 
       PodCopy(aOutMatrix, identityMatrix, 20);
 
-      float hueRotateValue = aValues[0];
+      float hueRotateValue = aMatrixAttributes.mValues[0];
 
       float c = static_cast<float>(cos(hueRotateValue * M_PI / 180));
       float s = static_cast<float>(sin(hueRotateValue * M_PI / 180));
@@ -486,32 +486,33 @@ ComputeColorMatrix(uint32_t aColorMatrixType, const nsTArray<float>& aValues,
       break;
     }
 
-    case SVG_FECOLORMATRIX_TYPE_LUMINANCE_TO_ALPHA:
-    {
+    case SVG_FECOLORMATRIX_TYPE_LUMINANCE_TO_ALPHA: {
       PodCopy(aOutMatrix, luminanceToAlphaMatrix, 20);
       break;
     }
 
-    case SVG_FECOLORMATRIX_TYPE_SEPIA:
-    {
-      if (aValues.Length() != 1)
-        return NS_ERROR_FAILURE;
+    case SVG_FECOLORMATRIX_TYPE_SEPIA: {
+      if (aMatrixAttributes.mValues.Length() != 1){
+        return false;
+      }
 
-      float amount = aValues[0];
+      float amount = aMatrixAttributes.mValues[0];
 
-      if (amount < 0 || amount > 1)
-        return NS_ERROR_FAILURE;
+      if (amount < 0 || amount > 1){
+        return false;
+      }
 
       InterpolateFromIdentityMatrix(sepiaMatrix, amount, aOutMatrix);
       break;
     }
 
-    default:
-      return NS_ERROR_FAILURE;
+    default: {
+      return false;
+    }
 
   }
 
-  return NS_OK;
+  return !ArrayEqual(aOutMatrix, identityMatrix, 20);
 }
 
 static void
@@ -779,20 +780,22 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return filter.forget();
     }
 
-    already_AddRefed<FilterNode> match(const ColorMatrixAttributes& aColorMatrix)
+    already_AddRefed<FilterNode> match(const ColorMatrixAttributes& aMatrixAttributes)
     {
-      uint32_t type = aColorMatrix.mType;
       float colorMatrix[20];
-      if (NS_FAILED(ComputeColorMatrix(type, aColorMatrix.mValues, colorMatrix)) ||
-          ArrayEqual(colorMatrix, identityMatrix)) {
+      if (!ComputeColorMatrix(aMatrixAttributes, colorMatrix)) {
         RefPtr<FilterNode> filter(mSources[0]);
         return filter.forget();
       }
-      Matrix5x4 matrix(colorMatrix[0], colorMatrix[5], colorMatrix[10],  colorMatrix[15],
-                       colorMatrix[1], colorMatrix[6], colorMatrix[11],  colorMatrix[16],
-                       colorMatrix[2], colorMatrix[7], colorMatrix[12],  colorMatrix[17],
-                       colorMatrix[3], colorMatrix[8], colorMatrix[13],  colorMatrix[18],
-                       colorMatrix[4], colorMatrix[9], colorMatrix[14],  colorMatrix[19]);
+
+      Matrix5x4 matrix(
+        colorMatrix[0], colorMatrix[5], colorMatrix[10],  colorMatrix[15],
+        colorMatrix[1], colorMatrix[6], colorMatrix[11],  colorMatrix[16],
+        colorMatrix[2], colorMatrix[7], colorMatrix[12],  colorMatrix[17],
+        colorMatrix[3], colorMatrix[8], colorMatrix[13],  colorMatrix[18],
+        colorMatrix[4], colorMatrix[9], colorMatrix[14],  colorMatrix[19]
+      );
+
       RefPtr<FilterNode> filter = mDT->CreateFilter(FilterType::COLOR_MATRIX);
       if (!filter) {
         return nullptr;

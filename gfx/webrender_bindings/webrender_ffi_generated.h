@@ -253,6 +253,8 @@ enum class WrFilterOpType : uint32_t {
   Sepia = 8,
   DropShadow = 9,
   ColorMatrix = 10,
+  SrgbToLinear = 11,
+  LinearToSrgb = 12,
 
   Sentinel /* this must be last for serialization purposes. */
 };

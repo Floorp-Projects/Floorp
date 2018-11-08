@@ -43,6 +43,10 @@ DebuggerPanel.prototype = {
     this._selectors = selectors;
     this._client = client;
     this.isReady = true;
+
+    this.panelWin.document.addEventListener("drag:start", this.toolbox.toggleDragging);
+    this.panelWin.document.addEventListener("drag:end", this.toolbox.toggleDragging);
+
     return this;
   },
 

@@ -47,6 +47,10 @@
   min-height: 29px;
 }
 
+.dragging #toolbox-panel-iframe-webconsole {
+  pointer-events: none;
+}
+
 .toolbox-tabs-wrapper {
   position: relative;
   display: flex;
