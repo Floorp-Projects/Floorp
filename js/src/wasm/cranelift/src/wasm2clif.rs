@@ -21,7 +21,7 @@
 use baldrdash as bd;
 use compile::{symbolic_function_name, wasm_function_name};
 use cranelift_codegen::cursor::{Cursor, FuncCursor};
-use cranelift_codegen::entity::{EntityMap};
+use cranelift_codegen::entity::EntityMap;
 use cranelift_codegen::ir;
 use cranelift_codegen::ir::condcodes::IntCC;
 use cranelift_codegen::ir::InstBuilder;

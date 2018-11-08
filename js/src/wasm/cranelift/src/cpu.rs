@@ -23,11 +23,11 @@
 
 use cranelift_codegen::isa;
 use cranelift_codegen::settings::{self, Configurable};
+use std::error;
 use std::mem;
 use std::str::FromStr;
-use std::error;
 use target_lexicon;
-use utils::{DashResult, BasicError};
+use utils::{BasicError, DashResult};
 
 use baldrdash::StaticEnvironment;
 
@@ -35,7 +35,7 @@ impl From<isa::LookupError> for BasicError {
     fn from(err: isa::LookupError) -> BasicError {
         let msg = match err {
             isa::LookupError::SupportDisabled => "ISA support is disabled",
-            isa::LookupError::Unsupported => "unsupported ISA"
+            isa::LookupError::Unsupported => "unsupported ISA",
         };
         BasicError::new(msg.to_string())
     }
