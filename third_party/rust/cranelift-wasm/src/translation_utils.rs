@@ -13,25 +13,14 @@ entity_impl!(FuncIndex);
 pub struct DefinedFuncIndex(u32);
 entity_impl!(DefinedFuncIndex);
 
-/// Index type of a table (imported or defined) inside the WebAssembly module.
-#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
-pub struct TableIndex(u32);
-entity_impl!(TableIndex);
-
-/// Index type of a global variable (imported or defined) inside the WebAssembly module.
-#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
-pub struct GlobalIndex(u32);
-entity_impl!(GlobalIndex);
-
-/// Index type of a linear memory (imported or defined) inside the WebAssembly module.
-#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
-pub struct MemoryIndex(u32);
-entity_impl!(MemoryIndex);
-
-/// Index type of a signature (imported or defined) inside the WebAssembly module.
-#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
-pub struct SignatureIndex(u32);
-entity_impl!(SignatureIndex);
+/// Index of a table (imported or defined) inside the WebAssembly module.
+pub type TableIndex = usize;
+/// Index of a global variable (imported or defined) inside the WebAssembly module.
+pub type GlobalIndex = usize;
+/// Index of a linear memory (imported or defined) inside the WebAssembly module.
+pub type MemoryIndex = usize;
+/// Index of a signature (imported or defined) inside the WebAssembly module.
+pub type SignatureIndex = usize;
 
 /// WebAssembly global.
 #[derive(Debug, Clone, Copy)]
@@ -92,13 +81,13 @@ pub struct Memory {
 
 /// Helper function translating wasmparser types to Cranelift types when possible.
 pub fn type_to_type(ty: wasmparser::Type) -> Result<ir::Type, ()> {
-    Ok(match ty {
-        wasmparser::Type::I32 => ir::types::I32,
-        wasmparser::Type::I64 => ir::types::I64,
-        wasmparser::Type::F32 => ir::types::F32,
-        wasmparser::Type::F64 => ir::types::F64,
-        _ => return Err(()),
-    })
+    match ty {
+        wasmparser::Type::I32 => Ok(ir::types::I32),
+        wasmparser::Type::I64 => Ok(ir::types::I64),
+        wasmparser::Type::F32 => Ok(ir::types::F32),
+        wasmparser::Type::F64 => Ok(ir::types::F64),
+        _ => Err(()),
+    }
 }
 
 /// Turns a `wasmparser` `f32` into a `Cranelift` one.

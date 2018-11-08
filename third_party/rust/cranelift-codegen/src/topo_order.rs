@@ -88,7 +88,7 @@ impl TopoOrder {
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use super::*;
     use cursor::{Cursor, FuncCursor};
     use dominator_tree::DominatorTree;

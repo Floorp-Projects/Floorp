@@ -12,6 +12,24 @@ use error;
 
 static SHIFTWIDTH: usize = 4;
 
+struct _IndentedScope {
+    fmt: Formatter,
+    after: Option<String>,
+}
+
+impl _IndentedScope {
+    fn _enter(&mut self) {
+        self.fmt._indent_push();
+    }
+
+    fn _exit(&mut self) {
+        self.fmt._indent_pop();
+        if let Some(ref s) = self.after {
+            self.fmt.line(&s);
+        }
+    }
+}
+
 pub struct Formatter {
     indent: usize,
     lines: Vec<String>,
@@ -20,29 +38,22 @@ pub struct Formatter {
 impl Formatter {
     /// Source code formatter class. Used to collect source code to be written
     /// to a file, and keep track of indentation.
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> Formatter {
+        Formatter {
             indent: 0,
             lines: Vec::new(),
         }
     }
 
     /// Increase current indentation level by one.
-    pub fn indent_push(&mut self) {
+    pub fn _indent_push(&mut self) {
         self.indent += 1;
     }
 
     /// Decrease indentation by one level.
-    pub fn indent_pop(&mut self) {
+    pub fn _indent_pop(&mut self) {
         assert!(self.indent > 0, "Already at top level indentation");
         self.indent -= 1;
-    }
-
-    pub fn indent<T, F: FnOnce(&mut Formatter) -> T>(&mut self, f: F) -> T {
-        self.indent_push();
-        let ret = f(self);
-        self.indent_pop();
-        ret
     }
 
     /// Get the current whitespace indentation in the form of a String.
@@ -57,9 +68,9 @@ impl Formatter {
     /// Get a string containing whitespace outdented one level. Used for
     /// lines of code that are inside a single indented block.
     fn _get_outdent(&mut self) -> String {
-        self.indent_push();
+        self._indent_push();
         let s = self.get_indent();
-        self.indent_pop();
+        self._indent_pop();
         s
     }
 
@@ -90,6 +101,13 @@ impl Formatter {
         }
 
         Ok(())
+    }
+
+    /// Return a scope object for use with a `with` statement.
+    /// The optional `before` and `after` parameters are surrounding lines
+    /// which are *not* indented.
+    fn _indented(&self, _before: Option<&str>, _after: Option<&str>) -> _IndentedScope {
+        unimplemented!();
     }
 
     /// Add one or more lines after stripping common indentation.
@@ -140,6 +158,7 @@ fn parse_multiline(s: &str) -> Vec<String> {
         .iter()
         .skip(1)
         .map(|l| l.len() - l.trim_left().len())
+        .filter(|&i| i > 0)
         .min();
 
     // Strip off leading blank lines.
@@ -238,9 +257,9 @@ mod srcgen_tests {
     fn formatter_basic_example_works() {
         let mut fmt = Formatter::new();
         fmt.line("Hello line 1");
-        fmt.indent_push();
+        fmt._indent_push();
         fmt._comment("Nested comment");
-        fmt.indent_pop();
+        fmt._indent_pop();
         fmt.line("Back home again");
         let expected_lines = vec![
             "Hello line 1\n",
@@ -258,9 +277,9 @@ mod srcgen_tests {
         let actual_results = Vec::with_capacity(4);
         (0..3).for_each(|_| {
             fmt.get_indent();
-            fmt.indent_push();
+            fmt._indent_push();
         });
-        (0..3).for_each(|_| fmt.indent_pop());
+        (0..3).for_each(|_| fmt._indent_pop());
         fmt.get_indent();
 
         actual_results
@@ -281,7 +300,7 @@ mod srcgen_tests {
     fn fmt_can_add_indented_line() {
         let mut fmt = Formatter::new();
         fmt.line("hello");
-        fmt.indent_push();
+        fmt._indent_push();
         fmt.line("world");
         let expected_lines = vec!["hello\n", "    world\n"];
         assert_eq!(fmt.lines, expected_lines);

@@ -172,7 +172,7 @@ got:
 /// # Note
 ///
 /// This feature is implemented behind the `simple-derive` feature, and is only
-/// available when that feature is enabled.
+/// avaliable when that feature is enabled.
 ///
 /// # Example
 ///

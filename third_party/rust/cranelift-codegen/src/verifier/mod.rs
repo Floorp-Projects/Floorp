@@ -43,7 +43,7 @@
 //!
 //! Global values
 //!
-//! - Detect cycles in global values.
+//! - Detect cycles in deref(base) declarations.
 //! - Detect use of 'vmctx' global value when no corresponding parameter is defined.
 //!
 //! TODO:
@@ -70,7 +70,7 @@ use ir::{
 };
 use isa::TargetIsa;
 use iterators::IteratorExtras;
-use settings::FlagsOrIsa;
+use settings::{Flags, FlagsOrIsa};
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::fmt::{self, Display, Formatter, Write};
@@ -120,6 +120,53 @@ macro_rules! nonfatal {
     });
 }
 
+/// Shorthand syntax for calling functions of the form
+/// `verify_foo(a, b, &mut VerifierErrors) -> VerifierStepResult<T>`
+/// as if they had the form `verify_foo(a, b) -> VerifierResult<T>`.
+///
+/// This syntax also ensures that no errors whatsoever were reported,
+/// even if they were not fatal.
+///
+/// # Example
+/// ```rust,ignore
+/// verify!(verify_context, func, cfg, domtree, fisa)
+///
+/// // ... is equivalent to...
+///
+/// let mut errors = VerifierErrors::new();
+/// let result = verify_context(func, cfg, domtree, fisa, &mut errors);
+///
+/// if errors.is_empty() {
+///     Ok(result.unwrap())
+/// } else {
+///     Err(errors)
+/// }
+/// ```
+#[macro_export]
+macro_rules! verify {
+    ( $verifier: expr; $fun: ident $(, $arg: expr )* ) => ({
+        let mut errors = $crate::verifier::VerifierErrors::default();
+        let result = $verifier.$fun( $( $arg, )* &mut errors);
+
+        if errors.is_empty() {
+            Ok(result.unwrap())
+        } else {
+            Err(errors)
+        }
+    });
+
+    ( $fun: path, $(, $arg: expr )* ) => ({
+        let mut errors = $crate::verifier::VerifierErrors::default();
+        let result = $fun( $( $arg, )* &mut errors);
+
+        if errors.is_empty() {
+            Ok(result.unwrap())
+        } else {
+            Err(errors)
+        }
+    });
+}
+
 mod cssa;
 mod flags;
 mod liveness;
@@ -156,6 +203,9 @@ pub type VerifierStepResult<T> = Result<T, ()>;
 ///
 /// Unlike `VerifierStepResult<()>` which may be `Ok` while still having reported
 /// errors, this type always returns `Err` if an error (fatal or not) was reported.
+///
+/// Typically, this error will be constructed by using `verify!` on a function
+/// that returns `VerifierStepResult<T>`.
 pub type VerifierResult<T> = Result<T, VerifierErrors>;
 
 /// List of verifier errors.
@@ -230,15 +280,7 @@ pub fn verify_function<'a, FOI: Into<FlagsOrIsa<'a>>>(
     fisa: FOI,
 ) -> VerifierResult<()> {
     let _tt = timing::verifier();
-    let mut errors = VerifierErrors::default();
-    let verifier = Verifier::new(func, fisa.into());
-    let result = verifier.run(&mut errors);
-    if errors.is_empty() {
-        result.unwrap();
-        Ok(())
-    } else {
-        Err(errors)
-    }
+    verify!(Verifier::new(func, fisa.into()); run)
 }
 
 /// Verify `func` after checking the integrity of associated context data structures `cfg` and
@@ -265,17 +307,19 @@ struct Verifier<'a> {
     func: &'a Function,
     expected_cfg: ControlFlowGraph,
     expected_domtree: DominatorTree,
+    flags: &'a Flags,
     isa: Option<&'a TargetIsa>,
 }
 
 impl<'a> Verifier<'a> {
-    pub fn new(func: &'a Function, fisa: FlagsOrIsa<'a>) -> Self {
+    pub fn new(func: &'a Function, fisa: FlagsOrIsa<'a>) -> Verifier<'a> {
         let expected_cfg = ControlFlowGraph::with_function(func);
         let expected_domtree = DominatorTree::with_function(func, &expected_cfg);
-        Self {
+        Verifier {
             func,
             expected_cfg,
             expected_domtree,
+            flags: fisa.flags,
             isa: fisa.isa,
         }
     }
@@ -292,28 +336,16 @@ impl<'a> Verifier<'a> {
             seen.insert(gv);
 
             let mut cur = gv;
-            loop {
-                match self.func.global_values[cur] {
-                    ir::GlobalValueData::Load { base, .. }
-                    | ir::GlobalValueData::IAddImm { base, .. } => {
-                        if seen.insert(base).is_some() {
-                            if !cycle_seen {
-                                report!(
-                                    errors,
-                                    gv,
-                                    "global value cycle: {}",
-                                    DisplayList(seen.as_slice())
-                                );
-                                // ensures we don't report the cycle multiple times
-                                cycle_seen = true;
-                            }
-                            continue 'gvs;
-                        }
-
-                        cur = base;
+            while let ir::GlobalValueData::Deref { base, .. } = self.func.global_values[cur] {
+                if seen.insert(base).is_some() {
+                    if !cycle_seen {
+                        report!(errors, gv, "deref cycle: {}", DisplayList(seen.as_slice()));
+                        cycle_seen = true; // ensures we don't report the cycle multiple times
                     }
-                    _ => break,
+                    continue 'gvs;
                 }
+
+                cur = base;
             }
 
             match self.func.global_values[gv] {
@@ -326,30 +358,7 @@ impl<'a> Verifier<'a> {
                         report!(errors, gv, "undeclared vmctx reference {}", gv);
                     }
                 }
-                ir::GlobalValueData::IAddImm {
-                    base, global_type, ..
-                } => {
-                    if !global_type.is_int() {
-                        report!(
-                            errors,
-                            gv,
-                            "iadd_imm global value with non-int type {}",
-                            global_type
-                        );
-                    } else if let Some(isa) = self.isa {
-                        let base_type = self.func.global_values[base].global_type(isa);
-                        if global_type != base_type {
-                            report!(
-                                errors,
-                                gv,
-                                "iadd_imm type {} differs from operand type {}",
-                                global_type,
-                                base_type
-                            );
-                        }
-                    }
-                }
-                ir::GlobalValueData::Load { base, .. } => {
+                ir::GlobalValueData::Deref { base, .. } => {
                     if let Some(isa) = self.isa {
                         let base_type = self.func.global_values[base].global_type(isa);
                         let pointer_type = isa.pointer_type();
@@ -357,7 +366,7 @@ impl<'a> Verifier<'a> {
                             report!(
                                 errors,
                                 gv,
-                                "base {} has type {}, which is not the pointer type {}",
+                                "deref base {} has type {}, which is not the pointer type {}",
                                 base,
                                 base_type,
                                 pointer_type
@@ -393,22 +402,30 @@ impl<'a> Verifier<'a> {
                     );
                 }
 
-                if let ir::HeapStyle::Dynamic { bound_gv, .. } = heap_data.style {
-                    if !self.func.global_values.is_valid(bound_gv) {
-                        return nonfatal!(errors, heap, "invalid bound global value {}", bound_gv);
-                    }
+                match heap_data.style {
+                    ir::HeapStyle::Dynamic { bound_gv, .. } => {
+                        if !self.func.global_values.is_valid(bound_gv) {
+                            return nonfatal!(
+                                errors,
+                                heap,
+                                "invalid bound global value {}",
+                                bound_gv
+                            );
+                        }
 
-                    let index_type = heap_data.index_type;
-                    let bound_type = self.func.global_values[bound_gv].global_type(isa);
-                    if index_type != bound_type {
-                        report!(
-                            errors,
-                            heap,
-                            "heap index type {} differs from the type of its bound, {}",
-                            index_type,
-                            bound_type
-                        );
+                        let index_type = heap_data.index_type;
+                        let bound_type = self.func.global_values[bound_gv].global_type(isa);
+                        if index_type != bound_type {
+                            report!(
+                                errors,
+                                heap,
+                                "heap index type {} differs from the type of its bound, {}",
+                                index_type,
+                                bound_type
+                            );
+                        }
                     }
+                    _ => {}
                 }
             }
         }
@@ -605,10 +622,7 @@ impl<'a> Verifier<'a> {
                 self.verify_ebb(inst, destination, errors)?;
                 self.verify_value_list(inst, args, errors)?;
             }
-            BranchTable { table, .. }
-            | BranchTableBase { table, .. }
-            | BranchTableEntry { table, .. }
-            | IndirectJump { table, .. } => {
+            BranchTable { table, .. } => {
                 self.verify_jump_table(inst, table, errors)?;
             }
             Call {
@@ -892,11 +906,11 @@ impl<'a> Verifier<'a> {
                     );
                 }
                 // The defining EBB dominates the instruction using this value.
-                if is_reachable && !self.expected_domtree.dominates(
-                    ebb,
-                    loc_inst,
-                    &self.func.layout,
-                ) {
+                if is_reachable
+                    && !self
+                        .expected_domtree
+                        .dominates(ebb, loc_inst, &self.func.layout)
+                {
                     return fatal!(
                         errors,
                         loc_inst,
@@ -990,8 +1004,7 @@ impl<'a> Verifier<'a> {
         for (&prev_ebb, &next_ebb) in domtree.cfg_postorder().iter().adjacent_pairs() {
             if self
                 .expected_domtree
-                .rpo_cmp(prev_ebb, next_ebb, &self.func.layout)
-                != Ordering::Greater
+                .rpo_cmp(prev_ebb, next_ebb, &self.func.layout) != Ordering::Greater
             {
                 return fatal!(
                     errors,
@@ -1058,8 +1071,8 @@ impl<'a> Verifier<'a> {
             ctrl_type
         } else {
             // Non-polymorphic instructions don't check the controlling type variable, so `Option`
-            // is unnecessary and we can just make it `INVALID`.
-            types::INVALID
+            // is unnecessary and we can just make it `VOID`.
+            types::VOID
         };
 
         // Typechecking instructions is never fatal
@@ -1164,21 +1177,9 @@ impl<'a> Verifier<'a> {
                     .map(|&v| self.func.dfg.value_type(v));
                 self.typecheck_variable_args_iterator(inst, iter, errors)?;
             }
-            BranchInfo::Table(table, ebb) => {
-                if let Some(ebb) = ebb {
+            BranchInfo::Table(table) => {
+                for (_, ebb) in self.func.jump_tables[table].entries() {
                     let arg_count = self.func.dfg.num_ebb_params(ebb);
-                    if arg_count != 0 {
-                        return nonfatal!(
-                            errors,
-                            inst,
-                            "takes no arguments, but had target {} with {} arguments",
-                            ebb,
-                            arg_count
-                        );
-                    }
-                }
-                for ebb in self.func.jump_tables[table].iter() {
-                    let arg_count = self.func.dfg.num_ebb_params(*ebb);
                     if arg_count != 0 {
                         return nonfatal!(
                             errors,
@@ -1550,17 +1551,8 @@ impl<'a> Verifier<'a> {
 
         let encoding = self.func.encodings[inst];
         if encoding.is_legal() {
-            if self.func.dfg[inst].opcode().is_ghost() {
-                return nonfatal!(
-                    errors,
-                    inst,
-                    "Ghost instruction has an encoding: {}",
-                    isa.encoding_info().display(encoding)
-                );
-            }
-
-            let mut encodings = isa
-                .legal_encodings(
+            let mut encodings =
+                isa.legal_encodings(
                     &self.func,
                     &self.func.dfg[inst],
                     self.func.dfg.ctrl_typevar(inst),
@@ -1611,9 +1603,9 @@ impl<'a> Verifier<'a> {
         // Instructions with side effects are not allowed to be ghost instructions.
         let opcode = self.func.dfg[inst].opcode();
 
-        // The `fallthrough` and `fallthrough_return` instructions are marked as terminators and
-        // branches, but they are not required to have an encoding.
-        if opcode == Opcode::Fallthrough || opcode == Opcode::FallthroughReturn {
+        // The `fallthrough` instruction is marked as a terminator and a branch, but it is not
+        // required to have an encoding.
+        if opcode == Opcode::Fallthrough {
             return Ok(());
         }
 
@@ -1653,29 +1645,22 @@ impl<'a> Verifier<'a> {
         Ok(())
     }
 
-    fn immediate_constraints(
-        &self,
-        inst: Inst,
-        errors: &mut VerifierErrors,
-    ) -> VerifierStepResult<()> {
-        let inst_data = &self.func.dfg[inst];
-
-        // If this is some sort of a store instruction, get the memflags, else, just return.
-        let memflags = match *inst_data {
-            ir::InstructionData::Store { flags, .. }
-            | ir::InstructionData::StoreComplex { flags, .. } => flags,
-            _ => return Ok(()),
-        };
-
-        if memflags.readonly() {
-            fatal!(
-                errors,
-                inst,
-                "A store instruction cannot have the `readonly` MemFlag"
-            )
-        } else {
-            Ok(())
+    /// Verify the `return_at_end` property which requires that there are no internal return
+    /// instructions.
+    fn verify_return_at_end(&self, errors: &mut VerifierErrors) -> VerifierStepResult<()> {
+        for ebb in self.func.layout.ebbs() {
+            let inst = self.func.layout.last_inst(ebb).unwrap();
+            if self.func.dfg[inst].opcode().is_return() && Some(ebb) != self.func.layout.last_ebb()
+            {
+                report!(
+                    errors,
+                    inst,
+                    "Internal return not allowed with return_at_end=1"
+                );
+            }
         }
+
+        errors.as_result()
     }
 
     pub fn run(&self, errors: &mut VerifierErrors) -> VerifierStepResult<()> {
@@ -1690,8 +1675,11 @@ impl<'a> Verifier<'a> {
                 self.instruction_integrity(inst, errors)?;
                 self.typecheck(inst, errors)?;
                 self.verify_encoding(inst, errors)?;
-                self.immediate_constraints(inst, errors)?;
             }
+        }
+
+        if self.flags.return_at_end() {
+            self.verify_return_at_end(errors)?;
         }
 
         verify_flags(self.func, &self.expected_cfg, self.isa, errors)?;

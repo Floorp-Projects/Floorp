@@ -12,15 +12,15 @@
 
 [package]
 name = "wasmparser"
-version = "0.21.8"
+version = "0.17.2"
 authors = ["Yury Delendik <ydelendik@mozilla.com>"]
 exclude = ["fuzz/**/*", "tests/**/*"]
 description = "A simple event-driven library for parsing WebAssembly binary files.\n"
 keywords = ["parser", "WebAssembly", "wasm"]
-license = "Apache-2.0 WITH LLVM-exception"
+license = "Apache-2.0"
 repository = "https://github.com/yurydelendik/wasmparser.rs"
 [dependencies.hashmap_core]
-version = "0.1.9"
+version = "0.1.1"
 optional = true
 
 [features]

@@ -1,29 +1,3 @@
-# Version 0.1.3
-
-- Added `Context::map`
-- Fixed a memory leak for older rust versions on error downcast
-
-# Version 0.1.2
-
-The original plan to release 1.0.0 was changed so that version 0.1.1 is released and a related [RFC to fix the error trait](https://github.com/rust-lang/rfcs/pull/2504) is submitted. See README for details.
-
-- Fix `failure_derive` to work with Rust 2018.
-- Add `#[fail(cause)]` that works similarly with `#[cause]`. The new form is preferred.
-- Fix `"backtrace"` feature to work without `"std"` feature.
-- Add `Compat::get_ref`.
-- Add `Fallible`.
-- Deprecate `Fail::causes` and `<dyn Fail>::causes` in favor of newly added `<dyn Fail>::iter_causes`.
-- Deprecate `Fail::root_cause` and `<dyn Fail>::root_cause` in favor of newly added `<dyn Fail>::find_root_cause`.
-- Add `<dyn Fail>::iter_chain`.
-- Implement `Box<Fail>: Fail`.
-- Add `Error::from_boxed_compat`.
-- Deprecate `Error::cause` in favor of newly added `Error::as_fail`.
-- Deprecate `Error::causes` in favor of newly added `Error::iter_chain`.
-- Deprecate `Error::root_cause` in favor of newly added `Error::find_root_cause`.
-- Add `Error::iter_causes`.
-- Implement `Error: AsRef<Fail>`.
-- Fix `Debug` implementation of `SyncFailure`.
-
 # Version 0.1.1
 
 - Add a `Causes` iterator, which iterates over the causes of a failure. Can be

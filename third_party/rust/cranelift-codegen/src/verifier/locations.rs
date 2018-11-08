@@ -332,23 +332,11 @@ impl<'a> LocationVerifier<'a> {
                     }
                 }
             }
-            Table(jt, ebb) => {
+            Table(jt) => {
                 for d in divert.all() {
                     let lr = &liveness[d.value];
-                    if let Some(ebb) = ebb {
+                    for (_, ebb) in self.func.jump_tables[jt].entries() {
                         if lr.is_livein(ebb, liveness.context(&self.func.layout)) {
-                            return fatal!(
-                                errors,
-                                inst,
-                                "{} is diverted to {} and live in to {}",
-                                d.value,
-                                d.to.display(&self.reginfo),
-                                ebb
-                            );
-                        }
-                    }
-                    for ebb in self.func.jump_tables[jt].iter() {
-                        if lr.is_livein(*ebb, liveness.context(&self.func.layout)) {
                             return fatal!(
                                 errors,
                                 inst,
