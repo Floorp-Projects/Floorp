@@ -2469,8 +2469,7 @@ UnifiedComplete.prototype = {
    * @rejects javascript exception.
    */
   getDatabaseHandle() {
-    if (UrlbarPrefs.get("autocomplete.enabled") &&
-        !this._promiseDatabase) {
+    if (!this._promiseDatabase) {
       this._promiseDatabase = (async () => {
         let conn = await PlacesUtils.promiseLargeCacheDBConnection();
 
@@ -2549,18 +2548,10 @@ UnifiedComplete.prototype = {
       }
     }
 
-    this._currentSearch = new Search(searchString, searchParam, listener,
-                                     this, prohibitSearchSuggestions,
-                                     previousResult);
-
-    // If we are not enabled, we need to return now.  Notice we need an empty
-    // result regardless, so we still create the Search object.
-    if (!UrlbarPrefs.get("autocomplete.enabled")) {
-      this.finishSearch(true);
-      return;
-    }
-
-    let search = this._currentSearch;
+    let search = this._currentSearch = new Search(searchString, searchParam,
+                                                  listener, this,
+                                                  prohibitSearchSuggestions,
+                                                  previousResult);
     this.getDatabaseHandle().then(conn => search.execute(conn))
                             .catch(ex => {
                               dump(`Query failed: ${ex}\n`);

@@ -6,7 +6,7 @@ use app_units::Au;
 use clap;
 use euclid::SideOffsets2D;
 use image;
-use image::GenericImage;
+use image::GenericImageView;
 use parse_function::parse_function;
 use premultiply::premultiply;
 use std::collections::HashMap;

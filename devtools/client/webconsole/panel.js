@@ -52,11 +52,6 @@ WebConsolePanel.prototype = {
         });
       }
 
-      // Local debugging needs to make the target remote.
-      if (!this.target.isRemote) {
-        await this.target.attach();
-      }
-
       const webConsoleUIWindow = iframe.contentWindow.wrappedJSObject;
       const chromeWindow = iframe.ownerDocument.defaultView;
 

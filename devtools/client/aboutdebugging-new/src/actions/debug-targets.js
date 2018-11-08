@@ -7,6 +7,8 @@
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
 
+const { l10n } = require("../modules/l10n");
+
 const {
   debugLocalAddon,
   debugRemoteAddon,
@@ -72,7 +74,8 @@ function inspectDebugTarget(type, id) {
   };
 }
 
-function installTemporaryExtension(message) {
+function installTemporaryExtension() {
+  const message = l10n.getString("about-debugging-tmp-extension-install-message");
   return async (dispatch, getState) => {
     const file = await openTemporaryExtension(window, message);
     try {
