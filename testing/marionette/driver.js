@@ -1449,6 +1449,7 @@ GeckoDriver.prototype.setWindowRect = async function(cmd) {
       await exitFullscreen(win);
       break;
 
+    case WindowState.Maximized:
     case WindowState.Minimized:
       await restoreWindow(win);
       break;
