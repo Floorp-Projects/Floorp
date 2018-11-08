@@ -25,7 +25,7 @@ add_task(async function() {
     let button = document.getElementById("real-button");
     ok(button, "Button should exist");
     if (button) {
-      let expectedContainer = document.getElementById(toolbar).customizationTarget;
+      let expectedContainer = CustomizableUI.getCustomizationTarget(document.getElementById(toolbar));
       is(button.parentNode, expectedContainer, "Button should be in the toolbar");
     }
 
