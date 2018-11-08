@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function test_providers() {
+add_task(async function test_filtering() {
   let match = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
                               UrlbarUtils.MATCH_SOURCE.TABS,
                               { url: "http://mozilla.org/foo/" });
@@ -56,4 +56,44 @@ add_task(async function test_providers() {
   await controller.startQuery(context, controller);
   await promise;
   Assert.deepEqual(context.results, [match]);
+});
+
+add_task(async function test_filter_javascript() {
+  let context = createContext();
+  let controller = new UrlbarController({
+    browserWindow: {
+      location: {
+        href: AppConstants.BROWSER_CHROME_URL,
+      },
+    },
+  });
+  let match = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
+                              UrlbarUtils.MATCH_SOURCE.TABS,
+                              { url: "http://mozilla.org/foo/" });
+  let jsMatch = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
+                                UrlbarUtils.MATCH_SOURCE.HISTORY,
+                                { url: "javascript:foo" });
+  registerBasicTestProvider([match, jsMatch]);
+
+  info("By default javascript should be filtered out");
+  let promise = promiseControllerNotification(controller, "onQueryResults");
+  await controller.startQuery(context, controller);
+  await promise;
+  Assert.deepEqual(context.results, [match]);
+
+  info("Except when the user explicitly starts the search with javascript:");
+  context = createContext(`javascript: ${UrlbarTokenizer.RESTRICT.HISTORY}`);
+  promise = promiseControllerNotification(controller, "onQueryResults");
+  await controller.startQuery(context, controller);
+  await promise;
+  Assert.deepEqual(context.results, [jsMatch]);
+
+  info("Disable javascript filtering");
+  Services.prefs.setBoolPref("browser.urlbar.filter.javascript", false);
+  context = createContext();
+  promise = promiseControllerNotification(controller, "onQueryResults");
+  await controller.startQuery(context, controller);
+  await promise;
+  Assert.deepEqual(context.results, [match, jsMatch]);
+  Services.prefs.clearUserPref("browser.urlbar.filter.javascript");
 });
