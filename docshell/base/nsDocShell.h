@@ -409,7 +409,7 @@ private: // member functions
   friend void mozilla::TimelineConsumers::PopMarkers(nsDocShell*,
     JSContext*, nsTArray<dom::ProfileTimelineMarker>&);
 
-  nsDocShell();
+  explicit nsDocShell(mozilla::dom::BrowsingContext* aBrowsingContext);
 
   // Security checks to prevent frameset spoofing. See comments at
   // implementation sites.
@@ -1043,9 +1043,8 @@ private: // data members
   int32_t mMarginWidth;
   int32_t mMarginHeight;
 
-  // This can either be a content docshell or a chrome docshell. After
-  // Create() is called, the type is not expected to change.
-  int32_t mItemType;
+  // This can either be a content docshell or a chrome docshell.
+  const int32_t mItemType;
 
   // Index into the nsISHEntry array, indicating the previous and current
   // entry at the time that this DocShell begins to load. Consequently

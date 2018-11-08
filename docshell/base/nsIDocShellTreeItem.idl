@@ -47,7 +47,7 @@ interface nsIDocShellTreeItem : nsISupports
 	/*
 	The type this item is.  
 	*/
-	attribute long itemType;
+	readonly attribute long itemType;
 	[noscript,notxpcom,nostdcall] long ItemType();
 
 	/*
