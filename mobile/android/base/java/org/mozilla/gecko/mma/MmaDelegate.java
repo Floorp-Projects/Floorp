@@ -12,7 +12,9 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Log;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.MmaConstants;
 import org.mozilla.gecko.PrefsHelper;
@@ -298,7 +300,16 @@ public class MmaDelegate {
 
     private static void unregisterInstalledPackagesReceiver(@NonNull final Activity activity) {
         if (packageAddedReceiver != null) {
-            activity.unregisterReceiver(packageAddedReceiver);
+            try {
+                // TODO investigate why the receiver would not be registered - bug 1505685
+                activity.unregisterReceiver(packageAddedReceiver);
+            } catch (IllegalArgumentException e) {
+                if (AppConstants.RELEASE_OR_BETA) {
+                    Log.w(TAG, "bug 1505685", e);
+                } else {
+                   throw e;
+                }
+            }
             packageAddedReceiver = null;
         }
     }
