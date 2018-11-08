@@ -39,7 +39,6 @@
     }
 
     function* test(testDriver) {
-      const target = document.getElementById("content");
       const cases = [
         {
           x: 0,
@@ -64,7 +63,7 @@
       ];
 
       for (let c of cases) {
-        yield synthesizeNativeTouchDrag(target,
+        yield synthesizeNativeTouchDrag(window,
                                         c.x,
                                         c.y,
                                         c.dx(document.documentElement.clientWidth),
