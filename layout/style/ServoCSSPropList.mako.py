@@ -102,6 +102,7 @@ SERIALIZED_PREDEFINED_TYPES = [
     "ListStyleType",
     "OffsetPath",
     "Opacity",
+    "OverflowWrap",
     "Quotes",
     "Resize",
     "Scale",
