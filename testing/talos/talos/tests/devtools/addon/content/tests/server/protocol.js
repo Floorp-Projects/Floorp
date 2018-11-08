@@ -29,13 +29,15 @@ module.exports = async function() {
   let tab = await testSetup(SIMPLE_URL);
   let messageManager = tab.linkedBrowser.messageManager;
 
+  let url = module.uri.replace(/protocol\.js$/, "actor.js");
+
   // Register a test actor within the content process
   messageManager.loadFrameScript("data:,(" + encodeURIComponent(
     `function () {
       const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
       const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
-      ActorRegistry.registerModule("chrome://damp/content/tests/server/actor.js", {
+      ActorRegistry.registerModule("${url}", {
         prefix: "dampTest",
         constructor: "DampTestActor",
         type: { target: true }

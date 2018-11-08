@@ -196,6 +196,18 @@ var E10SUtils = {
         return WebExtensionPolicy.useRemoteWebExtensions ? EXTENSION_REMOTE_TYPE : NOT_REMOTE;
 
       default:
+        // WebExtensions may set up protocol handlers for protocol names
+        // beginning with ext+.  These may redirect to http(s) pages or to
+        // moz-extension pages.  We can't actually tell here where one of
+        // these pages will end up loading but Talos tests use protocol
+        // handlers that redirect to extension pages that rely on this
+        // behavior so a pageloader frame script is injected correctly.
+        // Protocols that redirect to http(s) will just flip back to a
+        // regular content process after the redirect.
+        if (aURI.scheme.startsWith("ext+")) {
+          return WebExtensionPolicy.useRemoteWebExtensions ? EXTENSION_REMOTE_TYPE : NOT_REMOTE;
+        }
+
         // For any other nested URIs, we use the innerURI to determine the
         // remote type. In theory we should use the innermost URI, but some URIs
         // have fake inner URIs (e.g. about URIs with inner moz-safe-about) and
