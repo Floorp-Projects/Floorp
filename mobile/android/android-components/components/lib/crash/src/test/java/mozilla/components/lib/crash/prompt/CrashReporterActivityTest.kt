@@ -7,8 +7,8 @@ package mozilla.components.lib.crash.prompt
 import android.content.Intent
 import android.widget.Button
 import android.widget.TextView
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.R

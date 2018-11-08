@@ -5,7 +5,7 @@
 package mozilla.components.browser.search.provider
 
 import android.content.Context
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.provider.filter.SearchEngineFilter
 import mozilla.components.browser.search.provider.localization.SearchLocalizationProvider

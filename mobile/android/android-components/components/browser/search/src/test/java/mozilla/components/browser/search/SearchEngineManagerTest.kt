@@ -8,9 +8,9 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.provider.SearchEngineProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -136,7 +136,7 @@ class SearchEngineManagerTest {
             verify(provider, never()).loadSearchEngines(RuntimeEnvironment.application)
 
             shadow.sendBroadcast(Intent(Intent.ACTION_LOCALE_CHANGED))
-            launch(CommonPool) {}.join()
+            launch(Dispatchers.Default) {}.join()
 
             verify(provider).loadSearchEngines(RuntimeEnvironment.application)
             verifyNoMoreInteractions(provider)

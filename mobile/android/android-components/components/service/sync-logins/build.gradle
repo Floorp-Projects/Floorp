@@ -53,7 +53,7 @@ dependencies {
     implementation Deps.jna
     implementation Deps.kotlin_coroutines
 
-    testImplementation files(configurations.jnaForTest.files)
+    testImplementation configurations.jnaForTest.dependencies
 
     testImplementation Deps.mozilla_sync_logins
 

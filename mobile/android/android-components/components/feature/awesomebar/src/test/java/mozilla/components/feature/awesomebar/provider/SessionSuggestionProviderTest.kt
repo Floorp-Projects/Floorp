@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.tabs.TabsUseCases

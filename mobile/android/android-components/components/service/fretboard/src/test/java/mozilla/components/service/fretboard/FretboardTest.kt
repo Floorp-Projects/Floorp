@@ -8,8 +8,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
 import mozilla.components.support.test.any
 import org.junit.Assert.assertEquals
@@ -379,7 +379,7 @@ class FretboardTest {
         fretboard.setOverride(context, ExperimentDescriptor("first-name"), true)
         verify(prefsEditor).putBoolean("first-name", true)
 
-        runBlocking(CommonPool) {
+        runBlocking(Dispatchers.Default) {
             assertTrue(fretboard.isInExperiment(context, ExperimentDescriptor("first-name")))
             fretboard.setOverrideNow(context, ExperimentDescriptor("first-name"), false)
             verify(prefsEditor, times(2)).putBoolean("first-name", false)
@@ -426,7 +426,7 @@ class FretboardTest {
         fretboard.clearOverride(context, ExperimentDescriptor("first-name"))
         verify(prefsEditor).remove("first-name")
 
-        runBlocking(CommonPool) {
+        runBlocking(Dispatchers.Default) {
             fretboard.setOverrideNow(context, ExperimentDescriptor("first-name"), false)
             fretboard.clearOverrideNow(context, ExperimentDescriptor("first-name"))
             verify(prefsEditor, times(2)).remove("first-name")
@@ -471,7 +471,7 @@ class FretboardTest {
         fretboard.clearAllOverrides(context)
         verify(prefsEditor).clear()
 
-        runBlocking(CommonPool) {
+        runBlocking(Dispatchers.Default) {
             fretboard.setOverrideNow(context, ExperimentDescriptor("first-name"), false)
             fretboard.clearAllOverridesNow(context)
             verify(prefsEditor, times(2)).clear()

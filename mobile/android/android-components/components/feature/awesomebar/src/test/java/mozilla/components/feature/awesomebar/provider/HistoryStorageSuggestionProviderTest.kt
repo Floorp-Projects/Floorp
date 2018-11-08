@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.mock

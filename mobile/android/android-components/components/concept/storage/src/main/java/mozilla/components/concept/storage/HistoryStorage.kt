@@ -4,7 +4,7 @@
 
 package mozilla.components.concept.storage
 
-import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.Deferred
 
 /**
  * An interface which defines read/write methods for history data.

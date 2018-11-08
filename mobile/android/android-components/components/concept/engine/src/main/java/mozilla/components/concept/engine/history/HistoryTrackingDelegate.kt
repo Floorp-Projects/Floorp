@@ -4,7 +4,7 @@
 
 package mozilla.components.concept.engine.history
 
-import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.Deferred
 
 /**
  * An interface used for providing history information to an engine (e.g. for link highlighting),

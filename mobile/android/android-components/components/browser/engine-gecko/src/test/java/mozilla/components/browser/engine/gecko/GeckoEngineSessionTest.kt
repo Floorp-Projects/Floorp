@@ -6,7 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import android.os.Handler
 import android.os.Message
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession

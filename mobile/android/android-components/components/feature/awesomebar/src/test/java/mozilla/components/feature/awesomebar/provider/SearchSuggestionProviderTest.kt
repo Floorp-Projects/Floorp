@@ -5,7 +5,7 @@
 package mozilla.components.feature.awesomebar.provider
 
 import junit.framework.Assert.assertEquals
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session

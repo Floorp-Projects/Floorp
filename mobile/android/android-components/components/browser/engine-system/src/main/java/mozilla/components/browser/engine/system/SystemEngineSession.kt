@@ -12,12 +12,12 @@ import android.webkit.WebSettings
 import android.webkit.WebStorage
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.DefaultSettings
 import android.webkit.WebViewDatabase
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate

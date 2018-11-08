@@ -5,7 +5,7 @@
 package mozilla.components.browser.storage.sync
 
 import junit.framework.Assert.assertEquals
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.eq

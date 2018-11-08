@@ -6,12 +6,12 @@ package mozilla.components.browser.storage.sync
 
 import android.content.Context
 import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.cancelChildren
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult

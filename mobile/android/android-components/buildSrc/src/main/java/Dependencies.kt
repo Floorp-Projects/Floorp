@@ -4,12 +4,12 @@
 
 // Synchronized version numbers for dependencies used by (some) modules
 private object Versions {
-    const val kotlin = "1.2.71"
-    const val coroutines = "0.30.2"
+    const val kotlin = "1.3.0"
+    const val coroutines = "1.0.1"
 
     const val junit = "4.12"
     const val robolectric = "3.8"
-    const val mockito = "2.21.0"
+    const val mockito = "2.23.0"
     const val mockwebserver = "3.10.0"
 
     const val support_libraries = "27.1.1"

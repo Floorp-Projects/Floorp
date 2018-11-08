@@ -4,7 +4,7 @@
 
 package mozilla.components.browser.storage.memory
 
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.VisitType
 import org.junit.Assert.assertEquals

@@ -4,10 +4,10 @@
 
 package mozilla.components.browser.awesomebar
 
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.newSingleThreadContext
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals

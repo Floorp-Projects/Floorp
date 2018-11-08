@@ -6,10 +6,10 @@ package mozilla.components.browser.search.provider
 
 import android.content.Context
 import android.content.res.AssetManager
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineParser
 import mozilla.components.browser.search.provider.filter.SearchEngineFilter

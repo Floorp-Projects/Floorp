@@ -4,7 +4,7 @@
 
 package mozilla.components.browser.search.suggestions
 
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.SearchEngineParser
 import org.junit.Test
 import org.junit.runner.RunWith

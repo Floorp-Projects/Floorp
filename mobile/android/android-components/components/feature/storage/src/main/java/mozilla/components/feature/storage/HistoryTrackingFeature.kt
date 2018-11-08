@@ -5,8 +5,8 @@
 package mozilla.components.feature.storage
 
 import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.experimental.CompletableDeferred
-import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.storage.HistoryStorage

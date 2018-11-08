@@ -5,7 +5,7 @@
 package mozilla.components.browser.domains
 
 import android.content.Context
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
