@@ -305,8 +305,9 @@ SVGIDRenderingObserver::SVGIDRenderingObserver(URLAndReferrerInfo* aURI,
     referrerPolicy = aURI->GetReferrerPolicy();
   }
 
-  mObservedElementTracker.Reset(aObservingContent, uri, referrer,
-                                referrerPolicy, true, aReferenceImage);
+  mObservedElementTracker.ResetToURIFragmentID(aObservingContent, uri, referrer,
+                                               referrerPolicy, true,
+                                               aReferenceImage);
   StartObserving();
 }
 

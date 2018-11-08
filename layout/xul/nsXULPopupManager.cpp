@@ -728,8 +728,7 @@ nsXULPopupManager::ShowMenu(nsIContent *aMenu,
   nsAutoString position;
 
 #ifdef XP_MACOSX
-  nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(aMenu);
-  if (menulist) {
+  if (aMenu->IsXULElement(nsGkAtoms::menulist)) {
     position.AssignLiteral("selection");
   }
   else
@@ -2559,7 +2558,7 @@ nsXULPopupManager::IsValidMenuItem(nsIContent* aContent, bool aOnPopup)
   nsMenuFrame* menuFrame = do_QueryFrame(aContent->GetPrimaryFrame());
 
   bool skipNavigatingDisabledMenuItem = true;
-  if (aOnPopup && (!menuFrame || menuFrame->GetParentMenuListType() == eNotMenuList)) {
+  if (aOnPopup && (!menuFrame || !menuFrame->IsParentMenuList())) {
     skipNavigatingDisabledMenuItem =
       LookAndFeel::GetInt(LookAndFeel::eIntID_SkipNavigatingDisabledMenuItem,
                           0) != 0;

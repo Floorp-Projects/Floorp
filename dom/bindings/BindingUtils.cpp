@@ -684,16 +684,48 @@ DefineConstants(JSContext* cx, JS::Handle<JSObject*> obj,
 }
 
 static inline bool
-Define(JSContext* cx, JS::Handle<JSObject*> obj, const JSFunctionSpec* spec) {
-  return JS_DefineFunctions(cx, obj, spec);
+Define(JSContext* cx, JS::Handle<JSObject*> obj, const JSFunctionSpec* spec)
+{
+  bool ok = JS_DefineFunctions(cx, obj, spec);
+  if (ok) {
+    return true;
+  }
+
+  if (!strcmp(js::GetObjectClass(obj)->name, "DocumentPrototype")) {
+    MOZ_CRASH("Bug 1405521/1488480: JS_DefineFunctions failed for Document.prototype");
+  }
+
+  return false;
 }
 static inline bool
-Define(JSContext* cx, JS::Handle<JSObject*> obj, const JSPropertySpec* spec) {
-  return JS_DefineProperties(cx, obj, spec);
+Define(JSContext* cx, JS::Handle<JSObject*> obj, const JSPropertySpec* spec)
+{
+  bool ok = JS_DefineProperties(cx, obj, spec);
+  if (ok) {
+    return true;
+  }
+
+  if (!strcmp(js::GetObjectClass(obj)->name, "DocumentPrototype")) {
+    MOZ_CRASH("Bug 1405521/1488480: JS_DefineProperties failed for Document.prototype");
+  }
+
+  return false;
 }
+
 static inline bool
-Define(JSContext* cx, JS::Handle<JSObject*> obj, const ConstantSpec* spec) {
-  return DefineConstants(cx, obj, spec);
+Define(JSContext* cx, JS::Handle<JSObject*> obj, const ConstantSpec* spec)
+{
+  bool ok = DefineConstants(cx, obj, spec);
+  if (ok) {
+    return true;
+  }
+
+
+  if (!strcmp(js::GetObjectClass(obj)->name, "DocumentPrototype")) {
+    MOZ_CRASH("Bug 1405521/1488480: DefineConstants failed for Document.prototype");
+  }
+
+  return false;
 }
 
 template<typename T>
@@ -929,6 +961,13 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
       // properties go on the global itself.
       (!isGlobal &&
        !DefineProperties(cx, ourProto, properties, chromeOnlyProperties))) {
+    if (!strcmp(protoClass->name, "DocumentPrototype")) {
+      if (!ourProto) {
+        MOZ_CRASH("Bug 1405521/1488480: JS_NewObjectWithUniqueType failed for Document.prototype");
+      } else {
+        MOZ_CRASH("Bug 1405521/1488480: DefineProperties failed for Document.prototype");
+      }
+    }
     return nullptr;
   }
 
@@ -936,12 +975,18 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
     JS::Rooted<JSObject*> unscopableObj(cx,
       JS_NewObjectWithGivenProto(cx, nullptr, nullptr));
     if (!unscopableObj) {
+      if (!strcmp(protoClass->name, "DocumentPrototype")) {
+        MOZ_CRASH("Bug 1405521/1488480: Unscopable object creation failed for Document.prototype");
+      }
       return nullptr;
     }
 
     for (; *unscopableNames; ++unscopableNames) {
       if (!JS_DefineProperty(cx, unscopableObj, *unscopableNames,
                              JS::TrueHandleValue, JSPROP_ENUMERATE)) {
+        if (!strcmp(protoClass->name, "DocumentPrototype")) {
+          MOZ_CRASH("Bug 1405521/1488480: Defining property on unscopable object failed for Document.prototype");
+        }
         return nullptr;
       }
     }
@@ -951,6 +996,9 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
     // Readonly and non-enumerable to match Array.prototype.
     if (!JS_DefinePropertyById(cx, ourProto, unscopableId, unscopableObj,
                                JSPROP_READONLY)) {
+      if (!strcmp(protoClass->name, "DocumentPrototype")) {
+        MOZ_CRASH("Bug 1405521/1488480: Defining @@unscopables failed for Document.prototype");
+      }
       return nullptr;
     }
   }
@@ -959,6 +1007,9 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
     JS::Rooted<JSString*> toStringTagStr(cx,
                                          JS_NewStringCopyZ(cx, toStringTag));
     if (!toStringTagStr) {
+      if (!strcmp(protoClass->name, "DocumentPrototype")) {
+        MOZ_CRASH("Bug 1405521/1488480: Copying string tag failed for Document.prototype");
+      }
       return nullptr;
     }
 
@@ -966,6 +1017,9 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
       SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::toStringTag)));
     if (!JS_DefinePropertyById(cx, ourProto, toStringTagId, toStringTagStr,
                                JSPROP_READONLY)) {
+      if (!strcmp(protoClass->name, "DocumentPrototype")) {
+        MOZ_CRASH("Bug 1405521/1488480: Defining @@toStringTag failed for Document.prototype");
+      }
       return nullptr;
     }
   }

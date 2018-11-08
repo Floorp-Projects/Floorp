@@ -76,10 +76,6 @@ void SetBreakpoint(size_t aId, const js::BreakpointPosition& aPosition);
 // children cannot process such requests).
 void MaybeSwitchToReplayingChild();
 
-// If the active child is replaying, get its fractional (range [0,1]) position
-// in the recording. If the active child is recording, return Nothing.
-Maybe<double> GetRecordingPosition();
-
 ///////////////////////////////////////////////////////////////////////////////
 // Graphics
 ///////////////////////////////////////////////////////////////////////////////
@@ -368,7 +364,6 @@ public:
   }
 
   void SetPauseNeeded() {
-    MOZ_RELEASE_ASSERT(!mPauseNeeded);
     mPauseNeeded = true;
   }
 

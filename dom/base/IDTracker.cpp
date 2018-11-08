@@ -35,11 +35,14 @@ DocOrShadowFromContent(nsIContent& aContent)
 }
 
 void
-IDTracker::Reset(nsIContent* aFromContent, nsIURI* aURI,nsIURI* aReferrer,
-                 uint32_t aReferrerPolicy,
-                 bool aWatch, bool aReferenceImage)
+IDTracker::ResetToURIFragmentID(nsIContent* aFromContent,
+                                nsIURI* aURI,
+                                nsIURI* aReferrer,
+                                uint32_t aReferrerPolicy,
+                                bool aWatch,
+                                bool aReferenceImage)
 {
-  MOZ_ASSERT(aFromContent, "Reset() expects non-null content pointer");
+  MOZ_ASSERT(aFromContent, "ResetToURIFragmentID() expects non-null content pointer");
 
   Unlink();
 
@@ -243,8 +246,8 @@ IDTracker::DocumentLoadNotification::Observe(nsISupports* aSubject,
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(aSubject);
     mTarget->mPendingNotification = nullptr;
     NS_ASSERTION(!mTarget->mElement, "Why do we have content here?");
-    // If we got here, that means we had Reset() called with aWatch ==
-    // true.  So keep watching if IsPersistent().
+    // If we got here, that means we had Reset*() called with
+    // aWatch == true.  So keep watching if IsPersistent().
     mTarget->HaveNewDocumentOrShadowRoot(doc, mTarget->IsPersistent(), mRef);
     mTarget->ElementChanged(nullptr, mTarget->mElement);
   }

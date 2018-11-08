@@ -48,11 +48,6 @@ enum nsMenuType {
   eMenuType_Radio = 2
 };
 
-enum nsMenuListType {
-  eNotMenuList,      // not a menulist
-  eReadonlyMenuList  // <menulist/>
-};
-
 class nsMenuFrame;
 
 /**
@@ -182,7 +177,7 @@ public:
   }
   virtual bool IsOpen();
   virtual bool IsMenu();
-  nsMenuListType GetParentMenuListType();
+  bool IsParentMenuList();
   bool IsDisabled();
   void ToggleMenuState();
 
