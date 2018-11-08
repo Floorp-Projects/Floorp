@@ -237,19 +237,19 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
     let stack = [];
     for (let i = references.length - 1; i >= 0; i--) {
       let item = references[i];
-      stack.push([testUrl, item[0], item[1], item[2]]);
+      stack.push([testUrl, ...item]);
     }
 
     let done = false;
 
     while (stack.length && !done) {
-      let [lhsUrl, rhsUrl, references, relation] = stack.pop();
+      let [lhsUrl, rhsUrl, references, relation, extras = {}] = stack.pop();
       result.message += `Testing ${lhsUrl} ${relation} ${rhsUrl}\n`;
 
       let comparison;
       try {
         comparison = await this.compareUrls(
-            win, lhsUrl, rhsUrl, relation, timeout);
+            win, lhsUrl, rhsUrl, relation, timeout, extras);
       } catch (e) {
         comparison = {lhs: null, rhs: null, passed: false, error: e};
       }
@@ -318,7 +318,7 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
     return result;
   }
 
-  async compareUrls(win, lhsUrl, rhsUrl, relation, timeout) {
+  async compareUrls(win, lhsUrl, rhsUrl, relation, timeout, extras) {
     logger.info(`Testing ${lhsUrl} ${relation} ${rhsUrl}`);
 
     // Take the reference screenshot first so that if we pause
@@ -326,42 +326,56 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
     let rhs = await this.screenshot(win, rhsUrl, timeout);
     let lhs = await this.screenshot(win, lhsUrl, timeout);
 
-    let maxDifferences = {};
-
     logger.debug(`lhs canvas size ${lhs.canvas.width}x${lhs.canvas.height}`);
     logger.debug(`rhs canvas size ${rhs.canvas.width}x${rhs.canvas.height}`);
 
-    let error = null;
     let passed;
+    let error = null;
+    let pixelsDifferent = null;
+    let maxDifferences = {};
 
-    let differences;
     try {
-      differences = this.windowUtils.compareCanvases(
+      pixelsDifferent = this.windowUtils.compareCanvases(
           lhs.canvas, rhs.canvas, maxDifferences);
     } catch (e) {
-      differences = null;
       passed = false;
       error = e;
     }
 
     if (error === null) {
+      passed = this.isAcceptableDifference(
+          maxDifferences.value, pixelsDifferent, extras.fuzzy);
       switch (relation) {
         case "==":
-          passed = differences === 0;
           if (!passed) {
-            logger.info(`Found ${differences} pixels different, ` +
+            logger.info(`Found ${pixelsDifferent} pixels different, ` +
                         `maximum difference per channel ${maxDifferences.value}`);
           }
           break;
         case "!=":
-          passed = differences !== 0;
+          passed = !passed;
           break;
         default:
           throw new InvalidArgumentError("Reftest operator should be '==' or '!='");
+
+
       }
     }
-
     return {lhs, rhs, passed, error};
+  }
+
+  isAcceptableDifference(maxDifference, pixelsDifferent, allowed) {
+    if (!allowed) {
+      logger.info(`No differences allowed`);
+      return pixelsDifferent === 0;
+    }
+    let [allowedDiff, allowedPixels] = allowed;
+    logger.info(`Allowed ${allowedPixels.join("-")} pixels different, ` +
+                `maximum difference per channel ${allowedDiff.join("-")}`);
+    return ((maxDifference >= allowedDiff[0] &&
+             maxDifference <= allowedDiff[1]) &&
+            (pixelsDifferent >= allowedPixels[0] ||
+             pixelsDifferent <= allowedPixels[1]));
   }
 
   async screenshot(win, url, timeout) {
