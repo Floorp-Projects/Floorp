@@ -13,7 +13,7 @@ use cursor::{Cursor, EncCursor};
 use dominator_tree::DominatorTree;
 use entity::{SparseMap, SparseMapValue};
 use ir::{AbiParam, ArgumentLoc, InstBuilder};
-use ir::{Ebb, Function, Inst, Value};
+use ir::{Ebb, Function, Inst, InstructionData, Opcode, Value};
 use isa::RegClass;
 use isa::{ConstraintKind, EncInfo, Encoding, RecipeConstraints, TargetIsa};
 use regalloc::affinity::Affinity;
@@ -125,11 +125,15 @@ impl<'a> Context<'a> {
 
         // visit_ebb_header() places us at the first interesting instruction in the EBB.
         while let Some(inst) = self.cur.current_inst() {
-            let encoding = self.cur.func.encodings[inst];
-            if encoding.is_legal() {
+            if !self.cur.func.dfg[inst].opcode().is_ghost() {
+                // This instruction either has an encoding or has ABI constraints, so visit it to
+                // insert spills and fills as needed.
+                let encoding = self.cur.func.encodings[inst];
                 self.visit_inst(ebb, inst, encoding, tracker);
                 tracker.drop_dead(inst);
             } else {
+                // This is a ghost instruction with no encoding and no extra constraints, so we can
+                // just skip over it.
                 self.cur.next_inst();
             }
         }
@@ -200,15 +204,95 @@ impl<'a> Context<'a> {
         self.cur.use_srcloc(inst);
 
         // Get the operand constraints for `inst` that we are trying to satisfy.
-        let constraints = self
-            .encinfo
-            .operand_constraints(encoding)
-            .expect("Missing instruction encoding");
+        let constraints = self.encinfo.operand_constraints(encoding);
 
         // Identify reload candidates.
         debug_assert!(self.candidates.is_empty());
         self.find_candidates(inst, constraints);
 
+        if let InstructionData::Unary {
+            opcode: Opcode::Copy,
+            ..
+        } = self.cur.func.dfg[inst]
+        {
+            self.reload_copy_candidates(inst);
+        } else {
+            self.reload_inst_candidates(ebb, inst);
+        }
+
+        // TODO: Reuse reloads for future instructions.
+        self.reloads.clear();
+
+        let (_throughs, _kills, defs) =
+            tracker.process_inst(inst, &self.cur.func.dfg, self.liveness);
+
+        // Advance to the next instruction so we can insert any spills after the instruction.
+        self.cur.next_inst();
+
+        // Rewrite register defs that need to be spilled.
+        //
+        // Change:
+        //
+        // v2 = inst ...
+        //
+        // Into:
+        //
+        // v7 = inst ...
+        // v2 = spill v7
+        //
+        // That way, we don't need to rewrite all future uses of v2.
+        if let Some(constraints) = constraints {
+            for (lv, op) in defs.iter().zip(constraints.outs) {
+                if lv.affinity.is_stack() && op.kind != ConstraintKind::Stack {
+                    if let InstructionData::Unary {
+                        opcode: Opcode::Copy,
+                        arg,
+                    } = self.cur.func.dfg[inst]
+                    {
+                        self.cur.func.dfg.replace(inst).spill(arg);
+                        let ok = self.cur.func.update_encoding(inst, self.cur.isa).is_ok();
+                        debug_assert!(ok);
+                    } else {
+                        let value_type = self.cur.func.dfg.value_type(lv.value);
+                        let reg = self.cur.func.dfg.replace_result(lv.value, value_type);
+                        self.liveness.create_dead(reg, inst, Affinity::new(op));
+                        self.insert_spill(ebb, lv.value, reg);
+                    }
+                }
+            }
+        }
+
+        // Same thing for spilled call return values.
+        let retvals = &defs[self.cur.func.dfg[inst]
+                                .opcode()
+                                .constraints()
+                                .fixed_results()..];
+        if !retvals.is_empty() {
+            let sig = self
+                .cur
+                .func
+                .dfg
+                .call_signature(inst)
+                .expect("Extra results on non-call instruction");
+            for (i, lv) in retvals.iter().enumerate() {
+                let abi = self.cur.func.dfg.signatures[sig].returns[i];
+                debug_assert!(
+                    abi.location.is_reg(),
+                    "expected reg; got {:?}",
+                    abi.location
+                );
+                if lv.affinity.is_stack() {
+                    let reg = self.cur.func.dfg.replace_result(lv.value, abi.value_type);
+                    self.liveness
+                        .create_dead(reg, inst, Affinity::abi(&abi, self.cur.isa));
+                    self.insert_spill(ebb, lv.value, reg);
+                }
+            }
+        }
+    }
+
+    // Reload the current candidates for the given `inst`.
+    fn reload_inst_candidates(&mut self, ebb: Ebb, inst: Inst) {
         // Insert fill instructions before `inst` and replace `cand.value` with the filled value.
         for cand in self.candidates.iter_mut() {
             if let Some(reload) = self.reloads.get(cand.value) {
@@ -244,81 +328,46 @@ impl<'a> Context<'a> {
                 args[cand.argidx] = cand.value;
             }
         }
+    }
 
-        // TODO: Reuse reloads for future instructions.
-        self.reloads.clear();
+    // Reload the current candidates for the given copy `inst`.
+    //
+    // As an optimization, replace a copy instruction where the argument has been spilled with
+    // a fill instruction.
+    fn reload_copy_candidates(&mut self, inst: Inst) {
+        // Copy instructions can only have one argument.
+        debug_assert!(self.candidates.is_empty() || self.candidates.len() == 1);
 
-        let (_throughs, _kills, defs) =
-            tracker.process_inst(inst, &self.cur.func.dfg, self.liveness);
-
-        // Advance to the next instruction so we can insert any spills after the instruction.
-        self.cur.next_inst();
-
-        // Rewrite register defs that need to be spilled.
-        //
-        // Change:
-        //
-        // v2 = inst ...
-        //
-        // Into:
-        //
-        // v7 = inst ...
-        // v2 = spill v7
-        //
-        // That way, we don't need to rewrite all future uses of v2.
-        for (lv, op) in defs.iter().zip(constraints.outs) {
-            if lv.affinity.is_stack() && op.kind != ConstraintKind::Stack {
-                let value_type = self.cur.func.dfg.value_type(lv.value);
-                let reg = self.cur.func.dfg.replace_result(lv.value, value_type);
-                self.liveness.create_dead(reg, inst, Affinity::new(op));
-                self.insert_spill(ebb, lv.value, reg);
-            }
-        }
-
-        // Same thing for spilled call return values.
-        let retvals = &defs[constraints.outs.len()..];
-        if !retvals.is_empty() {
-            let sig = self
-                .cur
-                .func
-                .dfg
-                .call_signature(inst)
-                .expect("Extra results on non-call instruction");
-            for (i, lv) in retvals.iter().enumerate() {
-                let abi = self.cur.func.dfg.signatures[sig].returns[i];
-                debug_assert!(
-                    abi.location.is_reg(),
-                    "expected reg; got {:?}",
-                    abi.location
-                );
-                if lv.affinity.is_stack() {
-                    let reg = self.cur.func.dfg.replace_result(lv.value, abi.value_type);
-                    self.liveness
-                        .create_dead(reg, inst, Affinity::abi(&abi, self.cur.isa));
-                    self.insert_spill(ebb, lv.value, reg);
-                }
-            }
+        if let Some(cand) = self.candidates.pop() {
+            self.cur.func.dfg.replace(inst).fill(cand.value);
+            let ok = self.cur.func.update_encoding(inst, self.cur.isa).is_ok();
+            debug_assert!(ok);
         }
     }
 
     // Find reload candidates for `inst` and add them to `self.candidates`.
     //
     // These are uses of spilled values where the operand constraint requires a register.
-    fn find_candidates(&mut self, inst: Inst, constraints: &RecipeConstraints) {
+    fn find_candidates(&mut self, inst: Inst, constraints: Option<&RecipeConstraints>) {
         let args = self.cur.func.dfg.inst_args(inst);
 
-        for (argidx, (op, &arg)) in constraints.ins.iter().zip(args).enumerate() {
-            if op.kind != ConstraintKind::Stack && self.liveness[arg].affinity.is_stack() {
-                self.candidates.push(ReloadCandidate {
-                    argidx,
-                    value: arg,
-                    regclass: op.regclass,
-                })
+        if let Some(constraints) = constraints {
+            for (argidx, (op, &arg)) in constraints.ins.iter().zip(args).enumerate() {
+                if op.kind != ConstraintKind::Stack && self.liveness[arg].affinity.is_stack() {
+                    self.candidates.push(ReloadCandidate {
+                        argidx,
+                        value: arg,
+                        regclass: op.regclass,
+                    })
+                }
             }
         }
 
         // If we only have the fixed arguments, we're done now.
-        let offset = constraints.ins.len();
+        let offset = self.cur.func.dfg[inst]
+            .opcode()
+            .constraints()
+            .fixed_value_arguments();
         if args.len() == offset {
             return;
         }

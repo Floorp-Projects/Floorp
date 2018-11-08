@@ -28,7 +28,7 @@ pub trait InstBuilderBase<'f>: Sized {
     /// Insert an instruction and return a reference to it, consuming the builder.
     ///
     /// The result types may depend on a controlling type variable. For non-polymorphic
-    /// instructions with multiple results, pass `VOID` for the `ctrl_typevar` argument.
+    /// instructions with multiple results, pass `INVALID` for the `ctrl_typevar` argument.
     fn build(self, data: InstructionData, ctrl_typevar: Type) -> (Inst, &'f mut DataFlowGraph);
 }
 
@@ -74,8 +74,8 @@ pub struct InsertBuilder<'f, IIB: InstInserterBase<'f>> {
 impl<'f, IIB: InstInserterBase<'f>> InsertBuilder<'f, IIB> {
     /// Create a new builder which inserts instructions at `pos`.
     /// The `dfg` and `pos.layout` references should be from the same `Function`.
-    pub fn new(inserter: IIB) -> InsertBuilder<'f, IIB> {
-        InsertBuilder {
+    pub fn new(inserter: IIB) -> Self {
+        Self {
             inserter,
             unused: PhantomData,
         }
@@ -185,8 +185,8 @@ pub struct ReplaceBuilder<'f> {
 
 impl<'f> ReplaceBuilder<'f> {
     /// Create a `ReplaceBuilder` that will overwrite `inst`.
-    pub fn new(dfg: &'f mut DataFlowGraph, inst: Inst) -> ReplaceBuilder {
-        ReplaceBuilder { dfg, inst }
+    pub fn new(dfg: &'f mut DataFlowGraph, inst: Inst) -> Self {
+        Self { dfg, inst }
     }
 }
 

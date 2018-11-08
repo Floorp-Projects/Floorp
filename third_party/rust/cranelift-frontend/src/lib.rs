@@ -68,7 +68,8 @@
 //! use cranelift_codegen::entity::EntityRef;
 //! use cranelift_codegen::ir::types::*;
 //! use cranelift_codegen::ir::{AbiParam, ExternalName, Function, InstBuilder, Signature};
-//! use cranelift_codegen::settings::{self, CallConv};
+//! use cranelift_codegen::isa::CallConv;
+//! use cranelift_codegen::settings;
 //! use cranelift_codegen::verifier::verify_function;
 //! use cranelift_frontend::{FunctionBuilder, FunctionBuilderContext, Variable};
 //!
@@ -163,26 +164,47 @@
 #![cfg_attr(
     feature = "cargo-clippy",
     warn(
-        float_arithmetic, mut_mut, nonminimal_bool, option_map_unwrap_or, option_map_unwrap_or_else,
-        print_stdout, unicode_not_nfc, use_self
+        float_arithmetic,
+        mut_mut,
+        nonminimal_bool,
+        option_map_unwrap_or,
+        option_map_unwrap_or_else,
+        print_stdout,
+        unicode_not_nfc,
+        use_self
     )
 )]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(not(feature = "std"), feature(alloc))]
 
+#[cfg(not(feature = "std"))]
+#[macro_use]
+extern crate alloc;
 extern crate cranelift_codegen;
+#[cfg(test)]
+extern crate target_lexicon;
+#[macro_use]
+extern crate log;
 
 pub use frontend::{FunctionBuilder, FunctionBuilderContext};
+pub use switch::Switch;
 pub use variable::Variable;
 
 mod frontend;
 mod ssa;
+mod switch;
 mod variable;
 
+/// This replaces `std` in builds with `core`.
 #[cfg(not(feature = "std"))]
 mod std {
-    extern crate alloc;
-
-    pub use self::alloc::vec;
+    pub use alloc::{string, vec};
     pub use core::*;
+    pub mod collections {
+        #[allow(unused_extern_crates)]
+        extern crate hashmap_core;
+
+        pub use self::hashmap_core::map as hash_map;
+        pub use self::hashmap_core::{HashMap, HashSet};
+    }
 }

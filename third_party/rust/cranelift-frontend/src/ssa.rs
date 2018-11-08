@@ -6,11 +6,11 @@
 //! Lecture Notes in Computer Science, vol 7791. Springer, Berlin, Heidelberg
 
 use cranelift_codegen::cursor::{Cursor, FuncCursor};
-use cranelift_codegen::entity::{EntityMap, EntityRef, PrimaryMap};
+use cranelift_codegen::entity::{EntityRef, PrimaryMap, SecondaryMap};
 use cranelift_codegen::ir::immediates::{Ieee32, Ieee64};
 use cranelift_codegen::ir::instructions::BranchInfo;
 use cranelift_codegen::ir::types::{F32, F64};
-use cranelift_codegen::ir::{Ebb, Function, Inst, InstBuilder, Type, Value};
+use cranelift_codegen::ir::{Ebb, Function, Inst, InstBuilder, InstructionData, Type, Value};
 use cranelift_codegen::packed_option::PackedOption;
 use cranelift_codegen::packed_option::ReservedValue;
 use std::mem;
@@ -36,13 +36,13 @@ use Variable;
 pub struct SSABuilder {
     // Records for every variable and for every relevant block, the last definition of
     // the variable in the block.
-    // TODO: Consider a sparse representation rather than EntityMap-of-EntityMap.
-    variables: EntityMap<Variable, EntityMap<Block, PackedOption<Value>>>,
+    // TODO: Consider a sparse representation rather than SecondaryMap-of-SecondaryMap.
+    variables: SecondaryMap<Variable, SecondaryMap<Block, PackedOption<Value>>>,
     // Records the position of the basic blocks and the list of values used but not defined in the
     // block.
     blocks: PrimaryMap<Block, BlockData>,
     // Records the basic blocks at the beginning of the `Ebb`s.
-    ebb_headers: EntityMap<Ebb, PackedOption<Block>>,
+    ebb_headers: SecondaryMap<Ebb, PackedOption<Block>>,
 
     // Call and result stacks for use in the `use_var`/`predecessors_lookup` state machine.
     calls: Vec<Call>,
@@ -158,9 +158,9 @@ impl SSABuilder {
     /// Allocate a new blank SSA builder struct. Use the API function to interact with the struct.
     pub fn new() -> Self {
         Self {
-            variables: EntityMap::with_default(EntityMap::new()),
+            variables: SecondaryMap::with_default(SecondaryMap::new()),
             blocks: PrimaryMap::new(),
-            ebb_headers: EntityMap::new(),
+            ebb_headers: SecondaryMap::new(),
             calls: Vec::new(),
             results: Vec::new(),
             side_effects: SideEffects::new(),
@@ -442,14 +442,18 @@ impl SSABuilder {
     fn seal_one_ebb_header_block(&mut self, ebb: Ebb, func: &mut Function) {
         let block = self.header_block(ebb);
 
-        let (undef_vars, ebb): (Vec<(Variable, Value)>, Ebb) = match self.blocks[block] {
+        let undef_vars = match self.blocks[block] {
             BlockData::EbbBody { .. } => panic!("this should not happen"),
             BlockData::EbbHeader(ref mut data) => {
-                debug_assert!(!data.sealed);
+                debug_assert!(
+                    !data.sealed,
+                    "Attempting to seal {} which is already sealed.",
+                    ebb
+                );
+                debug_assert_eq!(ebb, data.ebb);
                 // Extract the undef_variables data from the block so that we
                 // can iterate over it without borrowing the whole builder.
-                let undef_variables = mem::replace(&mut data.undef_variables, Vec::new());
-                (undef_variables, data.ebb)
+                mem::replace(&mut data.undef_variables, Vec::new())
             }
         };
 
@@ -643,7 +647,7 @@ impl SSABuilder {
                 func.dfg.append_inst_arg(jump_inst, val);
                 None
             }
-            BranchInfo::Table(jt) => {
+            BranchInfo::Table(jt, default_ebb) => {
                 // In the case of a jump table, the situation is tricky because br_table doesn't
                 // support arguments.
                 // We have to split the critical edge
@@ -652,9 +656,24 @@ impl SSABuilder {
                 let middle_block = self.declare_ebb_header_block(middle_ebb);
                 self.blocks[middle_block].add_predecessor(jump_inst_block, jump_inst);
                 self.mark_ebb_header_block_sealed(middle_block);
+
+                if let Some(default_ebb) = default_ebb {
+                    if dest_ebb == default_ebb {
+                        match func.dfg[jump_inst] {
+                            InstructionData::BranchTable {
+                                destination: ref mut dest,
+                                ..
+                            } => {
+                                *dest = middle_ebb;
+                            }
+                            _ => panic!("should not happen"),
+                        }
+                    }
+                }
+
                 for old_dest in func.jump_tables[jt].as_mut_slice() {
-                    if old_dest.unwrap() == dest_ebb {
-                        *old_dest = PackedOption::from(middle_ebb);
+                    if *old_dest == dest_ebb {
+                        *old_dest = middle_ebb;
                     }
                 }
                 let mut cur = FuncCursor::new(func).at_bottom(middle_ebb);
@@ -982,20 +1001,31 @@ mod tests {
     #[test]
     fn br_table_with_args() {
         // This tests the on-demand splitting of critical edges for br_table with jump arguments
-        let mut func = Function::new();
-        let mut ssa = SSABuilder::new();
-        let ebb0 = func.dfg.make_ebb();
-        let ebb1 = func.dfg.make_ebb();
+        //
         // Here is the pseudo-program we want to translate:
+        //
+        // function %f {
+        // jt = jump_table [ebb2, ebb1]
         // ebb0:
-        //    x = 0;
-        //    br_table x ebb1
-        //    x = 1
-        //    jump ebb1
+        //    x = 1;
+        //    br_table x, ebb2, jt
         // ebb1:
+        //    x = 2
+        //    jump ebb2
+        // ebb2:
         //    x = x + 1
         //    return
-        //
+        // }
+
+        let mut func = Function::new();
+        let mut ssa = SSABuilder::new();
+        let mut jump_table = JumpTableData::new();
+        let ebb0 = func.dfg.make_ebb();
+        let ebb1 = func.dfg.make_ebb();
+        let ebb2 = func.dfg.make_ebb();
+
+        // ebb0:
+        //    x = 1;
         let block0 = ssa.declare_ebb_header_block(ebb0);
         ssa.seal_ebb_header_block(ebb0, &mut func);
         let x_var = Variable::new(0);
@@ -1003,41 +1033,60 @@ mod tests {
             let mut cur = FuncCursor::new(&mut func);
             cur.insert_ebb(ebb0);
             cur.insert_ebb(ebb1);
+            cur.insert_ebb(ebb2);
             cur.goto_bottom(ebb0);
             cur.ins().iconst(I32, 1)
         };
         ssa.def_var(x_var, x1, block0);
-        let mut data = JumpTableData::new();
-        data.push_entry(ebb1);
-        let jt = func.create_jump_table(data);
+
+        // jt = jump_table [ebb2, ebb1]
+        jump_table.push_entry(ebb2);
+        jump_table.push_entry(ebb1);
+        let jt = func.create_jump_table(jump_table);
+
+        // ebb0:
+        //    ...
+        //    br_table x, ebb2, jt
         ssa.use_var(&mut func, x_var, I32, block0).0;
         let br_table = {
             let mut cur = FuncCursor::new(&mut func).at_bottom(ebb0);
-            cur.ins().br_table(x1, jt)
+            cur.ins().br_table(x1, ebb2, jt)
         };
-        let block1 = ssa.declare_ebb_body_block(block0);
-        let x3 = {
-            let mut cur = FuncCursor::new(&mut func).at_bottom(ebb0);
+
+        // ebb1:
+        //    x = 2
+        //    jump ebb2
+        let block1 = ssa.declare_ebb_header_block(ebb1);
+        ssa.seal_ebb_header_block(ebb1, &mut func);
+        let x2 = {
+            let mut cur = FuncCursor::new(&mut func).at_bottom(ebb1);
             cur.ins().iconst(I32, 2)
         };
-        ssa.def_var(x_var, x3, block1);
+        ssa.def_var(x_var, x2, block1);
         let jump_inst = {
-            let mut cur = FuncCursor::new(&mut func).at_bottom(ebb0);
-            cur.ins().jump(ebb1, &[])
-        };
-        let block2 = ssa.declare_ebb_header_block(ebb1);
-        ssa.declare_ebb_predecessor(ebb1, block1, jump_inst);
-        ssa.declare_ebb_predecessor(ebb1, block0, br_table);
-        ssa.seal_ebb_header_block(ebb1, &mut func);
-        let x4 = ssa.use_var(&mut func, x_var, I32, block2).0;
-        {
             let mut cur = FuncCursor::new(&mut func).at_bottom(ebb1);
-            cur.ins().iadd_imm(x4, 1)
+            cur.ins().jump(ebb2, &[])
         };
+
+        // ebb2:
+        //    x = x + 1
+        //    return
+        let block3 = ssa.declare_ebb_header_block(ebb2);
+        ssa.declare_ebb_predecessor(ebb2, block1, jump_inst);
+        ssa.declare_ebb_predecessor(ebb2, block0, br_table);
+        ssa.seal_ebb_header_block(ebb2, &mut func);
+        let block4 = ssa.declare_ebb_body_block(block3);
+        let x3 = ssa.use_var(&mut func, x_var, I32, block4).0;
+        let x4 = {
+            let mut cur = FuncCursor::new(&mut func).at_bottom(ebb2);
+            cur.ins().iadd_imm(x3, 1)
+        };
+        ssa.def_var(x_var, x4, block4);
         {
-            let mut cur = FuncCursor::new(&mut func).at_bottom(ebb1);
+            let mut cur = FuncCursor::new(&mut func).at_bottom(ebb2);
             cur.ins().return_(&[])
         };
+
         let flags = settings::Flags::new(settings::builder());
         match verify_function(&func, &flags) {
             Ok(()) => {}
