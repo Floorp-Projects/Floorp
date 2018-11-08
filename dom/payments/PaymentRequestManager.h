@@ -74,16 +74,15 @@ public:
                              const nsAString& aPayerEmail,
                              const nsAString& aPayerPhone);
 
+  bool IsRegionSupported(const nsAString& region) const;
+
   // Called to ensure that we don't "leak" aRequest if we shut down while it had
   // an active request to the parent.
   void RequestIPCOver(PaymentRequest* aRequest);
 
 private:
-  PaymentRequestManager() = default;
-  ~PaymentRequestManager()
-  {
-    MOZ_ASSERT(mActivePayments.Count() == 0);
-  }
+  PaymentRequestManager();
+  ~PaymentRequestManager();
 
   PaymentRequestChild* GetPaymentChild(PaymentRequest* aRequest);
 
