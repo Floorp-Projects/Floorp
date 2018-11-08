@@ -30,6 +30,7 @@ nsDocShellLoadInfo::nsDocShellLoadInfo()
   , mReferrerPolicy(mozilla::net::RP_Unset)
   , mLoadType(LOAD_NORMAL)
   , mIsSrcdocLoad(false)
+  , mIsFromProcessingFrameAttributes(false)
 {
 }
 

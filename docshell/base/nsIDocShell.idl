@@ -145,6 +145,9 @@ interface nsIDocShell : nsIDocShellTreeItem
    * @param aLoadReplace         - If set LOAD_REPLACE flag will be set on the
    *                               channel. aOriginalURI is null, this argument is
    *                               ignored.
+   * @param aIsFromProcessingFrameAttributes
+   *          - If this is a load triggered by changing frame attributes.
+   *            See nsILoadInfo.isFromProcessingFrameAttributes
    * @param aReferrer            - Referring URI
    * @param aReferrerPolicy      - Referrer policy
    * @param aTriggeringPrincipal - A non-null principal that initiated that load.
@@ -192,6 +195,7 @@ interface nsIDocShell : nsIDocShellTreeItem
                               [const] in MaybeURI aResultPrincipalURI,
                               in bool aKeepResultPrincipalURIIfSet,
                               in boolean aLoadReplace,
+                              in boolean aIsFromProcessingFrameAttributes,
                               in nsIURI aReferrer,
                               in unsigned long aReferrerPolicy,
                               in nsIPrincipal aTriggeringPrincipal,
