@@ -234,10 +234,6 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
       params.push_back(aInfo.hasSandboxedProfile ? "TRUE" : "FALSE");
       params.push_back("HAS_WINDOW_SERVER");
       params.push_back(aInfo.hasWindowServer ? "TRUE" : "FALSE");
-      if (!aInfo.parentPort.empty()) {
-        params.push_back("PARENT_PORT");
-        params.push_back(aInfo.parentPort.c_str());
-      }
       if (!aInfo.crashServerPort.empty()) {
         params.push_back("CRASH_PORT");
         params.push_back(aInfo.crashServerPort.c_str());
@@ -342,7 +338,6 @@ GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo)
   // line arguments. Return false if any are missing.
   bool foundSandboxLevel = false;
   bool foundValidSandboxLevel = false;
-  bool foundParentPort = false;
   bool foundAppPath = false;
 
   // Read access directories used in testing
@@ -416,13 +411,7 @@ GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo)
     }
 #endif // DEBUG
 
-    // Handle positional arguments
-    if (strstr(aArgv[i], "org.mozilla.machname") != NULL) {
-      foundParentPort = true;
-      aInfo.parentPort.assign(aArgv[i]);
-      continue;
-    }
-
+    // Handle crash server positional argument
     if (strstr(aArgv[i], "gecko-crash-server-pipe") != NULL) {
       aInfo.crashServerPort.assign(aArgv[i]);
       continue;
@@ -438,12 +427,6 @@ GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo)
   if (!foundValidSandboxLevel) {
     fprintf(stderr, "Content sandbox disabled due to invalid"
                     "sandbox level (%d)\n", aInfo.level);
-    return false;
-  }
-
-  if (!foundParentPort) {
-    fprintf(stderr, "Content sandbox disabled due to "
-                    "missing sandbox CLI parent port parameter.\n");
     return false;
   }
 
