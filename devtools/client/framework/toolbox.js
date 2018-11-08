@@ -2168,7 +2168,13 @@ Toolbox.prototype = {
    * Tells the target tab to reload.
    */
   reloadTarget: function(force) {
-    this.target.activeTab.reload({ force: force });
+    if (this.target.canRewind) {
+      // Recording tabs need to be reloaded in a new content process.
+      const { reloadAndRecordTab } = require("devtools/client/webreplay/menu");
+      reloadAndRecordTab();
+    } else {
+      this.target.activeTab.reload({ force: force });
+    }
   },
 
   /**
