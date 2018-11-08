@@ -455,18 +455,6 @@
   background: #B7B6B6;
 }
 
-.webreplay-player .message {
-  position: absolute;
-  height: 100%;
-  width: 2px;
-  background: var(--blue-50);
-}
-
-.webreplay-player .message:hover {
-  background: var(--blue-40);
-  cursor: pointer;
-}
-
 .webreplay-player .commands {
   display: flex;
 }
@@ -505,4 +493,3 @@
   margin-left: 5px;
   margin-right: 10px;      
 }
-
