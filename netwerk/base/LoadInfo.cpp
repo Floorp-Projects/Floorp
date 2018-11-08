@@ -94,6 +94,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mIsTrackerBlocked(false)
   , mDocumentHasUserInteracted(false)
   , mDocumentHasLoaded(false)
+  , mIsFromProcessingFrameAttributes(false)
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -366,6 +367,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mIsTrackerBlocked(false)
   , mDocumentHasUserInteracted(false)
   , mDocumentHasLoaded(false)
+  , mIsFromProcessingFrameAttributes(false)
 {
   // Top-level loads are never third-party
   // Grab the information we can out of the window.
@@ -468,6 +470,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mIsTrackerBlocked(rhs.mIsTrackerBlocked)
   , mDocumentHasUserInteracted(rhs.mDocumentHasUserInteracted)
   , mDocumentHasLoaded(rhs.mDocumentHasLoaded)
+  , mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes)
 {
 }
 
@@ -562,6 +565,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mIsTrackerBlocked(false)
   , mDocumentHasUserInteracted(aDocumentHasUserInteracted)
   , mDocumentHasLoaded(aDocumentHasLoaded)
+  , mIsFromProcessingFrameAttributes(false)
 {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal || aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
@@ -1464,6 +1468,20 @@ LoadInfo::GetIsTopLevelLoad(bool *aResult)
 {
   *aResult = mFrameOuterWindowID ? mFrameOuterWindowID == mOuterWindowID
                                  : mParentOuterWindowID == mOuterWindowID;
+  return NS_OK;
+}
+
+void
+LoadInfo::SetIsFromProcessingFrameAttributes()
+{
+  mIsFromProcessingFrameAttributes = true;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetIsFromProcessingFrameAttributes(bool *aIsFromProcessingFrameAttributes)
+{
+  MOZ_ASSERT(aIsFromProcessingFrameAttributes);
+  *aIsFromProcessingFrameAttributes = mIsFromProcessingFrameAttributes;
   return NS_OK;
 }
 
