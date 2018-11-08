@@ -107,6 +107,7 @@ SERIALIZED_PREDEFINED_TYPES = [
     "Resize",
     "Scale",
     "TextAlign",
+    "Translate",
     "TimingFunction",
     "TransformStyle",
     "background::BackgroundSize",
