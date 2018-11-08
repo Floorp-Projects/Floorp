@@ -50,6 +50,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.browser_display_toolbar.*
+import kotlinx.android.synthetic.main.fragment_browser.*
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.lib.crash.Crash
@@ -687,8 +688,13 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
         fragmentManager
                 .beginTransaction()
-                .add(R.id.container, crashReporterFragment, CrashReporterFragment.FRAGMENT_TAG)
+                .addToBackStack(null)
+                .add(R.id.crash_container, crashReporterFragment, CrashReporterFragment.FRAGMENT_TAG)
                 .commit()
+
+        crash_container.visibility = View.VISIBLE
+        tabs.hide()
+        erase.hide()
     }
 
     internal fun showAddToHomescreenDialog(url: String, title: String) {

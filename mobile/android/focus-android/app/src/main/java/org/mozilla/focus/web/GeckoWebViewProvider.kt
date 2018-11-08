@@ -123,7 +123,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         SharedPreferences.OnSharedPreferenceChangeListener {
         private var callback: IWebView.Callback? = null
         private var findListener: IFindListener? = null
-        private var currentUrl: String = "about:blank"
+        private var currentUrl: String = ABOUT_BLANK
         private var canGoBack: Boolean = false
         private var canGoForward: Boolean = false
         private var isSecure: Boolean = false
@@ -373,12 +373,12 @@ class GeckoWebViewProvider : IWebViewProvider {
                 }
 
                 override fun onCrash(session: GeckoSession) {
-                    Log.i(TAG, "Crashed, opening new session")
                     geckoSession.close()
                     geckoSession = createGeckoSession()
                     applySettingsAndSetDelegates()
                     geckoSession.open(geckoRuntime!!)
                     setSession(geckoSession)
+                    currentUrl = ABOUT_BLANK
                     geckoSession.loadUri(currentUrl)
                 }
 

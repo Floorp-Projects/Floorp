@@ -45,6 +45,13 @@
 
             </android.support.v4.widget.SwipeRefreshLayout>
 
+            <FrameLayout
+                android:id="@+id/crash_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/photonRed50"
+                android:visibility="gone"/>
+
             <include
                 layout="@layout/browser_display_toolbar"/>
 
