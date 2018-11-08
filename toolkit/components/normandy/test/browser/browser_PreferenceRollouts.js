@@ -87,37 +87,6 @@ decorate_task(
   }
 );
 
-decorate_task(
-  PreferenceRollouts.withTestMock,
-  async function testCloseDatabase() {
-    await PreferenceRollouts.closeDB();
-    const openSpy = sinon.spy(IndexedDB, "open");
-    sinon.assert.notCalled(openSpy);
-
-    try {
-      // Using rollouts at all should open the database, but only once.
-      await PreferenceRollouts.has("foo");
-      await PreferenceRollouts.get("foo");
-      sinon.assert.calledOnce(openSpy);
-      openSpy.reset();
-
-      // close can be called multiple times
-      await PreferenceRollouts.closeDB();
-      await PreferenceRollouts.closeDB();
-      // and don't cause the database to be opened (that would be weird)
-      sinon.assert.notCalled(openSpy);
-
-      // After being closed, new operations cause the database to be opened again, but only once
-      await PreferenceRollouts.has("foo");
-      await PreferenceRollouts.get("foo");
-      sinon.assert.calledOnce(openSpy);
-
-    } finally {
-      openSpy.restore();
-    }
-  }
-);
-
 // recordOriginalValue should update storage to note the original values
 decorate_task(
   PreferenceRollouts.withTestMock,

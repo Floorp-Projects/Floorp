@@ -7,19 +7,16 @@
 #define nsReadConfig_h
 
 #include "mozilla/RefPtr.h"
-#include "nsIReadConfig.h"
 #include "nsAutoConfig.h"
 #include "nsIObserver.h"
 
 
-class nsReadConfig final : public nsIReadConfig,
-                           public nsIObserver
+class nsReadConfig final : public nsIObserver
 {
 
     public:
 
         NS_DECL_THREADSAFE_ISUPPORTS
-        NS_DECL_NSIREADCONFIG
         NS_DECL_NSIOBSERVER
 
         nsReadConfig();

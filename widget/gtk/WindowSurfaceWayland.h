@@ -21,7 +21,7 @@ class nsWaylandDisplay : public nsISupports {
   NS_DECL_THREADSAFE_ISUPPORTS
 
 public:
-  nsWaylandDisplay(wl_display *aDisplay);
+  explicit nsWaylandDisplay(wl_display *aDisplay);
 
   wl_shm*             GetShm();
   void                SetShm(wl_shm* aShm)   { mShm = aShm; };
@@ -107,7 +107,7 @@ private:
 // and related management
 class WindowSurfaceWayland : public WindowSurface {
 public:
-  WindowSurfaceWayland(nsWindow *aWindow);
+  explicit WindowSurfaceWayland(nsWindow *aWindow);
   ~WindowSurfaceWayland();
 
   already_AddRefed<gfx::DrawTarget> Lock(const LayoutDeviceIntRegion& aRegion) override;
