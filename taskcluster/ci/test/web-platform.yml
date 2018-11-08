@@ -34,8 +34,8 @@ web-platform-tests:
             default: 12
     max-run-time:
         by-test-platform:
+            linux64-ccov/debug: 10800
             windows10-64-ccov/debug: 10800
-            macosx64-ccov/debug: 7200
             default: 7200
     e10s:
         by-test-platform:
