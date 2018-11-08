@@ -11,7 +11,6 @@
 % locale global @AB_CD@ %locale/@AB_CD@/global/
   locale/@AB_CD@/global/aboutReader.properties          (%chrome/global/aboutReader.properties)
   locale/@AB_CD@/global/aboutRights.dtd                 (%chrome/global/aboutRights.dtd)
-  locale/@AB_CD@/global/aboutNetworking.dtd             (%chrome/global/aboutNetworking.dtd)
   locale/@AB_CD@/global/aboutStudies.properties         (%chrome/global/aboutStudies.properties)
   locale/@AB_CD@/global/aboutServiceWorkers.dtd         (%chrome/global/aboutServiceWorkers.dtd)
   locale/@AB_CD@/global/aboutServiceWorkers.properties  (%chrome/global/aboutServiceWorkers.properties)
