@@ -35,6 +35,10 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
+#ifdef MOZ_GECKO_PROFILER
+#include "ProfilerMarkerPayload.h"
+#endif
+
 bool is_in_main_thread()
 {
   return NS_IsMainThread();
@@ -1807,6 +1811,23 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, cons
       double latencyMs = (aEndTime - transactionId.mTxnStartTime).ToMilliseconds();
       double latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
       int32_t fracLatencyNorm = lround(latencyNorm * 100.0);
+
+#ifdef MOZ_GECKO_PROFILER
+      if (profiler_is_active()) {
+        class ContentFramePayload : public ProfilerMarkerPayload {
+          public:
+            ContentFramePayload(const mozilla::TimeStamp& aStartTime, const mozilla::TimeStamp& aEndTime)
+              : ProfilerMarkerPayload(aStartTime, aEndTime)
+            {}
+            virtual void StreamPayload(SpliceableJSONWriter& aWriter, const TimeStamp& aProcessStartTime, UniqueStacks& aUniqueStacks) override {
+              StreamCommonProps("CONTENT_FRAME_TIME", aWriter, aProcessStartTime, aUniqueStacks);
+            }
+        };
+        profiler_add_marker_for_thread(profiler_current_thread_id(), "CONTENT_FRAME_TIME", MakeUnique<ContentFramePayload>(mPendingTransactionIds.front().mTxnStartTime,
+                                                                                                                           aEndTime));
+      }
+#endif
+
       Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME, fracLatencyNorm);
       if (fracLatencyNorm > 200) {
         wr::RenderThread::Get()->NotifySlowFrame(mApi->GetId());
