@@ -136,8 +136,12 @@ size_t dummy;
 void end_test() {
     static size_t count = 0;
     /* Only exit when both constructors have been called */
-    if (++count == 2)
+    if (++count == 2) {
         ret = 0;
+        // Avoid the dummy variable being stripped out at link time because
+        // it's unused.
+        dummy = 1;
+    }
 }
 
 void test() {
