@@ -35,8 +35,8 @@ async function ensureVisible(node) {
 var move = {
   "drag": async function(id, target) {
     let targetNode = document.getElementById(target);
-    if (targetNode.customizationTarget) {
-      targetNode = targetNode.customizationTarget;
+    if (CustomizableUI.getCustomizationTarget(targetNode)) {
+      targetNode = CustomizableUI.getCustomizationTarget(targetNode);
     }
     let nodeToMove = document.getElementById(id);
     await ensureVisible(nodeToMove);
@@ -45,8 +45,8 @@ var move = {
   },
   "dragToItem": async function(id, target) {
     let targetNode = document.getElementById(target);
-    if (targetNode.customizationTarget) {
-      targetNode = targetNode.customizationTarget;
+    if (CustomizableUI.getCustomizationTarget(targetNode)) {
+      targetNode = CustomizableUI.getCustomizationTarget(targetNode);
     }
     let items = targetNode.querySelectorAll("toolbarpaletteitem");
     if (target == kPanel) {
@@ -68,14 +68,18 @@ var move = {
 
 function isLast(containerId, defaultPlacements, id) {
   assertAreaPlacements(containerId, defaultPlacements.concat([id]));
-  is(document.getElementById(containerId).customizationTarget.lastElementChild.firstElementChild.id, id,
+  let thisTarget =
+    CustomizableUI.getCustomizationTarget(document.getElementById(containerId));
+  is(thisTarget.lastElementChild.firstElementChild.id, id,
      "Widget " + id + " should be in " + containerId + " in customizing window.");
-  is(otherWin.document.getElementById(containerId).customizationTarget.lastElementChild.id, id,
+  let otherTarget =
+    CustomizableUI.getCustomizationTarget(otherWin.document.getElementById(containerId));
+  is(otherTarget.lastElementChild.id, id,
      "Widget " + id + " should be in " + containerId + " in other window.");
 }
 
 function getLastVisibleNodeInToolbar(containerId, win = window) {
-  let container = win.document.getElementById(containerId).customizationTarget;
+  let container = CustomizableUI.getCustomizationTarget(win.document.getElementById(containerId));
   let rv = container.lastElementChild;
   while (rv && (rv.getAttribute("hidden") == "true" || (rv.firstElementChild && rv.firstElementChild.getAttribute("hidden") == "true"))) {
     rv = rv.previousElementSibling;
@@ -106,9 +110,13 @@ function isLastVisibleInToolbar(containerId, defaultPlacements, id) {
 
 function isFirst(containerId, defaultPlacements, id) {
   assertAreaPlacements(containerId, [id].concat(defaultPlacements));
-  is(document.getElementById(containerId).customizationTarget.firstElementChild.firstElementChild.id, id,
+  let thisTarget =
+    CustomizableUI.getCustomizationTarget(document.getElementById(containerId));
+  is(thisTarget.firstElementChild.firstElementChild.id, id,
      "Widget " + id + " should be in " + containerId + " in customizing window.");
-  is(otherWin.document.getElementById(containerId).customizationTarget.firstElementChild.id, id,
+  let otherTarget =
+    CustomizableUI.getCustomizationTarget(otherWin.document.getElementById(containerId));
+  is(otherTarget.firstElementChild.id, id,
      "Widget " + id + " should be in " + containerId + " in other window.");
 }
 
