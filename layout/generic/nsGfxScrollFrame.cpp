@@ -2948,12 +2948,19 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsAtom* aOrig
   // the RCD-RSF this will have the effect of resetting the visual viewport
   // offset to be the same as the new scroll (= layout viewport) offset.
   // The APZ callback transform, which reflects the difference between these
-  // offsets, will subsequently be cleared. However, it we wait for APZ to
+  // offsets, will subsequently be cleared. However, if we wait for APZ to
   // clear it, the main thread could end up using the old value and get
   // incorrect results, so just clear it now.
   if (mIsRoot && nsLayoutUtils::CanScrollOriginClobberApz(mLastScrollOrigin)) {
     content->SetProperty(nsGkAtoms::apzCallbackTransform, new CSSPoint(),
                          nsINode::DeleteProperty<CSSPoint>);
+
+    // Similarly, update the main thread's view of the visual viewport
+    // offset. Otherwise, if we perform calculations that depend on this
+    // offset (e.g. by using nsIDOMWindowUtils.getVisualViewportOffset()
+    // in chrome JS code) before it's updated by the next APZ repaint,
+    // we could get incorrect results.
+    presContext->PresShell()->SetVisualViewportOffset(pt);
   }
 
   ScrollVisual();
