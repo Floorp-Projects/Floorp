@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-def setupProject(name, path, description, enableTaskcluster = true) {
+def setupProject(name, path, description, shouldPublish = true) {
     settings.include(name)
 
     project(name).projectDir = new File(rootDir, path)
@@ -19,7 +19,7 @@ def setupProject(name, path, description, enableTaskcluster = true) {
         // However, the "afterProject" listener iterates over every project and gives us the actual project
         // So, once we filter for the project we care about, we can set whatever we want
         if (project.name == name.substring(1)) {
-            project.ext.enableTaskcluster = enableTaskcluster
+            project.ext.shouldPublish = shouldPublish
         }
     }
 }

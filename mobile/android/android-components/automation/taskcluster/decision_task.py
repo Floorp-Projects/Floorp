@@ -6,6 +6,7 @@
 Decision task for pull requests and pushes
 """
 
+from __future__ import print_function
 import datetime
 import os
 import taskcluster
@@ -109,8 +110,8 @@ def create_compare_locales_task():
 
 if __name__ == "__main__":
     if SKIP_TASKS_TRIGGER in PR_TITLE:
-        print "Pull request title contains", SKIP_TASKS_TRIGGER
-        print "Exit"
+        print("Pull request title contains", SKIP_TASKS_TRIGGER)
+        print("Exit")
         exit(0)
 
     queue = taskcluster.Queue({ 'baseUrl': 'http://taskcluster/queue/v1' })
@@ -118,7 +119,7 @@ if __name__ == "__main__":
     modules = [':' + artifact['name'] for artifact in lib.module_definitions.from_gradle()]
 
     if len(modules) == 0:
-        print "Could not get module names from gradle"
+        print("Could not get module names from gradle")
         sys.exit(2)
 
     for module in modules:

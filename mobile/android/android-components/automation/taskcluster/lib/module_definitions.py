@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import print_function
 import json
 import subprocess
 
@@ -12,11 +13,11 @@ def from_gradle():
     exit_code = process.wait()
 
     if exit_code is not 0:
-        print "Gradle command returned error:", exit_code
+        print("Gradle command returned error: {}".format(exit_code))
 
     gradle_modules = json.loads(output)
     return [{
         'name': module['name'][1:],  # Gradle prefixes all module names with ":", e.g.: ":browser-awesomebar"
         'artifact': "public/build/{}.maven.zip".format(module['name'][1:]),
         'path': "{}/target.maven.zip".format(module['buildPath'])
-    } for module in gradle_modules if module['enableTaskcluster']]
+    } for module in gradle_modules if module['shouldPublish']]
