@@ -284,17 +284,6 @@ function test_custom_retention(controlToChange, expect, valueIncrement) {
   };
 }
 
-function test_locbar_suggestion_retention(suggestion, autocomplete) {
-  return function(win) {
-    let elem = win.document.getElementById(suggestion + "Suggestion");
-    ok(elem, "Suggest " + suggestion + " checkbox should exist.");
-    elem.click();
-
-    is(Services.prefs.getBoolPref("browser.urlbar.autocomplete.enabled"), autocomplete,
-       "browser.urlbar.autocomplete.enabled pref should be " + autocomplete);
-  };
-}
-
 const gPrefCache = new Map();
 
 function cache_preferences(win) {
