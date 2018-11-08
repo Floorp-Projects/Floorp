@@ -317,7 +317,7 @@ select > button[orientation="right"]:active {
   padding-block-start: 1px;
   padding-block-end: 1px;
   padding-inline-start: 4px;
-  padding-inline-end: 0;
+  padding-inline-end: 4px;
   color: unset;
   white-space: nowrap;
   text-align: unset;
