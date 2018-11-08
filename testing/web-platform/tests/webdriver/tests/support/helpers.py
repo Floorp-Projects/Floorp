@@ -181,3 +181,34 @@ def is_fullscreen(session):
     return session.execute_script("""
         return !!(window.fullScreen || document.webkitIsFullScreen)
         """)
+
+
+def document_dimensions(session):
+    return tuple(session.execute_script("""
+        let {devicePixelRatio} = window;
+        let {width, height} = document.documentElement.getBoundingClientRect();
+        return [width * devicePixelRatio, height * devicePixelRatio];
+        """))
+
+
+def screen_size(session):
+    """Returns the available width/height size of the screen."""
+    return tuple(session.execute_script("""
+        return [
+            screen.availWidth,
+            screen.availHeight,
+        ];
+        """))
+
+
+def available_screen_size(session):
+    """
+    Returns the effective available screen width/height size,
+    excluding any fixed window manager elements.
+    """
+    return tuple(session.execute_script("""
+        return [
+            screen.availWidth - screen.availLeft,
+            screen.availHeight - screen.availTop,
+        ];
+        """))
