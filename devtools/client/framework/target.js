@@ -156,7 +156,7 @@ const TargetFactory = exports.TargetFactory = {
  * abstract some common events and read-only properties common to many Tools.
  *
  * Supported read-only properties:
- * - name, isRemote, url
+ * - name, url
  *
  * Target extends EventEmitter and provides support for the following events:
  * - close: The target window has been closed. All tools attached to this
@@ -428,10 +428,6 @@ TabTarget.prototype = {
 
   get url() {
     return this._url;
-  },
-
-  get isRemote() {
-    return !this.isLocalTab;
   },
 
   get isAddon() {
@@ -880,10 +876,6 @@ function WorkerTarget(workerTargetFront) {
  * requiring only minimal changes to the rest of the frontend.
  */
 WorkerTarget.prototype = {
-  get isRemote() {
-    return true;
-  },
-
   get isBrowsingContext() {
     return true;
   },
