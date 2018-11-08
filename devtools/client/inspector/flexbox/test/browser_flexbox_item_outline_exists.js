@@ -25,10 +25,4 @@ add_task(async function() {
 
   ok(basis, "The basis outline exists");
   ok(final, "The final outline exists");
-
-  const [basisPoint, finalPoint] = [...flexOutlineContainer.querySelectorAll(
-    ".flex-outline-point.basis, .flex-outline-point.final")];
-
-  ok(basisPoint, "The basis point exists");
-  ok(finalPoint, "The final point exists");
 });

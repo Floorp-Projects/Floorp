@@ -54,8 +54,8 @@ class FlexItemSizingOutline extends PureComponent {
     );
   }
 
-  renderPoint(name) {
-    return dom.div({ className: `flex-outline-point ${name}`, "data-label": name });
+  renderPoint(className, label = className) {
+    return dom.div({ className: `flex-outline-point ${className}`, "data-label": label });
   }
 
   render() {
@@ -138,6 +138,16 @@ class FlexItemSizingOutline extends PureComponent {
     }
     gridTemplateColumns += "]";
 
+    // Check the final and basis points to see if they are the same and if so, combine
+    // them into a single rendered point.
+    const renderedBaseAndFinalPoints = [];
+    if (mainFinalSize === mainBaseSize) {
+      renderedBaseAndFinalPoints.push(this.renderPoint("basisfinal", "basis/final"));
+    } else {
+      renderedBaseAndFinalPoints.push(this.renderPoint("basis"));
+      renderedBaseAndFinalPoints.push(this.renderPoint("final"));
+    }
+
     return (
       dom.div({ className: "flex-outline-container" },
         dom.div(
@@ -150,8 +160,7 @@ class FlexItemSizingOutline extends PureComponent {
               gridTemplateColumns,
             },
           },
-          this.renderPoint("basis"),
-          this.renderPoint("final"),
+          renderedBaseAndFinalPoints,
           showMin ? this.renderPoint("min") : null,
           showMax ? this.renderPoint("max") : null,
           this.renderBasisOutline(mainBaseSize),
