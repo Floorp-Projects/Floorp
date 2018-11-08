@@ -21,7 +21,6 @@ namespace mozilla {
 using base::Thread;
 using namespace ipc;
 using namespace layers;
-using namespace gfx;
 
 nsresult
 RemoteDecoderModule::Startup()
