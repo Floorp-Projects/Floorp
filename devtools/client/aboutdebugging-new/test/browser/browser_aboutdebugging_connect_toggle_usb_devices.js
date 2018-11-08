@@ -3,6 +3,7 @@
 
 "use strict";
 
+const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 const { ADB } = require("devtools/shared/adb/adb");
 
 /**
@@ -35,6 +36,12 @@ add_task(async function() {
   await waitUntil(() => usbToggleButton.textContent.includes("Disable"));
   ok(!document.querySelector(".js-connect-usb-disabled-message"),
     "The message about enabling USB devices is no longer rendered");
+
+  info("Check that the addon was installed with the proper source");
+  const adbExtensionId = Services.prefs.getCharPref("devtools.remote.adb.extensionID");
+  const addon = await AddonManager.getAddonByID(adbExtensionId);
+  Assert.deepEqual(addon.installTelemetryInfo, { source: "about:debugging" },
+    "Got the expected addon.installTelemetryInfo");
 
   // Right now we are resuming as soon as "USB devices enabled" is displayed, but ADB
   // might still be starting up. If we move to uninstall directly, the ADB startup will
