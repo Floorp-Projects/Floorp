@@ -4119,31 +4119,17 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     dst->bodyScopeIndex_ = src->bodyScopeIndex_;
     dst->funLength_ = src->funLength();
     dst->nTypeSets_ = src->nTypeSets();
+
+    dst->immutableFlags_ = src->immutableFlags_;
+    dst->setFlag(ImmutableFlags::HasNonSyntacticScope,
+                 scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
+
     if (src->argumentsHasVarBinding()) {
         dst->setArgumentsHasVarBinding();
         if (src->analyzedArgsUsage()) {
             dst->setNeedsArgsObj(src->needsArgsObj());
         }
     }
-    dst->setFlag(ImmutableFlags::HasMappedArgsObj, src->hasMappedArgsObj());
-    dst->setFlag(ImmutableFlags::FunctionHasThisBinding, src->functionHasThisBinding());
-    dst->setFlag(ImmutableFlags::FunctionHasExtraBodyVarScope, src->functionHasExtraBodyVarScope());
-    dst->setFlag(ImmutableFlags::Strict, src->strict());
-    dst->setFlag(ImmutableFlags::ExplicitUseStrict, src->explicitUseStrict());
-    dst->setFlag(ImmutableFlags::HasNonSyntacticScope, scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
-    dst->setFlag(ImmutableFlags::BindingsAccessedDynamically, src->bindingsAccessedDynamically());
-    dst->setFlag(ImmutableFlags::FunHasExtensibleScope, src->funHasExtensibleScope());
-    dst->setFlag(ImmutableFlags::FunHasAnyAliasedFormal, src->funHasAnyAliasedFormal());
-    dst->setFlag(ImmutableFlags::HasSingletons, src->hasSingletons());
-    dst->setFlag(ImmutableFlags::TreatAsRunOnce, src->treatAsRunOnce());
-    dst->setFlag(ImmutableFlags::HasInnerFunctions, src->hasInnerFunctions());
-    dst->setFlag(ImmutableFlags::IsGenerator, src->isGenerator());
-    dst->setFlag(ImmutableFlags::IsDerivedClassConstructor, src->isDerivedClassConstructor());
-    dst->setFlag(ImmutableFlags::NeedsHomeObject, src->needsHomeObject());
-    dst->setFlag(ImmutableFlags::IsDefaultClassConstructor, src->isDefaultClassConstructor());
-    dst->setFlag(ImmutableFlags::IsAsync, src->isAsync());
-    dst->setFlag(ImmutableFlags::HasRest, src->hasRest());
-    dst->setFlag(ImmutableFlags::HideScriptFromDebugger, src->hideScriptFromDebugger());
 
     {
         auto array = dst->data_->scopes();
