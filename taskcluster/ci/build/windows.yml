@@ -509,6 +509,7 @@ win32-rusttests/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
         using: mozharness
+        actions: [build]
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -518,6 +519,8 @@ win32-rusttests/opt:
         extra-config:
             stage_platform: win32-rusttests
             artifact_flag_build_variant_in_try: null
+            build_targets: ['pre-export', 'export', 'recurse_rusttests']
+            disable_package_metrics: true
         mozconfig-variant: rusttests
     run-on-projects: ['trunk', 'try']
     toolchains:
@@ -544,6 +547,7 @@ win32-rusttests/debug:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
         using: mozharness
+        actions: [build]
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -553,6 +557,8 @@ win32-rusttests/debug:
         extra-config:
             stage_platform: win32-rusttests
             artifact_flag_build_variant_in_try: null
+            build_targets: ['pre-export', 'export', 'recurse_rusttests']
+            disable_package_metrics: true
         mozconfig-variant: rusttests-debug
     run-on-projects: ['trunk', 'try']
     toolchains:
