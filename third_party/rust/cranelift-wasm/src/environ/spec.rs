@@ -2,9 +2,9 @@
 //! traits `FunctionEnvironment` and `ModuleEnvironment`.
 use cranelift_codegen::cursor::FuncCursor;
 use cranelift_codegen::ir::{self, InstBuilder};
-use cranelift_codegen::isa::TargetFrontendConfig;
-use std::convert::From;
+use cranelift_codegen::settings::Flags;
 use std::vec::Vec;
+use target_lexicon::Triple;
 use translation_utils::{
     FuncIndex, Global, GlobalIndex, Memory, MemoryIndex, SignatureIndex, Table, TableIndex,
 };
@@ -35,11 +35,7 @@ pub enum WasmError {
     ///
     /// This error code is used by a WebAssembly translator when it encounters invalid WebAssembly
     /// code. This should never happen for validated WebAssembly code.
-    #[fail(
-        display = "Invalid input WebAssembly code at offset {}: {}",
-        _1,
-        _0
-    )]
+    #[fail(display = "Invalid input WebAssembly code at offset {}: {}", _1, _0)]
     InvalidWebAssembly {
         /// A string describing the validation error.
         message: &'static str,
@@ -63,9 +59,9 @@ pub enum WasmError {
     ImplLimitExceeded,
 }
 
-impl From<BinaryReaderError> for WasmError {
+impl WasmError {
     /// Convert from a `BinaryReaderError` to a `WasmError`.
-    fn from(e: BinaryReaderError) -> Self {
+    pub fn from_binary_reader_error(e: BinaryReaderError) -> Self {
         let BinaryReaderError { message, offset } = e;
         WasmError::InvalidWebAssembly { message, offset }
     }
@@ -74,34 +70,28 @@ impl From<BinaryReaderError> for WasmError {
 /// A convenient alias for a `Result` that uses `WasmError` as the error type.
 pub type WasmResult<T> = Result<T, WasmError>;
 
-/// How to return from functions.
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-pub enum ReturnMode {
-    /// Use normal return instructions as needed.
-    NormalReturns,
-    /// Use a single fallthrough return at the end of the function.
-    FallthroughReturn,
-}
-
 /// Environment affecting the translation of a single WebAssembly function.
 ///
 /// A `FuncEnvironment` trait object is required to translate a WebAssembly function to Cranelift
 /// IR. The function environment provides information about the WebAssembly module as well as the
 /// runtime environment.
 pub trait FuncEnvironment {
-    /// Get the information needed to produce Cranelift IR for the given target.
-    fn target_config(&self) -> TargetFrontendConfig;
+    /// Get the triple for the current compilation.
+    fn triple(&self) -> &Triple;
+
+    /// Get the flags for the current compilation.
+    fn flags(&self) -> &Flags;
 
     /// Get the Cranelift integer type to use for native pointers.
     ///
     /// This returns `I64` for 64-bit architectures and `I32` for 32-bit architectures.
     fn pointer_type(&self) -> ir::Type {
-        ir::Type::int(u16::from(self.target_config().pointer_bits())).unwrap()
+        ir::Type::int(u16::from(self.triple().pointer_width().unwrap().bits())).unwrap()
     }
 
     /// Get the size of a native pointer, in bytes.
     fn pointer_bytes(&self) -> u8 {
-        self.target_config().pointer_bytes()
+        self.triple().pointer_width().unwrap().bytes()
     }
 
     /// Set up the necessary preamble definitions in `func` to access the global variable
@@ -158,7 +148,6 @@ pub trait FuncEnvironment {
     /// The signature `sig_ref` was previously created by `make_indirect_sig()`.
     ///
     /// Return the call instruction whose results are the WebAssembly return values.
-    #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
     fn translate_call_indirect(
         &mut self,
         pos: FuncCursor,
@@ -223,21 +212,14 @@ pub trait FuncEnvironment {
     fn translate_loop_header(&mut self, _pos: FuncCursor) {
         // By default, don't emit anything.
     }
-
-    /// Should the code be structured to use a single `fallthrough_return` instruction at the end
-    /// of the function body, rather than `return` instructions as needed? This is used by VMs
-    /// to append custom epilogues.
-    fn return_mode(&self) -> ReturnMode {
-        ReturnMode::NormalReturns
-    }
 }
 
 /// An object satisfying the `ModuleEnvironment` trait can be passed as argument to the
 /// [`translate_module`](fn.translate_module.html) function. These methods should not be called
 /// by the user, they are only for `cranelift-wasm` internal use.
 pub trait ModuleEnvironment<'data> {
-    /// Get the information needed to produce Cranelift IR for the current target.
-    fn target_config(&self) -> &TargetFrontendConfig;
+    /// Get the flags for the current compilation.
+    fn flags(&self) -> &Flags;
 
     /// Return the name for the given function index.
     fn get_func_name(&self, func_index: FuncIndex) -> ir::ExternalName;

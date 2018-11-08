@@ -3,14 +3,12 @@
 //! The `write` module provides the `write_function` function which converts an IR `Function` to an
 //! equivalent textual form. This textual form can be read back by the `cranelift-reader` crate.
 
-use entity::SecondaryMap;
 use ir::entities::AnyEntity;
 use ir::{DataFlowGraph, Ebb, Function, Inst, SigRef, Type, Value, ValueDef};
 use isa::{RegInfo, TargetIsa};
 use packed_option::ReservedValue;
 use std::fmt::{self, Write};
 use std::string::String;
-use std::vec::Vec;
 
 /// A `FuncWriter` used to decorate functions during printing.
 pub trait FuncWriter {
@@ -19,7 +17,6 @@ pub trait FuncWriter {
         &mut self,
         w: &mut Write,
         func: &Function,
-        aliases: &SecondaryMap<Value, Vec<Value>>,
         isa: Option<&TargetIsa>,
         inst: Inst,
         ident: usize,
@@ -45,17 +42,13 @@ pub trait FuncWriter {
         }
 
         for (heap, heap_data) in &func.heaps {
-            if !heap_data.index_type.is_invalid() {
-                any = true;
-                self.write_entity_definition(w, func, heap.into(), heap_data)?;
-            }
+            any = true;
+            self.write_entity_definition(w, func, heap.into(), heap_data)?;
         }
 
         for (table, table_data) in &func.tables {
-            if !table_data.index_type.is_invalid() {
-                any = true;
-                self.write_entity_definition(w, func, table.into(), table_data)?;
-            }
+            any = true;
+            self.write_entity_definition(w, func, table.into(), table_data)?;
         }
 
         // Write out all signatures before functions since function declarations can refer to
@@ -66,8 +59,8 @@ pub trait FuncWriter {
         }
 
         for (fnref, ext_func) in &func.dfg.ext_funcs {
+            any = true;
             if ext_func.signature != SigRef::reserved_value() {
-                any = true;
                 self.write_entity_definition(w, func, fnref.into(), ext_func)?;
             }
         }
@@ -101,12 +94,11 @@ impl FuncWriter for PlainWriter {
         &mut self,
         w: &mut Write,
         func: &Function,
-        aliases: &SecondaryMap<Value, Vec<Value>>,
         isa: Option<&TargetIsa>,
         inst: Inst,
         indent: usize,
     ) -> fmt::Result {
-        write_instruction(w, func, aliases, isa, inst, indent)
+        write_instruction(w, func, isa, inst, indent)
     }
 }
 
@@ -114,18 +106,6 @@ impl FuncWriter for PlainWriter {
 /// Use `isa` to emit ISA-dependent annotations.
 pub fn write_function(w: &mut Write, func: &Function, isa: Option<&TargetIsa>) -> fmt::Result {
     decorate_function(&mut PlainWriter, w, func, isa)
-}
-
-/// Create a reverse-alias map from a value to all aliases having that value as a direct target
-fn alias_map(func: &Function) -> SecondaryMap<Value, Vec<Value>> {
-    let mut aliases = SecondaryMap::<_, Vec<_>>::new();
-    for v in func.dfg.values() {
-        // VADFS returns the immediate target of an alias
-        if let Some(k) = func.dfg.value_alias_dest_for_serialization(v) {
-            aliases[k].push(v);
-        }
-    }
-    aliases
 }
 
 /// Writes `func` to `w` as text.
@@ -143,13 +123,12 @@ pub fn decorate_function<FW: FuncWriter>(
     write!(w, "function ")?;
     write_spec(w, func, regs)?;
     writeln!(w, " {{")?;
-    let aliases = alias_map(func);
     let mut any = func_w.write_preamble(w, func, regs)?;
     for ebb in &func.layout {
         if any {
             writeln!(w)?;
         }
-        decorate_ebb(func_w, w, func, &aliases, isa, ebb)?;
+        decorate_ebb(func_w, w, func, isa, ebb)?;
         any = true;
     }
     writeln!(w, "}}")
@@ -216,7 +195,6 @@ fn decorate_ebb<FW: FuncWriter>(
     func_w: &mut FW,
     w: &mut Write,
     func: &Function,
-    aliases: &SecondaryMap<Value, Vec<Value>>,
     isa: Option<&TargetIsa>,
     ebb: Ebb,
 ) -> fmt::Result {
@@ -228,11 +206,8 @@ fn decorate_ebb<FW: FuncWriter>(
     };
 
     write_ebb_header(w, func, isa, ebb, indent)?;
-    for a in func.dfg.ebb_params(ebb).iter().cloned() {
-        write_value_aliases(w, aliases, a, indent)?;
-    }
     for inst in func.layout.ebb_insts(ebb) {
-        func_w.write_instruction(w, func, aliases, isa, inst, indent)?;
+        func_w.write_instruction(w, func, isa, inst, indent)?;
     }
 
     Ok(())
@@ -270,38 +245,33 @@ fn type_suffix(func: &Function, inst: Inst) -> Option<Type> {
 
     let rtype = func.dfg.ctrl_typevar(inst);
     assert!(
-        !rtype.is_invalid(),
+        !rtype.is_void(),
         "Polymorphic instruction must produce a result"
     );
     Some(rtype)
 }
 
-/// Write out any aliases to the given target, including indirect aliases
-fn write_value_aliases(
-    w: &mut Write,
-    aliases: &SecondaryMap<Value, Vec<Value>>,
-    target: Value,
-    indent: usize,
-) -> fmt::Result {
-    let mut todo_stack = vec![target];
-    while let Some(target) = todo_stack.pop() {
-        for &a in &aliases[target] {
-            writeln!(w, "{1:0$}{2} -> {3}", indent, "", a, target)?;
-            todo_stack.push(a);
+// Write out any value aliases appearing in `inst`.
+fn write_value_aliases(w: &mut Write, func: &Function, inst: Inst, indent: usize) -> fmt::Result {
+    for &arg in func.dfg.inst_args(inst) {
+        let resolved = func.dfg.resolve_aliases(arg);
+        if resolved != arg {
+            writeln!(w, "{1:0$}{2} -> {3}", indent, "", arg, resolved)?;
         }
     }
-
     Ok(())
 }
 
 fn write_instruction(
     w: &mut Write,
     func: &Function,
-    aliases: &SecondaryMap<Value, Vec<Value>>,
     isa: Option<&TargetIsa>,
     inst: Inst,
     indent: usize,
 ) -> fmt::Result {
+    // Value aliases come out on lines before the instruction using them.
+    write_value_aliases(w, func, inst, indent)?;
+
     // Prefix containing source location, encoding, and value locations.
     let mut s = String::with_capacity(16);
 
@@ -354,13 +324,7 @@ fn write_instruction(
     }
 
     write_operands(w, &func.dfg, isa, inst)?;
-    writeln!(w)?;
-
-    // Value aliases come out on lines after the instruction defining the referrent.
-    for r in func.dfg.inst_results(inst) {
-        write_value_aliases(w, aliases, *r, indent)?;
-    }
-    Ok(())
+    writeln!(w)
 }
 
 /// Write the operands of `inst` to `w` with a prepended space.
@@ -447,17 +411,7 @@ pub fn write_operands(
             write!(w, " {} {}, {}, {}", cond, args[0], args[1], destination)?;
             write_ebb_args(w, &args[2..])
         }
-        BranchTable {
-            arg,
-            destination,
-            table,
-            ..
-        } => write!(w, " {}, {}, {}", arg, destination, table),
-        BranchTableBase { table, .. } => write!(w, " {}", table),
-        BranchTableEntry {
-            args, imm, table, ..
-        } => write!(w, " {}, {}, {}, {}", args[0], args[1], imm, table),
-        IndirectJump { arg, table, .. } => write!(w, " {}, {}", arg, table),
+        BranchTable { arg, table, .. } => write!(w, " {}, {}", arg, table),
         Call {
             func_ref, ref args, ..
         } => write!(w, " {}({})", func_ref, DisplayValues(args.as_slice(pool))),
@@ -667,42 +621,6 @@ mod tests {
         assert_eq!(
             f.to_string(),
             "function %foo() fast {\n    ss0 = explicit_slot 4\n\nebb0(v0: i8, v1: f32x4):\n    return\n}\n"
-        );
-    }
-
-    #[test]
-    fn aliases() {
-        use ir::InstBuilder;
-
-        let mut func = Function::new();
-        {
-            let ebb0 = func.dfg.make_ebb();
-            let mut pos = FuncCursor::new(&mut func);
-            pos.insert_ebb(ebb0);
-
-            // make some detached values for change_to_alias
-            let v0 = pos.func.dfg.append_ebb_param(ebb0, types::I32);
-            let v1 = pos.func.dfg.append_ebb_param(ebb0, types::I32);
-            let v2 = pos.func.dfg.append_ebb_param(ebb0, types::I32);
-            pos.func.dfg.detach_ebb_params(ebb0);
-
-            // alias to a param--will be printed at beginning of ebb defining param
-            let v3 = pos.func.dfg.append_ebb_param(ebb0, types::I32);
-            pos.func.dfg.change_to_alias(v0, v3);
-
-            // alias to an alias--should print attached to alias, not ultimate target
-            pos.func.dfg.make_value_alias_for_serialization(v0, v2); // v0 <- v2
-
-            // alias to a result--will be printed after instruction producing result
-            let _dummy0 = pos.ins().iconst(types::I32, 42);
-            let v4 = pos.ins().iadd(v0, v0);
-            pos.func.dfg.change_to_alias(v1, v4);
-            let _dummy1 = pos.ins().iconst(types::I32, 23);
-            let _v7 = pos.ins().iadd(v1, v1);
-        }
-        assert_eq!(
-            func.to_string(),
-            "function u0:0() fast {\nebb0(v3: i32):\n    v0 -> v3\n    v2 -> v0\n    v4 = iconst.i32 42\n    v5 = iadd v0, v0\n    v1 -> v5\n    v6 = iconst.i32 23\n    v7 = iadd v1, v1\n}\n"
         );
     }
 }

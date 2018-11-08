@@ -266,8 +266,12 @@ where
     C: Comparator<K>,
 {
     /// Create a cursor with a default (off-the-end) location.
-    fn new(container: &'a mut Map<K, V>, forest: &'a mut MapForest<K, V>, comp: &'a C) -> Self {
-        Self {
+    fn new(
+        container: &'a mut Map<K, V>,
+        forest: &'a mut MapForest<K, V>,
+        comp: &'a C,
+    ) -> MapCursor<'a, K, V, C> {
+        MapCursor {
             root: &mut container.root,
             pool: &mut forest.nodes,
             comp,
@@ -284,7 +288,6 @@ where
     ///
     /// If the cursor reaches the end, return `None` and leave the cursor at the off-the-end
     /// position.
-    #[cfg_attr(feature = "cargo-clippy", allow(should_implement_trait))]
     pub fn next(&mut self) -> Option<(K, V)> {
         self.path.next(self.pool)
     }
@@ -426,7 +429,7 @@ where
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use super::super::NodeData;
     use super::*;
     use std::mem;

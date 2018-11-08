@@ -5,7 +5,8 @@ use ir;
 use isa;
 use isa::constraints::*;
 use isa::enc_tables::*;
-use isa::encoding::{base_size, RecipeSizing};
+use isa::encoding::RecipeSizing;
+use predicates;
 
 // Include the generated encoding tables:
 // - `LEVEL1_RV32`

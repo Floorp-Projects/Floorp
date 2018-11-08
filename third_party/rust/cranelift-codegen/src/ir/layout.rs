@@ -3,7 +3,7 @@
 //! The order of extended basic blocks in a function and the order of instructions in an EBB is
 //! determined by the `Layout` data structure defined in this module.
 
-use entity::SecondaryMap;
+use entity::EntityMap;
 use ir::progpoint::{ExpandedProgramPoint, ProgramOrder};
 use ir::{Ebb, Inst};
 use packed_option::PackedOption;
@@ -28,11 +28,11 @@ use timing;
 pub struct Layout {
     /// Linked list nodes for the layout order of EBBs Forms a doubly linked list, terminated in
     /// both ends by `None`.
-    ebbs: SecondaryMap<Ebb, EbbNode>,
+    ebbs: EntityMap<Ebb, EbbNode>,
 
     /// Linked list nodes for the layout order of instructions. Forms a double linked list per EBB,
     /// terminated in both ends by `None`.
-    insts: SecondaryMap<Inst, InstNode>,
+    insts: EntityMap<Inst, InstNode>,
 
     /// First EBB in the layout order, or `None` when no EBBs have been laid out.
     first_ebb: Option<Ebb>,
@@ -45,8 +45,8 @@ impl Layout {
     /// Create a new empty `Layout`.
     pub fn new() -> Self {
         Self {
-            ebbs: SecondaryMap::new(),
-            insts: SecondaryMap::new(),
+            ebbs: EntityMap::new(),
+            insts: EntityMap::new(),
             first_ebb: None,
             last_ebb: None,
         }
@@ -782,8 +782,8 @@ mod tests {
     impl<'f> LayoutCursor<'f> {
         /// Create a new `LayoutCursor` for `layout`.
         /// The cursor holds a mutable reference to `layout` for its entire lifetime.
-        pub fn new(layout: &'f mut Layout) -> Self {
-            Self {
+        pub fn new(layout: &'f mut Layout) -> LayoutCursor<'f> {
+            LayoutCursor {
                 layout,
                 pos: CursorPosition::Nowhere,
             }

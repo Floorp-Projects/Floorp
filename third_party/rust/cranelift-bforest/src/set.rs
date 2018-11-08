@@ -207,8 +207,12 @@ where
     C: Comparator<K>,
 {
     /// Create a cursor with a default (invalid) location.
-    fn new(container: &'a mut Set<K>, forest: &'a mut SetForest<K>, comp: &'a C) -> Self {
-        Self {
+    fn new(
+        container: &'a mut Set<K>,
+        forest: &'a mut SetForest<K>,
+        comp: &'a C,
+    ) -> SetCursor<'a, K, C> {
+        SetCursor {
             root: &mut container.root,
             pool: &mut forest.nodes,
             comp,
@@ -225,7 +229,6 @@ where
     ///
     /// If the cursor reaches the end, return `None` and leave the cursor at the off-the-end
     /// position.
-    #[cfg_attr(feature = "cargo-clippy", allow(should_implement_trait))]
     pub fn next(&mut self) -> Option<K> {
         self.path.next(self.pool).map(|(k, _)| k)
     }
@@ -354,7 +357,7 @@ where
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use super::super::NodeData;
     use super::*;
     use std::mem;

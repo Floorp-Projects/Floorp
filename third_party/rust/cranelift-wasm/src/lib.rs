@@ -12,25 +12,13 @@
 #![deny(missing_docs, trivial_numeric_casts, unused_extern_crates)]
 #![warn(unused_import_braces)]
 #![cfg_attr(feature = "std", deny(unstable_features))]
-#![cfg_attr(
-    feature = "clippy",
-    plugin(clippy(conf_file = "../../clippy.toml"))
-)]
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(new_without_default, new_without_default_derive)
-)]
+#![cfg_attr(feature = "clippy", plugin(clippy(conf_file = "../../clippy.toml")))]
+#![cfg_attr(feature = "cargo-clippy", allow(new_without_default, new_without_default_derive))]
 #![cfg_attr(
     feature = "cargo-clippy",
     warn(
-        float_arithmetic,
-        mut_mut,
-        nonminimal_bool,
-        option_map_unwrap_or,
-        option_map_unwrap_or_else,
-        print_stdout,
-        unicode_not_nfc,
-        use_self
+        float_arithmetic, mut_mut, nonminimal_bool, option_map_unwrap_or, option_map_unwrap_or_else,
+        print_stdout, unicode_not_nfc, use_self
     )
 )]
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -40,7 +28,6 @@ extern crate cranelift_codegen;
 #[macro_use]
 extern crate cranelift_entity;
 extern crate cranelift_frontend;
-#[cfg(test)]
 extern crate target_lexicon;
 extern crate wasmparser;
 
@@ -60,8 +47,7 @@ mod state;
 mod translation_utils;
 
 pub use environ::{
-    DummyEnvironment, FuncEnvironment, GlobalVariable, ModuleEnvironment, ReturnMode, WasmError,
-    WasmResult,
+    DummyEnvironment, FuncEnvironment, GlobalVariable, ModuleEnvironment, WasmError, WasmResult,
 };
 pub use func_translator::FuncTranslator;
 pub use module_translator::translate_module;
@@ -76,7 +62,6 @@ mod std {
 
     pub use self::alloc::string;
     pub use self::alloc::vec;
-    pub use core::convert;
     pub use core::fmt;
     pub use core::option;
     pub use core::{cmp, i32, str, u32};

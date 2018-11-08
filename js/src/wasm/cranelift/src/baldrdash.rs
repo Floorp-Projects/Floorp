@@ -16,6 +16,9 @@
 // Safe wrappers to the low-level ABI.  This re-exports all types in
 // baldrapi but none of the functions.
 
+// TODO: Should many u32 arguments and return values here really be
+// usize, to be more conventional?
+
 use baldrapi::CraneliftModuleEnvironment;
 use cranelift_codegen::binemit::CodeOffset;
 use cranelift_codegen::cursor::{Cursor, FuncCursor};
@@ -197,13 +200,13 @@ impl<'a> ModuleEnvironment<'a> {
         unsafe { baldrapi::env_func_is_import(self.env, func_index.index()) }
     }
     pub fn signature(&self, sig_index: SignatureIndex) -> FuncTypeWithId {
-        FuncTypeWithId(unsafe { baldrapi::env_signature(self.env, sig_index.index()) })
+        FuncTypeWithId(unsafe { baldrapi::env_signature(self.env, sig_index) })
     }
     pub fn table(&self, table_index: TableIndex) -> TableDesc {
-        TableDesc(unsafe { baldrapi::env_table(self.env, table_index.index()) })
+        TableDesc(unsafe { baldrapi::env_table(self.env, table_index) })
     }
     pub fn global(&self, global_index: GlobalIndex) -> GlobalDesc {
-        GlobalDesc(unsafe { baldrapi::env_global(self.env, global_index.index()) })
+        GlobalDesc(unsafe { baldrapi::env_global(self.env, global_index) })
     }
     pub fn min_memory_length(&self) -> i64 {
         self.env.min_memory_length as i64

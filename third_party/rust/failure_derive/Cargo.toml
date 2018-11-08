@@ -12,7 +12,7 @@
 
 [package]
 name = "failure_derive"
-version = "0.1.3"
+version = "0.1.2"
 authors = ["Without Boats <woboats@gmail.com>"]
 build = "build.rs"
 description = "derives for the failure crate"
@@ -30,10 +30,10 @@ version = "0.4.8"
 version = "0.6.3"
 
 [dependencies.syn]
-version = "0.15.0"
+version = "0.14.4"
 
 [dependencies.synstructure]
-version = "0.10.0"
+version = "0.9.0"
 [dev-dependencies.failure]
 version = "0.1.0"
 

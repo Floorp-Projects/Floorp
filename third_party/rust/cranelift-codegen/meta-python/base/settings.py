@@ -27,6 +27,30 @@ enable_verifier = BoolSetting(
         """,
         default=True)
 
+call_conv = EnumSetting(
+        """
+        Default calling convention:
+
+        - fast: not-ABI-stable convention for best performance
+        - cold: not-ABI-stable convention for infrequently executed code
+        - system_v: System V-style convention used on many platforms
+        - windows_fastcall: Windows "fastcall" convention, also used for
+                            x64 and ARM
+        - baldrdash: SpiderMonkey WebAssembly convention
+        - probestack: specialized convention for the probestack function
+
+        The default calling convention may be overridden by individual
+        functions.
+        """,
+
+        'fast',
+        'cold',
+        'system_v',
+        'windows_fastcall',
+        'baldrdash',
+        'probestack'
+)
+
 # Note that Cranelift doesn't currently need an is_pie flag, because PIE is
 # just PIC where symbols can't be pre-empted, which can be expressed with the
 # `colocated` flag on external functions and global values.
@@ -39,6 +63,16 @@ colocated_libcalls = BoolSetting(
         Generate code that assumes that libcalls can be declared "colocated",
         meaning they will be defined along with the current function, such that
         they can use more efficient addressing.
+        """)
+
+return_at_end = BoolSetting(
+        """
+        Generate functions with at most a single return instruction at the
+        end of the function.
+
+        This guarantees that functions do not have any internal return
+        instructions. Either they never return, or they have a single return
+        instruction at the end.
         """)
 
 avoid_div_traps = BoolSetting(
@@ -131,14 +165,5 @@ probestack_size_log2 = NumSetting(
         The default is 12, which translates to a size of 4096.
         """,
         default=12)
-
-#
-# Jump table options.
-#
-jump_tables_enabled = BoolSetting(
-        """
-        Enable the use of jump tables in generated machine code.
-        """,
-        default=True)
 
 group.close(globals())
