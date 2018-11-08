@@ -243,7 +243,7 @@
 
 button.open-accessibility-inspector,
 button.open-inspector {
-  mask: url("chrome://devtools/skin/images/devtools-reps/open-inspector.svg") no-repeat;
+  mask: url("../../../shared/components/reps/images/open-inspector.svg") no-repeat;
   display: inline-block;
   background-color: var(--comment-node-color);
   height: 16px;
@@ -264,7 +264,7 @@ button.open-inspector {
 /* Jump to definition button */
 
 button.jump-definition {
-  mask: url("chrome://devtools/skin/images/devtools-reps/jump-definition.svg") no-repeat;
+  mask: url("../../../shared/components/reps/images/jump-definition.svg") no-repeat;
   display: inline-block;
   background-color: var(--comment-node-color);
   height: 16px;
@@ -338,7 +338,7 @@ button.jump-definition {
 }
 
 .tree-node img.arrow {
-  mask: url("chrome://devtools/skin/images/devtools-components/arrow.svg") no-repeat;
+  mask: url("../images/arrow.svg") no-repeat;
   mask-size: 100%;
   width: 9px;
   height: 9px;
@@ -1035,39 +1035,39 @@ img.result-item-icon {
 }
 
 img.domain {
-  mask: url("chrome://devtools/skin/images/debugger/domain.svg") no-repeat;
+  mask: url("../images/domain.svg") no-repeat;
 }
 
 img.folder {
-  mask: url("chrome://devtools/skin/images/debugger/folder.svg") no-repeat;
+  mask: url("../images/folder.svg") no-repeat;
 }
 
 img.coffeescript {
-  mask: url("chrome://devtools/skin/images/debugger/coffeescript.svg") no-repeat;
+  mask: url("../images/coffeescript.svg") no-repeat;
 }
 
 img.javascript {
-  mask: url("chrome://devtools/skin/images/debugger/javascript.svg") no-repeat;
+  mask: url("../images/javascript.svg") no-repeat;
 }
 
 img.tab {
-  mask: url("chrome://devtools/skin/images/debugger/tab.svg") no-repeat;
+  mask: url("../images/tab.svg") no-repeat;
 }
 
 img.react {
-  mask: url("chrome://devtools/skin/images/debugger/react.svg") no-repeat;
+  mask: url("../images/react.svg") no-repeat;
 }
 
 img.typescript {
-  mask: url("chrome://devtools/skin/images/debugger/typescript.svg") no-repeat;
+  mask: url("../images/typescript.svg") no-repeat;
 }
 
 img.extension {
-  mask: url("chrome://devtools/skin/images/debugger/extension.svg") no-repeat;
+  mask: url("../images/extension.svg") no-repeat;
 }
 
 img.file {
-  mask: url("chrome://devtools/skin/images/debugger/file.svg") no-repeat;
+  mask: url("../images/file.svg") no-repeat;
   width: 13px;
   height: 13px;
 }
@@ -1096,7 +1096,7 @@ img.result-item-icon {
 }
 
 img.arrow {
-  mask: url("chrome://devtools/skin/images/debugger/arrow.svg");
+  mask: url("../images/arrow.svg");
   margin-inline-end: 5px;
   margin-top: 3px;
   width: 9px;
@@ -1244,7 +1244,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 }
 
 .close-btn .close {
-  mask: url("chrome://devtools/skin/images/debugger/close.svg") no-repeat;
+  mask: url("../images/close.svg") no-repeat;
   mask-size: 100%;
   background-color: var(--theme-comment);
   width: 8px;
@@ -1862,7 +1862,7 @@ html .toggle-button.end.vertical svg {
 }
 
 .sources-list .managed-tree .tree .node img.blackBox {
-  mask: url("chrome://devtools/skin/images/debugger/blackBox.svg") no-repeat;
+  mask: url("../images/blackBox.svg") no-repeat;
   mask-size: 100%;
   background-color: var(--theme-highlight-blue);
   width: 13px;
@@ -2182,24 +2182,24 @@ menuseparator {
 }
 
 .source-icon.prettyPrint {
-  mask: url("chrome://devtools/skin/images/debugger/prettyPrint.svg") no-repeat;
+  mask: url("../images/prettyPrint.svg") no-repeat;
   mask-size: 100%;
   background: var(--theme-highlight-blue);
   fill: var(--theme-textbox-box-shadow);
 }
 
 .source-icon.vue {
-  background: url("chrome://devtools/skin/images/debugger/vuejs.svg") 1px 1px no-repeat;
+  background: url("../images/vuejs.svg") 1px 1px no-repeat;
   background-size: 15px;
 }
 
 .source-icon.angular {
-  background: url("chrome://devtools/skin/images/debugger/angular.svg") 1px 1px no-repeat;
+  background: url("../images/angular.svg") 1px 1px no-repeat;
   background-size: 13px 13px;
 }
 
 .source-icon.blackBox {
-  mask: url("chrome://devtools/skin/images/debugger/blackBox.svg") no-repeat;
+  mask: url("../images/blackBox.svg") no-repeat;
   mask-size: 100%;
   background: var(--theme-highlight-blue);
 }
@@ -2274,14 +2274,14 @@ menuseparator {
 }
 
 .source-footer > .commands > .action > img.prettyPrint {
-  mask: url("chrome://devtools/skin/images/debugger/prettyPrint.svg") no-repeat;
+  mask: url("../images/prettyPrint.svg") no-repeat;
   height: 16px;
   width: 16px;
   background: var(--theme-body-color);
 }
 
 .source-footer > .commands > .action > img.blackBox {
-  mask: url("chrome://devtools/skin/images/debugger/blackBox.svg") no-repeat;
+  mask: url("../images/blackBox.svg") no-repeat;
   height: 16px;
   width: 16px;
   background: var(--theme-body-color);
@@ -2682,7 +2682,7 @@ menuseparator {
 
 .call-site::before {
   content: "";
-  mask: url("chrome://devtools/skin/images/debugger/column-marker.svg") no-repeat 100% 100%;
+  mask: url("../images/column-marker.svg") no-repeat 100% 100%;
   mask-size: contain;
   display: inline-block;
   background-color: var(--blue-55);
@@ -2699,7 +2699,7 @@ menuseparator {
 
 .call-site-bp::before {
   content: "";
-  mask: url("chrome://devtools/skin/images/debugger/column-marker.svg") no-repeat 100% 100%;
+  mask: url("../images/column-marker.svg") no-repeat 100% 100%;
   mask-size: contain;
   display: inline-block;
   background-color: var(--blue-55);
@@ -2845,7 +2845,7 @@ html[dir="rtl"] .editor-mount {
   height: 12px;
   width: 9px;
   background-color: var(--gutter-hover-background-color);
-  mask: url("chrome://devtools/skin/images/debugger/breakpoint.svg") no-repeat;
+  mask: url("../images/breakpoint.svg") no-repeat;
   mask-size: auto 12px;
   mask-position: right;
 }
@@ -3819,42 +3819,42 @@ img.skipPausing {
 }
 
 .command-bar img.pause {
-  mask: url("chrome://devtools/skin/images/debugger/pause.svg") no-repeat;
+  mask: url("../images/pause.svg") no-repeat;
 }
 
 .command-bar img.stepOver {
-  mask: url("chrome://devtools/skin/images/debugger/stepOver.svg") no-repeat;
+  mask: url("../images/stepOver.svg") no-repeat;
 }
 
 .command-bar img.stepIn {
-  mask: url("chrome://devtools/skin/images/debugger/stepIn.svg") no-repeat;
+  mask: url("../images/stepIn.svg") no-repeat;
 }
 
 .command-bar img.stepOut {
-  mask: url("chrome://devtools/skin/images/debugger/stepOut.svg") no-repeat;
+  mask: url("../images/stepOut.svg") no-repeat;
 }
 
 .command-bar img.resume {
-  mask: url("chrome://devtools/skin/images/debugger/resume.svg") no-repeat;
+  mask: url("../images/resume.svg") no-repeat;
 }
 
 .command-bar img.rewind {
-  mask: url("chrome://devtools/skin/images/debugger/resume.svg") no-repeat;
+  mask: url("../images/resume.svg") no-repeat;
   transform: scaleX(-1);
 }
 
 .command-bar img.reverseStepOver {
-  mask: url("chrome://devtools/skin/images/debugger/stepOver.svg") no-repeat;
+  mask: url("../images/stepOver.svg") no-repeat;
   transform: scaleX(-1);
 }
 
 .command-bar img.reverseStepIn {
-  mask: url("chrome://devtools/skin/images/debugger/stepIn.svg") no-repeat;
+  mask: url("../images/stepIn.svg") no-repeat;
   transform: scaleX(-1);
 }
 
 .command-bar img.reverseStepOut {
-  mask: url("chrome://devtools/skin/images/debugger/stepOut.svg") no-repeat;
+  mask: url("../images/stepOut.svg") no-repeat;
   transform: scaleX(-1);
 }
 
@@ -3863,7 +3863,7 @@ img.skipPausing {
 }
 
 .command-bar img.shortcuts {
-  mask: url("chrome://devtools/skin/images/help.svg") no-repeat;
+  mask: url("../images/help.svg") no-repeat;
   mask-size: contain;
 }
 
@@ -3886,7 +3886,7 @@ img.skipPausing {
 }
 
 .command-bar .skipPausing {
-  mask: url("chrome://devtools/skin/images/debugger/disable-pausing.svg") no-repeat;
+  mask: url("../images/disable-pausing.svg") no-repeat;
   mask-size: 100%;
 }
 
@@ -4316,7 +4316,7 @@ html .welcomebox .toggle-button-end.collapsed {
 }
 
 .source-tab img.react {
-  mask: url("chrome://devtools/skin/images/debugger/react.svg") no-repeat;
+  mask: url("../images/react.svg") no-repeat;
   mask-size: 100%;
   height: 14px;
   width: 14px;
@@ -4333,7 +4333,7 @@ html .welcomebox .toggle-button-end.collapsed {
 }
 
 img.moreTabs {
-  mask: url("chrome://devtools/skin/images/command-chevron.svg") no-repeat;
+  mask: url("../images/command-chevron.svg") no-repeat;
   mask-size: 100%;
   width: 12px;
   height: 12px;
@@ -4461,19 +4461,19 @@ html[dir="rtl"] .dropdown {
 }
 
 .dropdown-icon.prettyPrint {
-  mask: url("chrome://devtools/skin/images/debugger/prettyPrint.svg") no-repeat;
+  mask: url("../images/prettyPrint.svg") no-repeat;
   mask-size: 100%;
   background: var(--theme-highlight-blue);
 }
 
 .dropdown-icon.blackBox {
-  mask: url("chrome://devtools/skin/images/debugger/blackBox.svg") no-repeat;
+  mask: url("../images/blackBox.svg") no-repeat;
   mask-size: 100%;
   background: var(--theme-highlight-blue);
 }
 
 .dropdown-icon.file {
-  mask: url("chrome://devtools/skin/images/debugger/file.svg") no-repeat;
+  mask: url("../images/file.svg") no-repeat;
   mask-size: 100%;
   margin-bottom: 7px;
 }

@@ -178,7 +178,6 @@ devtools.jar:
     skin/images/dock-side-left.svg (themes/images/dock-side-left.svg)
     skin/images/dock-side-right.svg (themes/images/dock-side-right.svg)
     skin/images/dock-undock.svg (themes/images/dock-undock.svg)
-    skin/images/jump-definition.svg (themes/images/jump-definition.svg)
     skin/floating-scrollbars-responsive-design.css (themes/floating-scrollbars-responsive-design.css)
     skin/inspector.css (themes/inspector.css)
     skin/images/profiler-stopwatch.svg (themes/images/profiler-stopwatch.svg)
@@ -248,31 +247,6 @@ devtools.jar:
     skin/images/settings.svg (themes/images/settings.svg)
     skin/images/lock.svg (themes/images/lock.svg)
 
-    # Debugger
-    skin/images/debugger/angular.svg (themes/images/debugger/angular.svg)
-    skin/images/debugger/arrow.svg (themes/images/debugger/arrow.svg)
-    skin/images/debugger/blackBox.svg (themes/images/debugger/blackBox.svg)
-    skin/images/debugger/breakpoint.svg (themes/images/debugger/breakpoint.svg)
-    skin/images/debugger/close.svg (themes/images/debugger/close.svg)
-    skin/images/debugger/coffeescript.svg (themes/images/debugger/coffeescript.svg)
-    skin/images/debugger/column-marker.svg (themes/images/debugger/column-marker.svg)
-    skin/images/debugger/disable-pausing.svg (themes/images/debugger/disable-pausing.svg)
-    skin/images/debugger/domain.svg (themes/images/debugger/domain.svg)
-    skin/images/debugger/extension.svg (themes/images/debugger/extension.svg)
-    skin/images/debugger/file.svg (themes/images/debugger/file.svg)
-    skin/images/debugger/folder.svg (themes/images/debugger/folder.svg)
-    skin/images/debugger/javascript.svg (themes/images/debugger/javascript.svg)
-    skin/images/debugger/pause.svg (themes/images/debugger/pause.svg)
-    skin/images/debugger/prettyPrint.svg (themes/images/debugger/prettyPrint.svg)
-    skin/images/debugger/react.svg (themes/images/debugger/react.svg)
-    skin/images/debugger/resume.svg (themes/images/debugger/resume.svg)
-    skin/images/debugger/stepIn.svg (themes/images/debugger/stepIn.svg)
-    skin/images/debugger/stepOut.svg (themes/images/debugger/stepOut.svg)
-    skin/images/debugger/stepOver.svg (themes/images/debugger/stepOver.svg)
-    skin/images/debugger/tab.svg (themes/images/debugger/tab.svg)
-    skin/images/debugger/typescript.svg (themes/images/debugger/typescript.svg)
-    skin/images/debugger/vuejs.svg (themes/images/debugger/vuejs.svg)
-
     # Netmonitor
     content/netmonitor/src/assets/styles/httpi.css (netmonitor/src/assets/styles/httpi.css)
     content/netmonitor/src/assets/styles/netmonitor.css (netmonitor/src/assets/styles/netmonitor.css)
@@ -294,7 +268,3 @@ devtools.jar:
     # Devtools-components
     skin/images/devtools-components/arrow.svg (themes/images/devtools-components/arrow.svg)
     skin/images/devtools-components/checkbox.svg (themes/images/devtools-components/checkbox.svg)
-
-    # Devtools-reps
-    skin/images/devtools-reps/jump-definition.svg (themes/images/devtools-reps/jump-definition.svg)
-    skin/images/devtools-reps/open-inspector.svg (themes/images/devtools-reps/open-inspector.svg)
