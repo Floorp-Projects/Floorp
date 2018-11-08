@@ -392,6 +392,12 @@ function startup() {
       frameScript: "chrome://geckoview/content/GeckoViewContentChild.js",
     },
   }, {
+    name: "GeckoViewMedia",
+    onEnable: {
+      resource: "resource://gre/modules/GeckoViewMedia.jsm",
+      frameScript: "chrome://geckoview/content/GeckoViewMediaChild.js",
+    },
+  }, {
     name: "GeckoViewNavigation",
     onInit: {
       resource: "resource://gre/modules/GeckoViewNavigation.jsm",
