@@ -141,7 +141,7 @@ interface nsITelemetry : nsISupports
   readonly attribute uint32_t lastShutdownDuration;
 
   /**
-   * The number of failed profile lock attempts that have occurred prior to 
+   * The number of failed profile lock attempts that have occurred prior to
    * successfully locking the profile
    */
   readonly attribute uint32_t failedProfileLockCount;
@@ -284,8 +284,6 @@ interface nsITelemetry : nsISupports
    *   add(int) - Adds an int value to the appropriate bucket
    *   snapshot() - Returns a snapshot of the histogram with the same data fields as in histogramSnapshots()
    *   clear() - Zeros out the histogram's buckets and sum. This is intended to be only used in tests.
-   *   dataset() - identifies what dataset this is in: DATASET_RELEASE_CHANNEL_OPTOUT or ...OPTIN.
-   *               This is intended to be only used in tests.
    */
   [implicit_jscontext]
   jsval getHistogramById(in ACString id);
@@ -311,8 +309,6 @@ interface nsITelemetry : nsISupports
    *   keys() - Returns an array with the string keys of the currently registered histograms
    *   clear() - Clears the registered histograms from this.
    *             This is intended to be only used in tests.
-   *   dataset() - identifies what dataset this is in: DATASET_RELEASE_CHANNEL_OPTOUT or ...OPTIN.
-   *               This is intended to be only used in tests.
    */
   [implicit_jscontext]
   jsval getKeyedHistogramById(in ACString id);
