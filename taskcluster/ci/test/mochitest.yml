@@ -229,6 +229,7 @@ mochitest-devtools-chrome:
             default: 5400
     chunks:
         by-test-platform:
+            linux64/debug: 12
             linux64-ccov/debug: 12
             windows10-64-ccov/debug: 10
             macosx64-ccov/debug: 15
