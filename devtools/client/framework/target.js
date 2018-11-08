@@ -518,9 +518,8 @@ TabTarget.prototype = {
 
     // Attach the target actor
     const attachBrowsingContextTarget = async () => {
-      const [response, targetFront] = await this._client.attachTarget(this._form.actor);
+      const [, targetFront] = await this._client.attachTarget(this._form.actor);
       this.activeTab = targetFront;
-      this.threadActor = response.threadActor;
 
       this.activeTab.on("tabNavigated", this._onTabNavigated);
       this._onFrameUpdate = packet => {
@@ -820,7 +819,6 @@ TabTarget.prototype = {
     this._root = null;
     this._title = null;
     this._url = null;
-    this.threadActor = null;
   },
 
   toString: function() {
