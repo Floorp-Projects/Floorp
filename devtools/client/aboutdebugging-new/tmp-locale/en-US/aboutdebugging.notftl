@@ -139,11 +139,13 @@ about-debugging-extension-manifest-link = Manifest URL
 
 # Text displayed for extensions in "runtime" pages, before displaying the extension's uuid.
 # UUIDs look like b293e463-481e-5148-a487-5aaf7a130429
-about-debugging-extension-uuid = Internal UUID
+about-debugging-extension-uuid =
+  .label = Internal UUID
 
 # Text displayed for extensions (temporary extensions only) in "runtime" pages, before
 # displaying the location of the temporary extension.
-about-debugging-extension-location = Location
+about-debugging-extension-location =
+  .label = Location
 
 # Text displayed for extensions in "runtime" pages, before displaying the extension's ID.
 # For instance "geckoprofiler@mozilla.com" or "{ed26ddcb-5611-4512-a89a-51b8db81cfb2}".
@@ -176,28 +178,29 @@ about-debugging-worker-action-start = Start
 
 # Displayed for service workers in runtime pages,
 # "Fetch" is an event type and should not be localized.
-about-debugging-worker-fetch = Fetch
+# The status is used to indicate whether the service worker is currently listening
+# or not to "fetch" events.
+about-debugging-worker-fetch =
+  .label = Fetch
+  .value =
+    { $status ->
+      [listening] Listening for fetch events
+      [not-listening] Not listening for fetch events
+    }
 
-# Displayed for service workers in runtime pages, after about-debugging-worker-fetch,
-# to indicate the service worker is currently listening to "fetch" events.
-# "Fetch" is an event type and should not be localized.
-about-debugging-worker-fetch-listening = Listening for fetch events
+# Displayed for service workers in runtime pages, to indicate the status of a worker.
+# For workers for which no registration could be found yet, they are considered as
+# 'registering' (only active registrations are visible from about:debugging).
+about-debugging-worker-status =
+  { $status ->
+    [running] Running
+    [stopped] Stopped
+    [registering] Registering
+  }
 
-# Displayed for service workers in runtime pages, after about-debugging-worker-fetch,
-# to indicate the service worker is not listening to "fetch" events.
-# "Fetch" is an event type and should not be localized.
-about-debugging-worker-fetch-not-listening = Not listening for fetch events
-
-# Displayed for service workers in runtime pages, for service workers in RUNNING state.
-about-debugging-worker-status-running = Running
-
-# Displayed for service workers in runtime pages, for service workers in STOPPED state.
-about-debugging-worker-status-stopped = Stopped
-
-# Displayed for service workers in runtime pages, for service workers for which no
-# registration could be found yet. Only active registrations are visible from
-# about:debugging, so such service workers are considered as registering.
-about-debugging-worker-status-registering = Registering
+# Displayed for service workers in runtime pages, to label the scope of a worker
+about-debugging-worker-scope =
+  .label = Scope
 
 # Displayed for runtime info in runtime pages.
 # { $name } is brand name such as "Firefox Nightly"
