@@ -70,30 +70,6 @@ decorate_task(
 );
 
 decorate_task(
-  AddonStudies.withStudies(),
-  async function testCloseDatabase() {
-    await AddonStudies.close();
-    const openSpy = sinon.spy(IndexedDB, "open");
-    sinon.assert.notCalled(openSpy);
-
-    // Using studies at all should open the database, but only once.
-    await AddonStudies.has("foo");
-    await AddonStudies.get("foo");
-    sinon.assert.calledOnce(openSpy);
-
-    // close can be called multiple times
-    await AddonStudies.close();
-    await AddonStudies.close();
-
-    // After being closed, new operations cause the database to be opened again
-    await AddonStudies.has("test-study");
-    sinon.assert.calledTwice(openSpy);
-
-    openSpy.restore();
-  }
-);
-
-decorate_task(
   AddonStudies.withStudies([
     addonStudyFactory({name: "test-study1"}),
     addonStudyFactory({name: "test-study2"}),

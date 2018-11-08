@@ -193,6 +193,8 @@ function getBrowserInfo() {
 function testTabCreated(tab) {
   testTabID = tab.id;
   postToControlServer("status", "opened new empty tab " + testTabID);
+  // update raptor browser toolbar icon text, for a visual indicator when debugging
+  ext.browserAction.setTitle({title: "Raptor RUNNING"});
 }
 
 function testTabRemoved(tab) {
@@ -484,7 +486,6 @@ function cleanUp() {
 }
 
 function runner() {
-  console.log("Welcome to Jurassic Park!");
   let config = getTestConfig();
   console.log("test name is: " + config.test_name);
   console.log("test settings url is: " + config.test_settings_url);
@@ -494,6 +495,8 @@ function runner() {
   browserName = config.browser;
   benchmarkPort = config.benchmark_port;
   postStartupDelay = config.post_startup_delay;
+
+  postToControlServer("status", "raptor runner.js is loaded!");
 
   getBrowserInfo().then(function() {
     getTestSettings().then(function() {
