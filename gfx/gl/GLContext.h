@@ -579,18 +579,7 @@ public:
 private:
     mutable GLenum mTopError = 0;
 
-    GLenum RawGetError() const {
-        return mSymbols.fGetError();
-    }
-
-    GLenum RawGetErrorAndClear() const {
-        GLenum err = RawGetError();
-
-        if (err)
-            while (RawGetError()) {}
-
-        return err;
-    }
+    GLenum RawGetErrorAndClear() const;
 
     GLenum FlushErrors() const {
         GLenum err = RawGetErrorAndClear();
