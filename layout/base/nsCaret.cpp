@@ -433,24 +433,14 @@ nsCaret::SchedulePaint(Selection* aSelection)
   } else {
     selection = GetSelection();
   }
-  nsINode* focusNode;
-  if (mOverrideContent) {
-    focusNode = mOverrideContent;
-  } else if (selection) {
-    focusNode = selection->GetFocusNode();
-  } else {
-    return;
+
+  int32_t frameOffset;
+  nsIFrame* frame = GetFrameAndOffset(
+    selection, mOverrideContent, mOverrideOffset, &frameOffset);
+
+  if (frame) {
+    frame->SchedulePaint();
   }
-  if (!focusNode || !focusNode->IsContent()) {
-    return;
-  }
-  nsIFrame* f = focusNode->AsContent()->GetPrimaryFrame();
-  if (!f) {
-    return;
-  }
-  // This may not be the correct continuation frame, but that's OK since we're
-  // just scheduling a paint of the window (or popup).
-  f->SchedulePaint();
 }
 
 void nsCaret::SetVisibilityDuringSelection(bool aVisibility)
