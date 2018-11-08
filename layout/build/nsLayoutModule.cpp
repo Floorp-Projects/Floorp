@@ -226,11 +226,12 @@ nsLayoutModuleInitialize()
     return;
   }
 
-  if (XRE_GetProcessType() == GeckoProcessType_GPU) {
-    // We mark the layout module as being available in the GPU process so that
-    // XPCOM's component manager initializes the power manager service, which
-    // is needed for nsAppShell. However, we don't actually need anything in
-    // the layout module itself.
+  if (XRE_GetProcessType() == GeckoProcessType_GPU ||
+      XRE_GetProcessType() == GeckoProcessType_RDD) {
+    // We mark the layout module as being available in the GPU and RDD
+    // process so that XPCOM's component manager initializes the power
+    // manager service, which is needed for nsAppShell. However, we
+    // don't actually need anything in the layout module itself.
     return;
   }
 
@@ -676,7 +677,8 @@ static void
 LayoutModuleDtor()
 {
   if (XRE_GetProcessType() == GeckoProcessType_GPU ||
-      XRE_GetProcessType() == GeckoProcessType_VR) {
+      XRE_GetProcessType() == GeckoProcessType_VR ||
+      XRE_GetProcessType() == GeckoProcessType_RDD) {
     return;
   }
 
