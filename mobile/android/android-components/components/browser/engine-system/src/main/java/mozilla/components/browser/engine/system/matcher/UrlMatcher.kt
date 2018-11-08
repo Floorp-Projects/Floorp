@@ -23,7 +23,6 @@ class UrlMatcher {
     private val whiteList: WhiteList?
     private val previouslyMatched = HashSet<String>()
     private val previouslyUnmatched = HashSet<String>()
-    private var blockWebfonts = true
 
     constructor(patterns: Array<String>) {
         categories = HashMap()
@@ -66,11 +65,6 @@ class UrlMatcher {
     }
 
     internal fun setCategoryEnabled(category: String, enabled: Boolean) {
-        if (WEBFONTS == category) {
-            blockWebfonts = enabled
-            return
-        }
-
         if (enabled) {
             if (enabledCategories.contains(category)) {
                 return
@@ -114,10 +108,6 @@ class UrlMatcher {
         val resourceHost = resourceURI.host
         val pageHost = pageURI.host
 
-        if (blockWebfonts && isWebFont(resourceURI)) {
-            return true
-        }
-
         if (previouslyUnmatched.contains(resourceURLString)) {
             return false
         }
@@ -151,13 +141,12 @@ class UrlMatcher {
         const val CONTENT = "Content"
         const val DISCONNECT = "Disconnect"
         const val SOCIAL = "Social"
-        const val WEBFONTS = "Webfonts"
         const val DEFAULT = "default"
 
         private val ignoredCategories = setOf("Legacy Disconnect", "Legacy Content")
         private val disconnectMoved = setOf("Facebook", "Twitter")
-        private val webfontExceptions = arrayOf(".woff2", ".woff", ".eot", ".ttf", ".otf")
-        private val supportedCategories = setOf(ADVERTISING, ANALYTICS, SOCIAL, CONTENT, WEBFONTS)
+        private val webfontExtensions = arrayOf(".woff2", ".woff", ".eot", ".ttf", ".otf")
+        private val supportedCategories = setOf(ADVERTISING, ANALYTICS, SOCIAL, CONTENT)
 
         /**
          * Creates a new matcher instance for the provided URL lists.
@@ -217,7 +206,7 @@ class UrlMatcher {
          */
         fun isWebFont(uri: Uri): Boolean {
             val path = uri.path ?: return false
-            return webfontExceptions.find { path.endsWith(it) } != null
+            return webfontExtensions.find { path.endsWith(it) } != null
         }
 
         private fun loadCategories(

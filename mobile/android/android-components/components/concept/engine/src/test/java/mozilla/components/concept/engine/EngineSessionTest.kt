@@ -463,15 +463,15 @@ class EngineSessionTest {
                 TrackingProtectionPolicy.AD,
                 TrackingProtectionPolicy.ANALYTICS,
                 TrackingProtectionPolicy.CONTENT,
-                TrackingProtectionPolicy.SOCIAL,
-                TrackingProtectionPolicy.WEBFONTS).categories)
+                TrackingProtectionPolicy.TEST,
+                TrackingProtectionPolicy.SOCIAL).categories)
 
         val policy = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD, TrackingProtectionPolicy.ANALYTICS)
         assertTrue(policy.contains(TrackingProtectionPolicy.AD))
         assertTrue(policy.contains(TrackingProtectionPolicy.ANALYTICS))
-        assertFalse(policy.contains(TrackingProtectionPolicy.WEBFONTS))
         assertFalse(policy.contains(TrackingProtectionPolicy.SOCIAL))
         assertFalse(policy.contains(TrackingProtectionPolicy.CONTENT))
+        assertFalse(policy.contains(TrackingProtectionPolicy.TEST))
     }
 
     @Test

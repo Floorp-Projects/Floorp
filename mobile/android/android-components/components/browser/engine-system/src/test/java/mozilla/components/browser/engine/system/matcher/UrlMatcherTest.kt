@@ -278,4 +278,15 @@ class UrlMatcherTest {
         verify(matcher).setCategoryEnabled("Analytics", true)
         verify(matcher).setCategoryEnabled("Content", true)
     }
+
+    @Test
+    fun webFontsNotBlockedByDefault() {
+        val matcher = UrlMatcher.createMatcher(
+                StringReader(BLOCK_LIST),
+                listOf(StringReader(OVERRIDES)),
+                StringReader(WHITE_LIST),
+                setOf(UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS, UrlMatcher.SOCIAL, UrlMatcher.CONTENT))
+
+        assertFalse(matcher.matches("http://mozilla.org/fonts/test.woff2", "http://mozilla.org"))
+    }
 }

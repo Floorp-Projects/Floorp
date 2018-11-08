@@ -41,6 +41,15 @@ permalink: /changelog/
 
   ```
 
+* **concept-engine**, **engine-system**:
+  * ⚠️ **This is a breaking change**
+  * Web font blocking is now controlled by an engine setting only. `TrackingProtectionPolicy.WEBFONTS` was removed:
+
+  ```Kotlin
+  // Disable web fonts by default
+  SystemEngine(runtime, DefaultSettings(webFontsEnabled = false))
+  ```
+
 # 0.30.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.29.0...v0.30.0),

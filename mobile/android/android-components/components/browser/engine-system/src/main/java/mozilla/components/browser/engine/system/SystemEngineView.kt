@@ -407,8 +407,7 @@ class SystemEngineView @JvmOverloads constructor(
                 UrlMatcher.ADVERTISING to TrackingProtectionPolicy.AD,
                 UrlMatcher.ANALYTICS to TrackingProtectionPolicy.ANALYTICS,
                 UrlMatcher.CONTENT to TrackingProtectionPolicy.CONTENT,
-                UrlMatcher.SOCIAL to TrackingProtectionPolicy.SOCIAL,
-                UrlMatcher.WEBFONTS to TrackingProtectionPolicy.WEBFONTS
+                UrlMatcher.SOCIAL to TrackingProtectionPolicy.SOCIAL
         )
 
         @Synchronized
