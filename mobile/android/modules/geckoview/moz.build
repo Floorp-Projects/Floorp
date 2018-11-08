@@ -12,7 +12,6 @@ EXTRA_JS_MODULES += [
     'GeckoViewChildModule.jsm',
     'GeckoViewConsole.jsm',
     'GeckoViewContent.jsm',
-    'GeckoViewMedia.jsm',
     'GeckoViewModule.jsm',
     'GeckoViewNavigation.jsm',
     'GeckoViewProgress.jsm',
