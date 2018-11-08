@@ -1469,18 +1469,6 @@ GeckoDriver.prototype.setWindowRect = async function(cmd) {
     });
   };
 
-  // Wait for the window position to change.
-  async function windowPosition(x, y) {
-    return new PollPromise((resolve, reject) => {
-      if ((x == win.screenX && y == win.screenY) ||
-          (win.screenX != origRect.x || win.screenY != origRect.y)) {
-        resolve();
-      } else {
-        reject();
-      }
-    });
-  }
-
   switch (WindowState.from(win.windowState)) {
     case WindowState.Fullscreen:
       await exitFullscreen(win);
@@ -1505,8 +1493,9 @@ GeckoDriver.prototype.setWindowRect = async function(cmd) {
     assert.integer(x);
     assert.integer(y);
 
-    win.moveTo(x, y);
-    await windowPosition(x, y);
+    if (win.screenX != x || win.screenY != y) {
+      win.moveTo(x, y);
+    }
   }
 
   return this.curBrowser.rect;
