@@ -414,7 +414,7 @@ def write_interface(iface, fd):
             realtype = a.realtype.nativeType('in')
             tmpl = attr_builtin_infallible_tmpl
 
-            if a.realtype.kind != 'builtin':
+            if a.realtype.kind != 'builtin' and a.realtype.kind != 'cenum':
                 assert realtype.endswith(' *'), "bad infallible type"
                 tmpl = attr_refcnt_infallible_tmpl
                 realtype = realtype[:-2]  # strip trailing pointer
