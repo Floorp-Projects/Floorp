@@ -61,7 +61,6 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
   (define testingReadPath2 (param "TESTING_READ_PATH2"))
   (define testingReadPath3 (param "TESTING_READ_PATH3"))
   (define testingReadPath4 (param "TESTING_READ_PATH4"))
-  (define parentPort (param "PARENT_PORT"))
   (define crashPort (param "CRASH_PORT"))
 
   (if (string=? should-log "TRUE")
@@ -188,8 +187,6 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
     (ipc-posix-name-regex #"^CFPBS:"))
 
   (allow signal (target self))
-  (if (string? parentPort)
-    (allow mach-lookup (global-name parentPort)))
   (if (string? crashPort)
     (allow mach-lookup (global-name crashPort)))
   (if (string=? hasWindowServer "TRUE")
