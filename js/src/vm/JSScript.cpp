@@ -3351,13 +3351,6 @@ JSScript::initFromFunctionBox(HandleScript script, frontend::FunctionBox* funbox
 /* static */ void
 JSScript::initFromModuleContext(HandleScript script)
 {
-    script->clearFlag(ImmutableFlags::FunHasExtensibleScope);
-    script->clearFlag(ImmutableFlags::NeedsHomeObject);
-    script->clearFlag(ImmutableFlags::IsDerivedClassConstructor);
-    script->funLength_ = 0;
-
-    script->clearFlag(ImmutableFlags::IsGenerator);
-
     // Since modules are only run once, mark the script so that initializers
     // created within it may be given more precise types.
     script->setTreatAsRunOnce();
