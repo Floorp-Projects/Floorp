@@ -465,6 +465,11 @@ NS_EVENT_MESSAGE(eToggle)
 // Dialog element events.
 NS_EVENT_MESSAGE(eClose)
 
+// Marquee element events.
+NS_EVENT_MESSAGE(eMarqueeBounce)
+NS_EVENT_MESSAGE(eMarqueeStart)
+NS_EVENT_MESSAGE(eMarqueeFinish)
+
 #ifdef UNDEF_NS_EVENT_MESSAGE_FIRST_LAST
 #undef UNDEF_NS_EVENT_MESSAGE_FIRST_LAST
 #undef NS_EVENT_MESSAGE_FIRST_LAST

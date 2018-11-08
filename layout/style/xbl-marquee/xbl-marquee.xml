@@ -16,35 +16,6 @@
       <stylesheet src="chrome://xbl-marquee/content/xbl-marquee.css"/>
     </resources>
     <implementation>
-      <property name="onstart" exposeToUntrustedContent="true">
-        <getter>
-          return this.getAttribute("onstart");
-        </getter>
-        <setter>
-          this._setEventListener("start", val, true);
-          this.setAttribute("onstart", val);
-        </setter>
-      </property>
-
-      <property name="onfinish" exposeToUntrustedContent="true">
-        <getter>
-          return this.getAttribute("onfinish");
-        </getter>
-        <setter>
-          this._setEventListener("finish", val, true);
-          this.setAttribute("onfinish", val);
-        </setter>
-      </property>
-
-      <property name="onbounce" exposeToUntrustedContent="true">
-        <getter>
-          return this.getAttribute("onbounce");
-        </getter>
-        <setter>
-          this._setEventListener("bounce", val, true);
-          this.setAttribute("onbounce", val);
-        </setter>
-      </property>
 
       <property name="outerDiv"
         onget="return document.getAnonymousNodes(this)[0]"
@@ -86,73 +57,6 @@
 
           this.runId = 0;
         ]]>
-        </body>
-      </method>
-
-      <method name="_setEventListener">
-        <parameter name="aName"/>
-        <parameter name="aValue"/>
-        <parameter name="aIgnoreNextCall"/>
-        <body>
-          <![CDATA[
-          // _setEventListener is only used for setting the attribute event
-          // handlers, which we want to ignore if our document is sandboxed
-          // without the allow-scripts keyword.
-          if (document.hasScriptsBlockedBySandbox) {
-            return true;
-          }
-
-          // attribute event handlers should only be added if the
-          // document's CSP allows it.
-          if (!document.inlineScriptAllowedByCSP) {
-            return true;
-          }
-
-          if (this._ignoreNextCall) {
-            return this._ignoreNextCall = false;
-          }
-
-          if (aIgnoreNextCall) {
-            this._ignoreNextCall = true;
-          }
-
-          if (typeof this["_on" + aName] == 'function') {
-            this.removeEventListener(aName, this["_on" + aName]);
-          }
-
-          switch (typeof aValue)
-          {
-            case "function":
-              this["_on" + aName] = aValue;
-              this.addEventListener(aName, this["_on" + aName]);
-            break;
-
-            case "string":
-              if (!aIgnoreNextCall) {
-                try {
-                  // Function Xrays make this simple and safe. \o/
-                  this["_on" + aName] = new window.Function("event", aValue);
-                }
-                catch(e) {
-                  return false;
-                }
-                this.addEventListener(aName, this["_on" + aName]);
-              }
-              else {
-                this["_on" + aName] = aValue;
-              }
-            break;
-
-            case "object":
-              this["_on" + aName] = aValue;
-            break;
-
-            default:
-              this._ignoreNextCall = false;
-              throw new Error("Invalid argument for Marquee::on" + aName);
-          }
-          return true;
-          ]]>
         </body>
       </method>
 
@@ -364,15 +268,6 @@
                 case "direction":
                   target._currentDirection = target.direction;
                   break;
-                case "onstart":
-                  target._setEventListener("start", newValue);
-                  break;
-                case "onfinish":
-                  target._setEventListener("finish", newValue);
-                  break;
-                case "onbounce":
-                  target._setEventListener("bounce", newValue);
-                  break;
               }
             }
           }
@@ -406,15 +301,11 @@
           var myThis = this;
           var lambda = function myScopeFunction() { if (myThis.init) myThis.init(); }
 
-          this._setEventListener("start", this.getAttribute("onstart"));
-          this._setEventListener("finish", this.getAttribute("onfinish"));
-          this._setEventListener("bounce", this.getAttribute("onbounce"));
-
           this._mutationObserver = new MutationObserver(this._mutationActor);
           this._mutationObserver.observe(this, { attributes: true,
             attributeOldValue: true,
             attributeFilter: ['loop', '', 'behavior',
-              'direction', 'width', 'height', 'onstart', 'onfinish', 'onbounce'] });
+              'direction', 'width', 'height'] });
 
           // init needs to be run after the page has loaded in order to calculate
           // the correct height/width

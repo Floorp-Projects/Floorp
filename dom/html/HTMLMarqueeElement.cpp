@@ -51,6 +51,14 @@ static const nsAttrValue::EnumTable kDirectionTable[] = {
 // Default direction value is "left".
 static const nsAttrValue::EnumTable* kDefaultDirection = &kDirectionTable[0];
 
+bool
+HTMLMarqueeElement::IsEventAttributeNameInternal(nsAtom *aName)
+{
+  return nsContentUtils::IsEventAttributeName(aName,
+                                              EventNameType_HTML |
+                                              EventNameType_HTMLMarqueeOnly);
+}
+
 JSObject*
 HTMLMarqueeElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
