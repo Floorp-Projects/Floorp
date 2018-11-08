@@ -5,7 +5,7 @@ const ENGINE_NAME = "engine-suggestions.xml";
 const SERVER_PORT = 9000;
 const SUGGEST_PREF = "browser.urlbar.suggest.searches";
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
-const SUGGEST_RESTRICT_TOKEN = "$";
+const SUGGEST_RESTRICT_TOKEN = "?";
 
 var suggestionsFn;
 var previousSuggestionsFn;
