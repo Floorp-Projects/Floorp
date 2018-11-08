@@ -16,7 +16,7 @@ add_task(async function() {
   is(button.getAttribute(kAnchorAttribute), "nav-bar-overflow-button",
      "Button (" + button.id + ") starts out with correct anchor");
 
-  let navbar = document.getElementById("nav-bar").customizationTarget;
+  let navbar = CustomizableUI.getCustomizationTarget(document.getElementById("nav-bar"));
   let onMouseUp = BrowserTestUtils.waitForEvent(navbar, "mouseup");
   simulateItemDrag(button, navbar);
   await onMouseUp;

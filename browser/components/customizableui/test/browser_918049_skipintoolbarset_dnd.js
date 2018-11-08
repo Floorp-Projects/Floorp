@@ -15,7 +15,7 @@ add_task(async function() {
   skippedItem.setAttribute("label", "Test");
   skippedItem.setAttribute("skipintoolbarset", "true");
   skippedItem.setAttribute("removable", "true");
-  navbar.customizationTarget.appendChild(skippedItem);
+  CustomizableUI.getCustomizationTarget(navbar).appendChild(skippedItem);
   let libraryButton = document.getElementById("library-button");
   await startCustomizing();
   await waitForElementShown(skippedItem);

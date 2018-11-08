@@ -223,7 +223,7 @@ impl SharedTextures {
             array_rgba8_linear: TextureArray::new(
                 ImageFormat::BGRA8,
                 TextureFilter::Linear,
-                16 * 4,
+                32, /* More than 32 layers breaks on mac intel drivers for some reason */
             ),
             // Used for image-rendering: crisp. This is mostly favicons, which
             // are small. Some other images use it too, but those tend to be

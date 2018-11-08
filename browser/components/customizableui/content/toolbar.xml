@@ -35,22 +35,6 @@
                               .map(node => node.id);
           CustomizableUI.registerToolbarNode(this, children);
       ]]></constructor>
-
-      <property name="customizationTarget" readonly="true">
-        <getter><![CDATA[
-          if (this._customizationTarget)
-            return this._customizationTarget;
-
-          let id = this.getAttribute("customizationtarget");
-          if (id)
-            this._customizationTarget = document.getElementById(id);
-
-          if (!this._customizationTarget)
-            this._customizationTarget = this;
-
-          return this._customizationTarget;
-        ]]></getter>
-      </property>
     </implementation>
   </binding>
 
