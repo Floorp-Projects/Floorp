@@ -248,9 +248,6 @@ nsIFrame*
 NS_NewStackFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame*
-NS_NewProgressMeterFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
-
-nsIFrame*
 NS_NewRangeFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame*
@@ -4183,7 +4180,6 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
     SIMPLE_XUL_CREATE(iframe, NS_NewSubDocumentFrame),
     SIMPLE_XUL_CREATE(editor, NS_NewSubDocumentFrame),
     SIMPLE_XUL_CREATE(browser, NS_NewSubDocumentFrame),
-    SIMPLE_XUL_CREATE(progressmeter, NS_NewProgressMeterFrame),
     SIMPLE_XUL_CREATE(splitter, NS_NewSplitterFrame),
 #endif /* MOZ_XUL */
     SIMPLE_XUL_CREATE(slider, NS_NewSliderFrame),
