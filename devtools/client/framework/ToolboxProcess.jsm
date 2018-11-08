@@ -151,6 +151,7 @@ BrowserToolboxProcess.prototype = {
     this.loader = new DevToolsLoader();
     this.loader.invisibleToDebugger = true;
     const { DebuggerServer } = this.loader.require("devtools/server/main");
+    const { SocketListener } = this.loader.require("devtools/shared/security/socket");
     this.debuggerServer = DebuggerServer;
     dumpn("Created a separate loader instance for the DebuggerServer.");
 
@@ -167,10 +168,13 @@ BrowserToolboxProcess.prototype = {
 
     const chromeDebuggingWebSocket =
       Services.prefs.getBoolPref("devtools.debugger.chrome-debugging-websocket");
-    const listener = this.debuggerServer.createListener();
-    listener.portOrPath = -1;
-    listener.webSocket = chromeDebuggingWebSocket;
+    const socketOptions = {
+      portOrPath: -1,
+      webSocket: chromeDebuggingWebSocket,
+    };
+    const listener = new SocketListener(this.debuggerServer, socketOptions);
     listener.open();
+    this.listener = listener;
     this.port = listener.port;
 
     if (!this.port) {
@@ -360,6 +364,10 @@ BrowserToolboxProcess.prototype = {
     // jsbrowserdebugger is not connected with a toolbox so we pass -1 as the
     // toolbox session id.
     this._telemetry.toolClosed("jsbrowserdebugger", -1, this);
+
+    if (this.listener) {
+      this.listener.close();
+    }
 
     if (this.debuggerServer) {
       this.debuggerServer.off("connectionchange", this._onConnectionChange);

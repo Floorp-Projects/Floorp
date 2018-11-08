@@ -13,7 +13,7 @@ add_task(async function() {
   // _setupDebuggerServer is from xpcshell-test's head.js
   /* global _setupDebuggerServer */
   let testResumed = false;
-  const DebuggerServer = _setupDebuggerServer([testFile.path], () => {
+  const { DebuggerServer } = _setupDebuggerServer([testFile.path], () => {
     testResumed = true;
   });
   const transport = DebuggerServer.connectPipe();
