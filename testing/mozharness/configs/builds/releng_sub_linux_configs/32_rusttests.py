@@ -17,7 +17,9 @@ config = {
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
         'TINDERBOX_OUTPUT': '1',
     },
+    'build_targets': ['pre-export', 'export', 'recurse_rusttests'],
     'mozconfig_variant': 'rusttests',
     'artifact_flag_build_variant_in_try': None,
+    'disable_package_metrics': True,
     #######################
 }
