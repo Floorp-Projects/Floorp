@@ -62,11 +62,18 @@ ReplayDebugger.prototype = {
   replayResumeBackward() { RecordReplayControl.resume(/* forward = */ false); },
   replayResumeForward() { RecordReplayControl.resume(/* forward = */ true); },
   replayTimeWarp: RecordReplayControl.timeWarp,
-  replayRecordingPosition: RecordReplayControl.recordingPosition,
 
   replayPause() {
     RecordReplayControl.pause();
     this._repaint();
+  },
+
+  replayCurrentExecutionPoint() {
+    return this._sendRequest({ type: "currentExecutionPoint" });
+  },
+
+  replayRecordingEndpoint() {
+    return this._sendRequest({ type: "recordingEndpoint" });
   },
 
   addDebuggee() {},

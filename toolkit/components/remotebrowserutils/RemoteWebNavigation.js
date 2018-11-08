@@ -65,10 +65,12 @@ RemoteWebNavigation.prototype = {
   gotoIndex(aIndex) {
     this._sendMessage("WebNavigation:GotoIndex", {index: aIndex});
   },
-  loadURI(aURI, aLoadFlags, aReferrer, aPostData, aHeaders) {
+  loadURI(aURI, aLoadFlags, aReferrer, aPostData, aHeaders,
+          aTriggeringPrincipal) {
     this.loadURIWithOptions(aURI, aLoadFlags, aReferrer,
                             Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-                            aPostData, aHeaders, null);
+                            aPostData, aHeaders, null,
+                            aTriggeringPrincipal);
   },
   loadURIWithOptions(aURI, aLoadFlags, aReferrer, aReferrerPolicy,
                      aPostData, aHeaders, aBaseURI, aTriggeringPrincipal) {
@@ -105,9 +107,8 @@ RemoteWebNavigation.prototype = {
       postData: aPostData ? Utils.serializeInputStream(aPostData) : null,
       headers: aHeaders ? Utils.serializeInputStream(aHeaders) : null,
       baseURI: aBaseURI ? aBaseURI.spec : null,
-      triggeringPrincipal: aTriggeringPrincipal
-                           ? Utils.serializePrincipal(aTriggeringPrincipal)
-                           : Services.scriptSecurityManager.createNullPrincipal({}),
+      triggeringPrincipal: Utils.serializePrincipal(
+          aTriggeringPrincipal || Services.scriptSecurityManager.createNullPrincipal({})),
       requestTime: Services.telemetry.msSystemNow(),
     });
   },
