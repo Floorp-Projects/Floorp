@@ -10543,7 +10543,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
                "Setting up a first-letter frame on a non-first block continuation?");
     auto parent = static_cast<nsContainerFrame*>(aParentFrame->FirstContinuation());
     if (MOZ_UNLIKELY(parent->IsLineFrame())) {
-      parent = parent->GetParent();
+      parent = static_cast<nsContainerFrame*>(parent->GetParent()->FirstContinuation());
     }
     parent->SetHasFirstLetterChild();
     aBlockFrame->SetProperty(nsContainerFrame::FirstLetterProperty(),
@@ -10664,7 +10664,7 @@ static void ClearHasFirstLetterChildFrom(nsContainerFrame* aParentFrame)
     static_cast<nsContainerFrame*>(aParentFrame->FirstContinuation());
   if (MOZ_UNLIKELY(parent->IsLineFrame())) {
     MOZ_ASSERT(!parent->HasFirstLetterChild());
-    parent = parent->GetParent();
+    parent = static_cast<nsContainerFrame*>(parent->GetParent()->FirstContinuation());
   }
   MOZ_ASSERT(parent->HasFirstLetterChild());
   parent->ClearHasFirstLetterChild();
