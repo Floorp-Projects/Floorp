@@ -4,6 +4,45 @@
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
+String GLEAN_PARSER_VERSION
+GLEAN_PARSER_VERSION = "0.6.0"
+
+/* This script runs a given Python module as a "main" module, like
+ * `python -m module`. However, it first checks that the installed
+ * package is at the desired version, and if not, upgrades it using `pip`.
+ */
+String runPythonScript = """
+import importlib
+import subprocess
+import sys
+
+module_name = sys.argv[1]
+expected_version = sys.argv[2]
+
+try:
+    module = importlib.import_module(module_name)
+except ImportError:
+    found_version = None
+else:
+    found_version = getattr(module, '__version__')
+
+if found_version != expected_version:
+    subprocess.check_call([
+        sys.executable,
+        '-m',
+        'pip',
+        'install',
+        '--upgrade',
+        f'{module_name}=={expected_version}'
+    ])
+
+subprocess.check_call([
+    sys.executable,
+    '-m',
+    module_name
+] + sys.argv[3:])
+"""
+
 // Configure the Python environments
 envs {
     bootstrapDirectory = new File(buildDir, 'bootstrap')
@@ -11,7 +50,7 @@ envs {
     pipInstallOptions = "--trusted-host pypi.python.org --no-cache-dir"
 
     // Setup a miniconda environment.
-    conda "Miniconda3", "Miniconda3-latest", "64", ["glean_parser==0.6.0"]
+    conda "Miniconda3", "Miniconda3-latest", "64", ["glean_parser==${GLEAN_PARSER_VERSION}"]
 }
 
 // Setup the python environment before the build starts.
@@ -47,8 +86,11 @@ android.applicationVariants.all { variant ->
         } else {
             commandLine "$buildDir/bootstrap/Miniconda3/bin/python"
         }
-        args "-m"
+
+        args "-c"
+        args runPythonScript
         args "glean_parser"
+        args GLEAN_PARSER_VERSION
         args "translate"
         args "-f"
         args "kotlin"
