@@ -41,7 +41,7 @@ impl CoordinateSystem {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, PartialOrd)]
+#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, PartialOrd, Ord)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct SpatialNodeIndex(pub usize);

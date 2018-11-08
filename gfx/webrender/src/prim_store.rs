@@ -11,7 +11,7 @@ use api::{DeviceIntSideOffsets, WorldPixel, BoxShadowClipMode, NormalBorder, Wor
 use api::{PicturePixel, RasterPixel, ColorDepth, LineStyle, LineOrientation, LayoutSizeAu, AuHelpers, LayoutVector2DAu};
 use app_units::Au;
 use border::{get_max_scale_for_border, build_border_instances, create_normal_border_prim};
-use clip_scroll_tree::{ClipScrollTree, CoordinateSystemId, SpatialNodeIndex};
+use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
 use clip::{ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem, ClipNodeCollector};
 use euclid::{TypedTransform3D, TypedRect, TypedScale};
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
@@ -121,6 +121,39 @@ pub enum CoordinateSpaceMapping<F, T> {
     Transform(TypedTransform3D<f32, F, T>),
 }
 
+impl<F, T> CoordinateSpaceMapping<F, T> {
+    pub fn new(
+        ref_spatial_node_index: SpatialNodeIndex,
+        target_node_index: SpatialNodeIndex,
+        clip_scroll_tree: &ClipScrollTree,
+    ) -> Self {
+        let spatial_nodes = &clip_scroll_tree.spatial_nodes;
+        let ref_spatial_node = &spatial_nodes[ref_spatial_node_index.0];
+        let target_spatial_node = &spatial_nodes[target_node_index.0];
+
+        if ref_spatial_node_index == target_node_index {
+            CoordinateSpaceMapping::Local
+        } else if ref_spatial_node.coordinate_system_id == target_spatial_node.coordinate_system_id {
+            CoordinateSpaceMapping::ScaleOffset(
+                ref_spatial_node.coordinate_system_relative_scale_offset
+                    .inverse()
+                    .accumulate(
+                        &target_spatial_node.coordinate_system_relative_scale_offset
+                    )
+            )
+        } else {
+            let transform = clip_scroll_tree.get_relative_transform(
+                target_node_index,
+                ref_spatial_node_index,
+            ).expect("bug: should have already been culled");
+
+            CoordinateSpaceMapping::Transform(
+                transform.with_source::<F>().with_destination::<T>()
+            )
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct SpaceMapper<F, T> {
     kind: CoordinateSpaceMapping<F, T>,
@@ -159,31 +192,13 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         clip_scroll_tree: &ClipScrollTree,
     ) {
         if target_node_index != self.current_target_spatial_node_index {
-            let spatial_nodes = &clip_scroll_tree.spatial_nodes;
-            let ref_spatial_node = &spatial_nodes[self.ref_spatial_node_index.0];
-            let target_spatial_node = &spatial_nodes[target_node_index.0];
             self.current_target_spatial_node_index = target_node_index;
 
-            self.kind = if self.ref_spatial_node_index == target_node_index {
-                CoordinateSpaceMapping::Local
-            } else if ref_spatial_node.coordinate_system_id == target_spatial_node.coordinate_system_id {
-                CoordinateSpaceMapping::ScaleOffset(
-                    ref_spatial_node.coordinate_system_relative_scale_offset
-                        .inverse()
-                        .accumulate(
-                            &target_spatial_node.coordinate_system_relative_scale_offset
-                        )
-                )
-            } else {
-                let transform = clip_scroll_tree.get_relative_transform(
-                    target_node_index,
-                    self.ref_spatial_node_index,
-                ).expect("bug: should have already been culled");
-
-                CoordinateSpaceMapping::Transform(
-                    transform.with_source::<F>().with_destination::<T>()
-                )
-            };
+            self.kind = CoordinateSpaceMapping::new(
+                self.ref_spatial_node_index,
+                target_node_index,
+                clip_scroll_tree,
+            );
         }
     }
 
@@ -580,13 +595,14 @@ impl PrimitiveTemplate {
 // Type definitions for interning primitives.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 pub struct PrimitiveDataMarker;
 
 pub type PrimitiveDataStore = intern::DataStore<PrimitiveKey, PrimitiveTemplate, PrimitiveDataMarker>;
 pub type PrimitiveDataHandle = intern::Handle<PrimitiveDataMarker>;
 pub type PrimitiveDataUpdateList = intern::UpdateList<PrimitiveKey>;
 pub type PrimitiveDataInterner = intern::Interner<PrimitiveKey, PrimitiveSceneData, PrimitiveDataMarker>;
+pub type PrimitiveUid = intern::ItemUid<PrimitiveDataMarker>;
 
 // Maintains a list of opacity bindings that have been collapsed into
 // the color of a single primitive. This is an important optimization
@@ -2137,8 +2153,6 @@ impl PrimitiveStore {
             Some((pic_context_for_children, mut pic_state_for_children, mut prim_list)) => {
                 // Mark whether this picture has a complex coordinate system.
                 let is_passthrough = pic_context_for_children.is_passthrough;
-                pic_state_for_children.has_non_root_coord_system |=
-                    prim_context.spatial_node.coordinate_system_id != CoordinateSystemId::root();
 
                 self.prepare_primitives(
                     &mut prim_list,
@@ -2258,8 +2272,6 @@ impl PrimitiveStore {
                     if pic_context.apply_local_clip_rect { "(applied)" } else { "" },
                 );
             }
-
-            pic_state.has_non_root_coord_system |= clip_chain.has_non_root_coord_system;
 
             prim_instance.combined_local_clip_rect = if pic_context.apply_local_clip_rect {
                 clip_chain.local_clip_rect
@@ -2454,11 +2466,6 @@ impl PrimitiveStore {
                 spatial_node,
                 prim_instance.spatial_node_index,
             );
-
-            // Mark whether this picture contains any complex coordinate
-            // systems, due to either the scroll node or the clip-chain.
-            pic_state.has_non_root_coord_system |=
-                spatial_node.coordinate_system_id != CoordinateSystemId::root();
 
             pic_state.map_local_to_pic.set_target_spatial_node(
                 prim_instance.spatial_node_index,
