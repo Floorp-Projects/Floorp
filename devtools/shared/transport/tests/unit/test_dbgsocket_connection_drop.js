@@ -50,10 +50,12 @@ var test_helper = async function(payload) {
   authenticator.allowConnection = () => {
     return DebuggerServer.AuthenticationResult.ALLOW;
   };
+  const socketOptions = {
+    authenticator,
+    portOrPath: -1,
+  };
 
-  const listener = DebuggerServer.createListener();
-  listener.portOrPath = -1;
-  listener.authenticator = authenticator;
+  const listener = new SocketListener(DebuggerServer, socketOptions);
   listener.open();
 
   const transport = await DebuggerClient.socketConnect({
