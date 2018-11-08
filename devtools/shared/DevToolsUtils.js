@@ -176,13 +176,18 @@ exports.defineLazyPrototypeGetter = function(object, key, callback) {
  * Safely get the property value from a Debugger.Object for a given key. Walks
  * the prototype chain until the property is found.
  *
- * @param Debugger.Object object
+ * @param {Debugger.Object} object
  *        The Debugger.Object to get the value from.
- * @param String key
+ * @param {String} key
  *        The key to look for.
+ * @param {Boolean} invokeUnsafeGetter (defaults to false).
+ *        Optional boolean to indicate if the function should execute unsafe getter
+ *        in order to retrieve its result's properties.
+ *        ⚠️ This should be set to true *ONLY* on user action as it may cause side-effects
+ *        in the content page ⚠️
  * @return Any
  */
-exports.getProperty = function(object, key) {
+exports.getProperty = function(object, key, invokeUnsafeGetters = false) {
   const root = object;
   while (object && exports.isSafeDebuggerObject(object)) {
     let desc;
@@ -198,7 +203,7 @@ exports.getProperty = function(object, key) {
         return desc.value;
       }
       // Call the getter if it's safe.
-      if (exports.hasSafeGetter(desc)) {
+      if (exports.hasSafeGetter(desc) || invokeUnsafeGetters === true) {
         try {
           return desc.get.call(root).return;
         } catch (e) {
@@ -303,6 +308,40 @@ exports.hasSafeGetter = function(desc) {
   let fn = desc.get;
   fn = fn && exports.unwrap(fn);
   return fn && fn.callable && fn.class == "Function" && fn.script === undefined;
+};
+
+/**
+ * Check that the property value from a Debugger.Object for a given key is an unsafe
+ * getter or not. Walks the prototype chain until the property is found.
+ *
+ * @param {Debugger.Object} object
+ *        The Debugger.Object to check on.
+ * @param {String} key
+ *        The key to look for.
+ * @param {Boolean} invokeUnsafeGetter (defaults to false).
+ *        Optional boolean to indicate if the function should execute unsafe getter
+ *        in order to retrieve its result's properties.
+ * @return Boolean
+ */
+exports.isUnsafeGetter = function(object, key) {
+  while (object && exports.isSafeDebuggerObject(object)) {
+    let desc;
+    try {
+      desc = object.getOwnPropertyDescriptor(key);
+    } catch (e) {
+      // The above can throw when the debuggee does not subsume the object's
+      // compartment, or for some WrappedNatives like Cu.Sandbox.
+      return false;
+    }
+    if (desc) {
+      if (Object.getOwnPropertyNames(desc).includes("get")) {
+        return !exports.hasSafeGetter(desc);
+      }
+    }
+    object = object.proto;
+  }
+
+  return false;
 };
 
 /**
