@@ -323,6 +323,7 @@
   background-size: contain;
 }
 
+
 #command-button-replay, #command-button-stop-replay {
   background-color: transparent;
 }
@@ -332,6 +333,10 @@
 }
 
 #command-button-stop-replay::before {
+  fill: var(--red-60);
+}
+
+#command-button-stop-replay.paused::before{
   fill: currentColor;
 }
 
