@@ -86,6 +86,16 @@ function windowForTarget(aTarget) {
   return aTarget.ownerDocument.defaultView;
 }
 
+function getBoundingClientRectRelativeToVisualViewport(aElement) {
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  var rect = aElement.getBoundingClientRect();
+  var offsetX = {}, offsetY = {};
+  utils.getVisualViewportOffsetRelativeToLayoutViewport(offsetX, offsetY);
+  rect.x -= offsetX.value;
+  rect.y -= offsetY.value;
+  return rect;
+}
+
 // Several event sythesization functions below (and their helpers) take a "target" 
 // parameter which may be either an element or a window. For such functions,
 // the target's "bounding rect" refers to the bounding client rect for an element,
@@ -100,7 +110,7 @@ function coordinatesRelativeToScreen(aX, aY, aTarget) {
   var scale = targetWindow.devicePixelRatio;
   var rect = (aTarget instanceof Window)
     ? {left: 0, top: 0} /* we don't use the width or height */
-    : aTarget.getBoundingClientRect();
+    : getBoundingClientRectRelativeToVisualViewport(aTarget);
   return {
     x: (targetWindow.mozInnerScreenX + rect.left + aX) * scale,
     y: (targetWindow.mozInnerScreenY + rect.top + aY) * scale

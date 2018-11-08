@@ -23,9 +23,9 @@ function* test(testDriver) {
   // notification) resumes the test.
 
   // Scroll down to the iframe. Do it in two drags instead of one in case the
-  // device screen is short
-  yield synthesizeNativeTouchDrag(document.body, 10, 400, 0, -350);
-  yield synthesizeNativeTouchDrag(document.body, 10, 400, 0, -350);
+  // device screen is short.
+  yield synthesizeNativeTouchDrag(window, 10, 400, 0, -350);
+  yield synthesizeNativeTouchDrag(window, 10, 400, 0, -350);
   // Now the top of the visible area should be at y=700 of the top-level page,
   // so if the screen is >= 500px tall, the entire iframe should be visible, at
   // least vertically.
@@ -37,11 +37,9 @@ function* test(testDriver) {
   yield flushApzRepaints(testDriver);
   is(window.scrollY, 0, "Main-thread scroll position is still at 0");
 
-  // Scroll the iframe by 300px. Note that since the main-thread scroll position
-  // is still 0, the subframe's getBoundingClientRect is going to be off by
-  // 700 pixels, so we compensate for that here.
+  // Scroll the iframe by 300px.
   var subframe = document.getElementById('subframe');
-  yield synthesizeNativeTouchDrag(subframe, 10, 200 - 700, 0, -300);
+  yield synthesizeNativeTouchDrag(subframe, 10, 200, 0, -300);
 
   // Remove the observer, we don't need it any more.
   SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd", false);
