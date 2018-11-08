@@ -17,8 +17,10 @@ namespace mozilla {
 class CubebDeviceEnumerator final
 {
 public:
-  CubebDeviceEnumerator();
-  ~CubebDeviceEnumerator();
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CubebDeviceEnumerator)
+
+  static already_AddRefed<CubebDeviceEnumerator> GetInstance();
+  static void Shutdown();
   // This method returns a list of all the input and output audio devices
   // available on this machine.
   // This method is safe to call from all threads.
@@ -30,6 +32,8 @@ public:
   DeviceInfoFromID(CubebUtils::AudioDeviceID aID);
 
 private:
+  CubebDeviceEnumerator();
+  ~CubebDeviceEnumerator();
   // Static function called by cubeb when the audio input device list changes
   // (i.e. when a new device is made available, or non-available). This
   // re-binds to the MediaEngineWebRTC that instantiated this
@@ -45,6 +49,8 @@ private:
   // list each time instead of relying on automatic invalidation of the cache by
   // cubeb itself. Set in the constructor and then can be access on any thread.
   bool mManualInvalidation;
+
+  static StaticRefPtr<CubebDeviceEnumerator> sInstance;
 };
 
 }
