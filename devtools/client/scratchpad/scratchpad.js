@@ -2088,10 +2088,8 @@ ScratchpadTarget.consoleFor = ScratchpadTab.consoleFor;
 
 ScratchpadTarget.prototype = extend(ScratchpadTab.prototype, {
   _attach() {
-    if (this._target.isRemote) {
-      return Promise.resolve(this._target);
-    }
-    return this._target.attach().then(() => this._target);
+    // We return a promise here to match the typing of ScratchpadWindow._attach.
+    return Promise.resolve(this._target);
   },
 });
 
