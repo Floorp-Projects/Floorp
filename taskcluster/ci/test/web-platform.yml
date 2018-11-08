@@ -88,7 +88,11 @@ web-platform-tests-reftests:
     description: "Web platform reftest run"
     suite: web-platform-tests-reftests
     treeherder-symbol: W(Wr)
-    chunks: 6
+    chunks:
+        by-test-platform:
+            macosx.*: 1
+            default: 6
+
     e10s:
         by-test-platform:
             linux32/debug: both
@@ -112,7 +116,10 @@ web-platform-tests-reftests-headless:
     description: "Web platform reftest headless run"
     suite: web-platform-tests-reftests
     treeherder-symbol: W(WrH)
-    chunks: 6
+    chunks:
+        by-test-platform:
+            macosx.*: 1
+            default: 6
     e10s:
         by-test-platform:
             linux32/debug: both
