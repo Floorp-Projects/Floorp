@@ -54,6 +54,8 @@ private:
   ~ColumnSetWrapperFrame() override = default;
 
 #ifdef DEBUG
+  static void AssertColumnSpanWrapperSubtreeIsSane(const nsIFrame* aFrame);
+
   // True if frame constructor has finished building this frame and all of
   // its descendants.
   bool mFinishedBuildingColumns = false;
