@@ -77,6 +77,7 @@ import mozcrash
 import mozfile
 import mozinfo
 from mozprofile import Profile
+from mozprofile.cli import parse_preferences
 from mozrunner.utils import get_stack_fixer_function
 
 # --------------------------------------------------------------
@@ -951,7 +952,7 @@ class XPCShellTests(object):
         if self.mozInfo is None:
             self.mozInfo = os.path.join(self.testharnessdir, "mozinfo.json")
 
-    def buildPrefsFile(self):
+    def buildPrefsFile(self, extraPrefs):
         # Create the prefs.js file
         profile_data_dir = os.path.join(SCRIPT_DIR, 'profile_data')
 
@@ -975,6 +976,10 @@ class XPCShellTests(object):
         for name in base_profiles:
             path = os.path.join(profile_data_dir, name)
             profile.merge(path, interpolation=interpolation)
+
+        # add command line prefs
+        prefs = parse_preferences(extraPrefs)
+        profile.set_preferences(prefs)
 
         self.prefsFile = os.path.join(profile.profile, 'user.js')
 
@@ -1280,7 +1285,7 @@ class XPCShellTests(object):
         self.todoCount = 0
 
         self.setAbsPath()
-        self.buildPrefsFile()
+        self.buildPrefsFile(options.get('extraPrefs') or [])
         self.buildXpcsRunArgs()
 
         self.event = Event()

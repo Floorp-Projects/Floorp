@@ -23,7 +23,7 @@ from mochitest_options import MochitestArgumentParser
 from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_slice
 from mozdevice import ADBAndroid, ADBTimeoutError
-from mozprofile.cli import parse_key_value
+from mozprofile.cli import parse_key_value, parse_preferences
 import mozfile
 import mozinfo
 
@@ -243,7 +243,7 @@ class RobocopTestRunner(MochitestDesktop):
             'mochikit@mozilla.org',
         ])
 
-        self.extraPrefs = self.parseExtraPrefs(self.options.extraPrefs)
+        self.extraPrefs = parse_preferences(self.options.extraPrefs)
         if self.options.testingModulesDir:
             try:
                 self.device.push(self.options.testingModulesDir, self.remoteModulesDir)
