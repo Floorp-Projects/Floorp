@@ -1,4 +1,8 @@
 job-defaults:
+    serviceworker-e10s:
+        by-test-platform:
+            linux64/debug: both
+            default: false
     mozharness:
         script:
             by-test-platform:
