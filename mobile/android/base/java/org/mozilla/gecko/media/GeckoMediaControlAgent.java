@@ -541,7 +541,16 @@ public class GeckoMediaControlAgent {
         }
 
         void unregisterReceiver(Context context) {
-            context.unregisterReceiver(HeadSetStateReceiver.this);
+            try {
+                // TODO investigate why the receiver would not be registered - bug 1505685
+                context.unregisterReceiver(HeadSetStateReceiver.this);
+            } catch (IllegalArgumentException e) {
+                if (AppConstants.RELEASE_OR_BETA) {
+                    Log.w(LOGTAG, "bug 1505685", e);
+                } else {
+                    throw e;
+                }
+            }
         }
 
         @Override
