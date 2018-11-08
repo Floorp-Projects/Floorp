@@ -76,6 +76,8 @@ ReplayDebugger.prototype = {
     return this._sendRequest({ type: "recordingEndpoint" });
   },
 
+  replayIsRecording: RecordReplayControl.childIsRecording,
+
   addDebuggee() {},
   removeAllDebuggees() {},
 
@@ -382,6 +384,14 @@ ReplayDebugger.prototype = {
     this._breakpointKindSetter("ForcedPause", handler,
                                () => { this._repaint();
                                        handler.call(this, this.getNewestFrame()); });
+  },
+
+  get replayingOnPositionChange() {
+    return this._breakpointKindGetter("PositionChange");
+  },
+  set replayingOnPositionChange(handler) {
+    this._breakpointKindSetter("PositionChange", handler,
+                               () => { handler.call(this); });
   },
 
   getNewConsoleMessage() {
