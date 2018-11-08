@@ -1,8 +1,10 @@
 //! Cranelift DSL classes.
 //!
 //! This module defines the classes that are used to define Cranelift
-//! instructions and other entitties.
+//! instructions and other entities.
 
+pub mod isa;
+pub mod regs;
 pub mod types;
 
 /// Convert the string `s` to CamelCase.
