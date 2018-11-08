@@ -5452,9 +5452,6 @@ var TabContextMenu = {
     document.getElementById("context_closeTab").hidden = multiselectionContext;
     document.getElementById("context_closeSelectedTabs").hidden = !multiselectionContext;
 
-    // Disable "Close Tab Options" if all tabs are selected
-    document.getElementById("context_closeTabOptions").disabled = gBrowser.allTabsSelected();
-
     // Hide "Bookmark Tab" for multiselection.
     // Update its state if visible.
     let bookmarkTab = document.getElementById("context_bookmarkTab");
