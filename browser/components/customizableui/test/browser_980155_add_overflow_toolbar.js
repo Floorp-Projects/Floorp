@@ -26,10 +26,10 @@ add_task(async function addOverflowingToolbar() {
   }
 
   isnot(toolbarNode.overflowable, null, "Toolbar should have overflowable controller");
-  isnot(toolbarNode.customizationTarget, null, "Toolbar should have customization target");
-  isnot(toolbarNode.customizationTarget, toolbarNode, "Customization target should not be toolbar node");
+  isnot(CustomizableUI.getCustomizationTarget(toolbarNode), null, "Toolbar should have customization target");
+  isnot(CustomizableUI.getCustomizationTarget(toolbarNode), toolbarNode, "Customization target should not be toolbar node");
 
-  let oldChildCount = toolbarNode.customizationTarget.childElementCount;
+  let oldChildCount = CustomizableUI.getCustomizationTarget(toolbarNode).childElementCount;
   let overflowableList = document.getElementById(kToolbarName + "-overflow-list");
   let oldOverflowCount = overflowableList.childElementCount;
 
@@ -38,7 +38,7 @@ add_task(async function addOverflowingToolbar() {
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await waitForCondition(() => toolbarNode.hasAttribute("overflowing"));
   ok(toolbarNode.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
-  ok(toolbarNode.customizationTarget.childElementCount < oldChildCount, "Should have fewer children.");
+  ok(CustomizableUI.getCustomizationTarget(toolbarNode).childElementCount < oldChildCount, "Should have fewer children.");
   ok(overflowableList.childElementCount > oldOverflowCount, "Should have more overflowed widgets.");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);

@@ -232,11 +232,11 @@ add_task(async function() {
   // navbar has "settled"
   await waitForCondition(() => {
     return navbar.hasAttribute("overflowing") &&
-      navbar.customizationTarget.lastElementChild.getAttribute("overflows") == "false";
+      CustomizableUI.getCustomizationTarget(navbar).lastElementChild.getAttribute("overflows") == "false";
   });
 
   // Find last widget that doesn't allow overflowing
-  let nonOverflowing = navbar.customizationTarget.lastElementChild;
+  let nonOverflowing = CustomizableUI.getCustomizationTarget(navbar).lastElementChild;
   is(nonOverflowing.getAttribute("overflows"), "false", "Last child is expected to not allow overflowing");
   isnot(nonOverflowing.getAttribute("skipintoolbarset"), "true", "Last child is expected to not be skipintoolbarset");
 

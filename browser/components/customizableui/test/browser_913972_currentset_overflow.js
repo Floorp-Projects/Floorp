@@ -15,12 +15,13 @@ add_task(async function() {
   let originalWindowWidth = window.outerWidth;
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
-  let oldChildCount = navbar.customizationTarget.childElementCount;
+  let navbarTarget = CustomizableUI.getCustomizationTarget(navbar);
+  let oldChildCount = navbarTarget.childElementCount;
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should still be in default state when overflowing.");
-  ok(navbar.customizationTarget.childElementCount < oldChildCount, "Should have fewer children.");
+  ok(navbarTarget.childElementCount < oldChildCount, "Should have fewer children.");
   window.resizeTo(originalWindowWidth, window.outerHeight);
   await waitForCondition(() => !navbar.hasAttribute("overflowing"));
   ok(!navbar.hasAttribute("overflowing"), "Should no longer have an overflowing toolbar.");
@@ -29,14 +30,14 @@ add_task(async function() {
   // Verify actual physical placements match those of the placement array:
   let placementCounter = 0;
   let placements = CustomizableUI.getWidgetIdsInArea(CustomizableUI.AREA_NAVBAR);
-  for (let node of navbar.customizationTarget.children) {
+  for (let node of navbarTarget.children) {
     if (node.getAttribute("skipintoolbarset") == "true") {
       continue;
     }
     is(placements[placementCounter++], node.id, "Nodes should match after overflow");
   }
   is(placements.length, placementCounter, "Should have as many nodes as expected");
-  is(navbar.customizationTarget.childElementCount, oldChildCount, "Number of nodes should match");
+  is(navbarTarget.childElementCount, oldChildCount, "Number of nodes should match");
 });
 
 // Enter and exit customization mode, check that default state is correct.
