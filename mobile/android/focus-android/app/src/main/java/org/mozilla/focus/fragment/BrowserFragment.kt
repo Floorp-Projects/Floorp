@@ -676,7 +676,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         }
     }
 
-    internal fun showCrashReporter(crash: Crash) {
+    private fun showCrashReporter(crash: Crash) {
         val fragmentManager = requireActivity().supportFragmentManager
 
         Log.e("crash:", crash.toString())
@@ -707,7 +707,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         urlView?.text = requireContext().getString(R.string.tab_crash_report_title)
     }
 
-    internal fun hideCrashReporter() {
+    private fun hideCrashReporter() {
         val fragmentManager = requireActivity().supportFragmentManager
         val fragment = fragmentManager.findFragmentByTag(CrashReporterFragment.FRAGMENT_TAG)
                 ?: return
@@ -727,7 +727,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         }
     }
 
-    internal fun crashReporterIsVisible(): Boolean = requireActivity().supportFragmentManager.let {
+    private fun crashReporterIsVisible(): Boolean = requireActivity().supportFragmentManager.let {
         it.findFragmentByTag(CrashReporterFragment.FRAGMENT_TAG)?.isVisible ?: false
     }
 
@@ -1429,9 +1429,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
     }
 
     fun handleTabCrash(crash: Crash) {
-        Log.e("crashed!", crash.toString())
         showCrashReporter(crash)
-
     }
 
     companion object {

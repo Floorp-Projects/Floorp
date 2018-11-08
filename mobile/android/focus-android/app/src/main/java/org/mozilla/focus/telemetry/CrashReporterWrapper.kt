@@ -12,6 +12,7 @@ import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.MozillaSocorroService
 import mozilla.components.lib.crash.service.SentryService
 import org.mozilla.focus.BuildConfig
+import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.locale.LocaleManager
 import java.util.Locale
@@ -37,7 +38,7 @@ object CrashReporterWrapper {
         val supportedBuild = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
         if (!supportedBuild || BuildConfig.SENTRY_TOKEN.isEmpty()) return
 
-        val sentryDsn= BuildConfig.SENTRY_TOKEN
+        val sentryDsn = BuildConfig.SENTRY_TOKEN
 
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -49,7 +50,6 @@ object CrashReporterWrapper {
                 intent,
                 0)
 
-
         crashReporter = CrashReporter(
                 services = listOf(
                     SentryService(
@@ -58,6 +58,9 @@ object CrashReporterWrapper {
                         tags = createTags(context),
                         sendEventForNativeCrashes = true),
                     MozillaSocorroService(context, "Firefox Focus")
+                ),
+                promptConfiguration = CrashReporter.PromptConfiguration(
+                        appName = context.resources.getString(R.string.app_name)
                 ),
                 shouldPrompt = CrashReporter.Prompt.ALWAYS,
                 nonFatalCrashIntent = pendingIntent).install(context)

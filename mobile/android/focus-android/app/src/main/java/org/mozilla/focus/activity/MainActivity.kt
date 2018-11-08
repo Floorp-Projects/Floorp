@@ -186,7 +186,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
     override fun onNewIntent(unsafeIntent: Intent) {
         if (Crash.isCrashIntent(unsafeIntent)) {
-            val browserFragment = supportFragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
+            val browserFragment = supportFragmentManager
+                    .findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
             val crash = Crash.fromIntent(unsafeIntent)
 
             browserFragment?.handleTabCrash(crash)

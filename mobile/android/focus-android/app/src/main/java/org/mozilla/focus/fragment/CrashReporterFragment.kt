@@ -12,15 +12,13 @@ import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_crash_reporter.*
 import org.mozilla.focus.R
 
-
-class CrashReporterFragment: Fragment() {
-
+class CrashReporterFragment : Fragment() {
     var onCloseTabPressed: ((sendCrashReport: Boolean) -> Unit)? = null
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? = inflater.inflate(R.layout.fragment_crash_reporter, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
