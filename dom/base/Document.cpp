@@ -4301,6 +4301,13 @@ static void NotifyActivityChanged(nsISupports* aSupports, void* aUnused) {
       do_QueryInterface(aSupports));
   if (objectDocumentActivity) {
     objectDocumentActivity->NotifyOwnerDocumentActivityChanged();
+  } else {
+    nsCOMPtr<nsIImageLoadingContent> imageLoadingContent(
+        do_QueryInterface(aSupports));
+    if (imageLoadingContent) {
+      auto ilc = static_cast<nsImageLoadingContent*>(imageLoadingContent.get());
+      ilc->NotifyOwnerDocumentActivityChanged();
+    }
   }
 }
 

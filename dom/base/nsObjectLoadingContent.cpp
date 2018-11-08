@@ -927,6 +927,7 @@ void nsObjectLoadingContent::NotifyOwnerDocumentActivityChanged() {
   if (mInstanceOwner || mInstantiating) {
     QueueCheckPluginStopEvent();
   }
+  nsImageLoadingContent::NotifyOwnerDocumentActivityChanged();
 }
 
 // nsIRequestObserver

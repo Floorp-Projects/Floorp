@@ -225,6 +225,8 @@ DynamicImage::StartDecoding(uint32_t aFlags) { return NS_OK; }
 
 bool DynamicImage::StartDecodingWithResult(uint32_t aFlags) { return true; }
 
+bool DynamicImage::RequestDecodeWithResult(uint32_t aFlags) { return true; }
+
 NS_IMETHODIMP
 DynamicImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags) {
   return NS_OK;
