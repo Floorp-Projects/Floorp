@@ -575,11 +575,12 @@ BlockReflowInput::AddFloat(nsLineLayout*       aLineLayout,
   MOZ_ASSERT(aFloat->GetParent(), "float must have parent");
   MOZ_ASSERT(aFloat->GetParent()->IsFrameOfType(nsIFrame::eBlockFrame),
              "float's parent must be block");
-  MOZ_ASSERT(aFloat->GetParent() == mBlock ||
-             (aFloat->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT),
-             "float should be in this block unless it was marked as "
-             "pushed float");
-  if (aFloat->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
+  if (aFloat->HasAnyStateBits(NS_FRAME_IS_PUSHED_FLOAT) ||
+      aFloat->GetParent() != mBlock) {
+    MOZ_ASSERT(aFloat->HasAnyStateBits(NS_FRAME_IS_PUSHED_FLOAT | NS_FRAME_FIRST_REFLOW),
+               "float should be in this block unless it was marked as "
+               "pushed float, or just inserted");
+    MOZ_ASSERT(aFloat->GetParent()->FirstContinuation() == mBlock->FirstContinuation());
     // If, in a previous reflow, the float was pushed entirely to
     // another column/page, we need to steal it back.  (We might just
     // push it again, though.)  Likewise, if that previous reflow
@@ -588,8 +589,7 @@ BlockReflowInput::AddFloat(nsLineLayout*       aLineLayout,
     //
     // For more about pushed floats, see the comment above
     // nsBlockFrame::DrainPushedFloats.
-    nsBlockFrame *floatParent =
-      static_cast<nsBlockFrame*>(aFloat->GetParent());
+    auto* floatParent = static_cast<nsBlockFrame*>(aFloat->GetParent());
     floatParent->StealFrame(aFloat);
 
     aFloat->RemoveStateBits(NS_FRAME_IS_PUSHED_FLOAT);
