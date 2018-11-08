@@ -431,7 +431,7 @@ add_task(async function custom_context_menus() {
   is(widget.getAttribute("context"), "", "Should not have own context menu when in the panel.");
   is(widget.getAttribute("wrapped-context"), expectedContext, "Should keep own context menu wrapped now that we're in the panel.");
 
-  simulateItemDrag(widget, document.getElementById("nav-bar").customizationTarget);
+  simulateItemDrag(widget, CustomizableUI.getCustomizationTarget(document.getElementById("nav-bar")));
   is(widget.getAttribute("context"), "", "Should not have own context menu when back in toolbar because we're still customizing.");
   is(widget.getAttribute("wrapped-context"), expectedContext, "Should keep own context menu wrapped now that we're back in the toolbar.");
 
