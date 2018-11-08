@@ -92,9 +92,8 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
     }
 
     pub fn compile(&mut self) -> CodegenResult<()> {
-        let orig_size = self.context.compile(&*self.isa)?;
-        let size = self.remove_return_inst(orig_size) as usize;
-        self.binemit(size)
+        let size = self.context.compile(&*self.isa)?;
+        self.binemit(size as usize)
     }
 
     /// Translate the WebAssembly code to Cranelift IR.
@@ -117,37 +116,6 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
         info!("Translated wasm function {}.", func.index);
         debug!("Content: {}", self.context.func.display(&*self.isa));
         Ok(wsig)
-    }
-
-    /// Remove the trailing return instruction from the current function to make room for a custom
-    /// epilogue.
-    ///
-    /// Return the new function size in bytes, adjusted from size.
-    fn remove_return_inst(&mut self, size: CodeOffset) -> CodeOffset {
-        // Get the last instruction in the function.
-        let mut pos = FuncCursor::new(&mut self.context.func);
-
-        // Move to the bottom of the last EBB in the function.
-        pos.prev_ebb().expect("empty function");
-
-        // Move to the last instruction in the last EBB.
-        let inst = pos.prev_inst().expect("last EBB has not terminator");
-
-        // TODO There might be an issue here, if there can be more than one
-        // IR returns per IR function.
-
-        if pos.func.dfg[inst].opcode().is_return() {
-            let enc = pos.func.encodings[inst];
-            let ret_size = self.isa.encoding_info().bytes(enc);
-            // Remove the return instruction. This leaves the IR in an invalid state where the last
-            // EBB has no terminator. The code emitter shouldn't mind this. If it does want to
-            // verify the IR in the future, we could use a zero-sized return encoding instead.
-            pos.remove_inst();
-            return size - ret_size;
-        }
-
-        // Function doesn't have a return instruction.
-        size
     }
 
     /// Emit binary machine code to `emitter`.

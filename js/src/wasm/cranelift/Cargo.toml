@@ -8,9 +8,9 @@ crate-type = ["rlib"]
 name = "baldrdash"
 
 [dependencies]
-cranelift-codegen = "0.20.0"
-cranelift-wasm = "0.20.1"
-target-lexicon = "0.0.3"
+cranelift-codegen = "0.23.0"
+cranelift-wasm = "0.23.0"
+target-lexicon = "0.2.0"
 log = { version = "0.4.4", default-features = false, features = ["release_max_level_info"] }
 env_logger = "0.5.6"
 
