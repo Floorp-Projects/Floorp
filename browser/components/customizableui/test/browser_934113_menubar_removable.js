@@ -13,7 +13,7 @@ add_task(async function() {
   // Force the menu to be shown.
   const kAutohide = menubar.getAttribute("autohide");
   menubar.setAttribute("autohide", "false");
-  simulateItemDrag(menuItems, navbar.customizationTarget);
+  simulateItemDrag(menuItems, CustomizableUI.getCustomizationTarget(navbar));
 
   is(getAreaWidgetIds("nav-bar").indexOf("menubar-items"), -1, "Menu bar shouldn't be in the navbar.");
   ok(!navbar.querySelector("#menubar-items"), "Shouldn't find menubar items in the navbar.");
