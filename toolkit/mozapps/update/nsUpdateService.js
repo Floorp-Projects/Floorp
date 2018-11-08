@@ -1706,6 +1706,11 @@ UpdateService.prototype = {
   observe: function AUS_observe(subject, topic, data) {
     switch (topic) {
       case "post-update-processing":
+        // This pref was not cleared out of profiles after it stopped being used
+        // (Bug 1420514), so clear it out on the next update to avoid confusion
+        // regarding its use.
+        Services.prefs.clearUserPref("app.update.enabled");
+
         if (readStatusFile(getUpdatesDir()) == STATE_SUCCEEDED) {
           // After a successful update the post update preference needs to be
           // set early during startup so applications can perform post update
