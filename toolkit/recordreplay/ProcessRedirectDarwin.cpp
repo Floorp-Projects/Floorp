@@ -70,7 +70,8 @@ namespace recordreplay {
   MACRO(shm_open, RR_SaveRvalHadErrorNegative)                   \
   MACRO(socket, RR_SaveRvalHadErrorNegative)                     \
   MACRO(kqueue, RR_SaveRvalHadErrorNegative)                     \
-  MACRO(pipe, RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<0, 2 * sizeof(int)>>) \
+  MACRO(pipe, RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<0, 2 * sizeof(int)>>, \
+        nullptr, nullptr, Preamble_SetError)                     \
   MACRO(close, RR_SaveRvalHadErrorNegative)                      \
   MACRO(__close_nocancel, RR_SaveRvalHadErrorNegative)           \
   MACRO(mkdir, RR_SaveRvalHadErrorNegative)                      \
@@ -92,7 +93,7 @@ namespace recordreplay {
   MACRO(issetugid, RR_ScalarRval)                                \
   MACRO(__gettid, RR_ScalarRval)                                 \
   MACRO(getpid, nullptr, Preamble_getpid)                        \
-  MACRO(fcntl, RR_SaveRvalHadErrorNegative, Preamble_fcntl)      \
+  MACRO(fcntl, RR_SaveRvalHadErrorNegative, Preamble_fcntl, nullptr, MiddlemanPreamble_fcntl) \
   MACRO(getattrlist, RR_SaveRvalHadErrorNegative<RR_WriteBuffer<2, 3>>) \
   MACRO(fstat$INODE64,                                           \
         RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<1, sizeof(struct stat)>>, \
@@ -1081,6 +1082,23 @@ Preamble_fcntl(CallArguments* aArguments)
     MOZ_CRASH();
   }
   return PreambleResult::Redirect;
+}
+
+static PreambleResult
+MiddlemanPreamble_fcntl(CallArguments* aArguments)
+{
+  auto& cmd = aArguments->Arg<1, size_t>();
+  switch (cmd) {
+  case F_SETFL:
+  case F_SETFD:
+  case F_SETLK:
+  case F_SETLKW:
+    break;
+  default:
+    MOZ_CRASH();
+  }
+  aArguments->Rval<ssize_t>() = 0;
+  return PreambleResult::Veto;
 }
 
 static PreambleResult
