@@ -4012,12 +4012,10 @@ nsComputedDOMStyle::GetTransformValue(nsCSSValueSharedList* aSpecifiedTransform)
   nsStyleTransformMatrix::TransformReferenceBox refBox(mInnerFrame,
                                                        nsSize(0, 0));
 
-   bool dummyBool;
    gfx::Matrix4x4 matrix =
      nsStyleTransformMatrix::ReadTransforms(aSpecifiedTransform->mHead,
                                             refBox,
-                                            float(mozilla::AppUnitsPerCSSPixel()),
-                                            &dummyBool);
+                                            float(mozilla::AppUnitsPerCSSPixel()));
 
   return MatrixToCSSValue(matrix);
 }

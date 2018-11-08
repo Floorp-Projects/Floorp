@@ -469,8 +469,7 @@ template <typename Operator>
 static void
 ProcessMatrixOperator(Matrix4x4& aMatrix,
                       const nsCSSValue::Array* aData,
-                      TransformReferenceBox& aRefBox,
-                      bool* aContains3dTransform)
+                      TransformReferenceBox& aRefBox)
 {
   MOZ_ASSERT(aData->Count() == 4, "Invalid array!");
 
@@ -500,8 +499,7 @@ ProcessMatrixOperator(Matrix4x4& aMatrix,
     float appUnitPerCSSPixel = AppUnitsPerCSSPixel();
     matrix = nsStyleTransformMatrix::ReadTransforms(list,
                                                     aRefBox,
-                                                    appUnitPerCSSPixel,
-                                                    aContains3dTransform);
+                                                    appUnitPerCSSPixel);
     return matrix;
   };
 
@@ -527,22 +525,17 @@ ProcessMatrixOperator(Matrix4x4& aMatrix,
 void
 ProcessInterpolateMatrix(Matrix4x4& aMatrix,
                          const nsCSSValue::Array* aData,
-                         TransformReferenceBox& aRefBox,
-                         bool* aContains3dTransform)
+                         TransformReferenceBox& aRefBox)
 {
-  ProcessMatrixOperator<Interpolate>(aMatrix, aData,
-                                     aRefBox,
-                                     aContains3dTransform);
+  ProcessMatrixOperator<Interpolate>(aMatrix, aData, aRefBox);
 }
 
 void
 ProcessAccumulateMatrix(Matrix4x4& aMatrix,
                         const nsCSSValue::Array* aData,
-                        TransformReferenceBox& aRefBox,
-                        bool* aContains3dTransform)
+                        TransformReferenceBox& aRefBox)
 {
-  ProcessMatrixOperator<Accumulate>(aMatrix, aData, aRefBox,
-                                    aContains3dTransform);
+  ProcessMatrixOperator<Accumulate>(aMatrix, aData, aRefBox);
 }
 
 /* Helper function to process a translatex function. */
@@ -785,10 +778,8 @@ ProcessPerspective(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 static void
 MatrixForTransformFunction(Matrix4x4& aMatrix,
                            const nsCSSValue::Array * aData,
-                           TransformReferenceBox& aRefBox,
-                           bool* aContains3dTransform)
+                           TransformReferenceBox& aRefBox)
 {
-  MOZ_ASSERT(aContains3dTransform);
   MOZ_ASSERT(aData, "Why did you want to get data from a null array?");
 
   /* Get the keyword for the transform. */
@@ -800,14 +791,12 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
     ProcessTranslateY(aMatrix, aData, aRefBox);
     break;
   case eCSSKeyword_translatez:
-    *aContains3dTransform = true;
     ProcessTranslateZ(aMatrix, aData);
     break;
   case eCSSKeyword_translate:
     ProcessTranslate(aMatrix, aData, aRefBox);
     break;
   case eCSSKeyword_translate3d:
-    *aContains3dTransform = true;
     ProcessTranslate3D(aMatrix, aData, aRefBox);
     break;
   case eCSSKeyword_scalex:
@@ -817,14 +806,12 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
     ProcessScaleY(aMatrix, aData);
     break;
   case eCSSKeyword_scalez:
-    *aContains3dTransform = true;
     ProcessScaleZ(aMatrix, aData);
     break;
   case eCSSKeyword_scale:
     ProcessScale(aMatrix, aData);
     break;
   case eCSSKeyword_scale3d:
-    *aContains3dTransform = true;
     ProcessScale3D(aMatrix, aData);
     break;
   case eCSSKeyword_skewx:
@@ -837,40 +824,32 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
     ProcessSkew(aMatrix, aData);
     break;
   case eCSSKeyword_rotatex:
-    *aContains3dTransform = true;
     ProcessRotateX(aMatrix, aData);
     break;
   case eCSSKeyword_rotatey:
-    *aContains3dTransform = true;
     ProcessRotateY(aMatrix, aData);
     break;
   case eCSSKeyword_rotatez:
-    *aContains3dTransform = true;
     MOZ_FALLTHROUGH;
   case eCSSKeyword_rotate:
     ProcessRotateZ(aMatrix, aData);
     break;
   case eCSSKeyword_rotate3d:
-    *aContains3dTransform = true;
     ProcessRotate3D(aMatrix, aData);
     break;
   case eCSSKeyword_matrix:
     ProcessMatrix(aMatrix, aData, aRefBox);
     break;
   case eCSSKeyword_matrix3d:
-    *aContains3dTransform = true;
     ProcessMatrix3D(aMatrix, aData, aRefBox);
     break;
   case eCSSKeyword_interpolatematrix:
-    ProcessMatrixOperator<Interpolate>(aMatrix, aData, aRefBox,
-                                       aContains3dTransform);
+    ProcessMatrixOperator<Interpolate>(aMatrix, aData, aRefBox);
     break;
   case eCSSKeyword_accumulatematrix:
-    ProcessMatrixOperator<Accumulate>(aMatrix, aData, aRefBox,
-                                      aContains3dTransform);
+    ProcessMatrixOperator<Accumulate>(aMatrix, aData, aRefBox);
     break;
   case eCSSKeyword_perspective:
-    *aContains3dTransform = true;
     ProcessPerspective(aMatrix, aData);
     break;
   default:
@@ -918,8 +897,7 @@ SetIdentityMatrix(nsCSSValue::Array* aMatrix)
 static void
 ReadTransformsImpl(Matrix4x4& aMatrix,
                    const nsCSSValueList* aList,
-                   TransformReferenceBox& aRefBox,
-                   bool* aContains3dTransform)
+                   TransformReferenceBox& aRefBox)
 {
   for (const nsCSSValueList* curr = aList; curr != nullptr; curr = curr->mNext) {
     const nsCSSValue &currElem = curr->mValue;
@@ -934,19 +912,17 @@ ReadTransformsImpl(Matrix4x4& aMatrix,
                  "Incoming function is too short!");
 
     /* Read in a single transform matrix. */
-    MatrixForTransformFunction(aMatrix, currElem.GetArrayValue(), aRefBox,
-                               aContains3dTransform);
+    MatrixForTransformFunction(aMatrix, currElem.GetArrayValue(), aRefBox);
   }
 }
 
 Matrix4x4
 ReadTransforms(const nsCSSValueList* aList,
                TransformReferenceBox& aRefBox,
-               float aAppUnitsPerMatrixUnit,
-               bool* aContains3dTransform)
+               float aAppUnitsPerMatrixUnit)
 {
   Matrix4x4 result;
-  ReadTransformsImpl(result, aList, aRefBox, aContains3dTransform);
+  ReadTransformsImpl(result, aList, aRefBox);
 
   float scale = float(AppUnitsPerCSSPixel()) / aAppUnitsPerMatrixUnit;
   result.PreScale(1/scale, 1/scale, 1/scale);
@@ -960,14 +936,12 @@ ReadTransforms(const nsCSSValueList* aIndividualTransforms,
                const Maybe<MotionPathData>& aMotion,
                const nsCSSValueList* aTransform,
                TransformReferenceBox& aRefBox,
-               float aAppUnitsPerMatrixUnit,
-               bool* aContains3dTransform)
+               float aAppUnitsPerMatrixUnit)
 {
   Matrix4x4 result;
 
   if (aIndividualTransforms) {
-    ReadTransformsImpl(result, aIndividualTransforms, aRefBox,
-                       aContains3dTransform);
+    ReadTransformsImpl(result, aIndividualTransforms, aRefBox);
   }
 
   if (aMotion.isSome()) {
@@ -981,7 +955,7 @@ ReadTransforms(const nsCSSValueList* aIndividualTransforms,
   }
 
   if (aTransform) {
-    ReadTransformsImpl(result, aTransform, aRefBox, aContains3dTransform);
+    ReadTransformsImpl(result, aTransform, aRefBox);
   }
 
   float scale = float(AppUnitsPerCSSPixel()) / aAppUnitsPerMatrixUnit;
@@ -1348,13 +1322,11 @@ GetScaleValue(const nsCSSValueSharedList* aList,
   MOZ_ASSERT(aList && aList->mHead);
   MOZ_ASSERT(aForFrame);
 
-  bool dontCareBool;
   TransformReferenceBox refBox(aForFrame);
   Matrix4x4 transform = ReadTransforms(
                           aList->mHead,
                           refBox,
-                          aForFrame->PresContext()->AppUnitsPerDevPixel(),
-                          &dontCareBool);
+                          aForFrame->PresContext()->AppUnitsPerDevPixel());
   Matrix transform2d;
   bool canDraw2D = transform.CanDraw2D(&transform2d);
   if (!canDraw2D) {
