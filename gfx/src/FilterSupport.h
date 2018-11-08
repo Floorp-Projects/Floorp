@@ -610,6 +610,17 @@ public:
                                 const nsTArray<nsIntRegion>& aInputExtents);
 };
 
+/**
+ * Create a 4x5 color matrix for the different ways to specify color matrices
+ * in SVG.
+ *
+ * Return false if the input is invalid or if the resulting matrix is the
+ * identity.
+ */
+bool
+ComputeColorMatrix(const ColorMatrixAttributes& aMatrixAttributes,
+                   float aOutMatrix[20]);
+
 } // namespace gfx
 } // namespace mozilla
 
