@@ -97,14 +97,12 @@ pub struct SceneRequest {
     pub view: DocumentView,
     pub font_instances: FontInstanceMap,
     pub output_pipelines: FastHashSet<PipelineId>,
-    pub scene_id: u64,
 }
 
 #[cfg(feature = "replay")]
 pub struct LoadScene {
     pub document_id: DocumentId,
     pub scene: Scene,
-    pub scene_id: u64,
     pub output_pipelines: FastHashSet<PipelineId>,
     pub font_instances: FontInstanceMap,
     pub view: DocumentView,
@@ -330,7 +328,6 @@ impl SceneBuilder {
                     &item.output_pipelines,
                     &self.config,
                     &mut new_scene,
-                    item.scene_id,
                     &mut self.picture_id_generator,
                     &mut item.doc_resources,
                 );
@@ -435,7 +432,6 @@ impl SceneBuilder {
                     &request.output_pipelines,
                     &self.config,
                     &mut new_scene,
-                    request.scene_id,
                     &mut self.picture_id_generator,
                     &mut doc.resources,
                 );

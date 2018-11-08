@@ -11,7 +11,7 @@ use app_units::Au;
 use border::{ensure_no_corner_overlap, BorderRadiusAu};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
 use box_shadow::get_max_scale_for_box_shadow;
-use clip_scroll_tree::{ClipScrollTree, CoordinateSystemId, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
+use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use ellipse::Ellipse;
 use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use gpu_types::{BoxShadowStretchMode};
@@ -97,13 +97,14 @@ use util::{extract_inner_rect_safe, project_rect, ScaleOffset};
 // Type definitions for interning clip nodes.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct ClipDataMarker;
 
 pub type ClipDataStore = intern::DataStore<ClipItemKey, ClipNode, ClipDataMarker>;
 pub type ClipDataHandle = intern::Handle<ClipDataMarker>;
 pub type ClipDataUpdateList = intern::UpdateList<ClipItemKey>;
 pub type ClipDataInterner = intern::Interner<ClipItemKey, ClipItemSceneData, ClipDataMarker>;
+pub type ClipUid = intern::ItemUid<ClipDataMarker>;
 
 // Result of comparing a clip node instance against a local rect.
 #[derive(Debug)]
@@ -256,7 +257,6 @@ struct ClipNodeInfo {
     conversion: ClipSpaceConversion,
     handle: ClipDataHandle,
     spatial_node_index: SpatialNodeIndex,
-    has_non_root_coord_system: bool,
 }
 
 impl ClipNode {
@@ -423,7 +423,6 @@ pub struct ClipChainInstance {
     // Combined clip rect for clips that are in the
     // same coordinate system as the primitive.
     pub local_clip_rect: LayoutRect,
-    pub has_non_root_coord_system: bool,
     pub has_non_local_clips: bool,
     // If true, this clip chain requires allocation
     // of a clip mask.
@@ -578,7 +577,6 @@ impl ClipStore {
         // Run through the clip nodes, and see which ones affect this prim region.
 
         let first_clip_node_index = self.clip_node_instances.len() as u32;
-        let mut has_non_root_coord_system = false;
         let mut has_non_local_clips = false;
         let mut needs_mask = false;
 
@@ -664,8 +662,6 @@ impl ClipStore {
                         spatial_node_index: node_info.spatial_node_index,
                     };
                     self.clip_node_instances.push(instance);
-
-                    has_non_root_coord_system |= node_info.has_non_root_coord_system;
                 }
             }
         }
@@ -679,7 +675,6 @@ impl ClipStore {
         // Return a valid clip chain instance
         Some(ClipChainInstance {
             clips_range,
-            has_non_root_coord_system,
             has_non_local_clips,
             local_clip_rect,
             pic_clip_rect,
@@ -1322,7 +1317,6 @@ fn add_clip_node_to_current_chain(
             conversion,
             handle,
             spatial_node_index: clip_spatial_node_index,
-            has_non_root_coord_system: clip_spatial_node.coordinate_system_id != CoordinateSystemId::root(),
         })
     }
 

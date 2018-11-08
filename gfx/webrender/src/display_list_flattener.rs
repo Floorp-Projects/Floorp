@@ -173,7 +173,6 @@ impl<'a> DisplayListFlattener<'a> {
         output_pipelines: &FastHashSet<PipelineId>,
         frame_builder_config: &FrameBuilderConfig,
         new_scene: &mut Scene,
-        scene_id: u64,
         picture_id_generator: &mut PictureIdGenerator,
         resources: &mut DocumentResources,
     ) -> FrameBuilder {
@@ -221,7 +220,6 @@ impl<'a> DisplayListFlattener<'a> {
             view.inner_rect,
             background_color,
             view.window_size,
-            scene_id,
             flattener,
         )
     }
@@ -1007,6 +1005,7 @@ impl<'a> DisplayListFlattener<'a> {
                     &mut self.picture_id_generator,
                     &mut self.prim_store,
                     &self.resources.prim_interner,
+                    &self.clip_store,
                 );
                 (sc.is_3d(), extra_instance)
             },
@@ -1141,6 +1140,7 @@ impl<'a> DisplayListFlattener<'a> {
             prim_list,
             stacking_context.spatial_node_index,
             max_clip,
+            &self.clip_store,
         );
         let leaf_pic_index = self.prim_store.create_picture(leaf_picture);
 
@@ -1185,6 +1185,7 @@ impl<'a> DisplayListFlattener<'a> {
                 prim_list,
                 stacking_context.spatial_node_index,
                 max_clip,
+                &self.clip_store,
             );
 
             current_pic_index = self.prim_store.create_picture(container_picture);
@@ -1211,6 +1212,7 @@ impl<'a> DisplayListFlattener<'a> {
                 prim_list,
                 stacking_context.spatial_node_index,
                 max_clip,
+                &self.clip_store,
             );
             let filter_pic_index = self.prim_store.create_picture(filter_picture);
             current_pic_index = filter_pic_index;
@@ -1244,6 +1246,7 @@ impl<'a> DisplayListFlattener<'a> {
                 prim_list,
                 stacking_context.spatial_node_index,
                 max_clip,
+                &self.clip_store,
             );
             let blend_pic_index = self.prim_store.create_picture(blend_picture);
             current_pic_index = blend_pic_index;
@@ -1585,6 +1588,7 @@ impl<'a> DisplayListFlattener<'a> {
                             prim_list,
                             pending_shadow.clip_and_scroll.spatial_node_index,
                             max_clip,
+                            &self.clip_store,
                         );
 
                         // Create the primitive to draw the shadow picture into the scene.
@@ -2307,6 +2311,7 @@ impl FlattenedStackingContext {
         picture_id_generator: &mut PictureIdGenerator,
         prim_store: &mut PrimitiveStore,
         prim_interner: &PrimitiveDataInterner,
+        clip_store: &ClipStore,
     ) -> Option<PrimitiveInstance> {
         if !self.is_3d() || self.primitives.is_empty() {
             return None
@@ -2335,6 +2340,7 @@ impl FlattenedStackingContext {
             prim_list,
             self.spatial_node_index,
             LayoutRect::max_rect(),
+            clip_store,
         );
 
         let pic_index = prim_store.create_picture(container_picture);

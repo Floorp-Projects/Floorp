@@ -21,13 +21,13 @@ use gpu_types::{BorderInstance, ImageSource, UvRectKind};
 use internal_types::{CacheTextureId, FastHashMap, LayerIndex, SavedTargetIndex};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
-use picture::PictureCacheKey;
 use prim_store::{PictureIndex, ImageCacheKey, LineDecorationCacheKey};
 #[cfg(feature = "debugger")]
 use print_tree::{PrintTreePrinter};
 use render_backend::FrameId;
 use resource_cache::{CacheItem, ResourceCache};
-use std::{cmp, ops, usize, f32, i32};
+use surface::SurfaceCacheKey;
+use std::{cmp, ops, mem, usize, f32, i32};
 use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use tiling::{RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind};
@@ -1076,7 +1076,7 @@ pub enum RenderTaskCacheKeyKind {
     Image(ImageCacheKey),
     #[allow(dead_code)]
     Glyph(GpuGlyphCacheKey),
-    Picture(PictureCacheKey),
+    Picture(SurfaceCacheKey),
     BorderEdge(BorderEdgeCacheKey),
     BorderCorner(BorderCornerCacheKey),
     LineDecoration(LineDecorationCacheKey),
@@ -1145,19 +1145,18 @@ impl RenderTaskCache {
         // Nonetheless, we should remove stale entries
         // from here so that this hash map doesn't
         // grow indefinitely!
-        let mut keys_to_remove = Vec::new();
+        let cache_entries = &mut self.cache_entries;
 
-        for (key, handle) in &self.map {
-            let entry = self.cache_entries.get(handle);
-            if !texture_cache.is_allocated(&entry.handle) {
-                keys_to_remove.push(key.clone())
+        self.map.retain(|_, handle| {
+            let retain = texture_cache.is_allocated(
+                &cache_entries.get(handle).handle,
+            );
+            if !retain {
+                let handle = mem::replace(handle, FreeListHandle::invalid());
+                cache_entries.free(handle);
             }
-        }
-
-        for key in &keys_to_remove {
-            let handle = self.map.remove(key).unwrap();
-            self.cache_entries.free(handle);
-        }
+            retain
+        });
     }
 
     pub fn update(
