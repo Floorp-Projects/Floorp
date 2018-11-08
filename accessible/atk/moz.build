@@ -59,6 +59,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     # Used in G_DEFINE_TYPE_EXTENDED macro, probably fixed in newer glib /
     # gobject headers. See bug 1243331 comment 3.
     CXXFLAGS += [
+        '-Wno-error=unused-function',
         '-Wno-error=shadow',
         '-Wno-unused-local-typedefs',
     ]
