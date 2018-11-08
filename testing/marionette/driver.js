@@ -3048,28 +3048,7 @@ GeckoDriver.prototype.maximizeWindow = async function() {
       break;
   }
 
-  const origSize = {
-    outerWidth: win.outerWidth,
-    outerHeight: win.outerHeight,
-  };
-
-  // Wait for the window size to change.
-  async function windowSizeChange() {
-    return new PollPromise((resolve, reject) => {
-      let curSize = {
-        outerWidth: win.outerWidth,
-        outerHeight: win.outerHeight,
-      };
-      if (curSize.outerWidth != origSize.outerWidth ||
-          curSize.outerHeight != origSize.outerHeight) {
-        resolve();
-      } else {
-        reject();
-      }
-    });
-  }
-
-  if (WindowState.from(win.windowState) != win.Maximized) {
+  if (WindowState.from(win.windowState) != WindowState.Maximized) {
     let cb;
     await new TimedPromise(resolve => {
       cb = new DebounceCallback(resolve);
@@ -3077,28 +3056,6 @@ GeckoDriver.prototype.maximizeWindow = async function() {
       win.maximize();
     }, {throws: null});
     win.removeEventListener("sizemodechange", cb);
-
-    // Transitioning into a window state is asynchronous on Linux,
-    // and we cannot rely on sizemodechange to accurately tell us when
-    // the transition has completed.
-    //
-    // To counter for this we wait for the window size to change, which
-    // it usually will.  On platforms where the transition is synchronous,
-    // the wait will have the cost of one iteration because the size
-    // will have changed as part of the transition.  Where the platform is
-    // asynchronous, the cost may be greater as we have to poll
-    // continuously until we see a change, but it ensures conformity in
-    // behaviour.
-    //
-    // Certain window managers, however, do not have a concept of
-    // maximised windows and here sizemodechange may never fire.  Indeed,
-    // if the window covers the maximum available screen real estate,
-    // the window size may also not change.  In this circumstance,
-    // which admittedly is a somewhat bizarre edge case, we assume that
-    // the timeout of waiting for sizemodechange to fire is sufficient
-    // to give the window enough time to transition itself into whatever
-    // form or shape the WM is programmed to give it.
-    await windowSizeChange();
   }
 
   return this.curBrowser.rect;
