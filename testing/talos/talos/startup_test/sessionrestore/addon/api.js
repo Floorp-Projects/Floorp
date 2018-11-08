@@ -13,10 +13,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   StartupPerformance: "resource:///modules/sessionstore/StartupPerformance.jsm",
+  TalosParentProfiler: "resource://talos-powers/TalosParentProfiler.jsm",
 });
-
-XPCOMUtils.defineLazyScriptGetter(this, "TalosParentProfiler",
-                                  "resource://talos-powers/TalosParentProfiler.js");
 
 /* globals ExtensionAPI */
 
