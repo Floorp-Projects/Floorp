@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {
+  DebounceCallback,
   IdlePromise,
   PollPromise,
   Sleep,
@@ -10,6 +11,29 @@ const {
 } = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
 const DEFAULT_TIMEOUT = 2000;
+
+/**
+ * Mimics nsITimer, but instead of using a system clock you can
+ * preprogram it to invoke the callback after a given number of ticks.
+ */
+class MockTimer {
+  constructor(ticksBeforeFiring) {
+    this.goal = ticksBeforeFiring;
+    this.ticks = 0;
+    this.cancelled = false;
+  }
+
+  initWithCallback(cb, timeout, type) {
+    this.ticks++;
+    if (this.ticks >= this.goal) {
+      cb();
+    }
+  }
+
+  cancel() {
+    this.cancelled = true;
+  }
+}
 
 add_test(function test_PollPromise_funcTypes() {
   for (let type of ["foo", 42, null, undefined, true, [], {}]) {
@@ -153,4 +177,39 @@ add_task(async function test_IdlePromise() {
   };
   await IdlePromise(win);
   ok(called);
+});
+
+add_test(function test_DebounceCallback_constructor() {
+  for (let cb of [42, "foo", true, null, undefined, [], {}]) {
+    Assert.throws(() => new DebounceCallback(cb), /TypeError/);
+  }
+  for (let timeout of ["foo", true, [], {}, () => {}]) {
+    Assert.throws(() => new DebounceCallback(() => {}, {timeout}), /TypeError/);
+  }
+  for (let timeout of [-1, 2.3, NaN]) {
+    Assert.throws(() => new DebounceCallback(() => {}, {timeout}), /RangeError/);
+  }
+
+  run_next_test();
+});
+
+add_task(async function test_DebounceCallback_repeatedCallback() {
+  let uniqueEvent = {};
+  let ncalls = 0;
+
+  let cb = ev => {
+    ncalls++;
+    equal(ev, uniqueEvent);
+  };
+  let debouncer = new DebounceCallback(cb);
+  debouncer.timer = new MockTimer(3);
+
+  // flood the debouncer with events,
+  // we only expect the last one to fire
+  debouncer.handleEvent(uniqueEvent);
+  debouncer.handleEvent(uniqueEvent);
+  debouncer.handleEvent(uniqueEvent);
+
+  equal(ncalls, 1);
+  ok(debouncer.timer.cancelled);
 });
