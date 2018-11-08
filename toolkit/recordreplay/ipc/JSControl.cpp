@@ -432,6 +432,14 @@ Middleman_HadRepaintFailure(JSContext* aCx, unsigned aArgc, Value* aVp)
   return true;
 }
 
+static bool
+Middleman_ChildIsRecording(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+  args.rval().setBoolean(parent::ActiveChildIsRecording());
+  return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Devtools Sandbox
 ///////////////////////////////////////////////////////////////////////////////
@@ -931,6 +939,7 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
   JS_FN("maybeSwitchToReplayingChild", Middleman_MaybeSwitchToReplayingChild, 0, 0),
   JS_FN("hadRepaint", Middleman_HadRepaint, 2, 0),
   JS_FN("hadRepaintFailure", Middleman_HadRepaintFailure, 0, 0),
+  JS_FN("childIsRecording", Middleman_ChildIsRecording, 0, 0),
   JS_FS_END
 };
 

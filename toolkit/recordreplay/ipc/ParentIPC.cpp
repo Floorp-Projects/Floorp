@@ -14,6 +14,7 @@
 #include "js/Proxy.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
 #include "InfallibleVector.h"
+#include "JSControl.h"
 #include "Monitor.h"
 #include "ProcessRecordReplay.h"
 #include "ProcessRedirect.h"
@@ -583,6 +584,10 @@ SpawnReplayingChildren()
   AssignMajorCheckpoint(gSecondReplayingChild, CheckpointId::First);
 }
 
+// Hit any installed breakpoints with the specified kind.
+static void HitBreakpointsWithKind(js::BreakpointPosition::Kind aKind,
+                                   bool aRecordingBoundary = false);
+
 // Change the current active child, and select a new role for the old one.
 static void
 SwitchActiveChild(ChildProcessInfo* aChild, bool aRecoverPosition = true)
@@ -607,6 +612,12 @@ SwitchActiveChild(ChildProcessInfo* aChild, bool aRecoverPosition = true)
   } else {
     oldActiveChild->RecoverToCheckpoint(oldActiveChild->MostRecentSavedCheckpoint());
     oldActiveChild->SetRole(MakeUnique<ChildRoleStandby>());
+  }
+
+  // Position state is affected when we switch between recording and
+  // replaying children.
+  if (aChild->IsRecording() != oldActiveChild->IsRecording()) {
+    HitBreakpointsWithKind(js::BreakpointPosition::Kind::PositionChange);
   }
 }
 
@@ -995,9 +1006,6 @@ static bool gChildExecuteBackward = false;
 // main thread. This will continue execution in the preferred direction.
 static bool gResumeForwardOrBackward = false;
 
-// Hit any breakpoints installed for forced pauses.
-static void HitForcedPauseBreakpoints(bool aRecordingBoundary);
-
 static void
 MaybeSendRepaintMessage()
 {
@@ -1050,7 +1058,8 @@ Resume(bool aForward)
     // Don't rewind if we are at the beginning of the recording.
     if (targetCheckpoint == CheckpointId::Invalid) {
       SendMessageToUIProcess("HitRecordingBeginning");
-      HitForcedPauseBreakpoints(true);
+      HitBreakpointsWithKind(js::BreakpointPosition::Kind::ForcedPause,
+                             /* aRecordingBoundary = */ true);
       return;
     }
 
@@ -1077,7 +1086,8 @@ Resume(bool aForward)
       MOZ_RELEASE_ASSERT(!gActiveChild->IsRecording());
       if (!gRecordingChild) {
         SendMessageToUIProcess("HitRecordingEndpoint");
-        HitForcedPauseBreakpoints(true);
+        HitBreakpointsWithKind(js::BreakpointPosition::Kind::ForcedPause,
+                               /* aRecordingBoundary = */ true);
         return;
       }
 
@@ -1142,7 +1152,7 @@ TimeWarp(const js::ExecutionPoint& aTarget)
 
   gActiveChild->WaitUntilPaused();
   SendMessageToUIProcess("TimeWarpFinished");
-  HitForcedPauseBreakpoints(false);
+  HitBreakpointsWithKind(js::BreakpointPosition::Kind::ForcedPause);
 }
 
 void
@@ -1188,6 +1198,9 @@ RecvHitCheckpoint(const HitCheckpointMessage& aMsg)
 {
   UpdateCheckpointTimes(aMsg);
   MaybeUpdateGraphicsAtCheckpoint(aMsg.mCheckpointId);
+
+  // Position state is affected when new checkpoints are reached.
+  HitBreakpointsWithKind(js::BreakpointPosition::Kind::PositionChange);
 
   // Resume either forwards or backwards. Break the resume off into a separate
   // runnable, to avoid starving any code already on the stack and waiting for
@@ -1247,11 +1260,11 @@ RecvHitBreakpoint(const HitBreakpointMessage& aMsg)
 }
 
 static void
-HitForcedPauseBreakpoints(bool aRecordingBoundary)
+HitBreakpointsWithKind(js::BreakpointPosition::Kind aKind, bool aRecordingBoundary)
 {
   Vector<uint32_t> breakpoints;
-  gActiveChild->GetMatchingInstalledBreakpoints([=](js::BreakpointPosition::Kind aKind) {
-      return aKind == js::BreakpointPosition::ForcedPause;
+  gActiveChild->GetMatchingInstalledBreakpoints([=](js::BreakpointPosition::Kind aInstalled) {
+      return aInstalled == aKind;
     }, breakpoints);
   if (!breakpoints.empty()) {
     uint32_t* newBreakpoints = new uint32_t[breakpoints.length()];
