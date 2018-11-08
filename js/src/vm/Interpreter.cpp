@@ -3778,9 +3778,8 @@ CASE(JSOP_TABLESWITCH)
     int32_t high = GET_JUMP_OFFSET(pc2);
 
     i = uint32_t(i) - uint32_t(low);
-    if ((uint32_t)i < (uint32_t)(high - low + 1)) {
-        pc2 += JUMP_OFFSET_LEN + JUMP_OFFSET_LEN * i;
-        len = GET_JUMP_OFFSET(pc2);
+    if (uint32_t(i) < uint32_t(high - low + 1)) {
+        len = script->tableSwitchCaseOffset(REGS.pc, uint32_t(i)) - script->pcToOffset(REGS.pc);
     }
     ADVANCE_AND_DISPATCH(len);
 }

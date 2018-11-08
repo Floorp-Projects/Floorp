@@ -2565,6 +2565,16 @@ class JSScript : public js::gc::TenuredCell
         return data_->resumeOffsets();
     }
 
+    uint32_t tableSwitchCaseOffset(jsbytecode* pc, uint32_t caseIndex) const {
+        MOZ_ASSERT(containsPC(pc));
+        MOZ_ASSERT(*pc == JSOP_TABLESWITCH);
+        uint32_t firstResumeIndex = GET_RESUMEINDEX(pc + 3 * JUMP_OFFSET_LEN);
+        return resumeOffsets()[firstResumeIndex + caseIndex];
+    }
+    jsbytecode* tableSwitchCasePC(jsbytecode* pc, uint32_t caseIndex) const {
+        return offsetToPC(tableSwitchCaseOffset(pc, caseIndex));
+    }
+
     bool hasLoops();
 
     uint32_t numNotes() const {
