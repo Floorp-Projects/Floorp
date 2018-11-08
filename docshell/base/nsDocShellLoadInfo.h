@@ -123,6 +123,9 @@ public:
   void
   SetMaybeResultPrincipalURI(mozilla::Maybe<nsCOMPtr<nsIURI>> const& aRPURI);
 
+  void SetIsFromProcessingFrameAttributes() { mIsFromProcessingFrameAttributes = true; }
+  bool GetIsFromProcessingFrameAttributes() { return mIsFromProcessingFrameAttributes; }
+
 protected:
   virtual ~nsDocShellLoadInfo();
 
@@ -209,6 +212,10 @@ protected:
   // Used for srcdoc loads to give view-source knowledge of the load's base URI
   // as this information isn't embedded in the load's URI.
   nsCOMPtr<nsIURI> mBaseURI;
+
+  // This will be true if this load is triggered by attribute changes.
+  // See nsILoadInfo.isFromProcessingFrameAttributes
+  bool mIsFromProcessingFrameAttributes;
 };
 
 #endif /* nsDocShellLoadInfo_h__ */
