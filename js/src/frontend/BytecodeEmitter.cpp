@@ -2190,7 +2190,7 @@ BytecodeEmitter::isRunOnceLambda()
 }
 
 bool
-BytecodeEmitter::allocateResumeIndexForCurrentOffset(uint32_t* resumeIndex)
+BytecodeEmitter::allocateResumeIndex(ptrdiff_t offset, uint32_t* resumeIndex)
 {
     static constexpr uint32_t MaxResumeIndex = JS_BITMASK(24);
 
@@ -2203,7 +2203,26 @@ BytecodeEmitter::allocateResumeIndexForCurrentOffset(uint32_t* resumeIndex)
         return false;
     }
 
-    return resumeOffsetList.append(offset());
+    return resumeOffsetList.append(offset);
+}
+
+bool
+BytecodeEmitter::allocateResumeIndexRange(mozilla::Span<ptrdiff_t> offsets,
+                                          uint32_t* firstResumeIndex)
+{
+    *firstResumeIndex = 0;
+
+    for (size_t i = 0, len = offsets.size(); i < len; i++) {
+        uint32_t resumeIndex;
+        if (!allocateResumeIndex(offsets[i], &resumeIndex)) {
+            return false;
+        }
+        if (i == 0) {
+            *firstResumeIndex = resumeIndex;
+        }
+    }
+
+    return true;
 }
 
 bool
@@ -2225,7 +2244,7 @@ BytecodeEmitter::emitYieldOp(JSOp op)
     }
 
     uint32_t resumeIndex;
-    if (!allocateResumeIndexForCurrentOffset(&resumeIndex)) {
+    if (!allocateResumeIndex(offset(), &resumeIndex)) {
         return false;
     }
 
@@ -4458,7 +4477,7 @@ BytecodeEmitter::emitGoSub(JumpList* jump)
     }
 
     uint32_t resumeIndex;
-    if (!allocateResumeIndexForCurrentOffset(&resumeIndex)) {
+    if (!allocateResumeIndex(offset(), &resumeIndex)) {
         return false;
     }
 

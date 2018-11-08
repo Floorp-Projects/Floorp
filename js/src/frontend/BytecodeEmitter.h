@@ -617,7 +617,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     }
     MOZ_MUST_USE bool emitGetDotGeneratorInScope(EmitterScope& currentScope);
 
-    MOZ_MUST_USE bool allocateResumeIndexForCurrentOffset(uint32_t* resumeIndex);
+    MOZ_MUST_USE bool allocateResumeIndex(ptrdiff_t offset, uint32_t* resumeIndex);
+    MOZ_MUST_USE bool allocateResumeIndexRange(mozilla::Span<ptrdiff_t> offsets,
+                                               uint32_t* firstResumeIndex);
 
     MOZ_MUST_USE bool emitInitialYield(UnaryNode* yieldNode);
     MOZ_MUST_USE bool emitYield(UnaryNode* yieldNode);

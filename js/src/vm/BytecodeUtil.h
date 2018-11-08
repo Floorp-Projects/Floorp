@@ -384,7 +384,7 @@ static const unsigned ENVCOORD_SLOT_BITS  = 24;
 static const uint32_t ENVCOORD_SLOT_LIMIT = 1 << ENVCOORD_SLOT_BITS;
 
 struct JSCodeSpec {
-    int8_t              length;         /* length including opcode byte */
+    uint8_t             length;         /* length including opcode byte */
     int8_t              nuses;          /* arity, -1 if variadic */
     int8_t              ndefs;          /* number of stack results */
     uint32_t            format;         /* immediate operand format */
@@ -504,12 +504,6 @@ ReconstructStackDepth(JSContext* cx, JSScript* script, jsbytecode* pc, uint32_t*
 namespace js {
 
 /*
- * Get the length of variable-length bytecode like JSOP_TABLESWITCH.
- */
-extern size_t
-GetVariableBytecodeLength(jsbytecode* pc);
-
-/*
  * Find the source expression that resulted in v, and return a newly allocated
  * C-string containing it.  Fall back on v's string conversion (fallback) if we
  * can't find the bytecode that generated and pushed v on the operand stack.
@@ -542,11 +536,8 @@ GetBytecodeLength(jsbytecode* pc)
 {
     JSOp op = (JSOp)*pc;
     MOZ_ASSERT(op < JSOP_LIMIT);
-
-    if (CodeSpec[op].length != -1) {
-        return CodeSpec[op].length;
-    }
-    return GetVariableBytecodeLength(pc);
+    MOZ_ASSERT(CodeSpec[op].length > 0);
+    return CodeSpec[op].length;
 }
 
 static inline bool
@@ -836,7 +827,7 @@ GetNextPc(jsbytecode* pc)
 
 typedef Vector<jsbytecode*, 4, SystemAllocPolicy> PcVector;
 
-bool GetSuccessorBytecodes(jsbytecode* pc, PcVector& successors);
+bool GetSuccessorBytecodes(JSScript* script, jsbytecode* pc, PcVector& successors);
 bool GetPredecessorBytecodes(JSScript* script, jsbytecode* pc, PcVector& predecessors);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)

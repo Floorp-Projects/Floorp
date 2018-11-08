@@ -5208,8 +5208,7 @@ ICTableSwitch::Compiler::getStub(ICStubSpace* space)
     jsbytecode* defaultpc = pc_ + GET_JUMP_OFFSET(pc_);
 
     for (int32_t i = 0; i < length; i++) {
-        table[i] = pc_ + GET_JUMP_OFFSET(pc);
-        pc += JUMP_OFFSET_LEN;
+        table[i] = script_->tableSwitchCasePC(pc_, i);
     }
 
     return newStub<ICTableSwitch>(space, code, table, low, length, defaultpc);

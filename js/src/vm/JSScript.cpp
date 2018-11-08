@@ -3626,7 +3626,7 @@ JSScript::assertValidJumpTargets() const
             int32_t high = loc.getTableSwitchHigh();
 
             for (int i = 0; i < high - low + 1; i++) {
-                BytecodeLocation switchCase = loc.getTableSwitchCaseByIndex(i);
+                BytecodeLocation switchCase(this, tableSwitchCasePC(loc.toRawBytecode(), i));
                 MOZ_ASSERT(mainLoc <= switchCase && switchCase < endLoc);
                 MOZ_ASSERT(switchCase.isJumpTarget());
             }

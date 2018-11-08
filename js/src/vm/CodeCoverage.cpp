@@ -304,11 +304,10 @@ LCovSource::writeScript(JSScript* script)
             int32_t high = GET_JUMP_OFFSET(pc + JUMP_OFFSET_LEN * 2);
             MOZ_ASSERT(high - low + 1 >= 0);
             size_t numCases = high - low + 1;
-            jsbytecode* jumpTable = pc + JUMP_OFFSET_LEN * 3;
 
             jsbytecode* firstcasepc = exitpc;
             for (size_t j = 0; j < numCases; j++) {
-                jsbytecode* testpc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * j);
+                jsbytecode* testpc = script->tableSwitchCasePC(pc, j);
                 MOZ_ASSERT(script->code() <= testpc && testpc < end);
                 if (testpc < firstcasepc) {
                     firstcasepc = testpc;
@@ -326,7 +325,7 @@ LCovSource::writeScript(JSScript* script)
             size_t caseId = 0;
             bool tableJumpsToDefault = false;
             for (size_t i = 0; i < numCases; i++) {
-                jsbytecode* casepc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * i);
+                jsbytecode* casepc = script->tableSwitchCasePC(pc, i);
                 MOZ_ASSERT(script->code() <= casepc && casepc < end);
                 if (casepc == defaultpc) {
                     tableJumpsToDefault = true;
@@ -336,7 +335,7 @@ LCovSource::writeScript(JSScript* script)
                 jsbytecode* lastcasepc = firstcasepc - 1;
                 bool foundLastCase = false;
                 for (size_t j = 0; j < numCases; j++) {
-                    jsbytecode* testpc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * j);
+                    jsbytecode* testpc = script->tableSwitchCasePC(pc, j);
                     MOZ_ASSERT(script->code() <= testpc && testpc < end);
                     if (lastcasepc < testpc && (testpc < casepc || (j < i && testpc == casepc))) {
                         lastcasepc = testpc;
@@ -404,7 +403,7 @@ LCovSource::writeScript(JSScript* script)
                 jsbytecode* lastcasepc = firstcasepc - 1;
                 bool foundLastCase = false;
                 for (size_t j = 0; j < numCases; j++) {
-                    jsbytecode* testpc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * j);
+                    jsbytecode* testpc = script->tableSwitchCasePC(pc, j);
                     MOZ_ASSERT(script->code() <= testpc && testpc < end);
                     if (lastcasepc < testpc && testpc < defaultpc) {
                         lastcasepc = testpc;

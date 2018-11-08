@@ -4489,7 +4489,7 @@ BaselineCompiler::emit_JSOP_TABLESWITCH()
     frame.popRegsAndSync(1);
 
     // Call IC.
-    ICTableSwitch::Compiler compiler(cx, pc);
+    ICTableSwitch::Compiler compiler(cx, script, pc);
     return emitOpIC(compiler.getStub(&stubSpace_));
 }
 
