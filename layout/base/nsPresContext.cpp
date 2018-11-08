@@ -1334,6 +1334,8 @@ CheckOverflow(const nsStyleDisplay* aDisplay, ScrollStyles* aStyles)
 {
   if (aDisplay->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE &&
       aDisplay->mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_AUTO &&
+      aDisplay->mOverscrollBehaviorX == StyleOverscrollBehavior::Auto &&
+      aDisplay->mOverscrollBehaviorY == StyleOverscrollBehavior::Auto &&
       aDisplay->mScrollSnapTypeX == NS_STYLE_SCROLL_SNAP_TYPE_NONE &&
       aDisplay->mScrollSnapTypeY == NS_STYLE_SCROLL_SNAP_TYPE_NONE &&
       aDisplay->mScrollSnapPointsX == nsStyleCoord(eStyleUnit_None) &&
