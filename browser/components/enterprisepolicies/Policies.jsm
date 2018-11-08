@@ -144,8 +144,10 @@ var Policies = {
           let platform = AppConstants.platform;
           if (platform == "win") {
             dirs = [
-              // Ugly, but there is no official way to get %USERNAME\AppData\Local\Mozilla.
+              // Ugly, but there is no official way to get %USERNAME\AppData\Roaming\Mozilla.
               Services.dirsvc.get("XREUSysExt", Ci.nsIFile).parent,
+              // Even more ugly, but there is no official way to get %USERNAME\AppData\Local\Mozilla.
+              Services.dirsvc.get("DefProfLRt", Ci.nsIFile).parent.parent,
             ];
           } else if (platform == "macosx" || platform == "linux") {
             dirs = [
