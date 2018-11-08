@@ -240,8 +240,6 @@
 @RESPATH@/components/ContentProcessSingleton.js
 @RESPATH@/components/nsURLFormatter.manifest
 @RESPATH@/components/nsURLFormatter.js
-@RESPATH@/components/txEXSLTRegExFunctions.manifest
-@RESPATH@/components/txEXSLTRegExFunctions.js
 @RESPATH@/components/toolkitplaces.manifest
 @RESPATH@/components/nsLivemarkService.js
 @RESPATH@/components/nsTaggingService.js

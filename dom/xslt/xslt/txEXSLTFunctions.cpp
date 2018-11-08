@@ -26,9 +26,9 @@
 #include "nsIContent.h"
 #include "txMozillaXMLOutput.h"
 #include "nsTextNode.h"
-#include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/DocumentFragmentBinding.h"
 #include "prtime.h"
-#include "txIEXSLTRegExFunctions.h"
+#include "xpcprivate.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -217,19 +217,13 @@ private:
 class txEXSLTRegExFunctionCall : public FunctionCall
 {
 public:
-    txEXSLTRegExFunctionCall(txEXSLTType aType, txIEXSLTRegExFunctions* aRegExService)
+    explicit txEXSLTRegExFunctionCall(txEXSLTType aType)
       : mType(aType)
-      , mRegExService(aRegExService)
     {}
 
     static bool Create(txEXSLTType aType, FunctionCall** aFunction)
     {
-      nsCOMPtr<txIEXSLTRegExFunctions> regExService =
-        do_GetService("@mozilla.org/exslt/regexp;1");
-      if (!regExService) {
-        return false;
-      }
-      *aFunction = new txEXSLTRegExFunctionCall(aType, regExService);
+      *aFunction = new txEXSLTRegExFunctionCall(aType);
       return true;
     }
 
@@ -237,7 +231,6 @@ public:
 
 private:
     txEXSLTType mType;
-    nsCOMPtr<txIEXSLTRegExFunctions> mRegExService;
 };
 
 nsresult
@@ -734,15 +727,56 @@ txEXSLTRegExFunctionCall::evaluate(txIEvalContext* aContext,
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(xpc::PrivilegedJunkScope())) {
+        return NS_ERROR_FAILURE;
+    }
+    JSContext* cx = jsapi.cx();
+
+    xpc::SandboxOptions options;
+    options.sandboxName.AssignLiteral("txEXSLTRegExFunctionCall sandbox");
+    options.invisibleToDebugger = true;
+    JS::RootedValue v(cx);
+    rv = CreateSandboxObject(cx, &v, nsXPConnect::SystemPrincipal(), options);
+    MOZ_ALWAYS_SUCCEEDS(rv);
+    JS::RootedObject sandbox(cx, js::UncheckedUnwrap(&v.toObject()));
+
+    JSAutoRealm ar(cx, sandbox);
+    ErrorResult er;
+    GlobalObject global(cx, sandbox);
+    JS::RootedObject obj(cx);
+    ChromeUtils::Import(global,
+                        NS_LITERAL_STRING("resource://gre/modules/txEXSLTRegExFunctions.jsm"),
+                        Optional<JS::HandleObject>(), &obj, er);
+    MOZ_ALWAYS_TRUE(!er.Failed());
+
+    JS::RootedString str(cx, JS_NewUCStringCopyZ(cx, PromiseFlatString(string).get()));
+    JS::RootedString re(cx, JS_NewUCStringCopyZ(cx, PromiseFlatString(regex).get()));
+    JS::RootedString fl(cx, JS_NewUCStringCopyZ(cx, PromiseFlatString(flags).get()));
+
     switch (mType) {
         case txEXSLTType::MATCH:
         {
             nsCOMPtr<nsIDocument> sourceDoc = getSourceDocument(aContext);
             NS_ENSURE_STATE(sourceDoc);
 
+            JS::RootedValue doc(cx);
+            if (!GetOrCreateDOMReflector(cx, sourceDoc, &doc)) {
+                return NS_ERROR_FAILURE;
+            }
+
+            JS::AutoValueArray<4> args(cx);
+            args[0].setString(str);
+            args[1].setString(re);
+            args[2].setString(fl);
+            args[3].setObject(doc.toObject());
+
+            JS::RootedValue rval(cx);
+            if (!JS_CallFunctionName(cx, sandbox, "match", args, &rval)) {
+                return NS_ERROR_FAILURE;
+            }
             RefPtr<DocumentFragment> docFrag;
-            rv = mRegExService->Match(string, regex, flags, sourceDoc,
-                                      getter_AddRefs(docFrag));
+            rv = UNWRAP_OBJECT(DocumentFragment, &rval, docFrag);
             NS_ENSURE_SUCCESS(rv, rv);
             NS_ENSURE_STATE(docFrag);
 
@@ -768,9 +802,22 @@ txEXSLTRegExFunctionCall::evaluate(txIEvalContext* aContext,
             rv = mParams[3]->evaluateToString(aContext, replace);
             NS_ENSURE_SUCCESS(rv, rv);
 
+            JS::RootedString repl(cx, JS_NewUCStringCopyZ(cx, PromiseFlatString(replace).get()));
+
+            JS::AutoValueArray<4> args(cx);
+            args[0].setString(str);
+            args[1].setString(re);
+            args[2].setString(fl);
+            args[3].setString(repl);
+
+            JS::RootedValue rval(cx);
+            if (!JS_CallFunctionName(cx, sandbox, "replace", args, &rval)) {
+                return NS_ERROR_FAILURE;
+            }
             nsString result;
-            rv = mRegExService->Replace(string, regex, flags, replace, result);
-            NS_ENSURE_SUCCESS(rv, rv);
+            if (!ConvertJSValueToString(cx, rval, result)) {
+                return NS_ERROR_FAILURE;
+            }
 
             rv = aContext->recycler()->getStringResult(result, aResult);
             NS_ENSURE_SUCCESS(rv, rv);
@@ -779,9 +826,17 @@ txEXSLTRegExFunctionCall::evaluate(txIEvalContext* aContext,
         }
         case txEXSLTType::TEST:
         {
-            bool result;
-            rv = mRegExService->Test(string, regex, flags, &result);
-            NS_ENSURE_SUCCESS(rv, rv);
+            JS::AutoValueArray<3> args(cx);
+            args[0].setString(str);
+            args[1].setString(re);
+            args[2].setString(fl);
+
+            JS::RootedValue rval(cx);
+            if (!JS_CallFunctionName(cx, sandbox, "test", args, &rval)) {
+                return NS_ERROR_FAILURE;
+            }
+
+            bool result = rval.toBoolean();
 
             aContext->recycler()->getBoolResult(result, aResult);
 
