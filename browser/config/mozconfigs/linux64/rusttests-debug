@@ -3,5 +3,8 @@ MOZ_AUTOMATION_PACKAGE_TESTS=0
 MOZ_AUTOMATION_L10N_CHECK=0
 
 ac_add_options --enable-rust-tests
+mk_add_options MOZ_MAKE_FLAGS=--output-sync=line
 
 . "$topsrcdir/browser/config/mozconfigs/linux64/debug"
+
+unset ENABLE_CLANG_PLUGIN
