@@ -46,6 +46,8 @@
 #include "nsIDocShell.h"
 #include "gfxPlatform.h"
 
+#include "nsWebBrowser.h"
+
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
 #include "EventTracer.h"
 #endif
@@ -479,7 +481,10 @@ nsAppShellService::CreateWindowlessBrowser(bool aIsChrome, nsIWindowlessBrowser 
   /* First, we create an instance of nsWebBrowser. Instances of this class have
    * an associated doc shell, which is what we're interested in.
    */
-  nsCOMPtr<nsIWebBrowser> browser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
+  nsCOMPtr<nsIWebBrowser> browser =
+    new nsWebBrowser(aIsChrome ? nsIDocShellTreeItem::typeChromeWrapper
+                               : nsIDocShellTreeItem::typeContentWrapper);
+
   if (!browser) {
     NS_ERROR("Couldn't create instance of nsWebBrowser!");
     return NS_ERROR_FAILURE;
@@ -494,10 +499,6 @@ nsAppShellService::CreateWindowlessBrowser(bool aIsChrome, nsIWindowlessBrowser 
   browser->SetContainerWindow(stub);
 
   nsCOMPtr<nsIWebNavigation> navigation = do_QueryInterface(browser);
-
-  nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(navigation);
-  item->SetItemType(aIsChrome ? nsIDocShellTreeItem::typeChromeWrapper
-                              : nsIDocShellTreeItem::typeContentWrapper);
 
   /* A windowless web browser doesn't have an associated OS level window. To
    * accomplish this, we initialize the window associated with our instance of

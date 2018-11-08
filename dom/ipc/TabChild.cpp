@@ -548,16 +548,13 @@ TabChild::Init()
 
   // Directly create our web browser object and store it, so we can start
   // eliminating QIs.
-  mWebBrowser = new nsWebBrowser();
+  mWebBrowser = new nsWebBrowser(nsIDocShellTreeItem::typeContentWrapper);
   nsIWebBrowser* webBrowser = mWebBrowser;
 
   webBrowser->SetContainerWindow(this);
   webBrowser->SetOriginAttributes(OriginAttributesRef());
   mWebNav = do_QueryInterface(webBrowser);
   NS_ASSERTION(mWebNav, "nsWebBrowser doesn't implement nsIWebNavigation?");
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(WebNavigation()));
-  docShellItem->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
 
   nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(WebNavigation());
   if (!baseWindow) {
