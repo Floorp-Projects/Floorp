@@ -191,16 +191,10 @@ xmlns="http://www.w3.org/1999/xhtml"
                    onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab.linkedBrowser.currentURI.spec, TabContextMenu.contextTab.linkedBrowser.contentTitle, TabContextMenu.contextTab.multiselected);"/>
       </menu>
       <menuseparator/>
-      <menu id="context_closeTabOptions"
-            label="&closeTabOptions.label;"
-            accesskey="&closeTabOptions.accesskey;">
-        <menupopup id="closeOtherTabsMenu">
-          <menuitem id="context_closeTabsToTheEnd" label="&closeTabsToTheEnd.label;" accesskey="&closeTabsToTheEnd.accesskey;"
-                    oncommand="gBrowser.removeTabsToTheEndFrom(TabContextMenu.contextTab, {animate: true});"/>
-          <menuitem id="context_closeOtherTabs" label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
-                    oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
-        </menupopup>
-      </menu>
+      <menuitem id="context_closeTabsToTheEnd" label="&closeTabsToTheEnd.label;" accesskey="&closeTabsToTheEnd.accesskey;"
+                oncommand="gBrowser.removeTabsToTheEndFrom(TabContextMenu.contextTab, {animate: true});"/>
+      <menuitem id="context_closeOtherTabs" label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
+                oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
       <menuitem id="context_undoCloseTab"
                 label="&undoCloseTab.label;"
                 accesskey="&undoCloseTab.accesskey;"
