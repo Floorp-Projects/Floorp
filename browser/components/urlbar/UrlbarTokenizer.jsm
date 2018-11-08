@@ -180,9 +180,9 @@ UrlbarTokenizer.CHAR_TO_TYPE_MAP = new Map([
   ["+", UrlbarTokenizer.TYPE.RESTRICT_TAG],
   ["%", UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE],
   ["~", UrlbarTokenizer.TYPE.RESTRICT_TYPED],
-  ["$", UrlbarTokenizer.TYPE.RESTRICT_SEARCH],
+  ["?", UrlbarTokenizer.TYPE.RESTRICT_SEARCH],
   ["#", UrlbarTokenizer.TYPE.RESTRICT_TITLE],
-  ["@", UrlbarTokenizer.TYPE.RESTRICT_URL],
+  ["$", UrlbarTokenizer.TYPE.RESTRICT_URL],
 ]);
 
 /**
