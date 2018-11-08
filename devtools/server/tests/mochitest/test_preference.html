@@ -102,7 +102,6 @@ function runTests() {
 window.onload = function() {
   SpecialPowers.pushPrefEnv({
     "set": [
-      ["devtools.debugger.forbid-certified-apps", false],
       ["test.all.bool", true],
       ["test.all.int", 0x4321],
       ["test.all.string", "allizom"],
