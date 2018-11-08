@@ -58,6 +58,7 @@ const {MarionettePrefs} = ChromeUtils.import("chrome://marionette/content/prefs.
 ChromeUtils.import("chrome://marionette/content/proxy.js");
 ChromeUtils.import("chrome://marionette/content/reftest.js");
 const {
+  DebounceCallback,
   IdlePromise,
   PollPromise,
   TimedPromise,
@@ -3069,10 +3070,13 @@ GeckoDriver.prototype.maximizeWindow = async function() {
   }
 
   if (WindowState.from(win.windowState) != win.Maximized) {
+    let cb;
     await new TimedPromise(resolve => {
-      win.addEventListener("sizemodechange", resolve, {once: true});
+      cb = new DebounceCallback(resolve);
+      win.addEventListener("sizemodechange", cb);
       win.maximize();
     }, {throws: null});
+    win.removeEventListener("sizemodechange", cb);
 
     // Transitioning into a window state is asynchronous on Linux,
     // and we cannot rely on sizemodechange to accurately tell us when
@@ -3128,10 +3132,13 @@ GeckoDriver.prototype.fullscreenWindow = async function() {
   }
 
   if (WindowState.from(win.windowState) != WindowState.Fullscreen) {
-    await new Promise(resolve => {
-      win.addEventListener("sizemodechange", resolve, {once: true});
+    let cb;
+    await new TimedPromise(resolve => {
+      cb = new DebounceCallback(resolve);
+      win.addEventListener("sizemodechange", cb);
       win.fullScreen = true;
-    });
+    }, {throws: null});
+    win.removeEventListener("sizemodechange", cb);
   }
 
   return this.curBrowser.rect;
@@ -3632,18 +3639,14 @@ function getOuterWindowId(win) {
   return win.windowUtils.outerWindowID;
 }
 
-/**
- * Exit fullscreen and wait for `window` to resize.
- *
- * @param {ChromeWindow} window
- *     Window to exit fullscreen.
- */
 async function exitFullscreen(window) {
-  await new Promise(resolve => {
-    window.addEventListener("sizemodechange", () => resolve(), {once: true});
+  let cb;
+  await new TimedPromise(resolve => {
+    cb = new DebounceCallback(resolve);
+    window.addEventListener("sizemodechange", cb);
     window.fullScreen = false;
   });
-  await new IdlePromise(window);
+  window.removeEventListener("sizemodechange", cb);
 }
 
 function restoreWindow(window) {
