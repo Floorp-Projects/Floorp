@@ -3,13 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#define ENABLE_SET_CUBEB_BACKEND 1
+#include "AudioDeviceInfo.h"
+#include "CubebDeviceEnumerator.h"
 #include "gtest/gtest.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Attributes.h"
 #include "nsTArray.h"
-#define ENABLE_SET_CUBEB_BACKEND 1
-#include "CubebUtils.h"
-#include "MediaEngineWebRTC.h"
 
 using namespace mozilla;
 
