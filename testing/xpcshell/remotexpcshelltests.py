@@ -348,8 +348,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.device.chmod(remoteWrapper, root=True)
         os.remove(localWrapper)
 
-    def buildPrefsFile(self):
-        super(XPCShellRemote, self).buildPrefsFile()
+    def buildPrefsFile(self, extraPrefs):
+        super(XPCShellRemote, self).buildPrefsFile(extraPrefs)
 
         remotePrefsFile = posixpath.join(self.remoteTestRoot, 'user.js')
         self.device.push(self.prefsFile, remotePrefsFile)

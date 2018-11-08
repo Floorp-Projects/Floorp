@@ -124,6 +124,9 @@ def add_common_arguments(parser):
                         help="override the number of jobs (threads) when running tests "
                              "in parallel, the default is CPU x 1.5 when running via mach "
                              "and CPU x 4 when running in automation")
+    parser.add_argument("--setpref",
+                        action="append", dest="extraPrefs", metavar="PREF=VALUE",
+                        help="Defines an extra user preference (can be passed multiple times.")
     parser.add_argument("testPaths", nargs="*", default=None,
                         help="Paths of tests to run.")
     parser.add_argument("--verify",
