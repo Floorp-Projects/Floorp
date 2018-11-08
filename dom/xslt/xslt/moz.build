@@ -41,19 +41,16 @@ UNIFIED_SOURCES += [
     'txXSLTProcessor.cpp',
 ]
 
-EXTRA_COMPONENTS += [
-    'txEXSLTRegExFunctions.js',
-    'txEXSLTRegExFunctions.manifest',
+EXTRA_JS_MODULES += [
+    'txEXSLTRegExFunctions.jsm',
 ]
-
-# For nsAutoJSString
-LOCAL_INCLUDES += ["/dom/base"]
 
 LOCAL_INCLUDES += [
     '../base',
     '../xml',
     '../xpath',
     '/dom/base',
+    '/js/xpconnect/src',
 ]
 
 FINAL_LIBRARY = 'xul'
