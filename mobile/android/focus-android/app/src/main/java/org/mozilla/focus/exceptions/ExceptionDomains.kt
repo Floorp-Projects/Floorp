@@ -15,6 +15,8 @@ object ExceptionDomains {
     private const val KEY_DOMAINS = "exceptions_domains"
     private const val SEPARATOR = "@<;>@"
 
+    private var exceptions: List<String>? = null
+
     /**
      * Loads the previously added/saved custom domains from preferences.
      *
@@ -22,8 +24,14 @@ object ExceptionDomains {
      * @return list of custom domains
      */
     fun load(context: Context): List<String> {
-        val domains = preferences(context).getString(KEY_DOMAINS, "")
-        return domains?.split(SEPARATOR)?.filter { !it.isEmpty() } ?: listOf("")
+        if (exceptions == null) {
+            exceptions = (preferences(context)
+                    .getString(KEY_DOMAINS, "") ?: "")
+                    .split(SEPARATOR)
+                    .filter { !it.isEmpty() }
+        }
+
+        return exceptions ?: listOf()
     }
 
     /**
@@ -33,6 +41,8 @@ object ExceptionDomains {
      * @param domains list of domains
      */
     fun save(context: Context, domains: List<String>) {
+        exceptions = domains
+
         preferences(context)
             .edit()
             .putString(KEY_DOMAINS, domains.joinToString(separator = SEPARATOR))

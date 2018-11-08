@@ -1340,11 +1340,8 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             val host = URI(url).host
             val isException =
                 host != null && ExceptionDomains.load(requireContext()).contains(host)
-            if (isException) {
-                getWebView()?.setBlockingEnabled(false)
-            } else {
-                getWebView()?.setBlockingEnabled(true)
-            }
+            getWebView()?.setBlockingEnabled(!isException)
+
             urlView?.text = UrlUtils.stripUserInfo(url)
         }
 
