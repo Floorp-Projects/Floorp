@@ -499,6 +499,16 @@ already_AddRefed<nsINode> nsNodeUtils::CloneAndAdopt(
         nsObjectLoadingContent* olc =
             static_cast<nsObjectLoadingContent*>(objectLoadingContent.get());
         olc->NotifyOwnerDocumentActivityChanged();
+      } else {
+        // HTMLImageElement::FromNode is insufficient since we need this for
+        // <svg:image> as well.
+        nsCOMPtr<nsIImageLoadingContent> imageLoadingContent(
+            do_QueryInterface(aNode));
+        if (imageLoadingContent) {
+          auto ilc =
+              static_cast<nsImageLoadingContent*>(imageLoadingContent.get());
+          ilc->NotifyOwnerDocumentActivityChanged();
+        }
       }
     }
 

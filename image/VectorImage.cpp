@@ -1236,6 +1236,11 @@ bool VectorImage::StartDecodingWithResult(uint32_t aFlags) {
   return mIsFullyLoaded;
 }
 
+bool VectorImage::RequestDecodeWithResult(uint32_t aFlags) {
+  // SVG images are ready to draw when they are loaded
+  return mIsFullyLoaded;
+}
+
 NS_IMETHODIMP
 VectorImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags) {
   // Nothing to do for SVG images, though in theory we could rasterize to the

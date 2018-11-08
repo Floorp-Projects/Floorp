@@ -202,6 +202,10 @@ bool ImageWrapper::StartDecodingWithResult(uint32_t aFlags) {
   return mInnerImage->StartDecodingWithResult(aFlags);
 }
 
+bool ImageWrapper::RequestDecodeWithResult(uint32_t aFlags) {
+  return mInnerImage->RequestDecodeWithResult(aFlags);
+}
+
 NS_IMETHODIMP
 ImageWrapper::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags) {
   return mInnerImage->RequestDecodeForSize(aSize, aFlags);
