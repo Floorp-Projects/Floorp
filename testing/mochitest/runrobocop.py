@@ -17,12 +17,13 @@ sys.path.insert(
 
 from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
-from runtests import KeyValueParseError, MochitestDesktop, MessageLogger, parseKeyValue
+from runtests import KeyValueParseError, MochitestDesktop, MessageLogger
 from mochitest_options import MochitestArgumentParser
 
 from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_slice
 from mozdevice import ADBAndroid, ADBTimeoutError
+from mozprofile.cli import parse_key_value, parse_preferences
 import mozfile
 import mozinfo
 
@@ -242,7 +243,7 @@ class RobocopTestRunner(MochitestDesktop):
             'mochikit@mozilla.org',
         ])
 
-        self.extraPrefs = self.parseExtraPrefs(self.options.extraPrefs)
+        self.extraPrefs = parse_preferences(self.options.extraPrefs)
         if self.options.testingModulesDir:
             try:
                 self.device.push(self.options.testingModulesDir, self.remoteModulesDir)
@@ -414,7 +415,7 @@ class RobocopTestRunner(MochitestDesktop):
         try:
             browserEnv.update(
                 dict(
-                    parseKeyValue(
+                    parse_key_value(
                         self.options.environment,
                         context='--setenv')))
         except KeyValueParseError as e:

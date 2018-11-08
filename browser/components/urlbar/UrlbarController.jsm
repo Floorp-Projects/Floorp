@@ -10,7 +10,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   // BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -115,7 +114,7 @@ class UrlbarController {
    * @param {QueryContext} queryContext The query details.
    */
   async startQuery(queryContext) {
-    queryContext.autoFill = Services.prefs.getBoolPref("browser.urlbar.autoFill", true);
+    queryContext.autoFill = UrlbarPrefs.get("autoFill");
 
     this._notify("onQueryStarted", queryContext);
 

@@ -2040,7 +2040,7 @@ ScratchpadTab.prototype = {
    * @param object subject
    *        The tab or window to obtain the connection for.
    * @return Promise
-   *         The promise for the TabTarget for this tab.
+   *         The promise for the Target for this tab.
    */
   async _attach(subject) {
     const target = await TargetFactory.forTab(this._tab);
@@ -2088,10 +2088,8 @@ ScratchpadTarget.consoleFor = ScratchpadTab.consoleFor;
 
 ScratchpadTarget.prototype = extend(ScratchpadTab.prototype, {
   _attach() {
-    if (this._target.isRemote) {
-      return Promise.resolve(this._target);
-    }
-    return this._target.attach().then(() => this._target);
+    // We return a promise here to match the typing of ScratchpadWindow._attach.
+    return Promise.resolve(this._target);
   },
 });
 

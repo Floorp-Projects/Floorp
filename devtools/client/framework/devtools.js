@@ -601,7 +601,7 @@ DevTools.prototype = {
    * @param  {XULTab} tab
    *         The tab to use in creating a new target.
    *
-   * @return {TabTarget} A target object
+   * @return {Target} A target object
    */
   getTargetForTab: function(tab) {
     return TargetFactory.forTab(tab);
@@ -611,7 +611,7 @@ DevTools.prototype = {
    * Compatibility layer for web-extensions. Used by DevToolsShim for
    * browser/components/extensions/ext-devtools.js
    *
-   * web-extensions need to use dedicated instances of TabTarget and cannot reuse the
+   * web-extensions need to use dedicated instances of Target and cannot reuse the
    * cached instances managed by DevTools target factory.
    */
   createTargetForTab: function(tab) {

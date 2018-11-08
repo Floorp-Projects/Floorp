@@ -4,7 +4,7 @@
 
 use {WindowWrapper, NotifierEvent};
 use image::png::PNGEncoder;
-use image::{self, ColorType, GenericImage};
+use image::{self, ColorType, GenericImageView};
 use std::fs::File;
 use std::path::Path;
 use std::sync::mpsc::Receiver;

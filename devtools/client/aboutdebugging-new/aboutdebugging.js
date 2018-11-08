@@ -13,14 +13,15 @@ const { render, unmountComponentAtNode } =
   require("devtools/client/shared/vendor/react-dom");
 const Provider =
   createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
-const { L10nRegistry, FileSource } =
-  require("resource://gre/modules/L10nRegistry.jsm");
 
 const actions = require("./src/actions/index");
 const { configureStore } = require("./src/create-store");
 const {
   setDebugTargetCollapsibilities,
 } = require("./src/modules/debug-target-collapsibilities");
+
+const { l10n } = require("./src/modules/l10n");
+
 const {
   addNetworkLocationsObserver,
   getNetworkLocations,
@@ -55,10 +56,10 @@ const AboutDebugging = {
     this.store = configureStore();
     this.actions = bindActionCreators(actions, this.store.dispatch);
 
-    const fluentBundles = await this.createFluentBundles();
+    await l10n.init();
 
     render(
-      Provider({ store: this.store }, App({ fluentBundles })),
+      Provider({ store: this.store }, App({ fluentBundles: l10n.getBundles() })),
       this.mount
     );
 
@@ -71,31 +72,6 @@ const AboutDebugging = {
 
     adbAddon.on("update", this.onAdbAddonUpdated);
     this.onAdbAddonUpdated();
-  },
-
-  async createFluentBundles() {
-    // XXX Until the strings for the updated about:debugging stabilize, we
-    // locate them outside the regular directory for locale resources so that
-    // they don't get picked up by localization tools.
-    if (!L10nRegistry.sources.has("aboutdebugging")) {
-      const temporarySource = new FileSource(
-        "aboutdebugging",
-        ["en-US"],
-        "chrome://devtools/content/aboutdebugging-new/tmp-locale/{locale}/"
-      );
-      L10nRegistry.registerSource(temporarySource);
-    }
-
-    const locales = Services.locale.appLocalesAsBCP47;
-    const generator =
-      L10nRegistry.generateBundles(locales, ["aboutdebugging.ftl"]);
-
-    const bundles = [];
-    for await (const bundle of generator) {
-      bundles.push(bundle);
-    }
-
-    return bundles;
   },
 
   onAdbAddonUpdated() {
@@ -113,7 +89,7 @@ const AboutDebugging = {
   async destroy() {
     const state = this.store.getState();
 
-    L10nRegistry.removeSource("aboutdebugging");
+    l10n.destroy();
 
     const currentRuntimeId = state.runtimes.selectedRuntimeId;
     if (currentRuntimeId) {

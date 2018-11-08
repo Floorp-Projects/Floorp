@@ -58,6 +58,7 @@ const {MarionettePrefs} = ChromeUtils.import("chrome://marionette/content/prefs.
 ChromeUtils.import("chrome://marionette/content/proxy.js");
 ChromeUtils.import("chrome://marionette/content/reftest.js");
 const {
+  DebounceCallback,
   IdlePromise,
   PollPromise,
   TimedPromise,
@@ -1442,51 +1443,15 @@ GeckoDriver.prototype.setWindowRect = async function(cmd) {
   await this._handleUserPrompts();
 
   let {x, y, width, height} = cmd.parameters;
-  let origRect = this.curBrowser.rect;
-
-  // Synchronous resize to |width| and |height| dimensions.
-  async function resizeWindow(width, height) {
-    await new Promise(resolve => {
-      win.addEventListener("resize", resolve, {once: true});
-      win.resizeTo(width, height);
-    });
-    await new IdlePromise(win);
-  }
-
-  // Wait until window size has changed.  We can't wait for the
-  // user-requested window size as this may not be achievable on the
-  // current system.
-  const windowResizeChange = async () => {
-    return new PollPromise((resolve, reject) => {
-      let curRect = this.curBrowser.rect;
-      if (curRect.width != origRect.width &&
-          curRect.height != origRect.height) {
-        resolve();
-      } else {
-        reject();
-      }
-    });
-  };
-
-  // Wait for the window position to change.
-  async function windowPosition(x, y) {
-    return new PollPromise((resolve, reject) => {
-      if ((x == win.screenX && y == win.screenY) ||
-          (win.screenX != origRect.x || win.screenY != origRect.y)) {
-        resolve();
-      } else {
-        reject();
-      }
-    });
-  }
 
   switch (WindowState.from(win.windowState)) {
     case WindowState.Fullscreen:
       await exitFullscreen(win);
       break;
 
+    case WindowState.Maximized:
     case WindowState.Minimized:
-      await restoreWindow(win, this.curBrowser.eventObserver);
+      await restoreWindow(win);
       break;
   }
 
@@ -1494,18 +1459,33 @@ GeckoDriver.prototype.setWindowRect = async function(cmd) {
     assert.positiveInteger(height);
     assert.positiveInteger(width);
 
-    if (win.outerWidth != width || win.outerHeight != height) {
-      await resizeWindow(width, height);
-      await windowResizeChange();
-    }
+    let debounce = new DebounceCallback(() => {
+      win.dispatchEvent(new win.CustomEvent("resizeEnd"));
+    });
+
+    await new TimedPromise(async resolve => {
+      if (win.outerWidth == width && win.outerHeight == height) {
+        resolve();
+        return;
+      }
+
+      win.addEventListener("resize", debounce);
+      win.addEventListener("resizeEnd", resolve, {once: true});
+      win.resizeTo(width, height);
+      await new IdlePromise(win);
+    }, {timeout: 5000});
+
+    win.removeEventListener("resize", debounce);
   }
 
   if (x != null && y != null) {
     assert.integer(x);
     assert.integer(y);
 
-    win.moveTo(x, y);
-    await windowPosition(x, y);
+    if (win.screenX != x || win.screenY != y) {
+      win.moveTo(x, y);
+      await new IdlePromise(win);
+    }
   }
 
   return this.curBrowser.rect;
@@ -3000,15 +2980,16 @@ GeckoDriver.prototype.minimizeWindow = async function() {
   const win = assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  if (WindowState.from(win.windowState) == WindowState.Fullscreen) {
-    await exitFullscreen(win);
-  }
-
   if (WindowState.from(win.windowState) != WindowState.Minimized) {
-    await new Promise(resolve => {
-      this.curBrowser.eventObserver.addEventListener("visibilitychange", resolve, {once: true});
+    if (WindowState.from(win.windowState) == WindowState.Fullscreen) {
+      await exitFullscreen(win);
+    }
+
+    await new TimedPromise(resolve => {
+      win.addEventListener("visibilitychange", resolve, {once: true});
       win.minimize();
-    });
+    }, {throws: null});
+    await new IdlePromise(win);
   }
 
   return this.curBrowser.rect;
@@ -3043,58 +3024,19 @@ GeckoDriver.prototype.maximizeWindow = async function() {
       break;
 
     case WindowState.Minimized:
-      await restoreWindow(win, this.curBrowser.eventObserver);
+      await restoreWindow(win);
       break;
   }
 
-  const origSize = {
-    outerWidth: win.outerWidth,
-    outerHeight: win.outerHeight,
-  };
-
-  // Wait for the window size to change.
-  async function windowSizeChange() {
-    return new PollPromise((resolve, reject) => {
-      let curSize = {
-        outerWidth: win.outerWidth,
-        outerHeight: win.outerHeight,
-      };
-      if (curSize.outerWidth != origSize.outerWidth ||
-          curSize.outerHeight != origSize.outerHeight) {
-        resolve();
-      } else {
-        reject();
-      }
-    });
-  }
-
-  if (WindowState.from(win.windowState) != win.Maximized) {
+  if (WindowState.from(win.windowState) != WindowState.Maximized) {
+    let cb;
     await new TimedPromise(resolve => {
-      win.addEventListener("sizemodechange", resolve, {once: true});
+      cb = new DebounceCallback(resolve);
+      win.addEventListener("sizemodechange", cb);
       win.maximize();
     }, {throws: null});
-
-    // Transitioning into a window state is asynchronous on Linux,
-    // and we cannot rely on sizemodechange to accurately tell us when
-    // the transition has completed.
-    //
-    // To counter for this we wait for the window size to change, which
-    // it usually will.  On platforms where the transition is synchronous,
-    // the wait will have the cost of one iteration because the size
-    // will have changed as part of the transition.  Where the platform is
-    // asynchronous, the cost may be greater as we have to poll
-    // continuously until we see a change, but it ensures conformity in
-    // behaviour.
-    //
-    // Certain window managers, however, do not have a concept of
-    // maximised windows and here sizemodechange may never fire.  Indeed,
-    // if the window covers the maximum available screen real estate,
-    // the window size may also not change.  In this circumstance,
-    // which admittedly is a somewhat bizarre edge case, we assume that
-    // the timeout of waiting for sizemodechange to fire is sufficient
-    // to give the window enough time to transition itself into whatever
-    // form or shape the WM is programmed to give it.
-    await windowSizeChange();
+    win.removeEventListener("sizemodechange", cb);
+    await new IdlePromise(win);
   }
 
   return this.curBrowser.rect;
@@ -3124,15 +3066,19 @@ GeckoDriver.prototype.fullscreenWindow = async function() {
   await this._handleUserPrompts();
 
   if (WindowState.from(win.windowState) == WindowState.Minimized) {
-    await restoreWindow(win, this.curBrowser.eventObserver);
+    await restoreWindow(win);
   }
 
   if (WindowState.from(win.windowState) != WindowState.Fullscreen) {
-    await new Promise(resolve => {
-      win.addEventListener("sizemodechange", resolve, {once: true});
+    let cb;
+    await new TimedPromise(resolve => {
+      cb = new DebounceCallback(resolve);
+      win.addEventListener("sizemodechange", cb);
       win.fullScreen = true;
-    });
+    }, {throws: null});
+    win.removeEventListener("sizemodechange", cb);
   }
+  await new IdlePromise(win);
 
   return this.curBrowser.rect;
 };
@@ -3632,31 +3578,23 @@ function getOuterWindowId(win) {
   return win.windowUtils.outerWindowID;
 }
 
-/**
- * Exit fullscreen and wait for `window` to resize.
- *
- * @param {ChromeWindow} window
- *     Window to exit fullscreen.
- */
 async function exitFullscreen(window) {
-  await new Promise(resolve => {
-    window.addEventListener("sizemodechange", () => resolve(), {once: true});
+  let cb;
+  await new TimedPromise(resolve => {
+    cb = new DebounceCallback(resolve);
+    window.addEventListener("sizemodechange", cb);
     window.fullScreen = false;
   });
-  await new IdlePromise(window);
+  window.removeEventListener("sizemodechange", cb);
 }
 
-/**
- * Restore window and wait for the window state to change.
- *
- * @param {ChromeWindow} chromWindow
- *     Window to restore.
- * @param {WebElementEventTarget} contentWindow
- *     Content window to listen for events in.
- */
-async function restoreWindow(chromeWindow, contentWindow) {
-  return new Promise(resolve => {
-    contentWindow.addEventListener("visibilitychange", resolve, {once: true});
-    chromeWindow.restore();
+function restoreWindow(window) {
+  window.restore();
+  return new PollPromise((resolve, reject) => {
+    if (WindowState.from(window.windowState) != WindowState.Minimized) {
+      resolve();
+    } else {
+      reject();
+    }
   });
 }
