@@ -94,6 +94,9 @@ CrashReporterHost::FinalizeCrashReport()
     case GeckoProcessType_GPU:
       type = NS_LITERAL_CSTRING("gpu");
       break;
+    case GeckoProcessType_RDD:
+      type = NS_LITERAL_CSTRING("rdd");
+      break;
     default:
       NS_ERROR("unknown process type");
       break;
@@ -165,6 +168,10 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
     case GeckoProcessType_GPU:
       processType = nsICrashService::PROCESS_TYPE_GPU;
       telemetryKey.AssignLiteral("gpu");
+      break;
+    case GeckoProcessType_RDD:
+      processType = nsICrashService::PROCESS_TYPE_RDD;
+      telemetryKey.AssignLiteral("rdd");
       break;
     default:
       NS_ERROR("unknown process type");
