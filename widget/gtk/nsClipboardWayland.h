@@ -40,7 +40,7 @@ protected:
 class WaylandDataOffer : public DataOffer
 {
 public:
-    WaylandDataOffer(wl_data_offer* aWaylandDataOffer);
+    explicit WaylandDataOffer(wl_data_offer* aWaylandDataOffer);
 
     void DragOfferAccept(const char* aMimeType, uint32_t aTime);
     void SetDragStatus(GdkDragAction aAction, uint32_t aTime);
@@ -63,7 +63,7 @@ private:
 class PrimaryDataOffer : public DataOffer
 {
 public:
-    PrimaryDataOffer(gtk_primary_selection_offer* aPrimaryDataOffer);
+    explicit PrimaryDataOffer(gtk_primary_selection_offer* aPrimaryDataOffer);
     void SetAvailableDragActions(uint32_t aWaylandActions) {};
 
     virtual ~PrimaryDataOffer();
@@ -141,7 +141,6 @@ private:
     wl_seat                    *mSeat;
     wl_data_device_manager     *mDataDeviceManager;
     gtk_primary_selection_device_manager *mPrimarySelectionDataDeviceManager;
-    wl_keyboard                *mKeyboard;
 
     // Data offers provided by Wayland data device
     GHashTable*                 mActiveOffers;
