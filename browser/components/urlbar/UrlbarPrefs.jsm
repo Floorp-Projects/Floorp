@@ -25,10 +25,6 @@ const PREF_URLBAR_BRANCH = "browser.urlbar.";
 // value, nsIPrefBranch getter method name]].  In the former case, the getter
 // method name is inferred from the typeof the default value.
 const PREF_URLBAR_DEFAULTS = new Map([
-  // This will be removed in the future.  If false, UnifiedComplete will not
-  // perform any searches at all.
-  ["autocomplete.enabled", true],
-
   // "Autofill" is the name of the feature that automatically completes domains
   // and URLs that the user has visited as the user is typing them in the urlbar
   // textbox.  If false, autofill will be disabled.
@@ -47,6 +43,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // part of it. This also copies the urlbar value to the selection clipboard
   // on systems that support it.
   ["clickSelectsAll", false],
+
+  // Whether copying the entire URL from the location bar will put a human
+  // readable (percent-decoded) URL on the clipboard.
+  ["decodeURLsOnCopy", false],
 
   // The amount of time (ms) to wait after the user has stopped typing before
   // fetching results.  However, we ignore this for the very first result (the
@@ -171,9 +171,6 @@ class Preferences {
 
     Services.prefs.addObserver(PREF_URLBAR_BRANCH, this, true);
     Services.prefs.addObserver("keyword.enabled", this, true);
-
-    // On startup we must check that some prefs are linked.
-    this._updateLinkedPrefs();
   }
 
   /**
@@ -205,10 +202,9 @@ class Preferences {
     if (pref == "matchBuckets") {
       this._map.delete("matchBucketsSearch");
     }
-    if (pref == "autocomplete.enabled" || pref.startsWith("suggest.")) {
+    if (pref.startsWith("suggest.")) {
       this._map.delete("defaultBehavior");
       this._map.delete("emptySearchDefaultBehavior");
-      this._updateLinkedPrefs(pref);
     }
   }
 
@@ -309,47 +305,6 @@ class Preferences {
       }
     }
     return this._readPref(pref);
-  }
-
-  /**
-   * Used to keep some pref values linked.
-   * TODO: remove autocomplete.enabled and rely only on suggest.* prefs once we
-   * can drop legacy add-ons compatibility.
-   *
-   * @param {string} changedPref
-   *        The name of the preference that changed.
-   */
-  _updateLinkedPrefs(changedPref = "") {
-    // Avoid re-entrance.
-    if (this._linkingPrefs) {
-      return;
-    }
-    this._linkingPrefs = true;
-    try {
-      let branch = Services.prefs.getBranch(PREF_URLBAR_BRANCH);
-      const SUGGEST_PREFS = Object.keys(SUGGEST_PREF_TO_BEHAVIOR);
-      if (changedPref.startsWith("suggest.")) {
-        // A suggest pref changed, fix autocomplete.enabled.
-        branch.setBoolPref("autocomplete.enabled",
-                           SUGGEST_PREFS.some(type => this.get("suggest." + type)));
-      } else if (this.get("autocomplete.enabled")) {
-        // If autocomplete is enabled and all of the suggest.* prefs are
-        // disabled, reset the suggest.* prefs to their default value.
-        if (SUGGEST_PREFS.every(type => !this.get("suggest." + type))) {
-          for (let type of SUGGEST_PREFS) {
-            let def = PREF_URLBAR_DEFAULTS.get("suggest." + type);
-            branch.setBoolPref("suggest." + type, def);
-          }
-        }
-      } else {
-        // If autocomplete is disabled, deactivate all suggest preferences.
-        for (let type of SUGGEST_PREFS) {
-          branch.setBoolPref("suggest." + type, false);
-        }
-      }
-    } finally {
-      delete this._linkingPrefs;
-    }
   }
 
   /**

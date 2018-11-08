@@ -35,7 +35,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const TITLE_SEARCH_ENGINE_SEPARATOR = " \u00B7\u2013\u00B7 ";
 
 async function cleanup() {
-  Services.prefs.clearUserPref("browser.urlbar.autocomplete.enabled");
   Services.prefs.clearUserPref("browser.urlbar.autoFill");
   Services.prefs.clearUserPref("browser.urlbar.autoFill.searchEngines");
   let suggestPrefs = [

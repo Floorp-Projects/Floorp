@@ -65,7 +65,6 @@ Preferences.addAll([
   { id: "pref.privacy.disable_button.tracking_protection_exceptions", type: "bool" },
 
   // Location Bar
-  { id: "browser.urlbar.autocomplete.enabled", type: "bool" },
   { id: "browser.urlbar.suggest.bookmark", type: "bool" },
   { id: "browser.urlbar.suggest.history", type: "bool" },
   { id: "browser.urlbar.suggest.openpage", type: "bool" },
