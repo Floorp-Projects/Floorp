@@ -58,7 +58,7 @@ bool MaybeDivergeFromRecording();
 void PositionHit(const js::BreakpointPosition& aPosition);
 
 // Get an execution point for hitting the specified position right now.
-js::ExecutionPoint CurrentExecutionPoint(const js::BreakpointPosition& aPosition);
+js::ExecutionPoint CurrentExecutionPoint(const Maybe<js::BreakpointPosition>& aPosition);
 
 // Convert an identifier from NewTimeWarpTarget() which we have seen while
 // executing into an ExecutionPoint.

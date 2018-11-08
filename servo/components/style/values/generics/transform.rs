@@ -9,12 +9,12 @@ use euclid::{self, Rect, Transform3D};
 use num_traits::Zero;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
-use values::{computed, CSSFloat};
 use values::computed::length::Length as ComputedLength;
 use values::computed::length::LengthOrPercentage as ComputedLengthOrPercentage;
 use values::specified::angle::Angle as SpecifiedAngle;
 use values::specified::length::Length as SpecifiedLength;
 use values::specified::length::LengthOrPercentage as SpecifiedLengthOrPercentage;
+use values::{computed, CSSFloat};
 
 /// A generic 2D transformation matrix.
 #[allow(missing_docs)]
@@ -580,9 +580,9 @@ impl<Number: ToCss + PartialEq> ToCss for Scale<Number> {
     where
         W: fmt::Write,
     {
-        match self {
-            &Scale::None => dest.write_str("none"),
-            &Scale::Scale(ref x, ref y) => {
+        match *self {
+            Scale::None => dest.write_str("none"),
+            Scale::Scale(ref x, ref y) => {
                 x.to_css(dest)?;
                 if x != y {
                     dest.write_char(' ')?;
@@ -590,7 +590,7 @@ impl<Number: ToCss + PartialEq> ToCss for Scale<Number> {
                 }
                 Ok(())
             },
-            &Scale::Scale3D(ref x, ref y, ref z) => {
+            Scale::Scale3D(ref x, ref y, ref z) => {
                 x.to_css(dest)?;
                 dest.write_char(' ')?;
                 y.to_css(dest)?;

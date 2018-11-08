@@ -4,6 +4,7 @@
 
 /* eslint-env mozilla/frame-script */
 /* global XPCNativeWrapper */
+/* eslint-disable no-restricted-globals */
 
 "use strict";
 

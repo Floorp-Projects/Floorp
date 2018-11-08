@@ -717,6 +717,14 @@ const gRequestHandlers = {
   getNewConsoleMessage(request) {
     return convertConsoleMessage(gConsoleMessages[gConsoleMessages.length - 1]);
   },
+
+  currentExecutionPoint(request) {
+    return RecordReplayControl.currentExecutionPoint();
+  },
+
+  recordingEndpoint(request) {
+    return RecordReplayControl.recordingEndpoint();
+  },
 };
 
 // eslint-disable-next-line no-unused-vars
