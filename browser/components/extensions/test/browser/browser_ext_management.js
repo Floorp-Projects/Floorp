@@ -2,12 +2,6 @@
 
 const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
 
-function waitForTransition(element, propertyName) {
-  return BrowserTestUtils.waitForEvent(element, "transitionend", false, event => {
-    return event.target == element && event.propertyName == propertyName;
-  });
-}
-
 add_task(async function test_management_install() {
   await SpecialPowers.pushPrefEnv({set: [
     ["xpinstall.signatures.required", false],
@@ -57,14 +51,12 @@ add_task(async function test_management_install() {
   await extension.awaitMessage("ready");
 
   // Test installing a static WE theme.
-  let transitionDone = waitForTransition(document.documentElement, "background-color");
   clickBrowserAction(extension);
 
   let {id, type} = await extension.awaitMessage("installed");
   is(id, "tiger@persona.beard", "Static web extension theme installed");
   is(type, "theme", "Extension type is correct");
 
-  await transitionDone;
   let style = window.getComputedStyle(document.documentElement);
   is(style.backgroundColor, "rgb(255, 165, 0)", "Background is the new black");
 
