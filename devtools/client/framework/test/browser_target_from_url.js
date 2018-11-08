@@ -73,20 +73,23 @@ add_task(async function() {
   gBrowser.removeCurrentTab();
 });
 
-async function setupDebuggerServer(websocket) {
+async function setupDebuggerServer(webSocket) {
   info("Create a separate loader instance for the DebuggerServer.");
   const loader = new DevToolsLoader();
   const { DebuggerServer } = loader.require("devtools/server/main");
+  const { SocketListener } = loader.require("devtools/shared/security/socket");
 
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
   DebuggerServer.allowChromeProcess = true;
+  const socketOptions = {
+    // Pass -1 to automatically choose an available port
+    portOrPath: -1,
+    webSocket,
+  };
 
-  const listener = DebuggerServer.createListener();
+  const listener = new SocketListener(DebuggerServer, socketOptions);
   ok(listener, "Socket listener created");
-  // Pass -1 to automatically choose an available port
-  listener.portOrPath = -1;
-  listener.webSocket = websocket;
   await listener.open();
   is(DebuggerServer.listeningSockets, 1, "1 listening socket");
 

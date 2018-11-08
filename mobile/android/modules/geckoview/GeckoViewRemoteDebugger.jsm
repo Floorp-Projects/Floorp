@@ -23,6 +23,11 @@ XPCOMUtils.defineLazyGetter(this, "DebuggerServer", () => {
   return DebuggerServer;
 });
 
+XPCOMUtils.defineLazyGetter(this, "SocketListener", () => {
+  let { SocketListener } = require("devtools/shared/security/socket");
+  return SocketListener;
+});
+
 GeckoViewUtils.initLogging("RemoteDebugger", this);
 
 var GeckoViewRemoteDebugger = {
@@ -94,12 +99,14 @@ var GeckoViewRemoteDebugger = {
 class USBRemoteDebugger {
   start(aPortOrPath) {
     try {
-      let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
-      let authenticator = new AuthenticatorType.Server();
+      const AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+      const authenticator = new AuthenticatorType.Server();
       authenticator.allowConnection = this.allowConnection.bind(this);
-      this._listener = DebuggerServer.createListener();
-      this._listener.portOrPath = aPortOrPath;
-      this._listener.authenticator = authenticator;
+      const socketOptions = {
+        authenticator,
+        portOrPath: aPortOrPath,
+      };
+      this._listener = new SocketListener(DebuggerServer, socketOptions);
       this._listener.open();
       debug `USB remote debugger - listening on ${aPortOrPath}`;
     } catch (e) {
