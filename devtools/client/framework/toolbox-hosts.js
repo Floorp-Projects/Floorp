@@ -50,7 +50,8 @@ BottomHost.prototype = {
 
     const gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
     const ownerDocument = gBrowser.ownerDocument;
-    this._nbox = gBrowser.getNotificationBox(this.hostTab.linkedBrowser);
+    this._browserContainer =
+      gBrowser.getBrowserContainer(this.hostTab.linkedBrowser);
 
     this._splitter = ownerDocument.createXULElement("splitter");
     this._splitter.setAttribute("class", "devtools-horizontal-splitter");
@@ -62,11 +63,11 @@ BottomHost.prototype = {
     this.frame.className = "devtools-toolbox-bottom-iframe";
     this.frame.height = Math.min(
       Services.prefs.getIntPref(this.heightPref),
-      this._nbox.clientHeight - MIN_PAGE_SIZE
+      this._browserContainer.clientHeight - MIN_PAGE_SIZE
     );
 
-    this._nbox.appendChild(this._splitter);
-    this._nbox.appendChild(this.frame);
+    this._browserContainer.appendChild(this._splitter);
+    this._browserContainer.appendChild(this.frame);
 
     this.frame.tooltip = "aHTMLTooltip";
 
@@ -107,10 +108,10 @@ BottomHost.prototype = {
       this._destroyed = true;
 
       Services.prefs.setIntPref(this.heightPref, this.frame.height);
-      this._nbox.removeChild(this._splitter);
-      this._nbox.removeChild(this.frame);
+      this._browserContainer.removeChild(this._splitter);
+      this._browserContainer.removeChild(this.frame);
       this.frame = null;
-      this._nbox = null;
+      this._browserContainer = null;
       this._splitter = null;
     }
 
@@ -137,8 +138,8 @@ class SidebarHost {
     await gDevToolsBrowser.loadBrowserStyleSheet(this.hostTab.ownerGlobal);
     const gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
     const ownerDocument = gBrowser.ownerDocument;
-    this._browser = gBrowser.getBrowserContainer(this.hostTab.linkedBrowser);
-    this._sidebar = gBrowser.getSidebarContainer(this.hostTab.linkedBrowser);
+    this._browserContainer = gBrowser.getBrowserContainer(this.hostTab.linkedBrowser);
+    this._browserPanel = gBrowser.getPanel(this.hostTab.linkedBrowser);
 
     this._splitter = ownerDocument.createXULElement("splitter");
     this._splitter.setAttribute("class", "devtools-side-splitter");
@@ -149,7 +150,7 @@ class SidebarHost {
 
     this.frame.width = Math.min(
       Services.prefs.getIntPref(this.widthPref),
-      this._sidebar.clientWidth - MIN_PAGE_SIZE
+      this._browserPanel.clientWidth - MIN_PAGE_SIZE
     );
 
     // We should consider the direction when changing the dock position.
@@ -159,11 +160,11 @@ class SidebarHost {
 
     if (isLTR && this.type == "right" ||
         !isLTR && this.type == "left") {
-      this._sidebar.appendChild(this._splitter);
-      this._sidebar.appendChild(this.frame);
+      this._browserPanel.appendChild(this._splitter);
+      this._browserPanel.appendChild(this.frame);
     } else {
-      this._sidebar.insertBefore(this.frame, this._browser);
-      this._sidebar.insertBefore(this._splitter, this._browser);
+      this._browserPanel.insertBefore(this.frame, this._browserContainer);
+      this._browserPanel.insertBefore(this._splitter, this._browserContainer);
     }
 
     this.frame.tooltip = "aHTMLTooltip";
@@ -203,8 +204,8 @@ class SidebarHost {
       this._destroyed = true;
 
       Services.prefs.setIntPref(this.widthPref, this.frame.width);
-      this._sidebar.removeChild(this._splitter);
-      this._sidebar.removeChild(this.frame);
+      this._browserPanel.removeChild(this._splitter);
+      this._browserPanel.removeChild(this.frame);
     }
 
     return promise.resolve(null);

@@ -295,9 +295,9 @@ window._gBrowser = {
     browser.loadURI = _loadURI.bind(null, browser);
 
     let uniqueId = this._generateUniquePanelID();
-    let notificationbox = this.getNotificationBox(browser);
-    notificationbox.id = uniqueId;
-    this.tabpanels.appendChild(notificationbox);
+    let panel = this.getPanel(browser);
+    panel.id = uniqueId;
+    this.tabpanels.appendChild(panel);
 
     let tab = this.tabs[0];
     tab.linkedPanel = uniqueId;
@@ -507,8 +507,14 @@ window._gBrowser = {
   async _createFindBar(aTab) {
     let findBar = document.createXULElement("findbar");
     let browser = this.getBrowserForTab(aTab);
-    let browserContainer = this.getBrowserContainer(browser);
-    browserContainer.appendChild(findBar);
+
+    // The findbar should be inserted after the browserStack and, if present for
+    // this tab, after the StatusPanel as well.
+    let insertAfterElement = browser.parentNode;
+    if (insertAfterElement.nextElementSibling == StatusPanel.panel) {
+      insertAfterElement = StatusPanel.panel;
+    }
+    insertAfterElement.insertAdjacentElement("afterend", findBar);
 
     await new Promise(r => requestAnimationFrame(r));
     delete aTab._pendingFindBar;
@@ -529,9 +535,8 @@ window._gBrowser = {
   },
 
   _appendStatusPanel() {
-    let browser = this.selectedBrowser;
-    let browserContainer = this.getBrowserContainer(browser);
-    browserContainer.insertBefore(StatusPanel.panel, browser.parentNode.nextElementSibling);
+    this.selectedBrowser.parentNode.insertAdjacentElement("afterend",
+                                                          StatusPanel.panel);
   },
 
   _updateTabBarForPinnedTabs() {
@@ -640,16 +645,16 @@ window._gBrowser = {
     return this._tabForBrowser.get(aBrowser);
   },
 
-  getNotificationBox(aBrowser) {
-    return this.getSidebarContainer(aBrowser).parentNode;
-  },
-
-  getSidebarContainer(aBrowser) {
+  getPanel(aBrowser) {
     return this.getBrowserContainer(aBrowser).parentNode;
   },
 
   getBrowserContainer(aBrowser) {
     return (aBrowser || this.selectedBrowser).parentNode.parentNode;
+  },
+
+  getNotificationBox(aBrowser) {
+    return this.getBrowserContainer(aBrowser).firstElementChild;
   },
 
   getTabModalPromptBox(aBrowser) {
@@ -1735,7 +1740,7 @@ window._gBrowser = {
     let browser = this._getPreloadedBrowser();
 
     if (browser) {
-      browser.remove();
+      this.getPanel(browser).remove();
     }
   },
 
@@ -1786,8 +1791,8 @@ window._gBrowser = {
     let browser = this._createBrowser({ isPreloadBrowser: true, remoteType });
     this._preloadedBrowser = browser;
 
-    let notificationbox = this.getNotificationBox(browser);
-    this.tabpanels.appendChild(notificationbox);
+    let panel = this.getPanel(browser);
+    this.tabpanels.appendChild(panel);
 
     if (remoteType != E10SUtils.NOT_REMOTE) {
       // For remote browsers, we need to make sure that the webProgress is
@@ -1909,33 +1914,29 @@ window._gBrowser = {
       b.setAttribute("name", name);
     }
 
-    // Create the browserStack container
-    let stack = document.createXULElement("stack");
-    stack.className = "browserStack";
-    stack.appendChild(b);
-    stack.setAttribute("flex", "1");
+    let notificationbox = document.createXULElement("notificationbox");
+    notificationbox.setAttribute("notificationside", "top");
 
     // We set large flex on both containers to allow the devtools toolbox to
     // set a flex attribute. We don't want the toolbox to actually take up free
     // space, but we do want it to collapse when the window shrinks, and with
     // flex=0 it can't. When the toolbox is on the bottom it's a sibling of
-    // browserSidebarContainer, and when it's on the side it's a sibling of
+    // browserStack, and when it's on the side it's a sibling of
     // browserContainer.
+    let stack = document.createXULElement("stack");
+    stack.className = "browserStack";
+    stack.appendChild(b);
+    stack.setAttribute("flex", "10000");
+
     let browserContainer = document.createXULElement("vbox");
     browserContainer.className = "browserContainer";
+    browserContainer.appendChild(notificationbox);
     browserContainer.appendChild(stack);
     browserContainer.setAttribute("flex", "10000");
 
     let browserSidebarContainer = document.createXULElement("hbox");
     browserSidebarContainer.className = "browserSidebarContainer";
     browserSidebarContainer.appendChild(browserContainer);
-    browserSidebarContainer.setAttribute("flex", "10000");
-
-    // Add the Message and the Browser to the box
-    let notificationbox = document.createXULElement("notificationbox");
-    notificationbox.setAttribute("flex", "1");
-    notificationbox.setAttribute("notificationside", "top");
-    notificationbox.appendChild(browserSidebarContainer);
 
     // Prevent the superfluous initial load of a blank document
     // if we're going to load something other than about:blank.
@@ -2071,19 +2072,19 @@ window._gBrowser = {
     delete aTab._browserParams;
     delete aTab._cachedCurrentURI;
 
-    let notificationbox = this.getNotificationBox(browser);
+    let panel = this.getPanel(browser);
     let uniqueId = this._generateUniquePanelID();
-    notificationbox.id = uniqueId;
+    panel.id = uniqueId;
     aTab.linkedPanel = uniqueId;
 
     // Inject the <browser> into the DOM if necessary.
-    if (!notificationbox.parentNode) {
+    if (!panel.parentNode) {
       // NB: this appendChild call causes us to run constructors for the
       // browser element, which fires off a bunch of notifications. Some
       // of those notifications can cause code to run that inspects our
       // state, so it is important that the tab element is fully
       // initialized by this point.
-      this.tabpanels.appendChild(notificationbox);
+      this.tabpanels.appendChild(panel);
     }
 
     // wire up a progress listener for the new browser object.
@@ -2190,7 +2191,7 @@ window._gBrowser = {
     }
 
     aBrowser.destroy();
-    this.getNotificationBox(aBrowser).remove();
+    this.getPanel(aBrowser).remove();
     tab.removeAttribute("linkedpanel");
 
     this._createLazyBrowser(tab);
@@ -2502,8 +2503,7 @@ window._gBrowser = {
       if (t.linkedBrowser) {
         this._tabFilters.delete(t);
         this._tabListeners.delete(t);
-        let notificationbox = this.getNotificationBox(t.linkedBrowser);
-        notificationbox.remove();
+        this.getPanel(t.linkedBrowser).remove();
       }
       throw e;
     }
@@ -3100,7 +3100,7 @@ window._gBrowser = {
     // browser removal. So we remove the browser and the panel in two
     // steps.
 
-    var panel = this.getNotificationBox(browser);
+    var panel = this.getPanel(browser);
 
     // In the multi-process case, it's possible an asynchronous tab switch
     // is still underway. If so, then it's possible that the last visible
