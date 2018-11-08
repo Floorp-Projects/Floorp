@@ -338,11 +338,6 @@ var FullScreen = {
       // This is needed if they use the context menu to quit fullscreen
       this._isPopupOpen = false;
       this.cleanup();
-      // TabsInTitlebar skips appearance updates on resize events for exiting
-      // fullscreen, since that happens before we change the UI here in the
-      // "fullscreen" event. Hence we need to call it here to ensure the
-      // appearance is properly updated. See bug 1173768.
-      TabsInTitlebar.update();
     }
 
     if (enterFS && !document.fullscreenElement) {
