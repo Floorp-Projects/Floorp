@@ -2652,21 +2652,16 @@ window._gBrowser = {
   },
 
   getTabsToTheEndFrom(aTab) {
-    let tab;
-    if (aTab.multiselected) {
-      // In a multi-select context, pick the rightmost
-      // selected tab as reference.
-      let selectedTabs = this.selectedTabs;
-      tab = selectedTabs[selectedTabs.length - 1];
-    } else {
-      tab = aTab;
-    }
-
     let tabsToEnd = [];
     let tabs = this.visibleTabs;
     for (let i = tabs.length - 1; i >= 0; --i) {
-      if (tabs[i] == tab || tabs[i].pinned) {
+      if (tabs[i] == aTab || tabs[i].pinned) {
         break;
+      }
+      // In a multi-select context, select all unselected tabs
+      // starting from the context tab.
+      if (aTab.multiselected && tabs[i].multiselected) {
+        continue;
       }
       tabsToEnd.push(tabs[i]);
     }
