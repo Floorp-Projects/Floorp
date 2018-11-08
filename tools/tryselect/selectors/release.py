@@ -37,7 +37,7 @@ class ReleaseParser(BaseTryParser):
          {'metavar': 'STR',
           'action': 'append',
           'dest': 'migrations',
-          'choices': ['central-to-beta', 'beta-to-release'],
+          'choices': ['central-to-beta', 'beta-to-release', 'early-to-late-beta'],
           'help': "Migration to run for the release (can be specified multiple times).",
           }],
         [['--no-limit-locales'],
