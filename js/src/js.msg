@@ -333,7 +333,7 @@ MSG_DEF(JSMSG_TOO_MANY_CON_ARGS,       0, JSEXN_SYNTAXERR, "too many constructor
 MSG_DEF(JSMSG_TOO_MANY_DEFAULTS,       0, JSEXN_SYNTAXERR, "more than one switch default")
 MSG_DEF(JSMSG_TOO_MANY_FUN_ARGS,       0, JSEXN_SYNTAXERR, "too many function arguments")
 MSG_DEF(JSMSG_TOO_MANY_LOCALS,         0, JSEXN_SYNTAXERR, "too many local variables")
-MSG_DEF(JSMSG_TOO_MANY_RESUME_INDEXES, 0, JSEXN_SYNTAXERR, "too many yield/await/finally locations")
+MSG_DEF(JSMSG_TOO_MANY_RESUME_INDEXES, 0, JSEXN_SYNTAXERR, "too many yield/await/finally/case locations")
 MSG_DEF(JSMSG_TOUGH_BREAK,             0, JSEXN_SYNTAXERR, "unlabeled break must be inside loop or switch")
 MSG_DEF(JSMSG_UNEXPECTED_TOKEN,        2, JSEXN_SYNTAXERR, "expected {0}, got {1}")
 MSG_DEF(JSMSG_UNEXPECTED_TOKEN_NO_EXPECT,  1, JSEXN_SYNTAXERR, "unexpected token: {0}")
