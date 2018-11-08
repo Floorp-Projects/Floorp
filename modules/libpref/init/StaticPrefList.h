@@ -804,13 +804,6 @@ VARCACHE_PREF(
   bool, false
 )
 
-// Does overflow-break: break-word affect intrinsic size?
-VARCACHE_PREF(
-  "layout.css.overflow-break.intrinsic-size",
-   layout_css_overflow_break_intrinsic_size,
-  bool, false
-)
-
 // Does arbitrary ::-webkit-* pseudo-element parsed?
 VARCACHE_PREF(
   "layout.css.unknown-webkit-pseudo-element",

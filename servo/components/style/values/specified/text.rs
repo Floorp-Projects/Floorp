@@ -659,6 +659,8 @@ impl ToComputedValue for TextEmphasisStyle {
     fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
         match *self {
             TextEmphasisStyle::Keyword(ref keyword) => {
+                // FIXME(emilio): This should set the rule_cache_conditions
+                // properly.
                 let default_shape = if context.style().get_inherited_box().clone_writing_mode() ==
                     SpecifiedWritingMode::HorizontalTb
                 {
@@ -680,6 +682,7 @@ impl ToComputedValue for TextEmphasisStyle {
             },
         }
     }
+
     #[inline]
     fn from_computed_value(computed: &Self::ComputedValue) -> Self {
         match *computed {
@@ -876,4 +879,25 @@ impl Parse for MozTabSize {
             context, input,
         )?))
     }
+}
+
+/// Values for the `overflow-wrap` property.
+#[repr(u8)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+)]
+#[allow(missing_docs)]
+pub enum OverflowWrap {
+    Normal,
+    BreakWord,
+    Anywhere,
 }
