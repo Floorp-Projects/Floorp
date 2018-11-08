@@ -6,7 +6,7 @@
 
 // Test that the flex item outline is rotated for flex items in a column flexbox layout.
 
-const TEST_URI = URL_ROOT + "doc_flexbox_simple.html";
+const TEST_URI = URL_ROOT + "doc_flexbox_specific_cases.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
