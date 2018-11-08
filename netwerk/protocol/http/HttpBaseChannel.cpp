@@ -4142,7 +4142,7 @@ HttpBaseChannel::TimingAllowCheck(nsIPrincipal *aOrigin, bool *_retval)
     if (t.Type() == Tokenizer::TOKEN_EOF ||
         t.Equals(Tokenizer::Token::Char(','))) {
       p.Claim(headerItem);
-      headerItem.StripWhitespace();
+      nsHttp::TrimHTTPWhitespace(headerItem, headerItem);
       // If the list item contains a case-sensitive match for the value of the
       // origin, or a wildcard, return pass
       if (headerItem == origin || headerItem == "*") {
