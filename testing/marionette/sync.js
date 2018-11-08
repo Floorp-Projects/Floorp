@@ -4,6 +4,7 @@
 
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -26,6 +27,8 @@ this.EXPORTED_SYMBOLS = [
 ];
 
 const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
+
+const PROMISE_TIMEOUT = AppConstants.DEBUG ? 4500 : 1500;
 
 /**
  * @callback Condition
@@ -150,9 +153,11 @@ function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
  *     callback invoked after the ``timeout`` duration is reached.
  *     It is given two callbacks: ``resolve(value)`` and
  *     ``reject(error)``.
- * @param {timeout=} [timeout=1500] timeout
+ * @param {timeout=} timeout
  *     ``condition``'s ``reject`` callback will be called
  *     after this timeout, given in milliseconds.
+ *     By default 1500 ms in an optimised build and 4500 ms in
+ *     debug builds.
  * @param {Error=} [throws=TimeoutError] throws
  *     When the ``timeout`` is hit, this error class will be
  *     thrown.  If it is null, no error is thrown and the promise is
@@ -166,7 +171,8 @@ function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
  * @throws {RangeError}
  *     If `timeout` is not an unsigned integer.
  */
-function TimedPromise(fn, {timeout = 1500, throws = TimeoutError} = {}) {
+function TimedPromise(fn,
+    {timeout = PROMISE_TIMEOUT, throws = TimeoutError} = {}) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
   if (typeof fn != "function") {
