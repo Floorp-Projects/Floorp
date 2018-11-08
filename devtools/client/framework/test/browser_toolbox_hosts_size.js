@@ -17,21 +17,21 @@ add_task(async function() {
   Services.prefs.setIntPref("devtools.toolbox.sidebar.width", 10000);
 
   const tab = await addTab(URL);
-  const nbox = gBrowser.getNotificationBox();
-  const {clientHeight: nboxHeight, clientWidth: nboxWidth} = nbox;
+  const panel = gBrowser.getPanel();
+  const {clientHeight: panelHeight, clientWidth: panelWidth} = panel;
   const target = await TargetFactory.forTab(tab);
   const toolbox = await gDevTools.showToolbox(target);
 
-  is(nbox.clientHeight, nboxHeight, "Opening the toolbox hasn't changed the height of the nbox");
-  is(nbox.clientWidth, nboxWidth, "Opening the toolbox hasn't changed the width of the nbox");
+  is(panel.clientHeight, panelHeight, "Opening the toolbox hasn't changed the height of the panel");
+  is(panel.clientWidth, panelWidth, "Opening the toolbox hasn't changed the width of the panel");
 
-  let iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-bottom-iframe");
-  is(iframe.clientHeight, nboxHeight - 25, "The iframe fits within the available space");
+  let iframe = panel.querySelector(".devtools-toolbox-bottom-iframe");
+  is(iframe.clientHeight, panelHeight - 25, "The iframe fits within the available space");
 
   await toolbox.switchHost(Toolbox.HostType.RIGHT);
-  iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-side-iframe");
+  iframe = panel.querySelector(".devtools-toolbox-side-iframe");
   iframe.style.minWidth = "1px"; // Disable the min width set in css
-  is(iframe.clientWidth, nboxWidth - 25, "The iframe fits within the available space");
+  is(iframe.clientWidth, panelWidth - 25, "The iframe fits within the available space");
 
   await cleanup(toolbox);
 });
@@ -43,19 +43,19 @@ add_task(async function() {
   Services.prefs.setIntPref("devtools.toolbox.sidebar.width", 100);
 
   const tab = await addTab(URL);
-  const nbox = gBrowser.getNotificationBox();
-  const {clientHeight: nboxHeight, clientWidth: nboxWidth} = nbox;
+  const panel = gBrowser.getPanel();
+  const {clientHeight: panelHeight, clientWidth: panelWidth} = panel;
   const target = await TargetFactory.forTab(tab);
   const toolbox = await gDevTools.showToolbox(target);
 
-  is(nbox.clientHeight, nboxHeight, "Opening the toolbox hasn't changed the height of the nbox");
-  is(nbox.clientWidth, nboxWidth, "Opening the toolbox hasn't changed the width of the nbox");
+  is(panel.clientHeight, panelHeight, "Opening the toolbox hasn't changed the height of the panel");
+  is(panel.clientWidth, panelWidth, "Opening the toolbox hasn't changed the width of the panel");
 
-  let iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-bottom-iframe");
+  let iframe = panel.querySelector(".devtools-toolbox-bottom-iframe");
   is(iframe.clientHeight, 100, "The iframe is resized properly");
 
   await toolbox.switchHost(Toolbox.HostType.RIGHT);
-  iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-side-iframe");
+  iframe = panel.querySelector(".devtools-toolbox-side-iframe");
   iframe.style.minWidth = "1px"; // Disable the min width set in css
   is(iframe.clientWidth, 100, "The iframe is resized properly");
 

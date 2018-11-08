@@ -917,12 +917,7 @@ Tester.prototype = {
             ChromeUtils.import("resource://gre/modules/BackgroundPageThumbs.jsm", {});
           BackgroundPageThumbs._destroy();
 
-          // Destroy preloaded browsers.
-          if (gBrowser._preloadedBrowser) {
-            let browser = gBrowser._preloadedBrowser;
-            gBrowser._preloadedBrowser = null;
-            gBrowser.getNotificationBox(browser).remove();
-          }
+          gBrowser.removePreloadedBrowser();
         }
 
         // Schedule GC and CC runs before finishing in order to detect
