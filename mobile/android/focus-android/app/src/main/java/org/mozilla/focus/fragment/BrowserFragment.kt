@@ -66,6 +66,7 @@ import org.mozilla.focus.biometrics.BiometricAuthenticationHandler
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.broadcastreceiver.DownloadBroadcastReceiver
 import org.mozilla.focus.exceptions.ExceptionDomains
+import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.shouldRequestDesktopSite
 import org.mozilla.focus.findinpage.FindInPageCoordinator
@@ -679,7 +680,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         val fragmentManager = requireActivity().supportFragmentManager
 
         Log.e("crash:", crash.toString())
-        if (fragmentManager.findFragmentByTag(CrashReporterFragment.FRAGMENT_TAG) != null) {
+        if (crashReporterIsVisible()) {
             // We are already displaying the crash reporter
             // No need to show another one.
             return
@@ -701,11 +702,15 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         crash_container.visibility = View.VISIBLE
         tabs.hide()
         erase.hide()
+        securityView?.setImageResource(R.drawable.ic_firefox)
+        menuView?.visibility = View.GONE
+        urlView?.text = requireContext().getString(R.string.tab_crash_report_title)
     }
 
     internal fun hideCrashReporter() {
         val fragmentManager = requireActivity().supportFragmentManager
-        val fragment = fragmentManager.findFragmentByTag(CrashReporterFragment.FRAGMENT_TAG) ?: return
+        val fragment = fragmentManager.findFragmentByTag(CrashReporterFragment.FRAGMENT_TAG)
+                ?: return
 
         fragmentManager
                 .beginTransaction()
@@ -715,6 +720,15 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         crash_container.visibility = View.GONE
         tabs.show()
         erase.show()
+        securityView?.setImageResource(R.drawable.ic_internet)
+        menuView?.visibility = View.VISIBLE
+        urlView?.text = session.let {
+            if (it.isSearch) it.searchTerms else it.url
+        }
+    }
+
+    internal fun crashReporterIsVisible(): Boolean = requireActivity().supportFragmentManager.let {
+        it.findFragmentByTag(CrashReporterFragment.FRAGMENT_TAG)?.isVisible ?: false
     }
 
     internal fun showAddToHomescreenDialog(url: String, title: String) {
@@ -967,7 +981,9 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                 menuWeakReference = WeakReference(menu)
             }
 
-            R.id.display_url -> if (requireComponents.sessionManager.findSessionById(session.id) != null) {
+            R.id.display_url -> if (
+                    !crashReporterIsVisible() &&
+                    requireComponents.sessionManager.findSessionById(session.id) != null) {
                 val urlFragment = UrlInputFragment
                     .createWithSession(session, urlView!!)
 
@@ -1102,7 +1118,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                 showAddToHomescreenDialog(url, title)
             }
 
-            R.id.security_info -> showSecurityPopUp()
+            R.id.security_info -> if (!crashReporterIsVisible()) { showSecurityPopUp() }
 
             R.id.report_site_issue -> {
                 val reportUrl = String.format(SupportUtils.REPORT_SITE_ISSUE_URL, url)
@@ -1295,6 +1311,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
     }
 
     private fun updateSecurityIcon(session: Session, securityInfo: Session.SecurityInfo = session.securityInfo) {
+        if (crashReporterIsVisible()) return
         val securityView = securityView ?: return
 
         if (!session.loading) {

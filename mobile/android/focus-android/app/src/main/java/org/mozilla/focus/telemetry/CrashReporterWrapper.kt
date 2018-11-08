@@ -66,7 +66,7 @@ object CrashReporterWrapper {
     }
 
     fun onIsEnabledChanged(context: Context, isEnabled: Boolean = TelemetryWrapper.isTelemetryEnabled(context)) {
-        crashReporter?.enabled = isEnabled || true
+        crashReporter?.enabled = isEnabled
     }
 
     fun submitCrash(crash: Crash) {

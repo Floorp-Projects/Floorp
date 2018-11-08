@@ -22,13 +22,14 @@
     <TextView
         android:id="@+id/headline"
         android:layout_width="300dp"
-        android:layout_height="54dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:lineSpacingExtra="8sp"
         android:singleLine="false"
         android:text="@string/tab_crash_report_headline"
         android:textAlignment="center"
         android:textColor="@android:color/black"
         android:textSize="20sp"
-        android:layout_marginTop="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/background" />
@@ -37,11 +38,12 @@
         android:id="@+id/description"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:lineSpacingExtra="7sp"
         android:singleLine="false"
         android:text="@string/tab_crash_report_description"
         android:textColor="@android:color/black"
         android:textSize="15sp"
-        android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/headline" />
@@ -55,6 +57,7 @@
         android:checked="true"
         android:text="@string/crash_report_send_crash_label"
         android:textColor="@android:color/black"
+        android:textSize="15sp"
         app:layout_constraintBottom_toTopOf="@id/closeTabButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -63,16 +66,17 @@
 
     <Button
         android:id="@+id/closeTabButton"
-        android:layout_marginEnd="26dp"
-        android:layout_marginStart="26dp"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="26dp"
+        android:layout_marginEnd="26dp"
+        android:layout_marginBottom="24dp"
         android:backgroundTint="@color/colorCrashAccent"
         android:text="@string/tab_crash_report_close_tab_button_label"
         android:textFontWeight="600"
-        android:layout_marginBottom="24dp"
-        app:layout_constraintWidth_percent="0.8"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintWidth_percent="0.8" />
 </android.support.constraint.ConstraintLayout>
