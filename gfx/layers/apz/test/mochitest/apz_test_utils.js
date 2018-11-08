@@ -438,7 +438,11 @@ function runContinuation(testFunction) {
         }
       }
 
-      driveTest();
+      try {
+        driveTest();
+      } catch (ex) {
+        SimpleTest.ok(false, "APZ test continuation failed with exception: " + ex);
+      }
     });
   };
 }
