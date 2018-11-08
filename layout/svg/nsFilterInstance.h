@@ -21,6 +21,7 @@
 #include "nsTArray.h"
 #include "nsIFrame.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 class gfxContext;
 class nsIFrame;
@@ -120,6 +121,15 @@ public:
   static nsRect GetPostFilterBounds(nsIFrame *aFilteredFrame,
                                     const gfxRect *aOverrideBBox = nullptr,
                                     const nsRect *aPreFilterBounds = nullptr);
+
+  /**
+   * Try to build WebRender filters for a frame if the filters applied to it are supported.
+   */
+  static bool
+  BuildWebRenderFilters(nsIFrame* aFilteredFrame,
+                        const mozilla::LayoutDeviceIntRect& aPreFilterBounds,
+                        nsTArray<mozilla::wr::WrFilterOp>& aWrFilters,
+                        mozilla::LayoutDeviceIntRect& aPostFilterBounds);
 
 private:
   /**
