@@ -182,7 +182,6 @@ void
 ShadowRoot::Unattach()
 {
   MOZ_ASSERT(!HasSlots(), "Won't work!");
-  MOZ_ASSERT(IsUAWidget());
   MOZ_ASSERT(GetHost());
   Unbind();
   GetHost()->RemoveMutationObserver(this);
