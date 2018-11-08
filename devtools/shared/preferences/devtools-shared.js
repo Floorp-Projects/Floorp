@@ -37,8 +37,6 @@ pref("devtools.debugger.remote-port", 6000);
 pref("devtools.debugger.remote-websocket", false);
 // Force debugger server binding on the loopback interface
 pref("devtools.debugger.force-local", true);
-// Block tools from seeing / interacting with certified apps
-pref("devtools.debugger.forbid-certified-apps", true);
 
 // Limit for intercepted response bodies (1 MB)
 // Possible values:

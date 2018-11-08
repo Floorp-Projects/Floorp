@@ -5,21 +5,3 @@
 html, body {
   background: white;
 }
-
-#devicePrivileges {
-  font-family: monospace;
-  padding-left: 6px;
-}
-
-#devtools-check > a {
-  color: #4C9ED9;
-  cursor: pointer;
-}
-
-.action {
-  display: inline;
-}
-
-.action[hidden] {
-  display: none;
-}

@@ -118,12 +118,6 @@
 
 <!-- Runtime Details -->
 <!ENTITY runtimedetails_title "Runtime Info">
-<!ENTITY runtimedetails_adbIsRoot "ADB is root: ">
-<!ENTITY runtimedetails_summonADBRoot "root device">
-<!ENTITY runtimedetails_ADBRootWarning "(requires unlocked bootloader)">
-<!ENTITY runtimedetails_unrestrictedPrivileges "Unrestricted DevTools privileges: ">
-<!ENTITY runtimedetails_requestPrivileges "request higher privileges">
-<!ENTITY runtimedetails_privilegesWarning "(Will reboot device. Requires root access.)">
 
 <!-- Device Preferences and Settings -->
 <!ENTITY device_typeboolean "Boolean">
