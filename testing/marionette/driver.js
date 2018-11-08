@@ -1471,6 +1471,7 @@ GeckoDriver.prototype.setWindowRect = async function(cmd) {
       win.addEventListener("resize", debounce);
       win.addEventListener("resizeEnd", resolve, {once: true});
       win.resizeTo(width, height);
+      await new IdlePromise(win);
     }, {timeout: 5000});
 
     win.removeEventListener("resize", debounce);
@@ -1482,6 +1483,7 @@ GeckoDriver.prototype.setWindowRect = async function(cmd) {
 
     if (win.screenX != x || win.screenY != y) {
       win.moveTo(x, y);
+      await new IdlePromise(win);
     }
   }
 
@@ -2986,6 +2988,7 @@ GeckoDriver.prototype.minimizeWindow = async function() {
       win.addEventListener("visibilitychange", resolve, {once: true});
       win.minimize();
     }, {throws: null});
+    await new IdlePromise(win);
   }
 
   return this.curBrowser.rect;
@@ -3032,6 +3035,7 @@ GeckoDriver.prototype.maximizeWindow = async function() {
       win.maximize();
     }, {throws: null});
     win.removeEventListener("sizemodechange", cb);
+    await new IdlePromise(win);
   }
 
   return this.curBrowser.rect;
@@ -3073,6 +3077,7 @@ GeckoDriver.prototype.fullscreenWindow = async function() {
     }, {throws: null});
     win.removeEventListener("sizemodechange", cb);
   }
+  await new IdlePromise(win);
 
   return this.curBrowser.rect;
 };
