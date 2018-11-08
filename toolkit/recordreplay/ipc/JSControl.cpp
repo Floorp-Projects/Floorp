@@ -432,21 +432,6 @@ Middleman_HadRepaintFailure(JSContext* aCx, unsigned aArgc, Value* aVp)
   return true;
 }
 
-static bool
-Middleman_RecordingPosition(JSContext* aCx, unsigned aArgc, Value* aVp)
-{
-  CallArgs args = CallArgsFromVp(aArgc, aVp);
-
-  Maybe<double> recordingPosition = parent::GetRecordingPosition();
-
-  if (recordingPosition.isSome()) {
-    args.rval().setNumber(recordingPosition.ref());
-  } else {
-    args.rval().setUndefined();
-  }
-  return true;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // Devtools Sandbox
 ///////////////////////////////////////////////////////////////////////////////
@@ -830,14 +815,18 @@ static bool
 RecordReplay_CurrentExecutionPoint(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
-  RootedObject obj(aCx, NonNullObject(aCx, args.get(0)));
-  if (!obj) {
-    return false;
-  }
 
-  BreakpointPosition position;
-  if (!position.Decode(aCx, obj)) {
-    return false;
+  Maybe<BreakpointPosition> position;
+  if (!args.get(0).isUndefined()) {
+    RootedObject obj(aCx, NonNullObject(aCx, args.get(0)));
+    if (!obj) {
+      return false;
+    }
+
+    position.emplace();
+    if (!position.ref().Decode(aCx, obj)) {
+      return false;
+    }
   }
 
   ExecutionPoint point = navigation::CurrentExecutionPoint(position);
@@ -860,6 +849,21 @@ RecordReplay_TimeWarpTargetExecutionPoint(JSContext* aCx, unsigned aArgc, Value*
   }
 
   ExecutionPoint point = navigation::TimeWarpTargetExecutionPoint((ProgressCounter) timeWarpTarget);
+  RootedObject result(aCx, point.Encode(aCx));
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+static bool
+RecordReplay_RecordingEndpoint(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  ExecutionPoint point = navigation::GetRecordingEndpoint();
   RootedObject result(aCx, point.Encode(aCx));
   if (!result) {
     return false;
@@ -927,7 +931,6 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
   JS_FN("maybeSwitchToReplayingChild", Middleman_MaybeSwitchToReplayingChild, 0, 0),
   JS_FN("hadRepaint", Middleman_HadRepaint, 2, 0),
   JS_FN("hadRepaintFailure", Middleman_HadRepaintFailure, 0, 0),
-  JS_FN("recordingPosition", Middleman_RecordingPosition, 0, 0),
   JS_FS_END
 };
 
@@ -939,6 +942,7 @@ static const JSFunctionSpec gRecordReplayMethods[] = {
   JS_FN("getContent", RecordReplay_GetContent, 1, 0),
   JS_FN("currentExecutionPoint", RecordReplay_CurrentExecutionPoint, 1, 0),
   JS_FN("timeWarpTargetExecutionPoint", RecordReplay_TimeWarpTargetExecutionPoint, 1, 0),
+  JS_FN("recordingEndpoint", RecordReplay_RecordingEndpoint, 0, 0),
   JS_FN("repaint", RecordReplay_Repaint, 0, 0),
   JS_FN("dump", RecordReplay_Dump, 1, 0),
   JS_FS_END
