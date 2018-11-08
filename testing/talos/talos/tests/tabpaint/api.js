@@ -20,10 +20,12 @@
  *    for certain types of links (_blank links for example) to open new tabs.
  */
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "TalosParentProfiler",
-                               "resource://talos-powers/TalosParentProfiler.jsm");
+
+XPCOMUtils.defineLazyScriptGetter(this, "TalosParentProfiler",
+                                  "resource://talos-powers/TalosParentProfiler.js");
 
 const ANIMATION_PREF = "toolkit.cosmeticAnimations.enabled";
 const MULTI_OPT_OUT_PREF = "dom.ipc.multiOptOut";

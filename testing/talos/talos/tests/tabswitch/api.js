@@ -190,7 +190,7 @@ async function test(window) {
     return;
   }
 
-  ChromeUtils.import("resource://talos-powers/TalosParentProfiler.jsm", context);
+  Services.scriptloader.loadSubScript("resource://talos-powers/TalosParentProfiler.js", context);
   TalosParentProfiler = context.TalosParentProfiler;
 
   let testURLs = [];
