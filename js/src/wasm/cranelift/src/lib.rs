@@ -31,7 +31,7 @@ mod cpu;       // CPU detection and `TargetISA` configuration.
 mod utils;     // Helpers for other source files.
 mod wasm2clif; // WebAssembly to Cranelift translation callbacks.
 
-use baldrdash::{ CompiledFunc, FuncCompileInput, ModuleEnvironment, StaticEnvironment };
+use baldrdash::{CompiledFunc, FuncCompileInput, ModuleEnvironment, StaticEnvironment};
 use compile::BatchCompiler;
 use std::ptr;
 
@@ -64,7 +64,7 @@ pub extern "C" fn cranelift_compiler_create<'a, 'b>(
         Err(err) => {
             error!("When constructing the batch compiler: {}", err);
             ptr::null_mut()
-        },
+        }
     }
 }
 

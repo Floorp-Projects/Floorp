@@ -19,6 +19,7 @@
 // TODO: Should many u32 arguments and return values here really be
 // usize, to be more conventional?
 
+use baldrapi::CraneliftModuleEnvironment;
 use cranelift_codegen::binemit::CodeOffset;
 use cranelift_codegen::cursor::{Cursor, FuncCursor};
 use cranelift_codegen::entity::EntityRef;
@@ -29,17 +30,16 @@ use cranelift_codegen::{CodegenError, CodegenResult};
 use cranelift_wasm::{FuncIndex, GlobalIndex, SignatureIndex, TableIndex};
 use std::mem;
 use std::slice;
-use baldrapi::CraneliftModuleEnvironment;
 
 use baldrapi;
 
+pub use baldrapi::BD_SymbolicAddress as SymbolicAddress;
 pub use baldrapi::BD_ValType as ValType;
 pub use baldrapi::CraneliftCompiledFunc as CompiledFunc;
 pub use baldrapi::CraneliftFuncCompileInput as FuncCompileInput;
 pub use baldrapi::CraneliftMetadataEntry as MetadataEntry;
 pub use baldrapi::CraneliftStaticEnvironment as StaticEnvironment;
 pub use baldrapi::FuncTypeIdDescKind;
-pub use baldrapi::BD_SymbolicAddress as SymbolicAddress;
 pub use baldrapi::Trap;
 pub use baldrapi::TypeCode;
 
@@ -72,7 +72,7 @@ impl Into<ir::Type> for TypeCode {
     fn into(self) -> ir::Type {
         match self.into() {
             Some(t) => t,
-            None => panic!("unexpected void type")
+            None => panic!("unexpected void type"),
         }
     }
 }
@@ -183,10 +183,10 @@ impl FuncTypeWithId {
 /// Thin wrapper for the CraneliftModuleEnvironment structure.
 
 pub struct ModuleEnvironment<'a> {
-    env: &'a CraneliftModuleEnvironment
+    env: &'a CraneliftModuleEnvironment,
 }
 
-impl <'a> ModuleEnvironment<'a> {
+impl<'a> ModuleEnvironment<'a> {
     pub fn new(env: &'a CraneliftModuleEnvironment) -> Self {
         Self { env }
     }
