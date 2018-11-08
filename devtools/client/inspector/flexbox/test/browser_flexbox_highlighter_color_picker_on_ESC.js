@@ -6,7 +6,7 @@
 // Test that the flexbox highlighter color change in the color picker is reverted when
 // ESCAPE is pressed.
 
-const TEST_URI = URL_ROOT + "doc_flexbox_simple.html";
+const TEST_URI = URL_ROOT + "doc_flexbox_specific_cases.html";
 
 add_task(async function() {
   await addTab(TEST_URI);

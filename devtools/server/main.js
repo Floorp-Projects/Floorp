@@ -15,7 +15,6 @@ var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
 
-loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socket", true);
 loader.lazyRequireGetter(this, "Authentication", "devtools/shared/security/auth");
 loader.lazyRequireGetter(this, "LocalDebuggerTransport", "devtools/shared/transport/local-transport", true);
 loader.lazyRequireGetter(this, "ChildDebuggerTransport", "devtools/shared/transport/child-transport", true);
@@ -114,7 +113,7 @@ var DebuggerServer = {
 
     ActorRegistry.destroy();
 
-    this.closeAllListeners();
+    this.closeAllSocketListeners();
     this._initialized = false;
 
     dumpn("Debugger server is shut down.");
@@ -199,33 +198,15 @@ var DebuggerServer = {
   },
 
   /**
-   * Creates a socket listener for remote debugger connections.
-   *
-   * After calling this, set some socket options, such as the port / path to
-   * listen on, and then call |open| on the listener.
-   *
-   * See SocketListener in devtools/shared/security/socket.js for available
-   * options.
-   *
-   * @return SocketListener
-   *         A SocketListener instance that is waiting to be configured and
-   *         opened is returned.  This single listener can be closed at any
-   *         later time by calling |close| on the SocketListener.  If remote
-   *         connections are disabled, an error is thrown.
-   */
-  createListener() {
-    if (!Services.prefs.getBoolPref("devtools.debugger.remote-enabled")) {
-      throw new Error("Can't create listener, remote debugging disabled");
-    }
-    this._checkInit();
-    return DebuggerSocket.createListener();
-  },
-
-  /**
    * Add a SocketListener instance to the server's set of active
    * SocketListeners.  This is called by a SocketListener after it is opened.
    */
-  _addListener(listener) {
+  addSocketListener(listener) {
+    if (!Services.prefs.getBoolPref("devtools.debugger.remote-enabled")) {
+      throw new Error("Can't add a SocketListener, remote debugging disabled");
+    }
+    this._checkInit();
+
     listener.on("accepted", this._onSocketListenerAccepted);
     this._listeners.push(listener);
   },
@@ -234,7 +215,7 @@ var DebuggerServer = {
    * Remove a SocketListener instance from the server's set of active
    * SocketListeners.  This is called by a SocketListener after it is closed.
    */
-  _removeListener(listener) {
+  removeSocketListener(listener) {
     // Remove connections that were accepted in the listener.
     for (const connID of Object.getOwnPropertyNames(this._connections)) {
       const connection = this._connections[connID];
@@ -253,7 +234,7 @@ var DebuggerServer = {
    * @return boolean
    *         Whether any listeners were actually closed.
    */
-  closeAllListeners() {
+  closeAllSocketListeners() {
     if (!this.listeningSockets) {
       return false;
     }

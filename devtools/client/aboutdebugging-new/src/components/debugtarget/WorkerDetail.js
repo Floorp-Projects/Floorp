@@ -15,6 +15,8 @@ const {
   SERVICE_WORKER_FETCH_STATES,
 } = require("../../constants");
 
+const FieldPair = createFactory(require("./FieldPair"));
+
 /**
  * This component displays detail information for worker.
  */
@@ -27,61 +29,63 @@ class WorkerDetail extends PureComponent {
     };
   }
 
-  getStatusFtlId(status) {
-    switch (status) {
-      case "running":
-        return "about-debugging-worker-status-running";
-      case "stopped":
-        return "about-debugging-worker-status-stopped";
-      case "registering":
-        return "about-debugging-worker-status-registering";
-      default:
-        // Provided with a null id, Localized will simply use the fallback value defined
-        // in the component.
-        return null;
-    }
-  }
-
   renderFetch() {
     const { fetch } = this.props.target.details;
-    const name = this.props.getString("about-debugging-worker-fetch");
-    const label = fetch === SERVICE_WORKER_FETCH_STATES.LISTENING
-                    ? this.props.getString("about-debugging-worker-fetch-listening")
-                    : this.props.getString("about-debugging-worker-fetch-not-listening");
-    return this.renderField("fetch", name, label);
+    const status = fetch === SERVICE_WORKER_FETCH_STATES.LISTENING
+                    ? "listening"
+                    : "not-listening";
+
+    return Localized(
+      {
+        id: "about-debugging-worker-fetch",
+        attrs: { label: true, value: true },
+        $status: status,
+      },
+      FieldPair(
+        {
+          slug: "fetch",
+          label: "Fetch",
+          value: status,
+        }
+      )
+    );
   }
 
-  renderField(key, name, value) {
-    return [
-      dom.dt({ key: `${ key }-dt` }, name),
-      dom.dd(
+  renderScope() {
+    const { scope } = this.props.target.details;
+
+    return Localized(
+      {
+        id: "about-debugging-worker-scope",
+        attrs: { label: true },
+      },
+      FieldPair(
         {
-          className: "ellipsis-text",
-          key: `${ key }-dd`,
-          title: value,
-        },
-        value,
+          slug: "scope",
+          label: "Scope",
+          value: scope,
+        }
       ),
-    ];
+    );
   }
 
   renderStatus() {
     const status = this.props.target.details.status.toLowerCase();
-    const ftlId = this.getStatusFtlId(status);
 
-    return dom.dt(
-      {},
-      Localized(
-        {
-          id: ftlId,
-        },
-        dom.span(
+    return FieldPair(
+      {
+        slug: "status",
+        label: Localized(
           {
-            className: `badge ${status === "running" ? "badge--success" : ""}`,
+            id: "about-debugging-worker-status",
+            $status: status,
           },
-          status
-        )
-      )
+          dom.span(
+            { className: `badge ${status === "running" ? "badge--success" : ""}`},
+            status
+          )
+        ),
+      }
     );
   }
 
@@ -93,7 +97,7 @@ class WorkerDetail extends PureComponent {
         className: "worker-detail",
       },
       fetch ? this.renderFetch() : null,
-      scope ? this.renderField("scope", "Scope", scope) : null,
+      scope ? this.renderScope() : null,
       status ? this.renderStatus() : null,
     );
   }

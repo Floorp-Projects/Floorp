@@ -19,7 +19,7 @@
 #include "StreamTracks.h"
 #include "VideoSegment.h"
 #include "VideoUtils.h"
-#include "cubeb/cubeb.h"
+#include "CubebDeviceEnumerator.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Mutex.h"
@@ -46,44 +46,6 @@
 #include "webrtc/modules/video_capture/video_capture_defines.h"
 
 namespace mozilla {
-
-// This class implements a cache for accessing the audio device list. It can be
-// accessed on any thread.
-class CubebDeviceEnumerator final
-{
-public:
-  CubebDeviceEnumerator();
-  ~CubebDeviceEnumerator();
-  // This method returns a list of all the input and output audio devices
-  // available on this machine.
-  // This method is safe to call from all threads.
-  void EnumerateAudioInputDevices(nsTArray<RefPtr<AudioDeviceInfo>>& aOutDevices);
-  // From a cubeb device id, return the info for this device, if it's still a
-  // valid id, or nullptr otherwise.
-  // This method is safe to call from any thread.
-  already_AddRefed<AudioDeviceInfo>
-  DeviceInfoFromID(CubebUtils::AudioDeviceID aID);
-
-protected:
-
-  // Static function called by cubeb when the audio input device list changes
-  // (i.e. when a new device is made available, or non-available). This
-  // re-binds to the MediaEngineWebRTC that instantiated this
-  // CubebDeviceEnumerator, and simply calls `AudioDeviceListChanged` below.
-  static void AudioDeviceListChanged_s(cubeb* aContext, void* aUser);
-  // Invalidates the cached audio input device list, can be called on any
-  // thread.
-  void AudioDeviceListChanged();
-
-private:
-  // Synchronize access to mDevices
-  Mutex mMutex;
-  nsTArray<RefPtr<AudioDeviceInfo>> mDevices;
-  // If mManualInvalidation is true, then it is necessary to query the device
-  // list each time instead of relying on automatic invalidation of the cache by
-  // cubeb itself. Set in the constructor and then can be access on any thread.
-  bool mManualInvalidation;
-};
 
 class MediaEngineWebRTC : public MediaEngine
 {
@@ -117,7 +79,7 @@ private:
 
   // gUM runnables can e.g. Enumerate from multiple threads
   Mutex mMutex;
-  UniquePtr<mozilla::CubebDeviceEnumerator> mEnumerator;
+  RefPtr<mozilla::CubebDeviceEnumerator> mEnumerator;
   const bool mDelayAgnostic;
   const bool mExtendedFilter;
   // This also is set in the ctor and then never changed, but we can't make it

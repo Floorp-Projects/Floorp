@@ -176,14 +176,12 @@ namespace nsStyleTransformMatrix {
   void
   ProcessInterpolateMatrix(mozilla::gfx::Matrix4x4& aMatrix,
                            const nsCSSValue::Array* aData,
-                           TransformReferenceBox& aBounds,
-                           bool* aContains3dTransform);
+                           TransformReferenceBox& aBounds);
 
   void
   ProcessAccumulateMatrix(mozilla::gfx::Matrix4x4& aMatrix,
                           const nsCSSValue::Array* aData,
-                          TransformReferenceBox& aBounds,
-                          bool* aContains3dTransform);
+                          TransformReferenceBox& aBounds);
 
 
   /**
@@ -193,16 +191,12 @@ namespace nsStyleTransformMatrix {
    * @param aData The nsCSSValueList containing the transform functions
    * @param aBounds The frame's bounding rectangle.
    * @param aAppUnitsPerMatrixUnit The number of app units per device pixel.
-   * @param aContains3dTransform [out] Set to true if aList contains at least
-   *   one 3d transform function (as defined in the CSS transforms
-   *   specification), false otherwise.
    *
    * eCSSUnit_Pixel (as they are in an StyleAnimationValue)
    */
   mozilla::gfx::Matrix4x4 ReadTransforms(const nsCSSValueList* aList,
                                          TransformReferenceBox& aBounds,
-                                         float aAppUnitsPerMatrixUnit,
-                                         bool* aContains3dTransform);
+                                         float aAppUnitsPerMatrixUnit);
 
   // Generate the gfx::Matrix for CSS Transform Module Level 2.
   // https://drafts.csswg.org/css-transforms-2/#ctm
@@ -211,8 +205,7 @@ namespace nsStyleTransformMatrix {
                  const mozilla::Maybe<mozilla::MotionPathData>& aMotion,
                  const nsCSSValueList* aTransform,
                  TransformReferenceBox& aRefBox,
-                 float aAppUnitsPerMatrixUnit,
-                 bool* aContains3dTransform);
+                 float aAppUnitsPerMatrixUnit);
 
   /**
    * Given two nsStyleCoord values, compute the 2d position with respect to the

@@ -4,6 +4,7 @@
 
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -17,6 +18,7 @@ const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
 this.EXPORTED_SYMBOLS = [
+  "DebounceCallback",
   "IdlePromise",
   "MessageManagerDestroyedPromise",
   "PollPromise",
@@ -25,6 +27,8 @@ this.EXPORTED_SYMBOLS = [
 ];
 
 const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
+
+const PROMISE_TIMEOUT = AppConstants.DEBUG ? 4500 : 1500;
 
 /**
  * @callback Condition
@@ -149,9 +153,11 @@ function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
  *     callback invoked after the ``timeout`` duration is reached.
  *     It is given two callbacks: ``resolve(value)`` and
  *     ``reject(error)``.
- * @param {timeout=} [timeout=1500] timeout
+ * @param {timeout=} timeout
  *     ``condition``'s ``reject`` callback will be called
  *     after this timeout, given in milliseconds.
+ *     By default 1500 ms in an optimised build and 4500 ms in
+ *     debug builds.
  * @param {Error=} [throws=TimeoutError] throws
  *     When the ``timeout`` is hit, this error class will be
  *     thrown.  If it is null, no error is thrown and the promise is
@@ -165,7 +171,8 @@ function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
  * @throws {RangeError}
  *     If `timeout` is not an unsigned integer.
  */
-function TimedPromise(fn, {timeout = 1500, throws = TimeoutError} = {}) {
+function TimedPromise(fn,
+    {timeout = PROMISE_TIMEOUT, throws = TimeoutError} = {}) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
   if (typeof fn != "function") {
@@ -285,3 +292,62 @@ function IdlePromise(win) {
     });
   });
 }
+
+/**
+ * Wraps a callback function, that, as long as it continues to be
+ * invoked, will not be triggered.  The given function will be
+ * called after the timeout duration is reached, after no more
+ * events fire.
+ *
+ * This class implements the {@link EventListener} interface,
+ * which means it can be used interchangably with `addEventHandler`.
+ *
+ * Debouncing events can be useful when dealing with e.g. DOM events
+ * that fire at a high rate.  It is generally advisable to avoid
+ * computationally expensive operations such as DOM modifications
+ * under these circumstances.
+ *
+ * One such high frequenecy event is `resize` that can fire multiple
+ * times before the window reaches its final dimensions.  In order
+ * to delay an operation until the window has completed resizing,
+ * it is possible to use this technique to only invoke the callback
+ * after the last event has fired::
+ *
+ *     let cb = new DebounceCallback(event => {
+ *       // fires after the final resize event
+ *       console.log("resize", event);
+ *     });
+ *     window.addEventListener("resize", cb);
+ *
+ * Note that it is not possible to use this synchronisation primitive
+ * with `addEventListener(..., {once: true})`.
+ *
+ * @param {function(Event)} fn
+ *     Callback function that is guaranteed to be invoked once only,
+ *     after `timeout`.
+ * @param {number=} [timeout = 250] timeout
+ *     Time since last event firing, before `fn` will be invoked.
+ */
+class DebounceCallback {
+  constructor(fn, {timeout = 250} = {}) {
+    if (typeof fn != "function" || typeof timeout != "number") {
+      throw new TypeError();
+    }
+    if (!Number.isInteger(timeout) || timeout < 0) {
+      throw new RangeError();
+    }
+
+    this.fn = fn;
+    this.timeout = timeout;
+    this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  }
+
+  handleEvent(ev) {
+    this.timer.cancel();
+    this.timer.initWithCallback(() => {
+      this.timer.cancel();
+      this.fn(ev);
+    }, this.timeout, TYPE_ONE_SHOT);
+  }
+}
+this.DebounceCallback = DebounceCallback;

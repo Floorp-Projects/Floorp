@@ -89,13 +89,17 @@ class FlexItemSizingOutline extends PureComponent {
     // TODO: We might also want to check if the min-size property is defined.
     const showMin = clampState === "clamped_to_min";
 
-    // Sort all of the dimensions in order to come up with a grid track template.
-    // Make mainDeltaSize start from the same point as the other ones so we can compare.
+    // Create an array of all of the sizes we want to display that we can use to create
+    // a grid track template.
     let sizes = [
+      { name: "basis-start", size: 0 },
       { name: "basis-end", size: mainBaseSize },
+      { name: "final-start", size: 0 },
       { name: "final-end", size: mainFinalSize },
     ];
 
+    // Because mainDeltaSize is just a delta from base, make sure to make it absolute like
+    // the other sizes in the array, so we can later sort all sizes in the same way.
     if (mainDeltaSize > 0) {
       sizes.push({ name: "delta-start", size: mainBaseSize });
       sizes.push({ name: "delta-end", size: mainBaseSize + mainDeltaSize });
@@ -111,9 +115,16 @@ class FlexItemSizingOutline extends PureComponent {
       sizes.push({ name: "min", size: mainMinSize });
     }
 
+    // Sort all of the dimensions so we can create the grid track template correctly.
     sizes = sizes.sort((a, b) => a.size - b.size);
 
-    let gridTemplateColumns = "[final-start basis-start";
+    // In some cases, the delta-start may be negative (when an item wanted to shrink more
+    // than the item's base size). As a negative value would break the grid track template
+    // offset all values so they're all positive.
+    const offsetBy = sizes.reduce((acc, curr) => curr.size < acc ? curr.size : acc, 0);
+    sizes = sizes.map(entry => ({ size: entry.size - offsetBy, name: entry.name }));
+
+    let gridTemplateColumns = "[";
     let accumulatedSize = 0;
     for (const { name, size } of sizes) {
       const breadth = Math.round(size - accumulatedSize);

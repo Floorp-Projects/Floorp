@@ -15,12 +15,11 @@ SimpleTest.registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.debugger.prompt-connection");
 });
 
-function assertIsTabTarget(target, url, chrome = false) {
+function assertTarget(target, url, chrome = false) {
   is(target.url, url);
   is(target.isLocalTab, false);
   is(target.chrome, chrome);
   is(target.isBrowsingContext, true);
-  is(target.isRemote, true);
 }
 
 add_task(async function() {
@@ -43,16 +42,15 @@ add_task(async function() {
   is(target.isLocalTab, false);
   is(target.chrome, true);
   is(target.isBrowsingContext, true);
-  is(target.isRemote, true);
 
   info("Test tab");
   windowId = browser.outerWindowID;
   target = await targetFromURL(new URL("http://foo?type=tab&id=" + windowId));
-  assertIsTabTarget(target, TEST_URI);
+  assertTarget(target, TEST_URI);
 
   info("Test tab with chrome privileges");
   target = await targetFromURL(new URL("http://foo?type=tab&id=" + windowId + "&chrome"));
-  assertIsTabTarget(target, TEST_URI, true);
+  assertTarget(target, TEST_URI, true);
 
   info("Test invalid tab id");
   try {
@@ -65,7 +63,7 @@ add_task(async function() {
   info("Test parent process");
   target = await targetFromURL(new URL("http://foo?type=process"));
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  assertIsTabTarget(target, topWindow.location.href, true);
+  assertTarget(target, topWindow.location.href, true);
 
   await testRemoteTCP();
   await testRemoteWebSocket();
@@ -73,20 +71,23 @@ add_task(async function() {
   gBrowser.removeCurrentTab();
 });
 
-async function setupDebuggerServer(websocket) {
+async function setupDebuggerServer(webSocket) {
   info("Create a separate loader instance for the DebuggerServer.");
   const loader = new DevToolsLoader();
   const { DebuggerServer } = loader.require("devtools/server/main");
+  const { SocketListener } = loader.require("devtools/shared/security/socket");
 
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
   DebuggerServer.allowChromeProcess = true;
+  const socketOptions = {
+    // Pass -1 to automatically choose an available port
+    portOrPath: -1,
+    webSocket,
+  };
 
-  const listener = DebuggerServer.createListener();
+  const listener = new SocketListener(DebuggerServer, socketOptions);
   ok(listener, "Socket listener created");
-  // Pass -1 to automatically choose an available port
-  listener.portOrPath = -1;
-  listener.webSocket = websocket;
   await listener.open();
   is(DebuggerServer.listeningSockets, 1, "1 listening socket");
 
@@ -110,7 +111,7 @@ async function testRemoteTCP() {
   const { port } = server.listener;
   const target = await targetFromURL(new URL("http://foo?type=process&host=127.0.0.1&port=" + port));
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  assertIsTabTarget(target, topWindow.location.href, true);
+  assertTarget(target, topWindow.location.href, true);
 
   const settings = target.client._transport.connectionSettings;
   is(settings.host, "127.0.0.1");
@@ -130,7 +131,7 @@ async function testRemoteWebSocket() {
   const { port } = server.listener;
   const target = await targetFromURL(new URL("http://foo?type=process&host=127.0.0.1&port=" + port + "&ws=true"));
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  assertIsTabTarget(target, topWindow.location.href, true);
+  assertTarget(target, topWindow.location.href, true);
 
   const settings = target.client._transport.connectionSettings;
   is(settings.host, "127.0.0.1");

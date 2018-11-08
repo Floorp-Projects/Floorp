@@ -11175,12 +11175,10 @@ nsIFrame::ComputeWidgetTransform()
 
   nsPresContext* presContext = PresContext();
   int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
-  bool dummyBool;
   gfx::Matrix4x4 matrix =
     nsStyleTransformMatrix::ReadTransforms(uiReset->mSpecifiedWindowTransform->mHead,
                                            refBox,
-                                           float(appUnitsPerDevPixel),
-                                           &dummyBool);
+                                           float(appUnitsPerDevPixel));
 
   // Apply the -moz-window-transform-origin translation to the matrix.
   Point transformOrigin =

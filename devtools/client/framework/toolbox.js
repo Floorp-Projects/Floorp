@@ -2765,28 +2765,9 @@ Toolbox.prototype = {
       // in the initialization process can throw errors.
       await this._initInspector;
 
-      const currentPanel = this.getCurrentPanel();
-      if (currentPanel.stopPicker) {
-        await currentPanel.stopPicker();
-      } else {
-        await this.highlighterUtils.stopPicker();
-      }
       // Temporary fix for bug #1493131 - inspector has a different life cycle
       // than most other fronts because it is closely related to the toolbox.
-      this._inspector.destroy();
-
-      if (this._highlighter) {
-        await this._highlighter.destroy();
-      }
-      if (this._selection) {
-        this._selection.off("new-node-front", this._onNewSelectedNodeFront);
-        this._selection.destroy();
-      }
-
-      if (this.walker) {
-        this.walker.off("highlighter-ready", this._highlighterReady);
-        this.walker.off("highlighter-hide", this._highlighterHidden);
-      }
+      await this._inspector.destroy();
 
       this._inspector = null;
       this._highlighter = null;

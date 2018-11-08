@@ -6,7 +6,7 @@
 
 // Test that the flex item sizing information exists when a flex item is selected.
 
-const TEST_URI = URL_ROOT + "doc_flexbox_simple.html";
+const TEST_URI = URL_ROOT + "doc_flexbox_specific_cases.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
