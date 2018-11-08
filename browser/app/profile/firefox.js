@@ -334,6 +334,11 @@ pref("browser.urlbar.switchTabs.adoptIntoActiveWindow", false);
 // should be opened in new tabs by default.
 pref("browser.urlbar.openintab", false);
 
+// This is disabled until Bug 1340663 figures out the remaining requirements.
+pref("browser.urlbar.usepreloadedtopurls.enabled", false);
+pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
+
+// Toggle the new work in progress Address Bar code.
 pref("browser.urlbar.quantumbar", false);
 
 pref("browser.altClickSave", false);
@@ -1172,7 +1177,6 @@ pref("services.sync.prefs.sync.browser.startup.page", true);
 pref("services.sync.prefs.sync.browser.tabs.loadInBackground", true);
 pref("services.sync.prefs.sync.browser.tabs.warnOnClose", true);
 pref("services.sync.prefs.sync.browser.tabs.warnOnOpen", true);
-pref("services.sync.prefs.sync.browser.urlbar.autocomplete.enabled", true);
 pref("services.sync.prefs.sync.browser.urlbar.matchBuckets", true);
 pref("services.sync.prefs.sync.browser.urlbar.maxRichResults", true);
 pref("services.sync.prefs.sync.browser.urlbar.suggest.bookmark", true);

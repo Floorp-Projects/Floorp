@@ -201,3 +201,16 @@ add_task(function test_receiveResults() {
 
   sandbox.resetHistory();
 });
+
+add_task(function test_autocomplete_enabled() {
+  const context = createContext();
+  controller.receiveResults(context);
+
+  Assert.equal(generalListener.onQueryResults.callCount, 1,
+    "Should have called onQueryResults for the listener");
+  Assert.deepEqual(generalListener.onQueryResults.args[0], [context],
+    "Should have called onQueryResults with the context");
+
+  sandbox.resetHistory();
+});
+
