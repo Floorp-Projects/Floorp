@@ -167,8 +167,14 @@ using ZeroOnOverflow = bool;
 
 class BaseStackFrame;
 
+// Two flags, useABI and interModule, control how calls are made.
+//
 // UseABI::Wasm implies that the Tls/Heap/Global registers are nonvolatile,
 // except when InterModule::True is also set, when they are volatile.
+//
+// UseABI::Builtin implies that the Tls/Heap/Global registers are volatile.
+// In this case, we require InterModule::False.  The calling convention
+// is otherwise like UseABI::Wasm.
 //
 // UseABI::System implies that the Tls/Heap/Global registers are volatile.
 // Additionally, the parameter passing mechanism may be slightly different from
@@ -182,7 +188,7 @@ class BaseStackFrame;
 // after the call (it will restore the Tls register from the save slot and load
 // the other two from the Tls data).
 
-enum class UseABI { Wasm, System };
+enum class UseABI { Wasm, Builtin, System };
 enum class InterModule { False = false, True = true };
 
 #if defined(JS_CODEGEN_NONE)
@@ -3642,22 +3648,23 @@ class BaseCompiler final : public BaseCompilerInterface
 
     void beginCall(FunctionCall& call, UseABI useABI, InterModule interModule)
     {
+        MOZ_ASSERT_IF(useABI == UseABI::Builtin, interModule == InterModule::False);
+
         call.isInterModule = interModule == InterModule::True;
         call.usesSystemAbi = useABI == UseABI::System;
 
         if (call.usesSystemAbi) {
             // Call-outs need to use the appropriate system ABI.
 #if defined(JS_CODEGEN_ARM)
-# if defined(JS_SIMULATOR_ARM)
             call.hardFP = UseHardFpABI();
-# elif defined(JS_CODEGEN_ARM_HARDFP)
-            call.hardFP = true;
-# else
-            call.hardFP = false;
-# endif
             call.abi.setUseHardFp(call.hardFP);
 #elif defined(JS_CODEGEN_MIPS32)
             call.abi.enforceO32ABI();
+#endif
+        } else {
+#if defined(JS_CODEGEN_ARM)
+            MOZ_ASSERT(call.hardFP,
+                       "All private ABIs pass FP arguments in registers");
 #endif
         }
 
@@ -8261,7 +8268,7 @@ BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandTy
     size_t stackSpace = stackConsumed(numArgs);
 
     FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, UseABI::System, InterModule::False);
+    beginCall(baselineCall, UseABI::Builtin, InterModule::False);
 
     if (!emitCallArgs(signature, &baselineCall)) {
         return false;
