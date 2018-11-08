@@ -66,7 +66,11 @@ struct BreakpointPosition
     // Break when the debugger should pause even if no breakpoint has been
     // set: the beginning or end of the replay has been reached, or a time
     // warp has reached its destination.
-    ForcedPause
+    ForcedPause,
+
+    // Break when the child process reaches a checkpoint or we switch between
+    // recording and replaying child processes.
+    PositionChange
   ));
 
   Kind mKind;
@@ -120,6 +124,7 @@ struct BreakpointPosition
     case ConsoleMessage: return "ConsoleMessage";
     case WarpTarget: return "WarpTarget";
     case ForcedPause: return "ForcedPause";
+    case PositionChange: return "PositionChange";
     }
     MOZ_CRASH("Bad BreakpointPosition kind");
   }
