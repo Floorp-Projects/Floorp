@@ -102,11 +102,11 @@ BEGIN_TEST(testGCUID)
         }
     }
     vec.clear();
-    MinimizeHeap(cx);
 
     // Grab the last object in the vector as our object of interest.
     obj = vec2.back();
     CHECK(obj);
+    CHECK(!js::gc::IsInsideNursery(obj));
     tenuredAddr = uintptr_t(obj.get());
     CHECK(obj->zone()->getOrCreateUniqueId(obj, &uid));
 
@@ -114,7 +114,11 @@ BEGIN_TEST(testGCUID)
     // the new tenured heap location.
     JS::PrepareForFullGC(cx);
     JS::NonIncrementalGC(cx, GC_SHRINK, JS::gcreason::API);
-    MinimizeHeap(cx);
+
+    // There's a very low probability that this check could fail, but it is
+    // possible.  If it becomes an annoying intermittent then we should make
+    // this test more robust by recording IDs of many objects and then checking
+    // that some have moved.
     CHECK(uintptr_t(obj.get()) != tenuredAddr);
     CHECK(obj->zone()->hasUniqueId(obj));
     CHECK(obj->zone()->getOrCreateUniqueId(obj, &tmp));
