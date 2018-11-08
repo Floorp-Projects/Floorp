@@ -209,6 +209,10 @@ interface imgIContainer : nsISupports
    * (a "window into SVG space") based on the border image area, and we need to
    * be sure we don't subsequently scale that viewport in a way that distorts
    * its contents by stretching them more in one dimension than the other.
+   *
+   * FLAG_AVOID_REDECODE_FOR_SIZE: If there is already a raster surface
+   * available for this image, but it is not the same size as requested, skip
+   * starting a new decode for said size.
    */
   const unsigned long FLAG_NONE                            = 0x0;
   const unsigned long FLAG_SYNC_DECODE                     = 0x1;
@@ -222,6 +226,7 @@ interface imgIContainer : nsISupports
   const unsigned long FLAG_BYPASS_SURFACE_CACHE            = 0x100;
   const unsigned long FLAG_FORCE_PRESERVEASPECTRATIO_NONE  = 0x200;
   const unsigned long FLAG_FORCE_UNIFORM_SCALING           = 0x400;
+  const unsigned long FLAG_AVOID_REDECODE_FOR_SIZE         = 0x800;
 
   /**
    * A constant specifying the default set of decode flags (i.e., the default
@@ -471,6 +476,17 @@ interface imgIContainer : nsISupports
    *               is accepted; all others are ignored.
    */
   [noscript, notxpcom] boolean startDecodingWithResult(in uint32_t aFlags);
+
+  /*
+   * This method triggers decoding for an image, but unlike startDecoding() it
+   * enables the caller to provide more detailed information about the decode
+   * request.
+   *
+   * @param aFlags Flags of the FLAG_* variety.
+   * @return True there is a surface that satisfies the request and it is
+   *         fully decoded, else false.
+   */
+  [noscript, notxpcom] boolean requestDecodeWithResult(in uint32_t aFlags);
 
   /*
    * This method triggers decoding for an image, but unlike startDecoding() it
