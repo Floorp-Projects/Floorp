@@ -444,13 +444,10 @@ SetAnimatable(nsCSSPropertyID aProperty,
       break;
     case eCSSProperty_transform: {
       aAnimatable = InfallibleTArray<TransformFunction>();
-      if (aAnimationValue.mServo) {
-        RefPtr<nsCSSValueSharedList> list;
-        Servo_AnimationValue_GetTransform(aAnimationValue.mServo, &list);
-        AddTransformFunctions(list, aFrame, aRefBox, aAnimatable);
-      } else {
-        MOZ_CRASH("old style system disabled");
-      }
+      MOZ_ASSERT(aAnimationValue.mServo);
+      RefPtr<nsCSSValueSharedList> list;
+      Servo_AnimationValue_GetTransform(aAnimationValue.mServo, &list);
+      AddTransformFunctions(list, aFrame, aRefBox, aAnimatable);
       break;
     }
     default:
