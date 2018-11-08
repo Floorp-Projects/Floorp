@@ -15,7 +15,7 @@ SimpleTest.registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.debugger.prompt-connection");
 });
 
-function assertIsTabTarget(target, url, chrome = false) {
+function assertTarget(target, url, chrome = false) {
   is(target.url, url);
   is(target.isLocalTab, false);
   is(target.chrome, chrome);
@@ -46,11 +46,11 @@ add_task(async function() {
   info("Test tab");
   windowId = browser.outerWindowID;
   target = await targetFromURL(new URL("http://foo?type=tab&id=" + windowId));
-  assertIsTabTarget(target, TEST_URI);
+  assertTarget(target, TEST_URI);
 
   info("Test tab with chrome privileges");
   target = await targetFromURL(new URL("http://foo?type=tab&id=" + windowId + "&chrome"));
-  assertIsTabTarget(target, TEST_URI, true);
+  assertTarget(target, TEST_URI, true);
 
   info("Test invalid tab id");
   try {
@@ -63,7 +63,7 @@ add_task(async function() {
   info("Test parent process");
   target = await targetFromURL(new URL("http://foo?type=process"));
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  assertIsTabTarget(target, topWindow.location.href, true);
+  assertTarget(target, topWindow.location.href, true);
 
   await testRemoteTCP();
   await testRemoteWebSocket();
@@ -111,7 +111,7 @@ async function testRemoteTCP() {
   const { port } = server.listener;
   const target = await targetFromURL(new URL("http://foo?type=process&host=127.0.0.1&port=" + port));
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  assertIsTabTarget(target, topWindow.location.href, true);
+  assertTarget(target, topWindow.location.href, true);
 
   const settings = target.client._transport.connectionSettings;
   is(settings.host, "127.0.0.1");
@@ -131,7 +131,7 @@ async function testRemoteWebSocket() {
   const { port } = server.listener;
   const target = await targetFromURL(new URL("http://foo?type=process&host=127.0.0.1&port=" + port + "&ws=true"));
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  assertIsTabTarget(target, topWindow.location.href, true);
+  assertTarget(target, topWindow.location.href, true);
 
   const settings = target.client._transport.connectionSettings;
   is(settings.host, "127.0.0.1");
