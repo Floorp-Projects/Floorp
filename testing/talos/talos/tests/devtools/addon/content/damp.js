@@ -258,7 +258,7 @@ Damp.prototype = {
     this._currentTest = test;
 
     dump(`Loading test '${test}'\n`);
-    let testMethod = require("chrome://damp/content/tests/" + test);
+    let testMethod = require(this.rootURI.resolve(`content/tests/${test}`));
 
     this._timeout = window.setTimeout(() => {
       this.error("Test timed out");
@@ -312,8 +312,8 @@ Damp.prototype = {
     }
     this._log("\n" + out);
 
-    if (content && content.tpRecordTime) {
-      content.tpRecordTime(testResults.join(","), 0, testNames.join(","));
+    if (this.testDone) {
+      this.testDone({testResults, testNames});
     } else {
       // alert(out);
     }
@@ -404,10 +404,12 @@ Damp.prototype = {
     await this.garbageCollect();
   },
 
-  startTest() {
+  startTest(rootURI) {
+    let promise = new Promise(resolve => { this.testDone = resolve; });
+    this.rootURI = rootURI;
     try {
       dump("Initialize the head file with a reference to this DAMP instance\n");
-      let head = require("chrome://damp/content/tests/head.js");
+      let head = require(rootURI.resolve("content/tests/head.js"));
       head.initialize(this);
 
       this._win = Services.wm.getMostRecentWindow("navigator:browser");
@@ -417,7 +419,7 @@ Damp.prototype = {
       // Filter tests via `./mach --subtests filter` command line argument
       let filter = Services.prefs.getCharPref("talos.subtests", "");
 
-      let DAMP_TESTS = require("chrome://damp/content/damp-tests.js");
+      let DAMP_TESTS = require(rootURI.resolve("content/damp-tests.js"));
       let tests = DAMP_TESTS.filter(test => !test.disabled)
                             .filter(test => test.name.includes(filter));
 
@@ -448,5 +450,7 @@ Damp.prototype = {
     } catch (e) {
       this.exception(e);
     }
+
+    return promise;
   },
 };

@@ -55,6 +55,15 @@ add_task(async function test_protocolHandler() {
     },
 
     background() {
+      browser.test.onMessage.addListener(async (msg, arg) => {
+        if (msg == "open") {
+          let tab = await browser.tabs.create({url: arg});
+          browser.test.sendMessage("opened", tab.id);
+        } else if (msg == "close") {
+          await browser.tabs.remove(arg);
+          browser.test.sendMessage("closed");
+        }
+      });
       browser.test.sendMessage("test-url", browser.runtime.getURL("foo.html"));
     },
 
@@ -91,10 +100,14 @@ add_task(async function test_protocolHandler() {
   is(data.uriTemplate, `${handlerUrl}?val=%s`, "correct url template");
   chromeScript.destroy();
 
-  let win = window.open("ext+foo:test");
+  extension.sendMessage("open", "ext+foo:test");
+  let id = await extension.awaitMessage("opened");
+
   let query = await extension.awaitMessage("test-query");
   is(query, "?val=ext%2Bfoo%3Atest", "test query ok");
-  win.close();
+
+  extension.sendMessage("close", id);
+  await extension.awaitMessage("closed");
 
   // Shutdown the addon, then ensure the protocol was removed.
   await extension.unload();
