@@ -107,11 +107,10 @@ def gen_instruction_data(fmt):
     """
     Generate the InstructionData enum.
 
-    Every variant must contain `opcode` and `ty` fields. An instruction that
-    doesn't produce a value should have its `ty` field set to `VOID`. The size
-    of `InstructionData` should be kept at 16 bytes on 64-bit architectures. If
-    more space is needed to represent an instruction, use a `Box<AuxData>` to
-    store the additional information out of line.
+    Every variant must contain an `opcode` field. The size of `InstructionData`
+    should be kept at 16 bytes on 64-bit architectures. If more space is needed
+    to represent an instruction, use a `Box<AuxData>` to store the additional
+    information out of line.
     """
 
     fmt.line('#[derive(Clone, Debug)]')
@@ -706,7 +705,7 @@ def gen_inst_builder(inst, fmt):
             args.append(inst.ctrl_typevar.name)
         elif not inst.is_polymorphic:
             # No controlling type variable needed.
-            args.append('types::VOID')
+            args.append('types::INVALID')
         else:
             assert inst.is_polymorphic and inst.use_typevar_operand
             # Infer the controlling type variable from the input operands.

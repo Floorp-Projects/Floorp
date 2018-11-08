@@ -4,8 +4,9 @@ use parse_error::ParseError;
 use std::borrow::ToOwned;
 use std::fmt;
 use std::str::FromStr;
-use targets::{default_binary_format, Architecture, BinaryFormat, Environment, OperatingSystem,
-              Vendor};
+use targets::{
+    default_binary_format, Architecture, BinaryFormat, Environment, OperatingSystem, Vendor,
+};
 
 /// The target memory endianness.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -26,8 +27,8 @@ pub enum PointerWidth {
 
 impl PointerWidth {
     /// Return the number of bits in a pointer.
-    pub fn bits(&self) -> u8 {
-        match *self {
+    pub fn bits(self) -> u8 {
+        match self {
             PointerWidth::U16 => 16,
             PointerWidth::U32 => 32,
             PointerWidth::U64 => 64,
@@ -37,13 +38,22 @@ impl PointerWidth {
     /// Return the number of bytes in a pointer.
     ///
     /// For these purposes, there are 8 bits in a byte.
-    pub fn bytes(&self) -> u8 {
-        match *self {
+    pub fn bytes(self) -> u8 {
+        match self {
             PointerWidth::U16 => 2,
             PointerWidth::U32 => 4,
             PointerWidth::U64 => 8,
         }
     }
+}
+
+/// The calling convention, which specifies things like which registers are
+/// used for passing arguments, which registers are callee-saved, and so on.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[allow(missing_docs)]
+pub enum CallingConvention {
+    SystemV,
+    WindowsFastcall,
 }
 
 /// A target "triple", because historically such things had three fields, though
@@ -71,6 +81,29 @@ impl Triple {
     /// Return the pointer width of this target's architecture.
     pub fn pointer_width(&self) -> Result<PointerWidth, ()> {
         self.architecture.pointer_width()
+    }
+
+    /// Return the default calling convention for the given target triple.
+    pub fn default_calling_convention(&self) -> Result<CallingConvention, ()> {
+        Ok(match self.operating_system {
+            OperatingSystem::Bitrig
+            | OperatingSystem::Cloudabi
+            | OperatingSystem::Darwin
+            | OperatingSystem::Dragonfly
+            | OperatingSystem::Freebsd
+            | OperatingSystem::Fuchsia
+            | OperatingSystem::Haiku
+            | OperatingSystem::Ios
+            | OperatingSystem::L4re
+            | OperatingSystem::Linux
+            | OperatingSystem::Nebulet
+            | OperatingSystem::Netbsd
+            | OperatingSystem::Openbsd
+            | OperatingSystem::Redox
+            | OperatingSystem::Solaris => CallingConvention::SystemV,
+            OperatingSystem::Windows => CallingConvention::WindowsFastcall,
+            _ => return Err(()),
+        })
     }
 }
 
@@ -121,7 +154,8 @@ impl fmt::Display for Triple {
         let implied_binary_format = default_binary_format(&self);
 
         write!(f, "{}", self.architecture)?;
-        if self.vendor == Vendor::Unknown && self.operating_system == OperatingSystem::Unknown
+        if self.vendor == Vendor::Unknown
+            && self.operating_system == OperatingSystem::Unknown
             && (self.environment != Environment::Unknown
                 || self.binary_format != implied_binary_format)
         {
@@ -152,7 +186,7 @@ impl FromStr for Triple {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut parts = s.split('-');
-        let mut result = Triple::default();
+        let mut result = Self::default();
         let mut current_part;
 
         current_part = parts.next();
@@ -305,5 +339,6 @@ mod tests {
     fn unknown_properties() {
         assert_eq!(Triple::default().endianness(), Err(()));
         assert_eq!(Triple::default().pointer_width(), Err(()));
+        assert_eq!(Triple::default().default_calling_convention(), Err(()));
     }
 }

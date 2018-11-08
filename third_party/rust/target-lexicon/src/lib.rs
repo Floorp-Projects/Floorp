@@ -5,8 +5,14 @@
 #![cfg_attr(
     feature = "cargo-clippy",
     warn(
-        float_arithmetic, mut_mut, nonminimal_bool, option_map_unwrap_or, option_map_unwrap_or_else,
-        print_stdout, unicode_not_nfc, use_self
+        float_arithmetic,
+        mut_mut,
+        nonminimal_bool,
+        option_map_unwrap_or,
+        option_map_unwrap_or_else,
+        print_stdout,
+        unicode_not_nfc,
+        use_self
     )
 )]
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -34,4 +40,4 @@ mod triple;
 pub use host::HOST;
 pub use parse_error::ParseError;
 pub use targets::{Architecture, BinaryFormat, Environment, OperatingSystem, Vendor};
-pub use triple::{Endianness, PointerWidth, Triple};
+pub use triple::{CallingConvention, Endianness, PointerWidth, Triple};

@@ -28,7 +28,7 @@ use cranelift_codegen::ir::{self, InstBuilder, JumpTableData, MemFlags};
 use cranelift_codegen::packed_option::ReservedValue;
 use cranelift_entity::EntityRef;
 use cranelift_frontend::{FunctionBuilder, Variable};
-use environ::{FuncEnvironment, GlobalVariable, WasmError, WasmResult};
+use environ::{FuncEnvironment, GlobalVariable, ReturnMode, WasmError, WasmResult};
 use state::{ControlStackFrame, TranslationState};
 use std::collections::{hash_map, HashMap};
 use std::vec::Vec;
@@ -255,7 +255,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         Operator::BrTable { table } => {
             let (depths, default) = table.read_table();
             let mut min_depth = default;
-            for depth in &depths {
+            for depth in &*depths {
                 if *depth < min_depth {
                     min_depth = *depth;
                 }
@@ -273,9 +273,9 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let mut data = JumpTableData::with_capacity(depths.len());
             if jump_args_count == 0 {
                 // No jump arguments
-                for depth in depths {
+                for depth in &*depths {
                     let ebb = {
-                        let i = state.control_stack.len() - 1 - (depth as usize);
+                        let i = state.control_stack.len() - 1 - (*depth as usize);
                         let frame = &mut state.control_stack[i];
                         frame.set_branched_to_exit();
                         frame.br_destination()
@@ -283,40 +283,40 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
                     data.push_entry(ebb);
                 }
                 let jt = builder.create_jump_table(data);
-                builder.ins().br_table(val, jt);
                 let ebb = {
                     let i = state.control_stack.len() - 1 - (default as usize);
                     let frame = &mut state.control_stack[i];
                     frame.set_branched_to_exit();
                     frame.br_destination()
                 };
-                builder.ins().jump(ebb, &[]);
+                builder.ins().br_table(val, ebb, jt);
             } else {
                 // Here we have jump arguments, but Cranelift's br_table doesn't support them
                 // We then proceed to split the edges going out of the br_table
                 let return_count = jump_args_count;
                 let mut dest_ebb_sequence = Vec::new();
                 let mut dest_ebb_map = HashMap::new();
-                for depth in depths {
-                    let branch_ebb = match dest_ebb_map.entry(depth as usize) {
+                for depth in &*depths {
+                    let branch_ebb = match dest_ebb_map.entry(*depth as usize) {
                         hash_map::Entry::Occupied(entry) => *entry.get(),
                         hash_map::Entry::Vacant(entry) => {
                             let ebb = builder.create_ebb();
-                            dest_ebb_sequence.push((depth as usize, ebb));
+                            dest_ebb_sequence.push((*depth as usize, ebb));
                             *entry.insert(ebb)
                         }
                     };
                     data.push_entry(branch_ebb);
                 }
-                let jt = builder.create_jump_table(data);
-                builder.ins().br_table(val, jt);
-                let default_ebb = {
-                    let i = state.control_stack.len() - 1 - (default as usize);
-                    let frame = &mut state.control_stack[i];
-                    frame.set_branched_to_exit();
-                    frame.br_destination()
+                let default_branch_ebb = match dest_ebb_map.entry(default as usize) {
+                    hash_map::Entry::Occupied(entry) => *entry.get(),
+                    hash_map::Entry::Vacant(entry) => {
+                        let ebb = builder.create_ebb();
+                        dest_ebb_sequence.push((default as usize, ebb));
+                        *entry.insert(ebb)
+                    }
                 };
-                builder.ins().jump(default_ebb, state.peekn(return_count));
+                let jt = builder.create_jump_table(data);
+                builder.ins().br_table(val, default_branch_ebb, jt);
                 for (depth, dest_ebb) in dest_ebb_sequence {
                     builder.switch_to_block(dest_ebb);
                     builder.seal_block(dest_ebb);
@@ -341,11 +341,10 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             };
             {
                 let args = state.peekn(return_count);
-                if environ.flags().return_at_end() {
-                    builder.ins().jump(br_destination, args);
-                } else {
-                    builder.ins().return_(args);
-                }
+                match environ.return_mode() {
+                    ReturnMode::NormalReturns => builder.ins().return_(args),
+                    ReturnMode::FallthroughReturn => builder.ins().jump(br_destination, args),
+                };
             }
             state.popn(return_count);
             state.reachable = false;
@@ -382,9 +381,9 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let callee = state.pop1();
             let call = environ.translate_call_indirect(
                 builder.cursor(),
-                table_index as TableIndex,
+                TableIndex::new(table_index as usize),
                 table,
-                index as SignatureIndex,
+                SignatureIndex::new(index as usize),
                 sigref,
                 callee,
                 state.peekn(num_args),
@@ -405,20 +404,19 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         Operator::MemoryGrow { reserved } => {
             // The WebAssembly MVP only supports one linear memory, but we expect the reserved
             // argument to be a memory index.
-            let heap_index = reserved as MemoryIndex;
+            let heap_index = MemoryIndex::new(reserved as usize);
             let heap = state.get_heap(builder.func, reserved, environ);
             let val = state.pop1();
             state.push1(environ.translate_memory_grow(builder.cursor(), heap_index, heap, val)?)
         }
         Operator::MemorySize { reserved } => {
-            let heap_index = reserved as MemoryIndex;
+            let heap_index = MemoryIndex::new(reserved as usize);
             let heap = state.get_heap(builder.func, reserved, environ);
             state.push1(environ.translate_memory_size(builder.cursor(), heap_index, heap)?);
         }
         /******************************* Load instructions ***********************************
          * Wasm specifies an integer alignment flag but we drop it in Cranelift.
          * The memory base address is provided by the environment.
-         * TODO: differentiate between 32 bit and 64 bit architecture, to put the uextend or not
          ************************************************************************************/
         Operator::I32Load8U {
             memarg: MemoryImmediate { flags: _, offset },
@@ -493,7 +491,6 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         /****************************** Store instructions ***********************************
          * Wasm specifies an integer alignment flag but we drop it in Cranelift.
          * The memory base address is provided by the environment.
-         * TODO: differentiate between 32 bit and 64 bit architecture, to put the uextend or not
          ************************************************************************************/
         Operator::I32Store {
             memarg: MemoryImmediate { flags: _, offset },
@@ -892,6 +889,9 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::I64AtomicRmw16UCmpxchg { .. }
         | Operator::I64AtomicRmw32UCmpxchg { .. } => {
             return Err(WasmError::Unsupported("proposed thread operators"));
+        }
+        Operator::RefNull | Operator::RefIsNull { .. } => {
+            return Err(WasmError::Unsupported("proposed reference-type operators"));
         }
     };
     Ok(())
