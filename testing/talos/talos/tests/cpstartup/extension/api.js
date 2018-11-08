@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+
 /**
  * The purpose of this test it to measure the performance of a
  * content process startup.
@@ -15,8 +18,9 @@
  * the content side, just the overhead of spawning a new content process.
  */
 
-ChromeUtils.defineModuleGetter(this, "TalosParentProfiler",
-                                  "resource://talos-powers/TalosParentProfiler.jsm");
+XPCOMUtils.defineLazyScriptGetter(this, "TalosParentProfiler",
+                                  "resource://talos-powers/TalosParentProfiler.js");
+
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 
