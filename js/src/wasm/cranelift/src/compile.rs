@@ -34,8 +34,8 @@ use cranelift_wasm::{
 };
 use std::fmt;
 use std::mem;
-use wasm2clif::{init_sig, native_pointer_size, TransEnv};
 use utils::DashResult;
+use wasm2clif::{init_sig, native_pointer_size, TransEnv};
 
 /// The result of a function's compilation: code + metadata.
 pub struct CompiledFunc {
@@ -75,7 +75,7 @@ pub struct BatchCompiler<'a, 'b> {
     pub current_func: CompiledFunc,
 }
 
-impl <'a, 'b> BatchCompiler<'a, 'b> {
+impl<'a, 'b> BatchCompiler<'a, 'b> {
     pub fn new(
         static_environ: &'a bd::StaticEnvironment,
         environ: bd::ModuleEnvironment<'b>,
@@ -355,7 +355,12 @@ impl <'a, 'b> BatchCompiler<'a, 'b> {
         metadata.push(bd::MetadataEntry::indirect_call(ret_addr, srcloc));
     }
 
-    fn trap_metadata(&self, metadata: &mut Vec<bd::MetadataEntry>, inst: ir::Inst, offset: CodeOffset) {
+    fn trap_metadata(
+        &self,
+        metadata: &mut Vec<bd::MetadataEntry>,
+        inst: ir::Inst,
+        offset: CodeOffset,
+    ) {
         let func = &self.context.func;
         let (code, trap_offset) = match func.dfg[inst] {
             ir::InstructionData::Trap { code, .. } => (code, 0),
@@ -391,7 +396,11 @@ impl <'a, 'b> BatchCompiler<'a, 'b> {
             func.dfg.display_inst(inst, Some(self.isa.as_ref()))
         );
 
-        metadata.push(bd::MetadataEntry::trap(offset + trap_offset, srcloc, bd_trap));
+        metadata.push(bd::MetadataEntry::trap(
+            offset + trap_offset,
+            srcloc,
+            bd_trap,
+        ));
     }
 
     fn memory_metadata(
@@ -427,7 +436,7 @@ impl <'a, 'b> BatchCompiler<'a, 'b> {
     }
 }
 
-impl <'a, 'b> fmt::Display for BatchCompiler<'a, 'b> {
+impl<'a, 'b> fmt::Display for BatchCompiler<'a, 'b> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.context.func.display(self.isa.as_ref()))
     }

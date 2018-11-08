@@ -42,21 +42,30 @@ fn main() {
         .rustified_enum("BD_.*|Trap|TypeCode|FuncTypeIdDescKind")
         .whitelist_type("BD_.*|Trap|TypeCode|FuncTypeIdDescKind")
         .header("baldrapi.h")
-        .clang_args(&["-x", "c++", "-std=gnu++14", "-fno-sized-deallocation", "-DRUST_BINDGEN"])
-        .clang_arg("-I../..");
+        .clang_args(&[
+            "-x",
+            "c++",
+            "-std=gnu++14",
+            "-fno-sized-deallocation",
+            "-DRUST_BINDGEN",
+        ]).clang_arg("-I../..");
 
-    let path = PathBuf::from(env::var_os("MOZ_TOPOBJDIR").unwrap()).join("js/src/rust/extra-bindgen-flags");
+    let path = PathBuf::from(env::var_os("MOZ_TOPOBJDIR").unwrap())
+        .join("js/src/rust/extra-bindgen-flags");
 
     let mut extra_flags = String::new();
-        File::open(&path)
-            .expect("Failed to open extra-bindgen-flags file")
-            .read_to_string(&mut extra_flags)
-            .expect("Failed to read extra-bindgen-flags file");
+    File::open(&path)
+        .expect("Failed to open extra-bindgen-flags file")
+        .read_to_string(&mut extra_flags)
+        .expect("Failed to read extra-bindgen-flags file");
 
     let display_path = path.to_str().expect("path is utf8 encoded");
     println!("cargo:rerun-if-changed={}", display_path);
 
-    let extra_flags: Vec<String> = extra_flags.split_whitespace().map(|s| s.to_owned()).collect();
+    let extra_flags: Vec<String> = extra_flags
+        .split_whitespace()
+        .map(|s| s.to_owned())
+        .collect();
     for flag in extra_flags {
         bindings = bindings.clang_arg(flag);
     }
