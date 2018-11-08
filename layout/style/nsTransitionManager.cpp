@@ -609,15 +609,11 @@ AppendKeyframe(double aOffset,
 {
   Keyframe& frame = *aKeyframes.AppendElement();
   frame.mOffset.emplace(aOffset);
-
-  if (aValue.mServo) {
-    RefPtr<RawServoDeclarationBlock> decl =
-      Servo_AnimationValue_Uncompute(aValue.mServo).Consume();
-    frame.mPropertyValues.AppendElement(
-      PropertyValuePair(aProperty, std::move(decl)));
-  } else {
-    MOZ_CRASH("old style system disabled");
-  }
+  MOZ_ASSERT(aValue.mServo);
+  RefPtr<RawServoDeclarationBlock> decl =
+    Servo_AnimationValue_Uncompute(aValue.mServo).Consume();
+  frame.mPropertyValues.AppendElement(
+    PropertyValuePair(aProperty, std::move(decl)));
   return frame;
 }
 
