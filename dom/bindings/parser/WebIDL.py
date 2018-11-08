@@ -248,8 +248,14 @@ class IDLScope(IDLObject):
         return self.QName()
 
     def QName(self):
-        if self._name:
-            return self._name.QName() + "::"
+        # It's possible for us to be called before __init__ has been called, for
+        # the IDLObjectWithScope case.  In that case, self._name won't be set yet.
+        if hasattr(self, "_name"):
+            name = self._name
+        else:
+            name = None
+        if name:
+            return name.QName() + "::"
         return "::"
 
     def ensureUnique(self, identifier, object):

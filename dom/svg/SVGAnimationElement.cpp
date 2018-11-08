@@ -415,10 +415,10 @@ SVGAnimationElement::UpdateHrefTarget(const nsAString& aHrefStr)
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI),
                                             aHrefStr, OwnerDoc(), baseURI);
   // Bug 1415044 to investigate which referrer we should use
-  mHrefTarget.Reset(this,
-                    targetURI,
-                    OwnerDoc()->GetDocumentURI(),
-                    OwnerDoc()->GetReferrerPolicy());
+  mHrefTarget.ResetToURIFragmentID(this,
+                                   targetURI,
+                                   OwnerDoc()->GetDocumentURI(),
+                                   OwnerDoc()->GetReferrerPolicy());
   AnimationTargetChanged();
 }
 

@@ -588,6 +588,14 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData)
     }
   }
 
+  // Media playback is not supported when recording or replaying. See bug 1304146.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       nsPrintfCString("error creating %s decoder: "
+                                       "media playback is disabled while recording/replaying",
+                                       TrackTypeToStr(aData.mTrack)));
+  }
+
   // result may not be updated by PDMFactory::CreateDecoder, as such it must be
   // initialized to a fatal error by default.
   MediaResult result = MediaResult(
