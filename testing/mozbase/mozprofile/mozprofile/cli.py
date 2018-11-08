@@ -18,7 +18,57 @@ from .prefs import Preferences
 from .profile import FirefoxProfile
 from .profile import Profile
 
-__all__ = ['MozProfileCLI', 'cli']
+__all__ = ['MozProfileCLI', 'cli', 'KeyValueParseError', 'parse_key_value', 'parse_preferences']
+
+
+class KeyValueParseError(Exception):
+    """Error when parsing strings of serialized key-values."""
+
+    def __init__(self, msg, errors=()):
+        self.errors = errors
+        Exception.__init__(self, msg)
+
+
+def parse_key_value(strings, separator='=', context='key, value: '):
+    """Parse string-serialized key-value pairs in the form of `key = value`.
+
+    Args:
+        strings (list): List of strings to parse.
+        separator (str): Identifier used to split the strings.
+
+    Returns:
+        list: A list of (<key>, <value>) tuples. Whitespace is not stripped.
+
+    Raises:
+        KeyValueParseError
+    """
+
+    # syntax check
+    missing = [string for string in strings if separator not in string]
+    if missing:
+        raise KeyValueParseError(
+            "Error: syntax error in %s" %
+            (context, ','.join(missing)), errors=missing)
+    return [string.split(separator, 1) for string in strings]
+
+
+def parse_preferences(prefs, context='--setpref='):
+    """Parse preferences specified on the command line.
+
+    Args:
+        prefs (list): A list of strings, usually of the form "<pref>=<value>".
+
+    Returns:
+        dict: A dictionary of the form {<pref>: <value>} where values have been
+              cast.
+    """
+    try:
+        prefs = dict(parse_key_value(prefs, context=context))
+    except KeyValueParseError as e:
+        print(str(e))
+        sys.exit(1)
+
+    return {k: Preferences.cast(v) for k, v in prefs.items()}
 
 
 class MozProfileCLI(object):
@@ -70,13 +120,7 @@ class MozProfileCLI(object):
             prefs.add_file(prefs_file)
 
         # change CLI preferences into 2-tuples
-        separator = ':'
-        cli_prefs = []
-        for pref in self.options.prefs:
-            if separator not in pref:
-                self.parser.error("Preference must be a key-value pair separated by "
-                                  "a ':' (You gave: %s)" % pref)
-            cli_prefs.append(pref.split(separator, 1))
+        cli_prefs = parse_key_value(self.options.prefs, separator=':')
 
         # string preferences
         prefs.add(cli_prefs, cast=True)
