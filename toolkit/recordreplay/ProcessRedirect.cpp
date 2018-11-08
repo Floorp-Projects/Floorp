@@ -428,6 +428,7 @@ MaybeInternalJumpTarget(uint8_t* aIpStart, uint8_t* aIpEnd)
          !strstr(startName, "CTRunGetPositionsPtr")) ||
         (strstr(startName, "CTRunGetStringIndices") &&
          !strstr(startName, "CTRunGetStringIndicesPtr")) ||
+        strstr(startName, "CGColorSpaceCreateDeviceGray") ||
         strstr(startName, "CGColorSpaceCreateDeviceRGB") ||
         // For these functions, there is a syscall near the beginning which
         // other system threads might be inside.
