@@ -566,8 +566,8 @@ html|input.urlbar-input {
 }
 
 .browserContainer > findbar:-moz-lwtheme {
-  background-color: var(--toolbar-bgcolor);
-  background-image: none;
+  background-color: var(--lwt-accent-color);
+  background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor));
   color: var(--toolbar-color);
 }
 
