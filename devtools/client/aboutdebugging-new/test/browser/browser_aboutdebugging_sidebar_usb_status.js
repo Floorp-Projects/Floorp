@@ -22,7 +22,8 @@ add_task(async function() {
     "USB status element has the expected content");
 
   info("Install the adb extension and wait for the message to udpate");
-  adbAddon.install();
+  // Use "internal" as the install source to avoid triggering telemetry.
+  adbAddon.install("internal");
   await waitUntil(() => usbStatusElement.textContent.includes("USB devices enabled"));
 
   // Right now we are resuming as soon as "USB devices enabled" is displayed, but ADB
