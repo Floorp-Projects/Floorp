@@ -80,6 +80,7 @@ import org.mozilla.focus.session.SessionCallbackProxy
 import org.mozilla.focus.session.removeAndCloseAllSessions
 import org.mozilla.focus.session.removeAndCloseSession
 import org.mozilla.focus.session.ui.SessionsSheetFragment
+import org.mozilla.focus.telemetry.CrashReporterWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Browsers
@@ -686,6 +687,11 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
         val crashReporterFragment = CrashReporterFragment.create()
 
+        crashReporterFragment.onCloseTabPressed = { sendCrashReport ->
+            if (sendCrashReport) { CrashReporterWrapper.submitCrash(crash) }
+            hideCrashReporter()
+        }
+
         fragmentManager
                 .beginTransaction()
                 .addToBackStack(null)
@@ -695,6 +701,20 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         crash_container.visibility = View.VISIBLE
         tabs.hide()
         erase.hide()
+    }
+
+    internal fun hideCrashReporter() {
+        val fragmentManager = requireActivity().supportFragmentManager
+        val fragment = fragmentManager.findFragmentByTag(CrashReporterFragment.FRAGMENT_TAG) ?: return
+
+        fragmentManager
+                .beginTransaction()
+                .remove(fragment)
+                .commit()
+
+        crash_container.visibility = View.GONE
+        tabs.show()
+        erase.show()
     }
 
     internal fun showAddToHomescreenDialog(url: String, title: String) {

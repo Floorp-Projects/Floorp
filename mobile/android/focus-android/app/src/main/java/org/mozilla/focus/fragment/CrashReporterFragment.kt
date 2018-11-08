@@ -9,15 +9,28 @@ import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import kotlinx.android.synthetic.main.fragment_crash_reporter.*
 import org.mozilla.focus.R
 
 
 class CrashReporterFragment: Fragment() {
+
+    var onCloseTabPressed: ((sendCrashReport: Boolean) -> Unit)? = null
+
     override fun onCreateView(
             inflater: LayoutInflater,
             container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? = inflater.inflate(R.layout.fragment_crash_reporter, container, false)
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        closeTabButton.setOnClickListener {
+            val wantsSubmitCrashReport = sendCrashCheckbox.isChecked
+            onCloseTabPressed?.invoke(wantsSubmitCrashReport)
+        }
+    }
 
     companion object {
         val FRAGMENT_TAG = "crash-reporter"

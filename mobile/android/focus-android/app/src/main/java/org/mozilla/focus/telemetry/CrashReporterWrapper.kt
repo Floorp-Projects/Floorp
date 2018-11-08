@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.MozillaSocorroService
 import mozilla.components.lib.crash.service.SentryService
@@ -66,6 +67,10 @@ object CrashReporterWrapper {
 
     fun onIsEnabledChanged(context: Context, isEnabled: Boolean = TelemetryWrapper.isTelemetryEnabled(context)) {
         crashReporter?.enabled = isEnabled || true
+    }
+
+    fun submitCrash(crash: Crash) {
+        crashReporter?.submitReport(crash)
     }
 
     private fun createTags(context: Context) = mapOf(
