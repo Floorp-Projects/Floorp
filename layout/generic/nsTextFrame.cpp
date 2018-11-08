@@ -8607,8 +8607,7 @@ nsTextFrame::AddInlineMinISizeForFlow(gfxContext *aRenderingContext,
     return;
   }
 
-  // If overflow-wrap is break-word, we can wrap everywhere.
-  if (StaticPrefs::layout_css_overflow_break_intrinsic_size() &&
+  if (textStyle->mOverflowWrap == mozilla::StyleOverflowWrap::Anywhere &&
       textStyle->WordCanWrap(this)) {
     aData->OptionallyBreak();
     aData->mCurrentLine +=
