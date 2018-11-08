@@ -602,12 +602,14 @@ class RustTests(ContextDerived):
     __slots__ = (
         'names',
         'features',
+        'output_category',
     )
 
     def __init__(self, context, names, features):
         ContextDerived.__init__(self, context)
         self.names = names
         self.features = features
+        self.output_category = 'rusttests'
 
 
 class BaseLibrary(Linkable):
