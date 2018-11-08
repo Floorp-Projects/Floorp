@@ -59,4 +59,11 @@ class ToolbarPresenter(
     override fun onSearch(session: Session, searchTerms: String) {
         toolbar.setSearchTerms(searchTerms)
     }
+
+    override fun onSecurityChanged(session: Session, securityInfo: Session.SecurityInfo) {
+        when (securityInfo.secure) {
+            true -> toolbar.siteSecure = Toolbar.SiteSecurity.SECURE
+            false -> toolbar.siteSecure = Toolbar.SiteSecurity.INSECURE
+        }
+    }
 }

@@ -19,8 +19,11 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.isVisible
+import mozilla.components.ui.icons.R.drawable.mozac_ic_globe
+import mozilla.components.ui.icons.R.drawable.mozac_ic_lock
 
 /**
  * Sub-component of the browser toolbar responsible for displaying the URL and related controls.
@@ -71,7 +74,7 @@ internal class DisplayToolbar(
         val padding = resources.pxToDp(ICON_PADDING_DP)
         setPadding(padding, padding, padding, padding)
 
-        setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_globe)
+        setImageResource(mozac_ic_globe)
     }
 
     internal val urlView = TextView(context).apply {
@@ -217,6 +220,17 @@ internal class DisplayToolbar(
     }
 
     /**
+     * Sets the site's security icon as secure if true, else the regular globe.
+     */
+    fun setSiteSecurity(secure: SiteSecurity) {
+        val image = when (secure) {
+            SiteSecurity.SECURE -> mozac_ic_lock
+            SiteSecurity.INSECURE -> mozac_ic_globe
+        }
+        iconView.setImageResource(image)
+    }
+
+    /**
      * Declare that the actions (navigation actions, browser actions, page actions) have changed and
      * should be updated if needed.
      */
@@ -262,7 +276,7 @@ internal class DisplayToolbar(
         val browserActionsWidth = measureActions(browserActions, size = height)
         val pageActionsWidth = measureActions(pageActions, size = height)
 
-        // The url uses whatever space is left. Substract the icon and (optionally) the menu
+        // The url uses whatever space is left. Subtract the icon and (optionally) the menu
         val menuWidth = if (menuView.isVisible()) height else 0
         val urlWidth = width - browserActionsWidth - pageActionsWidth
                 - menuWidth - navigationActionsWidth - 2 * urlBoxMargin

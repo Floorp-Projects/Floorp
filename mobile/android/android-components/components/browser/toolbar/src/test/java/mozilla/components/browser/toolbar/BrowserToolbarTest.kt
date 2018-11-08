@@ -16,6 +16,7 @@ import mozilla.components.browser.toolbar.BrowserToolbar.Companion.ACTION_PADDIN
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.support.test.mock
@@ -736,5 +737,16 @@ class BrowserToolbarTest {
         reloadPageAction.bind(view)
         verify(view).setImageDrawable(stopImage)
         verify(view).contentDescription = "reload"
+    }
+
+    @Test
+    fun `siteSecure updates the displayToolbar`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        toolbar.displayToolbar = spy(toolbar.displayToolbar)
+        assertEquals(SiteSecurity.INSECURE, toolbar.siteSecure)
+
+        toolbar.siteSecure = SiteSecurity.SECURE
+
+        verify(toolbar.displayToolbar).setSiteSecurity(SiteSecurity.SECURE)
     }
 }

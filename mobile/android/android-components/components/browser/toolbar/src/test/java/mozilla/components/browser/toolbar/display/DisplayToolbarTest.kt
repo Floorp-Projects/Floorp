@@ -14,8 +14,10 @@ import android.widget.TextView
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.support.ktx.android.view.forEach
 import mozilla.components.support.test.mock
+import mozilla.components.ui.icons.R
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -31,6 +33,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 class DisplayToolbarTest {
@@ -392,8 +395,8 @@ class DisplayToolbarTest {
         val visibleAction = BrowserToolbar.Button(mock(), "Tabs") {}
         val invisibleAction = BrowserToolbar.Button(
             mock(),
-                "Settings",
-                visible = { false }) {}
+            "Settings",
+            visible = { false }) {}
 
         displayToolbar.addBrowserAction(visibleAction)
         displayToolbar.addBrowserAction(invisibleAction)
@@ -410,8 +413,8 @@ class DisplayToolbarTest {
         val visibleAction = BrowserToolbar.Button(mock(), "Forward") {}
         val invisibleAction = BrowserToolbar.Button(
             mock(),
-                "Back",
-                visible = { false }) {}
+            "Back",
+            visible = { false }) {}
 
         displayToolbar.addNavigationAction(visibleAction)
         displayToolbar.addNavigationAction(invisibleAction)
@@ -550,6 +553,24 @@ class DisplayToolbarTest {
         displayToolbar.urlView.performClick()
 
         verify(toolbar).editMode()
+    }
+
+    @Test
+    fun `iconView changes image resource when site security changes`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+        var shadowDrawable = shadowOf(displayToolbar.iconView.drawable)
+        assertEquals(R.drawable.mozac_ic_globe, shadowDrawable.createdFromResId)
+
+        displayToolbar.setSiteSecurity(SiteSecurity.SECURE)
+
+        shadowDrawable = shadowOf(displayToolbar.iconView.drawable)
+        assertEquals(R.drawable.mozac_ic_lock, shadowDrawable.createdFromResId)
+
+        displayToolbar.setSiteSecurity(SiteSecurity.INSECURE)
+
+        shadowDrawable = shadowOf(displayToolbar.iconView.drawable)
+        assertEquals(R.drawable.mozac_ic_globe, shadowDrawable.createdFromResId)
     }
 
     companion object {

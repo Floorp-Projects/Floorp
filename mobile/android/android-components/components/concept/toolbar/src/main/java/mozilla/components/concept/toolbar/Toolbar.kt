@@ -27,6 +27,11 @@ interface Toolbar {
     var url: String
 
     /**
+     * Sets/Gets the site security to be displayed on the toolbar.
+     */
+    var siteSecure: SiteSecurity
+
+    /**
      * Displays the currently used search terms as part of this Toolbar.
      *
      * @param searchTerms the search terms used by the current session
@@ -312,5 +317,10 @@ interface Toolbar {
         }
 
         override fun bind(view: View) = Unit
+    }
+
+    enum class SiteSecurity {
+        INSECURE,
+        SECURE,
     }
 }

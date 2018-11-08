@@ -187,6 +187,12 @@ class BrowserToolbar @JvmOverloads constructor(
             field = value
         }
 
+    override var siteSecure: Toolbar.SiteSecurity = Toolbar.SiteSecurity.INSECURE
+        set(value) {
+            displayToolbar.setSiteSecurity(value)
+            field = value
+        }
+
     init {
         context.obtainStyledAttributes(attrs, R.styleable.BrowserToolbar, defStyleAttr, 0).apply {
             attrs?.let {
