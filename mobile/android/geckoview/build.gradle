@@ -296,7 +296,14 @@ apply plugin: 'maven'
 uploadArchives {
     repositories.mavenDeployer {
         pom.groupId = 'org.mozilla.geckoview'
-        pom.artifactId = "geckoview-${mozconfig.substs.MOZ_UPDATE_CHANNEL}-${mozconfig.substs.ANDROID_CPU_ARCH}"
+
+        if (mozconfig.substs.MOZ_UPDATE_CHANNEL == 'release') {
+            // release artifacts don't specify the channel, for the sake of simplicity
+            pom.artifactId = "geckoview-${mozconfig.substs.ANDROID_CPU_ARCH}"
+        } else {
+            pom.artifactId = "geckoview-${mozconfig.substs.MOZ_UPDATE_CHANNEL}-${mozconfig.substs.ANDROID_CPU_ARCH}"
+        }
+
         pom.version = computeVersionNumber()
 
         pom.project {
