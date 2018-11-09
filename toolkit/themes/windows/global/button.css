@@ -26,7 +26,7 @@ button {
 }
 
 .button-text {
-  margin: 0 !important;
+  margin: 0;
   text-align: center;
 }
 
@@ -80,7 +80,7 @@ button[disabled="true"] {
 /* ::::: menu buttons ::::: */
 
 .button-menu-dropmarker {
-  -moz-appearance: none !important;
+  -moz-appearance: none;
   list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
   -moz-context-properties: fill;
   fill: currentColor;
