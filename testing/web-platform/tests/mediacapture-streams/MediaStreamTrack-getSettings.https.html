@@ -170,7 +170,7 @@
     assert_equals(typeof(settings.width), "number",
                   "width should exist and it should be a number.");
     assert_true(Number.isInteger(settings.width), "width should be an integer.");
-    assert_greater_than_equal(settings.width, 0);
+    assert_greater_than_equal(settings.width, 0);;
   }, 'width is reported by getSettings() for getUserMedia() video tracks');
 
   promise_test(async t => {
