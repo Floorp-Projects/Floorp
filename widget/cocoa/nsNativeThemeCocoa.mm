@@ -3366,7 +3366,7 @@ nsNativeThemeCocoa::ComputeWidgetInfo(nsIFrame* aFrame,
       return Some(WidgetInfo::SearchField(
         ComputeSearchFieldParams(aFrame, eventState)));
 
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     {
       // Don't request repaints for scrollbars at 100% because those don't animate.
       if (GetProgressValue(aFrame) < GetProgressMaxValue(aFrame)) {
@@ -3387,7 +3387,6 @@ nsNativeThemeCocoa::ComputeWidgetInfo(nsIFrame* aFrame,
       return Some(WidgetInfo::Meter(ComputeMeterParams(aFrame)));
 
     case StyleAppearance::Progresschunk:
-    case StyleAppearance::ProgresschunkVertical:
     case StyleAppearance::Meterchunk:
       // Do nothing: progress and meter bars cases will draw chunks.
       break;
@@ -3887,7 +3886,7 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
     case StyleAppearance::Textfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Searchfield:
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::ProgressbarVertical:
     case StyleAppearance::Meter:
     case StyleAppearance::Treetwisty:
@@ -4192,7 +4191,7 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext,
                       kMaxFocusRingWidth);
       break;
     }
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     {
       // Progress bars draw a 2 pixel white shadow under their progress indicators.
       overflow.bottom = 2;
@@ -4351,7 +4350,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
 
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     {
       SInt32 barHeight = 0;
       ::GetThemeMetric(kThemeMetricNormalProgressBarThickness, &barHeight);
@@ -4566,8 +4565,7 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame,
     case StyleAppearance::Menupopup:
     case StyleAppearance::Groupbox:
     case StyleAppearance::Progresschunk:
-    case StyleAppearance::ProgresschunkVertical:
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::ProgressbarVertical:
     case StyleAppearance::Meter:
     case StyleAppearance::Meterchunk:
@@ -4683,10 +4681,9 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case StyleAppearance::Searchfield:
     case StyleAppearance::Toolbox:
     //case StyleAppearance::Toolbarbutton:
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::ProgressbarVertical:
     case StyleAppearance::Progresschunk:
-    case StyleAppearance::ProgresschunkVertical:
     case StyleAppearance::Meter:
     case StyleAppearance::Meterchunk:
     case StyleAppearance::Separator:
@@ -4775,7 +4772,7 @@ nsNativeThemeCocoa::WidgetIsContainer(StyleAppearance aAppearance)
    case StyleAppearance::MozMenulistButton:
    case StyleAppearance::Radio:
    case StyleAppearance::Checkbox:
-   case StyleAppearance::Progressbar:
+   case StyleAppearance::ProgressBar:
    case StyleAppearance::Meter:
    case StyleAppearance::Range:
    case StyleAppearance::MozMacHelpButton:

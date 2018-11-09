@@ -813,7 +813,7 @@ output:-moz-ui-invalid {
 }
 
 progress {
-  -moz-appearance: progressbar;
+  -moz-appearance: progress-bar;
   display: inline-block;
   vertical-align: -0.2em;
 
