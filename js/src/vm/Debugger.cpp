@@ -6600,7 +6600,8 @@ class FlowGraphSummary {
             if (CodeSpec[op].type() == JOF_JUMP) {
                 addEdge(lineno, column, r.frontOffset() + GET_JUMP_OFFSET(r.frontPC()));
             } else if (op == JSOP_TABLESWITCH) {
-                jsbytecode* pc = r.frontPC();
+                jsbytecode* const switchPC = r.frontPC();
+                jsbytecode* pc = switchPC;
                 size_t offset = r.frontOffset();
                 ptrdiff_t step = JUMP_OFFSET_LEN;
                 size_t defaultOffset = offset + GET_JUMP_OFFSET(pc);
@@ -6613,9 +6614,8 @@ class FlowGraphSummary {
                 pc += JUMP_OFFSET_LEN;
 
                 for (int i = 0; i < ncases; i++) {
-                    size_t target = offset + GET_JUMP_OFFSET(pc);
+                    size_t target = script->tableSwitchCaseOffset(switchPC, i);
                     addEdge(lineno, column, target);
-                    pc += step;
                 }
             } else if (op == JSOP_TRY) {
                 // As there is no literal incoming edge into the catch block, we
@@ -6826,7 +6826,7 @@ class DebuggerScriptGetSuccessorOrPredecessorOffsetsMatcher
 
         PcVector adjacent;
         if (successor_) {
-            if (!GetSuccessorBytecodes(script->code() + offset_, adjacent)) {
+            if (!GetSuccessorBytecodes(script, script->code() + offset_, adjacent)) {
                 ReportOutOfMemory(cx_);
                 return false;
             }

@@ -40,7 +40,7 @@
       // decreases the rate of intermittents that we see. We should figure out
       // why and/or rewrite this test entirely.
       SpecialPowers.Services.obs.addObserver(testDriver, "mouseevent");
-      yield synthesizeNativeClick(input, 0, 0, testDriver);
+      yield synthesizeNativeClick(input, 10, 10, testDriver);
       SpecialPowers.Services.obs.removeObserver(testDriver, "mouseevent", false);
     }
     window.addEventListener("click", (e) => {

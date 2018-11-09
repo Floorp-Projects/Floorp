@@ -2058,6 +2058,30 @@ GLContext::MarkDestroyed()
     mSymbols = {};
 }
 
+// -
+
+GLenum
+GLContext::RawGetErrorAndClear() const
+{
+    const GLenum ret = mSymbols.fGetError();
+
+    auto flushedErr = ret;
+    uint32_t i = 1;
+    while (flushedErr && flushedErr != LOCAL_GL_CONTEXT_LOST) {
+        if (i == 100) {
+            gfxCriticalError() << "Flushing glGetError still " << gfx::hexa(flushedErr)
+                               << " after " << i << " calls.";
+            break;
+        }
+        flushedErr = mSymbols.fGetError();
+        i += 1;
+    }
+
+    return ret;
+}
+
+// -
+
 #ifdef MOZ_GL_DEBUG
 /* static */ void
 GLContext::AssertNotPassingStackBufferToTheGL(const void* ptr)

@@ -33,6 +33,10 @@ public:
                                                      ComputedStyle* aStyle,
                                                      nsFrameState aStateFlags);
 
+  nsContainerFrame* GetContentInsertionFrame() override;
+
+  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
+
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;
 #endif
@@ -48,6 +52,14 @@ public:
 private:
   explicit ColumnSetWrapperFrame(ComputedStyle* aStyle);
   ~ColumnSetWrapperFrame() override = default;
+
+#ifdef DEBUG
+  static void AssertColumnSpanWrapperSubtreeIsSane(const nsIFrame* aFrame);
+
+  // True if frame constructor has finished building this frame and all of
+  // its descendants.
+  bool mFinishedBuildingColumns = false;
+#endif
 };
 
 } // namespace mozilla

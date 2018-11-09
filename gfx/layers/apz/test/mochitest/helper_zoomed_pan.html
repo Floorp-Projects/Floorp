@@ -34,12 +34,11 @@
       // Compute the distance from the right/bottom edge of the visual
       // viewport to the same edge of the layout viewport and add the desired
       // offset to that.
-      const layout = (visual + scrollbarWidth) * RESOLUTION;
-      return layout - visual + OFFSET_SCREEN_PX;
+      const layout = (visual + scrollbarWidth);
+      return layout - (visual / RESOLUTION) + OFFSET_CSS_PX;
     }
 
     function* test(testDriver) {
-      const target = document.getElementById("content");
       const cases = [
         {
           x: 0,
@@ -52,7 +51,7 @@
           },
         },
         {
-          x: OFFSET_SCREEN_PX,
+          x: OFFSET_CSS_PX,
           y: 0,
           dx: (width) => 0,
           dy: (height) => -computeDelta(height, horizontalScrollbarWidth),
@@ -64,7 +63,7 @@
       ];
 
       for (let c of cases) {
-        yield synthesizeNativeTouchDrag(target,
+        yield synthesizeNativeTouchDrag(window,
                                         c.x,
                                         c.y,
                                         c.dx(document.documentElement.clientWidth),

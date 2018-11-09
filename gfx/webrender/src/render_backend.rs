@@ -477,7 +477,6 @@ struct PlainRenderBackend {
     frame_config: FrameBuilderConfig,
     documents: FastHashMap<DocumentId, DocumentView>,
     resources: PlainResources,
-    last_scene_id: u64,
 }
 
 /// The render backend is responsible for transforming high level display lists into
@@ -507,8 +506,6 @@ pub struct RenderBackend {
     sampler: Option<Box<AsyncPropertySampler + Send>>,
     size_of_op: Option<VoidPtrToSizeFn>,
     namespace_alloc_by_client: bool,
-
-    last_scene_id: u64,
 }
 
 impl RenderBackend {
@@ -545,7 +542,6 @@ impl RenderBackend {
             recorder,
             sampler,
             size_of_op,
-            last_scene_id: 0,
             namespace_alloc_by_client,
         }
     }
@@ -656,12 +652,6 @@ impl RenderBackend {
 
     fn next_namespace_id(&self) -> IdNamespace {
         IdNamespace(NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed) as u32)
-    }
-
-    pub fn make_unique_scene_id(&mut self) -> u64 {
-        // 2^64 scenes ought to be enough for anybody!
-        self.last_scene_id += 1;
-        self.last_scene_id
     }
 
     pub fn run(&mut self, mut profile_counters: BackendProfileCounters) {
@@ -1046,7 +1036,6 @@ impl RenderBackend {
             return;
         }
 
-        let scene_id = self.make_unique_scene_id();
         let doc = self.documents.get_mut(&document_id).unwrap();
 
         if txn.should_build_scene() {
@@ -1054,7 +1043,6 @@ impl RenderBackend {
                 view: doc.view.clone(),
                 font_instances: self.resource_cache.get_font_instances(),
                 output_pipelines: doc.output_pipelines.clone(),
-                scene_id,
             });
         }
 
@@ -1448,7 +1436,6 @@ impl RenderBackend {
                 .map(|(id, doc)| (*id, doc.view.clone()))
                 .collect(),
             resources,
-            last_scene_id: self.last_scene_id,
         };
 
         config.serialize(&backend, "backend");
@@ -1509,7 +1496,6 @@ impl RenderBackend {
 
         let mut scenes_to_build = Vec::new();
 
-        let mut last_scene_id = backend.last_scene_id;
         for (id, view) in backend.documents {
             debug!("\tdocument {:?}", id);
             let scene_name = format!("scene-{}-{}", (id.0).0, id.1);
@@ -1568,8 +1554,6 @@ impl RenderBackend {
                 None => true,
             };
 
-            last_scene_id += 1;
-
             scenes_to_build.push(LoadScene {
                 document_id: id,
                 scene: doc.scene.clone(),
@@ -1577,7 +1561,6 @@ impl RenderBackend {
                 config: self.frame_config.clone(),
                 output_pipelines: doc.output_pipelines.clone(),
                 font_instances: self.resource_cache.get_font_instances(),
-                scene_id: last_scene_id,
                 build_frame,
                 doc_resources,
             });

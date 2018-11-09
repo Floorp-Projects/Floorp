@@ -1329,25 +1329,24 @@ Element::AttachShadowWithoutNameChecks(ShadowRootMode aMode)
 void
 Element::UnattachShadow()
 {
-  RefPtr<ShadowRoot> shadowRoot = GetShadowRoot();
+  ShadowRoot* shadowRoot = GetShadowRoot();
   if (!shadowRoot) {
     return;
   }
 
   nsAutoScriptBlocker scriptBlocker;
 
-  nsIDocument* doc = GetComposedDoc();
-  if (doc) {
+  if (nsIDocument* doc = GetComposedDoc()) {
     if (nsIPresShell* shell = doc->GetShell()) {
       shell->DestroyFramesForAndRestyle(this);
     }
   }
   MOZ_ASSERT(!GetPrimaryFrame());
 
-  // Simply unhook the shadow root from the element.
-  MOZ_ASSERT(!shadowRoot->HasSlots(), "Won't work when shadow root has slots!");
-  shadowRoot->Unbind();
+  shadowRoot->Unattach();
   SetShadowRoot(nullptr);
+
+  // Beware shadowRoot could be dead after this call.
 }
 
 void

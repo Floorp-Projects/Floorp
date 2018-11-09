@@ -30,6 +30,10 @@ class GeckoViewTab extends GeckoViewModule {
       tabs: [tab],
       selectedTab: tab,
 
+      closeTab: function(aTab) {
+        // not implemented
+      },
+
       getTabForId: function(aId) {
         return this.selectedTab;
       },

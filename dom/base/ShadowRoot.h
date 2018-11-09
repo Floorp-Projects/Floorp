@@ -98,6 +98,10 @@ public:
   // being connected.
   void Unbind();
 
+  // Only intended for UA widgets / special shadow roots.
+  // Forgets our shadow host and unbinds all our kids.
+  void Unattach();
+
   // Calls BindToTree on each of our kids, and also maybe flags us as being
   // connected.
   nsresult Bind();

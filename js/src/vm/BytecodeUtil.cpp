@@ -94,26 +94,6 @@ const char* const js::CodeName[] = {
 static bool
 DecompileArgumentFromStack(JSContext* cx, int formalIndex, UniqueChars* res);
 
-size_t
-js::GetVariableBytecodeLength(jsbytecode* pc)
-{
-    JSOp op = JSOp(*pc);
-    MOZ_ASSERT(CodeSpec[op].length == -1);
-    switch (op) {
-      case JSOP_TABLESWITCH: {
-        /* Structure: default-jump case-low case-high case1-jump ... */
-        pc += JUMP_OFFSET_LEN;
-        int32_t low = GET_JUMP_OFFSET(pc);
-        pc += JUMP_OFFSET_LEN;
-        int32_t high = GET_JUMP_OFFSET(pc);
-        unsigned ncases = unsigned(high - low + 1);
-        return 1 + 3 * JUMP_OFFSET_LEN + ncases * JUMP_OFFSET_LEN;
-      }
-      default:
-        MOZ_CRASH("Unexpected op");
-    }
-}
-
 /* static */ const char
 PCCounts::numExecName[] = "interp";
 
@@ -926,16 +906,17 @@ BytecodeParser::parse()
                 return false;
             }
 
-            for (int32_t i = low; i <= high; i++) {
-                uint32_t targetOffset = offset + GET_JUMP_OFFSET(pc2);
-                if (targetOffset != offset) {
+            uint32_t ncases = high - low + 1;
+
+            for (uint32_t i = 0; i < ncases; i++) {
+                uint32_t targetOffset = script_->tableSwitchCaseOffset(pc, i);
+                if (targetOffset != defaultOffset) {
                     if (!addJump(targetOffset, &nextOffset, stackDepth, offsetStack,
                                  pc, JumpKind::SwitchCase))
                     {
                         return false;
                     }
                 }
-                pc2 += JUMP_OFFSET_LEN;
             }
             break;
           }
@@ -1433,7 +1414,7 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
         return 0;
     }
     const JSCodeSpec* cs = &CodeSpec[op];
-    ptrdiff_t len = (ptrdiff_t) cs->length;
+    const unsigned len = cs->length;
     if (!sp->jsprintf("%05u:", loc)) {
         return 0;
     }
@@ -1582,13 +1563,11 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
         }
 
         for (i = low; i <= high; i++) {
-            off = GET_JUMP_OFFSET(pc2);
+            off = script->tableSwitchCaseOffset(pc, i - low) - script->pcToOffset(pc);
             if (!sp->jsprintf("\n\t%d: %d", i, int(off))) {
                 return 0;
             }
-            pc2 += JUMP_OFFSET_LEN;
         }
-        len = 1 + pc2 - pc;
         break;
       }
 
@@ -3038,8 +3017,10 @@ js::GetCodeCoverageSummary(JSContext* cx, size_t* length)
 }
 
 bool
-js::GetSuccessorBytecodes(jsbytecode* pc, PcVector& successors)
+js::GetSuccessorBytecodes(JSScript* script, jsbytecode* pc, PcVector& successors)
 {
+    MOZ_ASSERT(script->containsPC(pc));
+
     JSOp op = (JSOp)*pc;
     if (FlowsIntoNext(op)) {
         if (!successors.append(GetNextPc(pc))) {
@@ -3063,10 +3044,9 @@ js::GetSuccessorBytecodes(jsbytecode* pc, PcVector& successors)
         npc += JUMP_OFFSET_LEN;
 
         for (int i = 0; i < ncases; i++) {
-            if (!successors.append(pc + GET_JUMP_OFFSET(npc))) {
+            if (!successors.append(script->tableSwitchCasePC(pc, i))) {
                 return false;
             }
-            npc += JUMP_OFFSET_LEN;
         }
     }
 
@@ -3080,7 +3060,7 @@ js::GetPredecessorBytecodes(JSScript* script, jsbytecode* pc, PcVector& predeces
     MOZ_ASSERT(pc >= script->code() && pc < end);
     for (jsbytecode* npc = script->code(); npc < end; npc = GetNextPc(npc)) {
         PcVector successors;
-        if (!GetSuccessorBytecodes(npc, successors)) {
+        if (!GetSuccessorBytecodes(script, npc, successors)) {
             return false;
         }
         for (size_t i = 0; i < successors.length(); i++) {

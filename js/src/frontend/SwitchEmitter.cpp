@@ -6,6 +6,8 @@
 
 #include "frontend/SwitchEmitter.h"
 
+#include "mozilla/Span.h"
+
 #include "jsutil.h"
 
 #include "frontend/BytecodeEmitter.h"
@@ -202,9 +204,6 @@ SwitchEmitter::emitTable(const TableGenerator& tableGen)
     top_ = bce_->offset();
 
     // The note has one offset that tells total switch code length.
-
-    // 3 offsets (len, low, high) before the table, 1 per entry.
-    size_t switchSize = size_t(JUMP_OFFSET_LEN * (3 + tableGen.tableLength()));
     if (!bce_->newSrcNote2(SRC_TABLESWITCH, 0, &noteIndex_)) {
         return false;
     }
@@ -215,7 +214,7 @@ SwitchEmitter::emitTable(const TableGenerator& tableGen)
     }
 
     MOZ_ASSERT(top_ == bce_->offset());
-    if (!bce_->emitN(JSOP_TABLESWITCH, switchSize)) {
+    if (!bce_->emitN(JSOP_TABLESWITCH, JSOP_TABLESWITCH_LENGTH - sizeof(jsbytecode))) {
         return false;
     }
 
@@ -452,12 +451,21 @@ SwitchEmitter::emitEnd()
         // Skip over the already-initialized switch bounds.
         pc += 2 * JUMP_OFFSET_LEN;
 
-        // Fill in the jump table, if there is one.
+        // Use the 'default' offset for missing cases.
         for (uint32_t i = 0, length = caseOffsets_.length(); i < length; i++) {
-            ptrdiff_t off = caseOffsets_[i];
-            SET_JUMP_OFFSET(pc, off == 0 ? 0 : off - top_);
-            pc += JUMP_OFFSET_LEN;
+            if (caseOffsets_[i] == 0) {
+                caseOffsets_[i] = defaultJumpTargetOffset_.offset;
+            }
         }
+
+        // Allocate resume index range.
+        uint32_t firstResumeIndex = 0;
+        mozilla::Span<ptrdiff_t> offsets = mozilla::MakeSpan(caseOffsets_.begin(),
+                                                             caseOffsets_.end());
+        if (!bce_->allocateResumeIndexRange(offsets, &firstResumeIndex)) {
+            return false;
+        }
+        SET_RESUMEINDEX(pc, firstResumeIndex);
     }
 
     // Patch breaks before leaving the scope, as all breaks are under the
