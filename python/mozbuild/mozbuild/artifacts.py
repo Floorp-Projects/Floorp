@@ -1247,18 +1247,34 @@ class Artifacts(object):
         return self._install_from_hg_pushheads(hg_pushheads, distdir)
 
     def install_from_revset(self, revset, distdir):
-        if self._hg:
-            revision = subprocess.check_output([self._hg, 'log', '--template', '{node}\n',
-                                                '-r', revset], cwd=self._topsrcdir).strip()
-            if len(revision.split('\n')) != 1:
-                raise ValueError('hg revision specification must resolve to exactly one commit')
-        else:
-            revision = subprocess.check_output([self._git, 'rev-parse', revset], cwd=self._topsrcdir).strip()
-            revision = subprocess.check_output([self._git, 'cinnabar', 'git2hg', revision], cwd=self._topsrcdir).strip()
-            if len(revision.split('\n')) != 1:
-                raise ValueError('hg revision specification must resolve to exactly one commit')
-            if revision == "0" * 40:
-                raise ValueError('git revision specification must resolve to a commit known to hg')
+        revision = None
+        try:
+            if self._hg:
+                revision = subprocess.check_output([self._hg, 'log', '--template', '{node}\n',
+                                                  '-r', revset], cwd=self._topsrcdir).strip()
+            elif self._git:
+                revset = subprocess.check_output([
+                    self._git, 'rev-parse', '%s^{commit}' % revset],
+                    stderr=open(os.devnull, 'w'), cwd=self._topsrcdir).strip()
+            else:
+                # Fallback to the exception handling case from both hg and git
+                raise subprocess.CalledProcessError()
+        except subprocess.CalledProcessError:
+            # If the mercurial of git commands above failed, it means the given
+            # revset is not known locally to the VCS. But if the revset looks
+            # like a complete sha1, assume it is a mercurial sha1 that hasn't
+            # been pulled, and use that.
+            if re.match(r'^[A-Fa-f0-9]{40}$', revset):
+                revision = revset
+
+        if revision is None and self._git:
+            revision = subprocess.check_output(
+                [self._git, 'cinnabar', 'git2hg', revset], cwd=self._topsrcdir).strip()
+
+        if revision == "0" * 40 or revision is None:
+            raise ValueError('revision specification must resolve to a commit known to hg')
+        if len(revision.split('\n')) != 1:
+            raise ValueError('revision specification must resolve to exactly one commit')
 
         self.log(logging.INFO, 'artifact',
                  {'revset': revset,
