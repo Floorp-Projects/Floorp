@@ -2196,6 +2196,9 @@ BytecodeEmitter::allocateResumeIndex(ptrdiff_t offset, uint32_t* resumeIndex)
 
     static_assert(MaxResumeIndex < uint32_t(GeneratorObject::RESUME_INDEX_CLOSING),
                   "resumeIndex should not include magic GeneratorObject resumeIndex values");
+    static_assert(MaxResumeIndex <= INT32_MAX / sizeof(uintptr_t),
+                  "resumeIndex * sizeof(uintptr_t) must fit in an int32. JIT code relies "
+                  "on this when loading resume entries from BaselineScript");
 
     *resumeIndex = resumeOffsetList.length();
     if (*resumeIndex > MaxResumeIndex) {
