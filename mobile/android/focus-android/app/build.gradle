@@ -142,7 +142,7 @@ repositories {
     maven {
         //  For the latest version of GeckoView (moving target!):
         //
-        //  Look at the Latest Firefox 63 on the mozilla-beta repository:
+        //  Look at the Latest Firefox 64 on the mozilla-beta repository:
         //  hg.mozilla.org/releases/mozilla-beta/branches
         //
         //  Click on the changeset ID to find the matching changeset/commit ID (shortened).
