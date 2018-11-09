@@ -230,9 +230,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             cmd += ["--device-serial=%s" % self.device_serial]
             cmd += ["--package-name=%s" % self.query_package_name()]
 
-        if sys.platform == "darwin":
-            cmd += ["--exclude=css"]
-
         if mozinfo.info["os"] == "win" and mozinfo.info["os_version"] == "6.1":
             # On Windows 7 --install-fonts fails, so fall back to a Firefox-specific codepath
             self._install_fonts()
