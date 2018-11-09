@@ -2599,16 +2599,13 @@ ReadableStreamControllerCancelSteps(JSContext* cx,
     if (unwrappedController->hasExternalSource()) {
         RootedValue rval(cx);
         {
-            RootedValue wrappedReason(cx, reason);
             AutoRealm ar(cx, unwrappedController);
+            Rooted<ReadableStream*> stream(cx, unwrappedController->stream());
+            void* source = unwrappedUnderlyingSource.toPrivate();
+            RootedValue wrappedReason(cx, reason);
             if (!cx->compartment()->wrap(cx, &wrappedReason)) {
                 return nullptr;
             }
-            void* source = unwrappedUnderlyingSource.toPrivate();
-
-            // Thanks to `ar`, `unwrappedController` is now same-compartment with `cx`.
-            // That's why this variable `stream` does not get the `unwrapped` prefix.
-            Rooted<ReadableStream*> stream(cx, unwrappedController->stream());
 
             cx->check(stream, wrappedReason);
             rval = cx->runtime()->readableStreamCancelCallback(cx, stream, source,
@@ -2828,11 +2825,17 @@ ReadableStreamControllerCallPullIfNeeded(JSContext* cx,
         Rooted<ReadableStream*> stream(cx, controller->stream());
         pullPromise = ReadableStreamTee_Pull(cx, teeState);
     } else if (controller->hasExternalSource()) {
-        void* source = underlyingSource.toPrivate();
-        Rooted<ReadableStream*> stream(cx, controller->stream());
-        double desiredSize = ReadableStreamControllerGetDesiredSizeUnchecked(controller);
-        cx->runtime()->readableStreamDataRequestCallback(cx, stream, source,
-                                                         stream->embeddingFlags(), desiredSize);
+        {
+            AutoRealm ar(cx, controller);
+            Rooted<ReadableStream*> stream(cx, controller->stream());
+            void* source = underlyingSource.toPrivate();
+            double desiredSize = ReadableStreamControllerGetDesiredSizeUnchecked(controller);
+            cx->runtime()->readableStreamDataRequestCallback(cx,
+                                                             stream,
+                                                             source,
+                                                             stream->embeddingFlags(),
+                                                             desiredSize);
+        }
         pullPromise = PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
     } else {
         pullPromise = PromiseInvokeOrNoop(cx, underlyingSource, cx->names().pull, controllerVal);
@@ -3370,9 +3373,6 @@ static const ClassOps ReadableByteStreamControllerClassOps = {
 CLASS_SPEC(ReadableByteStreamController, 3, SlotCount, ClassSpec::DontDefineConstructor,
            JSCLASS_BACKGROUND_FINALIZE, &ReadableByteStreamControllerClassOps);
 
-
-/***  */
-
 // Streams spec, 3.10.5.1. [[CancelSteps]] ()
 // Unified with 3.8.5.1 above.
 
@@ -3422,14 +3422,15 @@ ReadableByteStreamControllerPullSteps(JSContext* cx,
 
             size_t bytesWritten;
             {
+                AutoRealm ar(cx, stream);
                 JS::AutoSuppressGCAnalysis suppressGC(cx);
                 JS::AutoCheckCannotGC noGC;
                 bool dummy;
                 void* buffer = JS_GetArrayBufferViewData(view, &dummy, noGC);
+
                 auto cb = cx->runtime()->readableStreamWriteIntoReadRequestCallback;
                 MOZ_ASSERT(cb);
                 // TODO: use bytesWritten to correctly update the request's state.
-                // TODO: make this compartment-safe.
                 cb(cx, stream, underlyingSource, stream->embeddingFlags(), buffer,
                    queueTotalSize, &bytesWritten);
             }
@@ -4419,6 +4420,7 @@ JS::ReadableStreamUpdateDataAvailableFromSource(JSContext* cx, JS::HandleObject 
 
         size_t bytesWritten;
         {
+            AutoRealm ar(cx, stream);
             JS::AutoSuppressGCAnalysis suppressGC(cx);
             JS::AutoCheckCannotGC noGC;
             bool dummy;
@@ -4426,7 +4428,6 @@ JS::ReadableStreamUpdateDataAvailableFromSource(JSContext* cx, JS::HandleObject 
             auto cb = cx->runtime()->readableStreamWriteIntoReadRequestCallback;
             MOZ_ASSERT(cb);
             // TODO: use bytesWritten to correctly update the request's state.
-            // TODO: make cross-compartment safe.
             cb(cx, stream, underlyingSource, stream->embeddingFlags(), buffer,
                availableData, &bytesWritten);
         }
