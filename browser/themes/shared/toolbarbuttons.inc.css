@@ -93,7 +93,6 @@ toolbar[brighttext] {
 
 .findbar-button {
   -moz-appearance: none;
-  padding: 0;
   color: inherit;
 }
 
@@ -113,7 +112,7 @@ toolbar .toolbarbutton-1 > menupopup {
   margin-top: -3px;
 }
 
-.findbar-button > .toolbarbutton-text,
+.findbar-button,
 toolbarbutton.bookmark-item:not(.subviewbutton),
 toolbar .toolbarbutton-1 > .toolbarbutton-icon,
 toolbar .toolbarbutton-1 > .toolbarbutton-text,
@@ -173,7 +172,7 @@ toolbar[brighttext] .toolbaritem-combined-buttons > separator {
 #PersonalToolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled=true]):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled=true]):hover,
-.findbar-button:not(:-moz-any([checked="true"],[disabled="true"])):hover > .toolbarbutton-text,
+.findbar-button:not(:-moz-any([checked="true"],[disabled="true"])):hover,
 toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):not([open]),
 toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-icon,
 toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-text,
@@ -183,7 +182,7 @@ toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:ac
 }
 
 #PersonalToolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active),
-.findbar-button:not([disabled=true]):-moz-any([checked="true"],:hover:active) > .toolbarbutton-text,
+.findbar-button:not([disabled=true]):-moz-any([checked="true"],:hover:active),
 toolbarbutton.bookmark-item:not(.subviewbutton):hover:active:not([disabled="true"]),
 toolbarbutton.bookmark-item[open="true"],
 toolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-icon,
