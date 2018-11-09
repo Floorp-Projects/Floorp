@@ -40,8 +40,8 @@ if (isNotLoaded()) {
 }
 
 function onHiddenPrivateWindowReady() {
-  var iframe = hidden.document.createElement('iframe');
-  iframe.src = 'generic.html';
+  var iframe = hidden.document.createElement("iframe");
+  iframe.src = "generic.html";
   hidden.document.body.appendChild(iframe);
 
   var win = mainWindow.OpenBrowserWindow({private: true});
