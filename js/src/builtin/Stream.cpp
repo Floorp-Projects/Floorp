@@ -3020,7 +3020,7 @@ ReadableStreamDefaultControllerEnqueue(JSContext* cx,
             // and
             // Step d: If enqueueResult is an abrupt completion,
             RootedValue exn(cx);
-            if (!cx->isExceptionPending() || !cx->getPendingException(&exn)) {
+            if (!cx->isExceptionPending() || !GetAndClearException(cx, &exn)) {
                 // Uncatchable error. Die immediately without erroring the
                 // stream.
                 return false;
@@ -3034,6 +3034,7 @@ ReadableStreamDefaultControllerEnqueue(JSContext* cx,
             }
 
             // Step b.ii.2: Return chunkSize.
+            cx->setPendingException(exn);
             return false;
         }
     }
@@ -3058,6 +3059,7 @@ static MOZ_MUST_USE bool
 ReadableStreamControllerError(JSContext* cx, Handle<ReadableStreamController*> controller,
                               HandleValue e)
 {
+    MOZ_ASSERT(!cx->isExceptionPending());
     AssertSameCompartment(cx, e);
 
     // Step 1: Let stream be controller.[[controlledReadableStream]].
@@ -3096,6 +3098,8 @@ ReadableStreamDefaultControllerErrorIfNeeded(JSContext* cx,
                                              Handle<ReadableStreamDefaultController*> controller,
                                              HandleValue e)
 {
+    MOZ_ASSERT(!cx->isExceptionPending());
+
     // Step 1: If controller.[[controlledReadableStream]].[[state]] is "readable",
     //         perform ! ReadableStreamDefaultControllerError(controller, e).
     Rooted<ReadableStream*> stream(cx, controller->stream());
@@ -3670,7 +3674,7 @@ ReadableByteStreamControllerClose(JSContext* cx, Handle<ReadableByteStreamContro
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                       JSMSG_READABLEBYTESTREAMCONTROLLER_CLOSE_PENDING_PULL);
             RootedValue e(cx);
-            if (!cx->isExceptionPending() || !cx->getPendingException(&e)) {
+            if (!cx->isExceptionPending() || !GetAndClearException(cx, &e)) {
                 // Uncatchable error. Die immediately without erroring the
                 // stream.
                 return false;
@@ -3682,6 +3686,7 @@ ReadableByteStreamControllerClose(JSContext* cx, Handle<ReadableByteStreamContro
             }
 
             // Step iii: Throw e.
+            cx->setPendingException(e);
             return false;
         }
     }
