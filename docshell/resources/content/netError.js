@@ -12,16 +12,14 @@
       // which is the URL displayed in the location bar, i.e.
       // the URI that the user attempted to load.
 
-      function getErrorCode()
-      {
+      function getErrorCode() {
         var url = document.documentURI;
         var error = url.search(/e\=/);
         var duffUrl = url.search(/\&u\=/);
         return decodeURIComponent(url.slice(error + 2, duffUrl));
       }
 
-      function getCSSClass()
-      {
+      function getCSSClass() {
         var url = document.documentURI;
         var matches = url.match(/s\=([^&]+)\&/);
         // s is optional, if no match just return nothing
@@ -32,8 +30,7 @@
         return decodeURIComponent(matches[1]);
       }
 
-      function getDescription()
-      {
+      function getDescription() {
         var url = document.documentURI;
         var desc = url.search(/d\=/);
 
@@ -45,8 +42,7 @@
         return decodeURIComponent(url.slice(desc + 2));
       }
 
-      function retryThis(buttonEl)
-      {
+      function retryThis(buttonEl) {
         // Note: The application may wish to handle switching off "offline mode"
         // before this event handler runs, but using a capturing event handler.
 
@@ -63,23 +59,20 @@
         buttonEl.disabled = true;
       }
 
-      function initPage()
-      {
+      function initPage() {
         var err = getErrorCode();
 
         // if it's an unknown error or there's no title or description
         // defined, get the generic message
         var errTitle = document.getElementById("et_" + err);
         var errDesc  = document.getElementById("ed_" + err);
-        if (!errTitle || !errDesc)
-        {
+        if (!errTitle || !errDesc) {
           errTitle = document.getElementById("et_generic");
           errDesc  = document.getElementById("ed_generic");
         }
 
         var title = document.getElementById("errorTitleText");
-        if (title)
-        {
+        if (title) {
           title.parentNode.replaceChild(errTitle, title);
           // change id to the replaced child's id so styling works
           errTitle.id = "errorTitleText";
@@ -90,8 +83,7 @@
           sd.textContent = getDescription();
 
         var ld = document.getElementById("errorLongDesc");
-        if (ld)
-        {
+        if (ld) {
           ld.parentNode.replaceChild(errDesc, ld);
           // change id to the replaced child's id so styling works
           errDesc.id = "errorLongDesc";
@@ -139,8 +131,7 @@
           document.getElementById("errorTryAgain").style.display = "none";
           document.getElementById("errorPageContainer").setAttribute("class", "certerror");
           addDomainErrorLink();
-        }
-        else {
+        } else {
           // Remove the override block for non-certificate errors.  CSS-hiding
           // isn't good enough here, because of bug 39098
           var secOverride = document.getElementById("securityOverrideDiv");
@@ -165,8 +156,8 @@
 
       function showSecuritySection() {
         // Swap link out, content in
-        document.getElementById('securityOverrideContent').style.display = '';
-        document.getElementById('securityOverrideLink').style.display = 'none';
+        document.getElementById("securityOverrideContent").style.display = "";
+        document.getElementById("securityOverrideLink").style.display = "none";
       }
 
       /* In the case of SSL error pages about domain mismatch, see if
@@ -187,7 +178,7 @@
           // use an over-greedy regex
           var re = /<a id="cert_domain_link" title="([^"]+)">/;
           var result = re.exec(desc);
-          if(!result)
+          if (!result)
             return;
 
           // Remove sd's existing children
@@ -207,7 +198,7 @@
           sd.appendChild(document.createTextNode(desc.slice(desc.indexOf("</a>") + "</a>".length)));
         }
 
-        var link = document.getElementById('cert_domain_link');
+        var link = document.getElementById("cert_domain_link");
         if (!link)
           return;
 
