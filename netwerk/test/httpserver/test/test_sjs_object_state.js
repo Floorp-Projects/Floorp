@@ -173,6 +173,7 @@ function checkForFinish() {
     try {
       do_throw("uh-oh, how are we being finished twice?!?!");
     } finally {
+      // eslint-disable-next-line no-undef
       quit(1);
     }
   }

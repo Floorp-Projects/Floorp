@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+
 /*
  * Tests for correct behavior of asynchronous responses.
  */
@@ -122,8 +123,8 @@ function handleAsync2(request, response) {
   response.setHeader("X-Custom-Header", "value", false);
 
   callLater(startToHeaderDelay, function() {
-    var body = "BO";
-    response.bodyOutputStream.write(body, body.length);
+    var preBody = "BO";
+    response.bodyOutputStream.write(preBody, preBody.length);
 
     try {
       response.setStatusLine(request.httpVersion, 500, "after body write");
@@ -139,8 +140,8 @@ function handleAsync2(request, response) {
     }
 
     callLater(startToFinishedDelay - startToHeaderDelay, function() {
-      var body = "DY";
-      response.bodyOutputStream.write(body, body.length);
+      var postBody = "DY";
+      response.bodyOutputStream.write(postBody, postBody.length);
 
       response.finish();
       response.finish(); // idempotency

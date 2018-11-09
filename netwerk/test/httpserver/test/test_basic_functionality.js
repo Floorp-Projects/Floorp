@@ -8,6 +8,8 @@
  * Basic functionality test, from the client programmer's POV.
  */
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "port", function() {
   return srv.identity.primaryPort;
 });
@@ -32,9 +34,7 @@ function run_test() {
 
   // base path
   // XXX should actually test this works with a file by comparing streams!
-  var dirServ = Cc["@mozilla.org/file/directory_service;1"]
-                  .getService(Ci.nsIProperties);
-  var path = dirServ.get("CurWorkD", Ci.nsIFile);
+  var path = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   srv.registerDirectory("/", path);
 
   // register a few test paths

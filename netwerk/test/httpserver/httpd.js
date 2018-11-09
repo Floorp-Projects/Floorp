@@ -50,6 +50,8 @@ var DEBUG_TIMESTAMP = false; // non-const so tweakable in server tests
 
 var gGlobalObject = Cu.getGlobalForObject(this);
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 /**
  * Asserts that the given condition holds.  If it doesn't, the given message is
  * dumped, a stack trace is printed, and an exception is thrown to attempt to
@@ -184,16 +186,6 @@ function dumpStack() {
 
 /** The XPCOM thread manager. */
 var gThreadManager = null;
-
-/** The XPCOM prefs service. */
-var gRootPrefBranch = null;
-function getRootPrefBranch() {
-  if (!gRootPrefBranch) {
-    gRootPrefBranch = Cc["@mozilla.org/preferences-service;1"]
-                        .getService(Ci.nsIPrefBranch);
-  }
-  return gRootPrefBranch;
-}
 
 /**
  * JavaScript constructors for commonly-used classes; precreating these is a
@@ -487,15 +479,14 @@ nsHttpServer.prototype =
     // network.http.max-persistent-connections-per-proxy concurrent
     // connections, plus a safety margin in case some other process is
     // talking to the server as well.
-    var prefs = getRootPrefBranch();
     var maxConnections = 5 + Math.max(
-      prefs.getIntPref("network.http.max-persistent-connections-per-server"),
-      prefs.getIntPref("network.http.max-persistent-connections-per-proxy"));
+      Services.prefs.getIntPref("network.http.max-persistent-connections-per-server"),
+      Services.prefs.getIntPref("network.http.max-persistent-connections-per-proxy"));
 
     try {
       var loopback = true;
       if (this._host != "127.0.0.1" && this._host != "localhost") {
-        var loopback = false;
+        loopback = false;
       }
 
       // When automatically selecting a port, sometimes the chosen port is
@@ -503,15 +494,13 @@ nsHttpServer.prototype =
       // tests will intermittently fail. So, we simply keep trying to to
       // get a server socket until a valid port is obtained. We limit
       // ourselves to finite attempts just so we don't loop forever.
-      var ios = Cc["@mozilla.org/network/io-service;1"]
-                  .getService(Ci.nsIIOService);
       var socket;
       for (var i = 100; i; i--) {
         var temp = new ServerSocket(this._port,
                                     loopback, // true = localhost, false = everybody
                                     maxConnections);
 
-        var allowed = ios.allowPort(temp.port, "http");
+        var allowed = Services.io.allowPort(temp.port, "http");
         if (!allowed) {
           dumpn(">>>Warning: obtained ServerSocket listens on a blocked " +
                 "port: " + temp.port);
@@ -1601,9 +1590,7 @@ RequestReader.prototype =
       }
 
       try {
-        var uri = Cc["@mozilla.org/network/io-service;1"]
-                    .getService(Ci.nsIIOService)
-                    .newURI(fullPath);
+        var uri = Services.io.newURI(fullPath);
         fullPath = uri.pathQueryRef;
         scheme = uri.scheme;
         host = metadata._host = uri.asciiHost;
@@ -1899,7 +1886,7 @@ function defaultIndexHandler(metadata, response) {
   var files = directory.directoryEntries;
   while (files.hasMoreElements()) {
     var f = files.nextFile;
-    var name = f.leafName;
+    let name = f.leafName;
     if (!f.isHidden() &&
         (name.charAt(name.length - 1) != HIDDEN_CHAR ||
          name.charAt(name.length - 2) == HIDDEN_CHAR))
@@ -1911,7 +1898,7 @@ function defaultIndexHandler(metadata, response) {
   for (var i = 0; i < fileList.length; i++) {
     var file = fileList[i];
     try {
-      var name = file.leafName;
+      let name = file.leafName;
       if (name.charAt(name.length - 1) == HIDDEN_CHAR)
         name = name.substring(0, name.length - 1);
       var sep = file.isDirectory() ? "/" : "";
@@ -2477,11 +2464,10 @@ ServerHandler.prototype =
 
     var type = this._getTypeFromFile(file);
     if (type === SJS_TYPE) {
-      var fis = new FileInputStream(file, PR_RDONLY, PERMS_READONLY,
+      let fis = new FileInputStream(file, PR_RDONLY, PERMS_READONLY,
                                     Ci.nsIFileInputStream.CLOSE_ON_EOF);
 
       try {
-        var sis = new ScriptableInputStream(fis);
         var s = Cu.Sandbox(gGlobalObject);
         s.importFunction(dump, "dump");
         s.importFunction(atob, "atob");
@@ -2523,12 +2509,8 @@ ServerHandler.prototype =
           // getting the line number where we evaluate the SJS file.  Don't
           // separate these two lines!
           var line = new Error().lineNumber;
-          let uri = Cc["@mozilla.org/network/io-service;1"]
-                      .getService(Ci.nsIIOService)
-                      .newFileURI(file);
-          let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-                               .getService(Ci.mozIJSSubScriptLoader);
-          scriptLoader.loadSubScript(uri.spec, s);
+          let uri = Services.io.newFileURI(file);
+          Services.scriptloader.loadSubScript(uri.spec, s);
         } catch (e) {
           dumpn("*** syntax error in SJS at " + file.path + ": " + e);
           throw HTTP_500;
@@ -2558,7 +2540,7 @@ ServerHandler.prototype =
       maybeAddHeaders(file, metadata, response);
       response.setHeader("Content-Length", "" + count, false);
 
-      var fis = new FileInputStream(file, PR_RDONLY, PERMS_READONLY,
+      let fis = new FileInputStream(file, PR_RDONLY, PERMS_READONLY,
                                     Ci.nsIFileInputStream.CLOSE_ON_EOF);
 
       offset = offset || 0;
@@ -3726,7 +3708,7 @@ Response.prototype =
         QueryInterface: ChromeUtils.generateQI(["nsIRequestObserver"]),
       };
 
-    var headerCopier = this._asyncCopier =
+    this._asyncCopier =
       new WriteThroughCopier(responseHeadPipe.inputStream,
                              this._connection.output,
                              copyObserver, null);
@@ -3943,15 +3925,16 @@ WriteThroughCopier.prototype =
       if (bytesWanted === 0)
         throw Components.Exception("", Cr.NS_BASE_STREAM_CLOSED);
     } catch (e) {
+      let rv;
       if (streamClosed(e)) {
         dumpn("*** input stream closed");
-        e = bytesWanted === 0 ? Cr.NS_OK : Cr.NS_ERROR_UNEXPECTED;
+        rv = bytesWanted === 0 ? Cr.NS_OK : Cr.NS_ERROR_UNEXPECTED;
       } else {
         dumpn("!!! unexpected error reading from input, canceling: " + e);
-        e = Cr.NS_ERROR_UNEXPECTED;
+        rv = Cr.NS_ERROR_UNEXPECTED;
       }
 
-      this._doneReadingSource(e);
+      this._doneReadingSource(rv);
       return;
     }
 
@@ -4524,9 +4507,9 @@ nsHttpHeaders.prototype =
     var name = headerUtils.normalizeFieldName(fieldName);
     var value = headerUtils.normalizeFieldValue(fieldValue);
     if (name in this._headers) {
-      this._headers[name].push(fieldValue);
+      this._headers[name].push(value);
     } else {
-      this._headers[name] = [fieldValue];
+      this._headers[name] = [value];
     }
   },
 

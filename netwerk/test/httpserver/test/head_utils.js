@@ -3,13 +3,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* global __LOCATION__ */
+/* import-globals-from ../httpd.js */
 
 var _HTTPD_JS_PATH = __LOCATION__.parent;
 _HTTPD_JS_PATH.append("httpd.js");
 load(_HTTPD_JS_PATH.path);
 
 // if these tests fail, we'll want the debug output
-DEBUG = true;
+var linDEBUG = true;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
@@ -75,7 +77,7 @@ function fileContents(file) {
  *   includes a final empty line if data ended with a CRLF
  */
 function* LineIterator(data) {
-  var start = 0, index = 0;
+  var index = 0;
   do {
     index = data.indexOf("\r\n");
     if (index >= 0)
@@ -253,7 +255,7 @@ function runHttpTests(testArray, done) {
     } catch (e) {
       try {
         do_report_unexpected_exception(e, "testArray[" + testIndex + "].initChannel(ch)");
-      } catch (e) {
+      } catch (x) {
         /* swallow and let tests continue */
       }
     }
@@ -354,6 +356,8 @@ function RawTest(host, port, data, responseCheck) {
     data = [data];
   if (data.length <= 0)
     throw "bad data length";
+
+  // eslint-disable-next-line no-control-regex
   if (!data.every(function(v) { return /^[\x00-\xff]*$/.test(v); }))
     throw "bad data contained non-byte-valued character";
 
