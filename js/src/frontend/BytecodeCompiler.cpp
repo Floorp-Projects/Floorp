@@ -14,6 +14,7 @@
 #if defined(JS_BUILD_BINAST)
 # include "frontend/BinSource.h"
 #endif // JS_BUILD_BINAST
+#include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/EitherParser.h"
 #include "frontend/ErrorReporter.h"
@@ -39,13 +40,6 @@ using mozilla::Nothing;
 using JS::CompileOptions;
 using JS::ReadOnlyCompileOptions;
 using JS::SourceText;
-
-class BytecodeCompiler;
-
-template<typename Unit> class SourceAwareCompiler;
-template<typename Unit> class ScriptCompiler;
-template<typename Unit> class ModuleCompiler;
-template<typename Unit> class StandaloneFunctionCompiler;
 
 // CompileScript independently returns the ScriptSourceObject (SSO) for the
 // compile.  This is used by off-thread script compilation (OT-SC).
@@ -73,83 +67,12 @@ class MOZ_STACK_CLASS AutoInitializeSourceObject
         sourceObjectOut_(sourceObjectOut)
     { }
 
-    inline ~AutoInitializeSourceObject();
+    inline ~AutoInitializeSourceObject() {
+        if (sourceObjectOut_) {
+            *sourceObjectOut_ = compiler_.sourceObjectPtr();
+        }
+    }
 };
-
-// The BytecodeCompiler class contains resources common to compiling scripts and
-// function bodies.
-class MOZ_STACK_CLASS BytecodeCompiler
-{
-  protected:
-    AutoKeepAtoms keepAtoms;
-
-    JSContext* cx;
-    const ReadOnlyCompileOptions& options;
-
-    RootedScriptSourceObject sourceObject;
-    ScriptSource* scriptSource = nullptr;
-
-    Maybe<UsedNameTracker> usedNames;
-
-    Directives directives;
-
-    RootedScript script;
-
-  protected:
-    BytecodeCompiler(JSContext* cx, const ReadOnlyCompileOptions& options);
-
-    template<typename Unit> friend class SourceAwareCompiler;
-    template<typename Unit> friend class ScriptCompiler;
-    template<typename Unit> friend class ModuleCompiler;
-    template<typename Unit> friend class StandaloneFunctionCompiler;
-
-  public:
-    JSContext* context() const {
-        return cx;
-    }
-
-    ScriptSourceObject* sourceObjectPtr() const {
-        return sourceObject.get();
-    }
-
-  protected:
-    void assertSourceCreated() const {
-        MOZ_ASSERT(sourceObject != nullptr);
-        MOZ_ASSERT(scriptSource != nullptr);
-    }
-
-    MOZ_MUST_USE bool createScriptSource(const Maybe<uint32_t>& parameterListEnd);
-
-    void createUsedNames() {
-        usedNames.emplace(cx);
-    }
-
-    // Create a script for source of the given length, using the explicitly-
-    // provided toString offsets as the created script's offsets in the source.
-    MOZ_MUST_USE bool internalCreateScript(uint32_t toStringStart, uint32_t toStringEnd,
-                                           uint32_t sourceBufferLength);
-
-    MOZ_MUST_USE bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter,
-                                     const EitherParser& parser, SharedContext* sharedContext);
-
-    // This function lives here, not in SourceAwareCompiler, because it mostly
-    // uses fields in *this* class.
-    template<typename Unit>
-    MOZ_MUST_USE bool assignSource(SourceText<Unit>& sourceBuffer);
-
-    bool canLazilyParse() const;
-
-    MOZ_MUST_USE bool
-    deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObject environment);
-};
-
-inline
-AutoInitializeSourceObject::~AutoInitializeSourceObject()
-{
-    if (sourceObjectOut_) {
-        *sourceObjectOut_ = compiler_.sourceObjectPtr();
-    }
-}
 
 // RAII class to check the frontend reports an exception when it fails to
 // compile a script.
@@ -190,7 +113,7 @@ class MOZ_RAII AutoAssertReportedException
 };
 
 template<typename Unit>
-class MOZ_STACK_CLASS SourceAwareCompiler
+class MOZ_STACK_CLASS frontend::SourceAwareCompiler
 {
   protected:
     SourceText<Unit>& sourceBuffer_;
@@ -248,7 +171,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler
 };
 
 template<typename Unit>
-class MOZ_STACK_CLASS ScriptCompiler
+class MOZ_STACK_CLASS frontend::ScriptCompiler
   : public SourceAwareCompiler<Unit>
 {
     using Base = SourceAwareCompiler<Unit>;
@@ -276,24 +199,6 @@ class MOZ_STACK_CLASS ScriptCompiler
                             SharedContext* sc);
 };
 
-class MOZ_STACK_CLASS GlobalScriptInfo final
-  : public BytecodeCompiler
-{
-    GlobalSharedContext globalsc_;
-
-  public:
-    GlobalScriptInfo(JSContext* cx, const ReadOnlyCompileOptions& options, ScopeKind scopeKind)
-      : BytecodeCompiler(cx, options),
-        globalsc_(cx, scopeKind, directives, options.extraWarningsOption)
-    {
-        MOZ_ASSERT(scopeKind == ScopeKind::Global || scopeKind == ScopeKind::NonSyntactic);
-    }
-
-    GlobalSharedContext* sharedContext() {
-        return &globalsc_;
-    }
-};
-
 template<typename Unit>
 static JSScript*
 CreateGlobalScript(GlobalScriptInfo& info, JS::SourceText<Unit>& srcBuf,
@@ -301,7 +206,7 @@ CreateGlobalScript(GlobalScriptInfo& info, JS::SourceText<Unit>& srcBuf,
 {
     AutoAssertReportedException assertException(info.context());
 
-    ScriptCompiler<Unit> compiler(srcBuf);
+    frontend::ScriptCompiler<Unit> compiler(srcBuf);
     AutoInitializeSourceObject autoSSO(info, sourceObjectOut);
 
     if (!compiler.prepareScriptParse(info)) {
@@ -316,29 +221,6 @@ CreateGlobalScript(GlobalScriptInfo& info, JS::SourceText<Unit>& srcBuf,
     assertException.reset();
     return script;
 }
-
-class MOZ_STACK_CLASS EvalScriptInfo final
-  : public BytecodeCompiler
-{
-    HandleObject environment_;
-    EvalSharedContext evalsc_;
-
-  public:
-    EvalScriptInfo(JSContext* cx, const ReadOnlyCompileOptions& options, HandleObject environment,
-                   HandleScope enclosingScope)
-      : BytecodeCompiler(cx, options),
-        environment_(environment),
-        evalsc_(cx, environment_, enclosingScope, directives, options.extraWarningsOption)
-    {}
-
-    HandleObject environment() {
-        return environment_;
-    }
-
-    EvalSharedContext* sharedContext() {
-        return &evalsc_;
-    }
-};
 
 template<typename Unit>
 class MOZ_STACK_CLASS EvalScriptCompiler final
@@ -362,17 +244,8 @@ class MOZ_STACK_CLASS EvalScriptCompiler final
     }
 };
 
-class MOZ_STACK_CLASS ModuleInfo final
-  : public BytecodeCompiler
-{
-  public:
-    ModuleInfo(JSContext* cx, const ReadOnlyCompileOptions& options)
-      : BytecodeCompiler(cx, options)
-    {}
-};
-
 template<typename Unit>
-class MOZ_STACK_CLASS ModuleCompiler final
+class MOZ_STACK_CLASS frontend::ModuleCompiler final
   : public SourceAwareCompiler<Unit>
 {
     using Base = SourceAwareCompiler<Unit>;
@@ -391,17 +264,8 @@ class MOZ_STACK_CLASS ModuleCompiler final
     ModuleObject* compile(ModuleInfo& info);
 };
 
-class MOZ_STACK_CLASS StandaloneFunctionInfo final
-  : public BytecodeCompiler
-{
-  public:
-    StandaloneFunctionInfo(JSContext* cx, const ReadOnlyCompileOptions& options)
-      : BytecodeCompiler(cx, options)
-    {}
-};
-
 template<typename Unit>
-class MOZ_STACK_CLASS StandaloneFunctionCompiler final
+class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
   : public SourceAwareCompiler<Unit>
 {
     using Base = SourceAwareCompiler<Unit>;
@@ -547,8 +411,8 @@ BytecodeCompiler::canLazilyParse() const
 
 template<typename Unit>
 bool
-SourceAwareCompiler<Unit>::createSourceAndParser(BytecodeCompiler& info, ParseGoal goal,
-                                                 const Maybe<uint32_t>& parameterListEnd /* = Nothing() */)
+frontend::SourceAwareCompiler<Unit>::createSourceAndParser(BytecodeCompiler& info, ParseGoal goal,
+                                                           const Maybe<uint32_t>& parameterListEnd /* = Nothing() */)
 {
     if (!info.createScriptSource(parameterListEnd)) {
         return false;
@@ -599,9 +463,9 @@ BytecodeCompiler::emplaceEmitter(Maybe<BytecodeEmitter>& emitter,
 
 template<typename Unit>
 bool
-SourceAwareCompiler<Unit>::handleParseFailure(BytecodeCompiler& info,
-                                              const Directives& newDirectives,
-                                              TokenStreamPosition& startPosition)
+frontend::SourceAwareCompiler<Unit>::handleParseFailure(BytecodeCompiler& info,
+                                                        const Directives& newDirectives,
+                                                        TokenStreamPosition& startPosition)
 {
     if (parser->hadAbortedSyntaxParse()) {
         // Hit some unrecoverable ambiguity during an inner syntax parse.
@@ -646,8 +510,8 @@ BytecodeCompiler::deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObj
 
 template<typename Unit>
 JSScript*
-ScriptCompiler<Unit>::compileScript(BytecodeCompiler& info, HandleObject environment,
-                                    SharedContext* sc)
+frontend::ScriptCompiler<Unit>::compileScript(BytecodeCompiler& info, HandleObject environment,
+                                              SharedContext* sc)
 {
     assertSourceParserAndScriptCreated(info);
 
@@ -714,7 +578,7 @@ ScriptCompiler<Unit>::compileScript(BytecodeCompiler& info, HandleObject environ
 
 template<typename Unit>
 ModuleObject*
-ModuleCompiler<Unit>::compile(ModuleInfo& info)
+frontend::ModuleCompiler<Unit>::compile(ModuleInfo& info)
 {
     if (!createSourceAndParser(info, ParseGoal::Module) || !createCompleteScript(info)) {
         return nullptr;
@@ -771,10 +635,12 @@ ModuleCompiler<Unit>::compile(ModuleInfo& info)
 // constructor.
 template<typename Unit>
 CodeNode*
-StandaloneFunctionCompiler<Unit>::parse(StandaloneFunctionInfo& info, MutableHandleFunction fun,
-                                        HandleScope enclosingScope, GeneratorKind generatorKind,
-                                        FunctionAsyncKind asyncKind,
-                                        const Maybe<uint32_t>& parameterListEnd)
+frontend::StandaloneFunctionCompiler<Unit>::parse(StandaloneFunctionInfo& info,
+                                                  MutableHandleFunction fun,
+                                                  HandleScope enclosingScope,
+                                                  GeneratorKind generatorKind,
+                                                  FunctionAsyncKind asyncKind,
+                                                  const Maybe<uint32_t>& parameterListEnd)
 {
     MOZ_ASSERT(fun);
     MOZ_ASSERT(fun->isTenured());
@@ -804,8 +670,9 @@ StandaloneFunctionCompiler<Unit>::parse(StandaloneFunctionInfo& info, MutableHan
 // Compile a standalone JS function.
 template<typename Unit>
 bool
-StandaloneFunctionCompiler<Unit>::compile(StandaloneFunctionInfo& info, CodeNode* parsedFunction,
-                                          MutableHandleFunction fun)
+frontend::StandaloneFunctionCompiler<Unit>::compile(StandaloneFunctionInfo& info,
+                                                    CodeNode* parsedFunction,
+                                                    MutableHandleFunction fun)
 {
     FunctionBox* funbox = parsedFunction->funbox();
     if (funbox->function()->isInterpreted()) {
