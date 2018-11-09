@@ -124,6 +124,9 @@ JSContext::init(ContextKind kind)
         }
 #endif
 
+        if (!wasm::EnsureSignalHandlers(this)) {
+            return false;
+        }
     } else {
         atomsZoneFreeLists_ = js_new<gc::FreeLists>();
         if (!atomsZoneFreeLists_) {
@@ -1340,8 +1343,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     generationalDisabled(0),
     compactingDisabledCount(0),
     suppressProfilerSampling(false),
-    wasmTriedToInstallSignalHandlers(false),
-    wasmHaveSignalHandlers(false),
     tempLifoAlloc_((size_t)TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     debuggerMutations(0),
     ionPcScriptCache(nullptr),
