@@ -1,7 +1,6 @@
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
-const { TalosParentProfiler } = ChromeUtils.import("resource://talos-powers/TalosParentProfiler.jsm", {});
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 
 XPCOMUtils.defineLazyGetter(this, "require", function() {
@@ -90,6 +89,25 @@ Damp.prototype = {
       Cu.forceGC();
       await new Promise(done => setTimeout(done, 0));
     }
+  },
+
+  async ensureTalosParentProfiler() {
+    // TalosParentProfiler is part of TalosPowers, which is a separate WebExtension
+    // that may or may not already have finished loading at this point (unlike most
+    // Pageloader tests, Damp doesn't wait for Pageloader to find TalosPowers before
+    // running). getTalosParentProfiler is used to wait for TalosPowers to be around
+    // before continuing.
+    async function getTalosParentProfiler() {
+      try {
+        ChromeUtils.import("resource://talos-powers/TalosParentProfiler.jsm");
+        return TalosParentProfiler;
+      } catch (err) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return getTalosParentProfiler();
+      }
+    }
+
+    this.TalosParentProfiler = await getTalosParentProfiler();
   },
 
   /**
@@ -319,7 +337,7 @@ Damp.prototype = {
       this._reportAllResults();
     }
 
-    TalosParentProfiler.pause("DAMP - end");
+    this.TalosParentProfiler.pause("DAMP - end");
   },
 
   startAllocationTracker() {
@@ -379,6 +397,8 @@ Damp.prototype = {
       requestIdleCallback(resolve, { timeout: 15000 });
     });
 
+    await this.ensureTalosParentProfiler();
+
     // Free memory before running the first test, otherwise we may have a GC
     // related to Firefox startup or DAMP setup during the first test.
     await this.garbageCollect();
@@ -393,8 +413,6 @@ Damp.prototype = {
       this._win = Services.wm.getMostRecentWindow("navigator:browser");
       this._dampTab = this._win.gBrowser.selectedTab;
       this._win.gBrowser.selectedBrowser.focus(); // Unfocus the URL bar to avoid caret blink
-
-      TalosParentProfiler.resume("DAMP - start");
 
       // Filter tests via `./mach --subtests filter` command line argument
       let filter = Services.prefs.getCharPref("talos.subtests", "");
@@ -422,6 +440,7 @@ Damp.prototype = {
       }
 
      this.waitBeforeRunningTests().then(() => {
+        this.TalosParentProfiler.resume("DAMP - start");
         this._doSequence(sequenceArray, this._doneInternal);
       }).catch(e => {
         this.exception(e);
