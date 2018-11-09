@@ -36,8 +36,7 @@ object CrashReporterWrapper {
         // The BuildConfig value is populated from a file at compile time.
         // If the file did not exist, the value will be null.
         val supportedBuild = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
-        val hasSentryToken = BuildConfig.SENTRY_TOKEN != null
-        if (!hasSentryToken || !supportedBuild || BuildConfig.SENTRY_TOKEN.isEmpty()) return
+        if (!supportedBuild || BuildConfig.SENTRY_TOKEN.isEmpty()) return
 
         val sentryDsn = BuildConfig.SENTRY_TOKEN
 
