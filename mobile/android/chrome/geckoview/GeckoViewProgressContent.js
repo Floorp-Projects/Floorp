@@ -13,34 +13,19 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 class GeckoViewProgressContent extends GeckoViewContentModule {
   onInit() {
     debug `onInit`;
-  }
 
-  onEnable() {
-    debug `onEnable`;
+    ProgressTracker.onInit(this);
 
-    ProgressTracker.onEnable(this);
-
-    let flags = Ci.nsIWebProgress.NOTIFY_PROGRESS |
-                Ci.nsIWebProgress.NOTIFY_STATE_NETWORK |
-                Ci.nsIWebProgress.NOTIFY_LOCATION;
+    const flags = Ci.nsIWebProgress.NOTIFY_PROGRESS |
+                  Ci.nsIWebProgress.NOTIFY_STATE_NETWORK |
+                  Ci.nsIWebProgress.NOTIFY_LOCATION;
     this.progressFilter =
       Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
       .createInstance(Ci.nsIWebProgress);
     this.progressFilter.addProgressListener(this, flags);
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIWebProgress);
-    webProgress.addProgressListener(this.progressFilter, flags);
-  }
-
-  onDisable() {
-    debug `onDisable`;
-
-    if (this.progressFilter) {
-      this.progressFilter.removeProgressListener(this);
-      let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+    const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIWebProgress);
-      webProgress.removeProgressListener(this.progressFilter);
-    }
+    webProgress.addProgressListener(this.progressFilter, flags);
   }
 
   onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
@@ -88,7 +73,7 @@ class GeckoViewProgressContent extends GeckoViewContentModule {
 }
 
 const ProgressTracker = {
-  onEnable: function(aModule) {
+  onInit: function(aModule) {
     this._module = aModule;
     this.clear();
   },
