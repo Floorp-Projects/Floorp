@@ -137,15 +137,12 @@ OmxDataDecoder::EndOfStream()
 
   RefPtr<OmxDataDecoder> self = this;
   mOmxLayer->SendCommand(OMX_CommandFlush, OMX_ALL, nullptr)
-    ->Then(mOmxTaskQueue, __func__,
-        [self, this] () {
-          mDrainPromise.ResolveIfExists(mDecodedData, __func__);
-            mDecodedData.Clear();
-        },
-        [self, this] () {
-          mDrainPromise.ResolveIfExists(mDecodedData, __func__);
-          mDecodedData.Clear();
-        });
+    ->Then(mOmxTaskQueue,
+           __func__,
+           [self, this](OmxCommandPromise::ResolveOrRejectValue&& aValue) {
+             mDrainPromise.ResolveIfExists(std::move(mDecodedData), __func__);
+             mDecodedData = DecodedData();
+           });
 }
 
 RefPtr<MediaDataDecoder::InitPromise>
@@ -401,8 +398,8 @@ OmxDataDecoder::EmptyBufferDone(BufferData* aData)
           return;
         }
 
-        mDecodePromise.ResolveIfExists(mDecodedData, __func__);
-        mDecodedData.Clear();
+        mDecodePromise.ResolveIfExists(std::move(mDecodedData), __func__);
+        mDecodedData = DecodedData();
       });
 
     nsresult rv = mOmxTaskQueue->Dispatch(r.forget());
@@ -422,7 +419,7 @@ OmxDataDecoder::NotifyError(OMX_ERRORTYPE aOmxError, const char* aLine, const Me
 {
   LOG("NotifyError %d (%s) at %s", static_cast<int>(aOmxError),
       aError.ErrorName().get(), aLine);
-  mDecodedData.Clear();
+  mDecodedData = DecodedData();
   mDecodePromise.RejectIfExists(aError, __func__);
   mDrainPromise.RejectIfExists(aError, __func__);
   mFlushPromise.RejectIfExists(aError, __func__);
@@ -855,7 +852,7 @@ OmxDataDecoder::DoFlush()
 {
   MOZ_ASSERT(mOmxTaskQueue->IsCurrentThreadIn());
 
-  mDecodedData.Clear();
+  mDecodedData = DecodedData();
   mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   mDrainPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
 
