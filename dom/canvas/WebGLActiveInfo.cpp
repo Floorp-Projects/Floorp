@@ -140,7 +140,7 @@ ElemBaseType(const GLenum elemType)
     case LOCAL_GL_BOOL_VEC2:
     case LOCAL_GL_BOOL_VEC3:
     case LOCAL_GL_BOOL_VEC4:
-        return webgl::AttribBaseType::Bool;
+        return webgl::AttribBaseType::Boolean;
 
     // -
 

@@ -474,7 +474,7 @@ webgl::ToString(const webgl::AttribBaseType x)
         return "INT";
     case webgl::AttribBaseType::UInt:
         return "UINT";
-    case webgl::AttribBaseType::Bool:
+    case webgl::AttribBaseType::Boolean:
         return "BOOL";
     }
     MOZ_CRASH("pacify gcc6 warning");
@@ -554,7 +554,7 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const
 
         const auto& progBaseType = progAttrib.mActiveInfo->mBaseType;
         if ((attribDataBaseType != progBaseType) &
-            (progBaseType != webgl::AttribBaseType::Bool))
+            (progBaseType != webgl::AttribBaseType::Boolean))
         {
             const auto& dataType = ToString(attribDataBaseType);
             const auto& progType = ToString(progBaseType);

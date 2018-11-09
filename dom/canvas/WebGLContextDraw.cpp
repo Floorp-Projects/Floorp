@@ -859,7 +859,7 @@ WebGLContext::DoFakeVertexAttrib0(const uint64_t vertexCount)
     ////
 
     switch (mGenericVertexAttribTypes[0]) {
-    case webgl::AttribBaseType::Bool:
+    case webgl::AttribBaseType::Boolean:
     case webgl::AttribBaseType::Float:
         gl->fVertexAttribPointer(0, 4, LOCAL_GL_FLOAT, false, 0, 0);
         break;
