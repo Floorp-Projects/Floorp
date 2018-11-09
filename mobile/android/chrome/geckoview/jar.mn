@@ -13,6 +13,7 @@ geckoview.jar:
   content/geckoview.xul
   content/geckoview.js
   content/GeckoViewContentChild.js
+  content/GeckoViewMediaChild.js
   content/GeckoViewNavigationChild.js
   content/GeckoViewProgressChild.js
   content/GeckoViewPromptChild.js
