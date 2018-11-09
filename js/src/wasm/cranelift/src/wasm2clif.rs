@@ -561,15 +561,12 @@ impl<'a, 'b, 'c> cranelift_wasm::FuncEnvironment for TransEnv<'a, 'b, 'c> {
         };
 
         // 2. Bounds check the callee against the table length.
-        // TODO reuse this once !491 is merged.
-        //let (bound_gv, base_gv) = {
-        //let table_data = &pos.func.tables[table];
-        //(table_data.bound_gv, table_data.base_gv)
-        //};
+        let (bound_gv, base_gv) = {
+            let table_data = &pos.func.tables[table];
+            (table_data.bound_gv, table_data.base_gv)
+        };
 
-        //let tlength = pos.ins().global_value(ir::types::I32, bound_gv);
-        let gv_addr = pos.ins().global_value(native_pointer_type(), wtable.global);
-        let tlength = wtable.load_length(&mut pos, gv_addr);
+        let tlength = pos.ins().global_value(ir::types::I32, bound_gv);
 
         let oob = pos
             .ins()
@@ -577,8 +574,7 @@ impl<'a, 'b, 'c> cranelift_wasm::FuncEnvironment for TransEnv<'a, 'b, 'c> {
         pos.ins().trapnz(oob, ir::TrapCode::OutOfBounds);
 
         // 3. Load the wtable base pointer from a global.
-        //let tbase = pos.ins().global_value(native_pointer_type(), base_gv);
-        let tbase = wtable.load_base(&mut pos, gv_addr);
+        let tbase = pos.ins().global_value(native_pointer_type(), base_gv);
 
         // 4. Load callee pointer from wtable.
         let callee_x = if native_pointer_type() != ir::types::I32 {
