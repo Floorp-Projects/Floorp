@@ -317,9 +317,9 @@ SET TIMEOUT: resources/testharness.js
 # setTimeout use in reftests
 SET TIMEOUT: acid/acid3/test.html
 
-# Travis
+# CI configuration
+WEB-PLATFORM.TEST: .azure-pipelines.yml
 WEB-PLATFORM.TEST: .travis.yml
-
 
 # Third party code
 *: css/tools/apiclient/*
