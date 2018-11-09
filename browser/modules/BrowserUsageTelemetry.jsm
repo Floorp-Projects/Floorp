@@ -204,8 +204,8 @@ let URICountListener = {
     if (!this.isHttpURI(uri)) {
       return;
     }
-
-    if (shouldRecordSearchCount(browser.getTabBrowser())) {
+    if (shouldRecordSearchCount(browser.getTabBrowser()) &&
+        !(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
       Services.search.recordSearchURLTelemetry(uriSpec);
     }
 
