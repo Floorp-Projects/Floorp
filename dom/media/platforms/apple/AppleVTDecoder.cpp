@@ -11,7 +11,6 @@
 #include "AppleDecoderModule.h"
 #include "AppleUtils.h"
 #include "AppleVTLinker.h"
-#include "MacIOSurfaceImage.h"
 #include "MediaData.h"
 #include "mozilla/ArrayUtils.h"
 #include "H264.h"
@@ -437,7 +436,7 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
 
     RefPtr<MacIOSurface> macSurface = new MacIOSurface(surface);
 
-    RefPtr<layers::Image> image = new layers::MacIOSurfaceImage(macSurface);
+    RefPtr<layers::Image> image = new MacIOSurfaceImage(macSurface);
 
     data =
       VideoData::CreateFromImage(info.mDisplay,
