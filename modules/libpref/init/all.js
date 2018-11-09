@@ -1833,6 +1833,7 @@ pref("network.http.spdy.pull-allowance", 12582912); // 12MB
 pref("network.http.spdy.default-concurrent", 100);
 pref("network.http.spdy.default-hpack-buffer", 65536); // 64k
 pref("network.http.spdy.websockets", true);
+pref("network.http.spdy.enable-hpack-dump", false);
 
 // alt-svc allows separation of transport routing from
 // the origin host without using a proxy.
