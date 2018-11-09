@@ -81,8 +81,8 @@ mozilla::ipc::IPCResult
 VideoDecoderChild::RecvInputExhausted()
 {
   AssertOnManagerThread();
-  mDecodePromise.ResolveIfExists(std::move(mDecodedData), __func__);
-  mDecodedData = MediaDataDecoder::DecodedData();
+  mDecodePromise.ResolveIfExists(mDecodedData, __func__);
+  mDecodedData.Clear();
   return IPC_OK();
 }
 
@@ -90,8 +90,8 @@ mozilla::ipc::IPCResult
 VideoDecoderChild::RecvDrainComplete()
 {
   AssertOnManagerThread();
-  mDrainPromise.ResolveIfExists(std::move(mDecodedData), __func__);
-  mDecodedData = MediaDataDecoder::DecodedData();
+  mDrainPromise.ResolveIfExists(mDecodedData, __func__);
+  mDecodedData.Clear();
   return IPC_OK();
 }
 
@@ -99,7 +99,7 @@ mozilla::ipc::IPCResult
 VideoDecoderChild::RecvError(const nsresult& aError)
 {
   AssertOnManagerThread();
-  mDecodedData = MediaDataDecoder::DecodedData();
+  mDecodedData.Clear();
   mDecodePromise.RejectIfExists(aError, __func__);
   mDrainPromise.RejectIfExists(aError, __func__);
   mFlushPromise.RejectIfExists(aError, __func__);
@@ -153,7 +153,7 @@ VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy)
         MediaResult error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
         error.SetGPUCrashTimeStamp(ref->mGPUCrashTime);
         if (ref->mInitialized) {
-          mDecodedData = MediaDataDecoder::DecodedData();
+          mDecodedData.Clear();
           mDecodePromise.RejectIfExists(error, __func__);
           mDrainPromise.RejectIfExists(error, __func__);
           mFlushPromise.RejectIfExists(error, __func__);

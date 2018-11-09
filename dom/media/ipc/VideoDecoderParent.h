@@ -53,7 +53,7 @@ private:
   void Error(const MediaResult& aError);
 
   ~VideoDecoderParent();
-  void ProcessDecodedData(MediaDataDecoder::DecodedData&& aData);
+  void ProcessDecodedData(const MediaDataDecoder::DecodedData& aData);
 
   RefPtr<VideoDecoderManagerParent> mParent;
   RefPtr<VideoDecoderParent> mIPDLSelfRef;
