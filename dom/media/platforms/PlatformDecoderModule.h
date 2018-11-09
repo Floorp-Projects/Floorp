@@ -33,7 +33,10 @@ namespace layers {
 class ImageContainer;
 } // namespace layers
 
-class GpuDecoderModule;
+namespace dom {
+class RemoteDecoderModule;
+}
+
 class MediaDataDecoder;
 class TaskQueue;
 class CDMProxy;
@@ -211,7 +214,7 @@ protected:
 
   friend class MediaChangeMonitor;
   friend class PDMFactory;
-  friend class GpuDecoderModule;
+  friend class dom::RemoteDecoderModule;
   friend class EMEDecoderModule;
 
   // Indicates if the PlatformDecoderModule supports decoding of aColorDepth.
