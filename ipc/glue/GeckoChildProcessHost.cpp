@@ -143,10 +143,8 @@ auto
 GeckoChildProcessHost::GetPathToBinary(FilePath& exePath, GeckoProcessType processType) -> BinaryPathType
 {
   if (sRunSelfAsContentProc &&
-      (processType == GeckoProcessType_Content ||
-       processType == GeckoProcessType_GPU ||
-       processType == GeckoProcessType_VR ||
-       processType == GeckoProcessType_RDD)) {
+      (processType == GeckoProcessType_Content || processType == GeckoProcessType_GPU ||
+       processType == GeckoProcessType_VR)) {
 #if defined(OS_WIN)
     wchar_t exePathBuf[MAXPATHLEN];
     if (!::GetModuleFileNameW(nullptr, exePathBuf, MAXPATHLEN)) {
@@ -747,12 +745,9 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   // Add the application directory path (-appdir path)
   AddAppDirToCommandLine(childArgv);
 
-  // Tmp dir that the GPU or RDD process should use for crash reports.
-  // This arg is always populated (but possibly with an empty value) for
-  // a GPU or RDD child process.
-  if (mProcessType == GeckoProcessType_GPU ||
-      mProcessType == GeckoProcessType_RDD ||
-      mProcessType == GeckoProcessType_VR) {
+  // Tmp dir that the GPU process should use for crash reports. This arg is
+  // always populated (but possibly with an empty value) for a GPU child process.
+  if (mProcessType == GeckoProcessType_GPU || mProcessType == GeckoProcessType_VR) {
     nsCOMPtr<nsIFile> file;
     CrashReporter::GetChildProcessTmpDir(getter_AddRefs(file));
     nsAutoCString path;
@@ -994,11 +989,6 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
         // TODO: Implement sandbox for VR process, Bug 1430043.
       }
       break;
-    case GeckoProcessType_RDD:
-      if (mSandboxLevel > 0 && !PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX")) {
-        // TODO: Implement sandbox for RDD process, Bug 1498624.
-      }
-      break;
     case GeckoProcessType_Default:
     default:
       MOZ_CRASH("Bad process type in GeckoChildProcessHost");
@@ -1024,11 +1014,9 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   // Win app model id
   cmdLine.AppendLooseValue(mGroupId.get());
 
-  // Tmp dir that the GPU or RDD process should use for crash reports.
-  // This arg is always populated (but possibly with an empty value) for
-  // a GPU or RDD child process.
-  if (mProcessType == GeckoProcessType_GPU ||
-      mProcessType == GeckoProcessType_RDD) {
+  // Tmp dir that the GPU process should use for crash reports. This arg is
+  // always populated (but possibly with an empty value) for a GPU child process.
+  if (mProcessType == GeckoProcessType_GPU) {
     nsCOMPtr<nsIFile> file;
     CrashReporter::GetChildProcessTmpDir(getter_AddRefs(file));
     nsString path;
@@ -1083,7 +1071,6 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
     // child processes.
     if (mProcessType == GeckoProcessType_Content ||
         mProcessType == GeckoProcessType_GPU ||
-        mProcessType == GeckoProcessType_RDD ||
         mProcessType == GeckoProcessType_VR ||
         mProcessType == GeckoProcessType_GMPlugin) {
       if (!mSandboxBroker.AddTargetPeer(process)) {

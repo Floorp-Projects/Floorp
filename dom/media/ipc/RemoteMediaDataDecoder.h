@@ -13,7 +13,6 @@ namespace mozilla {
 
 class GpuDecoderModule;
 class IRemoteDecoderChild;
-class RemoteDecoderModule;
 class RemoteMediaDataDecoder;
 
 DDLoggedTypeCustomNameAndBase(RemoteMediaDataDecoder,
@@ -30,7 +29,6 @@ class RemoteMediaDataDecoder
 {
 public:
   friend class GpuDecoderModule;
-  friend class RemoteDecoderModule;
 
   // MediaDataDecoder
   RefPtr<InitPromise> Init() override;
