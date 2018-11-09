@@ -41,7 +41,7 @@ function test() {
 
 // an nsIWebProgressListener that checks all requests made by the docShell
 // have the flags we expect.
-RequestWatcher = {
+var RequestWatcher = {
   init(docShell, callback) {
     this.callback = callback;
     this.docShell = docShell;
