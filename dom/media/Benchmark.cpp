@@ -288,8 +288,7 @@ BenchmarkPlayback::FinalizeShutdown()
   MOZ_ASSERT(OnThread());
 
   MOZ_ASSERT(!mDecoder, "mDecoder must have been shutdown already");
-  mDecoderTaskQueue->BeginShutdown();
-  mDecoderTaskQueue->AwaitShutdownAndIdle();
+  MOZ_DIAGNOSTIC_ASSERT(mDecoderTaskQueue->IsEmpty());
   mDecoderTaskQueue = nullptr;
 
   if (mTrackDemuxer) {
