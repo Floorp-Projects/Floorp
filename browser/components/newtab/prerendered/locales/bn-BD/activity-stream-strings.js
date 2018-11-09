@@ -74,10 +74,10 @@ window.gActivityStreamStrings = {
   "topsites_form_image_validation": "ছবি লোড করতে ব্যর্থ। ভিন্ন URL এ চেস্টা করুন।",
   "pocket_read_more": "জনপ্রিয় বিষয়:",
   "pocket_read_even_more": "আরও গল্প দেখুন",
-  "pocket_more_reccommendations": "More Recommendations",
+  "pocket_more_reccommendations": "আরো সুপারিশ",
   "pocket_how_it_works": "কিভাবে এটা কাজ করে",
-  "pocket_cta_button": "Get Pocket",
-  "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
+  "pocket_cta_button": "Pocket পান",
+  "pocket_cta_text": "আপনার পছন্দের গল্পগুলো Pocket এ সংরক্ষণ করুন, এবং আকর্ষণীয় মনে পড়ুন।",
   "highlights_empty_state": "ব্রাউজি করা শুরু করুন, এবং কিছু গুরুত্বপূর্ণ নিবন্ধ, ভিডিও, এবং আপনি সম্প্রতি পরিদর্শন বা বুকমার্ক করেছেন এমন কিছু পৃষ্ঠা আমরা এখানে প্রদর্শন করব।",
   "topstories_empty_state": "কিছু একটা ঠিক নেই। {provider} এর শীর্ষ গল্পগুলো পেতে কিছুক্ষণ পর আবার দেখুন। অপেক্ষা করতে চান না? বিশ্বের সেরা গল্পগুলো পেতে কোন জনপ্রিয় বিষয় নির্বাচন করুন।",
   "manual_migration_explanation2": "অন্য ব্রাউজার থেকে আনা বুকমার্ক, ইতিহাস এবং পাসওয়ার্ডগুলির সাথে ফায়ারফক্স ব্যবহার করে দেখুন।",
@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "গোপনীয়তা নীতি",
   "firstrun_continue_to_login": "চালিয়ে যান",
   "firstrun_skip_login": "এই ধাপটি বাদ দিন",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "মেনু খুলুন",
   "pocket_learn_more": "আরও জানুন"
 };

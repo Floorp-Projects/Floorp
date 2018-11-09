@@ -913,10 +913,6 @@ main {
     .top-stories-bottom-container a.more-recommendations {
       font-weight: normal;
       font-size: 13px; }
-  @media (min-width: 866px) {
-    .top-stories-bottom-container {
-      line-height: 16px;
-      height: 16px; } }
 
 @media (min-width: 1122px) {
   .sections-list .normal-cards .section-list {
@@ -1840,6 +1836,8 @@ a.firstrun-link {
   .asrouter-admin .message-item .message-id {
     font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
     font-size: 12px; }
+  .asrouter-admin .providerUrl {
+    font-size: 12px; }
   .asrouter-admin pre {
     background: var(--newtab-textbox-background-color);
     margin: 0;
@@ -1872,7 +1870,8 @@ a.firstrun-link {
     margin-inline-end: 10px; }
   .pocket-logged-in-cta .cta-text {
     font-weight: normal;
-    font-size: 13px; }
+    font-size: 13px;
+    line-height: 1.230769231; }
   .pocket-logged-in-cta .pocket-cta-button,
   .pocket-logged-in-cta .cta-text {
     vertical-align: top; }
@@ -1880,7 +1879,8 @@ a.firstrun-link {
 .more-recommendations {
   display: flex;
   align-items: center;
-  white-space: nowrap; }
+  white-space: nowrap;
+  line-height: 1.230769231; }
   .more-recommendations::after {
     background: url("../data/content/assets/topic-show-more-12.svg") no-repeat center center;
     content: '';
@@ -2148,6 +2148,11 @@ a.firstrun-link {
     .SubmitFormSnippet .scene2Icon img {
       width: 98px;
       display: inline-block; }
+  .SubmitFormSnippet .scene2Title {
+    font-size: inherit;
+    margin: 0;
+    font-weight: bold;
+    display: inline; }
   .SubmitFormSnippet form {
     display: flex;
     flex-direction: column;
@@ -2262,6 +2267,8 @@ a.firstrun-link {
       background-image: url("resource://activity-stream/data/content/assets/illustration-screenshots@2x.png"); }
     .onboardingMessage .onboardingMessageImage.gift {
       background-image: url("resource://activity-stream/data/content/assets/illustration-gift@2x.png"); }
+    .onboardingMessage .onboardingMessageImage.sync {
+      background-image: url("resource://activity-stream/data/content/assets/illustration-sync@2x.png"); }
   .onboardingMessage .onboardingContent {
     height: 175px; }
     .onboardingMessage .onboardingContent > span > h3 {
