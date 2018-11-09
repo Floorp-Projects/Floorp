@@ -32,8 +32,6 @@ use std::ptr::write_unaligned;
 pub struct MemoryCodeSink<'a> {
     data: *mut u8,
     offset: isize,
-    /// Size of the machine code portion of output
-    pub code_size: isize,
     relocs: &'a mut RelocSink,
     traps: &'a mut TrapSink,
 }
@@ -43,11 +41,14 @@ impl<'a> MemoryCodeSink<'a> {
     ///
     /// This function is unsafe since `MemoryCodeSink` does not perform bounds checking on the
     /// memory buffer, and it can't guarantee that the `data` pointer is valid.
-    pub unsafe fn new(data: *mut u8, relocs: &'a mut RelocSink, traps: &'a mut TrapSink) -> Self {
-        Self {
+    pub unsafe fn new<'sink>(
+        data: *mut u8,
+        relocs: &'sink mut RelocSink,
+        traps: &'sink mut TrapSink,
+    ) -> MemoryCodeSink<'sink> {
+        MemoryCodeSink {
             data,
             offset: 0,
-            code_size: 0,
             relocs,
             traps,
         }
@@ -129,10 +130,6 @@ impl<'a> CodeSink for MemoryCodeSink<'a> {
     fn trap(&mut self, code: TrapCode, srcloc: SourceLoc) {
         let ofs = self.offset();
         self.traps.trap(ofs, srcloc, code);
-    }
-
-    fn begin_rodata(&mut self) {
-        self.code_size = self.offset;
     }
 }
 

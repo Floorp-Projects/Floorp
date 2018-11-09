@@ -5,10 +5,9 @@ use std::fmt;
 enum FlagBit {
     Notrap,
     Aligned,
-    Readonly,
 }
 
-const NAMES: [&str; 3] = ["notrap", "aligned", "readonly"];
+const NAMES: [&str; 2] = ["notrap", "aligned"];
 
 /// Flags for memory operations like load/store.
 ///
@@ -79,20 +78,6 @@ impl MemFlags {
     /// Set the `aligned` flag.
     pub fn set_aligned(&mut self) {
         self.set(FlagBit::Aligned)
-    }
-
-    /// Test if the `readonly` flag is set.
-    ///
-    /// Loads with this flag have no memory dependendies.
-    /// This results in indefined behavior if the dereferenced memory is mutated at any time
-    /// between when the function is called and when it is exited.
-    pub fn readonly(self) -> bool {
-        self.read(FlagBit::Readonly)
-    }
-
-    /// Set the `readonly` flag.
-    pub fn set_readonly(&mut self) {
-        self.set(FlagBit::Readonly)
     }
 }
 

@@ -24,7 +24,7 @@
 //! and `(Ebb0, jmp Ebb2)` respectively.
 
 use bforest;
-use entity::SecondaryMap;
+use entity::EntityMap;
 use ir::instructions::BranchInfo;
 use ir::{Ebb, Function, Inst};
 use std::mem;
@@ -72,7 +72,7 @@ struct CFGNode {
 /// and successors where predecessors are basic blocks and successors are
 /// extended basic blocks.
 pub struct ControlFlowGraph {
-    data: SecondaryMap<Ebb, CFGNode>,
+    data: EntityMap<Ebb, CFGNode>,
     pred_forest: bforest::MapForest<Inst, Ebb>,
     succ_forest: bforest::SetForest<Ebb>,
     valid: bool,
@@ -82,7 +82,7 @@ impl ControlFlowGraph {
     /// Allocate a new blank control flow graph.
     pub fn new() -> Self {
         Self {
-            data: SecondaryMap::new(),
+            data: EntityMap::new(),
             valid: false,
             pred_forest: bforest::MapForest::new(),
             succ_forest: bforest::SetForest::new(),
@@ -125,12 +125,9 @@ impl ControlFlowGraph {
                 BranchInfo::SingleDest(dest, _) => {
                     self.add_edge(ebb, inst, dest);
                 }
-                BranchInfo::Table(jt, dest) => {
-                    if let Some(dest) = dest {
+                BranchInfo::Table(jt) => {
+                    for (_, dest) in func.jump_tables[jt].entries() {
                         self.add_edge(ebb, inst, dest);
-                    }
-                    for dest in func.jump_tables[jt].iter() {
-                        self.add_edge(ebb, inst, *dest);
                     }
                 }
                 BranchInfo::NotABranch => {}

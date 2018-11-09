@@ -130,8 +130,6 @@ brff = Instruction(
         ins=(Cond, f, EBB, args), is_branch=True)
 
 x = Operand('x', iB, doc='index into jump table')
-Entry = TypeVar('Entry', 'A scalar integer type', ints=True)
-entry = Operand('entry', Entry, doc='entry of jump table')
 JT = Operand('JT', entities.jump_table)
 br_table = Instruction(
         'br_table', r"""
@@ -139,47 +137,12 @@ br_table = Instruction(
 
         Use ``x`` as an unsigned index into the jump table ``JT``. If a jump
         table entry is found, branch to the corresponding EBB. If no entry was
-        found or the index is out-of-bounds, branch to the given default EBB.
+        found fall through to the next instruction.
 
         Note that this branch instruction can't pass arguments to the targeted
         blocks. Split critical edges as needed to work around this.
         """,
-        ins=(x, EBB, JT), is_branch=True, is_terminator=True)
-
-Size = Operand('Size', uimm8, 'Size in bytes')
-jump_table_entry = Instruction(
-    'jump_table_entry', r"""
-    Get an entry from a jump table.
-
-    Load a serialized ``entry`` from a jump table ``JT`` at a given index
-    ``addr`` with a specific ``Size``. The retrieved entry may need to be
-    decoded after loading, depending upon the jump table type used.
-
-    Currently, the only type supported is entries which are relative to the
-    base of the jump table.
-    """,
-    ins=(x, addr, Size, JT), outs=entry)
-
-jump_table_base = Instruction(
-    'jump_table_base', r"""
-    Get the absolute base address of a jump table.
-
-    This is used for jump tables wherein the entries are stored relative to
-    the base of jump table. In order to use these, generated code should first
-    load an entry using ``jump_table_entry``, then use this instruction to add
-    the relative base back to it.
-    """,
-    ins=JT, outs=addr)
-
-indirect_jump_table_br = Instruction(
-    'indirect_jump_table_br', r"""
-    Branch indirectly via a jump table entry.
-
-    Unconditionally jump via a jump table entry that was previously loaded
-    with the ``jump_table_entry`` instruction.
-    """,
-    ins=(addr, JT),
-    is_branch=True, is_indirect_branch=True, is_terminator=True)
+        ins=(x, JT), is_branch=True)
 
 code = Operand('code', trapcode)
 trap = Instruction(
@@ -231,16 +194,6 @@ x_return = Instruction(
         Unconditionally transfer control to the calling function, passing the
         provided return values. The list of return values must match the
         function signature's return types.
-        """,
-        ins=rvals, is_return=True, is_terminator=True)
-
-fallthrough_return = Instruction(
-        'fallthrough_return', r"""
-        Return from the function by fallthrough.
-
-        This is a specialized instruction for use where one wants to append
-        a custom epilogue, which will then perform the real return. This
-        instruction has no encoding.
         """,
         ins=rvals, is_return=True, is_terminator=True)
 
@@ -549,15 +502,15 @@ global_value = Instruction(
         'global_value', r"""
         Compute the value of global GV.
         """,
-        ins=GV, outs=a)
+        ins=GV, outs=addr)
 
 # A specialized form of global_value instructions that only handles
 # symbolic names.
-symbol_value = Instruction(
-        'symbol_value', r"""
-        Compute the value of global GV, which is a symbolic value.
+globalsym_addr = Instruction(
+        'globalsym_addr', r"""
+        Compute the address of global GV, which is a symbolic name.
         """,
-        ins=GV, outs=a)
+        ins=GV, outs=addr)
 
 #
 # WebAssembly bounds-checked heap accesses.
@@ -844,7 +797,7 @@ vsplit = Instruction(
         the lanes from ``x``. The result may be two scalars if ``x`` only had
         two lanes.
         """,
-        ins=x, outs=(lo, hi), is_ghost=True)
+        ins=x, outs=(lo, hi))
 
 Any128 = TypeVar(
         'Any128', 'Any scalar or vector type with as most 128 lanes',
@@ -864,7 +817,7 @@ vconcat = Instruction(
 
         It is possible to form a vector by concatenating two scalars.
         """,
-        ins=(x, y), outs=a, is_ghost=True)
+        ins=(x, y), outs=a)
 
 c = Operand('c', TxN.as_bool(), doc='Controlling vector')
 x = Operand('x', TxN, doc='Value to use where `c` is true')
@@ -1134,7 +1087,7 @@ srem_imm = Instruction(
 
 irsub_imm = Instruction(
         'irsub_imm', """
-        Immediate reverse wrapping subtraction: :math:`a := Y - x \\pmod{2^B}`.
+        Immediate reverse wrapping subtraction: :math:`a := Y - x \pmod{2^B}`.
 
         Also works as integer negation when :math:`Y = 0`. Use :inst:`iadd_imm`
         with a negative immediate operand for the reverse immediate
@@ -1455,14 +1408,6 @@ sshr_imm = Instruction(
 
 x = Operand('x', iB)
 a = Operand('a', iB)
-
-bitrev = Instruction(
-        'bitrev', r"""
-        Reverse the bits of a integer.
-
-        Reverses the bits in ``x``.
-        """,
-        ins=x, outs=a)
 
 clz = Instruction(
         'clz', r"""
@@ -2009,7 +1954,7 @@ isplit = Instruction(
         Returns the low half of `x` and the high half of `x` as two independent
         values.
         """,
-        ins=x, outs=(lo, hi), is_ghost=True)
+        ins=x, outs=(lo, hi))
 
 
 NarrowInt = TypeVar(
@@ -2029,6 +1974,6 @@ iconcat = Instruction(
         the same number of lanes as the inputs, but the lanes are twice the
         size.
         """,
-        ins=(lo, hi), outs=a, is_ghost=True)
+        ins=(lo, hi), outs=a)
 
 GROUP.close()

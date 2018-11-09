@@ -22,11 +22,11 @@ use licm::do_licm;
 use loop_analysis::LoopAnalysis;
 use nan_canonicalization::do_nan_canonicalization;
 use postopt::do_postopt;
+use preopt::do_preopt;
 use regalloc;
 use result::CodegenResult;
 use settings::{FlagsOrIsa, OptLevel};
 use simple_gvn::do_simple_gvn;
-use simple_preopt::do_preopt;
 use std::vec::Vec;
 use timing;
 use unreachable_code::eliminate_unreachable_code;
@@ -101,7 +101,14 @@ impl Context {
         let code_size = self.compile(isa)?;
         let old_len = mem.len();
         mem.resize(old_len + code_size as usize, 0);
-        unsafe { self.emit_to_memory(isa, mem.as_mut_ptr().add(old_len), relocs, traps) };
+        unsafe {
+            self.emit_to_memory(
+                isa,
+                mem.as_mut_ptr().offset(old_len as isize),
+                relocs,
+                traps,
+            )
+        };
         Ok(())
     }
 
@@ -321,6 +328,7 @@ impl Context {
         let code_size = relax_branches(&mut self.func, isa)?;
         self.verify_if(isa)?;
         self.verify_locations_if(isa)?;
+
         Ok(code_size)
     }
 }
