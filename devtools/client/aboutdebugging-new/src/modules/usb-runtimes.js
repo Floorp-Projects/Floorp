@@ -42,3 +42,5 @@ function refreshUSBRuntimes() {
   return adbScanner.scan();
 }
 exports.refreshUSBRuntimes = refreshUSBRuntimes;
+
+require("./test-helper").enableMocks(module, "modules/usb-runtimes");
