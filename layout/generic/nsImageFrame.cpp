@@ -119,7 +119,7 @@ static bool HaveSpecifiedSize(const nsStylePosition* aStylePosition)
 
 // Decide whether we can optimize away reflows that result from the
 // image's intrinsic size changing.
-static bool HaveFixedSize(const ReflowInput& aReflowInput)
+inline bool HaveFixedSize(const ReflowInput& aReflowInput)
 {
   NS_ASSERTION(aReflowInput.mStylePosition, "crappy reflowInput - null stylePosition");
   // Don't try to make this optimization when an image has percentages
@@ -579,23 +579,8 @@ nsImageFrame::SourceRectToDest(const nsIntRect& aRect)
     (!(_state).HasAtLeastOneOfStates(NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED) && \
      (_state).HasState(NS_EVENT_STATE_LOADING) && (_loadingOK)))
 
-static bool HasAltText(const Element& aElement)
-{
-  // We always return some alternate text for <input>, see
-  // nsCSSFrameConstructor::GetAlternateTextFor.
-  if (aElement.IsHTMLElement(nsGkAtoms::input)) {
-    return true;
-  }
-
-  MOZ_ASSERT(aElement.IsHTMLElement(nsGkAtoms::img));
-  nsAutoString altText;
-  return aElement.GetAttr(nsGkAtoms::alt, altText) && !altText.IsEmpty();
-}
-
-
-// Check if we want to use an image frame or just let the frame constructor make
-// us into an inline.
-/* static */ bool
+/* static */
+bool
 nsImageFrame::ShouldCreateImageFrameFor(const Element& aElement,
                                         ComputedStyle& aStyle)
 {
@@ -605,25 +590,44 @@ nsImageFrame::ShouldCreateImageFrameFor(const Element& aElement,
     return true;
   }
 
+  // Check if we want to use a placeholder box with an icon or just
+  // let the presShell make us into inline text.  Decide as follows:
+  //
+  //  - if our special "force icons" style is set, show an icon
+  //  - else if our "do not show placeholders" pref is set, skip the icon
+  //  - else:
+  //  - if there is a src attribute, there is no alt attribute,
+  //    and this is not an <object> (which could not possibly have
+  //    such an attribute), show an icon.
+  //  - if QuirksMode, and the IMG has a size show an icon.
+  //  - otherwise, skip the icon
+  bool useSizedBox;
+
   if (aStyle.StyleUIReset()->mForceBrokenImageIcon) {
-    return true;
+    useSizedBox = true;
+  }
+  else if (gIconLoad && gIconLoad->mPrefForceInlineAltText) {
+    useSizedBox = false;
+  }
+  else if (aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::src) &&
+           !aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::alt) &&
+           !aElement.IsHTMLElement(nsGkAtoms::object) &&
+           !aElement.IsHTMLElement(nsGkAtoms::input)) {
+    // Use a sized box if we have no alt text.  This means no alt attribute
+    // and the node is not an object or an input (since those always have alt
+    // text).
+    useSizedBox = true;
+  }
+  else if (aElement.OwnerDoc()->GetCompatibilityMode() !=
+           eCompatibility_NavQuirks) {
+    useSizedBox = false;
+  }
+  else {
+    // check whether we have specified size
+    useSizedBox = HaveSpecifiedSize(aStyle.StylePosition());
   }
 
-  // if our "do not show placeholders" pref is set, skip the icon
-  if (gIconLoad && gIconLoad->mPrefForceInlineAltText) {
-    return false;
-  }
-
-  if (!HasAltText(aElement)) {
-    return true;
-  }
-
-  if (aElement.OwnerDoc()->GetCompatibilityMode() == eCompatibility_NavQuirks) {
-    // FIXME(emilio): We definitely don't reframe when this changes...
-    return HaveSpecifiedSize(aStyle.StylePosition());
-  }
-
-  return false;
+  return useSizedBox;
 }
 
 nsresult
