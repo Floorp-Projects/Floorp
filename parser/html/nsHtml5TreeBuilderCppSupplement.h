@@ -112,8 +112,6 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
              "Bogus namespace.");
 
   if (mBuilder) {
-    RefPtr<nsAtom> name = nsHtml5TreeOperation::Reget(aName);
-
     nsIContent* intendedParent =
       aIntendedParent ? static_cast<nsIContent*>(aIntendedParent) : nullptr;
 
@@ -126,7 +124,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
     nsIContent* elem;
     if (aNamespace == kNameSpaceID_XHTML) {
       elem = nsHtml5TreeOperation::CreateHTMLElement(
-        name,
+        aName,
         aAttributes,
         mozilla::dom::FROM_PARSER_FRAGMENT,
         nodeInfoManager,
@@ -134,7 +132,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
         aCreator.html);
     } else if (aNamespace == kNameSpaceID_SVG) {
       elem = nsHtml5TreeOperation::CreateSVGElement(
-        name,
+        aName,
         aAttributes,
         mozilla::dom::FROM_PARSER_FRAGMENT,
         nodeInfoManager,
@@ -143,7 +141,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
     } else {
       MOZ_ASSERT(aNamespace == kNameSpaceID_MathML);
       elem = nsHtml5TreeOperation::CreateMathMLElement(
-        name, aAttributes, nodeInfoManager, mBuilder);
+        aName, aAttributes, nodeInfoManager, mBuilder);
     }
     if (MOZ_UNLIKELY(aAttributes != tokenizer->GetAttributes() &&
                      aAttributes != nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES)) {
@@ -907,9 +905,8 @@ nsHtml5TreeBuilder::appendDoctypeToDocument(nsAtom* aName,
   aPublicId.ToString(publicId);
   aSystemId.ToString(systemId);
   if (mBuilder) {
-    RefPtr<nsAtom> name = nsHtml5TreeOperation::Reget(aName);
     nsresult rv = nsHtml5TreeOperation::AppendDoctypeToDocument(
-      name, publicId, systemId, mBuilder);
+      aName, publicId, systemId, mBuilder);
     if (NS_FAILED(rv)) {
       MarkAsBrokenAndRequestSuspensionWithBuilder(rv);
     }

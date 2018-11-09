@@ -71,7 +71,7 @@ public:
       if (!local->IsStatic()) {
         nsAutoString str;
         local->ToString(str);
-        local = aInterner->GetAtom(str);
+        nsAtom* local = aInterner->GetAtom(str);
         clone.mLocals[0] = local;
         clone.mLocals[1] = local;
         clone.mLocals[2] = local;
@@ -81,8 +81,8 @@ public:
   }
 
 private:
-  nsAtom* mLocals[3];
-  nsAtom* mPrefixes[3];
+  RefPtr<nsAtom> mLocals[3];
+  RefPtr<nsAtom> mPrefixes[3];
   int32_t mUris[3];
   int32_t mLine;
   nsHtml5String mValue;
