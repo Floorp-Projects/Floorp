@@ -147,5 +147,12 @@ for (let element of [divWithFontSizeSet, divWithFontSizeInherited]) {
         assert_computed_value('<angle>', '400grad', '360deg');
         assert_computed_value('<angle>', 'calc(360deg + 400grad)', '720deg');
     }, "<angle> values computed correctly for " + id);
+
+    test(function() {
+        assert_computed_value('*', '50s', '50s');
+        assert_computed_value('<time>', '1s', '1s');
+        assert_computed_value('<time>', '1000ms', '1s');
+        assert_computed_value('<time>', 'calc(1000ms + 1s)', '2s');
+    }, "<time> values computed correctly for " + id);
 }
 </script>
