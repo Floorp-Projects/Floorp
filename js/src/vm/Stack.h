@@ -29,8 +29,6 @@
 #include "vm/JSScript.h"
 #include "vm/SavedFrame.h"
 #include "wasm/WasmFrameIter.h"
-#include "wasm/WasmSignalHandlers.h"
-#include "wasm/WasmTypes.h"
 
 namespace JS {
 namespace dbg {
