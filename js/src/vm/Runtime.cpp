@@ -48,6 +48,7 @@
 #include "vm/JSScript.h"
 #include "vm/TraceLogging.h"
 #include "vm/TraceLoggingGraph.h"
+#include "wasm/WasmSignalHandlers.h"
 
 #include "gc/GC-inl.h"
 #include "vm/JSContext-inl.h"
@@ -181,6 +182,9 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
 {
     JS_COUNT_CTOR(JSRuntime);
     liveRuntimesCount++;
+
+    // See function comment for why we call this now, not in JS_Init().
+    wasm::EnsureEagerProcessSignalHandlers();
 }
 
 JSRuntime::~JSRuntime()
