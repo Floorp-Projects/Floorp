@@ -46,7 +46,6 @@
 #include "MP4Decoder.h"
 #include "VPXDecoder.h"
 #include "mozilla/GpuDecoderModule.h"
-#include "mozilla/RemoteDecoderModule.h"
 
 #include "H264.h"
 
@@ -351,11 +350,6 @@ PDMFactory::CreatePDMs()
     // of its decoder is infallible. As such it will be used for all media, we
     // can stop creating more PDM from this point.
     return;
-  }
-
-  if (StaticPrefs::MediaRddProcessEnabled()) {
-    m = new RemoteDecoderModule;
-    StartupPDM(m);
   }
 
 #ifdef XP_WIN
