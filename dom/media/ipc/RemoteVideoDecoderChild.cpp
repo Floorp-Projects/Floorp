@@ -119,8 +119,8 @@ mozilla::ipc::IPCResult
 RemoteVideoDecoderChild::RecvInputExhausted()
 {
   AssertOnManagerThread();
-  mDecodePromise.ResolveIfExists(mDecodedData, __func__);
-  mDecodedData.Clear();
+  mDecodePromise.ResolveIfExists(std::move(mDecodedData), __func__);
+  mDecodedData = MediaDataDecoder::DecodedData();
   return IPC_OK();
 }
 
@@ -128,8 +128,8 @@ mozilla::ipc::IPCResult
 RemoteVideoDecoderChild::RecvDrainComplete()
 {
   AssertOnManagerThread();
-  mDrainPromise.ResolveIfExists(mDecodedData, __func__);
-  mDecodedData.Clear();
+  mDecodePromise.ResolveIfExists(std::move(mDecodedData), __func__);
+  mDecodedData = MediaDataDecoder::DecodedData();
   return IPC_OK();
 }
 
@@ -137,7 +137,7 @@ mozilla::ipc::IPCResult
 RemoteVideoDecoderChild::RecvError(const nsresult& aError)
 {
   AssertOnManagerThread();
-  mDecodedData.Clear();
+  mDecodedData = MediaDataDecoder::DecodedData();
   mDecodePromise.RejectIfExists(aError, __func__);
   mDrainPromise.RejectIfExists(aError, __func__);
   mFlushPromise.RejectIfExists(aError, __func__);

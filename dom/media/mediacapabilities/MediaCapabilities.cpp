@@ -251,8 +251,10 @@ MediaCapabilities::DecodingInfo(
     promises.AppendElement(InvokeAsync(
       taskQueue,
       __func__,
-      [taskQueue, frameRate, compositor, config = std::move(config)]() mutable
-      -> RefPtr<CapabilitiesPromise> {
+      [ taskQueue,
+        frameRate,
+        compositor,
+        config = std::move(config) ]() mutable -> RefPtr<CapabilitiesPromise> {
         // MediaDataDecoder keeps a reference to the config object, so we must
         // keep it alive until the decoder has been shutdown.
         CreateDecoderParams params{ *config,
@@ -264,25 +266,25 @@ MediaCapabilities::DecodingInfo(
         return AllocationWrapper::CreateDecoder(params)->Then(
           taskQueue,
           __func__,
-          [taskQueue, frameRate, config = std::move(config)](
-            const AllocationWrapper::AllocateDecoderPromise::
-              ResolveOrRejectValue& aValue) mutable {
+          [ taskQueue, frameRate, config = std::move(config) ](
+            AllocationWrapper::AllocateDecoderPromise::ResolveOrRejectValue&&
+            aValue) mutable {
             if (aValue.IsReject()) {
-              return CapabilitiesPromise::CreateAndReject(aValue.RejectValue(),
-                                                          __func__);
+              return CapabilitiesPromise::CreateAndReject(
+                std::move(aValue.RejectValue()), __func__);
             }
-            RefPtr<MediaDataDecoder> decoder = aValue.ResolveValue();
+            RefPtr<MediaDataDecoder> decoder = std::move(aValue.ResolveValue());
             // We now query the decoder to determine if it's power efficient.
             RefPtr<CapabilitiesPromise> p = decoder->Init()->Then(
               taskQueue,
               __func__,
-              [taskQueue, decoder, frameRate, config = std::move(config)](
-                const MediaDataDecoder::InitPromise::ResolveOrRejectValue&
-                  aValue) mutable {
+              [ taskQueue, decoder, frameRate, config = std::move(config) ](
+                MediaDataDecoder::InitPromise::ResolveOrRejectValue&&
+                aValue) mutable {
                 RefPtr<CapabilitiesPromise> p;
                 if (aValue.IsReject()) {
-                  p = CapabilitiesPromise::CreateAndReject(aValue.RejectValue(),
-                                                           __func__);
+                  p = CapabilitiesPromise::CreateAndReject(
+                    std::move(aValue.RejectValue()), __func__);
                 } else {
                   MOZ_ASSERT(config->IsVideo());
                   nsAutoCString reason;
@@ -368,14 +370,15 @@ MediaCapabilities::DecodingInfo(
     ->Then(
       targetThread,
       __func__,
-      [promise,
-       tracks = std::move(tracks),
-       workerRef,
-       holder,
-       aConfiguration,
-       self,
-       this](const CapabilitiesPromise::AllPromiseType::ResolveOrRejectValue&
-               aValue) {
+      [
+        promise,
+        tracks = std::move(tracks),
+        workerRef,
+        holder,
+        aConfiguration,
+        self,
+        this
+      ](CapabilitiesPromise::AllPromiseType::ResolveOrRejectValue&& aValue) {
         holder->Complete();
         if (aValue.IsReject()) {
           auto info =

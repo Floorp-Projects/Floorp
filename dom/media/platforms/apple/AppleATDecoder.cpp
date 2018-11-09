@@ -223,7 +223,9 @@ AppleATDecoder::ProcessDecode(MediaRawData* aSample)
     mQueuedSamples.Clear();
   }
 
-  return DecodePromise::CreateAndResolve(std::move(mDecodedSamples), __func__);
+  DecodedData results = std::move(mDecodedSamples);
+  mDecodedSamples = DecodedData();
+  return DecodePromise::CreateAndResolve(std::move(results), __func__);
 }
 
 MediaResult
