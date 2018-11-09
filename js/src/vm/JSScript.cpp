@@ -2814,10 +2814,8 @@ JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
 void
 JSScript::freeScriptData()
 {
-    if (scriptData_) {
-        scriptData_->decRefCount();
-        scriptData_ = nullptr;
-    }
+    scriptData_->decRefCount();
+    scriptData_ = nullptr;
 }
 
 void
