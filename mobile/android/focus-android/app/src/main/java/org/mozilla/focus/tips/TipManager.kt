@@ -19,6 +19,7 @@ import org.mozilla.focus.R.string.tip_explain_allowlist
 import org.mozilla.focus.R.string.tip_open_in_new_tab
 import org.mozilla.focus.R.string.tip_request_desktop
 import org.mozilla.focus.R.string.tip_set_default_browser
+import org.mozilla.focus.exceptions.ExceptionDomains
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -38,7 +39,11 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             val id = tip_explain_allowlist
             val name = context.resources.getString(id)
 
-            return Tip(id, name, { true })
+            val shouldDisplayAllowListTip = {
+                ExceptionDomains.load(context).isEmpty()
+            }
+
+            return Tip(id, name, shouldDisplayAllowListTip)
         }
 
         fun createTrackingProtectionTip(context: Context): Tip {
