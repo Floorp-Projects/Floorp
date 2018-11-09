@@ -14,4 +14,6 @@ interface BrowsingContext {
   readonly attribute nsIDocShell? docShell;
 
   readonly attribute unsigned long long id;
+
+  readonly attribute BrowsingContext? opener;
 };

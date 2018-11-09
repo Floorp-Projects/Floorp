@@ -111,6 +111,13 @@ public:
 
   void GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren);
 
+  BrowsingContext* GetOpener()
+  {
+    return mOpener;
+  }
+
+  void SetOpener(BrowsingContext* aOpener);
+
   static void GetRootBrowsingContexts(
     nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
 
@@ -141,6 +148,7 @@ private:
 
   WeakPtr<BrowsingContext> mParent;
   Children mChildren;
+  WeakPtr<BrowsingContext> mOpener;
   nsCOMPtr<nsIDocShell> mDocShell;
   nsString mName;
 };
