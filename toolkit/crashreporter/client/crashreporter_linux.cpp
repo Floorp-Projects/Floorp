@@ -190,9 +190,7 @@ static void ViewReportClicked(GtkButton* button,
                                  GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled),
                                       GTK_SHADOW_IN);
-#if (MOZ_WIDGET_GTK >= 3)
   gtk_widget_set_vexpand(scrolled, TRUE);
-#endif
 
   GtkWidget* viewReportTextView = gtk_text_view_new();
   gtk_container_add(GTK_CONTAINER(scrolled), viewReportTextView);
@@ -469,9 +467,7 @@ bool UIShowCrashUI(const StringTable& files,
                                  GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled),
                                       GTK_SHADOW_IN);
-#if (MOZ_WIDGET_GTK >= 3)
   gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(scrolled), 100);
-#endif
 
   gCommentTextLabel = gtk_label_new(gStrings[ST_COMMENTGRAYTEXT].c_str());
   gCommentText = gtk_text_view_new();
