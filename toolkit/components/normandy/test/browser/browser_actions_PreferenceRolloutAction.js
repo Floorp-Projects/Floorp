@@ -111,7 +111,8 @@ decorate_task(
     await action.runRecipe(recipe);
     await action.finalize();
 
-    is(Services.prefs.getPrefType("test.pref1"), Services.prefs.PREF_INVALID, "pref1 should be removed");
+    /* Todo because of bug 1502410 and bug 1505941 */
+    todo_is(Services.prefs.getPrefType("test.pref1"), Services.prefs.PREF_INVALID, "pref1 should be removed");
     is(Services.prefs.getIntPref("test.pref2"), 2, "pref2 should be updated");
     is(Services.prefs.getIntPref("test.pref3"), 2, "pref3 should be added");
 
