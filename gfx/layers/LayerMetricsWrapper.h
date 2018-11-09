@@ -433,6 +433,15 @@ public:
     return mLayer->GetFixedPositionScrollContainerId();
   }
 
+  Maybe<uint64_t> GetZoomAnimationId() const
+  {
+    MOZ_ASSERT(IsValid());
+    // This function is only really needed for template-compatibility with
+    // WebRenderScrollDataWrapper. Although it will be called, the return
+    // value is not used.
+    return Nothing();
+  }
+
   bool IsBackfaceHidden() const
   {
     MOZ_ASSERT(IsValid());
