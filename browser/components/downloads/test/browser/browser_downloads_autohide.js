@@ -290,7 +290,7 @@ add_task(async function checkStateWhenHiddenInPalette() {
 
 add_task(async function checkContextMenu() {
   let contextMenu = document.getElementById("toolbar-context-menu");
-  let checkbox = contextMenu.querySelector(".customize-context-autoHide");
+  let checkbox = document.getElementById("toolbar-context-autohide-downloads-button");
   let button = document.getElementById("downloads-button");
 
   is(Services.prefs.getBoolPref(kDownloadAutoHidePref), true,
