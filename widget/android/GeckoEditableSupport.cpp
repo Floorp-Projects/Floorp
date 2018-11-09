@@ -908,11 +908,6 @@ GeckoEditableSupport::FlushIMEChanges(FlushChangesFlag aFlags)
         mEditable->OnSelectionChange(selStart, selEnd);
         flushOnException();
     }
-
-    while (mIMEActiveReplaceTextCount) {
-        mIMEActiveReplaceTextCount--;
-        OnImeSynchronize();
-    }
 }
 
 void
@@ -971,26 +966,11 @@ void
 GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
                                        jni::String::Param aText)
 {
-    mIMEActiveReplaceTextCount++;
-
-    if (!DoReplaceText(aStart, aEnd, aText)) {
-        // We did not process the event, so reply to it now.
-        mIMEActiveReplaceTextCount--;
-        OnImeSynchronize();
-    }
-}
-
-bool
-GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
-                                    jni::String::Param aText)
-{
-    // Return true if processed and we should reply to the OnImeReplaceText
-    // event later. Return false if _not_ processed and we should reply to the
-    // OnImeReplaceText event now.
+    AutoIMESynchronize as(this);
 
     if (mIMEMaskEventsCount > 0) {
         // Not focused; still reply to events, but don't do anything else.
-        return false;
+        return;
     }
 
     if (mWindow) {
@@ -1001,8 +981,8 @@ GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
         Replace text in Gecko thread from aStart to aEnd with the string text.
     */
     nsCOMPtr<nsIWidget> widget = GetWidget();
-    NS_ENSURE_TRUE(mDispatcher && widget, false);
-    NS_ENSURE_SUCCESS(BeginInputTransaction(mDispatcher), false);
+    NS_ENSURE_TRUE_VOID(mDispatcher && widget);
+    NS_ENSURE_SUCCESS_VOID(BeginInputTransaction(mDispatcher));
 
     RefPtr<TextComposition> composition(GetComposition());
     MOZ_ASSERT(!composition || !composition->IsEditorHandlingEvent());
@@ -1049,7 +1029,7 @@ GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
                 }
             }
             mIMEKeyEvents.Clear();
-            return true;
+            return;
         }
 
         if (aStart != aEnd) {
@@ -1059,7 +1039,7 @@ GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
             event.mTime = PR_Now() / 1000;
             widget->DispatchEvent(&event, status);
             if (!mDispatcher || widget->Destroyed()) {
-                return false;
+                return;
             }
         }
     } else if (composition->String().Equals(string)) {
@@ -1077,7 +1057,7 @@ GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
         mInputContext.mMayBeIMEUnaware) {
         SendIMEDummyKeyEvent(widget, eKeyDown);
         if (!mDispatcher || widget->Destroyed()) {
-            return false;
+            return;
         }
     }
 
@@ -1090,7 +1070,7 @@ GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
         mDispatcher->CommitComposition(status, &string);
     }
     if (!mDispatcher || widget->Destroyed()) {
-        return false;
+        return;
     }
 
     if (sDispatchKeyEventsInCompositionForAnyApps ||
@@ -1098,7 +1078,6 @@ GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
         SendIMEDummyKeyEvent(widget, eKeyUp);
         // Widget may be destroyed after dispatching the above event.
     }
-    return true;
 }
 
 void
@@ -1330,7 +1309,6 @@ GeckoEditableSupport::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
             RefPtr<GeckoEditableSupport> self(this);
             nsAppShell::PostEvent([this, self] {
                 if (!mIMEFocusCount) {
-                    mIMEActiveReplaceTextCount = 0;
                     mEditable->NotifyIME(EditableListener::NOTIFY_IME_OF_BLUR);
                     OnRemovedFrom(mDispatcher);
                 }
