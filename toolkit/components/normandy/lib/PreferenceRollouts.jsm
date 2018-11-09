@@ -225,9 +225,7 @@ var PreferenceRollouts = {
    */
   async saveStartupPrefs() {
     const prefBranch = Services.prefs.getBranch(STARTUP_PREFS_BRANCH);
-    for (const pref of prefBranch.getChildList("")) {
-      prefBranch.clearUserPref(pref);
-    }
+    prefBranch.deleteBranch("");
 
     for (const rollout of await this.getAllActive()) {
       for (const prefSpec of rollout.preferences) {
