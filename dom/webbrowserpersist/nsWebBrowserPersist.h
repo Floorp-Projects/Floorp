@@ -20,6 +20,7 @@
 #include "nsITransport.h"
 #include "nsIProgressEventSink.h"
 #include "nsIFile.h"
+#include "nsIContentPolicy.h"
 #include "nsIWebProgressListener2.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIWebBrowserPersistDocument.h"
@@ -57,6 +58,7 @@ private:
     virtual ~nsWebBrowserPersist();
     nsresult SaveURIInternal(
         nsIURI *aURI, nsIPrincipal* aTriggeringPrincipal,
+        nsContentPolicyType aContentPolicyType,
         uint32_t aCacheKey, nsIURI *aReferrer,
         uint32_t aReferrerPolicy, nsIInputStream *aPostData,
         const char *aExtraHeaders, nsIURI *aFile,
@@ -93,7 +95,8 @@ private:
     static nsresult GetLocalFileFromURI(nsIURI *aURI, nsIFile **aLocalFile);
     static nsresult AppendPathToURI(nsIURI *aURI, const nsAString & aPath, nsCOMPtr<nsIURI>& aOutURI);
     nsresult MakeAndStoreLocalFilenameInURIMap(
-        nsIURI *aURI, nsIWebBrowserPersistDocument *aDoc, bool aNeedsPersisting, URIData **aData);
+        nsIURI *aURI, nsIWebBrowserPersistDocument *aDoc, 
+        nsContentPolicyType aContentPolicyType, bool aNeedsPersisting, URIData **aData);
     nsresult MakeOutputStream(
         nsIURI *aFile, nsIOutputStream **aOutputStream);
     nsresult MakeOutputStreamFromFile(
@@ -113,11 +116,13 @@ private:
     nsresult StoreURI(
         const char *aURI,
         nsIWebBrowserPersistDocument *aDoc,
+        nsContentPolicyType aContentPolicyType,
         bool aNeedsPersisting = true,
         URIData **aData = nullptr);
     nsresult StoreURI(
         nsIURI *aURI,
         nsIWebBrowserPersistDocument *aDoc,
+        nsContentPolicyType aContentPolicyType,
         bool aNeedsPersisting = true,
         URIData **aData = nullptr);
     bool DocumentEncoderExists(const char *aContentType);

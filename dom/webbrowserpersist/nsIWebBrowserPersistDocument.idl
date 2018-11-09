@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIContentPolicy.idl"
 
 interface nsIInputStream;
 interface nsIOutputStream;
@@ -134,9 +135,11 @@ interface nsIWebBrowserPersistResourceVisitor : nsISupports
    *
    * @param aDocument   The document containing the reference.
    * @param aURI        The absolute URI spec for the referenced resource.
+   * @param aContentPolicyType The type of resource.
    */
   void visitResource(in nsIWebBrowserPersistDocument aDocument,
-                     in AUTF8String aURI);
+                     in AUTF8String aURI,
+                     in nsContentPolicyType aContentPolicyType);
   /**
    * Indicates a subdocument resource; e.g., a frame or iframe.
    *

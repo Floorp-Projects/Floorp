@@ -266,9 +266,10 @@ private:
     // Collects the status parameters to DocumentDone calls.
     nsresult mEndStatus;
 
-    nsresult OnWalkURI(const nsACString& aURISpec);
-    nsresult OnWalkURI(nsIURI* aURI);
+    nsresult OnWalkURI(const nsACString& aURISpec, nsContentPolicyType aContentPolicyType);
+    nsresult OnWalkURI(nsIURI* aURI, nsContentPolicyType aContentPolicyType);
     nsresult OnWalkAttribute(Element* aElement,
+                             nsContentPolicyType aContentPolicyType,
                              const char* aAttribute,
                              const char* aNamespaceURI = "");
     nsresult OnWalkSubframe(nsINode* aNode);
@@ -352,7 +353,7 @@ ResourceReader::OnError(nsresult aFailure)
 }
 
 nsresult
-ResourceReader::OnWalkURI(nsIURI* aURI)
+ResourceReader::OnWalkURI(nsIURI* aURI, nsContentPolicyType aContentPolicyType)
 {
     // Test if this URI should be persisted. By default
     // we should assume the URI  is persistable.
@@ -367,11 +368,11 @@ ResourceReader::OnWalkURI(nsIURI* aURI)
     nsAutoCString stringURI;
     rv = aURI->GetSpec(stringURI);
     NS_ENSURE_SUCCESS(rv, rv);
-    return mVisitor->VisitResource(mParent, stringURI);
+    return mVisitor->VisitResource(mParent, stringURI, aContentPolicyType);
 }
 
 nsresult
-ResourceReader::OnWalkURI(const nsACString& aURISpec)
+ResourceReader::OnWalkURI(const nsACString& aURISpec, nsContentPolicyType aContentPolicyType)
 {
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
@@ -381,7 +382,7 @@ ResourceReader::OnWalkURI(const nsACString& aURISpec)
                    mParent->GetCharacterSet(),
                    mCurrentBaseURI);
     NS_ENSURE_SUCCESS(rv, rv);
-    return OnWalkURI(uri);
+    return OnWalkURI(uri, aContentPolicyType);
 }
 
 static void
@@ -409,6 +410,7 @@ ExtractAttribute(Element* aElement,
 
 nsresult
 ResourceReader::OnWalkAttribute(Element* aElement,
+                                nsContentPolicyType aContentPolicyType,
                                 const char* aAttribute,
                                 const char* aNamespaceURI)
 {
@@ -417,7 +419,7 @@ ResourceReader::OnWalkAttribute(Element* aElement,
     if (uriSpec.IsEmpty()) {
         return NS_OK;
     }
-    return OnWalkURI(uriSpec);
+    return OnWalkURI(uriSpec, aContentPolicyType);
 }
 
 static nsresult
@@ -441,7 +443,7 @@ ResourceReader::OnWalkDOMNode(nsINode* aNode)
             nsAutoString href;
             GetXMLStyleSheetLink(nodeAsPI, href);
             if (!href.IsEmpty()) {
-                return OnWalkURI(NS_ConvertUTF16toUTF8(href));
+                return OnWalkURI(NS_ConvertUTF16toUTF8(href), nsIContentPolicy::TYPE_STYLESHEET);
             }
         }
         return NS_OK;
@@ -449,53 +451,53 @@ ResourceReader::OnWalkDOMNode(nsINode* aNode)
 
     // Test the node to see if it's an image, frame, iframe, css, js
     if (aNode->IsHTMLElement(nsGkAtoms::img)) {
-        return OnWalkAttribute(aNode->AsElement(), "src");
+        return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_IMAGE, "src");
     }
 
     if (aNode->IsSVGElement(nsGkAtoms::img)) {
-        return OnWalkAttribute(aNode->AsElement(), "href",
+        return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_IMAGE, "href",
                                "http://www.w3.org/1999/xlink");
     }
 
     if (aNode->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video)) {
-        return OnWalkAttribute(aNode->AsElement(), "src");
+        return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_MEDIA, "src");
     }
 
     if (aNode->IsHTMLElement(nsGkAtoms::source)) {
-        return OnWalkAttribute(aNode->AsElement(), "src");
+        return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_MEDIA, "src");
     }
 
     if (aNode->IsHTMLElement(nsGkAtoms::body)) {
-        return OnWalkAttribute(aNode->AsElement(), "background");
+        return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_IMAGE, "background");
     }
 
     if (aNode->IsHTMLElement(nsGkAtoms::table)) {
-        return OnWalkAttribute(aNode->AsElement(), "background");
+        return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_IMAGE, "background");
     }
 
     if (aNode->IsHTMLElement(nsGkAtoms::tr)) {
-        return OnWalkAttribute(aNode->AsElement(), "background");
+        return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_IMAGE, "background");
     }
 
     if (aNode->IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th)) {
-        return OnWalkAttribute(aNode->AsElement(), "background");
+        return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_IMAGE, "background");
     }
 
     if (aNode->IsHTMLElement(nsGkAtoms::script)) {
-        return OnWalkAttribute(aNode->AsElement(), "src");
+        return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_SCRIPT, "src");
     }
 
     if (aNode->IsSVGElement(nsGkAtoms::script)) {
-        return OnWalkAttribute(aNode->AsElement(), "href",
+        return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_SCRIPT, "href",
                                "http://www.w3.org/1999/xlink");
     }
 
     if (aNode->IsHTMLElement(nsGkAtoms::embed)) {
-        return OnWalkAttribute(aNode->AsElement(), "src");
+        return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_OBJECT, "src");
     }
 
     if (aNode->IsHTMLElement(nsGkAtoms::object)) {
-        return OnWalkAttribute(aNode->AsElement(), "data");
+        return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_OBJECT, "data");
     }
 
     if (auto nodeAsLink = dom::HTMLLinkElement::FromNode(aNode)) {
@@ -526,7 +528,7 @@ ResourceReader::OnWalkDOMNode(nsINode* aNode)
                 // Store the link for fix up if it says "stylesheet"
                 if (Substring(startWord, current)
                         .LowerCaseEqualsLiteral("stylesheet")) {
-                    OnWalkAttribute(aNode->AsElement(), "href");
+                    OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_STYLESHEET, "href");
                     return NS_OK;
                 }
                 if (current == end) {
@@ -548,7 +550,7 @@ ResourceReader::OnWalkDOMNode(nsINode* aNode)
 
     auto nodeAsInput = dom::HTMLInputElement::FromNode(aNode);
     if (nodeAsInput) {
-        return OnWalkAttribute(aNode->AsElement(), "src");
+        return OnWalkAttribute(aNode->AsElement(), nsIContentPolicy::TYPE_IMAGE, "src");
     }
 
     return NS_OK;
