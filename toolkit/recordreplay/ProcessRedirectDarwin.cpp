@@ -72,7 +72,7 @@ namespace recordreplay {
   MACRO(kqueue, RR_SaveRvalHadErrorNegative)                     \
   MACRO(pipe, RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<0, 2 * sizeof(int)>>, \
         nullptr, nullptr, Preamble_SetError)                     \
-  MACRO(close, RR_SaveRvalHadErrorNegative)                      \
+  MACRO(close, RR_SaveRvalHadErrorNegative, nullptr, nullptr, Preamble_Veto<0>) \
   MACRO(__close_nocancel, RR_SaveRvalHadErrorNegative)           \
   MACRO(mkdir, RR_SaveRvalHadErrorNegative)                      \
   MACRO(dup, RR_SaveRvalHadErrorNegative)                        \
