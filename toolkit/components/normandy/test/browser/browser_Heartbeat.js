@@ -79,7 +79,7 @@ sandboxManager.addHold("test running");
 /* Batch #1 - General UI, Stars, and telemetry data */
 add_task(async function() {
   const targetWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  const notificationBox = targetWindow.document.querySelector("#high-priority-global-notificationbox");
+  const notificationBox = targetWindow.gHighPriorityNotificationBox;
 
   const preCount = notificationBox.childElementCount;
   const hb = new Heartbeat(targetWindow, sandboxManager, {
@@ -128,7 +128,7 @@ add_task(async function() {
 // Batch #2 - Engagement buttons
 add_task(async function() {
   const targetWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  const notificationBox = targetWindow.document.querySelector("#high-priority-global-notificationbox");
+  const notificationBox = targetWindow.gHighPriorityNotificationBox;
   const hb = new Heartbeat(targetWindow, sandboxManager, {
     testing: true,
     flowId: "test",

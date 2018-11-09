@@ -1206,10 +1206,9 @@ BrowserGlue.prototype = {
       },
     ];
 
-    let nb = win.document.getElementById("global-notificationbox");
-    nb.appendNotification(message, "slow-startup",
-                          "chrome://browser/skin/slowStartup-16.png",
-                          nb.PRIORITY_INFO_LOW, buttons);
+    win.gNotificationBox.appendNotification(message, "slow-startup",
+      "chrome://browser/skin/slowStartup-16.png",
+      win.gNotificationBox.PRIORITY_INFO_LOW, buttons);
   },
 
   /**
@@ -1250,10 +1249,9 @@ BrowserGlue.prototype = {
       },
     ];
 
-    let nb = win.document.getElementById("global-notificationbox");
-    nb.appendNotification(message, "reset-profile-notification",
-                          "chrome://global/skin/icons/question-16.png",
-                          nb.PRIORITY_INFO_LOW, buttons);
+    win.gNotificationBox.appendNotification(message, "reset-profile-notification",
+      "chrome://global/skin/icons/question-16.png",
+      win.gNotificationBox.PRIORITY_INFO_LOW, buttons);
   },
 
   _notifyUnsignedAddonsDisabled() {
@@ -1272,9 +1270,9 @@ BrowserGlue.prototype = {
       },
     ];
 
-    let nb = win.document.getElementById("high-priority-global-notificationbox");
-    nb.appendNotification(message, "unsigned-addons-disabled", "",
-                          nb.PRIORITY_WARNING_MEDIUM, buttons);
+    win.gHighPriorityNotificationBox.appendNotification(message,
+      "unsigned-addons-disabled", "",
+      win.gHighPriorityNotificationBox.PRIORITY_WARNING_MEDIUM, buttons);
   },
 
   _firstWindowTelemetry(aWindow) {
@@ -1835,7 +1833,6 @@ BrowserGlue.prototype = {
                                  stringName: "pu.notifyButton.accesskey"});
 
       let win = BrowserWindowTracker.getTopWindow();
-      let notifyBox = win.document.getElementById("high-priority-global-notificationbox");
 
       let buttons = [
                       {
@@ -1848,9 +1845,9 @@ BrowserGlue.prototype = {
                       },
                     ];
 
-      notifyBox.appendNotification(text, "post-update-notification",
-                                   null, notifyBox.PRIORITY_INFO_LOW,
-                                   buttons);
+      win.gHighPriorityNotificationBox.appendNotification(text,
+        "post-update-notification", null,
+        win.gHighPriorityNotificationBox.PRIORITY_INFO_LOW, buttons);
     }
 
     if (!actions.includes("showAlert"))
@@ -2929,9 +2926,9 @@ BrowserGlue.prototype = {
         win.openTrustedLinkIn("https://support.mozilla.org/kb/flash-protected-mode-autodisabled", "tab");
       },
     }];
-    let nb = win.document.getElementById("global-notificationbox");
-    nb.appendNotification(message, "flash-hang", null,
-                          nb.PRIORITY_INFO_MEDIUM, buttons);
+
+    win.gNotificationBox.appendNotification(message, "flash-hang", null,
+      win.gNotificationBox.PRIORITY_INFO_MEDIUM, buttons);
   },
 
   _updateFxaBadges() {
@@ -3189,8 +3186,6 @@ var DefaultBrowserCheck = {
       let yesButtonKey = shellBundle.getString("setDefaultBrowserConfirm.accesskey");
       let notNowButtonKey = shellBundle.getString("setDefaultBrowserNotNow.accesskey");
 
-      let notificationBox = win.document.getElementById("high-priority-global-notificationbox");
-
       this._createPopup(win, {
         label: notNowButton,
         accesskey: notNowButtonKey,
@@ -3217,11 +3212,10 @@ var DefaultBrowserCheck = {
 
       let iconPixels = win.devicePixelRatio > 1 ? "32" : "16";
       let iconURL = "chrome://branding/content/icon" + iconPixels + ".png";
-      const priority = notificationBox.PRIORITY_WARNING_HIGH;
+      const priority = win.gHighPriorityNotificationBox.PRIORITY_WARNING_HIGH;
       let callback = this._onNotificationEvent.bind(this);
-      this._notification = notificationBox.appendNotification(promptMessage, "default-browser",
-                                                              iconURL, priority, buttons,
-                                                              callback);
+      this._notification = win.gHighPriorityNotificationBox.appendNotification(
+        promptMessage, "default-browser", iconURL, priority, buttons, callback);
     } else {
       // Modal prompt
       let promptTitle = shellBundle.getString("setDefaultBrowserTitle");

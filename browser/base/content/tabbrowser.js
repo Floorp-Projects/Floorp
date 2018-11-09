@@ -654,7 +654,14 @@ window._gBrowser = {
   },
 
   getNotificationBox(aBrowser) {
-    return this.getBrowserContainer(aBrowser).firstElementChild;
+    let container = this.getBrowserContainer(aBrowser);
+    let notificationbox = container.firstElementChild;
+    if (notificationbox.localName != "notificationbox") {
+      notificationbox = document.createXULElement("notificationbox");
+      notificationbox.setAttribute("notificationside", "top");
+      container.prepend(notificationbox);
+    }
+    return notificationbox;
   },
 
   getTabModalPromptBox(aBrowser) {

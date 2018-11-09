@@ -120,8 +120,6 @@ add_task(async function test_single_window() {
   // Close all the notifications, then try to trigger the data choices infobar.
   await closeAllNotifications();
 
-  let notificationBox = document.getElementById("global-notificationbox");
-
   // Make sure that we have a coherent initial state.
   Assert.equal(Preferences.get(PREF_ACCEPTED_POLICY_VERSION, 0), 0,
                "No version should be set on init.");
@@ -130,7 +128,7 @@ add_task(async function test_single_window() {
   Assert.ok(!TelemetryReportingPolicy.testIsUserNotified(),
             "User not notified about datareporting policy.");
 
-  let alertShownPromise = promiseWaitForAlertActive(notificationBox);
+  let alertShownPromise = promiseWaitForAlertActive(gNotificationBox);
   Assert.ok(!TelemetryReportingPolicy.canUpload(),
             "User should not be allowed to upload.");
 
@@ -138,15 +136,15 @@ add_task(async function test_single_window() {
   triggerInfoBar(10 * 1000);
   await alertShownPromise;
 
-  Assert.equal(notificationBox.allNotifications.length, 1, "Notification Displayed.");
+  Assert.equal(gNotificationBox.allNotifications.length, 1, "Notification Displayed.");
   Assert.ok(TelemetryReportingPolicy.canUpload(), "User should be allowed to upload now.");
 
   await promiseNextTick();
-  let promiseClosed = promiseWaitForNotificationClose(notificationBox.currentNotification);
-  await checkInfobarButton(notificationBox.currentNotification);
+  let promiseClosed = promiseWaitForNotificationClose(gNotificationBox.currentNotification);
+  await checkInfobarButton(gNotificationBox.currentNotification);
   await promiseClosed;
 
-  Assert.equal(notificationBox.allNotifications.length, 0, "No notifications remain.");
+  Assert.equal(gNotificationBox.allNotifications.length, 0, "No notifications remain.");
 
   // Check that we are still clear to upload and that the policy data is saved.
   Assert.ok(TelemetryReportingPolicy.canUpload());
@@ -168,13 +166,7 @@ add_task(async function test_multiple_windows() {
   // results in dismiss on every window.
   let otherWindow = await BrowserTestUtils.openNewBrowserWindow();
 
-  // Get the notification box for both windows.
-  let notificationBoxes = [
-    document.getElementById("global-notificationbox"),
-    otherWindow.document.getElementById("global-notificationbox"),
-  ];
-
-  Assert.ok(notificationBoxes[1], "2nd window has a global notification box.");
+  Assert.ok(otherWindow.gNotificationBox, "2nd window has a global notification box.");
 
   // Make sure that we have a coherent initial state.
   Assert.equal(Preferences.get(PREF_ACCEPTED_POLICY_VERSION, 0), 0, "No version should be set on init.");
@@ -182,8 +174,8 @@ add_task(async function test_multiple_windows() {
   Assert.ok(!TelemetryReportingPolicy.testIsUserNotified(), "User not notified about datareporting policy.");
 
   let showAlertPromises = [
-    promiseWaitForAlertActive(notificationBoxes[0]),
-    promiseWaitForAlertActive(notificationBoxes[1]),
+    promiseWaitForAlertActive(gNotificationBox),
+    promiseWaitForAlertActive(otherWindow.gNotificationBox),
   ];
 
   Assert.ok(!TelemetryReportingPolicy.canUpload(),
@@ -195,10 +187,10 @@ add_task(async function test_multiple_windows() {
 
   // Both notification were displayed. Close one and check that both gets closed.
   let closeAlertPromises = [
-    promiseWaitForNotificationClose(notificationBoxes[0].currentNotification),
-    promiseWaitForNotificationClose(notificationBoxes[1].currentNotification),
+    promiseWaitForNotificationClose(gNotificationBox.currentNotification),
+    promiseWaitForNotificationClose(otherWindow.gNotificationBox.currentNotification),
   ];
-  notificationBoxes[0].currentNotification.close();
+  gNotificationBox.currentNotification.close();
   await Promise.all(closeAlertPromises);
 
   // Close the second window we opened.
