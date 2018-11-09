@@ -134,6 +134,16 @@ struct APZCTreeManager::TreeBuildingState {
   // children, meaning they are added to the children's ancestor transforms
   // instead. Those deferred transforms are tracked here.
   DeferredTransformMap mPerspectiveTransformsDeferredToChildren;
+
+  // As we recurse down through the tree, this picks up the zoom animation id
+  // from a node in the layer tree, and propagates it downwards to the nearest
+  // APZC instance that is for an RCD node. Generally it will be set on the
+  // root node of the layers (sub-)tree, which may not be same as the RCD node
+  // for the subtree, and so we need this mechanism to ensure it gets propagated
+  // to the RCD's APZC instance. Once it is set on the APZC instance, the value
+  // is cleared back to Nothing(). Note that this is only used in the WebRender
+  // codepath.
+  Maybe<uint64_t> mZoomAnimationId;
 };
 
 class APZCTreeManager::CheckerboardFlushObserver : public nsIObserver {
@@ -885,6 +895,10 @@ APZCTreeManager::PrepareNodeForLayer(const RecursiveMutexAutoLock& aProofOfTreeL
 
   bool parentHasPerspective = aState.mParentHasPerspective.top();
 
+  if (Maybe<uint64_t> zoomAnimationId = aLayer.GetZoomAnimationId()) {
+    aState.mZoomAnimationId = zoomAnimationId;
+  }
+
   RefPtr<HitTestingTreeNode> node = nullptr;
   if (!needsApzc) {
     // Note: if layer properties must be propagated to nodes, RecvUpdate in
@@ -993,6 +1007,11 @@ APZCTreeManager::PrepareNodeForLayer(const RecursiveMutexAutoLock& aProofOfTreeL
       aState.mNodesToDestroy.RemoveElement(node);
       node->SetPrevSibling(nullptr);
       node->SetLastChild(nullptr);
+    }
+
+    if (aMetrics.IsRootContent()) {
+      apzc->SetZoomAnimationId(aState.mZoomAnimationId);
+      aState.mZoomAnimationId = Nothing();
     }
 
     APZCTM_LOG("Using APZC %p for layer %p with identifiers %" PRIx64 " %" PRId64 "\n",

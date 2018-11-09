@@ -316,6 +316,12 @@ public:
     return mLayer->GetFixedPositionScrollContainerId();
   }
 
+  Maybe<uint64_t> GetZoomAnimationId() const
+  {
+    MOZ_ASSERT(IsValid());
+    return mLayer->GetZoomAnimationId();
+  }
+
   bool IsBackfaceHidden() const
   {
     // This is only used by APZCTM hit testing, and WR does its own
