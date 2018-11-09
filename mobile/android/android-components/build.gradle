@@ -122,16 +122,6 @@ subprojects {
                     }
                 }
             }
-
-            if (it.hasProperty('kotlin')) {
-                android {
-                    kotlin {
-                        experimental {
-                            coroutines 'enable'
-                        }
-                    }
-                }
-            }
         }
     }
 }
