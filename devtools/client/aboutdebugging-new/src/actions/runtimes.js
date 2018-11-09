@@ -77,8 +77,7 @@ async function createClientForRuntime(runtime) {
 
 async function getRuntimeInfo(runtime, client) {
   const { extra, type } = runtime;
-  const deviceFront = await client.mainRoot.getFront("device");
-  const { brandName: name, channel, version } = await deviceFront.getDescription();
+  const { name, channel, version } = await client.getDeviceDescription();
   const icon =
     (channel === "release" || channel === "beta" || channel === "aurora")
       ? `chrome://devtools/skin/images/aboutdebugging-firefox-${ channel }.svg`
@@ -107,9 +106,9 @@ function connectRuntime(id) {
       const runtime = findRuntimeById(id, getState().runtimes);
       const { client, transportDetails } = await createClientForRuntime(runtime);
       const info = await getRuntimeInfo(runtime, client);
-      const preferenceFront = await client.mainRoot.getFront("preference");
-      const connectionPromptEnabled =
-        await preferenceFront.getBoolPref(RUNTIME_PREFERENCE.CONNECTION_PROMPT);
+
+      const promptPrefName = RUNTIME_PREFERENCE.CONNECTION_PROMPT;
+      const connectionPromptEnabled = await client.getPreference(promptPrefName);
       const runtimeDetails = { connectionPromptEnabled, client, info, transportDetails };
 
       if (runtime.type === RUNTIMES.USB) {
@@ -168,12 +167,10 @@ function updateConnectionPromptSetting(connectionPromptEnabled) {
     try {
       const runtime = getCurrentRuntime(getState().runtimes);
       const client = runtime.runtimeDetails.client;
-      const preferenceFront = await client.mainRoot.getFront("preference");
-      await preferenceFront.setBoolPref(RUNTIME_PREFERENCE.CONNECTION_PROMPT,
-                                        connectionPromptEnabled);
+      const promptPrefName = RUNTIME_PREFERENCE.CONNECTION_PROMPT;
+      await client.setPreference(promptPrefName, connectionPromptEnabled);
       // Re-get actual value from the runtime.
-      connectionPromptEnabled =
-        await preferenceFront.getBoolPref(RUNTIME_PREFERENCE.CONNECTION_PROMPT);
+      connectionPromptEnabled = await client.getPreference(promptPrefName);
 
       dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
                  runtime, connectionPromptEnabled });

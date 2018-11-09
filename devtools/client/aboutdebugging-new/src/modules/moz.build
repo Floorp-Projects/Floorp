@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'client-wrapper.js',
     'debug-target-collapsibilities.js',
     'debug-target-support.js',
     'extensions-helper.js',
