@@ -32,7 +32,7 @@ add_task(async function test_support_toolbar_properties_on_findbar() {
 
   info("Checking findbar background is set as toolbar color");
   Assert.equal(window.getComputedStyle(gFindBar).backgroundColor,
-               hexToCSS(TOOLBAR_COLOR),
+               hexToCSS(ACCENT_COLOR),
                "Findbar background color should be the same as toolbar background color.");
 
   info("Checking findbar and button text color is set as toolbar text color");
