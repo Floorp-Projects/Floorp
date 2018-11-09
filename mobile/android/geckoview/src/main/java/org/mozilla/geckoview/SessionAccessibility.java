@@ -140,7 +140,8 @@ public class SessionAccessibility {
                         if ((flags & FLAG_FOCUSED) != 0) {
                             mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityCursorToFocused", null);
                         } else {
-                            sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, virtualViewId, nodeInfo.getInt("className"), null);
+                            final int className = nodeInfo != null ? nodeInfo.getInt("className") : CLASSNAME_VIEW;
+                            sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, virtualViewId, className, null);
                         }
                     }
                 return true;
@@ -149,7 +150,8 @@ public class SessionAccessibility {
                 GeckoBundle nodeInfo = nativeProvider.getNodeInfo(virtualViewId);
                 final int flags = nodeInfo != null ? nodeInfo.getInt("flags") : 0;
                 if ((flags & (FLAG_SELECTABLE | FLAG_CHECKABLE)) == 0) {
-                    sendEvent(AccessibilityEvent.TYPE_VIEW_CLICKED, virtualViewId, nodeInfo.getInt("className"), null);
+                    final int className = nodeInfo != null ? nodeInfo.getInt("className") : CLASSNAME_VIEW;
+                    sendEvent(AccessibilityEvent.TYPE_VIEW_CLICKED, virtualViewId, className, null);
                 }
                 return true;
             case AccessibilityNodeInfo.ACTION_LONG_CLICK:
