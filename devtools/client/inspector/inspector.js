@@ -1411,6 +1411,8 @@ Inspector.prototype = {
 
     this.cancelUpdate();
 
+    this.sidebar.destroy();
+
     this.panelWin.removeEventListener("resize", this.onPanelWindowResize, true);
     this.selection.off("new-node-front", this.onNewSelection);
     this.selection.off("detached-front", this.onDetached);
