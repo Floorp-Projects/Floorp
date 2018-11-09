@@ -140,5 +140,12 @@ for (let element of [divWithFontSizeSet, divWithFontSizeInherited]) {
         assert_computed_value('tomato | plum', 'plum', 'plum');
         assert_computed_value('tomato | plum | <color>', 'plum', 'plum');
     }, "ident values that look like color keywords are not converted to colors" + id);
+
+    test(function() {
+        assert_computed_value('*', '-50grad', '-50grad');
+        assert_computed_value('<angle>', '180deg', '180deg');
+        assert_computed_value('<angle>', '400grad', '360deg');
+        assert_computed_value('<angle>', 'calc(360deg + 400grad)', '720deg');
+    }, "<angle> values computed correctly for " + id);
 }
 </script>
