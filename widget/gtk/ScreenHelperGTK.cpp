@@ -110,7 +110,6 @@ ScreenHelperGTK::~ScreenHelperGTK()
 gint
 ScreenHelperGTK::GetGTKMonitorScaleFactor(gint aMonitorNum)
 {
-#if (MOZ_WIDGET_GTK >= 3)
   // Since GDK 3.10
   static auto sGdkScreenGetMonitorScaleFactorPtr = (gint (*)(GdkScreen*, gint))
     dlsym(RTLD_DEFAULT, "gdk_screen_get_monitor_scale_factor");
@@ -118,7 +117,6 @@ ScreenHelperGTK::GetGTKMonitorScaleFactor(gint aMonitorNum)
     GdkScreen *screen = gdk_screen_get_default();
     return sGdkScreenGetMonitorScaleFactorPtr(screen, aMonitorNum);
   }
-#endif
   return 1;
 }
 
