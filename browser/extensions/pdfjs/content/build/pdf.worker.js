@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.1.26';
-var pdfjsBuild = 'f6bc9340';
+var pdfjsVersion = '2.1.42';
+var pdfjsBuild = '2194aef0';
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -178,7 +178,6 @@ var WorkerTask = function WorkerTaskClosure() {
   };
   return WorkerTask;
 }();
-;
 var PDFWorkerStream = function PDFWorkerStreamClosure() {
   function PDFWorkerStream(msgHandler) {
     this._msgHandler = msgHandler;
@@ -327,7 +326,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.1.26';
+    let workerVersion = '2.1.42';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -40022,78 +40021,75 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(12);
 
-var PostScriptParser = function PostScriptParserClosure() {
-  function PostScriptParser(lexer) {
+class PostScriptParser {
+  constructor(lexer) {
     this.lexer = lexer;
     this.operators = [];
     this.token = null;
     this.prev = null;
   }
-  PostScriptParser.prototype = {
-    nextToken: function PostScriptParser_nextToken() {
-      this.prev = this.token;
-      this.token = this.lexer.getToken();
-    },
-    accept: function PostScriptParser_accept(type) {
-      if (this.token.type === type) {
-        this.nextToken();
-        return true;
-      }
-      return false;
-    },
-    expect: function PostScriptParser_expect(type) {
-      if (this.accept(type)) {
-        return true;
-      }
-      throw new _util.FormatError(`Unexpected symbol: found ${this.token.type} expected ${type}.`);
-    },
-    parse: function PostScriptParser_parse() {
+  nextToken() {
+    this.prev = this.token;
+    this.token = this.lexer.getToken();
+  }
+  accept(type) {
+    if (this.token.type === type) {
       this.nextToken();
-      this.expect(PostScriptTokenTypes.LBRACE);
-      this.parseBlock();
-      this.expect(PostScriptTokenTypes.RBRACE);
-      return this.operators;
-    },
-    parseBlock: function PostScriptParser_parseBlock() {
-      while (true) {
-        if (this.accept(PostScriptTokenTypes.NUMBER)) {
-          this.operators.push(this.prev.value);
-        } else if (this.accept(PostScriptTokenTypes.OPERATOR)) {
-          this.operators.push(this.prev.value);
-        } else if (this.accept(PostScriptTokenTypes.LBRACE)) {
-          this.parseCondition();
-        } else {
-          return;
-        }
-      }
-    },
-    parseCondition: function PostScriptParser_parseCondition() {
-      var conditionLocation = this.operators.length;
-      this.operators.push(null, null);
-      this.parseBlock();
-      this.expect(PostScriptTokenTypes.RBRACE);
-      if (this.accept(PostScriptTokenTypes.IF)) {
-        this.operators[conditionLocation] = this.operators.length;
-        this.operators[conditionLocation + 1] = 'jz';
+      return true;
+    }
+    return false;
+  }
+  expect(type) {
+    if (this.accept(type)) {
+      return true;
+    }
+    throw new _util.FormatError(`Unexpected symbol: found ${this.token.type} expected ${type}.`);
+  }
+  parse() {
+    this.nextToken();
+    this.expect(PostScriptTokenTypes.LBRACE);
+    this.parseBlock();
+    this.expect(PostScriptTokenTypes.RBRACE);
+    return this.operators;
+  }
+  parseBlock() {
+    while (true) {
+      if (this.accept(PostScriptTokenTypes.NUMBER)) {
+        this.operators.push(this.prev.value);
+      } else if (this.accept(PostScriptTokenTypes.OPERATOR)) {
+        this.operators.push(this.prev.value);
       } else if (this.accept(PostScriptTokenTypes.LBRACE)) {
-        var jumpLocation = this.operators.length;
-        this.operators.push(null, null);
-        var endOfTrue = this.operators.length;
-        this.parseBlock();
-        this.expect(PostScriptTokenTypes.RBRACE);
-        this.expect(PostScriptTokenTypes.IFELSE);
-        this.operators[jumpLocation] = this.operators.length;
-        this.operators[jumpLocation + 1] = 'j';
-        this.operators[conditionLocation] = endOfTrue;
-        this.operators[conditionLocation + 1] = 'jz';
+        this.parseCondition();
       } else {
-        throw new _util.FormatError('PS Function: error parsing conditional.');
+        return;
       }
     }
-  };
-  return PostScriptParser;
-}();
-var PostScriptTokenTypes = {
+  }
+  parseCondition() {
+    const conditionLocation = this.operators.length;
+    this.operators.push(null, null);
+    this.parseBlock();
+    this.expect(PostScriptTokenTypes.RBRACE);
+    if (this.accept(PostScriptTokenTypes.IF)) {
+      this.operators[conditionLocation] = this.operators.length;
+      this.operators[conditionLocation + 1] = 'jz';
+    } else if (this.accept(PostScriptTokenTypes.LBRACE)) {
+      const jumpLocation = this.operators.length;
+      this.operators.push(null, null);
+      const endOfTrue = this.operators.length;
+      this.parseBlock();
+      this.expect(PostScriptTokenTypes.RBRACE);
+      this.expect(PostScriptTokenTypes.IFELSE);
+      this.operators[jumpLocation] = this.operators.length;
+      this.operators[jumpLocation + 1] = 'j';
+      this.operators[conditionLocation] = endOfTrue;
+      this.operators[conditionLocation + 1] = 'jz';
+    } else {
+      throw new _util.FormatError('PS Function: error parsing conditional.');
+    }
+  }
+}
+const PostScriptTokenTypes = {
   LBRACE: 0,
   RBRACE: 1,
   NUMBER: 2,
@@ -40101,112 +40097,119 @@ var PostScriptTokenTypes = {
   IF: 4,
   IFELSE: 5
 };
-var PostScriptToken = function PostScriptTokenClosure() {
-  function PostScriptToken(type, value) {
-    this.type = type;
-    this.value = value;
-  }
-  var opCache = Object.create(null);
-  PostScriptToken.getOperator = function PostScriptToken_getOperator(op) {
-    var opValue = opCache[op];
-    if (opValue) {
-      return opValue;
+const PostScriptToken = function PostScriptTokenClosure() {
+  const opCache = Object.create(null);
+  class PostScriptToken {
+    constructor(type, value) {
+      this.type = type;
+      this.value = value;
     }
-    return opCache[op] = new PostScriptToken(PostScriptTokenTypes.OPERATOR, op);
-  };
-  PostScriptToken.LBRACE = new PostScriptToken(PostScriptTokenTypes.LBRACE, '{');
-  PostScriptToken.RBRACE = new PostScriptToken(PostScriptTokenTypes.RBRACE, '}');
-  PostScriptToken.IF = new PostScriptToken(PostScriptTokenTypes.IF, 'IF');
-  PostScriptToken.IFELSE = new PostScriptToken(PostScriptTokenTypes.IFELSE, 'IFELSE');
+    static getOperator(op) {
+      const opValue = opCache[op];
+      if (opValue) {
+        return opValue;
+      }
+      return opCache[op] = new PostScriptToken(PostScriptTokenTypes.OPERATOR, op);
+    }
+    static get LBRACE() {
+      return (0, _util.shadow)(this, 'LBRACE', new PostScriptToken(PostScriptTokenTypes.LBRACE, '{'));
+    }
+    static get RBRACE() {
+      return (0, _util.shadow)(this, 'RBRACE', new PostScriptToken(PostScriptTokenTypes.RBRACE, '}'));
+    }
+    static get IF() {
+      return (0, _util.shadow)(this, 'IF', new PostScriptToken(PostScriptTokenTypes.IF, 'IF'));
+    }
+    static get IFELSE() {
+      return (0, _util.shadow)(this, 'IFELSE', new PostScriptToken(PostScriptTokenTypes.IFELSE, 'IFELSE'));
+    }
+  }
   return PostScriptToken;
 }();
-var PostScriptLexer = function PostScriptLexerClosure() {
-  function PostScriptLexer(stream) {
+class PostScriptLexer {
+  constructor(stream) {
     this.stream = stream;
     this.nextChar();
     this.strBuf = [];
   }
-  PostScriptLexer.prototype = {
-    nextChar: function PostScriptLexer_nextChar() {
-      return this.currentChar = this.stream.getByte();
-    },
-    getToken: function PostScriptLexer_getToken() {
-      var comment = false;
-      var ch = this.currentChar;
-      while (true) {
-        if (ch < 0) {
-          return _primitives.EOF;
+  nextChar() {
+    return this.currentChar = this.stream.getByte();
+  }
+  getToken() {
+    let comment = false;
+    let ch = this.currentChar;
+    while (true) {
+      if (ch < 0) {
+        return _primitives.EOF;
+      }
+      if (comment) {
+        if (ch === 0x0A || ch === 0x0D) {
+          comment = false;
         }
-        if (comment) {
-          if (ch === 0x0A || ch === 0x0D) {
-            comment = false;
-          }
-        } else if (ch === 0x25) {
-          comment = true;
-        } else if (!(0, _util.isSpace)(ch)) {
-          break;
-        }
-        ch = this.nextChar();
+      } else if (ch === 0x25) {
+        comment = true;
+      } else if (!(0, _util.isSpace)(ch)) {
+        break;
       }
-      switch (ch | 0) {
-        case 0x30:
-        case 0x31:
-        case 0x32:
-        case 0x33:
-        case 0x34:
-        case 0x35:
-        case 0x36:
-        case 0x37:
-        case 0x38:
-        case 0x39:
-        case 0x2B:
-        case 0x2D:
-        case 0x2E:
-          return new PostScriptToken(PostScriptTokenTypes.NUMBER, this.getNumber());
-        case 0x7B:
-          this.nextChar();
-          return PostScriptToken.LBRACE;
-        case 0x7D:
-          this.nextChar();
-          return PostScriptToken.RBRACE;
-      }
-      var strBuf = this.strBuf;
-      strBuf.length = 0;
-      strBuf[0] = String.fromCharCode(ch);
-      while ((ch = this.nextChar()) >= 0 && (ch >= 0x41 && ch <= 0x5A || ch >= 0x61 && ch <= 0x7A)) {
-        strBuf.push(String.fromCharCode(ch));
-      }
-      var str = strBuf.join('');
-      switch (str.toLowerCase()) {
-        case 'if':
-          return PostScriptToken.IF;
-        case 'ifelse':
-          return PostScriptToken.IFELSE;
-        default:
-          return PostScriptToken.getOperator(str);
-      }
-    },
-    getNumber: function PostScriptLexer_getNumber() {
-      var ch = this.currentChar;
-      var strBuf = this.strBuf;
-      strBuf.length = 0;
-      strBuf[0] = String.fromCharCode(ch);
-      while ((ch = this.nextChar()) >= 0) {
-        if (ch >= 0x30 && ch <= 0x39 || ch === 0x2D || ch === 0x2E) {
-          strBuf.push(String.fromCharCode(ch));
-        } else {
-          break;
-        }
-      }
-      var value = parseFloat(strBuf.join(''));
-      if (isNaN(value)) {
-        throw new _util.FormatError(`Invalid floating point number: ${value}`);
-      }
-      return value;
+      ch = this.nextChar();
     }
-  };
-  return PostScriptLexer;
-}();
+    switch (ch | 0) {
+      case 0x30:
+      case 0x31:
+      case 0x32:
+      case 0x33:
+      case 0x34:
+      case 0x35:
+      case 0x36:
+      case 0x37:
+      case 0x38:
+      case 0x39:
+      case 0x2B:
+      case 0x2D:
+      case 0x2E:
+        return new PostScriptToken(PostScriptTokenTypes.NUMBER, this.getNumber());
+      case 0x7B:
+        this.nextChar();
+        return PostScriptToken.LBRACE;
+      case 0x7D:
+        this.nextChar();
+        return PostScriptToken.RBRACE;
+    }
+    const strBuf = this.strBuf;
+    strBuf.length = 0;
+    strBuf[0] = String.fromCharCode(ch);
+    while ((ch = this.nextChar()) >= 0 && (ch >= 0x41 && ch <= 0x5A || ch >= 0x61 && ch <= 0x7A)) {
+      strBuf.push(String.fromCharCode(ch));
+    }
+    const str = strBuf.join('');
+    switch (str.toLowerCase()) {
+      case 'if':
+        return PostScriptToken.IF;
+      case 'ifelse':
+        return PostScriptToken.IFELSE;
+      default:
+        return PostScriptToken.getOperator(str);
+    }
+  }
+  getNumber() {
+    let ch = this.currentChar;
+    const strBuf = this.strBuf;
+    strBuf.length = 0;
+    strBuf[0] = String.fromCharCode(ch);
+    while ((ch = this.nextChar()) >= 0) {
+      if (ch >= 0x30 && ch <= 0x39 || ch === 0x2D || ch === 0x2E) {
+        strBuf.push(String.fromCharCode(ch));
+      } else {
+        break;
+      }
+    }
+    const value = parseFloat(strBuf.join(''));
+    if (isNaN(value)) {
+      throw new _util.FormatError(`Invalid floating point number: ${value}`);
+    }
+    return value;
+  }
+}
 exports.PostScriptLexer = PostScriptLexer;
 exports.PostScriptParser = PostScriptParser;
 
@@ -40870,7 +40873,7 @@ exports.PDFImage = PDFImage;
 
 
 module.exports = function isNodeJS() {
-  return typeof process === 'object' && process + '' === '[object process]';
+  return typeof process === 'object' && process + '' === '[object process]' && !process.versions['nw'];
 };
 
 /***/ }),
