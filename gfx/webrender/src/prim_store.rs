@@ -2341,9 +2341,10 @@ impl PrimitiveStore {
                         PicturePrimitive::add_split_plane(
                             splitter,
                             frame_state.transforms,
-                            prim_instance,
                             prim_local_rect,
+                            pic.spatial_node_index,
                             plane_split_anchor,
+                            frame_context.world_rect,
                         );
                     }
                 } else {
