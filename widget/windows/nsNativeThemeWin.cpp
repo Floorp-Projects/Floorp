@@ -594,8 +594,7 @@ nsNativeThemeWin::DrawThemedProgressMeter(nsIFrame* aFrame,
   }
 
   EventStates eventStates = GetContentState(parentFrame, aAppearance);
-  bool vertical = IsVerticalProgress(parentFrame) ||
-                  aAppearance == StyleAppearance::ProgresschunkVertical;
+  bool vertical = IsVerticalProgress(parentFrame);
   bool indeterminate = IsIndeterminateProgress(parentFrame, eventStates);
   bool animate = indeterminate;
 
@@ -759,10 +758,9 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(StyleAppearance a
     case StyleAppearance::Toolbarbutton:
     case StyleAppearance::Separator:
       return Some(eUXToolbar);
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::ProgressbarVertical:
     case StyleAppearance::Progresschunk:
-    case StyleAppearance::ProgresschunkVertical:
       return Some(eUXProgress);
     case StyleAppearance::Tab:
     case StyleAppearance::Tabpanel:
@@ -1014,7 +1012,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
       aState = TS_NORMAL;
       return NS_OK;
     }
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::ProgressbarVertical: {
       // Note IsVerticalProgress only tests for orient css attrribute,
       // StyleAppearance::ProgressbarVertical is dedicated to -moz-appearance:
@@ -1025,11 +1023,9 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
       aState = PBBS_NORMAL;
       return NS_OK;
     }
-    case StyleAppearance::Progresschunk:
-    case StyleAppearance::ProgresschunkVertical: {
+    case StyleAppearance::Progresschunk: {
       nsIFrame* parentFrame = aFrame->GetParent();
-      if (aAppearance == StyleAppearance::ProgresschunkVertical ||
-          IsVerticalProgress(parentFrame)) {
+      if (IsVerticalProgress(parentFrame)) {
         aPart = PP_FILLVERT;
       } else {
         aPart = PP_FILL;
@@ -1907,7 +1903,7 @@ RENDER_AGAIN:
       ::FillRect(hdc, &widgetRect, reinterpret_cast<HBRUSH>(COLOR_BTNFACE+1));
     }
   }
-  else if (aAppearance == StyleAppearance::Progressbar ||
+  else if (aAppearance == StyleAppearance::ProgressBar ||
            aAppearance == StyleAppearance::ProgressbarVertical) {
     // DrawThemeBackground renders each corner with a solid white pixel.
     // Restore these pixels to the underlying color. Tracks are rendered
@@ -1920,8 +1916,7 @@ RENDER_AGAIN:
     SetPixel(hdc, widgetRect.right-1, widgetRect.bottom-1, color);
     SetPixel(hdc, widgetRect.left, widgetRect.bottom-1, color);
   }
-  else if (aAppearance == StyleAppearance::Progresschunk ||
-           aAppearance == StyleAppearance::ProgresschunkVertical) {
+  else if (aAppearance == StyleAppearance::Progresschunk) {
     DrawThemedProgressMeter(aFrame, aAppearance, theme, hdc, part, state,
                             &widgetRect, &clipRect);
   }
@@ -2373,7 +2368,6 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
     case StyleAppearance::Toolbar:
     case StyleAppearance::Statusbar:
     case StyleAppearance::Progresschunk:
-    case StyleAppearance::ProgresschunkVertical:
     case StyleAppearance::Tabpanels:
     case StyleAppearance::Tabpanel:
     case StyleAppearance::Listbox:
@@ -2439,7 +2433,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
     case StyleAppearance::Menuitemtext:
       return NS_OK;
 
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::ProgressbarVertical:
       // Best-fit size for progress meters is too large for most 
       // themes. We want these widgets to be able to really shrink
@@ -2605,8 +2599,7 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame,
       aAppearance == StyleAppearance::Statusbarpanel ||
       aAppearance == StyleAppearance::Resizerpanel ||
       aAppearance == StyleAppearance::Progresschunk ||
-      aAppearance == StyleAppearance::ProgresschunkVertical ||
-      aAppearance == StyleAppearance::Progressbar ||
+      aAppearance == StyleAppearance::ProgressBar ||
       aAppearance == StyleAppearance::ProgressbarVertical ||
       aAppearance == StyleAppearance::Tooltip ||
       aAppearance == StyleAppearance::Tabpanels ||
@@ -2812,10 +2805,9 @@ nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame,
   case StyleAppearance::MozWinBorderlessGlass:
   case StyleAppearance::ScaleHorizontal:
   case StyleAppearance::ScaleVertical:
-  case StyleAppearance::Progressbar:
+  case StyleAppearance::ProgressBar:
   case StyleAppearance::ProgressbarVertical:
   case StyleAppearance::Progresschunk:
-  case StyleAppearance::ProgresschunkVertical:
   case StyleAppearance::Range:
     return eTransparent;
   default:
@@ -2907,10 +2899,9 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case StyleAppearance::Statusbar:
     case StyleAppearance::Statusbarpanel:
     case StyleAppearance::Resizerpanel:
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::ProgressbarVertical:
     case StyleAppearance::Progresschunk:
-    case StyleAppearance::ProgresschunkVertical:
     case StyleAppearance::Tab:
     case StyleAppearance::Tabpanel:
     case StyleAppearance::Tabpanels:
@@ -2981,7 +2972,7 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext,
     case StyleAppearance::Tooltip:
       result.top = result.left = result.bottom = result.right = 1;
       break;
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::ProgressbarVertical:
       result.top = result.left = result.bottom = result.right = 1;
       break;
@@ -3031,7 +3022,7 @@ nsNativeThemeWin::ClassicGetWidgetPadding(nsDeviceContext* aContext,
       }
       return true;
     }
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::ProgressbarVertical:
       (*aResult).top = (*aResult).left = (*aResult).bottom = (*aResult).right = 1;
       return true;
@@ -3140,9 +3131,8 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
     case StyleAppearance::Statusbarpanel:      
     case StyleAppearance::Resizerpanel:
     case StyleAppearance::Progresschunk:
-    case StyleAppearance::ProgresschunkVertical:
     case StyleAppearance::Tooltip:
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::ProgressbarVertical:
     case StyleAppearance::Tab:
     case StyleAppearance::Tabpanel:
@@ -3413,9 +3403,8 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame,
     case StyleAppearance::Statusbarpanel:
     case StyleAppearance::Resizerpanel:
     case StyleAppearance::Progresschunk:
-    case StyleAppearance::ProgresschunkVertical:
     case StyleAppearance::Tooltip:
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::ProgressbarVertical:
     case StyleAppearance::Tab:
     case StyleAppearance::Tabpanel:
@@ -3871,7 +3860,7 @@ RENDER_AGAIN:
       ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_BTNFACE+1));
       break;
     // Draw 3D face background controls
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::ProgressbarVertical:
       // Draw 3D border
       ::DrawEdge(hdc, &widgetRect, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
@@ -3967,17 +3956,12 @@ RENDER_AGAIN:
  
       break;
     }
-    case StyleAppearance::ProgresschunkVertical:
-      ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_HIGHLIGHT+1));
-      break;
-
     case StyleAppearance::Progresschunk: {
       nsIFrame* stateFrame = aFrame->GetParent();
       EventStates eventStates = GetContentState(stateFrame, aAppearance);
 
       bool indeterminate = IsIndeterminateProgress(stateFrame, eventStates);
-      bool vertical = IsVerticalProgress(stateFrame) ||
-                      aAppearance == StyleAppearance::ProgresschunkVertical;
+      bool vertical = IsVerticalProgress(stateFrame);
 
       nsIContent* content = aFrame->GetContent();
       if (!indeterminate || !content) {

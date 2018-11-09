@@ -709,12 +709,11 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
   case StyleAppearance::Resizerpanel:
     aGtkWidgetType = MOZ_GTK_FRAME;
     break;
-  case StyleAppearance::Progressbar:
+  case StyleAppearance::ProgressBar:
   case StyleAppearance::ProgressbarVertical:
     aGtkWidgetType = MOZ_GTK_PROGRESSBAR;
     break;
   case StyleAppearance::Progresschunk:
-  case StyleAppearance::ProgresschunkVertical:
     {
       nsIFrame* stateFrame = aFrame->GetParent();
       EventStates eventStates = GetContentState(stateFrame, aAppearance);
@@ -1829,8 +1828,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
       aAppearance == StyleAppearance::Statusbarpanel ||
       aAppearance == StyleAppearance::Resizerpanel ||
       aAppearance == StyleAppearance::Progresschunk ||
-      aAppearance == StyleAppearance::ProgresschunkVertical ||
-      aAppearance == StyleAppearance::Progressbar ||
+      aAppearance == StyleAppearance::ProgressBar ||
       aAppearance == StyleAppearance::ProgressbarVertical ||
       aAppearance == StyleAppearance::Menubar ||
       aAppearance == StyleAppearance::Menupopup ||
@@ -1985,10 +1983,9 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case StyleAppearance::Treeheadercell:
   case StyleAppearance::Treeheadersortarrow:
   case StyleAppearance::Treetwistyopen:
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::Progresschunk:
     case StyleAppearance::ProgressbarVertical:
-    case StyleAppearance::ProgresschunkVertical:
     case StyleAppearance::Tab:
     // case StyleAppearance::Tabpanel:
     case StyleAppearance::Tabpanels:
