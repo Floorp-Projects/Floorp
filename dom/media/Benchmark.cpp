@@ -335,7 +335,7 @@ BenchmarkPlayback::GlobalShutdown()
 }
 
 void
-BenchmarkPlayback::Output(const MediaDataDecoder::DecodedData& aResults)
+BenchmarkPlayback::Output(MediaDataDecoder::DecodedData&& aResults)
 {
   MOZ_ASSERT(OnThread());
   MOZ_ASSERT(!mFinished);
@@ -391,14 +391,14 @@ BenchmarkPlayback::InputExhausted()
   if (mSampleIndex == mSamples.Length() && !ref->mParameters.mStopAtFrame) {
     // Complete current frame decode then drain if still necessary.
     p->Then(Thread(), __func__,
-            [ref, this](const MediaDataDecoder::DecodedData& aResults) {
-              Output(aResults);
+            [ref, this](MediaDataDecoder::DecodedData&& aResults) {
+              Output(std::move(aResults));
               if (!mFinished) {
                 mDecoder->Drain()->Then(
                   Thread(), __func__,
-                  [ref, this](const MediaDataDecoder::DecodedData& aResults) {
+                  [ref, this](MediaDataDecoder::DecodedData&& aResults) {
                     mDrained = true;
-                    Output(aResults);
+                    Output(std::move(aResults));
                     MOZ_ASSERT(mFinished, "We must be done now");
                   },
                   [ref, this](const MediaResult& aError) { Error(aError); });
@@ -411,8 +411,8 @@ BenchmarkPlayback::InputExhausted()
     }
     // Continue decoding
     p->Then(Thread(), __func__,
-            [ref, this](const MediaDataDecoder::DecodedData& aResults) {
-              Output(aResults);
+            [ref, this](MediaDataDecoder::DecodedData&& aResults) {
+              Output(std::move(aResults));
               if (!mFinished) {
                 InputExhausted();
               }
