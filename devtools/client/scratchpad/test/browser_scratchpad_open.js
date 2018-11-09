@@ -78,8 +78,8 @@ function testOpenTestFile() {
         "http://example.com/browser/devtools/client/scratchpad/test/NS_ERROR_ILLEGAL_INPUT.txt",
         "silent",
         function(aStatus, content) {
-          const nb = win.document.querySelector("#scratchpad-notificationbox");
-          is(nb.querySelectorAll("notification").length, 1, "There is just one notification");
+          const nb = win.Scratchpad.notificationBox;
+          is(nb.allNotifications.length, 1, "There is just one notification");
           const cn = nb.currentNotification;
           is(cn.priority, nb.PRIORITY_WARNING_HIGH, "notification priority is correct");
           is(cn.value, "file-import-convert-failed", "notification value is corrent");

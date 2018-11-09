@@ -8,7 +8,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
 
-    <notificationbox id="nb" hidden="true"/>
+  <vbox id="nb" hidden="true"/>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"
@@ -22,7 +22,9 @@ var gNotificationBox;
 // Tests that a notification that is added in an hidden box didn't throw the animation
 function test() {
   SimpleTest.waitForExplicitFinish();
-  gNotificationBox = document.getElementById("nb");
+  gNotificationBox = new MozElements.NotificationBox(e => {
+    document.getElementById("nb").appendChild(e);
+  });
 
   is(gNotificationBox.allNotifications.length, 0, "There should be no initial notifications");
 

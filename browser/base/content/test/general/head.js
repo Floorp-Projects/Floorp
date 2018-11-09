@@ -13,8 +13,6 @@ ChromeUtils.defineModuleGetter(this, "TabCrashHandler",
  * Wait for a <notification> to be closed then call the specified callback.
  */
 function waitForNotificationClose(notification, cb) {
-  let parent = notification.parentNode;
-
   let observer = new MutationObserver(function onMutatations(mutations) {
     for (let mutation of mutations) {
       for (let i = 0; i < mutation.removedNodes.length; i++) {
@@ -27,7 +25,7 @@ function waitForNotificationClose(notification, cb) {
       }
     }
   });
-  observer.observe(parent, {childList: true});
+  observer.observe(notification.control.stack, {childList: true});
 }
 
 function closeAllNotifications() {

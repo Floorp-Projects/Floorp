@@ -1594,7 +1594,7 @@ var BrowserTestUtils = {
         return event.target.value == notificationValue;
       };
 
-      BrowserTestUtils.waitForEvent(notificationBox, "AlertActive",
+      BrowserTestUtils.waitForEvent(notificationBox.stack, "AlertActive",
                                     false, check).then((event) => {
         // The originalTarget of the AlertActive on a notificationbox
         // will be the notification itself.
