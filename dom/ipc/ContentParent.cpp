@@ -109,7 +109,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/HangDetails.h"
 #include "nsAnonymousTemporaryFile.h"
-#include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsCExternalHandlerService.h"
@@ -119,7 +118,6 @@
 #include "nsConsoleService.h"
 #include "nsContentUtils.h"
 #include "nsDebugImpl.h"
-#include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsEmbedCID.h"
 #include "nsFrameLoader.h"
@@ -575,6 +573,9 @@ UniquePtr<SandboxBrokerPolicyFactory> ContentParent::sSandboxBrokerPolicyFactory
 #endif
 uint64_t ContentParent::sNextTabParentId = 0;
 nsDataHashtable<nsUint64HashKey, TabParent*> ContentParent::sNextTabParents;
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+StaticAutoPtr<std::vector<std::string>> ContentParent::sMacSandboxParams;
+#endif
 
 // Whether a private docshell has been seen before.
 static bool sHasSeenPrivateDocShell = false;
@@ -661,6 +662,10 @@ ContentParent::StartUp()
 #if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
   sSandboxBrokerPolicyFactory = MakeUnique<SandboxBrokerPolicyFactory>();
 #endif
+
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+  sMacSandboxParams = new std::vector<std::string>;
+#endif
 }
 
 /*static*/ void
@@ -672,6 +677,10 @@ ContentParent::ShutDown()
 
 #if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
   sSandboxBrokerPolicyFactory = nullptr;
+#endif
+
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+  sMacSandboxParams = nullptr;
 #endif
 }
 
@@ -2051,17 +2060,29 @@ ContentParent::GetTestShellSingleton()
 }
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+// Append the sandbox command line parameters that are not static. i.e.,
+// parameters that can be different for different child processes.
 void
-ContentParent::AppendSandboxParams(std::vector<std::string> &aArgs)
+ContentParent::AppendDynamicSandboxParams(std::vector<std::string>& aArgs)
 {
-  nsCOMPtr<nsIProperties>
-    directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
-  if (!directoryService) {
-    MOZ_CRASH("Failed to get the directory service");
+  // For file content processes
+  if (GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE)) {
+    aArgs.push_back("-sbAllowFileAccess");
   }
+}
+
+// Generate the static sandbox command line parameters and store
+// them in the provided params vector to be used each time a new
+// content process is launched.
+static void
+CacheSandboxParams(std::vector<std::string>& aCachedParams)
+{
+  // This must only be called once and we should
+  // be starting with an empty list of parameters.
+  MOZ_ASSERT(aCachedParams.empty());
 
   // Indicates the child should startup the sandbox
-  aArgs.push_back("-sbStartup");
+  aCachedParams.push_back("-sbStartup");
 
   // The content sandbox level
   int contentSandboxLevel =
@@ -2069,28 +2090,23 @@ ContentParent::AppendSandboxParams(std::vector<std::string> &aArgs)
   std::ostringstream os;
   os << contentSandboxLevel;
   std::string contentSandboxLevelString = os.str();
-  aArgs.push_back("-sbLevel");
-  aArgs.push_back(contentSandboxLevelString);
+  aCachedParams.push_back("-sbLevel");
+  aCachedParams.push_back(contentSandboxLevelString);
 
   // Sandbox logging
   if (Preferences::GetBool("security.sandbox.logging.enabled") ||
       PR_GetEnv("MOZ_SANDBOX_LOGGING")) {
-    aArgs.push_back("-sbLogging");
-  }
-
-  // For file content processes
-  if (GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE)) {
-    aArgs.push_back("-sbAllowFileAccess");
+    aCachedParams.push_back("-sbLogging");
   }
 
   // Audio access
   if (!Preferences::GetBool("media.cubeb.sandbox")) {
-    aArgs.push_back("-sbAllowAudio");
+    aCachedParams.push_back("-sbAllowAudio");
   }
 
   // Windowserver access
   if (!Preferences::GetBool("security.sandbox.content.mac.disconnect-windowserver")) {
-    aArgs.push_back("-sbAllowWindowServer");
+    aCachedParams.push_back("-sbAllowWindowServer");
   }
 
   // .app path (normalized)
@@ -2098,16 +2114,16 @@ ContentParent::AppendSandboxParams(std::vector<std::string> &aArgs)
   if (!nsMacUtilsImpl::GetAppPath(appPath)) {
     MOZ_CRASH("Failed to get app dir paths");
   }
-  aArgs.push_back("-sbAppPath");
-  aArgs.push_back(appPath.get());
+  aCachedParams.push_back("-sbAppPath");
+  aCachedParams.push_back(appPath.get());
 
   // TESTING_READ_PATH1
   nsAutoCString testingReadPath1;
   Preferences::GetCString("security.sandbox.content.mac.testing_read_path1",
                           testingReadPath1);
   if (!testingReadPath1.IsEmpty()) {
-    aArgs.push_back("-sbTestingReadPath");
-    aArgs.push_back(testingReadPath1.get());
+    aCachedParams.push_back("-sbTestingReadPath");
+    aCachedParams.push_back(testingReadPath1.get());
   }
 
   // TESTING_READ_PATH2
@@ -2115,8 +2131,8 @@ ContentParent::AppendSandboxParams(std::vector<std::string> &aArgs)
   Preferences::GetCString("security.sandbox.content.mac.testing_read_path2",
                           testingReadPath2);
   if (!testingReadPath2.IsEmpty()) {
-    aArgs.push_back("-sbTestingReadPath");
-    aArgs.push_back(testingReadPath2.get());
+    aCachedParams.push_back("-sbTestingReadPath");
+    aCachedParams.push_back(testingReadPath2.get());
   }
 
   // TESTING_READ_PATH3, TESTING_READ_PATH4. In development builds,
@@ -2131,8 +2147,8 @@ ContentParent::AppendSandboxParams(std::vector<std::string> &aArgs)
     }
     nsCString repoDirPath;
     Unused << repoDir->GetNativePath(repoDirPath);
-    aArgs.push_back("-sbTestingReadPath");
-    aArgs.push_back(repoDirPath.get());
+    aCachedParams.push_back("-sbTestingReadPath");
+    aCachedParams.push_back(repoDirPath.get());
 
     // Object dir
     nsCOMPtr<nsIFile> objDir;
@@ -2142,8 +2158,8 @@ ContentParent::AppendSandboxParams(std::vector<std::string> &aArgs)
     }
     nsCString objDirPath;
     Unused << objDir->GetNativePath(objDirPath);
-    aArgs.push_back("-sbTestingReadPath");
-    aArgs.push_back(objDirPath.get());
+    aCachedParams.push_back("-sbTestingReadPath");
+    aCachedParams.push_back(objDirPath.get());
   }
 
   // DEBUG_WRITE_DIR
@@ -2157,10 +2173,32 @@ ContentParent::AppendSandboxParams(std::vector<std::string> &aArgs)
     // of that path.
     nsAutoCString bloatDirectoryPath =
       nsMacUtilsImpl::GetDirectoryPath(bloatLog);
-    aArgs.push_back("-sbDebugWriteDir");
-    aArgs.push_back(bloatDirectoryPath.get());
+    aCachedParams.push_back("-sbDebugWriteDir");
+    aCachedParams.push_back(bloatDirectoryPath.get());
   }
 #endif // DEBUG
+}
+
+// Append sandboxing command line parameters.
+void
+ContentParent::AppendSandboxParams(std::vector<std::string>& aArgs)
+{
+  MOZ_ASSERT(sMacSandboxParams != nullptr);
+
+  // An empty sMacSandboxParams indicates this is the
+  // first invocation and we don't have cached params yet.
+  if (sMacSandboxParams->empty()) {
+    CacheSandboxParams(*sMacSandboxParams);
+    MOZ_ASSERT(!sMacSandboxParams->empty());
+  }
+
+  // Append cached arguments.
+  aArgs.insert(aArgs.end(),
+               sMacSandboxParams->begin(),
+               sMacSandboxParams->end());
+
+  // Append remaining arguments.
+  AppendDynamicSandboxParams(aArgs);
 }
 #endif // XP_MACOSX && MOZ_CONTENT_SANDBOX
 
