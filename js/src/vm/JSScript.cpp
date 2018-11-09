@@ -3876,6 +3876,10 @@ bool
 js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
                        MutableHandle<GCVector<Scope*>> scopes)
 {
+    // We don't copy the HideScriptFromDebugger flag and it's not clear what
+    // should happen if it's set on the source script.
+    MOZ_ASSERT(!src->hideScriptFromDebugger());
+
     if (src->treatAsRunOnce() && !src->functionNonDelazifying()) {
         JS_ReportErrorASCII(cx, "No cloning toplevel run-once scripts");
         return false;
@@ -3986,8 +3990,6 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     dst->immutableFlags_ = src->immutableFlags_;
     dst->setFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
                  scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
-
-    dst->setFlag(JSScript::MutableFlags::HideScriptFromDebugger, src->hideScriptFromDebugger());
 
     if (src->argumentsHasVarBinding()) {
         dst->setArgumentsHasVarBinding();
