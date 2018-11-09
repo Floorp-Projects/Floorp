@@ -180,7 +180,6 @@ class GeckoEngineSessionTest {
             engineSession.geckoSession,
             "originContent",
             GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION,
-            null,
             mock(GeckoSession.PermissionDelegate.Callback::class.java)
         )
 
@@ -188,7 +187,6 @@ class GeckoEngineSessionTest {
             engineSession.geckoSession,
             null,
             GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION,
-            null,
             mock(GeckoSession.PermissionDelegate.Callback::class.java)
         )
 

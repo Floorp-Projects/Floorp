@@ -407,7 +407,6 @@ class GeckoEngineSession(
             session: GeckoSession?,
             uri: String?,
             type: Int,
-            access: String?,
             callback: GeckoSession.PermissionDelegate.Callback
         ) {
             val request = GeckoPermissionRequest.Content(uri ?: "", type, callback)
