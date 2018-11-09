@@ -72,7 +72,7 @@ class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
             'datareporting.healthreport.uploadEnabled': True,
             'datareporting.policy.dataSubmissionEnabled': True,
             'datareporting.policy.dataSubmissionPolicyBypassNotification': True,
-            'toolkit.telemetry.log.level': 0,
+            'toolkit.telemetry.log.level': 'Trace',
             'toolkit.telemetry.log.dump': True,
             'toolkit.telemetry.send.overrideOfficialCheck': True
         }

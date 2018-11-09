@@ -271,7 +271,7 @@ TEST(MicrodumpWriterTest, BasicWithMappings) {
   MappingList mappings;
   MappingEntry mapping;
   mapping.first = info;
-  memcpy(mapping.second, kModuleGUID, sizeof(MDGUID));
+  mapping.second.assign(std::begin(kModuleGUID), std::end(kModuleGUID));
   mappings.push_back(mapping);
 
   std::string buf;

@@ -55,7 +55,7 @@ function loadIframe(iframe) {
 }
 
 var progressListener = {
-  onStateChange: function (webProgress, req, flags, status) {
+  onStateChange(webProgress, req, flags, status) {
     if (!(flags & Ci.nsIWebProgressListener.STATE_STOP))
       return;
     is(Components.isSuccessCode(status), false,
@@ -64,16 +64,7 @@ var progressListener = {
     runNextTest();
   },
 
-  QueryInterface: function (iid) {
-    var iids = [
-      Ci.nsIWebProgressListener,
-      Ci.nsISupportsWeakReference,
-      Ci.nsISupports,
-    ];
-    if (iids.some(function (i) { return iid.equals(i); }))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener", "nsISupportsWeakReference"]),
 };
 
   </script>

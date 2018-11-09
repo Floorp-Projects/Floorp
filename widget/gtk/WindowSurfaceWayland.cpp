@@ -13,7 +13,7 @@
 #include "mozilla/gfx/Tools.h"
 #include "gfxPlatform.h"
 #include "mozcontainer.h"
-#include "nsCOMArray.h"
+#include "nsTArray.h"
 #include "mozilla/StaticMutex.h"
 #include "mozwayland/mozwayland.h"
 
@@ -135,9 +135,9 @@ namespace mozilla {
 namespace widget {
 
 #define BUFFER_BPP 4
+#define MAX_DISPLAY_CONNECTIONS 2
 
-// TODO: How many rendering threads do we actualy handle?
-static nsCOMArray<nsWaylandDisplay> gWaylandDisplays;
+static nsWaylandDisplay* gWaylandDisplays[MAX_DISPLAY_CONNECTIONS];
 static StaticMutex gWaylandDisplaysMutex;
 
 // Each thread which is using wayland connection (wl_display) has to operate
@@ -159,23 +159,23 @@ static void WaylandDisplayLoop(wl_display *aDisplay);
 static nsWaylandDisplay*
 WaylandDisplayGetLocked(wl_display *aDisplay, const StaticMutexAutoLock&)
 {
-  nsWaylandDisplay* waylandDisplay = nullptr;
-
-  int len = gWaylandDisplays.Count();
-  for (int i = 0; i < len; i++) {
-    if (gWaylandDisplays[i]->Matches(aDisplay)) {
-      waylandDisplay = gWaylandDisplays[i];
-      break;
+  for (auto& display: gWaylandDisplays) {
+    if (display && display->Matches(aDisplay)) {
+      NS_ADDREF(display);
+      return display;
     }
   }
 
-  if (!waylandDisplay) {
-    waylandDisplay = new nsWaylandDisplay(aDisplay);
-    gWaylandDisplays.AppendObject(waylandDisplay);
+  for (auto& display: gWaylandDisplays) {
+    if (display == nullptr) {
+      display = new nsWaylandDisplay(aDisplay);
+      NS_ADDREF(display);
+      return display;
+    }
   }
 
-  NS_ADDREF(waylandDisplay);
-  return waylandDisplay;
+  MOZ_CRASH("There's too many wayland display conections!");
+  return nullptr;
 }
 
 static nsWaylandDisplay*
@@ -189,14 +189,11 @@ static bool
 WaylandDisplayReleaseLocked(wl_display *aDisplay,
                             const StaticMutexAutoLock&)
 {
-  int len = gWaylandDisplays.Count();
-  for (int i = 0; i < len; i++) {
-    if (gWaylandDisplays[i]->Matches(aDisplay)) {
-      int rc = gWaylandDisplays[i]->Release();
-      // nsCOMArray::AppendObject()/RemoveObjectAt() also call AddRef()/Release()
-      // so remove WaylandDisplay when ref count is 1.
-      if (rc == 1) {
-        gWaylandDisplays.RemoveObjectAt(i);
+  for (auto& display: gWaylandDisplays) {
+    if (display && display->Matches(aDisplay)) {
+      int rc = display->Release();
+      if (rc == 0) {
+        display = nullptr;
       }
       return true;
     }
@@ -216,10 +213,9 @@ static void
 WaylandDisplayLoopLocked(wl_display* aDisplay,
                          const StaticMutexAutoLock&)
 {
-  int len = gWaylandDisplays.Count();
-  for (int i = 0; i < len; i++) {
-    if (gWaylandDisplays[i]->Matches(aDisplay)) {
-      if (gWaylandDisplays[i]->DisplayLoop()) {
+  for (auto& display: gWaylandDisplays) {
+    if (display && display->Matches(aDisplay)) {
+      if (display->DisplayLoop()) {
         MessageLoop::current()->PostDelayedTask(
             NewRunnableFunction("WaylandDisplayLoop",
                                &WaylandDisplayLoop,

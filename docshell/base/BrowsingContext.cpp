@@ -284,6 +284,25 @@ BrowsingContext::GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren)
   }
 }
 
+void
+BrowsingContext::SetOpener(BrowsingContext* aOpener)
+{
+  if (mOpener == aOpener) {
+    return;
+  }
+
+  mOpener = aOpener;
+
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+
+  auto cc = ContentChild::GetSingleton();
+  MOZ_DIAGNOSTIC_ASSERT(cc);
+  cc->SendSetOpenerBrowsingContext(BrowsingContextId(Id()),
+                                   BrowsingContextId(aOpener ? aOpener->Id() : 0));
+}
+
 /* static */ void
 BrowsingContext::GetRootBrowsingContexts(nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts)
 {

@@ -9,8 +9,9 @@ use serde::de::Deserializer;
 #[cfg(feature = "serialize")]
 use serde::ser::{Serializer, SerializeSeq};
 use serde::{Deserialize, Serialize};
-use std::io::{Read, Write};
+use std::io::{Read, stdout, Write};
 use std::marker::PhantomData;
+use std::ops::Range;
 use std::{io, mem, ptr, slice};
 use time::precise_time_ns;
 use {AlphaType, BorderDetails, BorderDisplayItem, BorderRadius, BoxShadowClipMode};
@@ -924,20 +925,31 @@ impl DisplayListBuilder {
         self.save_state.take().expect("No save to clear in DisplayListBuilder");
     }
 
-    /// Print the display items in the list to stderr. If the start parameter
-    /// is specified, only display items starting at that index (inclusive) will
-    /// be printed. If the end parameter is specified, only display items before
-    /// that index (exclusive) will be printed. Calling this function with
-    /// end <= start is allowed but is just a waste of CPU cycles.
-    /// This function returns the total number of items in the display list, which
-    /// allows the caller to subsequently invoke this function to only dump the
-    /// newly-added items.
-    pub fn print_display_list(
+    /// Print the display items in the list to stdout.
+    pub fn print_display_list(&mut self) {
+        self.emit_display_list(0, Range { start: None, end: None }, stdout());
+    }
+
+    /// Emits a debug representation of display items in the list, for debugging
+    /// purposes. If the range's start parameter is specified, only display
+    /// items starting at that index (inclusive) will be printed. If the range's
+    /// end parameter is specified, only display items before that index
+    /// (exclusive) will be printed. Calling this function with end <= start is
+    /// allowed but is just a waste of CPU cycles. The function emits the
+    /// debug representation of the selected display items, one per line, with
+    /// the given indent, to the provided sink object. The return value is
+    /// the total number of items in the display list, which allows the
+    /// caller to subsequently invoke this function to only dump the newly-added
+    /// items.
+    pub fn emit_display_list<W>(
         &mut self,
         indent: usize,
-        start: Option<usize>,
-        end: Option<usize>,
-    ) -> usize {
+        range: Range<Option<usize>>,
+        mut sink: W,
+    ) -> usize
+    where
+        W: Write
+    {
         let mut temp = BuiltDisplayList::default();
         mem::swap(&mut temp.data, &mut self.data);
 
@@ -945,8 +957,8 @@ impl DisplayListBuilder {
         {
             let mut iter = BuiltDisplayListIter::new(&temp);
             while let Some(item) = iter.next_raw() {
-                if index >= start.unwrap_or(0) && end.map_or(true, |e| index < e) {
-                    eprintln!("{}{:?}", "  ".repeat(indent), item.display_item());
+                if index >= range.start.unwrap_or(0) && range.end.map_or(true, |e| index < e) {
+                    writeln!(sink, "{}{:?}", "  ".repeat(indent), item.display_item());
                 }
                 index += 1;
             }

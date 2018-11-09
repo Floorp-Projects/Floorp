@@ -5457,6 +5457,7 @@ pref("network.trr.mode", 0);
 pref("network.trr.uri", "https://mozilla.cloudflare-dns.com/dns-query");
 // credentials to pass to DOH end-point
 pref("network.trr.credentials", "");
+pref("network.trr.custom_uri", "");
 // Wait for captive portal confirmation before enabling TRR
 #if defined(ANDROID)
 // On Android, the captive portal is handled by the OS itself

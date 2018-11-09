@@ -40,7 +40,7 @@ class SidebarRuntimeItem extends PureComponent {
       },
       dom.button(
         {
-          className: "default-button default-button--micro",
+          className: "default-button default-button--micro js-connect-button",
           onClick: () => {
             const { dispatch, runtimeId } = this.props;
             dispatch(Actions.connectRuntime(runtimeId));

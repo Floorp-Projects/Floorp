@@ -74,12 +74,6 @@ EmitReturnFromIC(MacroAssembler& masm)
 }
 
 inline void
-EmitChangeICReturnAddress(MacroAssembler& masm, Register reg)
-{
-    masm.movePtr(reg, lr);
-}
-
-inline void
 EmitBaselineLeaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false)
 {
     vixl::UseScratchRegisterScope temps(&masm.asVIXL());

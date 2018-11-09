@@ -16,6 +16,8 @@ js/src/builtin/intl/TimeZoneDataGenerated.h
 js/src/jsapi-tests/.*
 # See bug 1395584
 js/src/vm/Opcodes.h
+# Ignored because of bug 1506117
+layout/style/nsCSSKeywordList.h
 # Ignored because of bug 1342657
 layout/style/nsCSSPropAliasList.h
 # Ignored because of bug 1342657
