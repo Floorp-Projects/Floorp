@@ -303,3 +303,12 @@ function largeValue(size, seed) {
 
   return buffer;
 }
+
+async function deleteAllDatabases(testCase) {
+  const dbs_to_delete = await indexedDB.databases();
+  for( const db_info of dbs_to_delete) {
+    let request = indexedDB.deleteDatabase(db_info.name);
+    let eventWatcher = requestWatcher(testCase, request);
+    await eventWatcher.wait_for('success');
+  }
+}
