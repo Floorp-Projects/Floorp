@@ -140,144 +140,142 @@
 <groupbox id="fontsGroup" data-category="paneGeneral" hidden="true">
   <caption><label data-l10n-id="fonts-and-colors-header"/></caption>
 
-  <vbox>
-    <hbox id="fontSettings">
-      <hbox align="center" flex="1">
-        <label control="defaultFont" data-l10n-id="default-font"/>
-        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-        <hbox flex="1">
-          <menulist id="defaultFont" flex="1" delayprefsave="true" onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
-        </hbox>
-        <label id="defaultFontSizeLabel" control="defaultFontSize" data-l10n-id="default-font-size"></label>
-        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-        <hbox>
-          <menulist id="defaultFontSize" delayprefsave="true">
-            <menupopup>
-              <menuitem value="9" label="9"/>
-              <menuitem value="10" label="10"/>
-              <menuitem value="11" label="11"/>
-              <menuitem value="12" label="12"/>
-              <menuitem value="13" label="13"/>
-              <menuitem value="14" label="14"/>
-              <menuitem value="15" label="15"/>
-              <menuitem value="16" label="16"/>
-              <menuitem value="17" label="17"/>
-              <menuitem value="18" label="18"/>
-              <menuitem value="20" label="20"/>
-              <menuitem value="22" label="22"/>
-              <menuitem value="24" label="24"/>
-              <menuitem value="26" label="26"/>
-              <menuitem value="28" label="28"/>
-              <menuitem value="30" label="30"/>
-              <menuitem value="32" label="32"/>
-              <menuitem value="34" label="34"/>
-              <menuitem value="36" label="36"/>
-              <menuitem value="40" label="40"/>
-              <menuitem value="44" label="44"/>
-              <menuitem value="48" label="48"/>
-              <menuitem value="56" label="56"/>
-              <menuitem value="64" label="64"/>
-              <menuitem value="72" label="72"/>
-            </menupopup>
-          </menulist>
-        </hbox>
+  <hbox id="fontSettings">
+    <hbox align="center" flex="1">
+      <label control="defaultFont" data-l10n-id="default-font"/>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox flex="1">
+        <menulist id="defaultFont" flex="1" delayprefsave="true" onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
       </hbox>
+      <label id="defaultFontSizeLabel" control="defaultFontSize" data-l10n-id="default-font-size"></label>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <menulist id="defaultFontSize" delayprefsave="true">
+          <menupopup>
+            <menuitem value="9" label="9"/>
+            <menuitem value="10" label="10"/>
+            <menuitem value="11" label="11"/>
+            <menuitem value="12" label="12"/>
+            <menuitem value="13" label="13"/>
+            <menuitem value="14" label="14"/>
+            <menuitem value="15" label="15"/>
+            <menuitem value="16" label="16"/>
+            <menuitem value="17" label="17"/>
+            <menuitem value="18" label="18"/>
+            <menuitem value="20" label="20"/>
+            <menuitem value="22" label="22"/>
+            <menuitem value="24" label="24"/>
+            <menuitem value="26" label="26"/>
+            <menuitem value="28" label="28"/>
+            <menuitem value="30" label="30"/>
+            <menuitem value="32" label="32"/>
+            <menuitem value="34" label="34"/>
+            <menuitem value="36" label="36"/>
+            <menuitem value="40" label="40"/>
+            <menuitem value="44" label="44"/>
+            <menuitem value="48" label="48"/>
+            <menuitem value="56" label="56"/>
+            <menuitem value="64" label="64"/>
+            <menuitem value="72" label="72"/>
+          </menupopup>
+        </menulist>
+      </hbox>
+    </hbox>
 
-      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-      <hbox>
-        <button id="advancedFonts"
-                class="accessory-button"
-                icon="select-font"
-                data-l10n-id="advanced-fonts"
-                search-l10n-ids="
-                  fonts-window.title,
-                  fonts-langgroup-header,
-                  fonts-proportional-size,
-                  fonts-proportional-header,
-                  fonts-serif,
-                  fonts-sans-serif,
-                  fonts-monospace,
-                  fonts-langgroup-arabic.label,
-                  fonts-langgroup-armenian.label,
-                  fonts-langgroup-bengali.label,
-                  fonts-langgroup-simpl-chinese.label,
-                  fonts-langgroup-trad-chinese-hk.label,
-                  fonts-langgroup-trad-chinese.label,
-                  fonts-langgroup-cyrillic.label,
-                  fonts-langgroup-devanagari.label,
-                  fonts-langgroup-ethiopic.label,
-                  fonts-langgroup-georgian.label,
-                  fonts-langgroup-el.label,
-                  fonts-langgroup-gujarati.label,
-                  fonts-langgroup-gurmukhi.label,
-                  fonts-langgroup-japanese.label,
-                  fonts-langgroup-hebrew.label,
-                  fonts-langgroup-kannada.label,
-                  fonts-langgroup-khmer.label,
-                  fonts-langgroup-korean.label,
-                  fonts-langgroup-latin.label,
-                  fonts-langgroup-malayalam.label,
-                  fonts-langgroup-math.label,
-                  fonts-langgroup-odia.label,
-                  fonts-langgroup-sinhala.label,
-                  fonts-langgroup-tamil.label,
-                  fonts-langgroup-telugu.label,
-                  fonts-langgroup-thai.label,
-                  fonts-langgroup-tibetan.label,
-                  fonts-langgroup-canadian.label,
-                  fonts-langgroup-other.label,
-                  fonts-minsize,
-                  fonts-minsize-none.label,
-                  fonts-default-serif.label,
-                  fonts-default-sans-serif.label,
-                  fonts-allow-own.label,
-                  fonts-languages-fallback-header,
-                  fonts-languages-fallback-label,
-                  fonts-languages-fallback-desc,
-                  fonts-languages-fallback-name-auto.label,
-                  fonts-languages-fallback-name-arabic.label,
-                  fonts-languages-fallback-name-baltic.label,
-                  fonts-languages-fallback-name-ceiso.label,
-                  fonts-languages-fallback-name-cewindows.label,
-                  fonts-languages-fallback-name-simplified.label,
-                  fonts-languages-fallback-name-traditional.label,
-                  fonts-languages-fallback-name-cyrillic.label,
-                  fonts-languages-fallback-name-greek.label,
-                  fonts-languages-fallback-name-hebrew.label,
-                  fonts-languages-fallback-name-japanese.label,
-                  fonts-languages-fallback-name-korean.label,
-                  fonts-languages-fallback-name-thai.label,
-                  fonts-languages-fallback-name-turkish.label,
-                  fonts-languages-fallback-name-vietnamese.label,
-                  fonts-languages-fallback-name-other.label,
-                " />
-      </hbox>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <button id="advancedFonts"
+              class="accessory-button"
+              icon="select-font"
+              data-l10n-id="advanced-fonts"
+              search-l10n-ids="
+                fonts-window.title,
+                fonts-langgroup-header,
+                fonts-proportional-size,
+                fonts-proportional-header,
+                fonts-serif,
+                fonts-sans-serif,
+                fonts-monospace,
+                fonts-langgroup-arabic.label,
+                fonts-langgroup-armenian.label,
+                fonts-langgroup-bengali.label,
+                fonts-langgroup-simpl-chinese.label,
+                fonts-langgroup-trad-chinese-hk.label,
+                fonts-langgroup-trad-chinese.label,
+                fonts-langgroup-cyrillic.label,
+                fonts-langgroup-devanagari.label,
+                fonts-langgroup-ethiopic.label,
+                fonts-langgroup-georgian.label,
+                fonts-langgroup-el.label,
+                fonts-langgroup-gujarati.label,
+                fonts-langgroup-gurmukhi.label,
+                fonts-langgroup-japanese.label,
+                fonts-langgroup-hebrew.label,
+                fonts-langgroup-kannada.label,
+                fonts-langgroup-khmer.label,
+                fonts-langgroup-korean.label,
+                fonts-langgroup-latin.label,
+                fonts-langgroup-malayalam.label,
+                fonts-langgroup-math.label,
+                fonts-langgroup-odia.label,
+                fonts-langgroup-sinhala.label,
+                fonts-langgroup-tamil.label,
+                fonts-langgroup-telugu.label,
+                fonts-langgroup-thai.label,
+                fonts-langgroup-tibetan.label,
+                fonts-langgroup-canadian.label,
+                fonts-langgroup-other.label,
+                fonts-minsize,
+                fonts-minsize-none.label,
+                fonts-default-serif.label,
+                fonts-default-sans-serif.label,
+                fonts-allow-own.label,
+                fonts-languages-fallback-header,
+                fonts-languages-fallback-label,
+                fonts-languages-fallback-desc,
+                fonts-languages-fallback-name-auto.label,
+                fonts-languages-fallback-name-arabic.label,
+                fonts-languages-fallback-name-baltic.label,
+                fonts-languages-fallback-name-ceiso.label,
+                fonts-languages-fallback-name-cewindows.label,
+                fonts-languages-fallback-name-simplified.label,
+                fonts-languages-fallback-name-traditional.label,
+                fonts-languages-fallback-name-cyrillic.label,
+                fonts-languages-fallback-name-greek.label,
+                fonts-languages-fallback-name-hebrew.label,
+                fonts-languages-fallback-name-japanese.label,
+                fonts-languages-fallback-name-korean.label,
+                fonts-languages-fallback-name-thai.label,
+                fonts-languages-fallback-name-turkish.label,
+                fonts-languages-fallback-name-vietnamese.label,
+                fonts-languages-fallback-name-other.label,
+              " />
     </hbox>
-    <hbox id="colorsSettings">
-      <spacer flex="1" />
-      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-      <hbox>
-        <button id="colors"
-                class="accessory-button"
-                icon="select-color"
-                data-l10n-id="colors-settings"
-                search-l10n-ids="
-                  colors-page-override,
-                  colors-page-override-option-always.label,
-                  colors-page-override-option-auto.label,
-                  colors-page-override-option-never.label,
-                  colors-text-and-background,
-                  colors-text-header,
-                  colors-background,
-                  colors-use-system,
-                  colors-underline-links,
-                  colors-links-header,
-                  colors-unvisited-links,
-                  colors-visited-links
-                "/>
-      </hbox>
+  </hbox>
+  <hbox id="colorsSettings">
+    <spacer flex="1" />
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <button id="colors"
+              class="accessory-button"
+              icon="select-color"
+              data-l10n-id="colors-settings"
+              search-l10n-ids="
+                colors-page-override,
+                colors-page-override-option-always.label,
+                colors-page-override-option-auto.label,
+                colors-page-override-option-never.label,
+                colors-text-and-background,
+                colors-text-header,
+                colors-background,
+                colors-use-system,
+                colors-underline-links,
+                colors-links-header,
+                colors-unvisited-links,
+                colors-visited-links
+              "/>
     </hbox>
-  </vbox>
+  </hbox>
 </groupbox>
 
 <!-- Languages -->
