@@ -12,7 +12,7 @@ protocol PWebBrowserPersistResources {
   manager PWebBrowserPersistDocument;
 
 parent:
-  async VisitResource(nsCString aURI);
+  async VisitResource(nsCString aURI, uint32_t aContentPolicyType);
 
   // The actor sent here is in the START state; the parent-side
   // receiver will have to wait for it to enter the MAIN state

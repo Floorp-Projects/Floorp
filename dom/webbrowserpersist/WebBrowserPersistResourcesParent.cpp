@@ -52,9 +52,9 @@ WebBrowserPersistResourcesParent::Recv__delete__(const nsresult& aStatus)
 }
 
 mozilla::ipc::IPCResult
-WebBrowserPersistResourcesParent::RecvVisitResource(const nsCString& aURI)
+WebBrowserPersistResourcesParent::RecvVisitResource(const nsCString& aURI, const nsContentPolicyType& aContentPolicyType)
 {
-    mVisitor->VisitResource(mDocument, aURI);
+    mVisitor->VisitResource(mDocument, aURI, aContentPolicyType);
     return IPC_OK();
 }
 

@@ -12,6 +12,7 @@
 #include "WebBrowserPersistDocumentParent.h"
 #include "nsCOMPtr.h"
 #include "nsIWebBrowserPersistDocument.h"
+#include "nsIContentPolicy.h"
 
 namespace mozilla {
 
@@ -24,7 +25,7 @@ public:
                                      nsIWebBrowserPersistResourceVisitor* aVisitor);
 
     virtual mozilla::ipc::IPCResult
-    RecvVisitResource(const nsCString& aURI) override;
+    RecvVisitResource(const nsCString& aURI, const nsContentPolicyType& aContentPolicyType) override;
 
     virtual mozilla::ipc::IPCResult
     RecvVisitDocument(PWebBrowserPersistDocumentParent* aSubDocument) override;
