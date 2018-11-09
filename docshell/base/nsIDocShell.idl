@@ -649,12 +649,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
    [infallible] readonly attribute boolean hasForeignCookiesBeenBlocked;
 
-   /**
-   * This attribute determines whether a document seen cookies or storage
-   * attempts ever whether they've been allowed or blocked.
-   */
-   [infallible] readonly attribute boolean hasCookiesLoaded;
-
   /**
    * Disconnects this docshell's editor from its window, and stores the
    * editor data in the open document's session history entry.  This
