@@ -1689,20 +1689,17 @@ class JSScript : public js::gc::TenuredCell
         // 'this', 'arguments' and f.apply() are used. This is likely to be a wrapper.
         IsLikelyConstructorWrapper = 1 << 17,
 
-        // Set if the debugger's onNewScript hook has not yet been called.
-        HideScriptFromDebugger = 1 << 18,
-
         // Set if this function is a generator function or async generator.
-        IsGenerator = 1 << 19,
+        IsGenerator = 1 << 18,
 
         // Set if this function is an async function or async generator.
-        IsAsync = 1 << 20,
+        IsAsync = 1 << 19,
 
         // Set if this function has a rest parameter.
-        HasRest = 1 << 21,
+        HasRest = 1 << 20,
 
         // See comments below.
-        ArgsHasVarBinding = 1 << 22,
+        ArgsHasVarBinding = 1 << 21,
     };
     uint32_t immutableFlags_ = 0;
 
@@ -1768,6 +1765,9 @@ class JSScript : public js::gc::TenuredCell
         // See comments below.
         NeedsArgsAnalysis = 1 << 17,
         NeedsArgsObj = 1 << 18,
+
+        // Set if the debugger's onNewScript hook has not yet been called.
+        HideScriptFromDebugger = 1 << 19,
     };
     uint32_t mutableFlags_ = 0;
 
@@ -2171,10 +2171,10 @@ class JSScript : public js::gc::TenuredCell
     }
 
     bool hideScriptFromDebugger() const {
-        return hasFlag(ImmutableFlags::HideScriptFromDebugger);
+        return hasFlag(MutableFlags::HideScriptFromDebugger);
     }
     void clearHideScriptFromDebugger() {
-        clearFlag(ImmutableFlags::HideScriptFromDebugger);
+        clearFlag(MutableFlags::HideScriptFromDebugger);
     }
 
     bool needsHomeObject() const {

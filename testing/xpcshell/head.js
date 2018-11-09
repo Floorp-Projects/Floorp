@@ -59,6 +59,12 @@ var Assert = new AssertCls(function(err, message, stack) {
   }
 }, true);
 
+// Bug 1506134 for followup.  Some xpcshell tests use ContentTask.jsm, which
+// expects browser-test.js to have set a testScope that includes record.
+function record(condition, name, diag, stack) {
+  do_report_result(condition, name, stack);
+}
+
 var _add_params = function(params) {
   if (typeof _XPCSHELL_PROCESS != "undefined") {
     params.xpcshell_process = _XPCSHELL_PROCESS;

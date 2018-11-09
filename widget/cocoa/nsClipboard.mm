@@ -517,38 +517,48 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
     NSString *pboardType = nil;
 
     if (nsClipboard::IsStringType(flavorStr, &pboardType)) {
-      void* data = nullptr;
       uint32_t dataSize = 0;
       nsCOMPtr<nsISupports> genericDataWrapper;
       rv = aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(genericDataWrapper), &dataSize);
-      nsPrimitiveHelpers::CreateDataFromPrimitive(flavorStr, genericDataWrapper, &data, dataSize);
+      if (NS_FAILED(rv)) {
+        [pboardType release];
+        continue;
+      }
+
+      nsAutoString data;
+      if (nsCOMPtr<nsISupportsString> text = do_QueryInterface(genericDataWrapper)) {
+        text->GetData(data);
+      }
 
       NSString* nativeString;
-      if (data)
-        nativeString = [NSString stringWithCharacters:(const unichar*)data length:(dataSize / sizeof(char16_t))];
+      if (!data.IsEmpty())
+        nativeString = [NSString stringWithCharacters:(const unichar*)data.get() length:data.Length()];
       else
         nativeString = [NSString string];
-      
+
       // be nice to Carbon apps, normalize the receiver's contents using Form C.
       nativeString = [nativeString precomposedStringWithCanonicalMapping];
 
       [pasteboardOutputDict setObject:nativeString forKey:pboardType];
-      
-      free(data);
     }
     else if (flavorStr.EqualsLiteral(kCustomTypesMime)) {
-      void* data = nullptr;
       uint32_t dataSize = 0;
       nsCOMPtr<nsISupports> genericDataWrapper;
       rv = aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(genericDataWrapper), &dataSize);
-      nsPrimitiveHelpers::CreateDataFromPrimitive(flavorStr, genericDataWrapper, &data, dataSize);
+      if (NS_FAILED(rv)) {
+        continue;
+      }
 
-      if (data) {
-        NSData* nativeData = [NSData dataWithBytes:data length:dataSize];
+      nsAutoCString data;
+      if (nsCOMPtr<nsISupportsCString> text = do_QueryInterface(genericDataWrapper)) {
+        text->GetData(data);
+      }
+
+      if (!data.IsEmpty()) {
+        NSData* nativeData = [NSData dataWithBytes:data.get() length:data.Length()];
         NSString* customType =
           [UTIHelper stringFromPboardType:kMozCustomTypesPboardType];
         [pasteboardOutputDict setObject:nativeData forKey:customType];
-        free(data);
       }
     }
     else if (flavorStr.EqualsLiteral(kPNGImageMime) || flavorStr.EqualsLiteral(kJPEGImageMime) ||

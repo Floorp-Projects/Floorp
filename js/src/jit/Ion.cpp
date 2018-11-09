@@ -179,6 +179,7 @@ JitRuntime::JitRuntime()
     invalidatorOffset_(0),
     lazyLinkStubOffset_(0),
     interpreterStubOffset_(0),
+    doubleToInt32ValueStubOffset_(0),
     debugTrapHandler_(nullptr),
     baselineDebugModeOSRHandler_(nullptr),
     trampolineCode_(nullptr),
@@ -301,6 +302,9 @@ JitRuntime::initialize(JSContext* cx)
 
     JitSpew(JitSpew_Codegen, "# Emitting interpreter stub");
     generateInterpreterStub(masm);
+
+    JitSpew(JitSpew_Codegen, "# Emitting double-to-int32-value stub");
+    generateDoubleToInt32ValueStub(masm);
 
     JitSpew(JitSpew_Codegen, "# Emitting VM function wrappers");
     for (VMFunction* fun = VMFunction::functions; fun; fun = fun->next) {

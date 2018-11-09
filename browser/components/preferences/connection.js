@@ -35,6 +35,7 @@ Preferences.addAll([
   { id: "network.proxy.backup.socks_port", type: "int" },
   { id: "network.trr.mode", type: "int" },
   { id: "network.trr.uri", type: "string" },
+  { id: "network.trr.custom_uri", "type": "string" },
 ]);
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -55,6 +56,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
 var gConnectionsDialog = {
   beforeAccept() {
+    if (document.getElementById("customDnsOverHttpsUrlRadio").selected) {
+      Services.prefs.setStringPref("network.trr.uri", document.getElementById("customDnsOverHttpsInput").value);
+    }
+
     var proxyTypePref = Preferences.get("network.proxy.type");
     if (proxyTypePref.value == 2) {
       this.doAutoconfigURLFixup();
@@ -304,16 +309,25 @@ var gConnectionsDialog = {
     return trrModeCheckbox.checked ? 2 : 0;
   },
 
-  writeDnsOverHttpsUri() {
-    // called to update pref with user input
-    let input = document.getElementById("networkDnsOverHttpsUrl");
-    let uriString = input.value.trim();
-    // turn an empty string into `undefined` to clear the pref back to the default
-    return uriString.length ? uriString : undefined;
+  updateDnsOverHttpsUI() {
+    // Disable the custom url input box if the parent checkbox and custom radio button attached to it is not selected.
+    // Disable the custom radio button if the parent checkbox is not selected.
+    let parentCheckbox = document.getElementById("networkDnsOverHttps");
+    let customDnsOverHttpsUrlRadio = document.getElementById("customDnsOverHttpsUrlRadio");
+    let customDnsOverHttpsInput = document.getElementById("customDnsOverHttpsInput");
+    customDnsOverHttpsInput.disabled = !parentCheckbox.checked || !customDnsOverHttpsUrlRadio.selected;
+    customDnsOverHttpsUrlRadio.disabled = !parentCheckbox.checked;
   },
 
   initDnsOverHttpsUI() {
-    let input = document.getElementById("networkDnsOverHttpsUrl");
-    input.placeholder = Preferences.get("network.trr.uri").defaultValue;
+    let defaultDnsOverHttpsUrlRadio = document.getElementById("defaultDnsOverHttpsUrlRadio");
+    let defaultPrefUrl = Preferences.get("network.trr.uri").defaultValue;
+    document.l10n.setAttributes(defaultDnsOverHttpsUrlRadio, "connection-dns-over-https-url-default", {
+      url: defaultPrefUrl,
+    });
+    defaultDnsOverHttpsUrlRadio.value = defaultPrefUrl;
+    let radioGroup = document.getElementById("DnsOverHttpsUrlRadioGroup");
+    radioGroup.selectedIndex = Preferences.get("network.trr.uri").hasUserValue ? 1 : 0;
+    this.updateDnsOverHttpsUI();
   },
 };

@@ -104,23 +104,15 @@ var gDragSpaceObserver = {
   pref: "browser.tabs.extraDragSpace",
 
   init() {
-    this._update();
     Services.prefs.addObserver(this.pref, this);
+    this.observe();
   },
 
   uninit() {
     Services.prefs.removeObserver(this.pref, this);
   },
 
-  observe(aSubject, aTopic, aPrefName) {
-    if (aTopic != "nsPref:changed" || aPrefName != this.pref) {
-      return;
-    }
-
-    this._update();
-  },
-
-  _update() {
+  observe() {
     if (Services.prefs.getBoolPref(this.pref)) {
       document.documentElement.setAttribute("extradragspace", "true");
     } else {

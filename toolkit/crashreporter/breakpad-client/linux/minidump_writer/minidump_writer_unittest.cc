@@ -178,7 +178,7 @@ TEST(MinidumpWriterTest, MappingInfo) {
   AppMemoryList memory_list;
   MappingEntry mapping;
   mapping.first = info;
-  memcpy(mapping.second, kModuleGUID, sizeof(MDGUID));
+  mapping.second.assign(std::begin(kModuleGUID), std::end(kModuleGUID));
   mappings.push_back(mapping);
   ASSERT_TRUE(WriteMinidump(templ.c_str(), child, &context, sizeof(context),
                             mappings, memory_list, false, 0, false));
@@ -479,7 +479,7 @@ TEST(MinidumpWriterTest, MappingInfoContained) {
   AppMemoryList memory_list;
   MappingEntry mapping;
   mapping.first = info;
-  memcpy(mapping.second, kModuleGUID, sizeof(MDGUID));
+  mapping.second.assign(std::begin(kModuleGUID), std::end(kModuleGUID));
   mappings.push_back(mapping);
   ASSERT_TRUE(WriteMinidump(dumpfile.c_str(), child, &context, sizeof(context),
                             mappings, memory_list));

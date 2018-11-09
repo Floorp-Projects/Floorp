@@ -570,13 +570,14 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
     }
 
     void *primitive_data = nullptr;
+    uint32_t dataLen = 0;
     nsPrimitiveHelpers::CreateDataFromPrimitive(nsDependentCString(target_name),
-                                                item, &primitive_data, len);
+                                                item, &primitive_data, &dataLen);
 
     if (primitive_data) {
         gtk_selection_data_set(aSelectionData, selectionTarget,
                                8, /* 8 bits in a unit */
-                               (const guchar *)primitive_data, len);
+                               (const guchar *)primitive_data, dataLen);
         free(primitive_data);
     }
 
