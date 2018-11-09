@@ -1558,9 +1558,11 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    * normalized metadata which describes the change in the context of this rule.
    *
    * @param {Object} change
-   *        Data about a modification to a rule. @see |modifyProperties()|
+   *        Data about a modification to a declaration. @see |modifyProperties()|
    */
   logDeclarationChange(change) {
+    // Position of the declaration within its rule.
+    const index = change.index;
     // Destructure properties from the previous CSS declaration at this index, if any,
     // to new variable names to indicate the previous state.
     let {
@@ -1568,7 +1570,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       name: prevName,
       priority: prevPriority,
       commentOffsets,
-    } = this._declarations[change.index] || {};
+    } = this._declarations[index] || {};
     // A declaration is disabled if it has a `commentOffsets` array.
     // Here we type coerce the value to a boolean with double-bang (!!)
     const prevDisabled = !!commentOffsets;
@@ -1590,11 +1592,15 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // Otherwise, use the incoming value string.
         const value = change.newName ? prevValue : newValue;
 
-        data.add = { [name]: value };
+        data.add = [{ property: name, value, index }];
         // If there is a previous value, log its removal together with the previous
         // property name. Using the previous name handles the case for renaming a property
         // and is harmless when updating an existing value (the name stays the same).
-        data.remove = prevValue ? { [prevName]: prevValue } : null;
+        if (prevValue) {
+          data.remove = [{ property: prevName, value: prevValue, index }];
+        } else {
+          data.remove = null;
+        }
 
         // When toggling a declaration from OFF to ON, if not renaming the property,
         // do not mark the previous declaration for removal, otherwise the add and
@@ -1609,7 +1615,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       case "remove":
         data.type = "declaration-remove";
         data.add = null;
-        data.remove = { [change.name]: prevValue };
+        data.remove = [{ property: change.name, value: prevValue, index }];
         break;
     }
 
@@ -1628,10 +1634,14 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    */
   logSelectorChange(oldSelector, newSelector) {
     // Build a collection of CSS declarations existing on this rule.
-    const declarations = this._declarations.reduce((acc, decl) => {
-      acc[decl.name] = decl.priority ? decl.value + " !important" : decl.value;
+    const declarations = this._declarations.reduce((acc, decl, index) => {
+      acc.push({
+        property: decl.name,
+        value: decl.priority ? decl.value + " !important" : decl.value,
+        index,
+      });
       return acc;
-    }, {});
+    }, []);
 
     // Logging two distinct operations to remove the old rule and add a new one.
     // TODO: Make TrackChangeEmitter support transactions so these two operations are
