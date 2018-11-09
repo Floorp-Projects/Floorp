@@ -411,7 +411,7 @@
   </menupopup>
 </popupset>
 
-<notificationbox id="scratchpad-notificationbox" flex="1">
+<vbox id="scratchpad-container" flex="1">
   <hbox flex="1">
     <vbox id="scratchpad-editor" flex="1"/>
     <splitter class="devtools-side-splitter"/>
@@ -423,6 +423,6 @@
     </tabbox>
   </hbox>
   <toolbar id="statusbar-line-col" class="devtools-toolbar"/>
-</notificationbox>
+</vbox>
 
 </window>

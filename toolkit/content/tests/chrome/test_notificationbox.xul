@@ -8,7 +8,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
 
-  <notificationbox id="nb"/>
+  <vbox id="nb"/>
   <menupopup id="menupopup" onpopupshown="this.hidePopup()" onpopuphidden="checkPopupClosed()">
     <menuitem label="One"/>
   </menupopup>
@@ -28,8 +28,6 @@ var testtag_notificationbox_buttons = [
     popup: "menupopup"
   }
 ];
-
-var NSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 function testtag_notificationbox_buttonpressed(event)
 {
@@ -402,7 +400,6 @@ function testtag_notificationbox_State(nb, testid, expecteditem, expectedcount)
 
 function testtag_notification_State(nb, ntf, testid, label, value, image, priority)
 {
-  SimpleTest.is(ntf.control, nb, testid + " notification.control");
   SimpleTest.is(ntf.label, label, testid + " notification.label");
   SimpleTest.is(ntf.value, value, testid + " notification.value");
   SimpleTest.is(ntf.image, image, testid + " notification.image");
@@ -496,7 +493,11 @@ function runTimedTestsWait(tests, idx, element, arg)
     runTimedTests(tests, idx, element, arg);
 }
 
-setTimeout(testtag_notificationbox, 0, document.getElementById('nb'));
+setTimeout(() => {
+  testtag_notificationbox(new MozElements.NotificationBox(e => {
+    document.getElementById("nb").appendChild(e);
+  }));
+}, 0);
 ]]>
 </script>
 

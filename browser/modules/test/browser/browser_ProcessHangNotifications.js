@@ -8,7 +8,7 @@ ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
 function promiseNotificationShown(aWindow, aName) {
   return new Promise((resolve) => {
     let notificationBox = aWindow.gHighPriorityNotificationBox;
-    notificationBox.addEventListener("AlertActive", function() {
+    notificationBox.stack.addEventListener("AlertActive", function() {
       is(notificationBox.allNotifications.length, 1, "Notification Displayed.");
       resolve(notificationBox);
     }, {once: true});

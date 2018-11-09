@@ -264,7 +264,6 @@ add_task(async function test_one_pending() {
   let notification =
     await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should be a notification");
-
   gNotificationBox.removeNotification(notification, true);
   clearPendingCrashReports();
 });

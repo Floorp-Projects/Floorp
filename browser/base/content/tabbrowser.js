@@ -654,14 +654,14 @@ window._gBrowser = {
   },
 
   getNotificationBox(aBrowser) {
-    let container = this.getBrowserContainer(aBrowser);
-    let notificationbox = container.firstElementChild;
-    if (notificationbox.localName != "notificationbox") {
-      notificationbox = document.createXULElement("notificationbox");
-      notificationbox.setAttribute("notificationside", "top");
-      container.prepend(notificationbox);
+    let browser = aBrowser || this.selectedBrowser;
+    if (!browser._notificationBox) {
+      browser._notificationBox = new MozElements.NotificationBox(element => {
+        element.setAttribute("notificationside", "top");
+        this.getBrowserContainer(browser).prepend(element);
+      });
     }
-    return notificationbox;
+    return browser._notificationBox;
   },
 
   getTabModalPromptBox(aBrowser) {
