@@ -497,6 +497,11 @@ toolbar[brighttext] {
 
 .bookmark-item {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+toolbarbutton.bookmark-item {
   -moz-context-properties: fill, fill-opacity;
   fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
