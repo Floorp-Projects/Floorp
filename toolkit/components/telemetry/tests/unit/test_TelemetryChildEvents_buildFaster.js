@@ -56,6 +56,11 @@ add_task(async function test_setup() {
       methods: ["dynamic", "child"],
       objects: ["builtin", "anotherone"],
     },
+    "dynamic_expired": {
+      methods: ["check"],
+      objects: ["expiry"],
+      expired: true,
+    },
   });
   Telemetry.setEventRecordingEnabled(TEST_STATIC_EVENT_NAME, true);
   Telemetry.setEventRecordingEnabled(TEST_EVENT_NAME, true);
@@ -63,6 +68,7 @@ add_task(async function test_setup() {
   Telemetry.recordEvent(TEST_EVENT_NAME, "dynamic", "builtin");
   Telemetry.recordEvent(TEST_STATIC_EVENT_NAME, "main_and_content", "object1");
   Telemetry.recordEvent(TEST_EVENT_NAME, "dynamic", "anotherone");
+  Telemetry.recordEvent(TEST_EVENT_NAME, "check", "expiry");
 
   // Run test in child, don't wait for it to finish: just wait for the
   // MESSAGE_CHILD_TEST_DONE.
