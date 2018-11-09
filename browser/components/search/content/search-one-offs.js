@@ -183,8 +183,11 @@ class MozSearchOneOffs extends MozXULElement {
   }
 
   connectedCallback() {
-    this.appendChild(
-      MozXULElement.parseXULToFragment(`
+    if (this.delayConnectedCallback()) {
+      return;
+    }
+
+    this.appendChild(MozXULElement.parseXULToFragment(`
       <deck class="search-panel-one-offs-header search-panel-header search-panel-current-input">
         <label class="searchbar-oneoffheader-search" value="&searchWithHeader.label;"></label>
         <hbox class="search-panel-searchforwith search-panel-current-input">
