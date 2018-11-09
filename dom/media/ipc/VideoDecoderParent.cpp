@@ -165,11 +165,11 @@ VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
   RefPtr<VideoDecoderParent> self = this;
   mDecoder->Decode(data)->Then(
     mManagerTaskQueue, __func__,
-    [self, this](MediaDataDecoder::DecodedData&& aResults) {
+    [self, this](const MediaDataDecoder::DecodedData& aResults) {
       if (mDestroyed) {
         return;
       }
-      ProcessDecodedData(std::move(aResults));
+      ProcessDecodedData(aResults);
       Unused << SendInputExhausted();
     },
     [self](const MediaResult& aError) { self->Error(aError); });
@@ -177,7 +177,8 @@ VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
 }
 
 void
-VideoDecoderParent::ProcessDecodedData(MediaDataDecoder::DecodedData&& aData)
+VideoDecoderParent::ProcessDecodedData(
+  const MediaDataDecoder::DecodedData& aData)
 {
   MOZ_ASSERT(OnManagerThread());
 
@@ -186,7 +187,7 @@ VideoDecoderParent::ProcessDecodedData(MediaDataDecoder::DecodedData&& aData)
     return;
   }
 
-  for (auto&& data : aData) {
+  for (const auto& data : aData) {
     MOZ_ASSERT(data->mType == MediaData::VIDEO_DATA,
                 "Can only decode videos using VideoDecoderParent!");
     VideoData* video = static_cast<VideoData*>(data.get());
@@ -199,7 +200,7 @@ VideoDecoderParent::ProcessDecodedData(MediaDataDecoder::DecodedData&& aData)
 
     if (!texture) {
       texture = ImageClient::CreateTextureClientForImage(video->mImage,
-                                                         mKnowsCompositor);
+                                                          mKnowsCompositor);
     }
 
     if (texture && !texture->IsAddedToCompositableClient()) {
@@ -247,9 +248,9 @@ VideoDecoderParent::RecvDrain()
   RefPtr<VideoDecoderParent> self = this;
   mDecoder->Drain()->Then(
     mManagerTaskQueue, __func__,
-    [self, this](MediaDataDecoder::DecodedData&& aResults) {
+    [self, this](const MediaDataDecoder::DecodedData& aResults) {
       if (!mDestroyed) {
-        ProcessDecodedData(std::move(aResults));
+        ProcessDecodedData(aResults);
         Unused << SendDrainComplete();
       }
     },

@@ -552,8 +552,8 @@ MediaChangeMonitor::DecodeFirstSample(MediaRawData* aSample)
   AssertOnTaskQueue();
 
   if (mNeedKeyframe && !aSample->mKeyframe) {
-    mDecodePromise.Resolve(std::move(mPendingFrames), __func__);
-    mPendingFrames = DecodedData();
+    mDecodePromise.Resolve(mPendingFrames, __func__);
+    mPendingFrames.Clear();
     return;
   }
 
@@ -569,11 +569,11 @@ MediaChangeMonitor::DecodeFirstSample(MediaRawData* aSample)
   RefPtr<MediaChangeMonitor> self = this;
   mDecoder->Decode(aSample)
     ->Then(AbstractThread::GetCurrent()->AsTaskQueue(), __func__,
-           [self, this](MediaDataDecoder::DecodedData&& aResults) {
+           [self, this](const MediaDataDecoder::DecodedData& aResults) {
              mDecodePromiseRequest.Complete();
-             mPendingFrames.AppendElements(std::move(aResults));
-             mDecodePromise.Resolve(std::move(mPendingFrames), __func__);
-             mPendingFrames = DecodedData();
+             mPendingFrames.AppendElements(aResults);
+             mDecodePromise.Resolve(mPendingFrames, __func__);
+             mPendingFrames.Clear();
            },
            [self, this](const MediaResult& aError) {
              mDecodePromiseRequest.Complete();
@@ -619,7 +619,7 @@ MediaChangeMonitor::DrainThenFlushDecoder(MediaRawData* aPendingSample)
   mDecoder->Drain()
     ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
            __func__,
-           [self, sample, this](MediaDataDecoder::DecodedData&& aResults) {
+           [self, sample, this](const MediaDataDecoder::DecodedData& aResults) {
              mDrainRequest.Complete();
              if (!mFlushPromise.IsEmpty()) {
                // A Flush is pending, abort the current operation.
@@ -627,7 +627,7 @@ MediaChangeMonitor::DrainThenFlushDecoder(MediaRawData* aPendingSample)
                return;
              }
              if (aResults.Length() > 0) {
-               mPendingFrames.AppendElements(std::move(aResults));
+               mPendingFrames.AppendElements(aResults);
                DrainThenFlushDecoder(sample);
                return;
              }
