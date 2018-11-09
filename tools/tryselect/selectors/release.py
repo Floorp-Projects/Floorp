@@ -77,6 +77,8 @@ def run_try_release(
         raise Exception(
             "Can't do staging release for version: {} type: {}".format(
                 version, version.version_type))
+    elif release_type == 'esr':
+        release_type += str(version.major_number)
     task_config = {
         'version': 2,
         'parameters': {
