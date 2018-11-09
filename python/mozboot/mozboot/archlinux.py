@@ -43,6 +43,7 @@ class ArchlinuxBootstrapper(NodeInstall, StyloInstall, BaseBootstrapper):
         'libxt',
         'mime-types',
         'mozilla-common',
+        'nasm',
         'nss',
         'sqlite',
         'startup-notification',

@@ -65,6 +65,7 @@ class DebianBootstrapper(NodeInstall, StyloInstall, BaseBootstrapper):
         'libpulse-dev',
         'libx11-xcb-dev',
         'libxt-dev',
+        'nasm',
         'python-dbus',
         'xvfb',
         'yasm',
