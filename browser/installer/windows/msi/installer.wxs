@@ -69,7 +69,7 @@
                 ExeCommand="/S /InstallDirectoryName=[INSTALL_DIRECTORY_NAME] /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOTE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /LaunchedFromMSI" />
   <CustomAction Id="RunExtractOnly" Return="check" Execute="deferred"
                 HideTarget="no" Impersonate="no" BinaryKey="WrappedExe"
-                ExeCommand="/S /ExtractDir=[EXTRACT_DIR]" />
+                ExeCommand="/ExtractDir=[EXTRACT_DIR]" />
 
   <!-- When we run the custom actions is kind of arbitrary; this sequencing gets
        us the least confusing message showing in the MSI progress dialog while

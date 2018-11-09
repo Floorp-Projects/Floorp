@@ -69,6 +69,4 @@ For options that accept ``true`` or ``false``, ``=true`` can be left off to get 
     OptionalExtensions=false
 
 ``/ExtractDir=[directory]``
-  Extract the application files to the given directory and exit, without actually running the installer. Of course, this means all other options will be ignored.
-
-  This option is not available for use in .ini files.
+  Extract the application files to the given directory and exit, without actually running the installer. No other options may be supplied along with ``ExtractDir``, and ``ExtractDir`` is not available for use in .ini files.
