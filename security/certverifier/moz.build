@@ -78,7 +78,9 @@ if CONFIG['CC_TYPE'] == 'msvc':
     ]
 
     # Disable Spectre diagnostics only if optimization is disabled.
-    if not CONFIG['MOZ_OPTIMIZE']:
+    # AArch64 MSVC apparently warns about Spectre even if optimization is
+    # enabled, so disable the diagnostic there too.
+    if not CONFIG['MOZ_OPTIMIZE'] or CONFIG['CPU_ARCH'] == 'aarch64':
         CXXFLAGS += [
             '-wd5045', # Compiler will insert Spectre mitigation for memory
                        # load if /Qspectre switch specified
