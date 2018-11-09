@@ -87,6 +87,9 @@ public:
   void SetFixedPositionScrollContainerId(ScrollableLayerGuid::ViewID aId) { mFixedPosScrollContainerId = aId; }
   ScrollableLayerGuid::ViewID GetFixedPositionScrollContainerId() const { return mFixedPosScrollContainerId; }
 
+  void SetZoomAnimationId(const uint64_t& aId) { mZoomAnimationId = Some(aId); }
+  Maybe<uint64_t> GetZoomAnimationId() const { return mZoomAnimationId; }
+
   void Dump(const WebRenderScrollData& aOwner) const;
 
   friend struct IPC::ParamTraits<WebRenderLayerScrollData>;
@@ -117,6 +120,7 @@ private:
   ScrollbarData mScrollbarData;
   uint64_t mScrollbarAnimationId;
   ScrollableLayerGuid::ViewID mFixedPosScrollContainerId;
+  Maybe<uint64_t> mZoomAnimationId;
 };
 
 // Data needed by APZ, for the whole layer tree. One instance of this class
@@ -237,6 +241,7 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
     WriteParam(aMsg, aParam.mScrollbarData);
     WriteParam(aMsg, aParam.mScrollbarAnimationId);
     WriteParam(aMsg, aParam.mFixedPosScrollContainerId);
+    WriteParam(aMsg, aParam.mZoomAnimationId);
   }
 
   static bool
@@ -253,7 +258,8 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
         && ReadParam(aMsg, aIter, &aResult->mEventRegionsOverride)
         && ReadParam(aMsg, aIter, &aResult->mScrollbarData)
         && ReadParam(aMsg, aIter, &aResult->mScrollbarAnimationId)
-        && ReadParam(aMsg, aIter, &aResult->mFixedPosScrollContainerId);
+        && ReadParam(aMsg, aIter, &aResult->mFixedPosScrollContainerId)
+        && ReadParam(aMsg, aIter, &aResult->mZoomAnimationId);
   }
 };
 
