@@ -154,5 +154,15 @@ for (let element of [divWithFontSizeSet, divWithFontSizeInherited]) {
         assert_computed_value('<time>', '1000ms', '1s');
         assert_computed_value('<time>', 'calc(1000ms + 1s)', '2s');
     }, "<time> values computed correctly for " + id);
+
+    test(function() {
+        assert_computed_value('*', '50dpi', '50dpi');
+        assert_computed_value('<resolution>', '1dppx', '1dppx');
+        assert_computed_value('<resolution>', '96dpi', '1dppx');
+    }, "<resolution> values computed correctly for " + id);
+
+    test(function() {
+        assert_computed_value('<resolution>', 'calc(1dppx + 96dpi)', '2dppx');
+    }, "<resolution> values with calc() computed correctly for " + id);
 }
 </script>
