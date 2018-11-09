@@ -865,14 +865,14 @@ EditorEventListener::Drop(DragEvent* aDragEvent)
     return NS_OK;
   }
 
-  nsCOMPtr<nsINode> parent = aDragEvent->GetRangeParent();
-  nsCOMPtr<nsIContent> dropParent = do_QueryInterface(parent);
-  NS_ENSURE_TRUE(dropParent, NS_ERROR_FAILURE);
+  nsCOMPtr<nsINode> dropParentNode = aDragEvent->GetRangeParent();
+  nsIContent* dropParentContent = nsIContent::FromNodeOrNull(dropParentNode);
+  if (NS_WARN_IF(!dropParentContent)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  if (!dropParent->IsEditable() || !CanDrop(aDragEvent)) {
-    // was it because we're read-only?
-    RefPtr<EditorBase> editorBase(mEditorBase);
-    if ((editorBase->IsReadonly() || editorBase->IsDisabled()) &&
+  if (!dropParentContent->IsEditable() || !CanDrop(aDragEvent)) {
+    if ((mEditorBase->IsReadonly() || mEditorBase->IsDisabled()) &&
         !IsFileControlTextBox()) {
       // it was decided to "eat" the event as this is the "least surprise"
       // since someone else handling it might be unintentional and the
@@ -885,8 +885,18 @@ EditorEventListener::Drop(DragEvent* aDragEvent)
 
   aDragEvent->StopPropagation();
   aDragEvent->PreventDefault();
+
   RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
-  return textEditor->OnDrop(aDragEvent);
+  nsresult rv = textEditor->OnDrop(aDragEvent);
+  if (rv == NS_ERROR_EDITOR_DESTROYED) {
+    // If the editor has been destroyed, it means that this is handled as
+    // expected by the web app.  So, return NS_OK.
+    return NS_OK;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 bool
