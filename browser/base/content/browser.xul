@@ -145,6 +145,9 @@ xmlns="http://www.w3.org/1999/xhtml"
       <menuitem id="context_duplicateTab" label="&duplicateTab.label;"
                 accesskey="&duplicateTab.accesskey;"
                 oncommand="duplicateTabIn(TabContextMenu.contextTab, 'tab');"/>
+      <menuitem id="context_duplicateTabs" label="&duplicateTabs.label;"
+                accesskey="&duplicateTabs.accesskey;"
+                oncommand="TabContextMenu.duplicateSelectedTabs();"/>
       <menuseparator/>
       <menuitem id="context_selectAllTabs" label="&selectAllTabs.label;" accesskey="&selectAllTabs.accesskey;"
                 oncommand="gBrowser.selectAllTabs();"/>
