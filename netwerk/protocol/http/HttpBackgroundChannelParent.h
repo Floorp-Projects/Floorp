@@ -69,9 +69,6 @@ public:
   // To send NotifyTrackingProtectionDisabled message over background channel.
   bool OnNotifyTrackingProtectionDisabled();
 
-  // To send NotifyCookieAllowed message over background channel.
-  bool OnNotifyCookieAllowed();
-
   // To send NotifyTrackingCookieBlocked message over background channel.
   bool OnNotifyTrackingCookieBlocked(uint32_t aRejectedReason);
 

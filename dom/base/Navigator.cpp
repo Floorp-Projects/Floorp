@@ -544,17 +544,16 @@ Navigator::CookieEnabled()
   }
 
   uint32_t rejectedReason = 0;
-  bool granted =
-    AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(mWindow,
-                                                            codebaseURI,
-                                                            &rejectedReason);
+  if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(mWindow,
+                                                              codebaseURI,
+                                                              &rejectedReason)) {
+    return true;
+  }
 
-  AntiTrackingCommon::NotifyBlockingDecision(mWindow,
-                                             granted ?
-                                               AntiTrackingCommon::BlockingDecision::eAllow :
-                                               AntiTrackingCommon::BlockingDecision::eBlock,
-                                             rejectedReason);
-  return granted;
+  if (rejectedReason) {
+    AntiTrackingCommon::NotifyRejection(mWindow, rejectedReason);
+  }
+  return false;
 }
 
 bool
