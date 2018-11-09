@@ -16,7 +16,7 @@
 #include "jsfriendapi.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/OffThreadScriptCompilation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptElement.h"
 #include "nsIScriptGlobalObject.h"
@@ -98,9 +98,9 @@ nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
   // Compile.
   const nsPromiseFlatString& flatBody = PromiseFlatString(aBody);
 
-  JS::SourceBufferHolder source;
+  JS::SourceText<char16_t> source;
   if (!source.init(cx, flatBody.get(), flatBody.Length(),
-                   JS::SourceBufferHolder::NoOwnership))
+                   JS::SourceOwnership::Borrowed))
   {
     return NS_ERROR_FAILURE;
   }
@@ -224,7 +224,7 @@ nsJSUtils::ExecutionContext::JoinAndExec(JS::OffThreadToken** aOffThreadToken,
 
 nsresult
 nsJSUtils::ExecutionContext::CompileAndExec(JS::CompileOptions& aCompileOptions,
-                                            JS::SourceBufferHolder& aSrcBuf,
+                                            JS::SourceText<char16_t>& aSrcBuf,
                                             JS::MutableHandle<JSScript*> aScript)
 {
   if (mSkip) {
@@ -277,9 +277,9 @@ nsJSUtils::ExecutionContext::CompileAndExec(JS::CompileOptions& aCompileOptions,
   }
 
   const nsPromiseFlatString& flatScript = PromiseFlatString(aScript);
-  JS::SourceBufferHolder srcBuf;
+  JS::SourceText<char16_t> srcBuf;
   if (!srcBuf.init(mCx, flatScript.get(), flatScript.Length(),
-                   JS::SourceBufferHolder::NoOwnership))
+                   JS::SourceOwnership::Borrowed))
   {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
@@ -487,7 +487,7 @@ nsJSUtils::ExecutionContext::ExtractReturnValue(JS::MutableHandle<JS::Value> aRe
 
 nsresult
 nsJSUtils::CompileModule(JSContext* aCx,
-                       JS::SourceBufferHolder& aSrcBuf,
+                       JS::SourceText<char16_t>& aSrcBuf,
                        JS::Handle<JSObject*> aEvaluationGlobal,
                        JS::CompileOptions &aCompileOptions,
                        JS::MutableHandle<JSObject*> aModule)

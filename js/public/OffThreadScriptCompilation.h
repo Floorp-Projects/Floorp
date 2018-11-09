@@ -27,7 +27,7 @@ class JSScript;
 
 namespace JS {
 
-class SourceBufferHolder;
+template<typename UnitT> class SourceText;
 
 } // namespace JS
 
@@ -61,8 +61,9 @@ CanDecodeOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t 
  */
 
 extern JS_PUBLIC_API(bool)
-CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, SourceBufferHolder& srcBuf,
-                 OffThreadCompileCallback callback, void* callbackData);
+CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
+                 SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
+                 void* callbackData);
 
 extern JS_PUBLIC_API(JSScript*)
 FinishOffThreadScript(JSContext* cx, OffThreadToken* token);
@@ -72,7 +73,7 @@ CancelOffThreadScript(JSContext* cx, OffThreadToken* token);
 
 extern JS_PUBLIC_API(bool)
 CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                       SourceBufferHolder& srcBuf, OffThreadCompileCallback callback,
+                       SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
                        void* callbackData);
 
 extern JS_PUBLIC_API(JSObject*)

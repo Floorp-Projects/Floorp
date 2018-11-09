@@ -27,7 +27,7 @@
 #include "jit/BaselineJIT.h"
 #include "js/CharacterEncoding.h"
 #include "js/Date.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/UbiNodeBreadthFirst.h"
 #include "js/Vector.h"
@@ -63,7 +63,8 @@ using JS::CompileOptions;
 using JS::dbg::AutoEntryMonitor;
 using JS::dbg::Builder;
 using js::frontend::IsIdentifier;
-using JS::SourceBufferHolder;
+using JS::SourceOwnership;
+using JS::SourceText;
 using mozilla::DebugOnly;
 using mozilla::MakeScopeExit;
 using mozilla::Maybe;
@@ -8904,8 +8905,8 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
            .setIntroductionType("debugger eval")
            .maybeMakeStrictMode(frame && frame.hasScript() ? frame.script()->strict() : false);
 
-    SourceBufferHolder srcBuf;
-    if (!srcBuf.init(cx, chars.begin().get(), chars.length(), SourceBufferHolder::NoOwnership)) {
+    SourceText<char16_t> srcBuf;
+    if (!srcBuf.init(cx, chars.begin().get(), chars.length(), SourceOwnership::Borrowed)) {
         return false;
     }
 

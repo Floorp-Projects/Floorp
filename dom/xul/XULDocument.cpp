@@ -91,7 +91,7 @@
 #include "nsTextNode.h"
 #include "nsJSUtils.h"
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "mozilla/dom/URL.h"
 #include "nsIContentPolicy.h"
 #include "mozAutoDocUpdate.h"
@@ -1295,7 +1295,7 @@ XULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
             std::swap(unitsLength, mOffThreadCompileStringLength);
 
             rv = mCurrentScriptProto->Compile(units, unitsLength,
-                                              JS::SourceBufferHolder::GiveOwnership,
+                                              JS::SourceOwnership::TakeOwnership,
                                               uri, 1, this, this);
             if (NS_SUCCEEDED(rv) && !mCurrentScriptProto->HasScriptObject()) {
                 mOffThreadCompiling = true;

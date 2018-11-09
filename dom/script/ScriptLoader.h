@@ -32,7 +32,9 @@
 class nsIURI;
 
 namespace JS {
-  class SourceBufferHolder;
+
+template<typename UnitT> class SourceText;
+
 } // namespace JS
 
 namespace mozilla {
@@ -507,8 +509,8 @@ private:
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
-  mozilla::Maybe<JS::SourceBufferHolder> GetScriptSource(JSContext* aCx,
-                                                         ScriptLoadRequest* aRequest);
+  mozilla::Maybe<JS::SourceText<char16_t>>
+  GetScriptSource(JSContext* aCx, ScriptLoadRequest* aRequest);
 
   void SetModuleFetchStarted(ModuleLoadRequest *aRequest);
   void SetModuleFetchFinishedAndResumeWaitingRequests(ModuleLoadRequest* aRequest,
