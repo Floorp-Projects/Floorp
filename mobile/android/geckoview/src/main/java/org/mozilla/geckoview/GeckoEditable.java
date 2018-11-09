@@ -943,6 +943,10 @@ import android.view.inputmethod.EditorInfo;
         */
         try {
             if (mFocusedChild == null) {
+                if (mDefaultChild == null) {
+                    Log.w(LOGTAG, "Discarding key event");
+                    return;
+                }
                 // Not focused; send simple key event to chrome window.
                 onKeyEvent(mDefaultChild, event, action, metaState,
                            /* isSynthesizedImeKey */ false);
