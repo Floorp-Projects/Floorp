@@ -65,17 +65,24 @@ bool
 PaymentRequest::PrefEnabled(JSContext* aCx, JSObject* aObj)
 {
 #if defined(NIGHTLY_BUILD)
+  const char* supportedRegions[] = { "US", "CA" };
+
   if (!XRE_IsContentProcess()) {
     return false;
   }
   if (!StaticPrefs::dom_payments_request_enabled()) {
     return false;
   }
-  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
-  MOZ_ASSERT(manager);
   nsAutoString region;
   Preferences::GetString("browser.search.region", region);
-  if (!manager->IsRegionSupported(region)) {
+  bool regionIsSupported = false;
+  for (const char* each : supportedRegions) {
+    if (region.EqualsASCII(each)) {
+      regionIsSupported = true;
+      break;
+    }
+  }
+  if (!regionIsSupported) {
     return false;
   }
   nsAutoCString locale;
