@@ -186,7 +186,7 @@ HTMLEditor::InsertHTML(const nsAString& aInString)
   }
 
   return DoInsertHTMLWithContext(aInString, EmptyString(), EmptyString(),
-                                 EmptyString(), nullptr,  nullptr, 0,
+                                 EmptyString(), nullptr,  EditorDOMPoint(),
                                  true, true, false);
 }
 
@@ -196,8 +196,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
                                     const nsAString& aInfoStr,
                                     const nsAString& aFlavor,
                                     nsIDocument* aSourceDoc,
-                                    nsINode* aDestNode,
-                                    int32_t aDestOffset,
+                                    const EditorDOMPoint& aPointToInsert,
                                     bool aDeleteSelection,
                                     bool aTrustedInput,
                                     bool aClearStyle)
@@ -229,10 +228,12 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
                                            &streamStartOffset,
                                            &streamEndOffset,
                                            aTrustedInput);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  EditorDOMPoint targetPoint;
-  if (!aDestNode) {
+  EditorDOMPoint targetPoint(aPointToInsert);
+  if (!targetPoint.IsSet()) {
     // if caller didn't provide the destination/target node,
     // fetch the paste insertion point from our selection
     targetPoint = EditorBase::GetStartPoint(*SelectionRefPtr());
@@ -240,8 +241,6 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
         !IsEditable(targetPoint.GetContainer())) {
       return NS_ERROR_FAILURE;
     }
-  } else {
-    targetPoint.Set(aDestNode, aDestOffset);
   }
 
   // if we have a destination / target node, we want to insert there
@@ -250,7 +249,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   // also occur later; this block is intended to cover the various
   // scenarios where we are dropping in an editor (and may want to delete
   // the selection before collapsing the selection in the new destination)
-  if (aDestNode) {
+  if (aPointToInsert.IsSet()) {
     if (aDeleteSelection) {
       // Use an auto tracker so that our drop point is correctly
       // positioned after the delete.
@@ -283,6 +282,8 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   if (nodeList.IsEmpty()) {
     // We aren't inserting anything, but if aDeleteSelection is set, we do want
     // to delete everything.
+    // XXX What will this do? We've already called DeleteSelectionAsSubAtion()
+    //     above if insertion point is specified.
     if (aDeleteSelection) {
       nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -314,7 +315,9 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
 
   if (!cellSelectionMode) {
     rv = DeleteSelectionAndPrepareToCreateNode();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     if (aClearStyle) {
       // pasting does not inherit local inline styles
@@ -322,7 +325,9 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
       int32_t tmpOffset =
         static_cast<int32_t>(SelectionRefPtr()->AnchorOffset());
       rv = ClearStyle(address_of(tmpNode), &tmpOffset, nullptr, nullptr);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
   } else {
     // Delete whole cells: we will replace with new table content.
@@ -985,14 +990,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(HTMLEditor::BlobReader)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBlob)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHTMLEditor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSourceDoc)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDestinationNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPointToInsert)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(HTMLEditor::BlobReader)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBlob)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHTMLEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSourceDoc)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDestinationNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPointToInsert)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(HTMLEditor::BlobReader, AddRef)
@@ -1002,14 +1007,12 @@ HTMLEditor::BlobReader::BlobReader(BlobImpl* aBlob,
                                    HTMLEditor* aHTMLEditor,
                                    bool aIsSafe,
                                    nsIDocument* aSourceDoc,
-                                   nsINode* aDestinationNode,
-                                   int32_t aDestOffset,
+                                   const EditorDOMPoint& aPointToInsert,
                                    bool aDoDeleteSelection)
   : mBlob(aBlob)
   , mHTMLEditor(aHTMLEditor)
   , mSourceDoc(aSourceDoc)
-  , mDestinationNode(aDestinationNode)
-  , mDestOffset(aDestOffset)
+  , mPointToInsert(aPointToInsert)
   , mEditAction(aHTMLEditor->GetEditAction())
   , mIsSafe(aIsSafe)
   , mDoDeleteSelection(aDoDeleteSelection)
@@ -1017,7 +1020,10 @@ HTMLEditor::BlobReader::BlobReader(BlobImpl* aBlob,
   MOZ_ASSERT(mBlob);
   MOZ_ASSERT(mHTMLEditor);
   MOZ_ASSERT(mHTMLEditor->IsEditActionDataAvailable());
-  MOZ_ASSERT(mDestinationNode);
+  MOZ_ASSERT(aPointToInsert.IsSet());
+
+  // Take only offset here since it's our traditional behavior.
+  AutoEditorDOMPointChildInvalidator storeOnlyWithOffset(mPointToInsert);
 }
 
 nsresult
@@ -1034,14 +1040,15 @@ HTMLEditor::BlobReader::OnResult(const nsACString& aResult)
   NS_ConvertUTF16toUTF8 type(blobType);
   nsAutoString stuffToPaste;
   nsresult rv = ImgFromData(type, aResult, stuffToPaste);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   AutoPlaceholderBatch treatAsOneTransaction(*mHTMLEditor);
   rv = mHTMLEditor->DoInsertHTMLWithContext(stuffToPaste, EmptyString(),
                                             EmptyString(),
                                             NS_LITERAL_STRING(kFileMime),
-                                            mSourceDoc,
-                                            mDestinationNode, mDestOffset,
+                                            mSourceDoc, mPointToInsert,
                                             mDoDeleteSelection,
                                             mIsSafe, false);
   return rv;
@@ -1054,7 +1061,7 @@ HTMLEditor::BlobReader::OnError(const nsAString& aError)
   const char16_t* error = flat.get();
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("Editor"),
-                                  mDestinationNode->OwnerDoc(),
+                                  mPointToInsert.GetContainer()->OwnerDoc(),
                                   nsContentUtils::eDOM_PROPERTIES,
                                   "EditorFileDropFailed",
                                   &error, 1);
@@ -1161,25 +1168,31 @@ HTMLEditor::InsertObject(const nsACString& aType,
                          nsISupports* aObject,
                          bool aIsSafe,
                          nsIDocument* aSourceDoc,
-                         nsINode* aDestinationNode,
-                         int32_t aDestOffset,
+                         const EditorDOMPoint& aPointToInsert,
                          bool aDoDeleteSelection)
 {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  nsresult rv;
-
   if (nsCOMPtr<BlobImpl> blob = do_QueryInterface(aObject)) {
     RefPtr<BlobReader> br = new BlobReader(blob, this, aIsSafe, aSourceDoc,
-                                           aDestinationNode, aDestOffset,
+                                           aPointToInsert,
                                            aDoDeleteSelection);
-    nsCOMPtr<nsINode> node = aDestinationNode;
-    MOZ_ASSERT(node);
+    // XXX This is not guaranteed.
+    MOZ_ASSERT(aPointToInsert.IsSet());
 
-    RefPtr<Blob> domBlob = Blob::Create(node->GetOwnerGlobal(), blob);
-    NS_ENSURE_TRUE(domBlob, NS_ERROR_FAILURE);
+    RefPtr<Blob> domBlob =
+      Blob::Create(aPointToInsert.GetContainer()->GetOwnerGlobal(), blob);
+    if (NS_WARN_IF(!domBlob)) {
+      return NS_ERROR_FAILURE;
+    }
 
-    return SlurpBlob(domBlob, node->OwnerDoc()->GetWindow(), br);
+    nsresult rv =
+      SlurpBlob(domBlob, aPointToInsert.GetContainer()->OwnerDoc()->GetWindow(),
+                br);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
   }
 
   nsAutoCString type(aType);
@@ -1207,30 +1220,40 @@ HTMLEditor::InsertObject(const nsACString& aType,
       insertAsImage) {
     nsCString imageData;
     if (insertAsImage) {
-      rv = nsContentUtils::SlurpFileToString(fileObj, imageData);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv = nsContentUtils::SlurpFileToString(fileObj, imageData);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     } else {
       nsCOMPtr<nsIInputStream> imageStream = do_QueryInterface(aObject);
-      NS_ENSURE_TRUE(imageStream, NS_ERROR_FAILURE);
+      if (NS_WARN_IF(!imageStream)) {
+        return NS_ERROR_FAILURE;
+      }
 
-      rv = NS_ConsumeStream(imageStream, UINT32_MAX, imageData);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv = NS_ConsumeStream(imageStream, UINT32_MAX, imageData);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
       rv = imageStream->Close();
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
 
     nsAutoString stuffToPaste;
-    rv = ImgFromData(type, imageData, stuffToPaste);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = ImgFromData(type, imageData, stuffToPaste);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     AutoPlaceholderBatch treatAsOneTransaction(*this);
     rv = DoInsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(),
                                  NS_LITERAL_STRING(kFileMime),
-                                 aSourceDoc,
-                                 aDestinationNode, aDestOffset,
+                                 aSourceDoc, aPointToInsert,
                                  aDoDeleteSelection,
                                  aIsSafe, false);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the image");
   }
 
   return NS_OK;
@@ -1266,7 +1289,6 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
                                    bool havePrivateHTMLFlavor,
                                    bool aDoDeleteSelection)
 {
-  nsresult rv = NS_OK;
   nsAutoCString bestFlavor;
   nsCOMPtr<nsISupports> genericDataObj;
   if (NS_SUCCEEDED(
@@ -1282,15 +1304,20 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
         bestFlavor.EqualsLiteral(kJPGImageMime) ||
         bestFlavor.EqualsLiteral(kPNGImageMime) ||
         bestFlavor.EqualsLiteral(kGIFImageMime)) {
-      rv = InsertObject(bestFlavor, genericDataObj, isSafe,
-                        aSourceDoc, nullptr, 0, aDoDeleteSelection);
+      nsresult rv =
+        InsertObject(bestFlavor, genericDataObj, isSafe,
+                     aSourceDoc, EditorDOMPoint(), aDoDeleteSelection);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     } else if (bestFlavor.EqualsLiteral(kNativeHTMLMime)) {
       // note cf_html uses utf8
       nsAutoCString cfhtml;
       if (GetCString(genericDataObj, cfhtml)) {
-        nsString cfcontext, cffragment, cfselection; // cfselection left emtpy for now
-
-        rv = ParseCFHTML(cfhtml, getter_Copies(cffragment), getter_Copies(cfcontext));
+        // cfselection left emtpy for now.
+        nsString cfcontext, cffragment, cfselection;
+        nsresult rv = ParseCFHTML(cfhtml, getter_Copies(cffragment),
+                                  getter_Copies(cfcontext));
         if (NS_SUCCEEDED(rv) && !cffragment.IsEmpty()) {
           AutoPlaceholderBatch treatAsOneTransaction(*this);
           // If we have our private HTML flavor, we will only use the fragment
@@ -1298,18 +1325,21 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
           if (havePrivateHTMLFlavor) {
             rv = DoInsertHTMLWithContext(cffragment,
                                          aContextStr, aInfoStr, flavor,
-                                         aSourceDoc,
-                                         nullptr, 0,
+                                         aSourceDoc, EditorDOMPoint(),
                                          aDoDeleteSelection,
                                          isSafe);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
           } else {
             rv = DoInsertHTMLWithContext(cffragment,
                                          cfcontext, cfselection, flavor,
-                                         aSourceDoc,
-                                         nullptr, 0,
+                                         aSourceDoc, EditorDOMPoint(),
                                          aDoDeleteSelection,
                                          isSafe);
-
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
           }
         } else {
           // In some platforms (like Linux), the clipboard might return data
@@ -1336,24 +1366,28 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
       if (!stuffToPaste.IsEmpty()) {
         AutoPlaceholderBatch treatAsOneTransaction(*this);
         if (bestFlavor.EqualsLiteral(kHTMLMime)) {
-          rv = DoInsertHTMLWithContext(stuffToPaste,
-                                       aContextStr, aInfoStr, flavor,
-                                       aSourceDoc,
-                                       nullptr, 0,
-                                       aDoDeleteSelection,
-                                       isSafe);
+          nsresult rv =
+            DoInsertHTMLWithContext(stuffToPaste,
+                                    aContextStr, aInfoStr, flavor,
+                                    aSourceDoc, EditorDOMPoint(),
+                                    aDoDeleteSelection,
+                                    isSafe);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
         } else {
-          rv = InsertTextAt(stuffToPaste, nullptr, 0, aDoDeleteSelection);
+          nsresult rv = InsertTextAsSubAction(stuffToPaste);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
         }
       }
     }
   }
 
   // Try to scroll the selection into view if the paste succeeded
-  if (NS_SUCCEEDED(rv)) {
-    ScrollSelectionIntoView(false);
-  }
-  return rv;
+  ScrollSelectionIntoView(false);
+  return NS_OK;
 }
 
 static void
@@ -1373,10 +1407,18 @@ nsresult
 HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
                                    int32_t aIndex,
                                    nsIDocument* aSourceDoc,
-                                   nsINode* aDestinationNode,
-                                   int32_t aDestOffset,
+                                   const EditorDOMPoint& aDroppedAt,
                                    bool aDoDeleteSelection)
 {
+  MOZ_ASSERT(GetEditAction() == EditAction::eDrop);
+  MOZ_ASSERT(mPlaceholderBatch,
+    "TextEditor::InsertFromDataTransfer() should be called only by OnDrop() "
+    "and there should've already been placeholder transaction");
+  MOZ_ASSERT(aDroppedAt.IsSet());
+
+  // TODO: In some cases, callees may not remove selected content even when
+  //       they return NS_OK.  So, we need to remove instead here.
+
   ErrorResult rv;
   RefPtr<DOMStringList> types =
     aDataTransfer->MozTypesAt(aIndex, CallerType::System, rv);
@@ -1405,9 +1447,13 @@ HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
         if (variant) {
           nsCOMPtr<nsISupports> object;
           variant->GetAsISupports(getter_AddRefs(object));
-          return InsertObject(NS_ConvertUTF16toUTF8(type), object, isSafe,
-                              aSourceDoc, aDestinationNode, aDestOffset,
-                              aDoDeleteSelection);
+          nsresult rv =
+            InsertObject(NS_ConvertUTF16toUTF8(type), object, isSafe,
+                         aSourceDoc, aDroppedAt, aDoDeleteSelection);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+          return NS_OK;
         }
       } else if (type.EqualsLiteral(kNativeHTMLMime)) {
         // Windows only clipboard parsing.
@@ -1419,43 +1465,47 @@ HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
 
         nsresult rv = ParseCFHTML(cfhtml, getter_Copies(cffragment), getter_Copies(cfcontext));
         if (NS_SUCCEEDED(rv) && !cffragment.IsEmpty()) {
-          AutoPlaceholderBatch treatAsOneTransaction(*this);
-
           if (hasPrivateHTMLFlavor) {
             // If we have our private HTML flavor, we will only use the fragment
             // from the CF_HTML. The rest comes from the clipboard.
             nsAutoString contextString, infoString;
             GetStringFromDataTransfer(aDataTransfer, NS_LITERAL_STRING(kHTMLContext), aIndex, contextString);
             GetStringFromDataTransfer(aDataTransfer, NS_LITERAL_STRING(kHTMLInfo), aIndex, infoString);
-            return DoInsertHTMLWithContext(cffragment,
-                                           contextString, infoString, type,
-                                           aSourceDoc,
-                                           aDestinationNode, aDestOffset,
-                                           aDoDeleteSelection,
-                                           isSafe);
-          } else {
-            return DoInsertHTMLWithContext(cffragment,
-                                           cfcontext, cfselection, type,
-                                           aSourceDoc,
-                                           aDestinationNode, aDestOffset,
-                                           aDoDeleteSelection,
-                                           isSafe);
+            rv = DoInsertHTMLWithContext(cffragment,
+                                         contextString, infoString, type,
+                                         aSourceDoc, aDroppedAt,
+                                         aDoDeleteSelection,
+                                         isSafe);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
+            return NS_OK;
           }
+          rv = DoInsertHTMLWithContext(cffragment,
+                                       cfcontext, cfselection, type,
+                                       aSourceDoc, aDroppedAt,
+                                       aDoDeleteSelection,
+                                       isSafe);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+          return NS_OK;
         }
       } else if (type.EqualsLiteral(kHTMLMime)) {
         nsAutoString text, contextString, infoString;
         GetStringFromDataTransfer(aDataTransfer, type, aIndex, text);
         GetStringFromDataTransfer(aDataTransfer, NS_LITERAL_STRING(kHTMLContext), aIndex, contextString);
         GetStringFromDataTransfer(aDataTransfer, NS_LITERAL_STRING(kHTMLInfo), aIndex, infoString);
-
-        AutoPlaceholderBatch treatAsOneTransaction(*this);
         if (type.EqualsLiteral(kHTMLMime)) {
-          return DoInsertHTMLWithContext(text,
-                                         contextString, infoString, type,
-                                         aSourceDoc,
-                                         aDestinationNode, aDestOffset,
-                                         aDoDeleteSelection,
-                                         isSafe);
+          nsresult rv = DoInsertHTMLWithContext(text,
+                                                contextString, infoString, type,
+                                                aSourceDoc, aDroppedAt,
+                                                aDoDeleteSelection,
+                                                isSafe);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+          return NS_OK;
         }
       }
     }
@@ -1464,9 +1514,7 @@ HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
         type.EqualsLiteral(kMozTextInternal)) {
       nsAutoString text;
       GetStringFromDataTransfer(aDataTransfer, type, aIndex, text);
-
-      AutoPlaceholderBatch treatAsOneTransaction(*this);
-      return InsertTextAt(text, aDestinationNode, aDestOffset, aDoDeleteSelection);
+      return InsertTextAt(text, aDroppedAt, aDoDeleteSelection);
     }
   }
 
