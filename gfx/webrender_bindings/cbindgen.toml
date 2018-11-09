@@ -39,4 +39,4 @@ derive_helper_methods = true
 [defines]
 "target_os = windows" = "XP_WIN"
 "target_os = macos" = "XP_MACOSX"
-
+"target_os = android" = "ANDROID"
