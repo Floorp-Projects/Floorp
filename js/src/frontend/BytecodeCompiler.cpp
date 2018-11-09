@@ -301,12 +301,12 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
         return createSourceAndParser(info, ParseGoal::Script, parameterListEnd);
     }
 
-    CodeNode* parse(StandaloneFunctionInfo& info, MutableHandleFunction fun,
+    CodeNode* parse(StandaloneFunctionInfo& info, HandleFunction fun,
                     HandleScope enclosingScope, GeneratorKind generatorKind,
                     FunctionAsyncKind asyncKind, const Maybe<uint32_t>& parameterListEnd);
 
-    MOZ_MUST_USE bool compile(StandaloneFunctionInfo& info, CodeNode* parsedFunction,
-                              MutableHandleFunction fun);
+    MOZ_MUST_USE bool compile(MutableHandleFunction fun, StandaloneFunctionInfo& info,
+                              CodeNode* parsedFunction);
 
   private:
     // Create a script for a function with the given toString offsets in source
@@ -647,7 +647,7 @@ frontend::ModuleCompiler<Unit>::compile(ModuleInfo& info)
 template<typename Unit>
 CodeNode*
 frontend::StandaloneFunctionCompiler<Unit>::parse(StandaloneFunctionInfo& info,
-                                                  MutableHandleFunction fun,
+                                                  HandleFunction fun,
                                                   HandleScope enclosingScope,
                                                   GeneratorKind generatorKind,
                                                   FunctionAsyncKind asyncKind,
@@ -681,9 +681,9 @@ frontend::StandaloneFunctionCompiler<Unit>::parse(StandaloneFunctionInfo& info,
 // Compile a standalone JS function.
 template<typename Unit>
 bool
-frontend::StandaloneFunctionCompiler<Unit>::compile(StandaloneFunctionInfo& info,
-                                                    CodeNode* parsedFunction,
-                                                    MutableHandleFunction fun)
+frontend::StandaloneFunctionCompiler<Unit>::compile(MutableHandleFunction fun,
+                                                    StandaloneFunctionInfo& info,
+                                                    CodeNode* parsedFunction)
 {
     FunctionBox* funbox = parsedFunction->funbox();
     if (funbox->function()->isInterpreted()) {
@@ -1101,7 +1101,7 @@ frontend::CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
 
     CodeNode* parsedFunction = compiler.parse(info ,fun, scope, GeneratorKind::NotGenerator,
                                               FunctionAsyncKind::SyncFunction, parameterListEnd);
-    if (!parsedFunction || !compiler.compile(info, parsedFunction, fun)) {
+    if (!parsedFunction || !compiler.compile(fun, info, parsedFunction)) {
         return false;
     }
 
@@ -1128,7 +1128,7 @@ frontend::CompileStandaloneGenerator(JSContext* cx, MutableHandleFunction fun,
     CodeNode* parsedFunction =
         compiler.parse(info, fun, emptyGlobalScope, GeneratorKind::Generator,
                        FunctionAsyncKind::SyncFunction, parameterListEnd);
-    if (!parsedFunction || !compiler.compile(info, parsedFunction, fun)) {
+    if (!parsedFunction || !compiler.compile(fun, info, parsedFunction)) {
         return false;
     }
 
@@ -1155,7 +1155,7 @@ frontend::CompileStandaloneAsyncFunction(JSContext* cx, MutableHandleFunction fu
     CodeNode* parsedFunction =
         compiler.parse(info, fun, emptyGlobalScope, GeneratorKind::NotGenerator,
                        FunctionAsyncKind::AsyncFunction, parameterListEnd);
-    if (!parsedFunction || !compiler.compile(info, parsedFunction, fun)) {
+    if (!parsedFunction || !compiler.compile(fun, info, parsedFunction)) {
         return false;
     }
 
@@ -1182,7 +1182,7 @@ frontend::CompileStandaloneAsyncGenerator(JSContext* cx, MutableHandleFunction f
     CodeNode* parsedFunction =
         compiler.parse(info, fun, emptyGlobalScope, GeneratorKind::Generator,
                        FunctionAsyncKind::AsyncFunction, parameterListEnd);
-    if (!parsedFunction || !compiler.compile(info, parsedFunction, fun)) {
+    if (!parsedFunction || !compiler.compile(fun, info, parsedFunction)) {
         return false;
     }
 
