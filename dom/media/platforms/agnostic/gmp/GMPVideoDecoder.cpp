@@ -101,16 +101,16 @@ void
 GMPVideoDecoder::InputDataExhausted()
 {
   MOZ_ASSERT(IsOnGMPThread());
-  mDecodePromise.ResolveIfExists(mDecodedData, __func__);
-  mDecodedData.Clear();
+  mDecodePromise.ResolveIfExists(std::move(mDecodedData), __func__);
+  mDecodedData = DecodedData();
 }
 
 void
 GMPVideoDecoder::DrainComplete()
 {
   MOZ_ASSERT(IsOnGMPThread());
-  mDrainPromise.ResolveIfExists(mDecodedData, __func__);
-  mDecodedData.Clear();
+  mDrainPromise.ResolveIfExists(std::move(mDecodedData), __func__);
+  mDecodedData = DecodedData();
 }
 
 void
