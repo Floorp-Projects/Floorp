@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { ADB } = require("devtools/shared/adb/adb");
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/main");
 
 const Actions = require("./index");
@@ -15,6 +13,8 @@ const {
   findRuntimeById,
 } = require("../modules/runtimes-state-helper");
 const { isSupportedDebugTarget } = require("../modules/debug-target-support");
+
+const { createClientForRuntime } = require("../modules/runtime-client-factory");
 
 const {
   CONNECT_RUNTIME_FAILURE,
@@ -37,43 +37,6 @@ const {
   WATCH_RUNTIME_START,
   WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
-
-async function createLocalClient() {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  await client.connect();
-  return { client };
-}
-
-async function createNetworkClient(host, port) {
-  const transportDetails = { host, port };
-  const transport = await DebuggerClient.socketConnect(transportDetails);
-  const client = new DebuggerClient(transport);
-  await client.connect();
-  return { client, transportDetails };
-}
-
-async function createUSBClient(socketPath) {
-  const port = await ADB.prepareTCPConnection(socketPath);
-  return createNetworkClient("localhost", port);
-}
-
-async function createClientForRuntime(runtime) {
-  const { extra, type } = runtime;
-
-  if (type === RUNTIMES.THIS_FIREFOX) {
-    return createLocalClient();
-  } else if (type === RUNTIMES.NETWORK) {
-    const { host, port } = extra.connectionParameters;
-    return createNetworkClient(host, port);
-  } else if (type === RUNTIMES.USB) {
-    const { socketPath } = extra.connectionParameters;
-    return createUSBClient(socketPath);
-  }
-
-  return null;
-}
 
 async function getRuntimeInfo(runtime, client) {
   const { extra, type } = runtime;
