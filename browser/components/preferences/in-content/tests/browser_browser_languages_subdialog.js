@@ -128,11 +128,13 @@ function assertLocaleOrder(list, locales) {
 }
 
 function assertAvailableLocales(list, locales) {
-  let listLocales = Array.from(list.firstElementChild.children)
+  let items = Array.from(list.firstElementChild.children);
+  let listLocales = items
     .filter(item => item.value && item.value != "search");
   is(listLocales.length, locales.length, "The right number of locales are available");
   is(listLocales.map(item => item.value).sort(),
      locales.sort().join(","), "The available locales match");
+  is(items[0].getAttribute("class"), "label-item", "The first row is a label");
 }
 
 function requestLocale(localeCode, available, dialogDoc) {

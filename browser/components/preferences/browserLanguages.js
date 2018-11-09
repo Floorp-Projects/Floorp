@@ -210,7 +210,7 @@ class SortedItemSelectList {
     let {compareFn, items, menulist, popup} = this;
 
     // Find the index of the item to insert before.
-    let i = items.findIndex(el => compareFn(el, item) < 0);
+    let i = items.findIndex(el => compareFn(el, item) >= 0);
     items.splice(i, 0, item);
     popup.insertBefore(this.createItem(item), menulist.getItemAtIndex(i));
 
