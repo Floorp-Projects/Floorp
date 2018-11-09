@@ -67,13 +67,14 @@ public:
   virtual ~Http2BaseCompressor();
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   nsresult SetInitialMaxBufferSize(uint32_t maxBufferSize);
+  void SetDumpTables(bool dumpTables);
 
 protected:
   const static uint32_t kDefaultMaxBuffer = 4096;
 
   virtual void ClearHeaderTable();
   virtual void MakeRoom(uint32_t amount, const char *direction);
-  virtual void DumpState();
+  virtual void DumpState(const char *);
   virtual void SetMaxBufferSizeInternal(uint32_t maxBufferSize);
 
   nsACString *mOutput;
@@ -89,6 +90,8 @@ protected:
   Telemetry::HistogramID mPeakSizeID;
   MOZ_INIT_OUTSIDE_CTOR
   Telemetry::HistogramID mPeakCountID;
+
+  bool mDumpTables;
 
 private:
   RefPtr<HpackDynamicTableReporter> mDynamicReporter;
