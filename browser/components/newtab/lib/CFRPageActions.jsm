@@ -353,6 +353,7 @@ class PageAction {
       callback: () => {
         this._blockMessage(id);
         this.hide();
+        this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "BLOCK"});
         RecommendationMap.delete(browser);
       },
     }, {
@@ -361,6 +362,7 @@ class PageAction {
       callback: () => {
         this.dispatchUserAction(secondary[2].action);
         this.hide();
+        this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "MANAGE"});
         RecommendationMap.delete(browser);
       },
     }];

@@ -358,7 +358,7 @@ describe("<TopSiteLink>", () => {
   it("should not add the url to the href if it a search shortcut", () => {
     link.searchTopSite = true;
     const wrapper = shallow(<TopSiteLink link={link} />);
-    assert.isFalse(wrapper.find("a").props().href);
+    assert.isUndefined(wrapper.find("a").props().href);
   });
   it("should have rtl direction automatically set for text", () => {
     const wrapper = shallow(<TopSiteLink link={link} />);
