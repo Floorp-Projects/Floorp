@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/neteq/tools/rtp_file_source.h"
+#include "modules/audio_coding/neteq/tools/rtp_file_source.h"
 
 #include <assert.h>
 #include <string.h>
@@ -20,10 +20,10 @@
 
 #include <memory>
 
-#include "webrtc/base/checks.h"
-#include "webrtc/modules/audio_coding/neteq/tools/packet.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
-#include "webrtc/test/rtp_file_reader.h"
+#include "modules/audio_coding/neteq/tools/packet.h"
+#include "modules/rtp_rtcp/include/rtp_header_parser.h"
+#include "rtc_base/checks.h"
+#include "test/rtp_file_reader.h"
 
 namespace webrtc {
 namespace test {
@@ -72,8 +72,7 @@ std::unique_ptr<Packet> RtpFileSource::NextPacket() {
         packet_memory.release(), temp_packet.length,
         temp_packet.original_length, temp_packet.time_ms, *parser_.get()));
     if (!packet->valid_header()) {
-      assert(false);
-      return NULL;
+      continue;
     }
     if (filter_.test(packet->header().payloadType) ||
         (use_ssrc_filter_ && packet->header().ssrc != ssrc_)) {

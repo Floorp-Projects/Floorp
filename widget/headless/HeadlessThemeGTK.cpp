@@ -58,7 +58,7 @@ HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
     case StyleAppearance::Listbox:
     case StyleAppearance::Treeview:
     case StyleAppearance::Treeheadersortarrow:
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::ProgressbarVertical:
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
@@ -381,10 +381,9 @@ HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Treeheadercell:
     case StyleAppearance::Treeheadersortarrow:
     case StyleAppearance::Treetwistyopen:
-    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressBar:
     case StyleAppearance::Progresschunk:
     case StyleAppearance::ProgressbarVertical:
-    case StyleAppearance::ProgresschunkVertical:
     case StyleAppearance::Tab:
     case StyleAppearance::Tabpanels:
     case StyleAppearance::TabScrollArrowBack:

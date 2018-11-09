@@ -1,2 +1,4 @@
-kjellander@webrtc.org
-pbos@webrtc.org
+glider@chromium.org
+eugenis@chromium.org
+per-file tsan_suppressions.cc=*
+per-file lsan_suppressions.cc=*

@@ -639,39 +639,37 @@ BinASTParser<Tok>::checkFunctionClosedVars()
     return Ok();
 }
 
-template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::appendDirectivesToBody(ListNode* body, ListNode* directives)
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::prependDirectivesToBody(ListNode* body, ListNode* directives)
 {
     if (!directives) {
-        return body;
+        return Ok();
     }
 
-    ParseNode* result = body;
-    if (!directives->empty()) {
-        // Convert directive list to a list of strings.
-        auto pos = directives->head()->pn_pos;
-        BINJS_TRY_DECL(prefix, factory_.newStatementList(pos));
-        for (ParseNode* iter : directives->contents()) {
-            BINJS_TRY_DECL(statement, factory_.newExprStatement(iter, iter->pn_pos.end));
-            prefix->appendWithoutOrderAssumption(statement);
-        }
-
-        // Prepend to the body.
-        ParseNode* iter = body->head();
-        while (iter) {
-            ParseNode* next = iter->pn_next;
-            prefix->appendWithoutOrderAssumption(iter);
-            iter = next;
-        }
-        prefix->setKind(body->getKind());
-        prefix->setOp(body->getOp());
-        if (body->hasTopLevelFunctionDeclarations()) {
-            prefix->setHasTopLevelFunctionDeclarations();
-        }
-        result = prefix;
+    if (directives->empty()) {
+        return Ok();
     }
 
-    return result;
+    MOZ_TRY(prependDirectivesImpl(body, directives->head()));
+
+    return Ok();
+}
+
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::prependDirectivesImpl(ListNode* body, ParseNode* directive)
+{
+    BINJS_TRY(CheckRecursionLimit(cx_));
+
+    // Prepend in the reverse order by using stack, so that the directives are
+    // prepended in the original order.
+    if (ParseNode* next = directive->pn_next) {
+        MOZ_TRY(prependDirectivesImpl(body, next));
+    }
+
+    BINJS_TRY_DECL(statement, factory_.newExprStatement(directive, directive->pn_pos.end));
+    body->prependAndUpdatePos(statement);
+
+    return Ok();
 }
 
 template<typename Tok> mozilla::GenericErrorResult<JS::Error&>

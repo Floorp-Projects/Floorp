@@ -8,15 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_EXTERNAL_DECODER_TEST_H_
-#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_EXTERNAL_DECODER_TEST_H_
+#ifndef MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_EXTERNAL_DECODER_TEST_H_
+#define MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_EXTERNAL_DECODER_TEST_H_
 
 #include <memory>
 #include <string>
 
-#include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
-#include "webrtc/modules/audio_coding/neteq/include/neteq.h"
-#include "webrtc/modules/include/module_common_types.h"
+#include "api/audio_codecs/audio_decoder.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "modules/audio_coding/neteq/include/neteq.h"
+#include "modules/include/module_common_types.h"
 
 namespace webrtc {
 namespace test {
@@ -40,7 +41,7 @@ class NetEqExternalDecoderTest {
   // |payload_size_bytes| bytes. The |receive_timestamp| is an indication
   // of the time when the packet was received, and should be measured with
   // the same tick rate as the RTP timestamp of the current payload.
-  virtual void InsertPacket(WebRtcRTPHeader rtp_header,
+  virtual void InsertPacket(RTPHeader rtp_header,
                             rtc::ArrayView<const uint8_t> payload,
                             uint32_t receive_timestamp);
 
@@ -61,4 +62,4 @@ class NetEqExternalDecoderTest {
 }  // namespace test
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_EXTERNAL_DECODER_TEST_H_
+#endif  // MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_EXTERNAL_DECODER_TEST_H_

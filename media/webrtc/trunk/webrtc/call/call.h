@@ -7,29 +7,32 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef WEBRTC_CALL_CALL_H_
-#define WEBRTC_CALL_CALL_H_
+#ifndef CALL_CALL_H_
+#define CALL_CALL_H_
 
+#include <algorithm>
+#include <memory>
 #include <string>
 #include <vector>
 
-#include "webrtc/base/networkroute.h"
-#include "webrtc/base/platform_file.h"
-#include "webrtc/base/socket.h"
-#include "webrtc/call/audio_receive_stream.h"
-#include "webrtc/call/audio_send_stream.h"
-#include "webrtc/call/audio_state.h"
-#include "webrtc/call/flexfec_receive_stream.h"
-#include "webrtc/common_types.h"
-#include "webrtc/video_receive_stream.h"
-#include "webrtc/video_send_stream.h"
+#include "api/rtcerror.h"
+#include "call/audio_receive_stream.h"
+#include "call/audio_send_stream.h"
+#include "call/audio_state.h"
+#include "call/flexfec_receive_stream.h"
+#include "call/rtp_transport_controller_send_interface.h"
+#include "call/video_receive_stream.h"
+#include "call/video_send_stream.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "rtc_base/bitrateallocationstrategy.h"
+#include "rtc_base/networkroute.h"
+#include "rtc_base/platform_file.h"
+#include "rtc_base/socket.h"
 
 namespace webrtc {
 
 class AudioProcessing;
 class RtcEventLog;
-
-const char* Version();
 
 enum class MediaType {
   ANY,
@@ -37,6 +40,19 @@ enum class MediaType {
   VIDEO,
   DATA
 };
+
+// Like std::min, but considers non-positive values to be unset.
+// TODO(zstein): Remove once all callers use rtc::Optional.
+template <typename T>
+static T MinPositive(T a, T b) {
+  if (a <= 0) {
+    return b;
+  }
+  if (b <= 0) {
+    return a;
+  }
+  return std::min(a, b);
+}
 
 class PacketReceiver {
  public:
@@ -65,15 +81,26 @@ class Call {
       RTC_DCHECK(event_log);
     }
 
-    static const int kDefaultStartBitrateBps;
+    static constexpr int kDefaultStartBitrateBps = 300000;
 
     // Bitrate config used until valid bitrate estimates are calculated. Also
-    // used to cap total bitrate used.
+    // used to cap total bitrate used. This comes from the remote connection.
     struct BitrateConfig {
       int min_bitrate_bps = 0;
       int start_bitrate_bps = kDefaultStartBitrateBps;
       int max_bitrate_bps = -1;
     } bitrate_config;
+
+    // The local client's bitrate preferences. The actual configuration used
+    // is a combination of this and |bitrate_config|. The combination is
+    // currently more complicated than a simple mask operation (see
+    // SetBitrateConfig and SetBitrateConfigMask). Assumes that 0 <= min <=
+    // start <= max holds for set parameters.
+    struct BitrateConfigMask {
+      rtc::Optional<int> min_bitrate_bps;
+      rtc::Optional<int> start_bitrate_bps;
+      rtc::Optional<int> max_bitrate_bps;
+    };
 
     // AudioState which is possibly shared between multiple calls.
     // TODO(solenberg): Change this to a shared_ptr once we can use C++11.
@@ -100,6 +127,11 @@ class Call {
 
   static Call* Create(const Call::Config& config);
 
+  // Allows mocking |transport_send| for testing.
+  static Call* Create(
+      const Call::Config& config,
+      std::unique_ptr<RtpTransportControllerSendInterface> transport_send);
+
   virtual AudioSendStream* CreateAudioSendStream(
       const AudioSendStream::Config& config) = 0;
   virtual void DestroyAudioSendStream(AudioSendStream* send_stream) = 0;
@@ -119,6 +151,9 @@ class Call {
   virtual void DestroyVideoReceiveStream(
       VideoReceiveStream* receive_stream) = 0;
 
+  // In order for a created VideoReceiveStream to be aware that it is
+  // protected by a FlexfecReceiveStream, the latter should be created before
+  // the former.
   virtual FlexfecReceiveStream* CreateFlexfecReceiveStream(
       const FlexfecReceiveStream::Config& config) = 0;
   virtual void DestroyFlexfecReceiveStream(
@@ -133,13 +168,25 @@ class Call {
   // pacing delay, etc.
   virtual Stats GetStats() const = 0;
 
-  // TODO(pbos): Like BitrateConfig above this is currently per-stream instead
-  // of maximum for entire Call. This should be fixed along with the above.
-  // Specifying a start bitrate (>0) will currently reset the current bitrate
-  // estimate. This is due to how the 'x-google-start-bitrate' flag is currently
-  // implemented.
+  // The greater min and smaller max set by this and SetBitrateConfigMask will
+  // be used. The latest non-negative start value from either call will be used.
+  // Specifying a start bitrate (>0) will reset the current bitrate estimate.
+  // This is due to how the 'x-google-start-bitrate' flag is currently
+  // implemented. Passing -1 leaves the start bitrate unchanged. Behavior is not
+  // guaranteed for other negative values or 0.
   virtual void SetBitrateConfig(
       const Config::BitrateConfig& bitrate_config) = 0;
+
+  // The greater min and smaller max set by this and SetBitrateConfig will be
+  // used. The latest non-negative start value form either call will be used.
+  // Specifying a start bitrate will reset the current bitrate estimate.
+  // Assumes 0 <= min <= start <= max holds for set parameters.
+  virtual void SetBitrateConfigMask(
+      const Config::BitrateConfigMask& bitrate_mask) = 0;
+
+  virtual void SetBitrateAllocationStrategy(
+      std::unique_ptr<rtc::BitrateAllocationStrategy>
+          bitrate_allocation_strategy) = 0;
 
   // TODO(skvlad): When the unbundled case with multiple streams for the same
   // media type going over different networks is supported, track the state
@@ -164,4 +211,4 @@ class Call {
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_CALL_CALL_H_
+#endif  // CALL_CALL_H_

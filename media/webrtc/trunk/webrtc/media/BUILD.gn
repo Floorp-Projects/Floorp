@@ -7,20 +7,13 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 import("//build/config/linux/pkg_config.gni")
-import("../build/webrtc.gni")
+import("../webrtc.gni")
 
 group("media") {
-  public_deps = []
-  if (!build_with_mozilla) {
-    public_deps += [
-      ":rtc_media",
-      ":rtc_media_base",
-    ]
-  } else {
-    public_deps += [
-      ":mozilla_rtc_media",
-    ]
-  }
+  public_deps = [
+    ":rtc_media",
+    ":rtc_media_base",
+  ]
 }
 
 config("rtc_media_defines_config") {
@@ -39,36 +32,30 @@ config("rtc_media_warnings_config") {
   }
 }
 
-if (is_linux && rtc_use_gtk) {
-  pkg_config("gtk-lib") {
-    packages = [
-      "gobject-2.0",
-      "gthread-2.0",
-      "gtk+-2.0",
-    ]
-  }
-}
+rtc_source_set("rtc_h264_profile_id") {
+  sources = [
+    "base/h264_profile_level_id.cc",
+    "base/h264_profile_level_id.h",
+  ]
 
-if (build_with_mozilla) {
-  rtc_static_library("mozilla_rtc_media") {
-    defines = []
-    libs = []
-    deps = []
-    sources = [
-      "base/videoadapter.cc",
-      "base/videoadapter.h",
-      "base/videobroadcaster.cc",
-      "base/videobroadcaster.h",
-      "base/videosourcebase.cc",
-      "base/videosourcebase.h",
-    ]
+  if (!build_with_chromium && is_clang) {
+    # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
+
+  deps = [
+    "..:webrtc_common",
+    "../api:optional",
+    "../rtc_base:rtc_base",
+    "../rtc_base:rtc_base_approved",
+  ]
 }
 
 rtc_static_library("rtc_media_base") {
   defines = []
   libs = []
   deps = []
+  public_deps = []
   sources = [
     "base/adaptedvideotracksource.cc",
     "base/adaptedvideotracksource.h",
@@ -82,14 +69,8 @@ rtc_static_library("rtc_media_base") {
     "base/mediaconstants.h",
     "base/mediaengine.cc",
     "base/mediaengine.h",
-    "base/rtpdataengine.cc",
-    "base/rtpdataengine.h",
-    "base/rtputils.cc",
-    "base/rtputils.h",
     "base/streamparams.cc",
     "base/streamparams.h",
-    "base/turnutils.cc",
-    "base/turnutils.h",
     "base/videoadapter.cc",
     "base/videoadapter.h",
     "base/videobroadcaster.cc",
@@ -99,12 +80,25 @@ rtc_static_library("rtc_media_base") {
     "base/videocapturerfactory.h",
     "base/videocommon.cc",
     "base/videocommon.h",
-    "base/videoframe.h",
     "base/videosourcebase.cc",
     "base/videosourcebase.h",
+
+    # TODO(aleloi): add "base/videosinkinterface.h"
+    "base/videosourceinterface.cc",
+
+    # TODO(aleloi): add "base/videosourceinterface.h"
   ]
 
-  configs += [ ":rtc_media_warnings_config" ]
+  if (!build_with_mozilla) {
+    srcs += [
+      "base/rtpdataengine.cc",
+      "base/rtpdataengine.h",
+      "base/rtputils.cc",
+      "base/rtputils.h",
+      "base/turnutils.cc",
+      "base/turnutils.h",
+    ]
+  }
 
   if (!build_with_chromium && is_clang) {
     # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
@@ -114,9 +108,7 @@ rtc_static_library("rtc_media_base") {
   include_dirs = []
   if (rtc_build_libyuv) {
     deps += [ "$rtc_libyuv_dir" ]
-    public_deps = [
-      "$rtc_libyuv_dir",
-    ]
+    public_deps += [ "$rtc_libyuv_dir" ]
   } else {
     # Need to add a directory normally exported by libyuv.
     include_dirs += [ "$rtc_libyuv_dir/include" ]
@@ -124,21 +116,49 @@ rtc_static_library("rtc_media_base") {
 
   deps += [
     "..:webrtc_common",
-    "../base:rtc_base_approved",
+    "../api:optional",
+    "../api:video_frame_api",
+    "../api:video_frame_api_i420",
+    "../api/audio_codecs:audio_codecs_api",
+    "../api/video_codecs:video_codecs_api",
+    "../call:call_interfaces",
+    "../call:video_stream_api",
+    "../modules/audio_processing:audio_processing_statistics",
+    "../rtc_base:rtc_base",
+    "../rtc_base:rtc_base_approved",
+    "../system_wrappers:field_trial_api",
   ]
+
+  public_deps += [ ":rtc_h264_profile_id" ]
 
   if (!build_with_mozilla) {
     deps += [
-      "../p2p",
+      "../api:libjingle_peerconnection_api",
+      "../p2p"
     ]
+  }
+
+  if (is_nacl) {
+    deps += [ "//native_client_sdk/src/libraries/nacl_io" ]
   }
 }
 
-rtc_static_library("rtc_media") {
+rtc_static_library("rtc_audio_video") {
   defines = []
   libs = []
-  deps = []
+  deps = [
+    "../api:video_frame_api_i420",
+    "../modules/video_coding:video_coding_utility",
+  ]
   sources = [
+    "engine/adm_helpers.cc",
+    "engine/adm_helpers.h",
+    "engine/apm_helpers.cc",
+    "engine/apm_helpers.h",
+    "engine/constants.cc",
+    "engine/constants.h",
+    "engine/convert_legacy_video_factory.cc",
+    "engine/convert_legacy_video_factory.h",
     "engine/internaldecoderfactory.cc",
     "engine/internaldecoderfactory.h",
     "engine/internalencoderfactory.cc",
@@ -146,35 +166,39 @@ rtc_static_library("rtc_media") {
     "engine/nullwebrtcvideoengine.h",
     "engine/payload_type_mapper.cc",
     "engine/payload_type_mapper.h",
+    "engine/scopedvideodecoder.cc",
+    "engine/scopedvideodecoder.h",
+    "engine/scopedvideoencoder.cc",
+    "engine/scopedvideoencoder.h",
     "engine/simulcast.cc",
     "engine/simulcast.h",
+    "engine/simulcast_encoder_adapter.cc",
+    "engine/simulcast_encoder_adapter.h",
     "engine/videodecodersoftwarefallbackwrapper.cc",
     "engine/videodecodersoftwarefallbackwrapper.h",
     "engine/videoencodersoftwarefallbackwrapper.cc",
     "engine/videoencodersoftwarefallbackwrapper.h",
-    "engine/webrtccommon.h",
-    "engine/webrtcmediaengine.cc",
-    "engine/webrtcmediaengine.h",
-    "engine/webrtcvideocapturer.cc",
-    "engine/webrtcvideocapturer.h",
-    "engine/webrtcvideocapturerfactory.cc",
-    "engine/webrtcvideocapturerfactory.h",
+    "engine/vp8_encoder_simulcast_proxy.cc",
+    "engine/vp8_encoder_simulcast_proxy.h",
+    "engine/webrtcvideodecoderfactory.cc",
     "engine/webrtcvideodecoderfactory.h",
     "engine/webrtcvideoencoderfactory.cc",
     "engine/webrtcvideoencoderfactory.h",
-    "engine/webrtcvideoengine2.cc",
-    "engine/webrtcvideoengine2.h",
-    "engine/webrtcvideoframe.h",
-    "engine/webrtcvoe.h",
-    "engine/webrtcvoiceengine.cc",
-    "engine/webrtcvoiceengine.h",
-    "sctp/sctptransportinternal.h",
   ]
 
-  if (rtc_enable_sctp) {
+  if (!build_with_mozilla) {
     sources += [
-      "sctp/sctptransport.cc",
-      "sctp/sctptransport.h",
+      "engine/webrtcvideocapturer.cc",
+      "engine/webrtcvideocapturer.h",
+      "engine/webrtcvideocapturerfactory.cc",
+      "engine/webrtcvideocapturerfactory.h",
+      "engine/webrtcmediaengine.cc",
+      "engine/webrtcmediaengine.h",
+      "engine/webrtcvideoengine.cc",
+      "engine/webrtcvideoengine.h",
+      "engine/webrtcvoe.h",
+      "engine/webrtcvoiceengine.cc",
+      "engine/webrtcvoiceengine.h",
     ]
   }
 
@@ -199,6 +223,12 @@ rtc_static_library("rtc_media") {
     defines += [ "WEBRTC_INTELLIGIBILITY_ENHANCER=0" ]
   }
 
+  if (rtc_opus_support_120ms_ptime) {
+    defines += [ "WEBRTC_OPUS_SUPPORT_120MS_PTIME=1" ]
+  } else {
+    defines += [ "WEBRTC_OPUS_SUPPORT_120MS_PTIME=0" ]
+  }
+
   include_dirs = []
   if (rtc_build_libyuv) {
     deps += [ "$rtc_libyuv_dir" ]
@@ -210,15 +240,6 @@ rtc_static_library("rtc_media") {
     include_dirs += [ "$rtc_libyuv_dir/include" ]
   }
 
-  if (rtc_enable_sctp && rtc_build_usrsctp) {
-    include_dirs += [
-      # TODO(jiayl): move this into the public_configs of
-      # //third_party/usrsctp/BUILD.gn.
-      "//third_party/usrsctp/usrsctplib",
-    ]
-    deps += [ "//third_party/usrsctp" ]
-  }
-
   public_configs = []
   if (build_with_chromium) {
     deps += [ "../modules/video_capture:video_capture" ]
@@ -226,25 +247,112 @@ rtc_static_library("rtc_media") {
     public_configs += [ ":rtc_media_defines_config" ]
     deps += [ "../modules/video_capture:video_capture_internal_impl" ]
   }
-  if (is_linux && rtc_use_gtk) {
-    sources += [
-      "devices/gtkvideorenderer.cc",
-      "devices/gtkvideorenderer.h",
-    ]
-    public_configs += [ ":gtk-lib" ]
+  if (rtc_enable_protobuf) {
+    deps += [ "../modules/audio_processing/aec_dump:aec_dump_impl" ]
+  } else {
+    deps += [ "../modules/audio_processing/aec_dump:null_aec_dump_factory" ]
   }
   deps += [
     ":rtc_media_base",
     "..:webrtc_common",
     "../api:call_api",
+    "../api:optional",
     "../api:transport_api",
-    "../base:rtc_base_approved",
+    "../api:video_frame_api",
+    "../api/audio_codecs:audio_codecs_api",
+    "../api/video_codecs:video_codecs_api",
     "../call",
+    "../call:video_stream_api",
+    "../common_video:common_video",
+    "../modules/audio_coding:rent_a_codec",
+    "../modules/audio_device:audio_device",
     "../modules/audio_mixer:audio_mixer_impl",
+    "../modules/audio_processing:audio_processing",
+    "../modules/audio_processing/aec_dump",
+    "../modules/video_capture:video_capture_module",
     "../modules/video_coding",
+    "../modules/video_coding:webrtc_h264",
+    "../modules/video_coding:webrtc_vp8",
+    "../modules/video_coding:webrtc_vp9",
+    "../rtc_base:rtc_base",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base:rtc_task_queue",
+    "../rtc_base:sequenced_task_checker",
     "../system_wrappers",
+    "../video",
     "../voice_engine",
   ]
+
+  if (!build_with_mozilla) {
+    deps += [
+      "../api:libjingle_peerconnection_api",
+      "../p2p:rtc_p2p",
+      "../pc:rtc_pc_base",
+    ]
+  }
+}
+
+rtc_static_library("rtc_data") {
+  defines = []
+  deps = []
+
+  if (rtc_enable_sctp) {
+    sources = [
+      "sctp/sctptransport.cc",
+      "sctp/sctptransport.h",
+      "sctp/sctptransportinternal.h",
+    ]
+  }
+
+  configs += [ ":rtc_media_warnings_config" ]
+
+  if (!build_with_chromium && is_clang) {
+    # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  if (is_win) {
+    cflags = [
+      "/wd4245",  # conversion from "int" to "size_t", signed/unsigned mismatch.
+      "/wd4267",  # conversion from "size_t" to "int", possible loss of data.
+      "/wd4389",  # signed/unsigned mismatch.
+    ]
+  }
+
+  if (rtc_enable_sctp && rtc_build_usrsctp) {
+    include_dirs = [
+      # TODO(jiayl): move this into the public_configs of
+      # //third_party/usrsctp/BUILD.gn.
+      "//third_party/usrsctp/usrsctplib",
+    ]
+    deps += [ "//third_party/usrsctp" ]
+  }
+
+  deps += [
+    ":rtc_media_base",
+    "..:webrtc_common",
+    "../api:call_api",
+    "../api:transport_api",
+    "../rtc_base:rtc_base",
+    "../rtc_base:rtc_base_approved",
+    "../system_wrappers",
+  ]
+
+  if (!build_with_mozilla) {
+    deps += [ "../p2p:rtc_p2p" ]
+  }
+}
+
+rtc_source_set("rtc_media") {
+  public_deps = [
+    ":rtc_audio_video",
+  ]
+
+  if (!build_with_mozilla) {
+    public_deps += [
+      ":rtc_data",
+    ]
+  }
 }
 
 if (rtc_include_tests) {
@@ -257,15 +365,24 @@ if (rtc_include_tests) {
     }
   }
 
-  rtc_source_set("rtc_unittest_main") {
+  rtc_source_set("rtc_media_tests_utils") {
     testonly = true
 
     include_dirs = []
     public_deps = []
-    deps = []
+    deps = [
+      "../api:video_frame_api_i420",
+      "../call:video_stream_api",
+      "../modules/audio_coding:rent_a_codec",
+      "../modules/audio_processing:audio_processing",
+      "../modules/rtp_rtcp:rtp_rtcp",
+      "../modules/video_coding:video_coding_utility",
+      "../p2p:rtc_p2p",
+    ]
     sources = [
       "base/fakemediaengine.h",
       "base/fakenetworkinterface.h",
+      "base/fakertp.cc",
       "base/fakertp.h",
       "base/fakevideocapturer.h",
       "base/fakevideorenderer.h",
@@ -297,7 +414,17 @@ if (rtc_include_tests) {
     }
 
     deps += [
-      "../base:rtc_base_tests_main",
+      ":rtc_media",
+      ":rtc_media_base",
+      "..:webrtc_common",
+      "../api:call_api",
+      "../api:video_frame_api",
+      "../api/video_codecs:video_codecs_api",
+      "../call:call_interfaces",
+      "../rtc_base:rtc_base",
+      "../rtc_base:rtc_base_approved",
+      "../rtc_base:rtc_base_tests_utils",
+      "../test:test_support",
       "//testing/gtest",
     ]
     public_deps += [ "//testing/gmock" ]
@@ -314,7 +441,6 @@ if (rtc_include_tests) {
         # See https://bugs.chromium.org/p/webrtc/issues/detail?id=6266
         # for -Wno-sign-compare
         "-Wno-sign-compare",
-        "-Wno-unused-function",
       ]
     }
     if (!is_win) {
@@ -323,13 +449,13 @@ if (rtc_include_tests) {
   }
 
   rtc_media_unittests_resources = [
-    "//resources/media/captured-320x240-2s-48.frames",
-    "//resources/media/faces.1280x720_P420.yuv",
-    "//resources/media/faces_I420.jpg",
-    "//resources/media/faces_I422.jpg",
-    "//resources/media/faces_I444.jpg",
-    "//resources/media/faces_I411.jpg",
-    "//resources/media/faces_I400.jpg",
+    "../resources/media/captured-320x240-2s-48.frames",
+    "../resources/media/faces.1280x720_P420.yuv",
+    "../resources/media/faces_I420.jpg",
+    "../resources/media/faces_I422.jpg",
+    "../resources/media/faces_I444.jpg",
+    "../resources/media/faces_I411.jpg",
+    "../resources/media/faces_I400.jpg",
   ]
 
   if (is_ios) {
@@ -346,7 +472,11 @@ if (rtc_include_tests) {
     testonly = true
 
     defines = []
-    deps = []
+    deps = [
+      "../api:video_frame_api_i420",
+      "../pc:rtc_pc",
+      "../test:field_trial",
+    ]
     sources = [
       "base/codec_unittest.cc",
       "base/rtpdataengine_unittest.cc",
@@ -358,18 +488,26 @@ if (rtc_include_tests) {
       "base/videocapturer_unittest.cc",
       "base/videocommon_unittest.cc",
       "base/videoengine_unittest.h",
+      "engine/apm_helpers_unittest.cc",
       "engine/internaldecoderfactory_unittest.cc",
       "engine/nullwebrtcvideoengine_unittest.cc",
       "engine/payload_type_mapper_unittest.cc",
+      "engine/simulcast_encoder_adapter_unittest.cc",
       "engine/simulcast_unittest.cc",
       "engine/videodecodersoftwarefallbackwrapper_unittest.cc",
       "engine/videoencodersoftwarefallbackwrapper_unittest.cc",
+      "engine/vp8_encoder_simulcast_proxy_unittest.cc",
       "engine/webrtcmediaengine_unittest.cc",
       "engine/webrtcvideocapturer_unittest.cc",
       "engine/webrtcvideoencoderfactory_unittest.cc",
-      "engine/webrtcvideoengine2_unittest.cc",
-      "engine/webrtcvoiceengine_unittest.cc",
+      "engine/webrtcvideoengine_unittest.cc",
     ]
+
+    # TODO(kthelgason): Reenable this test on iOS.
+    # See bugs.webrtc.org/5569
+    if (!is_ios) {
+      sources += [ "engine/webrtcvoiceengine_unittest.cc" ]
+    }
 
     if (rtc_enable_sctp) {
       sources += [ "sctp/sctptransport_unittest.cc" ]
@@ -380,6 +518,13 @@ if (rtc_include_tests) {
     if (rtc_use_h264) {
       defines += [ "WEBRTC_USE_H264" ]
     }
+
+    if (rtc_opus_support_120ms_ptime) {
+      defines += [ "WEBRTC_OPUS_SUPPORT_120MS_PTIME=1" ]
+    } else {
+      defines += [ "WEBRTC_OPUS_SUPPORT_120MS_PTIME=0" ]
+    }
+
     if (is_win) {
       cflags = [
         "/wd4245",  # conversion from int to size_t, signed/unsigned mismatch.
@@ -409,13 +554,33 @@ if (rtc_include_tests) {
     }
 
     deps += [
-      # TODO(kjellander): Move as part of work in bugs.webrtc.org/4243.
       ":rtc_media",
-      ":rtc_unittest_main",
+      ":rtc_media_base",
+      ":rtc_media_tests_utils",
+      "../api:mock_video_codec_factory",
+      "../api:video_frame_api",
+      "../api/audio_codecs:builtin_audio_decoder_factory",
+      "../api/audio_codecs:builtin_audio_encoder_factory",
+      "../api/video_codecs:video_codecs_api",
       "../audio",
-      "../base:rtc_base_tests_utils",
+      "../call:call_interfaces",
+      "../common_video:common_video",
+      "../logging:rtc_event_log_api",
       "../modules/audio_device:mock_audio_device",
+      "../modules/audio_processing:audio_processing",
+      "../modules/video_coding:simulcast_test_utility",
+      "../modules/video_coding:video_coding_utility",
+      "../modules/video_coding:webrtc_vp8",
+      "../p2p:p2p_test_utils",
+      "../rtc_base:rtc_base",
+      "../rtc_base:rtc_base_approved",
+      "../rtc_base:rtc_base_tests_main",
+      "../rtc_base:rtc_base_tests_utils",
       "../system_wrappers:metrics_default",
+      "../test:audio_codec_mocks",
+      "../test:test_support",
+      "../test:video_test_common",
+      "../voice_engine:voice_engine",
     ]
   }
 }

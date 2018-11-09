@@ -8,11 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/remote_bitrate_estimator/test/metric_recorder.h"
+#include "modules/remote_bitrate_estimator/test/metric_recorder.h"
 
 #include <algorithm>
 
-#include "webrtc/modules/remote_bitrate_estimator/test/packet_sender.h"
+#include "modules/remote_bitrate_estimator/test/packet_sender.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 namespace testing {
@@ -309,10 +310,6 @@ void MetricRecorder::PlotDelayHistogram(const std::string& title,
                                         int64_t one_way_path_delay_ms) const {
   double average_delay_ms =
       static_cast<double>(sum_delays_ms_) / num_packets_received_;
-
-  // Prevent the error to be too close to zero (plotting issue).
-  double extra_error = average_delay_ms / 500;
-  double tenth_sigma_ms = DelayStdDev() / 10.0 + extra_error;
   int64_t percentile_5_ms = NthDelayPercentile(5);
   int64_t percentile_95_ms = NthDelayPercentile(95);
 
@@ -329,7 +326,7 @@ void MetricRecorder::PlotDelayHistogram(const std::string& title,
   BWE_TEST_LOGGING_LOG1("RESULTS >>> " + bwe_name + " Delay 95th percentile : ",
                         "%ld ms", percentile_95_ms - one_way_path_delay_ms);
 
-  RTC_UNUSED(tenth_sigma_ms);
+  RTC_UNUSED(average_delay_ms);
   RTC_UNUSED(percentile_5_ms);
   RTC_UNUSED(percentile_95_ms);
 }

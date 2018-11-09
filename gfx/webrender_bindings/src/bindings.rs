@@ -680,6 +680,11 @@ pub unsafe extern "C" fn wr_renderer_accumulate_memory_report(renderer: &mut Ren
     *report += renderer.report_memory();
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn wr_total_gpu_bytes_allocated() -> usize {
+    ::webrender::total_gpu_bytes_allocated()
+}
+
 // cbindgen doesn't support tuples, so we have a little struct instead, with
 // an Into implementation to convert from the tuple to the struct.
 #[repr(C)]

@@ -8,13 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_EXTENDED_JITTER_REPORT_H_
-#define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_EXTENDED_JITTER_REPORT_H_
+#ifndef MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_EXTENDED_JITTER_REPORT_H_
+#define MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_EXTENDED_JITTER_REPORT_H_
 
 #include <vector>
 
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet.h"
+#include "modules/rtp_rtcp/source/rtcp_packet.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -25,8 +24,8 @@ class ExtendedJitterReport : public RtcpPacket {
   static constexpr uint8_t kPacketType = 195;
   static constexpr size_t kMaxNumberOfJitterValues = 0x1f;
 
-  ExtendedJitterReport() {}
-  ~ExtendedJitterReport() override {}
+  ExtendedJitterReport();
+  ~ExtendedJitterReport() override;
 
   // Parse assumes header is already parsed and validated.
   bool Parse(const CommonHeader& packet);
@@ -37,7 +36,8 @@ class ExtendedJitterReport : public RtcpPacket {
     return inter_arrival_jitters_;
   }
 
- protected:
+  size_t BlockLength() const override;
+
   bool Create(uint8_t* packet,
               size_t* index,
               size_t max_length,
@@ -46,15 +46,9 @@ class ExtendedJitterReport : public RtcpPacket {
  private:
   static constexpr size_t kJitterSizeBytes = 4;
 
-  size_t BlockLength() const override {
-    return kHeaderLength + kJitterSizeBytes * inter_arrival_jitters_.size();
-  }
-
   std::vector<uint32_t> inter_arrival_jitters_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(ExtendedJitterReport);
 };
 
 }  // namespace rtcp
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_EXTENDED_JITTER_REPORT_H_
+#endif  // MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_EXTENDED_JITTER_REPORT_H_

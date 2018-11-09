@@ -9,11 +9,11 @@
  */
 
 
-#include "webrtc/modules/audio_coding/neteq/tools/neteq_external_decoder_test.h"
+#include "modules/audio_coding/neteq/tools/neteq_external_decoder_test.h"
 
-#include "webrtc/base/format_macros.h"
-#include "webrtc/modules/audio_coding/codecs/builtin_audio_decoder_factory.h"
-#include "webrtc/test/gtest.h"
+#include "api/audio_codecs/builtin_audio_decoder_factory.h"
+#include "rtc_base/format_macros.h"
+#include "test/gtest.h"
 
 namespace webrtc {
 namespace test {
@@ -37,7 +37,7 @@ void NetEqExternalDecoderTest::Init() {
 }
 
 void NetEqExternalDecoderTest::InsertPacket(
-    WebRtcRTPHeader rtp_header,
+    RTPHeader rtp_header,
     rtc::ArrayView<const uint8_t> payload,
     uint32_t receive_timestamp) {
   ASSERT_EQ(NetEq::kOK,

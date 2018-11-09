@@ -8,18 +8,17 @@
 *  be found in the AUTHORS file in the root of the source tree.
 */
 
-#include "webrtc/modules/desktop_capture/app_capturer.h"
-#include "webrtc/modules/desktop_capture/shared_desktop_frame.h"
-#include "webrtc/modules/desktop_capture/win/win_shared.h"
+#include "modules/desktop_capture/app_capturer.h"
+#include "modules/desktop_capture/shared_desktop_frame.h"
+#include "modules/desktop_capture/win/win_shared.h"
 
 #include <windows.h>
 #include <vector>
 #include <cassert>
 
-#include "webrtc/modules/desktop_capture/desktop_capturer.h"
-#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
-#include "webrtc/modules/desktop_capture/desktop_frame_win.h"
-#include "webrtc/system_wrappers/include/logging.h"
+#include "modules/desktop_capture/desktop_capturer.h"
+#include "modules/desktop_capture/desktop_capture_options.h"
+#include "modules/desktop_capture/desktop_frame_win.h"
 
 namespace webrtc {
 

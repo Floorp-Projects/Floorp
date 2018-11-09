@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/neteq/expand.h"
+#include "modules/audio_coding/neteq/expand.h"
 
 #include <assert.h>
 #include <string.h>  // memset
@@ -16,14 +16,14 @@
 #include <algorithm>  // min, max
 #include <limits>  // numeric_limits<T>
 
-#include "webrtc/base/safe_conversions.h"
-#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
-#include "webrtc/modules/audio_coding/neteq/background_noise.h"
-#include "webrtc/modules/audio_coding/neteq/cross_correlation.h"
-#include "webrtc/modules/audio_coding/neteq/dsp_helper.h"
-#include "webrtc/modules/audio_coding/neteq/random_vector.h"
-#include "webrtc/modules/audio_coding/neteq/statistics_calculator.h"
-#include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
+#include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "modules/audio_coding/neteq/background_noise.h"
+#include "modules/audio_coding/neteq/cross_correlation.h"
+#include "modules/audio_coding/neteq/dsp_helper.h"
+#include "modules/audio_coding/neteq/random_vector.h"
+#include "modules/audio_coding/neteq/statistics_calculator.h"
+#include "modules/audio_coding/neteq/sync_buffer.h"
+#include "rtc_base/numerics/safe_conversions.h"
 
 namespace webrtc {
 
@@ -222,7 +222,7 @@ int Expand::Process(AudioMultiVector* output) {
     //   >= 64 * fs_mult            => go from 1 to 0 in about 32 ms.
     // temp_shift = getbits(max_lag_) - 5.
     int temp_shift =
-        (31 - WebRtcSpl_NormW32(rtc::checked_cast<int32_t>(max_lag_))) - 5;
+        (31 - WebRtcSpl_NormW32(rtc::dchecked_cast<int32_t>(max_lag_))) - 5;
     int16_t mix_factor_increment = 256 >> temp_shift;
     if (stop_muting_) {
       mix_factor_increment = 0;
@@ -315,8 +315,8 @@ int Expand::Process(AudioMultiVector* output) {
       kMaxConsecutiveExpands : consecutive_expands_ + 1;
   expand_duration_samples_ += output->Size();
   // Clamp the duration counter at 2 seconds.
-  expand_duration_samples_ =
-      std::min(expand_duration_samples_, rtc::checked_cast<size_t>(fs_hz_ * 2));
+  expand_duration_samples_ = std::min(expand_duration_samples_,
+                                      rtc::dchecked_cast<size_t>(fs_hz_ * 2));
   return 0;
 }
 
@@ -325,7 +325,7 @@ void Expand::SetParametersForNormalAfterExpand() {
   lag_index_direction_ = 0;
   stop_muting_ = true;  // Do not mute signal any more.
   statistics_->LogDelayedPacketOutageEvent(
-      rtc::checked_cast<int>(expand_duration_samples_) / (fs_hz_ / 1000));
+      rtc::dchecked_cast<int>(expand_duration_samples_) / (fs_hz_ / 1000));
 }
 
 void Expand::SetParametersForMergeAfterExpand() {

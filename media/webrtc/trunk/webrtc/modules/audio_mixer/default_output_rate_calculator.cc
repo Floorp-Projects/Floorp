@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_mixer/default_output_rate_calculator.h"
+#include "modules/audio_mixer/default_output_rate_calculator.h"
 
 #include <algorithm>
 
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "modules/audio_processing/include/audio_processing.h"
 
 namespace webrtc {
 
@@ -31,7 +31,7 @@ int DefaultOutputRateCalculator::CalculateOutputRate(
   static constexpr NativeRate native_rates[] = {
       NativeRate::kSampleRate8kHz, NativeRate::kSampleRate16kHz,
       NativeRate::kSampleRate32kHz, NativeRate::kSampleRate48kHz};
-  const auto rounded_up_index = std::lower_bound(
+  const auto* rounded_up_index = std::lower_bound(
       std::begin(native_rates), std::end(native_rates), maximal_frequency);
   RTC_DCHECK(rounded_up_index != std::end(native_rates));
   return *rounded_up_index;
