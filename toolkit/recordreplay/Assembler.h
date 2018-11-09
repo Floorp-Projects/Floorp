@@ -147,7 +147,7 @@ private:
   template <typename... ByteList>
   inline void NewInstruction(ByteList... aBytes) {
     size_t numBytes = CountBytes(aBytes...);
-    MOZ_ASSERT(numBytes <= MaximumAdvance);
+    MOZ_RELEASE_ASSERT(numBytes <= MaximumAdvance);
     uint8_t* ip = Current();
     CopyBytes(ip, aBytes...);
     Advance(numBytes);

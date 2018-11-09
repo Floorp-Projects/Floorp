@@ -308,6 +308,21 @@ RecordReplayInvokeCall(size_t aCallId, CallArguments* aArguments)
 // effort sort of thing, and any failures will be noted for reporting and
 // without touching the original code at all.
 
+static void
+PrintRedirectSpew(const char* aFormat, ...)
+{
+  static bool spewEnabled = TestEnv("MOZ_RECORD_REPLAY_REDIRECT_SPEW");
+
+  if (spewEnabled) {
+    va_list ap;
+    va_start(ap, aFormat);
+    char buf[4096];
+    VsprintfLiteral(buf, aFormat, ap);
+    va_end(ap);
+    Print("%s", buf);
+  }
+}
+
 // Keep track of the jumps we know about which could affect the validity if a
 // code patch.
 static StaticInfallibleVector<std::pair<uint8_t*,uint8_t*>> gInternalJumps;
@@ -332,8 +347,25 @@ static StaticInfallibleVector<JumpPatch> gJumpPatches;
 static void
 AddJumpPatch(uint8_t* aStart, uint8_t* aTarget, bool aShort)
 {
+  PrintRedirectSpew("Adding jump patch: %p -> %p [Short %d]\n", aStart, aTarget, aShort);
   gInternalJumps.emplaceBack(aStart, aTarget);
   gJumpPatches.emplaceBack(aStart, aTarget, aShort);
+}
+
+static void
+AddLongJumpPatch(uint8_t* aStart, uint8_t* aTarget)
+{
+  AddJumpPatch(aStart, aTarget, /* aShort = */ false);
+}
+
+static bool
+AddShortJumpPatch(uint8_t* aStart, uint8_t* aTarget)
+{
+  if (!Assembler::CanPatchShortJump(aStart, aTarget)) {
+    return false;
+  }
+  AddJumpPatch(aStart, aTarget, /* aShort = */ true);
+  return true;
 }
 
 // A range of instructions to clobber at the end of redirecting.
@@ -352,6 +384,7 @@ static void
 AddClobberPatch(uint8_t* aStart, uint8_t* aEnd)
 {
   if (aStart < aEnd) {
+    PrintRedirectSpew("Adding clobber patch: [%p, %p]\n", aStart, aEnd);
     gClobberPatches.emplaceBack(aStart, aEnd);
   }
 }
@@ -385,12 +418,16 @@ DecodeInstruction(uint8_t* aIp, ud_t* aUd)
 static uint8_t*
 MaybeInternalJumpTarget(uint8_t* aIpStart, uint8_t* aIpEnd)
 {
+  PrintRedirectSpew("Checking for internal jump targets: [%p, %p]\n", aIpStart, aIpEnd);
+
   // The start and end have to be associated with the same symbol, as otherwise
   // a jump could come into the start of the later symbol.
   const char* startName = SymbolNameRaw(aIpStart);
   const char* endName = SymbolNameRaw(aIpEnd - 1);
   if (strcmp(startName, endName)) {
-    return SymbolBase(aIpEnd - 1);
+    uint8_t* target = SymbolBase(aIpEnd - 1);
+    PrintRedirectSpew("Failed [%p]: Different symbol names: %s %s\n", target, startName, endName);
+    return target;
   }
 
   // Look for any internal jumps from outside the patch range into the middle
@@ -398,6 +435,7 @@ MaybeInternalJumpTarget(uint8_t* aIpStart, uint8_t* aIpEnd)
   for (auto jump : gInternalJumps) {
     if (!(jump.first >= aIpStart && jump.first < aIpEnd) &&
         jump.second > aIpStart && jump.second < aIpEnd) {
+      PrintRedirectSpew("Failed [%p]: Internal jump target\n", jump.second);
       return jump.second;
     }
   }
@@ -406,11 +444,13 @@ MaybeInternalJumpTarget(uint8_t* aIpStart, uint8_t* aIpEnd)
   for (auto patch : gJumpPatches) {
     uint8_t* end = patch.mStart + (patch.mShort ? ShortJumpBytes : JumpBytesClobberRax);
     if (MemoryIntersects(aIpStart, aIpEnd - aIpStart, patch.mStart, end - patch.mStart)) {
+      PrintRedirectSpew("Failed [%p]: Patched region\n", end);
       return end;
     }
   }
   for (auto patch : gClobberPatches) {
     if (MemoryIntersects(aIpStart, aIpEnd - aIpStart, patch.mStart, patch.mEnd - patch.mStart)) {
+      PrintRedirectSpew("Failed [%p]: Clobbered region\n", patch.mEnd);
       return patch.mEnd;
     }
   }
@@ -434,10 +474,12 @@ MaybeInternalJumpTarget(uint8_t* aIpStart, uint8_t* aIpEnd)
         // other system threads might be inside.
         strstr(startName, "__workq_kernreturn") ||
         strstr(startName, "kevent64")) {
+      PrintRedirectSpew("Failed [%p]: Vetoed by annotation\n", aIpEnd - 1);
       return aIpEnd - 1;
     }
   }
 
+  PrintRedirectSpew("Success!\n");
   return nullptr;
 }
 
@@ -453,18 +495,18 @@ RedirectFailure(const char* aFormat, ...)
   VsprintfLiteral(buf, aFormat, ap);
   va_end(ap);
   gRedirectFailures.emplaceBack(strdup(buf));
+
+  PrintRedirectSpew("Redirection failure: %s\n", buf);
 }
 
 static void
 UnknownInstruction(const char* aName, uint8_t* aIp, size_t aNbytes)
 {
-  char buf[4096];
-  char* ptr = buf;
+  nsCString byteData;
   for (size_t i = 0; i < aNbytes; i++) {
-    int written = snprintf(ptr, sizeof(buf) - (ptr - buf), " %d", (int) aIp[i]);
-    ptr += written;
+    byteData.AppendPrintf(" %d", (int) aIp[i]);
   }
-  RedirectFailure("Unknown instruction in %s:%s", aName, buf);
+  RedirectFailure("Unknown instruction in %s:%s", aName, byteData.get());
 }
 
 // Try to emit instructions to |aAssembler| with equivalent behavior to any
@@ -687,8 +729,6 @@ static uint8_t*
 CopyInstructions(const char* aName, uint8_t* aIpStart, uint8_t* aIpEnd,
                  Assembler& aAssembler)
 {
-  MOZ_RELEASE_ASSERT(!MaybeInternalJumpTarget(aIpStart, aIpEnd));
-
   uint8_t* ip = aIpStart;
   while (ip < aIpEnd) {
     ip += CopyInstruction(aName, ip, aAssembler);
@@ -750,6 +790,9 @@ Redirect(size_t aCallId, Redirection& aRedirection, Assembler& aAssembler, bool 
     return;
   }
 
+  PrintRedirectSpew("Redirecting [FirstPass %d] %s: %p\n",
+                    aFirstPass, aRedirection.mName, functionStart);
+
   // First, see if we can overwrite JumpBytesClobberRax bytes of instructions
   // at the base function with a direct jump to the new function. Rax is never
   // live at the start of a function and we can emit a jump to an arbitrary
@@ -785,7 +828,7 @@ Redirect(size_t aCallId, Redirection& aRedirection, Assembler& aAssembler, bool 
 
     // Emit jump J0.
     uint8_t* newFunction = GenerateRedirectStub(aAssembler, aCallId);
-    AddJumpPatch(functionStart, newFunction, /* aShort = */ false);
+    AddLongJumpPatch(functionStart, newFunction);
     AddClobberPatch(functionStart + JumpBytesClobberRax, ro);
     return;
   }
@@ -818,8 +861,9 @@ Redirect(size_t aCallId, Redirection& aRedirection, Assembler& aAssembler, bool 
     return;
   }
 
-  // The original symbol must have enough bytes to insert a short jump.
-  MOZ_RELEASE_ASSERT(!MaybeInternalJumpTarget(ro, ro + ShortJumpBytes));
+  if (MaybeInternalJumpTarget(ro, ro + ShortJumpBytes)) {
+    RedirectFailure("Can't patch short jump for %s", aRedirection.mName);
+  }
 
   // Copy AA into generated code.
   aRedirection.mOriginalFunction = aAssembler.Current();
@@ -849,15 +893,17 @@ Redirect(size_t aCallId, Redirection& aRedirection, Assembler& aAssembler, bool 
   aAssembler.Jump(afterip);
 
   // Emit jump J1.
-  AddJumpPatch(ro, firstJumpTarget, /* aShort = */ false);
+  AddLongJumpPatch(ro, firstJumpTarget);
 
   // Emit jump J2.
   uint8_t* newFunction = GenerateRedirectStub(aAssembler, aCallId);
-  AddJumpPatch(ro + JumpBytesClobberRax, newFunction, /* aShort = */ false);
+  AddLongJumpPatch(ro + JumpBytesClobberRax, newFunction);
   AddClobberPatch(ro + 2 * JumpBytesClobberRax, afterip);
 
   // Emit jump J0.
-  AddJumpPatch(functionStart, ro + JumpBytesClobberRax, /* aShort = */ true);
+  if (!AddShortJumpPatch(functionStart, ro + JumpBytesClobberRax)) {
+    RedirectFailure("Short jump distance too long for %s", aRedirection.mName);
+  }
   AddClobberPatch(functionStart + ShortJumpBytes, nro);
 }
 
@@ -869,8 +915,8 @@ EarlyInitializeRedirections()
     if (!redirection.mName) {
       break;
     }
-    MOZ_ASSERT(!redirection.mBaseFunction);
-    MOZ_ASSERT(!redirection.mOriginalFunction);
+    MOZ_RELEASE_ASSERT(!redirection.mBaseFunction);
+    MOZ_RELEASE_ASSERT(!redirection.mOriginalFunction);
 
     redirection.mBaseFunction = FunctionStartAddress(redirection);
     redirection.mOriginalFunction = redirection.mBaseFunction;
@@ -892,7 +938,7 @@ EarlyInitializeRedirections()
 bool
 InitializeRedirections()
 {
-  MOZ_ASSERT(IsRecordingOrReplaying());
+  MOZ_RELEASE_ASSERT(IsRecordingOrReplaying());
 
   {
     Assembler assembler;
@@ -916,20 +962,12 @@ InitializeRedirections()
 
   // Don't install redirections if we had any failures.
   if (!gRedirectFailures.empty()) {
-    size_t len = 4096;
-    gInitializationFailureMessage = new char[4096];
-    gInitializationFailureMessage[--len] = 0;
-
-    char* ptr = gInitializationFailureMessage;
+    nsCString data;
     for (char* reason : gRedirectFailures) {
-      size_t n = snprintf(ptr, len, "%s\n", reason);
-      if (n >= len) {
-        break;
-      }
-      ptr += n;
-      len -= n;
+      data.AppendPrintf("%s\n", reason);
     }
 
+    gInitializationFailureMessage = strdup(data.get());
     return false;
   }
 
