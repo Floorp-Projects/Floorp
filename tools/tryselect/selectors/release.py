@@ -64,10 +64,7 @@ def run_try_release(
     push=True, message='{msg}', **kwargs
 ):
 
-    if version.is_beta:
-        app_version = attr.evolve(version, beta_number=None)
-    else:
-        app_version = version
+    app_version = attr.evolve(version, beta_number=None, is_esr=False)
 
     files_to_change = {
         'browser/config/version.txt': '{}\n'.format(app_version),
