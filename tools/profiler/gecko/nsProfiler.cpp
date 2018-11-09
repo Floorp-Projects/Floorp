@@ -45,7 +45,7 @@ extern "C" {
                                  nsProfiler::SymbolTable* symbol_table);
 }
 
-NS_IMPL_ISUPPORTS(nsProfiler, nsIProfiler)
+NS_IMPL_ISUPPORTS(nsProfiler, nsIProfiler, nsIObserver)
 
 nsProfiler::nsProfiler()
   : mLockedForPrivateBrowsing(false)
