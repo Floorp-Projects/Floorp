@@ -285,6 +285,7 @@ Http2BaseCompressor::Http2BaseCompressor()
   , mSetInitialMaxBufferSizeAllowed(true)
   , mPeakSize(0)
   , mPeakCount(0)
+  , mDumpTables(false)
 {
   mDynamicReporter = new HpackDynamicTableReporter(this);
   RegisterStrongMemoryReporter(mDynamicReporter);
@@ -349,11 +350,17 @@ Http2BaseCompressor::MakeRoom(uint32_t amount, const char *direction)
 }
 
 void
-Http2BaseCompressor::DumpState()
+Http2BaseCompressor::DumpState(const char *preamble)
 {
   if (!LOG_ENABLED()) {
     return;
   }
+
+  if (!mDumpTables) {
+    return;
+  }
+
+  LOG(("%s", preamble));
 
   LOG(("Header Table"));
   uint32_t i;
@@ -398,6 +405,12 @@ Http2BaseCompressor::SetInitialMaxBufferSize(uint32_t maxBufferSize)
   return NS_ERROR_FAILURE;
 }
 
+void
+Http2BaseCompressor::SetDumpTables(bool dumpTables)
+{
+  mDumpTables = dumpTables;
+}
+
 nsresult
 Http2Decompressor::DecodeHeaderBlock(const uint8_t *data, uint32_t datalen,
                                      nsACString &output, bool isPush)
@@ -423,25 +436,26 @@ Http2Decompressor::DecodeHeaderBlock(const uint8_t *data, uint32_t datalen,
   nsresult softfail_rv = NS_OK;
   while (NS_SUCCEEDED(rv) && (mOffset < mDataLen)) {
     bool modifiesTable = true;
+    const char *preamble = "Decompressor state after ?";
     if (mData[mOffset] & 0x80) {
       rv = DoIndexed();
-      LOG(("Decompressor state after indexed"));
+      preamble = "Decompressor state after indexed";
     } else if (mData[mOffset] & 0x40) {
       rv = DoLiteralWithIncremental();
-      LOG(("Decompressor state after literal with incremental"));
+      preamble = "Decompressor state after literal with incremental";
     } else if (mData[mOffset] & 0x20) {
       rv = DoContextUpdate();
-      LOG(("Decompressor state after context update"));
+      preamble = "Decompressor state after context update";
     } else if (mData[mOffset] & 0x10) {
       modifiesTable = false;
       rv = DoLiteralNeverIndexed();
-      LOG(("Decompressor state after literal never index"));
+      preamble = "Decompressor state after literal never index";
     } else {
       modifiesTable = false;
       rv = DoLiteralWithoutIndex();
-      LOG(("Decompressor state after literal without index"));
+      preamble = "Decompressor state after literal without index";
     }
-    DumpState();
+    DumpState(preamble);
     if (rv == NS_ERROR_ILLEGAL_VALUE) {
       if (modifiesTable) {
         // Unfortunately, we can't count on our peer now having the same state
@@ -1029,8 +1043,7 @@ Http2Decompressor::DoLiteralWithIncremental()
     ClearHeaderTable();
     LOG(("HTTP decompressor literal with index not inserted due to size %u %s %s\n",
          room, name.get(), value.get()));
-    LOG(("Decompressor state after ClearHeaderTable"));
-    DumpState();
+    DumpState("Decompressor state after ClearHeaderTable");
     return rv;
   }
 
@@ -1250,8 +1263,7 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
   }
 
   mOutput = nullptr;
-  LOG(("Compressor state after EncodeHeaderBlock"));
-  DumpState();
+  DumpState("Compressor state after EncodeHeaderBlock");
   return NS_OK;
 }
 
@@ -1468,15 +1480,13 @@ Http2Compressor::ProcessHeader(const nvPair inputPair, bool noLocalIndex,
   if (!match || noLocalIndex || neverIndex) {
     if (neverIndex) {
       DoOutput(kNeverIndexedLiteral, &inputPair, nameReference);
-      LOG(("Compressor state after literal never index"));
-      DumpState();
+      DumpState("Compressor state after literal never index");
       return;
     }
 
     if (noLocalIndex || (newSize > (mMaxBuffer / 2)) || (mMaxBuffer < 128)) {
       DoOutput(kPlainLiteral, &inputPair, nameReference);
-      LOG(("Compressor state after literal without index"));
-      DumpState();
+      DumpState("Compressor state after literal without index");
       return;
     }
 
@@ -1488,16 +1498,14 @@ Http2Compressor::ProcessHeader(const nvPair inputPair, bool noLocalIndex,
     mHeaderTable.AddElement(inputPair.mName, inputPair.mValue);
     LOG(("HTTP compressor %p new literal placed at index 0\n",
          this));
-    LOG(("Compressor state after literal with index"));
-    DumpState();
+    DumpState("Compressor state after literal with index");
     return;
   }
 
   // emit an index
   DoOutput(kIndex, &inputPair, matchedIndex);
 
-  LOG(("Compressor state after index"));
-  DumpState();
+  DumpState("Compressor state after index");
 }
 
 void
