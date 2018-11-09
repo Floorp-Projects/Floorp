@@ -140,7 +140,7 @@ AccessibilityPanel.prototype = {
     if (this.front.enabled) {
       this._telemetry.start(A11Y_SERVICE_DURATION, this);
     } else {
-      this._telemetry.finish(A11Y_SERVICE_DURATION, this);
+      this._telemetry.finish(A11Y_SERVICE_DURATION, this, true);
     }
   },
 
