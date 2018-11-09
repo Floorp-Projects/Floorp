@@ -340,30 +340,9 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     /* NB: Keep this in sync with CopyScript. */
 
     enum ScriptBits {
-        NoScriptRval,
-        Strict,
-        ContainsDynamicNameAccess,
-        FunHasExtensibleScope,
-        FunHasAnyAliasedFormal,
-        ArgumentsHasVarBinding,
         NeedsArgsObj,
-        HasMappedArgsObj,
-        FunctionHasThisBinding,
-        FunctionHasExtraBodyVarScope,
-        IsGenerator,
-        IsAsync,
-        HasRest,
         OwnSource,
-        ExplicitUseStrict,
-        SelfHosted,
-        HasSingleton,
-        TreatAsRunOnce,
         HasLazyScript,
-        HasNonSyntacticScope,
-        HasInnerFunctions,
-        NeedsHomeObject,
-        IsDerivedClassConstructor,
-        IsDefaultClassConstructor,
     };
 
     uint32_t length, lineno, column, nfixed, nslots;
@@ -374,6 +353,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     uint32_t nTypeSets = 0;
     uint32_t scriptBits = 0;
     uint32_t bodyScopeIndex = 0;
+    uint32_t immutableFlags = 0;
 
     JSContext* cx = xdr->cx();
     RootedScript script(cx);
@@ -414,6 +394,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         bodyScopeIndex = script->bodyScopeIndex();
         natoms = script->natoms();
 
+        immutableFlags = script->immutableFlags_;
+
         nsrcnotes = script->numNotes();
 
         nscopes = script->scopes().size();
@@ -436,78 +418,15 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         nTypeSets = script->nTypeSets();
         funLength = script->funLength();
 
-        if (script->noScriptRval()) {
-            scriptBits |= (1 << NoScriptRval);
-        }
-        if (script->strict()) {
-            scriptBits |= (1 << Strict);
-        }
-        if (script->explicitUseStrict()) {
-            scriptBits |= (1 << ExplicitUseStrict);
-        }
-        if (script->selfHosted()) {
-            scriptBits |= (1 << SelfHosted);
-        }
-        if (script->bindingsAccessedDynamically()) {
-            scriptBits |= (1 << ContainsDynamicNameAccess);
-        }
-        if (script->funHasExtensibleScope()) {
-            scriptBits |= (1 << FunHasExtensibleScope);
-        }
-        if (script->funHasAnyAliasedFormal()) {
-            scriptBits |= (1 << FunHasAnyAliasedFormal);
-        }
-        if (script->argumentsHasVarBinding()) {
-            scriptBits |= (1 << ArgumentsHasVarBinding);
-        }
         if (script->analyzedArgsUsage() && script->needsArgsObj()) {
             scriptBits |= (1 << NeedsArgsObj);
-        }
-        if (script->hasMappedArgsObj()) {
-            scriptBits |= (1 << HasMappedArgsObj);
-        }
-        if (script->functionHasThisBinding()) {
-            scriptBits |= (1 << FunctionHasThisBinding);
-        }
-        if (script->functionHasExtraBodyVarScope()) {
-            scriptBits |= (1 << FunctionHasExtraBodyVarScope);
         }
         MOZ_ASSERT_IF(sourceObjectArg, sourceObjectArg->source() == script->scriptSource());
         if (!sourceObjectArg) {
             scriptBits |= (1 << OwnSource);
         }
-        if (script->isGenerator()) {
-            scriptBits |= (1 << IsGenerator);
-        }
-        if (script->isAsync()) {
-            scriptBits |= (1 << IsAsync);
-        }
-        if (script->hasRest()) {
-            scriptBits |= (1 << HasRest);
-        }
-        if (script->hasSingletons()) {
-            scriptBits |= (1 << HasSingleton);
-        }
-        if (script->treatAsRunOnce()) {
-            scriptBits |= (1 << TreatAsRunOnce);
-        }
         if (script->isRelazifiable()) {
             scriptBits |= (1 << HasLazyScript);
-        }
-        if (script->hasNonSyntacticScope()) {
-            scriptBits |= (1 << HasNonSyntacticScope);
-        }
-        if (script->hasInnerFunctions()) {
-            scriptBits |= (1 << HasInnerFunctions);
-        }
-        if (script->needsHomeObject()) {
-            scriptBits |= (1 << NeedsHomeObject);
-        }
-        if (script->isDerivedClassConstructor()) {
-            scriptBits |= (1 << IsDerivedClassConstructor);
-        }
-        if (script->isDefaultClassConstructor()) {
-            scriptBits |= (1 << IsDefaultClassConstructor);
         }
     }
 
@@ -525,6 +444,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     MOZ_TRY(xdr->codeUint32(&nTypeSets));
     MOZ_TRY(xdr->codeUint32(&funLength));
     MOZ_TRY(xdr->codeUint32(&scriptBits));
+    MOZ_TRY(xdr->codeUint32(&immutableFlags));
 
     MOZ_ASSERT(!!(scriptBits & (1 << OwnSource)) == !sourceObjectArg);
     RootedScriptSourceObject sourceObject(cx, sourceObjectArg);
@@ -534,18 +454,20 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         // the document. If the noScriptRval or selfHostingMode flag doesn't
         // match, we should fail. This only applies to the top-level and not
         // its inner functions.
+        bool noScriptRval = !!(immutableFlags & uint32_t(ImmutableFlags::NoScriptRval));
+        bool selfHosted = !!(immutableFlags & uint32_t(ImmutableFlags::SelfHosted));
         mozilla::Maybe<CompileOptions> options;
         if (xdr->hasOptions() && (scriptBits & (1 << OwnSource))) {
             options.emplace(xdr->cx(), xdr->options());
-            if (options->noScriptRval != !!(scriptBits & (1 << NoScriptRval)) ||
-                options->selfHostingMode != !!(scriptBits & (1 << SelfHosted)))
+            if (options->noScriptRval != noScriptRval ||
+                options->selfHostingMode != selfHosted)
             {
                 return xdr->fail(JS::TranscodeResult_Failure_WrongCompileOption);
             }
         } else {
             options.emplace(xdr->cx());
-            (*options).setNoScriptRval(!!(scriptBits & (1 << NoScriptRval)))
-                      .setSelfHostingMode(!!(scriptBits & (1 << SelfHosted)));
+            (*options).setNoScriptRval(noScriptRval)
+                      .setSelfHostingMode(selfHosted);
         }
 
         if (scriptBits & (1 << OwnSource)) {
@@ -611,65 +533,15 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
         scriptp.set(script);
 
-        if (scriptBits & (1 << Strict)) {
-            script->setFlag(ImmutableFlags::Strict);
-        }
-        if (scriptBits & (1 << ExplicitUseStrict)) {
-            script->setFlag(ImmutableFlags::ExplicitUseStrict);
-        }
-        if (scriptBits & (1 << ContainsDynamicNameAccess)) {
-            script->setFlag(ImmutableFlags::BindingsAccessedDynamically);
-        }
-        if (scriptBits & (1 << FunHasExtensibleScope)) {
-            script->setFlag(ImmutableFlags::FunHasExtensibleScope);
-        }
-        if (scriptBits & (1 << FunHasAnyAliasedFormal)) {
-            script->setFlag(ImmutableFlags::FunHasAnyAliasedFormal);
-        }
-        if (scriptBits & (1 << ArgumentsHasVarBinding)) {
+        script->immutableFlags_ = immutableFlags;
+
+        if (script->hasFlag(ImmutableFlags::ArgsHasVarBinding)) {
+            // Call setArgumentsHasVarBinding to initialize the
+            // NeedsArgsAnalysis flag.
             script->setArgumentsHasVarBinding();
         }
         if (scriptBits & (1 << NeedsArgsObj)) {
             script->setNeedsArgsObj(true);
-        }
-        if (scriptBits & (1 << HasMappedArgsObj)) {
-            script->setFlag(ImmutableFlags::HasMappedArgsObj);
-        }
-        if (scriptBits & (1 << FunctionHasThisBinding)) {
-            script->setFlag(ImmutableFlags::FunctionHasThisBinding);
-        }
-        if (scriptBits & (1 << FunctionHasExtraBodyVarScope)) {
-            script->setFlag(ImmutableFlags::FunctionHasExtraBodyVarScope);
-        }
-        if (scriptBits & (1 << HasSingleton)) {
-            script->setFlag(ImmutableFlags::HasSingletons);
-        }
-        if (scriptBits & (1 << TreatAsRunOnce)) {
-            script->setFlag(ImmutableFlags::TreatAsRunOnce);
-        }
-        if (scriptBits & (1 << HasNonSyntacticScope)) {
-            script->setFlag(ImmutableFlags::HasNonSyntacticScope);
-        }
-        if (scriptBits & (1 << HasInnerFunctions)) {
-            script->setFlag(ImmutableFlags::HasInnerFunctions);
-        }
-        if (scriptBits & (1 << NeedsHomeObject)) {
-            script->setFlag(ImmutableFlags::NeedsHomeObject);
-        }
-        if (scriptBits & (1 << IsDerivedClassConstructor)) {
-            script->setFlag(ImmutableFlags::IsDerivedClassConstructor);
-        }
-        if (scriptBits & (1 << IsDefaultClassConstructor)) {
-            script->setFlag(ImmutableFlags::IsDefaultClassConstructor);
-        }
-        if (scriptBits & (1 << IsGenerator)) {
-            script->setFlag(ImmutableFlags::IsGenerator);
-        }
-        if (scriptBits & (1 << IsAsync)) {
-            script->setFlag(ImmutableFlags::IsAsync);
-        }
-        if (scriptBits & (1 << HasRest)) {
-            script->setFlag(ImmutableFlags::HasRest);
         }
     }
 
@@ -3298,7 +3170,7 @@ JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
     script->setFlag(ImmutableFlags::NoScriptRval, options.noScriptRval);
     script->setFlag(ImmutableFlags::SelfHosted, options.selfHostingMode);
     script->setFlag(ImmutableFlags::TreatAsRunOnce, options.isRunOnce);
-    script->setFlag(ImmutableFlags::HideScriptFromDebugger, options.hideScriptFromDebugger);
+    script->setFlag(MutableFlags::HideScriptFromDebugger, options.hideScriptFromDebugger);
 
     if (cx->runtime()->lcovOutput().isEnabled()) {
         if (!script->initScriptName(cx)) {
@@ -3479,13 +3351,6 @@ JSScript::initFromFunctionBox(HandleScript script, frontend::FunctionBox* funbox
 /* static */ void
 JSScript::initFromModuleContext(HandleScript script)
 {
-    script->clearFlag(ImmutableFlags::FunHasExtensibleScope);
-    script->clearFlag(ImmutableFlags::NeedsHomeObject);
-    script->clearFlag(ImmutableFlags::IsDerivedClassConstructor);
-    script->funLength_ = 0;
-
-    script->clearFlag(ImmutableFlags::IsGenerator);
-
     // Since modules are only run once, mark the script so that initializers
     // created within it may be given more precise types.
     script->setTreatAsRunOnce();
@@ -4011,8 +3876,6 @@ bool
 js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
                        MutableHandle<GCVector<Scope*>> scopes)
 {
-    using ImmutableFlags = JSScript::ImmutableFlags;
-
     if (src->treatAsRunOnce() && !src->functionNonDelazifying()) {
         JS_ReportErrorASCII(cx, "No cloning toplevel run-once scripts");
         return false;
@@ -4119,31 +3982,19 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     dst->bodyScopeIndex_ = src->bodyScopeIndex_;
     dst->funLength_ = src->funLength();
     dst->nTypeSets_ = src->nTypeSets();
+
+    dst->immutableFlags_ = src->immutableFlags_;
+    dst->setFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
+                 scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
+
+    dst->setFlag(JSScript::MutableFlags::HideScriptFromDebugger, src->hideScriptFromDebugger());
+
     if (src->argumentsHasVarBinding()) {
         dst->setArgumentsHasVarBinding();
         if (src->analyzedArgsUsage()) {
             dst->setNeedsArgsObj(src->needsArgsObj());
         }
     }
-    dst->setFlag(ImmutableFlags::HasMappedArgsObj, src->hasMappedArgsObj());
-    dst->setFlag(ImmutableFlags::FunctionHasThisBinding, src->functionHasThisBinding());
-    dst->setFlag(ImmutableFlags::FunctionHasExtraBodyVarScope, src->functionHasExtraBodyVarScope());
-    dst->setFlag(ImmutableFlags::Strict, src->strict());
-    dst->setFlag(ImmutableFlags::ExplicitUseStrict, src->explicitUseStrict());
-    dst->setFlag(ImmutableFlags::HasNonSyntacticScope, scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
-    dst->setFlag(ImmutableFlags::BindingsAccessedDynamically, src->bindingsAccessedDynamically());
-    dst->setFlag(ImmutableFlags::FunHasExtensibleScope, src->funHasExtensibleScope());
-    dst->setFlag(ImmutableFlags::FunHasAnyAliasedFormal, src->funHasAnyAliasedFormal());
-    dst->setFlag(ImmutableFlags::HasSingletons, src->hasSingletons());
-    dst->setFlag(ImmutableFlags::TreatAsRunOnce, src->treatAsRunOnce());
-    dst->setFlag(ImmutableFlags::HasInnerFunctions, src->hasInnerFunctions());
-    dst->setFlag(ImmutableFlags::IsGenerator, src->isGenerator());
-    dst->setFlag(ImmutableFlags::IsDerivedClassConstructor, src->isDerivedClassConstructor());
-    dst->setFlag(ImmutableFlags::NeedsHomeObject, src->needsHomeObject());
-    dst->setFlag(ImmutableFlags::IsDefaultClassConstructor, src->isDefaultClassConstructor());
-    dst->setFlag(ImmutableFlags::IsAsync, src->isAsync());
-    dst->setFlag(ImmutableFlags::HasRest, src->hasRest());
-    dst->setFlag(ImmutableFlags::HideScriptFromDebugger, src->hideScriptFromDebugger());
 
     {
         auto array = dst->data_->scopes();

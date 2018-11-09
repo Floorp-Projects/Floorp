@@ -1187,6 +1187,14 @@ parent:
      */
     async DetachBrowsingContext(BrowsingContextId aContextId,
                                 bool aMoveToBFCache);
+
+    /**
+     * Set the opener of browsing context with id 'aContextId' to the
+     * browsing context with id 'aOpenerId'.
+     */
+    async SetOpenerBrowsingContext(BrowsingContextId aContextId,
+                                   BrowsingContextId aOpenerContextId);
+
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                         Principal aPrincipal, ClonedMessageData aData);

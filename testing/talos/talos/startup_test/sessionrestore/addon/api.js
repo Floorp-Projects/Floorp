@@ -9,14 +9,13 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   Services: "resource://gre/modules/Services.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   StartupPerformance: "resource:///modules/sessionstore/StartupPerformance.jsm",
+  TalosParentProfiler: "resource://talos-powers/TalosParentProfiler.jsm",
 });
-
-XPCOMUtils.defineLazyScriptGetter(this, "TalosParentProfiler",
-                                  "resource://talos-powers/TalosParentProfiler.js");
 
 /* globals ExtensionAPI */
 
@@ -46,6 +45,21 @@ this.sessionrestore = class extends ExtensionAPI {
           await new Promise(resolve => {
             async function observe() {
               Services.obs.removeObserver(observe, StartupPerformance.RESTORED_TOPIC);
+
+              let win = BrowserWindowTracker.getTopWindow();
+              let args = win.arguments[0];
+              if (args && args instanceof Ci.nsIArray) {
+                // For start-up tests Gecko Profiler arguments are passed to the first URL in
+                // the query string, with the presumption that some tab that is loaded at start-up
+                // will want to use them in the TalosContentProfiler.js script.
+                //
+                // Because we're running this part of the test in the parent process, we
+                // pull those arguments from the top window directly. This is mainly so
+                // that TalosParentProfiler knows where to save the profile.
+                Cu.importGlobalProperties(["URL"]);
+                let url = new URL(args.queryElementAt(0, Ci.nsISupportsString).data);
+                TalosParentProfiler.initFromURLQueryParams(url.search);
+              }
 
               await TalosParentProfiler.pause("This test measures the time between sessionRestoreInit and sessionRestored, ignore everything around that");
               await TalosParentProfiler.finishStartupProfiling();

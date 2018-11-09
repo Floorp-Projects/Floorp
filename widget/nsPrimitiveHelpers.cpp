@@ -125,13 +125,14 @@ nsPrimitiveHelpers :: CreatePrimitiveForCFHTML ( const void* aDataBuff,
 // parameter does not reflect that.
 //
 void
-nsPrimitiveHelpers :: CreateDataFromPrimitive ( const nsACString& aFlavor, nsISupports* aPrimitive,
-                                                   void** aDataBuff, uint32_t aDataLen )
+nsPrimitiveHelpers::CreateDataFromPrimitive(const nsACString& aFlavor, nsISupports* aPrimitive,
+                                            void** aDataBuff, uint32_t*  aDataLen)
 {
   if ( !aDataBuff )
     return;
 
   *aDataBuff = nullptr;
+  *aDataLen = 0;
 
   if (aFlavor.EqualsLiteral(kTextMime) ||
       aFlavor.EqualsLiteral(kCustomTypesMime)) {
@@ -140,6 +141,7 @@ nsPrimitiveHelpers :: CreateDataFromPrimitive ( const nsACString& aFlavor, nsISu
       nsAutoCString data;
       plainText->GetData ( data );
       *aDataBuff = ToNewCString(data);
+      *aDataLen = data.Length() * sizeof(char);
     }
   }
   else {
@@ -148,6 +150,7 @@ nsPrimitiveHelpers :: CreateDataFromPrimitive ( const nsACString& aFlavor, nsISu
       nsAutoString data;
       doubleByteText->GetData ( data );
       *aDataBuff = ToNewUnicode(data);
+      *aDataLen = data.Length() * sizeof(char16_t);
     }
   }
 

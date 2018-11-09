@@ -388,6 +388,16 @@ Target.prototype = {
     return this._inspector;
   },
 
+  // Run callback on every front of this type that currently exists, and on every
+  // instantiation of front type in the future.
+  onFront(typeName, callback) {
+    const front = this.fronts.get(typeName);
+    if (front) {
+      return callback(front);
+    }
+    return this.on(typeName, callback);
+  },
+
   // Get a Front for a target-scoped actor.
   // i.e. an actor served by RootActor.listTabs or RootActorActor.getTab requests
   getFront(typeName) {
@@ -397,6 +407,7 @@ Target.prototype = {
       return front;
     }
     front = getFront(this.client, typeName, this.form);
+    this.emit(typeName, front);
     this.fronts.set(typeName, front);
     return front;
   },

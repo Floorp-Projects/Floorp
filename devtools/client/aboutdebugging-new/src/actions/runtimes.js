@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { ADB } = require("devtools/shared/adb/adb");
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/main");
 
 const Actions = require("./index");
@@ -15,6 +13,8 @@ const {
   findRuntimeById,
 } = require("../modules/runtimes-state-helper");
 const { isSupportedDebugTarget } = require("../modules/debug-target-support");
+
+const { createClientForRuntime } = require("../modules/runtime-client-factory");
 
 const {
   CONNECT_RUNTIME_FAILURE,
@@ -38,47 +38,9 @@ const {
   WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
 
-async function createLocalClient() {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  await client.connect();
-  return { client };
-}
-
-async function createNetworkClient(host, port) {
-  const transportDetails = { host, port };
-  const transport = await DebuggerClient.socketConnect(transportDetails);
-  const client = new DebuggerClient(transport);
-  await client.connect();
-  return { client, transportDetails };
-}
-
-async function createUSBClient(socketPath) {
-  const port = await ADB.prepareTCPConnection(socketPath);
-  return createNetworkClient("localhost", port);
-}
-
-async function createClientForRuntime(runtime) {
-  const { extra, type } = runtime;
-
-  if (type === RUNTIMES.THIS_FIREFOX) {
-    return createLocalClient();
-  } else if (type === RUNTIMES.NETWORK) {
-    const { host, port } = extra.connectionParameters;
-    return createNetworkClient(host, port);
-  } else if (type === RUNTIMES.USB) {
-    const { socketPath } = extra.connectionParameters;
-    return createUSBClient(socketPath);
-  }
-
-  return null;
-}
-
 async function getRuntimeInfo(runtime, client) {
   const { extra, type } = runtime;
-  const deviceFront = await client.mainRoot.getFront("device");
-  const { brandName: name, channel, version } = await deviceFront.getDescription();
+  const { name, channel, version } = await client.getDeviceDescription();
   const icon =
     (channel === "release" || channel === "beta" || channel === "aurora")
       ? `chrome://devtools/skin/images/aboutdebugging-firefox-${ channel }.svg`
@@ -107,9 +69,9 @@ function connectRuntime(id) {
       const runtime = findRuntimeById(id, getState().runtimes);
       const { client, transportDetails } = await createClientForRuntime(runtime);
       const info = await getRuntimeInfo(runtime, client);
-      const preferenceFront = await client.mainRoot.getFront("preference");
-      const connectionPromptEnabled =
-        await preferenceFront.getBoolPref(RUNTIME_PREFERENCE.CONNECTION_PROMPT);
+
+      const promptPrefName = RUNTIME_PREFERENCE.CONNECTION_PROMPT;
+      const connectionPromptEnabled = await client.getPreference(promptPrefName);
       const runtimeDetails = { connectionPromptEnabled, client, info, transportDetails };
 
       if (runtime.type === RUNTIMES.USB) {
@@ -168,12 +130,10 @@ function updateConnectionPromptSetting(connectionPromptEnabled) {
     try {
       const runtime = getCurrentRuntime(getState().runtimes);
       const client = runtime.runtimeDetails.client;
-      const preferenceFront = await client.mainRoot.getFront("preference");
-      await preferenceFront.setBoolPref(RUNTIME_PREFERENCE.CONNECTION_PROMPT,
-                                        connectionPromptEnabled);
+      const promptPrefName = RUNTIME_PREFERENCE.CONNECTION_PROMPT;
+      await client.setPreference(promptPrefName, connectionPromptEnabled);
       // Re-get actual value from the runtime.
-      connectionPromptEnabled =
-        await preferenceFront.getBoolPref(RUNTIME_PREFERENCE.CONNECTION_PROMPT);
+      connectionPromptEnabled = await client.getPreference(promptPrefName);
 
       dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
                  runtime, connectionPromptEnabled });

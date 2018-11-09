@@ -1108,6 +1108,12 @@ extern void DeleteBlobFont(WrFontInstanceKey aKey);
 
 extern void DeleteFontData(WrFontKey aKey);
 
+#if defined(ANDROID)
+extern int __android_log_write(int aPrio,
+                               const char *aTag,
+                               const char *aText);
+#endif
+
 extern void apz_deregister_sampler(WrWindowId aWindowId);
 
 extern void apz_deregister_updater(WrWindowId aWindowId);

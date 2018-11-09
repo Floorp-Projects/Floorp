@@ -6080,3 +6080,39 @@ ContentParent::RecvDetachBrowsingContext(const BrowsingContextId& aContextId,
 
   return IPC_OK();
 }
+
+mozilla::ipc::IPCResult
+ContentParent::RecvSetOpenerBrowsingContext(
+  const BrowsingContextId& aContextId,
+  const BrowsingContextId& aOpenerContextId)
+{
+  RefPtr<ChromeBrowsingContext> context = ChromeBrowsingContext::Get(aContextId);
+
+  if (!context) {
+    MOZ_LOG(BrowsingContext::GetLog(),
+            LogLevel::Debug,
+            ("ParentIPC: Trying to set opener already detached 0x%08" PRIx64,
+             (uint64_t)aContextId));
+    return IPC_OK();
+  }
+
+  if (!context->IsOwnedByProcess(ChildID())) {
+    // Where trying to set opener on a child BrowsingContext in
+    // another child process. This is illegal since the owner of the
+    // BrowsingContext is the proccess with the in-process docshell,
+    // which is tracked by OwnerProcessId.
+
+    // TODO(farre): To crash or not to crash. Same reasoning as in
+    // above TODO. [Bug 1471598]
+    MOZ_LOG(BrowsingContext::GetLog(),
+            LogLevel::Warning,
+            ("ParentIPC: Trying to set opener on out of process context 0x%08" PRIx64,
+             context->Id()));
+    return IPC_OK();
+  }
+
+  RefPtr<BrowsingContext> opener = BrowsingContext::Get(aOpenerContextId);
+  context->SetOpener(opener);
+
+  return IPC_OK();
+}

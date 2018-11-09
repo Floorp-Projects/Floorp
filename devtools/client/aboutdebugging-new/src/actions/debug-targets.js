@@ -166,11 +166,7 @@ function requestWorkers() {
     const client = getCurrentClient(getState().runtimes);
 
     try {
-      const {
-        other: otherWorkers,
-        service: serviceWorkers,
-        shared: sharedWorkers,
-      } = await client.mainRoot.listAllWorkers();
+      const { otherWorkers, serviceWorkers, sharedWorkers } = await client.listWorkers();
 
       dispatch({
         type: REQUEST_WORKERS_SUCCESS,

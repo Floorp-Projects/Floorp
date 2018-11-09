@@ -84,12 +84,6 @@ EmitReturnFromIC(MacroAssembler& masm)
 }
 
 inline void
-EmitChangeICReturnAddress(MacroAssembler& masm, Register reg)
-{
-    masm.movePtr(reg, ra);
-}
-
-inline void
 EmitBaselineLeaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false)
 {
     // Ion frames do not save and restore the frame pointer. If we called

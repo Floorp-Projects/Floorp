@@ -431,7 +431,7 @@ pub struct PicturePrimitive {
 
     /// The spatial node index of this picture when it is
     /// composited into the parent picture.
-    spatial_node_index: SpatialNodeIndex,
+    pub spatial_node_index: SpatialNodeIndex,
 
     /// The local rect of this picture. It is built
     /// dynamically during the first picture traversal.
@@ -670,31 +670,29 @@ impl PicturePrimitive {
     pub fn add_split_plane(
         splitter: &mut PlaneSplitter,
         transforms: &TransformPalette,
-        prim_instance: &PrimitiveInstance,
-        original_local_rect: LayoutRect,
+        local_rect: LayoutRect,
+        spatial_node_index: SpatialNodeIndex,
         plane_split_anchor: usize,
+        world_bounds: WorldRect,
     ) -> bool {
-        let transform = transforms
-            .get_world_transform(prim_instance.spatial_node_index);
-        let matrix = transform.cast();
+        // If the picture isn't visible, then ensure it's not added
+        // to the plane splitter, to avoid assertions during batching
+        // about each split plane having a surface.
+        if local_rect.size.width <= 0.0 ||
+           local_rect.size.height <= 0.0 {
+            return false;
+        }
 
-        // Apply the local clip rect here, before splitting. This is
-        // because the local clip rect can't be applied in the vertex
-        // shader for split composites, since we are drawing polygons
-        // rather that rectangles. The interpolation still works correctly
-        // since we determine the UVs by doing a bilerp with a factor
-        // from the original local rect.
-        let local_rect = match original_local_rect
-            .intersection(&prim_instance.combined_local_clip_rect)
-        {
-            Some(rect) => rect.cast(),
-            None => return false,
-        };
+        let transform = transforms
+            .get_world_transform(spatial_node_index);
+        let matrix = transform.cast();
+        let local_rect = local_rect.cast();
+        let world_bounds = world_bounds.cast();
 
         match transform.transform_kind() {
             TransformedRectKind::AxisAligned => {
                 let inv_transform = transforms
-                    .get_world_inv_transform(prim_instance.spatial_node_index);
+                    .get_world_inv_transform(spatial_node_index);
                 let polygon = Polygon::from_transformed_rect_with_inverse(
                     local_rect,
                     &matrix,
@@ -711,7 +709,7 @@ impl PicturePrimitive {
                         plane_split_anchor,
                     ),
                     &matrix,
-                    prim_instance.clipped_world_rect.map(|r| r.to_f64()),
+                    Some(world_bounds),
                 );
                 if let Ok(results) = results {
                     for poly in results {

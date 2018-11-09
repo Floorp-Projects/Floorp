@@ -441,7 +441,7 @@ class MicrodumpWriter {
   void DumpModule(const MappingInfo& mapping,
                   bool member,
                   unsigned int mapping_id,
-                  const uint8_t* identifier) {
+                  const std::vector<uint8_t>* identifier) {
 
     auto_wasteful_vector<uint8_t, kDefaultBuildIdSize> identifier_bytes(
         dumper_->allocator());
@@ -449,8 +449,8 @@ class MicrodumpWriter {
     if (identifier) {
       // GUID was provided by caller.
       identifier_bytes.insert(identifier_bytes.end(),
-                              identifier,
-                              identifier + sizeof(MDGUID));
+                              identifier->begin(),
+                              identifier->end());
     } else {
       dumper_->ElfFileIdentifierForMapping(
           mapping,
@@ -598,7 +598,7 @@ class MicrodumpWriter {
     for (MappingList::const_iterator iter = mapping_list_.begin();
          iter != mapping_list_.end();
          ++iter) {
-      DumpModule(iter->first, false, 0, iter->second);
+      DumpModule(iter->first, false, 0, &iter->second);
     }
   }
 

@@ -2614,42 +2614,6 @@ class ICCall_IsSuspendedGenerator : public ICStub
    };
 };
 
-// Stub for performing a TableSwitch, updating the IC's return address to jump
-// to whatever point the switch is branching to.
-class ICTableSwitch : public ICStub
-{
-    friend class ICStubSpace;
-
-  protected: // Protected to silence Clang warning.
-    void** table_;
-    int32_t min_;
-    int32_t length_;
-    void* defaultTarget_;
-
-    ICTableSwitch(JitCode* stubCode, void** table,
-                  int32_t min, int32_t length, void* defaultTarget)
-      : ICStub(TableSwitch, stubCode), table_(table),
-        min_(min), length_(length), defaultTarget_(defaultTarget)
-    {}
-
-  public:
-    void fixupJumpTable(JSScript* script, BaselineScript* baseline);
-
-    class Compiler : public ICStubCompiler {
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
-
-        JSScript* script_;
-        jsbytecode* pc_;
-
-      public:
-        Compiler(JSContext* cx, JSScript* script, jsbytecode* pc)
-          : ICStubCompiler(cx, ICStub::TableSwitch), script_(script), pc_(pc)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) override;
-    };
-};
-
 // IC for constructing an iterator from an input value.
 class ICGetIterator_Fallback : public ICFallbackStub
 {

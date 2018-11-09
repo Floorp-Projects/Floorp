@@ -10,6 +10,7 @@ import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
+import org.mozilla.geckoview.MediaElement
 import org.mozilla.geckoview.WebRequestError
 
 import android.view.inputmethod.CursorAnchorInfo
@@ -21,7 +22,7 @@ class Callbacks private constructor() {
 
     interface All : ContentDelegate, NavigationDelegate, PermissionDelegate, ProgressDelegate,
                     PromptDelegate, ScrollDelegate, SelectionActionDelegate, TextInputDelegate,
-                    TrackingProtectionDelegate
+                    TrackingProtectionDelegate, MediaDelegate
 
     interface ContentDelegate : GeckoSession.ContentDelegate {
         override fun onTitleChange(session: GeckoSession, title: String) {
@@ -175,6 +176,14 @@ class Callbacks private constructor() {
         }
 
         override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
+        }
+    }
+
+    interface MediaDelegate: GeckoSession.MediaDelegate {
+        override fun onMediaAdd(session: GeckoSession, element: MediaElement) {
+        }
+
+        override fun onMediaRemove(session: GeckoSession, element: MediaElement) {
         }
     }
 }
