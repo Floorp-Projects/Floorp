@@ -232,10 +232,11 @@ impl Runtime {
             let _ar = AutoRealm::with_obj(self.cx(), glob.get());
             let options = CompileOptionsWrapper::new(self.cx(), filename_cstr.as_ptr(), line_num);
 
-            let mut srcBuf = JS::SourceBufferHolder {
-                data_: ptr,
+            let mut srcBuf = JS::SourceText {
+                units_: ptr,
                 length_: len as _,
-                ownsChars_: false
+                ownsUnits_: false,
+                _phantom_0: marker::PhantomData
             };
             if !JS::Evaluate(self.cx(), options.ptr, &mut srcBuf, rval) {
                 debug!("...err!");

@@ -89,7 +89,7 @@ JS::CanDecodeBinASTOffThread(JSContext* cx, const ReadOnlyCompileOptions& option
 
 JS_PUBLIC_API(bool)
 JS::CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
-                     JS::SourceBufferHolder& srcBuf,
+                     JS::SourceText<char16_t>& srcBuf,
                      OffThreadCompileCallback callback, void* callbackData)
 {
     MOZ_ASSERT(CanCompileOffThread(cx, options, srcBuf.length()));
@@ -114,7 +114,7 @@ JS::CancelOffThreadScript(JSContext* cx, JS::OffThreadToken* token)
 
 JS_PUBLIC_API(bool)
 JS::CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                           JS::SourceBufferHolder& srcBuf,
+                           JS::SourceText<char16_t>& srcBuf,
                            OffThreadCompileCallback callback, void* callbackData)
 {
     MOZ_ASSERT(CanCompileOffThread(cx, options, srcBuf.length()));

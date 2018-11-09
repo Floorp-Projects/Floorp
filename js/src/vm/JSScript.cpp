@@ -40,7 +40,7 @@
 #include "js/CompileOptions.h"
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Wrapper.h"
@@ -84,7 +84,7 @@ using mozilla::Utf8Unit;
 
 using JS::CompileOptions;
 using JS::ReadOnlyCompileOptions;
-using JS::SourceBufferHolder;
+using JS::SourceText;
 
 template<XDRMode mode>
 XDRResult
@@ -2002,15 +2002,15 @@ ScriptSource::setCompressedSource(JSContext* cx, UniqueChars&& compressed, size_
 }
 
 bool
-ScriptSource::setSourceCopy(JSContext* cx, SourceBufferHolder& srcBuf)
+ScriptSource::setSourceCopy(JSContext* cx, SourceText<char16_t>& srcBuf)
 {
     MOZ_ASSERT(!hasSourceText());
 
     JSRuntime* runtime = cx->zone()->runtimeFromAnyThread();
     auto& cache = runtime->sharedImmutableStrings();
     auto deduped = cache.getOrCreate(srcBuf.get(), srcBuf.length(), [&srcBuf]() {
-        return srcBuf.ownsChars()
-               ? UniqueTwoByteChars(srcBuf.take())
+        return srcBuf.ownsUnits()
+               ? UniqueTwoByteChars(srcBuf.takeChars())
                : DuplicateString(srcBuf.get(), srcBuf.length());
     });
     if (!deduped) {

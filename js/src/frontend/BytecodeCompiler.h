@@ -12,6 +12,7 @@
 #include "NamespaceImports.h"
 
 #include "js/CompileOptions.h"
+#include "js/SourceText.h"
 #include "vm/Scope.h"
 #include "vm/TraceLogging.h"
 
@@ -32,7 +33,7 @@ class ParseNode;
 JSScript*
 CompileGlobalScript(JSContext* cx, ScopeKind scopeKind,
                     const JS::ReadOnlyCompileOptions& options,
-                    JS::SourceBufferHolder& srcBuf,
+                    JS::SourceText<char16_t>& srcBuf,
                     ScriptSourceObject** sourceObjectOut = nullptr);
 
 #if defined(JS_BUILD_BINAST)
@@ -52,16 +53,16 @@ JSScript*
 CompileEvalScript(JSContext* cx, HandleObject environment,
                   HandleScope enclosingScope,
                   const JS::ReadOnlyCompileOptions& options,
-                  JS::SourceBufferHolder& srcBuf,
+                  JS::SourceText<char16_t>& srcBuf,
                   ScriptSourceObject** sourceObjectOut = nullptr);
 
 ModuleObject*
 CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-              JS::SourceBufferHolder& srcBuf);
+              JS::SourceText<char16_t>& srcBuf);
 
 ModuleObject*
 CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-              JS::SourceBufferHolder& srcBuf,
+              JS::SourceText<char16_t>& srcBuf,
               ScriptSourceObject** sourceObjectOut);
 
 MOZ_MUST_USE bool
@@ -82,26 +83,26 @@ CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const char16_t* cha
 MOZ_MUST_USE bool
 CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
                           const JS::ReadOnlyCompileOptions& options,
-                          JS::SourceBufferHolder& srcBuf,
+                          JS::SourceText<char16_t>& srcBuf,
                           const mozilla::Maybe<uint32_t>& parameterListEnd,
                           HandleScope enclosingScope = nullptr);
 
 MOZ_MUST_USE bool
 CompileStandaloneGenerator(JSContext* cx, MutableHandleFunction fun,
                            const JS::ReadOnlyCompileOptions& options,
-                           JS::SourceBufferHolder& srcBuf,
+                           JS::SourceText<char16_t>& srcBuf,
                            const mozilla::Maybe<uint32_t>& parameterListEnd);
 
 MOZ_MUST_USE bool
 CompileStandaloneAsyncFunction(JSContext* cx, MutableHandleFunction fun,
                                const JS::ReadOnlyCompileOptions& options,
-                               JS::SourceBufferHolder& srcBuf,
+                               JS::SourceText<char16_t>& srcBuf,
                                const mozilla::Maybe<uint32_t>& parameterListEnd);
 
 MOZ_MUST_USE bool
 CompileStandaloneAsyncGenerator(JSContext* cx, MutableHandleFunction fun,
                                 const JS::ReadOnlyCompileOptions& options,
-                                JS::SourceBufferHolder& srcBuf,
+                                JS::SourceText<char16_t>& srcBuf,
                                 const mozilla::Maybe<uint32_t>& parameterListEnd);
 
 ScriptSourceObject*

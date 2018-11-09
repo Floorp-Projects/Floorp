@@ -26,7 +26,7 @@ namespace JS {
 
 template<typename T> class AutoVector;
 
-class SourceBufferHolder;
+template<typename UnitT> class SourceText;
 
 } // namespace JS
 
@@ -107,7 +107,7 @@ CloneAndExecuteScript(JSContext* cx, AutoVector<JSObject*>& envChain, Handle<JSS
  */
 extern JS_PUBLIC_API(bool)
 Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
-         SourceBufferHolder& srcBuf, MutableHandle<Value> rval);
+         SourceText<char16_t>& srcBuf, MutableHandle<Value> rval);
 
 /**
  * As above, but providing an explicit scope chain.  envChain must not include
@@ -116,7 +116,7 @@ Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
  */
 extern JS_PUBLIC_API(bool)
 Evaluate(JSContext* cx, AutoVector<JSObject*>& envChain, const ReadOnlyCompileOptions& options,
-         SourceBufferHolder& srcBuf, MutableHandle<Value> rval);
+         SourceText<char16_t>& srcBuf, MutableHandle<Value> rval);
 
 /**
  * Evaluate the provided UTF-8 data in the scope of the current global of |cx|,
@@ -154,7 +154,7 @@ EvaluateUtf8Path(JSContext* cx, const ReadOnlyCompileOptions& options,
  */
 extern JS_PUBLIC_API(bool)
 Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-        SourceBufferHolder& srcBuf, MutableHandle<JSScript*> script);
+        SourceText<char16_t>& srcBuf, MutableHandle<JSScript*> script);
 
 /**
  * Compile the provided UTF-8 data into a script.  If the data contains invalid
@@ -202,7 +202,7 @@ CompileUtf8Path(JSContext* cx, const ReadOnlyCompileOptions& options,
 
 extern JS_PUBLIC_API(bool)
 CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
-                            SourceBufferHolder& srcBuf, MutableHandle<JSScript*> script);
+                            SourceText<char16_t>& srcBuf, MutableHandle<JSScript*> script);
 
 /**
  * Compile the given Latin-1 data for non-syntactic scope.
@@ -227,7 +227,7 @@ extern JS_PUBLIC_API(bool)
 CompileFunction(JSContext* cx, AutoVector<JSObject*>& envChain,
                 const ReadOnlyCompileOptions& options,
                 const char* name, unsigned nargs, const char* const* argnames,
-                SourceBufferHolder& srcBuf, MutableHandle<JSFunction*> fun);
+                SourceText<char16_t>& srcBuf, MutableHandle<JSFunction*> fun);
 
 /**
  * Same as above, but taking UTF-8 encoded const char* for the function body.

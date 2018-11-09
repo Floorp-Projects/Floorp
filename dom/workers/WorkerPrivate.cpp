@@ -9,7 +9,7 @@
 #include "js/CompilationAndEvaluation.h"
 #include "js/LocaleSensitive.h"
 #include "js/MemoryMetrics.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "MessageEventRunnable.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs.h"
@@ -4902,9 +4902,9 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
 
       JS::Rooted<JS::Value> unused(aes.cx());
 
-      JS::SourceBufferHolder srcBuf;
+      JS::SourceText<char16_t> srcBuf;
       if (!srcBuf.init(aes.cx(), script.BeginReading(), script.Length(),
-                       JS::SourceBufferHolder::NoOwnership) ||
+                       JS::SourceOwnership::Borrowed) ||
           !JS::Evaluate(aes.cx(), options, srcBuf, &unused))
       {
         if (!JS_IsExceptionPending(aCx)) {

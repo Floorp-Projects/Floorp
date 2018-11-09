@@ -14,6 +14,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
 #include "jit/IonBuilder.h"
+#include "js/SourceText.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "threading/CpuCount.h"
@@ -502,7 +503,7 @@ ParseTask::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
            errors.sizeOfExcludingThis(mallocSizeOf);
 }
 
-ScriptParseTask::ScriptParseTask(JSContext* cx, JS::SourceBufferHolder& srcBuf,
+ScriptParseTask::ScriptParseTask(JSContext* cx, JS::SourceText<char16_t>& srcBuf,
                                  JS::OffThreadCompileCallback callback, void* callbackData)
   : ParseTask(ParseTaskKind::Script, cx, callback, callbackData),
     data(std::move(srcBuf))
@@ -527,7 +528,7 @@ ScriptParseTask::parse(JSContext* cx)
     }
 }
 
-ModuleParseTask::ModuleParseTask(JSContext* cx, JS::SourceBufferHolder& srcBuf,
+ModuleParseTask::ModuleParseTask(JSContext* cx, JS::SourceText<char16_t>& srcBuf,
                                  JS::OffThreadCompileCallback callback, void* callbackData)
   : ParseTask(ParseTaskKind::Module, cx, callback, callbackData),
     data(std::move(srcBuf))
@@ -867,7 +868,7 @@ StartOffThreadParseTask(JSContext* cx, ParseTask* task, const ReadOnlyCompileOpt
 
 bool
 js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& options,
-                              JS::SourceBufferHolder& srcBuf,
+                              JS::SourceText<char16_t>& srcBuf,
                               JS::OffThreadCompileCallback callback, void* callbackData)
 {
     auto task = cx->make_unique<ScriptParseTask>(cx, srcBuf, callback, callbackData);
@@ -881,7 +882,7 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
 
 bool
 js::StartOffThreadParseModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                              JS::SourceBufferHolder& srcBuf,
+                              JS::SourceText<char16_t>& srcBuf,
                               JS::OffThreadCompileCallback callback, void* callbackData)
 {
     auto task = cx->make_unique<ModuleParseTask>(cx, srcBuf, callback, callbackData);

@@ -31,7 +31,7 @@
 #include "xpcpublic.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/JSON.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Preferences.h"
@@ -1397,7 +1397,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
 
     JS::UniqueTwoByteChars srcChars(dataStringBuf);
 
-    JS::SourceBufferHolder srcBuf;
+    JS::SourceText<char16_t> srcBuf;
     if (!srcBuf.init(cx, std::move(srcChars), dataStringLength)) {
       return;
     }
