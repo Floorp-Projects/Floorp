@@ -255,7 +255,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
                 obj = GetVertexAttribUint32Array(cx, index);
                 break;
 
-            case webgl::AttribBaseType::Bool:
+            case webgl::AttribBaseType::Boolean:
                 MOZ_CRASH("impossible");
             }
 
