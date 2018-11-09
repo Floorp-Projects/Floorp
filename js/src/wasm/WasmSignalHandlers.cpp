@@ -70,6 +70,10 @@ using mozilla::DebugOnly;
 # define R13_sig(p) ((p)->R13)
 # define R14_sig(p) ((p)->R14)
 # define R15_sig(p) ((p)->R15)
+# define EPC_sig(p) ((p)->Pc)
+# define RFP_sig(p) ((p)->Fp)
+# define R31_sig(p) ((p)->Sp)
+# define RLR_sig(p) ((p)->Lr)
 #elif defined(__OpenBSD__)
 # define EIP_sig(p) ((p)->sc_eip)
 # define EBP_sig(p) ((p)->sc_ebp)
@@ -326,7 +330,7 @@ struct macos_arm_context {
 # define SP_sig(p) R13_sig(p)
 # define LR_sig(p) R14_sig(p)
 # define PC_sig(p) R15_sig(p)
-#elif defined(__aarch64__)
+#elif defined(_M_ARM64) || defined(__aarch64__)
 # define PC_sig(p) EPC_sig(p)
 # define FP_sig(p) RFP_sig(p)
 # define SP_sig(p) R31_sig(p)
@@ -752,11 +756,6 @@ wasm::EnsureEagerProcessSignalHandlers()
     // Install a SIGSEGV handler to handle safely-out-of-bounds asm.js heap
     // access and/or unaligned accesses.
 #if defined(XP_WIN)
-
-# if defined(_M_ARM64)
-    // The AArch64 Windows build is not ready for this yet.
-    return;
-# endif
 
 # if defined(MOZ_ASAN)
     // Under ASan we need to let the ASan runtime's ShadowExceptionHandler stay
