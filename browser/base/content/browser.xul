@@ -1112,6 +1112,10 @@ xmlns="http://www.w3.org/1999/xhtml"
                        tooltiptext="&fullScreenClose.tooltip;"
                        oncommand="BrowserTryToCloseWindow();"/>
       </hbox>
+
+      <box id="library-animatable-box" class="toolbarbutton-animatable-box">
+        <image class="toolbarbutton-animatable-image"/>
+      </box>
     </toolbar>
 
     <toolbar id="PersonalToolbar"
@@ -1293,9 +1297,6 @@ xmlns="http://www.w3.org/1999/xhtml"
         <searchbar id="searchbar" flex="1"/>
       </toolbaritem>
     </toolbarpalette>
-    <box id="library-animatable-box" class="toolbarbutton-animatable-box">
-      <image class="toolbarbutton-animatable-image"/>
-    </box>
   </toolbox>
 
   <hbox id="fullscr-toggler" hidden="true"/>
