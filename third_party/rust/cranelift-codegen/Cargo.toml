@@ -12,7 +12,7 @@
 
 [package]
 name = "cranelift-codegen"
-version = "0.23.0"
+version = "0.20.0"
 authors = ["The Cranelift Project Developers"]
 build = "build.rs"
 description = "Low-level code generator library"
@@ -23,11 +23,11 @@ categories = ["no-std"]
 license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/CraneStation/cranelift"
 [dependencies.cranelift-bforest]
-version = "0.23.0"
+version = "0.20.0"
 default-features = false
 
 [dependencies.cranelift-entity]
-version = "0.23.0"
+version = "0.20.0"
 default-features = false
 
 [dependencies.failure]
@@ -45,19 +45,19 @@ optional = true
 
 [dependencies.log]
 version = "0.4.4"
+features = ["release_max_level_warn"]
 default-features = false
 
 [dependencies.target-lexicon]
-version = "0.2.0"
+version = "0.0.3"
 default-features = false
 [build-dependencies.cranelift-codegen-meta]
-version = "0.23.0"
+version = "0.20.0"
 
 [features]
 core = ["hashmap_core"]
 default = ["std"]
 std = ["cranelift-entity/std", "cranelift-bforest/std", "target-lexicon/std"]
-testing_hooks = []
 [badges.maintenance]
 status = "experimental"
 

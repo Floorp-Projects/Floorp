@@ -1,8 +1,7 @@
 //! Utility routines for pretty-printing error messages.
 
-use entity::SecondaryMap;
 use ir;
-use ir::entities::{AnyEntity, Inst, Value};
+use ir::entities::{AnyEntity, Inst};
 use ir::function::Function;
 use isa::TargetIsa;
 use result::CodegenError;
@@ -25,7 +24,7 @@ pub fn pretty_verifier_error<'a>(
     let mut w = String::new();
 
     decorate_function(
-        &mut PrettyVerifierError(func_w.unwrap_or_else(|| Box::new(PlainWriter)), &mut errors),
+        &mut PrettyVerifierError(func_w.unwrap_or(Box::new(PlainWriter)), &mut errors),
         &mut w,
         func,
         isa,
@@ -40,12 +39,11 @@ impl<'a> FuncWriter for PrettyVerifierError<'a> {
         &mut self,
         w: &mut Write,
         func: &Function,
-        aliases: &SecondaryMap<Value, Vec<Value>>,
         isa: Option<&TargetIsa>,
         inst: Inst,
         indent: usize,
     ) -> fmt::Result {
-        pretty_instruction_error(w, func, aliases, isa, inst, indent, &mut *self.0, self.1)
+        pretty_instruction_error(w, func, isa, inst, indent, &mut *self.0, self.1)
     }
 
     fn write_entity_definition(
@@ -63,7 +61,6 @@ impl<'a> FuncWriter for PrettyVerifierError<'a> {
 fn pretty_instruction_error(
     w: &mut Write,
     func: &Function,
-    aliases: &SecondaryMap<Value, Vec<Value>>,
     isa: Option<&TargetIsa>,
     cur_inst: Inst,
     indent: usize,
@@ -80,11 +77,15 @@ fn pretty_instruction_error(
                 let err = errors.remove(i);
 
                 if !printed_instr {
-                    func_w.write_instruction(w, func, aliases, isa, cur_inst, indent)?;
+                    func_w.write_instruction(w, func, isa, cur_inst, indent)?;
                     printed_instr = true;
                 }
 
-                print_error(w, indent, cur_inst.to_string(), err)?;
+                write!(w, "{1:0$}^", indent, "")?;
+                for _c in cur_inst.to_string().chars() {
+                    write!(w, "~")?;
+                }
+                writeln!(w, " verifier {}", err.to_string())?;
             }
             ir::entities::AnyEntity::Inst(_) => i += 1,
             _ => unreachable!(),
@@ -129,7 +130,11 @@ fn pretty_preamble_error(
                 printed_entity = true;
             }
 
-            print_error(w, indent, entity.to_string(), err)?;
+            write!(w, "{1:0$}^", indent, "")?;
+            for _c in entity.to_string().chars() {
+                write!(w, "~")?;
+            }
+            writeln!(w, " verifier {}", err.to_string())?;
         } else {
             i += 1
         }
@@ -141,18 +146,6 @@ fn pretty_preamble_error(
         func_w.write_entity_definition(w, func, entity, value)?;
     }
 
-    Ok(())
-}
-
-/// Prints ;   ^~~~~~ verifier [ERROR BODY]
-fn print_error(w: &mut Write, indent: usize, s: String, err: VerifierError) -> fmt::Result {
-    let indent = if indent < 1 { 0 } else { indent - 1 };
-
-    write!(w, ";{1:0$}^", indent, "")?;
-    for _c in s.chars() {
-        write!(w, "~")?;
-    }
-    writeln!(w, " verifier {}", err.to_string())?;
     Ok(())
 }
 

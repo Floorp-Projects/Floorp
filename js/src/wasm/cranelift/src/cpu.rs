@@ -33,13 +33,22 @@ use baldrdash::StaticEnvironment;
 
 impl From<isa::LookupError> for BasicError {
     fn from(err: isa::LookupError) -> BasicError {
-        BasicError::new(err.to_string())
+        let msg = match err {
+            isa::LookupError::SupportDisabled => "ISA support is disabled",
+            isa::LookupError::Unsupported => "unsupported ISA",
+        };
+        BasicError::new(msg.to_string())
     }
 }
 
 impl From<settings::SetError> for BasicError {
     fn from(err: settings::SetError) -> BasicError {
-        BasicError::new(err.to_string())
+        let msg = match err {
+            settings::SetError::BadName => "bad setting name",
+            settings::SetError::BadType => "bad setting type",
+            settings::SetError::BadValue => "bad setting value",
+        };
+        BasicError::new(msg.to_string())
     }
 }
 
@@ -94,6 +103,10 @@ pub fn make_isa(env: &StaticEnvironment) -> DashResult<Box<isa::TargetIsa>> {
 fn make_shared_flags() -> settings::SetResult<settings::Flags> {
     let mut sb = settings::builder();
 
+    // Since we're using SM's epilogue insertion code, we can only handle a single return
+    // instruction at the end of the function.
+    sb.enable("return_at_end")?;
+
     // We don't install SIGFPE handlers, but depend on explicit traps around divisions.
     sb.enable("avoid_div_traps")?;
 
@@ -121,9 +134,6 @@ fn make_shared_flags() -> settings::SetResult<settings::Flags> {
 
     // Let's optimize for speed.
     sb.set("opt_level", "best")?;
-
-    // TODO: Enable jump tables (requires emitting readonly data separately from text).
-    sb.set("jump_tables_enabled", "false")?;
 
     Ok(settings::Flags::new(sb))
 }
