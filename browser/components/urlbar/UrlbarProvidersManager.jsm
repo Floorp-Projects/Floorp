@@ -252,6 +252,14 @@ class Query {
       return;
     }
 
+    // Filter out javascript results for safety. The provider is supposed to do
+    // it, but we don't want to risk leaking these out.
+    if (match.url.startsWith("javascript:") &&
+        !this.context.searchString.startsWith("javascript:") &&
+        UrlbarPrefs.get("filter.javascript")) {
+      return;
+    }
+
     this.context.results.push(match);
 
     let notifyResults = () => {

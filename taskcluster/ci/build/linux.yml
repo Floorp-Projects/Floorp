@@ -425,7 +425,7 @@ linux-rusttests/opt:
             PERFHERDER_EXTRA_OPTIONS: rusttests
     run:
         using: mozharness
-        actions: [get-secrets, build, check-test]
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
@@ -462,7 +462,7 @@ linux-rusttests/debug:
             PERFHERDER_EXTRA_OPTIONS: rusttests
     run:
         using: mozharness
-        actions: [get-secrets, build, check-test]
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
@@ -859,7 +859,7 @@ linux64-rusttests/opt:
             PERFHERDER_EXTRA_OPTIONS: rusttests
     run:
         using: mozharness
-        actions: [get-secrets, build, check-test]
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
@@ -895,7 +895,7 @@ linux64-rusttests/debug:
             PERFHERDER_EXTRA_OPTIONS: rusttests
     run:
         using: mozharness
-        actions: [get-secrets, build, check-test]
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py

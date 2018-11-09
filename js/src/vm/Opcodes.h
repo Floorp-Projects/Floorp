@@ -694,20 +694,18 @@
     macro(JSOP_AND, 69, "and", NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING|JOF_IC) \
     /*
      * Pops the top of stack value as 'i', if 'low <= i <= high',
-     * jumps to a 32-bit offset: 'offset[i - low]' from the current bytecode,
-     *                           unless the offset is zero (missing case)
+     * jumps to a 32-bit offset: offset is stored in the script's resumeOffsets
+     *                           list at index 'firstResumeIndex + (i - low)'
      * jumps to a 32-bit offset: 'len' from the current bytecode otherwise
-     *
-     * This opcode has variable length.
      *
      *   Category: Statements
      *   Type: Switch Statement
      *   Operands: int32_t len, int32_t low, int32_t high,
-     *             int32_t offset[0], ..., int32_t offset[high-low]
+     *             uint24_t firstResumeIndex
      *   Stack: i =>
      *   len: len
      */ \
-    macro(JSOP_TABLESWITCH, 70, "tableswitch", NULL, -1, 1, 0, JOF_TABLESWITCH|JOF_DETECTING|JOF_IC) \
+    macro(JSOP_TABLESWITCH, 70, "tableswitch", NULL, 16, 1, 0, JOF_TABLESWITCH|JOF_DETECTING|JOF_IC) \
     /*
      * Prologue emitted in scripts expected to run once, which deoptimizes code
      * if it executes multiple times.

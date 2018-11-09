@@ -246,7 +246,7 @@ tasks:
                 notify:
                   email:
                     subject: "Thank you for your try submission of ${push.revision}. It's the best!"
-                    content: "Your try push has been submitted. Use the link to view the status of your jobs."
+                    content: "Your try push has been submitted. It's the best! Use the link to view the status of your jobs."
                     link:
                       text: "Treeherder Jobs"
                       href: "https://treeherder.mozilla.org/#/jobs?repo=${repository.project}&revision=${push.revision}"

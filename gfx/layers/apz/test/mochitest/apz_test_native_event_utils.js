@@ -1,5 +1,11 @@
 // Utilities for synthesizing of native events.
 
+function getResolution() {
+  let resolution = { value: -1 }; // bogus value in case DWU fails us
+  SpecialPowers.getDOMWindowUtils(window).getResolution(resolution);
+  return resolution.value;
+}
+
 function getPlatform() {
   if (navigator.platform.indexOf("Win") == 0) {
     return "windows";
@@ -78,15 +84,45 @@ function nativeMouseUpEventMsg() {
   throw "Native mouse-up events not supported on platform " + getPlatform();
 }
 
-// Convert (aX, aY), in CSS pixels relative to aElement's bounding rect,
-// to device pixels relative to the screen.
-function coordinatesRelativeToScreen(aX, aY, aElement) {
-  var targetWindow = aElement.ownerDocument.defaultView;
-  var scale = targetWindow.devicePixelRatio;
+// Given an event target which may be a window or an element, get the associated window.
+function windowForTarget(aTarget) {
+  if (aTarget instanceof Window) {
+    return aTarget;
+  }
+  return aTarget.ownerDocument.defaultView;
+}
+
+function getBoundingClientRectRelativeToVisualViewport(aElement) {
+  let utils = SpecialPowers.getDOMWindowUtils(window);
   var rect = aElement.getBoundingClientRect();
+  var offsetX = {}, offsetY = {};
+  utils.getVisualViewportOffsetRelativeToLayoutViewport(offsetX, offsetY);
+  rect.x -= offsetX.value;
+  rect.y -= offsetY.value;
+  return rect;
+}
+
+// Several event sythesization functions below (and their helpers) take a "target" 
+// parameter which may be either an element or a window. For such functions,
+// the target's "bounding rect" refers to the bounding client rect for an element,
+// and the window's origin for a window.
+// Not all functions have been "upgraded" to allow a window argument yet; feel
+// free to upgrade others as necessary.
+
+// Convert (aX, aY), in CSS pixels relative to aTarget's bounding rect
+// to device pixels relative to the screen.
+function coordinatesRelativeToScreen(aX, aY, aTarget) {
+  var targetWindow = windowForTarget(aTarget);
+  var deviceScale = targetWindow.devicePixelRatio;
+  var resolution = getResolution();
+  var rect = (aTarget instanceof Window)
+    ? {left: 0, top: 0} /* we don't use the width or height */
+    : getBoundingClientRectRelativeToVisualViewport(aTarget);
+  // moxInnerScreen{X,Y} are in CSS coordinates of the browser chrome.
+  // The device scale applies to them, but the resolution only zooms the content.
   return {
-    x: (targetWindow.mozInnerScreenX + rect.left + aX) * scale,
-    y: (targetWindow.mozInnerScreenY + rect.top + aY) * scale
+    x: (targetWindow.mozInnerScreenX + ((rect.left + aX) * resolution)) * deviceScale,
+    y: (targetWindow.mozInnerScreenY + ((rect.top + aY) * resolution)) * deviceScale
   };
 }
 
@@ -186,16 +222,16 @@ function synthesizeNativeMouseMoveAndWaitForMoveEvent(aElement, aX, aY, aCallbac
 }
 
 // Synthesizes a native touch event and dispatches it. aX and aY in CSS pixels
-// relative to the top-left of |aElement|'s bounding rect.
-function synthesizeNativeTouch(aElement, aX, aY, aType, aObserver = null, aTouchId = 0) {
-  var pt = coordinatesRelativeToScreen(aX, aY, aElement);
-  var utils = SpecialPowers.getDOMWindowUtils(aElement.ownerDocument.defaultView);
+// relative to the top-left of |aTarget|'s bounding rect.
+function synthesizeNativeTouch(aTarget, aX, aY, aType, aObserver = null, aTouchId = 0) {
+  var pt = coordinatesRelativeToScreen(aX, aY, aTarget);
+  var utils = SpecialPowers.getDOMWindowUtils(windowForTarget(aTarget));
   utils.sendNativeTouchPoint(aTouchId, aType, pt.x, pt.y, 1, 90, aObserver);
   return true;
 }
 
 // Function to generate native touch events for a multi-touch sequence.
-// aElement is the element whose bounding rect the coordinates are relative to.
+// aTarget is the element or window whose bounding rect the coordinates are relative to.
 // aPositions is a 2D array of position data. It is indexed as [row][column],
 //   where advancing the row counter moves forward in time, and each column
 //   represents a single "finger" (or touch input). Each row must have exactly
@@ -212,7 +248,7 @@ function synthesizeNativeTouch(aElement, aX, aY, aType, aObserver = null, aTouch
 // aObserver is the observer that will get registered on the very last
 //   synthesizeNativeTouch call this function makes.
 // aTouchIds is an array holding the touch ID values of each "finger".
-function* synthesizeNativeTouchSequences(aElement, aPositions, aObserver = null, aTouchIds = [0]) {
+function* synthesizeNativeTouchSequences(aTarget, aPositions, aObserver = null, aTouchIds = [0]) {
   // We use lastNonNullValue to figure out which synthesizeNativeTouch call
   // will be the last one we make, so that we can register aObserver on it.
   var lastNonNullValue = -1;
@@ -268,11 +304,11 @@ function* synthesizeNativeTouchSequences(aElement, aPositions, aObserver = null,
           // make, pass the observer as well
           var thisIndex = ((i - yields) * aTouchIds.length) + j;
           var observer = (lastSynthesizeCall == thisIndex) ? aObserver : null;
-          synthesizeNativeTouch(aElement, currentPositions[j].x, currentPositions[j].y, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, observer, aTouchIds[j]);
+          synthesizeNativeTouch(aTarget, currentPositions[j].x, currentPositions[j].y, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, observer, aTouchIds[j]);
           currentPositions[j] = null;
         }
       } else {
-        synthesizeNativeTouch(aElement, aPositions[i][j].x, aPositions[i][j].y, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, aTouchIds[j]);
+        synthesizeNativeTouch(aTarget, aPositions[i][j].x, aPositions[i][j].y, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, aTouchIds[j]);
         currentPositions[j] = aPositions[i][j];
       }
     }
@@ -283,7 +319,7 @@ function* synthesizeNativeTouchSequences(aElement, aPositions, aObserver = null,
 // Note that when calling this function you'll want to make sure that the pref
 // "apz.touch_start_tolerance" is set to 0, or some of the touchmove will get
 // consumed to overcome the panning threshold.
-function synthesizeNativeTouchDrag(aElement, aX, aY, aDeltaX, aDeltaY, aObserver = null, aTouchId = 0) {
+function synthesizeNativeTouchDrag(aTarget, aX, aY, aDeltaX, aDeltaY, aObserver = null, aTouchId = 0) {
   var steps = Math.max(Math.abs(aDeltaX), Math.abs(aDeltaY));
   var positions = new Array();
   positions.push([{ x: aX, y: aY }]);
@@ -294,7 +330,7 @@ function synthesizeNativeTouchDrag(aElement, aX, aY, aDeltaX, aDeltaY, aObserver
     positions.push([pos]);
   }
   positions.push([{ x: aX + aDeltaX, y: aY + aDeltaY }]);
-  var continuation = synthesizeNativeTouchSequences(aElement, positions, aObserver, [aTouchId]);
+  var continuation = synthesizeNativeTouchSequences(aTarget, positions, aObserver, [aTouchId]);
   var yielded = continuation.next();
   while (!yielded.done) {
     yielded = continuation.next();

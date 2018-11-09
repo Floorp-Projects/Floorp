@@ -982,6 +982,7 @@ class XPCShellTests(object):
         profile.set_preferences(prefs)
 
         self.prefsFile = os.path.join(profile.profile, 'user.js')
+        return prefs
 
     def buildCoreEnvironment(self):
         """
@@ -1173,7 +1174,7 @@ class XPCShellTests(object):
         self.failCount += test.failCount
         self.todoCount += test.todoCount
 
-    def updateMozinfo(self):
+    def updateMozinfo(self, prefs):
         # Handle filenames in mozInfo
         if not isinstance(self.mozInfo, dict):
             mozInfoFile = self.mozInfo
@@ -1192,6 +1193,9 @@ class XPCShellTests(object):
                 k = k.encode('ascii')
             fixedInfo[k] = v
         self.mozInfo = fixedInfo
+
+        self.mozInfo['serviceworker_e10s'] = prefs.get(
+            'dom.serviceWorkers.parent_intercept', False)
 
         mozinfo.update(self.mozInfo)
 
@@ -1285,12 +1289,12 @@ class XPCShellTests(object):
         self.todoCount = 0
 
         self.setAbsPath()
-        self.buildPrefsFile(options.get('extraPrefs') or [])
+        prefs = self.buildPrefsFile(options.get('extraPrefs') or [])
         self.buildXpcsRunArgs()
 
         self.event = Event()
 
-        if not self.updateMozinfo():
+        if not self.updateMozinfo(prefs):
             return False
 
         self.stack_fixer_function = None

@@ -1,0 +1,10 @@
+<script>
+function go() {
+  var r = document.getSelection().getRangeAt(0).cloneRange();
+  a.type = "";
+  r.insertNode(b);
+}
+</script>
+<body onload=go()>
+<input id="a" autofocus type="date">
+<summary id="b">x</summary>

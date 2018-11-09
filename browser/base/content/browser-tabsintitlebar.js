@@ -10,18 +10,18 @@ var TabsInTitlebar = {
 
     gDragSpaceObserver.init();
     this._initialized = true;
-    this.update();
+    this._update();
   },
 
   allowedBy(condition, allow) {
     if (allow) {
       if (condition in this._disallowed) {
         delete this._disallowed[condition];
-        this.update();
+        this._update();
       }
     } else if (!(condition in this._disallowed)) {
       this._disallowed[condition] = null;
-      this.update();
+      this._update();
     }
   },
 
@@ -58,12 +58,13 @@ var TabsInTitlebar = {
                    Services.prefs.getBoolPref(this._prefName));
   },
 
-  update() {
-    if (!this._initialized || window.fullScreen) {
+  _update() {
+    if (!this._initialized) {
       return;
     }
 
     let allowed = this.systemSupported &&
+                  !window.fullScreen &&
                   (Object.keys(this._disallowed)).length == 0;
     if (allowed) {
       document.documentElement.setAttribute("tabsintitlebar", "true");
@@ -103,7 +104,7 @@ var gDragSpaceObserver = {
   pref: "browser.tabs.extraDragSpace",
 
   init() {
-    this.update();
+    this._update();
     Services.prefs.addObserver(this.pref, this);
   },
 
@@ -116,15 +117,14 @@ var gDragSpaceObserver = {
       return;
     }
 
-    this.update();
+    this._update();
   },
 
-  update() {
+  _update() {
     if (Services.prefs.getBoolPref(this.pref)) {
       document.documentElement.setAttribute("extradragspace", "true");
     } else {
       document.documentElement.removeAttribute("extradragspace");
     }
-    TabsInTitlebar.update();
   },
 };

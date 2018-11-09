@@ -1187,6 +1187,10 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _process_rust_tests(self, obj, backend_file):
         self._no_skip['check'].add(backend_file.relobjdir)
+        build_target = self._build_target_for_obj(obj)
+        self._compile_graph[build_target]
+        self._process_non_default_target(obj, 'force-cargo-test-run',
+                                         backend_file)
         backend_file.write_once('CARGO_FILE := $(srcdir)/Cargo.toml\n')
         backend_file.write_once('RUST_TESTS := %s\n' % ' '.join(obj.names))
         backend_file.write_once('RUST_TEST_FEATURES := %s\n' % ' '.join(obj.features))
@@ -1344,9 +1348,10 @@ class RecursiveMakeBackend(CommonBackend):
         backend_file.write('HOST_SHARED_LIBRARY = %s\n' % libdef.lib_name)
 
     def _build_target_for_obj(self, obj):
-        target_name = obj.KIND
         if hasattr(obj, 'output_category') and obj.output_category:
             target_name = obj.output_category
+        else:
+            target_name = obj.KIND
         return '%s/%s' % (mozpath.relpath(obj.objdir,
             self.environment.topobjdir), target_name)
 

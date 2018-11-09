@@ -154,18 +154,6 @@ class BytecodeLocation
         return GET_JUMP_OFFSET(rawBytecode_ + (2 * JUMP_OFFSET_LEN));
     }
 
-    // Return the BytecodeLocation referred to by index number in the table
-    // of the table switch.
-    //
-    // Returns (effectively) |this| on a gap in the table.
-    BytecodeLocation getTableSwitchCaseByIndex(size_t index) const {
-        MOZ_ASSERT(is(JSOP_TABLESWITCH));
-        RawBytecode offsetLoc = rawBytecode_ +
-                                (3 *  JUMP_OFFSET_LEN) + // Skip over low and high
-                                (index * JUMP_OFFSET_LEN); // Select table entry
-        return BytecodeLocation(*this, rawBytecode_ + GET_JUMP_OFFSET(offsetLoc));
-    }
-
 #ifdef DEBUG
     // To ease writing assertions
     bool isValid() const {
