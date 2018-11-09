@@ -31,16 +31,14 @@ function waitForNotificationClose(notification, cb) {
 }
 
 function closeAllNotifications() {
-  let notificationBox = document.getElementById("global-notificationbox");
-
-  if (!notificationBox || !notificationBox.currentNotification) {
+  if (!gNotificationBox.currentNotification) {
     return Promise.resolve();
   }
 
   return new Promise(resolve => {
-    for (let notification of notificationBox.allNotifications) {
+    for (let notification of gNotificationBox.allNotifications) {
       waitForNotificationClose(notification, function() {
-        if (notificationBox.allNotifications.length === 0) {
+        if (gNotificationBox.allNotifications.length === 0) {
           resolve();
         }
       });

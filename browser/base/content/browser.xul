@@ -1327,7 +1327,7 @@ xmlns="http://www.w3.org/1999/xhtml"
 
       <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" hidden="true"/>
       <vbox id="appcontent" flex="1">
-        <notificationbox id="high-priority-global-notificationbox" notificationside="top"/>
+        <!-- gHighPriorityNotificationBox will be added here lazily. -->
         <tabbox id="tabbrowser-tabbox"
                 flex="1" tabcontainer="tabbrowser-tabs">
           <tabpanels id="tabbrowser-tabpanels"
@@ -1370,7 +1370,7 @@ xmlns="http://www.w3.org/1999/xhtml"
   </html:div>
 
   <vbox id="browser-bottombox" layer="true">
-    <notificationbox id="global-notificationbox" notificationside="bottom"/>
+    <!-- gNotificationBox will be added here lazily. -->
   </vbox>
 
 </window>

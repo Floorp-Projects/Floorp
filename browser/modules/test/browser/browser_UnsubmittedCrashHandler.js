@@ -169,8 +169,6 @@ function waitForIgnoredReports(reportIDs) {
   return Promise.all(promises);
 }
 
-let gNotificationBox;
-
 add_task(async function setup() {
   // Pending crash reports are stored in the UAppData folder,
   // which exists outside of the profile folder. In order to
@@ -181,7 +179,6 @@ add_task(async function setup() {
   await makeFakeAppDir();
   // We'll assume that the notifications will be shown in the current
   // browser window's global notification box.
-  gNotificationBox = document.getElementById("global-notificationbox");
 
   // If we happen to already be seeing the unsent crash report
   // notification, it's because the developer running this test
@@ -239,7 +236,6 @@ add_task(async function setup() {
   UnsubmittedCrashHandler.init();
 
   registerCleanupFunction(function() {
-    gNotificationBox = null;
     clearPendingCrashReports();
     env.set("MOZ_CRASHREPORTER_URL", oldServerURL);
   });

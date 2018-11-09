@@ -5,16 +5,12 @@ const { WebExtensionPolicy } =
 
 ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
 
-function getNotificationBox(aWindow) {
-  return aWindow.document.getElementById("high-priority-global-notificationbox");
-}
-
 function promiseNotificationShown(aWindow, aName) {
   return new Promise((resolve) => {
-    let notification = getNotificationBox(aWindow);
-    notification.addEventListener("AlertActive", function() {
-      is(notification.allNotifications.length, 1, "Notification Displayed.");
-      resolve(notification);
+    let notificationBox = aWindow.gHighPriorityNotificationBox;
+    notificationBox.addEventListener("AlertActive", function() {
+      is(notificationBox.allNotifications.length, 1, "Notification Displayed.");
+      resolve(notificationBox);
     }, {once: true});
   });
 }

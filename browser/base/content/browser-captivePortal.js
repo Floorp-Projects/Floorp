@@ -23,8 +23,8 @@ var CaptivePortalWatcher = {
   _waitingForRecheck: false,
 
   get _captivePortalNotification() {
-    let nb = document.getElementById("high-priority-global-notificationbox");
-    return nb.getNotificationWithValue(this.PORTAL_NOTIFICATION_VALUE);
+    return gHighPriorityNotificationBox.getNotificationWithValue(
+                                           this.PORTAL_NOTIFICATION_VALUE);
   },
 
   get canonicalURL() {
@@ -228,9 +228,9 @@ var CaptivePortalWatcher = {
       gBrowser.tabContainer.removeEventListener("TabSelect", this);
     };
 
-    let nb = document.getElementById("high-priority-global-notificationbox");
-    nb.appendNotification(message, this.PORTAL_NOTIFICATION_VALUE, "",
-                          nb.PRIORITY_INFO_MEDIUM, buttons, closeHandler);
+    gHighPriorityNotificationBox.appendNotification(
+      message, this.PORTAL_NOTIFICATION_VALUE, "",
+      gHighPriorityNotificationBox.PRIORITY_INFO_MEDIUM, buttons, closeHandler);
 
     gBrowser.tabContainer.addEventListener("TabSelect", this);
   },
