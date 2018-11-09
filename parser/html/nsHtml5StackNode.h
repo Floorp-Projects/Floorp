@@ -61,8 +61,8 @@ class nsHtml5StackNode
 public:
   int32_t idxInTreeBuilder;
   int32_t flags;
-  nsAtom* name;
-  nsAtom* popName;
+  RefPtr<nsAtom> name;
+  RefPtr<nsAtom> popName;
   int32_t ns;
   nsIContentHandle* node;
   nsHtml5HtmlAttributes* attributes;

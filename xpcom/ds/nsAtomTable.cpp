@@ -67,7 +67,7 @@ enum class GCKind {
 static Atomic<int32_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve> gUnusedAtomCount(0);
 
 nsDynamicAtom::nsDynamicAtom(const nsAString& aString, uint32_t aHash)
-  : nsAtom(AtomKind::DynamicNormal, aString, aHash)
+  : nsAtom(aString, aHash)
   , mRefCnt(1)
 {
 }
@@ -149,8 +149,6 @@ nsAtom::ToString(nsAString& aString) const
 void
 nsAtom::ToUTF8String(nsACString& aBuf) const
 {
-  MOZ_ASSERT(!IsDynamicHTML5(),
-             "Called ToUTF8String() on a dynamic HTML5 atom");
   CopyUTF16toUTF8(nsDependentString(GetUTF16String(), mLength), aBuf);
 }
 
@@ -158,9 +156,6 @@ void
 nsAtom::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, AtomsSizes& aSizes)
   const
 {
-  MOZ_ASSERT(!IsDynamicHTML5(),
-             "Called AddSizeOfIncludingThis() on a dynamic HTML5 atom");
-
   // Static atoms are in static memory, and so are not measured here.
   if (IsDynamic()) {
     aSizes.mDynamicAtoms += aMallocSizeOf(this);
@@ -495,7 +490,6 @@ nsAtomSubTable::GCLocked(GCKind aKind)
     }
 
     nsAtom* atom = entry->mAtom;
-    MOZ_ASSERT(!atom->IsDynamicHTML5());
     if (atom->IsDynamic() && atom->AsDynamic()->mRefCnt == 0) {
       i.Remove();
       nsDynamicAtom::Destroy(atom->AsDynamic());
@@ -574,16 +568,12 @@ nsDynamicAtom::Release()
 MozExternalRefCountType
 nsAtom::AddRef()
 {
-  MOZ_ASSERT(!IsDynamicHTML5(), "Attempt to AddRef a dynamic HTML5 atom");
-
   return IsStatic() ? 2 : AsDynamic()->AddRef();
 }
 
 MozExternalRefCountType
 nsAtom::Release()
 {
-  MOZ_ASSERT(!IsDynamicHTML5(), "Attempt to Release a dynamic HTML5 atom");
-
   return IsStatic() ? 1 : AsDynamic()->Release();
 }
 

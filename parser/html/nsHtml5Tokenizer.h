@@ -282,7 +282,7 @@ protected:
   nsHtml5AttributeName* attributeName;
 private:
   nsHtml5AttributeName* nonInternedAttributeName;
-  nsAtom* doctypeName;
+  RefPtr<nsAtom> doctypeName;
   nsHtml5String publicIdentifier;
   nsHtml5String systemIdentifier;
   nsHtml5HtmlAttributes* attributes;
