@@ -101,7 +101,6 @@ public:
   bool RequiresTailDispatch(AbstractThread* aThread) const;
   bool RequiresTailDispatchFromCurrentThread() const;
 
-  virtual TaskQueue* AsTaskQueue() { MOZ_CRASH("Not a task queue!"); }
   virtual nsIEventTarget* AsEventTarget() { MOZ_CRASH("Not an event target!"); }
 
   // Returns the non-DocGroup version of AbstractThread on the main thread.
