@@ -614,6 +614,8 @@ APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
   AssertOnSamplerThread();
   MutexAutoLock lock(mMapLock);
 
+  nsTArray<wr::WrTransformProperty> transforms;
+
   // Sample async transforms on scrollable layers.
   for (const auto& mapping : mApzcMap) {
     AsyncPanZoomController* apzc = mapping.second;
@@ -625,9 +627,13 @@ APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
     ParentLayerPoint layerTranslation = apzc->GetCurrentAsyncTransform(
         AsyncPanZoomController::eForCompositing).mTranslation;
     LayoutDeviceToParentLayerScale zoom;
-    if (apzc->Metrics().IsRootContent()) {
+    if (Maybe<uint64_t> zoomAnimationId = apzc->GetZoomAnimationId()) {
+      // for now we only support zooming on root content APZCs
+      MOZ_ASSERT(apzc->Metrics().IsRootContent());
       zoom = apzc->GetCurrentPinchZoomScale(AsyncPanZoomController::eForCompositing);
-      aTxn.UpdatePinchZoom(zoom.scale);
+      transforms.AppendElement(wr::ToWrTransformProperty(
+        *zoomAnimationId,
+        Matrix4x4::Scaling(zoom.scale, zoom.scale, 1.0f)));
     }
 
     // The positive translation means the painted content is supposed to
@@ -644,7 +650,6 @@ APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
   }
 
   // Now collect all the async transforms needed for the scrollthumbs.
-  nsTArray<wr::WrTransformProperty> scrollbarTransforms;
   for (const ScrollThumbInfo& info : mScrollThumbInfo) {
     auto it = mApzcMap.find(info.mTargetGuid);
     if (it == mApzcMap.end()) {
@@ -667,11 +672,11 @@ APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
                 info.mTargetIsAncestor,
                 nullptr);
         });
-    scrollbarTransforms.AppendElement(wr::ToWrTransformProperty(
+    transforms.AppendElement(wr::ToWrTransformProperty(
         info.mThumbAnimationId,
         transform));
   }
-  aTxn.AppendTransformProperties(scrollbarTransforms);
+  aTxn.AppendTransformProperties(transforms);
 
   // Advance animations. It's important that this happens after
   // sampling all async transforms, because AdvanceAnimations() updates
