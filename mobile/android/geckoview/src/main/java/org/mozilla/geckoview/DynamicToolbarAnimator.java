@@ -40,12 +40,12 @@ public final class DynamicToolbarAnimator {
 
     private final Set<PinReason> mPinFlags = EnumSet.noneOf(PinReason.class);
 
-    private final LayerSession mTarget;
-    private final LayerSession.Compositor mCompositor;
+    private final GeckoSession mTarget;
+    private final GeckoSession.Compositor mCompositor;
     private ToolbarChromeProxy mToolbarChromeProxy;
     private int mMaxToolbarHeight;
 
-    /* package */ DynamicToolbarAnimator(final LayerSession aTarget) {
+    /* package */ DynamicToolbarAnimator(final GeckoSession aTarget) {
         mTarget = aTarget;
         mCompositor = aTarget.mCompositor;
     }
@@ -69,7 +69,7 @@ public final class DynamicToolbarAnimator {
         }
     }
 
-    // Keep this package-private because applications should use one of LayerSession's
+    // Keep this package-private because applications should use one of GeckoSession's
     // coordinates APIs instead of dealing with the dynamic toolbar manually.
     /* package */ int getCurrentToolbarHeight() {
         ThreadUtils.assertOnUiThread();
@@ -116,8 +116,8 @@ public final class DynamicToolbarAnimator {
 
         if (mCompositor.isReady()) {
             mCompositor.sendToolbarAnimatorMessage(
-                    immediately ? LayerSession.REQUEST_SHOW_TOOLBAR_IMMEDIATELY
-                                : LayerSession.REQUEST_SHOW_TOOLBAR_ANIMATED);
+                    immediately ? GeckoSession.REQUEST_SHOW_TOOLBAR_IMMEDIATELY
+                                : GeckoSession.REQUEST_SHOW_TOOLBAR_ANIMATED);
         }
     }
 
@@ -126,8 +126,8 @@ public final class DynamicToolbarAnimator {
 
         if (mCompositor.isReady()) {
             mCompositor.sendToolbarAnimatorMessage(
-                    immediately ? LayerSession.REQUEST_HIDE_TOOLBAR_IMMEDIATELY
-                                : LayerSession.REQUEST_HIDE_TOOLBAR_ANIMATED);
+                    immediately ? GeckoSession.REQUEST_HIDE_TOOLBAR_IMMEDIATELY
+                                : GeckoSession.REQUEST_HIDE_TOOLBAR_ANIMATED);
         }
     }
 
@@ -136,10 +136,10 @@ public final class DynamicToolbarAnimator {
 
         if ((mToolbarChromeProxy != null) && mToolbarChromeProxy.isToolbarChromeVisible()) {
             mCompositor.sendToolbarAnimatorMessage(
-                    LayerSession.REQUEST_SHOW_TOOLBAR_IMMEDIATELY);
+                    GeckoSession.REQUEST_SHOW_TOOLBAR_IMMEDIATELY);
         } else {
             mCompositor.sendToolbarAnimatorMessage(
-                    LayerSession.REQUEST_HIDE_TOOLBAR_IMMEDIATELY);
+                    GeckoSession.REQUEST_HIDE_TOOLBAR_IMMEDIATELY);
         }
 
         for (final PinReason reason : PinReason.values()) {
@@ -153,12 +153,12 @@ public final class DynamicToolbarAnimator {
         }
 
         switch (message) {
-            case LayerSession.STATIC_TOOLBAR_NEEDS_UPDATE: {
+            case GeckoSession.STATIC_TOOLBAR_NEEDS_UPDATE: {
                 // Send updated toolbar image to compositor.
                 final Bitmap bm = mToolbarChromeProxy.getBitmapOfToolbarChrome();
                 if (bm == null) {
                     mCompositor.sendToolbarAnimatorMessage(
-                            LayerSession.TOOLBAR_SNAPSHOT_FAILED);
+                            GeckoSession.TOOLBAR_SNAPSHOT_FAILED);
                     break;
                 }
 
@@ -172,22 +172,22 @@ public final class DynamicToolbarAnimator {
                 } catch (final Throwable e) {
                     Log.e(LOGTAG, "Cannot get toolbar pixels", e);
                     mCompositor.sendToolbarAnimatorMessage(
-                            LayerSession.TOOLBAR_SNAPSHOT_FAILED);
+                            GeckoSession.TOOLBAR_SNAPSHOT_FAILED);
                 }
                 break;
             }
 
-            case LayerSession.STATIC_TOOLBAR_READY: {
+            case GeckoSession.STATIC_TOOLBAR_READY: {
                 // Hide toolbar and send TOOLBAR_HIDDEN message to compositor
                 mToolbarChromeProxy.toggleToolbarChrome(false);
-                mCompositor.sendToolbarAnimatorMessage(LayerSession.TOOLBAR_HIDDEN);
+                mCompositor.sendToolbarAnimatorMessage(GeckoSession.TOOLBAR_HIDDEN);
                 break;
             }
 
-            case LayerSession.TOOLBAR_SHOW: {
+            case GeckoSession.TOOLBAR_SHOW: {
                 // Show toolbar.
                 mToolbarChromeProxy.toggleToolbarChrome(true);
-                mCompositor.sendToolbarAnimatorMessage(LayerSession.TOOLBAR_VISIBLE);
+                mCompositor.sendToolbarAnimatorMessage(GeckoSession.TOOLBAR_VISIBLE);
                 break;
             }
 
