@@ -818,10 +818,6 @@ class ManagerGroup(object):
             self.pool.add(manager)
         self.wait()
 
-    def is_alive(self):
-        """Boolean indicating whether any manager in the group is still alive"""
-        return any(manager.is_alive() for manager in self.pool)
-
     def wait(self):
         """Wait for all the managers in the group to finish"""
         for item in self.pool:
